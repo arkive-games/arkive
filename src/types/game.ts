@@ -6,12 +6,10 @@ import type L from "leaflet";
  */
 export interface GameMapMeta {
   id: string;
-  /** Public URL to the map image (relative to BASE_URL in YAML). */
-  imageUrl: string;
-  /** Map width in "x" units (e.g., pixels). */
-  width: number;
-  /** Map height in "y" units (e.g., pixels). */
-  height: number;
+  tileWidth: number;
+  tileHeight: number;
+  tilesCountX: number;
+  tilesCountY: number;
 }
 
 /**

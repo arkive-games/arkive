@@ -63,19 +63,42 @@ const GameMapView: React.FC<Props> = ({
   }
 
   // Leaflet simple CRS uses [y, x] for bounds and center
-  const bounds: L.LatLngBoundsExpression = [
-    [0, 0],
-    [selectedMap.height, selectedMap.width],
-  ];
+  const width = selectedMap.tileWidth * selectedMap.tilesCountX;
+  const height = selectedMap.tileHeight * selectedMap.tilesCountY;
 
   const center: [number, number] = [
-    selectedMap.height / 2,
-    selectedMap.width / 2,
+    height / 2,
+    width / 2,
   ];
 
   const base = import.meta.env.BASE_URL ?? "/";
-  const imageUrl =
-    base + selectedMap.imageUrl.replace(/^\//, "");
+
+  const tileOverlays = [];
+  for (let row = 0; row < selectedMap.tilesCountY; row++) {
+    for (let col = 0; col < selectedMap.tilesCountX; col++) {
+      const y0 = (selectedMap.tilesCountY - row - 1) * selectedMap.tileHeight;
+      const x0 = col * selectedMap.tileWidth;
+      const y1 = (selectedMap.tilesCountY - row) * selectedMap.tileHeight;
+      const x1 = (col + 1) * selectedMap.tileWidth;
+      const tileBounds: L.LatLngBoundsExpression = [
+        [y0, x0],
+        [y1, x1],
+      ];
+      const rowStr = row.toString().padStart(2, "0");
+      const colStr = col.toString().padStart(2, "0");
+      const relPath = `UI/Map/WorldMap/${selectedMap.id}/Res/${selectedMap.id}_${colStr}_${rowStr}.png`;
+      const url = base + relPath.replace(/^\//, "");
+      tileOverlays.push(
+        <ImageOverlay
+          key={`tile-${row}-${col}`}
+          url={url}
+          bounds={tileBounds}
+        />,
+      );
+
+    }
+  }
+
 
   return (
     <div className="flex-1 relative">
@@ -83,8 +106,11 @@ const GameMapView: React.FC<Props> = ({
         key={selectedMap.id}
         center={center}
         zoom={0}
-        minZoom={-2}
+        minZoom={-3}
         maxZoom={2}
+        zoomAnimation={false}
+        zoomSnap={0.2}
+        zoomDelta={0.2}
         crs={L.CRS.Simple}
         className="w-full h-full"
         attributionControl={false}
@@ -96,7 +122,7 @@ const GameMapView: React.FC<Props> = ({
           }}
         />
 
-        <ImageOverlay url={imageUrl} bounds={bounds} />
+        {tileOverlays}
 
         {markers
           .filter((m) =>
