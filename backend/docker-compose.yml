@@ -1,0 +1,39 @@
+version: '3.5'
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      - POSTGRES_USER=aion2
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=aion2
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      - aion2-network
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+  core:
+    image: tcimba/aion2-backend
+    restart: always
+    volumes:
+      - ./aion2/backend:/root/aion2-backend/aion2/backend
+      - ./data/public:/root/aion2-backend/public
+    build:
+      context: .
+      args:
+        DOCKER_BUILDKIT: 1
+    ports:
+      - "9000:9000"
+    networks:
+      - aion2-network
+    environment:
+      - DEBUG=true
+      - HOST=core
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+    depends_on:
+      - postgres
+
+networks:
+  aion2-network:
