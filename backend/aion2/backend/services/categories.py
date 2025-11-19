@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from aion2.backend import models, schemas
-from aion2.backend.utilities.dependencies import get_db, get_current_user, get_category_from_path, \
+from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_category_from_path, \
     get_category_from_path, get_language_from_path
 
 router = APIRouter(prefix="/categories", tags=["categories"])
@@ -17,7 +17,7 @@ category_translation_crud = FastCRUD(models.CategoryTranslation)
 
 @cbv(router)
 class Categories:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     db: AsyncSession = Depends(get_db)
 
     @router.post("/")
@@ -68,7 +68,7 @@ class Categories:
 
 @cbv(router)
 class CategoryTranslations:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     category_model: models.Category = Depends(get_category_from_path)
     language_model: models.Language = Depends(get_language_from_path)
     db: AsyncSession = Depends(get_db)

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aion2.backend import models, schemas
-from aion2.backend.utilities.dependencies import get_db, get_current_user, get_map_from_path, get_category_from_path
+from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_map_from_path, get_category_from_path
 
 router = APIRouter(prefix="/languages", tags=["languages"])
 
@@ -13,7 +13,7 @@ languages_crud = FastCRUD(models.Language)
 
 @cbv(router)
 class Languages:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     db: AsyncSession = Depends(get_db)
 
     @router.post("/")

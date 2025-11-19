@@ -6,14 +6,14 @@ from loguru import logger
 from aion2.backend import schemas, models
 from aion2.backend.interfaces.db import get_db
 from aion2.backend.interfaces.user import fastapi_users
-from aion2.backend.utilities.dependencies import get_current_user
+from aion2.backend.utilities.dependencies import get_current_superuser
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/become_superuser")
 async def become_superuser(
-    user: models.User = Depends(get_current_user),
+    user: models.User = Depends(get_current_superuser),
     db: AsyncSession = Depends(get_db),
 ) -> schemas.StandardResponse[schemas.UserRead]:
     logger.info(user)

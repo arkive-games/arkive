@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from aion2.backend import models, schemas
-from aion2.backend.utilities.dependencies import get_db, get_current_user, get_category_from_path, \
+from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_category_from_path, \
     get_category_from_path, get_language_from_path, get_map_from_path, get_subtype_from_path, get_marker_from_path
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
@@ -19,7 +19,7 @@ marker_translation_crud = FastCRUD(models.MarkerTranslation)
 
 @cbv(router)
 class Markers:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     map_model: models.Map = Depends(get_map_from_path)
     db: AsyncSession = Depends(get_db)
 
@@ -99,7 +99,7 @@ class Markers:
 
 @cbv(router)
 class MarkerTranslations:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     map_model: models.Map = Depends(get_map_from_path)
     marker_model: models.Marker = Depends(get_marker_from_path)
     language_model: models.Language = Depends(get_language_from_path)

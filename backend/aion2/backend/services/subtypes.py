@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from aion2.backend import models, schemas
-from aion2.backend.utilities.dependencies import get_db, get_current_user, get_subtype_from_path, \
+from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_subtype_from_path, \
     get_subtype_from_path, get_category_from_path, get_language_from_path
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
@@ -20,7 +20,7 @@ subtype_translation_crud = FastCRUD(models.SubtypeTranslation)
 
 @cbv(router)
 class Categories:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     db: AsyncSession = Depends(get_db)
 
     async def check_category_id(self, category_id: str | UUID | None) -> UUID | None:
@@ -82,7 +82,7 @@ class Categories:
 
 @cbv(router)
 class SubtypeTranslations:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     subtype_model: models.Subtype = Depends(get_subtype_from_path)
     language_model: models.Language = Depends(get_language_from_path)
     db: AsyncSession = Depends(get_db)

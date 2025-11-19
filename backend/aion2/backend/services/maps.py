@@ -11,8 +11,7 @@ from loguru import logger
 
 from aion2.backend import models, schemas
 from aion2.backend.config.manager import settings
-from aion2.backend.interfaces.user import get_current_user
-from aion2.backend.utilities.dependencies import get_db, get_current_user, get_map_from_path, get_language_from_path
+from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_map_from_path, get_language_from_path
 
 router = APIRouter(prefix="/maps", tags=["maps"])
 
@@ -22,7 +21,7 @@ map_translation_crud = FastCRUD(models.MapTranslation)
 
 @cbv(router)
 class Maps:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     db: AsyncSession = Depends(get_db)
 
     # @staticmethod
@@ -112,7 +111,7 @@ class Maps:
 
 @cbv(router)
 class MapTranslations:
-    user: models.User = Depends(get_current_user)
+    user: models.User = Depends(get_current_superuser)
     map_model: models.Map = Depends(get_map_from_path)
     language_model: models.Language = Depends(get_language_from_path)
     db: AsyncSession = Depends(get_db)
