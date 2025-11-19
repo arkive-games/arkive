@@ -23,6 +23,7 @@ services:
       context: .
       args:
         DOCKER_BUILDKIT: 1
+        PYPI_MIRROR: https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
     ports:
       - "9000:9000"
     networks:
