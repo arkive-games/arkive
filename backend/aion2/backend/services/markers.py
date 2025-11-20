@@ -73,6 +73,7 @@ class Markers:
         limit: int = Query(100),
         offset: int = Query(0),
         subtype: str = Query(""),
+        region: str = Query(""),
         name: str = Query(""),
         x: int | None = Query(None),
         y: int | None = Query(None),
@@ -81,12 +82,19 @@ class Markers:
             subtype_model = await get_subtype_from_path(subtype, self.db)
         else:
             subtype_model = None
+        if region:
+            region_model = await get_region_from_path(region, self.db)
+        else:
+            region_model = None
 
         filter_dict = { "map_id": self.map_model.id }
         query = select(models.Marker).where(models.Marker.map_id == self.map_model.id)
         if subtype_model is not None:
             query = query.where(models.Marker.subtype_id == subtype_model.id)
             filter_dict["subtype_id"] = subtype_model.id
+        if region_model is not None:
+            query = query.where(models.Marker.region_id == region_model.id)
+            filter_dict["region_id"] = region_model.id
         if name:
             query = query.where(models.Marker.name.contains(name))
             filter_dict["name__contains"] = name
