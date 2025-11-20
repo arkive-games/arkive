@@ -43,6 +43,7 @@ class ErrorCode(str, Enum):
     SubTypeNotFoundError = "SubTypeNotFoundError"
     LanguageNotFoundError = "LanguageNotFoundError"
     MarkerNotFoundError = "MarkerNotFoundError"
+    RegionNotFoundError = "RegionNotFoundError"
 
 
 class BizError(Exception):

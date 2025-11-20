@@ -72,6 +72,15 @@ async def get_subtype_from_path(
         "name", ErrorCode.SubTypeNotFoundError
     )
 
+async def get_region_from_path(
+        region_id: str = Path(..., alias="region"),
+        db: AsyncSession = Depends(get_db)
+) -> models.Region:
+    return await get_model(
+        region_id, db, models.Region,
+        "name", ErrorCode.RegionNotFoundError
+    )
+
 async def get_marker_from_path(
         marker_id: UUID = Path(..., alias="marker"),
         db: AsyncSession = Depends(get_db)

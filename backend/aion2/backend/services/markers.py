@@ -9,13 +9,27 @@ from loguru import logger
 
 from aion2.backend import models, schemas
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_category_from_path, \
-    get_category_from_path, get_language_from_path, get_map_from_path, get_subtype_from_path, get_marker_from_path
+    get_category_from_path, get_language_from_path, get_map_from_path, get_subtype_from_path, get_marker_from_path, \
+    get_region_from_path
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
 router = APIRouter(prefix="/maps/{map}/markers", tags=["markers"])
 
 marker_crud = FastCRUD(models.Marker)
 marker_translation_crud = FastCRUD(models.MarkerTranslation)
+
+async def update_marker_contributor(db: AsyncSession, marker: models.Marker, user: models.User):
+    result = await db.execute(
+        select(models.MarkerContributor).
+        where(models.MarkerContributor.marker_id == marker.id).
+        where(models.MarkerContributor.user_id == user.id)
+    )
+    marker_contribution = result.unique().scalar_one_or_none()
+    if marker_contribution is None:
+        marker_contribution = models.MarkerContributor(marker_id=marker.id, user_id=user.id)
+        db.add(marker_contribution)
+        await db.commit()
+
 
 @cbv(router)
 class Markers:
@@ -27,10 +41,19 @@ class Markers:
         if subtype_id is None:
             return None
         try:
-            marker_model = await get_subtype_from_path(subtype_id, self.db)
-            return marker_model.id
+            subtype_model = await get_subtype_from_path(subtype_id, self.db)
+            return subtype_model.id
         except:
             raise BizError(ErrorCode.SubTypeNotFoundError)
+
+    async def check_region_id(self, region_id: str | UUID | None) -> UUID | None:
+        if not region_id:
+            return None
+        try:
+            region_model = await get_region_from_path(region_id, self.db)
+            return region_model.id
+        except:
+            raise BizError(ErrorCode.RegionNotFoundError)
 
     @router.post("/")
     async def create_marker(
@@ -38,8 +61,10 @@ class Markers:
         marker_data: schemas.MarkerCreate,
     ) -> schemas.StandardResponse[schemas.MarkerReadDetail]:
         marker_data.subtype_id = await self.check_subtype_id(marker_data.subtype_id)
+        marker_data.region_id = await self.check_region_id(marker_data.region_id)
         marker_data.map_id = self.map_model.id
         marker_model = await marker_crud.create(self.db, marker_data)
+        await update_marker_contributor(self.db, marker_model, self.user)
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
     @router.get("/")
@@ -88,10 +113,12 @@ class Markers:
         if marker_model.map_id != self.map_model.id:
             raise BizError(ErrorCode.MarkerNotFoundError)
         marker_data.subtype_id = await self.check_subtype_id(marker_data.subtype_id)
+        marker_data.region_id = await self.check_region_id(marker_data.region_id)
         await marker_crud.update(
             self.db, marker_data, id=marker_model.id,
         )
         await self.db.refresh(marker_model)
+        await update_marker_contributor(self.db, marker_model, self.user)
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
     @router.delete("/{marker}")
@@ -145,6 +172,7 @@ class MarkerTranslations:
         self.db.add(translation_model)
         await self.db.commit()
         await self.db.refresh(translation_model)
+        await update_marker_contributor(self.db, self.marker_model, self.user)
         return schemas.MarkerTranslationRead.model_validate(translation_model).to_response()
 
     @router.delete("/{marker}/translations/{language}")
