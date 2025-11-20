@@ -22,16 +22,15 @@ export function setQueryParam(key: string, value: string | null) {
   window.history.replaceState({}, "", `${url.pathname}?${params.toString()}`);
 }
 
-const CDN_BASE_URL = import.meta.env.VITE_CDN_BASE_URL || "";
+const CDN_BASE_URL = import.meta.env.VITE_CDN_BASE_URL || import.meta.env.BASE_URL;
 
 export function getStaticUrl(relPath: string): string {
-  const base = CDN_BASE_URL + import.meta.env.BASE_URL;
-  return base + relPath.replace(/^\//, "");
+  return CDN_BASE_URL + relPath.replace(/^\//, "");
 }
 
 export function parseIconUrl(icon: string, map: GameMapMeta) {
   if (!icon) {
-    icon = "UI/Resource/Texture/Icon/UT_Marker_Exploration_Hideen.png";
+    icon = "UI/Resource/Texture/Icon/UT_Marker_Exploration_Hideen.webp";
   }
   if (icon.includes("Light") && map.type === "dark") {
     icon = icon.replace("Light", "Dark");

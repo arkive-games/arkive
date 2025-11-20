@@ -37,14 +37,14 @@ class GameTileLayer extends L.TileLayer {
     }
 
     if (isWatermark) {
-      return getStaticUrl('images/watermark.png');
+      return getStaticUrl('images/watermark.webp');
     }
 
     const xStr = String(x).padStart(2, "0");
     const yStr = String(y).padStart(2, "0");
 
     // console.log(coords, xStr, yStr)
-    const relPath = `UI/Map/WorldMap/${selectedMap.name}/Res/${selectedMap.name}_${xStr}_${yStr}.png`;
+    const relPath = `UI/Map/WorldMap/${selectedMap.name}/Res/${selectedMap.name}_${xStr}_${yStr}.webp`;
     return getStaticUrl(relPath);
   }
 
