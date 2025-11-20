@@ -22,8 +22,10 @@ export function setQueryParam(key: string, value: string | null) {
   window.history.replaceState({}, "", `${url.pathname}?${params.toString()}`);
 }
 
+const CDN_BASE_URL = import.meta.env.VITE_CDN_BASE_URL || "";
+
 export function getStaticUrl(relPath: string): string {
-  const base = import.meta.env.BASE_URL ?? "/";
+  const base = CDN_BASE_URL + import.meta.env.BASE_URL;
   return base + relPath.replace(/^\//, "");
 }
 
