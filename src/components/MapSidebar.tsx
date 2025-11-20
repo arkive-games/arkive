@@ -74,17 +74,17 @@ const MapSidebar: React.FC<Props> = ({
       <button
         onClick={onToggleCollapsed}
         className="
-      absolute top-1/2 -right-3 transform -translate-y-1/2
+      absolute top-1/2 -right-4 transform -translate-y-1/2
       z-20000
       bg-background border border-default shadow-md
-      h-6 w-6 rounded-full flex items-center justify-center
+      h-8 w-8 rounded-full flex items-center justify-center
       hover:bg-primary hover:text-primary-foreground
       transition-colors
     "
       >
         <FontAwesomeIcon
           icon={collapsed ? faChevronRight : faChevronLeft}
-          className="text-[16px]"
+          className="text-[20px]"
         />
       </button>
 
