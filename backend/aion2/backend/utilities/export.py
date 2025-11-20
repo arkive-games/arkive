@@ -6,9 +6,121 @@ from loguru import logger
 from aion2.backend import models, schemas
 from aion2.backend.config.manager import settings
 from aion2.backend.interfaces.db import get_db
+from aion2.backend.services.categories import category_translation_crud
 
 DATA_DIR = settings.PUBLIC_DIR / "data"
 LOCALES_DIR = settings.PUBLIC_DIR / "locales"
+
+async def export_languages(db: AsyncSession):
+    language_models = await db.execute(select(models.Language))
+    languages = [x.language_code for x in language_models.unique().scalars().all()]
+    return languages
+
+async def export_maps(db: AsyncSession):
+    map_models = await db.execute(select(models.Map).order_by(models.Map.order))
+    maps = []
+    for map_model in map_models.unique().scalars():
+        map_data = schemas.MapRead.model_validate(map_model)
+        maps.append({**map_data.model_dump(by_alias=True),"id": str(map_data.id)})
+    return maps
+
+
+async def export_map_translations(db: AsyncSession, language_code: str):
+    map_translation_models = await db.execute(
+        select(models.MapTranslation).
+        where(models.MapTranslation.language.has(models.Language.language_code  == language_code))
+    )
+    map_translations = {}
+    for map_translation_model in map_translation_models.unique().scalars().all():
+        map_translation_model: models.MapTranslation
+        map_translations[map_translation_model.map.name] = {
+            "name": map_translation_model.name,
+            "description": map_translation_model.description,
+        }
+    return map_translations
+
+
+async def export_types(db: AsyncSession):
+    category_models = await db.execute(select(models.Category).order_by(models.Category.order))
+    categories = []
+    subtype_category_map = {}
+    for category_model in category_models.unique().scalars().all():
+        category_data = schemas.CategoryRead.model_validate(category_model)
+        subtypes = []
+        for subtype_model in category_model.subtypes:
+            subtype_category_map[subtype_model.id] = (category_model.name, subtype_model.name)
+            subtype_data = schemas.SubtypeRead.model_validate(subtype_model)
+            subtypes.append({**subtype_data.model_dump(by_alias=True), "id": str(subtype_data.id)})
+        categories.append(
+            {**category_data.model_dump(by_alias=True), "id": str(category_data.id), "subtypes": subtypes})
+
+    return categories
+
+
+async def export_type_translations(db: AsyncSession, language_code: str):
+    category_translation_models = await db.execute(
+        select(models.CategoryTranslation).
+        where(models.CategoryTranslation.language.has(models.Language.language_code == language_code))
+    )
+    category_translations = {}
+    for translation in category_translation_models.unique().scalars().all():
+        translation: models.CategoryTranslation
+        category_translations[translation.category.name] = {
+            "name": translation.name,
+        }
+
+    subtype_translation_models = await db.execute(
+        select(models.SubtypeTranslation).
+        where(models.SubtypeTranslation.language.has(models.Language.language_code == language_code))
+    )
+    subtype_translations = {}
+    for translation in subtype_translation_models.unique().scalars().all():
+        translation: models.SubtypeTranslation
+        subtype_translations[translation.subtype.name] = {
+            "name": translation.name,
+            "description": translation.description,
+        }
+
+    return category_translations, subtype_translations
+
+
+async def export_markers(db: AsyncSession, map_name: str):
+    marker_models = await db.execute(
+        select(models.Marker).
+        where(models.Marker.map.has(models.Map.name == map_name))
+    )
+    markers = []
+    for marker_model in marker_models.unique().scalars().all():
+        marker_model: models.Marker
+        marker_data = schemas.MarkerRead.model_validate(marker_model)
+        marker_dict = {
+            **marker_data.model_dump(
+                by_alias=True,
+                exclude={"map_id", "subtype_id", "images"}
+            ),
+            "id": str(marker_data.id),
+            "subtype": marker_model.subtype.name,
+        }
+        markers.append(marker_dict)
+    return markers
+
+async def export_marker_translations(db: AsyncSession, language_code: str, map_name: str):
+    marker_translation_models = await db.execute(
+        select(models.MarkerTranslation).
+        where(models.MarkerTranslation.marker.has(
+            models.Marker.map.has(models.Map.name == map_name)
+        )).
+        where(models.MarkerTranslation.language.has(models.Language.language_code == language_code))
+    )
+    marker_translations = {}
+    for translation in marker_translation_models.unique().scalars().all():
+        translation: models.MarkerTranslation
+        marker_translations[str(translation.marker_id)] = {
+            "name": translation.name,
+            "description": translation.description,
+        }
+    return marker_translations
+
 
 async def export_data(db: AsyncSession):
     language_models = await db.execute(select(models.Language))

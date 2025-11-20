@@ -15,6 +15,7 @@ from aion2.backend.services.maps import router as maps_router
 from aion2.backend.services.categories import router as categories_router
 from aion2.backend.services.subtypes import router as subtypes_router
 from aion2.backend.services.markers import router as markers_router
+from aion2.backend.services.export import router as export_router
 
 router = APIRouter()
 
@@ -35,3 +36,4 @@ router.include_router(maps_router)
 router.include_router(categories_router)
 router.include_router(subtypes_router)
 router.include_router(markers_router)
+router.include_router(export_router)
