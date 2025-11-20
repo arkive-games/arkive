@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { Card, Button, Spinner, Switch } from "@heroui/react";
 import { useTranslation } from "react-i18next";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 import type { GameMapMeta, MarkerTypeCategory } from "../types/game";
 import { parseIconUrl } from "../utils/url.ts";
@@ -22,6 +24,9 @@ type Props = {
 
   onShowAllSubtypes: () => void;
   onHideAllSubtypes: () => void;
+
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 };
 
 const MapSidebar: React.FC<Props> = ({
@@ -38,6 +43,8 @@ const MapSidebar: React.FC<Props> = ({
                                        onToggleShowLabels,
                                        onShowAllSubtypes,
                                        onHideAllSubtypes,
+                                       collapsed,
+                                       onToggleCollapsed,
                                      }) => {
   const { t } = useTranslation();
   const selectedMap = maps.find(m => m.name === selectedMapId);
@@ -56,7 +63,35 @@ const MapSidebar: React.FC<Props> = ({
   };
 
   return (
-    <aside className="w-80 border-r border-default-200 p-3 flex flex-col gap-4 overflow-y-auto">
+    <aside
+      className={`
+    relative h-full border-r border-default bg-content1
+    transition-all duration-300 flex flex-col
+    ${collapsed ? "w-[0px]" : "w-72"}
+  `}
+    >
+      {/* Collapse handle */}
+      <button
+        onClick={onToggleCollapsed}
+        className="
+      absolute top-1/2 -right-3 transform -translate-y-1/2
+      z-20000
+      bg-background border border-default shadow-md
+      h-6 w-6 rounded-full flex items-center justify-center
+      hover:bg-primary hover:text-primary-foreground
+      transition-colors
+    "
+      >
+        <FontAwesomeIcon
+          icon={collapsed ? faChevronRight : faChevronLeft}
+          className="text-[10px]"
+        />
+      </button>
+
+      {/* Sidebar content */}
+      {!collapsed && (
+        <div className="flex-1 overflow-y-auto">
+
       {/* Map selection */}
       <Card className="p-3">
         <h2 className="text-sm font-semibold mb-2">
@@ -206,6 +241,9 @@ const MapSidebar: React.FC<Props> = ({
           </Switch>
         </div>
       </Card>
+
+      )}
+      </div>
       )}
     </aside>
   );

@@ -25,6 +25,7 @@ const App: React.FC = () => {
   );
   const [allSubtypes, setAllSubtypes] = useState<Map<string, MarkerTypeSubtype>>(new Map());
   const [showLabels, setShowLabels] = useState<boolean>(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Initialize selected map
   useEffect(() => {
@@ -181,6 +182,8 @@ const App: React.FC = () => {
           onToggleShowLabels={setShowLabels}
           onShowAllSubtypes={handleShowAllSubtypes}
           onHideAllSubtypes={handleHideAllSubtypes}
+          collapsed={sidebarCollapsed}
+          onToggleCollapsed={() => setSidebarCollapsed((prev) => !prev)}
         />
 
         <GameMapView
