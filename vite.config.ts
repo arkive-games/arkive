@@ -4,6 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/aion2-interactive-map/',
+  base: process.env.VITE_PUBLIC_BASE || '/aion2-interactive-map/',
   plugins: [react(), tailwindcss()],
 })

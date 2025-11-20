@@ -64,7 +64,7 @@ const TopNavbar: React.FC = () => {
           onClick={toggleDataMode}
           aria-label="Toggle theme"
           className="text-default-600 hover:text-default-900 transition-colors"
-          style={{display: "none"}}
+          // style={{display: "none"}}
         >
           <FontAwesomeIcon
             icon={isStatic ? faDatabase : faCloud}

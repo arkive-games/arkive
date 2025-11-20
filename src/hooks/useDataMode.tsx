@@ -11,7 +11,14 @@ import {
 import i18n from "../i18n";
 
 export type DataMode = "static" | "dynamic";
-export const DEFAULT_DATA_MODE: DataMode = "dynamic";
+
+function normalize(mode: string | undefined): DataMode {
+  return mode === "dynamic" ? "dynamic" : "static";
+}
+
+const DEFAULT_DATA_MODE: DataMode = normalize(
+  import.meta.env.VITE_DEFAULT_DATA_MODE
+);
 
 type DataModeContextValue = {
   dataMode: DataMode;
