@@ -1,6 +1,6 @@
 // src/components/GameMapView.tsx
 import React, {useCallback, useState} from "react";
-import { MapContainer, ImageOverlay, useMapEvents } from "react-leaflet";
+import { MapContainer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
 import GameMarker from "./GameMarker";
@@ -11,7 +11,7 @@ import type {
   MarkerInstance,
   MarkerTypeCategory, MarkerTypeSubtype,
 } from "../types/game";
-import {getStaticUrl} from "../utils/url.ts";
+import GameMapTiles from "./GameMapTiles.ts";
 
 
 type CursorTrackerProps = {
@@ -127,52 +127,33 @@ const GameMapView: React.FC<Props> = ({
   const width = selectedMap.tileWidth * selectedMap.tilesCountX;
   const height = selectedMap.tileHeight * selectedMap.tilesCountY;
 
+  const bounds: L.LatLngBoundsExpression = [
+    [0, 0],
+    [height, width],
+  ];
+
   const center: [number, number] = [
     height / 2,
     width / 2,
   ];
-
-  const tileOverlays = [];
-  for (let row = 0; row < selectedMap.tilesCountY; row++) {
-    for (let col = 0; col < selectedMap.tilesCountX; col++) {
-      const y0 = (selectedMap.tilesCountY - row - 1) * selectedMap.tileHeight;
-      const x0 = col * selectedMap.tileWidth;
-      const y1 = (selectedMap.tilesCountY - row) * selectedMap.tileHeight;
-      const x1 = (col + 1) * selectedMap.tileWidth;
-      const tileBounds: L.LatLngBoundsExpression = [
-        [y0, x0],
-        [y1, x1],
-      ];
-      const rowStr = row.toString().padStart(2, "0");
-      const colStr = col.toString().padStart(2, "0");
-      const relPath = `UI/Map/WorldMap/${selectedMap.name}/Res/${selectedMap.name}_${colStr}_${rowStr}.png`;
-      const url = getStaticUrl(relPath);
-      tileOverlays.push(
-        <ImageOverlay
-          key={`tile-${row}-${col}`}
-          url={url}
-          bounds={tileBounds}
-        />,
-      );
-
-    }
-  }
 
   return (
     <div className="flex-1 relative" onClick={() => setContextMenu(null)}>
       <MapContainer
         key={selectedMap.id}
         center={center}
+        bounds={bounds}
         zoom={0}
         minZoom={-3}
         maxZoom={2}
-        zoomAnimation={false}
-        zoomSnap={0.2}
-        zoomDelta={0.2}
+        // zoomAnimation={false}
+        // fadeAnimation={false}
+        zoomSnap={0.25}
+        zoomDelta={0.25}
         crs={L.CRS.Simple}
         className="w-full h-full"
         attributionControl={false}
-        ref={mapRef as any}
+        ref={mapRef}
       >
         <CursorTracker
           onUpdate={(x, y) => {
@@ -186,7 +167,7 @@ const GameMapView: React.FC<Props> = ({
           onCloseMenu={() => setContextMenu(null)}
         />
 
-        {tileOverlays}
+        <GameMapTiles selectedMap={selectedMap}/>
 
         {markers
           .filter((m) =>
