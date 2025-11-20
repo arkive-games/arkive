@@ -23,6 +23,7 @@ body {
     sans-serif;
 }
 
+
 /* Leaflet container needs explicit size, we’ll also set via className */
 .leaflet-container {
     width: 100%;

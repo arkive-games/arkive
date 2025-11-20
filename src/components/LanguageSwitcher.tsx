@@ -18,7 +18,7 @@ const LanguageSwitcher: React.FC = () => {
     <Dropdown>
       <DropdownTrigger>
         <Button isIconOnly variant="light">
-          <FontAwesomeIcon icon={faLanguage} className="text-xl" />
+          <FontAwesomeIcon icon={faLanguage} className="text-lg" />
         </Button>
       </DropdownTrigger>
 

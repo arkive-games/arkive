@@ -4,6 +4,7 @@ import React, { useMemo, useRef, useState, useEffect } from "react";
 import TopNavbar from "./components/TopNavbar";
 import MapSidebar from "./components/MapSidebar";
 import GameMapView from "./components/GameMapView";
+import IntroModal from "./components/IntroModal";
 
 import { Spinner } from "@heroui/react";
 
@@ -25,7 +26,8 @@ const App: React.FC = () => {
   );
   const [allSubtypes, setAllSubtypes] = useState<Map<string, MarkerTypeSubtype>>(new Map());
   const [showLabels, setShowLabels] = useState<boolean>(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  const [isIntroOpen, setIsIntroOpen] = useState<boolean>(true);
 
   // Initialize selected map
   useEffect(() => {
@@ -165,7 +167,14 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col">
-      <TopNavbar />
+      <TopNavbar
+        onOpenIntroModal={() => setIsIntroOpen(true)}
+      />
+
+      <IntroModal
+        isOpen={isIntroOpen}
+        onClose={() => setIsIntroOpen(false)}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         <MapSidebar

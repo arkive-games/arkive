@@ -1,19 +1,24 @@
 // src/components/TopNavbar.tsx
 import React from "react";
 import {
+  Button,
   Navbar,
   NavbarBrand,
   NavbarContent,
 } from "@heroui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMoon, faSun, faCloud, faDatabase } from "@fortawesome/free-solid-svg-icons";
+import {faMoon, faSun, faCloud, faDatabase, faCircleInfo } from "@fortawesome/free-solid-svg-icons";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "../hooks/useTheme";
 import LanguageSwitcher from "./LanguageSwitcher";
 import {useDataMode} from "../hooks/useDataMode.tsx";
 
-const TopNavbar: React.FC = () => {
+type TopNavbarProps = {
+  onOpenIntroModal?: () => void;
+};
+
+const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenIntroModal }) => {
   const { t } = useTranslation(); // we use fully-qualified keys like common:siteTitle
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
@@ -40,37 +45,32 @@ const TopNavbar: React.FC = () => {
       {/* RIGHT: Language switcher + theme toggle */}
       <NavbarContent
         justify="end"
-        className="flex items-center gap-4"
+        className="flex items-center gap-1"
       >
         {/* Language switcher (owns its own button & dropdown) */}
         <LanguageSwitcher />
 
         {/* Theme toggle */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          className="text-default-600 hover:text-default-900 transition-colors"
-        >
+        <Button isIconOnly variant="light" onPress={toggleTheme}>
           <FontAwesomeIcon
             icon={isDark ? faSun : faMoon}
             className="text-lg"
           />
-        </button>
+        </Button>
 
         {/* Data mode toggle */}
-        <button
-          type="button"
-          onClick={toggleDataMode}
-          aria-label="Toggle theme"
-          className="text-default-600 hover:text-default-900 transition-colors"
-          // style={{display: "none"}}
-        >
+        <Button isIconOnly variant="light" onPress={toggleDataMode}>
           <FontAwesomeIcon
             icon={isStatic ? faDatabase : faCloud}
             className="text-lg"
           />
-        </button>
+        </Button>
+
+
+        <Button isIconOnly variant="light" onPress={onOpenIntroModal}>
+          <FontAwesomeIcon icon={faCircleInfo} className="text-lg" />
+        </Button>
+
       </NavbarContent>
     </Navbar>
   );
