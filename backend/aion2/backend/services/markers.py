@@ -140,7 +140,7 @@ class MarkerTranslations:
             if translation_data.name is not None:
                 translation_model.name = translation_data.name
             if translation_data.description is not None:
-                translation_model.name = translation_data.description
+                translation_model.description = translation_data.description
 
         self.db.add(translation_model)
         await self.db.commit()

@@ -17,7 +17,11 @@ async def export_languages(db: AsyncSession):
     return languages
 
 async def export_maps(db: AsyncSession):
-    map_models = await db.execute(select(models.Map).order_by(models.Map.order))
+    map_models = await db.execute(
+        select(models.Map)
+        # .where(models.Map.is_visible.is_(True))
+        .order_by(models.Map.order)
+    )
     maps = []
     for map_model in map_models.unique().scalars():
         map_data = schemas.MapRead.model_validate(map_model)
