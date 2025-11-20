@@ -128,8 +128,8 @@ const App: React.FC = () => {
     const map = mapRef.current;
     const meta = maps.find((m) => m.name === mapId);
     if (map && meta) {
-      const height = meta.tileWidth * meta?.tilesCountX;
-      const width = meta.tileWidth * meta?.tilesCountY;
+      const height = meta.tileWidth * meta?.tilesCountY;
+      const width = meta.tileWidth * meta?.tilesCountX;
         map.setView(
         [height / 2, width / 2],
         map.getZoom(),

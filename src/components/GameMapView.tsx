@@ -137,6 +137,8 @@ const GameMapView: React.FC<Props> = ({
     width / 2,
   ];
 
+  // console.log(bounds, center)
+
   return (
     <div className="flex-1 relative" onClick={() => setContextMenu(null)}>
       <MapContainer

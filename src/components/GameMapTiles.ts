@@ -22,9 +22,8 @@ class GameTileLayer extends L.TileLayer {
   }
 
   getTileUrl(coords: L.Coords): string {
-    console.log("[GameTileLayer] getTileUrl", coords);
-
     const { selectedMap, isWatermark } = this.gameOptions;
+    // console.log("[GameTileLayer] getTileUrl", coords, selectedMap);
 
     // Leaflet coords.x, coords.y are tile indices.
     // Your naming is "Map_YY_XX.png" with 2-digit zero padding.
@@ -44,12 +43,10 @@ class GameTileLayer extends L.TileLayer {
     const xStr = String(x).padStart(2, "0");
     const yStr = String(y).padStart(2, "0");
 
-    console.log(coords, xStr, yStr)
+    // console.log(coords, xStr, yStr)
     const relPath = `UI/Map/WorldMap/${selectedMap.name}/Res/${selectedMap.name}_${xStr}_${yStr}.png`;
     return getStaticUrl(relPath);
   }
-
-
 
 }
 
@@ -80,7 +77,7 @@ const GameMapTiles: React.FC<GameTilesProps> = ({ selectedMap }) => {
       maxZoom: map.getMaxZoom(),
       maxNativeZoom: 0,
       minNativeZoom: 0,
-      opacity: 0.2,
+      opacity: 0.15,
     });
 
     watermarkLayer.addTo(map);

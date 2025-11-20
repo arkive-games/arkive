@@ -12,6 +12,7 @@ export interface GameMapMeta {
   tileHeight: number;
   tilesCountX: number;
   tilesCountY: number;
+  isVisible: boolean;
 }
 
 /**

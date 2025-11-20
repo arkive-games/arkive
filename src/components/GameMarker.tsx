@@ -149,8 +149,10 @@ const GameMarkerInner: React.FC<Props> = ({
   const icon = createPinIcon(innerIcon, pinColor, isCompleted);
 
   // Localized marker name with fallback to id
-  // const localizedName = t(`${markerKeyPrefix}.name`, marker.id);
-  const localizedName = subtypeLabel;
+  let localizedName = t(`${markerKeyPrefix}.name`, "");
+  if (!localizedName) {
+    localizedName = subtypeLabel;
+  }
 
   // Localized description with fallback text
   const description = t(

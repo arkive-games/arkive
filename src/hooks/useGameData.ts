@@ -25,7 +25,7 @@ export function useGameData() {
         ]);
 
         if (cancelled) return;
-        setMaps(mapsData.maps);
+        setMaps(mapsData.maps.filter((map) => map.isVisible));
         setTypes(typesData.categories);
       } catch (e) {
         console.error(e);
