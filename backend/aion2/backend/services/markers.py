@@ -49,6 +49,8 @@ class Markers:
         offset: int = Query(0),
         subtype: str = Query(""),
         name: str = Query(""),
+        x: int | None = Query(None),
+        y: int | None = Query(None),
     ) -> schemas.StandardListResponse[schemas.MarkerReadDetail]:
         if subtype:
             subtype_model = await get_subtype_from_path(subtype, self.db)
@@ -63,6 +65,13 @@ class Markers:
         if name:
             query = query.where(models.Marker.name.contains(name))
             filter_dict["name__contains"] = name
+        if x is not None:
+            query = query.where(models.Marker.x == x)
+            filter_dict["x"] = x
+        if y is not None:
+            query = query.where(models.Marker.y == y)
+            filter_dict["y"] = y
+
         query = query.limit(limit).offset(offset)
 
         count = await marker_crud.count(self.db, **filter_dict)

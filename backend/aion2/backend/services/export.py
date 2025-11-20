@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aion2.backend import models
 from aion2.backend.utilities.dependencies import get_current_superuser, get_db
-from aion2.backend.utilities.export import export_maps, export_map_translations, export_types, export_type_translations, \
+from aion2.backend.utilities.export import export_data, export_maps, export_map_translations, export_types, export_type_translations, \
     export_markers, export_marker_translations
 
 router = APIRouter(prefix="/export", tags=["export"])
@@ -25,6 +25,10 @@ class Export:
             generate_yaml_data(),
             media_type="text/yaml",
         )
+
+    @router.get("/export")
+    async def export_all_data(self):
+        return await export_data(self.db)
 
     @router.get("/data/maps.yaml")
     async def export_data_maps(self) -> StreamingResponse:
