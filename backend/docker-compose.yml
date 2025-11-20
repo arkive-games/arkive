@@ -4,7 +4,7 @@ services:
     image: postgres:18
     environment:
       - POSTGRES_USER=aion2
-      - POSTGRES_PASSWORD=pass
+      - POSTGRES_PASSWORD={$POSTGRES_PASSWORD:-pass}
       - POSTGRES_DB=aion2
       - PGDATA=/var/lib/postgresql/data/pgdata
     networks:
@@ -33,6 +33,7 @@ services:
       - HOST=core
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
+      - POSTGRES_PASSWORD={$POSTGRES_PASSWORD:-pass}
     depends_on:
       - postgres
 
