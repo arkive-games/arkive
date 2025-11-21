@@ -2,6 +2,7 @@ version: '3.5'
 services:
   postgres:
     image: postgres:18
+    restart: always
     environment:
       - POSTGRES_USER=aion2
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pass}
