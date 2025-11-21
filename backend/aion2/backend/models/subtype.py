@@ -18,6 +18,7 @@ class Subtype(AsyncAttrs, Base):
     color: Mapped[str] = mapped_column(String)  # Color of the subtype
     icon: Mapped[str] = mapped_column(String)  # Icon for the subtype
     icon_scale: Mapped[float] = mapped_column(Double, default=1.0, server_default=text("1"))
+    hide_tooltip: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
     order: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))  # Display order of the map
     category_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True),
                                                      ForeignKey('categories.id', ondelete='SET NULL'),
