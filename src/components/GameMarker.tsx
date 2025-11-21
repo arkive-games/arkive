@@ -45,13 +45,14 @@ function createPinIcon(
   iconScale: number,
   completed: boolean,
 ): L.DivIcon {
-  const iconSize = 32 * iconScale;
+  const iconBaseSize = 40;
+  const iconSize = iconBaseSize * iconScale;
   const html = renderToString(
     <div
       style={{
         position: "relative",
-        width: "32px",
-        height: "32px",
+        width: `${iconBaseSize}px`,
+        height: `${iconBaseSize}px`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -89,8 +90,8 @@ function createPinIcon(
   return L.divIcon({
     html,
     className: "",
-    iconSize: [32, 32],
-    iconAnchor: [16, 16], // center of the icon
+    iconSize: [iconBaseSize, iconBaseSize],
+    iconAnchor: [iconBaseSize / 2, iconBaseSize / 2], // center of the icon
     popupAnchor: [0, -10], // popup above icon
   });
 }
@@ -126,6 +127,7 @@ const GameMarkerInner: React.FC<Props> = ({
   );
   const iconScale = sub?.iconScale || 1.0;
   const canComplete = !!sub?.canComplete;
+  const hideTooltip = !!sub?.hideTooltip;
 
   // Completion key is stored per map in useMarkers; here we just build the same key
   const completedKey = marker.id;
@@ -154,7 +156,7 @@ const GameMarkerInner: React.FC<Props> = ({
       position={new L.LatLng(marker.y, marker.x)}
       icon={icon}
     >
-      {showLabel && (
+      {(showLabel && !hideTooltip) && (
         <Tooltip
           permanent
           direction="top"

@@ -28,6 +28,7 @@ export interface MarkerTypeSubtype {
   icon?: string;
   /** Hex color string for the pin body, e.g. "#FFAA00". */
   iconScale?: number;
+  hideTooltip?: boolean;
   color?: string;
   /** Whether markers of this subtype can be marked as completed. */
   canComplete?: boolean;
