@@ -100,11 +100,13 @@ async def export_markers(db: AsyncSession, map_name: str):
         marker_dict = {
             **marker_data.model_dump(
                 by_alias=True,
-                exclude={"map_id", "subtype_id", "images"}
+                exclude={"map_id", "subtype_id", "region_id", "images"}
             ),
             "id": str(marker_data.id),
             "subtype": marker_model.subtype.name,
         }
+        if marker_model.region:
+            marker_dict["region"] = marker_model.region.name
         markers.append(marker_dict)
     return markers
 
@@ -208,7 +210,7 @@ async def export_data(db: AsyncSession):
             marker_dict = {
                 **marker_data.model_dump(
                     by_alias=True,
-                    exclude={"map_id", "subtype_id", "images"}
+                    exclude={"map_id", "subtype_id", "region_id", "images"}
                 ),
                 "id": str(marker_data.id),
                 "category": category,
@@ -216,6 +218,8 @@ async def export_data(db: AsyncSession):
             }
             if marker_model.images:
                 marker_dict["images"] = marker_model.images
+            if marker_model.region:
+                marker_dict["region"] = marker_model.region.name
             markers.append(marker_dict)
             for translation in marker_model.translations:
                 marker_translations[translation.language.language_code][str(marker_model.id)] = {
