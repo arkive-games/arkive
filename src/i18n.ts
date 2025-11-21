@@ -23,12 +23,19 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    lng: "zh-CN",
+    // lng: "zh-CN",
     fallbackLng: "zh-CN",
     supportedLngs: SUPPORTED_LANGUAGES,
 
     ns: ["common", "maps", "types", "regions"],
     defaultNS: "common",
+
+    detection: {
+      // order of detection
+      order: ["querystring", "localStorage", "navigator", "htmlTag"],
+      // caches to store detected language
+      caches: ["localStorage"],
+    },
 
     backend: {
       loadPath: getBackendLoadPath(),
@@ -39,10 +46,6 @@ i18n
       escapeValue: false,
     },
 
-    detection: {
-      order: ["querystring", "localStorage", "navigator"],
-      caches: ["localStorage"],
-    },
   });
 
 export default i18n;

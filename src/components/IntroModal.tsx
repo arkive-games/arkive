@@ -52,7 +52,7 @@ const IntroModal: React.FC<IntroModalProps> = ({isOpen, onClose}) => {
         onOpenChange={(open) => {
           if (!open) handleCloseAll();
         }}
-        size="md"
+        size="xl"
         backdrop="blur"
         placement="center"
         scrollBehavior="inside"
