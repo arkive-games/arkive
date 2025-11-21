@@ -64,6 +64,13 @@ export interface MarkerInstance {
   images: string[];
 }
 
+
+export interface RegionInstance {
+  id: string;
+  name: string;
+  type: string;
+}
+
 /**
  * Reference to the Leaflet map instance.
  * Allow null so useRef<Map | null>(null) matches React.RefObject<MapRef>.
@@ -115,3 +122,8 @@ export interface RawMarkersFile {
   // [categoryId: string]: any;
   markers: MarkerInstance[];
 }
+
+export interface RawRegionsFile {
+  regions: RegionInstance[];
+}
+

@@ -1,12 +1,13 @@
 // src/hooks/useMarkers.ts
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { MarkerInstance, RawMarkersFile } from "../types/game";
+import type {MarkerInstance, RawMarkersFile, RawRegionsFile, RegionInstance} from "../types/game";
 import { useYamlLoader } from "../hooks/useYamlLoader";
 
 const COMPLETED_STORAGE_PREFIX = "aion2.completedMarkers.v1.";
 
 export function useMarkers(selectedMapId: string | null) {
   const [markers, setMarkers] = useState<MarkerInstance[]>([]);
+  const [regions, setRegions] = useState<RegionInstance[]>([]);
   const [loading, setLoading] = useState(false);
   const loadYaml = useYamlLoader();
 
@@ -27,6 +28,7 @@ export function useMarkers(selectedMapId: string | null) {
   useEffect(() => {
     if (!selectedMapId) {
       setMarkers([]);
+      setRegions([]);
       return;
     }
 
@@ -39,10 +41,17 @@ export function useMarkers(selectedMapId: string | null) {
           `data/markers/${selectedMapId}.yaml`,
         );
         if (cancelled) return;
+        const rawRegion = await loadYaml<RawRegionsFile>(
+          `data/regions/${selectedMapId}.yaml`,
+        )
         setMarkers(raw.markers);
+        setRegions(rawRegion.regions);
       } catch (e) {
         console.error(e);
-        if (!cancelled) setMarkers([]);
+        if (!cancelled) {
+          setMarkers([]);
+          setRegions([]);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -126,6 +135,7 @@ export function useMarkers(selectedMapId: string | null) {
 
   return {
     markers,
+    regions,
     loading,
     subtypeCounts,
 

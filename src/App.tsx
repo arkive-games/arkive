@@ -14,16 +14,62 @@ import { useMarkers } from "./hooks/useMarkers";
 import type {GameMapMeta, MapRef, MarkerTypeSubtype} from "./types/game";
 import {getQueryParam, setQueryParam} from "./utils/url.ts";
 
+const VISIBLE_SUBTYPES_STORAGE_PREFIX = "aion2.visibleSubtypes.v1.";
+const VISIBLE_REGIONS_STORAGE_PREFIX = "aion2.visibleRegions.v1.";
+
+const saveVisibleData = (prefix: string, selectedMapId: string | null, data: Set<string> | null) => {
+  if (!selectedMapId || !data) return;
+  const storageKey = `${prefix}${selectedMapId}`;
+  try {
+    const arr = Array.from(data);
+    const stored = JSON.stringify(arr);
+    console.log("Save", storageKey, stored);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(storageKey, stored);
+    }
+  } catch (e) {
+    console.warn("Failed to save to localStorage", storageKey, e);
+  }
+}
+
+const loadVisibleData = (prefix: string, selectedMapId: string | null, validKeys: Set<string>) => {
+  const storageKey = `${prefix}${selectedMapId}`;
+  try {
+    const stored = typeof window !== "undefined"
+      ? window.localStorage.getItem(storageKey)
+      : null;
+    if (!stored) throw new Error("Storage is missing");
+    console.log("Load", storageKey, stored);
+    const parsed = JSON.parse(stored) as string[];
+    const set = new Set<string>();
+    parsed.forEach((key) => {
+      if (validKeys.has(key)) set.add(key);
+    });
+    return set;
+  } catch (e) {
+    console.warn("Failed to parse from localStorage", storageKey, e);
+    return null;
+  }
+}
+
 const App: React.FC = () => {
-  const VISIBLE_STORAGE_PREFIX = "aion2.visibleSubtypes.v1.";
+
 
   const { maps, types, loading: loadingGameData } = useGameData();
   const [selectedMapId, setSelectedMapId] = useState<string | null>(null);
+  const {
+    markers,
+    regions,
+    loading: loadingMarkers,
+    subtypeCounts,
+    completedSet,
+    completedCounts,
+    toggleMarkerCompleted,
+  } = useMarkers(selectedMapId);
 
   // visibleSubtypes: key = `${categoryId}::${subtypeId}`
-  const [visibleSubtypes, setVisibleSubtypes] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const [visibleSubtypes, setVisibleSubtypes] = useState<Set<string> | null>(null);
+  const [visibleRegions, setVisibleRegions] = useState<Set<string> | null>(null);
   const [allSubtypes, setAllSubtypes] = useState<Map<string, MarkerTypeSubtype>>(new Map());
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
@@ -50,7 +96,6 @@ const App: React.FC = () => {
   // Initialize visibleSubtypes once when types are loaded
   useEffect(() => {
     if (!selectedMapId || types.length === 0) return;
-
     const all = new Map<string, MarkerTypeSubtype>();
     types.forEach((cat) => {
       cat.subtypes.forEach((sub) => {
@@ -59,65 +104,40 @@ const App: React.FC = () => {
       });
     });
     setAllSubtypes(all);
-
-    const storageKey = `${VISIBLE_STORAGE_PREFIX}${selectedMapId}`;
-    const stored = typeof window !== "undefined"
-      ? window.localStorage.getItem(storageKey)
-      : null;
-
-    if (stored != null) {
-      try {
-        console.log("Load visibleSubtypes", stored);
-        const parsed = JSON.parse(stored) as string[];
-        const set = new Set<string>();
-
-        // Only keep keys that still exist in current types
-        const validKeys = new Set<string>();
-        types.forEach((cat) => {
-          cat.subtypes.forEach((sub) => {
-            validKeys.add(sub.name);
-          });
-        });
-
-        parsed.forEach((key) => {
-          if (validKeys.has(key)) set.add(key);
-        });
-
-        setVisibleSubtypes(set);
-        return;
-      } catch (e) {
-        console.warn("Failed to parse visibleSubtypes from localStorage", e);
-        // Fall through to "select all"
-      }
+    const validKeys = new Set(all.keys());
+    const visible = loadVisibleData(VISIBLE_SUBTYPES_STORAGE_PREFIX, selectedMapId, validKeys);
+    if (visible) {
+      setVisibleSubtypes(visible);
+    } else {
+      setVisibleSubtypes(validKeys);
     }
-    // Default: all visible for this map
-    setVisibleSubtypes(new Set(all.keys()));
-
   }, [selectedMapId, types]);
 
+  // Initialize visibleRegions once when regions are loaded
   useEffect(() => {
-    if (!selectedMapId) return;
-    const storageKey = `${VISIBLE_STORAGE_PREFIX}${selectedMapId}`;
-    try {
-      const arr = Array.from(visibleSubtypes);
-      const stored = JSON.stringify(arr);
-      console.log("Save visibleSubtypes", stored);
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(storageKey, stored);
-      }
-    } catch (e) {
-      console.warn("Failed to save visibleSubtypes to localStorage", e);
+    if (!selectedMapId || regions.length === 0) return;
+    // setAllSubtypes(all);
+    const validKeys = new Set(regions.map(x => x.name));
+    const visible = loadVisibleData(VISIBLE_REGIONS_STORAGE_PREFIX, selectedMapId, validKeys);
+    if (visible) {
+      setVisibleRegions(visible);
+    } else {
+      setVisibleRegions(validKeys);
     }
+  }, [selectedMapId, regions]);
+
+
+  useEffect(() => {
+    console.log("saveVisibleData", selectedMapId, visibleSubtypes)
+    saveVisibleData(VISIBLE_SUBTYPES_STORAGE_PREFIX, selectedMapId, visibleSubtypes)
   }, [selectedMapId, visibleSubtypes]);
 
-  const {
-    markers,
-    loading: loadingMarkers,
-    subtypeCounts,
-    completedSet,
-    completedCounts,
-    toggleMarkerCompleted,
-  } = useMarkers(selectedMapId);
+  useEffect(() => {
+    console.log("saveVisibleData", selectedMapId, visibleRegions)
+    saveVisibleData(VISIBLE_REGIONS_STORAGE_PREFIX, selectedMapId, visibleRegions)
+  }, [selectedMapId, visibleRegions]);
+
+
 
   const selectedMap: GameMapMeta | null = useMemo(
     () => maps.find((m) => m.name === selectedMapId) ?? null,
@@ -145,6 +165,15 @@ const App: React.FC = () => {
       const next = new Set(prev);
       if (next.has(subtypeId)) next.delete(subtypeId);
       else next.add(subtypeId);
+      return next;
+    });
+  };
+
+  const handleToggleRegion = (regionId: string) => {
+    setVisibleRegions((prev) => {
+      const next = new Set(prev);
+      if (next.has(regionId)) next.delete(regionId);
+      else next.add(regionId);
       return next;
     });
   };
@@ -179,14 +208,17 @@ const App: React.FC = () => {
       <div className="flex flex-1 overflow-hidden">
         <MapSidebar
           maps={maps}
+          regions={regions}
           types={types}
           selectedMapId={selectedMapId}
           onMapChange={handleMapChange}
           loadingMarkers={loadingMarkers}
           subtypeCounts={subtypeCounts}
           completedCounts={completedCounts}
-          visibleSubtypes={visibleSubtypes}
+          visibleSubtypes={visibleSubtypes || new Set()}
           onToggleSubtype={handleToggleSubtype}
+          visibleRegions={visibleRegions || new Set()}
+          onToggleRegion={handleToggleRegion}
           showLabels={showLabels}
           onToggleShowLabels={setShowLabels}
           onShowAllSubtypes={handleShowAllSubtypes}
@@ -199,7 +231,7 @@ const App: React.FC = () => {
           selectedMap={selectedMap}
           markers={markers}
           mapRef={mapRef}
-          visibleSubtypes={visibleSubtypes}
+          visibleSubtypes={visibleSubtypes || new Set()}
           types={types}
           subtypes={allSubtypes}
           showLabels={showLabels}

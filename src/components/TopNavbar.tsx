@@ -48,12 +48,13 @@ const TopNavbar: React.FC<TopNavbarProps> = ({ onOpenIntroModal }) => {
         justify="end"
         className="flex items-center gap-1"
       >
-        <img
-          src={getStaticUrl("images/shanke.webp")}
-          alt="Banner"
-          className="h-10 w-auto object-contain select-none pointer-events-none"
-        />
-
+        <a href="https://m.flashkrypton.com/?ch=10004&gameConfigId=286&autoShow=0#/community" target="_blank">
+          <img
+            src={getStaticUrl("images/shanke.webp")}
+            alt="Banner"
+            className="h-10 w-auto object-contain select-none pointer-events-none"
+          />
+        </a>
 
         {/* Language switcher (owns its own button & dropdown) */}
         <LanguageSwitcher />
