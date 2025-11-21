@@ -67,7 +67,7 @@ const MapSidebar: React.FC<Props> = ({
       className={`
     relative h-full border-r border-default bg-content1
     transition-all duration-300 flex flex-col space-y-2
-    ${collapsed ? "w-[0px]" : "w-72 px-2 py-2"}
+    ${collapsed ? "w-[0px]" : "w-80 px-2 py-2"}
   `}
     >
       {/* Collapse handle */}
@@ -183,6 +183,7 @@ const MapSidebar: React.FC<Props> = ({
                             const active = visibleSubtypes.has(key);
                             const canComplete = sub.canComplete === true;
                             const iconName = sub.icon || cat.icon || "";
+                            const iconSize = (sub.iconScale || 1.0) * 20;
 
                             return (
                               <button
@@ -197,11 +198,20 @@ const MapSidebar: React.FC<Props> = ({
                                 ].join(" ")}
                               >
                           <span className="flex items-center gap-1 min-w-0">
-                            <img
-                              src={parseIconUrl(iconName, selectedMap)}
-                              alt=""
-                              className="w-[20px] h-[20px] object-contain inline-block"
-                            />
+                            <div className="relative w-5 h-5 overflow-visible flex items-center justify-center">
+                              <img
+                                src={parseIconUrl(iconName, selectedMap)}
+                                alt=""
+                                className="absolute top-1/2 left-1/2
+                                  -translate-x-1/2 -translate-y-1/2
+                                  object-contain inline-block pointer-events-none
+                                "
+                                style={{
+                                  width: iconSize,
+                                  height: iconSize,
+                                }}
+                              />
+                            </div>
                             <span className="truncate text-left">
                               {t(
                                 `types:subtypes.${sub.name}.name`,
@@ -243,8 +253,8 @@ const MapSidebar: React.FC<Props> = ({
             </Card>
 
           )}
-        {/*</div>*/}
-          </>
+          {/*</div>*/}
+        </>
       )}
     </aside>
   );

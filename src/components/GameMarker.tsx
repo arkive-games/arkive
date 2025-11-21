@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import L from "leaflet";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLocationPin, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import {  faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { renderToString } from "react-dom/server";
 
 import MarkerPopupContent from "./MarkerPopupContent";
@@ -29,7 +29,7 @@ function getSubtypeIconDef(sub: MarkerTypeSubtype | undefined, map: GameMapMeta)
 }
 
 /** Lookup color from YAML (subtype > category > default). */
-function getSubtypeColor(
+/*function getSubtypeColor(
   sub?: MarkerTypeSubtype, cat?: MarkerTypeCategory,
 ): string {
   return "#FFFFFF";
@@ -38,52 +38,39 @@ function getSubtypeColor(
     cat?.color ||
     "#E53935"
   );
-}
+}*/
 
-/** Create a FA-based location pin icon. */
 function createPinIcon(
   innerIcon: string,
-  pinColor: string,
+  iconScale: number,
   completed: boolean,
 ): L.DivIcon {
+  const iconSize = 32 * iconScale;
   const html = renderToString(
     <div
       style={{
         position: "relative",
-        width: "36px",
-        height: "36px",
+        width: "32px",
+        height: "32px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         opacity: completed ? 0.4 : 1,
       }}
     >
-      {/* Outer pin */}
-      <FontAwesomeIcon
-        icon={faLocationPin}
+      {/* Inner icon directly */}
+      <img
+        src={innerIcon}
+        alt=""
         style={{
-          fontSize: "36px",
-          color: pinColor,
-          filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.4))",
+          width: `${iconSize}px`,
+          height: `${iconSize}px`,
+          objectFit: "contain",
+          pointerEvents: "none",
+          zIndex: 1000,
         }}
       />
 
-      {/* Inner icon shifted a bit upwards */}
-      <img
-        src={innerIcon}  // string URL to your subtype icon
-        alt=""
-        style={{
-          position: "absolute",
-          width: "20px",
-          height: "20px",
-          top: "6px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          objectFit: "contain",
-          pointerEvents: "none",
-          zIndex: "10000"
-        }}
-      />
       {completed && (
         <FontAwesomeIcon
           icon={faCheckCircle}
@@ -92,7 +79,7 @@ function createPinIcon(
             fontSize: "12px",
             right: "-2px",
             bottom: "-2px",
-            color: "#22c55e", // emerald-500
+            color: "#22c55e",
           }}
         />
       )}
@@ -102,11 +89,12 @@ function createPinIcon(
   return L.divIcon({
     html,
     className: "",
-    iconSize: [36, 36],
-    iconAnchor: [18, 36],
-    popupAnchor: [0, -36],
+    iconSize: [32, 32],
+    iconAnchor: [16, 16], // center of the icon
+    popupAnchor: [0, -10], // popup above icon
   });
 }
+
 
 const GameMarkerInner: React.FC<Props> = ({
                                        map,
@@ -136,6 +124,7 @@ const GameMarkerInner: React.FC<Props> = ({
   const subtypeLabel = t(
     `types:subtypes.${sub?.name}.name`,
   );
+  const iconScale = sub?.iconScale || 1.0;
   const canComplete = !!sub?.canComplete;
 
   // Completion key is stored per map in useMarkers; here we just build the same key
@@ -144,9 +133,9 @@ const GameMarkerInner: React.FC<Props> = ({
 
   // find icon and color
   const innerIcon = getSubtypeIconDef(sub, map);
-  const pinColor = getSubtypeColor(sub, cat);
+  // const pinColor = getSubtypeColor(sub, cat);
 
-  const icon = createPinIcon(innerIcon, pinColor, isCompleted);
+  const icon = createPinIcon(innerIcon, iconScale, isCompleted);
 
   // Localized marker name with fallback to id
   let localizedName = t(`${markerKeyPrefix}.name`, "");
@@ -169,7 +158,7 @@ const GameMarkerInner: React.FC<Props> = ({
         <Tooltip
           permanent
           direction="top"
-          offset={[0, -38]} // your chosen offset
+          offset={[0, -15]}
           className="game-marker-tooltip"
         >
           {localizedName}
