@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, String, Float, ForeignKey, JSON
+from sqlalchemy import Column, String, Float, ForeignKey, JSON, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -18,6 +18,7 @@ class Region(AsyncAttrs, Base):
                                          nullable=False)
 
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    type: Mapped[str] = mapped_column(String, default="", server_default=text("''"))
 
     map: Mapped["Map"] = relationship("Map", lazy="joined", join_depth=1)
     translations: Mapped[list["RegionTranslation"]] = relationship("RegionTranslation", back_populates="region",

@@ -9,6 +9,7 @@ class RegionRead(BaseModel):
     id: UUID
     map_id: UUID
     name: str
+    type: str
 
 class RegionReadDetail(RegionRead):
     map: MapRead
@@ -17,10 +18,11 @@ class RegionReadDetail(RegionRead):
 class RegionCreate(BaseModel):
     map_id: UUID | None = None
     name: str
+    type: str = ""
 
 class RegionUpdate(BaseModel):
     name: str | None = None
-
+    type: str | None = None
 
 class RegionTranslationRead(BaseModel):
     id: UUID

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aion2.backend import models
 from aion2.backend.utilities.dependencies import get_current_superuser, get_db
 from aion2.backend.utilities.export import export_data, export_maps, export_map_translations, export_types, export_type_translations, \
-    export_markers, export_marker_translations
+    export_markers, export_marker_translations, export_regions, export_region_translations, export_languages
 
 router = APIRouter(prefix="/export", tags=["export"])
 
@@ -50,6 +50,16 @@ class Export:
     async def export_locale_types(self, language: str = Path(...)) -> StreamingResponse:
         category_translations, subtype_translations = await export_type_translations(self.db, language)
         return await self.export_yaml({"categories": category_translations, "subtypes": subtype_translations})
+
+    @router.get("/data/regions/{map_name}.yaml")
+    async def export_data_regions(self, map_name: str = Path(...)) -> StreamingResponse:
+        regions = await export_regions(self.db, map_name)
+        return await self.export_yaml({"regions": regions})
+
+    @router.get("/locales/{language}/regions/{map_name}.yaml")
+    async def export_locales_regions(self, language: str = Path(...), map_name: str = Path(...)) -> StreamingResponse:
+        region_translations = await export_region_translations(self.db, language, map_name)
+        return await self.export_yaml(region_translations)
 
     @router.get("/data/markers/{map_name}.yaml")
     async def export_data_markers(self, map_name: str = Path(...)) -> StreamingResponse:

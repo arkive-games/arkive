@@ -7,6 +7,7 @@ from aion2.backend import models, schemas
 from aion2.backend.config.manager import settings
 from aion2.backend.interfaces.db import get_db
 from aion2.backend.services.categories import category_translation_crud
+from aion2.backend.services.regions import region_crud
 
 DATA_DIR = settings.PUBLIC_DIR / "data"
 LOCALES_DIR = settings.PUBLIC_DIR / "locales"
@@ -86,6 +87,44 @@ async def export_type_translations(db: AsyncSession, language_code: str):
         }
 
     return category_translations, subtype_translations
+
+async def export_regions(db: AsyncSession,  map_name: str):
+    region_models = await db.execute(
+        select(models.Region).
+        where(models.Region.map.has(models.Map.name == map_name))
+    )
+    regions = []
+    for region_model in region_models.unique().scalars().all():
+        region_model: models.Region
+        region_data = schemas.RegionRead.model_validate(region_model)
+        region_dict = {
+            **region_data.model_dump(
+                by_alias=True,
+                exclude={"map_id"}
+            ),
+            "id": str(region_data.id),
+        }
+        regions.append(region_dict)
+    return regions
+
+
+async def export_region_translations(db: AsyncSession, language_code: str, map_name: str):
+    region_translation_models = await db.execute(
+        select(models.RegionTranslation).
+        where(models.RegionTranslation.region.has(
+            models.Marker.map.has(models.Map.name == map_name)
+        )).
+        where(models.RegionTranslation.language.has(models.Language.language_code == language_code))
+    )
+    region_translations = {}
+    for translation in region_translation_models.unique().scalars().all():
+        translation: models.RegionTranslation
+        region_translations[str(translation.region.name)] = {
+            "name": translation.name,
+            "description": translation.description,
+        }
+    return region_translations
+
 
 
 async def export_markers(db: AsyncSession, map_name: str):
