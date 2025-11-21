@@ -35,12 +35,5 @@ export function parseIconUrl(icon: string, map: GameMapMeta) {
   if (icon.includes("Light") && map.type === "dark") {
     icon = icon.replace("Light", "Dark");
   }
-  if (icon.includes("Monolith_Material_L_001") && map.type !== "light")  {
-    if (map.type === "dark") {
-      icon = icon.replace("Monolith_Material_L_001", "Monolith_Material_D_001");
-    } else if (map.type === "abyss") {
-      icon = icon.replace("Monolith_Material_L_001", "Monolith_Material_L_005");
-    }
-  }
   return getStaticUrl(icon);
 }
