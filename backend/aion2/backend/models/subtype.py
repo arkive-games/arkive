@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, String, ForeignKey, Boolean, Integer, text
+from sqlalchemy import Column, String, ForeignKey, Boolean, Integer, text, Double
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -17,6 +17,7 @@ class Subtype(AsyncAttrs, Base):
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)  # Name of the subtype
     color: Mapped[str] = mapped_column(String)  # Color of the subtype
     icon: Mapped[str] = mapped_column(String)  # Icon for the subtype
+    icon_scale: Mapped[float] = mapped_column(Double, default=1.0, server_default=text("1"))
     order: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))  # Display order of the map
     category_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True),
                                                      ForeignKey('categories.id', ondelete='SET NULL'),

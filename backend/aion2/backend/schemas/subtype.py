@@ -8,6 +8,7 @@ class SubtypeRead(BaseModel):
     name: str
     color: str
     icon: str
+    icon_scale: float
     order: int
     can_complete: bool
     # category_id: UUID
@@ -16,6 +17,9 @@ class SubtypeCreate(BaseModel):
     name: str
     color: str
     icon: str
+    icon_scale: float = 1.0
+    order: int
+    can_complete: bool
     order: int
     category_id: str | UUID | None = None
     can_complete: bool = False
@@ -24,6 +28,8 @@ class SubtypeUpdate(BaseModel):
     name: str | None = None
     color: str | None = None
     icon: str | None = None
+    icon_scale: float | None = None
+    order: int
     order: int | None = None
     category_id: str | UUID | None = None
     can_complete: bool | None = None
