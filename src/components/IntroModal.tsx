@@ -12,6 +12,7 @@ import {useTranslation} from "react-i18next";
 import {getStaticUrl} from "../utils/url.ts";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faAlipay} from "@fortawesome/free-brands-svg-icons";
+import moment from "moment";
 
 type IntroModalProps = {
   isOpen: boolean;
@@ -27,6 +28,8 @@ const IntroModal: React.FC<IntroModalProps> = ({isOpen, onClose}) => {
     setShowImageOverlay(false);
     onClose();
   };
+
+  const buildTime = moment(Number(__BUILD_TIME__)).format("YYYY-MM-DD HH:mm:ss")
 
   return (
     <>
@@ -64,9 +67,15 @@ const IntroModal: React.FC<IntroModalProps> = ({isOpen, onClose}) => {
           {() => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                {t("introModal.title")}
+                <span className="text-base font-semibold">
+                  {t("introModal.title")}
+                </span>
+                <span className="text-xs text-default-500">
+                  {`${t("introModal.version", "Version")} ${__BUILD_GIT_COMMIT__.substring(0, 6)} (${buildTime})`}
+                </span>
               </ModalHeader>
               <ModalBody>
+
                 <p className="text-sm text-default-600 whitespace-pre-line">
                   {t(
                     "introModal.body",
@@ -80,7 +89,7 @@ const IntroModal: React.FC<IntroModalProps> = ({isOpen, onClose}) => {
               </ModalBody>
               <ModalFooter className="flex items-center justify-between">
                 <Button isIconOnly variant="light" onPress={() => setShowImageOverlay(true)}>
-                  <FontAwesomeIcon icon={faAlipay} className="text-xl" />
+                  <FontAwesomeIcon icon={faAlipay} className="text-xl"/>
                 </Button>
                 <Button color="primary" variant="solid" size="sm" onPress={onClose}>
                   {t("ui.confirm")}

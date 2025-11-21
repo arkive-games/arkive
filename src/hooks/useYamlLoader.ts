@@ -9,7 +9,7 @@ export function useYamlLoader() {
     <T,>(path: string) => {
       const base = getBaseUrl().replace(/\/+$/, "");
       const cleaned = path.replace(/^\/+/, "");
-      const url = `${base}/${cleaned}`;
+      const url = `${base}/${cleaned}?build=${__BUILD_GIT_COMMIT__}`;
       return fetchYaml<T>(url);
     },
     [getBaseUrl],
