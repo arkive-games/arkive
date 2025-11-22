@@ -189,7 +189,7 @@ class Markers:
         if marker_model.map_id != self.map_model.id:
             raise BizError(ErrorCode.MarkerNotFoundError)
         image_data = await asyncio.to_thread(process_image, file.file)
-        s3_key = f"markers_images/{image_data["digest"]}"
+        s3_key = f"markers_images/{image_data['digest']}"
         try:
             for size in ("full", "normal", "small"):
                 await s3_client.put_object(
