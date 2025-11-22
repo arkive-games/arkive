@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aion2.backend.interfaces.db import get_db, Base
 from aion2.backend.interfaces.user import get_current_user, get_current_superuser
+from aion2.backend.interfaces.s3 import s3_client_upload_dependency
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 from aion2.backend import models, schemas
 

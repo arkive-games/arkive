@@ -1,5 +1,6 @@
 from aion2.backend.models.user import User
 from aion2.backend.models.language import Language
+from aion2.backend.models.images import Image
 from aion2.backend.models.map import Map, MapTranslation
 from aion2.backend.models.category import Category, CategoryTranslation
 from aion2.backend.models.subtype import Subtype, SubtypeTranslation

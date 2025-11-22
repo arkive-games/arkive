@@ -1,5 +1,9 @@
+import asyncio
+import hashlib
 from uuid import UUID
 
+from aiobotocore.client import AioBaseClient
+from botocore.exceptions import ClientError
 from fastapi_utils.cbv import cbv
 from fastcrud import FastCRUD
 from fastapi import APIRouter, Depends, Body, UploadFile, File, Form, FastAPI, Query
@@ -8,10 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from aion2.backend import models, schemas
+from aion2.backend.config.manager import settings
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_category_from_path, \
     get_category_from_path, get_language_from_path, get_map_from_path, get_subtype_from_path, get_marker_from_path, \
-    get_region_from_path
+    get_region_from_path, s3_client_upload_dependency
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
+from aion2.backend.utilities.image import process_image_to_buffer, sha256_base64url
 
 router = APIRouter(prefix="/maps/{map}/markers", tags=["markers"])
 
@@ -133,12 +139,39 @@ class Markers:
     async def delete_marker(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path)
-    )-> schemas.StandardResponse[schemas.Empty]:
+    ) -> schemas.StandardResponse[schemas.Empty]:
         if marker_model.map_id != self.map_model.id:
             raise BizError(ErrorCode.MarkerNotFoundError)
         await self.db.delete(marker_model)
         await self.db.commit()
         return schemas.StandardResponse()
+
+    @router.put("/{marker}/images")
+    async def upload_marker_image(
+        self,
+        marker_model: models.Marker = Depends(get_marker_from_path),
+        file: UploadFile = File(...),
+        s3_client: AioBaseClient = Depends(s3_client_upload_dependency),
+    ) -> schemas.StandardResponse[schemas.Empty]:
+
+        file_bytes = await asyncio.to_thread(process_image_to_buffer, file.file, 80)
+        filename = sha256_base64url(file_bytes)+ ".webp"
+        key = f"markers/{marker_model.id}/{filename}"
+        try:
+            await s3_client.put_object(
+                Bucket=settings.S3_BUCKET,
+                Key=key,
+                Body=file_bytes,
+                ContentType="image/webp",
+            )
+        except ClientError as e:
+            raise BizError(ErrorCode.S3UploadError, str(e))
+
+
+
+
+        return schemas.StandardResponse()
+
 
 
 @cbv(router)

@@ -45,6 +45,10 @@ class ErrorCode(str, Enum):
     MarkerNotFoundError = "MarkerNotFoundError"
     RegionNotFoundError = "RegionNotFoundError"
 
+    S3ConfigError = "S3ConfigError"
+    S3UploadError = "S3UploadError"
+    ImageError = "ImageError"
+
 
 class BizError(Exception):
     def __init__(

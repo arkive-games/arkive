@@ -78,7 +78,15 @@ class DatabaseSettings(BaseSettings):
     )
     POSTGRES_DATABASE: str = Field(default="aion2", description="PostgreSQL database")
 
-class BackendBaseSettings(BackendServerSettings, AuthCORSSettings, AuthGeneralSettings, DatabaseSettings):
+class S3StorageSettings(BaseSettings):
+    S3_HOST: str = Field(default="localhost", description="S3 host")
+    S3_PORT: int = Field(default=8080, description="S3 port")
+    S3_USERNAME: str = Field(default="aion2", description="S3 username")
+    S3_PASSWORD: str = Field(default="", description="S3 password")
+    S3_BUCKET: str = Field(default="aion2", description="S3 bucket")
+    S3_PUBLIC_URL: str = Field(default="https://oss-cn-shenzhen.aliyuncs.com", description="S3 public URL")
+
+class BackendBaseSettings(BackendServerSettings, AuthCORSSettings, AuthGeneralSettings, DatabaseSettings, S3StorageSettings):
     TITLE: str = "AION2 Interactive Map Backend"
     VERSION: str = "0.1.0"
     TIMEZONE: str = "UTC"

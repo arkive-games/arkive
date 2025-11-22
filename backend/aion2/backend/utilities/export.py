@@ -237,6 +237,22 @@ async def export_data(db: AsyncSession):
         with filename.open("w", encoding="utf-8") as f:
             yaml.dump(type_translations, f, allow_unicode=True)
 
+    for map_data in maps:
+        map_name = map_data["name"]
+        regions = await export_regions(db, map_name)
+        filename = DATA_DIR / "regions" / f"{map_name}.yaml"
+        filename.parent.mkdir(parents=True, exist_ok=True)
+        with filename.open("w", encoding="utf-8") as f:
+            yaml.dump({"regions": regions}, f, allow_unicode=True)
+
+        for language in languages:
+            translations = await export_region_translations(db, language, map_name)
+            filename = LOCALES_DIR / str(language) / "regions" / f"{map_name}.yaml"
+            filename.parent.mkdir(parents=True, exist_ok=True)
+            with filename.open("w", encoding="utf-8") as f:
+                yaml.dump(translations, f, allow_unicode=True)
+
+
     # export markers
     for map_data in maps:
         map_name = map_data["name"]

@@ -30,7 +30,7 @@ services:
     networks:
       - aion2-network
     environment:
-      - DEBUG=true
+      - DEBUG=${DEBUG:-false}
       - HOST=core
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
