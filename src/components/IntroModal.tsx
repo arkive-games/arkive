@@ -26,8 +26,6 @@ const IntroModal: React.FC<IntroModalProps> = ({isOpen, onClose}) => {
   const [showImageOverlay, setShowImageOverlay] = useState<boolean>(false);
   const alipayUrl = getStaticUrl("images/alipay.webp");
 
-  console.log("introModal.body =", JSON.stringify(t("introModal.body")));
-
   const handleCloseAll = () => {
     setShowImageOverlay(false);
     onClose();
