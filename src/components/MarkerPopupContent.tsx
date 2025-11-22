@@ -36,8 +36,8 @@ const MarkerPopupContent: React.FC<Props> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const hasImages = images && images.length > 0;
-  const resolvedSmallImages = images?.map(image => getStaticUrl(image + "_small.webp"));
-  const resolvedNormalImages = images?.map(image => getStaticUrl(image + "_normal.webp"));
+  const resolvedSmallImages = images?.map(image => getStaticUrl(image + ".small.webp"));
+  const resolvedNormalImages = images?.map(image => getStaticUrl(image + ".normal.webp"));
 
   return (
     <Card
@@ -114,14 +114,14 @@ const MarkerPopupContent: React.FC<Props> = ({
                   type="button"
                   onClick={() => setIsGalleryOpen(false)}
                   className="
-      absolute top-3 right-3 z-20
-      inline-flex h-8 w-8 items-center justify-center
-      rounded-full
-      bg-black/60 text-white
-      hover:bg-black/80
-      dark:bg-white/80 dark:text-black dark:hover:bg-white
-      shadow-md
-    "
+                    absolute top-3 right-3 z-20
+                    inline-flex h-8 w-8 items-center justify-center
+                    rounded-full
+                    bg-black/60 text-white
+                    hover:bg-black/80
+                    dark:bg-white/80 dark:text-black dark:hover:bg-white
+                    shadow-md
+                  "
                   aria-label="Close gallery"
                 >
                   ✕
