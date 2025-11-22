@@ -1,6 +1,7 @@
 /* src/index.css */
 
 @import 'tailwindcss';
+@plugin "@tailwindcss/typography";
 @plugin './hero.ts';
 
 /* Make Tailwind scan HeroUI theme files for class names */

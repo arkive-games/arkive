@@ -13,6 +13,8 @@ import {getStaticUrl} from "../utils/url.ts";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faAlipay} from "@fortawesome/free-brands-svg-icons";
 import moment from "moment";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type IntroModalProps = {
   isOpen: boolean;
@@ -23,6 +25,8 @@ const IntroModal: React.FC<IntroModalProps> = ({isOpen, onClose}) => {
   const {t} = useTranslation("common");
   const [showImageOverlay, setShowImageOverlay] = useState<boolean>(false);
   const alipayUrl = getStaticUrl("images/alipay.webp");
+
+  console.log("introModal.body =", JSON.stringify(t("introModal.body")));
 
   const handleCloseAll = () => {
     setShowImageOverlay(false);
@@ -52,7 +56,7 @@ const IntroModal: React.FC<IntroModalProps> = ({isOpen, onClose}) => {
         onOpenChange={(open) => {
           if (!open) handleCloseAll();
         }}
-        size="xl"
+        size="3xl"
         backdrop="blur"
         placement="center"
         scrollBehavior="inside"
@@ -74,18 +78,16 @@ const IntroModal: React.FC<IntroModalProps> = ({isOpen, onClose}) => {
                   {`${t("introModal.version", "Version")} ${__BUILD_GIT_COMMIT__.substring(0, 6)} (${buildTime})`}
                 </span>
               </ModalHeader>
-              <ModalBody>
+              <ModalBody className="space-y-3">
+                {/* Markdown body */}
+                <div className="text-sm text-default-600 prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{t("introModal.body")}</ReactMarkdown>
+                </div>
 
-                <p className="text-sm text-default-600 whitespace-pre-line">
-                  {t(
-                    "introModal.body",
-                  )}
-                </p>
-                <p className="text-xs text-default-500 whitespace-pre-line mt-2">
-                  {t(
-                    "introModal.hint"
-                  )}
-                </p>
+                {/* Markdown hint */}
+                <div className="text-sm text-default-600 prose prose-sm dark:prose-invert max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{t("introModal.hint")}</ReactMarkdown>
+                </div>
               </ModalBody>
               <ModalFooter className="flex items-center justify-between">
                 <Button isIconOnly variant="light" onPress={() => setShowImageOverlay(true)}>
