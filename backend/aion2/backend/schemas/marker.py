@@ -1,7 +1,8 @@
 from uuid import UUID
 from typing import List
 
-from aion2.backend.schemas import RegionRead
+from aion2.backend.schemas.region import RegionRead
+from aion2.backend.schemas.image import ImageRead
 from aion2.backend.schemas.base import BaseModel
 from aion2.backend.schemas.language import LanguageRead
 from aion2.backend.schemas.subtype import SubtypeRead
@@ -15,13 +16,14 @@ class MarkerRead(BaseModel):
     name: str
     x: float
     y: float
-    images: List[str] | None
 
 class MarkerReadDetail(MarkerRead):
     subtype: SubtypeRead
     region: RegionRead | None = None
     map: MapRead
     translations: List["MarkerTranslationRead"]  # Forward reference for translations
+    images: List["MarkerImageRead"]
+    # images: List[str] | None
 
 class MarkerCreate(BaseModel):
     map_id: UUID | None = None
@@ -39,6 +41,20 @@ class MarkerUpdate(BaseModel):
     x: float | None = None
     y: float | None = None
     # images: List[str] | None = None
+
+class MarkerImageCreate(BaseModel):
+    marker_id: UUID
+    image_id: UUID
+    order: int = 0
+
+class MarkerImageRead(BaseModel):
+    marker_id: UUID
+    image_id: UUID
+    image: ImageRead
+    order: int
+
+class MarkerImageReadDetail(MarkerImageRead):
+    marker: MarkerRead
 
 class MarkerTranslationRead(BaseModel):
     id: UUID

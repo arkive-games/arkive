@@ -18,7 +18,7 @@ def sha256_base64url(data: bytes, length: int = 16) -> str:
     encoded = base64.urlsafe_b64encode(digest).decode().rstrip("=")
     return encoded
 
-def process_image_to_buffer(file: BinaryIO, quality) -> bytes:
+def process_image_to_buffer(file: BinaryIO, quality):
     try:
         buffer = BytesIO()
         with Image.open(file) as img:
@@ -29,7 +29,7 @@ def process_image_to_buffer(file: BinaryIO, quality) -> bytes:
                 method=6,
             )
         buffer.seek(0)
-        return buffer.getvalue()
+        return buffer.getvalue(), (img.height, img.width)
     except Exception as e:
         raise BizError(ErrorCode.ImageError, str(e))
 

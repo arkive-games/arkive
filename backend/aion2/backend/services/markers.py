@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+from typing import Any, Sequence
 from uuid import UUID
 
 from aiobotocore.client import AioBaseClient
@@ -23,6 +24,9 @@ router = APIRouter(prefix="/maps/{map}/markers", tags=["markers"])
 
 marker_crud = FastCRUD(models.Marker)
 marker_translation_crud = FastCRUD(models.MarkerTranslation)
+marker_image_crud = FastCRUD(models.MarkerImage)
+image_crud = FastCRUD(models.Image)
+
 
 async def update_marker_contributor(db: AsyncSession, marker: models.Marker, user: models.User):
     result = await db.execute(
@@ -93,7 +97,7 @@ class Markers:
         else:
             region_model = None
 
-        filter_dict = { "map_id": self.map_model.id }
+        filter_dict: dict[str, Any] = { "map_id": self.map_model.id }
         query = select(models.Marker).where(models.Marker.map_id == self.map_model.id)
         if subtype_model is not None:
             query = query.where(models.Marker.subtype_id == subtype_model.id)
@@ -117,6 +121,13 @@ class Markers:
         result = await self.db.execute(query)
         markers = [schemas.MarkerReadDetail.model_validate(x) for x in result.unique().scalars()]
         return schemas.StandardListResponse(markers, count)
+
+    @router.get("/{marker}")
+    async def get_marker(
+        self,
+        marker_model: models.Marker = Depends(get_marker_from_path)
+    ) -> schemas.StandardResponse[schemas.MarkerReadDetail]:
+        return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
     @router.patch("/{marker}")
     async def update_marker(
@@ -146,31 +157,77 @@ class Markers:
         await self.db.commit()
         return schemas.StandardResponse()
 
+    @router.get("/{marker}/images")
+    async def list_marker_images(
+        self,
+        marker_model: models.Marker = Depends(get_marker_from_path),
+    ) -> schemas.StandardListResponse[schemas.MarkerImageReadDetail]:
+        result = await self.db.execute(
+            select(models.MarkerImage).
+            where(models.MarkerImage.marker_id == marker_model.id)
+        )
+        marker_images = [schemas.MarkerImageReadDetail.model_validate(x) for x in result.unique().scalars()]
+        return schemas.StandardListResponse(marker_images)
+
+
     @router.put("/{marker}/images")
     async def upload_marker_image(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path),
         file: UploadFile = File(...),
         s3_client: AioBaseClient = Depends(s3_client_upload_dependency),
-    ) -> schemas.StandardResponse[schemas.Empty]:
+    ) -> schemas.StandardResponse[schemas.MarkerImageReadDetail]:
 
-        file_bytes = await asyncio.to_thread(process_image_to_buffer, file.file, 80)
+        file_bytes, (height, width) = await asyncio.to_thread(process_image_to_buffer, file.file, 80)
         filename = sha256_base64url(file_bytes)+ ".webp"
-        key = f"markers/{marker_model.id}/{filename}"
+        s3_key = f"markers_images/{filename}"
         try:
             await s3_client.put_object(
                 Bucket=settings.S3_BUCKET,
-                Key=key,
+                Key=s3_key,
                 Body=file_bytes,
                 ContentType="image/webp",
             )
         except ClientError as e:
             raise BizError(ErrorCode.S3UploadError, str(e))
 
+        # create image in db
+        result = await self.db.execute(
+            select(models.Image).
+            where(models.Image.s3_key == s3_key)
+        )
+        image_model = result.unique().scalar_one_or_none()
+        if image_model is None:
+            image_data = schemas.ImageCreate(
+                s3_key=s3_key,
+                height=height,
+                width=width,
+            )
+            image_model = await image_crud.create(self.db, image_data)
+
+        # create marker model in db
+        result = await self.db.execute(
+            select(models.MarkerImage).
+            where(models.MarkerImage.marker_id == marker_model.id)
+        )
+        marker_image_models = result.unique().scalars().all()
+        marker_image_model = None
+        for x in marker_image_models:
+            if x.image_id == image_model.id:
+                marker_image_model = x
+                break
+        if marker_image_model is None:
+            marker_image_data = schemas.MarkerImageCreate(
+                marker_id=marker_model.id,
+                image_id=image_model.id,
+                order=len(marker_image_models),
+            )
+            marker_image_model = await marker_image_crud.create(self.db, marker_image_data)
+
+        await update_marker_contributor(self.db, marker_model, self.user)
+        return schemas.MarkerImageReadDetail.model_validate(marker_image_model).to_response()
 
 
-
-        return schemas.StandardResponse()
 
 
 
