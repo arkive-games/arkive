@@ -4,8 +4,6 @@ import httpx
 
 TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMjJmYTZlYS04MTVmLTQ3NjUtOThhOS0wNDZlZmZkYmMxZDQiLCJhdWQiOlsiZmFzdGFwaS11c2VyczphdXRoIl0sImV4cCI6MTc2NDg1OTIxMH0.ZlC6b71uyPh3gWsFKS_bJWec55EjcGNE47EA9URApfY"  # <<< put your real token here
 
-
-
 BASE_URL = "http://localhost:9000/api/v1/maps/World_D_A"
 FILENAME = "region_dark.json"
 

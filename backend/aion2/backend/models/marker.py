@@ -49,7 +49,7 @@ class MarkerImage(Base):
     image_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('images.id', ondelete='CASCADE'), nullable=False)  # Foreign key to Marker
     order: Mapped[int] = mapped_column(Integer, default=0)
 
-    marker: Mapped["Marker"] = relationship("Marker", back_populates="images", lazy="joined", join_depth=1)
+    marker: Mapped["Marker"] = relationship("Marker", back_populates="images", lazy="joined", join_depth=1, order_by="MarkerImage.order")
     image: Mapped["Image"] = relationship("Image", lazy="joined", join_depth=2)  # Link to Image model
 
 

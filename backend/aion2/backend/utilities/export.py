@@ -144,6 +144,10 @@ async def export_markers(db: AsyncSession, map_name: str):
             "id": str(marker_data.id),
             "subtype": marker_model.subtype.name,
         }
+        if marker_model.images:
+            marker_dict["images"] = [
+                x.image.s3_key for x in marker_model.images
+            ]
         if marker_model.region:
             marker_dict["region"] = marker_model.region.name
         markers.append(marker_dict)
@@ -272,7 +276,9 @@ async def export_data(db: AsyncSession):
                 "subtype": subtype,
             }
             if marker_model.images:
-                marker_dict["images"] = marker_model.images
+                marker_dict["images"] = [
+                    x.image.s3_key for x in marker_model.images
+                ]
             if marker_model.region:
                 marker_dict["region"] = marker_model.region.name
             markers.append(marker_dict)

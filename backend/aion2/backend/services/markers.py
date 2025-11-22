@@ -7,7 +7,7 @@ from aiobotocore.client import AioBaseClient
 from botocore.exceptions import ClientError
 from fastapi_utils.cbv import cbv
 from fastcrud import FastCRUD
-from fastapi import APIRouter, Depends, Body, UploadFile, File, Form, FastAPI, Query
+from fastapi import APIRouter, Depends, Body, UploadFile, File, Form, FastAPI, Query, Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -18,7 +18,7 @@ from aion2.backend.utilities.dependencies import get_db, get_current_superuser, 
     get_category_from_path, get_language_from_path, get_map_from_path, get_subtype_from_path, get_marker_from_path, \
     get_region_from_path, s3_client_upload_dependency
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
-from aion2.backend.utilities.image import process_image_to_buffer, sha256_base64url
+from aion2.backend.utilities.image import process_image
 
 router = APIRouter(prefix="/maps/{map}/markers", tags=["markers"])
 
@@ -127,6 +127,8 @@ class Markers:
         self,
         marker_model: models.Marker = Depends(get_marker_from_path)
     ) -> schemas.StandardResponse[schemas.MarkerReadDetail]:
+        if marker_model.map_id != self.map_model.id:
+            raise BizError(ErrorCode.MarkerNotFoundError)
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
     @router.patch("/{marker}")
@@ -157,16 +159,23 @@ class Markers:
         await self.db.commit()
         return schemas.StandardResponse()
 
+    async def db_list_marker_images(self, marker_model: models.Marker):
+        result = await self.db.execute(
+            select(models.MarkerImage).
+            where(models.MarkerImage.marker_id == marker_model.id).
+            order_by(models.MarkerImage.order)
+        )
+        return result.unique().scalars().all()
+
     @router.get("/{marker}/images")
     async def list_marker_images(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path),
     ) -> schemas.StandardListResponse[schemas.MarkerImageReadDetail]:
-        result = await self.db.execute(
-            select(models.MarkerImage).
-            where(models.MarkerImage.marker_id == marker_model.id)
-        )
-        marker_images = [schemas.MarkerImageReadDetail.model_validate(x) for x in result.unique().scalars()]
+        if marker_model.map_id != self.map_model.id:
+            raise BizError(ErrorCode.MarkerNotFoundError)
+        marker_image_models = await self.db_list_marker_images(marker_model)
+        marker_images = [schemas.MarkerImageReadDetail.model_validate(x) for x in marker_image_models]
         return schemas.StandardListResponse(marker_images)
 
 
@@ -177,17 +186,19 @@ class Markers:
         file: UploadFile = File(...),
         s3_client: AioBaseClient = Depends(s3_client_upload_dependency),
     ) -> schemas.StandardResponse[schemas.MarkerImageReadDetail]:
-
-        file_bytes, (height, width) = await asyncio.to_thread(process_image_to_buffer, file.file, 80)
-        filename = sha256_base64url(file_bytes)+ ".webp"
-        s3_key = f"markers_images/{filename}"
+        if marker_model.map_id != self.map_model.id:
+            raise BizError(ErrorCode.MarkerNotFoundError)
+        image_data = await asyncio.to_thread(process_image, file.file)
+        s3_key = f"markers_images/{image_data["digest"]}"
         try:
-            await s3_client.put_object(
-                Bucket=settings.S3_BUCKET,
-                Key=s3_key,
-                Body=file_bytes,
-                ContentType="image/webp",
-            )
+            for size in ("full", "normal", "small"):
+                await s3_client.put_object(
+                    Bucket=settings.S3_BUCKET,
+                    Key=f"{s3_key}.{size}.webp",
+                    Body=image_data[size],
+                    ContentType="image/webp",
+                )
+
         except ClientError as e:
             raise BizError(ErrorCode.S3UploadError, str(e))
 
@@ -200,17 +211,13 @@ class Markers:
         if image_model is None:
             image_data = schemas.ImageCreate(
                 s3_key=s3_key,
-                height=height,
-                width=width,
+                height=image_data["height"],
+                width=image_data["width"],
             )
             image_model = await image_crud.create(self.db, image_data)
 
         # create marker model in db
-        result = await self.db.execute(
-            select(models.MarkerImage).
-            where(models.MarkerImage.marker_id == marker_model.id)
-        )
-        marker_image_models = result.unique().scalars().all()
+        marker_image_models = await self.db_list_marker_images(marker_model)
         marker_image_model = None
         for x in marker_image_models:
             if x.image_id == image_model.id:
@@ -226,6 +233,18 @@ class Markers:
 
         await update_marker_contributor(self.db, marker_model, self.user)
         return schemas.MarkerImageReadDetail.model_validate(marker_image_model).to_response()
+
+    @router.delete("/{marker}/images/{order}")
+    async def delete_marker_image(
+        self,
+        marker_model: models.Marker = Depends(get_marker_from_path),
+        order: int = Path(...)
+    ) -> schemas.StandardResponse[schemas.Empty]:
+        marker_image_models = await self.db_list_marker_images(marker_model)
+        filtered_models = list(filter(lambda x: x.order != order, marker_image_models))
+        for i, marker_image_model in enumerate(filtered_models):
+            marker_image_model.order = i
+        return schemas.StandardResponse()
 
 
 
