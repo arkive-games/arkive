@@ -11,7 +11,7 @@ import httpx
 
 TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMjJmYTZlYS04MTVmLTQ3NjUtOThhOS0wNDZlZmZkYmMxZDQiLCJhdWQiOlsiZmFzdGFwaS11c2VyczphdXRoIl0sImV4cCI6MTc2NDg1OTIxMH0.ZlC6b71uyPh3gWsFKS_bJWec55EjcGNE47EA9URApfY"  # <<< put your real token here
 
-MAP_NAME = "World_L_A"
+MAP_NAME = "World_D_A"
 BASE_URL = f"http://localhost:9000/api/v1/maps/{MAP_NAME}"
 IMAGE_DIRECTORY = f"G:\\NCSoft\\{MAP_NAME}"
 
@@ -77,22 +77,23 @@ for coord in coord_map.keys():
 
 async def upload_images():
     async with httpx.AsyncClient(headers=HEADERS) as client:
-        for _coord, coord_data in matched_coord_map.items():
+        for i, (_coord, coord_data) in enumerate(matched_coord_map.items()):
             try:
                 image_file: Path = coord_data["image"]
                 files = {
                     "file": (image_file.name, image_file.open("rb"), "image/webp")
                 }
                 put_url = f"{MARKERS_URL}/{coord_data["id"]}/images"
+                # print(put_url)
                 put_resp = await client.put(put_url, files=files)
                 put_resp_data = put_resp.json()
-                print(f"[PUT] {_coord} {coord_data["image"]}: {put_resp.status_code} {put_resp_data}")
+                print(f"[PUT] {i} {_coord} {coord_data["image"]}: {put_resp.status_code} {put_resp_data}")
             except Exception as e:
                 print(coord_data)
                 print(e)
 
 
-
 if __name__ == "__main__":
     asyncio.run(upload_images())
+    # pass
 # print(data)

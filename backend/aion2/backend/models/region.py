@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, String, Float, ForeignKey, JSON, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from aion2.backend.interfaces.db import Base  # Correct import
@@ -19,6 +19,13 @@ class Region(AsyncAttrs, Base):
 
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     type: Mapped[str] = mapped_column(String, default="", server_default=text("''"))
+    borders: Mapped[list] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=list,  # Python-side default: []
+        server_default=text("'[]'::jsonb"),  # DB-side default: []
+    )
+
 
     map: Mapped["Map"] = relationship("Map", lazy="joined", join_depth=1)
     translations: Mapped[list["RegionTranslation"]] = relationship("RegionTranslation", back_populates="region",

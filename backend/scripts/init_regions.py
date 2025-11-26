@@ -4,12 +4,12 @@ import httpx
 
 TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMjJmYTZlYS04MTVmLTQ3NjUtOThhOS0wNDZlZmZkYmMxZDQiLCJhdWQiOlsiZmFzdGFwaS11c2VyczphdXRoIl0sImV4cCI6MTc2NDg1OTIxMH0.ZlC6b71uyPh3gWsFKS_bJWec55EjcGNE47EA9URApfY"  # <<< put your real token here
 
-BASE_URL = "http://localhost:9000/api/v1/maps/World_D_A"
-FILENAME = "region_dark.json"
+# BASE_URL = "http://localhost:9000/api/v1/maps/World_D_A"
+# FILENAME = "region_dark.json"
 
 
-# BASE_URL = "http://localhost:9000/api/v1/maps/World_L_A"
-# FILENAME = "region_light.json"
+BASE_URL = "http://localhost:9000/api/v1/maps/World_L_A"
+FILENAME = "region_light.json"
 
 # BASE_URL = "http://www.tc-imba.com/api/v1/maps/World_L_A"
 REGIONS_URL = f"{BASE_URL}/regions"
@@ -95,4 +95,4 @@ async def upload_region_markers():
 
 
 if __name__ == "__main__":
-    asyncio.run(upload_region_markers())
+    asyncio.run(upload_regions())

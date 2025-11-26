@@ -6,6 +6,7 @@
   {"name": "EllunRiverMarsh", "en": "Ellun River Marsh", "zh-CN": "艾尔伦河沼泽", "zh-TW": "艾爾倫河沼澤", "x": 3901, "y": 4944, "type": 2},
   {"name": "EllunRiverMidstream", "en": "Ellun River Midstream", "zh-CN": "艾尔伦河中游", "zh-TW": "艾爾倫河中游", "x": 3677, "y": 4355, "type": 2},
   {"name": "VerteronFortressRuins", "en": "Verteron Fortress Ruins", "zh-CN": "裴尔特朗要塞废墟", "zh-TW": "裴爾特朗要塞廢墟", "x": 3932, "y": 4043, "type": 2},
+  {"name": "TolbasForest", "en": "Tolbas Forest", "zh-CN": "托尔巴斯森林", "zh-TW": "托爾巴斯森林", "x": 3533, "y": 3596, "type": 2},
   {"name": "NorthernTolbasForest", "en": "Northern Tolbas Forest", "zh-CN": "托尔巴斯森林北部", "zh-TW": "托爾巴斯森林北部", "x": 3533, "y": 3596, "type": 2},
   {"name": "EasternTolbasForest", "en": "Eastern Tolbas Forest", "zh-CN": "托尔巴斯森林东部", "zh-TW": "托爾巴斯森林東部", "x": 3770, "y": 3419, "type": 2},
   {"name": "SouthernTolbasForest", "en": "Southern Tolbas Forest", "zh-CN": "托尔巴斯森林南部", "zh-TW": "托爾巴斯森林南部", "x": 3400, "y": 3332, "type": 2},
