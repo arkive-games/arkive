@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 from fastapi_utils.cbv import cbv
 from fastcrud import FastCRUD
 from fastapi import APIRouter, Depends, Body, UploadFile, File, Form, FastAPI, Query, Path
-from sqlalchemy import select
+from sqlalchemy import select, func, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
@@ -159,6 +159,12 @@ class Markers:
         await self.db.commit()
         return schemas.StandardResponse()
 
+@cbv(router)
+class MarkerImages:
+    user: models.User = Depends(get_current_superuser)
+    map_model: models.Map = Depends(get_map_from_path)
+    db: AsyncSession = Depends(get_db)
+
     async def db_list_marker_images(self, marker_model: models.Marker):
         result = await self.db.execute(
             select(models.MarkerImage).
@@ -166,6 +172,15 @@ class Markers:
             order_by(models.MarkerImage.order)
         )
         return result.unique().scalars().all()
+
+    async def db_count_marker_images_by_image_id(self, image_id: UUID) -> int:
+        result = await self.db.execute(
+            select(func.count()).
+            select_from(models.MarkerImage).
+            where(models.MarkerImage.image_id == image_id)
+        )
+        return result.scalar()
+
 
     @router.get("/{marker}/images")
     async def list_marker_images(
@@ -234,17 +249,62 @@ class Markers:
         await update_marker_contributor(self.db, marker_model, self.user)
         return schemas.MarkerImageReadDetail.model_validate(marker_image_model).to_response()
 
-    @router.delete("/{marker}/images/{order}")
+    @router.delete("/{marker}/images/{image}")
     async def delete_marker_image(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path),
-        order: int = Path(...)
+        marker_image_id: UUID = Path(..., alias="image"),
+        s3_client: AioBaseClient = Depends(s3_client_upload_dependency)
     ) -> schemas.StandardResponse[schemas.Empty]:
-        marker_image_models = await self.db_list_marker_images(marker_model)
-        filtered_models = list(filter(lambda x: x.order != order, marker_image_models))
-        for i, marker_image_model in enumerate(filtered_models):
-            marker_image_model.order = i
+        # find the marker_image
+        marker_image: models.MarkerImage = await self.db.scalar(
+            select(models.MarkerImage).where(
+                models.MarkerImage.marker_id == marker_model.id,
+                models.MarkerImage.id == marker_image_id,
+            )
+        )
+        if marker_image is None:
+            raise BizError(ErrorCode.MarkerImageNotFoundError)
+
+        # delete the marker_image
+        order = marker_image.order
+        image_id = marker_image.image_id
+        image_s3_key = marker_image.image.s3_key
+        await self.db.delete(marker_image)
+
+        # shift down orders for all later images of the same marker
+        await self.db.execute(
+            update(models.MarkerImage)
+            .where(
+                models.MarkerImage.marker_id == marker_model.id,
+                models.MarkerImage.order > order,
+            )
+            .values(order=models.MarkerImage.order - 1)
+        )
+
+        # delete the image if no other marker_image uses this image
+        count = await self.db.scalar(
+            select(func.count())
+            .select_from(models.MarkerImage)
+            .where(models.MarkerImage.image_id == image_id)
+        )
+        await self.db.commit()
+        if count == 0:
+            await self.db.execute(
+                delete(models.Image).where(models.Image.id == image_id)
+            )
+            try:
+                for size in ("full", "normal", "small"):
+                    await s3_client.delete_object(
+                        Bucket=settings.S3_BUCKET,
+                        Key=f"{image_s3_key}.{size}.webp",
+                    )
+            except ClientError as e:
+                raise BizError(ErrorCode.S3UploadError, str(e))
+            await self.db.commit()
+
         return schemas.StandardResponse()
+
 
 
 

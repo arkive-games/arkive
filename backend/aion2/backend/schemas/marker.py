@@ -48,6 +48,7 @@ class MarkerImageCreate(BaseModel):
     order: int = 0
 
 class MarkerImageRead(BaseModel):
+    id: UUID
     marker_id: UUID
     image_id: UUID
     image: ImageRead
