@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi_users import exceptions as fastapi_users_exceptions
 from loguru import logger
 from pydantic import ValidationError
+from slowapi.errors import RateLimitExceeded
 
 from aion2.backend.utilities.exceptions import BizError, ErrorCode, ErrorShowType
 
@@ -108,6 +109,12 @@ def http_error_handler(request: Request, exc: HTTPException) -> JSONResponse:
             )
         )
 
+def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return business_error_response(
+        BizError(ErrorCode.RateLimitExceededError, exc.detail, ErrorShowType.ErrorMessage)
+    )
+
+
 
 async def catch_exceptions_middleware(request: Request, call_next: Any) -> JSONResponse:
     try:
@@ -129,5 +136,6 @@ def register_error_handlers(backend_app: FastAPI) -> None:
     )
     backend_app.add_exception_handler(BizError, business_error_handler)
     backend_app.add_exception_handler(ValidationError, validation_error_handler)
+    backend_app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
     backend_app.add_exception_handler(HTTPException, http_error_handler)
     backend_app.middleware("http")(catch_exceptions_middleware)

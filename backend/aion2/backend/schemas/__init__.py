@@ -7,3 +7,4 @@ from aion2.backend.schemas.subtype import SubtypeRead, SubtypeCreate, SubtypeUpd
 from aion2.backend.schemas.region import RegionRead, RegionReadDetail, RegionCreate, RegionUpdate, RegionTranslationRead, RegionTranslationUpdate
 from aion2.backend.schemas.marker import MarkerRead, MarkerReadDetail, MarkerCreate, MarkerUpdate, MarkerTranslationRead, MarkerTranslationUpdate, MarkerImageCreate, MarkerImageRead, MarkerImageReadDetail
 from aion2.backend.schemas.image import ImageRead, ImageCreate
+from aion2.backend.schemas.auth import AltchaChallenge

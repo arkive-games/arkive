@@ -26,6 +26,8 @@ class ErrorCode(str, Enum):
     IntegrityError = "IntegrityError"
     ValidationError = "ValidationError"
     ApiNotImplementedError = "ApiNotImplementedError"
+    RateLimitExceededError = "RateLimitExceededError"
+    AltchaChallengeError = "AltchaChallengeError"
 
     # User Errors
     UserManagerError = "UserManagerError"

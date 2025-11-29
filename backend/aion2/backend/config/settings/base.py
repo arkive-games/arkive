@@ -55,6 +55,9 @@ class AuthGeneralSettings(BaseSettings):
     JWT_SECRET_KEY: str = Field(
         default="YOUR-JWT-SECRET-KEY", description="JWT secret key"
     )
+    ALTCHA_HMAC_KEY: str = Field(
+        default="YOUR-ALTCHA-HMAC-KEY", description="HMAC key"
+    )
     JWT_SUBJECT: str = Field(default="aion2", description="JWT subject")
     JWT_TOKEN_PREFIX: str = Field(default="aion2", description="JWT token prefix")
     JWT_ALGORITHM: str = Field(default="HS256", description="JWT algorithm")

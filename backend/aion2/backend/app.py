@@ -1,6 +1,8 @@
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from aion2.backend.config.errors import register_error_handlers
 from aion2.backend.config.events import (
@@ -9,8 +11,7 @@ from aion2.backend.config.events import (
 )
 from aion2.backend.config.manager import settings
 from aion2.backend.utilities.logging import init_logging, intercept_all_loggers
-
-
+from aion2.backend.utilities.limiter import limiter
 
 def initialize_backend_application() -> fastapi.FastAPI:
     init_logging()
@@ -18,6 +19,7 @@ def initialize_backend_application() -> fastapi.FastAPI:
     app = fastapi.FastAPI(**settings.set_backend_app_attributes)  # type: ignore
 
     app.logger = logger
+    app.state.limiter = limiter
 
     app.add_middleware(
         CORSMiddleware,
@@ -45,4 +47,4 @@ def initialize_backend_application() -> fastapi.FastAPI:
     return app
 
 
-backend_app: fastapi.FastAPI = initialize_backend_application()
+backend_app = initialize_backend_application()
