@@ -5,4 +5,5 @@ from aion2.backend.models.map import Map, MapTranslation
 from aion2.backend.models.category import Category, CategoryTranslation
 from aion2.backend.models.subtype import Subtype, SubtypeTranslation
 from aion2.backend.models.region import Region, RegionTranslation
-from aion2.backend.models.marker import Marker, MarkerImage, MarkerTranslation, MarkerContributor
+from aion2.backend.models.marker import Marker, MarkerImage, MarkerTranslation, MarkerContributor, MarkerFeedback
+from aion2.backend.models.user_marker_progress import UserMarkerProgress

@@ -1,3 +1,4 @@
+from enum import Enum
 from uuid import UUID
 from typing import List
 
@@ -7,6 +8,18 @@ from aion2.backend.schemas.base import BaseModel
 from aion2.backend.schemas.language import LanguageRead
 from aion2.backend.schemas.subtype import SubtypeRead
 from aion2.backend.schemas.map import MapRead
+
+class MarkerFeedbackType(str, Enum):
+    CREATE = "create"
+    UPDATE = "update"
+
+
+class MarkerFeedbackStatus(str, Enum):
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    REVISION = "revision"
+    PENDING = "pending"
+
 
 class MarkerRead(BaseModel):
     id: UUID
@@ -23,16 +36,18 @@ class MarkerReadDetail(MarkerRead):
     map: MapRead
     translations: List["MarkerTranslationRead"]  # Forward reference for translations
     images: List["MarkerImageRead"]
-    # images: List[str] | None
 
 class MarkerCreate(BaseModel):
-    map_id: UUID | None = None
     subtype_id: UUID | str
     region_id: UUID | str | None = None
     name: str
     x: float
     y: float
-    # images: List[str] | None = []
+
+class MarkerCreateReal(MarkerCreate):
+    map_id: UUID
+    index_in_subtype: int | None
+
 
 class MarkerUpdate(BaseModel):
     subtype_id: UUID | str | None = None
@@ -56,6 +71,29 @@ class MarkerImageRead(BaseModel):
 
 class MarkerImageReadDetail(MarkerImageRead):
     marker: MarkerRead
+
+
+class MarkerFeedbackRead(BaseModel):
+    id: UUID
+    marker_id: UUID
+    user_id: UUID
+    type: MarkerFeedbackType
+    status: MarkerFeedbackStatus
+
+    x: int | None = None
+    y: int | None = None
+    name: None | str = None
+    description: None | str = None
+    reply: None | str = None
+
+
+class MarkerFeedbackCreate(BaseModel):
+    type: MarkerFeedbackType
+    x: int | None = None
+    y: int | None = None
+    name: None | str = None
+    description: str
+
 
 class MarkerTranslationRead(BaseModel):
     id: UUID

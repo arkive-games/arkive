@@ -4,13 +4,14 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+from aion2.backend.models.base import TimestampMixin
 from aion2.backend.interfaces.db import Base
 import uuid
 
 if TYPE_CHECKING:
     from aion2.backend.models import Language
 
-class Map(AsyncAttrs, Base):
+class Map(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'maps'
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id
@@ -30,7 +31,7 @@ class Map(AsyncAttrs, Base):
                                                                 lazy="joined", join_depth=1,
                                                                 cascade="all, delete-orphan")
 
-class MapTranslation(Base):
+class MapTranslation(Base, TimestampMixin):
     __tablename__ = 'map_translations'
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id (primary key)

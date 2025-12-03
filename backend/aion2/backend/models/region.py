@@ -5,12 +5,13 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from aion2.backend.interfaces.db import Base  # Correct import
+from aion2.backend.models.base import TimestampMixin
 import uuid
 
 if TYPE_CHECKING:
     from aion2.backend.models import Map, Category, Subtype, Language
 
-class Region(AsyncAttrs, Base):
+class Region(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'regions'
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -32,7 +33,7 @@ class Region(AsyncAttrs, Base):
                                                                    lazy="joined", join_depth=1,
                                                                    cascade="all, delete-orphan")
 
-class RegionTranslation(Base):
+class RegionTranslation(Base, TimestampMixin):
     __tablename__ = "region_translations"
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

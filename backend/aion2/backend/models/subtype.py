@@ -5,12 +5,13 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from aion2.backend.interfaces.db import Base  # Correct import
+from aion2.backend.models.base import TimestampMixin
 import uuid
 
 if TYPE_CHECKING:
     from aion2.backend.models import Category, Language
 
-class Subtype(AsyncAttrs, Base):
+class Subtype(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'subtypes'
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id
@@ -32,13 +33,7 @@ class Subtype(AsyncAttrs, Base):
                                                                     cascade="all, delete-orphan")
 
 
-from sqlalchemy import Column, String, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from aion2.backend.interfaces.db import Base  # Correct import
-import uuid
-
-class SubtypeTranslation(Base):
+class SubtypeTranslation(Base, TimestampMixin):
     __tablename__ = 'subtype_translations'
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id

@@ -4,13 +4,15 @@ from sqlalchemy import Column, String, ForeignKey, Integer, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from aion2.backend.interfaces.db import Base  # Correct import
 import uuid
+
+from aion2.backend.models.base import TimestampMixin
+from aion2.backend.interfaces.db import Base  # Correct import
 
 if TYPE_CHECKING:
     from aion2.backend.models import Subtype, Language
 
-class Category(AsyncAttrs, Base):
+class Category(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'categories'
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id
@@ -25,7 +27,7 @@ class Category(AsyncAttrs, Base):
                                                                      lazy="joined", join_depth=1,
                                                                      cascade="all, delete-orphan")
 
-class CategoryTranslation(Base):
+class CategoryTranslation(Base, TimestampMixin):
     __tablename__ = 'category_translations'
 
     id: Mapped[UUID] = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id

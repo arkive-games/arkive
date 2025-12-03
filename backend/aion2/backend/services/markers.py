@@ -14,13 +14,14 @@ from loguru import logger
 
 from aion2.backend import models, schemas
 from aion2.backend.config.manager import settings
-from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_category_from_path, \
+from aion2.backend.utilities.bitset import ensure_bitset_size, set_bit
+from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_current_user, get_category_from_path, \
     get_category_from_path, get_language_from_path, get_map_from_path, get_subtype_from_path, get_marker_from_path, \
     get_region_from_path, s3_client_upload_dependency
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 from aion2.backend.utilities.image import process_image
 
-router = APIRouter(prefix="/maps/{map}/markers", tags=["markers"])
+router = APIRouter(prefix="/maps/{map}", tags=["markers"])
 
 marker_crud = FastCRUD(models.Marker)
 marker_translation_crud = FastCRUD(models.MarkerTranslation)
@@ -65,19 +66,41 @@ class Markers:
         except:
             raise BizError(ErrorCode.RegionNotFoundError)
 
-    @router.post("/")
+    async def get_next_index_for_subtype(self, subtype_id: UUID | None) -> int | None:
+        if subtype_id is None:
+            return None
+        stmt = (
+            select(
+                func.coalesce(func.max(models.Marker.index_in_subtype), -1) + 1
+            )
+            .where(
+                models.Marker.map_id == self.map_model.id,
+                models.Marker.subtype_id == subtype_id,
+            )
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one()
+
+    @router.post("/markers")
     async def create_marker(
         self,
         marker_data: schemas.MarkerCreate,
     ) -> schemas.StandardResponse[schemas.MarkerReadDetail]:
-        marker_data.subtype_id = await self.check_subtype_id(marker_data.subtype_id)
-        marker_data.region_id = await self.check_region_id(marker_data.region_id)
-        marker_data.map_id = self.map_model.id
-        marker_model = await marker_crud.create(self.db, marker_data)
+        subtype_id = await self.check_subtype_id(marker_data.subtype_id)
+        index_in_subtype = await self.get_next_index_for_subtype(subtype_id)
+        region_id = await self.check_region_id(marker_data.region_id)
+        real_marker_data = schemas.MarkerCreateReal(
+            **marker_data.model_dump(),
+            subtype_id=subtype_id,
+            region_id=region_id,
+            map_id=self.map_model.id,
+            index_in_subtype=index_in_subtype,
+        )
+        marker_model = await marker_crud.create(self.db, real_marker_data)
         await update_marker_contributor(self.db, marker_model, self.user)
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
-    @router.get("/")
+    @router.get("/markers")
     async def list_markers(
         self,
         limit: int = Query(100),
@@ -122,7 +145,7 @@ class Markers:
         markers = [schemas.MarkerReadDetail.model_validate(x) for x in result.unique().scalars()]
         return schemas.StandardListResponse(markers, count)
 
-    @router.get("/{marker}")
+    @router.get("/markers/{marker}")
     async def get_marker(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path)
@@ -131,7 +154,7 @@ class Markers:
             raise BizError(ErrorCode.MarkerNotFoundError)
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
-    @router.patch("/{marker}")
+    @router.patch("/markers/{marker}")
     async def update_marker(
         self,
         marker_data: schemas.MarkerUpdate,
@@ -139,16 +162,23 @@ class Markers:
     ) -> schemas.StandardResponse[schemas.MarkerReadDetail]:
         if marker_model.map_id != self.map_model.id:
             raise BizError(ErrorCode.MarkerNotFoundError)
-        marker_data.subtype_id = await self.check_subtype_id(marker_data.subtype_id)
-        marker_data.region_id = await self.check_region_id(marker_data.region_id)
+        subtype_id = await self.check_subtype_id(marker_data.subtype_id)
+        region_id = await self.check_region_id(marker_data.region_id)
+        update_dict = {
+            **marker_data.model_dump(),
+            "subtype_id": subtype_id,
+            "region_id": region_id,
+        }
+        if subtype_id != marker_model.subtype_id:
+            update_dict["index_in_subtype"] = await self.get_next_index_for_subtype(subtype_id)
         await marker_crud.update(
-            self.db, marker_data, id=marker_model.id,
+            self.db, update_dict, id=marker_model.id,
         )
         await self.db.refresh(marker_model)
         await update_marker_contributor(self.db, marker_model, self.user)
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
-    @router.delete("/{marker}")
+    @router.delete("/markers/{marker}")
     async def delete_marker(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path)
@@ -158,6 +188,116 @@ class Markers:
         await self.db.delete(marker_model)
         await self.db.commit()
         return schemas.StandardResponse()
+
+@cbv(router)
+class UserMarkerProgress:
+    user: models.User = Depends(get_current_user)
+    map_model: models.Marker = Depends(get_map_from_path)
+    db: AsyncSession = Depends(get_db)
+
+    @router.get("/marker_progress")
+    async def list_user_marker_progress(
+        self,
+    ) -> schemas.StandardListResponse[schemas.UserMarkerProgressRead]:
+        stmt = (
+            select(models.UserMarkerProgress).
+            where(models.UserMarkerProgress.user_id == self.user.id).
+            where(models.UserMarkerProgress.map_id == self.map_model.id)
+        )
+        result = await self.db.execute(stmt)
+        # user_marker_progress_models = result.scalars().all()
+        user_marker_progress_models = [
+            schemas.UserMarkerProgressRead.model_validate(x)
+            for x in result.scalars()
+        ]
+        return schemas.StandardListResponse(user_marker_progress_models)
+
+    @router.put("/markers/{marker}/progress")
+    async def update_user_marker_progress_by_marker(
+        self,
+        marker_data: schemas.UserMarkerProgressUpdateBit,
+        marker_model: models.Marker = Depends(get_marker_from_path),
+    ) -> schemas.StandardResponse[schemas.Empty]:
+        if marker_model.map_id != self.map_model.id:
+            raise BizError(ErrorCode.MarkerNotFoundError)
+        if marker_model.subtype_id is None or marker_model.subtype.can_complete is False:
+            raise BizError(ErrorCode.SubTypeNotFoundError)
+        stmt = (
+            select(models.UserMarkerProgress)
+            .where(
+                models.UserMarkerProgress.user_id == self.user.id,
+                models.UserMarkerProgress.map_id == self.map_model.id,
+                models.UserMarkerProgress.subtype_id == marker_model.subtype_id,
+            )
+            .with_for_update()  # optional, protects against concurrent updates
+        )
+        res = await self.db.execute(stmt)
+        progress_model = res.unique().scalar_one_or_none()
+        required_bits = marker_model.index_in_subtype + 1
+        if progress_model is None:
+            bitset = ensure_bitset_size(None, required_bits)
+            progress_model = models.UserMarkerProgress(
+                user_id=self.user.id,
+                map_id=self.map_model.id,
+                subtype_id=marker_model.subtype_id,
+                bitset=bitset,
+            )
+            self.db.add(progress_model)
+            await self.db.flush()
+        else:
+            progress_model.bitset = ensure_bitset_size(progress_model.bitset, required_bits)
+        progress_model.bitset = set_bit(progress_model.bitset, marker_model.index_in_subtype, marker_data.completed)
+        await self.db.commit()
+        return schemas.StandardResponse()
+
+    @router.put("/subtypes/{subtype}/progress")
+    async def update_user_marker_progress_by_subtype(
+        self,
+        subtype_data: schemas.UserMarkerProgressUpdateAll,
+        subtype_model: models.Subtype = Depends(get_subtype_from_path),
+    ) -> schemas.StandardResponse[schemas.UserMarkerProgressRead]:
+        max_idx_stmt = (
+            select(func.max(models.Marker.index_in_subtype))
+            .where(
+                models.Marker.map_id == self.map_model.id,
+                models.Marker.subtype_id == subtype_model.id,
+            )
+        )
+        max_idx_res = await self.db.execute(max_idx_stmt)
+        max_index = max_idx_res.scalar_one()
+        if max_index is None:
+            raise BizError(ErrorCode.SubTypeNotFoundError)
+        max_count = max_index + 1
+        incoming_bit_count = len(subtype_data.bitset) * 8
+        if incoming_bit_count > max_count:
+            raise BizError(ErrorCode.BitSetTooLongError)
+
+        stmt = (
+            select(models.UserMarkerProgress)
+            .where(
+                models.UserMarkerProgress.user_id == self.user.id,
+                models.UserMarkerProgress.map_id == self.map_model.id,
+                models.UserMarkerProgress.subtype_id == subtype_model.id,
+            )
+        )
+        res = await self.db.execute(stmt)
+        progress_model = res.unique().scalar_one_or_none()
+
+        if progress_model is None:
+            progress_model = models.UserMarkerProgress(
+                user_id=self.user.id,
+                map_id=self.map_model.id,
+                subtype_id=subtype_model.id,
+                bitset=subtype_data.bitset,
+            )
+            self.db.add(progress_model)
+        else:
+            progress_model.bitset = subtype_data.bitset
+        await self.db.commit()
+        await self.db.refresh(progress_model)
+        return schemas.UserMarkerProgressRead.model_validate(progress_model).to_response()
+
+
 
 @cbv(router)
 class MarkerImages:
@@ -182,7 +322,7 @@ class MarkerImages:
         return result.scalar()
 
 
-    @router.get("/{marker}/images")
+    @router.get("/markers/{marker}/images")
     async def list_marker_images(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path),
@@ -194,7 +334,7 @@ class MarkerImages:
         return schemas.StandardListResponse(marker_images)
 
 
-    @router.put("/{marker}/images")
+    @router.put("/markers/{marker}/images")
     async def upload_marker_image(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path),
@@ -249,7 +389,7 @@ class MarkerImages:
         await update_marker_contributor(self.db, marker_model, self.user)
         return schemas.MarkerImageReadDetail.model_validate(marker_image_model).to_response()
 
-    @router.delete("/{marker}/images/{image}")
+    @router.delete("/markers/{marker}/images/{image}")
     async def delete_marker_image(
         self,
         marker_model: models.Marker = Depends(get_marker_from_path),
@@ -327,7 +467,7 @@ class MarkerTranslations:
         ))
         return result.unique().scalar_one_or_none()
 
-    @router.patch("/{marker}/translations/{language}")
+    @router.patch("/markers/{marker}/translations/{language}")
     async def update_marker_translation(
         self,
         translation_data: schemas.MarkerTranslationUpdate,
@@ -352,7 +492,7 @@ class MarkerTranslations:
         await update_marker_contributor(self.db, self.marker_model, self.user)
         return schemas.MarkerTranslationRead.model_validate(translation_model).to_response()
 
-    @router.delete("/{marker}/translations/{language}")
+    @router.delete("/markers/{marker}/translations/{language}")
     async def delete_marker_translation(self) -> schemas.StandardResponse[schemas.Empty]:
         translation_model = await self.get_translation_model()
         if translation_model is not None:
