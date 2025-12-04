@@ -37,12 +37,13 @@ async def clear_cache(key_prefix: str) -> None:
         return
     cache: RedisCache = caches.get("default")
     logger.debug("clear cache: {}", key_prefix)
-    keys = []
-    async for key in cache.client.scan_iter(f"{key_prefix}:*"):
-        keys.append(key)
-    jobs = [cache.delete(key) for key in keys]
-    await asyncio.gather(*jobs)
-    logger.debug("delete cache keys: {}", keys)
+    await cache.delete(key_prefix)
+    # keys = []
+    # async for key in cache.client.scan_iter(f"{key_prefix}:*"):
+    #     keys.append(key)
+    # jobs = [cache.delete(key) for key in keys]
+    # await asyncio.gather(*jobs)
+    # logger.debug("delete cache keys: {}", keys)
 
 
 caches.set_config(
