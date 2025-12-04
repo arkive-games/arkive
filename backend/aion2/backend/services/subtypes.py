@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from aion2.backend import models, schemas
+from aion2.backend.interfaces.cache import clear_cache
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_subtype_from_path, \
     get_subtype_from_path, get_category_from_path, get_language_from_path
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
@@ -39,6 +40,7 @@ class Categories:
     ) -> schemas.StandardResponse[schemas.SubtypeReadDetail]:
         subtype_data.category_id = await self.check_category_id(subtype_data.category_id)
         subtype_model = await subtype_crud.create(self.db, subtype_data)
+        await clear_cache("data:types")
         return schemas.SubtypeReadDetail.model_validate(subtype_model).to_response()
 
     @router.get("/")
@@ -73,6 +75,7 @@ class Categories:
             self.db, subtype_data, id=subtype_model.id,
         )
         await self.db.refresh(subtype_model)
+        await clear_cache("data:types")
         return schemas.SubtypeReadDetail.model_validate(subtype_model).to_response()
 
     @router.delete("/{subtype}")
@@ -82,6 +85,7 @@ class Categories:
     ) -> schemas.StandardResponse[schemas.Empty]:
         await self.db.delete(subtype_model)
         await self.db.commit()
+        await clear_cache("data:types")
         return schemas.StandardResponse()
 
 @cbv(router)
@@ -120,6 +124,7 @@ class SubtypeTranslations:
         self.db.add(translation_model)
         await self.db.commit()
         await self.db.refresh(translation_model)
+        await clear_cache(f"locales:{self.language_model.language_code}:types")
         return schemas.SubtypeTranslationRead.model_validate(translation_model).to_response()
 
     @router.delete("/{subtype}/translations/{language}")
@@ -128,4 +133,5 @@ class SubtypeTranslations:
         if translation_model is not None:
             await self.db.delete(translation_model)
             await self.db.commit()
+        await clear_cache(f"locales:{self.language_model.language_code}:types")
         return schemas.StandardResponse()

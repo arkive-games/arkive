@@ -4,6 +4,7 @@ import fastapi
 import loguru
 
 from aion2.backend.config.manager import settings
+from aion2.backend.interfaces.cache import clear_all_cache
 from aion2.backend.interfaces.db import init_db
 
 
@@ -11,6 +12,7 @@ def execute_backend_server_event_handler(backend_app: fastapi.FastAPI) -> typing
     async def launch_backend_server_events() -> None:
         loguru.logger.info("------ {} Initializing ------", settings.TITLE)
         await init_db()
+        await clear_all_cache()
         loguru.logger.info("------ {} Launched ------", settings.TITLE)
 
     return launch_backend_server_events

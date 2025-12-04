@@ -11,6 +11,7 @@ from loguru import logger
 
 from aion2.backend import models, schemas
 from aion2.backend.config.manager import settings
+from aion2.backend.interfaces.cache import clear_cache
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_map_from_path, get_language_from_path
 
 router = APIRouter(prefix="/maps", tags=["maps"])
@@ -37,6 +38,7 @@ class Maps:
         map_data: schemas.MapCreate,
     ) -> schemas.StandardResponse[schemas.MapReadDetail]:
         map_model = await map_crud.create(self.db, map_data)
+        await clear_cache("data:maps")
         return schemas.MapReadDetail.model_validate(map_model).to_response()
 
     @router.get("/")
@@ -64,6 +66,7 @@ class Maps:
             self.db, map_data, id=map_model.id,
             schema_to_select=schemas.MapReadDetail, return_as_model=True
         )
+        await clear_cache("data:maps")
         logger.info(f"Updated map: {map_model}")
         return map_read.to_response()
 
@@ -75,6 +78,7 @@ class Maps:
         # self.fs_delete_map_image(map_model)
         await self.db.delete(map_model)
         await self.db.commit()
+        await clear_cache("data:maps")
         return schemas.StandardResponse()
 
     # @router.post("/{map}/upload")

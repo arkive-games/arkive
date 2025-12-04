@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from aion2.backend import models, schemas
+from aion2.backend.interfaces.cache import clear_cache
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_region_from_path, \
     get_language_from_path, get_map_from_path
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
@@ -31,6 +32,7 @@ class Regions:
     ) -> schemas.StandardResponse[schemas.RegionReadDetail]:
         region_data.map_id = self.map_model.id
         region_model = await region_crud.create(self.db, region_data)
+        await clear_cache(f"data:regions:{self.map_model.name}")
         return schemas.RegionReadDetail.model_validate(region_model).to_response()
 
     @router.get("/")
@@ -58,6 +60,7 @@ class Regions:
             self.db, region_data, id=region_model.id,
         )
         await self.db.refresh(region_model)
+        await clear_cache(f"data:regions:{self.map_model.name}")
         return schemas.RegionReadDetail.model_validate(region_model).to_response()
 
     @router.delete("/{region}")
@@ -67,6 +70,7 @@ class Regions:
     ) -> schemas.StandardResponse[schemas.Empty]:
         await self.db.delete(region_model)
         await self.db.commit()
+        await clear_cache(f"data:regions:{self.map_model.name}")
         return schemas.StandardResponse()
 
 @cbv(router)
@@ -106,6 +110,7 @@ class RegionTranslations:
         self.db.add(translation_model)
         await self.db.commit()
         await self.db.refresh(translation_model)
+        await clear_cache(f"locales:{self.language_model.language_code}:regions:{self.map_model.name}")
         return schemas.RegionTranslationRead.model_validate(translation_model).to_response()
 
     @router.delete("/{region}/translations/{language}")
@@ -114,6 +119,7 @@ class RegionTranslations:
         if translation_model is not None:
             await self.db.delete(translation_model)
             await self.db.commit()
+            await clear_cache(f"locales:{self.language_model.language_code}:regions:{self.map_model.name}")
         return schemas.StandardResponse()
 
 

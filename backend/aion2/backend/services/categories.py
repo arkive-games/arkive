@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from aion2.backend import models, schemas
+from aion2.backend.interfaces.cache import clear_cache
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_category_from_path, \
     get_category_from_path, get_language_from_path
 
@@ -26,6 +27,7 @@ class Categories:
         category_data: schemas.CategoryCreate,
     ) -> schemas.StandardResponse[schemas.CategoryReadDetail]:
         category_model = await category_crud.create(self.db, category_data)
+        await clear_cache(f"data:types")
         return schemas.CategoryReadDetail.model_validate(category_model).to_response()
 
     @router.get("/")
@@ -55,6 +57,7 @@ class Categories:
             self.db, category_data, id=category_model.id,
         )
         await self.db.refresh(category_model)
+        await clear_cache(f"data:types")
         return schemas.CategoryReadDetail.model_validate(category_model).to_response()
 
     @router.delete("/{category}")
@@ -64,6 +67,7 @@ class Categories:
     ) -> schemas.StandardResponse[schemas.Empty]:
         await self.db.delete(category_model)
         await self.db.commit()
+        await clear_cache(f"data:types")
         return schemas.StandardResponse()
 
 @cbv(router)
@@ -99,6 +103,7 @@ class CategoryTranslations:
         self.db.add(translation_model)
         await self.db.commit()
         await self.db.refresh(translation_model)
+        await clear_cache(f"locales:{self.language_model.language_code}:types")
         return schemas.CategoryTranslationRead.model_validate(translation_model).to_response()
 
     @router.delete("/{category}/translations/{language}")
@@ -107,4 +112,5 @@ class CategoryTranslations:
         if translation_model is not None:
             await self.db.delete(translation_model)
             await self.db.commit()
+        await clear_cache(f"locales:{self.language_model.language_code}:types")
         return schemas.StandardResponse()

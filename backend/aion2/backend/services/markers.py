@@ -14,6 +14,7 @@ from loguru import logger
 
 from aion2.backend import models, schemas
 from aion2.backend.config.manager import settings
+from aion2.backend.interfaces.cache import clear_cache
 from aion2.backend.utilities.bitset import ensure_bitset_size, set_bit
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_current_user, get_category_from_path, \
     get_category_from_path, get_language_from_path, get_map_from_path, get_subtype_from_path, get_marker_from_path, \
@@ -98,6 +99,7 @@ class Markers:
         )
         marker_model = await marker_crud.create(self.db, real_marker_data)
         await update_marker_contributor(self.db, marker_model, self.user)
+        await clear_cache(f"data:markers:{self.map_model.name}")
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
     @router.get("/markers")
@@ -176,6 +178,7 @@ class Markers:
         )
         await self.db.refresh(marker_model)
         await update_marker_contributor(self.db, marker_model, self.user)
+        await clear_cache(f"data:markers:{self.map_model.name}")
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
     @router.delete("/markers/{marker}")
@@ -187,6 +190,7 @@ class Markers:
             raise BizError(ErrorCode.MarkerNotFoundError)
         await self.db.delete(marker_model)
         await self.db.commit()
+        await clear_cache(f"data:markers:{self.map_model.name}")
         return schemas.StandardResponse()
 
 @cbv(router)
@@ -387,6 +391,7 @@ class MarkerImages:
             marker_image_model = await marker_image_crud.create(self.db, marker_image_data)
 
         await update_marker_contributor(self.db, marker_model, self.user)
+        await clear_cache(f"data:markers:{self.map_model.name}")
         return schemas.MarkerImageReadDetail.model_validate(marker_image_model).to_response()
 
     @router.delete("/markers/{marker}/images/{image}")
@@ -442,7 +447,7 @@ class MarkerImages:
             except ClientError as e:
                 raise BizError(ErrorCode.S3UploadError, str(e))
             await self.db.commit()
-
+        await clear_cache(f"data:markers:{self.map_model.name}")
         return schemas.StandardResponse()
 
 
@@ -494,6 +499,7 @@ class MarkerTranslations:
         await self.db.commit()
         await self.db.refresh(translation_model)
         await update_marker_contributor(self.db, self.marker_model, self.user)
+        await clear_cache(f"locales:{self.language_model.language_code}:markers:{self.map_model.name}")
         return schemas.MarkerTranslationRead.model_validate(translation_model).to_response()
 
     @router.delete("/markers/{marker}/translations/{language}")
@@ -502,4 +508,5 @@ class MarkerTranslations:
         if translation_model is not None:
             await self.db.delete(translation_model)
             await self.db.commit()
+            await clear_cache(f"locales:{self.language_model.language_code}:markers:{self.map_model.name}")
         return schemas.StandardResponse()

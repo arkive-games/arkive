@@ -6,6 +6,11 @@ from loguru import logger
 
 from aion2.backend.config.manager import settings
 
+async def clear_all_cache():
+    logger.info("Clear all redis cache")
+    cache = caches.get("default")
+    await cache.clear()
+
 
 async def use_cache(key: str, fallback_func: Any, *args, **kwargs) -> Any:
     cache: BaseCache = caches.get("default")
