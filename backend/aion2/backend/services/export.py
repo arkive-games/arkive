@@ -22,7 +22,8 @@ class Export:
         async def wrapper():
             return yaml.dump(await func)
 
-        data = await use_cache(key, wrapper)
+        data = await wrapper()
+        # data = await use_cache(key, wrapper)
         return Response(
             content=data,
             media_type="text/yaml",
