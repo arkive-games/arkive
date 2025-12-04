@@ -27,7 +27,7 @@ async def export_maps(db: AsyncSession):
     for map_model in map_models.unique().scalars():
         map_data = schemas.MapRead.model_validate(map_model)
         maps.append({**map_data.model_dump(by_alias=True),"id": str(map_data.id)})
-    return maps
+    return {"maps": maps}
 
 
 async def export_map_translations(db: AsyncSession, language_code: str):
@@ -59,7 +59,7 @@ async def export_types(db: AsyncSession):
         categories.append(
             {**category_data.model_dump(by_alias=True), "id": str(category_data.id), "subtypes": subtypes})
 
-    return categories
+    return {"categories": categories}
 
 
 async def export_type_translations(db: AsyncSession, language_code: str):
@@ -85,8 +85,7 @@ async def export_type_translations(db: AsyncSession, language_code: str):
             "name": translation.name,
             "description": translation.description,
         }
-
-    return category_translations, subtype_translations
+    return {"categories": category_translations, "subtypes": subtype_translations}
 
 async def export_regions(db: AsyncSession,  map_name: str):
     region_models = await db.execute(
@@ -105,7 +104,7 @@ async def export_regions(db: AsyncSession,  map_name: str):
             "id": str(region_data.id),
         }
         regions.append(region_dict)
-    return regions
+    return {"regions": regions}
 
 
 async def export_region_translations(db: AsyncSession, language_code: str, map_name: str):
@@ -151,7 +150,7 @@ async def export_markers(db: AsyncSession, map_name: str):
         if marker_model.region:
             marker_dict["region"] = marker_model.region.name
         markers.append(marker_dict)
-    return markers
+    return {"markers": markers}
 
 async def export_marker_translations(db: AsyncSession, language_code: str, map_name: str):
     marker_translation_models = await db.execute(

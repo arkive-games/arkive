@@ -15,6 +15,13 @@ services:
     command: postgres -c 'max_connections=1000'
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+  redis:
+    image: redis:8-alpine
+    command: redis-server --requirepass aion2
+    networks:
+      - aion2-network
+    ports:
+      - "16379:6379"
   core:
     image: tcimba/aion2-backend
     restart: always

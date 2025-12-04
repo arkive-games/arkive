@@ -446,8 +446,12 @@ class MarkerImages:
         return schemas.StandardResponse()
 
 
+@cbv(router)
+class MarkerFeedback:
+    user: models.User = Depends(get_current_user)
 
-
+    async def list_marker_feedbacks(self):
+        pass
 
 
 @cbv(router)

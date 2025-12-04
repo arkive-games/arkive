@@ -9,7 +9,6 @@ ROOT_DIR: pathlib.Path = pathlib.Path(
 ).parent.parent.parent.parent.parent.resolve()
 
 
-
 class BackendServerSettings(BaseSettings):
     API_PREFIX: str = "/api/v1"
     DOCS_URL: str = "/api/v1/docs"
@@ -21,7 +20,7 @@ class BackendServerSettings(BaseSettings):
     SERVER_PORT: int = Field(
         default=9000,
         description="Bind socket to this port. "
-        "If 0, an available port will be picked",
+                    "If 0, an available port will be picked",
     )
     SERVER_WORKERS: int = Field(default=1, description="Number of worker processes.")
     FRONTEND_URL: str = Field(
@@ -39,6 +38,7 @@ class BackendServerSettings(BaseSettings):
     def validate_public_dir(cls, v: pathlib.Path):
         return v.absolute()
 
+
 class AuthCORSSettings(BaseSettings):
     IS_ALLOWED_CREDENTIALS: bool = Field(
         default=True, description="CORS allowed credentials"
@@ -46,6 +46,7 @@ class AuthCORSSettings(BaseSettings):
     ALLOWED_ORIGINS: list[str] = ["*"]
     ALLOWED_METHODS: list[str] = ["*"]
     ALLOWED_HEADERS: list[str] = ["*"]
+
 
 class AuthGeneralSettings(BaseSettings):
     API_TOKEN: str = Field(default="YOUR-API-TOKEN", description="API token")
@@ -70,6 +71,7 @@ class AuthGeneralSettings(BaseSettings):
     def JWT_EXPIRE_SECONDS(self) -> int:
         return ((self.JWT_DAY * 24 + self.JWT_HOUR) * 60 + self.JWT_MIN) * 60
 
+
 class DatabaseSettings(BaseSettings):
     POSTGRES_HOST: str = Field(default="localhost", description="PostgreSQL host")
     POSTGRES_PORT: int = Field(default=5432, description="PostgreSQL port")
@@ -81,6 +83,14 @@ class DatabaseSettings(BaseSettings):
     )
     POSTGRES_DATABASE: str = Field(default="aion2", description="PostgreSQL database")
 
+
+class DatabaseRedisSettings(BaseSettings):
+    REDIS_HOST: str = Field(default="localhost", description="Redis host")
+    REDIS_PORT: int = Field(default=6379, description="Redis port")
+    REDIS_PASSWORD: str = Field(default="aion2", description="Redis password")
+    REDIS_DATABASE: int = Field(default=0, description="Redis database index")
+
+
 class S3StorageSettings(BaseSettings):
     S3_HOST: str = Field(default="localhost", description="S3 host")
     S3_PORT: int = Field(default=8080, description="S3 port")
@@ -89,7 +99,9 @@ class S3StorageSettings(BaseSettings):
     S3_BUCKET: str = Field(default="aion2", description="S3 bucket")
     S3_PUBLIC_URL: str = Field(default="https://oss-cn-shenzhen.aliyuncs.com", description="S3 public URL")
 
-class BackendBaseSettings(BackendServerSettings, AuthCORSSettings, AuthGeneralSettings, DatabaseSettings, S3StorageSettings):
+
+class BackendBaseSettings(BackendServerSettings, AuthCORSSettings, AuthGeneralSettings, DatabaseSettings,
+                          DatabaseRedisSettings, S3StorageSettings):
     TITLE: str = "AION2 Interactive Map Backend"
     VERSION: str = "0.1.0"
     TIMEZONE: str = "UTC"
