@@ -90,7 +90,7 @@ class Markers:
         index_in_subtype = await self.get_next_index_for_subtype(subtype_id)
         region_id = await self.check_region_id(marker_data.region_id)
         real_marker_data = schemas.MarkerCreateReal(
-            **marker_data.model_dump(),
+            **marker_data.model_dump(exclude={"subtype_id", "region_id"}),
             subtype_id=subtype_id,
             region_id=region_id,
             map_id=self.map_model.id,
@@ -165,7 +165,7 @@ class Markers:
         subtype_id = await self.check_subtype_id(marker_data.subtype_id)
         region_id = await self.check_region_id(marker_data.region_id)
         update_dict = {
-            **marker_data.model_dump(),
+            **marker_data.model_dump(exclude={"subtype_id", "region_id"}),
             "subtype_id": subtype_id,
             "region_id": region_id,
         }
