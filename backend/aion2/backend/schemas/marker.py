@@ -29,6 +29,7 @@ class MarkerRead(BaseModel):
     name: str
     x: float
     y: float
+    index_in_subtype: int
 
 class MarkerReadDetail(MarkerRead):
     subtype: SubtypeRead

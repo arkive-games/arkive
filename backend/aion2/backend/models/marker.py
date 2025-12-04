@@ -3,7 +3,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, String, Float, ForeignKey, JSON, UniqueConstraint, Integer, Enum as PgEnum, Text, \
-    DateTime, func
+    DateTime, func, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class Marker(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'markers'
     __table_args__ = (
-        UniqueConstraint('map_id', 'subtype_id', 'index_in_subtype', name="uq_marker_map_subtype_index"),
+        Index('idx_marker_map_subtype_index', 'map_id', 'subtype_id', 'index_in_subtype'),
     )
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id for marker
