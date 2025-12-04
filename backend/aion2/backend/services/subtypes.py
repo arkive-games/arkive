@@ -44,7 +44,11 @@ class Categories:
     @router.get("/")
     async def get_subtypes(self) -> schemas.StandardListResponse[schemas.SubtypeReadDetail]:
         count = await subtype_crud.count(self.db)
-        result = await self.db.execute(select(models.Subtype).order_by(models.Subtype.order))
+        result = await self.db.execute(
+            select(models.Subtype).
+            order_by(models.Subtype.category_id).
+            order_by(models.Subtype.order)
+        )
         subtypes = [schemas.SubtypeReadDetail.model_validate(x) for x in result.unique().scalars()]
         return schemas.StandardListResponse(subtypes, count)
 
