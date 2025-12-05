@@ -9,3 +9,4 @@ from aion2.backend.schemas.marker import MarkerRead, MarkerReadDetail, MarkerCre
 from aion2.backend.schemas.image import ImageRead, ImageCreate
 from aion2.backend.schemas.auth import AltchaChallenge
 from aion2.backend.schemas.user_marker_progress import UserMarkerProgressRead, UserMarkerProgressUpdateAll, UserMarkerProgressUpdateBit
+from aion2.backend.schemas.comment import CommentCreate, CommentRead, CommentTargetType

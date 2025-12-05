@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 from fastapi_utils.cbv import cbv
 from fastcrud import FastCRUD
 from fastapi import APIRouter, Depends, Body, UploadFile, File, Form, FastAPI, Query, Path
-from sqlalchemy import select, func, delete, update
+from sqlalchemy import select, func, delete, update, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
@@ -452,11 +452,76 @@ class MarkerImages:
 
 
 @cbv(router)
-class MarkerFeedback:
+class MarkerComment:
     user: models.User = Depends(get_current_user)
+    map_model: models.Map = Depends(get_map_from_path)
+    marker_model: models.Marker = Depends(get_marker_from_path)
+    db: AsyncSession = Depends(get_db)
 
-    async def list_marker_feedbacks(self):
-        pass
+    @router.get("/markers/{marker}/comments")
+    async def list_marker_comments(
+        self,
+    ) -> schemas.StandardListResponse[schemas.CommentRead]:
+        if self.marker_model.map_id != self.map_model.id:
+            raise BizError(ErrorCode.MarkerNotFoundError)
+
+        stmt = (
+            select(models.Comment).
+            where(models.Comment.target_type == schemas.CommentTargetType.marker).
+            where(models.Comment.target_id == self.marker_model.id)
+        )
+        if not self.user.is_superuser:
+            stmt = stmt.where(or_(
+                models.Comment.verified.is_(True),
+                models.Comment.user_id == self.user.id,
+            ))
+
+        result = await self.db.execute(stmt)
+        comments = [schemas.CommentRead.model_validate(x) for x in result.unique().scalars()]
+        return schemas.StandardListResponse(comments)
+
+    @router.post("/markers/{marker}/comments")
+    async def create_marker_comment(
+        self,
+        comment_data: schemas.CommentCreate,
+    ) -> schemas.StandardResponse[schemas.CommentRead]:
+        if self.marker_model.map_id != self.map_model.id:
+            raise BizError(ErrorCode.MarkerNotFoundError)
+
+        if comment_data.reply_to_id is None:
+            reply_to_id = None
+            root_id = None
+        else:
+            result = await self.db.execute(
+                select(models.Comment).where(models.Comment.id == comment_data.reply_to_id)
+            )
+            reply_to_comment: models.Comment | None = result.unique().scalar_one_or_none()
+            if reply_to_comment is None:
+                raise BizError(ErrorCode.MarkerNotFoundError)
+            reply_to_id = reply_to_comment.id
+            if reply_to_comment.root_id is None:
+                root_id = reply_to_id
+            else:
+                root_id = reply_to_comment.root_id
+
+        verified = self.user.is_superuser
+        comment = models.Comment(
+            user_id=self.user.id,
+            target_type=schemas.CommentTargetType.marker,
+            target_id=self.marker_model.id,
+            content=comment_data.content,
+            verified=verified,
+            root_id=root_id,
+            reply_to_id=reply_to_id
+        )
+        self.db.add(comment)
+        await self.db.commit()
+        await self.db.refresh(comment)
+        return schemas.CommentRead.model_validate(comment).to_response()
+
+
+
+
 
 
 @cbv(router)
