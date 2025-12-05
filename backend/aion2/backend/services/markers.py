@@ -468,7 +468,8 @@ class MarkerComment:
         stmt = (
             select(models.Comment).
             where(models.Comment.target_type == schemas.CommentTargetType.marker).
-            where(models.Comment.target_id == self.marker_model.id)
+            where(models.Comment.target_id == self.marker_model.id).
+            order_by(models.Comment.created_at)
         )
         if not self.user.is_superuser:
             stmt = stmt.where(or_(
