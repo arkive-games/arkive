@@ -68,7 +68,10 @@ class MarkerFeedback(Base):
     # __table_args__ = ()
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id for translation
-    marker_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('markers.id', ondelete='CASCADE'), nullable=False)  # Foreign key to Marker
+    map_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('maps.id', ondelete='CASCADE'),
+                                         nullable=False)  # Foreign key to Map
+    subtype_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey('subtypes.id', ondelete='SET NULL'), nullable=True)  # Foreign key to Subtype
+    marker_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey('markers.id', ondelete='SET NULL'), nullable=True)  # Foreign key to Marker
     user_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'),
                                           nullable=False)  # Foreign key to User
 
@@ -90,6 +93,9 @@ class MarkerFeedback(Base):
 
     # Admin response
     reply: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    marker: Mapped["Marker"] = relationship("Marker", lazy="joined", join_depth=1)
+
 
 
 

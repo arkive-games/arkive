@@ -76,7 +76,9 @@ class MarkerImageReadDetail(MarkerImageRead):
 
 class MarkerFeedbackRead(BaseModel):
     id: UUID
-    marker_id: UUID
+    map_id: UUID
+    subtype_id: UUID | None
+    marker_id: UUID | None
     user_id: UUID
     type: MarkerFeedbackType
     status: MarkerFeedbackStatus
@@ -88,12 +90,13 @@ class MarkerFeedbackRead(BaseModel):
     reply: None | str = None
 
 
-class MarkerFeedbackCreate(BaseModel):
-    type: MarkerFeedbackType
+class MarkerFeedbackUpdate(BaseModel):
+    type: MarkerFeedbackType = MarkerFeedbackType.CREATE
+    subtype: UUID | str | None
     x: int | None = None
     y: int | None = None
     name: None | str = None
-    description: str
+    description: None | str = None
 
 
 class MarkerTranslationRead(BaseModel):

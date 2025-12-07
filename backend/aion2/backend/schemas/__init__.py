@@ -5,7 +5,7 @@ from aion2.backend.schemas.map import MapRead, MapReadDetail, MapCreate, MapUpda
 from aion2.backend.schemas.category import CategoryRead, CategoryReadDetail, CategoryCreate, CategoryUpdate, CategoryTranslationRead, CategoryTranslationUpdate, SubtypeReadDetail
 from aion2.backend.schemas.subtype import SubtypeRead, SubtypeCreate, SubtypeUpdate, SubtypeTranslationRead, SubtypeTranslationUpdate
 from aion2.backend.schemas.region import RegionRead, RegionReadDetail, RegionCreate, RegionUpdate, RegionTranslationRead, RegionTranslationUpdate
-from aion2.backend.schemas.marker import MarkerRead, MarkerReadDetail, MarkerCreate, MarkerCreateReal, MarkerUpdate, MarkerTranslationRead, MarkerTranslationUpdate, MarkerImageCreate, MarkerImageRead, MarkerImageReadDetail
+from aion2.backend.schemas.marker import MarkerRead, MarkerReadDetail, MarkerCreate, MarkerCreateReal, MarkerUpdate, MarkerTranslationRead, MarkerTranslationUpdate, MarkerImageCreate, MarkerImageRead, MarkerImageReadDetail, MarkerFeedbackRead, MarkerFeedbackUpdate
 from aion2.backend.schemas.image import ImageRead, ImageCreate
 from aion2.backend.schemas.auth import AltchaChallenge
 from aion2.backend.schemas.user_marker_progress import UserMarkerProgressRead, UserMarkerProgressUpdateAll, UserMarkerProgressUpdateBit
