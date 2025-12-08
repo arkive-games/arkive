@@ -1,6 +1,6 @@
 import asyncio
 import hashlib
-from typing import Any, Sequence
+from typing import Any, Sequence, BinaryIO
 from uuid import UUID
 
 from aiobotocore.client import AioBaseClient
@@ -21,7 +21,7 @@ from aion2.backend.utilities.dependencies import get_db, get_current_superuser, 
     get_category_from_path, get_language_from_path, get_map_from_path, get_subtype_from_path, get_marker_from_path, \
     get_region_from_path, s3_client_upload_dependency
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
-from aion2.backend.utilities.image import process_image
+from aion2.backend.utilities.image import process_image, load_normalized_image, make_full_image, sha256_base64url
 
 router = APIRouter(prefix="/maps/{map}", tags=["markers"])
 
@@ -425,6 +425,7 @@ class MarkerImages:
             )
             .values(order=models.MarkerImage.order - 1)
         )
+        await self.db.commit()
 
         # delete the image if no other marker_image uses this image
         count = await self.db.scalar(
@@ -432,7 +433,6 @@ class MarkerImages:
             .select_from(models.MarkerImage)
             .where(models.MarkerImage.image_id == image_id)
         )
-        await self.db.commit()
         if count == 0:
             await self.db.execute(
                 delete(models.Image).where(models.Image.id == image_id)
@@ -525,6 +525,7 @@ class MarkerFeedback:
     user: models.User = Depends(get_current_user)
     map_model: models.Map = Depends(get_map_from_path)
     db: AsyncSession = Depends(get_db)
+    s3_client: AioBaseClient = Depends(s3_client_upload_dependency)
 
     @router.get("/marker_feedbacks")
     async def list_marker_feedbacks(
@@ -539,23 +540,104 @@ class MarkerFeedback:
         feedbacks = [schemas.MarkerFeedbackRead.model_validate(x) for x in result.unique().scalars()]
         return schemas.StandardListResponse(feedbacks)
 
+    @staticmethod
+    def process_image(file: BinaryIO):
+        img = load_normalized_image(file)
+        full_bytes = make_full_image(img)
+        return {
+            "full": full_bytes,
+            "width": img.width,
+            "height": img.height,
+            "digest": sha256_base64url(full_bytes),
+        }
+
+    async def upload_image(self, file: UploadFile):
+        image_data = await asyncio.to_thread(self.process_image, file.file)
+        s3_key = f"marker_feedbacks_images/{image_data['digest']}"
+        try:
+            await self.s3_client.put_object(
+                Bucket=settings.S3_BUCKET,
+                Key=f"{s3_key}.webp",
+                Body=image_data["full"],
+                ContentType="image/webp",
+            )
+        except ClientError as e:
+            raise BizError(ErrorCode.S3UploadError, str(e))
+
+        result = await self.db.execute(
+            select(models.Image).
+            where(models.Image.s3_key == s3_key)
+        )
+        image_model = result.unique().scalar_one_or_none()
+        if image_model is None:
+            image_data = schemas.ImageCreate(
+                s3_key=s3_key,
+                height=image_data["height"],
+                width=image_data["width"],
+            )
+            image_model = await image_crud.create(self.db, image_data)
+        return image_model
+
+    async def delete_image(self, image_id: UUID):
+        count = await self.db.scalar(
+            select(func.count())
+            .select_from(models.MarkerFeedback)
+            .where(models.MarkerFeedback.image_id == image_id)
+        )
+        if count == 0:
+            result = await self.db.execute(
+                select(models.Image).where(models.Image.id == image_id)
+            )
+            image_model = result.unique().scalar_one_or_none()
+            if image_model is not None:
+                s3_key = image_model.s3_key
+                await self.db.delete(image_model)
+                try:
+                    await self.s3_client.delete_object(
+                        Bucket=settings.S3_BUCKET,
+                        Key=f"{s3_key}.webp",
+                    )
+                except ClientError as e:
+                    raise BizError(ErrorCode.S3UploadError, str(e))
+                await self.db.commit()
+
+    @staticmethod
+    def get_marker_feedback_form(
+            type: schemas.MarkerFeedbackType = Form(schemas.MarkerFeedbackType.CREATE),
+            subtype: UUID | str | None = Form(None),
+            x: int | None = Form(None),
+            y: int | None = Form(None),
+            name: None | str = Form(None),
+            description: None | str = Form(None),
+    ):
+        return schemas.MarkerFeedbackUpdate(
+            type=type, subtype=subtype, x=x, y=y,
+            name=name, description=description,
+        )
 
     @router.post("/marker_feedbacks")
     async def create_marker_feedback(
-        self,
-        data: schemas.MarkerFeedbackUpdate
+            self,
+            data: schemas.MarkerFeedbackUpdate = Depends(get_marker_feedback_form),
+            file: UploadFile | None = File(None),
     ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
         subtype_model = await get_subtype_from_path(data.subtype, self.db)
         if subtype_model is None:
             subtype_id = None
         else:
             subtype_id = subtype_model.id
+        if file is not None:
+            image_model = await self.upload_image(file)
+            image_id = image_model.id
+        else:
+            image_id = None
 
         feedback = models.MarkerFeedback(
             map_id=self.map_model.id,
             subtype_id=subtype_id,
             marker_id=None,
             user_id=self.user.id,
+            image_id=image_id,
             type=data.type,
             x=data.x,
             y=data.y,
@@ -569,9 +651,10 @@ class MarkerFeedback:
 
     @router.patch("/marker_feedbacks/{feedback}")
     async def update_marker_feedback(
-        self,
-        data: schemas.MarkerFeedbackUpdate,
-        feedback_id: UUID = Path(..., alias="feedback"),
+            self,
+            data: schemas.MarkerFeedbackUpdate = Depends(get_marker_feedback_form),
+            feedback_id: UUID = Path(..., alias="feedback"),
+            file: UploadFile | None = File(None),
     ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
         result = await self.db.execute(
             select(models.MarkerFeedback).where(models.MarkerFeedback.id == feedback_id)
@@ -579,6 +662,14 @@ class MarkerFeedback:
         feedback_model = result.unique().scalar_one_or_none()
         if feedback_model is None:
             raise BizError(ErrorCode.MarkerNotFoundError)
+
+        if file is not None:
+            image_model = await self.upload_image(file)
+            image_id = image_model.id
+            old_image_id = feedback_model.image_id
+        else:
+            image_id = None
+            old_image_id = None
 
         if data.subtype is not None:
             subtype_model = await get_subtype_from_path(data.subtype, self.db)
@@ -596,11 +687,18 @@ class MarkerFeedback:
         if data.description is not None:
             feedback_model.description = data.description
 
+        if image_id is not None:
+            feedback_model.image_id = image_id
+
         self.db.add(feedback_model)
         await self.db.commit()
         await self.db.refresh(feedback_model)
-        return schemas.MarkerFeedbackRead.model_validate(feedback_model).to_response()
 
+        # remove image if necessary
+        if old_image_id is not None:
+            await self.delete_image(old_image_id)
+
+        return schemas.MarkerFeedbackRead.model_validate(feedback_model).to_response()
 
 
 @cbv(router)

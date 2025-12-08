@@ -74,6 +74,7 @@ class MarkerFeedback(Base):
     marker_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey('markers.id', ondelete='SET NULL'), nullable=True)  # Foreign key to Marker
     user_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'),
                                           nullable=False)  # Foreign key to User
+    image_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey('images.id', ondelete='SET NULL'), nullable=True)
 
     type: Mapped[MarkerFeedbackType] = mapped_column(
         PgEnum(MarkerFeedbackType, name="feedback_type"),
@@ -95,7 +96,7 @@ class MarkerFeedback(Base):
     reply: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     marker: Mapped["Marker"] = relationship("Marker", lazy="joined", join_depth=1)
-
+    image: Mapped["Image"] = relationship("Image", lazy="joined", join_depth=1)
 
 
 

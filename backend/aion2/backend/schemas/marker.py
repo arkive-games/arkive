@@ -79,6 +79,7 @@ class MarkerFeedbackRead(BaseModel):
     map_id: UUID
     subtype_id: UUID | None
     marker_id: UUID | None
+    image_id: UUID | None
     user_id: UUID
     type: MarkerFeedbackType
     status: MarkerFeedbackStatus
@@ -88,6 +89,8 @@ class MarkerFeedbackRead(BaseModel):
     name: None | str = None
     description: None | str = None
     reply: None | str = None
+
+    image: ImageRead | None = None
 
 
 class MarkerFeedbackUpdate(BaseModel):
