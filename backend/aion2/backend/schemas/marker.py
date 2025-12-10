@@ -19,6 +19,7 @@ class MarkerFeedbackStatus(str, Enum):
     REJECTED = "rejected"
     REVISION = "revision"
     PENDING = "pending"
+    DELETED = "deleted"
 
 
 class MarkerRead(BaseModel):

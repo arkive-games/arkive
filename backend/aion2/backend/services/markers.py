@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 from fastapi_utils.cbv import cbv
 from fastcrud import FastCRUD
 from fastapi import APIRouter, Depends, Body, UploadFile, File, Form, FastAPI, Query, Path
-from sqlalchemy import select, func, delete, update, or_
+from sqlalchemy import select, func, delete, update, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
@@ -535,7 +535,11 @@ class MarkerFeedback:
             select(models.MarkerFeedback).
             # where(models.MarkerFeedback.marker.has(models.Marker.map_id == self.map_model.id)).
             where(models.MarkerFeedback.map_id == self.map_model.id).
-            where(models.MarkerFeedback.user_id == self.user.id)
+            where(models.MarkerFeedback.user_id == self.user.id).
+            where(and_(
+                models.MarkerFeedback.status != schemas.MarkerFeedbackStatus.ACCEPTED,
+                models.MarkerFeedback.status != schemas.MarkerFeedbackStatus.DELETED,
+            ))
         )
         feedbacks = [schemas.MarkerFeedbackRead.model_validate(x) for x in result.unique().scalars()]
         return schemas.StandardListResponse(feedbacks)
@@ -643,11 +647,27 @@ class MarkerFeedback:
             y=data.y,
             name=data.name,
             description=data.description,
+            status=schemas.MarkerFeedbackStatus.PENDING,
         )
         self.db.add(feedback)
         await self.db.commit()
         await self.db.refresh(feedback)
         return schemas.MarkerFeedbackRead.model_validate(feedback).to_response()
+
+    async def get_feedback_model(self, feedback_id: UUID):
+        result = await self.db.execute(
+            select(models.MarkerFeedback).
+            where(models.MarkerFeedback.id == feedback_id).
+            where(models.MarkerFeedback.map_id == self.map_model.id).
+            where(models.MarkerFeedback.user_id == self.user.id)
+        )
+        feedback_model: models.MarkerFeedback = result.unique().scalar_one_or_none()
+        if feedback_model is None:
+            raise BizError(ErrorCode.MarkerNotFoundError)
+        if feedback_model.status == schemas.MarkerFeedbackStatus.ACCEPTED or feedback_model.status == schemas.MarkerFeedbackStatus.DELETED:
+            raise BizError(ErrorCode.MarkerFeedbackNotEditableError)
+        return feedback_model
+
 
     @router.patch("/marker_feedbacks/{feedback}")
     async def update_marker_feedback(
@@ -656,13 +676,8 @@ class MarkerFeedback:
             feedback_id: UUID = Path(..., alias="feedback"),
             file: UploadFile | None = File(None),
     ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
-        result = await self.db.execute(
-            select(models.MarkerFeedback).where(models.MarkerFeedback.id == feedback_id)
-        )
-        feedback_model = result.unique().scalar_one_or_none()
-        if feedback_model is None:
-            raise BizError(ErrorCode.MarkerNotFoundError)
-
+        feedback_model = await self.get_feedback_model(feedback_id)
+        feedback_model.status = schemas.MarkerFeedbackStatus.PENDING
         if file is not None:
             image_model = await self.upload_image(file)
             image_id = image_model.id
@@ -698,6 +713,18 @@ class MarkerFeedback:
         if old_image_id is not None:
             await self.delete_image(old_image_id)
 
+        return schemas.MarkerFeedbackRead.model_validate(feedback_model).to_response()
+
+    @router.delete("/marker_feedbacks/{feedback}")
+    async def delete_marker_feedback(
+            self,
+            feedback_id: UUID = Path(..., alias="feedback"),
+    ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
+        feedback_model = await self.get_feedback_model(feedback_id)
+        feedback_model.status = schemas.MarkerFeedbackStatus.DELETED
+        self.db.add(feedback_model)
+        await self.db.commit()
+        await self.db.refresh(feedback_model)
         return schemas.MarkerFeedbackRead.model_validate(feedback_model).to_response()
 
 

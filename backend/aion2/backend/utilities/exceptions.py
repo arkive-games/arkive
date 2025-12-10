@@ -46,6 +46,7 @@ class ErrorCode(str, Enum):
     LanguageNotFoundError = "LanguageNotFoundError"
     MarkerNotFoundError = "MarkerNotFoundError"
     MarkerFeedbackNotFoundError = "MarkerFeedbackNotFoundError"
+    MarkerFeedbackNotEditableError = "MarkerFeedbackNotEditableError"
     MarkerImageNotFoundError = "MarkerImageNotFoundError"
     RegionNotFoundError = "RegionNotFoundError"
     BitSetTooLongError = "BitSetTooLongError"
