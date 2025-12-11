@@ -147,6 +147,9 @@ async def export_markers(db: AsyncSession, map_name: str):
             marker_dict["images"] = [
                 x.image.s3_key for x in marker_model.images
             ]
+        marker_dict["contributors"] = [
+            x.user.name for x in marker_model.contributors
+        ]
         if marker_model.region:
             marker_dict["region"] = marker_model.region.name
         markers.append(marker_dict)

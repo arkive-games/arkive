@@ -13,7 +13,7 @@ from aion2.backend.schemas.marker import MarkerFeedbackType, MarkerFeedbackStatu
 import uuid
 
 if TYPE_CHECKING:
-    from aion2.backend.models import Map, Region, Subtype, Language, Image
+    from aion2.backend.models import Map, Region, Subtype, Language, Image, User
 
 class Marker(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'markers'
@@ -46,7 +46,9 @@ class Marker(AsyncAttrs, Base, TimestampMixin):
     translations: Mapped[list["MarkerTranslation"]] = relationship("MarkerTranslation", back_populates="marker",
                                                                    lazy="joined", join_depth=1,
                                                                    cascade="all, delete-orphan")
-
+    contributors: Mapped[list["MarkerContributor"]] = relationship("MarkerContributor", back_populates="marker",
+                                                                   lazy="joined", join_depth=1,
+                                                                   cascade="all, delete-orphan")
 
 class MarkerImage(Base, TimestampMixin):
     __tablename__ = 'marker_images'
@@ -124,3 +126,6 @@ class MarkerContributor(Base, TimestampMixin):
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     marker_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('markers.id', ondelete='CASCADE'), nullable=False)
     user_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+
+    marker: Mapped["Marker"] = relationship("Marker", back_populates="contributors", lazy="joined", join_depth=1)
+    user: Mapped["User"] = relationship("User", lazy="joined", join_depth=2)
