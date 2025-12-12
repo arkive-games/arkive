@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 from fastapi_utils.cbv import cbv
 from fastcrud import FastCRUD
 from fastapi import APIRouter, Depends, Body, UploadFile, File, Form, FastAPI, Query, Path
-from sqlalchemy import select, func, delete, update, or_, and_
+from sqlalchemy import select, func, delete, update, or_, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
@@ -530,17 +530,27 @@ class MarkerFeedback:
     @router.get("/marker_feedbacks")
     async def list_marker_feedbacks(
             self,
+            admin: bool = Query(False),
+            limit: int = Query(100),
+            offset: int = Query(0),
     ) -> schemas.StandardListResponse[schemas.MarkerFeedbackRead]:
-        result = await self.db.execute(
-            select(models.MarkerFeedback).
-            # where(models.MarkerFeedback.marker.has(models.Marker.map_id == self.map_model.id)).
-            where(models.MarkerFeedback.map_id == self.map_model.id).
-            where(models.MarkerFeedback.user_id == self.user.id).
-            where(and_(
-                models.MarkerFeedback.status != schemas.MarkerFeedbackStatus.ACCEPTED,
-                models.MarkerFeedback.status != schemas.MarkerFeedbackStatus.DELETED,
-            ))
-        )
+        stmt = select(models.MarkerFeedback).where(models.MarkerFeedback.map_id == self.map_model.id)
+        if admin:
+            if not self.user.is_superuser:
+                raise BizError(ErrorCode.UnauthorizedError)
+            stmt = (
+                stmt.limit(limit).offset(offset)
+            )
+        else:
+            stmt = (
+                stmt.where(models.MarkerFeedback.user_id == self.user.id).
+                where(and_(
+                    models.MarkerFeedback.status != schemas.MarkerFeedbackStatus.ACCEPTED,
+                    models.MarkerFeedback.status != schemas.MarkerFeedbackStatus.DELETED,
+                ))
+            )
+        stmt = stmt.order_by(desc(models.MarkerFeedback.created_at))
+        result = await self.db.execute(stmt)
         feedbacks = [schemas.MarkerFeedbackRead.model_validate(x) for x in result.unique().scalars()]
         return schemas.StandardListResponse(feedbacks)
 
@@ -667,7 +677,6 @@ class MarkerFeedback:
         if feedback_model.status == schemas.MarkerFeedbackStatus.ACCEPTED or feedback_model.status == schemas.MarkerFeedbackStatus.DELETED:
             raise BizError(ErrorCode.MarkerFeedbackNotEditableError)
         return feedback_model
-
 
     @router.patch("/marker_feedbacks/{feedback}")
     async def update_marker_feedback(

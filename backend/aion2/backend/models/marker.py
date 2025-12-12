@@ -47,7 +47,7 @@ class Marker(AsyncAttrs, Base, TimestampMixin):
                                                                    lazy="joined", join_depth=1,
                                                                    cascade="all, delete-orphan")
     contributors: Mapped[list["MarkerContributor"]] = relationship("MarkerContributor", back_populates="marker",
-                                                                   lazy="joined", join_depth=1,
+                                                                   lazy="joined", join_depth=1, order_by="MarkerContributor.created_at",
                                                                    cascade="all, delete-orphan")
 
 class MarkerImage(Base, TimestampMixin):
@@ -66,7 +66,7 @@ class MarkerImage(Base, TimestampMixin):
 
 
 
-class MarkerFeedback(Base):
+class MarkerFeedback(Base, TimestampMixin):
     __tablename__ = 'marker_feedbacks'
     # __table_args__ = ()
 
