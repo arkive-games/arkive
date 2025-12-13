@@ -2,6 +2,7 @@ from enum import Enum
 from uuid import UUID
 from typing import List
 
+from aion2.backend.schemas import UserRead
 from aion2.backend.schemas.region import RegionRead
 from aion2.backend.schemas.image import ImageRead
 from aion2.backend.schemas.base import BaseModel
@@ -94,6 +95,7 @@ class MarkerFeedbackRead(BaseModel):
     description: None | str = None
     reply: None | str = None
 
+    user: UserRead
     image: ImageRead | None = None
 
 

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from aion2.backend.interfaces.db import Base  # Correct import
 from aion2.backend.models.base import TimestampMixin
+from aion2.backend.schemas import UserRead
 from aion2.backend.schemas.marker import MarkerFeedbackType, MarkerFeedbackStatus
 import uuid
 
@@ -98,6 +99,7 @@ class MarkerFeedback(Base, TimestampMixin):
     # Admin response
     reply: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    user: Mapped["User"] = relationship("User", lazy="joined", join_depth=1)
     marker: Mapped["Marker"] = relationship("Marker", lazy="joined", join_depth=1)
     image: Mapped["Image"] = relationship("Image", lazy="joined", join_depth=1)
 
