@@ -106,6 +106,11 @@ class MarkerFeedbackUpdate(BaseModel):
     description: None | str = None
 
 
+class MarkerFeedbackReply(MarkerFeedbackUpdate):
+    status: MarkerFeedbackStatus = MarkerFeedbackStatus.REVISION
+    reply: str = ""
+    language: str = "zh-CN"
+
 class MarkerTranslationRead(BaseModel):
     id: UUID
     language: LanguageRead

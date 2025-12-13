@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+from io import BytesIO
 from typing import Any, Sequence, BinaryIO
 from uuid import UUID
 
@@ -31,17 +32,88 @@ marker_image_crud = FastCRUD(models.MarkerImage)
 image_crud = FastCRUD(models.Image)
 
 
-async def update_marker_contributor(db: AsyncSession, marker: models.Marker, user: models.User):
+async def update_marker_contributor(db: AsyncSession, marker_id: UUID, user_id: UUID):
     result = await db.execute(
         select(models.MarkerContributor).
-        where(models.MarkerContributor.marker_id == marker.id).
-        where(models.MarkerContributor.user_id == user.id)
+        where(models.MarkerContributor.marker_id == marker_id).
+        where(models.MarkerContributor.user_id == user_id)
     )
     marker_contribution = result.unique().scalar_one_or_none()
     if marker_contribution is None:
-        marker_contribution = models.MarkerContributor(marker_id=marker.id, user_id=user.id)
+        marker_contribution = models.MarkerContributor(marker_id=marker_id, user_id=user_id)
         db.add(marker_contribution)
         await db.commit()
+
+
+async def get_next_index_for_subtype(db: AsyncSession, map_id: UUID, subtype_id: UUID | None) -> int | None:
+    if subtype_id is None:
+        return None
+    stmt = (
+        select(
+            func.coalesce(func.max(models.Marker.index_in_subtype), -1) + 1
+        )
+        .where(
+            models.Marker.map_id == map_id,
+            models.Marker.subtype_id == subtype_id,
+        )
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one()
+
+
+async def db_list_marker_images(db: AsyncSession, marker_id: UUID):
+    result = await db.execute(
+        select(models.MarkerImage).
+        where(models.MarkerImage.marker_id == marker_id).
+        order_by(models.MarkerImage.order)
+    )
+    return result.unique().scalars().all()
+
+
+async def upload_image(db: AsyncSession, s3_client: AioBaseClient, marker_id: UUID, data: BinaryIO):
+    image_data = await asyncio.to_thread(process_image, data)
+    s3_key = f"markers_images/{image_data['digest']}"
+    try:
+        for size in ("full", "normal", "small"):
+            await s3_client.put_object(
+                Bucket=settings.S3_BUCKET,
+                Key=f"{s3_key}.{size}.webp",
+                Body=image_data[size],
+                ContentType="image/webp",
+            )
+
+    except ClientError as e:
+        raise BizError(ErrorCode.S3UploadError, str(e))
+
+    # create image in db
+    result = await db.execute(
+        select(models.Image).
+        where(models.Image.s3_key == s3_key)
+    )
+    image_model = result.unique().scalar_one_or_none()
+    if image_model is None:
+        image_data = schemas.ImageCreate(
+            s3_key=s3_key,
+            height=image_data["height"],
+            width=image_data["width"],
+        )
+        image_model = await image_crud.create(db, image_data)
+
+    # create marker model in db
+    marker_image_models = await db_list_marker_images(db, marker_id)
+    marker_image_model = None
+    for x in marker_image_models:
+        if x.image_id == image_model.id:
+            marker_image_model = x
+            break
+    if marker_image_model is None:
+        marker_image_data = schemas.MarkerImageCreate(
+            marker_id=marker_id,
+            image_id=image_model.id,
+            order=len(marker_image_models),
+        )
+        marker_image_model = await marker_image_crud.create(db, marker_image_data)
+    return marker_image_model
 
 
 @cbv(router)
@@ -68,28 +140,13 @@ class Markers:
         except:
             raise BizError(ErrorCode.RegionNotFoundError)
 
-    async def get_next_index_for_subtype(self, subtype_id: UUID | None) -> int | None:
-        if subtype_id is None:
-            return None
-        stmt = (
-            select(
-                func.coalesce(func.max(models.Marker.index_in_subtype), -1) + 1
-            )
-            .where(
-                models.Marker.map_id == self.map_model.id,
-                models.Marker.subtype_id == subtype_id,
-            )
-        )
-        result = await self.db.execute(stmt)
-        return result.scalar_one()
-
     @router.post("/markers")
     async def create_marker(
             self,
             marker_data: schemas.MarkerCreate,
     ) -> schemas.StandardResponse[schemas.MarkerReadDetail]:
         subtype_id = await self.check_subtype_id(marker_data.subtype_id)
-        index_in_subtype = await self.get_next_index_for_subtype(subtype_id)
+        index_in_subtype = await get_next_index_for_subtype(self.db, self.map_model.id, subtype_id)
         region_id = await self.check_region_id(marker_data.region_id)
         real_marker_data = schemas.MarkerCreateReal(
             **marker_data.model_dump(exclude={"subtype_id", "region_id"}),
@@ -99,7 +156,7 @@ class Markers:
             index_in_subtype=index_in_subtype,
         )
         marker_model = await marker_crud.create(self.db, real_marker_data)
-        await update_marker_contributor(self.db, marker_model, self.user)
+        await update_marker_contributor(self.db, marker_model.id, self.user.id)
         await clear_cache(f"data:markers:{self.map_model.name}")
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
@@ -173,12 +230,12 @@ class Markers:
             "region_id": region_id,
         }
         if subtype_id != marker_model.subtype_id:
-            update_dict["index_in_subtype"] = await self.get_next_index_for_subtype(subtype_id)
+            update_dict["index_in_subtype"] = await get_next_index_for_subtype(self.db, self.map_model.id, subtype_id)
         await marker_crud.update(
             self.db, update_dict, id=marker_model.id,
         )
         await self.db.refresh(marker_model)
-        await update_marker_contributor(self.db, marker_model, self.user)
+        await update_marker_contributor(self.db, marker_model.id, self.user.id)
         await clear_cache(f"data:markers:{self.map_model.name}")
         return schemas.MarkerReadDetail.model_validate(marker_model).to_response()
 
@@ -310,14 +367,6 @@ class MarkerImages:
     map_model: models.Map = Depends(get_map_from_path)
     db: AsyncSession = Depends(get_db)
 
-    async def db_list_marker_images(self, marker_model: models.Marker):
-        result = await self.db.execute(
-            select(models.MarkerImage).
-            where(models.MarkerImage.marker_id == marker_model.id).
-            order_by(models.MarkerImage.order)
-        )
-        return result.unique().scalars().all()
-
     async def db_count_marker_images_by_image_id(self, image_id: UUID) -> int:
         result = await self.db.execute(
             select(func.count()).
@@ -333,7 +382,7 @@ class MarkerImages:
     ) -> schemas.StandardListResponse[schemas.MarkerImageReadDetail]:
         if marker_model.map_id != self.map_model.id:
             raise BizError(ErrorCode.MarkerNotFoundError)
-        marker_image_models = await self.db_list_marker_images(marker_model)
+        marker_image_models = await db_list_marker_images(self.db, marker_model.id)
         marker_images = [schemas.MarkerImageReadDetail.model_validate(x) for x in marker_image_models]
         return schemas.StandardListResponse(marker_images)
 
@@ -346,50 +395,8 @@ class MarkerImages:
     ) -> schemas.StandardResponse[schemas.MarkerImageReadDetail]:
         if marker_model.map_id != self.map_model.id:
             raise BizError(ErrorCode.MarkerNotFoundError)
-        image_data = await asyncio.to_thread(process_image, file.file)
-        s3_key = f"markers_images/{image_data['digest']}"
-        try:
-            for size in ("full", "normal", "small"):
-                await s3_client.put_object(
-                    Bucket=settings.S3_BUCKET,
-                    Key=f"{s3_key}.{size}.webp",
-                    Body=image_data[size],
-                    ContentType="image/webp",
-                )
-
-        except ClientError as e:
-            raise BizError(ErrorCode.S3UploadError, str(e))
-
-        # create image in db
-        result = await self.db.execute(
-            select(models.Image).
-            where(models.Image.s3_key == s3_key)
-        )
-        image_model = result.unique().scalar_one_or_none()
-        if image_model is None:
-            image_data = schemas.ImageCreate(
-                s3_key=s3_key,
-                height=image_data["height"],
-                width=image_data["width"],
-            )
-            image_model = await image_crud.create(self.db, image_data)
-
-        # create marker model in db
-        marker_image_models = await self.db_list_marker_images(marker_model)
-        marker_image_model = None
-        for x in marker_image_models:
-            if x.image_id == image_model.id:
-                marker_image_model = x
-                break
-        if marker_image_model is None:
-            marker_image_data = schemas.MarkerImageCreate(
-                marker_id=marker_model.id,
-                image_id=image_model.id,
-                order=len(marker_image_models),
-            )
-            marker_image_model = await marker_image_crud.create(self.db, marker_image_data)
-
-        await update_marker_contributor(self.db, marker_model, self.user)
+        marker_image_model = await upload_image(self.db, s3_client, marker_model.id, file.file)
+        await update_marker_contributor(self.db, marker_model.id, self.user.id)
         await clear_cache(f"data:markers:{self.map_model.name}")
         return schemas.MarkerImageReadDetail.model_validate(marker_image_model).to_response()
 
@@ -565,7 +572,7 @@ class MarkerFeedback:
             "digest": sha256_base64url(full_bytes),
         }
 
-    async def upload_image(self, file: UploadFile):
+    async def _upload_image(self, file: UploadFile):
         image_data = await asyncio.to_thread(self.process_image, file.file)
         s3_key = f"marker_feedbacks_images/{image_data['digest']}"
         try:
@@ -641,7 +648,7 @@ class MarkerFeedback:
         else:
             subtype_id = subtype_model.id
         if file is not None:
-            image_model = await self.upload_image(file)
+            image_model = await self._upload_image(file)
             image_id = image_model.id
         else:
             image_id = None
@@ -664,13 +671,16 @@ class MarkerFeedback:
         await self.db.refresh(feedback)
         return schemas.MarkerFeedbackRead.model_validate(feedback).to_response()
 
-    async def get_feedback_model(self, feedback_id: UUID):
-        result = await self.db.execute(
+    async def get_feedback_model(self, feedback_id: UUID, user_id: UUID | None = None):
+        stmt = (
             select(models.MarkerFeedback).
             where(models.MarkerFeedback.id == feedback_id).
-            where(models.MarkerFeedback.map_id == self.map_model.id).
-            where(models.MarkerFeedback.user_id == self.user.id)
+            where(models.MarkerFeedback.map_id == self.map_model.id)
         )
+        if user_id is not None:
+            stmt = stmt.where(models.MarkerFeedback.user_id == user_id)
+
+        result = await self.db.execute(stmt)
         feedback_model: models.MarkerFeedback = result.unique().scalar_one_or_none()
         if feedback_model is None:
             raise BizError(ErrorCode.MarkerNotFoundError)
@@ -678,23 +688,7 @@ class MarkerFeedback:
             raise BizError(ErrorCode.MarkerFeedbackNotEditableError)
         return feedback_model
 
-    @router.patch("/marker_feedbacks/{feedback}")
-    async def update_marker_feedback(
-            self,
-            data: schemas.MarkerFeedbackUpdate = Depends(get_marker_feedback_form),
-            feedback_id: UUID = Path(..., alias="feedback"),
-            file: UploadFile | None = File(None),
-    ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
-        feedback_model = await self.get_feedback_model(feedback_id)
-        feedback_model.status = schemas.MarkerFeedbackStatus.PENDING
-        if file is not None:
-            image_model = await self.upload_image(file)
-            image_id = image_model.id
-            old_image_id = feedback_model.image_id
-        else:
-            image_id = None
-            old_image_id = None
-
+    async def _update_marker_feedback(self, feedback_model: models.MarkerFeedback, data: schemas.MarkerFeedbackUpdate):
         if data.subtype is not None:
             subtype_model = await get_subtype_from_path(data.subtype, self.db)
             if subtype_model is None:
@@ -710,6 +704,26 @@ class MarkerFeedback:
             feedback_model.name = data.name
         if data.description is not None:
             feedback_model.description = data.description
+        return feedback_model
+
+    @router.patch("/marker_feedbacks/{feedback}")
+    async def update_marker_feedback(
+            self,
+            data: schemas.MarkerFeedbackUpdate = Depends(get_marker_feedback_form),
+            feedback_id: UUID = Path(..., alias="feedback"),
+            file: UploadFile | None = File(None),
+    ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
+        feedback_model = await self.get_feedback_model(feedback_id, self.user.id)
+        feedback_model.status = schemas.MarkerFeedbackStatus.PENDING
+        if file is not None:
+            image_model = await self._upload_image(file)
+            image_id = image_model.id
+            old_image_id = feedback_model.image_id
+        else:
+            image_id = None
+            old_image_id = None
+
+        feedback_model = await self._update_marker_feedback(feedback_model, data)
 
         if image_id is not None:
             feedback_model.image_id = image_id
@@ -729,11 +743,69 @@ class MarkerFeedback:
             self,
             feedback_id: UUID = Path(..., alias="feedback"),
     ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
-        feedback_model = await self.get_feedback_model(feedback_id)
+        feedback_model = await self.get_feedback_model(feedback_id, self.user.id)
         feedback_model.status = schemas.MarkerFeedbackStatus.DELETED
         self.db.add(feedback_model)
         await self.db.commit()
         await self.db.refresh(feedback_model)
+        return schemas.MarkerFeedbackRead.model_validate(feedback_model).to_response()
+
+    @router.post("/marker_feedbacks/{feedback}", dependencies=[Depends(get_current_superuser)])
+    async def reply_marker_feedback(
+        self,
+        data: schemas.MarkerFeedbackReply,
+        feedback_id: UUID = Path(..., alias="feedback"),
+        s3_client: AioBaseClient = Depends(s3_client_upload_dependency),
+    ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
+        feedback_model = await self.get_feedback_model(feedback_id)
+        feedback_model = await self._update_marker_feedback(feedback_model, data)
+        feedback_model.status = data.status
+        feedback_model.reply = data.reply
+        self.db.add(feedback_model)
+        await self.db.commit()
+        await self.db.refresh(feedback_model)
+        if data.status == schemas.MarkerFeedbackStatus.ACCEPTED:
+            if feedback_model.subtype_id:
+                index_in_subtype = await get_next_index_for_subtype(
+                    self.db, self.map_model.id, feedback_model.subtype_id
+                )
+            else:
+                index_in_subtype = 0
+            marker_model = models.Marker(
+                map_id=self.map_model.id,
+                subtype_id=feedback_model.subtype_id,
+                x=feedback_model.x,
+                y=feedback_model.y,
+                index_in_subtype=index_in_subtype,
+                name="",
+            )
+            self.db.add(marker_model)
+            await self.db.commit()
+            await self.db.refresh(marker_model)
+            language_model = await get_language_from_path(data.language, self.db)
+            if language_model is not None:
+                marker_translation_model = models.MarkerTranslation(
+                    marker_id=marker_model.id,
+                    language_id=language_model.id,
+                    name=feedback_model.name,
+                    description=feedback_model.description,
+                )
+                self.db.add(marker_translation_model)
+            await self.db.commit()
+            await update_marker_contributor(self.db, marker_model.id, feedback_model.user_id)
+
+            if feedback_model.image_id is not None:
+                try:
+                    resp = await s3_client.get_object(
+                        Bucket=settings.S3_BUCKET,
+                        Key=f"{feedback_model.image.s3_key}.webp",
+                    )
+                    data = await resp["Body"].read()
+                except ClientError as e:
+                    raise BizError(ErrorCode.S3UploadError, str(e))
+                await upload_image(self.db, s3_client, marker_model.id, BytesIO(data))
+            await clear_cache(f"data:markers:{self.map_model.name}")
+
         return schemas.MarkerFeedbackRead.model_validate(feedback_model).to_response()
 
 
@@ -776,7 +848,7 @@ class MarkerTranslations:
         self.db.add(translation_model)
         await self.db.commit()
         await self.db.refresh(translation_model)
-        await update_marker_contributor(self.db, self.marker_model, self.user)
+        await update_marker_contributor(self.db, self.marker_model.id, self.user.id)
         await clear_cache(f"locales:{self.language_model.language_code}:markers:{self.map_model.name}")
         return schemas.MarkerTranslationRead.model_validate(translation_model).to_response()
 
