@@ -101,7 +101,7 @@ class MarkerFeedbackRead(BaseModel):
 
 class MarkerFeedbackUpdate(BaseModel):
     type: MarkerFeedbackType = MarkerFeedbackType.CREATE
-    marker_id: UUID | None
+    marker_id: UUID | None = None
     subtype_id: UUID | str | None
     x: int | None = None
     y: int | None = None
