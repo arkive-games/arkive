@@ -546,7 +546,8 @@ class MarkerFeedback:
             if not self.user.is_superuser:
                 raise BizError(ErrorCode.UnauthorizedError)
             stmt = (
-                stmt.limit(limit).offset(offset)
+                stmt.where(models.MarkerFeedback.type == schemas.MarkerFeedbackType.CREATE).
+                limit(limit).offset(offset)
             )
         else:
             stmt = (
@@ -625,14 +626,15 @@ class MarkerFeedback:
     @staticmethod
     def get_marker_feedback_form(
             type: schemas.MarkerFeedbackType = Form(schemas.MarkerFeedbackType.CREATE),
-            subtype: UUID | str | None = Form(None),
+            marker_id: UUID | None = Form(None),
+            subtype_id: UUID | str | None = Form(None),
             x: int | None = Form(None),
             y: int | None = Form(None),
             name: None | str = Form(None),
             description: None | str = Form(None),
     ):
         return schemas.MarkerFeedbackUpdate(
-            type=type, subtype=subtype, x=x, y=y,
+            type=type, marker_id=marker_id, subtype_id=subtype_id, x=x, y=y,
             name=name, description=description,
         )
 
@@ -642,11 +644,17 @@ class MarkerFeedback:
             data: schemas.MarkerFeedbackUpdate = Depends(get_marker_feedback_form),
             file: UploadFile | None = File(None),
     ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
-        subtype_model = await get_subtype_from_path(data.subtype, self.db)
-        if subtype_model is None:
-            subtype_id = None
-        else:
+        if data.subtype_id is not None:
+            subtype_model = await get_subtype_from_path(data.subtype_id, self.db)
             subtype_id = subtype_model.id
+        else:
+            subtype_id = None
+        if data.marker_id is not None:
+            marker_model = await get_marker_from_path(data.marker_id, self.db)
+            marker_id = marker_model.id
+        else:
+            marker_id = None
+
         if file is not None:
             image_model = await self._upload_image(file)
             image_id = image_model.id
@@ -656,7 +664,7 @@ class MarkerFeedback:
         feedback = models.MarkerFeedback(
             map_id=self.map_model.id,
             subtype_id=subtype_id,
-            marker_id=None,
+            marker_id=marker_id,
             user_id=self.user.id,
             image_id=image_id,
             type=data.type,
@@ -689,8 +697,8 @@ class MarkerFeedback:
         return feedback_model
 
     async def _update_marker_feedback(self, feedback_model: models.MarkerFeedback, data: schemas.MarkerFeedbackUpdate):
-        if data.subtype is not None:
-            subtype_model = await get_subtype_from_path(data.subtype, self.db)
+        if data.subtype_id is not None:
+            subtype_model = await get_subtype_from_path(data.subtype_id, self.db)
             if subtype_model is None:
                 subtype_id = None
             else:
