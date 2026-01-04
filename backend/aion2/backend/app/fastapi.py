@@ -10,13 +10,14 @@ from aion2.backend.config.events import (
     terminate_backend_server_event_handler,
 )
 from aion2.backend.config.manager import settings
+from aion2.backend.interfaces.httpx import lifespan_httpx
 from aion2.backend.utilities.logging import init_logging, intercept_all_loggers
 from aion2.backend.utilities.limiter import limiter
 
 def initialize_backend_application() -> fastapi.FastAPI:
     init_logging()
     intercept_all_loggers()
-    app = fastapi.FastAPI(**settings.set_backend_app_attributes)  # type: ignore
+    app = fastapi.FastAPI(**settings.set_backend_app_attributes, lifespan=lifespan_httpx)
 
     app.logger = logger
     app.state.limiter = limiter

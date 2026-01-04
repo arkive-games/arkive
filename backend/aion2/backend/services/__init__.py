@@ -17,6 +17,7 @@ from aion2.backend.services.subtypes import router as subtypes_router
 from aion2.backend.services.regions import router as regions_router
 from aion2.backend.services.markers import router as markers_router
 from aion2.backend.services.export import router as export_router
+from aion2.backend.services.characters import router as character_router
 
 router = APIRouter()
 
@@ -39,3 +40,4 @@ router.include_router(subtypes_router)
 router.include_router(regions_router)
 router.include_router(markers_router)
 router.include_router(export_router)
+router.include_router(character_router)

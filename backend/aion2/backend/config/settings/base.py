@@ -90,6 +90,9 @@ class DatabaseRedisSettings(BaseSettings):
     REDIS_PASSWORD: str = Field(default="aion2", description="Redis password")
     REDIS_DATABASE: int = Field(default=0, description="Redis database index")
 
+    CELERY_BROKER_DB_INDEX: int = Field(default=1, description="Redis database index for Celery broker")
+    CELERY_RESULT_DB_INDEX: int = Field(default=2, description="Redis database index for Celery result backend")
+
 
 class S3StorageSettings(BaseSettings):
     S3_HOST: str = Field(default="localhost", description="S3 host")

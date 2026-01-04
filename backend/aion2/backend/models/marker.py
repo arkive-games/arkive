@@ -32,6 +32,7 @@ class Marker(AsyncAttrs, Base, TimestampMixin):
     y: Mapped[float] = mapped_column(Float, nullable=False)  # Y-coordinate of the marker
     index_in_subtype: Mapped[int | None] = mapped_column(Integer, nullable=True)
     icon: Mapped[str] = mapped_column(String, nullable=True)
+    type: Mapped[str] = mapped_column(String, nullable=True)
 
     # Relationships to other models
     map: Mapped["Map"] = relationship("Map", lazy="joined", join_depth=1)  # Relationship to Map model
