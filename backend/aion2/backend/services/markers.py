@@ -536,7 +536,7 @@ class MarkerComment:
         stmt = (
             select(models.Comment).
             where(models.Comment.target_type == schemas.CommentTargetType.marker).
-            order_by(models.Comment.created_at).
+            order_by(desc(models.Comment.created_at)).
             limit(limit).offset(offset)
         )
         result = await self.db.execute(stmt)
