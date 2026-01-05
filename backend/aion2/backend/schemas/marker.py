@@ -32,8 +32,8 @@ class MarkerRead(BaseModel):
     x: float
     y: float
     index_in_subtype: int
-    icon: str = ""
-    marker: str = ""
+    icon: str | None = ""
+    marker: str | None = ""
 
 class MarkerReadDetail(MarkerRead):
     subtype: SubtypeRead
