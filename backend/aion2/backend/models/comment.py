@@ -11,6 +11,9 @@ from aion2.backend.interfaces.db import Base  # Correct import
 from aion2.backend.schemas.comment import CommentTargetType
 
 
+if TYPE_CHECKING:
+    from aion2.backend.models import User
+
 class Comment(Base, TimestampMixin):
     __tablename__ = "comments"
     __table_args__ = (
@@ -51,7 +54,7 @@ class Comment(Base, TimestampMixin):
         ForeignKey("comments.id", ondelete="SET NULL"),
         nullable=True,
     )
-
+    user: Mapped["User"] = relationship("User", lazy="joined", join_depth=1)
 
 
 

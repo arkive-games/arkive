@@ -50,6 +50,7 @@ class ErrorCode(str, Enum):
     MarkerImageNotFoundError = "MarkerImageNotFoundError"
     RegionNotFoundError = "RegionNotFoundError"
     BitSetTooLongError = "BitSetTooLongError"
+    CommentNotFoundError = "CommentNotFoundError"
 
     S3ConfigError = "S3ConfigError"
     S3UploadError = "S3UploadError"

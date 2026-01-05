@@ -461,20 +461,20 @@ class MarkerImages:
 class MarkerComment:
     user: models.User = Depends(get_current_user)
     map_model: models.Map = Depends(get_map_from_path)
-    marker_model: models.Marker = Depends(get_marker_from_path)
     db: AsyncSession = Depends(get_db)
 
     @router.get("/markers/{marker}/comments")
     async def list_marker_comments(
             self,
+            marker_model: models.Marker = Depends(get_marker_from_path)
     ) -> schemas.StandardListResponse[schemas.CommentRead]:
-        if self.marker_model.map_id != self.map_model.id:
+        if marker_model.map_id != self.map_model.id:
             raise BizError(ErrorCode.MarkerNotFoundError)
 
         stmt = (
             select(models.Comment).
             where(models.Comment.target_type == schemas.CommentTargetType.marker).
-            where(models.Comment.target_id == self.marker_model.id).
+            where(models.Comment.target_id == marker_model.id).
             order_by(models.Comment.created_at)
         )
         if not self.user.is_superuser:
@@ -491,8 +491,9 @@ class MarkerComment:
     async def create_marker_comment(
             self,
             comment_data: schemas.CommentCreate,
+            marker_model: models.Marker = Depends(get_marker_from_path)
     ) -> schemas.StandardResponse[schemas.CommentRead]:
-        if self.marker_model.map_id != self.map_model.id:
+        if marker_model.map_id != self.map_model.id:
             raise BizError(ErrorCode.MarkerNotFoundError)
 
         if comment_data.reply_to_id is None:
@@ -515,7 +516,7 @@ class MarkerComment:
         comment = models.Comment(
             user_id=self.user.id,
             target_type=schemas.CommentTargetType.marker,
-            target_id=self.marker_model.id,
+            target_id=marker_model.id,
             content=comment_data.content,
             verified=verified,
             root_id=root_id,
@@ -525,6 +526,47 @@ class MarkerComment:
         await self.db.commit()
         await self.db.refresh(comment)
         return schemas.CommentRead.model_validate(comment).to_response()
+
+    @router.get("/marker_comments", dependencies=[Depends(get_current_superuser)])
+    async def list_all_marker_feedbacks(
+            self,
+            limit: int = Query(100),
+            offset: int = Query(0),
+    ) -> schemas.StandardListResponse[schemas.CommentRead]:
+        stmt = (
+            select(models.Comment).
+            where(models.Comment.target_type == schemas.CommentTargetType.marker).
+            order_by(models.Comment.created_at).
+            limit(limit).offset(offset)
+        )
+        result = await self.db.execute(stmt)
+        comments = [schemas.CommentRead.model_validate(x) for x in result.unique().scalars()]
+        return schemas.StandardListResponse(comments)
+
+    async def get_comment_model(self, comment_id: UUID):
+        stmt = (
+            select(models.Comment).
+            where(models.Comment.id == comment_id).
+            where(models.Comment.target_type == "marker")
+        )
+        result = await self.db.execute(stmt)
+        comment_model: models.Comment = result.unique().scalar_one_or_none()
+        if comment_model is None:
+            raise BizError(ErrorCode.CommentNotFoundError)
+        return comment_model
+
+    @router.post("/marker_comments/{comment}", dependencies=[Depends(get_current_superuser)])
+    async def verify_marker_comment(
+            self,
+            verified: bool = Query(True),
+            comment_id: UUID = Path(..., alias="comment"),
+    ) -> schemas.StandardResponse[schemas.CommentRead]:
+        comment_model = await self.get_comment_model(comment_id)
+        comment_model.verified = verified
+        self.db.add(comment_model)
+        await self.db.commit()
+        await self.db.refresh(comment_model)
+        return schemas.CommentRead.model_validate(comment_model).to_response()
 
 
 @cbv(router)
@@ -760,10 +802,10 @@ class MarkerFeedback:
 
     @router.post("/marker_feedbacks/{feedback}", dependencies=[Depends(get_current_superuser)])
     async def reply_marker_feedback(
-        self,
-        data: schemas.MarkerFeedbackReply,
-        feedback_id: UUID = Path(..., alias="feedback"),
-        s3_client: AioBaseClient = Depends(s3_client_upload_dependency),
+            self,
+            data: schemas.MarkerFeedbackReply,
+            feedback_id: UUID = Path(..., alias="feedback"),
+            s3_client: AioBaseClient = Depends(s3_client_upload_dependency),
     ) -> schemas.StandardResponse[schemas.MarkerFeedbackRead]:
         feedback_model = await self.get_feedback_model(feedback_id)
         feedback_model = await self._update_marker_feedback(feedback_model, data)
