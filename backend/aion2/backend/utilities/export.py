@@ -142,6 +142,7 @@ async def export_markers(db: AsyncSession, map_name: str):
             ),
             "id": str(marker_data.id),
             "subtype": marker_model.subtype.name,
+            "type": marker_model.type,
         }
         if marker_model.images:
             marker_dict["images"] = [

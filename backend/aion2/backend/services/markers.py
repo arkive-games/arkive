@@ -692,7 +692,7 @@ class MarkerFeedback:
         feedback_model: models.MarkerFeedback = result.unique().scalar_one_or_none()
         if feedback_model is None:
             raise BizError(ErrorCode.MarkerNotFoundError)
-        if feedback_model.status == schemas.MarkerFeedbackStatus.ACCEPTED or feedback_model.status == schemas.MarkerFeedbackStatus.DELETED:
+        if feedback_model.status == schemas.MarkerFeedbackStatus.DELETED:
             raise BizError(ErrorCode.MarkerFeedbackNotEditableError)
         return feedback_model
 
