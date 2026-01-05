@@ -28,6 +28,7 @@ router = APIRouter(prefix="/maps/{map}", tags=["markers"])
 
 marker_crud = FastCRUD(models.Marker)
 marker_translation_crud = FastCRUD(models.MarkerTranslation)
+comment_crud = FastCRUD(models.Comment)
 marker_image_crud = FastCRUD(models.MarkerImage)
 image_crud = FastCRUD(models.Image)
 
@@ -528,7 +529,7 @@ class MarkerComment:
         return schemas.CommentRead.model_validate(comment).to_response()
 
     @router.get("/marker_comments", dependencies=[Depends(get_current_superuser)])
-    async def list_all_marker_feedbacks(
+    async def list_all_marker_comments(
             self,
             limit: int = Query(100),
             offset: int = Query(0),
@@ -541,7 +542,8 @@ class MarkerComment:
         )
         result = await self.db.execute(stmt)
         comments = [schemas.CommentRead.model_validate(x) for x in result.unique().scalars()]
-        return schemas.StandardListResponse(comments)
+        count = await comment_crud.count(self.db, target_type="marker")
+        return schemas.StandardListResponse(comments, count)
 
     async def get_comment_model(self, comment_id: UUID):
         stmt = (
@@ -583,6 +585,7 @@ class MarkerFeedback:
             limit: int = Query(100),
             offset: int = Query(0),
     ) -> schemas.StandardListResponse[schemas.MarkerFeedbackRead]:
+        count = 0
         stmt = select(models.MarkerFeedback).where(models.MarkerFeedback.map_id == self.map_model.id)
         if admin:
             if not self.user.is_superuser:
@@ -591,6 +594,7 @@ class MarkerFeedback:
                 stmt.where(models.MarkerFeedback.type == schemas.MarkerFeedbackType.CREATE).
                 limit(limit).offset(offset)
             )
+            count = await comment_crud.count(self.db, map_id=self.map_model.id, type=schemas.MarkerFeedbackType.CREATE)
         else:
             stmt = (
                 stmt.where(models.MarkerFeedback.user_id == self.user.id).
@@ -602,7 +606,9 @@ class MarkerFeedback:
         stmt = stmt.order_by(desc(models.MarkerFeedback.created_at))
         result = await self.db.execute(stmt)
         feedbacks = [schemas.MarkerFeedbackRead.model_validate(x) for x in result.unique().scalars()]
-        return schemas.StandardListResponse(feedbacks)
+        if not admin:
+            count = len(feedbacks)
+        return schemas.StandardListResponse(feedbacks, count)
 
     @staticmethod
     def process_image(file: BinaryIO):
