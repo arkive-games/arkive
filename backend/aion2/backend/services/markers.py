@@ -570,6 +570,15 @@ class MarkerComment:
         await self.db.refresh(comment_model)
         return schemas.CommentRead.model_validate(comment_model).to_response()
 
+    @router.delete("/marker_comments/{comment}", dependencies=[Depends(get_current_superuser)])
+    async def delete_marker_comment(
+            self,
+            comment_id: UUID = Path(..., alias="comment"),
+    ) -> schemas.StandardResponse[schemas.Empty]:
+        comment_model = await self.get_comment_model(comment_id)
+        await self.db.delete(comment_model)
+        await self.db.commit()
+        return schemas.StandardResponse()
 
 @cbv(router)
 class MarkerFeedback:

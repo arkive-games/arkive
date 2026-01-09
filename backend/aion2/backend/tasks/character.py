@@ -1,3 +1,5 @@
+from datetime import datetime, UTC
+
 import httpx
 from loguru import logger
 
@@ -30,9 +32,8 @@ def get_character_detail(character_id: str, server_id: int) -> schemas.Character
         }
     )
     data = resp.json()
-
-
-
+    skills = [schemas.CharacterSkill.model_validate(x) for x in data["skill"]["skillList"]]
+    equipments = [schemas.CharacterEquipment.model_validate(x) for x in data["equipment"]["equipmentList"]]
 
     result = schemas.CharacterDetail(
         profile=profile,
@@ -40,6 +41,9 @@ def get_character_detail(character_id: str, server_id: int) -> schemas.Character
         titles=titles,
         rankings=rankings,
         boards=boards,
+        skills=skills,
+        equipments=equipments,
+        updated_at=datetime.now(UTC)
     )
 
     return result

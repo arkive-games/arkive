@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 from typing import Optional, List, Any
 
@@ -70,12 +71,27 @@ class CharacterRanking(BaseModel):
 
 
 class CharacterBoard(BaseModel):
-    id: int = Field(..., description="Record ID")
+    id: int = Field(..., description="Board ID")
     name: str = Field(..., description="Display name")
     total_node_count: int = Field(..., description="Total node count")
     open_node_count: int = Field(..., description="Open/active node count")
     icon: HttpUrl = Field(..., description="Icon URL")
     open: int = Field(..., description="Open status flag")
+
+
+class CharacterSkill(BaseModel):
+    id: int = Field(..., description="Skill ID")
+    skillLevel: int = Field(..., description="Skill level")
+    acquired: int = Field(..., description="Acquired")
+    equip: int = Field(..., description="Equip")
+
+
+
+class CharacterEquipment(BaseModel):
+    id: int = Field(..., description="Equipment ID")
+    enchant_level: int = Field(..., description="Enchant level")
+    exceed_level: int = Field(..., description="Exceed level")
+    slotPos: int = Field(..., description="Slot position")
 
 
 class CharacterDetail(BaseModel):
@@ -84,4 +100,7 @@ class CharacterDetail(BaseModel):
     titles: list[CharacterTitle]
     rankings: list[CharacterRanking]
     boards: list[CharacterBoard]
+    skills: list[CharacterSkill]
+    equipments: list[CharacterEquipment]
+    updated_at: datetime = Field(..., description="Updated at")
 

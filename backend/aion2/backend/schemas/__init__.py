@@ -18,4 +18,4 @@ from aion2.backend.schemas.user_marker_progress import UserMarkerProgressRead, U
     UserMarkerProgressUpdateBit
 from aion2.backend.schemas.comment import CommentCreate, CommentRead, CommentTargetType
 from aion2.backend.schemas.character import CharacterInfo, CharacterTitle, CharacterStat, CharacterDetail, \
-    CharacterBoard, CharacterProfile, CharacterRanking
+    CharacterBoard, CharacterProfile, CharacterRanking, CharacterEquipment, CharacterSkill
