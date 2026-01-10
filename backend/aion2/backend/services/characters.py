@@ -23,7 +23,7 @@ from aion2.backend.schemas import CharacterInfo
 from aion2.backend.utilities.dependencies import get_db, get_current_user, get_current_superuser, get_region_from_path, \
     get_language_from_path, get_map_from_path, get_httpx_client, get_redis_client
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
-from aion2.backend.tasks.character import get_character_task
+from aion2.backend.tasks.character import get_character_task, get_character_task_temp
 
 router = APIRouter(prefix="/characters", tags=["characters"])
 
@@ -61,6 +61,29 @@ class Character:
         data = resp.json()
         characters = [self.validate_character(x) for x in data["list"]]
         return schemas.StandardListResponse(characters)
+
+    @router.get("/info")
+    async def get_character_info(
+            self,
+            region: str = Query("tw"),
+            character: str = Query(...),
+            server: int = Query(...),
+    ) -> schemas.StandardResponse[schemas.CharacterDetail]:
+        async def wrapper():
+            return await asyncio.to_thread(get_character_task_temp, region, character, server)
+
+        key = f"character:{server}:{character}"
+        detail = await use_cache(key, wrapper)
+
+        # Refresh data
+        current_datetime = datetime.now(UTC)
+        time_diff = current_datetime - detail.updated_at
+        if time_diff > timedelta(minutes=10):
+            await clear_cache(key)
+            detail = await use_cache(key, wrapper)
+
+        # detail = await wrapper()
+        return detail.to_response()
 
     # @router.get("/info")
     # async def get_character_info(

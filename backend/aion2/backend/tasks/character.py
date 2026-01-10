@@ -10,13 +10,13 @@ from aion2.backend.app.celery import celery_app
 
 def get_api_base_url(region_id: str):
     if region_id == "kr":
-        return "https://aion2.plaync.com/api/"
+        return "https://aion2.plaync.com/api"
     return "https://tw.ncsoft.com/aion2/api"
 
 
 def get_character_detail_info(region_id: str, character_id: str, server_id: int) -> schemas.CharacterDetailInfo:
     resp = httpx.get(
-        f"${get_api_base_url(region_id)}/character/info",
+        f"{get_api_base_url(region_id)}/character/info",
         params={
             "characterId": character_id,
             "serverId": server_id,
@@ -24,6 +24,7 @@ def get_character_detail_info(region_id: str, character_id: str, server_id: int)
         }
     )
     data = resp.json()
+    # logger.debug(data)
     profile = schemas.CharacterProfile.model_validate(data["profile"])
     stats = [schemas.CharacterStat.model_validate(x) for x in data["stat"]["statList"]]
     titles = [schemas.CharacterTitle.model_validate(x) for x in data["title"]["titleList"]]
@@ -41,7 +42,7 @@ def get_character_detail_info(region_id: str, character_id: str, server_id: int)
 
 def get_character_equipments(region_id: str, character_id: str, server_id: int) -> schemas.CharacterEquipments:
     resp = httpx.get(
-        f"${get_api_base_url(region_id)}/character/equipment",
+        f"{get_api_base_url(region_id)}/character/equipment",
         params={
             "characterId": character_id,
             "serverId": server_id,
@@ -61,7 +62,7 @@ def get_character_equipments(region_id: str, character_id: str, server_id: int) 
 def get_character_item(region_id: str, character_id: str, server_id: int, item_id: int, enchant_level: int,
                        slot_pos: int) -> schemas.CharacterItem:
     resp = httpx.get(
-        f"${get_api_base_url(region_id)}/character/equipment/item",
+        f"{get_api_base_url(region_id)}/character/equipment/item",
         params={
             "id": item_id,
             "enchantLevel": enchant_level,
@@ -82,6 +83,14 @@ def get_character_item(region_id: str, character_id: str, server_id: int, item_i
         magic_stone_stats=magic_stone_stats,
     )
 
+def get_character_task_temp(region_id: str, character_id: str, server_id: int):
+    info = get_character_detail_info(region_id=region_id, character_id=character_id, server_id=server_id)
+    equipments = get_character_equipments(region_id=region_id, character_id=character_id, server_id=server_id)
+    return schemas.CharacterDetail(
+        **info.model_dump(),
+        **equipments.model_dump(),
+        updated_at=datetime.now(UTC),
+    )
 
 @celery_app.task
 def get_character_task(*, region_id: str, character_id: str, server_id: int):

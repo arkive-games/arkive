@@ -27,10 +27,10 @@ class CharacterStat(BaseModel):
 
 
 class CharacterTitle(BaseModel):
-    id: int
+    id: int | None
     equip_category: str
-    name: str
-    grade: str
+    name: str | None
+    grade: str | None
     total_count: int
     owned_count: int
 
@@ -108,7 +108,9 @@ class CharacterDetailInfo(BaseModel):
 class CharacterEquipments(BaseModel):
     skills: list[CharacterSkill]
     equipments: list[CharacterEquipment]
-    # updated_at: datetime = Field(..., description="Updated at")
+
+class CharacterDetail(CharacterDetailInfo, CharacterEquipments):
+    updated_at: datetime = Field(..., description="Updated at")
 
 
 class CharacterItemMainStat(BaseModel):
