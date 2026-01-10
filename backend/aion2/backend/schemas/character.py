@@ -6,6 +6,8 @@ from pydantic import Field, HttpUrl
 
 from aion2.backend.schemas.base import BaseModel
 from aion2.backend.schemas.language import LanguageRead
+
+
 # Map Schemas
 
 class CharacterInfo(BaseModel):
@@ -17,6 +19,7 @@ class CharacterInfo(BaseModel):
     server_id: int
     server_name: str
     profile_image_url: str
+
 
 class CharacterStat(BaseModel):
     type: str
@@ -49,6 +52,7 @@ class CharacterProfile(BaseModel):
     title_name: str = Field(..., description="Title name")
     title_grade: str = Field(..., description="Title grade or rarity")
     profile_image: HttpUrl = Field(..., description="Profile image URL")
+
 
 class CharacterRanking(BaseModel):
     ranking_contents_type: int | None = Field(None, description="Ranking contents category type")
@@ -86,7 +90,6 @@ class CharacterSkill(BaseModel):
     equip: int = Field(..., description="Equip")
 
 
-
 class CharacterEquipment(BaseModel):
     id: int = Field(..., description="Equipment ID")
     enchant_level: int = Field(..., description="Enchant level")
@@ -94,13 +97,58 @@ class CharacterEquipment(BaseModel):
     slotPos: int = Field(..., description="Slot position")
 
 
-class CharacterDetail(BaseModel):
+class CharacterDetailInfo(BaseModel):
     profile: CharacterProfile
     stats: list[CharacterStat]
     titles: list[CharacterTitle]
     rankings: list[CharacterRanking]
     boards: list[CharacterBoard]
+
+
+class CharacterEquipments(BaseModel):
     skills: list[CharacterSkill]
     equipments: list[CharacterEquipment]
-    updated_at: datetime = Field(..., description="Updated at")
+    # updated_at: datetime = Field(..., description="Updated at")
+
+
+class CharacterItemMainStat(BaseModel):
+    id: str = Field(..., description="Stat ID")
+    min_value: str = Field("", description="Min value")
+    value: str = Field(..., description="Stat value")
+    extra: str = Field("", description="Extra data")
+    exceed: bool = Field(False, description="Exceed")
+
+
+class CharacterItemSubStat(BaseModel):
+    id: str = Field(..., description="Stat ID")
+    value: str = Field(..., description="Stat value")
+
+
+class CharacterItemMagicStoneStat(BaseModel):
+    id: str = Field(..., description="Stat ID")
+    value: str = Field(..., description="Stat value")
+    grade: str = Field(..., description="Stat grade")
+    slot_pos: int = Field(..., description="Slot position")
+
+
+class CharacterItemGodStoneStat(BaseModel):
+    icon: str = Field(..., description="Icon URL")
+    name: str = Field(..., description="Name")
+    desc: str = Field(..., description="Description")
+    grade: str = Field(..., description="Grade")
+    slot_pos: int = Field(..., description="Slot position")
+
+
+class CharacterItem(BaseModel):
+    id: int = Field(..., description="Item ID")
+    level: int = Field(..., description="Item level")
+    level_value: int = Field(..., description="Item extra level")
+    enchant_level: int = Field(..., description="Item enchant level")
+    max_enchant_level: int = Field(..., description="Item max enchant level")
+    max_exceed_enchant_level: int = Field(..., description="Item max exceed enchant level")
+    soul_bind_rate: str = Field(..., description="Soul bind rate")
+    main_stats: list[CharacterItemMainStat]
+    sub_stats: list[CharacterItemSubStat]
+    magic_stone_stats: list[CharacterItemMagicStoneStat]
+    god_stone_stat: CharacterItemGodStoneStat
 

@@ -28,6 +28,7 @@ router = APIRouter(prefix="/maps/{map}", tags=["markers"])
 
 marker_crud = FastCRUD(models.Marker)
 marker_translation_crud = FastCRUD(models.MarkerTranslation)
+marker_feedback_crud = FastCRUD(models.MarkerFeedback)
 comment_crud = FastCRUD(models.Comment)
 marker_image_crud = FastCRUD(models.MarkerImage)
 image_crud = FastCRUD(models.Image)
@@ -603,7 +604,7 @@ class MarkerFeedback:
                 stmt.where(models.MarkerFeedback.type == schemas.MarkerFeedbackType.CREATE).
                 limit(limit).offset(offset)
             )
-            count = await comment_crud.count(self.db, map_id=self.map_model.id, type=schemas.MarkerFeedbackType.CREATE)
+            count = await marker_feedback_crud.count(self.db, map_id=self.map_model.id, type=schemas.MarkerFeedbackType.CREATE)
         else:
             stmt = (
                 stmt.where(models.MarkerFeedback.user_id == self.user.id).

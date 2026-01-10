@@ -17,5 +17,6 @@ from aion2.backend.schemas.auth import AltchaChallenge
 from aion2.backend.schemas.user_marker_progress import UserMarkerProgressRead, UserMarkerProgressUpdateAll, \
     UserMarkerProgressUpdateBit
 from aion2.backend.schemas.comment import CommentCreate, CommentRead, CommentTargetType
-from aion2.backend.schemas.character import CharacterInfo, CharacterTitle, CharacterStat, CharacterDetail, \
-    CharacterBoard, CharacterProfile, CharacterRanking, CharacterEquipment, CharacterSkill
+from aion2.backend.schemas.character import CharacterInfo, CharacterTitle, CharacterStat, CharacterDetailInfo, \
+    CharacterBoard, CharacterProfile, CharacterRanking, CharacterEquipment, CharacterSkill, CharacterEquipments, \
+    CharacterItem, CharacterItemSubStat, CharacterItemMainStat, CharacterItemMagicStoneStat, CharacterItemGodStoneStat
