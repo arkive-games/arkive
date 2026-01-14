@@ -47,6 +47,23 @@ services:
       - REDIS_HOST=redis
     depends_on:
       - postgres
-
+  celery:
+    image: tcimba/aion2-backend
+    restart: always
+    volumes:
+      - ./aion2/backend:/root/aion2-backend/aion2/backend
+      - ./data/public:/root/aion2-backend/public
+    networks:
+      - aion2-network
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - core
+    command: >
+      poetry run celery
+      -A aion2.backend.app.celery:celery_app
+      worker
+      --loglevel=info
+      --concurrency=4
 networks:
   aion2-network:

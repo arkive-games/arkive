@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 from typing import Optional, List, Any
 
-from pydantic import Field, HttpUrl
+from pydantic import Field
 
 from aion2.backend.schemas.base import BaseModel
 from aion2.backend.schemas.language import LanguageRead
@@ -51,7 +51,7 @@ class CharacterProfile(BaseModel):
     title_id: int = Field(..., description="Title ID")
     title_name: str = Field(..., description="Title name")
     title_grade: str = Field(..., description="Title grade or rarity")
-    profile_image: HttpUrl = Field(..., description="Profile image URL")
+    profile_image: str = Field(..., description="Profile image URL")
 
 
 class CharacterRanking(BaseModel):
@@ -79,7 +79,7 @@ class CharacterBoard(BaseModel):
     name: str = Field(..., description="Display name")
     total_node_count: int = Field(..., description="Total node count")
     open_node_count: int = Field(..., description="Open/active node count")
-    icon: HttpUrl = Field(..., description="Icon URL")
+    icon: str = Field(..., description="Icon URL")
     open: int = Field(..., description="Open status flag")
 
 
@@ -94,7 +94,7 @@ class CharacterEquipment(BaseModel):
     id: int = Field(..., description="Equipment ID")
     enchant_level: int = Field(..., description="Enchant level")
     exceed_level: int = Field(..., description="Exceed level")
-    slotPos: int = Field(..., description="Slot position")
+    slot_pos: int = Field(..., description="Slot position")
 
 
 class CharacterDetailInfo(BaseModel):
@@ -108,6 +108,7 @@ class CharacterDetailInfo(BaseModel):
 class CharacterEquipments(BaseModel):
     skills: list[CharacterSkill]
     equipments: list[CharacterEquipment]
+
 
 class CharacterDetail(CharacterDetailInfo, CharacterEquipments):
     updated_at: datetime = Field(..., description="Updated at")
@@ -147,10 +148,33 @@ class CharacterItem(BaseModel):
     level_value: int = Field(..., description="Item extra level")
     enchant_level: int = Field(..., description="Item enchant level")
     max_enchant_level: int = Field(..., description="Item max enchant level")
-    max_exceed_enchant_level: int = Field(..., description="Item max exceed enchant level")
+    max_exceed_enchant_level: int = Field(default=0, description="Item max exceed enchant level")
     soul_bind_rate: str = Field(..., description="Soul bind rate")
-    main_stats: list[CharacterItemMainStat]
-    sub_stats: list[CharacterItemSubStat]
-    magic_stone_stats: list[CharacterItemMagicStoneStat]
-    god_stone_stat: CharacterItemGodStoneStat
+    main_stats: list[CharacterItemMainStat] = Field(default_factory=list, description="Main stats")
+    sub_stats: list[CharacterItemSubStat] = Field(default_factory=list, description="Sub stats")
+    magic_stone_stat: list[CharacterItemMagicStoneStat] = Field(default_factory=list, description="Magic stone stat")
+    god_stone_stat: list[CharacterItemGodStoneStat] = Field(default=list, description="god stone stat")
 
+
+class CharacterJobMeta(BaseModel):
+    job_id: str = Field(..., description="Job ID")
+    status: str = Field(..., description="Job status")
+    started_at: float | None = Field(default=None, description="Updated at")
+    updated_at: float = Field(..., description="Updated at")
+    done: int = Field(default=0, description="Done")
+    failed: int = Field(default=0, description="Failed")
+    total: int = Field(default=0, description="Total")
+
+
+
+
+class CharacterJobItem(BaseModel):
+    type: str = Field(..., description="Job item type")
+    # data: CharacterDetailInfo | CharacterEquipments | CharacterItem = Field(..., description="Job item data")
+    data: dict = Field(..., description="Job item data")
+
+class CharacterJob(BaseModel):
+    job_id: str | None = Field(None, description="Job ID")
+    status: str = Field(..., description="Job status")
+    meta: CharacterJobMeta = Field(..., description="Job meta data")
+    items: dict = Field({}, description="Job items")

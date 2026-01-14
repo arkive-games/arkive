@@ -38,6 +38,15 @@ packages = [
     { include = "aion2" },
 ]
 
+[tool.poetry.scripts]
+aion2 = "aion2.backend.__main__:cli"
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "watchfiles (>=1.1.1,<2.0.0)"
+]
+

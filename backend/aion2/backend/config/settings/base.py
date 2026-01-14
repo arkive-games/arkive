@@ -92,6 +92,7 @@ class DatabaseRedisSettings(BaseSettings):
 
     CELERY_BROKER_DB_INDEX: int = Field(default=1, description="Redis database index for Celery broker")
     CELERY_RESULT_DB_INDEX: int = Field(default=2, description="Redis database index for Celery result backend")
+    PERSISTENT_REDIS_DB_INDEX: int = Field(default=3, description="Redis database index for persistent storage")
 
 
 class S3StorageSettings(BaseSettings):

@@ -16,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 from datetime import datetime, UTC, timedelta
 
-
 from aion2.backend import models, schemas
 from aion2.backend.interfaces.cache import clear_cache, use_cache
 from aion2.backend.schemas import CharacterInfo
@@ -62,146 +61,170 @@ class Character:
         characters = [self.validate_character(x) for x in data["list"]]
         return schemas.StandardListResponse(characters)
 
+    # @router.get("/info")
+    # async def get_character_info(
+    #         self,
+    #         region: str = Query("tw"),
+    #         character: str = Query(...),
+    #         server: int = Query(...),
+    # ) -> schemas.StandardResponse[schemas.CharacterDetail]:
+    #     async def wrapper():
+    #         return await asyncio.to_thread(get_character_task_temp, region, character, server)
+    #
+    #     key = f"character:{server}:{character}"
+    #     detail = await use_cache(key, wrapper)
+    #
+    #     # Refresh data
+    #     current_datetime = datetime.now(UTC)
+    #     time_diff = current_datetime - detail.updated_at
+    #     if time_diff > timedelta(minutes=10):
+    #         await clear_cache(key)
+    #         detail = await use_cache(key, wrapper)
+    #
+    #     # detail = await wrapper()
+    #     return detail.to_response()
+
     @router.get("/info")
     async def get_character_info(
             self,
             region: str = Query("tw"),
             character: str = Query(...),
             server: int = Query(...),
-    ) -> schemas.StandardResponse[schemas.CharacterDetail]:
-        async def wrapper():
-            return await asyncio.to_thread(get_character_task_temp, region, character, server)
+            redis: aioredis.Redis = Depends(get_redis_client)
+    ) -> schemas.StandardResponse[schemas.CharacterJob]:
+        # Use region, server, and character for job identifier
+        cache_key_prefix = f"character:{region}:{server}:{character}"
+        cache_key_meta = f"{cache_key_prefix}:meta"
+        cache_key_items = f"{cache_key_prefix}:items"
 
-        key = f"character:{server}:{character}"
-        detail = await use_cache(key, wrapper)
+        # Get the current time using datetime
+        current_time = datetime.now()
 
-        # Refresh data
-        current_datetime = datetime.now(UTC)
-        time_diff = current_datetime - detail.updated_at
-        if time_diff > timedelta(minutes=10):
-            await clear_cache(key)
-            detail = await use_cache(key, wrapper)
+        # Retrieve cached metadata and items in all cases
 
-        # detail = await wrapper()
-        return detail.to_response()
+        meta = await redis.hgetall(cache_key_meta)
+        try:
+            meta = schemas.CharacterJobMeta.model_validate(meta)
+        except:
+            meta = None
 
-    # @router.get("/info")
-    # async def get_character_info(
-    #     self,
-    #     region: str = Query("tw"),
-    #     character: str = Query(...),
-    #     server: int = Query(...),
-    #     redis: aioredis.Redis = Depends(get_redis_client)
-    # ):
-    #     # Use region, server, and character for job identifier
-    #     cache_key_prefix = f"character:{region}:{server}:{character}"
-    #     cache_key_meta = f"{cache_key_prefix}:meta"
-    #     cache_key_items = f"{cache_key_prefix}:items"
-    #
-    #     # Get the current time using datetime
-    #     current_time = datetime.now()
-    #
-    #     # Retrieve cached metadata and items in all cases
-    #     cached_result = await redis.hgetall(cache_key_meta)
-    #     items = await redis.lrange(cache_key_items, 0, -1)
-    #
-    #     # Check if cached data exists and if it's still valid (within 15 minutes)
-    #     cached_at = await redis.get(f"{cache_key_prefix}:cached_at")
-    #     if cached_at:
-    #         cached_at = datetime.fromtimestamp(float(cached_at))
-    #         # If cached data is still valid (within 15 minutes)
-    #         if current_time - cached_at < timedelta(minutes=15):  # 15 minutes TTL
-    #             # Return cached results directly if data is valid
-    #             return {"job_id": None, "status": "cached", "cached_result": cached_result, "items": items}
-    #
-    #     # If cache is expired or not found, check if the job is already running
-    #     job_status = cached_result.get("status")
-    #     current_job_id = cached_result.get("job_id")
-    #
-    #     # If no job is running, create a new job
-    #     if not current_job_id or job_status != "running":
-    #         celery_job = get_character_task.apply_async(kwargs={
-    #             "region_id": region,
-    #             "character_id": character,
-    #             "server_id": server,
-    #         })
-    #         current_job_id = celery_job.id
-    #         await redis.hset(cache_key_meta, mapping={
-    #             "job_id": current_job_id,
-    #             "status": "running",
-    #             "done": 0,
-    #             "total": 20,
-    #             "updated_at": current_time.timestamp()
-    #         })
-    #
-    #     # Return the cached results (which can be empty) and the job ID
-    #     return {"job_id": current_job_id, "status": "running", "cached_result": cached_result, "items": items}
-    #
-    #     # async def wrapper():
-    #     #     return await asyncio.to_thread(get_character_detail, character, server)
-    #     #
-    #     # detail = await use_cache(key, wrapper)
-    #     #
-    #     # # Refresh data
-    #     # current_datetime = datetime.now(UTC)
-    #     # time_diff = current_datetime - detail.updated_at
-    #     # if time_diff > timedelta(minutes=10):
-    #     #     await clear_cache(key)
-    #     #     detail = await use_cache(key, wrapper)
-    #     # return detail.to_response()
-    #
-    # @router.websocket("/ws")
-    # async def get_character_info_websocket(
-    #         self,
-    #         websocket: WebSocket,
-    #         region: str = Query("tw"),
-    #         character: str = Query(...),
-    #         server: int = Query(...),
-    #         redis: aioredis.Redis = Depends(get_redis_client)
-    # ):
-    #     await websocket.accept()
-    #     cache_key_prefix = f"character:{region}:{server}:{character}"
-    #     cache_key_meta = f"{cache_key_prefix}:meta"
-    #     channel = f"{cache_key_prefix}:channel"
-    #     pubsub = redis.pubsub()
-    #
-    #     try:
-    #         # Subscribe first to minimize the “update between snapshot and subscribe” race.
-    #         await pubsub.subscribe(channel)
-    #
-    #         # 1) On connect: Send the current job meta
-    #         meta = await redis.hgetall(cache_key_meta)
-    #         if meta.get("status", "") == "done":
-    #             return
-    #
-    #         # Send the initial snapshot to the client
-    #         await websocket.send_json(meta)
-    #
-    #         # 2) Listen for updates on the Pub/Sub channel
-    #         async for message in pubsub.listen():
-    #             if message.get("type") == "message":
-    #                 # Forward the update to the client
-    #                 job_update = message.get("data").decode("utf-8")
-    #                 # Parse the job update string as JSON
-    #                 try:
-    #                     job_update_dict = json.loads(job_update)
-    #                 except json.JSONDecodeError:
-    #                     # If the data is not valid JSON, log the error
-    #                     logger.error(f"Error decoding job update: {job_update}")
-    #                     job_update_dict = await redis.hgetall(cache_key_meta)
-    #                 # Send the update to the WebSocket client
-    #                 await websocket.send_text(job_update)
-    #
-    #                 # If the job is done, send the final response and close the connection
-    #                 if job_update_dict.get("status") == "done":
-    #                     break
-    #
-    #
-    #     except WebSocketDisconnect:
-    #         logger.info("WebSocket disconnected")
-    #     finally:
-    #         try:
-    #             await pubsub.unsubscribe(channel)
-    #         finally:
-    #             await pubsub.close()
-    #
+        items_raw: dict[str, str] = await redis.hgetall(cache_key_items)
+        items: dict[str, dict] = {}
+        for k, v in items_raw.items():
+            try:
+                items[k] = json.loads(v)
+            except json.JSONDecodeError:
+                pass
+
+        # logger.info(cache_key_prefix)
+        # logger.info(cache_key_meta)
+        # logger.info(cache_key_items)
+        # logger.info(meta)
+        # logger.info(items)
+
+        # Check if cached data exists and if it's still valid (within 15 minutes)
+        try:
+            if meta is not None and meta.status == "done":
+                cached_at = datetime.fromtimestamp(meta.updated_at)
+                # cached_at = await redis.get(f"{cache_key_prefix}:cached_at")
+                # if cached_at and meta:
+                #     cached_at = datetime.fromtimestamp(float(cached_at))
+                # If cached data is still valid (within 15 minutes)
+                if current_time - cached_at < timedelta(minutes=15):  # 15 minutes TTL
+                    # Return cached results directly if data is valid
+                    return schemas.CharacterJob(
+                        job_id=None,
+                        status="cached",
+                        meta=meta,
+                        items=items,
+                    ).to_response()
+        except:
+            pass
+
+        # If no job is running, create a new job
+        # if not current_job_id or job_status != "running":
+        if meta is None or (meta.status != "running" and meta.status != "scheduled"):
+            celery_job = get_character_task.apply_async(kwargs={
+                "region_id": region,
+                "character_id": character,
+                "server_id": server,
+            })
+            current_job_id = str(celery_job.id)
+            meta = schemas.CharacterJobMeta(
+                job_id=current_job_id,
+                status="scheduled",
+                updated_at=current_time.timestamp(),
+            )
+            logger.info("start celery job: {}", meta)
+            await redis.hset(cache_key_meta, mapping=meta.model_dump(exclude_none=True))
+        else:
+            current_job_id = meta.job_id
+
+        # Return the cached results (which can be empty) and the job ID
+        return schemas.CharacterJob(
+            job_id=current_job_id,
+            status=meta.status,
+            meta=meta,
+            items=items,
+        ).to_response()
+
+
+@router.websocket("/ws")
+async def get_character_info_websocket(
+        websocket: WebSocket,
+        region: str = Query("tw"),
+        character: str = Query(...),
+        server: int = Query(...),
+):
+    await websocket.accept()
+
+    redis = getattr(websocket.app.state, "redis_client", None)
+    if redis is None:
+        await websocket.close(code=1011)
+        return
+
+    cache_key_prefix = f"character:{region}:{server}:{character}"
+    cache_key_meta = f"{cache_key_prefix}:meta"
+    channel = f"{cache_key_prefix}:channel"
+    pubsub = redis.pubsub()
+
+    try:
+        # Subscribe first to minimize the “update between snapshot and subscribe” race.
+        await pubsub.subscribe(channel)
+
+        # 1) On connect: Send the current job meta
+        meta = await redis.hgetall(cache_key_meta)
+        status = meta.get("status", "")
+        if status != "scheduled" and status != "running":
+            return
+
+        # Send the initial snapshot to the client
+        await websocket.send_json(meta)
+
+        # 2) Listen for updates on the Pub/Sub channel
+        async for message in pubsub.listen():
+            if message.get("type") == "message":
+                # Forward the update to the client
+                job_update = message.get("data")
+                # Parse the job update string as JSON
+                try:
+                    job_update_dict = json.loads(job_update)
+                except json.JSONDecodeError:
+                    # If the data is not valid JSON, log the error
+                    logger.error(f"Error decoding job update: {job_update}")
+                    job_update_dict = await redis.hgetall(cache_key_meta)
+                # Send the update to the WebSocket client
+                await websocket.send_text(job_update)
+
+                # If the job is done, send the final response and close the connection
+                if job_update_dict.get("status") in ("done", "failed"):
+                    break
+
+
+    except WebSocketDisconnect:
+        logger.info("WebSocket disconnected")
+    finally:
+        try:
+            await pubsub.unsubscribe(channel)
+        finally:
+            await pubsub.close()
