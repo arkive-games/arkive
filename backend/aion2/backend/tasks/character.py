@@ -40,8 +40,8 @@ def get_character_detail_info(region_id: str, character_id: str, server_id: int)
     stats = [schemas.CharacterStat.model_validate(x) for x in data["stat"]["statList"]]
     titles = [schemas.CharacterTitle(
         **x,
-        stats=[y.get("desc", "") for y in x.get("statList", [])],
-        equip_stats=[y.get("desc", "") for y in x.get("equipStatList", [])],
+        stats=[y.get("desc", "") for y in (x.get("statList", []) or [])],
+        equip_stats=[y.get("desc", "") for y in (x.get("equipStatList", []) or [])],
     ) for x in data["title"]["titleList"]]
     rankings = [schemas.CharacterRanking.model_validate(x) for x in data["ranking"]["rankingList"]]
     boards = [schemas.CharacterBoard.model_validate(x) for x in data["daevanion"]["boardList"]]
