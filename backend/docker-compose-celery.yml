@@ -12,7 +12,7 @@ services:
       - aion2-network
     environment:
       - REDIS_HOST=aion2.tc-imba.com
-      - REDIS-PORT=16379
+      - REDIS_PORT=16379
     command: >
       poetry run celery
       -A aion2.backend.app.celery:celery_app
