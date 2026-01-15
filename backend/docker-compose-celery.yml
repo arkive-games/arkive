@@ -18,6 +18,6 @@ services:
       -A aion2.backend.app.celery:celery_app
       worker
       --loglevel=info
-      --concurrency=32
+      --concurrency=4
 networks:
   aion2-network:
