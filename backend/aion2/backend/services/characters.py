@@ -91,6 +91,7 @@ class Character:
             region: str = Query("tw"),
             character: str = Query(...),
             server: int = Query(...),
+            refresh: bool = Query(False),
             redis: aioredis.Redis = Depends(get_redis_client)
     ) -> schemas.StandardResponse[schemas.CharacterJob]:
         # Use region, server, and character for job identifier
@@ -125,7 +126,7 @@ class Character:
 
         # Check if cached data exists and if it's still valid (within 15 minutes)
         try:
-            if meta is not None and meta.status == "done":
+            if not refresh and meta is not None and meta.status == "done":
                 cached_at = datetime.fromtimestamp(meta.updated_at)
                 # cached_at = await redis.get(f"{cache_key_prefix}:cached_at")
                 # if cached_at and meta:
@@ -144,7 +145,7 @@ class Character:
 
         # If no job is running, create a new job
         # if not current_job_id or job_status != "running":
-        if meta is None or (meta.status != "running" and meta.status != "scheduled"):
+        if refresh or meta is None or (meta.status != "running" and meta.status != "scheduled"):
             celery_job = get_character_task.apply_async(kwargs={
                 "region_id": region,
                 "character_id": character,

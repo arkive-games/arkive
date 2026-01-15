@@ -20,4 +20,5 @@ from aion2.backend.schemas.comment import CommentCreate, CommentRead, CommentTar
 from aion2.backend.schemas.character import CharacterInfo, CharacterTitle, CharacterStat, CharacterDetailInfo, \
     CharacterBoard, CharacterProfile, CharacterRanking, CharacterEquipment, CharacterSkill, CharacterEquipments, \
     CharacterItem, CharacterItemSubStat, CharacterItemMainStat, CharacterItemMagicStoneStat, CharacterItemGodStoneStat, \
-    CharacterDetail, CharacterJob, CharacterJobMeta, CharacterJobItem, CharacterItemSubSkill
+    CharacterDetail, CharacterJob, CharacterJobMeta, CharacterJobItem, CharacterItemSubSkill, CharacterSkin, \
+    CharacterPet, CharacterWing

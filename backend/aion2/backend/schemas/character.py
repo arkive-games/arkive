@@ -97,9 +97,31 @@ class CharacterEquipment(BaseModel):
     enchant_level: int = Field(..., description="Enchant level")
     exceed_level: int = Field(..., description="Exceed level")
     slot_pos: int = Field(..., description="Slot position")
+    slot_pos_name: str = Field(..., description="Slot name")
+
 
 class CharacterSkin(BaseModel):
     id: int = Field(..., description="Skin ID")
+    name: str = Field(..., description="Skin name")
+    grade: str = Field(..., description="Skin grade")
+    slot_pos: int = Field(..., description="Slot position")
+    slot_pos_name: str = Field(..., description="Slot name")
+    icon: str = Field(..., description="Skin icon URL")
+
+
+class CharacterPet(BaseModel):
+    id: int = Field(..., description="Pet ID")
+    name: str = Field(..., description="Pet name")
+    level: int = Field(..., description="Pet level")
+    icon: str = Field(..., description="Pet icon URL")
+
+
+class CharacterWing(BaseModel):
+    id: int = Field(..., description="Wing ID")
+    name: str = Field(..., description="Wing name")
+    grade: str = Field(..., description="Wing grade")
+    icon: str = Field(..., description="Wing icon URL")
+
 
 class CharacterDetailInfo(BaseModel):
     profile: CharacterProfile
@@ -112,7 +134,10 @@ class CharacterDetailInfo(BaseModel):
 class CharacterEquipments(BaseModel):
     skills: list[CharacterSkill]
     equipments: list[CharacterEquipment]
-    # skins: list[CharacterSkin]
+    skins: list[CharacterSkin]
+    pet: CharacterPet
+    wing: CharacterWing
+
 
 class CharacterDetail(CharacterDetailInfo, CharacterEquipments):
     updated_at: datetime = Field(..., description="Updated at")
@@ -129,6 +154,7 @@ class CharacterItemMainStat(BaseModel):
 class CharacterItemSubStat(BaseModel):
     id: str = Field(..., description="Stat ID")
     value: str = Field(..., description="Stat value")
+
 
 class CharacterItemSubSkill(BaseModel):
     id: int = Field(..., description="Skill ID")
@@ -175,12 +201,11 @@ class CharacterJobMeta(BaseModel):
     total: int = Field(default=0, description="Total")
 
 
-
-
 class CharacterJobItem(BaseModel):
     type: str = Field(..., description="Job item type")
     # data: CharacterDetailInfo | CharacterEquipments | CharacterItem = Field(..., description="Job item data")
     data: dict = Field(..., description="Job item data")
+
 
 class CharacterJob(BaseModel):
     job_id: str | None = Field(None, description="Job ID")

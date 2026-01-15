@@ -75,9 +75,15 @@ def get_character_equipments(region_id: str, character_id: str, server_id: int) 
     data = resp.json()
     skills = [schemas.CharacterSkill.model_validate(x) for x in data["skill"]["skillList"]]
     equipments = [schemas.CharacterEquipment.model_validate(x) for x in data["equipment"]["equipmentList"]]
+    skins = [schemas.CharacterSkin.model_validate(x) for x in data["equipment"]["skinList"]]
+    pet = schemas.CharacterPet.model_validate(data["petwing"]["pet"])
+    wing = schemas.CharacterWing.model_validate(data["petwing"]["wing"])
     result = schemas.CharacterEquipments(
         skills=skills,
         equipments=equipments,
+        skins=skins,
+        pet=pet,
+        wing=wing,
     )
     return result
 
