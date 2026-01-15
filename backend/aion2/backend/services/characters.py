@@ -17,6 +17,7 @@ from loguru import logger
 from datetime import datetime, UTC, timedelta
 
 from aion2.backend import models, schemas
+from aion2.backend.config.manager import settings
 from aion2.backend.interfaces.cache import clear_cache, use_cache
 from aion2.backend.schemas import CharacterInfo
 from aion2.backend.utilities.dependencies import get_db, get_current_user, get_current_superuser, get_region_from_path, \

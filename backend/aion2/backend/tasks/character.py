@@ -38,7 +38,11 @@ def get_character_detail_info(region_id: str, character_id: str, server_id: int)
     # logger.debug(data)
     profile = schemas.CharacterProfile.model_validate(data["profile"])
     stats = [schemas.CharacterStat.model_validate(x) for x in data["stat"]["statList"]]
-    titles = [schemas.CharacterTitle.model_validate(x) for x in data["title"]["titleList"]]
+    titles = [schemas.CharacterTitle(
+        **x,
+        stats=[y.get("desc", "") for y in x.get("statList", [])],
+        equip_stats=[y.get("desc", "") for y in x.get("equipStatList", [])],
+    ) for x in data["title"]["titleList"]]
     rankings = [schemas.CharacterRanking.model_validate(x) for x in data["ranking"]["rankingList"]]
     boards = [schemas.CharacterBoard.model_validate(x) for x in data["daevanion"]["boardList"]]
     result = schemas.CharacterDetailInfo(
@@ -102,6 +106,7 @@ def get_character_item(region_id: str, character_id: str, server_id: int, item_i
     data = resp.json()
     main_stats = [schemas.CharacterItemMainStat.model_validate(x) for x in data.get("mainStats", [])]
     sub_stats = [schemas.CharacterItemSubStat.model_validate(x) for x in data.get("subStats", [])]
+    sub_skills = [schemas.CharacterItemSubSkill.model_validate(x) for x in data.get("subSkills", [])]
     magic_stone_stat = [schemas.CharacterItemMagicStoneStat.model_validate(x) for x in data.get("magicStoneStat", [])]
     god_stone_stat = [schemas.CharacterItemGodStoneStat.model_validate(x) for x in data.get("godStoneStat", [])]
 
@@ -109,6 +114,7 @@ def get_character_item(region_id: str, character_id: str, server_id: int, item_i
         **data,
         main_stats=main_stats,
         sub_stats=sub_stats,
+        sub_skills=sub_skills,
         magic_stone_stat=magic_stone_stat,
         god_stone_stat=god_stone_stat,
     )

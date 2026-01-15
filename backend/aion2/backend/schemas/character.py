@@ -33,6 +33,8 @@ class CharacterTitle(BaseModel):
     grade: str | None
     total_count: int
     owned_count: int
+    stats: List[str] = Field(default_factory=list)
+    equip_stats: List[str] = Field(default_factory=list)
 
 
 class CharacterProfile(BaseModel):
@@ -126,6 +128,10 @@ class CharacterItemSubStat(BaseModel):
     id: str = Field(..., description="Stat ID")
     value: str = Field(..., description="Stat value")
 
+class CharacterItemSubSkill(BaseModel):
+    id: int = Field(..., description="Skill ID")
+    level: int = Field(..., description="Level")
+
 
 class CharacterItemMagicStoneStat(BaseModel):
     id: str = Field(..., description="Stat ID")
@@ -152,6 +158,7 @@ class CharacterItem(BaseModel):
     soul_bind_rate: str = Field(..., description="Soul bind rate")
     main_stats: list[CharacterItemMainStat] = Field(default_factory=list, description="Main stats")
     sub_stats: list[CharacterItemSubStat] = Field(default_factory=list, description="Sub stats")
+    sub_skills: list[CharacterItemSubSkill] = Field(default_factory=list, description="Sub skills")
     magic_stone_stat: list[CharacterItemMagicStoneStat] = Field(default_factory=list, description="Magic stone stat")
     god_stone_stat: list[CharacterItemGodStoneStat] = Field(default=list, description="god stone stat")
 
