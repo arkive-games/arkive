@@ -13,8 +13,6 @@ services:
     environment:
       - REDIS_HOST=aion2.tc-imba.com
       - REDIS-PORT=16379
-    depends_on:
-      - core
     command: >
       poetry run celery
       -A aion2.backend.app.celery:celery_app
