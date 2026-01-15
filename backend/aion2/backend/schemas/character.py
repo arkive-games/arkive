@@ -98,6 +98,8 @@ class CharacterEquipment(BaseModel):
     exceed_level: int = Field(..., description="Exceed level")
     slot_pos: int = Field(..., description="Slot position")
 
+class CharacterSkin(BaseModel):
+    id: int = Field(..., description="Skin ID")
 
 class CharacterDetailInfo(BaseModel):
     profile: CharacterProfile
@@ -110,7 +112,7 @@ class CharacterDetailInfo(BaseModel):
 class CharacterEquipments(BaseModel):
     skills: list[CharacterSkill]
     equipments: list[CharacterEquipment]
-
+    # skins: list[CharacterSkin]
 
 class CharacterDetail(CharacterDetailInfo, CharacterEquipments):
     updated_at: datetime = Field(..., description="Updated at")
