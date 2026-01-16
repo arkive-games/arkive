@@ -110,17 +110,17 @@ class CharacterSkin(BaseModel):
 
 
 class CharacterPet(BaseModel):
-    id: int = Field(..., description="Pet ID")
-    name: str = Field(..., description="Pet name")
-    level: int = Field(..., description="Pet level")
-    icon: str = Field(..., description="Pet icon URL")
+    id: int | None = Field(default=None, description="Pet ID")
+    name: str | None = Field(default=None, description="Pet name")
+    level: int | None = Field(default=None, description="Pet level")
+    icon: str | None = Field(default=None, description="Pet icon URL")
 
 
 class CharacterWing(BaseModel):
-    id: int = Field(..., description="Wing ID")
-    name: str = Field(..., description="Wing name")
-    grade: str = Field(..., description="Wing grade")
-    icon: str = Field(..., description="Wing icon URL")
+    id: int | None = Field(default=None, description="Wing ID")
+    name: str | None = Field(default=None, description="Wing name")
+    grade: str | None = Field(default=None, description="Wing grade")
+    icon: str | None = Field(default=None, description="Wing icon URL")
 
 
 class CharacterDetailInfo(BaseModel):
