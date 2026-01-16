@@ -16,6 +16,11 @@ def get_api_base_url(region_id: str):
         return "https://aion2.plaync.com/api"
     return "https://tw.ncsoft.com/aion2/api"
 
+def get_search_base_url(region_id: str):
+    if region_id == "kr":
+        return "https://aion2.plaync.com/ko-kr/api/search/aion2/search/v2/character"
+    return "https://tw.ncsoft.com/aion2/api/search/aion2tw/search/v2/character"
+
 
 @retry(
     retry=retry_if_exception_type(httpx.HTTPError),
@@ -213,8 +218,8 @@ def get_character_task(self, *, region_id: str, character_id: str, server_id: in
         meta.status = "done"
         meta.updated_at = finished_at
         r.set(f"{cache_key_prefix}:cached_at", str(finished_at))
-
         r.hset(cache_key_meta, mapping=meta.model_dump(exclude_none=True, by_alias=True))
+        _publish(r, channel, payload=meta.model_dump(exclude_none=True, by_alias=True))
 
     except Exception as e:
         err = f"{type(e).__name__}: {e}"
@@ -223,4 +228,4 @@ def get_character_task(self, *, region_id: str, character_id: str, server_id: in
         meta.status = "failed"
         meta.updated_at = datetime.now(UTC).timestamp()
         r.hset(cache_key_meta, mapping=meta.model_dump(exclude_none=True, by_alias=True))
-        # _publish(r, channel, payload=meta.model_dump(exclude_none=True, by_alias=True))
+        _publish(r, channel, payload=meta.model_dump(exclude_none=True, by_alias=True))
