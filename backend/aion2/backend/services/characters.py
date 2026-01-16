@@ -219,11 +219,12 @@ async def get_character_info_websocket(
                     job_update_dict = await redis.hgetall(cache_key_meta)
                 # Send the update to the WebSocket client
                 await websocket.send_text(job_update)
-
                 # If the job is done, send the final response and close the connection
                 if job_update_dict.get("status") in ("done", "failed"):
                     break
 
+        await websocket.close()
+        logger.info(f"websocket closed: {websocket}")
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
@@ -232,3 +233,5 @@ async def get_character_info_websocket(
             await pubsub.unsubscribe(channel)
         finally:
             await pubsub.close()
+
+
