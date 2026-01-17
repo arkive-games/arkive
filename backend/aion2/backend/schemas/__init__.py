@@ -21,4 +21,4 @@ from aion2.backend.schemas.character import CharacterInfo, CharacterTitle, Chara
     CharacterBoard, CharacterProfile, CharacterRanking, CharacterEquipment, CharacterSkill, CharacterEquipments, \
     CharacterItem, CharacterItemSubStat, CharacterItemMainStat, CharacterItemMagicStoneStat, CharacterItemGodStoneStat, \
     CharacterDetail, CharacterJob, CharacterJobMeta, CharacterJobItem, CharacterItemSubSkill, CharacterSkin, \
-    CharacterPet, CharacterWing
+    CharacterPet, CharacterWing, CharacterBoardDetail

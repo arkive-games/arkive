@@ -23,7 +23,7 @@ from aion2.backend.schemas import CharacterInfo
 from aion2.backend.utilities.dependencies import get_db, get_current_user, get_current_superuser, get_region_from_path, \
     get_language_from_path, get_map_from_path, get_httpx_client, get_redis_client
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
-from aion2.backend.tasks.character import get_character_task, get_character_task_temp, get_api_base_url, \
+from aion2.backend.tasks.character import get_character_task, get_api_base_url, \
     get_search_base_url
 
 router = APIRouter(prefix="/characters", tags=["characters"])

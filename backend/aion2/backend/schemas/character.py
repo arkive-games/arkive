@@ -191,6 +191,11 @@ class CharacterItem(BaseModel):
     god_stone_stat: list[CharacterItemGodStoneStat] = Field(default=list, description="god stone stat")
 
 
+class CharacterBoardDetail(BaseModel):
+    board_id: int = Field(..., description="Board ID")
+    open_nodes: List[int] = Field(default_factory=list, description="Nodes open")
+
+
 class CharacterJobMeta(BaseModel):
     job_id: str = Field(..., description="Job ID")
     status: str = Field(..., description="Job status")

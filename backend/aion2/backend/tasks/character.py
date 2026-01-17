@@ -131,13 +131,34 @@ def get_character_item(region_id: str, character_id: str, server_id: int, item_i
     )
 
 
-def get_character_task_temp(region_id: str, character_id: str, server_id: int):
-    info = get_character_detail_info(region_id=region_id, character_id=character_id, server_id=server_id)
-    equipments = get_character_equipments(region_id=region_id, character_id=character_id, server_id=server_id)
-    return schemas.CharacterDetail(
-        **info.model_dump(),
-        **equipments.model_dump(),
-        updated_at=datetime.now(UTC),
+@retry(
+    retry=retry_if_exception_type(httpx.HTTPError),
+    wait=wait_exponential_jitter(initial=1, max=20),
+    stop=stop_after_attempt(5),
+    reraise=True,
+)
+def get_character_board(region_id: str, character_id: str, server_id: int, board_id: int) -> schemas.CharacterBoardDetail:
+    resp = httpx.get(
+        f"{get_api_base_url(region_id)}/character/daevanion/detail",
+        params={
+            "boardId": board_id,
+            "characterId": character_id,
+            "serverId": server_id,
+            "lang": "zh"
+        },
+        timeout=30,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+
+    open_nodes = []
+    for node in data.get("nodeList", []):
+        if node["open"] == 1:
+            open_nodes.append(node["nodeId"])
+
+    return schemas.CharacterBoardDetail(
+        board_id=board_id,
+        open_nodes=open_nodes,
     )
 
 
@@ -180,7 +201,7 @@ def get_character_task(self, *, region_id: str, character_id: str, server_id: in
         started_at=started_at,
         updated_at=started_at,
         done=0,
-        total=21,
+        total=27,
     )
 
     try:
@@ -196,7 +217,7 @@ def get_character_task(self, *, region_id: str, character_id: str, server_id: in
         # get equipments
         equipments = get_character_equipments(region_id=region_id, character_id=character_id, server_id=server_id)
         meta.done += 1
-        meta.total = 2 + len(equipments.equipments)
+        meta.total = 8 + len(equipments.equipments)
         _update_item("equipments", equipments.model_dump(exclude_none=True, by_alias=True))
 
         # get equipment
@@ -210,9 +231,22 @@ def get_character_task(self, *, region_id: str, character_id: str, server_id: in
                 meta.done += 1
                 _update_item(f"equipments:{equipment.slot_pos}", item.model_dump(exclude_none=True, by_alias=True))
             except Exception as e:
-                logger.error(f"Failed to get item {equipment.id}: {e}")
+                logger.error(f"Failed to get equipment {equipment.id}: {e}")
                 meta.failed += 1
                 _update_item(f"equipments:{equipment.slot_pos}", {})
+
+        # get boards
+        for board in info.boards:
+            try:
+                item = get_character_board(
+                    region_id=region_id, character_id=character_id, server_id=server_id, board_id=board.id
+                )
+                meta.done += 1
+                _update_item(f"boards:{board.id}", item.model_dump(exclude_none=True, by_alias=True))
+            except Exception as e:
+                logger.error(f"Failed to get board {board.id}: {e}")
+                meta.failed += 1
+                _update_item(f"boards:{board.id}", {})
 
         finished_at = datetime.now(UTC).timestamp()
         meta.status = "done"
