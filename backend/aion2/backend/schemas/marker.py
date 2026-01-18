@@ -33,7 +33,7 @@ class MarkerRead(BaseModel):
     y: float
     index_in_subtype: int
     icon: str | None = ""
-    marker: str | None = ""
+    type: str | None = ""
 
 class MarkerReadDetail(MarkerRead):
     subtype: SubtypeRead
@@ -49,7 +49,8 @@ class MarkerCreate(BaseModel):
     x: float
     y: float
     icon: str = ""
-    marker: str = ""
+    type: str = ""
+    index_in_subtype: int | None = None
 
 class MarkerCreateReal(MarkerCreate):
     map_id: UUID
@@ -63,7 +64,8 @@ class MarkerUpdate(BaseModel):
     x: float | None = None
     y: float | None = None
     icon: str | None = None
-    marker: str | None = None
+    type: str | None = None
+    index_in_subtype: int | None = None
     # images: List[str] | None = None
 
 class MarkerImageCreate(BaseModel):

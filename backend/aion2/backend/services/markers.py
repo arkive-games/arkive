@@ -148,7 +148,10 @@ class Markers:
             marker_data: schemas.MarkerCreate,
     ) -> schemas.StandardResponse[schemas.MarkerReadDetail]:
         subtype_id = await self.check_subtype_id(marker_data.subtype_id)
-        index_in_subtype = await get_next_index_for_subtype(self.db, self.map_model.id, subtype_id)
+        if marker_data.index_in_subtype is None:
+            index_in_subtype = await get_next_index_for_subtype(self.db, self.map_model.id, subtype_id)
+        else:
+            index_in_subtype = marker_data.index_in_subtype
         region_id = await self.check_region_id(marker_data.region_id)
         real_marker_data = schemas.MarkerCreateReal(
             **marker_data.model_dump(exclude={"subtype_id", "region_id"}),
@@ -226,12 +229,14 @@ class Markers:
             raise BizError(ErrorCode.MarkerNotFoundError)
         subtype_id = await self.check_subtype_id(marker_data.subtype_id)
         region_id = await self.check_region_id(marker_data.region_id)
-        update_dict = {
-            **marker_data.model_dump(exclude={"subtype_id", "region_id"}),
+        update_dict: dict[str, Any] = {
+            **marker_data.model_dump(exclude={"subtype_id", "region_id", "index_in_subtype"}),
             "subtype_id": subtype_id,
             "region_id": region_id,
         }
-        if subtype_id != marker_model.subtype_id:
+        if marker_model.index_in_subtype is not None:
+            update_dict["index_in_subtype"] = marker_model.index_in_subtype
+        elif subtype_id != marker_model.subtype_id:
             update_dict["index_in_subtype"] = await get_next_index_for_subtype(self.db, self.map_model.id, subtype_id)
         await marker_crud.update(
             self.db, update_dict, id=marker_model.id,
