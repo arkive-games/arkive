@@ -49,6 +49,9 @@ class ErrorCode(str, Enum):
     MarkerFeedbackNotEditableError = "MarkerFeedbackNotEditableError"
     MarkerImageNotFoundError = "MarkerImageNotFoundError"
     RegionNotFoundError = "RegionNotFoundError"
+    SeasonNotFoundError = "SeasonNotFoundError"
+    ServerNotFoundError = "ServerNotFoundError"
+    ServerMatchingNotFoundError = "ServerMatchingNotFoundError"
     BitSetTooLongError = "BitSetTooLongError"
     CommentNotFoundError = "CommentNotFoundError"
 

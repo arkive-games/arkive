@@ -31,5 +31,5 @@ class ServerMatching(AsyncAttrs, Base, TimestampMixin):
 
     # Relationships
     season: Mapped["Season"] = relationship("Season")
-    server1: Mapped["Server"] = relationship("Server", lazy="joined", join_depth=1)
-    server2: Mapped["Server"] = relationship("Server", lazy="joined", join_depth=1)
+    server1: Mapped["Server"] = relationship("Server", foreign_keys=[server1_id], lazy="joined", join_depth=1)
+    server2: Mapped["Server"] = relationship("Server", foreign_keys=[server2_id], lazy="joined", join_depth=1)

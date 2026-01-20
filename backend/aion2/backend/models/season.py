@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Integer, DateTime
+from sqlalchemy import String, Integer, DateTime, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import Mapped, mapped_column
@@ -12,6 +12,11 @@ class Season(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'seasons'
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    number: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    server_region: Mapped[str] = mapped_column(String, nullable=False)
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('number', 'server_region', name='_number_server_region_uc'),
+    )

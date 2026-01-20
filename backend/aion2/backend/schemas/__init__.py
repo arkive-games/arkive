@@ -22,3 +22,6 @@ from aion2.backend.schemas.character import CharacterInfo, CharacterTitle, Chara
     CharacterItem, CharacterItemSubStat, CharacterItemMainStat, CharacterItemMagicStoneStat, CharacterItemGodStoneStat, \
     CharacterDetail, CharacterJob, CharacterJobMeta, CharacterJobItem, CharacterItemSubSkill, CharacterSkin, \
     CharacterPet, CharacterWing, CharacterBoardDetail
+from aion2.backend.schemas.season import SeasonRead, SeasonCreate, SeasonUpdate
+from aion2.backend.schemas.server import ServerRead, ServerCreate, ServerUpdate, ServerMatchingRead, \
+    ServerMatchingReadDetail, ServerMatchingCreate, ServerMatchingUpdate

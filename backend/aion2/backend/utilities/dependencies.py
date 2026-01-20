@@ -84,6 +84,33 @@ async def get_region_from_path(
         "name", ErrorCode.RegionNotFoundError
     )
 
+async def get_season_from_path(
+        season_id: UUID = Path(..., alias="season"),
+        db: AsyncSession = Depends(get_db)
+) -> models.Season:
+    return await get_model(
+        str(season_id), db, models.Season,
+        "id", ErrorCode.SeasonNotFoundError
+    )
+
+async def get_server_from_path(
+        server_id: UUID = Path(..., alias="server"),
+        db: AsyncSession = Depends(get_db)
+) -> models.Server:
+    return await get_model(
+        str(server_id), db, models.Server,
+        "id", ErrorCode.ServerNotFoundError
+    )
+
+async def get_server_matching_from_path(
+        server_matching_id: UUID = Path(..., alias="server_matching"),
+        db: AsyncSession = Depends(get_db)
+) -> models.ServerMatching:
+    return await get_model(
+        str(server_matching_id), db, models.ServerMatching,
+        "id", ErrorCode.ServerMatchingNotFoundError
+    )
+
 async def get_marker_from_path(
         marker_id: UUID = Path(..., alias="marker"),
         db: AsyncSession = Depends(get_db)
