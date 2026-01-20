@@ -8,3 +8,5 @@ from aion2.backend.models.region import Region, RegionTranslation
 from aion2.backend.models.marker import Marker, MarkerImage, MarkerTranslation, MarkerContributor, MarkerFeedback
 from aion2.backend.models.user_marker_progress import UserMarkerProgress
 from aion2.backend.models.comment import Comment
+from aion2.backend.models.season import Season
+from aion2.backend.models.server import Server, ServerMatching
