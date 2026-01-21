@@ -1,6 +1,6 @@
 import uuid
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Integer, ForeignKey
+from sqlalchemy import String, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -20,6 +20,10 @@ class Server(AsyncAttrs, Base, TimestampMixin):
     server_id: Mapped[int] = mapped_column(Integer, nullable=False)
     server_name: Mapped[str] = mapped_column(String, nullable=False)
     server_short_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('server_region', 'server_id', name='_server_region_server_id_uc'),
+    )
 
 class ServerMatching(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'server_matchings'

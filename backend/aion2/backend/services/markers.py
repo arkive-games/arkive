@@ -154,7 +154,7 @@ class Markers:
             index_in_subtype = marker_data.index_in_subtype
         region_id = await self.check_region_id(marker_data.region_id)
         real_marker_data = schemas.MarkerCreateReal(
-            **marker_data.model_dump(exclude={"subtype_id", "region_id"}),
+            **marker_data.model_dump(exclude={"subtype_id", "region_id", "index_in_subtype"}),
             subtype_id=subtype_id,
             region_id=region_id,
             map_id=self.map_model.id,
