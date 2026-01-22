@@ -111,6 +111,15 @@ async def get_server_matching_from_path(
         "id", ErrorCode.ServerMatchingNotFoundError
     )
 
+async def get_abyss_artifact_from_path(
+        abyss_artifact_id: UUID = Path(..., alias="abyss_artifact"),
+        db: AsyncSession = Depends(get_db)
+) -> models.AbyssArtifact:
+    return await get_model(
+        str(abyss_artifact_id), db, models.AbyssArtifact,
+        "id", ErrorCode.AbyssArtifactNotFoundError
+    )
+
 async def get_marker_from_path(
         marker_id: UUID = Path(..., alias="marker"),
         db: AsyncSession = Depends(get_db)

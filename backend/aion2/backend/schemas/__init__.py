@@ -25,3 +25,6 @@ from aion2.backend.schemas.character import CharacterInfo, CharacterTitle, Chara
 from aion2.backend.schemas.season import SeasonRead, SeasonCreate, SeasonUpdate
 from aion2.backend.schemas.server import ServerRead, ServerCreate, ServerUpdate, ServerMatchingRead, \
     ServerMatchingReadDetail, ServerMatchingCreate, ServerMatchingUpdate
+from aion2.backend.schemas.abyss_artifact import AbyssArtifactRead, AbyssArtifactReadDetail, \
+    AbyssArtifactCreate, AbyssArtifactUpdate, AbyssArtifactStateRead, AbyssArtifactStateReadDetail, \
+    AbyssArtifactStateCreate, AbyssArtifactStateUpdate

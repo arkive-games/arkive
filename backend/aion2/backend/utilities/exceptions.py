@@ -52,6 +52,8 @@ class ErrorCode(str, Enum):
     SeasonNotFoundError = "SeasonNotFoundError"
     ServerNotFoundError = "ServerNotFoundError"
     ServerMatchingNotFoundError = "ServerMatchingNotFoundError"
+    AbyssArtifactNotFoundError = "AbyssArtifactNotFoundError"
+    AbyssArtifactStateNotFoundError = "AbyssArtifactStateNotFoundError"
     BitSetTooLongError = "BitSetTooLongError"
     CommentNotFoundError = "CommentNotFoundError"
 
