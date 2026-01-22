@@ -12,13 +12,17 @@ from aion2.backend.schemas.comment import CommentTargetType
 
 
 if TYPE_CHECKING:
-    from aion2.backend.models import User
+    from aion2.backend.models import User, Marker
 
 class Comment(Base, TimestampMixin):
     __tablename__ = "comments"
     __table_args__ = (
 
     )
+    __mapper_args__ = {
+        "polymorphic_identity": "comments",
+        "polymorphic_on": "target_type",
+    }
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID id
     user_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'),
@@ -57,6 +61,20 @@ class Comment(Base, TimestampMixin):
     user: Mapped["User"] = relationship("User", lazy="joined", join_depth=1)
 
 
+class MarkerComment(Comment):
+
+    __mapper_args__ = {
+        "polymorphic_identity": "marker",
+    }
+
+    marker: Mapped["Marker"] = relationship(
+        "Marker",
+        primaryjoin="foreign(MarkerComment.target_id) == Marker.id",
+        uselist=False,
+        viewonly=True,
+        lazy="joined",
+        join_depth=1,
+    )
 
 
 

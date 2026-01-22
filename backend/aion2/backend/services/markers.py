@@ -29,7 +29,7 @@ router = APIRouter(prefix="/maps/{map}", tags=["markers"])
 marker_crud = FastCRUD(models.Marker)
 marker_translation_crud = FastCRUD(models.MarkerTranslation)
 marker_feedback_crud = FastCRUD(models.MarkerFeedback)
-comment_crud = FastCRUD(models.Comment)
+marker_comment_crud = FastCRUD(models.MarkerComment)
 marker_image_crud = FastCRUD(models.MarkerImage)
 image_crud = FastCRUD(models.Image)
 
@@ -539,16 +539,19 @@ class MarkerComment:
             self,
             limit: int = Query(100),
             offset: int = Query(0),
-    ) -> schemas.StandardListResponse[schemas.CommentRead]:
+    ) -> schemas.StandardListResponse[schemas.MarkerCommentRead]:
         stmt = (
-            select(models.Comment).
-            where(models.Comment.target_type == schemas.CommentTargetType.marker).
-            order_by(desc(models.Comment.created_at)).
+            select(models.MarkerComment).
+            where(models.MarkerComment.marker.has(
+                models.Marker.map_id == self.map_model.id
+            )).
+            # where(models.MarkerComment.target_type == schemas.CommentTargetType.marker).
+            order_by(desc(models.MarkerComment.created_at)).
             limit(limit).offset(offset)
         )
         result = await self.db.execute(stmt)
-        comments = [schemas.CommentRead.model_validate(x) for x in result.unique().scalars()]
-        count = await comment_crud.count(self.db, target_type="marker")
+        comments = [schemas.MarkerCommentRead.model_validate(x) for x in result.unique().scalars()]
+        count = await marker_comment_crud.count(self.db)
         return schemas.StandardListResponse(comments, count)
 
     async def get_comment_model(self, comment_id: UUID):
