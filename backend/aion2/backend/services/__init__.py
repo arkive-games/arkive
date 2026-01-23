@@ -20,7 +20,9 @@ from aion2.backend.services.export import router as export_router
 from aion2.backend.services.characters import router as character_router
 from aion2.backend.services.seasons import router as seasons_router
 from aion2.backend.services.servers import router as servers_router
-from aion2.backend.services.abyss_artifacts import router as abyss_artifacts_router
+from aion2.backend.services.server_matchings import router as server_matchings_router
+from aion2.backend.services.abyss_artifacts import router as abyss_artifacts_states_router, \
+    artifacts_router as abyss_artifacts_router
 
 router = APIRouter()
 
@@ -46,4 +48,6 @@ router.include_router(export_router)
 router.include_router(character_router)
 router.include_router(seasons_router)
 router.include_router(servers_router)
+router.include_router(server_matchings_router)
+router.include_router(abyss_artifacts_states_router)
 router.include_router(abyss_artifacts_router)

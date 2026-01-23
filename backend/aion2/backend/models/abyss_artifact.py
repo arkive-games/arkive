@@ -1,7 +1,7 @@
 import uuid
-from datetime import date
+from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import ForeignKey, UniqueConstraint, Integer, Date
+from sqlalchemy import ForeignKey, UniqueConstraint, Integer, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -29,12 +29,12 @@ class AbyssArtifactState(AsyncAttrs, Base, TimestampMixin):
     abyss_artifact_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('abyss_artifacts.id', ondelete='CASCADE'), nullable=False)
     server_matching_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('server_matchings.id', ondelete='CASCADE'), nullable=False)
     state: Mapped[int] = mapped_column(Integer, nullable=False)
-    date: Mapped[date] = mapped_column(Date, nullable=False)
+    record_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     # Relationships
     abyss_artifact: Mapped["AbyssArtifact"] = relationship("AbyssArtifact")
     server_matching: Mapped["ServerMatching"] = relationship("ServerMatching")
 
     __table_args__ = (
-        UniqueConstraint('abyss_artifact_id', 'server_matching_id', 'date', name='_abyss_artifact_server_matching_date_uc'),
+        UniqueConstraint('abyss_artifact_id', 'server_matching_id', 'record_time', name='_abyss_artifact_server_matching_record_time_uc'),
     )

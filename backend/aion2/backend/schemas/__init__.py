@@ -27,4 +27,4 @@ from aion2.backend.schemas.server import ServerRead, ServerCreate, ServerUpdate,
     ServerMatchingReadDetail, ServerMatchingCreate, ServerMatchingUpdate
 from aion2.backend.schemas.abyss_artifact import AbyssArtifactRead, AbyssArtifactReadDetail, \
     AbyssArtifactCreate, AbyssArtifactUpdate, AbyssArtifactStateRead, AbyssArtifactStateReadDetail, \
-    AbyssArtifactStateCreate, AbyssArtifactStateUpdate
+    AbyssArtifactStateCreate, AbyssArtifactStateUpdate, AbyssArtifactServerCount

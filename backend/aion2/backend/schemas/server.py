@@ -37,11 +37,9 @@ class ServerMatchingReadDetail(ServerMatchingRead):
     server2: ServerRead
 
 class ServerMatchingCreate(BaseModel):
-    season_id: UUID
     server1_id: UUID
     server2_id: UUID
 
 class ServerMatchingUpdate(BaseModel):
-    season_id: Optional[UUID] = None
     server1_id: Optional[UUID] = None
     server2_id: Optional[UUID] = None

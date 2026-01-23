@@ -15,12 +15,13 @@ from aion2.backend import models, schemas
 
 BT = TypeVar("BT", bound=Base)
 
+
 async def get_model(
-    model_id: str | UUID,
-    db: AsyncSession,
-    model_type: Type[BT],
-    model_field: str,
-    model_error_code: ErrorCode,
+        model_id: str | UUID,
+        db: AsyncSession,
+        model_type: Type[BT],
+        model_field: str,
+        model_error_code: ErrorCode,
 ) -> BT:
     try:
         uuid = UUID(model_id)
@@ -33,7 +34,6 @@ async def get_model(
     return model
 
 
-
 async def get_language_from_path(
         language_id: str = Path(..., alias="language"),
         db: AsyncSession = Depends(get_db)
@@ -44,7 +44,6 @@ async def get_language_from_path(
     )
 
 
-
 async def get_map_from_path(
         map_id: str = Path(..., alias="map"),
         db: AsyncSession = Depends(get_db)
@@ -53,7 +52,6 @@ async def get_map_from_path(
         map_id, db, models.Map,
         "name", ErrorCode.MapNotFoundError
     )
-
 
 
 async def get_category_from_path(
@@ -75,6 +73,7 @@ async def get_subtype_from_path(
         "name", ErrorCode.SubTypeNotFoundError
     )
 
+
 async def get_region_from_path(
         region_id: str = Path(..., alias="region"),
         db: AsyncSession = Depends(get_db)
@@ -83,6 +82,7 @@ async def get_region_from_path(
         region_id, db, models.Region,
         "name", ErrorCode.RegionNotFoundError
     )
+
 
 async def get_season_from_path(
         season_id: UUID = Path(..., alias="season"),
@@ -93,6 +93,7 @@ async def get_season_from_path(
         "id", ErrorCode.SeasonNotFoundError
     )
 
+
 async def get_server_from_path(
         server_id: UUID = Path(..., alias="server"),
         db: AsyncSession = Depends(get_db)
@@ -101,6 +102,7 @@ async def get_server_from_path(
         str(server_id), db, models.Server,
         "id", ErrorCode.ServerNotFoundError
     )
+
 
 async def get_server_matching_from_path(
         server_matching_id: UUID = Path(..., alias="server_matching"),
@@ -111,6 +113,7 @@ async def get_server_matching_from_path(
         "id", ErrorCode.ServerMatchingNotFoundError
     )
 
+
 async def get_abyss_artifact_from_path(
         abyss_artifact_id: UUID = Path(..., alias="abyss_artifact"),
         db: AsyncSession = Depends(get_db)
@@ -119,6 +122,17 @@ async def get_abyss_artifact_from_path(
         str(abyss_artifact_id), db, models.AbyssArtifact,
         "id", ErrorCode.AbyssArtifactNotFoundError
     )
+
+
+async def get_abyss_artifact_state_from_path(
+        state_id: UUID = Path(..., alias="state"),
+        db: AsyncSession = Depends(get_db)
+) -> models.AbyssArtifactState:
+    return await get_model(
+        str(state_id), db, models.AbyssArtifactState,
+        "id", ErrorCode.AbyssArtifactStateNotFoundError
+    )
+
 
 async def get_marker_from_path(
         marker_id: UUID = Path(..., alias="marker"),

@@ -12,19 +12,19 @@ season_crud = FastCRUD(models.Season)
 
 @cbv(router)
 class Seasons:
-    user: models.User = Depends(get_current_superuser)
     db: AsyncSession = Depends(get_db)
 
     @router.post("/")
     async def create_season(
         self,
         season_data: schemas.SeasonCreate,
+        user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.SeasonRead]:
         season_model = await season_crud.create(self.db, season_data)
         return schemas.SeasonRead.model_validate(season_model).to_response()
 
     @router.get("/")
-    async def get_seasons(self) -> schemas.StandardListResponse[schemas.SeasonRead]:
+    async def list_seasons(self) -> schemas.StandardListResponse[schemas.SeasonRead]:
         count = await season_crud.count(self.db)
         result = await season_crud.get_multi(self.db)
         seasons = [schemas.SeasonRead.model_validate(x) for x in result["data"]]
@@ -42,6 +42,7 @@ class Seasons:
         self,
         season_data: schemas.SeasonUpdate,
         season_model: models.Season = Depends(get_season_from_path),
+        user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.SeasonRead]:
         await season_crud.update(
             self.db, season_data, id=season_model.id,
@@ -53,6 +54,7 @@ class Seasons:
     async def delete_season(
         self,
         season_model: models.Season = Depends(get_season_from_path),
+        user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.Empty]:
         await self.db.delete(season_model)
         await self.db.commit()
