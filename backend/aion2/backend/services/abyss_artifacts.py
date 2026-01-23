@@ -62,6 +62,7 @@ class AbyssArtifactStates:
         self,
         abyss_artifact_id: Optional[uuid.UUID] = Query(None),
         server_matching_id: Optional[uuid.UUID] = Query(None),
+        current_time: Optional[datetime] = Query(None),
     ) -> schemas.StandardListResponse[schemas.AbyssArtifactStateRead]:
         from sqlalchemy import desc
         query = select(models.AbyssArtifactState).distinct(
@@ -82,6 +83,8 @@ class AbyssArtifactStates:
             )
         if server_matching_id:
             query = query.where(models.AbyssArtifactState.server_matching_id == server_matching_id)
+        if current_time:
+            query = query.where(models.AbyssArtifactState.record_time <= current_time)
 
         query = query.order_by(
             models.AbyssArtifactState.abyss_artifact_id,
