@@ -106,12 +106,8 @@ class AbyssArtifactStates:
         )
         artifact_total = (await self.db.execute(total_query)).scalar() or 0
 
-        # 2. Get latest state for each (artifact, server_matching) in this season/map
-        # We reuse the logic from list_abyss_artifact_states but we need to join server_matching to get server IDs
-        latest_states_query = select(models.AbyssArtifactState).distinct(
-            models.AbyssArtifactState.abyss_artifact_id,
-            models.AbyssArtifactState.server_matching_id
-        ).options(
+        # 2. Get all states in this season/map
+        states_query = select(models.AbyssArtifactState).options(
             joinedload(models.AbyssArtifactState.server_matching).joinedload(models.ServerMatching.server1),
             joinedload(models.AbyssArtifactState.server_matching).joinedload(models.ServerMatching.server2)
         ).where(
@@ -121,19 +117,15 @@ class AbyssArtifactStates:
             models.AbyssArtifactState.server_matching.has(
                 models.ServerMatching.season_id == self.season_model.id
             )
-        ).order_by(
-            models.AbyssArtifactState.abyss_artifact_id,
-            models.AbyssArtifactState.server_matching_id,
-            desc(models.AbyssArtifactState.record_time)
         )
 
-        result = await self.db.execute(latest_states_query)
-        latest_states = result.unique().scalars().all()
+        result = await self.db.execute(states_query)
+        all_states = result.unique().scalars().all()
 
         # 3. Aggregate counts per server
         # state = 1 -> server1, state = 2 -> server2
         counts = {} # server_id -> count
-        for s in latest_states:
+        for s in all_states:
             if s.state == 1:
                 sid = s.server_matching.server1.server_id
                 counts[sid] = counts.get(sid, 0) + 1
