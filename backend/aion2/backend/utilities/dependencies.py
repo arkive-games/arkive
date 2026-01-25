@@ -134,6 +134,22 @@ async def get_abyss_artifact_state_from_path(
     )
 
 
+async def get_abyss_artifact_map_state_from_path(
+        state_id: UUID = Path(..., alias="state"),
+        db: AsyncSession = Depends(get_db)
+) -> models.AbyssArtifactMapState:
+    from sqlalchemy.orm import joinedload
+    result = await db.execute(
+        select(models.AbyssArtifactMapState)
+        .options(joinedload(models.AbyssArtifactMapState.server_matching))
+        .where(models.AbyssArtifactMapState.id == state_id)
+    )
+    model = result.unique().scalar_one_or_none()
+    if model is None:
+        raise BizError(ErrorCode.AbyssArtifactMapStateNotFoundError)
+    return model
+
+
 async def get_marker_from_path(
         marker_id: UUID = Path(..., alias="marker"),
         db: AsyncSession = Depends(get_db)

@@ -9,14 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aion2.backend import models, schemas
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_abyss_artifact_from_path, \
-    get_map_from_path, get_abyss_artifact_state_from_path, get_season_from_path
+    get_map_from_path, get_season_from_path, get_abyss_artifact_map_state_from_path
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
 router = APIRouter(prefix="/seasons/{season}/maps/{map}/artifacts", tags=["abyss_artifacts_states"])
 artifacts_router = APIRouter(prefix="/maps/{map}/artifacts", tags=["abyss_artifacts"])
 
 abyss_artifact_crud = FastCRUD(models.AbyssArtifact)
-abyss_artifact_state_crud = FastCRUD(models.AbyssArtifactState)
+abyss_artifact_map_state_crud = FastCRUD(models.AbyssArtifactMapState)
 
 @cbv(router)
 class AbyssArtifactStates:
@@ -24,22 +24,14 @@ class AbyssArtifactStates:
     map_model: models.Map = Depends(get_map_from_path)
     season_model: models.Season = Depends(get_season_from_path)
 
+
     @router.post("/states")
     async def create_abyss_artifact_state(
         self,
-        state_data: schemas.AbyssArtifactStateCreate,
+        state_data: schemas.AbyssArtifactMapStateCreate,
         user: models.User = Depends(get_current_superuser),
-    ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
-        result = await self.db.execute(
-            select(models.AbyssArtifact).where(
-                models.AbyssArtifact.id == state_data.abyss_artifact_id,
-                models.AbyssArtifact.marker.has(models.Marker.map_id == self.map_model.id)
-            )
-        )
-        artifact = result.unique().scalar_one_or_none()
-        if artifact is None:
-            raise BizError(ErrorCode.AbyssArtifactNotFoundError)
-
+    ) -> schemas.StandardResponse[schemas.AbyssArtifactMapStateRead]:
+        # Verify matching exists and belongs to the season
         result = await self.db.execute(
             select(models.ServerMatching).where(
                 models.ServerMatching.id == state_data.server_matching_id,
@@ -50,51 +42,85 @@ class AbyssArtifactStates:
         if matching is None:
             raise BizError(ErrorCode.ServerMatchingNotFoundError)
 
-        state_model = models.AbyssArtifactState(**state_data.model_dump())
+        state_model = models.AbyssArtifactMapState(
+            server_matching_id=state_data.server_matching_id,
+            states=[s.model_dump(mode='json') for s in state_data.states],
+            record_time=state_data.record_time
+        )
         self.db.add(state_model)
 
         await self.db.commit()
         await self.db.refresh(state_model)
-        return schemas.AbyssArtifactStateRead.model_validate(state_model).to_response()
+        return schemas.AbyssArtifactMapStateRead.model_validate(state_model).to_response()
+
+    @router.patch("/states/{state}")
+    async def update_abyss_artifact_state(
+        self,
+        state_data: schemas.AbyssArtifactMapStateUpdate,
+        state_model: models.AbyssArtifactMapState = Depends(get_abyss_artifact_map_state_from_path),
+        user: models.User = Depends(get_current_superuser),
+    ) -> schemas.StandardResponse[schemas.AbyssArtifactMapStateRead]:
+        if state_model.server_matching.season_id != self.season_model.id:
+            raise BizError(ErrorCode.SeasonNotFoundError)
+
+        if state_data.states is not None:
+            state_model.states = [s.model_dump(mode='json') for s in state_data.states]
+        if state_data.record_time is not None:
+            state_model.record_time = state_data.record_time
+
+        await self.db.commit()
+        await self.db.refresh(state_model)
+        return schemas.AbyssArtifactMapStateRead.model_validate(state_model).to_response()
+
+    @router.delete("/states/{state}")
+    async def delete_abyss_artifact_state(
+        self,
+        state_model: models.AbyssArtifactMapState = Depends(get_abyss_artifact_map_state_from_path),
+        user: models.User = Depends(get_current_superuser),
+    ) -> schemas.StandardResponse[schemas.Empty]:
+        if state_model.server_matching.season_id != self.season_model.id:
+            raise BizError(ErrorCode.SeasonNotFoundError)
+
+        await self.db.delete(state_model)
+        await self.db.commit()
+        return schemas.StandardResponse()
 
     @router.get("/states")
     async def list_abyss_artifact_states(
         self,
-        abyss_artifact_id: Optional[uuid.UUID] = Query(None),
         server_matching_id: Optional[uuid.UUID] = Query(None),
         current_time: Optional[datetime] = Query(None),
-    ) -> schemas.StandardListResponse[schemas.AbyssArtifactStateRead]:
+    ) -> schemas.StandardListResponse[schemas.AbyssArtifactMapStateRead]:
         from sqlalchemy import desc
-        query = select(models.AbyssArtifactState).distinct(
-            models.AbyssArtifactState.abyss_artifact_id,
-            models.AbyssArtifactState.server_matching_id
+        
+        # We want the latest state for each server_matching_id before current_time
+        query = select(models.AbyssArtifactMapState).distinct(
+            models.AbyssArtifactMapState.server_matching_id
         ).where(
-            models.AbyssArtifactState.abyss_artifact.has(
-                models.AbyssArtifact.marker.has(models.Marker.map_id == self.map_model.id)
-            ),
-            models.AbyssArtifactState.server_matching.has(
+            models.AbyssArtifactMapState.server_matching.has(
                 models.ServerMatching.season_id == self.season_model.id
             )
         )
 
-        if abyss_artifact_id:
-            query = query.where(
-                models.AbyssArtifactState.abyss_artifact_id == abyss_artifact_id,
-            )
         if server_matching_id:
-            query = query.where(models.AbyssArtifactState.server_matching_id == server_matching_id)
-        if current_time:
-            query = query.where(models.AbyssArtifactState.record_time <= current_time)
+            query = query.where(models.AbyssArtifactMapState.server_matching_id == server_matching_id)
 
+        if current_time:
+            query = query.where(models.AbyssArtifactMapState.record_time <= current_time)
+
+        # To use distinct on a column, it must be the first column in order_by
         query = query.order_by(
-            models.AbyssArtifactState.abyss_artifact_id,
-            models.AbyssArtifactState.server_matching_id,
-            desc(models.AbyssArtifactState.record_time)
+            models.AbyssArtifactMapState.server_matching_id,
+            desc(models.AbyssArtifactMapState.record_time)
         )
 
         result = await self.db.execute(query)
-        states = [schemas.AbyssArtifactStateRead.model_validate(x) for x in result.unique().scalars()]
-        return schemas.StandardListResponse(states)
+        states = result.scalars().all()
+        
+        return schemas.StandardListResponse([
+            schemas.AbyssArtifactMapStateRead.model_validate(s) for s in states
+        ])
+
 
     @router.get("/count")
     async def count_artifacts_by_server(
@@ -109,32 +135,43 @@ class AbyssArtifactStates:
         )
         artifact_total = (await self.db.execute(total_query)).scalar() or 0
 
-        # 2. Get all states in this season/map
-        states_query = select(models.AbyssArtifactState).options(
-            joinedload(models.AbyssArtifactState.server_matching).joinedload(models.ServerMatching.server1),
-            joinedload(models.AbyssArtifactState.server_matching).joinedload(models.ServerMatching.server2)
+        # 2. Get all map states in this season
+        states_query = select(models.AbyssArtifactMapState).options(
+            joinedload(models.AbyssArtifactMapState.server_matching).joinedload(models.ServerMatching.server1),
+            joinedload(models.AbyssArtifactMapState.server_matching).joinedload(models.ServerMatching.server2)
         ).where(
-            models.AbyssArtifactState.abyss_artifact.has(
-                models.AbyssArtifact.marker.has(models.Marker.map_id == self.map_model.id)
-            ),
-            models.AbyssArtifactState.server_matching.has(
+            models.AbyssArtifactMapState.server_matching.has(
                 models.ServerMatching.season_id == self.season_model.id
             )
         )
 
         result = await self.db.execute(states_query)
-        all_states = result.unique().scalars().all()
+        all_map_states = result.unique().scalars().all()
 
         # 3. Aggregate counts per server
         # state = 1 -> server1, state = 2 -> server2
         counts = {} # server_id -> count
-        for s in all_states:
-            if s.state == 1:
-                sid = s.server_matching.server1.server_id
-                counts[sid] = counts.get(sid, 0) + 1
-            elif s.state == 2:
-                sid = s.server_matching.server2.server_id
-                counts[sid] = counts.get(sid, 0) + 1
+        
+        # Optimization: get all artifacts on this map
+        artifacts_on_map_query = select(models.AbyssArtifact.id).where(
+            models.AbyssArtifact.marker.has(models.Marker.map_id == self.map_model.id)
+        )
+        artifacts_on_map = set((await self.db.execute(artifacts_on_map_query)).scalars().all())
+
+        for ms in all_map_states:
+            for s in ms.states:
+                # Handle both UUID object and string from JSON
+                artifact_id = s['abyss_artifact_id']
+                if isinstance(artifact_id, str):
+                    artifact_id = uuid.UUID(artifact_id)
+                
+                if artifact_id in artifacts_on_map:
+                    if s['state'] == 1:
+                        sid = ms.server_matching.server1.server_id
+                        counts[sid] = counts.get(sid, 0) + 1
+                    elif s['state'] == 2:
+                        sid = ms.server_matching.server2.server_id
+                        counts[sid] = counts.get(sid, 0) + 1
 
         # 4. We also want to include all servers in this season's matchings, even if they have 0 artifacts
         # Get all servers in matchings for this season
@@ -162,47 +199,6 @@ class AbyssArtifactStates:
 
         return schemas.StandardListResponse(response_data)
 
-    @router.get("/states/{state}")
-    async def get_abyss_artifact_state(
-        self,
-        state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path)
-    ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
-        if state_model.abyss_artifact.marker.map_id != self.map_model.id:
-            raise BizError(ErrorCode.MapNotFoundError)
-        if state_model.server_matching.season_id != self.season_model.id:
-            raise BizError(ErrorCode.SeasonNotFoundError)
-        return schemas.AbyssArtifactStateRead.model_validate(state_model).to_response()
-
-    @router.patch("/states/{state}")
-    async def update_abyss_artifact_state(
-        self,
-        state_data: schemas.AbyssArtifactStateUpdate,
-        state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
-        user: models.User = Depends(get_current_superuser),
-    ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
-        if state_model.abyss_artifact.marker.map_id != self.map_model.id:
-            raise BizError(ErrorCode.MapNotFoundError)
-        if state_model.server_matching.season_id != self.season_model.id:
-            raise BizError(ErrorCode.SeasonNotFoundError)
-        await abyss_artifact_state_crud.update(
-            self.db, state_data, id=state_model.id,
-        )
-        await self.db.refresh(state_model)
-        return schemas.AbyssArtifactStateRead.model_validate(state_model).to_response()
-
-    @router.delete("/states/{state}")
-    async def delete_abyss_artifact_state(
-        self,
-        state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
-        user: models.User = Depends(get_current_superuser),
-    ) -> schemas.StandardResponse[schemas.Empty]:
-        if state_model.abyss_artifact.marker.map_id != self.map_model.id:
-            raise BizError(ErrorCode.MapNotFoundError)
-        if state_model.server_matching.season_id != self.season_model.id:
-            raise BizError(ErrorCode.SeasonNotFoundError)
-        await self.db.delete(state_model)
-        await self.db.commit()
-        return schemas.StandardResponse()
 
 @cbv(artifacts_router)
 class AbyssArtifacts:

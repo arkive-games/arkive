@@ -58,3 +58,26 @@ class AbyssArtifactServerCount(BaseModel):
     server_id: int
     artifact_count: int
     artifact_total: int
+
+
+class AbyssArtifactMapStateInfo(BaseModel):
+    abyss_artifact_id: UUID
+    state: int
+
+
+class AbyssArtifactMapStateRead(BaseModel):
+    id: UUID
+    server_matching_id: UUID
+    states: list[AbyssArtifactMapStateInfo]
+    record_time: datetime
+
+
+class AbyssArtifactMapStateCreate(BaseModel):
+    server_matching_id: UUID
+    states: list[AbyssArtifactMapStateInfo]
+    record_time: datetime
+
+
+class AbyssArtifactMapStateUpdate(BaseModel):
+    states: Optional[list[AbyssArtifactMapStateInfo]] = None
+    record_time: Optional[datetime] = None
