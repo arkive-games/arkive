@@ -148,10 +148,8 @@ class AbyssArtifactStates:
     ) -> schemas.StandardListResponse[schemas.AbyssArtifactMapStateRead]:
         from sqlalchemy import desc
         
-        # We want the latest state for each server_matching_id before current_time
-        query = select(models.AbyssArtifactMapState).distinct(
-            models.AbyssArtifactMapState.server_matching_id
-        ).where(
+        # Base query
+        query = select(models.AbyssArtifactMapState).where(
             models.AbyssArtifactMapState.map_id == self.map_model.id,
             models.AbyssArtifactMapState.server_matching.has(
                 models.ServerMatching.season_id == self.season_model.id
@@ -159,16 +157,24 @@ class AbyssArtifactStates:
         )
 
         if server_matching_id:
+            # If server_matching_id is found, output all states of the server_matching_id ordered by record time desc.
             query = query.where(models.AbyssArtifactMapState.server_matching_id == server_matching_id)
+            query = query.order_by(desc(models.AbyssArtifactMapState.record_time))
+        else:
+            # If server_matching_id is not found, output only one state for each server matching (the original behavior)
+            query = query.distinct(models.AbyssArtifactMapState.server_matching_id)
+            
+            if current_time:
+                query = query.where(models.AbyssArtifactMapState.record_time <= current_time)
 
-        if current_time:
+            # To use distinct on a column, it must be the first column in order_by
+            query = query.order_by(
+                models.AbyssArtifactMapState.server_matching_id,
+                desc(models.AbyssArtifactMapState.record_time)
+            )
+
+        if current_time and server_matching_id:
             query = query.where(models.AbyssArtifactMapState.record_time <= current_time)
-
-        # To use distinct on a column, it must be the first column in order_by
-        query = query.order_by(
-            models.AbyssArtifactMapState.server_matching_id,
-            desc(models.AbyssArtifactMapState.record_time)
-        )
 
         result = await self.db.execute(query)
         states = result.scalars().all()
