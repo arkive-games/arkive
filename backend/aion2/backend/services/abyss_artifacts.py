@@ -25,6 +25,47 @@ class AbyssArtifactStates:
     season_model: models.Season = Depends(get_season_from_path)
 
 
+    async def _validate_record_time(
+        self,
+        server_matching_id: uuid.UUID,
+        map_id: uuid.UUID,
+        record_time: datetime,
+        exclude_id: Optional[uuid.UUID] = None
+    ):
+        # Find states with same server_matching_id and map_id
+        query = select(models.AbyssArtifactMapState).where(
+            models.AbyssArtifactMapState.server_matching_id == server_matching_id,
+            models.AbyssArtifactMapState.map_id == map_id
+        )
+        if exclude_id:
+            query = query.where(models.AbyssArtifactMapState.id != exclude_id)
+        
+        result = await self.db.execute(query)
+        existing_states = result.scalars().all()
+
+        from datetime import timezone
+        for state in existing_states:
+            # Normalize both datetimes to UTC aware for safe comparison
+            dt1 = state.record_time
+            dt2 = record_time
+            
+            if dt1.tzinfo is None:
+                dt1 = dt1.replace(tzinfo=timezone.utc)
+            else:
+                dt1 = dt1.astimezone(timezone.utc)
+
+            if dt2.tzinfo is None:
+                dt2 = dt2.replace(tzinfo=timezone.utc)
+            else:
+                dt2 = dt2.astimezone(timezone.utc)
+
+            diff = abs((dt1 - dt2).total_seconds())
+            if diff < 48 * 3600:
+                raise BizError(
+                    ErrorCode.ValidationError,
+                    f"Record time must be at least 48 hours apart from existing records. Conflict with {state.record_time}"
+                )
+
     @router.post("/states")
     async def create_abyss_artifact_state(
         self,
@@ -42,8 +83,15 @@ class AbyssArtifactStates:
         if matching is None:
             raise BizError(ErrorCode.ServerMatchingNotFoundError)
 
+        await self._validate_record_time(
+            state_data.server_matching_id,
+            self.map_model.id,
+            state_data.record_time
+        )
+
         state_model = models.AbyssArtifactMapState(
             server_matching_id=state_data.server_matching_id,
+            map_id=self.map_model.id,
             states=[s.model_dump(mode='json') for s in state_data.states],
             record_time=state_data.record_time
         )
@@ -63,10 +111,17 @@ class AbyssArtifactStates:
         if state_model.server_matching.season_id != self.season_model.id:
             raise BizError(ErrorCode.SeasonNotFoundError)
 
+        if state_data.record_time is not None:
+            await self._validate_record_time(
+                state_model.server_matching_id,
+                state_model.map_id,
+                state_data.record_time,
+                exclude_id=state_model.id
+            )
+            state_model.record_time = state_data.record_time
+
         if state_data.states is not None:
             state_model.states = [s.model_dump(mode='json') for s in state_data.states]
-        if state_data.record_time is not None:
-            state_model.record_time = state_data.record_time
 
         await self.db.commit()
         await self.db.refresh(state_model)
@@ -97,6 +152,7 @@ class AbyssArtifactStates:
         query = select(models.AbyssArtifactMapState).distinct(
             models.AbyssArtifactMapState.server_matching_id
         ).where(
+            models.AbyssArtifactMapState.map_id == self.map_model.id,
             models.AbyssArtifactMapState.server_matching.has(
                 models.ServerMatching.season_id == self.season_model.id
             )
@@ -135,11 +191,12 @@ class AbyssArtifactStates:
         )
         artifact_total = (await self.db.execute(total_query)).scalar() or 0
 
-        # 2. Get all map states in this season
+        # 2. Get all map states in this season for this map
         states_query = select(models.AbyssArtifactMapState).options(
             joinedload(models.AbyssArtifactMapState.server_matching).joinedload(models.ServerMatching.server1),
             joinedload(models.AbyssArtifactMapState.server_matching).joinedload(models.ServerMatching.server2)
         ).where(
+            models.AbyssArtifactMapState.map_id == self.map_model.id,
             models.AbyssArtifactMapState.server_matching.has(
                 models.ServerMatching.season_id == self.season_model.id
             )

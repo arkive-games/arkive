@@ -67,6 +67,7 @@ class AbyssArtifactMapStateInfo(BaseModel):
 
 class AbyssArtifactMapStateRead(BaseModel):
     id: UUID
+    map_id: UUID
     server_matching_id: UUID
     states: list[AbyssArtifactMapStateInfo]
     record_time: datetime

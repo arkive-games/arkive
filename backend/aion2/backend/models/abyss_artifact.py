@@ -43,9 +43,11 @@ class AbyssArtifactMapState(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'abyss_artifact_map_states'
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    map_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('maps.id', ondelete='CASCADE'), nullable=False)
     server_matching_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('server_matchings.id', ondelete='CASCADE'), nullable=False)
     states: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
     record_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     # Relationships
+    map: Mapped["Map"] = relationship("Map")
     server_matching: Mapped["ServerMatching"] = relationship("ServerMatching")
