@@ -128,25 +128,15 @@ async def get_abyss_artifact_state_from_path(
         state_id: UUID = Path(..., alias="state"),
         db: AsyncSession = Depends(get_db)
 ) -> models.AbyssArtifactState:
-    return await get_model(
-        str(state_id), db, models.AbyssArtifactState,
-        "id", ErrorCode.AbyssArtifactStateNotFoundError
-    )
-
-
-async def get_abyss_artifact_map_state_from_path(
-        state_id: UUID = Path(..., alias="state"),
-        db: AsyncSession = Depends(get_db)
-) -> models.AbyssArtifactMapState:
     from sqlalchemy.orm import joinedload
     result = await db.execute(
-        select(models.AbyssArtifactMapState)
-        .options(joinedload(models.AbyssArtifactMapState.server_matching))
-        .where(models.AbyssArtifactMapState.id == state_id)
+        select(models.AbyssArtifactState)
+        .options(joinedload(models.AbyssArtifactState.server_matching))
+        .where(models.AbyssArtifactState.id == state_id)
     )
     model = result.unique().scalar_one_or_none()
     if model is None:
-        raise BizError(ErrorCode.AbyssArtifactMapStateNotFoundError)
+        raise BizError(ErrorCode.AbyssArtifactStateNotFoundError)
     return model
 
 

@@ -27,30 +27,27 @@ class AbyssArtifactUpdate(BaseModel):
     order: Optional[int] = None
 
 
+class AbyssArtifactStateInfo(BaseModel):
+    abyss_artifact_id: UUID
+    state: int
+
+
 class AbyssArtifactStateRead(BaseModel):
     id: UUID
-    abyss_artifact_id: UUID
+    map_id: UUID
     server_matching_id: UUID
-    state: int
+    states: list[AbyssArtifactStateInfo]
     record_time: datetime
 
 
-class AbyssArtifactStateReadDetail(AbyssArtifactStateRead):
-    abyss_artifact: AbyssArtifactRead
-    server_matching: ServerMatchingRead
-
-
 class AbyssArtifactStateCreate(BaseModel):
-    abyss_artifact_id: UUID
     server_matching_id: UUID
-    state: int
+    states: list[AbyssArtifactStateInfo]
     record_time: datetime
 
 
 class AbyssArtifactStateUpdate(BaseModel):
-    abyss_artifact_id: Optional[UUID] = None
-    server_matching_id: Optional[UUID] = None
-    state: Optional[int] = None
+    states: Optional[list[AbyssArtifactStateInfo]] = None
     record_time: Optional[datetime] = None
 
 
@@ -58,27 +55,3 @@ class AbyssArtifactServerCount(BaseModel):
     server_id: int
     artifact_count: int
     artifact_total: int
-
-
-class AbyssArtifactMapStateInfo(BaseModel):
-    abyss_artifact_id: UUID
-    state: int
-
-
-class AbyssArtifactMapStateRead(BaseModel):
-    id: UUID
-    map_id: UUID
-    server_matching_id: UUID
-    states: list[AbyssArtifactMapStateInfo]
-    record_time: datetime
-
-
-class AbyssArtifactMapStateCreate(BaseModel):
-    server_matching_id: UUID
-    states: list[AbyssArtifactMapStateInfo]
-    record_time: datetime
-
-
-class AbyssArtifactMapStateUpdate(BaseModel):
-    states: Optional[list[AbyssArtifactMapStateInfo]] = None
-    record_time: Optional[datetime] = None
