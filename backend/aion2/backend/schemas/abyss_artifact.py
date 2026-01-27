@@ -5,6 +5,7 @@ from aion2.backend.schemas.base import BaseModel
 from aion2.backend.schemas.map import MapRead
 from aion2.backend.schemas.marker import MarkerRead
 from aion2.backend.schemas.server import ServerMatchingRead
+from aion2.backend.schemas.user import UserRead
 
 
 class AbyssArtifactRead(BaseModel):
@@ -32,12 +33,20 @@ class AbyssArtifactStateInfo(BaseModel):
     state: int
 
 
+class AbyssArtifactContributorRead(BaseModel):
+    id: UUID
+    user_id: UUID
+    user: UserRead
+
+
 class AbyssArtifactStateRead(BaseModel):
     id: UUID
     map_id: UUID
     server_matching_id: UUID
     states: list[AbyssArtifactStateInfo]
     record_time: datetime
+    is_verified: bool
+    contributors: list[AbyssArtifactContributorRead]
 
 
 class AbyssArtifactStateCreate(BaseModel):
@@ -49,6 +58,7 @@ class AbyssArtifactStateCreate(BaseModel):
 class AbyssArtifactStateUpdate(BaseModel):
     states: Optional[list[AbyssArtifactStateInfo]] = None
     record_time: Optional[datetime] = None
+    is_verified: Optional[bool] = None
 
 
 class AbyssArtifactServerCount(BaseModel):

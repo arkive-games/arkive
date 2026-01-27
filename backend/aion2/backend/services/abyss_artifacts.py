@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aion2.backend import models, schemas
-from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_abyss_artifact_from_path, \
+from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_current_user, get_abyss_artifact_from_path, \
     get_map_from_path, get_season_from_path, get_abyss_artifact_state_from_path
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
@@ -17,6 +17,19 @@ artifacts_router = APIRouter(prefix="/maps/{map}/artifacts", tags=["abyss_artifa
 
 abyss_artifact_crud = FastCRUD(models.AbyssArtifact)
 abyss_artifact_state_crud = FastCRUD(models.AbyssArtifactState)
+
+async def update_abyss_artifact_contributor(db: AsyncSession, abyss_artifact_state_id: uuid.UUID, user_id: uuid.UUID):
+    result = await db.execute(
+        select(models.AbyssArtifactContributor).
+        where(models.AbyssArtifactContributor.abyss_artifact_state_id == abyss_artifact_state_id).
+        where(models.AbyssArtifactContributor.user_id == user_id)
+    )
+    contributor = result.unique().scalar_one_or_none()
+    if contributor is None:
+        contributor = models.AbyssArtifactContributor(abyss_artifact_state_id=abyss_artifact_state_id, user_id=user_id)
+        db.add(contributor)
+        await db.commit()
+
 
 @cbv(router)
 class AbyssArtifactStates:
@@ -70,7 +83,7 @@ class AbyssArtifactStates:
     async def create_abyss_artifact_state(
         self,
         state_data: schemas.AbyssArtifactStateCreate,
-        user: models.User = Depends(get_current_superuser),
+        user: models.User = Depends(get_current_user),
     ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
         # Verify matching exists and belongs to the season
         result = await self.db.execute(
@@ -93,12 +106,16 @@ class AbyssArtifactStates:
             server_matching_id=state_data.server_matching_id,
             map_id=self.map_model.id,
             states=[s.model_dump(mode='json') for s in state_data.states],
+            is_verified=user.is_superuser,
             record_time=state_data.record_time
         )
         self.db.add(state_model)
 
         await self.db.commit()
         await self.db.refresh(state_model)
+
+        await update_abyss_artifact_contributor(self.db, state_model.id, user.id)
+
         return schemas.AbyssArtifactStateRead.model_validate(state_model).to_response()
 
     @router.patch("/states/{state}")
@@ -106,7 +123,7 @@ class AbyssArtifactStates:
         self,
         state_data: schemas.AbyssArtifactStateUpdate,
         state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
-        user: models.User = Depends(get_current_superuser),
+        user: models.User = Depends(get_current_user),
     ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
         if state_model.server_matching.season_id != self.season_model.id:
             raise BizError(ErrorCode.SeasonNotFoundError)
@@ -123,15 +140,21 @@ class AbyssArtifactStates:
         if state_data.states is not None:
             state_model.states = [s.model_dump(mode='json') for s in state_data.states]
 
+        if state_data.is_verified is not None:
+            state_model.is_verified = state_data.is_verified
+
         await self.db.commit()
         await self.db.refresh(state_model)
+
+        await update_abyss_artifact_contributor(self.db, state_model.id, user.id)
+
         return schemas.AbyssArtifactStateRead.model_validate(state_model).to_response()
 
     @router.delete("/states/{state}")
     async def delete_abyss_artifact_state(
         self,
         state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
-        user: models.User = Depends(get_current_superuser),
+        user: models.User = Depends(get_current_user),
     ) -> schemas.StandardResponse[schemas.Empty]:
         if state_model.server_matching.season_id != self.season_model.id:
             raise BizError(ErrorCode.SeasonNotFoundError)
@@ -147,9 +170,12 @@ class AbyssArtifactStates:
         current_time: Optional[datetime] = Query(None),
     ) -> schemas.StandardListResponse[schemas.AbyssArtifactStateRead]:
         from sqlalchemy import desc
+        from sqlalchemy.orm import joinedload
         
         # Base query
-        query = select(models.AbyssArtifactState).where(
+        query = select(models.AbyssArtifactState).options(
+            joinedload(models.AbyssArtifactState.contributors).joinedload(models.AbyssArtifactContributor.user)
+        ).where(
             models.AbyssArtifactState.map_id == self.map_model.id,
             models.AbyssArtifactState.server_matching.has(
                 models.ServerMatching.season_id == self.season_model.id

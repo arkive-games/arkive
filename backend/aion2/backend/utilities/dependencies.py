@@ -131,7 +131,10 @@ async def get_abyss_artifact_state_from_path(
     from sqlalchemy.orm import joinedload
     result = await db.execute(
         select(models.AbyssArtifactState)
-        .options(joinedload(models.AbyssArtifactState.server_matching))
+        .options(
+            joinedload(models.AbyssArtifactState.server_matching),
+            joinedload(models.AbyssArtifactState.contributors).joinedload(models.AbyssArtifactContributor.user)
+        )
         .where(models.AbyssArtifactState.id == state_id)
     )
     model = result.unique().scalar_one_or_none()

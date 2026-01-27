@@ -28,7 +28,6 @@ class AbyssArtifactState(AsyncAttrs, Base, TimestampMixin):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     map_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('maps.id', ondelete='CASCADE'), nullable=False)
     server_matching_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('server_matchings.id', ondelete='CASCADE'), nullable=False)
-    contributor_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     states: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     record_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -36,7 +35,20 @@ class AbyssArtifactState(AsyncAttrs, Base, TimestampMixin):
     # Relationships
     map: Mapped["Map"] = relationship("Map")
     server_matching: Mapped["ServerMatching"] = relationship("ServerMatching")
-    contributor: Mapped[Optional["User"]] = relationship("User")
+    contributors: Mapped[list["AbyssArtifactContributor"]] = relationship("AbyssArtifactContributor", back_populates="abyss_artifact_state", cascade="all, delete-orphan")
+
+class AbyssArtifactContributor(AsyncAttrs, Base, TimestampMixin):
+    __tablename__ = "abyss_artifact_contributors"
+    __table_args__ = (
+        UniqueConstraint("abyss_artifact_state_id", "user_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    abyss_artifact_state_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('abyss_artifact_states.id', ondelete='CASCADE'), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+
+    abyss_artifact_state: Mapped["AbyssArtifactState"] = relationship("AbyssArtifactState", back_populates="contributors")
+    user: Mapped["User"] = relationship("User", lazy="joined", join_depth=1)
 
 class AbyssArtifactVote(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = 'abyss_artifact_votes'
