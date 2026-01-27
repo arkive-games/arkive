@@ -203,7 +203,7 @@ class AbyssArtifactStates:
             query = query.where(models.AbyssArtifactState.record_time <= current_time)
 
         result = await self.db.execute(query)
-        states = result.scalars().all()
+        states = result.unique().scalars().all()
         
         return schemas.StandardListResponse([
             schemas.AbyssArtifactStateRead.model_validate(s) for s in states
