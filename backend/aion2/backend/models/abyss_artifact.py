@@ -33,9 +33,9 @@ class AbyssArtifactState(AsyncAttrs, Base, TimestampMixin):
     record_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     # Relationships
-    map: Mapped["Map"] = relationship("Map")
-    server_matching: Mapped["ServerMatching"] = relationship("ServerMatching")
-    contributors: Mapped[list["AbyssArtifactContributor"]] = relationship("AbyssArtifactContributor", back_populates="abyss_artifact_state", cascade="all, delete-orphan")
+    map: Mapped["Map"] = relationship("Map", lazy="joined", join_depth=1)
+    server_matching: Mapped["ServerMatching"] = relationship("ServerMatching", lazy="joined", join_depth=1)
+    contributors: Mapped[list["AbyssArtifactContributor"]] = relationship("AbyssArtifactContributor", back_populates="abyss_artifact_state", cascade="all, delete-orphan", lazy="joined", join_depth=1)
 
 class AbyssArtifactContributor(AsyncAttrs, Base, TimestampMixin):
     __tablename__ = "abyss_artifact_contributors"

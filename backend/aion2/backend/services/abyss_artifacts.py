@@ -8,7 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aion2.backend import models, schemas
-from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_current_user, get_abyss_artifact_from_path, \
+from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_current_user, \
+    get_abyss_artifact_from_path, \
     get_map_from_path, get_season_from_path, get_abyss_artifact_state_from_path
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
@@ -17,6 +18,7 @@ artifacts_router = APIRouter(prefix="/maps/{map}/artifacts", tags=["abyss_artifa
 
 abyss_artifact_crud = FastCRUD(models.AbyssArtifact)
 abyss_artifact_state_crud = FastCRUD(models.AbyssArtifactState)
+
 
 async def update_abyss_artifact_contributor(db: AsyncSession, abyss_artifact_state_id: uuid.UUID, user_id: uuid.UUID):
     result = await db.execute(
@@ -37,31 +39,31 @@ class AbyssArtifactStates:
     map_model: models.Map = Depends(get_map_from_path)
     season_model: models.Season = Depends(get_season_from_path)
 
-
     async def _validate_record_time(
-        self,
-        server_matching_id: uuid.UUID,
-        map_id: uuid.UUID,
-        record_time: datetime,
-        exclude_id: Optional[uuid.UUID] = None
+            self,
+            server_matching_id: uuid.UUID,
+            map_id: uuid.UUID,
+            record_time: datetime,
+            exclude_id: Optional[uuid.UUID] = None
     ):
-        # Find states with same server_matching_id and map_id
+        # Find states with same server_matching_id and map_id that are verified
         query = select(models.AbyssArtifactState).where(
             models.AbyssArtifactState.server_matching_id == server_matching_id,
-            models.AbyssArtifactState.map_id == map_id
+            models.AbyssArtifactState.map_id == map_id,
+            models.AbyssArtifactState.is_verified == True
         )
         if exclude_id:
             query = query.where(models.AbyssArtifactState.id != exclude_id)
-        
+
         result = await self.db.execute(query)
-        existing_states = result.scalars().all()
+        existing_states = result.unique().scalars().all()
 
         from datetime import timezone
         for state in existing_states:
             # Normalize both datetimes to UTC aware for safe comparison
             dt1 = state.record_time
             dt2 = record_time
-            
+
             if dt1.tzinfo is None:
                 dt1 = dt1.replace(tzinfo=timezone.utc)
             else:
@@ -81,9 +83,9 @@ class AbyssArtifactStates:
 
     @router.post("/states")
     async def create_abyss_artifact_state(
-        self,
-        state_data: schemas.AbyssArtifactStateCreate,
-        user: models.User = Depends(get_current_user),
+            self,
+            state_data: schemas.AbyssArtifactStateCreate,
+            user: models.User = Depends(get_current_user),
     ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
         # Verify matching exists and belongs to the season
         result = await self.db.execute(
@@ -120,13 +122,21 @@ class AbyssArtifactStates:
 
     @router.patch("/states/{state}")
     async def update_abyss_artifact_state(
-        self,
-        state_data: schemas.AbyssArtifactStateUpdate,
-        state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
-        user: models.User = Depends(get_current_user),
+            self,
+            state_data: schemas.AbyssArtifactStateUpdate,
+            state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
+            user: models.User = Depends(get_current_user),
     ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
+        if state_model.is_verified and not user.is_superuser:
+            raise BizError(ErrorCode.PermissionError)
+
+        if not user.is_superuser:
+            contributor_ids = [c.user_id for c in state_model.contributors]
+            if user.id not in contributor_ids:
+                raise BizError(ErrorCode.PermissionError)
+
         if state_model.server_matching.season_id != self.season_model.id:
-            raise BizError(ErrorCode.SeasonNotFoundError)
+            raise   BizError(ErrorCode.SeasonNotFoundError)
 
         if state_data.record_time is not None:
             await self._validate_record_time(
@@ -143,6 +153,9 @@ class AbyssArtifactStates:
         if state_data.is_verified is not None:
             state_model.is_verified = state_data.is_verified
 
+        if user.is_superuser:
+            state_model.is_verified = True
+
         await self.db.commit()
         await self.db.refresh(state_model)
 
@@ -152,9 +165,9 @@ class AbyssArtifactStates:
 
     @router.delete("/states/{state}")
     async def delete_abyss_artifact_state(
-        self,
-        state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
-        user: models.User = Depends(get_current_user),
+            self,
+            state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
+            user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.Empty]:
         if state_model.server_matching.season_id != self.season_model.id:
             raise BizError(ErrorCode.SeasonNotFoundError)
@@ -165,13 +178,13 @@ class AbyssArtifactStates:
 
     @router.get("/states")
     async def list_abyss_artifact_states(
-        self,
-        server_matching_id: Optional[uuid.UUID] = Query(None),
-        current_time: Optional[datetime] = Query(None),
+            self,
+            server_matching_id: Optional[uuid.UUID] = Query(None),
+            current_time: Optional[datetime] = Query(None),
     ) -> schemas.StandardListResponse[schemas.AbyssArtifactStateRead]:
         from sqlalchemy import desc
         from sqlalchemy.orm import joinedload
-        
+
         # Base query
         query = select(models.AbyssArtifactState).options(
             joinedload(models.AbyssArtifactState.contributors).joinedload(models.AbyssArtifactContributor.user)
@@ -189,7 +202,7 @@ class AbyssArtifactStates:
         else:
             # If server_matching_id is not found, output only one state for each server matching (the original behavior)
             query = query.distinct(models.AbyssArtifactState.server_matching_id)
-            
+
             if current_time:
                 query = query.where(models.AbyssArtifactState.record_time <= current_time)
 
@@ -204,19 +217,18 @@ class AbyssArtifactStates:
 
         result = await self.db.execute(query)
         states = result.unique().scalars().all()
-        
+
         return schemas.StandardListResponse([
             schemas.AbyssArtifactStateRead.model_validate(s) for s in states
         ])
 
-
     @router.get("/count")
     async def count_artifacts_by_server(
-        self,
+            self,
     ) -> schemas.StandardListResponse[schemas.AbyssArtifactServerCount]:
         from sqlalchemy import desc, func
         from sqlalchemy.orm import joinedload
-        
+
         # 1. Total artifacts on this map
         total_query = select(func.count(models.AbyssArtifact.id)).where(
             models.AbyssArtifact.marker.has(models.Marker.map_id == self.map_model.id)
@@ -239,8 +251,8 @@ class AbyssArtifactStates:
 
         # 3. Aggregate counts per server
         # state = 1 -> server1, state = 2 -> server2
-        counts = {} # server_id -> count
-        
+        counts = {}  # server_id -> count
+
         # Optimization: get all artifacts on this map
         artifacts_on_map_query = select(models.AbyssArtifact.id).where(
             models.AbyssArtifact.marker.has(models.Marker.map_id == self.map_model.id)
@@ -253,7 +265,7 @@ class AbyssArtifactStates:
                 artifact_id = s['abyss_artifact_id']
                 if isinstance(artifact_id, str):
                     artifact_id = uuid.UUID(artifact_id)
-                
+
                 if artifact_id in artifacts_on_map:
                     if s['state'] == 1:
                         sid = ms.server_matching.server1.server_id
@@ -272,12 +284,12 @@ class AbyssArtifactStates:
         )
         matchings_result = await self.db.execute(matchings_query)
         matchings = matchings_result.unique().scalars().all()
-        
+
         server_ids = set()
         for m in matchings:
             server_ids.add(m.server1.server_id)
             server_ids.add(m.server2.server_id)
-        
+
         response_data = []
         for sid in sorted(list(server_ids)):
             response_data.append(schemas.AbyssArtifactServerCount(
@@ -296,9 +308,9 @@ class AbyssArtifacts:
 
     @artifacts_router.post("/")
     async def create_abyss_artifact(
-        self,
-        artifact_data: schemas.AbyssArtifactCreate,
-        user: models.User = Depends(get_current_superuser),
+            self,
+            artifact_data: schemas.AbyssArtifactCreate,
+            user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.AbyssArtifactReadDetail]:
         result = await self.db.execute(
             select(models.Marker).where(
@@ -323,8 +335,8 @@ class AbyssArtifacts:
 
     @artifacts_router.get("/{abyss_artifact}")
     async def get_abyss_artifact(
-        self,
-        artifact_model: models.AbyssArtifact = Depends(get_abyss_artifact_from_path)
+            self,
+            artifact_model: models.AbyssArtifact = Depends(get_abyss_artifact_from_path)
     ) -> schemas.StandardResponse[schemas.AbyssArtifactReadDetail]:
         if artifact_model.marker.map_id != self.map_model.id:
             raise BizError(ErrorCode.MapNotFoundError)
@@ -332,10 +344,10 @@ class AbyssArtifacts:
 
     @artifacts_router.patch("/{abyss_artifact}")
     async def update_abyss_artifact(
-        self,
-        artifact_data: schemas.AbyssArtifactUpdate,
-        artifact_model: models.AbyssArtifact = Depends(get_abyss_artifact_from_path),
-        user: models.User = Depends(get_current_superuser),
+            self,
+            artifact_data: schemas.AbyssArtifactUpdate,
+            artifact_model: models.AbyssArtifact = Depends(get_abyss_artifact_from_path),
+            user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.AbyssArtifactReadDetail]:
         if artifact_model.marker.map_id != self.map_model.id:
             raise BizError(ErrorCode.MapNotFoundError)
@@ -349,9 +361,9 @@ class AbyssArtifacts:
 
     @artifacts_router.delete("/{abyss_artifact}")
     async def delete_abyss_artifact(
-        self,
-        artifact_model: models.AbyssArtifact = Depends(get_abyss_artifact_from_path),
-        user: models.User = Depends(get_current_superuser),
+            self,
+            artifact_model: models.AbyssArtifact = Depends(get_abyss_artifact_from_path),
+            user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.Empty]:
         if artifact_model.marker.map_id != self.map_model.id:
             raise BizError(ErrorCode.MapNotFoundError)
