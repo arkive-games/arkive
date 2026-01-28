@@ -47,6 +47,13 @@ class AbyssArtifactStateRead(BaseModel):
     record_time: datetime
     is_verified: bool
     contributors: list[AbyssArtifactContributorRead]
+    upvotes_count: int = 0
+    downvotes_count: int = 0
+    user_vote: Optional[bool] = None
+
+
+class AbyssArtifactVoteCreate(BaseModel):
+    vote: bool
 
 
 class AbyssArtifactStateCreate(BaseModel):

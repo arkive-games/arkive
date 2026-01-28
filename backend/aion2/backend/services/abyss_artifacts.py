@@ -11,6 +11,7 @@ from aion2.backend import models, schemas
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_current_user, \
     get_abyss_artifact_from_path, \
     get_map_from_path, get_season_from_path, get_abyss_artifact_state_from_path
+from aion2.backend.interfaces.user import fastapi_users
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
 router = APIRouter(prefix="/seasons/{season}/maps/{map}/artifacts", tags=["abyss_artifacts_states"])
@@ -118,7 +119,7 @@ class AbyssArtifactStates:
 
         await update_abyss_artifact_contributor(self.db, state_model.id, user.id)
 
-        return schemas.AbyssArtifactStateRead.model_validate(state_model).to_response()
+        return await self._get_state_read_response(state_model, user)
 
     @router.patch("/states/{state}")
     async def update_abyss_artifact_state(
@@ -161,7 +162,7 @@ class AbyssArtifactStates:
 
         await update_abyss_artifact_contributor(self.db, state_model.id, user.id)
 
-        return schemas.AbyssArtifactStateRead.model_validate(state_model).to_response()
+        return await self._get_state_read_response(state_model, user)
 
     @router.delete("/states/{state}")
     async def delete_abyss_artifact_state(
@@ -176,18 +177,91 @@ class AbyssArtifactStates:
         await self.db.commit()
         return schemas.StandardResponse()
 
+    @router.post("/states/{state}/vote")
+    async def vote_abyss_artifact_state(
+            self,
+            vote_data: schemas.AbyssArtifactVoteCreate,
+            state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
+            user: models.User = Depends(get_current_user),
+    ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
+        from sqlalchemy import delete
+        
+        # Check if user already voted
+        existing_vote_query = select(models.AbyssArtifactVote).where(
+            models.AbyssArtifactVote.abyss_artifact_state_id == state_model.id,
+            models.AbyssArtifactVote.user_id == user.id
+        )
+        existing_vote = (await self.db.execute(existing_vote_query)).scalar_one_or_none()
+        
+        if existing_vote:
+            if existing_vote.vote == vote_data.vote:
+                # Same vote, remove it (cancel vote)
+                await self.db.delete(existing_vote)
+            else:
+                # Different vote, update it
+                existing_vote.vote = vote_data.vote
+        else:
+            # New vote
+            new_vote = models.AbyssArtifactVote(
+                abyss_artifact_state_id=state_model.id,
+                user_id=user.id,
+                vote=vote_data.vote
+            )
+            self.db.add(new_vote)
+            
+        await self.db.commit()
+        await self.db.refresh(state_model)
+        
+        # Return updated state
+        return await self._get_state_read_response(state_model, user)
+
+    async def _get_state_read_response(
+            self, 
+            state: models.AbyssArtifactState, 
+            user: Optional[models.User] = None
+    ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
+        upvotes_count = 0
+        downvotes_count = 0
+        user_vote = None
+        
+        # We need to ensure votes are loaded
+        # Since we use joinedload in get_abyss_artifact_state_from_path, they might be there
+        # But for new votes just added, we might need to refresh or query
+        
+        query = select(models.AbyssArtifactVote).where(
+            models.AbyssArtifactVote.abyss_artifact_state_id == state.id
+        )
+        result = await self.db.execute(query)
+        votes = result.scalars().all()
+        
+        for v in votes:
+            if v.vote:
+                upvotes_count += 1
+            else:
+                downvotes_count += 1
+            if user and v.user_id == user.id:
+                user_vote = v.vote
+        
+        res = schemas.AbyssArtifactStateRead.model_validate(state)
+        res.upvotes_count = upvotes_count
+        res.downvotes_count = downvotes_count
+        res.user_vote = user_vote
+        return res.to_response()
+
     @router.get("/states")
     async def list_abyss_artifact_states(
             self,
             server_matching_id: Optional[uuid.UUID] = Query(None),
             current_time: Optional[datetime] = Query(None),
+            user: Optional[models.User] = Depends(fastapi_users.current_user(optional=True)),
     ) -> schemas.StandardListResponse[schemas.AbyssArtifactStateRead]:
         from sqlalchemy import desc
         from sqlalchemy.orm import joinedload
 
         # Base query
         query = select(models.AbyssArtifactState).options(
-            joinedload(models.AbyssArtifactState.contributors).joinedload(models.AbyssArtifactContributor.user)
+            joinedload(models.AbyssArtifactState.contributors).joinedload(models.AbyssArtifactContributor.user),
+            joinedload(models.AbyssArtifactState.votes)
         ).where(
             models.AbyssArtifactState.map_id == self.map_model.id,
             models.AbyssArtifactState.server_matching.has(
@@ -218,9 +292,26 @@ class AbyssArtifactStates:
         result = await self.db.execute(query)
         states = result.unique().scalars().all()
 
-        return schemas.StandardListResponse([
-            schemas.AbyssArtifactStateRead.model_validate(s) for s in states
-        ])
+        response_list = []
+        for s in states:
+            upvotes_count = 0
+            downvotes_count = 0
+            user_vote = None
+            for v in s.votes:
+                if v.vote:
+                    upvotes_count += 1
+                else:
+                    downvotes_count += 1
+                if user and v.user_id == user.id:
+                    user_vote = v.vote
+            
+            read_schema = schemas.AbyssArtifactStateRead.model_validate(s)
+            read_schema.upvotes_count = upvotes_count
+            read_schema.downvotes_count = downvotes_count
+            read_schema.user_vote = user_vote
+            response_list.append(read_schema)
+
+        return schemas.StandardListResponse(response_list)
 
     @router.get("/count")
     async def count_artifacts_by_server(

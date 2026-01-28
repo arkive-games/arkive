@@ -28,4 +28,4 @@ from aion2.backend.schemas.server import ServerRead, ServerCreate, ServerUpdate,
 from aion2.backend.schemas.abyss_artifact import AbyssArtifactRead, AbyssArtifactReadDetail, \
     AbyssArtifactCreate, AbyssArtifactUpdate, AbyssArtifactStateRead, \
     AbyssArtifactStateCreate, AbyssArtifactStateUpdate, AbyssArtifactServerCount, \
-    AbyssArtifactStateInfo
+    AbyssArtifactStateInfo, AbyssArtifactVoteCreate
