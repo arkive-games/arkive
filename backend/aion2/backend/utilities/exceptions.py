@@ -54,6 +54,7 @@ class ErrorCode(str, Enum):
     ServerMatchingNotFoundError = "ServerMatchingNotFoundError"
     AbyssArtifactNotFoundError = "AbyssArtifactNotFoundError"
     AbyssArtifactStateNotFoundError = "AbyssArtifactStateNotFoundError"
+    AbyssArtifactAdminNotFoundError = "AbyssArtifactAdminNotFoundError"
     BitSetTooLongError = "BitSetTooLongError"
     CommentNotFoundError = "CommentNotFoundError"
 

@@ -65,3 +65,17 @@ class AbyssArtifactVote(AsyncAttrs, Base, TimestampMixin):
     # Relationships
     abyss_artifact_state: Mapped["AbyssArtifactState"] = relationship("AbyssArtifactState", back_populates="votes")
     user: Mapped["User"] = relationship("User", lazy="joined", join_depth=1)
+
+class AbyssArtifactAdmin(AsyncAttrs, Base, TimestampMixin):
+    __tablename__ = 'abyss_artifact_admins'
+    __table_args__ = (
+        UniqueConstraint("user_id", "server_matching_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    server_matching_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('server_matchings.id', ondelete='CASCADE'), nullable=False)
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", lazy="joined", join_depth=1)
+    server_matching: Mapped["ServerMatching"] = relationship("ServerMatching", lazy="joined", join_depth=1)

@@ -72,3 +72,24 @@ class AbyssArtifactServerCount(BaseModel):
     server_id: int
     artifact_count: int
     artifact_total: int
+
+
+class AbyssArtifactAdminRead(BaseModel):
+    id: UUID
+    user_id: UUID
+    server_matching_id: UUID
+
+
+class AbyssArtifactAdminReadDetail(AbyssArtifactAdminRead):
+    user: UserRead
+    server_matching: ServerMatchingRead
+
+
+class AbyssArtifactAdminCreate(BaseModel):
+    user_id: UUID
+    server_matching_id: UUID
+
+
+class AbyssArtifactAdminUpdate(BaseModel):
+    user_id: Optional[UUID] = None
+    server_matching_id: Optional[UUID] = None

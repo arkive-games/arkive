@@ -10,4 +10,4 @@ from aion2.backend.models.user_marker_progress import UserMarkerProgress
 from aion2.backend.models.comment import Comment, MarkerComment
 from aion2.backend.models.season import Season
 from aion2.backend.models.server import Server, ServerMatching
-from aion2.backend.models.abyss_artifact import AbyssArtifact, AbyssArtifactState, AbyssArtifactVote, AbyssArtifactContributor
+from aion2.backend.models.abyss_artifact import AbyssArtifact, AbyssArtifactState, AbyssArtifactVote, AbyssArtifactContributor, AbyssArtifactAdmin
