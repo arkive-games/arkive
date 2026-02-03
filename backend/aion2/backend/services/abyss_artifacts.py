@@ -11,13 +11,13 @@ from sqlalchemy.orm import joinedload
 from aion2.backend import models, schemas
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_current_user, \
     get_abyss_artifact_from_path, \
-    get_map_from_path, get_season_from_path, get_abyss_artifact_state_from_path
+    get_map_from_path, get_season_from_path, get_abyss_artifact_state_from_path, get_server_matching_from_path
 from aion2.backend.interfaces.user import fastapi_users
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
 
 router = APIRouter(prefix="/seasons/{season}/maps/{map}/artifacts", tags=["abyss_artifacts_states"])
 artifacts_router = APIRouter(prefix="/maps/{map}/artifacts", tags=["abyss_artifacts"])
-admin_router = APIRouter(prefix="/abyss_artifact_admins", tags=["abyss_artifact_admins"])
+admin_router = APIRouter(prefix="/seasons/{season}/server_matchings/{server_matching}/abyss_artifact_admins", tags=["abyss_artifact_admins"])
 
 abyss_artifact_crud = FastCRUD(models.AbyssArtifact)
 abyss_artifact_state_crud = FastCRUD(models.AbyssArtifactState)
@@ -95,6 +95,17 @@ class AbyssArtifactStates:
                     f"Record time must be at least 48 hours apart from existing records. Conflict with {state.record_time}"
                 )
 
+    async def _is_artifact_admin(self, user: models.User, server_matching_id: uuid.UUID) -> bool:
+        if user.is_superuser:
+            return True
+        admin_result = await self.db.execute(
+            select(models.AbyssArtifactAdmin).where(
+                models.AbyssArtifactAdmin.user_id == user.id,
+                models.AbyssArtifactAdmin.server_matching_id == server_matching_id
+            )
+        )
+        return admin_result.unique().scalar_one_or_none() is not None
+
     @router.post("/states")
     async def create_abyss_artifact_state(
             self,
@@ -118,20 +129,13 @@ class AbyssArtifactStates:
             state_data.record_time
         )
 
-        # Check if user is an admin for this server matching
-        admin_result = await self.db.execute(
-            select(models.AbyssArtifactAdmin).where(
-                models.AbyssArtifactAdmin.user_id == user.id,
-                models.AbyssArtifactAdmin.server_matching_id == state_data.server_matching_id
-            )
-        )
-        is_artifact_admin = admin_result.unique().scalar_one_or_none() is not None
+        is_artifact_admin = await self._is_artifact_admin(user, state_data.server_matching_id)
 
         state_model = models.AbyssArtifactState(
             server_matching_id=state_data.server_matching_id,
             map_id=self.map_model.id,
             states=[s.model_dump(mode='json') for s in state_data.states],
-            is_verified=user.is_superuser or is_artifact_admin,
+            is_verified=is_artifact_admin,
             record_time=state_data.record_time
         )
         self.db.add(state_model)
@@ -150,10 +154,12 @@ class AbyssArtifactStates:
             state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
             user: models.User = Depends(get_current_user),
     ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
-        if state_model.is_verified and not user.is_superuser:
+        is_artifact_admin = await self._is_artifact_admin(user, state_model.server_matching_id)
+
+        if state_model.is_verified and not is_artifact_admin:
             raise BizError(ErrorCode.PermissionError)
 
-        if not user.is_superuser:
+        if not is_artifact_admin:
             contributor_ids = [c.user_id for c in state_model.contributors]
             if user.id not in contributor_ids:
                 raise BizError(ErrorCode.PermissionError)
@@ -174,24 +180,44 @@ class AbyssArtifactStates:
             state_model.states = [s.model_dump(mode='json') for s in state_data.states]
 
         if state_data.is_verified is not None:
-            state_model.is_verified = state_data.is_verified
+            if is_artifact_admin:
+                state_model.is_verified = state_data.is_verified
 
-        # Check if user is an admin for this server matching
-        admin_result = await self.db.execute(
-            select(models.AbyssArtifactAdmin).where(
-                models.AbyssArtifactAdmin.user_id == user.id,
-                models.AbyssArtifactAdmin.server_matching_id == state_model.server_matching_id
-            )
-        )
-        is_artifact_admin = admin_result.unique().scalar_one_or_none() is not None
-
-        if user.is_superuser or is_artifact_admin:
+        if is_artifact_admin:
             state_model.is_verified = True
 
         await self.db.commit()
         await self.db.refresh(state_model)
 
         await update_abyss_artifact_contributor(self.db, state_model.id, user.id)
+
+        return await self._get_state_read_response(state_model, user)
+
+    @router.post("/states/{state}/verify")
+    async def verify_abyss_artifact_state(
+            self,
+            state_model: models.AbyssArtifactState = Depends(get_abyss_artifact_state_from_path),
+            user: models.User = Depends(get_current_user),
+    ) -> schemas.StandardResponse[schemas.AbyssArtifactStateRead]:
+        is_artifact_admin = await self._is_artifact_admin(user, state_model.server_matching_id)
+
+        if not is_artifact_admin:
+            raise BizError(ErrorCode.PermissionError)
+
+        if state_model.server_matching.season_id != self.season_model.id:
+            raise BizError(ErrorCode.SeasonNotFoundError)
+
+        # Validate record time before verifying
+        await self._validate_record_time(
+            state_model.server_matching_id,
+            state_model.map_id,
+            state_model.record_time,
+            exclude_id=state_model.id
+        )
+
+        state_model.is_verified = True
+        await self.db.commit()
+        await self.db.refresh(state_model)
 
         return await self._get_state_read_response(state_model, user)
 
@@ -497,74 +523,65 @@ class AbyssArtifacts:
 @cbv(admin_router)
 class AbyssArtifactAdmins:
     db: AsyncSession = Depends(get_db)
+    season_model: models.Season = Depends(get_season_from_path)
+    matching_model: models.ServerMatching = Depends(get_server_matching_from_path)
 
-    @admin_router.post("/")
+    @admin_router.post("/{user_id}")
     async def create_admin(
         self,
-        admin_data: schemas.AbyssArtifactAdminCreate,
+        user_id: uuid.UUID,
         user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.AbyssArtifactAdminReadDetail]:
-        admin_model = await admin_crud.create(self.db, admin_data)
+        # Verify matching in path belongs to the season
+        if self.matching_model.season_id != self.season_model.id:
+            raise BizError(ErrorCode.SeasonNotFoundError)
+
+        admin_model = await admin_crud.create(self.db, schemas.AbyssArtifactAdminCreate(
+            user_id=user_id,
+            server_matching_id=self.matching_model.id
+        ))
         await self.db.refresh(admin_model, ["user", "server_matching"])
         return schemas.AbyssArtifactAdminReadDetail.model_validate(admin_model).to_response()
 
     @admin_router.get("/")
     async def list_admins(
         self,
-        user: models.User = Depends(get_current_superuser)
     ) -> schemas.StandardListResponse[schemas.AbyssArtifactAdminReadDetail]:
+        if self.matching_model.season_id != self.season_model.id:
+            raise BizError(ErrorCode.SeasonNotFoundError)
+
         query = select(models.AbyssArtifactAdmin).options(
             joinedload(models.AbyssArtifactAdmin.user),
             joinedload(models.AbyssArtifactAdmin.server_matching).joinedload(models.ServerMatching.server1),
             joinedload(models.AbyssArtifactAdmin.server_matching).joinedload(models.ServerMatching.server2),
             joinedload(models.AbyssArtifactAdmin.server_matching).joinedload(models.ServerMatching.season)
+        ).where(
+            models.AbyssArtifactAdmin.server_matching_id == self.matching_model.id
         )
         result = await self.db.execute(query)
         admins = [schemas.AbyssArtifactAdminReadDetail.model_validate(x) for x in result.unique().scalars()]
         return schemas.StandardListResponse(admins, len(admins))
 
-    @admin_router.get("/my_matchings")
-    async def get_my_matchings(
-        self,
-        user: models.User = Depends(get_current_user)
-    ) -> schemas.StandardListResponse[schemas.ServerMatchingReadDetail]:
-        query = select(models.AbyssArtifactAdmin).options(
-            joinedload(models.AbyssArtifactAdmin.server_matching).joinedload(models.ServerMatching.server1),
-            joinedload(models.AbyssArtifactAdmin.server_matching).joinedload(models.ServerMatching.server2),
-            joinedload(models.AbyssArtifactAdmin.server_matching).joinedload(models.ServerMatching.season)
-        ).where(models.AbyssArtifactAdmin.user_id == user.id)
-
-        result = await self.db.execute(query)
-        admins = result.unique().scalars().all()
-        matchings = [schemas.ServerMatchingReadDetail.model_validate(a.server_matching) for a in admins]
-        return schemas.StandardListResponse(matchings, len(matchings))
-
-    @admin_router.get("/{admin_id}")
-    async def get_admin(
-        self,
-        admin_model: models.AbyssArtifactAdmin = Depends(get_admin_from_path),
-        user: models.User = Depends(get_current_superuser)
-    ) -> schemas.StandardResponse[schemas.AbyssArtifactAdminReadDetail]:
-        await self.db.refresh(admin_model, ["user", "server_matching"])
-        return schemas.AbyssArtifactAdminReadDetail.model_validate(admin_model).to_response()
-
-    @admin_router.patch("/{admin_id}")
-    async def update_admin(
-        self,
-        admin_data: schemas.AbyssArtifactAdminUpdate,
-        admin_model: models.AbyssArtifactAdmin = Depends(get_admin_from_path),
-        user: models.User = Depends(get_current_superuser),
-    ) -> schemas.StandardResponse[schemas.AbyssArtifactAdminReadDetail]:
-        await admin_crud.update(self.db, admin_data, id=admin_model.id)
-        await self.db.refresh(admin_model, ["user", "server_matching"])
-        return schemas.AbyssArtifactAdminReadDetail.model_validate(admin_model).to_response()
-
-    @admin_router.delete("/{admin_id}")
+    @admin_router.delete("/{user_id}")
     async def delete_admin(
         self,
-        admin_model: models.AbyssArtifactAdmin = Depends(get_admin_from_path),
+        user_id: uuid.UUID,
         user: models.User = Depends(get_current_superuser),
     ) -> schemas.StandardResponse[schemas.Empty]:
+        if self.matching_model.season_id != self.season_model.id:
+            raise BizError(ErrorCode.SeasonNotFoundError)
+        
+        # Find the admin record for this user and matching
+        result = await self.db.execute(
+            select(models.AbyssArtifactAdmin).where(
+                models.AbyssArtifactAdmin.user_id == user_id,
+                models.AbyssArtifactAdmin.server_matching_id == self.matching_model.id
+            )
+        )
+        admin_model = result.unique().scalar_one_or_none()
+        if admin_model is None:
+            raise BizError(ErrorCode.AbyssArtifactAdminNotFoundError)
+            
         await self.db.delete(admin_model)
         await self.db.commit()
         return schemas.StandardResponse()

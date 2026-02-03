@@ -89,7 +89,3 @@ class AbyssArtifactAdminCreate(BaseModel):
     user_id: UUID
     server_matching_id: UUID
 
-
-class AbyssArtifactAdminUpdate(BaseModel):
-    user_id: Optional[UUID] = None
-    server_matching_id: Optional[UUID] = None
