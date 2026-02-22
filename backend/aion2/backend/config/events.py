@@ -8,11 +8,16 @@ from aion2.backend.config.manager import settings
 from aion2.backend.interfaces.cache import clear_all_cache
 from aion2.backend.interfaces.db import init_db
 from aion2.backend.interfaces.redis import init_redis, close_redis
+from aion2.backend.app.celery import celery_app, discover_tasks
 
 
 def execute_backend_server_event_handler(backend_app: fastapi.FastAPI) -> typing.Any:
     async def launch_backend_server_events() -> None:
         loguru.logger.info("------ {} Initializing ------", settings.TITLE)
+        
+        # Discover Celery tasks
+        discover_tasks()
+
         # HTTPX client startup
         backend_app.state.httpx_client = httpx.AsyncClient(
             timeout=30.0,
@@ -23,6 +28,14 @@ def execute_backend_server_event_handler(backend_app: fastapi.FastAPI) -> typing
 
         await init_db()
         await clear_all_cache()
+
+        # Purge Celery tasks on startup
+        try:
+            purged_count = celery_app.control.purge()
+            loguru.logger.info("Purged {} Celery tasks on startup", purged_count)
+        except Exception as e:
+            loguru.logger.error("Failed to purge Celery tasks: {}", e)
+
         loguru.logger.info("------ {} Launched ------", settings.TITLE)
 
     return launch_backend_server_events

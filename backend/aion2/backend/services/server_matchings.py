@@ -24,7 +24,7 @@ class ServerMatchings:
     ) -> schemas.StandardResponse[schemas.ServerMatchingReadDetail]:
         matching_model = await server_matching_crud.create(
             self.db,
-            schemas.ServerMatchingCreate(
+            schemas.ServerMatchingCreateInternal(
                 **matching_data.model_dump(),
                 season_id=self.season_model.id
             )

@@ -40,6 +40,9 @@ class ServerMatchingCreate(BaseModel):
     server1_id: UUID
     server2_id: UUID
 
+class ServerMatchingCreateInternal(ServerMatchingCreate):
+    season_id: UUID
+
 class ServerMatchingUpdate(BaseModel):
     server1_id: Optional[UUID] = None
     server2_id: Optional[UUID] = None

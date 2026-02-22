@@ -29,4 +29,10 @@ celery_app.conf.update(
     enable_utc=True,
 )
 
-celery_app.autodiscover_tasks(["aion2.backend.tasks.character"])
+
+def discover_tasks():
+    celery_app.autodiscover_tasks(["aion2.backend.tasks.character"])
+
+
+# Force discovery when running as worker/beat
+discover_tasks()
