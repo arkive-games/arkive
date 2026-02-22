@@ -102,7 +102,14 @@ class Character:
         cache_key_items = f"{cache_key_prefix}:items"
 
         # Get the current time using datetime
-        current_time = datetime.now()
+        current_time = datetime.now(UTC)
+
+        # Retrieve server start time from Redis
+        server_start_time = await redis.get("server_start_time")
+        if server_start_time:
+            server_start_time = float(server_start_time)
+        else:
+            server_start_time = 0.0
 
         # Retrieve cached metadata and items in all cases
 
@@ -120,19 +127,10 @@ class Character:
             except json.JSONDecodeError:
                 pass
 
-        # logger.info(cache_key_prefix)
-        # logger.info(cache_key_meta)
-        # logger.info(cache_key_items)
-        # logger.info(meta)
-        # logger.info(items)
-
         # Check if cached data exists and if it's still valid (within 15 minutes)
         try:
             if not refresh and meta is not None and meta.status == "done":
-                cached_at = datetime.fromtimestamp(meta.updated_at)
-                # cached_at = await redis.get(f"{cache_key_prefix}:cached_at")
-                # if cached_at and meta:
-                #     cached_at = datetime.fromtimestamp(float(cached_at))
+                cached_at = datetime.fromtimestamp(meta.updated_at, UTC)
                 # If cached data is still valid (within 15 minutes)
                 if current_time - cached_at < timedelta(minutes=15):  # 15 minutes TTL
                     # Return cached results directly if data is valid
@@ -146,8 +144,14 @@ class Character:
             pass
 
         # If no job is running, create a new job
-        # if not current_job_id or job_status != "running":
-        if refresh or meta is None or (meta.status != "running" and meta.status != "scheduled"):
+        is_stale = False
+        if meta and meta.status in ("running", "scheduled"):
+            job_updated_at = meta.updated_at
+            if job_updated_at < server_start_time:
+                is_stale = True
+                logger.info("Job {} is stale (started at {}, server started at {})", meta.job_id, job_updated_at, server_start_time)
+
+        if refresh or meta is None or (meta.status != "running" and meta.status != "scheduled") or is_stale:
             celery_job = get_character_preview_task.apply_async(kwargs={
                 "region_id": region,
                 "character_id": character,

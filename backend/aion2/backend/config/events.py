@@ -4,6 +4,8 @@ import fastapi
 import httpx
 import loguru
 
+from datetime import datetime, UTC
+
 from aion2.backend.config.manager import settings
 from aion2.backend.interfaces.cache import clear_all_cache
 from aion2.backend.interfaces.db import init_db
@@ -25,6 +27,11 @@ def execute_backend_server_event_handler(backend_app: fastapi.FastAPI) -> typing
         )
         # Initialize Redis client on startup
         await init_redis(backend_app)
+        
+        # Record server start time in Redis
+        redis_client = getattr(backend_app.state, "redis_client", None)
+        if redis_client:
+            await redis_client.set("server_start_time", datetime.now(UTC).timestamp())
 
         await init_db()
         await clear_all_cache()
