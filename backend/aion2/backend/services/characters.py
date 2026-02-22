@@ -23,7 +23,7 @@ from aion2.backend.schemas import CharacterInfo
 from aion2.backend.utilities.dependencies import get_db, get_current_user, get_current_superuser, get_region_from_path, \
     get_language_from_path, get_map_from_path, get_httpx_client, get_redis_client
 from aion2.backend.utilities.exceptions import BizError, ErrorCode
-from aion2.backend.tasks.character import get_character_task, get_api_base_url, \
+from aion2.backend.tasks.character import get_character_preview_task, get_api_base_url, \
     get_search_base_url
 
 router = APIRouter(prefix="/characters", tags=["characters"])
@@ -148,7 +148,7 @@ class Character:
         # If no job is running, create a new job
         # if not current_job_id or job_status != "running":
         if refresh or meta is None or (meta.status != "running" and meta.status != "scheduled"):
-            celery_job = get_character_task.apply_async(kwargs={
+            celery_job = get_character_preview_task.apply_async(kwargs={
                 "region_id": region,
                 "character_id": character,
                 "server_id": server,

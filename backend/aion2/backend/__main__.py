@@ -36,10 +36,11 @@ def serve() -> None:
 
 
 @cli.command()
+@click.argument("worker_type", type=click.Choice(["preview", "default"]), default="default")
 @click.option("--loglevel", default="info", show_default=True)
 @click.option("--pool", default="solo", show_default=True, help="Use 'solo' on Windows.")
 @click.option("--concurrency", type=int, default=None, help="Celery concurrency (optional).")
-def celery(loglevel: str, pool: str, concurrency: int | None) -> None:
+def celery(worker_type: str, loglevel: str, pool: str, concurrency: int | None) -> None:
     cmd = [
         sys.executable,
         "-m",
@@ -50,6 +51,14 @@ def celery(loglevel: str, pool: str, concurrency: int | None) -> None:
         f"--loglevel={loglevel}",
         f"--pool={pool}",
     ]
+
+    if worker_type == "preview":
+        cmd.extend(["-Q", "high_priority", "-c", "1", "-n", "worker_preview@%h"])
+    else:
+        cmd.extend(["-Q", "high_priority,default", "-n", "worker_general@%h"])
+        if concurrency is None:
+            concurrency = 3
+
     if concurrency is not None:
         cmd.append(f"--concurrency={concurrency}")
     _run(cmd)

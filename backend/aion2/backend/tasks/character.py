@@ -175,14 +175,13 @@ def _publish(r: redis.Redis, channel: str, payload: dict) -> None:
     r.publish(channel, json.dumps(payload, ensure_ascii=False))
 
 
-@celery_app.task(bind=True)
-def get_character_task(self, *, region_id: str, character_id: str, server_id: int):
+@celery_app.task(bind=True, queue="high_priority")
+def get_character_preview_task(self, *, region_id: str, character_id: str, server_id: int):
     def _update_item(key: str, value: dict) -> None:
         meta.updated_at = datetime.now(UTC).timestamp()
         r.hset(cache_key_meta, mapping=meta.model_dump(exclude_none=True, by_alias=True))
         r.hset(cache_key_items, key=key, value=json.dumps(value, ensure_ascii=False))
         _publish(r, channel, payload={
-            # **meta.model_dump(exclude_none=True, by_alias=True),
             "key": key,
             "value": value,
         })
@@ -201,13 +200,11 @@ def get_character_task(self, *, region_id: str, character_id: str, server_id: in
         started_at=started_at,
         updated_at=started_at,
         done=0,
-        total=27,
+        total=2,
     )
 
     try:
-        print(meta.model_dump())
         r.hset(cache_key_meta, mapping=meta.model_dump(exclude_none=True, by_alias=True))
-        # _publish(r, channel, payload=meta.model_dump(exclude_none=True, by_alias=True))
 
         # get info
         info = get_character_detail_info(region_id=region_id, character_id=character_id, server_id=server_id)
@@ -217,8 +214,68 @@ def get_character_task(self, *, region_id: str, character_id: str, server_id: in
         # get equipments
         equipments = get_character_equipments(region_id=region_id, character_id=character_id, server_id=server_id)
         meta.done += 1
-        meta.total = 8 + len(equipments.equipments)
         _update_item("equipments", equipments.model_dump(exclude_none=True, by_alias=True))
+
+        # Trigger detail task
+        get_character_detail_task.delay(
+            region_id=region_id,
+            character_id=character_id,
+            server_id=server_id,
+            info_dict=info.model_dump(),
+            equipments_dict=equipments.model_dump()
+        )
+
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+        logger.exception("get_character_preview_task failed: {}", err)
+
+        meta.status = "failed"
+        meta.updated_at = datetime.now(UTC).timestamp()
+        r.hset(cache_key_meta, mapping=meta.model_dump(exclude_none=True, by_alias=True))
+        _publish(r, channel, payload=meta.model_dump(exclude_none=True, by_alias=True))
+
+
+@celery_app.task(bind=True, queue="default")
+def get_character_detail_task(
+    self, *, region_id: str, character_id: str, server_id: int, info_dict: dict, equipments_dict: dict
+):
+    def _update_item(key: str, value: dict) -> None:
+        meta.updated_at = datetime.now(UTC).timestamp()
+        r.hset(cache_key_meta, mapping=meta.model_dump(exclude_none=True, by_alias=True))
+        r.hset(cache_key_items, key=key, value=json.dumps(value, ensure_ascii=False))
+        _publish(r, channel, payload={
+            "key": key,
+            "value": value,
+        })
+
+    info = schemas.CharacterDetailInfo(**info_dict)
+    equipments = schemas.CharacterEquipments(**equipments_dict)
+
+    cache_key_prefix = f"character:{region_id}:{server_id}:{character_id}"
+    cache_key_meta = f"{cache_key_prefix}:meta"
+    cache_key_items = f"{cache_key_prefix}:items"
+    channel = f"{cache_key_prefix}:channel"
+    r = _redis_sync()
+
+    # resume task meta
+    raw_meta = r.hgetall(cache_key_meta)
+    if raw_meta:
+        meta = schemas.CharacterJobMeta(**raw_meta)
+        meta.job_id = self.request.id
+        meta.total = 2 + len(equipments.equipments) + len(info.boards)
+    else:
+        started_at = datetime.now(UTC).timestamp()
+        meta = schemas.CharacterJobMeta(
+            job_id=self.request.id,
+            status="running",
+            started_at=started_at,
+            updated_at=started_at,
+            done=2,
+            total=2 + len(equipments.equipments) + len(info.boards),
+        )
+
+    try:
+        r.hset(cache_key_meta, mapping=meta.model_dump(exclude_none=True, by_alias=True))
 
         # get equipment
         for equipment in equipments.equipments:
@@ -257,7 +314,7 @@ def get_character_task(self, *, region_id: str, character_id: str, server_id: in
 
     except Exception as e:
         err = f"{type(e).__name__}: {e}"
-        logger.exception("get_character_task failed: {}", err)
+        logger.exception("get_character_detail_task failed: {}", err)
 
         meta.status = "failed"
         meta.updated_at = datetime.now(UTC).timestamp()
