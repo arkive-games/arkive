@@ -19,5 +19,5 @@ class Season(AsyncAttrs, Base, TimestampMixin):
     end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     __table_args__ = (
-        UniqueConstraint('number', 'server_region', name='_number_server_region_uc'),
+        UniqueConstraint('number', 'matching_number', 'server_region', name='_number_matching_server_region_uc'),
     )
