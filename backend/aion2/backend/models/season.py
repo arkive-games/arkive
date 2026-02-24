@@ -13,6 +13,7 @@ class Season(AsyncAttrs, Base, TimestampMixin):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     number: Mapped[int] = mapped_column(Integer, nullable=False)
+    matching_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     server_region: Mapped[str] = mapped_column(String, nullable=False)
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
