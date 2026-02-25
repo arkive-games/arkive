@@ -3,6 +3,7 @@ from fastcrud import FastCRUD
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import select
 from aion2.backend import models, schemas
 from aion2.backend.utilities.dependencies import get_db, get_current_superuser, get_season_from_path
 
@@ -26,8 +27,10 @@ class Seasons:
     @router.get("/")
     async def list_seasons(self) -> schemas.StandardListResponse[schemas.SeasonRead]:
         count = await season_crud.count(self.db)
-        result = await season_crud.get_multi(self.db)
-        seasons = [schemas.SeasonRead.model_validate(x) for x in result["data"]]
+        result = await self.db.execute(
+            select(models.Season).order_by(models.Season.number, models.Season.matching_number)
+        )
+        seasons = [schemas.SeasonRead.model_validate(x) for x in result.scalars().all()]
         return schemas.StandardListResponse(seasons, count)
 
     @router.get("/{season}")

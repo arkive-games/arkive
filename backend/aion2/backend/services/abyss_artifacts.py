@@ -60,6 +60,34 @@ class AbyssArtifactStates:
             record_time: datetime,
             exclude_id: Optional[uuid.UUID] = None
     ):
+        from datetime import timezone
+        # Normalize record_time to UTC aware for safe comparison
+        record_time_utc = record_time
+        if record_time_utc.tzinfo is None:
+            record_time_utc = record_time_utc.replace(tzinfo=timezone.utc)
+        else:
+            record_time_utc = record_time_utc.astimezone(timezone.utc)
+
+        # Validate that the record time is within the season range
+        season_start = self.season_model.start_date
+        season_end = self.season_model.end_date
+
+        if season_start.tzinfo is None:
+            season_start = season_start.replace(tzinfo=timezone.utc)
+        else:
+            season_start = season_start.astimezone(timezone.utc)
+
+        if season_end.tzinfo is None:
+            season_end = season_end.replace(tzinfo=timezone.utc)
+        else:
+            season_end = season_end.astimezone(timezone.utc)
+
+        if record_time_utc < season_start or record_time_utc > season_end:
+            raise BizError(
+                ErrorCode.ValidationError,
+                f"Record time must be between {self.season_model.start_date} and {self.season_model.end_date}."
+            )
+
         # Find states with same server_matching_id and map_id that are verified
         query = select(models.AbyssArtifactState).where(
             models.AbyssArtifactState.server_matching_id == server_matching_id,
@@ -72,21 +100,15 @@ class AbyssArtifactStates:
         result = await self.db.execute(query)
         existing_states = result.unique().scalars().all()
 
-        from datetime import timezone
         for state in existing_states:
             # Normalize both datetimes to UTC aware for safe comparison
             dt1 = state.record_time
-            dt2 = record_time
+            dt2 = record_time_utc
 
             if dt1.tzinfo is None:
                 dt1 = dt1.replace(tzinfo=timezone.utc)
             else:
                 dt1 = dt1.astimezone(timezone.utc)
-
-            if dt2.tzinfo is None:
-                dt2 = dt2.replace(tzinfo=timezone.utc)
-            else:
-                dt2 = dt2.astimezone(timezone.utc)
 
             diff = abs((dt1 - dt2).total_seconds())
             if diff < 48 * 3600:
