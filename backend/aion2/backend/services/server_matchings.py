@@ -47,7 +47,7 @@ class ServerMatchings:
             joinedload(models.ServerMatching.server2)
         ).join(models.ServerMatching.server1).where(
             models.ServerMatching.season_id == self.season_model.id
-        ).order_by(models.Server.server_id)
+        ).order_by(models.ServerMatching.order.asc())
         
         result_db = await self.db.execute(query)
         matchings = [schemas.ServerMatchingReadDetail.model_validate(x) for x in result_db.unique().scalars()]

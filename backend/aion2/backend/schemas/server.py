@@ -30,6 +30,7 @@ class ServerMatchingRead(BaseModel):
     season_id: UUID
     server1_id: UUID
     server2_id: UUID
+    order: int
 
 class ServerMatchingReadDetail(ServerMatchingRead):
     season: SeasonRead
@@ -39,6 +40,7 @@ class ServerMatchingReadDetail(ServerMatchingRead):
 class ServerMatchingCreate(BaseModel):
     server1_id: UUID
     server2_id: UUID
+    order: Optional[int] = 0
 
 class ServerMatchingCreateInternal(ServerMatchingCreate):
     season_id: UUID
@@ -46,3 +48,4 @@ class ServerMatchingCreateInternal(ServerMatchingCreate):
 class ServerMatchingUpdate(BaseModel):
     server1_id: Optional[UUID] = None
     server2_id: Optional[UUID] = None
+    order: Optional[int] = None

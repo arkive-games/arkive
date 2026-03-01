@@ -32,6 +32,7 @@ class ServerMatching(AsyncAttrs, Base, TimestampMixin):
     season_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('seasons.id', ondelete='CASCADE'), nullable=False)
     server1_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('servers.id', ondelete='CASCADE'), nullable=False)
     server2_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('servers.id', ondelete='CASCADE'), nullable=False)
+    order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
     season: Mapped["Season"] = relationship("Season", lazy="joined", join_depth=1)
