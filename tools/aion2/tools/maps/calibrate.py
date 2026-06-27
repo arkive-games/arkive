@@ -2,11 +2,11 @@ import math
 from dataclasses import dataclass, field
 
 from .names import tokens
-from .regions_ref import centroid, load_frontend_regions
+from .subzone_groups_ref import centroid, load_frontend_subzone_groups
 from .subzones import parse_subzones, map_data_path
 from .transform import ALL_ORIENTATIONS, Orientation, WorldMapTransform
 from .worldmap import WorldMapMeta
-from . import worldmap_path, regions_yaml_path
+from . import worldmap_path, subzone_groups_yaml_path
 
 
 @dataclass
@@ -22,17 +22,21 @@ class Calibration:
 
 
 def _match_pairs(map_name):
-    """Return ground-truth pairs: (subzone_world_centroid, region_pixel_centroid, name)."""
+    """Return ground-truth pairs: (subzone_world_centroid, subzone_group_pixel_centroid, name).
+
+    Matches game subzone volumes (SubzoneVolumeInfoMap) against the frontend's
+    coarse named areas (subzone groups) by name.
+    """
     subs = parse_subzones(map_data_path(map_name))
-    regions = load_frontend_regions(regions_yaml_path(map_name))
-    region_by_tokens = {tokens(r.name): centroid(r.points) for r in regions}
+    groups = load_frontend_subzone_groups(subzone_groups_yaml_path(map_name))
+    group_by_tokens = {tokens(g.name): centroid(g.points) for g in groups}
     pairs = []
     for s in subs:
-        rc = region_by_tokens.get(tokens(s.name))
-        if rc is None:
+        gc = group_by_tokens.get(tokens(s.name))
+        if gc is None:
             continue
         sc = centroid([list(p) for p in s.points])  # subzone world centroid
-        pairs.append((sc, rc, s.name))
+        pairs.append((sc, gc, s.name))
     return pairs
 
 

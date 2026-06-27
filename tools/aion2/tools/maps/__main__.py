@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 
 from .calibrate import calibrate, _match_pairs
 from .subzones import parse_subzones, map_data_path
-from .regions_ref import load_frontend_regions
+from .subzone_groups_ref import load_frontend_subzone_groups
 from .transform import WorldMapTransform
 from .worldmap import WorldMapMeta
-from . import CALIBRATION_OUT, worldmap_path, regions_yaml_path
+from . import CALIBRATION_OUT, worldmap_path, subzone_groups_yaml_path
 
 
 def _write_json(cal):
@@ -27,12 +27,12 @@ def _write_overlay(cal):
     meta = WorldMapMeta.from_json(worldmap_path(cal.map_name), cal.map_name)
     t = WorldMapTransform(meta, cal.orientation)
     subs = parse_subzones(map_data_path(cal.map_name))
-    regions = load_frontend_regions(regions_yaml_path(cal.map_name))
+    groups = load_frontend_subzone_groups(subzone_groups_yaml_path(cal.map_name))
 
     fig, ax = plt.subplots(figsize=(10, 10))
-    for r in regions:                       # existing pixel polygons (blue)
-        xs = [p[0] for p in r.points] + [r.points[0][0]]
-        ys = [p[1] for p in r.points] + [r.points[0][1]]
+    for g in groups:                        # existing subzone-group pixel polygons (blue)
+        xs = [p[0] for p in g.points] + [g.points[0][0]]
+        ys = [p[1] for p in g.points] + [g.points[0][1]]
         ax.plot(xs, ys, color="tab:blue", linewidth=0.8, alpha=0.6)
     for s in subs:                          # transformed subzone polygons (red)
         pts = [t.world_to_pixel(x, y) for x, y in s.points]
@@ -42,7 +42,7 @@ def _write_overlay(cal):
     ax.set_xlim(0, meta.pixel_width)
     ax.set_ylim(meta.pixel_height, 0)       # image-style: y down
     ax.set_aspect("equal")
-    ax.set_title(f"{cal.map_name}: existing regions (blue) vs transformed subzones (red)")
+    ax.set_title(f"{cal.map_name}: subzone groups (blue) vs transformed subzones (red)")
     out = CALIBRATION_OUT / f"{cal.map_name}_overlay.png"
     fig.savefig(out, dpi=120)
     plt.close(fig)
