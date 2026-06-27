@@ -43,10 +43,29 @@ uv run python -m aion2.tools.maps.emit_frontend
 uv run python -m aion2.tools.maps.emit_frontend --map World_L_A
 ```
 
-Coverage from the current parse: `monolithMaterial` (god-fragment locations),
-`village` / `battlefield` (subzone IconType). NOT yet derivable (omitted):
-`teleport`, `seal`, `occupation`, `hiddenCube` — these need additional raw
-tables. `types.yaml` and its locales are carried forward from the curated
-`frontend/public/data` (icon/canComplete mapping, not raw-derived). Region
-borders are point-derived placeholder squares — the parse does not yet emit
-subzone polygons.
+Coverage from the current parse:
+
+| subtype            | category   | raw source |
+|--------------------|------------|------------|
+| `monolithMaterial` | collection | `MapData.json` `SpawnInfoList` (GodFragment EnvObj) |
+| `village`          | location   | `Subzone.json` IconType `EIconType::Village` |
+| `battlefield`      | location   | `Subzone.json` IconType `EIconType::Battlefield` |
+| `teleport`         | location   | `SpawnInfoList` spawns of EnvObj `Usage == TeleportArtifact` |
+| `seal`             | location   | `SpawnInfoList` spawns of EnvObj `Usage == EnterDungeon` whose `UsageValue` is a `Dungeon.json` row with `DungeonType == Seal` + `LinkedMap == <map>` (name from the dungeon `Title`) |
+| `hiddenCube`       | collection | `SpawnInfoList` spawns of EnvObj `Category` starting `EEnvObjCategory::HiddenCube` |
+
+NOT yet derivable (omitted): `occupation`. The `GarrisonTerritory` subzones
+exist (`Subzone.json` `DisplayName` keys `STR_Subzone_GarrisonTerritory_L1_*`)
+but the legacy curated occupation names do not join cleanly to those keys, and
+those subzones already partly surface as `village`/`battlefield`. A definitive
+occupation-objective table (capturable-fort list with positions + display
+names) is still needed.
+
+`types.yaml` and its locales are carried forward from the curated
+`frontend/public/data` (icon/canComplete mapping, not raw-derived).
+
+Region borders are now REAL subzone polygons: `extract.py` reads each subzone's
+boundary vertices from `MapData.json` `SubzoneVolumeInfoMap` and transforms them
+world→pixel with the same `WorldMapTransform` used for marker `px` (emitted as
+`pxBorders`); `emit_frontend.build_regions` turns those into `RegionInstance.borders`
+so outlines align with the markers.

@@ -20,14 +20,21 @@ Coverage (from the current parse):
   - monolithMaterial  <- Fragments (god-fragment locations)
   - village           <- Subzones with IconType == EIconType::Village
   - battlefield       <- Subzones with IconType == EIconType::Battlefield
+  - teleport          <- WorldMarkers (EnvObj Usage TeleportArtifact spawns)
+  - seal              <- WorldMarkers (EnterDungeon EnvObj for Seal dungeons)
+  - hiddenCube        <- WorldMarkers (EnvObj Category HiddenCube* spawns)
 
 Categories NOT derivable from the current parse (omitted, see report):
-  teleport, seal, occupation, hiddenCube — need additional raw tables.
+  occupation — GarrisonTerritory subzones exist but the legacy curated names
+  (Maktashan Outpost, Sehna Outpost, ...) do not join cleanly to the raw
+  Subzone DisplayName keys, and those subzones already partly surface as
+  village/battlefield; a definitive occupation-objective table is still needed.
 
-Regions: the parser does not (yet) emit subzone polygons, only a single
-``px`` point + ``area`` per subzone. Real polygon borders are therefore NOT
-available from the parse. We emit point-derived placeholder squares so the
-frontend region layer has valid geometry; this is flagged in the report.
+Regions: real subzone polygons. The parser (``extract.py``) reads each
+subzone's boundary vertices from ``MapData.json`` ``SubzoneVolumeInfoMap`` and
+transforms them world->pixel via the SAME ``WorldMapTransform`` as the marker
+``px``, emitting them as ``pxBorders``. ``build_regions`` turns those into
+``RegionInstance.borders`` so region outlines align with the markers.
 
 Usage::
 
@@ -74,6 +81,13 @@ MAP_META = {
 ICON_TYPE_TO_SUBTYPE = {
     "EIconType::Village": ("location", "village"),
     "EIconType::Battlefield": ("location", "battlefield"),
+}
+
+# WorldMarkers.kind -> types.yaml category for the subtype of the same name.
+WORLD_MARKER_CATEGORY = {
+    "teleport": "location",
+    "seal": "location",
+    "hiddenCube": "collection",
 }
 
 _cc_s2t = OpenCC("s2t")
@@ -212,46 +226,79 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "name_zhCN": s.get("name_zhCN", "") or s.get("Name", ""),
         }
 
+    # --- world markers: teleport / seal / hiddenCube (from SpawnInfoList /
+    #     instance gates), transformed with the SAME px convention -----------
+    for w in map_data.get("WorldMarkers", []):
+        px = w.get("px")
+        if not px:
+            continue
+        subtype = w.get("kind")
+        category = WORLD_MARKER_CATEGORY.get(subtype)
+        if not category:
+            continue
+        idx = next_index(subtype)
+        mid = f"{name}-{subtype}-{idx}"
+        markers.append({
+            "id": mid,
+            "category": category,
+            "subtype": subtype,
+            "x": _round2(px[0]),
+            "y": _round2(px[1]),
+            "images": [],
+            "contributors": [],
+            "indexInSubtype": idx,
+        })
+        locale[mid] = {
+            "name_en": w.get("name_en", "") or str(idx + 1),
+            "name_zhCN": w.get("name_zhCN", "") or str(idx + 1),
+        }
+
     markers.sort(key=lambda m: (m["subtype"], m["indexInSubtype"]))
     return markers, locale
 
 
 def build_regions(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
-    """Emit one region per subzone. NOTE: the parse has no polygons, only a
-    point + area, so borders are a point-derived square placeholder."""
+    """Emit one region per subzone *name*, with the REAL polygon boundary.
+
+    Borders come from the parser's ``pxBorders`` (subzone polygon vertices from
+    ``MapData.json`` ``SubzoneVolumeInfoMap``, transformed world->pixel with the
+    SAME ``WorldMapTransform`` used for marker ``px``), so region outlines align
+    with the village/battlefield/monolith markers. Subzones sharing a slug (e.g.
+    several volumes for one named area) are merged into a multi-ring region so
+    the region->marker linkage by slug is preserved.
+
+    ``borders`` is ``number[][][]`` = list of rings, each ring a list of
+    ``[x, y]`` pixel points (matches ``RegionInstance`` / ``GameMapBorders``).
+    """
     regions: list[dict] = []
     locale: dict[str, dict] = {}
-    seen: set[str] = set()
+    by_key: dict[str, dict] = {}
     for s in map_data.get("Subzones", []):
-        px = s.get("px")
-        if not px or not s.get("bMapEnabled", True):
+        if not s.get("bMapEnabled", True):
             continue
+        ring = s.get("pxBorders")
+        if not ring or len(ring) < 3:
+            continue
+        # Close the ring so the de-duped border polylines join cleanly.
+        ring = [[_round2(x), _round2(y)] for x, y in ring]
+        if ring[0] != ring[-1]:
+            ring = ring + [ring[0]]
         key = _slug(s.get("Name", ""))
-        if key in seen:
-            continue
-        seen.add(key)
-        cx, cy = float(px[0]), float(px[1])
-        # half-extent from area (sqrt(area)/2), clamped to keep it sane.
-        area = float(s.get("area") or 0.0)
-        half = max(20.0, min((area ** 0.5) / 2.0, 600.0)) if area else 60.0
-        ring = [
-            [_round2(cx - half), _round2(cy - half)],
-            [_round2(cx + half), _round2(cy - half)],
-            [_round2(cx + half), _round2(cy + half)],
-            [_round2(cx - half), _round2(cy + half)],
-        ]
         sub_type = (s.get("SubzoneType") or "").split("::")[-1].lower() or "subzone"
-        regions.append({
-            "id": str(s["ID"]),
-            "name": key,
-            "type": sub_type,
-            "borders": [[ring]],
-        })
-        locale[key] = {
-            "name_en": s.get("name_en", "") or key,
-            "name_zhCN": s.get("name_zhCN", "") or key,
-        }
-    regions.sort(key=lambda r: r["name"])
+        if key not in by_key:
+            by_key[key] = {
+                "id": str(s["ID"]),
+                "name": key,
+                "type": sub_type,
+                "borders": [ring],
+            }
+            locale[key] = {
+                "name_en": s.get("name_en", "") or key,
+                "name_zhCN": s.get("name_zhCN", "") or key,
+            }
+        else:
+            by_key[key]["borders"].append(ring)
+    regions = sorted(by_key.values(), key=lambda r: r["name"])
     return regions, locale
 
 
