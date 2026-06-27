@@ -22,7 +22,7 @@ The reconstruction:
 | `aion2-interactive-map` (frontend) | React 19, Vite, HeroUI, Tailwind, TanStack Router, Leaflet, i18next | git repo; JWT auth; `public/images` 2.9MB curated; `public/UI` **190MB / 6,215 PNGs** (game-derived, the "dirty" part); loads static YAML + backend API; i18n from backend `/api/v1/export/locales`. |
 | `aion2-interactive-map-webadmin` | React 19, Ant Design Pro, UmiJS/Max | git repo; marker CRUD + feedback/comment moderation; OpenAPI-generated client; **no map rendering**; deployed at `/webadmin/`. |
 | `aion2-interactive-map-backend` | FastAPI, PostgreSQL, S3 (Tencent COS) | git repo; hand-placed marker x/y; screenshots in S3; comments/feedback/contributors; user progress; abyss artifacts. |
-| `aion2-tools` | Python / Poetry | git repo; `game_data/ → parsed_data/`; has `parse/map.py`, `region/region.py`, template matching, `webp/transform.py`; depends on **opencc** (zh-TW→zh-CN). |
+| `aion2-tools` | Python / uv | git repo; `game_data/ → parsed_data/`; has `parse/map.py`, `region/region.py`, template matching, `webp/transform.py`; depends on **opencc** (zh-TW→zh-CN). **Migrated Poetry→uv 2026-06-27** (in-project `.venv`, Python 3.13 pinned). |
 | Game export `G:\NCSoft\Export\Exports\AION2\Content\` | UE5 export, 2.9 GB | JSON tables; `MapData.json` (X,Y,Z world coords); `WorldMap/*.json` (world→sector/pixel mapping); `UI/` PNGs (Map 895MB + Resource 992MB…); `Data/Table/L10N/{en-US,ko-KR,zh-TW}/L10NString.json` (flat key→string, `[DNT]` placeholders). |
 
 ## 3. Key decisions
@@ -39,6 +39,7 @@ The reconstruction:
 | Consumption | Frontend fetches data + images **by URL** from their own services (existing `VITE_CDN_BASE_URL` / `VITE_API_BASE_URL` config). No submodules, no build-time copy. |
 | Workspace meta | Root folder is a **lightweight workspace git repo** holding shared CLAUDE.md, `.claude/skills/`, and specs; it `.gitignore`s the nested repos. |
 | Backend reconciliation | **Deferred (future work)** — pair dataset with DB, preserve screenshots + user content, drop redundant hand-entered data. |
+| Python tooling | **uv** (not Poetry) for all Python repos — in-project `.venv`, lockfile committed, Python pinned via `.python-version`. `tools` migrated 2026-06-27; `backend` migrates when its Phase 3 work begins. |
 
 ## 4. Target layout
 
