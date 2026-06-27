@@ -72,11 +72,20 @@ def _teleport_env_ids() -> frozenset:
 
 
 @lru_cache(maxsize=None)
-def _hiddencube_env_ids() -> frozenset:
-    """EnvObj defs categorized as hidden cubes (Light/Dark collectibles)."""
+def _hiddencube_light_env_ids() -> frozenset:
+    """EnvObj defs categorized as Light (Elyos) hidden cubes."""
     return frozenset(
         e["ID"]["Value"] for e in _table("EnvObjData.json")
-        if str(e.get("Category", "")).startswith("EEnvObjCategory::HiddenCube")
+        if str(e.get("Category", "")) == "EEnvObjCategory::HiddenCubeLight"
+    )
+
+
+@lru_cache(maxsize=None)
+def _hiddencube_dark_env_ids() -> frozenset:
+    """EnvObj defs categorized as Dark (Asmodian) hidden cubes."""
+    return frozenset(
+        e["ID"]["Value"] for e in _table("EnvObjData.json")
+        if str(e.get("Category", "")) == "EEnvObjCategory::HiddenCubeDark"
     )
 
 
@@ -289,7 +298,8 @@ def extract_map(name: str, l10n: L10N) -> dict:
     #         and via instance gates (seal). Same world->pixel transform as
     #         everything else, so they align with subzone polygons + markers.
     tp_ids = _teleport_env_ids()
-    hc_ids = _hiddencube_env_ids()
+    hc_light_ids = _hiddencube_light_env_ids()
+    hc_dark_ids = _hiddencube_dark_env_ids()
     seal_env = _seal_env_to_dungeon(name)  # EnvObj ID -> Seal Dungeon row
     world_markers = []
     for s in md["Properties"]["Data"].get("SpawnInfoList", []):
@@ -300,8 +310,10 @@ def extract_map(name: str, l10n: L10N) -> dict:
         name_en = name_zh = ""
         if env & tp_ids:
             kind = "teleport"
-        elif env & hc_ids:
-            kind = "hiddenCube"
+        elif env & hc_light_ids:
+            kind = "hiddenCubeLight"
+        elif env & hc_dark_ids:
+            kind = "hiddenCubeDark"
         else:
             seal_hit = next((seal_env[i] for i in env if i in seal_env), None)
             if seal_hit is not None:
@@ -342,7 +354,7 @@ def main():
     l10n = L10N()
     maps_idx = _maps_index()
     hdr = (f"{'map':20s}{'subzones':>9s}{'polys':>6s}{'groups':>7s}{'icons':>6s}"
-           f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cube':>5s}")
+           f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cubeL':>6s}{'cubeD':>6s}")
     print(hdr)
     for name in REQUESTED_MAPS:
         if name not in maps_idx:
@@ -353,10 +365,11 @@ def main():
         n_icons = sum(1 for s in data["Subzones"] if s["IconType"])
         n_poly = sum(1 for s in data["Subzones"] if s.get("pxBorders"))
         wm = data.get("WorldMarkers", [])
-        kc = {k: sum(1 for w in wm if w["kind"] == k) for k in ("teleport", "seal", "hiddenCube")}
+        kc = {k: sum(1 for w in wm if w["kind"] == k)
+              for k in ("teleport", "seal", "hiddenCubeLight", "hiddenCubeDark")}
         print(f"{name:20s}{len(data['Subzones']):>9d}{n_poly:>6d}{len(data['SubzoneGroups']):>7d}"
               f"{n_icons:>6d}{len(data['Fragments']):>10d}{len(data['MonolithGroups']):>11d}"
-              f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCube']:>5d}")
+              f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCubeLight']:>6d}{kc['hiddenCubeDark']:>6d}")
 
 
 if __name__ == "__main__":

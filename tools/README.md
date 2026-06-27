@@ -31,9 +31,15 @@ Options: `-q/--quality` (default 90), `--lossless`, `-f/--force`.
 ## Emit frontend dataset → `data/` repo
 `aion2/tools/maps/emit_frontend.py` converts the parsed per-map JSON
 (`tools/parsed_data/maps/*.json`) into the FRONTEND data schema and writes it
-into the sibling `data/` repo (`maps.yaml`, `types.yaml`, `markers/<map>.yaml`,
-`regions/<map>.yaml`, and `locales/<lng>/{maps,types,markers,regions}`). It is
-idempotent — re-run freely.
+into the sibling `data/` repo as **JSON** (`maps.json`, `types.json`,
+`markers/<map>.json`, `regions/<map>.json`, and
+`locales/<lng>/{maps,types,markers,regions}.json`). It is idempotent — re-run
+freely.
+
+**Data format convention:** generated data is JSON (the frontend consumes
+JSON); only hand-authored config is YAML. The `types` definition is authored in
+`tools/data_src/types.yaml` and compiled to `data/types.json` by `emit_frontend`
+(so humans edit YAML, the frontend gets JSON).
 
 ```bash
 # All parsed maps
@@ -52,7 +58,8 @@ Coverage from the current parse:
 | `battlefield`      | location   | `Subzone.json` IconType `EIconType::Battlefield` |
 | `teleport`         | location   | `SpawnInfoList` spawns of EnvObj `Usage == TeleportArtifact` |
 | `seal`             | location   | `SpawnInfoList` spawns of EnvObj `Usage == EnterDungeon` whose `UsageValue` is a `Dungeon.json` row with `DungeonType == Seal` + `LinkedMap == <map>` (name from the dungeon `Title`) |
-| `hiddenCube`       | collection | `SpawnInfoList` spawns of EnvObj `Category` starting `EEnvObjCategory::HiddenCube` |
+| `hiddenCubeLight`  | collection | `SpawnInfoList` spawns of EnvObj `Category == EEnvObjCategory::HiddenCubeLight` (Elyos) |
+| `hiddenCubeDark`   | collection | `SpawnInfoList` spawns of EnvObj `Category == EEnvObjCategory::HiddenCubeDark` (Asmodian) |
 
 NOT yet derivable (omitted): `occupation`. The `GarrisonTerritory` subzones
 exist (`Subzone.json` `DisplayName` keys `STR_Subzone_GarrisonTerritory_L1_*`)
@@ -61,8 +68,10 @@ those subzones already partly surface as `village`/`battlefield`. A definitive
 occupation-objective table (capturable-fort list with positions + display
 names) is still needed.
 
-`types.yaml` and its locales are carried forward from the curated
-`frontend/public/data` (icon/canComplete mapping, not raw-derived).
+`types.json` is compiled from `tools/data_src/types.yaml` (icon/canComplete
+mapping, hand-authored). Its locales (category/subtype display names) are built
+from the curated `frontend/public/locales/<lng>/types.yaml`, with the
+`hiddenCube` split into `hiddenCubeLight` (Elyos) / `hiddenCubeDark` (Asmodian).
 
 Region borders are now REAL subzone polygons: `extract.py` reads each subzone's
 boundary vertices from `MapData.json` `SubzoneVolumeInfoMap` and transforms them

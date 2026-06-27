@@ -4,17 +4,21 @@ per-map JSON (``tools/parsed_data/maps/*.json``).
 This is the bridge between the raw-game-export parser and the React frontend.
 It is idempotent and re-runnable: every run fully rewrites the generated files.
 
+Generated data is emitted as **JSON** (the frontend consumes JSON). The only
+hand-authored source is ``tools/data_src/types.yaml`` (icon/canComplete config),
+which is compiled to ``data/types.json``.
+
 Output layout (in the sibling ``data/`` repo)::
 
     data/
-      maps.yaml                      # {maps: [GameMapMeta]}
-      types.yaml                     # {categories: [...]}   (carried from curated)
-      regions/<map>.yaml             # {regions: [RegionInstance]}
-      markers/<map>.yaml             # {markers: [MarkerInstance]}
-      locales/<lng>/maps.yaml
-      locales/<lng>/types.yaml       # (carried from curated)
-      locales/<lng>/markers/<map>.yaml
-      locales/<lng>/regions/<map>.yaml
+      maps.json                      # {maps: [GameMapMeta]}
+      types.json                     # {categories: [...]}   (compiled from data_src/types.yaml)
+      regions/<map>.json             # {regions: [RegionInstance]}
+      markers/<map>.json             # {markers: [MarkerInstance]}
+      locales/<lng>/maps.json
+      locales/<lng>/types.json       # (subtype names, built here)
+      locales/<lng>/markers/<map>.json
+      locales/<lng>/regions/<map>.json
 
 Coverage (from the current parse):
   - monolithMaterial  <- Fragments (god-fragment locations)
@@ -22,7 +26,8 @@ Coverage (from the current parse):
   - battlefield       <- Subzones with IconType == EIconType::Battlefield
   - teleport          <- WorldMarkers (EnvObj Usage TeleportArtifact spawns)
   - seal              <- WorldMarkers (EnterDungeon EnvObj for Seal dungeons)
-  - hiddenCube        <- WorldMarkers (EnvObj Category HiddenCube* spawns)
+  - hiddenCubeLight   <- WorldMarkers (EnvObj Category HiddenCubeLight spawns)
+  - hiddenCubeDark    <- WorldMarkers (EnvObj Category HiddenCubeDark spawns)
 
 Categories NOT derivable from the current parse (omitted, see report):
   occupation — GarrisonTerritory subzones exist but the legacy curated names
@@ -56,12 +61,21 @@ from . import TOOLS_ROOT
 # --- Paths ----------------------------------------------------------------
 PARSED_MAPS_DIR = TOOLS_ROOT / "parsed_data" / "maps"
 DATA_REPO = TOOLS_ROOT.parent / "data"
-# The curated types.yaml is a mapping (icons/canComplete), not raw-derived
-# data, so we carry it forward as the canonical types definition.
-CURATED_ROOT = TOOLS_ROOT.parent / "frontend" / "public" / "data"
+# types is hand-authored config (icons/canComplete). Humans edit this YAML; we
+# compile it to data/types.json so the frontend gets JSON.
+TYPES_SRC = TOOLS_ROOT / "data_src" / "types.yaml"
+# Curated subtype/category display names (carried + adjusted into types.json
+# locales). Still YAML sources; we emit JSON.
 CURATED_LOCALES = TOOLS_ROOT.parent / "frontend" / "public" / "locales"
 
 LANGS = ("en", "zh-CN", "zh-TW")
+
+# Subtype display names that the curated types locale does not yet carry
+# (e.g. the split hiddenCube). {subtype: {en, zhCN}}; zh-TW derived via OpenCC.
+EXTRA_SUBTYPE_NAMES = {
+    "hiddenCubeLight": {"en": "Hidden Cube (Elyos)", "zhCN": "隐藏背包（天族）"},
+    "hiddenCubeDark": {"en": "Hidden Cube (Asmodian)", "zhCN": "隐藏背包（魔族）"},
+}
 
 # Visible-map ordering / type, keyed by parsed map Name. Maps not present in
 # the parse are still listed (isVisible may stay true) but will have empty
@@ -87,7 +101,8 @@ ICON_TYPE_TO_SUBTYPE = {
 WORLD_MARKER_CATEGORY = {
     "teleport": "location",
     "seal": "location",
-    "hiddenCube": "collection",
+    "hiddenCubeLight": "collection",
+    "hiddenCubeDark": "collection",
 }
 
 _cc_s2t = OpenCC("s2t")
@@ -302,11 +317,12 @@ def build_regions(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
     return regions, locale
 
 
-# --- YAML writing ---------------------------------------------------------
-def _write_yaml(path: Path, data) -> None:
+# --- JSON writing ---------------------------------------------------------
+def _write_json(path: Path, data) -> None:
+    """Write compact JSON (CJK stays readable thanks to ensure_ascii=False)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        yaml.safe_dump(data, allow_unicode=True, sort_keys=True, default_flow_style=False),
+        json.dumps(data, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
 
@@ -326,14 +342,28 @@ def _locale_block(entries: dict[str, dict], lang: str) -> dict:
     return out
 
 
-def _carry_curated(rel: str, src_root: Path, dst_root: Path) -> bool:
-    src = src_root / rel
-    if not src.exists():
-        return False
-    dst = dst_root / rel
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
-    return True
+def _types_locale(lang: str) -> dict:
+    """Build the types-locale (category + subtype display names) for ``lang``.
+
+    Carries the curated ``public/locales/<lang>/types.yaml`` and adjusts it for
+    the hiddenCube split: removes the old ``hiddenCube`` subtype and injects
+    ``hiddenCubeLight`` / ``hiddenCubeDark`` from ``EXTRA_SUBTYPE_NAMES``.
+    """
+    src = CURATED_LOCALES / lang / "types.yaml"
+    data = yaml.safe_load(src.read_text(encoding="utf-8")) if src.exists() else {}
+    data = data or {}
+    subtypes = dict(data.get("subtypes", {}))
+    subtypes.pop("hiddenCube", None)
+    for sub, names in EXTRA_SUBTYPE_NAMES.items():
+        if lang == "en":
+            name = names["en"]
+        elif lang == "zh-CN":
+            name = names["zhCN"]
+        else:  # zh-TW
+            name = _to_tw(names["zhCN"])
+        subtypes[sub] = {"name": name, "description": name}
+    data["subtypes"] = subtypes
+    return data
 
 
 def emit(only_map: str | None = None) -> None:
@@ -343,16 +373,18 @@ def emit(only_map: str | None = None) -> None:
 
     DATA_REPO.mkdir(parents=True, exist_ok=True)
 
-    # 1. maps.yaml
-    _write_yaml(DATA_REPO / "maps.yaml", build_maps_yaml(parsed))
+    # 1. maps.json
+    _write_json(DATA_REPO / "maps.json", build_maps_yaml(parsed))
 
-    # 2. types.yaml — carried from curated (icon/canComplete mapping).
-    if not _carry_curated("types.yaml", CURATED_ROOT, DATA_REPO):
-        print("WARN: curated types.yaml not found")
+    # 2. types.json — compiled from the hand-authored data_src/types.yaml.
+    if TYPES_SRC.exists():
+        _write_json(DATA_REPO / "types.json", yaml.safe_load(TYPES_SRC.read_text(encoding="utf-8")))
+    else:
+        print(f"WARN: types source not found at {TYPES_SRC}")
 
-    # 3. types locales — carried from curated.
+    # 3. types locales — built from curated names + hiddenCube split.
     for lng in LANGS:
-        _carry_curated(f"{lng}/types.yaml", CURATED_LOCALES, DATA_REPO / "locales")
+        _write_json(DATA_REPO / "locales" / lng / "types.json", _types_locale(lng))
 
     # 4. maps locales — built from parsed names (fallback to map name).
     maps_locale_entries = {}
@@ -366,8 +398,8 @@ def emit(only_map: str | None = None) -> None:
             "name_zhCN": _map_display_zh(name, parsed),
         }
     for lng in LANGS:
-        _write_yaml(
-            DATA_REPO / "locales" / lng / "maps.yaml",
+        _write_json(
+            DATA_REPO / "locales" / lng / "maps.json",
             _locale_block(maps_locale_entries, lng),
         )
 
@@ -389,15 +421,15 @@ def emit(only_map: str | None = None) -> None:
             dupes = {i for i in ids if ids.count(i) > 1}
             raise SystemExit(f"{name}: duplicate marker ids: {sorted(dupes)[:5]}")
 
-        _write_yaml(DATA_REPO / "markers" / f"{name}.yaml", {"markers": markers})
-        _write_yaml(DATA_REPO / "regions" / f"{name}.yaml", {"regions": regions})
+        _write_json(DATA_REPO / "markers" / f"{name}.json", {"markers": markers})
+        _write_json(DATA_REPO / "regions" / f"{name}.json", {"regions": regions})
         for lng in LANGS:
-            _write_yaml(
-                DATA_REPO / "locales" / lng / "markers" / f"{name}.yaml",
+            _write_json(
+                DATA_REPO / "locales" / lng / "markers" / f"{name}.json",
                 _locale_block(m_loc, lng),
             )
-            _write_yaml(
-                DATA_REPO / "locales" / lng / "regions" / f"{name}.yaml",
+            _write_json(
+                DATA_REPO / "locales" / lng / "regions" / f"{name}.json",
                 _locale_block(r_loc, lng),
             )
         by_sub: dict[str, int] = {}
@@ -410,17 +442,17 @@ def emit(only_map: str | None = None) -> None:
     for name, meta in MAP_META.items():
         if name in parsed:
             continue
-        if not (DATA_REPO / "markers" / f"{name}.yaml").exists():
-            _write_yaml(DATA_REPO / "markers" / f"{name}.yaml", {"markers": []})
-        if not (DATA_REPO / "regions" / f"{name}.yaml").exists():
-            _write_yaml(DATA_REPO / "regions" / f"{name}.yaml", {"regions": []})
+        if not (DATA_REPO / "markers" / f"{name}.json").exists():
+            _write_json(DATA_REPO / "markers" / f"{name}.json", {"markers": []})
+        if not (DATA_REPO / "regions" / f"{name}.json").exists():
+            _write_json(DATA_REPO / "regions" / f"{name}.json", {"regions": []})
         for lng in LANGS:
-            mp = DATA_REPO / "locales" / lng / "markers" / f"{name}.yaml"
-            rp = DATA_REPO / "locales" / lng / "regions" / f"{name}.yaml"
+            mp = DATA_REPO / "locales" / lng / "markers" / f"{name}.json"
+            rp = DATA_REPO / "locales" / lng / "regions" / f"{name}.json"
             if not mp.exists():
-                _write_yaml(mp, {})
+                _write_json(mp, {})
             if not rp.exists():
-                _write_yaml(rp, {})
+                _write_json(rp, {})
 
     print("Emitted FRONTEND data to", DATA_REPO)
     for name, s in summary.items():
