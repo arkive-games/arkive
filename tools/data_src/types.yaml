@@ -65,7 +65,7 @@ categories:
     icon: UI/Resource/Texture/Icon/UT_Marker_Exploration_Hideen.webp
     iconScale: 1.25
     id: 07258887-ab0d-4293-a5e8-6d73d5578e65
-    name: hiddenCubeLight
+    name: hiddenCube
     order: 1
   - canComplete: true
     color: '#000000'
@@ -73,7 +73,7 @@ categories:
     icon: UI/Resource/Texture/Icon/UT_Marker_Exploration_Hideen.webp
     iconScale: 1.25
     id: 5b3a0d4c-9f1e-4a87-9c2b-1d2f8e6a7b40
-    name: hiddenCubeDark
+    name: hiddenCubeKeyOnly
     order: 2
 - color: '#000000'
   icon: ''

@@ -72,20 +72,30 @@ def _teleport_env_ids() -> frozenset:
 
 
 @lru_cache(maxsize=None)
-def _hiddencube_light_env_ids() -> frozenset:
-    """EnvObj defs categorized as Light (Elyos) hidden cubes."""
+def _hiddencube_open_env_ids() -> frozenset:
+    """EnvObj defs for hidden cubes that are openable WITHOUT a key (yellow).
+
+    Split is by ``bIsKeyOnly`` (the KEY-REQUIREMENT axis), NOT by faction:
+    both HiddenCubeLight and HiddenCubeDark categories contain both values.
+    ``bIsKeyOnly == False`` -> yellow (ResourceKey HiddenCube_01,
+    RequireConfirmDesc.Key UI_ENVOBJ_TREASUREBOX_DESC)."""
     return frozenset(
         e["ID"]["Value"] for e in _table("EnvObjData.json")
-        if str(e.get("Category", "")) == "EEnvObjCategory::HiddenCubeLight"
+        if str(e.get("Category", "")).startswith("EEnvObjCategory::HiddenCube")
+        and not e.get("bIsKeyOnly", False)
     )
 
 
 @lru_cache(maxsize=None)
-def _hiddencube_dark_env_ids() -> frozenset:
-    """EnvObj defs categorized as Dark (Asmodian) hidden cubes."""
+def _hiddencube_keyonly_env_ids() -> frozenset:
+    """EnvObj defs for hidden cubes that are KEY-ONLY (red).
+
+    ``bIsKeyOnly == True`` -> red (ResourceKey HiddenCube_01_V04,
+    RequireConfirmDesc.Key UI_ENVOBJ_TREASUREBOX_KEY_ONLY_DESC)."""
     return frozenset(
         e["ID"]["Value"] for e in _table("EnvObjData.json")
-        if str(e.get("Category", "")) == "EEnvObjCategory::HiddenCubeDark"
+        if str(e.get("Category", "")).startswith("EEnvObjCategory::HiddenCube")
+        and e.get("bIsKeyOnly", False)
     )
 
 
@@ -298,42 +308,51 @@ def extract_map(name: str, l10n: L10N) -> dict:
     #         and via instance gates (seal). Same world->pixel transform as
     #         everything else, so they align with subzone polygons + markers.
     tp_ids = _teleport_env_ids()
-    hc_light_ids = _hiddencube_light_env_ids()
-    hc_dark_ids = _hiddencube_dark_env_ids()
+    hc_open_ids = _hiddencube_open_env_ids()
+    hc_keyonly_ids = _hiddencube_keyonly_env_ids()
     seal_env = _seal_env_to_dungeon(name)  # EnvObj ID -> Seal Dungeon row
     world_markers = []
     for s in md["Properties"]["Data"].get("SpawnInfoList", []):
         env = set(_ids(s.get("EnvObjIdList", [])))
         if not env:
             continue
-        kind = None
-        name_en = name_zh = ""
+        # A spawn entry may correspond to one or more marker kinds. Hidden-cube
+        # spawners list BOTH variants (one bIsKeyOnly=False open + one
+        # bIsKeyOnly=True key-only EnvObj def) at the same spawn points, so we
+        # emit one marker per variant present. Split is by KEY REQUIREMENT
+        # (bIsKeyOnly), NOT by faction (HiddenCubeLight/Dark).
+        emit = []  # list of (kind, name_en, name_zhCN, env_obj_id)
         if env & tp_ids:
-            kind = "teleport"
-        elif env & hc_light_ids:
-            kind = "hiddenCubeLight"
-        elif env & hc_dark_ids:
-            kind = "hiddenCubeDark"
-        else:
+            emit.append(("teleport", "", "", next(iter(env & tp_ids))))
+        if env & hc_open_ids:
+            emit.append(("hiddenCube", "", "", next(iter(env & hc_open_ids))))
+        if env & hc_keyonly_ids:
+            emit.append(("hiddenCubeKeyOnly", "", "", next(iter(env & hc_keyonly_ids))))
+        if not emit:
             seal_hit = next((seal_env[i] for i in env if i in seal_env), None)
             if seal_hit is not None:
-                kind = "seal"
                 title = seal_hit.get("Title", {}) or {}
-                name_en = l10n.en(title.get("Key", "")) or ""
-                name_zh = l10n.zh_cn(title.get("Key", "")) or ""
-        if not kind:
+                emit.append((
+                    "seal",
+                    l10n.en(title.get("Key", "")) or "",
+                    l10n.zh_cn(title.get("Key", "")) or "",
+                    next((i for i in env if i in seal_env), next(iter(env))),
+                ))
+        if not emit:
             continue
         loc = s["Positions"][0]["Location"]
         loc3 = [round(loc["X"], 2), round(loc["Y"], 2), round(loc["Z"], 2)]
-        world_markers.append({
-            "kind": kind,
-            "Name": s["Name"],
-            "EnvObjId": next(iter(env)),
-            "name_en": name_en,
-            "name_zhCN": name_zh,
-            "Location": loc3,
-            "px": to_px(loc3),
-        })
+        px = to_px(loc3)
+        for kind, name_en, name_zh, env_obj_id in emit:
+            world_markers.append({
+                "kind": kind,
+                "Name": s["Name"],
+                "EnvObjId": env_obj_id,
+                "name_en": name_en,
+                "name_zhCN": name_zh,
+                "Location": loc3,
+                "px": px,
+            })
 
     return {
         "Name": name,
@@ -354,7 +373,7 @@ def main():
     l10n = L10N()
     maps_idx = _maps_index()
     hdr = (f"{'map':20s}{'subzones':>9s}{'polys':>6s}{'groups':>7s}{'icons':>6s}"
-           f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cubeL':>6s}{'cubeD':>6s}")
+           f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cube':>6s}{'cubeKey':>8s}")
     print(hdr)
     for name in REQUESTED_MAPS:
         if name not in maps_idx:
@@ -366,10 +385,10 @@ def main():
         n_poly = sum(1 for s in data["Subzones"] if s.get("pxBorders"))
         wm = data.get("WorldMarkers", [])
         kc = {k: sum(1 for w in wm if w["kind"] == k)
-              for k in ("teleport", "seal", "hiddenCubeLight", "hiddenCubeDark")}
+              for k in ("teleport", "seal", "hiddenCube", "hiddenCubeKeyOnly")}
         print(f"{name:20s}{len(data['Subzones']):>9d}{n_poly:>6d}{len(data['SubzoneGroups']):>7d}"
               f"{n_icons:>6d}{len(data['Fragments']):>10d}{len(data['MonolithGroups']):>11d}"
-              f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCubeLight']:>6d}{kc['hiddenCubeDark']:>6d}")
+              f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCube']:>6d}{kc['hiddenCubeKeyOnly']:>8d}")
 
 
 if __name__ == "__main__":

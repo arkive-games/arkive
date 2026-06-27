@@ -26,8 +26,8 @@ Coverage (from the current parse):
   - battlefield       <- Subzones with IconType == EIconType::Battlefield
   - teleport          <- WorldMarkers (EnvObj Usage TeleportArtifact spawns)
   - seal              <- WorldMarkers (EnterDungeon EnvObj for Seal dungeons)
-  - hiddenCubeLight   <- WorldMarkers (EnvObj Category HiddenCubeLight spawns)
-  - hiddenCubeDark    <- WorldMarkers (EnvObj Category HiddenCubeDark spawns)
+  - hiddenCube        <- WorldMarkers (HiddenCube EnvObj spawns, bIsKeyOnly=False, yellow)
+  - hiddenCubeKeyOnly <- WorldMarkers (HiddenCube EnvObj spawns, bIsKeyOnly=True, red)
 
 Categories NOT derivable from the current parse (omitted, see report):
   occupation — GarrisonTerritory subzones exist but the legacy curated names
@@ -71,10 +71,11 @@ CURATED_LOCALES = TOOLS_ROOT.parent / "frontend" / "public" / "locales"
 LANGS = ("en", "zh-CN", "zh-TW")
 
 # Subtype display names that the curated types locale does not yet carry
-# (e.g. the split hiddenCube). {subtype: {en, zhCN}}; zh-TW derived via OpenCC.
+# (the hiddenCube split by KEY REQUIREMENT, not faction). {subtype: {en, zhCN}};
+# zh-TW derived via OpenCC.
 EXTRA_SUBTYPE_NAMES = {
-    "hiddenCubeLight": {"en": "Hidden Cube (Elyos)", "zhCN": "隐藏背包（天族）"},
-    "hiddenCubeDark": {"en": "Hidden Cube (Asmodian)", "zhCN": "隐藏背包（魔族）"},
+    "hiddenCube": {"en": "Hidden Cube", "zhCN": "隐藏宝箱"},
+    "hiddenCubeKeyOnly": {"en": "Hidden Cube (Key)", "zhCN": "隐藏宝箱（钥匙）"},
 }
 
 # Visible-map ordering / type, keyed by parsed map Name. Maps not present in
@@ -101,8 +102,8 @@ ICON_TYPE_TO_SUBTYPE = {
 WORLD_MARKER_CATEGORY = {
     "teleport": "location",
     "seal": "location",
-    "hiddenCubeLight": "collection",
-    "hiddenCubeDark": "collection",
+    "hiddenCube": "collection",
+    "hiddenCubeKeyOnly": "collection",
 }
 
 _cc_s2t = OpenCC("s2t")
@@ -346,14 +347,16 @@ def _types_locale(lang: str) -> dict:
     """Build the types-locale (category + subtype display names) for ``lang``.
 
     Carries the curated ``public/locales/<lang>/types.yaml`` and adjusts it for
-    the hiddenCube split: removes the old ``hiddenCube`` subtype and injects
-    ``hiddenCubeLight`` / ``hiddenCubeDark`` from ``EXTRA_SUBTYPE_NAMES``.
+    the hiddenCube split by KEY REQUIREMENT (not faction): removes any legacy
+    ``hiddenCube*`` subtypes and injects ``hiddenCube`` (yellow / keyless) and
+    ``hiddenCubeKeyOnly`` (red / key-only) from ``EXTRA_SUBTYPE_NAMES``.
     """
     src = CURATED_LOCALES / lang / "types.yaml"
     data = yaml.safe_load(src.read_text(encoding="utf-8")) if src.exists() else {}
     data = data or {}
     subtypes = dict(data.get("subtypes", {}))
-    subtypes.pop("hiddenCube", None)
+    for legacy in ("hiddenCube", "hiddenCubeLight", "hiddenCubeDark"):
+        subtypes.pop(legacy, None)
     for sub, names in EXTRA_SUBTYPE_NAMES.items():
         if lang == "en":
             name = names["en"]
