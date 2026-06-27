@@ -7,14 +7,14 @@ sub-repo keeps its own remote and history; this root repo tracks only shared met
 ## Repos
 - `frontend/` — unified map + admin app (React 19 / Vite / Tailwind / shadcn / Leaflet).
 - `backend/`  — FastAPI + PostgreSQL + S3; dynamic/user data only.
-- `tools/`    — Python; transforms the raw game export into `data/` + `images/`.
-- `images/`   — derived WebP image set, served over HTTP.
+- `tools/`    — Python; transforms the raw game export into `data/` + `resource/`.
+- `resource/` — derived WebP image set under a `UI/` root, served over HTTP.
 - `data/`     — derived parsed dataset (markers, regions, tables, locales), served over HTTP.
 
 ## Data-flow contract
 Raw game export (`G:\NCSoft\Export\Exports\AION2\Content\`, Perforce later)
-  --tools-->  data/ (text)      --HTTP-->  frontend
-  --tools-->  images/ (WebP)    --HTTP-->  frontend
+  --tools-->  data/ (text)        --HTTP-->  frontend
+  --tools-->  resource/UI (WebP)  --HTTP-->  frontend
 backend  --HTTP (auth, comments, feedback, contributors, progress, uploads, artifact voting)-->  frontend
 
 ## Coordinate transform (world → map pixels)
@@ -43,7 +43,11 @@ The orientation is expected to hold for all maps (same engine), but **re-verify 
 landmarks/overlay. Implementation: `tools/aion2/tools/maps/` (`WorldMapTransform`).
 
 ## Notes
-- `frontend/public/UI` is a junction into `images/` (see Phase 0 plan). Do not commit it.
+- Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo
+  (`resource/UI/...`). Dev: a Vite middleware serves `../resource/UI` at `/UI`
+  (`frontend/vite.config.ts`, `RESOURCE_UI_DIR` override). Prod: set
+  `VITE_RESOURCE_BASE_URL`. The old `frontend/public/UI` junction is removed.
+  Non-`UI/` assets (sidebar bg, logo, watermark) still live in `frontend/public/images`.
 - Old web admin repo: `C:\Users\liuyh\WebstormProjects\aion2-interactive-map-webadmin`
   (to be ported into `frontend/` in Phase 2, then archived).
 
