@@ -40,6 +40,7 @@ The reconstruction:
 | Workspace meta | Root folder is a **lightweight workspace git repo** holding shared CLAUDE.md, `.claude/skills/`, and specs; it `.gitignore`s the nested repos. |
 | Backend reconciliation | **Deferred (future work)** — pair dataset with DB, preserve screenshots + user content, drop redundant hand-entered data. |
 | Python tooling | **uv** (not Poetry) for all Python repos — in-project `.venv`, lockfile committed, Python pinned via `.python-version`. `tools` migrated 2026-06-27; `backend` migrates when its Phase 3 work begins. |
+| Naming | **All names align with game-data terms.** Established: project `region` → game **`subzoneGroup`** (coarse named areas; `SubzoneGroup.json`); finer polygon volumes = **`subzone`** (`SubzoneVolumeInfoMap`); no standalone `Zone`. `tools`+docs aligned 2026-06-27; **frontend** rename folded into Phase 2, **backend** into Phase 3. |
 
 ## 4. Target layout
 
@@ -68,7 +69,7 @@ aion2-map/                   ← workspace git repo (meta only; gitignores neste
 
 ```
 Game export (raw, Perforce later)
-   │  ── tools ──►  data repo (text: markers, regions, tables, locales)  ──HTTP──┐
+   │  ── tools ──►  data repo (text: markers, subzoneGroups, tables, locales)  ──HTTP──┐
    │  ── tools ──►  images repo (WebP icons/UI)                                  ──HTTP──┤
    │                                                                                     ▼
 backend (FastAPI) ── HTTP (dynamic/user data only) ──────────────────────────────►  frontend
@@ -100,8 +101,9 @@ The technical heart. Inputs from the raw export; outputs to `data/` and `images/
   (`MapData.json` X,Y,Z) → map-image pixel space** using `WorldMap/*.json` metadata
   (`StartWorldLocation`, `WorldBoundBox`, `SectorPlaneSize`, texture sizes) — the space the
   frontend/backend already use for marker x/y. Emit YAML/JSON matching the frontend schema.
-- **(b) Regions & tables:** regenerate region polygons and reference tables (reuse
-  `region/region.py`, `parse/map.py` where still valid).
+- **(b) Subzone groups & tables:** regenerate subzone-group polygons and reference tables
+  (rework the legacy `region/` package — renaming it region→subzoneGroup at that point —
+  and `parse/map.py` where still valid).
 - **(c) Images:** select needed UI images from `Content/UI`, **convert PNG → WebP**
   (reuse `webp/transform.py`), optimize, emit to `images/`.
 - **(d) Localization:** parse `L10N/{en-US,ko-KR,zh-TW}/L10NString.json`; filter `[DNT]`

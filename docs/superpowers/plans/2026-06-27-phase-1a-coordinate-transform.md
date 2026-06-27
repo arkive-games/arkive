@@ -8,7 +8,16 @@
 
 **Tech Stack:** Python 3.13 (uv-pinned), **uv** for env/deps (in-project `.venv`), pytest (dev group), PyYAML + matplotlib (existing deps). Runs against the tools repo at `G:/NCSoft/aion2-map/tools` via `uv run`.
 
-**Why this is Phase 1's first step:** markers (1B) and regions (1C) are meaningless until the world→pixel transform is proven correct. This sub-plan de-risks everything downstream and is identical under every marker-model decision.
+**Why this is Phase 1's first step:** markers (1B) and subzone groups (1C) are meaningless until the world→pixel transform is proven correct. This sub-plan de-risks everything downstream and is identical under every marker-model decision.
+
+> **Post-implementation rename (commit `c927228`):** to align with game-data terms, the
+> frontend "region" concept was renamed **region → subzoneGroup**. The code below was renamed
+> accordingly: `regions_ref.py`→`subzone_groups_ref.py`, `RegionRef`→`SubzoneGroupRef`,
+> `load_frontend_regions`→`load_frontend_subzone_groups`, `regions_yaml_path`→
+> `subzone_groups_yaml_path`. The game's finer `SubzoneVolumeInfoMap` volumes remain
+> **subzone** (`subzones.py` unchanged). The frontend dir/key is still `regions/` until the
+> Phase 2 rename. The code listings below show the original names; the committed code uses the
+> renamed ones.
 
 ---
 
