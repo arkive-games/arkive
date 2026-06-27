@@ -1,0 +1,9 @@
+# uv / virtualenv
+.venv/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Generated calibration overlays (binary, regenerable)
+parsed_data/calibration/*.png
