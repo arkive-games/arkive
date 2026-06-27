@@ -27,3 +27,26 @@ uv run python -m aion2.tools.assets.convert_webp \
 ```
 
 Options: `-q/--quality` (default 90), `--lossless`, `-f/--force`.
+
+## Emit frontend dataset → `data/` repo
+`aion2/tools/maps/emit_frontend.py` converts the parsed per-map JSON
+(`tools/parsed_data/maps/*.json`) into the FRONTEND data schema and writes it
+into the sibling `data/` repo (`maps.yaml`, `types.yaml`, `markers/<map>.yaml`,
+`regions/<map>.yaml`, and `locales/<lng>/{maps,types,markers,regions}`). It is
+idempotent — re-run freely.
+
+```bash
+# All parsed maps
+uv run python -m aion2.tools.maps.emit_frontend
+
+# A single map
+uv run python -m aion2.tools.maps.emit_frontend --map World_L_A
+```
+
+Coverage from the current parse: `monolithMaterial` (god-fragment locations),
+`village` / `battlefield` (subzone IconType). NOT yet derivable (omitted):
+`teleport`, `seal`, `occupation`, `hiddenCube` — these need additional raw
+tables. `types.yaml` and its locales are carried forward from the curated
+`frontend/public/data` (icon/canComplete mapping, not raw-derived). Region
+borders are point-derived placeholder squares — the parse does not yet emit
+subzone polygons.
