@@ -62,7 +62,7 @@ categories:
   - canComplete: true
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Icon/UT_Marker_Exploration_Hideen.webp
+    icon: images/HiddenCube.webp
     iconScale: 1.25
     id: 07258887-ab0d-4293-a5e8-6d73d5578e65
     name: hiddenCube
