@@ -21,18 +21,34 @@ Output layout (in the sibling ``data/`` repo)::
       locales/<lng>/regions/<map>.json
 
 Coverage (from the current parse):
-  - monolithMaterial  <- Fragments (god-fragment locations)
+  - fragments         <- Fragments (god-fragment locations)
   - village           <- Subzones with IconType == EIconType::Village
   - battlefield       <- Subzones with IconType == EIconType::Battlefield
   - teleport          <- WorldMarkers (EnvObj Usage TeleportArtifact spawns)
   - seal              <- WorldMarkers (EnterDungeon EnvObj for Seal dungeons)
   - hiddenCube        <- WorldMarkers (HiddenCube EnvObj spawns, bIsKeyOnly=False, yellow only)
+  - gathering<Type>   <- WorldMarkers (GatherSource EnvObj spawns, split by SourceType)
+  - boss              <- WorldMarkers (WorldMapFieldNamed named field monsters)
+  - dungeon           <- WorldMarkers (EnterDungeon EnvObj for player-facing FIELD
+                         dungeons) — PARSED but empty: every such dungeon has
+                         LinkedMap==None (instanced, entered via UI lobby), so none
+                         are placed on the world maps in the current export.
+
+LOD tiers (per-marker ``tier`` = zoom level at which it first appears; replaces
+the old ``rank``):
+  - tier 1: subzone village/battlefield whose WorldMapInfoType rank == 1
+  - tier 2: teleport, seal, dungeon, boss (and campsite, if ever parsed)
+  - tier 3: subzone village/battlefield whose rank == 2; fragments; hiddenCube; gathering
+  Markers with no determinable tier omit ``tier`` (never shown under LOD).
 
 Categories NOT derivable from the current parse (omitted, see report):
   occupation — GarrisonTerritory subzones exist but the legacy curated names
   (Maktashan Outpost, Sehna Outpost, ...) do not join cleanly to the raw
   Subzone DisplayName keys, and those subzones already partly surface as
   village/battlefield; a definitive occupation-objective table is still needed.
+  campsite — Kisk EnvObjs (28 defs) are NOT placed via any map's SpawnInfoList
+  (0 spawns on every world map), and WorldMapFieldNamed carries only bosses, so
+  no campsite source with world positions exists; needs a Kisk/base spawn table.
 
 Regions: real subzone polygons. The parser (``extract.py``) reads each
 subzone's boundary vertices from ``MapData.json`` ``SubzoneVolumeInfoMap`` and
@@ -74,6 +90,10 @@ LANGS = ("en", "zh-CN", "zh-TW")
 # zhTW}}; zh-TW falls back to OpenCC if not given.
 EXTRA_SUBTYPE_NAMES = {
     "hiddenCube": {"en": "Hidden Cube", "zhCN": "隐藏宝箱", "zhTW": "隱藏寶箱"},
+    # fragments keeps the legacy monolithMaterial display names (re-keyed).
+    "fragments": {"en": "Monolith", "zhCN": "主神痕迹", "zhTW": "主神痕跡"},
+    "dungeon": {"en": "Dungeon", "zhCN": "副本", "zhTW": "副本"},
+    "boss": {"en": "Boss", "zhCN": "Boss", "zhTW": "Boss"},
 }
 
 # Visible-map ordering / type, keyed by parsed map Name. Maps not present in
@@ -97,14 +117,66 @@ ICON_TYPE_TO_SUBTYPE = {
 }
 
 # WorldMarkers.kind -> types.yaml category for the subtype of the same name.
+# ``gathering`` is split per SourceType into ``gathering<Type>`` subtypes (the
+# category is always ``gathering``), handled separately in build_markers.
 WORLD_MARKER_CATEGORY = {
     "teleport": "location",
     "seal": "location",
     "hiddenCube": "collection",
+    "dungeon": "location",
+    "boss": "location",
 }
 
-# Non-subzone world markers always render at zoom LOD rank 2.
-WORLD_MARKER_RANK = 2
+# 3-tier LOD model: tier = the zoom level at which a marker first appears.
+#   tier 1: subzone village/battlefield with WorldMapInfoType rank == 1
+#   tier 2: teleport, seal, dungeon, boss (campsite too, if parsed)
+#   tier 3: subzone village/battlefield rank == 2; fragments; hiddenCube; gathering
+# Subzone village/battlefield tier comes from IconRank (1->1, 2->3); other kinds
+# get a fixed tier here. Markers with no tier omit the field.
+WORLD_MARKER_TIER = {
+    "teleport": 2,
+    "seal": 2,
+    "dungeon": 2,
+    "boss": 2,
+    "campsite": 2,
+    "hiddenCube": 3,
+    "gathering": 3,
+}
+FRAGMENTS_TIER = 3
+# Subzone IconRank (1/2) -> LOD tier (1/3).
+SUBZONE_RANK_TO_TIER = {1: 1, 2: 3}
+
+# GatherSource SourceType (short) -> gathering subtype name + marker icon.
+# Dedicated per-type marker icons exist in the resource repo
+# (UI/Resource/Texture/Icon/UT_Marker_Gather*); we reuse them rather than the
+# legacy per-material item icons. SourceType is the clean ~10-way grouping.
+GATHER_SUBTYPES = {
+    "Od":         ("gatheringOd",        "UI/Resource/Texture/Icon/UT_Marker_Gather_Od.webp"),
+    "Herb":       ("gatheringHerb",      "UI/Resource/Texture/Icon/UT_Marker_Gather_Herb.webp"),
+    "Jewelry":    ("gatheringJewelry",   "UI/Resource/Texture/Icon/UT_Marker_Gatherl_Jewelry.webp"),
+    "Metal":      ("gatheringMetal",     "UI/Resource/Texture/Icon/UT_Marker_Gatherl_Metal.webp"),
+    "RareMetal":  ("gatheringRareMetal", "UI/Resource/Texture/Icon/UT_Marker_Gatherl_RareMetal.webp"),
+    "Tree":       ("gatheringTree",      "UI/Resource/Texture/Icon/UT_Marker_Gather_Tree.webp"),
+    "Flower":     ("gatheringFlower",    "UI/Resource/Texture/Icon/UT_Marker_Gather_Flower.webp"),
+    "Berry":      ("gatheringBerry",     "UI/Resource/Texture/Icon/UT_Marker_Gather_Berry.webp"),
+    "Vegetable":  ("gatheringVegetable", "UI/Resource/Texture/Icon/UT_Marker_Gather_Vegetable.webp"),
+    "Shellfish":  ("gatheringShellfish", "UI/Resource/Texture/Icon/UT_Marker_Gather_shellfish.webp"),
+}
+
+# Display names for the gathering SourceType subtypes (injected into types
+# locales). zh-TW falls back to OpenCC from zhCN when absent.
+GATHER_SUBTYPE_NAMES = {
+    "gatheringOd":        {"en": "Odyle",      "zhCN": "奥德", "zhTW": "奧德"},
+    "gatheringHerb":      {"en": "Herb",       "zhCN": "草药", "zhTW": "草藥"},
+    "gatheringJewelry":   {"en": "Gemstone",   "zhCN": "宝石", "zhTW": "寶石"},
+    "gatheringMetal":     {"en": "Metal",      "zhCN": "金属", "zhTW": "金屬"},
+    "gatheringRareMetal": {"en": "Rare Metal", "zhCN": "稀有金属", "zhTW": "稀有金屬"},
+    "gatheringTree":      {"en": "Wood",       "zhCN": "木材", "zhTW": "木材"},
+    "gatheringFlower":    {"en": "Flower",     "zhCN": "花卉", "zhTW": "花卉"},
+    "gatheringBerry":     {"en": "Berry",      "zhCN": "浆果", "zhTW": "漿果"},
+    "gatheringVegetable": {"en": "Vegetable",  "zhCN": "蔬菜", "zhTW": "蔬菜"},
+    "gatheringShellfish": {"en": "Shellfish",  "zhCN": "贝类", "zhTW": "貝類"},
+}
 
 _cc_s2t = OpenCC("s2t")
 
@@ -185,17 +257,17 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
 
     name = map_data["Name"]
 
-    # --- monolithMaterial from Fragments -----------------------------------
+    # --- fragments (was monolithMaterial) from Fragments -------------------
     groups = {g["GroupName"]: g for g in map_data.get("MonolithGroups", [])}
     for f in map_data.get("Fragments", []):
         px = f.get("px")
         if not px:
             continue
-        subtype = "monolithMaterial"
+        subtype = "fragments"
         idx = next_index(subtype)
         # NOTE: Fragment EnvObjId is NOT unique in the export (often repeated),
         # so we key by subtype + running index, which is unique by construction.
-        mid = f"{name}-monolithMaterial-{idx}"
+        mid = f"{name}-fragments-{idx}"
         grp = groups.get(f.get("GroupName"), {})
         region_key = _slug(grp.get("SubzoneName", ""))
         markers.append({
@@ -205,7 +277,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "region": region_key,
             "x": _round2(px[0]),
             "y": _round2(px[1]),
-            "rank": WORLD_MARKER_RANK,
+            "tier": FRAGMENTS_TIER,
             "images": [],
             "contributors": [],
             "indexInSubtype": idx,
@@ -238,40 +310,53 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "contributors": [],
             "indexInSubtype": idx,
         }
-        # rank from the subzone's WorldMapUIRegion (1 or 2); OMIT when the
-        # subzone has no rank — the frontend never shows rankless markers.
-        rank = s.get("IconRank")
-        if rank is not None:
-            marker["rank"] = rank
+        # tier from the subzone's WorldMapUIRegion rank (1 -> tier 1, 2 -> tier
+        # 3); OMIT when the subzone has no rank — never shown under LOD.
+        tier = SUBZONE_RANK_TO_TIER.get(s.get("IconRank"))
+        if tier is not None:
+            marker["tier"] = tier
         markers.append(marker)
         locale[mid] = {
             "name_en": s.get("name_en", "") or s.get("Name", ""),
             "name_zhCN": s.get("name_zhCN", "") or s.get("Name", ""),
         }
 
-    # --- world markers: teleport / seal / hiddenCube (from SpawnInfoList /
-    #     instance gates), transformed with the SAME px convention -----------
+    # --- world markers: teleport / seal / hiddenCube / gathering / dungeon /
+    #     boss (from SpawnInfoList / instance gates / named spawns),
+    #     transformed with the SAME px convention -----------------------------
     for w in map_data.get("WorldMarkers", []):
         px = w.get("px")
         if not px:
             continue
-        subtype = w.get("kind")
-        category = WORLD_MARKER_CATEGORY.get(subtype)
+        kind = w.get("kind")
+        if kind == "gathering":
+            # split into gathering<SourceType>; category is always 'gathering'.
+            mapping = GATHER_SUBTYPES.get(w.get("sourceType"))
+            if not mapping:
+                continue
+            subtype = mapping[0]
+            category = "gathering"
+        else:
+            subtype = kind
+            category = WORLD_MARKER_CATEGORY.get(subtype)
         if not category:
             continue
         idx = next_index(subtype)
         mid = f"{name}-{subtype}-{idx}"
-        markers.append({
+        marker = {
             "id": mid,
             "category": category,
             "subtype": subtype,
             "x": _round2(px[0]),
             "y": _round2(px[1]),
-            "rank": WORLD_MARKER_RANK,
             "images": [],
             "contributors": [],
             "indexInSubtype": idx,
-        })
+        }
+        tier = WORLD_MARKER_TIER.get(kind)
+        if tier is not None:
+            marker["tier"] = tier
+        markers.append(marker)
         locale[mid] = {
             "name_en": w.get("name_en", "") or str(idx + 1),
             "name_zhCN": w.get("name_zhCN", "") or str(idx + 1),
@@ -362,15 +447,27 @@ def _types_locale(lang: str) -> dict:
     data = yaml.safe_load(src.read_text(encoding="utf-8")) if src.exists() else {}
     data = data or {}
     subtypes = dict(data.get("subtypes", {}))
-    for legacy in ("hiddenCube", "hiddenCubeKeyOnly", "hiddenCubeLight", "hiddenCubeDark"):
+    # Drop legacy keys that this pipeline replaces: hiddenCube* variants,
+    # monolithMaterial (-> fragments), and the legacy per-material gathering*
+    # names (-> per-SourceType gathering* keys defined below).
+    for legacy in ("hiddenCube", "hiddenCubeKeyOnly", "hiddenCubeLight",
+                   "hiddenCubeDark", "monolithMaterial"):
         subtypes.pop(legacy, None)
-    for sub, names in EXTRA_SUBTYPE_NAMES.items():
+    for legacy in [k for k in subtypes if k.startswith("gathering")]:
+        subtypes.pop(legacy, None)
+
+    def _pick(names: dict) -> str:
         if lang == "en":
-            name = names["en"]
-        elif lang == "zh-CN":
-            name = names["zhCN"]
-        else:  # zh-TW
-            name = names.get("zhTW") or _to_tw(names["zhCN"])
+            return names["en"]
+        if lang == "zh-CN":
+            return names["zhCN"]
+        return names.get("zhTW") or _to_tw(names["zhCN"])
+
+    for sub, names in EXTRA_SUBTYPE_NAMES.items():
+        name = _pick(names)
+        subtypes[sub] = {"name": name, "description": name}
+    for sub, names in GATHER_SUBTYPE_NAMES.items():
+        name = _pick(names)
         subtypes[sub] = {"name": name, "description": name}
     data["subtypes"] = subtypes
     return data

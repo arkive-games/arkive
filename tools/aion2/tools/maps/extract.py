@@ -8,7 +8,7 @@ No "region" concept — only the game's own hierarchy, with raw field names kept
   - geometry       (MapData.json SubzoneVolumeInfoMap)  : joined by SubzoneTableId
   - world-map icon (Table/WorldMapUIRegion.json)        : joined by SubzoneId
                      -> IconType, IconRank (from WorldMapInfoType Region_Rank<N>)
-  - god fragments  (MapData.json SpawnInfoList, GodFragment EnvObj)
+  - fragments      (MapData.json SpawnInfoList, GodFragment EnvObj)
                      -> monolith achievement group (Achievement.json UseEnvObjSpawnerName)
                      -> canonical Subzone: the max-area subzone sharing the group's
                         Title name (== the icon-bearing one).
@@ -71,6 +71,79 @@ def _godfragment_env_ids() -> frozenset:
         e["ID"]["Value"] for e in _table("EnvObjData.json")
         if "GodFragment" in (e.get("ResourceKey", "") + e.get("Name", ""))
     )
+
+
+@lru_cache(maxsize=None)
+def _gather_source_type_by_env() -> dict:
+    """GatherSource EnvObj ID -> short SourceType (e.g. ``Od``, ``Herb``).
+
+    The EnvObj's ``UsageValue`` (e.g. ``Gather_Herb_lv1_Common_001_f``) is the
+    ``GatherSource.Name``; that row's ``SourceType`` (``EGatherSourceType::Od``)
+    is the material grouping. All 142 GatherSource EnvObj defs resolve cleanly
+    into ~10 SourceTypes, so we emit one ``gathering<SourceType>`` subtype each."""
+    gs = {r["Name"]: r for r in _table("GatherSource.json")}
+    out = {}
+    for e in _table("EnvObjData.json"):
+        if e.get("Usage") != "EEnvObjectUsage::GatherSource":
+            continue
+        row = gs.get(e.get("UsageValue"))
+        if row and row.get("SourceType"):
+            out[e["ID"]["Value"]] = str(row["SourceType"]).split("::")[-1]
+    return out
+
+
+# Player-facing FIELD dungeon types — world entrances we WOULD surface as the
+# ``dungeon`` subtype. Excludes Seal (its own subtype), Quest (sub-district /
+# story gates), and instance/abyss-internal types (InstanceLayer, AbyssArtifact,
+# Abyss, AbyssWar, PersonalAgit, Guild, BossChallenge, FieldEvent). NOTE: in the
+# current export every dungeon of these types has ``LinkedMap == None`` (entered
+# via a UI lobby, no world position), so none are placed on the world maps; the
+# parser still resolves them generically in case future data adds field gates.
+_FIELD_DUNGEON_TYPES = frozenset({
+    "EDungeonType::Matching", "EDungeonType::Party", "EDungeonType::Raid",
+    "EDungeonType::Daily", "EDungeonType::Awaken", "EDungeonType::Ascension",
+    "EDungeonType::Growth",
+})
+
+
+@lru_cache(maxsize=None)
+def _enter_dungeon_env_to_field_dungeon() -> dict:
+    """EnterDungeon EnvObj ID -> Dungeon row, for player-facing FIELD dungeons.
+
+    ``UsageValue`` of an ``EnterDungeon`` EnvObj is the numeric Dungeon ID. We
+    keep only rows whose ``DungeonType`` is in ``_FIELD_DUNGEON_TYPES`` (Seal /
+    Quest / instance / abyss types are dropped)."""
+    dgs = {r["ID"]["Value"]: r for r in _table("Dungeon.json")}
+    out = {}
+    for e in _table("EnvObjData.json"):
+        if e.get("Usage") != "EEnvObjectUsage::EnterDungeon":
+            continue
+        uv = str(e.get("UsageValue", ""))
+        if not uv.isdigit():
+            continue
+        dg = dgs.get(int(uv))
+        if dg is not None and dg.get("DungeonType") in _FIELD_DUNGEON_TYPES:
+            out[e["ID"]["Value"]] = dg
+    return out
+
+
+def _field_named_bosses(map_id: int) -> dict:
+    """spawner Name -> WorldMapFieldNamed row, for named field bosses on a map.
+
+    ``WorldMapFieldNamed.FieldNamedSpawnerName`` matches a ``SpawnInfoList``
+    entry Name in that map's ``MapData.json`` (100% resolve in the current
+    export), giving the boss a world position; the spawn entry's ``NpcIdList``
+    resolves a localized boss name via ``NpcData.Desc``."""
+    return {
+        r["FieldNamedSpawnerName"]: r
+        for r in _table("WorldMapFieldNamed.json")
+        if r["MapId"]["Value"] == map_id
+    }
+
+
+@lru_cache(maxsize=None)
+def _npc_index() -> dict:
+    return {r["ID"]["Value"]: r for r in _table("NpcData.json")}
 
 
 @lru_cache(maxsize=None)
@@ -305,27 +378,44 @@ def extract_map(name: str, l10n: L10N) -> dict:
             "SubzoneName": canon_sz["Name"] if canon_sz else None,
         })
 
-    # ---- 4. world markers placed via SpawnInfoList (teleport, hiddenCube)
-    #         and via instance gates (seal). Same world->pixel transform as
-    #         everything else, so they align with subzone polygons + markers.
+    # ---- 4. world markers placed via SpawnInfoList (teleport, hiddenCube,
+    #         gathering, dungeon, boss) and via instance gates (seal). Same
+    #         world->pixel transform as everything else, so they align with
+    #         subzone polygons + markers.
     tp_ids = _teleport_env_ids()
     hc_open_ids = _hiddencube_open_env_ids()
+    gather_type = _gather_source_type_by_env()   # EnvObj ID -> SourceType (Od, Herb, ...)
+    field_dg = _enter_dungeon_env_to_field_dungeon()  # EnvObj ID -> field Dungeon row
     seal_env = _seal_env_to_dungeon(name)  # EnvObj ID -> Seal Dungeon row
+    named_bosses = _field_named_bosses(map_id)  # spawner Name -> WorldMapFieldNamed row
+    npc_idx = _npc_index()
     world_markers = []
     for s in md["Properties"]["Data"].get("SpawnInfoList", []):
         env = set(_ids(s.get("EnvObjIdList", [])))
-        if not env:
-            continue
-        # A spawn entry may correspond to one or more marker kinds. Hidden-cube
-        # spawners list BOTH variants (one bIsKeyOnly=False open + one
-        # bIsKeyOnly=True key-only EnvObj def) at the same spawn points; we keep
-        # ONLY the yellow (openable, bIsKeyOnly=False) cube as a single
-        # ``hiddenCube`` per spawn and drop the key-only variant entirely.
-        emit = []  # list of (kind, name_en, name_zhCN, env_obj_id)
+        emit = []  # list of (kind, name_en, name_zhCN, env_obj_id, extra)
         if env & tp_ids:
-            emit.append(("teleport", "", "", next(iter(env & tp_ids))))
+            emit.append(("teleport", "", "", next(iter(env & tp_ids)), None))
         if env & hc_open_ids:
-            emit.append(("hiddenCube", "", "", next(iter(env & hc_open_ids))))
+            # Hidden-cube spawners list BOTH variants (one bIsKeyOnly=False open +
+            # one bIsKeyOnly=True key-only EnvObj def) at the same spawn points; we
+            # keep ONLY the yellow (openable) cube and drop the key-only variant.
+            emit.append(("hiddenCube", "", "", next(iter(env & hc_open_ids)), None))
+        # gathering: one marker per spawn, subtype carries the SourceType.
+        gather_hit = next((i for i in env if i in gather_type), None)
+        if gather_hit is not None:
+            emit.append(("gathering", "", "", gather_hit, gather_type[gather_hit]))
+        # field dungeon entrances (non-Seal player-facing). None present in the
+        # current export, but parsed generically if future data adds them.
+        dg_hit = next((field_dg[i] for i in env if i in field_dg), None)
+        if dg_hit is not None:
+            title = dg_hit.get("Title", {}) or {}
+            emit.append((
+                "dungeon",
+                l10n.en(title.get("Key", "")) or "",
+                l10n.zh_cn(title.get("Key", "")) or "",
+                next(i for i in env if i in field_dg),
+                None,
+            ))
         if not emit:
             seal_hit = next((seal_env[i] for i in env if i in seal_env), None)
             if seal_hit is not None:
@@ -334,15 +424,31 @@ def extract_map(name: str, l10n: L10N) -> dict:
                     "seal",
                     l10n.en(title.get("Key", "")) or "",
                     l10n.zh_cn(title.get("Key", "")) or "",
-                    next((i for i in env if i in seal_env), next(iter(env))),
+                    next((i for i in env if i in seal_env), next(iter(env)) if env else None),
+                    None,
+                ))
+        # boss: named field monster placed via WorldMapFieldNamed (NPC spawn,
+        # no EnvObj). Resolve the boss display name from its NpcData.Desc.
+        if not emit:
+            boss = named_bosses.get(s["Name"])
+            if boss is not None:
+                npc_ids = _ids(s.get("NpcIdList", []))
+                npc = npc_idx.get(npc_ids[0]) if npc_ids else None
+                desc = (npc or {}).get("Desc", {}) or {}
+                emit.append((
+                    "boss",
+                    l10n.en(desc.get("Key", "")) or "",
+                    l10n.zh_cn(desc.get("Key", "")) or "",
+                    None,
+                    None,
                 ))
         if not emit:
             continue
         loc = s["Positions"][0]["Location"]
         loc3 = [round(loc["X"], 2), round(loc["Y"], 2), round(loc["Z"], 2)]
         px = to_px(loc3)
-        for kind, name_en, name_zh, env_obj_id in emit:
-            world_markers.append({
+        for kind, name_en, name_zh, env_obj_id, extra in emit:
+            wm = {
                 "kind": kind,
                 "Name": s["Name"],
                 "EnvObjId": env_obj_id,
@@ -350,7 +456,10 @@ def extract_map(name: str, l10n: L10N) -> dict:
                 "name_zhCN": name_zh,
                 "Location": loc3,
                 "px": px,
-            })
+            }
+            if kind == "gathering":
+                wm["sourceType"] = extra  # e.g. "Od" -> subtype gatheringOd
+            world_markers.append(wm)
 
     return {
         "Name": name,
@@ -371,7 +480,8 @@ def main():
     l10n = L10N()
     maps_idx = _maps_index()
     hdr = (f"{'map':20s}{'subzones':>9s}{'polys':>6s}{'groups':>7s}{'icons':>6s}"
-           f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cube':>6s}")
+           f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cube':>6s}"
+           f"{'gath':>6s}{'dgn':>5s}{'boss':>5s}")
     print(hdr)
     for name in REQUESTED_MAPS:
         if name not in maps_idx:
@@ -383,10 +493,11 @@ def main():
         n_poly = sum(1 for s in data["Subzones"] if s.get("pxBorders"))
         wm = data.get("WorldMarkers", [])
         kc = {k: sum(1 for w in wm if w["kind"] == k)
-              for k in ("teleport", "seal", "hiddenCube")}
+              for k in ("teleport", "seal", "hiddenCube", "gathering", "dungeon", "boss")}
         print(f"{name:20s}{len(data['Subzones']):>9d}{n_poly:>6d}{len(data['SubzoneGroups']):>7d}"
               f"{n_icons:>6d}{len(data['Fragments']):>10d}{len(data['MonolithGroups']):>11d}"
-              f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCube']:>6d}")
+              f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCube']:>6d}"
+              f"{kc['gathering']:>6d}{kc['dungeon']:>5d}{kc['boss']:>5d}")
 
 
 if __name__ == "__main__":

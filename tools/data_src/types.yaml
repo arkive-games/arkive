@@ -45,6 +45,22 @@ categories:
     id: 111de9ef-0b75-4de0-9dc5-730c0f181947
     name: occupation
     order: 3
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: false
+    icon: UI/Resource/Texture/Icon/UT_Marker_Dungeon.webp
+    iconScale: 1.25
+    id: 2f4a1d7c-6b3e-4a9f-8c21-7d5e0b9a4c10
+    name: dungeon
+    order: 4
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: false
+    icon: UI/Resource/Texture/Icon/UT_Marker_Monster_Boss.webp
+    iconScale: 1.25
+    id: 9b8c2e15-4d7a-43f6-bf90-1a2c3d4e5f60
+    name: boss
+    order: 5
 - color: '#000000'
   icon: ''
   id: 559c0e87-1f70-4e38-ae37-cacb71cb7a41
@@ -57,7 +73,7 @@ categories:
     icon: images/Monolith_Material_Light.webp
     iconScale: 1.0
     id: 8c336fdf-a1cd-4d9c-8b76-f6466bbb726e
-    name: monolithMaterial
+    name: fragments
     order: 0
   - canComplete: true
     color: '#000000'
@@ -76,107 +92,83 @@ categories:
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Od_L_lv2_02a.webp
-    iconScale: 1.5
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gather_Od.webp
+    iconScale: 1.25
     id: 50e2a0e5-37d2-490f-afff-b691420513a7
-    name: gatheringOdyle
+    name: gatheringOd
     order: 0
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Ore_A_c_002.webp
-    iconScale: 1.5
-    id: 999278b5-ded9-4409-bf9c-021ebdcebc5b
-    name: gatheringOrichalcumOre
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gather_Herb.webp
+    iconScale: 1.25
+    id: 350d37ec-4cb5-4540-961f-ecdcca977aff
+    name: gatheringHerb
     order: 1
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Wood_A_c_001.webp
-    iconScale: 1.75
-    id: f3ccb191-6d03-4eea-b693-001920a21a38
-    name: gatheringYggdrasilLog
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gatherl_Jewelry.webp
+    iconScale: 1.25
+    id: 6077231a-7e53-4aa4-8f16-039f318080bc
+    name: gatheringJewelry
     order: 2
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Gemstone_A_c_002.webp
-    iconScale: 1.75
-    id: 6077231a-7e53-4aa4-8f16-039f318080bc
-    name: gatheringSapphireGemstone
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gatherl_Metal.webp
+    iconScale: 1.25
+    id: 999278b5-ded9-4409-bf9c-021ebdcebc5b
+    name: gatheringMetal
     order: 3
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Gemstone_A_c_003.webp
-    iconScale: 1.75
-    id: 0e5a0850-52a7-4bf0-9401-edb9ce37bf04
-    name: gatheringDiamondGemstone
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gatherl_RareMetal.webp
+    iconScale: 1.25
+    id: 0834586d-7ce9-4108-9ae3-638005b8d2af
+    name: gatheringRareMetal
     order: 4
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Gemstone_A_c_004.webp
-    iconScale: 1.75
-    id: 0834586d-7ce9-4108-9ae3-638005b8d2af
-    name: gatheringRubyGemstone
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gather_Tree.webp
+    iconScale: 1.25
+    id: f3ccb191-6d03-4eea-b693-001920a21a38
+    name: gatheringTree
     order: 5
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Herb_L_c_001.webp
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gather_Flower.webp
     iconScale: 1.25
-    id: 350d37ec-4cb5-4540-961f-ecdcca977aff
-    name: gatheringAria
+    id: 0e5a0850-52a7-4bf0-9401-edb9ce37bf04
+    name: gatheringFlower
     order: 6
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Herb_D_c_002.webp
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gather_Berry.webp
     iconScale: 1.25
-    id: f3727c7a-77fc-4c13-b7c4-9169e9302d2a
-    name: gatheringTargena
+    id: 2c2fd485-bff9-43ef-ad3b-8375bb6c788e
+    name: gatheringBerry
     order: 7
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Food_L_c_001.webp
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gather_Vegetable.webp
     iconScale: 1.25
     id: 48e5e9aa-c845-4bfd-b0b5-b2c029d18b12
-    name: gatheringCoriolus
+    name: gatheringVegetable
     order: 8
   - canComplete: false
     color: '#000000'
     hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Gather_Fruit_L_lv2_01a.webp
-    iconScale: 1.25
-    id: 2c2fd485-bff9-43ef-ad3b-8375bb6c788e
-    name: gatheringKukuru
-    order: 9
-  - canComplete: false
-    color: '#000000'
-    hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Food_D_c_003.webp
-    iconScale: 1.25
-    id: db306dbb-cc8f-4aae-b819-194fc04a5f72
-    name: gatheringMela
-    order: 10
-  - canComplete: false
-    color: '#000000'
-    hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Gather_Food_L_lv1_01c.webp
-    iconScale: 1.25
-    id: 23625473-1ab5-4cae-b03c-e8c6a233d081
-    name: gatheringInina
-    order: 11
-  - canComplete: false
-    color: '#000000'
-    hideTooltip: true
-    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Food_L_c_006.webp
+    icon: UI/Resource/Texture/Icon/UT_Marker_Gather_shellfish.webp
     iconScale: 1.25
     id: 33065c54-e872-4534-bf48-1edc92ae52a6
-    name: gatheringCypri
-    order: 12
+    name: gatheringShellfish
+    order: 9
 - color: '#000000'
   icon: ''
   id: 67fd0858-18ea-40f0-9fb4-f2bedd6c5274
