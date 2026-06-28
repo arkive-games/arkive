@@ -26,29 +26,21 @@ Coverage (from the current parse):
   - battlefield       <- Subzones with IconType == EIconType::Battlefield
   - teleport          <- WorldMarkers (EnvObj Usage TeleportArtifact spawns)
   - seal              <- WorldMarkers (EnterDungeon EnvObj for Seal dungeons)
+  - occupation        <- WorldMarkers (garrison EnterInstanceLayer EnvObj spawns, 驻地)
   - hiddenCube        <- WorldMarkers (HiddenCube EnvObj spawns, bIsKeyOnly=False, yellow only)
-  - gathering<Type>   <- WorldMarkers (GatherSource EnvObj spawns, split by SourceType)
-  - boss              <- WorldMarkers (WorldMapFieldNamed named field monsters)
-  - dungeon           <- WorldMarkers (EnterDungeon EnvObj for player-facing FIELD
-                         dungeons) — PARSED but empty: every such dungeon has
-                         LinkedMap==None (instanced, entered via UI lobby), so none
-                         are placed on the world maps in the current export.
+  - gathering<Mat>    <- WorldMarkers (GatherSource EnvObj spawns, one per node
+                         position, subtyped by specific material, SourceType fallback)
+  - boss              <- WorldMarkers (spawns referencing a bNamed NPC; named from
+                         NpcData.Desc)
+  - dungeon           <- WorldMarkers (PartyDungeon + AbyssArtifact field-dungeon
+                         entrances spawned on the world map; Seal/Quest/housing excluded)
 
 LOD tiers (per-marker ``tier`` = zoom level at which it first appears; replaces
 the old ``rank``):
   - tier 1: subzone village/battlefield whose WorldMapInfoType rank == 1
-  - tier 2: teleport, seal, dungeon, boss (and campsite, if ever parsed)
+  - tier 2: teleport, seal, occupation, dungeon, boss
   - tier 3: subzone village/battlefield whose rank == 2; fragments; hiddenCube; gathering
   Markers with no determinable tier omit ``tier`` (never shown under LOD).
-
-Categories NOT derivable from the current parse (omitted, see report):
-  occupation — GarrisonTerritory subzones exist but the legacy curated names
-  (Maktashan Outpost, Sehna Outpost, ...) do not join cleanly to the raw
-  Subzone DisplayName keys, and those subzones already partly surface as
-  village/battlefield; a definitive occupation-objective table is still needed.
-  campsite — Kisk EnvObjs (28 defs) are NOT placed via any map's SpawnInfoList
-  (0 spawns on every world map), and WorldMapFieldNamed carries only bosses, so
-  no campsite source with world positions exists; needs a Kisk/base spawn table.
 
 Regions: real subzone polygons. The parser (``extract.py``) reads each
 subzone's boundary vertices from ``MapData.json`` ``SubzoneVolumeInfoMap`` and
@@ -94,6 +86,8 @@ EXTRA_SUBTYPE_NAMES = {
     "fragments": {"en": "Monolith", "zhCN": "主神痕迹", "zhTW": "主神痕跡"},
     "dungeon": {"en": "Dungeon", "zhCN": "副本", "zhTW": "副本"},
     "boss": {"en": "Boss", "zhCN": "Boss", "zhTW": "Boss"},
+    # 驻地 / garrison occupation objectives.
+    "occupation": {"en": "Garrison", "zhCN": "驻地", "zhTW": "駐地"},
 }
 
 # Visible-map ordering / type, keyed by parsed map Name. Maps not present in
@@ -122,6 +116,7 @@ ICON_TYPE_TO_SUBTYPE = {
 WORLD_MARKER_CATEGORY = {
     "teleport": "location",
     "seal": "location",
+    "occupation": "location",
     "hiddenCube": "collection",
     "dungeon": "location",
     "boss": "location",
@@ -136,9 +131,9 @@ WORLD_MARKER_CATEGORY = {
 WORLD_MARKER_TIER = {
     "teleport": 2,
     "seal": 2,
+    "occupation": 2,
     "dungeon": 2,
     "boss": 2,
-    "campsite": 2,
     "hiddenCube": 3,
     "gathering": 3,
 }
@@ -146,26 +141,62 @@ FRAGMENTS_TIER = 3
 # Subzone IconRank (1/2) -> LOD tier (1/3).
 SUBZONE_RANK_TO_TIER = {1: 1, 2: 3}
 
-# GatherSource SourceType (short) -> gathering subtype name + marker icon.
-# Dedicated per-type marker icons exist in the resource repo
-# (UI/Resource/Texture/Icon/UT_Marker_Gather*); we reuse them rather than the
-# legacy per-material item icons. SourceType is the clean ~10-way grouping.
-GATHER_SUBTYPES = {
-    "Od":         ("gatheringOd",        "UI/Resource/Texture/Icon/UT_Marker_Gather_Od.webp"),
-    "Herb":       ("gatheringHerb",      "UI/Resource/Texture/Icon/UT_Marker_Gather_Herb.webp"),
-    "Jewelry":    ("gatheringJewelry",   "UI/Resource/Texture/Icon/UT_Marker_Gatherl_Jewelry.webp"),
-    "Metal":      ("gatheringMetal",     "UI/Resource/Texture/Icon/UT_Marker_Gatherl_Metal.webp"),
-    "RareMetal":  ("gatheringRareMetal", "UI/Resource/Texture/Icon/UT_Marker_Gatherl_RareMetal.webp"),
-    "Tree":       ("gatheringTree",      "UI/Resource/Texture/Icon/UT_Marker_Gather_Tree.webp"),
-    "Flower":     ("gatheringFlower",    "UI/Resource/Texture/Icon/UT_Marker_Gather_Flower.webp"),
-    "Berry":      ("gatheringBerry",     "UI/Resource/Texture/Icon/UT_Marker_Gather_Berry.webp"),
-    "Vegetable":  ("gatheringVegetable", "UI/Resource/Texture/Icon/UT_Marker_Gather_Vegetable.webp"),
-    "Shellfish":  ("gatheringShellfish", "UI/Resource/Texture/Icon/UT_Marker_Gather_shellfish.webp"),
+# Specific GatherSource MATERIAL (EnvObj Desc, english) -> legacy gathering
+# subtype key. These 13 materials are the Elyos/World_L_A set and reuse the
+# legacy curated subtype names + per-item icons (in data_src/types.yaml). The
+# precise material is read from the EnvObj Desc by the parser (WorldMarkers
+# ``material``); markers of these materials get the specific subtype below.
+GATHER_MATERIAL_SUBTYPES = {
+    "Odyle":      "gatheringOdyle",
+    "Orichalcum": "gatheringOrichalcumOre",
+    "Yggdrasil":  "gatheringYggdrasilLog",
+    "Sapphire":   "gatheringSapphireGemstone",
+    "Diamond":    "gatheringDiamondGemstone",
+    "Ruby":       "gatheringRubyGemstone",
+    "Aria":       "gatheringAria",
+    "Targena":    "gatheringTargena",
+    "Coriolus":   "gatheringCoriolus",
+    "Kukuru":     "gatheringKukuru",
+    "Mela":       "gatheringMela",
+    "Inina":      "gatheringInina",
+    "Cypri":      "gatheringCypri",
 }
 
-# Display names for the gathering SourceType subtypes (injected into types
-# locales). zh-TW falls back to OpenCC from zhCN when absent.
+# Fallback: GatherSource SourceType (short) -> broad gathering subtype, used for
+# materials with no legacy match (e.g. the Asmodian Asvata/Azpha/... set on
+# World_D_A). Generic UT_Marker_Gather icons keyed by SourceType.
+GATHER_SOURCETYPE_SUBTYPES = {
+    "Od":         "gatheringOd",
+    "Herb":       "gatheringHerb",
+    "Jewelry":    "gatheringJewelry",
+    "Metal":      "gatheringMetal",
+    "RareMetal":  "gatheringRareMetal",
+    "Tree":       "gatheringTree",
+    "Flower":     "gatheringFlower",
+    "Berry":      "gatheringBerry",
+    "Vegetable":  "gatheringVegetable",
+    "Shellfish":  "gatheringShellfish",
+}
+
+# Display names for ALL gathering subtypes (specific materials + SourceType
+# fallbacks), injected into the types locales. zh from the game L10N of each
+# material; zh-TW falls back to OpenCC from zhCN when absent.
 GATHER_SUBTYPE_NAMES = {
+    # specific materials (Elyos set)
+    "gatheringOdyle":            {"en": "Odyle",      "zhCN": "奥德"},
+    "gatheringOrichalcumOre":    {"en": "Orichalcum", "zhCN": "奥里哈康"},
+    "gatheringYggdrasilLog":     {"en": "Yggdrasil",  "zhCN": "世界树"},
+    "gatheringSapphireGemstone": {"en": "Sapphire",   "zhCN": "蓝宝石"},
+    "gatheringDiamondGemstone":  {"en": "Diamond",    "zhCN": "钻石"},
+    "gatheringRubyGemstone":     {"en": "Ruby",       "zhCN": "红宝石"},
+    "gatheringAria":             {"en": "Aria",       "zhCN": "当归"},
+    "gatheringTargena":          {"en": "Targena",    "zhCN": "龙蒿"},
+    "gatheringCoriolus":         {"en": "Coriolus",   "zhCN": "云芝"},
+    "gatheringKukuru":           {"en": "Kukuru",     "zhCN": "库库罗"},
+    "gatheringMela":             {"en": "Mela",       "zhCN": "梅拉"},
+    "gatheringInina":            {"en": "Inina",      "zhCN": "雪莉"},
+    "gatheringCypri":            {"en": "Cypri",      "zhCN": "齐尔利"},
+    # SourceType fallbacks
     "gatheringOd":        {"en": "Odyle",      "zhCN": "奥德", "zhTW": "奧德"},
     "gatheringHerb":      {"en": "Herb",       "zhCN": "草药", "zhTW": "草藥"},
     "gatheringJewelry":   {"en": "Gemstone",   "zhCN": "宝石", "zhTW": "寶石"},
@@ -330,11 +361,14 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             continue
         kind = w.get("kind")
         if kind == "gathering":
-            # split into gathering<SourceType>; category is always 'gathering'.
-            mapping = GATHER_SUBTYPES.get(w.get("sourceType"))
-            if not mapping:
+            # subtype by SPECIFIC material when it maps to a legacy subtype,
+            # else fall back to the broad SourceType subtype. category is always
+            # 'gathering'.
+            subtype = GATHER_MATERIAL_SUBTYPES.get(w.get("material"))
+            if not subtype:
+                subtype = GATHER_SOURCETYPE_SUBTYPES.get(w.get("sourceType"))
+            if not subtype:
                 continue
-            subtype = mapping[0]
             category = "gathering"
         else:
             subtype = kind
