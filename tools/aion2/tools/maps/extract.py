@@ -65,6 +65,18 @@ def _maps_index():
     return {m["Name"]: m for m in _table("Map.json")}
 
 
+def map_title(name: str, l10n: L10N) -> dict[str, str]:
+    """Localized map title from ``Map.json``'s ``Desc.Key``.
+
+    Maps absent from ``Map.json`` (e.g. ``World_L_B`` / ``World_D_B``) fall back
+    to the conventional ``STR_Map_<name>`` L10N key. Returns ``{"en", "zhCN"}``;
+    values may be empty strings when the key has no L10N body.
+    """
+    entry = _maps_index().get(name) or {}
+    desc_key = (entry.get("Desc") or {}).get("Key") or f"STR_Map_{name}"
+    return {"en": l10n.en(desc_key), "zhCN": l10n.zh_cn(desc_key)}
+
+
 @lru_cache(maxsize=None)
 def _godfragment_env_ids() -> frozenset:
     return frozenset(
