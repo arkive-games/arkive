@@ -6,7 +6,8 @@ No "region" concept — only the game's own hierarchy, with raw field names kept
   - Subzone        (Table/Subzone.json, by MapId)       : ID, Name, DisplayName,
                      WorldMapFogGroupId -> SubzoneGroup.ID, SubzoneType, bMapEnabled
   - geometry       (MapData.json SubzoneVolumeInfoMap)  : joined by SubzoneTableId
-  - world-map icon (Table/WorldMapUIRegion.json)        : joined by SubzoneId -> IconType, rank
+  - world-map icon (Table/WorldMapUIRegion.json)        : joined by SubzoneId
+                     -> IconType, IconRank (from WorldMapInfoType Region_Rank<N>)
   - god fragments  (MapData.json SpawnInfoList, GodFragment EnvObj)
                      -> monolith achievement group (Achievement.json UseEnvObjSpawnerName)
                      -> canonical Subzone: the max-area subzone sharing the group's
@@ -42,6 +43,16 @@ _MONO_PREFIX = "Group_Unlock_MonolithFragment_"
 
 def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", s.lower())
+
+
+def _parse_rank(world_map_info_type):
+    """``EWorldMapInfoType::Region_Rank2`` -> ``2`` (frontend zoom LOD rank).
+
+    Returns ``None`` when there is no WorldMapUIRegion / no trailing Rank<N>."""
+    if not world_map_info_type:
+        return None
+    m = re.search(r"Rank(\d+)$", str(world_map_info_type))
+    return int(m.group(1)) if m else None
 
 
 @lru_cache(maxsize=None)
@@ -83,19 +94,6 @@ def _hiddencube_open_env_ids() -> frozenset:
         e["ID"]["Value"] for e in _table("EnvObjData.json")
         if str(e.get("Category", "")).startswith("EEnvObjCategory::HiddenCube")
         and not e.get("bIsKeyOnly", False)
-    )
-
-
-@lru_cache(maxsize=None)
-def _hiddencube_keyonly_env_ids() -> frozenset:
-    """EnvObj defs for hidden cubes that are KEY-ONLY (red).
-
-    ``bIsKeyOnly == True`` -> red (ResourceKey HiddenCube_01_V04,
-    RequireConfirmDesc.Key UI_ENVOBJ_TREASUREBOX_KEY_ONLY_DESC)."""
-    return frozenset(
-        e["ID"]["Value"] for e in _table("EnvObjData.json")
-        if str(e.get("Category", "")).startswith("EEnvObjCategory::HiddenCube")
-        and e.get("bIsKeyOnly", False)
     )
 
 
@@ -227,6 +225,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
         sid = s["ID"]["Value"]
         g = geom.get(sid, {})
         ic = icons.get(sid)
+        wm_info = ic["WorldMapInfoType"] if ic else None
         subzones.append({
             "ID": sid,
             "Name": s["Name"],
@@ -237,7 +236,9 @@ def extract_map(name: str, l10n: L10N) -> dict:
             "SubzoneType": s["SubzoneType"],
             "bMapEnabled": s.get("bMapEnabled", False),
             "IconType": ic["IconType"] if ic else None,
-            "WorldMapInfoType": ic["WorldMapInfoType"] if ic else None,
+            "WorldMapInfoType": wm_info,
+            # LOD rank parsed from WorldMapInfoType (Region_Rank1/2 -> 1/2).
+            "IconRank": _parse_rank(wm_info),
             "Location": g.get("Location"),
             "px": to_px(g.get("Location")),
             "area": g.get("area"),
@@ -309,7 +310,6 @@ def extract_map(name: str, l10n: L10N) -> dict:
     #         everything else, so they align with subzone polygons + markers.
     tp_ids = _teleport_env_ids()
     hc_open_ids = _hiddencube_open_env_ids()
-    hc_keyonly_ids = _hiddencube_keyonly_env_ids()
     seal_env = _seal_env_to_dungeon(name)  # EnvObj ID -> Seal Dungeon row
     world_markers = []
     for s in md["Properties"]["Data"].get("SpawnInfoList", []):
@@ -318,16 +318,14 @@ def extract_map(name: str, l10n: L10N) -> dict:
             continue
         # A spawn entry may correspond to one or more marker kinds. Hidden-cube
         # spawners list BOTH variants (one bIsKeyOnly=False open + one
-        # bIsKeyOnly=True key-only EnvObj def) at the same spawn points, so we
-        # emit one marker per variant present. Split is by KEY REQUIREMENT
-        # (bIsKeyOnly), NOT by faction (HiddenCubeLight/Dark).
+        # bIsKeyOnly=True key-only EnvObj def) at the same spawn points; we keep
+        # ONLY the yellow (openable, bIsKeyOnly=False) cube as a single
+        # ``hiddenCube`` per spawn and drop the key-only variant entirely.
         emit = []  # list of (kind, name_en, name_zhCN, env_obj_id)
         if env & tp_ids:
             emit.append(("teleport", "", "", next(iter(env & tp_ids))))
         if env & hc_open_ids:
             emit.append(("hiddenCube", "", "", next(iter(env & hc_open_ids))))
-        if env & hc_keyonly_ids:
-            emit.append(("hiddenCubeKeyOnly", "", "", next(iter(env & hc_keyonly_ids))))
         if not emit:
             seal_hit = next((seal_env[i] for i in env if i in seal_env), None)
             if seal_hit is not None:
@@ -373,7 +371,7 @@ def main():
     l10n = L10N()
     maps_idx = _maps_index()
     hdr = (f"{'map':20s}{'subzones':>9s}{'polys':>6s}{'groups':>7s}{'icons':>6s}"
-           f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cube':>6s}{'cubeKey':>8s}")
+           f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cube':>6s}")
     print(hdr)
     for name in REQUESTED_MAPS:
         if name not in maps_idx:
@@ -385,10 +383,10 @@ def main():
         n_poly = sum(1 for s in data["Subzones"] if s.get("pxBorders"))
         wm = data.get("WorldMarkers", [])
         kc = {k: sum(1 for w in wm if w["kind"] == k)
-              for k in ("teleport", "seal", "hiddenCube", "hiddenCubeKeyOnly")}
+              for k in ("teleport", "seal", "hiddenCube")}
         print(f"{name:20s}{len(data['Subzones']):>9d}{n_poly:>6d}{len(data['SubzoneGroups']):>7d}"
               f"{n_icons:>6d}{len(data['Fragments']):>10d}{len(data['MonolithGroups']):>11d}"
-              f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCube']:>6d}{kc['hiddenCubeKeyOnly']:>8d}")
+              f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCube']:>6d}")
 
 
 if __name__ == "__main__":

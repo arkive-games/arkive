@@ -26,8 +26,7 @@ Coverage (from the current parse):
   - battlefield       <- Subzones with IconType == EIconType::Battlefield
   - teleport          <- WorldMarkers (EnvObj Usage TeleportArtifact spawns)
   - seal              <- WorldMarkers (EnterDungeon EnvObj for Seal dungeons)
-  - hiddenCube        <- WorldMarkers (HiddenCube EnvObj spawns, bIsKeyOnly=False, yellow)
-  - hiddenCubeKeyOnly <- WorldMarkers (HiddenCube EnvObj spawns, bIsKeyOnly=True, red)
+  - hiddenCube        <- WorldMarkers (HiddenCube EnvObj spawns, bIsKeyOnly=False, yellow only)
 
 Categories NOT derivable from the current parse (omitted, see report):
   occupation — GarrisonTerritory subzones exist but the legacy curated names
@@ -70,12 +69,11 @@ CURATED_LOCALES = TOOLS_ROOT.parent / "frontend" / "public" / "locales"
 
 LANGS = ("en", "zh-CN", "zh-TW")
 
-# Subtype display names that the curated types locale does not yet carry
-# (the hiddenCube split by KEY REQUIREMENT, not faction). {subtype: {en, zhCN}};
-# zh-TW derived via OpenCC.
+# Subtype display names injected into the types locale. ``hiddenCube`` is the
+# single yellow (openable) cube — NO faction / key suffix. {subtype: {en, zhCN,
+# zhTW}}; zh-TW falls back to OpenCC if not given.
 EXTRA_SUBTYPE_NAMES = {
-    "hiddenCube": {"en": "Hidden Cube", "zhCN": "隐藏宝箱"},
-    "hiddenCubeKeyOnly": {"en": "Hidden Cube (Key)", "zhCN": "隐藏宝箱（钥匙）"},
+    "hiddenCube": {"en": "Hidden Cube", "zhCN": "隐藏宝箱", "zhTW": "隱藏寶箱"},
 }
 
 # Visible-map ordering / type, keyed by parsed map Name. Maps not present in
@@ -103,8 +101,10 @@ WORLD_MARKER_CATEGORY = {
     "teleport": "location",
     "seal": "location",
     "hiddenCube": "collection",
-    "hiddenCubeKeyOnly": "collection",
 }
+
+# Non-subzone world markers always render at zoom LOD rank 2.
+WORLD_MARKER_RANK = 2
 
 _cc_s2t = OpenCC("s2t")
 
@@ -205,6 +205,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "region": region_key,
             "x": _round2(px[0]),
             "y": _round2(px[1]),
+            "rank": WORLD_MARKER_RANK,
             "images": [],
             "contributors": [],
             "indexInSubtype": idx,
@@ -226,7 +227,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         category, subtype = mapping
         idx = next_index(subtype)
         mid = f"{name}-{subtype}-{s['ID']}"
-        markers.append({
+        marker = {
             "id": mid,
             "category": category,
             "subtype": subtype,
@@ -236,7 +237,13 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "images": [],
             "contributors": [],
             "indexInSubtype": idx,
-        })
+        }
+        # rank from the subzone's WorldMapUIRegion (1 or 2); OMIT when the
+        # subzone has no rank — the frontend never shows rankless markers.
+        rank = s.get("IconRank")
+        if rank is not None:
+            marker["rank"] = rank
+        markers.append(marker)
         locale[mid] = {
             "name_en": s.get("name_en", "") or s.get("Name", ""),
             "name_zhCN": s.get("name_zhCN", "") or s.get("Name", ""),
@@ -260,6 +267,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "subtype": subtype,
             "x": _round2(px[0]),
             "y": _round2(px[1]),
+            "rank": WORLD_MARKER_RANK,
             "images": [],
             "contributors": [],
             "indexInSubtype": idx,
@@ -346,16 +354,15 @@ def _locale_block(entries: dict[str, dict], lang: str) -> dict:
 def _types_locale(lang: str) -> dict:
     """Build the types-locale (category + subtype display names) for ``lang``.
 
-    Carries the curated ``public/locales/<lang>/types.yaml`` and adjusts it for
-    the hiddenCube split by KEY REQUIREMENT (not faction): removes any legacy
-    ``hiddenCube*`` subtypes and injects ``hiddenCube`` (yellow / keyless) and
-    ``hiddenCubeKeyOnly`` (red / key-only) from ``EXTRA_SUBTYPE_NAMES``.
+    Carries the curated ``public/locales/<lang>/types.yaml`` and injects the
+    single yellow ``hiddenCube`` name (NO faction / key suffix) from
+    ``EXTRA_SUBTYPE_NAMES``, dropping any legacy hiddenCube* variants.
     """
     src = CURATED_LOCALES / lang / "types.yaml"
     data = yaml.safe_load(src.read_text(encoding="utf-8")) if src.exists() else {}
     data = data or {}
     subtypes = dict(data.get("subtypes", {}))
-    for legacy in ("hiddenCube", "hiddenCubeLight", "hiddenCubeDark"):
+    for legacy in ("hiddenCube", "hiddenCubeKeyOnly", "hiddenCubeLight", "hiddenCubeDark"):
         subtypes.pop(legacy, None)
     for sub, names in EXTRA_SUBTYPE_NAMES.items():
         if lang == "en":
@@ -363,7 +370,7 @@ def _types_locale(lang: str) -> dict:
         elif lang == "zh-CN":
             name = names["zhCN"]
         else:  # zh-TW
-            name = _to_tw(names["zhCN"])
+            name = names.get("zhTW") or _to_tw(names["zhCN"])
         subtypes[sub] = {"name": name, "description": name}
     data["subtypes"] = subtypes
     return data
