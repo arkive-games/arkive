@@ -1,7 +1,7 @@
 # Phase 2 — Clean Server-Free Frontend Rebuild (Map First)
 
 **Date:** 2026-06-27
-**Status:** Approved design
+**Status:** Map module IMPLEMENTED + validated (2026-06-28) on branch `phase2/map-rebuild`. Plan: `docs/superpowers/plans/2026-06-27-phase2-map-rebuild.md` (10 tasks done). Crafting/Class/Items modules still pending (own plans). Known minor gap: one marker-type category lacks an en translation in the locale data.
 
 ## Context & goal
 
