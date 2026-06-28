@@ -64,6 +64,8 @@ import yaml
 from opencc import OpenCC
 
 from . import TOOLS_ROOT
+from .l10n import L10N
+from .extract import map_title
 
 # --- Paths ----------------------------------------------------------------
 PARSED_MAPS_DIR = TOOLS_ROOT / "parsed_data" / "maps"
@@ -235,6 +237,41 @@ def load_parsed() -> dict[str, dict]:
 
 def _round2(v: float) -> float:
     return round(float(v), 2)
+
+
+# Faction suffix appended to the L10N base title, keyed by faction. Derived from
+# the machine name; Abyss/Reshanta maps (no _L_/_D_) get no suffix. zh-TW is
+# produced later by the existing _to_tw() pass over the zh-CN string.
+_FACTION_SUFFIX = {
+    "light": {"en": " (Elyos)", "zh-CN": "（天）"},
+    "dark": {"en": " (Asmodian)", "zh-CN": "（魔）"},
+}
+
+
+def _faction(name: str) -> str | None:
+    """Faction from the machine name: ``_L_`` -> light, ``_D_`` -> dark, else None."""
+    if "_L_" in name:
+        return "light"
+    if "_D_" in name:
+        return "dark"
+    return None
+
+
+def _map_display(name: str, l10n: L10N) -> dict[str, str]:
+    """Composed map display names: L10N base title + faction suffix.
+
+    Returns ``{"name_en", "name_zhCN"}`` (the shape ``_locale_block`` expects).
+    Base falls back to ``name.replace("_", " ")`` when L10N has no body; zh base
+    falls back to the en base when there is no zh body.
+    """
+    title = map_title(name, l10n)
+    base_en = title["en"] or name.replace("_", " ")
+    base_zh = title["zhCN"] or base_en
+    fac = _faction(name)
+    if fac:
+        base_en += _FACTION_SUFFIX[fac]["en"]
+        base_zh += _FACTION_SUFFIX[fac]["zh-CN"]
+    return {"name_en": base_en, "name_zhCN": base_zh}
 
 
 # --- Builders -------------------------------------------------------------
@@ -527,17 +564,9 @@ def emit(only_map: str | None = None) -> None:
     for lng in LANGS:
         _write_json(DATA_REPO / "locales" / lng / "types.json", _types_locale(lng))
 
-    # 4. maps locales — built from parsed names (fallback to map name).
-    maps_locale_entries = {}
-    for name in MAP_META:
-        md = parsed.get(name)
-        if md and md.get("Subzones"):
-            # map display name: prefer first subzone-group/region name? use Name.
-            pass
-        maps_locale_entries[name] = {
-            "name_en": _map_display_en(name),
-            "name_zhCN": _map_display_zh(name, parsed),
-        }
+    # 4. maps locales — localized titles from game L10N + faction suffix.
+    l10n = L10N()
+    maps_locale_entries = {name: _map_display(name, l10n) for name in MAP_META}
     for lng in LANGS:
         _write_json(
             DATA_REPO / "locales" / lng / "maps.json",
@@ -598,30 +627,6 @@ def emit(only_map: str | None = None) -> None:
     print("Emitted FRONTEND data to", DATA_REPO)
     for name, s in summary.items():
         print(f"  {name}: {s['markers']} markers {s['by_subtype']}, {s['regions']} regions")
-
-
-# --- map display names (curated-aligned) ----------------------------------
-_MAP_DISPLAY_EN = {
-    "World_L_A": "Verteron (Elyos)",
-    "World_D_A": "Altgard (Asmodian)",
-    "World_L_B": "World L B",
-    "World_D_B": "World D B",
-    "World_L_Starter": "Starter (Elyos)",
-    "World_D_Starter": "Starter (Asmodian)",
-    "Abyss_Reshanta_A": "Reshanta A",
-    "Abyss_Reshanta_B": "Reshanta B",
-    "Abyss_Reshanta_C": "Reshanta C",
-}
-
-
-def _map_display_en(name: str) -> str:
-    return _MAP_DISPLAY_EN.get(name, name.replace("_", " "))
-
-
-def _map_display_zh(name: str, parsed: dict) -> str:
-    # No reliable per-map zh title in the parse; carry the curated CN if any,
-    # else romanized name. Frontend falls back gracefully.
-    return _MAP_DISPLAY_EN.get(name, name.replace("_", " "))
 
 
 def main() -> None:
