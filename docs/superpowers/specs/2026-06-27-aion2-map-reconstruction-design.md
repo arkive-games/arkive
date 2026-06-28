@@ -136,6 +136,15 @@ Depends on Phase 0; can develop in parallel with Phase 1 against a sample datase
 - **Drop/regenerate:** hand-entered coordinates/translations now sourced from the dataset.
 - Produce a migration that **re-anchors preserved screenshots** onto dataset-sourced markers.
 
+### 🚩 Future work — recover `Abyss_Reshanta_B`
+`Abyss_Reshanta_B` (the `AR2_` version) was **removed from the current export** and replaced by
+`Abyss_Reshanta_C` (`AR3_`). Its `Map.json`/`Subzone.json`/`Achievement.json`/`WorldMap` entries
+are gone; only a **stale `MapData.json`** survives (100 fragment positions + 6 subzone polygons,
+**unnamed and ungrouped**). Old frontend B data is empty. Full reconstruction is **not possible
+from the current export**. If B is ever needed, recover from **an older game-export snapshot**
+(still has B in its tables) or from the **backend DB** (old hand-entered B markers + S3
+screenshots). Deferred — C supersedes it in live content.
+
 ## 7. Risks & open questions (for per-phase specs)
 
 - **Coordinate transform fidelity (Phase 1a):** must reproduce the existing marker x/y space
