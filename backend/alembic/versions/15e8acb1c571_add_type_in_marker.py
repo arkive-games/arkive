@@ -4,6 +4,11 @@ Revision ID: 15e8acb1c571
 Revises: 36fcaeea636d
 Create Date: 2026-01-04 17:18:36.158578
 
+TODO(remove): This `markers.type` column backs the user-uploaded marker type,
+which is being retired (frontend user-defined markers removed). A future
+migration should drop the column once no client sends/reads it. Do NOT edit this
+revision's upgrade/downgrade (history must stay runnable). See
+docs/deprecations/user-uploaded-marker-type.md.
 """
 from typing import Sequence, Union
 

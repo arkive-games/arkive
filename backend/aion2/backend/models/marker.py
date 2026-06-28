@@ -32,6 +32,11 @@ class Marker(AsyncAttrs, Base, TimestampMixin):
     y: Mapped[float] = mapped_column(Float, nullable=False)  # Y-coordinate of the marker
     index_in_subtype: Mapped[int | None] = mapped_column(Integer, nullable=True)
     icon: Mapped[str] = mapped_column(String, nullable=True)
+    # TODO(remove): user-uploaded marker type — pending frontend removal of
+    # user-defined markers (already done). The "uploaded" value has no remaining
+    # producer/consumer. See docs/deprecations/user-uploaded-marker-type.md.
+    # Do NOT drop yet; needs a follow-up migration. NOTE: MarkerFeedback.type is
+    # an unrelated enum and must stay.
     type: Mapped[str] = mapped_column(String, nullable=True)
 
     # Relationships to other models

@@ -33,6 +33,7 @@ class MarkerRead(BaseModel):
     y: float
     index_in_subtype: int
     icon: str | None = ""
+    # TODO(remove): user-uploaded marker type — see docs/deprecations/user-uploaded-marker-type.md
     type: str | None = ""
 
 class MarkerReadDetail(MarkerRead):
@@ -49,6 +50,7 @@ class MarkerCreate(BaseModel):
     x: float
     y: float
     icon: str = ""
+    # TODO(remove): user-uploaded marker type — see docs/deprecations/user-uploaded-marker-type.md
     type: str = ""
     index_in_subtype: int | None = None
 
@@ -64,6 +66,7 @@ class MarkerUpdate(BaseModel):
     x: float | None = None
     y: float | None = None
     icon: str | None = None
+    # TODO(remove): user-uploaded marker type — see docs/deprecations/user-uploaded-marker-type.md
     type: str | None = None
     index_in_subtype: int | None = None
     # images: List[str] | None = None
