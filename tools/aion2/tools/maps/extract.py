@@ -185,6 +185,22 @@ def _teleport_env_ids() -> frozenset:
 
 
 @lru_cache(maxsize=None)
+def _teleport_name_by_env() -> dict:
+    """teleport EnvObj ID -> localized name Desc.Key (``EnvObjData_<name>_desc``).
+
+    All 161 TeleportArtifact EnvObjs resolve a meaningful place name from this
+    key (e.g. "Latesran Western Root", "Marsh Legion Campsite") in both en and
+    zh — none empty/numeric — so this is the primary teleport name source. The
+    containing-subzone fallback below is only a safety net if a Desc ever resolves
+    empty."""
+    return {
+        e["ID"]["Value"]: (e.get("Desc") or {}).get("Key", "")
+        for e in _table("EnvObjData.json")
+        if e["ID"]["Value"] in _teleport_env_ids()
+    }
+
+
+@lru_cache(maxsize=None)
 def _hiddencube_open_env_ids() -> frozenset:
     """EnvObj defs for hidden cubes that are openable WITHOUT a key (yellow).
 
@@ -453,6 +469,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
     #         world->pixel transform as everything else, so they align with
     #         subzone polygons + markers.
     tp_ids = _teleport_env_ids()
+    tp_names = _teleport_name_by_env()   # teleport EnvObj ID -> Desc.Key
     hc_open_ids = _hiddencube_open_env_ids()
     gather_info = _gather_info_by_env()   # EnvObj ID -> {sourceType, descKey}
     occ_ids = _occupation_env_ids()       # garrison/camp world entrances (驻地)
@@ -471,6 +488,42 @@ def extract_map(name: str, l10n: L10N) -> dict:
         s = re.sub(r"门$", "", s)
         return s
 
+    # Subzone polygons in WORLD space, for the teleport name fallback (only used
+    # if an EnvObj Desc ever resolves empty — none currently do). Each entry is
+    # (shapely Polygon, name_en, name_zhCN); we pick the containing subzone, else
+    # the nearest by polygon distance.
+    _subzone_polys = []
+    for s in subzones:
+        if not s.get("name_en") and not s.get("name_zhCN"):
+            continue
+        g = geom.get(s["ID"], {})
+        pts = g.get("Points") or []
+        if len(pts) < 3:
+            continue
+        poly = Polygon(pts)
+        if not poly.is_valid:
+            poly = poly.buffer(0)
+        if poly.is_empty:
+            continue
+        _subzone_polys.append((poly, s.get("name_en", ""), s.get("name_zhCN", "")))
+
+    def _subzone_name_at(loc3):
+        """(name_en, name_zhCN) of the subzone containing world (x, y), else the
+        nearest subzone. ('', '') if no subzone geometry on this map."""
+        if not _subzone_polys or not loc3 or loc3[0] is None:
+            return "", ""
+        from shapely.geometry import Point
+        pt = Point(loc3[0], loc3[1])
+        best = None
+        best_d = None
+        for poly, en, zh in _subzone_polys:
+            if poly.contains(pt):
+                return en, zh
+            d = poly.distance(pt)
+            if best_d is None or d < best_d:
+                best_d, best = d, (en, zh)
+        return best if best else ("", "")
+
     world_markers = []
     for s in md["Properties"]["Data"].get("SpawnInfoList", []):
         env = set(_ids(s.get("EnvObjIdList", [])))
@@ -479,7 +532,16 @@ def extract_map(name: str, l10n: L10N) -> dict:
         # density); otherwise one marker at Positions[0] (the spawner anchor).
         emit = []
         if env & tp_ids:
-            emit.append(("teleport", "", "", next(iter(env & tp_ids)), None, False))
+            tp_eid = next(iter(env & tp_ids))
+            tp_key = tp_names.get(tp_eid, "")
+            emit.append((
+                "teleport",
+                l10n.en(tp_key) or "",
+                l10n.zh_cn(tp_key) or "",
+                tp_eid,
+                None,
+                False,
+            ))
         if env & hc_open_ids:
             # Hidden-cube spawners list BOTH variants (one bIsKeyOnly=False open +
             # one bIsKeyOnly=True key-only EnvObj def) at the same spawn points; we
@@ -571,12 +633,18 @@ def extract_map(name: str, l10n: L10N) -> dict:
             for p in locs:
                 loc = p["Location"]
                 loc3 = [round(loc["X"], 2), round(loc["Y"], 2), round(loc["Z"], 2)]
+                m_name_en, m_name_zh = name_en, name_zh
+                # Teleport fallback: if the EnvObj Desc resolved empty, name the
+                # marker after the subzone that contains (or is nearest to) it,
+                # so it's at least a place name rather than a number.
+                if kind == "teleport" and not m_name_en and not m_name_zh:
+                    m_name_en, m_name_zh = _subzone_name_at(loc3)
                 wm = {
                     "kind": kind,
                     "Name": s["Name"],
                     "EnvObjId": env_obj_id,
-                    "name_en": name_en,
-                    "name_zhCN": name_zh,
+                    "name_en": m_name_en,
+                    "name_zhCN": m_name_zh,
                     "Location": loc3,
                     "px": to_px(loc3),
                 }
