@@ -42,7 +42,7 @@ async def update_matchings():
 
         # 4. Read matchings from CSV files
         matching_files = [
-            ("matchings_2_3.csv", 2, 3),
+            ("matchings_3_2.csv", 3, 2),
         ]
 
         for file_name, season_number, matching_number in matching_files:
@@ -61,7 +61,11 @@ async def update_matchings():
 
             with open(csv_path, "r", encoding="utf-8") as f:
                 reader = csv.reader(f)
-                for row in reader:
+                rows = []
+                server_ids_in_file = set()
+                duplicate_found = False
+                
+                for line_number, row in enumerate(reader, start=1):
                     if not row or len(row) < 2:
                         continue
                     
@@ -69,9 +73,26 @@ async def update_matchings():
                         server_1_id = int(row[0].strip())
                         server_2_id = int(row[1].strip())
                     except ValueError:
-                        print(f"Skipping invalid row in {file_name}: {row}")
+                        print(f"Skipping invalid row in {file_name} at line {line_number}: {row}")
                         continue
+                    
+                    if server_1_id in server_ids_in_file:
+                        print(f"Duplicate server ID {server_1_id} found in {file_name} at line {line_number}.")
+                        duplicate_found = True
+                    server_ids_in_file.add(server_1_id)
+                    
+                    if server_2_id in server_ids_in_file:
+                        print(f"Duplicate server ID {server_2_id} found in {file_name} at line {line_number}.")
+                        duplicate_found = True
+                    server_ids_in_file.add(server_2_id)
+                    
+                    rows.append((line_number, server_1_id, server_2_id))
+                
+                if duplicate_found:
+                    print(f"Aborting processing for {file_name} due to duplicate server IDs.")
+                    continue
 
+                for line_number, server_1_id, server_2_id in rows:
                     if server_1_id not in servers:
                         print(f"Server ID {server_1_id} (tw) not found.")
                         continue
@@ -82,10 +103,11 @@ async def update_matchings():
 
                     body = ServerMatchingCreate(
                         server_1_id=servers[server_1_id].id,
-                        server_2_id=servers[server_2_id].id
+                        server_2_id=servers[server_2_id].id,
+                        order=line_number
                     )
 
-                    print(f"Creating matching for season {season_number} (matching {matching_number}): {server_1_id} <-> {server_2_id}")
+                    print(f"Creating matching for season {season_number} (matching {matching_number}) [order {line_number}]: {server_1_id} <-> {server_2_id}")
                     response = await server_matchings_create_server_matching_api_v_1_seasons_season_server_matchings_post.asyncio(
                         client=_client,
                         season=season_id,
