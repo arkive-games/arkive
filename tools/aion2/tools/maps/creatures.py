@@ -61,3 +61,33 @@ def build_pet_source_index(vehicle_list, item_table, npc_loot):
         if meta is not None:
             index[row["NpcId"]["Value"]] = meta
     return index
+
+
+def cluster_points(points, radius):
+    """Deterministic greedy clustering of ``(x, y)`` points.
+
+    Sorts the points first (so the result is independent of input order), then
+    merges each point into the first existing cluster whose running centroid is
+    within ``radius``; otherwise it starts a new cluster.
+
+    Returns ``[{"x", "y", "count"}]`` with centroids rounded to 2 decimals.
+    """
+    r2 = radius * radius
+    clusters: list[dict] = []  # each: {"sx", "sy", "n"}
+    for x, y in sorted(points):
+        placed = False
+        for c in clusters:
+            cx = c["sx"] / c["n"]
+            cy = c["sy"] / c["n"]
+            if (cx - x) ** 2 + (cy - y) ** 2 <= r2:
+                c["sx"] += x
+                c["sy"] += y
+                c["n"] += 1
+                placed = True
+                break
+        if not placed:
+            clusters.append({"sx": x, "sy": y, "n": 1})
+    return [
+        {"x": round(c["sx"] / c["n"], 2), "y": round(c["sy"] / c["n"], 2), "count": c["n"]}
+        for c in clusters
+    ]
