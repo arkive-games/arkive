@@ -42,6 +42,10 @@ Dawn Legion Base = upper-left. This matches the raw **map image** (image Y incre
 The orientation is expected to hold for all maps (same engine), but **re-verify per map** via
 landmarks/overlay. Implementation: `tools/aion2/tools/maps/` (`WorldMapTransform`).
 
+## Conventions
+- **New features:** open a git worktree for the work (isolate from the current workspace).
+- **Merging back:** integrate with rebase (not merge commits).
+
 ## Notes
 - Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo
   (`resource/UI/...`). Dev: a Vite middleware serves `../resource/UI` at `/UI`
