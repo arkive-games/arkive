@@ -86,6 +86,28 @@ def _godfragment_env_ids() -> frozenset:
 
 
 @lru_cache(maxsize=None)
+def _envobj_name_by_id() -> dict:
+    return {
+        e["ID"]["Value"]: (e.get("Name", "") or "")
+        for e in _table("EnvObjData.json")
+    }
+
+
+def _fragment_type(env_id: int) -> str:
+    """Classify a god fragment by its EnvObj `Name` suffix.
+
+    Names look like `E_L1_Verteron_fragment_Air` / `_Water` / `_Ground`. The
+    untyped "HQ" fragments (no suffix) fold into `ground`.
+    """
+    name = _envobj_name_by_id().get(env_id, "").lower()
+    if name.endswith("_air"):
+        return "air"
+    if name.endswith("_water"):
+        return "water"
+    return "ground"
+
+
+@lru_cache(maxsize=None)
 def _gather_info_by_env() -> dict:
     """GatherSource EnvObj ID -> {sourceType, descKey}.
 
@@ -447,12 +469,14 @@ def extract_map(name: str, l10n: L10N) -> dict:
         grp = spawn2grp.get(s["Name"])
         loc = s["Positions"][0]["Location"]
         loc3 = [round(loc["X"], 2), round(loc["Y"], 2), round(loc["Z"], 2)]
+        env_id = _ids(s["EnvObjIdList"])[0]
         fragments.append({
             "Name": s["Name"],
-            "EnvObjId": _ids(s["EnvObjIdList"])[0],
+            "EnvObjId": env_id,
             "GroupName": grp,
             "Location": loc3,
             "px": to_px(loc3),
+            "Type": _fragment_type(env_id),
         })
         if grp:
             group_frag_count[grp] = group_frag_count.get(grp, 0) + 1
