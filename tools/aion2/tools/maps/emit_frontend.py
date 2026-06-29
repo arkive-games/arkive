@@ -349,6 +349,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "images": [],
             "contributors": [],
             "indexInSubtype": idx,
+            "fragmentType": f.get("Type", "ground"),
         })
         locale[mid] = {
             "name_en": grp.get("title_en", "") or str(idx + 1),
