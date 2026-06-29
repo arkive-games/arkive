@@ -76,6 +76,8 @@ def test_build_creature_markers_clusters_per_pet():
     assert all(m["name_en"] == "PetA" and m["name_zhCN"] == "宠物A" for m in out)
     assert sorted(m["count"] for m in out) == [1, 2]
     assert all(isinstance(m["px"], list) and len(m["px"]) == 2 for m in out)
+    # each marker carries the pet identity, so emit can count a pet once
+    assert all(m["petKey"] == "str_veh_A" for m in out)
 
 
 def test_build_creature_markers_no_transform_returns_empty():
@@ -125,3 +127,30 @@ def test_emit_frontend_routes_creature_marker():
     assert locale[m["id"]]["name_en"] == "Fossa"
     assert locale[m["id"]]["desc_en"] == "7 spawn points"
     assert locale[m["id"]]["desc_zhCN"] == "7 处刷新点"
+
+
+def test_emit_frontend_creature_index_is_per_pet():
+    """The same pet counts once in the sidebar: every spawn cluster of a pet
+    shares one indexInSubtype (what subtypeCounts tallies), while each cluster
+    keeps a unique marker id."""
+    from collections import Counter
+    from aion2.tools.maps.emit_frontend import build_markers
+
+    map_data = {
+        "Name": "TestMap",
+        "WorldMarkers": [
+            {"kind": "creatureFeral", "px": [10.0, 10.0], "name_en": "A",
+             "name_zhCN": "甲", "count": 3, "petKey": "str_veh_A"},
+            {"kind": "creatureFeral", "px": [900.0, 900.0], "name_en": "A",
+             "name_zhCN": "甲", "count": 2, "petKey": "str_veh_A"},
+            {"kind": "creatureFeral", "px": [50.0, 50.0], "name_en": "B",
+             "name_zhCN": "乙", "count": 1, "petKey": "str_veh_B"},
+        ],
+    }
+    markers, _ = build_markers(map_data)
+    feral = [m for m in markers if m["subtype"] == "creatureFeral"]
+    assert len(feral) == 3
+    assert len({m["id"] for m in feral}) == 3        # unique id per cluster
+    idx_counts = Counter(m["indexInSubtype"] for m in feral)
+    assert len(idx_counts) == 2                       # 2 distinct pets -> sidebar counts 2
+    assert sorted(idx_counts.values()) == [1, 2]      # pet A's 2 clusters share 1 index; pet B: 1

@@ -102,8 +102,9 @@ def build_creature_markers(spawn_info_list, transform, index, l10n, radius=CLUST
 
     Pools every source NPC's spawn positions per pet (keyed by the pet's
     ``descKey``), transforms them world->pixel, and clusters each pet's points.
-    Returns dicts shaped like the other ``WorldMarkers`` plus a ``count``:
-    ``{"kind", "name_en", "name_zhCN", "Location": None, "px": [x, y], "count"}``.
+    Returns dicts shaped like the other ``WorldMarkers`` plus ``count`` and
+    ``petKey`` (the pet's Desc.Key, used downstream for per-pet sidebar counting):
+    ``{"kind", "name_en", "name_zhCN", "Location": None, "px": [x, y], "count", "petKey"}``.
     Returns ``[]`` when there is no transform or empty index.
     """
     if transform is None or not index:
@@ -140,5 +141,9 @@ def build_creature_markers(spawn_info_list, transform, index, l10n, radius=CLUST
                 "Location": None,
                 "px": [c["x"], c["y"]],
                 "count": c["count"],
+                # Stable pet identity (its Desc.Key). emit_frontend uses this to
+                # give every cluster of the same pet ONE indexInSubtype, so the
+                # sidebar counts a pet once regardless of cluster count.
+                "petKey": key,
             })
     return markers

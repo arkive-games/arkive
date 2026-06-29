@@ -337,6 +337,20 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         counters[subtype] = i + 1
         return i
 
+    # Creature subtypes count once PER PET, not per cluster: every spawn cluster
+    # of the same pet shares one indexInSubtype, which is what the sidebar tallies
+    # (subtypeCounts = unique indexInSubtype) and what completion keys on. The
+    # marker `id` stays unique per cluster (it uses next_index).
+    creature_pet_index: dict[tuple[str, str], int] = {}
+    creature_pet_counter: dict[str, int] = {}
+
+    def pet_index(subtype: str, pet_key: str) -> int:
+        k = (subtype, pet_key)
+        if k not in creature_pet_index:
+            creature_pet_index[k] = creature_pet_counter.get(subtype, 0)
+            creature_pet_counter[subtype] = creature_pet_index[k] + 1
+        return creature_pet_index[k]
+
     name = map_data["Name"]
 
     # --- fragments (was monolithMaterial) from Fragments -------------------
@@ -441,6 +455,11 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             continue
         idx = next_index(subtype)
         mid = f"{name}-{subtype}-{idx}"
+        # Creatures: indexInSubtype is per-pet (clusters of one pet share it) so a
+        # pet is counted/completed once; every other subtype is per-marker (== idx).
+        index_in_subtype = (
+            pet_index(subtype, w.get("petKey", mid)) if category == "creature" else idx
+        )
         marker = {
             "id": mid,
             "category": category,
@@ -449,7 +468,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "y": _round2(px[1]),
             "images": [],
             "contributors": [],
-            "indexInSubtype": idx,
+            "indexInSubtype": index_in_subtype,
         }
         tier = WORLD_MARKER_TIER.get(kind)
         if tier is not None:
