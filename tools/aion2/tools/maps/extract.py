@@ -29,6 +29,7 @@ from .l10n import L10N
 from .subzones import _find_first, map_data_path
 from .transform import Orientation, WorldMapTransform
 from .worldmap import WorldMapMeta
+from .creatures import build_creature_markers, build_pet_source_index
 
 TABLE = RAW_ROOT / "Data" / "Table"
 OUT_DIR = TOOLS_ROOT / "parsed_data" / "maps"
@@ -207,6 +208,14 @@ def _named_npc_ids() -> frozenset:
 @lru_cache(maxsize=None)
 def _npc_index() -> dict:
     return {r["ID"]["Value"]: r for r in _table("NpcData.json")}
+
+
+@lru_cache(maxsize=None)
+def _pet_source_index():
+    """Source NpcId -> pet (subtype + name keys). Static across maps; cached."""
+    return build_pet_source_index(
+        _table("VehicleList.json"), _table("Item.json"), _table("NpcLoot.json")
+    )
 
 
 @lru_cache(maxsize=None)
@@ -691,6 +700,19 @@ def extract_map(name: str, l10n: L10N) -> dict:
                     wm["material"] = extra[1]
                 world_markers.append(wm)
 
+    # ---- 5. creature/pet markers: tameable-creature spawns, clustered per pet.
+    #         Source NPC -> pet (CreatureType subtype + localized name) via
+    #         VehicleList/Item/NpcLoot; positions from this map's SpawnInfoList,
+    #         transformed with the SAME WorldMapTransform, clustered at 200px.
+    world_markers.extend(
+        build_creature_markers(
+            md["Properties"]["Data"].get("SpawnInfoList", []),
+            transform,
+            _pet_source_index(),
+            l10n,
+        )
+    )
+
     return {
         "Name": name,
         "MapId": map_id,
@@ -711,7 +733,7 @@ def main():
     maps_idx = _maps_index()
     hdr = (f"{'map':20s}{'subzones':>9s}{'polys':>6s}{'groups':>7s}{'icons':>6s}"
            f"{'fragments':>10s}{'monoGroups':>11s}{'tp':>4s}{'seal':>5s}{'cube':>6s}"
-           f"{'gath':>6s}{'occ':>5s}{'dgn':>5s}{'boss':>5s}")
+           f"{'gath':>6s}{'occ':>5s}{'dgn':>5s}{'boss':>5s}{'crea':>6s}")
     print(hdr)
     for name in REQUESTED_MAPS:
         if name not in maps_idx:
@@ -725,10 +747,11 @@ def main():
         kc = {k: sum(1 for w in wm if w["kind"] == k)
               for k in ("teleport", "seal", "hiddenCube", "gathering", "occupation",
                         "dungeon", "boss")}
+        kc["creature"] = sum(1 for w in wm if str(w["kind"]).startswith("creature"))
         print(f"{name:20s}{len(data['Subzones']):>9d}{n_poly:>6d}{len(data['SubzoneGroups']):>7d}"
               f"{n_icons:>6d}{len(data['Fragments']):>10d}{len(data['MonolithGroups']):>11d}"
               f"{kc['teleport']:>4d}{kc['seal']:>5d}{kc['hiddenCube']:>6d}"
-              f"{kc['gathering']:>6d}{kc['occupation']:>5d}{kc['dungeon']:>5d}{kc['boss']:>5d}")
+              f"{kc['gathering']:>6d}{kc['occupation']:>5d}{kc['dungeon']:>5d}{kc['boss']:>5d}{kc['creature']:>6d}")
 
 
 if __name__ == "__main__":

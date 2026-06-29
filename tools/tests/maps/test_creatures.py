@@ -82,3 +82,26 @@ def test_build_creature_markers_no_transform_returns_empty():
     index = {100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "A"}}
     spawn = [{"NpcIdList": [{"Value": 100}], "Positions": [{"Location": {"X": 0, "Y": 0}}]}]
     assert build_creature_markers(spawn, None, index, _FakeL10N()) == []
+
+
+def test_extract_world_l_a_emits_creature_markers():
+    """Integration: parse the real World_L_A export and check creature markers.
+
+    Requires the raw export (RAW_DATA_PATH from tools/.env, loaded by
+    aion2.tools.__init__). The expected count band is wide because the
+    deterministic (sorted) clusterer differs slightly from exploratory counts.
+    """
+    from aion2.tools.maps.extract import extract_map
+    from aion2.tools.maps.l10n import L10N
+
+    data = extract_map("World_L_A", L10N())
+    creatures = [w for w in data["WorldMarkers"] if str(w["kind"]).startswith("creature")]
+    assert 250 <= len(creatures) <= 500
+    assert {w["kind"] for w in creatures} <= {
+        "creatureIntellect", "creatureFeral", "creatureNature",
+        "creatureTrans", "creatureSpecial",
+    }
+    for w in creatures:
+        assert w["px"] and 0 <= w["px"][0] <= 8192 and 0 <= w["px"][1] <= 8192
+        assert w["name_en"]      # localized pet name, non-empty
+        assert w["count"] >= 1
