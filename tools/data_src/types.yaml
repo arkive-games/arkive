@@ -70,7 +70,8 @@ categories:
   - canComplete: true
     color: '#000000'
     hideTooltip: true
-    icon: images/Monolith_Material_Light.webp
+    icon: UI/Resource/Texture/Icon/UT_Marker_MonolithFragment.webp
+    iconComplete: UI/Resource/Texture/Icon/UT_Marker_MonolithFragment_Complete.webp
     iconScale: 1.0
     id: 8c336fdf-a1cd-4d9c-8b76-f6466bbb726e
     name: fragments
