@@ -91,3 +91,54 @@ def cluster_points(points, radius):
         {"x": round(c["sx"] / c["n"], 2), "y": round(c["sy"] / c["n"], 2), "count": c["n"]}
         for c in clusters
     ]
+
+
+def _ids(lst):
+    return [x.get("Value") if isinstance(x, dict) else x for x in lst]
+
+
+def build_creature_markers(spawn_info_list, transform, index, l10n, radius=CLUSTER_RADIUS):
+    """Build clustered creature WorldMarker dicts for one map.
+
+    Pools every source NPC's spawn positions per pet (keyed by the pet's
+    ``descKey``), transforms them world->pixel, and clusters each pet's points.
+    Returns dicts shaped like the other ``WorldMarkers`` plus a ``count``:
+    ``{"kind", "name_en", "name_zhCN", "Location": None, "px": [x, y], "count"}``.
+    Returns ``[]`` when there is no transform or empty index.
+    """
+    if transform is None or not index:
+        return []
+
+    pet_points: dict[str, list] = {}  # descKey -> [(px, py), ...]
+    pet_meta: dict[str, dict] = {}    # descKey -> {"subtype", "descKey", "petName"}
+    for s in spawn_info_list:
+        metas = [index[n] for n in _ids(s.get("NpcIdList", [])) if n in index]
+        if not metas:
+            continue
+        positions = s.get("Positions") or []
+        if not positions:
+            continue
+        pxs = []
+        for p in positions:
+            loc = p["Location"]
+            pxs.append(transform.world_to_pixel(loc["X"], loc["Y"]))
+        for meta in metas:
+            key = meta["descKey"]
+            pet_points.setdefault(key, []).extend(pxs)
+            pet_meta[key] = meta
+
+    markers: list[dict] = []
+    for key in sorted(pet_points):  # deterministic output order
+        meta = pet_meta[key]
+        name_en = l10n.en(key)
+        name_zh = l10n.zh_cn(key)
+        for c in cluster_points(pet_points[key], radius):
+            markers.append({
+                "kind": meta["subtype"],
+                "name_en": name_en,
+                "name_zhCN": name_zh,
+                "Location": None,
+                "px": [c["x"], c["y"]],
+                "count": c["count"],
+            })
+    return markers

@@ -42,3 +42,43 @@ def test_cluster_points_deterministic_regardless_of_order():
 
 def test_cluster_points_empty():
     assert cluster_points([], 200) == []
+
+
+from aion2.tools.maps.creatures import build_creature_markers
+
+
+class _FakeTransform:
+    def world_to_pixel(self, x, y):
+        return (x, y)  # identity, so pixel == world for easy assertions
+
+
+class _FakeL10N:
+    def en(self, key):
+        return {"str_veh_A": "PetA"}.get(key, "")
+
+    def zh_cn(self, key):
+        return {"str_veh_A": "宠物A"}.get(key, "")
+
+
+def test_build_creature_markers_clusters_per_pet():
+    index = {100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "A"}}
+    spawn = [
+        {"NpcIdList": [{"Value": 100}],
+         "Positions": [{"Location": {"X": 0, "Y": 0}}, {"Location": {"X": 40, "Y": 0}}]},
+        {"NpcIdList": [{"Value": 100}],
+         "Positions": [{"Location": {"X": 3000, "Y": 3000}}]},
+        # NPC not in the index contributes nothing:
+        {"NpcIdList": [{"Value": 777}], "Positions": [{"Location": {"X": 5, "Y": 5}}]},
+    ]
+    out = build_creature_markers(spawn, _FakeTransform(), index, _FakeL10N(), radius=200)
+    assert len(out) == 2  # (0,0)+(40,0) merge; (3000,3000) separate
+    assert all(m["kind"] == "creatureFeral" for m in out)
+    assert all(m["name_en"] == "PetA" and m["name_zhCN"] == "宠物A" for m in out)
+    assert sorted(m["count"] for m in out) == [1, 2]
+    assert all(isinstance(m["px"], list) and len(m["px"]) == 2 for m in out)
+
+
+def test_build_creature_markers_no_transform_returns_empty():
+    index = {100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "A"}}
+    spawn = [{"NpcIdList": [{"Value": 100}], "Positions": [{"Location": {"X": 0, "Y": 0}}]}]
+    assert build_creature_markers(spawn, None, index, _FakeL10N()) == []
