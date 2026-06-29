@@ -83,7 +83,11 @@ LANGS = ("en", "zh-CN", "zh-TW")
 # single yellow (openable) cube — NO faction / key suffix. {subtype: {en, zhCN,
 # zhTW}}; zh-TW falls back to OpenCC if not given.
 EXTRA_SUBTYPE_NAMES = {
-    "hiddenCube": {"en": "Hidden Cube", "zhCN": "隐藏宝箱", "zhTW": "隱藏寶箱"},
+    # Game L10N (Data/Table/L10N): EN "Hidden Cube", zh-TW "隱藏背包" (the term
+    # used by every Hidden-Cube achievement/mission string, e.g.
+    # STR_BATTLEPASS_MISSION_*_22). zh-CN is the OpenCC t2s of the zh-TW string
+    # ("隐藏背包"). NOT "宝箱" — that was an earlier guess and is wrong.
+    "hiddenCube": {"en": "Hidden Cube", "zhCN": "隐藏背包", "zhTW": "隱藏背包"},
     # fragments keeps the legacy monolithMaterial display names (re-keyed).
     "fragments": {"en": "Monolith", "zhCN": "主神痕迹", "zhTW": "主神痕跡"},
     "dungeon": {"en": "Dungeon", "zhCN": "副本", "zhTW": "副本"},
@@ -326,6 +330,12 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
     name = map_data["Name"]
 
     # --- fragments (was monolithMaterial) from Fragments -------------------
+    # Title shows the subtype label ("主神痕迹"); the per-marker locating info —
+    # region name + a per-region running number — goes in the description, e.g.
+    # "坎塔斯溪谷西部 #1". The region counter is independent of the global
+    # indexInSubtype so each region's fragments number from #1.
+    frag_names = EXTRA_SUBTYPE_NAMES["fragments"]
+    region_counts: dict[str, int] = {}
     groups = {g["GroupName"]: g for g in map_data.get("MonolithGroups", [])}
     for f in map_data.get("Fragments", []):
         px = f.get("px")
@@ -338,6 +348,9 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         mid = f"{name}-fragments-{idx}"
         grp = groups.get(f.get("GroupName"), {})
         region_key = _slug(grp.get("SubzoneName", ""))
+        n = region_counts[region_key] = region_counts.get(region_key, 0) + 1
+        region_en = grp.get("title_en", "")
+        region_zh = grp.get("title_zhCN", "")
         markers.append({
             "id": mid,
             "category": "collection",
@@ -352,8 +365,11 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "fragmentType": f.get("Type", "ground"),
         })
         locale[mid] = {
-            "name_en": grp.get("title_en", "") or str(idx + 1),
-            "name_zhCN": grp.get("title_zhCN", "") or str(idx + 1),
+            "name_en": frag_names["en"],
+            "name_zhCN": frag_names["zhCN"],
+            "name_zhTW": frag_names["zhTW"],
+            "desc_en": f"{region_en} #{n}" if region_en else f"#{n}",
+            "desc_zhCN": f"{region_zh} #{n}" if region_zh else f"#{n}",
         }
 
     # --- village / battlefield from Subzone IconType -----------------------
@@ -429,10 +445,22 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         if tier is not None:
             marker["tier"] = tier
         markers.append(marker)
-        locale[mid] = {
-            "name_en": w.get("name_en", "") or str(idx + 1),
-            "name_zhCN": w.get("name_zhCN", "") or str(idx + 1),
-        }
+        if subtype == "hiddenCube":
+            # Title = subtype label ("隐藏背包"); the cube has no region, so the
+            # description is just its running number ("#1").
+            cube_names = EXTRA_SUBTYPE_NAMES["hiddenCube"]
+            locale[mid] = {
+                "name_en": cube_names["en"],
+                "name_zhCN": cube_names["zhCN"],
+                "name_zhTW": cube_names["zhTW"],
+                "desc_en": f"#{idx + 1}",
+                "desc_zhCN": f"#{idx + 1}",
+            }
+        else:
+            locale[mid] = {
+                "name_en": w.get("name_en", "") or str(idx + 1),
+                "name_zhCN": w.get("name_zhCN", "") or str(idx + 1),
+            }
 
     markers.sort(key=lambda m: (m["subtype"], m["indexInSubtype"]))
     return markers, locale
@@ -494,17 +522,29 @@ def _write_json(path: Path, data) -> None:
 
 
 def _locale_block(entries: dict[str, dict], lang: str) -> dict:
-    """{key: {name_en, name_zhCN}} -> {key: {name, description}} for a lang."""
+    """{key: {name_en, name_zhCN[, desc_en, desc_zhCN]}} -> {key: {name,
+    description}} for a lang.
+
+    When an entry carries no ``desc_*`` the description mirrors the name (the
+    original behaviour, unchanged for maps/regions and every plain marker).
+    Markers that want a distinct description (fragments, hiddenCube) supply
+    ``desc_en`` / ``desc_zhCN``; zh-TW is OpenCC-converted from ``desc_zhCN``.
+    """
     out = {}
     for key, v in entries.items():
         if lang == "en":
             name = v.get("name_en", "")
+            desc = v.get("desc_en")
         elif lang == "zh-CN":
             name = v.get("name_zhCN", "")
+            desc = v.get("desc_zhCN")
         else:  # zh-TW
-            name = _to_tw(v.get("name_zhCN", ""))
+            # Prefer an explicit zh-TW name when given (OpenCC s2t mis-converts
+            # some words, e.g. 背包 -> 揹包); fall back to converting zh-CN.
+            name = v.get("name_zhTW") or _to_tw(v.get("name_zhCN", ""))
+            desc = _to_tw(v["desc_zhCN"]) if v.get("desc_zhCN") else None
         name = name or key
-        out[key] = {"name": name, "description": name}
+        out[key] = {"name": name, "description": desc if desc else name}
     return out
 
 

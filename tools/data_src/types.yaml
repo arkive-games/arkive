@@ -76,7 +76,7 @@ categories:
     id: 8c336fdf-a1cd-4d9c-8b76-f6466bbb726e
     name: fragments
     order: 0
-  - canComplete: true
+  - canComplete: false
     color: '#000000'
     hideTooltip: true
     icon: images/HiddenCube.webp
