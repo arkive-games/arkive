@@ -35,3 +35,26 @@ def test_generated_maps_json_visibility():
     assert maps["World_L_B"]["isVisible"] is True
     assert maps["World_D_B"]["isVisible"] is True
     assert maps["Abyss_Reshanta_B"]["isVisible"] is False
+
+
+def test_fragments_have_valid_type():
+    markers = json.loads(
+        (DATA / "markers" / "World_L_A.json").read_text(encoding="utf-8")
+    )["markers"]
+    frags = [m for m in markers if m["subtype"] == "fragments"]
+    assert frags, "expected fragment markers in World_L_A"
+    assert all(m.get("fragmentType") in {"ground", "air", "water"} for m in frags)
+    # World_L_A (Verteron) spawns all three kinds (ground 390 / air 120 / water 50).
+    assert {"air", "water", "ground"} <= {m["fragmentType"] for m in frags}
+
+
+def test_fragments_subtype_uses_real_icons():
+    types = json.loads((DATA / "types.json").read_text(encoding="utf-8"))
+    sub = next(
+        s
+        for c in types["categories"]
+        for s in c["subtypes"]
+        if s["name"] == "fragments"
+    )
+    assert sub["icon"] == "UI/Resource/Texture/Icon/UT_Marker_MonolithFragment.webp"
+    assert sub["iconComplete"] == "UI/Resource/Texture/Icon/UT_Marker_MonolithFragment_Complete.webp"
