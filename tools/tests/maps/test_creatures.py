@@ -105,3 +105,23 @@ def test_extract_world_l_a_emits_creature_markers():
         assert w["px"] and 0 <= w["px"][0] <= 8192 and 0 <= w["px"][1] <= 8192
         assert w["name_en"]      # localized pet name, non-empty
         assert w["count"] >= 1
+
+
+def test_emit_frontend_routes_creature_marker():
+    from aion2.tools.maps.emit_frontend import build_markers
+
+    map_data = {
+        "Name": "TestMap",
+        "WorldMarkers": [
+            {"kind": "creatureFeral", "px": [100.0, 200.0],
+             "name_en": "Fossa", "name_zhCN": "波沙", "count": 7},
+        ],
+    }
+    markers, locale = build_markers(map_data)
+    m = next(m for m in markers if m["subtype"] == "creatureFeral")
+    assert m["category"] == "creature"
+    assert m["tier"] == 3
+    assert m["x"] == 100.0 and m["y"] == 200.0
+    assert locale[m["id"]]["name_en"] == "Fossa"
+    assert locale[m["id"]]["desc_en"] == "7 spawn points"
+    assert locale[m["id"]]["desc_zhCN"] == "7 处刷新点"

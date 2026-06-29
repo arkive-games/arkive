@@ -126,6 +126,11 @@ WORLD_MARKER_CATEGORY = {
     "hiddenCube": "collection",
     "dungeon": "location",
     "boss": "location",
+    "creatureIntellect": "creature",
+    "creatureFeral": "creature",
+    "creatureNature": "creature",
+    "creatureTrans": "creature",
+    "creatureSpecial": "creature",
 }
 
 # 3-tier LOD model: tier = the zoom level at which a marker first appears.
@@ -142,6 +147,11 @@ WORLD_MARKER_TIER = {
     "boss": 2,
     "hiddenCube": 3,
     "gathering": 3,
+    "creatureIntellect": 3,
+    "creatureFeral": 3,
+    "creatureNature": 3,
+    "creatureTrans": 3,
+    "creatureSpecial": 3,
 }
 FRAGMENTS_TIER = 3
 # Subzone IconRank (1/2) -> LOD tier (1/3).
@@ -455,6 +465,16 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
                 "name_zhTW": cube_names["zhTW"],
                 "desc_en": f"#{idx + 1}",
                 "desc_zhCN": f"#{idx + 1}",
+            }
+        elif category == "creature":
+            # Title = the localized pet name; description = how many spawn points
+            # this cluster merged (so clustering isn't silently lossy).
+            cnt = w.get("count", 1)
+            locale[mid] = {
+                "name_en": w.get("name_en", "") or str(idx + 1),
+                "name_zhCN": w.get("name_zhCN", "") or str(idx + 1),
+                "desc_en": f"{cnt} spawn points",
+                "desc_zhCN": f"{cnt} 处刷新点",
             }
         else:
             locale[mid] = {
