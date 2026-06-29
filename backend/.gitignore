@@ -3,3 +3,7 @@ data
 .env
 public
 
+# Python caches
+__pycache__/
+*.pyc
+
