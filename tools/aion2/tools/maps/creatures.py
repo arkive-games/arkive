@@ -25,11 +25,11 @@ CREATURE_TYPE_TO_SUBTYPE = {
 # Per-pet spawn clustering radius, in map pixels (the world maps are 8192px).
 CLUSTER_RADIUS = 200.0
 
-# De-overlap: creature markers (across pets) whose pixel positions fall within
-# COLLIDE_RADIUS are fanned out onto a small circle of DEOVERLAP_OFFSET so stacked
-# pins (different pets sharing one spawn point) stay individually visible.
-COLLIDE_RADIUS = 24.0
-DEOVERLAP_OFFSET = 16.0
+# De-overlap: creature markers (across pets) are nudged apart until every pair is
+# at least MIN_SEPARATION px apart, so pins don't visually overlap until you zoom
+# in close. ~ the on-screen icon size (40px base) so two pins just clear at 1:1.
+MIN_SEPARATION = 44.0
+DEOVERLAP_MAX_ITERS = 60
 
 # Per-pet portrait icon, served from the resource repo at /UI. The pet's
 # ``Name`` (e.g. "KrallReg_01") maps to ``UT_Vehicle_Portrait_<Name>.webp``.
@@ -181,45 +181,52 @@ def build_creature_markers(spawn_info_list, transform, index, l10n,
                 m["icon"] = icon
             markers.append(m)
 
-    return _deoverlap(markers, COLLIDE_RADIUS, DEOVERLAP_OFFSET)
+    return _deoverlap(markers, MIN_SEPARATION, DEOVERLAP_MAX_ITERS)
 
 
-def _deoverlap(markers, collide_r, offset):
-    """Fan apart creature markers whose pixel positions collide.
+def _deoverlap(markers, min_dist, max_iters=DEOVERLAP_MAX_ITERS):
+    """Spread creature markers so no two are closer than ``min_dist`` px.
 
-    Markers within ``collide_r`` px of a group's seed marker are grouped (greedy,
-    in a deterministic order); each group of size > 1 is spread evenly onto a circle
-    of radius ``offset`` around the group centroid. Single markers are untouched.
-    Mutates and returns ``markers`` (only ``px`` changes; ``Location``/z stay).
+    Iterative relaxation: each pass walks every pair (in a deterministic, sorted
+    order) and pushes any pair closer than ``min_dist`` symmetrically apart along
+    their axis; coincident points use a deterministic golden-angle direction. The
+    pass repeats until no pair needs moving or ``max_iters`` is hit. This actually
+    GUARANTEES the minimum spacing on convergence (a single greedy fan-out does
+    not — fanned pins can re-collide with their neighbours).
+
+    Mutates and returns ``markers``; only ``px`` changes (``Location``/z stay).
     """
     n = len(markers)
     if n < 2:
         return markers
-    r2 = collide_r * collide_r
     order = sorted(range(n), key=lambda i: (markers[i]["px"][0], markers[i]["px"][1], markers[i]["petKey"]))
-    used = [False] * n
-    for ai in order:
-        if used[ai]:
-            continue
-        group = [ai]
-        used[ai] = True
-        ax, ay = markers[ai]["px"]
-        for bi in order:
-            if used[bi]:
-                continue
-            dx = ax - markers[bi]["px"][0]
-            dy = ay - markers[bi]["px"][1]
-            if dx * dx + dy * dy <= r2:
-                group.append(bi)
-                used[bi] = True
-        if len(group) < 2:
-            continue
-        cx = sum(markers[i]["px"][0] for i in group) / len(group)
-        cy = sum(markers[i]["px"][1] for i in group) / len(group)
-        members = sorted(group, key=lambda i: (markers[i]["petKey"], markers[i]["px"][0], markers[i]["px"][1]))
-        k = len(members)
-        for j, i in enumerate(members):
-            ang = 2 * math.pi * j / k
-            markers[i]["px"] = [round(cx + offset * math.cos(ang), 2),
-                                round(cy + offset * math.sin(ang), 2)]
+    min2 = min_dist * min_dist
+    for _ in range(max_iters):
+        moved = False
+        for a in range(n):
+            i = order[a]
+            xi, yi = markers[i]["px"]
+            for b in range(a + 1, n):
+                j = order[b]
+                xj, yj = markers[j]["px"]
+                dx = xj - xi
+                dy = yj - yi
+                d2 = dx * dx + dy * dy
+                if d2 >= min2:
+                    continue
+                d = math.sqrt(d2)
+                if d < 1e-9:
+                    # Coincident: deterministic direction from the (sorted) index.
+                    ang = 2 * math.pi * ((b * 0.6180339887) % 1.0)
+                    ux, uy = math.cos(ang), math.sin(ang)
+                else:
+                    ux, uy = dx / d, dy / d
+                push = (min_dist - d) / 2.0 + 0.05
+                xi -= ux * push
+                yi -= uy * push
+                markers[i]["px"] = [round(xi, 2), round(yi, 2)]
+                markers[j]["px"] = [round(xj + ux * push, 2), round(yj + uy * push, 2)]
+                moved = True
+        if not moved:
+            break
     return markers

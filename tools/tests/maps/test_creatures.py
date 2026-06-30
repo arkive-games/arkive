@@ -103,22 +103,29 @@ def test_build_creature_markers_omits_icon_when_portrait_missing():
     assert "icon" not in out[0]
 
 
-def test_build_creature_markers_deoverlaps_same_position():
-    # two different pets spawning at the exact same point must not stack
+def test_build_creature_markers_deoverlaps_to_min_separation():
+    # different pets at (nearly) the same point are pushed >= MIN_SEPARATION apart
+    # (a single fan-out used to leave close pairs overlapping), yet stay nearby.
+    from aion2.tools.maps.creatures import MIN_SEPARATION
     index = {
         100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "A_01"},
         200: {"subtype": "creatureNature", "descKey": "str_veh_B", "petName": "B_01"},
+        300: {"subtype": "creatureNature", "descKey": "str_veh_C", "petName": "C_01"},
     }
     spawn = [
         {"NpcIdList": [{"Value": 100}], "Positions": [{"Location": {"X": 500, "Y": 500, "Z": 0}}]},
         {"NpcIdList": [{"Value": 200}], "Positions": [{"Location": {"X": 500, "Y": 500, "Z": 0}}]},
+        {"NpcIdList": [{"Value": 300}], "Positions": [{"Location": {"X": 510, "Y": 505, "Z": 0}}]},
     ]
     out = build_creature_markers(spawn, _FakeTransform(), index, _FakeL10N(), radius=200)
-    assert len(out) == 2
-    (x1, y1), (x2, y2) = out[0]["px"], out[1]["px"]
-    assert (x1 - x2) ** 2 + (y1 - y2) ** 2 > 1.0   # no longer stacked
-    for m in out:                                   # but only nudged a little
-        assert ((m["px"][0] - 500) ** 2 + (m["px"][1] - 500) ** 2) ** 0.5 <= 32
+    assert len(out) == 3
+    for a in range(len(out)):
+        for b in range(a + 1, len(out)):
+            d = ((out[a]["px"][0] - out[b]["px"][0]) ** 2
+                 + (out[a]["px"][1] - out[b]["px"][1]) ** 2) ** 0.5
+            assert d >= MIN_SEPARATION - 0.5   # guaranteed spacing (minus rounding)
+    for m in out:                              # still near the original cluster
+        assert ((m["px"][0] - 503) ** 2 + (m["px"][1] - 503) ** 2) ** 0.5 <= 3 * MIN_SEPARATION
 
 
 def test_build_creature_markers_no_transform_returns_empty():
