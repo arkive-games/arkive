@@ -310,16 +310,21 @@ def _occupation_env_ids() -> frozenset:
 
     These are the icon-bearing world entrances to garrison instances. Each is an
     ``EEnvObjectUsage::EnterInstanceLayer`` EnvObj whose Name matches the
-    ``*Garrison*..._Insk_*`` pattern (the entrance door). Verified against the
+    ``*Garri*..._Insk_*`` pattern (the entrance door). Verified against the
     legacy curated ``occupation`` markers on World_L_A: all 15 legacy coords
-    nearest-match one of these spawns within <=4.9 px on the 8192-px map. Other
-    EnterInstanceLayer EnvObjs (houses, illusion curtains, village doors) are
-    excluded by the ``Garrison``+``Insk`` name filter. There are exactly 15 such
-    defs in the whole export, all spawned on World_L_A."""
+    nearest-match one of these spawns within <=4.9 px on the 8192-px map.
+
+    NOTE on the name token: World_L_A uses the spelling ``Garrison``
+    (``E_L1_Garrison_R1_Insk`` ...), but the dark map spells it ``Garrision``
+    (``E_Daeva_Garrision_D1_Insk``) — a typo in the game export. We match the
+    common prefix ``Garri`` to catch both. The whole export has exactly 19 such
+    EnterInstanceLayer+Insk defs (15 ``Garrison`` on World_L_A + 4 ``Garrision``);
+    other EnterInstanceLayer EnvObjs (houses, illusion curtains, village doors)
+    carry neither token and are excluded."""
     return frozenset(
         e["ID"]["Value"] for e in _table("EnvObjData.json")
         if e.get("Usage") == "EEnvObjectUsage::EnterInstanceLayer"
-        and "Garrison" in e.get("Name", "") and "Insk" in e.get("Name", "")
+        and "Garri" in e.get("Name", "") and "Insk" in e.get("Name", "")
     )
 
 
