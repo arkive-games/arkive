@@ -63,7 +63,7 @@ from pathlib import Path
 import yaml
 from opencc import OpenCC
 
-from . import TOOLS_ROOT
+from . import RAW_ROOT, TOOLS_ROOT
 from .l10n import L10N
 from .extract import map_title
 
@@ -306,9 +306,32 @@ def _map_display(name: str, l10n: L10N) -> dict[str, str]:
 
 
 # --- Builders -------------------------------------------------------------
+def _count_raw_tiles(name: str) -> tuple[int, int] | None:
+    """Image-only maps (no ``Data/WorldMap/<map>.json``) — derive the tile grid
+    by scanning the raw tile images ``UI/Map/WorldMap/<name>/Res/<name>_XX_YY.png``
+    (filename index is ``_<x>_<y>`` = col_row, matching the frontend tile URL).
+
+    Returns ``(tilesCountX, tilesCountY)`` or ``None`` when no tiles are found."""
+    res = RAW_ROOT / "UI" / "Map" / "WorldMap" / name / "Res"
+    if not res.is_dir():
+        return None
+    pat = re.compile(rf"^{re.escape(name)}_(\d+)_(\d+)\.png$")
+    max_x = max_y = -1
+    for f in res.glob(f"{name}_*.png"):
+        m = pat.match(f.name)
+        if not m:
+            continue
+        max_x = max(max_x, int(m.group(1)))
+        max_y = max(max_y, int(m.group(2)))
+    if max_x < 0:
+        return None
+    return max_x + 1, max_y + 1
+
+
 def build_maps_yaml(parsed: dict[str, dict]) -> dict:
     """maps.yaml — visible maps with GameMapMeta. Tile grid derived from the
-    parsed worldmap metadata (px = SectorSize * SectorPlaneSize / tileSize)."""
+    parsed worldmap metadata (px = SectorSize * SectorPlaneSize / tileSize), or,
+    for image-only maps with no WorldMap metadata, by counting the raw tiles."""
     from .worldmap import WorldMapMeta
     from . import worldmap_path
 
@@ -322,6 +345,12 @@ def build_maps_yaml(parsed: dict[str, dict]) -> dict:
             tile = int(wm.sector_plane_size)
             tiles_x = wm.sector_count_x
             tiles_y = wm.sector_count_y
+        else:
+            # Image-only map (no WorldMap metadata): derive the grid from the
+            # raw tile images. Tile size stays the default 1024 (mip0 size).
+            counted = _count_raw_tiles(name)
+            if counted is not None:
+                tiles_x, tiles_y = counted
         # MapId from parse when available (else keep a deterministic id).
         map_id = str(parsed.get(name, {}).get("MapId", name))
         entry = {
