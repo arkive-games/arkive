@@ -11,6 +11,8 @@ WorldMapTransform, and an L10N resolver.
 """
 from __future__ import annotations
 
+import math
+
 # ECreatureType::<T> -> the data/types.json subtype key (already defined there).
 CREATURE_TYPE_TO_SUBTYPE = {
     "Intellect": "creatureIntellect",
@@ -22,6 +24,16 @@ CREATURE_TYPE_TO_SUBTYPE = {
 
 # Per-pet spawn clustering radius, in map pixels (the world maps are 8192px).
 CLUSTER_RADIUS = 200.0
+
+# De-overlap: creature markers (across pets) whose pixel positions fall within
+# COLLIDE_RADIUS are fanned out onto a small circle of DEOVERLAP_OFFSET so stacked
+# pins (different pets sharing one spawn point) stay individually visible.
+COLLIDE_RADIUS = 24.0
+DEOVERLAP_OFFSET = 16.0
+
+# Per-pet portrait icon, served from the resource repo at /UI. The pet's
+# ``Name`` (e.g. "KrallReg_01") maps to ``UT_Vehicle_Portrait_<Name>.webp``.
+PORTRAIT_DIR = "UI/Resource/Texture/Portrait/Portrait_Vehicle/"
 
 
 def build_pet_source_index(vehicle_list, item_table, npc_loot):
@@ -64,17 +76,18 @@ def build_pet_source_index(vehicle_list, item_table, npc_loot):
 
 
 def cluster_points(points, radius):
-    """Deterministic greedy clustering of ``(x, y)`` points.
+    """Deterministic greedy clustering of ``(x, y, z)`` points.
 
-    Sorts the points first (so the result is independent of input order), then
-    merges each point into the first existing cluster whose running centroid is
-    within ``radius``; otherwise it starts a new cluster.
+    Groups by the (x, y) pixel distance only; ``z`` (world height) is carried as
+    the per-cluster mean. Sorts the points first (so the result is independent of
+    input order), then merges each point into the first existing cluster whose
+    running centroid is within ``radius``; otherwise it starts a new cluster.
 
-    Returns ``[{"x", "y", "count"}]`` with centroids rounded to 2 decimals.
+    Returns ``[{"x", "y", "z", "count"}]`` with values rounded to 2 decimals.
     """
     r2 = radius * radius
-    clusters: list[dict] = []  # each: {"sx", "sy", "n"}
-    for x, y in sorted(points):
+    clusters: list[dict] = []  # each: {"sx", "sy", "sz", "n"}
+    for x, y, z in sorted(points):
         placed = False
         for c in clusters:
             cx = c["sx"] / c["n"]
@@ -82,13 +95,15 @@ def cluster_points(points, radius):
             if (cx - x) ** 2 + (cy - y) ** 2 <= r2:
                 c["sx"] += x
                 c["sy"] += y
+                c["sz"] += z
                 c["n"] += 1
                 placed = True
                 break
         if not placed:
-            clusters.append({"sx": x, "sy": y, "n": 1})
+            clusters.append({"sx": x, "sy": y, "sz": z, "n": 1})
     return [
-        {"x": round(c["sx"] / c["n"], 2), "y": round(c["sy"] / c["n"], 2), "count": c["n"]}
+        {"x": round(c["sx"] / c["n"], 2), "y": round(c["sy"] / c["n"], 2),
+         "z": round(c["sz"] / c["n"], 2), "count": c["n"]}
         for c in clusters
     ]
 
@@ -97,20 +112,27 @@ def _ids(lst):
     return [x.get("Value") if isinstance(x, dict) else x for x in lst]
 
 
-def build_creature_markers(spawn_info_list, transform, index, l10n, radius=CLUSTER_RADIUS):
+def build_creature_markers(spawn_info_list, transform, index, l10n,
+                           available_portraits=None, radius=CLUSTER_RADIUS):
     """Build clustered creature WorldMarker dicts for one map.
 
     Pools every source NPC's spawn positions per pet (keyed by the pet's
-    ``descKey``), transforms them world->pixel, and clusters each pet's points.
-    Returns dicts shaped like the other ``WorldMarkers`` plus ``count`` and
-    ``petKey`` (the pet's Desc.Key, used downstream for per-pet sidebar counting):
-    ``{"kind", "name_en", "name_zhCN", "Location": None, "px": [x, y], "count", "petKey"}``.
-    Returns ``[]`` when there is no transform or empty index.
+    ``descKey``), transforms (x, y) world->pixel while carrying world Z, and
+    clusters each pet's points. Each marker carries:
+    ``{"kind", "name_en", "name_zhCN", "Location": [None, None, worldZ],
+       "px": [x, y], "count", "petKey"[, "icon"]}`` where ``Location[2]`` is the
+    cluster's mean world Z (emit_frontend scales it to pixel-z), and ``icon`` is
+    the per-pet portrait (set only when its stem is in ``available_portraits``;
+    ``None`` means "set it unconditionally").
+
+    Finally runs a de-overlap pass so stacked pins (different pets sharing a
+    spawn point) are fanned apart. Returns ``[]`` when there is no transform or
+    empty index.
     """
     if transform is None or not index:
         return []
 
-    pet_points: dict[str, list] = {}  # descKey -> [(px, py), ...]
+    pet_points: dict[str, list] = {}  # descKey -> [(px, py, worldZ), ...]
     pet_meta: dict[str, dict] = {}    # descKey -> {"subtype", "descKey", "petName"}
     for s in spawn_info_list:
         metas = [index[n] for n in _ids(s.get("NpcIdList", [])) if n in index]
@@ -119,13 +141,14 @@ def build_creature_markers(spawn_info_list, transform, index, l10n, radius=CLUST
         positions = s.get("Positions") or []
         if not positions:
             continue
-        pxs = []
+        pts = []
         for p in positions:
             loc = p["Location"]
-            pxs.append(transform.world_to_pixel(loc["X"], loc["Y"]))
+            px, py = transform.world_to_pixel(loc["X"], loc["Y"])
+            pts.append((px, py, loc["Z"]))
         for meta in metas:
             key = meta["descKey"]
-            pet_points.setdefault(key, []).extend(pxs)
+            pet_points.setdefault(key, []).extend(pts)
             pet_meta[key] = meta
 
     markers: list[dict] = []
@@ -133,17 +156,70 @@ def build_creature_markers(spawn_info_list, transform, index, l10n, radius=CLUST
         meta = pet_meta[key]
         name_en = l10n.en(key)
         name_zh = l10n.zh_cn(key)
+        stem = "UT_Vehicle_Portrait_" + meta.get("petName", "")
+        icon = (
+            PORTRAIT_DIR + stem + ".webp"
+            if meta.get("petName") and (available_portraits is None or stem in available_portraits)
+            else None
+        )
         for c in cluster_points(pet_points[key], radius):
-            markers.append({
+            m = {
                 "kind": meta["subtype"],
                 "name_en": name_en,
                 "name_zhCN": name_zh,
-                "Location": None,
+                # x, y unused (clustered in pixel space); Z is the cluster's mean
+                # world height, scaled to pixel-z by emit_frontend.
+                "Location": [None, None, c["z"]],
                 "px": [c["x"], c["y"]],
                 "count": c["count"],
                 # Stable pet identity (its Desc.Key). emit_frontend uses this to
                 # give every cluster of the same pet ONE indexInSubtype, so the
                 # sidebar counts a pet once regardless of cluster count.
                 "petKey": key,
-            })
+            }
+            if icon:
+                m["icon"] = icon
+            markers.append(m)
+
+    return _deoverlap(markers, COLLIDE_RADIUS, DEOVERLAP_OFFSET)
+
+
+def _deoverlap(markers, collide_r, offset):
+    """Fan apart creature markers whose pixel positions collide.
+
+    Markers within ``collide_r`` px of a group's seed marker are grouped (greedy,
+    in a deterministic order); each group of size > 1 is spread evenly onto a circle
+    of radius ``offset`` around the group centroid. Single markers are untouched.
+    Mutates and returns ``markers`` (only ``px`` changes; ``Location``/z stay).
+    """
+    n = len(markers)
+    if n < 2:
+        return markers
+    r2 = collide_r * collide_r
+    order = sorted(range(n), key=lambda i: (markers[i]["px"][0], markers[i]["px"][1], markers[i]["petKey"]))
+    used = [False] * n
+    for ai in order:
+        if used[ai]:
+            continue
+        group = [ai]
+        used[ai] = True
+        ax, ay = markers[ai]["px"]
+        for bi in order:
+            if used[bi]:
+                continue
+            dx = ax - markers[bi]["px"][0]
+            dy = ay - markers[bi]["px"][1]
+            if dx * dx + dy * dy <= r2:
+                group.append(bi)
+                used[bi] = True
+        if len(group) < 2:
+            continue
+        cx = sum(markers[i]["px"][0] for i in group) / len(group)
+        cy = sum(markers[i]["px"][1] for i in group) / len(group)
+        members = sorted(group, key=lambda i: (markers[i]["petKey"], markers[i]["px"][0], markers[i]["px"][1]))
+        k = len(members)
+        for j, i in enumerate(members):
+            ang = 2 * math.pi * j / k
+            markers[i]["px"] = [round(cx + offset * math.cos(ang), 2),
+                                round(cy + offset * math.sin(ang), 2)]
     return markers

@@ -253,6 +253,23 @@ def _round2(v: float) -> float:
     return round(float(v), 2)
 
 
+def _pixel_scale(map_name: str) -> float | None:
+    """Pixels per world-unit for a map (``pixel_width / (max_x - min_x)``), the
+    X-axis factor of the world->pixel transform. Used to express marker ``z``
+    (world height) in pixel units consistent with ``x``/``y``. ``None`` if no
+    worldmap. NOTE: assumes a square pixel aspect (x-scale == y-scale), which
+    holds for every current map; a non-square map would skew z vs y."""
+    from .worldmap import WorldMapMeta
+    from . import worldmap_path
+
+    p = worldmap_path(map_name)
+    if not p.exists():
+        return None
+    wm = WorldMapMeta.from_json(p, map_name)
+    span = wm.max_x - wm.min_x
+    return wm.pixel_width / span if span else None
+
+
 # Faction suffix appended to the L10N base title, keyed by faction. Derived from
 # the machine name; Abyss/Reshanta maps (no _L_/_D_) get no suffix. zh-TW is
 # produced later by the existing _to_tw() pass over the zh-CN string.
@@ -353,6 +370,15 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
 
     name = map_data["Name"]
 
+    # Pixel-scaled z for every marker: world Z (from each marker's Location[2])
+    # times the map scale, so z shares units with x/y. None when unavailable.
+    scale = _pixel_scale(name)
+
+    def z_of(loc):
+        if scale is None or not loc or len(loc) < 3 or loc[2] is None:
+            return None
+        return _round2(loc[2] * scale)
+
     # --- fragments (was monolithMaterial) from Fragments -------------------
     # Title shows the subtype label ("主神痕迹"); the per-marker locating info —
     # region name + a per-region running number — goes in the description, e.g.
@@ -382,6 +408,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "region": region_key,
             "x": _round2(px[0]),
             "y": _round2(px[1]),
+            "z": z_of(f.get("Location")),
             "tier": FRAGMENTS_TIER,
             "images": [],
             "contributors": [],
@@ -415,6 +442,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "region": _slug(s.get("Name", "")),
             "x": _round2(px[0]),
             "y": _round2(px[1]),
+            "z": z_of(s.get("Location")),
             "images": [],
             "contributors": [],
             "indexInSubtype": idx,
@@ -466,6 +494,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "subtype": subtype,
             "x": _round2(px[0]),
             "y": _round2(px[1]),
+            "z": z_of(w.get("Location")),
             "images": [],
             "contributors": [],
             "indexInSubtype": index_in_subtype,
@@ -473,6 +502,10 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         tier = WORLD_MARKER_TIER.get(kind)
         if tier is not None:
             marker["tier"] = tier
+        # Creatures carry a per-pet portrait icon (other subtypes use the
+        # types.yaml subtype icon, so no per-marker icon).
+        if w.get("icon"):
+            marker["icon"] = w["icon"]
         markers.append(marker)
         if subtype == "hiddenCube":
             # Title = subtype label ("隐藏背包"); the cube has no region, so the

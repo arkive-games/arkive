@@ -19,24 +19,26 @@ def test_build_pet_source_index_maps_npc_to_subtype_and_name():
     assert set(idx.keys()) == {2100075}
     assert idx[2100075]["subtype"] == "creatureIntellect"
     assert idx[2100075]["descKey"] == "str_veh_KrallReg_01"
+    assert idx[2100075]["petName"] == "KrallReg_01"
 
 
 from aion2.tools.maps.creatures import cluster_points
 
 
-def test_cluster_points_groups_within_radius():
-    # two tight groups; radius 200 keeps them separate
-    pts = [(0, 0), (50, 0), (0, 50), (1000, 1000), (1000, 1050)]
+def test_cluster_points_groups_within_radius_and_averages_z():
+    # (x, y, z); radius 200 keeps the two groups separate; z is averaged per cluster
+    pts = [(0, 0, 100), (50, 0, 200), (0, 50, 300), (1000, 1000, 10), (1000, 1050, 30)]
     out = cluster_points(pts, 200)
     assert len(out) == 2
-    assert sorted(c["count"] for c in out) == [2, 3]
-    # every cluster carries a centroid
-    assert all("x" in c and "y" in c for c in out)
+    by_count = {c["count"]: c for c in out}
+    assert sorted(by_count) == [2, 3]
+    assert by_count[3]["z"] == 200   # (100 + 200 + 300) / 3
+    assert by_count[2]["z"] == 20    # (10 + 30) / 2
 
 
 def test_cluster_points_deterministic_regardless_of_order():
-    a = cluster_points([(0, 0), (10, 0), (1000, 0)], 200)
-    b = cluster_points([(1000, 0), (10, 0), (0, 0)], 200)
+    a = cluster_points([(0, 0, 5), (10, 0, 5), (1000, 0, 5)], 200)
+    b = cluster_points([(1000, 0, 5), (10, 0, 5), (0, 0, 5)], 200)
     assert a == b
 
 
@@ -60,29 +62,68 @@ class _FakeL10N:
         return {"str_veh_A": "宠物A"}.get(key, "")
 
 
-def test_build_creature_markers_clusters_per_pet():
-    index = {100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "A"}}
+_PORTRAIT = "UI/Resource/Texture/Portrait/Portrait_Vehicle/UT_Vehicle_Portrait_"
+
+
+def test_build_creature_markers_clusters_per_pet_with_z_and_icon():
+    index = {100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "Fossa_01"}}
     spawn = [
         {"NpcIdList": [{"Value": 100}],
-         "Positions": [{"Location": {"X": 0, "Y": 0}}, {"Location": {"X": 40, "Y": 0}}]},
+         "Positions": [{"Location": {"X": 0, "Y": 0, "Z": 100}},
+                       {"Location": {"X": 40, "Y": 0, "Z": 300}}]},
         {"NpcIdList": [{"Value": 100}],
-         "Positions": [{"Location": {"X": 3000, "Y": 3000}}]},
+         "Positions": [{"Location": {"X": 3000, "Y": 3000, "Z": 50}}]},
         # NPC not in the index contributes nothing:
-        {"NpcIdList": [{"Value": 777}], "Positions": [{"Location": {"X": 5, "Y": 5}}]},
+        {"NpcIdList": [{"Value": 777}], "Positions": [{"Location": {"X": 5, "Y": 5, "Z": 0}}]},
     ]
-    out = build_creature_markers(spawn, _FakeTransform(), index, _FakeL10N(), radius=200)
+    out = build_creature_markers(
+        spawn, _FakeTransform(), index, _FakeL10N(),
+        available_portraits={"UT_Vehicle_Portrait_Fossa_01"}, radius=200,
+    )
     assert len(out) == 2  # (0,0)+(40,0) merge; (3000,3000) separate
     assert all(m["kind"] == "creatureFeral" for m in out)
     assert all(m["name_en"] == "PetA" and m["name_zhCN"] == "宠物A" for m in out)
     assert sorted(m["count"] for m in out) == [1, 2]
-    assert all(isinstance(m["px"], list) and len(m["px"]) == 2 for m in out)
-    # each marker carries the pet identity, so emit can count a pet once
     assert all(m["petKey"] == "str_veh_A" for m in out)
+    # world-Z average carried in Location[2]
+    big = next(m for m in out if m["count"] == 2)
+    assert big["Location"][2] == 200  # (100 + 300) / 2
+    # per-pet portrait icon (available)
+    assert all(m["icon"] == _PORTRAIT + "Fossa_01.webp" for m in out)
+
+
+def test_build_creature_markers_omits_icon_when_portrait_missing():
+    index = {100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "NoArt_01"}}
+    spawn = [{"NpcIdList": [{"Value": 100}],
+              "Positions": [{"Location": {"X": 0, "Y": 0, "Z": 0}}]}]
+    out = build_creature_markers(
+        spawn, _FakeTransform(), index, _FakeL10N(), available_portraits=set(), radius=200,
+    )
+    assert len(out) == 1
+    assert "icon" not in out[0]
+
+
+def test_build_creature_markers_deoverlaps_same_position():
+    # two different pets spawning at the exact same point must not stack
+    index = {
+        100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "A_01"},
+        200: {"subtype": "creatureNature", "descKey": "str_veh_B", "petName": "B_01"},
+    }
+    spawn = [
+        {"NpcIdList": [{"Value": 100}], "Positions": [{"Location": {"X": 500, "Y": 500, "Z": 0}}]},
+        {"NpcIdList": [{"Value": 200}], "Positions": [{"Location": {"X": 500, "Y": 500, "Z": 0}}]},
+    ]
+    out = build_creature_markers(spawn, _FakeTransform(), index, _FakeL10N(), radius=200)
+    assert len(out) == 2
+    (x1, y1), (x2, y2) = out[0]["px"], out[1]["px"]
+    assert (x1 - x2) ** 2 + (y1 - y2) ** 2 > 1.0   # no longer stacked
+    for m in out:                                   # but only nudged a little
+        assert ((m["px"][0] - 500) ** 2 + (m["px"][1] - 500) ** 2) ** 0.5 <= 32
 
 
 def test_build_creature_markers_no_transform_returns_empty():
-    index = {100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "A"}}
-    spawn = [{"NpcIdList": [{"Value": 100}], "Positions": [{"Location": {"X": 0, "Y": 0}}]}]
+    index = {100: {"subtype": "creatureFeral", "descKey": "str_veh_A", "petName": "A_01"}}
+    spawn = [{"NpcIdList": [{"Value": 100}], "Positions": [{"Location": {"X": 0, "Y": 0, "Z": 0}}]}]
     assert build_creature_markers(spawn, None, index, _FakeL10N()) == []
 
 
@@ -107,6 +148,9 @@ def test_extract_world_l_a_emits_creature_markers():
         assert w["px"] and 0 <= w["px"][0] <= 8192 and 0 <= w["px"][1] <= 8192
         assert w["name_en"]      # localized pet name, non-empty
         assert w["count"] >= 1
+        assert w.get("Location") and w["Location"][2] is not None   # world-Z carried
+    # nearly every pet has a portrait icon (only a handful lack raw art)
+    assert sum(1 for w in creatures if w.get("icon")) >= 0.9 * len(creatures)
 
 
 def test_emit_frontend_routes_creature_marker():
@@ -154,3 +198,40 @@ def test_emit_frontend_creature_index_is_per_pet():
     idx_counts = Counter(m["indexInSubtype"] for m in feral)
     assert len(idx_counts) == 2                       # 2 distinct pets -> sidebar counts 2
     assert sorted(idx_counts.values()) == [1, 2]      # pet A's 2 clusters share 1 index; pet B: 1
+
+
+def test_emit_frontend_creature_z_and_icon():
+    """Creature markers carry a pixel-scaled z (from world Z) and their per-pet icon."""
+    from aion2.tools.maps.emit_frontend import build_markers
+
+    scale = 8192 / 816000  # World_L_A pixel scale
+    map_data = {
+        "Name": "World_L_A",
+        "WorldMarkers": [
+            {"kind": "creatureFeral", "px": [100.0, 200.0], "name_en": "Fossa",
+             "name_zhCN": "波沙", "count": 7, "petKey": "str_veh_Fossa_01",
+             "Location": [None, None, 10000.0],
+             "icon": _PORTRAIT + "Fossa_01.webp"},
+        ],
+    }
+    markers, _ = build_markers(map_data)
+    m = next(m for m in markers if m["subtype"] == "creatureFeral")
+    assert m["icon"].endswith("UT_Vehicle_Portrait_Fossa_01.webp")
+    assert abs(m["z"] - 10000.0 * scale) < 0.5
+
+
+def test_emit_frontend_adds_z_to_non_creature_markers():
+    """z is added to ALL markers (e.g. boss), scaled from world Z."""
+    from aion2.tools.maps.emit_frontend import build_markers
+
+    scale = 8192 / 816000
+    map_data = {
+        "Name": "World_L_A",
+        "WorldMarkers": [
+            {"kind": "boss", "px": [10.0, 20.0], "name_en": "X", "name_zhCN": "X",
+             "Location": [1000.0, 2000.0, 5000.0]},
+        ],
+    }
+    markers, _ = build_markers(map_data)
+    m = next(m for m in markers if m["subtype"] == "boss")
+    assert abs(m["z"] - 5000.0 * scale) < 0.5

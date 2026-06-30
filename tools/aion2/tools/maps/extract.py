@@ -219,6 +219,17 @@ def _pet_source_index():
 
 
 @lru_cache(maxsize=None)
+def _vehicle_portrait_stems() -> frozenset:
+    """Available vehicle-portrait file stems (``UT_Vehicle_Portrait_*``) in the
+    raw export. A pet gets its portrait icon only when its stem is present here
+    (the resource repo mirrors these PNGs to WebP)."""
+    d = RAW_ROOT / "UI" / "Resource" / "Texture" / "Portrait" / "Portrait_Vehicle"
+    if not d.exists():
+        return frozenset()
+    return frozenset(p.stem for p in d.glob("*.png"))
+
+
+@lru_cache(maxsize=None)
 def _teleport_env_ids() -> frozenset:
     """EnvObj defs usable as world teleport/flight artifacts."""
     return frozenset(
@@ -710,6 +721,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
             transform,
             _pet_source_index(),
             l10n,
+            available_portraits=_vehicle_portrait_stems(),
         )
     )
 
