@@ -298,11 +298,19 @@ def _map_display(name: str, l10n: L10N) -> dict[str, str]:
     title = map_title(name, l10n)
     base_en = title["en"] or name.replace("_", " ")
     base_zh = title["zhCN"] or base_en
+    full_en, full_zh = base_en, base_zh
     fac = _faction(name)
     if fac:
-        base_en += _FACTION_SUFFIX[fac]["en"]
-        base_zh += _FACTION_SUFFIX[fac]["zh-CN"]
-    return {"name_en": base_en, "name_zhCN": base_zh}
+        full_en = base_en + _FACTION_SUFFIX[fac]["en"]
+        full_zh = base_zh + _FACTION_SUFFIX[fac]["zh-CN"]
+    # Full title (with faction suffix) + short title (base, no suffix). The
+    # short form labels per-marker ids like hidden cubes ("斐尔特朗 #1").
+    return {
+        "name_en": full_en,
+        "name_zhCN": full_zh,
+        "short_en": base_en,
+        "short_zhCN": base_zh,
+    }
 
 
 # --- Builders -------------------------------------------------------------
@@ -646,6 +654,15 @@ def _locale_block(entries: dict[str, dict], lang: str) -> dict:
             desc = _to_tw(v["desc_zhCN"]) if v.get("desc_zhCN") else None
         name = name or key
         out[key] = {"name": name, "description": desc if desc else name}
+        # Optional short name (currently maps: base title without faction suffix).
+        if "short_en" in v or "short_zhCN" in v:
+            if lang == "en":
+                short = v.get("short_en", "")
+            elif lang == "zh-CN":
+                short = v.get("short_zhCN", "")
+            else:
+                short = v.get("short_zhTW") or _to_tw(v.get("short_zhCN", ""))
+            out[key]["shortName"] = short or name
     return out
 
 
