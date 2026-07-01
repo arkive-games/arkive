@@ -46,6 +46,8 @@ landmarks/overlay. Implementation: `tools/aion2/tools/maps/` (`WorldMapTransform
 - **New features:** open a git worktree for the work (isolate from the current workspace).
 - **Merging back:** integrate with rebase (not merge commits).
 - **Live testing:** when work needs live testing, merge it back first (with rebase), then test.
+- **Git on Windows:** use PowerShell to run git operations (pull, push, etc.). All repo
+  origins are SSH (`git@github.com:...`).
 
 ## Notes
 - Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo
