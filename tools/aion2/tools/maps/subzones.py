@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from . import RAW_ROOT
+from . import RAW_ROOT, map_table_key
 
 _SUFFIX = "_Subzone"
 
@@ -49,8 +49,9 @@ def _map_base_dir(map_name: str) -> str:
 
 
 def map_data_path(map_name: str) -> Path:
-    base = _map_base_dir(map_name)
-    return RAW_ROOT / "Data" / "Map" / base / map_name / "MapData.json"
+    key = map_table_key(map_name)
+    base = _map_base_dir(key)
+    return RAW_ROOT / "Data" / "Map" / base / key / "MapData.json"
 
 
 def parse_subzones(path: Path) -> list[Subzone]:

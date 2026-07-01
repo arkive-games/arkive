@@ -100,15 +100,16 @@ EXTRA_SUBTYPE_NAMES = {
 # the parse are still listed (isVisible may stay true) but will have empty
 # marker/region files.
 MAP_META = {
-    "World_L_A": {"type": "light", "order": 0, "isVisible": True},
-    "World_D_A": {"type": "dark", "order": 1, "isVisible": True},
-    "World_L_B": {"type": "light", "order": 2, "isVisible": True},
-    "World_D_B": {"type": "dark", "order": 3, "isVisible": True},
+    "World_L_B": {"type": "light", "order": 0, "isVisible": True},
+    "World_D_B": {"type": "dark", "order": 1, "isVisible": True},
+    "World_L_A": {"type": "light", "order": 2, "isVisible": True},
+    "World_D_A": {"type": "dark", "order": 3, "isVisible": True},
     "World_L_Starter": {"type": "light", "order": 4, "isVisible": True},
     "World_D_Starter": {"type": "dark", "order": 5, "isVisible": True},
     "Abyss_Reshanta_A": {"type": "abyss", "order": 6, "isVisible": True},
-    "Abyss_Reshanta_B": {"type": "abyss", "order": 7, "isVisible": False},
-    "Abyss_Reshanta_C": {"type": "abyss", "order": 8, "isVisible": True},
+    "Abyss_Reshanta_C": {"type": "abyss", "order": 7, "isVisible": True},
+    "Abyss_Reshanta_D": {"type": "abyss", "order": 8, "isVisible": True},
+    "Abyss_Battlefield_A": {"type": "abyss", "order": 9, "isVisible": True},
 }
 
 ICON_TYPE_TO_SUBTYPE = {

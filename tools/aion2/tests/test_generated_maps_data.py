@@ -38,7 +38,10 @@ def test_generated_maps_json_visibility():
             json.loads((DATA / "maps.json").read_text(encoding="utf-8"))["maps"]}
     assert maps["World_L_B"]["isVisible"] is True
     assert maps["World_D_B"]["isVisible"] is True
-    assert maps["Abyss_Reshanta_B"]["isVisible"] is False
+    # Reshanta_B was removed from the game; the new abyss maps replaced it.
+    assert "Abyss_Reshanta_B" not in maps
+    assert maps["Abyss_Reshanta_D"]["isVisible"] is True
+    assert maps["Abyss_Battlefield_A"]["isVisible"] is True
 
 
 def test_fragments_have_valid_type():

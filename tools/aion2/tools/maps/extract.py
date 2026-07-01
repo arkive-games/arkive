@@ -24,7 +24,7 @@ from pathlib import Path
 
 from shapely.geometry import Polygon
 
-from . import RAW_ROOT, TOOLS_ROOT, worldmap_path
+from . import RAW_ROOT, TOOLS_ROOT, worldmap_path, map_table_key
 from .l10n import L10N
 from .subzones import _find_first, map_data_path
 from .transform import Orientation, WorldMapTransform
@@ -38,7 +38,9 @@ OUT_DIR = TOOLS_ROOT / "parsed_data" / "maps"
 # Dawn Legion Base upper-left). Assumed for all maps; re-verify per map with landmarks.
 ORIENTATION = Orientation(px_from="X", flip_x=False, flip_y=False)
 
-REQUESTED_MAPS = ["World_L_A", "World_D_A", "Abyss_Reshanta_A", "Abyss_Reshanta_B", "Abyss_Reshanta_C"]
+REQUESTED_MAPS = ["World_L_A", "World_D_A", "World_L_B", "World_D_B",
+                  "Abyss_Reshanta_A", "Abyss_Reshanta_C", "Abyss_Reshanta_D",
+                  "Abyss_Battlefield_A"]
 _MONO_PREFIX = "Group_Unlock_MonolithFragment_"
 
 
@@ -73,7 +75,7 @@ def map_title(name: str, l10n: L10N) -> dict[str, str]:
     to the conventional ``STR_Map_<name>`` L10N key. Returns ``{"en", "zhCN"}``;
     values may be empty strings when the key has no L10N body.
     """
-    entry = _maps_index().get(name) or {}
+    entry = _maps_index().get(map_table_key(name)) or {}
     desc_key = (entry.get("Desc") or {}).get("Key") or f"STR_Map_{name}"
     return {"en": l10n.en(desc_key), "zhCN": l10n.zh_cn(desc_key)}
 
@@ -368,7 +370,7 @@ def _centroid(points):
 
 
 def extract_map(name: str, l10n: L10N) -> dict:
-    entry = _maps_index()[name]
+    entry = _maps_index()[map_table_key(name)]
     map_id = entry["ID"]["Value"]
 
     # ---- 1. SubzoneGroups (only those referenced by this map's subzones) ----
@@ -753,7 +755,7 @@ def main():
            f"{'gath':>6s}{'occ':>5s}{'dgn':>5s}{'boss':>5s}{'crea':>6s}")
     print(hdr)
     for name in REQUESTED_MAPS:
-        if name not in maps_idx:
+        if map_table_key(name) not in maps_idx:
             print(f"{name:20s}  SKIPPED — not in Map.json (deprecated/replaced)")
             continue
         data = extract_map(name, l10n)
