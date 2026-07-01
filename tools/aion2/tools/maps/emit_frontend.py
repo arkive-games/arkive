@@ -158,12 +158,14 @@ FRAGMENTS_TIER = 3
 # Subzone IconRank (1/2) -> LOD tier (1/3).
 SUBZONE_RANK_TO_TIER = {1: 1, 2: 3}
 
-# Specific GatherSource MATERIAL (EnvObj Desc, english) -> legacy gathering
-# subtype key. These 13 materials are the Elyos/World_L_A set and reuse the
-# legacy curated subtype names + per-item icons (in data_src/types.yaml). The
-# precise material is read from the EnvObj Desc by the parser (WorldMarkers
-# ``material``); markers of these materials get the specific subtype below.
+# Specific GatherSource MATERIAL (EnvObj Desc, english) -> gathering subtype key.
+# Two faction sets: the 13 Elyos/World_L materials and the 8 Asmodian/World_D
+# materials. Each reuses the curated subtype names + per-item icons (in
+# data_src/types.yaml). The precise material is read from the EnvObj Desc by the
+# parser (WorldMarkers ``material``) — NOT from SourceType, which is not 1:1 with
+# material — and markers of these materials get the specific subtype below.
 GATHER_MATERIAL_SUBTYPES = {
+    # Elyos / World_L set
     "Odyle":      "gatheringOdyle",
     "Orichalcum": "gatheringOrichalcumOre",
     "Yggdrasil":  "gatheringYggdrasilLog",
@@ -177,6 +179,16 @@ GATHER_MATERIAL_SUBTYPES = {
     "Mela":       "gatheringMela",
     "Inina":      "gatheringInina",
     "Cypri":      "gatheringCypri",
+    # Asmodian / World_D set (Odyle/Orichalcum/Diamond/Sapphire/Ruby are shared
+    # with the Elyos set above)
+    "Asvata":     "gatheringAsvata",
+    "Azpha":      "gatheringAzpha",
+    "Calendula":  "gatheringCalendula",
+    "Morfa":      "gatheringMorfa",
+    "Raydam":     "gatheringRaydam",
+    "Pujery":     "gatheringPujery",
+    "Ohkra":      "gatheringOhkra",
+    "Conide":     "gatheringConide",
 }
 
 # Fallback: GatherSource SourceType (short) -> broad gathering subtype, used for
@@ -213,6 +225,15 @@ GATHER_SUBTYPE_NAMES = {
     "gatheringMela":             {"en": "Mela",       "zhCN": "梅拉"},
     "gatheringInina":            {"en": "Inina",      "zhCN": "雪莉"},
     "gatheringCypri":            {"en": "Cypri",      "zhCN": "齐尔利"},
+    # specific materials (Asmodian set)
+    "gatheringAsvata":           {"en": "Asvata",     "zhCN": "菩提"},
+    "gatheringAzpha":            {"en": "Azpha",      "zhCN": "天涯草"},
+    "gatheringCalendula":        {"en": "Calendula",  "zhCN": "金盏花"},
+    "gatheringMorfa":            {"en": "Morfa",      "zhCN": "魔尔菇"},
+    "gatheringRaydam":           {"en": "Raydam",     "zhCN": "莱森树莓"},
+    "gatheringPujery":           {"en": "Pujery",     "zhCN": "波齐鲤"},
+    "gatheringOhkra":            {"en": "Ohkra",      "zhCN": "秋葵"},
+    "gatheringConide":           {"en": "Conide",     "zhCN": "珂尼玳"},
     # SourceType fallbacks
     "gatheringOd":        {"en": "Odyle",      "zhCN": "奥德", "zhTW": "奧德"},
     "gatheringHerb":      {"en": "Herb",       "zhCN": "草药", "zhTW": "草藥"},

@@ -197,9 +197,79 @@ categories:
     id: 33065c54-e872-4534-bf48-1edc92ae52a6
     name: gatheringCypri
     order: 12
-  # --- Broad SourceType fallback subtypes (used for materials with no legacy
-  #     match, e.g. the Asmodian Asvata/Azpha/... set on World_D_A). Generic
-  #     UT_Marker_Gather icons keyed by GatherSource SourceType.
+  # --- Asmodian / World_D specific materials. Per-material item icons resolved
+  #     from raw Item.json (material Desc -> IconRes); art is often shared with
+  #     the Elyos twin (Morfa/Coriolus, Pujery/Cypri, Calendula/Targena,
+  #     Asvata/Yggdrasil). Ohkra & Conide's game-assigned icons (Food_L_c_002 /
+  #     _005) were never exported, so they reuse the same substitutes as their
+  #     L-map twins Kukuru & Inina.
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: true
+    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Wood_A_c_001.webp
+    iconScale: 1.75
+    id: 7a1c9e20-0002-4a00-9000-000000000001
+    name: gatheringAsvata
+    order: 13
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: true
+    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Herb_D_c_001.webp
+    iconScale: 1.25
+    id: 7a1c9e20-0002-4a00-9000-000000000002
+    name: gatheringAzpha
+    order: 14
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: true
+    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Herb_D_c_002.webp
+    iconScale: 1.25
+    id: 7a1c9e20-0002-4a00-9000-000000000003
+    name: gatheringCalendula
+    order: 15
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: true
+    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Food_L_c_001.webp
+    iconScale: 1.25
+    id: 7a1c9e20-0002-4a00-9000-000000000004
+    name: gatheringMorfa
+    order: 16
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: true
+    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Food_L_c_003.webp
+    iconScale: 1.25
+    id: 7a1c9e20-0002-4a00-9000-000000000005
+    name: gatheringRaydam
+    order: 17
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: true
+    icon: UI/Resource/Texture/Item/ETC/Icon_Item_Gather_Food_L_c_006.webp
+    iconScale: 1.25
+    id: 7a1c9e20-0002-4a00-9000-000000000006
+    name: gatheringPujery
+    order: 18
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: true
+    icon: UI/Resource/Texture/Item/ETC/Icon_Gather_Fruit_L_lv2_01b.webp
+    iconScale: 1.25
+    id: 7a1c9e20-0002-4a00-9000-000000000007
+    name: gatheringOhkra
+    order: 19
+  - canComplete: false
+    color: '#000000'
+    hideTooltip: true
+    icon: UI/Resource/Texture/Item/ETC/Icon_Gather_Food_L_lv1_01c.webp
+    iconScale: 1.25
+    id: 7a1c9e20-0002-4a00-9000-000000000008
+    name: gatheringConide
+    order: 20
+  # --- Broad SourceType fallback subtypes (used for materials with no specific
+  #     match above). Generic UT_Marker_Gather icons keyed by GatherSource
+  #     SourceType.
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -207,7 +277,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000001
     name: gatheringOd
-    order: 13
+    order: 21
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -215,7 +285,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000002
     name: gatheringHerb
-    order: 14
+    order: 22
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -223,7 +293,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000003
     name: gatheringJewelry
-    order: 15
+    order: 23
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -231,7 +301,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000004
     name: gatheringMetal
-    order: 16
+    order: 24
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -239,7 +309,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000005
     name: gatheringRareMetal
-    order: 17
+    order: 25
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -247,7 +317,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000006
     name: gatheringTree
-    order: 18
+    order: 26
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -255,7 +325,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000007
     name: gatheringFlower
-    order: 19
+    order: 27
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -263,7 +333,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000008
     name: gatheringBerry
-    order: 20
+    order: 28
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -271,7 +341,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-000000000009
     name: gatheringVegetable
-    order: 21
+    order: 29
   - canComplete: false
     color: '#000000'
     hideTooltip: true
@@ -279,7 +349,7 @@ categories:
     iconScale: 1.25
     id: 7a1c9e20-0001-4a00-9000-00000000000a
     name: gatheringShellfish
-    order: 22
+    order: 30
 - color: '#000000'
   icon: ''
   id: 67fd0858-18ea-40f0-9fb4-f2bedd6c5274
