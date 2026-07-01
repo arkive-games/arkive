@@ -307,39 +307,38 @@ def _seal_env_to_dungeon() -> dict:
 
 
 @lru_cache(maxsize=None)
-def _occupation_env_ids() -> frozenset:
-    """EnvObj defs for garrison/camp world-map entrances (驻地 / occupation).
+def _occupation_subzones_by_map() -> dict:
+    """map_id -> {subzone Name -> quest ID} for occupation (驻地) territories.
 
-    These are the icon-bearing world entrances to garrison instances. Each is an
-    ``EEnvObjectUsage::EnterInstanceLayer`` EnvObj whose Name matches the
-    ``*Garri*..._Insk_*`` pattern (the entrance door). Verified against the
-    legacy curated ``occupation`` markers on World_L_A: all 15 legacy coords
-    nearest-match one of these spawns within <=4.9 px on the 8192-px map.
+    Occupations are *declared* by Exploration quests, not inferred from EnvObj
+    names: ``Quest.json`` rows with ``Type == EQuestType::Exploration`` and
+    ``ExplorationType == EExplorationType::OccupationTerritory``. Each such quest
+    carries an ``AcquireMapId`` and a single ``SubZone`` AcquirableCondition; the
+    occupation marker is placed at that subzone's centre and labelled by its
+    ``DisplayName`` (which resolves to the legacy names, e.g. "Latrima Outpost").
 
-    NOTE on the name token: World_L_A uses the spelling ``Garrison``
-    (``E_L1_Garrison_R1_Insk`` ...), but the dark map spells it ``Garrision``
-    (``E_Daeva_Garrision_D1_Insk``) — a typo in the game export. We match the
-    common prefix ``Garri`` to catch both. The whole export has exactly 19 such
-    EnterInstanceLayer+Insk defs (15 ``Garrison`` on World_L_A + 4 ``Garrision``);
-    other EnterInstanceLayer EnvObjs (houses, illusion curtains, village doors)
-    carry neither token and are excluded."""
-    return frozenset(
-        e["ID"]["Value"] for e in _table("EnvObjData.json")
-        if e.get("Usage") == "EEnvObjectUsage::EnterInstanceLayer"
-        and "Garri" in e.get("Name", "") and "Insk" in e.get("Name", "")
-    )
-
-
-@lru_cache(maxsize=None)
-def _occupation_name_by_env() -> dict:
-    """occupation EnvObj ID -> localized name Desc.Key, with the trailing
-    " Door" stripped so the marker reads e.g. "Maktashan Outpost" (matching the
-    legacy curated names) rather than "Maktashan Outpost Door"."""
-    return {
-        e["ID"]["Value"]: (e.get("Desc") or {}).get("Key", "")
-        for e in _table("EnvObjData.json")
-        if e["ID"]["Value"] in _occupation_env_ids()
-    }
+    The whole export has 42 (World_L_A 15, World_L_B 6, World_D_A 15,
+    World_D_B 6) — matching the legacy curated set exactly. Unlike the old
+    ``*Garri*..._Insk_*`` EnvObj-name heuristic, this covers the dark maps, whose
+    entrances are named ``E_D1_(Human|Daeva|Dragon)NN_Entrance`` and so carried
+    neither the ``Garri`` nor ``Insk`` token."""
+    out: dict = {}
+    for q in _table("Quest.json"):
+        if q.get("Type") != "EQuestType::Exploration":
+            continue
+        if q.get("ExplorationType") != "EExplorationType::OccupationTerritory":
+            continue
+        mid = (q.get("AcquireMapId") or {}).get("Value")
+        if mid is None:
+            continue
+        subzone = next(
+            (c.get("Value") for c in q.get("AcquirableConditions", [])
+             if c.get("Type") == "EQuestAcquirableCondition::SubZone"),
+            None,
+        )
+        if subzone:
+            out.setdefault(mid, {})[subzone] = q["ID"]["Value"]
+    return out
 
 
 @lru_cache(maxsize=None)
@@ -535,21 +534,11 @@ def extract_map(name: str, l10n: L10N) -> dict:
     tp_names = _teleport_name_by_env()   # teleport EnvObj ID -> Desc.Key
     hc_open_ids = _hiddencube_open_env_ids()
     gather_info = _gather_info_by_env()   # EnvObj ID -> {sourceType, descKey}
-    occ_ids = _occupation_env_ids()       # garrison/camp world entrances (驻地)
-    occ_names = _occupation_name_by_env()  # occ EnvObj ID -> Desc.Key
+    occ_subzones = _occupation_subzones_by_map().get(map_id, {})  # 驻地: subzone Name -> quest ID
     field_dg = _field_dungeon_env()  # EnvObj ID -> {dg, descKey} (field dungeon)
     seal_env = _seal_env_to_dungeon()  # EnvObj ID -> Seal Dungeon row (any LinkedMap)
     named_npc_ids = _named_npc_ids()  # set of bNamed NPC IDs (world bosses)
     npc_idx = _npc_index()
-
-    def _strip_door(s: str) -> str:
-        """Localized garrison names come as "<Name> Door" / "<名称>门"; drop the
-        trailing door noun so the marker reads as the place itself."""
-        if not s:
-            return s
-        s = re.sub(r"\s*Door$", "", s)
-        s = re.sub(r"门$", "", s)
-        return s
 
     # Subzone polygons in WORLD space, for the teleport name fallback (only used
     # if an EnvObj Desc ever resolves empty — none currently do). Each entry is
@@ -628,18 +617,6 @@ def extract_map(name: str, l10n: L10N) -> dict:
                 (gi["sourceType"], mat_en),
                 True,
             ))
-        # occupation (驻地): garrison/camp world entrance. Name from EnvObj Desc.
-        occ_hit = next((i for i in env if i in occ_ids), None)
-        if occ_hit is not None:
-            key = occ_names.get(occ_hit, "")
-            emit.append((
-                "occupation",
-                _strip_door(l10n.en(key)) or "",
-                _strip_door(l10n.zh_cn(key)) or "",
-                occ_hit,
-                None,
-                False,
-            ))
         # field dungeon entrances: PartyDungeon (Urugugu/Draupnir/Fire Temple/
         # Krao) + AbyssArtifact portals (Reshanta), spawned on the world map.
         # Seal / Quest / housing types are excluded in _field_dungeon_env. Name
@@ -717,6 +694,26 @@ def extract_map(name: str, l10n: L10N) -> dict:
                     wm["sourceType"] = extra[0]
                     wm["material"] = extra[1]
                 world_markers.append(wm)
+
+    # ---- 4b. occupation (驻地) markers: one per Exploration/OccupationTerritory
+    #      quest on this map, anchored at the centre of the SubZone it names and
+    #      labelled by that subzone's DisplayName (see _occupation_subzones_by_map).
+    if occ_subzones:
+        sz_by_name = {sz["Name"]: sz for sz in subzones}
+        for sz_name in occ_subzones:
+            sz = sz_by_name.get(sz_name)
+            if sz is None or not sz.get("Location") or not sz.get("px"):
+                print(f"  [occupation] {name}: subzone {sz_name!r} missing / no geometry")
+                continue
+            world_markers.append({
+                "kind": "occupation",
+                "Name": sz_name,
+                "EnvObjId": None,
+                "name_en": sz.get("name_en", ""),
+                "name_zhCN": sz.get("name_zhCN", ""),
+                "Location": sz["Location"],
+                "px": sz["px"],
+            })
 
     # ---- 5. creature/pet markers: tameable-creature spawns, clustered per pet.
     #         Source NPC -> pet (CreatureType subtype + localized name) via

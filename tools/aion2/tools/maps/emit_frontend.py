@@ -26,7 +26,7 @@ Coverage (from the current parse):
   - battlefield       <- Subzones with IconType == EIconType::Battlefield
   - teleport          <- WorldMarkers (EnvObj Usage TeleportArtifact spawns)
   - seal              <- WorldMarkers (EnterDungeon EnvObj for Seal dungeons)
-  - occupation        <- WorldMarkers (garrison EnterInstanceLayer EnvObj spawns, 驻地)
+  - occupation        <- WorldMarkers (Exploration/OccupationTerritory quest SubZones, 驻地)
   - hiddenCube        <- WorldMarkers (HiddenCube EnvObj spawns, bIsKeyOnly=False, yellow only)
   - gathering<Mat>    <- WorldMarkers (GatherSource EnvObj spawns, one per node
                          position, subtyped by specific material, SourceType fallback)
