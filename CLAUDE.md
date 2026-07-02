@@ -48,6 +48,21 @@ landmarks/overlay. Implementation: `tools/aion2/tools/maps/` (`WorldMapTransform
 - **Live testing:** when work needs live testing, merge it back first (with rebase), then test.
 - **Git on Windows:** use PowerShell to run git operations (pull, push, etc.). All repo
   origins are SSH (`git@github.com:...`).
+- **Implementation via Codex:** when implementing code changes, delegate to Codex through
+  its MCP server if possible (`mcp__codex__codex` / `mcp__codex__codex-reply`); Claude
+  plans, reviews, and verifies. MCP server config (`.mcp.json` or Claude Code settings):
+
+  ```json
+  "codex": {
+    "type": "stdio",
+    "command": "codex",
+    "args": [
+      "mcp-server",
+      "-c", "approval_policy=\"never\"",
+      "-c", "sandbox_mode=\"danger-full-access\""
+    ]
+  }
+  ```
 
 ## Notes
 - Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo
