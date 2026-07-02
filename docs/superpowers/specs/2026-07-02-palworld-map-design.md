@@ -140,13 +140,13 @@ gate; no new contract types are needed).
 | Category | Subtype | Source | Icon |
 |---|---|---|---|
 | location | fastTravel | TowerFastTravelPoint actors | `T_icon_compass_FTtower` |
-| location | eagleStatue | UnlockMapPoint actors | `T_icon_compass_tower` (verify at impl.) |
+| location | eagleStatue | UnlockMapPoint actors | `T_icon_compass_FTUnlockMap` (eagle glyph, verified 2026-07-02) |
 | location | dungeon | DungeonPortalMarker actors | `T_icon_compass_dungeon` |
-| boss | fieldBoss | DT_BossSpawnerLoactionData rows whose `CharacterID` starts with `BOSS_` (RAID_/arena rows dropped); name "«pal ja name» Lv.«Level»" | pal icon, fallback `T_prt_map_BossIconFrame` |
-| collectible | treasureMap | TreasureMapPoint actors | compass icon chosen at impl. |
-| collectible | note | Note actors | compass icon chosen at impl. |
-| resource | copper / quartz / coal / sulfur | PalMapObjectSpawner_Rock* actors | compass/item icon chosen at impl. |
-| pal | palSpawn | DT_PalSpawnerPlacement ⋈ DT_PalWildSpawner, clustered 200 px; name = distinct pal ja names in cluster (popup lists pals + level ranges via localized description) | `T_icon_compass_16` or similar |
+| boss | fieldBoss | DT_BossSpawnerLoactionData rows whose `CharacterID` starts with `BOSS_` (RAID_/arena rows dropped); name "«pal ja name» Lv.«Level»" | per-marker pal head icon (`T_<id>_icon_normal`), fallback `T_icon_compass_boss` |
+| collectible | treasureMap | TreasureMapPoint actors | `T_icon_compass_Search_Treasure` |
+| collectible | note | Note actors | `T_icon_compass_Search_Junk` |
+| resource | copper / quartz / coal / sulfur | PalMapObjectSpawner_Rock* actors | colored pin per material (export has no ore item icons; engine pin fallback + subtype `color`) |
+| pal | palSpawn | DT_PalSpawnerPlacement ⋈ DT_PalWildSpawner, clustered 200 px; name = distinct pal ja names in cluster (popup lists pals + level ranges via localized description) | per-marker head icon of the spawner's primary pal (`Pal_1`); pin fallback |
 
 Marker ids: `<MapId>-<subtype>-<n>` (stable ordering by source key then
 coordinates, matching the AION2 convention of deterministic output).
