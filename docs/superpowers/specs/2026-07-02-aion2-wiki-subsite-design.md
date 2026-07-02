@@ -244,9 +244,12 @@ per-step maps — the full loop that motivates the feature.
 
 ## 12. Open risks / assumptions
 
-- **Resolver coverage:** `KillNpc`+`AskNpc`+`UseEnvObj` cover ~80% of objectives on paper,
-  but the NPC-name → SpawnInfo join rate is unverified. The emitter's coverage report is
-  the phase-1 exit criterion for knowing where the gaps are.
+- **Resolver coverage (measured, phase-1 emit run 2026-07-02):** `AskNpc` 575/587 (98%),
+  `CloseNpc` 14/14 (100%), `KillNpc` 426/1132 (38%), `UseEnvObj` 173/350 (49%),
+  `CollectItem` 0/16 (0%). Interpretation: quest-giver/talk objectives resolve almost
+  fully; kill/gather targets often live on maps not yet in `data/maps.json` (only 8 maps
+  emitted) or spawn under different spawner names — expect KillNpc/UseEnvObj coverage to
+  rise as more maps are added. `CollectItem` needs an item→source resolver (phase 3).
 - **`ClearMapEvent` (524 objectives)** is the largest unresolved type; whether map events
   carry usable positions in `MapData.json` needs investigation (deferred to phase 4 unless
   phase 1 shows quest pages feel empty without it).
