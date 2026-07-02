@@ -8,6 +8,9 @@
 .idea/
 .ruff_cache/
 
+# Claude Code worktrees (isolated feature branches)
+.claude/worktrees/
+
 # Python caches
 __pycache__/
 *.pyc
