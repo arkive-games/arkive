@@ -476,12 +476,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeParsed } from './extract.mjs';
 
+// Not exported: this module dispatches on import; stage modules receive paths as args.
 const here = path.dirname(fileURLToPath(import.meta.url));
-export const RAW = process.env.PALWORLD_RAW
+const RAW = process.env.PALWORLD_RAW
   ?? 'E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal';
-export const DATA_OUT = process.env.PALWORLD_DATA_OUT ?? 'E:/aion2-map/data-palworld';
-export const RES_OUT = process.env.PALWORLD_RES_OUT ?? 'E:/aion2-map/resource-palworld';
-export const PARSED_DIR = path.join(here, '..', 'parsed');
+const DATA_OUT = process.env.PALWORLD_DATA_OUT ?? 'E:/aion2-map/data-palworld';
+const RES_OUT = process.env.PALWORLD_RES_OUT ?? 'E:/aion2-map/resource-palworld';
+const PARSED_DIR = path.join(here, '..', 'parsed');
 
 const stage = process.argv[2];
 if (stage === 'extract') {
