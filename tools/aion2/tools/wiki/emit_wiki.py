@@ -98,8 +98,8 @@ def build_map_name_ltexts(l10n, map_rows, map_names: list[str]) -> dict[str, dic
     return out
 
 
-def build_spawn_indexes(map_names: list[str], npcs, env_objs=None) -> tuple[dict, dict, dict]:
-    spawn_idx, point_idx, npc_spawns = {}, {}, {}
+def build_spawn_indexes(map_names: list[str], npcs, env_objs=None) -> tuple[dict, dict, dict, dict]:
+    spawn_idx, point_idx, npc_spawns, subzone_idx = {}, {}, {}, {}
     for name in map_names:
         md = json.loads(map_data_path(name).read_text(encoding="utf-8"))
         data = md["Properties"]["Data"]
@@ -110,9 +110,10 @@ def build_spawn_indexes(map_names: list[str], npcs, env_objs=None) -> tuple[dict
             spawns, npcs, tr, env_objs=env_objs
         )
         point_idx[name] = resolvers.build_point_index(data, tr)
+        subzone_idx[name] = resolvers.build_subzone_index(data)
         for npc_id, pts in resolvers.build_npc_spawns(spawns, tr).items():
             npc_spawns.setdefault(npc_id, {})[name] = pts
-    return spawn_idx, point_idx, npc_spawns
+    return spawn_idx, point_idx, npc_spawns, subzone_idx
 
 
 def build_icon_index() -> dict[str, str]:
@@ -213,6 +214,7 @@ def build_quest_entity(
     item_ids=None,
     npc_name_to_id=None,
     point_index=None,
+    subzone_index=None,
 ) -> dict:
     npc_names = npc_names or {}
     item_ids = item_ids or {}
@@ -222,7 +224,13 @@ def build_quest_entity(
         objectives = []
         for index, g in enumerate(st["goals"], start=1):
             map_name = mapid_to_name.get(g["mapId"]) if g["mapId"] else None
-            r = resolvers.resolve_goal(g, map_name, spawn_index, point_index=point_index)
+            r = resolvers.resolve_goal(
+                g,
+                map_name,
+                spawn_index,
+                point_index=point_index,
+                subzone_index=subzone_index,
+            )
             label = _quest_ltext(
                 l10n, q["textKey"], f"step{st['order']}_obj_{index}"
             ) or _goal_label(g, npc_names, l10n)
@@ -304,7 +312,9 @@ def emit() -> None:
     map_names = _emitted_map_names()
     mapid_to_name = build_mapid_to_name(map_rows, set(map_names))
     map_name_ltext = build_map_name_ltexts(l10n, map_rows, map_names)
-    spawn_index, point_index, npc_spawns = build_spawn_indexes(map_names, npcs, env_objs)
+    spawn_index, point_index, npc_spawns, subzone_index = build_spawn_indexes(
+        map_names, npcs, env_objs
+    )
     icon_index = build_icon_index()
     item_names = build_item_names(l10n, items)
     item_ids = {name: rec["id"] for name, rec in items["by_name"].items()}
@@ -337,6 +347,7 @@ def emit() -> None:
             item_ids=item_ids,
             npc_name_to_id=npc_name_to_id,
             point_index=point_index,
+            subzone_index=subzone_index,
         )
         _write_json(DATA_REPO / "wiki" / "quest" / f"{q['id']}.json", ent)
         quest_docs.append(

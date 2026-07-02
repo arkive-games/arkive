@@ -1,6 +1,8 @@
 """Pure parsers: UE columnar table rows -> plain dict records. No IO here."""
 from __future__ import annotations
 
+import re
+
 
 def val(x):
     """Unwrap UE ``{"Value": v}`` scalars; normalize empty sentinels to None."""
@@ -15,7 +17,17 @@ def enum(x):
     """Convert ``EQuestType::Hero`` to ``Hero``."""
     if not x or x == "None":
         return None
-    return str(x).split("::")[-1]
+    out = str(x).split("::")[-1]
+    return None if out in ("None", "") else out
+
+
+def item_tier(x) -> int:
+    """Convert ``EItemTier::t2`` to ``2``; unknown/missing tiers become 0."""
+    tier = enum(x)
+    if not tier:
+        return 0
+    match = re.fullmatch(r"t(\d+)", str(tier), flags=re.IGNORECASE)
+    return int(match.group(1)) if match else 0
 
 
 def l10n_key(x):
@@ -138,7 +150,7 @@ def parse_items(rows: list[dict]) -> dict:
             "descLongKey": l10n_key(r.get("DescLong")),
             "iconRes": val(r.get("IconRes")),
             "grade": (enum(r.get("ItemGrade")) or "Common").lower(),
-            "tier": val(r.get("ItemTier")) or 0,
+            "tier": item_tier(r.get("ItemTier")),
             "itemLevel": val(r.get("ItemLevel")) or 0,
             "itemType": itype,
             "category": enum(r.get(cat_field)) if cat_field else None,

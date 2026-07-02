@@ -48,6 +48,16 @@ item:
 # title-cased slug (en) - emitter warns so new categories get labels added here.
 sections:
   # equip categories
+  pants: { en: "Pants", zhCN: "下装" }
+  shoulder: { en: "Shoulders", zhCN: "护肩" }
+  cape: { en: "Cape", zhCN: "披风" }
+  brooch: { en: "Brooch", zhCN: "胸针" }
+  amulet: { en: "Amulet", zhCN: "护身符" }
+  pendant: { en: "Pendant", zhCN: "坠饰" }
+  rune: { en: "Rune", zhCN: "符文" }
+  gauntlet: { en: "Gauntlets", zhCN: "拳套" }
+  guarder: { en: "Guarder", zhCN: "护手" }
+  magicbook: { en: "Spellbook", zhCN: "魔导书" }
   greatsword: { en: "Greatsword", zhCN: "大剑" }
   sword: { en: "Sword", zhCN: "单手剑" }
   dagger: { en: "Dagger", zhCN: "短剑" }
@@ -69,6 +79,43 @@ sections:
   belt: { en: "Belt", zhCN: "腰带" }
   bracelet: { en: "Bracelet", zhCN: "手镯" }
   # usable categories
+  scroll: { en: "Scroll", zhCN: "卷轴" }
+  teleportscroll: { en: "Teleport Scroll", zhCN: "传送卷轴" }
+  drink: { en: "Drink", zhCN: "饮品" }
+  magicstone: { en: "Magic Stone", zhCN: "魔石" }
+  polymorph: { en: "Transformation", zhCN: "变身" }
+  petpolymorph: { en: "Pet Transformation", zhCN: "宠物变身" }
+  kinabox: { en: "Kinah Box", zhCN: "基纳宝箱" }
+  ticket: { en: "Ticket", zhCN: "票券" }
+  sealstone: { en: "Sealstone", zhCN: "封印石" }
+  souladd: { en: "Soul Infusion", zhCN: "附魂" }
+  battlepass: { en: "Battle Pass", zhCN: "通行证" }
+  customize: { en: "Customization", zhCN: "自定义" }
+  note: { en: "Note", zhCN: "笔记" }
+  contentssweepticket: { en: "Content Sweep Ticket", zhCN: "副本扫荡券" }
+  addcontentsticketcount: { en: "Entry Count Ticket", zhCN: "入场次数券" }
+  addcontentstickettime: { en: "Entry Time Ticket", zhCN: "入场时间券" }
+  getsocialaction: { en: "Social Action", zhCN: "社交动作" }
+  getwing: { en: "Wings", zhCN: "翅膀" }
+  getpoint: { en: "Point Reward", zhCN: "点数奖励" }
+  getgamecash: { en: "Game Cash", zhCN: "游戏点券" }
+  getgodstone: { en: "Godstone", zhCN: "神石" }
+  subscribe: { en: "Subscription", zhCN: "订阅" }
+  extension: { en: "Expansion", zhCN: "扩展" }
+  characterslotunlock: { en: "Character Slot Unlock", zhCN: "角色栏位解锁" }
+  setupkisk: { en: "Kisk Setup", zhCN: "奇斯克设置" }
+  skincombine: { en: "Skin Combine", zhCN: "外观合成" }
+  skinextraction: { en: "Skin Extraction", zhCN: "外观提取" }
+  elevate: { en: "Elevation", zhCN: "提升" }
+  rebirth: { en: "Rebirth", zhCN: "重生" }
+  succession: { en: "Succession", zhCN: "继承" }
+  surpass: { en: "Surpass", zhCN: "突破" }
+  ascensiongrade: { en: "Ascension Grade", zhCN: "升阶等级" }
+  monolithallclear: { en: "Monolith Clear", zhCN: "方尖碑清除" }
+  monolithtoken: { en: "Monolith Token", zhCN: "方尖碑代币" }
+  occupationterritoryallclear: { en: "Territory Clear", zhCN: "占领地清除" }
+  sealallclear: { en: "Seal Clear", zhCN: "封印清除" }
+  conversionrecipe: { en: "Conversion Recipe", zhCN: "转换配方" }
   skinshop: { en: "Appearance", zhCN: "外观" }
   gettitle: { en: "Titles", zhCN: "称号" }
   vehiclesoul: { en: "Vehicle souls", zhCN: "坐骑之魂" }
@@ -77,6 +124,24 @@ sections:
   potion: { en: "Potions", zhCN: "药水" }
   questscroll: { en: "Quest scrolls", zhCN: "任务卷轴" }
   # misc categories
+  material: { en: "Material", zhCN: "材料" }
+  misc: { en: "Miscellaneous", zhCN: "杂项" }
+  gather: { en: "Gathering", zhCN: "采集物" }
+  deco: { en: "Decoration", zhCN: "装饰" }
+  conversionresource: { en: "Conversion Resource", zhCN: "转换材料" }
+  conversionresource_special: { en: "Special Conversion Resource", zhCN: "特殊转换材料" }
+  arcanamaterial: { en: "Arcana Material", zhCN: "奥术材料" }
+  createarcanamaterial: { en: "Arcana Craft Material", zhCN: "奥术制作材料" }
+  getarcana: { en: "Arcana", zhCN: "奥术" }
+  arcanabell: { en: "Arcana Bell", zhCN: "奥术铃" }
+  arcanacompass: { en: "Arcana Compass", zhCN: "奥术罗盘" }
+  arcanagrail: { en: "Arcana Grail", zhCN: "奥术圣杯" }
+  arcanahourglass: { en: "Arcana Hourglass", zhCN: "奥术沙漏" }
+  arcanakey: { en: "Arcana Key", zhCN: "奥术钥匙" }
+  arcanalibra: { en: "Arcana Libra", zhCN: "奥术天秤" }
+  arcanamirror: { en: "Arcana Mirror", zhCN: "奥术镜" }
+  arcanaparchment: { en: "Arcana Parchment", zhCN: "奥术卷轴" }
+  vehiclesoulcrystal: { en: "Vehicle Soul Crystal", zhCN: "坐骑魂晶" }
   craftresource: { en: "Craft resources", zhCN: "制作材料" }
   gatherresource: { en: "Gather resources", zhCN: "采集材料" }
   # generic

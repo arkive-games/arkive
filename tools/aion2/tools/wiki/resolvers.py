@@ -73,6 +73,18 @@ def build_point_index(map_data: dict, transform) -> dict[str, dict]:
     return idx
 
 
+def build_subzone_index(map_data: dict) -> dict[str, str]:
+    """Subzone volume label -> numeric SubzoneTableId string."""
+    idx: dict[str, str] = {}
+    for e in map_data.get("SubzoneVolumeInfoMap") or []:
+        v = e.get("Value") or e
+        label = v.get("LabelName")
+        table_id = v.get("SubzoneTableId")
+        if label and table_id is not None:
+            idx.setdefault(label, str(table_id))
+    return idx
+
+
 def build_npc_spawns(spawn_info_list, transform) -> dict[int, list[dict]]:
     """NPC id -> [{x,y}] on this map."""
     out: dict[int, list[dict]] = {}
@@ -92,16 +104,18 @@ def build_npc_spawns(spawn_info_list, transform) -> dict[int, list[dict]]:
     return out
 
 
-def resolve_goal(goal, map_name, spawn_index, point_index=None):
+def resolve_goal(goal, map_name, spawn_index, point_index=None, subzone_index=None):
     """Return {resolved: True|False|None, pois: [...], region: {...}|None}."""
     gtype = goal["type"]
     per_map_points = (point_index or {}).get(map_name or "", {})
+    per_map_subzones = (subzone_index or {}).get(map_name or "", {})
     out = {"resolved": None, "pois": [], "region": None}
 
     if gtype == "EnterSubZone":
-        v = goal["values"][0] if goal["values"] else None
-        if v is not None and map_name:
-            out["region"] = {"mapName": map_name, "id": str(v)}
+        label = goal["values"][0] if goal["values"] else None
+        table_id = per_map_subzones.get(label)
+        if table_id is not None and map_name:
+            out["region"] = {"mapName": map_name, "id": table_id}
         return out
 
     per_map = spawn_index.get(map_name or "", {})

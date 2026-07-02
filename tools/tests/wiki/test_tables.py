@@ -20,6 +20,8 @@ def test_val_unwraps_ue_scalars():
 def test_enum_strips_prefix():
     assert tables.enum("EQuestType::Hero") == "Hero"
     assert tables.enum("ERace::Light") == "Light"
+    assert tables.enum("EClassType::None") is None
+    assert tables.enum("None") is None
     assert tables.enum(None) is None
 
 
@@ -74,6 +76,29 @@ def test_parse_items_by_id_and_name():
                         "itemLevel", "itemType", "category", "race", "stats",
                         "sellPrice", "maxStack"}
     assert items["by_name"][rec["name"]] is rec
+
+
+def test_parse_items_numeric_tier_and_none_category():
+    rows = [{
+        "ID": {"Value": 1},
+        "Name": "IT_Tiered",
+        "Desc": {"Key": "IT_Tiered_desc"},
+        "DescLong": {"Key": "None"},
+        "IconRes": "Icon_A",
+        "ItemGrade": "EItemGrade::Rare",
+        "ItemTier": "EItemTier::t2",
+        "ItemLevel": 10,
+        "ItemType": "EItemType::Equip",
+        "EquipCategory": "EEquipCategory::None",
+        "ItemRace": "ERace::All",
+        "SellPrice": 1,
+        "MaxStackCount": 1,
+        "MainStats": [{"Key": "EStat::None", "Value": 99}],
+    }]
+    rec = tables.parse_items(rows)["by_id"][1]
+    assert rec["tier"] == 2
+    assert rec["category"] is None
+    assert rec["stats"] == []
 
 
 def test_parse_npc_loot():

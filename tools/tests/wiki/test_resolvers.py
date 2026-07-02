@@ -132,7 +132,8 @@ def test_spawn_index_env_obj_ids():
 def test_build_point_index():
     data = {
         "SubzoneVolumeInfoMap": [
-            {"Key": "SZ_A", "Value": {"LabelName": "SZ_A", "Location": {"X": 100, "Y": 100}}}
+            {"Key": "SZ_A", "Value": {"LabelName": "SZ_A", "Location": {"X": 100, "Y": 100},
+                                      "SubzoneTableId": 2096}}
         ],
         "TriggerActorDataMap": [
             {"Key": {"Value": 1}, "Value": {"Name": "TR_B", "Location": {"X": 200, "Y": 200}}}
@@ -145,6 +146,14 @@ def test_build_point_index():
     assert idx["SZ_A"] == {"x": 10.0, "y": 10.0}
     assert idx["TR_B"] == {"x": 20.0, "y": 20.0}
     assert idx["MP_C"] == {"x": 30.0, "y": 30.0}
+
+
+def test_build_subzone_index():
+    data = {"SubzoneVolumeInfoMap": [
+        {"Key": "SZ_A", "Value": {"LabelName": "SZ_A", "SubzoneTableId": 2096}},
+        {"Key": "SZ_NoId", "Value": {"LabelName": "SZ_NoId"}},
+    ]}
+    assert resolvers.build_subzone_index(data) == {"SZ_A": "2096"}
 
 
 def test_build_npc_spawns():
@@ -168,9 +177,20 @@ def test_resolve_move_point_fallback():
 
 
 def test_resolve_enter_subzone_region():
-    goal = {"type": "EnterSubZone", "values": [2096], "movePoint": None}
-    r = resolvers.resolve_goal(goal, "World_L_A", {})
+    goal = {"type": "EnterSubZone", "values": ["SZ_A"], "movePoint": None}
+    r = resolvers.resolve_goal(
+        goal, "World_L_A", {}, subzone_index={"World_L_A": {"SZ_A": "2096"}}
+    )
     assert r["region"] == {"mapName": "World_L_A", "id": "2096"}
+    assert r["resolved"] is None and r["pois"] == []
+
+
+def test_resolve_enter_subzone_region_missing_label():
+    goal = {"type": "EnterSubZone", "values": ["SZ_Missing"], "movePoint": None}
+    r = resolvers.resolve_goal(
+        goal, "World_L_A", {}, subzone_index={"World_L_A": {"SZ_A": "2096"}}
+    )
+    assert r["region"] is None
     assert r["resolved"] is None and r["pois"] == []
 
 

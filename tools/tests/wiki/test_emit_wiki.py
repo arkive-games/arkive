@@ -79,3 +79,31 @@ def test_quest_entity_reward_items_have_id_and_objective_target():
     kill = next(o for st in ent["steps"] for o in st["objectives"] if o["type"] == "KillNpc")
     assert kill["target"] == {"type": "npc", "id": 7}
     assert "region" in kill
+
+
+def test_quest_entity_enter_subzone_region_uses_numeric_id():
+    quests = tables.parse_quests(
+        json.loads((FIX / "quest_sample.json").read_text(encoding="utf-8"))
+    )
+    q = quests[0]
+    ent = emit_wiki.build_quest_entity(
+        q,
+        [{"order": 1, "goals": [{
+            "type": "EnterSubZone",
+            "values": ["SZ_A"],
+            "mapId": 1000,
+            "movePoint": None,
+            "marker": True,
+            "optional": False,
+        }]}],
+        rewards={},
+        l10n=FakeL10N(),
+        mapid_to_name={1000: "World_L_A"},
+        spawn_index={},
+        name_to_id={q["name"]: q["id"]},
+        prev_index={},
+        item_names={},
+        subzone_index={"World_L_A": {"SZ_A": "2096"}},
+    )
+    objective = ent["steps"][0]["objectives"][0]
+    assert objective["region"] == {"mapName": "World_L_A", "id": "2096"}
