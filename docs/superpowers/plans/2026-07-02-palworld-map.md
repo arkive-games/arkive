@@ -986,7 +986,7 @@ pnpm validate-data E:/aion2-map/data-palworld
 
 Expected: validate-data exits 0. If it reports shape errors (e.g. `types.json` field names), fix `emit.mjs` to match `packages/data-contract` — the contract wins — and re-run both the unit test and the gate.
 
-Sanity-check counts printed by emit: MainWorld should carry most markers; total fastTravel across both maps = 152, dungeon = 157, resources = 39/27/23/23, treasureMap = 42, note = 15, eagleStatue = 22; fieldBoss > 100; palSpawn in the low hundreds per map (clustered from ~8k placements). If palSpawn is >1000 per map, report DONE_WITH_CONCERNS (spec §8 knob: raise radius in types.yaml).
+Sanity-check counts printed by emit: MainWorld should carry most markers; total fastTravel across both maps = 152, dungeon = 157, resources = 39/27/23/23, treasureMap = 42, note = 15, eagleStatue = 22; fieldBoss ≤ 90 (90 in source; any outside both bounds are dropped); palSpawn in the low hundreds per map (clustered from ~8k placements). If palSpawn is >1000 per map, report DONE_WITH_CONCERNS (spec §8 knob: raise radius in types.yaml).
 
 - [ ] **Step 6: Initialize the data repo and commit both repos**
 
