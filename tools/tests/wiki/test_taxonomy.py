@@ -19,10 +19,12 @@ CFG = {
     }
 }
 QUESTS = [
-    {"id": 1, "type": "Hero", "part": "hero_poeta_00"},
-    {"id": 2, "type": "Hero", "part": "hero_poeta_01"},
-    {"id": 3, "type": "District", "part": None},
-    {"id": 4, "type": "UnknownType", "part": None},
+    {"id": 1, "type": "Hero", "part": "hero_Eltnen_01", "recommendedLevel": 15},
+    {"id": 2, "type": "Hero", "part": "hero_poeta_00", "recommendedLevel": 1},
+    {"id": 3, "type": "Hero", "part": "hero_poeta_01", "recommendedLevel": 5},
+    {"id": 4, "type": "Hero", "part": None, "recommendedLevel": 0},
+    {"id": 5, "type": "District", "part": None, "recommendedLevel": 0},
+    {"id": 6, "type": "UnknownType", "part": None, "recommendedLevel": 0},
 ]
 
 
@@ -34,12 +36,14 @@ def test_group_slug_for():
 def test_build_tree_counts_and_sections():
     tree, unmatched = taxonomy.build_quest_tree(CFG, QUESTS)
     quest = tree["types"][0]
-    assert quest["slug"] == "quest" and quest["count"] == 3
+    assert quest["slug"] == "quest" and quest["count"] == 5
     main = quest["groups"][0]
-    assert main["slug"] == "main" and main["count"] == 2
+    assert main["slug"] == "main" and main["count"] == 4
     assert [s["slug"] for s in main["sections"]] == [
         "hero_poeta_00",
         "hero_poeta_01",
+        "hero_Eltnen_01",
+        "other",
     ]
     side = quest["groups"][1]
     assert side["sections"][0]["slug"] == "other"
