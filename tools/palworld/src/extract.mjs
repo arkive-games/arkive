@@ -48,7 +48,7 @@ export function runExtract(raw) {
       key, characterId: r.CharacterID, level: r.Level,
       location: { X: r.Location.X, Y: r.Location.Y, Z: r.Location.Z ?? 0 },
     }))
-    .filter((b) => b.characterId?.startsWith('BOSS_'));
+    .filter((b) => b.characterId && /^BOSS_/i.test(b.characterId)); // /i: "Boss_Anubis" is mixed case
 
   const wildRows = readRows(raw, 'DataTable/Spawner/DT_PalWildSpawner.json');
   const wildByName = new Map();

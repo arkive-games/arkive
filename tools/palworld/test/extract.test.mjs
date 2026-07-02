@@ -20,13 +20,17 @@ describe.skipIf(!hasRaw)('extract (integration)', () => {
     expect(bySubtype('coal')).toBe(23);
     expect(bySubtype('sulfur')).toBe(23);
     expect(out.pois.every((p) => Number.isFinite(p.location.X) && Number.isFinite(p.location.Y))).toBe(true);
-    expect(out.bosses.length).toBeGreaterThan(100);
-    expect(out.bosses.every((b) => b.characterId.startsWith('BOSS_'))).toBe(true);
+    // 159 rows: 70 are CharacterID "None"; 89 start BOSS_ + 1 is "Boss_Anubis"
+    // (mixed case, a real field boss) → case-insensitive filter yields 90.
+    expect(out.bosses.length).toBe(90);
+    expect(out.bosses.every((b) => /^BOSS_/i.test(b.characterId))).toBe(true);
     expect(out.palSpawns.length).toBeGreaterThan(5000);
     expect(out.palSpawns.every((s) => s.pals.length >= 1)).toBe(true);
     expect(out.names.Kitsunebi ?? out.names[Object.keys(out.names)[0]]).toBeTruthy();
     expect(out.bounds.MainWorld.min.X).toBe(-1099400);
     expect(out.bounds.WorldTree.max.Y).toBe(-476400);
-    expect(out.palIcons.size ?? Object.keys(out.palIcons).length).toBeGreaterThan(500);
+    // Texture/PalIcon/Normal has 827 files = 413 .png + 414 .json sidecars;
+    // only .png stems are collected.
+    expect(out.palIcons.size ?? Object.keys(out.palIcons).length).toBeGreaterThan(400);
   }, 120_000);
 });
