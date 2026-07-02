@@ -79,10 +79,46 @@ def build_subzone_index(map_data: dict) -> dict[str, str]:
     for e in map_data.get("SubzoneVolumeInfoMap") or []:
         v = e.get("Value") or e
         label = v.get("LabelName")
-        table_id = v.get("SubzoneTableId")
+        table_id = _scalar(v.get("SubzoneTableId"))
         if label and table_id is not None:
             idx.setdefault(label, str(table_id))
     return idx
+
+
+def _scalar(x):
+    if isinstance(x, dict) and "Value" in x:
+        return x.get("Value")
+    return x
+
+
+def _round2(v: float) -> float:
+    return round(float(v), 2)
+
+
+def build_region_geometry(map_data: dict, transform) -> list[dict]:
+    """SubzoneTableId -> pixel polygon rings for wiki region highlights."""
+    by_id: dict[str, dict] = {}
+    for e in map_data.get("SubzoneVolumeInfoMap") or []:
+        v = e.get("Value") or e
+        table_id = _scalar(v.get("SubzoneTableId"))
+        points = v.get("Points") or []
+        if table_id is None or len(points) < 3:
+            continue
+
+        ring = []
+        for p in points:
+            if not isinstance(p, dict) or "X" not in p or "Y" not in p:
+                continue
+            x, y = transform.world_to_pixel(p["X"], p["Y"])
+            ring.append([_round2(x), _round2(y)])
+        if len(ring) < 3:
+            continue
+        if ring[0] != ring[-1]:
+            ring = ring + [ring[0]]
+
+        key = str(table_id)
+        by_id.setdefault(key, {"id": key, "borders": []})["borders"].append(ring)
+    return sorted(by_id.values(), key=lambda r: r["id"])
 
 
 def build_npc_spawns(spawn_info_list, transform) -> dict[int, list[dict]]:

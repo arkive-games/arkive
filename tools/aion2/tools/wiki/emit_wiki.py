@@ -98,8 +98,11 @@ def build_map_name_ltexts(l10n, map_rows, map_names: list[str]) -> dict[str, dic
     return out
 
 
-def build_spawn_indexes(map_names: list[str], npcs, env_objs=None) -> tuple[dict, dict, dict, dict]:
-    spawn_idx, point_idx, npc_spawns, subzone_idx = {}, {}, {}, {}
+def build_spawn_indexes(
+    map_names: list[str], npcs, env_objs=None
+) -> tuple[dict, dict, dict, dict, dict]:
+    spawn_idx, point_idx, npc_spawns = {}, {}, {}
+    subzone_idx, region_geometry = {}, {}
     for name in map_names:
         md = json.loads(map_data_path(name).read_text(encoding="utf-8"))
         data = md["Properties"]["Data"]
@@ -111,9 +114,10 @@ def build_spawn_indexes(map_names: list[str], npcs, env_objs=None) -> tuple[dict
         )
         point_idx[name] = resolvers.build_point_index(data, tr)
         subzone_idx[name] = resolvers.build_subzone_index(data)
+        region_geometry[name] = resolvers.build_region_geometry(data, tr)
         for npc_id, pts in resolvers.build_npc_spawns(spawns, tr).items():
             npc_spawns.setdefault(npc_id, {})[name] = pts
-    return spawn_idx, point_idx, npc_spawns, subzone_idx
+    return spawn_idx, point_idx, npc_spawns, subzone_idx, region_geometry
 
 
 def build_icon_index() -> dict[str, str]:
@@ -312,9 +316,13 @@ def emit() -> None:
     map_names = _emitted_map_names()
     mapid_to_name = build_mapid_to_name(map_rows, set(map_names))
     map_name_ltext = build_map_name_ltexts(l10n, map_rows, map_names)
-    spawn_index, point_index, npc_spawns, subzone_index = build_spawn_indexes(
-        map_names, npcs, env_objs
-    )
+    (
+        spawn_index,
+        point_index,
+        npc_spawns,
+        subzone_index,
+        region_geometry,
+    ) = build_spawn_indexes(map_names, npcs, env_objs)
     icon_index = build_icon_index()
     item_names = build_item_names(l10n, items)
     item_ids = {name: rec["id"] for name, rec in items["by_name"].items()}
@@ -506,6 +514,11 @@ def emit() -> None:
     _write_json(DATA_REPO / "wiki" / "index" / "npc.json", {"docs": npc_docs})
     _write_json(DATA_REPO / "wiki" / "index" / "item.json", {"docs": item_docs})
     _write_json(DATA_REPO / "wiki" / "taxonomy.json", tree)
+    for map_name, regions in region_geometry.items():
+        _write_json(
+            DATA_REPO / "wiki" / "regions" / f"{map_name}.json",
+            {"regions": regions},
+        )
 
     def lang_key(lng):
         return {"en": "en", "zh-CN": "zhCN", "zh-TW": "zhTW"}[lng]

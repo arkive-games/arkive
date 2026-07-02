@@ -156,6 +156,52 @@ def test_build_subzone_index():
     assert resolvers.build_subzone_index(data) == {"SZ_A": "2096"}
 
 
+def test_build_region_geometry_groups_rings_by_subzone_table_id():
+    data = {
+        "SubzoneVolumeInfoMap": [
+            {
+                "Key": "SZ_A",
+                "Value": {
+                    "SubzoneTableId": 2096,
+                    "Points": [
+                        {"X": 100.0, "Y": 200.0},
+                        {"X": 111.25, "Y": 200.0},
+                        {"X": 111.25, "Y": 222.25},
+                    ],
+                },
+            },
+            {
+                "Key": "SZ_A_2",
+                "Value": {
+                    "SubzoneTableId": {"Value": 2096},
+                    "Points": [
+                        {"X": 300.0, "Y": 400.0},
+                        {"X": 310.0, "Y": 400.0},
+                        {"X": 310.0, "Y": 410.0},
+                        {"X": 300.0, "Y": 400.0},
+                    ],
+                },
+            },
+            {
+                "Key": "SZ_Short",
+                "Value": {
+                    "SubzoneTableId": 3000,
+                    "Points": [{"X": 1.0, "Y": 2.0}, {"X": 3.0, "Y": 4.0}],
+                },
+            },
+        ]
+    }
+    assert resolvers.build_region_geometry(data, FakeTransform()) == [
+        {
+            "id": "2096",
+            "borders": [
+                [[10.0, 20.0], [11.12, 20.0], [11.12, 22.23], [10.0, 20.0]],
+                [[30.0, 40.0], [31.0, 40.0], [31.0, 41.0], [30.0, 40.0]],
+            ],
+        }
+    ]
+
+
 def test_build_npc_spawns():
     idx = resolvers.build_npc_spawns(SPAWNS, FakeTransform())
     assert idx[42] == [{"x": 10.0, "y": 20.0}]
