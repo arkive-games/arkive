@@ -2,7 +2,9 @@
 
 **Date:** 2026-07-02 (v2 — redesigned same day after direct inspection of the quest tables;
 v1 was based on a survey that missed `QuestStep`/`QuestReward`/`QuestString`)
-**Status:** Approved (brainstorming), pending implementation plan
+**Status:** Implemented 2026-07-02 — phases 1–3 done (quest/NPC/item pages, region highlights,
+resolver upgrades, site-wide design + i18n pass across en/zh-CN/zh-TW); phase 4 (SEO prerender) deferred.
+Plan: `docs/superpowers/plans/2026-07-02-wiki-phase23-npc-item.md`
 **Repos touched:** `frontend/` (routes, embedded map, wiki pages), `tools/` (new wiki emitter), `data/` (new generated output)
 
 ## 1. Goal
