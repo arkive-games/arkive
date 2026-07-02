@@ -1,6 +1,7 @@
-# AION2 Wiki Subsite — Design
+# AION2 Wiki Subsite — Design (v2)
 
-**Date:** 2026-07-02
+**Date:** 2026-07-02 (v2 — redesigned same day after direct inspection of the quest tables;
+v1 was based on a survey that missed `QuestStep`/`QuestReward`/`QuestString`)
 **Status:** Approved (brainstorming), pending implementation plan
 **Repos touched:** `frontend/` (routes, embedded map, wiki pages), `tools/` (new wiki emitter), `data/` (new generated output)
 
@@ -9,7 +10,7 @@
 Add a wiki to the AION2 site whose pages are **fully auto-generated** from the parsed
 game data, and which is **deeply integrated with the interactive map** in both directions:
 
-- A wiki page (e.g. a quest) can render an inline map showing **only that entity's POIs** —
+- A wiki page (e.g. a quest) renders an inline map showing **only that entity's POIs** —
   no default markers, no sidebar.
 - Markers on the main map can **deep-link to their wiki page**.
 
@@ -27,33 +28,48 @@ The wiki is not a human-authoring CMS. All content is derived from the game expo
 | Embedded map | **Extract a shared presentational `<EmbeddedMap>`** | Avoids duplicating projection/tile/marker logic (which would drift); improves the current map code. |
 | v1 entity scope | **Quests, NPCs/Monsters, Items** | Quests are the flagship; NPCs/monsters have coords; items link to sources. |
 
-## 3. Data availability (verified against the raw export)
+## 3. Ground truth: what the quest tables actually contain (verified by direct inspection)
 
-- `tools/` is **Python**. The wiki generator is a new emitter alongside
-  `tools/aion2/tools/maps/emit_frontend.py`.
-- Markers today have **no entity link** — IDs are synthetic (`<Map>-<subtype>-<index>`).
-  Cross-linking requires a new field (see §5).
-- **Quests** (`Data/Table/Quest.json`) have **no direct world coordinates**. Coordinates are
-  resolved by joining **Quest → `AcquireNpcTalk` → `NpcData.json` → per-map `MapData.json`
-  `SpawnInfo` (Location X,Y,Z)**. Fields available: `ID`, `Name`, `AcquireMapId`,
-  `AcquireNpcTalk`, `CompleteMapId`.
-- **NPCs / monsters** (`NpcData.json` + `MapData.json` `SpawnInfo`) **do have coordinates**.
-  `NpcData` gives `Desc.Key` (L10N), `Level`, `bNamed` (named/boss), `NpcType`.
-- **Items** (`Item.json`) have **no coordinates**; sources are indirect via gather nodes and
-  `NpcLoot.json`. Item pages link to *sources*, not their own map markers.
+All tables are columnar UE exports (`{Version, Ids, Properties.Data[]}`) under
+`E:\Exports\AION2\Content\Data\Table\`.
 
-**Implication:** the flagship "quest page → map POIs" feature is feasible but depends on a
-cross-table join that can partially fail (a quest whose giver NPC has no spawn). The design
-must degrade gracefully (§7).
+**`Quest.json` — 1,429 quests.** Rich per-quest fields:
+`ID`, `Name` (string key, e.g. `HQ1100010`), `Race`, `UnlockLevel`, `RecommendedLevel`,
+`QuestText` (L10N key), `Type` (Hero/District/Duty…), `Part`, `Grade`,
+`AcquireMapId`, `AcquireBeforeNpcTalk` / `AcquireAfterNpcTalk` / `AcquireNotiNpcTalk`
+(note: **not** a single `AcquireNpcTalk` as v1 assumed), `AcquireItemList`,
+`CompleteType`/`CompleteMapId`/`CompleteNpcTalk`, `NextQuestName` (**quest chains**),
+`RepeatType`, `bEnableGiveup`.
+
+**`QuestStep.json` — 2,553 steps.** Keyed by `QuestName` + `Order`. Each step has a
+`GoalList[]` of objectives, and **each objective carries its own map + target**:
+- `Type` — distribution: `KillNpc` 1132, `AskNpc` 587, `ClearMapEvent` 524, `UseEnvObj` 350,
+  `EnterVolumePC` 148, `CompleteCelviceTalk` 92, `EnterSubZone` 14, `CollectItem` 16, others small.
+- `Value[]` — target refs (e.g. NPC string name `N_L1_Q_Xiaolinlin_01`, talk id).
+- `MapId` — per-objective map.
+- `bMarker` — **the game's own "show a map marker for this objective" flag.**
+- `QuestMovePointName` (43 uses), `TeleportName`, `ArrivalAction`, `bOptional`.
+
+**`QuestReward.json` — 1,321 reward groups** keyed by `Group` (≈ quest id):
+`ExpReward`, `ItemRewards` (Gold etc.), `ItemNormalRewards` (item name + count +
+enchant level), `ItemSelectRewards`, `RandomReward`.
+
+**Also present, for later phases:** `QuestString.json`, `QuestPart.json`, `QuestType.json`,
+`DistrictQuestGroup.json`, `DutyQuestGroup.json`.
+
+**Supporting tables:** `NpcData.json` (NPC by string name: `Desc.Key` L10N, `Level`,
+`bNamed`, `NpcType`), per-map `MapData.json` `SpawnInfo` (NPC → world X,Y,Z),
+`Item.json`, `NpcLoot.json`. Subzone polygons already exist in `data/regions/<Map>.json`.
 
 ## 4. Architecture
 
 ```
-Raw export (Quest.json, NpcData.json, Item.json, per-map MapData.json SpawnInfo)
+Raw export: Quest.json + QuestStep.json + QuestReward.json + QuestString.json
+            NpcData.json, Item.json, NpcLoot.json, per-map MapData.json SpawnInfo
    │
-   ▼  tools/  (new emit_wiki.py — joins + resolves coords + L10N)
-data/wiki/<type>/<id>.json         (per-entity page data + pois[])
-data/wiki/index/<type>.json        (hub/list + search index)
+   ▼  tools/  (new emit_wiki.py — objective resolvers + joins + L10N + backlink indexes)
+data/wiki/<type>/<id>.json         (per-entity page data, steps[], pois[], rewards, chain)
+data/wiki/index/<type>.json        (hub/list + minisearch index)
 data/locales/<lang>/wiki/...       (localized text, mirrors marker-locale pattern)
 data/markers/<Map>.json            (extended: optional entityType/entityId)
    │
@@ -65,100 +81,141 @@ No new framework, no second build. One shared map engine.
 
 ## 5. Data model & pipeline (`tools/`)
 
-New module (e.g. `tools/aion2/tools/wiki/emit_wiki.py`) that:
+New module (e.g. `tools/aion2/tools/wiki/emit_wiki.py`), idempotent and re-runnable
+(same contract as `emit_frontend.py`).
 
-1. Parses `Quest.json`, `NpcData.json`, `Item.json`.
-2. Resolves POIs:
-   - **Quest:** `AcquireNpcTalk` → NpcData → SpawnInfo → `{mapId, x, y}` (+ `CompleteMapId`
-     context). Multiple spawns → multiple POIs.
-   - **NPC/Monster:** NpcData → all SpawnInfo entries → POIs.
-   - **Item:** no POIs; instead `sources: [{kind: 'gather'|'drop', ref}]`.
-3. Emits per-entity JSON:
-   ```json
-   {
-     "id": 1100010,
-     "type": "quest",
-     "name": "<localized-or-key>",
-     "fields": { "level": 12, "acquireMapId": 1110, "...": "..." },
-     "pois": [{ "mapId": "World_D_A", "x": 3607.9, "y": 2963.0, "label": "...", "markerId": null }],
-     "related": [{ "type": "npc", "id": 2010549504 }]
-   }
-   ```
-4. Emits `data/wiki/index/<type>.json` (list + `minisearch`-ready search index).
-5. Emits localized text under `data/locales/<lang>/wiki/...`.
-6. **Extends the marker emitter** to add optional `entityType` / `entityId` on markers that
-   correspond to a wiki entity, enabling map→wiki deep links.
+### 5.1 Objective → POI resolvers (the core of the emitter)
 
-The emitter is idempotent and re-runnable (same contract as `emit_frontend.py`).
+POIs are resolved **per quest-step objective** (not per quest, as v1 had it), honoring the
+game's own `bMarker` flag. One resolver per objective type, tiered by confidence:
+
+| Objective type | Resolver | Coverage |
+|---|---|---|
+| `AskNpc`, `KillNpc`, `CloseNpc` | `Value[0]` NPC name → `NpcData` → `SpawnInfo` coords (all spawns) | high — top 2 types = ~1.7k objectives |
+| `UseEnvObj`, `CollectItem` (gather) | EnvObj name → env spawns (reuses the existing gather-node parsing) | high |
+| `EnterSubZone` | subzone id → region polygon from `data/regions/` → **region highlight**, not a point | high |
+| `EnterVolumePC`, `ClearMapEvent`, move-points | best-effort (volume/event/move-point positions in `MapData.json` where present) | partial — emit what resolves, log the rest |
+| non-spatial (`PCLevel`, `ClearQuest`, …) | no POI; rendered as text-only objectives | n/a |
+
+Unresolved objectives are never fatal: the step renders without a POI and the emitter's
+**coverage report** (per-type resolve %) tells us where to invest next.
+
+### 5.2 Emitted quest page shape
+
+```json
+{
+  "id": 1100010, "type": "quest", "name": "HQ1100010",
+  "race": "Light", "questType": "Hero", "unlockLevel": 1, "recommendedLevel": 1,
+  "acquire": { "mapId": 1000, "npc": {"type": "npc", "id": "..."}, "pois": [ ... ] },
+  "steps": [
+    { "order": 1, "objectives": [
+        { "type": "KillNpc", "label": "...", "target": {"type": "npc", "id": "..."},
+          "mapId": "World_L_A", "pois": [{"x": 1, "y": 2}], "marker": true, "optional": false }
+    ]}
+  ],
+  "rewards": { "exp": 1712, "items": [{"item": "...", "count": 20}], "select": [] },
+  "chain": { "next": 1101010, "prev": [1099010] },
+  "related": [{ "type": "npc", "id": "..." }, { "type": "item", "id": "..." }]
+}
+```
+
+`chain.prev` is a **reverse index** built by the emitter from `NextQuestName` (the table
+only stores forward links). Similarly the emitter builds **backlink indexes**: item →
+"rewarded by quests [...]", npc → "involved in quests [...]" — these power the `related`
+sections on NPC/item pages without runtime scans.
+
+### 5.3 Other outputs
+
+- `data/wiki/index/<type>.json` — hub list + `minisearch`-ready index (1,429 quests is
+  small; a single index file per type is fine).
+- `data/locales/<lang>/wiki/...` — localized names/text via `QuestString.json` /
+  `NpcData.Desc.Key`, mirroring the marker-locale pattern.
+- **Marker emitter extension:** optional `entityType`/`entityId` on markers that correspond
+  to wiki entities (Phase 1: quest-giver/boss-relevant markers), enabling map→wiki links.
+- `sitemap.xml` for the wiki routes.
 
 ## 6. Frontend
 
 ### Routes (TanStack file-based, code-split)
 - `/wiki` — landing / overview.
 - `/wiki/$type` — searchable list (uses `minisearch`, already a dependency).
-- `/wiki/$type/$id` — entity page. Route loader fetches the entity JSON.
+- `/wiki/$type/$id` — entity page; route loader fetches the entity JSON. Numeric id is
+  canonical (readable slugs are YAGNI for v1; names live in `<title>`/OG meta).
 
 ### Templates
-- `QuestPage`, `NpcPage`, `ItemPage` — typed renderers over the entity JSON.
+- **`QuestPage` = walkthrough layout:** header (name, type, race, levels, repeat), acquire
+  section with embedded map of the giver, **steps in order** — each objective with its
+  label, target link, and a per-step map (or one combined map with step-grouped POIs —
+  implementation detail for the plan), rewards panel, prev/next **chain navigation**.
+- `NpcPage`: stats, named/boss badge, spawn map (all spawns), "involved in quests" backlinks,
+  drops (from `NpcLoot`, phase 2+).
+- `ItemPage`: stats, "rewarded by quests" backlinks, sources (gather nodes / loot) — phase 3.
 - Rich text via `react-markdown` + `remark-gfm`, sanitized with `dompurify`, styled with
   `@tailwindcss/typography` (all already dependencies).
 
 ### `<EmbeddedMap>` (extracted from `GameMapView`)
-- Props: `mapId`, `markers`, `interactive?` (default read-only for wiki), `initialView?`,
-  `onMarkerClick?`.
-- Presentational: takes markers as props, **no context coupling**.
-- The existing full map route becomes a thin wrapper that feeds `<EmbeddedMap>` markers and
-  handlers from the current contexts (`GameMapContext`, `MarkersContext`, `GameDataContext`).
-- Wiki pages render it with only the entity's POIs and no sidebar.
+- Props: `mapId`, `markers`, `highlightRegions?` (for `EnterSubZone` objectives —
+  `GameMapBorders` already renders region polygons), `interactive?` (default read-only),
+  `initialView?` (auto-fit to supplied POIs), `onMarkerClick?`.
+- Presentational: takes markers as props, **no context coupling**. The existing full map
+  route becomes a thin wrapper feeding it from the current contexts
+  (`GameMapContext`, `MarkersContext`, `GameDataContext`).
 
 ## 7. Integration (both directions)
 
-- **Map → wiki:** `SelectedMarkerPopup` / marker popup shows a "View in wiki" link when the
-  marker carries `entityType`/`entityId` → navigates to `/wiki/$type/$id`.
-- **Wiki → map:** POIs in the embedded map link to the full map focused on that marker
-  (`/?map=<mapId>&marker=<markerId>` or coord focus); inline entity references
-  (`related[]`) link to other wiki pages.
+- **Map → wiki:** marker popup shows a "View in wiki" link when the marker carries
+  `entityType`/`entityId` → `/wiki/$type/$id`.
+- **Wiki → map:** POIs in the embedded map link to the full map focused there
+  (`/?map=<mapId>&marker=<markerId>` or coord focus); entity references (`related`,
+  objective targets, reward items, chain links) link to other wiki pages.
 
 ## 8. SEO / prerender
 
-- **v1:** client-rendered + generated `sitemap.xml` + runtime `<title>`/OG meta per page.
-- **Later phase:** post-build headless-Chrome snapshot of `/wiki/...` routes to static HTML
-  for stronger crawlability. Deferred — not required for launch.
+- **v1:** client-rendered + emitter-generated `sitemap.xml` + runtime `<title>`/OG meta.
+- **Later phase:** post-build headless-Chrome snapshot of `/wiki/...` routes to static HTML.
 
 ## 9. Error handling
 
 - Missing entity id → wiki 404 page.
-- Failed coord join (quest giver has no spawn) → page renders **without** a map (or "location
-  unknown"); the emitter logs the broken reference. A bad cross-ref never blocks the page.
+- Unresolved objective POI → objective renders as text without a map pin; emitter logs it
+  and counts it in the coverage report. A bad cross-ref never blocks a page.
 - Missing localization → fall back to key/base language (existing marker-locale behavior).
 
 ## 10. Testing
 
-- **`tools/`:** unit tests for the join logic with fixtures (quest→npc→spawn, including the
-  no-spawn failure path) and the emitted JSON shape.
+- **`tools/`:** unit tests per objective resolver with fixtures (AskNpc/KillNpc → spawn,
+  EnterSubZone → region, unresolvable → logged + omitted); emitted JSON shape; chain
+  reverse-index; reward join.
 - **Frontend (Playwright, already configured):**
-  - Entity page renders from JSON.
-  - Embedded map shows exactly the entity's POIs and no default markers.
+  - Quest page renders steps, rewards, and chain nav from JSON.
+  - Embedded map shows exactly the entity's POIs (and region highlight) — no default markers.
   - Marker → wiki link navigates to the correct page.
   - Wiki POI → map link focuses the correct marker.
 
 ## 11. Phasing
 
-1. **Foundation + flagship:** extract `<EmbeddedMap>`; wiki route scaffold; **Quest pages**;
+1. **Foundation + flagship:** extract `<EmbeddedMap>`; wiki scaffold; **quest walkthrough
+   pages** (steps + POIs via the NPC/EnvObj/SubZone resolvers + rewards + chain nav);
    `entityType`/`entityId` marker field; both link directions; sitemap + runtime meta.
-2. **NPCs/Monsters:** NPC/monster wiki pages; named-NPC/boss markers on the main map.
-3. **Items:** item pages with source links (gather nodes / loot).
-4. **SEO upgrade:** post-build prerender snapshots.
+   Reward items render as plain names (links activate in phase 3).
+2. **NPCs/Monsters:** NPC/monster pages (spawn maps, quest backlinks); named-NPC/boss
+   markers on the main map.
+3. **Items:** item pages (quest-reward backlinks, gather/loot sources); reward links go live.
+4. **SEO upgrade:** post-build prerender snapshots. Best-effort resolvers for
+   `ClearMapEvent`/`EnterVolumePC` if coverage report shows they matter.
 
-Each phase is independently shippable. Phase 1 delivers the full "quest → embedded map → POIs"
-+ "marker → wiki" loop that motivates the feature.
+Each phase is independently shippable. Phase 1 alone delivers a walkthrough wiki with
+per-step maps — the full loop that motivates the feature.
 
 ## 12. Open risks / assumptions
 
-- **Join completeness:** unknown what fraction of quests resolve to a spawnable giver NPC.
-  Emitter must report coverage stats so we know how many quest pages get a map.
-- **Marker↔entity mapping:** current markers are synthetic; wiring `entityType`/`entityId`
-  requires deciding which existing marker subtypes map to which entity types (Phase 1 scopes
-  this to quest-relevant markers; broaden later).
-- **Locale volume:** thousands of entities × N languages may be large; consider sharding
-  locale files per type/map as markers already do.
+- **Resolver coverage:** `KillNpc`+`AskNpc`+`UseEnvObj` cover ~80% of objectives on paper,
+  but the NPC-name → SpawnInfo join rate is unverified. The emitter's coverage report is
+  the phase-1 exit criterion for knowing where the gaps are.
+- **`ClearMapEvent` (524 objectives)** is the largest unresolved type; whether map events
+  carry usable positions in `MapData.json` needs investigation (deferred to phase 4 unless
+  phase 1 shows quest pages feel empty without it).
+- **Marker↔entity mapping:** existing markers are synthetic; phase 1 scopes
+  `entityType`/`entityId` to quest-relevant and boss markers, broadening later.
+- **Locale volume:** modest (1,429 quests), but keep per-type locale files so growth stays
+  bounded (mirrors per-map marker locales).
