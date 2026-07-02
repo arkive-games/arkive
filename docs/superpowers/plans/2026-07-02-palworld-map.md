@@ -1329,22 +1329,34 @@ export interface TypesLocale {
 }
 export type MapsLocale = Record<string, { name: string; shortName?: string }>
 
+// Contract file shapes (see data-contract schemas): maps.json = {maps:[...]},
+// markers/<Map>.json = {markers:[...]}, types.json nests subtypes under categories.
+// The nested taxonomy is flattened here so the UI keeps a flat subtype list.
+interface TypesFile {
+  categories: { id: string; subtypes: { id: string; icon?: string; color?: string }[] }[]
+}
+
 export async function loadStatic(lng: string) {
-  const [maps, types, mapsL10n, typesL10n] = await Promise.all([
-    j<MapMeta[]>(`${DATA_BASE}/maps.json`),
-    j<Taxonomy>(`${DATA_BASE}/types.json`),
+  const [mapsFile, typesFile, mapsL10n, typesL10n] = await Promise.all([
+    j<{ maps: MapMeta[] }>(`${DATA_BASE}/maps.json`),
+    j<TypesFile>(`${DATA_BASE}/types.json`),
     j<MapsLocale>(`${DATA_BASE}/locales/${lng}/maps.json`),
     j<TypesLocale>(`${DATA_BASE}/locales/${lng}/types.json`),
   ])
-  return { maps, types, mapsL10n, typesL10n }
+  const types: Taxonomy = {
+    categories: typesFile.categories.map((c) => ({ id: c.id })),
+    subtypes: typesFile.categories.flatMap((c) =>
+      c.subtypes.map((s) => ({ ...s, category: c.id }))),
+  }
+  return { maps: mapsFile.maps, types, mapsL10n, typesL10n }
 }
 
 export async function loadMarkers(mapId: string, lng: string) {
-  const [markers, l10n] = await Promise.all([
-    j<MarkerRow[]>(`${DATA_BASE}/markers/${mapId}.json`),
+  const [markersFile, l10n] = await Promise.all([
+    j<{ markers: MarkerRow[] }>(`${DATA_BASE}/markers/${mapId}.json`),
     j<MarkerLocale>(`${DATA_BASE}/locales/${lng}/markers/${mapId}.json`),
   ])
-  return { markers, l10n }
+  return { markers: markersFile.markers, l10n }
 }
 ```
 
