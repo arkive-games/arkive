@@ -26,11 +26,11 @@ describe.skipIf(!hasRaw)('extract (integration)', () => {
     expect(out.bosses.every((b) => /^BOSS_/i.test(b.characterId))).toBe(true);
     expect(out.palSpawns.length).toBeGreaterThan(5000);
     expect(out.palSpawns.every((s) => s.pals.length >= 1)).toBe(true);
-    expect(out.names.Kitsunebi ?? out.names[Object.keys(out.names)[0]]).toBeTruthy();
+    expect(out.names.Kitsunebi).toBeTruthy();
     expect(out.bounds.MainWorld.min.X).toBe(-1099400);
     expect(out.bounds.WorldTree.max.Y).toBe(-476400);
     // Texture/PalIcon/Normal has 827 files = 413 .png + 414 .json sidecars;
     // only .png stems are collected.
-    expect(out.palIcons.size ?? Object.keys(out.palIcons).length).toBeGreaterThan(400);
+    expect(out.palIcons.size).toBeGreaterThan(400);
   }, 120_000);
 });
