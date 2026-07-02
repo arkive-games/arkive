@@ -126,8 +126,11 @@ sections on NPC/item pages without runtime scans.
 
 ### 5.3 Other outputs
 
+- `data/wiki/taxonomy.json` — the full TOC tree (types → groups → sections) with slugs,
+  L10N label keys, counts, order (see §6 Taxonomy).
 - `data/wiki/index/<type>.json` — hub list + compact search **documents**
-  (`{id, type, name, level, mapId}`; localized names via the locale files). The frontend
+  (`{id, type, name, level, mapId, group, section}`; localized names via the locale
+  files). `group`/`section` drive the group list pages and chapter sections. The frontend
   builds the MiniSearch index at runtime (lazily, on first search) — NOT a serialized
   MiniSearch index: that would be larger than the documents, version-locked to the
   frontend's minisearch package, and would require a Node step in the Python pipeline.
@@ -140,11 +143,34 @@ sections on NPC/item pages without runtime scans.
 
 ## 6. Frontend
 
-### Routes (TanStack file-based, code-split)
-- `/wiki` — landing / overview.
-- `/wiki/$type` — searchable list (uses `minisearch`, already a dependency).
-- `/wiki/$type/$id` — entity page; route loader fetches the entity JSON. Numeric id is
-  canonical (readable slugs are YAGNI for v1; names live in `<title>`/OG meta).
+### Taxonomy (table of contents, huijiwiki-category-style)
+
+Every type has a **group tree** derived from real classification fields, with a
+hand-authored enum→slug/label mapping in `tools` config (same pattern as `types.yaml`):
+
+- **Quests:** group = `Quest.Type` (`Hero`→`main` 239, `District`→`side` 179,
+  `DutyScroll`+`DutyMission`→`duty` 783, `Exploration`→`exploration` 204,
+  `Ascension`→`ascension` 10, `GatherCraftMastery`→`mastery` 12, `Daevagauge` 2);
+  sections within a group = **chapter/episode** from `Quest.Part` (29 values, e.g.
+  `hero_poeta_00`…`hero_Eltnen_02` Elyos, `hero_ishalgen_00`…`hero_Morheim_02` Asmodian).
+  `Race` (Light/Dark/All) is a **filter toggle**, not a tree level. Future game
+  versions/episodes extend the chapter axis (new `Part` values) without redesign.
+- **NPCs:** groups like `boss`/`named`/`normal` (from `bNamed`, `NpcType`), sections by map/zone.
+- **Items:** groups from `Item.json` categories (phase 3).
+
+The emitter writes `data/wiki/taxonomy.json` — the full tree (types → groups → sections)
+with slugs, L10N label keys, counts, and order. All hub/TOC pages render from this one file.
+
+### Routes (TanStack file-based, code-split — one convention for all types)
+- `/wiki` — site TOC: every type's group tree with counts (rendered from `taxonomy.json`).
+- `/wiki/$type` — type hub: category tree for that type (groups, chapter sections, counts)
+  + search (uses `minisearch`, already a dependency).
+- `/wiki/$type/$slug` — **one route file, two pages:** numeric slug → entity page (fetches
+  the entity JSON); non-numeric slug → **group list page** (e.g. `/wiki/quest/main`):
+  chapter-sectioned tables (name, level, zone, rewards summary) with a sticky TOC sidebar,
+  chapters as `#anchors`, faction filter toggle. List pages filter the per-type index
+  client-side (fine at 1,429 quests). Numeric id is canonical for entities (readable slugs
+  are YAGNI for v1; names live in `<title>`/OG meta). Unknown slug → wiki 404.
 
 ### Templates
 - **`QuestPage` = walkthrough layout:** header (name, type, race, levels, repeat), acquire
@@ -198,10 +224,12 @@ sections on NPC/item pages without runtime scans.
 
 ## 11. Phasing
 
-1. **Foundation + flagship:** extract `<EmbeddedMap>`; wiki scaffold; **quest walkthrough
-   pages** (steps + POIs via the NPC/EnvObj/SubZone resolvers + rewards + chain nav);
-   `entityType`/`entityId` marker field; both link directions; sitemap + runtime meta.
-   Reward items render as plain names (links activate in phase 3).
+1. **Foundation + flagship:** extract `<EmbeddedMap>`; wiki scaffold; **taxonomy + TOC**
+   (`taxonomy.json`, `/wiki` site TOC, quest hub, group list pages with chapter sections);
+   **quest walkthrough pages** (steps + POIs via the NPC/EnvObj/SubZone resolvers +
+   rewards + chain nav); `entityType`/`entityId` marker field; both link directions;
+   sitemap (entity + group pages) + runtime meta. Reward items render as plain names
+   (links activate in phase 3).
 2. **NPCs/Monsters:** NPC/monster pages (spawn maps, quest backlinks); named-NPC/boss
    markers on the main map.
 3. **Items:** item pages (quest-reward backlinks, gather/loot sources); reward links go live.
