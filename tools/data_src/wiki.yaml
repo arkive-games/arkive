@@ -1,0 +1,22 @@
+# Wiki taxonomy: game enum -> URL slug + display labels. Order = display order.
+quest:
+  labels: { en: "Quests", zhCN: "任务" }
+  groups:
+    - slug: main
+      types: [Hero]
+      labels: { en: "Main quests", zhCN: "主线任务" }
+    - slug: side
+      types: [District]
+      labels: { en: "Side quests", zhCN: "支线任务" }
+    - slug: duty
+      types: [DutyMission, DutyScroll]
+      labels: { en: "Duty quests", zhCN: "使命任务" }
+    - slug: exploration
+      types: [Exploration]
+      labels: { en: "Exploration", zhCN: "探索任务" }
+    - slug: ascension
+      types: [Ascension]
+      labels: { en: "Ascension", zhCN: "飞升任务" }
+    - slug: mastery
+      types: [GatherCraftMastery, Daevagauge]
+      labels: { en: "Mastery & misc", zhCN: "专精与其他" }
