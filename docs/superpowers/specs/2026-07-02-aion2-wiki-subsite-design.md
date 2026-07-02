@@ -187,9 +187,12 @@ with slugs, L10N label keys, counts, and order. All hub/TOC pages render from th
 - Props: `mapId`, `markers`, `highlightRegions?` (for `EnterSubZone` objectives —
   `GameMapBorders` already renders region polygons), `interactive?` (default read-only),
   `initialView?` (auto-fit to supplied POIs), `onMarkerClick?`.
-- Presentational: takes markers as props, **no context coupling**. The existing full map
-  route becomes a thin wrapper feeding it from the current contexts
-  (`GameMapContext`, `MarkersContext`, `GameDataContext`).
+- Presentational: takes markers as props, **no context coupling**.
+- *Phase-1 refinement:* `EmbeddedMap` is a thin parallel composition of the already-shared
+  modules (`GameMapTiles`, `lib/coords`, `markerIcons`) rather than a refactor that makes
+  `GameMapView` wrap it — the anti-drift goal holds because tiles/projection/icons are
+  single shared modules, and `GameMapView`'s perf machinery (LOD, culling, chunked
+  mounting) is main-map-specific and would gain nothing from the indirection.
 
 ## 7. Integration (both directions)
 
