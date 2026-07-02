@@ -1,0 +1,64 @@
+languages: [en, zh-CN, zh-TW]
+maps:
+  - id: MainWorld
+    names: { en: Palpagos Islands, zh-CN: 帕鲁帕格斯群岛, zh-TW: 帕魯帕格斯群島 }
+    shortNames: { en: Main, zh-CN: 主大陆, zh-TW: 主大陸 }
+  - id: WorldTree
+    names: { en: Sakurajima & World Tree, zh-CN: 樱花岛与世界树, zh-TW: 櫻花島與世界樹 }
+    shortNames: { en: Sakurajima, zh-CN: 樱花岛, zh-TW: 櫻花島 }
+categories:
+  - id: location
+    names: { en: Locations, zh-CN: 地点, zh-TW: 地點 }
+  - id: boss
+    names: { en: Bosses, zh-CN: 首领, zh-TW: 首領 }
+  - id: collectible
+    names: { en: Collectibles, zh-CN: 收集品, zh-TW: 收集品 }
+  - id: resource
+    names: { en: Resources, zh-CN: 资源, zh-TW: 資源 }
+  - id: pal
+    names: { en: Pals, zh-CN: 帕鲁, zh-TW: 帕魯 }
+subtypes:
+  - id: fastTravel
+    category: location
+    icon: T_icon_compass_FTtower
+    names: { en: Fast Travel Statue, zh-CN: 传送雕像, zh-TW: 傳送雕像 }
+  - id: eagleStatue
+    category: location
+    icon: T_icon_compass_FTUnlockMap
+    names: { en: Eagle Statue, zh-CN: 巨鹰雕像, zh-TW: 巨鷹雕像 }
+  - id: dungeon
+    category: location
+    icon: T_icon_compass_dungeon
+    names: { en: Dungeon, zh-CN: 地下城, zh-TW: 地下城 }
+  - id: fieldBoss
+    category: boss
+    icon: T_icon_compass_boss
+    names: { en: Field Boss, zh-CN: 野外首领, zh-TW: 野外首領 }
+  - id: treasureMap
+    category: collectible
+    icon: T_icon_compass_Search_Treasure
+    names: { en: Treasure Map Point, zh-CN: 藏宝图地点, zh-TW: 藏寶圖地點 }
+  - id: note
+    category: collectible
+    icon: T_icon_compass_Search_Junk
+    names: { en: Note, zh-CN: 笔记, zh-TW: 筆記 }
+  - id: copper
+    category: resource
+    color: "#B87333"
+    names: { en: Copper Ore, zh-CN: 铜矿, zh-TW: 銅礦 }
+  - id: quartz
+    category: resource
+    color: "#DCD9E8"
+    names: { en: Quartz, zh-CN: 石英, zh-TW: 石英 }
+  - id: coal
+    category: resource
+    color: "#4A5560"
+    names: { en: Coal, zh-CN: 煤矿, zh-TW: 煤礦 }
+  - id: sulfur
+    category: resource
+    color: "#D9C24A"
+    names: { en: Sulfur, zh-CN: 硫磺, zh-TW: 硫磺 }
+  - id: palSpawn
+    category: pal
+    clusterRadius: 200
+    names: { en: Pal Spawn, zh-CN: 帕鲁出没点, zh-TW: 帕魯出沒點 }
