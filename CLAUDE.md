@@ -46,8 +46,14 @@ landmarks/overlay. Implementation: `tools/aion2/tools/maps/` (`WorldMapTransform
 - **New features:** open a git worktree for the work (isolate from the current workspace).
 - **Merging back:** integrate with rebase (not merge commits).
 - **Live testing:** when work needs live testing, merge it back first (with rebase), then test.
-- **Git on Windows:** use PowerShell to run git operations (pull, push, etc.). All repo
-  origins are SSH (`git@github.com:...`).
+- **Git on Windows:** bash or PowerShell both work. All repo origins are SSH
+  (`git@github.com:...`); SSH works via `HOME` set in `~/.claude/settings.json` env plus
+  `core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe` in the global gitconfig.
+- **Dev server for verification:** a Vite dev server is often already running (default
+  `http://localhost:5173`). Before asking the user to set one up, try connecting to it
+  first (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:5173`); also check
+  nearby ports (5174+) since Vite auto-increments when 5173 is taken. Only ask the user
+  to start/set up the server if nothing responds.
 - **Implementation via Codex:** when implementing code changes, delegate to Codex through
   its MCP server if possible (`mcp__codex__codex` / `mcp__codex__codex-reply`); Claude
   plans, reviews, and verifies. MCP server config (`.mcp.json` or Claude Code settings):
