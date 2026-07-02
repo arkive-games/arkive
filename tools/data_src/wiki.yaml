@@ -144,6 +144,36 @@ sections:
   vehiclesoulcrystal: { en: "Vehicle Soul Crystal", zhCN: "坐骑魂晶" }
   craftresource: { en: "Craft resources", zhCN: "制作材料" }
   gatherresource: { en: "Gather resources", zhCN: "采集材料" }
+  hero_ishalgen_00: { en: "Ishalgen — Chapter 00", zhCN: "伊斯夏尔肯 第00章" }
+  hero_ishalgen_01: { en: "Ishalgen — Chapter 01", zhCN: "伊斯夏尔肯 第01章" }
+  hero_poeta_00: { en: "Poeta — Chapter 00", zhCN: "波伊塔 第00章" }
+  hero_poeta_01: { en: "Poeta — Chapter 01", zhCN: "波伊塔 第01章" }
+  hero_altgard_02: { en: "Altgard — Chapter 02", zhCN: "亚尔特盖德 第02章" }
+  hero_altgard_03: { en: "Altgard — Chapter 03", zhCN: "亚尔特盖德 第03章" }
+  hero_altgard_04: { en: "Altgard — Chapter 04", zhCN: "亚尔特盖德 第04章" }
+  hero_altgard_05: { en: "Altgard — Chapter 05", zhCN: "亚尔特盖德 第05章" }
+  hero_altgard_06: { en: "Altgard — Chapter 06", zhCN: "亚尔特盖德 第06章" }
+  hero_verteron_02: { en: "Verteron — Chapter 02", zhCN: "斐尔特朗 第02章" }
+  hero_verteron_03: { en: "Verteron — Chapter 03", zhCN: "斐尔特朗 第03章" }
+  hero_verteron_04: { en: "Verteron — Chapter 04", zhCN: "斐尔特朗 第04章" }
+  hero_verteron_05: { en: "Verteron — Chapter 05", zhCN: "斐尔特朗 第05章" }
+  hero_verteron_06: { en: "Verteron — Chapter 06", zhCN: "斐尔特朗 第06章" }
+  hero_Eltnen_01: { en: "Eltnen — Chapter 01", zhCN: "耶尔特奈 第01章" }
+  hero_Eltnen_02: { en: "Eltnen — Chapter 02", zhCN: "耶尔特奈 第02章" }
+  hero_Morheim_01: { en: "Morheim — Chapter 01", zhCN: "莫尔海姆 第01章" }
+  hero_Morheim_02: { en: "Morheim — Chapter 02", zhCN: "莫尔海姆 第02章" }
+  ascension_01to02_light: { en: "Ascension 1→2 (Elyos)", zhCN: "飞升 1→2（天族）" }
+  ascension_01to02_dark: { en: "Ascension 1→2 (Asmodian)", zhCN: "飞升 1→2（魔族）" }
+  ascension_02to03_light: { en: "Ascension 2→3 (Elyos)", zhCN: "飞升 2→3（天族）" }
+  ascension_02to03_dark: { en: "Ascension 2→3 (Asmodian)", zhCN: "飞升 2→3（魔族）" }
+  ascension_03to04_light: { en: "Ascension 3→4 (Elyos)", zhCN: "飞升 3→4（天族）" }
+  ascension_03to04_dark: { en: "Ascension 3→4 (Asmodian)", zhCN: "飞升 3→4（魔族）" }
+  ascension_04to05_light: { en: "Ascension 4→5 (Elyos)", zhCN: "飞升 4→5（天族）" }
+  ascension_04to05_dark: { en: "Ascension 4→5 (Asmodian)", zhCN: "飞升 4→5（魔族）" }
+  ascension_05to06_light: { en: "Ascension 5→6 (Elyos)", zhCN: "飞升 5→6（天族）" }
+  ascension_05to06_dark: { en: "Ascension 5→6 (Asmodian)", zhCN: "飞升 5→6（魔族）" }
+  craftmastery: { en: "Crafting Mastery", zhCN: "制作专精" }
+  gathermastery: { en: "Gathering Mastery", zhCN: "采集专精" }
   # generic
   currency: { en: "Currency", zhCN: "货币" }
   unknown: { en: "Unknown", zhCN: "未知" }
