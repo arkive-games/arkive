@@ -565,6 +565,8 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         # types.yaml subtype icon, so no per-marker icon).
         if w.get("icon"):
             marker["icon"] = w["icon"]
+        if w.get("entity"):
+            marker["entity"] = w["entity"]
         markers.append(marker)
         if subtype == "hiddenCube":
             # Title = subtype label ("隐藏背包"); the cube has no region, so the

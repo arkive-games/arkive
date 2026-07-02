@@ -700,7 +700,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
     #      labelled by that subzone's DisplayName (see _occupation_subzones_by_map).
     if occ_subzones:
         sz_by_name = {sz["Name"]: sz for sz in subzones}
-        for sz_name in occ_subzones:
+        for sz_name, quest_id in occ_subzones.items():
             sz = sz_by_name.get(sz_name)
             if sz is None or not sz.get("Location") or not sz.get("px"):
                 print(f"  [occupation] {name}: subzone {sz_name!r} missing / no geometry")
@@ -713,6 +713,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
                 "name_zhCN": sz.get("name_zhCN", ""),
                 "Location": sz["Location"],
                 "px": sz["px"],
+                "entity": {"type": "quest", "id": quest_id},
             })
 
     # ---- 5. creature/pet markers: tameable-creature spawns, clustered per pet.
