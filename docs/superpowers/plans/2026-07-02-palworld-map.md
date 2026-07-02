@@ -1016,10 +1016,11 @@ const pad2 = (n) => String(n).padStart(2, '0');
 
 function collectIconNames(dataOut) {
   const icons = new Set();
+  // Contract shapes: types.json nests subtypes under categories; markers files wrap in {markers}.
   const types = JSON.parse(fs.readFileSync(path.join(dataOut, 'types.json'), 'utf8'));
-  for (const s of types.subtypes) if (s.icon) icons.add(s.icon);
+  for (const c of types.categories) for (const s of c.subtypes) if (s.icon) icons.add(s.icon);
   for (const f of fs.readdirSync(path.join(dataOut, 'markers'))) {
-    const markers = JSON.parse(fs.readFileSync(path.join(dataOut, 'markers', f), 'utf8'));
+    const { markers } = JSON.parse(fs.readFileSync(path.join(dataOut, 'markers', f), 'utf8'));
     for (const m of markers) if (m.icon) icons.add(m.icon);
   }
   return icons;
