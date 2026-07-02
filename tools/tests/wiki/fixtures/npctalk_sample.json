@@ -1,0 +1,86 @@
+[
+ {
+  "ID": {
+   "Value": 1
+  },
+  "Name": "NPCTalk_9120001_01_QuestAccept",
+  "Order": 1,
+  "Type": "ENpcTalkType::FullScreen",
+  "ChatTitle": {
+   "Key": "NpcTalk_24B78C8019AA4427A3FF8B6A0F182C23_chat_title",
+   "StringKey": "None"
+  },
+  "ChatDescription": {
+   "Key": "NpcTalk_24B78C8019AA4427A3FF8B6A0F182C23_cv_text",
+   "StringKey": "None"
+  },
+  "PlayTime": 10000,
+  "bAbleToSkip": true,
+  "SpeakerType": "ENpcTalkSpeakerType::None",
+  "LanguageType": "ENpcLanguageType::None",
+  "SpeakerValue": "None",
+  "Camera": "3rd_Right",
+  "CameraTarget": "None",
+  "Portrait": "None",
+  "Act": "AD_Beg_L_01",
+  "FinishTalk": "None",
+  "FinishAct": "None",
+  "CvRes": "None"
+ },
+ {
+  "ID": {
+   "Value": 2
+  },
+  "Name": "NPCTalk_9120001_01_QuestAccept",
+  "Order": 2,
+  "Type": "ENpcTalkType::FullScreen",
+  "ChatTitle": {
+   "Key": "NpcTalk_321E373B02B8486FA6A7B59C0C3D9857_chat_title",
+   "StringKey": "None"
+  },
+  "ChatDescription": {
+   "Key": "NpcTalk_321E373B02B8486FA6A7B59C0C3D9857_cv_text",
+   "StringKey": "None"
+  },
+  "PlayTime": 10000,
+  "bAbleToSkip": true,
+  "SpeakerType": "ENpcTalkSpeakerType::None",
+  "LanguageType": "ENpcLanguageType::None",
+  "SpeakerValue": "None",
+  "Camera": "3rd_Right",
+  "CameraTarget": "None",
+  "Portrait": "None",
+  "Act": "AD_Deny_L_01",
+  "FinishTalk": "None",
+  "FinishAct": "None",
+  "CvRes": "None"
+ },
+ {
+  "ID": {
+   "Value": 3
+  },
+  "Name": "NPCTalk_9120001_01_Ask1",
+  "Order": 1,
+  "Type": "ENpcTalkType::FullScreen",
+  "ChatTitle": {
+   "Key": "NpcTalk_A88004E6CF294B38B39ABD3993C66F3B_chat_title",
+   "StringKey": "None"
+  },
+  "ChatDescription": {
+   "Key": "NpcTalk_A88004E6CF294B38B39ABD3993C66F3B_cv_text",
+   "StringKey": "None"
+  },
+  "PlayTime": 10000,
+  "bAbleToSkip": true,
+  "SpeakerType": "ENpcTalkSpeakerType::None",
+  "LanguageType": "ENpcLanguageType::None",
+  "SpeakerValue": "None",
+  "Camera": "3rd_Right",
+  "CameraTarget": "None",
+  "Portrait": "None",
+  "Act": "AD_Fear_H_01",
+  "FinishTalk": "None",
+  "FinishAct": "None",
+  "CvRes": "None"
+ }
+]

@@ -65,6 +65,48 @@ def main() -> None:
         for s in spawns[:40]
     ]
     _dump("spawninfo_sample.json", trimmed)
+
+    # --- Phase 2/3 fixtures ---
+    items = _table("Item.json")
+    _dump("item_sample.json", items[:6])
+
+    loot = _table("NpcLoot.json")
+    _dump("npcloot_sample.json", loot[:3])
+
+    routes = _table("ItemGetRoute.json")
+    def compact_routes(key: str, limit: int) -> list[dict]:
+        return sorted(
+            (r for r in routes if r.get(key)),
+            key=lambda r: len(json.dumps(r, ensure_ascii=False)),
+        )[:limit]
+
+    sample_routes = compact_routes("MonsterGetRoutes", 2) + \
+        compact_routes("GatherGetRoutes", 1) + \
+        compact_routes("NPCShopInfo", 1) + \
+        compact_routes("QuestGetRoutes", 1)
+    _dump("itemgetroute_sample.json", sample_routes)
+
+    talks = _table("NpcTalk.json")
+    _dump("npctalk_sample.json", [t for t in talks if t.get("SpeakerValue")][:3])
+
+    _dump("fieldevent_sample.json", _table("FieldEvent.json")[:3])
+
+    envs = _table("EnvObjData.json")
+    _dump("envobj_sample.json", envs[:3])
+
+    d = md["Properties"]["Data"]
+    _dump("mapdata_points_sample.json", {
+        "SubzoneVolumeInfoMap": (d.get("SubzoneVolumeInfoMap") or [])[:2],
+        "TriggerActorDataMap": (d.get("TriggerActorDataMap") or [])[:2],
+        "QuestMovePointDataMap": (d.get("QuestMovePointDataMap") or [])[:2],
+    })
+    # SpawnInfo entries that carry EnvObjIdList (for env-obj index tests)
+    env_spawns = [s for s in spawns if s.get("EnvObjIdList")][:5]
+    _dump("spawninfo_env_sample.json", [
+        {"Name": s.get("Name"), "EnvObjIdList": s.get("EnvObjIdList"),
+         "Positions": (s.get("Positions") or [])[:1]}
+        for s in env_spawns
+    ])
     print("fixtures written to", FIXTURES)
 
 
