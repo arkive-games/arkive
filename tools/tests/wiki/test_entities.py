@@ -40,3 +40,33 @@ def test_build_npc_quest_refs():
     refs = entities.build_npc_quest_refs(quests, steps, talks)
     assert refs["NPC_G"] == [{"id": 1, "role": "giver"}]
     assert refs["NPC_A"] == [{"id": 1, "role": "target"}]
+
+
+ITEM = {"id": 5, "name": "IT_A", "descKey": None, "descLongKey": None,
+        "iconRes": "Icon_WP_GS_0022_T05", "grade": "legend", "tier": 5,
+        "itemLevel": 30, "itemType": "Equip", "category": "Greatsword",
+        "race": "all", "sellPrice": 10, "maxStack": 1,
+        "stats": [{"key": "Attack", "value": 12}]}
+
+
+def test_build_item_entity_shape():
+    ent = entities.build_item_entity(
+        ITEM,
+        name={"en": "Sword", "zhCN": "Sword", "zhTW": "Sword"},
+        desc={"en": "d", "zhCN": "d", "zhTW": "d"},
+        icon="UI/Resource/Texture/Item/Weapon/Icon_WP_GS_0022_T05.webp",
+        routes={"monsters": [7], "gather": False, "craft": True, "shop": False, "quests": [3]},
+        reward_from=[100, 101],
+        dropped_by=[{"id": 7, "name": {"en": "Boss A", "zhCN": "Boss A", "zhTW": "Boss A"}, "level": 12}],
+    )
+    assert ent["type"] == "item" and ent["grade"] == "legend"
+    assert ent["icon"].endswith(".webp")
+    assert ent["sources"] == {"gather": False, "craft": True, "shop": False, "quests": [3]}
+    assert ent["rewardFrom"] == [100, 101]
+    assert ent["droppedBy"][0]["id"] == 7
+
+
+def test_build_item_entity_no_routes():
+    ent = entities.build_item_entity(ITEM, name={}, desc=None, icon=None,
+                                     routes=None, reward_from=[], dropped_by=[])
+    assert ent["sources"] == {"gather": False, "craft": False, "shop": False, "quests": []}

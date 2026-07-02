@@ -57,3 +57,32 @@ def build_npc_entity(npc, name, spawns_by_map, quest_refs, drop_items) -> dict:
         "quests": quest_refs[:200],
         "drops": drop_items[:MAX_DROPS],
     }
+
+
+def build_item_entity(item, name, desc, icon, routes, reward_from, dropped_by) -> dict:
+    routes = routes or {"monsters": [], "gather": False, "craft": False,
+                        "shop": False, "quests": []}
+    return {
+        "id": item["id"],
+        "type": "item",
+        "name": name,
+        "desc": desc,
+        "grade": item["grade"],
+        "tier": item["tier"],
+        "itemLevel": item["itemLevel"],
+        "itemType": item["itemType"],
+        "category": item["category"],
+        "race": item["race"],
+        "icon": icon,
+        "stats": item["stats"],
+        "sellPrice": item["sellPrice"],
+        "maxStack": item["maxStack"],
+        "sources": {
+            "gather": routes["gather"],
+            "craft": routes["craft"],
+            "shop": routes["shop"],
+            "quests": routes["quests"][:MAX_REWARD_FROM],
+        },
+        "rewardFrom": reward_from[:MAX_REWARD_FROM],
+        "droppedBy": dropped_by[:MAX_DROPPED_BY],
+    }

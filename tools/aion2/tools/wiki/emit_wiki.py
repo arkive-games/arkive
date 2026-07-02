@@ -119,14 +119,19 @@ def build_quest_entity(
     prev_index,
     item_names,
     npc_names=None,
+    item_ids=None,
+    npc_name_to_id=None,
+    point_index=None,
 ) -> dict:
     npc_names = npc_names or {}
+    item_ids = item_ids or {}
+    npc_name_to_id = npc_name_to_id or {}
     ent_steps = []
     for st in steps:
         objectives = []
         for index, g in enumerate(st["goals"], start=1):
             map_name = mapid_to_name.get(g["mapId"]) if g["mapId"] else None
-            r = resolvers.resolve_goal(g, map_name, spawn_index)
+            r = resolvers.resolve_goal(g, map_name, spawn_index, point_index=point_index)
             label = _quest_ltext(
                 l10n, q["textKey"], f"step{st['order']}_obj_{index}"
             ) or _goal_label(g, npc_names, l10n)
@@ -139,6 +144,13 @@ def build_quest_entity(
                     "mapName": map_name,
                     "pois": r["pois"],
                     "resolved": r["resolved"],
+                    "target": (
+                        {"type": "npc", "id": npc_name_to_id[g["values"][0]]}
+                        if g["type"] in resolvers.NPC_GOALS and g["values"]
+                        and g["values"][0] in npc_name_to_id
+                        else None
+                    ),
+                    "region": r["region"],
                 }
             )
         ent_steps.append({"order": st["order"], "objectives": objectives})
@@ -146,6 +158,7 @@ def build_quest_entity(
     rw = rewards.get(str(q["id"]).lstrip("0"), {"exp": 0, "items": [], "select": []})
     rw_items = [
         {
+            "id": item_ids.get(i["item"]),
             "name": item_names.get(
                 i["item"], {"en": i["item"], "zhCN": i["item"], "zhTW": i["item"]}
             ),
