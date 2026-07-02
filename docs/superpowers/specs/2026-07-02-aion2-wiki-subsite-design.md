@@ -126,8 +126,12 @@ sections on NPC/item pages without runtime scans.
 
 ### 5.3 Other outputs
 
-- `data/wiki/index/<type>.json` — hub list + `minisearch`-ready index (1,429 quests is
-  small; a single index file per type is fine).
+- `data/wiki/index/<type>.json` — hub list + compact search **documents**
+  (`{id, type, name, level, mapId}`; localized names via the locale files). The frontend
+  builds the MiniSearch index at runtime (lazily, on first search) — NOT a serialized
+  MiniSearch index: that would be larger than the documents, version-locked to the
+  frontend's minisearch package, and would require a Node step in the Python pipeline.
+  At this scale (1,429 quests) runtime indexing is tens of milliseconds.
 - `data/locales/<lang>/wiki/...` — localized names/text via `QuestString.json` /
   `NpcData.Desc.Key`, mirroring the marker-locale pattern.
 - **Marker emitter extension:** optional `entityType`/`entityId` on markers that correspond
