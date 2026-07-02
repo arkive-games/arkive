@@ -119,3 +119,55 @@ def test_poi_cap():
         spawn_index=idx,
     )
     assert len(r["pois"]) == resolvers.MAX_POIS
+
+
+def test_spawn_index_env_obj_ids():
+    spawns = [{"Name": "SP_1", "EnvObjIdList": [{"Value": 42}],
+               "Positions": [{"Location": {"X": 100, "Y": 200}}]}]
+    idx = resolvers.build_spawn_index(spawns, {"by_id": {}}, FakeTransform(),
+                                      env_objs={42: "Env_Herb_01"})
+    assert idx["Env_Herb_01"] == [{"x": 10.0, "y": 20.0}]
+
+
+def test_build_point_index():
+    data = {
+        "SubzoneVolumeInfoMap": [
+            {"Key": "SZ_A", "Value": {"LabelName": "SZ_A", "Location": {"X": 100, "Y": 100}}}
+        ],
+        "TriggerActorDataMap": [
+            {"Key": {"Value": 1}, "Value": {"Name": "TR_B", "Location": {"X": 200, "Y": 200}}}
+        ],
+        "QuestMovePointDataMap": [
+            {"Key": "MP_C", "Value": {"LabelName": "MP_C", "Location": {"X": 300, "Y": 300}}}
+        ],
+    }
+    idx = resolvers.build_point_index(data, FakeTransform())
+    assert idx["SZ_A"] == {"x": 10.0, "y": 10.0}
+    assert idx["TR_B"] == {"x": 20.0, "y": 20.0}
+    assert idx["MP_C"] == {"x": 30.0, "y": 30.0}
+
+
+def test_resolve_enter_volume_pc():
+    r = resolvers.resolve_goal(
+        {"type": "EnterVolumePC", "values": ["TR_B"], "movePoint": None},
+        "World_L_A", {}, point_index={"World_L_A": {"TR_B": {"x": 20.0, "y": 20.0}}})
+    assert r["resolved"] is True and r["pois"] == [{"x": 20.0, "y": 20.0}]
+
+
+def test_resolve_move_point_fallback():
+    goal = {"type": "KillNpc", "values": ["NoSuchNpc"], "movePoint": "MP_C"}
+    r = resolvers.resolve_goal(goal, "World_L_A", {},
+                               point_index={"World_L_A": {"MP_C": {"x": 30.0, "y": 30.0}}})
+    assert r["resolved"] is True and r["pois"] == [{"x": 30.0, "y": 30.0}]
+
+
+def test_resolve_enter_subzone_region():
+    goal = {"type": "EnterSubZone", "values": [2096], "movePoint": None}
+    r = resolvers.resolve_goal(goal, "World_L_A", {})
+    assert r["region"] == {"mapName": "World_L_A", "id": "2096"}
+    assert r["resolved"] is None and r["pois"] == []
+
+
+def test_resolve_goal_region_default_none():
+    r = resolvers.resolve_goal({"type": "AskNpc", "values": [], "movePoint": None}, None, {})
+    assert r["region"] is None

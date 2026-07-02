@@ -16,12 +16,11 @@ NONSPATIAL = {
     "KillPCAbyssGrade",
     "CompleteCelviceTalk",
     "ClearMapEvent",
-    "EnterVolumePC",
     "EngraveTeleportArtifact",
 }
 
 
-def build_spawn_index(spawn_info_list, npcs, transform) -> dict[str, list[dict]]:
+def build_spawn_index(spawn_info_list, npcs, transform, env_objs=None) -> dict[str, list[dict]]:
     """Index target name -> [{x,y}], by spawner Name and by NPC string name."""
     idx: dict[str, list[dict]] = {}
 
@@ -45,17 +44,61 @@ def build_spawn_index(spawn_info_list, npcs, transform) -> dict[str, list[dict]]
             npc = npcs["by_id"].get(v)
             if npc and npc.get("name") and npc["name"] != s.get("Name"):
                 add(npc["name"], pts)
+        for eid in s.get("EnvObjIdList") or []:
+            v = eid.get("Value") if isinstance(eid, dict) else eid
+            ename = (env_objs or {}).get(v)
+            if ename and ename != s.get("Name"):
+                add(ename, pts)
     return idx
 
 
-def resolve_goal(goal: dict, map_name: str | None, spawn_index: dict) -> dict:
-    """Return {resolved: True|False|None, pois: [...]}; None means no point POI."""
+def build_point_index(map_data: dict, transform) -> dict[str, dict]:
+    """Label/name -> single {x,y} point from volumes, triggers, move points."""
+    idx: dict[str, dict] = {}
+
+    def add(name, loc):
+        if name and isinstance(loc, dict) and "X" in loc and "Y" in loc:
+            x, y = transform.world_to_pixel(loc["X"], loc["Y"])
+            idx.setdefault(name, {"x": round(x, 1), "y": round(y, 1)})
+
+    for e in map_data.get("SubzoneVolumeInfoMap") or []:
+        v = e.get("Value") or e
+        add(v.get("LabelName"), v.get("Location"))
+    for e in map_data.get("TriggerActorDataMap") or []:
+        v = e.get("Value") or e
+        add(v.get("Name"), v.get("Location"))
+    for e in map_data.get("QuestMovePointDataMap") or []:
+        v = e.get("Value") or e
+        add(v.get("LabelName"), v.get("Location"))
+    return idx
+
+
+def resolve_goal(goal, map_name, spawn_index, point_index=None):
+    """Return {resolved: True|False|None, pois: [...], region: {...}|None}."""
     gtype = goal["type"]
-    if gtype in NONSPATIAL or gtype == "EnterSubZone":
-        return {"resolved": None, "pois": []}
+    per_map_points = (point_index or {}).get(map_name or "", {})
+    out = {"resolved": None, "pois": [], "region": None}
+
+    if gtype == "EnterSubZone":
+        v = goal["values"][0] if goal["values"] else None
+        if v is not None and map_name:
+            out["region"] = {"mapName": map_name, "id": str(v)}
+        return out
+
+    per_map = spawn_index.get(map_name or "", {})
+    pois: list[dict] = []
+    target = goal["values"][0] if goal["values"] else None
     if gtype in NPC_GOALS or gtype in ENV_GOALS:
-        target = goal["values"][0] if goal["values"] else None
-        per_map = spawn_index.get(map_name or "", {})
-        pois = per_map.get(target, []) if target else []
-        return {"resolved": bool(pois), "pois": pois[:MAX_POIS]}
-    return {"resolved": None, "pois": []}
+        pois = list(per_map.get(target, [])) if target else []
+    elif gtype == "EnterVolumePC":
+        if target and target in per_map_points:
+            pois = [per_map_points[target]]
+
+    if not pois and goal.get("movePoint") and goal["movePoint"] in per_map_points:
+        pois = [per_map_points[goal["movePoint"]]]
+
+    if not pois and gtype in NONSPATIAL:
+        return out
+    out["resolved"] = bool(pois)
+    out["pois"] = pois[:MAX_POIS]
+    return out

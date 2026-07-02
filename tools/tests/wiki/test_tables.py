@@ -94,12 +94,6 @@ def test_parse_npc_talks():
     assert name and speaker
 
 
-def test_parse_field_events():
-    evs = tables.parse_field_events(_load("fieldevent_sample.json"))
-    rec = next(iter(evs.values()))
-    assert set(rec) >= {"mapId", "markers"}
-
-
 def test_parse_steps_move_point():
     steps = tables.parse_steps(_load("queststep_sample.json"))
     goal = next(iter(steps.values()))[0]["goals"][0]

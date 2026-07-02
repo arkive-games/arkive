@@ -92,8 +92,6 @@ def main() -> None:
         [t for t in talks if t.get("SpeakerValue") not in (None, "", "None")][:3],
     )
 
-    _dump("fieldevent_sample.json", _table("FieldEvent.json")[:3])
-
     envs = _table("EnvObjData.json")
     _dump("envobj_sample.json", envs[:3])
 

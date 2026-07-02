@@ -202,20 +202,3 @@ def parse_npc_talks(rows: list[dict]) -> dict[str, str]:
         if name and speaker:
             out[name] = speaker
     return out
-
-
-def parse_field_events(rows: list[dict]) -> dict[str, dict]:
-    """FieldEvent Name -> {mapId, markers:[npc/env table names]}."""
-    out: dict[str, dict] = {}
-    for r in rows:
-        name = val(r.get("Name")) or val(r.get("EventName"))
-        if not name:
-            continue
-        markers = [
-            v for v in (
-                val(m) for m in
-                (r.get("MarkerNpcList") or []) + (r.get("MarkerEnvObjList") or [])
-            ) if v
-        ]
-        out[name] = {"mapId": val(r.get("MapId")), "markers": markers}
-    return out
