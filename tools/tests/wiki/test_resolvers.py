@@ -147,6 +147,12 @@ def test_build_point_index():
     assert idx["MP_C"] == {"x": 30.0, "y": 30.0}
 
 
+def test_build_npc_spawns():
+    idx = resolvers.build_npc_spawns(SPAWNS, FakeTransform())
+    assert idx[42] == [{"x": 10.0, "y": 20.0}]
+    assert idx[43] == [{"x": 30.0, "y": 40.0}, {"x": 31.0, "y": 41.0}]
+
+
 def test_resolve_enter_volume_pc():
     r = resolvers.resolve_goal(
         {"type": "EnterVolumePC", "values": ["TR_B"], "movePoint": None},

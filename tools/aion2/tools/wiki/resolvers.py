@@ -73,6 +73,25 @@ def build_point_index(map_data: dict, transform) -> dict[str, dict]:
     return idx
 
 
+def build_npc_spawns(spawn_info_list, transform) -> dict[int, list[dict]]:
+    """NPC id -> [{x,y}] on this map."""
+    out: dict[int, list[dict]] = {}
+    for s in spawn_info_list or []:
+        pts = []
+        for p in s.get("Positions") or []:
+            loc = p.get("Location") or {}
+            if "X" in loc and "Y" in loc:
+                x, y = transform.world_to_pixel(loc["X"], loc["Y"])
+                pts.append({"x": round(x, 1), "y": round(y, 1)})
+        if not pts:
+            continue
+        for nid in s.get("NpcIdList") or []:
+            v = nid.get("Value") if isinstance(nid, dict) else nid
+            if v is not None:
+                out.setdefault(int(v), []).extend(pts)
+    return out
+
+
 def resolve_goal(goal, map_name, spawn_index, point_index=None):
     """Return {resolved: True|False|None, pois: [...], region: {...}|None}."""
     gtype = goal["type"]
