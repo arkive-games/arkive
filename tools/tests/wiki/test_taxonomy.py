@@ -53,3 +53,24 @@ def test_build_tree_counts_and_sections():
 def test_section_label_humanizes_slug():
     assert taxonomy.section_label("hero_poeta_00") == "Hero Poeta 00"
     assert taxonomy.section_label("other") == "Other"
+
+
+def test_classify_npc():
+    assert taxonomy.classify_npc({"named": True, "subType": "HeroMonster", "npcType": "Monster"}) == "boss"
+    assert taxonomy.classify_npc({"named": False, "subType": "NormalMonster", "npcType": "Monster"}) == "monster"
+    assert taxonomy.classify_npc({"named": False, "subType": "NormalCitizen", "npcType": "Citizen"}) == "citizen"
+    assert taxonomy.classify_npc({"named": False, "subType": "NormalSummon", "npcType": "Summon"}) is None
+
+
+def test_build_type_node():
+    groups_cfg = [{"slug": "a", "labels": {}}, {"slug": "b", "labels": {}}]
+    records = [
+        {"group": "a", "section": "s1", "sort": 5},
+        {"group": "a", "section": "s1", "sort": 2},
+        {"group": "b", "section": "s2", "sort": 1},
+        {"group": None, "section": "x", "sort": 0},
+    ]
+    node = taxonomy.build_type_node("npc", groups_cfg, records)
+    assert node["slug"] == "npc" and node["count"] == 3
+    a = next(g for g in node["groups"] if g["slug"] == "a")
+    assert a["count"] == 2 and a["sections"] == [{"slug": "s1", "count": 2}]

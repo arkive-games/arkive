@@ -20,3 +20,66 @@ quest:
     - slug: mastery
       types: [GatherCraftMastery, Daevagauge]
       labels: { en: "Mastery & misc", zhCN: "专精与其他" }
+npc:
+  labels: { en: "NPCs & Monsters", zhCN: "NPC与怪物" }
+  groups:
+    - slug: boss
+      labels: { en: "Named & bosses", zhCN: "精英与首领" }
+    - slug: monster
+      labels: { en: "Monsters", zhCN: "怪物" }
+    - slug: citizen
+      labels: { en: "NPCs", zhCN: "NPC" }
+item:
+  labels: { en: "Items", zhCN: "物品" }
+  groups:
+    - slug: equipment
+      types: [Equip]
+      labels: { en: "Equipment", zhCN: "装备" }
+    - slug: usable
+      types: [Usable]
+      labels: { en: "Consumables & usables", zhCN: "消耗与可用品" }
+    - slug: material
+      types: [Misc]
+      labels: { en: "Materials & misc", zhCN: "材料与杂项" }
+    - slug: currency
+      types: [Currency]
+      labels: { en: "Currency", zhCN: "货币" }
+# Hand-authored section labels (slug -> per-language). Missing slugs fall back to
+# title-cased slug (en) - emitter warns so new categories get labels added here.
+sections:
+  # equip categories
+  greatsword: { en: "Greatsword", zhCN: "大剑" }
+  sword: { en: "Sword", zhCN: "单手剑" }
+  dagger: { en: "Dagger", zhCN: "短剑" }
+  mace: { en: "Mace", zhCN: "钉锤" }
+  staff: { en: "Staff", zhCN: "法杖" }
+  orb: { en: "Orb", zhCN: "宝珠" }
+  spellbook: { en: "Spellbook", zhCN: "魔导书" }
+  bow: { en: "Bow", zhCN: "弓" }
+  shield: { en: "Shield", zhCN: "盾牌" }
+  torso: { en: "Torso", zhCN: "上衣" }
+  legs: { en: "Legs", zhCN: "下装" }
+  boots: { en: "Boots", zhCN: "鞋子" }
+  gloves: { en: "Gloves", zhCN: "手套" }
+  shoulders: { en: "Shoulders", zhCN: "护肩" }
+  helmet: { en: "Helmet", zhCN: "头盔" }
+  earring: { en: "Earring", zhCN: "耳环" }
+  necklace: { en: "Necklace", zhCN: "项链" }
+  ring: { en: "Ring", zhCN: "戒指" }
+  belt: { en: "Belt", zhCN: "腰带" }
+  bracelet: { en: "Bracelet", zhCN: "手镯" }
+  # usable categories
+  skinshop: { en: "Appearance", zhCN: "外观" }
+  gettitle: { en: "Titles", zhCN: "称号" }
+  vehiclesoul: { en: "Vehicle souls", zhCN: "坐骑之魂" }
+  rewardbox: { en: "Reward boxes", zhCN: "奖励宝箱" }
+  food: { en: "Food", zhCN: "食物" }
+  potion: { en: "Potions", zhCN: "药水" }
+  questscroll: { en: "Quest scrolls", zhCN: "任务卷轴" }
+  # misc categories
+  craftresource: { en: "Craft resources", zhCN: "制作材料" }
+  gatherresource: { en: "Gather resources", zhCN: "采集材料" }
+  # generic
+  currency: { en: "Currency", zhCN: "货币" }
+  unknown: { en: "Unknown", zhCN: "未知" }
+  other: { en: "Other", zhCN: "其他" }
