@@ -87,7 +87,10 @@ def main() -> None:
     _dump("itemgetroute_sample.json", sample_routes)
 
     talks = _table("NpcTalk.json")
-    _dump("npctalk_sample.json", [t for t in talks if t.get("SpeakerValue")][:3])
+    _dump(
+        "npctalk_sample.json",
+        [t for t in talks if t.get("SpeakerValue") not in (None, "", "None")][:3],
+    )
 
     _dump("fieldevent_sample.json", _table("FieldEvent.json")[:3])
 

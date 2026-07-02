@@ -57,3 +57,50 @@ def test_parse_rewards_indexes_by_group():
     assert isinstance(g, str)
     assert isinstance(r["exp"], int)
     assert isinstance(r["items"], list)
+
+
+def test_parse_npcs_extended_fields():
+    npcs = tables.parse_npcs(_load("npcdata_sample.json"))
+    rec = next(iter(npcs["by_id"].values()))
+    for key in ("npcType", "subType", "grade", "funcType", "relationship"):
+        assert key in rec
+
+
+def test_parse_items_by_id_and_name():
+    items = tables.parse_items(_load("item_sample.json"))
+    rec = next(iter(items["by_id"].values()))
+    assert rec["id"] and rec["name"]
+    assert set(rec) >= {"descKey", "descLongKey", "iconRes", "grade", "tier",
+                        "itemLevel", "itemType", "category", "race", "stats",
+                        "sellPrice", "maxStack"}
+    assert items["by_name"][rec["name"]] is rec
+
+
+def test_parse_npc_loot():
+    loot = tables.parse_npc_loot(_load("npcloot_sample.json"))
+    npc_id, item_ids = next(iter(loot.items()))
+    assert isinstance(npc_id, int) and all(isinstance(i, int) for i in item_ids)
+
+
+def test_parse_item_routes():
+    routes = tables.parse_item_routes(_load("itemgetroute_sample.json"))
+    rec = next(iter(routes.values()))
+    assert set(rec) == {"monsters", "gather", "craft", "shop", "quests"}
+
+
+def test_parse_npc_talks():
+    talks = tables.parse_npc_talks(_load("npctalk_sample.json"))
+    name, speaker = next(iter(talks.items()))
+    assert name and speaker
+
+
+def test_parse_field_events():
+    evs = tables.parse_field_events(_load("fieldevent_sample.json"))
+    rec = next(iter(evs.values()))
+    assert set(rec) >= {"mapId", "markers"}
+
+
+def test_parse_steps_move_point():
+    steps = tables.parse_steps(_load("queststep_sample.json"))
+    goal = next(iter(steps.values()))[0]["goals"][0]
+    assert "movePoint" in goal
