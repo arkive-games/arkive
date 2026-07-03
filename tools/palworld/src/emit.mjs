@@ -24,7 +24,12 @@ const palIcon = (palIcons, id) => {
 
 export function buildDataset(parsed) {
   const src = loadTypesSrc();
-  const { bounds, names, palIcons } = parsed;
+  const { bounds, namesByLang, palIcons } = parsed;
+  const languages = src.languages;
+  const missingLanguages = languages.filter((lng) => !namesByLang?.[lng]);
+  if (missingLanguages.length) {
+    throw new Error(`Parsed pal names are missing languages: ${missingLanguages.join(', ')}`);
+  }
   const mapIds = ['MainWorld', 'WorldTree'];
   const assignOrder = [
     { mapId: 'WorldTree', ...bounds.WorldTree },
@@ -55,7 +60,7 @@ export function buildDataset(parsed) {
   };
 
   // Candidate markers per map, keyed by subtype, before id assignment.
-  // Each candidate: { subtype, category, x, y, z, icon?, sortKey, locByLng? }
+  // Each candidate: { subtype, category, x, y, z, icon?, sortKey, nameByLng?, descByLng? }
   const candidates = Object.fromEntries(mapIds.map((id) => [id, []]));
   const subtypeCat = Object.fromEntries(src.subtypes.map((s) => [s.id, s.category]));
   const push = (mapId, c) => candidates[mapId].push(c);
@@ -73,12 +78,13 @@ export function buildDataset(parsed) {
   for (const b of parsed.bosses) {
     const mapId = assignMap(b.location, assignOrder);
     if (!mapId) continue;
-    const nm = `${palName(names, b.characterId)} Lv.${b.level}`;
+    const nameByLng = Object.fromEntries(languages.map((lng) =>
+      [lng, `${palName(namesByLang[lng], b.characterId)} Lv.${b.level}`]));
     push(mapId, {
       subtype: 'fieldBoss', ...toPx(mapId, b.location),
       icon: palIcon(palIcons, b.characterId) ?? 'T_icon_compass_boss',
       sortKey: `${b.characterId}-${b.key}`,
-      name: nm,
+      nameByLng,
     });
   }
 
@@ -106,15 +112,18 @@ export function buildDataset(parsed) {
         subtype: 'palSpawn', x: c.x, y: c.y, z: c.z,
         icon: palIcon(palIcons, pals[0].id) ?? undefined,
         sortKey: `${c.x},${c.y}`,
-        name: pals.map((p) => palName(names, p.id)).join(' / '),
-        description: pals.map((p) => `${palName(names, p.id)} Lv.${p.lvMin}–${p.lvMax}`).join('\n'),
+        nameByLng: Object.fromEntries(languages.map((lng) =>
+          [lng, pals.map((p) => palName(namesByLang[lng], p.id)).join(' / ')])),
+        descByLng: Object.fromEntries(languages.map((lng) =>
+          [lng, pals.map((p) => `${palName(namesByLang[lng], p.id)} Lv.${p.lvMin}–${p.lvMax}`).join('\n')])),
       });
     }
   }
 
   // Assign stable ids: per map+subtype, sort by sortKey then coords, index from 1
   const markers = {};
-  const markerLoc = {}; // mapId -> markerId -> {name?, description?}
+  const markerLoc = Object.fromEntries(languages.map((lng) =>
+    [lng, Object.fromEntries(mapIds.map((id) => [id, {}]))])); // lng -> mapId -> markerId -> {name?, description?}
   for (const mapId of mapIds) {
     const bySubtype = new Map();
     for (const c of candidates[mapId]) {
@@ -122,7 +131,6 @@ export function buildDataset(parsed) {
       bySubtype.get(c.subtype).push(c);
     }
     markers[mapId] = [];
-    markerLoc[mapId] = {};
     for (const s of src.subtypes) {
       const list = (bySubtype.get(s.id) ?? []).sort((a, b) =>
         a.sortKey < b.sortKey ? -1 : a.sortKey > b.sortKey ? 1 : a.x - b.x || a.y - b.y);
@@ -134,20 +142,26 @@ export function buildDataset(parsed) {
           ...(c.icon ? { icon: c.icon } : {}),
           images: [], contributors: [], indexInSubtype: i + 1,
         });
-        if (c.name || c.description) {
-          markerLoc[mapId][id] = {
-            ...(c.name ? { name: c.name } : {}),
-            ...(c.description ? { description: c.description } : {}),
-          };
+        if (c.nameByLng || c.descByLng) {
+          for (const lng of languages) {
+            const name = c.nameByLng?.[lng];
+            const description = c.descByLng?.[lng];
+            if (name || description) {
+              markerLoc[lng][mapId][id] = {
+                ...(name ? { name } : {}),
+                ...(description ? { description } : {}),
+              };
+            }
+          }
         }
       });
     }
   }
 
-  // Locales — game-derived names are ja in all languages (spec decision 6);
-  // taxonomy/map labels are hand-authored per language in types.yaml.
+  // Locales — taxonomy/map labels are hand-authored per language in types.yaml;
+  // pal names come from the game's per-language L10N tables.
   const locales = {};
-  for (const lng of src.languages) {
+  for (const lng of languages) {
     locales[lng] = {
       maps: Object.fromEntries(src.maps.map((m) => [m.id, {
         name: m.names[lng], description: '', shortName: m.shortNames[lng],
@@ -156,7 +170,7 @@ export function buildDataset(parsed) {
         categories: Object.fromEntries(src.categories.map((c) => [c.id, { name: c.names[lng] }])),
         subtypes: Object.fromEntries(src.subtypes.map((s) => [s.id, { name: s.names[lng], description: '' }])),
       },
-      markers: markerLoc,           // identical across languages (ja names)
+      markers: markerLoc[lng],
       regions: Object.fromEntries(mapIds.map((id) => [id, {}])),
     };
   }
