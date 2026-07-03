@@ -1,8 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const readRows = (raw, rel) =>
-  JSON.parse(fs.readFileSync(path.join(raw, rel), 'utf8'))[0].Rows;
+const readRowsFile = (file) =>
+  JSON.parse(fs.readFileSync(file, 'utf8'))[0].Rows;
+
+const readRows = (raw, rel) => readRowsFile(path.join(raw, rel));
+
+export const L10N_LANG_TAGS = {
+  de: 'de-DE', en: 'en-US', es: 'es-ES', 'es-MX': 'es-MX', fr: 'fr-FR',
+  id: 'id-ID', it: 'it-IT', ko: 'ko-KR', pl: 'pl-PL', 'pt-BR': 'pt-BR',
+  ru: 'ru-RU', th: 'th-TH', tr: 'tr-TR', vi: 'vi-VN',
+  'zh-Hans': 'zh-CN', 'zh-Hant': 'zh-TW',
+};
 
 const POI_CLASSES = [
   { subtype: 'fastTravel', match: (t) => t === 'BP_LevelObject_TowerFastTravelPoint_C' },
@@ -15,6 +24,23 @@ const POI_CLASSES = [
   { subtype: 'coal', match: (t) => t === 'BP_PalMapObjectSpawner_RockCoal_C' },
   { subtype: 'sulfur', match: (t) => t === 'BP_PalMapObjectSpawner_Sulfur_C' },
 ];
+
+function readPalNames(tablePath) {
+  const rows = readRowsFile(tablePath);
+  const names = {};
+  for (const [key, r] of Object.entries(rows)) {
+    if (key.startsWith('PAL_NAME_')) names[key.slice('PAL_NAME_'.length)] = r.TextData.SourceString;
+  }
+  return names;
+}
+
+function readL10nPalNames(raw, folder, tag) {
+  const tablePath = path.join(raw, '..', 'L10N', folder, 'Pal/DataTable/Text/DT_PalNameText_Common.json');
+  if (!fs.existsSync(tablePath)) {
+    throw new Error(`Missing Palworld L10N name table for ${folder} (${tag}): ${tablePath}`);
+  }
+  return readPalNames(tablePath);
+}
 
 function actorLocation(actor, exportsArr) {
   const objPath = actor.Properties?.RootComponent?.ObjectPath;
@@ -72,11 +98,8 @@ export function runExtract(raw) {
     });
   }
 
-  const nameRows = readRows(raw, 'DataTable/Text/DT_PalNameText_Common.json');
-  const names = {};
-  for (const [key, r] of Object.entries(nameRows)) {
-    if (key.startsWith('PAL_NAME_')) names[key.slice('PAL_NAME_'.length)] = r.TextData.SourceString;
-  }
+  const namesByLang = Object.fromEntries(Object.entries(L10N_LANG_TAGS)
+    .map(([folder, tag]) => [tag, readL10nPalNames(raw, folder, tag)]));
 
   const palIcons = new Set(
     fs.readdirSync(path.join(raw, 'Texture/PalIcon/Normal'))
@@ -84,7 +107,7 @@ export function runExtract(raw) {
       .map((f) => f.slice(0, -4)),
   );
 
-  return { bounds, pois, bosses, palSpawns, names, palIcons };
+  return { bounds, pois, bosses, palSpawns, namesByLang, palIcons };
 }
 
 export function writeParsed(raw, outDir) {
