@@ -45,13 +45,44 @@ export function buildDataset(parsed) {
     isVisible: true,
   }));
 
+  // Per-pal subtypes (points 9/10): one subtype per distinct wild-spawn pal,
+  // ordered by Paldeck ZukanIndex; spawns cluster within a single pal id only.
+  const palSpawnCfg = src.subtypes.find((s) => s.id === 'palSpawn');
+  const radius = palSpawnCfg.clusterRadius;
+  const baseId = (id) => id.replace(/^BOSS_/i, '');
+  const zForId = (id) =>
+    parsed.palMeta?.[id] ?? parsed.palMeta?.[baseId(id)] ?? { zukanIndex: -1, zukanIndexSuffix: '' };
+  // Only catalogued pals (present in DT_PalMonsterParameter) count as pals;
+  // this drops placeholder rows ("RowName") and human NPC spawners ("Male_*").
+  const isRealPal = (id) => !!parsed.palMeta?.[id];
+  const palIdSet = new Set();
+  for (const s of parsed.palSpawns) for (const p of s.pals) if (isRealPal(p.id)) palIdSet.add(p.id);
+  const palSubtypes = [...palIdSet].map((id) => {
+    const z = zForId(id);
+    return {
+      id, category: 'pal',
+      icon: palIcon(palIcons, id) ?? undefined,
+      zukanIndex: typeof z.zukanIndex === 'number' ? z.zukanIndex : -1,
+      zukanIndexSuffix: z.zukanIndexSuffix ?? '',
+      names: Object.fromEntries(languages.map((lng) => [lng, palName(namesByLang[lng], id)])),
+    };
+  }).sort((a, b) => {
+    const aMissing = a.zukanIndex < 0, bMissing = b.zukanIndex < 0;
+    if (aMissing !== bMissing) return aMissing ? 1 : -1;
+    if (a.zukanIndex !== b.zukanIndex) return a.zukanIndex - b.zukanIndex;
+    if (a.zukanIndexSuffix !== b.zukanIndexSuffix) return a.zukanIndexSuffix < b.zukanIndexSuffix ? -1 : 1;
+    return a.names['en-US'] < b.names['en-US'] ? -1 : a.names['en-US'] > b.names['en-US'] ? 1 : 0;
+  });
+  // Emitted subtype set: yaml subtypes minus the palSpawn template, plus per-pal subtypes.
+  const subtypeDefs = [...src.subtypes.filter((s) => s.category !== 'pal'), ...palSubtypes];
+
   // types.json — contract TypesFile: categories nest their subtypes; `name`
   // is the machine key (locales carry display names, keyed by it). We use
   // id === name, matching the aion2 data repo's locale keying.
   const types = {
     categories: src.categories.map((c) => ({
       id: c.id, name: c.id,
-      subtypes: src.subtypes.filter((s) => s.category === c.id).map((s) => ({
+      subtypes: subtypeDefs.filter((s) => s.category === c.id).map((s) => ({
         id: s.id, name: s.id,
         ...(s.icon ? { icon: s.icon } : {}),
         ...(s.color ? { color: s.color } : {}),
@@ -62,7 +93,7 @@ export function buildDataset(parsed) {
   // Candidate markers per map, keyed by subtype, before id assignment.
   // Each candidate: { subtype, category, x, y, z, icon?, sortKey, nameByLng?, descByLng? }
   const candidates = Object.fromEntries(mapIds.map((id) => [id, []]));
-  const subtypeCat = Object.fromEntries(src.subtypes.map((s) => [s.id, s.category]));
+  const subtypeCat = Object.fromEntries(subtypeDefs.map((s) => [s.id, s.category]));
   const push = (mapId, c) => candidates[mapId].push(c);
   const toPx = (mapId, loc) => {
     const { x, y } = transforms[mapId](loc);
@@ -72,7 +103,10 @@ export function buildDataset(parsed) {
   for (const p of parsed.pois) {
     const mapId = assignMap(p.location, assignOrder);
     if (!mapId) continue;
-    push(mapId, { subtype: p.subtype, ...toPx(mapId, p.location), sortKey: p.sourceName });
+    push(mapId, {
+      subtype: p.subtype, ...toPx(mapId, p.location), sortKey: p.sourceName,
+      ...(p.nameByLng ? { nameByLng: p.nameByLng } : {}),
+    });
   }
 
   for (const b of parsed.bosses) {
@@ -81,42 +115,40 @@ export function buildDataset(parsed) {
     const nameByLng = Object.fromEntries(languages.map((lng) =>
       [lng, `${palName(namesByLang[lng], b.characterId)} Lv.${b.level}`]));
     push(mapId, {
-      subtype: 'fieldBoss', ...toPx(mapId, b.location),
+      subtype: 'alphaPal', ...toPx(mapId, b.location),
       icon: palIcon(palIcons, b.characterId) ?? 'T_icon_compass_boss',
       sortKey: `${b.characterId}-${b.key}`,
       nameByLng,
     });
   }
 
-  // Pal spawns: cluster per map at radius from types.yaml
-  const radius = src.subtypes.find((s) => s.id === 'palSpawn').clusterRadius;
-  const byMap = Object.fromEntries(mapIds.map((id) => [id, []]));
+  // Pal spawns: split by pal id first, then cluster within each pal id only
+  // (point 10 — never merge different pals into one marker). Each pal is its
+  // own subtype (id === pal id); the marker's level range lives in the popup.
+  const byMapPal = Object.fromEntries(mapIds.map((id) => [id, new Map()])); // mapId -> palId -> points[]
   for (const s of parsed.palSpawns) {
     const mapId = assignMap(s.location, assignOrder);
     if (!mapId) continue;
-    byMap[mapId].push({ ...toPx(mapId, s.location), spawnerName: s.spawnerName, pals: s.pals });
+    const px = toPx(mapId, s.location);
+    for (const p of s.pals) {
+      if (!isRealPal(p.id)) continue;
+      const m = byMapPal[mapId];
+      if (!m.has(p.id)) m.set(p.id, []);
+      m.get(p.id).push({ ...px, lvMin: p.lvMin, lvMax: p.lvMax });
+    }
   }
   for (const mapId of mapIds) {
-    for (const c of clusterPoints(byMap[mapId], radius)) {
-      // distinct pals across the cluster, keeping first-seen order, merged level ranges
-      const seen = new Map();
-      for (const item of c.items) {
-        for (const p of item.pals) {
-          const e = seen.get(p.id);
-          if (e) { e.lvMin = Math.min(e.lvMin, p.lvMin); e.lvMax = Math.max(e.lvMax, p.lvMax); }
-          else seen.set(p.id, { ...p });
-        }
+    for (const [palId, points] of byMapPal[mapId]) {
+      for (const c of clusterPoints(points, radius)) {
+        let lvMin = Infinity, lvMax = -Infinity;
+        for (const it of c.items) { lvMin = Math.min(lvMin, it.lvMin); lvMax = Math.max(lvMax, it.lvMax); }
+        push(mapId, {
+          subtype: palId, x: c.x, y: c.y, z: c.z,
+          icon: palIcon(palIcons, palId) ?? undefined,
+          sortKey: `${c.x},${c.y}`,
+          descByLng: Object.fromEntries(languages.map((lng) => [lng, `Lv.${lvMin}–${lvMax}`])),
+        });
       }
-      const pals = [...seen.values()];
-      push(mapId, {
-        subtype: 'palSpawn', x: c.x, y: c.y, z: c.z,
-        icon: palIcon(palIcons, pals[0].id) ?? undefined,
-        sortKey: `${c.x},${c.y}`,
-        nameByLng: Object.fromEntries(languages.map((lng) =>
-          [lng, pals.map((p) => palName(namesByLang[lng], p.id)).join(' / ')])),
-        descByLng: Object.fromEntries(languages.map((lng) =>
-          [lng, pals.map((p) => `${palName(namesByLang[lng], p.id)} Lv.${p.lvMin}–${p.lvMax}`).join('\n')])),
-      });
     }
   }
 
@@ -131,7 +163,7 @@ export function buildDataset(parsed) {
       bySubtype.get(c.subtype).push(c);
     }
     markers[mapId] = [];
-    for (const s of src.subtypes) {
+    for (const s of subtypeDefs) {
       const list = (bySubtype.get(s.id) ?? []).sort((a, b) =>
         a.sortKey < b.sortKey ? -1 : a.sortKey > b.sortKey ? 1 : a.x - b.x || a.y - b.y);
       list.forEach((c, i) => {
@@ -168,7 +200,7 @@ export function buildDataset(parsed) {
       }])),
       types: {
         categories: Object.fromEntries(src.categories.map((c) => [c.id, { name: c.names[lng] }])),
-        subtypes: Object.fromEntries(src.subtypes.map((s) => [s.id, { name: s.names[lng], description: '' }])),
+        subtypes: Object.fromEntries(subtypeDefs.map((s) => [s.id, { name: s.names[lng], description: '' }])),
       },
       markers: markerLoc[lng],
       regions: Object.fromEntries(mapIds.map((id) => [id, {}])),

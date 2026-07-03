@@ -41,8 +41,11 @@ const CELL_CLASSES = [
   { subtype: 'egg', match: (t) => /^bp_palmapobjectspawner_palegg_.+_C$/i.test(t) },
   { subtype: 'chest', match: (t) => /^BP_PalMapObjectSpawner_Treasure_.+_C$/.test(t) },
   { subtype: 'camp', match: (t) => /^BP_NPCCampSpawner_.+_C$/.test(t) },
+  // Post-1.0 Oil Rig raid treasure boxes; exact `_C` match excludes the
+  // `_Goal_C` variant (raid objective points, not lootable treasure).
+  { subtype: 'oilrigTreasure', match: (t) => t === 'BP_OilrigTreasureBoxSpawner_C' },
 ];
-const CELL_GREP = 'BP_LevelObject_Relic_C|BP_PalMapObjectSpawner_SkillFruits_|palmapobjectspawner_palegg_|BP_PalMapObjectSpawner_Treasure_|BP_NPCCampSpawner_';
+const CELL_GREP = 'BP_LevelObject_Relic_C|BP_PalMapObjectSpawner_SkillFruits_|palmapobjectspawner_palegg_|BP_PalMapObjectSpawner_Treasure_|BP_NPCCampSpawner_|BP_OilrigTreasureBoxSpawner_C';
 
 // Post-1.0 content not covered by the pre-1.0 taxonomy — surfaced for the
 // point-11 report. Values are raw class/id patterns; counts computed at extract.
@@ -118,7 +121,7 @@ function extractCellPois(raw) {
   const cellsDir = path.join(raw, 'Maps/MainWorld_5/PL_MainWorld5/_Generated_');
   let files = [];
   try {
-    const out = execSync(`grep -rlEi --include='MainGrid*.json' "${CELL_GREP}" .`,
+    const out = execSync(`grep -rlEi --include='MainGrid*.json' --include='oilrig_L0_*.json' --include='CloseRange_L0_*.json' "${CELL_GREP}" .`,
       { cwd: cellsDir, maxBuffer: 1 << 28 }).toString();
     files = out.split('\n').map((f) => f.trim()).filter(Boolean);
   } catch (err) {

@@ -1,64 +1,92 @@
-languages: [en-US, de-DE, es-ES, es-MX, fr-FR, id-ID, it-IT, ko-KR, pl-PL, pt-BR, ru-RU, th-TH, tr-TR, vi-VN, zh-CN, zh-TW]
+languages: [en-US, ja-JP, de-DE, es-ES, es-MX, fr-FR, id-ID, it-IT, ko-KR, pl-PL, pt-BR, ru-RU, th-TH, tr-TR, vi-VN, zh-CN, zh-TW]
 maps:
   - id: MainWorld
-    names: { en-US: Palpagos Islands, de-DE: Palpagos-Inseln, es-ES: Islas Palpagos, es-MX: Islas Palpagos, fr-FR: Îles Palpagos, id-ID: Kepulauan Palpagos, it-IT: Isole Palpagos, ko-KR: 팔파고스 제도, pl-PL: Wyspy Palpagos, pt-BR: Ilhas Palpagos, ru-RU: Острова Палпагос, th-TH: หมู่เกาะพัลปาโกส, tr-TR: Palpagos Adaları, vi-VN: Quần đảo Palpagos, zh-CN: 帕鲁帕格斯群岛, zh-TW: 帕魯帕格斯群島 }
-    shortNames: { en-US: Main, de-DE: Haupt, es-ES: Principal, es-MX: Principal, fr-FR: Principale, id-ID: Utama, it-IT: Principale, ko-KR: 메인, pl-PL: Główna, pt-BR: Principal, ru-RU: Основной, th-TH: หลัก, tr-TR: Ana, vi-VN: Chính, zh-CN: 主大陆, zh-TW: 主大陸 }
+    names: { en-US: Palpagos Islands, ja-JP: パルパゴス諸島, de-DE: Palpagos-Inseln, es-ES: Islas Palpagos, es-MX: Islas Palpagos, fr-FR: Îles Palpagos, id-ID: Kepulauan Palpagos, it-IT: Isole Palpagos, ko-KR: 팔파고스 제도, pl-PL: Wyspy Palpagos, pt-BR: Ilhas Palpagos, ru-RU: Острова Палпагос, th-TH: หมู่เกาะพัลปาโกส, tr-TR: Palpagos Adaları, vi-VN: Quần đảo Palpagos, zh-CN: 帕鲁帕格斯群岛, zh-TW: 帕魯帕格斯群島 }
+    shortNames: { en-US: Main, ja-JP: メイン, de-DE: Haupt, es-ES: Principal, es-MX: Principal, fr-FR: Principale, id-ID: Utama, it-IT: Principale, ko-KR: 메인, pl-PL: Główna, pt-BR: Principal, ru-RU: Основной, th-TH: หลัก, tr-TR: Ana, vi-VN: Chính, zh-CN: 主大陆, zh-TW: 主大陸 }
   - id: WorldTree
-    names: { en-US: Sakurajima & World Tree, de-DE: Sakurajima & Weltenbaum, es-ES: Sakurajima y Árbol del Mundo, es-MX: Sakurajima y Árbol del Mundo, fr-FR: Sakurajima et Arbre-Monde, id-ID: Sakurajima & Pohon Dunia, it-IT: Sakurajima e Albero del Mondo, ko-KR: 사쿠라지마 & 세계수, pl-PL: Sakurajima i Drzewo Świata, pt-BR: Sakurajima e Árvore do Mundo, ru-RU: Сакурадзима и Мировое древо, th-TH: ซากุระจิมะและต้นไม้โลก, tr-TR: Sakurajima ve Dünya Ağacı, vi-VN: Sakurajima & Cây Thế Giới, zh-CN: 樱花岛与世界树, zh-TW: 櫻花島與世界樹 }
-    shortNames: { en-US: Sakurajima, de-DE: Sakurajima, es-ES: Sakurajima, es-MX: Sakurajima, fr-FR: Sakurajima, id-ID: Sakurajima, it-IT: Sakurajima, ko-KR: 사쿠라지마, pl-PL: Sakurajima, pt-BR: Sakurajima, ru-RU: Сакурадзима, th-TH: ซากุระจิมะ, tr-TR: Sakurajima, vi-VN: Sakurajima, zh-CN: 樱花岛, zh-TW: 櫻花島 }
+    names: { en-US: Sakurajima & World Tree, ja-JP: サクラジマ＆世界樹, de-DE: Sakurajima & Weltenbaum, es-ES: Sakurajima y Árbol del Mundo, es-MX: Sakurajima y Árbol del Mundo, fr-FR: Sakurajima et Arbre-Monde, id-ID: Sakurajima & Pohon Dunia, it-IT: Sakurajima e Albero del Mondo, ko-KR: 사쿠라지마 & 세계수, pl-PL: Sakurajima i Drzewo Świata, pt-BR: Sakurajima e Árvore do Mundo, ru-RU: Сакурадзима и Мировое древо, th-TH: ซากุระจิมะและต้นไม้โลก, tr-TR: Sakurajima ve Dünya Ağacı, vi-VN: Sakurajima & Cây Thế Giới, zh-CN: 樱花岛与世界树, zh-TW: 櫻花島與世界樹 }
+    shortNames: { en-US: Sakurajima, ja-JP: サクラジマ, de-DE: Sakurajima, es-ES: Sakurajima, es-MX: Sakurajima, fr-FR: Sakurajima, id-ID: Sakurajima, it-IT: Sakurajima, ko-KR: 사쿠라지마, pl-PL: Sakurajima, pt-BR: Sakurajima, ru-RU: Сакурадзима, th-TH: ซากุระจิมะ, tr-TR: Sakurajima, vi-VN: Sakurajima, zh-CN: 樱花岛, zh-TW: 櫻花島 }
 categories:
   - id: location
-    names: { en-US: Locations, de-DE: Orte, es-ES: Lugares, es-MX: Lugares, fr-FR: Lieux, id-ID: Lokasi, it-IT: Luoghi, ko-KR: 지역, pl-PL: Miejsca, pt-BR: Locais, ru-RU: Локации, th-TH: สถานที่, tr-TR: Konumlar, vi-VN: Địa điểm, zh-CN: 地点, zh-TW: 地點 }
+    names: { en-US: Locations, ja-JP: 場所, de-DE: Orte, es-ES: Lugares, es-MX: Lugares, fr-FR: Lieux, id-ID: Lokasi, it-IT: Luoghi, ko-KR: 지역, pl-PL: Miejsca, pt-BR: Locais, ru-RU: Локации, th-TH: สถานที่, tr-TR: Konumlar, vi-VN: Địa điểm, zh-CN: 地点, zh-TW: 地點 }
   - id: boss
-    names: { en-US: Bosses, de-DE: Bosse, es-ES: Jefes, es-MX: Jefes, fr-FR: Boss, id-ID: Bos, it-IT: Boss, ko-KR: 보스, pl-PL: Bossowie, pt-BR: Chefes, ru-RU: Боссы, th-TH: บอส, tr-TR: Boslar, vi-VN: Trùm, zh-CN: 首领, zh-TW: 首領 }
+    names: { en-US: Bosses, ja-JP: ボス, de-DE: Bosse, es-ES: Jefes, es-MX: Jefes, fr-FR: Boss, id-ID: Bos, it-IT: Boss, ko-KR: 보스, pl-PL: Bossowie, pt-BR: Chefes, ru-RU: Боссы, th-TH: บอส, tr-TR: Boslar, vi-VN: Trùm, zh-CN: 首领, zh-TW: 首領 }
   - id: collectible
-    names: { en-US: Collectibles, de-DE: Sammelobjekte, es-ES: Coleccionables, es-MX: Coleccionables, fr-FR: Objets à collectionner, id-ID: Koleksi, it-IT: Collezionabili, ko-KR: 수집품, pl-PL: Znajdźki, pt-BR: Colecionáveis, ru-RU: Коллекционные предметы, th-TH: ของสะสม, tr-TR: Koleksiyonluklar, vi-VN: Đồ sưu tầm, zh-CN: 收集品, zh-TW: 收集品 }
+    names: { en-US: Collectibles, ja-JP: 収集品, de-DE: Sammelobjekte, es-ES: Coleccionables, es-MX: Coleccionables, fr-FR: Objets à collectionner, id-ID: Koleksi, it-IT: Collezionabili, ko-KR: 수집품, pl-PL: Znajdźki, pt-BR: Colecionáveis, ru-RU: Коллекционные предметы, th-TH: ของสะสม, tr-TR: Koleksiyonluklar, vi-VN: Đồ sưu tầm, zh-CN: 收集品, zh-TW: 收集品 }
   - id: resource
-    names: { en-US: Resources, de-DE: Ressourcen, es-ES: Recursos, es-MX: Recursos, fr-FR: Ressources, id-ID: Sumber Daya, it-IT: Risorse, ko-KR: 자원, pl-PL: Surowce, pt-BR: Recursos, ru-RU: Ресурсы, th-TH: ทรัพยากร, tr-TR: Kaynaklar, vi-VN: Tài nguyên, zh-CN: 资源, zh-TW: 資源 }
+    names: { en-US: Resources, ja-JP: 資源, de-DE: Ressourcen, es-ES: Recursos, es-MX: Recursos, fr-FR: Ressources, id-ID: Sumber Daya, it-IT: Risorse, ko-KR: 자원, pl-PL: Surowce, pt-BR: Recursos, ru-RU: Ресурсы, th-TH: ทรัพยากร, tr-TR: Kaynaklar, vi-VN: Tài nguyên, zh-CN: 资源, zh-TW: 資源 }
   - id: pal
-    names: { en-US: Pals, de-DE: Pals, es-ES: Pals, es-MX: Pals, fr-FR: Pals, id-ID: Pal, it-IT: Pal, ko-KR: 팰, pl-PL: Pale, pt-BR: Pals, ru-RU: Палы, th-TH: พัล, tr-TR: Pal'lar, vi-VN: Pal, zh-CN: 帕鲁, zh-TW: 帕魯 }
+    names: { en-US: Pals, ja-JP: パル, de-DE: Pals, es-ES: Pals, es-MX: Pals, fr-FR: Pals, id-ID: Pal, it-IT: Pal, ko-KR: 팰, pl-PL: Pale, pt-BR: Pals, ru-RU: Палы, th-TH: พัล, tr-TR: Pal'lar, vi-VN: Pal, zh-CN: 帕鲁, zh-TW: 帕魯 }
 subtypes:
   - id: fastTravel
     category: location
     icon: T_icon_compass_FTtower
-    names: { en-US: Fast Travel Statue, de-DE: Schnellreise-Statue, es-ES: Estatua de viaje rápido, es-MX: Estatua de viaje rápido, fr-FR: Statue de voyage rapide, id-ID: Patung Perjalanan Cepat, it-IT: Statua del viaggio rapido, ko-KR: 빠른 이동 석상, pl-PL: Posąg szybkiej podróży, pt-BR: Estátua de viagem rápida, ru-RU: Статуя быстрого перемещения, th-TH: รูปปั้นเดินทางด่วน, tr-TR: Hızlı Seyahat Heykeli, vi-VN: Tượng dịch chuyển nhanh, zh-CN: 传送雕像, zh-TW: 傳送雕像 }
+    names: { en-US: Fast Travel Statue, ja-JP: ファストトラベル石像, de-DE: Schnellreise-Statue, es-ES: Estatua de viaje rápido, es-MX: Estatua de viaje rápido, fr-FR: Statue de voyage rapide, id-ID: Patung Perjalanan Cepat, it-IT: Statua del viaggio rapido, ko-KR: 빠른 이동 석상, pl-PL: Posąg szybkiej podróży, pt-BR: Estátua de viagem rápida, ru-RU: Статуя быстрого перемещения, th-TH: รูปปั้นเดินทางด่วน, tr-TR: Hızlı Seyahat Heykeli, vi-VN: Tượng dịch chuyển nhanh, zh-CN: 传送雕像, zh-TW: 傳送雕像 }
   - id: eagleStatue
     category: location
     icon: T_icon_compass_FTUnlockMap
-    names: { en-US: Eagle Statue, de-DE: Adlerstatue, es-ES: Estatua del águila, es-MX: Estatua del águila, fr-FR: Statue de l'aigle, id-ID: Patung Elang, it-IT: Statua dell'aquila, ko-KR: 독수리 석상, pl-PL: Posąg orła, pt-BR: Estátua da águia, ru-RU: Статуя орла, th-TH: รูปปั้นนกอินทรี, tr-TR: Kartal Heykeli, vi-VN: Tượng đại bàng, zh-CN: 巨鹰雕像, zh-TW: 巨鷹雕像 }
+    names: { en-US: Eagle Statue, ja-JP: 大鷲の石像, de-DE: Adlerstatue, es-ES: Estatua del águila, es-MX: Estatua del águila, fr-FR: Statue de l'aigle, id-ID: Patung Elang, it-IT: Statua dell'aquila, ko-KR: 독수리 석상, pl-PL: Posąg orła, pt-BR: Estátua da águia, ru-RU: Статуя орла, th-TH: รูปปั้นนกอินทรี, tr-TR: Kartal Heykeli, vi-VN: Tượng đại bàng, zh-CN: 巨鹰雕像, zh-TW: 巨鷹雕像 }
+  - id: tower
+    category: location
+    icon: T_icon_compass_tower
+    names: { en-US: Tower Boss, ja-JP: タワーボス, de-DE: Turmboss, es-ES: Jefe de torre, es-MX: Jefe de torre, fr-FR: Boss de tour, id-ID: Bos Menara, it-IT: Boss della torre, ko-KR: 타워 보스, pl-PL: Boss wieży, pt-BR: Chefe da torre, ru-RU: Босс башни, th-TH: บอสหอคอย, tr-TR: Kule Bosu, vi-VN: Trùm Tháp, zh-CN: 高塔首领, zh-TW: 高塔首領 }
   - id: dungeon
     category: location
     icon: T_icon_compass_dungeon
-    names: { en-US: Dungeon, de-DE: Dungeon, es-ES: Mazmorra, es-MX: Mazmorra, fr-FR: Donjon, id-ID: Dungeon, it-IT: Dungeon, ko-KR: 던전, pl-PL: Loch, pt-BR: Masmorra, ru-RU: Подземелье, th-TH: ดันเจี้ยน, tr-TR: Zindan, vi-VN: Hầm ngục, zh-CN: 地下城, zh-TW: 地下城 }
-  - id: fieldBoss
+    names: { en-US: Dungeon, ja-JP: ダンジョン, de-DE: Dungeon, es-ES: Mazmorra, es-MX: Mazmorra, fr-FR: Donjon, id-ID: Dungeon, it-IT: Dungeon, ko-KR: 던전, pl-PL: Loch, pt-BR: Masmorra, ru-RU: Подземелье, th-TH: ดันเจี้ยน, tr-TR: Zindan, vi-VN: Hầm ngục, zh-CN: 地下城, zh-TW: 地下城 }
+  - id: camp
+    category: location
+    icon: T_icon_compass_camp
+    names: { en-US: Camp, ja-JP: 敵拠点, de-DE: Lager, es-ES: Campamento, es-MX: Campamento, fr-FR: Camp, id-ID: Kamp, it-IT: Accampamento, ko-KR: 적 거점, pl-PL: Obóz, pt-BR: Acampamento, ru-RU: Лагерь, th-TH: ค่าย, tr-TR: Kamp, vi-VN: Trại, zh-CN: 敌人营地, zh-TW: 敵人營地 }
+  - id: alphaPal
     category: boss
     icon: T_icon_compass_boss
-    names: { en-US: Field Boss, de-DE: Feldboss, es-ES: Jefe de campo, es-MX: Jefe de campo, fr-FR: Boss de zone, id-ID: Bos Lapangan, it-IT: Boss di zona, ko-KR: 필드 보스, pl-PL: Boss terenowy, pt-BR: Chefe de campo, ru-RU: Полевой босс, th-TH: บอสภาคสนาม, tr-TR: Saha Bosu, vi-VN: Boss dã ngoại, zh-CN: 野外首领, zh-TW: 野外首領 }
+    names: { en-US: Alpha Pal, ja-JP: フィールドボス, de-DE: Alpha-Pal, es-ES: Pal alfa, es-MX: Pal alfa, fr-FR: Pal alpha, id-ID: Pal Alfa, it-IT: Pal alfa, ko-KR: 알파 팰, pl-PL: Pal alfa, pt-BR: Pal alfa, ru-RU: Альфа-Пал, th-TH: พัลอัลฟา, tr-TR: Alfa Pal, vi-VN: Pal Alpha, zh-CN: 阿尔法帕鲁, zh-TW: 阿爾法帕魯 }
   - id: treasureMap
     category: collectible
     icon: T_icon_compass_Search_Treasure
-    names: { en-US: Treasure Map Point, de-DE: Schatzkarten-Fundort, es-ES: Punto del mapa del tesoro, es-MX: Punto del mapa del tesoro, fr-FR: Point de carte au trésor, id-ID: Titik Peta Harta Karun, it-IT: Punto della mappa del tesoro, ko-KR: 보물 지도 지점, pl-PL: Punkt mapy skarbów, pt-BR: Ponto do mapa do tesouro, ru-RU: Точка карты сокровищ, th-TH: จุดแผนที่สมบัติ, tr-TR: Hazine Haritası Noktası, vi-VN: Điểm bản đồ kho báu, zh-CN: 藏宝图地点, zh-TW: 藏寶圖地點 }
+    names: { en-US: Treasure Map Point, ja-JP: 宝の地図ポイント, de-DE: Schatzkarten-Fundort, es-ES: Punto del mapa del tesoro, es-MX: Punto del mapa del tesoro, fr-FR: Point de carte au trésor, id-ID: Titik Peta Harta Karun, it-IT: Punto della mappa del tesoro, ko-KR: 보물 지도 지점, pl-PL: Punkt mapy skarbów, pt-BR: Ponto do mapa do tesouro, ru-RU: Точка карты сокровищ, th-TH: จุดแผนที่สมบัติ, tr-TR: Hazine Haritası Noktası, vi-VN: Điểm bản đồ kho báu, zh-CN: 藏宝图地点, zh-TW: 藏寶圖地點 }
   - id: note
     category: collectible
     icon: T_icon_compass_Search_Junk
-    names: { en-US: Note, de-DE: Notiz, es-ES: Nota, es-MX: Nota, fr-FR: Note, id-ID: Catatan, it-IT: Nota, ko-KR: 노트, pl-PL: Notatka, pt-BR: Nota, ru-RU: Записка, th-TH: บันทึก, tr-TR: Not, vi-VN: Ghi chú, zh-CN: 笔记, zh-TW: 筆記 }
+    names: { en-US: Note, ja-JP: メモ, de-DE: Notiz, es-ES: Nota, es-MX: Nota, fr-FR: Note, id-ID: Catatan, it-IT: Nota, ko-KR: 노트, pl-PL: Notatka, pt-BR: Nota, ru-RU: Записка, th-TH: บันทึก, tr-TR: Not, vi-VN: Ghi chú, zh-CN: 笔记, zh-TW: 筆記 }
+  - id: skillFruit
+    category: collectible
+    icon: T_icon_buildObject_Farm_SkillFruits
+    names: { en-US: Skill Fruit, ja-JP: スキルフルーツ, de-DE: Fähigkeitenfrucht, es-ES: Fruta de habilidad, es-MX: Fruta de habilidad, fr-FR: Fruit de compétence, id-ID: Buah Skill, it-IT: Frutto abilità, ko-KR: 스킬 프루츠, pl-PL: Owoc umiejętności, pt-BR: Fruta de habilidade, ru-RU: Плод навыка, th-TH: ผลไม้สกิล, tr-TR: Yetenek Meyvesi, vi-VN: Quả kỹ năng, zh-CN: 技能果实, zh-TW: 技能果實 }
+  - id: egg
+    category: collectible
+    icon: T_icon_buildObject_HatchingPalEgg
+    names: { en-US: Pal Egg, ja-JP: パルのタマゴ, de-DE: Pal-Ei, es-ES: Huevo de Pal, es-MX: Huevo de Pal, fr-FR: Œuf de Pal, id-ID: Telur Pal, it-IT: Uovo di Pal, ko-KR: 팰의 알, pl-PL: Jajo Pala, pt-BR: Ovo de Pal, ru-RU: Яйцо Пала, th-TH: ไข่พาล, tr-TR: Pal Yumurtası, vi-VN: Trứng Pal, zh-CN: 帕鲁蛋, zh-TW: 帕魯蛋 }
+  - id: chest
+    category: collectible
+    icon: T_icon_buildObject_ItemChest
+    names: { en-US: Chest, ja-JP: 宝箱, de-DE: Truhe, es-ES: Cofre, es-MX: Cofre, fr-FR: Coffre, id-ID: Peti, it-IT: Forziere, ko-KR: 상자, pl-PL: Skrzynia, pt-BR: Baú, ru-RU: Сундук, th-TH: หีบสมบัติ, tr-TR: Sandık, vi-VN: Rương, zh-CN: 宝箱, zh-TW: 寶箱 }
+  - id: lifmunkEffigy
+    category: collectible
+    icon: T_Carbunclo_icon_normal
+    names: { en-US: Lifmunk Effigy, ja-JP: クルリス像, de-DE: Lifmunk-Statuette, es-ES: Estatua de Lifmunk, es-MX: Estatua de Lifmunk, fr-FR: Statue de Lifmunk, id-ID: Patung Lifmunk, it-IT: Statua di Lifmunk, ko-KR: 쿠룰리스 상, pl-PL: Posążek Lifmunka, pt-BR: Estátua de Lifmunk, ru-RU: Статуя Лифманка, th-TH: หุ่นจำลอง Lifmunk, tr-TR: Lifmunk Figürü, vi-VN: Tượng Lifmunk, zh-CN: 翠叶鼠雕像, zh-TW: 翠葉鼠雕像 }
+  - id: oilrigTreasure
+    category: collectible
+    icon: T_icon_compass_Oilrig
+    names: { en-US: Oil Rig Treasure, ja-JP: オイルリグの宝箱, de-DE: Bohrinsel-Schatz, es-ES: Tesoro de la plataforma petrolífera, es-MX: Tesoro de la plataforma petrolera, fr-FR: Trésor de la plateforme pétrolière, id-ID: Harta Karun Kilang Minyak, it-IT: Tesoro della piattaforma petrolifera, ko-KR: 석유 시추 시설 보물, pl-PL: Skarb platformy wiertniczej, pt-BR: Tesouro da plataforma de petróleo, ru-RU: Сокровище нефтяной вышки, th-TH: สมบัติแท่นขุดเจาะน้ำมัน, tr-TR: Petrol Kulesi Hazinesi, vi-VN: Kho báu giàn khoan dầu, zh-CN: 石油钻井平台宝箱, zh-TW: 石油鑽井平台寶箱 }
   - id: copper
     category: resource
     color: "#B87333"
-    names: { en-US: Copper Ore, de-DE: Kupfererz, es-ES: Mineral de cobre, es-MX: Mineral de cobre, fr-FR: Minerai de cuivre, id-ID: Bijih Tembaga, it-IT: Minerale di rame, ko-KR: 구리 광석, pl-PL: Ruda miedzi, pt-BR: Minério de cobre, ru-RU: Медная руда, th-TH: แร่ทองแดง, tr-TR: Bakır Cevheri, vi-VN: Quặng đồng, zh-CN: 铜矿, zh-TW: 銅礦 }
+    names: { en-US: Copper Ore, ja-JP: 銅鉱石, de-DE: Kupfererz, es-ES: Mineral de cobre, es-MX: Mineral de cobre, fr-FR: Minerai de cuivre, id-ID: Bijih Tembaga, it-IT: Minerale di rame, ko-KR: 구리 광석, pl-PL: Ruda miedzi, pt-BR: Minério de cobre, ru-RU: Медная руда, th-TH: แร่ทองแดง, tr-TR: Bakır Cevheri, vi-VN: Quặng đồng, zh-CN: 铜矿, zh-TW: 銅礦 }
   - id: quartz
     category: resource
     color: "#DCD9E8"
-    names: { en-US: Quartz, de-DE: Quarz, es-ES: Cuarzo, es-MX: Cuarzo, fr-FR: Quartz, id-ID: Kuarsa, it-IT: Quarzo, ko-KR: 석영, pl-PL: Kwarc, pt-BR: Quartzo, ru-RU: Кварц, th-TH: ควอตซ์, tr-TR: Kuvars, vi-VN: Thạch anh, zh-CN: 石英, zh-TW: 石英 }
+    names: { en-US: Quartz, ja-JP: 水晶, de-DE: Quarz, es-ES: Cuarzo, es-MX: Cuarzo, fr-FR: Quartz, id-ID: Kuarsa, it-IT: Quarzo, ko-KR: 석영, pl-PL: Kwarc, pt-BR: Quartzo, ru-RU: Кварц, th-TH: ควอตซ์, tr-TR: Kuvars, vi-VN: Thạch anh, zh-CN: 石英, zh-TW: 石英 }
   - id: coal
     category: resource
     color: "#4A5560"
-    names: { en-US: Coal, de-DE: Kohle, es-ES: Carbón, es-MX: Carbón, fr-FR: Charbon, id-ID: Batu Bara, it-IT: Carbone, ko-KR: 석탄, pl-PL: Węgiel, pt-BR: Carvão, ru-RU: Уголь, th-TH: ถ่านหิน, tr-TR: Kömür, vi-VN: Than đá, zh-CN: 煤矿, zh-TW: 煤礦 }
+    names: { en-US: Coal, ja-JP: 石炭, de-DE: Kohle, es-ES: Carbón, es-MX: Carbón, fr-FR: Charbon, id-ID: Batu Bara, it-IT: Carbone, ko-KR: 석탄, pl-PL: Węgiel, pt-BR: Carvão, ru-RU: Уголь, th-TH: ถ่านหิน, tr-TR: Kömür, vi-VN: Than đá, zh-CN: 煤矿, zh-TW: 煤礦 }
   - id: sulfur
     category: resource
     color: "#D9C24A"
-    names: { en-US: Sulfur, de-DE: Schwefel, es-ES: Azufre, es-MX: Azufre, fr-FR: Soufre, id-ID: Belerang, it-IT: Zolfo, ko-KR: 유황, pl-PL: Siarka, pt-BR: Enxofre, ru-RU: Сера, th-TH: กำมะถัน, tr-TR: Kükürt, vi-VN: Lưu huỳnh, zh-CN: 硫磺, zh-TW: 硫磺 }
+    names: { en-US: Sulfur, ja-JP: 硫黄, de-DE: Schwefel, es-ES: Azufre, es-MX: Azufre, fr-FR: Soufre, id-ID: Belerang, it-IT: Zolfo, ko-KR: 유황, pl-PL: Siarka, pt-BR: Enxofre, ru-RU: Сера, th-TH: กำมะถัน, tr-TR: Kükürt, vi-VN: Lưu huỳnh, zh-CN: 硫磺, zh-TW: 硫磺 }
   - id: palSpawn
     category: pal
     clusterRadius: 200
-    names: { en-US: Pal Spawn, de-DE: Pal-Vorkommen, es-ES: Aparición de Pal, es-MX: Aparición de Pal, fr-FR: Apparition de Pal, id-ID: Kemunculan Pal, it-IT: Comparsa di Pal, ko-KR: 팰 출현 지점, pl-PL: Miejsce występowania Pali, pt-BR: Surgimento de Pal, ru-RU: Место обитания пала, th-TH: จุดเกิดพัล, tr-TR: Pal Çıkma Noktası, vi-VN: Điểm xuất hiện Pal, zh-CN: 帕鲁出没点, zh-TW: 帕魯出沒點 }
+    names: { en-US: Pal Spawn, ja-JP: パル出現地点, de-DE: Pal-Vorkommen, es-ES: Aparición de Pal, es-MX: Aparición de Pal, fr-FR: Apparition de Pal, id-ID: Kemunculan Pal, it-IT: Comparsa di Pal, ko-KR: 팰 출현 지점, pl-PL: Miejsce występowania Pali, pt-BR: Surgimento de Pal, ru-RU: Место обитания пала, th-TH: จุดเกิดพัล, tr-TR: Pal Çıkma Noktası, vi-VN: Điểm xuất hiện Pal, zh-CN: 帕鲁出没点, zh-TW: 帕魯出沒點 }

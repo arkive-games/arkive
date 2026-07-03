@@ -21,6 +21,8 @@ function collectIconNames(dataOut) {
 function iconSourcePath(raw, name) {
   const compass = path.join(raw, 'Texture/UI/InGame', `${name}.png`);
   if (name.startsWith('T_icon_compass_') && fs.existsSync(compass)) return compass;
+  const build = path.join(raw, 'Texture/BuildObject/PNG', `${name}.png`);
+  if (name.startsWith('T_icon_buildObject_') && fs.existsSync(build)) return build;
   const pal = path.join(raw, 'Texture/PalIcon/Normal', `${name}.png`);
   if (fs.existsSync(pal)) return pal;
   return null;
