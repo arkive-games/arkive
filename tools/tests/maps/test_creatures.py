@@ -174,7 +174,7 @@ def test_emit_frontend_routes_creature_marker():
         "Name": "TestMap",
         "WorldMarkers": [
             {"kind": "creatureFeral", "px": [100.0, 200.0],
-             "name_en": "Fossa", "name_zhCN": "波沙", "count": 7},
+             "name_en": "Fossa", "name_zhCN": "波沙", "name_ko": "포사", "count": 7},
         ],
     }
     markers, locale = build_markers(map_data)
@@ -183,8 +183,10 @@ def test_emit_frontend_routes_creature_marker():
     assert m["tier"] == 3
     assert m["x"] == 100.0 and m["y"] == 200.0
     assert locale[m["id"]]["name_en"] == "Fossa"
+    assert locale[m["id"]]["name_ko"] == "포사"
     assert locale[m["id"]]["desc_en"] == "7 spawn points"
     assert locale[m["id"]]["desc_zhCN"] == "7 处刷新点"
+    assert locale[m["id"]]["desc_ko"] == "7곳의 리젠 지점"
 
 
 def test_emit_frontend_creature_index_is_per_pet():

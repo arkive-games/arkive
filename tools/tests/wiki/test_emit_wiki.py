@@ -13,6 +13,9 @@ class FakeL10N:
     def zh_cn(self, key):
         return f"CN:{key}" if key else ""
 
+    def ko(self, key):
+        return f"KO:{key}" if key else ""
+
 
 def test_build_quest_entity_shape():
     quests = tables.parse_quests(
@@ -34,7 +37,7 @@ def test_build_quest_entity_shape():
         item_names={},
     )
     assert ent["id"] == q["id"] and ent["type"] == "quest"
-    assert set(ent["name"]) == {"en", "zhCN", "zhTW"}
+    assert set(ent["name"]) == {"en", "zhCN", "zhTW", "ko"}
     assert isinstance(ent["steps"], list)
     for st in ent["steps"]:
         for ob in st["objectives"]:
@@ -71,7 +74,7 @@ def test_quest_entity_reward_items_have_id_and_objective_target():
         spawn_index={},
         name_to_id={q["name"]: q["id"]},
         prev_index={},
-        item_names={"IT_A": {"en": "Item A", "zhCN": "Item A", "zhTW": "Item A"}},
+        item_names={"IT_A": {"en": "Item A", "zhCN": "Item A", "zhTW": "Item A", "ko": "Item A"}},
         item_ids={"IT_A": 5},
         npc_name_to_id={"NPC_A": 7},
     )

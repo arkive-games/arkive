@@ -75,23 +75,23 @@ DATA_REPO = TOOLS_ROOT.parent / "data"
 TYPES_SRC = TOOLS_ROOT / "data_src" / "types.yaml"
 # Curated subtype/category display names (carried + adjusted into types.json
 # locales). Still YAML sources; we emit JSON.
-CURATED_LOCALES = TOOLS_ROOT.parent / "frontend" / "public" / "locales"
+CURATED_LOCALES = TOOLS_ROOT.parent / "frontend" / "apps" / "aion2" / "public" / "locales"
 
-LANGS = ("en", "zh-CN", "zh-TW")
+LANGS = ("en-US", "zh-CN", "zh-TW", "ko-KR")
 
 # Subtype display names injected into the types locale. ``hiddenCube`` is the
 # single yellow (openable) cube — NO faction / key suffix. {subtype: {en, zhCN,
-# zhTW}}; zh-TW falls back to OpenCC if not given.
+# zhTW, ko}}; zh-TW falls back to OpenCC if not given.
 EXTRA_SUBTYPE_NAMES = {
     # Game L10N (Data/Table/L10N): EN "Hidden Cube", zh-TW "隱藏背包" (the term
     # used by every Hidden-Cube achievement/mission string, e.g.
     # STR_BATTLEPASS_MISSION_*_22). zh-CN is the OpenCC t2s of the zh-TW string
     # ("隐藏背包"). NOT "宝箱" — that was an earlier guess and is wrong.
-    "hiddenCube": {"en": "Hidden Cube", "zhCN": "隐藏背包", "zhTW": "隱藏背包"},
+    "hiddenCube": {"en": "Hidden Cube", "zhCN": "隐藏背包", "zhTW": "隱藏背包", "ko": "히든 큐브"},
     # fragments keeps the legacy monolithMaterial display names (re-keyed).
-    "fragments": {"en": "Monolith", "zhCN": "主神痕迹", "zhTW": "主神痕跡"},
-    "dungeon": {"en": "Dungeon", "zhCN": "副本", "zhTW": "副本"},
-    "boss": {"en": "Boss", "zhCN": "Boss", "zhTW": "Boss"},
+    "fragments": {"en": "Monolith", "zhCN": "主神痕迹", "zhTW": "主神痕跡", "ko": "모노리스"},
+    "dungeon": {"en": "Dungeon", "zhCN": "副本", "zhTW": "副本", "ko": "던전"},
+    "boss": {"en": "Boss", "zhCN": "Boss", "zhTW": "Boss", "ko": "보스"},
     # 驻地 / garrison occupation objectives.
     "occupation": {"en": "Garrison", "zhCN": "驻地", "zhTW": "駐地"},
 }
@@ -212,38 +212,38 @@ GATHER_SOURCETYPE_SUBTYPES = {
 # material; zh-TW falls back to OpenCC from zhCN when absent.
 GATHER_SUBTYPE_NAMES = {
     # specific materials (Elyos set)
-    "gatheringOdyle":            {"en": "Odyle",      "zhCN": "奥德"},
-    "gatheringOrichalcumOre":    {"en": "Orichalcum", "zhCN": "奥里哈康"},
-    "gatheringYggdrasilLog":     {"en": "Yggdrasil",  "zhCN": "世界树"},
-    "gatheringSapphireGemstone": {"en": "Sapphire",   "zhCN": "蓝宝石"},
-    "gatheringDiamondGemstone":  {"en": "Diamond",    "zhCN": "钻石"},
-    "gatheringRubyGemstone":     {"en": "Ruby",       "zhCN": "红宝石"},
-    "gatheringAria":             {"en": "Aria",       "zhCN": "当归"},
-    "gatheringTargena":          {"en": "Targena",    "zhCN": "龙蒿"},
-    "gatheringCoriolus":         {"en": "Coriolus",   "zhCN": "云芝"},
-    "gatheringKukuru":           {"en": "Kukuru",     "zhCN": "库库罗"},
-    "gatheringMela":             {"en": "Mela",       "zhCN": "梅拉"},
-    "gatheringInina":            {"en": "Inina",      "zhCN": "雪莉"},
-    "gatheringCypri":            {"en": "Cypri",      "zhCN": "齐尔利"},
+    "gatheringOdyle":            {"en": "Odyle",      "zhCN": "奥德", "ko": "오드"},
+    "gatheringOrichalcumOre":    {"en": "Orichalcum", "zhCN": "奥里哈康", "ko": "오리하르콘"},
+    "gatheringYggdrasilLog":     {"en": "Yggdrasil",  "zhCN": "世界树", "ko": "이그드라실"},
+    "gatheringSapphireGemstone": {"en": "Sapphire",   "zhCN": "蓝宝石", "ko": "사파이어"},
+    "gatheringDiamondGemstone":  {"en": "Diamond",    "zhCN": "钻石", "ko": "다이아몬드"},
+    "gatheringRubyGemstone":     {"en": "Ruby",       "zhCN": "红宝石", "ko": "루비"},
+    "gatheringAria":             {"en": "Aria",       "zhCN": "当归", "ko": "안젤리카"},
+    "gatheringTargena":          {"en": "Targena",    "zhCN": "龙蒿", "ko": "타라곤"},
+    "gatheringCoriolus":         {"en": "Coriolus",   "zhCN": "云芝", "ko": "코리올루스"},
+    "gatheringKukuru":           {"en": "Kukuru",     "zhCN": "库库罗", "ko": "쿠쿠르"},
+    "gatheringMela":             {"en": "Mela",       "zhCN": "梅拉", "ko": "멜라"},
+    "gatheringInina":            {"en": "Inina",      "zhCN": "雪莉", "ko": "쉐리"},
+    "gatheringCypri":            {"en": "Cypri",      "zhCN": "齐尔利", "ko": "킬리"},
     # specific materials (Asmodian set)
-    "gatheringAsvata":           {"en": "Asvata",     "zhCN": "菩提"},
-    "gatheringAzpha":            {"en": "Azpha",      "zhCN": "天涯草"},
-    "gatheringCalendula":        {"en": "Calendula",  "zhCN": "金盏花"},
-    "gatheringMorfa":            {"en": "Morfa",      "zhCN": "魔尔菇"},
-    "gatheringRaydam":           {"en": "Raydam",     "zhCN": "莱森树莓"},
-    "gatheringPujery":           {"en": "Pujery",     "zhCN": "波齐鲤"},
-    "gatheringOhkra":            {"en": "Ohkra",      "zhCN": "秋葵"},
-    "gatheringConide":           {"en": "Conide",     "zhCN": "珂尼玳"},
+    "gatheringAsvata":           {"en": "Asvata",     "zhCN": "菩提", "ko": "아스바타"},
+    "gatheringAzpha":            {"en": "Azpha",      "zhCN": "天涯草", "ko": "안누스"},
+    "gatheringCalendula":        {"en": "Calendula",  "zhCN": "金盏花", "ko": "카렌두라"},
+    "gatheringMorfa":            {"en": "Morfa",      "zhCN": "魔尔菇", "ko": "모르파"},
+    "gatheringRaydam":           {"en": "Raydam",     "zhCN": "莱森树莓", "ko": "레이담"},
+    "gatheringPujery":           {"en": "Pujery",     "zhCN": "波齐鲤", "ko": "푸제리"},
+    "gatheringOhkra":            {"en": "Ohkra",      "zhCN": "秋葵", "ko": "오크라"},
+    "gatheringConide":           {"en": "Conide",     "zhCN": "珂尼玳", "ko": "코니데"},
     # SourceType fallbacks
-    "gatheringOd":        {"en": "Odyle",      "zhCN": "奥德", "zhTW": "奧德"},
-    "gatheringHerb":      {"en": "Herb",       "zhCN": "草药", "zhTW": "草藥"},
+    "gatheringOd":        {"en": "Odyle",      "zhCN": "奥德", "zhTW": "奧德", "ko": "오드"},
+    "gatheringHerb":      {"en": "Herb",       "zhCN": "草药", "zhTW": "草藥", "ko": "약초"},
     "gatheringJewelry":   {"en": "Gemstone",   "zhCN": "宝石", "zhTW": "寶石"},
-    "gatheringMetal":     {"en": "Metal",      "zhCN": "金属", "zhTW": "金屬"},
+    "gatheringMetal":     {"en": "Metal",      "zhCN": "金属", "zhTW": "金屬", "ko": "금속"},
     "gatheringRareMetal": {"en": "Rare Metal", "zhCN": "稀有金属", "zhTW": "稀有金屬"},
     "gatheringTree":      {"en": "Wood",       "zhCN": "木材", "zhTW": "木材"},
-    "gatheringFlower":    {"en": "Flower",     "zhCN": "花卉", "zhTW": "花卉"},
+    "gatheringFlower":    {"en": "Flower",     "zhCN": "花卉", "zhTW": "花卉", "ko": "플라워"},
     "gatheringBerry":     {"en": "Berry",      "zhCN": "浆果", "zhTW": "漿果"},
-    "gatheringVegetable": {"en": "Vegetable",  "zhCN": "蔬菜", "zhTW": "蔬菜"},
+    "gatheringVegetable": {"en": "Vegetable",  "zhCN": "蔬菜", "zhTW": "蔬菜", "ko": "채소"},
     "gatheringShellfish": {"en": "Shellfish",  "zhCN": "贝类", "zhTW": "貝類"},
 }
 
@@ -296,8 +296,8 @@ def _pixel_scale(map_name: str) -> float | None:
 # the machine name; Abyss/Reshanta maps (no _L_/_D_) get no suffix. zh-TW is
 # produced later by the existing _to_tw() pass over the zh-CN string.
 _FACTION_SUFFIX = {
-    "light": {"en": " (Elyos)", "zh-CN": "（天）"},
-    "dark": {"en": " (Asmodian)", "zh-CN": "（魔）"},
+    "light": {"en": " (Elyos)", "zh-CN": "（天）", "ko": " (천족)"},
+    "dark": {"en": " (Asmodian)", "zh-CN": "（魔）", "ko": " (마족)"},
 }
 
 
@@ -313,25 +313,29 @@ def _faction(name: str) -> str | None:
 def _map_display(name: str, l10n: L10N) -> dict[str, str]:
     """Composed map display names: L10N base title + faction suffix.
 
-    Returns ``{"name_en", "name_zhCN"}`` (the shape ``_locale_block`` expects).
-    Base falls back to ``name.replace("_", " ")`` when L10N has no body; zh base
-    falls back to the en base when there is no zh body.
+    Returns ``{"name_en", "name_zhCN", "name_ko"}`` (the shape ``_locale_block`` expects).
+    Base falls back to ``name.replace("_", " ")`` when L10N has no body; zh/ko
+    bases fall back to the en base when there is no localized body.
     """
     title = map_title(name, l10n)
     base_en = title["en"] or name.replace("_", " ")
     base_zh = title["zhCN"] or base_en
-    full_en, full_zh = base_en, base_zh
+    base_ko = title["ko"] or base_en
+    full_en, full_zh, full_ko = base_en, base_zh, base_ko
     fac = _faction(name)
     if fac:
         full_en = base_en + _FACTION_SUFFIX[fac]["en"]
         full_zh = base_zh + _FACTION_SUFFIX[fac]["zh-CN"]
+        full_ko = base_ko + _FACTION_SUFFIX[fac]["ko"]
     # Full title (with faction suffix) + short title (base, no suffix). The
     # short form labels per-marker ids like hidden cubes ("斐尔特朗 #1").
     return {
         "name_en": full_en,
         "name_zhCN": full_zh,
+        "name_ko": full_ko,
         "short_en": base_en,
         "short_zhCN": base_zh,
+        "short_ko": base_ko,
     }
 
 
@@ -460,6 +464,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         n = region_counts[region_key] = region_counts.get(region_key, 0) + 1
         region_en = grp.get("title_en", "")
         region_zh = grp.get("title_zhCN", "")
+        region_ko = grp.get("title_ko", "")
         markers.append({
             "id": mid,
             "category": "collection",
@@ -478,8 +483,10 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             "name_en": frag_names["en"],
             "name_zhCN": frag_names["zhCN"],
             "name_zhTW": frag_names["zhTW"],
+            "name_ko": frag_names.get("ko", frag_names["en"]),
             "desc_en": f"{region_en} #{n}" if region_en else f"#{n}",
             "desc_zhCN": f"{region_zh} #{n}" if region_zh else f"#{n}",
+            "desc_ko": f"{region_ko} #{n}" if region_ko else f"#{n}",
         }
 
     # --- village / battlefield from Subzone IconType -----------------------
@@ -515,6 +522,7 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         locale[mid] = {
             "name_en": s.get("name_en", "") or s.get("Name", ""),
             "name_zhCN": s.get("name_zhCN", "") or s.get("Name", ""),
+            "name_ko": s.get("name_ko", "") or s.get("Name", ""),
         }
 
     # --- world markers: teleport / seal / hiddenCube / gathering / dungeon /
@@ -576,8 +584,10 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
                 "name_en": cube_names["en"],
                 "name_zhCN": cube_names["zhCN"],
                 "name_zhTW": cube_names["zhTW"],
+                "name_ko": cube_names.get("ko", cube_names["en"]),
                 "desc_en": f"#{idx + 1}",
                 "desc_zhCN": f"#{idx + 1}",
+                "desc_ko": f"#{idx + 1}",
             }
         elif category == "creature":
             # Title = the localized pet name; description = how many spawn points
@@ -586,13 +596,16 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             locale[mid] = {
                 "name_en": w.get("name_en", "") or str(idx + 1),
                 "name_zhCN": w.get("name_zhCN", "") or str(idx + 1),
+                "name_ko": w.get("name_ko", "") or w.get("name_en", "") or str(idx + 1),
                 "desc_en": f"{cnt} spawn points",
                 "desc_zhCN": f"{cnt} 处刷新点",
+                "desc_ko": f"{cnt}곳의 리젠 지점",
             }
         else:
             locale[mid] = {
                 "name_en": w.get("name_en", "") or str(idx + 1),
                 "name_zhCN": w.get("name_zhCN", "") or str(idx + 1),
+                "name_ko": w.get("name_ko", "") or w.get("name_en", "") or str(idx + 1),
             }
 
     markers.sort(key=lambda m: (m["subtype"], m["indexInSubtype"]))
@@ -637,6 +650,7 @@ def build_regions(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
             locale[key] = {
                 "name_en": s.get("name_en", "") or key,
                 "name_zhCN": s.get("name_zhCN", "") or key,
+                "name_ko": s.get("name_ko", "") or key,
             }
         else:
             by_key[key]["borders"].append(ring)
@@ -655,22 +669,26 @@ def _write_json(path: Path, data) -> None:
 
 
 def _locale_block(entries: dict[str, dict], lang: str) -> dict:
-    """{key: {name_en, name_zhCN[, desc_en, desc_zhCN]}} -> {key: {name,
+    """{key: {name_en, name_zhCN, name_ko[, desc_en, desc_zhCN, desc_ko]}} -> {key: {name,
     description}} for a lang.
 
     When an entry carries no ``desc_*`` the description mirrors the name (the
     original behaviour, unchanged for maps/regions and every plain marker).
     Markers that want a distinct description (fragments, hiddenCube) supply
-    ``desc_en`` / ``desc_zhCN``; zh-TW is OpenCC-converted from ``desc_zhCN``.
+    ``desc_en`` / ``desc_zhCN`` / ``desc_ko``; zh-TW is OpenCC-converted from
+    ``desc_zhCN``.
     """
     out = {}
     for key, v in entries.items():
-        if lang == "en":
+        if lang == "en-US":
             name = v.get("name_en", "")
             desc = v.get("desc_en")
         elif lang == "zh-CN":
             name = v.get("name_zhCN", "")
             desc = v.get("desc_zhCN")
+        elif lang == "ko-KR":
+            name = v.get("name_ko") or v.get("name_en", "")
+            desc = v.get("desc_ko") or v.get("desc_en")
         else:  # zh-TW
             # Prefer an explicit zh-TW name when given (OpenCC s2t mis-converts
             # some words, e.g. 背包 -> 揹包); fall back to converting zh-CN.
@@ -679,11 +697,13 @@ def _locale_block(entries: dict[str, dict], lang: str) -> dict:
         name = name or key
         out[key] = {"name": name, "description": desc if desc else name}
         # Optional short name (currently maps: base title without faction suffix).
-        if "short_en" in v or "short_zhCN" in v:
-            if lang == "en":
+        if "short_en" in v or "short_zhCN" in v or "short_ko" in v:
+            if lang == "en-US":
                 short = v.get("short_en", "")
             elif lang == "zh-CN":
                 short = v.get("short_zhCN", "")
+            elif lang == "ko-KR":
+                short = v.get("short_ko") or v.get("short_en", "")
             else:
                 short = v.get("short_zhTW") or _to_tw(v.get("short_zhCN", ""))
             out[key]["shortName"] = short or name
@@ -693,7 +713,7 @@ def _locale_block(entries: dict[str, dict], lang: str) -> dict:
 def _types_locale(lang: str) -> dict:
     """Build the types-locale (category + subtype display names) for ``lang``.
 
-    Carries the curated ``public/locales/<lang>/types.yaml`` and injects the
+    Carries the curated aion2 ``public/locales/<lang>/types.yaml`` and injects the
     single yellow ``hiddenCube`` name (NO faction / key suffix) from
     ``EXTRA_SUBTYPE_NAMES``, dropping any legacy hiddenCube* variants.
     """
@@ -711,10 +731,12 @@ def _types_locale(lang: str) -> dict:
         subtypes.pop(legacy, None)
 
     def _pick(names: dict) -> str:
-        if lang == "en":
+        if lang == "en-US":
             return names["en"]
         if lang == "zh-CN":
             return names["zhCN"]
+        if lang == "ko-KR":
+            return names.get("ko") or names["en"]
         return names.get("zhTW") or _to_tw(names["zhCN"])
 
     for sub, names in EXTRA_SUBTYPE_NAMES.items():

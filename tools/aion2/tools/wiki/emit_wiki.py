@@ -23,7 +23,7 @@ from aion2.tools.wiki import entities, resolvers, tables, taxonomy
 DATA_REPO = TOOLS_ROOT.parent / "data"
 RESOURCE_REPO = TOOLS_ROOT.parent / "resource"
 WIKI_CFG = TOOLS_ROOT / "data_src" / "wiki.yaml"
-LANGS = ("en", "zh-CN", "zh-TW")
+LANGS = ("en-US", "zh-CN", "zh-TW", "ko-KR")
 _s2t = OpenCC("s2t")
 
 
@@ -37,7 +37,8 @@ def _write_json(path: Path, obj) -> None:
 
 def ltext(l10n, key) -> dict:
     en, cn = l10n.en(key), l10n.zh_cn(key)
-    return {"en": en, "zhCN": cn, "zhTW": _s2t.convert(cn) if cn else ""}
+    ko = l10n.ko(key) or en
+    return {"en": en, "zhCN": cn, "zhTW": _s2t.convert(cn) if cn else "", "ko": ko}
 
 
 def _has_text(text: dict) -> bool:
@@ -46,7 +47,7 @@ def _has_text(text: dict) -> bool:
 
 def _fallback_ltext(value: str | None) -> dict:
     value = value or ""
-    return {"en": value, "zhCN": value, "zhTW": value}
+    return {"en": value, "zhCN": value, "zhTW": value, "ko": value}
 
 
 def _ltext_or_fallback(l10n, key, fallback: str | None) -> dict:
@@ -161,7 +162,7 @@ def build_item_names(l10n, items=None) -> dict[str, dict]:
             out[name] = (
                 ltext(l10n, key)
                 if key
-                else {"en": name, "zhCN": name, "zhTW": name}
+                else {"en": name, "zhCN": name, "zhTW": name, "ko": name}
             )
     return out
 
@@ -200,7 +201,7 @@ def _goal_label(goal, target_names: dict, l10n) -> dict:
     """Objective label: '<Type>: <localized target>' with raw-key fallback."""
     target = goal["values"][0] if goal["values"] else ""
     loc = target_names.get(target)
-    base = loc if loc else {"en": target, "zhCN": target, "zhTW": target}
+    base = loc if loc else {"en": target, "zhCN": target, "zhTW": target, "ko": target}
     return {k: f"{goal['type']}: {v}" if v else goal["type"] for k, v in base.items()}
 
 
@@ -263,7 +264,7 @@ def build_quest_entity(
         {
             "id": item_ids.get(i["item"]),
             "name": item_names.get(
-                i["item"], {"en": i["item"], "zhCN": i["item"], "zhTW": i["item"]}
+                i["item"], {"en": i["item"], "zhCN": i["item"], "zhTW": i["item"], "ko": i["item"]}
             ),
             "count": i["count"],
         }
@@ -273,6 +274,7 @@ def build_quest_entity(
         "en": q["name"],
         "zhCN": q["name"],
         "zhTW": q["name"],
+        "ko": q["name"],
     }
     return {
         "id": q["id"],
@@ -521,7 +523,7 @@ def emit() -> None:
         )
 
     def lang_key(lng):
-        return {"en": "en", "zh-CN": "zhCN", "zh-TW": "zhTW"}[lng]
+        return {"en-US": "en", "zh-CN": "zhCN", "zh-TW": "zhTW", "ko-KR": "ko"}[lng]
 
     fallback_sections: set[str] = set()
     for lng in LANGS:
