@@ -72,12 +72,12 @@ def map_title(name: str, l10n: L10N) -> dict[str, str]:
     """Localized map title from ``Map.json``'s ``Desc.Key``.
 
     Maps absent from ``Map.json`` (e.g. ``World_L_B`` / ``World_D_B``) fall back
-    to the conventional ``STR_Map_<name>`` L10N key. Returns ``{"en", "zhCN"}``;
+    to the conventional ``STR_Map_<name>`` L10N key. Returns ``{"en", "zhCN", "ko"}``;
     values may be empty strings when the key has no L10N body.
     """
     entry = _maps_index().get(map_table_key(name)) or {}
     desc_key = (entry.get("Desc") or {}).get("Key") or f"STR_Map_{name}"
-    return {"en": l10n.en(desc_key), "zhCN": l10n.zh_cn(desc_key)}
+    return {"en": l10n.en(desc_key), "zhCN": l10n.zh_cn(desc_key), "ko": l10n.ko(desc_key)}
 
 
 @lru_cache(maxsize=None)
@@ -386,6 +386,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
             "Desc": desc,
             "name_en": l10n.en(desc.get("Key", "")),
             "name_zhCN": l10n.zh_cn(desc.get("Key", "")),
+            "name_ko": l10n.ko(desc.get("Key", "")),
             "resolved": g is not None,
         })
 
@@ -451,6 +452,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
             "DisplayName": s["DisplayName"],
             "name_en": l10n.en(s["DisplayName"]["Key"]),
             "name_zhCN": l10n.zh_cn(s["DisplayName"]["Key"]),
+            "name_ko": l10n.ko(s["DisplayName"]["Key"]),
             "WorldMapFogGroupId": s["WorldMapFogGroupId"],
             "SubzoneType": s["SubzoneType"],
             "bMapEnabled": s.get("bMapEnabled", False),
@@ -521,6 +523,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
             "Title": title,
             "title_en": title_en,
             "title_zhCN": l10n.zh_cn(title.get("Key", "")),
+            "title_ko": l10n.ko(title.get("Key", "")),
             "FragmentCount": group_frag_count[grp],
             "SubzoneId": canon,
             "SubzoneName": canon_sz["Name"] if canon_sz else None,
@@ -542,11 +545,11 @@ def extract_map(name: str, l10n: L10N) -> dict:
 
     # Subzone polygons in WORLD space, for the teleport name fallback (only used
     # if an EnvObj Desc ever resolves empty — none currently do). Each entry is
-    # (shapely Polygon, name_en, name_zhCN); we pick the containing subzone, else
+    # (shapely Polygon, name_en, name_zhCN, name_ko); we pick the containing subzone, else
     # the nearest by polygon distance.
     _subzone_polys = []
     for s in subzones:
-        if not s.get("name_en") and not s.get("name_zhCN"):
+        if not s.get("name_en") and not s.get("name_zhCN") and not s.get("name_ko"):
             continue
         g = geom.get(s["ID"], {})
         pts = g.get("Points") or []
@@ -557,29 +560,29 @@ def extract_map(name: str, l10n: L10N) -> dict:
             poly = poly.buffer(0)
         if poly.is_empty:
             continue
-        _subzone_polys.append((poly, s.get("name_en", ""), s.get("name_zhCN", "")))
+        _subzone_polys.append((poly, s.get("name_en", ""), s.get("name_zhCN", ""), s.get("name_ko", "")))
 
     def _subzone_name_at(loc3):
-        """(name_en, name_zhCN) of the subzone containing world (x, y), else the
-        nearest subzone. ('', '') if no subzone geometry on this map."""
+        """(name_en, name_zhCN, name_ko) of the subzone containing world (x, y),
+        else the nearest subzone. ('', '', '') if no subzone geometry on this map."""
         if not _subzone_polys or not loc3 or loc3[0] is None:
-            return "", ""
+            return "", "", ""
         from shapely.geometry import Point
         pt = Point(loc3[0], loc3[1])
         best = None
         best_d = None
-        for poly, en, zh in _subzone_polys:
+        for poly, en, zh, ko in _subzone_polys:
             if poly.contains(pt):
-                return en, zh
+                return en, zh, ko
             d = poly.distance(pt)
             if best_d is None or d < best_d:
-                best_d, best = d, (en, zh)
-        return best if best else ("", "")
+                best_d, best = d, (en, zh, ko)
+        return best if best else ("", "", "")
 
     world_markers = []
     for s in md["Properties"]["Data"].get("SpawnInfoList", []):
         env = set(_ids(s.get("EnvObjIdList", [])))
-        # (kind, name_en, name_zhCN, env_obj_id, extra, per_position)
+        # (kind, name_en, name_zhCN, name_ko, env_obj_id, extra, per_position)
         # per_position=True emits one marker per Positions entry (node-level
         # density); otherwise one marker at Positions[0] (the spawner anchor).
         emit = []
@@ -590,6 +593,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
                 "teleport",
                 l10n.en(tp_key) or "",
                 l10n.zh_cn(tp_key) or "",
+                l10n.ko(tp_key) or "",
                 tp_eid,
                 None,
                 False,
@@ -598,7 +602,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
             # Hidden-cube spawners list BOTH variants (one bIsKeyOnly=False open +
             # one bIsKeyOnly=True key-only EnvObj def) at the same spawn points; we
             # keep ONLY the yellow (openable) cube and drop the key-only variant.
-            emit.append(("hiddenCube", "", "", next(iter(env & hc_open_ids)), None, False))
+            emit.append(("hiddenCube", "", "", "", next(iter(env & hc_open_ids)), None, False))
         # gathering: one marker PER NODE POSITION (gather fields have many nodes:
         # 3-66 positions per spawn entry, vs 1 for teleport). Subtype carries the
         # specific material name resolved from the EnvObj Desc.
@@ -610,6 +614,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
                 "gathering",
                 mat_en,
                 l10n.zh_cn(gi["descKey"]) or "",
+                l10n.ko(gi["descKey"]) or "",
                 gather_hit,
                 # extra: (sourceType, materialName) — emit_frontend maps the
                 # specific material to a legacy gathering subtype (icon+name)
@@ -631,6 +636,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
                 "dungeon",
                 l10n.en(name_key) or "",
                 l10n.zh_cn(name_key) or "",
+                l10n.ko(name_key) or "",
                 dg_env_id,
                 None,
                 False,
@@ -643,6 +649,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
                     "seal",
                     l10n.en(title.get("Key", "")) or "",
                     l10n.zh_cn(title.get("Key", "")) or "",
+                    l10n.ko(title.get("Key", "")) or "",
                     next((i for i in env if i in seal_env), next(iter(env)) if env else None),
                     None,
                     False,
@@ -659,6 +666,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
                     "boss",
                     l10n.en(desc.get("Key", "")) or "",
                     l10n.zh_cn(desc.get("Key", "")) or "",
+                    l10n.ko(desc.get("Key", "")) or "",
                     None,
                     None,
                     False,
@@ -668,23 +676,24 @@ def extract_map(name: str, l10n: L10N) -> dict:
         positions = s.get("Positions") or []
         if not positions:
             continue
-        for kind, name_en, name_zh, env_obj_id, extra, per_position in emit:
+        for kind, name_en, name_zh, name_ko, env_obj_id, extra, per_position in emit:
             locs = positions if per_position else positions[:1]
             for p in locs:
                 loc = p["Location"]
                 loc3 = [round(loc["X"], 2), round(loc["Y"], 2), round(loc["Z"], 2)]
-                m_name_en, m_name_zh = name_en, name_zh
+                m_name_en, m_name_zh, m_name_ko = name_en, name_zh, name_ko
                 # Teleport fallback: if the EnvObj Desc resolved empty, name the
                 # marker after the subzone that contains (or is nearest to) it,
                 # so it's at least a place name rather than a number.
-                if kind == "teleport" and not m_name_en and not m_name_zh:
-                    m_name_en, m_name_zh = _subzone_name_at(loc3)
+                if kind == "teleport" and not (m_name_en or m_name_zh or m_name_ko):
+                    m_name_en, m_name_zh, m_name_ko = _subzone_name_at(loc3)
                 wm = {
                     "kind": kind,
                     "Name": s["Name"],
                     "EnvObjId": env_obj_id,
                     "name_en": m_name_en,
                     "name_zhCN": m_name_zh,
+                    "name_ko": m_name_ko,
                     "Location": loc3,
                     "px": to_px(loc3),
                 }
@@ -711,6 +720,7 @@ def extract_map(name: str, l10n: L10N) -> dict:
                 "EnvObjId": None,
                 "name_en": sz.get("name_en", ""),
                 "name_zhCN": sz.get("name_zhCN", ""),
+                "name_ko": sz.get("name_ko", ""),
                 "Location": sz["Location"],
                 "px": sz["px"],
                 "entity": {"type": "quest", "id": quest_id},

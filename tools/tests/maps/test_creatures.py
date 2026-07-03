@@ -61,6 +61,9 @@ class _FakeL10N:
     def zh_cn(self, key):
         return {"str_veh_A": "宠物A"}.get(key, "")
 
+    def ko(self, key):
+        return {"str_veh_A": "펫A"}.get(key, "")
+
 
 _PORTRAIT = "UI/Resource/Texture/Portrait/Portrait_Vehicle/UT_Vehicle_Portrait_"
 
@@ -82,7 +85,10 @@ def test_build_creature_markers_clusters_per_pet_with_z_and_icon():
     )
     assert len(out) == 2  # (0,0)+(40,0) merge; (3000,3000) separate
     assert all(m["kind"] == "creatureFeral" for m in out)
-    assert all(m["name_en"] == "PetA" and m["name_zhCN"] == "宠物A" for m in out)
+    assert all(
+        m["name_en"] == "PetA" and m["name_zhCN"] == "宠物A" and m["name_ko"] == "펫A"
+        for m in out
+    )
     assert sorted(m["count"] for m in out) == [1, 2]
     assert all(m["petKey"] == "str_veh_A" for m in out)
     # world-Z average carried in Location[2]
@@ -154,6 +160,7 @@ def test_extract_world_l_a_emits_creature_markers():
     for w in creatures:
         assert w["px"] and 0 <= w["px"][0] <= 8192 and 0 <= w["px"][1] <= 8192
         assert w["name_en"]      # localized pet name, non-empty
+        assert w["name_ko"]      # localized pet name, non-empty
         assert w["count"] >= 1
         assert w.get("Location") and w["Location"][2] is not None   # world-Z carried
     # nearly every pet has a portrait icon (only a handful lack raw art)

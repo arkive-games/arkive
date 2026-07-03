@@ -119,7 +119,7 @@ def build_creature_markers(spawn_info_list, transform, index, l10n,
     Pools every source NPC's spawn positions per pet (keyed by the pet's
     ``descKey``), transforms (x, y) world->pixel while carrying world Z, and
     clusters each pet's points. Each marker carries:
-    ``{"kind", "name_en", "name_zhCN", "Location": [None, None, worldZ],
+    ``{"kind", "name_en", "name_zhCN", "name_ko", "Location": [None, None, worldZ],
        "px": [x, y], "count", "petKey"[, "icon"]}`` where ``Location[2]`` is the
     cluster's mean world Z (emit_frontend scales it to pixel-z), and ``icon`` is
     the per-pet portrait (set only when its stem is in ``available_portraits``;
@@ -156,6 +156,7 @@ def build_creature_markers(spawn_info_list, transform, index, l10n,
         meta = pet_meta[key]
         name_en = l10n.en(key)
         name_zh = l10n.zh_cn(key)
+        name_ko = l10n.ko(key)
         stem = "UT_Vehicle_Portrait_" + meta.get("petName", "")
         icon = (
             PORTRAIT_DIR + stem + ".webp"
@@ -167,6 +168,7 @@ def build_creature_markers(spawn_info_list, transform, index, l10n,
                 "kind": meta["subtype"],
                 "name_en": name_en,
                 "name_zhCN": name_zh,
+                "name_ko": name_ko,
                 # x, y unused (clustered in pixel space); Z is the cluster's mean
                 # world height, scaled to pixel-z by emit_frontend.
                 "Location": [None, None, c["z"]],
