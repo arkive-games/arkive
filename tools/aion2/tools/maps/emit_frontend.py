@@ -93,7 +93,8 @@ EXTRA_SUBTYPE_NAMES = {
     "dungeon": {"en": "Dungeon", "zhCN": "副本", "zhTW": "副本", "ko": "던전"},
     "boss": {"en": "Boss", "zhCN": "Boss", "zhTW": "Boss", "ko": "보스"},
     # 驻地 / garrison occupation objectives.
-    "occupation": {"en": "Garrison", "zhCN": "驻地", "zhTW": "駐地"},
+    # ko hand-curated (no exact L10N string match for the short "Garrison" form).
+    "occupation": {"en": "Garrison", "zhCN": "驻地", "zhTW": "駐地", "ko": "주둔지"},
 }
 
 # Visible-map ordering / type, keyed by parsed map Name. Maps not present in
@@ -237,14 +238,14 @@ GATHER_SUBTYPE_NAMES = {
     # SourceType fallbacks
     "gatheringOd":        {"en": "Odyle",      "zhCN": "奥德", "zhTW": "奧德", "ko": "오드"},
     "gatheringHerb":      {"en": "Herb",       "zhCN": "草药", "zhTW": "草藥", "ko": "약초"},
-    "gatheringJewelry":   {"en": "Gemstone",   "zhCN": "宝石", "zhTW": "寶石"},
+    "gatheringJewelry":   {"en": "Gemstone",   "zhCN": "宝石", "zhTW": "寶石", "ko": "보석"},
     "gatheringMetal":     {"en": "Metal",      "zhCN": "金属", "zhTW": "金屬", "ko": "금속"},
-    "gatheringRareMetal": {"en": "Rare Metal", "zhCN": "稀有金属", "zhTW": "稀有金屬"},
-    "gatheringTree":      {"en": "Wood",       "zhCN": "木材", "zhTW": "木材"},
+    "gatheringRareMetal": {"en": "Rare Metal", "zhCN": "稀有金属", "zhTW": "稀有金屬", "ko": "희귀 금속"},
+    "gatheringTree":      {"en": "Wood",       "zhCN": "木材", "zhTW": "木材", "ko": "목재"},
     "gatheringFlower":    {"en": "Flower",     "zhCN": "花卉", "zhTW": "花卉", "ko": "플라워"},
-    "gatheringBerry":     {"en": "Berry",      "zhCN": "浆果", "zhTW": "漿果"},
+    "gatheringBerry":     {"en": "Berry",      "zhCN": "浆果", "zhTW": "漿果", "ko": "베리"},
     "gatheringVegetable": {"en": "Vegetable",  "zhCN": "蔬菜", "zhTW": "蔬菜", "ko": "채소"},
-    "gatheringShellfish": {"en": "Shellfish",  "zhCN": "贝类", "zhTW": "貝類"},
+    "gatheringShellfish": {"en": "Shellfish",  "zhCN": "贝类", "zhTW": "貝類", "ko": "조개류"},
 }
 
 _cc_s2t = OpenCC("s2t")
