@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 const readRowsFile = (file) =>
   JSON.parse(fs.readFileSync(file, 'utf8'))[0].Rows;
@@ -12,10 +13,15 @@ export const L10N_LANG_TAGS = {
   ru: 'ru-RU', th: 'th-TH', tr: 'tr-TR', vi: 'vi-VN',
   'zh-Hans': 'zh-CN', 'zh-Hant': 'zh-TW',
 };
+// The game's BASE tables (SourceString) are authored in Japanese, so ja-JP is
+// sourced from the base tables rather than an L10N folder.
+export const JA_TAG = 'ja-JP';
 
+// Persistent-level actors (Maps/MainWorld_5/PL_MainWorld5.json).
 const POI_CLASSES = [
   { subtype: 'fastTravel', match: (t) => t === 'BP_LevelObject_TowerFastTravelPoint_C' },
   { subtype: 'eagleStatue', match: (t) => t === 'BP_LevelObject_UnlockMapPoint_C' },
+  { subtype: 'tower', match: (t) => /^BP_PalBossTower(_.+)?_C$/.test(t) },
   { subtype: 'dungeon', match: (t) => /^BP_DungeonPortalMarker_.+_C$/.test(t) },
   { subtype: 'treasureMap', match: (t) => t === 'BP_LevelObject_TreasureMapPoint_C' },
   { subtype: 'note', match: (t) => t === 'BP_LevelObject_Note_C' },
@@ -23,6 +29,27 @@ const POI_CLASSES = [
   { subtype: 'quartz', match: (t) => t === 'BP_PalMapObjectSpawner_RockQuartz_C' },
   { subtype: 'coal', match: (t) => t === 'BP_PalMapObjectSpawner_RockCoal_C' },
   { subtype: 'sulfur', match: (t) => t === 'BP_PalMapObjectSpawner_Sulfur_C' },
+];
+
+// World-Partition cell actors (PL_MainWorld5/_Generated_/MainGrid*.json). These
+// appear at inconsistent LODs (effigies only in L15, chests/eggs only in L0),
+// so we scan every MainGrid cell that references any target class and dedup by
+// rounded world location.
+const CELL_CLASSES = [
+  { subtype: 'lifmunkEffigy', match: (t) => t === 'BP_LevelObject_Relic_C' },
+  { subtype: 'skillFruit', match: (t) => /^BP_PalMapObjectSpawner_SkillFruits_.+_C$/.test(t) },
+  { subtype: 'egg', match: (t) => /^bp_palmapobjectspawner_palegg_.+_C$/i.test(t) },
+  { subtype: 'chest', match: (t) => /^BP_PalMapObjectSpawner_Treasure_.+_C$/.test(t) },
+  { subtype: 'camp', match: (t) => /^BP_NPCCampSpawner_.+_C$/.test(t) },
+];
+const CELL_GREP = 'BP_LevelObject_Relic_C|BP_PalMapObjectSpawner_SkillFruits_|palmapobjectspawner_palegg_|BP_PalMapObjectSpawner_Treasure_|BP_NPCCampSpawner_';
+
+// Post-1.0 content not covered by the pre-1.0 taxonomy — surfaced for the
+// point-11 report. Values are raw class/id patterns; counts computed at extract.
+const NEW_TYPE_WATCH = [
+  { key: 'oilrigTreasure', desc: 'Oil Rig raid treasure boxes', pattern: 'BP_OilrigTreasureBoxSpawner_C' },
+  { key: 'oilrigGoal', desc: 'Oil Rig raid goal points', pattern: 'BP_OilrigTreasureBoxSpawner_Goal_C' },
+  { key: 'dlcCamp', desc: 'DLC syndicate camps (fold into camp)', pattern: 'BP_NPCCampSpawner_DLC[0-9]' },
 ];
 
 function readPalNames(tablePath) {
@@ -42,12 +69,102 @@ function readL10nPalNames(raw, folder, tag) {
   return readPalNames(tablePath);
 }
 
+// Fast-travel / respawn-point display names. Base table holds ja SourceString;
+// each L10N folder holds LocalizedString for one language.
+function readRespawnNames(tablePath) {
+  if (!fs.existsSync(tablePath)) return {};
+  const rows = readRowsFile(tablePath);
+  const m = {};
+  for (const [key, r] of Object.entries(rows)) {
+    const s = r?.TextData?.LocalizedString || r?.TextData?.SourceString;
+    if (s) m[key] = s;
+  }
+  return m;
+}
+
+function readRespawnNamesByLang(raw) {
+  const base = readRespawnNames(path.join(raw, 'DataTable/Text/DT_MapRespawnPointInfoText.json'));
+  const byLang = { [JA_TAG]: base };
+  for (const [folder, tag] of Object.entries(L10N_LANG_TAGS)) {
+    const loc = readRespawnNames(path.join(raw, '..', 'L10N', folder, 'Pal/DataTable/Text/DT_MapRespawnPointInfoText.json'));
+    byLang[tag] = { ...base, ...loc }; // fall back to ja for keys missing a translation
+  }
+  return byLang;
+}
+
+// Resolve the display name for a fast-travel point across all languages.
+function fastTravelNameByLng(ftNames, pointId) {
+  if (!pointId) return null;
+  const byLng = {};
+  let any = false;
+  for (const [tag, table] of Object.entries(ftNames)) {
+    const name = table[pointId] || table[`${pointId}_Title`];
+    if (name) { byLng[tag] = name; any = true; }
+  }
+  return any ? byLng : null;
+}
+
 function actorLocation(actor, exportsArr) {
   const objPath = actor.Properties?.RootComponent?.ObjectPath;
   if (!objPath) return null;
   const idx = Number(objPath.split('.').pop());
   const loc = exportsArr[idx]?.Properties?.RelativeLocation;
   return loc ? { X: loc.X, Y: loc.Y, Z: loc.Z ?? 0 } : null;
+}
+
+// Scan every MainGrid cell that references a target class; dedup identical
+// actors that recur across LOD levels by rounded (1m grid) world location.
+function extractCellPois(raw) {
+  const cellsDir = path.join(raw, 'Maps/MainWorld_5/PL_MainWorld5/_Generated_');
+  let files = [];
+  try {
+    const out = execSync(`grep -rlEi --include='MainGrid*.json' "${CELL_GREP}" .`,
+      { cwd: cellsDir, maxBuffer: 1 << 28 }).toString();
+    files = out.split('\n').map((f) => f.trim()).filter(Boolean);
+  } catch (err) {
+    // grep exits non-zero when nothing matches; treat as empty
+    if (err.status !== 1) throw err;
+  }
+  const pois = [];
+  const seen = new Set();
+  const key = (subtype, loc) =>
+    `${subtype}|${Math.round(loc.X / 100)}|${Math.round(loc.Y / 100)}`;
+  for (const rel of files) {
+    const arr = JSON.parse(fs.readFileSync(path.join(cellsDir, rel), 'utf8'));
+    for (const exp of arr) {
+      const cls = CELL_CLASSES.find((c) => c.match(exp.Type ?? ''));
+      if (!cls) continue;
+      const location = actorLocation(exp, arr);
+      if (!location) continue;
+      const k = key(cls.subtype, location);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      pois.push({ subtype: cls.subtype, sourceName: exp.Name, location });
+    }
+  }
+  return pois;
+}
+
+function countNewTypeCandidates(raw) {
+  const cellsDir = path.join(raw, 'Maps/MainWorld_5/PL_MainWorld5/_Generated_');
+  const levelFile = path.join(raw, 'Maps/MainWorld_5/PL_MainWorld5.json');
+  const grepCount = (pattern, target, opts = '') => {
+    try {
+      const out = execSync(`grep -rhoEi ${opts} "\\"Type\\": \\"${pattern}[A-Za-z0-9_]*\\"" ${target}`,
+        { cwd: cellsDir, maxBuffer: 1 << 28 }).toString();
+      return out.split('\n').filter(Boolean).length;
+    } catch (err) {
+      if (err.status === 1) return 0;
+      throw err;
+    }
+  };
+  const out = {};
+  for (const w of NEW_TYPE_WATCH) {
+    const inCells = grepCount(w.pattern, ".", "--include='*.json'");
+    const inLevel = grepCount(w.pattern, `'${levelFile}'`);
+    out[w.key] = { desc: w.desc, pattern: w.pattern, count: inCells + inLevel };
+  }
+  return out;
 }
 
 export function runExtract(raw) {
@@ -57,6 +174,8 @@ export function runExtract(raw) {
     WorldTree: { min: uiRows.Tree.landScapeRealPositionMin, max: uiRows.Tree.landScapeRealPositionMax },
   };
 
+  const ftNames = readRespawnNamesByLang(raw);
+
   const level = JSON.parse(fs.readFileSync(
     path.join(raw, 'Maps/MainWorld_5/PL_MainWorld5.json'), 'utf8'));
   const pois = [];
@@ -65,8 +184,15 @@ export function runExtract(raw) {
     if (!cls) continue;
     const location = actorLocation(exp, level);
     if (!location) continue;
-    pois.push({ subtype: cls.subtype, sourceName: exp.Name, location });
+    const poi = { subtype: cls.subtype, sourceName: exp.Name, location };
+    if (cls.subtype === 'fastTravel') {
+      const nameByLng = fastTravelNameByLng(ftNames, exp.Properties?.FastTravelPointID);
+      if (nameByLng) poi.nameByLng = nameByLng;
+    }
+    pois.push(poi);
   }
+  // World-Partition cell collectibles (effigies, skill fruit, eggs, chests, camps)
+  pois.push(...extractCellPois(raw));
 
   const bossRows = readRows(raw, 'DataTable/UI/DT_BossSpawnerLoactionData.json');
   const bosses = Object.entries(bossRows)
@@ -98,8 +224,16 @@ export function runExtract(raw) {
     });
   }
 
+  // Paldeck order metadata: ZukanIndex (asc), ZukanIndexSuffix as tiebreak.
+  const monParam = readRows(raw, 'DataTable/Character/DT_PalMonsterParameter.json');
+  const palMeta = {};
+  for (const [id, r] of Object.entries(monParam)) {
+    palMeta[id] = { zukanIndex: r.ZukanIndex ?? -1, zukanIndexSuffix: r.ZukanIndexSuffix ?? '' };
+  }
+
   const namesByLang = Object.fromEntries(Object.entries(L10N_LANG_TAGS)
     .map(([folder, tag]) => [tag, readL10nPalNames(raw, folder, tag)]));
+  namesByLang[JA_TAG] = readPalNames(path.join(raw, 'DataTable/Text/DT_PalNameText_Common.json'));
 
   const palIcons = new Set(
     fs.readdirSync(path.join(raw, 'Texture/PalIcon/Normal'))
@@ -107,7 +241,9 @@ export function runExtract(raw) {
       .map((f) => f.slice(0, -4)),
   );
 
-  return { bounds, pois, bosses, palSpawns, namesByLang, palIcons };
+  const newTypeCandidates = countNewTypeCandidates(raw);
+
+  return { bounds, pois, bosses, palSpawns, palMeta, namesByLang, palIcons, newTypeCandidates };
 }
 
 export function writeParsed(raw, outDir) {
