@@ -46,6 +46,7 @@ subtypes:
   - id: alphaPal
     category: boss
     icon: T_icon_compass_boss
+    color: "#ef4444"
     names: { en-US: Alpha Pal, ja-JP: フィールドボス, de-DE: Alpha-Pal, es-ES: Pal alfa, es-MX: Pal alfa, fr-FR: Pal alpha, id-ID: Pal Alfa, it-IT: Pal alfa, ko-KR: 알파 팰, pl-PL: Pal alfa, pt-BR: Pal alfa, ru-RU: Альфа-Пал, th-TH: พัลอัลฟา, tr-TR: Alfa Pal, vi-VN: Pal Alpha, zh-CN: 阿尔法帕鲁, zh-TW: 阿爾法帕魯 }
   - id: treasureMap
     category: collectible
