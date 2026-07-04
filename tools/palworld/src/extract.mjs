@@ -107,6 +107,34 @@ function fastTravelNameByLng(ftNames, pointId) {
   return any ? byLng : null;
 }
 
+// Tower point names come back as "<Tower name> <Entrance>" (e.g. "Rayne
+// Syndicate Tower Entrance", "雷恩盗猎集团的高塔 入口"). Strip the trailing
+// localized "Entrance" word per language WITHOUT a hardcoded word list: across
+// the tower set the entrance word is the shared trailing space-token, so we
+// find the most common one per language and strip only that. Names with no
+// such suffix (e.g. "Deserted Islet", "Within the Seal") are left untouched.
+function stripEntranceSuffixes(nameMaps) {
+  const langs = new Set();
+  for (const m of nameMaps) for (const l of Object.keys(m)) langs.add(l);
+  for (const lng of langs) {
+    const counts = new Map();
+    for (const m of nameMaps) {
+      const s = m[lng];
+      const i = s ? s.lastIndexOf(' ') : -1;
+      if (i < 0) continue;
+      const tok = s.slice(i + 1);
+      counts.set(tok, (counts.get(tok) ?? 0) + 1);
+    }
+    let suffix = null, best = 0;
+    for (const [tok, n] of counts) if (n > best) { best = n; suffix = tok; }
+    if (!suffix || best < 3) continue; // needs to recur to count as "Entrance"
+    const tail = ` ${suffix}`;
+    for (const m of nameMaps) {
+      if (m[lng]?.endsWith(tail)) m[lng] = m[lng].slice(0, -tail.length);
+    }
+  }
+}
+
 function actorLocation(actor, exportsArr) {
   const objPath = actor.Properties?.RootComponent?.ObjectPath;
   if (!objPath) return null;
@@ -181,6 +209,28 @@ export function runExtract(raw) {
 
   const level = JSON.parse(fs.readFileSync(
     path.join(raw, 'Maps/MainWorld_5/PL_MainWorld5.json'), 'utf8'));
+
+  // Tower fast-travel points carry a FastTravelPointID that keys the tower's
+  // name in the respawn table. Two blueprint classes exist
+  // (BP_LevelObject_ and BP_MapObject_TowerFastTravelPoint_C); match both. Each
+  // BP_PalBossTower actor sits at exactly one of these (verified 1:1 mutual
+  // nearest), so a nearest-point lookup resolves the tower's name.
+  const towerFtPoints = [];
+  for (const exp of level) {
+    if (!/TowerFastTravelPoint_C$/.test(exp.Type ?? '')) continue;
+    const id = exp.Properties?.FastTravelPointID;
+    const loc = actorLocation(exp, level);
+    if (id && loc) towerFtPoints.push({ id, loc });
+  }
+  const towerNameByLng = (loc) => {
+    let best = null, bd = Infinity;
+    for (const f of towerFtPoints) {
+      const d = Math.hypot(f.loc.X - loc.X, f.loc.Y - loc.Y);
+      if (d < bd) { bd = d; best = f; }
+    }
+    return best ? fastTravelNameByLng(ftNames, best.id) : null;
+  };
+
   const pois = [];
   for (const exp of level) {
     const cls = POI_CLASSES.find((c) => c.match(exp.Type ?? ''));
@@ -191,9 +241,15 @@ export function runExtract(raw) {
     if (cls.subtype === 'fastTravel') {
       const nameByLng = fastTravelNameByLng(ftNames, exp.Properties?.FastTravelPointID);
       if (nameByLng) poi.nameByLng = nameByLng;
+    } else if (cls.subtype === 'tower') {
+      const nameByLng = towerNameByLng(location);
+      if (nameByLng) poi.nameByLng = nameByLng;
     }
     pois.push(poi);
   }
+  // Drop the localized "Entrance" suffix from tower names (data-driven, no
+  // per-language word list).
+  stripEntranceSuffixes(pois.filter((p) => p.subtype === 'tower' && p.nameByLng).map((p) => p.nameByLng));
   // World-Partition cell collectibles (effigies, skill fruit, eggs, chests, camps)
   pois.push(...extractCellPois(raw));
 
