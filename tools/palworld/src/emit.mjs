@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
-import { makeTransform } from './transform.mjs';
+import { makeTransform, makeInverseTransform } from './transform.mjs';
 import { assignMap } from './bounds.mjs';
 import { clusterPoints } from './cluster.mjs';
 import { ORIENTATIONS } from './orientation.mjs';
@@ -37,12 +37,20 @@ export function buildDataset(parsed) {
   ];
   const transforms = Object.fromEntries(mapIds.map((id) =>
     [id, makeTransform(bounds[id], ORIENTATIONS[id], SIZE, SIZE)]));
+  const inverses = Object.fromEntries(mapIds.map((id) =>
+    [id, makeInverseTransform(bounds[id], ORIENTATIONS[id], SIZE, SIZE)]));
 
-  // maps.json
+  // maps.json — markers/regions now store RAW WORLD coords; publish the
+  // world→pixel params (bounds + orientation) so the frontend derives pixels.
   const maps = src.maps.map((m) => ({
     id: m.id, name: m.id, type: 'world',
     tileWidth: 1024, tileHeight: 1024, tilesCountX: 8, tilesCountY: 8,
     isVisible: true,
+    worldBounds: {
+      min: { x: bounds[m.id].min.X, y: bounds[m.id].min.Y },
+      max: { x: bounds[m.id].max.X, y: bounds[m.id].max.Y },
+    },
+    orientation: ORIENTATIONS[m.id],
   }));
 
   // Per-pal subtypes (points 9/10): one subtype per distinct wild-spawn pal,
@@ -108,16 +116,19 @@ export function buildDataset(parsed) {
   const candidates = Object.fromEntries(mapIds.map((id) => [id, []]));
   const subtypeCat = Object.fromEntries(subtypeDefs.map((s) => [s.id, s.category]));
   const push = (mapId, c) => candidates[mapId].push(c);
+  // Pixel position (used for pal-spawn clustering, which runs in pixel space).
   const toPx = (mapId, loc) => {
     const { x, y } = transforms[mapId](loc);
     return { x: round2(x), y: round2(y), z: round2(loc.Z ?? 0) };
   };
+  // Emitted position: RAW WORLD coords (x=world X, y=world Y, z=world Z).
+  const toWorld = (loc) => ({ x: round2(loc.X), y: round2(loc.Y), z: round2(loc.Z ?? 0) });
 
   for (const p of parsed.pois) {
     const mapId = assignMap(p.location, assignOrder);
     if (!mapId) continue;
     push(mapId, {
-      subtype: p.subtype, ...toPx(mapId, p.location), sortKey: p.sourceName,
+      subtype: p.subtype, ...toWorld(p.location), sortKey: p.sourceName,
       ...(p.nameByLng ? { nameByLng: p.nameByLng } : {}),
     });
   }
@@ -129,7 +140,7 @@ export function buildDataset(parsed) {
       [lng, `${palName(namesByLang[lng], b.characterId)} Lv.${b.level}`]));
     const z = zForId(b.characterId);
     push(mapId, {
-      subtype: 'alphaPal', ...toPx(mapId, b.location),
+      subtype: 'alphaPal', ...toWorld(b.location),
       icon: palIcon(palIcons, b.characterId) ?? 'T_icon_compass_boss',
       sortKey: `${b.characterId}-${b.key}`,
       nameByLng,
@@ -159,8 +170,11 @@ export function buildDataset(parsed) {
       for (const c of clusterPoints(points, radius)) {
         let lvMin = Infinity, lvMax = -Infinity;
         for (const it of c.items) { lvMin = Math.min(lvMin, it.lvMin); lvMax = Math.max(lvMax, it.lvMax); }
+        // Cluster centroid is in pixel space → back to world for emission.
+        // sortKey stays pixel-based so marker ids match the pre-migration order.
+        const w = inverses[mapId](c.x, c.y);
         push(mapId, {
-          subtype: palId, x: c.x, y: c.y, z: c.z,
+          subtype: palId, x: round2(w.X), y: round2(w.Y), z: c.z,
           icon: palIcon(palIcons, palId) ?? undefined,
           sortKey: `${c.x},${c.y}`,
           descByLng: Object.fromEntries(languages.map((lng) => [lng, `Lv.${lvMin}–${lvMax}`])),

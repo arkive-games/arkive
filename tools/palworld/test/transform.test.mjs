@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeTransform } from '../src/transform.mjs';
+import { makeTransform, makeInverseTransform } from '../src/transform.mjs';
 import { assignMap } from '../src/bounds.mjs';
 
 const bounds = { min: { X: -1099400, Y: -724400 }, max: { X: 349400, Y: 724400 } };
@@ -19,6 +19,29 @@ describe('makeTransform', () => {
     const t = makeTransform(bounds, { pxAxis: 'X', flipX: true, flipY: true }, 8192, 8192);
     expect(t({ X: -1099400, Y: -724400 })).toEqual({ x: 8192, y: 8192 });
   });
+});
+
+describe('makeInverseTransform', () => {
+  for (const orientation of [
+    { pxAxis: 'X', flipX: false, flipY: false },
+    { pxAxis: 'Y', flipX: false, flipY: true },
+    { pxAxis: 'Y', flipX: true, flipY: true },
+  ]) {
+    it(`round-trips world→pixel→world for ${JSON.stringify(orientation)}`, () => {
+      const fwd = makeTransform(bounds, orientation, 8192, 8192);
+      const inv = makeInverseTransform(bounds, orientation, 8192, 8192);
+      for (const w of [
+        { X: -375000, Y: 0 },
+        { X: 12345.6, Y: -98765.4 },
+        { X: 200000, Y: 500000 },
+      ]) {
+        const p = fwd(w);
+        const back = inv(p.x, p.y);
+        expect(back.X).toBeCloseTo(w.X, 3);
+        expect(back.Y).toBeCloseTo(w.Y, 3);
+      }
+    });
+  }
 });
 
 describe('assignMap', () => {

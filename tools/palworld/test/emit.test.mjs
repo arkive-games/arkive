@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { buildDataset } from '../src/emit.mjs';
+import { makeTransform } from '../src/transform.mjs';
 
-const languages = ['en-US', 'de-DE', 'es-ES', 'es-MX', 'fr-FR', 'id-ID', 'it-IT', 'ko-KR', 'pl-PL', 'pt-BR', 'ru-RU', 'th-TH', 'tr-TR', 'vi-VN', 'zh-CN', 'zh-TW'];
+const languages = ['en-US', 'ja-JP', 'de-DE', 'es-ES', 'es-MX', 'fr-FR', 'id-ID', 'it-IT', 'ko-KR', 'pl-PL', 'pt-BR', 'ru-RU', 'th-TH', 'tr-TR', 'vi-VN', 'zh-CN', 'zh-TW'];
 const namesByLang = Object.fromEntries(languages.map((lng) => [lng, {
   Kitsunebi: `${lng} Kitsunebi`,
   SheepBall: `${lng} SheepBall`,
@@ -27,6 +28,10 @@ const parsed = {
     { spawnerName: 'sp1', pals: [{ id: 'SheepBall', lvMin: 1, lvMax: 3 }], location: { X: 50, Y: 50, Z: 0 } },
   ],
   namesByLang,
+  palMeta: {
+    SheepBall: { zukanIndex: 2, zukanIndexSuffix: '' },
+    Kitsunebi: { zukanIndex: 5, zukanIndexSuffix: '' },
+  },
   palIcons: new Set(['T_Kitsunebi_icon_normal', 'T_SheepBall_icon_normal']),
 };
 
@@ -52,22 +57,45 @@ describe('buildDataset', () => {
   });
 
   it('gives bosses per-pal icons and localized Lv names in every locale', () => {
-    const boss = ds.markers.MainWorld.find((m) => m.subtype === 'fieldBoss');
+    const boss = ds.markers.MainWorld.find((m) => m.subtype === 'alphaPal');
     expect(boss.icon).toBe('T_Kitsunebi_icon_normal');
     expect(ds.locales['en-US'].markers.MainWorld[boss.id].name).toBe('Foxparks Lv.12');
     expect(ds.locales['ko-KR'].markers.MainWorld[boss.id].name).toBe('불꽃여우 Lv.12');
   });
 
-  it('clusters pal spawns and lists pals in the description', () => {
-    const spawns = ds.markers.MainWorld.filter((m) => m.subtype === 'palSpawn');
+  it('clusters pal spawns into a per-pal subtype with a Lv-range description', () => {
+    const spawns = ds.markers.MainWorld.filter((m) => m.subtype === 'SheepBall');
     expect(spawns).toHaveLength(1); // two placements 70px apart → one cluster
     expect(spawns[0].icon).toBe('T_SheepBall_icon_normal');
     const en = ds.locales['en-US'].markers.MainWorld[spawns[0].id];
     const ko = ds.locales['ko-KR'].markers.MainWorld[spawns[0].id];
-    expect(en.name).toBe('Lamball');
-    expect(en.description).toBe('Lamball Lv.1–3');
-    expect(ko.name).toBe('도로롱');
-    expect(ko.description).toBe('도로롱 Lv.1–3');
+    expect(en.description).toBe('Lv.1–3');
+    expect(ko.description).toBe('Lv.1–3');
+  });
+
+  it('publishes world→pixel params (bounds + orientation) in maps.json', () => {
+    expect(ds.maps[0].worldBounds).toEqual({
+      min: { x: -1099400, y: -724400 },
+      max: { x: 349400, y: 724400 },
+    });
+    expect(ds.maps[0].orientation).toEqual({ pxAxis: 'Y', flipX: false, flipY: true });
+  });
+
+  it('emits raw world coords that reproduce the tile-pixel position', () => {
+    const ft = ds.markers.MainWorld.find((m) => m.id === 'MainWorld-fastTravel-1');
+    // poi FT_1 world (0,0) → stored verbatim as world coords
+    expect(ft.x).toBe(0);
+    expect(ft.y).toBe(0);
+    // and world→pixel places it where the old pixel-space data would have
+    const t = makeTransform(
+      { min: { X: -1099400, Y: -724400 }, max: { X: 349400, Y: 724400 } },
+      { pxAxis: 'Y', flipX: false, flipY: true },
+      8192,
+      8192,
+    );
+    const px = t({ X: ft.x, Y: ft.y });
+    expect(px.x).toBeCloseTo(4096, 3);
+    expect(px.y).toBeCloseTo(1975.62, 1);
   });
 
   it('emits empty regions and complete locale trees for all 16 languages', () => {
