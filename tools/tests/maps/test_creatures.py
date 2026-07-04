@@ -181,6 +181,7 @@ def test_emit_frontend_routes_creature_marker():
     m = next(m for m in markers if m["subtype"] == "creatureFeral")
     assert m["category"] == "creature"
     assert m["tier"] == 3
+    assert m["count"] == 7  # cluster size drives the on-map count badge
     assert m["x"] == 100.0 and m["y"] == 200.0
     assert locale[m["id"]]["name_en"] == "Fossa"
     assert locale[m["id"]]["name_ko"] == "포사"

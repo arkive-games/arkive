@@ -570,6 +570,10 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
         tier = WORLD_MARKER_TIER.get(kind)
         if tier is not None:
             marker["tier"] = tier
+        # Cluster size (creatures merge nearby spawns): drives the on-map count
+        # badge. Only emitted when >1 so single markers stay lean.
+        if w.get("count", 1) > 1:
+            marker["count"] = w["count"]
         # Creatures carry a per-pet portrait icon (other subtypes use the
         # types.yaml subtype icon, so no per-marker icon).
         if w.get("icon"):
