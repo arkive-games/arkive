@@ -24,7 +24,7 @@ subtypes:
     category: location
     icon: T_icon_compass_FTtower
     iconScale: 1.75
-    names: { en-US: Fast Travel Statue, ja-JP: ファストトラベル石像, de-DE: Schnellreise-Statue, es-ES: Estatua de viaje rápido, es-MX: Estatua de viaje rápido, fr-FR: Statue de voyage rapide, id-ID: Patung Perjalanan Cepat, it-IT: Statua del viaggio rapido, ko-KR: 빠른 이동 석상, pl-PL: Posąg szybkiej podróży, pt-BR: Estátua de viagem rápida, ru-RU: Статуя быстрого перемещения, th-TH: รูปปั้นเดินทางด่วน, tr-TR: Hızlı Seyahat Heykeli, vi-VN: Tượng dịch chuyển nhanh, zh-CN: 传送雕像, zh-TW: 傳送雕像 }
+    names: { en-US: Great Eagle Statue, ja-JP: 大鷲の像, de-DE: Adlerstatue, es-ES: Estatua de Águila, es-MX: Estatua del Águila, fr-FR: Statue du Grand Aigle, id-ID: Patung Elang Raksasa, it-IT: Statua del grande volatile, ko-KR: 참수리 상, pl-PL: Posąg Wielkiego Orła, pt-BR: Estátua da Águia Gigante, ru-RU: Статуя Орлана, th-TH: รูปปั้นอินทรียักษ์, tr-TR: Büyük Kartal Heykeli, vi-VN: Tượng Đại Bàng, zh-CN: 巨鹫之像, zh-TW: 巨鷲之像 }
   - id: eagleStatue
     category: location
     icon: T_icon_compass_FTUnlockMap
@@ -33,7 +33,7 @@ subtypes:
   - id: tower
     category: location
     icon: T_icon_compass_tower
-    names: { en-US: Tower Boss, ja-JP: タワーボス, de-DE: Turmboss, es-ES: Jefe de torre, es-MX: Jefe de torre, fr-FR: Boss de tour, id-ID: Bos Menara, it-IT: Boss della torre, ko-KR: 타워 보스, pl-PL: Boss wieży, pt-BR: Chefe da torre, ru-RU: Босс башни, th-TH: บอสหอคอย, tr-TR: Kule Bosu, vi-VN: Trùm Tháp, zh-CN: 高塔首领, zh-TW: 高塔首領 }
+    names: { en-US: Tower, ja-JP: 塔, de-DE: Turm, es-ES: Torre, es-MX: Torre, fr-FR: Tour, id-ID: Menara, it-IT: Torre, ko-KR: 탑, pl-PL: Wieża, pt-BR: Torre, ru-RU: Башни, th-TH: หอคอย, tr-TR: Kule, vi-VN: Tháp, zh-CN: 高塔, zh-TW: 高塔 }
   - id: dungeon
     category: location
     icon: T_icon_compass_dungeon
@@ -42,17 +42,17 @@ subtypes:
   - id: camp
     category: location
     icon: T_icon_compass_camp
-    names: { en-US: Camp, ja-JP: 敵拠点, de-DE: Lager, es-ES: Campamento, es-MX: Campamento, fr-FR: Camp, id-ID: Kamp, it-IT: Accampamento, ko-KR: 적 거점, pl-PL: Obóz, pt-BR: Acampamento, ru-RU: Лагерь, th-TH: ค่าย, tr-TR: Kamp, vi-VN: Trại, zh-CN: 敌人营地, zh-TW: 敵人營地 }
+    names: { en-US: Base, ja-JP: 拠点, de-DE: Lager, es-ES: Base, es-MX: Base, fr-FR: Base, id-ID: Markas, it-IT: Base, ko-KR: 거점, pl-PL: Baza, pt-BR: Base, ru-RU: База, th-TH: ฐาน, tr-TR: Üs, vi-VN: Căn cứ, zh-CN: 据点, zh-TW: 據點 }
   - id: alphaPal
     category: boss
     icon: T_icon_compass_boss
     color: "#ef4444"
-    names: { en-US: Alpha Pal, ja-JP: フィールドボス, de-DE: Alpha-Pal, es-ES: Pal alfa, es-MX: Pal alfa, fr-FR: Pal alpha, id-ID: Pal Alfa, it-IT: Pal alfa, ko-KR: 알파 팰, pl-PL: Pal alfa, pt-BR: Pal alfa, ru-RU: Альфа-Пал, th-TH: พัลอัลฟา, tr-TR: Alfa Pal, vi-VN: Pal Alpha, zh-CN: 阿尔法帕鲁, zh-TW: 阿爾法帕魯 }
+    names: { en-US: Field Boss, ja-JP: フィールドボス, de-DE: Feldboss, es-ES: Jefe de campo, es-MX: Jefe de campo, fr-FR: Boss de terrain, id-ID: Bos Wilayah, it-IT: Boss di zona, ko-KR: 필드 보스, pl-PL: Boss terenowy, pt-BR: Chefe de área, ru-RU: Мировой босс, th-TH: บอสประจำถิ่น, tr-TR: Bölge Boss'u, vi-VN: Boss khu vực, zh-CN: 区域头目, zh-TW: 區域頭目 }
   - id: wanted
     category: boss
     color: "#f59e0b"
     icon: T_icon_compass_boss  # fallback for the one criminal (BOSS_Police_Old) with no portrait row
-    names: { en-US: Wanted Criminal, ja-JP: 賞金首, de-DE: Kopfgeldziel, es-ES: Se busca, es-MX: Se busca, fr-FR: Recherché, id-ID: Buronan, it-IT: Ricercato, ko-KR: 현상범, pl-PL: Poszukiwany, pt-BR: Procurado, ru-RU: Разыскиваемый, th-TH: อาชญากรค่าหัว, tr-TR: Aranan suçlu, vi-VN: Tội phạm bị truy nã, zh-CN: 通缉犯, zh-TW: 通緝犯 }
+    names: { en-US: Wanted Fugitive, ja-JP: 指名手配, de-DE: Kopfgeld, es-ES: Buscados, es-MX: Buscados, fr-FR: Cibles recherchées, id-ID: Buronan, it-IT: Taglie, ko-KR: 지명수배, pl-PL: Poszukiwany zbieg, pt-BR: Procurados, ru-RU: Разыскиваемые, th-TH: ผู้ออกหมายจับ, tr-TR: Aranan Kaçak, vi-VN: Kẻ Bị Truy Nã, zh-CN: 悬赏头目, zh-TW: 懸賞頭目 }
   - id: predator
     category: boss
     color: "#a855f7"
@@ -61,7 +61,7 @@ subtypes:
   - id: treasureMap
     category: collectible
     icon: T_icon_compass_Search_Treasure
-    names: { en-US: Treasure Map Point, ja-JP: 宝の地図ポイント, de-DE: Schatzkarten-Fundort, es-ES: Punto del mapa del tesoro, es-MX: Punto del mapa del tesoro, fr-FR: Point de carte au trésor, id-ID: Titik Peta Harta Karun, it-IT: Punto della mappa del tesoro, ko-KR: 보물 지도 지점, pl-PL: Punkt mapy skarbów, pt-BR: Ponto do mapa do tesouro, ru-RU: Точка карты сокровищ, th-TH: จุดแผนที่สมบัติ, tr-TR: Hazine Haritası Noktası, vi-VN: Điểm bản đồ kho báu, zh-CN: 藏宝图地点, zh-TW: 藏寶圖地點 }
+    names: { en-US: Treasure Map, ja-JP: 宝の地図, de-DE: Schatzkarte, es-ES: Mapa del tesoro, es-MX: Mapa del tesoro, fr-FR: Carte au trésor, id-ID: Peta Harta Karun, it-IT: Mappa del tesoro, ko-KR: 보물 지도, pl-PL: Mapa skarbów, pt-BR: Mapa do Tesouro, ru-RU: Карта сокровищ, th-TH: เเผนที่ขุมทรัพย์, tr-TR: Hazine Haritası, vi-VN: Bản Đồ Kho Báu, zh-CN: 藏宝图, zh-TW: 藏寶圖 }
   - id: note
     category: collectible
     icon: T_icon_compass_Search_Junk
@@ -85,7 +85,7 @@ subtypes:
   - id: oilrigTreasure
     category: collectible
     icon: T_icon_compass_Oilrig
-    names: { en-US: Oil Rig Treasure, ja-JP: オイルリグの宝箱, de-DE: Bohrinsel-Schatz, es-ES: Tesoro de la plataforma petrolífera, es-MX: Tesoro de la plataforma petrolera, fr-FR: Trésor de la plateforme pétrolière, id-ID: Harta Karun Kilang Minyak, it-IT: Tesoro della piattaforma petrolifera, ko-KR: 석유 시추 시설 보물, pl-PL: Skarb platformy wiertniczej, pt-BR: Tesouro da plataforma de petróleo, ru-RU: Сокровище нефтяной вышки, th-TH: สมบัติแท่นขุดเจาะน้ำมัน, tr-TR: Petrol Kulesi Hazinesi, vi-VN: Kho báu giàn khoan dầu, zh-CN: 石油钻井平台宝箱, zh-TW: 石油鑽井平台寶箱 }
+    names: { en-US: Oil Rig, ja-JP: オイルリグ, de-DE: Bohrinsel, es-ES: Plataforma petrolífera, es-MX: Plataforma petrolífera, fr-FR: Plate-forme pétrolière, id-ID: Rig Minyak, it-IT: Piattaforme petrolifere, ko-KR: 시추 시설, pl-PL: Platforma wiertnicza, pt-BR: Plataformas petrolíferas, ru-RU: Нефтяная платформа, th-TH: แท่นขุดเจาะน้ำมัน, tr-TR: Petrol Kuyusu, vi-VN: Giàn Khoan Dầu, zh-CN: 油田要塞, zh-TW: 油田要塞 }
   - id: copper
     category: resource
     color: "#B87333"
