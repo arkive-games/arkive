@@ -361,6 +361,7 @@ categories:
   icon: ''
   id: 7c086a97-5ab5-4452-8a78-a4264f858077
   name: creature
+  pinVariant: circular
   order: 4
   subtypes:
   - canComplete: true
