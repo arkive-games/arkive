@@ -95,6 +95,17 @@ function readRespawnNamesByLang(raw) {
   return byLang;
 }
 
+// Human NPC names (wanted criminals etc.), keyed NAME_<id>, by language.
+function readHumanNamesByLang(raw) {
+  const base = readRespawnNames(path.join(raw, 'DataTable/Text/DT_HumanNameText_Common.json'));
+  const byLang = { [JA_TAG]: base };
+  for (const [folder, tag] of Object.entries(L10N_LANG_TAGS)) {
+    const loc = readRespawnNames(path.join(raw, '..', 'L10N', folder, 'Pal/DataTable/Text/DT_HumanNameText_Common.json'));
+    byLang[tag] = { ...base, ...loc };
+  }
+  return byLang;
+}
+
 // Resolve the display name for a fast-travel point across all languages.
 function fastTravelNameByLng(ftNames, pointId) {
   if (!pointId) return null;
@@ -261,6 +272,36 @@ export function runExtract(raw) {
     }))
     .filter((b) => b.characterId && /^BOSS_/i.test(b.characterId)); // /i: "Boss_Anubis" is mixed case
 
+  // Wanted criminals: human bosses in the same boss-spawner table, identified
+  // by CharacterID "None" + a BOSS_* SpawnerID (excludes REGION_Oilrig_* rows).
+  // Name comes from DT_HumanNameText (NAME_<SpawnerID>, e.g. "通缉犯 威普"),
+  // portrait icon from DT_PalBossNPCIcon. The table has duplicate rows, so
+  // dedup by spawner + rounded location.
+  const humanNames = readHumanNamesByLang(raw);
+  const bossNpcIcon = readRows(raw, 'DataTable/Character/DT_PalBossNPCIcon.json');
+  const wantedSeen = new Set();
+  const wanted = [];
+  for (const r of Object.values(bossRows)) {
+    const sid = r.SpawnerID ?? '';
+    if (r.CharacterID && r.CharacterID !== 'None') continue; // pal bosses handled above
+    if (!/^BOSS_/i.test(sid)) continue;
+    const k = `${sid}|${Math.round(r.Location.X)}|${Math.round(r.Location.Y)}`;
+    if (wantedSeen.has(k)) continue;
+    wantedSeen.add(k);
+    const nameByLng = {};
+    for (const [tag, table] of Object.entries(humanNames)) {
+      const nm = table[`NAME_${sid}`];
+      if (nm) nameByLng[tag] = nm;
+    }
+    const iconStem = (bossNpcIcon[sid]?.Icon?.AssetPathName ?? '').split('.').pop() || null;
+    wanted.push({
+      spawnerId: sid, level: r.Level,
+      location: { X: r.Location.X, Y: r.Location.Y, Z: r.Location.Z ?? 0 },
+      ...(iconStem ? { icon: iconStem } : {}),
+      ...(Object.keys(nameByLng).length ? { nameByLng } : {}),
+    });
+  }
+
   const wildRows = readRows(raw, 'DataTable/Spawner/DT_PalWildSpawner.json');
   const wildByName = new Map();
   for (const r of Object.values(wildRows)) {
@@ -302,7 +343,7 @@ export function runExtract(raw) {
 
   const newTypeCandidates = countNewTypeCandidates(raw);
 
-  return { bounds, pois, bosses, palSpawns, palMeta, namesByLang, palIcons, newTypeCandidates };
+  return { bounds, pois, bosses, wanted, palSpawns, palMeta, namesByLang, palIcons, newTypeCandidates };
 }
 
 export function writeParsed(raw, outDir) {

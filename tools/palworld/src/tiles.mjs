@@ -23,6 +23,8 @@ function iconSourcePath(raw, name) {
   if (name.startsWith('T_icon_compass_') && fs.existsSync(compass)) return compass;
   const build = path.join(raw, 'Texture/BuildObject/PNG', `${name}.png`);
   if (name.startsWith('T_icon_buildObject_') && fs.existsSync(build)) return build;
+  const npc = path.join(raw, 'Texture/PalIcon/NPC', `${name}.png`);
+  if (name.startsWith('T_BOSS_NPC_') && fs.existsSync(npc)) return npc;
   const pal = path.join(raw, 'Texture/PalIcon/Normal', `${name}.png`);
   if (fs.existsSync(pal)) return pal;
   return null;

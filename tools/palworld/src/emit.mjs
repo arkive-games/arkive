@@ -150,6 +150,20 @@ export function buildDataset(parsed) {
     });
   }
 
+  // Wanted criminals (human bosses): name from the raw human-name table, level
+  // in the popup description, portrait icon per criminal.
+  for (const w of parsed.wanted ?? []) {
+    const mapId = assignMap(w.location, assignOrder);
+    if (!mapId) continue;
+    push(mapId, {
+      subtype: 'wanted', ...toWorld(w.location),
+      ...(w.icon ? { icon: w.icon } : {}),
+      sortKey: w.spawnerId,
+      ...(w.nameByLng ? { nameByLng: w.nameByLng } : {}),
+      ...(w.level ? { descByLng: Object.fromEntries(languages.map((lng) => [lng, `Lv.${w.level}`])) } : {}),
+    });
+  }
+
   // Pal spawns: split by pal id first, then cluster within each pal id only
   // (point 10 — never merge different pals into one marker). Each pal is its
   // own subtype (id === pal id); the marker's level range lives in the popup.

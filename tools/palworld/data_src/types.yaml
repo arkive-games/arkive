@@ -48,6 +48,11 @@ subtypes:
     icon: T_icon_compass_boss
     color: "#ef4444"
     names: { en-US: Alpha Pal, ja-JP: フィールドボス, de-DE: Alpha-Pal, es-ES: Pal alfa, es-MX: Pal alfa, fr-FR: Pal alpha, id-ID: Pal Alfa, it-IT: Pal alfa, ko-KR: 알파 팰, pl-PL: Pal alfa, pt-BR: Pal alfa, ru-RU: Альфа-Пал, th-TH: พัลอัลฟา, tr-TR: Alfa Pal, vi-VN: Pal Alpha, zh-CN: 阿尔法帕鲁, zh-TW: 阿爾法帕魯 }
+  - id: wanted
+    category: boss
+    color: "#f59e0b"
+    icon: T_icon_compass_boss  # fallback for the one criminal (BOSS_Police_Old) with no portrait row
+    names: { en-US: Wanted Criminal, ja-JP: 賞金首, de-DE: Kopfgeldziel, es-ES: Se busca, es-MX: Se busca, fr-FR: Recherché, id-ID: Buronan, it-IT: Ricercato, ko-KR: 현상범, pl-PL: Poszukiwany, pt-BR: Procurado, ru-RU: Разыскиваемый, th-TH: อาชญากรค่าหัว, tr-TR: Aranan suçlu, vi-VN: Tội phạm bị truy nã, zh-CN: 通缉犯, zh-TW: 通緝犯 }
   - id: treasureMap
     category: collectible
     icon: T_icon_compass_Search_Treasure
