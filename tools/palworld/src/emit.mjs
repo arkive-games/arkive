@@ -150,17 +150,20 @@ export function buildDataset(parsed) {
     });
   }
 
-  // Wanted criminals (human bosses): name from the raw human-name table, level
-  // in the popup description, portrait icon per criminal.
+  // Wanted criminals (human bosses): name from the raw human-name table with
+  // the level appended (same "<name> Lv.X" form as alpha pals), portrait icon.
   for (const w of parsed.wanted ?? []) {
     const mapId = assignMap(w.location, assignOrder);
     if (!mapId) continue;
+    const nameByLng = w.nameByLng
+      ? Object.fromEntries(Object.entries(w.nameByLng).map(
+          ([lng, n]) => [lng, w.level ? `${n} Lv.${w.level}` : n]))
+      : null;
     push(mapId, {
       subtype: 'wanted', ...toWorld(w.location),
       ...(w.icon ? { icon: w.icon } : {}),
       sortKey: w.spawnerId,
-      ...(w.nameByLng ? { nameByLng: w.nameByLng } : {}),
-      ...(w.level ? { descByLng: Object.fromEntries(languages.map((lng) => [lng, `Lv.${w.level}`])) } : {}),
+      ...(nameByLng ? { nameByLng } : {}),
     });
   }
 
