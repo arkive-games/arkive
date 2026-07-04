@@ -106,8 +106,8 @@ frontend reads `VITE_RESOURCE_BASE_URL` / `VITE_DATA_BASE_URL` instead.
 # backend  (defaults to port 9000)
 cd backend && uv run <your run command — see backend README>
 
-# frontend
-cd frontend && pnpm dev
+# frontend  (per game: dev:aion2 / dev:palworld)
+cd frontend && pnpm dev:aion2
 ```
 
 ## Notes for whoever (or whatever) runs this
