@@ -167,6 +167,22 @@ export function buildDataset(parsed) {
     });
   }
 
+  // Predators ("狂暴化的<Pal> Lv.X"): pal portrait icon, level appended to name.
+  for (const p of parsed.predators ?? []) {
+    const mapId = assignMap(p.location, assignOrder);
+    if (!mapId) continue;
+    const nameByLng = p.nameByLng
+      ? Object.fromEntries(Object.entries(p.nameByLng).map(
+          ([lng, n]) => [lng, p.level ? `${n} Lv.${p.level}` : n]))
+      : null;
+    push(mapId, {
+      subtype: 'predator', ...toWorld(p.location),
+      ...(p.icon ? { icon: p.icon } : {}),
+      sortKey: p.pal,
+      ...(nameByLng ? { nameByLng } : {}),
+    });
+  }
+
   // Pal spawns: split by pal id first, then cluster within each pal id only
   // (point 10 — never merge different pals into one marker). Each pal is its
   // own subtype (id === pal id); the marker's level range lives in the popup.

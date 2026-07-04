@@ -53,6 +53,11 @@ subtypes:
     color: "#f59e0b"
     icon: T_icon_compass_boss  # fallback for the one criminal (BOSS_Police_Old) with no portrait row
     names: { en-US: Wanted Criminal, ja-JP: 賞金首, de-DE: Kopfgeldziel, es-ES: Se busca, es-MX: Se busca, fr-FR: Recherché, id-ID: Buronan, it-IT: Ricercato, ko-KR: 현상범, pl-PL: Poszukiwany, pt-BR: Procurado, ru-RU: Разыскиваемый, th-TH: อาชญากรค่าหัว, tr-TR: Aranan suçlu, vi-VN: Tội phạm bị truy nã, zh-CN: 通缉犯, zh-TW: 通緝犯 }
+  - id: predator
+    category: boss
+    color: "#a855f7"
+    icon: T_icon_compass_boss  # fallback if a predator's pal portrait is unavailable
+    names: { en-US: Predator, ja-JP: 狂暴化, de-DE: Bestie, es-ES: Depredador, es-MX: Depredador, fr-FR: Prédateur, id-ID: Predator, it-IT: Predatore, ko-KR: 광폭화, pl-PL: Drapieżnik, pt-BR: Predador, ru-RU: Хищник, th-TH: ผู้ล่า, tr-TR: Yırtıcı, vi-VN: Thú săn mồi, zh-CN: 狂暴化, zh-TW: 狂暴化 }
   - id: treasureMap
     category: collectible
     icon: T_icon_compass_Search_Treasure

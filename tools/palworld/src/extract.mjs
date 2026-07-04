@@ -341,9 +341,82 @@ export function runExtract(raw) {
       .map((f) => f.slice(0, -4)),
   );
 
+  // Predators ("狂暴化的<Pal>"): NOT a data table — each is a
+  // BP_PalSpawner_Sheets_*_PreBOSS_* actor placed in a world-partition cell.
+  // Map each spawner class to its predator pal via the sheet blueprint, then
+  // read the placed actors' locations from the MainGrid cells. Name = the
+  // localized PREDATOR_NAME prefix + the pal's name; icon = the pal's portrait.
+  const predatorPrefix = (() => {
+    const read = (f) => {
+      try {
+        const r = JSON.parse(fs.readFileSync(f, 'utf8'))[0].Rows.PREDATOR_NAME;
+        return r?.TextData?.LocalizedString || r?.TextData?.SourceString || null;
+      } catch { return null; }
+    };
+    const m = { [JA_TAG]: read(path.join(raw, 'DataTable/Text/DT_NamePrefixText_Common.json')) };
+    for (const [folder, tag] of Object.entries(L10N_LANG_TAGS)) {
+      m[tag] = read(path.join(raw, '..', 'L10N', folder, 'Pal/DataTable/Text/DT_NamePrefixText_Common.json')) || m[JA_TAG];
+    }
+    return m;
+  })();
+  const sheetDir = path.join(raw, 'Blueprint/Spawner/SheetsVariant');
+  const predatorSheet = {}; // spawner-class Type -> { pal, level }
+  for (const f of fs.readdirSync(sheetDir)) {
+    if (!/PreBOSS/.test(f) || !f.endsWith('.json')) continue;
+    for (const e of JSON.parse(fs.readFileSync(path.join(sheetDir, f), 'utf8'))) {
+      for (const g of e.Properties?.SpawnGroupList ?? []) {
+        for (const pl of g.PalList ?? []) {
+          if (/^PREDATOR_/.test(pl.PalId?.Key ?? '')) predatorSheet[e.Type] = { pal: pl.PalId.Key, level: pl.Level };
+        }
+      }
+    }
+  }
+  // ja/zh join the prefix without a space ("狂暴化的精灵龙"); others use a space.
+  const cjkTail = (s) => /[぀-ヿ㐀-鿿豈-﫿]/.test(s.slice(-1));
+  const predatorName = (base) => {
+    const out = {};
+    for (const [tag, names] of Object.entries(namesByLang)) {
+      const pn = names[base] ?? names[base.replace(/_(Ice|Fire|Dark|Ground|Electric|Grass|Water)$/, '')];
+      if (!pn) continue;
+      const pre = predatorPrefix[tag];
+      out[tag] = pre ? `${pre}${cjkTail(pre) ? '' : ' '}${pn}` : pn;
+    }
+    return out;
+  };
+  const predators = [];
+  {
+    const cellsDir = path.join(raw, 'Maps/MainWorld_5/PL_MainWorld5/_Generated_');
+    let files = [];
+    try {
+      files = execSync("grep -rlI \"PreBOSS\" --include='MainGrid*.json' .", { cwd: cellsDir, maxBuffer: 1 << 28 })
+        .toString().split('\n').filter(Boolean);
+    } catch (err) { if (err.status !== 1) throw err; }
+    const seen = new Set();
+    for (const rel of files) {
+      const arr = JSON.parse(fs.readFileSync(path.join(cellsDir, rel), 'utf8'));
+      for (const e of arr) {
+        const info = predatorSheet[e.Type];
+        if (!info) continue;
+        const location = actorLocation(e, arr);
+        if (!location) continue;
+        const k = `${info.pal}|${Math.round(location.X / 100)}|${Math.round(location.Y / 100)}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        const base = info.pal.replace(/^PREDATOR_/, '');
+        const iconStem = `T_${base}_icon_normal`;
+        const nameByLng = predatorName(base);
+        predators.push({
+          pal: info.pal, level: info.level, location,
+          ...(palIcons.has(iconStem) ? { icon: iconStem } : {}),
+          ...(Object.keys(nameByLng).length ? { nameByLng } : {}),
+        });
+      }
+    }
+  }
+
   const newTypeCandidates = countNewTypeCandidates(raw);
 
-  return { bounds, pois, bosses, wanted, palSpawns, palMeta, namesByLang, palIcons, newTypeCandidates };
+  return { bounds, pois, bosses, wanted, predators, palSpawns, palMeta, namesByLang, palIcons, newTypeCandidates };
 }
 
 export function writeParsed(raw, outDir) {
