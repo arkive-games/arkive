@@ -50,8 +50,16 @@ export function buildDataset(parsed) {
   const palSpawnCfg = src.subtypes.find((s) => s.id === 'palSpawn');
   const radius = palSpawnCfg.clusterRadius;
   const baseId = (id) => id.replace(/^BOSS_/i, '');
-  const zForId = (id) =>
-    parsed.palMeta?.[id] ?? parsed.palMeta?.[baseId(id)] ?? { zukanIndex: -1, zukanIndexSuffix: '' };
+  // Prefer a catalogued entry (zukanIndex > 0). Bosses ("BOSS_X") have their own
+  // palMeta row with zukanIndex -1, so fall through to the base pal ("X") which
+  // carries the real Paldeck number.
+  const zForId = (id) => {
+    const direct = parsed.palMeta?.[id];
+    if (direct && direct.zukanIndex > 0) return direct;
+    const base = parsed.palMeta?.[baseId(id)];
+    if (base && base.zukanIndex > 0) return base;
+    return direct ?? base ?? { zukanIndex: -1, zukanIndexSuffix: '' };
+  };
   // Only catalogued pals (present in DT_PalMonsterParameter) count as pals;
   // this drops placeholder rows ("RowName") and human NPC spawners ("Male_*").
   const isRealPal = (id) => !!parsed.palMeta?.[id];
@@ -86,6 +94,9 @@ export function buildDataset(parsed) {
         id: s.id, name: s.id,
         ...(s.icon ? { icon: s.icon } : {}),
         ...(s.color ? { color: s.color } : {}),
+        ...(typeof s.zukanIndex === 'number' && s.zukanIndex > 0
+          ? { zukanIndex: s.zukanIndex, ...(s.zukanIndexSuffix ? { zukanIndexSuffix: s.zukanIndexSuffix } : {}) }
+          : {}),
       })),
     })),
   };
@@ -114,11 +125,15 @@ export function buildDataset(parsed) {
     if (!mapId) continue;
     const nameByLng = Object.fromEntries(languages.map((lng) =>
       [lng, `${palName(namesByLang[lng], b.characterId)} Lv.${b.level}`]));
+    const z = zForId(b.characterId);
     push(mapId, {
       subtype: 'alphaPal', ...toPx(mapId, b.location),
       icon: palIcon(palIcons, b.characterId) ?? 'T_icon_compass_boss',
       sortKey: `${b.characterId}-${b.key}`,
       nameByLng,
+      ...(z.zukanIndex > 0
+        ? { zukanIndex: z.zukanIndex, ...(z.zukanIndexSuffix ? { zukanIndexSuffix: z.zukanIndexSuffix } : {}) }
+        : {}),
     });
   }
 
@@ -172,6 +187,7 @@ export function buildDataset(parsed) {
           id, subtype: s.id, category: subtypeCat[s.id],
           x: c.x, y: c.y, z: c.z,
           ...(c.icon ? { icon: c.icon } : {}),
+          ...(c.zukanIndex ? { zukanIndex: c.zukanIndex, ...(c.zukanIndexSuffix ? { zukanIndexSuffix: c.zukanIndexSuffix } : {}) } : {}),
           images: [], contributors: [], indexInSubtype: i + 1,
         });
         if (c.nameByLng || c.descByLng) {
