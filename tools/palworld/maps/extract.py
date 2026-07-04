@@ -321,15 +321,25 @@ def run_extract(raw: Path) -> dict:
         wanted.append(entry)
 
     wild_rows = read_rows(raw / "DataTable/Spawner/DT_PalWildSpawner.json")
-    wild_by_name = {}
+    # A SpawnerName spans MANY rows — an area spawner lists each of its possible
+    # pals (and day/night, level-band, weather variants) in its own row. Aggregate
+    # the union of pals per name; keying by name alone would keep only the last row
+    # and drop the rest (most wild pals). Dedup by pal id, widening the level band.
+    wild_by_name: dict[str, dict[str, dict]] = {}
     for r in wild_rows.values():
-        pals = []
+        name = r["SpawnerName"]
         for n in (1, 2, 3):
             pid = r.get(f"Pal_{n}")
-            if pid and pid != "None":
-                pals.append({"id": pid, "lvMin": r[f"LvMin_{n}"], "lvMax": r[f"LvMax_{n}"]})
-        if pals:
-            wild_by_name[r["SpawnerName"]] = pals
+            if not pid or pid == "None":
+                continue
+            slot = wild_by_name.setdefault(name, {})
+            lv_min, lv_max = r[f"LvMin_{n}"], r[f"LvMax_{n}"]
+            cur = slot.get(pid)
+            if cur:
+                cur["lvMin"] = min(cur["lvMin"], lv_min)
+                cur["lvMax"] = max(cur["lvMax"], lv_max)
+            else:
+                slot[pid] = {"id": pid, "lvMin": lv_min, "lvMax": lv_max}
     place_rows = read_rows(raw / "DataTable/Spawner/DT_PalSpawnerPlacement.json")
     pal_spawns = []
     for r in place_rows.values():
@@ -339,7 +349,7 @@ def run_extract(raw: Path) -> dict:
         if not pals:
             continue
         pal_spawns.append({
-            "spawnerName": r["SpawnerName"], "pals": pals,
+            "spawnerName": r["SpawnerName"], "pals": list(pals.values()),
             "location": {"X": r["Location"]["X"], "Y": r["Location"]["Y"], "Z": r["Location"].get("Z", 0)},
         })
 
