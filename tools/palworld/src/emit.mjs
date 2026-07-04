@@ -90,9 +90,11 @@ export function buildDataset(parsed) {
   const types = {
     categories: src.categories.map((c) => ({
       id: c.id, name: c.id,
+      ...(c.pinVariant ? { pinVariant: c.pinVariant } : {}),
       subtypes: subtypeDefs.filter((s) => s.category === c.id).map((s) => ({
         id: s.id, name: s.id,
         ...(s.icon ? { icon: s.icon } : {}),
+        ...(typeof s.iconScale === 'number' ? { iconScale: s.iconScale } : {}),
         ...(s.color ? { color: s.color } : {}),
         ...(typeof s.zukanIndex === 'number' && s.zukanIndex > 0
           ? { zukanIndex: s.zukanIndex, ...(s.zukanIndexSuffix ? { zukanIndexSuffix: s.zukanIndexSuffix } : {}) }

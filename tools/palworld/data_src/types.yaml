@@ -10,21 +10,25 @@ categories:
   - id: location
     names: { en-US: Locations, ja-JP: 場所, de-DE: Orte, es-ES: Lugares, es-MX: Lugares, fr-FR: Lieux, id-ID: Lokasi, it-IT: Luoghi, ko-KR: 지역, pl-PL: Miejsca, pt-BR: Locais, ru-RU: Локации, th-TH: สถานที่, tr-TR: Konumlar, vi-VN: Địa điểm, zh-CN: 地点, zh-TW: 地點 }
   - id: boss
+    pinVariant: circular
     names: { en-US: Bosses, ja-JP: ボス, de-DE: Bosse, es-ES: Jefes, es-MX: Jefes, fr-FR: Boss, id-ID: Bos, it-IT: Boss, ko-KR: 보스, pl-PL: Bossowie, pt-BR: Chefes, ru-RU: Боссы, th-TH: บอส, tr-TR: Boslar, vi-VN: Trùm, zh-CN: 首领, zh-TW: 首領 }
   - id: collectible
     names: { en-US: Collectibles, ja-JP: 収集品, de-DE: Sammelobjekte, es-ES: Coleccionables, es-MX: Coleccionables, fr-FR: Objets à collectionner, id-ID: Koleksi, it-IT: Collezionabili, ko-KR: 수집품, pl-PL: Znajdźki, pt-BR: Colecionáveis, ru-RU: Коллекционные предметы, th-TH: ของสะสม, tr-TR: Koleksiyonluklar, vi-VN: Đồ sưu tầm, zh-CN: 收集品, zh-TW: 收集品 }
   - id: resource
     names: { en-US: Resources, ja-JP: 資源, de-DE: Ressourcen, es-ES: Recursos, es-MX: Recursos, fr-FR: Ressources, id-ID: Sumber Daya, it-IT: Risorse, ko-KR: 자원, pl-PL: Surowce, pt-BR: Recursos, ru-RU: Ресурсы, th-TH: ทรัพยากร, tr-TR: Kaynaklar, vi-VN: Tài nguyên, zh-CN: 资源, zh-TW: 資源 }
   - id: pal
+    pinVariant: circular
     names: { en-US: Pals, ja-JP: パル, de-DE: Pals, es-ES: Pals, es-MX: Pals, fr-FR: Pals, id-ID: Pal, it-IT: Pal, ko-KR: 팰, pl-PL: Pale, pt-BR: Pals, ru-RU: Палы, th-TH: พัล, tr-TR: Pal'lar, vi-VN: Pal, zh-CN: 帕鲁, zh-TW: 帕魯 }
 subtypes:
   - id: fastTravel
     category: location
     icon: T_icon_compass_FTtower
+    iconScale: 1.75
     names: { en-US: Fast Travel Statue, ja-JP: ファストトラベル石像, de-DE: Schnellreise-Statue, es-ES: Estatua de viaje rápido, es-MX: Estatua de viaje rápido, fr-FR: Statue de voyage rapide, id-ID: Patung Perjalanan Cepat, it-IT: Statua del viaggio rapido, ko-KR: 빠른 이동 석상, pl-PL: Posąg szybkiej podróży, pt-BR: Estátua de viagem rápida, ru-RU: Статуя быстрого перемещения, th-TH: รูปปั้นเดินทางด่วน, tr-TR: Hızlı Seyahat Heykeli, vi-VN: Tượng dịch chuyển nhanh, zh-CN: 传送雕像, zh-TW: 傳送雕像 }
   - id: eagleStatue
     category: location
     icon: T_icon_compass_FTUnlockMap
+    iconScale: 1.75
     names: { en-US: Eagle Statue, ja-JP: 大鷲の石像, de-DE: Adlerstatue, es-ES: Estatua del águila, es-MX: Estatua del águila, fr-FR: Statue de l'aigle, id-ID: Patung Elang, it-IT: Statua dell'aquila, ko-KR: 독수리 석상, pl-PL: Posąg orła, pt-BR: Estátua da águia, ru-RU: Статуя орла, th-TH: รูปปั้นนกอินทรี, tr-TR: Kartal Heykeli, vi-VN: Tượng đại bàng, zh-CN: 巨鹰雕像, zh-TW: 巨鷹雕像 }
   - id: tower
     category: location
@@ -33,6 +37,7 @@ subtypes:
   - id: dungeon
     category: location
     icon: T_icon_compass_dungeon
+    iconScale: 0.95
     names: { en-US: Dungeon, ja-JP: ダンジョン, de-DE: Dungeon, es-ES: Mazmorra, es-MX: Mazmorra, fr-FR: Donjon, id-ID: Dungeon, it-IT: Dungeon, ko-KR: 던전, pl-PL: Loch, pt-BR: Masmorra, ru-RU: Подземелье, th-TH: ดันเจี้ยน, tr-TR: Zindan, vi-VN: Hầm ngục, zh-CN: 地下城, zh-TW: 地下城 }
   - id: camp
     category: location
