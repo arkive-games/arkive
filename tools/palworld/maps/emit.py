@@ -97,10 +97,13 @@ def build_dataset(parsed: dict) -> dict:
     pal_subtypes = []
     for pid in pal_id_order:
         z = z_for_id(pid)
+        zi = z["zukanIndex"] if isinstance(z["zukanIndex"], (int, float)) else -1
+        # Wild creatures without a Paldeck number (Yakushima slimes, cave bats, …)
+        # aren't catchable Pals — file them under a separate "enemy" category.
         pal_subtypes.append({
-            "id": pid, "category": "pal",
+            "id": pid, "category": "pal" if zi > 0 else "enemy",
             "icon": _pal_icon(pal_icons, pid),
-            "zukanIndex": z["zukanIndex"] if isinstance(z["zukanIndex"], (int, float)) else -1,
+            "zukanIndex": zi,
             "zukanIndexSuffix": z.get("zukanIndexSuffix", ""),
             "names": {lng: _pal_name(names_by_lang[lng], pid) for lng in languages},
         })
