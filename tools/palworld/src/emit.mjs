@@ -177,6 +177,7 @@ export function buildDataset(parsed) {
           subtype: palId, x: round2(w.X), y: round2(w.Y), z: c.z,
           icon: palIcon(palIcons, palId) ?? undefined,
           sortKey: `${c.x},${c.y}`,
+          count: c.items.length,
           descByLng: Object.fromEntries(languages.map((lng) => [lng, `Lv.${lvMin}–${lvMax}`])),
         });
       }
@@ -204,6 +205,7 @@ export function buildDataset(parsed) {
           x: c.x, y: c.y, z: c.z,
           ...(c.icon ? { icon: c.icon } : {}),
           ...(c.zukanIndex ? { zukanIndex: c.zukanIndex, ...(c.zukanIndexSuffix ? { zukanIndexSuffix: c.zukanIndexSuffix } : {}) } : {}),
+          ...(c.count && c.count > 1 ? { count: c.count } : {}),
           images: [], contributors: [], indexInSubtype: i + 1,
         });
         if (c.nameByLng || c.descByLng) {

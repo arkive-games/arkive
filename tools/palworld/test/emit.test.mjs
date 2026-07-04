@@ -67,6 +67,7 @@ describe('buildDataset', () => {
     const spawns = ds.markers.MainWorld.filter((m) => m.subtype === 'SheepBall');
     expect(spawns).toHaveLength(1); // two placements 70px apart → one cluster
     expect(spawns[0].icon).toBe('T_SheepBall_icon_normal');
+    expect(spawns[0].count).toBe(2); // both spawn points merged into this cluster
     const en = ds.locales['en-US'].markers.MainWorld[spawns[0].id];
     const ko = ds.locales['ko-KR'].markers.MainWorld[spawns[0].id];
     expect(en.description).toBe('Lv.1–3');
