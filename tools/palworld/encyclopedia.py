@@ -30,6 +30,7 @@ import os
 import re
 from pathlib import Path
 
+import yaml
 from PIL import Image
 
 from .breeding import _has_real_name, _names_by_lang
@@ -65,8 +66,21 @@ _NONE = {None, "None", ""}
 _WAZA_PREFIX = re.compile(r"^(boss_|gym_)", re.I)
 
 
+_DATA_SRC = Path(__file__).parent / "data_src"
+
+
 def _strip(v: str | None, prefix: str) -> str:
     return (v or "").replace(prefix, "")
+
+
+def _load_partner_labels() -> tuple[dict, dict]:
+    """Hand-authored partner-skill labels from partner_effects.yaml:
+    ({EffectType: {tag: label}}, {TargetType: {tag: label}})."""
+    path = _DATA_SRC / "partner_effects.yaml"
+    if not path.exists():
+        return {}, {}
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return doc.get("effects") or {}, doc.get("targets") or {}
 
 
 def _read_text(path: Path, prefix: str) -> dict:
@@ -188,7 +202,38 @@ def _active_skills(cid: str, learnset: list, waza_by_id: dict) -> list:
     return out
 
 
-def _partner_skill(cid: str, partner_rows: dict, waza_by_id: dict) -> dict:
+def _partner_effects(cid: str, partner_rows: dict, passive_main: dict) -> list:
+    """Buff-type partner effects: the rank tiers (``SkillName.Key`` ``_1``…``_5``)
+    resolved through ``DT_PassiveSkill_Main`` and grouped by (type, target), each
+    with the per-rank ``values`` array."""
+    r = partner_rows.get(cid)
+    if not r:
+        return []
+    grouped: dict[tuple[str, str], list] = {}
+    order: list[tuple[str, str]] = []
+    for ps in r.get("PassiveSkills") or []:
+        for s in ps.get("SkillAndParametersArray") or []:
+            key = ((s.get("SkillName") or {}).get("Key"))
+            row = passive_main.get(key)
+            if not row:
+                continue
+            for i in (1, 2, 3, 4):
+                et = _strip(row.get(f"EffectType{i}"), _EFFT)
+                if not et or et in ("no", "None"):
+                    continue
+                tgt = _strip(row.get(f"TargetType{i}"), _TGT)
+                gk = (et, tgt)
+                if gk not in grouped:
+                    grouped[gk] = []
+                    order.append(gk)
+                grouped[gk].append(round2(row.get(f"EffectValue{i}", 0.0)))
+    return [
+        {"type": et, "target": tgt, "values": grouped[(et, tgt)]}
+        for (et, tgt) in order
+    ]
+
+
+def _partner_skill(cid: str, partner_rows: dict, waza_by_id: dict, passive_main: dict) -> dict:
     r = partner_rows.get(cid)
     if not r:
         return {}
@@ -203,6 +248,15 @@ def _partner_skill(cid: str, partner_rows: dict, waza_by_id: dict) -> dict:
     ranks = [round2(v) for v in (act.get("ActiveSkill_MainValueByRank") or [])]
     if ranks:
         out["rankValues"] = ranks
+    unlock = next(
+        (it.get("Key") for it in (r.get("RestrictionItems") or []) if it.get("Key")),
+        None,
+    )
+    if unlock:
+        out["unlockItem"] = unlock
+    effects = _partner_effects(cid, partner_rows, passive_main)
+    if effects:
+        out["effects"] = effects
     return out
 
 
@@ -286,7 +340,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "stats": _stats(r),
             "work": _work(r),
             "bestWork": _strip(r.get("BestWorkSuitability"), _WORK),
-            "partnerSkill": _partner_skill(cid, partner_rows, waza_by_id),
+            "partnerSkill": _partner_skill(cid, partner_rows, waza_by_id, passive_main),
             "activeSkills": _active_skills(cid, _learnset_for(cid, learnsets), waza_by_id),
             "passives": _passives_of(r),
             "drops": _drops(cid, drop_rows),
@@ -312,9 +366,23 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     active_waza = {s["wazaId"] for p in pals for s in p["activeSkills"]}
     partner_waza = {p["partnerSkill"].get("wazaId") for p in pals if p["partnerSkill"].get("wazaId")}
     all_waza = sorted(active_waza | partner_waza)
-    drop_items = sorted({d["item"] for p in pals for d in p["drops"]})
+    unlock_items = {p["partnerSkill"]["unlockItem"] for p in pals if p["partnerSkill"].get("unlockItem")}
+    item_ids = sorted({d["item"] for p in pals for d in p["drops"]} | unlock_items)
+    effect_types = sorted({e["type"] for p in pals for e in p["partnerSkill"].get("effects", [])})
+    target_types = sorted({e["target"] for p in pals for e in p["partnerSkill"].get("effects", [])})
     pal_ids = [p["id"] for p in pals]
     passive_ids = [p["id"] for p in passives]
+
+    # Partner-skill effect/target labels: hand-authored taxonomy
+    # (data_src/partner_effects.yaml), per language, falling back lang -> en-US ->
+    # raw enum. Types with no authored label are reported for review/localization.
+    effect_labels, target_labels = _load_partner_labels()
+    unauthored = [t for t in effect_types if t not in effect_labels]
+    if unauthored:
+        print(f"encyclopedia: {len(unauthored)} partner effect types unauthored (raw enum): {unauthored}")
+    unauth_tgt = [t for t in target_types if t not in target_labels]
+    if unauth_tgt:
+        print(f"encyclopedia: {len(unauth_tgt)} partner target types unauthored (raw enum): {unauth_tgt}")
 
     def partner_name_desc(cid: str, table_name: dict, table_desc: dict) -> dict:
         r = mon[cid]
@@ -368,7 +436,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             passives_loc[pid] = s
         write_json(data_out / "locales" / tag / "passives.json", passives_loc)
 
-        items_loc = {item: titem.get(item, item) for item in drop_items}
+        items_loc = {item: titem.get(item, item) for item in item_ids}
         write_json(data_out / "locales" / tag / "items.json", items_loc)
 
         enums_loc = {
@@ -376,6 +444,18 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "work": {wt: tui.get(f"COMMON_WORK_SUITABILITY_{wt}", wt) for wt in WORK_TYPES},
         }
         write_json(data_out / "locales" / tag / "enums.json", enums_loc)
+
+        effects_loc = {
+            t: (effect_labels.get(t, {}).get(tag) or effect_labels.get(t, {}).get("en-US") or t)
+            for t in effect_types
+        }
+        write_json(data_out / "locales" / tag / "partnerEffects.json", effects_loc)
+
+        targets_loc = {
+            t: (target_labels.get(t, {}).get(tag) or target_labels.get(t, {}).get("en-US") or t)
+            for t in target_types
+        }
+        write_json(data_out / "locales" / tag / "partnerTargets.json", targets_loc)
 
     # ---- Icons -------------------------------------------------------------
     icons_dir = res_out / "icons"
@@ -400,7 +480,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     langs = len(_all_tags())
     print(
         f"encyclopedia: {len(pals)} pals, {len(passives)} passives, "
-        f"{len(all_waza)} waza, {len(drop_items)} drop items, "
+        f"{len(all_waza)} waza, {len(item_ids)} items, "
         f"{langs} locales, {converted} icons converted"
     )
     return {"pals": pals, "passives": passives, "wazaIds": all_waza}

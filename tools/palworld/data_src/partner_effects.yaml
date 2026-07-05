@@ -1,0 +1,112 @@
+# Partner-skill effect-type labels.
+#
+# Shape: effects: { <EffectType>: { <tag>: label } }
+# The emitter (encyclopedia.py) writes data-palworld/locales/<tag>/partnerEffects.json
+# with the fallback  lang -> en-US -> raw enum.  Only effect types actually used by
+# roster pals are emitted; unauthored types fall back to the raw enum string and are
+# printed by the build for later review.
+#
+# Currently seeded with en-US labels only (readable in every language via fallback).
+# Translate per language by adding more tags under an effect type, e.g.:
+#   MaxInventoryWeight: { en-US: Carry Weight, ja-JP: 所持重量 }
+#
+# Ambiguous / uncertain effect types are intentionally left unauthored (raw enum) for
+# review — see the build's "unauthored (raw enum)" report.
+effects:
+  # --- carrying / movement -------------------------------------------------
+  MaxInventoryWeight: { en-US: Carry Weight Up }
+  ItemWeightReduction: { en-US: Item Weight Reduction }
+  MoveSpeed: { en-US: Move Speed Up }
+  MoveSpeed_Grass: { en-US: "Move Speed Up (Grassland)" }
+  MoveSpeed_Ground: { en-US: "Move Speed Up (Ground)" }
+  MoveSpeed_Snow: { en-US: "Move Speed Up (Snow)" }
+  ClimbMoveSpeedRate: { en-US: Climbing Speed Up }
+  SwimSpeed: { en-US: Swim Speed Up }
+  AirDash: { en-US: Air Dash }
+  JumpPower_Increase: { en-US: Jump Power Up }
+  JumpCount_Increase: { en-US: Extra Jump }
+  LowGravity: { en-US: Low Gravity }
+  FallDamageRate: { en-US: Fall Damage Reduction }
+
+  # --- combat --------------------------------------------------------------
+  ShotAttack: { en-US: Shot Attack Up }
+  Defense: { en-US: Defense Up }
+  AttackSpeedUp: { en-US: Attack Speed Up }
+  ReloadSpeedUp: { en-US: Reload Speed Up }
+  LifeSteal: { en-US: Life Steal }
+  RecoverHPOnHPThreshold: { en-US: Heal at Low HP }
+  Regene_HP_Rate: { en-US: HP Regeneration }
+  ShieldDamageCutRate: { en-US: Shield Damage Reduction }
+
+  # --- status effects inflicted --------------------------------------------
+  AdditionalEffect_Burn: { en-US: "Inflict Burn" }
+  AdditionalEffect_Darkness: { en-US: "Inflict Darkness" }
+  AdditionalEffect_Electrical: { en-US: "Inflict Shock" }
+  AdditionalEffect_Freeze: { en-US: "Inflict Freeze" }
+  AdditionalEffect_IvyCling: { en-US: "Inflict Ivy Cling" }
+  AdditionalEffect_Muddy: { en-US: "Inflict Muddy" }
+  AdditionalEffect_Wetness: { en-US: "Inflict Wet" }
+
+  # --- status resistances --------------------------------------------------
+  ResistAdditionalEffect_Burn: { en-US: "Burn Resistance" }
+  ResistAdditionalEffect_Darkness: { en-US: "Darkness Resistance" }
+  ResistAdditionalEffect_Electrical: { en-US: "Shock Resistance" }
+  ResistAdditionalEffect_Freeze: { en-US: "Freeze Resistance" }
+  ResistAdditionalEffect_IvyCling: { en-US: "Ivy Cling Resistance" }
+  ResistAdditionalEffect_Muddy: { en-US: "Muddy Resistance" }
+  ResistAdditionalEffect_Poison: { en-US: "Poison Resistance" }
+  ResistAdditionalEffect_Stun: { en-US: "Stun Resistance" }
+  ResistAdditionalEffect_Wetness: { en-US: "Wet Resistance" }
+
+  # --- element resistances -------------------------------------------------
+  ElementResist_Normal: { en-US: "Neutral Resistance" }
+  ElementResist_Fire: { en-US: "Fire Resistance" }
+  ElementResist_Water: { en-US: "Water Resistance" }
+  ElementResist_Leaf: { en-US: "Grass Resistance" }
+  ElementResist_Electricity: { en-US: "Electric Resistance" }
+  ElementResist_Ice: { en-US: "Ice Resistance" }
+  ElementResist_Earth: { en-US: "Ground Resistance" }
+  ElementResist_Dark: { en-US: "Dark Resistance" }
+  ElementResist_Dragon: { en-US: "Dragon Resistance" }
+
+  # --- environment resistances ---------------------------------------------
+  TemperatureResist_Cold: { en-US: Cold Resistance }
+  TemperatureResist_Heat: { en-US: Heat Resistance }
+  ExplosionResist: { en-US: Explosion Resistance }
+  InvalidToxicGas: { en-US: Toxic Gas Immunity }
+  LavaDamageInvalid: { en-US: Lava Damage Immunity }
+
+  # --- gathering / work ----------------------------------------------------
+  Mining: { en-US: Mining }
+  Logging: { en-US: Logging }
+  CraftSpeed: { en-US: Work Speed Up }
+  EquipmentDurabilityRate: { en-US: Equipment Durability Up }
+  WorkSuitabilityAddRank_Collection: { en-US: "Gathering Aptitude Up" }
+  WorkSuitabilityAddRank_Cool: { en-US: "Cooling Aptitude Up" }
+  WorkSuitabilityAddRank_Deforest: { en-US: "Lumbering Aptitude Up" }
+  WorkSuitabilityAddRank_EmitFlame: { en-US: "Kindling Aptitude Up" }
+  WorkSuitabilityAddRank_GenerateElectricity: { en-US: "Generating Electricity Aptitude Up" }
+  WorkSuitabilityAddRank_Handcraft: { en-US: "Handiwork Aptitude Up" }
+  WorkSuitabilityAddRank_Mining: { en-US: "Mining Aptitude Up" }
+  WorkSuitabilityAddRank_MonsterFarm: { en-US: "Farming Aptitude Up" }
+  WorkSuitabilityAddRank_ProductMedicine: { en-US: "Medicine Production Aptitude Up" }
+  WorkSuitabilityAddRank_Seeding: { en-US: "Planting Aptitude Up" }
+  WorkSuitabilityAddRank_Transport: { en-US: "Transporting Aptitude Up" }
+  WorkSuitabilityAddRank_Watering: { en-US: "Watering Aptitude Up" }
+
+  # --- base / breeding / farming -------------------------------------------
+  FarmCropGrowupSpeed: { en-US: Crop Growth Speed Up }
+  FarmCropHarvestNumRate: { en-US: Crop Yield Up }
+  BreedSpeed_InBaseCamp: { en-US: Breeding Speed Up }
+  PalEggHatchingSpeed: { en-US: Egg Hatching Speed Up }
+  PalExp_Increase: { en-US: Pal EXP Up }
+
+# Partner-skill effect targets. Same fallback lang -> en-US -> raw enum.
+targets:
+  ToTrainer: { en-US: to you }
+  ToSelf: { en-US: to this Pal }
+  ToSelfAndTrainer: { en-US: to you and this Pal }
+  ToOtomo: { en-US: to your Pals }
+  ToActiveOtomo: { en-US: to your active Pal }
+  ToBaseCampPal: { en-US: to base Pals }
+  ToBuildObject: { en-US: to structures }
