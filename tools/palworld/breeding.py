@@ -129,6 +129,8 @@ def run_breeding(raw: Path, data_out: Path, res_out: Path) -> None:
             # Eligible as a rank-average child? Combo-only children and Pals the
             # game flags IgnoreCombi (legendaries: self-bred only) are not.
             "breedChild": cid not in combo_children_all and not r.get("IgnoreCombi"),
+            # Legendaries (IgnoreCombi) — self-bred only; flagged for the UI.
+            **({"legendary": True} if r.get("IgnoreCombi") else {}),
         }
         for cid, r in roster.items()
     ]
