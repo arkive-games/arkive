@@ -20,7 +20,7 @@ Outputs (mirrors the maps/breeding split):
   data-palworld/locales/<tag>/items.json      {itemId: name}
   data-palworld/locales/<tag>/enums.json      {elements: {Element: name}, work: {WorkType: name}}
   resource-palworld/icons/element_<Element>.webp   (9)
-  resource-palworld/icons/work_<WorkType>.webp     (12; OilExtraction has no icon)
+  resource-palworld/icons/work_<WorkType>.webp     (13, colored T_icon_palwork_NN)
 
 Run: ``uv run python -m palworld.encyclopedia`` (from the ``tools`` dir).
 """
@@ -52,14 +52,32 @@ _CAT = "EPalWazaCategory::"
 _EFFT = "EPalPassiveSkillEffectType::"
 _TGT = "EPalPassiveSkillEffectTargetType::"
 
-# EPalElementType enum order -> element icon T_Icon_element_00..08.
+# The 9 element types (EPalElementType names, enum order).
 ELEMENTS = ["Normal", "Fire", "Water", "Leaf", "Electricity", "Ice", "Earth", "Dark", "Dragon"]
-# The 13 work-suitability types (order = display order); OilExtraction lacks an icon.
+# Element name -> element-icon index (Texture/UI/Main_Menu/T_Icon_element_NN.png).
+# The icon texture order is NOT the enum order (e.g. 03 is Electricity, 04 is
+# Leaf) — verified by matching each icon's symbol. Using enum order mismatched
+# icons (grass showing the lightning bolt, etc.).
+ELEMENT_ICON_INDEX = {
+    "Normal": 0, "Fire": 1, "Water": 2, "Electricity": 3, "Leaf": 4,
+    "Dark": 5, "Dragon": 6, "Earth": 7, "Ice": 8,
+}
+# The 13 work-suitability types (order = display order).
 WORK_TYPES = [
     "EmitFlame", "Watering", "Seeding", "GenerateElectricity", "Handcraft",
     "Collection", "Deforest", "Mining", "OilExtraction", "ProductMedicine",
     "Cool", "Transport", "MonsterFarm",
 ]
+# WorkType -> colored icon index (Texture/UI/InGame/T_icon_palwork_NN.png). The
+# texture index follows the EPalWorkSuitability enum EXCEPT OilExtraction (09)
+# and ProductMedicine (08) are swapped relative to it — verified by matching each
+# colored icon's silhouette against the named white WorkRank_<WorkType> icon.
+WORK_ICON_INDEX = {
+    "EmitFlame": 0, "Watering": 1, "Seeding": 2, "GenerateElectricity": 3,
+    "Handcraft": 4, "Collection": 5, "Deforest": 6, "Mining": 7,
+    "ProductMedicine": 8, "OilExtraction": 9, "Cool": 10, "Transport": 11,
+    "MonsterFarm": 12,
+}
 
 _NONE = {None, "None", ""}
 # DT_WazaMasterLevel PalIds occasionally differ from the CharacterID only by
@@ -771,11 +789,13 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             img.save(dest, "WEBP", quality=90, method=6)
         return 1
 
-    for idx, name in enumerate(ELEMENTS):
-        src = raw / "Texture/UI/Main_Menu" / f"T_Icon_element_{idx:02d}.png"
+    for name in ELEMENTS:
+        src = raw / "Texture/UI/Main_Menu" / f"T_Icon_element_{ELEMENT_ICON_INDEX[name]:02d}.png"
         converted += convert(src, icons_dir / f"element_{name}.webp")
     for wt in WORK_TYPES:
-        src = raw / "Texture/UI/InGame/SkillIcon" / f"T_icon_skill_pal_WorkRank_{wt}.png"
+        # Colored work-suitability icons (white WorkRank_* silhouettes lack a
+        # color and omit OilExtraction; the palwork_NN set is colored + complete).
+        src = raw / "Texture/UI/InGame" / f"T_icon_palwork_{WORK_ICON_INDEX[wt]:02d}.png"
         converted += convert(src, icons_dir / f"work_{wt}.webp")
 
     langs = len(_all_tags())

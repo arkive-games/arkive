@@ -47,7 +47,7 @@ def test_encyclopedia_integration(tmp_path):
     en_enums = json.loads((data_out / "locales/en-US/enums.json").read_text(encoding="utf-8"))
     assert en_enums["elements"]["Fire"] == "Fire" and en_enums["work"]["Mining"]
 
-    # Icons: 9 elements + 12 work suitabilities (OilExtraction has no WorkRank icon).
+    # Icons: 9 elements + 13 colored work suitabilities (all WORK_TYPES).
     assert {p.name for p in (res_out / "icons").glob("element_*.webp")} == {f"element_{e}.webp" for e in ELEMENTS}
     work_icons = {p.name for p in (res_out / "icons").glob("work_*.webp")}
-    assert work_icons == {f"work_{w}.webp" for w in WORK_TYPES if w != "OilExtraction"}
+    assert work_icons == {f"work_{w}.webp" for w in WORK_TYPES}
