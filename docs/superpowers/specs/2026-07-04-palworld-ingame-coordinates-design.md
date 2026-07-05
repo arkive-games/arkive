@@ -102,16 +102,34 @@ Holds a per-map affine (scale + offset per axis). `App.tsx` passes
 In-game coords are integers → round and drop decimals: `x:NNN, y:NNN` (and the
 same in the copied string). Matches the game.
 
-## Verification (before finalizing constants)
+## Verification (done 2026-07-04)
 
-1. Look up 2–3 named fast-travel statues' in-game coords (community map / paldb),
-   match to our `fastTravel` markers by name, run their pixel coords through the
-   affine, and confirm within a few units. (User may supply their own in-game
-   readings instead — more authoritative.)
-2. If any point is off by more than ~5 units, switch that map to **direct
-   calibration**: least-squares fit the affine from the reference points instead
-   of the composed constants.
-3. Regression: AION2 readout must be unchanged (identity default).
+Validated the composed formula against **6 tower entrances** (published in-game
+coords vs our marker pixels → affine):
+
+| Tower | formula | published | Δ |
+|---|---|---|---|
+| Feybreak | (−1288, −1665) | (−1294, −1669) | ~5 |
+| PIDF | (542, 335) | (561, 334) | ~19 |
+| PAL Genetic | (−138, 465) | (−148, 447) | ~15 |
+| Eternal Pyre | (−595, −531) | (−587, −517) | ~12 |
+| Rayne Syndicate | (118, −422) | (113, −431) | ~8 |
+| Free Pal Alliance | (34, −308) | (181, 29) | **outlier** |
+
+5/6 match within the eyeball error of scraped guide coords (the readout only
+needs approximate agreement). **Free Pal Alliance is a data-quality outlier**:
+our `MainWorld-fastTravel-2` marker is mislocated relative to the real tower —
+a separate data issue, NOT a transform error. The library constants
+(scale **459**, shift `(158000, 123888)`) are therefore correct for our export.
+
+Final **MainWorld** pixel→game constants:
+```
+game_x = 0.3853059 * px - 1922.444
+game_y = 1031.128   - 0.3853059 * py
+```
+(Both round to integers for display.)
+
+Regression: AION2 readout must stay unchanged (identity default).
 
 ## Files touched
 

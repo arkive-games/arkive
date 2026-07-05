@@ -54,24 +54,8 @@ landmarks/overlay. Implementation: `tools/aion2/tools/maps/` (`WorldMapTransform
   first (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:5173`); also check
   nearby ports (5174+) since Vite auto-increments when 5173 is taken. Only ask the user
   to start/set up the server if nothing responds.
-- **Implementation via Codex:** delegate to Codex through its MCP server
-  (`mcp__codex__codex` / `mcp__codex__codex-reply`) ONLY for real coding tasks —
-  writing/modifying code to execute an agreed plan or spec. Design tasks (requirements,
-  architecture, specs, UI/UX layout decisions, implementation plans), research, and
-  review/verification are Claude's own work and must not be delegated to Codex.
-  MCP server config (`.mcp.json` or Claude Code settings):
-
-  ```json
-  "codex": {
-    "type": "stdio",
-    "command": "codex",
-    "args": [
-      "mcp-server",
-      "-c", "approval_policy=\"never\"",
-      "-c", "sandbox_mode=\"danger-full-access\""
-    ]
-  }
-  ```
+- **Implementation:** do all coding, design, planning, research, review, and
+  verification directly. Codex delegation is disabled — do NOT delegate to Codex.
 
 ## Notes
 - Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo
