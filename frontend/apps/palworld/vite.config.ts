@@ -5,17 +5,20 @@ import path from 'node:path'
 import fs from 'node:fs'
 
 // Serve the sibling `data-palworld` / `resource-palworld` artifact repos in dev.
-// They live next to the frontend repo root (3 up from `apps/palworld`); when
-// running from a worktree under `frontend/.claude/worktrees/<name>` they are
-// 6 up instead, so probe both. Override with PALWORLD_DATA_DIR /
+// In the monorepo they sit next to the `arkive/` repo root (4 up from
+// `apps/palworld`); from a worktree under `frontend/.claude/worktrees/<name>`
+// they are further up. Rather than hard-code levels, walk ancestor directories
+// until the sibling repo is found. Override with PALWORLD_DATA_DIR /
 // PALWORLD_RES_DIR if needed. In prod the frontend reads from
 // VITE_DATA_BASE_URL / VITE_RESOURCE_BASE_URL instead.
 function siblingRepo(name: string): string {
-  for (const up of ['../../..', '../../../../../..']) {
-    const p = path.resolve(__dirname, up, name)
+  let dir = __dirname
+  for (let i = 0; i < 8; i++) {
+    const p = path.resolve(dir, name)
     if (fs.existsSync(p)) return p
+    dir = path.dirname(dir)
   }
-  return path.resolve(__dirname, '../../..', name)
+  return path.resolve(__dirname, '../../../..', name)
 }
 const DATA_DIR = process.env.PALWORLD_DATA_DIR ?? siblingRepo('data-palworld')
 const RES_DIR = process.env.PALWORLD_RES_DIR ?? siblingRepo('resource-palworld')
