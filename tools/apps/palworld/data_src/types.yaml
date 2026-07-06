@@ -96,19 +96,38 @@ subtypes:
   - id: copper
     category: resource
     color: "#B87333"
+    icon: T_itemicon_Material_CopperOre
     names: { en-US: Copper Ore, ja-JP: 銅鉱石, de-DE: Kupfererz, es-ES: Mineral de cobre, es-MX: Mineral de cobre, fr-FR: Minerai de cuivre, id-ID: Bijih Tembaga, it-IT: Minerale di rame, ko-KR: 구리 광석, pl-PL: Ruda miedzi, pt-BR: Minério de cobre, ru-RU: Медная руда, th-TH: แร่ทองแดง, tr-TR: Bakır Cevheri, vi-VN: Quặng đồng, zh-CN: 铜矿, zh-TW: 銅礦 }
   - id: quartz
     category: resource
     color: "#DCD9E8"
+    icon: T_itemicon_Material_Quartz
     names: { en-US: Quartz, ja-JP: 水晶, de-DE: Quarz, es-ES: Cuarzo, es-MX: Cuarzo, fr-FR: Quartz, id-ID: Kuarsa, it-IT: Quarzo, ko-KR: 석영, pl-PL: Kwarc, pt-BR: Quartzo, ru-RU: Кварц, th-TH: ควอตซ์, tr-TR: Kuvars, vi-VN: Thạch anh, zh-CN: 石英, zh-TW: 石英 }
   - id: coal
     category: resource
     color: "#4A5560"
+    icon: T_itemicon_Material_Coal
     names: { en-US: Coal, ja-JP: 石炭, de-DE: Kohle, es-ES: Carbón, es-MX: Carbón, fr-FR: Charbon, id-ID: Batu Bara, it-IT: Carbone, ko-KR: 석탄, pl-PL: Węgiel, pt-BR: Carvão, ru-RU: Уголь, th-TH: ถ่านหิน, tr-TR: Kömür, vi-VN: Than đá, zh-CN: 煤矿, zh-TW: 煤礦 }
   - id: sulfur
     category: resource
     color: "#D9C24A"
+    icon: T_itemicon_Material_Sulfur
     names: { en-US: Sulfur, ja-JP: 硫黄, de-DE: Schwefel, es-ES: Azufre, es-MX: Azufre, fr-FR: Soufre, id-ID: Belerang, it-IT: Zolfo, ko-KR: 유황, pl-PL: Siarka, pt-BR: Enxofre, ru-RU: Сера, th-TH: กำมะถัน, tr-TR: Kükürt, vi-VN: Lưu huỳnh, zh-CN: 硫磺, zh-TW: 硫磺 }
+  - id: oil
+    category: resource
+    color: "#2F2A33"
+    icon: T_itemicon_Material_CrudeOil
+    names: { en-US: Crude Oil, ja-JP: 原油, de-DE: Rohöl, es-ES: Petróleo crudo, es-MX: Petróleo, fr-FR: Pétrole brut, id-ID: Minyak Mentah, it-IT: Petrolio greggio, ko-KR: 원유, pl-PL: Ropa naftowa, pt-BR: Óleo cru, ru-RU: Сырая нефть, th-TH: น้ำมันดิบ, tr-TR: Ham Petrol, vi-VN: Dầu Thô, zh-CN: 原油, zh-TW: 原油 }
+  - id: skyIslandOre
+    category: resource
+    color: "#F4B942"
+    icon: T_itemicon_Material_SkyIslandOre
+    names: { en-US: Soralite, ja-JP: ソルライト, de-DE: Soralit, es-ES: Soralita, es-MX: Soralite, fr-FR: Soralite, id-ID: Solite, it-IT: Soralite, ko-KR: 솔라이트, pl-PL: Solit, pt-BR: Soralite, ru-RU: Соллайт, th-TH: แสงโซลาร์, tr-TR: Güneş Taşı, vi-VN: Đá Soralite, zh-CN: 烈阳金属, zh-TW: 烈陽金屬 }
+  - id: worldTreeOre
+    category: resource
+    color: "#7FB069"
+    icon: T_itemicon_Material_WorldTreeOre
+    names: { en-US: Paloxite, ja-JP: パルキサイト, de-DE: Paloxit, es-ES: Paloxita, es-MX: Palxite, fr-FR: Paloxite, id-ID: Palxite, it-IT: Paloxite, ko-KR: 팰키사이트, pl-PL: Paloksyt, pt-BR: Paloxita, ru-RU: Палкзит, th-TH: พาลไซต์, tr-TR: Pal-kalsit, vi-VN: Paloxite, zh-CN: 帕鲁树晶矿, zh-TW: 帕魯樹晶礦 }
   - id: palSpawn
     category: pal
     clusterRadius: 200

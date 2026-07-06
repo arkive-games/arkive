@@ -96,6 +96,14 @@ def test_enemy_category_pals_are_hidden(ds):
     assert "YakushimaMonster001" not in ds["locales"]["en-US"]["types"]["subtypes"]
 
 
+def test_resource_subtypes_carry_item_icons(ds):
+    # Resource nodes render with the game's item icon (not a bare colored dot).
+    resource = next(c for c in ds["types"]["categories"] if c["name"] == "resource")
+    by_id = {s["id"]: s for s in resource["subtypes"]}
+    assert by_id["copper"]["icon"] == "T_itemicon_Material_CopperOre"
+    assert by_id["coal"]["icon"] == "T_itemicon_Material_Coal"
+
+
 def test_publishes_world_pixel_params(ds):
     assert ds["maps"][0]["worldBounds"] == {"min": {"x": -1099400, "y": -724400}, "max": {"x": 349400, "y": 724400}}
     assert ds["maps"][0]["orientation"] == {"pxAxis": "Y", "flipX": False, "flipY": True}

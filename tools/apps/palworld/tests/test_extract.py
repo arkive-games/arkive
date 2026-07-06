@@ -102,6 +102,10 @@ def test_extract_integration():
     assert by_subtype("quartz") == 27
     assert by_subtype("coal") == 23
     assert by_subtype("sulfur") == 23
+    # Cell-only mineable resources (no persistent-level deposit).
+    assert by_subtype("oil") == 185
+    assert by_subtype("skyIslandOre") == 226
+    assert by_subtype("worldTreeOre") == 80
     # Sealed Realms: one location POI per ImprisonmentBoss placement, each labelled
     # with the boss it holds.
     realms = [p for p in out["pois"] if p["subtype"] == "sealedRealm"]

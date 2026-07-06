@@ -42,6 +42,12 @@ def _icon_source_path(raw: Path, name: str) -> Path | None:
     build = raw / "Texture/BuildObject/PNG" / f"{name}.png"
     if name.startswith("T_icon_buildObject_") and build.exists():
         return build
+    # Inventory item icons (resource materials, etc.) live in the sibling
+    # `Content/Others` tree, not under `Content/Pal`. e.g. ore/oil markers use
+    # T_itemicon_Material_<Item>.
+    item = raw.parent / "Others/InventoryItemIcon/Texture" / f"{name}.png"
+    if name.startswith("T_itemicon_") and item.exists():
+        return item
     npc = raw / "Texture/PalIcon/NPC" / f"{name}.png"
     if name.startswith("T_BOSS_NPC_") and npc.exists():
         return npc

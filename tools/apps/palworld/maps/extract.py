@@ -48,11 +48,19 @@ CELL_CLASSES = [
     ("camp", re.compile(r"^BP_NPCCampSpawner_.+_C$")),
     # Post-1.0 Oil Rig raid treasure boxes; exact `_C` excludes `_Goal_C`.
     ("oilrigTreasure", re.compile(r"^BP_OilrigTreasureBoxSpawner_C$")),
+    # Mineable resources that live only in the cells (no persistent-level
+    # BoxPlacementTool deposit): crude-oil fields, Sky Island ore (Soralite),
+    # World Tree ore (Paloxite). Copper/coal/quartz/sulfur come from the level.
+    ("oil", re.compile(r"^BP_LevelObject_OilField_C$")),
+    ("skyIslandOre", re.compile(r"^BP_PalMapObjectSpawner_SkyIslandOre_C$")),
+    ("worldTreeOre", re.compile(r"^BP_PalMapObjectSpawner_WorldTreeOre_C$")),
 ]
 CELL_GREP = (
     "BP_LevelObject_Relic|BP_PalMapObjectSpawner_SkillFruits_|"
     "palmapobjectspawner_palegg_|BP_PalMapObjectSpawner_Treasure_|"
-    "BP_NPCCampSpawner_|BP_OilrigTreasureBoxSpawner_C"
+    "BP_NPCCampSpawner_|BP_OilrigTreasureBoxSpawner_C|"
+    "BP_LevelObject_OilField_C|BP_PalMapObjectSpawner_SkyIslandOre_C|"
+    "BP_PalMapObjectSpawner_WorldTreeOre_C"
 )
 
 # Per-pal effigy buff-relics: BP_LevelObject_Relic_<Pal>_C (e.g. _SheepBall_C).
