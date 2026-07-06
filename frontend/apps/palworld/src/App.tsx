@@ -34,6 +34,10 @@ const PAL_SEARCH_OPTIONS = { combineWith: 'AND', fuzzy: false } as const
 // FilterPanel sync effect doesn't re-run each render).
 const PAL_COLLAPSED_CATEGORIES = ['pal']
 
+// Location subtypes hidden by default (too dense / low-signal); the user can
+// still enable them from the filter sidebar.
+const DEFAULT_HIDDEN_LOCATIONS = new Set(['dungeon', 'camp'])
+
 export default function App() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -70,10 +74,14 @@ export default function App() {
         if (cancelled) return
         setStaticData(d)
         // Only initialize visible set once; preserve user-set empty (Hide all).
-        // Default to showing just the location markers, minus dungeons.
+        // Default to showing just the location markers, minus the dense ones.
         if (!visibleInitialized.current) {
           visibleInitialized.current = true
-          setVisible(new Set(d.types.subtypes.filter((s) => s.category === 'location' && s.id !== 'dungeon').map((s) => s.id)))
+          setVisible(new Set(
+            d.types.subtypes
+              .filter((s) => s.category === 'location' && !DEFAULT_HIDDEN_LOCATIONS.has(s.id))
+              .map((s) => s.id),
+          ))
         }
       })
       .catch((err) => {

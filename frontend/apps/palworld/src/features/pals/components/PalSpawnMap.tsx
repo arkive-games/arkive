@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { GameMapTiles, createPinIcon, dataToLatLng } from '@gamemap/map-engine'
 import { cn } from '@gamemap/ui'
 import { palworldAssets, palIconUrl } from '../../../lib/assets'
-import { loadPalSpawns, type PalSpawns } from '../../../lib/pals'
+import { loadPalSpawns, type PalSpawns, type SpawnKind } from '../../../lib/pals'
 import { DATA_BASE } from '../../../lib/urls'
 
 type MapsLocale = Record<string, { name: string; shortName?: string }>
@@ -38,17 +38,23 @@ function useMapLabels(lng: string): Record<string, string> {
  * more than one map, a toggle switches between them. Bare Leaflet + tiles (no
  * full engine chrome), mirroring aion2's wiki `EmbeddedMap`.
  */
+// Boss category color (data_src/types.yaml) — boss spawn points ring red.
+const BOSS_RING = '#ef4444'
+
 export function PalSpawnMap({
   palId,
   palIcon,
   palName,
   className,
+  emptyMessage,
 }: {
   palId: string
   palIcon: string
   /** Prefills the full map's search box so it surfaces this pal's markers. */
   palName?: string
   className?: string
+  /** Shown when the pal has no spawn points at all (page decides the wording). */
+  emptyMessage?: string
 }) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -74,13 +80,21 @@ export function PalSpawnMap({
 
   const current = spawns?.[active]
   const map = current?.map
+  const hasWild = !!current?.points.some((p) => p.kind === 'wild')
+  const hasBoss = !!current?.points.some((p) => p.kind === 'boss')
 
   // Match the main map's pal marker: circular portrait at scale 0.9 with the
   // cluster count drawn as a top-right badge. createPinIcon caches by count, so
   // building one per point only ever produces a handful of distinct icons.
   const iconUrl = useMemo(() => palIconUrl(palIcon), [palIcon])
-  const iconFor = (count?: number) =>
-    createPinIcon(iconUrl, 0.9, false, { variant: 'circular', count })
+  // Boss points ring red and sit slightly larger so they read as highlighted;
+  // wild points keep the default white ring at scale 0.9.
+  const iconFor = (kind: SpawnKind, count?: number) =>
+    createPinIcon(iconUrl, kind === 'boss' ? 1 : 0.9, false, {
+      variant: 'circular',
+      count,
+      ...(kind === 'boss' ? { ringColor: BOSS_RING } : {}),
+    })
 
   const { bounds, fit } = useMemo(() => {
     if (!map || !current) return { bounds: null, fit: null }
@@ -98,7 +112,7 @@ export function PalSpawnMap({
   if (spawns && spawns.length === 0) {
     return (
       <p className="text-sm text-muted-foreground" data-testid="pal-spawn-empty">
-        {t('pal.noSpawns')}
+        {emptyMessage ?? t('pal.noSpawns')}
       </p>
     )
   }
@@ -152,13 +166,28 @@ export function PalSpawnMap({
         >
           <GameMapTiles selectedMap={map} assets={palworldAssets} />
           {current.points.map((p, i) => (
-            <Marker key={i} position={dataToLatLng(map, p.x, p.y)} icon={iconFor(p.count)}>
+            <Marker key={i} position={dataToLatLng(map, p.x, p.y)} icon={iconFor(p.kind, p.count)}>
               {p.level ? (
                 <Tooltip direction="top">{p.level}</Tooltip>
               ) : null}
             </Marker>
           ))}
         </MapContainer>
+        {hasWild && hasBoss ? (
+          <div className="absolute bottom-2 left-2 z-[500] flex items-center gap-3 rounded bg-background/80 px-2 py-1 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="inline-block size-2.5 rounded-full border border-[rgba(255,255,255,0.9)] bg-muted-foreground/40" />
+              {t('pal.spawnWild')}
+            </span>
+            <span className="flex items-center gap-1">
+              <span
+                className="inline-block size-2.5 rounded-full bg-muted-foreground/40"
+                style={{ border: `1.5px solid ${BOSS_RING}` }}
+              />
+              {t('pal.spawnBoss')}
+            </span>
+          </div>
+        ) : null}
         <Link
           to="/"
           search={{ map: map.id, q: palName }}

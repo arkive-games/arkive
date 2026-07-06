@@ -86,6 +86,10 @@ export interface PalEntry {
   activeSkills: ActiveSkill[]
   passives: string[]
   drops: Drop[]
+  /** True when the pal is obtained at the Summoning Altar (DT_PalRaidBoss). */
+  summonable: boolean
+  /** Materials + counts to craft this pal's summon item (only when summonable). */
+  summonMaterials?: { item: string; count: number }[]
 }
 
 export interface PassiveEffect { type: string; value: number; target: string }
@@ -140,7 +144,7 @@ async function fetchBundle(lng: string): Promise<PalsBundle> {
     j<Record<string, PalText>>(`${DATA_BASE}/locales/${lng}/pals.json`),
     j<Record<string, SkillText>>(`${DATA_BASE}/locales/${lng}/passives.json`),
     j<Record<string, SkillText>>(`${DATA_BASE}/locales/${lng}/skills.json`),
-    j<Record<string, { name: string }>>(`${DATA_BASE}/locales/${lng}/items.json`),
+    j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/items.json`),
     j<EnumsLocale>(`${DATA_BASE}/locales/${lng}/enums.json`),
     j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerEffects.json`),
     j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerTargets.json`),
@@ -155,7 +159,7 @@ async function fetchBundle(lng: string): Promise<PalsBundle> {
     passivesById: new Map(passivesFile.passives.map((p) => [p.id, p])),
     passiveText,
     skills,
-    items: Object.fromEntries(Object.entries(items).map(([id, v]) => [id, v.name])),
+    items,
     itemIcon,
     enums,
     partnerEffects,
@@ -179,18 +183,25 @@ export function loadPals(lng: string): Promise<PalsBundle> {
  * `level` is that spawn's localized level range (e.g. "Lv.1–3"), read from the
  * marker locale — the same string the main map shows.
  */
-export interface SpawnPoint { x: number; y: number; count?: number; level?: string }
+/** A spawn point's origin: a normal wild encounter, or a (field/alpha) boss. */
+export type SpawnKind = 'wild' | 'boss'
+export interface SpawnPoint { x: number; y: number; count?: number; level?: string; kind: SpawnKind }
 export interface PalSpawns { map: GameMapMeta; points: SpawnPoint[] }
 
-interface SpawnMarker { id: string; subtype: string; x: number; y: number; count?: number }
+interface SpawnMarker { id: string; subtype: string; x: number; y: number; count?: number; pal?: string }
+
+// Boss markers share one subtype per boss kind (not a pal id); they carry a
+// `pal` field linking back to the catchable pal (emitted by tools/…/emit.py).
+const BOSS_SUBTYPES = new Set(['fieldBoss', 'predator'])
 
 /**
- * Every map on which `palId` spawns, with that pal's spawn points. Reuses the
- * per-pal markers already in `markers/<map>.json` (subtype = pal id); maps with
- * no spawns are omitted. Points are the data's pre-clustered markers rendered
- * individually (no further clustering) so each shows on the embedded map. The
- * per-marker `level` range comes from the `<lng>` marker locale (missing locale
- * ⇒ level simply omitted).
+ * Every map on which `palId` appears, with that pal's spawn points. Reuses the
+ * markers already in `markers/<map>.json`: wild encounters use the pal id as
+ * `subtype`; alpha/field bosses use a boss `subtype` plus a `pal` field. Maps
+ * with no points are omitted. Points are the data's pre-clustered markers
+ * rendered individually (no further clustering). The per-marker label comes from
+ * the `<lng>` marker locale — wild points use `description` (level range), boss
+ * points use `name` (already "`<Name> Lv.<n>`"); missing locale ⇒ label omitted.
  */
 export async function loadPalSpawns(palId: string, lng: string): Promise<PalSpawns[]> {
   const { maps } = await j<{ maps: GameMapMeta[] }>(`${DATA_BASE}/maps.json`)
@@ -198,13 +209,26 @@ export async function loadPalSpawns(palId: string, lng: string): Promise<PalSpaw
     maps.map(async (map) => {
       const [{ markers }, loc] = await Promise.all([
         j<{ markers: SpawnMarker[] }>(`${DATA_BASE}/markers/${map.id}.json`),
-        j<Record<string, { description?: string }>>(
+        j<Record<string, { name?: string; description?: string }>>(
           `${DATA_BASE}/locales/${lng}/markers/${map.id}.json`,
-        ).catch(() => ({}) as Record<string, { description?: string }>),
+        ).catch(() => ({}) as Record<string, { name?: string; description?: string }>),
       ])
-      const points = markers
-        .filter((m) => m.subtype === palId)
-        .map((m) => ({ x: m.x, y: m.y, count: m.count, level: loc[m.id]?.description }))
+      const points: SpawnPoint[] = []
+      for (const m of markers) {
+        const isBoss = BOSS_SUBTYPES.has(m.subtype) && m.pal === palId
+        const isWild = m.subtype === palId
+        if (!isBoss && !isWild) continue
+        const label = loc[m.id]
+        points.push({
+          x: m.x,
+          y: m.y,
+          count: m.count,
+          level: isBoss ? label?.name : label?.description,
+          kind: isBoss ? 'boss' : 'wild',
+        })
+      }
+      // Wild first, boss last, so boss markers render on top of overlapping wild ones.
+      points.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'wild' ? -1 : 1))
       return { map, points }
     }),
   )

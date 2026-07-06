@@ -27,6 +27,7 @@ import {
   ActiveSkillRow,
   PassiveRow,
   DropRow,
+  SummonMaterialRow,
   PalSpawnMap,
 } from './components'
 
@@ -194,6 +195,19 @@ export default function PalDetailPage() {
       resolveCharacterNames(text?.partnerSkill?.desc, bundle.text) ||
       (ps.wazaId ? resolveCharacterNames(bundle.skills[ps.wazaId]?.description, bundle.text) : '')
     const unlockItemName = ps.unlockItem ? bundle.items[ps.unlockItem] ?? ps.unlockItem : ''
+
+    // When a pal has no wild/boss spawns, say how it's obtained. A breeding
+    // recipe is only a *real* acquisition path if the pal isn't one of its own
+    // parents (X = X + Y still needs an X), so require a≠c and b≠c. Summoning
+    // (Summoning Altar) takes priority over breeding when both apply.
+    const breedable = !!breeding?.data.combos.some(
+      (cb) => cb.c === pal.id && cb.a !== pal.id && cb.b !== pal.id,
+    )
+    const spawnEmptyMessage = pal.summonable
+      ? t('pal.summonOnly')
+      : breedable
+        ? t('pal.breedingOnly')
+        : t('pal.noSpawns')
 
     body = (
       <div className="space-y-6">
@@ -368,7 +382,31 @@ export default function PalDetailPage() {
             ) : null}
 
             <PalSection title={t('pal.section.spawns')}>
-              <PalSpawnMap palId={pal.id} palIcon={pal.icon} palName={text?.name ?? pal.id} className="aspect-square" />
+              <PalSpawnMap
+                palId={pal.id}
+                palIcon={pal.icon}
+                palName={text?.name ?? pal.id}
+                className="aspect-square"
+                emptyMessage={spawnEmptyMessage}
+              />
+              {pal.summonable && pal.summonMaterials?.length ? (
+                <div className="mt-3">
+                  <div className="mb-1 text-xs font-medium text-muted-foreground">
+                    {t('pal.summonMaterials')}
+                  </div>
+                  <div className="divide-y divide-border/60">
+                    {pal.summonMaterials.map((m) => (
+                      <SummonMaterialRow
+                        key={m.item}
+                        id={m.item}
+                        name={bundle.items[m.item] ?? m.item}
+                        icon={bundle.itemIcon[m.item]}
+                        count={m.count}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </PalSection>
           </div>
 
