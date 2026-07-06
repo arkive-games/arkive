@@ -190,8 +190,36 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   const positionById = useMemo(() => {
     const map = new Map<string, L.LatLng>();
     if (!selectedMap) return map;
+    // Markers sharing an identical data coordinate (e.g. boss "pool" spawn points
+    // where several bosses occupy one spot) would render exactly on top of one
+    // another. Fan each such group out around its shared point by a small fixed
+    // pixel radius so no pin is hidden — the underlying data is untouched, only
+    // the rendered position is nudged. Groups of one project straight through.
+    const groups = new Map<string, EngineMarker[]>();
     for (const m of markers) {
-      map.set(m.id, dataToLatLng(selectedMap, m.x, m.y));
+      const key = `${m.x},${m.y}`;
+      const g = groups.get(key);
+      if (g) g.push(m);
+      else groups.set(key, [m]);
+    }
+    const FAN_RADIUS_PX = 18;
+    for (const group of groups.values()) {
+      if (group.length === 1) {
+        const m = group[0];
+        map.set(m.id, dataToLatLng(selectedMap, m.x, m.y));
+        continue;
+      }
+      group.forEach((m, i) => {
+        const base = dataToLatLng(selectedMap, m.x, m.y);
+        const angle = (2 * Math.PI * i) / group.length;
+        map.set(
+          m.id,
+          new L.LatLng(
+            base.lat + FAN_RADIUS_PX * Math.sin(angle),
+            base.lng + FAN_RADIUS_PX * Math.cos(angle),
+          ),
+        );
+      });
     }
     return map;
   }, [selectedMap, markers]);
