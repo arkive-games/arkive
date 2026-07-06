@@ -1,0 +1,183 @@
+lang: "en-US"
+appName: "AION2 Map"
+siteTitle: "AION2\nInteractive Map"
+mapSubtitle: "Interactive Map"
+announcement: "200 monolith positions for in Abyss updated, screenshots will be added later."
+
+nav:
+  home: "Home"
+  classBd: "Class BD"
+  crafting: "Equip Crafting"
+  enhancement: "Equip Enhancement"
+  forum: "Forum"
+
+# Language display names are NOT localized: the switcher shows native names
+# (endonyms) from LANGUAGE_LABELS in src/i18n.ts.
+language:
+  label: "Language"
+
+ui:
+  confirm: "Confirm"
+  cancel: "Cancel"
+  close: "Close"
+  loading: "Loading..."
+  search: "Search"
+  noData: "No Data"
+  noDescription: "No description"
+  add: "Add"
+
+theme:
+  auto: "Auto (Change with Map)"
+  light: "Day Mode (Elyos)"
+  dark: "Night Mode (Asmodian)"
+  abyss: "Dawn Mode (Abyss)"
+
+fragmentType:
+  ground: "Ground"
+  air: "Air"
+  water: "Water"
+
+map:
+  copyPosition: "Copy position"
+  noMapSelected: "No map selected."
+  zoomIn: "Zoom in"
+  zoomOut: "Zoom out"
+
+menu:
+  home: "Home"
+  settings: "Settings"
+  maps: "Maps"
+  regions: "Regions"
+  markerTypes: "Marker Types"
+  showNamesOnPins: "Show names"
+  showAllMarkers: "Show all"
+  hideAllMarkers: "Hide all"
+  clearMarkerCompleted: "Clear completed"
+  clearMarkerCompletedBody: "Do you want to clear all completed marker in this map?"
+  selectMap: "Select a map"
+  showBorders: "Show region borders"
+  showMarkerNames: "Show marker names"
+  lodToggle: "Auto detail by zoom"
+  expand: "Expand"
+  collapse: "Collapse"
+  switchTheme: "Switch theme"
+  switchLanguage: "Switch language"
+  contact: "Contact us"
+  donate: "Donate"
+
+routes:
+  map: "Map"
+  class: "Classes"
+  crafting: "Crafting"
+  enhancement: "Enhancement"
+  character: "Character"
+  leaderboard: "Leaderboard"
+  forum: "Forum"
+
+leaderboard:
+  artifactRegionRanking: "Artifact Proportion Region Ranking"
+  realtimeArtifactRatio: "Real-time Artifact Proportion"
+  refreshedAgo: "Refreshed {{time}} ago"
+  refreshIn: "Refresh in {{time}}"
+  inContention: "Pending Upload"
+  rank: "Rank"
+  artifactCount: "Artifacts"
+  totalArtifacts: "Total"
+  seasonN: "Season {{n}}"
+  matchingN: "Matching {{n}}"
+  artifactState:
+    title: "Artifact Data"
+    uploadTime: "Upload Time"
+    recordTime: "Capture Date"
+    countdown: "Countdown"
+    disabledTime: "Countdown Start Time"
+    light: "Light"
+    dark: "Dark"
+    isVerified: "Verified"
+    contributors: "Contributors"
+    create: "Create Artifact Data"
+    update: "Update Artifact Data"
+    save: "Save"
+    cancel: "Cancel"
+    verify: "Verify"
+    loginToSubmit: "Login to submit"
+    timeFixedNote: "Time is fixed to {{time}} (local time)"
+    validationError: "Create/Edit failed, at least 48 hours between two records."
+  providedBy: "Provided by <emph>{{username}}</emph>"
+  artifactAdmins: "Artifact Admins"
+  addArtifactAdmin: "Add Artifact Admin"
+  submitData: "Click to submit data"
+  pin: "Pin"
+  share: "Share"
+
+buttons:
+  apply: "Apply"
+  ok: "OK"
+  yes: "Yes"
+  no: "No"
+
+errors:
+  unknown: "An unknown error occurred."
+  network: "Network connection error."
+  notFound: "Resource not found."
+
+markerActions:
+  markCompleted: "Mark as completed"
+  markNotCompleted: "Completed"
+
+markerSearch:
+  unnamed: "Unnamed marker"
+
+search:
+  resultsCount: "{{count}} results"
+  coords: "Coords: {{x}}, {{y}}"
+  scopeBoth: "All"
+  scopeName: "Name"
+  scopeToggle: "Toggle search scope"
+
+introModal:
+  version: "Version"
+  title: "Welcome to AION2 Interactive Map"
+  body: |-
+    The website is built and maintained by the **苏烟攻略组 (Suyn AION2 Team)**. We promise that this site will **always remain free**, and all daily operations rely solely on **voluntary donations**. We will never sell, trade, or charge for this website on any platform (such as Goofish, Taobao, TikTok). Please stay alert and beware of scams! If you obtained this website by paying money, please request a **refund** and report the seller. If you encounter impersonators posting fake versions of our content, please help **report** them — thank you!
+
+    The site developer (**tc-imba**) is a firm supporter and contributor to the open-source community. All code and resources of this website are released under the **GNU GPL license**.
+
+    If any individual or organization **violates the GPL license** and redistributes the site's code or resources in any form (free or paid), we will **reserve all rights to pursue legal responsibility**.
+
+    ### Communication & Contact
+
+    - **Aion 2 Discussion Discord:** https://discord.gg/cqn9sKbWPU
+    - **Bug reports & marker sharing**: please contact via Discord
+    - **Advertisement inquiries**: please contact via Discord
+
+    ### If the map fails to load
+
+    It may be due to high server load.  
+    You may switch the top-right **online mode (cloud icon)** to **offline mode**, though offline data updates may be slightly delayed.
+
+    ### Team Members
+
+    **苏烟、双酿(tc-imba)、物语、阡陌夕晨、小海、言本卿、粥棵儿、落花千树、Marry、焦糖云朵大麦茶、煎饺**
+
+    ### Special Thanks to Our Supporters
+
+    **笛声青案梦长安、不知水玄月、次不次薯条ono、饭特稀、澜芳华、阿姐收手吧、魔1–汐见琴音、11111、地对地导弹**
+
+  hint: |-
+    Maintaining a game guide website requires a tremendous amount of time and effort. If you wish to support us, you may do so via the Alipay QR code below — your kindness is what keeps this project moving forward ❤
+
+  
+rightSidebar:
+  members:
+    title: "Members"
+  contact:
+    title: "Communication & Contact"
+    content: |
+      1. **Our Aion 2 Discussion Discord:** https://discord.gg/cqn9sKbWPU
+      2. For the latest Aion 2 news and active discussions, check out the Aion 2 Global Discord – **the biggest Aion 2's community** we’re happy to collaborate with: https://discord.gg/aion2global
+
+race:
+  light: "Elyos"
+  dark: "Asmodian"
+  abyss: "Abyss"

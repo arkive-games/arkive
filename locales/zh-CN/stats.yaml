@@ -1,0 +1,251 @@
+STR:
+  name: 威力
+DEX:
+  name: 敏捷
+AGI:
+  name: 精確
+WIS:
+  name: 意志
+INT:
+  name: 知識
+CON:
+  name: 體力
+
+Destruction:
+  name: 破壞
+  description: 吉凱爾
+Death:
+  name: 死亡
+  description: 崔妮爾
+Wisdom:
+  name: 智慧
+  description: 露梅爾
+Destiny:
+  name: 命運
+  description: 瑪爾庫坦
+Space:
+  name: 空間
+  description: 伊斯拉佩爾
+Time:
+  name: 時間
+  description: 希埃爾
+Life:
+  name: 生命
+  description: 尤斯迪埃
+Illusion:
+  name: 幻象
+  description: 凱西內爾
+Freedom:
+  name: 自由
+  description: 白傑爾
+Justice:
+  name: 正義
+  description: 奈薩肯
+
+WeaponFixingDamage:
+  name: 攻擊力
+DamageRatio:
+  name: 攻擊力增加
+DefenseRatio:
+  name: 防禦力增加
+WeaponAccuracy:
+  name: 命中
+Critical:
+  name: 暴擊
+PvEAmplifyDamage:
+  name: PVE傷害增幅
+PvEDecreaseDamage:
+  name: PVE傷害耐性
+Block:
+  name: 格擋
+AmplifyWeaponDamage:
+  name: 武器傷害增幅
+CombatSpeed:
+  name: 戰鬥速度
+AdditionalHitRate:
+  name: 多段打擊擊中
+Accuracy:
+  name: 額外命中
+MPMax:
+  name: 精神力
+HPMax:
+  name: 生命力
+FPMax:
+  name: 飛行力
+BackAttackDamage:
+  name: 後方攻擊力
+ArmorDefense:
+  name: 防禦力
+AmplifyHpHealGet:
+  name: 所受治癒量
+HPRegen:
+  name: 生命力自然恢復
+MPRegen:
+  name: 精神力自然恢復
+AmplifyAllDamage:
+  name: 傷害增幅
+CriticalResist:
+  name: 暴擊抵抗
+HpPotionRate:
+  name: 生命力藥水恢復增加
+Restoration:
+  name: 再生
+DecreaseDamage:
+  name: 傷害耐性
+AbnormalResistance:
+  name: 異常狀態抵抗
+MoveSpeed:
+  name: 移動速度
+Evasion:
+  name: 額外迴避
+BackAttackDefense:
+  name: 後方防禦力
+AmplifyCriticalDamage:
+  name: 暴擊傷害增幅
+DefensePierce:
+  name: 貫穿
+SealStoneAddDamage:
+  name: 封魂石額外傷害
+Perfect:
+  name: 完美
+ArmorEvasion:
+  name: 迴避
+CriticalAddDamage:
+  name: 暴擊攻擊力
+ShockPropertyAccuracy:
+  name: 衝擊系擊中
+CriticalDamageDefense:
+  name: 暴擊防禦力
+AmplifyBackAttack:
+  name: 後方傷害增幅
+
+AttackIncrease:
+  name: 攻擊力增加
+EvasionIncrease:
+  name: 迴避增加
+BlockIncrease:
+  name: 格擋增加
+CriticalHitResistIncrease:
+  name: 暴擊抵抗增加
+StatusEffectChanceIncrease:
+  name: 異常狀態擊中
+HPIncrease:
+  name: 生命力增加
+AccuracyIncrease:
+  name: 命中增加
+CriticalHitIncrease:
+  name: 暴擊增加
+StatusEffectResistIncrease:
+  name: 異常狀態抵抗
+DefenseIncrease:
+  name: 防禦力增加
+PerfectIncrease:
+  name: 完美
+CooldownDecrease:
+  name: 冷卻時間
+EndurancePenetrationIncrease:
+  name: 鐵壁貫穿
+RegenerationIncrease:
+  name: 再生
+CombatSpeedIncrease:
+  name: 戰鬥速度
+SmiteResistIncrease:
+  name: 強擊抵抗
+PerfectResistIncrease:
+  name: 完美抵抗
+RegenerationPenetrationIncrease:
+  name: 再生貫穿
+MPCostDecrease:
+  name: 精神力消耗量
+SmiteIncrease:
+  name: 強擊
+MPIncrease:
+  name: 精神力增加
+EnduranceIncrease:
+  name: 鐵壁
+MoveSpeedIncrease:
+  name: 移動速度
+HardHit:
+  name: 強擊
+
+# Board
+MaxHP:
+  name: 生命力
+MaxMP:
+  name: 精神力
+Attack:
+  name: 額外攻擊力
+Defense:
+  name: 額外防禦力
+CriticalHit:
+  name: 暴擊
+CriticalHitResist:
+  name: 暴擊抵抗
+CooldownReduction:
+  name: 冷卻時間減少
+DamageBoost:
+  name: 傷害增幅
+DamageTolerance:
+  name: 傷害耐性
+CriticalDamageBoost:
+  name: 暴擊傷害增幅
+CriticalDamageTolerance:
+  name: 暴擊傷害耐性
+Multi-HitChance:
+  name: 多段打擊擊中
+Multi-HitResist:
+  name: 多段打擊抵抗
+BossDamageBoost:
+  name: 首領傷害增幅
+BossDamageTolerance:
+  name: 首領傷害耐性
+BossAttack:
+  name: 首領攻擊力
+BossDefense:
+  name: 首領防禦力
+PvEAccuracy:
+  name: PVE命中
+PvEEvasion:
+  name: PVE迴避
+PvEAttack:
+  name: PVE攻擊力
+PvEDefense:
+  name: PVE防禦力
+PvEDamageBoost:
+  name: PVE傷害增幅
+PvEDamageTolerance:
+  name: PVE傷害耐性
+PvPAccuracy:
+  name: PVP命中
+PvPEvasion:
+  name: PVP迴避
+PvPAttack:
+  name: PVP攻擊力
+PvPDefense:
+  name: PVP防禦力
+PvPDamageBoost:
+  name: PVP傷害增幅
+PvPDamageTolerance:
+  name: PVP傷害耐性
+PvPCriticalHit:
+  name: PVP暴擊
+PvPCriticalHitResist:
+  name: PVP暴擊抵抗
+StatusEffectChance:
+  name: 異常狀態擊中
+StatusEffectResist:
+  name: 異常狀態抵抗
+WeaponDamageBoost:
+  name: 武器傷害增幅
+WeaponDamageTolerance:
+  name: 武器傷害耐性
+IncreasesMaxHP:
+  name: 生命力增加
+Endurance:
+  name: 鐵壁
+EndurancePenetration:
+  name: 鐵壁貫穿
+Regeneration:
+  name: 再生
+RegenerationPenetration:
+  name: 再生貫穿

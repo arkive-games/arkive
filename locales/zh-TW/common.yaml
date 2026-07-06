@@ -1,0 +1,119 @@
+lang: "zh-TW"
+appName: "AION2 地圖"
+siteTitle: "AION2 互動地圖"
+mapSubtitle: "互動地圖"
+
+nav:
+  home: "首頁"
+  classBd: "職業BD"
+  crafting: "裝備製作"
+  enhancement: "裝備強化"
+  forum: "論壇"
+
+# 語言顯示名不做翻譯：切換選單使用 src/i18n.ts 中 LANGUAGE_LABELS 的本族語名稱。
+language:
+  label: "語言"
+
+theme:
+  auto: "自動（隨地圖切換）"
+  light: "白天模式（天族）"
+  dark: "夜晚模式（魔族）"
+  abyss: "黃昏模式（深淵）"
+
+fragmentType:
+  ground: "地面"
+  air: "空中"
+  water: "水中"
+
+map:
+  copyPosition: "複製座標"
+  noMapSelected: "未選擇地圖。"
+  zoomIn: "放大"
+  zoomOut: "縮小"
+
+ui:
+  confirm: "確認"
+  cancel: "取消"
+  close: "關閉"
+  loading: "載入中..."
+  search: "搜尋"
+  noData: "暫無數據"
+  noDescription: "無描述"
+  add: "添加"
+
+leaderboard:
+  artifactRegionRanking: "神器占比大區排名"
+  realtimeArtifactRatio: "實時神器占比"
+  refreshedAgo: "{{time}}前重新整理"
+  refreshIn: "{{time}}後重新整理"
+  inContention: "數據待上傳"
+  rank: "排名"
+  artifactCount: "神器數量"
+  totalArtifacts: "總計神器"
+  seasonN: "第{{n}}賽季"
+  matchingN: "第{{n}}次匹配"
+  artifactState:
+    recordTime: "佔領日期"
+    isVerified: "已驗證"
+    contributors: "貢獻者"
+    verify: "驗證"
+    timeFixedNote: "時間固定為 {{time}} (當地時間)"
+    validationError: "創建/編輯失敗，兩條數據至少間隔48小時"
+  providedBy: "資訊由 <emph>{{username}}</emph> 提供"
+  artifactAdmins: "神器管理員"
+  addArtifactAdmin: "添加神器管理員"
+  submitData: "點擊提交數據"
+  pin: "置頂"
+  share: "分享"
+
+menu:
+  home: "首頁"
+  settings: "設定"
+  maps: "地圖"
+  regions: "區域"
+  markerTypes: "標記類型"
+  showNamesOnPins: "在標記上顯示名稱"
+  showAllMarkers: "全部顯示"
+  hideAllMarkers: "全部隱藏"
+  clearMarkerCompleted: "清除已完成標記"
+  clearMarkerCompletedBody: "你確定要清除這張地圖所有的已完成標記嗎？"
+  selectMap: "選擇地圖"
+  switchTheme: "切換主題"
+  switchLanguage: "切換語言"
+  contact: "聯絡我們"
+  donate: "贊助"
+  expand: "展開"
+  collapse: "收起"
+  showBorders: "顯示地區邊界"
+  showMarkerNames: "顯示標記名字"
+  lodToggle: "按縮放顯示層級"
+
+buttons:
+  apply: "套用"
+  ok: "確認"
+  yes: "是"
+  no: "否"
+
+errors:
+  unknown: "發生未知錯誤。"
+  network: "網路連線錯誤。"
+  notFound: "找不到資源。"
+
+markerSearch:
+  unnamed: "未命名標記"
+
+search:
+  resultsCount: "{{count}}個搜尋結果"
+  coords: "座標：{{x}}，{{y}}"
+  scopeBoth: "全部"
+  scopeName: "名"
+  scopeToggle: "切換搜尋範圍"
+
+markerActions:
+  markCompleted: "標記為已完成"
+  markNotCompleted: "已完成"
+
+race:
+  light: "天族"
+  dark: "魔族"
+  abyss: "深淵"

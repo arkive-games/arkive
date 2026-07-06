@@ -1,0 +1,190 @@
+mainStats:
+  - type: STR
+    icon: images/Character/stat_str.webp
+    secondStats:
+      - type: AttackIncrease
+  - type: DEX
+    icon: images/Character/stat_dex.webp
+    secondStats:
+      - type: EvasionIncrease
+      - type: BlockIncrease
+      - type: CriticalHitResistIncrease
+  - type: AGI
+    icon: images/Character/stat_agi.webp
+    secondStats:
+      - type: AccuracyIncrease
+      - type: CriticalHitIncrease
+  - type: WIS
+    icon: images/Character/stat_wis.webp
+    secondStats:
+      - type: StatusEffectResistIncrease
+  - type: INT
+    icon: images/Character/stat_int.webp
+    secondStats:
+      - type: StatusEffectChanceIncrease
+  - type: CON
+    icon: images/Character/stat_con.webp
+    secondStats:
+      - type: HPIncrease
+lordStats:
+  - type: Destruction
+    icon: images/Character/stat_lords_destruction.webp
+    secondStats:
+      - type: AttackIncrease
+      - type: PerfectResistIncrease
+  - type: Death
+    icon: images/Character/stat_lords_death.webp
+    secondStats:
+      - type: CriticalHitIncrease
+      - type: RegenerationPenetrationIncrease
+  - type: Wisdom
+    icon: images/Character/stat_lords_wisdom.webp
+    secondStats:
+      - type: MPCostDecrease
+      - type: SmiteIncrease
+  - type: Destiny
+    icon: images/Character/stat_lords_destiny.webp
+    secondStats:
+      - type: MPIncrease
+      - type: EnduranceIncrease
+  - type: Space
+    icon: images/Character/stat_lords_space.webp
+    secondStats:
+      - type: MoveSpeedIncrease
+      - type: BlockIncrease
+  - type: Time
+    icon: images/Character/stat_lords_time.webp
+    secondStats:
+      - type: CombatSpeedIncrease
+      - type: SmiteResistIncrease
+  - type: Life
+    icon: images/Character/stat_lords_life.webp
+    secondStats:
+      - type: HPIncrease
+      - type: RegenerationIncrease
+  - type: Illusion
+    icon: images/Character/stat_lords_illusion.webp
+    secondStats:
+      - type: CooldownDecrease
+      - type: EndurancePenetrationIncrease
+  - type: Freedom
+    icon: images/Character/stat_lords_freedom.webp
+    secondStats:
+      - type: AccuracyIncrease
+      - type: EvasionIncrease
+  - type: Justice
+    icon: images/Character/stat_lords_justice.webp
+    secondStats:
+      - type: DefenseIncrease
+      - type: PerfectIncrease
+secondStats:
+  - type: AttackIncrease
+  - type: EvasionIncrease
+  - type: BlockIncrease
+  - type: CriticalHitResistIncrease
+  - type: StatusEffectChanceIncrease
+  - type: HPIncrease
+  - type: AccuracyIncrease
+  - type: CriticalHitIncrease
+  - type: StatusEffectResistIncrease
+  - type: DefenseIncrease
+  - type: PerfectIncrease
+  - type: CooldownDecrease
+  - type: EndurancePenetrationIncrease
+  - type: RegenerationIncrease
+  - type: CombatSpeedIncrease
+  - type: SmiteResistIncrease
+  - type: PerfectResistIncrease
+  - type: RegenerationPenetrationIncrease
+  - type: MPCostDecrease
+  - type: SmiteIncrease
+  - type: MPIncrease
+  - type: EnduranceIncrease
+  - type: MoveSpeedIncrease
+boardStats:
+  - type: MaxHP
+    value: "100"
+  - type: MaxMP
+    value: "50"
+  - type: Attack
+    value: "5"
+  - type: Defense
+    value: "50"
+  - type: CriticalHit
+    value: "10"
+  - type: CriticalHitResist
+    value: "10"
+  - type: CooldownReduction
+    value: "2.5%"
+  - type: CombatSpeed
+    value: "2.5%"
+  - type: DamageBoost
+    value: "5%"
+  - type: DamageTolerance
+    value: "5%"
+  - type: CriticalDamageBoost
+    value: "5%"
+  - type: CriticalDamageTolerance
+    value: "5%"
+  - type: Multi-HitChance
+    value: "3%"
+  - type: Multi-HitResist
+    value: "3%"
+  - type: BossDamageBoost
+    value: "1%"
+  - type: BossDamageTolerance
+    value: "1%"
+  - type: BossAttack
+    value: "5"
+  - type: BossDefense
+    value: "50"
+  - type: PvEAccuracy
+    value: "10"
+  - type: PvEEvasion
+    value: "10"
+  - type: PvEAttack
+    value: "5"
+  - type: PvEDefense
+    value: "50"
+  - type: PvEDamageBoost
+    value: "2.5%"
+  - type: PvEDamageTolerance
+    value: "2.5%"
+  - type: PvPAccuracy
+    value: "10"
+  - type: PvPEvasion
+    value: "10"
+  - type: PvPAttack
+    value: "5"
+  - type: PvPDefense
+    value: "50"
+  - type: PvPDamageBoost
+    value: "2.5%"
+  - type: PvPDamageTolerance
+    value: "2.5%"
+  - type: PvPCriticalHit
+    value: "5"
+  - type: PvPCriticalHitResist
+    value: "5"
+  - type: StatusEffectChance
+    value: "1%"
+  - type: StatusEffectResist
+    value: "1%"
+  - type: WeaponDamageBoost
+    value: "2.5%"
+  - type: WeaponDamageTolerance
+    value: "2.5%"
+  - type: Accuracy
+    value: "10"
+  - type: Block
+    value: "10"
+  - type: IncreasesMaxHP
+    value: "1%"
+  - type: Endurance
+    value: "1%"
+  - type: EndurancePenetration
+    value: "1%"
+  - type: Regeneration
+    value: "1%"
+  - type: RegenerationPenetration
+    value: "1%"
