@@ -107,7 +107,7 @@ export default function TechnologyPage() {
     body = <CatalogPageLoading />
   } else {
     body = (
-      <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-[3rem_repeat(7,minmax(0,1fr))]">
+      <div className="grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-[3rem_repeat(7,minmax(0,1fr))]">
         {/* Header row: level corner + normal (spans 6) + ancient (1) */}
         <div className="hidden md:block" />
         <div className="sticky top-0 z-10 rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 md:col-span-6 dark:text-sky-200">
