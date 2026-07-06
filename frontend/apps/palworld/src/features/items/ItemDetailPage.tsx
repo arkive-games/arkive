@@ -115,6 +115,21 @@ export default function ItemDetailPage() {
                       <MaterialRow key={m.item} id={m.item} name={iname(m.item)} count={m.count} />
                     ))}
                   </div>
+                  {item.recipe.craftedAt?.length ? (
+                    <div className="mt-3">
+                      <div className="mb-1.5 text-xs text-muted-foreground">{t('item.craftedAt')}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.recipe.craftedAt.map((bid) => (
+                          <BuildingLink
+                            key={bid}
+                            id={bid}
+                            name={b.buildings.text[bid]?.name ?? bid}
+                            icon={b.buildings.byId.get(bid)?.icon}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                     <div>
                       {t('item.work')}: <span className="text-foreground tabular-nums">{item.recipe.work}</span>
@@ -225,6 +240,7 @@ export default function ItemDetailPage() {
                 <InfoRows>
                   <StatRow label={t('item.type')} value={itemTypeLabel(item.typeA, b.items.typeLabels)} />
                   <StatRow label={t('item.rarity')} value={item.rarity} />
+                  <StatRow label={t('item.sortId')} value={item.sortId} />
                   {item.rank ? <StatRow label={t('item.rank')} value={item.rank} /> : null}
                   {elementLabel ? <StatRow label={t('item.element')} value={elementLabel} /> : null}
                   {item.weight ? <StatRow label={t('item.weight')} value={item.weight} /> : null}

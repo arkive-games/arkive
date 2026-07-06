@@ -12,6 +12,8 @@ export interface Recipe {
   work: number
   unlockItemId?: string
   materials: Material[]
+  /** Production buildings that can craft this item (building ids, base tier first). */
+  craftedAt?: string[]
 }
 export interface FoodEffect {
   satiety?: number

@@ -13,7 +13,9 @@ JA ``_Common`` base overlaid per-language from ``L10N/<folder>/Pal``), reusing
 Cross-links (same id space throughout — item id == recipe product id ==
 building material id; building id == UnlockBuildObjects entry; UnlockItemRecipes
 entry == recipe row-key whose Product_Id is the crafted item):
-  * item.recipe          — the recipe that crafts it (materials → item ids)
+  * item.recipe          — the recipe that crafts it (materials → item ids;
+                           recipe.craftedAt → production building ids, from the
+                           buildings' Blueprint converter params)
   * item.droppedBy       — pals that drop it        (inverted from pals.json)
   * item.partnerFor      — pals whose partner skill it unlocks (from pals.json)
   * item.usedInItems     — recipes that consume it  (→ product item ids)
@@ -166,6 +168,54 @@ def _equip(r: dict) -> dict:
         "magazine": r.get("MagazineSize", 0) or 0,
     }
     return {k: v for k, v in e.items() if v}
+
+
+def _craft_specs(raw: Path, building_ids: set) -> dict:
+    """Map crafting building id -> (TypeA set, TypeB set, max Rank).
+
+    No DataTable links a recipe to the workbench that crafts it. That relation
+    lives in each production building's Blueprint: a
+    ``PalMapObjectItemConverterParameterComponent`` declares which item TypeA /
+    TypeB it accepts and the max item Rank it can craft. An item is craftable at
+    a building when (no A filter or item TypeA in A) AND item TypeB in B AND item
+    Rank <= rankMax. Restricted to emitted (player-facing) buildings.
+    """
+    specs: dict[str, tuple[set, set, int]] = {}
+    bp_dir = raw / "Blueprint/MapObject/BuildObject"
+    if not bp_dir.is_dir():
+        return specs
+    for f in bp_dir.iterdir():
+        if not (f.name.startswith("BP_BuildObject_") and f.suffix == ".json"):
+            continue
+        bid = f.name[len("BP_BuildObject_") : -len(".json")]
+        if bid not in building_ids:
+            continue
+        try:
+            comps = json.loads(f.read_text(encoding="utf-8"))
+        except (ValueError, OSError):
+            continue
+        for c in comps if isinstance(comps, list) else []:
+            if "ItemConverterParameter" not in str(c.get("Type", "")):
+                continue
+            p = c.get("Properties") or {}
+            b = set(p.get("TargetTypesB") or [])
+            if not b:  # no TypeB filter -> can't tell what it crafts
+                continue
+            specs[bid] = (set(p.get("TargetTypesA") or []), b, p.get("TargetRankMax", 0) or 0)
+            break
+    return specs
+
+
+def _crafted_at(r: dict, specs: dict, bld_rows: dict) -> list[str]:
+    """Production buildings that can craft item row ``r``, ordered by build rank."""
+    a, b, rank = r.get("TypeA"), r.get("TypeB"), r.get("Rank", 0) or 0
+    ids = [
+        bid
+        for bid, (sa, sb, mx) in specs.items()
+        if (not sa or a in sa) and b in sb and rank <= mx
+    ]
+    ids.sort(key=lambda bid: ((bld_rows.get(bid) or {}).get("Rank", 0), bid))
+    return ids
 
 
 def _icon_basename(icon_rows: dict, bid: str) -> str | None:
@@ -326,6 +376,8 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     techs.sort(key=lambda t: t["level"])
 
     # --- assemble item entries ----------------------------------------------
+    # crafting stations per item (from building Blueprint converter params)
+    craft_specs = _craft_specs(raw, building_id_set)
     items = []
     for iid in item_ids:
         r = item_rows[iid]
@@ -356,6 +408,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             gate = rc.get("UnlockItemID")
             if gate and gate not in _NONE:
                 recipe["unlockItemId"] = gate
+            stations = _crafted_at(r, craft_specs, bld_rows)
+            if stations:
+                recipe["craftedAt"] = stations
             entry["recipe"] = recipe
         if iid in dropped_by:
             entry["droppedBy"] = sorted(dropped_by[iid])
