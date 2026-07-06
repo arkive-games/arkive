@@ -34,6 +34,8 @@ export interface ItemEntry {
   id: string
   typeA: string
   typeB: string
+  /** Game's canonical inventory order — unique per item, language-independent. */
+  sortId: number
   rarity: number
   rank: number
   weight: number

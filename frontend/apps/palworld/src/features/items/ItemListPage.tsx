@@ -54,7 +54,9 @@ export default function ItemListPage() {
     return bundle.items
       .filter((i) => cat === 'all' || i.typeA === cat)
       .filter((i) => !q || (bundle.text[i.id]?.name ?? i.id).toLowerCase().includes(q))
-      .sort((a, b) => (bundle.text[a.id]?.name ?? a.id).localeCompare(bundle.text[b.id]?.name ?? b.id))
+      // Stable game order (SortId), identical across languages, rather than by
+      // localized name which would reshuffle per locale.
+      .sort((a, b) => a.sortId - b.sortId || a.id.localeCompare(b.id))
   }, [bundle, query, cat])
 
   return (
@@ -94,22 +96,28 @@ export default function ItemListPage() {
           ) : !bundle ? (
             <CatalogPageLoading />
           ) : (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {list.map((i) => (
                 <Link
                   key={i.id}
                   to="/items/$id"
                   params={{ id: i.id }}
                   data-testid="item-card"
-                  className={`group flex flex-col gap-1 rounded-lg border-l-4 border border-border bg-card p-3 shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
+                  className={`group flex aspect-square flex-col items-center gap-1 rounded-lg border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
                 >
-                  <div className="flex items-center gap-2">
-                    {i.icon ? <ItemGlyph icon={i.icon} size={28} /> : null}
-                    <span className="line-clamp-2 text-sm font-medium leading-tight">
-                      {bundle.text[i.id]?.name ?? i.id}
-                    </span>
+                  <span className="w-full truncate text-[11px] uppercase tracking-wide text-muted-foreground">
+                    {itemTypeLabel(i.typeA, bundle.typeLabels)}
+                  </span>
+                  <div className="flex min-h-0 flex-1 items-center justify-center">
+                    {i.icon ? (
+                      <ItemGlyph icon={i.icon} size={72} />
+                    ) : (
+                      <div className="size-[72px]" aria-hidden />
+                    )}
                   </div>
-                  <span className="text-[11px] text-muted-foreground">{itemTypeLabel(i.typeA, bundle.typeLabels)}</span>
+                  <span className="line-clamp-2 w-full text-sm font-medium leading-tight">
+                    {bundle.text[i.id]?.name ?? i.id}
+                  </span>
                 </Link>
               ))}
             </div>
