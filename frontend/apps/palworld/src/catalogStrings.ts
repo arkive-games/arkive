@@ -72,6 +72,12 @@ export interface CatalogStrings {
     unlocksItems: string
     unlocksBuildings: string
     empty: string
+    normalTitle: string
+    ancientTitle: string
+    typeItem: string
+    typeStructure: string
+    searchPlaceholder: string
+    count: string
   }
 }
 
@@ -129,6 +135,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Items',
       unlocksBuildings: 'Buildings',
       empty: 'No technologies at this level.',
+      normalTitle: 'Technology',
+      ancientTitle: 'Ancient Technology',
+      typeItem: 'Item',
+      typeStructure: 'Structure',
+      searchPlaceholder: 'Search technologies…',
+      count: '{{count}} technologies',
     },
   },
   'de-DE': {
@@ -184,6 +196,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Gegenstände',
       unlocksBuildings: 'Gebäude',
       empty: 'Keine Technologien auf dieser Stufe.',
+      normalTitle: 'Technologie',
+      ancientTitle: 'Antike Technologie',
+      typeItem: 'Gegenstand',
+      typeStructure: 'Struktur',
+      searchPlaceholder: 'Technologien suchen…',
+      count: '{{count}} Technologien',
     },
   },
   'es-ES': {
@@ -239,6 +257,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Objetos',
       unlocksBuildings: 'Construcciones',
       empty: 'No hay tecnologías en este nivel.',
+      normalTitle: 'Tecnología',
+      ancientTitle: 'Tecnología antigua',
+      typeItem: 'Objeto',
+      typeStructure: 'Estructura',
+      searchPlaceholder: 'Buscar tecnologías…',
+      count: '{{count}} tecnologías',
     },
   },
   'es-MX': {
@@ -294,6 +318,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Objetos',
       unlocksBuildings: 'Construcciones',
       empty: 'No hay tecnologías en este nivel.',
+      normalTitle: 'Tecnología',
+      ancientTitle: 'Tecnología antigua',
+      typeItem: 'Objeto',
+      typeStructure: 'Estructura',
+      searchPlaceholder: 'Buscar tecnologías…',
+      count: '{{count}} tecnologías',
     },
   },
   'fr-FR': {
@@ -349,6 +379,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Objets',
       unlocksBuildings: 'Bâtiments',
       empty: 'Aucune technologie à ce niveau.',
+      normalTitle: 'Technologie',
+      ancientTitle: 'Technologie ancienne',
+      typeItem: 'Objet',
+      typeStructure: 'Structure',
+      searchPlaceholder: 'Rechercher des technologies…',
+      count: '{{count}} technologies',
     },
   },
   'id-ID': {
@@ -404,6 +440,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Item',
       unlocksBuildings: 'Bangunan',
       empty: 'Tidak ada teknologi di level ini.',
+      normalTitle: 'Teknologi',
+      ancientTitle: 'Teknologi Kuno',
+      typeItem: 'Item',
+      typeStructure: 'Struktur',
+      searchPlaceholder: 'Cari teknologi…',
+      count: '{{count}} teknologi',
     },
   },
   'it-IT': {
@@ -459,6 +501,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Oggetti',
       unlocksBuildings: 'Costruzioni',
       empty: 'Nessuna tecnologia a questo livello.',
+      normalTitle: 'Tecnologia',
+      ancientTitle: 'Tecnologia antica',
+      typeItem: 'Oggetto',
+      typeStructure: 'Struttura',
+      searchPlaceholder: 'Cerca tecnologie…',
+      count: '{{count}} tecnologie',
     },
   },
   'ja-JP': {
@@ -514,6 +562,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'アイテム',
       unlocksBuildings: '建築物',
       empty: 'このレベルのテクノロジーはありません。',
+      normalTitle: 'テクノロジー',
+      ancientTitle: '古代テクノロジー',
+      typeItem: 'アイテム',
+      typeStructure: '建築',
+      searchPlaceholder: 'テクノロジーを検索…',
+      count: '{{count}}件のテクノロジー',
     },
   },
   'ko-KR': {
@@ -569,6 +623,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: '아이템',
       unlocksBuildings: '건축물',
       empty: '이 레벨의 기술이 없습니다.',
+      normalTitle: '기술',
+      ancientTitle: '고대 기술',
+      typeItem: '아이템',
+      typeStructure: '건축',
+      searchPlaceholder: '기술 검색…',
+      count: '기술 {{count}}개',
     },
   },
   'pl-PL': {
@@ -624,6 +684,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Przedmioty',
       unlocksBuildings: 'Budynki',
       empty: 'Brak technologii na tym poziomie.',
+      normalTitle: 'Technologia',
+      ancientTitle: 'Starożytna technologia',
+      typeItem: 'Przedmiot',
+      typeStructure: 'Konstrukcja',
+      searchPlaceholder: 'Szukaj technologii…',
+      count: 'Technologie: {{count}}',
     },
   },
   'pt-BR': {
@@ -679,6 +745,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Itens',
       unlocksBuildings: 'Construções',
       empty: 'Nenhuma tecnologia neste nível.',
+      normalTitle: 'Tecnologia',
+      ancientTitle: 'Tecnologia antiga',
+      typeItem: 'Item',
+      typeStructure: 'Estrutura',
+      searchPlaceholder: 'Buscar tecnologias…',
+      count: '{{count}} tecnologias',
     },
   },
   'ru-RU': {
@@ -734,6 +806,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Предметы',
       unlocksBuildings: 'Постройки',
       empty: 'На этом уровне нет технологий.',
+      normalTitle: 'Технологии',
+      ancientTitle: 'Древние технологии',
+      typeItem: 'Предмет',
+      typeStructure: 'Постройка',
+      searchPlaceholder: 'Поиск технологий…',
+      count: 'Технологий: {{count}}',
     },
   },
   'th-TH': {
@@ -789,6 +867,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'ไอเทม',
       unlocksBuildings: 'สิ่งก่อสร้าง',
       empty: 'ไม่มีเทคโนโลยีในเลเวลนี้',
+      normalTitle: 'เทคโนโลยี',
+      ancientTitle: 'เทคโนโลยีโบราณ',
+      typeItem: 'ไอเทม',
+      typeStructure: 'สิ่งก่อสร้าง',
+      searchPlaceholder: 'ค้นหาเทคโนโลยี…',
+      count: 'เทคโนโลยี {{count}} รายการ',
     },
   },
   'tr-TR': {
@@ -844,6 +928,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Eşyalar',
       unlocksBuildings: 'Yapılar',
       empty: 'Bu seviyede teknoloji yok.',
+      normalTitle: 'Teknoloji',
+      ancientTitle: 'Antik Teknoloji',
+      typeItem: 'Eşya',
+      typeStructure: 'Yapı',
+      searchPlaceholder: 'Teknoloji ara…',
+      count: '{{count}} teknoloji',
     },
   },
   'vi-VN': {
@@ -899,6 +989,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: 'Vật phẩm',
       unlocksBuildings: 'Công trình',
       empty: 'Không có công nghệ ở cấp này.',
+      normalTitle: 'Công nghệ',
+      ancientTitle: 'Công nghệ cổ đại',
+      typeItem: 'Vật phẩm',
+      typeStructure: 'Công trình',
+      searchPlaceholder: 'Tìm công nghệ…',
+      count: '{{count}} công nghệ',
     },
   },
   'zh-CN': {
@@ -954,6 +1050,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: '道具',
       unlocksBuildings: '建筑',
       empty: '该等级没有科技。',
+      normalTitle: '科技',
+      ancientTitle: '古代科技',
+      typeItem: '道具',
+      typeStructure: '建筑',
+      searchPlaceholder: '通过名字搜索',
+      count: '{{count}} 项科技',
     },
   },
   'zh-TW': {
@@ -1009,6 +1111,12 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       unlocksItems: '道具',
       unlocksBuildings: '建築',
       empty: '該等級沒有科技。',
+      normalTitle: '科技',
+      ancientTitle: '古代科技',
+      typeItem: '道具',
+      typeStructure: '建築',
+      searchPlaceholder: '透過名稱搜尋',
+      count: '{{count}} 項科技',
     },
   },
 }

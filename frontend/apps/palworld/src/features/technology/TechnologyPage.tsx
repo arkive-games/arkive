@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Input } from '@gamemap/ui'
 import { TopNav } from '../../components/TopNav'
 import {
   loadItems,
@@ -10,12 +11,10 @@ import {
   type TechBundle,
   type TechEntry,
 } from '../../lib/catalog'
-import {
-  CatalogSection,
-  CatalogPageLoading,
-  ItemLink,
-  BuildingLink,
-} from '../catalog/components'
+import { CatalogPageLoading } from '../catalog/components'
+import { buildRegions, techImage, techType, type LevelGroup } from './techModel'
+import { TechTile, type ResolvedTechImage } from './components/TechTile'
+import { TechDialog } from './components/TechDialog'
 
 interface Bundles {
   items: ItemsBundle
@@ -29,6 +28,8 @@ export default function TechnologyPage() {
 
   const [b, setB] = useState<Bundles | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [selected, setSelected] = useState<TechEntry | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -46,26 +47,45 @@ export default function TechnologyPage() {
     }
   }, [lng, t])
 
+  const nameOf = useMemo(
+    () => (tech: TechEntry) => b?.tech.text[tech.id]?.name ?? tech.id,
+    [b],
+  )
+
+  const regions = useMemo(() => {
+    if (!b) return { normal: [] as LevelGroup[], ancient: [] as LevelGroup[] }
+    return buildRegions(b.tech.techs, nameOf, query)
+  }, [b, nameOf, query])
+
+  // Union of levels present in either region, so the two columns stay aligned.
   const levels = useMemo(() => {
-    if (!b) return []
-    const byLevel = new Map<number, TechEntry[]>()
-    for (const tech of b.tech.techs) {
-      const arr = byLevel.get(tech.level)
-      if (arr) arr.push(tech)
-      else byLevel.set(tech.level, [tech])
-    }
-    return [...byLevel.entries()]
-      .sort((a, c) => a[0] - c[0])
-      .map(([level, techs]) => ({
-        level,
-        techs: techs.sort((a, c) => {
-          if (a.isBoss !== c.isBoss) return a.isBoss ? -1 : 1
-          const an = b.tech.text[a.id]?.name ?? a.id
-          const cn = b.tech.text[c.id]?.name ?? c.id
-          return an.localeCompare(cn)
-        }),
-      }))
-  }, [b])
+    const normalByLevel = new Map(regions.normal.map((g) => [g.level, g.techs]))
+    const ancientByLevel = new Map(regions.ancient.map((g) => [g.level, g.techs]))
+    const all = [...new Set([...normalByLevel.keys(), ...ancientByLevel.keys()])].sort(
+      (x, y) => x - y,
+    )
+    return all.map((level) => ({
+      level,
+      normal: normalByLevel.get(level) ?? [],
+      ancient: ancientByLevel.get(level) ?? [],
+    }))
+  }, [regions])
+
+  const matchCount = useMemo(
+    () =>
+      regions.normal.reduce((n, g) => n + g.techs.length, 0) +
+      regions.ancient.reduce((n, g) => n + g.techs.length, 0),
+    [regions],
+  )
+
+  const resolveImage = (tech: TechEntry): ResolvedTechImage | null => {
+    if (!b) return null
+    const ref = techImage(tech)
+    if (!ref) return null
+    const icon =
+      ref.kind === 'item' ? b.items.byId.get(ref.id)?.icon : b.buildings.byId.get(ref.id)?.icon
+    return icon ? { kind: ref.kind, icon } : null
+  }
 
   let body: React.ReactNode
   if (loadError) {
@@ -73,36 +93,44 @@ export default function TechnologyPage() {
   } else if (!b) {
     body = <CatalogPageLoading />
   } else {
-    const iname = (id: string) => b.items.text[id]?.name ?? id
-    const bname = (id: string) => b.buildings.text[id]?.name ?? id
-
     body = (
-      <div className="space-y-4">
-        {levels.map(({ level, techs }) => (
-          <div
-            key={level}
-            className="grid grid-cols-1 gap-3 md:grid-cols-[5rem_minmax(0,1fr)] md:items-start"
-          >
-            <div className="md:sticky md:top-2">
-              <div className="text-sm font-bold tabular-nums whitespace-nowrap">
-                {t('tech.level', { level })}
-              </div>
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-[3rem_minmax(0,1fr)_minmax(0,20rem)]">
+        {/* Header row */}
+        <div className="hidden md:block" />
+        <div className="sticky top-0 z-10 rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 dark:text-sky-200">
+          {t('tech.normalTitle')}
+        </div>
+        <div className="sticky top-0 z-10 rounded-md bg-purple-500/15 px-3 py-1.5 text-sm font-bold text-purple-800 dark:text-purple-200">
+          {t('tech.ancientTitle')}
+        </div>
+
+        {levels.map(({ level, normal, ancient }) => (
+          <Fragment key={level}>
+            <div className="pt-1 text-sm font-bold tabular-nums text-muted-foreground md:text-right">
+              {level}
             </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {techs.map((tech) => (
-                <TechCard
-                  key={tech.id}
-                  tech={tech}
-                  name={b.tech.text[tech.id]?.name ?? tech.id}
-                  description={b.tech.text[tech.id]?.description}
-                  buildings={b.buildings}
-                  iname={iname}
-                  bname={bname}
-                />
-              ))}
-            </div>
-          </div>
+            <TileGrid
+              techs={normal}
+              ancient={false}
+              nameOf={nameOf}
+              resolveImage={resolveImage}
+              onSelect={setSelected}
+            />
+            <TileGrid
+              techs={ancient}
+              ancient
+              nameOf={nameOf}
+              resolveImage={resolveImage}
+              onSelect={setSelected}
+            />
+          </Fragment>
         ))}
+
+        {levels.length === 0 ? (
+          <div className="md:col-span-3 py-8 text-center text-muted-foreground">
+            {t('tech.empty')}
+          </div>
+        ) : null}
       </div>
     )
   }
@@ -111,82 +139,81 @@ export default function TechnologyPage() {
     <div className="flex h-screen flex-col bg-background text-foreground">
       <TopNav active="/technology" />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-4 py-6">
-          <h1 className="mb-4 text-2xl font-bold">{t('tech.title')}</h1>
+        <div className="mx-auto w-full max-w-6xl px-4 py-6">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold">{t('tech.title')}</h1>
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('tech.searchPlaceholder')}
+              className="max-w-xs"
+            />
+            {b ? (
+              <span className="text-sm text-muted-foreground">
+                {t('tech.count', { count: matchCount })}
+              </span>
+            ) : null}
+          </div>
           {body}
         </div>
       </div>
+
+      {b ? (
+        <TechDialog
+          tech={selected}
+          name={selected ? nameOf(selected) : ''}
+          description={selected ? b.tech.text[selected.id]?.description : undefined}
+          type={selected ? techType(selected) : 'item'}
+          ancient={selected?.isBoss ?? false}
+          requireTechName={
+            selected?.requireTech
+              ? (b.tech.text[selected.requireTech]?.name ?? selected.requireTech)
+              : undefined
+          }
+          onClose={() => setSelected(null)}
+          iname={(id) => b.items.text[id]?.name ?? id}
+          bname={(id) => b.buildings.text[id]?.name ?? id}
+          itemIcon={(id) => b.items.byId.get(id)?.icon}
+          buildingIcon={(id) => b.buildings.byId.get(id)?.icon}
+        />
+      ) : null}
     </div>
   )
 }
 
-function TechCard({
-  tech,
-  name,
-  description,
-  buildings,
-  iname,
-  bname,
+function TileGrid({
+  techs,
+  ancient,
+  nameOf,
+  resolveImage,
+  onSelect,
 }: {
-  tech: TechEntry
-  name: string
-  description?: string
-  buildings: BuildingsBundle
-  iname: (id: string) => string
-  bname: (id: string) => string
+  techs: TechEntry[]
+  ancient: boolean
+  nameOf: (tech: TechEntry) => string
+  resolveImage: (tech: TechEntry) => ResolvedTechImage | null
+  onSelect: (tech: TechEntry) => void
 }) {
-  const { t } = useTranslation()
+  if (techs.length === 0) return <div className="hidden md:block" />
   return (
-    <CatalogSection className="flex h-full flex-col gap-2 p-3">
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold leading-tight">{name}</h3>
-        <div className="flex shrink-0 items-center gap-1">
-          {tech.isBoss ? (
-            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-              {t('tech.boss')}
-            </span>
-          ) : null}
-          {tech.cost ? (
-            <span className="text-[11px] text-muted-foreground tabular-nums">
-              {t('tech.cost', { count: tech.cost })}
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      {description ? (
-        <p className="text-xs leading-relaxed text-muted-foreground whitespace-pre-line line-clamp-3">
-          {description}
-        </p>
-      ) : null}
-
-      {tech.requireBoss ? (
-        <div className="text-[11px] text-muted-foreground">
-          {t('tech.requiresBoss', { boss: tech.requireBoss })}
-        </div>
-      ) : null}
-
-      {tech.unlockItems.length ? (
-        <div>
-          <div className="mb-1 text-[11px] text-muted-foreground">{t('tech.unlocksItems')}</div>
-          <div className="flex flex-wrap gap-1.5">
-            {tech.unlockItems.map((id) => (
-              <ItemLink key={id} id={id} name={iname(id)} />
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {tech.unlockBuildings.length ? (
-        <div>
-          <div className="mb-1 text-[11px] text-muted-foreground">{t('tech.unlocksBuildings')}</div>
-          <div className="flex flex-wrap gap-1.5">
-            {tech.unlockBuildings.map((id) => (
-              <BuildingLink key={id} id={id} name={bname(id)} icon={buildings.byId.get(id)?.icon} />
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </CatalogSection>
+    <div
+      className={
+        ancient
+          ? 'grid grid-cols-2 gap-2'
+          : 'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'
+      }
+    >
+      {techs.map((tech) => (
+        <TechTile
+          key={tech.id}
+          name={nameOf(tech)}
+          type={techType(tech)}
+          cost={tech.cost}
+          ancient={ancient}
+          image={resolveImage(tech)}
+          onSelect={() => onSelect(tech)}
+        />
+      ))}
+    </div>
   )
 }
