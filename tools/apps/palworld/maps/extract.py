@@ -50,10 +50,17 @@ CELL_CLASSES = [
     ("oilrigTreasure", re.compile(r"^BP_OilrigTreasureBoxSpawner_C$")),
 ]
 CELL_GREP = (
-    "BP_LevelObject_Relic_C|BP_PalMapObjectSpawner_SkillFruits_|"
+    "BP_LevelObject_Relic|BP_PalMapObjectSpawner_SkillFruits_|"
     "palmapobjectspawner_palegg_|BP_PalMapObjectSpawner_Treasure_|"
     "BP_NPCCampSpawner_|BP_OilrigTreasureBoxSpawner_C"
 )
+
+# Per-pal effigy buff-relics: BP_LevelObject_Relic_<Pal>_C (e.g. _SheepBall_C).
+# They share the PalLevelObjectRelic base with the plain Lifmunk Effigy
+# (BP_LevelObject_Relic_C, matched exactly above) but each grants a passive
+# buff (EPalRelicType) and is skinned as a specific pal. Captured as their own
+# `effigy<Pal>` subtypes; the base class stays `lifmunkEffigy`.
+EFFIGY_VARIANT_RX = re.compile(r"^BP_LevelObject_Relic_([A-Za-z0-9]+)_C$")
 
 # Post-1.0 content not covered by the pre-1.0 taxonomy — surfaced for reporting.
 NEW_TYPE_WATCH = [
@@ -183,7 +190,14 @@ def _extract_cell_pois(raw: Path) -> list[dict]:
     for rel in files:
         arr = json.loads((cells_dir / rel).read_text(encoding="utf-8"))
         for exp in arr:
-            subtype = _match(CELL_CLASSES, exp.get("Type") or "")
+            t = exp.get("Type") or ""
+            subtype = _match(CELL_CLASSES, t)
+            effigy_pal = None
+            if not subtype:
+                m = EFFIGY_VARIANT_RX.match(t)
+                if m:
+                    effigy_pal = m.group(1)
+                    subtype = f"effigy{effigy_pal}"
             if not subtype:
                 continue
             location = _actor_location(exp, arr)
@@ -193,7 +207,10 @@ def _extract_cell_pois(raw: Path) -> list[dict]:
             if k in seen:
                 continue
             seen.add(k)
-            pois.append({"subtype": subtype, "sourceName": exp["Name"], "location": location})
+            poi = {"subtype": subtype, "sourceName": exp["Name"], "location": location}
+            if effigy_pal:
+                poi["effigyPal"] = effigy_pal
+            pois.append(poi)
     return pois
 
 
@@ -359,6 +376,46 @@ def run_extract(raw: Path) -> dict:
     for pid, r in mon_param.items():
         pal_meta[pid] = {"zukanIndex": r.get("ZukanIndex", -1), "zukanIndexSuffix": r.get("ZukanIndexSuffix", "")}
 
+    # Field bosses: fixed boss spawns placed via DT_PalSpawnerPlacement (type
+    # FieldBoss). Their spawner rows list BOSS_<pal> codenames (a placement may
+    # offer a small pool). Emit each as an alpha-boss (same path as the bosses
+    # above). Most duplicate DT_BossSpawnerLoactionData at identical coords — skip
+    # those — leaving only bosses that table omits (e.g. BlackCentaur).
+    # Dedup on the stripped pal id (not the raw codename): the two tables label
+    # the same boss slightly differently (e.g. BOSS_X vs a variant), so keying on
+    # characterId would leave duplicate markers at identical coords.
+    def _boss_base(cid: str) -> str:
+        return re.sub(r"^BOSS_", "", cid, flags=re.IGNORECASE)
+
+    boss_seen = {
+        (_boss_base(b["characterId"]), js_round(b["location"]["X"]), js_round(b["location"]["Y"]))
+        for b in bosses
+    }
+    for r in place_rows.values():
+        if r.get("SpawnerType") != "EPalSpawnedCharacterType::FieldBoss":
+            continue
+        pals = wild_by_name.get(r["SpawnerName"])
+        if not pals:
+            continue
+        loc = {"X": r["Location"]["X"], "Y": r["Location"]["Y"], "Z": r["Location"].get("Z", 0)}
+        lx, ly = js_round(loc["X"]), js_round(loc["Y"])
+        for cid, info in pals.items():
+            base = _boss_base(cid)
+            if base not in pal_meta:  # skip non-roster codenames (RowName, mixed-case, …)
+                continue
+            key = (base, lx, ly)
+            if key in boss_seen:
+                continue
+            boss_seen.add(key)
+            # Normalise to BOSS_<base> so every boss entry is uniform (some
+            # FieldBoss rows reference the pal by its plain id).
+            bosses.append({
+                "key": f"FB-{r['SpawnerName']}-{base}",
+                "characterId": f"BOSS_{base}",
+                "level": info["lvMax"],
+                "location": loc,
+            })
+
     names_by_lang = {tag: _read_l10n_pal_names(raw, folder, tag) for folder, tag in L10N_LANG_TAGS.items()}
     names_by_lang[JA_TAG] = _read_pal_names(raw / "DataTable/Text/DT_PalNameText_Common.json")
 
@@ -427,10 +484,32 @@ def run_extract(raw: Path) -> dict:
 
     new_type_candidates = _count_new_type_candidates(raw)
 
+    # Effigy statue names: each pal effigy is the item ITEM_NAME_Relic_<NN>
+    # (Japanese "<pal>像"). Map each captured `effigy<Pal>` subtype to its
+    # localized item name by matching the pal's Japanese name, so subtypes read
+    # e.g. "Lamball Effigy" / "棉悠悠雕像" rather than the bare pal name.
+    item_names = _read_text_by_lang(raw, "DT_ItemNameText_Common.json")
+    ja_relic_key = {}  # ja pal name -> ITEM_NAME_Relic_<NN> key
+    for key, name in item_names[JA_TAG].items():
+        if key.startswith("ITEM_NAME_Relic_") and name.endswith("像"):
+            ja_relic_key[name[:-1]] = key
+    ja_pal_names = names_by_lang[JA_TAG]
+    effigy_names: dict[str, dict] = {}  # effigy subtype id -> {tag: name}
+    for poi in pois:
+        pal = poi.get("effigyPal")
+        if not pal or poi["subtype"] in effigy_names:
+            continue
+        key = ja_relic_key.get(ja_pal_names.get(pal, ""))
+        if key:
+            effigy_names[poi["subtype"]] = {
+                tag: tbl[key] for tag, tbl in item_names.items() if key in tbl
+            }
+
     return {
         "bounds": bounds, "pois": pois, "bosses": bosses, "wanted": wanted,
         "predators": predators, "palSpawns": pal_spawns, "palMeta": pal_meta,
         "namesByLang": names_by_lang, "palIcons": pal_icons,
+        "effigyNames": effigy_names,
         "newTypeCandidates": new_type_candidates,
     }
 

@@ -112,7 +112,36 @@ def build_dataset(parsed: dict) -> dict:
         s["zukanIndex"], s["zukanIndexSuffix"], s["names"]["en-US"],
     ))
 
-    subtype_defs = [s for s in src["subtypes"] if s["category"] != "pal"] + pal_subtypes
+    # Per-pal effigy buff-relics (extract sets ``effigyPal`` on each poi): one
+    # subtype per pal, named/iconed from that pal, ordered by ZukanIndex. They
+    # join the plain Lifmunk Effigy under the hand-authored "effigy" category.
+    effigy_pal_by_sub = {}  # subtype id -> pal codename (insertion order)
+    for p in parsed["pois"]:
+        pal = p.get("effigyPal")
+        if pal:
+            effigy_pal_by_sub.setdefault(p["subtype"], pal)
+    effigy_names = parsed.get("effigyNames") or {}  # subtype id -> {lng: item name}
+    effigy_subtypes = []
+    for sid, pal in effigy_pal_by_sub.items():
+        # Prefer the official effigy item name (ITEM_NAME_Relic_<NN>); fall back
+        # to the bare pal name for any language the item table doesn't cover.
+        item_name = effigy_names.get(sid) or {}
+        names = {lng: (item_name.get(lng) or _pal_name(names_by_lang[lng], pal)) for lng in languages}
+        effigy_subtypes.append({
+            "id": sid, "category": "effigy", "effigyPal": pal,
+            "icon": _pal_icon(pal_icons, pal),
+            "names": names,
+        })
+    effigy_subtypes.sort(key=lambda s: (
+        0 if z_for_id(s["effigyPal"])["zukanIndex"] >= 0 else 1,
+        z_for_id(s["effigyPal"])["zukanIndex"],
+        z_for_id(s["effigyPal"]).get("zukanIndexSuffix", ""),
+        s["names"]["en-US"],
+    ))
+
+    subtype_defs = (
+        [s for s in src["subtypes"] if s["category"] != "pal"] + pal_subtypes + effigy_subtypes
+    )
 
     # types.json — categories nest subtypes; `name` is the machine key (id).
     types = {"categories": []}
@@ -156,6 +185,9 @@ def build_dataset(parsed: dict) -> dict:
         c = {"subtype": p["subtype"], **to_world(p["location"]), "sortKey": p["sourceName"]}
         if p.get("nameByLng"):
             c["nameByLng"] = p["nameByLng"]
+        # Effigy relics link to their pal so a pal's page can list them.
+        if p.get("effigyPal"):
+            c["pal"] = p["effigyPal"]
         candidates[mid].append(c)
 
     for b in parsed["bosses"]:
@@ -170,6 +202,10 @@ def build_dataset(parsed: dict) -> dict:
             "sortKey": f"{b['characterId']}-{b['key']}",
             "nameByLng": name_by_lng,
         }
+        # Link the boss to its catchable pal so a pal's page can list boss spawns.
+        boss_pal = _base_id(b["characterId"])
+        if is_real_pal(boss_pal):
+            c["pal"] = boss_pal
         if z["zukanIndex"] > 0:
             c["zukanIndex"] = z["zukanIndex"]
             if z.get("zukanIndexSuffix"):
@@ -202,6 +238,10 @@ def build_dataset(parsed: dict) -> dict:
             c["icon"] = p["icon"]
         if name_by_lng:
             c["nameByLng"] = name_by_lng
+        # Predator ids look like ``PREDATOR_<PalId>``; link to the catchable pal.
+        pred_pal = re.sub(r"^PREDATOR_", "", p["pal"])
+        if is_real_pal(pred_pal):
+            c["pal"] = pred_pal
         candidates[mid].append(c)
 
     # Pal spawns: split by pal id, cluster within each pal id only.
@@ -250,6 +290,8 @@ def build_dataset(parsed: dict) -> dict:
                 }
                 if c.get("icon"):
                     marker["icon"] = c["icon"]
+                if c.get("pal"):
+                    marker["pal"] = c["pal"]
                 if c.get("zukanIndex"):
                     marker["zukanIndex"] = c["zukanIndex"]
                     if c.get("zukanIndexSuffix"):

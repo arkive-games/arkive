@@ -14,6 +14,9 @@ categories:
     names: { en-US: Bosses, ja-JP: ボス, de-DE: Bosse, es-ES: Jefes, es-MX: Jefes, fr-FR: Boss, id-ID: Bos, it-IT: Boss, ko-KR: 보스, pl-PL: Bossowie, pt-BR: Chefes, ru-RU: Боссы, th-TH: บอส, tr-TR: Boslar, vi-VN: Trùm, zh-CN: 首领, zh-TW: 首領 }
   - id: collectible
     names: { en-US: Collectibles, ja-JP: 収集品, de-DE: Sammelobjekte, es-ES: Coleccionables, es-MX: Coleccionables, fr-FR: Objets à collectionner, id-ID: Koleksi, it-IT: Collezionabili, ko-KR: 수집품, pl-PL: Znajdźki, pt-BR: Colecionáveis, ru-RU: Коллекционные предметы, th-TH: ของสะสม, tr-TR: Koleksiyonluklar, vi-VN: Đồ sưu tầm, zh-CN: 收集品, zh-TW: 收集品 }
+  - id: effigy
+    pinVariant: circular
+    names: { en-US: Effigies, ja-JP: 石像, de-DE: Statuetten, es-ES: Estatuas, es-MX: Estatuas, fr-FR: Statues, id-ID: Patung, it-IT: Statue, ko-KR: 조각상, pl-PL: Posążki, pt-BR: Estátuas, ru-RU: Статуэтки, th-TH: หุ่นจำลอง, tr-TR: Figürler, vi-VN: Tượng, zh-CN: 雕像, zh-TW: 雕像 }
   - id: resource
     names: { en-US: Resources, ja-JP: 資源, de-DE: Ressourcen, es-ES: Recursos, es-MX: Recursos, fr-FR: Ressources, id-ID: Sumber Daya, it-IT: Risorse, ko-KR: 자원, pl-PL: Surowce, pt-BR: Recursos, ru-RU: Ресурсы, th-TH: ทรัพยากร, tr-TR: Kaynaklar, vi-VN: Tài nguyên, zh-CN: 资源, zh-TW: 資源 }
   - id: pal
@@ -82,7 +85,7 @@ subtypes:
     icon: T_icon_buildObject_ItemChest
     names: { en-US: Chest, ja-JP: 宝箱, de-DE: Truhe, es-ES: Cofre, es-MX: Cofre, fr-FR: Coffre, id-ID: Peti, it-IT: Forziere, ko-KR: 상자, pl-PL: Skrzynia, pt-BR: Baú, ru-RU: Сундук, th-TH: หีบสมบัติ, tr-TR: Sandık, vi-VN: Rương, zh-CN: 宝箱, zh-TW: 寶箱 }
   - id: lifmunkEffigy
-    category: collectible
+    category: effigy
     icon: T_Carbunclo_icon_normal
     names: { en-US: Lifmunk Effigy, ja-JP: クルリス像, de-DE: Lifmunk-Statuette, es-ES: Estatua de Lifmunk, es-MX: Estatua de Lifmunk, fr-FR: Statue de Lifmunk, id-ID: Patung Lifmunk, it-IT: Statua di Lifmunk, ko-KR: 쿠룰리스 상, pl-PL: Posążek Lifmunka, pt-BR: Estátua de Lifmunk, ru-RU: Статуя Лифманка, th-TH: หุ่นจำลอง Lifmunk, tr-TR: Lifmunk Figürü, vi-VN: Tượng Lifmunk, zh-CN: 翠叶鼠雕像, zh-TW: 翠葉鼠雕像 }
   - id: oilrigTreasure
