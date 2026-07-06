@@ -4,9 +4,9 @@ import os
 from pathlib import Path
 
 # Sibling `data/` repo (same resolution as emit_frontend's DATA_REPO):
-# .../tools/aion2/tests/this_file -> parents[3] == .../<workspace> -> /data.
+# .../tools/apps/aion2/tests/this_file -> parents[4] == .../<workspace> -> /data.
 # Override with DATA_REPO for a non-standard layout.
-DATA = Path(os.environ.get("DATA_REPO") or (Path(__file__).resolve().parents[3] / "data"))
+DATA = Path(os.environ.get("DATA_REPO") or (Path(__file__).resolve().parents[4] / "data"))
 
 
 def _locale(lng):

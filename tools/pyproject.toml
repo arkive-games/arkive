@@ -36,11 +36,11 @@ dev = [
 ]
 
 [tool.uv.sources]
-aion2-interactive-map-backend-client = { path = "aion2-interactive-map-backend-client", editable = true }
+aion2-interactive-map-backend-client = { path = "packages/backend-client", editable = true }
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["aion2", "palworld"]
+packages = ["apps/aion2", "apps/palworld", "packages/tools"]

@@ -10,7 +10,7 @@ resolution-markers = [
 [[package]]
 name = "aion2-interactive-map-backend-client"
 version = "0.1.0"
-source = { editable = "aion2-interactive-map-backend-client" }
+source = { editable = "packages/backend-client" }
 dependencies = [
     { name = "attrs" },
     { name = "httpx" },
@@ -59,7 +59,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aion2-interactive-map-backend-client", editable = "aion2-interactive-map-backend-client" },
+    { name = "aion2-interactive-map-backend-client", editable = "packages/backend-client" },
     { name = "beautifulsoup4", specifier = ">=4.14.3,<5.0.0" },
     { name = "cairosvg", specifier = ">=2.8.2,<3.0.0" },
     { name = "datamodel-code-generator", specifier = ">=0.55.0,<0.56.0" },

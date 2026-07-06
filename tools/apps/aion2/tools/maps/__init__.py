@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-TOOLS_ROOT = Path(__file__).resolve().parents[3]   # .../tools
+TOOLS_ROOT = Path(__file__).resolve().parents[4]   # .../tools
 WORKSPACE_ROOT = TOOLS_ROOT.parent                 # .../aion2-map
 
 # Raw UE5 game export. Per-machine path; set RAW_DATA_PATH in tools/.env.

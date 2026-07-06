@@ -645,6 +645,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "size": _strip(r.get("Size"), _SIZE),
             "rarity": r.get("Rarity", 0),
             "nocturnal": bool(r.get("Nocturnal")),
+            "reaction": r.get("AIResponse") or "None",
             "stats": _stats(r),
             "work": _work(r),
             "bestWork": _strip(r.get("BestWorkSuitability"), _WORK),

@@ -23,13 +23,11 @@ entry == recipe row-key whose Product_Id is the crafted item):
   * building.unlockTech  — techs that unlock it
   * tech.unlockItems / tech.unlockBuildings — what a tech grants, by level
 
-Item icons DO exist in the game (DT_ItemIconDataTable_Common maps item id ->
-texture), but the meaningful ones live under ``/Game/Others/InventoryItemIcon``
-which is not part of the current raw export (the whole ``Others`` content tree is
-absent). Only ~248 of 1183 icon rows resolve to exported ``/Game/Pal`` textures
-(debug weapons / pal-derived icons). So items carry no icon until that tree is
-re-exported; buildings do (``build_<id>.webp``). See ``_item_icon`` (gated on the
-PNG actually existing, so it degrades gracefully and fills in after a re-export).
+Item icons: DT_ItemIconDataTable_Common maps item id -> a texture under
+``/Game/Others/InventoryItemIcon/Texture``. That ``Others`` tree lives in
+Content/Others (one level above ``RAW`` = Content/Pal) and is now part of the
+export, so items carry ``item_<id>.webp`` icons. The conversion is gated on the
+PNG actually existing, so it degrades gracefully if a given export omits the tree.
 
 Localized text guard: the game's L10N tables ship per-language PLACEHOLDER strings
 for untranslated tier-variant rows (e.g. ``en Text`` / ``zh-hans text`` / ``-`` /
@@ -46,6 +44,7 @@ Outputs:
   data-palworld/locales/<tag>/technology.json  {id: {name, description?}}
   data-palworld/locales/<tag>/labels.json       {item: {typeA: label}, building: {typeA: label}}
   resource-palworld/icons/build_<id>.webp
+  resource-palworld/icons/item_<id>.webp
 
 Run: ``uv run python -m palworld.catalog`` (from the ``tools`` dir), AFTER
 ``encyclopedia`` (this stage reads data-palworld/pals.json for drop inversion).
@@ -201,6 +200,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     raw, data_out, res_out = Path(raw), Path(data_out), Path(res_out)
 
     item_rows = read_rows(raw / "DataTable/Item/DT_ItemDataTable_Common.json")
+    item_icon_rows = read_rows(raw / "DataTable/Item/DT_ItemIconDataTable_Common.json")
     recipe_rows = read_rows(raw / "DataTable/Item/DT_ItemRecipeDataTable_Common.json")
     bld_rows = read_rows(raw / "DataTable/MapObject/Building/DT_BuildObjectDataTable_Common.json")
     bld_icon_rows = read_rows(raw / "DataTable/MapObject/Building/DT_BuildObjectIconDataTable_Common.json")
@@ -401,6 +401,22 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             entry["icon"] = f"build_{bid}"
         bld_out.append(entry)
 
+    # item icons: DT_ItemIconDataTable_Common maps item id -> a texture under
+    # /Game/Others/InventoryItemIcon/Texture. That tree lives in Content/Others,
+    # one level above RAW (=Content/Pal). Gated on the PNG existing so it degrades
+    # gracefully if the Others tree is absent from a given export.
+    item_icon_dir = raw.parent / "Others/InventoryItemIcon/Texture"
+    item_icons = 0
+    for entry in items:
+        base = _icon_basename(item_icon_rows, entry["id"])
+        if not base:
+            continue
+        dest = icons_dir / f"item_{entry['id']}.webp"
+        if convert(item_icon_dir / f"{base}.png", dest):
+            item_icons += 1
+        if dest.exists():
+            entry["icon"] = f"item_{entry['id']}"
+
     write_json(data_out / "items.json", {"items": items})
     write_json(data_out / "buildings.json", {"buildings": bld_out})
     write_json(data_out / "technology.json", {"techs": techs})
@@ -489,7 +505,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
 
     print(
         f"catalog: {len(items)} items, {len(bld_out)} buildings, {len(techs)} techs, "
-        f"{len(tags)} locales, {converted} building icons converted"
+        f"{len(tags)} locales, {converted} building icons, {item_icons} item icons converted"
     )
     return {"items": items, "buildings": bld_out, "techs": techs}
 
