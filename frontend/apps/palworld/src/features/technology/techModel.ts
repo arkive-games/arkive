@@ -47,11 +47,13 @@ export function matchesQuery(name: string, query: string): boolean {
   return name.toLowerCase().includes(q)
 }
 
-/** Group techs by level (ascending), each level's techs sorted by localized name. */
-export function groupByLevel(
-  techs: TechEntry[],
-  nameOf: (tech: TechEntry) => string,
-): LevelGroup[] {
+/**
+ * Group techs by level (ascending), preserving the input order within each
+ * level. `technology.json` is emitted in the game's tech-tree order, so keeping
+ * that order makes the page match the game and stay identical across languages
+ * (never sort by localized name here).
+ */
+export function groupByLevel(techs: TechEntry[]): LevelGroup[] {
   const byLevel = new Map<number, TechEntry[]>()
   for (const tech of techs) {
     const arr = byLevel.get(tech.level)
@@ -60,10 +62,7 @@ export function groupByLevel(
   }
   return [...byLevel.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([level, list]) => ({
-      level,
-      techs: [...list].sort((a, b) => nameOf(a).localeCompare(nameOf(b))),
-    }))
+    .map(([level, list]) => ({ level, techs: list }))
 }
 
 /**
@@ -84,7 +83,7 @@ export function buildRegions(
     else normal.push(tech)
   }
   return {
-    normal: groupByLevel(normal, nameOf),
-    ancient: groupByLevel(ancient, nameOf),
+    normal: groupByLevel(normal),
+    ancient: groupByLevel(ancient),
   }
 }

@@ -67,18 +67,15 @@ describe('matchesQuery', () => {
 })
 
 describe('groupByLevel', () => {
-  const nameOf = (t: TechEntry) => t.id
-  it('orders levels ascending and names within a level', () => {
-    const groups = groupByLevel(
-      [
-        tech({ id: 'b', level: 2 }),
-        tech({ id: 'a', level: 2 }),
-        tech({ id: 'c', level: 1 }),
-      ],
-      nameOf,
-    )
+  it('orders levels ascending and preserves input order within a level', () => {
+    const groups = groupByLevel([
+      tech({ id: 'b', level: 2 }),
+      tech({ id: 'a', level: 2 }),
+      tech({ id: 'c', level: 1 }),
+    ])
     expect(groups.map((g) => g.level)).toEqual([1, 2])
-    expect(groups[1].techs.map((t) => t.id)).toEqual(['a', 'b'])
+    // Input order kept (b before a) — NOT alphabetized.
+    expect(groups[1].techs.map((t) => t.id)).toEqual(['b', 'a'])
   })
 })
 
