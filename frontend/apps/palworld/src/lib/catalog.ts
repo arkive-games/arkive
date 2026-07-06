@@ -78,6 +78,9 @@ export interface TechEntry {
   unlockBuildings: string[]
   requireBoss?: string
   requireTech?: string
+  /** Fallback tile icon basename (`item_<id>` / `build_<id>`) for techs whose
+   *  unlocked item/building is absent from the datasets. Set by the tools. */
+  icon?: string
 }
 
 // --- locale shapes -----------------------------------------------------------

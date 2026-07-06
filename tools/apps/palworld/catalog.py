@@ -498,6 +498,57 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         if dest.exists():
             entry["icon"] = f"item_{entry['id']}"
 
+    # tech-tile icon fallback: a few techs unlock an item/building that is absent
+    # from the emitted datasets (no localized name, a missing table row, or a
+    # recipe-id casing mismatch), so the frontend cannot derive their tile icon
+    # from unlockItems/unlockBuildings. Resolve one directly from the raw unlock
+    # chain and stamp `tech.icon` (a ready ``icons/<name>`` basename).
+    item_icon_by_id = {e["id"]: e.get("icon") for e in items}
+    bld_icon_by_id = {e["id"]: e.get("icon") for e in bld_out}
+    item_rows_ci = {k.lower(): k for k in item_rows}
+
+    def _tech_resolves(t: dict) -> bool:
+        return any(item_icon_by_id.get(i) for i in t["unlockItems"]) or any(
+            bld_icon_by_id.get(b) for b in t["unlockBuildings"]
+        )
+
+    def _canon_item(pid: str | None) -> str | None:
+        if not pid or pid in _NONE:
+            return None
+        return pid if pid in item_rows else item_rows_ci.get(pid.lower())
+
+    def _fallback_item_icon(pid: str) -> str | None:
+        icon_name = (item_rows.get(pid) or {}).get("IconName")
+        dest = icons_dir / f"item_{pid}.webp"
+        for key in [icon_name, pid] if icon_name and icon_name != "None" else [pid]:
+            base = _icon_basename(item_icon_rows, key)
+            if not base:
+                continue
+            convert(item_icon_dir / f"{base}.png", dest)
+            if dest.exists():
+                return f"item_{pid}"
+        return None
+
+    tech_icons = 0
+    for t in techs:
+        if _tech_resolves(t):
+            continue
+        raw_t = tech_rows.get(t["id"], {})
+        icon = None
+        for rid in raw_t.get("UnlockItemRecipes") or []:
+            pid = _canon_item((_ci(recipe_rows, rid) or {}).get("Product_Id")) or _canon_item(rid)
+            if pid and (icon := _fallback_item_icon(pid)):
+                break
+        if not icon:
+            for bid in raw_t.get("UnlockBuildObjects") or []:
+                if (icons_dir / f"build_{bid}.webp").exists():
+                    icon = f"build_{bid}"
+                    break
+        if icon:
+            t["icon"] = icon
+            tech_icons += 1
+    print(f"catalog: resolved {tech_icons} fallback tech icons")
+
     write_json(data_out / "items.json", {"items": items})
     write_json(data_out / "buildings.json", {"buildings": bld_out})
     write_json(data_out / "technology.json", {"techs": techs})

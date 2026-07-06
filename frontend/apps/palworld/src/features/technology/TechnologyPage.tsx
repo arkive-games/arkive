@@ -58,12 +58,17 @@ export default function TechnologyPage() {
       description: (tech) => b.tech.text[tech.id]?.description,
       image: (tech): ResolvedTechImage | null => {
         const ref = techImage(tech)
-        if (!ref) return null
-        const icon =
-          ref.kind === 'item'
-            ? b.items.byId.get(ref.id)?.icon
-            : b.buildings.byId.get(ref.id)?.icon
-        return icon ? { kind: ref.kind, icon } : null
+        if (ref) {
+          const icon =
+            ref.kind === 'item'
+              ? b.items.byId.get(ref.id)?.icon
+              : b.buildings.byId.get(ref.id)?.icon
+          if (icon) return { kind: ref.kind, icon }
+        }
+        // Fallback for techs whose unlock is absent from the datasets: the tools
+        // stamp a ready icon basename (item_*/build_* resolve to the same URL).
+        if (tech.icon) return { kind: 'item', icon: tech.icon }
+        return null
       },
       requireTechName: (tech) =>
         tech.requireTech ? (b.tech.text[tech.requireTech]?.name ?? tech.requireTech) : undefined,
