@@ -49,8 +49,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 15174,
     strictPort: true,
-    // Reachable through the frp tunnel exposed on the Aliyun relay.
-    allowedHosts: ['47.100.127.198'],
+    allowedHosts: true,
   },
   plugins: [
     react(),
