@@ -330,10 +330,10 @@ export default function PalDetailPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs text-muted-foreground">
-                      <th className="pb-1 pr-2 text-center font-medium">{t('pal.lv')}</th>
+                      <th className="whitespace-nowrap pb-1 pr-2 text-center font-medium">{t('pal.lv')}</th>
                       <th className="pb-1 pr-2 font-medium">{t('pal.skill')}</th>
-                      <th className="pb-1 pr-2 text-right font-medium">{t('pal.power')}</th>
-                      <th className="pb-1 text-right font-medium">{t('pal.cooldown')}</th>
+                      <th className="whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.power')}</th>
+                      <th className="whitespace-nowrap pb-1 text-right font-medium">{t('pal.cooldown')}</th>
                     </tr>
                   </thead>
                   <tbody>
