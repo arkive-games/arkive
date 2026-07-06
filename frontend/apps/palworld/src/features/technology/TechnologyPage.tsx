@@ -12,9 +12,8 @@ import {
   type TechEntry,
 } from '../../lib/catalog'
 import { CatalogPageLoading } from '../catalog/components'
-import { buildRegions, techImage, techType, type LevelGroup } from './techModel'
-import { TechTile, type ResolvedTechImage } from './components/TechTile'
-import { TechDialog } from './components/TechDialog'
+import { buildRegions, techImage, type LevelGroup } from './techModel'
+import { TechTile, type ResolvedTechImage, type TechResolvers } from './components/TechTile'
 
 interface Bundles {
   items: ItemsBundle
@@ -29,7 +28,6 @@ export default function TechnologyPage() {
   const [b, setB] = useState<Bundles | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [selected, setSelected] = useState<TechEntry | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -51,6 +49,30 @@ export default function TechnologyPage() {
     () => (tech: TechEntry) => b?.tech.text[tech.id]?.name ?? tech.id,
     [b],
   )
+
+  // Lookups every tile needs for its square + hover-card details.
+  const resolvers = useMemo<TechResolvers | null>(() => {
+    if (!b) return null
+    return {
+      name: nameOf,
+      description: (tech) => b.tech.text[tech.id]?.description,
+      image: (tech): ResolvedTechImage | null => {
+        const ref = techImage(tech)
+        if (!ref) return null
+        const icon =
+          ref.kind === 'item'
+            ? b.items.byId.get(ref.id)?.icon
+            : b.buildings.byId.get(ref.id)?.icon
+        return icon ? { kind: ref.kind, icon } : null
+      },
+      requireTechName: (tech) =>
+        tech.requireTech ? (b.tech.text[tech.requireTech]?.name ?? tech.requireTech) : undefined,
+      iname: (id) => b.items.text[id]?.name ?? id,
+      bname: (id) => b.buildings.text[id]?.name ?? id,
+      itemIcon: (id) => b.items.byId.get(id)?.icon,
+      buildingIcon: (id) => b.buildings.byId.get(id)?.icon,
+    }
+  }, [b, nameOf])
 
   const regions = useMemo(() => {
     if (!b) return { normal: [] as LevelGroup[], ancient: [] as LevelGroup[] }
@@ -78,23 +100,14 @@ export default function TechnologyPage() {
     [regions],
   )
 
-  const resolveImage = (tech: TechEntry): ResolvedTechImage | null => {
-    if (!b) return null
-    const ref = techImage(tech)
-    if (!ref) return null
-    const icon =
-      ref.kind === 'item' ? b.items.byId.get(ref.id)?.icon : b.buildings.byId.get(ref.id)?.icon
-    return icon ? { kind: ref.kind, icon } : null
-  }
-
   let body: React.ReactNode
   if (loadError) {
     body = <div className="text-center text-destructive">{loadError}</div>
-  } else if (!b) {
+  } else if (!b || !resolvers) {
     body = <CatalogPageLoading />
   } else {
     body = (
-      <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-[3rem_minmax(0,1fr)_minmax(0,20rem)]">
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-[3rem_minmax(0,1fr)_minmax(0,22rem)]">
         {/* Header row */}
         <div className="hidden md:block" />
         <div className="sticky top-0 z-10 rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 dark:text-sky-200">
@@ -109,20 +122,8 @@ export default function TechnologyPage() {
             <div className="pt-1 text-sm font-bold tabular-nums text-muted-foreground md:text-right">
               {level}
             </div>
-            <TileGrid
-              techs={normal}
-              ancient={false}
-              nameOf={nameOf}
-              resolveImage={resolveImage}
-              onSelect={setSelected}
-            />
-            <TileGrid
-              techs={ancient}
-              ancient
-              nameOf={nameOf}
-              resolveImage={resolveImage}
-              onSelect={setSelected}
-            />
+            <TileGrid techs={normal} ancient={false} resolvers={resolvers} />
+            <TileGrid techs={ancient} ancient resolvers={resolvers} />
           </Fragment>
         ))}
 
@@ -157,26 +158,6 @@ export default function TechnologyPage() {
           {body}
         </div>
       </div>
-
-      {b ? (
-        <TechDialog
-          tech={selected}
-          name={selected ? nameOf(selected) : ''}
-          description={selected ? b.tech.text[selected.id]?.description : undefined}
-          type={selected ? techType(selected) : 'item'}
-          ancient={selected?.isBoss ?? false}
-          requireTechName={
-            selected?.requireTech
-              ? (b.tech.text[selected.requireTech]?.name ?? selected.requireTech)
-              : undefined
-          }
-          onClose={() => setSelected(null)}
-          iname={(id) => b.items.text[id]?.name ?? id}
-          bname={(id) => b.buildings.text[id]?.name ?? id}
-          itemIcon={(id) => b.items.byId.get(id)?.icon}
-          buildingIcon={(id) => b.buildings.byId.get(id)?.icon}
-        />
-      ) : null}
     </div>
   )
 }
@@ -184,35 +165,23 @@ export default function TechnologyPage() {
 function TileGrid({
   techs,
   ancient,
-  nameOf,
-  resolveImage,
-  onSelect,
+  resolvers,
 }: {
   techs: TechEntry[]
   ancient: boolean
-  nameOf: (tech: TechEntry) => string
-  resolveImage: (tech: TechEntry) => ResolvedTechImage | null
-  onSelect: (tech: TechEntry) => void
+  resolvers: TechResolvers
 }) {
   if (techs.length === 0) return <div className="hidden md:block" />
   return (
     <div
       className={
         ancient
-          ? 'grid grid-cols-2 gap-2'
-          : 'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'
+          ? 'grid grid-cols-2 gap-2 sm:grid-cols-3'
+          : 'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
       }
     >
       {techs.map((tech) => (
-        <TechTile
-          key={tech.id}
-          name={nameOf(tech)}
-          type={techType(tech)}
-          cost={tech.cost}
-          ancient={ancient}
-          image={resolveImage(tech)}
-          onSelect={() => onSelect(tech)}
-        />
+        <TechTile key={tech.id} tech={tech} resolvers={resolvers} />
       ))}
     </div>
   )
