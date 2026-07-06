@@ -23,8 +23,19 @@ entry == recipe row-key whose Product_Id is the crafted item):
   * building.unlockTech  — techs that unlock it
   * tech.unlockItems / tech.unlockBuildings — what a tech grants, by level
 
-Item icons are NOT present in the game export (only pal + building icons are),
-so items carry no icon; buildings do (``build_<id>.webp``).
+Item icons DO exist in the game (DT_ItemIconDataTable_Common maps item id ->
+texture), but the meaningful ones live under ``/Game/Others/InventoryItemIcon``
+which is not part of the current raw export (the whole ``Others`` content tree is
+absent). Only ~248 of 1183 icon rows resolve to exported ``/Game/Pal`` textures
+(debug weapons / pal-derived icons). So items carry no icon until that tree is
+re-exported; buildings do (``build_<id>.webp``). See ``_item_icon`` (gated on the
+PNG actually existing, so it degrades gracefully and fills in after a re-export).
+
+Localized text guard: the game's L10N tables ship per-language PLACEHOLDER strings
+for untranslated tier-variant rows (e.g. ``en Text`` / ``zh-hans text`` / ``-`` /
+``ko_Text``); only the JA ``_Common`` base carries the real name (with a ``+N``
+tier suffix). ``_ph`` detects these placeholders; item names then fall back to the
+localized base item's name + the ``+N`` suffix, everything else to the JA base.
 
 Outputs:
   data-palworld/items.json                 {items: [ItemEntry]}
@@ -70,6 +81,37 @@ _NONE = {None, "None", "", "EPalElementType::None", "EPalEnergyType::None", "EPa
 # Tokens embedded in technology name/description text.
 _TOKEN_RE = re.compile(r"<(itemName|mapObjectName|uiCommon)\b[^>]*?id=\|([^|]+)\|[^>]*?/>")
 _TAG_RE = re.compile(r"<[^>]+>")
+
+# The game's L10N tables use per-language placeholder strings for untranslated
+# rows: "en Text", "es_Text", "ko_Text", "zh-hans text", "zh-hant text", "-".
+_PLACEHOLDER_RE = re.compile(r"^(?:-+|[a-z]{2}(?:-[a-z0-9]{2,4})?[ _]?text)$", re.IGNORECASE)
+# Trailing tier suffix on a variant id (WeakerBow_2, AssaultRifle_Default2).
+_VARIANT_SUFFIX_RE = re.compile(r"_?\d+$")
+
+
+def _ph(s: str | None) -> str:
+    """Return s if it's a real translation, else '' (empty or a placeholder)."""
+    s = (s or "").strip()
+    return "" if not s or _PLACEHOLDER_RE.match(s) else s
+
+
+def _item_name(iid: str, iname: dict, ja_iname: dict) -> str:
+    """Localized item name, healing placeholder tier-variant rows.
+
+    Untranslated variants (WeakerBow_2 -> "zh-hans text") become the localized
+    base name plus the JA "+N" suffix (陈旧的弓 + "+1"); failing that, the JA
+    base string; failing that, the raw id.
+    """
+    nm = _ph(iname.get(iid))
+    if nm:
+        return nm
+    ja = (ja_iname.get(iid) or "").strip()
+    m = re.search(r"(\+\d+)$", ja)
+    base_id = _VARIANT_SUFFIX_RE.sub("", iid)
+    base_nm = _ph(iname.get(base_id)) if base_id != iid else ""
+    if base_nm and m:
+        return base_nm + m.group(1)
+    return _ph(ja) or iid
 
 
 def _ci(d: dict, key: str) -> str | None:
@@ -350,18 +392,25 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     write_json(data_out / "technology.json", {"techs": techs})
 
     # --- localized text ------------------------------------------------------
+    # JA base tables (tags[0] == JA_TAG): the only source with real strings for
+    # rows the game left as per-language placeholders. Used as the last resort.
+    ja = tags[0]
+    ja_iname, ja_idesc = item_name_by_lang[ja], item_desc_by_lang[ja]
+    ja_bname, ja_bdesc = bld_name_by_lang[ja], bld_desc_by_lang[ja]
+    ja_tname, ja_tdesc = tech_name_by_lang[ja], tech_desc_by_lang[ja]
+
     tech_by_id = {t["id"]: t for t in techs}
     for tag in tags:
         iname, idesc = item_name_by_lang[tag], item_desc_by_lang[tag]
         bname, bdesc = bld_name_by_lang[tag], bld_desc_by_lang[tag]
         tname, tdesc, ui = tech_name_by_lang[tag], tech_desc_by_lang[tag], ui_by_lang[tag]
-        en_iname = item_name_by_lang["en-US"]
 
         items_loc = {}
         for iid in item_ids:
-            nm = iname.get(iid) or en_iname.get(iid) or iid
+            nm = _item_name(iid, iname, ja_iname)
             e = {"name": _resolve_tokens(nm, iname, bname, ui) or iid}
-            d = _resolve_tokens(idesc.get(iid) or "", iname, bname, ui)
+            d = _ph(idesc.get(iid)) or _ph(ja_idesc.get(iid))
+            d = _resolve_tokens(d, iname, bname, ui)
             if d:
                 e["description"] = d
             items_loc[iid] = e
@@ -370,9 +419,10 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         bld_loc = {}
         for b in bld_out:
             bid = b["id"]
-            nm = _ci(bname, bid) or _ci(bld_name_by_lang["en-US"], bid) or bid
+            nm = _ph(_ci(bname, bid)) or _ph(_ci(ja_bname, bid)) or bid
             e = {"name": _resolve_tokens(nm, iname, bname, ui) or bid}
-            d = _resolve_tokens(_ci(bdesc, bid) or "", iname, bname, ui)
+            d = _ph(_ci(bdesc, bid)) or _ph(_ci(ja_bdesc, bid))
+            d = _resolve_tokens(d, iname, bname, ui)
             if d:
                 e["description"] = d
             bld_loc[bid] = e
@@ -382,19 +432,22 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         for tid, r in tech_rows.items():
             if tid not in tech_by_id:
                 continue
-            raw_name = tname.get(r.get("Name") or "", "")
+            name_key, desc_key = r.get("Name") or "", r.get("Description") or ""
+            raw_name = _ph(tname.get(name_key)) or _ph(ja_tname.get(name_key))
             name = _resolve_tokens(raw_name, iname, bname, ui)
             if not name:
                 # fall back to the first unlocked entity's name
                 t = tech_by_id[tid]
                 if t["unlockBuildings"]:
-                    name = _ci(bname, t["unlockBuildings"][0]) or t["unlockBuildings"][0]
+                    bid0 = t["unlockBuildings"][0]
+                    name = _ph(_ci(bname, bid0)) or _ph(_ci(ja_bname, bid0)) or bid0
                 elif t["unlockItems"]:
-                    name = iname.get(t["unlockItems"][0]) or t["unlockItems"][0]
+                    name = _item_name(t["unlockItems"][0], iname, ja_iname)
                 else:
                     name = tid
             e = {"name": name}
-            desc = _resolve_tokens(tdesc.get(r.get("Description") or "", ""), iname, bname, ui)
+            desc = _ph(tdesc.get(desc_key)) or _ph(ja_tdesc.get(desc_key))
+            desc = _resolve_tokens(desc, iname, bname, ui)
             if desc:
                 e["description"] = desc
             tech_loc[tid] = e
