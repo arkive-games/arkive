@@ -30,6 +30,10 @@ const palIdLookup = (q: string) =>
 // queries still go through palIdLookup above.
 const PAL_SEARCH_OPTIONS = { combineWith: 'AND', fuzzy: false } as const
 
+// Categories that start collapsed in the filter sidebar (stable identity so the
+// FilterPanel sync effect doesn't re-run each render).
+const PAL_COLLAPSED_CATEGORIES = ['pal']
+
 export default function App() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -358,6 +362,9 @@ export default function App() {
             categories={filterCategories}
             onToggleSubtype={onToggle}
             onSetCategory={onSetCategory}
+            // The pal list is huge; keep it collapsed by default so the smaller
+            // location/other categories stay readable. Users can still open it.
+            defaultCollapsedCategoryIds={PAL_COLLAPSED_CATEGORIES}
             categoryToggleLabels={{ show: t('showAll'), hide: t('hideAll') }}
             controls={[
               {

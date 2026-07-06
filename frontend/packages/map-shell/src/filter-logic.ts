@@ -7,11 +7,24 @@ export function deriveEyeState(subtypes: { active: boolean }[]): EyeState {
   return activeCount > 0 ? "some" : "none"
 }
 
-export function syncExpanded(prev: string[], categoryIds: string[]): string[] {
+const NO_COLLAPSED: ReadonlySet<string> = new Set()
+
+/**
+ * Keep the expanded-category set in sync as categories load in asynchronously.
+ * New categories are auto-expanded so users see them, EXCEPT any listed in
+ * `collapsedByDefault` — those stay closed until the user opens them (used for
+ * large categories like palworld's "pal"). User-driven collapses of other
+ * categories are still re-added when they reappear (donor bug-compatible).
+ */
+export function syncExpanded(
+  prev: string[],
+  categoryIds: string[],
+  collapsedByDefault: ReadonlySet<string> = NO_COLLAPSED,
+): string[] {
   const known = new Set(prev)
   const next = [...prev]
   for (const id of categoryIds) {
-    if (!known.has(id)) next.push(id)
+    if (!known.has(id) && !collapsedByDefault.has(id)) next.push(id)
   }
   return next.length === prev.length ? prev : next
 }

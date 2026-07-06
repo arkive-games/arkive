@@ -31,4 +31,12 @@ describe("syncExpanded", () => {
     // set still contains "a", the sync effect re-appends it. Replicate exactly.
     expect(syncExpanded(["b"], ["a", "b"])).toEqual(["b", "a"])
   })
+  it("does not auto-expand categories listed as collapsed-by-default", () => {
+    const collapsed = new Set(["pal"])
+    expect(syncExpanded([], ["location", "pal"], collapsed)).toEqual(["location"])
+    // A user-expanded collapsed-by-default category is preserved once known.
+    expect(syncExpanded(["pal"], ["location", "pal"], collapsed)).toEqual(["pal", "location"])
+    // Nothing to add → same reference (no needless re-render).
+    expect(syncExpanded(["location"], ["location", "pal"], collapsed)).toEqual(["location"])
+  })
 })

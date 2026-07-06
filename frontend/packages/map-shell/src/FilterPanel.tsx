@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent, type ReactNode } from "react"
+import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import {
   Accordion,
@@ -63,6 +63,9 @@ export interface FilterPanelProps {
   categoryToggleLabels?: { show: string; hide: string }
   controls?: FilterControl[]
   classNames?: FilterPanelClassNames
+  /** Category ids that start collapsed instead of auto-expanding (e.g. a large
+   *  "pal" list). Users can still open them; the choice is then preserved. */
+  defaultCollapsedCategoryIds?: string[]
 }
 
 const BUTTON_BASE =
@@ -77,16 +80,23 @@ export function FilterPanel({
   categoryToggleLabels,
   controls,
   classNames,
+  defaultCollapsedCategoryIds,
 }: FilterPanelProps) {
-  // All categories expanded by default. Data loads async, so the category set
-  // grows over time; keep the expanded set in sync as categories appear while
-  // preserving user collapses (same semantics as the aion2 donor).
+  // Categories auto-expand as data loads async, except those in
+  // `defaultCollapsedCategoryIds` which start closed; keep the expanded set in
+  // sync as categories appear while preserving user collapses (aion2 donor).
   const [expanded, setExpanded] = useState<string[]>([])
   const idsKey = categories.map((c) => c.id).join("|")
-  useEffect(() => {
-    setExpanded((prev) => syncExpanded(prev, categories.map((c) => c.id)))
+  const collapsedKey = (defaultCollapsedCategoryIds ?? []).join("|")
+  const collapsedByDefault = useMemo(
+    () => new Set(defaultCollapsedCategoryIds ?? []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idsKey])
+    [collapsedKey],
+  )
+  useEffect(() => {
+    setExpanded((prev) => syncExpanded(prev, categories.map((c) => c.id), collapsedByDefault))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, collapsedByDefault])
 
   return (
     <div className={cn("flex w-full flex-col", classNames?.root)}>
