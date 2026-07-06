@@ -320,7 +320,10 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         if req and req not in _NONE:
             entry["requireTech"] = req
         techs.append(entry)
-    techs.sort(key=lambda t: (t["level"], t["isBoss"], t["id"]))
+    # Stable sort by level only: `techs` is built in data-table row order, which
+    # is the game's tech-tree order, so a stable sort keeps that order within
+    # each level (game-accurate and language-independent for the frontend).
+    techs.sort(key=lambda t: t["level"])
 
     # --- assemble item entries ----------------------------------------------
     items = []
