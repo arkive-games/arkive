@@ -33,6 +33,15 @@ def test_encyclopedia_integration(tmp_path):
     # Every Pal has a learnset and a localized partner-skill name.
     assert all(p["activeSkills"] for p in pals)
 
+    # Summoning-Altar pals (DT_PalRaidBoss egg rewards) are flagged; others aren't.
+    assert all(isinstance(p["summonable"], bool) for p in pals)
+    assert {p["id"] for p in pals if p["summonable"]} == {
+        "NightLady", "NightLady_Dark", "KingBahamut_Dragon", "DarkMechaDragon", "LegendDeer",
+    }
+    # Summonable pals carry their summon-item recipe materials (parts × count).
+    assert by_id["NightLady"]["summonMaterials"] == [{"item": "PalSummon_NightLady_Parts", "count": 4}]
+    assert "summonMaterials" not in by_id["Anubis"]
+
     # Global passive list: the 115 displayable, each with a rank and effects list.
     assert len(passives) == 115
     assert all("rank" in p and isinstance(p["effects"], list) for p in passives)

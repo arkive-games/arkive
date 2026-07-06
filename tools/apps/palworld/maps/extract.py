@@ -419,6 +419,29 @@ def run_extract(raw: Path) -> dict:
     names_by_lang = {tag: _read_l10n_pal_names(raw, folder, tag) for folder, tag in L10N_LANG_TAGS.items()}
     names_by_lang[JA_TAG] = _read_pal_names(raw / "DataTable/Text/DT_PalNameText_Common.json")
 
+    # Sealed Realms: each ImprisonmentBoss placement seals a caged alpha boss.
+    # Emit one location POI per realm, labelled with the boss it holds.
+    realm_seen = set()
+    for r in place_rows.values():
+        if r.get("SpawnerType") != "EPalSpawnedCharacterType::ImprisonmentBoss":
+            continue
+        loc = {"X": r["Location"]["X"], "Y": r["Location"]["Y"], "Z": r["Location"].get("Z", 0)}
+        k = (js_round(loc["X"]), js_round(loc["Y"]))
+        if k in realm_seen:
+            continue
+        realm_seen.add(k)
+        poi = {"subtype": "sealedRealm", "sourceName": r["SpawnerName"], "location": loc}
+        pals = wild_by_name.get(r["SpawnerName"]) or {}
+        boss = next(
+            (b for pid in pals if (b := re.sub(r"^BOSS_", "", pid, flags=re.IGNORECASE)) in pal_meta),
+            None,
+        )
+        if boss:
+            name_by_lng = {tag: names[boss] for tag, names in names_by_lang.items() if names.get(boss)}
+            if name_by_lng:
+                poi["nameByLng"] = name_by_lng
+        pois.append(poi)
+
     pal_icons = sorted(
         p.stem for p in (raw / "Texture/PalIcon/Normal").iterdir() if p.suffix == ".png"
     )

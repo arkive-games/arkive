@@ -73,9 +73,17 @@ def test_extract_integration():
     assert by_subtype("quartz") == 27
     assert by_subtype("coal") == 23
     assert by_subtype("sulfur") == 23
+    # Sealed Realms: one location POI per ImprisonmentBoss placement, each labelled
+    # with the boss it holds.
+    realms = [p for p in out["pois"] if p["subtype"] == "sealedRealm"]
+    assert len(realms) == 18
+    assert all(p.get("nameByLng", {}).get("en-US") for p in realms)
     assert all(isinstance(p["location"]["X"], (int, float)) and isinstance(p["location"]["Y"], (int, float)) for p in out["pois"])
-    assert len(out["bosses"]) == 90
+    # 90 from DT_BossSpawnerLoactionData + 7 new field bosses (DT_PalSpawnerPlacement
+    # FieldBoss) that table omits, e.g. BlackCentaur; overlapping ones are deduped.
+    assert len(out["bosses"]) == 97
     assert all(p["characterId"].upper().startswith("BOSS_") for p in out["bosses"])
+    assert any(p["characterId"] == "BOSS_BlackCentaur" for p in out["bosses"])
     assert len(out["palSpawns"]) > 5000
     assert all(len(s["pals"]) >= 1 for s in out["palSpawns"])
     assert out["namesByLang"]["en-US"]["Kitsunebi"]

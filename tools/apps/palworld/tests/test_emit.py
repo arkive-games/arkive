@@ -63,8 +63,10 @@ def test_markers_assigned_with_stable_ids(ds):
 
 
 def test_bosses_get_icon_and_localized_lv_names(ds):
-    boss = next(m for m in ds["markers"]["MainWorld"] if m["subtype"] == "alphaPal")
+    boss = next(m for m in ds["markers"]["MainWorld"] if m["subtype"] == "fieldBoss")
     assert boss["icon"] == "T_Kitsunebi_icon_normal"
+    # Boss markers link back to their catchable pal so a pal page can list them.
+    assert boss["pal"] == "Kitsunebi"
     assert ds["locales"]["en-US"]["markers"]["MainWorld"][boss["id"]]["name"] == "Foxparks Lv.12"
     assert ds["locales"]["ko-KR"]["markers"]["MainWorld"][boss["id"]]["name"] == "불꽃여우 Lv.12"
 

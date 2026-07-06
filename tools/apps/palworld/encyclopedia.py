@@ -607,6 +607,50 @@ def _passive_effects(r: dict) -> list:
     return out
 
 
+_SUMMON_PREFIX = re.compile(r"^(RAID_|BOSS_)")
+
+
+def _recipe_materials(rec: dict) -> list[dict]:
+    """The (item, count) materials of a DT_ItemRecipeDataTable row (5 slots)."""
+    mats = []
+    for i in range(1, 6):
+        item = rec.get(f"Material{i}_Id")
+        count = rec.get(f"Material{i}_Count") or 0
+        if item and item != "None" and count > 0:
+            mats.append({"item": item, "count": count})
+    return mats
+
+
+def _summon_recipes(raw: Path, roster: set[str]) -> dict[str, list[dict]]:
+    """{palId: [{item, count}]} for pals obtained at the Summoning Altar.
+
+    ``DT_PalRaidBoss`` keys each summon ritual by its summon-item id
+    (``PalSummon_<pal>``); the pal you receive is the ritual's
+    ``EggPalIDAndWeight`` reward (a ``RAID_``/``BOSS_`` codename mapping to a
+    roster id). The materials + counts are that summon item's crafting recipe
+    (``DT_ItemRecipeDataTable``) — e.g. 4× the pal's "fragment" parts. Higher
+    difficulty ``*_2`` rituals are skipped in favour of the base one."""
+    raid = read_rows(raw / "Blueprint/RaidBoss/DT_PalRaidBoss.json")
+    recipes = read_rows(raw / "DataTable/Item/DT_ItemRecipeDataTable.json")
+    out: dict[str, list[dict]] = {}
+    for key, r in raid.items():
+        if key.endswith("_2"):
+            continue
+        pals = set()
+        for egg in r.get("EggPalIDAndWeight") or []:
+            k = (egg.get("Key") or {}).get("Key")
+            if k:
+                pid = _SUMMON_PREFIX.sub("", k)
+                if pid in roster:
+                    pals.add(pid)
+        if not pals:
+            continue
+        mats = _recipe_materials(recipes.get(key, {}))
+        for pid in pals:
+            out.setdefault(pid, mats)
+    return out
+
+
 def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     raw, data_out, res_out = Path(raw), Path(data_out), Path(res_out)
 
@@ -628,6 +672,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
         learnsets.setdefault(row.get("PalId"), []).append(row)
 
     roster = {cid: r for cid, r in mon.items() if _is_roster(cid, r, names_by_lang, raw_icons)}
+    summon_recipes = _summon_recipes(raw, set(roster))
 
     pals = []
     for cid, r in roster.items():
@@ -653,6 +698,8 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "activeSkills": _active_skills(cid, _learnset_for(cid, learnsets), waza_by_id),
             "passives": _passives_of(r),
             "drops": _drops(cid, drop_rows),
+            "summonable": cid in summon_recipes,
+            **({"summonMaterials": summon_recipes[cid]} if cid in summon_recipes else {}),
         })
     pals.sort(key=lambda p: (p["zukanIndex"], p["zukanIndexSuffix"], p["id"]))
 
@@ -681,7 +728,8 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     partner_waza = {p["partnerSkill"].get("wazaId") for p in pals if p["partnerSkill"].get("wazaId")}
     all_waza = sorted(active_waza | partner_waza)
     unlock_items = {p["partnerSkill"]["unlockItem"] for p in pals if p["partnerSkill"].get("unlockItem")}
-    item_ids = sorted({d["item"] for p in pals for d in p["drops"]} | unlock_items)
+    summon_mats = {m["item"] for mats in summon_recipes.values() for m in mats}
+    item_ids = sorted({d["item"] for p in pals for d in p["drops"]} | unlock_items | summon_mats)
     effect_types = sorted({e["type"] for p in pals for e in p["partnerSkill"].get("effects", [])})
     target_types = sorted({e["target"] for p in pals for e in p["partnerSkill"].get("effects", [])})
     pal_ids = [p["id"] for p in pals]

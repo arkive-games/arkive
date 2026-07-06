@@ -197,7 +197,7 @@ def build_dataset(parsed: dict) -> dict:
         name_by_lng = {lng: f"{_pal_name(names_by_lang[lng], b['characterId'])} Lv.{b['level']}" for lng in languages}
         z = z_for_id(b["characterId"])
         c = {
-            "subtype": "alphaPal", **to_world(b["location"]),
+            "subtype": "fieldBoss", **to_world(b["location"]),
             "icon": _pal_icon(pal_icons, b["characterId"]) or "T_icon_compass_boss",
             "sortKey": f"{b['characterId']}-{b['key']}",
             "nameByLng": name_by_lng,

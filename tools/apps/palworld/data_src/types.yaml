@@ -49,7 +49,11 @@ subtypes:
     category: location
     icon: T_icon_compass_camp
     names: { en-US: Base, ja-JP: 拠点, de-DE: Lager, es-ES: Base, es-MX: Base, fr-FR: Base, id-ID: Markas, it-IT: Base, ko-KR: 거점, pl-PL: Baza, pt-BR: Base, ru-RU: База, th-TH: ฐาน, tr-TR: Üs, vi-VN: Căn cứ, zh-CN: 据点, zh-TW: 據點 }
-  - id: alphaPal
+  - id: sealedRealm
+    category: location
+    icon: T_icon_compass_BossGate
+    names: { en-US: Sealed Realm, ja-JP: 封印されし領域, de-DE: Versiegeltes Reich, es-ES: Reino sellado, es-MX: Reino sellado, fr-FR: Royaume scellé, id-ID: Alam Tersegel, it-IT: Reame sigillato, ko-KR: 봉인된 영역, pl-PL: Zapieczętowana kraina, pt-BR: Reino Selado, ru-RU: Запечатанный мир, th-TH: ดินแดนผนึก, tr-TR: Mühürlü Diyar, vi-VN: Vương quốc phong ấn, zh-CN: 封印领域, zh-TW: 封印領域 }
+  - id: fieldBoss
     category: boss
     icon: T_icon_compass_boss
     color: "#ef4444"
