@@ -22,6 +22,7 @@ import {
   BuildingLink,
   PalLink,
   MaterialRow,
+  ItemGlyph,
 } from '../catalog/components'
 
 interface Bundles {
@@ -90,9 +91,12 @@ export default function ItemDetailPage() {
       body = (
         <div className="space-y-6">
           {/* Header */}
-          <div className="min-w-0">
-            <div className="text-sm text-muted-foreground">{itemTypeLabel(item.typeA, b.items.typeLabels)}</div>
-            <h1 className="text-2xl font-bold">{text?.name ?? item.id}</h1>
+          <div className="flex min-w-0 items-center gap-3">
+            {item.icon ? <ItemGlyph icon={item.icon} size={48} /> : null}
+            <div className="min-w-0">
+              <div className="text-sm text-muted-foreground">{itemTypeLabel(item.typeA, b.items.typeLabels)}</div>
+              <h1 className="text-2xl font-bold">{text?.name ?? item.id}</h1>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_320px]">

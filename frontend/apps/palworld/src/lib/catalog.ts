@@ -40,6 +40,7 @@ export interface ItemEntry {
   price: number
   maxStack: number
   handcraft: boolean
+  icon?: string
   element?: string
   food?: FoodEffect
   equip?: EquipStats

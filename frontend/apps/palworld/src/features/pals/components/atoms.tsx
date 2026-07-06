@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@gamemap/ui'
-import { elementIconUrl, workIconUrl } from '../../../lib/assets'
+import { elementIconUrl, itemIconUrl, workIconUrl } from '../../../lib/assets'
 import type { ActiveSkill, Element, WorkType } from '../../../lib/pals'
 
 /** An <img> that removes itself if the asset is missing (e.g. OilExtraction
@@ -129,24 +129,27 @@ export function PassiveRow({ name, description }: { name: string; description?: 
   )
 }
 
-/** A kill-drop item: name + drop rate + quantity range. */
+/** A kill-drop item: icon + name + drop rate + quantity range. */
 export function DropRow({
   id,
   name,
   rate,
   min,
   max,
+  icon,
 }: {
   id?: string
   name: string
   rate: number
   min: number
   max: number
+  icon?: string
 }) {
   const qty = min === max ? `${min}` : `${min}–${max}`
   const label = id ? (
-    <Link to="/items/$id" params={{ id }} className="min-w-0 flex-1 truncate hover:text-primary">
-      {name}
+    <Link to="/items/$id" params={{ id }} className="flex min-w-0 flex-1 items-center gap-2 hover:text-primary">
+      {icon ? <IconImg src={itemIconUrl(icon)} alt="" size={20} /> : null}
+      <span className="truncate">{name}</span>
     </Link>
   ) : (
     <span className="min-w-0 flex-1 truncate">{name}</span>

@@ -12,7 +12,7 @@ import {
 import { TopNav } from '../../components/TopNav'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { itemTypeLabel } from '../catalog/labels'
-import { CatalogPageLoading, rarityBorderClass } from '../catalog/components'
+import { CatalogPageLoading, ItemGlyph, rarityBorderClass } from '../catalog/components'
 
 export default function ItemListPage() {
   const { t, i18n } = useTranslation()
@@ -103,9 +103,12 @@ export default function ItemListPage() {
                   data-testid="item-card"
                   className={`group flex flex-col gap-1 rounded-lg border-l-4 border border-border bg-card p-3 shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
                 >
-                  <span className="line-clamp-2 text-sm font-medium leading-tight">
-                    {bundle.text[i.id]?.name ?? i.id}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {i.icon ? <ItemGlyph icon={i.icon} size={28} /> : null}
+                    <span className="line-clamp-2 text-sm font-medium leading-tight">
+                      {bundle.text[i.id]?.name ?? i.id}
+                    </span>
+                  </div>
                   <span className="text-[11px] text-muted-foreground">{itemTypeLabel(i.typeA, bundle.typeLabels)}</span>
                 </Link>
               ))}

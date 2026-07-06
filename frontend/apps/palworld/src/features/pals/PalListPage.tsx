@@ -1,17 +1,21 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Input } from '@gamemap/ui'
+import { Button, Input } from '@gamemap/ui'
 import { TopNav } from '../../components/TopNav'
 import { loadPals, type PalsBundle } from '../../lib/pals'
-import { PalCard, PalPageLoading } from './components'
+import { PalCard, PalFilters, PalPageLoading, PalTable } from './components'
+import { filterStrings } from './filterStrings'
+import { EMPTY_FILTER, useFilteredPals, type PalFilter } from './useFilteredPals'
 
 export default function PalListPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const fs = filterStrings(lng)
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<PalFilter>(EMPTY_FILTER)
+  const [view, setView] = useState<'grid' | 'list'>('grid')
 
   useEffect(() => {
     let cancelled = false
@@ -29,45 +33,59 @@ export default function PalListPage() {
     }
   }, [lng, t])
 
-  const roster = useMemo(() => {
-    if (!bundle) return []
-    const sorted = [...bundle.pals].sort(
-      (a, b) => a.zukanIndex - b.zukanIndex || a.zukanIndexSuffix.localeCompare(b.zukanIndexSuffix),
-    )
-    const q = query.trim().toLowerCase()
-    if (!q) return sorted
-    const digits = q.replace(/^no\.?/, '').replace(/^0+/, '')
-    return sorted.filter((p) => {
-      const name = (bundle.text[p.id]?.name ?? p.id).toLowerCase()
-      if (name.includes(q)) return true
-      if (/^\d+$/.test(digits) && String(p.zukanIndex) === digits) return true
-      return false
-    })
-  }, [bundle, query])
+  const roster = useFilteredPals(bundle, filter)
 
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
       <TopNav active="/pals" />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-4 py-6">
-          <div className="mb-4 flex items-center gap-3">
+        <div className="mx-auto w-full max-w-6xl px-4 py-6">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={filter.query}
+              onChange={(e) => setFilter({ ...filter, query: e.target.value })}
               placeholder={t('pal.searchPlaceholder')}
-              className="max-w-sm"
+              className="max-w-xs"
             />
             {bundle ? (
               <span className="text-sm text-muted-foreground">
                 {t('pal.count', { count: roster.length })}
               </span>
             ) : null}
+            <div className="ml-auto inline-flex overflow-hidden rounded-md border border-border">
+              <Button
+                variant={view === 'grid' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-8 rounded-none"
+                onClick={() => setView('grid')}
+              >
+                {fs.gridView}
+              </Button>
+              <Button
+                variant={view === 'list' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-8 rounded-none"
+                onClick={() => setView('list')}
+              >
+                {fs.listView}
+              </Button>
+            </div>
           </div>
+
+          {bundle ? (
+            <div className="mb-4">
+              <PalFilters bundle={bundle} filter={filter} onChange={setFilter} />
+            </div>
+          ) : null}
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
           ) : !bundle ? (
             <PalPageLoading />
+          ) : roster.length === 0 ? (
+            <div className="mt-12 text-center text-sm text-muted-foreground">{fs.noResults}</div>
+          ) : view === 'list' ? (
+            <PalTable pals={roster} bundle={bundle} />
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
               {roster.map((p) => (

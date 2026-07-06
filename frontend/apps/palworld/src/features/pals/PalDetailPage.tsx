@@ -15,6 +15,7 @@ import { comboKey, loadBreeding, makeEngine, queryFormulas, type BreedingData, t
 import { RecipeCard, buildRecipeMeta } from '../breeding/RecipeCard'
 import { palIconUrl } from '../../lib/assets'
 import { formatPalId } from '../../lib/palId'
+import { filterStrings } from './filterStrings'
 import {
   PalSection,
   InfoRows,
@@ -145,6 +146,7 @@ export default function PalDetailPage() {
   const { id } = useParams({ from: '/pals/$id' })
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const fs = filterStrings(lng)
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [breeding, setBreeding] = useState<{ data: BreedingData; names: NameMap } | null>(null)
@@ -210,10 +212,18 @@ export default function PalDetailPage() {
               </div>
             ) : null}
             <h1 className="text-2xl font-bold">{text?.name ?? pal.id}</h1>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               {pal.elements.map((e) => (
                 <ElementBadge key={e} element={e} label={bundle.enums.elements[e] ?? e} />
               ))}
+              <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                {fs.reaction}: {fs.reactions[pal.reaction] ?? pal.reaction}
+              </span>
+              {pal.nocturnal ? (
+                <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                  {fs.nocturnal}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
@@ -396,6 +406,7 @@ export default function PalDetailPage() {
                       key={d.item}
                       id={d.item}
                       name={bundle.items[d.item] ?? d.item}
+                      icon={bundle.itemIcon[d.item]}
                       rate={d.rate}
                       min={d.min}
                       max={d.max}

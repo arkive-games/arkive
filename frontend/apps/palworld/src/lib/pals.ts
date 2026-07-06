@@ -19,6 +19,14 @@ export const WORK_TYPES: WorkType[] = [
   'Cool', 'Transport', 'MonsterFarm',
 ]
 
+/** Wild encounter reaction (raw `AIResponse`, 遭遇反応). Ordered most→least
+ *  hostile; the filter only shows values present in the loaded roster. */
+export const REACTIONS = [
+  'Warlike', 'Warlike_Anyway', 'Warlike_WithoutPlayer', 'Kill_All',
+  'Escape_to_Battle', 'NotInterested', 'Escape', 'Friendly', 'Boss', 'None',
+] as const
+export type Reaction = (typeof REACTIONS)[number]
+
 // --- data shapes (mirror pals.json / passives.json) --------------------------
 export interface PalStats {
   hp: number; meleeAttack: number; shotAttack: number; defense: number
@@ -70,6 +78,7 @@ export interface PalEntry {
   size: string
   rarity: number
   nocturnal: boolean
+  reaction: string
   stats: PalStats
   work: Partial<Record<WorkType, number>>
   bestWork: WorkType
@@ -112,6 +121,8 @@ export interface PalsBundle {
   skills: Record<string, SkillText>
   /** itemId -> localized name (from the shared items locale; description omitted here). */
   items: Record<string, string>
+  /** itemId -> icon asset name (only for items whose icon texture was exported). */
+  itemIcon: Record<string, string>
   enums: EnumsLocale
   /** partner-skill effect type -> localized label (fallback lang -> en-US -> raw enum). */
   partnerEffects: Record<string, string>
@@ -122,9 +133,10 @@ export interface PalsBundle {
 const cache = new Map<string, Promise<PalsBundle>>()
 
 async function fetchBundle(lng: string): Promise<PalsBundle> {
-  const [palsFile, passivesFile, text, passiveText, skills, items, enums, partnerEffects, partnerTargets] = await Promise.all([
+  const [palsFile, passivesFile, itemsFile, text, passiveText, skills, items, enums, partnerEffects, partnerTargets] = await Promise.all([
     j<{ pals: PalEntry[] }>(`${DATA_BASE}/pals.json`),
     j<{ passives: Passive[] }>(`${DATA_BASE}/passives.json`),
+    j<{ items: { id: string; icon?: string }[] }>(`${DATA_BASE}/items.json`),
     j<Record<string, PalText>>(`${DATA_BASE}/locales/${lng}/pals.json`),
     j<Record<string, SkillText>>(`${DATA_BASE}/locales/${lng}/passives.json`),
     j<Record<string, SkillText>>(`${DATA_BASE}/locales/${lng}/skills.json`),
@@ -133,6 +145,8 @@ async function fetchBundle(lng: string): Promise<PalsBundle> {
     j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerEffects.json`),
     j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerTargets.json`),
   ])
+  const itemIcon: Record<string, string> = {}
+  for (const it of itemsFile.items) if (it.icon) itemIcon[it.id] = it.icon
   return {
     pals: palsFile.pals,
     byId: new Map(palsFile.pals.map((p) => [p.id, p])),
@@ -142,6 +156,7 @@ async function fetchBundle(lng: string): Promise<PalsBundle> {
     passiveText,
     skills,
     items: Object.fromEntries(Object.entries(items).map(([id, v]) => [id, v.name])),
+    itemIcon,
     enums,
     partnerEffects,
     partnerTargets,

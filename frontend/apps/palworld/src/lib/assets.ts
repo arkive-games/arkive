@@ -16,3 +16,6 @@ export const palIconUrl = (icon: string): string => `${RES_BASE}/icons/${icon}.w
 export const elementIconUrl = (element: string): string => `${RES_BASE}/icons/element_${element}.webp`
 /** Work-suitability icon; OilExtraction has none (callers fall back to the label). */
 export const workIconUrl = (work: string): string => `${RES_BASE}/icons/work_${work}.webp`
+/** Inventory item icon (e.g. `item_Wood`); present only for items whose icon
+ *  texture was exported (callers gate on the icon field / handle 404). */
+export const itemIconUrl = (icon: string): string => `${RES_BASE}/icons/${icon}.webp`

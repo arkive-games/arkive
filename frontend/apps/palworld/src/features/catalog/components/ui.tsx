@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@gamemap/ui'
 import { buildingIconUrl } from '../../../lib/catalog'
-import { palIconUrl } from '../../../lib/assets'
+import { itemIconUrl, palIconUrl } from '../../../lib/assets'
 
 /** A titled panel — the catalog encyclopedias' section container. */
 export function CatalogSection({
@@ -88,12 +88,31 @@ export function rarityBorderClass(rarity: number): string {
 const CHIP =
   'inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent'
 
-/** Cross-link chip to an item detail page. */
-export function ItemLink({ id, name }: { id: string; name: string }) {
+/** Cross-link chip to an item detail page (icon + name). */
+export function ItemLink({ id, name, icon }: { id: string; name: string; icon?: string }) {
   return (
     <Link to="/items/$id" params={{ id }} className={CHIP}>
+      {icon ? <ItemGlyph icon={icon} /> : null}
       {name}
     </Link>
+  )
+}
+
+/** An item icon that removes itself if the asset is missing (many items have no
+ *  exported icon texture). */
+export function ItemGlyph({ icon, size = 20 }: { icon: string; size?: number }) {
+  const [ok, setOk] = useState(true)
+  if (!ok) return null
+  return (
+    <img
+      src={itemIconUrl(icon)}
+      alt=""
+      width={size}
+      height={size}
+      loading="lazy"
+      onError={() => setOk(false)}
+      className="shrink-0 object-contain"
+    />
   )
 }
 

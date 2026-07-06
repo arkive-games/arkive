@@ -10,4 +10,5 @@ export {
   PalLink,
   MaterialRow,
   BuildingGlyph,
+  ItemGlyph,
 } from './ui'
