@@ -51,7 +51,7 @@ export function TechTile({ tech, resolvers }: TechTileProps) {
           aria-label={name}
           title={name}
           className={cn(
-            'group flex aspect-square w-36 flex-col overflow-hidden rounded-md border bg-card text-left shadow-sm transition',
+            'group flex aspect-square w-full flex-col overflow-hidden rounded-md border bg-card text-left shadow-sm transition',
             'hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             ancient
               ? 'border-purple-400/60 hover:border-purple-400'
