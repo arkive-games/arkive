@@ -169,7 +169,14 @@ def _equip(r: dict) -> dict:
 
 
 def _icon_basename(icon_rows: dict, bid: str) -> str | None:
-    row = icon_rows.get(bid) or {}
+    if not bid or bid == "None":
+        return None
+    row = icon_rows.get(bid)
+    if row is None:
+        # case-insensitive fallback (IconName "PickAxe_Default" vs row "Pickaxe_Default")
+        lk = bid.lower()
+        row = next((v for k, v in icon_rows.items() if k.lower() == lk), None)
+    row = row or {}
     for field in ("SoftIcon", "Icon"):
         path = (row.get(field) or {}).get("AssetPathName")
         if path and path != "None":
@@ -323,6 +330,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             "id": iid,
             "typeA": _strip(r.get("TypeA"), _ITEM_A),
             "typeB": _strip(r.get("TypeB"), _ITEM_B),
+            "sortId": r.get("SortId", 0),
             "rarity": r.get("Rarity", 0),
             "rank": r.get("Rank", 0),
             "weight": round2(r.get("Weight", 0.0)),
@@ -357,7 +365,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         if iid in item_unlock_tech:
             entry["unlockTech"] = sorted(item_unlock_tech[iid])
         items.append(entry)
-    items.sort(key=lambda e: (e["typeA"], e["typeB"], e["id"]))
+    # canonical order: the game's own SortId (unique per item, language-independent),
+    # with id as a stable tiebreaker. Frontends reuse this order across all languages.
+    items.sort(key=lambda e: (e["sortId"], e["id"]))
 
     # --- assemble building entries + icons -----------------------------------
     icons_dir = res_out / "icons"
@@ -401,19 +411,32 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             entry["icon"] = f"build_{bid}"
         bld_out.append(entry)
 
-    # item icons: DT_ItemIconDataTable_Common maps item id -> a texture under
+    # item icons: DT_ItemIconDataTable_Common maps an icon key -> a texture under
     # /Game/Others/InventoryItemIcon/Texture. That tree lives in Content/Others,
     # one level above RAW (=Content/Pal). Gated on the PNG existing so it degrades
     # gracefully if the Others tree is absent from a given export.
+    #
+    # The icon table is keyed by the item row's IconName field, NOT the item id:
+    # tier variants and blueprints share a base icon row this way (DecalGun_1..5 ->
+    # "DecalGun", Blueprint_Katana_2 -> "Katana"). Resolve IconName first, then fall
+    # back to the item id (some rows are keyed by id directly). _icon_basename also
+    # matches case-insensitively (IconName "PickAxe_Default" vs row "Pickaxe_Default").
     item_icon_dir = raw.parent / "Others/InventoryItemIcon/Texture"
     item_icons = 0
     for entry in items:
-        base = _icon_basename(item_icon_rows, entry["id"])
-        if not base:
-            continue
+        r = item_rows.get(entry["id"]) or {}
+        icon_name = r.get("IconName")
+        keys = [icon_name, entry["id"]] if icon_name and icon_name != "None" else [entry["id"]]
         dest = icons_dir / f"item_{entry['id']}.webp"
-        if convert(item_icon_dir / f"{base}.png", dest):
-            item_icons += 1
+        for key in keys:
+            base = _icon_basename(item_icon_rows, key)
+            if not base:
+                continue
+            if convert(item_icon_dir / f"{base}.png", dest):
+                item_icons += 1
+                break
+            if dest.exists():  # already converted on a prior run
+                break
         if dest.exists():
             entry["icon"] = f"item_{entry['id']}"
 
