@@ -60,13 +60,16 @@ export function TechTile({ tech, resolvers }: TechTileProps) {
         >
           <span
             className={cn(
-              'px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+              'flex items-center justify-between gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
               ancient
                 ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300'
                 : 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
             )}
           >
-            {typeLabel}
+            <span>{typeLabel}</span>
+            <span className="shrink-0 normal-case tabular-nums">
+              {t('tech.cost', { count: tech.cost })}
+            </span>
           </span>
 
           <span className="flex min-h-0 flex-1 items-center justify-center p-2">
@@ -81,11 +84,8 @@ export function TechTile({ tech, resolvers }: TechTileProps) {
             )}
           </span>
 
-          <span className="flex items-end justify-between gap-1 px-2 pb-1.5">
+          <span className="px-2 pb-1.5">
             <span className="line-clamp-2 text-xs font-medium leading-tight">{name}</span>
-            <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
-              {t('tech.cost', { count: tech.cost })}
-            </span>
           </span>
         </button>
       </HoverCardTrigger>
