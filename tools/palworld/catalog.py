@@ -44,6 +44,7 @@ Outputs:
   data-palworld/locales/<tag>/items.json       {id: {name, description?}}
   data-palworld/locales/<tag>/buildings.json   {id: {name, description?}}
   data-palworld/locales/<tag>/technology.json  {id: {name, description?}}
+  data-palworld/locales/<tag>/labels.json       {item: {typeA: label}, building: {typeA: label}}
   resource-palworld/icons/build_<id>.webp
 
 Run: ``uv run python -m palworld.catalog`` (from the ``tools`` dir), AFTER
@@ -95,22 +96,31 @@ def _ph(s: str | None) -> str:
     return "" if not s or _PLACEHOLDER_RE.match(s) else s
 
 
-def _item_name(iid: str, iname: dict, ja_iname: dict) -> str:
+def _item_name(iid: str, iname: dict, ja_iname: dict, ja_name_to_id: dict) -> str:
     """Localized item name, healing placeholder tier-variant rows.
 
-    Untranslated variants (WeakerBow_2 -> "zh-hans text") become the localized
-    base name plus the JA "+N" suffix (陈旧的弓 + "+1"); failing that, the JA
-    base string; failing that, the raw id.
+    Untranslated variants carry a placeholder in every language ("zh-hans text")
+    while the JA base holds the real name with a "+N" tier suffix (アサルトライフル+1).
+    We recover the localized name by matching the JA base ("アサルトライフル") back to
+    its item id (AssaultRifle_Default1 -> 突击步枪) and re-appending "+N", so the
+    result is fully localized (突击步枪+1). The id-suffix strip is a secondary
+    heuristic (WeakerBow_2 -> WeakerBow). Failing both, the JA base string, then id.
     """
     nm = _ph(iname.get(iid))
     if nm:
         return nm
     ja = (ja_iname.get(iid) or "").strip()
     m = re.search(r"(\+\d+)$", ja)
-    base_id = _VARIANT_SUFFIX_RE.sub("", iid)
-    base_nm = _ph(iname.get(base_id)) if base_id != iid else ""
-    if base_nm and m:
-        return base_nm + m.group(1)
+    if m:
+        base_ja = ja[: m.start()].rstrip()
+        base_id = ja_name_to_id.get(base_ja)
+        if not base_id:
+            cand = _VARIANT_SUFFIX_RE.sub("", iid)
+            base_id = cand if cand != iid else None
+        if base_id:
+            base_nm = _ph(iname.get(base_id))
+            if base_nm:
+                return base_nm + m.group(1)
     return _ph(ja) or iid
 
 
@@ -204,6 +214,10 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     tech_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_TechnologyNameText_Common.json", "")
     tech_desc_by_lang = _text_by_lang(raw, "DataTable/Text/DT_TechnologyDescText_Common.json", "")
     ui_by_lang = _text_by_lang(raw, "DataTable/Text/DT_UI_Common_Text_Common.json", "")
+    # category labels: item TypeA -> COMMON_ITEMTYPE_A_<X> (in the UI table),
+    # building TypeA -> CATEGORY_TYPE_A_<X> (in the build-object category table).
+    item_type_by_lang = _text_by_lang(raw, "DataTable/Text/DT_UI_Common_Text_Common.json", "COMMON_ITEMTYPE_A_")
+    bld_type_by_lang = _text_by_lang(raw, "DataTable/Text/DT_BuildObjectCategoryText.json", "CATEGORY_TYPE_A_")
 
     tags = _all_tags()
 
@@ -398,6 +412,19 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     ja_iname, ja_idesc = item_name_by_lang[ja], item_desc_by_lang[ja]
     ja_bname, ja_bdesc = bld_name_by_lang[ja], bld_desc_by_lang[ja]
     ja_tname, ja_tdesc = tech_name_by_lang[ja], tech_desc_by_lang[ja]
+    ja_itype, ja_btype = item_type_by_lang[ja], bld_type_by_lang[ja]
+
+    # category typeA values actually present in the emitted datasets
+    item_types = sorted({e["typeA"] for e in items})
+    bld_types = sorted({e["typeA"] for e in bld_out})
+
+    # JA base name -> item id, so a variant's placeholder ("アサルトライフル+1")
+    # can be re-localized via its base item (AssaultRifle_Default1 -> 突击步枪).
+    ja_name_to_id: dict[str, str] = {}
+    for iid in item_ids:
+        n = _ph(ja_iname.get(iid))
+        if n and n not in ja_name_to_id:
+            ja_name_to_id[n] = iid
 
     tech_by_id = {t["id"]: t for t in techs}
     for tag in tags:
@@ -407,7 +434,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
 
         items_loc = {}
         for iid in item_ids:
-            nm = _item_name(iid, iname, ja_iname)
+            nm = _item_name(iid, iname, ja_iname, ja_name_to_id)
             e = {"name": _resolve_tokens(nm, iname, bname, ui) or iid}
             d = _ph(idesc.get(iid)) or _ph(ja_idesc.get(iid))
             d = _resolve_tokens(d, iname, bname, ui)
@@ -442,7 +469,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
                     bid0 = t["unlockBuildings"][0]
                     name = _ph(_ci(bname, bid0)) or _ph(_ci(ja_bname, bid0)) or bid0
                 elif t["unlockItems"]:
-                    name = _item_name(t["unlockItems"][0], iname, ja_iname)
+                    name = _item_name(t["unlockItems"][0], iname, ja_iname, ja_name_to_id)
                 else:
                     name = tid
             e = {"name": name}
@@ -452,6 +479,13 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
                 e["description"] = desc
             tech_loc[tid] = e
         write_json(data_out / "locales" / tag / "technology.json", tech_loc)
+
+        itype, btype = item_type_by_lang[tag], bld_type_by_lang[tag]
+        labels = {
+            "item": {k: _ph(itype.get(k)) or _ph(ja_itype.get(k)) or k for k in item_types},
+            "building": {k: _ph(btype.get(k)) or _ph(ja_btype.get(k)) or k for k in bld_types},
+        }
+        write_json(data_out / "locales" / tag / "labels.json", labels)
 
     print(
         f"catalog: {len(items)} items, {len(bld_out)} buildings, {len(techs)} techs, "
