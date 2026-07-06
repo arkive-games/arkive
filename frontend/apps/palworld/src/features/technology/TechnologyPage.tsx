@@ -107,7 +107,7 @@ export default function TechnologyPage() {
     body = <CatalogPageLoading />
   } else {
     body = (
-      <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-[3rem_minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-[3rem_minmax(0,1fr)_auto]">
         {/* Header row */}
         <div className="hidden md:block" />
         <div className="sticky top-0 z-10 rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 dark:text-sky-200">
@@ -173,13 +173,7 @@ function TileGrid({
 }) {
   if (techs.length === 0) return <div className="hidden md:block" />
   return (
-    <div
-      className={
-        ancient
-          ? 'grid grid-cols-2 gap-2 sm:grid-cols-3'
-          : 'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-      }
-    >
+    <div className={ancient ? 'flex flex-col gap-2' : 'flex flex-wrap gap-2'}>
       {techs.map((tech) => (
         <TechTile key={tech.id} tech={tech} resolvers={resolvers} />
       ))}
