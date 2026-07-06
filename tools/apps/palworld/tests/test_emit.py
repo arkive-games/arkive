@@ -31,11 +31,15 @@ PARSED = {
     "palSpawns": [
         {"spawnerName": "sp1", "pals": [{"id": "SheepBall", "lvMin": 1, "lvMax": 3}], "location": {"X": 0, "Y": 0, "Z": 0}},
         {"spawnerName": "sp1", "pals": [{"id": "SheepBall", "lvMin": 1, "lvMax": 3}], "location": {"X": 50, "Y": 50, "Z": 0}},
+        # Non-Paldeck dungeon monster (zukanIndex <= 0): must be dropped, not
+        # surfaced as a marker/subtype/category.
+        {"spawnerName": "dg1", "pals": [{"id": "YakushimaMonster001", "lvMin": 1, "lvMax": 1}], "location": {"X": 100, "Y": 100, "Z": 0}},
     ],
     "namesByLang": _names_by_lang(),
     "palMeta": {
         "SheepBall": {"zukanIndex": 2, "zukanIndexSuffix": ""},
         "Kitsunebi": {"zukanIndex": 5, "zukanIndexSuffix": ""},
+        "YakushimaMonster001": {"zukanIndex": -1, "zukanIndexSuffix": ""},
     },
     "palIcons": ["T_Kitsunebi_icon_normal", "T_SheepBall_icon_normal"],
 }
@@ -78,6 +82,18 @@ def test_pal_spawns_cluster_with_lv_range(ds):
     assert spawns[0]["count"] == 2
     assert ds["locales"]["en-US"]["markers"]["MainWorld"][spawns[0]["id"]]["description"] == "Lv.1–3"
     assert ds["locales"]["ko-KR"]["markers"]["MainWorld"][spawns[0]["id"]]["description"] == "Lv.1–3"
+
+
+def test_enemy_category_pals_are_hidden(ds):
+    # Wild non-Paldeck creatures (zukanIndex <= 0) are dropped: no "enemy"
+    # category, no subtype, no markers.
+    cat_ids = {c["name"] for c in ds["types"]["categories"]}
+    assert "enemy" not in cat_ids
+    all_subs = {row["id"] for cat in ds["types"]["categories"] for row in cat["subtypes"]}
+    assert "YakushimaMonster001" not in all_subs
+    for mid in ds["markers"]:
+        assert not any(m["subtype"] == "YakushimaMonster001" for m in ds["markers"][mid])
+    assert "YakushimaMonster001" not in ds["locales"]["en-US"]["types"]["subtypes"]
 
 
 def test_publishes_world_pixel_params(ds):

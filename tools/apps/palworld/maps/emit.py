@@ -98,10 +98,14 @@ def build_dataset(parsed: dict) -> dict:
     for pid in pal_id_order:
         z = z_for_id(pid)
         zi = z["zukanIndex"] if isinstance(z["zukanIndex"], (int, float)) else -1
-        # Wild creatures without a Paldeck number (Yakushima slimes, cave bats, …)
-        # aren't catchable Pals — file them under a separate "enemy" category.
+        # Wild creatures without a Paldeck number (Yakushima dungeon monsters,
+        # cave bats, …) aren't catchable Pals. They're dungeon-instanced spawns
+        # that stack on a single dungeon-entrance point, so drop them entirely
+        # rather than surfacing a separate "enemy" category on the map.
+        if zi <= 0:
+            continue
         pal_subtypes.append({
-            "id": pid, "category": "pal" if zi > 0 else "enemy",
+            "id": pid, "category": "pal",
             "icon": _pal_icon(pal_icons, pid),
             "zukanIndex": zi,
             "zukanIndexSuffix": z.get("zukanIndexSuffix", ""),

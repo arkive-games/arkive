@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from palworld.maps.extract import L10N_LANG_TAGS, run_extract
+from palworld.maps.extract import L10N_LANG_TAGS, _actor_location, run_extract
 
 RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
 
@@ -37,6 +37,35 @@ def _make_fixture_raw(root: Path) -> Path:
             "PAL_NAME_Alpaca": {"TextData": {"SourceString": "멜파카" if tag == "ko-KR" else f"{tag} Alpaca"}},
         }}])
     return raw
+
+
+def test_actor_location_unattached_is_world():
+    # Actor whose root component has no AttachParent: RelativeLocation IS its
+    # world location (fast-travel/tower/dungeon actors work this way).
+    exports = [
+        {"Name": "a", "Properties": {"RootComponent": {"ObjectPath": "PL.1"}}},
+        {"Properties": {"RelativeLocation": {"X": 123.0, "Y": 456.0, "Z": 7.0}}},
+    ]
+    assert _actor_location(exports[0], exports) == {"X": 123.0, "Y": 456.0, "Z": 7.0}
+
+
+def test_actor_location_composes_attach_parent_chain():
+    # Rock/ore spawners (copper/quartz/coal/sulfur) attach their root component
+    # to a BP_BoxPlacementTool parent, so RelativeLocation is a small offset in
+    # the parent's frame — NOT a world position. The world location is
+    # parent_loc + Rz(parent_yaw) * child_offset.
+    exports = [
+        {"Name": "ore", "Properties": {"RootComponent": {"ObjectPath": "PL.1"}}},
+        {"Properties": {"RelativeLocation": {"X": 10.0, "Y": 0.0, "Z": 5.0},
+                        "AttachParent": {"ObjectPath": "PL.2"}}},
+        {"Properties": {"RelativeLocation": {"X": 1000.0, "Y": 2000.0, "Z": 0.0},
+                        "RelativeRotation": {"Pitch": 0, "Yaw": 90, "Roll": 0}}},
+    ]
+    loc = _actor_location(exports[0], exports)
+    # Rotate (10, 0) by yaw 90° -> (0, 10); add parent (1000, 2000) -> (1000, 2010).
+    assert loc["X"] == pytest.approx(1000.0, abs=1e-6)
+    assert loc["Y"] == pytest.approx(2010.0, abs=1e-6)
+    assert loc["Z"] == pytest.approx(5.0)
 
 
 def test_l10n_lang_tags_complete():
@@ -79,6 +108,15 @@ def test_extract_integration():
     assert len(realms) == 18
     assert all(p.get("nameByLng", {}).get("en-US") for p in realms)
     assert all(isinstance(p["location"]["X"], (int, float)) and isinstance(p["location"]["Y"], (int, float)) for p in out["pois"])
+    # Resource spawners attach to a BP_BoxPlacementTool parent; their world
+    # location must be composed from that parent (they used to collapse to a
+    # ~±3000 stripe around world origin). Assert they resolve inside MainWorld
+    # bounds and are spread across the map, not clustered at the origin.
+    resources = [p for p in out["pois"] if p["subtype"] in ("copper", "quartz", "coal", "sulfur")]
+    mn, mx = out["bounds"]["MainWorld"]["min"], out["bounds"]["MainWorld"]["max"]
+    assert resources
+    assert all(mn["X"] <= p["location"]["X"] <= mx["X"] and mn["Y"] <= p["location"]["Y"] <= mx["Y"] for p in resources)
+    assert max(abs(p["location"]["X"]) for p in resources) > 100000
     # 90 from DT_BossSpawnerLoactionData + 7 new field bosses (DT_PalSpawnerPlacement
     # FieldBoss) that table omits, e.g. BlackCentaur; overlapping ones are deduped.
     assert len(out["bosses"]) == 97

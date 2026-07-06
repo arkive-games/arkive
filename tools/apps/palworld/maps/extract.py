@@ -165,10 +165,32 @@ def _actor_location(actor: dict, exports: list) -> dict | None:
     idx = int(obj_path.split(".")[-1])
     if idx >= len(exports):
         return None
-    loc = (exports[idx].get("Properties") or {}).get("RelativeLocation")
+    comp = exports[idx]
+    loc = (comp.get("Properties") or {}).get("RelativeLocation")
     if not loc:
         return None
-    return {"X": loc["X"], "Y": loc["Y"], "Z": loc.get("Z", 0)}
+    x, y, z = loc["X"], loc["Y"], loc.get("Z", 0)
+    # Most actors' root component is unparented, so RelativeLocation IS the world
+    # position. But some spawners (copper/quartz/coal/sulfur ore rocks) attach
+    # their root to a BP_BoxPlacementTool parent, making RelativeLocation a small
+    # offset in the parent's frame. Compose the AttachParent chain — parent
+    # location + parent-yaw-rotated child offset — to recover the world position.
+    # (These parents carry only Z-yaw; pitch/roll are 0.)
+    parent = (comp.get("Properties") or {}).get("AttachParent")
+    depth = 0
+    while parent and depth < 16:
+        p_idx = int(parent["ObjectPath"].split(".")[-1])
+        if p_idx >= len(exports):
+            break
+        p_props = exports[p_idx].get("Properties") or {}
+        p_loc = p_props.get("RelativeLocation") or {}
+        yaw = math.radians((p_props.get("RelativeRotation") or {}).get("Yaw", 0) or 0)
+        cos, sin = math.cos(yaw), math.sin(yaw)
+        x, y = x * cos - y * sin + p_loc.get("X", 0), x * sin + y * cos + p_loc.get("Y", 0)
+        z += p_loc.get("Z", 0)
+        parent = p_props.get("AttachParent")
+        depth += 1
+    return {"X": x, "Y": y, "Z": z}
 
 
 def _grep_files(cwd: Path, pattern: str, includes: list[str]) -> list[str]:

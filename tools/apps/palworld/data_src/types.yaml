@@ -22,9 +22,6 @@ categories:
   - id: pal
     pinVariant: circular
     names: { en-US: Pals, ja-JP: パル, de-DE: Pals, es-ES: Pals, es-MX: Pals, fr-FR: Pals, id-ID: Pal, it-IT: Pal, ko-KR: 팰, pl-PL: Pale, pt-BR: Pals, ru-RU: Палы, th-TH: พัล, tr-TR: Pal'lar, vi-VN: Pal, zh-CN: 帕鲁, zh-TW: 帕魯 }
-  - id: enemy
-    pinVariant: circular
-    names: { en-US: Enemies, ja-JP: 敵, de-DE: Gegner, es-ES: Enemigos, es-MX: Enemigos, fr-FR: Ennemis, id-ID: Musuh, it-IT: Nemici, ko-KR: 적, pl-PL: Wrogowie, pt-BR: Inimigos, ru-RU: Враги, th-TH: ศัตรู, tr-TR: Düşmanlar, vi-VN: Kẻ địch, zh-CN: 敌人, zh-TW: 敵人 }
 subtypes:
   - id: fastTravel
     category: location
