@@ -36,7 +36,7 @@ const PAL_COLLAPSED_CATEGORIES = ['pal']
 
 // Location subtypes hidden by default (too dense / low-signal); the user can
 // still enable them from the filter sidebar.
-const DEFAULT_HIDDEN_LOCATIONS = new Set(['dungeon', 'camp'])
+const DEFAULT_HIDDEN_LOCATIONS = new Set(['dungeon', 'camp', 'sealedRealm'])
 
 export default function App() {
   const { t, i18n } = useTranslation()
