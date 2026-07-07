@@ -34,6 +34,11 @@ export type SearchPanelProps = {
   debounceMs?: number
   classNames?: { root?: string }
   /**
+   * "floating" (default): the desktop right-side absolute overlay.
+   * "inline": fills its container (used inside a mobile bottom sheet).
+   */
+  variant?: "floating" | "inline"
+  /**
    * Maps a result's DATA (x, y) to the coordinate pair shown on the card.
    * Default: identity. Fly-to still uses the raw DATA coords. An app supplies
    * this to display game-native coords (e.g. Palworld in-game coordinates).
@@ -109,6 +114,7 @@ export function SearchPanel({
   resultAside,
   initialQuery,
   onResultsChange,
+  variant = "floating",
 }: SearchPanelProps) {
   const [query, setQuery] = useState(initialQuery ?? "")
   const [debounced, setDebounced] = useState(initialQuery ?? "")
@@ -208,7 +214,9 @@ export function SearchPanel({
   return (
     <div
       className={cn(
-        "pointer-events-auto absolute top-3 right-3 bottom-3 z-[600] flex w-[290px] flex-col gap-2",
+        variant === "floating"
+          ? "pointer-events-auto absolute top-3 right-3 bottom-3 z-[600] flex w-[290px] flex-col gap-2"
+          : "flex h-full min-h-0 w-full flex-col gap-2",
         classNames?.root,
       )}
       data-testid="search-panel"
