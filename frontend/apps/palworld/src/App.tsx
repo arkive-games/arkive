@@ -454,8 +454,10 @@ export default function App() {
 
   if (isMobile) {
     return (
-      <div className="relative h-dvh w-screen overflow-hidden bg-background text-foreground">
-        <main className="absolute inset-0">{mapView}</main>
+      <div className="relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+        {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
+            gets a definite height and Leaflet sizes correctly on mount. */}
+        <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}</main>
 
         {/* Floating actions; sit above the bottom tab bar (h-14) + safe area. */}
         <div
