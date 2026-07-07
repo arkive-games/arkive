@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Input } from '@gamemap/ui'
-import { TopNav } from '../../components/TopNav'
+import { ContentPage } from '../../components/ContentPage'
 import { loadQuests, type QuestsBundle } from '../../lib/catalog'
 import { CatalogPageLoading } from '../catalog/components'
 import { questTypeLabel } from './labels'
@@ -51,10 +51,7 @@ export default function QuestListPage() {
   const tabs = ['all', ...types]
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <TopNav active="/quests" />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6">
+    <ContentPage active="/quests" title={t('quest.title')} maxWidth="max-w-3xl">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Input
               value={query}
@@ -123,8 +120,6 @@ export default function QuestListPage() {
               ))}
             </ul>
           )}
-        </div>
-      </div>
-    </div>
+    </ContentPage>
   )
 }

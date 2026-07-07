@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@gamemap/ui'
-import { TopNav } from '../../components/TopNav'
+import { ContentPage } from '../../components/ContentPage'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { itemTypeLabel } from '../catalog/labels'
 import { CatalogPageLoading, ItemGlyph, rarityBorderClass } from '../catalog/components'
@@ -60,10 +60,7 @@ export default function ItemListPage() {
   }, [bundle, query, cat])
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <TopNav active="/items" />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-4 py-6">
+    <ContentPage active="/items" title={t('item.title')} maxWidth="max-w-5xl">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Input
               value={query}
@@ -125,8 +122,6 @@ export default function ItemListPage() {
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </ContentPage>
   )
 }

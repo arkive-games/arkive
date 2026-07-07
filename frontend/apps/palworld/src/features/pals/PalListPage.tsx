@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Input } from '@gamemap/ui'
-import { TopNav } from '../../components/TopNav'
+import { ContentPage } from '../../components/ContentPage'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { PalCard, PalFilters, PalPageLoading, PalTable } from './components'
 import { filterStrings } from './filterStrings'
@@ -57,10 +57,7 @@ export default function PalListPage() {
   const roster = useFilteredPals(bundle, filter)
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <TopNav active="/pals" />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-6xl px-4 py-6">
+    <ContentPage active="/pals" title={t('pal.title')} maxWidth="max-w-6xl">
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
               value={filter.query}
@@ -114,8 +111,6 @@ export default function PalListPage() {
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </ContentPage>
   )
 }

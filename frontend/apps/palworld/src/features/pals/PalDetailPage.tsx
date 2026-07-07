@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight, Zap } from 'lucide-react'
-import { TopNav } from '../../components/TopNav'
+import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
   fillPassiveDesc,
@@ -466,11 +466,8 @@ export default function PalDetailPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <TopNav active="/pals" />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-4 py-6">{body}</div>
-      </div>
-    </div>
+    <ContentPage active="/pals" title={t('pal.title')} maxWidth="max-w-5xl">
+      {body}
+    </ContentPage>
   )
 }

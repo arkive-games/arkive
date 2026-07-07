@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Button } from '@gamemap/ui'
-import { TopNav } from '../../components/TopNav'
+import { ContentPage } from '../../components/ContentPage'
 import {
   comboKey,
   favKey,
@@ -125,10 +125,7 @@ export default function BreedingPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <TopNav active="/breeding" />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-4xl px-4 py-6">
+    <ContentPage active="/breeding" title={t('breeding.navBreeding')} maxWidth="max-w-4xl">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <PalPicker
               label={t('breeding.parentA')}
@@ -199,8 +196,6 @@ export default function BreedingPage() {
               ) : null}
             </>
           )}
-        </div>
-      </div>
-    </div>
+    </ContentPage>
   )
 }

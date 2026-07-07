@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@gamemap/ui'
-import { TopNav } from '../../components/TopNav'
+import { ContentPage } from '../../components/ContentPage'
 import { loadBuildings, type BuildingsBundle } from '../../lib/catalog'
 import { buildingTypeLabel } from '../catalog/labels'
 import { BuildingGlyph, CatalogPageLoading } from '../catalog/components'
@@ -62,10 +62,7 @@ export default function BuildingListPage() {
   }, [bundle, query, cat])
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <TopNav active="/buildings" />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-4 py-6">
+    <ContentPage active="/buildings" title={t('building.title')} maxWidth="max-w-5xl">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Input
               value={query}
@@ -115,15 +112,10 @@ export default function BuildingListPage() {
                   <span className="line-clamp-2 text-xs font-medium leading-tight">
                     {bundle.text[b.id]?.name ?? b.id}
                   </span>
-                  <span className="line-clamp-1 font-mono text-[10px] leading-tight text-muted-foreground">
-                    {b.id}
-                  </span>
                 </Link>
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </ContentPage>
   )
 }

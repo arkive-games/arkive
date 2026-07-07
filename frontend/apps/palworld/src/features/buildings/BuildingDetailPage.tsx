@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
-import { TopNav } from '../../components/TopNav'
+import { ContentPage } from '../../components/ContentPage'
 import {
   loadItems,
   loadBuildings,
@@ -151,11 +151,8 @@ export default function BuildingDetailPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <TopNav active="/buildings" />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-4 py-6">{body}</div>
-      </div>
-    </div>
+    <ContentPage active="/buildings" title={t('building.title')} maxWidth="max-w-5xl">
+      {body}
+    </ContentPage>
   )
 }

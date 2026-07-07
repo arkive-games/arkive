@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@gamemap/ui'
-import { TopNav } from '../../components/TopNav'
+import { ContentPage } from '../../components/ContentPage'
 import {
   loadItems,
   loadBuildings,
@@ -142,12 +142,9 @@ export default function TechnologyPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <TopNav active="/technology" />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-6xl px-4 py-6">
+    <ContentPage active="/technology" title={t('tech.title')} maxWidth="max-w-6xl">
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold">{t('tech.title')}</h1>
+            <h1 className="hidden text-2xl font-bold md:block">{t('tech.title')}</h1>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -161,9 +158,7 @@ export default function TechnologyPage() {
             ) : null}
           </div>
           {body}
-        </div>
-      </div>
-    </div>
+    </ContentPage>
   )
 }
 
