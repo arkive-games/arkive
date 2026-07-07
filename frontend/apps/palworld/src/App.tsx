@@ -15,6 +15,8 @@ import { toGameCoords } from './lib/coords'
 import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, useIsMobile } from '@gamemap/ui'
+import { SlidersHorizontal, Search as SearchIcon } from 'lucide-react'
 
 // A purely-numeric query is an exact Paldeck-id lookup: search only the idLabel
 // field, no prefix/fuzzy, so "11"/"011" find only No.011 — not the 110-119
@@ -59,6 +61,9 @@ export default function App() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const mapRef = useRef<MapRef>(null)
+  const isMobile = useIsMobile()
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [searchSheetOpen, setSearchSheetOpen] = useState(false)
   // Restore the persisted selection once at mount (null = nothing saved, so the
   // default selection below applies). Held in state so it seeds both the initial
   // `visible` set and the init guard without reading a ref during render.
@@ -353,6 +358,147 @@ export default function App() {
 
   if (!staticData) return <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">Loading…</div>
 
+  const mapSelect = (
+    <ShellMapSelect
+      classNames={{ wrapper: 'mb-3' }}
+      maps={staticData.maps.map((m) => ({
+        id: m.id,
+        label: staticData.mapsL10n[m.id]?.shortName ?? staticData.mapsL10n[m.id]?.name ?? m.id,
+      }))}
+      activeMapId={mapId}
+      onSelectMap={setMapId}
+      barStyle={{
+        background:
+          'linear-gradient(90deg, rgba(53,208,232,0) 0%, rgba(53,208,232,0.35) 54%, rgba(53,208,232,0) 100%)',
+        borderImage:
+          'linear-gradient(90deg, rgba(53,208,232,0), rgba(53,208,232,0.9), rgba(53,208,232,0)) 1',
+      }}
+    />
+  )
+
+  const filterPanel = (
+    <FilterPanel
+      categories={filterCategories}
+      onToggleSubtype={onToggle}
+      onSetCategory={onSetCategory}
+      // The pal list is huge; keep it collapsed by default so the smaller
+      // location/other categories stay readable. Users can still open it.
+      defaultCollapsedCategoryIds={PAL_COLLAPSED_CATEGORIES}
+      categoryToggleLabels={{ show: t('showAll'), hide: t('hideAll') }}
+      controls={[
+        {
+          id: 'show-all',
+          label: t('showAll'),
+          onClick: () => setVisible(new Set(staticData.types.subtypes.map((s) => s.id))),
+        },
+        { id: 'hide-all', label: t('hideAll'), onClick: () => setVisible(new Set()) },
+        {
+          id: 'show-tooltip',
+          label: t('showTooltip'),
+          onClick: () => setShowLabels((v) => !v),
+          active: showLabels,
+        },
+      ]}
+      classNames={{
+        controlButton: 'bg-secondary text-secondary-foreground',
+        controlButtonActive: 'bg-primary text-primary-foreground',
+        subtypeButton: 'bg-secondary text-secondary-foreground',
+        subtypeButtonActive: 'bg-primary text-primary-foreground',
+      }}
+    />
+  )
+
+  const searchPanel = (variant: 'floating' | 'inline') => (
+    <SearchPanel
+      items={searchItems}
+      onSelect={setSelectedMarkerId}
+      onFlyTo={setSelectedPosition}
+      onResultsChange={setSearchResultIds}
+      initialQuery={initialQuery}
+      labels={searchLabels}
+      displayCoords={displayCoords}
+      // Palworld's `description` is a spawn level range ("Lv.10–14"), not
+      // real text — searching it makes a numeric query match every marker
+      // of that level. Search name + Paldeck id only.
+      searchFields={['name', 'idLabel']}
+      resolveSearchOptions={palIdLookup}
+      searchOptions={PAL_SEARCH_OPTIONS}
+      variant={variant}
+    />
+  )
+
+  const mapView = (
+    <GameMapView
+      mapRef={mapRef}
+      map={map}
+      markers={engineMarkers}
+      regions={[]}
+      visibleSubtypes={visible}
+      showLabels={showLabels}
+      showBorders={false}
+      lodEnabled={false}
+      selectedMarkerId={selectedMarkerId}
+      forceShowIds={forceShowIds}
+      selectedPosition={selectedPosition}
+      onToggleMarker={onToggleMarker}
+      subzoneAt={subzoneAt}
+      displayCoords={displayCoords}
+      flyToDuration={0.5}
+      assets={palworldAssets}
+      theme={palworldTheme}
+      exposeTestHandle={import.meta.env.DEV}
+      renderPopupContent={renderPopupContent}
+      labels={labels}
+    />
+  )
+
+  if (isMobile) {
+    return (
+      <div className="relative h-dvh w-screen overflow-hidden bg-background text-foreground">
+        <main className="absolute inset-0">{mapView}</main>
+
+        {/* Floating actions; sit above the bottom tab bar (h-14) + safe area. */}
+        <div
+          className="absolute right-3 z-[700] flex flex-col gap-2"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4.5rem)' }}
+        >
+          <button
+            type="button"
+            data-testid="map-fab-search"
+            aria-label={t('search')}
+            onClick={() => setSearchSheetOpen(true)}
+            className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
+          >
+            <SearchIcon className="size-5" />
+          </button>
+          <button
+            type="button"
+            data-testid="map-fab-filter"
+            aria-label={t('filter')}
+            onClick={() => setFilterSheetOpen(true)}
+            className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-lg"
+          >
+            <SlidersHorizontal className="size-5" />
+          </button>
+        </div>
+
+        <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+          <SheetContent side="bottom" data-testid="filter-sheet" className="max-h-[85dvh]">
+            <SheetHeader>{mapSelect}</SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto">{filterPanel}</div>
+          </SheetContent>
+        </Sheet>
+
+        <Sheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
+          <SheetContent side="bottom" data-testid="search-sheet" className="h-[70dvh]">
+            <SheetTitle className="sr-only">{t('search')}</SheetTitle>
+            {searchPanel('inline')}
+          </SheetContent>
+        </Sheet>
+      </div>
+    )
+  }
+
   return (
     <ShellLayout
       className="bg-background text-foreground"
@@ -377,94 +523,15 @@ export default function App() {
               />
             </div>
           }
-          mapSelectorSlot={
-            <ShellMapSelect
-              classNames={{ wrapper: "mb-3" }}
-              maps={staticData.maps.map((m) => ({
-                id: m.id,
-                label: staticData.mapsL10n[m.id]?.shortName ?? staticData.mapsL10n[m.id]?.name ?? m.id,
-              }))}
-              activeMapId={mapId}
-              onSelectMap={setMapId}
-              barStyle={{
-                background:
-                  "linear-gradient(90deg, rgba(53,208,232,0) 0%, rgba(53,208,232,0.35) 54%, rgba(53,208,232,0) 100%)",
-                borderImage:
-                  "linear-gradient(90deg, rgba(53,208,232,0), rgba(53,208,232,0.9), rgba(53,208,232,0)) 1",
-              }}
-            />
-          }
+          mapSelectorSlot={mapSelect}
         >
-          <FilterPanel
-            categories={filterCategories}
-            onToggleSubtype={onToggle}
-            onSetCategory={onSetCategory}
-            // The pal list is huge; keep it collapsed by default so the smaller
-            // location/other categories stay readable. Users can still open it.
-            defaultCollapsedCategoryIds={PAL_COLLAPSED_CATEGORIES}
-            categoryToggleLabels={{ show: t('showAll'), hide: t('hideAll') }}
-            controls={[
-              {
-                id: 'show-all',
-                label: t('showAll'),
-                onClick: () => setVisible(new Set(staticData.types.subtypes.map((s) => s.id))),
-              },
-              { id: 'hide-all', label: t('hideAll'), onClick: () => setVisible(new Set()) },
-              {
-                id: 'show-tooltip',
-                label: t('showTooltip'),
-                onClick: () => setShowLabels((v) => !v),
-                active: showLabels,
-              },
-            ]}
-            classNames={{
-              controlButton: 'bg-secondary text-secondary-foreground',
-              controlButtonActive: 'bg-primary text-primary-foreground',
-              subtypeButton: 'bg-secondary text-secondary-foreground',
-              subtypeButtonActive: 'bg-primary text-primary-foreground',
-            }}
-          />
+          {filterPanel}
         </ShellSidebar>
       }
     >
       <main className="relative flex min-w-0 flex-1 overflow-hidden">
-          <GameMapView
-            mapRef={mapRef}
-            map={map}
-            markers={engineMarkers}
-            regions={[]}
-            visibleSubtypes={visible}
-            showLabels={showLabels}
-            showBorders={false}
-            lodEnabled={false}
-            selectedMarkerId={selectedMarkerId}
-            forceShowIds={forceShowIds}
-            selectedPosition={selectedPosition}
-            onToggleMarker={onToggleMarker}
-            subzoneAt={subzoneAt}
-            displayCoords={displayCoords}
-            flyToDuration={0.5}
-            assets={palworldAssets}
-            theme={palworldTheme}
-            exposeTestHandle={import.meta.env.DEV}
-            renderPopupContent={renderPopupContent}
-            labels={labels}
-          />
-          <SearchPanel
-            items={searchItems}
-            onSelect={setSelectedMarkerId}
-            onFlyTo={setSelectedPosition}
-            onResultsChange={setSearchResultIds}
-            initialQuery={initialQuery}
-            labels={searchLabels}
-            displayCoords={displayCoords}
-            // Palworld's `description` is a spawn level range ("Lv.10–14"), not
-            // real text — searching it makes a numeric query match every marker
-            // of that level. Search name + Paldeck id only.
-            searchFields={['name', 'idLabel']}
-            resolveSearchOptions={palIdLookup}
-            searchOptions={PAL_SEARCH_OPTIONS}
-          />
+        {mapView}
+        {searchPanel('floating')}
       </main>
     </ShellLayout>
   )
