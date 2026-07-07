@@ -19,7 +19,7 @@ export interface ShellLayoutProps {
  */
 export function ShellLayout({ sidebar, topBar, children, className }: ShellLayoutProps) {
   return (
-    <div className={cn("flex h-screen w-screen overflow-hidden", className)}>
+    <div className={cn("flex h-dvh w-screen overflow-hidden", className)}>
       {sidebar}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {topBar}
