@@ -38,12 +38,34 @@ const PAL_COLLAPSED_CATEGORIES = ['pal']
 // still enable them from the filter sidebar.
 const DEFAULT_HIDDEN_LOCATIONS = new Set(['dungeon', 'camp', 'sealedRealm'])
 
+// Persist the map's visible-subtype selection across reloads. The selection is
+// global (subtypes are a shared taxonomy, not reset on map switch), so a single
+// key suffices.
+const MAP_VISIBLE_KEY = 'palworld.map.visibleSubtypes'
+
+/** Read the persisted set of visible subtypes; null when nothing is saved yet. */
+function readStoredSubtypes(): Set<string> | null {
+  try {
+    const raw = localStorage.getItem(MAP_VISIBLE_KEY)
+    if (!raw) return null
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? new Set(arr as string[]) : null
+  } catch {
+    return null
+  }
+}
+
 export default function App() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const mapRef = useRef<MapRef>(null)
-  // Track whether visible-subtypes have been initialized at least once
-  const visibleInitialized = useRef(false)
+  // Restore the persisted selection once at mount (null = nothing saved, so the
+  // default selection below applies). Held in state so it seeds both the initial
+  // `visible` set and the init guard without reading a ref during render.
+  const [restoredVisible] = useState<Set<string> | null>(readStoredSubtypes)
+  // Skip the default-selection init below when a saved set was restored — even
+  // an empty one, since the user may have deliberately hidden everything.
+  const visibleInitialized = useRef(restoredVisible != null)
 
   // Deep-link params (?map=… & ?q=…): open a given map with the search box
   // prefilled — used by the Paldeck "view on full map" link.
@@ -58,7 +80,7 @@ export default function App() {
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
   const [palsBundle, setPalsBundle] = useState<PalsBundle | null>(null)
   const [markerData, setMarkerData] = useState<{ markers: MarkerRow[]; l10n: MarkerLocale } | null>(null)
-  const [visible, setVisible] = useState<Set<string>>(new Set())
+  const [visible, setVisible] = useState<Set<string>>(() => restoredVisible ?? new Set())
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
   const [selectedPosition, setSelectedPosition] = useState<{ x: number; y: number } | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -91,6 +113,13 @@ export default function App() {
       })
     return () => { cancelled = true }
   }, [lng, t])
+
+  // Persist the visible-subtype selection so it survives reloads.
+  useEffect(() => {
+    try {
+      localStorage.setItem(MAP_VISIBLE_KEY, JSON.stringify([...visible]))
+    } catch { /* no storage */ }
+  }, [visible])
 
   // Encyclopedia data (elements/best-work) for enriching pal marker popups.
   useEffect(() => {

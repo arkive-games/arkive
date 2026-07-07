@@ -7,6 +7,21 @@ import { PalCard, PalFilters, PalPageLoading, PalTable } from './components'
 import { filterStrings } from './filterStrings'
 import { EMPTY_FILTER, useFilteredPals, type PalFilter } from './useFilteredPals'
 
+// Persist the pal-list filter across reloads.
+const PAL_FILTER_KEY = 'palworld.pals.filter'
+
+/** Read the persisted filter, merged onto EMPTY_FILTER so a stored object with
+ *  missing or since-added fields stays valid. */
+function readStoredFilter(): PalFilter {
+  try {
+    const raw = localStorage.getItem(PAL_FILTER_KEY)
+    if (!raw) return EMPTY_FILTER
+    return { ...EMPTY_FILTER, ...(JSON.parse(raw) as Partial<PalFilter>) }
+  } catch {
+    return EMPTY_FILTER
+  }
+}
+
 export default function PalListPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -14,8 +29,14 @@ export default function PalListPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<PalFilter>(EMPTY_FILTER)
+  const [filter, setFilter] = useState<PalFilter>(readStoredFilter)
   const [view, setView] = useState<'grid' | 'list'>('grid')
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PAL_FILTER_KEY, JSON.stringify(filter))
+    } catch { /* no storage */ }
+  }, [filter])
 
   useEffect(() => {
     let cancelled = false
