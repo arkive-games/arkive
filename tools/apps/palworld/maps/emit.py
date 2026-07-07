@@ -24,9 +24,27 @@ _TYPES_YAML = _HERE.parent / "data_src" / "types.yaml"
 
 _BOSS_PREFIX = re.compile(r"^BOSS_", re.IGNORECASE)
 
+_NPC_VERSION_SUFFIX = re.compile(r"_v?\d+$")
+
 
 def _base_id(pid: str) -> str:
     return _BOSS_PREFIX.sub("", pid)
+
+
+def _humanize_npc(npc_id: str) -> str:
+    """Readable label from an NPC id (UniqueName key or class suffix).
+
+    The game ships no clean id→localized-name table for placed NPCs, so we
+    derive a display label: strip the ``U_`` / gender / trailing-version noise,
+    split CamelCase and digit runs. e.g. ``U_Male_Farmer01_v01`` -> "Farmer 01",
+    ``BountyTrader`` -> "Bounty Trader", ``MedalTrader`` -> "Medal Trader"."""
+    s = re.sub(r"^U_", "", npc_id)
+    s = re.sub(r"^(?:Male|Female)_", "", s)
+    s = _NPC_VERSION_SUFFIX.sub("", s)
+    s = s.replace("_", " ")
+    s = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", s)
+    s = re.sub(r"(?<=[A-Za-z])(?=\d)", " ", s)
+    return re.sub(r"\s+", " ", s).strip() or npc_id
 
 
 def _pal_name(names: dict, pid: str) -> str:
@@ -247,6 +265,16 @@ def build_dataset(parsed: dict) -> dict:
         if is_real_pal(pred_pal):
             c["pal"] = pred_pal
         candidates[mid].append(c)
+
+    for n in parsed.get("npcs", []):
+        mid = assign_map(n["location"], assign_order)
+        if not mid:
+            continue
+        label = _humanize_npc(n["npcId"])
+        candidates[mid].append({
+            "subtype": "npc", **to_world(n["location"]), "sortKey": n["npcId"],
+            "nameByLng": {lng: label for lng in languages},
+        })
 
     # Pal spawns: split by pal id, cluster within each pal id only.
     by_map_pal = {mid: {} for mid in map_ids}

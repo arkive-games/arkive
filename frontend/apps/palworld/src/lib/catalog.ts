@@ -83,9 +83,34 @@ export interface TechEntry {
   icon?: string
 }
 
+export interface QuestLocation {
+  map: string
+  x: number
+  y: number
+  z: number
+}
+export interface QuestEntry {
+  id: string
+  /** Main | Sub | Hidden — the quest log tab. */
+  type: string
+  /** Game quest-table order (stable, language-independent). */
+  order: number
+  rewardExp?: number
+  rewardItems?: Material[]
+  /** Quest ids that auto-start when this one completes (the chain). */
+  nextQuests?: string[]
+  location?: QuestLocation
+}
+
 // --- locale shapes -----------------------------------------------------------
 export interface CatalogText {
   name: string
+  description?: string
+}
+
+/** Localized quest text: {title, description?}. From locales/<lng>/quests.json. */
+export interface QuestText {
+  title: string
   description?: string
 }
 
@@ -121,9 +146,16 @@ export interface TechBundle {
   text: Record<string, CatalogText>
 }
 
+export interface QuestsBundle {
+  quests: QuestEntry[]
+  byId: Map<string, QuestEntry>
+  text: Record<string, QuestText>
+}
+
 const itemsCache = new Map<string, Promise<ItemsBundle>>()
 const buildingsCache = new Map<string, Promise<BuildingsBundle>>()
 const techCache = new Map<string, Promise<TechBundle>>()
+const questsCache = new Map<string, Promise<QuestsBundle>>()
 
 async function fetchItems(lng: string): Promise<ItemsBundle> {
   const [file, text, labels] = await Promise.all([
@@ -187,6 +219,24 @@ export function loadTech(lng: string): Promise<TechBundle> {
   if (!p) {
     p = fetchTech(lng)
     techCache.set(lng, p)
+  }
+  return p
+}
+
+async function fetchQuests(lng: string): Promise<QuestsBundle> {
+  const [file, text] = await Promise.all([
+    j<{ quests: QuestEntry[] }>(`${DATA_BASE}/quests.json`),
+    j<Record<string, QuestText>>(`${DATA_BASE}/locales/${lng}/quests.json`),
+  ])
+  return { quests: file.quests, byId: new Map(file.quests.map((q) => [q.id, q])), text }
+}
+
+/** Load (and cache per language) the quest log dataset. */
+export function loadQuests(lng: string): Promise<QuestsBundle> {
+  let p = questsCache.get(lng)
+  if (!p) {
+    p = fetchQuests(lng)
+    questsCache.set(lng, p)
   }
   return p
 }

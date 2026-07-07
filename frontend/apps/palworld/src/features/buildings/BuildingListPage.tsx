@@ -52,8 +52,13 @@ export default function BuildingListPage() {
     const q = query.trim().toLowerCase()
     return bundle.buildings
       .filter((b) => cat === 'all' || b.typeA === cat)
-      .filter((b) => !q || (bundle.text[b.id]?.name ?? b.id).toLowerCase().includes(q))
-      .sort((a, b) => (bundle.text[a.id]?.name ?? a.id).localeCompare(bundle.text[b.id]?.name ?? b.id))
+      .filter(
+        (b) =>
+          !q ||
+          b.id.toLowerCase().includes(q) ||
+          (bundle.text[b.id]?.name ?? b.id).toLowerCase().includes(q),
+      )
+      .sort((a, b) => a.id.localeCompare(b.id))
   }, [bundle, query, cat])
 
   return (
@@ -109,6 +114,9 @@ export default function BuildingListPage() {
                   )}
                   <span className="line-clamp-2 text-xs font-medium leading-tight">
                     {bundle.text[b.id]?.name ?? b.id}
+                  </span>
+                  <span className="line-clamp-1 font-mono text-[10px] leading-tight text-muted-foreground">
+                    {b.id}
                   </span>
                 </Link>
               ))}

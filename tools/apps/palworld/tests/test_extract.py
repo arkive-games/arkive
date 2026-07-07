@@ -97,7 +97,9 @@ def test_extract_integration():
     assert by_subtype("eagleStatue") == 22
     assert by_subtype("dungeon") == 157
     assert by_subtype("treasureMap") == 42
-    assert by_subtype("note") == 15
+    # Notes are scanned from the persistent level (15) AND the world-partition
+    # cells, then deduped by rounded world location.
+    assert by_subtype("note") == 64
     assert by_subtype("copper") == 39
     assert by_subtype("quartz") == 27
     assert by_subtype("coal") == 23
@@ -135,3 +137,7 @@ def test_extract_integration():
     # Features added this session:
     assert len(out["wanted"]) == 33
     assert len(out["predators"]) == 29
+    # Placed NPC spawners (talkable / merchant / quest), level + cells, deduped.
+    assert len(out["npcs"]) == 127
+    assert all(n["npcId"] and isinstance(n["location"]["X"], (int, float)) for n in out["npcs"])
+    assert any(n["npcId"] == "MedalTrader" for n in out["npcs"])

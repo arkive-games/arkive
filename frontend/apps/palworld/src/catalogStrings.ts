@@ -58,6 +58,7 @@ export interface CatalogStrings {
     viewInEncyclopedia: string
     all: string
     section: { description: string; materials: string; info: string }
+    id: string
     type: string
     rank: string
     energy: string
@@ -115,6 +116,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Attack', defense: 'Defense', hp: 'HP', shield: 'Shield', magicAttack: 'Magic Attack', magicDefense: 'Magic Defense', durability: 'Durability', magazine: 'Magazine' },
     },
     building: {
+      id: 'ID',
       title: 'Buildings',
       searchPlaceholder: 'Search buildings…',
       count: '{{count}} buildings',
@@ -178,6 +180,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Angriff', defense: 'Verteidigung', hp: 'LP', shield: 'Schild', magicAttack: 'Magieangriff', magicDefense: 'Magieabwehr', durability: 'Haltbarkeit', magazine: 'Magazin' },
     },
     building: {
+      id: 'ID',
       title: 'Gebäude',
       searchPlaceholder: 'Gebäude suchen…',
       count: '{{count}} Gebäude',
@@ -241,6 +244,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Ataque', defense: 'Defensa', hp: 'PS', shield: 'Escudo', magicAttack: 'Ataque mágico', magicDefense: 'Defensa mágica', durability: 'Durabilidad', magazine: 'Cargador' },
     },
     building: {
+      id: 'ID',
       title: 'Construcciones',
       searchPlaceholder: 'Buscar construcciones…',
       count: '{{count}} construcciones',
@@ -304,6 +308,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Ataque', defense: 'Defensa', hp: 'PS', shield: 'Escudo', magicAttack: 'Ataque mágico', magicDefense: 'Defensa mágica', durability: 'Durabilidad', magazine: 'Cargador' },
     },
     building: {
+      id: 'ID',
       title: 'Construcciones',
       searchPlaceholder: 'Buscar construcciones…',
       count: '{{count}} construcciones',
@@ -367,6 +372,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Attaque', defense: 'Défense', hp: 'PV', shield: 'Bouclier', magicAttack: 'Attaque magique', magicDefense: 'Défense magique', durability: 'Durabilité', magazine: 'Chargeur' },
     },
     building: {
+      id: 'ID',
       title: 'Bâtiments',
       searchPlaceholder: 'Rechercher des bâtiments…',
       count: '{{count}} bâtiments',
@@ -430,6 +436,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Serangan', defense: 'Pertahanan', hp: 'HP', shield: 'Perisai', magicAttack: 'Serangan Sihir', magicDefense: 'Pertahanan Sihir', durability: 'Daya Tahan', magazine: 'Magasin' },
     },
     building: {
+      id: 'ID',
       title: 'Bangunan',
       searchPlaceholder: 'Cari bangunan…',
       count: '{{count}} bangunan',
@@ -493,6 +500,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Attacco', defense: 'Difesa', hp: 'PS', shield: 'Scudo', magicAttack: 'Attacco magico', magicDefense: 'Difesa magica', durability: 'Durabilità', magazine: 'Caricatore' },
     },
     building: {
+      id: 'ID',
       title: 'Costruzioni',
       searchPlaceholder: 'Cerca costruzioni…',
       count: '{{count}} costruzioni',
@@ -556,6 +564,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: '攻撃', defense: '防御', hp: 'HP', shield: 'シールド', magicAttack: '魔法攻撃', magicDefense: '魔法防御', durability: '耐久度', magazine: '装弾数' },
     },
     building: {
+      id: 'ID',
       title: '建築物',
       searchPlaceholder: '建築物を検索…',
       count: '{{count}} 個',
@@ -619,6 +628,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: '공격', defense: '방어', hp: 'HP', shield: '실드', magicAttack: '마법 공격', magicDefense: '마법 방어', durability: '내구도', magazine: '탄창' },
     },
     building: {
+      id: 'ID',
       title: '건축물',
       searchPlaceholder: '건축물 검색…',
       count: '{{count}}개',
@@ -682,6 +692,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Atak', defense: 'Obrona', hp: 'PŻ', shield: 'Tarcza', magicAttack: 'Atak magiczny', magicDefense: 'Obrona magiczna', durability: 'Wytrzymałość', magazine: 'Magazynek' },
     },
     building: {
+      id: 'ID',
       title: 'Budynki',
       searchPlaceholder: 'Szukaj budynków…',
       count: 'Budynki: {{count}}',
@@ -745,6 +756,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Ataque', defense: 'Defesa', hp: 'PV', shield: 'Escudo', magicAttack: 'Ataque mágico', magicDefense: 'Defesa mágica', durability: 'Durabilidade', magazine: 'Carregador' },
     },
     building: {
+      id: 'ID',
       title: 'Construções',
       searchPlaceholder: 'Buscar construções…',
       count: '{{count}} construções',
@@ -808,6 +820,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Атака', defense: 'Защита', hp: 'ОЗ', shield: 'Щит', magicAttack: 'Магическая атака', magicDefense: 'Магическая защита', durability: 'Прочность', magazine: 'Магазин' },
     },
     building: {
+      id: 'ID',
       title: 'Постройки',
       searchPlaceholder: 'Поиск построек…',
       count: 'Построек: {{count}}',
@@ -871,6 +884,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'โจมตี', defense: 'ป้องกัน', hp: 'HP', shield: 'โล่', magicAttack: 'โจมตีเวท', magicDefense: 'ป้องกันเวท', durability: 'ความทนทาน', magazine: 'แม็กกาซีน' },
     },
     building: {
+      id: 'ID',
       title: 'สิ่งก่อสร้าง',
       searchPlaceholder: 'ค้นหาสิ่งก่อสร้าง…',
       count: '{{count}} รายการ',
@@ -934,6 +948,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Saldırı', defense: 'Savunma', hp: 'CP', shield: 'Kalkan', magicAttack: 'Büyü Saldırısı', magicDefense: 'Büyü Savunması', durability: 'Dayanıklılık', magazine: 'Şarjör' },
     },
     building: {
+      id: 'ID',
       title: 'Yapılar',
       searchPlaceholder: 'Yapı ara…',
       count: '{{count}} yapı',
@@ -997,6 +1012,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: 'Tấn công', defense: 'Phòng thủ', hp: 'HP', shield: 'Khiên', magicAttack: 'Tấn công phép', magicDefense: 'Phòng thủ phép', durability: 'Độ bền', magazine: 'Băng đạn' },
     },
     building: {
+      id: 'ID',
       title: 'Công trình',
       searchPlaceholder: 'Tìm công trình…',
       count: '{{count}} công trình',
@@ -1060,6 +1076,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: '攻击', defense: '防御', hp: '生命值', shield: '护盾', magicAttack: '魔法攻击', magicDefense: '魔法防御', durability: '耐久度', magazine: '弹匣' },
     },
     building: {
+      id: 'ID',
       title: '建筑',
       searchPlaceholder: '搜索建筑…',
       count: '{{count}} 个建筑',
@@ -1123,6 +1140,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
       equip: { attack: '攻擊', defense: '防禦', hp: '生命值', shield: '護盾', magicAttack: '魔法攻擊', magicDefense: '魔法防禦', durability: '耐久度', magazine: '彈匣' },
     },
     building: {
+      id: 'ID',
       title: '建築',
       searchPlaceholder: '搜尋建築…',
       count: '{{count}} 個建築',

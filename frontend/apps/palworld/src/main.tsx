@@ -21,6 +21,8 @@ import ItemDetailPage from './features/items/ItemDetailPage'
 import BuildingListPage from './features/buildings/BuildingListPage'
 import BuildingDetailPage from './features/buildings/BuildingDetailPage'
 import TechnologyPage from './features/technology/TechnologyPage'
+import QuestListPage from './features/quests/QuestListPage'
+import QuestDetailPage from './features/quests/QuestDetailPage'
 
 const THEME_KEY = 'palworld.theme'
 const themeStorage: ThemeStorage = {
@@ -106,6 +108,16 @@ const technologyRoute = createRoute({
   path: '/technology',
   component: TechnologyPage,
 })
+const questsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quests',
+  component: QuestListPage,
+})
+const questDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quests/$id',
+  component: QuestDetailPage,
+})
 const routeTree = rootRoute.addChildren([
   mapRoute,
   breedingRoute,
@@ -116,6 +128,8 @@ const routeTree = rootRoute.addChildren([
   buildingsRoute,
   buildingDetailRoute,
   technologyRoute,
+  questsRoute,
+  questDetailRoute,
 ])
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
 declare module '@tanstack/react-router' {

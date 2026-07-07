@@ -54,14 +54,26 @@ CELL_CLASSES = [
     ("oil", re.compile(r"^BP_LevelObject_OilField_C$")),
     ("skyIslandOre", re.compile(r"^BP_PalMapObjectSpawner_SkyIslandOre_C$")),
     ("worldTreeOre", re.compile(r"^BP_PalMapObjectSpawner_WorldTreeOre_C$")),
+    # Collectible notes: only ~15 sit in the always-loaded persistent level; the
+    # rest live in the world-partition cells (the L15 aggregate). Scan both and
+    # dedup globally (see _dedup_pois_by_location) so all note pickups surface.
+    ("note", re.compile(r"^BP_LevelObject_Note_C$")),
 ]
 CELL_GREP = (
     "BP_LevelObject_Relic|BP_PalMapObjectSpawner_SkillFruits_|"
     "palmapobjectspawner_palegg_|BP_PalMapObjectSpawner_Treasure_|"
     "BP_NPCCampSpawner_|BP_OilrigTreasureBoxSpawner_C|"
     "BP_LevelObject_OilField_C|BP_PalMapObjectSpawner_SkyIslandOre_C|"
-    "BP_PalMapObjectSpawner_WorldTreeOre_C"
+    "BP_PalMapObjectSpawner_WorldTreeOre_C|BP_LevelObject_Note_C"
 )
+
+# NPC spawners placed on the map: the generic BP_MonoNPCSpawner_C carries a
+# UniqueName key (e.g. "BountyTrader", "U_Male_Farmer01_v01"); named variants
+# (BP_MonoNPCSpawner_MedalTrader_C, BP_QuestTargetNPCSpawner_Breeder03_C) bake
+# the identity into the class name. We surface these talkable/merchant/quest
+# NPCs; combat squads, enemy-dungeon spawns and decorative "_NPC_C" props are
+# intentionally excluded.
+NPC_SPAWNER_RX = re.compile(r"^BP_(?:Mono|QuestTarget)NPCSpawner(?:_([A-Za-z0-9]+))?_C$")
 
 # Per-pal effigy buff-relics: BP_LevelObject_Relic_<Pal>_C (e.g. _SheepBall_C).
 # They share the PalLevelObjectRelic base with the plain Lifmunk Effigy
@@ -244,6 +256,67 @@ def _extract_cell_pois(raw: Path) -> list[dict]:
     return pois
 
 
+def _dedup_pois_by_location(pois: list[dict], subtypes: set[str]) -> list[dict]:
+    """Drop duplicate POIs of the given subtypes at the same rounded world
+    location. Notes exist in BOTH the persistent level and the world-partition
+    cells (the L15 aggregate), so the combined list would otherwise double-count
+    them. Other subtypes are left untouched (first occurrence wins)."""
+    seen: set = set()
+    out: list[dict] = []
+    for p in pois:
+        if p["subtype"] in subtypes:
+            k = (p["subtype"], js_round(p["location"]["X"] / 100), js_round(p["location"]["Y"] / 100))
+            if k in seen:
+                continue
+            seen.add(k)
+        out.append(p)
+    return out
+
+
+def _npc_identity(exp: dict) -> str | None:
+    """Identity of an NPC spawner actor, or None if it isn't one we surface.
+
+    The generic ``BP_MonoNPCSpawner_C`` carries the identity in its
+    ``UniqueName`` key; named variants bake it into the class suffix. Prefer the
+    UniqueName key (more specific), else the class suffix."""
+    m = NPC_SPAWNER_RX.match(exp.get("Type") or "")
+    if not m:
+        return None
+    uk = ((exp.get("Properties") or {}).get("UniqueName") or {}).get("Key")
+    if uk and uk not in ("None", ""):
+        return uk
+    return m.group(1)  # class suffix (None for the bare BP_MonoNPCSpawner_C)
+
+
+def _extract_npcs(raw: Path, level: list) -> list[dict]:
+    """Talkable/merchant/quest NPC spawners from the persistent level and the
+    world-partition cells, deduped by (npcId, rounded world location)."""
+    npcs: list[dict] = []
+    seen: set = set()
+
+    def add(exp: dict, exports: list) -> None:
+        nid = _npc_identity(exp)
+        if not nid:
+            return
+        loc = _actor_location(exp, exports)
+        if not loc:
+            return
+        k = (nid, js_round(loc["X"] / 100), js_round(loc["Y"] / 100))
+        if k in seen:
+            return
+        seen.add(k)
+        npcs.append({"npcId": nid, "sourceName": exp["Name"], "location": loc})
+
+    for exp in level:
+        add(exp, level)
+    cells_dir = raw / _CELLS_REL
+    for rel in _grep_files(cells_dir, "NPCSpawner", ["MainGrid*.json"]):
+        arr = json.loads((cells_dir / rel).read_text(encoding="utf-8"))
+        for exp in arr:
+            add(exp, arr)
+    return npcs
+
+
 def _grep_count(cwd: Path, regex: str, target: str, include: str | None) -> int:
     args = ["grep", "-rhoEi"]
     if include:
@@ -326,6 +399,10 @@ def run_extract(raw: Path) -> dict:
         pois.append(poi)
     _strip_entrance_suffixes([p["nameByLng"] for p in pois if p["subtype"] == "tower" and "nameByLng" in p])
     pois.extend(_extract_cell_pois(raw))
+    # Notes are scanned from both the level and the cells; dedup the union.
+    pois = _dedup_pois_by_location(pois, {"note"})
+
+    npcs = _extract_npcs(raw, level)
 
     boss_rows = read_rows(raw / "DataTable/UI/DT_BossSpawnerLoactionData.json")
     bosses = []
@@ -562,7 +639,7 @@ def run_extract(raw: Path) -> dict:
         "bounds": bounds, "pois": pois, "bosses": bosses, "wanted": wanted,
         "predators": predators, "palSpawns": pal_spawns, "palMeta": pal_meta,
         "namesByLang": names_by_lang, "palIcons": pal_icons,
-        "effigyNames": effigy_names,
+        "effigyNames": effigy_names, "npcs": npcs,
         "newTypeCandidates": new_type_candidates,
     }
 

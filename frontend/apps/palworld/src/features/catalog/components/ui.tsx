@@ -63,7 +63,7 @@ export function CatalogNotFound({
   backLabel,
 }: {
   message: string
-  to: '/items' | '/buildings'
+  to: '/items' | '/buildings' | '/quests'
   backLabel: string
 }) {
   return (

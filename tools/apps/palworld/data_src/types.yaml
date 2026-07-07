@@ -22,6 +22,8 @@ categories:
   - id: pal
     pinVariant: circular
     names: { en-US: Pals, ja-JP: パル, de-DE: Pals, es-ES: Pals, es-MX: Pals, fr-FR: Pals, id-ID: Pal, it-IT: Pal, ko-KR: 팰, pl-PL: Pale, pt-BR: Pals, ru-RU: Палы, th-TH: พัล, tr-TR: Pal'lar, vi-VN: Pal, zh-CN: 帕鲁, zh-TW: 帕魯 }
+  - id: npc
+    names: { en-US: NPCs, ja-JP: NPC, de-DE: NSCs, es-ES: PNJ, es-MX: PNJ, fr-FR: PNJ, id-ID: NPC, it-IT: PNG, ko-KR: NPC, pl-PL: NPC, pt-BR: NPCs, ru-RU: НПС, th-TH: NPC, tr-TR: NPC'ler, vi-VN: NPC, zh-CN: NPC, zh-TW: NPC }
 subtypes:
   - id: fastTravel
     category: location
@@ -132,3 +134,7 @@ subtypes:
     category: pal
     clusterRadius: 200
     names: { en-US: Pal Spawn, ja-JP: パル出現地点, de-DE: Pal-Vorkommen, es-ES: Aparición de Pal, es-MX: Aparición de Pal, fr-FR: Apparition de Pal, id-ID: Kemunculan Pal, it-IT: Comparsa di Pal, ko-KR: 팰 출현 지점, pl-PL: Miejsce występowania Pali, pt-BR: Surgimento de Pal, ru-RU: Место обитания пала, th-TH: จุดเกิดพัล, tr-TR: Pal Çıkma Noktası, vi-VN: Điểm xuất hiện Pal, zh-CN: 帕鲁出没点, zh-TW: 帕魯出沒點 }
+  - id: npc
+    category: npc
+    color: "#38bdf8"
+    names: { en-US: NPC, ja-JP: NPC, de-DE: NSC, es-ES: PNJ, es-MX: PNJ, fr-FR: PNJ, id-ID: NPC, it-IT: PNG, ko-KR: NPC, pl-PL: NPC, pt-BR: NPC, ru-RU: НПС, th-TH: NPC, tr-TR: NPC, vi-VN: NPC, zh-CN: NPC, zh-TW: NPC }
