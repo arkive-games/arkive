@@ -141,3 +141,10 @@ def test_extract_integration():
     assert len(out["npcs"]) == 127
     assert all(n["npcId"] and isinstance(n["location"]["X"], (int, float)) for n in out["npcs"])
     assert any(n["npcId"] == "MedalTrader" for n in out["npcs"])
+    # Most NPCs resolve a localized name (DT_UniqueNPC -> DT_UniqueNPCText) and a
+    # portrait icon (DT_PalCharacterIconDataTable); a few quest-target NPCs don't.
+    named = [n for n in out["npcs"] if n.get("nameByLng", {}).get("en-US")]
+    iconed = [n for n in out["npcs"] if n.get("icon")]
+    assert len(named) >= 115 and len(iconed) >= 110
+    trader = next(n for n in out["npcs"] if n["npcId"] == "BountyTrader")
+    assert trader["nameByLng"]["ja-JP"] == "自警団の指名手配係" and trader["icon"]

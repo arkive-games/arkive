@@ -270,11 +270,16 @@ def build_dataset(parsed: dict) -> dict:
         mid = assign_map(n["location"], assign_order)
         if not mid:
             continue
-        label = _humanize_npc(n["npcId"])
-        candidates[mid].append({
+        # Prefer the game's localized NPC name; fall back to a humanized id for
+        # the few quest-target NPCs with no DT_UniqueNPC row.
+        name_by_lng = n.get("nameByLng") or {lng: _humanize_npc(n["npcId"]) for lng in languages}
+        cand = {
             "subtype": "npc", **to_world(n["location"]), "sortKey": n["npcId"],
-            "nameByLng": {lng: label for lng in languages},
-        })
+            "nameByLng": name_by_lng,
+        }
+        if n.get("icon"):
+            cand["icon"] = n["icon"]
+        candidates[mid].append(cand)
 
     # Pal spawns: split by pal id, cluster within each pal id only.
     by_map_pal = {mid: {} for mid in map_ids}

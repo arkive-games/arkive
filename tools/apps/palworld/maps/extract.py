@@ -288,9 +288,51 @@ def _npc_identity(exp: dict) -> str | None:
     return m.group(1)  # class suffix (None for the bare BP_MonoNPCSpawner_C)
 
 
+def _npc_name_icon(raw: Path):
+    """Resolver: NPC UniqueName -> (nameByLng | None, iconStem | None).
+
+    ``DT_UniqueNPC`` (keyed by the spawner's UniqueName) gives a ``NameTextID``
+    (localized in ``DT_UniqueNPCText``, with ``DT_HumanNameText`` as a fallback
+    for role-name ids) and a ``CharacterID``. ``DT_PalCharacterIconDataTable``
+    maps the UniqueName (or its CharacterID) to a portrait texture under
+    ``Texture/PalIcon``. A handful of quest-target NPCs have no row and fall back
+    to a humanized label + color pin in ``emit``."""
+    def _rows(rel: str) -> dict:
+        p = raw / rel
+        return read_rows(p) if p.exists() else {}
+
+    uniq = _rows("DataTable/Character/DT_UniqueNPC_Common.json")
+    icon_rows = _rows("DataTable/Character/DT_PalCharacterIconDataTable_Common.json")
+    unpc = _read_text_by_lang(raw, "DT_UniqueNPCText_Common.json")
+    human = _read_text_by_lang(raw, "DT_HumanNameText_Common.json")
+    tags = [JA_TAG, *L10N_LANG_TAGS.values()]
+
+    def _stem(row: dict | None) -> str:
+        path = (row.get("Icon") or {}).get("AssetPathName", "") if row else ""
+        return path.split(".")[-1] if path else ""
+
+    def resolve(npc_id: str) -> tuple[dict | None, str | None]:
+        row = uniq.get(npc_id) or {}
+        nt, cid = row.get("NameTextID"), row.get("CharacterID")
+        name_by_lng = {}
+        if nt and nt != "None":
+            for tag in tags:
+                nm = unpc.get(tag, {}).get(nt) or human.get(tag, {}).get(nt)
+                if nm:
+                    name_by_lng[tag] = nm
+        stem = _stem(icon_rows.get(npc_id)) or (_stem(icon_rows.get(cid)) if cid else "")
+        return (name_by_lng or None, stem or None)
+
+    return resolve
+
+
 def _extract_npcs(raw: Path, level: list) -> list[dict]:
     """Talkable/merchant/quest NPC spawners from the persistent level and the
-    world-partition cells, deduped by (npcId, rounded world location)."""
+    world-partition cells, deduped by (npcId, rounded world location).
+
+    Each NPC is enriched with a localized name and portrait icon resolved via
+    _npc_name_icon."""
+    resolve = _npc_name_icon(raw)
     npcs: list[dict] = []
     seen: set = set()
 
@@ -305,7 +347,13 @@ def _extract_npcs(raw: Path, level: list) -> list[dict]:
         if k in seen:
             return
         seen.add(k)
-        npcs.append({"npcId": nid, "sourceName": exp["Name"], "location": loc})
+        entry = {"npcId": nid, "sourceName": exp["Name"], "location": loc}
+        name_by_lng, icon = resolve(nid)
+        if name_by_lng:
+            entry["nameByLng"] = name_by_lng
+        if icon:
+            entry["icon"] = icon
+        npcs.append(entry)
 
     for exp in level:
         add(exp, level)
