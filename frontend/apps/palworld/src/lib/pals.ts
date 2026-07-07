@@ -102,6 +102,8 @@ export interface PalText {
   partnerSkill?: { name: string; desc?: string }
 }
 export interface SkillText { name: string; description?: string }
+/** Item-name locale entry (catalog.py shape). We use only `name` in pal views. */
+interface ItemText { name: string; description?: string }
 export interface EnumsLocale {
   elements: Record<string, string>
   work: Record<string, string>
@@ -137,20 +139,25 @@ export interface PalsBundle {
 const cache = new Map<string, Promise<PalsBundle>>()
 
 async function fetchBundle(lng: string): Promise<PalsBundle> {
-  const [palsFile, passivesFile, itemsFile, text, passiveText, skills, items, enums, partnerEffects, partnerTargets] = await Promise.all([
+  const [palsFile, passivesFile, itemsFile, text, passiveText, skills, itemsLoc, enums, partnerEffects, partnerTargets] = await Promise.all([
     j<{ pals: PalEntry[] }>(`${DATA_BASE}/pals.json`),
     j<{ passives: Passive[] }>(`${DATA_BASE}/passives.json`),
     j<{ items: { id: string; icon?: string }[] }>(`${DATA_BASE}/items.json`),
     j<Record<string, PalText>>(`${DATA_BASE}/locales/${lng}/pals.json`),
     j<Record<string, SkillText>>(`${DATA_BASE}/locales/${lng}/passives.json`),
     j<Record<string, SkillText>>(`${DATA_BASE}/locales/${lng}/skills.json`),
-    j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/items.json`),
+    // Item names come from catalog.py's file, shape {id: {name, description?}};
+    // we flatten it to {id: name} below since pal views only need the name.
+    j<Record<string, ItemText>>(`${DATA_BASE}/locales/${lng}/items.json`),
     j<EnumsLocale>(`${DATA_BASE}/locales/${lng}/enums.json`),
     j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerEffects.json`),
     j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerTargets.json`),
   ])
   const itemIcon: Record<string, string> = {}
   for (const it of itemsFile.items) if (it.icon) itemIcon[it.id] = it.icon
+  // Flatten catalog's {id: {name, description?}} to {id: name} for pal views.
+  const items: Record<string, string> = {}
+  for (const [id, v] of Object.entries(itemsLoc)) items[id] = v.name
   return {
     pals: palsFile.pals,
     byId: new Map(palsFile.pals.map((p) => [p.id, p])),

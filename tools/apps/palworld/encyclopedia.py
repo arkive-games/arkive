@@ -17,7 +17,6 @@ Outputs (mirrors the maps/breeding split):
       (partnerSkill.desc = DT_PalFirstActivatedInfoText prose, tokens resolved)
   data-palworld/locales/<tag>/skills.json     {wazaId: {name, description?}}
   data-palworld/locales/<tag>/passives.json   {passiveId: {name, description?}}
-  data-palworld/locales/<tag>/items.json      {itemId: name}
   data-palworld/locales/<tag>/enums.json      {elements: {Element: name}, work: {WorkType: name}}
   resource-palworld/icons/element_<Element>.webp   (9)
   resource-palworld/icons/work_<WorkType>.webp     (13, colored T_icon_palwork_NN)
@@ -804,8 +803,12 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             passives_loc[pid] = s
         write_json(data_out / "locales" / tag / "passives.json", passives_loc)
 
-        items_loc = {item: titem.get(item, item) for item in item_ids}
-        write_json(data_out / "locales" / tag / "items.json", items_loc)
+        # NB: the item-name locale (locales/<tag>/items.json) is owned solely by
+        # catalog.py, which emits the *full* item set in {id: {name, description?}}
+        # shape. This pipeline must NOT write it — doing so previously clobbered
+        # catalog's file with a pal-referenced subset in a flat {id: name} shape,
+        # breaking the item encyclopedia. Pal-referenced item names are read from
+        # catalog's file by the frontend (all such items are in catalog's set).
 
         enums_loc = {
             "elements": {e: tui.get(f"COMMON_ELEMENT_NAME_{e}", e) for e in ELEMENTS},
