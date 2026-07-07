@@ -26,7 +26,7 @@ export function TopNav({ active }: { active: NavKey }) {
 
   return (
     <ShellTopBar
-      classNames={{ root: 'border-b border-border bg-card text-card-foreground' }}
+      classNames={{ root: 'hidden border-b border-border bg-card text-card-foreground md:flex' }}
       nav={{
         items,
         renderItem: (item, className) => (
