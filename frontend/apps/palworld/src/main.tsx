@@ -23,6 +23,7 @@ import BuildingDetailPage from './features/buildings/BuildingDetailPage'
 import TechnologyPage from './features/technology/TechnologyPage'
 import QuestListPage from './features/quests/QuestListPage'
 import QuestDetailPage from './features/quests/QuestDetailPage'
+import { BottomTabBar } from './components/BottomTabBar'
 
 const THEME_KEY = 'palworld.theme'
 const themeStorage: ThemeStorage = {
@@ -41,7 +42,14 @@ const themeStorage: ThemeStorage = {
   },
 }
 
-const rootRoute = createRootRoute({ component: () => <Outlet /> })
+const rootRoute = createRootRoute({
+  component: () => (
+    <>
+      <Outlet />
+      <BottomTabBar />
+    </>
+  ),
+})
 export interface MapSearch {
   /** Prefill the marker search box (e.g. a pal name from the encyclopedia). */
   q?: string

@@ -29,6 +29,21 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
   'zh-TW': '繁體中文',
 }
 
+// Mobile-chrome labels (bottom-tab "More" sheet + map filter button). Merged
+// per-locale below so every language localizes them.
+export const MORE_LABELS: Record<Language, string> = {
+  'en-US': 'More', 'de-DE': 'Mehr', 'es-ES': 'Más', 'es-MX': 'Más', 'fr-FR': 'Plus',
+  'id-ID': 'Lainnya', 'it-IT': 'Altro', 'ja-JP': 'その他', 'ko-KR': '더보기', 'pl-PL': 'Więcej',
+  'pt-BR': 'Mais', 'ru-RU': 'Ещё', 'th-TH': 'เพิ่มเติม', 'tr-TR': 'Daha fazla', 'vi-VN': 'Thêm',
+  'zh-CN': '更多', 'zh-TW': '更多',
+}
+export const FILTER_LABELS: Record<Language, string> = {
+  'en-US': 'Filters', 'de-DE': 'Filter', 'es-ES': 'Filtros', 'es-MX': 'Filtros', 'fr-FR': 'Filtres',
+  'id-ID': 'Filter', 'it-IT': 'Filtri', 'ja-JP': 'フィルター', 'ko-KR': '필터', 'pl-PL': 'Filtry',
+  'pt-BR': 'Filtros', 'ru-RU': 'Фильтры', 'th-TH': 'ตัวกรอง', 'tr-TR': 'Filtreler', 'vi-VN': 'Bộ lọc',
+  'zh-CN': '筛选', 'zh-TW': '篩選',
+}
+
 const resources = {
   'en-US': {
     translation: {
@@ -502,6 +517,8 @@ for (const lng of LANGUAGES) {
       tech: CATALOG_STRINGS[lng].tech,
       quest: QUEST_STRINGS[lng] ?? QUEST_STRINGS['en-US'],
       catalogLoading: CATALOG_STRINGS[lng].loading,
+      more: MORE_LABELS[lng],
+      filter: FILTER_LABELS[lng],
     },
     true,
     true,
