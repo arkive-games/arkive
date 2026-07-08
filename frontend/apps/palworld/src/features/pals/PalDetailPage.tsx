@@ -44,6 +44,17 @@ const STAT_KEYS = [
   'price',
 ] as const
 
+// Movement speeds (raw world units). A `-1` value is the game's "no such speed"
+// sentinel and renders as an em-dash.
+const SPEED_KEYS = [
+  'slowWalkSpeed',
+  'walkSpeed',
+  'runSpeed',
+  'rideSprintSpeed',
+  'transportSpeed',
+  'swimSpeed',
+] as const
+
 // Join per-rank values with " / ", but collapse to a single value when every rank
 // is identical (e.g. 100 / 100 / 100 / 100 / 100 → 100).
 function joinRanks(vals: readonly (number | string)[]): string {
@@ -344,11 +355,12 @@ export default function PalDetailPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs text-muted-foreground">
-                      <th className="whitespace-nowrap pb-1 pr-2 text-center font-medium">{t('pal.lv')}</th>
-                      <th className="pb-1 pr-2 font-medium">{t('pal.skill')}</th>
-                      <th className="whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.power')}</th>
-                      <th className="whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.range')}</th>
-                      <th className="whitespace-nowrap pb-1 text-right font-medium">{t('pal.cooldown')}</th>
+                      <th className="w-px whitespace-nowrap pb-1 pr-2 text-center font-medium">{t('pal.lv')}</th>
+                      <th className="w-full pb-1 pr-2 font-medium">{t('pal.skill')}</th>
+                      <th className="w-px whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.power')}</th>
+                      <th className="w-px whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.cooldown')}</th>
+                      <th className="w-px whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.range')}</th>
+                      <th className="w-px whitespace-nowrap pb-1 font-medium">{t('pal.type')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -357,6 +369,7 @@ export default function PalDetailPage() {
                         key={`${s.wazaId}-${s.level}`}
                         skill={s}
                         name={bundle.skills[s.wazaId]?.name ?? s.wazaId}
+                        typeLabel={t(s.category === 'Melee' ? 'pal.melee' : 'pal.ranged')}
                         description={resolveCharacterNames(bundle.skills[s.wazaId]?.description, bundle.text)}
                       />
                     ))}
@@ -415,6 +428,23 @@ export default function PalDetailPage() {
               <InfoRows>
                 {STAT_KEYS.map((k) => (
                   <StatRow key={k} label={t(`pal.stat.${k}`)} value={pal.stats[k]} />
+                ))}
+                <StatRow label={t('pal.stat.size')} value={pal.size || '—'} />
+                <StatRow label={t('pal.stat.rarity')} value={pal.rarity} />
+                <StatRow
+                  label={t('pal.stat.gender')}
+                  value={
+                    pal.stats.maleProbability < 0
+                      ? t('pal.genderless')
+                      : `♂ ${pal.stats.maleProbability}% · ♀ ${100 - pal.stats.maleProbability}%`
+                  }
+                />
+                {SPEED_KEYS.map((k) => (
+                  <StatRow
+                    key={k}
+                    label={t(`pal.stat.${k}`)}
+                    value={pal.stats[k] < 0 ? '—' : pal.stats[k]}
+                  />
                 ))}
               </InfoRows>
             </PalSection>

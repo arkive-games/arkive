@@ -96,18 +96,17 @@ export function PalSpawnMap({
       ...(kind === 'boss' ? { ringColor: BOSS_RING } : {}),
     })
 
-  const { bounds, fit } = useMemo(() => {
-    if (!map || !current) return { bounds: null, fit: null }
+  // Full map extent — the embedded map opens zoomed out to show the whole map
+  // (rather than fitting tightly to this pal's spawn cluster).
+  const bounds = useMemo(() => {
+    if (!map) return null
     const width = map.tileWidth * map.tilesCountX
     const height = map.tileHeight * map.tilesCountY
-    const full: L.LatLngBoundsExpression = [
+    return [
       [0, 0],
       [height, width],
-    ]
-    const pts = current.points.map((p) => dataToLatLng(map, p.x, p.y))
-    if (!pts.length) return { bounds: full, fit: full }
-    return { bounds: full, fit: L.latLngBounds(pts).pad(0.4) }
-  }, [map, current])
+    ] as L.LatLngBoundsExpression
+  }, [map])
 
   if (spawns && spawns.length === 0) {
     return (
@@ -150,7 +149,7 @@ export function PalSpawnMap({
       >
         <MapContainer
           key={`${map.id}:${current.points.length}`}
-          bounds={fit ?? bounds}
+          bounds={bounds}
           maxBounds={bounds}
           crs={L.CRS.Simple}
           minZoom={-4}

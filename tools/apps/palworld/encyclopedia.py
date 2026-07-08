@@ -214,10 +214,12 @@ def _stats(r: dict) -> dict:
         "captureRate": round2(r.get("CaptureRateCorrect", 1.0)),
         "price": int(r.get("Price", 0)),
         "maleProbability": r.get("MaleProbability", 0),
+        "slowWalkSpeed": r.get("SlowWalkSpeed", 0),
         "walkSpeed": r.get("WalkSpeed", 0),
         "runSpeed": r.get("RunSpeed", 0),
         "rideSprintSpeed": r.get("RideSprintSpeed", 0),
         "transportSpeed": r.get("TransportSpeed", 0),
+        "swimSpeed": r.get("SwimSpeed", 0),
     }
 
 

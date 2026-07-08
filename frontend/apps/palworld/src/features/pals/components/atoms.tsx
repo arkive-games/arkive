@@ -97,39 +97,55 @@ export function formatSkillRange(minRange: number, maxRange: number): string {
   return minRange > 0 ? `${m(minRange)}–${m(maxRange)} m` : `${m(maxRange)} m`
 }
 
-/** One row of the active-skill table. Render inside a <tbody>. */
+/** One active skill, rendered as two rows inside a <tbody>: the first row holds
+ *  the stat columns (name, melee/ranged type, power, range, cooldown); the
+ *  second is a single merged cell with the skill description. The level cell
+ *  spans both rows (rowspan) and is vertically centred. */
 export function ActiveSkillRow({
   skill,
   name,
+  typeLabel,
   description,
-  categoryLabel,
 }: {
   skill: ActiveSkill
   name: string
+  typeLabel: string
   description?: string
-  categoryLabel?: string
 }) {
+  const hasDesc = !!description
+  const top = hasDesc ? 'pt-2' : 'py-2'
   return (
-    <tr className="border-t border-border/60 align-top">
-      <td className="py-2 pr-2 text-center tabular-nums text-muted-foreground">{skill.level}</td>
-      <td className="py-2 pr-2">
-        <div className="flex items-center gap-1.5 font-medium">
-          <IconImg src={elementIconUrl(skill.element as Element)} alt="" size={16} />
-          {name}
-        </div>
-        {description ? (
-          <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
-        ) : null}
-        {categoryLabel ? (
-          <div className="mt-0.5 text-xs text-muted-foreground/80">{categoryLabel}</div>
-        ) : null}
-      </td>
-      <td className="py-2 pr-2 text-right tabular-nums">{skill.power || '—'}</td>
-      <td className="py-2 pr-2 text-right tabular-nums text-muted-foreground">
-        {formatSkillRange(skill.minRange, skill.maxRange)}
-      </td>
-      <td className="py-2 text-right tabular-nums text-muted-foreground">{skill.coolTime}s</td>
-    </tr>
+    <>
+      <tr className="border-t border-border/60">
+        <td
+          rowSpan={hasDesc ? 2 : 1}
+          className="px-1 pr-2 text-center align-middle tabular-nums text-muted-foreground"
+        >
+          {skill.level}
+        </td>
+        <td className={cn('pr-2 align-top', top)}>
+          <div className="flex items-center gap-1.5 font-medium">
+            <IconImg src={elementIconUrl(skill.element as Element)} alt="" size={16} />
+            {name}
+          </div>
+        </td>
+        <td className={cn('whitespace-nowrap pr-2 text-right align-top tabular-nums', top)}>{skill.power || '—'}</td>
+        <td className={cn('whitespace-nowrap pr-2 text-right align-top tabular-nums text-muted-foreground', top)}>
+          {skill.coolTime}s
+        </td>
+        <td className={cn('whitespace-nowrap pr-2 text-right align-top tabular-nums text-muted-foreground', top)}>
+          {formatSkillRange(skill.minRange, skill.maxRange)}
+        </td>
+        <td className={cn('whitespace-nowrap align-top text-muted-foreground', top)}>{typeLabel}</td>
+      </tr>
+      {hasDesc ? (
+        <tr>
+          <td colSpan={5} className="pb-2 pr-2 text-xs text-muted-foreground">
+            {description}
+          </td>
+        </tr>
+      ) : null}
+    </>
   )
 }
 
