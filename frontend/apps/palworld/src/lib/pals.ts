@@ -314,9 +314,9 @@ export function buildActiveSkills(bundle: PalsBundle): ActiveSkillEntry[] {
       if (!e) {
         e = {
           wazaId: s.wazaId,
-          // A few boss/unreleased skills ship an empty localized name — fall
-          // back to the raw id rather than render a blank cell.
-          name: bundle.skills[s.wazaId]?.name || s.wazaId,
+          // Localized name; empty when the skill has no L10N entry (some
+          // boss/unreleased skills). Callers surface the raw `wazaId` instead.
+          name: bundle.skills[s.wazaId]?.name ?? '',
           description: resolveCharacterNames(bundle.skills[s.wazaId]?.description, bundle.text),
           element: s.element as Element,
           melee: s.category === 'Melee',

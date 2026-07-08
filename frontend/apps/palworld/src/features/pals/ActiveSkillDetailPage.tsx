@@ -79,7 +79,7 @@ export default function ActiveSkillDetailPage() {
             }}
           />
           <div className="min-w-0">
-            <h1 className="text-3xl font-bold">{skill.name}</h1>
+            <h1 className="text-3xl font-bold break-words">{skill.name || skill.wazaId}</h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <ElementBadge element={skill.element as Element} label={bundle.enums.elements[skill.element] ?? skill.element} />
               <span

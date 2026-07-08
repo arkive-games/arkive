@@ -142,8 +142,8 @@ export default function ActiveSkillsPage() {
           <table className="w-full min-w-[720px] border-collapse text-sm">
             <thead className="bg-secondary/50 text-left text-xs font-semibold text-muted-foreground">
               <tr>
-                <th className="px-2 py-2">{t('pal.skill')}</th>
-                <th className="px-2 py-2">{t('pal.section.description')}</th>
+                <th className="w-48 px-2 py-2">{t('pal.skill')}</th>
+                <th className="w-full px-2 py-2">{t('pal.section.description')}</th>
                 <th className="px-2 py-2">{t('pal.type')}</th>
                 <th className="px-2 py-2 text-right">{t('pal.power')}</th>
                 <th className="px-2 py-2 text-right">{t('pal.cooldown')}</th>
@@ -158,12 +158,12 @@ export default function ActiveSkillsPage() {
                   data-testid="active-skill-row"
                   className="border-t border-border/60 align-middle hover:bg-accent/40"
                 >
-                  <td className="px-2 py-1.5">
+                  <td className="w-48 max-w-48 px-2 py-1.5">
                     <Link
                       to="/active-skills/$id"
                       params={{ id: s.wazaId }}
                       data-testid="active-skill-link"
-                      className="group flex items-center gap-2 font-medium hover:text-primary"
+                      className="group flex max-w-full items-center gap-2 font-medium hover:text-primary"
                     >
                       <img
                         src={elementIconUrl(s.element)}
@@ -175,10 +175,12 @@ export default function ActiveSkillsPage() {
                           e.currentTarget.style.visibility = 'hidden'
                         }}
                       />
-                      <span className="truncate group-hover:underline">{s.name}</span>
+                      <span className="min-w-0 truncate group-hover:underline">{s.name}</span>
                     </Link>
                   </td>
-                  <td className="px-2 py-1.5 text-xs whitespace-pre-line text-muted-foreground">{s.description}</td>
+                  <td className="px-2 py-1.5 text-xs whitespace-pre-line text-muted-foreground">
+                    {s.name ? s.description : s.wazaId}
+                  </td>
                   <td className="whitespace-nowrap px-2 py-1.5 text-muted-foreground">
                     {t(s.melee ? 'pal.melee' : 'pal.ranged')}
                   </td>
