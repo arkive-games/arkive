@@ -117,9 +117,16 @@ const buildingDetailRoute = createRoute({
   path: '/buildings/$id',
   component: BuildingDetailPage,
 })
+export interface TechnologySearch {
+  /** Tech id to scroll to and highlight on load, e.g. /technology?tech=Workbench */
+  tech?: string
+}
 const technologyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/technology',
+  validateSearch: (s: Record<string, unknown>): TechnologySearch => ({
+    tech: typeof s.tech === 'string' ? s.tech : undefined,
+  }),
   component: TechnologyPage,
 })
 const questsRoute = createRoute({

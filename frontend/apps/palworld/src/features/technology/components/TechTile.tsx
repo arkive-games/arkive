@@ -26,6 +26,8 @@ export interface TechResolvers {
 export interface TechTileProps {
   tech: TechEntry
   resolvers: TechResolvers
+  /** When true, draw an attention ring — used when deep-linked via ?tech=<id>. */
+  highlighted?: boolean
 }
 
 /**
@@ -34,7 +36,7 @@ export interface TechTileProps {
  * opens a hover card with full details; the pointer can move into the card to
  * click its unlock links.
  */
-export function TechTile({ tech, resolvers }: TechTileProps) {
+export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps) {
   const { t } = useTranslation()
   const ancient = tech.isBoss
   const type = techType(tech)
@@ -47,6 +49,7 @@ export function TechTile({ tech, resolvers }: TechTileProps) {
       <HoverCardTrigger asChild>
         <button
           type="button"
+          id={`tech-${tech.id}`}
           data-testid="tech-tile"
           aria-label={name}
           title={name}
@@ -56,6 +59,7 @@ export function TechTile({ tech, resolvers }: TechTileProps) {
             ancient
               ? 'border-purple-400/60 hover:border-purple-400'
               : 'border-sky-400/50 hover:border-sky-400',
+            highlighted && 'ring-2 ring-amber-400 ring-offset-2 ring-offset-background',
           )}
         >
           <span

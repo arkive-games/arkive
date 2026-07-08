@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearch } from '@tanstack/react-router'
 import { Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
@@ -24,6 +25,8 @@ interface Bundles {
 export default function TechnologyPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+
+  const { tech: focusId } = useSearch({ from: '/technology' })
 
   const [b, setB] = useState<Bundles | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -105,6 +108,13 @@ export default function TechnologyPage() {
     [regions],
   )
 
+  // Deep link (?tech=<id>): once the tiles are rendered, scroll the target into
+  // view. TechTile also draws a highlight ring while the id is focused.
+  useEffect(() => {
+    if (!b || !focusId) return
+    document.getElementById(`tech-${focusId}`)?.scrollIntoView({ block: 'center' })
+  }, [b, focusId])
+
   let body: React.ReactNode
   if (loadError) {
     body = <div className="text-center text-destructive">{loadError}</div>
@@ -127,8 +137,8 @@ export default function TechnologyPage() {
             <div className="pt-1 text-sm font-bold tabular-nums text-muted-foreground md:text-right">
               {level}
             </div>
-            <TileGrid techs={normal} ancient={false} resolvers={resolvers} />
-            <TileGrid techs={ancient} ancient resolvers={resolvers} />
+            <TileGrid techs={normal} ancient={false} resolvers={resolvers} focusId={focusId} />
+            <TileGrid techs={ancient} ancient resolvers={resolvers} focusId={focusId} />
           </Fragment>
         ))}
 
@@ -166,10 +176,12 @@ function TileGrid({
   techs,
   ancient,
   resolvers,
+  focusId,
 }: {
   techs: TechEntry[]
   ancient: boolean
   resolvers: TechResolvers
+  focusId?: string
 }) {
   // Normal block spans 6 of the outer columns and subdivides into 6; the ancient
   // block is a single column. Both render even when empty so a level with only
@@ -183,7 +195,12 @@ function TileGrid({
       }
     >
       {techs.map((tech) => (
-        <TechTile key={tech.id} tech={tech} resolvers={resolvers} />
+        <TechTile
+          key={tech.id}
+          tech={tech}
+          resolvers={resolvers}
+          highlighted={tech.id === focusId}
+        />
       ))}
     </div>
   )

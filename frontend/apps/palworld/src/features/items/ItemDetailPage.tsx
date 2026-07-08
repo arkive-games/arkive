@@ -192,6 +192,7 @@ export default function ItemDetailPage() {
                           <Link
                             key={tid}
                             to="/technology"
+                            search={{ tech: tid }}
                             className="inline-flex items-center rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
                           >
                             {b.tech.text[tid]?.name ?? tid}
