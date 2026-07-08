@@ -51,6 +51,15 @@ export const DATABASE_LABELS: Record<Language, string> = {
   'th-TH': 'ฐานข้อมูล', 'tr-TR': 'Veritabanı', 'vi-VN': 'Cơ sở dữ liệu', 'zh-CN': '数据库',
   'zh-TW': '資料庫',
 }
+// Passive Skills page: "all rarities" option in the rarity filter.
+export const ALL_RARITIES_LABELS: Record<Language, string> = {
+  'en-US': 'All rarities', 'de-DE': 'Alle Seltenheiten', 'es-ES': 'Todas las rarezas',
+  'es-MX': 'Todas las rarezas', 'fr-FR': 'Toutes les raretés', 'id-ID': 'Semua kelangkaan',
+  'it-IT': 'Tutte le rarità', 'ja-JP': 'すべてのレアリティ', 'ko-KR': '모든 등급',
+  'pl-PL': 'Wszystkie rzadkości', 'pt-BR': 'Todas as raridades', 'ru-RU': 'Все редкости',
+  'th-TH': 'ทุกระดับ', 'tr-TR': 'Tüm nadirlikler', 'vi-VN': 'Mọi độ hiếm',
+  'zh-CN': '全部稀有度', 'zh-TW': '全部稀有度',
+}
 // Top-nav dropdown group label for pal-related pages (Paldeck/Breeding/Passives).
 export const PALS_GROUP_LABELS: Record<Language, string> = {
   'en-US': 'Pals', 'de-DE': 'Pals', 'es-ES': 'Pals', 'es-MX': 'Pals', 'fr-FR': 'Pals',
@@ -535,6 +544,7 @@ for (const lng of LANGUAGES) {
       more: MORE_LABELS[lng],
       filter: FILTER_LABELS[lng],
       nav: { database: DATABASE_LABELS[lng], pals: PALS_GROUP_LABELS[lng] },
+      passive: { allRarities: ALL_RARITIES_LABELS[lng] },
     },
     true,
     true,

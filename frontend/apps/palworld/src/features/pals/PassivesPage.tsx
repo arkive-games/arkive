@@ -1,9 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Input } from '@gamemap/ui'
+import {
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
-import { loadPals, fillPassiveDesc, type PalsBundle } from '../../lib/pals'
-import { PalPageLoading, PassiveRow } from './components'
+import { loadPals, passiveDescription, stripPassiveTags, type PalsBundle } from '../../lib/pals'
+import { PalPageLoading, PassiveRarity, PassiveText, passiveRarityTier } from './components'
+
+/** A passive's rarity bucket key, e.g. "+3" / "+1" / "-2". Matches the arrow
+ *  display (sign + 1–3 tier), so the filter lines up with what cards show. */
+function rarityKey(rank: number): string {
+  if (!rank) return '0'
+  return `${rank > 0 ? '+' : '-'}${passiveRarityTier(rank)}`
+}
+/** A representative rank for rendering a bucket's arrows in the filter. */
+function repRank(key: string): number {
+  const tier = Number(key[1])
+  const mag = tier >= 3 ? 4 : tier
+  return key[0] === '-' ? -mag : mag
+}
+/** Signed tier score for sorting buckets best → worst (+3 … -2). */
+function rarityScore(key: string): number {
+  return (key[0] === '-' ? -1 : 1) * Number(key[1])
+}
 
 export default function PassivesPage() {
   const { t, i18n } = useTranslation()
@@ -12,6 +36,7 @@ export default function PassivesPage() {
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [rarity, setRarity] = useState('all')
 
   useEffect(() => {
     let cancelled = false
@@ -29,33 +54,46 @@ export default function PassivesPage() {
     }
   }, [lng, t])
 
-  const list = useMemo(() => {
+  // All passives (union of ids with metadata and/or localized text), each with a
+  // display description (real or synthesized) and its rank.
+  const all = useMemo(() => {
     if (!bundle) return []
-    // Union of ids that have metadata and/or localized text, so every passive
-    // appears even if one source is missing it.
     const ids = new Set<string>()
     for (const p of bundle.passives) ids.add(p.id)
     for (const id of Object.keys(bundle.passiveText)) ids.add(id)
-    const rows = [...ids].map((id) => ({
-      id,
-      name: bundle.passiveText[id]?.name ?? id,
-      description: fillPassiveDesc(bundle.passiveText[id]?.description, bundle.passivesById.get(id)),
-      rank: bundle.passivesById.get(id)?.rank,
-    }))
+    return [...ids].map((id) => {
+      const description = passiveDescription(id, bundle)
+      return {
+        id,
+        name: bundle.passiveText[id]?.name ?? id,
+        description,
+        // Plain text (tags stripped) for case-insensitive search matching.
+        search: stripPassiveTags(description).toLowerCase(),
+        rank: bundle.passivesById.get(id)?.rank ?? 0,
+      }
+    })
+  }, [bundle])
+
+  // Rarity buckets present, best → worst, for the filter dropdown.
+  const rarities = useMemo(() => {
+    const keys = new Set<string>()
+    for (const p of all) keys.add(rarityKey(p.rank))
+    return [...keys].sort((a, b) => rarityScore(b) - rarityScore(a))
+  }, [all])
+
+  const list = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const filtered = q
-      ? rows.filter(
-          (r) =>
-            r.name.toLowerCase().includes(q) ||
-            r.description.toLowerCase().includes(q) ||
-            r.id.toLowerCase().includes(q),
-        )
-      : rows
-    return filtered.sort((a, b) => a.name.localeCompare(b.name))
-  }, [bundle, query])
+    return all
+      .filter((r) => rarity === 'all' || rarityKey(r.rank) === rarity)
+      .filter(
+        (r) => !q || r.name.toLowerCase().includes(q) || r.search.includes(q) || r.id.toLowerCase().includes(q),
+      )
+      // Best rarity first, then alphabetical.
+      .sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name))
+  }, [all, query, rarity])
 
   return (
-    <ContentPage active="/passives" title={t('pal.section.passives')} maxWidth="max-w-3xl">
+    <ContentPage active="/passives" title={t('pal.section.passives')} maxWidth="max-w-4xl">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Input
           value={query}
@@ -64,6 +102,19 @@ export default function PassivesPage() {
           className="max-w-sm"
           data-testid="passive-search"
         />
+        <Select value={rarity} onValueChange={setRarity}>
+          <SelectTrigger className="w-44" data-testid="passive-rarity-filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('passive.allRarities')}</SelectItem>
+            {rarities.map((key) => (
+              <SelectItem key={key} value={key} data-testid={`rarity-${key}`}>
+                <PassiveRarity rank={repRank(key)} />
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {bundle ? (
           <span className="text-sm text-muted-foreground">
             {t('resultsCount', { count: list.length })}
@@ -76,10 +127,22 @@ export default function PassivesPage() {
       ) : !bundle ? (
         <PalPageLoading />
       ) : (
-        <div className="divide-y divide-border/60 rounded-lg border border-border bg-card px-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((r) => (
-            <div key={r.id} data-testid="passive-row">
-              <PassiveRow name={r.name} description={r.description} rank={r.rank} />
+            <div
+              key={r.id}
+              data-testid="passive-row"
+              className="flex flex-col rounded-lg border border-border bg-card p-3 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-sm font-medium leading-tight">{r.name}</span>
+                <PassiveRarity rank={r.rank} />
+              </div>
+              {r.description ? (
+                <p className="mt-1 text-xs leading-snug whitespace-pre-line text-muted-foreground">
+                  <PassiveText text={r.description} />
+                </p>
+              ) : null}
             </div>
           ))}
         </div>

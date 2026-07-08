@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Zap } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
-  fillPassiveDesc,
+  passiveDescription,
   resolveCharacterNames,
   type PalsBundle,
   type PalEntry,
@@ -371,10 +371,7 @@ export default function PalDetailPage() {
                     <PassiveRow
                       key={pidStr}
                       name={bundle.passiveText[pidStr]?.name ?? pidStr}
-                      description={fillPassiveDesc(
-                        bundle.passiveText[pidStr]?.description,
-                        bundle.passivesById.get(pidStr),
-                      )}
+                      description={passiveDescription(pidStr, bundle)}
                       rank={bundle.passivesById.get(pidStr)?.rank}
                     />
                   ))}

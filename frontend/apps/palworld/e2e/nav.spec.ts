@@ -38,3 +38,24 @@ test('Pals dropdown navigates to the Passive Skills page and search filters it',
   await page.getByTestId('passive-search').fill('')
   await expect(rows.first()).toBeVisible()
 })
+
+test('Passive Skills rarity filter narrows the list', async ({ page }) => {
+  await page.goto('/passives')
+  const rows = page.getByTestId('passive-row')
+  await expect(rows.first()).toBeVisible()
+  const total = await rows.count()
+  await page.getByTestId('passive-rarity-filter').click()
+  await page.locator('[data-testid^="rarity-"]').first().click()
+  const filtered = await rows.count()
+  expect(filtered).toBeGreaterThan(0)
+  expect(filtered).toBeLessThan(total)
+})
+
+test('Passive descriptions render coloured value tags', async ({ page }) => {
+  await page.goto('/passives')
+  await expect(page.locator('[data-testid="passive-row"]').first()).toBeVisible()
+  const coloured = page.locator(
+    '[data-testid="passive-row"] p span[class*="text-sky-500"], [data-testid="passive-row"] p span[class*="text-destructive"]',
+  )
+  expect(await coloured.count()).toBeGreaterThan(0)
+})
