@@ -41,6 +41,17 @@ export interface ActiveSkill {
   power: number; coolTime: number
   /** Attack range in raw world units (cm; ÷100 = metres). 0 when the skill has none. */
   minRange: number; maxRange: number
+  /** Rarity tier from DT_WazaDataTable (`Weak`/`Medium`/`Strong`), or `None`.
+   *  A tier doubles as the Skill-Fruit marker: the fruit farm's lottery draws by
+   *  element × rarity, so exactly the tiered skills are obtainable from a fruit;
+   *  `None` skills are learned by leveling only. See {@link isSkillFruitSkill}. */
+  strength?: string
+}
+
+/** True when an active skill is obtainable from a Skill Fruit (it carries a
+ *  Weak/Medium/Strong rarity tier). `None`/absent ⇒ default (level-learned) only. */
+export function isSkillFruitSkill(strength: string | undefined): boolean {
+  return strength === 'Weak' || strength === 'Medium' || strength === 'Strong'
 }
 /** One buff effect of a partner skill: effect type, target, and per-rank values. */
 export interface PartnerEffect { type: string; target: string; values: number[] }
@@ -269,6 +280,60 @@ export function resolveCharacterNames(
 ): string {
   if (!s) return ''
   return s.replace(CHARACTER_NAME_RE, (_m, id: string) => text[id]?.name ?? id)
+}
+
+// --- active-skill catalog (Active Skills list + per-skill detail pages) ------
+/** A pal that learns an active skill by leveling, and the level it learns it at. */
+export interface ActiveSkillPalRef { id: string; name: string; icon: string; level: number }
+/** One distinct active skill: element-invariant metadata, its Skill-Fruit flag,
+ *  and every pal that learns it (level-sorted). */
+export interface ActiveSkillEntry {
+  wazaId: string
+  name: string
+  description: string
+  element: Element
+  /** Melee vs. ranged (everything non-`Melee`). */
+  melee: boolean
+  power: number
+  coolTime: number
+  minRange: number
+  maxRange: number
+  isFruit: boolean
+  pals: ActiveSkillPalRef[]
+}
+
+/** Build the deduped active-skill catalog from a loaded bundle. Skill metadata
+ *  is element-invariant, so it's taken from the first occurrence; the learn
+ *  `level` varies per pal and lives on each pal ref. */
+export function buildActiveSkills(bundle: PalsBundle): ActiveSkillEntry[] {
+  const byId = new Map<string, ActiveSkillEntry>()
+  for (const p of bundle.pals) {
+    const palName = bundle.text[p.id]?.name ?? p.id
+    for (const s of p.activeSkills) {
+      let e = byId.get(s.wazaId)
+      if (!e) {
+        e = {
+          wazaId: s.wazaId,
+          // A few boss/unreleased skills ship an empty localized name — fall
+          // back to the raw id rather than render a blank cell.
+          name: bundle.skills[s.wazaId]?.name || s.wazaId,
+          description: resolveCharacterNames(bundle.skills[s.wazaId]?.description, bundle.text),
+          element: s.element as Element,
+          melee: s.category === 'Melee',
+          power: s.power,
+          coolTime: s.coolTime,
+          minRange: s.minRange,
+          maxRange: s.maxRange,
+          isFruit: isSkillFruitSkill(s.strength),
+          pals: [],
+        }
+        byId.set(s.wazaId, e)
+      }
+      e.pals.push({ id: p.id, name: palName, icon: p.icon, level: s.level })
+    }
+  }
+  for (const e of byId.values()) e.pals.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name))
+  return [...byId.values()]
 }
 
 /** Localized name for a passive/active waza description with `{EffectValue1}`-style

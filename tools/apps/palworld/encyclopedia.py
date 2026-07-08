@@ -48,6 +48,7 @@ _SIZE = "EPalSizeType::"
 _GENUS = "EPalGenusCategoryType::"
 _WORK = "EPalWorkSuitability::"
 _CAT = "EPalWazaCategory::"
+_STR = "EPalWazaStrength::"
 _EFFT = "EPalPassiveSkillEffectType::"
 _TGT = "EPalPassiveSkillEffectTargetType::"
 
@@ -286,6 +287,10 @@ def _active_skills(cid: str, learnset: list, waza_by_id: dict) -> list:
             "coolTime": round2(w.get("CoolTime", 0.0)),
             "minRange": w.get("MinRange", 0),
             "maxRange": w.get("MaxRange", 0),
+            # Rarity tier (Weak/Medium/Strong) doubles as the Skill-Fruit marker:
+            # the fruit farm's lottery draws by element × rarity, so exactly the
+            # tiered skills are obtainable from fruit; "None" = default (level) only.
+            "strength": _strip(w.get("Strength"), _STR),
         })
     out.sort(key=lambda s: (s["level"], s["wazaId"]))
     return out

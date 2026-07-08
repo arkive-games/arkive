@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 
-export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/items' | '/buildings' | '/technology' | '/quests'
+export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/items' | '/buildings' | '/technology' | '/quests'
 
 /**
  * Unified top navigation shared by every page (map, Paldeck, breeding). The
@@ -23,6 +23,7 @@ export function TopNav({ active }: { active: NavKey }) {
         { key: '/pals', label: t('pal.title'), active: active === '/pals' },
         { key: '/breeding', label: t('breeding.navBreeding'), active: active === '/breeding' },
         { key: '/passives', label: t('pal.section.passives'), active: active === '/passives' },
+        { key: '/active-skills', label: t('pal.section.activeSkills'), active: active === '/active-skills' },
       ],
     },
     {

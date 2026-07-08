@@ -100,6 +100,48 @@ export const PASSIVE_CATEGORY_LABELS: Record<Language, Record<string, string>> =
   'zh-CN': { attack: '攻击', defense: '防御', work: '工作', move: '移动', utility: '辅助', none: '无' },
   'zh-TW': { attack: '攻擊', defense: '防禦', work: '工作', move: '移動', utility: '輔助', none: '無' },
 }
+// Active Skills page: element filter-group label.
+export const ACTIVE_SKILL_ELEMENT_LABELS: Record<Language, string> = {
+  'en-US': 'Element', 'de-DE': 'Element', 'es-ES': 'Elemento', 'es-MX': 'Elemento', 'fr-FR': 'Élément',
+  'id-ID': 'Elemen', 'it-IT': 'Elemento', 'ja-JP': '属性', 'ko-KR': '속성', 'pl-PL': 'Żywioł',
+  'pt-BR': 'Elemento', 'ru-RU': 'Стихия', 'th-TH': 'ธาตุ', 'tr-TR': 'Element', 'vi-VN': 'Hệ',
+  'zh-CN': '属性', 'zh-TW': '屬性',
+}
+// Active Skills page: source filter-group label (how the skill is obtained).
+export const ACTIVE_SKILL_SOURCE_LABELS: Record<Language, string> = {
+  'en-US': 'Source', 'de-DE': 'Quelle', 'es-ES': 'Origen', 'es-MX': 'Origen', 'fr-FR': 'Source',
+  'id-ID': 'Sumber', 'it-IT': 'Fonte', 'ja-JP': '入手方法', 'ko-KR': '획득 방법', 'pl-PL': 'Źródło',
+  'pt-BR': 'Origem', 'ru-RU': 'Источник', 'th-TH': 'แหล่งที่มา', 'tr-TR': 'Kaynak', 'vi-VN': 'Nguồn',
+  'zh-CN': '来源', 'zh-TW': '來源',
+}
+// Active Skills page: "obtainable from a Skill Fruit" source label / badge.
+export const ACTIVE_SKILL_FRUIT_LABELS: Record<Language, string> = {
+  'en-US': 'Skill Fruit', 'de-DE': 'Fähigkeitsfrucht', 'es-ES': 'Fruta de habilidad',
+  'es-MX': 'Fruta de habilidad', 'fr-FR': 'Fruit de compétence', 'id-ID': 'Buah Skill',
+  'it-IT': 'Frutto abilità', 'ja-JP': 'スキルフルーツ', 'ko-KR': '스킬 열매', 'pl-PL': 'Owoc umiejętności',
+  'pt-BR': 'Fruta de habilidade', 'ru-RU': 'Плод навыка', 'th-TH': 'ผลไม้สกิล', 'tr-TR': 'Yetenek Meyvesi',
+  'vi-VN': 'Quả Kỹ Năng', 'zh-CN': '技能果实', 'zh-TW': '技能果實',
+}
+// Active Skills page: "learned by leveling only" source label / badge.
+export const ACTIVE_SKILL_DEFAULT_LABELS: Record<Language, string> = {
+  'en-US': 'Default', 'de-DE': 'Standard', 'es-ES': 'Predeterminada', 'es-MX': 'Predeterminada',
+  'fr-FR': 'Par défaut', 'id-ID': 'Bawaan', 'it-IT': 'Predefinita', 'ja-JP': 'デフォルト',
+  'ko-KR': '기본', 'pl-PL': 'Domyślna', 'pt-BR': 'Padrão', 'ru-RU': 'Базовый', 'th-TH': 'พื้นฐาน',
+  'tr-TR': 'Varsayılan', 'vi-VN': 'Mặc định', 'zh-CN': '默认', 'zh-TW': '預設',
+}
+// Active Skills detail: boolean "obtainable from a Skill Fruit" value (有 / 无).
+export const ACTIVE_SKILL_HAS_LABELS: Record<Language, string> = {
+  'en-US': 'Yes', 'de-DE': 'Ja', 'es-ES': 'Sí', 'es-MX': 'Sí', 'fr-FR': 'Oui',
+  'id-ID': 'Ya', 'it-IT': 'Sì', 'ja-JP': 'あり', 'ko-KR': '있음', 'pl-PL': 'Tak',
+  'pt-BR': 'Sim', 'ru-RU': 'Да', 'th-TH': 'มี', 'tr-TR': 'Evet', 'vi-VN': 'Có',
+  'zh-CN': '有', 'zh-TW': '有',
+}
+export const ACTIVE_SKILL_HASNOT_LABELS: Record<Language, string> = {
+  'en-US': 'No', 'de-DE': 'Nein', 'es-ES': 'No', 'es-MX': 'No', 'fr-FR': 'Non',
+  'id-ID': 'Tidak', 'it-IT': 'No', 'ja-JP': 'なし', 'ko-KR': '없음', 'pl-PL': 'Nie',
+  'pt-BR': 'Não', 'ru-RU': 'Нет', 'th-TH': 'ไม่มี', 'tr-TR': 'Hayır', 'vi-VN': 'Không',
+  'zh-CN': '无', 'zh-TW': '無',
+}
 // Top-nav dropdown group label for pal-related pages (Paldeck/Breeding/Passives).
 export const PALS_GROUP_LABELS: Record<Language, string> = {
   'en-US': 'Pals', 'de-DE': 'Pals', 'es-ES': 'Pals', 'es-MX': 'Pals', 'fr-FR': 'Pals',
@@ -589,6 +631,14 @@ for (const lng of LANGUAGES) {
         allRarities: ALL_RARITIES_LABELS[lng],
         allTypes: ALL_TYPES_LABELS[lng],
         category: PASSIVE_CATEGORY_LABELS[lng],
+      },
+      activeSkill: {
+        element: ACTIVE_SKILL_ELEMENT_LABELS[lng],
+        source: ACTIVE_SKILL_SOURCE_LABELS[lng],
+        fruit: ACTIVE_SKILL_FRUIT_LABELS[lng],
+        defaultOnly: ACTIVE_SKILL_DEFAULT_LABELS[lng],
+        has: ACTIVE_SKILL_HAS_LABELS[lng],
+        hasNot: ACTIVE_SKILL_HASNOT_LABELS[lng],
       },
     },
     true,

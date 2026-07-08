@@ -1,5 +1,5 @@
 export { PalSection, InfoRows, StatRow, PalPageLoading, PalNotFound } from './ui'
-export { ElementBadge, WorkSuitability, ActiveSkillRow, PassiveRow, PassiveRarity, PassiveTitleBar, PassiveText, passiveRarityTier, DropRow, SummonMaterialRow } from './atoms'
+export { ElementBadge, WorkSuitability, ActiveSkillRow, formatSkillRange, PassiveRow, PassiveRarity, PassiveTitleBar, PassiveText, passiveRarityTier, DropRow, SummonMaterialRow } from './atoms'
 export { PalCard } from './PalCard'
 export { PalSpawnMap } from './PalSpawnMap'
 export { PalFilters } from './PalFilters'
