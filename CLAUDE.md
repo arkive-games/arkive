@@ -57,11 +57,12 @@ landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTran
 - **Git on Windows:** bash or PowerShell both work. All repo origins are SSH
   (`git@github.com:...`); SSH works via `HOME` set in `~/.claude/settings.json` env plus
   `core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe` in the global gitconfig.
-- **Dev server for verification:** a Vite dev server is often already running (default
-  `http://localhost:5173`). Before asking the user to set one up, try connecting to it
-  first (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:5173`); also check
-  nearby ports (5174+) since Vite auto-increments when 5173 is taken. Only ask the user
-  to start/set up the server if nothing responds.
+- **Dev server ports (fixed per app):** aion2 → `http://localhost:15173`, palworld →
+  `http://localhost:15174`. A dev server is often already running; before asking the user to
+  start one, probe the app's port first
+  (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:15174`). Only ask the user to
+  start/set up the server if nothing responds. (Note: `5173`/`5174` may be taken by unrelated
+  apps — don't assume those are ours.)
 - **Implementation:** do all coding, design, planning, research, review, and
   verification directly. Codex delegation is disabled — do NOT delegate to Codex.
 - **Typography / font sizes:** never hard-code pixel sizes (no `text-[13px]`,
