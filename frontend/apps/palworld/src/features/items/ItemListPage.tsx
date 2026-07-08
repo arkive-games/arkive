@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { Input } from '@gamemap/ui'
+import { HoverCard, HoverCardTrigger, Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { itemTypeLabel } from '../catalog/labels'
-import { CatalogPageLoading, ItemGlyph, rarityBorderClass } from '../catalog/components'
+import {
+  CatalogDataProvider,
+  CatalogPageLoading,
+  HoverCardBody,
+  ItemGlyph,
+  ItemSummary,
+  rarityBorderClass,
+} from '../catalog/components'
 
 export default function ItemListPage() {
   const { t, i18n } = useTranslation()
@@ -90,34 +97,42 @@ export default function ItemListPage() {
           ) : !bundle ? (
             <CatalogPageLoading />
           ) : (
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-              {list.map((i) => (
-                <Link
-                  key={i.id}
-                  to="/items/$id"
-                  params={{ id: i.id }}
-                  data-testid="item-card"
-                  className={`group relative flex aspect-square flex-col items-center gap-1 rounded-lg border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
-                >
-                  <span className="absolute right-1.5 top-1.5 text-xs tabular-nums text-muted-foreground/70">
-                    #{i.sortId}
-                  </span>
-                  <span className="w-full truncate px-4 text-xs uppercase tracking-wide text-muted-foreground">
-                    {itemTypeLabel(i.typeA, bundle.typeLabels)}
-                  </span>
-                  <div className="flex min-h-0 flex-1 items-center justify-center">
-                    {i.icon ? (
-                      <ItemGlyph icon={i.icon} size={72} />
-                    ) : (
-                      <div className="size-[72px]" aria-hidden />
-                    )}
-                  </div>
-                  <span className="line-clamp-2 w-full text-sm font-medium leading-tight">
-                    {bundle.text[i.id]?.name ?? i.id}
-                  </span>
-                </Link>
-              ))}
-            </div>
+            <CatalogDataProvider items={bundle}>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
+                {list.map((i) => (
+                  <HoverCard key={i.id} openDelay={120} closeDelay={120}>
+                    <HoverCardTrigger asChild>
+                      <Link
+                        to="/items/$id"
+                        params={{ id: i.id }}
+                        data-testid="item-card"
+                        className={`group flex aspect-square flex-col items-center gap-1 rounded-lg border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
+                      >
+                        <div className="flex w-full items-center justify-between gap-1 text-xs text-muted-foreground">
+                          <span className="min-w-0 truncate uppercase tracking-wide">
+                            {itemTypeLabel(i.typeA, bundle.typeLabels)}
+                          </span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground/70">#{i.sortId}</span>
+                        </div>
+                        <div className="flex min-h-0 flex-1 items-center justify-center">
+                          {i.icon ? (
+                            <ItemGlyph icon={i.icon} size={72} />
+                          ) : (
+                            <div className="size-[72px]" aria-hidden />
+                          )}
+                        </div>
+                        <span className="line-clamp-2 w-full text-sm font-medium leading-tight">
+                          {bundle.text[i.id]?.name ?? i.id}
+                        </span>
+                      </Link>
+                    </HoverCardTrigger>
+                    <HoverCardBody className="w-72">
+                      <ItemSummary item={i} />
+                    </HoverCardBody>
+                  </HoverCard>
+                ))}
+              </div>
+            </CatalogDataProvider>
           )}
     </ContentPage>
   )
