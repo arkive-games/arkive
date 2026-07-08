@@ -308,6 +308,48 @@ const EFFECT_LABEL: Record<string, string> = {
   WorkSuitabilityAddRank_MonsterFarm: 'Ranch Work Suitability',
 }
 
+// --- effect categories (for the Passive Skills page filter) ------------------
+export type PassiveCategory = 'attack' | 'defense' | 'work' | 'move' | 'utility'
+/** Fixed display/filter order. */
+export const PASSIVE_CATEGORIES: PassiveCategory[] = ['attack', 'defense', 'work', 'move', 'utility']
+
+const EFFECT_CATEGORY: Record<string, PassiveCategory> = {
+  ShotAttack: 'attack',
+  LifeSteal: 'attack',
+  Defense: 'defense',
+  MaxHP: 'defense',
+  AutoHPRegeneRate: 'defense',
+  ExplosionResist: 'defense',
+  LeanBackInvalid_ForPassiveSkill: 'defense',
+  KnockbackInvalid_ForPassiveSkill: 'defense',
+  CraftSpeed: 'work',
+  Mining: 'work',
+  Logging: 'work',
+  BreedSpeed: 'work',
+  BreedSpeed_InBaseCamp: 'work',
+  PalEggHatchingSpeed: 'work',
+  MoveSpeed: 'move',
+  SwimSpeed: 'move',
+  RideJumpCount_Increase: 'move',
+}
+
+/** Coarse category for one effect `type` (handles element/work prefixes). */
+function effectCategory(type: string): PassiveCategory {
+  if (type.startsWith('ElementBoost_')) return 'attack'
+  if (type.startsWith('ElementResist_') || type.startsWith('ResistAdditionalEffect_')) return 'defense'
+  if (type.startsWith('WorkSuitabilityAddRank_')) return 'work'
+  return EFFECT_CATEGORY[type] ?? 'utility'
+}
+
+/** The set of categories a passive touches, in fixed order. */
+export function passiveCategories(id: string, bundle: PalsBundle): PassiveCategory[] {
+  const passive = bundle.passivesById.get(id)
+  if (!passive) return []
+  const set = new Set<PassiveCategory>()
+  for (const e of passive.effects) set.add(effectCategory(e.type))
+  return PASSIVE_CATEGORIES.filter((c) => set.has(c))
+}
+
 /** Turn a raw effect `type` into a readable label when it has no curated entry. */
 function humanizeEffectType(type: string): string {
   return type
@@ -319,11 +361,15 @@ function humanizeEffectType(type: string): string {
     .replace(/^\w/, (c) => c.toUpperCase())
 }
 
-function effectTypeLabel(type: string, enums: EnumsLocale): string {
+function effectTypeLabel(type: string, bundle: PalsBundle): string {
+  // Prefer the game's own localized label (partner-skill effect names share the
+  // passive effect-type enum) so synthesized text is localized, not English.
+  const inGame = bundle.partnerEffects[type]
+  if (inGame) return inGame
   const boost = /^ElementBoost_(\w+)$/.exec(type)
-  if (boost) return `${enums.elements[boost[1]] ?? boost[1]} Attack`
+  if (boost) return `${bundle.enums.elements[boost[1]] ?? boost[1]} Attack`
   const resist = /^ElementResist_(\w+)$/.exec(type)
-  if (resist) return `${enums.elements[resist[1]] ?? resist[1]} Resistance`
+  if (resist) return `${bundle.enums.elements[resist[1]] ?? resist[1]} Resistance`
   const addl = /^ResistAdditionalEffect_(\w+)$/.exec(type)
   if (addl) return `${addl[1]} Resistance`
   return EFFECT_LABEL[type] ?? humanizeEffectType(type)
@@ -374,7 +420,7 @@ export function passiveDescription(id: string, bundle: PalsBundle): string {
   if (!passive) return ''
   return passive.effects
     .map((e) => {
-      const label = effectTypeLabel(e.type, bundle.enums)
+      const label = effectTypeLabel(e.type, bundle)
       if (!e.value) return label
       const sign = e.value > 0 ? '+' : '−'
       return `${label} ${sign}${Math.abs(e.value)}%`

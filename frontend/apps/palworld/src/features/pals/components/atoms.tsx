@@ -187,9 +187,10 @@ function parsePassiveText(text: string): { text: string; cls: string | null }[] 
     }
     segs.push({ text: part, cls })
   }
-  // The game often tags only the "%" (or sign), leaving the number plain — e.g.
-  // "Work Speed -20<NumRed_13>%</>". Pull a trailing number/sign off the plain
-  // segment into the adjacent coloured one so the whole value is coloured.
+  // The game often tags only part of a value, leaving the rest plain. Coalesce so
+  // the whole "+50%" / "-20%" is coloured:
+  //  (A) plain ending in a number/sign before a coloured seg — "Work Speed -20" + "%".
+  //  (B) coloured sign/number fragment before a plain number — "+" + "50%".
   for (let i = 1; i < segs.length; i++) {
     const prev = segs[i - 1]
     const cur = segs[i]
@@ -198,6 +199,16 @@ function parsePassiveText(text: string): { text: string; cls: string | null }[] 
     if (!m) continue
     prev.text = prev.text.slice(0, m.index)
     cur.text = m[0] + cur.text
+  }
+  for (let i = 0; i < segs.length - 1; i++) {
+    const cur = segs[i]
+    const next = segs[i + 1]
+    if (!cur.cls || next.cls) continue
+    if (!/[+\-\d]$/.test(cur.text)) continue
+    const m = /^([\d.,]*\d[\d.,]*%?)/.exec(next.text)
+    if (!m) continue
+    cur.text += m[0]
+    next.text = next.text.slice(m[0].length)
   }
   return segs.filter((s) => s.text)
 }

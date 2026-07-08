@@ -60,6 +60,33 @@ export const ALL_RARITIES_LABELS: Record<Language, string> = {
   'th-TH': 'ทุกระดับ', 'tr-TR': 'Tüm nadirlikler', 'vi-VN': 'Mọi độ hiếm',
   'zh-CN': '全部稀有度', 'zh-TW': '全部稀有度',
 }
+// Passive Skills page: "all types" option in the category filter.
+export const ALL_TYPES_LABELS: Record<Language, string> = {
+  'en-US': 'All types', 'de-DE': 'Alle Typen', 'es-ES': 'Todos los tipos', 'es-MX': 'Todos los tipos',
+  'fr-FR': 'Tous les types', 'id-ID': 'Semua tipe', 'it-IT': 'Tutti i tipi', 'ja-JP': 'すべてのタイプ',
+  'ko-KR': '모든 유형', 'pl-PL': 'Wszystkie typy', 'pt-BR': 'Todos os tipos', 'ru-RU': 'Все типы',
+  'th-TH': 'ทุกประเภท', 'tr-TR': 'Tüm türler', 'vi-VN': 'Mọi loại', 'zh-CN': '全部类型', 'zh-TW': '全部類型',
+}
+// Passive effect-category labels (attack / defense / work / move / utility).
+export const PASSIVE_CATEGORY_LABELS: Record<Language, Record<string, string>> = {
+  'en-US': { attack: 'Attack', defense: 'Defense', work: 'Work', move: 'Movement', utility: 'Utility' },
+  'de-DE': { attack: 'Angriff', defense: 'Verteidigung', work: 'Arbeit', move: 'Bewegung', utility: 'Sonstiges' },
+  'es-ES': { attack: 'Ataque', defense: 'Defensa', work: 'Trabajo', move: 'Movimiento', utility: 'Utilidad' },
+  'es-MX': { attack: 'Ataque', defense: 'Defensa', work: 'Trabajo', move: 'Movimiento', utility: 'Utilidad' },
+  'fr-FR': { attack: 'Attaque', defense: 'Défense', work: 'Travail', move: 'Déplacement', utility: 'Utilité' },
+  'id-ID': { attack: 'Serangan', defense: 'Pertahanan', work: 'Kerja', move: 'Gerakan', utility: 'Utilitas' },
+  'it-IT': { attack: 'Attacco', defense: 'Difesa', work: 'Lavoro', move: 'Movimento', utility: 'Utilità' },
+  'ja-JP': { attack: '攻撃', defense: '防御', work: '労働', move: '移動', utility: 'その他' },
+  'ko-KR': { attack: '공격', defense: '방어', work: '작업', move: '이동', utility: '기타' },
+  'pl-PL': { attack: 'Atak', defense: 'Obrona', work: 'Praca', move: 'Ruch', utility: 'Inne' },
+  'pt-BR': { attack: 'Ataque', defense: 'Defesa', work: 'Trabalho', move: 'Movimento', utility: 'Utilidade' },
+  'ru-RU': { attack: 'Атака', defense: 'Защита', work: 'Работа', move: 'Движение', utility: 'Прочее' },
+  'th-TH': { attack: 'โจมตี', defense: 'ป้องกัน', work: 'ทำงาน', move: 'เคลื่อนที่', utility: 'อื่นๆ' },
+  'tr-TR': { attack: 'Saldırı', defense: 'Savunma', work: 'İş', move: 'Hareket', utility: 'Diğer' },
+  'vi-VN': { attack: 'Tấn công', defense: 'Phòng thủ', work: 'Lao động', move: 'Di chuyển', utility: 'Tiện ích' },
+  'zh-CN': { attack: '攻击', defense: '防御', work: '工作', move: '移动', utility: '辅助' },
+  'zh-TW': { attack: '攻擊', defense: '防禦', work: '工作', move: '移動', utility: '輔助' },
+}
 // Top-nav dropdown group label for pal-related pages (Paldeck/Breeding/Passives).
 export const PALS_GROUP_LABELS: Record<Language, string> = {
   'en-US': 'Pals', 'de-DE': 'Pals', 'es-ES': 'Pals', 'es-MX': 'Pals', 'fr-FR': 'Pals',
@@ -544,7 +571,11 @@ for (const lng of LANGUAGES) {
       more: MORE_LABELS[lng],
       filter: FILTER_LABELS[lng],
       nav: { database: DATABASE_LABELS[lng], pals: PALS_GROUP_LABELS[lng] },
-      passive: { allRarities: ALL_RARITIES_LABELS[lng] },
+      passive: {
+        allRarities: ALL_RARITIES_LABELS[lng],
+        allTypes: ALL_TYPES_LABELS[lng],
+        category: PASSIVE_CATEGORY_LABELS[lng],
+      },
     },
     true,
     true,

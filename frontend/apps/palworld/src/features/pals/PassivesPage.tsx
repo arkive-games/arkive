@@ -9,7 +9,15 @@ import {
   SelectValue,
 } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
-import { loadPals, passiveDescription, stripPassiveTags, type PalsBundle } from '../../lib/pals'
+import {
+  loadPals,
+  passiveCategories,
+  passiveDescription,
+  stripPassiveTags,
+  PASSIVE_CATEGORIES,
+  type PalsBundle,
+  type PassiveCategory,
+} from '../../lib/pals'
 import { PalPageLoading, PassiveRarity, PassiveText, passiveRarityTier } from './components'
 
 /** A passive's rarity bucket key, e.g. "+3" / "+1" / "-2". Matches the arrow
@@ -37,6 +45,7 @@ export default function PassivesPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [rarity, setRarity] = useState('all')
+  const [category, setCategory] = useState('all')
 
   useEffect(() => {
     let cancelled = false
@@ -55,7 +64,7 @@ export default function PassivesPage() {
   }, [lng, t])
 
   // All passives (union of ids with metadata and/or localized text), each with a
-  // display description (real or synthesized) and its rank.
+  // display description (real or synthesized), its rank, and its categories.
   const all = useMemo(() => {
     if (!bundle) return []
     const ids = new Set<string>()
@@ -70,6 +79,7 @@ export default function PassivesPage() {
         // Plain text (tags stripped) for case-insensitive search matching.
         search: stripPassiveTags(description).toLowerCase(),
         rank: bundle.passivesById.get(id)?.rank ?? 0,
+        categories: passiveCategories(id, bundle),
       }
     })
   }, [bundle])
@@ -81,16 +91,27 @@ export default function PassivesPage() {
     return [...keys].sort((a, b) => rarityScore(b) - rarityScore(a))
   }, [all])
 
+  // Categories present, in fixed order, for the category filter.
+  const categories = useMemo(() => {
+    const present = new Set<PassiveCategory>()
+    for (const p of all) for (const c of p.categories) present.add(c)
+    return PASSIVE_CATEGORIES.filter((c) => present.has(c))
+  }, [all])
+
   const list = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return all
-      .filter((r) => rarity === 'all' || rarityKey(r.rank) === rarity)
-      .filter(
-        (r) => !q || r.name.toLowerCase().includes(q) || r.search.includes(q) || r.id.toLowerCase().includes(q),
-      )
-      // Best rarity first, then alphabetical.
-      .sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name))
-  }, [all, query, rarity])
+    return (
+      all
+        .filter((r) => rarity === 'all' || rarityKey(r.rank) === rarity)
+        .filter((r) => category === 'all' || r.categories.includes(category as PassiveCategory))
+        .filter(
+          (r) => !q || r.name.toLowerCase().includes(q) || r.search.includes(q) || r.id.toLowerCase().includes(q),
+        )
+        // Best rarity first, then by id so the order is identical in every
+        // language (localized names would reshuffle per locale).
+        .sort((a, b) => b.rank - a.rank || a.id.localeCompare(b.id))
+    )
+  }, [all, query, rarity, category])
 
   return (
     <ContentPage active="/passives" title={t('pal.section.passives')} maxWidth="max-w-4xl">
@@ -103,7 +124,7 @@ export default function PassivesPage() {
           data-testid="passive-search"
         />
         <Select value={rarity} onValueChange={setRarity}>
-          <SelectTrigger className="w-44" data-testid="passive-rarity-filter">
+          <SelectTrigger className="w-40" data-testid="passive-rarity-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -111,6 +132,19 @@ export default function PassivesPage() {
             {rarities.map((key) => (
               <SelectItem key={key} value={key} data-testid={`rarity-${key}`}>
                 <PassiveRarity rank={repRank(key)} />
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="w-40" data-testid="passive-category-filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('passive.allTypes')}</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c} value={c} data-testid={`category-${c}`}>
+                {t(`passive.category.${c}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -142,6 +176,18 @@ export default function PassivesPage() {
                 <p className="mt-1 text-xs leading-snug whitespace-pre-line text-muted-foreground">
                   <PassiveText text={r.description} />
                 </p>
+              ) : null}
+              {r.categories.length ? (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {r.categories.map((c) => (
+                    <span
+                      key={c}
+                      className="rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
+                    >
+                      {t(`passive.category.${c}`)}
+                    </span>
+                  ))}
+                </div>
               ) : null}
             </div>
           ))}
