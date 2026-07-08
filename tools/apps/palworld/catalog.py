@@ -278,6 +278,45 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
 
     tags = _all_tags()
 
+    # Some items point their name/description at a differently-keyed text row via
+    # OverrideName / OverrideDescription (e.g. item `GrapplingGun` →
+    # `ITEM_NAME_GrapplingGun_1`). Alias those texts under the item id in every
+    # language so all downstream lookups (inclusion gate, localized name/desc)
+    # resolve by id like every other item.
+    def _alias_override(by_lang: dict, field: str, prefix: str) -> None:
+        for iid, r in item_rows.items():
+            ov = r.get(field)
+            if not ov or ov in _NONE:
+                continue
+            key = ov[len(prefix):] if ov.startswith(prefix) else ov
+            for t in tags:
+                lang = by_lang.get(t)
+                if lang and iid not in lang and key in lang:
+                    lang[iid] = lang[key]
+
+    _alias_override(item_name_by_lang, "OverrideName", "ITEM_NAME_")
+    _alias_override(item_desc_by_lang, "OverrideDescription", "ITEM_DESC_")
+
+    # Some item ids differ only in casing from their text-table key (e.g. item
+    # `FlameThrower` → key `Flamethrower`). Alias the case-insensitive match under
+    # the item id so it resolves like every other item. Runs after the override
+    # pass so an explicit OverrideName always wins.
+    def _alias_ci(by_lang: dict) -> None:
+        for t in tags:
+            lang = by_lang.get(t)
+            if not lang:
+                continue
+            ci = {k.lower(): k for k in lang}
+            for iid in item_rows:
+                if iid in lang:
+                    continue
+                k = ci.get(iid.lower())
+                if k:
+                    lang[iid] = lang[k]
+
+    _alias_ci(item_name_by_lang)
+    _alias_ci(item_desc_by_lang)
+
     def item_has_name(iid: str) -> bool:
         return any((item_name_by_lang.get(t, {}).get(iid) or "").strip() for t in tags)
 
@@ -325,6 +364,10 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         buildings.append({"id": bid, "row": r, "materials": mats})
 
     building_id_set = {b["id"] for b in buildings}
+    # tech UnlockBuildObjects entries sometimes differ in casing from the
+    # building DataTable row key (e.g. tech `Workbench` → building `WorkBench`);
+    # index by lowercase so the unlock resolves to the emitted (canonical) id.
+    bld_id_ci = {b.lower(): b for b in building_id_set}
 
     # pal drops / partner unlocks (from the already-emitted pal encyclopedia)
     pals_path = data_out / "pals.json"
@@ -345,16 +388,19 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     for tid, r in tech_rows.items():
         unlock_items, seen_i = [], set()
         for recipe_id in r.get("UnlockItemRecipes") or []:
-            prod = (recipe_rows.get(recipe_id) or {}).get("Product_Id")
+            # recipe ids in UnlockItemRecipes sometimes differ in casing from the
+            # recipe table key (e.g. `Bow_triple` → `Bow_Triple`); resolve either.
+            prod = (_ci(recipe_rows, recipe_id) or {}).get("Product_Id")
             if prod in item_id_set and prod not in seen_i:
                 seen_i.add(prod)
                 unlock_items.append(prod)
                 item_unlock_tech[prod].add(tid)
         unlock_bld = []
         for b in r.get("UnlockBuildObjects") or []:
-            if b in building_id_set:
-                unlock_bld.append(b)
-                bld_unlock_tech[b].add(tid)
+            canon = b if b in building_id_set else bld_id_ci.get(b.lower())
+            if canon:
+                unlock_bld.append(canon)
+                bld_unlock_tech[canon].add(tid)
         entry = {
             "id": tid,
             "level": r.get("LevelCap", 1),
