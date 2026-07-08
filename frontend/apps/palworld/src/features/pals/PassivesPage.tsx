@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from '@tanstack/react-router'
 import {
   Input,
   Select,
@@ -18,7 +19,11 @@ import {
   type PalsBundle,
   type PassiveCategory,
 } from '../../lib/pals'
+import { palIconUrl } from '../../lib/assets'
 import { PalPageLoading, PassiveRarity, PassiveText, passiveRarityTier } from './components'
+
+/** Pals that innately carry a given passive, keyed by passive id. */
+type PalRef = { id: string; name: string; icon: string }
 
 /** A passive's rarity bucket key, e.g. "+3" / "+1" / "-2". Matches the arrow
  *  display (sign + 1–3 tier), so the filter lines up with what cards show. */
@@ -64,9 +69,18 @@ export default function PassivesPage() {
   }, [lng, t])
 
   // All passives (union of ids with metadata and/or localized text), each with a
-  // display description (real or synthesized), its rank, and its categories.
+  // display description (real or synthesized), its rank, categories, and the
+  // pals that innately carry it (reverse of each pal's `passives` list).
   const all = useMemo(() => {
     if (!bundle) return []
+    const palsByPassive = new Map<string, PalRef[]>()
+    for (const p of bundle.pals) {
+      for (const pid of p.passives) {
+        const list = palsByPassive.get(pid) ?? []
+        list.push({ id: p.id, name: bundle.text[p.id]?.name ?? p.id, icon: p.icon })
+        palsByPassive.set(pid, list)
+      }
+    }
     const ids = new Set<string>()
     for (const p of bundle.passives) ids.add(p.id)
     for (const id of Object.keys(bundle.passiveText)) ids.add(id)
@@ -80,6 +94,7 @@ export default function PassivesPage() {
         search: stripPassiveTags(description).toLowerCase(),
         rank: bundle.passivesById.get(id)?.rank ?? 0,
         categories: passiveCategories(id, bundle),
+        pals: palsByPassive.get(id) ?? [],
       }
     })
   }, [bundle])
@@ -192,16 +207,46 @@ export default function PassivesPage() {
                   <PassiveText text={r.description} />
                 </p>
               ) : null}
-              {r.categories.length ? (
-                <div className="mt-auto flex flex-wrap gap-1 pt-2">
-                  {r.categories.map((c) => (
-                    <span
-                      key={c}
-                      className="rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
-                    >
-                      {t(`passive.category.${c}`)}
-                    </span>
-                  ))}
+              {r.pals.length || r.categories.length ? (
+                <div className="mt-auto space-y-2 pt-2">
+                  {r.pals.length ? (
+                    <div className="flex flex-wrap items-center gap-1">
+                      {r.pals.slice(0, 14).map((p) => (
+                        <Link
+                          key={p.id}
+                          to="/pals/$id"
+                          params={{ id: p.id }}
+                          title={p.name}
+                          data-testid="passive-pal"
+                          className="shrink-0 rounded-full border border-border bg-secondary/40 transition hover:border-primary/60"
+                        >
+                          <img
+                            src={palIconUrl(p.icon)}
+                            alt={p.name}
+                            width={24}
+                            height={24}
+                            loading="lazy"
+                            className="size-6 rounded-full object-contain"
+                          />
+                        </Link>
+                      ))}
+                      {r.pals.length > 14 ? (
+                        <span className="text-xs text-muted-foreground">+{r.pals.length - 14}</span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {r.categories.length ? (
+                    <div className="flex flex-wrap gap-1">
+                      {r.categories.map((c) => (
+                        <span
+                          key={c}
+                          className="rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
+                        >
+                          {t(`passive.category.${c}`)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>
