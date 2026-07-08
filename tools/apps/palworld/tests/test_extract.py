@@ -95,6 +95,11 @@ def test_extract_integration():
 
     assert by_subtype("fastTravel") == 152
     assert by_subtype("eagleStatue") == 22
+    # Eagle statues are map-reveal watchtowers: each carries a FastTravelPointID
+    # (WatchTower_*) keying a localized name in DT_MapRespawnPointInfoText.
+    eagles = [p for p in out["pois"] if p["subtype"] == "eagleStatue"]
+    assert all(p.get("nameByLng", {}).get("en-US") for p in eagles)
+    assert any("Watchtower" in p["nameByLng"]["en-US"] for p in eagles)
     assert by_subtype("dungeon") == 157
     assert by_subtype("treasureMap") == 42
     # Notes are scanned from the persistent level (15) AND the world-partition

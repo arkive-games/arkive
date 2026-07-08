@@ -436,7 +436,10 @@ def run_extract(raw: Path) -> dict:
         if not location:
             continue
         poi = {"subtype": subtype, "sourceName": exp["Name"], "location": location}
-        if subtype == "fastTravel":
+        # fastTravel and eagleStatue (UnlockMapPoint, the map-reveal "watchtower")
+        # both carry their own FastTravelPointID keying DT_MapRespawnPointInfoText
+        # (eagle statues use the WatchTower_* / WatchTower_WorldTree_* rows).
+        if subtype in ("fastTravel", "eagleStatue"):
             nm = _ft_name_by_lng(ft_names, (exp.get("Properties") or {}).get("FastTravelPointID"))
             if nm:
                 poi["nameByLng"] = nm
