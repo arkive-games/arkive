@@ -77,7 +77,7 @@ export function ShellTopBar({
             item.children && item.children.length > 0 ? (
               <NavDropdown key={item.key} item={item} nav={nav} />
             ) : (
-              <span key={item.key}>
+              <span key={item.key} className="inline-flex items-center">
                 {nav.renderItem(item, navItemClass(item.active, nav))}
               </span>
             ),
