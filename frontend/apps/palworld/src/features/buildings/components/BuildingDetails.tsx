@@ -67,7 +67,7 @@ export function BuildingDetails({
             {building.unlockTech.map((tid) => {
               const entry = tech.byId.get(tid)
               return entry ? (
-                <TechChip key={tid} tech={entry} resolvers={techResolvers} withHoverCard={false} />
+                <TechChip key={tid} tech={entry} resolvers={techResolvers} />
               ) : null
             })}
           </div>

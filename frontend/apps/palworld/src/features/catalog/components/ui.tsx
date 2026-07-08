@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@gamemap/ui'
 import { buildingIconUrl } from '../../../lib/catalog'
-import { itemIconUrl, palIconUrl } from '../../../lib/assets'
+import { itemIconUrl } from '../../../lib/assets'
 
 /** A titled panel — the catalog encyclopedias' section container. */
 export function CatalogSection({
@@ -89,16 +89,6 @@ export function rarityBorderClass(rarity: number): string {
 export const CHIP =
   'inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent'
 
-/** Cross-link chip to an item detail page (icon + name). */
-export function ItemLink({ id, name, icon }: { id: string; name: string; icon?: string }) {
-  return (
-    <Link to="/items/$id" params={{ id }} className={CHIP}>
-      {icon ? <ItemGlyph icon={icon} /> : null}
-      {name}
-    </Link>
-  )
-}
-
 /** An item icon that removes itself if the asset is missing (many items have no
  *  exported icon texture). */
 export function ItemGlyph({ icon, size = 20 }: { icon: string; size?: number }) {
@@ -114,42 +104,6 @@ export function ItemGlyph({ icon, size = 20 }: { icon: string; size?: number }) 
       onError={() => setOk(false)}
       className="shrink-0 object-contain"
     />
-  )
-}
-
-/** Cross-link chip to a building detail page (icon + name). */
-export function BuildingLink({ id, name, icon }: { id: string; name: string; icon?: string }) {
-  return (
-    <Link to="/buildings/$id" params={{ id }} className={CHIP}>
-      {icon ? <BuildingGlyph icon={icon} /> : null}
-      {name}
-    </Link>
-  )
-}
-
-/** Cross-link chip to a pal detail page (icon + name). */
-export function PalLink({ id, name, icon }: { id: string; name: string; icon?: string }) {
-  return (
-    <Link to="/pals/$id" params={{ id }} className={CHIP}>
-      {icon ? (
-        <img src={palIconUrl(icon)} alt="" loading="lazy" className="size-5 shrink-0 object-contain" />
-      ) : null}
-      {name}
-    </Link>
-  )
-}
-
-/** A build/craft material: item link + required count. */
-export function MaterialRow({ id, name, count }: { id: string; name: string; count: number }) {
-  return (
-    <Link
-      to="/items/$id"
-      params={{ id }}
-      className="flex items-center gap-2 py-1.5 text-sm transition first:pt-0 last:pb-0 hover:text-primary"
-    >
-      <span className="min-w-0 flex-1 truncate">{name}</span>
-      <span className="shrink-0 tabular-nums text-muted-foreground">×{count}</span>
-    </Link>
   )
 }
 

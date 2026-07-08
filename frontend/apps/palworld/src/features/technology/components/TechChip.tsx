@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
-import { CHIP, ItemGlyph, BuildingGlyph } from '../../catalog/components'
+import { HoverCard, HoverCardTrigger } from '@gamemap/ui'
+import { CHIP, ItemGlyph, BuildingGlyph, HoverCardBody, useNested } from '../../catalog/components'
 import type { TechEntry } from '../../../lib/catalog'
 import type { TechResolvers } from '../techModel'
 import { TechDetails } from './TechDetails'
@@ -8,17 +8,15 @@ import { TechDetails } from './TechDetails'
 export interface TechChipProps {
   tech: TechEntry
   resolvers: TechResolvers
-  /** Wrap the chip in a hover card showing the tech's details (default true). */
-  withHoverCard?: boolean
 }
 
 /**
  * A cross-link chip to a technology: its icon + name, linking to the tech on the
- * tech page (`/technology?tech=<id>`). By default it opens a hover card with the
- * tech's full details; pass `withHoverCard={false}` when the chip itself lives
- * inside another hover card (no nested cards).
+ * tech page (`/technology?tech=<id>`). It opens a hover card with the tech's
+ * details — unless it is itself inside a hover card (no nested cards).
  */
-export function TechChip({ tech, resolvers, withHoverCard = true }: TechChipProps) {
+export function TechChip({ tech, resolvers }: TechChipProps) {
+  const nested = useNested()
   const name = resolvers.name(tech)
   const image = resolvers.image(tech)
 
@@ -41,12 +39,12 @@ export function TechChip({ tech, resolvers, withHoverCard = true }: TechChipProp
     </Link>
   )
 
-  if (!withHoverCard) return chip
+  if (nested) return chip
 
   return (
     <HoverCard openDelay={120} closeDelay={120}>
       <HoverCardTrigger asChild>{chip}</HoverCardTrigger>
-      <HoverCardContent align="start" className="w-80">
+      <HoverCardBody className="w-80">
         <TechDetails
           tech={tech}
           name={name}
@@ -57,7 +55,7 @@ export function TechChip({ tech, resolvers, withHoverCard = true }: TechChipProp
           itemIcon={resolvers.itemIcon}
           buildingIcon={resolvers.buildingIcon}
         />
-      </HoverCardContent>
+      </HoverCardBody>
     </HoverCard>
   )
 }

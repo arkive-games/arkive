@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { cn, HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
-import { ItemGlyph, BuildingGlyph } from '../../catalog/components'
+import { cn, HoverCard, HoverCardTrigger } from '@gamemap/ui'
+import { ItemGlyph, BuildingGlyph, HoverCardBody } from '../../catalog/components'
 import type { TechEntry } from '../../../lib/catalog'
 import { techType, type TechResolvers } from '../techModel'
 import { TechDetails } from './TechDetails'
@@ -76,7 +76,7 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
         </button>
       </HoverCardTrigger>
 
-      <HoverCardContent side="right" align="start" className="w-80">
+      <HoverCardBody side="right" className="w-80">
         <TechDetails
           tech={tech}
           name={name}
@@ -87,7 +87,7 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
           itemIcon={resolvers.itemIcon}
           buildingIcon={resolvers.buildingIcon}
         />
-      </HoverCardContent>
+      </HoverCardBody>
     </HoverCard>
   )
 }

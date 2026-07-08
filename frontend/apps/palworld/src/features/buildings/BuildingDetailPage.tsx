@@ -18,6 +18,7 @@ import {
   StatRow,
   CatalogPageLoading,
   CatalogNotFound,
+  CatalogDataProvider,
   MaterialRow,
 } from '../catalog/components'
 import { makeTechResolvers } from '../technology/techModel'
@@ -152,7 +153,9 @@ export default function BuildingDetailPage() {
 
   return (
     <ContentPage active="/buildings" title={t('building.title')} maxWidth="max-w-5xl">
-      {body}
+      <CatalogDataProvider items={b?.items} buildings={b?.buildings} tech={b?.tech}>
+        {body}
+      </CatalogDataProvider>
     </ContentPage>
   )
 }

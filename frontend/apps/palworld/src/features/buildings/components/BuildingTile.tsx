@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
+import { HoverCard, HoverCardTrigger } from '@gamemap/ui'
 import type { BuildingEntry, BuildingsBundle, TechBundle } from '../../../lib/catalog'
 import { buildingTypeLabel } from '../../catalog/labels'
-import { BuildingGlyph } from '../../catalog/components'
+import { BuildingGlyph, HoverCardBody } from '../../catalog/components'
 import type { TechResolvers } from '../../technology/techModel'
 import { BuildingDetails } from './BuildingDetails'
 
@@ -50,7 +50,7 @@ export function BuildingTile({
         </Link>
       </HoverCardTrigger>
 
-      <HoverCardContent side="right" align="start" className="w-72">
+      <HoverCardBody className="w-72">
         <BuildingDetails
           building={building}
           name={name}
@@ -59,7 +59,7 @@ export function BuildingTile({
           tech={tech}
           techResolvers={techResolvers}
         />
-      </HoverCardContent>
+      </HoverCardBody>
     </HoverCard>
   )
 }
