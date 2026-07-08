@@ -98,12 +98,22 @@ export default function PassivesPage() {
     return PASSIVE_CATEGORIES.filter((c) => present.has(c))
   }, [all])
 
+  // Whether any passive is uncategorized (debuffs / text-only) — drives the
+  // "None" filter option.
+  const hasNone = useMemo(() => all.some((p) => p.categories.length === 0), [all])
+
   const list = useMemo(() => {
     const q = query.trim().toLowerCase()
     return (
       all
         .filter((r) => rarity === 'all' || rarityKey(r.rank) === rarity)
-        .filter((r) => category === 'all' || r.categories.includes(category as PassiveCategory))
+        .filter((r) =>
+          category === 'all'
+            ? true
+            : category === 'none'
+              ? r.categories.length === 0
+              : r.categories.includes(category as PassiveCategory),
+        )
         .filter(
           (r) => !q || r.name.toLowerCase().includes(q) || r.search.includes(q) || r.id.toLowerCase().includes(q),
         )
@@ -147,6 +157,11 @@ export default function PassivesPage() {
                 {t(`passive.category.${c}`)}
               </SelectItem>
             ))}
+            {hasNone ? (
+              <SelectItem value="none" data-testid="category-none">
+                {t('passive.category.none')}
+              </SelectItem>
+            ) : null}
           </SelectContent>
         </Select>
         {bundle ? (
@@ -178,7 +193,7 @@ export default function PassivesPage() {
                 </p>
               ) : null}
               {r.categories.length ? (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-auto flex flex-wrap gap-1 pt-2">
                   {r.categories.map((c) => (
                     <span
                       key={c}

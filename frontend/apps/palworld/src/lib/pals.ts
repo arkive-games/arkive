@@ -32,6 +32,7 @@ export interface PalStats {
   hp: number; meleeAttack: number; shotAttack: number; defense: number
   craftSpeed: number; stamina: number; foodAmount: number; maxFullStomach: number
   captureRate: number; price: number; maleProbability: number
+  slowWalkSpeed: number
   walkSpeed: number; runSpeed: number; rideSprintSpeed: number; transportSpeed: number
   swimSpeed: number
 }
@@ -332,6 +333,7 @@ const EFFECT_CATEGORY: Record<string, PassiveCategory> = {
   MoveSpeed: 'move',
   SwimSpeed: 'move',
   RideJumpCount_Increase: 'move',
+  PlayerSP_DecreaseRate: 'move', // player stamina → mobility
 }
 
 /** Coarse category for one effect `type` (handles element/work prefixes). */
@@ -342,10 +344,11 @@ function effectCategory(type: string): PassiveCategory {
   return EFFECT_CATEGORY[type] ?? 'utility'
 }
 
-/** The set of categories a passive touches, in fixed order. */
+/** The set of categories a passive touches, in fixed order. Debuffs (negative
+ *  rank) and unranked/text-only passives are left uncategorized (empty). */
 export function passiveCategories(id: string, bundle: PalsBundle): PassiveCategory[] {
   const passive = bundle.passivesById.get(id)
-  if (!passive) return []
+  if (!passive || passive.rank <= 0) return []
   const set = new Set<PassiveCategory>()
   for (const e of passive.effects) set.add(effectCategory(e.type))
   return PASSIVE_CATEGORIES.filter((c) => set.has(c))
