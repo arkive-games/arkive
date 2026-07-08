@@ -51,6 +51,19 @@ export const DATABASE_LABELS: Record<Language, string> = {
   'th-TH': 'ฐานข้อมูล', 'tr-TR': 'Veritabanı', 'vi-VN': 'Cơ sở dữ liệu', 'zh-CN': '数据库',
   'zh-TW': '資料庫',
 }
+// Filter-group titles (chip rows on the passives / items / buildings pages).
+export const FILTER_RARITY_LABELS: Record<Language, string> = {
+  'en-US': 'Rarity', 'de-DE': 'Seltenheit', 'es-ES': 'Rareza', 'es-MX': 'Rareza', 'fr-FR': 'Rareté',
+  'id-ID': 'Kelangkaan', 'it-IT': 'Rarità', 'ja-JP': 'レアリティ', 'ko-KR': '등급', 'pl-PL': 'Rzadkość',
+  'pt-BR': 'Raridade', 'ru-RU': 'Редкость', 'th-TH': 'ระดับ', 'tr-TR': 'Nadirlik', 'vi-VN': 'Độ hiếm',
+  'zh-CN': '稀有度', 'zh-TW': '稀有度',
+}
+export const FILTER_CATEGORY_LABELS: Record<Language, string> = {
+  'en-US': 'Category', 'de-DE': 'Kategorie', 'es-ES': 'Categoría', 'es-MX': 'Categoría',
+  'fr-FR': 'Catégorie', 'id-ID': 'Kategori', 'it-IT': 'Categoria', 'ja-JP': 'カテゴリ', 'ko-KR': '종류',
+  'pl-PL': 'Kategoria', 'pt-BR': 'Categoria', 'ru-RU': 'Категория', 'th-TH': 'หมวดหมู่',
+  'tr-TR': 'Kategori', 'vi-VN': 'Danh mục', 'zh-CN': '类别', 'zh-TW': '類別',
+}
 // Passive Skills page: "all rarities" option in the rarity filter.
 export const ALL_RARITIES_LABELS: Record<Language, string> = {
   'en-US': 'All rarities', 'de-DE': 'Alle Seltenheiten', 'es-ES': 'Todas las rarezas',
@@ -570,6 +583,7 @@ for (const lng of LANGUAGES) {
       catalogLoading: CATALOG_STRINGS[lng].loading,
       more: MORE_LABELS[lng],
       filter: FILTER_LABELS[lng],
+      filters: { rarity: FILTER_RARITY_LABELS[lng], category: FILTER_CATEGORY_LABELS[lng] },
       nav: { database: DATABASE_LABELS[lng], pals: PALS_GROUP_LABELS[lng] },
       passive: {
         allRarities: ALL_RARITIES_LABELS[lng],

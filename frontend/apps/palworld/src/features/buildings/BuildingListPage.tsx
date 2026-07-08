@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
-import { FilterChip, toggleValue } from '../../components/FilterChip'
+import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadItems,
   loadBuildings,
@@ -90,17 +90,19 @@ export default function BuildingListPage() {
             ) : null}
           </div>
           {bundle ? (
-            <div className="mb-4 flex flex-wrap gap-1.5" data-testid="building-category-filter">
-              {categories.map((c) => (
-                <FilterChip
-                  key={c}
-                  active={cats.includes(c)}
-                  onClick={() => setCats((s) => toggleValue(s, c))}
-                  testId={`building-cat-${c}`}
-                >
-                  {buildingTypeLabel(c, bundle.typeLabels)}
-                </FilterChip>
-              ))}
+            <div className="mb-4">
+              <FilterRow label={t('filters.category')} testId="building-category-filter">
+                {categories.map((c) => (
+                  <FilterChip
+                    key={c}
+                    active={cats.includes(c)}
+                    onClick={() => setCats((s) => toggleValue(s, c))}
+                    testId={`building-cat-${c}`}
+                  >
+                    {buildingTypeLabel(c, bundle.typeLabels)}
+                  </FilterChip>
+                ))}
+              </FilterRow>
             </div>
           ) : null}
 

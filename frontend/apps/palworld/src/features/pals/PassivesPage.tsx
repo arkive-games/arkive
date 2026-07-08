@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
-import { FilterChip, toggleValue } from '../../components/FilterChip'
+import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
   passiveCategories,
@@ -150,7 +150,7 @@ export default function PassivesPage() {
       </div>
       {bundle ? (
         <div className="mb-4 space-y-1.5">
-          <div className="flex flex-wrap gap-1.5" data-testid="passive-rarity-filter">
+          <FilterRow label={t('filters.rarity')} testId="passive-rarity-filter">
             {rarities.map((key) => (
               <FilterChip
                 key={key}
@@ -161,8 +161,8 @@ export default function PassivesPage() {
                 <PassiveRarity rank={repRank(key)} />
               </FilterChip>
             ))}
-          </div>
-          <div className="flex flex-wrap gap-1.5" data-testid="passive-category-filter">
+          </FilterRow>
+          <FilterRow label={t('filters.category')} testId="passive-category-filter">
             {categories.map((c) => (
               <FilterChip
                 key={c}
@@ -182,7 +182,7 @@ export default function PassivesPage() {
                 {t('passive.category.none')}
               </FilterChip>
             ) : null}
-          </div>
+          </FilterRow>
         </div>
       ) : null}
 

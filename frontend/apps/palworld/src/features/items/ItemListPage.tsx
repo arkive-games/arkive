@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
-import { FilterChip, toggleValue } from '../../components/FilterChip'
+import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { itemTypeLabel } from '../catalog/labels'
 import { CatalogPageLoading, ItemGlyph, rarityBorderClass } from '../catalog/components'
@@ -69,17 +69,19 @@ export default function ItemListPage() {
             ) : null}
           </div>
           {bundle ? (
-            <div className="mb-4 flex flex-wrap gap-1.5" data-testid="item-category-filter">
-              {categories.map((c) => (
-                <FilterChip
-                  key={c}
-                  active={cats.includes(c)}
-                  onClick={() => setCats((s) => toggleValue(s, c))}
-                  testId={`item-cat-${c}`}
-                >
-                  {itemTypeLabel(c, bundle.typeLabels)}
-                </FilterChip>
-              ))}
+            <div className="mb-4">
+              <FilterRow label={t('filters.category')} testId="item-category-filter">
+                {categories.map((c) => (
+                  <FilterChip
+                    key={c}
+                    active={cats.includes(c)}
+                    onClick={() => setCats((s) => toggleValue(s, c))}
+                    testId={`item-cat-${c}`}
+                  >
+                    {itemTypeLabel(c, bundle.typeLabels)}
+                  </FilterChip>
+                ))}
+              </FilterRow>
             </div>
           ) : null}
 
