@@ -7,18 +7,25 @@ export interface ContentPageProps {
   active: NavKey
   /** Page title shown in the mobile-only header. */
   title: ReactNode
-  /** Tailwind max-width class for the centered content column (e.g. "max-w-5xl"). */
+  /**
+   * @deprecated Ignored — every non-map page shares one width (the Paldeck
+   * width, `max-w-6xl`). Kept only so existing call sites still type-check.
+   */
   maxWidth?: string
   children: ReactNode
 }
 
+// Single content width for all non-map pages (matches the Paldeck).
+const CONTENT_MAX_WIDTH = 'max-w-6xl'
+
 /**
  * Shared page shell for every non-map page. Desktop (md+) renders the top nav +
- * scroll area + max-width column exactly as before. Mobile hides the top nav
- * (the bottom tab bar handles navigation), shows a compact title header, and
- * pads the bottom so content clears the fixed bottom tab bar + safe area.
+ * scroll area + max-width column; mobile hides the top nav (the bottom tab bar
+ * handles navigation), shows a compact title header, and pads the bottom so
+ * content clears the fixed bottom tab bar + safe area. The content column width
+ * is unified across all pages.
  */
-export function ContentPage({ active, title, maxWidth = 'max-w-5xl', children }: ContentPageProps) {
+export function ContentPage({ active, title, children }: ContentPageProps) {
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">
       <TopNav active={active} />
@@ -30,7 +37,7 @@ export function ContentPage({ active, title, maxWidth = 'max-w-5xl', children }:
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div
-          className={cn('mx-auto w-full px-4 py-6', maxWidth)}
+          className={cn('mx-auto w-full px-4 py-6', CONTENT_MAX_WIDTH)}
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 4rem)' }}
         >
           {children}
