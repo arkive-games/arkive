@@ -105,6 +105,12 @@ def test_extract_integration():
     # Notes are scanned from the persistent level (15) AND the world-partition
     # cells, then deduped by rounded world location.
     assert by_subtype("note") == 64
+    # Every note resolves a name (title line), description (body) and a full-page
+    # illustration stem from its NoteRowName via DT_Note* tables.
+    notes = [p for p in out["pois"] if p["subtype"] == "note"]
+    assert all(p.get("nameByLng", {}).get("en-US") for p in notes)
+    assert all(p.get("descByLng", {}).get("en-US") for p in notes)
+    assert all(p.get("image", "").startswith("T_Note_") for p in notes)
     assert by_subtype("copper") == 39
     assert by_subtype("quartz") == 27
     assert by_subtype("coal") == 23

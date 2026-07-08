@@ -130,6 +130,12 @@ export interface MarkerInstance {
   images: string[];
   contributors: string[];
   icon?: string;
+  /**
+   * Game-provided illustration asset stem (e.g. a note's full-page drawing),
+   * resolved to `notes/<image>.webp` in the resource repo. Distinct from
+   * `images`, which holds user-contributed photo uploads.
+   */
+  image?: string;
   name?: string;
   indexInSubtype: number;
   /**

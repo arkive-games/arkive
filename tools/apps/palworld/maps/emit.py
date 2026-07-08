@@ -207,6 +207,11 @@ def build_dataset(parsed: dict) -> dict:
         c = {"subtype": p["subtype"], **to_world(p["location"]), "sortKey": p["sourceName"]}
         if p.get("nameByLng"):
             c["nameByLng"] = p["nameByLng"]
+        if p.get("descByLng"):
+            c["descByLng"] = p["descByLng"]
+        # Notes carry a full-page illustration (resource-palworld notes/<stem>.webp).
+        if p.get("image"):
+            c["image"] = p["image"]
         # Effigy relics link to their pal so a pal's page can list them.
         if p.get("effigyPal"):
             c["pal"] = p["effigyPal"]
@@ -335,6 +340,8 @@ def build_dataset(parsed: dict) -> dict:
                         marker["zukanIndexSuffix"] = c["zukanIndexSuffix"]
                 if c.get("count") and c["count"] > 1:
                     marker["count"] = c["count"]
+                if c.get("image"):
+                    marker["image"] = c["image"]
                 marker["images"] = []
                 marker["contributors"] = []
                 marker["indexInSubtype"] = i + 1

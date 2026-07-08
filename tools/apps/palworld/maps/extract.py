@@ -152,6 +152,51 @@ def _ft_name_by_lng(ft_names: dict, point_id) -> dict | None:
     return by_lng or None
 
 
+def _split_note_text(s: str) -> tuple[str, str]:
+    """Split a note's localized string into (title, body). The game authors each
+    note as ``Title\\r\\n\\r\\nBody`` — the first line is the note's name, the rest
+    (its blank-line-separated paragraphs) the description. Fall back to the first
+    line as the title when there is no blank-line separator."""
+    text = s.replace("\r\n", "\n").replace("\r", "\n")
+    title, sep, body = text.partition("\n\n")
+    if not sep:
+        title, _, body = text.partition("\n")
+    return title.strip(), body.strip()
+
+
+def _note_resolver(raw: Path):
+    """Return ``resolve(row) -> (nameByLng | None, descByLng | None, imageStem |
+    None)`` for note POIs. Each ``BP_LevelObject_Note_C`` carries a NoteRowName
+    keying ``DT_NoteMasterDataTable`` (-> ``TextId_Description``), whose text lives
+    in ``DT_NoteDescText`` (base ja + per-language L10N). Each string splits into a
+    title (name) and body (description). ``DT_NoteTextureDataTable`` maps the row to
+    a full-page illustration under ``Texture/Note/`` (``T_Note_<row>``)."""
+    def _rows_or_empty(p: Path) -> dict:
+        return read_rows(p) if p.exists() else {}
+
+    master = _rows_or_empty(raw / "DataTable/NoteData/DT_NoteMasterDataTable.json")
+    textures = _rows_or_empty(raw / "DataTable/NoteData/DT_NoteTextureDataTable.json")
+    desc_by_lng = _read_text_by_lang(raw, "DT_NoteDescText.json")
+
+    def resolve(row: str):
+        text_id = (master.get(row) or {}).get("TextId_Description") or row
+        name_by_lng, desc_out = {}, {}
+        for tag, table in desc_by_lng.items():
+            s = table.get(text_id)
+            if not s:
+                continue
+            title, body = _split_note_text(s)
+            if title:
+                name_by_lng[tag] = title
+            if body:
+                desc_out[tag] = body
+        asset = ((textures.get(row) or {}).get("Texture") or {}).get("AssetPathName") or ""
+        stem = asset.split(".")[-1] if asset else None
+        return (name_by_lng or None, desc_out or None, stem or None)
+
+    return resolve
+
+
 def _strip_entrance_suffixes(name_maps: list[dict]) -> None:
     """Drop the shared trailing "Entrance" token per language (data-driven)."""
     langs = set()
@@ -252,6 +297,10 @@ def _extract_cell_pois(raw: Path) -> list[dict]:
             poi = {"subtype": subtype, "sourceName": exp["Name"], "location": location}
             if effigy_pal:
                 poi["effigyPal"] = effigy_pal
+            if subtype == "note":
+                row = ((exp.get("Properties") or {}).get("NoteRowName") or {}).get("Key")
+                if row:
+                    poi["noteRow"] = row
             pois.append(poi)
     return pois
 
@@ -447,11 +496,29 @@ def run_extract(raw: Path) -> dict:
             nm = tower_name_by_lng(location)
             if nm:
                 poi["nameByLng"] = nm
+        elif subtype == "note":
+            row = ((exp.get("Properties") or {}).get("NoteRowName") or {}).get("Key")
+            if row:
+                poi["noteRow"] = row
         pois.append(poi)
     _strip_entrance_suffixes([p["nameByLng"] for p in pois if p["subtype"] == "tower" and "nameByLng" in p])
     pois.extend(_extract_cell_pois(raw))
     # Notes are scanned from both the level and the cells; dedup the union.
     pois = _dedup_pois_by_location(pois, {"note"})
+
+    # Resolve note names/descriptions/illustrations from their NoteRowName. Done
+    # after the level+cell dedup so each surviving note gets labelled once.
+    note_resolve = _note_resolver(raw)
+    for p in pois:
+        if p["subtype"] != "note" or not p.get("noteRow"):
+            continue
+        name_by_lng, desc_by_lng, image = note_resolve(p["noteRow"])
+        if name_by_lng:
+            p["nameByLng"] = name_by_lng
+        if desc_by_lng:
+            p["descByLng"] = desc_by_lng
+        if image:
+            p["image"] = image
 
     npcs = _extract_npcs(raw, level)
 

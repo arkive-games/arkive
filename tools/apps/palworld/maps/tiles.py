@@ -18,6 +18,8 @@ Image.MAX_IMAGE_PIXELS = None  # source maps are 8192x8192
 MAP_IMAGES = {"MainWorld": "Texture/UI/Map/T_WorldMap.png", "WorldTree": "Texture/UI/Map/T_TreeMap.png"}
 TILE = 1024
 COUNT = 8
+# Long-edge cap for note illustrations (they only render in a small popup).
+NOTE_MAX_EDGE = 1024
 
 
 def _collect_icon_names(data_out: Path) -> set[str]:
@@ -33,6 +35,18 @@ def _collect_icon_names(data_out: Path) -> set[str]:
             if m.get("icon"):
                 icons.add(m["icon"])
     return icons
+
+
+def _collect_note_images(data_out: Path) -> set[str]:
+    """Note markers carry a full-page illustration stem in their ``image`` field
+    (see data-contract ``MarkerInstance.image``); collect the referenced stems."""
+    images: set[str] = set()
+    for f in sorted((data_out / "markers").iterdir()):
+        markers = json.loads(f.read_text(encoding="utf-8"))["markers"]
+        for m in markers:
+            if m.get("image"):
+                images.add(m["image"])
+    return images
 
 
 def _icon_source_path(raw: Path, name: str) -> Path | None:
@@ -59,6 +73,33 @@ def _icon_source_path(raw: Path, name: str) -> Path | None:
 
 def _save_webp(img: Image.Image, dest: Path) -> None:
     img.save(dest, "WEBP", quality=90, method=6)
+
+
+def convert_notes(raw: Path, data_out: Path, res_out: Path) -> None:
+    """Convert note illustrations (large full-page drawings under Texture/Note)
+    to resource-palworld ``notes/<stem>.webp`` (kept out of ``icons/`` — not pin
+    icons). Source art is ~2560px; downscale the long edge to ``NOTE_MAX_EDGE``
+    since these only render in a ~320px popup — keeps each file web-friendly
+    (~1MB -> ~150KB)."""
+    raw, data_out, res_out = Path(raw), Path(data_out), Path(res_out)
+    note_dir = res_out / "notes"
+    note_dir.mkdir(parents=True, exist_ok=True)
+    ok, missing = 0, []
+    for name in _collect_note_images(data_out):
+        src = raw / "Texture/Note" / f"{name}.png"
+        if not src.exists():
+            missing.append(name)
+            continue
+        with Image.open(src) as im:
+            im = im.convert("RGBA") if im.mode not in ("RGB", "RGBA") else im
+            scale = NOTE_MAX_EDGE / max(im.size)
+            if scale < 1:
+                im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
+            _save_webp(im, note_dir / f"{name}.webp")
+        ok += 1
+    print(f"notes: {ok} converted")
+    if missing:
+        print(f"notes missing sources: {missing}")
 
 
 def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
@@ -88,3 +129,5 @@ def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
     print(f"icons: {ok} converted")
     if missing:
         print(f"icons missing sources: {missing}")
+
+    convert_notes(raw, data_out, res_out)

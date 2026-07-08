@@ -10,6 +10,8 @@ export const palworldAssets: MapAssets = {
     icon ? `${RES_BASE}/icons/${icon}.webp` : '',
 }
 
+/** Note illustration (e.g. `T_Note_SorajimaBoss1`) — a full-page drawing. */
+export const noteImageUrl = (stem: string): string => `${RES_BASE}/notes/${stem}.webp`
 /** Pal roster icon (e.g. `T_Anubis_icon_normal`). */
 export const palIconUrl = (icon: string): string => `${RES_BASE}/icons/${icon}.webp`
 /** Element badge icon; every element has one. */
