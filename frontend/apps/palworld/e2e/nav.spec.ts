@@ -91,17 +91,22 @@ test('Passive cards link the pals that carry the passive', async ({ page }) => {
   await expect(palLink).toHaveAttribute('href', /\/pals\//)
 })
 
-test('Passive title bar uses the faceted rarity background', async ({ page }) => {
+test('Passive title bar uses the faceted rarity figure or flat bar', async ({ page }) => {
   await page.goto('/passives')
-  const bar = page.locator('[data-testid="passive-row"] > div').first()
-  await expect(bar).toBeVisible()
-  const info = await bar.evaluate((el) => {
-    const s = getComputedStyle(el)
-    return { img: s.backgroundImage, blend: s.backgroundBlendMode, bg: s.backgroundColor }
-  })
-  expect(info.img).toContain('skill_base_02')
-  expect(info.blend).toContain('multiply')
-  expect(info.bg).not.toBe('rgba(0, 0, 0, 0)')
+  await expect(page.locator('[data-testid="passive-row"] > div:first-child').first()).toBeVisible()
+  const bars = await page.locator('[data-testid="passive-row"] > div:first-child').evaluateAll((els) =>
+    els.map((el) => {
+      const s = getComputedStyle(el)
+      return { img: s.backgroundImage, bg: s.backgroundColor }
+    }),
+  )
+  // Blue/gold rarities show the pre-coloured faceted webp figure (no CSS blend).
+  const figures = bars.filter((b) => b.img.includes('skill_base_02'))
+  expect(figures.length).toBeGreaterThan(0)
+  expect(figures.every((b) => b.img.includes('.webp'))).toBe(true)
+  // Normal / detrimental rarities use the flat dark bar (#1F2428).
+  const flat = bars.filter((b) => b.img === 'none')
+  expect(flat.every((b) => b.bg === 'rgb(31, 36, 40)')).toBe(true)
 })
 
 test('Passive rarity renders tinted arrow icons', async ({ page }) => {

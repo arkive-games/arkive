@@ -1,0 +1,13 @@
+{
+  "source": "reference.png",
+  "rarities": {
+    "blue": {
+      "left": "#61F3CE",
+      "right": "#315690"
+    },
+    "gold": {
+      "left": "#AB9529",
+      "right": "#AB9529"
+    }
+  }
+}

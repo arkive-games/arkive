@@ -179,7 +179,7 @@ export function PassiveRarity({ rank, color }: { rank: number | undefined; color
   if (!rank) return null
   const spec = RANK_ICON[`${rank > 0 ? '+' : '-'}${passiveRarityTier(rank)}`]
   if (!spec) return null
-  const url = `${import.meta.env.BASE_URL}images/passive-rank/${spec.file}.png`
+  const url = `${import.meta.env.BASE_URL}images/passive-rank/${spec.file}.webp`
   return (
     <span
       role="img"
@@ -204,53 +204,51 @@ export function PassiveRarity({ rank, color }: { rank: number | undefined; color
   )
 }
 
-// Title-bar tint per signed rarity tier (matches the in-game skill bars): +1 /
-// unranked use a neutral slate (the game's default bar), the rest the rank hue.
-const RANK_BAR: Record<string, string> = {
-  '+3': RANK_BLUE,
-  '+2': RANK_GOLD,
-  '+1': '#64748B',
-  '-1': RANK_RED,
-  '-2': RANK_RED,
-}
-function rankBarColor(rank: number): string {
-  if (!rank) return '#64748B'
-  return RANK_BAR[`${rank > 0 ? '+' : '-'}${passiveRarityTier(rank)}`] ?? '#64748B'
-}
-/** Black or white, whichever reads better on `hex`. */
-function readableOn(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? '#0E2A3C' : '#FFFFFF'
+// Flat bar background for the "normal" (+1 / unranked) and "red" (detrimental)
+// tiers — these don't get a faceted figure, just the game's dark bar colour.
+const TITLE_BG_FLAT = '#1F2428'
+
+// Per signed rarity tier: +3 and +2 use a pre-coloured faceted figure (generated
+// from the game's grayscale skill-bar strip by tools/apps/palworld/skill_bar);
+// the rest use the flat dark bar. `fg`/`arrow` are chosen to read on each.
+type TitleBarStyle = { figure?: string; bg: string; fg: string; arrow: string }
+function titleBarStyle(rank: number): TitleBarStyle {
+  const tier = passiveRarityTier(rank)
+  if (rank > 0 && tier === 3)
+    return { figure: 'skill_base_02_blue', bg: RANK_BLUE, fg: '#FFFFFF', arrow: '#FFFFFF' }
+  if (rank > 0 && tier === 2)
+    return { figure: 'skill_base_02_gold', bg: RANK_GOLD, fg: '#0E2A3C', arrow: '#0E2A3C' }
+  if (rank < 0) return { bg: TITLE_BG_FLAT, fg: '#FFFFFF', arrow: RANK_RED }
+  return { bg: TITLE_BG_FLAT, fg: '#FFFFFF', arrow: '#FFFFFF' } // +1 / unranked
 }
 
-/** A passive's title row styled like the in-game skill bar: a rarity-tinted,
- *  faceted background (T_prt_pal_skill_base_02) with the name on the left and the
- *  rarity arrows on the right. */
+/** A passive's title row styled like the in-game skill bar: a faceted figure
+ *  (blue / gold rarities) or a flat dark bar (normal / detrimental), with the
+ *  name on the left and the rarity arrows on the right. */
 export function PassiveTitleBar({ name, rank }: { name: string; rank: number }) {
-  const bar = rankBarColor(rank)
-  const fg = readableOn(bar)
-  const tex = `${import.meta.env.BASE_URL}images/passive-rank/skill_base_02.png`
+  const st = titleBarStyle(rank)
+  const bgImage = st.figure
+    ? `url("${import.meta.env.BASE_URL}images/passive-rank/${st.figure}.webp")`
+    : undefined
+  const light = st.fg === '#FFFFFF'
   return (
     <div
       className="flex items-center justify-between gap-2 overflow-hidden rounded border-l-4 px-2 py-1"
       style={{
-        backgroundColor: bar,
-        backgroundImage: `url("${tex}")`,
-        backgroundBlendMode: 'multiply',
-        backgroundSize: 'auto 100%',
-        backgroundRepeat: 'repeat-x',
-        borderLeftColor: fg === '#FFFFFF' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)',
+        backgroundColor: st.bg,
+        backgroundImage: bgImage,
+        backgroundSize: '100% 100%', // stretch the figure to fill the bar (no tiling)
+        backgroundRepeat: 'no-repeat',
+        borderLeftColor: light ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)',
       }}
     >
       <span
         className="truncate text-sm font-semibold"
-        style={{ color: fg, textShadow: fg === '#FFFFFF' ? '0 1px 1px rgba(0,0,0,0.35)' : 'none' }}
+        style={{ color: st.fg, textShadow: light ? '0 1px 1px rgba(0,0,0,0.35)' : 'none' }}
       >
         {name}
       </span>
-      <PassiveRarity rank={rank} color={fg} />
+      <PassiveRarity rank={rank} color={st.arrow} />
     </div>
   )
 }
