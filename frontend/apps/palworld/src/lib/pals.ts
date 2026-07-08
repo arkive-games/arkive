@@ -99,6 +99,15 @@ export interface PalEntry {
 export interface PassiveEffect { type: string; value: number; target: string }
 export interface Passive { id: string; rank: number; effects: PassiveEffect[] }
 
+/** Filter facets emitted by the pipeline: only the values actually present in the
+ *  roster (canonical order), so the Paldeck filters hide chips with no pals. */
+export interface PalFacets {
+  elements: Element[]
+  works: WorkType[]
+  reactions: string[]
+  nocturnal: boolean
+}
+
 // --- locale shapes -----------------------------------------------------------
 export interface PalText {
   name: string
@@ -123,6 +132,8 @@ const j = async <T>(url: string): Promise<T> => {
 export interface PalsBundle {
   pals: PalEntry[]
   byId: Map<string, PalEntry>
+  /** Filter facets present in the roster (from the pipeline). */
+  filters: PalFacets
   /** palId -> localized name/description/partner-skill. */
   text: Record<string, PalText>
   passives: Passive[]
@@ -144,7 +155,7 @@ const cache = new Map<string, Promise<PalsBundle>>()
 
 async function fetchBundle(lng: string): Promise<PalsBundle> {
   const [palsFile, passivesFile, itemsFile, text, passiveText, skills, itemsLoc, enums, partnerEffects, partnerTargets] = await Promise.all([
-    j<{ pals: PalEntry[] }>(`${DATA_BASE}/pals.json`),
+    j<{ pals: PalEntry[]; filters: PalFacets }>(`${DATA_BASE}/pals.json`),
     j<{ passives: Passive[] }>(`${DATA_BASE}/passives.json`),
     j<{ items: { id: string; icon?: string }[] }>(`${DATA_BASE}/items.json`),
     j<Record<string, PalText>>(`${DATA_BASE}/locales/${lng}/pals.json`),
@@ -165,6 +176,7 @@ async function fetchBundle(lng: string): Promise<PalsBundle> {
   return {
     pals: palsFile.pals,
     byId: new Map(palsFile.pals.map((p) => [p.id, p])),
+    filters: palsFile.filters,
     text,
     passives: passivesFile.passives,
     passivesById: new Map(passivesFile.passives.map((p) => [p.id, p])),

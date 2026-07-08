@@ -132,10 +132,10 @@ export function ActiveSkillRow({
         <td className={cn('whitespace-nowrap pr-2 text-right align-top tabular-nums text-muted-foreground', top)}>
           {skill.coolTime}s
         </td>
-        <td className={cn('whitespace-nowrap pr-2 text-right align-top tabular-nums text-muted-foreground', top)}>
+        <td className={cn('whitespace-nowrap pr-2 align-top text-muted-foreground', top)}>{typeLabel}</td>
+        <td className={cn('whitespace-nowrap text-right align-top tabular-nums text-muted-foreground', top)}>
           {formatSkillRange(skill.minRange, skill.maxRange)}
         </td>
-        <td className={cn('whitespace-nowrap align-top text-muted-foreground', top)}>{typeLabel}</td>
       </tr>
       {hasDesc ? (
         <tr>

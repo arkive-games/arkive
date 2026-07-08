@@ -67,6 +67,12 @@ WORK_TYPES = [
     "Collection", "Deforest", "Mining", "OilExtraction", "ProductMedicine",
     "Cool", "Transport", "MonsterFarm",
 ]
+# Wild-encounter reactions (raw AIResponse) in canonical display order, kept in
+# sync with the frontend REACTIONS list. Used to emit the present filter facets.
+REACTIONS = [
+    "Warlike", "Warlike_Anyway", "Warlike_WithoutPlayer", "Kill_All",
+    "Escape_to_Battle", "NotInterested", "Escape", "Friendly", "Boss", "None",
+]
 # WorkType -> colored icon index (Texture/UI/InGame/T_icon_palwork_NN.png). The
 # texture index follows the EPalWorkSuitability enum EXCEPT OilExtraction (09)
 # and ProductMedicine (08) are swapped relative to it — verified by matching each
@@ -706,13 +712,24 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
         })
     pals.sort(key=lambda p: (p["zukanIndex"], p["zukanIndexSuffix"], p["id"]))
 
+    # Filter facets: only the element / work / reaction values actually present in
+    # the roster (canonical order), so the frontend hides chips with no pals.
+    filters = {
+        "elements": [e for e in ELEMENTS if any(e in p["elements"] for p in pals)],
+        "works": [w for w in WORK_TYPES if any(w in p["work"] for p in pals)],
+        "reactions": [
+            r for r in REACTIONS if r != "None" and any(p["reaction"] == r for p in pals)
+        ],
+        "nocturnal": any(p["nocturnal"] for p in pals),
+    }
+
     disp = _displayable_passives(passive_main)
     passives = [
         {"id": pid, "rank": v.get("Rank", 0), "effects": _passive_effects(v)}
         for pid, v in disp.items()
     ]
 
-    write_json(data_out / "pals.json", {"pals": pals})
+    write_json(data_out / "pals.json", {"pals": pals, "filters": filters})
     write_json(data_out / "passives.json", {"passives": passives})
 
     # ---- Localized text ----------------------------------------------------

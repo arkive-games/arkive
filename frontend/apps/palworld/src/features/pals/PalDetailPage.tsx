@@ -359,8 +359,8 @@ export default function PalDetailPage() {
                       <th className="w-full pb-1 pr-2 font-medium">{t('pal.skill')}</th>
                       <th className="w-px whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.power')}</th>
                       <th className="w-px whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.cooldown')}</th>
-                      <th className="w-px whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.range')}</th>
-                      <th className="w-px whitespace-nowrap pb-1 font-medium">{t('pal.type')}</th>
+                      <th className="w-px whitespace-nowrap pb-1 pr-2 font-medium">{t('pal.type')}</th>
+                      <th className="w-px whitespace-nowrap pb-1 text-right font-medium">{t('pal.range')}</th>
                     </tr>
                   </thead>
                   <tbody>

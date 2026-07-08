@@ -14,7 +14,7 @@ import {
   cn,
 } from '@gamemap/ui'
 import { elementIconUrl, itemIconUrl, workIconUrl } from '../../../lib/assets'
-import { ELEMENTS, REACTIONS, WORK_TYPES, type PalsBundle } from '../../../lib/pals'
+import { type PalsBundle } from '../../../lib/pals'
 import { filterStrings } from '../filterStrings'
 import { isFilterActive, toggle, type PalFilter } from '../useFilteredPals'
 
@@ -86,11 +86,9 @@ export function PalFilters({
   const fs = filterStrings(i18n.resolvedLanguage ?? 'en-US')
   const [lootOpen, setLootOpen] = useState(false)
 
-  // Reactions actually present in the roster, in canonical order.
-  const reactions = useMemo(() => {
-    const present = new Set(bundle.pals.map((p) => p.reaction))
-    return REACTIONS.filter((r) => present.has(r) && r !== 'None')
-  }, [bundle])
+  // Which element / work / reaction values exist in the roster is decided by the
+  // pipeline (data-palworld/pals.json `filters`) so chips with no pals are hidden.
+  const { elements, works, reactions } = bundle.filters
 
   // Every lootable item id (union of all drops), sorted by localized name.
   const lootItems = useMemo(() => {
@@ -105,33 +103,37 @@ export function PalFilters({
 
   return (
     <div className="space-y-2 rounded-lg border border-border bg-card/50 p-3">
-      <Group label={fs.elements}>
-        {ELEMENTS.map((e) => (
-          <Chip
-            key={e}
-            active={filter.elements.includes(e)}
-            onClick={() => onChange({ ...filter, elements: toggle(filter.elements, e) })}
-            title={bundle.enums.elements[e] ?? e}
-          >
-            <Glyph src={elementIconUrl(e)} size={16} />
-            {bundle.enums.elements[e] ?? e}
-          </Chip>
-        ))}
-      </Group>
+      {elements.length ? (
+        <Group label={fs.elements}>
+          {elements.map((e) => (
+            <Chip
+              key={e}
+              active={filter.elements.includes(e)}
+              onClick={() => onChange({ ...filter, elements: toggle(filter.elements, e) })}
+              title={bundle.enums.elements[e] ?? e}
+            >
+              <Glyph src={elementIconUrl(e)} size={16} />
+              {bundle.enums.elements[e] ?? e}
+            </Chip>
+          ))}
+        </Group>
+      ) : null}
 
-      <Group label={fs.col.work}>
-        {WORK_TYPES.map((w) => (
-          <Chip
-            key={w}
-            active={filter.works.includes(w)}
-            onClick={() => onChange({ ...filter, works: toggle(filter.works, w) })}
-            title={bundle.enums.work[w] ?? w}
-          >
-            <Glyph src={workIconUrl(w)} size={16} />
-            {bundle.enums.work[w] ?? w}
-          </Chip>
-        ))}
-      </Group>
+      {works.length ? (
+        <Group label={fs.col.work}>
+          {works.map((w) => (
+            <Chip
+              key={w}
+              active={filter.works.includes(w)}
+              onClick={() => onChange({ ...filter, works: toggle(filter.works, w) })}
+              title={bundle.enums.work[w] ?? w}
+            >
+              <Glyph src={workIconUrl(w)} size={16} />
+              {bundle.enums.work[w] ?? w}
+            </Chip>
+          ))}
+        </Group>
+      ) : null}
 
       {reactions.length ? (
         <Group label={fs.reaction}>
@@ -147,14 +149,16 @@ export function PalFilters({
         </Group>
       ) : null}
 
-      <Group label={fs.nocturnal}>
-        <Chip
-          active={filter.nocturnal}
-          onClick={() => onChange({ ...filter, nocturnal: !filter.nocturnal })}
-        >
-          {fs.nocturnalOnly}
-        </Chip>
-      </Group>
+      {bundle.filters.nocturnal ? (
+        <Group label={fs.nocturnal}>
+          <Chip
+            active={filter.nocturnal}
+            onClick={() => onChange({ ...filter, nocturnal: !filter.nocturnal })}
+          >
+            {fs.nocturnalOnly}
+          </Chip>
+        </Group>
+      ) : null}
 
       <Group label={fs.loot}>
         <Popover open={lootOpen} onOpenChange={setLootOpen}>
