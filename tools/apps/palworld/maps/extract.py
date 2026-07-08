@@ -82,6 +82,27 @@ NPC_SPAWNER_RX = re.compile(r"^BP_(?:Mono|QuestTarget)NPCSpawner(?:_([A-Za-z0-9]
 # `effigy<Pal>` subtypes; the base class stays `lifmunkEffigy`.
 EFFIGY_VARIANT_RX = re.compile(r"^BP_LevelObject_Relic_([A-Za-z0-9]+)_C$")
 
+# Each effigy relic grants one player status buff (its BP's `EPalRelicType`).
+# The buff's localized name/description is the Statue-of-Power UI text
+# `BUILDUP_PLAYER_STATUS[_DESC]_<NN>`, where NN is the relic type's index below
+# (same order as DT_PlayerStatusRankMasterDataTable).
+RELIC_TYPE_INDEX = {
+    "CapturePower": 0, "HungerReduction": 1, "SwimSpeed": 2, "FoodDecayReduction": 3,
+    "JumpPower": 4, "GliderSpeed": 5, "ClimbSpeed": 6, "StatusAilmentResist": 7,
+    "StaminaReduction": 8, "SphereHoming": 9, "ExpBonus": 10, "RainbowPassiveRate": 11,
+    "MoveSpeed": 12,
+}
+_RELIC_TYPE_RX = re.compile(r"EPalRelicType::([A-Za-z]+)")
+
+
+def _relic_type_of(raw: Path, pal: str) -> str | None:
+    """Read the `EPalRelicType` a per-pal effigy grants, from its level-object BP."""
+    p = raw / "Blueprint/MapObject/Object/LevelObject" / f"BP_LevelObject_Relic_{pal}.json"
+    if not p.exists():
+        return None
+    m = _RELIC_TYPE_RX.search(p.read_text(encoding="utf-8"))
+    return m.group(1) if m else None
+
 # Post-1.0 content not covered by the pre-1.0 taxonomy — surfaced for reporting.
 NEW_TYPE_WATCH = [
     ("oilrigTreasure", "Oil Rig raid treasure boxes", "BP_OilrigTreasureBoxSpawner_C"),
@@ -737,12 +758,15 @@ def run_extract(raw: Path) -> dict:
     # localized item name by matching the pal's Japanese name, so subtypes read
     # e.g. "Lamball Effigy" / "棉悠悠雕像" rather than the bare pal name.
     item_names = _read_text_by_lang(raw, "DT_ItemNameText_Common.json")
+    buildup = _read_text_by_lang(raw, "DT_UI_Common_Text_Common.json")  # Statue-of-Power UI text
     ja_relic_key = {}  # ja pal name -> ITEM_NAME_Relic_<NN> key
     for key, name in item_names[JA_TAG].items():
         if key.startswith("ITEM_NAME_Relic_") and name.endswith("像"):
             ja_relic_key[name[:-1]] = key
     ja_pal_names = names_by_lang[JA_TAG]
     effigy_names: dict[str, dict] = {}  # effigy subtype id -> {tag: name}
+    effigy_icons: dict[str, str] = {}   # effigy subtype id -> relic item icon stem
+    effigy_descs: dict[str, dict] = {}  # effigy subtype id -> {tag: buff description}
     for poi in pois:
         pal = poi.get("effigyPal")
         if not pal or poi["subtype"] in effigy_names:
@@ -752,12 +776,24 @@ def run_extract(raw: Path) -> dict:
             effigy_names[poi["subtype"]] = {
                 tag: tbl[key] for tag, tbl in item_names.items() if key in tbl
             }
+            # Relic item icon: ITEM_NAME_Relic_<NN> -> texture stem
+            # "T_itemicon_Relic_<NN>" (resolved from Others/InventoryItemIcon).
+            effigy_icons[poi["subtype"]] = "T_itemicon_" + key[len("ITEM_NAME_"):]
+        # Buff description: the relic's EPalRelicType -> Statue-of-Power status text.
+        rtype = _relic_type_of(raw, pal)
+        idx = RELIC_TYPE_INDEX.get(rtype) if rtype else None
+        if idx is not None:
+            dkey = f"BUILDUP_PLAYER_STATUS_DESC_{idx:02d}"
+            desc = {tag: tbl[dkey] for tag, tbl in buildup.items() if tbl.get(dkey)}
+            if desc:
+                effigy_descs[poi["subtype"]] = desc
 
     return {
         "bounds": bounds, "pois": pois, "bosses": bosses, "wanted": wanted,
         "predators": predators, "palSpawns": pal_spawns, "palMeta": pal_meta,
         "namesByLang": names_by_lang, "palIcons": pal_icons,
-        "effigyNames": effigy_names, "npcs": npcs,
+        "effigyNames": effigy_names, "effigyIcons": effigy_icons,
+        "effigyDescriptions": effigy_descs, "npcs": npcs,
         "newTypeCandidates": new_type_candidates,
     }
 

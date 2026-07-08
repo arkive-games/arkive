@@ -173,7 +173,8 @@ export default function App() {
     if (!staticData || !markerData) return []
     return markerData.markers.map((m) => {
       const loc = markerData.l10n[m.id]
-      const subLabel = staticData.typesL10n.subtypes[m.subtype]?.name ?? m.subtype
+      const subtypeL10n = staticData.typesL10n.subtypes[m.subtype]
+      const subLabel = subtypeL10n?.name ?? m.subtype
       const subtypeMeta = subtypeMetaMap.get(m.subtype)
       return {
         id: m.id,
@@ -187,7 +188,9 @@ export default function App() {
         images: [] as string[],
         contributors: [] as string[],
         localizedName: loc?.name ?? subLabel,
-        localizedDescription: loc?.description,
+        // Fall back to the subtype's shared description (e.g. an effigy's buff)
+        // when a marker has no description of its own.
+        localizedDescription: loc?.description ?? subtypeL10n?.description,
         subtypeLabel: subLabel,
         subtypeMeta,
         completed: false,

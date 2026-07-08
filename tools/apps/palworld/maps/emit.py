@@ -143,16 +143,24 @@ def build_dataset(parsed: dict) -> dict:
         if pal:
             effigy_pal_by_sub.setdefault(p["subtype"], pal)
     effigy_names = parsed.get("effigyNames") or {}  # subtype id -> {lng: item name}
+    effigy_icons = parsed.get("effigyIcons") or {}  # subtype id -> relic icon stem
+    effigy_descs = parsed.get("effigyDescriptions") or {}  # subtype id -> {lng: buff desc}
     effigy_subtypes = []
     for sid, pal in effigy_pal_by_sub.items():
         # Prefer the official effigy item name (ITEM_NAME_Relic_<NN>); fall back
         # to the bare pal name for any language the item table doesn't cover.
         item_name = effigy_names.get(sid) or {}
+        item_desc = effigy_descs.get(sid) or {}
         names = {lng: (item_name.get(lng) or _pal_name(names_by_lang[lng], pal)) for lng in languages}
+        # Each effigy's buff (its EPalRelicType) as a per-language default
+        # description shared by every marker of the subtype.
+        descriptions = {lng: item_desc.get(lng, "") for lng in languages}
         effigy_subtypes.append({
             "id": sid, "category": "effigy", "effigyPal": pal,
-            "icon": _pal_icon(pal_icons, pal),
+            # The relic item icon (falls back to the pal icon if unresolved).
+            "icon": effigy_icons.get(sid) or _pal_icon(pal_icons, pal),
             "names": names,
+            "descriptions": descriptions,
         })
     effigy_subtypes.sort(key=lambda s: (
         0 if z_for_id(s["effigyPal"])["zukanIndex"] >= 0 else 1,
@@ -364,7 +372,10 @@ def build_dataset(parsed: dict) -> dict:
             "maps": {m["id"]: {"name": m["names"][lng], "description": "", "shortName": m["shortNames"][lng]} for m in src["maps"]},
             "types": {
                 "categories": {c["id"]: {"name": c["names"][lng]} for c in src["categories"]},
-                "subtypes": {s["id"]: {"name": s["names"][lng], "description": ""} for s in subtype_defs},
+                "subtypes": {
+                    s["id"]: {"name": s["names"][lng], "description": (s.get("descriptions") or {}).get(lng, "")}
+                    for s in subtype_defs
+                },
             },
             "markers": marker_loc[lng],
             "regions": {mid: {} for mid in map_ids},
