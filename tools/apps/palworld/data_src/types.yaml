@@ -34,7 +34,7 @@ subtypes:
     category: location
     icon: T_icon_compass_FTUnlockMap
     iconScale: 1.75
-    names: { en-US: Eagle Statue, ja-JP: 大鷲の石像, de-DE: Adlerstatue, es-ES: Estatua del águila, es-MX: Estatua del águila, fr-FR: Statue de l'aigle, id-ID: Patung Elang, it-IT: Statua dell'aquila, ko-KR: 독수리 석상, pl-PL: Posąg orła, pt-BR: Estátua da águia, ru-RU: Статуя орла, th-TH: รูปปั้นนกอินทรี, tr-TR: Kartal Heykeli, vi-VN: Tượng đại bàng, zh-CN: 巨鹰雕像, zh-TW: 巨鷹雕像 }
+    names: { en-US: Watchtower, ja-JP: 観測塔, de-DE: Beobachtungswarte, es-ES: Torre de observación, es-MX: Torre de observación, fr-FR: Tour d'observation, id-ID: Menara Observasi, it-IT: Torre di osservazione, ko-KR: 관측탑, pl-PL: Wieża obserwacyjna, pt-BR: Torre de Observação, ru-RU: Наблюдательная башня, th-TH: หอสังเกตการณ์, tr-TR: Gözetleme Kulesi, vi-VN: Tháp Quan Sát, zh-CN: 瞭望塔, zh-TW: 瞭望塔 }
   - id: tower
     category: location
     icon: T_icon_compass_tower
