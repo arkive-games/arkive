@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from '@tanstack/react-router'
-import { Map, PawPrint, Package, Hammer, Menu, FlaskConical, ScrollText, Heart } from 'lucide-react'
+import { Map, PawPrint, Package, Hammer, Menu, FlaskConical, ScrollText, Heart, Sparkles } from 'lucide-react'
 import { cn, Sheet, SheetContent, SheetHeader, SheetTitle } from '@gamemap/ui'
 import { ThemeToggle } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
@@ -17,6 +17,7 @@ function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/buildings')) return '/buildings'
   if (pathname.startsWith('/technology')) return '/technology'
   if (pathname.startsWith('/quests')) return '/quests'
+  if (pathname.startsWith('/passives')) return '/passives'
   if (pathname.startsWith('/breeding')) return '/breeding'
   return '/'
 }
@@ -38,6 +39,7 @@ export function BottomTabBar() {
     { key: '/technology', label: t('tech.title'), icon: FlaskConical },
     { key: '/quests', label: t('quest.title'), icon: ScrollText },
     { key: '/breeding', label: t('breeding.navBreeding'), icon: Heart },
+    { key: '/passives', label: t('pal.section.passives'), icon: Sparkles },
   ]
   const moreActive = more.some((m) => m.key === active)
 

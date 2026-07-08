@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 
-export type NavKey = '/' | '/pals' | '/breeding' | '/items' | '/buildings' | '/technology' | '/quests'
+export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/items' | '/buildings' | '/technology' | '/quests'
 
 /**
  * Unified top navigation shared by every page (map, Paldeck, breeding). The
@@ -16,7 +16,15 @@ export function TopNav({ active }: { active: NavKey }) {
 
   const items: ShellNavItem[] = [
     { key: '/', label: t('breeding.navMap'), active: active === '/' },
-    { key: '/pals', label: t('pal.title'), active: active === '/pals' },
+    {
+      key: 'pals',
+      label: t('nav.pals'),
+      children: [
+        { key: '/pals', label: t('pal.title'), active: active === '/pals' },
+        { key: '/breeding', label: t('breeding.navBreeding'), active: active === '/breeding' },
+        { key: '/passives', label: t('pal.section.passives'), active: active === '/passives' },
+      ],
+    },
     {
       key: 'database',
       label: t('nav.database'),
@@ -27,7 +35,6 @@ export function TopNav({ active }: { active: NavKey }) {
         { key: '/quests', label: t('quest.title'), active: active === '/quests' },
       ],
     },
-    { key: '/breeding', label: t('breeding.navBreeding'), active: active === '/breeding' },
   ]
 
   return (

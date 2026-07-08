@@ -23,6 +23,7 @@ import BuildingDetailPage from './features/buildings/BuildingDetailPage'
 import TechnologyPage from './features/technology/TechnologyPage'
 import QuestListPage from './features/quests/QuestListPage'
 import QuestDetailPage from './features/quests/QuestDetailPage'
+import PassivesPage from './features/pals/PassivesPage'
 import { BottomTabBar } from './components/BottomTabBar'
 
 const THEME_KEY = 'palworld.theme'
@@ -91,6 +92,11 @@ const palDetailRoute = createRoute({
   path: '/pals/$id',
   component: PalDetailPage,
 })
+const passivesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/passives',
+  component: PassivesPage,
+})
 const itemsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/items',
@@ -131,6 +137,7 @@ const routeTree = rootRoute.addChildren([
   breedingRoute,
   palsRoute,
   palDetailRoute,
+  passivesRoute,
   itemsRoute,
   itemDetailRoute,
   buildingsRoute,

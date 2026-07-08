@@ -51,6 +51,13 @@ export const DATABASE_LABELS: Record<Language, string> = {
   'th-TH': 'ฐานข้อมูล', 'tr-TR': 'Veritabanı', 'vi-VN': 'Cơ sở dữ liệu', 'zh-CN': '数据库',
   'zh-TW': '資料庫',
 }
+// Top-nav dropdown group label for pal-related pages (Paldeck/Breeding/Passives).
+export const PALS_GROUP_LABELS: Record<Language, string> = {
+  'en-US': 'Pals', 'de-DE': 'Pals', 'es-ES': 'Pals', 'es-MX': 'Pals', 'fr-FR': 'Pals',
+  'id-ID': 'Pals', 'it-IT': 'Pals', 'ja-JP': 'パル', 'ko-KR': '팰', 'pl-PL': 'Pals',
+  'pt-BR': 'Pals', 'ru-RU': 'Палы', 'th-TH': 'Pals', 'tr-TR': 'Pals', 'vi-VN': 'Pals',
+  'zh-CN': '帕鲁', 'zh-TW': '帕魯',
+}
 
 const resources = {
   'en-US': {
@@ -527,7 +534,7 @@ for (const lng of LANGUAGES) {
       catalogLoading: CATALOG_STRINGS[lng].loading,
       more: MORE_LABELS[lng],
       filter: FILTER_LABELS[lng],
-      nav: { database: DATABASE_LABELS[lng] },
+      nav: { database: DATABASE_LABELS[lng], pals: PALS_GROUP_LABELS[lng] },
     },
     true,
     true,
