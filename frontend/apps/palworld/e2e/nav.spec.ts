@@ -15,3 +15,23 @@ test('Database trigger shows active styling on a catalog route', async ({ page }
   await page.goto('/buildings')
   await expect(page.getByTestId('nav-dropdown-database')).toHaveClass(/text-primary/)
 })
+
+test('Pals dropdown navigates to the Passive Skills page and search filters it', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('nav-dropdown-pals').click()
+  const passivesLink = page.getByRole('menuitem', { name: 'Passive Skills' })
+  await expect(passivesLink).toBeVisible()
+  await passivesLink.click()
+  await expect(page).toHaveURL(/\/passives$/)
+
+  const rows = page.getByTestId('passive-row')
+  await expect(rows.first()).toBeVisible()
+  const total = await rows.count()
+  expect(total).toBeGreaterThan(0)
+
+  // A query that can't match anything empties the list; clearing restores it.
+  await page.getByTestId('passive-search').fill('zzzzzzzzzz')
+  await expect(rows).toHaveCount(0)
+  await page.getByTestId('passive-search').fill('')
+  await expect(rows.first()).toBeVisible()
+})
