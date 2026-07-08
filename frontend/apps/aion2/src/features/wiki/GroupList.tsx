@@ -69,7 +69,7 @@ export default function GroupList({
         </ul>
       </nav>
       <div className="min-w-0 flex-1">
-        <h1 className="mb-2 text-2xl font-bold">
+        <h1 className="mb-2 text-3xl font-bold">
           {t(`wiki/taxonomy:groups.${type}.${group}.name`)}
         </h1>
         <div className="mb-4 flex gap-2 text-sm">
@@ -93,7 +93,7 @@ export default function GroupList({
         {node.sections.map((s) =>
           sections[s.slug]?.length ? (
             <section key={s.slug} id={s.slug} className="mb-6 scroll-mt-4">
-              <h2 className="mb-2 border-b border-border pb-1 text-lg font-semibold">
+              <h2 className="mb-2 border-b border-border pb-1 text-xl font-semibold">
                 {t(`wiki/taxonomy:sections.${s.slug}.name`)}
               </h2>
               <table className="w-full text-sm">

@@ -85,6 +85,18 @@ export function WorkSuitability({
   )
 }
 
+/** Format an active-skill range (raw world units → metres). Returns '—' when
+ * the skill has no meaningful reach. Shows `min–max m` when a minimum exists,
+ * otherwise just the maximum reach. */
+export function formatSkillRange(minRange: number, maxRange: number): string {
+  if (!maxRange || maxRange <= 0) return '—'
+  const m = (u: number) => {
+    const v = u / 100
+    return Number.isInteger(v) ? `${v}` : v.toFixed(1)
+  }
+  return minRange > 0 ? `${m(minRange)}–${m(maxRange)} m` : `${m(maxRange)} m`
+}
+
 /** One row of the active-skill table. Render inside a <tbody>. */
 export function ActiveSkillRow({
   skill,
@@ -109,10 +121,13 @@ export function ActiveSkillRow({
           <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
         ) : null}
         {categoryLabel ? (
-          <div className="mt-0.5 text-[11px] text-muted-foreground/80">{categoryLabel}</div>
+          <div className="mt-0.5 text-xs text-muted-foreground/80">{categoryLabel}</div>
         ) : null}
       </td>
       <td className="py-2 pr-2 text-right tabular-nums">{skill.power || '—'}</td>
+      <td className="py-2 pr-2 text-right tabular-nums text-muted-foreground">
+        {formatSkillRange(skill.minRange, skill.maxRange)}
+      </td>
       <td className="py-2 text-right tabular-nums text-muted-foreground">{skill.coolTime}s</td>
     </tr>
   )
@@ -172,7 +187,19 @@ function parsePassiveText(text: string): { text: string; cls: string | null }[] 
     }
     segs.push({ text: part, cls })
   }
-  return segs
+  // The game often tags only the "%" (or sign), leaving the number plain — e.g.
+  // "Work Speed -20<NumRed_13>%</>". Pull a trailing number/sign off the plain
+  // segment into the adjacent coloured one so the whole value is coloured.
+  for (let i = 1; i < segs.length; i++) {
+    const prev = segs[i - 1]
+    const cur = segs[i]
+    if (!cur.cls || prev.cls) continue
+    const m = /([+-]?[\d.,]*\d[\d.,]*|[+-])$/.exec(prev.text)
+    if (!m) continue
+    prev.text = prev.text.slice(0, m.index)
+    cur.text = m[0] + cur.text
+  }
+  return segs.filter((s) => s.text)
 }
 
 /** Render a passive description string, styling the game's colour/status tags.

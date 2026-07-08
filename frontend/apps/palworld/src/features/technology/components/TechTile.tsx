@@ -60,7 +60,7 @@ export function TechTile({ tech, resolvers }: TechTileProps) {
         >
           <span
             className={cn(
-              'flex items-center justify-between gap-1 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+              'flex items-center justify-between gap-1 px-2 py-0.5 text-xs font-medium uppercase tracking-wide',
               ancient
                 ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300'
                 : 'bg-sky-500/15 text-sky-700 dark:text-sky-300',

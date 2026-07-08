@@ -87,7 +87,7 @@ export default function BuildingDetailPage() {
             ) : null}
             <div className="min-w-0">
               <div className="text-sm text-muted-foreground">{buildingTypeLabel(bld.typeA, b.buildings.typeLabels)}</div>
-              <h1 className="text-2xl font-bold">{text?.name ?? bld.id}</h1>
+              <h1 className="text-3xl font-bold">{text?.name ?? bld.id}</h1>
               <div className="mt-0.5 font-mono text-xs text-muted-foreground">{bld.id}</div>
             </div>
           </div>

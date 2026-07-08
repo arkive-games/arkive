@@ -41,16 +41,16 @@ export function TechDetails({
         <span
           className={
             ancient
-              ? 'rounded bg-purple-500/15 px-1.5 py-0.5 text-[11px] font-medium text-purple-600 dark:text-purple-300'
-              : 'rounded bg-sky-500/15 px-1.5 py-0.5 text-[11px] font-medium text-sky-700 dark:text-sky-300'
+              ? 'rounded bg-purple-500/15 px-1.5 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-300'
+              : 'rounded bg-sky-500/15 px-1.5 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300'
           }
         >
           {ancient ? t('tech.ancientTitle') : t('tech.normalTitle')}
         </span>
-        <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium">
+        <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
           {type === 'item' ? t('tech.typeItem') : t('tech.typeStructure')}
         </span>
-        <span className="text-[11px] tabular-nums text-muted-foreground">
+        <span className="text-xs tabular-nums text-muted-foreground">
           {t('tech.level', { level: tech.level })} · {t('tech.cost', { count: tech.cost })}
         </span>
       </div>
@@ -74,7 +74,7 @@ export function TechDetails({
 
       {tech.unlockItems.length ? (
         <div>
-          <div className="mb-1 text-[11px] text-muted-foreground">{t('tech.unlocksItems')}</div>
+          <div className="mb-1 text-xs text-muted-foreground">{t('tech.unlocksItems')}</div>
           <div className="flex flex-wrap gap-1.5">
             {tech.unlockItems.map((id) => (
               <ItemLink key={id} id={id} name={iname(id)} icon={itemIcon(id)} />
@@ -85,7 +85,7 @@ export function TechDetails({
 
       {tech.unlockBuildings.length ? (
         <div>
-          <div className="mb-1 text-[11px] text-muted-foreground">{t('tech.unlocksBuildings')}</div>
+          <div className="mb-1 text-xs text-muted-foreground">{t('tech.unlocksBuildings')}</div>
           <div className="flex flex-wrap gap-1.5">
             {tech.unlockBuildings.map((id) => (
               <BuildingLink key={id} id={id} name={bname(id)} icon={buildingIcon(id)} />

@@ -95,7 +95,7 @@ export default function ItemDetailPage() {
             {item.icon ? <ItemGlyph icon={item.icon} size={48} /> : null}
             <div className="min-w-0">
               <div className="text-sm text-muted-foreground">{itemTypeLabel(item.typeA, b.items.typeLabels)}</div>
-              <h1 className="text-2xl font-bold">{text?.name ?? item.id}</h1>
+              <h1 className="text-3xl font-bold">{text?.name ?? item.id}</h1>
             </div>
           </div>
 

@@ -107,7 +107,7 @@ export default function NpcPage({ id }: { id: string }) {
       <header className="space-y-3">
         <Breadcrumb items={breadcrumbItems} />
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-bold">{name}</h1>
+          <h1 className="text-3xl font-bold">{name}</h1>
           <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
             {levelText}
           </span>
@@ -171,7 +171,7 @@ export default function NpcPage({ id }: { id: string }) {
 
         <div className="order-2 min-w-0 md:order-1">
           <section className="mb-6 rounded-md border border-border bg-card p-4 text-card-foreground">
-            <h2 className="mb-3 text-lg font-semibold">
+            <h2 className="mb-3 text-xl font-semibold">
               {t("wiki:npc.spawns")}
             </h2>
             {npc.spawns.length > 0 ? (
@@ -200,7 +200,7 @@ export default function NpcPage({ id }: { id: string }) {
 
           {npc.drops.length > 0 && (
             <section className="rounded-md border border-border bg-card p-4 text-card-foreground">
-              <h2 className="mb-3 text-lg font-semibold">
+              <h2 className="mb-3 text-xl font-semibold">
                 {t("wiki:npc.drops")}
               </h2>
               <ul className="divide-y divide-border/60 text-sm">

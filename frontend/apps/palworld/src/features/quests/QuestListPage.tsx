@@ -99,7 +99,7 @@ export default function QuestListPage() {
                   >
                     <span
                       className={
-                        'shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium ' +
+                        'shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ' +
                         (quest.type === 'Main'
                           ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
                           : 'bg-sky-500/15 text-sky-600 dark:text-sky-400')

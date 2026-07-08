@@ -144,7 +144,7 @@ export default function TechnologyPage() {
   return (
     <ContentPage active="/technology" title={t('tech.title')} maxWidth="max-w-6xl">
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <h1 className="hidden text-2xl font-bold md:block">{t('tech.title')}</h1>
+            <h1 className="hidden text-3xl font-bold md:block">{t('tech.title')}</h1>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}

@@ -225,7 +225,7 @@ export default function PalDetailPage() {
                 {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
               </div>
             ) : null}
-            <h1 className="text-2xl font-bold">{text?.name ?? pal.id}</h1>
+            <h1 className="text-3xl font-bold">{text?.name ?? pal.id}</h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               {pal.elements.map((e) => (
                 <ElementBadge key={e} element={e} label={bundle.enums.elements[e] ?? e} />
@@ -347,6 +347,7 @@ export default function PalDetailPage() {
                       <th className="whitespace-nowrap pb-1 pr-2 text-center font-medium">{t('pal.lv')}</th>
                       <th className="pb-1 pr-2 font-medium">{t('pal.skill')}</th>
                       <th className="whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.power')}</th>
+                      <th className="whitespace-nowrap pb-1 pr-2 text-right font-medium">{t('pal.range')}</th>
                       <th className="whitespace-nowrap pb-1 text-right font-medium">{t('pal.cooldown')}</th>
                     </tr>
                   </thead>

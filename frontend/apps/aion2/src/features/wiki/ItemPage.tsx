@@ -113,7 +113,7 @@ export default function ItemPage({ id }: { id: string }) {
         <div className="flex items-start gap-3">
           <ItemIcon icon={item.icon} alt={name} size={56} />
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-3xl font-bold">
               <GradeText grade={item.grade}>{name}</GradeText>
             </h1>
             {heroMeta.length > 0 && (
@@ -188,7 +188,7 @@ export default function ItemPage({ id }: { id: string }) {
         <div className="order-2 min-w-0 md:order-1">
           {hasSources && (
             <section className="mb-6 rounded-md border border-border bg-card p-4 text-card-foreground">
-              <h2 className="mb-3 text-lg font-semibold">
+              <h2 className="mb-3 text-xl font-semibold">
                 {t("wiki:item.sources")}
               </h2>
               {hasSourcePills && (
@@ -223,7 +223,7 @@ export default function ItemPage({ id }: { id: string }) {
 
           {item.droppedBy.length > 0 && (
             <section className="mb-6 rounded-md border border-border bg-card p-4 text-card-foreground">
-              <h2 className="mb-3 text-lg font-semibold">
+              <h2 className="mb-3 text-xl font-semibold">
                 {t("wiki:item.droppedBy")}
               </h2>
               <ul className="divide-y divide-border/60 text-sm">
@@ -250,7 +250,7 @@ export default function ItemPage({ id }: { id: string }) {
 
           {item.rewardFrom.length > 0 && (
             <section className="rounded-md border border-border bg-card p-4 text-card-foreground">
-              <h2 className="mb-3 text-lg font-semibold">
+              <h2 className="mb-3 text-xl font-semibold">
                 {t("wiki:item.rewardFrom")}
               </h2>
               <QuestLinkList ids={item.rewardFrom} />

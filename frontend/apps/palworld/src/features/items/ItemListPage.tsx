@@ -102,10 +102,10 @@ export default function ItemListPage() {
                   data-testid="item-card"
                   className={`group relative flex aspect-square flex-col items-center gap-1 rounded-lg border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
                 >
-                  <span className="absolute right-1.5 top-1.5 text-[10px] tabular-nums text-muted-foreground/70">
+                  <span className="absolute right-1.5 top-1.5 text-xs tabular-nums text-muted-foreground/70">
                     #{i.sortId}
                   </span>
-                  <span className="w-full truncate px-4 text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <span className="w-full truncate px-4 text-xs uppercase tracking-wide text-muted-foreground">
                     {itemTypeLabel(i.typeA, bundle.typeLabels)}
                   </span>
                   <div className="flex min-h-0 flex-1 items-center justify-center">

@@ -45,7 +45,7 @@ export function BottomTabBar() {
 
   const itemCls = (isActive: boolean) =>
     cn(
-      'flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-medium transition-colors',
+      'flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-xs font-medium transition-colors',
       isActive ? 'text-primary' : 'text-muted-foreground',
     )
 

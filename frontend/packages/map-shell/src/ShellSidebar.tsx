@@ -100,7 +100,7 @@ export function ShellSidebar({
         )}
       >
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        <span className="mt-0.5 whitespace-normal px-0.5 text-center text-[10px] leading-tight">
+        <span className="mt-0.5 whitespace-normal px-0.5 text-center text-xs leading-tight">
           {collapsed ? expandLabel : collapseLabel}
         </span>
       </button>

@@ -67,7 +67,7 @@ export default function QuestDetailPage() {
         <div className="space-y-6">
           <div className="min-w-0">
             <div className="text-sm text-muted-foreground">{questTypeLabel(quest.type, t)}</div>
-            <h1 className="text-2xl font-bold">{text?.title ?? quest.id}</h1>
+            <h1 className="text-3xl font-bold">{text?.title ?? quest.id}</h1>
             <div className="mt-0.5 font-mono text-xs text-muted-foreground">{quest.id}</div>
           </div>
 

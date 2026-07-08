@@ -18,7 +18,7 @@ export default function Logo() {
         alt="AION2 Logo"
         className="h-[100px] w-[100px] object-contain"
       />
-      <div className="text-center text-[22px] font-bold leading-[30px] text-primary">
+      <div className="text-center text-2xl font-bold leading-[30px] text-primary">
         {title.split("\n").map((line, i) => (
           <span key={i}>
             {i > 0 && <br />}

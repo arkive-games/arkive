@@ -331,7 +331,7 @@ export default function App() {
           </div>
         ) : null}
         {count && count > 1 ? (
-          <div className="mt-2 text-[13px] text-muted-foreground">
+          <div className="mt-2 text-sm text-muted-foreground">
             {t('spawnCount', { count })}
           </div>
         ) : null}
@@ -339,7 +339,7 @@ export default function App() {
           <Link
             to="/pals/$id"
             params={{ id: marker.subtype }}
-            className="mt-2 inline-block text-[13px] text-primary hover:underline"
+            className="mt-2 inline-block text-sm text-primary hover:underline"
           >
             {t('pal.viewInEncyclopedia')}
           </Link>

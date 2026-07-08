@@ -293,7 +293,7 @@ export function SearchPanel({
                         />
                       )}
                       {item.idLabel && (
-                        <span className="shrink-0 rounded bg-muted px-1 text-[11px] font-mono tabular-nums text-muted-foreground">
+                        <span className="shrink-0 rounded bg-muted px-1 text-xs font-mono tabular-nums text-muted-foreground">
                           {item.idLabel}
                         </span>
                       )}
@@ -302,7 +302,7 @@ export function SearchPanel({
                       </span>
                     </div>
                     {metaLabel && (
-                      <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                      <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                         {metaLabel}
                       </span>
                     )}
@@ -316,7 +316,7 @@ export function SearchPanel({
                     >
                       {item.description || labels.noDescription}
                     </span>
-                    <div className="mt-0.5 flex items-center justify-between gap-2 text-[11px] text-muted-foreground/70">
+                    <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground/70">
                       <span className="shrink-0 tabular-nums">
                         {(() => {
                           const c = displayCoords(item.x, item.y)

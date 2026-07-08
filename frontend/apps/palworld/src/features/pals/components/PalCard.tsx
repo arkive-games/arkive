@@ -20,7 +20,7 @@ export function PalCard({ pal, name }: { pal: PalEntry; name: string }) {
         className="size-16 shrink-0 object-contain"
       />
       {pid ? (
-        <span className="text-[10px] tabular-nums text-muted-foreground">
+        <span className="text-xs tabular-nums text-muted-foreground">
           {pid.text}
           {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
         </span>

@@ -54,7 +54,7 @@ function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
             <span
               key={w}
               title={`${bundle.enums.work[w] ?? w} Lv${pal.work[w]}`}
-              className="inline-flex items-center gap-0.5 rounded bg-secondary/60 px-1 py-0.5 text-[11px] tabular-nums"
+              className="inline-flex items-center gap-0.5 rounded bg-secondary/60 px-1 py-0.5 text-xs tabular-nums"
             >
               <Glyph src={workIconUrl(w)} size={14} />
               {pal.work[w]}
@@ -78,7 +78,7 @@ function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
                 to="/items/$id"
                 params={{ id: d.item }}
                 title={`${d.rate}%`}
-                className="rounded bg-secondary/60 px-1 py-0.5 text-[11px] hover:text-primary"
+                className="rounded bg-secondary/60 px-1 py-0.5 text-xs hover:text-primary"
               >
                 {bundle.items[d.item] ?? d.item}
               </Link>

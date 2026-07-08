@@ -64,6 +64,11 @@ landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTran
   to start/set up the server if nothing responds.
 - **Implementation:** do all coding, design, planning, research, review, and
   verification directly. Codex delegation is disabled — do NOT delegate to Codex.
+- **Typography / font sizes:** never hard-code pixel sizes (no `text-[13px]`,
+  `font-size: 11px`). Always use the Tailwind scale steps (`text-xs`, `text-sm`,
+  `text-base`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`) so text stays consistent
+  and scales with the root `font-size` set in each app's `index.css`. If a needed size
+  isn't on the scale, prefer rem over px. Floor for in-content text is `text-xs` (12px).
 
 ## Notes
 - Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo

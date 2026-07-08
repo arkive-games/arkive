@@ -116,7 +116,7 @@ export default function TypeHub({ type }: { type: string }) {
 
   return (
     <div data-testid="wiki-type-hub">
-      <h1 className="mb-4 text-2xl font-bold">
+      <h1 className="mb-4 text-3xl font-bold">
         {t(`wiki/taxonomy:types.${type}.name`)}
       </h1>
       <Input

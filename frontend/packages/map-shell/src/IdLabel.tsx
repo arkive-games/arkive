@@ -25,7 +25,7 @@ export function IdLabel({ value, className, accentClassName }: IdLabelProps) {
   return (
     <span
       className={cn(
-        "shrink-0 rounded bg-muted px-1 text-[11px] font-mono tabular-nums text-muted-foreground",
+        "shrink-0 rounded bg-muted px-1 text-xs font-mono tabular-nums text-muted-foreground",
         className,
       )}
     >

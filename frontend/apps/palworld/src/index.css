@@ -75,6 +75,13 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Desktop readability: raise the rem base from the browser default 16px.
+   The app is rem-based (Tailwind), so this scales all text/spacing uniformly
+   like a gentle zoom. Tunable knob for overall UI size (16.5–18px). */
+html {
+  font-size: 17px;
+}
+
 /* Region outside the map image (Leaflet void): match the map art's dark
    blue-black ocean edge (MainWorld #0c161e, WorldTree #0d151c) so panning or
    zooming past the map borders blends seamlessly instead of showing Leaflet's

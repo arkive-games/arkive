@@ -150,7 +150,7 @@ export default function QuestPage({ id }: { id: string }) {
     <article data-testid="wiki-quest-page" className="space-y-6">
       <header className="space-y-3">
         <Breadcrumb items={breadcrumbItems} />
-        <h1 className="text-2xl font-bold">{lt(q.name, lang)}</h1>
+        <h1 className="text-3xl font-bold">{lt(q.name, lang)}</h1>
       </header>
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
@@ -255,7 +255,7 @@ export default function QuestPage({ id }: { id: string }) {
 
         <div className="order-2 min-w-0 md:order-1">
           <section className="mb-6 rounded-md border border-border bg-card p-4 text-card-foreground">
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-xl font-semibold">
               {t("wiki:quest.objectives")}
             </h2>
             <ol className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
@@ -290,7 +290,7 @@ export default function QuestPage({ id }: { id: string }) {
           )}
 
           <section>
-            <h2 className="mb-2 text-lg font-semibold">
+            <h2 className="mb-2 text-xl font-semibold">
               {t("wiki:quest.steps")}
             </h2>
             <ol className="space-y-3">

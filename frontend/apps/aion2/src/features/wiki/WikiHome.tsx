@@ -21,7 +21,7 @@ export default function WikiHome() {
 
   return (
     <div data-testid="wiki-home">
-      <h1 className="mb-6 text-2xl font-bold">{t("wiki:home.title")}</h1>
+      <h1 className="mb-6 text-3xl font-bold">{t("wiki:home.title")}</h1>
       {tax.types.map((type) => (
         <section key={type.slug} className="mb-8">
           <Link

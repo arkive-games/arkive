@@ -88,7 +88,7 @@ function PalChip({
           {names[id] ?? id}
           <GenderMark g={gender} />
         </span>
-        <span className="flex items-center gap-1 text-[10px] tabular-nums text-muted-foreground">
+        <span className="flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
           {pid ? (
             <span>
               {pid.text}
@@ -147,7 +147,7 @@ export function RecipeCard({ f, names, meta, uniqueLabel, fav, hideResult }: Rec
       {f.unique ? (
         <span
           className={cn(
-            'absolute -top-2 inline-flex items-center gap-1 rounded-full border border-amber-400/70 bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300',
+            'absolute -top-2 inline-flex items-center gap-1 rounded-full border border-amber-400/70 bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300',
             fav ? 'right-8' : 'right-2',
           )}
           title={uniqueLabel}

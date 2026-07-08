@@ -63,12 +63,12 @@ const MarkerPopupContent: React.FC<Props> = ({ marker }) => {
     >
       <CardContent className="flex flex-col px-4 py-4">
         {/* Title */}
-        <div className="text-[18px] font-bold leading-snug text-[#3D3D3D] dark:text-white">
+        <div className="text-lg font-bold leading-snug text-[#3D3D3D] dark:text-white">
           {name}
         </div>
 
         {/* Category / subtype + coords */}
-        <div className="mt-2 text-[14px] leading-tight text-[rgba(0,0,0,0.6)] dark:text-[rgba(255,255,255,0.6)]">
+        <div className="mt-2 text-sm leading-tight text-[rgba(0,0,0,0.6)] dark:text-[rgba(255,255,255,0.6)]">
           {metaLine}
           {metaLine ? " " : ""}
           <span className="tabular-nums">{coords}</span>
@@ -90,11 +90,11 @@ const MarkerPopupContent: React.FC<Props> = ({ marker }) => {
         {/* Description (with dividers above/below); grey placeholder if none */}
         <hr className="my-3 border-0 border-t border-border" />
         {description ? (
-          <div className="text-[14px] leading-relaxed text-[#3D3D3D] dark:text-white">
+          <div className="text-sm leading-relaxed text-[#3D3D3D] dark:text-white">
             {description}
           </div>
         ) : (
-          <div className="text-[14px] leading-relaxed text-[rgba(0,0,0,0.35)] italic dark:text-[rgba(255,255,255,0.35)]">
+          <div className="text-sm leading-relaxed text-[rgba(0,0,0,0.35)] italic dark:text-[rgba(255,255,255,0.35)]">
             {t("common:ui.noDescription", "No description")}
           </div>
         )}
@@ -121,7 +121,7 @@ const MarkerPopupContent: React.FC<Props> = ({ marker }) => {
               type="button"
               onClick={() => toggleMarkerCompleted(marker)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-medium transition-colors",
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors",
                 isCompleted
                   ? "bg-[rgba(85,179,76,0.12)] text-[#55B34C]"
                   : "border border-[#55B34C] text-[#55B34C] hover:bg-[rgba(85,179,76,0.08)]",
