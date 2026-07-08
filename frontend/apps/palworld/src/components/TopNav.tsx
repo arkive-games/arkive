@@ -17,11 +17,17 @@ export function TopNav({ active }: { active: NavKey }) {
   const items: ShellNavItem[] = [
     { key: '/', label: t('breeding.navMap'), active: active === '/' },
     { key: '/pals', label: t('pal.title'), active: active === '/pals' },
+    {
+      key: 'database',
+      label: t('nav.database'),
+      children: [
+        { key: '/items', label: t('item.title'), active: active === '/items' },
+        { key: '/buildings', label: t('building.title'), active: active === '/buildings' },
+        { key: '/technology', label: t('tech.title'), active: active === '/technology' },
+        { key: '/quests', label: t('quest.title'), active: active === '/quests' },
+      ],
+    },
     { key: '/breeding', label: t('breeding.navBreeding'), active: active === '/breeding' },
-    { key: '/items', label: t('item.title'), active: active === '/items' },
-    { key: '/buildings', label: t('building.title'), active: active === '/buildings' },
-    { key: '/technology', label: t('tech.title'), active: active === '/technology' },
-    { key: '/quests', label: t('quest.title'), active: active === '/quests' },
   ]
 
   return (

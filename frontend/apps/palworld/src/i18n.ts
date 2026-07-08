@@ -43,6 +43,14 @@ export const FILTER_LABELS: Record<Language, string> = {
   'pt-BR': 'Filtros', 'ru-RU': 'Фильтры', 'th-TH': 'ตัวกรอง', 'tr-TR': 'Filtreler', 'vi-VN': 'Bộ lọc',
   'zh-CN': '筛选', 'zh-TW': '篩選',
 }
+// Top-nav dropdown group label (Items/Buildings/Technology/Quests).
+export const DATABASE_LABELS: Record<Language, string> = {
+  'en-US': 'Database', 'de-DE': 'Datenbank', 'es-ES': 'Base de datos', 'es-MX': 'Base de datos',
+  'fr-FR': 'Base de données', 'id-ID': 'Basis data', 'it-IT': 'Database', 'ja-JP': 'データベース',
+  'ko-KR': '데이터베이스', 'pl-PL': 'Baza danych', 'pt-BR': 'Banco de dados', 'ru-RU': 'База данных',
+  'th-TH': 'ฐานข้อมูล', 'tr-TR': 'Veritabanı', 'vi-VN': 'Cơ sở dữ liệu', 'zh-CN': '数据库',
+  'zh-TW': '資料庫',
+}
 
 const resources = {
   'en-US': {
@@ -519,6 +527,7 @@ for (const lng of LANGUAGES) {
       catalogLoading: CATALOG_STRINGS[lng].loading,
       more: MORE_LABELS[lng],
       filter: FILTER_LABELS[lng],
+      nav: { database: DATABASE_LABELS[lng] },
     },
     true,
     true,
