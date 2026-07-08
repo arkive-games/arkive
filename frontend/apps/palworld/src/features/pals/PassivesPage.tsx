@@ -20,7 +20,7 @@ import {
   type PassiveCategory,
 } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
-import { PalPageLoading, PassiveRarity, PassiveText, passiveRarityTier } from './components'
+import { PalPageLoading, PassiveRarity, PassiveText, PassiveTitleBar, passiveRarityTier } from './components'
 
 /** Pals that innately carry a given passive, keyed by passive id. */
 type PalRef = { id: string; name: string; icon: string }
@@ -196,14 +196,12 @@ export default function PassivesPage() {
             <div
               key={r.id}
               data-testid="passive-row"
-              className="flex flex-col rounded-lg border border-border bg-card p-3 shadow-sm"
+              className="flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm"
             >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-sm font-medium leading-tight">{r.name}</span>
-                <PassiveRarity rank={r.rank} />
-              </div>
+              <PassiveTitleBar name={r.name} rank={r.rank} />
+              <div className="flex flex-1 flex-col p-3">
               {r.description ? (
-                <p className="mt-1 text-xs leading-snug whitespace-pre-line text-muted-foreground">
+                <p className="text-xs leading-snug whitespace-pre-line text-muted-foreground">
                   <PassiveText text={r.description} />
                 </p>
               ) : null}
@@ -211,7 +209,7 @@ export default function PassivesPage() {
                 <div className="mt-auto space-y-2 pt-2">
                   {r.pals.length ? (
                     <div className="flex flex-wrap items-center gap-1">
-                      {r.pals.slice(0, 14).map((p) => (
+                      {r.pals.map((p) => (
                         <Link
                           key={p.id}
                           to="/pals/$id"
@@ -230,9 +228,6 @@ export default function PassivesPage() {
                           />
                         </Link>
                       ))}
-                      {r.pals.length > 14 ? (
-                        <span className="text-xs text-muted-foreground">+{r.pals.length - 14}</span>
-                      ) : null}
                     </div>
                   ) : null}
                   {r.categories.length ? (
@@ -249,6 +244,7 @@ export default function PassivesPage() {
                   ) : null}
                 </div>
               ) : null}
+              </div>
             </div>
           ))}
         </div>

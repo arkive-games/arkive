@@ -438,11 +438,25 @@ function effectTypeLabel(type: string, bundle: PalsBundle): string {
 /** Resolve one `<uiCommon id=|COMMON_…|/>` reference to display text. Work
  *  suitability refs reuse the localized work-enum label; the rest fall back to a
  *  small map / humanized id. */
-function resolveUiCommon(key: string, enums: EnumsLocale): string {
+/** The localized bare "work suitability/aptitude" word, derived from the game's
+ *  own `WorkSuitabilityAddRank_<Work>` partner-effect labels (shared suffix minus
+ *  the "up" decoration) so it stays in-language without a hard-coded map. */
+function suitabilityWord(bundle: PalsBundle): string {
+  const entries = Object.entries(bundle.partnerEffects)
+    .filter(([k]) => k.startsWith('WorkSuitabilityAddRank_'))
+    .map(([, v]) => v)
+  if (entries.length < 2) return 'Work Suitability'
+  let s = commonSuffix(entries)
+  const up = statAffixes(bundle).suffix
+  if (up && s.endsWith(up)) s = s.slice(0, s.length - up.length)
+  return s.trim() || 'Work Suitability'
+}
+
+function resolveUiCommon(key: string, bundle: PalsBundle): string {
   if (key === 'COMMON_STATUS_HP') return 'HP'
-  if (key === 'COMMON_WORK_SUITABILITY_PALDEX') return 'Work Suitability'
+  if (key === 'COMMON_WORK_SUITABILITY_PALDEX') return suitabilityWord(bundle)
   const work = /^COMMON_WORK_SUITABILITY_(\w+)$/.exec(key)
-  if (work && enums.work[work[1]]) return enums.work[work[1]]
+  if (work && bundle.enums.work[work[1]]) return bundle.enums.work[work[1]]
   return key.replace(/^COMMON_/, '').replace(/_/g, ' ')
 }
 
@@ -451,7 +465,7 @@ function resolveUiCommon(key: string, enums: EnumsLocale): string {
  *  renderer (see PassiveText). */
 function resolvePassiveTokens(s: string, bundle: PalsBundle): string {
   return s
-    .replace(/<uiCommon id=\|([^|]+)\|\s*\/>/g, (_m, k: string) => resolveUiCommon(k, bundle.enums))
+    .replace(/<uiCommon id=\|([^|]+)\|\s*\/>/g, (_m, k: string) => resolveUiCommon(k, bundle))
     .replace(/\r\n?/g, '\n')
     .replace(/[ \t]+/g, ' ')
     .trim()
@@ -479,5 +493,6 @@ export function passiveDescription(id: string, bundle: PalsBundle): string {
       const sign = e.value > 0 ? '+' : '−'
       return `${label} ${sign}${Math.abs(e.value)}%`
     })
-    .join(', ')
+    // One effect per line (the card renders with `whitespace-pre-line`).
+    .join('\n')
 }

@@ -63,11 +63,43 @@ test('Passive Skills category filter narrows the list', async ({ page }) => {
   expect(filtered).toBeLessThan(total)
 })
 
+test('Passive cards link the pals that carry the passive', async ({ page }) => {
+  await page.goto('/passives')
+  const palLink = page.locator('[data-testid="passive-pal"]').first()
+  await expect(palLink).toBeVisible()
+  await expect(palLink).toHaveAttribute('href', /\/pals\//)
+})
+
+test('Passive title bar uses the faceted rarity background', async ({ page }) => {
+  await page.goto('/passives')
+  const bar = page.locator('[data-testid="passive-row"] > div').first()
+  await expect(bar).toBeVisible()
+  const info = await bar.evaluate((el) => {
+    const s = getComputedStyle(el)
+    return { img: s.backgroundImage, blend: s.backgroundBlendMode, bg: s.backgroundColor }
+  })
+  expect(info.img).toContain('skill_base_02')
+  expect(info.blend).toContain('multiply')
+  expect(info.bg).not.toBe('rgba(0, 0, 0, 0)')
+})
+
+test('Passive rarity renders tinted arrow icons', async ({ page }) => {
+  await page.goto('/passives')
+  const badge = page.locator('[data-testid="passive-row"] span[title^="Rank"]').first()
+  await expect(badge).toBeVisible()
+  const info = await badge.evaluate((el) => {
+    const s = getComputedStyle(el)
+    return { bg: s.backgroundColor, mask: s.maskImage || (s as unknown as { webkitMaskImage: string }).webkitMaskImage }
+  })
+  expect(info.mask).toContain('passive-rank')
+  expect(info.bg).not.toBe('rgba(0, 0, 0, 0)')
+})
+
 test('Passive descriptions render coloured value tags', async ({ page }) => {
   await page.goto('/passives')
   await expect(page.locator('[data-testid="passive-row"]').first()).toBeVisible()
   const coloured = page.locator(
-    '[data-testid="passive-row"] p span[class*="text-sky-500"], [data-testid="passive-row"] p span[class*="text-destructive"]',
+    '[data-testid="passive-row"] p span[class*="5591BD"], [data-testid="passive-row"] p span[class*="B4493E"]',
   )
   expect(await coloured.count()).toBeGreaterThan(0)
 })

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { elementIconUrl, itemIconUrl, workIconUrl } from '../../../lib/assets'
 import type { ActiveSkill, Element, WorkType } from '../../../lib/pals'
@@ -155,33 +154,114 @@ export function passiveRarityTier(rank: number): number {
   return m >= 4 ? 3 : m >= 2 ? 2 : 1
 }
 
-/** A passive's rarity/tier, derived from its game `Rank`: positive ranks are
- *  beneficial (gold up-arrows), negative are detrimental (red down-arrows), with
- *  1–3 arrows by magnitude. Rank 0 (no tier) renders nothing. */
-export function PassiveRarity({ rank }: { rank: number | undefined }) {
+// Rarity colours, matching the in-game skill-status arrows. Reused by the
+// description value tags so numbers and rarity read consistently.
+export const RANK_BLUE = '#9FF9D8' // +3
+export const RANK_RED = '#D85143' // negatives
+const RANK_GOLD = '#F5E159' // +2
+const RANK_WHITE = '#FFFFFF' // +1
+
+// Signed rarity tier -> game arrow icon (in public/images/passive-rank/), tint,
+// and whether it's flipped (negatives point down).
+const RANK_ICON: Record<string, { file: string; color: string; flip?: boolean }> = {
+  '+3': { file: 'arrow_04', color: RANK_BLUE },
+  '+2': { file: 'arrow_03', color: RANK_GOLD },
+  '+1': { file: 'arrow_01', color: RANK_WHITE },
+  '-1': { file: 'arrow_01', color: RANK_RED, flip: true },
+  '-2': { file: 'arrow_02', color: RANK_RED, flip: true },
+}
+
+/** A passive's rarity, from its game `Rank`, rendered as the in-game arrow icon
+ *  recoloured (via a CSS mask) and flipped for debuffs. `color` overrides the
+ *  rank tint (e.g. to stay visible on a same-coloured title bar). Rank 0 renders
+ *  nothing. */
+export function PassiveRarity({ rank, color }: { rank: number | undefined; color?: string }) {
   if (!rank) return null
-  const good = rank > 0
-  const tier = passiveRarityTier(rank)
-  const Icon = good ? ChevronUp : ChevronDown
+  const spec = RANK_ICON[`${rank > 0 ? '+' : '-'}${passiveRarityTier(rank)}`]
+  if (!spec) return null
+  const url = `${import.meta.env.BASE_URL}images/passive-rank/${spec.file}.png`
   return (
     <span
-      className={cn('inline-flex shrink-0', good ? 'text-amber-500' : 'text-destructive')}
-      title={`Rank ${rank}`}
+      role="img"
       aria-label={`Rank ${rank}`}
+      title={`Rank ${rank}`}
+      className="inline-block size-4 shrink-0"
+      style={{
+        backgroundColor: color ?? spec.color,
+        WebkitMaskImage: `url("${url}")`,
+        maskImage: `url("${url}")`,
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+        transform: spec.flip ? 'scaleY(-1)' : undefined,
+        // Keep light tints (white/mint/gold) visible on light card backgrounds.
+        filter: 'drop-shadow(0 0 0.5px rgba(0,0,0,0.45))',
+      }}
+    />
+  )
+}
+
+// Title-bar tint per signed rarity tier (matches the in-game skill bars): +1 /
+// unranked use a neutral slate (the game's default bar), the rest the rank hue.
+const RANK_BAR: Record<string, string> = {
+  '+3': RANK_BLUE,
+  '+2': RANK_GOLD,
+  '+1': '#64748B',
+  '-1': RANK_RED,
+  '-2': RANK_RED,
+}
+function rankBarColor(rank: number): string {
+  if (!rank) return '#64748B'
+  return RANK_BAR[`${rank > 0 ? '+' : '-'}${passiveRarityTier(rank)}`] ?? '#64748B'
+}
+/** Black or white, whichever reads better on `hex`. */
+function readableOn(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? '#0E2A3C' : '#FFFFFF'
+}
+
+/** A passive's title row styled like the in-game skill bar: a rarity-tinted,
+ *  faceted background (T_prt_pal_skill_base_02) with the name on the left and the
+ *  rarity arrows on the right. */
+export function PassiveTitleBar({ name, rank }: { name: string; rank: number }) {
+  const bar = rankBarColor(rank)
+  const fg = readableOn(bar)
+  const tex = `${import.meta.env.BASE_URL}images/passive-rank/skill_base_02.png`
+  return (
+    <div
+      className="flex items-center justify-between gap-2 overflow-hidden rounded border-l-4 px-2 py-1"
+      style={{
+        backgroundColor: bar,
+        backgroundImage: `url("${tex}")`,
+        backgroundBlendMode: 'multiply',
+        backgroundSize: 'auto 100%',
+        backgroundRepeat: 'repeat-x',
+        borderLeftColor: fg === '#FFFFFF' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)',
+      }}
     >
-      {Array.from({ length: tier }).map((_, i) => (
-        <Icon key={i} className={cn('size-3.5', i > 0 && '-ml-1.5')} strokeWidth={2.5} />
-      ))}
-    </span>
+      <span
+        className="truncate text-sm font-semibold"
+        style={{ color: fg, textShadow: fg === '#FFFFFF' ? '0 1px 1px rgba(0,0,0,0.35)' : 'none' }}
+      >
+        {name}
+      </span>
+      <PassiveRarity rank={rank} color={fg} />
+    </div>
   )
 }
 
 // The game's passive text styles fragments with pseudo-tags: `<NumBlue_13>` for
 // a positive (blue) value, `<NumRed_13>` for a negative (red) value, and
-// `<Status_Up>` for a buff word (e.g. "Immune"). Each is closed by `</>`.
+// `<Status_Up>` for a buff word (e.g. "Immune"). Each is closed by `</>`. Blue
+// and red match the rarity colours (RANK_BLUE / RANK_RED).
 const PASSIVE_TAG_CLASS: Record<string, string> = {
-  NumBlue_13: 'font-semibold text-sky-500',
-  NumRed_13: 'font-semibold text-destructive',
+  NumBlue_13: 'font-semibold text-[#5591BD]',
+  NumRed_13: 'font-semibold text-[#B4493E]',
   Status_Up: 'font-semibold text-emerald-500',
 }
 
