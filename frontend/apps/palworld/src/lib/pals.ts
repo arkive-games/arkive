@@ -37,6 +37,8 @@ export interface PalStats {
 export interface ActiveSkill {
   wazaId: string; level: number; element: string; category: string
   power: number; coolTime: number
+  /** Attack range in raw world units (cm; ÷100 = metres). 0 when the skill has none. */
+  minRange: number; maxRange: number
 }
 /** One buff effect of a partner skill: effect type, target, and per-rank values. */
 export interface PartnerEffect { type: string; target: string; values: number[] }

@@ -276,6 +276,8 @@ def _active_skills(cid: str, learnset: list, waza_by_id: dict) -> list:
             "category": _strip(w.get("Category"), _CAT),
             "power": w.get("DisplayPower", w.get("Power", 0)),
             "coolTime": round2(w.get("CoolTime", 0.0)),
+            "minRange": w.get("MinRange", 0),
+            "maxRange": w.get("MaxRange", 0),
         })
     out.sort(key=lambda s: (s["level"], s["wazaId"]))
     return out

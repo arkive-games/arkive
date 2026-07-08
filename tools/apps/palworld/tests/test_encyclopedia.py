@@ -28,6 +28,12 @@ def test_encyclopedia_integration(tmp_path):
     assert anubis["work"]["Handcraft"] == 6 and anubis["bestWork"] == "Handcraft"
     assert len(anubis["activeSkills"]) >= 1
     assert anubis["activeSkills"][0]["level"] <= anubis["activeSkills"][-1]["level"]
+    # Each active skill carries its attack range (raw world units) from DT_WazaDataTable.
+    assert all(
+        "minRange" in s and "maxRange" in s and s["maxRange"] >= 0
+        for s in anubis["activeSkills"]
+    )
+    assert any(s["maxRange"] > 0 for s in anubis["activeSkills"])
     assert any(d["item"] == "Bone" for d in anubis["drops"])
 
     # Every Pal has a learnset and a localized partner-skill name.
