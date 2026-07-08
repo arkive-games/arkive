@@ -10,22 +10,24 @@ export function PalCard({ pal, name }: { pal: PalEntry; name: string }) {
     <Link
       to="/pals/$id"
       params={{ id: pal.id }}
-      className="group flex flex-col items-center gap-1.5 rounded-lg border border-border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent"
+      className="group flex aspect-square flex-col items-center gap-1 rounded-lg border border-border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent"
       data-testid="pal-card"
     >
-      <img
-        src={palIconUrl(pal.icon)}
-        alt=""
-        loading="lazy"
-        className="size-16 shrink-0 object-contain"
-      />
       {pid ? (
-        <span className="text-xs tabular-nums text-muted-foreground">
+        <span className="w-full truncate text-xs tabular-nums text-muted-foreground">
           {pid.text}
           {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
         </span>
       ) : null}
-      <span className="line-clamp-2 text-xs font-medium leading-tight">{name}</span>
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <img
+          src={palIconUrl(pal.icon)}
+          alt=""
+          loading="lazy"
+          className="size-16 shrink-0 object-contain"
+        />
+      </div>
+      <span className="line-clamp-2 w-full text-xs font-medium leading-tight">{name}</span>
     </Link>
   )
 }

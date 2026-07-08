@@ -105,7 +105,7 @@ export default function PalListPage() {
           ) : view === 'list' ? (
             <PalTable pals={roster} bundle={bundle} />
           ) : (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
               {roster.map((p) => (
                 <PalCard key={p.id} pal={p} name={bundle.text[p.id]?.name ?? p.id} />
               ))}

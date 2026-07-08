@@ -111,7 +111,7 @@ export default function BuildingListPage() {
           ) : !bundle || !tech || !techResolvers ? (
             <CatalogPageLoading />
           ) : (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
               {list.map((b) => (
                 <BuildingTile
                   key={b.id}
