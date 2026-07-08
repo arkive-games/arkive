@@ -33,6 +33,7 @@ export interface PalStats {
   craftSpeed: number; stamina: number; foodAmount: number; maxFullStomach: number
   captureRate: number; price: number; maleProbability: number
   walkSpeed: number; runSpeed: number; rideSprintSpeed: number; transportSpeed: number
+  swimSpeed: number
 }
 export interface ActiveSkill {
   wazaId: string; level: number; element: string; category: string
@@ -361,11 +362,61 @@ function humanizeEffectType(type: string): string {
     .replace(/^\w/, (c) => c.toUpperCase())
 }
 
+function commonPrefix(strs: string[]): string {
+  if (!strs.length) return ''
+  let p = strs[0]
+  for (const s of strs.slice(1)) {
+    let k = 0
+    while (k < p.length && k < s.length && p[k] === s[k]) k++
+    p = p.slice(0, k)
+    if (!p) break
+  }
+  return p
+}
+function commonSuffix(strs: string[]): string {
+  if (!strs.length) return ''
+  let p = strs[0]
+  for (const s of strs.slice(1)) {
+    let k = 0
+    while (k < p.length && k < s.length && p[p.length - 1 - k] === s[s.length - 1 - k]) k++
+    p = p.slice(p.length - k)
+    if (!p) break
+  }
+  return p
+}
+
+// The game's partner-effect labels bake in a direction decoration ("Defense Up",
+// "防御力提升", "Tăng phòng thủ", "Защита +"). For passives that can be negative
+// this reads wrong ("Defense Up −20%"), so we strip that decoration to a bare
+// stat name and let the signed value convey direction. The decoration is derived
+// per-language as the shared prefix/suffix of several always-directional stat
+// labels — no hard-coded word lists. Cached per bundle.
+const AFFIX_CACHE = new WeakMap<PalsBundle, { prefix: string; suffix: string }>()
+function statAffixes(bundle: PalsBundle): { prefix: string; suffix: string } {
+  let a = AFFIX_CACHE.get(bundle)
+  if (!a) {
+    const samples = ['CraftSpeed', 'Defense', 'ShotAttack', 'MoveSpeed']
+      .map((t) => bundle.partnerEffects[t])
+      .filter(Boolean)
+    a = { prefix: commonPrefix(samples), suffix: commonSuffix(samples) }
+    AFFIX_CACHE.set(bundle, a)
+  }
+  return a
+}
+function bareStatLabel(label: string, bundle: PalsBundle): string {
+  const { prefix, suffix } = statAffixes(bundle)
+  let s = label
+  if (prefix && s.startsWith(prefix)) s = s.slice(prefix.length)
+  if (suffix && s.endsWith(suffix)) s = s.slice(0, s.length - suffix.length)
+  return s.trim() || label
+}
+
 function effectTypeLabel(type: string, bundle: PalsBundle): string {
   // Prefer the game's own localized label (partner-skill effect names share the
-  // passive effect-type enum) so synthesized text is localized, not English.
+  // passive effect-type enum) so synthesized text is localized, not English —
+  // stripping the baked-in "up/increase" decoration so negatives read right.
   const inGame = bundle.partnerEffects[type]
-  if (inGame) return inGame
+  if (inGame) return bareStatLabel(inGame, bundle)
   const boost = /^ElementBoost_(\w+)$/.exec(type)
   if (boost) return `${bundle.enums.elements[boost[1]] ?? boost[1]} Attack`
   const resist = /^ElementResist_(\w+)$/.exec(type)
