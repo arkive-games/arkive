@@ -157,6 +157,12 @@ export interface MarkerInstance {
    * on-map count badge and the "N spawns" popup line.
    */
   count?: number;
+  /**
+   * Ancient Shrine reward (palworld): the gear schematic the shrine grants
+   * (`item` = item id, `count` = quantity) plus the Dog Coins awarded alongside
+   * it (`dogCoin`). Drives the shrine popup's reward line.
+   */
+  reward?: { item: string; count: number; dogCoin?: number };
 }
 
 export interface RegionInstance {

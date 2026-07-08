@@ -24,6 +24,8 @@ export interface MarkerRow {
   image?: string
   /** Spawn points merged into this cluster marker (absent/1 = not a cluster). */
   count?: number
+  /** Ancient Shrine reward: gear schematic (item id + count) + Dog Coins. */
+  reward?: { item: string; count: number; dogCoin?: number }
 }
 export type MarkerLocale = Record<string, { name?: string; description?: string }>
 export interface TypesLocale {

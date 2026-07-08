@@ -78,6 +78,9 @@ export const markerInstanceSchema = z.object({
   tier: z.number().optional(),
   fragmentType: z.enum(["ground", "air", "water"]).optional(),
   entity: markerEntityRefSchema.optional(),
+  reward: z
+    .object({ item: z.string(), count: z.number(), dogCoin: z.number().optional() })
+    .optional(),
 }) satisfies z.ZodType<MarkerInstance>;
 
 export const regionInstanceSchema = z.object({

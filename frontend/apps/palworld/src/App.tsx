@@ -8,7 +8,7 @@ import {
   loadStatic, loadMarkers,
   type MapMeta, type Taxonomy, type TypesLocale, type MapsLocale, type MarkerRow, type MarkerLocale
 } from './lib/data'
-import { palworldAssets, workIconUrl } from './lib/assets'
+import { palworldAssets, workIconUrl, noteImageUrl, itemIconUrl } from './lib/assets'
 import { loadPals, type PalsBundle } from './lib/pals'
 import { ElementBadge } from './features/pals/components'
 import { toGameCoords } from './lib/coords'
@@ -184,6 +184,7 @@ export default function App() {
         y: m.y,
         z: m.z,
         icon: m.icon,
+        image: m.image,
         indexInSubtype: m.indexInSubtype,
         images: [] as string[],
         contributors: [] as string[],
@@ -197,6 +198,7 @@ export default function App() {
         zukanIndex: m.zukanIndex,
         zukanIndexSuffix: m.zukanIndexSuffix,
         count: m.count,
+        reward: m.reward,
       }
     })
   }, [staticData, markerData, subtypeMetaMap])
@@ -331,6 +333,14 @@ export default function App() {
         description={marker.localizedDescription}
         noDescriptionLabel={t('noDescription')}
       >
+        {marker.image ? (
+          <img
+            src={noteImageUrl(marker.image)}
+            alt=""
+            loading="lazy"
+            className="mt-3 w-full rounded-md border border-border object-contain"
+          />
+        ) : null}
         {pal ? (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {pal.elements.map((e) => (
@@ -347,6 +357,13 @@ export default function App() {
         {count && count > 1 ? (
           <div className="mt-2 text-sm text-muted-foreground">
             {t('spawnCount', { count })}
+          </div>
+        ) : null}
+        {marker.reward?.dogCoin ? (
+          // Ancient Shrine: the schematic (marker name) plus the Dog Coins it grants.
+          <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <img src={itemIconUrl('item_DogCoin')} alt="" width={18} height={18} className="object-contain" />
+            <span>×{marker.reward.dogCoin}</span>
           </div>
         ) : null}
         {isPal ? (
