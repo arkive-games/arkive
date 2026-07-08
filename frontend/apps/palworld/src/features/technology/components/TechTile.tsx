@@ -2,26 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { cn, HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
 import { ItemGlyph, BuildingGlyph } from '../../catalog/components'
 import type { TechEntry } from '../../../lib/catalog'
-import { techType, type TechImageRef } from '../techModel'
+import { techType, type TechResolvers } from '../techModel'
 import { TechDetails } from './TechDetails'
-
-/** The icon shown on a tile, resolved to a concrete icon texture id. */
-export interface ResolvedTechImage {
-  kind: TechImageRef['kind']
-  icon: string
-}
-
-/** Lookups the tile needs to render itself and its hover-card details. */
-export interface TechResolvers {
-  name: (tech: TechEntry) => string
-  description: (tech: TechEntry) => string | undefined
-  image: (tech: TechEntry) => ResolvedTechImage | null
-  requireTechName: (tech: TechEntry) => string | undefined
-  iname: (id: string) => string
-  bname: (id: string) => string
-  itemIcon: (id: string) => string | undefined
-  buildingIcon: (id: string) => string | undefined
-}
 
 export interface TechTileProps {
   tech: TechEntry

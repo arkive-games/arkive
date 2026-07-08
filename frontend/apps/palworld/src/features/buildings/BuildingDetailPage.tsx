@@ -20,6 +20,8 @@ import {
   CatalogNotFound,
   MaterialRow,
 } from '../catalog/components'
+import { makeTechResolvers } from '../technology/techModel'
+import { TechChip } from '../technology/components/TechChip'
 
 interface Bundles {
   items: ItemsBundle
@@ -68,6 +70,7 @@ export default function BuildingDetailPage() {
       )
     } else {
       const iname = (iid: string) => b.items.text[iid]?.name ?? iid
+      const techResolvers = makeTechResolvers(b.items, b.buildings, b.tech)
       const text = b.buildings.text[id]
       const energy = bld.energyType ? bld.energyType.replace(/^E[A-Za-z]+::/, '') : ''
 
@@ -114,16 +117,12 @@ export default function BuildingDetailPage() {
               {bld.unlockTech?.length ? (
                 <CatalogSection title={t('building.fromTech')}>
                   <div className="flex flex-wrap gap-1.5">
-                    {bld.unlockTech.map((tid) => (
-                      <Link
-                        key={tid}
-                        to="/technology"
-                        search={{ tech: tid }}
-                        className="inline-flex items-center rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
-                      >
-                        {b.tech.text[tid]?.name ?? tid}
-                      </Link>
-                    ))}
+                    {bld.unlockTech.map((tid) => {
+                      const entry = b.tech.byId.get(tid)
+                      return entry ? (
+                        <TechChip key={tid} tech={entry} resolvers={techResolvers} />
+                      ) : null
+                    })}
                   </div>
                 </CatalogSection>
               ) : null}

@@ -1,4 +1,9 @@
-import type { TechEntry } from '../../lib/catalog'
+import type {
+  TechEntry,
+  ItemsBundle,
+  BuildingsBundle,
+  TechBundle,
+} from '../../lib/catalog'
 
 /** A tech's derived kind, used for the tile's type badge (道具 / 建筑). */
 export type TechType = 'item' | 'structure'
@@ -7,6 +12,56 @@ export type TechType = 'item' | 'structure'
 export interface TechImageRef {
   kind: 'item' | 'building'
   id: string
+}
+
+/** A tech's tile/chip icon, resolved to a concrete icon texture id. */
+export interface ResolvedTechImage {
+  kind: TechImageRef['kind']
+  icon: string
+}
+
+/** Lookups a tile/chip needs to render itself and its hover-card details. */
+export interface TechResolvers {
+  name: (tech: TechEntry) => string
+  description: (tech: TechEntry) => string | undefined
+  image: (tech: TechEntry) => ResolvedTechImage | null
+  requireTechName: (tech: TechEntry) => string | undefined
+  iname: (id: string) => string
+  bname: (id: string) => string
+  itemIcon: (id: string) => string | undefined
+  buildingIcon: (id: string) => string | undefined
+}
+
+/**
+ * Build the lookups a TechTile / TechChip needs from the loaded catalog
+ * bundles. The tile has no icon of its own: it uses the first unlocked entry's
+ * icon, falling back to the tools-stamped `tech.icon` basename.
+ */
+export function makeTechResolvers(
+  items: ItemsBundle,
+  buildings: BuildingsBundle,
+  tech: TechBundle,
+): TechResolvers {
+  return {
+    name: (t) => tech.text[t.id]?.name ?? t.id,
+    description: (t) => tech.text[t.id]?.description,
+    image: (t) => {
+      const ref = techImage(t)
+      if (ref) {
+        const icon =
+          ref.kind === 'item' ? items.byId.get(ref.id)?.icon : buildings.byId.get(ref.id)?.icon
+        if (icon) return { kind: ref.kind, icon }
+      }
+      if (t.icon) return { kind: 'item', icon: t.icon }
+      return null
+    },
+    requireTechName: (t) =>
+      t.requireTech ? (tech.text[t.requireTech]?.name ?? t.requireTech) : undefined,
+    iname: (id) => items.text[id]?.name ?? id,
+    bname: (id) => buildings.text[id]?.name ?? id,
+    itemIcon: (id) => items.byId.get(id)?.icon,
+    buildingIcon: (id) => buildings.byId.get(id)?.icon,
+  }
 }
 
 /** One level's worth of techs within a region. */

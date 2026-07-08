@@ -13,8 +13,8 @@ import {
   type TechEntry,
 } from '../../lib/catalog'
 import { CatalogPageLoading } from '../catalog/components'
-import { buildRegions, techImage, type LevelGroup } from './techModel'
-import { TechTile, type ResolvedTechImage, type TechResolvers } from './components/TechTile'
+import { buildRegions, makeTechResolvers, type LevelGroup, type TechResolvers } from './techModel'
+import { TechTile } from './components/TechTile'
 
 interface Bundles {
   items: ItemsBundle
@@ -54,33 +54,10 @@ export default function TechnologyPage() {
   )
 
   // Lookups every tile needs for its square + hover-card details.
-  const resolvers = useMemo<TechResolvers | null>(() => {
-    if (!b) return null
-    return {
-      name: nameOf,
-      description: (tech) => b.tech.text[tech.id]?.description,
-      image: (tech): ResolvedTechImage | null => {
-        const ref = techImage(tech)
-        if (ref) {
-          const icon =
-            ref.kind === 'item'
-              ? b.items.byId.get(ref.id)?.icon
-              : b.buildings.byId.get(ref.id)?.icon
-          if (icon) return { kind: ref.kind, icon }
-        }
-        // Fallback for techs whose unlock is absent from the datasets: the tools
-        // stamp a ready icon basename (item_*/build_* resolve to the same URL).
-        if (tech.icon) return { kind: 'item', icon: tech.icon }
-        return null
-      },
-      requireTechName: (tech) =>
-        tech.requireTech ? (b.tech.text[tech.requireTech]?.name ?? tech.requireTech) : undefined,
-      iname: (id) => b.items.text[id]?.name ?? id,
-      bname: (id) => b.buildings.text[id]?.name ?? id,
-      itemIcon: (id) => b.items.byId.get(id)?.icon,
-      buildingIcon: (id) => b.buildings.byId.get(id)?.icon,
-    }
-  }, [b, nameOf])
+  const resolvers = useMemo<TechResolvers | null>(
+    () => (b ? makeTechResolvers(b.items, b.buildings, b.tech) : null),
+    [b],
+  )
 
   const regions = useMemo(() => {
     if (!b) return { normal: [] as LevelGroup[], ancient: [] as LevelGroup[] }

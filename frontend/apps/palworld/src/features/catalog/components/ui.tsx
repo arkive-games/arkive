@@ -85,7 +85,8 @@ export function rarityBorderClass(rarity: number): string {
   return 'border-border'
 }
 
-const CHIP =
+/** Shared cross-link chip styling (icon + name). */
+export const CHIP =
   'inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent'
 
 /** Cross-link chip to an item detail page (icon + name). */

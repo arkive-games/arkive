@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
 import { ContentPage } from '../../components/ContentPage'
@@ -18,12 +18,14 @@ import {
   StatRow,
   CatalogPageLoading,
   CatalogNotFound,
-  ItemLink,
   BuildingLink,
   PalLink,
-  MaterialRow,
   ItemGlyph,
+  CHIP,
 } from '../catalog/components'
+import { makeTechResolvers } from '../technology/techModel'
+import { TechChip } from '../technology/components/TechChip'
+import { ItemHoverCard } from './components/ItemHoverCard'
 
 interface Bundles {
   items: ItemsBundle
@@ -81,6 +83,24 @@ export default function ItemDetailPage() {
       )
     } else {
       const iname = (iid: string) => b.items.text[iid]?.name ?? iid
+      const techResolvers = makeTechResolvers(b.items, b.buildings, b.tech)
+      // Wrap an item cross-link trigger in a hover card showing the target
+      // item's summary. Falls back to the bare trigger if the item is unknown.
+      const itemHover = (iid: string, trigger: React.ReactNode) => {
+        const it = b.items.byId.get(iid)
+        if (!it) return trigger
+        return (
+          <ItemHoverCard
+            item={it}
+            name={iname(iid)}
+            typeLabels={b.items.typeLabels}
+            description={b.items.text[iid]?.description}
+            elementLabel={it.element ? (b.pals.enums.elements[it.element] ?? it.element) : undefined}
+          >
+            {trigger}
+          </ItemHoverCard>
+        )
+      }
       const text = b.items.text[id]
       const food = item.food
       const equip = item.equip
@@ -112,7 +132,21 @@ export default function ItemDetailPage() {
                 <CatalogSection title={t('item.section.craft')}>
                   <div className="divide-y divide-border/60">
                     {item.recipe.materials.map((m) => (
-                      <MaterialRow key={m.item} id={m.item} name={iname(m.item)} count={m.count} />
+                      <Fragment key={m.item}>
+                        {itemHover(
+                          m.item,
+                          <Link
+                            to="/items/$id"
+                            params={{ id: m.item }}
+                            className="flex items-center gap-2 py-1.5 text-sm transition first:pt-0 last:pb-0 hover:text-primary"
+                          >
+                            <span className="min-w-0 flex-1 truncate">{iname(m.item)}</span>
+                            <span className="shrink-0 tabular-nums text-muted-foreground">
+                              ×{m.count}
+                            </span>
+                          </Link>,
+                        )}
+                      </Fragment>
                     ))}
                   </div>
                   {item.recipe.craftedAt?.length ? (
@@ -137,13 +171,16 @@ export default function ItemDetailPage() {
                     {item.recipe.unlockItemId ? (
                       <div>
                         {t('item.unlockItem')}:{' '}
-                        <Link
-                          to="/items/$id"
-                          params={{ id: item.recipe.unlockItemId }}
-                          className="text-primary hover:underline"
-                        >
-                          {iname(item.recipe.unlockItemId)}
-                        </Link>
+                        {itemHover(
+                          item.recipe.unlockItemId,
+                          <Link
+                            to="/items/$id"
+                            params={{ id: item.recipe.unlockItemId }}
+                            className="text-primary hover:underline"
+                          >
+                            {iname(item.recipe.unlockItemId)}
+                          </Link>,
+                        )}
                       </div>
                     ) : item.handcraft ? (
                       <div>{t('item.handcraft')}</div>
@@ -188,16 +225,12 @@ export default function ItemDetailPage() {
                     <div>
                       <div className="mb-1.5 text-xs text-muted-foreground">{t('item.fromTech')}</div>
                       <div className="flex flex-wrap gap-1.5">
-                        {item.unlockTech.map((tid) => (
-                          <Link
-                            key={tid}
-                            to="/technology"
-                            search={{ tech: tid }}
-                            className="inline-flex items-center rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
-                          >
-                            {b.tech.text[tid]?.name ?? tid}
-                          </Link>
-                        ))}
+                        {item.unlockTech.map((tid) => {
+                          const entry = b.tech.byId.get(tid)
+                          return entry ? (
+                            <TechChip key={tid} tech={entry} resolvers={techResolvers} />
+                          ) : null
+                        })}
                       </div>
                     </div>
                   ) : null}
@@ -211,7 +244,17 @@ export default function ItemDetailPage() {
                       <div className="mb-1.5 text-xs text-muted-foreground">{t('item.usedInItems')}</div>
                       <div className="flex flex-wrap gap-1.5">
                         {item.usedInItems.map((iid) => (
-                          <ItemLink key={iid} id={iid} name={iname(iid)} />
+                          <Fragment key={iid}>
+                            {itemHover(
+                              iid,
+                              <Link to="/items/$id" params={{ id: iid }} className={CHIP}>
+                                {b.items.byId.get(iid)?.icon ? (
+                                  <ItemGlyph icon={b.items.byId.get(iid)!.icon!} />
+                                ) : null}
+                                {iname(iid)}
+                              </Link>,
+                            )}
+                          </Fragment>
                         ))}
                       </div>
                     </div>

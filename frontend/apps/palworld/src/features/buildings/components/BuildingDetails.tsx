@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from '@tanstack/react-router'
-import type { BuildingEntry, BuildingsBundle } from '../../../lib/catalog'
+import type { BuildingEntry, BuildingsBundle, TechBundle } from '../../../lib/catalog'
 import { buildingTypeLabel } from '../../catalog/labels'
 import { MaterialRow } from '../../catalog/components'
+import type { TechResolvers } from '../../technology/techModel'
+import { TechChip } from '../../technology/components/TechChip'
 
 export interface BuildingDetailsProps {
   building: BuildingEntry
@@ -10,8 +11,9 @@ export interface BuildingDetailsProps {
   typeLabels: BuildingsBundle['typeLabels']
   /** Localized item name for a material id. */
   iname: (id: string) => string
-  /** Localized technology name for a tech id. */
-  techName: (id: string) => string
+  /** Tech bundle (to resolve unlock-tech entries) + tech chip resolvers. */
+  tech: TechBundle
+  techResolvers: TechResolvers
 }
 
 /**
@@ -19,7 +21,14 @@ export interface BuildingDetailsProps {
  * material and tech chips are real links, so the card must let the pointer move
  * into it (see HoverCard usage in BuildingTile).
  */
-export function BuildingDetails({ building, name, typeLabels, iname, techName }: BuildingDetailsProps) {
+export function BuildingDetails({
+  building,
+  name,
+  typeLabels,
+  iname,
+  tech,
+  techResolvers,
+}: BuildingDetailsProps) {
   const { t } = useTranslation()
   const energy = building.energyType ? building.energyType.replace(/^E[A-Za-z]+::/, '') : ''
 
@@ -55,16 +64,12 @@ export function BuildingDetails({ building, name, typeLabels, iname, techName }:
         <div>
           <div className="mb-1 text-xs text-muted-foreground">{t('building.fromTech')}</div>
           <div className="flex flex-wrap gap-1.5">
-            {building.unlockTech.map((tid) => (
-              <Link
-                key={tid}
-                to="/technology"
-                search={{ tech: tid }}
-                className="inline-flex items-center rounded-md border border-border bg-secondary/40 px-2 py-1 text-xs transition hover:border-primary/60 hover:bg-accent"
-              >
-                {techName(tid)}
-              </Link>
-            ))}
+            {building.unlockTech.map((tid) => {
+              const entry = tech.byId.get(tid)
+              return entry ? (
+                <TechChip key={tid} tech={entry} resolvers={techResolvers} withHoverCard={false} />
+              ) : null
+            })}
           </div>
         </div>
       ) : null}

@@ -19,6 +19,7 @@ import {
 } from '../../lib/catalog'
 import { buildingTypeLabel } from '../catalog/labels'
 import { CatalogPageLoading } from '../catalog/components'
+import { makeTechResolvers } from '../technology/techModel'
 import { BuildingTile } from './components/BuildingTile'
 
 export default function BuildingListPage() {
@@ -74,7 +75,10 @@ export default function BuildingListPage() {
   }, [bundle, query, cat])
 
   const iname = (id: string) => items?.text[id]?.name ?? id
-  const techName = (id: string) => tech?.text[id]?.name ?? id
+  const techResolvers = useMemo(
+    () => (items && bundle && tech ? makeTechResolvers(items, bundle, tech) : null),
+    [items, bundle, tech],
+  )
 
   return (
     <ContentPage active="/buildings" title={t('building.title')} maxWidth="max-w-5xl">
@@ -107,7 +111,7 @@ export default function BuildingListPage() {
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
-          ) : !bundle ? (
+          ) : !bundle || !tech || !techResolvers ? (
             <CatalogPageLoading />
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
@@ -118,7 +122,8 @@ export default function BuildingListPage() {
                   name={bundle.text[b.id]?.name ?? b.id}
                   typeLabels={bundle.typeLabels}
                   iname={iname}
-                  techName={techName}
+                  tech={tech}
+                  techResolvers={techResolvers}
                 />
               ))}
             </div>

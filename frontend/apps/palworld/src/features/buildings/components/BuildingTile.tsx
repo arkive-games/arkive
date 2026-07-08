@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
-import type { BuildingEntry, BuildingsBundle } from '../../../lib/catalog'
+import type { BuildingEntry, BuildingsBundle, TechBundle } from '../../../lib/catalog'
 import { buildingTypeLabel } from '../../catalog/labels'
 import { BuildingGlyph } from '../../catalog/components'
+import type { TechResolvers } from '../../technology/techModel'
 import { BuildingDetails } from './BuildingDetails'
 
 export interface BuildingTileProps {
@@ -10,7 +11,8 @@ export interface BuildingTileProps {
   name: string
   typeLabels: BuildingsBundle['typeLabels']
   iname: (id: string) => string
-  techName: (id: string) => string
+  tech: TechBundle
+  techResolvers: TechResolvers
 }
 
 /**
@@ -19,7 +21,14 @@ export interface BuildingTileProps {
  * card with the build materials, unlocking technology, and properties. The
  * pointer can move into the card to click its material / tech links.
  */
-export function BuildingTile({ building, name, typeLabels, iname, techName }: BuildingTileProps) {
+export function BuildingTile({
+  building,
+  name,
+  typeLabels,
+  iname,
+  tech,
+  techResolvers,
+}: BuildingTileProps) {
   return (
     <HoverCard openDelay={120} closeDelay={120}>
       <HoverCardTrigger asChild>
@@ -47,7 +56,8 @@ export function BuildingTile({ building, name, typeLabels, iname, techName }: Bu
           name={name}
           typeLabels={typeLabels}
           iname={iname}
-          techName={techName}
+          tech={tech}
+          techResolvers={techResolvers}
         />
       </HoverCardContent>
     </HoverCard>

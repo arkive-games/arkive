@@ -11,4 +11,5 @@ export {
   MaterialRow,
   BuildingGlyph,
   ItemGlyph,
+  CHIP,
 } from './ui'
