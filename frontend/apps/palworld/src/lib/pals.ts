@@ -265,3 +265,117 @@ export function fillPassiveDesc(desc: string | undefined, passive: Passive | und
     return eff ? String(eff.value) : ''
   })
 }
+
+// Concise labels for the common passive effect types (see passives.json). The
+// game ships no description text for ~21 stat-modifier passives, so we
+// synthesize one from the effects. Element attack/resist and a few families are
+// handled by pattern below; the long tail falls back to a humanized type name.
+// Labels are English (the passive *name* stays localized); element names are
+// localized via the enums locale.
+const EFFECT_LABEL: Record<string, string> = {
+  CraftSpeed: 'Work Speed',
+  Defense: 'Defense',
+  ShotAttack: 'Attack',
+  MaxHP: 'Max HP',
+  MoveSpeed: 'Move Speed',
+  SwimSpeed: 'Swim Speed',
+  LifeSteal: 'Life Steal',
+  Mining: 'Mining',
+  Logging: 'Logging',
+  BreedSpeed: 'Breeding Speed',
+  BreedSpeed_InBaseCamp: 'Ranch Breeding Speed',
+  PalEggHatchingSpeed: 'Egg Hatching Speed',
+  ActiveSkillCoolTime_Decrease: 'Skill Cooldown',
+  PalSP_Increase: 'Partner Skill Gauge',
+  FullStomatch_Decrease: 'Hunger Rate',
+  Sanity_Decrease: 'Sanity Loss',
+  ShopSellPrice_Money_Increase: 'Sell Price',
+  ShopBuyPrice_Money_Increase: 'Buy Price',
+  AutoHPRegeneRate: 'HP Regen',
+  RideJumpCount_Increase: 'Ride Jumps',
+  ExplosionResist: 'Explosion Resistance',
+  Nocturnal: 'Nocturnal',
+  NightOwl: 'Night Owl',
+  NonKilling: 'Non-Lethal Captures',
+  WorldTreeDecayImmunity: 'World Tree Decay Immunity',
+  LeanBackInvalid_ForPassiveSkill: 'Flinch Immunity',
+  KnockbackInvalid_ForPassiveSkill: 'Knockback Immunity',
+  ReloadSpeedUp: 'Reload Speed',
+  PlayerSP_DecreaseRate: 'Stamina Drain',
+  SelfDeathAddItemDrop: 'Extra Drops on Death',
+  WorkSuitabilityAddRank_MonsterFarm: 'Ranch Work Suitability',
+}
+
+/** Turn a raw effect `type` into a readable label when it has no curated entry. */
+function humanizeEffectType(type: string): string {
+  return type
+    .replace(/_ForPassiveSkill$/, '')
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^\w/, (c) => c.toUpperCase())
+}
+
+function effectTypeLabel(type: string, enums: EnumsLocale): string {
+  const boost = /^ElementBoost_(\w+)$/.exec(type)
+  if (boost) return `${enums.elements[boost[1]] ?? boost[1]} Attack`
+  const resist = /^ElementResist_(\w+)$/.exec(type)
+  if (resist) return `${enums.elements[resist[1]] ?? resist[1]} Resistance`
+  const addl = /^ResistAdditionalEffect_(\w+)$/.exec(type)
+  if (addl) return `${addl[1]} Resistance`
+  return EFFECT_LABEL[type] ?? humanizeEffectType(type)
+}
+
+/**
+ * Display description for a passive. Uses the game's localized text when present
+ * (with `{EffectValue}` placeholders filled); otherwise synthesizes one from the
+ * passive's effects (e.g. "Work Speed +75%, Flinch Immunity"). Effects with a
+ * zero value (boolean flags like immunities) render as a bare label.
+ */
+/** Resolve one `<uiCommon id=|COMMON_…|/>` reference to display text. Work
+ *  suitability refs reuse the localized work-enum label; the rest fall back to a
+ *  small map / humanized id. */
+function resolveUiCommon(key: string, enums: EnumsLocale): string {
+  if (key === 'COMMON_STATUS_HP') return 'HP'
+  if (key === 'COMMON_WORK_SUITABILITY_PALDEX') return 'Work Suitability'
+  const work = /^COMMON_WORK_SUITABILITY_(\w+)$/.exec(key)
+  if (work && enums.work[work[1]]) return enums.work[work[1]]
+  return key.replace(/^COMMON_/, '').replace(/_/g, ' ')
+}
+
+/** Resolve `<uiCommon .../>` refs and normalize whitespace, KEEPING the colour /
+ *  status tags (`<NumBlue_13>`, `<NumRed_13>`, `<Status_Up>`, `</>`) for the
+ *  renderer (see PassiveText). */
+function resolvePassiveTokens(s: string, bundle: PalsBundle): string {
+  return s
+    .replace(/<uiCommon id=\|([^|]+)\|\s*\/>/g, (_m, k: string) => resolveUiCommon(k, bundle.enums))
+    .replace(/\r\n?/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .trim()
+}
+
+/** Strip all markup tags to plain text (for searching / accessible fallbacks). */
+export function stripPassiveTags(s: string): string {
+  return s.replace(/<[^>]*>/g, '').replace(/[ \t]+/g, ' ').trim()
+}
+
+/**
+ * Display description for a passive. Uses the game's localized text when present
+ * (with `{EffectValue}` filled, `<uiCommon/>` refs resolved, colour/status tags
+ * kept for PassiveText to render); otherwise synthesizes one from the effects.
+ */
+export function passiveDescription(id: string, bundle: PalsBundle): string {
+  const passive = bundle.passivesById.get(id)
+  const real = fillPassiveDesc(bundle.passiveText[id]?.description, passive)
+  if (real) return resolvePassiveTokens(real, bundle)
+  if (!passive) return ''
+  return passive.effects
+    .map((e) => {
+      const label = effectTypeLabel(e.type, bundle.enums)
+      if (!e.value) return label
+      const sign = e.value > 0 ? '+' : '−'
+      return `${label} ${sign}${Math.abs(e.value)}%`
+    })
+    .join(', ')
+}

@@ -118,14 +118,19 @@ export function ActiveSkillRow({
   )
 }
 
+/** 1–3 arrow tier for a passive `Rank`, by magnitude. */
+export function passiveRarityTier(rank: number): number {
+  const m = Math.abs(rank)
+  return m >= 4 ? 3 : m >= 2 ? 2 : 1
+}
+
 /** A passive's rarity/tier, derived from its game `Rank`: positive ranks are
  *  beneficial (gold up-arrows), negative are detrimental (red down-arrows), with
  *  1–3 arrows by magnitude. Rank 0 (no tier) renders nothing. */
 export function PassiveRarity({ rank }: { rank: number | undefined }) {
   if (!rank) return null
   const good = rank > 0
-  const m = Math.abs(rank)
-  const tier = m >= 4 ? 3 : m >= 2 ? 2 : 1
+  const tier = passiveRarityTier(rank)
   const Icon = good ? ChevronUp : ChevronDown
   return (
     <span
@@ -137,6 +142,54 @@ export function PassiveRarity({ rank }: { rank: number | undefined }) {
         <Icon key={i} className={cn('size-3.5', i > 0 && '-ml-1.5')} strokeWidth={2.5} />
       ))}
     </span>
+  )
+}
+
+// The game's passive text styles fragments with pseudo-tags: `<NumBlue_13>` for
+// a positive (blue) value, `<NumRed_13>` for a negative (red) value, and
+// `<Status_Up>` for a buff word (e.g. "Immune"). Each is closed by `</>`.
+const PASSIVE_TAG_CLASS: Record<string, string> = {
+  NumBlue_13: 'font-semibold text-sky-500',
+  NumRed_13: 'font-semibold text-destructive',
+  Status_Up: 'font-semibold text-emerald-500',
+}
+
+/** Split tagged passive text into styled segments (module-scope so the running
+ *  class state isn't a render-time reassignment). */
+function parsePassiveText(text: string): { text: string; cls: string | null }[] {
+  const segs: { text: string; cls: string | null }[] = []
+  let cls: string | null = null
+  for (const part of text.split(/(<\/>|<[A-Za-z0-9_]+>)/)) {
+    if (!part) continue
+    if (part === '</>') {
+      cls = null
+      continue
+    }
+    const open = /^<([A-Za-z0-9_]+)>$/.exec(part)
+    if (open) {
+      cls = PASSIVE_TAG_CLASS[open[1]] ?? null
+      continue
+    }
+    segs.push({ text: part, cls })
+  }
+  return segs
+}
+
+/** Render a passive description string, styling the game's colour/status tags.
+ *  Plain text (no tags, e.g. a synthesized description) passes through as-is. */
+export function PassiveText({ text }: { text: string }) {
+  return (
+    <>
+      {parsePassiveText(text).map((s, i) =>
+        s.cls ? (
+          <span key={i} className={s.cls}>
+            {s.text}
+          </span>
+        ) : (
+          <span key={i}>{s.text}</span>
+        ),
+      )}
+    </>
   )
 }
 
@@ -157,7 +210,9 @@ export function PassiveRow({
         <PassiveRarity rank={rank} />
       </div>
       {description ? (
-        <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
+        <div className="mt-0.5 text-xs whitespace-pre-line text-muted-foreground">
+          <PassiveText text={description} />
+        </div>
       ) : null}
     </div>
   )
