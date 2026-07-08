@@ -9,7 +9,8 @@ export interface BreedingPal {
   icon: string
   /** CombiRank (breeding power); lower = rarer. */
   rank: number
-  /** Internal row order — the rank-average tie-break prefers the lower index. */
+  /** DataTable (DT_PalMonsterParameter) row order. Present in the emitted data
+   *  but no longer used for the tie-break — the game uses Paldeck order. */
   idx: number
   /** Eligible as a rank-average child (not a combo-only child, not a legendary). */
   breedChild: boolean
@@ -84,7 +85,8 @@ function orient(f: Combo, fixedId: string, slot: 'a' | 'b'): Combo {
  *   1. same species  -> that species
  *   2. unique combo  -> its child (order-independent; two rows are gender-specific)
  *   3. rank-average  -> childRank = floor((rankA + rankB + 1) / 2); the eligible Pal
- *      with the nearest CombiRank, ties broken by lower internal index.
+ *      with the nearest CombiRank, ties broken by earlier Paldeck index
+ *      (ZukanIndex, base form before variant) — matching the game.
  * Fallback candidates exclude combo-only children and legendaries (`breedChild`),
  * so you can never breed something rarer than your rarest parent.
  */
@@ -121,11 +123,20 @@ export function makeEngine(data: BreedingData): BreedingEngine {
         const b = byId.get(bId)
         if (!a || !b) return []
         const target = Math.floor((a.rank + b.rank + 1) / 2)
+        // Tie-break: the game picks the Pal earlier in Paldeck order (ZukanIndex,
+        // then base form before variant). This is NOT DataTable row order (`idx`) —
+        // the two diverge for Pals added out of Paldeck order in later patches.
+        const earlier = (p: BreedingPal, q: BreedingPal): boolean =>
+          p.zukanIndex !== q.zukanIndex
+            ? p.zukanIndex < q.zukanIndex
+            : p.zukanIndexSuffix !== q.zukanIndexSuffix
+              ? p.zukanIndexSuffix < q.zukanIndexSuffix
+              : p.id < q.id
         let best: BreedingPal | null = null
         let bestDist = Infinity
         for (const p of pool) {
           const d = Math.abs(p.rank - target)
-          if (d < bestDist || (d === bestDist && best !== null && p.idx < best.idx)) {
+          if (d < bestDist || (d === bestDist && best !== null && earlier(p, best))) {
             bestDist = d
             best = p
           }
