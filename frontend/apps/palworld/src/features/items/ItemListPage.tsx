@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import {
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@gamemap/ui'
+import { Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
+import { FilterChip, toggleValue } from '../../components/FilterChip'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { itemTypeLabel } from '../catalog/labels'
 import { CatalogPageLoading, ItemGlyph, rarityBorderClass } from '../catalog/components'
@@ -21,7 +15,7 @@ export default function ItemListPage() {
   const [bundle, setBundle] = useState<ItemsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [cat, setCat] = useState('all')
+  const [cats, setCats] = useState<string[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -52,41 +46,42 @@ export default function ItemListPage() {
     if (!bundle) return []
     const q = query.trim().toLowerCase()
     return bundle.items
-      .filter((i) => cat === 'all' || i.typeA === cat)
+      .filter((i) => cats.length === 0 || cats.includes(i.typeA))
       .filter((i) => !q || (bundle.text[i.id]?.name ?? i.id).toLowerCase().includes(q))
       // Stable game order (SortId), identical across languages, rather than by
       // localized name which would reshuffle per locale.
       .sort((a, b) => a.sortId - b.sortId || a.id.localeCompare(b.id))
-  }, [bundle, query, cat])
+  }, [bundle, query, cats])
 
   return (
     <ContentPage active="/items" title={t('item.title')} maxWidth="max-w-5xl">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('item.searchPlaceholder')}
               className="max-w-sm"
             />
-            <Select value={cat} onValueChange={setCat}>
-              <SelectTrigger className="w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('item.all')}</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {itemTypeLabel(c, bundle?.typeLabels)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             {bundle ? (
               <span className="text-sm text-muted-foreground">
                 {t('item.count', { count: list.length })}
               </span>
             ) : null}
           </div>
+          {bundle ? (
+            <div className="mb-4 flex flex-wrap gap-1.5" data-testid="item-category-filter">
+              {categories.map((c) => (
+                <FilterChip
+                  key={c}
+                  active={cats.includes(c)}
+                  onClick={() => setCats((s) => toggleValue(s, c))}
+                  testId={`item-cat-${c}`}
+                >
+                  {itemTypeLabel(c, bundle.typeLabels)}
+                </FilterChip>
+              ))}
+            </div>
+          ) : null}
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>

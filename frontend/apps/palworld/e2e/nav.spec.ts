@@ -39,28 +39,49 @@ test('Pals dropdown navigates to the Passive Skills page and search filters it',
   await expect(rows.first()).toBeVisible()
 })
 
-test('Passive Skills rarity filter narrows the list', async ({ page }) => {
+test('Passive Skills rarity filter (chips) narrows the list', async ({ page }) => {
   await page.goto('/passives')
   const rows = page.getByTestId('passive-row')
   await expect(rows.first()).toBeVisible()
   const total = await rows.count()
-  await page.getByTestId('passive-rarity-filter').click()
-  await page.locator('[data-testid^="rarity-"]').first().click()
+  const chip = page.locator('[data-testid^="rarity-"]').first()
+  await chip.click()
+  await expect(chip).toHaveAttribute('aria-pressed', 'true')
   const filtered = await rows.count()
   expect(filtered).toBeGreaterThan(0)
   expect(filtered).toBeLessThan(total)
 })
 
-test('Passive Skills category filter narrows the list', async ({ page }) => {
+test('Passive Skills category filter (chips) narrows the list', async ({ page }) => {
   await page.goto('/passives')
   const rows = page.getByTestId('passive-row')
   await expect(rows.first()).toBeVisible()
   const total = await rows.count()
-  await page.getByTestId('passive-category-filter').click()
   await page.getByTestId('category-work').click()
   const filtered = await rows.count()
   expect(filtered).toBeGreaterThan(0)
   expect(filtered).toBeLessThan(total)
+})
+
+test('Item page category chips filter the grid', async ({ page }) => {
+  await page.goto('/items')
+  const cards = page.getByTestId('item-card')
+  await expect(cards.first()).toBeVisible()
+  const total = await cards.count()
+  const chip = page.locator('[data-testid^="item-cat-"]').first()
+  await chip.click()
+  await expect(chip).toHaveAttribute('aria-pressed', 'true')
+  const filtered = await cards.count()
+  expect(filtered).toBeGreaterThan(0)
+  expect(filtered).toBeLessThan(total)
+})
+
+test('Building page category chips toggle', async ({ page }) => {
+  await page.goto('/buildings')
+  const chip = page.locator('[data-testid^="building-cat-"]').first()
+  await expect(chip).toBeVisible()
+  await chip.click()
+  await expect(chip).toHaveAttribute('aria-pressed', 'true')
 })
 
 test('Passive cards link the pals that carry the passive', async ({ page }) => {

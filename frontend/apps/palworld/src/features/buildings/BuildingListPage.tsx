@@ -1,14 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@gamemap/ui'
+import { Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
+import { FilterChip, toggleValue } from '../../components/FilterChip'
 import {
   loadItems,
   loadBuildings,
@@ -31,7 +25,7 @@ export default function BuildingListPage() {
   const [tech, setTech] = useState<TechBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [cat, setCat] = useState('all')
+  const [cats, setCats] = useState<string[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -64,7 +58,7 @@ export default function BuildingListPage() {
     if (!bundle) return []
     const q = query.trim().toLowerCase()
     return bundle.buildings
-      .filter((b) => cat === 'all' || b.typeA === cat)
+      .filter((b) => cats.length === 0 || cats.includes(b.typeA))
       .filter(
         (b) =>
           !q ||
@@ -72,7 +66,7 @@ export default function BuildingListPage() {
           (bundle.text[b.id]?.name ?? b.id).toLowerCase().includes(q),
       )
       .sort((a, b) => a.id.localeCompare(b.id))
-  }, [bundle, query, cat])
+  }, [bundle, query, cats])
 
   const iname = (id: string) => items?.text[id]?.name ?? id
   const techResolvers = useMemo(
@@ -82,32 +76,33 @@ export default function BuildingListPage() {
 
   return (
     <ContentPage active="/buildings" title={t('building.title')} maxWidth="max-w-5xl">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('building.searchPlaceholder')}
               className="max-w-sm"
             />
-            <Select value={cat} onValueChange={setCat}>
-              <SelectTrigger className="w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('building.all')}</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {buildingTypeLabel(c, bundle?.typeLabels)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             {bundle ? (
               <span className="text-sm text-muted-foreground">
                 {t('building.count', { count: list.length })}
               </span>
             ) : null}
           </div>
+          {bundle ? (
+            <div className="mb-4 flex flex-wrap gap-1.5" data-testid="building-category-filter">
+              {categories.map((c) => (
+                <FilterChip
+                  key={c}
+                  active={cats.includes(c)}
+                  onClick={() => setCats((s) => toggleValue(s, c))}
+                  testId={`building-cat-${c}`}
+                >
+                  {buildingTypeLabel(c, bundle.typeLabels)}
+                </FilterChip>
+              ))}
+            </div>
+          ) : null}
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>

@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import {
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@gamemap/ui'
+import { Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
+import { FilterChip, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
   passiveCategories,
@@ -49,8 +43,8 @@ export default function PassivesPage() {
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [rarity, setRarity] = useState('all')
-  const [category, setCategory] = useState('all')
+  const [raritySel, setRaritySel] = useState<string[]>([])
+  const [categorySel, setCategorySel] = useState<string[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -121,13 +115,13 @@ export default function PassivesPage() {
     const q = query.trim().toLowerCase()
     return (
       all
-        .filter((r) => rarity === 'all' || rarityKey(r.rank) === rarity)
-        .filter((r) =>
-          category === 'all'
-            ? true
-            : category === 'none'
-              ? r.categories.length === 0
-              : r.categories.includes(category as PassiveCategory),
+        .filter((r) => raritySel.length === 0 || raritySel.includes(rarityKey(r.rank)))
+        .filter(
+          (r) =>
+            categorySel.length === 0 ||
+            categorySel.some((c) =>
+              c === 'none' ? r.categories.length === 0 : r.categories.includes(c as PassiveCategory),
+            ),
         )
         .filter(
           (r) => !q || r.name.toLowerCase().includes(q) || r.search.includes(q) || r.id.toLowerCase().includes(q),
@@ -136,11 +130,11 @@ export default function PassivesPage() {
         // language (localized names would reshuffle per locale).
         .sort((a, b) => b.rank - a.rank || a.id.localeCompare(b.id))
     )
-  }, [all, query, rarity, category])
+  }, [all, query, raritySel, categorySel])
 
   return (
     <ContentPage active="/passives" title={t('pal.section.passives')} maxWidth="max-w-4xl">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -148,43 +142,49 @@ export default function PassivesPage() {
           className="max-w-sm"
           data-testid="passive-search"
         />
-        <Select value={rarity} onValueChange={setRarity}>
-          <SelectTrigger className="w-40" data-testid="passive-rarity-filter">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('passive.allRarities')}</SelectItem>
-            {rarities.map((key) => (
-              <SelectItem key={key} value={key} data-testid={`rarity-${key}`}>
-                <PassiveRarity rank={repRank(key)} />
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-40" data-testid="passive-category-filter">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('passive.allTypes')}</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c} value={c} data-testid={`category-${c}`}>
-                {t(`passive.category.${c}`)}
-              </SelectItem>
-            ))}
-            {hasNone ? (
-              <SelectItem value="none" data-testid="category-none">
-                {t('passive.category.none')}
-              </SelectItem>
-            ) : null}
-          </SelectContent>
-        </Select>
         {bundle ? (
           <span className="text-sm text-muted-foreground">
             {t('resultsCount', { count: list.length })}
           </span>
         ) : null}
       </div>
+      {bundle ? (
+        <div className="mb-4 space-y-1.5">
+          <div className="flex flex-wrap gap-1.5" data-testid="passive-rarity-filter">
+            {rarities.map((key) => (
+              <FilterChip
+                key={key}
+                active={raritySel.includes(key)}
+                onClick={() => setRaritySel((s) => toggleValue(s, key))}
+                testId={`rarity-${key}`}
+              >
+                <PassiveRarity rank={repRank(key)} />
+              </FilterChip>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1.5" data-testid="passive-category-filter">
+            {categories.map((c) => (
+              <FilterChip
+                key={c}
+                active={categorySel.includes(c)}
+                onClick={() => setCategorySel((s) => toggleValue(s, c))}
+                testId={`category-${c}`}
+              >
+                {t(`passive.category.${c}`)}
+              </FilterChip>
+            ))}
+            {hasNone ? (
+              <FilterChip
+                active={categorySel.includes('none')}
+                onClick={() => setCategorySel((s) => toggleValue(s, 'none'))}
+                testId="category-none"
+              >
+                {t('passive.category.none')}
+              </FilterChip>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>
