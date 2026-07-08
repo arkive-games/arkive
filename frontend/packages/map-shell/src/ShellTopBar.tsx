@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { CheckIcon, Languages, Settings } from "lucide-react"
+import { CheckIcon, ChevronDown, Languages, Settings } from "lucide-react"
 import {
   Button,
   cn,
@@ -14,6 +14,12 @@ export interface ShellNavItem {
   key: string
   label: ReactNode
   active?: boolean
+  /**
+   * When present and non-empty, this item renders as a dropdown: `label` (+ a
+   * chevron) is the trigger and each child renders as a menu item via
+   * `renderItem`. Children are leaf links — nested `children` are ignored.
+   */
+  children?: ShellNavItem[]
 }
 
 export interface ShellTopBarNav {
@@ -67,19 +73,15 @@ export function ShellTopBar({
       {(leftSlot || nav) && (
         <div className={cn("flex items-center gap-6", classNames?.left)}>
           {leftSlot}
-          {nav?.items.map((item) => (
-            <span key={item.key}>
-              {nav.renderItem(
-                item,
-                cn(
-                  "text-sm transition-colors",
-                  item.active
-                    ? cn("font-semibold text-primary", nav.classNames?.itemActive)
-                    : cn("text-foreground/70 hover:text-foreground", nav.classNames?.item),
-                ),
-              )}
-            </span>
-          ))}
+          {nav?.items.map((item) =>
+            item.children && item.children.length > 0 ? (
+              <NavDropdown key={item.key} item={item} nav={nav} />
+            ) : (
+              <span key={item.key}>
+                {nav.renderItem(item, navItemClass(item.active, nav))}
+              </span>
+            ),
+          )}
         </div>
       )}
       <div className={cn("ml-auto flex items-center gap-1", classNames?.right)}>
@@ -142,5 +144,45 @@ export function ShellTopBar({
         {rightExtras}
       </div>
     </header>
+  )
+}
+
+/** Base + active/inactive classes for a top-bar nav item (link or dropdown trigger). */
+function navItemClass(active: boolean | undefined, nav: ShellTopBarNav): string {
+  return cn(
+    "text-sm transition-colors",
+    active
+      ? cn("font-semibold text-primary", nav.classNames?.itemActive)
+      : cn("text-foreground/70 hover:text-foreground", nav.classNames?.item),
+  )
+}
+
+/** A top-bar item that owns children: renders a dropdown of leaf links. */
+function NavDropdown({ item, nav }: { item: ShellNavItem; nav: ShellTopBarNav }) {
+  const children = item.children ?? []
+  const groupActive = item.active || children.some((c) => c.active)
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          data-testid={`nav-dropdown-${item.key}`}
+          className={cn(navItemClass(groupActive, nav), "inline-flex items-center gap-1")}
+        >
+          {item.label}
+          <ChevronDown className="size-4" aria-hidden />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="z-[2000]">
+        {children.map((child) => (
+          <DropdownMenuItem key={child.key} asChild>
+            {nav.renderItem(
+              child,
+              cn("w-full", child.active ? "font-semibold text-primary" : "text-foreground"),
+            )}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
