@@ -215,9 +215,9 @@ type TitleBarStyle = { figure?: string; bg: string; fg: string; arrow: string }
 function titleBarStyle(rank: number): TitleBarStyle {
   const tier = passiveRarityTier(rank)
   if (rank > 0 && tier === 3)
-    return { figure: 'skill_base_02_blue', bg: RANK_BLUE, fg: '#FFFFFF', arrow: '#FFFFFF' }
+    return { figure: 'skill_base_02_blue', bg: RANK_BLUE, fg: '#FFFFFF', arrow: RANK_BLUE }
   if (rank > 0 && tier === 2)
-    return { figure: 'skill_base_02_gold', bg: RANK_GOLD, fg: '#0E2A3C', arrow: '#0E2A3C' }
+    return { figure: 'skill_base_02_gold', bg: RANK_GOLD, fg: '#0E2A3C', arrow: RANK_GOLD }
   if (rank < 0) return { bg: TITLE_BG_FLAT, fg: '#FFFFFF', arrow: RANK_RED }
   return { bg: TITLE_BG_FLAT, fg: '#FFFFFF', arrow: '#FFFFFF' } // +1 / unranked
 }
