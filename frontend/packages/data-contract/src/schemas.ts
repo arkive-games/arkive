@@ -68,6 +68,7 @@ export const markerInstanceSchema = z.object({
   region: z.string().optional(),
   x: z.number(),
   y: z.number(),
+  z: z.number().optional(),
   images: z.array(z.string()),
   contributors: z.array(z.string()),
   icon: z.string().optional(),

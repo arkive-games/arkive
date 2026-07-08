@@ -31,4 +31,22 @@ describe('toGameCoords', () => {
     expect(toGameCoords('WorldTree', 1234, 5678)).toEqual({ x: 1234, y: 5678 })
     expect(toGameCoords('Unknown', 0, 0)).toEqual({ x: 0, y: 0 })
   })
+
+  it('omits z when no height is supplied', () => {
+    expect(toGameCoords('MainWorld', 0, 0)).not.toHaveProperty('z')
+    expect(toGameCoords('WorldTree', 1, 2)).not.toHaveProperty('z')
+  })
+
+  it('scales MainWorld height (z) to in-game units by /459', () => {
+    const g = toGameCoords('MainWorld', -123888, 158000, 4590)
+    expect(g.z).toBeCloseTo(10, 6) // 4590 / 459
+  })
+
+  it('passes z through unchanged for maps without a transform', () => {
+    expect(toGameCoords('WorldTree', 1234, 5678, 42)).toEqual({
+      x: 1234,
+      y: 5678,
+      z: 42,
+    })
+  })
 })

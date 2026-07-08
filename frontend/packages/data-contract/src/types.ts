@@ -120,6 +120,13 @@ export interface MarkerInstance {
   region?: string;
   x: number;
   y: number;
+  /**
+   * World height (the vertical / up axis), in raw engine units. Present on
+   * game exports that carry 3D coordinates (e.g. palworld); absent for legacy
+   * 2D/pixel datasets. Not used for map positioning — `x`/`y` alone place the
+   * marker — but surfaced in the coordinate readout so players can see altitude.
+   */
+  z?: number;
   images: string[];
   contributors: string[];
   icon?: string;

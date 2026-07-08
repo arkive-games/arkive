@@ -12,6 +12,8 @@ export type SearchItem = {
   iconUrl?: string
   x: number
   y: number
+  /** World height (up axis). When present it's shown as a labeled `Z` value. */
+  z?: number
 }
 
 /** A `SearchItem` text field that can be indexed for searching. */
@@ -39,11 +41,17 @@ export type SearchPanelProps = {
    */
   variant?: "floating" | "inline"
   /**
-   * Maps a result's DATA (x, y) to the coordinate pair shown on the card.
+   * Maps a result's DATA (x, y[, z]) to the coordinates shown on the card.
    * Default: identity. Fly-to still uses the raw DATA coords. An app supplies
    * this to display game-native coords (e.g. Palworld in-game coordinates).
+   * When it returns a `z`, the card appends a labeled `Z` (height) value so the
+   * up axis is unambiguous.
    */
-  displayCoords?: (x: number, y: number) => { x: number; y: number }
+  displayCoords?: (
+    x: number,
+    y: number,
+    z?: number,
+  ) => { x: number; y: number; z?: number }
   /**
    * Which item fields are indexed for searching. Required — the panel makes no
    * assumption about the item shape. E.g. AION2 passes `["name","description"]`;
@@ -107,7 +115,7 @@ export function SearchPanel({
   labels,
   debounceMs = 200,
   classNames,
-  displayCoords = (x, y) => ({ x, y }),
+  displayCoords = (x, y, z) => ({ x, y, z }),
   searchFields,
   resolveSearchOptions,
   searchOptions,
@@ -319,8 +327,13 @@ export function SearchPanel({
                     <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground/70">
                       <span className="shrink-0 tabular-nums">
                         {(() => {
-                          const c = displayCoords(item.x, item.y)
-                          return `(${Math.round(c.x)}, ${Math.round(c.y)})`
+                          const c = displayCoords(item.x, item.y, item.z)
+                          const xy = `(${Math.round(c.x)}, ${Math.round(c.y)})`
+                          // Height goes on a separately labeled `Z` so the up
+                          // axis is never confused with the (x, y) pair.
+                          return c.z === undefined
+                            ? xy
+                            : `${xy} · Z ${Math.round(c.z)}`
                         })()}
                       </span>
                       {(() => {

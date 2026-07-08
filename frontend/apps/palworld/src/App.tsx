@@ -181,6 +181,7 @@ export default function App() {
         category: m.category,
         x: m.x,
         y: m.y,
+        z: m.z,
         icon: m.icon,
         indexInSubtype: m.indexInSubtype,
         images: [] as string[],
@@ -214,6 +215,7 @@ export default function App() {
         iconUrl: iconName && map ? palworldAssets.markerIconUrl(iconName, map) : undefined,
         x: m.x,
         y: m.y,
+        z: m.z,
       }
     })
   }, [engineMarkers, staticData, map])
@@ -281,9 +283,10 @@ export default function App() {
     setSelectedMarkerId((cur) => (cur === id ? null : id))
   }, [])
 
-  // Show the game's in-game map coordinates in the readout (cursor + copy).
+  // Show the game's in-game map coordinates in the readout (cursor + copy +
+  // search). The cursor has no height, so `z` is only supplied for markers.
   const displayCoords = useCallback(
-    (x: number, y: number) => toGameCoords(mapId, x, y),
+    (x: number, y: number, z?: number) => toGameCoords(mapId, x, y, z),
     [mapId],
   )
 
@@ -301,10 +304,15 @@ export default function App() {
     const catId = marker.subtypeMeta?.category ?? marker.category
     const catLabel = catId ? (staticData?.typesL10n.categories[catId]?.name ?? catId) : ''
     const subLabel = marker.subtypeLabel ?? marker.subtype
-    const g = toGameCoords(mapId, marker.x, marker.y)
+    const g = toGameCoords(mapId, marker.x, marker.y, marker.z)
+    // Height is labeled separately as `Z` so it's never mistaken for x/y.
+    const coordText =
+      g.z === undefined
+        ? `(${Math.round(g.x)}, ${Math.round(g.y)})`
+        : `(${Math.round(g.x)}, ${Math.round(g.y)}) · Z ${Math.round(g.z)}`
     const metaLine = [
       [catLabel, subLabel].filter(Boolean).join(' / '),
-      `(${Math.round(g.x)}, ${Math.round(g.y)})`,
+      coordText,
     ].filter(Boolean).join(' ')
     const count = marker.count
     const isPal = catId === 'pal'
