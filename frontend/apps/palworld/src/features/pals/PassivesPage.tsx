@@ -40,6 +40,7 @@ export default function PassivesPage() {
       id,
       name: bundle.passiveText[id]?.name ?? id,
       description: fillPassiveDesc(bundle.passiveText[id]?.description, bundle.passivesById.get(id)),
+      rank: bundle.passivesById.get(id)?.rank,
     }))
     const q = query.trim().toLowerCase()
     const filtered = q
@@ -78,7 +79,7 @@ export default function PassivesPage() {
         <div className="divide-y divide-border/60 rounded-lg border border-border bg-card px-4">
           {list.map((r) => (
             <div key={r.id} data-testid="passive-row">
-              <PassiveRow name={r.name} description={r.description} />
+              <PassiveRow name={r.name} description={r.description} rank={r.rank} />
             </div>
           ))}
         </div>

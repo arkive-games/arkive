@@ -375,6 +375,7 @@ export default function PalDetailPage() {
                         bundle.passiveText[pidStr]?.description,
                         bundle.passivesById.get(pidStr),
                       )}
+                      rank={bundle.passivesById.get(pidStr)?.rank}
                     />
                   ))}
                 </div>

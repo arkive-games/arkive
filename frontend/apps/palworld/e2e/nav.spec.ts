@@ -29,6 +29,9 @@ test('Pals dropdown navigates to the Passive Skills page and search filters it',
   const total = await rows.count()
   expect(total).toBeGreaterThan(0)
 
+  // Each passive shows a rarity/rank indicator.
+  await expect(page.locator('[data-testid="passive-row"] span[title^="Rank"]').first()).toBeVisible()
+
   // A query that can't match anything empties the list; clearing restores it.
   await page.getByTestId('passive-search').fill('zzzzzzzzzz')
   await expect(rows).toHaveCount(0)

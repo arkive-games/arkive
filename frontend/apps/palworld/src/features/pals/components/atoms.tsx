@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { elementIconUrl, itemIconUrl, workIconUrl } from '../../../lib/assets'
 import type { ActiveSkill, Element, WorkType } from '../../../lib/pals'
@@ -117,11 +118,44 @@ export function ActiveSkillRow({
   )
 }
 
-/** Innate passive skill: name + effect description. */
-export function PassiveRow({ name, description }: { name: string; description?: string }) {
+/** A passive's rarity/tier, derived from its game `Rank`: positive ranks are
+ *  beneficial (gold up-arrows), negative are detrimental (red down-arrows), with
+ *  1–3 arrows by magnitude. Rank 0 (no tier) renders nothing. */
+export function PassiveRarity({ rank }: { rank: number | undefined }) {
+  if (!rank) return null
+  const good = rank > 0
+  const m = Math.abs(rank)
+  const tier = m >= 4 ? 3 : m >= 2 ? 2 : 1
+  const Icon = good ? ChevronUp : ChevronDown
+  return (
+    <span
+      className={cn('inline-flex shrink-0', good ? 'text-amber-500' : 'text-destructive')}
+      title={`Rank ${rank}`}
+      aria-label={`Rank ${rank}`}
+    >
+      {Array.from({ length: tier }).map((_, i) => (
+        <Icon key={i} className={cn('size-3.5', i > 0 && '-ml-1.5')} strokeWidth={2.5} />
+      ))}
+    </span>
+  )
+}
+
+/** Innate passive skill: name (+ rarity tier) + effect description. */
+export function PassiveRow({
+  name,
+  description,
+  rank,
+}: {
+  name: string
+  description?: string
+  rank?: number
+}) {
   return (
     <div className="py-2 first:pt-0 last:pb-0">
-      <div className="text-sm font-medium">{name}</div>
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm font-medium">{name}</span>
+        <PassiveRarity rank={rank} />
+      </div>
       {description ? (
         <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
       ) : null}
