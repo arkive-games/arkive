@@ -223,6 +223,9 @@ def build_dataset(parsed: dict) -> dict:
         # Effigy relics link to their pal so a pal's page can list them.
         if p.get("effigyPal"):
             c["pal"] = p["effigyPal"]
+        # Ancient Shrine reward (schematic item + Dog Coins) for the popup.
+        if p.get("reward"):
+            c["reward"] = p["reward"]
         candidates[mid].append(c)
 
     for b in parsed["bosses"]:
@@ -350,6 +353,8 @@ def build_dataset(parsed: dict) -> dict:
                     marker["count"] = c["count"]
                 if c.get("image"):
                     marker["image"] = c["image"]
+                if c.get("reward"):
+                    marker["reward"] = c["reward"]
                 marker["images"] = []
                 marker["contributors"] = []
                 marker["indexInSubtype"] = i + 1

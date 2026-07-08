@@ -23,6 +23,7 @@ categories:
     pinVariant: circular
     names: { en-US: Pals, ja-JP: パル, de-DE: Pals, es-ES: Pals, es-MX: Pals, fr-FR: Pals, id-ID: Pal, it-IT: Pal, ko-KR: 팰, pl-PL: Pale, pt-BR: Pals, ru-RU: Палы, th-TH: พัล, tr-TR: Pal'lar, vi-VN: Pal, zh-CN: 帕鲁, zh-TW: 帕魯 }
   - id: npc
+    pinVariant: circular
     names: { en-US: NPCs, ja-JP: NPC, de-DE: NSCs, es-ES: PNJ, es-MX: PNJ, fr-FR: PNJ, id-ID: NPC, it-IT: PNG, ko-KR: NPC, pl-PL: NPC, pt-BR: NPCs, ru-RU: НПС, th-TH: NPC, tr-TR: NPC'ler, vi-VN: NPC, zh-CN: NPC, zh-TW: NPC }
 subtypes:
   - id: fastTravel
@@ -52,6 +53,10 @@ subtypes:
     category: location
     icon: T_icon_compass_BossGate
     names: { en-US: Sealed Realm, ja-JP: 封印されし領域, de-DE: Versiegeltes Reich, es-ES: Reino sellado, es-MX: Reino sellado, fr-FR: Royaume scellé, id-ID: Alam Tersegel, it-IT: Reame sigillato, ko-KR: 봉인된 영역, pl-PL: Zapieczętowana kraina, pt-BR: Reino Selado, ru-RU: Запечатанный мир, th-TH: ดินแดนผนึก, tr-TR: Mühürlü Diyar, vi-VN: Vương quốc phong ấn, zh-CN: 封印领域, zh-TW: 封印領域 }
+  - id: ancientShrine
+    category: location
+    icon: T_icon_compass_KeyBoss
+    names: { en-US: Ancient Shrine, ja-JP: 古代の祠, de-DE: Alter Schrein, es-ES: Santuario antiguo, es-MX: Santuario antiguo, fr-FR: Sanctuaire ancien, id-ID: Kuil Kuno, it-IT: Santuario antico, ko-KR: 고대 사당, pl-PL: Starożytna świątynia, pt-BR: Santuário antigo, ru-RU: Древнее святилище, th-TH: ศาลเจ้าโบราณ, tr-TR: Kadim Tapınak, vi-VN: Đền cổ, zh-CN: 远古神龛, zh-TW: 遠古神龕 }
   - id: fieldBoss
     category: boss
     icon: T_icon_compass_boss

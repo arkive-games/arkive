@@ -31,6 +31,10 @@ POI_CLASSES = [
     ("tower", re.compile(r"^BP_PalBossTower(_.+)?_C$")),
     ("dungeon", re.compile(r"^BP_DungeonPortalMarker_.+_C$")),
     ("treasureMap", re.compile(r"^BP_LevelObject_TreasureMapPoint_C$")),
+    # Ancient Shrine: a lock-gated pickup tower granting one gear schematic + Dog
+    # Coins (reward from DT_ItemPickupDataTable). ~106 across the overworld, split
+    # between the persistent level (2) and the world-partition cells (104).
+    ("ancientShrine", re.compile(r"^BP_LevelObject_ItemPickupTower_C$")),
     ("note", re.compile(r"^BP_LevelObject_Note_C$")),
     ("copper", re.compile(r"^BP_PalMapObjectSpawner_RockCopper_C$")),
     ("quartz", re.compile(r"^BP_PalMapObjectSpawner_RockQuartz_C$")),
@@ -57,6 +61,7 @@ CELL_CLASSES = [
     # Collectible notes: only ~15 sit in the always-loaded persistent level; the
     # rest live in the world-partition cells (the L15 aggregate). Scan both and
     # dedup globally (see _dedup_pois_by_location) so all note pickups surface.
+    ("ancientShrine", re.compile(r"^BP_LevelObject_ItemPickupTower_C$")),
     ("note", re.compile(r"^BP_LevelObject_Note_C$")),
 ]
 CELL_GREP = (
@@ -64,7 +69,8 @@ CELL_GREP = (
     "palmapobjectspawner_palegg_|BP_PalMapObjectSpawner_Treasure_|"
     "BP_NPCCampSpawner_|BP_OilrigTreasureBoxSpawner_C|"
     "BP_LevelObject_OilField_C|BP_PalMapObjectSpawner_SkyIslandOre_C|"
-    "BP_PalMapObjectSpawner_WorldTreeOre_C|BP_LevelObject_Note_C"
+    "BP_PalMapObjectSpawner_WorldTreeOre_C|BP_LevelObject_Note_C|"
+    "BP_LevelObject_ItemPickupTower_C"
 )
 
 # NPC spawners placed on the map: the generic BP_MonoNPCSpawner_C carries a
@@ -252,16 +258,19 @@ def _actor_location(actor: dict, exports: list) -> dict | None:
     if idx >= len(exports):
         return None
     comp = exports[idx]
-    loc = (comp.get("Properties") or {}).get("RelativeLocation")
-    if not loc:
-        return None
-    x, y, z = loc["X"], loc["Y"], loc.get("Z", 0)
+    loc = (comp.get("Properties") or {}).get("RelativeLocation") or {}
     # Most actors' root component is unparented, so RelativeLocation IS the world
-    # position. But some spawners (copper/quartz/coal/sulfur ore rocks) attach
-    # their root to a BP_BoxPlacementTool parent, making RelativeLocation a small
-    # offset in the parent's frame. Compose the AttachParent chain — parent
-    # location + parent-yaw-rotated child offset — to recover the world position.
-    # (These parents carry only Z-yaw; pitch/roll are 0.)
+    # position. But some actors carry NO RelativeLocation on their root (it lives
+    # up an AttachParent chain via an intermediate ChildActorComponent — e.g. the
+    # Ancient Shrine pickup towers), and some spawners (copper/quartz/coal/sulfur
+    # ore rocks) attach their root to a BP_BoxPlacementTool parent, making
+    # RelativeLocation a small offset in the parent's frame. So seed from the root
+    # (0,0,0 when absent) and compose the AttachParent chain — parent location +
+    # parent-yaw-rotated child offset — to recover the world position. (Parents
+    # carry only Z-yaw; pitch/roll are 0.) Return None only if NO component in the
+    # chain supplied a location, preserving the old "locationless actor" skip.
+    found = bool(loc)
+    x, y, z = loc.get("X", 0), loc.get("Y", 0), loc.get("Z", 0)
     parent = (comp.get("Properties") or {}).get("AttachParent")
     depth = 0
     while parent and depth < 16:
@@ -269,14 +278,16 @@ def _actor_location(actor: dict, exports: list) -> dict | None:
         if p_idx >= len(exports):
             break
         p_props = exports[p_idx].get("Properties") or {}
-        p_loc = p_props.get("RelativeLocation") or {}
+        p_loc = p_props.get("RelativeLocation")
+        found = found or bool(p_loc)
+        p_loc = p_loc or {}
         yaw = math.radians((p_props.get("RelativeRotation") or {}).get("Yaw", 0) or 0)
         cos, sin = math.cos(yaw), math.sin(yaw)
         x, y = x * cos - y * sin + p_loc.get("X", 0), x * sin + y * cos + p_loc.get("Y", 0)
         z += p_loc.get("Z", 0)
         parent = p_props.get("AttachParent")
         depth += 1
-    return {"X": x, "Y": y, "Z": z}
+    return {"X": x, "Y": y, "Z": z} if found else None
 
 
 def _grep_files(cwd: Path, pattern: str, includes: list[str]) -> list[str]:
@@ -322,6 +333,10 @@ def _extract_cell_pois(raw: Path) -> list[dict]:
                 row = ((exp.get("Properties") or {}).get("NoteRowName") or {}).get("Key")
                 if row:
                     poi["noteRow"] = row
+            elif subtype == "ancientShrine":
+                row = ((exp.get("Properties") or {}).get("ItemPickupRowName") or {}).get("Key")
+                if row:
+                    poi["pickupRow"] = row
             pois.append(poi)
     return pois
 
@@ -358,15 +373,75 @@ def _npc_identity(exp: dict) -> str | None:
     return m.group(1)  # class suffix (None for the bare BP_MonoNPCSpawner_C)
 
 
+# Portrait-icon fallbacks for NPCs whose identity maps to no
+# DT_PalCharacterIconDataTable key by the general rules in `_npc_name_icon`
+# (generic/quest NPCs with no dedicated portrait row). identity -> icon key.
+NPC_ICON_ALIASES = {
+    # Wildlife-sanctuary guide: a generic male "Mobu" NPC with no portrait row
+    # (CharacterID WildlifeSanctuary_guide, NameTextID BattlePaltamer001) — use
+    # the generic male-citizen portrait.
+    "U_WildlifeSanctuary_guide": "MobuCitizen_Male",
+}
+
+# Trailing spawn/variant index on a CharacterID (Male_DarkTrader01_03 -> _03).
+_ICON_VARIANT_IDX_RX = re.compile(r"_\d+$")
+# Trailing digits on a spawner class-suffix role (Breeder03 -> Breeder).
+_ICON_TRAIL_DIGITS_RX = re.compile(r"\d+$")
+
+# Sub-quest title text id embedded in a BP_SubQuest_<X> blueprint (the quest name).
+_QUESTNAME_RX = re.compile(r"QUEST_SUB_QUESTNAME_[A-Za-z0-9_]+")
+
+
+def _quest_npc_names(raw: Path) -> dict[str, dict]:
+    """{npcId: {tag: questTitle}} for quest-target NPCs with no DT_UniqueNPC row.
+
+    Such NPCs (e.g. Breeder03, Ranger02, StrongOldMan01) are the target of a
+    ``Sub_<npcId>`` sub-quest (DT_PalQuestData). That quest's blueprint embeds a
+    ``QUEST_SUB_QUESTNAME_*`` text id whose localized value ("The Fugitive",
+    "Captured Adventurer", …, in DT_UI_Common_Text) is the only per-NPC label
+    available — used as the marker name so these otherwise-nameless quest markers
+    read meaningfully."""
+    quest_path = raw / "DataTable/Quest/DT_PalQuestData.json"
+    if not quest_path.exists():
+        return {}
+    quest = read_rows(quest_path)
+    ui = _read_text_by_lang(raw, "DT_UI_Common_Text_Common.json")
+    out: dict[str, dict] = {}
+    for qid, row in quest.items():
+        if not qid.startswith("Sub_"):
+            continue
+        asset = (row.get("QuestData") or {}).get("AssetPathName") or ""
+        rel = asset.split(".")[0].replace("/Game/Pal/", "")
+        bp = raw / f"{rel}.json"
+        if not rel or not bp.exists():
+            continue
+        m = _QUESTNAME_RX.search(bp.read_text(encoding="utf-8"))
+        if not m:
+            continue
+        names = {tag: t[m.group(0)] for tag, t in ui.items() if m.group(0) in t}
+        if names:
+            out[qid[len("Sub_"):]] = names
+    return out
+
+
 def _npc_name_icon(raw: Path):
     """Resolver: NPC UniqueName -> (nameByLng | None, iconStem | None).
 
     ``DT_UniqueNPC`` (keyed by the spawner's UniqueName) gives a ``NameTextID``
     (localized in ``DT_UniqueNPCText``, with ``DT_HumanNameText`` as a fallback
     for role-name ids) and a ``CharacterID``. ``DT_PalCharacterIconDataTable``
-    maps the UniqueName (or its CharacterID) to a portrait texture under
-    ``Texture/PalIcon``. A handful of quest-target NPCs have no row and fall back
-    to a humanized label + color pin in ``emit``."""
+    maps a character key to a portrait texture under ``Texture/PalIcon``.
+
+    The portrait key rarely matches the UniqueName/CharacterID verbatim, so the
+    lookup walks an ordered candidate chain (`_icon_stem`): exact ids, the
+    CharacterID minus its ``_NN`` variant index (Male_DarkTrader01_03 ->
+    Male_DarkTrader01), the ``NameTextID`` minus its ``NAME_`` prefix
+    (NAME_Male_SorajimaPeople01 -> Male_SorajimaPeople01), a gender-prefixed bare
+    id (StrongOldMan02 -> Male_StrongOldMan02), then a role-base match for
+    quest-spawner suffixes (Breeder03 -> Male_Breeder01_v01, Ranger02 ->
+    Female_Ranger01_v01), and finally a hand-curated ``NPC_ICON_ALIASES`` entry.
+    The rare NPC still unresolved falls back to a humanized label + color pin in
+    ``emit``."""
     def _rows(rel: str) -> dict:
         p = raw / rel
         return read_rows(p) if p.exists() else {}
@@ -375,11 +450,36 @@ def _npc_name_icon(raw: Path):
     icon_rows = _rows("DataTable/Character/DT_PalCharacterIconDataTable_Common.json")
     unpc = _read_text_by_lang(raw, "DT_UniqueNPCText_Common.json")
     human = _read_text_by_lang(raw, "DT_HumanNameText_Common.json")
+    quest_names = _quest_npc_names(raw)
     tags = [JA_TAG, *L10N_LANG_TAGS.values()]
 
     def _stem(row: dict | None) -> str:
         path = (row.get("Icon") or {}).get("AssetPathName", "") if row else ""
         return path.split(".")[-1] if path else ""
+
+    def _icon_stem(npc_id: str, cid: str | None, nt: str | None, row: dict) -> str:
+        """First portrait stem from the ordered candidate chain (see docstring)."""
+        cands = [npc_id]
+        if cid and cid != "None":
+            cands += [cid, _ICON_VARIANT_IDX_RX.sub("", cid)]
+        if nt and nt != "None":
+            cands.append(re.sub(r"^NAME_", "", nt))
+        gender = (row.get("Gender") or "").split("::")[-1]
+        genders = [gender] if gender in ("Male", "Female") else ["Male", "Female"]
+        cands += [f"{g}_{npc_id}" for g in genders]
+        for k in cands:
+            st = _stem(icon_rows.get(k))
+            if st:
+                return st
+        # Role-base match: strip the spawner suffix's trailing index to the bare
+        # role, then take the lowest-sorted <Gender>_<role>NN(_vNN) portrait.
+        role = _ICON_TRAIL_DIGITS_RX.sub("", npc_id)
+        if len(role) >= 4:
+            rx = re.compile(rf"^(?:{'|'.join(genders)})_{re.escape(role)}\d*(?:_v\d+)?$")
+            for k in sorted(icon_rows):
+                if rx.match(k) and (st := _stem(icon_rows.get(k))):
+                    return st
+        return _stem(icon_rows.get(NPC_ICON_ALIASES.get(npc_id)))
 
     def resolve(npc_id: str) -> tuple[dict | None, str | None]:
         row = uniq.get(npc_id) or {}
@@ -390,8 +490,9 @@ def _npc_name_icon(raw: Path):
                 nm = unpc.get(tag, {}).get(nt) or human.get(tag, {}).get(nt)
                 if nm:
                     name_by_lng[tag] = nm
-        stem = _stem(icon_rows.get(npc_id)) or (_stem(icon_rows.get(cid)) if cid else "")
-        return (name_by_lng or None, stem or None)
+        # No DT_UniqueNPC name -> fall back to the sub-quest title (quest targets).
+        name = name_by_lng or quest_names.get(npc_id)
+        return (name or None, _icon_stem(npc_id, cid, nt, row) or None)
 
     return resolve
 
@@ -521,11 +622,15 @@ def run_extract(raw: Path) -> dict:
             row = ((exp.get("Properties") or {}).get("NoteRowName") or {}).get("Key")
             if row:
                 poi["noteRow"] = row
+        elif subtype == "ancientShrine":
+            row = ((exp.get("Properties") or {}).get("ItemPickupRowName") or {}).get("Key")
+            if row:
+                poi["pickupRow"] = row
         pois.append(poi)
     _strip_entrance_suffixes([p["nameByLng"] for p in pois if p["subtype"] == "tower" and "nameByLng" in p])
     pois.extend(_extract_cell_pois(raw))
-    # Notes are scanned from both the level and the cells; dedup the union.
-    pois = _dedup_pois_by_location(pois, {"note"})
+    # Notes and shrines are scanned from both the level and the cells; dedup the union.
+    pois = _dedup_pois_by_location(pois, {"note", "ancientShrine"})
 
     # Resolve note names/descriptions/illustrations from their NoteRowName. Done
     # after the level+cell dedup so each surviving note gets labelled once.
@@ -540,6 +645,28 @@ def run_extract(raw: Path) -> dict:
             p["descByLng"] = desc_by_lng
         if image:
             p["image"] = image
+
+    # Resolve Ancient Shrine rewards + names from their ItemPickupRowName. Each
+    # shrine grants one gear schematic + Dog Coins (DT_ItemPickupDataTable); label
+    # the marker by the schematic's localized item name (DT_ItemNameText).
+    if any(p["subtype"] == "ancientShrine" for p in pois):
+        pickup_rows = read_rows(raw / "DataTable/Item/DT_ItemPickupDataTable.json")
+        shrine_item_names = _read_text_by_lang(raw, "DT_ItemNameText_Common.json")
+        for p in pois:
+            if p["subtype"] != "ancientShrine":
+                continue
+            rec = pickup_rows.get(p.pop("pickupRow", None) or "")
+            item = (rec or {}).get("Item_01_Id")
+            if not rec or not item or item == "None":
+                continue
+            reward = {"item": item, "count": rec.get("Item_01_Num", 1)}
+            if rec.get("Item_02_Id") == "DogCoin":
+                reward["dogCoin"] = rec.get("Item_02_Num", 0)
+            p["reward"] = reward
+            key = f"ITEM_NAME_{item}"
+            names = {tag: t[key] for tag, t in shrine_item_names.items() if key in t}
+            if names:
+                p["nameByLng"] = names
 
     npcs = _extract_npcs(raw, level)
 

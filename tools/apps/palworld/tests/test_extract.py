@@ -148,14 +148,38 @@ def test_extract_integration():
     # Features added this session:
     assert len(out["wanted"]) == 33
     assert len(out["predators"]) == 29
+    # Ancient Shrines: lock-gated pickup towers (level + cells, deduped). Their
+    # root component has no RelativeLocation — recovered via the _actor_location
+    # AttachParent walk — and each carries a schematic+Dog-Coin reward + a name.
+    shrines = [p for p in out["pois"] if p["subtype"] == "ancientShrine"]
+    assert len(shrines) == 106
+    assert all(mn["X"] <= p["location"]["X"] <= mx["X"] and mn["Y"] <= p["location"]["Y"] <= mx["Y"] for p in shrines)
+    assert all(s.get("reward", {}).get("item") for s in shrines)
+    assert sum(1 for s in shrines if s.get("nameByLng", {}).get("en-US")) >= 100
+    sample = next(s for s in shrines if s["reward"].get("dogCoin"))
+    assert sample["reward"]["count"] >= 1 and sample["reward"]["dogCoin"] > 0
+    assert "pickupRow" not in sample  # temp key stripped after enrichment
     # Placed NPC spawners (talkable / merchant / quest), level + cells, deduped.
-    assert len(out["npcs"]) == 127
+    # (145 incl. +18 recovered by the _actor_location AttachParent-chain fix —
+    # NPC spawners whose root component likewise carries no RelativeLocation.)
+    assert len(out["npcs"]) == 145
     assert all(n["npcId"] and isinstance(n["location"]["X"], (int, float)) for n in out["npcs"])
     assert any(n["npcId"] == "MedalTrader" for n in out["npcs"])
-    # Most NPCs resolve a localized name (DT_UniqueNPC -> DT_UniqueNPCText) and a
-    # portrait icon (DT_PalCharacterIconDataTable); a few quest-target NPCs don't.
-    named = [n for n in out["npcs"] if n.get("nameByLng", {}).get("en-US")]
-    iconed = [n for n in out["npcs"] if n.get("icon")]
-    assert len(named) >= 115 and len(iconed) >= 110
+    # Every NPC resolves BOTH a portrait icon (via the _npc_name_icon fallback
+    # chain: exact id -> CharacterID -> `_NN`-variant/`NAME_`-stripped ->
+    # gender-prefixed -> role-base match -> NPC_ICON_ALIASES) AND a localized name
+    # (DT_UniqueNPC/-Text, or the sub-quest title for quest-target NPCs with no row).
+    assert all(n.get("icon") for n in out["npcs"])
+    assert all(n.get("nameByLng", {}).get("en-US") for n in out["npcs"])
     trader = next(n for n in out["npcs"] if n["npcId"] == "BountyTrader")
     assert trader["nameByLng"]["ja-JP"] == "自警団の指名手配係" and trader["icon"]
+    # Icon fallback-chain recoveries (previously icon-less): each rule once.
+    by_id = {n["npcId"]: n for n in out["npcs"]}
+    assert by_id["DarkTrader03"]["icon"] == "T_Male_DarkTrader01_icon_normal"  # strip _NN
+    assert by_id["U_SorajimaTowerGuide"]["icon"] == "T_Male_SorajimaPeople01_icon_normal"  # NAME_
+    assert by_id["StrongOldMan02"]["icon"] == "T_Male_StrongOldMan02_icon_normal"  # gender prefix
+    assert by_id["Breeder03"]["icon"] == "T_Male_Breeder01_v01_icon_normal"  # role-base match
+    assert by_id["U_WildlifeSanctuary_guide"]["icon"] == "T_MobuCitizen_Male_icon_normal"  # alias
+    # Quest-target NPCs (no DT_UniqueNPC row) are named by their sub-quest title.
+    assert by_id["Ranger02"]["nameByLng"]["en-US"] == "The Fugitive"
+    assert by_id["Breeder03"]["nameByLng"]["en-US"] == "No Mercy for Pal Thieves"

@@ -24,6 +24,9 @@ PARSED = {
         {"subtype": "fastTravel", "sourceName": "FT_1", "location": {"X": 0, "Y": 0, "Z": 10}},
         {"subtype": "fastTravel", "sourceName": "FT_2", "location": {"X": 400000, "Y": -600000, "Z": 10}},
         {"subtype": "copper", "sourceName": "CU_1", "location": {"X": 100, "Y": 100, "Z": 0}},
+        {"subtype": "ancientShrine", "sourceName": "SH_1", "location": {"X": 200, "Y": 200, "Z": 5},
+         "reward": {"item": "Blueprint_Musket_4", "count": 1, "dogCoin": 20},
+         "nameByLng": {lng: ("Musket Schematic" if lng == "en-US" else f"{lng} Musket") for lng in LANGUAGES}},
     ],
     "bosses": [
         {"key": "0", "characterId": "BOSS_Kitsunebi", "level": 12, "location": {"X": 5000, "Y": 5000, "Z": 0}},
@@ -94,6 +97,14 @@ def test_enemy_category_pals_are_hidden(ds):
     for mid in ds["markers"]:
         assert not any(m["subtype"] == "YakushimaMonster001" for m in ds["markers"][mid])
     assert "YakushimaMonster001" not in ds["locales"]["en-US"]["types"]["subtypes"]
+
+
+def test_ancient_shrine_carries_reward_and_name(ds):
+    sh = [m for m in ds["markers"]["MainWorld"] if m["subtype"] == "ancientShrine"]
+    assert len(sh) == 1
+    assert sh[0]["category"] == "location"
+    assert sh[0]["reward"] == {"item": "Blueprint_Musket_4", "count": 1, "dogCoin": 20}
+    assert ds["locales"]["en-US"]["markers"]["MainWorld"][sh[0]["id"]]["name"] == "Musket Schematic"
 
 
 def test_resource_subtypes_carry_item_icons(ds):
