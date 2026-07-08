@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import MiniSearch, { type SearchOptions, type SearchResult } from "minisearch"
 import { cn } from "@gamemap/ui"
+import { formatCoords } from "./coordFormat"
 
 export type SearchItem = {
   id: string
@@ -325,17 +326,21 @@ export function SearchPanel({
                       {item.description || labels.noDescription}
                     </span>
                     <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground/70">
-                      <span className="shrink-0 tabular-nums">
-                        {(() => {
-                          const c = displayCoords(item.x, item.y, item.z)
-                          const xy = `(${Math.round(c.x)}, ${Math.round(c.y)})`
-                          // Height goes on a separately labeled `Z` so the up
-                          // axis is never confused with the (x, y) pair.
-                          return c.z === undefined
-                            ? xy
-                            : `${xy} · Z ${Math.round(c.z)}`
-                        })()}
-                      </span>
+                      {(() => {
+                        const c = displayCoords(item.x, item.y, item.z)
+                        // Compact `(X, Y, Z)` visible; the axis-labeled aria/title
+                        // spells out which number is which (esp. the Z height).
+                        const { text, aria } = formatCoords(c.x, c.y, c.z)
+                        return (
+                          <span
+                            className="shrink-0 tabular-nums"
+                            aria-label={aria}
+                            title={aria}
+                          >
+                            {text}
+                          </span>
+                        )
+                      })()}
                       {(() => {
                         const aside = resultAside?.(item)
                         return aside ? (

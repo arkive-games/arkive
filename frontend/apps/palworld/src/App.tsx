@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearch } from '@tanstack/react-router'
 import { GameMapView, type EngineMarker, type MapRef } from '@gamemap/map-engine'
-import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, type FilterCategory, type SearchItem } from '@gamemap/map-shell'
+import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, type FilterCategory, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers,
@@ -308,15 +308,18 @@ export default function App() {
     const catLabel = catId ? (staticData?.typesL10n.categories[catId]?.name ?? catId) : ''
     const subLabel = marker.subtypeLabel ?? marker.subtype
     const g = toGameCoords(mapId, marker.x, marker.y, marker.z)
-    // Height is labeled separately as `Z` so it's never mistaken for x/y.
-    const coordText =
-      g.z === undefined
-        ? `(${Math.round(g.x)}, ${Math.round(g.y)})`
-        : `(${Math.round(g.x)}, ${Math.round(g.y)}) · Z ${Math.round(g.z)}`
-    const metaLine = [
-      [catLabel, subLabel].filter(Boolean).join(' / '),
-      coordText,
-    ].filter(Boolean).join(' ')
+    const { text: coordText, aria: coordAria } = formatCoords(g.x, g.y, g.z)
+    const catText = [catLabel, subLabel].filter(Boolean).join(' / ')
+    // The coords get their own element so the axis-labeled aria/title (which
+    // number is X/Y/Z) rides only on the coordinate, not the whole meta line.
+    const metaLine = (
+      <>
+        {catText ? `${catText} ` : ''}
+        <span aria-label={coordAria} title={coordAria}>
+          {coordText}
+        </span>
+      </>
+    )
     const count = marker.count
     const isPal = catId === 'pal'
     const pal = isPal && palsBundle ? palsBundle.byId.get(marker.subtype) : undefined

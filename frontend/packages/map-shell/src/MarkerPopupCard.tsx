@@ -5,7 +5,7 @@ import { IdLabel, type IdLabelValue } from "./IdLabel"
 export type MarkerPopupCardProps = {
   idLabel?: IdLabelValue;
   name: string
-  metaLine?: string
+  metaLine?: ReactNode
   description?: string
   noDescriptionLabel?: string
   images?: string[]
