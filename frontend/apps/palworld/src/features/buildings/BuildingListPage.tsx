@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from '@tanstack/react-router'
 import {
   Input,
   Select,
@@ -10,15 +9,25 @@ import {
   SelectValue,
 } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
-import { loadBuildings, type BuildingsBundle } from '../../lib/catalog'
+import {
+  loadItems,
+  loadBuildings,
+  loadTech,
+  type ItemsBundle,
+  type BuildingsBundle,
+  type TechBundle,
+} from '../../lib/catalog'
 import { buildingTypeLabel } from '../catalog/labels'
-import { BuildingGlyph, CatalogPageLoading } from '../catalog/components'
+import { CatalogPageLoading } from '../catalog/components'
+import { BuildingTile } from './components/BuildingTile'
 
 export default function BuildingListPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
 
   const [bundle, setBundle] = useState<BuildingsBundle | null>(null)
+  const [items, setItems] = useState<ItemsBundle | null>(null)
+  const [tech, setTech] = useState<TechBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [cat, setCat] = useState('all')
@@ -26,9 +35,12 @@ export default function BuildingListPage() {
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    loadBuildings(lng)
-      .then((b) => {
-        if (!cancelled) setBundle(b)
+    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng)])
+      .then(([i, b, tc]) => {
+        if (cancelled) return
+        setItems(i)
+        setBundle(b)
+        setTech(tc)
       })
       .catch((err) => {
         console.error(err)
@@ -60,6 +72,9 @@ export default function BuildingListPage() {
       )
       .sort((a, b) => a.id.localeCompare(b.id))
   }, [bundle, query, cat])
+
+  const iname = (id: string) => items?.text[id]?.name ?? id
+  const techName = (id: string) => tech?.text[id]?.name ?? id
 
   return (
     <ContentPage active="/buildings" title={t('building.title')} maxWidth="max-w-5xl">
@@ -97,22 +112,14 @@ export default function BuildingListPage() {
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
               {list.map((b) => (
-                <Link
+                <BuildingTile
                   key={b.id}
-                  to="/buildings/$id"
-                  params={{ id: b.id }}
-                  data-testid="building-card"
-                  className="group flex flex-col items-center gap-1.5 rounded-lg border border-border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent"
-                >
-                  {b.icon ? (
-                    <BuildingGlyph icon={b.icon} size={48} />
-                  ) : (
-                    <div className="size-12" />
-                  )}
-                  <span className="line-clamp-2 text-xs font-medium leading-tight">
-                    {bundle.text[b.id]?.name ?? b.id}
-                  </span>
-                </Link>
+                  building={b}
+                  name={bundle.text[b.id]?.name ?? b.id}
+                  typeLabels={bundle.typeLabels}
+                  iname={iname}
+                  techName={techName}
+                />
               ))}
             </div>
           )}
