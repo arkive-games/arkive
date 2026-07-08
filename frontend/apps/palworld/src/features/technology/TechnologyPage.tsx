@@ -99,10 +99,10 @@ export default function TechnologyPage() {
     body = <CatalogPageLoading />
   } else {
     body = (
-      <div className="grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-[3rem_repeat(7,minmax(0,1fr))]">
-        {/* Header row: level corner + normal (spans 6) + ancient (1) */}
+      <div className="grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-[3rem_repeat(8,minmax(0,1fr))]">
+        {/* Header row: level corner + normal (spans 7) + ancient (1) */}
         <div className="hidden md:block" />
-        <div className="sticky top-0 z-10 rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 md:col-span-6 dark:text-sky-200">
+        <div className="sticky top-0 z-10 rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 md:col-span-7 dark:text-sky-200">
           {t('tech.normalTitle')}
         </div>
         <div className="sticky top-0 z-10 rounded-md bg-purple-500/15 px-3 py-1.5 text-sm font-bold text-purple-800 dark:text-purple-200">
@@ -120,7 +120,7 @@ export default function TechnologyPage() {
         ))}
 
         {levels.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground md:col-span-8">
+          <div className="py-8 text-center text-muted-foreground md:col-span-9">
             {t('tech.empty')}
           </div>
         ) : null}
@@ -160,7 +160,7 @@ function TileGrid({
   resolvers: TechResolvers
   focusId?: string
 }) {
-  // Normal block spans 6 of the outer columns and subdivides into 6; the ancient
+  // Normal block spans 7 of the outer columns and subdivides into 7; the ancient
   // block is a single column. Both render even when empty so a level with only
   // one side keeps the other column aligned.
   return (
@@ -168,7 +168,7 @@ function TileGrid({
       className={
         ancient
           ? 'grid grid-cols-1 gap-2'
-          : 'grid grid-cols-2 gap-2 sm:grid-cols-3 md:col-span-6 md:grid-cols-6'
+          : 'grid grid-cols-2 gap-2 sm:grid-cols-3 md:col-span-7 md:grid-cols-7'
       }
     >
       {techs.map((tech) => (
