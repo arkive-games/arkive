@@ -82,11 +82,16 @@ html {
   font-size: 17px;
 }
 
-/* Region outside the map image (Leaflet void): match the map art's dark
-   blue-black ocean edge (MainWorld #0c161e, WorldTree #0d151c) so panning or
-   zooming past the map borders blends seamlessly instead of showing Leaflet's
-   default grey. Fixed color in both light and dark — it mirrors the map art,
-   not the UI theme. */
+/* Region outside the map image (Leaflet void). The tiles are generated with the
+   out-of-border void cleared to transparent (tools: palworld.maps.slice_tiles),
+   so this background shows through both beyond the image bounds AND inside the
+   map extent past the coastline — letting the void colour follow the UI theme.
+   Light: a pale ocean blue. Dark: the map art's dark blue-black ocean edge
+   (MainWorld #0c161e, WorldTree #0d151c) so it still blends into the coastline. */
 .leaflet-container {
+  background: #cfe4ef;
+}
+
+.dark .leaflet-container {
   background: #0c161e;
 }

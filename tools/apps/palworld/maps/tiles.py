@@ -11,7 +11,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
+from scipy import ndimage
 
 Image.MAX_IMAGE_PIXELS = None  # source maps are 8192x8192
 
@@ -20,6 +22,26 @@ TILE = 1024
 COUNT = 8
 # Long-edge cap for note illustrations (they only render in a small popup).
 NOTE_MAX_EDGE = 1024
+# The border art is a bright cyan glow line (the map's true edge) with a wide
+# (~30px) dark vignette gradient fading from it out to a flat near-black void
+# (MainWorld ~#0d161e, WorldTree ~#0d151c). ``_clear_void`` clears the void to
+# transparent so the frontend background shows through.
+#
+# VOID_MATCH_TOLERANCE is the Manhattan colour-distance from the border colour
+# below which a pixel counts as "void-like". It is set high (140) deliberately:
+# a low value would cut at the *outer* edge of the flat void, leaving the whole
+# dark vignette opaque (a thick border) and threshold-meandering across the flat
+# region (jaggies). Cutting near the cyan line instead — where the gradient is
+# steep — yields a thin border and a tight, clean edge. The cyan line itself
+# (distance ~430, far above the tolerance) forms a closed barrier that keeps the
+# edge-connected flood fill from leaking into in-map water of a similar dark
+# tone: the edge-connected void stays ~31% (MainWorld) / ~61% (WorldTree) even
+# as the tolerance rises, i.e. it only ever absorbs the vignette ring.
+VOID_MATCH_TOLERANCE = 140
+# Feather width (px) of the signed-distance alpha ramp centred on the void
+# boundary. ~1px of anti-aliasing so the edge is smooth (no jaggies) rather than
+# a hard binary cut, while staying crisp.
+VOID_FEATHER_PX = 1.2
 
 
 def _collect_icon_names(data_out: Path) -> set[str]:
@@ -75,6 +97,56 @@ def _save_webp(img: Image.Image, dest: Path) -> None:
     img.save(dest, "WEBP", quality=90, method=6)
 
 
+def _clear_void(img: Image.Image) -> Image.Image:
+    """Make the out-of-border "void" transparent so the frontend's Leaflet
+    background colour shows through (letting it differ per light/dark theme).
+
+    The source map bakes an opaque dark fill outside the playable border, so a
+    fixed CSS background can only match one theme. Here we clear the void to
+    alpha 0 instead: take the border colour from a corner pixel, find every
+    pixel within ``VOID_MATCH_TOLERANCE`` of it, and keep only the connected
+    components touching an image edge (so in-map water of a similar tone, walled
+    off by the cyan border line, is preserved — see the constant's note). The
+    boundary alpha is then anti-aliased with a ``VOID_FEATHER_PX`` signed-
+    distance ramp so the coastline is smooth, not a jagged binary cut. Returns a
+    new RGBA image.
+    """
+    rgba = np.array(img.convert("RGBA"))
+    border = rgba[0, 0, :3].astype(np.int16)
+    dist = np.abs(rgba[:, :, :3].astype(np.int16) - border).sum(axis=2)
+    close = dist <= VOID_MATCH_TOLERANCE
+    labels, _ = ndimage.label(close)
+    edge = np.unique(
+        np.concatenate([labels[0, :], labels[-1, :], labels[:, 0], labels[:, -1]])
+    )
+    edge = edge[edge != 0]
+    void = np.isin(labels, edge)
+    # Signed distance to the void boundary (+ inside island, − inside void),
+    # mapped through a soft ~1px ramp → anti-aliased alpha instead of 0/255.
+    signed = ndimage.distance_transform_edt(~void) - ndimage.distance_transform_edt(void)
+    ramp = np.clip(signed / VOID_FEATHER_PX + 0.5, 0.0, 1.0)
+    rgba[:, :, 3] = (rgba[:, :, 3] * ramp).astype(np.uint8)
+    return Image.fromarray(rgba, "RGBA")
+
+
+def slice_tiles(raw: Path, res_out: Path) -> None:
+    """Slice each world map image into 8x8 ``TILE``-px WebP tiles, with the
+    out-of-border void cleared to transparent (see ``_clear_void``). Kept
+    separate from icon/note conversion so tiles can be regenerated on their own.
+    """
+    raw, res_out = Path(raw), Path(res_out)
+    for map_id, img_rel in MAP_IMAGES.items():
+        dir_ = res_out / "tiles" / map_id
+        dir_.mkdir(parents=True, exist_ok=True)
+        with Image.open(raw / img_rel) as img:
+            img = _clear_void(img)
+            for x in range(COUNT):
+                for y in range(COUNT):
+                    tile = img.crop((x * TILE, y * TILE, (x + 1) * TILE, (y + 1) * TILE))
+                    _save_webp(tile, dir_ / f"{map_id}_{x:02d}_{y:02d}.webp")
+        print(f"tiles: {map_id} 64 tiles")
+
+
 def convert_notes(raw: Path, data_out: Path, res_out: Path) -> None:
     """Convert note illustrations (large full-page drawings under Texture/Note)
     to resource-palworld ``notes/<stem>.webp`` (kept out of ``icons/`` — not pin
@@ -104,16 +176,7 @@ def convert_notes(raw: Path, data_out: Path, res_out: Path) -> None:
 
 def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
     raw, data_out, res_out = Path(raw), Path(data_out), Path(res_out)
-    for map_id, img_rel in MAP_IMAGES.items():
-        dir_ = res_out / "tiles" / map_id
-        dir_.mkdir(parents=True, exist_ok=True)
-        with Image.open(raw / img_rel) as img:
-            img = img.convert("RGBA") if img.mode not in ("RGB", "RGBA") else img
-            for x in range(COUNT):
-                for y in range(COUNT):
-                    tile = img.crop((x * TILE, y * TILE, (x + 1) * TILE, (y + 1) * TILE))
-                    _save_webp(tile, dir_ / f"{map_id}_{x:02d}_{y:02d}.webp")
-        print(f"tiles: {map_id} 64 tiles")
+    slice_tiles(raw, res_out)
 
     icon_dir = res_out / "icons"
     icon_dir.mkdir(parents=True, exist_ok=True)
