@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
-import { cn } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
@@ -82,16 +81,11 @@ export default function ActiveSkillDetailPage() {
             <h1 className="text-3xl font-bold break-words">{skill.name || skill.wazaId}</h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <ElementBadge element={skill.element as Element} label={bundle.enums.elements[skill.element] ?? skill.element} />
-              <span
-                className={cn(
-                  'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                  skill.isFruit
-                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-secondary text-secondary-foreground',
-                )}
-              >
-                {skill.isFruit ? t('activeSkill.fruit') : t('activeSkill.defaultOnly')}
-              </span>
+              {skill.isFruit ? (
+                <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  {t('activeSkill.fruit')}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
