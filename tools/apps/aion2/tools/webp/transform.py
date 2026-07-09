@@ -36,8 +36,12 @@ def transform_png_to_webp(src_dir, dest_dir, quality=100):
                     print(f"Failed to convert {src_file_path}: {e}")
 
 if __name__ == "__main__":
-    SOURCE_DIRECTORY = r"G:\NCSoft\Export\UI"
-    DESTINATION_DIRECTORY = r"G:\NCSoft\Export_webp\UI"
-    QUALITY = 100
-    
-    transform_png_to_webp(SOURCE_DIRECTORY, DESTINATION_DIRECTORY, QUALITY)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Convert a PNG tree to WebP, mirroring the structure.")
+    parser.add_argument("src", help="Source root (PNG tree)")
+    parser.add_argument("dest", help="Destination root (WebP tree)")
+    parser.add_argument("-q", "--quality", type=int, default=100, help="WebP quality 1-100 (default 100)")
+    args = parser.parse_args()
+
+    transform_png_to_webp(args.src, args.dest, args.quality)

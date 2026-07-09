@@ -26,7 +26,6 @@ Run: ``uv run python -m palworld.encyclopedia`` (from the ``tools`` dir).
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 
@@ -34,12 +33,9 @@ import yaml
 from PIL import Image
 
 from .breeding import _has_real_name, _names_by_lang
+from .env import require_dir
 from .maps.common import read_rows, round2, write_json
 from .maps.extract import JA_TAG, L10N_LANG_TAGS
-
-RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
-DATA_OUT = Path(os.environ.get("PALWORLD_DATA_OUT", "E:/aion2-map/data-palworld"))
-RES_OUT = Path(os.environ.get("PALWORLD_RES_OUT", "E:/aion2-map/resource-palworld"))
 
 # Enum prefixes stripped to bare names in the output.
 _ELEM = "EPalElementType::"
@@ -894,4 +890,8 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
 
 
 if __name__ == "__main__":
-    run_encyclopedia(RAW, DATA_OUT, RES_OUT)
+    run_encyclopedia(
+        require_dir("PALWORLD_RAW"),
+        require_dir("PALWORLD_DATA_OUT"),
+        require_dir("PALWORLD_RES_OUT"),
+    )

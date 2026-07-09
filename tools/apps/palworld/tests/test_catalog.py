@@ -1,18 +1,16 @@
-import os
-from pathlib import Path
-
 import pytest
 
 from palworld.catalog import run_catalog
+from palworld.env import optional_dir
 
-RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
+RAW = optional_dir("PALWORLD_RAW")
 # Reuse the already-populated resource repo so `convert()` no-ops on existing
 # .webp files — this integration test asserts linking, not icons, and a cold
 # icon conversion of the full catalog is prohibitively slow.
-RES = Path(os.environ.get("PALWORLD_RES_OUT", "E:/arkive-games/resource-palworld"))
+RES = optional_dir("PALWORLD_RES_OUT")
 
 
-@pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
+@pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
 def test_tech_building_unlock_casing(tmp_path):
     """A tech's UnlockBuildObjects entry must link even when its casing differs
     from the building DataTable row key.
@@ -22,7 +20,7 @@ def test_tech_building_unlock_casing(tmp_path):
     membership test silently dropped the unlock, so the tech linked to nothing.
     """
     data_out = tmp_path / "data"
-    res_out = RES if RES.exists() else tmp_path / "res"
+    res_out = RES if RES and RES.exists() else tmp_path / "res"
     out = run_catalog(RAW, data_out, res_out)
     techs = {t["id"]: t for t in out["techs"]}
     buildings = {b["id"]: b for b in out["buildings"]}
@@ -34,7 +32,7 @@ def test_tech_building_unlock_casing(tmp_path):
     assert "Workbench" in buildings["WorkBench"].get("unlockTech", [])
 
 
-@pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
+@pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
 def test_item_override_name_included(tmp_path):
     """An item whose name lives under `OverrideName` (a differently-keyed text
     row) must still be emitted and linked from its tech.
@@ -44,7 +42,7 @@ def test_item_override_name_included(tmp_path):
     lookup dropped it from the item set, so the tech unlocking it linked nothing.
     """
     data_out = tmp_path / "data"
-    res_out = RES if RES.exists() else tmp_path / "res"
+    res_out = RES if RES and RES.exists() else tmp_path / "res"
     out = run_catalog(RAW, data_out, res_out)
     item_ids = {i["id"] for i in out["items"]}
     techs = {t["id"]: t for t in out["techs"]}
@@ -58,7 +56,7 @@ def test_item_override_name_included(tmp_path):
     assert zh["GrapplingGun"]["name"] == "爪钩枪"
 
 
-@pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
+@pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
 def test_item_name_key_casing(tmp_path):
     """An item whose name-table key differs only in casing from the item id must
     still be emitted.
@@ -67,14 +65,14 @@ def test_item_name_key_casing(tmp_path):
     `Flamethrower` (lowercase t). The case-sensitive lookup dropped it.
     """
     data_out = tmp_path / "data"
-    res_out = RES if RES.exists() else tmp_path / "res"
+    res_out = RES if RES and RES.exists() else tmp_path / "res"
     out = run_catalog(RAW, data_out, res_out)
     item_ids = {i["id"] for i in out["items"]}
 
     assert "FlameThrower" in item_ids
 
 
-@pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
+@pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
 def test_tech_recipe_id_casing(tmp_path):
     """A tech's UnlockItemRecipes id must resolve even when its casing differs
     from the recipe table key.
@@ -83,7 +81,7 @@ def test_tech_recipe_id_casing(tmp_path):
     is `Bow_Triple`; the case-sensitive lookup left the tech linking nothing.
     """
     data_out = tmp_path / "data"
-    res_out = RES if RES.exists() else tmp_path / "res"
+    res_out = RES if RES and RES.exists() else tmp_path / "res"
     out = run_catalog(RAW, data_out, res_out)
     techs = {t["id"]: t for t in out["techs"]}
 
@@ -91,7 +89,7 @@ def test_tech_recipe_id_casing(tmp_path):
     assert techs["SkillUnlock_SakuraSaurus_Water"]["unlockItems"] == ["SkillUnlock_SakuraSaurus_Water"]
 
 
-@pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
+@pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
 def test_illegal_items_imported_and_flagged(tmp_path):
     """Every named item is imported, including bLegalInGame=False ones. Dead
     data (deprecated dupes, debug rows) is stamped `illegal: True` so the
@@ -99,7 +97,7 @@ def test_illegal_items_imported_and_flagged(tmp_path):
     obtainable collectibles — whitelisted, emitted without the flag.
     """
     data_out = tmp_path / "data"
-    res_out = RES if RES.exists() else tmp_path / "res"
+    res_out = RES if RES and RES.exists() else tmp_path / "res"
     out = run_catalog(RAW, data_out, res_out)
     by_id = {i["id"]: i for i in out["items"]}
 

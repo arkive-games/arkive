@@ -1,13 +1,16 @@
-import os
 from pathlib import Path
 
-TOOLS_ROOT = Path(__file__).resolve().parents[4]   # .../tools
-WORKSPACE_ROOT = TOOLS_ROOT.parent                 # .../aion2-map
+from ..env import optional_dir, require_dir
 
-# Raw UE5 game export. Per-machine path; set RAW_DATA_PATH in tools/.env.
-RAW_ROOT = Path(os.environ.get("RAW_DATA_PATH") or "G:/NCSoft/Export/Exports/AION2/Content")
-# Sibling frontend repo. Defaults to ../frontend; override via FRONTEND_ROOT if needed.
-FRONTEND_ROOT = Path(os.environ.get("FRONTEND_ROOT") or (WORKSPACE_ROOT / "frontend"))
+TOOLS_ROOT = Path(__file__).resolve().parents[4]   # .../tools
+WORKSPACE_ROOT = TOOLS_ROOT.parent                 # monorepo root (.../arkive)
+
+# Raw UE5 game export. Per-machine path; must be set via RAW_DATA_PATH in
+# tools/.env (see tools/.env.example) — no hardcoded fallback.
+RAW_ROOT = require_dir("RAW_DATA_PATH")
+# Monorepo frontend/ workspace. Derived from the repo layout; override via
+# FRONTEND_ROOT only for a non-standard checkout.
+FRONTEND_ROOT = optional_dir("FRONTEND_ROOT") or (WORKSPACE_ROOT / "frontend")
 CALIBRATION_OUT = TOOLS_ROOT / "parsed_data" / "calibration"
 
 # A few maps' frontend/tile name differs from their Map.json data key. The Abyss

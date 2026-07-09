@@ -12,17 +12,19 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
+from ..env import optional_dir
+
 _HERE = Path(__file__).resolve().parent
 _REPO = _HERE.parents[3]  # tools/apps/palworld/skill_bar -> repo root
 
-RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
-DEFAULT_TEX = RAW / "Texture/UI/Main_Menu/T_prt_pal_skill_base_02.png"
+# PALWORLD_RAW is optional here: the grayscale strip is checked in as a fallback.
+_RAW = optional_dir("PALWORLD_RAW")
+DEFAULT_TEX = _RAW / "Texture/UI/Main_Menu/T_prt_pal_skill_base_02.png" if _RAW else None
 FALLBACK_TEX = _HERE / "strip.png"  # checked-in copy of the grayscale strip
 DEFAULT_COLORS = _HERE / "colors.json"
 DEFAULT_OUT_DIR = _REPO / "frontend/apps/palworld/public/images/passive-rank"
@@ -57,7 +59,7 @@ def main() -> None:
     ap.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR, help="output directory")
     args = ap.parse_args()
 
-    tex = args.tex or (DEFAULT_TEX if DEFAULT_TEX.exists() else FALLBACK_TEX)
+    tex = args.tex or (DEFAULT_TEX if DEFAULT_TEX and DEFAULT_TEX.exists() else FALLBACK_TEX)
     if not tex.exists():
         raise SystemExit(f"grayscale strip not found: {tex}")
 

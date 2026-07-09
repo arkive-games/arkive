@@ -1,15 +1,14 @@
 import json
-import os
-from pathlib import Path
 
 import pytest
 
 from palworld.encyclopedia import ELEMENTS, WORK_TYPES, run_encyclopedia
+from palworld.env import optional_dir
 
-RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
+RAW = optional_dir("PALWORLD_RAW")
 
 
-@pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
+@pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
 def test_encyclopedia_integration(tmp_path):
     data_out, res_out = tmp_path / "data", tmp_path / "res"
     out = run_encyclopedia(RAW, data_out, res_out)

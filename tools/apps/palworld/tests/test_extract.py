@@ -1,12 +1,12 @@
 import json
-import os
 from pathlib import Path
 
 import pytest
 
+from palworld.env import optional_dir
 from palworld.maps.extract import L10N_LANG_TAGS, _actor_location, run_extract
 
-RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
+RAW = optional_dir("PALWORLD_RAW")
 
 
 def _wj(path: Path, obj):
@@ -126,7 +126,7 @@ def test_extracts_healing_spring_and_warp_altar_from_cells(tmp_path):
     assert "warpAltar" in by_sub
 
 
-@pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
+@pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
 def test_extract_integration():
     out = run_extract(RAW)
 

@@ -26,17 +26,14 @@ names are resolved on the frontend via items.json (same id space).
 from __future__ import annotations
 
 import json
-import os
 import re
 from pathlib import Path
 
 from .catalog import _ph, _resolve_tokens
 from .encyclopedia import _all_tags, _text_by_lang
+from .env import require_dir
 from .maps.bounds import assign_map
 from .maps.common import read_rows, round2, write_json
-
-RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
-DATA_OUT = Path(os.environ.get("PALWORLD_DATA_OUT", "E:/aion2-map/data-palworld"))
 
 _QUEST_TYPE = "EPalQuestType::"
 _NONE = {None, "None", ""}
@@ -163,4 +160,4 @@ def run_quests(raw: Path, data_out: Path) -> dict:
 
 
 if __name__ == "__main__":
-    run_quests(RAW, DATA_OUT)
+    run_quests(require_dir("PALWORLD_RAW"), require_dir("PALWORLD_DATA_OUT"))

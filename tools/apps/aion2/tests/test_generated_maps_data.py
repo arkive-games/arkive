@@ -1,12 +1,18 @@
 """Asserts on the regenerated data/ repo. Run AFTER the emitter (Step 3)."""
 import json
-import os
-from pathlib import Path
 
-# Sibling `data/` repo (same resolution as emit_frontend's DATA_REPO):
-# .../tools/apps/aion2/tests/this_file -> parents[4] == .../<workspace> -> /data.
-# Override with DATA_REPO for a non-standard layout.
-DATA = Path(os.environ.get("DATA_REPO") or (Path(__file__).resolve().parents[4] / "data"))
+import pytest
+
+from aion2.tools.env import optional_dir
+
+# Output `data/` repo (same env var as emit_frontend's DATA_REPO); the legacy
+# DATA_REPO override is honoured for a non-standard layout.
+DATA = optional_dir("DATA_REPO") or optional_dir("AION2_DATA_OUT")
+
+pytestmark = pytest.mark.skipif(
+    DATA is None or not DATA.exists(),
+    reason="AION2_DATA_OUT / DATA_REPO not set or data repo not present",
+)
 
 
 def _locale(lng):
@@ -14,14 +20,14 @@ def _locale(lng):
 
 
 def test_locales_are_localized_and_differ_across_languages():
-    en, zh = _locale("en"), _locale("zh-CN")
+    en, zh = _locale("en-US"), _locale("zh-CN")
     assert en["World_L_A"]["name"] == "Verteron (Elyos)"
     assert zh["World_L_A"]["name"].endswith("（天）")
     assert zh["World_L_A"]["name"] != en["World_L_A"]["name"]
 
 
 def test_starter_and_b_maps_localized():
-    en = _locale("en")
+    en = _locale("en-US")
     assert en["World_L_Starter"]["name"] == "Poeta (Elyos)"
     assert en["World_D_Starter"]["name"] == "Ishalgen (Asmodian)"
     assert en["World_L_B"]["name"] == "Eltnen (Elyos)"
@@ -93,7 +99,7 @@ def test_fragment_title_is_subtype_label_and_desc_is_region_and_number():
 
     markers = _markers("World_L_A")
     frags = [m for m in markers if m["subtype"] == "fragments"]
-    for lng in ("en", "zh-CN", "zh-TW"):
+    for lng in ("en-US", "zh-CN", "zh-TW"):
         loc = _marker_loc(lng, "World_L_A")
         label = _subtype_label(lng, "fragments")
         per_region = {}
@@ -113,7 +119,7 @@ def test_hidden_cube_title_is_label_and_desc_is_number():
     markers = _markers("World_L_A")
     cubes = [m for m in markers if m["subtype"] == "hiddenCube"]
     assert cubes, "expected hiddenCube markers in World_L_A"
-    for lng in ("en", "zh-CN", "zh-TW"):
+    for lng in ("en-US", "zh-CN", "zh-TW"):
         loc = _marker_loc(lng, "World_L_A")
         label = _subtype_label(lng, "hiddenCube")
         for m in cubes:
@@ -124,7 +130,7 @@ def test_hidden_cube_title_is_label_and_desc_is_number():
 
 def test_hidden_cube_label_matches_game_l10n():
     """Game L10N term is 背包 ("Hidden Cube"), never the wrong 宝箱/揹包."""
-    assert _subtype_label("en", "hiddenCube") == "Hidden Cube"
+    assert _subtype_label("en-US", "hiddenCube") == "Hidden Cube"
     assert _subtype_label("zh-CN", "hiddenCube") == "隐藏背包"
     assert _subtype_label("zh-TW", "hiddenCube") == "隱藏背包"
     tw = _marker_loc("zh-TW", "World_L_A")

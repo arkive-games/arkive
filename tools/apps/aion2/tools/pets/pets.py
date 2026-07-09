@@ -7,6 +7,7 @@ from io import BytesIO
 from opencc import OpenCC
 
 from aion2.tools.common.auth import get_headers
+from aion2.tools.env import require_dir
 from aion2_interactive_map_backend_client import Client
 from aion2_interactive_map_backend_client.api.markers import markers_create_marker_api_v_1_maps_map_markers_post, \
     marker_images_upload_marker_image_api_v_1_maps_map_markers_marker_images_put, \
@@ -20,7 +21,8 @@ cc = OpenCC("t2s")
 # -------------------------------------------------------
 # Paths
 # -------------------------------------------------------
-root = Path(r"G:\NCSoft\宠物")
+# Folder of per-pet screenshot subdirs used to build marker uploads.
+root = require_dir("AION2_PETS_DIR")
 pets_json_path = Path(r"table.pets.json")
 
 dirs_with_png = {p.parent for p in root.rglob("*.png")}

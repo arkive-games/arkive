@@ -1,6 +1,7 @@
 """CLI: ``python -m palworld.maps <extract|calibrate|emit|tiles>``.
 
-Paths default from env vars (matching the old JS cli.mjs):
+Paths come from env vars / ``tools/.env`` — required per stage, no defaults
+(see ``palworld.env``):
   PALWORLD_RAW       raw UE export root (…/Content/Pal)
   PALWORLD_DATA_OUT  data-palworld repo
   PALWORLD_RES_OUT   resource-palworld repo
@@ -9,12 +10,10 @@ Paths default from env vars (matching the old JS cli.mjs):
 from __future__ import annotations
 
 import argparse
-import os
 from pathlib import Path
 
-RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
-DATA_OUT = Path(os.environ.get("PALWORLD_DATA_OUT", "E:/aion2-map/data-palworld"))
-RES_OUT = Path(os.environ.get("PALWORLD_RES_OUT", "E:/aion2-map/resource-palworld"))
+from ..env import require_dir
+
 PARSED_DIR = Path(__file__).resolve().parent.parent / "parsed"
 
 
@@ -25,17 +24,21 @@ def main() -> None:
 
     if args.stage == "extract":
         from .extract import write_parsed
-        write_parsed(RAW, PARSED_DIR)
+        write_parsed(require_dir("PALWORLD_RAW"), PARSED_DIR)
         print(f"extract: wrote {PARSED_DIR}")
     elif args.stage == "calibrate":
         from .calibrate import run_calibrate
-        run_calibrate(RAW, PARSED_DIR)
+        run_calibrate(require_dir("PALWORLD_RAW"), PARSED_DIR)
     elif args.stage == "emit":
         from .emit import run_emit
-        run_emit(PARSED_DIR, DATA_OUT)
+        run_emit(PARSED_DIR, require_dir("PALWORLD_DATA_OUT"))
     elif args.stage == "tiles":
         from .tiles import run_tiles
-        run_tiles(RAW, DATA_OUT, RES_OUT)
+        run_tiles(
+            require_dir("PALWORLD_RAW"),
+            require_dir("PALWORLD_DATA_OUT"),
+            require_dir("PALWORLD_RES_OUT"),
+        )
 
 
 if __name__ == "__main__":

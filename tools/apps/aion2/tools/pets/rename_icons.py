@@ -1,9 +1,11 @@
 import json
-from pathlib import Path
 import shutil
 
+from aion2.tools.env import require_dir
+
 pets = json.load(open('table.pets.json', encoding='utf-8'))
-src_dir = Path("G:\\NCSoft\\Export\\UI\\Resource\\Texture\\Portrait\\Portrait_Vehicle")
+# Pre-monorepo export root (the old layout with UI/ directly under it).
+src_dir = require_dir("AION2_LEGACY_EXPORT_ROOT") / "UI/Resource/Texture/Portrait/Portrait_Vehicle"
 dest_dir = src_dir.parent / "Portrait_Vehicle_Rename"
 dest_dir.mkdir(parents=True, exist_ok=True)
 

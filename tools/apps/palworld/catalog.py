@@ -55,7 +55,6 @@ Run: ``uv run python -m palworld.catalog`` (from the ``tools`` dir), AFTER
 from __future__ import annotations
 
 import json
-import os
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -63,11 +62,8 @@ from pathlib import Path
 from PIL import Image
 
 from .encyclopedia import _all_tags, _read_text, _strip, _text_by_lang
+from .env import require_dir
 from .maps.common import read_rows, round2, write_json
-
-RAW = Path(os.environ.get("PALWORLD_RAW", "E:/SteamLibrary/steamapps/common/Palworld/Exports/Pal/Content/Pal"))
-DATA_OUT = Path(os.environ.get("PALWORLD_DATA_OUT", "E:/aion2-map/data-palworld"))
-RES_OUT = Path(os.environ.get("PALWORLD_RES_OUT", "E:/aion2-map/resource-palworld"))
 
 _ITEM_A = "EPalItemTypeA::"
 _ITEM_B = "EPalItemTypeB::"
@@ -700,4 +696,8 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
 
 
 if __name__ == "__main__":
-    run_catalog(RAW, DATA_OUT, RES_OUT)
+    run_catalog(
+        require_dir("PALWORLD_RAW"),
+        require_dir("PALWORLD_DATA_OUT"),
+        require_dir("PALWORLD_RES_OUT"),
+    )

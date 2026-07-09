@@ -63,19 +63,22 @@ from pathlib import Path
 import yaml
 from opencc import OpenCC
 
-from . import RAW_ROOT, TOOLS_ROOT
+from . import FRONTEND_ROOT, RAW_ROOT, TOOLS_ROOT
+from ..env import require_dir
 from .l10n import L10N
 from .extract import map_title
 
 # --- Paths ----------------------------------------------------------------
 PARSED_MAPS_DIR = TOOLS_ROOT / "parsed_data" / "maps"
-DATA_REPO = TOOLS_ROOT.parent / "data"
+# Output data repo (separate repo, served over HTTP). Per-machine path; the old
+# `TOOLS_ROOT.parent / "data"` sibling resolution broke with the monorepo move.
+DATA_REPO = require_dir("AION2_DATA_OUT")
 # types is hand-authored config (icons/canComplete). Humans edit this YAML; we
 # compile it to data/types.json so the frontend gets JSON.
 TYPES_SRC = TOOLS_ROOT / "data_src" / "types.yaml"
 # Curated subtype/category display names (carried + adjusted into types.json
 # locales). Still YAML sources; we emit JSON.
-CURATED_LOCALES = TOOLS_ROOT.parent / "frontend" / "apps" / "aion2" / "public" / "locales"
+CURATED_LOCALES = FRONTEND_ROOT / "apps" / "aion2" / "public" / "locales"
 
 LANGS = ("en-US", "zh-CN", "zh-TW", "ko-KR")
 

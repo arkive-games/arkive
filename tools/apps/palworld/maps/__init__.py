@@ -7,6 +7,7 @@ Stages (run via ``python -m palworld.maps <stage>``):
 - ``emit``      — build the contract-v1 dataset into ``data-palworld``.
 - ``tiles``     — convert map tiles + marker icons to WebP into ``resource-palworld``.
 
-Defaults for the raw export / output dirs come from env vars
-(``PALWORLD_RAW`` / ``PALWORLD_DATA_OUT`` / ``PALWORLD_RES_OUT``); see ``paths``.
+The raw export / output dirs come from required env vars
+(``PALWORLD_RAW`` / ``PALWORLD_DATA_OUT`` / ``PALWORLD_RES_OUT``), loaded from
+``tools/.env``; see ``palworld.env``.
 """

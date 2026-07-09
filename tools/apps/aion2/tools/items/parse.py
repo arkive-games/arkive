@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import pandas as pd
 import yaml
 
+from aion2.tools.env import require_dir
 from aion2_interactive_map_backend_client.api import languages
 
 # df = df_cn.merge(df_en, on="id", how="left", suffixes=("", "_en"))
@@ -20,7 +21,8 @@ cols = [
 
 FOLDERS = ["Item/Accessory", "Item/Armor", "Item/BMShop", "Item/ETC", "Item/Weapon", "Item/Wing", "Icon_Arcana", "Portrait/Portrait_Vehicle"]
 UI_PREFIX = "UI/Resource/Texture"
-GAME_SRC = Path("G:\\NCSoft\\Export")
+# Pre-monorepo export root (the old layout with UI/ directly under it).
+GAME_SRC = require_dir("AION2_LEGACY_EXPORT_ROOT")
 
 filename_folder_map = {}
 for folder in FOLDERS:

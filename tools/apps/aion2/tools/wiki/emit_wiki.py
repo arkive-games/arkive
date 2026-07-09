@@ -12,6 +12,7 @@ from pathlib import Path
 import yaml
 from opencc import OpenCC
 
+from aion2.tools.env import require_dir
 from aion2.tools.maps import TOOLS_ROOT, map_table_key, worldmap_path
 from aion2.tools.maps.extract import ORIENTATION, _table
 from aion2.tools.maps.l10n import L10N
@@ -20,8 +21,10 @@ from aion2.tools.maps.transform import WorldMapTransform
 from aion2.tools.maps.worldmap import WorldMapMeta
 from aion2.tools.wiki import entities, resolvers, tables, taxonomy
 
-DATA_REPO = TOOLS_ROOT.parent / "data"
-RESOURCE_REPO = TOOLS_ROOT.parent / "resource"
+# Output repos (separate repos, served over HTTP). Per-machine paths; the old
+# `TOOLS_ROOT.parent / …` sibling resolution broke with the monorepo move.
+DATA_REPO = require_dir("AION2_DATA_OUT")
+RESOURCE_REPO = require_dir("AION2_RES_OUT")
 WIKI_CFG = TOOLS_ROOT / "data_src" / "wiki.yaml"
 LANGS = ("en-US", "zh-CN", "zh-TW", "ko-KR")
 _s2t = OpenCC("s2t")
