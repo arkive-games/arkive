@@ -27,8 +27,20 @@ describe('toGameCoords', () => {
     expect(g.y).toBeCloseTo(0, 6)
   })
 
-  it('is identity for maps without a transform (e.g. WorldTree)', () => {
-    expect(toGameCoords('WorldTree', 1234, 5678)).toEqual({ x: 1234, y: 5678 })
+  it('maps WorldTree on the same global Paldex grid as MainWorld', () => {
+    // WorldTree markers live in the same UE world space, so the world→Paldex
+    // affine applies unchanged (it used to fall through as raw world coords).
+    const g = toGameCoords('WorldTree', 570652, -558439, 22369)
+    expect(Math.round(g.x)).toBe(-1561)
+    expect(Math.round(g.y)).toBe(1513)
+    expect(Math.round(g.z!)).toBe(49)
+    // Identical to MainWorld for the same world coords.
+    expect(toGameCoords('WorldTree', 1234, 5678)).toEqual(
+      toGameCoords('MainWorld', 1234, 5678),
+    )
+  })
+
+  it('is identity for maps without a known grid', () => {
     expect(toGameCoords('Unknown', 0, 0)).toEqual({ x: 0, y: 0 })
   })
 
@@ -37,13 +49,13 @@ describe('toGameCoords', () => {
     expect(toGameCoords('WorldTree', 1, 2)).not.toHaveProperty('z')
   })
 
-  it('scales MainWorld height (z) to in-game units by /459', () => {
-    const g = toGameCoords('MainWorld', -123888, 158000, 4590)
-    expect(g.z).toBeCloseTo(10, 6) // 4590 / 459
+  it('scales height (z) to in-game units by /459', () => {
+    expect(toGameCoords('MainWorld', -123888, 158000, 4590).z).toBeCloseTo(10, 6)
+    expect(toGameCoords('WorldTree', -123888, 158000, 4590).z).toBeCloseTo(10, 6)
   })
 
-  it('passes z through unchanged for maps without a transform', () => {
-    expect(toGameCoords('WorldTree', 1234, 5678, 42)).toEqual({
+  it('passes z through unchanged for maps without a known grid', () => {
+    expect(toGameCoords('Unknown', 1234, 5678, 42)).toEqual({
       x: 1234,
       y: 5678,
       z: 42,

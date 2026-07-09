@@ -17,19 +17,23 @@
 //
 //   game_z = worldZ / 459   (height / altitude; the game itself shows no Z)
 //
-// Only MainWorld has a known in-game grid; other maps (e.g. WorldTree) return
-// their coords unchanged.
+// The Paldex formula is a property of Palworld's world space, not of any one
+// map: MainWorld and WorldTree markers share the same UE world coordinates
+// (both are extracted from the persistent MainWorld_5 level), so the same
+// affine applies to both. Unknown map ids fall through as raw coords.
 
-const MAIN_WORLD = {
+const WORLD_GRID = {
   scale: 459,
   shiftX: 158000, // subtracted from worldY → game x
   shiftY: 123888, // added to worldX → game y
 }
+const GRID_MAPS = new Set(['MainWorld', 'WorldTree'])
 
 /**
- * RAW WORLD (x, y[, z]) → Palworld in-game coords. Identity for unmapped maps.
- * `z` is world height; when supplied it is scaled to in-game units and returned
- * (the caller labels it as the Z / height axis). Omitted when `z` is undefined.
+ * RAW WORLD (x, y[, z]) → Palworld in-game coords. Identity for maps without a
+ * known grid. `z` is world height; when supplied it is scaled to in-game units
+ * and returned (the caller labels it as the Z / height axis). Omitted when `z`
+ * is undefined.
  */
 export function toGameCoords(
   mapId: string,
@@ -37,10 +41,10 @@ export function toGameCoords(
   y: number,
   z?: number,
 ): { x: number; y: number; z?: number } {
-  if (mapId !== 'MainWorld') return z === undefined ? { x, y } : { x, y, z }
+  if (!GRID_MAPS.has(mapId)) return z === undefined ? { x, y } : { x, y, z }
   return {
-    x: (y - MAIN_WORLD.shiftX) / MAIN_WORLD.scale,
-    y: (x + MAIN_WORLD.shiftY) / MAIN_WORLD.scale,
-    ...(z === undefined ? {} : { z: z / MAIN_WORLD.scale }),
+    x: (y - WORLD_GRID.shiftX) / WORLD_GRID.scale,
+    y: (x + WORLD_GRID.shiftY) / WORLD_GRID.scale,
+    ...(z === undefined ? {} : { z: z / WORLD_GRID.scale }),
   }
 }
