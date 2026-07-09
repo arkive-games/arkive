@@ -89,3 +89,27 @@ def test_tech_recipe_id_casing(tmp_path):
 
     assert techs["Battle_RangeWeapon_Bow3"]["unlockItems"] == ["Bow_Triple"]
     assert techs["SkillUnlock_SakuraSaurus_Water"]["unlockItems"] == ["SkillUnlock_SakuraSaurus_Water"]
+
+
+@pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
+def test_effigies_included_despite_illegal_flag(tmp_path):
+    """Effigies (Relic, Relic_01..Relic_12) are flagged bLegalInGame=False — they
+    can't sit in inventory as tradeable goods, you consume them at the Statue of
+    Power — but are real collectible items players hold, so they must appear in
+    the item list. The cut Key Spheres share the same Essential type and illegal
+    flag yet are unreleased content (rank 0, no recipe/markers) and stay excluded.
+    """
+    data_out = tmp_path / "data"
+    res_out = RES if RES.exists() else tmp_path / "res"
+    out = run_catalog(RAW, data_out, res_out)
+    item_ids = {i["id"] for i in out["items"]}
+
+    assert "Relic" in item_ids      # base Lifmunk Effigy
+    assert "Relic_01" in item_ids   # Lamball Effigy
+    assert "Relic_12" in item_ids   # Mimog Effigy
+    # Cut/unreleased content sharing the same Essential type + illegal flag stays
+    # out — the whitelist keys on the exact Relic ids, not the shared flag.
+    assert "KeySphere_01" not in item_ids
+
+    relic = next(i for i in out["items"] if i["id"] == "Relic")
+    assert relic["typeA"] == "Essential"

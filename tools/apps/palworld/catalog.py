@@ -321,9 +321,15 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         return any((item_name_by_lang.get(t, {}).get(iid) or "").strip() for t in tags)
 
     # --- items (inclusion gate: legal + has a localized name) ----------------
+    # Effigies (Relic, Relic_01..Relic_12) are flagged bLegalInGame=False: they
+    # aren't tradeable inventory goods — you consume them at the Statue of Power
+    # to raise Capture Power — but players do hold them, so surface them despite
+    # the legality gate. Keyed on the exact `Relic`/`Relic_NN` ids so the same
+    # type's cut Key Spheres and unrelated ids (WorldTreeRelic_*) stay excluded.
+    effigy_item = re.compile(r"^Relic(_\d+)?$").match
     item_ids = [
         iid for iid, r in item_rows.items()
-        if r.get("bLegalInGame", True) and item_has_name(iid)
+        if item_has_name(iid) and (r.get("bLegalInGame", True) or effigy_item(iid))
     ]
     item_id_set = set(item_ids)
 
