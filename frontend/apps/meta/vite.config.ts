@@ -6,7 +6,7 @@ import path from 'node:path'
 export default defineConfig({
   server: {
     host: '0.0.0.0',
-    port: 15175,
+    port: 15172,
     strictPort: true,
     allowedHosts: true,
   },

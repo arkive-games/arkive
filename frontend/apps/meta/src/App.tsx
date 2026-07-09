@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next'
 import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
-import { Card, cn } from '@gamemap/ui'
 import { ArrowUpRight } from 'lucide-react'
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import { SITES } from './sites'
@@ -31,32 +30,23 @@ export default function App() {
             <a
               key={site.id}
               href={site.url}
-              className="group block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group relative block aspect-video overflow-hidden rounded-xl border border-border shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Card
-                className={cn(
-                  'h-full gap-4 py-6 transition-colors',
-                  'group-hover:border-accent group-hover:bg-secondary',
-                )}
-              >
-                <div className="flex flex-col items-center gap-4 px-6 text-center">
-                  <div className="flex size-24 items-center justify-center rounded-xl bg-slate-800 p-3">
-                    <img
-                      src={site.logo}
-                      alt={t(site.nameKey)}
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold">{t(site.nameKey)}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">{t(site.descKey)}</p>
-                  </div>
-                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-accent">
-                    {t('action.open')}
-                    <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </span>
-                </div>
-              </Card>
+              <img
+                src={site.bg}
+                alt=""
+                className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              {/* Dark gradient so the light text stays legible over any artwork. */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25 transition-colors group-hover:from-black/80" />
+              <div className="relative flex size-full flex-col justify-end gap-1 p-6 text-white">
+                <h2 className="text-2xl font-semibold drop-shadow">{t(site.nameKey)}</h2>
+                <p className="text-sm text-white/85 drop-shadow">{t(site.descKey)}</p>
+                <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium">
+                  {t('action.open')}
+                  <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </span>
+              </div>
             </a>
           ))}
         </div>
