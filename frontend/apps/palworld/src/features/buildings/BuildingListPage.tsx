@@ -75,7 +75,7 @@ export default function BuildingListPage() {
   )
 
   return (
-    <ContentPage active="/buildings" title={t('building.title')} maxWidth="max-w-5xl">
+    <ContentPage active="/buildings" title={t('building.title')} heading>
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
               value={query}

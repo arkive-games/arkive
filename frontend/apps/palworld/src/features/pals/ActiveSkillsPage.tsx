@@ -75,7 +75,7 @@ export default function ActiveSkillsPage() {
   }, [all, query, elementSel, typeSel, sourceSel])
 
   return (
-    <ContentPage active="/active-skills" title={t('pal.section.activeSkills')}>
+    <ContentPage active="/active-skills" title={t('pal.section.activeSkills')} heading>
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
           value={query}

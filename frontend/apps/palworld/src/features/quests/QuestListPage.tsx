@@ -51,7 +51,7 @@ export default function QuestListPage() {
   const tabs = ['all', ...types]
 
   return (
-    <ContentPage active="/quests" title={t('quest.title')} maxWidth="max-w-3xl">
+    <ContentPage active="/quests" title={t('quest.title')} heading>
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Input
               value={query}

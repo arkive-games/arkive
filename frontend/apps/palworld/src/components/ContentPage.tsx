@@ -12,6 +12,11 @@ export interface ContentPageProps {
    * width, `max-w-6xl`). Kept only so existing call sites still type-check.
    */
   maxWidth?: string
+  /**
+   * Render `title` as a full-width desktop heading line above the content.
+   * List/catalog pages opt in; detail pages keep their own entity header.
+   */
+  heading?: boolean
   children: ReactNode
 }
 
@@ -25,7 +30,7 @@ const CONTENT_MAX_WIDTH = 'max-w-6xl'
  * content clears the fixed bottom tab bar + safe area. The content column width
  * is unified across all pages.
  */
-export function ContentPage({ active, title, children }: ContentPageProps) {
+export function ContentPage({ active, title, heading = false, children }: ContentPageProps) {
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">
       <TopNav active={active} />
@@ -40,6 +45,9 @@ export function ContentPage({ active, title, children }: ContentPageProps) {
           className={cn('mx-auto w-full px-4 py-6', CONTENT_MAX_WIDTH)}
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 4rem)' }}
         >
+          {heading ? (
+            <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1>
+          ) : null}
           {children}
         </div>
       </div>
