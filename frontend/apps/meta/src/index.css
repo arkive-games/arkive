@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@source "../../../packages/ui/src";
+@source "../../../packages/map-shell/src";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Neutral slate palette — deliberately distinct from aion2 (teal) and palworld,
+   since this hub links to both and should feel game-agnostic. */
+:root {
+  --radius: 0.625rem;
+  --background: #F6F7F9;
+  --foreground: #1B2430;
+  --card: #FFFFFF;
+  --card-foreground: #1B2430;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B2430;
+  --primary: #475569;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E7EAEE;
+  --secondary-foreground: #1B2430;
+  --muted: #EDEFF2;
+  --muted-foreground: #5B6675;
+  --accent: #6366F1;
+  --accent-foreground: #FFFFFF;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(27, 36, 48, 0.12);
+  --input: #E7EAEE;
+  --ring: #6366F1;
+}
+
+.dark {
+  --background: #0F141B;
+  --foreground: #E7ECF2;
+  --card: #171E27;
+  --card-foreground: #E7ECF2;
+  --popover: #171E27;
+  --popover-foreground: #E7ECF2;
+  --primary: #94A3B8;
+  --primary-foreground: #0F141B;
+  --secondary: #232C38;
+  --secondary-foreground: #E7ECF2;
+  --muted: #232C38;
+  --muted-foreground: #9AA6B4;
+  --accent: #818CF8;
+  --accent-foreground: #0F141B;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(231, 236, 242, 0.14);
+  --input: #232C38;
+  --ring: #818CF8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+html {
+  font-size: 17px;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+}
