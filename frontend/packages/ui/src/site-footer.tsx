@@ -49,6 +49,8 @@ function SiteFooter({
           by
           <a
             href={homeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className="font-medium underline-offset-4 hover:text-foreground hover:underline"
           >
             Arkive Games (藏舟攻略网)
