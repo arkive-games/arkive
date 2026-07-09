@@ -99,9 +99,11 @@ export default function TechnologyPage() {
     body = <CatalogPageLoading />
   } else {
     body = (
-      <div className="grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-[3rem_repeat(8,minmax(0,1fr))]">
-        {/* Header row: level corner + normal (spans 7) + ancient (1) */}
-        <div className="hidden md:block" />
+      <div className="grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-8">
+        {/* Header row: normal (spans 7) + ancient (1). The grid is flush-left
+            (no dedicated level column) so the tech squares line up with the
+            Items/Buildings grids; the per-row level number hangs in the left
+            margin (see TileGrid). */}
         <div className="sticky top-0 z-10 rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 md:col-span-7 dark:text-sky-200">
           {t('tech.normalTitle')}
         </div>
@@ -111,16 +113,19 @@ export default function TechnologyPage() {
 
         {levels.map(({ level, normal, ancient }) => (
           <Fragment key={level}>
-            <div className="pt-1 text-sm font-bold tabular-nums text-muted-foreground md:text-right">
-              {level}
-            </div>
-            <TileGrid techs={normal} ancient={false} resolvers={resolvers} focusId={focusId} />
+            <TileGrid
+              techs={normal}
+              ancient={false}
+              level={level}
+              resolvers={resolvers}
+              focusId={focusId}
+            />
             <TileGrid techs={ancient} ancient resolvers={resolvers} focusId={focusId} />
           </Fragment>
         ))}
 
         {levels.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground md:col-span-9">
+          <div className="py-8 text-center text-muted-foreground md:col-span-8">
             {t('tech.empty')}
           </div>
         ) : null}
@@ -129,9 +134,8 @@ export default function TechnologyPage() {
   }
 
   return (
-    <ContentPage active="/technology" title={t('tech.title')} maxWidth="max-w-6xl">
+    <ContentPage active="/technology" title={t('tech.title')} heading>
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <h1 className="hidden text-3xl font-bold md:block">{t('tech.title')}</h1>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -154,11 +158,14 @@ function TileGrid({
   ancient,
   resolvers,
   focusId,
+  level,
 }: {
   techs: TechEntry[]
   ancient: boolean
   resolvers: TechResolvers
   focusId?: string
+  /** Level number, shown as a hanging label to the left of the normal block. */
+  level?: number
 }) {
   // Normal block spans 7 of the outer columns and subdivides into 7; the ancient
   // block is a single column. Both render even when empty so a level with only
@@ -168,9 +175,14 @@ function TileGrid({
       className={
         ancient
           ? 'grid grid-cols-1 gap-2'
-          : 'grid grid-cols-2 gap-2 sm:grid-cols-3 md:col-span-7 md:grid-cols-7'
+          : 'relative grid grid-cols-2 gap-2 sm:grid-cols-3 md:col-span-7 md:grid-cols-7'
       }
     >
+      {!ancient && level != null ? (
+        <span className="pointer-events-none absolute right-full top-1 mr-2 hidden text-sm font-bold tabular-nums text-muted-foreground md:block">
+          {level}
+        </span>
+      ) : null}
       {techs.map((tech) => (
         <TechTile
           key={tech.id}

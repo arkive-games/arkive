@@ -61,7 +61,7 @@ export default function ItemListPage() {
   }, [bundle, query, cats])
 
   return (
-    <ContentPage active="/items" title={t('item.title')} maxWidth="max-w-5xl">
+    <ContentPage active="/items" title={t('item.title')} heading>
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
               value={query}
@@ -106,22 +106,25 @@ export default function ItemListPage() {
                         to="/items/$id"
                         params={{ id: i.id }}
                         data-testid="item-card"
-                        className={`group flex aspect-square flex-col items-center gap-1 rounded-lg border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
+                        title={bundle.text[i.id]?.name ?? i.id}
+                        className={`group flex aspect-square w-full flex-col overflow-hidden rounded-md border bg-card shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
                       >
-                        <div className="flex w-full items-center justify-between gap-1 text-xs text-muted-foreground">
-                          <span className="min-w-0 truncate uppercase tracking-wide">
+                        <span className="relative flex items-center justify-center bg-muted px-6 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          <span className="min-w-0 max-w-full truncate">
                             {itemTypeLabel(i.typeA, bundle.typeLabels)}
                           </span>
-                          <span className="shrink-0 tabular-nums text-muted-foreground/70">#{i.sortId}</span>
-                        </div>
-                        <div className="flex min-h-0 flex-1 items-center justify-center">
+                          <span className="absolute right-2 normal-case tabular-nums text-muted-foreground/70">
+                            #{i.sortId}
+                          </span>
+                        </span>
+                        <span className="flex min-h-0 flex-1 items-center justify-center p-2">
                           {i.icon ? (
                             <ItemGlyph icon={i.icon} size={72} />
                           ) : (
-                            <div className="size-[72px]" aria-hidden />
+                            <span className="size-16 rounded bg-secondary" aria-hidden />
                           )}
-                        </div>
-                        <span className="line-clamp-2 w-full text-sm font-medium leading-tight">
+                        </span>
+                        <span className="block truncate px-2 pb-1.5 text-center text-xs font-medium leading-tight">
                           {bundle.text[i.id]?.name ?? i.id}
                         </span>
                       </Link>

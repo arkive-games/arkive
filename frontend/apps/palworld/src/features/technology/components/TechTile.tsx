@@ -36,7 +36,7 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
           aria-label={name}
           title={name}
           className={cn(
-            'group flex aspect-square w-full flex-col overflow-hidden rounded-md border bg-card text-left shadow-sm transition',
+            'group flex aspect-square w-full flex-col overflow-hidden rounded-md border bg-card shadow-sm transition',
             'hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             ancient
               ? 'border-purple-400/60 hover:border-purple-400'
@@ -46,14 +46,14 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
         >
           <span
             className={cn(
-              'flex items-center justify-between gap-1 px-2 py-0.5 text-xs font-medium uppercase tracking-wide',
+              'relative flex items-center justify-center px-6 py-0.5 text-xs font-medium uppercase tracking-wide',
               ancient
                 ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300'
                 : 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
             )}
           >
-            <span>{typeLabel}</span>
-            <span className="shrink-0 normal-case tabular-nums">
+            <span className="min-w-0 max-w-full truncate">{typeLabel}</span>
+            <span className="absolute right-2 normal-case tabular-nums">
               {t('tech.cost', { count: tech.cost })}
             </span>
           </span>
@@ -61,17 +61,17 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
           <span className="flex min-h-0 flex-1 items-center justify-center p-2">
             {image ? (
               image.kind === 'item' ? (
-                <ItemGlyph icon={image.icon} size={96} />
+                <ItemGlyph icon={image.icon} size={72} />
               ) : (
-                <BuildingGlyph icon={image.icon} size={96} />
+                <BuildingGlyph icon={image.icon} size={72} />
               )
             ) : (
               <span className="size-16 rounded bg-secondary" aria-hidden />
             )}
           </span>
 
-          <span className="px-2 pb-1.5">
-            <span className="line-clamp-2 text-xs font-medium leading-tight">{name}</span>
+          <span className="block truncate px-2 pb-1.5 text-center text-xs font-medium leading-tight">
+            {name}
           </span>
         </button>
       </HoverCardTrigger>

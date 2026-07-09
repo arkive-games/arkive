@@ -36,19 +36,22 @@ export function BuildingTile({
           to="/buildings/$id"
           params={{ id: building.id }}
           data-testid="building-card"
-          className="group flex aspect-square flex-col items-center gap-1 rounded-lg border border-border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent"
+          title={name}
+          className="group flex aspect-square w-full flex-col overflow-hidden rounded-md border border-border bg-card shadow-sm transition hover:border-primary/60 hover:bg-accent"
         >
-          <span className="w-full truncate text-xs uppercase tracking-wide text-muted-foreground">
-            {buildingTypeLabel(building.typeA, typeLabels)}
+          <span className="flex items-center justify-center bg-muted px-6 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <span className="min-w-0 max-w-full truncate">
+              {buildingTypeLabel(building.typeA, typeLabels)}
+            </span>
           </span>
-          <div className="flex min-h-0 flex-1 items-center justify-center">
+          <span className="flex min-h-0 flex-1 items-center justify-center p-2">
             {building.icon ? (
-              <BuildingGlyph icon={building.icon} size={48} />
+              <BuildingGlyph icon={building.icon} size={72} />
             ) : (
-              <div className="size-12" />
+              <span className="size-16 rounded bg-secondary" aria-hidden />
             )}
-          </div>
-          <span className="line-clamp-2 w-full text-xs font-medium leading-tight">{name}</span>
+          </span>
+          <span className="block truncate px-2 pb-1.5 text-center text-xs font-medium leading-tight">{name}</span>
         </Link>
       </HoverCardTrigger>
 
