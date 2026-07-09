@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
+import { SiteFooter } from '@gamemap/ui'
 import { ArrowUpRight } from 'lucide-react'
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import { SITES } from './sites'
@@ -51,6 +52,12 @@ export default function App() {
           ))}
         </div>
       </main>
+
+      <SiteFooter
+        homeUrl={import.meta.env.VITE_HOME_URL}
+        githubUrl={import.meta.env.VITE_GITHUB_URL}
+        icpBeian={import.meta.env.VITE_ICP_BEIAN}
+      />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { cn } from '@gamemap/ui'
+import { cn, SiteFooter } from '@gamemap/ui'
 import { TopNav, type NavKey } from './TopNav'
 
 export interface ContentPageProps {
@@ -41,14 +41,20 @@ export function ContentPage({ active, title, heading = false, children }: Conten
         {title}
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div
-          className={cn('mx-auto w-full px-4 py-6', CONTENT_MAX_WIDTH)}
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 4rem)' }}
-        >
-          {heading ? (
-            <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1>
-          ) : null}
-          {children}
+        <div className="flex min-h-full flex-col">
+          <div className={cn('mx-auto w-full flex-1 px-4 py-6', CONTENT_MAX_WIDTH)}>
+            {heading ? (
+              <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1>
+            ) : null}
+            {children}
+          </div>
+          {/* On mobile the footer (last scroll element) clears the fixed bottom tab bar. */}
+          <SiteFooter
+            className="pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-4"
+            homeUrl={import.meta.env.VITE_HOME_URL}
+            githubUrl={import.meta.env.VITE_GITHUB_URL}
+            icpBeian={import.meta.env.VITE_ICP_BEIAN}
+          />
         </div>
       </div>
     </div>
