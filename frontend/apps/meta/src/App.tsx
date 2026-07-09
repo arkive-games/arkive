@@ -9,9 +9,9 @@ export default function App() {
   const lng = i18n.resolvedLanguage ?? 'en-US'
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+    <div className="flex min-h-dvh flex-col text-foreground">
       <ShellTopBar
-        classNames={{ root: 'border-b border-border bg-card text-card-foreground' }}
+        classNames={{ root: 'sticky top-0 z-10 border-b border-border bg-card/70 text-card-foreground backdrop-blur-md' }}
         leftSlot={<span className="text-lg font-semibold tracking-tight">{t('brand')}</span>}
         languageSwitcher={{
           languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
@@ -30,7 +30,7 @@ export default function App() {
             <a
               key={site.id}
               href={site.url}
-              className="group relative block aspect-video overflow-hidden rounded-xl border border-border shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group relative block aspect-video overflow-hidden rounded-2xl border border-border shadow-xl shadow-black/25 ring-1 ring-black/5 transition-shadow duration-300 outline-none hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-ring"
             >
               <img
                 src={site.bg}

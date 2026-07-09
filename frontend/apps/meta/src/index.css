@@ -81,8 +81,50 @@ html {
   font-size: 17px;
 }
 
+/* Atmospheric backdrop: a soft spotlight behind the cards plus two faint
+   corner tints, over the base color. Film grain (::before) and a vignette
+   (::after) sit above the gradients but behind the page content, giving the
+   flat page some depth in both themes. */
 body {
   margin: 0;
-  background: var(--background);
+  min-height: 100dvh;
   color: var(--foreground);
+  background-color: var(--background);
+  background-image:
+    radial-gradient(62% 55% at 50% 32%, rgba(96, 132, 196, 0.22), transparent 72%),
+    radial-gradient(40% 42% at 10% 6%, rgba(56, 189, 248, 0.16), transparent 70%),
+    radial-gradient(42% 46% at 92% 96%, rgba(139, 110, 248, 0.14), transparent 72%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
+
+.dark body {
+  background-image:
+    radial-gradient(62% 55% at 50% 32%, rgba(70, 104, 168, 0.26), transparent 72%),
+    radial-gradient(40% 42% at 10% 6%, rgba(34, 211, 238, 0.12), transparent 70%),
+    radial-gradient(42% 46% at 92% 96%, rgba(129, 92, 246, 0.16), transparent 72%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.dark body::before {
+  opacity: 0.06;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(10, 14, 22, 0.35) 100%);
+}
+
