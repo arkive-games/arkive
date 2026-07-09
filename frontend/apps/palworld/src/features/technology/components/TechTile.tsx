@@ -46,14 +46,14 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
         >
           <span
             className={cn(
-              'relative flex items-center justify-center px-6 py-0.5 text-xs font-medium uppercase tracking-wide',
+              'flex items-center gap-2 px-2 py-0.5 text-xs font-medium uppercase tracking-wide',
               ancient
                 ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300'
                 : 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
             )}
           >
-            <span className="min-w-0 max-w-full truncate">{typeLabel}</span>
-            <span className="absolute right-2 normal-case tabular-nums">
+            <span className="min-w-0 flex-1 truncate text-left">{typeLabel}</span>
+            <span className="shrink-0 normal-case tabular-nums">
               {t('tech.cost', { count: tech.cost })}
             </span>
           </span>
