@@ -44,9 +44,9 @@ export interface ItemEntry {
   price: number
   maxStack: number
   handcraft: boolean
-  /** bLegalInGame=False in the game data — not a normal tradeable inventory item
-   *  (effigies, quest Key Spheres, deprecated/debug rows). Hidden unless the
-   *  item list's "hidden items" filter is on. */
+  /** bLegalInGame=False dead data (deprecated dupes, debug rows) — never shown
+   *  in the item list. Real bLegalInGame=False specials (effigies, main-quest
+   *  Key Spheres) are whitelisted in the tools pipeline and arrive unflagged. */
   illegal?: boolean
   icon?: string
   element?: string

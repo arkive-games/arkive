@@ -324,9 +324,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     # Import every named item, including those flagged bLegalInGame=False. That
     # flag marks items that can't legitimately sit in inventory as tradeable
     # goods — a mixed bag of real-but-special items (effigies, main-quest Key
-    # Spheres) and dead data (deprecated `_old`/`2` dupes, debug rows). Rather
-    # than guess which are "real", surface them all and stamp `illegal: True`
-    # so the frontend can hide them behind an opt-in filter.
+    # Spheres) and dead data (deprecated `_old`/`2` dupes, debug rows). The
+    # known-real ones are whitelisted below and emitted as normal items; the
+    # rest are stamped `illegal: True` so the frontend drops them from the list.
     item_ids = [iid for iid, r in item_rows.items() if item_has_name(iid)]
     item_id_set = set(item_ids)
 
@@ -442,10 +442,13 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             "maxStack": r.get("MaxStackCount", 0),
             "handcraft": bool(r.get("bEnableHandcraft")),
         }
-        # bLegalInGame=False → not a normal tradeable inventory item (effigies,
-        # quest Key Spheres, deprecated/debug rows). Flagged so the item list can
-        # hide it behind an opt-in filter; omitted for the legal majority.
-        if not r.get("bLegalInGame", True):
+        # bLegalInGame=False → not a normal tradeable inventory item. Effigies
+        # (`Relic`, `Relic_NN`) and main-quest Key Spheres (`KeySphere_NN`) are
+        # real obtainable collectibles despite the flag — whitelisted. The rest
+        # is dead data (deprecated dupes, debug rows), flagged so the item list
+        # drops it; omitted for the legal majority.
+        whitelisted = iid == "Relic" or iid.startswith(("Relic_", "KeySphere_"))
+        if not r.get("bLegalInGame", True) and not whitelisted:
             entry["illegal"] = True
         elem = _strip(r.get("ElementType"), _ELEM)
         if elem and elem != "None":

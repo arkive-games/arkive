@@ -93,18 +93,23 @@ def test_tech_recipe_id_casing(tmp_path):
 
 @pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
 def test_illegal_items_imported_and_flagged(tmp_path):
-    """Every named item is imported, including bLegalInGame=False ones, each
-    stamped `illegal: True` so the frontend can hide them behind an opt-in
-    filter. Effigies (real collectibles) and Key Spheres (main-quest tokens)
-    both carry the flag; normal legal items don't.
+    """Every named item is imported, including bLegalInGame=False ones. Dead
+    data (deprecated dupes, debug rows) is stamped `illegal: True` so the
+    frontend drops it, but effigies and main-quest Key Spheres are real
+    obtainable collectibles — whitelisted, emitted without the flag.
     """
     data_out = tmp_path / "data"
     res_out = RES if RES.exists() else tmp_path / "res"
     out = run_catalog(RAW, data_out, res_out)
     by_id = {i["id"]: i for i in out["items"]}
 
-    # Illegal items are now imported and flagged.
-    for iid in ("Relic", "Relic_01", "Relic_12", "KeySphere_01"):
+    # Whitelisted bLegalInGame=False items: imported, NOT flagged.
+    for iid in ("Relic", "Relic_01", "Relic_12", "KeySphere_01", "KeySphere_08"):
+        assert iid in by_id, iid
+        assert "illegal" not in by_id[iid], iid
+
+    # Non-whitelisted illegal rows (deprecated/debug data) keep the flag.
+    for iid in ("Bow_Poison", "MagnumBullet"):
         assert iid in by_id, iid
         assert by_id[iid]["illegal"] is True, iid
 

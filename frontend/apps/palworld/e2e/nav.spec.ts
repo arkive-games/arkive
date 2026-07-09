@@ -76,17 +76,23 @@ test('Item page category chips filter the grid', async ({ page }) => {
   expect(filtered).toBeLessThan(total)
 })
 
-test('Item page "Hidden items" toggle reveals bLegalInGame=false items', async ({ page }) => {
+test('Effigies and Key Spheres are listed; illegal dead data stays hidden', async ({ page }) => {
   await page.goto('/items')
   const cards = page.getByTestId('item-card')
   await expect(cards.first()).toBeVisible()
-  const shown = await cards.count()
-  const toggle = page.getByTestId('item-show-hidden')
-  await expect(toggle).toHaveAttribute('aria-pressed', 'false') // hidden by default
-  await toggle.click()
-  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
-  const withHidden = await cards.count()
-  expect(withHidden).toBeGreaterThan(shown) // extra illegal items appear
+  // The old opt-in "Hidden items" toggle is gone.
+  await expect(page.getByTestId('item-show-hidden')).toHaveCount(0)
+  const search = page.getByPlaceholder('Search items…')
+  // Whitelisted bLegalInGame=false items (effigies, Key Spheres) are shown.
+  await search.fill('Effigy')
+  await expect(cards.first()).toBeVisible()
+  expect(await cards.count()).toBeGreaterThanOrEqual(13) // Lifmunk + 12 pal effigies
+  await search.fill('Key Sphere')
+  await expect(cards.first()).toBeVisible()
+  // Non-whitelisted illegal rows (deprecated dupes) never appear — 'Magnum
+  // Ammo' exists in the data only as a bLegalInGame=false row.
+  await search.fill('Magnum Ammo')
+  await expect(cards).toHaveCount(0)
 })
 
 test('Building page category chips toggle', async ({ page }) => {
