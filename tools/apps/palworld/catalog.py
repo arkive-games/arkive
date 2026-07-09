@@ -320,17 +320,14 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     def item_has_name(iid: str) -> bool:
         return any((item_name_by_lang.get(t, {}).get(iid) or "").strip() for t in tags)
 
-    # --- items (inclusion gate: legal + has a localized name) ----------------
-    # Effigies (Relic, Relic_01..Relic_12) are flagged bLegalInGame=False: they
-    # aren't tradeable inventory goods — you consume them at the Statue of Power
-    # to raise Capture Power — but players do hold them, so surface them despite
-    # the legality gate. Keyed on the exact `Relic`/`Relic_NN` ids so the same
-    # type's cut Key Spheres and unrelated ids (WorldTreeRelic_*) stay excluded.
-    effigy_item = re.compile(r"^Relic(_\d+)?$").match
-    item_ids = [
-        iid for iid, r in item_rows.items()
-        if item_has_name(iid) and (r.get("bLegalInGame", True) or effigy_item(iid))
-    ]
+    # --- items (inclusion gate: has a localized name) ------------------------
+    # Import every named item, including those flagged bLegalInGame=False. That
+    # flag marks items that can't legitimately sit in inventory as tradeable
+    # goods — a mixed bag of real-but-special items (effigies, main-quest Key
+    # Spheres) and dead data (deprecated `_old`/`2` dupes, debug rows). Rather
+    # than guess which are "real", surface them all and stamp `illegal: True`
+    # so the frontend can hide them behind an opt-in filter.
+    item_ids = [iid for iid, r in item_rows.items() if item_has_name(iid)]
     item_id_set = set(item_ids)
 
     # recipe that crafts each item (row-key == product id in the vast majority;
@@ -445,6 +442,11 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             "maxStack": r.get("MaxStackCount", 0),
             "handcraft": bool(r.get("bEnableHandcraft")),
         }
+        # bLegalInGame=False → not a normal tradeable inventory item (effigies,
+        # quest Key Spheres, deprecated/debug rows). Flagged so the item list can
+        # hide it behind an opt-in filter; omitted for the legal majority.
+        if not r.get("bLegalInGame", True):
+            entry["illegal"] = True
         elem = _strip(r.get("ElementType"), _ELEM)
         if elem and elem != "None":
             entry["element"] = elem

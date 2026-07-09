@@ -23,6 +23,9 @@ export default function ItemListPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [cats, setCats] = useState<string[]>([])
+  // bLegalInGame=false items (effigies, quest Key Spheres, deprecated/debug
+  // rows) are hidden until this toggle is on.
+  const [showHidden, setShowHidden] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -40,25 +43,33 @@ export default function ItemListPage() {
     }
   }, [lng, t])
 
-  // Distinct categories (TypeA) present, sorted by localized label.
+  // Whether any hidden (illegal) item exists — drives the "Hidden items" chip.
+  const hasHidden = useMemo(() => !!bundle?.items.some((i) => i.illegal), [bundle])
+
+  // Distinct categories (TypeA) present, sorted by localized label. Derived from
+  // the currently-visible set so categories that only hold hidden items don't
+  // appear while the toggle is off.
   const categories = useMemo(() => {
     if (!bundle) return []
-    const set = new Set(bundle.items.map((i) => i.typeA))
+    const set = new Set(
+      bundle.items.filter((i) => showHidden || !i.illegal).map((i) => i.typeA),
+    )
     return [...set].sort((a, b) =>
       itemTypeLabel(a, bundle.typeLabels).localeCompare(itemTypeLabel(b, bundle.typeLabels)),
     )
-  }, [bundle])
+  }, [bundle, showHidden])
 
   const list = useMemo(() => {
     if (!bundle) return []
     const q = query.trim().toLowerCase()
     return bundle.items
+      .filter((i) => showHidden || !i.illegal)
       .filter((i) => cats.length === 0 || cats.includes(i.typeA))
       .filter((i) => !q || (bundle.text[i.id]?.name ?? i.id).toLowerCase().includes(q))
       // Stable game order (SortId), identical across languages, rather than by
       // localized name which would reshuffle per locale.
       .sort((a, b) => a.sortId - b.sortId || a.id.localeCompare(b.id))
-  }, [bundle, query, cats])
+  }, [bundle, query, cats, showHidden])
 
   return (
     <ContentPage active="/items" title={t('item.title')} heading>
@@ -88,6 +99,15 @@ export default function ItemListPage() {
                     {itemTypeLabel(c, bundle.typeLabels)}
                   </FilterChip>
                 ))}
+                {hasHidden ? (
+                  <FilterChip
+                    active={showHidden}
+                    onClick={() => setShowHidden((v) => !v)}
+                    testId="item-show-hidden"
+                  >
+                    {t('filters.hidden')}
+                  </FilterChip>
+                ) : null}
               </FilterRow>
             </div>
           ) : null}

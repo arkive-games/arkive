@@ -76,6 +76,19 @@ test('Item page category chips filter the grid', async ({ page }) => {
   expect(filtered).toBeLessThan(total)
 })
 
+test('Item page "Hidden items" toggle reveals bLegalInGame=false items', async ({ page }) => {
+  await page.goto('/items')
+  const cards = page.getByTestId('item-card')
+  await expect(cards.first()).toBeVisible()
+  const shown = await cards.count()
+  const toggle = page.getByTestId('item-show-hidden')
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false') // hidden by default
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  const withHidden = await cards.count()
+  expect(withHidden).toBeGreaterThan(shown) // extra illegal items appear
+})
+
 test('Building page category chips toggle', async ({ page }) => {
   await page.goto('/buildings')
   const chip = page.locator('[data-testid^="building-cat-"]').first()

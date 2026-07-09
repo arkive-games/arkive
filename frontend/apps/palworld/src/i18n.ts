@@ -64,6 +64,16 @@ export const FILTER_CATEGORY_LABELS: Record<Language, string> = {
   'pl-PL': 'Kategoria', 'pt-BR': 'Categoria', 'ru-RU': 'Категория', 'th-TH': 'หมวดหมู่',
   'tr-TR': 'Kategori', 'vi-VN': 'Danh mục', 'zh-CN': '类别', 'zh-TW': '類別',
 }
+// Items page: toggle chip that reveals bLegalInGame=false items (effigies,
+// quest Key Spheres, deprecated/debug rows), hidden by default.
+export const SHOW_HIDDEN_LABELS: Record<Language, string> = {
+  'en-US': 'Hidden items', 'de-DE': 'Versteckte Objekte', 'es-ES': 'Objetos ocultos',
+  'es-MX': 'Objetos ocultos', 'fr-FR': 'Objets cachés', 'id-ID': 'Item tersembunyi',
+  'it-IT': 'Oggetti nascosti', 'ja-JP': '非表示アイテム', 'ko-KR': '숨겨진 아이템',
+  'pl-PL': 'Ukryte przedmioty', 'pt-BR': 'Itens ocultos', 'ru-RU': 'Скрытые предметы',
+  'th-TH': 'ไอเทมที่ซ่อน', 'tr-TR': 'Gizli eşyalar', 'vi-VN': 'Vật phẩm ẩn',
+  'zh-CN': '隐藏物品', 'zh-TW': '隱藏物品',
+}
 // Passive Skills page: "all rarities" option in the rarity filter.
 export const ALL_RARITIES_LABELS: Record<Language, string> = {
   'en-US': 'All rarities', 'de-DE': 'Alle Seltenheiten', 'es-ES': 'Todas las rarezas',
@@ -653,7 +663,11 @@ for (const lng of LANGUAGES) {
       catalogLoading: CATALOG_STRINGS[lng].loading,
       more: MORE_LABELS[lng],
       filter: FILTER_LABELS[lng],
-      filters: { rarity: FILTER_RARITY_LABELS[lng], category: FILTER_CATEGORY_LABELS[lng] },
+      filters: {
+        rarity: FILTER_RARITY_LABELS[lng],
+        category: FILTER_CATEGORY_LABELS[lng],
+        hidden: SHOW_HIDDEN_LABELS[lng],
+      },
       nav: { database: DATABASE_LABELS[lng], pals: PALS_GROUP_LABELS[lng] },
       passive: {
         allRarities: ALL_RARITIES_LABELS[lng],
