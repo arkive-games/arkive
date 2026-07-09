@@ -18,26 +18,29 @@ categories:
     names: { en-US: Effigies, ja-JP: 石像, de-DE: Statuetten, es-ES: Estatuas, es-MX: Estatuas, fr-FR: Statues, id-ID: Patung, it-IT: Statue, ko-KR: 조각상, pl-PL: Posążki, pt-BR: Estátuas, ru-RU: Статуэтки, th-TH: หุ่นจำลอง, tr-TR: Figürler, vi-VN: Tượng, zh-CN: 雕像, zh-TW: 雕像 }
   - id: resource
     names: { en-US: Resources, ja-JP: 資源, de-DE: Ressourcen, es-ES: Recursos, es-MX: Recursos, fr-FR: Ressources, id-ID: Sumber Daya, it-IT: Risorse, ko-KR: 자원, pl-PL: Surowce, pt-BR: Recursos, ru-RU: Ресурсы, th-TH: ทรัพยากร, tr-TR: Kaynaklar, vi-VN: Tài nguyên, zh-CN: 资源, zh-TW: 資源 }
-  - id: pal
-    pinVariant: circular
-    names: { en-US: Pals, ja-JP: パル, de-DE: Pals, es-ES: Pals, es-MX: Pals, fr-FR: Pals, id-ID: Pal, it-IT: Pal, ko-KR: 팰, pl-PL: Pale, pt-BR: Pals, ru-RU: Палы, th-TH: พัล, tr-TR: Pal'lar, vi-VN: Pal, zh-CN: 帕鲁, zh-TW: 帕魯 }
   - id: npc
     pinVariant: circular
     names: { en-US: NPCs, ja-JP: NPC, de-DE: NSCs, es-ES: PNJ, es-MX: PNJ, fr-FR: PNJ, id-ID: NPC, it-IT: PNG, ko-KR: NPC, pl-PL: NPC, pt-BR: NPCs, ru-RU: НПС, th-TH: NPC, tr-TR: NPC'ler, vi-VN: NPC, zh-CN: NPC, zh-TW: NPC }
+  - id: pal
+    pinVariant: circular
+    names: { en-US: Pals, ja-JP: パル, de-DE: Pals, es-ES: Pals, es-MX: Pals, fr-FR: Pals, id-ID: Pal, it-IT: Pal, ko-KR: 팰, pl-PL: Pale, pt-BR: Pals, ru-RU: Палы, th-TH: พัล, tr-TR: Pal'lar, vi-VN: Pal, zh-CN: 帕鲁, zh-TW: 帕魯 }
 subtypes:
   - id: fastTravel
     category: location
     icon: T_icon_compass_FTtower
     iconScale: 1.75
+    defaultActive: true
     names: { en-US: Great Eagle Statue, ja-JP: 大鷲の像, de-DE: Adlerstatue, es-ES: Estatua de Águila, es-MX: Estatua del Águila, fr-FR: Statue du Grand Aigle, id-ID: Patung Elang Raksasa, it-IT: Statua del grande volatile, ko-KR: 참수리 상, pl-PL: Posąg Wielkiego Orła, pt-BR: Estátua da Águia Gigante, ru-RU: Статуя Орлана, th-TH: รูปปั้นอินทรียักษ์, tr-TR: Büyük Kartal Heykeli, vi-VN: Tượng Đại Bàng, zh-CN: 巨鹫之像, zh-TW: 巨鷲之像 }
   - id: eagleStatue
     category: location
     icon: T_icon_compass_FTUnlockMap
     iconScale: 1.75
+    defaultActive: true
     names: { en-US: Watchtower, ja-JP: 観測塔, de-DE: Beobachtungswarte, es-ES: Torre de observación, es-MX: Torre de observación, fr-FR: Tour d'observation, id-ID: Menara Observasi, it-IT: Torre di osservazione, ko-KR: 관측탑, pl-PL: Wieża obserwacyjna, pt-BR: Torre de Observação, ru-RU: Наблюдательная башня, th-TH: หอสังเกตการณ์, tr-TR: Gözetleme Kulesi, vi-VN: Tháp Quan Sát, zh-CN: 瞭望塔, zh-TW: 瞭望塔 }
   - id: tower
     category: location
     icon: T_icon_compass_tower
+    defaultActive: true
     names: { en-US: Tower, ja-JP: 塔, de-DE: Turm, es-ES: Torre, es-MX: Torre, fr-FR: Tour, id-ID: Menara, it-IT: Torre, ko-KR: 탑, pl-PL: Wieża, pt-BR: Torre, ru-RU: Башни, th-TH: หอคอย, tr-TR: Kule, vi-VN: Tháp, zh-CN: 高塔, zh-TW: 高塔 }
   - id: dungeon
     category: location

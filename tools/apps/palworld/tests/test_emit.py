@@ -151,3 +151,20 @@ def test_empty_regions_and_full_locale_trees(ds):
         assert ds["locales"][lng]["maps"]["MainWorld"]["name"]
         assert ds["locales"][lng]["types"]["subtypes"]["fastTravel"]["name"]
         assert ds["locales"][lng]["regions"]["MainWorld"] == {}
+
+
+def test_default_active_flag_only_on_curated_subtypes(ds):
+    # Exactly the first three location subtypes are the map's default selection;
+    # every other subtype omits the flag so it starts hidden.
+    flagged = {
+        row["id"]
+        for cat in ds["types"]["categories"]
+        for row in cat["subtypes"]
+        if row.get("defaultActive")
+    }
+    assert flagged == {"fastTravel", "eagleStatue", "tower"}
+
+
+def test_npc_category_ordered_before_pal(ds):
+    order = [c["id"] for c in ds["types"]["categories"]]
+    assert order.index("npc") < order.index("pal")

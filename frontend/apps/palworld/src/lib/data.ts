@@ -38,7 +38,7 @@ interface TypesFile {
   categories: {
     id: string
     pinVariant?: MarkerPinVariant
-    subtypes: { id: string; icon?: string; color?: string; iconScale?: number; pinVariant?: MarkerPinVariant }[]
+    subtypes: { id: string; icon?: string; color?: string; iconScale?: number; pinVariant?: MarkerPinVariant; defaultActive?: boolean }[]
   }[]
 }
 

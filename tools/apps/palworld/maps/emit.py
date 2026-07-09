@@ -207,6 +207,11 @@ def build_dataset(parsed: dict) -> dict:
                 row["zukanIndex"] = s["zukanIndex"]
                 if s.get("zukanIndexSuffix"):
                     row["zukanIndexSuffix"] = s["zukanIndexSuffix"]
+            # Curated default-visible subtypes (hand-tagged in types.yaml): the
+            # frontend seeds its initial filter selection from these; every other
+            # subtype starts hidden.
+            if s.get("defaultActive"):
+                row["defaultActive"] = True
             subs.append(row)
         cat["subtypes"] = subs
         types["categories"].append(cat)

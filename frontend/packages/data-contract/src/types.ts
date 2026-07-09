@@ -68,6 +68,12 @@ export interface MarkerTypeSubtype {
   hideTooltip?: boolean;
   /** Hex color string for the pin body, e.g. "#FFAA00". */
   color?: string;
+  /**
+   * When true, this subtype is selected (visible) by default on first load;
+   * every subtype without the flag starts hidden. Only a small curated set
+   * carries it, so the map opens uncluttered.
+   */
+  defaultActive?: boolean;
   /** Whether markers of this subtype can be marked as completed. */
   canComplete?: boolean;
   /** Icon shown when a marker of this subtype is completed (icon-swap

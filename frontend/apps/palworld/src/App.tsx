@@ -36,10 +36,6 @@ const PAL_SEARCH_OPTIONS = { combineWith: 'AND', fuzzy: false } as const
 // FilterPanel sync effect doesn't re-run each render).
 const PAL_COLLAPSED_CATEGORIES = ['pal']
 
-// Location subtypes hidden by default (too dense / low-signal); the user can
-// still enable them from the filter sidebar.
-const DEFAULT_HIDDEN_LOCATIONS = new Set(['dungeon', 'camp', 'sealedRealm'])
-
 // Persist the map's visible-subtype selection across reloads. The selection is
 // global (subtypes are a shared taxonomy, not reset on map switch), so a single
 // key suffices.
@@ -101,13 +97,13 @@ export default function App() {
         if (cancelled) return
         setStaticData(d)
         // Only initialize visible set once; preserve user-set empty (Hide all).
-        // Default to showing just the location markers, minus the dense ones.
+        // Default selection = the subtypes the taxonomy flags `defaultActive`
+        // (a small curated set); every other subtype starts hidden so the map
+        // opens uncluttered.
         if (!visibleInitialized.current) {
           visibleInitialized.current = true
           setVisible(new Set(
-            d.types.subtypes
-              .filter((s) => s.category === 'location' && !DEFAULT_HIDDEN_LOCATIONS.has(s.id))
-              .map((s) => s.id),
+            d.types.subtypes.filter((s) => s.defaultActive).map((s) => s.id),
           ))
         }
       })
