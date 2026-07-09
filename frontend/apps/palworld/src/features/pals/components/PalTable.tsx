@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { elementIconUrl, itemIconUrl, palIconUrl, workIconUrl } from '../../../lib/assets'
 import { formatPalId } from '../../../lib/palId'
 import { WORK_TYPES, type PalEntry, type PalsBundle } from '../../../lib/pals'
+import { PalHover } from '../../catalog/components'
 import { filterStrings } from '../filterStrings'
 
 function Glyph({ src, size = 18, title }: { src: string; size?: number; title?: string }) {
@@ -36,10 +37,12 @@ function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
         {pid ? `${pid.text}${pid.accent ?? ''}` : '—'}
       </td>
       <td className="px-2 py-1.5">
-        <Link to="/pals/$id" params={{ id: pal.id }} className="flex items-center gap-2 hover:text-primary">
-          <img src={palIconUrl(pal.icon)} alt="" width={28} height={28} loading="lazy" className="shrink-0 object-contain" />
-          <span className="truncate font-medium">{name}</span>
-        </Link>
+        <PalHover id={pal.id}>
+          <Link to="/pals/$id" params={{ id: pal.id }} className="flex items-center gap-2 hover:text-primary">
+            <img src={palIconUrl(pal.icon)} alt="" width={28} height={28} loading="lazy" className="shrink-0 object-contain" />
+            <span className="truncate font-medium">{name}</span>
+          </Link>
+        </PalHover>
       </td>
       <td className="px-2 py-1.5">
         <div className="flex gap-1">

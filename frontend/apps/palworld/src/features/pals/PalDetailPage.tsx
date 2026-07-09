@@ -15,6 +15,7 @@ import { comboKey, loadBreeding, makeEngine, queryFormulas, type BreedingData, t
 import { RecipeCard, buildRecipeMeta } from '../breeding/RecipeCard'
 import { palIconUrl } from '../../lib/assets'
 import { formatPalId } from '../../lib/palId'
+import { CatalogDataProvider } from '../catalog/components'
 import { filterStrings } from './filterStrings'
 import {
   PalSection,
@@ -509,7 +510,7 @@ export default function PalDetailPage() {
 
   return (
     <ContentPage active="/pals" title={t('pal.title')} maxWidth="max-w-5xl">
-      {body}
+      <CatalogDataProvider pals={bundle ?? undefined}>{body}</CatalogDataProvider>
     </ContentPage>
   )
 }

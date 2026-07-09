@@ -4,6 +4,7 @@ import { cn } from '@gamemap/ui'
 import type { BreedingPal, Combo, Gender, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
 import { formatPalId } from '../../lib/palId'
+import { PalHover } from '../catalog/components'
 
 // Per-Pal display metadata used by a recipe card (icon, Paldeck id, breeding
 // power, legendary flag), keyed by Pal id.
@@ -62,6 +63,7 @@ function PalChip({
   const m = meta.get(id)
   const pid = m ? formatPalId(m.zukanIndex, m.zukanIndexSuffix) : undefined
   return (
+    <PalHover id={id}>
     <Link
       to="/pals/$id"
       params={{ id }}
@@ -104,6 +106,7 @@ function PalChip({
         </span>
       </span>
     </Link>
+    </PalHover>
   )
 }
 

@@ -14,6 +14,7 @@ import {
   type PassiveCategory,
 } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
+import { CatalogDataProvider, PalHover } from '../catalog/components'
 import { PalPageLoading, PassiveRarity, PassiveText, PassiveTitleBar, passiveRarityTier } from './components'
 
 /** Pals that innately carry a given passive, keyed by passive id. */
@@ -140,7 +141,8 @@ export default function PassivesPage() {
 
   return (
     <TooltipProvider delayDuration={200}>
-    <ContentPage active="/passives" title={t('pal.section.passives')} maxWidth="max-w-4xl">
+    <CatalogDataProvider pals={bundle ?? undefined}>
+    <ContentPage active="/passives" title={t('pal.section.passives')} heading>
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
           value={query}
@@ -234,23 +236,24 @@ export default function PassivesPage() {
                   {r.pals.length ? (
                     <div className="flex flex-wrap items-center gap-1">
                       {r.pals.map((p) => (
-                        <Link
-                          key={p.id}
-                          to="/pals/$id"
-                          params={{ id: p.id }}
-                          title={p.name}
-                          data-testid="passive-pal"
-                          className="shrink-0 rounded-full border border-border bg-secondary/40 transition hover:border-primary/60"
-                        >
-                          <img
-                            src={palIconUrl(p.icon)}
-                            alt={p.name}
-                            width={24}
-                            height={24}
-                            loading="lazy"
-                            className="size-6 rounded-full object-contain"
-                          />
-                        </Link>
+                        <PalHover key={p.id} id={p.id}>
+                          <Link
+                            to="/pals/$id"
+                            params={{ id: p.id }}
+                            title={p.name}
+                            data-testid="passive-pal"
+                            className="shrink-0 rounded-full border border-border bg-secondary/40 transition hover:border-primary/60"
+                          >
+                            <img
+                              src={palIconUrl(p.icon)}
+                              alt={p.name}
+                              width={24}
+                              height={24}
+                              loading="lazy"
+                              className="size-6 rounded-full object-contain"
+                            />
+                          </Link>
+                        </PalHover>
                       ))}
                     </div>
                   ) : null}
@@ -288,6 +291,7 @@ export default function PassivesPage() {
         </div>
       )}
     </ContentPage>
+    </CatalogDataProvider>
     </TooltipProvider>
   )
 }

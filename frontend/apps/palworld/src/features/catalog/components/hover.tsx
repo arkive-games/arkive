@@ -9,7 +9,7 @@ import type {
   ItemEntry,
   BuildingEntry,
 } from '../../../lib/catalog'
-import type { PalsBundle, PalEntry } from '../../../lib/pals'
+import { resolveCharacterNames, type PalsBundle, type PalEntry } from '../../../lib/pals'
 import { palIconUrl } from '../../../lib/assets'
 import { itemTypeLabel, buildingTypeLabel } from '../labels'
 import { CHIP, ItemGlyph, BuildingGlyph } from './ui'
@@ -139,10 +139,19 @@ export function BuildingSummary({ building }: { building: BuildingEntry }) {
 }
 
 export function PalSummary({ pal }: { pal: PalEntry }) {
+  const { t } = useTranslation()
   const { pals } = useCatalogData()
   const name = pals?.text[pal.id]?.name ?? pal.id
-  const description = pals?.text[pal.id]?.description
+  const description = resolveCharacterNames(pals?.text[pal.id]?.description, pals?.text ?? {})
   const elements = pal.elements.map((e) => pals?.enums.elements[e] ?? e).join(' · ')
+
+  const rows: Array<[string, ReactNode]> = [
+    [t('pal.stat.rarity'), pal.rarity],
+    [t('pal.stat.hp'), pal.stats.hp],
+    [t('pal.stat.meleeAttack'), pal.stats.meleeAttack],
+    [t('pal.stat.shotAttack'), pal.stats.shotAttack],
+    [t('pal.stat.defense'), pal.stats.defense],
+  ]
 
   return (
     <div className="flex flex-col gap-2 text-left">
@@ -155,6 +164,7 @@ export function PalSummary({ pal }: { pal: PalEntry }) {
           {elements ? <div className="text-xs text-muted-foreground">{elements}</div> : null}
         </div>
       </div>
+      <PropsLine rows={rows} />
       {description ? (
         <p className="line-clamp-4 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
           {description}
@@ -194,6 +204,18 @@ function ChipHover({ kind, id, children }: { kind: ChipKind; id: string; childre
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
       <HoverCardBody className="w-72">{body}</HoverCardBody>
     </HoverCard>
+  )
+}
+
+/** Wraps any existing pal `<Link>` (or other trigger) in a pal hover card. The
+ *  trigger keeps its own styling (`asChild`); renders bare when nested in another
+ *  hover card or when the pals bundle isn't in context. Use to enable the card on
+ *  pal links that aren't the ready-made `PalLink` chip. */
+export function PalHover({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <ChipHover kind="pal" id={id}>
+      {children}
+    </ChipHover>
   )
 }
 

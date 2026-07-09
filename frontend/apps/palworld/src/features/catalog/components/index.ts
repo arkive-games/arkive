@@ -17,6 +17,7 @@ export {
   ItemLink,
   BuildingLink,
   PalLink,
+  PalHover,
   MaterialRow,
   ItemSummary,
   BuildingSummary,

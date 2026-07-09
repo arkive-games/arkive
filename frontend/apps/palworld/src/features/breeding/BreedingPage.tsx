@@ -13,6 +13,8 @@ import {
   type Combo,
   type NameMap,
 } from '../../lib/breeding'
+import { loadPals, type PalsBundle } from '../../lib/pals'
+import { CatalogDataProvider } from '../catalog/components'
 import { PalPicker } from './PalPicker'
 import { RecipeCard, buildRecipeMeta } from './RecipeCard'
 
@@ -44,6 +46,9 @@ export default function BreedingPage() {
   )
 
   const [payload, setPayload] = useState<{ data: BreedingData; names: NameMap } | null>(null)
+  // Full Pal bundle, loaded only to power the pal hover cards on recipe chips.
+  // A failure here is non-fatal — the cards just degrade to plain links.
+  const [pals, setPals] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [favs, setFavs] = useState<Set<string>>(() => {
     try {
@@ -85,6 +90,18 @@ export default function BreedingPage() {
     }
   }, [lng, t])
 
+  useEffect(() => {
+    let cancelled = false
+    loadPals(lng)
+      .then((b) => {
+        if (!cancelled) setPals(b)
+      })
+      .catch((err) => console.error(err))
+    return () => {
+      cancelled = true
+    }
+  }, [lng])
+
   // Drop any query selection that isn't a real roster Pal (replace, not push).
   useEffect(() => {
     if (!payload) return
@@ -125,7 +142,8 @@ export default function BreedingPage() {
   }
 
   return (
-    <ContentPage active="/breeding" title={t('breeding.navBreeding')} maxWidth="max-w-4xl">
+    <ContentPage active="/breeding" title={t('breeding.navBreeding')} heading>
+        <CatalogDataProvider pals={pals ?? undefined}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <PalPicker
               label={t('breeding.parentA')}
@@ -196,6 +214,7 @@ export default function BreedingPage() {
               ) : null}
             </>
           )}
+        </CatalogDataProvider>
     </ContentPage>
   )
 }

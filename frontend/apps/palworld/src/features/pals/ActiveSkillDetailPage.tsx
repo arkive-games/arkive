@@ -10,6 +10,7 @@ import {
   type PalsBundle,
 } from '../../lib/pals'
 import { elementIconUrl, palIconUrl } from '../../lib/assets'
+import { CatalogDataProvider, PalHover } from '../catalog/components'
 import { PalSection, InfoRows, StatRow, PalPageLoading, ElementBadge, formatSkillRange } from './components'
 
 export default function ActiveSkillDetailPage() {
@@ -110,26 +111,27 @@ export default function ActiveSkillDetailPage() {
           {skill.pals.length ? (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {skill.pals.map((p) => (
-                <Link
-                  key={p.id}
-                  to="/pals/$id"
-                  params={{ id: p.id }}
-                  data-testid="active-skill-detail-pal"
-                  className="flex items-center gap-2 rounded-lg border border-border bg-card p-2 transition hover:border-primary/60"
-                >
-                  <img
-                    src={palIconUrl(p.icon)}
-                    alt=""
-                    width={36}
-                    height={36}
-                    loading="lazy"
-                    className="size-9 shrink-0 rounded-full object-contain"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{p.name}</span>
-                  <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-xs font-semibold tabular-nums text-secondary-foreground">
-                    Lv{p.level}
-                  </span>
-                </Link>
+                <PalHover key={p.id} id={p.id}>
+                  <Link
+                    to="/pals/$id"
+                    params={{ id: p.id }}
+                    data-testid="active-skill-detail-pal"
+                    className="flex items-center gap-2 rounded-lg border border-border bg-card p-2 transition hover:border-primary/60"
+                  >
+                    <img
+                      src={palIconUrl(p.icon)}
+                      alt=""
+                      width={36}
+                      height={36}
+                      loading="lazy"
+                      className="size-9 shrink-0 rounded-full object-contain"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{p.name}</span>
+                    <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-xs font-semibold tabular-nums text-secondary-foreground">
+                      Lv{p.level}
+                    </span>
+                  </Link>
+                </PalHover>
               ))}
             </div>
           ) : (
@@ -142,7 +144,7 @@ export default function ActiveSkillDetailPage() {
 
   return (
     <ContentPage active="/active-skills" title={t('pal.section.activeSkills')}>
-      {body}
+      <CatalogDataProvider pals={bundle ?? undefined}>{body}</CatalogDataProvider>
     </ContentPage>
   )
 }

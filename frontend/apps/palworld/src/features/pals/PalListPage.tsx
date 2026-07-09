@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Button, Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { loadPals, type PalsBundle } from '../../lib/pals'
+import { CatalogDataProvider } from '../catalog/components'
 import { PalCard, PalFilters, PalPageLoading, PalTable } from './components'
 import { filterStrings } from './filterStrings'
 import { EMPTY_FILTER, useFilteredPals, type PalFilter } from './useFilteredPals'
@@ -57,7 +58,8 @@ export default function PalListPage() {
   const roster = useFilteredPals(bundle, filter)
 
   return (
-    <ContentPage active="/pals" title={t('pal.title')} maxWidth="max-w-6xl">
+    <ContentPage active="/pals" title={t('pal.title')} heading>
+        <CatalogDataProvider pals={bundle ?? undefined}>
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
               value={filter.query}
@@ -111,6 +113,7 @@ export default function PalListPage() {
               ))}
             </div>
           )}
+        </CatalogDataProvider>
     </ContentPage>
   )
 }
