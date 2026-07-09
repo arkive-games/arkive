@@ -108,7 +108,9 @@ export interface PalEntry {
 }
 
 export interface PassiveEffect { type: string; value: number; target: string }
-export interface Passive { id: string; rank: number; effects: PassiveEffect[] }
+/** `mutation` marks a mutation-pool passive (game `AddMutationPal`): exclusive to
+ *  mutated Pals or grafted via a disposable implant at the Operating Table. */
+export interface Passive { id: string; rank: number; effects: PassiveEffect[]; mutation?: boolean }
 
 /** Filter facets emitted by the pipeline: only the values actually present in the
  *  roster (canonical order), so the Paldeck filters hide chips with no pals. */

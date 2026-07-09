@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { Input } from '@gamemap/ui'
+import { Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
@@ -45,6 +45,7 @@ export default function PassivesPage() {
   const [query, setQuery] = useState('')
   const [raritySel, setRaritySel] = useState<string[]>([])
   const [categorySel, setCategorySel] = useState<string[]>([])
+  const [mutationOnly, setMutationOnly] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -87,6 +88,7 @@ export default function PassivesPage() {
         // Plain text (tags stripped) for case-insensitive search matching.
         search: stripPassiveTags(description).toLowerCase(),
         rank: bundle.passivesById.get(id)?.rank ?? 0,
+        mutation: bundle.passivesById.get(id)?.mutation ?? false,
         categories: passiveCategories(id, bundle),
         pals: palsByPassive.get(id) ?? [],
       }
@@ -111,6 +113,9 @@ export default function PassivesPage() {
   // "None" filter option.
   const hasNone = useMemo(() => all.some((p) => p.categories.length === 0), [all])
 
+  // Whether any mutation-pool passive is present — drives the "Mutation" chip.
+  const hasMutation = useMemo(() => all.some((p) => p.mutation), [all])
+
   const list = useMemo(() => {
     const q = query.trim().toLowerCase()
     return (
@@ -123,6 +128,7 @@ export default function PassivesPage() {
               c === 'none' ? r.categories.length === 0 : r.categories.includes(c as PassiveCategory),
             ),
         )
+        .filter((r) => !mutationOnly || r.mutation)
         .filter(
           (r) => !q || r.name.toLowerCase().includes(q) || r.search.includes(q) || r.id.toLowerCase().includes(q),
         )
@@ -130,9 +136,10 @@ export default function PassivesPage() {
         // language (localized names would reshuffle per locale).
         .sort((a, b) => b.rank - a.rank || a.id.localeCompare(b.id))
     )
-  }, [all, query, raritySel, categorySel])
+  }, [all, query, raritySel, categorySel, mutationOnly])
 
   return (
+    <TooltipProvider delayDuration={200}>
     <ContentPage active="/passives" title={t('pal.section.passives')} maxWidth="max-w-4xl">
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
@@ -182,6 +189,23 @@ export default function PassivesPage() {
                 {t('passive.category.none')}
               </FilterChip>
             ) : null}
+            {hasMutation ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <FilterChip
+                      active={mutationOnly}
+                      onClick={() => setMutationOnly((v) => !v)}
+                      testId="category-mutation"
+                    >
+                      <span className="inline-block size-1.5 rounded-full bg-violet-500" />
+                      {t('passive.mutation')}
+                    </FilterChip>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">{t('passive.mutationTip')}</TooltipContent>
+              </Tooltip>
+            ) : null}
           </FilterRow>
         </div>
       ) : null}
@@ -205,7 +229,7 @@ export default function PassivesPage() {
                   <PassiveText text={r.description} />
                 </p>
               ) : null}
-              {r.pals.length || r.categories.length ? (
+              {r.pals.length || r.categories.length || r.mutation ? (
                 <div className="mt-auto space-y-2 pt-2">
                   {r.pals.length ? (
                     <div className="flex flex-wrap items-center gap-1">
@@ -230,8 +254,22 @@ export default function PassivesPage() {
                       ))}
                     </div>
                   ) : null}
-                  {r.categories.length ? (
+                  {r.categories.length || r.mutation ? (
                     <div className="flex flex-wrap gap-1">
+                      {r.mutation ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span
+                              data-testid="passive-mutation-badge"
+                              className="inline-flex cursor-help items-center gap-1 rounded bg-violet-500/15 px-1.5 py-0.5 text-xs font-medium text-violet-600 ring-1 ring-inset ring-violet-500/30 dark:text-violet-300"
+                            >
+                              <span className="inline-block size-1.5 rounded-full bg-violet-500" />
+                              {t('passive.mutation')}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">{t('passive.mutationTip')}</TooltipContent>
+                        </Tooltip>
+                      ) : null}
                       {r.categories.map((c) => (
                         <span
                           key={c}
@@ -250,5 +288,6 @@ export default function PassivesPage() {
         </div>
       )}
     </ContentPage>
+    </TooltipProvider>
   )
 }

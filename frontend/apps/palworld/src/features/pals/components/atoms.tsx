@@ -233,13 +233,12 @@ export function PassiveTitleBar({ name, rank }: { name: string; rank: number }) 
   const light = st.fg === '#FFFFFF'
   return (
     <div
-      className="flex items-center justify-between gap-2 overflow-hidden rounded border-l-4 px-2 py-1"
+      className="flex items-center justify-between gap-2 overflow-hidden rounded px-2 py-1"
       style={{
         backgroundColor: st.bg,
         backgroundImage: bgImage,
         backgroundSize: '100% 100%', // stretch the figure to fill the bar (no tiling)
         backgroundRepeat: 'no-repeat',
-        borderLeftColor: light ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)',
       }}
     >
       <span

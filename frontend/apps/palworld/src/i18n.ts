@@ -100,6 +100,34 @@ export const PASSIVE_CATEGORY_LABELS: Record<Language, Record<string, string>> =
   'zh-CN': { attack: '攻击', defense: '防御', work: '工作', move: '移动', utility: '辅助', none: '无' },
   'zh-TW': { attack: '攻擊', defense: '防禦', work: '工作', move: '移動', utility: '輔助', none: '無' },
 }
+// Passive Skills page: "mutation-pool passive" badge / filter chip label.
+export const PASSIVE_MUTATION_LABELS: Record<Language, string> = {
+  'en-US': 'Mutation', 'de-DE': 'Mutation', 'es-ES': 'Mutación', 'es-MX': 'Mutación',
+  'fr-FR': 'Mutation', 'id-ID': 'Mutasi', 'it-IT': 'Mutazione', 'ja-JP': '突然変異',
+  'ko-KR': '돌연변이', 'pl-PL': 'Mutacja', 'pt-BR': 'Mutação', 'ru-RU': 'Мутация',
+  'th-TH': 'กลายพันธุ์', 'tr-TR': 'Mutasyon', 'vi-VN': 'Đột biến', 'zh-CN': '突然变异',
+  'zh-TW': '突然變異',
+}
+// Passive Skills page: tooltip explaining what a mutation-pool passive is.
+export const PASSIVE_MUTATION_TIP_LABELS: Record<Language, string> = {
+  'en-US': 'Mutation-exclusive passive: appears on mutated Pals, or grafted with a disposable implant at the Operating Table.',
+  'de-DE': 'Mutationsexklusives Passiv: erscheint bei mutierten Pals oder wird per Einweg-Implantat am Operationstisch eingesetzt.',
+  'es-ES': 'Pasiva exclusiva de mutación: aparece en Pals mutados o se injerta con un implante desechable en la mesa de operaciones.',
+  'es-MX': 'Pasiva exclusiva de mutación: aparece en Pals mutados o se injerta con un implante desechable en la mesa de operaciones.',
+  'fr-FR': 'Compétence passive de mutation : présente sur les Pals mutés ou greffée avec un implant jetable à la table d’opération.',
+  'id-ID': 'Pasif khusus mutasi: muncul pada Pal mutan, atau dicangkok dengan implan sekali pakai di Meja Operasi.',
+  'it-IT': 'Abilità passiva da mutazione: compare sui Pal mutati o si innesta con un impianto usa e getta al tavolo operatorio.',
+  'ja-JP': '突然変異専用のパッシブ。突然変異したパルに出現するほか、手術台で使い捨てインプラントを使って付与できます。',
+  'ko-KR': '돌연변이 전용 패시브: 돌연변이 팰에게 나타나거나 수술대에서 일회용 임플란트로 이식할 수 있습니다.',
+  'pl-PL': 'Pasywka mutacyjna: pojawia się u zmutowanych Pali lub można ją wszczepić jednorazowym implantem przy stole operacyjnym.',
+  'pt-BR': 'Passiva exclusiva de mutação: aparece em Pals mutantes ou é enxertada com um implante descartável na Mesa de Operações.',
+  'ru-RU': 'Пассивная способность мутации: появляется у мутировавших палов или вживляется одноразовым имплантом на операционном столе.',
+  'th-TH': 'สกิลติดตัวเฉพาะการกลายพันธุ์: พบในพัลกลายพันธุ์ หรือปลูกถ่ายด้วยรากเทียมแบบใช้ครั้งเดียวที่โต๊ะผ่าตัด',
+  'tr-TR': 'Mutasyona özel pasif: mutasyona uğramış Pal’lerde görülür ya da Ameliyat Masası’nda tek kullanımlık implantla aşılanır.',
+  'vi-VN': 'Nội tại đột biến: xuất hiện ở Pal đột biến, hoặc được cấy bằng cấy ghép dùng một lần tại Bàn Phẫu thuật.',
+  'zh-CN': '突然变异专属被动：出现在突然变异帕鲁身上，或在手术台用一次性植入体移植获得。',
+  'zh-TW': '突然變異專屬被動：出現在突然變異帕魯身上，或在手術台以一次性植入體移植取得。',
+}
 // Active Skills page: element filter-group label.
 export const ACTIVE_SKILL_ELEMENT_LABELS: Record<Language, string> = {
   'en-US': 'Element', 'de-DE': 'Element', 'es-ES': 'Elemento', 'es-MX': 'Elemento', 'fr-FR': 'Élément',
@@ -631,6 +659,8 @@ for (const lng of LANGUAGES) {
         allRarities: ALL_RARITIES_LABELS[lng],
         allTypes: ALL_TYPES_LABELS[lng],
         category: PASSIVE_CATEGORY_LABELS[lng],
+        mutation: PASSIVE_MUTATION_LABELS[lng],
+        mutationTip: PASSIVE_MUTATION_TIP_LABELS[lng],
       },
       activeSkill: {
         element: ACTIVE_SKILL_ELEMENT_LABELS[lng],

@@ -730,7 +730,15 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
 
     disp = _displayable_passives(passive_main)
     passives = [
-        {"id": pid, "rank": v.get("Rank", 0), "effects": _passive_effects(v)}
+        {
+            "id": pid,
+            "rank": v.get("Rank", 0),
+            "effects": _passive_effects(v),
+            # Mutation-pool passives (AddMutationPal): exclusive to mutated Pals
+            # (hatched from Mutated Eggs) or grafted via a disposable implant at
+            # the Operating Table. Flagged for the Passive Skills page.
+            **({"mutation": True} if v.get("AddMutationPal") is True else {}),
+        }
         for pid, v in disp.items()
     ]
 
