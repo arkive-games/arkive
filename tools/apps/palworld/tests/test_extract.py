@@ -21,6 +21,16 @@ def _make_fixture_raw(root: Path) -> Path:
         "Tree": {"landScapeRealPositionMin": {"X": 200, "Y": 200}, "landScapeRealPositionMax": {"X": 300, "Y": 300}},
     }}])
     _wj(raw / "Maps/MainWorld_5/PL_MainWorld5.json", [])
+    # A world-partition cell holding a healing spring and a warp altar (both
+    # world-partition-only classes) so the cell scan surfaces the new subtypes.
+    _wj(raw / "Maps/MainWorld_5/PL_MainWorld5/_Generated_/MainGrid_L0_test.json", [
+        {"Type": "BP_LevelObject_HealSpring_C", "Name": "HS1",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.1"}}},
+        {"Properties": {"RelativeLocation": {"X": 500000, "Y": -600000, "Z": 100}}},
+        {"Type": "BP_LevelObject_SkylandWarpAlter_C", "Name": "WA1",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.3"}}},
+        {"Properties": {"RelativeLocation": {"X": -700000, "Y": 0, "Z": 40000}}},
+    ])
     # World-map display names (base = ja SourceString; L10N folders below).
     _wj(raw / "DataTable/Text/DT_WorldMap_Common_Text_Common.json", [{"Rows": {
         "WORLDMAP_NAME_MainMap": {"TextData": {"SourceString": "ja-JP Main"}},
@@ -106,6 +116,16 @@ def test_reads_map_names_from_worldmap_table(tmp_path):
     assert len(out["mapNames"]["MainWorld"]) == 17  # 16 L10N folders + ja-JP base
 
 
+def test_extracts_healing_spring_and_warp_altar_from_cells(tmp_path):
+    # HealSpring -> healingSpring; SkylandWarpAlter / WarpAltar_WorldTree* ->
+    # warpAltar. Both live only in the world-partition cells.
+    raw = _make_fixture_raw(tmp_path)
+    out = run_extract(raw)
+    by_sub = {p["subtype"] for p in out["pois"]}
+    assert "healingSpring" in by_sub
+    assert "warpAltar" in by_sub
+
+
 @pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
 def test_extract_integration():
     out = run_extract(RAW)
@@ -139,6 +159,10 @@ def test_extract_integration():
     assert by_subtype("oil") == 185
     assert by_subtype("skyIslandOre") == 226
     assert by_subtype("worldTreeOre") == 80
+    # Healing springs (all on the World Tree map) and warp altars (Sky Island
+    # altars + the World Tree entrance/exit), both world-partition-only.
+    assert by_subtype("healingSpring") == 3
+    assert by_subtype("warpAltar") == 22
     # Sealed Realms: one location POI per ImprisonmentBoss placement, each labelled
     # with the boss it holds.
     realms = [p for p in out["pois"] if p["subtype"] == "sealedRealm"]

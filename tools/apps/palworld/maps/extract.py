@@ -62,6 +62,11 @@ CELL_CLASSES = [
     ("oil", re.compile(r"^BP_LevelObject_OilField_C$")),
     ("skyIslandOre", re.compile(r"^BP_PalMapObjectSpawner_SkyIslandOre_C$")),
     ("worldTreeOre", re.compile(r"^BP_PalMapObjectSpawner_WorldTreeOre_C$")),
+    # Hot springs that heal pals, and player warp altars (Sky Island altars plus
+    # the World Tree entrance/exit). All world-partition-only (no persistent-level
+    # instance), so they are scanned from the cells alongside the ores above.
+    ("healingSpring", re.compile(r"^BP_LevelObject_HealSpring_C$")),
+    ("warpAltar", re.compile(r"^BP_LevelObject_(SkylandWarpAlter|WarpAltar_WorldTree(Entrance|Exit))_C$")),
     # Collectible notes: only ~15 sit in the always-loaded persistent level; the
     # rest live in the world-partition cells (the L15 aggregate). Scan both and
     # dedup globally (see _dedup_pois_by_location) so all note pickups surface.
@@ -74,7 +79,8 @@ CELL_GREP = (
     "BP_NPCCampSpawner_|BP_OilrigTreasureBoxSpawner_C|"
     "BP_LevelObject_OilField_C|BP_PalMapObjectSpawner_SkyIslandOre_C|"
     "BP_PalMapObjectSpawner_WorldTreeOre_C|BP_LevelObject_Note_C|"
-    "BP_LevelObject_ItemPickupTower_C"
+    "BP_LevelObject_ItemPickupTower_C|BP_LevelObject_HealSpring_C|"
+    "BP_LevelObject_SkylandWarpAlter_C|BP_LevelObject_WarpAltar_WorldTree"
 )
 
 # NPC spawners placed on the map: the generic BP_MonoNPCSpawner_C carries a

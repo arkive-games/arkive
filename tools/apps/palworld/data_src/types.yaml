@@ -56,6 +56,14 @@ subtypes:
     category: location
     icon: T_icon_compass_KeyBoss
     names: { en-US: Ancient Shrine, ja-JP: 古代の祠, de-DE: Alter Schrein, es-ES: Santuario antiguo, es-MX: Santuario antiguo, fr-FR: Sanctuaire ancien, id-ID: Kuil Kuno, it-IT: Santuario antico, ko-KR: 고대 사당, pl-PL: Starożytna świątynia, pt-BR: Santuário antigo, ru-RU: Древнее святилище, th-TH: ศาลเจ้าโบราณ, tr-TR: Kadim Tapınak, vi-VN: Đền cổ, zh-CN: 远古神龛, zh-TW: 遠古神龕 }
+  - id: warpAltar
+    category: location
+    icon: T_icon_compass_Teleport
+    names: { en-US: Warp Altar, ja-JP: ワープ祭壇, de-DE: Warp-Altar, es-ES: Altar de teletransporte, es-MX: Altar de teletransporte, fr-FR: Autel de téléportation, id-ID: Altar Warp, it-IT: Altare di teletrasporto, ko-KR: 워프 제단, pl-PL: Ołtarz teleportacji, pt-BR: Altar de Teletransporte, ru-RU: Алтарь телепортации, th-TH: แท่นบูชาวาร์ป, tr-TR: Işınlanma Sunağı, vi-VN: Bàn Thờ Dịch Chuyển, zh-CN: 传送祭坛, zh-TW: 傳送祭壇 }
+  - id: healingSpring
+    category: location
+    color: "#22d3ee"
+    names: { en-US: Healing Spring, ja-JP: 回復の泉, de-DE: Heilquelle, es-ES: Manantial curativo, es-MX: Manantial curativo, fr-FR: Source de soin, id-ID: Mata Air Penyembuh, it-IT: Sorgente curativa, ko-KR: 회복의 샘, pl-PL: Źródło uzdrowienia, pt-BR: Fonte de Cura, ru-RU: Целебный источник, th-TH: น้ำพุรักษา, tr-TR: Şifa Pınarı, vi-VN: Suối Chữa Lành, zh-CN: 治愈之泉, zh-TW: 治癒之泉 }
   - id: fieldBoss
     category: boss
     icon: T_icon_compass_boss
