@@ -40,6 +40,7 @@ export interface PalStrings {
   section: {
     description: string
     stats: string
+    details: string
     work: string
     partnerSkill: string
     activeSkills: string
@@ -107,6 +108,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Description',
       stats: 'Base Stats',
+      details: 'Details',
       work: 'Work Suitability',
       partnerSkill: 'Partner Skill',
       activeSkills: 'Active Skills',
@@ -172,6 +174,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Beschreibung',
       stats: 'Basiswerte',
+      details: 'Details',
       work: 'Arbeitseignung',
       partnerSkill: 'Partner-Fähigkeit',
       activeSkills: 'Aktive Fähigkeiten',
@@ -237,6 +240,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Descripción',
       stats: 'Estadísticas base',
+      details: 'Detalles',
       work: 'Aptitud laboral',
       partnerSkill: 'Habilidad de compañero',
       activeSkills: 'Habilidades activas',
@@ -302,6 +306,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Descripción',
       stats: 'Estadísticas base',
+      details: 'Detalles',
       work: 'Aptitud laboral',
       partnerSkill: 'Habilidad de compañero',
       activeSkills: 'Habilidades activas',
@@ -367,6 +372,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Description',
       stats: 'Statistiques de base',
+      details: 'Détails',
       work: 'Aptitude au travail',
       partnerSkill: 'Compétence de partenaire',
       activeSkills: 'Compétences actives',
@@ -432,6 +438,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Deskripsi',
       stats: 'Statistik Dasar',
+      details: 'Detail',
       work: 'Kecocokan Kerja',
       partnerSkill: 'Skill Pasangan',
       activeSkills: 'Skill Aktif',
@@ -497,6 +504,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Descrizione',
       stats: 'Statistiche base',
+      details: 'Dettagli',
       work: 'Idoneità al lavoro',
       partnerSkill: 'Abilità del compagno',
       activeSkills: 'Abilità attive',
@@ -562,6 +570,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: '説明',
       stats: '基礎ステータス',
+      details: '詳細',
       work: '仕事適性',
       partnerSkill: 'パートナースキル',
       activeSkills: 'アクティブスキル',
@@ -627,6 +636,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: '설명',
       stats: '기본 능력치',
+      details: '세부 정보',
       work: '작업 적성',
       partnerSkill: '파트너 스킬',
       activeSkills: '액티브 스킬',
@@ -692,6 +702,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Opis',
       stats: 'Statystyki podstawowe',
+      details: 'Szczegóły',
       work: 'Przydatność do pracy',
       partnerSkill: 'Umiejętność partnera',
       activeSkills: 'Umiejętności aktywne',
@@ -757,6 +768,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Descrição',
       stats: 'Atributos base',
+      details: 'Detalhes',
       work: 'Aptidão de trabalho',
       partnerSkill: 'Habilidade de parceiro',
       activeSkills: 'Habilidades ativas',
@@ -822,6 +834,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Описание',
       stats: 'Базовые характеристики',
+      details: 'Подробности',
       work: 'Пригодность к работе',
       partnerSkill: 'Навык напарника',
       activeSkills: 'Активные навыки',
@@ -887,6 +900,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'คำอธิบาย',
       stats: 'ค่าพื้นฐาน',
+      details: 'รายละเอียด',
       work: 'ความถนัดงาน',
       partnerSkill: 'สกิลคู่หู',
       activeSkills: 'สกิลโจมตี',
@@ -952,6 +966,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Açıklama',
       stats: 'Temel Değerler',
+      details: 'Ayrıntılar',
       work: 'İş Uygunluğu',
       partnerSkill: 'Partner Yeteneği',
       activeSkills: 'Aktif Yetenekler',
@@ -1017,6 +1032,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: 'Mô tả',
       stats: 'Chỉ số cơ bản',
+      details: 'Chi tiết',
       work: 'Độ phù hợp công việc',
       partnerSkill: 'Kỹ năng đồng hành',
       activeSkills: 'Kỹ năng chủ động',
@@ -1082,6 +1098,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: '描述',
       stats: '基础属性',
+      details: '详细信息',
       work: '工作适性',
       partnerSkill: '伙伴技能',
       activeSkills: '主动技能',
@@ -1147,6 +1164,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     section: {
       description: '描述',
       stats: '基礎屬性',
+      details: '詳細資訊',
       work: '工作適性',
       partnerSkill: '夥伴技能',
       activeSkills: '主動技能',

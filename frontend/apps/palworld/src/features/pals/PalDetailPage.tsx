@@ -44,6 +44,11 @@ const STAT_KEYS = [
   'price',
 ] as const
 
+// The Base Stats card shows the first 7 (combat) stats through Food; the
+// remaining stats move to a "Details" card placed below Work Suitability.
+const PRIMARY_STAT_KEYS = STAT_KEYS.slice(0, 7)
+const SECONDARY_STAT_KEYS = STAT_KEYS.slice(7)
+
 // Movement speeds (raw world units). A `-1` value is the game's "no such speed"
 // sentinel and renders as an em-dash.
 const SPEED_KEYS = [
@@ -426,7 +431,31 @@ export default function PalDetailPage() {
           <div className="space-y-6 md:order-2">
             <PalSection title={t('pal.section.stats')}>
               <InfoRows>
-                {STAT_KEYS.map((k) => (
+                {PRIMARY_STAT_KEYS.map((k) => (
+                  <StatRow key={k} label={t(`pal.stat.${k}`)} value={pal.stats[k]} />
+                ))}
+              </InfoRows>
+            </PalSection>
+
+            {workEntries.length ? (
+              <PalSection title={t('pal.section.work')}>
+                <div className="space-y-1.5">
+                  {workEntries.map(([w, lvl]) => (
+                    <WorkSuitability
+                      key={w}
+                      work={w}
+                      level={lvl}
+                      label={bundle.enums.work[w] ?? w}
+                      highlight={lvl === maxWorkLevel}
+                    />
+                  ))}
+                </div>
+              </PalSection>
+            ) : null}
+
+            <PalSection title={t('pal.section.details')}>
+              <InfoRows>
+                {SECONDARY_STAT_KEYS.map((k) => (
                   <StatRow key={k} label={t(`pal.stat.${k}`)} value={pal.stats[k]} />
                 ))}
                 <StatRow label={t('pal.stat.size')} value={pal.size || '—'} />
@@ -448,22 +477,6 @@ export default function PalDetailPage() {
                 ))}
               </InfoRows>
             </PalSection>
-
-            {workEntries.length ? (
-              <PalSection title={t('pal.section.work')}>
-                <div className="space-y-1.5">
-                  {workEntries.map(([w, lvl]) => (
-                    <WorkSuitability
-                      key={w}
-                      work={w}
-                      level={lvl}
-                      label={bundle.enums.work[w] ?? w}
-                      highlight={lvl === maxWorkLevel}
-                    />
-                  ))}
-                </div>
-              </PalSection>
-            ) : null}
 
             {pal.drops.length ? (
               <PalSection title={t('pal.section.drops')}>
