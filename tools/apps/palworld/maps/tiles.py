@@ -42,7 +42,7 @@ NOTE_MAX_EDGE = 1024
 # rim that the flood fill can't reach; a large inset trims it to match.
 VOID_PARAMS: dict[str, dict[str, int]] = {
     "MainWorld": {"tol": 140, "inset": 0},
-    "WorldTree": {"tol": 140, "inset": 110},
+    "WorldTree": {"tol": 140, "inset": 40},
 }
 # Feather width (px) of the signed-distance alpha ramp centred on the coastline.
 # ~1px of anti-aliasing so the edge is smooth (no jaggies) yet crisp.
