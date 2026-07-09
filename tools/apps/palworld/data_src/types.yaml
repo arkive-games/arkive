@@ -59,10 +59,14 @@ subtypes:
   - id: warpAltar
     category: location
     icon: T_icon_compass_Teleport
-    names: { en-US: Warp Altar, ja-JP: ワープ祭壇, de-DE: Warp-Altar, es-ES: Altar de teletransporte, es-MX: Altar de teletransporte, fr-FR: Autel de téléportation, id-ID: Altar Warp, it-IT: Altare di teletrasporto, ko-KR: 워프 제단, pl-PL: Ołtarz teleportacji, pt-BR: Altar de Teletransporte, ru-RU: Алтарь телепортации, th-TH: แท่นบูชาวาร์ป, tr-TR: Işınlanma Sunağı, vi-VN: Bàn Thờ Dịch Chuyển, zh-CN: 传送祭坛, zh-TW: 傳送祭壇 }
+    # Names are the object noun from the game's own WarpAltar UI strings
+    # (DT_UI_Common_Text_Common INTERACT_INDICATOR_WarpAltar / SYSTEM_DIALOG_WARPALTAR).
+    names: { en-US: Altar, ja-JP: 転送円環, de-DE: Teleportal, es-ES: Círculo de teletransporte, es-MX: Círculo de teletransporte, fr-FR: Portail de transfert, id-ID: Lingkaran Teleportasi, it-IT: Altare di teletrasporto, ko-KR: 순간 이동 제단, pl-PL: Ołtarz teleportacyjny, pt-BR: Círculo de transferência, ru-RU: Круг телепортации, th-TH: จุดเคลื่อนย้าย, tr-TR: Işınlanma Halkası, vi-VN: Vòng tròn dịch chuyển, zh-CN: 传送环, zh-TW: 傳送環 }
   - id: healingSpring
     category: location
-    color: "#22d3ee"
+    # The in-world object is SM_HealingFountain (a mossy stone fountain); the
+    # game has no compass icon for it, so use the matching build-object icon.
+    icon: T_icon_buildObject_Fountain
     names: { en-US: Healing Spring, ja-JP: 回復の泉, de-DE: Heilquelle, es-ES: Manantial curativo, es-MX: Manantial curativo, fr-FR: Source de soin, id-ID: Mata Air Penyembuh, it-IT: Sorgente curativa, ko-KR: 회복의 샘, pl-PL: Źródło uzdrowienia, pt-BR: Fonte de Cura, ru-RU: Целебный источник, th-TH: น้ำพุรักษา, tr-TR: Şifa Pınarı, vi-VN: Suối Chữa Lành, zh-CN: 治愈之泉, zh-TW: 治癒之泉 }
   - id: fieldBoss
     category: boss
