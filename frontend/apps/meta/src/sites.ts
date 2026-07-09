@@ -19,7 +19,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'palworld',
-    url: import.meta.env.VITE_PAL_URL ?? 'https://pal.tc-imba.com',
+    url: import.meta.env.VITE_PAL_URL ?? 'https://palworld.tc-imba.com',
     bg: '/palworld-bg.webp',
     nameKey: 'site.palworld.name',
     descKey: 'site.palworld.desc',
