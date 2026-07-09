@@ -15,7 +15,7 @@ import { comboKey, loadBreeding, makeEngine, queryFormulas, type BreedingData, t
 import { RecipeCard, buildRecipeMeta } from '../breeding/RecipeCard'
 import { palIconUrl } from '../../lib/assets'
 import { formatPalId } from '../../lib/palId'
-import { CatalogDataProvider } from '../catalog/components'
+import { CatalogDataProvider, MaterialChip } from '../catalog/components'
 import { filterStrings } from './filterStrings'
 import {
   PalSection,
@@ -28,7 +28,6 @@ import {
   ActiveSkillRow,
   PassiveRow,
   DropRow,
-  SummonMaterialRow,
   PalSpawnMap,
 } from './components'
 
@@ -412,9 +411,9 @@ export default function PalDetailPage() {
                   <div className="mb-1 text-xs font-medium text-muted-foreground">
                     {t('pal.summonMaterials')}
                   </div>
-                  <div className="divide-y divide-border/60">
+                  <div className="flex flex-wrap gap-1.5">
                     {pal.summonMaterials.map((m) => (
-                      <SummonMaterialRow
+                      <MaterialChip
                         key={m.item}
                         id={m.item}
                         name={bundle.items[m.item] ?? m.item}

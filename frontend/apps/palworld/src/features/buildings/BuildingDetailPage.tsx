@@ -19,7 +19,7 @@ import {
   CatalogPageLoading,
   CatalogNotFound,
   CatalogDataProvider,
-  MaterialRow,
+  MaterialChip,
 } from '../catalog/components'
 import { makeTechResolvers } from '../technology/techModel'
 import { TechChip } from '../technology/components/TechChip'
@@ -107,9 +107,9 @@ export default function BuildingDetailPage() {
 
               {bld.materials.length ? (
                 <CatalogSection title={t('building.section.materials')}>
-                  <div className="divide-y divide-border/60">
+                  <div className="flex flex-wrap gap-1.5">
                     {bld.materials.map((m) => (
-                      <MaterialRow key={m.item} id={m.item} name={iname(m.item)} count={m.count} />
+                      <MaterialChip key={m.item} id={m.item} name={iname(m.item)} count={m.count} />
                     ))}
                   </div>
                 </CatalogSection>

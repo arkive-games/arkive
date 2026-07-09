@@ -12,7 +12,7 @@ import {
   type TechBundle,
 } from '../../lib/catalog'
 import { buildingTypeLabel } from '../catalog/labels'
-import { CatalogPageLoading } from '../catalog/components'
+import { CatalogDataProvider, CatalogPageLoading } from '../catalog/components'
 import { makeTechResolvers } from '../technology/techModel'
 import { BuildingTile } from './components/BuildingTile'
 
@@ -111,19 +111,21 @@ export default function BuildingListPage() {
           ) : !bundle || !tech || !techResolvers ? (
             <CatalogPageLoading />
           ) : (
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-              {list.map((b) => (
-                <BuildingTile
-                  key={b.id}
-                  building={b}
-                  name={bundle.text[b.id]?.name ?? b.id}
-                  typeLabels={bundle.typeLabels}
-                  iname={iname}
-                  tech={tech}
-                  techResolvers={techResolvers}
-                />
-              ))}
-            </div>
+            <CatalogDataProvider items={items ?? undefined} buildings={bundle} tech={tech}>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
+                {list.map((b) => (
+                  <BuildingTile
+                    key={b.id}
+                    building={b}
+                    name={bundle.text[b.id]?.name ?? b.id}
+                    typeLabels={bundle.typeLabels}
+                    iname={iname}
+                    tech={tech}
+                    techResolvers={techResolvers}
+                  />
+                ))}
+              </div>
+            </CatalogDataProvider>
           )}
     </ContentPage>
   )

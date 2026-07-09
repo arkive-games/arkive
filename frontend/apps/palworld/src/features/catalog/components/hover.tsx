@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
@@ -9,9 +9,14 @@ import type {
   ItemEntry,
   BuildingEntry,
 } from '../../../lib/catalog'
-import { resolveCharacterNames, type PalsBundle, type PalEntry } from '../../../lib/pals'
-import { palIconUrl } from '../../../lib/assets'
+import { resolveCharacterNames, type PalsBundle, type PalEntry, type WorkType } from '../../../lib/pals'
+import { palIconUrl, workIconUrl } from '../../../lib/assets'
 import { itemTypeLabel, buildingTypeLabel } from '../labels'
+// Imported from the atoms file directly (not ../../pals/components) to avoid a
+// module cycle: that index re-exports PalTable/PalCard, which import from here.
+import { ElementBadge } from '../../pals/components/atoms'
+import { filterStrings } from '../../pals/filterStrings'
+import { techImage } from '../../technology/techModel'
 import { CHIP, ItemGlyph, BuildingGlyph } from './ui'
 
 // --- context -----------------------------------------------------------------
@@ -71,9 +76,34 @@ function PropsLine({ rows }: { rows: Array<[string, ReactNode]> }) {
   )
 }
 
+/** Plain (never-nested) tech chip: icon + name linking into the tech tree. Kept
+ *  local instead of reusing TechChip to avoid a module cycle (TechChip imports
+ *  from catalog/components); inside a hover card chips render bare anyway. */
+function TechMiniChip({ id }: { id: string }) {
+  const { items, buildings, tech } = useCatalogData()
+  const entry = tech?.byId.get(id)
+  const name = tech?.text[id]?.name ?? id
+
+  let glyph: ReactNode = null
+  const ref = entry ? techImage(entry) : null
+  if (ref) {
+    const icon =
+      ref.kind === 'item' ? items?.byId.get(ref.id)?.icon : buildings?.byId.get(ref.id)?.icon
+    if (icon) glyph = ref.kind === 'item' ? <ItemGlyph icon={icon} /> : <BuildingGlyph icon={icon} />
+  }
+  if (!glyph && entry?.icon) glyph = <ItemGlyph icon={entry.icon} />
+
+  return (
+    <Link to="/technology" search={{ tech: id }} className={CHIP}>
+      {glyph}
+      {name}
+    </Link>
+  )
+}
+
 export function ItemSummary({ item }: { item: ItemEntry }) {
   const { t } = useTranslation()
-  const { items, pals } = useCatalogData()
+  const { items, buildings, tech, pals } = useCatalogData()
   const name = items?.text[item.id]?.name ?? item.id
   const description = items?.text[item.id]?.description
   const elementLabel = item.element ? (pals?.enums.elements[item.element] ?? item.element) : undefined
@@ -100,6 +130,47 @@ export function ItemSummary({ item }: { item: ItemEntry }) {
         <p className="line-clamp-4 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
           {description}
         </p>
+      ) : null}
+      {item.recipe ? (
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
+            <span>{t('item.section.craft')}</span>
+            <span>
+              {t('item.work')}:{' '}
+              <span className="text-foreground tabular-nums">{item.recipe.work}</span>
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {item.recipe.materials.map((m) => (
+              <MaterialChip key={m.item} id={m.item} name={items?.text[m.item]?.name ?? m.item} count={m.count} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {item.recipe?.craftedAt?.length && buildings ? (
+        <div>
+          <div className="mb-1 text-xs text-muted-foreground">{t('item.craftedAt')}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {item.recipe.craftedAt.map((bid) => (
+              <BuildingLink
+                key={bid}
+                id={bid}
+                name={buildings.text[bid]?.name ?? bid}
+                icon={buildings.byId.get(bid)?.icon}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {item.unlockTech?.length && tech ? (
+        <div>
+          <div className="mb-1 text-xs text-muted-foreground">{t('item.fromTech')}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {item.unlockTech.map((tid) => (
+              <TechMiniChip key={tid} id={tid} />
+            ))}
+          </div>
+        </div>
       ) : null}
     </div>
   )
@@ -138,20 +209,43 @@ export function BuildingSummary({ building }: { building: BuildingEntry }) {
   )
 }
 
+/** Compact work-suitability pill: work icon + level. The localized work name
+ *  lives in the title tooltip; when the work type has no icon (OilExtraction)
+ *  the name stands in for it. */
+function WorkBadge({ work, level, label }: { work: WorkType; level: number; label: string }) {
+  const [iconOk, setIconOk] = useState(true)
+  return (
+    <span
+      title={label}
+      className="inline-flex items-center gap-1 rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground"
+    >
+      {iconOk ? (
+        <img
+          src={workIconUrl(work)}
+          alt={label}
+          width={16}
+          height={16}
+          loading="lazy"
+          onError={() => setIconOk(false)}
+          className="shrink-0 object-contain"
+        />
+      ) : (
+        <span className="max-w-24 truncate">{label}</span>
+      )}
+      <span className="tabular-nums">Lv{level}</span>
+    </span>
+  )
+}
+
 export function PalSummary({ pal }: { pal: PalEntry }) {
-  const { t } = useTranslation()
+  const { i18n } = useTranslation()
   const { pals } = useCatalogData()
+  const fs = filterStrings(i18n.language)
   const name = pals?.text[pal.id]?.name ?? pal.id
   const description = resolveCharacterNames(pals?.text[pal.id]?.description, pals?.text ?? {})
-  const elements = pal.elements.map((e) => pals?.enums.elements[e] ?? e).join(' · ')
-
-  const rows: Array<[string, ReactNode]> = [
-    [t('pal.stat.rarity'), pal.rarity],
-    [t('pal.stat.hp'), pal.stats.hp],
-    [t('pal.stat.meleeAttack'), pal.stats.meleeAttack],
-    [t('pal.stat.shotAttack'), pal.stats.shotAttack],
-    [t('pal.stat.defense'), pal.stats.defense],
-  ]
+  const workEntries = (Object.entries(pal.work) as [WorkType, number][])
+    .filter(([, lvl]) => lvl > 0)
+    .sort((a, b) => b[1] - a[1])
 
   return (
     <div className="flex flex-col gap-2 text-left">
@@ -159,12 +253,25 @@ export function PalSummary({ pal }: { pal: PalEntry }) {
         {pal.icon ? (
           <img src={palIconUrl(pal.icon)} alt="" loading="lazy" className="size-8 shrink-0 object-contain" />
         ) : null}
-        <div className="min-w-0">
-          <div className="text-sm font-semibold leading-tight">{name}</div>
-          {elements ? <div className="text-xs text-muted-foreground">{elements}</div> : null}
-        </div>
+        <div className="min-w-0 text-sm font-semibold leading-tight">{name}</div>
       </div>
-      <PropsLine rows={rows} />
+      <div className="flex flex-wrap items-center gap-1">
+        {pal.elements.map((e) => (
+          <ElementBadge key={e} element={e} label={pals?.enums.elements[e] ?? e} size={14} />
+        ))}
+        {pal.reaction && pal.reaction !== 'None' ? (
+          <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+            {fs.reaction}: {fs.reactions[pal.reaction] ?? pal.reaction}
+          </span>
+        ) : null}
+      </div>
+      {workEntries.length ? (
+        <div className="flex flex-wrap gap-1">
+          {workEntries.map(([w, lvl]) => (
+            <WorkBadge key={w} work={w} level={lvl} label={pals?.enums.work[w] ?? w} />
+          ))}
+        </div>
+      ) : null}
       {description ? (
         <p className="line-clamp-4 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
           {description}
@@ -257,16 +364,27 @@ export function PalLink({ id, name, icon }: { id: string; name: string; icon?: s
   )
 }
 
-/** A build/craft material: item link + required count, with an item hover card. */
-export function MaterialRow({ id, name, count }: { id: string; name: string; count: number }) {
+/** A build/craft material: the standard item chip (icon + name) plus required
+ *  count, with an item hover card. `icon` overrides the catalog-context lookup
+ *  for pages that don't load the items bundle. */
+export function MaterialChip({
+  id,
+  name,
+  count,
+  icon,
+}: {
+  id: string
+  name: string
+  count: number
+  icon?: string
+}) {
+  const { items } = useCatalogData()
+  const glyph = icon ?? items?.byId.get(id)?.icon
   return (
     <ChipHover kind="item" id={id}>
-      <Link
-        to="/items/$id"
-        params={{ id }}
-        className="flex items-center gap-2 py-1.5 text-sm transition first:pt-0 last:pb-0 hover:text-primary"
-      >
-        <span className="min-w-0 flex-1 truncate">{name}</span>
+      <Link to="/items/$id" params={{ id }} className={CHIP}>
+        {glyph ? <ItemGlyph icon={glyph} /> : null}
+        <span className="min-w-0 truncate">{name}</span>
         <span className="shrink-0 tabular-nums text-muted-foreground">×{count}</span>
       </Link>
     </ChipHover>

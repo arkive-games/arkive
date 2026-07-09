@@ -382,31 +382,3 @@ export function DropRow({
     </div>
   )
 }
-
-/** A summon-altar material: icon + name + required quantity. */
-export function SummonMaterialRow({
-  id,
-  name,
-  count,
-  icon,
-}: {
-  id?: string
-  name: string
-  count: number
-  icon?: string
-}) {
-  const label = id ? (
-    <Link to="/items/$id" params={{ id }} className="flex min-w-0 flex-1 items-center gap-2 hover:text-primary">
-      {icon ? <IconImg src={itemIconUrl(icon)} alt="" size={20} /> : null}
-      <span className="truncate">{name}</span>
-    </Link>
-  ) : (
-    <span className="min-w-0 flex-1 truncate">{name}</span>
-  )
-  return (
-    <div className="flex items-center gap-2 py-1.5 text-sm first:pt-0 last:pb-0">
-      {label}
-      <span className="shrink-0 tabular-nums text-muted-foreground">×{count}</span>
-    </div>
-  )
-}

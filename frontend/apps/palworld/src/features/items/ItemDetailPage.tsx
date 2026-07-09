@@ -22,7 +22,7 @@ import {
   ItemLink,
   BuildingLink,
   PalLink,
-  MaterialRow,
+  MaterialChip,
   ItemGlyph,
 } from '../catalog/components'
 import { makeTechResolvers } from '../technology/techModel'
@@ -114,9 +114,9 @@ export default function ItemDetailPage() {
 
               {item.recipe ? (
                 <CatalogSection title={t('item.section.craft')}>
-                  <div className="divide-y divide-border/60">
+                  <div className="flex flex-wrap gap-1.5">
                     {item.recipe.materials.map((m) => (
-                      <MaterialRow key={m.item} id={m.item} name={iname(m.item)} count={m.count} />
+                      <MaterialChip key={m.item} id={m.item} name={iname(m.item)} count={m.count} />
                     ))}
                   </div>
                   {item.recipe.craftedAt?.length ? (

@@ -18,7 +18,7 @@ export {
   BuildingLink,
   PalLink,
   PalHover,
-  MaterialRow,
+  MaterialChip,
   ItemSummary,
   BuildingSummary,
   PalSummary,

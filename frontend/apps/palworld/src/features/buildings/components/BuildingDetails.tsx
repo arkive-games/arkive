@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { BuildingEntry, BuildingsBundle, TechBundle } from '../../../lib/catalog'
 import { buildingTypeLabel } from '../../catalog/labels'
-import { MaterialRow } from '../../catalog/components'
+import { MaterialChip } from '../../catalog/components'
 import type { TechResolvers } from '../../technology/techModel'
 import { TechChip } from '../../technology/components/TechChip'
 
@@ -52,9 +52,9 @@ export function BuildingDetails({
       {building.materials.length ? (
         <div>
           <div className="mb-1 text-xs text-muted-foreground">{t('building.section.materials')}</div>
-          <div className="divide-y divide-border/60">
+          <div className="flex flex-wrap gap-1.5">
             {building.materials.map((m) => (
-              <MaterialRow key={m.item} id={m.item} name={iname(m.item)} count={m.count} />
+              <MaterialChip key={m.item} id={m.item} name={iname(m.item)} count={m.count} />
             ))}
           </div>
         </div>

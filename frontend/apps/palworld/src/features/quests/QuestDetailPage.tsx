@@ -11,7 +11,7 @@ import {
   CatalogPageLoading,
   CatalogNotFound,
   CatalogDataProvider,
-  ItemLink,
+  MaterialChip,
 } from '../catalog/components'
 import { questTypeLabel } from './labels'
 
@@ -84,10 +84,7 @@ export default function QuestDetailPage() {
                 <CatalogSection title={t('quest.section.rewards')}>
                   <div className="flex flex-wrap gap-1.5">
                     {quest.rewardItems.map((r) => (
-                      <span key={r.item} className="inline-flex items-center gap-1">
-                        <ItemLink id={r.item} name={iname(r.item)} icon={b.items.byId.get(r.item)?.icon} />
-                        <span className="text-xs tabular-nums text-muted-foreground">×{r.count}</span>
-                      </span>
+                      <MaterialChip key={r.item} id={r.item} name={iname(r.item)} count={r.count} />
                     ))}
                   </div>
                 </CatalogSection>

@@ -4,7 +4,14 @@ import { Link } from '@tanstack/react-router'
 import { HoverCard, HoverCardTrigger, Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
-import { loadItems, type ItemsBundle } from '../../lib/catalog'
+import {
+  loadItems,
+  loadBuildings,
+  loadTech,
+  type ItemsBundle,
+  type BuildingsBundle,
+  type TechBundle,
+} from '../../lib/catalog'
 import { itemTypeLabel } from '../catalog/labels'
 import {
   CatalogDataProvider,
@@ -15,11 +22,18 @@ import {
   rarityBorderClass,
 } from '../catalog/components'
 
+interface Bundles {
+  items: ItemsBundle
+  buildings: BuildingsBundle
+  tech: TechBundle
+}
+
 export default function ItemListPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
 
-  const [bundle, setBundle] = useState<ItemsBundle | null>(null)
+  const [bundles, setBundles] = useState<Bundles | null>(null)
+  const bundle = bundles?.items ?? null
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [cats, setCats] = useState<string[]>([])
@@ -27,9 +41,10 @@ export default function ItemListPage() {
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    loadItems(lng)
-      .then((b) => {
-        if (!cancelled) setBundle(b)
+    // Buildings + tech feed the item hover cards (crafted-at / unlock-tech).
+    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng)])
+      .then(([items, buildings, tech]) => {
+        if (!cancelled) setBundles({ items, buildings, tech })
       })
       .catch((err) => {
         console.error(err)
@@ -102,7 +117,7 @@ export default function ItemListPage() {
           ) : !bundle ? (
             <CatalogPageLoading />
           ) : (
-            <CatalogDataProvider items={bundle}>
+            <CatalogDataProvider items={bundle} buildings={bundles?.buildings} tech={bundles?.tech}>
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
                 {list.map((i) => (
                   <HoverCard key={i.id} openDelay={120} closeDelay={120}>
