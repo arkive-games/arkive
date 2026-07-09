@@ -39,6 +39,10 @@ PARSED = {
         {"spawnerName": "dg1", "pals": [{"id": "YakushimaMonster001", "lvMin": 1, "lvMax": 1}], "location": {"X": 100, "Y": 100, "Z": 0}},
     ],
     "namesByLang": _names_by_lang(),
+    "mapNames": {
+        "MainWorld": {lng: ("Palpagos Islands" if lng == "en-US" else f"{lng} Main") for lng in LANGUAGES},
+        "WorldTree": {lng: ("The World Tree" if lng == "en-US" else f"{lng} Tree") for lng in LANGUAGES},
+    },
     "palMeta": {
         "SheepBall": {"zukanIndex": 2, "zukanIndexSuffix": ""},
         "Kitsunebi": {"zukanIndex": 5, "zukanIndexSuffix": ""},
@@ -57,6 +61,17 @@ def test_two_maps_with_tiling(ds):
     assert [m["id"] for m in ds["maps"]] == ["MainWorld", "WorldTree"]
     m0 = ds["maps"][0]
     assert (m0["tileWidth"], m0["tileHeight"], m0["tilesCountX"], m0["tilesCountY"], m0["isVisible"]) == (1024, 1024, 8, 8, True)
+
+
+def test_map_name_and_shortname_from_game_worldmap_l10n(ds):
+    # Both the full name and the switcher shortName use the game's official
+    # WorldMap name (parsed mapNames), not a hand-authored types.yaml label.
+    en = ds["locales"]["en-US"]["maps"]
+    assert en["MainWorld"]["name"] == "Palpagos Islands"
+    assert en["MainWorld"]["shortName"] == "Palpagos Islands"
+    assert en["WorldTree"]["name"] == "The World Tree"
+    assert en["WorldTree"]["shortName"] == "The World Tree"
+    assert ds["locales"]["zh-CN"]["maps"]["WorldTree"]["name"] == "zh-CN Tree"
 
 
 def test_markers_assigned_with_stable_ids(ds):

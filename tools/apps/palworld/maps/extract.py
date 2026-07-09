@@ -24,6 +24,10 @@ L10N_LANG_TAGS = {
 }
 JA_TAG = "ja-JP"
 
+# Map display names come from the game's WorldMap UI text
+# (DT_WorldMap_Common_Text_Common); each map id maps to one WORLDMAP_NAME_* key.
+MAP_NAME_KEYS = {"MainWorld": "WORLDMAP_NAME_MainMap", "WorldTree": "WORLDMAP_NAME_Tree"}
+
 # Persistent-level actors (Maps/MainWorld_5/PL_MainWorld5.json).
 POI_CLASSES = [
     ("fastTravel", re.compile(r"^BP_LevelObject_TowerFastTravelPoint_C$")),
@@ -587,6 +591,13 @@ def run_extract(raw: Path) -> dict:
 
     ft_names = _read_text_by_lang(raw, "DT_MapRespawnPointInfoText.json")
 
+    # Localized map display names, from the game's WorldMap UI text table.
+    worldmap_text = _read_text_by_lang(raw, "DT_WorldMap_Common_Text_Common.json")
+    map_names = {
+        mid: {tag: tbl[key] for tag, tbl in worldmap_text.items() if tbl.get(key)}
+        for mid, key in MAP_NAME_KEYS.items()
+    }
+
     level = json.loads((raw / _LEVEL_REL).read_text(encoding="utf-8"))
 
     # Tower fast-travel points (both BP_LevelObject_ and BP_MapObject_ variants)
@@ -931,7 +942,7 @@ def run_extract(raw: Path) -> dict:
         effigy_descs.setdefault("lifmunkEffigy", base_desc)
 
     return {
-        "bounds": bounds, "pois": pois, "bosses": bosses, "wanted": wanted,
+        "bounds": bounds, "mapNames": map_names, "pois": pois, "bosses": bosses, "wanted": wanted,
         "predators": predators, "palSpawns": pal_spawns, "palMeta": pal_meta,
         "namesByLang": names_by_lang, "palIcons": pal_icons,
         "effigyNames": effigy_names, "effigyIcons": effigy_icons,

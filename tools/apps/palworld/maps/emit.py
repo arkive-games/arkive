@@ -63,6 +63,7 @@ def _orient_json(o) -> dict:
 def build_dataset(parsed: dict) -> dict:
     src = yaml.safe_load(_TYPES_YAML.read_text(encoding="utf-8"))
     bounds = parsed["bounds"]
+    map_names = parsed["mapNames"]
     names_by_lang = parsed["namesByLang"]
     pal_icons = set(parsed["palIcons"])
     pal_meta = parsed.get("palMeta") or {}
@@ -70,6 +71,10 @@ def build_dataset(parsed: dict) -> dict:
     missing = [lng for lng in languages if not names_by_lang.get(lng)]
     if missing:
         raise RuntimeError(f"Parsed pal names are missing languages: {', '.join(missing)}")
+
+    def _map_name(mid: str, lng: str) -> str:
+        names = map_names.get(mid, {})
+        return names.get(lng) or names.get("en-US") or mid
 
     map_ids = ["MainWorld", "WorldTree"]
     assign_order = [
@@ -382,7 +387,9 @@ def build_dataset(parsed: dict) -> dict:
     locales = {}
     for lng in languages:
         locales[lng] = {
-            "maps": {m["id"]: {"name": m["names"][lng], "description": "", "shortName": m["shortNames"][lng]} for m in src["maps"]},
+            # Map name + switcher shortName both use the game's official WorldMap
+            # L10N name (fall back to en-US, then the map id, if a lang is absent).
+            "maps": {m["id"]: {"name": _map_name(m["id"], lng), "description": "", "shortName": _map_name(m["id"], lng)} for m in src["maps"]},
             "types": {
                 "categories": {c["id"]: {"name": c["names"][lng]} for c in src["categories"]},
                 "subtypes": {

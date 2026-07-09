@@ -21,6 +21,11 @@ def _make_fixture_raw(root: Path) -> Path:
         "Tree": {"landScapeRealPositionMin": {"X": 200, "Y": 200}, "landScapeRealPositionMax": {"X": 300, "Y": 300}},
     }}])
     _wj(raw / "Maps/MainWorld_5/PL_MainWorld5.json", [])
+    # World-map display names (base = ja SourceString; L10N folders below).
+    _wj(raw / "DataTable/Text/DT_WorldMap_Common_Text_Common.json", [{"Rows": {
+        "WORLDMAP_NAME_MainMap": {"TextData": {"SourceString": "ja-JP Main"}},
+        "WORLDMAP_NAME_Tree": {"TextData": {"SourceString": "ja-JP Tree"}},
+    }}])
     for rel in ["DataTable/UI/DT_BossSpawnerLoactionData.json",
                 "DataTable/Spawner/DT_PalWildSpawner.json",
                 "DataTable/Spawner/DT_PalSpawnerPlacement.json",
@@ -35,6 +40,10 @@ def _make_fixture_raw(root: Path) -> Path:
     for folder, tag in L10N_LANG_TAGS.items():
         _wj(root / "Content" / "L10N" / folder / "Pal/DataTable/Text/DT_PalNameText_Common.json", [{"Rows": {
             "PAL_NAME_Alpaca": {"TextData": {"SourceString": "멜파카" if tag == "ko-KR" else f"{tag} Alpaca"}},
+        }}])
+        _wj(root / "Content" / "L10N" / folder / "Pal/DataTable/Text/DT_WorldMap_Common_Text_Common.json", [{"Rows": {
+            "WORLDMAP_NAME_MainMap": {"TextData": {"LocalizedString": f"{tag} Main"}},
+            "WORLDMAP_NAME_Tree": {"TextData": {"LocalizedString": f"{tag} Tree"}},
         }}])
     return raw
 
@@ -84,6 +93,17 @@ def test_reads_pal_names_from_every_l10n_table(tmp_path):
     assert out["namesByLang"]["ko-KR"]["Alpaca"] == "멜파카"
     assert out["namesByLang"]["en-US"]["Alpaca"] == "en-US Alpaca"
     assert len(out["namesByLang"]) == 17  # 16 L10N folders + ja-JP base
+
+
+def test_reads_map_names_from_worldmap_table(tmp_path):
+    # Map display names come from DT_WorldMap_Common_Text_Common (base ja
+    # SourceString + each L10N folder's LocalizedString), keyed per map id.
+    raw = _make_fixture_raw(tmp_path)
+    out = run_extract(raw)
+    assert out["mapNames"]["MainWorld"]["ja-JP"] == "ja-JP Main"
+    assert out["mapNames"]["MainWorld"]["en-US"] == "en-US Main"
+    assert out["mapNames"]["WorldTree"]["ko-KR"] == "ko-KR Tree"
+    assert len(out["mapNames"]["MainWorld"]) == 17  # 16 L10N folders + ja-JP base
 
 
 @pytest.mark.skipif(not RAW.exists(), reason="raw Palworld export not available")
@@ -144,6 +164,12 @@ def test_extract_integration():
     assert out["namesByLang"]["en-US"]["Kitsunebi"]
     assert out["bounds"]["MainWorld"]["min"]["X"] == -1099400
     assert out["bounds"]["WorldTree"]["max"]["Y"] == -476400
+    # Map display names sourced from the game's WorldMap L10N table.
+    assert out["mapNames"]["MainWorld"]["en-US"] == "Palpagos Islands"
+    assert out["mapNames"]["MainWorld"]["zh-CN"] == "帕洛斯群岛"
+    assert out["mapNames"]["MainWorld"]["ja-JP"] == "パルパゴス島"
+    assert out["mapNames"]["WorldTree"]["en-US"] == "The World Tree"
+    assert out["mapNames"]["WorldTree"]["zh-CN"] == "世界树"
     assert len(out["palIcons"]) > 400
     # Features added this session:
     assert len(out["wanted"]) == 33

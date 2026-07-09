@@ -1,11 +1,10 @@
 languages: [en-US, ja-JP, de-DE, es-ES, es-MX, fr-FR, id-ID, it-IT, ko-KR, pl-PL, pt-BR, ru-RU, th-TH, tr-TR, vi-VN, zh-CN, zh-TW]
+# Map display names (name + switcher shortName) are sourced from the game's
+# WorldMap L10N table (DT_WorldMap_Common_Text_Common) in the extract stage —
+# not hand-authored here. See tools/apps/palworld/maps/extract.py (MAP_NAME_KEYS).
 maps:
   - id: MainWorld
-    names: { en-US: Palpagos Islands, ja-JP: パルパゴス諸島, de-DE: Palpagos-Inseln, es-ES: Islas Palpagos, es-MX: Islas Palpagos, fr-FR: Îles Palpagos, id-ID: Kepulauan Palpagos, it-IT: Isole Palpagos, ko-KR: 팔파고스 제도, pl-PL: Wyspy Palpagos, pt-BR: Ilhas Palpagos, ru-RU: Острова Палпагос, th-TH: หมู่เกาะพัลปาโกส, tr-TR: Palpagos Adaları, vi-VN: Quần đảo Palpagos, zh-CN: 帕鲁帕格斯群岛, zh-TW: 帕魯帕格斯群島 }
-    shortNames: { en-US: Main, ja-JP: メイン, de-DE: Haupt, es-ES: Principal, es-MX: Principal, fr-FR: Principale, id-ID: Utama, it-IT: Principale, ko-KR: 메인, pl-PL: Główna, pt-BR: Principal, ru-RU: Основной, th-TH: หลัก, tr-TR: Ana, vi-VN: Chính, zh-CN: 主大陆, zh-TW: 主大陸 }
   - id: WorldTree
-    names: { en-US: Sakurajima & World Tree, ja-JP: サクラジマ＆世界樹, de-DE: Sakurajima & Weltenbaum, es-ES: Sakurajima y Árbol del Mundo, es-MX: Sakurajima y Árbol del Mundo, fr-FR: Sakurajima et Arbre-Monde, id-ID: Sakurajima & Pohon Dunia, it-IT: Sakurajima e Albero del Mondo, ko-KR: 사쿠라지마 & 세계수, pl-PL: Sakurajima i Drzewo Świata, pt-BR: Sakurajima e Árvore do Mundo, ru-RU: Сакурадзима и Мировое древо, th-TH: ซากุระจิมะและต้นไม้โลก, tr-TR: Sakurajima ve Dünya Ağacı, vi-VN: Sakurajima & Cây Thế Giới, zh-CN: 樱花岛与世界树, zh-TW: 櫻花島與世界樹 }
-    shortNames: { en-US: Sakurajima, ja-JP: サクラジマ, de-DE: Sakurajima, es-ES: Sakurajima, es-MX: Sakurajima, fr-FR: Sakurajima, id-ID: Sakurajima, it-IT: Sakurajima, ko-KR: 사쿠라지마, pl-PL: Sakurajima, pt-BR: Sakurajima, ru-RU: Сакурадзима, th-TH: ซากุระจิมะ, tr-TR: Sakurajima, vi-VN: Sakurajima, zh-CN: 樱花岛, zh-TW: 櫻花島 }
 categories:
   - id: location
     names: { en-US: Locations, ja-JP: 場所, de-DE: Orte, es-ES: Lugares, es-MX: Lugares, fr-FR: Lieux, id-ID: Lokasi, it-IT: Luoghi, ko-KR: 지역, pl-PL: Miejsca, pt-BR: Locais, ru-RU: Локации, th-TH: สถานที่, tr-TR: Konumlar, vi-VN: Địa điểm, zh-CN: 地点, zh-TW: 地點 }
