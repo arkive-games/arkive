@@ -1,10 +1,13 @@
 import type { Language } from '../../i18n'
 
 // UI chrome for the Pals list-page filters + list (table) view, plus labels for
-// the `reaction` (遭遇反応) enum and the `nocturnal` (夜行性) flag. These are NOT
-// in the game's L10N tables, so they are hand-authored here. `en-US` is the
-// complete baseline; a handful of languages carry full overrides and every other
-// language falls back to `en-US` (see `filterStrings`). Kept out of the 17-lang
+// the `reaction` (遭遇反応) enum and the `nocturnal` flag. Most of these are NOT
+// in the game's L10N tables, so they are hand-authored here. The exception is the
+// nocturnal label: the game surfaces it as `WORKER_SUITABILITY_SETTING_NOCTURNALITY`
+// (en "Sleepless", zh "不眠", ja "不眠", ko "불면") — the values below mirror that
+// L10N term so the flag reads the same as in-game. `en-US` is the complete
+// baseline; a handful of languages carry full overrides and every other language
+// falls back to `en-US` (see `filterStrings`). Kept out of the 17-lang
 // `PAL_STRINGS` giant on purpose — this is a small, self-contained surface.
 
 export interface FilterStrings {
@@ -41,8 +44,8 @@ const EN: FilterStrings = {
   elements: 'Elements',
   work: 'Work',
   reaction: 'Reaction',
-  nocturnal: 'Nocturnal',
-  nocturnalOnly: 'Nocturnal only',
+  nocturnal: 'Sleepless',
+  nocturnalOnly: 'Sleepless only',
   loot: 'Drops',
   lootPlaceholder: 'Filter by dropped item…',
   lootEmpty: 'No item found.',
@@ -56,7 +59,7 @@ const EN: FilterStrings = {
     name: 'Pal',
     elements: 'Elements',
     work: 'Work Suitability',
-    nocturnal: 'Nocturnal',
+    nocturnal: 'Sleepless',
     reaction: 'Reaction',
     rarity: 'Rarity',
     drops: 'Drops',
@@ -81,8 +84,8 @@ const OVERRIDES: Partial<Record<Language, FilterStrings>> = {
     elements: '属性',
     work: '工作适性',
     reaction: '遭遇反应',
-    nocturnal: '夜行性',
-    nocturnalOnly: '仅夜行性',
+    nocturnal: '不眠',
+    nocturnalOnly: '仅不眠',
     loot: '掉落物',
     lootPlaceholder: '按掉落物筛选…',
     lootEmpty: '未找到物品。',
@@ -96,7 +99,7 @@ const OVERRIDES: Partial<Record<Language, FilterStrings>> = {
       name: '帕鲁',
       elements: '属性',
       work: '工作适性',
-      nocturnal: '夜行性',
+      nocturnal: '不眠',
       reaction: '遭遇反应',
       rarity: '稀有度',
       drops: '掉落物',
@@ -119,8 +122,8 @@ const OVERRIDES: Partial<Record<Language, FilterStrings>> = {
     elements: '屬性',
     work: '工作適性',
     reaction: '遭遇反應',
-    nocturnal: '夜行性',
-    nocturnalOnly: '僅夜行性',
+    nocturnal: '不眠',
+    nocturnalOnly: '僅不眠',
     loot: '掉落物',
     lootPlaceholder: '依掉落物篩選…',
     lootEmpty: '找不到物品。',
@@ -134,7 +137,7 @@ const OVERRIDES: Partial<Record<Language, FilterStrings>> = {
       name: '帕魯',
       elements: '屬性',
       work: '工作適性',
-      nocturnal: '夜行性',
+      nocturnal: '不眠',
       reaction: '遭遇反應',
       rarity: '稀有度',
       drops: '掉落物',
@@ -157,8 +160,8 @@ const OVERRIDES: Partial<Record<Language, FilterStrings>> = {
     elements: '属性',
     work: '仕事適性',
     reaction: '遭遇反応',
-    nocturnal: '夜行性',
-    nocturnalOnly: '夜行性のみ',
+    nocturnal: '不眠',
+    nocturnalOnly: '不眠のみ',
     loot: 'ドロップ',
     lootPlaceholder: 'ドロップ品で絞り込み…',
     lootEmpty: 'アイテムが見つかりません。',
@@ -172,7 +175,7 @@ const OVERRIDES: Partial<Record<Language, FilterStrings>> = {
       name: 'パル',
       elements: '属性',
       work: '仕事適性',
-      nocturnal: '夜行性',
+      nocturnal: '不眠',
       reaction: '遭遇反応',
       rarity: 'レア度',
       drops: 'ドロップ',
@@ -195,8 +198,8 @@ const OVERRIDES: Partial<Record<Language, FilterStrings>> = {
     elements: '속성',
     work: '작업 적성',
     reaction: '조우 반응',
-    nocturnal: '야행성',
-    nocturnalOnly: '야행성만',
+    nocturnal: '불면',
+    nocturnalOnly: '불면만',
     loot: '드롭',
     lootPlaceholder: '드롭 아이템으로 필터…',
     lootEmpty: '아이템을 찾을 수 없습니다.',
@@ -210,7 +213,7 @@ const OVERRIDES: Partial<Record<Language, FilterStrings>> = {
       name: '팰',
       elements: '속성',
       work: '작업 적성',
-      nocturnal: '야행성',
+      nocturnal: '불면',
       reaction: '조우 반응',
       rarity: '희귀도',
       drops: '드롭',
