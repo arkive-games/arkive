@@ -66,9 +66,11 @@ function Chip({
 
 function Group({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 w-16 shrink-0 text-xs font-semibold text-muted-foreground">{label}</span>
-      {children}
+    <div className="flex items-start gap-1.5">
+      <span className="mr-1 w-16 shrink-0 py-1 text-xs font-semibold text-muted-foreground">
+        {label}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">{children}</div>
     </div>
   )
 }
