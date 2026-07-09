@@ -94,7 +94,7 @@ subtypes:
     names: { en-US: Chest, ja-JP: 宝箱, de-DE: Truhe, es-ES: Cofre, es-MX: Cofre, fr-FR: Coffre, id-ID: Peti, it-IT: Forziere, ko-KR: 상자, pl-PL: Skrzynia, pt-BR: Baú, ru-RU: Сундук, th-TH: หีบสมบัติ, tr-TR: Sandık, vi-VN: Rương, zh-CN: 宝箱, zh-TW: 寶箱 }
   - id: lifmunkEffigy
     category: effigy
-    icon: T_Carbunclo_icon_normal
+    icon: T_itemicon_Relic
     names: { en-US: Lifmunk Effigy, ja-JP: クルリス像, de-DE: Lifmunk-Statuette, es-ES: Estatua de Lifmunk, es-MX: Estatua de Lifmunk, fr-FR: Statue de Lifmunk, id-ID: Patung Lifmunk, it-IT: Statua di Lifmunk, ko-KR: 쿠룰리스 상, pl-PL: Posążek Lifmunka, pt-BR: Estátua de Lifmunk, ru-RU: Статуя Лифманка, th-TH: หุ่นจำลอง Lifmunk, tr-TR: Lifmunk Figürü, vi-VN: Tượng Lifmunk, zh-CN: 翠叶鼠雕像, zh-TW: 翠葉鼠雕像 }
   - id: oilrigTreasure
     category: collectible

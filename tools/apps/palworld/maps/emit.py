@@ -169,6 +169,14 @@ def build_dataset(parsed: dict) -> dict:
         s["names"]["en-US"],
     ))
 
+    # The base Lifmunk Effigy subtype is hand-authored in types.yaml (not
+    # generated from a poi's ``effigyPal``); attach its buff description the same
+    # way pal effigies carry theirs, so every effigy exposes its player attribute.
+    for s in src["subtypes"]:
+        d = effigy_descs.get(s["id"])
+        if d and not s.get("descriptions"):
+            s["descriptions"] = {lng: d.get(lng, "") for lng in languages}
+
     subtype_defs = (
         [s for s in src["subtypes"] if s["category"] != "pal"] + pal_subtypes + effigy_subtypes
     )

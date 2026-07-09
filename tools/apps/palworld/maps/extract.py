@@ -109,6 +109,17 @@ def _relic_type_of(raw: Path, pal: str) -> str | None:
     m = _RELIC_TYPE_RX.search(p.read_text(encoding="utf-8"))
     return m.group(1) if m else None
 
+
+def _relic_buff_desc(rtype: str | None, buildup: dict) -> dict:
+    """The Statue-of-Power status description for an EPalRelicType, per language.
+
+    ``buildup`` is {tag: {key: string}}; returns {tag: description} or ``{}``."""
+    idx = RELIC_TYPE_INDEX.get(rtype) if rtype else None
+    if idx is None:
+        return {}
+    dkey = f"BUILDUP_PLAYER_STATUS_DESC_{idx:02d}"
+    return {tag: tbl[dkey] for tag, tbl in buildup.items() if tbl.get(dkey)}
+
 # Post-1.0 content not covered by the pre-1.0 taxonomy — surfaced for reporting.
 NEW_TYPE_WATCH = [
     ("oilrigTreasure", "Oil Rig raid treasure boxes", "BP_OilrigTreasureBoxSpawner_C"),
@@ -907,13 +918,17 @@ def run_extract(raw: Path) -> dict:
             # "T_itemicon_Relic_<NN>" (resolved from Others/InventoryItemIcon).
             effigy_icons[poi["subtype"]] = "T_itemicon_" + key[len("ITEM_NAME_"):]
         # Buff description: the relic's EPalRelicType -> Statue-of-Power status text.
-        rtype = _relic_type_of(raw, pal)
-        idx = RELIC_TYPE_INDEX.get(rtype) if rtype else None
-        if idx is not None:
-            dkey = f"BUILDUP_PLAYER_STATUS_DESC_{idx:02d}"
-            desc = {tag: tbl[dkey] for tag, tbl in buildup.items() if tbl.get(dkey)}
-            if desc:
-                effigy_descs[poi["subtype"]] = desc
+        desc = _relic_buff_desc(_relic_type_of(raw, pal), buildup)
+        if desc:
+            effigy_descs[poi["subtype"]] = desc
+
+    # The plain Lifmunk Effigy (base relic, subtype "lifmunkEffigy") has no
+    # EPalRelicType in its BP: it grants the default Capture Power buff (index 0,
+    # the effect Lifmunk Effigies feed into at the Statue of Power). Give it the
+    # same player-attribute description every pal effigy carries.
+    base_desc = _relic_buff_desc("CapturePower", buildup)
+    if base_desc:
+        effigy_descs.setdefault("lifmunkEffigy", base_desc)
 
     return {
         "bounds": bounds, "pois": pois, "bosses": bosses, "wanted": wanted,

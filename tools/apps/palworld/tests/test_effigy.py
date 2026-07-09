@@ -36,7 +36,14 @@ PARSED = {
     "effigyNames": {
         "effigySheepBall": {lng: f"{lng} Lamball Effigy" for lng in LANGUAGES},
     },
+    # Each effigy carries the player attribute it grants. The base Lifmunk
+    # Effigy grants Capture Power; SheepBall grants Satiety Duration.
+    "effigyDescriptions": {
+        "lifmunkEffigy": {lng: f"{lng} Capture Power" for lng in LANGUAGES},
+        "effigySheepBall": {lng: f"{lng} Satiety" for lng in LANGUAGES},
+    },
 }
+PARSED["effigyDescriptions"]["lifmunkEffigy"]["en-US"] = "Enhances Capture Power when using spheres."
 PARSED["namesByLang"]["en-US"] = {"SheepBall": "Lamball", "PinkCat": "Cattiva"}
 PARSED["effigyNames"]["effigySheepBall"]["en-US"] = "Lamball Effigy"
 
@@ -53,6 +60,18 @@ def test_effigy_category_holds_lifmunk_plus_per_pal_effigies(ds):
     assert ids == ["lifmunkEffigy", "effigySheepBall", "effigyPinkCat"]
     # Pal effigies reuse the pal portrait icon.
     assert next(s for s in effigy["subtypes"] if s["id"] == "effigySheepBall")["icon"] == "T_SheepBall_icon_normal"
+    # The base Lifmunk Effigy uses the relic item icon, not the pal portrait.
+    assert next(s for s in effigy["subtypes"] if s["id"] == "lifmunkEffigy")["icon"] == "T_itemicon_Relic"
+
+
+def test_every_effigy_carries_its_player_attribute(ds):
+    # Both the base Lifmunk Effigy and pal effigies expose the buff they grant.
+    for lng in LANGUAGES:
+        subs = ds["locales"][lng]["types"]["subtypes"]
+        assert subs["lifmunkEffigy"]["description"]
+        assert subs["effigySheepBall"]["description"]
+    en = ds["locales"]["en-US"]["types"]["subtypes"]
+    assert en["lifmunkEffigy"]["description"] == "Enhances Capture Power when using spheres."
 
 
 def test_lifmunk_effigy_recategorized_to_effigy(ds):
