@@ -10,7 +10,7 @@ export interface BreedingPal {
   /** CombiRank (breeding power); lower = rarer. */
   rank: number
   /** DataTable (DT_PalMonsterParameter) row order. Present in the emitted data
-   *  but no longer used for the tie-break — the game uses Paldeck order. */
+   *  but no longer used for the tie-break — the game rounds ties up by rank. */
   idx: number
   /** Eligible as a rank-average child (not a combo-only child, not a legendary). */
   breedChild: boolean
@@ -85,8 +85,8 @@ function orient(f: Combo, fixedId: string, slot: 'a' | 'b'): Combo {
  *   1. same species  -> that species
  *   2. unique combo  -> its child (order-independent; two rows are gender-specific)
  *   3. rank-average  -> childRank = floor((rankA + rankB + 1) / 2); the eligible Pal
- *      with the nearest CombiRank, ties broken by earlier Paldeck index
- *      (ZukanIndex, base form before variant) — matching the game.
+ *      with the nearest CombiRank, equal-distance ties broken toward the HIGHER
+ *      CombiRank (round half up — matching the +1 above and verified in-game).
  * Fallback candidates exclude combo-only children and legendaries (`breedChild`),
  * so you can never breed something rarer than your rarest parent.
  */
@@ -123,20 +123,24 @@ export function makeEngine(data: BreedingData): BreedingEngine {
         const b = byId.get(bId)
         if (!a || !b) return []
         const target = Math.floor((a.rank + b.rank + 1) / 2)
-        // Tie-break: the game picks the Pal earlier in Paldeck order (ZukanIndex,
-        // then base form before variant). This is NOT DataTable row order (`idx`) —
-        // the two diverge for Pals added out of Paldeck order in later patches.
-        const earlier = (p: BreedingPal, q: BreedingPal): boolean =>
-          p.zukanIndex !== q.zukanIndex
-            ? p.zukanIndex < q.zukanIndex
-            : p.zukanIndexSuffix !== q.zukanIndexSuffix
-              ? p.zukanIndexSuffix < q.zukanIndexSuffix
-              : p.id < q.id
+        // Tie-break: on an equal-distance tie the game takes the HIGHER CombiRank
+        // (round half up — the same bias as the +1 in `target`). Verified against
+        // in-game hatches. This is NOT DataTable row order (`idx`) nor Paldeck
+        // order — both mispredict some ties. Same-rank ties fall back to Paldeck
+        // order (ZukanIndex, base form before variant) for determinism.
+        const better = (p: BreedingPal, q: BreedingPal): boolean =>
+          p.rank !== q.rank
+            ? p.rank > q.rank
+            : p.zukanIndex !== q.zukanIndex
+              ? p.zukanIndex < q.zukanIndex
+              : p.zukanIndexSuffix !== q.zukanIndexSuffix
+                ? p.zukanIndexSuffix < q.zukanIndexSuffix
+                : p.id < q.id
         let best: BreedingPal | null = null
         let bestDist = Infinity
         for (const p of pool) {
           const d = Math.abs(p.rank - target)
-          if (d < bestDist || (d === bestDist && best !== null && earlier(p, best))) {
+          if (d < bestDist || (d === bestDist && best !== null && better(p, best))) {
             bestDist = d
             best = p
           }

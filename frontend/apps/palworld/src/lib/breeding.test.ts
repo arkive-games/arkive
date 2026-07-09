@@ -5,36 +5,48 @@ import { makeEngine, type BreedingData } from './breeding'
 /**
  * Rank-average tie-break regression.
  *
- * Relaxaurus (No.094, rank 1090) × Broncherry (No.108, rank 1380):
- *   target = floor((1090 + 1380 + 1) / 2) = 1235
- * Two candidates are exactly 5 away — a genuine tie:
- *   Palumba  (No.106, rank 1240)  ← lower Paldeck index
- *   Nitemary (No.148, rank 1230)  ← lower DataTable row (`idx`)
- * The game breaks ties by Paldeck order (earlier index wins), so the child is
- * Palumba. Verified against an in-game hatch. The old code broke ties by `idx`
- * (DataTable row order), which diverges from Paldeck order for Pals added out
- * of order in later patches, and wrongly picked Nitemary.
+ * On an equal-distance tie the game takes the HIGHER CombiRank (round half up,
+ * matching the +1 in `target`). Both scenarios below are genuine ties verified
+ * against in-game hatches; each rules out a wrong rule we shipped earlier:
+ *
+ *   Case 1 — Relaxaurus (rank 1090) × Broncherry (1380), target 1235:
+ *     Palumba  (No.106, 1240, idx 650)  ← higher rank + lower Paldeck (wins)
+ *     Nitemary (No.148, 1230, idx 537)  ← lower idx  → the old idx tie-break trap
+ *
+ *   Case 2 — ElecPanda (1020) × Deer Ground (2580), target 1800:
+ *     WhiteMoth (No.116, 1810, idx 434) ← higher rank (wins)
+ *     QueenBee  (No.068, 1790, idx 453) ← lower Paldeck → the Paldeck tie-break trap
+ *
+ * Only "higher rank wins" satisfies both.
  */
 const data: BreedingData = {
   pals: [
+    { id: 'ElecPanda', zukanIndex: 185, zukanIndexSuffix: '', icon: '', rank: 1020, idx: 361, breedChild: true },
+    { id: 'DeerGround', zukanIndex: 32, zukanIndexSuffix: 'B', icon: '', rank: 2580, idx: 358, breedChild: true },
     { id: 'Relaxaurus', zukanIndex: 94, zukanIndexSuffix: '', icon: '', rank: 1090, idx: 407, breedChild: true },
-    { id: 'Palumba', zukanIndex: 106, zukanIndexSuffix: '', icon: '', rank: 1240, idx: 650, breedChild: true },
     { id: 'Broncherry', zukanIndex: 108, zukanIndexSuffix: '', icon: '', rank: 1380, idx: 426, breedChild: true },
-    // Lower `idx` than Palumba but higher Paldeck index — the old tie-break trap.
+    { id: 'QueenBee', zukanIndex: 68, zukanIndexSuffix: '', icon: '', rank: 1790, idx: 453, breedChild: true },
+    { id: 'Palumba', zukanIndex: 106, zukanIndexSuffix: '', icon: '', rank: 1240, idx: 650, breedChild: true },
     { id: 'Nitemary', zukanIndex: 148, zukanIndexSuffix: '', icon: '', rank: 1230, idx: 537, breedChild: true },
+    { id: 'WhiteMoth', zukanIndex: 116, zukanIndexSuffix: '', icon: '', rank: 1810, idx: 434, breedChild: true },
   ],
   combos: [],
 }
 
-describe('makeEngine rank-average tie-break', () => {
-  it('breaks a distance tie toward the lower Paldeck index, not the lower DataTable row', () => {
+describe('makeEngine rank-average tie-break (higher CombiRank wins)', () => {
+  it('Case 1: picks Palumba over lower-idx Nitemary', () => {
     const engine = makeEngine(data)
-    const out = engine.childOf('Relaxaurus', 'Broncherry')
-    expect(out.map((c) => c.c)).toEqual(['Palumba'])
+    expect(engine.childOf('Relaxaurus', 'Broncherry').map((c) => c.c)).toEqual(['Palumba'])
+  })
+
+  it('Case 2: picks WhiteMoth over lower-Paldeck QueenBee', () => {
+    const engine = makeEngine(data)
+    expect(engine.childOf('ElecPanda', 'DeerGround').map((c) => c.c)).toEqual(['WhiteMoth'])
   })
 
   it('is order-independent', () => {
     const engine = makeEngine(data)
     expect(engine.childOf('Broncherry', 'Relaxaurus').map((c) => c.c)).toEqual(['Palumba'])
+    expect(engine.childOf('DeerGround', 'ElecPanda').map((c) => c.c)).toEqual(['WhiteMoth'])
   })
 })
