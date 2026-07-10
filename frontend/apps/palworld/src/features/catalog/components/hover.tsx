@@ -334,6 +334,16 @@ export function PalHover({ id, children }: { id: string; children: ReactNode }) 
   )
 }
 
+/** Item-flavoured sibling of `PalHover`: wraps any existing item `<Link>` (or
+ *  other trigger) in an item hover card. */
+export function ItemHover({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <ChipHover kind="item" id={id}>
+      {children}
+    </ChipHover>
+  )
+}
+
 /** Cross-link chip to an item detail page (icon + name) with an item hover card. */
 export function ItemLink({ id, name, icon }: { id: string; name: string; icon?: string }) {
   return (

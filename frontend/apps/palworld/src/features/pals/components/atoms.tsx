@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
 import { cn } from '@gamemap/ui'
-import { elementIconUrl, itemIconUrl, workIconUrl } from '../../../lib/assets'
+import { elementIconUrl, workIconUrl } from '../../../lib/assets'
 import type { ActiveSkill, Element, WorkType } from '../../../lib/pals'
 
 /** An <img> that removes itself if the asset is missing (e.g. OilExtraction
  *  has no work icon), letting an adjacent text label stand in. */
-function IconImg({
+export function IconImg({
   src,
   alt,
   size,
@@ -340,40 +339,6 @@ export function PassiveRow({
           <PassiveText text={description} />
         </div>
       ) : null}
-    </div>
-  )
-}
-
-/** A kill-drop item: icon + name + drop rate + quantity range. */
-export function DropRow({
-  id,
-  name,
-  rate,
-  min,
-  max,
-  icon,
-}: {
-  id?: string
-  name: string
-  rate: number
-  min: number
-  max: number
-  icon?: string
-}) {
-  const qty = min === max ? `${min}` : `${min}–${max}`
-  const label = id ? (
-    <Link to="/items/$id" params={{ id }} className="flex min-w-0 flex-1 items-center gap-2 hover:text-primary">
-      {icon ? <IconImg src={itemIconUrl(icon)} alt="" size={20} /> : null}
-      <span className="truncate">{name}</span>
-    </Link>
-  ) : (
-    <span className="min-w-0 flex-1 truncate">{name}</span>
-  )
-  return (
-    <div className="flex items-center gap-2 py-1.5 text-sm first:pt-0 last:pb-0">
-      {label}
-      <span className="shrink-0 tabular-nums text-muted-foreground">×{qty}</span>
-      <span className="w-14 shrink-0 text-right tabular-nums">{rate}%</span>
     </div>
   )
 }
