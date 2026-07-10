@@ -15,26 +15,25 @@ import {
 } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
 import { CatalogDataProvider, PalHover } from '../catalog/components'
-import { PalPageLoading, PassiveRarity, PassiveText, PassiveTitleBar, passiveRarityTier } from './components'
+import { PalPageLoading, PassiveRarity, PassiveText, PassiveTitleBar } from './components'
 
 /** Pals that innately carry a given passive, keyed by passive id. */
 type PalRef = { id: string; name: string; icon: string }
 
-/** A passive's rarity bucket key, e.g. "+3" / "+1" / "-2". Matches the arrow
- *  display (sign + 1–3 tier), so the filter lines up with what cards show. */
+/** A passive's rarity bucket key — its signed rank, e.g. "+4" / "+1" / "-3".
+ *  Arrows show abs(rank) chevrons, so each rank is its own bucket and the
+ *  filter lines up with what cards show. */
 function rarityKey(rank: number): string {
   if (!rank) return '0'
-  return `${rank > 0 ? '+' : '-'}${passiveRarityTier(rank)}`
+  return rank > 0 ? `+${rank}` : `${rank}`
 }
-/** A representative rank for rendering a bucket's arrows in the filter. */
+/** The rank a bucket key stands for, for rendering its arrows in the filter. */
 function repRank(key: string): number {
-  const tier = Number(key[1])
-  const mag = tier >= 3 ? 4 : tier
-  return key[0] === '-' ? -mag : mag
+  return Number(key)
 }
-/** Signed tier score for sorting buckets best → worst (+3 … -2). */
+/** Signed rank score for sorting buckets best → worst (+5 … -3). */
 function rarityScore(key: string): number {
-  return (key[0] === '-' ? -1 : 1) * Number(key[1])
+  return Number(key)
 }
 
 export default function PassivesPage() {

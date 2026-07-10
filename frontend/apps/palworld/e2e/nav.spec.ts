@@ -140,6 +140,21 @@ test('Passive rarity renders tinted arrow icons', async ({ page }) => {
   expect(info.bg).not.toBe('rgba(0, 0, 0, 0)')
 })
 
+test('Passive arrow count is abs(rank), independent of the colour tier', async ({ page }) => {
+  await page.goto('/passives')
+  await page.getByTestId('passive-search').fill('Musclehead')
+  // Musclehead is Rank 2 in-game: two gold chevrons (arrow_02), not the tier icon.
+  const up = page.locator('[data-testid="passive-row"] span[title="Rank 2"]').first()
+  await expect(up).toBeVisible()
+  expect(await up.evaluate((el) => getComputedStyle(el).maskImage)).toContain('arrow_02')
+  await page.getByTestId('passive-search').fill('Slacker')
+  // Slacker is Rank -3: three red chevrons pointing down (arrow_03 flipped).
+  const down = page.locator('[data-testid="passive-row"] span[title="Rank -3"]').first()
+  await expect(down).toBeVisible()
+  expect(await down.evaluate((el) => getComputedStyle(el).maskImage)).toContain('arrow_03')
+  expect(await down.evaluate((el) => getComputedStyle(el).transform)).not.toBe('none')
+})
+
 test('Passive descriptions render coloured value tags', async ({ page }) => {
   await page.goto('/passives')
   await expect(page.locator('[data-testid="passive-row"]').first()).toBeVisible()

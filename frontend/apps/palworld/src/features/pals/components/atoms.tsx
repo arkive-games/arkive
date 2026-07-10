@@ -148,7 +148,10 @@ export function ActiveSkillRow({
   )
 }
 
-/** 1–3 arrow tier for a passive `Rank`, by magnitude. */
+/** 1–3 colour tier for a passive `Rank`, by magnitude: 1 white, 2 gold, 3 blue.
+ *  Only picks the tint / title-bar treatment — the in-game arrow *count* is
+ *  abs(Rank) itself (1–5, verified against the game's Abs→switch over the
+ *  arrow_01–05 textures in WBP_MainMenu_Pal_Skill_Passive). */
 export function passiveRarityTier(rank: number): number {
   const m = Math.abs(rank)
   return m >= 4 ? 3 : m >= 2 ? 2 : 1
@@ -156,30 +159,22 @@ export function passiveRarityTier(rank: number): number {
 
 // Rarity colours, matching the in-game skill-status arrows. Reused by the
 // description value tags so numbers and rarity read consistently.
-export const RANK_BLUE = '#9FF9D8' // +3
+export const RANK_BLUE = '#9FF9D8' // tier 3 (rank 4+)
 export const RANK_RED = '#D85143' // negatives
-const RANK_GOLD = '#F5E159' // +2
-const RANK_WHITE = '#FFFFFF' // +1
+const RANK_GOLD = '#F5E159' // tier 2 (rank 2–3)
+const RANK_WHITE = '#FFFFFF' // tier 1 (rank 1)
 
-// Signed rarity tier -> game arrow icon (in public/images/passive-rank/), tint,
-// and whether it's flipped (negatives point down).
-const RANK_ICON: Record<string, { file: string; color: string; flip?: boolean }> = {
-  '+3': { file: 'arrow_04', color: RANK_BLUE },
-  '+2': { file: 'arrow_03', color: RANK_GOLD },
-  '+1': { file: 'arrow_01', color: RANK_WHITE },
-  '-1': { file: 'arrow_01', color: RANK_RED, flip: true },
-  '-2': { file: 'arrow_02', color: RANK_RED, flip: true },
-}
+const TIER_COLOR: Record<number, string> = { 1: RANK_WHITE, 2: RANK_GOLD, 3: RANK_BLUE }
 
 /** A passive's rarity, from its game `Rank`, rendered as the in-game arrow icon
- *  recoloured (via a CSS mask) and flipped for debuffs. `color` overrides the
- *  rank tint (e.g. to stay visible on a same-coloured title bar). Rank 0 renders
+ *  (abs(rank) chevrons, from public/images/passive-rank/arrow_01–05) recoloured
+ *  (via a CSS mask) and flipped for debuffs. `color` overrides the rank tint
+ *  (e.g. to stay visible on a same-coloured title bar). Rank 0 renders
  *  nothing. */
 export function PassiveRarity({ rank, color }: { rank: number | undefined; color?: string }) {
   if (!rank) return null
-  const spec = RANK_ICON[`${rank > 0 ? '+' : '-'}${passiveRarityTier(rank)}`]
-  if (!spec) return null
-  const url = `${import.meta.env.BASE_URL}images/passive-rank/${spec.file}.webp`
+  const count = Math.min(Math.abs(rank), 5)
+  const url = `${import.meta.env.BASE_URL}images/passive-rank/arrow_${String(count).padStart(2, '0')}.webp`
   return (
     <span
       role="img"
@@ -187,7 +182,7 @@ export function PassiveRarity({ rank, color }: { rank: number | undefined; color
       title={`Rank ${rank}`}
       className="inline-block size-4 shrink-0"
       style={{
-        backgroundColor: color ?? spec.color,
+        backgroundColor: color ?? (rank < 0 ? RANK_RED : TIER_COLOR[passiveRarityTier(rank)]),
         WebkitMaskImage: `url("${url}")`,
         maskImage: `url("${url}")`,
         WebkitMaskRepeat: 'no-repeat',
@@ -196,7 +191,7 @@ export function PassiveRarity({ rank, color }: { rank: number | undefined; color
         maskPosition: 'center',
         WebkitMaskSize: 'contain',
         maskSize: 'contain',
-        transform: spec.flip ? 'scaleY(-1)' : undefined,
+        transform: rank < 0 ? 'scaleY(-1)' : undefined,
         // Keep light tints (white/mint/gold) visible on light card backgrounds.
         filter: 'drop-shadow(0 0 0.5px rgba(0,0,0,0.45))',
       }}
