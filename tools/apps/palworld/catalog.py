@@ -76,6 +76,12 @@ _BOSS = "EPalBossType::"
 
 _NONE = {None, "None", "", "EPalElementType::None", "EPalEnergyType::None", "EPalBossType::None"}
 
+# Internal / non-player build objects that carry a MapObjectName text row but are
+# not real build-menu entries (no icon-table row, no unlock tech): a trap-reaction
+# panel (mesh SM_WalkPoint) and a debug wood generator (mesh SM_Loggingcamp_Tree,
+# name left as the untranslated id). Excluded from the emitted building set.
+_EXCLUDE_BUILDINGS = {"Trap_MovingPanel", "WoodCreator"}
+
 # Tokens embedded in technology name/description text.
 _TOKEN_RE = re.compile(r"<(itemName|mapObjectName|uiCommon)\b[^>]*?id=\|([^|]+)\|[^>]*?/>")
 _TAG_RE = re.compile(r"<[^>]+>")
@@ -355,6 +361,8 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     # buildings
     buildings = []
     for bid, r in bld_rows.items():
+        if bid in _EXCLUDE_BUILDINGS:
+            continue
         name = any((bld_name_by_lang.get(t, {}) and _ci(bld_name_by_lang[t], bid)) for t in tags)
         if not name:
             continue
@@ -497,6 +505,20 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
 
     bld_out = []
     png_dirs = [raw / "Texture/BuildObject/PNG", raw / "Texture/BuildObject/Icon"]
+    # A few buildings have no icon-table row (or a "None" AssetPathName) and no
+    # T_icon_buildObject_<id>.png fallback, so they emit no icon even though a
+    # suitable source texture exists elsewhere in the export. Map those explicitly:
+    #   * DefenseMachinegun_AutoTurret ("Ancient Turret") — its BP is part of the
+    #     DefenseBulletLauncher_Machinegun family, whose build icon the export
+    #     wrote with the leading "D" dropped (…_efenseBulletLauncher_Machinegun).
+    #   * Decal_PalSticker_PinkCat — stickers carry no build-menu icon; use the
+    #     decal art itself.
+    icon_overrides = {
+        "DefenseMachinegun_AutoTurret": raw
+        / "Texture/BuildObject/PNG/T_icon_buildObject_efenseBulletLauncher_Machinegun.png",
+        "Decal_PalSticker_PinkCat": raw
+        / "Model/Prop/Furniture/Decal_Sticker/T_PalSticker_PinkCat.png",
+    }
     for b in buildings:
         bid, r, mats = b["id"], b["row"], b["materials"]
         entry = {
@@ -516,12 +538,17 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         if bid in bld_unlock_tech:
             entry["unlockTech"] = sorted(bld_unlock_tech[bid])
         # icon
-        base = _icon_basename(bld_icon_rows, bid) or f"T_icon_buildObject_{bid}"
         dest = icons_dir / f"build_{bid}.webp"
-        for d in png_dirs:
-            if convert(d / f"{base}.png", dest):
+        override = icon_overrides.get(bid)
+        if override is not None:
+            if convert(override, dest):
                 converted += 1
-                break
+        else:
+            base = _icon_basename(bld_icon_rows, bid) or f"T_icon_buildObject_{bid}"
+            for d in png_dirs:
+                if convert(d / f"{base}.png", dest):
+                    converted += 1
+                    break
         if dest.exists():
             entry["icon"] = f"build_{bid}"
         bld_out.append(entry)
