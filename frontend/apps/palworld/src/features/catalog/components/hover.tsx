@@ -9,7 +9,7 @@ import type {
   ItemEntry,
   BuildingEntry,
 } from '../../../lib/catalog'
-import { resolveCharacterNames, type PalsBundle, type PalEntry, type WorkType } from '../../../lib/pals'
+import { resolveCharacterNames, type Element, type PalsBundle, type PalEntry, type WorkType } from '../../../lib/pals'
 import { palIconUrl, workIconUrl } from '../../../lib/assets'
 import { itemTypeLabel, buildingTypeLabel, energyLabel } from '../labels'
 // Imported from the atoms file directly (not ../../pals/components) to avoid a
@@ -17,7 +17,7 @@ import { itemTypeLabel, buildingTypeLabel, energyLabel } from '../labels'
 import { ElementBadge } from '../../pals/components/atoms'
 import { filterStrings } from '../../pals/filterStrings'
 import { techImage, buildingUnlockLevel } from '../../technology/techModel'
-import { CHIP, ItemGlyph, BuildingGlyph } from './ui'
+import { CHIP, ItemGlyph, BuildingGlyph, HoverCardHeader } from './ui'
 
 // --- context -----------------------------------------------------------------
 // Chips render their own hover card by pulling the loaded bundles from context,
@@ -63,19 +63,6 @@ export function HoverCardBody({
 
 // --- compact summaries (hover-card bodies) -----------------------------------
 
-function PropsLine({ rows }: { rows: Array<[string, ReactNode]> }) {
-  if (!rows.length) return null
-  return (
-    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-      {rows.map(([label, value]) => (
-        <span key={label}>
-          {label}: <span className="text-foreground tabular-nums">{value}</span>
-        </span>
-      ))}
-    </div>
-  )
-}
-
 /** Plain (never-nested) tech chip: icon + name linking into the tech tree. Kept
  *  local instead of reusing TechChip to avoid a module cycle (TechChip imports
  *  from catalog/components); inside a hover card chips render bare anyway. */
@@ -108,26 +95,30 @@ export function ItemSummary({ item }: { item: ItemEntry }) {
   const description = items?.text[item.id]?.description
   const elementLabel = item.element ? (pals?.enums.elements[item.element] ?? item.element) : undefined
 
-  const rows: Array<[string, ReactNode]> = []
-  if (item.rarity) rows.push([t('item.rarity'), item.rarity])
-  if (elementLabel) rows.push([t('item.element'), elementLabel])
-  if (item.weight) rows.push([t('item.weight'), item.weight])
-  if (item.maxStack) rows.push([t('item.stack'), item.maxStack])
+  const props = [
+    item.rarity ? `${t('item.rarity')} ${item.rarity}` : '',
+    item.weight ? `${t('item.weight')} ${item.weight}` : '',
+    item.maxStack ? `${t('item.stack')} ${item.maxStack}` : '',
+  ].filter(Boolean)
 
   return (
     <div className="flex flex-col gap-2 text-left">
-      <div className="flex items-center gap-2">
-        {item.icon ? <ItemGlyph icon={item.icon} size={32} /> : null}
-        <div className="min-w-0">
-          <div className="text-sm font-semibold leading-tight">{name}</div>
-          <div className="text-xs text-muted-foreground">
-            {itemTypeLabel(item.typeA, items?.typeLabels)}
-            {' · '}
-            <span className="font-mono">{item.id}</span>
-          </div>
-        </div>
+      <HoverCardHeader
+        glyph={item.icon ? <ItemGlyph icon={item.icon} size={32} /> : null}
+        name={name}
+        id={item.id}
+      />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
+          {itemTypeLabel(item.typeA, items?.typeLabels)}
+        </span>
+        {item.element ? (
+          <ElementBadge element={item.element as Element} label={elementLabel ?? item.element} size={14} />
+        ) : null}
+        {props.length ? (
+          <span className="text-xs tabular-nums text-muted-foreground">{props.join(' · ')}</span>
+        ) : null}
       </div>
-      <PropsLine rows={rows} />
       {description ? (
         <p className="line-clamp-4 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
           {description}
@@ -186,25 +177,27 @@ export function BuildingSummary({ building }: { building: BuildingEntry }) {
   const energy = building.energyType ? energyLabel(building.energyType, buildings?.energyLabels) : ''
   const level = buildingUnlockLevel(building, tech)
 
-  const rows: Array<[string, ReactNode]> = []
-  if (level != null) rows.push([t('building.level'), level])
-  if (building.work) rows.push([t('building.work'), building.work])
-  if (energy) rows.push([t('building.energy'), energy])
+  const props = [
+    level != null ? `${t('building.level')} ${level}` : '',
+    building.work ? `${t('building.work')} ${building.work}` : '',
+    energy ? `${t('building.energy')} ${energy}` : '',
+  ].filter(Boolean)
 
   return (
     <div className="flex flex-col gap-2 text-left">
-      <div className="flex items-center gap-2">
-        {building.icon ? <BuildingGlyph icon={building.icon} size={32} /> : null}
-        <div className="min-w-0">
-          <div className="text-sm font-semibold leading-tight">{name}</div>
-          <div className="text-xs text-muted-foreground">
-            {buildingTypeLabel(building.typeA, buildings?.typeLabels)}
-            {' · '}
-            <span className="font-mono">{building.id}</span>
-          </div>
-        </div>
+      <HoverCardHeader
+        glyph={building.icon ? <BuildingGlyph icon={building.icon} size={32} /> : null}
+        name={name}
+        id={building.id}
+      />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
+          {buildingTypeLabel(building.typeA, buildings?.typeLabels)}
+        </span>
+        {props.length ? (
+          <span className="text-xs tabular-nums text-muted-foreground">{props.join(' · ')}</span>
+        ) : null}
       </div>
-      <PropsLine rows={rows} />
       {description ? (
         <p className="line-clamp-4 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
           {description}

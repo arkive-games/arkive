@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { TechEntry } from '../../../lib/catalog'
-import { ItemLink, BuildingLink, ItemGlyph, BuildingGlyph } from '../../catalog/components'
+import { ItemLink, BuildingLink, ItemGlyph, BuildingGlyph, HoverCardHeader } from '../../catalog/components'
 import { techType, type ResolvedTechImage } from '../techModel'
 
 export interface TechDetailsProps {
@@ -39,19 +39,19 @@ export function TechDetails({
 
   return (
     <div className="flex flex-col gap-2 text-left">
-      <div className="flex items-center gap-2">
-        {image ? (
-          image.kind === 'item' ? (
-            <ItemGlyph icon={image.icon} size={32} />
-          ) : (
-            <BuildingGlyph icon={image.icon} size={32} />
-          )
-        ) : null}
-        <div className="min-w-0">
-          <div className="text-sm font-semibold leading-tight">{name}</div>
-          <div className="font-mono text-xs text-muted-foreground">{tech.id}</div>
-        </div>
-      </div>
+      <HoverCardHeader
+        glyph={
+          image ? (
+            image.kind === 'item' ? (
+              <ItemGlyph icon={image.icon} size={32} />
+            ) : (
+              <BuildingGlyph icon={image.icon} size={32} />
+            )
+          ) : null
+        }
+        name={name}
+        id={tech.id}
+      />
       <div className="flex flex-wrap items-center gap-1.5">
         <span
           className={

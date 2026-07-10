@@ -7,6 +7,7 @@ export {
   rarityBorderClass,
   BuildingGlyph,
   ItemGlyph,
+  HoverCardHeader,
   CHIP,
 } from './ui'
 export {

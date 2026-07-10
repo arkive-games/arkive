@@ -31,6 +31,28 @@ export function CatalogSection({
   )
 }
 
+/** Hover-card header shared by the item / building / tech cards: a 32px glyph
+ *  next to the localized name with the raw game id in a mono line under it. */
+export function HoverCardHeader({
+  glyph,
+  name,
+  id,
+}: {
+  glyph?: ReactNode
+  name: string
+  id: string
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {glyph}
+      <div className="min-w-0">
+        <div className="text-sm font-semibold leading-tight">{name}</div>
+        <div className="font-mono text-xs text-muted-foreground">{id}</div>
+      </div>
+    </div>
+  )
+}
+
 export function InfoRows({ children }: { children: ReactNode }) {
   return <dl className="divide-y divide-border/60 text-sm">{children}</dl>
 }
