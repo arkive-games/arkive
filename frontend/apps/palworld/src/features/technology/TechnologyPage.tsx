@@ -12,6 +12,7 @@ import {
   type TechBundle,
   type TechEntry,
 } from '../../lib/catalog'
+import { loadPals, type PalsBundle } from '../../lib/pals'
 import { CatalogPageLoading } from '../catalog/components'
 import { buildRegions, makeTechResolvers, type LevelGroup, type TechResolvers } from './techModel'
 import { TechTile } from './components/TechTile'
@@ -20,6 +21,7 @@ interface Bundles {
   items: ItemsBundle
   buildings: BuildingsBundle
   tech: TechBundle
+  pals: PalsBundle
 }
 
 export default function TechnologyPage() {
@@ -35,9 +37,9 @@ export default function TechnologyPage() {
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng)])
-      .then(([items, buildings, tech]) => {
-        if (!cancelled) setB({ items, buildings, tech })
+    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng), loadPals(lng)])
+      .then(([items, buildings, tech, pals]) => {
+        if (!cancelled) setB({ items, buildings, tech, pals })
       })
       .catch((err) => {
         console.error(err)
@@ -55,7 +57,7 @@ export default function TechnologyPage() {
 
   // Lookups every tile needs for its square + hover-card details.
   const resolvers = useMemo<TechResolvers | null>(
-    () => (b ? makeTechResolvers(b.items, b.buildings, b.tech) : null),
+    () => (b ? makeTechResolvers(b.items, b.buildings, b.tech, b.pals) : null),
     [b],
   )
 

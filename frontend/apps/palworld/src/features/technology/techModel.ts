@@ -35,12 +35,34 @@ export interface ResolvedTechImage {
   icon: string
 }
 
+/** The slice of the pals bundle the resolvers need (structural, so tests and
+ *  pages can pass the full `PalsBundle`). */
+export interface PalsLike {
+  byId: Map<string, { icon?: string }>
+  text: Record<string, { name: string }>
+}
+
+/** A resolved pal reference (for the capture-requirement chip). */
+export interface ResolvedPalRef {
+  id: string
+  name: string
+  icon?: string
+}
+
 /** Lookups a tile/chip needs to render itself and its hover-card details. */
 export interface TechResolvers {
   name: (tech: TechEntry) => string
   description: (tech: TechEntry) => string | undefined
   image: (tech: TechEntry) => ResolvedTechImage | null
   requireTechName: (tech: TechEntry) => string | undefined
+  /** The prerequisite tech's full entry (`requireTech`), for a cross-link chip. */
+  requireTechEntry: (tech: TechEntry) => TechEntry | undefined
+  /** Localized tower name for `requireBoss` (falls back to the raw boss id). */
+  requireBossName: (tech: TechEntry) => string | undefined
+  /** Localized research name for `requireResearch` (falls back to the raw id). */
+  requireResearchName: (tech: TechEntry) => string | undefined
+  /** The pal to capture (`requirePal`), resolved to a name + icon. */
+  requirePal: (tech: TechEntry) => ResolvedPalRef | undefined
   iname: (id: string) => string
   bname: (id: string) => string
   itemIcon: (id: string) => string | undefined
@@ -56,6 +78,7 @@ export function makeTechResolvers(
   items: ItemsBundle,
   buildings: BuildingsBundle,
   tech: TechBundle,
+  pals: PalsLike,
 ): TechResolvers {
   return {
     name: (t) => tech.text[t.id]?.name ?? t.id,
@@ -72,6 +95,19 @@ export function makeTechResolvers(
     },
     requireTechName: (t) =>
       t.requireTech ? (tech.text[t.requireTech]?.name ?? t.requireTech) : undefined,
+    requireTechEntry: (t) => (t.requireTech ? tech.byId.get(t.requireTech) : undefined),
+    requireBossName: (t) =>
+      t.requireBoss ? (tech.text[t.id]?.requireBossName ?? t.requireBoss) : undefined,
+    requireResearchName: (t) =>
+      t.requireResearch ? (tech.text[t.id]?.requireResearchName ?? t.requireResearch) : undefined,
+    requirePal: (t) =>
+      t.requirePal
+        ? {
+            id: t.requirePal,
+            name: pals.text[t.requirePal]?.name ?? t.requirePal,
+            icon: pals.byId.get(t.requirePal)?.icon,
+          }
+        : undefined,
     iname: (id) => items.text[id]?.name ?? id,
     bname: (id) => buildings.text[id]?.name ?? id,
     itemIcon: (id) => items.byId.get(id)?.icon,

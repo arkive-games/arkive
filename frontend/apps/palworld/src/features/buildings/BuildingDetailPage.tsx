@@ -11,6 +11,7 @@ import {
   type BuildingsBundle,
   type TechBundle,
 } from '../../lib/catalog'
+import { loadPals, type PalsBundle } from '../../lib/pals'
 import { buildingTypeLabel, energyLabel } from '../catalog/labels'
 import {
   CatalogSection,
@@ -28,6 +29,7 @@ interface Bundles {
   items: ItemsBundle
   buildings: BuildingsBundle
   tech: TechBundle
+  pals: PalsBundle
 }
 
 export default function BuildingDetailPage() {
@@ -41,9 +43,9 @@ export default function BuildingDetailPage() {
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng)])
-      .then(([items, buildings, tech]) => {
-        if (!cancelled) setB({ items, buildings, tech })
+    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng), loadPals(lng)])
+      .then(([items, buildings, tech, pals]) => {
+        if (!cancelled) setB({ items, buildings, tech, pals })
       })
       .catch((err) => {
         console.error(err)
@@ -71,7 +73,7 @@ export default function BuildingDetailPage() {
       )
     } else {
       const iname = (iid: string) => b.items.text[iid]?.name ?? iid
-      const techResolvers = makeTechResolvers(b.items, b.buildings, b.tech)
+      const techResolvers = makeTechResolvers(b.items, b.buildings, b.tech, b.pals)
       const text = b.buildings.text[id]
       const energy = bld.energyType ? energyLabel(bld.energyType, b.buildings.energyLabels) : ''
       const level = buildingUnlockLevel(bld, b.tech)

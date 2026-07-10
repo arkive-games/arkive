@@ -82,8 +82,15 @@ export interface TechEntry {
   isBoss: boolean
   unlockItems: string[]
   unlockBuildings: string[]
+  /** Tower boss (EPalBossType value, e.g. `GrassBoss`) that must be defeated
+   *  before this tech can be unlocked. */
   requireBoss?: string
+  /** Prerequisite tech id that must be unlocked first. */
   requireTech?: string
+  /** Lab research project id that must be completed first. */
+  requireResearch?: string
+  /** Pal that must be captured to unlock (partner-skill `SkillUnlock_*` techs). */
+  requirePal?: string
   /** Fallback tile icon basename (`item_<id>` / `build_<id>`) for techs whose
    *  unlocked item/building is absent from the datasets. Set by the tools. */
   icon?: string
@@ -112,6 +119,14 @@ export interface QuestEntry {
 export interface CatalogText {
   name: string
   description?: string
+}
+
+/** Localized tech text: adds the unlock-requirement names (the tower's
+ *  boss-battle name for `requireBoss`, the lab research project's name for
+ *  `requireResearch`). From locales/<lng>/technology.json. */
+export interface TechText extends CatalogText {
+  requireBossName?: string
+  requireResearchName?: string
 }
 
 /** Localized quest text: {title, description?}. From locales/<lng>/quests.json. */
@@ -153,7 +168,7 @@ export interface BuildingsBundle {
 export interface TechBundle {
   techs: TechEntry[]
   byId: Map<string, TechEntry>
-  text: Record<string, CatalogText>
+  text: Record<string, TechText>
 }
 
 export interface QuestsBundle {
@@ -199,7 +214,7 @@ async function fetchBuildings(lng: string): Promise<BuildingsBundle> {
 async function fetchTech(lng: string): Promise<TechBundle> {
   const [file, text] = await Promise.all([
     j<{ techs: TechEntry[] }>(`${DATA_BASE}/technology.json`),
-    j<Record<string, CatalogText>>(`${DATA_BASE}/locales/${lng}/technology.json`),
+    j<Record<string, TechText>>(`${DATA_BASE}/locales/${lng}/technology.json`),
   ])
   return { techs: file.techs, byId: new Map(file.techs.map((t) => [t.id, t])), text }
 }

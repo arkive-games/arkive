@@ -77,17 +77,7 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
       </HoverCardTrigger>
 
       <HoverCardBody side="right" className="w-80">
-        <TechDetails
-          tech={tech}
-          name={name}
-          image={image}
-          description={resolvers.description(tech)}
-          requireTechName={resolvers.requireTechName(tech)}
-          iname={resolvers.iname}
-          bname={resolvers.bname}
-          itemIcon={resolvers.itemIcon}
-          buildingIcon={resolvers.buildingIcon}
-        />
+        <TechDetails tech={tech} resolvers={resolvers} />
       </HoverCardBody>
     </HoverCard>
   )

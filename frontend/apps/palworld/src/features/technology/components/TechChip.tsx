@@ -45,17 +45,7 @@ export function TechChip({ tech, resolvers }: TechChipProps) {
     <HoverCard openDelay={120} closeDelay={120}>
       <HoverCardTrigger asChild>{chip}</HoverCardTrigger>
       <HoverCardBody className="w-80">
-        <TechDetails
-          tech={tech}
-          name={name}
-          image={image}
-          description={resolvers.description(tech)}
-          requireTechName={resolvers.requireTechName(tech)}
-          iname={resolvers.iname}
-          bname={resolvers.bname}
-          itemIcon={resolvers.itemIcon}
-          buildingIcon={resolvers.buildingIcon}
-        />
+        <TechDetails tech={tech} resolvers={resolvers} />
       </HoverCardBody>
     </HoverCard>
   )

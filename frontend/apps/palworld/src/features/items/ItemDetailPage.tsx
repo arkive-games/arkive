@@ -84,7 +84,7 @@ export default function ItemDetailPage() {
       )
     } else {
       const iname = (iid: string) => b.items.text[iid]?.name ?? iid
-      const techResolvers = makeTechResolvers(b.items, b.buildings, b.tech)
+      const techResolvers = makeTechResolvers(b.items, b.buildings, b.tech, b.pals)
       const text = b.items.text[id]
       const food = item.food
       const equip = item.equip
@@ -157,28 +157,13 @@ export default function ItemDetailPage() {
                 </CatalogSection>
               ) : null}
 
-              {item.droppedBy?.length || item.unlockTech?.length || item.partnerFor?.length ? (
+              {item.droppedBy?.length || item.unlockTech?.length ? (
                 <CatalogSection title={t('item.section.obtain')}>
                   {item.droppedBy?.length ? (
                     <div className="mb-3">
                       <div className="mb-1.5 text-xs text-muted-foreground">{t('item.droppedBy')}</div>
                       <div className="flex flex-wrap gap-1.5">
                         {item.droppedBy.map((pid) => (
-                          <PalLink
-                            key={pid}
-                            id={pid}
-                            name={b.pals.text[pid]?.name ?? pid}
-                            icon={b.pals.byId.get(pid)?.icon}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                  {item.partnerFor?.length ? (
-                    <div className="mb-3">
-                      <div className="mb-1.5 text-xs text-muted-foreground">{t('pal.unlockItem')}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {item.partnerFor.map((pid) => (
                           <PalLink
                             key={pid}
                             id={pid}

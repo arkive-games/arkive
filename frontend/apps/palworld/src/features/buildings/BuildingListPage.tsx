@@ -11,6 +11,7 @@ import {
   type BuildingsBundle,
   type TechBundle,
 } from '../../lib/catalog'
+import { loadPals, type PalsBundle } from '../../lib/pals'
 import { buildingTypeLabel, typeOrder } from '../catalog/labels'
 import { CatalogDataProvider, CatalogPageLoading } from '../catalog/components'
 import { makeTechResolvers } from '../technology/techModel'
@@ -23,6 +24,7 @@ export default function BuildingListPage() {
   const [bundle, setBundle] = useState<BuildingsBundle | null>(null)
   const [items, setItems] = useState<ItemsBundle | null>(null)
   const [tech, setTech] = useState<TechBundle | null>(null)
+  const [pals, setPals] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [cats, setCats] = useState<string[]>([])
@@ -30,12 +32,13 @@ export default function BuildingListPage() {
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng)])
-      .then(([i, b, tc]) => {
+    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng), loadPals(lng)])
+      .then(([i, b, tc, p]) => {
         if (cancelled) return
         setItems(i)
         setBundle(b)
         setTech(tc)
+        setPals(p)
       })
       .catch((err) => {
         console.error(err)
@@ -79,8 +82,8 @@ export default function BuildingListPage() {
 
   const iname = (id: string) => items?.text[id]?.name ?? id
   const techResolvers = useMemo(
-    () => (items && bundle && tech ? makeTechResolvers(items, bundle, tech) : null),
-    [items, bundle, tech],
+    () => (items && bundle && tech && pals ? makeTechResolvers(items, bundle, tech, pals) : null),
+    [items, bundle, tech, pals],
   )
 
   return (

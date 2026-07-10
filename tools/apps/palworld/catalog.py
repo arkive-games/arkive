@@ -24,6 +24,7 @@ entry == recipe row-key whose Product_Id is the crafted item):
   * building.materials   — build cost (→ item ids)
   * building.unlockTech  — techs that unlock it
   * tech.unlockItems / tech.unlockBuildings — what a tech grants, by level
+  * tech.requirePal        — pal whose capture unlocks the tech (SkillUnlock_*)
 
 Item icons: DT_ItemIconDataTable_Common maps item id -> a texture under
 ``/Game/Others/InventoryItemIcon/Texture``. That ``Others`` tree lives in
@@ -43,7 +44,8 @@ Outputs:
   data-palworld/technology.json            {techs: [TechEntry]}
   data-palworld/locales/<tag>/items.json       {id: {name, description?}}
   data-palworld/locales/<tag>/buildings.json   {id: {name, description?}}
-  data-palworld/locales/<tag>/technology.json  {id: {name, description?}}
+  data-palworld/locales/<tag>/technology.json  {id: {name, description?,
+                                                requireBossName?, requireResearchName?}}
   data-palworld/locales/<tag>/labels.json       {item: {typeA: label}, building: {typeA: label}}
   resource-palworld/icons/build_<id>.webp
   resource-palworld/icons/item_<id>.webp
@@ -271,6 +273,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     bld_rows = read_rows(raw / "DataTable/MapObject/Building/DT_BuildObjectDataTable_Common.json")
     bld_icon_rows = read_rows(raw / "DataTable/MapObject/Building/DT_BuildObjectIconDataTable_Common.json")
     tech_rows = read_rows(raw / "DataTable/Technology/DT_TechnologyRecipeUnlock_Common.json")
+    # research-lab projects: some techs unlock only after a lab research
+    # completes (tech RequireResearchId -> lab row -> TextId -> localized name).
+    lab_rows = read_rows(raw / "DataTable/Lab/DT_LabResearchDataTable.json")
 
     # --- localized text (all layered ja base + per-language) -----------------
     item_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_ItemNameText_Common.json", "ITEM_NAME_")
@@ -280,6 +285,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     tech_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_TechnologyNameText_Common.json", "")
     tech_desc_by_lang = _text_by_lang(raw, "DataTable/Text/DT_TechnologyDescText_Common.json", "")
     ui_by_lang = _text_by_lang(raw, "DataTable/Text/DT_UI_Common_Text_Common.json", "")
+    lab_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_LabResearchText.json", "")
     # category labels: item TypeA -> COMMON_ITEMTYPE_A_<X> (in the UI table),
     # building TypeA -> CATEGORY_TYPE_A_<X> (in the build-object category table).
     item_type_by_lang = _text_by_lang(raw, "DataTable/Text/DT_UI_Common_Text_Common.json", "COMMON_ITEMTYPE_A_")
@@ -432,6 +438,15 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         req = r.get("RequireTechnology")
         if req and req not in _NONE:
             entry["requireTech"] = req
+        res = r.get("RequireResearchId")
+        if res and res not in _NONE:
+            entry["requireResearch"] = res
+        # partner-skill techs (SkillUnlock_*) unlock by capturing the pal whose
+        # partner skill their unlock item enables — the table carries no explicit
+        # field, so derive it from the pal encyclopedia's unlockItem back-refs.
+        req_pal = sorted({p for i2 in unlock_items for p in partner_for.get(i2, ())})
+        if req_pal:
+            entry["requirePal"] = req_pal[0]
         techs.append(entry)
     # Stable sort by level only: `techs` is built in data-table row order, which
     # is the game's tech-tree order, so a stable sort keeps that order within
@@ -658,6 +673,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     ja_iname, ja_idesc = item_name_by_lang[ja], item_desc_by_lang[ja]
     ja_bname, ja_bdesc = bld_name_by_lang[ja], bld_desc_by_lang[ja]
     ja_tname, ja_tdesc = tech_name_by_lang[ja], tech_desc_by_lang[ja]
+    ja_ui, ja_lname = ui_by_lang[ja], lab_name_by_lang[ja]
     ja_itype, ja_btype = item_type_by_lang[ja], bld_type_by_lang[ja]
 
     # category typeA values actually present in the emitted datasets, in the
@@ -686,6 +702,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         iname, idesc = item_name_by_lang[tag], item_desc_by_lang[tag]
         bname, bdesc = bld_name_by_lang[tag], bld_desc_by_lang[tag]
         tname, tdesc, ui = tech_name_by_lang[tag], tech_desc_by_lang[tag], ui_by_lang[tag]
+        lname = lab_name_by_lang[tag]
 
         items_loc = {}
         for iid in item_ids:
@@ -732,6 +749,23 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             desc = _resolve_tokens(desc, iname, bname, ui)
             if desc:
                 e["description"] = desc
+            # localized unlock-requirement names: the tower's boss-battle name
+            # (BOSS_BATTLE_NAME_<boss>, e.g. "Tower of the Rayne Syndicate") and
+            # the lab research project's name (lab row TextId).
+            te = tech_by_id[tid]
+            boss = te.get("requireBoss")
+            if boss:
+                bn = _ph(ui.get(f"BOSS_BATTLE_NAME_{boss}")) or _ph(
+                    ja_ui.get(f"BOSS_BATTLE_NAME_{boss}")
+                )
+                if bn:
+                    e["requireBossName"] = bn
+            rid = te.get("requireResearch")
+            if rid:
+                text_id = (lab_rows.get(rid) or {}).get("TextId") or ""
+                rn = _ph(lname.get(text_id)) or _ph(ja_lname.get(text_id))
+                if rn:
+                    e["requireResearchName"] = rn
             tech_loc[tid] = e
         write_json(data_out / "locales" / tag / "technology.json", tech_loc)
 

@@ -1,20 +1,20 @@
 import { useTranslation } from 'react-i18next'
+import { Link } from '@tanstack/react-router'
 import type { TechEntry } from '../../../lib/catalog'
-import { ItemLink, BuildingLink, ItemGlyph, BuildingGlyph, HoverCardHeader } from '../../catalog/components'
-import { techType, type ResolvedTechImage } from '../techModel'
+import {
+  CHIP,
+  ItemLink,
+  BuildingLink,
+  ItemGlyph,
+  BuildingGlyph,
+  PalLink,
+  HoverCardHeader,
+} from '../../catalog/components'
+import { techType, type TechResolvers } from '../techModel'
 
 export interface TechDetailsProps {
   tech: TechEntry
-  name: string
-  description?: string
-  /** The tech's display icon (first unlocked item/building), if any. */
-  image?: ResolvedTechImage | null
-  /** Localized name of the prerequisite tech (`requireTech`), if any. */
-  requireTechName?: string
-  iname: (id: string) => string
-  bname: (id: string) => string
-  itemIcon: (id: string) => string | undefined
-  buildingIcon: (id: string) => string | undefined
+  resolvers: TechResolvers
 }
 
 /**
@@ -22,20 +22,18 @@ export interface TechDetailsProps {
  * unlock chips are real links, so the card must let the pointer move into it
  * (see HoverCard usage in TechTile).
  */
-export function TechDetails({
-  tech,
-  name,
-  description,
-  image,
-  requireTechName,
-  iname,
-  bname,
-  itemIcon,
-  buildingIcon,
-}: TechDetailsProps) {
+export function TechDetails({ tech, resolvers }: TechDetailsProps) {
   const { t } = useTranslation()
   const ancient = tech.isBoss
   const type = techType(tech)
+  const name = resolvers.name(tech)
+  const image = resolvers.image(tech)
+  const description = resolvers.description(tech)
+  const reqPal = resolvers.requirePal(tech)
+  const reqBossName = resolvers.requireBossName(tech)
+  const reqResearchName = resolvers.requireResearchName(tech)
+  const reqTechEntry = resolvers.requireTechEntry(tech)
+  const reqTechName = resolvers.requireTechName(tech)
 
   return (
     <div className="flex flex-col gap-2 text-left">
@@ -70,14 +68,38 @@ export function TechDetails({
         </span>
       </div>
 
-      {tech.requireTech && requireTechName ? (
-        <div className="text-xs text-muted-foreground">
-          {t('tech.requires')}: {requireTechName}
-        </div>
-      ) : null}
-      {tech.requireBoss ? (
-        <div className="text-xs text-muted-foreground">
-          {t('tech.requiresBoss', { boss: tech.requireBoss })}
+      {reqPal || reqBossName || reqTechName || reqResearchName ? (
+        <div>
+          <div className="mb-1 text-xs text-muted-foreground">{t('tech.unlockBy')}</div>
+          <div className="flex flex-col items-start gap-1 text-xs">
+            {reqPal ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-muted-foreground">{t('tech.reqCapture')}</span>
+                <PalLink id={reqPal.id} name={reqPal.name} icon={reqPal.icon} />
+              </div>
+            ) : null}
+            {reqBossName ? (
+              <div>
+                <span className="text-muted-foreground">{t('tech.reqDefeat')}</span> {reqBossName}
+              </div>
+            ) : null}
+            {reqTechName ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-muted-foreground">{t('tech.reqUnlock')}</span>
+                {reqTechEntry ? (
+                  <TechRefChip entry={reqTechEntry} resolvers={resolvers} />
+                ) : (
+                  <span>{reqTechName}</span>
+                )}
+              </div>
+            ) : null}
+            {reqResearchName ? (
+              <div>
+                <span className="text-muted-foreground">{t('tech.reqResearch')}</span>{' '}
+                {reqResearchName}
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -92,7 +114,7 @@ export function TechDetails({
           <div className="mb-1 text-xs text-muted-foreground">{t('tech.unlocksItems')}</div>
           <div className="flex flex-wrap gap-1.5">
             {tech.unlockItems.map((id) => (
-              <ItemLink key={id} id={id} name={iname(id)} icon={itemIcon(id)} />
+              <ItemLink key={id} id={id} name={resolvers.iname(id)} icon={resolvers.itemIcon(id)} />
             ))}
           </div>
         </div>
@@ -103,11 +125,36 @@ export function TechDetails({
           <div className="mb-1 text-xs text-muted-foreground">{t('tech.unlocksBuildings')}</div>
           <div className="flex flex-wrap gap-1.5">
             {tech.unlockBuildings.map((id) => (
-              <BuildingLink key={id} id={id} name={bname(id)} icon={buildingIcon(id)} />
+              <BuildingLink
+                key={id}
+                id={id}
+                name={resolvers.bname(id)}
+                icon={resolvers.buildingIcon(id)}
+              />
             ))}
           </div>
         </div>
       ) : null}
     </div>
+  )
+}
+
+/** A cross-link chip to the prerequisite tech (`/technology?tech=<id>`). A local
+ *  plain-chip variant of `TechChip`: this card is already a hover card, so the
+ *  nested chip never opens one (and importing TechChip here would be circular). */
+function TechRefChip({ entry, resolvers }: { entry: TechEntry; resolvers: TechResolvers }) {
+  const name = resolvers.name(entry)
+  const image = resolvers.image(entry)
+  return (
+    <Link to="/technology" search={{ tech: entry.id }} className={CHIP} title={name}>
+      {image ? (
+        image.kind === 'item' ? (
+          <ItemGlyph icon={image.icon} />
+        ) : (
+          <BuildingGlyph icon={image.icon} />
+        )
+      ) : null}
+      {name}
+    </Link>
   )
 }
