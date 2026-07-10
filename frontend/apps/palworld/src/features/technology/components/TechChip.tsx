@@ -48,6 +48,7 @@ export function TechChip({ tech, resolvers }: TechChipProps) {
         <TechDetails
           tech={tech}
           name={name}
+          image={image}
           description={resolvers.description(tech)}
           requireTechName={resolvers.requireTechName(tech)}
           iname={resolvers.iname}

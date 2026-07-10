@@ -122,6 +122,8 @@ export function ItemSummary({ item }: { item: ItemEntry }) {
           <div className="text-sm font-semibold leading-tight">{name}</div>
           <div className="text-xs text-muted-foreground">
             {itemTypeLabel(item.typeA, items?.typeLabels)}
+            {' · '}
+            <span className="font-mono">{item.id}</span>
           </div>
         </div>
       </div>
@@ -197,6 +199,8 @@ export function BuildingSummary({ building }: { building: BuildingEntry }) {
           <div className="text-sm font-semibold leading-tight">{name}</div>
           <div className="text-xs text-muted-foreground">
             {buildingTypeLabel(building.typeA, buildings?.typeLabels)}
+            {' · '}
+            <span className="font-mono">{building.id}</span>
           </div>
         </div>
       </div>
@@ -254,7 +258,10 @@ export function PalSummary({ pal }: { pal: PalEntry }) {
         {pal.icon ? (
           <img src={palIconUrl(pal.icon)} alt="" loading="lazy" className="size-8 shrink-0 object-contain" />
         ) : null}
-        <div className="min-w-0 text-sm font-semibold leading-tight">{name}</div>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold leading-tight">{name}</div>
+          <div className="font-mono text-xs text-muted-foreground">{pal.id}</div>
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-1">
         {pal.elements.map((e) => (

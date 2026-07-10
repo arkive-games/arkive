@@ -100,6 +100,7 @@ export default function ItemDetailPage() {
             <div className="min-w-0">
               <div className="text-sm text-muted-foreground">{itemTypeLabel(item.typeA, b.items.typeLabels)}</div>
               <h1 className="text-3xl font-bold">{text?.name ?? item.id}</h1>
+              <div className="mt-0.5 font-mono text-xs text-muted-foreground">{item.id}</div>
             </div>
           </div>
 

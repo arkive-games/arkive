@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { BuildingEntry, BuildingsBundle, TechBundle } from '../../../lib/catalog'
 import { buildingTypeLabel, energyLabel } from '../../catalog/labels'
-import { MaterialChip, useCatalogData } from '../../catalog/components'
+import { BuildingGlyph, MaterialChip, useCatalogData } from '../../catalog/components'
 import { buildingUnlockLevel, type TechResolvers } from '../../technology/techModel'
 import { TechChip } from '../../technology/components/TechChip'
 
@@ -41,7 +41,13 @@ export function BuildingDetails({
 
   return (
     <div className="flex flex-col gap-2 text-left">
-      <div className="text-sm font-semibold leading-tight">{name}</div>
+      <div className="flex items-center gap-2">
+        {building.icon ? <BuildingGlyph icon={building.icon} size={32} /> : null}
+        <div className="min-w-0">
+          <div className="text-sm font-semibold leading-tight">{name}</div>
+          <div className="font-mono text-xs text-muted-foreground">{building.id}</div>
+        </div>
+      </div>
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">

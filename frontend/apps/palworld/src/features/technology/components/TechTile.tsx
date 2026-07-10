@@ -80,6 +80,7 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
         <TechDetails
           tech={tech}
           name={name}
+          image={image}
           description={resolvers.description(tech)}
           requireTechName={resolvers.requireTechName(tech)}
           iname={resolvers.iname}

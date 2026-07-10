@@ -26,6 +26,7 @@ Run: ``uv run python -m palworld.encyclopedia`` (from the ``tools`` dir).
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -620,6 +621,37 @@ def _passive_effects(r: dict) -> list:
 _SUMMON_PREFIX = re.compile(r"^(RAID_|BOSS_)")
 
 
+def _egg_config(raw: Path) -> tuple[list[int], dict[str, str]]:
+    """Egg-selection config from ``BP_PalGameSetting`` (no pal table carries an
+    egg column; the game picks the egg at runtime from these two settings):
+
+    * ``PalEggRankInfoArray`` — ascending size-tier ceilings; a pal's egg tier
+      (``_01``…``_05``) is the first entry with ``PalRarity >= Rarity``
+      (2/4/6/7/99 → e.g. rarity 8+ lands in the last, "huge", tier).
+    * ``PalEggMapObjectIdMap`` — primary element → egg family. The map stores
+      map-object ids where the Normal family is the bare ``PalEgg``; the *item*
+      ids spell it out (``PalEgg_Normal_01``…), handled in :func:`_egg_item`.
+    """
+    doc = json.loads((raw / "Blueprint/System/BP_PalGameSetting.json").read_text(encoding="utf-8"))
+    props = next(
+        e["Properties"] for e in doc if "PalEggRankInfoArray" in (e.get("Properties") or {})
+    )
+    tiers = [int(i["PalRarity"]) for i in props["PalEggRankInfoArray"]]
+    families = {
+        _strip(kv["Key"], _ELEM): kv["Value"]["Key"] for kv in props["PalEggMapObjectIdMap"]
+    }
+    return tiers, families
+
+
+def _egg_item(tiers: list[int], families: dict[str, str], element: str, rarity: int) -> str:
+    """Item id of the egg this pal hatches from (``PalEgg_<Family>_<tier>``)."""
+    tier = next((i + 1 for i, ceil in enumerate(tiers) if rarity <= ceil), len(tiers))
+    fam = families.get(element, "PalEgg")
+    if fam == "PalEgg":
+        fam = "PalEgg_Normal"
+    return f"{fam}_{tier:02d}"
+
+
 def _recipe_materials(rec: dict) -> list[dict]:
     """The (item, count) materials of a DT_ItemRecipeDataTable row (5 slots)."""
     mats = []
@@ -683,6 +715,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
 
     roster = {cid: r for cid, r in mon.items() if _is_roster(cid, r, names_by_lang, raw_icons)}
     summon_recipes = _summon_recipes(raw, set(roster))
+    egg_tiers, egg_families = _egg_config(raw)
 
     pals = []
     for cid, r in roster.items():
@@ -699,6 +732,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "genus": _strip(r.get("GenusCategory"), _GENUS),
             "size": _strip(r.get("Size"), _SIZE),
             "rarity": r.get("Rarity", 0),
+            "egg": _egg_item(egg_tiers, egg_families, elements[0], r.get("Rarity", 0)),
             "nocturnal": bool(r.get("Nocturnal")),
             "reaction": r.get("AIResponse") or "None",
             "stats": _stats(r),

@@ -15,7 +15,8 @@ import { comboKey, loadBreeding, makeEngine, queryFormulas, type BreedingData, t
 import { RecipeCard, buildRecipeMeta } from '../breeding/RecipeCard'
 import { palIconUrl } from '../../lib/assets'
 import { formatPalId } from '../../lib/palId'
-import { CatalogDataProvider, MaterialChip } from '../catalog/components'
+import { loadItems, type ItemsBundle } from '../../lib/catalog'
+import { CatalogDataProvider, ItemLink, MaterialChip } from '../catalog/components'
 import { filterStrings } from './filterStrings'
 import {
   PalSection,
@@ -167,16 +168,19 @@ export default function PalDetailPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [breeding, setBreeding] = useState<{ data: BreedingData; names: NameMap } | null>(null)
+  // Items catalog: powers the hover cards of item chips (e.g. the egg badge).
+  const [items, setItems] = useState<ItemsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    Promise.all([loadPals(lng), loadBreeding(lng)])
-      .then(([b, br]) => {
+    Promise.all([loadPals(lng), loadBreeding(lng), loadItems(lng)])
+      .then(([b, br, it]) => {
         if (cancelled) return
         setBundle(b)
         setBreeding(br)
+        setItems(it)
       })
       .catch((err) => {
         console.error(err)
@@ -242,6 +246,7 @@ export default function PalDetailPage() {
               </div>
             ) : null}
             <h1 className="text-3xl font-bold">{text?.name ?? pal.id}</h1>
+            <div className="mt-0.5 font-mono text-xs text-muted-foreground">{pal.id}</div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               {pal.elements.map((e) => (
                 <ElementBadge key={e} element={e} label={bundle.enums.elements[e] ?? e} />
@@ -461,6 +466,16 @@ export default function PalDetailPage() {
                 <StatRow label={t('pal.stat.size')} value={pal.size || '—'} />
                 <StatRow label={t('pal.stat.rarity')} value={pal.rarity} />
                 <StatRow
+                  label={t('pal.stat.egg')}
+                  value={
+                    <ItemLink
+                      id={pal.egg}
+                      name={bundle.items[pal.egg] ?? pal.egg}
+                      icon={bundle.itemIcon[pal.egg]}
+                    />
+                  }
+                />
+                <StatRow
                   label={t('pal.stat.gender')}
                   value={
                     pal.stats.maleProbability < 0
@@ -509,7 +524,9 @@ export default function PalDetailPage() {
 
   return (
     <ContentPage active="/pals" title={t('pal.title')} maxWidth="max-w-5xl">
-      <CatalogDataProvider pals={bundle ?? undefined}>{body}</CatalogDataProvider>
+      <CatalogDataProvider pals={bundle ?? undefined} items={items ?? undefined}>
+        {body}
+      </CatalogDataProvider>
     </ContentPage>
   )
 }

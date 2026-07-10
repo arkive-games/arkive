@@ -1,4 +1,5 @@
 import json
+import re
 
 import pytest
 
@@ -37,6 +38,16 @@ def test_encyclopedia_integration(tmp_path):
 
     # Every Pal has a learnset and a localized partner-skill name.
     assert all(p["activeSkills"] for p in pals)
+
+    # Egg item (primary-element family + rarity tier from BP_PalGameSetting),
+    # spot-checked against in-game hatches: Lamball → Common Egg, Jetragon →
+    # Huge Dragon Egg, Relaxaurus (rarity 8, first tier past the 7-ceiling) →
+    # Huge Dragon Egg, Vanwyrm (Fire/Dark dual, rarity 5) → Large Scorching Egg.
+    assert by_id["SheepBall"]["egg"] == "PalEgg_Normal_01"
+    assert by_id["JetDragon"]["egg"] == "PalEgg_Dragon_05"
+    assert by_id["LazyDragon"]["egg"] == "PalEgg_Dragon_05"
+    assert by_id["BirdDragon"]["egg"] == "PalEgg_Fire_03"
+    assert all(re.fullmatch(r"PalEgg_\w+_0[1-5]", p["egg"]) for p in pals)
 
     # Summoning-Altar pals (DT_PalRaidBoss egg rewards) are flagged; others aren't.
     assert all(isinstance(p["summonable"], bool) for p in pals)

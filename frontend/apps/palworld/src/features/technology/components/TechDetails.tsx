@@ -1,12 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import type { TechEntry } from '../../../lib/catalog'
-import { ItemLink, BuildingLink } from '../../catalog/components'
-import { techType } from '../techModel'
+import { ItemLink, BuildingLink, ItemGlyph, BuildingGlyph } from '../../catalog/components'
+import { techType, type ResolvedTechImage } from '../techModel'
 
 export interface TechDetailsProps {
   tech: TechEntry
   name: string
   description?: string
+  /** The tech's display icon (first unlocked item/building), if any. */
+  image?: ResolvedTechImage | null
   /** Localized name of the prerequisite tech (`requireTech`), if any. */
   requireTechName?: string
   iname: (id: string) => string
@@ -24,6 +26,7 @@ export function TechDetails({
   tech,
   name,
   description,
+  image,
   requireTechName,
   iname,
   bname,
@@ -36,7 +39,19 @@ export function TechDetails({
 
   return (
     <div className="flex flex-col gap-2 text-left">
-      <div className="text-sm font-semibold leading-tight">{name}</div>
+      <div className="flex items-center gap-2">
+        {image ? (
+          image.kind === 'item' ? (
+            <ItemGlyph icon={image.icon} size={32} />
+          ) : (
+            <BuildingGlyph icon={image.icon} size={32} />
+          )
+        ) : null}
+        <div className="min-w-0">
+          <div className="text-sm font-semibold leading-tight">{name}</div>
+          <div className="font-mono text-xs text-muted-foreground">{tech.id}</div>
+        </div>
+      </div>
       <div className="flex flex-wrap items-center gap-1.5">
         <span
           className={

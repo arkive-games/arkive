@@ -92,6 +92,9 @@ export interface PalEntry {
   genus: string
   size: string
   rarity: number
+  /** Item id of the egg this pal hatches from (`PalEgg_<Family>_<tier>`;
+   *  primary-element family + rarity tier, from BP_PalGameSetting). */
+  egg: string
   nocturnal: boolean
   reaction: string
   stats: PalStats
