@@ -8,6 +8,8 @@ export interface CatalogStrings {
   loading: string
   item: {
     title: string
+    /** Singular kind label for the hover-card tag pill ("Item"). */
+    tag: string
     searchPlaceholder: string
     count: string
     notFound: string
@@ -51,6 +53,8 @@ export interface CatalogStrings {
   }
   building: {
     title: string
+    /** Singular kind label for the hover-card tag pill ("Building"). */
+    tag: string
     searchPlaceholder: string
     count: string
     notFound: string
@@ -89,6 +93,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Loading…',
     item: {
       title: 'Items',
+      tag: 'Item',
       searchPlaceholder: 'Search items…',
       count: '{{count}} items',
       notFound: 'No item found for "{{id}}".',
@@ -118,6 +123,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Buildings',
+      tag: 'Building',
       searchPlaceholder: 'Search buildings…',
       count: '{{count}} buildings',
       notFound: 'No building found for "{{id}}".',
@@ -153,6 +159,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Wird geladen…',
     item: {
       title: 'Gegenstände',
+      tag: 'Gegenstand',
       searchPlaceholder: 'Gegenstände suchen…',
       count: '{{count}} Gegenstände',
       notFound: 'Kein Gegenstand für „{{id}}" gefunden.',
@@ -182,6 +189,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Gebäude',
+      tag: 'Gebäude',
       searchPlaceholder: 'Gebäude suchen…',
       count: '{{count}} Gebäude',
       notFound: 'Kein Gebäude für „{{id}}" gefunden.',
@@ -217,6 +225,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Cargando…',
     item: {
       title: 'Objetos',
+      tag: 'Objeto',
       searchPlaceholder: 'Buscar objetos…',
       count: '{{count}} objetos',
       notFound: 'No se encontró ningún objeto para "{{id}}".',
@@ -246,6 +255,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Construcciones',
+      tag: 'Construcción',
       searchPlaceholder: 'Buscar construcciones…',
       count: '{{count}} construcciones',
       notFound: 'No se encontró ninguna construcción para "{{id}}".',
@@ -281,6 +291,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Cargando…',
     item: {
       title: 'Objetos',
+      tag: 'Objeto',
       searchPlaceholder: 'Buscar objetos…',
       count: '{{count}} objetos',
       notFound: 'No se encontró ningún objeto para "{{id}}".',
@@ -310,6 +321,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Construcciones',
+      tag: 'Construcción',
       searchPlaceholder: 'Buscar construcciones…',
       count: '{{count}} construcciones',
       notFound: 'No se encontró ninguna construcción para "{{id}}".',
@@ -345,6 +357,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Chargement…',
     item: {
       title: 'Objets',
+      tag: 'Objet',
       searchPlaceholder: 'Rechercher des objets…',
       count: '{{count}} objets',
       notFound: 'Aucun objet trouvé pour « {{id}} ».',
@@ -374,6 +387,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Bâtiments',
+      tag: 'Bâtiment',
       searchPlaceholder: 'Rechercher des bâtiments…',
       count: '{{count}} bâtiments',
       notFound: 'Aucun bâtiment trouvé pour « {{id}} ».',
@@ -409,6 +423,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Memuat…',
     item: {
       title: 'Item',
+      tag: 'Item',
       searchPlaceholder: 'Cari item…',
       count: '{{count}} item',
       notFound: 'Tidak ada item untuk "{{id}}".',
@@ -438,6 +453,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Bangunan',
+      tag: 'Bangunan',
       searchPlaceholder: 'Cari bangunan…',
       count: '{{count}} bangunan',
       notFound: 'Tidak ada bangunan untuk "{{id}}".',
@@ -473,6 +489,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Caricamento…',
     item: {
       title: 'Oggetti',
+      tag: 'Oggetto',
       searchPlaceholder: 'Cerca oggetti…',
       count: '{{count}} oggetti',
       notFound: 'Nessun oggetto trovato per "{{id}}".',
@@ -502,6 +519,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Costruzioni',
+      tag: 'Costruzione',
       searchPlaceholder: 'Cerca costruzioni…',
       count: '{{count}} costruzioni',
       notFound: 'Nessuna costruzione trovata per "{{id}}".',
@@ -537,6 +555,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: '読み込み中…',
     item: {
       title: 'アイテム',
+      tag: 'アイテム',
       searchPlaceholder: 'アイテムを検索…',
       count: '{{count}} 個',
       notFound: '「{{id}}」のアイテムが見つかりません。',
@@ -566,6 +585,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: '建築物',
+      tag: '建築物',
       searchPlaceholder: '建築物を検索…',
       count: '{{count}} 個',
       notFound: '「{{id}}」の建築物が見つかりません。',
@@ -601,6 +621,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: '불러오는 중…',
     item: {
       title: '아이템',
+      tag: '아이템',
       searchPlaceholder: '아이템 검색…',
       count: '{{count}}개',
       notFound: '"{{id}}"에 해당하는 아이템을 찾을 수 없습니다.',
@@ -630,6 +651,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: '건축물',
+      tag: '건축물',
       searchPlaceholder: '건축물 검색…',
       count: '{{count}}개',
       notFound: '"{{id}}"에 해당하는 건축물을 찾을 수 없습니다.',
@@ -665,6 +687,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Wczytywanie…',
     item: {
       title: 'Przedmioty',
+      tag: 'Przedmiot',
       searchPlaceholder: 'Szukaj przedmiotów…',
       count: 'Przedmioty: {{count}}',
       notFound: 'Nie znaleziono przedmiotu dla „{{id}}".',
@@ -694,6 +717,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Budynki',
+      tag: 'Budynek',
       searchPlaceholder: 'Szukaj budynków…',
       count: 'Budynki: {{count}}',
       notFound: 'Nie znaleziono budynku dla „{{id}}".',
@@ -729,6 +753,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Carregando…',
     item: {
       title: 'Itens',
+      tag: 'Item',
       searchPlaceholder: 'Buscar itens…',
       count: '{{count}} itens',
       notFound: 'Nenhum item encontrado para "{{id}}".',
@@ -758,6 +783,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Construções',
+      tag: 'Construção',
       searchPlaceholder: 'Buscar construções…',
       count: '{{count}} construções',
       notFound: 'Nenhuma construção encontrada para "{{id}}".',
@@ -793,6 +819,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Загрузка…',
     item: {
       title: 'Предметы',
+      tag: 'Предмет',
       searchPlaceholder: 'Поиск предметов…',
       count: 'Предметов: {{count}}',
       notFound: 'Предмет по запросу «{{id}}» не найден.',
@@ -822,6 +849,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Постройки',
+      tag: 'Постройка',
       searchPlaceholder: 'Поиск построек…',
       count: 'Построек: {{count}}',
       notFound: 'Постройка по запросу «{{id}}» не найдена.',
@@ -857,6 +885,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'กำลังโหลด…',
     item: {
       title: 'ไอเทม',
+      tag: 'ไอเทม',
       searchPlaceholder: 'ค้นหาไอเทม…',
       count: '{{count}} รายการ',
       notFound: 'ไม่พบไอเทมสำหรับ "{{id}}"',
@@ -886,6 +915,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'สิ่งก่อสร้าง',
+      tag: 'สิ่งก่อสร้าง',
       searchPlaceholder: 'ค้นหาสิ่งก่อสร้าง…',
       count: '{{count}} รายการ',
       notFound: 'ไม่พบสิ่งก่อสร้างสำหรับ "{{id}}"',
@@ -921,6 +951,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Yükleniyor…',
     item: {
       title: 'Eşyalar',
+      tag: 'Eşya',
       searchPlaceholder: 'Eşya ara…',
       count: '{{count}} eşya',
       notFound: '"{{id}}" için eşya bulunamadı.',
@@ -950,6 +981,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Yapılar',
+      tag: 'Yapı',
       searchPlaceholder: 'Yapı ara…',
       count: '{{count}} yapı',
       notFound: '"{{id}}" için yapı bulunamadı.',
@@ -985,6 +1017,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: 'Đang tải…',
     item: {
       title: 'Vật phẩm',
+      tag: 'Vật phẩm',
       searchPlaceholder: 'Tìm vật phẩm…',
       count: '{{count}} vật phẩm',
       notFound: 'Không tìm thấy vật phẩm cho "{{id}}".',
@@ -1014,6 +1047,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: 'Công trình',
+      tag: 'Công trình',
       searchPlaceholder: 'Tìm công trình…',
       count: '{{count}} công trình',
       notFound: 'Không tìm thấy công trình cho "{{id}}".',
@@ -1049,6 +1083,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: '加载中…',
     item: {
       title: '道具',
+      tag: '道具',
       searchPlaceholder: '搜索道具…',
       count: '{{count}} 个道具',
       notFound: '未找到道具「{{id}}」。',
@@ -1078,6 +1113,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: '建筑',
+      tag: '建筑',
       searchPlaceholder: '搜索建筑…',
       count: '{{count}} 个建筑',
       notFound: '未找到建筑「{{id}}」。',
@@ -1113,6 +1149,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     loading: '載入中…',
     item: {
       title: '道具',
+      tag: '道具',
       searchPlaceholder: '搜尋道具…',
       count: '{{count}} 個道具',
       notFound: '未找到道具「{{id}}」。',
@@ -1142,6 +1179,7 @@ export const CATALOG_STRINGS: Record<Language, CatalogStrings> = {
     building: {
       id: 'ID',
       title: '建築',
+      tag: '建築',
       searchPlaceholder: '搜尋建築…',
       count: '{{count}} 個建築',
       notFound: '未找到建築「{{id}}」。',

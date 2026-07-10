@@ -48,6 +48,9 @@ export function BuildingDetails({
       />
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+          {t('building.tag')}
+        </span>
         <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
           {buildingTypeLabel(building.typeA, typeLabels)}
         </span>

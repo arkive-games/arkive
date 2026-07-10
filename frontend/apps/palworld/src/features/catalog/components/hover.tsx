@@ -109,6 +109,9 @@ export function ItemSummary({ item }: { item: ItemEntry }) {
         id={item.id}
       />
       <div className="flex flex-wrap items-center gap-1.5">
+        <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+          {t('item.tag')}
+        </span>
         <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
           {itemTypeLabel(item.typeA, items?.typeLabels)}
         </span>
@@ -191,6 +194,9 @@ export function BuildingSummary({ building }: { building: BuildingEntry }) {
         id={building.id}
       />
       <div className="flex flex-wrap items-center gap-1.5">
+        <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+          {t('building.tag')}
+        </span>
         <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
           {buildingTypeLabel(building.typeA, buildings?.typeLabels)}
         </span>
