@@ -11,12 +11,12 @@ import type {
 } from '../../../lib/catalog'
 import { resolveCharacterNames, type PalsBundle, type PalEntry, type WorkType } from '../../../lib/pals'
 import { palIconUrl, workIconUrl } from '../../../lib/assets'
-import { itemTypeLabel, buildingTypeLabel } from '../labels'
+import { itemTypeLabel, buildingTypeLabel, energyLabel } from '../labels'
 // Imported from the atoms file directly (not ../../pals/components) to avoid a
 // module cycle: that index re-exports PalTable/PalCard, which import from here.
 import { ElementBadge } from '../../pals/components/atoms'
 import { filterStrings } from '../../pals/filterStrings'
-import { techImage } from '../../technology/techModel'
+import { techImage, buildingUnlockLevel } from '../../technology/techModel'
 import { CHIP, ItemGlyph, BuildingGlyph } from './ui'
 
 // --- context -----------------------------------------------------------------
@@ -178,13 +178,14 @@ export function ItemSummary({ item }: { item: ItemEntry }) {
 
 export function BuildingSummary({ building }: { building: BuildingEntry }) {
   const { t } = useTranslation()
-  const { buildings } = useCatalogData()
+  const { buildings, tech } = useCatalogData()
   const name = buildings?.text[building.id]?.name ?? building.id
   const description = buildings?.text[building.id]?.description
-  const energy = building.energyType ? building.energyType.replace(/^E[A-Za-z]+::/, '') : ''
+  const energy = building.energyType ? energyLabel(building.energyType, buildings?.energyLabels) : ''
+  const level = buildingUnlockLevel(building, tech)
 
   const rows: Array<[string, ReactNode]> = []
-  if (building.rank) rows.push([t('building.rank'), building.rank])
+  if (level != null) rows.push([t('building.level'), level])
   if (building.work) rows.push([t('building.work'), building.work])
   if (energy) rows.push([t('building.energy'), energy])
 

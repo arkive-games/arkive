@@ -74,6 +74,11 @@ _BLD_UI = "EPalBuildObjectTypeForUIDisplay::"
 _ENERGY = "EPalEnergyType::"
 _BOSS = "EPalBossType::"
 
+# EPalEnergyType value -> the build-menu UI-category text row that names it
+# (CATEGORY_TYPE_UI_Electricity = "Electricity" / 电力 / …) — the game's only
+# standalone localized noun for a building's power requirement.
+_ENERGY_TEXT = {"Electric": "Electricity"}
+
 _NONE = {None, "None", "", "EPalElementType::None", "EPalEnergyType::None", "EPalBossType::None"}
 
 # Internal / non-player build objects that carry a MapObjectName text row but are
@@ -279,6 +284,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     # building TypeA -> CATEGORY_TYPE_A_<X> (in the build-object category table).
     item_type_by_lang = _text_by_lang(raw, "DataTable/Text/DT_UI_Common_Text_Common.json", "COMMON_ITEMTYPE_A_")
     bld_type_by_lang = _text_by_lang(raw, "DataTable/Text/DT_BuildObjectCategoryText.json", "CATEGORY_TYPE_A_")
+    # build-menu UI subcategory labels (TypeUIDisplay); also names the energy
+    # requirement (CATEGORY_TYPE_UI_Electricity).
+    bld_ui_type_by_lang = _text_by_lang(raw, "DataTable/Text/DT_BuildObjectCategoryText.json", "CATEGORY_TYPE_UI_")
 
     tags = _all_tags()
 
@@ -526,9 +534,11 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             "typeA": _strip(r.get("TypeA"), _BLD_A),
             "typeB": _strip(r.get("TypeB"), _BLD_B),
             "typeUI": _strip(r.get("TypeUIDisplay"), _BLD_UI),
-            # build-menu position; unique within a typeA category only
+            # build-menu position; unique within a typeA category only.
+            # (Rank is deliberately not emitted: it is a constant 1 for every
+            # row in the current game data — the "level" shown in the UI is
+            # the unlocking tech's level instead.)
             "sortId": r.get("SortId", 0),
-            "rank": r.get("Rank", 0),
             "work": round2(r.get("RequiredBuildWorkAmount", 0.0)),
             "materials": mats,
         }
@@ -661,6 +671,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
 
     item_types = _canon_types({e["typeA"] for e in items}, ja_itype)
     bld_types = _canon_types({e["typeA"] for e in bld_out}, ja_btype)
+    energy_types = sorted({e["energyType"] for e in bld_out if e.get("energyType")})
 
     # JA base name -> item id, so a variant's placeholder ("アサルトライフル+1")
     # can be re-localized via its base item (AssaultRifle_Default1 -> 突击步枪).
@@ -725,9 +736,15 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         write_json(data_out / "locales" / tag / "technology.json", tech_loc)
 
         itype, btype = item_type_by_lang[tag], bld_type_by_lang[tag]
+        butype = bld_ui_type_by_lang[tag]
         labels = {
             "item": {k: _ph(itype.get(k)) or _ph(ja_itype.get(k)) or k for k in item_types},
             "building": {k: _ph(btype.get(k)) or _ph(ja_btype.get(k)) or k for k in bld_types},
+            # building energy requirement (EPalEnergyType), named by the
+            # build-menu UI-category row (CATEGORY_TYPE_UI_Electricity = 电力).
+            "energy": {
+                e: _ph(butype.get(_ENERGY_TEXT.get(e, e))) or e for e in energy_types
+            },
         }
         write_json(data_out / "locales" / tag / "labels.json", labels)
 

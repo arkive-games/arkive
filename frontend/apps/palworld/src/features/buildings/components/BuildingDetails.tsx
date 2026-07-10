@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import type { BuildingEntry, BuildingsBundle, TechBundle } from '../../../lib/catalog'
-import { buildingTypeLabel } from '../../catalog/labels'
-import { MaterialChip } from '../../catalog/components'
-import type { TechResolvers } from '../../technology/techModel'
+import { buildingTypeLabel, energyLabel } from '../../catalog/labels'
+import { MaterialChip, useCatalogData } from '../../catalog/components'
+import { buildingUnlockLevel, type TechResolvers } from '../../technology/techModel'
 import { TechChip } from '../../technology/components/TechChip'
 
 export interface BuildingDetailsProps {
@@ -30,7 +30,14 @@ export function BuildingDetails({
   techResolvers,
 }: BuildingDetailsProps) {
   const { t } = useTranslation()
-  const energy = building.energyType ? building.energyType.replace(/^E[A-Za-z]+::/, '') : ''
+  const { buildings } = useCatalogData()
+  const energy = building.energyType ? energyLabel(building.energyType, buildings?.energyLabels) : ''
+  const level = buildingUnlockLevel(building, tech)
+  const props = [
+    level != null ? `${t('building.level')} ${level}` : '',
+    building.work ? `${t('building.work')} ${building.work}` : '',
+    energy ? `${t('building.energy')} ${energy}` : '',
+  ].filter(Boolean)
 
   return (
     <div className="flex flex-col gap-2 text-left">
@@ -40,13 +47,7 @@ export function BuildingDetails({
         <span className="rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
           {buildingTypeLabel(building.typeA, typeLabels)}
         </span>
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {building.rank ? `${t('building.rank')} ${building.rank}` : null}
-          {building.rank && building.work ? ' · ' : null}
-          {building.work ? `${t('building.work')} ${building.work}` : null}
-          {(building.rank || building.work) && energy ? ' · ' : null}
-          {energy ? `${t('building.energy')} ${energy}` : null}
-        </span>
+        <span className="text-xs tabular-nums text-muted-foreground">{props.join(' · ')}</span>
       </div>
 
       {building.materials.length ? (

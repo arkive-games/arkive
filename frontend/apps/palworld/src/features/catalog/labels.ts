@@ -16,6 +16,12 @@ export const buildingTypeLabel = (typeA: string, labels?: TypeLabels): string =>
   return labels?.[k] ?? BUILDING_TYPE_LABELS[k] ?? k
 }
 
+/** Localized building energy requirement (falls back to the raw enum value). */
+export const energyLabel = (energyType: string, labels?: TypeLabels): string => {
+  const k = strip(energyType)
+  return labels?.[k] ?? k
+}
+
 /** Position of a typeA in the game's category order. labels.json is emitted in
  *  the raw text-table row order (same in every language), so its key order is
  *  the canonical one; types missing from it sort after all known ones. */

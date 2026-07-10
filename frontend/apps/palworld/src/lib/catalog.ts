@@ -68,7 +68,6 @@ export interface BuildingEntry {
   typeUI: string
   /** Game's build-menu position — unique within a typeA category only. */
   sortId: number
-  rank: number
   work: number
   materials: Material[]
   energyType?: string
@@ -126,6 +125,8 @@ export type TypeLabels = Record<string, string>
 interface LabelsFile {
   item: TypeLabels
   building: TypeLabels
+  /** Building energy requirement (EPalEnergyType value -> localized name). */
+  energy?: TypeLabels
 }
 
 // --- loaders -----------------------------------------------------------------
@@ -146,6 +147,8 @@ export interface BuildingsBundle {
   byId: Map<string, BuildingEntry>
   text: Record<string, CatalogText>
   typeLabels: TypeLabels
+  /** Localized energy-requirement names (e.g. Electric -> 雷). */
+  energyLabels: TypeLabels
 }
 export interface TechBundle {
   techs: TechEntry[]
@@ -189,6 +192,7 @@ async function fetchBuildings(lng: string): Promise<BuildingsBundle> {
     byId: new Map(file.buildings.map((b) => [b.id, b])),
     text,
     typeLabels: labels.building,
+    energyLabels: labels.energy ?? {},
   }
 }
 

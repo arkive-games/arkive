@@ -11,7 +11,7 @@ import {
   type BuildingsBundle,
   type TechBundle,
 } from '../../lib/catalog'
-import { buildingTypeLabel } from '../catalog/labels'
+import { buildingTypeLabel, energyLabel } from '../catalog/labels'
 import {
   CatalogSection,
   InfoRows,
@@ -21,7 +21,7 @@ import {
   CatalogDataProvider,
   MaterialChip,
 } from '../catalog/components'
-import { makeTechResolvers } from '../technology/techModel'
+import { buildingUnlockLevel, makeTechResolvers } from '../technology/techModel'
 import { TechChip } from '../technology/components/TechChip'
 
 interface Bundles {
@@ -73,7 +73,8 @@ export default function BuildingDetailPage() {
       const iname = (iid: string) => b.items.text[iid]?.name ?? iid
       const techResolvers = makeTechResolvers(b.items, b.buildings, b.tech)
       const text = b.buildings.text[id]
-      const energy = bld.energyType ? bld.energyType.replace(/^E[A-Za-z]+::/, '') : ''
+      const energy = bld.energyType ? energyLabel(bld.energyType, b.buildings.energyLabels) : ''
+      const level = buildingUnlockLevel(bld, b.tech)
 
       body = (
         <div className="space-y-6">
@@ -135,7 +136,7 @@ export default function BuildingDetailPage() {
                 <InfoRows>
                   <StatRow label={t('building.id')} value={bld.id} />
                   <StatRow label={t('building.type')} value={buildingTypeLabel(bld.typeA, b.buildings.typeLabels)} />
-                  {bld.rank ? <StatRow label={t('building.rank')} value={bld.rank} /> : null}
+                  {level != null ? <StatRow label={t('building.level')} value={level} /> : null}
                   {bld.work ? <StatRow label={t('building.work')} value={bld.work} /> : null}
                   {energy ? <StatRow label={t('building.energy')} value={energy} /> : null}
                 </InfoRows>

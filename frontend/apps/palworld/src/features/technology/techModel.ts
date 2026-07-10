@@ -2,8 +2,23 @@ import type {
   TechEntry,
   ItemsBundle,
   BuildingsBundle,
+  BuildingEntry,
   TechBundle,
 } from '../../lib/catalog'
+
+/** Lowest technology level that unlocks the building — the building's "level".
+ *  Undefined when nothing unlocks it (or the tech bundle isn't loaded); the
+ *  raw table's Rank field is a constant 1 across the whole game, so this is
+ *  the only meaningful tier. */
+export function buildingUnlockLevel(
+  building: BuildingEntry,
+  tech?: TechBundle,
+): number | undefined {
+  const levels = (building.unlockTech ?? [])
+    .map((tid) => tech?.byId.get(tid)?.level)
+    .filter((l): l is number => l != null)
+  return levels.length ? Math.min(...levels) : undefined
+}
 
 /** A tech's derived kind, used for the tile's type badge (道具 / 建筑). */
 export type TechType = 'item' | 'structure'
