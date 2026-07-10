@@ -623,9 +623,17 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     ja_tname, ja_tdesc = tech_name_by_lang[ja], tech_desc_by_lang[ja]
     ja_itype, ja_btype = item_type_by_lang[ja], bld_type_by_lang[ja]
 
-    # category typeA values actually present in the emitted datasets
-    item_types = sorted({e["typeA"] for e in items})
-    bld_types = sorted({e["typeA"] for e in bld_out})
+    # category typeA values actually present in the emitted datasets, in the
+    # game's own order: the COMMON_ITEMTYPE_A_* / CATEGORY_TYPE_A_* text-table
+    # row order (identical in every language). labels.json preserves this key
+    # order, so the frontend derives the canonical category order from it.
+    # Types missing from the text table are appended alphabetically.
+    def _canon_types(present: set, table: dict) -> list:
+        known = [k for k in table if k in present]
+        return known + sorted(present - set(known))
+
+    item_types = _canon_types({e["typeA"] for e in items}, ja_itype)
+    bld_types = _canon_types({e["typeA"] for e in bld_out}, ja_btype)
 
     # JA base name -> item id, so a variant's placeholder ("アサルトライフル+1")
     # can be re-localized via its base item (AssaultRifle_Default1 -> 突击步枪).

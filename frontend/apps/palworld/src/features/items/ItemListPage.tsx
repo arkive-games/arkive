@@ -12,7 +12,7 @@ import {
   type BuildingsBundle,
   type TechBundle,
 } from '../../lib/catalog'
-import { itemTypeLabel } from '../catalog/labels'
+import { itemTypeLabel, typeOrder } from '../catalog/labels'
 import {
   CatalogDataProvider,
   CatalogPageLoading,
@@ -55,14 +55,15 @@ export default function ItemListPage() {
     }
   }, [lng, t])
 
-  // Distinct categories (TypeA) present, sorted by localized label. Derived
-  // from the visible set so categories that only hold illegal (never-shown)
-  // items don't appear.
+  // Distinct categories (TypeA) present, in the game's category order (the
+  // labels.json key order — identical across languages). Derived from the
+  // visible set so categories that only hold illegal (never-shown) items
+  // don't appear.
   const categories = useMemo(() => {
     if (!bundle) return []
     const set = new Set(bundle.items.filter((i) => !i.illegal).map((i) => i.typeA))
-    return [...set].sort((a, b) =>
-      itemTypeLabel(a, bundle.typeLabels).localeCompare(itemTypeLabel(b, bundle.typeLabels)),
+    return [...set].sort(
+      (a, b) => typeOrder(a, bundle.typeLabels) - typeOrder(b, bundle.typeLabels) || a.localeCompare(b),
     )
   }, [bundle])
 

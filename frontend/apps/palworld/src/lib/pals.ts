@@ -157,6 +157,9 @@ export interface PalsBundle {
   items: Record<string, string>
   /** itemId -> icon asset name (only for items whose icon texture was exported). */
   itemIcon: Record<string, string>
+  /** itemId -> position in items.json, which is emitted in the game's
+   *  inventory order (SortId) — a language-independent sort key. */
+  itemOrder: Record<string, number>
   enums: EnumsLocale
   /** partner-skill effect type -> localized label (fallback lang -> en-US -> raw enum). */
   partnerEffects: Record<string, string>
@@ -182,7 +185,11 @@ async function fetchBundle(lng: string): Promise<PalsBundle> {
     j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerTargets.json`),
   ])
   const itemIcon: Record<string, string> = {}
-  for (const it of itemsFile.items) if (it.icon) itemIcon[it.id] = it.icon
+  const itemOrder: Record<string, number> = {}
+  itemsFile.items.forEach((it, i) => {
+    if (it.icon) itemIcon[it.id] = it.icon
+    itemOrder[it.id] = i
+  })
   // Flatten catalog's {id: {name, description?}} to {id: name} for pal views.
   const items: Record<string, string> = {}
   for (const [id, v] of Object.entries(itemsLoc)) items[id] = v.name
@@ -197,6 +204,7 @@ async function fetchBundle(lng: string): Promise<PalsBundle> {
     skills,
     items,
     itemIcon,
+    itemOrder,
     enums,
     partnerEffects,
     partnerTargets,

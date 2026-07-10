@@ -15,3 +15,12 @@ export const buildingTypeLabel = (typeA: string, labels?: TypeLabels): string =>
   const k = strip(typeA)
   return labels?.[k] ?? BUILDING_TYPE_LABELS[k] ?? k
 }
+
+/** Position of a typeA in the game's category order. labels.json is emitted in
+ *  the raw text-table row order (same in every language), so its key order is
+ *  the canonical one; types missing from it sort after all known ones. */
+export const typeOrder = (typeA: string, labels?: TypeLabels): number => {
+  const keys = labels ? Object.keys(labels) : []
+  const i = keys.indexOf(strip(typeA))
+  return i < 0 ? keys.length : i
+}

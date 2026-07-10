@@ -92,13 +92,19 @@ export function PalFilters({
   // pipeline (data-palworld/pals.json `filters`) so chips with no pals are hidden.
   const { elements, works, reactions } = bundle.filters
 
-  // Every lootable item id (union of all drops), sorted by localized name.
+  // Every lootable item id (union of all drops), in the game's inventory order
+  // (items.json position = SortId) — identical across languages.
   const lootItems = useMemo(() => {
     const ids = new Set<string>()
     for (const p of bundle.pals) for (const d of p.drops) ids.add(d.item)
+    const last = Object.keys(bundle.itemOrder).length
     return [...ids]
       .map((id) => ({ id, name: bundle.items[id] ?? id, icon: bundle.itemIcon[id] }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+      .sort(
+        (a, b) =>
+          (bundle.itemOrder[a.id] ?? last) - (bundle.itemOrder[b.id] ?? last) ||
+          a.id.localeCompare(b.id),
+      )
   }, [bundle])
 
   const lootName = filter.loot ? (bundle.items[filter.loot] ?? filter.loot) : null

@@ -11,7 +11,7 @@ import {
   type BuildingsBundle,
   type TechBundle,
 } from '../../lib/catalog'
-import { buildingTypeLabel } from '../catalog/labels'
+import { buildingTypeLabel, typeOrder } from '../catalog/labels'
 import { CatalogDataProvider, CatalogPageLoading } from '../catalog/components'
 import { makeTechResolvers } from '../technology/techModel'
 import { BuildingTile } from './components/BuildingTile'
@@ -46,11 +46,13 @@ export default function BuildingListPage() {
     }
   }, [lng, t])
 
+  // Categories in the game's build-menu order (labels.json key order —
+  // identical across languages).
   const categories = useMemo(() => {
     if (!bundle) return []
     const set = new Set(bundle.buildings.map((b) => b.typeA))
-    return [...set].sort((a, b) =>
-      buildingTypeLabel(a, bundle.typeLabels).localeCompare(buildingTypeLabel(b, bundle.typeLabels)),
+    return [...set].sort(
+      (a, b) => typeOrder(a, bundle.typeLabels) - typeOrder(b, bundle.typeLabels) || a.localeCompare(b),
     )
   }, [bundle])
 
@@ -65,11 +67,13 @@ export default function BuildingListPage() {
           b.id.toLowerCase().includes(q) ||
           (bundle.text[b.id]?.name ?? b.id).toLowerCase().includes(q),
       )
-      // Stable game order: build-menu SortId within each category (SortId is
-      // only unique per typeA), identical across languages.
+      // Stable game order: build-menu category order, then SortId within the
+      // category (SortId is only unique per typeA), identical across languages.
       .sort(
         (a, b) =>
-          a.typeA.localeCompare(b.typeA) || a.sortId - b.sortId || a.id.localeCompare(b.id),
+          typeOrder(a.typeA, bundle.typeLabels) - typeOrder(b.typeA, bundle.typeLabels) ||
+          a.sortId - b.sortId ||
+          a.id.localeCompare(b.id),
       )
   }, [bundle, query, cats])
 
