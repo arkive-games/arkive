@@ -65,7 +65,12 @@ export default function BuildingListPage() {
           b.id.toLowerCase().includes(q) ||
           (bundle.text[b.id]?.name ?? b.id).toLowerCase().includes(q),
       )
-      .sort((a, b) => a.id.localeCompare(b.id))
+      // Stable game order: build-menu SortId within each category (SortId is
+      // only unique per typeA), identical across languages.
+      .sort(
+        (a, b) =>
+          a.typeA.localeCompare(b.typeA) || a.sortId - b.sortId || a.id.localeCompare(b.id),
+      )
   }, [bundle, query, cats])
 
   const iname = (id: string) => items?.text[id]?.name ?? id

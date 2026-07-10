@@ -12,7 +12,8 @@ export interface Recipe {
   work: number
   unlockItemId?: string
   materials: Material[]
-  /** Production buildings that can craft this item (building ids, base tier first). */
+  /** Production buildings that can craft this item (building ids, in the
+   *  game's build-menu order — base tier first). */
   craftedAt?: string[]
 }
 export interface FoodEffect {
@@ -65,6 +66,8 @@ export interface BuildingEntry {
   typeA: string
   typeB: string
   typeUI: string
+  /** Game's build-menu position — unique within a typeA category only. */
+  sortId: number
   rank: number
   work: number
   materials: Material[]

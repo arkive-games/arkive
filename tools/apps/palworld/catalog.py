@@ -203,14 +203,16 @@ def _craft_specs(raw: Path, building_ids: set) -> dict:
 
 
 def _crafted_at(r: dict, specs: dict, bld_rows: dict) -> list[str]:
-    """Production buildings that can craft item row ``r``, ordered by build rank."""
+    """Production buildings that can craft item row ``r``, in the game's
+    build-menu order (``SortId``, unique within a TypeA category — all craft
+    stations share the Product category, so it orders base tier first)."""
     a, b, rank = r.get("TypeA"), r.get("TypeB"), r.get("Rank", 0) or 0
     ids = [
         bid
         for bid, (sa, sb, mx) in specs.items()
         if (not sa or a in sa) and b in sb and rank <= mx
     ]
-    ids.sort(key=lambda bid: ((bld_rows.get(bid) or {}).get("Rank", 0), bid))
+    ids.sort(key=lambda bid: ((bld_rows.get(bid) or {}).get("SortId", 0), bid))
     return ids
 
 
@@ -502,6 +504,8 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             "typeA": _strip(r.get("TypeA"), _BLD_A),
             "typeB": _strip(r.get("TypeB"), _BLD_B),
             "typeUI": _strip(r.get("TypeUIDisplay"), _BLD_UI),
+            # build-menu position; unique within a typeA category only
+            "sortId": r.get("SortId", 0),
             "rank": r.get("Rank", 0),
             "work": round2(r.get("RequiredBuildWorkAmount", 0.0)),
             "materials": mats,
@@ -602,6 +606,10 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             tech_icons += 1
     print(f"catalog: resolved {tech_icons} fallback tech icons")
 
+    # canonical building order: build-menu SortId within each category (it is
+    # only unique per typeA), id as a stable tiebreaker — language-independent,
+    # mirroring the items' SortId ordering above.
+    bld_out.sort(key=lambda e: (e["typeA"], e["sortId"], e["id"]))
     write_json(data_out / "items.json", {"items": items})
     write_json(data_out / "buildings.json", {"buildings": bld_out})
     write_json(data_out / "technology.json", {"techs": techs})
