@@ -77,6 +77,13 @@ export default function App() {
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
   } | null>(null)
   const [mapId, setMapId] = useState(mapParam ?? 'MainWorld')
+  // ?map= is read once as the initial state above; a later in-app navigation
+  // (e.g. picking a marker in the global search while already on the map)
+  // changes only the URL, so sync it back into state here.
+  useEffect(() => {
+    if (mapParam && mapParam !== mapId) setMapId(mapParam)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapParam])
   // Per-map completed-marker ids (effigies/bosses), persisted in localStorage.
   const { completed, toggleCompleted } = useCompletedMarkers(mapId)
   // Ids of the markers currently in the search results — forced onto the map so

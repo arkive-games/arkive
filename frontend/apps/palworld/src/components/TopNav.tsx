@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
+import { GlobalSearchWidget } from './GlobalSearchWidget'
 
 export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/items' | '/buildings' | '/technology' | '/quests'
 
@@ -49,6 +50,7 @@ export function TopNav({ active }: { active: NavKey }) {
           </Link>
         ),
       }}
+      search={<GlobalSearchWidget />}
       languageSwitcher={{
         languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
         current: lng,
