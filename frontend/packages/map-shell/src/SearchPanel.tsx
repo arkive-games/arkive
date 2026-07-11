@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import MiniSearch, { type SearchOptions, type SearchResult } from "minisearch"
 import { cn } from "@gamemap/ui"
 import { formatCoords } from "./coordFormat"
+import { searchTokenize } from "./searchTokenizer"
 
 export type SearchItem = {
   id: string
@@ -161,15 +162,7 @@ export function SearchPanel({
         prefix: true,
         fuzzy: (term) => (/^\d+$/.test(term) ? false : 0.2),
       },
-      // Tokenize into Latin-letter runs, digit runs, and single CJK chars.
-      // Splitting letters from digits means a suffixed id like "No.111B" yields
-      // the number token "111" (findable by a numeric query) while CJK still
-      // matches per character. Strip leading zeros from numeric tokens (index +
-      // query) so "11"/"011" both match a zero-padded id token "011" (No.011).
-      tokenize: (s) =>
-        (s.match(/[a-zA-Z]+|[0-9]+|[぀-ヿ㐀-鿿豈-﫿가-힯]/g) ?? []).map((t) =>
-          /^\d+$/.test(t) ? t.replace(/^0+(?=\d)/, "") : t,
-        ),
+      tokenize: searchTokenize,
     })
     ms.addAll(items)
     return ms
