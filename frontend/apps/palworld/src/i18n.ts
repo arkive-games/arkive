@@ -177,6 +177,22 @@ export const PALS_GROUP_LABELS: Record<Language, string> = {
   'pt-BR': 'Pals', 'ru-RU': 'Палы', 'th-TH': 'Pals', 'tr-TR': 'Pals', 'vi-VN': 'Pals',
   'zh-CN': '帕鲁', 'zh-TW': '帕魯',
 }
+// Map popup completion pill (effigies / bosses): action + done states.
+export const MARK_COMPLETED_LABELS: Record<Language, string> = {
+  'en-US': 'Mark as completed', 'de-DE': 'Als erledigt markieren', 'es-ES': 'Marcar como completado',
+  'es-MX': 'Marcar como completado', 'fr-FR': 'Marquer comme terminé', 'id-ID': 'Tandai selesai',
+  'it-IT': 'Segna come completato', 'ja-JP': '完了にする', 'ko-KR': '완료로 표시',
+  'pl-PL': 'Oznacz jako ukończone', 'pt-BR': 'Marcar como concluído', 'ru-RU': 'Отметить выполненным',
+  'th-TH': 'ทำเครื่องหมายว่าเสร็จแล้ว', 'tr-TR': 'Tamamlandı olarak işaretle', 'vi-VN': 'Đánh dấu đã hoàn thành',
+  'zh-CN': '标记为已完成', 'zh-TW': '標記為已完成',
+}
+export const COMPLETED_LABELS: Record<Language, string> = {
+  'en-US': 'Completed', 'de-DE': 'Erledigt', 'es-ES': 'Completado', 'es-MX': 'Completado',
+  'fr-FR': 'Terminé', 'id-ID': 'Selesai', 'it-IT': 'Completato', 'ja-JP': '完了',
+  'ko-KR': '완료', 'pl-PL': 'Ukończono', 'pt-BR': 'Concluído', 'ru-RU': 'Выполнено',
+  'th-TH': 'เสร็จแล้ว', 'tr-TR': 'Tamamlandı', 'vi-VN': 'Đã hoàn thành',
+  'zh-CN': '已完成', 'zh-TW': '已完成',
+}
 
 const resources = {
   'en-US': {
@@ -658,6 +674,10 @@ for (const lng of LANGUAGES) {
         category: FILTER_CATEGORY_LABELS[lng],
       },
       nav: { database: DATABASE_LABELS[lng], pals: PALS_GROUP_LABELS[lng] },
+      markerActions: {
+        markCompleted: MARK_COMPLETED_LABELS[lng],
+        completed: COMPLETED_LABELS[lng],
+      },
       passive: {
         allRarities: ALL_RARITIES_LABELS[lng],
         allTypes: ALL_TYPES_LABELS[lng],
