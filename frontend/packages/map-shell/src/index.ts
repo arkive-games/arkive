@@ -20,6 +20,13 @@ export { IdLabel, type IdLabelValue, type IdLabelProps } from "./IdLabel"
 export { MarkerPopupCard, type MarkerPopupCardProps } from "./MarkerPopupCard"
 export { SearchPanel, type SearchPanelProps, type SearchItem, type SearchPanelLabels } from "./SearchPanel"
 export { searchTokenize } from "./searchTokenizer"
+export {
+  GlobalSearch,
+  type GlobalSearchProps,
+  type GlobalSearchEntry,
+  type GlobalSearchSource,
+  type GlobalSearchLabels,
+} from "./GlobalSearch"
 export { formatCoords } from "./coordFormat"
 export { ThemeProvider, useTheme, type Theme, type ThemeStorage } from "./theme/ThemeProvider"
 export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./theme/ThemeToggle"
