@@ -37,6 +37,19 @@ export const MORE_LABELS: Record<Language, string> = {
   'pt-BR': 'Mais', 'ru-RU': 'Ещё', 'th-TH': 'เพิ่มเติม', 'tr-TR': 'Daha fazla', 'vi-VN': 'Thêm',
   'zh-CN': '更多', 'zh-TW': '更多',
 }
+// Catalog list pages: manual fallback for the scroll-triggered incremental
+// reveal ({{count}} = tiles not yet rendered).
+export const SHOW_MORE_LABELS: Record<Language, string> = {
+  'en-US': 'Show more ({{count}})', 'de-DE': 'Mehr anzeigen ({{count}})',
+  'es-ES': 'Mostrar más ({{count}})', 'es-MX': 'Mostrar más ({{count}})',
+  'fr-FR': 'Afficher plus ({{count}})', 'id-ID': 'Tampilkan lebih banyak ({{count}})',
+  'it-IT': 'Mostra altro ({{count}})', 'ja-JP': 'さらに表示（{{count}}）',
+  'ko-KR': '더 보기 ({{count}})', 'pl-PL': 'Pokaż więcej ({{count}})',
+  'pt-BR': 'Mostrar mais ({{count}})', 'ru-RU': 'Показать ещё ({{count}})',
+  'th-TH': 'แสดงเพิ่มเติม ({{count}})', 'tr-TR': 'Daha fazla göster ({{count}})',
+  'vi-VN': 'Hiển thị thêm ({{count}})', 'zh-CN': '显示更多（{{count}}）',
+  'zh-TW': '顯示更多（{{count}}）',
+}
 export const FILTER_LABELS: Record<Language, string> = {
   'en-US': 'Filters', 'de-DE': 'Filter', 'es-ES': 'Filtros', 'es-MX': 'Filtros', 'fr-FR': 'Filtres',
   'id-ID': 'Filter', 'it-IT': 'Filtri', 'ja-JP': 'フィルター', 'ko-KR': '필터', 'pl-PL': 'Filtry',
@@ -667,6 +680,7 @@ for (const lng of LANGUAGES) {
       tech: CATALOG_STRINGS[lng].tech,
       quest: QUEST_STRINGS[lng] ?? QUEST_STRINGS['en-US'],
       catalogLoading: CATALOG_STRINGS[lng].loading,
+      catalogShowMore: SHOW_MORE_LABELS[lng],
       more: MORE_LABELS[lng],
       filter: FILTER_LABELS[lng],
       filters: {
