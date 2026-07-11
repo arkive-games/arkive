@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Button } from '@gamemap/ui'
+import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
   comboKey,
@@ -142,7 +142,8 @@ export default function BreedingPage() {
   }
 
   return (
-    <ContentPage active="/breeding" title={t('breeding.navBreeding')} heading>
+    <TooltipProvider delayDuration={200}>
+      <ContentPage active="/breeding" title={t('breeding.navBreeding')} heading>
         <CatalogDataProvider pals={pals ?? undefined}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <PalPicker
@@ -172,10 +173,23 @@ export default function BreedingPage() {
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-2">
-            <span className="text-sm text-muted-foreground">
+            <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               {result.browsingSpecial
                 ? t('breeding.showingSpecial')
                 : t('breeding.combinations', { count: result.total })}
+              {/* Same badge as the Passive Skills page; the tip covers the breeding side. */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    data-testid="breeding-mutation-info"
+                    className="inline-flex cursor-help items-center gap-1 rounded bg-violet-500/15 px-1.5 py-0.5 text-xs font-medium text-violet-600 ring-1 ring-inset ring-violet-500/30 dark:text-violet-300"
+                  >
+                    <span className="inline-block size-1.5 rounded-full bg-violet-500" />
+                    {t('passive.mutation')}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">{t('breeding.mutationTip')}</TooltipContent>
+              </Tooltip>
             </span>
             {hasFilter ? (
               <Button
@@ -215,6 +229,7 @@ export default function BreedingPage() {
             </>
           )}
         </CatalogDataProvider>
-    </ContentPage>
+      </ContentPage>
+    </TooltipProvider>
   )
 }

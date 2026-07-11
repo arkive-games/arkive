@@ -24,6 +24,12 @@ export interface BreedingStrings {
   /** Pager button labels (Paldeck breeding section). */
   prevPage: string
   nextPage: string
+  /**
+   * Tooltip on the breeding page's mutation info badge. Item/building names
+   * (Mutated Egg, Extravagant Vegetable Cake, Breeding Farm) follow the game's
+   * own L10N tables; the badge label reuses `passive.mutation`.
+   */
+  mutationTip: string
 }
 
 export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
@@ -46,6 +52,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Breeding Power',
     prevPage: 'Previous page',
     nextPage: 'Next page',
+    mutationTip:
+      'Breeding rarely produces a Mutated Egg — the hatched Pal is mutated and gains a mutation-exclusive passive skill. An Extravagant Vegetable Cake at the Breeding Farm makes mutations more likely and talents grow more easily.',
   },
   'de-DE': {
     navMap: 'Karte',
@@ -66,6 +74,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Zuchtstärke',
     prevPage: 'Vorherige Seite',
     nextPage: 'Nächste Seite',
+    mutationTip:
+      'Bei der Zucht entsteht selten ein Mutiertes Ei — der geschlüpfte Pal ist mutiert und erhält ein mutationsexklusives Passiv. Eine Exquisite Gemüsetorte in der Zuchtfarm lässt Mutationen häufiger auftreten und Talente leichter wachsen.',
   },
   'es-ES': {
     navMap: 'Mapa',
@@ -86,6 +96,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Poder de crianza',
     prevPage: 'Página anterior',
     nextPage: 'Página siguiente',
+    mutationTip:
+      'La crianza rara vez produce un Huevo metamorfo: el Pal que nace está mutado y obtiene una pasiva exclusiva de mutación. Un Pastel de verduras selectas en el Criadero hace más probables las mutaciones y facilita el desarrollo del talento.',
   },
   'es-MX': {
     navMap: 'Mapa',
@@ -106,6 +118,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Poder de crianza',
     prevPage: 'Página anterior',
     nextPage: 'Página siguiente',
+    mutationTip:
+      'La crianza rara vez produce un Huevo mutado: el Pal que nace está mutado y obtiene una pasiva exclusiva de mutación. Un Pastel de verduras de lujo en el Criadero aumenta la probabilidad de mutaciones y facilita el crecimiento del talento.',
   },
   'fr-FR': {
     navMap: 'Carte',
@@ -126,6 +140,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: "Puissance d'élevage",
     prevPage: 'Page précédente',
     nextPage: 'Page suivante',
+    mutationTip:
+      "L'élevage produit rarement un Œuf mutant — le Pal qui en éclot est muté et obtient une compétence passive exclusive de mutation. Un Gâteau aux légumes raffiné à l'Élevage rend les mutations plus fréquentes et facilite le développement des talents.",
   },
   'id-ID': {
     navMap: 'Peta',
@@ -146,6 +162,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Kekuatan Ternak',
     prevPage: 'Halaman sebelumnya',
     nextPage: 'Halaman berikutnya',
+    mutationTip:
+      'Ternak kadang menghasilkan Telur Mutasi — Pal yang menetas bermutasi dan mendapat pasif khusus mutasi. Kue Sayuran Mewah di Tempat Pembiakkan membuat mutasi lebih mungkin terjadi dan bakat lebih mudah berkembang.',
   },
   'it-IT': {
     navMap: 'Mappa',
@@ -166,6 +184,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Potenza di allevamento',
     prevPage: 'Pagina precedente',
     nextPage: 'Pagina successiva',
+    mutationTip:
+      "Dall'allevamento nasce raramente un Uovo mutante: il Pal che si schiude è mutato e ottiene un'abilità passiva da mutazione. Una Torta di verdure gourmet nel Ranch per Pal rende più probabili le mutazioni e facilita lo sviluppo dei talenti.",
   },
   'ja-JP': {
     navMap: 'マップ',
@@ -186,6 +206,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: '交配ランク',
     prevPage: '前のページ',
     nextPage: '次のページ',
+    mutationTip:
+      '交配ではまれに突然変異タマゴが生まれ、孵化したパルは突然変異して専用のパッシブスキルを得ます。配合牧場に豪華野菜ケーキを入れると突然変異が起こりやすくなり、才能も伸びやすくなります。',
   },
   'ko-KR': {
     navMap: '지도',
@@ -206,6 +228,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: '교배 랭크',
     prevPage: '이전 페이지',
     nextPage: '다음 페이지',
+    mutationTip:
+      '교배에서는 드물게 돌연변이 알이 나오며, 부화한 팰은 돌연변이가 되어 전용 패시브 스킬을 얻습니다. 배합 목장에 호화 야채 케이크를 넣으면 돌연변이 확률이 증가하고 재능도 오르기 쉬워집니다.',
   },
   'pl-PL': {
     navMap: 'Mapa',
@@ -226,6 +250,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Moc hodowlana',
     prevPage: 'Poprzednia strona',
     nextPage: 'Następna strona',
+    mutationTip:
+      'Hodowla rzadko daje Zmutowane jajo — wykluty Pal jest zmutowany i otrzymuje pasywną umiejętność dostępną tylko z mutacji. Wykwintne ciasto warzywne na Farmie hodowlanej zwiększa szansę na mutacje i ułatwia rozwój talentów.',
   },
   'pt-BR': {
     navMap: 'Mapa',
@@ -246,6 +272,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Poder de reprodução',
     prevPage: 'Página anterior',
     nextPage: 'Próxima página',
+    mutationTip:
+      'A reprodução raramente produz um Ovo Mutante — o Pal que nasce é mutante e ganha uma passiva exclusiva de mutação. Um Bolo de Verduras Extravagante na Fazenda de Acasalamento aumenta a chance de mutação e facilita o crescimento dos talentos.',
   },
   'ru-RU': {
     navMap: 'Карта',
@@ -266,6 +294,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Сила разведения',
     prevPage: 'Предыдущая страница',
     nextPage: 'Следующая страница',
+    mutationTip:
+      'При разведении изредка появляется Мутировавшее яйцо — вылупившийся пал мутирует и получает эксклюзивный пассивный навык мутации. Роскошный овощной торт на Племенной ферме повышает вероятность мутаций и облегчает развитие талантов.',
   },
   'th-TH': {
     navMap: 'แผนที่',
@@ -286,6 +316,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'พลังการผสมพันธุ์',
     prevPage: 'หน้าก่อนหน้า',
     nextPage: 'หน้าถัดไป',
+    mutationTip:
+      'การผสมพันธุ์มีโอกาสน้อยมากที่จะได้ไข่แปรสภาพกะทันหัน — พัลที่ฟักออกมาจะกลายพันธุ์และได้รับสกิลติดตัวเฉพาะการกลายพันธุ์ เค้กผักชั้นเลิศในฟาร์มขยายพันธุ์จะทำให้เกิดการกลายพันธุ์ได้ง่ายขึ้นและพัฒนาศักยภาพได้เร็วขึ้น',
   },
   'tr-TR': {
     navMap: 'Harita',
@@ -306,6 +338,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Üretme Gücü',
     prevPage: 'Önceki sayfa',
     nextPage: 'Sonraki sayfa',
+    mutationTip:
+      "Üretme sırasında nadiren mutasyona uğramış bir yumurta (Aniden Dönüşmüş) çıkar — yumurtadan çıkan Pal mutasyonludur ve mutasyona özel bir pasif beceri kazanır. Üretim Çiftliği'ndeki Lüks Sebze Pastası mutasyon olasılığını artırır ve yeteneklerin gelişimini kolaylaştırır.",
   },
   'vi-VN': {
     navMap: 'Bản đồ',
@@ -326,6 +360,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: 'Sức nhân giống',
     prevPage: 'Trang trước',
     nextPage: 'Trang sau',
+    mutationTip:
+      'Nhân giống hiếm khi tạo ra Trứng Đột Biến — Pal nở ra bị đột biến và nhận kỹ năng bị động chỉ có từ đột biến. Bánh Rau Củ Thượng Hạng ở Trang Trại Phối Giống giúp đột biến dễ xảy ra hơn và tài năng cũng dễ phát triển hơn.',
   },
   'zh-CN': {
     navMap: '地图',
@@ -346,6 +382,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: '配种能力',
     prevPage: '上一页',
     nextPage: '下一页',
+    mutationTip:
+      '配种偶尔会产下突变帕鲁蛋——孵化出的帕鲁会发生突然变异，获得突然变异专属的被动技能。在配种牧场放入豪华蔬菜蛋糕可提高突然变异的概率，潜力值也更容易上升。',
   },
   'zh-TW': {
     navMap: '地圖',
@@ -366,5 +404,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     breedingPower: '配種能力',
     prevPage: '上一頁',
     nextPage: '下一頁',
+    mutationTip:
+      '配種偶爾會產下突變帕魯蛋——孵化出的帕魯會發生突然變異，獲得突然變異專屬的被動技能。在配種牧場放入豪華蔬菜蛋糕可提高突然變異的機率，潛力值也更容易上升。',
   },
 }
