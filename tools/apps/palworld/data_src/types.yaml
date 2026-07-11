@@ -57,6 +57,7 @@ subtypes:
     names: { en-US: Sealed Realm, ja-JP: 封印されし領域, de-DE: Versiegeltes Reich, es-ES: Reino sellado, es-MX: Reino sellado, fr-FR: Royaume scellé, id-ID: Alam Tersegel, it-IT: Reame sigillato, ko-KR: 봉인된 영역, pl-PL: Zapieczętowana kraina, pt-BR: Reino Selado, ru-RU: Запечатанный мир, th-TH: ดินแดนผนึก, tr-TR: Mühürlü Diyar, vi-VN: Vương quốc phong ấn, zh-CN: 封印领域, zh-TW: 封印領域 }
   - id: ancientShrine
     category: location
+    canComplete: true
     icon: T_icon_compass_KeyBoss
     names: { en-US: Ancient Shrine, ja-JP: 古代の祠, de-DE: Alter Schrein, es-ES: Santuario antiguo, es-MX: Santuario antiguo, fr-FR: Sanctuaire ancien, id-ID: Kuil Kuno, it-IT: Santuario antico, ko-KR: 고대 사당, pl-PL: Starożytna świątynia, pt-BR: Santuário antigo, ru-RU: Древнее святилище, th-TH: ศาลเจ้าโบราณ, tr-TR: Kadim Tapınak, vi-VN: Đền cổ, zh-CN: 远古神龛, zh-TW: 遠古神龕 }
   - id: warpAltar
@@ -95,6 +96,7 @@ subtypes:
     names: { en-US: Treasure Map, ja-JP: 宝の地図, de-DE: Schatzkarte, es-ES: Mapa del tesoro, es-MX: Mapa del tesoro, fr-FR: Carte au trésor, id-ID: Peta Harta Karun, it-IT: Mappa del tesoro, ko-KR: 보물 지도, pl-PL: Mapa skarbów, pt-BR: Mapa do Tesouro, ru-RU: Карта сокровищ, th-TH: เเผนที่ขุมทรัพย์, tr-TR: Hazine Haritası, vi-VN: Bản Đồ Kho Báu, zh-CN: 藏宝图, zh-TW: 藏寶圖 }
   - id: note
     category: collectible
+    canComplete: true
     icon: T_icon_compass_Search_Junk
     names: { en-US: Note, ja-JP: メモ, de-DE: Notiz, es-ES: Nota, es-MX: Nota, fr-FR: Note, id-ID: Catatan, it-IT: Nota, ko-KR: 노트, pl-PL: Notatka, pt-BR: Nota, ru-RU: Записка, th-TH: บันทึก, tr-TR: Not, vi-VN: Ghi chú, zh-CN: 笔记, zh-TW: 筆記 }
   - id: skillFruit

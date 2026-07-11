@@ -175,12 +175,15 @@ def _subtype_row(ds, cat_id, sub_id):
     return next(s for s in cat["subtypes"] if s["id"] == sub_id)
 
 
-def test_boss_and_lifmunk_effigy_subtypes_are_completable(ds):
-    # Boss encounters and effigy pickups are one-time: the taxonomy flags them
-    # canComplete so the frontend offers completion tracking.
+def test_one_time_subtypes_are_completable(ds):
+    # One-time encounters/pickups (bosses, effigies, shrine clears, note
+    # collection) are flagged canComplete so the frontend offers completion
+    # tracking.
     for sub_id in ("fieldBoss", "wanted", "predator"):
         assert _subtype_row(ds, "boss", sub_id).get("canComplete") is True
     assert _subtype_row(ds, "effigy", "lifmunkEffigy").get("canComplete") is True
+    assert _subtype_row(ds, "location", "ancientShrine").get("canComplete") is True
+    assert _subtype_row(ds, "collectible", "note").get("canComplete") is True
 
 
 def test_non_completable_subtypes_omit_the_flag(ds):
