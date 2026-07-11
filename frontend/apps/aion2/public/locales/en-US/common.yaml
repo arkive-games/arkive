@@ -181,3 +181,14 @@ race:
   light: "Elyos"
   dark: "Asmodian"
   abyss: "Abyss"
+
+globalSearch:
+  button: "Search"
+  placeholder: "Search quests, NPCs, items, markers…"
+  empty: "No results"
+  loading: "Loading…"
+  group:
+    quest: "Quests"
+    npc: "NPCs"
+    item: "Items"
+    markers: "Map markers"

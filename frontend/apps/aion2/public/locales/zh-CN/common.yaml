@@ -286,3 +286,14 @@ titles:
   Attack: 攻击系列
   Defense: 防御系列
   Etc: 其他系列
+
+globalSearch:
+  button: "搜索"
+  placeholder: "搜索任务、NPC、物品、地图标记…"
+  empty: "无结果"
+  loading: "加载中…"
+  group:
+    quest: "任务"
+    npc: "NPC"
+    item: "物品"
+    markers: "地图标记"
