@@ -21,6 +21,8 @@ import {
   ItemSummary,
   rarityBorderClass,
 } from '../catalog/components'
+import { RevealFooter } from '../catalog/RevealFooter'
+import { useIncrementalList } from '../catalog/useIncrementalList'
 
 interface Bundles {
   items: ItemsBundle
@@ -81,6 +83,10 @@ export default function ItemListPage() {
       .sort((a, b) => a.sortId - b.sortId || a.id.localeCompare(b.id))
   }, [bundle, query, cats])
 
+  // Auto-scroll reveal: the full list is in memory, but mounting ~1,900
+  // HoverCard tiles at once is a DOM-size problem, not a data one.
+  const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'items')
+
   return (
     <ContentPage active="/items" title={t('item.title')} heading>
           <div className="mb-3 flex flex-wrap items-center gap-3">
@@ -91,7 +97,7 @@ export default function ItemListPage() {
               className="max-w-sm"
             />
             {bundle ? (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground" data-testid="item-count">
                 {t('item.count', { count: list.length })}
               </span>
             ) : null}
@@ -120,7 +126,7 @@ export default function ItemListPage() {
           ) : (
             <CatalogDataProvider items={bundle} buildings={bundles?.buildings} tech={bundles?.tech}>
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-                {list.map((i) => (
+                {shown.map((i) => (
                   <HoverCard key={i.id} openDelay={120} closeDelay={120}>
                     <HoverCardTrigger asChild>
                       <Link
@@ -156,6 +162,13 @@ export default function ItemListPage() {
                   </HoverCard>
                 ))}
               </div>
+              <RevealFooter
+                shownCount={shown.length}
+                remaining={remaining}
+                showMore={showMore}
+                sentinelRef={sentinelRef}
+                testId="item-show-more"
+              />
             </CatalogDataProvider>
           )}
     </ContentPage>

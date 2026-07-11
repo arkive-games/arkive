@@ -14,6 +14,8 @@ import {
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { buildingTypeLabel, typeOrder } from '../catalog/labels'
 import { CatalogDataProvider, CatalogPageLoading } from '../catalog/components'
+import { RevealFooter } from '../catalog/RevealFooter'
+import { useIncrementalList } from '../catalog/useIncrementalList'
 import { makeTechResolvers } from '../technology/techModel'
 import { BuildingTile } from './components/BuildingTile'
 
@@ -80,6 +82,10 @@ export default function BuildingListPage() {
       )
   }, [bundle, query, cats])
 
+  // Same auto-scroll reveal as the items page; 494 tiles is mild, but the
+  // shared behavior also speeds first paint.
+  const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'buildings')
+
   const iname = (id: string) => items?.text[id]?.name ?? id
   const techResolvers = useMemo(
     () => (items && bundle && tech && pals ? makeTechResolvers(items, bundle, tech, pals) : null),
@@ -96,7 +102,7 @@ export default function BuildingListPage() {
               className="max-w-sm"
             />
             {bundle ? (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground" data-testid="building-count">
                 {t('building.count', { count: list.length })}
               </span>
             ) : null}
@@ -125,7 +131,7 @@ export default function BuildingListPage() {
           ) : (
             <CatalogDataProvider items={items ?? undefined} buildings={bundle} tech={tech}>
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
-                {list.map((b) => (
+                {shown.map((b) => (
                   <BuildingTile
                     key={b.id}
                     building={b}
@@ -137,6 +143,13 @@ export default function BuildingListPage() {
                   />
                 ))}
               </div>
+              <RevealFooter
+                shownCount={shown.length}
+                remaining={remaining}
+                showMore={showMore}
+                sentinelRef={sentinelRef}
+                testId="building-show-more"
+              />
             </CatalogDataProvider>
           )}
     </ContentPage>
