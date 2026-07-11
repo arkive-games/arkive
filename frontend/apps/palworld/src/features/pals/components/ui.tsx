@@ -36,7 +36,7 @@ export function InfoRows({ children }: { children: ReactNode }) {
 /** A label/value pair; used for stats and header facts. */
 export function StatRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="grid grid-cols-[minmax(6rem,auto)_minmax(0,1fr)] gap-3 py-1.5 first:pt-0 last:pb-0">
+    <div className="grid grid-cols-[minmax(6rem,auto)_minmax(0,1fr)] items-center gap-3 py-1.5 first:pt-0 last:pb-0">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="min-w-0 text-right font-medium tabular-nums break-words">{value}</dd>
     </div>
