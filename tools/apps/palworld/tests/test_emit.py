@@ -168,3 +168,22 @@ def test_default_active_flag_only_on_curated_subtypes(ds):
 def test_npc_category_ordered_before_pal(ds):
     order = [c["id"] for c in ds["types"]["categories"]]
     assert order.index("npc") < order.index("pal")
+
+
+def _subtype_row(ds, cat_id, sub_id):
+    cat = next(c for c in ds["types"]["categories"] if c["id"] == cat_id)
+    return next(s for s in cat["subtypes"] if s["id"] == sub_id)
+
+
+def test_boss_and_lifmunk_effigy_subtypes_are_completable(ds):
+    # Boss encounters and effigy pickups are one-time: the taxonomy flags them
+    # canComplete so the frontend offers completion tracking.
+    for sub_id in ("fieldBoss", "wanted", "predator"):
+        assert _subtype_row(ds, "boss", sub_id).get("canComplete") is True
+    assert _subtype_row(ds, "effigy", "lifmunkEffigy").get("canComplete") is True
+
+
+def test_non_completable_subtypes_omit_the_flag(ds):
+    # Emit-only-when-true, like defaultActive: repeatable markers carry no key.
+    assert "canComplete" not in _subtype_row(ds, "location", "fastTravel")
+    assert "canComplete" not in _subtype_row(ds, "resource", "copper")

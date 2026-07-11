@@ -23,6 +23,10 @@ PARSED = {
     ],
     "bosses": [],
     "palSpawns": [],
+    "mapNames": {
+        "MainWorld": {lng: f"{lng} Main" for lng in LANGUAGES},
+        "WorldTree": {lng: f"{lng} Tree" for lng in LANGUAGES},
+    },
     "namesByLang": {
         lng: {"SheepBall": f"{lng} SheepBall", "PinkCat": f"{lng} PinkCat"} for lng in LANGUAGES
     },
@@ -103,3 +107,10 @@ def test_effigy_subtype_named_from_item_name_with_pal_fallback(ds):
     # The category itself is localized in every language.
     for lng in LANGUAGES:
         assert ds["locales"][lng]["types"]["categories"]["effigy"]["name"]
+
+
+def test_generated_pal_effigies_are_completable(ds):
+    effigy = next(c for c in ds["types"]["categories"] if c["id"] == "effigy")
+    subs = {s["id"]: s for s in effigy["subtypes"]}
+    assert subs["effigySheepBall"].get("canComplete") is True
+    assert subs["effigyPinkCat"].get("canComplete") is True

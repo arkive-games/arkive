@@ -73,16 +73,19 @@ subtypes:
     names: { en-US: Healing Spring, ja-JP: 回復の泉, de-DE: Heilquelle, es-ES: Manantial curativo, es-MX: Manantial curativo, fr-FR: Source de soin, id-ID: Mata Air Penyembuh, it-IT: Sorgente curativa, ko-KR: 회복의 샘, pl-PL: Źródło uzdrowienia, pt-BR: Fonte de Cura, ru-RU: Целебный источник, th-TH: น้ำพุรักษา, tr-TR: Şifa Pınarı, vi-VN: Suối Chữa Lành, zh-CN: 治愈之泉, zh-TW: 治癒之泉 }
   - id: fieldBoss
     category: boss
+    canComplete: true
     icon: T_icon_compass_boss
     color: "#ef4444"
     names: { en-US: Field Boss, ja-JP: フィールドボス, de-DE: Feldboss, es-ES: Jefe de campo, es-MX: Jefe de campo, fr-FR: Boss de terrain, id-ID: Bos Wilayah, it-IT: Boss di zona, ko-KR: 필드 보스, pl-PL: Boss terenowy, pt-BR: Chefe de área, ru-RU: Мировой босс, th-TH: บอสประจำถิ่น, tr-TR: Bölge Boss'u, vi-VN: Boss khu vực, zh-CN: 区域头目, zh-TW: 區域頭目 }
   - id: wanted
     category: boss
+    canComplete: true
     color: "#f59e0b"
     icon: T_icon_compass_boss  # fallback for the one criminal (BOSS_Police_Old) with no portrait row
     names: { en-US: Wanted Fugitive, ja-JP: 指名手配, de-DE: Kopfgeld, es-ES: Buscados, es-MX: Buscados, fr-FR: Cibles recherchées, id-ID: Buronan, it-IT: Taglie, ko-KR: 지명수배, pl-PL: Poszukiwany zbieg, pt-BR: Procurados, ru-RU: Разыскиваемые, th-TH: ผู้ออกหมายจับ, tr-TR: Aranan Kaçak, vi-VN: Kẻ Bị Truy Nã, zh-CN: 悬赏头目, zh-TW: 懸賞頭目 }
   - id: predator
     category: boss
+    canComplete: true
     color: "#a855f7"
     icon: T_icon_compass_boss  # fallback if a predator's pal portrait is unavailable
     names: { en-US: Predator, ja-JP: 狂暴化, de-DE: Bestie, es-ES: Depredador, es-MX: Depredador, fr-FR: Prédateur, id-ID: Predator, it-IT: Predatore, ko-KR: 광폭화, pl-PL: Drapieżnik, pt-BR: Predador, ru-RU: Хищник, th-TH: ผู้ล่า, tr-TR: Yırtıcı, vi-VN: Thú săn mồi, zh-CN: 狂暴化, zh-TW: 狂暴化 }
@@ -108,6 +111,7 @@ subtypes:
     names: { en-US: Chest, ja-JP: 宝箱, de-DE: Truhe, es-ES: Cofre, es-MX: Cofre, fr-FR: Coffre, id-ID: Peti, it-IT: Forziere, ko-KR: 상자, pl-PL: Skrzynia, pt-BR: Baú, ru-RU: Сундук, th-TH: หีบสมบัติ, tr-TR: Sandık, vi-VN: Rương, zh-CN: 宝箱, zh-TW: 寶箱 }
   - id: lifmunkEffigy
     category: effigy
+    canComplete: true
     icon: T_itemicon_Relic
     names: { en-US: Lifmunk Effigy, ja-JP: クルリス像, de-DE: Lifmunk-Statuette, es-ES: Estatua de Lifmunk, es-MX: Estatua de Lifmunk, fr-FR: Statue de Lifmunk, id-ID: Patung Lifmunk, it-IT: Statua di Lifmunk, ko-KR: 쿠룰리스 상, pl-PL: Posążek Lifmunka, pt-BR: Estátua de Lifmunk, ru-RU: Статуя Лифманка, th-TH: หุ่นจำลอง Lifmunk, tr-TR: Lifmunk Figürü, vi-VN: Tượng Lifmunk, zh-CN: 翠叶鼠雕像, zh-TW: 翠葉鼠雕像 }
   - id: oilrigTreasure

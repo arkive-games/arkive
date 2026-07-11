@@ -161,7 +161,8 @@ def build_dataset(parsed: dict) -> dict:
         # description shared by every marker of the subtype.
         descriptions = {lng: item_desc.get(lng, "") for lng in languages}
         effigy_subtypes.append({
-            "id": sid, "category": "effigy", "effigyPal": pal,
+            # One-time pickups: completable, like the hand-authored lifmunkEffigy.
+            "id": sid, "category": "effigy", "effigyPal": pal, "canComplete": True,
             # The relic item icon (falls back to the pal icon if unresolved).
             "icon": effigy_icons.get(sid) or _pal_icon(pal_icons, pal),
             "names": names,
@@ -212,6 +213,10 @@ def build_dataset(parsed: dict) -> dict:
             # subtype starts hidden.
             if s.get("defaultActive"):
                 row["defaultActive"] = True
+            # One-time markers (bosses, effigies): the frontend offers per-marker
+            # completion tracking. Emit-only-when-true, like defaultActive.
+            if s.get("canComplete"):
+                row["canComplete"] = True
             subs.append(row)
         cat["subtypes"] = subs
         types["categories"].append(cat)
