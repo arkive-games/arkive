@@ -15,8 +15,9 @@ import { toGameCoords } from './lib/coords'
 import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, useIsMobile } from '@gamemap/ui'
-import { SlidersHorizontal, Search as SearchIcon } from 'lucide-react'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
+import { SlidersHorizontal, Search as SearchIcon, Check } from 'lucide-react'
+import { useCompletedMarkers } from './lib/completedMarkers'
 
 // A purely-numeric query is an exact Paldeck-id lookup: search only the idLabel
 // field, no prefix/fuzzy, so "11"/"011" find only No.011 — not the 110-119
@@ -76,6 +77,8 @@ export default function App() {
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
   } | null>(null)
   const [mapId, setMapId] = useState(mapParam ?? 'MainWorld')
+  // Per-map completed-marker ids (effigies/bosses), persisted in localStorage.
+  const { completed, toggleCompleted } = useCompletedMarkers(mapId)
   // Ids of the markers currently in the search results — forced onto the map so
   // a hit shows even when its subtype filter is off (see SearchPanel).
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
@@ -190,14 +193,14 @@ export default function App() {
         localizedDescription: loc?.description ?? subtypeL10n?.description,
         subtypeLabel: subLabel,
         subtypeMeta,
-        completed: false,
+        completed: completed.has(m.id),
         zukanIndex: m.zukanIndex,
         zukanIndexSuffix: m.zukanIndexSuffix,
         count: m.count,
         reward: m.reward,
       }
     })
-  }, [staticData, markerData, subtypeMetaMap])
+  }, [staticData, markerData, subtypeMetaMap, completed])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
 
@@ -259,6 +262,16 @@ export default function App() {
     return counts
   }, [markerData])
 
+  // Completed count per subtype on the current map (X in the X/N filter badge).
+  const completedBySubtype = useMemo(() => {
+    const counts = new Map<string, number>()
+    if (!markerData) return counts
+    for (const m of markerData.markers) {
+      if (completed.has(m.id)) counts.set(m.subtype, (counts.get(m.subtype) ?? 0) + 1)
+    }
+    return counts
+  }, [markerData, completed])
+
   const filterCategories: FilterCategory[] = useMemo(() => {
     if (!staticData) return []
     return staticData.types.categories
@@ -274,11 +287,15 @@ export default function App() {
             active: visible.has(s.id),
             // Pal buttons show the Paldeck id chip; everything else shows a count.
             idLabel: formatPalId(s.zukanIndex, s.zukanIndexSuffix),
-            count: cat.id === 'pal' ? undefined : (countBySubtype.get(s.id) ?? 0),
+            // Completable subtypes show progress (X/N) instead of a plain count.
+            badge: s.canComplete
+              ? `${completedBySubtype.get(s.id) ?? 0}/${countBySubtype.get(s.id) ?? 0}`
+              : undefined,
+            count: cat.id === 'pal' || s.canComplete ? undefined : (countBySubtype.get(s.id) ?? 0),
           })),
       }))
       .filter((cat) => cat.subtypes.length > 0)
-  }, [staticData, visible, countBySubtype])
+  }, [staticData, visible, countBySubtype, completedBySubtype])
 
   const onToggleMarker = useCallback((id: string | null) => {
     setSelectedMarkerId((cur) => (cur === id ? null : id))
@@ -371,9 +388,28 @@ export default function App() {
             {t('pal.viewInEncyclopedia')}
           </Link>
         ) : null}
+        {marker.subtypeMeta?.canComplete ? (
+          <div className="mt-4 flex items-center justify-end">
+            <button
+              type="button"
+              data-testid="marker-complete-toggle"
+              onClick={() => toggleCompleted(marker.id)}
+              aria-pressed={!!marker.completed}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors',
+                marker.completed
+                  ? 'bg-[rgba(85,179,76,0.12)] text-[#55B34C]'
+                  : 'border border-[#55B34C] text-[#55B34C] hover:bg-[rgba(85,179,76,0.08)]',
+              )}
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+              {marker.completed ? t('markerActions.completed') : t('markerActions.markCompleted')}
+            </button>
+          </div>
+        ) : null}
       </MarkerPopupCard>
     )
-  }, [staticData, t, mapId, palsBundle])
+  }, [staticData, t, mapId, palsBundle, toggleCompleted])
 
   if (loadError) {
     return (
