@@ -206,6 +206,34 @@ export const COMPLETED_LABELS: Record<Language, string> = {
   'th-TH': 'เสร็จแล้ว', 'tr-TR': 'Tamamlandı', 'vi-VN': 'Đã hoàn thành',
   'zh-CN': '已完成', 'zh-TW': '已完成',
 }
+// Global search (topbar palette): input placeholder / empty / loading states.
+// The trigger-button label reuses the existing `search` key.
+export const GLOBAL_SEARCH_PLACEHOLDER_LABELS: Record<Language, string> = {
+  'en-US': 'Search pals, items, tech…', 'de-DE': 'Pals, Items, Technologien suchen…',
+  'es-ES': 'Buscar pals, objetos, tecnología…', 'es-MX': 'Buscar pals, objetos, tecnología…',
+  'fr-FR': 'Rechercher pals, objets, technologies…', 'id-ID': 'Cari pal, item, teknologi…',
+  'it-IT': 'Cerca pal, oggetti, tecnologie…', 'ja-JP': 'パル・アイテム・技術を検索…',
+  'ko-KR': '팰, 아이템, 기술 검색…', 'pl-PL': 'Szukaj pali, przedmiotów, technologii…',
+  'pt-BR': 'Buscar pals, itens, tecnologia…', 'ru-RU': 'Поиск палов, предметов, технологий…',
+  'th-TH': 'ค้นหาพัล ไอเทม เทคโนโลยี…', 'tr-TR': 'Pal, eşya, teknoloji ara…',
+  'vi-VN': 'Tìm pal, vật phẩm, công nghệ…', 'zh-CN': '搜索帕鲁、物品、科技…',
+  'zh-TW': '搜尋帕魯、物品、科技…',
+}
+export const GLOBAL_SEARCH_EMPTY_LABELS: Record<Language, string> = {
+  'en-US': 'No results', 'de-DE': 'Keine Ergebnisse', 'es-ES': 'Sin resultados',
+  'es-MX': 'Sin resultados', 'fr-FR': 'Aucun résultat', 'id-ID': 'Tidak ada hasil',
+  'it-IT': 'Nessun risultato', 'ja-JP': '結果なし', 'ko-KR': '결과 없음',
+  'pl-PL': 'Brak wyników', 'pt-BR': 'Sem resultados', 'ru-RU': 'Ничего не найдено',
+  'th-TH': 'ไม่พบผลลัพธ์', 'tr-TR': 'Sonuç yok', 'vi-VN': 'Không có kết quả',
+  'zh-CN': '无结果', 'zh-TW': '無結果',
+}
+export const GLOBAL_SEARCH_LOADING_LABELS: Record<Language, string> = {
+  'en-US': 'Loading…', 'de-DE': 'Wird geladen…', 'es-ES': 'Cargando…', 'es-MX': 'Cargando…',
+  'fr-FR': 'Chargement…', 'id-ID': 'Memuat…', 'it-IT': 'Caricamento…', 'ja-JP': '読み込み中…',
+  'ko-KR': '불러오는 중…', 'pl-PL': 'Wczytywanie…', 'pt-BR': 'Carregando…', 'ru-RU': 'Загрузка…',
+  'th-TH': 'กำลังโหลด…', 'tr-TR': 'Yükleniyor…', 'vi-VN': 'Đang tải…', 'zh-CN': '加载中…',
+  'zh-TW': '載入中…',
+}
 
 const resources = {
   'en-US': {
@@ -691,6 +719,11 @@ for (const lng of LANGUAGES) {
       markerActions: {
         markCompleted: MARK_COMPLETED_LABELS[lng],
         completed: COMPLETED_LABELS[lng],
+      },
+      globalSearch: {
+        placeholder: GLOBAL_SEARCH_PLACEHOLDER_LABELS[lng],
+        empty: GLOBAL_SEARCH_EMPTY_LABELS[lng],
+        loading: GLOBAL_SEARCH_LOADING_LABELS[lng],
       },
       passive: {
         allRarities: ALL_RARITIES_LABELS[lng],
