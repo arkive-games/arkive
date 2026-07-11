@@ -39,6 +39,8 @@ export interface ShellTopBarProps {
   /** Highlighted navigation shown in the left area; the active item is styled distinctly. */
   nav?: ShellTopBarNav
   rightExtras?: ReactNode
+  /** Global search widget, rendered at the start of the right-side cluster. */
+  search?: ReactNode
   languageSwitcher?: {
     languages: { code: string; label: string }[]
     current: string
@@ -64,6 +66,7 @@ export function ShellTopBar({
   leftSlot,
   nav,
   rightExtras,
+  search,
   languageSwitcher,
   themeSwitcher,
   classNames,
@@ -85,6 +88,7 @@ export function ShellTopBar({
         </div>
       )}
       <div className={cn("ml-auto flex items-center gap-1", classNames?.right)}>
+        {search}
         {languageSwitcher && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
