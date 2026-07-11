@@ -67,13 +67,18 @@ test('Item page category chips filter the grid', async ({ page }) => {
   await page.goto('/items')
   const cards = page.getByTestId('item-card')
   await expect(cards.first()).toBeVisible()
-  const total = await cards.count()
+  // Rendered tiles are capped by the incremental reveal, so compare the
+  // matched-total label rather than the tile count.
+  const readTotal = async () =>
+    Number((await page.getByTestId('item-count').innerText()).replace(/\D/g, ''))
+  const total = await readTotal()
   const chip = page.locator('[data-testid^="item-cat-"]').first()
   await chip.click()
   await expect(chip).toHaveAttribute('aria-pressed', 'true')
-  const filtered = await cards.count()
+  const filtered = await readTotal()
   expect(filtered).toBeGreaterThan(0)
   expect(filtered).toBeLessThan(total)
+  expect(await cards.count()).toBeGreaterThan(0)
 })
 
 test('Effigies and Key Spheres are listed; illegal dead data stays hidden', async ({ page }) => {
