@@ -8,13 +8,14 @@ import {
   loadStatic, loadMarkers,
   type MapMeta, type Taxonomy, type TypesLocale, type MapsLocale, type MarkerRow, type MarkerLocale
 } from './lib/data'
-import { palworldAssets, workIconUrl, noteImageUrl, itemIconUrl } from './lib/assets'
+import { palworldAssets, workIconUrl, noteImageUrl } from './lib/assets'
 import { loadPals, type PalsBundle } from './lib/pals'
 import { ElementBadge } from './features/pals/components'
 import { toGameCoords } from './lib/coords'
 import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
+import { RewardBadges } from './components/RewardBadges'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
@@ -379,12 +380,9 @@ export default function App() {
             {t('spawnCount', { count })}
           </div>
         ) : null}
-        {marker.reward?.dogCoin ? (
-          // Ancient Shrine: the schematic (marker name) plus the Dog Coins it grants.
-          <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <img src={itemIconUrl('item_DogCoin')} alt="" width={18} height={18} className="object-contain" />
-            <span>×{marker.reward.dogCoin}</span>
-          </div>
+        {marker.reward ? (
+          // Ancient Shrine: the unlocked item, the schematic itself, and Dog Coins.
+          <RewardBadges reward={marker.reward} />
         ) : null}
         {isPal ? (
           <Link
