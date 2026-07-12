@@ -28,6 +28,8 @@ export interface MarkerRow {
   reward?: { item: string; count: number; dogCoin?: number }
   /** Linked catchable pal (fieldBoss/predator) — backs the popup drop badges. */
   pal?: string
+  /** Kill drops carried directly (wanted criminals — no pal to look up). */
+  drops?: { item: string; rate: number; min: number; max: number }[]
   /** Warp altars: the partner marker this one teleports to (map-qualified —
    *  the World Tree entrance/exit pair spans maps). */
   warpTo?: { map: string; id: string }

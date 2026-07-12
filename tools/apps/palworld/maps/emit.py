@@ -289,6 +289,9 @@ def build_dataset(parsed: dict) -> dict:
             c["icon"] = w["icon"]
         if name_by_lng:
             c["nameByLng"] = name_by_lng
+        # Kill drops (bounty tokens, gold, keys) for the popup's drop badges.
+        if w.get("drops"):
+            c["drops"] = w["drops"]
         candidates[mid].append(c)
 
     for p in parsed.get("predators", []):
@@ -388,6 +391,8 @@ def build_dataset(parsed: dict) -> dict:
                     marker["image"] = c["image"]
                 if c.get("reward"):
                     marker["reward"] = c["reward"]
+                if c.get("drops"):
+                    marker["drops"] = c["drops"]
                 marker["images"] = []
                 marker["contributors"] = []
                 marker["indexInSubtype"] = i + 1

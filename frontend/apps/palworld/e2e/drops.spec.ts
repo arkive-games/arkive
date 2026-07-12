@@ -1,8 +1,24 @@
 import { test, expect } from '@playwright/test'
 
-// Boss and wild-pal marker popups show the pal's kill drops as badges linking
+// Boss, wild-pal, and wanted marker popups show kill drops as badges linking
 // to the item pages. Field bosses / predators carry a `pal` field; wild spawn
-// markers use the pal id as their subtype.
+// markers use the pal id as their subtype; wanted criminals (human bosses)
+// carry their drops directly on the marker.
+
+test('wanted criminal popup shows its kill-drop badges', async ({ page }) => {
+  await page.goto(`/?map=MainWorld&q=${encodeURIComponent('Ram Lv.59')}`)
+  const results = page.getByTestId('search-results')
+  await results.getByText('Ram Lv.59', { exact: true }).first().click()
+
+  const popup = page.getByTestId('marker-popup-card')
+  await expect(popup).toBeVisible()
+
+  // The Dark Trader bounty drops bounty tokens, gold, and a Gold Key.
+  const drops = popup.getByTestId('marker-drop-item')
+  await expect(drops.filter({ hasText: 'Successful Bounty Token' })).toHaveAttribute('href', /\/items\/BountyProof_1$/)
+  await expect(drops.filter({ hasText: 'Gold Coin' })).toContainText('×500–1000')
+  await expect(drops.filter({ hasText: 'Gold Key' })).toHaveAttribute('href', /\/items\/TreasureBoxKey03$/)
+})
 
 test('field boss popup shows the pal drop badges', async ({ page }) => {
   await page.goto(`/?map=MainWorld&q=${encodeURIComponent('Melpaca Lv.7')}`)

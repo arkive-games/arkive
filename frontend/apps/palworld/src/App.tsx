@@ -229,6 +229,7 @@ export default function App() {
         count: m.count,
         reward: m.reward,
         pal: m.pal,
+        drops: m.drops,
         warpTo: m.warpTo,
       }
     })
@@ -401,8 +402,10 @@ export default function App() {
     const isPal = catId === 'pal'
     const pal = isPal && palsBundle ? palsBundle.byId.get(marker.subtype) : undefined
     // Kill drops: wild spawns key the pal by subtype; field bosses and
-    // predators link their catchable pal via `pal`.
+    // predators link their catchable pal via `pal`; wanted criminals (human
+    // bosses, no pal to look up) carry their drops on the marker itself.
     const dropsPal = pal ?? (marker.pal && palsBundle ? palsBundle.byId.get(marker.pal) : undefined)
+    const drops = dropsPal?.drops ?? marker.drops
     return (
       <MarkerPopupCard
         idLabel={idLabel}
@@ -437,8 +440,8 @@ export default function App() {
             {t('spawnCount', { count })}
           </div>
         ) : null}
-        {dropsPal && dropsPal.drops.length > 0 ? (
-          <PalDropBadges drops={dropsPal.drops} bundle={palsBundle!} />
+        {drops && drops.length > 0 && palsBundle ? (
+          <PalDropBadges drops={drops} bundle={palsBundle} />
         ) : null}
         {marker.reward ? (
           // Ancient Shrine: the unlocked item, the schematic itself, and Dog Coins.

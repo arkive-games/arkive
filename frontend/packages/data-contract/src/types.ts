@@ -177,6 +177,13 @@ export interface MarkerInstance {
    */
   pal?: string;
   /**
+   * Kill drops carried directly on the marker (palworld wanted criminals —
+   * human bosses whose drops can't be looked up via a pal id). Same shape as
+   * a pal's encyclopedia drops; `rate` is a percentage. Drives the popup's
+   * drop badges for markers without a `pal` link.
+   */
+  drops?: { item: string; rate: number; min: number; max: number }[];
+  /**
    * Partner marker of a two-way teleporter (palworld warp altars): the marker
    * this one warps to, map-qualified because a pair may span maps (the World
    * Tree entrance/exit). Drives the popup's "connects to" line and the on-map

@@ -754,6 +754,14 @@ def run_extract(raw: Path) -> dict:
     # Wanted criminals: human bosses (CharacterID "None" + BOSS_* SpawnerID).
     human_names = _read_text_by_lang(raw, "DT_HumanNameText_Common.json")
     boss_npc_icon = read_rows(raw / "DataTable/Character/DT_PalBossNPCIcon.json")
+    # Their SpawnerID doubles as the CharacterID keying DT_PalDropItem, so the
+    # kill drops (bounty tokens, gold, keys) resolve like a pal's. One outlier
+    # (BOSS_Police_Old) has no drop row and simply gets no drops. (Deferred
+    # import: encyclopedia reaches back into maps.extract via breeding, so a
+    # top-level import would be circular.)
+    from ..encyclopedia import _drops
+    drop_path = raw / "DataTable/Character/DT_PalDropItem.json"
+    drop_rows = read_rows(drop_path) if drop_path.exists() else {}
     wanted_seen = set()
     wanted = []
     for r in boss_rows.values():
@@ -779,6 +787,9 @@ def run_extract(raw: Path) -> dict:
             entry["icon"] = icon_stem
         if name_by_lng:
             entry["nameByLng"] = name_by_lng
+        drops = _drops(sid, drop_rows)
+        if drops:
+            entry["drops"] = drops
         wanted.append(entry)
 
     wild_rows = read_rows(raw / "DataTable/Spawner/DT_PalWildSpawner.json")

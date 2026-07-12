@@ -237,6 +237,13 @@ def test_extract_integration():
     assert len(out["palIcons"]) > 400
     # Features added this session:
     assert len(out["wanted"]) == 33
+    # Wanted criminals carry their kill drops (DT_PalDropItem rows keyed by the
+    # SpawnerID, which doubles as the human boss's CharacterID). Only
+    # BOSS_Police_Old ships without a drop row.
+    assert sum(1 for w in out["wanted"] if w.get("drops")) == 32
+    dark_trader = next(w for w in out["wanted"] if w["spawnerId"] == "BOSS_DarkTrader")
+    assert {"item": "BountyProof_1", "rate": 100, "min": 5, "max": 5} in dark_trader["drops"]
+    assert any(d["item"] == "Money" for d in dark_trader["drops"])
     assert len(out["predators"]) == 29
     # Ancient Shrines: lock-gated pickup towers (level + cells, deduped). Their
     # root component has no RelativeLocation — recovered via the _actor_location

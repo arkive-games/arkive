@@ -41,6 +41,13 @@ PARSED = {
     "bosses": [
         {"key": "0", "characterId": "BOSS_Kitsunebi", "level": 12, "location": {"X": 5000, "Y": 5000, "Z": 0}},
     ],
+    "wanted": [
+        {"spawnerId": "BOSS_DarkTrader", "level": 59, "location": {"X": 6000, "Y": 6000, "Z": 0},
+         "icon": "T_BOSS_NPC_DarkTrader",
+         "nameByLng": {lng: ("Ram" if lng == "en-US" else f"{lng} Ram") for lng in LANGUAGES},
+         "drops": [{"item": "BountyProof_1", "rate": 100, "min": 5, "max": 5},
+                   {"item": "Money", "rate": 100, "min": 500, "max": 1000}]},
+    ],
     "palSpawns": [
         {"spawnerName": "sp1", "pals": [{"id": "SheepBall", "lvMin": 1, "lvMax": 3}], "location": {"X": 0, "Y": 0, "Z": 0}},
         {"spawnerName": "sp1", "pals": [{"id": "SheepBall", "lvMin": 1, "lvMax": 3}], "location": {"X": 50, "Y": 50, "Z": 0}},
@@ -194,6 +201,16 @@ def test_one_time_subtypes_are_completable(ds):
     assert _subtype_row(ds, "effigy", "lifmunkEffigy").get("canComplete") is True
     assert _subtype_row(ds, "location", "ancientShrine").get("canComplete") is True
     assert _subtype_row(ds, "collectible", "note").get("canComplete") is True
+
+
+def test_wanted_carries_drops_and_lv_name(ds):
+    w = [m for m in ds["markers"]["MainWorld"] if m["subtype"] == "wanted"]
+    assert len(w) == 1
+    assert w[0]["drops"] == [
+        {"item": "BountyProof_1", "rate": 100, "min": 5, "max": 5},
+        {"item": "Money", "rate": 100, "min": 500, "max": 1000},
+    ]
+    assert ds["locales"]["en-US"]["markers"]["MainWorld"][w[0]["id"]]["name"] == "Ram Lv.59"
 
 
 def test_warp_altars_cross_reference_partner_markers(ds):
