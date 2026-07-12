@@ -13,6 +13,19 @@ function getGitVersion() {
 // Serve the sibling `resource` repo's `UI/` folder at `/UI` in dev, replacing
 // the old `frontend/public/UI` junction. The resource repo lives next to
 // `frontend/` in the workspace; override with RESOURCE_UI_DIR if needed.
+// Like palworld's config, walk ancestor directories to find a sibling repo so
+// dev servers started from a git worktree (deeper in the tree) still find it
+// rather than relying on a fixed number of `..` levels.
+function siblingRepo(name: string): string {
+  let dir = __dirname;
+  for (let i = 0; i < 8; i++) {
+    const p = path.resolve(dir, name);
+    if (fs.existsSync(p)) return p;
+    dir = path.dirname(dir);
+  }
+  return path.resolve(__dirname, "../../../..", name);
+}
+
 const MIME: Record<string, string> = {
   ".webp": "image/webp",
   ".png": "image/png",
@@ -23,10 +36,9 @@ const MIME: Record<string, string> = {
 };
 
 function resourceUiProxy(): Plugin {
-  const uiDir = path.resolve(
-    __dirname,
-    process.env.RESOURCE_UI_DIR ?? "../../../../resource-aion2/UI",
-  );
+  const uiDir = process.env.RESOURCE_UI_DIR
+    ? path.resolve(__dirname, process.env.RESOURCE_UI_DIR)
+    : path.join(siblingRepo("resource-aion2"), "UI");
   return {
     name: "resource-ui-static",
     configureServer(server) {
@@ -54,7 +66,9 @@ function resourceUiProxy(): Plugin {
 // `/data` in dev. Mirrors the `/UI` resource proxy above. In prod the frontend
 // reads from VITE_DATA_BASE_URL instead. Override the dir with DATA_DIR.
 function dataRepoProxy(): Plugin {
-  const dataDir = path.resolve(__dirname, process.env.DATA_DIR ?? "../../../../data-aion2");
+  const dataDir = process.env.DATA_DIR
+    ? path.resolve(__dirname, process.env.DATA_DIR)
+    : siblingRepo("data-aion2");
   return {
     name: "data-repo-static",
     configureServer(server) {
