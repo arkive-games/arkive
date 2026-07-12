@@ -114,6 +114,18 @@ export interface GameMapViewProps {
   /** Position to fly to (search / deep-link), DATA image-space. */
   selectedPosition: { x: number; y: number } | null;
   /**
+   * Line overlays in DATA space, rendered as dashed polylines above the tiles
+   * (e.g. the link between a selected teleporter and its partner). The app
+   * supplies/clears them; undefined/empty = none.
+   */
+  overlayLines?: {
+    id: string;
+    from: { x: number; y: number };
+    to: { x: number; y: number };
+    /** Stroke color; defaults to the theme's pin-dot accent. */
+    color?: string;
+  }[];
+  /**
    * Marker click / background click / popup close → selection toggle.
    * `null` always deselects.
    */

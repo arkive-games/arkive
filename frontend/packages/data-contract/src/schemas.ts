@@ -81,6 +81,7 @@ export const markerInstanceSchema = z.object({
   reward: z
     .object({ item: z.string(), count: z.number(), dogCoin: z.number().optional() })
     .optional(),
+  warpTo: z.object({ map: z.string(), id: z.string() }).optional(),
 }) satisfies z.ZodType<MarkerInstance>;
 
 export const regionInstanceSchema = z.object({

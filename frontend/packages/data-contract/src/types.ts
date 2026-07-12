@@ -169,6 +169,13 @@ export interface MarkerInstance {
    * it (`dogCoin`). Drives the shrine popup's reward line.
    */
   reward?: { item: string; count: number; dogCoin?: number };
+  /**
+   * Partner marker of a two-way teleporter (palworld warp altars): the marker
+   * this one warps to, map-qualified because a pair may span maps (the World
+   * Tree entrance/exit). Drives the popup's "connects to" line and the on-map
+   * link line when the marker is selected.
+   */
+  warpTo?: { map: string; id: string };
 }
 
 export interface RegionInstance {

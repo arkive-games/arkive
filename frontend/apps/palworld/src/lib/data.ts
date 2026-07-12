@@ -26,6 +26,9 @@ export interface MarkerRow {
   count?: number
   /** Ancient Shrine reward: gear schematic (item id + count) + Dog Coins. */
   reward?: { item: string; count: number; dogCoin?: number }
+  /** Warp altars: the partner marker this one teleports to (map-qualified —
+   *  the World Tree entrance/exit pair spans maps). */
+  warpTo?: { map: string; id: string }
 }
 export type MarkerLocale = Record<string, { name?: string; description?: string }>
 export interface TypesLocale {

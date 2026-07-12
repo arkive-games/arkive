@@ -142,6 +142,11 @@ export default function App() {
     return () => { cancelled = true }
   }, [lng])
 
+  // A marker to select once the NEXT map's markers finish loading — set when
+  // following a cross-map warp-altar link (the map switch below clears the
+  // current selection first).
+  const pendingSelectRef = useRef<string | null>(null)
+
   // Clear selection on map switch
   useEffect(() => {
     setMarkerData(null)
@@ -152,6 +157,15 @@ export default function App() {
       .then((d) => {
         if (cancelled) return
         setMarkerData(d)
+        const pending = pendingSelectRef.current
+        if (pending) {
+          pendingSelectRef.current = null
+          const target = d.markers.find((m) => m.id === pending)
+          if (target) {
+            setSelectedMarkerId(target.id)
+            setSelectedPosition({ x: target.x, y: target.y })
+          }
+        }
       })
       .catch((err) => {
         if (cancelled) return
@@ -175,6 +189,14 @@ export default function App() {
     if (!staticData) return new Map<string, MarkerTypeSubtype>()
     return new Map(staticData.types.subtypes.map((s) => [s.id, s]))
   }, [staticData])
+
+  // Raw marker rows by id, for resolving a warp altar's partner (popup line +
+  // on-map link line).
+  const markerRowById = useMemo(() => {
+    const map = new Map<string, MarkerRow>()
+    for (const m of markerData?.markers ?? []) map.set(m.id, m)
+    return map
+  }, [markerData])
 
   const engineMarkers: EngineMarker[] = useMemo(() => {
     if (!staticData || !markerData) return []
@@ -206,6 +228,7 @@ export default function App() {
         zukanIndexSuffix: m.zukanIndexSuffix,
         count: m.count,
         reward: m.reward,
+        warpTo: m.warpTo,
       }
     })
   }, [staticData, markerData, subtypeMetaMap, completed])
@@ -309,6 +332,36 @@ export default function App() {
     setSelectedMarkerId((cur) => (cur === id ? null : id))
   }, [])
 
+  // Follow a warp altar's link to its partner: same map → select + fly to it;
+  // other map (World Tree entrance/exit) → switch maps, then select once the
+  // new map's markers arrive (pendingSelectRef).
+  const followWarpLink = useCallback((warpTo: { map: string; id: string }) => {
+    if (warpTo.map === mapId) {
+      const target = markerRowById.get(warpTo.id)
+      setSelectedMarkerId(warpTo.id)
+      if (target) setSelectedPosition({ x: target.x, y: target.y })
+    } else {
+      pendingSelectRef.current = warpTo.id
+      setMapId(warpTo.map)
+    }
+  }, [mapId, markerRowById])
+
+  // Dashed link line between a selected warp altar and its same-map partner.
+  // Cross-map pairs draw nothing (the popup's "connects to" handles those).
+  const overlayLines = useMemo(() => {
+    if (!selectedMarkerId) return undefined
+    const sel = markerRowById.get(selectedMarkerId)
+    if (!sel?.warpTo || sel.warpTo.map !== mapId) return undefined
+    const target = markerRowById.get(sel.warpTo.id)
+    if (!target) return undefined
+    return [{
+      id: `warp-${sel.id}`,
+      from: { x: sel.x, y: sel.y },
+      to: { x: target.x, y: target.y },
+      color: '#35D0E8',
+    }]
+  }, [selectedMarkerId, markerRowById, mapId])
+
   // Show the game's in-game map coordinates in the readout (cursor + copy +
   // search). The cursor has no height, so `z` is only supplied for markers.
   const displayCoords = useCallback(
@@ -384,6 +437,31 @@ export default function App() {
           // Ancient Shrine: the unlocked item, the schematic itself, and Dog Coins.
           <RewardBadges reward={marker.reward} />
         ) : null}
+        {marker.warpTo ? (() => {
+          // Warp altar: name the partner altar and jump to it on click. Same
+          // map → "<subtype> #<n> (coords)"; other map → the map's name.
+          const warpTo = marker.warpTo
+          const target = warpTo.map === mapId ? markerRowById.get(warpTo.id) : undefined
+          let targetLabel: string
+          if (warpTo.map !== mapId) {
+            targetLabel = staticData?.mapsL10n[warpTo.map]?.name ?? warpTo.map
+          } else if (target) {
+            const tg = toGameCoords(mapId, target.x, target.y)
+            targetLabel = `${subLabel} #${target.indexInSubtype} (${formatCoords(tg.x, tg.y).text})`
+          } else {
+            targetLabel = warpTo.id
+          }
+          return (
+            <button
+              type="button"
+              data-testid="marker-warp-link"
+              onClick={() => followWarpLink(warpTo)}
+              className="mt-2 inline-flex items-center gap-1 self-start text-sm text-primary hover:underline"
+            >
+              {t('markerActions.connectsTo')}: {targetLabel}
+            </button>
+          )
+        })() : null}
         {isPal ? (
           <Link
             to="/pals/$id"
@@ -414,7 +492,7 @@ export default function App() {
         ) : null}
       </MarkerPopupCard>
     )
-  }, [staticData, t, mapId, palsBundle, toggleCompleted])
+  }, [staticData, t, mapId, palsBundle, toggleCompleted, markerRowById, followWarpLink])
 
   if (loadError) {
     return (
@@ -508,6 +586,7 @@ export default function App() {
       selectedMarkerId={selectedMarkerId}
       forceShowIds={forceShowIds}
       selectedPosition={selectedPosition}
+      overlayLines={overlayLines}
       onToggleMarker={onToggleMarker}
       subzoneAt={subzoneAt}
       displayCoords={displayCoords}

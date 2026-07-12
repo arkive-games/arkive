@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { MapContainer, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
 import type { RegionInstance } from "@gamemap/data-contract";
@@ -140,6 +140,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   selectedMarkerId,
   forceShowIds,
   selectedPosition,
+  overlayLines,
   onToggleMarker,
   subzoneAt,
   flyToDuration,
@@ -429,6 +430,24 @@ const GameMapView: React.FC<GameMapViewProps> = ({
           hoveredRegion={hoveredRegion}
           setHoveredRegion={setHoveredRegion}
         />
+
+        {/* App-supplied line overlays (e.g. a selected teleporter's link to
+            its partner), projected from DATA space like the markers. */}
+        {overlayLines?.map((line) => (
+          <Polyline
+            key={line.id}
+            positions={[
+              dataToLatLng(selectedMap, line.from.x, line.from.y),
+              dataToLatLng(selectedMap, line.to.x, line.to.y),
+            ]}
+            pathOptions={{
+              color: line.color ?? theme.pinDot,
+              weight: 2.5,
+              opacity: 0.85,
+              dashArray: "8 8",
+            }}
+          />
+        ))}
 
         {renderedMarkers.map(({ marker, position }) => (
           <GameMarker

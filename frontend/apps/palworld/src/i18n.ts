@@ -206,6 +206,15 @@ export const COMPLETED_LABELS: Record<Language, string> = {
   'th-TH': 'เสร็จแล้ว', 'tr-TR': 'Tamamlandı', 'vi-VN': 'Đã hoàn thành',
   'zh-CN': '已完成', 'zh-TW': '已完成',
 }
+// Map popup (warp altars): "Connects to <partner>" link line.
+export const CONNECTS_TO_LABELS: Record<Language, string> = {
+  'en-US': 'Connects to', 'de-DE': 'Verbunden mit', 'es-ES': 'Conecta con',
+  'es-MX': 'Conecta con', 'fr-FR': 'Relié à', 'id-ID': 'Terhubung ke',
+  'it-IT': 'Collegato a', 'ja-JP': '接続先', 'ko-KR': '연결 대상',
+  'pl-PL': 'Połączony z', 'pt-BR': 'Conecta a', 'ru-RU': 'Связан с',
+  'th-TH': 'เชื่อมต่อกับ', 'tr-TR': 'Bağlantı', 'vi-VN': 'Kết nối với',
+  'zh-CN': '连接至', 'zh-TW': '連接至',
+}
 // Global search (topbar palette): input placeholder / empty / loading states.
 // The trigger-button label reuses the existing `search` key.
 export const GLOBAL_SEARCH_PLACEHOLDER_LABELS: Record<Language, string> = {
@@ -719,6 +728,7 @@ for (const lng of LANGUAGES) {
       markerActions: {
         markCompleted: MARK_COMPLETED_LABELS[lng],
         completed: COMPLETED_LABELS[lng],
+        connectsTo: CONNECTS_TO_LABELS[lng],
       },
       globalSearch: {
         placeholder: GLOBAL_SEARCH_PLACEHOLDER_LABELS[lng],
