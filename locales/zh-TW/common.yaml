@@ -117,3 +117,14 @@ race:
   light: "天族"
   dark: "魔族"
   abyss: "深淵"
+
+globalSearch:
+  button: "搜尋"
+  placeholder: "搜尋任務、NPC、物品、地圖標記…"
+  empty: "無結果"
+  loading: "載入中…"
+  group:
+    quest: "任務"
+    npc: "NPC"
+    item: "物品"
+    markers: "地圖標記"

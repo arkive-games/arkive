@@ -181,3 +181,14 @@ race:
   light: "천족"
   dark: "마족"
   abyss: "어비스"
+
+globalSearch:
+  button: "검색"
+  placeholder: "퀘스트, NPC, 아이템, 지도 마커 검색…"
+  empty: "결과 없음"
+  loading: "불러오는 중…"
+  group:
+    quest: "퀘스트"
+    npc: "NPC"
+    item: "아이템"
+    markers: "지도 마커"
