@@ -111,7 +111,9 @@ export function PalPicker({ label, pals, names, value, onChange, labels }: PalPi
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-          <Command>
+          <Command
+            filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0)}
+          >
             <CommandInput placeholder={labels.searchPal} />
             <CommandList>
               <CommandEmpty>{labels.noPalFound}</CommandEmpty>
