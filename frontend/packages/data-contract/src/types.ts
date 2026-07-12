@@ -170,6 +170,13 @@ export interface MarkerInstance {
    */
   reward?: { item: string; count: number; dogCoin?: number };
   /**
+   * Catchable pal linked by boss-type markers (palworld field bosses /
+   * predators): the base pal id whose Paldeck entry backs the popup's drop
+   * badges and the pal page's boss-spawn list. Wild spawn markers carry no
+   * `pal` — their `subtype` IS the pal id.
+   */
+  pal?: string;
+  /**
    * Partner marker of a two-way teleporter (palworld warp altars): the marker
    * this one warps to, map-qualified because a pair may span maps (the World
    * Tree entrance/exit). Drives the popup's "connects to" line and the on-map

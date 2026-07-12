@@ -5,6 +5,7 @@ import { cn } from '@gamemap/ui'
 import { loadItems, type ItemsBundle } from '../lib/catalog'
 import { itemIconUrl } from '../lib/assets'
 import type { MarkerRow } from '../lib/data'
+import type { Drop, PalsBundle } from '../lib/pals'
 
 const pillClass =
   'inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground'
@@ -64,6 +65,39 @@ export function RewardBadges({ reward }: { reward: NonNullable<MarkerRow['reward
           ×{reward.dogCoin}
         </span>
       ) : null}
+    </div>
+  )
+}
+
+/**
+ * Kill-drop badges for a pal-linked marker (wild spawn, field boss, predator):
+ * icon + localized name + quantity, plus the rate when the drop isn't
+ * guaranteed. Names/icons come from the pals bundle the map already loads,
+ * so these render synchronously. Badges link to the item's page.
+ */
+export function PalDropBadges({ drops, bundle }: { drops: Drop[]; bundle: PalsBundle }) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-muted-foreground">
+      {drops.map((d, i) => {
+        const icon = bundle.itemIcon[d.item]
+        const qty = d.min === d.max ? `${d.min}` : `${d.min}–${d.max}`
+        return (
+          <Link
+            key={`${d.item}-${i}`}
+            to="/items/$id"
+            params={{ id: d.item }}
+            data-testid="marker-drop-item"
+            className={cn(pillClass, 'transition-colors hover:bg-secondary/80 hover:text-foreground')}
+          >
+            {icon ? (
+              <img src={itemIconUrl(icon)} alt="" width={16} height={16} className="object-contain" />
+            ) : null}
+            {bundle.items[d.item] ?? d.item}
+            {` ×${qty}`}
+            {d.rate < 100 ? ` (${d.rate}%)` : ''}
+          </Link>
+        )
+      })}
     </div>
   )
 }

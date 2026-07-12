@@ -15,7 +15,7 @@ import { toGameCoords } from './lib/coords'
 import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
-import { RewardBadges } from './components/RewardBadges'
+import { PalDropBadges, RewardBadges } from './components/RewardBadges'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
@@ -228,6 +228,7 @@ export default function App() {
         zukanIndexSuffix: m.zukanIndexSuffix,
         count: m.count,
         reward: m.reward,
+        pal: m.pal,
         warpTo: m.warpTo,
       }
     })
@@ -399,6 +400,9 @@ export default function App() {
     const count = marker.count
     const isPal = catId === 'pal'
     const pal = isPal && palsBundle ? palsBundle.byId.get(marker.subtype) : undefined
+    // Kill drops: wild spawns key the pal by subtype; field bosses and
+    // predators link their catchable pal via `pal`.
+    const dropsPal = pal ?? (marker.pal && palsBundle ? palsBundle.byId.get(marker.pal) : undefined)
     return (
       <MarkerPopupCard
         idLabel={idLabel}
@@ -432,6 +436,9 @@ export default function App() {
           <div className="mt-2 text-sm text-muted-foreground">
             {t('spawnCount', { count })}
           </div>
+        ) : null}
+        {dropsPal && dropsPal.drops.length > 0 ? (
+          <PalDropBadges drops={dropsPal.drops} bundle={palsBundle!} />
         ) : null}
         {marker.reward ? (
           // Ancient Shrine: the unlocked item, the schematic itself, and Dog Coins.
