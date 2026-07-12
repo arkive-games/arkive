@@ -140,6 +140,10 @@ NEW_TYPE_WATCH = [
 _CELLS_REL = "Maps/MainWorld_5/PL_MainWorld5/_Generated_"
 _LEVEL_REL = "Maps/MainWorld_5/PL_MainWorld5.json"
 
+# Warp-point destination actors (persistent level): the base class covers the
+# Sky Island altars, the WorldTreeEntrance subclass the World Tree pair.
+_WARP_DEST_RX = re.compile(r"^BP_LevelObject_WarpPointDestination(_[A-Za-z0-9]+)?_C$")
+
 
 def _match(classes, t: str):
     for subtype, rx in classes:
@@ -358,8 +362,43 @@ def _extract_cell_pois(raw: Path) -> list[dict]:
                 row = ((exp.get("Properties") or {}).get("ItemPickupRowName") or {}).get("Key")
                 if row:
                     poi["pickupRow"] = row
+            elif subtype == "warpAltar":
+                # GUID of the altar's own WarpPointDestination actor; resolved to
+                # the partner altar in _link_warp_altars, then stripped.
+                dest = (exp.get("Properties") or {}).get("SourceDestinationLevelObjectId")
+                if dest:
+                    poi["warpDestId"] = dest
             pois.append(poi)
     return pois
+
+
+def _link_warp_altars(pois: list[dict], level: list) -> None:
+    """Resolve each warp altar's partner altar and record it as
+    ``warpPartnerSource`` (the partner's actor sourceName; ``emit`` maps it to
+    the partner's final marker id).
+
+    The connection is a two-hop GUID chain: an altar's
+    ``SourceDestinationLevelObjectId`` names its OWN ``WarpPointDestination``
+    actor (placed beside it in the persistent level); destinations reference
+    each other via ``PairedDestinationLevelObjectId``. Altars A and B are
+    connected iff their destinations form such a pair — using an altar warps
+    the player to the paired (far) destination, so links are bidirectional."""
+    pair_of = {}
+    for exp in level:
+        if not _WARP_DEST_RX.match(exp.get("Type") or ""):
+            continue
+        p = exp.get("Properties") or {}
+        inst, pair = p.get("LevelObjectInstanceId"), p.get("PairedDestinationLevelObjectId")
+        if inst and pair:
+            pair_of[inst] = pair
+    altar_by_dest = {p["warpDestId"]: p for p in pois if p.get("warpDestId")}
+    for p in pois:
+        dest = p.pop("warpDestId", None)
+        if not dest:
+            continue
+        partner = altar_by_dest.get(pair_of.get(dest))
+        if partner is not None and partner is not p:
+            p["warpPartnerSource"] = partner["sourceName"]
 
 
 def _dedup_pois_by_location(pois: list[dict], subtypes: set[str]) -> list[dict]:
@@ -659,6 +698,10 @@ def run_extract(raw: Path) -> dict:
     pois.extend(_extract_cell_pois(raw))
     # Notes and shrines are scanned from both the level and the cells; dedup the union.
     pois = _dedup_pois_by_location(pois, {"note", "ancientShrine"})
+    # Warp altars: resolve each altar's partner via the persistent-level
+    # WarpPointDestination pairing (done after dedup so links land on the
+    # surviving poi objects).
+    _link_warp_altars(pois, level)
 
     # Resolve note names/descriptions/illustrations from their NoteRowName. Done
     # after the level+cell dedup so each surviving note gets labelled once.

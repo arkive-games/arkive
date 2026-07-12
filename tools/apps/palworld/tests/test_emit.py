@@ -27,6 +27,16 @@ PARSED = {
         {"subtype": "ancientShrine", "sourceName": "SH_1", "location": {"X": 200, "Y": 200, "Z": 5},
          "reward": {"item": "Blueprint_Musket_4", "count": 1, "dogCoin": 20},
          "nameByLng": {lng: ("Musket Schematic" if lng == "en-US" else f"{lng} Musket") for lng in LANGUAGES}},
+        # Warp altars: a same-map pair plus a cross-map pair (the World Tree
+        # entrance on MainWorld ↔ the exit inside WorldTree bounds).
+        {"subtype": "warpAltar", "sourceName": "WA_A", "location": {"X": 1000, "Y": 1000, "Z": 0},
+         "warpPartnerSource": "WA_B"},
+        {"subtype": "warpAltar", "sourceName": "WA_B", "location": {"X": 2000, "Y": 2000, "Z": 0},
+         "warpPartnerSource": "WA_A"},
+        {"subtype": "warpAltar", "sourceName": "WA_ENT", "location": {"X": 3000, "Y": 3000, "Z": 0},
+         "warpPartnerSource": "WA_EXIT"},
+        {"subtype": "warpAltar", "sourceName": "WA_EXIT", "location": {"X": 400000, "Y": -600000, "Z": 0},
+         "warpPartnerSource": "WA_ENT"},
     ],
     "bosses": [
         {"key": "0", "characterId": "BOSS_Kitsunebi", "level": 12, "location": {"X": 5000, "Y": 5000, "Z": 0}},
@@ -184,6 +194,21 @@ def test_one_time_subtypes_are_completable(ds):
     assert _subtype_row(ds, "effigy", "lifmunkEffigy").get("canComplete") is True
     assert _subtype_row(ds, "location", "ancientShrine").get("canComplete") is True
     assert _subtype_row(ds, "collectible", "note").get("canComplete") is True
+
+
+def test_warp_altars_cross_reference_partner_markers(ds):
+    # Each warp altar marker resolves its partner's FINAL marker id (assigned
+    # after per-map sorting), as a map-qualified ref so cross-map pairs work.
+    mw = {m["id"]: m for m in ds["markers"]["MainWorld"] if m["subtype"] == "warpAltar"}
+    assert mw["MainWorld-warpAltar-1"]["warpTo"] == {"map": "MainWorld", "id": "MainWorld-warpAltar-2"}
+    assert mw["MainWorld-warpAltar-2"]["warpTo"] == {"map": "MainWorld", "id": "MainWorld-warpAltar-1"}
+    # Cross-map pair: entrance on MainWorld ↔ exit on WorldTree.
+    assert mw["MainWorld-warpAltar-3"]["warpTo"] == {"map": "WorldTree", "id": "WorldTree-warpAltar-1"}
+    wt = [m for m in ds["markers"]["WorldTree"] if m["subtype"] == "warpAltar"]
+    assert len(wt) == 1
+    assert wt[0]["warpTo"] == {"map": "MainWorld", "id": "MainWorld-warpAltar-3"}
+    # Non-warp markers never carry the field.
+    assert all("warpTo" not in m for m in ds["markers"]["MainWorld"] if m["subtype"] != "warpAltar")
 
 
 def test_non_completable_subtypes_omit_the_flag(ds):

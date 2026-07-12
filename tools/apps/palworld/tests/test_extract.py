@@ -20,16 +20,35 @@ def _make_fixture_raw(root: Path) -> Path:
         "MainMap": {"landScapeRealPositionMin": {"X": 0, "Y": 0}, "landScapeRealPositionMax": {"X": 100, "Y": 100}},
         "Tree": {"landScapeRealPositionMin": {"X": 200, "Y": 200}, "landScapeRealPositionMax": {"X": 300, "Y": 300}},
     }}])
-    _wj(raw / "Maps/MainWorld_5/PL_MainWorld5.json", [])
-    # A world-partition cell holding a healing spring and a warp altar (both
+    # Warp-point destination actors live in the persistent level. Each altar's
+    # SourceDestinationLevelObjectId points at ITS OWN destination; destinations
+    # reference each other via PairedDestinationLevelObjectId — that pairing is
+    # the altar↔altar connection. One uses the WorldTreeEntrance subclass type
+    # so the class match covers both.
+    _wj(raw / "Maps/MainWorld_5/PL_MainWorld5.json", [
+        {"Type": "BP_LevelObject_WarpPointDestination_C", "Name": "WD1",
+         "Properties": {"LevelObjectInstanceId": "GUID-D1",
+                        "PairedDestinationLevelObjectId": "GUID-D2"}},
+        {"Type": "BP_LevelObject_WarpPointDestination_WorldTreeEntrance_C", "Name": "WD2",
+         "Properties": {"LevelObjectInstanceId": "GUID-D2",
+                        "PairedDestinationLevelObjectId": "GUID-D1"}},
+    ])
+    # A world-partition cell holding a healing spring and two warp altars (all
     # world-partition-only classes) so the cell scan surfaces the new subtypes.
     _wj(raw / "Maps/MainWorld_5/PL_MainWorld5/_Generated_/MainGrid_L0_test.json", [
         {"Type": "BP_LevelObject_HealSpring_C", "Name": "HS1",
          "Properties": {"RootComponent": {"ObjectPath": "cell.1"}}},
         {"Properties": {"RelativeLocation": {"X": 500000, "Y": -600000, "Z": 100}}},
         {"Type": "BP_LevelObject_SkylandWarpAlter_C", "Name": "WA1",
-         "Properties": {"RootComponent": {"ObjectPath": "cell.3"}}},
+         "Properties": {"RootComponent": {"ObjectPath": "cell.3"},
+                        "LevelObjectInstanceId": "GUID-A1",
+                        "SourceDestinationLevelObjectId": "GUID-D1"}},
         {"Properties": {"RelativeLocation": {"X": -700000, "Y": 0, "Z": 40000}}},
+        {"Type": "BP_LevelObject_SkylandWarpAlter_C", "Name": "WA2",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.5"},
+                        "LevelObjectInstanceId": "GUID-A2",
+                        "SourceDestinationLevelObjectId": "GUID-D2"}},
+        {"Properties": {"RelativeLocation": {"X": -750000, "Y": 10000, "Z": 40000}}},
     ])
     # World-map display names (base = ja SourceString; L10N folders below).
     _wj(raw / "DataTable/Text/DT_WorldMap_Common_Text_Common.json", [{"Rows": {
@@ -126,6 +145,19 @@ def test_extracts_healing_spring_and_warp_altar_from_cells(tmp_path):
     assert "warpAltar" in by_sub
 
 
+def test_links_warp_altar_pairs(tmp_path):
+    # Altar → its own WarpPointDestination (SourceDestinationLevelObjectId) →
+    # paired destination (PairedDestinationLevelObjectId) → the partner altar.
+    # Both altars end up cross-referencing each other by sourceName; the temp
+    # GUID key is stripped once linking is done.
+    raw = _make_fixture_raw(tmp_path)
+    out = run_extract(raw)
+    altars = {p["sourceName"]: p for p in out["pois"] if p["subtype"] == "warpAltar"}
+    assert altars["WA1"]["warpPartnerSource"] == "WA2"
+    assert altars["WA2"]["warpPartnerSource"] == "WA1"
+    assert "warpDestId" not in altars["WA1"]
+
+
 @pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
 def test_extract_integration():
     out = run_extract(RAW)
@@ -163,6 +195,14 @@ def test_extract_integration():
     # altars + the World Tree entrance/exit), both world-partition-only.
     assert by_subtype("healingSpring") == 3
     assert by_subtype("warpAltar") == 22
+    # Every warp altar links to exactly one partner (10 Sky Island pairs + the
+    # World Tree entrance/exit pair), and the pairing is symmetric.
+    altars = {p["sourceName"]: p for p in out["pois"] if p["subtype"] == "warpAltar"}
+    assert all(p.get("warpPartnerSource") for p in altars.values())
+    assert all(
+        altars[p["warpPartnerSource"]]["warpPartnerSource"] == p["sourceName"]
+        for p in altars.values()
+    )
     # Sealed Realms: one location POI per ImprisonmentBoss placement, each labelled
     # with the boss it holds.
     realms = [p for p in out["pois"] if p["subtype"] == "sealedRealm"]

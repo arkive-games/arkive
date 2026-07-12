@@ -249,6 +249,10 @@ def build_dataset(parsed: dict) -> dict:
         # Ancient Shrine reward (schematic item + Dog Coins) for the popup.
         if p.get("reward"):
             c["reward"] = p["reward"]
+        # Warp altars: partner altar's sourceName, resolved to the partner's
+        # final marker id after id assignment below.
+        if p.get("warpPartnerSource"):
+            c["warpPartnerSource"] = p["warpPartnerSource"]
         candidates[mid].append(c)
 
     for b in parsed["bosses"]:
@@ -351,6 +355,12 @@ def build_dataset(parsed: dict) -> dict:
     # Assign stable ids: per map+subtype, sort by sortKey then coords, index from 1.
     markers = {}
     marker_loc = {lng: {mid: {} for mid in map_ids} for lng in languages}
+    # Warp-altar link resolution: sourceName (= poi sortKey) -> map-qualified
+    # marker ref, plus the (marker, partnerSource) pairs still to resolve. Two
+    # passes because a partner's final id may be assigned later (or on another
+    # map — the World Tree entrance/exit pair spans maps).
+    warp_ref_by_source: dict[str, dict] = {}
+    warp_pending: list[tuple[dict, str]] = []
     for mid in map_ids:
         by_subtype: dict[str, list] = {}
         for c in candidates[mid]:
@@ -381,6 +391,10 @@ def build_dataset(parsed: dict) -> dict:
                 marker["images"] = []
                 marker["contributors"] = []
                 marker["indexInSubtype"] = i + 1
+                if s["id"] == "warpAltar":
+                    warp_ref_by_source[c["sortKey"]] = {"map": mid, "id": mid_id}
+                    if c.get("warpPartnerSource"):
+                        warp_pending.append((marker, c["warpPartnerSource"]))
                 markers[mid].append(marker)
                 if c.get("nameByLng") or c.get("descByLng"):
                     for lng in languages:
@@ -393,6 +407,12 @@ def build_dataset(parsed: dict) -> dict:
                             if description:
                                 entry["description"] = description
                             marker_loc[lng][mid][mid_id] = entry
+
+    # Second pass: point each warp altar at its partner's final marker id.
+    for marker, partner_source in warp_pending:
+        ref = warp_ref_by_source.get(partner_source)
+        if ref:
+            marker["warpTo"] = ref
 
     locales = {}
     for lng in languages:
