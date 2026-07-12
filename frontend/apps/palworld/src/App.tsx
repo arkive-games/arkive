@@ -447,7 +447,8 @@ export default function App() {
             targetLabel = staticData?.mapsL10n[warpTo.map]?.name ?? warpTo.map
           } else if (target) {
             const tg = toGameCoords(mapId, target.x, target.y)
-            targetLabel = `${subLabel} #${target.indexInSubtype} (${formatCoords(tg.x, tg.y).text})`
+            // formatCoords().text already wraps the numbers in parentheses.
+            targetLabel = `${subLabel} #${target.indexInSubtype} ${formatCoords(tg.x, tg.y).text}`
           } else {
             targetLabel = warpTo.id
           }
