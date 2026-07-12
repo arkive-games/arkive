@@ -218,3 +218,142 @@ export function queryFormulas(
   out.sort((x, y) => r(x.c) - r(y.c) || r(x.a) - r(y.a) || r(x.b) - r(y.b))
   return { list: out, total: out.length, browsingSpecial }
 }
+
+// ---------------------------------------------------------------------------
+// Multi-layer breeding tree (drill down into how to breed each parent)
+
+/**
+ * One focused recipe in the drill-down tree: parents `a`/`b` (genders only for
+ * the two gender-specific combos), plus the recipe chosen for breeding each
+ * parent (`l` for `a`, `r` for `b`). The child is never stored — it is
+ * re-derived through the engine, which also invalidates stale URLs.
+ */
+export interface BreedTreeNode {
+  a: string
+  b: string
+  ag?: Gender
+  bg?: Gender
+  l?: BreedTreeNode
+  r?: BreedTreeNode
+}
+
+/** Position of a node in the tree: the l/r turns taken from the root. */
+export type TreePath = ('l' | 'r')[]
+
+/**
+ * child id -> every combo (over all unordered pairs) producing it. Full scan of
+ * ~n²/2 pairs — built once and memoized by the caller (only in tree mode).
+ * Lists keep the main view's sort (roster order of parent A, then B).
+ */
+export function buildChildIndex(engine: BreedingEngine, data: BreedingData): Map<string, Combo[]> {
+  const index = new Map<string, Combo[]>()
+  const pals = data.pals
+  for (let i = 0; i < pals.length; i++) {
+    for (let k = i; k < pals.length; k++) {
+      for (const f of engine.childOf(pals[i].id, pals[k].id)) {
+        const list = index.get(f.c)
+        if (list) list.push(f)
+        else index.set(f.c, [f])
+      }
+    }
+  }
+  return index
+}
+
+/**
+ * Recipes usable to *obtain* `palId`: every pair producing it minus pairs that
+ * contain the Pal itself (breeding A from A is no way to get your first A).
+ * Legendaries come out empty — they are self-bred only.
+ */
+export function recipesToBreed(index: Map<string, Combo[]>, palId: string): Combo[] {
+  return (index.get(palId) ?? []).filter((f) => f.a !== palId && f.b !== palId)
+}
+
+/**
+ * The combo a tree node stands for, oriented so `node.a` stays in slot A
+ * (genders travel with their parent), or null when the node matches no real
+ * recipe — unknown ids, or genders that don't match (the gendered pairs only
+ * resolve per gender, so a node for them must carry `ag`/`bg`).
+ */
+export function resolveNode(engine: BreedingEngine, node: BreedTreeNode): Combo | null {
+  for (const f of engine.childOf(node.a, node.b)) {
+    if (f.a === node.a && f.b === node.b && f.ag === node.ag && f.bg === node.bg) return f
+    if (node.a !== node.b && f.a === node.b && f.b === node.a && f.ag === node.bg && f.bg === node.ag)
+      return { ...f, a: f.b, b: f.a, ag: f.bg, bg: f.ag }
+  }
+  return null
+}
+
+/**
+ * Deep-validate a tree against loaded data: parents must be real roster ids,
+ * every node must resolve to a recipe, and a subtree must produce the parent it
+ * hangs under (`l` -> `a`, `r` -> `b`; `expectedChild` applies the same rule to
+ * the root when the caller pins it). Invalid subtrees are pruned; an invalid
+ * node drops itself (and thus everything below).
+ */
+export function sanitizeTree(
+  engine: BreedingEngine,
+  ids: Set<string>,
+  node: BreedTreeNode,
+  expectedChild?: string,
+): BreedTreeNode | undefined {
+  if (!ids.has(node.a) || !ids.has(node.b)) return undefined
+  const combo = resolveNode(engine, node)
+  if (!combo) return undefined
+  if (expectedChild !== undefined && combo.c !== expectedChild) return undefined
+  const out: BreedTreeNode = { a: node.a, b: node.b }
+  if (node.ag) out.ag = node.ag
+  if (node.bg) out.bg = node.bg
+  const l = node.l ? sanitizeTree(engine, ids, node.l, node.a) : undefined
+  const r = node.r ? sanitizeTree(engine, ids, node.r, node.b) : undefined
+  if (l) out.l = l
+  if (r) out.r = r
+  return out
+}
+
+/**
+ * Immutable subtree replacement at `path`; `sub` undefined clears the slot.
+ * A path through a missing node is a no-op (stale click).
+ */
+export function setSubtree(
+  root: BreedTreeNode | undefined,
+  path: TreePath,
+  sub: BreedTreeNode | undefined,
+): BreedTreeNode | undefined {
+  if (path.length === 0) return sub
+  if (!root) return root
+  const [head, ...rest] = path
+  if (rest.length > 0 && !root[head]) return root
+  const next = rest.length === 0 ? sub : setSubtree(root[head], rest, sub)
+  const out = { ...root }
+  if (next) out[head] = next
+  else delete out[head]
+  return out
+}
+
+const MAX_TREE_DEPTH = 16
+
+/**
+ * Structural parse of the `?tree=` search param (route-level, data-independent;
+ * `sanitizeTree` does the data-aware pass once the roster is loaded). A node
+ * with bad parents/genders is dropped wholesale; malformed or too-deep subtrees
+ * are pruned.
+ */
+export function parseTreeParam(v: unknown, depth = 0): BreedTreeNode | undefined {
+  if (depth >= MAX_TREE_DEPTH) return undefined
+  if (typeof v !== 'object' || v === null) return undefined
+  const o = v as Record<string, unknown>
+  if (typeof o.a !== 'string' || typeof o.b !== 'string') return undefined
+  const gender = (x: unknown): Gender | undefined => (x === 'M' || x === 'F' ? x : undefined)
+  if ((o.ag !== undefined && !gender(o.ag)) || (o.bg !== undefined && !gender(o.bg))) return undefined
+  const out: BreedTreeNode = { a: o.a, b: o.b }
+  const ag = gender(o.ag)
+  const bg = gender(o.bg)
+  if (ag) out.ag = ag
+  if (bg) out.bg = bg
+  const l = parseTreeParam(o.l, depth + 1)
+  const r = parseTreeParam(o.r, depth + 1)
+  if (l) out.l = l
+  if (r) out.r = r
+  return out
+}
