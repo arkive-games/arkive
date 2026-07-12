@@ -1,21 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
 import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
+  buildChildIndex,
   comboKey,
   favKey,
   loadBreeding,
   makeEngine,
   queryFormulas,
+  sanitizeTree,
+  setSubtree,
   type BreedingData,
+  type BreedTreeNode,
   type Combo,
   type NameMap,
+  type TreePath,
 } from '../../lib/breeding'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { CatalogDataProvider } from '../catalog/components'
 import { PalPicker } from './PalPicker'
+import { BreedingTreeView } from './BreedingTreeView'
 import { RecipeCard, buildRecipeMeta } from './RecipeCard'
 
 // Cap on rendered cards; a target-only query can match >1000 parent pairs. Set
@@ -40,7 +47,9 @@ export default function BreedingPage() {
 
   const setParam = useCallback(
     (key: 'a' | 'b' | 'c', id: string | null) => {
-      navigate({ search: (prev) => ({ ...prev, [key]: id ?? undefined }) })
+      // A picker change invalidates the drill-down (its root recipe belonged
+      // to the previous query), so it also exits tree mode.
+      navigate({ search: (prev) => ({ ...prev, [key]: id ?? undefined, tree: undefined }) })
     },
     [navigate],
   )
@@ -102,18 +111,41 @@ export default function BreedingPage() {
     }
   }, [lng])
 
-  // Drop any query selection that isn't a real roster Pal (replace, not push).
+  const engine = useMemo(() => (payload ? makeEngine(payload.data) : null), [payload])
+
+  // Drop any query selection that isn't a real roster Pal, and prune tree nodes
+  // that don't resolve to real recipes anymore (replace, not push).
   useEffect(() => {
-    if (!payload) return
+    if (!payload || !engine) return
     const ids = new Set(payload.data.pals.map((p) => p.id))
     const keep = (v?: string) => (v && ids.has(v) ? v : undefined)
-    const cleaned = { a: keep(search.a), b: keep(search.b), c: keep(search.c) }
-    if (cleaned.a !== search.a || cleaned.b !== search.b || cleaned.c !== search.c) {
+    const tree = search.tree ? sanitizeTree(engine, ids, search.tree) : undefined
+    const cleaned = { a: keep(search.a), b: keep(search.b), c: keep(search.c), tree }
+    if (
+      cleaned.a !== search.a ||
+      cleaned.b !== search.b ||
+      cleaned.c !== search.c ||
+      JSON.stringify(tree) !== JSON.stringify(search.tree)
+    ) {
       navigate({ search: cleaned, replace: true })
     }
-  }, [payload, search.a, search.b, search.c, navigate])
+  }, [payload, engine, search.a, search.b, search.c, search.tree, navigate])
 
-  const engine = useMemo(() => (payload ? makeEngine(payload.data) : null), [payload])
+  // child -> recipes index powering the tree sections. A full-roster scan
+  // (~n²/2 pair resolutions), so it is only built when tree mode is entered;
+  // the boolean dep keeps it stable across drill navigations.
+  const treeActive = search.tree != null
+  const childIndex = useMemo(
+    () => (engine && payload && treeActive ? buildChildIndex(engine, payload.data) : null),
+    [engine, payload, treeActive],
+  )
+
+  const updateTree = useCallback(
+    (path: TreePath, sub: BreedTreeNode | undefined) => {
+      navigate({ search: (prev) => ({ ...prev, tree: setSubtree(prev.tree, path, sub) }) })
+    },
+    [navigate],
+  )
 
   const meta = useMemo(() => buildRecipeMeta(payload?.data.pals ?? []), [payload])
 
@@ -191,19 +223,42 @@ export default function BreedingPage() {
                 <TooltipContent className="max-w-xs">{t('breeding.mutationTip')}</TooltipContent>
               </Tooltip>
             </span>
-            {hasFilter ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate({ search: {} })}
-              >
-                {t('breeding.clear')}
-              </Button>
-            ) : null}
+            <span className="flex shrink-0 items-center gap-1">
+              {search.tree ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate({ search: (prev) => ({ ...prev, tree: undefined }) })}
+                >
+                  <ArrowLeft className="size-4" />
+                  {t('breeding.allRecipes')}
+                </Button>
+              ) : null}
+              {hasFilter ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate({ search: {} })}
+                >
+                  {t('breeding.clear')}
+                </Button>
+              ) : null}
+            </span>
           </div>
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
+          ) : search.tree && engine && childIndex ? (
+            <BreedingTreeView
+              root={search.tree}
+              engine={engine}
+              index={childIndex}
+              names={payload?.names ?? {}}
+              meta={meta}
+              uniqueLabel={t('breeding.unique')}
+              selectLabel={t('breeding.expandRecipe')}
+              onChange={updateTree}
+            />
           ) : (
             <>
               <div className="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2">
@@ -217,6 +272,8 @@ export default function BreedingPage() {
                       meta={meta}
                       uniqueLabel={t('breeding.unique')}
                       fav={{ isFav: favs.has(fk), onToggle: () => toggleFav(fk), label: t('breeding.favorite') }}
+                      onSelect={() => updateTree([], { a: f.a, b: f.b, ag: f.ag, bg: f.bg })}
+                      selectLabel={t('breeding.expandRecipe')}
                     />
                   )
                 })}

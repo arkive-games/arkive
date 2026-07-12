@@ -14,6 +14,7 @@ import './index.css'
 import './i18n'
 import App from './App'
 import BreedingPage from './features/breeding/BreedingPage'
+import { parseTreeParam, type BreedTreeNode } from './lib/breeding'
 import PalListPage from './features/pals/PalListPage'
 import PalDetailPage from './features/pals/PalDetailPage'
 import ItemListPage from './features/items/ItemListPage'
@@ -72,6 +73,8 @@ export interface BreedingSearch {
   a?: string
   b?: string
   c?: string
+  /** Focused-recipe drill-down (multi-layer breeding tree); see BreedTreeNode. */
+  tree?: BreedTreeNode
 }
 const breedingRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -81,6 +84,7 @@ const breedingRoute = createRoute({
     a: typeof s.a === 'string' ? s.a : undefined,
     b: typeof s.b === 'string' ? s.b : undefined,
     c: typeof s.c === 'string' ? s.c : undefined,
+    tree: parseTreeParam(s.tree),
   }),
   component: BreedingPage,
 })

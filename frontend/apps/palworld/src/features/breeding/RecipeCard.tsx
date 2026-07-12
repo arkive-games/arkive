@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Sparkles, Star, Zap } from 'lucide-react'
+import { ListTree, Sparkles, Star, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import type { BreedingPal, Combo, Gender, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
@@ -124,34 +124,56 @@ export interface RecipeCardProps {
    * in that narrow column.
    */
   hideResult?: boolean
+  /**
+   * Makes the whole card clickable (clicks on inner links/buttons keep their
+   * own behavior) and adds a tree icon-button as the keyboard-accessible
+   * affordance. Used to drill into how to breed this recipe's parents.
+   */
+  onSelect?: () => void
+  /** Accessible label / tooltip for the select affordance. */
+  selectLabel?: string
 }
 
 /**
  * One breeding recipe. Normally `A + B = C`; with `hideResult` just `A + B`
  * (the parents). Width-flexible (the parent grid controls column count) so the
  * same card serves the wide calculator and the narrower Paldeck breeding
- * section. The star is only rendered when `fav` is given.
+ * section. The star / expand actions are only rendered when `fav` / `onSelect`
+ * are given.
  */
-export function RecipeCard({ f, names, meta, uniqueLabel, fav, hideResult }: RecipeCardProps) {
+export function RecipeCard({ f, names, meta, uniqueLabel, fav, hideResult, onSelect, selectLabel }: RecipeCardProps) {
+  const hasActions = Boolean(fav || onSelect)
   return (
     <div
       className={cn(
         'relative grid items-center gap-1.5 rounded-lg border px-3 py-2 text-sm',
         hideResult
-          ? 'grid-cols-[1fr_auto_1fr]'
-          : fav
+          ? hasActions
+            ? 'grid-cols-[1fr_auto_1fr_auto]'
+            : 'grid-cols-[1fr_auto_1fr]'
+          : hasActions
             ? 'grid-cols-[1fr_auto_1fr_auto_1fr_auto]'
             : 'grid-cols-[1fr_auto_1fr_auto_1fr]',
         f.unique
           ? 'border-amber-400/70 bg-amber-400/10 ring-1 ring-amber-400/30'
           : 'border-border bg-card',
+        onSelect && 'cursor-pointer transition-shadow hover:ring-2 hover:ring-primary/40',
       )}
+      onClick={
+        onSelect
+          ? (e) => {
+              // Inner pal links and action buttons keep their own behavior.
+              if ((e.target as HTMLElement).closest('a,button')) return
+              onSelect()
+            }
+          : undefined
+      }
     >
       {f.unique ? (
         <span
           className={cn(
             'absolute -top-2 inline-flex items-center gap-1 rounded-full border border-amber-400/70 bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300',
-            fav ? 'right-8' : 'right-2',
+            fav && onSelect ? 'right-14' : hasActions ? 'right-8' : 'right-2',
           )}
           title={uniqueLabel}
         >
@@ -168,17 +190,32 @@ export function RecipeCard({ f, names, meta, uniqueLabel, fav, hideResult }: Rec
           <PalChip id={f.c} names={names} meta={meta} emphasis />
         </>
       )}
-      {fav ? (
-        <button
-          type="button"
-          onClick={fav.onToggle}
-          aria-label={fav.label}
-          aria-pressed={fav.isFav}
-          title={fav.label}
-          className="ml-1 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <Star className={cn('size-4', fav.isFav && 'fill-amber-400 text-amber-400')} />
-        </button>
+      {hasActions ? (
+        <span className="ml-1 flex items-center">
+          {onSelect ? (
+            <button
+              type="button"
+              onClick={onSelect}
+              aria-label={selectLabel}
+              title={selectLabel}
+              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <ListTree className="size-4" />
+            </button>
+          ) : null}
+          {fav ? (
+            <button
+              type="button"
+              onClick={fav.onToggle}
+              aria-label={fav.label}
+              aria-pressed={fav.isFav}
+              title={fav.label}
+              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <Star className={cn('size-4', fav.isFav && 'fill-amber-400 text-amber-400')} />
+            </button>
+          ) : null}
+        </span>
       ) : null}
     </div>
   )
