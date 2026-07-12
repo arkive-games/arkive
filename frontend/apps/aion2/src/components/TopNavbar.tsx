@@ -7,6 +7,7 @@ import { ShellTopBar } from "@gamemap/map-shell";
 import { Button, Popover, PopoverContent, PopoverTrigger } from "@gamemap/ui";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
+import GlobalSearchWidget from "@/components/GlobalSearchWidget";
 
 // "abyss" is disabled for now — kept in the Theme type + CSS for easy re-enable,
 // but not offered in the switcher.
@@ -54,6 +55,7 @@ export default function TopNavbar() {
           </div>
         </>
       }
+      search={<GlobalSearchWidget />}
       languageSwitcher={{
         languages: SUPPORTED_LANGUAGES.map((lng) => ({
           code: lng,
