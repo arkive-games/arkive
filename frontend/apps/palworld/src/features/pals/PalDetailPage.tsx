@@ -251,6 +251,11 @@ export default function PalDetailPage() {
               {pal.elements.map((e) => (
                 <ElementBadge key={e} element={e} label={bundle.enums.elements[e] ?? e} />
               ))}
+              {pal.size ? (
+                <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                  {t('pal.stat.size')}: {pal.size}
+                </span>
+              ) : null}
               <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
                 {fs.reaction}: {fs.reactions[pal.reaction] ?? pal.reaction}
               </span>

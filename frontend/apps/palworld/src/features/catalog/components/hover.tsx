@@ -266,7 +266,7 @@ function WorkBadge({ work, level, label }: { work: WorkType; level: number; labe
 }
 
 export function PalSummary({ pal }: { pal: PalEntry }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { pals } = useCatalogData()
   const fs = filterStrings(i18n.language)
   const name = pals?.text[pal.id]?.name ?? pal.id
@@ -290,6 +290,11 @@ export function PalSummary({ pal }: { pal: PalEntry }) {
         {pal.elements.map((e) => (
           <ElementBadge key={e} element={e} label={pals?.enums.elements[e] ?? e} size={14} />
         ))}
+        {pal.size ? (
+          <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+            {t('pal.stat.size')}: {pal.size}
+          </span>
+        ) : null}
         {pal.reaction && pal.reaction !== 'None' ? (
           <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
             {fs.reaction}: {fs.reactions[pal.reaction] ?? pal.reaction}

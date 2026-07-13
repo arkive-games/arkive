@@ -66,13 +66,18 @@ unchanged.
 
 ### 6. Grid cards — `src/features/pals/components/PalCard.tsx`
 
-- The card's top row becomes a two-ended flex row: Paldeck number left (as today), a
-  small muted size tag (e.g. `XL`, `text-xs text-muted-foreground`) on the right.
-  Always visible.
+- **Unchanged.** (An always-visible corner tag was tried first and rejected by review:
+  the size lives in the hover card instead, keeping the dense grid clean.)
 
-### 7. Detail page
+### 7. Hover card — `src/features/catalog/components/hover.tsx` (`PalSummary`)
 
-- No change (size already renders in the Details card).
+- A `Size: XS`-style pill (`t('pal.stat.size')`: code) in the badges row, between the
+  element badges and the reaction pill, styled like the reaction pill.
+
+### 8. Detail page — `src/features/pals/PalDetailPage.tsx`
+
+- Same `Size: XS` pill in the header badges row (between elements and reaction), in
+  addition to the existing Size row in the Details card.
 
 ## Testing
 
