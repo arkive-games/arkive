@@ -14,7 +14,7 @@ import {
   cn,
 } from '@gamemap/ui'
 import { elementIconUrl, itemIconUrl, workIconUrl } from '../../../lib/assets'
-import { type PalsBundle } from '../../../lib/pals'
+import { SIZE_ORDER, type PalsBundle } from '../../../lib/pals'
 import { filterStrings } from '../filterStrings'
 import { isFilterActive, toggle, type PalFilter } from '../useFilteredPals'
 
@@ -84,13 +84,20 @@ export function PalFilters({
   filter: PalFilter
   onChange: (f: PalFilter) => void
 }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const fs = filterStrings(i18n.resolvedLanguage ?? 'en-US')
   const [lootOpen, setLootOpen] = useState(false)
 
   // Which element / work / reaction values exist in the roster is decided by the
   // pipeline (data-palworld/pals.json `filters`) so chips with no pals are hidden.
   const { elements, works, reactions } = bundle.filters
+
+  // Size facet is derived client-side (not in the pipeline's `filters` block):
+  // canonical order, hiding any size with no pals — same idea as the loot list.
+  const sizes = useMemo(
+    () => SIZE_ORDER.filter((s) => bundle.pals.some((p) => p.size === s)),
+    [bundle],
+  )
 
   // Every lootable item id (union of all drops), in the game's inventory order
   // (items.json position = SortId) — identical across languages.
@@ -152,6 +159,20 @@ export function PalFilters({
               onClick={() => onChange({ ...filter, reactions: toggle(filter.reactions, r) })}
             >
               {fs.reactions[r] ?? r}
+            </Chip>
+          ))}
+        </Group>
+      ) : null}
+
+      {sizes.length ? (
+        <Group label={t('pal.stat.size')}>
+          {sizes.map((s) => (
+            <Chip
+              key={s}
+              active={filter.sizes.includes(s)}
+              onClick={() => onChange({ ...filter, sizes: toggle(filter.sizes, s) })}
+            >
+              {s}
             </Chip>
           ))}
         </Group>
@@ -222,7 +243,7 @@ export function PalFilters({
             variant="ghost"
             size="sm"
             className="h-7 text-xs text-muted-foreground"
-            onClick={() => onChange({ ...filter, elements: [], works: [], reactions: [], nocturnal: false, loot: null })}
+            onClick={() => onChange({ ...filter, elements: [], works: [], reactions: [], sizes: [], nocturnal: false, loot: null })}
           >
             {fs.clear}
           </Button>

@@ -27,6 +27,10 @@ export const REACTIONS = [
 ] as const
 export type Reaction = (typeof REACTIONS)[number]
 
+/** Pal body size (raw `EPalSizeType` codes, smallest→largest). The game ships no
+ *  localized names for these; the codes are shown as-is in every language. */
+export const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL'] as const
+
 // --- data shapes (mirror pals.json / passives.json) --------------------------
 export interface PalStats {
   hp: number; meleeAttack: number; shotAttack: number; defense: number
