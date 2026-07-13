@@ -15,7 +15,7 @@ import { toGameCoords } from './lib/coords'
 import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
-import { PalDropBadges, RewardBadges } from './components/RewardBadges'
+import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
@@ -452,11 +452,14 @@ export default function App() {
     )
     const count = marker.count
     const isPal = catId === 'pal'
+    const isEffigy = catId === 'effigy'
     const pal = isPal && palsBundle ? palsBundle.byId.get(marker.subtype) : undefined
     // Kill drops: wild spawns key the pal by subtype; field bosses and
     // predators link their catchable pal via `pal`; wanted criminals (human
     // bosses, no pal to look up) carry their drops on the marker itself.
-    const dropsPal = pal ?? (marker.pal && palsBundle ? palsBundle.byId.get(marker.pal) : undefined)
+    // Effigies also carry marker.pal (for pal-detail page links) but must NOT
+    // resolve drops from it — they show the relic item via EffigyItemBadge.
+    const dropsPal = pal ?? (!isEffigy && marker.pal && palsBundle ? palsBundle.byId.get(marker.pal) : undefined)
     const drops = dropsPal?.drops ?? marker.drops
     return (
       <MarkerPopupCard
@@ -494,6 +497,9 @@ export default function App() {
         ) : null}
         {drops && drops.length > 0 && palsBundle ? (
           <PalDropBadges drops={drops} bundle={palsBundle} />
+        ) : null}
+        {isEffigy ? (
+          <EffigyItemBadge icon={marker.subtypeMeta?.icon} name={marker.subtypeLabel ?? marker.subtype} />
         ) : null}
         {marker.reward ? (
           // Ancient Shrine: the unlocked item, the schematic itself, and Dog Coins.

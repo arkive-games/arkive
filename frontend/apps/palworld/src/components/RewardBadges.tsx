@@ -70,6 +70,40 @@ export function RewardBadges({ reward }: { reward: NonNullable<MarkerRow['reward
 }
 
 /**
+ * Effigy item badge: shows the relic item you pick up at an effigy location.
+ * Links to the item's encyclopedia page for relic icons (T_itemicon_* prefix →
+ * strip to get the item id); falls back to a plain badge for pal-portrait icons.
+ */
+export function EffigyItemBadge({ icon, name }: { icon: string | undefined; name: string }) {
+  if (!icon) return null
+  const itemId = icon.startsWith('T_itemicon_') ? icon.replace('T_itemicon_', '') : null
+  const content = (
+    <>
+      <img src={itemIconUrl(icon)} alt="" width={16} height={16} className="object-contain" />
+      {name}
+    </>
+  )
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-muted-foreground">
+      {itemId ? (
+        <Link
+          to="/items/$id"
+          params={{ id: itemId }}
+          data-testid="marker-effigy-item"
+          className={cn(pillClass, 'transition-colors hover:bg-secondary/80 hover:text-foreground')}
+        >
+          {content}
+        </Link>
+      ) : (
+        <span data-testid="marker-effigy-item" className={pillClass}>
+          {content}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/**
  * Kill-drop badges for a pal-linked marker (wild spawn, field boss, predator):
  * icon + localized name + quantity, plus the rate when the drop isn't
  * guaranteed. Names/icons come from the pals bundle the map already loads,
