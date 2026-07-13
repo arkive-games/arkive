@@ -12,6 +12,7 @@ import {
   type BuildingsBundle,
   type TechBundle,
 } from '../../lib/catalog'
+import { loadPals, type PalsBundle } from '../../lib/pals'
 import { itemTypeLabel, typeOrder } from '../catalog/labels'
 import {
   CatalogDataProvider,
@@ -28,6 +29,7 @@ interface Bundles {
   items: ItemsBundle
   buildings: BuildingsBundle
   tech: TechBundle
+  pals: PalsBundle
 }
 
 export default function ItemListPage() {
@@ -43,10 +45,11 @@ export default function ItemListPage() {
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    // Buildings + tech feed the item hover cards (crafted-at / unlock-tech).
-    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng)])
-      .then(([items, buildings, tech]) => {
-        if (!cancelled) setBundles({ items, buildings, tech })
+    // Buildings + tech + pals feed the item hover cards (crafted-at /
+    // unlock-tech / dropped-by / element labels).
+    Promise.all([loadItems(lng), loadBuildings(lng), loadTech(lng), loadPals(lng)])
+      .then(([items, buildings, tech, pals]) => {
+        if (!cancelled) setBundles({ items, buildings, tech, pals })
       })
       .catch((err) => {
         console.error(err)
@@ -124,7 +127,12 @@ export default function ItemListPage() {
           ) : !bundle ? (
             <CatalogPageLoading />
           ) : (
-            <CatalogDataProvider items={bundle} buildings={bundles?.buildings} tech={bundles?.tech}>
+            <CatalogDataProvider
+              items={bundle}
+              buildings={bundles?.buildings}
+              tech={bundles?.tech}
+              pals={bundles?.pals}
+            >
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
                 {shown.map((i) => (
                   <HoverCard key={i.id} openDelay={120} closeDelay={120}>

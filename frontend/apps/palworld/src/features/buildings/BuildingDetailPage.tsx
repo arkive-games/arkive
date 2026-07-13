@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
 import { ContentPage } from '../../components/ContentPage'
@@ -20,8 +20,11 @@ import {
   CatalogPageLoading,
   CatalogNotFound,
   CatalogDataProvider,
+  ItemLink,
   MaterialChip,
 } from '../catalog/components'
+import { RevealFooter } from '../catalog/RevealFooter'
+import { useIncrementalList } from '../catalog/useIncrementalList'
 import { buildingUnlockLevel, makeTechResolvers } from '../technology/techModel'
 import { TechChip } from '../technology/components/TechChip'
 
@@ -55,6 +58,20 @@ export default function BuildingDetailPage() {
       cancelled = true
     }
   }, [lng, t])
+
+  // Items craftable at this building — the reverse of item.recipe.craftedAt
+  // (the dataset only stores the relation on the item side). Stable game
+  // inventory order (SortId), identical across languages.
+  const crafts = useMemo(() => {
+    if (!b) return []
+    return b.items.items
+      .filter((i) => !i.illegal && i.recipe?.craftedAt?.includes(id))
+      .sort((x, y) => x.sortId - y.sortId || x.id.localeCompare(y.id))
+  }, [b, id])
+
+  // Production stations craft up to ~900 items (AncientWorkBench) — reveal
+  // the chip list incrementally like the item grid.
+  const craftsReveal = useIncrementalList(crafts, `building.${id}.crafts`)
 
   let body: React.ReactNode
   if (loadError) {
@@ -130,6 +147,23 @@ export default function BuildingDetailPage() {
                   </div>
                 </CatalogSection>
               ) : null}
+
+              {crafts.length ? (
+                <CatalogSection title={`${t('building.section.crafts')} · ${crafts.length}`}>
+                  <div className="flex flex-wrap gap-1.5">
+                    {craftsReveal.shown.map((i) => (
+                      <ItemLink key={i.id} id={i.id} name={iname(i.id)} icon={i.icon} />
+                    ))}
+                  </div>
+                  <RevealFooter
+                    shownCount={craftsReveal.shown.length}
+                    remaining={craftsReveal.remaining}
+                    showMore={craftsReveal.showMore}
+                    sentinelRef={craftsReveal.sentinelRef}
+                    testId="building-crafts-show-more"
+                  />
+                </CatalogSection>
+              ) : null}
             </div>
 
             {/* Sidebar */}
@@ -156,7 +190,7 @@ export default function BuildingDetailPage() {
 
   return (
     <ContentPage active="/buildings" title={t('building.title')} maxWidth="max-w-5xl">
-      <CatalogDataProvider items={b?.items} buildings={b?.buildings} tech={b?.tech}>
+      <CatalogDataProvider items={b?.items} buildings={b?.buildings} tech={b?.tech} pals={b?.pals}>
         {body}
       </CatalogDataProvider>
     </ContentPage>

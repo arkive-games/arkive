@@ -88,6 +88,10 @@ function TechMiniChip({ id }: { id: string }) {
   )
 }
 
+/** Dropped-by cap in the compact item card. Common materials are dropped by
+ *  dozens of pals (Leather: 78) — the full list lives on the detail page. */
+const DROPPED_BY_MAX = 6
+
 export function ItemSummary({ item }: { item: ItemEntry }) {
   const { t } = useTranslation()
   const { items, buildings, tech, pals } = useCatalogData()
@@ -155,6 +159,26 @@ export function ItemSummary({ item }: { item: ItemEntry }) {
                 icon={buildings.byId.get(bid)?.icon}
               />
             ))}
+          </div>
+        </div>
+      ) : null}
+      {item.droppedBy?.length && pals ? (
+        <div>
+          <div className="mb-1 text-xs text-muted-foreground">{t('item.droppedBy')}</div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {item.droppedBy.slice(0, DROPPED_BY_MAX).map((pid) => (
+              <PalLink
+                key={pid}
+                id={pid}
+                name={pals.text[pid]?.name ?? pid}
+                icon={pals.byId.get(pid)?.icon}
+              />
+            ))}
+            {item.droppedBy.length > DROPPED_BY_MAX ? (
+              <span className="text-xs tabular-nums text-muted-foreground">
+                +{item.droppedBy.length - DROPPED_BY_MAX}
+              </span>
+            ) : null}
           </div>
         </div>
       ) : null}
