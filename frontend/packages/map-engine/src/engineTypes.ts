@@ -114,6 +114,28 @@ export interface GameMapViewProps {
   /** Position to fly to (search / deep-link), DATA image-space. */
   selectedPosition: { x: number; y: number } | null;
   /**
+   * View to open at instead of the default (whole map at min zoom): center in
+   * DATA space + Leaflet zoom. Read once at map mount (the container is keyed
+   * by map id, so a per-map value applies on each switch); later changes are
+   * ignored. Out-of-range values are clamped, non-finite ones fall back to the
+   * default view.
+   */
+  initialView?: { x: number; y: number; zoom: number } | null;
+  /**
+   * Fired at the end of every pan/zoom gesture (`moveend`/`zoomend`, plus once
+   * on mount) with the current center in DATA space and the Leaflet zoom —
+   * the persistence feed for `initialView`.
+   */
+  onViewChange?: (view: { x: number; y: number; zoom: number }) => void;
+  /**
+   * One-shot: skip the fly-to the FIRST time selection lands on this marker
+   * id. Used when restoring a persisted selection, so reopening the popup
+   * doesn't yank the map away from the restored center. Later selections of
+   * the same marker fly normally; resets when the map (keyed container)
+   * remounts.
+   */
+  suppressInitialFlyForId?: string | null;
+  /**
    * Line overlays in DATA space, rendered as dashed polylines above the tiles
    * (e.g. the link between a selected teleporter and its partner). The app
    * supplies/clears them; undefined/empty = none.

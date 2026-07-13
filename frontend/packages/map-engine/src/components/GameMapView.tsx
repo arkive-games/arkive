@@ -9,7 +9,7 @@ import type {
   GameMapViewProps,
 } from "../engineTypes.ts";
 import { DEFAULT_MAP_THEME } from "../theme.ts";
-import { dataToLatLng } from "../coords.ts";
+import { dataToLatLng, latLngToData } from "../coords.ts";
 // Side effect: registers the smooth wheel-zoom handler on L.Map (the
 // smoothWheelZoom/smoothSensitivity MapContainer props below need it).
 import "../leaflet-smooth-wheel-zoom.ts";
@@ -47,6 +47,10 @@ const DEFAULT_LABELS: GameMapViewLabels = {
 const TIER2_MIN_ZOOM = -1.25; // at/above this zoom, tier-2 markers appear
 const TIER3_MIN_ZOOM = 0; // at/above this zoom, tier-3 markers appear
 
+/** Zoom range of the map container (also clamps a restored `initialView`). */
+const MIN_ZOOM = -3;
+const MAX_ZOOM = 2;
+
 /**
  * Viewport culling: only markers whose position falls inside the current map
  * bounds (expanded by this fraction on each side) are mounted. The padding
@@ -82,17 +86,19 @@ function visibleTierForZoom(zoom: number): number {
  * markers cull correctly before the first gesture.
  */
 const ViewportWatcher: React.FC<{
-  onChange: (zoom: number, bounds: L.LatLngBounds) => void;
+  onChange: (zoom: number, bounds: L.LatLngBounds, center: L.LatLng) => void;
 }> = ({ onChange }) => {
   const map = useMap();
   useEffect(() => {
-    onChange(map.getZoom(), map.getBounds());
+    onChange(map.getZoom(), map.getBounds(), map.getCenter());
     // Run once per map instance; `onChange` is a stable useCallback.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]);
   useMapEvents({
-    moveend: (e) => onChange(e.target.getZoom(), e.target.getBounds()),
-    zoomend: (e) => onChange(e.target.getZoom(), e.target.getBounds()),
+    moveend: (e) =>
+      onChange(e.target.getZoom(), e.target.getBounds(), e.target.getCenter()),
+    zoomend: (e) =>
+      onChange(e.target.getZoom(), e.target.getBounds(), e.target.getCenter()),
   });
   return null;
 };
@@ -140,6 +146,9 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   selectedMarkerId,
   forceShowIds,
   selectedPosition,
+  initialView,
+  onViewChange,
+  suppressInitialFlyForId,
   overlayLines,
   onToggleMarker,
   subzoneAt,
@@ -156,18 +165,40 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   const [hoveredRegion, setHoveredRegion] = useState<RegionInstance | undefined>(
     undefined,
   );
-  // Initialized to the MapContainer default zoom (-3); updated on `zoomend`.
-  const [zoom, setZoom] = useState(-3);
+  // Restored view (persistence): applied to the MapContainer at mount only —
+  // the container is keyed by map id, so a per-map value takes effect on each
+  // switch and later prop changes are ignored. Non-finite values fall back to
+  // the default whole-map view; zoom clamps to the container range and the
+  // center is clamped into the map's pixel bounds below (once the size is
+  // known).
+  const hasInitialView =
+    !!initialView &&
+    Number.isFinite(initialView.x) &&
+    Number.isFinite(initialView.y) &&
+    Number.isFinite(initialView.zoom);
+  const initialZoom = hasInitialView
+    ? Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, initialView.zoom))
+    : MIN_ZOOM;
+
+  // Initialized to the mount zoom; updated on `zoomend` (and seeded again by
+  // ViewportWatcher when the container mounts).
+  const [zoom, setZoom] = useState(initialZoom);
   // Padded visible bounds for viewport culling; null until the map is ready
   // (during which culling is skipped — only the few default-zoom markers show).
   const [viewBounds, setViewBounds] = useState<L.LatLngBounds | null>(null);
 
   const handleViewport = useCallback(
-    (z: number, bounds: L.LatLngBounds) => {
+    (z: number, bounds: L.LatLngBounds, center: L.LatLng) => {
       setZoom(z);
       setViewBounds(bounds.pad(VIEWPORT_PAD));
+      // Report the end-of-gesture view in DATA space (what markers use), so
+      // apps can persist it without knowing about Leaflet coordinates.
+      if (onViewChange && selectedMap) {
+        const c = latLngToData(selectedMap, center.lat, center.lng);
+        onViewChange({ x: c.x, y: c.y, zoom: z });
+      }
     },
-    [],
+    [onViewChange, selectedMap],
   );
 
   const handleCopyPosition = useCallback((x: number, y: number) => {
@@ -368,6 +399,20 @@ const GameMapView: React.FC<GameMapViewProps> = ({
 
   const center: [number, number] = [height / 2, width / 2];
 
+  // Mount view: the restored view when one is stored, else the default
+  // (whole map, fully zoomed out). The restored center is clamped into the
+  // map's pixel bounds so stale/foreign data can't open onto empty void.
+  let mountCenter: L.LatLngExpression = center;
+  let mountZoom = MIN_ZOOM;
+  if (hasInitialView) {
+    const c = dataToLatLng(selectedMap, initialView.x, initialView.y);
+    mountCenter = [
+      Math.min(height, Math.max(0, c.lat)),
+      Math.min(width, Math.max(0, c.lng)),
+    ];
+    mountZoom = initialZoom;
+  }
+
   return (
     <div
       // `.gm-map-root` (engine.css) isolates the map's stacking context so its
@@ -379,11 +424,11 @@ const GameMapView: React.FC<GameMapViewProps> = ({
     >
       <MapContainer
         key={selectedMap.id}
-        center={center}
+        center={mountCenter}
         bounds={bounds}
-        zoom={-3}
-        minZoom={-3}
-        maxZoom={2}
+        zoom={mountZoom}
+        minZoom={MIN_ZOOM}
+        maxZoom={MAX_ZOOM}
         // Smooth, continuous zoom. zoomSnap=0 lets the map settle on any
         // fractional zoom (no stepping to 0.25 boundaries). The built-in
         // (discrete) wheel handler is disabled (scrollWheelZoom=false) in
@@ -469,6 +514,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
           selectedMarkerId={selectedMarkerId}
           selectedPosition={selectedPosition}
           flyToDuration={flyToDuration}
+          suppressInitialFlyForId={suppressInitialFlyForId}
         />
 
         <SelectedMarkerPopup

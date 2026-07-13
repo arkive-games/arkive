@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 import type { GameMapMeta } from "@gamemap/data-contract";
 import type { EngineMarker } from "../engineTypes.ts";
@@ -11,6 +11,8 @@ type MarkerFocusControllerProps = {
   selectedPosition: { x: number; y: number } | null | undefined;
   /** Duration (seconds) of the fly-to animation. */
   flyToDuration: number;
+  /** One-shot: skip the first fly for this id (restored selection). */
+  suppressInitialFlyForId?: string | null;
 };
 
 /**
@@ -24,8 +26,15 @@ const MarkerFocusController: React.FC<MarkerFocusControllerProps> = ({
   selectedMarkerId,
   selectedPosition,
   flyToDuration,
+  suppressInitialFlyForId,
 }) => {
   const leafletMap = useMap();
+
+  // Whether the one-shot suppression has been consumed. A restored selection
+  // (selection set programmatically right after the map mounts at a restored
+  // view) must NOT fly — flying would recenter on the marker and stomp the
+  // restored position. Any later selection of the same id flies normally.
+  const suppressConsumedRef = useRef(false);
 
   // Key the fly-to on the selected marker's COORDS, not the marker object or
   // the lookup map: `EngineMarker`s are rebuilt whenever app-side state (e.g.
@@ -39,10 +48,22 @@ const MarkerFocusController: React.FC<MarkerFocusControllerProps> = ({
     if (!leafletMap || !selectedMarkerId) return;
     if (markerX == null || markerY == null) return;
 
+    if (
+      !suppressConsumedRef.current &&
+      suppressInitialFlyForId != null &&
+      selectedMarkerId === suppressInitialFlyForId
+    ) {
+      suppressConsumedRef.current = true;
+      return;
+    }
+
     // DATA (image-space) → Leaflet LatLng with the single vertical flip.
     const latLng = dataToLatLng(map, markerX, markerY);
 
     leafletMap.flyTo(latLng, leafletMap.getZoom(), { duration: flyToDuration });
+    // suppressInitialFlyForId is read, not reacted to: its arrival alone must
+    // not re-run (and thus trigger) a fly for the already-selected marker.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leafletMap, selectedMarkerId, markerX, markerY, map, flyToDuration]);
 
   useEffect(() => {
