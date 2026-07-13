@@ -67,6 +67,7 @@ function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
       </td>
       <td className="px-2 py-1.5 text-center text-xs">{pal.nocturnal ? fs.yes : '—'}</td>
       <td className="px-2 py-1.5 text-xs">{fs.reactions[pal.reaction] ?? pal.reaction}</td>
+      <td className="px-2 py-1.5 text-center text-xs text-muted-foreground">{pal.size || '—'}</td>
       <td className="px-2 py-1.5 text-center tabular-nums text-xs text-muted-foreground">{pal.rarity}</td>
       <td className="px-2 py-1.5">
         <div className="flex flex-wrap gap-1">
@@ -94,7 +95,8 @@ function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
 }
 
 export function PalTable({ pals, bundle }: { pals: PalEntry[]; bundle: PalsBundle }) {
-  const fs = filterStrings(useTranslation().i18n.resolvedLanguage ?? 'en-US')
+  const { t, i18n } = useTranslation()
+  const fs = filterStrings(i18n.resolvedLanguage ?? 'en-US')
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full min-w-[720px] border-collapse text-sm">
@@ -106,6 +108,7 @@ export function PalTable({ pals, bundle }: { pals: PalEntry[]; bundle: PalsBundl
             <th className="px-2 py-2">{fs.col.work}</th>
             <th className="px-2 py-2 text-center">{fs.col.nocturnal}</th>
             <th className="px-2 py-2">{fs.col.reaction}</th>
+            <th className="px-2 py-2 text-center">{t('pal.stat.size')}</th>
             <th className="px-2 py-2 text-center">{fs.col.rarity}</th>
             <th className="px-2 py-2">{fs.col.drops}</th>
           </tr>
