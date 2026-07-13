@@ -46,21 +46,23 @@ unchanged.
 
 ### 3. Filter UI — `src/features/pals/components/PalFilters.tsx`
 
-- New chip `Group` labeled with `fs.size`, placed between **Reaction** and **Sleepless**.
+- New chip `Group` labeled with `t('pal.stat.size')`, placed between **Reaction** and
+  **Sleepless**.
 - Text-only chips (no glyph), labels = raw codes `XS S M L XL`, toggling
   `filter.sizes` via the existing `toggle` helper.
 - The clear-filters button also resets `sizes: []`.
 
-### 4. Strings — `src/features/pals/filterStrings.ts`
+### 4. Strings
 
-- Add `size: string` (group label) and `col.size: string` (table header) to
-  `FilterStrings`, with hand-authored values for the existing override set:
-  - en-US: `Size`, zh-CN: `尺寸`, zh-TW: `尺寸`, ja-JP: `サイズ`, ko-KR: `크기`.
+- No new strings. The detail page's stat label `pal.stat.size` already exists in
+  `palStrings.ts` for **all 17 languages** (en `Size`, zh-CN `体型`, zh-TW `體型`,
+  ja `サイズ`, ko `크기`, …); the filter group label and the table column header
+  reuse `t('pal.stat.size')`. `filterStrings.ts` is untouched.
 
 ### 5. Table view — `src/features/pals/components/PalTable.tsx`
 
-- New centered `Size` column immediately **before Rarity**: header `fs.col.size`, cell =
-  raw code with the same muted/tabular styling as the Rarity cell.
+- New centered `Size` column immediately **before Rarity**: header `t('pal.stat.size')`,
+  cell = raw code with the same muted styling as the Rarity cell.
 
 ### 6. Grid cards — `src/features/pals/components/PalCard.tsx`
 
