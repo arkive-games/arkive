@@ -125,6 +125,30 @@ test('Building page category chips toggle', async ({ page }) => {
   await expect(chip).toHaveAttribute('aria-pressed', 'true')
 })
 
+test('Multi-line tooltip text fills the tooltip width', async ({ page }) => {
+  await page.goto('/passives')
+  await page.getByTestId('category-mutation').hover()
+  const tip = page.locator('[data-slot="tooltip-content"]')
+  await expect(tip).toBeVisible()
+  // The mutation tip wraps to several lines under max-w-xs; greedy wrapping
+  // must fill the available width instead of leaving a gap on the right
+  // (text-balance shortens lines without shrinking the box).
+  const { inner, maxLine, lines } = await tip.evaluate((el) => {
+    const textNode = [...el.childNodes].find((n) => n.nodeType === Node.TEXT_NODE)
+    const range = document.createRange()
+    range.selectNodeContents(textNode!)
+    const rects = [...range.getClientRects()]
+    const cs = getComputedStyle(el)
+    return {
+      inner: el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+      maxLine: Math.max(...rects.map((r) => r.width)),
+      lines: rects.length,
+    }
+  })
+  expect(lines).toBeGreaterThan(1)
+  expect(maxLine).toBeGreaterThan(inner - 40)
+})
+
 test('Passive cards link the pals that carry the passive', async ({ page }) => {
   await page.goto('/passives')
   const palLink = page.locator('[data-testid="passive-pal"]').first()
