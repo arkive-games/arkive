@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearch } from '@tanstack/react-router'
 import { GameMapView, type EngineMarker, type MapRef } from '@gamemap/map-engine'
-import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, type FilterCategory, type SearchItem } from '@gamemap/map-shell'
+import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers,
@@ -55,6 +55,25 @@ function readStoredSubtypes(): Set<string> | null {
   }
 }
 
+// Per-map view + selection persistence (center, zoom, selected marker), fed
+// into useMapViewMemory. The storage-free shell hook gets storage through this
+// adapter, same as the theme.
+const MAP_VIEW_KEY = 'palworld.map.view'
+const mapViewStore: MapViewStore = {
+  get: () => {
+    try {
+      return localStorage.getItem(MAP_VIEW_KEY)
+    } catch {
+      return null
+    }
+  },
+  set: (raw) => {
+    try {
+      localStorage.setItem(MAP_VIEW_KEY, raw)
+    } catch { /* no storage — feature degrades to non-persistent */ }
+  },
+}
+
 export default function App() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -87,11 +106,21 @@ export default function App() {
   }, [mapParam])
   // Per-map completed-marker ids (effigies/bosses), persisted in localStorage.
   const { completed, toggleCompleted } = useCompletedMarkers(mapId)
+  // Per-map view (center/zoom) + selected marker, persisted across reloads.
+  const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId)
+  // Marker id restored from storage for the current markers load — passed to
+  // the engine so the restore does NOT fly (the restored center wins). Cleared
+  // when a reload starts and set again by each restore, which re-arms the
+  // engine's one-shot suppression (e.g. across a locale switch).
+  const [restoredMarkerId, setRestoredMarkerId] = useState<string | null>(null)
   // Ids of the markers currently in the search results — forced onto the map so
   // a hit shows even when its subtype filter is off (see SearchPanel).
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
   const [palsBundle, setPalsBundle] = useState<PalsBundle | null>(null)
-  const [markerData, setMarkerData] = useState<{ markers: MarkerRow[]; l10n: MarkerLocale } | null>(null)
+  // `mapId` records which map the loaded markers belong to — the selection
+  // persistence below must not write while markers and mapId disagree (the
+  // one-commit window right after a map switch).
+  const [markerData, setMarkerData] = useState<{ mapId: string; markers: MarkerRow[]; l10n: MarkerLocale } | null>(null)
   const [visible, setVisible] = useState<Set<string>>(() => restoredVisible ?? new Set())
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
   const [selectedPosition, setSelectedPosition] = useState<{ x: number; y: number } | null>(null)
@@ -147,16 +176,22 @@ export default function App() {
   // current selection first).
   const pendingSelectRef = useRef<string | null>(null)
 
-  // Clear selection on map switch
+  // Clear selection on map switch (and on locale reload — the popup teardown
+  // fires a deselect anyway), then restore once the markers arrive: a pending
+  // cross-map warp-link target wins; otherwise the stored selection reopens,
+  // with the fly suppressed so the restored center stays put. Storage is
+  // re-read here (not the mount snapshot) so a deselect saved since then isn't
+  // resurrected by a locale switch.
   useEffect(() => {
     setMarkerData(null)
     setSelectedMarkerId(null)
     setSelectedPosition(null)
+    setRestoredMarkerId(null)
     let cancelled = false
     loadMarkers(mapId, lng)
       .then((d) => {
         if (cancelled) return
-        setMarkerData(d)
+        setMarkerData({ mapId, ...d })
         const pending = pendingSelectRef.current
         if (pending) {
           pendingSelectRef.current = null
@@ -164,6 +199,12 @@ export default function App() {
           if (target) {
             setSelectedMarkerId(target.id)
             setSelectedPosition({ x: target.x, y: target.y })
+          }
+        } else {
+          const stored = readMapView(mapViewStore, mapId).marker
+          if (stored && d.markers.some((m) => m.id === stored)) {
+            setRestoredMarkerId(stored)
+            setSelectedMarkerId(stored)
           }
         }
       })
@@ -174,6 +215,15 @@ export default function App() {
       })
     return () => { cancelled = true }
   }, [mapId, lng, t])
+
+  // Persist the selection per map. Guarded on the loaded markers belonging to
+  // the CURRENT map: right after a map switch the old selection coexists with
+  // the new mapId for one commit, and writing then would corrupt the new
+  // map's stored entry before its own restore ran.
+  useEffect(() => {
+    if (!markerData || markerData.mapId !== mapId) return
+    saveMarker(selectedMarkerId)
+  }, [markerData, mapId, selectedMarkerId, saveMarker])
 
   // A bad `?map=` deep link would otherwise leave the engine in its empty
   // state; fall back to the default once the map list is known.
@@ -599,6 +649,9 @@ export default function App() {
       selectedMarkerId={selectedMarkerId}
       forceShowIds={forceShowIds}
       selectedPosition={selectedPosition}
+      initialView={initialView}
+      onViewChange={saveView}
+      suppressInitialFlyForId={restoredMarkerId}
       overlayLines={overlayLines}
       onToggleMarker={onToggleMarker}
       subzoneAt={subzoneAt}

@@ -6,7 +6,14 @@ import {
   type GameMapViewLabels,
   type MapRef,
 } from "@gamemap/map-engine";
-import { ShellLayout, SearchPanel, type SearchItem } from "@gamemap/map-shell";
+import {
+  ShellLayout,
+  SearchPanel,
+  readMapView,
+  useMapViewMemory,
+  type MapViewStore,
+  type SearchItem,
+} from "@gamemap/map-shell";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { useGameData } from "@/context/GameDataContext";
@@ -19,15 +26,37 @@ import TopNavbar from "@/components/TopNavbar";
 import { getQueryParam, parseIconUrl } from "@/lib/url";
 import { ICP_RECORD, MAP_FLY_TO_DURATION } from "@/lib/constants";
 
+// Per-map view + selection persistence (center, zoom, selected marker), fed
+// into useMapViewMemory. The storage-free shell hook gets storage through this
+// adapter, same as the theme.
+const MAP_VIEW_KEY = "aion2.map.view";
+const mapViewStore: MapViewStore = {
+  get: () => {
+    try {
+      return localStorage.getItem(MAP_VIEW_KEY);
+    } catch {
+      return null;
+    }
+  },
+  set: (raw) => {
+    try {
+      localStorage.setItem(MAP_VIEW_KEY, raw);
+    } catch { /* no storage — feature degrades to non-persistent */ }
+  },
+};
+
 export default function MapRoute() {
   const mapRef = useRef<MapRef>(null);
   const appliedDeepLink = useRef(false);
+  // Whether the deep link actually navigated somewhere (marker or position) —
+  // in that case the stored selection must NOT be restored on top of it.
+  const deepLinkNavigated = useRef(false);
 
   // App contexts → engine props. MapRoute is the ADAPTER: the engine
   // components (@gamemap/map-engine) read no app context themselves;
   // everything they need is derived here and passed down.
   const { selectedMap, types } = useGameMap();
-  const { markers, markersById, regions, showLabels, completedBySubtype } =
+  const { markers, markersById, regions, showLabels, completedBySubtype, markersMapId } =
     useMarkers();
   const { visibleSubtypes, visibleRegions, showBorders, lodEnabled, allSubtypes } =
     useGameData();
@@ -57,6 +86,13 @@ export default function MapRoute() {
     x: number;
     y: number;
   } | null>(null);
+
+  // Per-map view (center/zoom) + selected marker, persisted across reloads.
+  const mapId = selectedMap?.id ?? "";
+  const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId);
+  // Marker id restored from storage — passed to the engine so the restore does
+  // NOT fly (the restored center wins); a later manual selection flies again.
+  const [restoredMarkerId, setRestoredMarkerId] = useState<string | null>(null);
 
   // Ids of the current search results — forced onto the map so a hit shows even
   // when its subtype filter is off (the engine bypasses the filter for these).
@@ -174,6 +210,7 @@ export default function MapRoute() {
     const pos = getQueryParam("pos");
     if (markerId && markersById[markerId]) {
       const marker = markersById[markerId];
+      deepLinkNavigated.current = true;
       queueMicrotask(() => {
         setSelectedMarkerId(markerId);
         setSelectedPosition({
@@ -187,10 +224,49 @@ export default function MapRoute() {
     if (pos) {
       const [x, y] = pos.split(",").map(Number);
       if (Number.isFinite(x) && Number.isFinite(y)) {
+        deepLinkNavigated.current = true;
         queueMicrotask(() => setSelectedPosition({ x, y }));
       }
     }
   }, [markersById]);
+
+  // Clear the selection when the map switches (it used to linger, id-orphaned,
+  // across switches), so the new map starts from its own stored state.
+  const prevMapIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedMap) return;
+    if (prevMapIdRef.current === selectedMap.id) return;
+    prevMapIdRef.current = selectedMap.id;
+    setSelectedMarkerId(null);
+    setSelectedPosition(null);
+    setRestoredMarkerId(null);
+  }, [selectedMap]);
+
+  // Restore the stored selection once the map's own markers have arrived
+  // (`markersMapId` lags `selectedMap.id` until then). Runs once per map load
+  // — NOT on locale rebuilds of `markersById` — and never on top of a deep
+  // link. Declared after the deep-link effect so the deep-link decision for
+  // this markers arrival has already been made.
+  const restoredForMapRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedMap || markersMapId !== selectedMap.id) return;
+    if (restoredForMapRef.current === markersMapId) return;
+    restoredForMapRef.current = markersMapId;
+    if (deepLinkNavigated.current) return;
+    const stored = readMapView(mapViewStore, mapId).marker;
+    if (stored && markersById[stored]) {
+      setRestoredMarkerId(stored);
+      setSelectedMarkerId(stored);
+    }
+  }, [selectedMap, markersMapId, markersById, mapId]);
+
+  // Persist the selection per map. Guarded on the loaded markers belonging to
+  // the CURRENT map, so the transient window during a map switch can't write
+  // one map's selection under the other map's key.
+  useEffect(() => {
+    if (!selectedMap || markersMapId !== selectedMap.id) return;
+    saveMarker(selectedMarkerId);
+  }, [selectedMarkerId, selectedMap, markersMapId, saveMarker]);
 
   return (
     <ShellLayout
@@ -212,6 +288,9 @@ export default function MapRoute() {
           selectedMarkerId={selectedMarkerId}
           forceShowIds={forceShowIds}
           selectedPosition={selectedPosition}
+          initialView={initialView}
+          onViewChange={saveView}
+          suppressInitialFlyForId={restoredMarkerId}
           onToggleMarker={handleToggleMarker}
           subzoneAt={subzoneAt}
           flyToDuration={MAP_FLY_TO_DURATION}

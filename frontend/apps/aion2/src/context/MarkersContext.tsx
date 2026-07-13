@@ -11,6 +11,14 @@ type MarkersContextValue = {
   markersById: Record<string, MarkerWithTranslations>;
   regions: RegionInstance[];
   loading: boolean;
+  /**
+   * Id of the map the loaded markers belong to, or null while none are
+   * loaded. During a map switch the old markers stay mounted until the new
+   * fetch lands, so this LAGS `selectedMap.id` — consumers that persist
+   * per-map state key on it so one map's state never writes under another
+   * map's key.
+   */
+  markersMapId: string | null;
 
   showLabels: boolean;
   setShowLabels: (value: boolean) => void;
@@ -70,6 +78,7 @@ function loadV2Subtype(map: string, subtype: string): Set<number> {
 export const MarkersProvider = ({children}: MarkersProviderProps) => {
   const [baseMarkers, setBaseMarkers] = useState<MarkerInstance[]>([]);
   const [regions, setRegions] = useState<RegionInstance[]>([]);
+  const [markersMapId, setMarkersMapId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showLabels, setShowLabels] = useState<boolean>(true);
 
@@ -159,6 +168,7 @@ export const MarkersProvider = ({children}: MarkersProviderProps) => {
     if (!selectedMap) {
       setBaseMarkers([]);
       setRegions([]);
+      setMarkersMapId(null);
       return;
     }
 
@@ -176,11 +186,16 @@ export const MarkersProvider = ({children}: MarkersProviderProps) => {
         )
         setBaseMarkers(raw.markers || []);
         setRegions(rawRegion.regions || []);
+        setMarkersMapId(selectedMap?.id ?? null);
       } catch (e) {
         console.error(e);
         if (!cancelled) {
           setBaseMarkers([]);
           setRegions([]);
+          // Load failed: markers belong to no map. Leaving this null keeps
+          // per-map persistence consumers read-only, so an error can't wipe
+          // stored state.
+          setMarkersMapId(null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -333,6 +348,7 @@ export const MarkersProvider = ({children}: MarkersProviderProps) => {
       markersById,
       regions,
       loading,
+      markersMapId,
       showLabels,
       setShowLabels,
       subtypeCounts,

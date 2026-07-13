@@ -34,7 +34,13 @@ const MarkerFocusController: React.FC<MarkerFocusControllerProps> = ({
   // (selection set programmatically right after the map mounts at a restored
   // view) must NOT fly — flying would recenter on the marker and stomp the
   // restored position. Any later selection of the same id flies normally.
+  // Re-arms whenever the suppress id changes: the app clears it when the
+  // markers reload and sets it again on re-restore (e.g. a locale switch), so
+  // each restore gets its own suppressed first fly.
   const suppressConsumedRef = useRef(false);
+  useEffect(() => {
+    suppressConsumedRef.current = false;
+  }, [suppressInitialFlyForId]);
 
   // Key the fly-to on the selected marker's COORDS, not the marker object or
   // the lookup map: `EngineMarker`s are rebuilt whenever app-side state (e.g.
