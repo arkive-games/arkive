@@ -26,6 +26,9 @@ test('selected altar shows connects-to link and a dashed line to its partner', a
   // Sky Island altars overlap at the default zoom — dispatch the click.
   await altars.first().dispatchEvent('click')
 
+  // Altars have no per-marker names — the popup titles them by number.
+  await expect(page.getByTestId('marker-popup-card')).toContainText('Altar #1')
+
   const link = page.getByTestId('marker-warp-link')
   await expect(link).toBeVisible()
   await expect(link).toContainText('Connects to')

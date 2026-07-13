@@ -217,7 +217,9 @@ export default function App() {
         indexInSubtype: m.indexInSubtype,
         images: [] as string[],
         contributors: [] as string[],
-        localizedName: loc?.name ?? subLabel,
+        // Warp altars carry no per-marker names; number the fallback
+        // ("Altar #3") to match the partner-link labels.
+        localizedName: loc?.name ?? (m.warpTo ? `${subLabel} #${m.indexInSubtype}` : subLabel),
         // Fall back to the subtype's shared description (e.g. an effigy's buff)
         // when a marker has no description of its own.
         localizedDescription: loc?.description ?? subtypeL10n?.description,
