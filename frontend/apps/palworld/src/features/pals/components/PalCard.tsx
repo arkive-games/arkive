@@ -15,12 +15,19 @@ export function PalCard({ pal, name }: { pal: PalEntry; name: string }) {
         className="group flex aspect-square flex-col items-center gap-1 rounded-lg border border-border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent"
         data-testid="pal-card"
       >
-        {pid ? (
-          <span className="w-full truncate text-xs tabular-nums text-muted-foreground">
-            {pid.text}
-            {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
-          </span>
-        ) : null}
+        <div className="flex w-full items-baseline justify-between gap-1">
+          {pid ? (
+            <span className="min-w-0 truncate text-xs tabular-nums text-muted-foreground">
+              {pid.text}
+              {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
+            </span>
+          ) : (
+            <span />
+          )}
+          {pal.size ? (
+            <span className="shrink-0 text-xs text-muted-foreground">{pal.size}</span>
+          ) : null}
+        </div>
         <div className="flex min-h-0 flex-1 items-center justify-center">
           <img
             src={palIconUrl(pal.icon)}
