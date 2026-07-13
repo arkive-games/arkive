@@ -63,6 +63,23 @@ test('Passive Skills category filter (chips) narrows the list', async ({ page })
   expect(filtered).toBeLessThan(total)
 })
 
+test('Passive Skills innate chip keeps only passives some pal carries by default', async ({ page }) => {
+  await page.goto('/passives')
+  const rows = page.getByTestId('passive-row')
+  await expect(rows.first()).toBeVisible()
+  const total = await rows.count()
+  const chip = page.getByTestId('category-innate')
+  await chip.click()
+  await expect(chip).toHaveAttribute('aria-pressed', 'true')
+  const filtered = await rows.count()
+  expect(filtered).toBeGreaterThan(0)
+  expect(filtered).toBeLessThan(total)
+  // Every remaining card lists at least one pal that innately carries it.
+  for (let i = 0; i < filtered; i++) {
+    await expect(rows.nth(i).locator('[data-testid="passive-pal"]').first()).toBeVisible()
+  }
+})
+
 test('Item page category chips filter the grid', async ({ page }) => {
   await page.goto('/items')
   const cards = page.getByTestId('item-card')

@@ -46,6 +46,7 @@ export default function PassivesPage() {
   const [raritySel, setRaritySel] = useState<string[]>([])
   const [categorySel, setCategorySel] = useState<string[]>([])
   const [mutationOnly, setMutationOnly] = useState(false)
+  const [innateOnly, setInnateOnly] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -116,6 +117,9 @@ export default function PassivesPage() {
   // Whether any mutation-pool passive is present — drives the "Mutation" chip.
   const hasMutation = useMemo(() => all.some((p) => p.mutation), [all])
 
+  // Whether any passive is innately carried by a pal — drives the "Innate" chip.
+  const hasInnate = useMemo(() => all.some((p) => p.pals.length > 0), [all])
+
   const list = useMemo(() => {
     const q = query.trim().toLowerCase()
     return (
@@ -129,6 +133,7 @@ export default function PassivesPage() {
             ),
         )
         .filter((r) => !mutationOnly || r.mutation)
+        .filter((r) => !innateOnly || r.pals.length > 0)
         .filter(
           (r) => !q || r.name.toLowerCase().includes(q) || r.search.includes(q) || r.id.toLowerCase().includes(q),
         )
@@ -136,7 +141,7 @@ export default function PassivesPage() {
         // language (localized names would reshuffle per locale).
         .sort((a, b) => b.rank - a.rank || a.id.localeCompare(b.id))
     )
-  }, [all, query, raritySel, categorySel, mutationOnly])
+  }, [all, query, raritySel, categorySel, mutationOnly, innateOnly])
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -189,6 +194,23 @@ export default function PassivesPage() {
               >
                 {t('passive.category.none')}
               </FilterChip>
+            ) : null}
+            {hasInnate ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <FilterChip
+                      active={innateOnly}
+                      onClick={() => setInnateOnly((v) => !v)}
+                      testId="category-innate"
+                    >
+                      <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
+                      {t('passive.innate')}
+                    </FilterChip>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">{t('passive.innateTip')}</TooltipContent>
+              </Tooltip>
             ) : null}
             {hasMutation ? (
               <Tooltip>

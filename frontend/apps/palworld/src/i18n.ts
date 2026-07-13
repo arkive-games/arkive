@@ -141,6 +141,34 @@ export const PASSIVE_MUTATION_TIP_LABELS: Record<Language, string> = {
   'zh-CN': '突然变异专属被动：出现在突然变异帕鲁身上，或在手术台用一次性植入体移植获得。',
   'zh-TW': '突然變異專屬被動：出現在突然變異帕魯身上，或在手術台以一次性植入體移植取得。',
 }
+// Passive Skills page: "innate passive of some Pals" filter chip label.
+export const PASSIVE_INNATE_LABELS: Record<Language, string> = {
+  'en-US': 'Innate', 'de-DE': 'Angeboren', 'es-ES': 'Innata', 'es-MX': 'Innata',
+  'fr-FR': 'Innée', 'id-ID': 'Bawaan', 'it-IT': 'Innata', 'ja-JP': '固有',
+  'ko-KR': '고유', 'pl-PL': 'Wrodzona', 'pt-BR': 'Inata', 'ru-RU': 'Врождённая',
+  'th-TH': 'แต่กำเนิด', 'tr-TR': 'Doğuştan', 'vi-VN': 'Bẩm sinh', 'zh-CN': '固有',
+  'zh-TW': '固有',
+}
+// Passive Skills page: tooltip explaining the innate filter.
+export const PASSIVE_INNATE_TIP_LABELS: Record<Language, string> = {
+  'en-US': 'Innate passive: certain Pals always carry this passive by default.',
+  'de-DE': 'Angeborenes Passiv: bestimmte Pals tragen dieses Passiv immer von Natur aus.',
+  'es-ES': 'Pasiva innata: ciertos Pals siempre llevan esta pasiva por defecto.',
+  'es-MX': 'Pasiva innata: ciertos Pals siempre llevan esta pasiva por defecto.',
+  'fr-FR': 'Compétence passive innée : certains Pals possèdent toujours cette compétence par défaut.',
+  'id-ID': 'Pasif bawaan: Pal tertentu selalu memiliki pasif ini secara bawaan.',
+  'it-IT': 'Abilità passiva innata: alcuni Pal possiedono sempre questa passiva di default.',
+  'ja-JP': '固有パッシブ:特定のパルが最初から必ず持っているパッシブです。',
+  'ko-KR': '고유 패시브: 특정 팰이 기본적으로 항상 지니고 있는 패시브입니다.',
+  'pl-PL': 'Pasywka wrodzona: niektóre Pale zawsze mają ją domyślnie.',
+  'pt-BR': 'Passiva inata: certos Pals sempre carregam esta passiva por padrão.',
+  'ru-RU': 'Врождённая пассивная способность: некоторые палы всегда имеют её по умолчанию.',
+  'th-TH': 'สกิลติดตัวแต่กำเนิด: พัลบางตัวจะมีสกิลนี้ติดตัวมาโดยพื้นฐานเสมอ',
+  'tr-TR': 'Doğuştan pasif: belirli Pal’ler bu pasife her zaman varsayılan olarak sahiptir.',
+  'vi-VN': 'Nội tại bẩm sinh: một số Pal luôn sở hữu nội tại này theo mặc định.',
+  'zh-CN': '固有被动：特定帕鲁天生必定携带该被动。',
+  'zh-TW': '固有被動：特定帕魯天生必定攜帶該被動。',
+}
 // Active Skills page: element filter-group label.
 export const ACTIVE_SKILL_ELEMENT_LABELS: Record<Language, string> = {
   'en-US': 'Element', 'de-DE': 'Element', 'es-ES': 'Elemento', 'es-MX': 'Elemento', 'fr-FR': 'Élément',
@@ -741,6 +769,8 @@ for (const lng of LANGUAGES) {
         category: PASSIVE_CATEGORY_LABELS[lng],
         mutation: PASSIVE_MUTATION_LABELS[lng],
         mutationTip: PASSIVE_MUTATION_TIP_LABELS[lng],
+        innate: PASSIVE_INNATE_LABELS[lng],
+        innateTip: PASSIVE_INNATE_TIP_LABELS[lng],
       },
       activeSkill: {
         element: ACTIVE_SKILL_ELEMENT_LABELS[lng],
