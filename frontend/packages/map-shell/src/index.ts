@@ -28,5 +28,12 @@ export {
   type GlobalSearchLabels,
 } from "./GlobalSearch"
 export { formatCoords } from "./coordFormat"
+export {
+  useMapViewMemory,
+  readMapView,
+  writeMapView,
+  type MapViewState,
+  type MapViewStore,
+} from "./mapViewMemory"
 export { ThemeProvider, useTheme, type Theme, type ThemeStorage } from "./theme/ThemeProvider"
 export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./theme/ThemeToggle"
