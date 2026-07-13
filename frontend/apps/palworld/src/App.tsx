@@ -668,6 +668,7 @@ export default function App() {
   if (isMobile) {
     return (
       <div className="relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+        <h1 className="sr-only">{t('title')}</h1>
         {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
             gets a definite height and Leaflet sizes correctly on mount. */}
         <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}</main>
@@ -715,6 +716,8 @@ export default function App() {
   }
 
   return (
+    <>
+    <h1 className="sr-only">{t('title')}</h1>
     <ShellLayout
       className="bg-background text-foreground"
       topBar={<TopNav active="/" />}
@@ -749,5 +752,6 @@ export default function App() {
         {searchPanel('floating')}
       </main>
     </ShellLayout>
+    </>
   )
 }
