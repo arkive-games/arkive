@@ -211,6 +211,73 @@ export const ACTIVE_SKILL_HASNOT_LABELS: Record<Language, string> = {
   'pt-BR': 'Não', 'ru-RU': 'Нет', 'th-TH': 'ไม่มี', 'tr-TR': 'Hayır', 'vi-VN': 'Không',
   'zh-CN': '无', 'zh-TW': '無',
 }
+// Partner Skills page: page/nav title (plural of pal.section.partnerSkill; CJK
+// and a few other languages don't mark the plural, so they reuse the same term).
+export const PARTNER_TITLE_LABELS: Record<Language, string> = {
+  'en-US': 'Partner Skills', 'de-DE': 'Partner-Fähigkeiten', 'es-ES': 'Habilidades de compañero',
+  'es-MX': 'Habilidades de compañero', 'fr-FR': 'Compétences de partenaire', 'id-ID': 'Skill Pasangan',
+  'it-IT': 'Abilità del compagno', 'ja-JP': 'パートナースキル', 'ko-KR': '파트너 스킬',
+  'pl-PL': 'Umiejętności partnera', 'pt-BR': 'Habilidades de parceiro', 'ru-RU': 'Навыки напарника',
+  'th-TH': 'สกิลคู่หู', 'tr-TR': 'Partner Yetenekleri', 'vi-VN': 'Kỹ năng đồng hành',
+  'zh-CN': '伙伴技能', 'zh-TW': '夥伴技能',
+}
+// Partner Skills page: category filter/badge labels (derived facets: mount /
+// glider / weapon gear, ranch production, attack waza, buff groups).
+export const PARTNER_CATEGORY_LABELS: Record<Language, Record<string, string>> = {
+  'en-US': { mount: 'Mount', glider: 'Glider', weapon: 'Weapon', ranch: 'Ranch', attack: 'Attack', combat: 'Combat', move: 'Movement', work: 'Work', utility: 'Utility' },
+  'de-DE': { mount: 'Reittier', glider: 'Gleiter', weapon: 'Waffe', ranch: 'Farm', attack: 'Angriff', combat: 'Kampf', move: 'Bewegung', work: 'Arbeit', utility: 'Sonstiges' },
+  'es-ES': { mount: 'Montura', glider: 'Planeador', weapon: 'Arma', ranch: 'Granja', attack: 'Ataque', combat: 'Combate', move: 'Movimiento', work: 'Trabajo', utility: 'Utilidad' },
+  'es-MX': { mount: 'Montura', glider: 'Planeador', weapon: 'Arma', ranch: 'Granja', attack: 'Ataque', combat: 'Combate', move: 'Movimiento', work: 'Trabajo', utility: 'Utilidad' },
+  'fr-FR': { mount: 'Monture', glider: 'Planeur', weapon: 'Arme', ranch: 'Ranch', attack: 'Attaque', combat: 'Combat', move: 'Déplacement', work: 'Travail', utility: 'Utilité' },
+  'id-ID': { mount: 'Tunggangan', glider: 'Peluncur', weapon: 'Senjata', ranch: 'Peternakan', attack: 'Serangan', combat: 'Pertarungan', move: 'Gerakan', work: 'Kerja', utility: 'Utilitas' },
+  'it-IT': { mount: 'Cavalcatura', glider: 'Aliante', weapon: 'Arma', ranch: 'Ranch', attack: 'Attacco', combat: 'Combattimento', move: 'Movimento', work: 'Lavoro', utility: 'Utilità' },
+  'ja-JP': { mount: '騎乗', glider: 'グライダー', weapon: '武器', ranch: '牧場', attack: '攻撃', combat: '戦闘', move: '移動', work: '労働', utility: 'その他' },
+  'ko-KR': { mount: '탑승', glider: '글라이더', weapon: '무기', ranch: '목장', attack: '공격', combat: '전투', move: '이동', work: '작업', utility: '기타' },
+  'pl-PL': { mount: 'Wierzchowiec', glider: 'Lotnia', weapon: 'Broń', ranch: 'Ranczo', attack: 'Atak', combat: 'Walka', move: 'Ruch', work: 'Praca', utility: 'Inne' },
+  'pt-BR': { mount: 'Montaria', glider: 'Planador', weapon: 'Arma', ranch: 'Rancho', attack: 'Ataque', combat: 'Combate', move: 'Movimento', work: 'Trabalho', utility: 'Utilidade' },
+  'ru-RU': { mount: 'Ездовой', glider: 'Планер', weapon: 'Оружие', ranch: 'Ранчо', attack: 'Атака', combat: 'Бой', move: 'Движение', work: 'Работа', utility: 'Прочее' },
+  'th-TH': { mount: 'พาหนะ', glider: 'เครื่องร่อน', weapon: 'อาวุธ', ranch: 'ฟาร์ม', attack: 'โจมตี', combat: 'การต่อสู้', move: 'เคลื่อนที่', work: 'ทำงาน', utility: 'อื่นๆ' },
+  'tr-TR': { mount: 'Binek', glider: 'Planör', weapon: 'Silah', ranch: 'Çiftlik', attack: 'Saldırı', combat: 'Savaş', move: 'Hareket', work: 'İş', utility: 'Diğer' },
+  'vi-VN': { mount: 'Thú cưỡi', glider: 'Dù lượn', weapon: 'Vũ khí', ranch: 'Trang trại', attack: 'Tấn công', combat: 'Chiến đấu', move: 'Di chuyển', work: 'Lao động', utility: 'Tiện ích' },
+  'zh-CN': { mount: '骑乘', glider: '滑翔', weapon: '武器', ranch: '牧场', attack: '攻击', combat: '战斗', move: '移动', work: '工作', utility: '辅助' },
+  'zh-TW': { mount: '騎乘', glider: '滑翔', weapon: '武器', ranch: '牧場', attack: '攻擊', combat: '戰鬥', move: '移動', work: '工作', utility: '輔助' },
+}
+// Pal detail: ranch-production table title (items produced at the Pal Ranch).
+export const PARTNER_RANCH_LABELS: Record<Language, string> = {
+  'en-US': 'Ranch Produce', 'de-DE': 'Farm-Erzeugnisse', 'es-ES': 'Producción en la granja',
+  'es-MX': 'Producción en la granja', 'fr-FR': 'Production au ranch', 'id-ID': 'Hasil Peternakan',
+  'it-IT': 'Produzione del ranch', 'ja-JP': '牧場の生産物', 'ko-KR': '목장 생산품',
+  'pl-PL': 'Produkty rancza', 'pt-BR': 'Produção do rancho', 'ru-RU': 'Продукция ранчо',
+  'th-TH': 'ผลผลิตฟาร์ม', 'tr-TR': 'Çiftlik Ürünleri', 'vi-VN': 'Sản phẩm trang trại',
+  'zh-CN': '牧场生产物', 'zh-TW': '牧場生產物',
+}
+// Pal detail ranch table: probability-share column header.
+export const PARTNER_CHANCE_LABELS: Record<Language, string> = {
+  'en-US': 'Chance', 'de-DE': 'Chance', 'es-ES': 'Probabilidad', 'es-MX': 'Probabilidad',
+  'fr-FR': 'Chance', 'id-ID': 'Peluang', 'it-IT': 'Probabilità', 'ja-JP': '確率', 'ko-KR': '확률',
+  'pl-PL': 'Szansa', 'pt-BR': 'Chance', 'ru-RU': 'Шанс', 'th-TH': 'โอกาส', 'tr-TR': 'Şans',
+  'vi-VN': 'Tỷ lệ', 'zh-CN': '概率', 'zh-TW': '機率',
+}
+// Pal detail: auto-trigger notes for non-player-activated partner actions.
+export const PARTNER_TRIGGER_LABELS: Record<Language, Record<string, string>> = {
+  'en-US': { OpenTreasure: 'Triggers when opening treasure chests', PalRevive: 'Triggers when a Pal is downed', PlayerRevive: 'Triggers when the player is downed' },
+  'de-DE': { OpenTreasure: 'Löst beim Öffnen von Schatztruhen aus', PalRevive: 'Löst aus, wenn ein Pal kampfunfähig wird', PlayerRevive: 'Löst aus, wenn der Spieler kampfunfähig wird' },
+  'es-ES': { OpenTreasure: 'Se activa al abrir cofres del tesoro', PalRevive: 'Se activa cuando un Pal cae debilitado', PlayerRevive: 'Se activa cuando el jugador cae debilitado' },
+  'es-MX': { OpenTreasure: 'Se activa al abrir cofres del tesoro', PalRevive: 'Se activa cuando un Pal cae debilitado', PlayerRevive: 'Se activa cuando el jugador cae debilitado' },
+  'fr-FR': { OpenTreasure: 'Se déclenche à l’ouverture des coffres au trésor', PalRevive: 'Se déclenche quand un Pal est mis K.O.', PlayerRevive: 'Se déclenche quand le joueur est mis K.O.' },
+  'id-ID': { OpenTreasure: 'Aktif saat membuka peti harta', PalRevive: 'Aktif saat Pal tumbang', PlayerRevive: 'Aktif saat pemain tumbang' },
+  'it-IT': { OpenTreasure: 'Si attiva aprendo i forzieri del tesoro', PalRevive: 'Si attiva quando un Pal viene messo K.O.', PlayerRevive: 'Si attiva quando il giocatore viene messo K.O.' },
+  'ja-JP': { OpenTreasure: '宝箱を開けると発動', PalRevive: 'パルが戦闘不能になると発動', PlayerRevive: 'プレイヤーが戦闘不能になると発動' },
+  'ko-KR': { OpenTreasure: '보물상자를 열면 발동', PalRevive: '팰이 전투 불능이 되면 발동', PlayerRevive: '플레이어가 전투 불능이 되면 발동' },
+  'pl-PL': { OpenTreasure: 'Aktywuje się przy otwieraniu skrzyń ze skarbami', PalRevive: 'Aktywuje się, gdy Pal zostanie powalony', PlayerRevive: 'Aktywuje się, gdy gracz zostanie powalony' },
+  'pt-BR': { OpenTreasure: 'Ativa ao abrir baús de tesouro', PalRevive: 'Ativa quando um Pal é derrubado', PlayerRevive: 'Ativa quando o jogador é derrubado' },
+  'ru-RU': { OpenTreasure: 'Срабатывает при открытии сундуков с сокровищами', PalRevive: 'Срабатывает, когда пал выведен из строя', PlayerRevive: 'Срабатывает, когда игрок выведен из строя' },
+  'th-TH': { OpenTreasure: 'ทำงานเมื่อเปิดหีบสมบัติ', PalRevive: 'ทำงานเมื่อพัลหมดสภาพต่อสู้', PlayerRevive: 'ทำงานเมื่อผู้เล่นหมดสภาพต่อสู้' },
+  'tr-TR': { OpenTreasure: 'Hazine sandıkları açılınca tetiklenir', PalRevive: 'Bir Pal devrildiğinde tetiklenir', PlayerRevive: 'Oyuncu devrildiğinde tetiklenir' },
+  'vi-VN': { OpenTreasure: 'Kích hoạt khi mở rương kho báu', PalRevive: 'Kích hoạt khi Pal bị hạ gục', PlayerRevive: 'Kích hoạt khi người chơi bị hạ gục' },
+  'zh-CN': { OpenTreasure: '开启宝箱时触发', PalRevive: '帕鲁倒下时触发', PlayerRevive: '玩家倒下时触发' },
+  'zh-TW': { OpenTreasure: '開啟寶箱時觸發', PalRevive: '帕魯倒下時觸發', PlayerRevive: '玩家倒下時觸發' },
+}
 // Top-nav dropdown group label for pal-related pages (Paldeck/Breeding/Passives).
 export const PALS_GROUP_LABELS: Record<Language, string> = {
   'en-US': 'Pals', 'de-DE': 'Pals', 'es-ES': 'Pals', 'es-MX': 'Pals', 'fr-FR': 'Pals',
@@ -779,6 +846,13 @@ for (const lng of LANGUAGES) {
         defaultOnly: ACTIVE_SKILL_DEFAULT_LABELS[lng],
         has: ACTIVE_SKILL_HAS_LABELS[lng],
         hasNot: ACTIVE_SKILL_HASNOT_LABELS[lng],
+      },
+      partner: {
+        title: PARTNER_TITLE_LABELS[lng],
+        category: PARTNER_CATEGORY_LABELS[lng],
+        ranch: PARTNER_RANCH_LABELS[lng],
+        chance: PARTNER_CHANCE_LABELS[lng],
+        trigger: PARTNER_TRIGGER_LABELS[lng],
       },
     },
     true,

@@ -59,8 +59,11 @@ export function isSkillFruitSkill(strength: string | undefined): boolean {
 }
 /** One buff effect of a partner skill: effect type, target, and per-rank values. */
 export interface PartnerEffect { type: string; target: string; values: number[] }
-/** Fixed metadata of an action-type partner skill (from DT_PartnerSkill). */
+/** Fixed metadata of an action-type partner skill (from DT_PartnerSkill).
+ *  `name` is the raw SkillName key (e.g. `SearchMine`); `triggerType` is set
+ *  only for auto-triggered skills (`OpenTreasure`/`PalRevive`/`PlayerRevive`). */
 export interface PartnerAction {
+  name?: string
   effectTime: number
   coolTime: number
   execCost: number
@@ -68,20 +71,30 @@ export interface PartnerAction {
   toggle: boolean
   canChangeWeapon?: boolean
   canThrowPal?: boolean
+  triggerType?: string
 }
+/** One weighted entry of a ranch (Pal Ranch) production lottery: the produced
+ *  item, its weight within the rank's pool, and the per-drop count range. */
+export interface FarmItem { item: string; weight: number; min: number; max: number }
 /** A partner skill in one of three shapes (see tools/palworld/encyclopedia.py):
- *  - attack: `wazaId`/`element` + per-rank `rankValues` (power multiplier).
+ *  - attack: `wazaId`/`element`/`power` + per-rank `rankValues` (multiplier).
  *  - buff:   `effects` (each with per-rank `values`).
  *  - action: `action` metadata + optional per-rank `rankValues` / `coolTimeByRank`
  *            / `effectTimeByRank`.
- *  Any shape may carry `unlockItem`. The name always comes from the locale. */
+ *  Any shape may carry `unlockItem` + its `gear` kind (`Saddle` = mount,
+ *  `Gloves` = glider, else a held weapon/tool) and `farm` (ranch production,
+ *  `farm[rank-1]` = that partner-skill rank's weighted item pool).
+ *  The name always comes from the locale. */
 export interface PartnerSkill {
   wazaId?: string
   element?: string
+  power?: number
   rankValues?: number[]
   coolTimeByRank?: number[]
   effectTimeByRank?: number[]
   unlockItem?: string
+  gear?: string
+  farm?: FarmItem[][]
   effects?: PartnerEffect[]
   action?: PartnerAction
 }
@@ -351,6 +364,132 @@ export function buildActiveSkills(bundle: PalsBundle): ActiveSkillEntry[] {
   }
   for (const e of byId.values()) e.pals.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name))
   return [...byId.values()]
+}
+
+// --- partner-skill catalog (Partner Skills index page) ------------------------
+/** Data shape of a partner skill (which raw fields drive it). `gear` covers
+ *  unlock-item-only skills (plain mounts/gliders with no stats of their own). */
+export type PartnerShape = 'attack' | 'buff' | 'action' | 'gear'
+/** Coarse filter categories; a skill can be in several (like passives). */
+export type PartnerCategory =
+  | 'mount' | 'glider' | 'weapon' | 'ranch' | 'attack'
+  | 'combat' | 'move' | 'work' | 'utility'
+/** Fixed display/filter order. */
+export const PARTNER_CATEGORIES: PartnerCategory[] = [
+  'mount', 'glider', 'weapon', 'ranch', 'attack', 'combat', 'move', 'work', 'utility',
+]
+
+// Gear kind (SkillUnlock item icon) → category. Saddle = rideable mount,
+// Gloves = glider; every other kind is a held/worn weapon or tool.
+const GEAR_CATEGORY: Record<string, PartnerCategory> = {
+  Saddle: 'mount',
+  Gloves: 'glider',
+}
+
+/** Category of a partner-skill gear kind (`mount`/`glider`/`weapon`), or
+ *  undefined when the skill has no gear. Shared with the pal detail badge. */
+export function gearCategory(gear: string | undefined): PartnerCategory | undefined {
+  if (!gear) return undefined
+  return GEAR_CATEGORY[gear] ?? 'weapon'
+}
+
+// Buff effect type → category. Prefix families are handled in
+// partnerEffectCategory; the long tail (element boosts, damage/shield/ailment
+// modifiers) defaults to 'combat'.
+const PARTNER_EFFECT_CATEGORY: Record<string, PartnerCategory> = {
+  // movement / carrying
+  MoveSpeed: 'move', MoveSpeed_Grass: 'move', MoveSpeed_Ground: 'move', MoveSpeed_Snow: 'move',
+  ClimbMoveSpeedRate: 'move', SwimSpeed: 'move', AirDash: 'move',
+  JumpPower_Increase: 'move', JumpCount_Increase: 'move', LowGravity: 'move',
+  FallDamageRate: 'move', MaxInventoryWeight: 'move', ItemWeightReduction: 'move',
+  // work / gathering / base
+  Mining: 'work', Logging: 'work', CraftSpeed: 'work', CollectItemDrop: 'work',
+  EquipmentDurabilityRate: 'work', MeatCutAddItemDrop: 'work', GainItemDrop: 'work',
+  FarmCropGrowupSpeed: 'work', FarmCropHarvestNumRate: 'work',
+  BreedSpeed_InBaseCamp: 'work', PalEggHatchingSpeed: 'work',
+  EggAlphaConversion: 'work', EggObtainExtraEgg: 'work', PalExp_Increase: 'work',
+  FullStomatch_Decrease: 'work', Regene_Stomatch_Hungriest: 'work',
+  Sanity_Decrease: 'work', ItemCorruptionSpeedRate: 'work',
+  // capture / environment / misc utility
+  CaptureLevel_SneakBonus: 'utility', SphereRecovery: 'utility',
+  SyncroPassiveWhenCapture: 'utility', EnemySightDetectionRate: 'utility',
+  TemperatureResist_Cold: 'utility', TemperatureResist_Heat: 'utility',
+  InvalidToxicGas: 'utility', LavaDamageInvalid: 'utility',
+  PartnerSkillCoolTime_Decrease: 'utility',
+}
+
+function partnerEffectCategory(type: string): PartnerCategory {
+  if (type.startsWith('Fishing') || type.startsWith('WorkSuitabilityAddRank_')) return 'work'
+  if (type.startsWith('CaptureLevelUpIfTarget_')) return 'utility'
+  return PARTNER_EFFECT_CATEGORY[type] ?? 'combat'
+}
+
+// Action SkillName → category: ride weapons and held guns are 'weapon';
+// heal/search/revive/vision helpers are 'utility'; sled/jump movement aids are
+// 'move'; the rest (StatusUp*, Berserk, Shiled, …) buff the fight.
+function partnerActionCategory(name: string): PartnerCategory {
+  if (/^(UniqueRide|AssaultRifle|Shotgun|Grenade|Launcher|RocketLauncher|Minigun|Flamethrower|SwordCutlassfish|OnHeadShoot|SpinningShell)/.test(name)) return 'weapon'
+  if (/^(Heal|Search|NightVision|NightRunner|Stealth|OpenTreasure|Revive|ReturnToBaseCamp)/.test(name)) return 'utility'
+  if (/^(Toboggan|JumpFrog)/.test(name)) return 'move'
+  return 'combat'
+}
+
+/** One partner skill (1:1 with its pal — entries link to the pal detail page). */
+export interface PartnerSkillEntry {
+  palId: string
+  palName: string
+  palIcon: string
+  zukanIndex: number
+  zukanIndexSuffix: string
+  name: string
+  description: string
+  shape: PartnerShape
+  element?: Element
+  power?: number
+  categories: PartnerCategory[]
+}
+
+/** Build the partner-skill index from a loaded bundle: every pal with a
+ *  localized partner-skill name, with derived shape + filter categories. */
+export function buildPartnerSkills(bundle: PalsBundle): PartnerSkillEntry[] {
+  const out: PartnerSkillEntry[] = []
+  for (const p of bundle.pals) {
+    const text = bundle.text[p.id]
+    const name = text?.partnerSkill?.name
+    if (!name) continue
+    const ps = p.partnerSkill
+    const shape: PartnerShape = ps.wazaId
+      ? 'attack'
+      : ps.effects?.length
+        ? 'buff'
+        : ps.action
+          ? 'action'
+          : 'gear'
+    const cats = new Set<PartnerCategory>()
+    const gc = gearCategory(ps.gear)
+    if (gc) cats.add(gc)
+    if (ps.farm?.length) cats.add('ranch')
+    if (shape === 'attack') cats.add('attack')
+    for (const e of ps.effects ?? []) cats.add(partnerEffectCategory(e.type))
+    if (ps.action?.name) cats.add(partnerActionCategory(ps.action.name))
+    const description =
+      resolveCharacterNames(text?.partnerSkill?.desc, bundle.text) ||
+      (ps.wazaId ? resolveCharacterNames(bundle.skills[ps.wazaId]?.description, bundle.text) : '')
+    out.push({
+      palId: p.id,
+      palName: text?.name ?? p.id,
+      palIcon: p.icon,
+      zukanIndex: p.zukanIndex,
+      zukanIndexSuffix: p.zukanIndexSuffix,
+      name,
+      description,
+      shape,
+      element: ps.element as Element | undefined,
+      power: ps.power,
+      categories: PARTNER_CATEGORIES.filter((c) => cats.has(c)),
+    })
+  }
+  return out
 }
 
 /** Localized name for a passive/active waza description with `{EffectValue1}`-style

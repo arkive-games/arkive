@@ -5,11 +5,13 @@ import { ChevronLeft, ChevronRight, Zap } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
+  gearCategory,
   passiveDescription,
   resolveCharacterNames,
   type PalsBundle,
   type PalEntry,
   type WorkType,
+  type FarmItem,
 } from '../../lib/pals'
 import { comboKey, loadBreeding, makeEngine, queryFormulas, type BreedingData, type NameMap } from '../../lib/breeding'
 import { RecipeCard, buildRecipeMeta } from '../breeding/RecipeCard'
@@ -65,6 +67,58 @@ const SPEED_KEYS = [
 // is identical (e.g. 100 / 100 / 100 / 100 / 100 → 100).
 function joinRanks(vals: readonly (number | string)[]): string {
   return vals.every((v) => v === vals[0]) ? String(vals[0]) : vals.join(' / ')
+}
+
+// A produced-count range: "1" when min == max, else "1–5".
+function countRange(min: number, max: number): string {
+  return min === max ? String(min) : `${min}–${max}`
+}
+
+/** Pal Ranch production per partner-skill rank: one row per rank (Lv1…LvN),
+ *  each listing the items dropped with their count range and — for weighted
+ *  multi-item pools — each item's percentage share of that rank's draw. */
+function RanchProduce({ farm, bundle }: { farm: FarmItem[][]; bundle: PalsBundle }) {
+  const { t } = useTranslation()
+  if (!farm.length) return null
+  return (
+    <div className="mt-3">
+      <div className="mb-1 text-xs font-medium text-muted-foreground">{t('partner.ranch')}</div>
+      <div className="overflow-x-auto rounded-md border border-border">
+        <table className="w-full border-collapse text-xs">
+          <thead className="bg-secondary/50 text-left text-muted-foreground">
+            <tr>
+              <th className="w-px whitespace-nowrap px-2 py-1 font-medium">{t('pal.lv')}</th>
+              <th className="px-2 py-1 font-medium">{t('pal.section.drops')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {farm.map((pool, i) => {
+              const total = pool.reduce((s, e) => s + e.weight, 0) || 1
+              const multi = pool.length > 1
+              return (
+                <tr key={i} className="border-t border-border/60 align-top">
+                  <td className="whitespace-nowrap px-2 py-1 tabular-nums text-muted-foreground">{i + 1}</td>
+                  <td className="px-2 py-1">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      {pool.map((e, j) => (
+                        <span key={`${e.item}-${j}`} className="inline-flex items-center gap-1">
+                          <ItemLink id={e.item} name={bundle.items[e.item] ?? e.item} icon={bundle.itemIcon[e.item]} />
+                          <span className="tabular-nums text-muted-foreground">
+                            ×{countRange(e.min, e.max)}
+                            {multi ? ` (${Math.round((e.weight / total) * 100)}%)` : ''}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 }
 
 function BreedingLinks({
@@ -215,6 +269,7 @@ export default function PalDetailPage() {
       resolveCharacterNames(text?.partnerSkill?.desc, bundle.text) ||
       (ps.wazaId ? resolveCharacterNames(bundle.skills[ps.wazaId]?.description, bundle.text) : '')
     const unlockItemName = ps.unlockItem ? bundle.items[ps.unlockItem] ?? ps.unlockItem : ''
+    const gearCat = gearCategory(ps.gear)
 
     // When a pal has no wild/boss spawns, say how it's obtained. A breeding
     // recipe is only a *real* acquisition path if the pal isn't one of its own
@@ -281,7 +336,14 @@ export default function PalDetailPage() {
 
             {partnerName ? (
               <PalSection title={t('pal.section.partnerSkill')}>
-                <div className="text-sm font-medium">{partnerName}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium">{partnerName}</span>
+                  {gearCat ? (
+                    <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                      {t(`partner.category.${gearCat}`)}
+                    </span>
+                  ) : null}
+                </div>
                 {unlockItemName ? (
                   <div className="mt-1 text-xs text-muted-foreground">
                     {t('pal.unlockItem')}:{' '}
@@ -360,6 +422,14 @@ export default function PalDetailPage() {
                   <div className="mt-2 text-xs tabular-nums text-muted-foreground">
                     {t('pal.rankScaling')}: {joinRanks(ps.rankValues)}
                   </div>
+                ) : null}
+                {ps.action?.triggerType ? (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {t(`partner.trigger.${ps.action.triggerType}`, { defaultValue: '' })}
+                  </div>
+                ) : null}
+                {ps.farm?.length ? (
+                  <RanchProduce farm={ps.farm} bundle={bundle} />
                 ) : null}
                 <div className="mt-2 text-xs text-muted-foreground">{t('pal.condensation')}</div>
               </PalSection>

@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@tanstack/react-router'
 import { GlobalSearch, type GlobalSearchEntry, type GlobalSearchSource } from '@gamemap/map-shell'
-import { loadPals, buildActiveSkills } from '../lib/pals'
+import { loadPals, buildActiveSkills, buildPartnerSkills } from '../lib/pals'
 import { loadBuildings, loadItems, loadQuests, loadTech, buildingIconUrl } from '../lib/catalog'
 import { loadMarkers, loadStatic } from '../lib/data'
 import { itemIconUrl, palIconUrl } from '../lib/assets'
@@ -45,6 +45,20 @@ export function GlobalSearchWidget() {
         return buildActiveSkills(b)
           .filter((s) => s.name)
           .map((s) => ({ id: s.wazaId, name: s.name }))
+      },
+    },
+    {
+      key: 'partnerSkills',
+      label: t('partner.title'),
+      load: async () => {
+        const b = await loadPals(lng)
+        // 1:1 with pals — the pal name is the detail line, the pal icon the thumb.
+        return buildPartnerSkills(b).map((s) => ({
+          id: s.palId,
+          name: s.name,
+          detail: s.palName,
+          iconUrl: palIconUrl(s.palIcon),
+        }))
       },
     },
     {
@@ -131,6 +145,10 @@ export function GlobalSearchWidget() {
         break
       case 'skills':
         void navigate({ to: '/active-skills/$id', params: { id } })
+        break
+      case 'partnerSkills':
+        // Partner skills map 1:1 to pals; the entry id is the pal id.
+        void navigate({ to: '/pals/$id', params: { id } })
         break
       case 'passives':
         void navigate({ to: '/passives' })
