@@ -636,6 +636,30 @@ def run_extract(raw: Path) -> dict:
 
     ft_names = _read_text_by_lang(raw, "DT_MapRespawnPointInfoText.json")
 
+    # Dungeon portals: each BP_DungeonPortalMarker_<Biome>_C carries a default
+    # SpawnAreaId list (its dungeon type); some placed actors override it
+    # (that's how Grass002/Forest002 and the PvP-island caverns reach the map).
+    # The area id keys the dungeons.json loot dataset; the localized dungeon
+    # name comes from DT_DungeonNameText via the spawn-area table.
+    portal_default_area: dict[str, str] = {}
+    portal_bp_dir = raw / "Blueprint/MapObject/Dungeon"
+    if portal_bp_dir.exists():
+        for bp in sorted(portal_bp_dir.rglob("BP_DungeonPortalMarker_*.json")):
+            for obj in json.loads(bp.read_text(encoding="utf-8")):
+                ids = (obj.get("Properties") or {}).get("SpawnAreaIds")
+                if ids and (obj.get("Name") or "").startswith("Default__"):
+                    portal_default_area[f"{bp.stem}_C"] = ids[0].get("Key")
+    area_table = raw / "DataTable/Dungeon/DT_DungeonSpawnAreaDataTable.json"
+    dungeon_area_rows = read_rows(area_table) if area_table.exists() else {}
+    dungeon_names = _read_text_by_lang(raw, "DT_DungeonNameText.json")
+
+    def dungeon_name_by_lng(area: str) -> dict | None:
+        text_id = (dungeon_area_rows.get(area) or {}).get("DungeonNameTextId")
+        if not text_id:
+            return None
+        nm = {tag: tbl[text_id] for tag, tbl in dungeon_names.items() if tbl.get(text_id)}
+        return nm or None
+
     # Localized map display names, from the game's WorldMap UI text table.
     worldmap_text = _read_text_by_lang(raw, "DT_WorldMap_Common_Text_Common.json")
     map_names = {
@@ -693,6 +717,14 @@ def run_extract(raw: Path) -> dict:
             row = ((exp.get("Properties") or {}).get("ItemPickupRowName") or {}).get("Key")
             if row:
                 poi["pickupRow"] = row
+        elif subtype == "dungeon":
+            ids = (exp.get("Properties") or {}).get("SpawnAreaIds")
+            area = (ids[0].get("Key") if ids else None) or portal_default_area.get(exp.get("Type") or "")
+            if area:
+                poi["dungeonArea"] = area
+                nm = dungeon_name_by_lng(area)
+                if nm:
+                    poi["nameByLng"] = nm
         pois.append(poi)
     _strip_entrance_suffixes([p["nameByLng"] for p in pois if p["subtype"] == "tower" and "nameByLng" in p])
     pois.extend(_extract_cell_pois(raw))

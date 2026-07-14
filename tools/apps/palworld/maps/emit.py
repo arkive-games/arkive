@@ -264,6 +264,9 @@ def build_dataset(parsed: dict) -> dict:
         # Effigy relics link to their pal so a pal's page can list them.
         if p.get("effigyPal"):
             c["pal"] = p["effigyPal"]
+        # Dungeon portals link to their SpawnAreaId (keys dungeons.json loot).
+        if p.get("dungeonArea"):
+            c["dungeonArea"] = p["dungeonArea"]
         # Ancient Shrine reward (schematic item + Dog Coins) for the popup.
         if p.get("reward"):
             c["reward"] = p["reward"]
@@ -439,6 +442,8 @@ def build_dataset(parsed: dict) -> dict:
                     marker["reward"] = c["reward"]
                 if c.get("drops"):
                     marker["drops"] = c["drops"]
+                if c.get("dungeonArea"):
+                    marker["dungeonArea"] = c["dungeonArea"]
                 marker["images"] = []
                 marker["contributors"] = []
                 marker["indexInSubtype"] = i + 1

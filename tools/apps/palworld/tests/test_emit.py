@@ -27,6 +27,10 @@ PARSED = {
         {"subtype": "ancientShrine", "sourceName": "SH_1", "location": {"X": 200, "Y": 200, "Z": 5},
          "reward": {"item": "Blueprint_Musket_4", "count": 1, "dogCoin": 20},
          "nameByLng": {lng: ("Musket Schematic" if lng == "en-US" else f"{lng} Musket") for lng in LANGUAGES}},
+        # Dungeon portal: carries its SpawnAreaId + the localized dungeon name.
+        {"subtype": "dungeon", "sourceName": "DP_1", "location": {"X": 300, "Y": 300, "Z": 0},
+         "dungeonArea": "Forest001",
+         "nameByLng": {lng: ("Mountain Stream Grotto" if lng == "en-US" else f"{lng} Grotto") for lng in LANGUAGES}},
         # Warp altars: a same-map pair plus a cross-map pair (the World Tree
         # entrance on MainWorld ↔ the exit inside WorldTree bounds).
         {"subtype": "warpAltar", "sourceName": "WA_A", "location": {"X": 1000, "Y": 1000, "Z": 0},
@@ -169,6 +173,13 @@ def test_ancient_shrine_carries_reward_and_name(ds):
     assert sh[0]["category"] == "location"
     assert sh[0]["reward"] == {"item": "Blueprint_Musket_4", "count": 1, "dogCoin": 20}
     assert ds["locales"]["en-US"]["markers"]["MainWorld"][sh[0]["id"]]["name"] == "Musket Schematic"
+
+
+def test_dungeon_portal_carries_area_and_name(ds):
+    dg = [m for m in ds["markers"]["MainWorld"] if m["subtype"] == "dungeon"]
+    assert len(dg) == 1
+    assert dg[0]["dungeonArea"] == "Forest001"
+    assert ds["locales"]["en-US"]["markers"]["MainWorld"][dg[0]["id"]]["name"] == "Mountain Stream Grotto"
 
 
 def test_resource_subtypes_carry_item_icons(ds):
