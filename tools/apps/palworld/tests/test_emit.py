@@ -39,7 +39,8 @@ PARSED = {
          "warpPartnerSource": "WA_ENT"},
     ],
     "bosses": [
-        {"key": "0", "characterId": "BOSS_Kitsunebi", "level": 12, "location": {"X": 5000, "Y": 5000, "Z": 0}},
+        {"key": "0", "characterId": "BOSS_Kitsunebi", "level": 12, "location": {"X": 5000, "Y": 5000, "Z": 0},
+         "nightOnly": True},
     ],
     "wanted": [
         {"spawnerId": "BOSS_DarkTrader", "level": 59, "location": {"X": 6000, "Y": 6000, "Z": 0},
@@ -54,6 +55,13 @@ PARSED = {
         # Non-Paldeck dungeon monster (zukanIndex <= 0): must be dropped, not
         # surfaced as a marker/subtype/category.
         {"spawnerName": "dg1", "pals": [{"id": "YakushimaMonster001", "lvMin": 1, "lvMax": 1}], "location": {"X": 100, "Y": 100, "Z": 0}},
+        # Night-only spawn points: an all-night Kitsunebi cluster, plus a mixed
+        # cluster (night + unrestricted point) far enough away (>> clusterRadius)
+        # to stay separate.
+        {"spawnerName": "ng1", "pals": [{"id": "Kitsunebi", "lvMin": 5, "lvMax": 7, "nightOnly": True}], "location": {"X": 200000, "Y": 0, "Z": 0}},
+        {"spawnerName": "ng2", "pals": [{"id": "Kitsunebi", "lvMin": 6, "lvMax": 8, "nightOnly": True}], "location": {"X": 200050, "Y": 0, "Z": 0}},
+        {"spawnerName": "mx1", "pals": [{"id": "Kitsunebi", "lvMin": 9, "lvMax": 10, "nightOnly": True}], "location": {"X": -300000, "Y": 0, "Z": 0}},
+        {"spawnerName": "mx2", "pals": [{"id": "Kitsunebi", "lvMin": 9, "lvMax": 10}], "location": {"X": -300050, "Y": 0, "Z": 0}},
     ],
     "namesByLang": _names_by_lang(),
     "mapNames": {
@@ -117,6 +125,22 @@ def test_pal_spawns_cluster_with_lv_range(ds):
     assert spawns[0]["count"] == 2
     assert ds["locales"]["en-US"]["markers"]["MainWorld"][spawns[0]["id"]]["description"] == "Lv.1–3"
     assert ds["locales"]["ko-KR"]["markers"]["MainWorld"][spawns[0]["id"]]["description"] == "Lv.1–3"
+
+
+def test_night_only_spawn_clusters_flagged(ds):
+    # nightOnly only when EVERY point in the cluster is night-restricted; a
+    # mixed cluster spawns in daytime too, and pure day clusters carry no key.
+    kits = [m for m in ds["markers"]["MainWorld"] if m["subtype"] == "Kitsunebi"]
+    assert len(kits) == 2
+    night = next(m for m in kits if m["x"] > 0)
+    mixed = next(m for m in kits if m["x"] < 0)
+    assert night["nightOnly"] is True
+    assert "nightOnly" not in mixed
+    sheep = next(m for m in ds["markers"]["MainWorld"] if m["subtype"] == "SheepBall")
+    assert "nightOnly" not in sheep
+    # Night-restricted field bosses pass the flag through to their marker.
+    boss = next(m for m in ds["markers"]["MainWorld"] if m["subtype"] == "fieldBoss")
+    assert boss["nightOnly"] is True
 
 
 def test_enemy_category_pals_are_hidden(ds):

@@ -17,7 +17,7 @@ import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
-import { SlidersHorizontal, Search as SearchIcon, Check } from 'lucide-react'
+import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
 
 // A purely-numeric query is an exact Paldeck-id lookup: search only the idLabel
@@ -279,6 +279,7 @@ export default function App() {
         zukanIndex: m.zukanIndex,
         zukanIndexSuffix: m.zukanIndexSuffix,
         count: m.count,
+        nightOnly: m.nightOnly,
         reward: m.reward,
         pal: m.pal,
         drops: m.drops,
@@ -493,6 +494,12 @@ export default function App() {
         {count && count > 1 ? (
           <div className="mt-2 text-sm text-muted-foreground">
             {t('spawnCount', { count })}
+          </div>
+        ) : null}
+        {marker.nightOnly ? (
+          <div className="mt-2 flex items-center gap-1.5 text-sm text-indigo-500 dark:text-indigo-400" data-testid="marker-night-only">
+            <Moon className="h-3.5 w-3.5" aria-hidden />
+            {t('pal.nightOnlyNote')}
           </div>
         ) : null}
         {drops && drops.length > 0 && palsBundle ? (

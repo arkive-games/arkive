@@ -271,6 +271,9 @@ def build_dataset(parsed: dict) -> dict:
         boss_pal = _base_id(b["characterId"])
         if is_real_pal(boss_pal):
             c["pal"] = boss_pal
+        # Night-restricted field bosses (spawner OnlyTime=Night).
+        if b.get("nightOnly"):
+            c["nightOnly"] = True
         if z["zukanIndex"] > 0:
             c["zukanIndex"] = z["zukanIndex"]
             if z.get("zukanIndexSuffix"):
@@ -337,7 +340,9 @@ def build_dataset(parsed: dict) -> dict:
         for p in s["pals"]:
             if not is_real_pal(p["id"]):
                 continue
-            by_map_pal[mid].setdefault(p["id"], []).append({**px, "lvMin": p["lvMin"], "lvMax": p["lvMax"]})
+            by_map_pal[mid].setdefault(p["id"], []).append(
+                {**px, "lvMin": p["lvMin"], "lvMax": p["lvMax"], "night": bool(p.get("nightOnly"))}
+            )
     for mid in map_ids:
         for pal_id, points in by_map_pal[mid].items():
             for c in cluster_points(points, radius):
@@ -350,6 +355,10 @@ def build_dataset(parsed: dict) -> dict:
                     "count": len(c["items"]),
                     "descByLng": {lng: f"Lv.{lv_min}–{lv_max}" for lng in languages},
                 }
+                # Night-only when EVERY clustered point is night-restricted (a
+                # mixed cluster also spawns in daytime, so it gets no flag).
+                if all(it["night"] for it in c["items"]):
+                    cand["nightOnly"] = True
                 icon = _pal_icon(pal_icons, pal_id)
                 if icon:
                     cand["icon"] = icon
@@ -387,6 +396,8 @@ def build_dataset(parsed: dict) -> dict:
                         marker["zukanIndexSuffix"] = c["zukanIndexSuffix"]
                 if c.get("count") and c["count"] > 1:
                     marker["count"] = c["count"]
+                if c.get("nightOnly"):
+                    marker["nightOnly"] = True
                 if c.get("image"):
                     marker["image"] = c["image"]
                 if c.get("reward"):

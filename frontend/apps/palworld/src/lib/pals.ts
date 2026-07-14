@@ -249,10 +249,12 @@ export function loadPals(lng: string): Promise<PalsBundle> {
  */
 /** A spawn point's origin: a normal wild encounter, or a (field/alpha) boss. */
 export type SpawnKind = 'wild' | 'boss'
-export interface SpawnPoint { x: number; y: number; count?: number; level?: string; kind: SpawnKind }
+/** `night` marks a night-restricted point (spawner OnlyTime=Night on every
+ *  merged raw point) — the pal appears there only at night. */
+export interface SpawnPoint { x: number; y: number; count?: number; level?: string; kind: SpawnKind; night?: boolean }
 export interface PalSpawns { map: GameMapMeta; points: SpawnPoint[] }
 
-interface SpawnMarker { id: string; subtype: string; x: number; y: number; count?: number; pal?: string }
+interface SpawnMarker { id: string; subtype: string; x: number; y: number; count?: number; pal?: string; nightOnly?: boolean }
 
 // Boss markers share one subtype per boss kind (not a pal id); they carry a
 // `pal` field linking back to the catchable pal (emitted by tools/…/emit.py).
@@ -289,6 +291,7 @@ export async function loadPalSpawns(palId: string, lng: string): Promise<PalSpaw
           count: m.count,
           level: isBoss ? label?.name : label?.description,
           kind: isBoss ? 'boss' : 'wild',
+          night: m.nightOnly,
         })
       }
       // Wild first, boss last, so boss markers render on top of overlapping wild ones.

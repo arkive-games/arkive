@@ -78,6 +78,7 @@ export const markerInstanceSchema = z.object({
   tier: z.number().optional(),
   fragmentType: z.enum(["ground", "air", "water"]).optional(),
   entity: markerEntityRefSchema.optional(),
+  nightOnly: z.boolean().optional(),
   reward: z
     .object({ item: z.string(), count: z.number(), dogCoin: z.number().optional() })
     .optional(),

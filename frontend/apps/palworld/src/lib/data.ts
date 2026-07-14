@@ -24,6 +24,8 @@ export interface MarkerRow {
   image?: string
   /** Spawn points merged into this cluster marker (absent/1 = not a cluster). */
   count?: number
+  /** Night-restricted spawn (every merged point has spawner OnlyTime=Night). */
+  nightOnly?: boolean
   /** Ancient Shrine reward: gear schematic (item id + count) + Dog Coins. */
   reward?: { item: string; count: number; dogCoin?: number }
   /** Linked catchable pal (fieldBoss/predator) — backs the popup drop badges. */

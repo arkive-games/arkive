@@ -225,6 +225,21 @@ def test_extract_integration():
     assert any(p["characterId"] == "BOSS_BlackCentaur" for p in out["bosses"])
     assert len(out["palSpawns"]) > 5000
     assert all(len(s["pals"]) >= 1 for s in out["palSpawns"])
+    # Day/night: an OnlyTime=Night spawner row marks the pal night-only at that
+    # spawner (present-only-when-true); unrestricted rows stay unflagged, and
+    # one spawner can mix both kinds (green_A: DreamDemon at night, SheepBall
+    # any time).
+    spawn_by_name = {}
+    for s in out["palSpawns"]:
+        spawn_by_name.setdefault(s["spawnerName"], s)
+    green_a = {p["id"]: p for p in spawn_by_name["green_A"]["pals"]}
+    assert green_a["DreamDemon"]["nightOnly"] is True
+    assert "nightOnly" not in green_a["SheepBall"]
+    green_c = {p["id"]: p for p in spawn_by_name["green_C"]["pals"]}
+    assert green_c["NightFox"]["nightOnly"] is True
+    # The two night-restricted field bosses in current data.
+    night_bosses = {b["characterId"] for b in out["bosses"] if b.get("nightOnly")}
+    assert night_bosses == {"BOSS_GrimGirl", "BOSS_LilyQueen_Dark"}
     assert out["namesByLang"]["en-US"]["Kitsunebi"]
     assert out["bounds"]["MainWorld"]["min"]["X"] == -1099400
     assert out["bounds"]["WorldTree"]["max"]["Y"] == -476400

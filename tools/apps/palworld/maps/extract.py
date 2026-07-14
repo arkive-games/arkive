@@ -797,9 +797,13 @@ def run_extract(raw: Path) -> dict:
     # pals (and day/night, level-band, weather variants) in its own row. Aggregate
     # the union of pals per name; keying by name alone would keep only the last row
     # and drop the rest (most wild pals). Dedup by pal id, widening the level band.
+    # ``OnlyTime`` is the spawn system's only time restriction: ``Night`` rows
+    # spawn only at night, ``Undefined`` rows any time (no Day-only rows exist).
+    # A pal is night-only at a spawner iff every row listing it there is Night.
     wild_by_name: dict[str, dict[str, dict]] = {}
     for r in wild_rows.values():
         name = r["SpawnerName"]
+        is_night = r.get("OnlyTime") == "EPalOneDayTimeType::Night"
         for n in (1, 2, 3):
             pid = r.get(f"Pal_{n}")
             if not pid or pid == "None":
@@ -810,8 +814,12 @@ def run_extract(raw: Path) -> dict:
             if cur:
                 cur["lvMin"] = min(cur["lvMin"], lv_min)
                 cur["lvMax"] = max(cur["lvMax"], lv_max)
+                if not is_night:
+                    cur.pop("nightOnly", None)
             else:
                 slot[pid] = {"id": pid, "lvMin": lv_min, "lvMax": lv_max}
+                if is_night:
+                    slot[pid]["nightOnly"] = True
     place_rows = read_rows(raw / "DataTable/Spawner/DT_PalSpawnerPlacement.json")
     pal_spawns = []
     for r in place_rows.values():
@@ -870,6 +878,25 @@ def run_extract(raw: Path) -> dict:
                 "level": info["lvMax"],
                 "location": loc,
             })
+
+    # Night-only field bosses (their spawner rows carry OnlyTime=Night): flag
+    # every boss entry whose pal+coords match such a placement — the entry may
+    # have come from the placement loop above OR from DT_BossSpawnerLoactionData
+    # (in which case the placement duplicate was skipped but the boss is still
+    # the night-restricted spawn).
+    night_boss_keys = set()
+    for r in place_rows.values():
+        if r.get("SpawnerType") != "EPalSpawnedCharacterType::FieldBoss":
+            continue
+        for cid, info in (wild_by_name.get(r["SpawnerName"]) or {}).items():
+            if info.get("nightOnly"):
+                night_boss_keys.add(
+                    (_boss_base(cid), js_round(r["Location"]["X"]), js_round(r["Location"]["Y"]))
+                )
+    for b in bosses:
+        key = (_boss_base(b["characterId"]), js_round(b["location"]["X"]), js_round(b["location"]["Y"]))
+        if key in night_boss_keys:
+            b["nightOnly"] = True
 
     names_by_lang = {tag: _read_l10n_pal_names(raw, folder, tag) for folder, tag in L10N_LANG_TAGS.items()}
     names_by_lang[JA_TAG] = _read_pal_names(raw / "DataTable/Text/DT_PalNameText_Common.json")

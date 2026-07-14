@@ -3,6 +3,7 @@ import L from 'leaflet'
 import { MapContainer, Marker, Tooltip } from 'react-leaflet'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Moon } from 'lucide-react'
 // Importing the map-engine barrel also registers the smooth wheel-zoom handler.
 import { GameMapTiles, createPinIcon, dataToLatLng } from '@gamemap/map-engine'
 import { cn } from '@gamemap/ui'
@@ -40,6 +41,8 @@ function useMapLabels(lng: string): Record<string, string> {
  */
 // Boss category color (data_src/types.yaml) — boss spawn points ring red.
 const BOSS_RING = '#ef4444'
+// Night-restricted wild points ring indigo (boss identity wins over night).
+const NIGHT_RING = '#818cf8'
 
 export function PalSpawnMap({
   palId,
@@ -82,18 +85,22 @@ export function PalSpawnMap({
   const map = current?.map
   const hasWild = !!current?.points.some((p) => p.kind === 'wild')
   const hasBoss = !!current?.points.some((p) => p.kind === 'boss')
+  const hasNight = !!current?.points.some((p) => p.night)
+  // Every point night-restricted → one prominent note instead of a legend entry.
+  const allNight = !!current && current.points.length > 0 && current.points.every((p) => p.night)
 
   // Match the main map's pal marker: circular portrait at scale 0.9 with the
   // cluster count drawn as a top-right badge. createPinIcon caches by count, so
   // building one per point only ever produces a handful of distinct icons.
   const iconUrl = useMemo(() => palIconUrl(palIcon), [palIcon])
   // Boss points ring red and sit slightly larger so they read as highlighted;
-  // wild points keep the default white ring at scale 0.9.
-  const iconFor = (kind: SpawnKind, count?: number) =>
+  // night-restricted wild points ring indigo; other wild points keep the
+  // default white ring at scale 0.9.
+  const iconFor = (kind: SpawnKind, count?: number, night?: boolean) =>
     createPinIcon(iconUrl, kind === 'boss' ? 1 : 0.9, false, {
       variant: 'circular',
       count,
-      ...(kind === 'boss' ? { ringColor: BOSS_RING } : {}),
+      ...(kind === 'boss' ? { ringColor: BOSS_RING } : night ? { ringColor: NIGHT_RING } : {}),
     })
 
   // Full map extent — the embedded map opens zoomed out to show the whole map
@@ -165,26 +172,46 @@ export function PalSpawnMap({
         >
           <GameMapTiles selectedMap={map} assets={palworldAssets} />
           {current.points.map((p, i) => (
-            <Marker key={i} position={dataToLatLng(map, p.x, p.y)} icon={iconFor(p.kind, p.count)}>
+            <Marker key={i} position={dataToLatLng(map, p.x, p.y)} icon={iconFor(p.kind, p.count, p.night)}>
               {p.level ? (
                 <Tooltip direction="top">{p.level}</Tooltip>
               ) : null}
             </Marker>
           ))}
         </MapContainer>
-        {hasWild && hasBoss ? (
+        {(hasWild && hasBoss) || (hasNight && !allNight) ? (
           <div className="absolute bottom-2 left-2 z-[500] flex items-center gap-3 rounded bg-background/80 px-2 py-1 text-xs">
             <span className="flex items-center gap-1">
               <span className="inline-block size-2.5 rounded-full border border-[rgba(255,255,255,0.9)] bg-muted-foreground/40" />
               {t('pal.spawnWild')}
             </span>
-            <span className="flex items-center gap-1">
-              <span
-                className="inline-block size-2.5 rounded-full bg-muted-foreground/40"
-                style={{ border: `1.5px solid ${BOSS_RING}` }}
-              />
-              {t('pal.spawnBoss')}
-            </span>
+            {hasNight ? (
+              <span className="flex items-center gap-1">
+                <span
+                  className="inline-block size-2.5 rounded-full bg-muted-foreground/40"
+                  style={{ border: `1.5px solid ${NIGHT_RING}` }}
+                />
+                {t('pal.nightOnly')}
+              </span>
+            ) : null}
+            {hasBoss ? (
+              <span className="flex items-center gap-1">
+                <span
+                  className="inline-block size-2.5 rounded-full bg-muted-foreground/40"
+                  style={{ border: `1.5px solid ${BOSS_RING}` }}
+                />
+                {t('pal.spawnBoss')}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+        {allNight ? (
+          <div
+            className="absolute bottom-2 left-2 z-[500] flex items-center gap-1.5 rounded bg-background/80 px-2 py-1 text-xs text-indigo-500 dark:text-indigo-400"
+            data-testid="pal-spawn-night-note"
+          >
+            <Moon className="h-3 w-3" aria-hidden />
+            {t('pal.nightOnlyNote')}
           </div>
         ) : null}
         <Link

@@ -164,6 +164,13 @@ export interface MarkerInstance {
    */
   count?: number;
   /**
+   * True when this spawn is restricted to nighttime (palworld: the spawner's
+   * `OnlyTime=Night`). On a cluster marker it means EVERY merged spawn point
+   * is night-only; mixed clusters (day + night points) carry no flag. Drives
+   * the popup's "only appears at night" line and the pal page's night styling.
+   */
+  nightOnly?: boolean;
+  /**
    * Ancient Shrine reward (palworld): the gear schematic the shrine grants
    * (`item` = item id, `count` = quantity) plus the Dog Coins awarded alongside
    * it (`dogCoin`). Drives the shrine popup's reward line.
