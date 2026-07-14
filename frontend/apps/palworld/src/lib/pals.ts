@@ -241,65 +241,67 @@ export function loadPals(lng: string): Promise<PalsBundle> {
   return p
 }
 
-// --- spawn markers (for the embedded per-pal map) ---------------------------
+// --- spawn points (for the embedded per-pal map) -----------------------------
 /**
- * A pal's spawn point on one map. `count` (>1) marks a pre-clustered point;
- * `level` is that spawn's localized level range (e.g. "Lv.1–3"), read from the
- * marker locale — the same string the main map shows.
+ * A pal's exact spawn point on one map; `level` is a preformatted level label
+ * (e.g. "Lv.1–3", or "Lv.7" for bosses).
  */
 /** A spawn point's origin: a normal wild encounter, or a (field/alpha) boss. */
 export type SpawnKind = 'wild' | 'boss'
-/** `night` marks a night-restricted point (spawner OnlyTime=Night on every
- *  merged raw point) — the pal appears there only at night. */
-export interface SpawnPoint { x: number; y: number; count?: number; level?: string; kind: SpawnKind; night?: boolean }
+/** `night` marks a night-restricted point (spawner OnlyTime=Night) — the pal
+ *  appears there only at night. */
+export interface SpawnPoint { x: number; y: number; level?: string; kind: SpawnKind; night?: boolean }
 export interface PalSpawns { map: GameMapMeta; points: SpawnPoint[] }
 
-interface SpawnMarker { id: string; subtype: string; x: number; y: number; count?: number; pal?: string; nightOnly?: boolean }
-
-// Boss markers share one subtype per boss kind (not a pal id); they carry a
-// `pal` field linking back to the catchable pal (emitted by tools/…/emit.py).
-const BOSS_SUBTYPES = new Set(['fieldBoss', 'predator'])
+// spawns/<palId>.json (emitted by tools/…/emit.py): the pal's pre-cluster
+// placements plus fieldBoss/predator points, keyed by map id.
+interface SpawnFile {
+  maps: Record<
+    string,
+    {
+      points?: { x: number; y: number; z: number; lvMin: number; lvMax: number; nightOnly?: boolean }[]
+      bosses?: { x: number; y: number; z: number; kind: string; level?: number; nightOnly?: boolean }[]
+    }
+  >
+}
 
 /**
- * Every map on which `palId` appears, with that pal's spawn points. Reuses the
- * markers already in `markers/<map>.json`: wild encounters use the pal id as
- * `subtype`; alpha/field bosses use a boss `subtype` plus a `pal` field. Maps
- * with no points are omitted. Points are the data's pre-clustered markers
- * rendered individually (no further clustering). The per-marker label comes from
- * the `<lng>` marker locale — wild points use `description` (level range), boss
- * points use `name` (already "`<Name> Lv.<n>`"); missing locale ⇒ label omitted.
+ * Every map on which `palId` appears, with that pal's exact spawn positions
+ * from `spawns/<palId>.json` (unclustered — the main map's markers stay
+ * clustered, this file carries the raw placements). Maps with no points are
+ * omitted; a missing file (404) means the pal never spawns. Level labels are
+ * formatted here from the numeric band — no locale fetch needed.
  */
-export async function loadPalSpawns(palId: string, lng: string): Promise<PalSpawns[]> {
-  const { maps } = await j<{ maps: GameMapMeta[] }>(`${DATA_BASE}/maps.json`)
-  const per = await Promise.all(
-    maps.map(async (map) => {
-      const [{ markers }, loc] = await Promise.all([
-        j<{ markers: SpawnMarker[] }>(`${DATA_BASE}/markers/${map.id}.json`),
-        j<Record<string, { name?: string; description?: string }>>(
-          `${DATA_BASE}/locales/${lng}/markers/${map.id}.json`,
-        ).catch(() => ({}) as Record<string, { name?: string; description?: string }>),
-      ])
-      const points: SpawnPoint[] = []
-      for (const m of markers) {
-        const isBoss = BOSS_SUBTYPES.has(m.subtype) && m.pal === palId
-        const isWild = m.subtype === palId
-        if (!isBoss && !isWild) continue
-        const label = loc[m.id]
-        points.push({
-          x: m.x,
-          y: m.y,
-          count: m.count,
-          level: isBoss ? label?.name : label?.description,
-          kind: isBoss ? 'boss' : 'wild',
-          night: m.nightOnly,
-        })
-      }
-      // Wild first, boss last, so boss markers render on top of overlapping wild ones.
-      points.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'wild' ? -1 : 1))
-      return { map, points }
-    }),
-  )
-  return per.filter((p) => p.points.length > 0)
+export async function loadPalSpawns(palId: string): Promise<PalSpawns[]> {
+  const [{ maps }, file] = await Promise.all([
+    j<{ maps: GameMapMeta[] }>(`${DATA_BASE}/maps.json`),
+    j<SpawnFile>(`${DATA_BASE}/spawns/${palId}.json`).catch(() => null),
+  ])
+  if (!file) return []
+  const out: PalSpawns[] = []
+  for (const map of maps) {
+    const m = file.maps[map.id]
+    if (!m) continue
+    const points: SpawnPoint[] = (m.points ?? []).map((p) => ({
+      x: p.x,
+      y: p.y,
+      kind: 'wild' as const,
+      level: p.lvMin === p.lvMax ? `Lv.${p.lvMin}` : `Lv.${p.lvMin}–${p.lvMax}`,
+      night: p.nightOnly,
+    }))
+    // Boss points last, so they render on top of overlapping wild ones.
+    for (const b of m.bosses ?? []) {
+      points.push({
+        x: b.x,
+        y: b.y,
+        kind: 'boss',
+        level: b.level ? `Lv.${b.level}` : undefined,
+        night: b.nightOnly,
+      })
+    }
+    if (points.length > 0) out.push({ map, points })
+  }
+  return out
 }
 
 // Game locale text embeds pal-name placeholders like `<characterName id=|Anubis|/>`

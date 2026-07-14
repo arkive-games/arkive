@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
-import { MapContainer, Marker, Tooltip } from 'react-leaflet'
+import { CircleMarker, MapContainer, Marker, Tooltip } from 'react-leaflet'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Moon } from 'lucide-react'
@@ -34,8 +34,8 @@ function useMapLabels(lng: string): Record<string, string> {
 }
 
 /**
- * Embedded mini-map of a single pal's spawns, unclustered (each data point
- * shown individually). Loads spawns across every map; when the pal spawns on
+ * Embedded mini-map of a single pal's exact spawn positions (unclustered, from
+ * `spawns/<palId>.json`). Loads spawns across every map; when the pal spawns on
  * more than one map, a toggle switches between them. Bare Leaflet + tiles (no
  * full engine chrome), mirroring aion2's wiki `EmbeddedMap`.
  */
@@ -43,6 +43,18 @@ function useMapLabels(lng: string): Record<string, string> {
 const BOSS_RING = '#ef4444'
 // Night-restricted wild points ring indigo (boss identity wins over night).
 const NIGHT_RING = '#818cf8'
+// Above this many wild points on one map, icon pins stack into an unreadable
+// pile (spawner grids sit ~50 m apart; verified at ~270 points); fall back to
+// small canvas-rendered dots. Bosses stay pins.
+const MAX_PIN_POINTS = 50
+// Wild dot style, matching the legend's muted, white-ringed swatch; night
+// points keep their indigo ring in dot form too.
+const dotStyle = (night?: boolean): L.PathOptions => ({
+  color: night ? NIGHT_RING : 'rgba(255,255,255,0.9)',
+  weight: 1,
+  fillColor: '#64748b',
+  fillOpacity: 0.9,
+})
 
 export function PalSpawnMap({
   palId,
@@ -69,7 +81,7 @@ export function PalSpawnMap({
     let cancelled = false
     setSpawns(null)
     setActive(0)
-    loadPalSpawns(palId, lng)
+    loadPalSpawns(palId)
       .then((s) => {
         if (!cancelled) setSpawns(s)
       })
@@ -79,27 +91,28 @@ export function PalSpawnMap({
     return () => {
       cancelled = true
     }
-  }, [palId, lng])
+  }, [palId])
 
   const current = spawns?.[active]
   const map = current?.map
-  const hasWild = !!current?.points.some((p) => p.kind === 'wild')
+  const wildCount = current?.points.filter((p) => p.kind === 'wild').length ?? 0
+  const hasWild = wildCount > 0
   const hasBoss = !!current?.points.some((p) => p.kind === 'boss')
   const hasNight = !!current?.points.some((p) => p.night)
   // Every point night-restricted → one prominent note instead of a legend entry.
   const allNight = !!current && current.points.length > 0 && current.points.every((p) => p.night)
+  // High-volume pals (5k+ exact points) would choke on icon pins; draw their
+  // wild points as canvas dots instead. Bosses always stay pins.
+  const useDots = wildCount > MAX_PIN_POINTS
 
-  // Match the main map's pal marker: circular portrait at scale 0.9 with the
-  // cluster count drawn as a top-right badge. createPinIcon caches by count, so
-  // building one per point only ever produces a handful of distinct icons.
+  // Match the main map's pal marker: circular portrait at scale 0.9.
   const iconUrl = useMemo(() => palIconUrl(palIcon), [palIcon])
   // Boss points ring red and sit slightly larger so they read as highlighted;
   // night-restricted wild points ring indigo; other wild points keep the
   // default white ring at scale 0.9.
-  const iconFor = (kind: SpawnKind, count?: number, night?: boolean) =>
+  const iconFor = (kind: SpawnKind, night?: boolean) =>
     createPinIcon(iconUrl, kind === 'boss' ? 1 : 0.9, false, {
       variant: 'circular',
-      count,
       ...(kind === 'boss' ? { ringColor: BOSS_RING } : night ? { ringColor: NIGHT_RING } : {}),
     })
 
@@ -159,6 +172,7 @@ export function PalSpawnMap({
           bounds={bounds}
           maxBounds={bounds}
           crs={L.CRS.Simple}
+          preferCanvas={true}
           minZoom={-4}
           maxZoom={2}
           zoomSnap={0}
@@ -171,13 +185,22 @@ export function PalSpawnMap({
           className="h-full w-full"
         >
           <GameMapTiles selectedMap={map} assets={palworldAssets} />
-          {current.points.map((p, i) => (
-            <Marker key={i} position={dataToLatLng(map, p.x, p.y)} icon={iconFor(p.kind, p.count, p.night)}>
-              {p.level ? (
-                <Tooltip direction="top">{p.level}</Tooltip>
-              ) : null}
-            </Marker>
-          ))}
+          {current.points.map((p, i) =>
+            p.kind === 'wild' && useDots ? (
+              <CircleMarker
+                key={i}
+                center={dataToLatLng(map, p.x, p.y)}
+                radius={3}
+                pathOptions={dotStyle(p.night)}
+              >
+                {p.level ? <Tooltip direction="top">{p.level}</Tooltip> : null}
+              </CircleMarker>
+            ) : (
+              <Marker key={i} position={dataToLatLng(map, p.x, p.y)} icon={iconFor(p.kind, p.night)}>
+                {p.level ? <Tooltip direction="top">{p.level}</Tooltip> : null}
+              </Marker>
+            ),
+          )}
         </MapContainer>
         {(hasWild && hasBoss) || (hasNight && !allNight) ? (
           <div className="absolute bottom-2 left-2 z-[500] flex items-center gap-3 rounded bg-background/80 px-2 py-1 text-xs">
