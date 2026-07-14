@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
+import { cn, HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
 import type {
   ItemsBundle,
   BuildingsBundle,
@@ -239,13 +239,27 @@ export function BuildingSummary({ building }: { building: BuildingEntry }) {
 
 /** Compact work-suitability pill: work icon + level. The localized work name
  *  lives in the title tooltip; when the work type has no icon (OilExtraction)
- *  the name stands in for it. */
-function WorkBadge({ work, level, label }: { work: WorkType; level: number; label: string }) {
+ *  the name stands in for it. `best` = the species' BestWorkSuitability
+ *  (gold — the condenser upgrades it first). */
+function WorkBadge({
+  work,
+  level,
+  label,
+  best,
+}: {
+  work: WorkType
+  level: number
+  label: string
+  best?: boolean
+}) {
   const [iconOk, setIconOk] = useState(true)
   return (
     <span
       title={label}
-      className="inline-flex items-center gap-1 rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground"
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium text-secondary-foreground',
+        best ? 'bg-amber-500/10 ring-1 ring-inset ring-amber-500/60' : 'bg-secondary',
+      )}
     >
       {iconOk ? (
         <img
@@ -304,7 +318,13 @@ export function PalSummary({ pal }: { pal: PalEntry }) {
       {workEntries.length ? (
         <div className="flex flex-wrap gap-1">
           {workEntries.map(([w, lvl]) => (
-            <WorkBadge key={w} work={w} level={lvl} label={pals?.enums.work[w] ?? w} />
+            <WorkBadge
+              key={w}
+              work={w}
+              level={lvl}
+              label={pals?.enums.work[w] ?? w}
+              best={w === pal.bestWork}
+            />
           ))}
         </div>
       ) : null}

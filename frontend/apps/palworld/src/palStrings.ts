@@ -37,6 +37,8 @@ export interface PalStrings {
   bredFrom: string
   openBreeding: string
   noBreeding: string
+  workBestCaption: string
+  condenseTitle: string
   section: {
     description: string
     stats: string
@@ -106,6 +108,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Bred from',
     openBreeding: 'Open breeding calculator →',
     noBreeding: 'No breeding combinations produce this Pal.',
+    workBestCaption: '★ Best work suitability — Pal Essence Condenser stars upgrade it first.',
+    condenseTitle: 'Pal Essence Condenser upgrades',
     section: {
       description: 'Description',
       stats: 'Base Stats',
@@ -173,6 +177,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Gezüchtet aus',
     openBreeding: 'Zucht-Rechner öffnen →',
     noBreeding: 'Keine Zuchtkombination erzeugt dieses Pal.',
+    workBestCaption: '★ Beste Arbeitseignung – die Sterne des Pal-Entsafters verbessern sie zuerst.',
+    condenseTitle: 'Pal-Entsafter: Verbesserungen',
     section: {
       description: 'Beschreibung',
       stats: 'Basiswerte',
@@ -240,6 +246,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Criado a partir de',
     openBreeding: 'Abrir calculadora de crianza →',
     noBreeding: 'Ninguna combinación de crianza produce este Pal.',
+    workBestCaption: '★ Mejor aptitud de trabajo: las estrellas de la Cápsula de concentrado Pal la mejoran primero.',
+    condenseTitle: 'Mejoras de la Cápsula de concentrado Pal',
     section: {
       description: 'Descripción',
       stats: 'Estadísticas base',
@@ -307,6 +315,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Criado a partir de',
     openBreeding: 'Abrir calculadora de crianza →',
     noBreeding: 'Ninguna combinación de crianza produce este Pal.',
+    workBestCaption: '★ Mejor aptitud de trabajo: las estrellas de la Cápsula de concentrado Pal la mejoran primero.',
+    condenseTitle: 'Mejoras de la Cápsula de concentrado Pal',
     section: {
       description: 'Descripción',
       stats: 'Estadísticas base',
@@ -374,6 +384,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Issu de',
     openBreeding: "Ouvrir le calculateur d'élevage →",
     noBreeding: 'Aucune combinaison ne produit ce Pal.',
+    workBestCaption: '★ Meilleure aptitude au travail — les étoiles de la Capsule d’essence de Pal l’améliorent en premier.',
+    condenseTitle: 'Améliorations de la Capsule d’essence de Pal',
     section: {
       description: 'Description',
       stats: 'Statistiques de base',
@@ -441,6 +453,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Diternak dari',
     openBreeding: 'Buka kalkulator ternak →',
     noBreeding: 'Tidak ada kombinasi ternak yang menghasilkan Pal ini.',
+    workBestCaption: '★ Kecocokan kerja terbaik — bintang Tabung Ekstraktor Pal meningkatkannya lebih dulu.',
+    condenseTitle: 'Peningkatan Tabung Ekstraktor Pal',
     section: {
       description: 'Deskripsi',
       stats: 'Statistik Dasar',
@@ -508,6 +522,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Generato da',
     openBreeding: 'Apri il calcolatore di allevamento →',
     noBreeding: 'Nessuna combinazione di allevamento produce questo Pal.',
+    workBestCaption: '★ Migliore attitudine al lavoro: le stelle della Capsula di potenziamento Pal la migliorano per prima.',
+    condenseTitle: 'Miglioramenti della Capsula di potenziamento Pal',
     section: {
       description: 'Descrizione',
       stats: 'Statistiche base',
@@ -575,6 +591,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: '交配元',
     openBreeding: '交配計算機を開く →',
     noBreeding: 'このパルを生む交配の組み合わせはありません。',
+    workBestCaption: '★ 最も得意な作業適性 — パル濃縮ポッドの星で優先的に強化されます。',
+    condenseTitle: 'パル濃縮ポッドによる強化',
     section: {
       description: '説明',
       stats: '基礎ステータス',
@@ -642,6 +660,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: '교배 재료',
     openBreeding: '교배 계산기 열기 →',
     noBreeding: '이 팰을 만드는 교배 조합이 없습니다.',
+    workBestCaption: '★ 가장 뛰어난 작업 적성 — 팰 농축 포드의 별이 우선적으로 강화합니다.',
+    condenseTitle: '팰 농축 포드 강화',
     section: {
       description: '설명',
       stats: '기본 능력치',
@@ -709,6 +729,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Wyhodowany z',
     openBreeding: 'Otwórz kalkulator hodowli →',
     noBreeding: 'Żadna kombinacja hodowli nie tworzy tego Pala.',
+    workBestCaption: '★ Najlepsze predyspozycje do pracy — gwiazdki Kondensatora Esencji Pali ulepszają je w pierwszej kolejności.',
+    condenseTitle: 'Ulepszenia Kondensatora Esencji Pali',
     section: {
       description: 'Opis',
       stats: 'Statystyki podstawowe',
@@ -776,6 +798,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Gerado a partir de',
     openBreeding: 'Abrir calculadora de reprodução →',
     noBreeding: 'Nenhuma combinação de reprodução gera este Pal.',
+    workBestCaption: '★ Melhor aptidão de trabalho — as estrelas do Casulo de Condensação de Pal a aprimoram primeiro.',
+    condenseTitle: 'Melhorias do Casulo de Condensação de Pal',
     section: {
       description: 'Descrição',
       stats: 'Atributos base',
@@ -843,6 +867,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Выведен из',
     openBreeding: 'Открыть калькулятор разведения →',
     noBreeding: 'Ни одна комбинация разведения не даёт этого пала.',
+    workBestCaption: '★ Лучшая рабочая специализация — звёзды Конденсатора Палов улучшают её в первую очередь.',
+    condenseTitle: 'Улучшения Конденсатора Палов',
     section: {
       description: 'Описание',
       stats: 'Базовые характеристики',
@@ -910,6 +936,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'ผสมพันธุ์จาก',
     openBreeding: 'เปิดเครื่องคำนวณการผสมพันธุ์ →',
     noBreeding: 'ไม่มีการผสมพันธุ์ใดที่ให้ Pal ตัวนี้',
+    workBestCaption: '★ ความถนัดงานที่ดีที่สุด — ดาวจากแคปซูลควบแน่นพาลจะอัปเกรดให้ก่อน',
+    condenseTitle: 'อัปเกรดจากแคปซูลควบแน่นพาล',
     section: {
       description: 'คำอธิบาย',
       stats: 'ค่าพื้นฐาน',
@@ -977,6 +1005,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Şundan üretildi',
     openBreeding: 'Üretme hesaplayıcıyı aç →',
     noBreeding: 'Hiçbir üretme kombinasyonu bu Palı üretmez.',
+    workBestCaption: '★ En iyi iş uygunluğu — Pal Özü Yoğunlaştırıcı yıldızları önce onu geliştirir.',
+    condenseTitle: 'Pal Özü Yoğunlaştırıcı geliştirmeleri',
     section: {
       description: 'Açıklama',
       stats: 'Temel Değerler',
@@ -1044,6 +1074,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: 'Nhân giống từ',
     openBreeding: 'Mở công cụ tính nhân giống →',
     noBreeding: 'Không có tổ hợp nhân giống nào tạo ra Pal này.',
+    workBestCaption: '★ Năng khiếu làm việc tốt nhất — sao của Máy Tinh Luyện Pal sẽ nâng cấp nó trước tiên.',
+    condenseTitle: 'Nâng cấp Máy Tinh Luyện Pal',
     section: {
       description: 'Mô tả',
       stats: 'Chỉ số cơ bản',
@@ -1111,6 +1143,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: '配种来源',
     openBreeding: '打开配种计算器 →',
     noBreeding: '没有可产出该帕鲁的配种组合。',
+    workBestCaption: '★ 最擅长的工作适性 — 帕鲁浓缩机的星级会优先强化它。',
+    condenseTitle: '帕鲁浓缩机强化',
     section: {
       description: '描述',
       stats: '基础属性',
@@ -1178,6 +1212,8 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     bredFrom: '配種來源',
     openBreeding: '開啟配種計算器 →',
     noBreeding: '沒有可產出該帕魯的配種組合。',
+    workBestCaption: '★ 最擅長的工作適性 — 帕魯濃縮機的星級會優先強化它。',
+    condenseTitle: '帕魯濃縮機強化',
     section: {
       description: '描述',
       stats: '基礎屬性',

@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { cn } from '@gamemap/ui'
+import { cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
 import { elementIconUrl, workIconUrl } from '../../../lib/assets'
+import type { CondenseEntry } from '../../../lib/condenser'
 import type { ActiveSkill, Element, WorkType } from '../../../lib/pals'
 
 /** An <img> that removes itself if the asset is missing (e.g. OilExtraction
@@ -50,35 +51,78 @@ export function ElementBadge({
 }
 
 /** Work-suitability icon + localized name + level badge. Falls back to the
- *  label alone when the work type has no icon (OilExtraction). */
+ *  label alone when the work type has no icon (OilExtraction). `highlight`
+ *  marks the species' BestWorkSuitability (gold + ★ — the condenser upgrades
+ *  it first). `condense` adds the max-condensed level (`Lv6 →8`) with a
+ *  per-star breakdown tooltip titled `condenseTitle`. */
 export function WorkSuitability({
   work,
   level,
   label,
   description,
   highlight,
+  condense,
+  condenseTitle,
 }: {
   work: WorkType
   level: number
   label: string
   description?: string
   highlight?: boolean
+  condense?: CondenseEntry
+  condenseTitle?: string
 }) {
+  const upgraded = condense && condense.final > level
+  const badge = (
+    <span
+      className={cn(
+        'ml-auto shrink-0 rounded bg-background/70 px-1.5 py-0.5 text-xs font-semibold tabular-nums',
+        upgraded && 'cursor-help',
+      )}
+    >
+      Lv{level}
+      {upgraded ? (
+        <span className="text-emerald-600 dark:text-emerald-400"> →{condense.final}</span>
+      ) : null}
+    </span>
+  )
   return (
     <div
       title={description}
       className={cn(
         'flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm',
         highlight
-          ? 'border-primary/60 bg-primary/10'
+          ? 'border-amber-500/60 bg-amber-500/10'
           : 'border-border bg-secondary/40',
       )}
     >
       <IconImg src={workIconUrl(work)} alt="" size={22} />
-      <span className="min-w-0 truncate">{label}</span>
-      <span className="ml-auto shrink-0 rounded bg-background/70 px-1.5 py-0.5 text-xs font-semibold tabular-nums">
-        Lv{level}
+      <span className="min-w-0 truncate">
+        {label}
+        {highlight ? <span className="text-amber-500 dark:text-amber-400"> ★</span> : null}
       </span>
+      {upgraded ? (
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>{badge}</TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              {condenseTitle ? <div className="mb-1 font-medium">{condenseTitle}</div> : null}
+              <div className="space-y-0.5 tabular-nums">
+                {condense.stars.map((s) => (
+                  <div key={s.star} className="flex justify-between gap-4">
+                    <span>★{s.star}</span>
+                    <span>
+                      Lv{s.from} → {s.to}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        badge
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@gamemap/ui'
 import { elementIconUrl, itemIconUrl, palIconUrl, workIconUrl } from '../../../lib/assets'
 import { formatPalId } from '../../../lib/palId'
 import { WORK_TYPES, type PalEntry, type PalsBundle } from '../../../lib/pals'
@@ -57,7 +58,13 @@ function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
             <span
               key={w}
               title={`${bundle.enums.work[w] ?? w} Lv${pal.work[w]}`}
-              className="inline-flex items-center gap-0.5 rounded bg-secondary/60 px-1 py-0.5 text-xs tabular-nums"
+              className={cn(
+                'inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-xs tabular-nums',
+                // gold = the species' BestWorkSuitability (condenser upgrades it first)
+                w === pal.bestWork
+                  ? 'bg-amber-500/10 ring-1 ring-inset ring-amber-500/60'
+                  : 'bg-secondary/60',
+              )}
             >
               <Glyph src={workIconUrl(w)} size={14} />
               {pal.work[w]}
