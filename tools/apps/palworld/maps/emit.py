@@ -7,13 +7,14 @@ locales) from ``parsed.json`` and the hand-authored ``data_src/types.yaml``.
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
 
 import yaml
 
 from .bounds import assign_map
 from .cluster import cluster_points
-from .common import round2, write_json
+from .common import js_round, round2, write_json
 from .extract import read_parsed
 from .orientation import ORIENTATIONS
 from .transform import make_inverse_transform, make_transform
@@ -224,6 +225,23 @@ def build_dataset(parsed: dict) -> dict:
     candidates = {mid: [] for mid in map_ids}
     subtype_cat = {s["id"]: s["category"] for s in subtype_defs}
 
+    # Per-pal exact spawn points (spawns/<palId>.json): the pre-cluster
+    # placements plus fieldBoss/predator points, so the pal detail map can show
+    # exact positions with a single fetch. Coords are integer world cm — sub-cm
+    # precision is meaningless at the 8192 px map resolution.
+    pal_subtype_ids = {s["id"] for s in pal_subtypes}
+    spawn_files: dict[str, dict] = {}
+
+    def _spawn_entry(pid: str, mid: str, kind: str) -> list:
+        maps_ = spawn_files.setdefault(pid, {"maps": {}})["maps"]
+        return maps_.setdefault(mid, {}).setdefault(kind, [])
+
+    def _spawn_xyz(loc) -> dict:
+        return {"x": js_round(loc["X"]), "y": js_round(loc["Y"]), "z": js_round(loc.get("Z", 0))}
+
+    def _is_deck_pal(pid: str) -> bool:
+        return is_real_pal(pid) and z_for_id(pid)["zukanIndex"] > 0
+
     def to_px(mid, loc):
         x, y = transforms[mid](loc)
         return {"x": round2(x), "y": round2(y), "z": round2(loc.get("Z", 0))}
@@ -274,6 +292,13 @@ def build_dataset(parsed: dict) -> dict:
         # Night-restricted field bosses (spawner OnlyTime=Night).
         if b.get("nightOnly"):
             c["nightOnly"] = True
+        if _is_deck_pal(boss_pal):
+            entry = {**_spawn_xyz(b["location"]), "kind": "fieldBoss"}
+            if b.get("level"):
+                entry["level"] = b["level"]
+            if b.get("nightOnly"):
+                entry["nightOnly"] = True
+            _spawn_entry(boss_pal, mid, "bosses").append(entry)
         if z["zukanIndex"] > 0:
             c["zukanIndex"] = z["zukanIndex"]
             if z.get("zukanIndexSuffix"):
@@ -313,6 +338,11 @@ def build_dataset(parsed: dict) -> dict:
         pred_pal = re.sub(r"^PREDATOR_", "", p["pal"])
         if is_real_pal(pred_pal):
             c["pal"] = pred_pal
+        if _is_deck_pal(pred_pal):
+            entry = {**_spawn_xyz(p["location"]), "kind": "predator"}
+            if p.get("level"):
+                entry["level"] = p["level"]
+            _spawn_entry(pred_pal, mid, "bosses").append(entry)
         candidates[mid].append(c)
 
     for n in parsed.get("npcs", []):
@@ -343,6 +373,11 @@ def build_dataset(parsed: dict) -> dict:
             by_map_pal[mid].setdefault(p["id"], []).append(
                 {**px, "lvMin": p["lvMin"], "lvMax": p["lvMax"], "night": bool(p.get("nightOnly"))}
             )
+            if p["id"] in pal_subtype_ids:
+                point = {**_spawn_xyz(s["location"]), "lvMin": p["lvMin"], "lvMax": p["lvMax"]}
+                if p.get("nightOnly"):
+                    point["nightOnly"] = True
+                _spawn_entry(p["id"], mid, "points").append(point)
     for mid in map_ids:
         for pal_id, points in by_map_pal[mid].items():
             for c in cluster_points(points, radius):
@@ -447,8 +482,27 @@ def build_dataset(parsed: dict) -> dict:
             "regions": {mid: {} for mid in map_ids},
         }
 
+    # Order the per-pal spawn files deterministically (points by coords, maps in
+    # map_ids order) so re-runs produce byte-identical artifacts.
+    spawns = {}
+    for pid in sorted(spawn_files):
+        by_map = spawn_files[pid]["maps"]
+        ordered = {}
+        for mid in map_ids:
+            if mid not in by_map:
+                continue
+            mp = {}
+            if "points" in by_map[mid]:
+                mp["points"] = sorted(
+                    by_map[mid]["points"], key=lambda p: (p["x"], p["y"], p["z"], p["lvMin"], p["lvMax"])
+                )
+            if "bosses" in by_map[mid]:
+                mp["bosses"] = sorted(by_map[mid]["bosses"], key=lambda b: (b["kind"], b["x"], b["y"]))
+            ordered[mid] = mp
+        spawns[pid] = {"maps": ordered}
+
     regions = {mid: [] for mid in map_ids}
-    return {"maps": maps, "types": types, "markers": markers, "regions": regions, "locales": locales}
+    return {"maps": maps, "types": types, "markers": markers, "regions": regions, "locales": locales, "spawns": spawns}
 
 
 def run_emit(parsed_dir: Path, data_out: Path) -> None:
@@ -470,5 +524,13 @@ def run_emit(parsed_dir: Path, data_out: Path) -> None:
         for mid in ds["markers"]:
             w(f"locales/{lng}/markers/{mid}.json", loc["markers"][mid])
             w(f"locales/{lng}/regions/{mid}.json", loc["regions"][mid])
+    # Per-pal exact spawn points. Rebuild the directory from scratch so files
+    # for renamed/removed pals don't linger from earlier runs.
+    spawns_dir = data_out / "spawns"
+    if spawns_dir.exists():
+        shutil.rmtree(spawns_dir)
+    for pid, obj in ds["spawns"].items():
+        w(f"spawns/{pid}.json", obj)
     for mid, lst in ds["markers"].items():
         print(f"emit: {mid} {len(lst)} markers")
+    print(f"emit: spawns {len(ds['spawns'])} pals")

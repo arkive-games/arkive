@@ -52,6 +52,8 @@ PARSED = {
     "palSpawns": [
         {"spawnerName": "sp1", "pals": [{"id": "SheepBall", "lvMin": 1, "lvMax": 3}], "location": {"X": 0, "Y": 0, "Z": 0}},
         {"spawnerName": "sp1", "pals": [{"id": "SheepBall", "lvMin": 1, "lvMax": 3}], "location": {"X": 50, "Y": 50, "Z": 0}},
+        # Fractional world coords: the per-pal spawns file rounds to integers.
+        {"spawnerName": "sp2", "pals": [{"id": "PinkCat", "lvMin": 4, "lvMax": 6}], "location": {"X": 123.6, "Y": -77.4, "Z": 12.5}},
         # Non-Paldeck dungeon monster (zukanIndex <= 0): must be dropped, not
         # surfaced as a marker/subtype/category.
         {"spawnerName": "dg1", "pals": [{"id": "YakushimaMonster001", "lvMin": 1, "lvMax": 1}], "location": {"X": 100, "Y": 100, "Z": 0}},
@@ -63,6 +65,11 @@ PARSED = {
         {"spawnerName": "mx1", "pals": [{"id": "Kitsunebi", "lvMin": 9, "lvMax": 10, "nightOnly": True}], "location": {"X": -300000, "Y": 0, "Z": 0}},
         {"spawnerName": "mx2", "pals": [{"id": "Kitsunebi", "lvMin": 9, "lvMax": 10}], "location": {"X": -300050, "Y": 0, "Z": 0}},
     ],
+    "predators": [
+        {"pal": "PREDATOR_SheepBall", "level": 30, "location": {"X": 7000, "Y": 7000, "Z": 0},
+         "icon": "T_SheepBall_icon_normal",
+         "nameByLng": {lng: ("Predator Lamball" if lng == "en-US" else f"{lng} Predator") for lng in LANGUAGES}},
+    ],
     "namesByLang": _names_by_lang(),
     "mapNames": {
         "MainWorld": {lng: ("Palpagos Islands" if lng == "en-US" else f"{lng} Main") for lng in LANGUAGES},
@@ -70,6 +77,7 @@ PARSED = {
     },
     "palMeta": {
         "SheepBall": {"zukanIndex": 2, "zukanIndexSuffix": ""},
+        "PinkCat": {"zukanIndex": 3, "zukanIndexSuffix": ""},
         "Kitsunebi": {"zukanIndex": 5, "zukanIndexSuffix": ""},
         "YakushimaMonster001": {"zukanIndex": -1, "zukanIndexSuffix": ""},
     },
@@ -256,3 +264,67 @@ def test_non_completable_subtypes_omit_the_flag(ds):
     # Emit-only-when-true, like defaultActive: repeatable markers carry no key.
     assert "canComplete" not in _subtype_row(ds, "location", "fastTravel")
     assert "canComplete" not in _subtype_row(ds, "resource", "copper")
+
+
+# --- per-pal exact spawn points (spawns/<palId>.json) ------------------------
+
+
+def test_spawns_exact_points_with_integer_coords(ds):
+    # Every pre-cluster placement survives as one exact point; coords round to
+    # integer world cm (half toward +Inf, matching round2's convention).
+    sb = ds["spawns"]["SheepBall"]["maps"]["MainWorld"]
+    assert sb["points"] == [
+        {"x": 0, "y": 0, "z": 0, "lvMin": 1, "lvMax": 3},
+        {"x": 50, "y": 50, "z": 0, "lvMin": 1, "lvMax": 3},
+    ]
+    assert ds["spawns"]["PinkCat"]["maps"]["MainWorld"]["points"] == [
+        {"x": 124, "y": -77, "z": 13, "lvMin": 4, "lvMax": 6},
+    ]
+
+
+def test_spawns_include_boss_points(ds):
+    # Field bosses and predators back-link into the catchable pal's file so the
+    # detail map needs exactly one fetch. Night-restricted bosses keep the flag.
+    ki = ds["spawns"]["Kitsunebi"]["maps"]["MainWorld"]
+    assert ki["bosses"] == [{"x": 5000, "y": 5000, "z": 0, "kind": "fieldBoss", "level": 12, "nightOnly": True}]
+    sb = ds["spawns"]["SheepBall"]["maps"]["MainWorld"]
+    assert sb["bosses"] == [{"x": 7000, "y": 7000, "z": 0, "kind": "predator", "level": 30}]
+
+
+def test_spawns_keep_per_point_night_flag(ds):
+    # Exact points carry nightOnly per placement (emit-only-when-true) — even
+    # inside a mixed cluster, where the cluster marker itself gets no flag.
+    pts = ds["spawns"]["Kitsunebi"]["maps"]["MainWorld"]["points"]
+    assert pts == [
+        {"x": -300050, "y": 0, "z": 0, "lvMin": 9, "lvMax": 10},
+        {"x": -300000, "y": 0, "z": 0, "lvMin": 9, "lvMax": 10, "nightOnly": True},
+        {"x": 200000, "y": 0, "z": 0, "lvMin": 5, "lvMax": 7, "nightOnly": True},
+        {"x": 200050, "y": 0, "z": 0, "lvMin": 6, "lvMax": 8, "nightOnly": True},
+    ]
+    # Unrestricted pals carry no key anywhere.
+    assert all("nightOnly" not in p for p in ds["spawns"]["SheepBall"]["maps"]["MainWorld"]["points"])
+
+
+def test_spawns_drop_non_paldeck_and_empty_maps(ds):
+    # Non-Paldeck creatures get no file; maps without content are omitted.
+    assert "YakushimaMonster001" not in ds["spawns"]
+    assert "WorldTree" not in ds["spawns"]["SheepBall"]["maps"]
+
+
+def test_run_emit_writes_and_prunes_spawn_files(tmp_path):
+    import json
+
+    from palworld.maps.emit import run_emit
+
+    parsed_dir = tmp_path / "parsed"
+    parsed_dir.mkdir()
+    (parsed_dir / "parsed.json").write_text(json.dumps(PARSED), encoding="utf-8")
+    out = tmp_path / "out"
+    # A leftover file from a previous run (pal renamed/removed) must not survive.
+    stale = out / "spawns" / "OldPal.json"
+    stale.parent.mkdir(parents=True)
+    stale.write_text("{}", encoding="utf-8")
+    run_emit(parsed_dir, out)
+    assert (out / "spawns" / "SheepBall.json").exists()
+    assert (out / "spawns" / "Kitsunebi.json").exists()
+    assert not stale.exists()
