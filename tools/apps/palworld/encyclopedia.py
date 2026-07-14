@@ -48,6 +48,7 @@ _CAT = "EPalWazaCategory::"
 _STR = "EPalWazaStrength::"
 _EFFT = "EPalPassiveSkillEffectType::"
 _TGT = "EPalPassiveSkillEffectTargetType::"
+_TRIG = "EPalPartnerSkillTriggerType::"
 
 # The 9 element types (EPalElementType names, enum order).
 ELEMENTS = ["Normal", "Fire", "Water", "Leaf", "Electricity", "Ice", "Earth", "Dark", "Dragon"]
@@ -508,9 +509,13 @@ def _resolve_desc(
     return s
 
 
-def _action_meta(d: dict) -> dict:
-    """Partner *action* metadata from ``DT_PartnerSkill`` (fixed, not per-rank)."""
+def _action_meta(d: dict, name: str) -> dict:
+    """Partner *action* metadata from ``DT_PartnerSkill`` (fixed, not per-rank).
+    ``name`` is the raw SkillName key (e.g. ``SearchMine``) — kept so the frontend
+    can categorize actions; ``triggerType`` is emitted only for auto-triggered
+    skills (``OpenTreasure`` / ``PalRevive`` / ``PlayerRevive``)."""
     m = {
+        "name": name,
         "effectTime": round2(d.get("EffectTime", 0.0)),
         "coolTime": round2(d.get("CoolDownTime", 0.0)),
         "execCost": round2(d.get("ExecCost", 0.0)),
@@ -521,17 +526,22 @@ def _action_meta(d: dict) -> dict:
         m["canChangeWeapon"] = True
     if d.get("CanThrowPal"):
         m["canThrowPal"] = True
+    trig = _strip(d.get("TriggerType"), _TRIG)
+    if trig not in ("", "None", "PlayerTrigger"):
+        m["triggerType"] = trig
     return m
 
 
 def _partner_skill(r: dict, waza_by_id: dict, passive_main: dict, partner_def: dict) -> dict:
     """A Pal's partner skill in one of three shapes:
-    * **attack** — ``ActiveSkill.WazaID`` set → waza id, element, per-rank power.
+    * **attack** — ``ActiveSkill.WazaID`` set → waza id, element, base ``power``
+      (waza DisplayPower), per-rank multipliers.
     * **buff**   — ``PassiveSkills[]`` set → per-rank effect lines.
     * **action** — else a named ``ActiveSkill.SkillName`` resolving in
-      ``DT_PartnerSkill`` → fixed action metadata plus any per-rank value/cooldown/
-      effect-time arrays.
-    ``unlockItem`` (condensation gate) is added for any shape."""
+      ``DT_PartnerSkill`` → fixed action metadata (incl. raw ``name`` and any
+      auto ``triggerType``) plus any per-rank value/cooldown/effect-time arrays.
+    ``unlockItem`` (condensation gate) is added for any shape; the caller layers
+    ``gear`` (unlock-gear kind) and ``farm`` (ranch production) on top."""
     if not r:
         return {}
     act = r.get("ActiveSkill") or {}
@@ -539,9 +549,13 @@ def _partner_skill(r: dict, waza_by_id: dict, passive_main: dict, partner_def: d
     wid = _strip(act.get("WazaID"), _WAZA)
     if wid and wid != "None":
         out["wazaId"] = wid
-        el = _strip(waza_by_id.get(wid, {}).get("Element"), _ELEM)
+        w = waza_by_id.get(wid, {})
+        el = _strip(w.get("Element"), _ELEM)
         if el and el != "None":
             out["element"] = el
+        power = w.get("DisplayPower", w.get("Power", 0))
+        if power:
+            out["power"] = power
         ranks = [round2(v) for v in (act.get("ActiveSkill_MainValueByRank") or [])]
         if ranks:
             out["rankValues"] = ranks
@@ -556,7 +570,7 @@ def _partner_skill(r: dict, waza_by_id: dict, passive_main: dict, partner_def: d
             ranks = [round2(v) for v in (act.get("ActiveSkill_MainValueByRank") or [])]
             cools = [round2(v) for v in (act.get("ActiveSkill_OverWriteCoolTimeByRank") or [])]
             efftimes = [round2(v) for v in (act.get("ActiveSkill_OverWriteEffectTimeByRank") or [])]
-            meta = _action_meta(d)
+            meta = _action_meta(d, sk)
             # Skip empty "Unknown"-style actions with no timings, cost, toggle or scaling.
             has_meta = meta["toggle"] or any(
                 meta[k] for k in ("effectTime", "coolTime", "execCost", "idleCost")
@@ -594,6 +608,87 @@ def _drops(cid: str, drop_rows: dict) -> list:
                 best[item] = entry
     out = list(best.values())
     out.sort(key=lambda d: (-d["rate"], d["item"]))
+    return out
+
+
+def _gear_types(raw: Path) -> dict[str, str]:
+    """{unlockItemId: gear kind} for partner-skill gear (``Essential_PalGear``
+    items), from the item's ``IconName`` minus the ``SkillUnlock_`` prefix —
+    ``Saddle`` (mount), ``Gloves`` (glider), else a held/worn weapon or tool
+    (Harness, AssaultRifle, …). The frontend maps kinds to filter categories."""
+    items = read_rows(raw / "DataTable/Item/DT_ItemDataTable.json")
+    out = {}
+    for iid, r in items.items():
+        if r.get("TypeB") != "EPalItemTypeB::Essential_PalGear":
+            continue
+        icon = r.get("IconName") or ""
+        out[iid] = icon.removeprefix("SkillUnlock_") or iid
+    return out
+
+
+def _farm_items(raw: Path, roster_ids: set[str]) -> dict[str, list]:
+    """{palId: farm} — Pal Ranch production per partner-skill rank.
+
+    Three-table chain: the pal actor BP's ``PalStaticCharacterParameterComponent
+    .SpawnItem.FieldLotteryNameByRank`` (BP path via ``DT_PalBPClass``) maps rank
+    ``"1"``…``"10"`` to a field-lottery name; ``DT_FieldLotteryNameDataTable``
+    holds per-slot probabilities (every ranch lottery in the current data uses a
+    single slot at 100% — warned if not); ``DT_ItemLotteryDataTable`` rows
+    (grouped by ``FieldName``) are the weighted item pool with count ranges.
+
+    ``farm[rank-1] = [{item, weight, min, max}, …]`` sorted weight-descending;
+    the frontend derives each item's percentage share from the weights."""
+    bp_rows = read_rows(raw / "DataTable/Character/DT_PalBPClass.json")
+    field_rows = read_rows(raw / "DataTable/Common/DT_FieldLotteryNameDataTable.json")
+    lot_rows = read_rows(raw / "DataTable/Item/DT_ItemLotteryDataTable.json")
+    by_field: dict[str, list] = {}
+    for r in lot_rows.values():
+        by_field.setdefault(r.get("FieldName"), []).append(r)
+
+    out: dict[str, list] = {}
+    for cid in roster_ids:
+        ap = ((bp_rows.get(cid) or {}).get("BPClass") or {}).get("AssetPathName") or ""
+        if not ap:
+            continue
+        path = raw / (ap.split(".")[0].replace("/Game/Pal/", "") + ".json")
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        # Cheap substring gate before parsing the (large) actor-BP json.
+        if "FieldLotteryNameByRank" not in text:
+            continue
+        ranks_map: dict[int, str] = {}
+        for e in json.loads(text):
+            si = (e.get("Properties") or {}).get("SpawnItem")
+            if si and si.get("FieldLotteryNameByRank"):
+                ranks_map = {
+                    int(kv["Key"]): kv["Value"]["Key"]
+                    for kv in si["FieldLotteryNameByRank"]
+                }
+                break
+        if not ranks_map:
+            continue
+        farm = []
+        for rank in range(1, max(ranks_map) + 1):
+            name = ranks_map.get(rank)
+            slots = by_field.get(name) or []
+            frow = field_rows.get(name) or {}
+            used = sorted({s.get("SlotNo") for s in slots})
+            if used != [1] or round(frow.get("ItemSlot1_ProbabilityPercent", 0)) != 100:
+                print(f"encyclopedia: unexpected ranch lottery shape {name} (slots={used})")
+            items = [
+                {
+                    "item": s["StaticItemId"],
+                    "weight": round2(s.get("WeightInSlot", 0.0)),
+                    "min": s.get("MinNum", 0),
+                    "max": s.get("MaxNum", 0),
+                }
+                for s in slots
+            ]
+            items.sort(key=lambda i: (-i["weight"], i["item"]))
+            farm.append(items)
+        if any(farm):
+            out[cid] = farm
     return out
 
 
@@ -716,6 +811,8 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     roster = {cid: r for cid, r in mon.items() if _is_roster(cid, r, names_by_lang, raw_icons)}
     summon_recipes = _summon_recipes(raw, set(roster))
     egg_tiers, egg_families = _egg_config(raw)
+    gear_types = _gear_types(raw)
+    farm_by_cid = _farm_items(raw, set(roster))
 
     pals = []
     for cid, r in roster.items():
@@ -723,6 +820,17 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
         e2 = _strip(r.get("ElementType2"), _ELEM)
         if e2 and e2 != "None":
             elements.append(e2)
+        partner = _partner_skill(partner_rows.get(cid), waza_by_id, passive_main, partner_def)
+        # Some gear-gated skills (gliders, chokers, …) have an empty
+        # RestrictionItems but a conventionally-named SkillUnlock_<cid> gear item
+        # (14 pals, e.g. Eagle's gloves) — fall back to it.
+        if not partner.get("unlockItem") and f"SkillUnlock_{cid}" in gear_types:
+            partner["unlockItem"] = f"SkillUnlock_{cid}"
+        gear = gear_types.get(partner.get("unlockItem") or "")
+        if gear:
+            partner["gear"] = gear
+        if cid in farm_by_cid:
+            partner["farm"] = farm_by_cid[cid]
         pals.append({
             "id": cid,
             "zukanIndex": r["ZukanIndex"],
@@ -738,7 +846,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "stats": _stats(r),
             "work": _work(r),
             "bestWork": _strip(r.get("BestWorkSuitability"), _WORK),
-            "partnerSkill": _partner_skill(partner_rows.get(cid), waza_by_id, passive_main, partner_def),
+            "partnerSkill": partner,
             "activeSkills": _active_skills(cid, _learnset_for(cid, learnsets), waza_by_id),
             "passives": _passives_of(r),
             "drops": _drops(cid, drop_rows),

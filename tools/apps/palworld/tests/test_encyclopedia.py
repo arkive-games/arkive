@@ -58,6 +58,28 @@ def test_encyclopedia_integration(tmp_path):
     assert by_id["NightLady"]["summonMaterials"] == [{"item": "PalSummon_NightLady_Parts", "count": 4}]
     assert "summonMaterials" not in by_id["Anubis"]
 
+    # Partner skill extras (verified against the raw export 2026-07-14).
+    # Ranch production per rank: BP SpawnItem.FieldLotteryNameByRank chain.
+    chikipi = by_id["ChickenPal"]["partnerSkill"]
+    assert len(chikipi["farm"]) == 10
+    assert chikipi["farm"][0] == [{"item": "Egg", "weight": 1, "min": 1, "max": 2}]
+    assert chikipi["farm"][9][0]["max"] > chikipi["farm"][0][0]["max"]
+    # Vixy digs a weighted multi-item pool that upgrades with rank.
+    vixy = by_id["CuteFox"]["partnerSkill"]["farm"]
+    assert {i["item"] for i in vixy[0]} == {"PalSphere", "Arrow", "Money", "Bone"}
+    assert any(i["item"] == "PalSphere_Mega" for i in vixy[9])
+    assert sum(1 for p in pals if p["partnerSkill"].get("farm")) >= 30
+    # Gear kind from the SkillUnlock item icon (incl. the SkillUnlock_<cid>
+    # fallback for the 14 gear-gated skills with empty RestrictionItems).
+    assert by_id["Alpaca"]["partnerSkill"]["gear"] == "Saddle"
+    assert by_id["Eagle"]["partnerSkill"] == {"unlockItem": "SkillUnlock_Eagle", "gear": "Gloves"}
+    assert by_id["Kitsunebi"]["partnerSkill"]["gear"] == "Harness"
+    # Action name + auto trigger type; attack shape carries the waza base power.
+    assert by_id["Kitsunebi"]["partnerSkill"]["action"]["name"] == "Flamethrower"
+    assert by_id["LeafMomonga"]["partnerSkill"]["action"]["triggerType"] == "PlayerRevive"
+    assert by_id["MimicDog"]["partnerSkill"]["action"]["triggerType"] == "OpenTreasure"
+    assert by_id["BluePlatypus"]["partnerSkill"]["power"] == 100
+
     # Global passive list: the 115 displayable, each with a rank and effects list.
     assert len(passives) == 115
     assert all("rank" in p and isinstance(p["effects"], list) for p in passives)
