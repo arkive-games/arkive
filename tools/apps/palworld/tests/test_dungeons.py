@@ -47,6 +47,12 @@ def test_dungeons_integration(tmp_path):
     egg = next(e for e in medium["entries"] if e["kind"] == "egg")
     assert egg["eggPool"] in out["eggPools"]
     assert all(p["weight"] > 0 and p["pal"] for p in out["eggPools"][egg["eggPool"]])
+    # Pools are merged onto base pal ids: no BOSS_ (alpha) variants and no
+    # duplicate rows survive (they'd render duplicate chips).
+    for pool in list(out["eggPools"].values()) + list(out["cagePools"].values()):
+        ids = [p["pal"] for p in pool]
+        assert len(ids) == len(set(ids))
+        assert not any(i.upper().startswith("BOSS_") for i in ids)
     cage = next(e for e in medium["entries"] if e["kind"] == "cage")
     pool = out["cagePools"][cage["cagePool"]]
     assert all(p["lvMin"] <= p["lvMax"] for p in pool)

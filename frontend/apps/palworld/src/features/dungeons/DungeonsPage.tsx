@@ -113,8 +113,8 @@ function PalPool({
         {summary}
       </summary>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        {pals.map((p) => (
-          <span key={p.pal} className="inline-flex items-center gap-1">
+        {pals.map((p, i) => (
+          <span key={`${p.pal}-${i}`} className="inline-flex items-center gap-1">
             {total > 0 ? <ChanceBadge pct={(p.weight / total) * 100} /> : null}
             <PalLink id={p.pal} name={b.pals.text[p.pal]?.name ?? p.pal} icon={b.pals.byId.get(p.pal)?.icon} />
             {p.lvMin != null ? (
@@ -160,8 +160,8 @@ function RewardEntryRow({ tier, entry, b }: { tier: RewardTier; entry: RewardEnt
   } else if (entry.pals?.length) {
     detail = (
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-        {entry.pals.map((p) => (
-          <span key={p.pal} className="inline-flex items-center gap-1">
+        {entry.pals.map((p, i) => (
+          <span key={`${p.pal}-${i}`} className="inline-flex items-center gap-1">
             <PalLink id={p.pal} name={b.pals.text[p.pal]?.name ?? p.pal} icon={b.pals.byId.get(p.pal)?.icon} />
             <span className="text-xs tabular-nums text-muted-foreground">
               Lv.{p.lvMin === p.lvMax ? p.lvMin : `${p.lvMin}–${p.lvMax}`}
@@ -222,8 +222,8 @@ function DungeonCard({ d, b }: { d: DungeonEntry; b: Bundles }) {
                 <Swords className="size-3.5" aria-hidden />
                 {t('dungeon.boss')}
               </span>
-              {bosses.map((e) => (
-                <span key={e.pal} className="inline-flex items-center gap-1">
+              {bosses.map((e, i) => (
+                <span key={`${e.pal}-${i}`} className="inline-flex items-center gap-1">
                   <PalLink id={e.pal} name={b.pals.text[e.pal]?.name ?? e.pal} icon={b.pals.byId.get(e.pal)?.icon} />
                   <span className="text-xs tabular-nums text-muted-foreground">
                     Lv.{e.lvMin === e.lvMax ? e.lvMin : `${e.lvMin}–${e.lvMax}`}
@@ -238,8 +238,8 @@ function DungeonCard({ d, b }: { d: DungeonEntry; b: Bundles }) {
                 <Skull className="size-3.5" aria-hidden />
                 {t('dungeon.enemies')}
               </span>
-              {normals.map((e) => (
-                <span key={e.pal} className="inline-flex items-center gap-1">
+              {normals.map((e, i) => (
+                <span key={`${e.pal}-${i}`} className="inline-flex items-center gap-1">
                   <PalLink id={e.pal} name={b.pals.text[e.pal]?.name ?? e.pal} icon={b.pals.byId.get(e.pal)?.icon} />
                   <span className="text-xs tabular-nums text-muted-foreground">
                     Lv.{e.lvMin === e.lvMax ? e.lvMin : `${e.lvMin}–${e.lvMax}`}

@@ -161,11 +161,17 @@ def _reward_entry(raw: Path, row: dict) -> tuple[dict | None, dict]:
     m = _EGG_STEM.match(stem)
     if m and props.get("SpawnPalEggLotteryDataArray"):
         pool_id = f"{m.group(1).lower()}_{int(m.group(2)):02d}"
-        pool = [
-            {"pal": pid, "weight": round2(e.get("Weight", 0.0))}
-            for e in props["SpawnPalEggLotteryDataArray"]
-            if (pid := ((e.get("PalEggData") or {}).get("PalMonsterId") or {}).get("Key")) not in _NONE
-        ]
+        # The raw arrays list BOSS_ (alpha) variants and the plain pal as
+        # separate weighted entries, plus the odd duplicate row. The catalog
+        # has no BOSS_ ids (same Paldeck entry), so merge onto the base pal.
+        weights: dict[str, float] = {}
+        for e in props["SpawnPalEggLotteryDataArray"]:
+            pid = ((e.get("PalEggData") or {}).get("PalMonsterId") or {}).get("Key")
+            if pid in _NONE:
+                continue
+            pid = _BOSS_PREFIX.sub("", pid)
+            weights[pid] = weights.get(pid, 0.0) + e.get("Weight", 0.0)
+        pool = [{"pal": pid, "weight": round2(w)} for pid, w in weights.items()]
         pool.sort(key=lambda e: (-e["weight"], e["pal"]))
         return {"kind": "egg", "weight": weight, "eggPool": pool_id}, {pool_id: pool}
 
@@ -293,17 +299,27 @@ def run_dungeons(raw: Path, data_out: Path) -> dict:
         else:
             print(f"dungeons: lottery {name} referenced but empty")
 
+    # Merged per pal (the table has the odd duplicate row): weights summed,
+    # level ranges widened.
     cage_pools: dict[str, list] = {}
     for r in cage_rows.values():
         fn = r.get("FieldName")
         if fn not in used_cages or r.get("PalId") in _NONE:
             continue
-        cage_pools.setdefault(fn, []).append({
-            "pal": r["PalId"],
-            "weight": round2(r.get("Weight", 0.0)),
-            "lvMin": r.get("MinLevel", 1),
-            "lvMax": r.get("MaxLevel", 1),
-        })
+        pid = _BOSS_PREFIX.sub("", r["PalId"])
+        pool = cage_pools.setdefault(fn, [])
+        e = next((x for x in pool if x["pal"] == pid), None)
+        if e:
+            e["weight"] = round2(e["weight"] + r.get("Weight", 0.0))
+            e["lvMin"] = min(e["lvMin"], r.get("MinLevel", 1))
+            e["lvMax"] = max(e["lvMax"], r.get("MaxLevel", 1))
+        else:
+            pool.append({
+                "pal": pid,
+                "weight": round2(r.get("Weight", 0.0)),
+                "lvMin": r.get("MinLevel", 1),
+                "lvMax": r.get("MaxLevel", 1),
+            })
     for lst in cage_pools.values():
         lst.sort(key=lambda e: (-e["weight"], e["pal"]))
 
