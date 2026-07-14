@@ -67,9 +67,11 @@ byte-identical to before.
   files (~2.6 MB → a few KB per detail page). Map labels still come from
   `locales/<lng>/maps.json`.
 - `PalSpawnMap.tsx` rendering:
-  - **≤ 300 wild points on a map:** current circular pal-icon pins, no count badge
-    (every pin is one spawn); tooltip shows `Lv.{min}–{max}`.
-  - **> 300 wild points:** small dots via `L.circleMarker` on a canvas renderer so
+  - **≤ 50 wild points on a map:** current circular pal-icon pins, no count badge
+    (every pin is one spawn); tooltip shows `Lv.{min}–{max}`. (Originally specced
+    at 300; visual verification showed pins stack unreadably from ~100 up, since
+    spawner grids sit ~50 m apart.)
+  - **> 50 wild points:** small dots via `L.circleMarker` on a canvas renderer so
     MimicDog-class pals stay smooth; tooltip on hover still available.
   - Bosses always render as pins with the existing red ring + legend.
   - Per-map toggle and "View on map" deep link unchanged.
