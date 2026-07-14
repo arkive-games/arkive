@@ -35,6 +35,8 @@ export interface MarkerRow {
   /** Warp altars: the partner marker this one teleports to (map-qualified —
    *  the World Tree entrance/exit pair spans maps). */
   warpTo?: { map: string; id: string }
+  /** Dungeon portals: the dungeon SpawnAreaId (keys dungeons.json loot). */
+  dungeonArea?: string
 }
 export type MarkerLocale = Record<string, { name?: string; description?: string }>
 export interface TypesLocale {

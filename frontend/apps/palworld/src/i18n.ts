@@ -3,6 +3,7 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
 import { BREEDING_STRINGS } from './breedingStrings'
 import { CATALOG_STRINGS } from './catalogStrings'
+import { DUNGEON_STRINGS } from './dungeonStrings'
 import { PAL_STRINGS } from './palStrings'
 import { QUEST_STRINGS } from './questStrings'
 
@@ -811,6 +812,7 @@ for (const lng of LANGUAGES) {
       building: CATALOG_STRINGS[lng].building,
       tech: CATALOG_STRINGS[lng].tech,
       quest: QUEST_STRINGS[lng] ?? QUEST_STRINGS['en-US'],
+      dungeon: DUNGEON_STRINGS[lng] ?? DUNGEON_STRINGS['en-US'],
       catalogLoading: CATALOG_STRINGS[lng].loading,
       catalogShowMore: SHOW_MORE_LABELS[lng],
       more: MORE_LABELS[lng],

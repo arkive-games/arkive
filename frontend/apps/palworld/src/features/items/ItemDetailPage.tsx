@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
 import { ContentPage } from '../../components/ContentPage'
+import { loadDungeons, dungeonsByItem, type DungeonsBundle } from '../../lib/dungeons'
 import {
   loadItems,
   loadBuildings,
@@ -54,6 +55,9 @@ export default function ItemDetailPage() {
 
   const [b, setB] = useState<Bundles | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  // Dungeon loot dataset for the "found in dungeons" obtain row. Loaded
+  // separately and best-effort: the page renders fully without it.
+  const [dungeons, setDungeons] = useState<DungeonsBundle | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -70,6 +74,24 @@ export default function ItemDetailPage() {
       cancelled = true
     }
   }, [lng, t])
+
+  useEffect(() => {
+    let cancelled = false
+    loadDungeons(lng)
+      .then((d) => { if (!cancelled) setDungeons(d) })
+      .catch((err) => console.error(err))
+    return () => {
+      cancelled = true
+    }
+  }, [lng])
+
+  // Dungeons whose chest / boss-reward lotteries can drop the current item.
+  const itemDungeons = useMemo(() => {
+    if (!dungeons) return []
+    const ids = dungeonsByItem(dungeons.file).get(id)
+    if (!ids) return []
+    return dungeons.file.dungeons.filter((d) => ids.has(d.id))
+  }, [dungeons, id])
 
   let body: React.ReactNode
   if (loadError) {
@@ -157,7 +179,7 @@ export default function ItemDetailPage() {
                 </CatalogSection>
               ) : null}
 
-              {item.droppedBy?.length || item.unlockTech?.length ? (
+              {item.droppedBy?.length || item.unlockTech?.length || itemDungeons.length ? (
                 <CatalogSection title={t('item.section.obtain')}>
                   {item.droppedBy?.length ? (
                     <div className="mb-3">
@@ -175,7 +197,7 @@ export default function ItemDetailPage() {
                     </div>
                   ) : null}
                   {item.unlockTech?.length ? (
-                    <div>
+                    <div className={itemDungeons.length ? 'mb-3' : ''}>
                       <div className="mb-1.5 text-xs text-muted-foreground">{t('item.fromTech')}</div>
                       <div className="flex flex-wrap gap-1.5">
                         {item.unlockTech.map((tid) => {
@@ -184,6 +206,23 @@ export default function ItemDetailPage() {
                             <TechChip key={tid} tech={entry} resolvers={techResolvers} />
                           ) : null
                         })}
+                      </div>
+                    </div>
+                  ) : null}
+                  {itemDungeons.length ? (
+                    <div data-testid="item-dungeon-sources">
+                      <div className="mb-1.5 text-xs text-muted-foreground">{t('dungeon.foundIn')}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {itemDungeons.map((d) => (
+                          <Link
+                            key={d.id}
+                            to="/dungeons"
+                            search={{ d: d.id }}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
+                          >
+                            {dungeons?.text[d.id]?.name ?? d.id}
+                          </Link>
+                        ))}
                       </div>
                     </div>
                   ) : null}

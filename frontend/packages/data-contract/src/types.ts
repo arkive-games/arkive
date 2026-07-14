@@ -197,6 +197,12 @@ export interface MarkerInstance {
    * link line when the marker is selected.
    */
   warpTo?: { map: string; id: string };
+  /**
+   * Dungeon spawn-area id carried by dungeon-portal markers (palworld, e.g.
+   * `Forest001`): keys the `dungeons.json` loot dataset. Drives the popup's
+   * "view dungeon loot" link.
+   */
+  dungeonArea?: string;
 }
 
 export interface RegionInstance {

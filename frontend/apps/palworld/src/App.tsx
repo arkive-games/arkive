@@ -284,6 +284,7 @@ export default function App() {
         pal: m.pal,
         drops: m.drops,
         warpTo: m.warpTo,
+        dungeonArea: m.dungeonArea,
       }
     })
   }, [staticData, markerData, subtypeMetaMap, completed])
@@ -545,6 +546,16 @@ export default function App() {
             className="mt-2 inline-block text-sm text-primary hover:underline"
           >
             {t('pal.viewInEncyclopedia')}
+          </Link>
+        ) : null}
+        {marker.dungeonArea ? (
+          <Link
+            to="/dungeons"
+            search={{ d: marker.dungeonArea }}
+            data-testid="marker-dungeon-link"
+            className="mt-2 inline-block text-sm text-primary hover:underline"
+          >
+            {t('dungeon.viewLoot')}
           </Link>
         ) : null}
         {marker.subtypeMeta?.canComplete ? (
