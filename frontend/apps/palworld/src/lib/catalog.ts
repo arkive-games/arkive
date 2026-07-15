@@ -33,6 +33,35 @@ export interface EquipStats {
   magazine?: number
 }
 
+/** One acquisition channel of a blueprint (schematic) item, emitted by
+ *  tools/palworld/blueprint_sources.py. Kind-discriminated:
+ *  - chest/fishing/supply/camp/oilrig: `area` names the region (labels.json
+ *    `area` for game-localized islands/rigs, `bp.area.*` UI strings for the
+ *    mainland biomes); `grade` is the chest tier, `chance` the best per-roll
+ *    percentage (slot probability × weight share).
+ *  - treasureMap: `item` is the treasure-map item id.
+ *  - salvage: `rank` of the fishing junk spot.
+ *  - raid: `pal` is the summoning-altar boss.
+ *  - shrine: `count` of Ancient Shrines granting it.
+ *  - merchant: `shop` key (bp.shop.*), `price` in `currency` (an item id).
+ *  - arena: `rank` row name (bp.arenaRank.*), `repeat` for repeat-clear. */
+export interface BlueprintSource {
+  kind:
+    | 'chest' | 'fishing' | 'salvage' | 'supply' | 'camp' | 'oilrig'
+    | 'treasureMap' | 'raid' | 'shrine' | 'merchant' | 'arena'
+  area?: string
+  grade?: number
+  chance?: number
+  item?: string
+  rank?: number | string
+  pal?: string
+  count?: number
+  shop?: string
+  price?: number
+  currency?: string
+  repeat?: boolean
+}
+
 export interface ItemEntry {
   id: string
   typeA: string
@@ -60,6 +89,13 @@ export interface ItemEntry {
   usedInItems?: string[]
   usedInBuildings?: string[]
   unlockTech?: string[]
+  /** Items whose recipe this item unlocks (inverse of recipe.unlockItemId). */
+  unlocksCraft?: string[]
+  /** Acquisition channels (blueprint-family items only). */
+  sources?: BlueprintSource[]
+  /** Blueprint with NO acquisition channel at all (also no pal drop, dungeon
+   *  lottery or recycler output) — dead data as far as players are concerned. */
+  noSource?: boolean
 }
 
 export interface BuildingEntry {
@@ -143,6 +179,9 @@ interface LabelsFile {
   building: TypeLabels
   /** Building energy requirement (EPalEnergyType value -> localized name). */
   energy?: TypeLabels
+  /** Blueprint-source areas with a game-localized world-map name (islands +
+   *  oil rigs); mainland biomes fall back to the bp.area.* UI strings. */
+  area?: TypeLabels
 }
 
 // --- loaders -----------------------------------------------------------------
@@ -157,6 +196,8 @@ export interface ItemsBundle {
   byId: Map<string, ItemEntry>
   text: Record<string, CatalogText>
   typeLabels: TypeLabels
+  /** Game-localized blueprint-source area names (islands + oil rigs). */
+  areaLabels: TypeLabels
 }
 export interface BuildingsBundle {
   buildings: BuildingEntry[]
@@ -203,6 +244,7 @@ async function fetchItems(lng: string): Promise<ItemsBundle> {
     byId: new Map(file.items.map((i) => [i.id, i])),
     text,
     typeLabels: labels.item,
+    areaLabels: labels.area ?? {},
   }
 }
 

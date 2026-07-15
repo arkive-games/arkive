@@ -14,6 +14,7 @@ import {
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { loadRecycler, type RecyclerFile } from '../../lib/recycler'
 import { RecyclerRecipeSection } from '../recycler/RecyclerSections'
+import { BlueprintSourceRows, UnlocksCraftSection } from './BlueprintSections'
 import { itemTypeLabel } from '../catalog/labels'
 import {
   CatalogSection,
@@ -122,6 +123,18 @@ export default function ItemDetailPage() {
       const equipRows = equip ? EQUIP_KEYS.filter((k) => equip[k] != null && equip[k] !== 0) : []
       const elementLabel = item.element ? b.pals.enums.elements[item.element] ?? item.element : ''
       const recyclerRecipe = recycler?.recipes.find((r) => r.input === id)
+      // Blueprint acquisition: emitted source channels, plus whether the relic
+      // recycler can yield this item (inverse of the recycler recipes).
+      const recyclerYields =
+        recycler?.recipes.some((r) => r.slots.some((sl) => sl.items.some((i) => i.item === id))) ??
+        false
+      const hasObtain =
+        item.droppedBy?.length ||
+        item.unlockTech?.length ||
+        itemDungeons.length ||
+        item.sources?.length ||
+        item.noSource ||
+        recyclerYields
 
       body = (
         <div className="space-y-6">
@@ -188,54 +201,64 @@ export default function ItemDetailPage() {
                 </CatalogSection>
               ) : null}
 
-              {item.droppedBy?.length || item.unlockTech?.length || itemDungeons.length ? (
+              <UnlocksCraftSection item={item} items={b.items} />
+
+              {hasObtain ? (
                 <CatalogSection title={t('item.section.obtain')}>
-                  {item.droppedBy?.length ? (
-                    <div className="mb-3">
-                      <div className="mb-1.5 text-xs text-muted-foreground">{t('item.droppedBy')}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {item.droppedBy.map((d) => (
-                          <PalLink
-                            key={d.id}
-                            id={d.id}
-                            name={b.pals.text[d.id]?.name ?? d.id}
-                            icon={b.pals.byId.get(d.id)?.icon}
-                            badge={d.isBoss ? t('item.bossDrop') : undefined}
-                          />
-                        ))}
+                  <div className="space-y-3">
+                    {item.droppedBy?.length ? (
+                      <div>
+                        <div className="mb-1.5 text-xs text-muted-foreground">{t('item.droppedBy')}</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.droppedBy.map((d) => (
+                            <PalLink
+                              key={d.id}
+                              id={d.id}
+                              name={b.pals.text[d.id]?.name ?? d.id}
+                              icon={b.pals.byId.get(d.id)?.icon}
+                              badge={d.isBoss ? t('item.bossDrop') : undefined}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
-                  {item.unlockTech?.length ? (
-                    <div className={itemDungeons.length ? 'mb-3' : ''}>
-                      <div className="mb-1.5 text-xs text-muted-foreground">{t('item.fromTech')}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {item.unlockTech.map((tid) => {
-                          const entry = b.tech.byId.get(tid)
-                          return entry ? (
-                            <TechChip key={tid} tech={entry} resolvers={techResolvers} />
-                          ) : null
-                        })}
+                    ) : null}
+                    <BlueprintSourceRows
+                      item={item}
+                      items={b.items}
+                      pals={b.pals}
+                      recycler={recycler}
+                    />
+                    {item.unlockTech?.length ? (
+                      <div>
+                        <div className="mb-1.5 text-xs text-muted-foreground">{t('item.fromTech')}</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.unlockTech.map((tid) => {
+                            const entry = b.tech.byId.get(tid)
+                            return entry ? (
+                              <TechChip key={tid} tech={entry} resolvers={techResolvers} />
+                            ) : null
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
-                  {itemDungeons.length ? (
-                    <div data-testid="item-dungeon-sources">
-                      <div className="mb-1.5 text-xs text-muted-foreground">{t('dungeon.foundIn')}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {itemDungeons.map((d) => (
-                          <Link
-                            key={d.id}
-                            to="/dungeons/$id"
-                            params={{ id: d.id }}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
-                          >
-                            {dungeons?.text[d.id]?.name ?? d.id}
-                          </Link>
-                        ))}
+                    ) : null}
+                    {itemDungeons.length ? (
+                      <div data-testid="item-dungeon-sources">
+                        <div className="mb-1.5 text-xs text-muted-foreground">{t('dungeon.foundIn')}</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {itemDungeons.map((d) => (
+                            <Link
+                              key={d.id}
+                              to="/dungeons/$id"
+                              params={{ id: d.id }}
+                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
+                            >
+                              {dungeons?.text[d.id]?.name ?? d.id}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
+                    ) : null}
+                  </div>
                 </CatalogSection>
               ) : null}
 

@@ -41,6 +41,10 @@ export default function ItemListPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [cats, setCats] = useState<string[]>([])
+  // "No known source" blueprint filter — only offered (and only applies) while
+  // the Blueprint category is selected. The matching items are hidden dead
+  // data (`illegal`), so this chip is the one place that reveals them.
+  const [noSourceOnly, setNoSourceOnly] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -72,19 +76,22 @@ export default function ItemListPage() {
     )
   }, [bundle])
 
+  const noSourceActive = noSourceOnly && cats.includes('Blueprint')
   const list = useMemo(() => {
     if (!bundle) return []
     const q = query.trim().toLowerCase()
     return bundle.items
       // bLegalInGame=false dead data (deprecated dupes, debug rows) is never
-      // shown; real specials (effigies, Key Spheres) arrive unflagged.
-      .filter((i) => !i.illegal)
+      // shown — except through the no-source blueprint filter, whose matches
+      // are exactly such rows; real specials (effigies, Key Spheres) arrive
+      // unflagged.
+      .filter((i) => (noSourceActive ? i.noSource : !i.illegal))
       .filter((i) => cats.length === 0 || cats.includes(i.typeA))
       .filter((i) => !q || (bundle.text[i.id]?.name ?? i.id).toLowerCase().includes(q))
       // Stable game order (SortId), identical across languages, rather than by
       // localized name which would reshuffle per locale.
       .sort((a, b) => a.sortId - b.sortId || a.id.localeCompare(b.id))
-  }, [bundle, query, cats])
+  }, [bundle, query, cats, noSourceActive])
 
   // Auto-scroll reveal: the full list is in memory, but mounting ~1,900
   // HoverCard tiles at once is a DOM-size problem, not a data one.
@@ -118,6 +125,15 @@ export default function ItemListPage() {
                     {itemTypeLabel(c, bundle.typeLabels)}
                   </FilterChip>
                 ))}
+                {cats.includes('Blueprint') ? (
+                  <FilterChip
+                    active={noSourceOnly}
+                    onClick={() => setNoSourceOnly((v) => !v)}
+                    testId="item-nosource-filter"
+                  >
+                    {t('bp.noSourceFilter')}
+                  </FilterChip>
+                ) : null}
               </FilterRow>
             </div>
           ) : null}

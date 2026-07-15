@@ -1,6 +1,7 @@
 import i18n from 'i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
+import { BLUEPRINT_STRINGS } from './blueprintStrings'
 import { BREEDING_STRINGS } from './breedingStrings'
 import { CATALOG_STRINGS } from './catalogStrings'
 import { DUNGEON_STRINGS } from './dungeonStrings'
@@ -813,6 +814,7 @@ for (const lng of LANGUAGES) {
       building: CATALOG_STRINGS[lng].building,
       tech: CATALOG_STRINGS[lng].tech,
       quest: QUEST_STRINGS[lng] ?? QUEST_STRINGS['en-US'],
+      bp: BLUEPRINT_STRINGS[lng] ?? BLUEPRINT_STRINGS['en-US'],
       dungeon: DUNGEON_STRINGS[lng] ?? DUNGEON_STRINGS['en-US'],
       recycler: RECYCLER_STRINGS[lng] ?? RECYCLER_STRINGS['en-US'],
       catalogLoading: CATALOG_STRINGS[lng].loading,

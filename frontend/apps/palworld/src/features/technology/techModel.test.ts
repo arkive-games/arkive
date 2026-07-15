@@ -82,7 +82,7 @@ describe('groupByLevel', () => {
 })
 
 describe('makeTechResolvers requirements', () => {
-  const items: ItemsBundle = { items: [], byId: new Map(), text: {}, typeLabels: {} }
+  const items: ItemsBundle = { items: [], byId: new Map(), text: {}, typeLabels: {}, areaLabels: {} }
   const buildings: BuildingsBundle = {
     buildings: [],
     byId: new Map(),
