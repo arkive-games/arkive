@@ -609,8 +609,11 @@ def emit() -> None:
 
 
 def main() -> None:
+    from ..version import stamp_version
+
     argparse.ArgumentParser(description="Emit wiki dataset").parse_args()
     emit()
+    stamp_version(DATA_REPO)
 
 
 if __name__ == "__main__":

@@ -213,8 +213,11 @@ def run_breeding(raw: Path, data_out: Path, res_out: Path) -> None:
 
 
 if __name__ == "__main__":
+    from .version import stamp_version
+
     run_breeding(
         require_dir("PALWORLD_RAW"),
         require_dir("PALWORLD_DATA_OUT"),
         require_dir("PALWORLD_RES_OUT"),
     )
+    stamp_version(require_dir("PALWORLD_DATA_OUT"))

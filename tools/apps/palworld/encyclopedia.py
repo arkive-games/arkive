@@ -1034,8 +1034,11 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
 
 
 if __name__ == "__main__":
+    from .version import stamp_version
+
     run_encyclopedia(
         require_dir("PALWORLD_RAW"),
         require_dir("PALWORLD_DATA_OUT"),
         require_dir("PALWORLD_RES_OUT"),
     )
+    stamp_version(require_dir("PALWORLD_DATA_OUT"))

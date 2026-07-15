@@ -30,15 +30,19 @@ def main() -> None:
         from .calibrate import run_calibrate
         run_calibrate(require_dir("PALWORLD_RAW"), PARSED_DIR)
     elif args.stage == "emit":
+        from ..version import stamp_version
         from .emit import run_emit
         run_emit(PARSED_DIR, require_dir("PALWORLD_DATA_OUT"))
+        stamp_version(require_dir("PALWORLD_DATA_OUT"))
     elif args.stage == "tiles":
+        from ..version import stamp_version
         from .tiles import run_tiles
         run_tiles(
             require_dir("PALWORLD_RAW"),
             require_dir("PALWORLD_DATA_OUT"),
             require_dir("PALWORLD_RES_OUT"),
         )
+        stamp_version(require_dir("PALWORLD_DATA_OUT"))
 
 
 if __name__ == "__main__":

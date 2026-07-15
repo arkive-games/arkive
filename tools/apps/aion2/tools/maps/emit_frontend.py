@@ -843,10 +843,13 @@ def emit(only_map: str | None = None) -> None:
 
 
 def main() -> None:
+    from ..version import stamp_version
+
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--map", dest="map", default=None, help="emit a single map, e.g. World_L_A")
     args = ap.parse_args()
     emit(args.map)
+    stamp_version(DATA_REPO)
 
 
 if __name__ == "__main__":

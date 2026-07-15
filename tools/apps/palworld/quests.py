@@ -160,4 +160,7 @@ def run_quests(raw: Path, data_out: Path) -> dict:
 
 
 if __name__ == "__main__":
+    from .version import stamp_version
+
     run_quests(require_dir("PALWORLD_RAW"), require_dir("PALWORLD_DATA_OUT"))
+    stamp_version(require_dir("PALWORLD_DATA_OUT"))
