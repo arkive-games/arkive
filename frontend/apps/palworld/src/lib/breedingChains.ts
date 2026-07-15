@@ -5,6 +5,12 @@ import { orient, type BreedingData, type BreedingEngine, type Combo } from './br
 // target Child C within a generation budget. One chain per *species path*;
 // each step carries every usable partner option.
 
+// Module-level cache keyed by engine instance (WeakMap so entries are GC'd
+// automatically when a new engine is created after a data reload). Shared
+// across all findChains / bfsDist calls — each pal's children are computed
+// at most once per engine, reducing repeated O(n) engine.childOf scans.
+const engineChildCache = new WeakMap<BreedingEngine, Map<string, Map<string, Combo[]>>>()
+
 /**
  * One breeding step: `fixed` (the Pal carried from the previous step, or A)
  * paired with any of `partners` to produce `child`. Every partner Combo is
@@ -25,42 +31,53 @@ export interface BreedChain {
  * Every child obtainable by pairing `palId` with the whole roster, mapped to
  * the combos producing it (oriented with `palId` in slot a). The Pal itself is
  * excluded — a step that produces its own input advances nothing.
+ *
+ * Results are memoized per engine instance so each pal is computed at most once
+ * per session (WeakMap key → auto-cleared when a new engine is created).
  */
 export function childrenOf(engine: BreedingEngine, data: BreedingData, palId: string): Map<string, Combo[]> {
-  const out = new Map<string, Combo[]>()
+  let byPal = engineChildCache.get(engine)
+  if (!byPal) { byPal = new Map(); engineChildCache.set(engine, byPal) }
+  let cached = byPal.get(palId)
+  if (cached) return cached
+  cached = new Map<string, Combo[]>()
   for (const p of data.pals) {
     for (const f of engine.childOf(palId, p.id)) {
       if (f.c === palId) continue
       const oriented = orient(f, palId, 'a')
-      const list = out.get(f.c)
+      const list = cached.get(f.c)
       if (list) list.push(oriented)
-      else out.set(f.c, [oriented])
+      else cached.set(f.c, [oriented])
     }
   }
-  return out
+  byPal.set(palId, cached)
+  return cached
 }
 
 /**
  * Every parent that can produce `childId`, mapped to its partner combos
- * (each oriented with that parent in slot a). Full unordered-pair scan.
+ * (each oriented with that parent in slot a). Built from the memoized
+ * childrenOf maps — O(n) instead of the O(n²) pair scan.
+ *
+ * The self-pair (A+A=A) is handled separately because childrenOf excludes
+ * self-children (`f.c === palId`), but parentsOf(A) must include A itself.
  */
 export function parentsOf(engine: BreedingEngine, data: BreedingData, childId: string): Map<string, Combo[]> {
   const out = new Map<string, Combo[]>()
-  const add = (parent: string, f: Combo) => {
-    const oriented = orient(f, parent, 'a')
-    const list = out.get(parent)
-    if (list) list.push(oriented)
-    else out.set(parent, [oriented])
+  for (const p of data.pals) {
+    const combos = childrenOf(engine, data, p.id).get(childId)
+    if (!combos) continue
+    const existing = out.get(p.id)
+    if (existing) combos.forEach((c) => existing.push(c))
+    else out.set(p.id, [...combos])
   }
-  const pals = data.pals
-  for (let i = 0; i < pals.length; i++) {
-    for (let k = i; k < pals.length; k++) {
-      for (const f of engine.childOf(pals[i].id, pals[k].id)) {
-        if (f.c !== childId) continue
-        add(f.a, f)
-        if (f.a !== f.b) add(f.b, f)
-      }
-    }
+  // Same-species self-pair: A+A=A. childrenOf excludes self-children, so add explicitly.
+  const selfCombos = engine.childOf(childId, childId).filter((f) => f.c === childId)
+  if (selfCombos.length > 0) {
+    const oriented = selfCombos.map((f) => orient(f, childId, 'a'))
+    const existing = out.get(childId)
+    if (existing) oriented.forEach((c) => existing.push(c))
+    else out.set(childId, oriented)
   }
   return out
 }
@@ -141,15 +158,6 @@ export function findChains(
   const distToC = bfsDistToTarget(engine, data, cId)
   const distFromA = bfsDistFromSource(engine, data, aId)
 
-  // Memoize childrenOf so each pal's children are computed at most once.
-  const childCache = new Map<string, Map<string, Combo[]>>()
-  const children = (id: string) => {
-    if (childCache.has(id)) return childCache.get(id)!
-    const c = childrenOf(engine, data, id)
-    childCache.set(id, c)
-    return c
-  }
-
   const parC = parentsOf(engine, data, cId)
   const out: BreedChain[] = []
   const path: ChainStep[] = []
@@ -161,7 +169,7 @@ export function findChains(
       if (last) out.push({ steps: [...path, { fixed: cur, child: cId, partners: last }] })
       return
     }
-    const kids = children(cur)
+    const kids = childrenOf(engine, data, cur)
     const rem = n - depth - 1
     const mids = [...kids.keys()]
       .filter((b) => {
