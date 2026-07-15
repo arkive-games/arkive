@@ -12,7 +12,10 @@ items list. Three user-facing goals:
 594 `Blueprint_*` rows in `DT_ItemDataTable_Common`; 582 pass the has-name gate
 (101 of those `bLegalInGame=false` → hidden). 113 have no source anywhere in the
 export — mostly tier 2–5 cosmetic-head variants and `Blueprint_Salvage_*` baits
-referenced only by item/recipe tables (dead data), but some are legal+visible.
+referenced only by item/recipe tables (dead data). After all channels are
+collected (including raids), **every visible blueprint has a source**; the 100
+emitted no-source rows are all `illegal` dead data, surfaced only through the
+items-list "No known source" filter.
 
 Acquisition surfaces that reference blueprint item ids:
 
@@ -29,6 +32,7 @@ Acquisition surfaces that reference blueprint item ids:
 | Ancient shrines | `DT_ItemPickupDataTable`, joined to placed shrines already in `markers/*.json` (`reward.item`) | 106 placed shrines |
 | Merchants | `DT_ItemShopCreateData_Common` groups; NPC → `BP_PalShopVenderDataComponent.itemShopSimpleLotteryTableName` → `DT_ItemShopLotteryData` → group. Blueprint-selling groups: `Village_Shop_1`, `Desert_Shop_2`, `Volcano_Shop_2`, `Medal_Shop_1` (Dog Coins), `Arena_Shop_1` (Battle Tickets) | derived once; emitter warns if a new group starts selling blueprints |
 | Arena rewards | `DT_ArenaSoloRewardTable` first/repeat clear per rank | 3 blueprint rewards |
+| Summoning-altar raids | `Blueprint/RaidBoss/DT_PalRaidBoss_Common` `SuccessItemList` per summon row (boss pal from `InfoList`, `RAID_` prefix / `_2` hard-mode suffix stripped) | the only channel for `Blueprint_YakushimaBoss002_Relic` — without it one *visible* blueprint would be falsely no-source |
 | Pal / boss drops | already emitted (`item.droppedBy`) | 24 blueprints |
 | Dungeon chest/boss lotteries | already emitted (`dungeons.json`, "found in dungeons" row) | existing UI |
 
@@ -55,6 +59,7 @@ entries gain:
     weight-share, 2dp).
   - `{kind:'treasureMap', item, grade, chance}` — `item` links to the map item.
   - `{kind:'salvage', rank, chance}`
+  - `{kind:'raid', pal, chance}` — summoning-altar boss (links to the pal).
   - `{kind:'shrine', count}` — count of placed shrine markers granting it.
   - `{kind:'merchant', shop, price, currency}` — `shop` ∈ village/desertWeapon/
     volcanoWeapon/medal/arena; `price` = OverridePrice or item Price; `currency`
