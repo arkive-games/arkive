@@ -135,44 +135,41 @@ function LayoutPlot({ layout, hidden }: { layout: DungeonLayout; hidden: Set<str
     c,
     pts: hidden.has(c.key) ? [] : layout.points.filter(c.match),
   }))
+  // The scale bar lives under the plot as plain HTML so it can't collide
+  // with markers near the plot edge.
   const meters = scaleLength(b.width / 100)
-  const barY = b.minY + b.height - 3 * u
   return (
-    <svg
-      viewBox={`${b.minX} ${b.minY} ${b.width} ${b.height}`}
-      className="mx-auto w-full rounded-lg border border-border bg-secondary/30"
-      style={{ aspectRatio: `${b.width} / ${b.height}`, maxHeight: '75vh' }}
-      data-testid="dungeon-layout-plot"
-      role="img"
-    >
-      {groups.map(({ c, pts }) =>
-        pts.map((p, i) => (
-          <Marker
-            key={`${c.key}-${i}`}
-            shape={c.shape}
-            cls={c.cls}
-            x={p.x}
-            y={p.y}
-            r={u * (c.size ?? 1)}
-            title={t(`dungeon.${c.label}`, c.labelParams)}
-          />
-        )),
-      )}
-      <g className="stroke-muted-foreground" strokeWidth={u * 0.3}>
-        <line x1={b.minX + 2 * u} y1={barY} x2={b.minX + 2 * u + meters * 100} y2={barY} />
-        <line x1={b.minX + 2 * u} y1={barY - u} x2={b.minX + 2 * u} y2={barY + u} />
-        <line x1={b.minX + 2 * u + meters * 100} y1={barY - u} x2={b.minX + 2 * u + meters * 100} y2={barY + u} />
-      </g>
-      <text
-        x={b.minX + 2 * u + (meters * 100) / 2}
-        y={barY - 1.5 * u}
-        textAnchor="middle"
-        className="fill-muted-foreground"
-        style={{ fontSize: 3 * u }}
+    <div>
+      <svg
+        viewBox={`${b.minX} ${b.minY} ${b.width} ${b.height}`}
+        className="mx-auto w-full rounded-lg border border-border bg-secondary/30"
+        style={{ aspectRatio: `${b.width} / ${b.height}`, maxHeight: '75vh' }}
+        data-testid="dungeon-layout-plot"
+        role="img"
       >
-        {meters} m
-      </text>
-    </svg>
+        {groups.map(({ c, pts }) =>
+          pts.map((p, i) => (
+            <Marker
+              key={`${c.key}-${i}`}
+              shape={c.shape}
+              cls={c.cls}
+              x={p.x}
+              y={p.y}
+              r={u * (c.size ?? 1)}
+              title={t(`dungeon.${c.label}`, c.labelParams)}
+            />
+          )),
+        )}
+      </svg>
+      <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+        <span
+          className="h-1.5 border-x border-b border-muted-foreground/60"
+          style={{ width: `${((meters * 100) / b.width) * 100}%` }}
+          aria-hidden
+        />
+        <span className="tabular-nums">{meters} m</span>
+      </div>
+    </div>
   )
 }
 
