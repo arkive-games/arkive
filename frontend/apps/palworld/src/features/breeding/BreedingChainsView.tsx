@@ -11,12 +11,18 @@ import { GenderMark, LEGENDARY_ICON, PalChip, RecipeCard, type RecipeMeta } from
 const PARTNER_CAP = 8
 // Chain cards shown per group before the show-more button.
 const GROUP_CAP = 40
-// Tree view: first-step groups shown initially, and per click.
+// Tree view: first-step groups shown initially per generation section.
 const TREE_ROOT_CAP = 5
 // Tree view: continuations shown per node initially (rest behind show-more).
 const TREE_CHILD_CAP = 1
 // Tree view: rows revealed per show-more click.
 const TREE_MORE = 10
+// Tree view: partner chips per row, thinning with depth to keep deep rows quiet.
+const TREE_PARTNER_CAPS = [PARTNER_CAP, 5, 3, 2]
+// Tree view: per-depth indent of the fixed-parent column (desktop grid layout;
+// static classes so Tailwind sees them).
+const TREE_INDENT = ['', 'sm:pl-6', 'sm:pl-12', 'sm:pl-18', 'sm:pl-24', 'sm:pl-30']
+const indentClass = (depth: number) => TREE_INDENT[Math.min(depth, TREE_INDENT.length - 1)]
 
 interface ChainsCtx {
   names: NameMap
@@ -71,21 +77,26 @@ function PartnerChip({ f, ctx }: { f: Combo; ctx: ChainsCtx }) {
 }
 
 /**
- * One breeding step: fixed parent + (partner options) = child.
- * `flow="card"` rows dissolve (sm:contents) into the chain card's shared
- * 5-column grid; `flow="inline"` rows are self-contained wrapping flex rows
- * (used by the tree view, where cross-row column alignment has no meaning).
+ * One breeding step: fixed parent + (partner options) = child. The row is a
+ * wrapping flex on narrow screens (chips can't shrink, a rigid grid would
+ * overflow); from sm up it dissolves (contents) into the enclosing card's
+ * shared 5-column grid so +, = and the child column align across rows.
+ * `depth` (tree view) indents the fixed-parent column and thins the partner
+ * cap, keeping deeper rows quieter.
  */
-function StepRow({ step, final, ctx, flow = 'card' }: { step: ChainStep; final: boolean; ctx: ChainsCtx; flow?: 'card' | 'inline' }) {
+function StepRow({ step, final, ctx, depth = 0 }: { step: ChainStep; final: boolean; ctx: ChainsCtx; depth?: number }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
-  const partners = expanded ? step.partners : step.partners.slice(0, PARTNER_CAP)
+  const cap = TREE_PARTNER_CAPS[Math.min(depth, TREE_PARTNER_CAPS.length - 1)]
+  const partners = expanded ? step.partners : step.partners.slice(0, cap)
   const hidden = step.partners.length - partners.length
   return (
-    // Wrapping flex row on narrow screens (chips can't shrink, a rigid grid
-    // overflows); in card flow the row dissolves into the shared grid from sm up.
-    <div className={cn('flex flex-wrap items-center gap-1.5', flow === 'card' && 'sm:contents')}>
-      <PalChip id={step.fixed} names={ctx.names} meta={ctx.meta} />
+    <div className="flex flex-wrap items-center gap-1.5 sm:contents">
+      {/* Indent lives inside the first grid cell: the levels above render as
+          display:contents on sm+, so nesting can't come from their boxes. */}
+      <span className={cn('flex min-w-0 items-center', indentClass(depth))}>
+        <PalChip id={step.fixed} names={ctx.names} meta={ctx.meta} />
+      </span>
       <span className="px-1 text-muted-foreground">+</span>
       <span className="flex min-w-0 flex-wrap items-center gap-1">
         {partners.map((f) => (
@@ -100,6 +111,16 @@ function StepRow({ step, final, ctx, flow = 'card' }: { step: ChainStep; final: 
             className="rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             +{hidden}
+          </button>
+        ) : expanded && step.partners.length > cap ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            aria-label={t('breeding.collapse')}
+            title={t('breeding.collapse')}
+            className="rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            −
           </button>
         ) : null}
       </span>
@@ -162,39 +183,37 @@ function ChainGroup({ label, chains, ctx }: { label: string; chains: BreedChain[
 }
 
 /**
- * One tree node: its step row, then — indented — its continuations. Only the
- * first continuation is visible initially; the rest hide behind show-more.
+ * Show-more / show-fewer pair for a capped node list. Renders nothing while
+ * everything fits the initial cap.
  */
-function TreeNodeView({ node, ctx }: { node: ChainTreeNode; ctx: ChainsCtx }) {
-  return (
-    <div data-testid="breeding-tree-node">
-      <StepRow step={node.step} final={node.children.length === 0} ctx={ctx} flow="inline" />
-      {node.children.length > 0 ? (
-        <TreeLevel nodes={node.children} ctx={ctx} className="mt-1.5 border-l-2 border-border pl-3 sm:pl-4" />
-      ) : null}
-    </div>
-  )
-}
-
-// TreeNodeView/TreeLevel recurse into each other (depth ≤ 6 by construction).
-function TreeLevel({ nodes, className, ctx }: { nodes: ChainTreeNode[]; className?: string; ctx: ChainsCtx }) {
+function RevealControls({
+  total,
+  cap,
+  initial,
+  onMore,
+  onLess,
+  className,
+}: {
+  total: number
+  cap: number
+  initial: number
+  onMore: () => void
+  onLess: () => void
+  className?: string
+}) {
   const { t } = useTranslation()
-  const [cap, setCap] = useState(TREE_CHILD_CAP)
-  const shown = nodes.slice(0, cap)
-  const hidden = nodes.length - shown.length
+  const hidden = Math.max(0, total - cap)
+  if (hidden === 0 && cap <= initial) return null
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
-      {shown.map((n) => (
-        <TreeNodeView key={n.step.child} node={n} ctx={ctx} />
-      ))}
+    <div className={cn('flex items-center gap-1', className)}>
       {hidden > 0 ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="self-start text-muted-foreground"
-          onClick={() => setCap((c) => c + TREE_MORE)}
-        >
+        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onMore}>
           {t('breeding.showMoreRecipes', { count: Math.min(TREE_MORE, hidden) })}
+        </Button>
+      ) : null}
+      {cap > initial ? (
+        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onLess}>
+          {t('breeding.collapse')}
         </Button>
       ) : null}
     </div>
@@ -202,37 +221,118 @@ function TreeLevel({ nodes, className, ctx }: { nodes: ChainTreeNode[]; classNam
 }
 
 /**
- * Tree layout of the planner results: chains merged into a prefix tree, one
- * card per first step (`A + X = B` group), continuations nested and revealed
- * on demand. Remount (via key) on a query change to reset all reveal caps.
+ * One tree node: its step row, then its continuations one level deeper. Only
+ * the first continuation is visible initially; the rest hide behind show-more.
+ * On sm+ the wrapper renders as display:contents so every row across all
+ * depths joins the section card's shared grid (aligned = / child columns).
+ */
+function TreeNodeView({ node, depth, ctx }: { node: ChainTreeNode; depth: number; ctx: ChainsCtx }) {
+  return (
+    <div data-testid="breeding-tree-node" className="sm:contents">
+      <StepRow step={node.step} final={node.children.length === 0} ctx={ctx} depth={depth} />
+      {node.children.length > 0 ? <TreeLevel nodes={node.children} depth={depth + 1} ctx={ctx} /> : null}
+    </div>
+  )
+}
+
+// TreeNodeView/TreeLevel recurse into each other (depth ≤ 6 by construction).
+function TreeLevel({ nodes, depth, ctx }: { nodes: ChainTreeNode[]; depth: number; ctx: ChainsCtx }) {
+  const [cap, setCap] = useState(TREE_CHILD_CAP)
+  const shown = nodes.slice(0, cap)
+  return (
+    // Mobile: nested, left-ruled block. sm+: dissolves into the card grid,
+    // where nesting shows as first-column indentation instead.
+    <div className="mt-1.5 flex flex-col gap-1.5 border-l-2 border-border pl-3 sm:contents">
+      {shown.map((n) => (
+        <TreeNodeView key={n.step.child} node={n} depth={depth} ctx={ctx} />
+      ))}
+      <RevealControls
+        total={nodes.length}
+        cap={cap}
+        initial={TREE_CHILD_CAP}
+        onMore={() => setCap((c) => c + TREE_MORE)}
+        onLess={() => setCap(TREE_CHILD_CAP)}
+        className={cn('sm:col-span-full', indentClass(depth))}
+      />
+    </div>
+  )
+}
+
+/** Leaves under a node = complete chains it contains. */
+const leafCount = (n: ChainTreeNode): number =>
+  n.children.length === 0 ? 1 : n.children.reduce((s, c) => s + leafCount(c), 0)
+
+/** Chain length of a subtree (uniform per root by construction; max for safety). */
+const treeDepth = (n: ChainTreeNode): number =>
+  n.children.length === 0 ? 1 : 1 + Math.max(...n.children.map(treeDepth))
+
+/** One generation section: header + first-step group cards, capped with reveal. */
+function TreeSection({ label, count, roots, ctx }: { label: string; count: number; roots: ChainTreeNode[]; ctx: ChainsCtx }) {
+  const [cap, setCap] = useState(TREE_ROOT_CAP)
+  return (
+    <section>
+      <GroupHeader label={label} count={count} />
+      <div className="flex flex-col gap-2">
+        {roots.slice(0, cap).map((n) => (
+          <div
+            key={n.step.child}
+            data-testid="breeding-chain-group"
+            className="flex flex-col gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm sm:grid sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] sm:items-center"
+          >
+            <TreeNodeView node={n} depth={0} ctx={ctx} />
+          </div>
+        ))}
+        <RevealControls
+          total={roots.length}
+          cap={cap}
+          initial={TREE_ROOT_CAP}
+          onMore={() => setCap((c) => c + TREE_MORE)}
+          onLess={() => setCap(TREE_ROOT_CAP)}
+          className="self-start"
+        />
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Tree layout of the planner results, sectioned by generation count like the
+ * list view: chains merge into a prefix tree; each first step (`A + X = B`)
+ * is one group card with its continuations nested below, recursing to the
+ * target. Remount (via key) on a query change to reset all reveal caps.
  */
 export function BreedingChainsTreeView({ chains, ...ctx }: { chains: BreedChain[] } & ChainsCtx) {
   const { t } = useTranslation()
   const roots = buildChainTree(chains)
-  const [cap, setCap] = useState(TREE_ROOT_CAP)
-  const shown = roots.slice(0, cap)
-  const hidden = roots.length - shown.length
+  // Section roots by their chain length (direct first, then ascending).
+  const byGen = new Map<number, ChainTreeNode[]>()
+  for (const n of roots) {
+    const g = treeDepth(n)
+    const list = byGen.get(g) ?? []
+    list.push(n)
+    byGen.set(g, list)
+  }
+  const gens = [...byGen.keys()].sort((a, b) => a - b)
   return (
-    <div className="mt-2 flex flex-col gap-2">
-      {shown.map((n) => (
-        <div
-          key={n.step.child}
-          data-testid="breeding-chain-group"
-          className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
-        >
-          <TreeNodeView node={n} ctx={ctx} />
-        </div>
-      ))}
-      {hidden > 0 ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="self-start text-muted-foreground"
-          onClick={() => setCap((c) => c + TREE_MORE)}
-        >
-          {t('breeding.showMoreRecipes', { count: Math.min(TREE_MORE, hidden) })}
-        </Button>
-      ) : null}
+    <div className="mt-2">
+      {gens.map((g) => {
+        const sectionRoots = byGen.get(g)!
+        // Direct section counts recipes (matching the list view); N-gen
+        // sections count complete chains (tree leaves).
+        const count =
+          g === 1
+            ? sectionRoots.reduce((s, n) => s + n.step.partners.length, 0)
+            : sectionRoots.reduce((s, n) => s + leafCount(n), 0)
+        return (
+          <TreeSection
+            key={g}
+            label={g === 1 ? t('breeding.chainDirect') : t('breeding.chainNGen', { count: g })}
+            count={count}
+            roots={sectionRoots}
+            ctx={ctx}
+          />
+        )
+      })}
     </div>
   )
 }

@@ -51,6 +51,9 @@ test('tree view groups chains by first step, reveals hidden branches with show-m
   // SheepBall→Anubis gen3: 79 chains sharing first-step groups — a real tree.
   await page.goto('/breeding?gen=3&a=SheepBall&c=Anubis&view=tree')
 
+  // Still sectioned by generation count, like the list view.
+  await expect(page.getByText('3-generation chains')).toBeVisible()
+
   // Root level: first-step groups, capped at 5 with a show-more reveal.
   const groups = page.getByTestId('breeding-chain-group')
   await expect(groups.first()).toBeVisible()
@@ -60,6 +63,10 @@ test('tree view groups chains by first step, reveals hidden branches with show-m
   await expect(showMore.first()).toBeVisible()
   await showMore.last().click() // the root-level button is the last one on the page
   expect(await groups.count()).toBeGreaterThan(initial)
+
+  // Show-more is reversible: Collapse restores the initial cap.
+  await page.getByRole('button', { name: 'Collapse' }).click()
+  expect(await groups.count()).toBe(initial)
 
   // Nested rows render recursively down to the target (3 levels for a 3-gen chain).
   expect(await groups.first().getByTestId('breeding-tree-node').count()).toBeGreaterThanOrEqual(2)
