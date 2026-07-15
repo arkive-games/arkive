@@ -71,11 +71,12 @@ function StepRow({ step, final, ctx }: { step: ChainStep; final: boolean; ctx: C
   const partners = expanded ? step.partners : step.partners.slice(0, PARTNER_CAP)
   const hidden = step.partners.length - partners.length
   return (
-    // Wrapping flex on narrow screens (chips can't shrink, a rigid grid
-    // overflows); the aligned 5-column grid from sm up.
-    <div className="flex flex-wrap items-center gap-1.5 sm:grid sm:grid-cols-[minmax(0,auto)_auto_minmax(0,1fr)_auto_minmax(0,auto)]">
+    // Wrapping flex row on narrow screens (chips can't shrink, a rigid grid
+    // overflows); from sm up the row dissolves (contents) into the card's
+    // shared 5-column grid so +, = and the child column align across steps.
+    <div className="flex flex-wrap items-center gap-1.5 sm:contents">
       <PalChip id={step.fixed} names={ctx.names} meta={ctx.meta} />
-      <span className="text-muted-foreground">+</span>
+      <span className="px-1 text-muted-foreground">+</span>
       <span className="flex min-w-0 flex-wrap items-center gap-1">
         {partners.map((f) => (
           <PartnerChip key={comboKey(f)} f={f} ctx={ctx} />
@@ -92,7 +93,7 @@ function StepRow({ step, final, ctx }: { step: ChainStep; final: boolean; ctx: C
           </button>
         ) : null}
       </span>
-      <span className="text-muted-foreground">=</span>
+      <span className="px-1 text-muted-foreground">=</span>
       <PalChip id={step.child} names={ctx.names} meta={ctx.meta} emphasis={final} />
     </div>
   )
@@ -103,7 +104,10 @@ function ChainCard({ chain, ctx }: { chain: BreedChain; ctx: ChainsCtx }) {
   return (
     <div
       data-testid="breeding-chain"
-      className="flex flex-col gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm"
+      // One grid shared by every step row (rows are `contents` from sm up), so
+      // the fixed / + / partners / = / child columns line up across steps
+      // regardless of how wide each Pal chip is.
+      className="flex flex-col gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm sm:grid sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] sm:items-center"
     >
       {chain.steps.map((s, i) => (
         <StepRow key={s.child} step={s} final={i === chain.steps.length - 1} ctx={ctx} />
