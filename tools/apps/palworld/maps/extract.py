@@ -153,11 +153,14 @@ def _match(classes, t: str):
 
 
 def _read_pal_names(table_path: Path) -> dict:
+    # Keys are lowercased: the name table's casing occasionally disagrees with
+    # CharacterID (PAL_NAME_Windchimes vs WindChimes) — probe with pid.lower()
+    # (see breeding._pal_name; emit._pal_name does the same for markers).
     rows = read_rows(table_path)
     names = {}
     for key, r in rows.items():
         if key.startswith("PAL_NAME_"):
-            names[key[len("PAL_NAME_"):]] = r["TextData"]["SourceString"]
+            names[key[len("PAL_NAME_"):].lower()] = r["TextData"]["SourceString"]
     return names
 
 
@@ -960,7 +963,8 @@ def run_extract(raw: Path) -> dict:
             None,
         )
         if boss:
-            name_by_lng = {tag: names[boss] for tag, names in names_by_lang.items() if names.get(boss)}
+            lb = boss.lower()
+            name_by_lng = {tag: names[lb] for tag, names in names_by_lang.items() if names.get(lb)}
             if name_by_lng:
                 poi["nameByLng"] = name_by_lng
         pois.append(poi)
@@ -989,7 +993,7 @@ def run_extract(raw: Path) -> dict:
     def predator_name(base: str) -> dict:
         out = {}
         for tag, names in names_by_lang.items():
-            pn = names.get(base) or names.get(_VARIANT_SUFFIX.sub("", base))
+            pn = names.get(base.lower()) or names.get(_VARIANT_SUFFIX.sub("", base).lower())
             if not pn:
                 continue
             pre = predator_prefix.get(tag)
@@ -1047,7 +1051,7 @@ def run_extract(raw: Path) -> dict:
         pal = poi.get("effigyPal")
         if not pal or poi["subtype"] in effigy_names:
             continue
-        key = ja_relic_key.get(ja_pal_names.get(pal, ""))
+        key = ja_relic_key.get(ja_pal_names.get(pal.lower(), ""))
         if key:
             effigy_names[poi["subtype"]] = {
                 tag: tbl[key] for tag, tbl in item_names.items() if key in tbl

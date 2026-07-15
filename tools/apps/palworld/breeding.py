@@ -46,7 +46,7 @@ def _read_pal_names(table_path: Path) -> dict:
         td = r.get("TextData") or {}
         s = td.get("LocalizedString") or td.get("SourceString")
         if s:
-            out[key[len("PAL_NAME_"):]] = s
+            out[key[len("PAL_NAME_"):].lower()] = s
     return out
 
 
@@ -60,8 +60,18 @@ def _names_by_lang(raw: Path) -> dict[str, dict]:
     return by_lang
 
 
+def _pal_name(names_by_lang: dict, tag: str, cid: str) -> str | None:
+    """Localized pal name with en-US -> ja fallback. Name-table keys are
+    lowercased (see _read_pal_names) because the text tables occasionally
+    disagree with DT_PalMonsterParameter on CharacterID casing (e.g.
+    PAL_NAME_Windchimes vs CharacterID WindChimes) — every lookup must go
+    through this casefolded accessor, never index the tables directly."""
+    k = cid.lower()
+    return names_by_lang[tag].get(k) or names_by_lang["en-US"].get(k) or names_by_lang[JA_TAG].get(k)
+
+
 def _has_real_name(names_by_lang: dict, cid: str) -> bool:
-    n = names_by_lang["en-US"].get(cid) or names_by_lang[JA_TAG].get(cid)
+    n = _pal_name(names_by_lang, "en-US", cid)
     return bool(n) and n != "-"
 
 
@@ -178,11 +188,7 @@ def run_breeding(raw: Path, data_out: Path, res_out: Path) -> None:
     # Per-language name maps (fall back en -> ja -> id).
     ids = [p["id"] for p in pals]
     for tag in [JA_TAG, *L10N_LANG_TAGS.values()]:
-        table = names_by_lang[tag]
-        loc = {
-            cid: table.get(cid) or names_by_lang["en-US"].get(cid) or names_by_lang[JA_TAG].get(cid) or cid
-            for cid in ids
-        }
+        loc = {cid: _pal_name(names_by_lang, tag, cid) or cid for cid in ids}
         write_json(data_out / "locales" / tag / "breeding.json", loc)
 
     # Convert any roster icon missing from resource-palworld/icons.

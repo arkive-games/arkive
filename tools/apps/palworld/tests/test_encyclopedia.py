@@ -16,10 +16,13 @@ def test_encyclopedia_integration(tmp_path):
     pals, passives = out["pals"], out["passives"]
     by_id = {p["id"]: p for p in pals}
 
-    # Roster matches the breeding stage's filter: 286 catalogued Pals plus the
+    # Roster matches the breeding stage's filter: 288 catalogued Pals plus the
     # 11 uncatalogued Terraria-collab creatures (ZukanIndex -1, icons under the
     # PalIcon/Normal/Yakushima subfolder).
-    assert len(pals) == 297
+    assert len(pals) == 299
+    # No.038 Hangyu: CharacterID is WindChimes but every text table spells it
+    # Windchimes — the casefolded name lookup must keep both variants rostered.
+    assert {p["id"] for p in pals if p["zukanIndex"] == 38} == {"WindChimes", "WindChimes_Ice"}
     assert all(p["icon"].startswith("T_") for p in pals)
     uncatalogued = [p["id"] for p in pals if p["zukanIndex"] < 1]
     assert uncatalogued == [
@@ -106,6 +109,11 @@ def test_encyclopedia_integration(tmp_path):
     assert en_pals["YakushimaBoss001"]["name"] == "Eye of Cthulhu"
     assert en_pals["Anubis"]["description"]
     assert en_pals["Anubis"]["partnerSkill"]["name"]
+    # Case-mismatched text keys (PAL_NAME_/PAL_LONG_DESC_/PAL_FIRST_SPAWN_DESC_
+    # _Windchimes vs CharacterID WindChimes) must still resolve.
+    assert en_pals["WindChimes"]["name"] == "Hangyu"
+    assert en_pals["WindChimes"]["description"]
+    assert en_pals["WindChimes"]["partnerSkill"]["desc"]
     zh_name = json.loads((data_out / "locales/zh-CN/pals.json").read_text(encoding="utf-8"))["Anubis"]["name"]
     assert zh_name and all("一" <= c <= "鿿" for c in zh_name)  # real CJK, not JA base
     en_enums = json.loads((data_out / "locales/en-US/enums.json").read_text(encoding="utf-8"))

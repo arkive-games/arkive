@@ -34,7 +34,7 @@ from pathlib import Path
 import yaml
 from PIL import Image
 
-from .breeding import _icon_paths, _is_roster, _names_by_lang, _roster_sort_key
+from .breeding import _icon_paths, _is_roster, _names_by_lang, _pal_name, _roster_sort_key
 from .env import require_dir
 from .maps.common import read_rows, round2, write_json
 from .maps.extract import JA_TAG, L10N_LANG_TAGS
@@ -168,8 +168,12 @@ def _compose_effect(t: str, tag: str, tui: dict, connectors: dict) -> str | None
     return None
 
 
-def _read_text(path: Path, prefix: str) -> dict:
-    """{idAfterPrefix: string} from a DT_*Text table (localized or source)."""
+def _read_text(path: Path, prefix: str, lower: bool = False) -> dict:
+    """{idAfterPrefix: string} from a DT_*Text table (localized or source).
+    ``lower`` casefolds the keys — use it for tables keyed by CharacterID,
+    whose casing occasionally disagrees with DT_PalMonsterParameter (e.g.
+    PAL_LONG_DESC_Windchimes vs CharacterID WindChimes); probe those tables
+    with ``cid.lower()``."""
     if not path.exists():
         return {}
     out = {}
@@ -179,16 +183,17 @@ def _read_text(path: Path, prefix: str) -> dict:
         td = r.get("TextData") or {}
         s = td.get("LocalizedString") or td.get("SourceString")
         if s:
-            out[key[len(prefix):]] = s
+            k = key[len(prefix):]
+            out[k.lower() if lower else k] = s
     return out
 
 
-def _text_by_lang(raw: Path, rel: str, prefix: str) -> dict[str, dict]:
+def _text_by_lang(raw: Path, rel: str, prefix: str, lower: bool = False) -> dict[str, dict]:
     """{tag: {id: string}}; each L10N folder layered over the ja base for one table."""
-    ja = _read_text(raw / rel, prefix)
+    ja = _read_text(raw / rel, prefix, lower)
     by_lang = {JA_TAG: ja}
     for folder, tag in L10N_LANG_TAGS.items():
-        loc = _read_text(raw.parent / "L10N" / folder / "Pal" / rel, prefix)
+        loc = _read_text(raw.parent / "L10N" / folder / "Pal" / rel, prefix, lower)
         by_lang[tag] = {**ja, **loc}
     return by_lang
 
@@ -876,14 +881,15 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     write_json(data_out / "passives.json", {"passives": passives})
 
     # ---- Localized text ----------------------------------------------------
-    desc_by_lang = _text_by_lang(raw, "DataTable/Text/DT_PalLongDescriptionText.json", "PAL_LONG_DESC_")
+    # CharacterID-keyed tables read with lowercased keys (probe with cid.lower()).
+    desc_by_lang = _text_by_lang(raw, "DataTable/Text/DT_PalLongDescriptionText.json", "PAL_LONG_DESC_", lower=True)
     skill_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_SkillNameText_Common.json", "")
     skill_desc_by_lang = _text_by_lang(raw, "DataTable/Text/DT_SkillDescText_Common.json", "")
     item_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_ItemNameText_Common.json", "ITEM_NAME_")
     ui_by_lang = _text_by_lang(raw, "DataTable/Text/DT_UI_Common_Text_Common.json", "")
     # Partner-skill description sources (DT_PalFirstActivatedInfoText) + the tables its
     # tokens reference: map-object names and the per-rank append phrases.
-    first_by_lang = _text_by_lang(raw, "DataTable/Text/DT_PalFirstActivatedInfoText.json", "PAL_FIRST_SPAWN_DESC_")
+    first_by_lang = _text_by_lang(raw, "DataTable/Text/DT_PalFirstActivatedInfoText.json", "PAL_FIRST_SPAWN_DESC_", lower=True)
     mapobj_by_lang = _text_by_lang(raw, "DataTable/Text/DT_MapObjectNameText_Common.json", "MAPOBJECT_NAME_")
     append_by_lang = _text_by_lang(raw, "DataTable/Text/DT_PartnerSkillAppendText.json", "")
 
@@ -919,7 +925,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             name_key = f"PARTNERSKILL_{cid}"
         out = {"name": table_name.get(name_key) or table_name.get(f"PARTNERSKILL_{cid}") or ""}
         d = _resolve_desc(
-            tfirst.get(cid, ""), partner_rows.get(cid) or {}, passive_main, tappend,
+            tfirst.get(cid.lower(), ""), partner_rows.get(cid) or {}, passive_main, tappend,
             titem, tmap, tui, table_name, none_word,
         )
         if d:
@@ -938,8 +944,8 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
         pals_loc = {}
         for cid in pal_ids:
             entry = {
-                "name": names_by_lang[tag].get(cid) or names_by_lang["en-US"].get(cid) or cid,
-                "description": tdescr.get(cid, ""),
+                "name": _pal_name(names_by_lang, tag, cid) or cid,
+                "description": tdescr.get(cid.lower(), ""),
             }
             ps = partner_name_desc(
                 cid, tname, tfirst, titem, tui, tmap, tappend, _NONE_WORD,

@@ -49,7 +49,9 @@ def _humanize_npc(npc_id: str) -> str:
 
 
 def _pal_name(names: dict, pid: str) -> str:
-    return names.get(_base_id(pid)) or names.get(pid) or pid
+    # Name-table keys are lowercased (extract._read_pal_names): the text tables
+    # occasionally disagree with CharacterID casing (Windchimes vs WindChimes).
+    return names.get(_base_id(pid).lower()) or names.get(pid.lower()) or pid
 
 
 def _pal_icon(pal_icons: set, pid: str) -> str | None:
@@ -129,7 +131,7 @@ def build_dataset(parsed: dict) -> dict:
         # instanced spawners are placed at). Nameless/iconless internal
         # codenames would render as raw ids, so those stay dropped.
         if zi <= 0 and not (
-            _pal_icon(pal_icons, pid) and (en_names.get(_base_id(pid)) or en_names.get(pid))
+            _pal_icon(pal_icons, pid) and (en_names.get(_base_id(pid).lower()) or en_names.get(pid.lower()))
         ):
             continue
         pal_subtypes.append({
