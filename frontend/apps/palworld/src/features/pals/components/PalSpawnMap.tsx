@@ -54,14 +54,15 @@ const CLUSTER_TIERS = [
   { minZoom: -Infinity, cell: 704 },
   { minZoom: -3, cell: 352 },
   { minZoom: -2, cell: 176 },
-  { minZoom: -1, cell: 0 },
+  { minZoom: -1, cell: 88 },
+  { minZoom: 0, cell: 0 },
 ]
 // Above this many wild points, the deepest tier keeps clustering (with a cell
 // fine enough to only merge same-spawner stacks) instead of showing all — a
 // few common pals carry 1.5k–4.9k exact points (spawner grids sit ~50 m
 // apart) and mounting that many divIcon markers at once janks the page.
 const SHOW_ALL_MAX = 1500
-const DENSE_FINEST_CELL = 88
+const DENSE_FINEST_CELL = 44
 
 function tierFor(zoom: number): number {
   let tier = 0
