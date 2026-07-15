@@ -550,8 +550,8 @@ export default function App() {
         ) : null}
         {marker.dungeonArea ? (
           <Link
-            to="/dungeons"
-            search={{ d: marker.dungeonArea }}
+            to="/dungeons/$id"
+            params={{ id: marker.dungeonArea }}
             data-testid="marker-dungeon-link"
             className="mt-2 inline-block text-sm text-primary hover:underline"
           >

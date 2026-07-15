@@ -216,8 +216,8 @@ export default function ItemDetailPage() {
                         {itemDungeons.map((d) => (
                           <Link
                             key={d.id}
-                            to="/dungeons"
-                            search={{ d: d.id }}
+                            to="/dungeons/$id"
+                            params={{ id: d.id }}
                             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
                           >
                             {dungeons?.text[d.id]?.name ?? d.id}
