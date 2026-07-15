@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
-import { CircleMarker, MapContainer, Marker, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Tooltip, useMap } from 'react-leaflet'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Moon } from 'lucide-react'
@@ -8,7 +8,7 @@ import { Moon } from 'lucide-react'
 import { GameMapTiles, createPinIcon, dataToLatLng } from '@gamemap/map-engine'
 import { cn } from '@gamemap/ui'
 import { palworldAssets, palIconUrl } from '../../../lib/assets'
-import { loadPalSpawns, type PalSpawns, type SpawnKind } from '../../../lib/pals'
+import { loadPalSpawns, type PalSpawns, type SpawnKind, type SpawnPoint } from '../../../lib/pals'
 import { DATA_BASE } from '../../../lib/urls'
 
 type MapsLocale = Record<string, { name: string; shortName?: string }>
@@ -33,29 +33,6 @@ function useMapLabels(lng: string): Record<string, string> {
   return labels
 }
 
-// Wild-marker zoom scaling: anchored at 1.0 around zoom -2 (a typical mid
-// view), shrinking toward 0.6 fully zoomed out and growing to 1.4 zoomed in.
-// Quantized to 0.1 steps so continuous smooth-wheel zoom only re-renders the
-// markers (and grows the shared icon cache) a handful of times, not per frame.
-function zoomToScale(z: number): number {
-  const raw = Math.pow(2, (z + 2) * 0.35)
-  return Math.round(Math.min(1.4, Math.max(0.6, raw)) * 10) / 10
-}
-
-/** Reports the map's zoom-derived marker scale into parent state. */
-function ZoomScaleWatcher({ onScale }: { onScale: (scale: number) => void }) {
-  const map = useMap()
-  useEffect(() => {
-    const update = () => onScale(zoomToScale(map.getZoom()))
-    update()
-    map.on('zoom', update)
-    return () => {
-      map.off('zoom', update)
-    }
-  }, [map, onScale])
-  return null
-}
-
 /**
  * Embedded mini-map of a single pal's exact spawn positions (unclustered, from
  * `spawns/<palId>.json`). Loads spawns across every map; when the pal spawns on
@@ -66,18 +43,132 @@ function ZoomScaleWatcher({ onScale }: { onScale: (scale: number) => void }) {
 const BOSS_RING = '#ef4444'
 // Night-restricted wild points ring indigo (boss identity wins over night).
 const NIGHT_RING = '#818cf8'
-// Above this many wild points on one map, icon pins stack into an unreadable
-// pile (spawner grids sit ~50 m apart; verified at ~270 points); fall back to
-// small canvas-rendered dots. Bosses stay pins.
-const MAX_PIN_POINTS = 50
-// Wild dot style, matching the legend's muted, white-ringed swatch; night
-// points keep their indigo ring in dot form too.
-const dotStyle = (night?: boolean): L.PathOptions => ({
-  color: night ? NIGHT_RING : 'rgba(255,255,255,0.9)',
-  weight: 1,
-  fillColor: '#64748b',
-  fillOpacity: 0.9,
-})
+
+// --- dynamic clustering ------------------------------------------------------
+// Wild spawn points cluster into count-badged pins when zoomed out and split
+// apart as you zoom in (bosses never cluster). Clusters are square grid
+// buckets in map-image px; a cell renders at `cell * 2^zoom` screen px, so
+// each tier's cell keeps cluster pins ≥ ~44px apart (one pin width) at the
+// tier's minimum zoom. `cell: 0` = no clustering, every exact point shows.
+const CLUSTER_TIERS = [
+  { minZoom: -Infinity, cell: 704 },
+  { minZoom: -3, cell: 352 },
+  { minZoom: -2, cell: 176 },
+  { minZoom: -1, cell: 0 },
+]
+// Above this many wild points, the deepest tier keeps clustering (with a cell
+// fine enough to only merge same-spawner stacks) instead of showing all — a
+// few common pals carry 1.5k–4.9k exact points (spawner grids sit ~50 m
+// apart) and mounting that many divIcon markers at once janks the page.
+const SHOW_ALL_MAX = 1500
+const DENSE_FINEST_CELL = 88
+
+function tierFor(zoom: number): number {
+  let tier = 0
+  for (let i = 1; i < CLUSTER_TIERS.length; i++) if (zoom >= CLUSTER_TIERS[i].minZoom) tier = i
+  return tier
+}
+
+/** Reports the map's cluster tier into parent state. Listens to the raw zoom
+ *  stream but the value only changes at tier boundaries, so a continuous
+ *  smooth-wheel glide re-renders the markers at most once per crossing. */
+function ZoomTierWatcher({ onTier }: { onTier: (tier: number) => void }) {
+  const map = useMap()
+  useEffect(() => {
+    const update = () => onTier(tierFor(map.getZoom()))
+    update()
+    map.on('zoom', update)
+    return () => {
+      map.off('zoom', update)
+    }
+  }, [map, onTier])
+  return null
+}
+
+/** One rendered pin: an exact spawn point (`count` 1) or a cluster of nearby
+ *  wild points (`count` > 1, drawn with a count badge at the centroid). */
+interface RenderMarker {
+  pos: L.LatLng
+  kind: SpawnKind
+  night?: boolean
+  level?: string
+  count: number
+}
+
+function clusterPoints(
+  map: PalSpawns['map'],
+  points: SpawnPoint[],
+  cell: number,
+): RenderMarker[] {
+  const wild: RenderMarker[] = []
+  // Bosses render last (= on top) so overlapping wild pins never hide them.
+  const bosses: RenderMarker[] = []
+  interface Bucket {
+    latSum: number
+    lngSum: number
+    count: number
+    allNight: boolean
+    lvMin: number
+    lvMax: number
+    first: { pos: L.LatLng; p: SpawnPoint }
+  }
+  const buckets = new Map<string, Bucket>()
+  for (const p of points) {
+    const pos = dataToLatLng(map, p.x, p.y)
+    if (p.kind === 'boss') {
+      bosses.push({ pos, kind: 'boss', night: p.night, level: p.level, count: 1 })
+      continue
+    }
+    if (cell === 0) {
+      wild.push({ pos, kind: 'wild', night: p.night, level: p.level, count: 1 })
+      continue
+    }
+    const key = `${Math.floor(pos.lng / cell)}:${Math.floor(pos.lat / cell)}`
+    let b = buckets.get(key)
+    if (!b) {
+      b = {
+        latSum: 0,
+        lngSum: 0,
+        count: 0,
+        allNight: true,
+        lvMin: Infinity,
+        lvMax: -Infinity,
+        first: { pos, p },
+      }
+      buckets.set(key, b)
+    }
+    b.latSum += pos.lat
+    b.lngSum += pos.lng
+    b.count += 1
+    if (!p.night) b.allNight = false
+    // Levels arrive preformatted ("Lv.12" / "Lv.5–9"); merge cluster ranges by
+    // pulling the numbers back out.
+    for (const n of p.level?.match(/\d+/g) ?? []) {
+      const lv = Number(n)
+      if (lv < b.lvMin) b.lvMin = lv
+      if (lv > b.lvMax) b.lvMax = lv
+    }
+  }
+  for (const b of buckets.values()) {
+    if (b.count === 1) {
+      const { pos, p } = b.first
+      wild.push({ pos, kind: 'wild', night: p.night, level: p.level, count: 1 })
+      continue
+    }
+    wild.push({
+      pos: new L.LatLng(b.latSum / b.count, b.lngSum / b.count),
+      kind: 'wild',
+      night: b.allNight,
+      level: Number.isFinite(b.lvMin)
+        ? b.lvMin === b.lvMax
+          ? `Lv.${b.lvMin}`
+          : `Lv.${b.lvMin}–${b.lvMax}`
+        : undefined,
+      count: b.count,
+    })
+  }
+  return [...wild, ...bosses]
+}
 
 export function PalSpawnMap({
   palId,
@@ -99,7 +190,9 @@ export function PalSpawnMap({
   const mapLabels = useMapLabels(lng)
   const [spawns, setSpawns] = useState<PalSpawns[] | null>(null)
   const [active, setActive] = useState(0)
-  const [zoomScale, setZoomScale] = useState(1)
+  // Coarsest tier by default — matches the initial fit-to-bounds zoom; the
+  // watcher corrects it on mount if a map opens more zoomed in.
+  const [tier, setTier] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -125,21 +218,28 @@ export function PalSpawnMap({
   const hasNight = !!current?.points.some((p) => p.night)
   // Every point night-restricted → one prominent note instead of a legend entry.
   const allNight = !!current && current.points.length > 0 && current.points.every((p) => p.night)
-  // High-volume pals (5k+ exact points) would choke on icon pins; draw their
-  // wild points as canvas dots instead. Bosses always stay pins.
-  const useDots = wildCount > MAX_PIN_POINTS
 
   // Match the main map's pal marker: circular portrait at scale 0.9.
   const iconUrl = useMemo(() => palIconUrl(palIcon), [palIcon])
-  // Boss points keep the fixed-size red-ringed circle so they always read as
-  // highlighted; night-restricted wild points ring indigo; other wild points
-  // keep the default white ring. Wild markers scale with zoom (icons are
-  // rebuilt per quantized zoom step and shared via createPinIcon's cache).
-  const iconFor = (kind: SpawnKind, night?: boolean) =>
-    createPinIcon(iconUrl, kind === 'boss' ? 1 : 0.9 * zoomScale, false, {
+  // Boss points ring red and sit slightly larger so they read as highlighted;
+  // night-restricted wild points/clusters ring indigo (a cluster counts as
+  // night only when every merged point is); other wild pins keep the default
+  // white ring at scale 0.9. Clusters carry a count badge.
+  const iconFor = (m: RenderMarker) =>
+    createPinIcon(iconUrl, m.kind === 'boss' ? 1 : 0.9, false, {
       variant: 'circular',
-      ...(kind === 'boss' ? { ringColor: BOSS_RING } : night ? { ringColor: NIGHT_RING } : {}),
+      ...(m.count > 1 ? { count: m.count } : {}),
+      ...(m.kind === 'boss' ? { ringColor: BOSS_RING } : m.night ? { ringColor: NIGHT_RING } : {}),
     })
+
+  // Re-cluster only when the pal/map or the zoom tier changes — a full pass
+  // over ≤ 5k points is a few ms, and the tier only flips at zoom boundaries.
+  const markers = useMemo(() => {
+    if (!map || !current) return []
+    let cell = CLUSTER_TIERS[tier].cell
+    if (cell === 0 && wildCount > SHOW_ALL_MAX) cell = DENSE_FINEST_CELL
+    return clusterPoints(map, current.points, cell)
+  }, [map, current, tier, wildCount])
 
   // Full map extent — the embedded map opens zoomed out to show the whole map
   // (rather than fitting tightly to this pal's spawn cluster).
@@ -210,23 +310,12 @@ export function PalSpawnMap({
           className="h-full w-full"
         >
           <GameMapTiles selectedMap={map} assets={palworldAssets} />
-          <ZoomScaleWatcher onScale={setZoomScale} />
-          {current.points.map((p, i) =>
-            p.kind === 'wild' && useDots ? (
-              <CircleMarker
-                key={i}
-                center={dataToLatLng(map, p.x, p.y)}
-                radius={3 * zoomScale}
-                pathOptions={dotStyle(p.night)}
-              >
-                {p.level ? <Tooltip direction="top">{p.level}</Tooltip> : null}
-              </CircleMarker>
-            ) : (
-              <Marker key={i} position={dataToLatLng(map, p.x, p.y)} icon={iconFor(p.kind, p.night)}>
-                {p.level ? <Tooltip direction="top">{p.level}</Tooltip> : null}
-              </Marker>
-            ),
-          )}
+          <ZoomTierWatcher onTier={setTier} />
+          {markers.map((m, i) => (
+            <Marker key={i} position={m.pos} icon={iconFor(m)}>
+              {m.level ? <Tooltip direction="top">{m.level}</Tooltip> : null}
+            </Marker>
+          ))}
         </MapContainer>
         {(hasWild && hasBoss) || (hasNight && !allNight) ? (
           <div className="absolute bottom-2 left-2 z-[500] flex items-center gap-3 rounded bg-background/80 px-2 py-1 text-xs">

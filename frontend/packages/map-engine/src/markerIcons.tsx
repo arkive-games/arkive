@@ -128,6 +128,10 @@ export function createPinIcon(
         style={{
           width: `${iconSize}px`,
           height: `${iconSize}px`,
+          // The wrapper is a fixed 40px flex box; without this, content sized
+          // past 40px (iconScale > 1) gets flex-shrunk back on the main axis
+          // only, squashing the circle into an ellipse.
+          flexShrink: 0,
           borderRadius: "50%",
           overflow: "hidden",
           border: `1.5px solid ${ring}`,
@@ -158,6 +162,7 @@ export function createPinIcon(
         style={{
           width: `${iconSize}px`,
           height: `${iconSize}px`,
+          flexShrink: 0,
           objectFit: "contain",
           pointerEvents: "none",
           zIndex: 1000,
