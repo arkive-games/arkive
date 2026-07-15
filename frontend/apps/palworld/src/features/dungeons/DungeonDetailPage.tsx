@@ -36,7 +36,8 @@ type TabKey = (typeof TAB_ORDER)[number]
 
 /** Boss-room rewards as a full-width tabbed card: one tab per difficulty, the
  *  `bonus` tier riding in the Hard tab under its own subheading. Dungeons with
- *  a single tier group render no tab bar. Entries flow in CSS multi-columns. */
+ *  a single tier group render no tab bar. Entries stack full-width; each
+ *  expanded lottery spreads its items in multi-columns like the chest section. */
 function BossRewardsSection({ d, b }: { d: DungeonEntry; b: Bundles }) {
   const { t } = useTranslation()
   const groups = useMemo(() => {
@@ -89,7 +90,7 @@ function BossRewardsSection({ d, b }: { d: DungeonEntry; b: Bundles }) {
                 {t('dungeon.tier.bonus')}
               </div>
             ) : null}
-            <ul className="gap-x-4 md:columns-2 xl:columns-3">
+            <ul className="space-y-2">
               {tier.entries.map((entry, i) => (
                 <RewardEntryRow
                   key={i}

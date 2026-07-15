@@ -112,7 +112,8 @@ Detail-page loot layout rework:
   (Easy | Medium | Hard, button-tab idiom as on the quests list). The `Hard03`
   "bonus" tier folds into the Hard tab under a "Hard · bonus" subheading. Dungeons
   with a single tier group (the six Hard03-only ones) render no tab bar. Entries
-  flow in CSS multi-columns (`md:columns-2 xl:columns-3`, `break-inside-avoid`).
+  stack full-width; each expanded lottery spreads its items in CSS multi-columns,
+  matching the chest-loot section.
 - **Chest lotteries inside reward entries render expanded by default** (no
   `<details>`); egg/cage pal pools stay collapsible.
 - **Dedup:**

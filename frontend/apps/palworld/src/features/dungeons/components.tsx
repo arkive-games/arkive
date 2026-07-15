@@ -163,7 +163,7 @@ export function RewardEntryRow({
   } else if (entry.lottery && b.dungeons.file.lotteries[entry.lottery]) {
     detail = (
       <div className="mt-2">
-        <LotteryTable slots={b.dungeons.file.lotteries[entry.lottery]} b={b} />
+        <LotteryTable slots={b.dungeons.file.lotteries[entry.lottery]} b={b} columns />
       </div>
     )
   } else if (entry.eggPool && b.dungeons.file.eggPools[entry.eggPool]) {
@@ -200,9 +200,7 @@ export function RewardEntryRow({
   }
 
   return (
-    // mb + break-inside-avoid instead of parent space-y: the entries flow in
-    // CSS multi-columns on the detail page, where margins must stay with the card.
-    <li className="mb-2 break-inside-avoid rounded-md border border-border/60 bg-secondary/20 px-2.5 py-2">
+    <li className="rounded-md border border-border/60 bg-secondary/20 px-2.5 py-2">
       <div className="flex items-center gap-1.5">
         <ChanceBadge pct={share} />
         <span className="text-sm font-medium">{label}</span>
