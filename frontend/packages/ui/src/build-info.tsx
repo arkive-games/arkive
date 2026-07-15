@@ -7,6 +7,8 @@ export interface BuildInfoProps {
   commit: string
   /** Build time as epoch milliseconds (wire to a Vite `define` constant). */
   buildTime: string | number
+  /** When true (pass `import.meta.env.DEV`): commit shows "dev", time shows last page-load. */
+  dev?: boolean
   /** Repository link opened by the icon. Defaults to the monorepo. */
   repoUrl?: string
   /** Injectable labels so apps can localize; the package stays i18n-free. */
@@ -19,23 +21,27 @@ export interface BuildInfoProps {
   className?: string
 }
 
+function toISO(ms: number): string {
+  return new Date(ms).toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC")
+}
+
 /**
  * Top-bar build badge shared by every app: a GitHub icon linking to the repo,
  * with a hovercard showing the commit hash (linked to the commit page) and the
- * build time.
+ * build time in ISO 8601 format.
+ *
+ * Pass `dev={import.meta.env.DEV}` to show "dev" + last page-load time in dev mode.
  */
 function BuildInfo({
   commit,
   buildTime,
+  dev = false,
   repoUrl = "https://github.com/arkive-games/arkive",
   labels,
   className,
 }: BuildInfoProps) {
-  const shortCommit = commit.slice(0, 7)
-  const builtAt = new Date(Number(buildTime))
-  const builtAtText = Number.isNaN(builtAt.getTime())
-    ? String(buildTime)
-    : builtAt.toLocaleString()
+  const displayCommit = dev ? "dev" : commit.slice(0, 7)
+  const displayTime = dev ? toISO(Date.now()) : toISO(Number(buildTime))
 
   return (
     <HoverCard openDelay={100}>
@@ -58,17 +64,21 @@ function BuildInfo({
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           <dt className="text-muted-foreground">{labels?.commit ?? "Commit"}</dt>
           <dd>
-            <a
-              href={`${repoUrl.replace(/\/$/, "")}/commit/${commit}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono underline-offset-4 hover:underline"
-            >
-              {shortCommit}
-            </a>
+            {dev ? (
+              <span className="font-mono">{displayCommit}</span>
+            ) : (
+              <a
+                href={`${repoUrl.replace(/\/$/, "")}/commit/${commit}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono underline-offset-4 hover:underline"
+              >
+                {displayCommit}
+              </a>
+            )}
           </dd>
           <dt className="text-muted-foreground">{labels?.buildTime ?? "Built"}</dt>
-          <dd>{builtAtText}</dd>
+          <dd className="font-mono">{displayTime}</dd>
         </dl>
       </HoverCardContent>
     </HoverCard>

@@ -108,7 +108,7 @@ export default function TopNavbar() {
               </div>
             </PopoverContent>
           </Popover>
-          <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} />
+          <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} dev={import.meta.env.DEV} />
         </>
       }
     />

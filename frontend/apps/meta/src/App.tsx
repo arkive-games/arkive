@@ -23,7 +23,7 @@ export default function App() {
         rightExtras={
           <>
             <ThemeToggle labels={{ auto: t('theme.auto'), light: t('theme.light'), dark: t('theme.dark') }} />
-            <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} />
+            <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} dev={import.meta.env.DEV} />
           </>
         }
       />
