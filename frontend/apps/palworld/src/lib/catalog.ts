@@ -54,7 +54,8 @@ export interface ItemEntry {
   food?: FoodEffect
   equip?: EquipStats
   recipe?: Recipe
-  droppedBy?: string[]
+  /** Pals that drop this item; `isBoss` marks drops exclusive to the boss form. */
+  droppedBy?: { id: string; isBoss?: boolean }[]
   partnerFor?: string[]
   usedInItems?: string[]
   usedInBuildings?: string[]

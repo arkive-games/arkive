@@ -828,6 +828,9 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             partner["gear"] = gear
         if cid in farm_by_cid:
             partner["farm"] = farm_by_cid[cid]
+        # Boss-form kill drops (BOSS_<cid> rows in DT_PalDropItem): zero-rate
+        # slots are intentional overrides (base materials suppressed) — exclude.
+        boss_drops = [d for d in _drops(f"BOSS_{cid}", drop_rows) if d["rate"] > 0]
         pals.append({
             "id": cid,
             "zukanIndex": r["ZukanIndex"],
@@ -847,6 +850,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "activeSkills": _active_skills(cid, _learnset_for(cid, learnsets), waza_by_id),
             "passives": _passives_of(r),
             "drops": _drops(cid, drop_rows),
+            **({"bossDrops": boss_drops} if boss_drops else {}),
             "summonable": cid in summon_recipes,
             **({"summonMaterials": summon_recipes[cid]} if cid in summon_recipes else {}),
         })

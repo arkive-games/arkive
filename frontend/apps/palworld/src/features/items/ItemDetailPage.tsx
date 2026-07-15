@@ -194,12 +194,13 @@ export default function ItemDetailPage() {
                     <div className="mb-3">
                       <div className="mb-1.5 text-xs text-muted-foreground">{t('item.droppedBy')}</div>
                       <div className="flex flex-wrap gap-1.5">
-                        {item.droppedBy.map((pid) => (
+                        {item.droppedBy.map((d) => (
                           <PalLink
-                            key={pid}
-                            id={pid}
-                            name={b.pals.text[pid]?.name ?? pid}
-                            icon={b.pals.byId.get(pid)?.icon}
+                            key={d.id}
+                            id={d.id}
+                            name={b.pals.text[d.id]?.name ?? d.id}
+                            icon={b.pals.byId.get(d.id)?.icon}
+                            badge={d.isBoss ? t('item.bossDrop') : undefined}
                           />
                         ))}
                       </div>

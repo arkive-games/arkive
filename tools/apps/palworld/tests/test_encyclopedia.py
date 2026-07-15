@@ -54,6 +54,13 @@ def test_encyclopedia_integration(tmp_path):
     assert any(s["maxRange"] > 0 for s in anubis["activeSkills"])
     assert any(d["item"] == "Bone" for d in anubis["drops"])
 
+    # Boss-form kill drops (BOSS_<cid> rows) are split into `bossDrops`:
+    # present on pals with a boss variant, zero-rate override slots excluded,
+    # and never leaking into the base `drops` list.
+    with_boss = [p for p in pals if p.get("bossDrops")]
+    assert with_boss
+    assert all(d["rate"] > 0 for p in with_boss for d in p["bossDrops"])
+
     # Every Pal has a learnset and a localized partner-skill name.
     assert all(p["activeSkills"] for p in pals)
 

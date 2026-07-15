@@ -90,7 +90,26 @@ def test_tech_recipe_id_casing(tmp_path):
 
 
 @pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
-def test_illegal_items_imported_and_flagged(tmp_path):
+def test_dropped_by_boss_annotation(tmp_path):
+    """`droppedBy` is an annotated `{id, isBoss?}` list inverted from the pal
+    encyclopedia's `drops` + `bossDrops`. A pal that drops the item in its base
+    form counts as a normal drop (no flag) even if the boss form drops it too;
+    boss-only drops are flagged `isBoss`.
+    """
+    from palworld.encyclopedia import run_encyclopedia
+
+    data_out = tmp_path / "data"
+    res_out = RES if RES and RES.exists() else tmp_path / "res"
+    run_encyclopedia(RAW, data_out, res_out)  # catalog inverts pals.json
+    out = run_catalog(RAW, data_out, res_out)
+    by_id = {i["id"]: i for i in out["items"]}
+
+    # Base drop: Anubis drops Bone in its wild form — unflagged entry.
+    bone = {e["id"]: e for e in by_id["Bone"]["droppedBy"]}
+    assert "Anubis" in bone and "isBoss" not in bone["Anubis"]
+
+    # Boss-only drops exist somewhere (rare schematics etc.) and are flagged.
+    assert any(e.get("isBoss") for i in out["items"] for e in i.get("droppedBy", []))
     """Every named item is imported, including bLegalInGame=False ones. Dead
     data (deprecated dupes, debug rows) is stamped `illegal: True` so the
     frontend drops it, but effigies and main-quest Key Spheres are real

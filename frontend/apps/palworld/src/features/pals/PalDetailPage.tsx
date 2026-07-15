@@ -621,6 +621,24 @@ export default function PalDetailPage() {
               </PalSection>
             ) : null}
 
+            {pal.bossDrops?.length ? (
+              <PalSection title={t('pal.section.bossDrops')}>
+                <div className="divide-y divide-border/60">
+                  {pal.bossDrops.map((d) => (
+                    <DropRow
+                      key={d.item}
+                      id={d.item}
+                      name={bundle.items[d.item] ?? d.item}
+                      icon={bundle.itemIcon[d.item]}
+                      rate={d.rate}
+                      min={d.min}
+                      max={d.max}
+                    />
+                  ))}
+                </div>
+              </PalSection>
+            ) : null}
+
             {breeding ? (
               <BreedingLinks pal={pal} data={breeding.data} names={breeding.names} />
             ) : null}

@@ -16,7 +16,8 @@ entry == recipe row-key whose Product_Id is the crafted item):
   * item.recipe          — the recipe that crafts it (materials → item ids;
                            recipe.craftedAt → production building ids, from the
                            buildings' Blueprint converter params)
-  * item.droppedBy       — pals that drop it        (inverted from pals.json)
+  * item.droppedBy       — pals that drop it, [{id, isBoss?}] (inverted from
+                           pals.json drops + bossDrops; boss-only drops flagged)
   * item.partnerFor      — pals whose partner skill it unlocks (from pals.json)
   * item.usedInItems     — recipes that consume it  (→ product item ids)
   * item.usedInBuildings — buildings that consume it (→ building ids)
@@ -360,6 +361,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     used_in_items: dict[str, set] = defaultdict(set)
     used_in_buildings: dict[str, set] = defaultdict(set)
     dropped_by: dict[str, set] = defaultdict(set)
+    dropped_by_boss: dict[str, set] = defaultdict(set)
     partner_for: dict[str, set] = defaultdict(set)
     item_unlock_tech: dict[str, set] = defaultdict(set)
     bld_unlock_tech: dict[str, set] = defaultdict(set)
@@ -400,6 +402,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             for d in p.get("drops", []):
                 if d.get("item") in item_id_set:
                     dropped_by[d["item"]].add(p["id"])
+            for d in p.get("bossDrops", []):
+                if d.get("item") in item_id_set:
+                    dropped_by_boss[d["item"]].add(p["id"])
             ui = (p.get("partnerSkill") or {}).get("unlockItem")
             if ui in item_id_set:
                 partner_for[ui].add(p["id"])
@@ -498,8 +503,14 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             if stations:
                 recipe["craftedAt"] = stations
             entry["recipe"] = recipe
-        if iid in dropped_by:
-            entry["droppedBy"] = sorted(dropped_by[iid])
+        if iid in dropped_by or iid in dropped_by_boss:
+            # One annotated list; a pal that drops the item in both forms
+            # counts as a normal drop (isBoss omitted).
+            normal = dropped_by[iid]
+            entry["droppedBy"] = [
+                {"id": pid} if pid in normal else {"id": pid, "isBoss": True}
+                for pid in sorted(normal | dropped_by_boss[iid])
+            ]
         if iid in partner_for:
             entry["partnerFor"] = sorted(partner_for[iid])
         if iid in used_in_items:

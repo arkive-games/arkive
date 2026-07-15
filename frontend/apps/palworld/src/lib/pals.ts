@@ -121,6 +121,9 @@ export interface PalEntry {
   activeSkills: ActiveSkill[]
   passives: string[]
   drops: Drop[]
+  /** Kill drops of the boss form (BOSS_<id> row in DT_PalDropItem); absent when
+   *  the pal has no boss variant with non-zero drop rates. */
+  bossDrops?: Drop[]
   /** True when the pal is obtained at the Summoning Altar (DT_PalRaidBoss). */
   summonable: boolean
   /** Materials + counts to craft this pal's summon item (only when summonable). */

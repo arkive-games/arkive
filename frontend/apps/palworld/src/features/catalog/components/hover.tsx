@@ -166,12 +166,13 @@ export function ItemSummary({ item }: { item: ItemEntry }) {
         <div>
           <div className="mb-1 text-xs text-muted-foreground">{t('item.droppedBy')}</div>
           <div className="flex flex-wrap items-center gap-1.5">
-            {item.droppedBy.slice(0, DROPPED_BY_MAX).map((pid) => (
+            {item.droppedBy.slice(0, DROPPED_BY_MAX).map((d) => (
               <PalLink
-                key={pid}
-                id={pid}
-                name={pals.text[pid]?.name ?? pid}
-                icon={pals.byId.get(pid)?.icon}
+                key={d.id}
+                id={d.id}
+                name={pals.text[d.id]?.name ?? d.id}
+                icon={pals.byId.get(d.id)?.icon}
+                badge={d.isBoss ? t('item.bossDrop') : undefined}
               />
             ))}
             {item.droppedBy.length > DROPPED_BY_MAX ? (
@@ -417,7 +418,7 @@ export function BuildingLink({ id, name, icon }: { id: string; name: string; ico
 }
 
 /** Cross-link chip to a pal detail page (icon + name) with a pal hover card. */
-export function PalLink({ id, name, icon }: { id: string; name: string; icon?: string }) {
+export function PalLink({ id, name, icon, badge }: { id: string; name: string; icon?: string; badge?: string }) {
   return (
     <ChipHover kind="pal" id={id}>
       <Link to="/pals/$id" params={{ id }} className={CHIP}>
@@ -425,6 +426,11 @@ export function PalLink({ id, name, icon }: { id: string; name: string; icon?: s
           <img src={palIconUrl(icon)} alt="" loading="lazy" className="size-5 shrink-0 object-contain" />
         ) : null}
         {name}
+        {badge ? (
+          <span className="rounded bg-amber-500/15 px-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+            {badge}
+          </span>
+        ) : null}
       </Link>
     </ChipHover>
   )
