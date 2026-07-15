@@ -64,6 +64,12 @@ from pathlib import Path
 
 from PIL import Image
 
+from .blueprint_sources import (
+    AREA_TEXT_IDS,
+    collect_sources,
+    dungeon_lottery_items,
+    recycler_output_items,
+)
 from .encyclopedia import _all_tags, _read_text, _strip, _text_by_lang
 from .env import require_dir
 from .maps.common import read_rows, round2, write_json
@@ -287,6 +293,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     tech_desc_by_lang = _text_by_lang(raw, "DataTable/Text/DT_TechnologyDescText_Common.json", "")
     ui_by_lang = _text_by_lang(raw, "DataTable/Text/DT_UI_Common_Text_Common.json", "")
     lab_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_LabResearchText.json", "")
+    # world-map region names: the game-localized labels for blueprint-source
+    # areas (Sakurajima / Feybreak / Sunreach / World Tree / the oil rigs).
+    wmap_by_lang = _text_by_lang(raw, "DataTable/Text/DT_WorldMap_Common_Text_Common.json", "")
     # category labels: item TypeA -> COMMON_ITEMTYPE_A_<X> (in the UI table),
     # building TypeA -> CATEGORY_TYPE_A_<X> (in the build-object category table).
     item_type_by_lang = _text_by_lang(raw, "DataTable/Text/DT_UI_Common_Text_Common.json", "COMMON_ITEMTYPE_A_")
@@ -356,6 +365,14 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         pid = r.get("Product_Id")
         if pid and pid not in _NONE and pid not in recipe_by_product:
             recipe_by_product[pid] = r
+
+    # inverse of recipe.unlockItemId: gate item (a blueprint, usually) -> the
+    # items whose recipes it unlocks.
+    unlocks_craft: dict[str, set] = defaultdict(set)
+    for r in recipe_rows.values():
+        gate, pid = r.get("UnlockItemID"), r.get("Product_Id")
+        if gate not in _NONE and gate in item_id_set and pid in item_id_set:
+            unlocks_craft[gate].add(pid)
 
     # --- cross-reference indices --------------------------------------------
     used_in_items: dict[str, set] = defaultdict(set)
@@ -461,6 +478,16 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     # --- assemble item entries ----------------------------------------------
     # crafting stations per item (from building Blueprint converter params)
     craft_specs = _craft_specs(raw, building_id_set)
+    # blueprint acquisition channels (chests / fishing / camps / shrines /
+    # merchants / arena, see blueprint_sources.py) + the acquisition sets the
+    # noSource stamp additionally checks. Both sibling datasets are emitted by
+    # earlier stages; without them the stamp would produce false positives, so
+    # it is skipped (with a warning) when either is missing.
+    bp_sources = collect_sources(raw, data_out, item_rows, item_id_set)
+    dungeon_items = dungeon_lottery_items(data_out)
+    recycler_items = recycler_output_items(data_out)
+    if dungeon_items is None or recycler_items is None:
+        print("catalog: WARNING dungeons.json/recycler.json missing — noSource not stamped")
     items = []
     for iid in item_ids:
         r = item_rows[iid]
@@ -511,6 +538,23 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
                 {"id": pid} if pid in normal else {"id": pid, "isBoss": True}
                 for pid in sorted(normal | dropped_by_boss[iid])
             ]
+        if iid in unlocks_craft:
+            entry["unlocksCraft"] = sorted(unlocks_craft[iid])
+        if iid in bp_sources:
+            entry["sources"] = bp_sources[iid]
+        # Blueprint-family items reachable through NO channel at all: no field
+        # lottery / shrine / merchant / arena source, no pal drop, no dungeon
+        # chest or boss lottery, not a relic-recycler output.
+        if (
+            iid.startswith("Blueprint_")
+            and dungeon_items is not None
+            and recycler_items is not None
+            and iid not in bp_sources
+            and "droppedBy" not in entry
+            and iid not in dungeon_items
+            and iid not in recycler_items
+        ):
+            entry["noSource"] = True
         if iid in partner_for:
             entry["partnerFor"] = sorted(partner_for[iid])
         if iid in used_in_items:
@@ -686,6 +730,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     ja_tname, ja_tdesc = tech_name_by_lang[ja], tech_desc_by_lang[ja]
     ja_ui, ja_lname = ui_by_lang[ja], lab_name_by_lang[ja]
     ja_itype, ja_btype = item_type_by_lang[ja], bld_type_by_lang[ja]
+    ja_wmap = wmap_by_lang[ja]
 
     # category typeA values actually present in the emitted datasets, in the
     # game's own order: the COMMON_ITEMTYPE_A_* / CATEGORY_TYPE_A_* text-table
@@ -782,6 +827,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
 
         itype, btype = item_type_by_lang[tag], bld_type_by_lang[tag]
         butype = bld_ui_type_by_lang[tag]
+        wmap = wmap_by_lang[tag]
         labels = {
             "item": {k: _ph(itype.get(k)) or _ph(ja_itype.get(k)) or k for k in item_types},
             "building": {k: _ph(btype.get(k)) or _ph(ja_btype.get(k)) or k for k in bld_types},
@@ -789,6 +835,12 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             # build-menu UI-category row (CATEGORY_TYPE_UI_Electricity = 电力).
             "energy": {
                 e: _ph(butype.get(_ENERGY_TEXT.get(e, e))) or e for e in energy_types
+            },
+            # blueprint-source areas with a game-localized world-map name;
+            # areas absent here (mainland biomes) are app-side UI strings.
+            "area": {
+                k: _ph(wmap.get(tid)) or _ph(ja_wmap.get(tid)) or k
+                for k, tid in AREA_TEXT_IDS.items()
             },
         }
         write_json(data_out / "locales" / tag / "labels.json", labels)
