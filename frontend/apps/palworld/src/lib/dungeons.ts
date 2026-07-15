@@ -1,4 +1,4 @@
-import { DATA_BASE } from './urls'
+import { dataUrl } from './urls'
 
 // --- data shapes (mirror dungeons.json, emitted by tools/palworld/dungeons.py) --
 // Everything keys off a dungeon SpawnAreaId (`Grass001` … `Skyland001`), the
@@ -93,8 +93,8 @@ const cache = new Map<string, Promise<DungeonsBundle>>()
 
 async function fetchDungeons(lng: string): Promise<DungeonsBundle> {
   const [file, text] = await Promise.all([
-    j<DungeonsFile>(`${DATA_BASE}/dungeons.json`),
-    j<DungeonText>(`${DATA_BASE}/locales/${lng}/dungeons.json`),
+    j<DungeonsFile>(dataUrl(`dungeons.json`)),
+    j<DungeonText>(dataUrl(`locales/${lng}/dungeons.json`)),
   ])
   return { file, byId: new Map(file.dungeons.map((d) => [d.id, d])), text }
 }

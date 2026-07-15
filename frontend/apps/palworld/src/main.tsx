@@ -31,6 +31,7 @@ import ActiveSkillsPage from './features/pals/ActiveSkillsPage'
 import ActiveSkillDetailPage from './features/pals/ActiveSkillDetailPage'
 import PartnerSkillsPage from './features/pals/PartnerSkillsPage'
 import { BottomTabBar } from './components/BottomTabBar'
+import { initDataVersion } from './lib/urls'
 
 const THEME_KEY = 'palworld.theme'
 const themeStorage: ThemeStorage = {
@@ -212,10 +213,15 @@ declare module '@tanstack/react-router' {
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ThemeProvider defaultTheme="auto" storage={themeStorage}>
-      <RouterProvider router={router} />
-    </ThemeProvider>
-  </StrictMode>,
-)
+// Resolve the data-artifact version before first render so every data fetch
+// carries its ?v= cache-buster (initDataVersion never rejects and times out
+// internally, so a slow/unversioned data host can't block the app).
+void initDataVersion().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ThemeProvider defaultTheme="auto" storage={themeStorage}>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </StrictMode>,
+  )
+})

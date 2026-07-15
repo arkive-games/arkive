@@ -45,6 +45,24 @@ test('switching language to ko-KR localizes UI and data labels', async ({ page }
   await expect(page.getByText('팰 출현 지점').first()).toBeVisible({ timeout: 10_000 })
 })
 
+test('data fetches carry the artifact-version cache-buster', async ({ page }) => {
+  // version.json (stamped by tools) is fetched first; every other data URL
+  // must then carry ?v=<version> so long-cached files bust on data deploys.
+  const dataRequests: string[] = []
+  page.on('request', (r) => {
+    const url = new URL(r.url())
+    if (url.pathname.startsWith('/data/') && url.pathname !== '/data/version.json') {
+      dataRequests.push(url.pathname + url.search)
+    }
+  })
+  await page.goto('/')
+  await expect(
+    page.locator('.leaflet-marker-pane .leaflet-marker-icon img[src*="T_icon_compass_FTtower"]').first(),
+  ).toBeVisible({ timeout: 15_000 })
+  expect(dataRequests.length).toBeGreaterThan(0)
+  for (const u of dataRequests) expect(u).toMatch(/\?v=[0-9a-f]{12}$/)
+})
+
 test('map switch swaps tile URLs', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('.leaflet-container')).toBeVisible()

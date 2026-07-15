@@ -1,4 +1,4 @@
-import { DATA_BASE } from './urls'
+import { dataUrl } from './urls'
 import type { LotteryItem, LotterySlot } from './dungeons'
 
 // --- data shapes (mirror recycler.json, emitted by tools/palworld/recycler.py) --
@@ -28,7 +28,7 @@ const cache = new Map<string, Promise<RecyclerFile>>()
 export function loadRecycler(): Promise<RecyclerFile> {
   let p = cache.get('file')
   if (!p) {
-    p = fetch(`${DATA_BASE}/recycler.json`).then((r) => {
+    p = fetch(dataUrl(`recycler.json`)).then((r) => {
       if (!r.ok) throw new Error(`recycler.json: ${r.status}`)
       return r.json() as Promise<RecyclerFile>
     })

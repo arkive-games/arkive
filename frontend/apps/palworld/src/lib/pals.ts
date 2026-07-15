@@ -1,5 +1,5 @@
 import type { GameMapMeta } from '@gamemap/data-contract'
-import { DATA_BASE } from './urls'
+import { dataUrl } from './urls'
 
 // --- enums (kept in sync with tools/palworld/encyclopedia.py) ----------------
 export type Element =
@@ -194,18 +194,18 @@ const cache = new Map<string, Promise<PalsBundle>>()
 
 async function fetchBundle(lng: string): Promise<PalsBundle> {
   const [palsFile, passivesFile, itemsFile, text, passiveText, skills, itemsLoc, enums, partnerEffects, partnerTargets] = await Promise.all([
-    j<{ pals: PalEntry[]; filters: PalFacets }>(`${DATA_BASE}/pals.json`),
-    j<{ passives: Passive[] }>(`${DATA_BASE}/passives.json`),
-    j<{ items: { id: string; icon?: string }[] }>(`${DATA_BASE}/items.json`),
-    j<Record<string, PalText>>(`${DATA_BASE}/locales/${lng}/pals.json`),
-    j<Record<string, SkillText>>(`${DATA_BASE}/locales/${lng}/passives.json`),
-    j<Record<string, SkillText>>(`${DATA_BASE}/locales/${lng}/skills.json`),
+    j<{ pals: PalEntry[]; filters: PalFacets }>(dataUrl(`pals.json`)),
+    j<{ passives: Passive[] }>(dataUrl(`passives.json`)),
+    j<{ items: { id: string; icon?: string }[] }>(dataUrl(`items.json`)),
+    j<Record<string, PalText>>(dataUrl(`locales/${lng}/pals.json`)),
+    j<Record<string, SkillText>>(dataUrl(`locales/${lng}/passives.json`)),
+    j<Record<string, SkillText>>(dataUrl(`locales/${lng}/skills.json`)),
     // Item names come from catalog.py's file, shape {id: {name, description?}};
     // we flatten it to {id: name} below since pal views only need the name.
-    j<Record<string, ItemText>>(`${DATA_BASE}/locales/${lng}/items.json`),
-    j<EnumsLocale>(`${DATA_BASE}/locales/${lng}/enums.json`),
-    j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerEffects.json`),
-    j<Record<string, string>>(`${DATA_BASE}/locales/${lng}/partnerTargets.json`),
+    j<Record<string, ItemText>>(dataUrl(`locales/${lng}/items.json`)),
+    j<EnumsLocale>(dataUrl(`locales/${lng}/enums.json`)),
+    j<Record<string, string>>(dataUrl(`locales/${lng}/partnerEffects.json`)),
+    j<Record<string, string>>(dataUrl(`locales/${lng}/partnerTargets.json`)),
   ])
   const itemIcon: Record<string, string> = {}
   const itemOrder: Record<string, number> = {}
@@ -277,8 +277,8 @@ interface SpawnFile {
  */
 export async function loadPalSpawns(palId: string): Promise<PalSpawns[]> {
   const [{ maps }, file] = await Promise.all([
-    j<{ maps: GameMapMeta[] }>(`${DATA_BASE}/maps.json`),
-    j<SpawnFile>(`${DATA_BASE}/spawns/${palId}.json`).catch(() => null),
+    j<{ maps: GameMapMeta[] }>(dataUrl(`maps.json`)),
+    j<SpawnFile>(dataUrl(`spawns/${palId}.json`)).catch(() => null),
   ])
   if (!file) return []
   const out: PalSpawns[] = []

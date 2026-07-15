@@ -1,4 +1,4 @@
-import { DATA_BASE, RES_BASE } from './urls'
+import { dataUrl, RES_BASE } from './urls'
 
 // --- data shapes (mirror items.json / buildings.json / technology.json) -------
 // Emitted by tools/palworld/catalog.py. Ids share one space: item id ==
@@ -226,9 +226,9 @@ const questsCache = new Map<string, Promise<QuestsBundle>>()
 
 async function fetchItems(lng: string): Promise<ItemsBundle> {
   const [file, text, labels] = await Promise.all([
-    j<{ items: ItemEntry[] }>(`${DATA_BASE}/items.json`),
-    j<Record<string, CatalogText>>(`${DATA_BASE}/locales/${lng}/items.json`),
-    j<LabelsFile>(`${DATA_BASE}/locales/${lng}/labels.json`),
+    j<{ items: ItemEntry[] }>(dataUrl(`items.json`)),
+    j<Record<string, CatalogText>>(dataUrl(`locales/${lng}/items.json`)),
+    j<LabelsFile>(dataUrl(`locales/${lng}/labels.json`)),
   ])
   // droppedBy was `string[]` before boss drops were split out; tolerate stale
   // deployed data by lifting bare ids into unflagged entries.
@@ -250,9 +250,9 @@ async function fetchItems(lng: string): Promise<ItemsBundle> {
 
 async function fetchBuildings(lng: string): Promise<BuildingsBundle> {
   const [file, text, labels] = await Promise.all([
-    j<{ buildings: BuildingEntry[] }>(`${DATA_BASE}/buildings.json`),
-    j<Record<string, CatalogText>>(`${DATA_BASE}/locales/${lng}/buildings.json`),
-    j<LabelsFile>(`${DATA_BASE}/locales/${lng}/labels.json`),
+    j<{ buildings: BuildingEntry[] }>(dataUrl(`buildings.json`)),
+    j<Record<string, CatalogText>>(dataUrl(`locales/${lng}/buildings.json`)),
+    j<LabelsFile>(dataUrl(`locales/${lng}/labels.json`)),
   ])
   return {
     buildings: file.buildings,
@@ -265,8 +265,8 @@ async function fetchBuildings(lng: string): Promise<BuildingsBundle> {
 
 async function fetchTech(lng: string): Promise<TechBundle> {
   const [file, text] = await Promise.all([
-    j<{ techs: TechEntry[] }>(`${DATA_BASE}/technology.json`),
-    j<Record<string, TechText>>(`${DATA_BASE}/locales/${lng}/technology.json`),
+    j<{ techs: TechEntry[] }>(dataUrl(`technology.json`)),
+    j<Record<string, TechText>>(dataUrl(`locales/${lng}/technology.json`)),
   ])
   return { techs: file.techs, byId: new Map(file.techs.map((t) => [t.id, t])), text }
 }
@@ -303,8 +303,8 @@ export function loadTech(lng: string): Promise<TechBundle> {
 
 async function fetchQuests(lng: string): Promise<QuestsBundle> {
   const [file, text] = await Promise.all([
-    j<{ quests: QuestEntry[] }>(`${DATA_BASE}/quests.json`),
-    j<Record<string, QuestText>>(`${DATA_BASE}/locales/${lng}/quests.json`),
+    j<{ quests: QuestEntry[] }>(dataUrl(`quests.json`)),
+    j<Record<string, QuestText>>(dataUrl(`locales/${lng}/quests.json`)),
   ])
   return { quests: file.quests, byId: new Map(file.quests.map((q) => [q.id, q])), text }
 }

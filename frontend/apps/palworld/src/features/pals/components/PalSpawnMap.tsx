@@ -9,7 +9,7 @@ import { GameMapTiles, createPinIcon, dataToLatLng } from '@gamemap/map-engine'
 import { cn } from '@gamemap/ui'
 import { palworldAssets, palIconUrl } from '../../../lib/assets'
 import { loadPalSpawns, type PalSpawns, type SpawnKind, type SpawnPoint } from '../../../lib/pals'
-import { DATA_BASE } from '../../../lib/urls'
+import { dataUrl } from '../../../lib/urls'
 
 type MapsLocale = Record<string, { name: string; shortName?: string }>
 
@@ -17,7 +17,7 @@ function useMapLabels(lng: string): Record<string, string> {
   const [labels, setLabels] = useState<Record<string, string>>({})
   useEffect(() => {
     let cancelled = false
-    fetch(`${DATA_BASE}/locales/${lng}/maps.json`)
+    fetch(dataUrl(`locales/${lng}/maps.json`))
       .then((r) => (r.ok ? (r.json() as Promise<MapsLocale>) : ({} as MapsLocale)))
       .then((m) => {
         if (cancelled) return

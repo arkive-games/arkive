@@ -1,5 +1,5 @@
 import type { GameMapMeta, MarkerPinVariant, MarkerTypeSubtype } from '@gamemap/data-contract'
-import { DATA_BASE } from './urls'
+import { dataUrl } from './urls'
 
 const j = async <T>(url: string): Promise<T> => {
   const r = await fetch(url)
@@ -55,10 +55,10 @@ interface TypesFile {
 
 export async function loadStatic(lng: string) {
   const [mapsFile, typesFile, mapsL10n, typesL10n] = await Promise.all([
-    j<{ maps: GameMapMeta[] }>(`${DATA_BASE}/maps.json`),
-    j<TypesFile>(`${DATA_BASE}/types.json`),
-    j<MapsLocale>(`${DATA_BASE}/locales/${lng}/maps.json`),
-    j<TypesLocale>(`${DATA_BASE}/locales/${lng}/types.json`),
+    j<{ maps: GameMapMeta[] }>(dataUrl(`maps.json`)),
+    j<TypesFile>(dataUrl(`types.json`)),
+    j<MapsLocale>(dataUrl(`locales/${lng}/maps.json`)),
+    j<TypesLocale>(dataUrl(`locales/${lng}/types.json`)),
   ])
   const types: Taxonomy = {
     categories: typesFile.categories.map((c) => ({ id: c.id })),
@@ -76,8 +76,8 @@ export async function loadStatic(lng: string) {
 
 export async function loadMarkers(mapId: string, lng: string) {
   const [markersFile, l10n] = await Promise.all([
-    j<{ markers: MarkerRow[] }>(`${DATA_BASE}/markers/${mapId}.json`),
-    j<MarkerLocale>(`${DATA_BASE}/locales/${lng}/markers/${mapId}.json`),
+    j<{ markers: MarkerRow[] }>(dataUrl(`markers/${mapId}.json`)),
+    j<MarkerLocale>(dataUrl(`locales/${lng}/markers/${mapId}.json`)),
   ])
   return { markers: markersFile.markers, l10n }
 }

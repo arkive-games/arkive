@@ -1,4 +1,4 @@
-import { DATA_BASE } from './urls'
+import { dataUrl } from './urls'
 
 export type Gender = 'M' | 'F'
 
@@ -45,8 +45,8 @@ const j = async <T>(url: string): Promise<T> => {
 
 export async function loadBreeding(lng: string): Promise<{ data: BreedingData; names: NameMap }> {
   const [data, names] = await Promise.all([
-    j<BreedingData>(`${DATA_BASE}/breeding.json`),
-    j<NameMap>(`${DATA_BASE}/locales/${lng}/breeding.json`),
+    j<BreedingData>(dataUrl(`breeding.json`)),
+    j<NameMap>(dataUrl(`locales/${lng}/breeding.json`)),
   ])
   return { data, names }
 }
