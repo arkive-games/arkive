@@ -60,6 +60,8 @@ export interface DungeonStrings {
   /** Prev/next dungeon header links (aria-labels). */
   prevDungeon: string
   nextDungeon: string
+  /** Boss-reward chest that reuses the interior chest lottery (dedup line). */
+  sameAsChest: string
 }
 
 export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
@@ -91,6 +93,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'View on full map',
     prevDungeon: 'Previous dungeon',
     nextDungeon: 'Next dungeon',
+    sameAsChest: 'Same items as the dungeon chest loot',
   },
   'de-DE': {
     title: 'Dungeons',
@@ -120,6 +123,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Auf der Gesamtkarte ansehen',
     prevDungeon: 'Vorheriger Dungeon',
     nextDungeon: 'Nächster Dungeon',
+    sameAsChest: 'Gleiche Gegenstände wie die Truhenbeute',
   },
   'es-ES': {
     title: 'Mazmorras',
@@ -149,6 +153,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Ver en el mapa completo',
     prevDungeon: 'Mazmorra anterior',
     nextDungeon: 'Mazmorra siguiente',
+    sameAsChest: 'Los mismos objetos que el botín de cofres',
   },
   'es-MX': {
     title: 'Mazmorras',
@@ -178,6 +183,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Ver en el mapa completo',
     prevDungeon: 'Mazmorra anterior',
     nextDungeon: 'Mazmorra siguiente',
+    sameAsChest: 'Los mismos objetos que el botín de cofres',
   },
   'fr-FR': {
     title: 'Donjons',
@@ -207,6 +213,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Voir sur la carte complète',
     prevDungeon: 'Donjon précédent',
     nextDungeon: 'Donjon suivant',
+    sameAsChest: 'Mêmes objets que le butin des coffres',
   },
   'id-ID': {
     title: 'Dungeon',
@@ -236,6 +243,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Lihat di peta penuh',
     prevDungeon: 'Dungeon sebelumnya',
     nextDungeon: 'Dungeon berikutnya',
+    sameAsChest: 'Item yang sama dengan isi peti dungeon',
   },
   'it-IT': {
     title: 'Dungeon',
@@ -265,6 +273,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Vedi sulla mappa completa',
     prevDungeon: 'Dungeon precedente',
     nextDungeon: 'Dungeon successivo',
+    sameAsChest: 'Stessi oggetti del bottino dei forzieri',
   },
   'ja-JP': {
     title: 'ダンジョン',
@@ -294,6 +303,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: '全体マップで見る',
     prevDungeon: '前のダンジョン',
     nextDungeon: '次のダンジョン',
+    sameAsChest: '宝箱の中身と同じアイテム',
   },
   'ko-KR': {
     title: '던전',
@@ -323,6 +333,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: '전체 지도에서 보기',
     prevDungeon: '이전 던전',
     nextDungeon: '다음 던전',
+    sameAsChest: '상자 전리품과 동일한 아이템',
   },
   'pl-PL': {
     title: 'Lochy',
@@ -352,6 +363,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Zobacz na pełnej mapie',
     prevDungeon: 'Poprzedni loch',
     nextDungeon: 'Następny loch',
+    sameAsChest: 'Te same przedmioty co łup ze skrzyń',
   },
   'pt-BR': {
     title: 'Masmorras',
@@ -381,6 +393,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Ver no mapa completo',
     prevDungeon: 'Masmorra anterior',
     nextDungeon: 'Próxima masmorra',
+    sameAsChest: 'Os mesmos itens do saque dos baús',
   },
   'ru-RU': {
     title: 'Подземелья',
@@ -410,6 +423,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Показать на полной карте',
     prevDungeon: 'Предыдущее подземелье',
     nextDungeon: 'Следующее подземелье',
+    sameAsChest: 'Те же предметы, что и в добыче из сундуков',
   },
   'th-TH': {
     title: 'ดันเจี้ยน',
@@ -439,6 +453,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'ดูบนแผนที่เต็ม',
     prevDungeon: 'ดันเจี้ยนก่อนหน้า',
     nextDungeon: 'ดันเจี้ยนถัดไป',
+    sameAsChest: 'ไอเทมเดียวกับของในหีบสมบัติ',
   },
   'tr-TR': {
     title: 'Zindanlar',
@@ -468,6 +483,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Tam haritada gör',
     prevDungeon: 'Önceki zindan',
     nextDungeon: 'Sonraki zindan',
+    sameAsChest: 'Sandık ganimetiyle aynı eşyalar',
   },
   'vi-VN': {
     title: 'Hầm ngục',
@@ -497,6 +513,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: 'Xem trên bản đồ đầy đủ',
     prevDungeon: 'Hầm ngục trước',
     nextDungeon: 'Hầm ngục sau',
+    sameAsChest: 'Cùng vật phẩm với chiến lợi phẩm rương',
   },
   'zh-CN': {
     title: '地下城',
@@ -526,6 +543,7 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: '在完整地图中查看',
     prevDungeon: '上一个地下城',
     nextDungeon: '下一个地下城',
+    sameAsChest: '与宝箱掉落相同的物品',
   },
   'zh-TW': {
     title: '地下城',
@@ -555,5 +573,6 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     viewOnMap: '在完整地圖中檢視',
     prevDungeon: '上一個地下城',
     nextDungeon: '下一個地下城',
+    sameAsChest: '與寶箱掉落相同的物品',
   },
 }

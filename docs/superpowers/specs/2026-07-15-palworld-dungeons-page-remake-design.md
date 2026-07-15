@@ -104,6 +104,27 @@ New `e2e/dungeons.spec.ts`:
 - `/dungeons?d=Grass001` redirects to `/dungeons/Grass001`;
 - item detail page's dungeon chip navigates to the dungeon detail page.
 
+## Iteration 2 (2026-07-15, user feedback)
+
+Detail-page loot layout rework:
+
+- **Boss-room rewards** become a full-width section with difficulty **tabs**
+  (Easy | Medium | Hard, button-tab idiom as on the quests list). The `Hard03`
+  "bonus" tier folds into the Hard tab under a "Hard · bonus" subheading. Dungeons
+  with a single tier group (the six Hard03-only ones) render no tab bar. Entries
+  flow in CSS multi-columns (`md:columns-2 xl:columns-3`, `break-inside-avoid`).
+- **Chest lotteries inside reward entries render expanded by default** (no
+  `<details>`); egg/cage pal pools stay collapsible.
+- **Dedup:**
+  - A boss-reward chest whose lottery is the dungeon's interior chest lottery
+    (`chests.normal` — reused in Easy/Medium/Hard by six dungeons) renders a
+    one-line "Same items as the dungeon chest loot" reference instead of
+    repeating the table (new `sameAsChest` string).
+  - The probability footnote (`lootNote`) moves out of `LotteryTable` and renders
+    once per section instead of under every table.
+- **Chest loot / Technology chest** sections go full width; lottery item lists
+  flow in CSS multi-columns (`sm:columns-2 xl:columns-3`).
+
 ## Trade-offs
 
 - The `?d=` redirect keeps old links alive at the cost of one extra route hop.
