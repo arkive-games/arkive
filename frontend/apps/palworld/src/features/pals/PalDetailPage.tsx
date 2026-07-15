@@ -81,42 +81,50 @@ function countRange(min: number, max: number): string {
 function RanchProduce({ farm, bundle }: { farm: FarmItem[][]; bundle: PalsBundle }) {
   const { t } = useTranslation()
   if (!farm.length) return null
+  // Split into two side-by-side tables of 5 ranks (1–5 | 6–10) on desktop;
+  // they stack back into one column on narrow screens.
+  const chunks: { start: number; pools: FarmItem[][] }[] = []
+  for (let i = 0; i < farm.length; i += 5) chunks.push({ start: i, pools: farm.slice(i, i + 5) })
   return (
     <div className="mt-3">
-      <div className="mb-1 text-xs font-medium text-muted-foreground">{t('partner.ranch')}</div>
-      <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full border-collapse text-xs">
-          <thead className="bg-secondary/50 text-left text-muted-foreground">
-            <tr>
-              <th className="w-px whitespace-nowrap px-2 py-1 font-medium">{t('pal.lv')}</th>
-              <th className="px-2 py-1 font-medium">{t('pal.section.drops')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {farm.map((pool, i) => {
-              const total = pool.reduce((s, e) => s + e.weight, 0) || 1
-              const multi = pool.length > 1
-              return (
-                <tr key={i} className="border-t border-border/60 align-top">
-                  <td className="whitespace-nowrap px-2 py-1 tabular-nums text-muted-foreground">{i + 1}</td>
-                  <td className="px-2 py-1">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      {pool.map((e, j) => (
-                        <span key={`${e.item}-${j}`} className="inline-flex items-center gap-1">
-                          <ItemLink id={e.item} name={bundle.items[e.item] ?? e.item} icon={bundle.itemIcon[e.item]} />
-                          <span className="tabular-nums text-muted-foreground">
-                            ×{countRange(e.min, e.max)}
-                            {multi ? ` (${Math.round((e.weight / total) * 100)}%)` : ''}
+      <div className="mb-1 text-sm font-medium">{t('partner.ranch')}</div>
+      <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
+        {chunks.map(({ start, pools }) => (
+          <table key={start} className="h-fit w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-muted-foreground">
+                <th className="w-px whitespace-nowrap pb-1 pr-2 text-center font-medium">{t('pal.lv')}</th>
+                <th className="w-full pb-1 font-medium">{t('pal.section.drops')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pools.map((pool, i) => {
+                const total = pool.reduce((s, e) => s + e.weight, 0) || 1
+                const multi = pool.length > 1
+                return (
+                  <tr key={start + i} className="border-t border-border/60">
+                    <td className="px-1 pr-2 text-center align-middle tabular-nums text-muted-foreground">
+                      {start + i + 1}
+                    </td>
+                    <td className="py-2">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        {pool.map((e, j) => (
+                          <span key={`${e.item}-${j}`} className="inline-flex items-center gap-1">
+                            <ItemLink id={e.item} name={bundle.items[e.item] ?? e.item} icon={bundle.itemIcon[e.item]} />
+                            <span className="tabular-nums text-muted-foreground">
+                              ×{countRange(e.min, e.max)}
+                              {multi ? ` (${Math.round((e.weight / total) * 100)}%)` : ''}
+                            </span>
                           </span>
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        ))}
       </div>
     </div>
   )
