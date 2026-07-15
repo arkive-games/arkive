@@ -47,6 +47,34 @@ test('mode toggle enters and leaves the planner, keeping the selection', async (
   await expect(page.getByText('Parent B')).toBeVisible()
 })
 
+test('tree view groups chains by first step, reveals hidden branches with show-more', async ({ page }) => {
+  // SheepBall→Anubis gen3: 79 chains sharing first-step groups — a real tree.
+  await page.goto('/breeding?gen=3&a=SheepBall&c=Anubis&view=tree')
+
+  // Root level: first-step groups, capped at 5 with a show-more reveal.
+  const groups = page.getByTestId('breeding-chain-group')
+  await expect(groups.first()).toBeVisible()
+  const initial = await groups.count()
+  expect(initial).toBeLessThanOrEqual(5)
+  const showMore = page.getByRole('button', { name: /Show \d+ more/ })
+  await expect(showMore.first()).toBeVisible()
+  await showMore.last().click() // the root-level button is the last one on the page
+  expect(await groups.count()).toBeGreaterThan(initial)
+
+  // Nested rows render recursively down to the target (3 levels for a 3-gen chain).
+  expect(await groups.first().getByTestId('breeding-tree-node').count()).toBeGreaterThanOrEqual(2)
+
+  // The icon toggle returns to the flat list (and the URL drops view=tree).
+  await page.getByRole('button', { name: 'List view' }).click()
+  await expect(page).not.toHaveURL(/view=tree/)
+  await expect(page.getByTestId('breeding-chain').first()).toBeVisible()
+
+  // And back into the tree.
+  await page.getByRole('button', { name: 'Tree view' }).click()
+  await expect(page).toHaveURL(/view=tree/)
+  await expect(page.getByTestId('breeding-chain-group').first()).toBeVisible()
+})
+
 test('unreachable target shows the empty-chains message', async ({ page }) => {
   // Jetragon (JetDragon) is a legendary: self-bred only, so no chain can reach it.
   await page.goto('/breeding?gen=3&a=SheepBall&c=JetDragon')

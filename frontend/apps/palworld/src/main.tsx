@@ -80,6 +80,8 @@ export interface BreedingSearch {
   tree?: BreedTreeNode
   /** Multi-generation planner mode: generation budget (present = mode active). */
   gen?: 2 | 3 | 4 | 5 | 6
+  /** Planner result layout: prefix-tree grouping instead of the flat chain list. */
+  view?: 'tree'
 }
 const breedingRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -91,6 +93,7 @@ const breedingRoute = createRoute({
     c: typeof s.c === 'string' ? s.c : undefined,
     tree: parseTreeParam(s.tree),
     gen: [2, 3, 4, 5, 6].includes(Number(s.gen)) ? (Number(s.gen) as 2 | 3 | 4 | 5 | 6) : undefined,
+    view: s.view === 'tree' ? 'tree' : undefined,
   }),
   component: BreedingPage,
 })

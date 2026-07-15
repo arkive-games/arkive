@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, List, ListTree } from 'lucide-react'
 import {
   Button,
   Select,
@@ -35,7 +35,7 @@ import { loadPals, type PalsBundle } from '../../lib/pals'
 import { CatalogDataProvider } from '../catalog/components'
 import { PalPicker } from './PalPicker'
 import { BreedingTreeView } from './BreedingTreeView'
-import { BreedingChainsView } from './BreedingChainsView'
+import { BreedingChainsTreeView, BreedingChainsView } from './BreedingChainsView'
 import { RecipeCard, buildRecipeMeta } from './RecipeCard'
 
 // Cap on rendered cards; a target-only query can match >1000 parent pairs. Set
@@ -155,16 +155,19 @@ export default function BreedingPage() {
     const ids = new Set(payload.data.pals.map((p) => p.id))
     const keep = (v?: string) => (v && ids.has(v) ? v : undefined)
     const tree = search.tree && search.gen == null ? sanitizeTree(engine, ids, search.tree) : undefined
-    const cleaned = { a: keep(search.a), b: keep(search.b), c: keep(search.c), tree, gen: search.gen }
+    // The tree layout (`view`) only exists in planner mode.
+    const view = search.gen != null ? search.view : undefined
+    const cleaned = { a: keep(search.a), b: keep(search.b), c: keep(search.c), tree, gen: search.gen, view }
     if (
       cleaned.a !== search.a ||
       cleaned.b !== search.b ||
       cleaned.c !== search.c ||
+      cleaned.view !== search.view ||
       JSON.stringify(tree) !== JSON.stringify(search.tree)
     ) {
       navigate({ search: cleaned, replace: true })
     }
-  }, [payload, engine, search.a, search.b, search.c, search.tree, search.gen, navigate])
+  }, [payload, engine, search.a, search.b, search.c, search.tree, search.gen, search.view, navigate])
 
   // child -> recipes index powering the tree sections. A full-roster scan
   // (~n²/2 pair resolutions), so it is only built when tree mode is entered;
@@ -310,6 +313,30 @@ export default function BreedingPage() {
               </Tooltip>
             </span>
             <span className="flex shrink-0 items-center gap-1">
+              {gen != null && chains && chains.length > 0 ? (
+                <span className="mr-1 inline-flex items-center gap-0.5 rounded-md border border-border p-0.5">
+                  <Button
+                    variant={search.view === 'tree' ? 'ghost' : 'secondary'}
+                    size="icon"
+                    className="size-7"
+                    aria-label={t('breeding.viewList')}
+                    title={t('breeding.viewList')}
+                    onClick={() => navigate({ search: (prev) => ({ ...prev, view: undefined }) })}
+                  >
+                    <List className="size-4" />
+                  </Button>
+                  <Button
+                    variant={search.view === 'tree' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="size-7"
+                    aria-label={t('breeding.viewTree')}
+                    title={t('breeding.viewTree')}
+                    onClick={() => navigate({ search: (prev) => ({ ...prev, view: 'tree' }) })}
+                  >
+                    <ListTree className="size-4" />
+                  </Button>
+                </span>
+              ) : null}
               {search.tree ? (
                 <Button
                   variant="ghost"
@@ -341,6 +368,15 @@ export default function BreedingPage() {
               <div className="mt-8 text-center text-sm text-muted-foreground">
                 {t('breeding.noChains', { count: gen })}
               </div>
+            ) : chains && search.view === 'tree' ? (
+              <BreedingChainsTreeView
+                // Remount on a query change to reset the reveal caps.
+                key={`${aSel}|${cSel}|${gen}`}
+                chains={chains}
+                names={payload?.names ?? {}}
+                meta={meta}
+                uniqueLabel={t('breeding.unique')}
+              />
             ) : chains ? (
               <BreedingChainsView
                 // Remount on a query change to reset per-group and per-step caps.

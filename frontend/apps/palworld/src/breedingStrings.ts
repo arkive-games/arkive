@@ -59,6 +59,9 @@ export interface BreedingStrings {
   noChains: string
   /** Expander revealing every partner option of a chain step. */
   showAllPartners: string
+  /** Planner result layout toggle (flat list vs prefix tree). */
+  viewList: string
+  viewTree: string
 }
 
 export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
@@ -96,6 +99,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainNGen: '{{count}}-generation chains',
     noChains: 'No breeding chain within {{count}} generations — try more generations or another parent.',
     showAllPartners: 'Show all {{count}} partners',
+    viewList: 'List view',
+    viewTree: 'Tree view',
     mutationTip:
       'Breeding rarely produces a Mutated Egg — the hatched Pal is mutated and gains a mutation-exclusive passive skill. An Extravagant Vegetable Cake at the Breeding Farm makes mutations more likely and talents grow more easily.',
   },
@@ -134,6 +139,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       'Keine Zuchtkette innerhalb von {{count}} Generationen — versuche mehr Generationen oder ein anderes Elternteil.',
     showAllPartners: 'Alle {{count}} Partner anzeigen',
+    viewList: 'Listenansicht',
+    viewTree: 'Baumansicht',
     mutationTip:
       'Bei der Zucht entsteht selten ein Mutiertes Ei — der geschlüpfte Pal ist mutiert und erhält ein mutationsexklusives Passiv. Eine Exquisite Gemüsetorte in der Zuchtfarm lässt Mutationen häufiger auftreten und Talente leichter wachsen.',
   },
@@ -172,6 +179,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       'No hay ninguna cadena de crianza en {{count}} generaciones — prueba con más generaciones u otro progenitor.',
     showAllPartners: 'Mostrar los {{count}} compañeros',
+    viewList: 'Vista de lista',
+    viewTree: 'Vista de árbol',
     mutationTip:
       'La crianza rara vez produce un Huevo metamorfo: el Pal que nace está mutado y obtiene una pasiva exclusiva de mutación. Un Pastel de verduras selectas en el Criadero hace más probables las mutaciones y facilita el desarrollo del talento.',
   },
@@ -210,6 +219,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       'No hay ninguna cadena de crianza en {{count}} generaciones — prueba con más generaciones u otro progenitor.',
     showAllPartners: 'Mostrar los {{count}} compañeros',
+    viewList: 'Vista de lista',
+    viewTree: 'Vista de árbol',
     mutationTip:
       'La crianza rara vez produce un Huevo mutado: el Pal que nace está mutado y obtiene una pasiva exclusiva de mutación. Un Pastel de verduras de lujo en el Criadero aumenta la probabilidad de mutaciones y facilita el crecimiento del talento.',
   },
@@ -248,6 +259,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       "Aucune chaîne d'élevage en {{count}} générations — essayez plus de générations ou un autre parent.",
     showAllPartners: 'Afficher les {{count}} partenaires',
+    viewList: 'Vue liste',
+    viewTree: 'Vue arborescente',
     mutationTip:
       "L'élevage produit rarement un Œuf mutant — le Pal qui en éclot est muté et obtient une compétence passive exclusive de mutation. Un Gâteau aux légumes raffiné à l'Élevage rend les mutations plus fréquentes et facilite le développement des talents.",
   },
@@ -286,6 +299,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       'Tidak ada rantai ternak dalam {{count}} generasi — coba lebih banyak generasi atau induk lain.',
     showAllPartners: 'Tampilkan semua {{count}} pasangan',
+    viewList: 'Tampilan daftar',
+    viewTree: 'Tampilan pohon',
     mutationTip:
       'Ternak kadang menghasilkan Telur Mutasi — Pal yang menetas bermutasi dan mendapat pasif khusus mutasi. Kue Sayuran Mewah di Tempat Pembiakkan membuat mutasi lebih mungkin terjadi dan bakat lebih mudah berkembang.',
   },
@@ -324,6 +339,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       'Nessuna catena di allevamento entro {{count}} generazioni — prova con più generazioni o un altro genitore.',
     showAllPartners: 'Mostra tutti i {{count}} partner',
+    viewList: 'Vista elenco',
+    viewTree: 'Vista ad albero',
     mutationTip:
       "Dall'allevamento nasce raramente un Uovo mutante: il Pal che si schiude è mutato e ottiene un'abilità passiva da mutazione. Una Torta di verdure gourmet nel Ranch per Pal rende più probabili le mutazioni e facilita lo sviluppo dei talenti.",
   },
@@ -361,6 +378,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainNGen: '{{count}}世代チェーン',
     noChains: '{{count}}世代以内の交配チェーンが見つかりません。世代数を増やすか別の親を試してください。',
     showAllPartners: 'パートナー全{{count}}体を表示',
+    viewList: 'リスト表示',
+    viewTree: 'ツリー表示',
     mutationTip:
       '交配ではまれに突然変異タマゴが生まれ、孵化したパルは突然変異して専用のパッシブスキルを得ます。配合牧場に豪華野菜ケーキを入れると突然変異が起こりやすくなり、才能も伸びやすくなります。',
   },
@@ -398,6 +417,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainNGen: '{{count}}세대 체인',
     noChains: '{{count}}세대 안에 교배 체인이 없습니다. 세대 수를 늘리거나 다른 부모를 시도하세요.',
     showAllPartners: '파트너 {{count}}마리 모두 보기',
+    viewList: '목록 보기',
+    viewTree: '트리 보기',
     mutationTip:
       '교배에서는 드물게 돌연변이 알이 나오며, 부화한 팰은 돌연변이가 되어 전용 패시브 스킬을 얻습니다. 배합 목장에 호화 야채 케이크를 넣으면 돌연변이 확률이 증가하고 재능도 오르기 쉬워집니다.',
   },
@@ -436,6 +457,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       'Brak łańcucha hodowli w {{count}} pokoleniach — spróbuj więcej pokoleń lub innego rodzica.',
     showAllPartners: 'Pokaż wszystkich partnerów: {{count}}',
+    viewList: 'Widok listy',
+    viewTree: 'Widok drzewa',
     mutationTip:
       'Hodowla rzadko daje Zmutowane jajo — wykluty Pal jest zmutowany i otrzymuje pasywną umiejętność dostępną tylko z mutacji. Wykwintne ciasto warzywne na Farmie hodowlanej zwiększa szansę na mutacje i ułatwia rozwój talentów.',
   },
@@ -474,6 +497,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       'Nenhuma cadeia de reprodução em {{count}} gerações — tente mais gerações ou outro progenitor.',
     showAllPartners: 'Mostrar todos os {{count}} parceiros',
+    viewList: 'Visão em lista',
+    viewTree: 'Visão em árvore',
     mutationTip:
       'A reprodução raramente produz um Ovo Mutante — o Pal que nasce é mutante e ganha uma passiva exclusiva de mutação. Um Bolo de Verduras Extravagante na Fazenda de Acasalamento aumenta a chance de mutação e facilita o crescimento dos talentos.',
   },
@@ -512,6 +537,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     noChains:
       'Нет цепочки разведения в пределах {{count}} поколений — попробуйте больше поколений или другого родителя.',
     showAllPartners: 'Показать всех партнёров: {{count}}',
+    viewList: 'Список',
+    viewTree: 'Дерево',
     mutationTip:
       'При разведении изредка появляется Мутировавшее яйцо — вылупившийся пал мутирует и получает эксклюзивный пассивный навык мутации. Роскошный овощной торт на Племенной ферме повышает вероятность мутаций и облегчает развитие талантов.',
   },
@@ -549,6 +576,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainNGen: 'สาย {{count}} รุ่น',
     noChains: 'ไม่พบสายการผสมพันธุ์ภายใน {{count}} รุ่น — ลองเพิ่มจำนวนรุ่นหรือเปลี่ยนพ่อแม่',
     showAllPartners: 'แสดงคู่ผสมทั้งหมด {{count}} ตัว',
+    viewList: 'มุมมองรายการ',
+    viewTree: 'มุมมองแบบต้นไม้',
     mutationTip:
       'การผสมพันธุ์มีโอกาสน้อยมากที่จะได้ไข่แปรสภาพกะทันหัน — พัลที่ฟักออกมาจะกลายพันธุ์และได้รับสกิลติดตัวเฉพาะการกลายพันธุ์ เค้กผักชั้นเลิศในฟาร์มขยายพันธุ์จะทำให้เกิดการกลายพันธุ์ได้ง่ายขึ้นและพัฒนาศักยภาพได้เร็วขึ้น',
   },
@@ -586,6 +615,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainNGen: '{{count}} nesillik zincirler',
     noChains: '{{count}} nesil içinde üretme zinciri yok — daha fazla nesil veya başka bir ebeveyn dene.',
     showAllPartners: 'Tüm {{count}} eşi göster',
+    viewList: 'Liste görünümü',
+    viewTree: 'Ağaç görünümü',
     mutationTip:
       "Üretme sırasında nadiren mutasyona uğramış bir yumurta (Aniden Dönüşmüş) çıkar — yumurtadan çıkan Pal mutasyonludur ve mutasyona özel bir pasif beceri kazanır. Üretim Çiftliği'ndeki Lüks Sebze Pastası mutasyon olasılığını artırır ve yeteneklerin gelişimini kolaylaştırır.",
   },
@@ -623,6 +654,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainNGen: 'Chuỗi {{count}} thế hệ',
     noChains: 'Không có chuỗi nhân giống trong {{count}} thế hệ — thử thêm thế hệ hoặc bố mẹ khác.',
     showAllPartners: 'Hiện tất cả {{count}} bạn ghép',
+    viewList: 'Dạng danh sách',
+    viewTree: 'Dạng cây',
     mutationTip:
       'Nhân giống hiếm khi tạo ra Trứng Đột Biến — Pal nở ra bị đột biến và nhận kỹ năng bị động chỉ có từ đột biến. Bánh Rau Củ Thượng Hạng ở Trang Trại Phối Giống giúp đột biến dễ xảy ra hơn và tài năng cũng dễ phát triển hơn.',
   },
@@ -660,6 +693,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainNGen: '{{count}}代路线',
     noChains: '在 {{count}} 代以内没有可行的配种路线——试试增加代数或更换父母。',
     showAllPartners: '显示全部 {{count}} 个配对',
+    viewList: '列表视图',
+    viewTree: '树状视图',
     mutationTip:
       '配种偶尔会产下突变帕鲁蛋——孵化出的帕鲁会发生突然变异，获得突然变异专属的被动技能。在配种牧场放入豪华蔬菜蛋糕可提高突然变异的概率，潜力值也更容易上升。',
   },
@@ -697,6 +732,8 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainNGen: '{{count}}代路線',
     noChains: '在 {{count}} 代以內沒有可行的配種路線——試試增加代數或更換父母。',
     showAllPartners: '顯示全部 {{count}} 個配對',
+    viewList: '清單檢視',
+    viewTree: '樹狀檢視',
     mutationTip:
       '配種偶爾會產下突變帕魯蛋——孵化出的帕魯會發生突然變異，獲得突然變異專屬的被動技能。在配種牧場放入豪華蔬菜蛋糕可提高突然變異的機率，潛力值也更容易上升。',
   },

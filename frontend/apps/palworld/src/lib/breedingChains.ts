@@ -82,6 +82,46 @@ export function parentsOf(engine: BreedingEngine, data: BreedingData, childId: s
 }
 
 /**
+ * One node of the chain *tree* view: a breeding step plus every continuation.
+ * Chains sharing a step sequence share the node (prefix tree). A node with no
+ * children is a leaf — its `step.child` is the target C.
+ */
+export interface ChainTreeNode {
+  step: ChainStep
+  children: ChainTreeNode[]
+}
+
+/**
+ * Merge a chain list into a prefix tree: one node per distinct step sequence,
+ * children in first-seen chain order (chains arrive shortest-first, so leaves
+ * and short branches surface before deeper ones). Steps for the same
+ * fixed→child pair are identical across chains, so the first-seen step is kept.
+ */
+export function buildChainTree(chains: BreedChain[]): ChainTreeNode[] {
+  const roots: ChainTreeNode[] = []
+  // Children lookup per parent node (null = root level), avoiding O(siblings) scans.
+  const index = new Map<ChainTreeNode | null, Map<string, ChainTreeNode>>()
+  index.set(null, new Map())
+  for (const ch of chains) {
+    let parent: ChainTreeNode | null = null
+    let siblings = roots
+    for (const step of ch.steps) {
+      const byChild: Map<string, ChainTreeNode> = index.get(parent)!
+      let node: ChainTreeNode | undefined = byChild.get(step.child)
+      if (!node) {
+        node = { step, children: [] }
+        byChild.set(step.child, node)
+        siblings.push(node)
+        index.set(node, new Map())
+      }
+      parent = node
+      siblings = node.children
+    }
+  }
+  return roots
+}
+
+/**
  * Backward BFS from `targetId`: dist[X] = minimum breeding steps from X to
  * reach targetId. Unreachable pals (legendaries, etc.) are absent from the map.
  */

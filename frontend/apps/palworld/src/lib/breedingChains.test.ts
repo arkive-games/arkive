@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 import { makeEngine, type BreedingData, type BreedingPal } from './breeding'
-import { findChains } from './breedingChains'
+import { buildChainTree, findChains, type BreedChain, type ChainTreeNode } from './breedingChains'
 
 /**
  * Synthetic roster with a deterministic topology: every Pal has the same
@@ -174,5 +174,54 @@ describe('findChains', () => {
 
   it('maxGen=2 excludes 3-step chains even at maxGen=6', () => {
     expect(shape(findChains(engine, data, 'A', 'C', 2))).toEqual([['C'], ['B', 'C'], ['F', 'C']])
+  })
+})
+
+/** Tree shape as nested [child, [subtrees]] tuples for compact assertions. */
+type TreeShape = [string, TreeShape[]]
+const treeShape = (nodes: ChainTreeNode[]): TreeShape[] =>
+  nodes.map((n) => [n.step.child, treeShape(n.children)])
+
+describe('buildChainTree', () => {
+  it('merges chains into a prefix tree, preserving chain order at every level', () => {
+    const chains = findChains(engine, data, 'A', 'C', 3)
+    // Chains: [C], [B,C], [F,C], [E,D,C] — no shared prefixes in this topology.
+    expect(treeShape(buildChainTree(chains))).toEqual([
+      ['C', []],
+      ['B', [['C', []]]],
+      ['F', [['C', []]]],
+      ['E', [['D', [['C', []]]]]],
+    ])
+  })
+
+  it('shares one node per common prefix and appends divergent branches in order', () => {
+    // Hand-built chains (buildChainTree is generic over any chain list).
+    const step = (fixed: string, child: string): BreedChain['steps'][number] => ({
+      fixed,
+      child,
+      partners: [{ a: fixed, b: 'X', c: child }],
+    })
+    const chains: BreedChain[] = [
+      { steps: [step('A', 'G'), step('G', 'K'), step('K', 'P'), step('P', 'C')] },
+      { steps: [step('A', 'G'), step('G', 'K'), step('K', 'Q'), step('Q', 'C')] },
+      { steps: [step('A', 'G'), step('G', 'M'), step('M', 'C')] },
+    ]
+    expect(treeShape(buildChainTree(chains))).toEqual([
+      [
+        'G',
+        [
+          ['K', [['P', [['C', []]]], ['Q', [['C', []]]]]],
+          ['M', [['C', []]]],
+        ],
+      ],
+    ])
+  })
+
+  it('keeps the first-seen step object (partners identical for a given fixed→child pair)', () => {
+    const chains = findChains(engine, data, 'A', 'C', 3)
+    const tree = buildChainTree(chains)
+    const toB = tree.find((n) => n.step.child === 'B')!
+    expect(toB.step.partners.map((f) => f.b)).toEqual(['X1', 'X7'])
+    expect(toB.children[0].step.fixed).toBe('B')
   })
 })
