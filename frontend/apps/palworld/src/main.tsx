@@ -23,6 +23,7 @@ import BuildingListPage from './features/buildings/BuildingListPage'
 import BuildingDetailPage from './features/buildings/BuildingDetailPage'
 import TechnologyPage from './features/technology/TechnologyPage'
 import DungeonsPage from './features/dungeons/DungeonsPage'
+import DungeonDetailPage from './features/dungeons/DungeonDetailPage'
 import QuestListPage from './features/quests/QuestListPage'
 import QuestDetailPage from './features/quests/QuestDetailPage'
 import PassivesPage from './features/pals/PassivesPage'
@@ -167,6 +168,11 @@ const dungeonsRoute = createRoute({
   }),
   component: DungeonsPage,
 })
+const dungeonDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/dungeons/$id',
+  component: DungeonDetailPage,
+})
 const questsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quests',
@@ -192,6 +198,7 @@ const routeTree = rootRoute.addChildren([
   buildingDetailRoute,
   technologyRoute,
   dungeonsRoute,
+  dungeonDetailRoute,
   questsRoute,
   questDetailRoute,
 ])

@@ -46,8 +46,8 @@ existing loot renderers. Unknown id → `CatalogNotFound` with back link.
    best per-roll chance (desc). Deterministic; non-empty for every dungeon (verified
    against the dataset: 34–174 unique items each).
 3. **Overview grid** (`lg:grid-cols-[minmax(0,1fr)_380px]`):
-   - left — **Encounters**: boss spotlight (larger icons + level), then mid-boss /
-     floor pools / fishing as the existing chip rows;
+   - left — **Encounters**: enemy-pool chip rows, boss first (boss pools hold up to
+     30 pals, so spotlight cards would dwarf the page);
    - right — **Entrances map widget** (§4).
 4. **Loot grid** (`lg:grid-cols-2`): left = Chest loot + Technology chest;
    right = Boss-room rewards. Existing `LotteryTable` / `RewardEntryRow` components,
