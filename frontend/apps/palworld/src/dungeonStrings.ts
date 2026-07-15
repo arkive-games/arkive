@@ -46,6 +46,20 @@ export interface DungeonStrings {
   foundIn: string
   /** Map popup link on dungeon portal markers. */
   viewLoot: string
+  /** Detail page: enemy pools section title. */
+  encounters: string
+  /** Detail page: entrance-map section title, with count. */
+  entrances: string
+  /** Detail page: top-drops strip title. */
+  notableDrops: string
+  backToList: string
+  /** Detail page: unknown-id message. */
+  notFound: string
+  /** Entrance widget corner link to the full map. */
+  viewOnMap: string
+  /** Prev/next dungeon header links (aria-labels). */
+  prevDungeon: string
+  nextDungeon: string
 }
 
 export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
@@ -69,6 +83,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} possible pals',
     foundIn: 'Found in dungeons',
     viewLoot: 'View dungeon loot',
+    encounters: 'Encounters',
+    entrances: 'Entrances ({{count}})',
+    notableDrops: 'Notable drops',
+    backToList: 'Back to dungeons',
+    notFound: 'Dungeon {{id}} not found.',
+    viewOnMap: 'View on full map',
+    prevDungeon: 'Previous dungeon',
+    nextDungeon: 'Next dungeon',
   },
   'de-DE': {
     title: 'Dungeons',
@@ -90,6 +112,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} mögliche Pals',
     foundIn: 'In Dungeons zu finden',
     viewLoot: 'Dungeon-Beute ansehen',
+    encounters: 'Begegnungen',
+    entrances: 'Eingänge ({{count}})',
+    notableDrops: 'Nennenswerte Beute',
+    backToList: 'Zurück zu den Dungeons',
+    notFound: 'Dungeon {{id}} nicht gefunden.',
+    viewOnMap: 'Auf der Gesamtkarte ansehen',
+    prevDungeon: 'Vorheriger Dungeon',
+    nextDungeon: 'Nächster Dungeon',
   },
   'es-ES': {
     title: 'Mazmorras',
@@ -111,6 +141,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} pals posibles',
     foundIn: 'Se encuentra en mazmorras',
     viewLoot: 'Ver botín de la mazmorra',
+    encounters: 'Encuentros',
+    entrances: 'Entradas ({{count}})',
+    notableDrops: 'Botín destacado',
+    backToList: 'Volver a mazmorras',
+    notFound: 'No se encontró la mazmorra {{id}}.',
+    viewOnMap: 'Ver en el mapa completo',
+    prevDungeon: 'Mazmorra anterior',
+    nextDungeon: 'Mazmorra siguiente',
   },
   'es-MX': {
     title: 'Mazmorras',
@@ -132,6 +170,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} pals posibles',
     foundIn: 'Se encuentra en mazmorras',
     viewLoot: 'Ver botín de la mazmorra',
+    encounters: 'Encuentros',
+    entrances: 'Entradas ({{count}})',
+    notableDrops: 'Botín destacado',
+    backToList: 'Volver a mazmorras',
+    notFound: 'No se encontró la mazmorra {{id}}.',
+    viewOnMap: 'Ver en el mapa completo',
+    prevDungeon: 'Mazmorra anterior',
+    nextDungeon: 'Mazmorra siguiente',
   },
   'fr-FR': {
     title: 'Donjons',
@@ -153,6 +199,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} pals possibles',
     foundIn: 'Trouvé dans les donjons',
     viewLoot: 'Voir le butin du donjon',
+    encounters: 'Rencontres',
+    entrances: 'Entrées ({{count}})',
+    notableDrops: 'Butin notable',
+    backToList: 'Retour aux donjons',
+    notFound: 'Donjon {{id}} introuvable.',
+    viewOnMap: 'Voir sur la carte complète',
+    prevDungeon: 'Donjon précédent',
+    nextDungeon: 'Donjon suivant',
   },
   'id-ID': {
     title: 'Dungeon',
@@ -174,6 +228,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} pal yang mungkin',
     foundIn: 'Ditemukan di dungeon',
     viewLoot: 'Lihat loot dungeon',
+    encounters: 'Musuh yang muncul',
+    entrances: 'Pintu masuk ({{count}})',
+    notableDrops: 'Loot penting',
+    backToList: 'Kembali ke daftar dungeon',
+    notFound: 'Dungeon {{id}} tidak ditemukan.',
+    viewOnMap: 'Lihat di peta penuh',
+    prevDungeon: 'Dungeon sebelumnya',
+    nextDungeon: 'Dungeon berikutnya',
   },
   'it-IT': {
     title: 'Dungeon',
@@ -195,6 +257,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} pal possibili',
     foundIn: 'Si trova nei dungeon',
     viewLoot: 'Vedi bottino del dungeon',
+    encounters: 'Incontri',
+    entrances: 'Ingressi ({{count}})',
+    notableDrops: 'Bottino degno di nota',
+    backToList: 'Torna ai dungeon',
+    notFound: 'Dungeon {{id}} non trovato.',
+    viewOnMap: 'Vedi sulla mappa completa',
+    prevDungeon: 'Dungeon precedente',
+    nextDungeon: 'Dungeon successivo',
   },
   'ja-JP': {
     title: 'ダンジョン',
@@ -216,6 +286,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '出現候補 {{count}} 体',
     foundIn: '入手できるダンジョン',
     viewLoot: 'ダンジョンの戦利品を見る',
+    encounters: '出現する敵とボス',
+    entrances: '入口（{{count}}か所）',
+    notableDrops: '注目のドロップ',
+    backToList: 'ダンジョン一覧へ戻る',
+    notFound: 'ダンジョン {{id}} が見つかりません。',
+    viewOnMap: '全体マップで見る',
+    prevDungeon: '前のダンジョン',
+    nextDungeon: '次のダンジョン',
   },
   'ko-KR': {
     title: '던전',
@@ -237,6 +315,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '가능한 팰 {{count}}종',
     foundIn: '획득 가능한 던전',
     viewLoot: '던전 전리품 보기',
+    encounters: '등장 몬스터와 보스',
+    entrances: '입구 ({{count}}곳)',
+    notableDrops: '주목할 전리품',
+    backToList: '던전 목록으로 돌아가기',
+    notFound: '던전 {{id}}을(를) 찾을 수 없습니다.',
+    viewOnMap: '전체 지도에서 보기',
+    prevDungeon: '이전 던전',
+    nextDungeon: '다음 던전',
   },
   'pl-PL': {
     title: 'Lochy',
@@ -258,6 +344,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} możliwych pali',
     foundIn: 'Występuje w lochach',
     viewLoot: 'Zobacz łupy z lochu',
+    encounters: 'Przeciwnicy i bossowie',
+    entrances: 'Wejścia ({{count}})',
+    notableDrops: 'Godny uwagi łup',
+    backToList: 'Powrót do lochów',
+    notFound: 'Nie znaleziono lochu {{id}}.',
+    viewOnMap: 'Zobacz na pełnej mapie',
+    prevDungeon: 'Poprzedni loch',
+    nextDungeon: 'Następny loch',
   },
   'pt-BR': {
     title: 'Masmorras',
@@ -279,6 +373,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} pals possíveis',
     foundIn: 'Encontrado em masmorras',
     viewLoot: 'Ver saque da masmorra',
+    encounters: 'Encontros',
+    entrances: 'Entradas ({{count}})',
+    notableDrops: 'Saque notável',
+    backToList: 'Voltar às masmorras',
+    notFound: 'Masmorra {{id}} não encontrada.',
+    viewOnMap: 'Ver no mapa completo',
+    prevDungeon: 'Masmorra anterior',
+    nextDungeon: 'Próxima masmorra',
   },
   'ru-RU': {
     title: 'Подземелья',
@@ -300,6 +402,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: 'Возможных палов: {{count}}',
     foundIn: 'Встречается в подземельях',
     viewLoot: 'Посмотреть добычу подземелья',
+    encounters: 'Противники и боссы',
+    entrances: 'Входы ({{count}})',
+    notableDrops: 'Примечательная добыча',
+    backToList: 'Назад к подземельям',
+    notFound: 'Подземелье {{id}} не найдено.',
+    viewOnMap: 'Показать на полной карте',
+    prevDungeon: 'Предыдущее подземелье',
+    nextDungeon: 'Следующее подземелье',
   },
   'th-TH': {
     title: 'ดันเจี้ยน',
@@ -321,6 +431,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: 'พัลที่เป็นไปได้ {{count}} ตัว',
     foundIn: 'พบได้ในดันเจี้ยน',
     viewLoot: 'ดูของรางวัลดันเจี้ยน',
+    encounters: 'ศัตรูและบอส',
+    entrances: 'ทางเข้า ({{count}})',
+    notableDrops: 'ของรางวัลเด่น',
+    backToList: 'กลับไปหน้าดันเจี้ยน',
+    notFound: 'ไม่พบดันเจี้ยน {{id}}',
+    viewOnMap: 'ดูบนแผนที่เต็ม',
+    prevDungeon: 'ดันเจี้ยนก่อนหน้า',
+    nextDungeon: 'ดันเจี้ยนถัดไป',
   },
   'tr-TR': {
     title: 'Zindanlar',
@@ -342,6 +460,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} olası pal',
     foundIn: 'Zindanlarda bulunur',
     viewLoot: 'Zindan ganimetini gör',
+    encounters: 'Karşılaşmalar',
+    entrances: 'Girişler ({{count}})',
+    notableDrops: 'Öne çıkan ganimet',
+    backToList: 'Zindan listesine dön',
+    notFound: '{{id}} zindanı bulunamadı.',
+    viewOnMap: 'Tam haritada gör',
+    prevDungeon: 'Önceki zindan',
+    nextDungeon: 'Sonraki zindan',
   },
   'vi-VN': {
     title: 'Hầm ngục',
@@ -363,6 +489,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '{{count}} pal có thể xuất hiện',
     foundIn: 'Tìm thấy trong hầm ngục',
     viewLoot: 'Xem chiến lợi phẩm hầm ngục',
+    encounters: 'Kẻ địch và trùm',
+    entrances: 'Lối vào ({{count}})',
+    notableDrops: 'Chiến lợi phẩm đáng chú ý',
+    backToList: 'Quay lại danh sách hầm ngục',
+    notFound: 'Không tìm thấy hầm ngục {{id}}.',
+    viewOnMap: 'Xem trên bản đồ đầy đủ',
+    prevDungeon: 'Hầm ngục trước',
+    nextDungeon: 'Hầm ngục sau',
   },
   'zh-CN': {
     title: '地下城',
@@ -384,6 +518,14 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '可能出现 {{count}} 种帕鲁',
     foundIn: '可在以下地下城获得',
     viewLoot: '查看地下城掉落',
+    encounters: '敌人与头目',
+    entrances: '入口（{{count}} 个）',
+    notableDrops: '重点掉落',
+    backToList: '返回地下城列表',
+    notFound: '未找到地下城 {{id}}。',
+    viewOnMap: '在完整地图中查看',
+    prevDungeon: '上一个地下城',
+    nextDungeon: '下一个地下城',
   },
   'zh-TW': {
     title: '地下城',
@@ -405,5 +547,13 @@ export const DUNGEON_STRINGS: Record<Language, DungeonStrings> = {
     poolCount: '可能出現 {{count}} 種帕魯',
     foundIn: '可在以下地下城獲得',
     viewLoot: '查看地下城掉落',
+    encounters: '敵人與頭目',
+    entrances: '入口（{{count}} 個）',
+    notableDrops: '重點掉落',
+    backToList: '返回地下城列表',
+    notFound: '未找到地下城 {{id}}。',
+    viewOnMap: '在完整地圖中檢視',
+    prevDungeon: '上一個地下城',
+    nextDungeon: '下一個地下城',
   },
 }
