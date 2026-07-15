@@ -295,6 +295,8 @@ def build_dataset(parsed: dict) -> dict:
         # Night-restricted field bosses (spawner OnlyTime=Night).
         if b.get("nightOnly"):
             c["nightOnly"] = True
+        if b.get("drops"):
+            c["drops"] = b["drops"]
         if _is_deck_pal(boss_pal):
             entry = {**_spawn_xyz(b["location"]), "kind": "fieldBoss"}
             if b.get("level"):

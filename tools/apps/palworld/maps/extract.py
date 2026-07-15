@@ -930,6 +930,15 @@ def run_extract(raw: Path) -> dict:
         if key in night_boss_keys:
             b["nightOnly"] = True
 
+    # Kill drops for field bosses: BOSS_ entries in DT_PalDropItem include rare
+    # schematic drops (3%) alongside guaranteed PalCrystal_Ex/sell-item slots.
+    # Zero-rate slots are intentional overrides (base pal materials suppressed for
+    # the boss form) — exclude them.
+    for b in bosses:
+        drops = [d for d in _drops(b["characterId"], drop_rows) if d["rate"] > 0]
+        if drops:
+            b["drops"] = drops
+
     names_by_lang = {tag: _read_l10n_pal_names(raw, folder, tag) for folder, tag in L10N_LANG_TAGS.items()}
     names_by_lang[JA_TAG] = _read_pal_names(raw / "DataTable/Text/DT_PalNameText_Common.json")
 
