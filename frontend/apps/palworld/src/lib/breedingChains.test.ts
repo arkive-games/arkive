@@ -133,4 +133,46 @@ describe('findChains', () => {
     expect(shape(chains)).toEqual([['C']])
     expect(chains[0].steps[0].partners.map((f) => [f.a, f.b])).toEqual([['C', 'C']])
   })
+
+  it('finds 4-gen chains when a 4-step path exists and no shorter chain dominates it', () => {
+    // Extended topology adds G→K→P→C (4 steps from A via A+X8=G, G+X9=K, K+W3=P, P+W4=C).
+    // G has dtc=3, so it appears ONLY at n=4 (not n=3 where dtc must equal 2).
+    const data4: BreedingData = {
+      pals: [
+        ...data.pals,
+        pal('G', 19),
+        pal('K', 20),
+        pal('P', 21),
+        pal('X8', 22),
+        pal('X9', 23),
+        pal('W3', 24),
+        pal('W4', 25),
+      ],
+      combos: [
+        ...data.combos,
+        { a: 'A', b: 'X8', c: 'G' },
+        { a: 'G', b: 'X9', c: 'K' },
+        { a: 'K', b: 'W3', c: 'P' },
+        { a: 'P', b: 'W4', c: 'C' },
+      ],
+    }
+    const engine4 = makeEngine(data4)
+    const g3 = shape(findChains(engine4, data4, 'A', 'C', 3))
+    const g4 = shape(findChains(engine4, data4, 'A', 'C', 4))
+    expect(g3).not.toContainEqual(['G', 'K', 'P', 'C'])  // G has dtc=3, not valid at n=3
+    expect(g4).toContainEqual(['G', 'K', 'P', 'C'])       // valid at n=4
+    expect(g4).toContainEqual(['C'])                       // direct still present
+    expect(g4).toContainEqual(['B', 'C'])                  // 2-gen still present
+    expect(g4).toContainEqual(['E', 'D', 'C'])             // 3-gen still present
+  })
+
+  it('gen=6 produces the same chains as gen=3 when no 4-6-gen paths exist', () => {
+    // The test topology has no 4-gen or deeper paths (X3 is the only pal at dtc=3
+    // from C, but A can't breed X3, so no 4-step chain is reachable).
+    expect(shape(findChains(engine, data, 'A', 'C', 6))).toEqual(shape(findChains(engine, data, 'A', 'C', 3)))
+  })
+
+  it('maxGen=2 excludes 3-step chains even at maxGen=6', () => {
+    expect(shape(findChains(engine, data, 'A', 'C', 2))).toEqual([['C'], ['B', 'C'], ['F', 'C']])
+  })
 })

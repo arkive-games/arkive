@@ -166,12 +166,21 @@ export interface BreedingChainsViewProps extends ChainsCtx {
  */
 export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, ...ctx }: BreedingChainsViewProps) {
   const { t } = useTranslation()
-  const direct = chains.filter((ch) => ch.steps.length === 1)
-  const twoGen = chains.filter((ch) => ch.steps.length === 2)
-  const threeGen = chains.filter((ch) => ch.steps.length === 3)
+
+  // Group chains by step count so the view works for any maxGen (2–6).
+  const bySteps = new Map<number, BreedChain[]>()
+  for (const ch of chains) {
+    const n = ch.steps.length
+    const list = bySteps.get(n) ?? []
+    list.push(ch)
+    bySteps.set(n, list)
+  }
+  const direct = bySteps.get(1)
+  const multiLengths = [...bySteps.keys()].filter((n) => n > 1).sort((a, b) => a - b)
+
   return (
     <div className="mt-2">
-      {direct.length > 0 ? (
+      {direct ? (
         <section>
           <GroupHeader label={t('breeding.chainDirect')} count={direct[0].steps[0].partners.length} />
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
@@ -191,8 +200,14 @@ export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, ...ctx
           </div>
         </section>
       ) : null}
-      <ChainGroup label={t('breeding.chainTwoGen')} chains={twoGen} ctx={ctx} />
-      <ChainGroup label={t('breeding.chainThreeGen')} chains={threeGen} ctx={ctx} />
+      {multiLengths.map((n) => (
+        <ChainGroup
+          key={n}
+          label={t('breeding.chainNGen', { count: n })}
+          chains={bySteps.get(n)!}
+          ctx={ctx}
+        />
+      ))}
     </div>
   )
 }

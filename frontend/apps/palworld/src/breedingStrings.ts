@@ -51,10 +51,10 @@ export interface BreedingStrings {
   chainPrompt: string
   /** Result count line in planner mode. */
   chainCount: string
-  /** Group headers, by chain length. */
+  /** Group header for direct (1-step) recipes. */
   chainDirect: string
-  chainTwoGen: string
-  chainThreeGen: string
+  /** Group header for N-generation chains (N ≥ 2); use {{count}} for N. */
+  chainNGen: string
   /** No chain reaches the target within the generation budget. */
   noChains: string
   /** Expander revealing every partner option of a chain step. */
@@ -93,8 +93,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Pick Parent A and a Child to plan a breeding chain.',
     chainCount: '{{count}} chains',
     chainDirect: 'Direct recipes',
-    chainTwoGen: '2-generation chains',
-    chainThreeGen: '3-generation chains',
+    chainNGen: '{{count}}-generation chains',
     noChains: 'No breeding chain within {{count}} generations — try more generations or another parent.',
     showAllPartners: 'Show all {{count}} partners',
     mutationTip:
@@ -131,8 +130,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Wähle Elternteil A und einen Nachkommen, um eine Zuchtkette zu planen.',
     chainCount: '{{count}} Ketten',
     chainDirect: 'Direkte Rezepte',
-    chainTwoGen: 'Ketten über 2 Generationen',
-    chainThreeGen: 'Ketten über 3 Generationen',
+    chainNGen: '{{count}}-Generationen-Kette',
     noChains:
       'Keine Zuchtkette innerhalb von {{count}} Generationen — versuche mehr Generationen oder ein anderes Elternteil.',
     showAllPartners: 'Alle {{count}} Partner anzeigen',
@@ -170,8 +168,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Elige el progenitor A y una cría para planificar una cadena de crianza.',
     chainCount: '{{count}} cadenas',
     chainDirect: 'Recetas directas',
-    chainTwoGen: 'Cadenas de 2 generaciones',
-    chainThreeGen: 'Cadenas de 3 generaciones',
+    chainNGen: 'Cadenas de {{count}} generaciones',
     noChains:
       'No hay ninguna cadena de crianza en {{count}} generaciones — prueba con más generaciones u otro progenitor.',
     showAllPartners: 'Mostrar los {{count}} compañeros',
@@ -209,8 +206,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Elige el progenitor A y una cría para planificar una cadena de crianza.',
     chainCount: '{{count}} cadenas',
     chainDirect: 'Recetas directas',
-    chainTwoGen: 'Cadenas de 2 generaciones',
-    chainThreeGen: 'Cadenas de 3 generaciones',
+    chainNGen: 'Cadenas de {{count}} generaciones',
     noChains:
       'No hay ninguna cadena de crianza en {{count}} generaciones — prueba con más generaciones u otro progenitor.',
     showAllPartners: 'Mostrar los {{count}} compañeros',
@@ -248,8 +244,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: "Choisissez le parent A et un enfant pour planifier une chaîne d'élevage.",
     chainCount: '{{count}} chaînes',
     chainDirect: 'Recettes directes',
-    chainTwoGen: 'Chaînes en 2 générations',
-    chainThreeGen: 'Chaînes en 3 générations',
+    chainNGen: 'Chaînes en {{count}} générations',
     noChains:
       "Aucune chaîne d'élevage en {{count}} générations — essayez plus de générations ou un autre parent.",
     showAllPartners: 'Afficher les {{count}} partenaires',
@@ -287,8 +282,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Pilih Induk A dan Anak untuk merencanakan rantai ternak.',
     chainCount: '{{count}} rantai',
     chainDirect: 'Resep langsung',
-    chainTwoGen: 'Rantai 2 generasi',
-    chainThreeGen: 'Rantai 3 generasi',
+    chainNGen: 'Rantai {{count}} generasi',
     noChains:
       'Tidak ada rantai ternak dalam {{count}} generasi — coba lebih banyak generasi atau induk lain.',
     showAllPartners: 'Tampilkan semua {{count}} pasangan',
@@ -326,8 +320,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Scegli il genitore A e un cucciolo per pianificare una catena di allevamento.',
     chainCount: '{{count}} catene',
     chainDirect: 'Ricette dirette',
-    chainTwoGen: 'Catene da 2 generazioni',
-    chainThreeGen: 'Catene da 3 generazioni',
+    chainNGen: 'Catene da {{count}} generazioni',
     noChains:
       'Nessuna catena di allevamento entro {{count}} generazioni — prova con più generazioni o un altro genitore.',
     showAllPartners: 'Mostra tutti i {{count}} partner',
@@ -365,8 +358,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: '親 A と子を選ぶと交配チェーンを計算します。',
     chainCount: 'チェーン {{count}} 件',
     chainDirect: '直接レシピ',
-    chainTwoGen: '2世代チェーン',
-    chainThreeGen: '3世代チェーン',
+    chainNGen: '{{count}}世代チェーン',
     noChains: '{{count}}世代以内の交配チェーンが見つかりません。世代数を増やすか別の親を試してください。',
     showAllPartners: 'パートナー全{{count}}体を表示',
     mutationTip:
@@ -403,8 +395,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: '부모 A와 자식을 선택하면 교배 체인을 계산합니다.',
     chainCount: '체인 {{count}}개',
     chainDirect: '직접 레시피',
-    chainTwoGen: '2세대 체인',
-    chainThreeGen: '3세대 체인',
+    chainNGen: '{{count}}세대 체인',
     noChains: '{{count}}세대 안에 교배 체인이 없습니다. 세대 수를 늘리거나 다른 부모를 시도하세요.',
     showAllPartners: '파트너 {{count}}마리 모두 보기',
     mutationTip:
@@ -441,8 +432,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Wybierz rodzica A i potomka, aby zaplanować łańcuch hodowli.',
     chainCount: 'Łańcuchy: {{count}}',
     chainDirect: 'Receptury bezpośrednie',
-    chainTwoGen: 'Łańcuchy 2-pokoleniowe',
-    chainThreeGen: 'Łańcuchy 3-pokoleniowe',
+    chainNGen: 'Łańcuchy {{count}}-pokoleniowe',
     noChains:
       'Brak łańcucha hodowli w {{count}} pokoleniach — spróbuj więcej pokoleń lub innego rodzica.',
     showAllPartners: 'Pokaż wszystkich partnerów: {{count}}',
@@ -480,8 +470,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Escolha o progenitor A e um filhote para planejar uma cadeia de reprodução.',
     chainCount: '{{count}} cadeias',
     chainDirect: 'Receitas diretas',
-    chainTwoGen: 'Cadeias de 2 gerações',
-    chainThreeGen: 'Cadeias de 3 gerações',
+    chainNGen: 'Cadeias de {{count}} gerações',
     noChains:
       'Nenhuma cadeia de reprodução em {{count}} gerações — tente mais gerações ou outro progenitor.',
     showAllPartners: 'Mostrar todos os {{count}} parceiros',
@@ -519,8 +508,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Выберите родителя A и потомка, чтобы спланировать цепочку разведения.',
     chainCount: 'Цепочек: {{count}}',
     chainDirect: 'Прямые рецепты',
-    chainTwoGen: 'Цепочки в 2 поколения',
-    chainThreeGen: 'Цепочки в 3 поколения',
+    chainNGen: 'Цепочки в {{count}} поколения',
     noChains:
       'Нет цепочки разведения в пределах {{count}} поколений — попробуйте больше поколений или другого родителя.',
     showAllPartners: 'Показать всех партнёров: {{count}}',
@@ -558,8 +546,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'เลือกพ่อแม่ A และลูกเพื่อวางแผนสายการผสมพันธุ์',
     chainCount: '{{count}} สาย',
     chainDirect: 'สูตรโดยตรง',
-    chainTwoGen: 'สาย 2 รุ่น',
-    chainThreeGen: 'สาย 3 รุ่น',
+    chainNGen: 'สาย {{count}} รุ่น',
     noChains: 'ไม่พบสายการผสมพันธุ์ภายใน {{count}} รุ่น — ลองเพิ่มจำนวนรุ่นหรือเปลี่ยนพ่อแม่',
     showAllPartners: 'แสดงคู่ผสมทั้งหมด {{count}} ตัว',
     mutationTip:
@@ -596,8 +583,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Bir üretme zinciri planlamak için Ebeveyn A ve bir yavru seç.',
     chainCount: '{{count}} zincir',
     chainDirect: 'Doğrudan tarifler',
-    chainTwoGen: '2 nesillik zincirler',
-    chainThreeGen: '3 nesillik zincirler',
+    chainNGen: '{{count}} nesillik zincirler',
     noChains: '{{count}} nesil içinde üretme zinciri yok — daha fazla nesil veya başka bir ebeveyn dene.',
     showAllPartners: 'Tüm {{count}} eşi göster',
     mutationTip:
@@ -634,8 +620,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: 'Chọn Bố mẹ A và Con để lập chuỗi nhân giống.',
     chainCount: '{{count}} chuỗi',
     chainDirect: 'Công thức trực tiếp',
-    chainTwoGen: 'Chuỗi 2 thế hệ',
-    chainThreeGen: 'Chuỗi 3 thế hệ',
+    chainNGen: 'Chuỗi {{count}} thế hệ',
     noChains: 'Không có chuỗi nhân giống trong {{count}} thế hệ — thử thêm thế hệ hoặc bố mẹ khác.',
     showAllPartners: 'Hiện tất cả {{count}} bạn ghép',
     mutationTip:
@@ -672,8 +657,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: '选择父母 A 和子代，规划多代配种路线。',
     chainCount: '{{count}} 条路线',
     chainDirect: '直接配方',
-    chainTwoGen: '两代路线',
-    chainThreeGen: '三代路线',
+    chainNGen: '{{count}}代路线',
     noChains: '在 {{count}} 代以内没有可行的配种路线——试试增加代数或更换父母。',
     showAllPartners: '显示全部 {{count}} 个配对',
     mutationTip:
@@ -710,8 +694,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     chainPrompt: '選擇父母 A 和子代，規劃多代配種路線。',
     chainCount: '{{count}} 條路線',
     chainDirect: '直接配方',
-    chainTwoGen: '兩代路線',
-    chainThreeGen: '三代路線',
+    chainNGen: '{{count}}代路線',
     noChains: '在 {{count}} 代以內沒有可行的配種路線——試試增加代數或更換父母。',
     showAllPartners: '顯示全部 {{count}} 個配對',
     mutationTip:

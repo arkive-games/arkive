@@ -82,7 +82,7 @@ export default function BreedingPage() {
   )
 
   const setGen = useCallback(
-    (g: 2 | 3) => {
+    (g: 2 | 3 | 4 | 5 | 6) => {
       navigate({ search: (prev) => ({ ...prev, gen: g }) })
     },
     [navigate],
@@ -257,13 +257,22 @@ export default function BreedingPage() {
             {gen != null ? (
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-medium text-muted-foreground">{t('breeding.maxGenerations')}</span>
-                <Select value={String(gen)} onValueChange={(v) => setGen(Number(v) === 3 ? 3 : 2)}>
+                <Select
+                  value={String(gen)}
+                  onValueChange={(v) => {
+                    const n = Number(v)
+                    setGen(n === 3 ? 3 : n === 4 ? 4 : n === 5 ? 5 : n === 6 ? 6 : 2)
+                  }}
+                >
                   <SelectTrigger className="!h-11 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="2">2</SelectItem>
                     <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="6">6</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

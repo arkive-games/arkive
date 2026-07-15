@@ -11,15 +11,21 @@ test('multi-gen mode lists direct recipes and 2-gen chains, no 3-gen group at ge
   await expect(page.getByText('Direct recipes')).toBeVisible()
   await expect(page.getByText('2-generation chains')).toBeVisible()
   await expect(page.getByText('3-generation chains')).toHaveCount(0)
+  await expect(page.getByText('4-generation chains')).toHaveCount(0)
 
   // Chain cards render with one row per step; step rows carry partner chips.
   const chains = page.getByTestId('breeding-chain')
   expect(await chains.count()).toBeGreaterThan(0)
 })
 
-test('gen=3 adds the 3-generation group', async ({ page }) => {
+test('gen=3 adds the 3-generation group and gen=6 adds 4-gen through 6-gen groups for a deep target', async ({ page }) => {
+  // PinkRabbit is reachable in 1 step from SheepBall, so gen=3 adds 3-gen chains.
   await page.goto('/breeding?gen=3&a=SheepBall&c=PinkRabbit')
   await expect(page.getByText('3-generation chains')).toBeVisible()
+
+  // DomeArmorDragon requires min 4 steps from SheepBall; gen=6 should show 4-gen chains.
+  await page.goto('/breeding?gen=6&a=SheepBall&c=DomeArmorDragon')
+  await expect(page.getByText('4-generation chains')).toBeVisible()
 })
 
 test('mode toggle enters and leaves the planner, keeping the selection', async ({ page }) => {
