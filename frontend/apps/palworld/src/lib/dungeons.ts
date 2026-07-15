@@ -145,6 +145,45 @@ export function dungeonLotteries(d: DungeonEntry): { name: string; source: 'ches
   return out
 }
 
+/** Enemy level range across every spawn bucket; null when there are no enemies. */
+export function dungeonLevelRange(d: DungeonEntry): { min: number; max: number } | null {
+  let min = Infinity
+  let max = -Infinity
+  const e = d.enemies ?? {}
+  for (const list of [e.normal, e.floor2, e.floor3, e.floor4, e.midBoss, e.fishing, e.boss]) {
+    for (const en of list ?? []) {
+      if (en.lvMin < min) min = en.lvMin
+      if (en.lvMax > max) max = en.lvMax
+    }
+  }
+  return min <= max ? { min, max } : null
+}
+
+/** Up to `cap` "notable" items across all the dungeon's lotteries: unique items
+ *  ranked by chest-tier grade (desc), then best per-roll chance (desc), then id
+ *  (stable). Backs the detail page's notable-drops strip. */
+export function notableDrops(
+  file: DungeonsFile,
+  d: DungeonEntry,
+  cap = 8,
+): { item: string; grade: number; chance: number }[] {
+  const best = new Map<string, { item: string; grade: number; chance: number }>()
+  for (const { name } of dungeonLotteries(d)) {
+    for (const slot of file.lotteries[name] ?? []) {
+      for (const it of slot.items) {
+        const chance = itemChance(slot, it)
+        const cur = best.get(it.item)
+        if (!cur || it.grade > cur.grade || (it.grade === cur.grade && chance > cur.chance)) {
+          best.set(it.item, { item: it.item, grade: it.grade, chance })
+        }
+      }
+    }
+  }
+  return [...best.values()]
+    .sort((a, b) => b.grade - a.grade || b.chance - a.chance || a.item.localeCompare(b.item))
+    .slice(0, cap)
+}
+
 /** Reverse index: item id → dungeons whose loot tables can drop it. */
 export function dungeonsByItem(file: DungeonsFile): Map<string, Set<string>> {
   const out = new Map<string, Set<string>>()
