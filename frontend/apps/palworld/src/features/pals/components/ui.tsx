@@ -6,11 +6,14 @@ import { cn } from '@gamemap/ui'
 /** A titled panel — the encyclopedia's section container. */
 export function PalSection({
   title,
+  action,
   children,
   className,
   testId,
 }: {
   title?: string
+  /** Rendered right-aligned on the title row (e.g. a related-page link). */
+  action?: ReactNode
   children: ReactNode
   className?: string
   testId?: string
@@ -23,7 +26,16 @@ export function PalSection({
       )}
       data-testid={testId}
     >
-      {title ? <h2 className="mb-3 text-sm font-semibold">{title}</h2> : null}
+      {title ? (
+        action != null ? (
+          <div className="mb-3 flex items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold">{title}</h2>
+            {action}
+          </div>
+        ) : (
+          <h2 className="mb-3 text-sm font-semibold">{title}</h2>
+        )
+      ) : null}
       {children}
     </section>
   )

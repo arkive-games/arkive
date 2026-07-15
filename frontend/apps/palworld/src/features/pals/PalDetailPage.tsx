@@ -152,8 +152,13 @@ function BreedingLinks({
     setPage(0)
   }, [pal.id])
 
+  const sectionTitle = t('pal.section.breeding')
   if (parents.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t('pal.noBreeding')}</p>
+    return (
+      <PalSection title={sectionTitle}>
+        <p className="text-sm text-muted-foreground">{t('pal.noBreeding')}</p>
+      </PalSection>
+    )
   }
   // This pal's own breeding power (CombiRank). Every recipe here produces this
   // same pal, so the result chip is dropped and the power shown once up top.
@@ -163,7 +168,25 @@ function BreedingLinks({
   // Clamp: `page` state can lag a pal change for one render before the effect resets it.
   const curPage = Math.min(page, pageCount - 1)
   const shown = parents.slice(curPage * PAGE_SIZE, curPage * PAGE_SIZE + PAGE_SIZE)
+  // When paginated, pad the short last page with invisible card clones so every
+  // page is PAGE_SIZE rows tall and the pager doesn't jump. A single page keeps
+  // its natural height.
+  const padCount = pageCount > 1 ? PAGE_SIZE - shown.length : 0
   return (
+    <PalSection
+      title={sectionTitle}
+      action={
+        <Link
+          to="/breeding"
+          search={{ c: pal.id }}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm font-normal text-primary hover:underline"
+        >
+          {t('pal.openBreeding')}
+        </Link>
+      }
+    >
     <div className="space-y-2">
       {rank != null ? (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -184,16 +207,13 @@ function BreedingLinks({
         {shown.map((f) => (
           <RecipeCard key={comboKey(f)} f={f} names={names} meta={meta} uniqueLabel={t('breeding.unique')} hideResult />
         ))}
+        {Array.from({ length: padCount }, (_, i) => (
+          // Invisible clone of a real card: reserves exactly one row's height.
+          <div key={`pad-${i}`} aria-hidden="true" className="invisible">
+            <RecipeCard f={parents[0]} names={names} meta={meta} uniqueLabel={t('breeding.unique')} hideResult />
+          </div>
+        ))}
       </div>
-      <Link
-        to="/breeding"
-        search={{ c: pal.id }}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-block text-sm text-primary hover:underline"
-      >
-        {t('pal.openBreeding')}
-      </Link>
       {pageCount > 1 ? (
         <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
           <button
@@ -220,6 +240,7 @@ function BreedingLinks({
         </div>
       ) : null}
     </div>
+    </PalSection>
   )
 }
 
@@ -601,9 +622,7 @@ export default function PalDetailPage() {
             ) : null}
 
             {breeding ? (
-              <PalSection title={t('pal.section.breeding')}>
-                <BreedingLinks pal={pal} data={breeding.data} names={breeding.names} />
-              </PalSection>
+              <BreedingLinks pal={pal} data={breeding.data} names={breeding.names} />
             ) : null}
           </div>
         </div>
