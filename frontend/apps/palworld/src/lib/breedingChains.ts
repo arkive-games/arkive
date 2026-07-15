@@ -22,7 +22,13 @@ export interface ChainStep {
   partners: Combo[]
 }
 
-/** 1–6 linked steps: steps[i].child === steps[i+1].fixed; the last child is C. */
+/**
+ * 1–6 linked steps: steps[i].child === steps[i+1].fixed; the last child is C.
+ *
+ * Treat chains as immutable: partner arrays alias the engine-lifetime cache,
+ * and sibling chains share their common-prefix step objects. Mutating either
+ * would corrupt every other chain (and all future queries) for this engine.
+ */
 export interface BreedChain {
   steps: ChainStep[]
 }
@@ -66,19 +72,12 @@ export function parentsOf(engine: BreedingEngine, data: BreedingData, childId: s
   const out = new Map<string, Combo[]>()
   for (const p of data.pals) {
     const combos = childrenOf(engine, data, p.id).get(childId)
-    if (!combos) continue
-    const existing = out.get(p.id)
-    if (existing) combos.forEach((c) => existing.push(c))
-    else out.set(p.id, [...combos])
+    if (combos) out.set(p.id, [...combos])
   }
-  // Same-species self-pair: A+A=A. childrenOf excludes self-children, so add explicitly.
+  // Same-species self-pair: A+A=A. childrenOf excludes self-children (and keys
+  // any pal-X-produces-childId combo under X), so childId has no entry yet.
   const selfCombos = engine.childOf(childId, childId).filter((f) => f.c === childId)
-  if (selfCombos.length > 0) {
-    const oriented = selfCombos.map((f) => orient(f, childId, 'a'))
-    const existing = out.get(childId)
-    if (existing) oriented.forEach((c) => existing.push(c))
-    else out.set(childId, oriented)
-  }
+  if (selfCombos.length > 0) out.set(childId, selfCombos.map((f) => orient(f, childId, 'a')))
   return out
 }
 
@@ -140,9 +139,10 @@ function bfsDistFromSource(
  *   - distToC[B] == n - k - 1 (B is exactly on the optimal path for this length)
  *   - distFromA[B] >= k + 1   (no shorter chain shares the same prefix through B)
  *
- * This reproduces the current two-clause detour filter exactly for n=2,3, and
- * generalises it correctly to n=4–6. The two BFS precomputations add ~10 ms per
- * query on the real 286-pal roster (both O(n²), memoized).
+ * This reproduces the previous two-clause detour filter exactly for n=2,3, and
+ * generalises it to n=4–6. Cost on the real 286-pal roster: ~100 ms for the
+ * first query on a fresh engine (fills the childrenOf cache), single-digit ms
+ * after that — including the worst known result set (~5.8k chains at gen 6).
  */
 export function findChains(
   engine: BreedingEngine,
