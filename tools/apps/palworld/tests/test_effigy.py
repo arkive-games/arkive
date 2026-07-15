@@ -27,8 +27,9 @@ PARSED = {
         "MainWorld": {lng: f"{lng} Main" for lng in LANGUAGES},
         "WorldTree": {lng: f"{lng} Tree" for lng in LANGUAGES},
     },
+    # Name keys are lowercased, matching extract._read_pal_names' output.
     "namesByLang": {
-        lng: {"SheepBall": f"{lng} SheepBall", "PinkCat": f"{lng} PinkCat"} for lng in LANGUAGES
+        lng: {"sheepball": f"{lng} SheepBall", "pinkcat": f"{lng} PinkCat"} for lng in LANGUAGES
     },
     "palMeta": {
         "SheepBall": {"zukanIndex": 2, "zukanIndexSuffix": ""},
@@ -48,7 +49,7 @@ PARSED = {
     },
 }
 PARSED["effigyDescriptions"]["lifmunkEffigy"]["en-US"] = "Enhances Capture Power when using spheres."
-PARSED["namesByLang"]["en-US"] = {"SheepBall": "Lamball", "PinkCat": "Cattiva"}
+PARSED["namesByLang"]["en-US"] = {"sheepball": "Lamball", "pinkcat": "Cattiva"}
 PARSED["effigyNames"]["effigySheepBall"]["en-US"] = "Lamball Effigy"
 
 

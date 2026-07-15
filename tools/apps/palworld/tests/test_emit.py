@@ -9,9 +9,10 @@ LANGUAGES = ["en-US", "ja-JP", "de-DE", "es-ES", "es-MX", "fr-FR", "id-ID", "it-
 
 
 def _names_by_lang():
-    m = {lng: {"Kitsunebi": f"{lng} Kitsunebi", "SheepBall": f"{lng} SheepBall"} for lng in LANGUAGES}
-    m["en-US"] = {"Kitsunebi": "Foxparks", "SheepBall": "Lamball"}
-    m["ko-KR"] = {"Kitsunebi": "불꽃여우", "SheepBall": "도로롱"}
+    # Keys are lowercased, matching extract._read_pal_names' casefolded output.
+    m = {lng: {"kitsunebi": f"{lng} Kitsunebi", "sheepball": f"{lng} SheepBall"} for lng in LANGUAGES}
+    m["en-US"] = {"kitsunebi": "Foxparks", "sheepball": "Lamball"}
+    m["ko-KR"] = {"kitsunebi": "불꽃여우", "sheepball": "도로롱"}
     return m
 
 

@@ -119,8 +119,9 @@ def test_l10n_lang_tags_complete():
 def test_reads_pal_names_from_every_l10n_table(tmp_path):
     raw = _make_fixture_raw(tmp_path)
     out = run_extract(raw)
-    assert out["namesByLang"]["ko-KR"]["Alpaca"] == "멜파카"
-    assert out["namesByLang"]["en-US"]["Alpaca"] == "en-US Alpaca"
+    # Keys are casefolded (CharacterID casing can differ from the text table).
+    assert out["namesByLang"]["ko-KR"]["alpaca"] == "멜파카"
+    assert out["namesByLang"]["en-US"]["alpaca"] == "en-US Alpaca"
     assert len(out["namesByLang"]) == 17  # 16 L10N folders + ja-JP base
 
 
@@ -240,7 +241,7 @@ def test_extract_integration():
     # The two night-restricted field bosses in current data.
     night_bosses = {b["characterId"] for b in out["bosses"] if b.get("nightOnly")}
     assert night_bosses == {"BOSS_GrimGirl", "BOSS_LilyQueen_Dark"}
-    assert out["namesByLang"]["en-US"]["Kitsunebi"]
+    assert out["namesByLang"]["en-US"]["kitsunebi"]
     assert out["bounds"]["MainWorld"]["min"]["X"] == -1099400
     assert out["bounds"]["WorldTree"]["max"]["Y"] == -476400
     # Map display names sourced from the game's WorldMap L10N table.
