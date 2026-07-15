@@ -22,7 +22,17 @@ export interface BuildInfoProps {
 }
 
 function toISO(ms: number): string {
-  return new Date(ms).toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC")
+  const d = new Date(ms)
+  const p = (n: number, w = 2) => String(n).padStart(w, "0")
+  const off = -d.getTimezoneOffset()
+  const sign = off >= 0 ? "+" : "-"
+  const hh = p(Math.floor(Math.abs(off) / 60))
+  const mm = p(Math.abs(off) % 60)
+  return (
+    `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ` +
+    `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())} ` +
+    `${sign}${hh}:${mm}`
+  )
 }
 
 /**
