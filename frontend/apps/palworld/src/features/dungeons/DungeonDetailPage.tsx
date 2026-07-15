@@ -22,6 +22,7 @@ import {
 } from '../catalog/components'
 import { LotteryTable, RewardEntryRow, TIER_KEY, type Bundles } from './components'
 import { DungeonEntranceMap } from './DungeonEntranceMap'
+import { DungeonLayoutsSection } from './DungeonLayoutsSection'
 
 const NAV_LINK =
   'inline-flex items-center gap-1 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent'
@@ -277,6 +278,8 @@ export default function DungeonDetailPage() {
             </CatalogSection>
           ) : null}
           {d.bossRewards.length ? <BossRewardsSection d={d} b={b} /> : null}
+
+          <DungeonLayoutsSection dungeonId={d.id} />
 
           {/* One probability footnote for every loot table above (was repeated
               under each table). */}
