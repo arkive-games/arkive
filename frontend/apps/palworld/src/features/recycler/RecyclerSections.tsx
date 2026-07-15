@@ -69,13 +69,14 @@ function PoolCell({ g, b }: { g: SlotGroup; b: ItemsBundle }) {
   )
 }
 
-/** Roll-count subtext + per-roll chances for multi-roll groups. */
+/** Multi-roll groups: roll count, max possible drops, per-roll chances. */
 function RollDetail({ g }: { g: SlotGroup }) {
   const { t } = useTranslation()
   if (g.rolls.length <= 1) return null
   return (
     <div className="text-xs tabular-nums text-muted-foreground">
-      {t('recycler.rolls', { count: g.rolls.length })} · {g.rolls.map((p) => formatChance(p)).join('% / ')}%
+      {t('recycler.rolls', { count: g.rolls.length })} · {t('recycler.upTo', { count: g.rolls.length })} ·{' '}
+      {g.rolls.map((p) => formatChance(p)).join('% / ')}%
     </div>
   )
 }
@@ -151,7 +152,11 @@ export function RecyclerComparisonSection({ file, items }: { file: RecyclerFile;
                         {g ? (
                           <div
                             className="space-y-0.5"
-                            title={g.rolls.length > 1 ? `${g.rolls.map((p) => formatChance(p)).join('% / ')}%` : undefined}
+                            title={
+                              g.rolls.length > 1
+                                ? `${t('recycler.upTo', { count: g.rolls.length })} · ${g.rolls.map((p) => formatChance(p)).join('% / ')}%`
+                                : undefined
+                            }
                           >
                             <div className="flex items-center gap-1.5">
                               <ChanceBadge pct={anyRollChance(g.rolls)} />

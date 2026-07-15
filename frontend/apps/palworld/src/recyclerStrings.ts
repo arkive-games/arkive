@@ -15,8 +15,10 @@ export interface RecyclerStrings {
   boost: string
   /** Expandable pool summary: "{{count}} possible items". */
   poolCount: string
-  /** Cell subtext when a pool is rolled several times: "{{count}} rolls". */
+  /** Multi-roll subtext: "{{count}} independent rolls". */
   rolls: string
+  /** Multi-roll yield hint: "up to {{count}} drops". */
+  upTo: string
   /** Relic item page: label of the link row to the recycler building. */
   convertAt: string
   /** Probability-semantics footnote under the tables. */
@@ -30,9 +32,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Work required',
     boost: 'Feeding {{item}} speeds conversion ×{{mult}}',
     poolCount: '{{count}} possible items',
-    rolls: '{{count}} rolls',
+    rolls: '{{count}} independent rolls',
+    upTo: 'up to {{count}} drops',
     convertAt: 'Converted at',
-    note: 'Each roll happens independently; rows with several rolls show the chance of at least one hit. Items inside a pool share the roll by weight.',
+    note: 'Every roll is independent. A multi-roll row is drawn once per roll at the chances listed, so it can hit several times per conversion (duplicates included); its percentage is the chance of at least one hit. Within a pool, one item is drawn by weight.',
   },
   'de-DE': {
     title: 'Umwandlungserträge',
@@ -40,9 +43,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Benötigte Arbeit',
     boost: '{{item}} verfüttern beschleunigt die Umwandlung ×{{mult}}',
     poolCount: '{{count}} mögliche Items',
-    rolls: '{{count}} Würfe',
+    rolls: '{{count}} unabhängige Würfe',
+    upTo: 'bis zu {{count}} Drops',
     convertAt: 'Umgewandelt bei',
-    note: 'Jeder Wurf erfolgt unabhängig; Zeilen mit mehreren Würfen zeigen die Chance auf mindestens einen Treffer. Items eines Pools teilen sich den Wurf nach Gewicht.',
+    note: 'Jeder Wurf ist unabhängig. Eine Zeile mit mehreren Würfen wird pro Wurf einzeln ausgelost und kann pro Umwandlung mehrfach treffen (auch doppelt); ihr Prozentwert ist die Chance auf mindestens einen Treffer. Innerhalb eines Pools wird ein Item nach Gewicht gezogen.',
   },
   'es-ES': {
     title: 'Resultados de conversión',
@@ -50,9 +54,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Trabajo necesario',
     boost: 'Suministrar {{item}} acelera la conversión ×{{mult}}',
     poolCount: '{{count}} objetos posibles',
-    rolls: '{{count}} tiradas',
+    rolls: '{{count}} tiradas independientes',
+    upTo: 'hasta {{count}} premios',
     convertAt: 'Se convierte en',
-    note: 'Cada tirada ocurre de forma independiente; las filas con varias tiradas muestran la probabilidad de acertar al menos una vez. Los objetos de un grupo comparten la tirada según su peso.',
+    note: 'Cada tirada es independiente. Una fila con varias tiradas se sortea una vez por tirada con las probabilidades indicadas, así que puede acertar varias veces por conversión (incluso repetidos); su porcentaje es la probabilidad de acertar al menos una vez. Dentro de un grupo se extrae un objeto según su peso.',
   },
   'es-MX': {
     title: 'Resultados de conversión',
@@ -60,9 +65,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Trabajo necesario',
     boost: 'Suministrar {{item}} acelera la conversión ×{{mult}}',
     poolCount: '{{count}} objetos posibles',
-    rolls: '{{count}} tiradas',
+    rolls: '{{count}} tiradas independientes',
+    upTo: 'hasta {{count}} premios',
     convertAt: 'Se convierte en',
-    note: 'Cada tirada ocurre de forma independiente; las filas con varias tiradas muestran la probabilidad de acertar al menos una vez. Los objetos de un grupo comparten la tirada según su peso.',
+    note: 'Cada tirada es independiente. Una fila con varias tiradas se sortea una vez por tirada con las probabilidades indicadas, así que puede acertar varias veces por conversión (incluso repetidos); su porcentaje es la probabilidad de acertar al menos una vez. Dentro de un grupo se extrae un objeto según su peso.',
   },
   'fr-FR': {
     title: 'Produits de conversion',
@@ -70,9 +76,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Travail requis',
     boost: 'Donner {{item}} accélère la conversion ×{{mult}}',
     poolCount: '{{count}} objets possibles',
-    rolls: '{{count}} tirages',
+    rolls: '{{count}} tirages indépendants',
+    upTo: 'jusqu’à {{count}} gains',
     convertAt: 'Converti à',
-    note: 'Chaque tirage a lieu indépendamment ; les lignes à plusieurs tirages affichent la chance d’au moins une réussite. Les objets d’un même lot se partagent le tirage selon leur poids.',
+    note: 'Chaque tirage est indépendant. Une ligne à plusieurs tirages est tirée une fois par tirage aux chances indiquées : elle peut donc réussir plusieurs fois par conversion (doublons possibles) ; son pourcentage est la chance d’au moins une réussite. Au sein d’un lot, un objet est tiré selon son poids.',
   },
   'id-ID': {
     title: 'Hasil Konversi',
@@ -80,9 +87,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Kerja yang dibutuhkan',
     boost: 'Memberikan {{item}} mempercepat konversi ×{{mult}}',
     poolCount: '{{count}} item yang mungkin',
-    rolls: '{{count}} undian',
+    rolls: '{{count}} undian independen',
+    upTo: 'hingga {{count}} hadiah',
     convertAt: 'Dikonversi di',
-    note: 'Setiap undian terjadi secara independen; baris dengan beberapa undian menunjukkan peluang minimal satu kali berhasil. Item dalam satu kelompok membagi undian menurut bobot.',
+    note: 'Setiap undian berdiri sendiri. Baris dengan beberapa undian diundi sekali per undian dengan peluang yang tertera, jadi bisa berhasil beberapa kali per konversi (termasuk duplikat); persentasenya adalah peluang minimal satu kali berhasil. Dalam satu kelompok, satu item diundi menurut bobot.',
   },
   'it-IT': {
     title: 'Prodotti della conversione',
@@ -90,9 +98,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Lavoro richiesto',
     boost: 'Fornire {{item}} accelera la conversione ×{{mult}}',
     poolCount: '{{count}} oggetti possibili',
-    rolls: '{{count}} estrazioni',
+    rolls: '{{count}} estrazioni indipendenti',
+    upTo: 'fino a {{count}} premi',
     convertAt: 'Convertito presso',
-    note: 'Ogni estrazione avviene in modo indipendente; le righe con più estrazioni mostrano la probabilità di almeno un successo. Gli oggetti di un gruppo si dividono l’estrazione in base al peso.',
+    note: 'Ogni estrazione è indipendente. Una riga con più estrazioni viene estratta una volta per estrazione con le probabilità indicate, quindi può riuscire più volte per conversione (anche doppioni); la sua percentuale è la probabilità di almeno un successo. All’interno di un gruppo un oggetto viene estratto in base al peso.',
   },
   'ja-JP': {
     title: '変換で得られるもの',
@@ -100,9 +109,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: '必要作業量',
     boost: '{{item}}を与えると変換速度が×{{mult}}になります',
     poolCount: '候補アイテム {{count}} 種',
-    rolls: '抽選 {{count}} 回',
+    rolls: '独立した抽選 {{count}} 回',
+    upTo: '最大 {{count}} 個',
     convertAt: '変換施設',
-    note: '各抽選は独立して行われます。複数回抽選の行は1回以上当たる確率を表示します。同じ抽選内のアイテムは重みに応じて確率を分け合います。',
+    note: '各抽選は独立しています。複数回抽選の行は表示された確率で1回ずつ抽選され、1回の変換で複数回当たることもあります（重複あり）。表示のパーセントは1回以上当たる確率です。同じ抽選内では重みに応じて1つのアイテムが選ばれます。',
   },
   'ko-KR': {
     title: '변환 산출물',
@@ -110,9 +120,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: '필요 작업량',
     boost: '{{item}}을(를) 공급하면 변환 속도가 ×{{mult}}가 됩니다',
     poolCount: '가능한 아이템 {{count}}종',
-    rolls: '추첨 {{count}}회',
+    rolls: '독립 추첨 {{count}}회',
+    upTo: '최대 {{count}}개',
     convertAt: '변환 시설',
-    note: '각 추첨은 독립적으로 진행됩니다. 여러 번 추첨하는 행은 1회 이상 당첨될 확률을 표시합니다. 같은 추첨 풀의 아이템은 가중치에 따라 확률을 나눠 가집니다.',
+    note: '각 추첨은 독립적으로 진행됩니다. 여러 번 추첨하는 행은 표시된 확률로 매번 따로 추첨되어 한 번의 변환에서 여러 번 당첨될 수 있습니다(중복 포함). 표시된 퍼센트는 1회 이상 당첨될 확률입니다. 같은 추첨 풀에서는 가중치에 따라 아이템 하나가 선택됩니다.',
   },
   'pl-PL': {
     title: 'Wyniki konwersji',
@@ -120,9 +131,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Wymagana praca',
     boost: 'Podanie {{item}} przyspiesza konwersję ×{{mult}}',
     poolCount: '{{count}} możliwych przedmiotów',
-    rolls: '{{count}} losowań',
+    rolls: '{{count}} niezależnych losowań',
+    upTo: 'do {{count}} nagród',
     convertAt: 'Konwertowane w',
-    note: 'Każde losowanie odbywa się niezależnie; wiersze z wieloma losowaniami pokazują szansę na co najmniej jedno trafienie. Przedmioty w puli dzielą losowanie według wagi.',
+    note: 'Każde losowanie jest niezależne. Wiersz z wieloma losowaniami losuje się raz na losowanie z podanymi szansami, więc może trafić kilka razy na konwersję (także duplikaty); jego procent to szansa na co najmniej jedno trafienie. W obrębie puli przedmiot jest losowany według wagi.',
   },
   'pt-BR': {
     title: 'Resultados da conversão',
@@ -130,9 +142,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Trabalho necessário',
     boost: 'Fornecer {{item}} acelera a conversão ×{{mult}}',
     poolCount: '{{count}} itens possíveis',
-    rolls: '{{count}} sorteios',
+    rolls: '{{count}} sorteios independentes',
+    upTo: 'até {{count}} prêmios',
     convertAt: 'Convertido em',
-    note: 'Cada sorteio acontece de forma independente; linhas com vários sorteios mostram a chance de acertar pelo menos uma vez. Itens de um grupo compartilham o sorteio conforme o peso.',
+    note: 'Cada sorteio é independente. Uma linha com vários sorteios é sorteada uma vez por sorteio com as chances mostradas, podendo acertar várias vezes por conversão (inclusive repetidos); sua porcentagem é a chance de acertar pelo menos uma vez. Dentro de um grupo, um item é sorteado pelo peso.',
   },
   'ru-RU': {
     title: 'Результаты преобразования',
@@ -140,9 +153,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Требуемая работа',
     boost: 'Подача {{item}} ускоряет преобразование ×{{mult}}',
     poolCount: 'Возможных предметов: {{count}}',
-    rolls: 'Бросков: {{count}}',
+    rolls: 'Независимых бросков: {{count}}',
+    upTo: 'до {{count}} наград',
     convertAt: 'Преобразуется в',
-    note: 'Каждый бросок происходит независимо; строки с несколькими бросками показывают шанс хотя бы одного попадания. Предметы в пуле делят бросок по весу.',
+    note: 'Каждый бросок независим. Строка с несколькими бросками разыгрывается отдельно на каждый бросок с указанными шансами, поэтому за одно преобразование может выпасть несколько раз (в том числе повторно); её процент — шанс хотя бы одного попадания. Внутри пула предмет выбирается по весу.',
   },
   'th-TH': {
     title: 'ผลลัพธ์การแปลง',
@@ -150,9 +164,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'ปริมาณงานที่ต้องใช้',
     boost: 'ให้ {{item}} จะเร่งความเร็วการแปลง ×{{mult}}',
     poolCount: 'ไอเทมที่เป็นไปได้ {{count}} ชนิด',
-    rolls: 'สุ่ม {{count}} ครั้ง',
+    rolls: 'สุ่มอิสระ {{count}} ครั้ง',
+    upTo: 'ได้สูงสุด {{count}} ชิ้น',
     convertAt: 'แปลงได้ที่',
-    note: 'การสุ่มแต่ละครั้งเกิดขึ้นอย่างอิสระ แถวที่สุ่มหลายครั้งจะแสดงโอกาสที่จะได้อย่างน้อยหนึ่งครั้ง ไอเทมในกลุ่มเดียวกันแบ่งโอกาสตามน้ำหนัก',
+    note: 'การสุ่มแต่ละครั้งเป็นอิสระต่อกัน แถวที่สุ่มหลายครั้งจะสุ่มทีละครั้งตามโอกาสที่แสดง จึงอาจได้หลายครั้งต่อการแปลงหนึ่งครั้ง (ซ้ำกันได้) เปอร์เซ็นต์ที่แสดงคือโอกาสได้อย่างน้อยหนึ่งครั้ง ภายในกลุ่มเดียวกันจะสุ่มไอเทมหนึ่งชิ้นตามน้ำหนัก',
   },
   'tr-TR': {
     title: 'Dönüştürme Çıktıları',
@@ -160,9 +175,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Gerekli iş',
     boost: '{{item}} verilirse dönüştürme ×{{mult}} hızlanır',
     poolCount: '{{count}} olası eşya',
-    rolls: '{{count}} çekiliş',
+    rolls: '{{count}} bağımsız çekiliş',
+    upTo: 'en fazla {{count}} ödül',
     convertAt: 'Dönüştürüldüğü yer',
-    note: 'Her çekiliş bağımsız yapılır; birden çok çekilişli satırlar en az bir kez isabet şansını gösterir. Bir havuzdaki eşyalar çekilişi ağırlığa göre paylaşır.',
+    note: 'Her çekiliş bağımsızdır. Birden çok çekilişli bir satır, listelenen şanslarla her çekiliş için ayrı çekilir; bu yüzden bir dönüştürmede birden çok kez (tekrarlar dahil) isabet edebilir. Yüzdesi en az bir isabet şansıdır. Bir havuz içinde eşya ağırlığa göre çekilir.',
   },
   'vi-VN': {
     title: 'Sản phẩm chuyển đổi',
@@ -170,9 +186,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: 'Công việc cần thiết',
     boost: 'Cung cấp {{item}} giúp chuyển đổi nhanh ×{{mult}}',
     poolCount: '{{count}} vật phẩm có thể nhận',
-    rolls: '{{count}} lượt quay',
+    rolls: '{{count}} lượt quay độc lập',
+    upTo: 'tối đa {{count}} phần thưởng',
     convertAt: 'Chuyển đổi tại',
-    note: 'Mỗi lượt quay diễn ra độc lập; hàng có nhiều lượt quay hiển thị tỉ lệ trúng ít nhất một lần. Vật phẩm trong cùng nhóm chia tỉ lệ theo trọng số.',
+    note: 'Mỗi lượt quay là độc lập. Hàng có nhiều lượt quay được quay riêng từng lượt theo tỉ lệ liệt kê, nên mỗi lần chuyển đổi có thể trúng nhiều lần (kể cả trùng lặp); phần trăm hiển thị là tỉ lệ trúng ít nhất một lần. Trong một nhóm, vật phẩm được chọn theo trọng số.',
   },
   'zh-CN': {
     title: '转换产出',
@@ -180,9 +197,10 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: '所需工作量',
     boost: '投喂{{item}}可使转换速度 ×{{mult}}',
     poolCount: '可能产出 {{count}} 种物品',
-    rolls: '{{count}} 次抽取',
+    rolls: '独立抽取 {{count}} 次',
+    upTo: '最多可获得 {{count}} 份',
     convertAt: '转换设施',
-    note: '每次抽取按所示概率独立进行；含多次抽取的行显示至少命中一次的概率；同一抽取池内的物品按权重分摊概率。',
+    note: '每次抽取相互独立。多次抽取的行每转换一次会按所列概率逐次抽取，因此可能命中多次（可重复获得）；所示百分比为至少命中一次的概率。同一抽取池内按权重抽中一件物品。',
   },
   'zh-TW': {
     title: '轉換產出',
@@ -190,8 +208,9 @@ export const RECYCLER_STRINGS: Record<Language, RecyclerStrings> = {
     work: '所需工作量',
     boost: '投餵{{item}}可使轉換速度 ×{{mult}}',
     poolCount: '可能產出 {{count}} 種物品',
-    rolls: '{{count}} 次抽取',
+    rolls: '獨立抽取 {{count}} 次',
+    upTo: '最多可獲得 {{count}} 份',
     convertAt: '轉換設施',
-    note: '每次抽取依所示機率獨立進行；含多次抽取的列顯示至少命中一次的機率；同一抽取池內的物品按權重分攤機率。',
+    note: '每次抽取相互獨立。多次抽取的列每轉換一次會依所列機率逐次抽取，因此可能命中多次（可重複獲得）；所示百分比為至少命中一次的機率。同一抽取池內按權重抽中一件物品。',
   },
 }
