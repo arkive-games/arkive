@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
-import { CircleMarker, MapContainer, Marker, Tooltip } from 'react-leaflet'
+import { CircleMarker, MapContainer, Marker, Tooltip, useMap } from 'react-leaflet'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Moon } from 'lucide-react'
@@ -31,6 +31,29 @@ function useMapLabels(lng: string): Record<string, string> {
     }
   }, [lng])
   return labels
+}
+
+// Wild-marker zoom scaling: anchored at 1.0 around zoom -2 (a typical mid
+// view), shrinking toward 0.6 fully zoomed out and growing to 1.4 zoomed in.
+// Quantized to 0.1 steps so continuous smooth-wheel zoom only re-renders the
+// markers (and grows the shared icon cache) a handful of times, not per frame.
+function zoomToScale(z: number): number {
+  const raw = Math.pow(2, (z + 2) * 0.35)
+  return Math.round(Math.min(1.4, Math.max(0.6, raw)) * 10) / 10
+}
+
+/** Reports the map's zoom-derived marker scale into parent state. */
+function ZoomScaleWatcher({ onScale }: { onScale: (scale: number) => void }) {
+  const map = useMap()
+  useEffect(() => {
+    const update = () => onScale(zoomToScale(map.getZoom()))
+    update()
+    map.on('zoom', update)
+    return () => {
+      map.off('zoom', update)
+    }
+  }, [map, onScale])
+  return null
 }
 
 /**
@@ -76,6 +99,7 @@ export function PalSpawnMap({
   const mapLabels = useMapLabels(lng)
   const [spawns, setSpawns] = useState<PalSpawns[] | null>(null)
   const [active, setActive] = useState(0)
+  const [zoomScale, setZoomScale] = useState(1)
 
   useEffect(() => {
     let cancelled = false
@@ -107,11 +131,12 @@ export function PalSpawnMap({
 
   // Match the main map's pal marker: circular portrait at scale 0.9.
   const iconUrl = useMemo(() => palIconUrl(palIcon), [palIcon])
-  // Boss points ring red and sit slightly larger so they read as highlighted;
-  // night-restricted wild points ring indigo; other wild points keep the
-  // default white ring at scale 0.9.
+  // Boss points keep the fixed-size red-ringed circle so they always read as
+  // highlighted; night-restricted wild points ring indigo; other wild points
+  // keep the default white ring. Wild markers scale with zoom (icons are
+  // rebuilt per quantized zoom step and shared via createPinIcon's cache).
   const iconFor = (kind: SpawnKind, night?: boolean) =>
-    createPinIcon(iconUrl, kind === 'boss' ? 1 : 0.9, false, {
+    createPinIcon(iconUrl, kind === 'boss' ? 1 : 0.9 * zoomScale, false, {
       variant: 'circular',
       ...(kind === 'boss' ? { ringColor: BOSS_RING } : night ? { ringColor: NIGHT_RING } : {}),
     })
@@ -185,12 +210,13 @@ export function PalSpawnMap({
           className="h-full w-full"
         >
           <GameMapTiles selectedMap={map} assets={palworldAssets} />
+          <ZoomScaleWatcher onScale={setZoomScale} />
           {current.points.map((p, i) =>
             p.kind === 'wild' && useDots ? (
               <CircleMarker
                 key={i}
                 center={dataToLatLng(map, p.x, p.y)}
-                radius={3}
+                radius={3 * zoomScale}
                 pathOptions={dotStyle(p.night)}
               >
                 {p.level ? <Tooltip direction="top">{p.level}</Tooltip> : null}
