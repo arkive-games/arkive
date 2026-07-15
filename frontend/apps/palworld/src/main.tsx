@@ -22,7 +22,7 @@ import ItemDetailPage from './features/items/ItemDetailPage'
 import BuildingListPage from './features/buildings/BuildingListPage'
 import BuildingDetailPage from './features/buildings/BuildingDetailPage'
 import TechnologyPage from './features/technology/TechnologyPage'
-import DungeonsPage from './features/dungeons/DungeonsPage'
+import DungeonListPage from './features/dungeons/DungeonListPage'
 import DungeonDetailPage from './features/dungeons/DungeonDetailPage'
 import QuestListPage from './features/quests/QuestListPage'
 import QuestDetailPage from './features/quests/QuestDetailPage'
@@ -157,7 +157,7 @@ const technologyRoute = createRoute({
   component: TechnologyPage,
 })
 export interface DungeonsSearch {
-  /** Dungeon SpawnAreaId to scroll to on load, e.g. /dungeons?d=Forest001 */
+  /** Legacy deep link (/dungeons?d=<SpawnAreaId>) — redirects to /dungeons/$id. */
   d?: string
 }
 const dungeonsRoute = createRoute({
@@ -166,7 +166,7 @@ const dungeonsRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): DungeonsSearch => ({
     d: typeof s.d === 'string' ? s.d : undefined,
   }),
-  component: DungeonsPage,
+  component: DungeonListPage,
 })
 const dungeonDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
