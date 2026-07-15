@@ -30,6 +30,35 @@ test('dungeon detail renders header, sections, and the entrance map', async ({ p
   await expect(page).toHaveURL(/\/dungeons\/Island001$/)
 })
 
+test('boss rewards: difficulty tabs, deduped interior chest, expanded loot', async ({ page }) => {
+  await page.goto('/dungeons/Grass001')
+  const section = page.getByTestId('dungeon-boss-rewards')
+  await expect(section).toBeVisible()
+
+  // Grass001 has Easy/Medium/Hard(+bonus) tiers → three tab buttons.
+  await expect(section.getByTestId('dungeon-tier-tab-easy')).toBeVisible()
+  await expect(section.getByTestId('dungeon-tier-tab-medium')).toBeVisible()
+  await expect(section.getByTestId('dungeon-tier-tab-hard')).toBeVisible()
+
+  // Easy tab (default): its treasure chest reuses the interior chest lottery →
+  // one-line reference instead of a repeated table.
+  await expect(section.getByTestId('dungeon-reward-shared-chest').first()).toBeVisible()
+  // Non-shared chest lotteries (the scrap pile) render expanded: item links are
+  // visible without opening any <details>.
+  await expect(section.locator('a[href*="/items/"]').first()).toBeVisible()
+
+  // The Hard tab shows the bonus tier under its own subheading.
+  await section.getByTestId('dungeon-tier-tab-hard').click()
+  await expect(section.getByText('Hard · bonus')).toBeVisible()
+})
+
+test('boss rewards without tier variants render no tab bar', async ({ page }) => {
+  await page.goto('/dungeons/Island001')
+  const section = page.getByTestId('dungeon-boss-rewards')
+  await expect(section).toBeVisible()
+  await expect(section.getByTestId('dungeon-tier-tab-hard')).toHaveCount(0)
+})
+
 test('legacy ?d= deep link redirects to the detail page', async ({ page }) => {
   await page.goto('/dungeons?d=Forest001')
   await expect(page).toHaveURL(/\/dungeons\/Forest001/)
