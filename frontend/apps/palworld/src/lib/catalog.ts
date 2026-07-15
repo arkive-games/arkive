@@ -189,6 +189,15 @@ async function fetchItems(lng: string): Promise<ItemsBundle> {
     j<Record<string, CatalogText>>(`${DATA_BASE}/locales/${lng}/items.json`),
     j<LabelsFile>(`${DATA_BASE}/locales/${lng}/labels.json`),
   ])
+  // droppedBy was `string[]` before boss drops were split out; tolerate stale
+  // deployed data by lifting bare ids into unflagged entries.
+  for (const it of file.items) {
+    if (it.droppedBy) {
+      it.droppedBy = it.droppedBy.map((e) =>
+        typeof e === 'string' ? { id: e } : e,
+      )
+    }
+  }
   return {
     items: file.items,
     byId: new Map(file.items.map((i) => [i.id, i])),
