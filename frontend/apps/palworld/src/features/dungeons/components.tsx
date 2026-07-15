@@ -46,8 +46,19 @@ export function ChanceBadge({ pct }: { pct: number }) {
 }
 
 /** One lottery rendered as its independent rolls; each roll lists the weighted
- *  item pool with per-roll chances, count ranges and chest-tier badges. */
-export function LotteryTable({ slots, b }: { slots: LotterySlot[]; b: Bundles }) {
+ *  item pool with per-roll chances, count ranges and chest-tier badges.
+ *  `columns` flows the items in responsive CSS multi-columns (full-width
+ *  sections); the probability footnote is the section's job (rendered once
+ *  per page, not per table). */
+export function LotteryTable({
+  slots,
+  b,
+  columns = false,
+}: {
+  slots: LotterySlot[]
+  b: Bundles
+  columns?: boolean
+}) {
   const { t } = useTranslation()
   const iname = (iid: string) => b.items.text[iid]?.name ?? iid
   return (
@@ -59,9 +70,12 @@ export function LotteryTable({ slots, b }: { slots: LotterySlot[]; b: Bundles })
               {t('dungeon.roll', { n: si + 1, pct: formatChance(slot.prob) })}
             </div>
           ) : null}
-          <ul className="space-y-1">
+          <ul className={columns ? 'gap-x-6 sm:columns-2 xl:columns-3' : 'space-y-1'}>
             {slot.items.map((it, ii) => (
-              <li key={`${it.item}-${ii}`} className="flex flex-wrap items-center gap-1.5">
+              <li
+                key={`${it.item}-${ii}`}
+                className={`flex flex-wrap items-center gap-1.5${columns ? ' mb-1 break-inside-avoid' : ''}`}
+              >
                 <ChanceBadge pct={itemChance(slot, it)} />
                 <ItemLink id={it.item} name={iname(it.item)} icon={b.items.byId.get(it.item)?.icon} />
                 {it.max > 1 || it.min > 1 ? (
@@ -79,7 +93,6 @@ export function LotteryTable({ slots, b }: { slots: LotterySlot[]; b: Bundles })
           </ul>
         </div>
       ))}
-      <p className="text-xs text-muted-foreground">{t('dungeon.lootNote')}</p>
     </div>
   )
 }
@@ -117,9 +130,22 @@ export function PalPool({
   )
 }
 
-/** One boss-room reward entry: kind label + tier share, expanding to the
- *  underlying loot (chest lottery / egg pool / cage pool / mimic pals). */
-export function RewardEntryRow({ tier, entry, b }: { tier: RewardTier; entry: RewardEntry; b: Bundles }) {
+/** One boss-room reward entry: kind label + tier share, with the underlying
+ *  loot shown inline (chest lottery expanded by default; egg/cage pools stay
+ *  collapsible). A chest that reuses the dungeon's interior chest lottery
+ *  (`interiorLottery`) renders a one-line reference instead of repeating the
+ *  full table. */
+export function RewardEntryRow({
+  tier,
+  entry,
+  b,
+  interiorLottery,
+}: {
+  tier: RewardTier
+  entry: RewardEntry
+  b: Bundles
+  interiorLottery?: string
+}) {
   const { t } = useTranslation()
   const share = entryShare(tier, entry)
   const isJunk = entry.kind === 'chest' && entry.object === 'TreasureBox_RequiredLongHold'
@@ -128,16 +154,17 @@ export function RewardEntryRow({ tier, entry, b }: { tier: RewardTier; entry: Re
   const label = t(`dungeon.kind.${kindKey}`)
 
   let detail: React.ReactNode = null
-  if (entry.lottery && b.dungeons.file.lotteries[entry.lottery]) {
+  if (entry.lottery && entry.lottery === interiorLottery) {
     detail = (
-      <details className="mt-1.5">
-        <summary className="cursor-pointer select-none text-xs text-primary hover:underline">
-          {t('dungeon.chestLoot')}
-        </summary>
-        <div className="mt-2">
-          <LotteryTable slots={b.dungeons.file.lotteries[entry.lottery]} b={b} />
-        </div>
-      </details>
+      <div className="mt-1 text-xs text-muted-foreground" data-testid="dungeon-reward-shared-chest">
+        {t('dungeon.sameAsChest')}
+      </div>
+    )
+  } else if (entry.lottery && b.dungeons.file.lotteries[entry.lottery]) {
+    detail = (
+      <div className="mt-2">
+        <LotteryTable slots={b.dungeons.file.lotteries[entry.lottery]} b={b} />
+      </div>
     )
   } else if (entry.eggPool && b.dungeons.file.eggPools[entry.eggPool]) {
     const pool = b.dungeons.file.eggPools[entry.eggPool]
@@ -173,7 +200,9 @@ export function RewardEntryRow({ tier, entry, b }: { tier: RewardTier; entry: Re
   }
 
   return (
-    <li className="rounded-md border border-border/60 bg-secondary/20 px-2.5 py-2">
+    // mb + break-inside-avoid instead of parent space-y: the entries flow in
+    // CSS multi-columns on the detail page, where margins must stay with the card.
+    <li className="mb-2 break-inside-avoid rounded-md border border-border/60 bg-secondary/20 px-2.5 py-2">
       <div className="flex items-center gap-1.5">
         <ChanceBadge pct={share} />
         <span className="text-sm font-medium">{label}</span>

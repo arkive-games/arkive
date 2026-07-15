@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight, Fish, Skull, Swords } from 'lucide-react'
@@ -10,6 +10,7 @@ import {
   dungeonLevelRange,
   notableDrops,
   type DungeonEntry,
+  type RewardTier,
 } from '../../lib/dungeons'
 import {
   CatalogSection,
@@ -28,6 +29,82 @@ const NAV_LINK =
 /** Difficulty order shared with the list page (ascending EXP bonus, then id). */
 function orderDungeons(list: DungeonEntry[]): DungeonEntry[] {
   return [...list].sort((a, c) => a.bonusExpRate - c.bonusExpRate || a.id.localeCompare(c.id))
+}
+
+const TAB_ORDER = ['easy', 'medium', 'hard'] as const
+type TabKey = (typeof TAB_ORDER)[number]
+
+/** Boss-room rewards as a full-width tabbed card: one tab per difficulty, the
+ *  `bonus` tier riding in the Hard tab under its own subheading. Dungeons with
+ *  a single tier group render no tab bar. Entries flow in CSS multi-columns. */
+function BossRewardsSection({ d, b }: { d: DungeonEntry; b: Bundles }) {
+  const { t } = useTranslation()
+  const groups = useMemo(() => {
+    const byKey = new Map<TabKey, RewardTier[]>()
+    for (const tier of d.bossRewards) {
+      const key = TIER_KEY[tier.tier] ?? 'hard'
+      const tab: TabKey = key === 'bonus' ? 'hard' : key
+      byKey.set(tab, [...(byKey.get(tab) ?? []), tier])
+    }
+    return TAB_ORDER.filter((k) => byKey.has(k)).map((k) => ({ key: k, tiers: byKey.get(k)! }))
+  }, [d])
+  const [active, setActive] = useState(0)
+  // Prev/next navigation can land on a dungeon with fewer tabs.
+  useEffect(() => {
+    setActive(0)
+  }, [d.id])
+  const group = groups[Math.min(active, groups.length - 1)]
+  if (!group) return null
+
+  return (
+    <CatalogSection title={t('dungeon.bossRewards')} testId="dungeon-boss-rewards">
+      {groups.length > 1 ? (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {groups.map((g, i) => (
+            <button
+              key={g.key}
+              type="button"
+              data-testid={`dungeon-tier-tab-${g.key}`}
+              aria-pressed={g === group}
+              onClick={() => setActive(i)}
+              className={
+                'rounded-md px-3 py-1.5 text-sm transition ' +
+                (g === group
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground hover:bg-accent')
+              }
+            >
+              {t(`dungeon.tier.${g.key}`)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div className="space-y-3">
+        {group.tiers.map((tier) => (
+          <div key={tier.tier}>
+            {/* The bonus tier always announces itself; the tab already names
+                the main tier, so plain tiers get no redundant subheading. */}
+            {(TIER_KEY[tier.tier] ?? 'hard') === 'bonus' ? (
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">
+                {t('dungeon.tier.bonus')}
+              </div>
+            ) : null}
+            <ul className="gap-x-4 md:columns-2 xl:columns-3">
+              {tier.entries.map((entry, i) => (
+                <RewardEntryRow
+                  key={i}
+                  tier={tier}
+                  entry={entry}
+                  b={b}
+                  interiorLottery={d.chests?.normal}
+                />
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </CatalogSection>
+  )
 }
 
 export default function DungeonDetailPage() {
@@ -188,38 +265,23 @@ export default function DungeonDetailPage() {
             <DungeonEntranceMap dungeonId={d.id} dungeonName={name} />
           </div>
 
-          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-            <div className="space-y-6">
-              {normalLot ? (
-                <CatalogSection title={t('dungeon.chestLoot')} testId="dungeon-chest-loot">
-                  <LotteryTable slots={normalLot} b={b} />
-                </CatalogSection>
-              ) : null}
-              {specialLot ? (
-                <CatalogSection title={t('dungeon.techChest')} testId="dungeon-tech-chest">
-                  <LotteryTable slots={specialLot} b={b} />
-                </CatalogSection>
-              ) : null}
-            </div>
-            {d.bossRewards.length ? (
-              <CatalogSection title={t('dungeon.bossRewards')} testId="dungeon-boss-rewards">
-                <div className="space-y-3">
-                  {d.bossRewards.map((tier) => (
-                    <div key={tier.tier}>
-                      <div className="mb-1.5 text-xs font-medium text-muted-foreground">
-                        {t(`dungeon.tier.${TIER_KEY[tier.tier] ?? 'hard'}`)}
-                      </div>
-                      <ul className="space-y-1.5">
-                        {tier.entries.map((entry, i) => (
-                          <RewardEntryRow key={i} tier={tier} entry={entry} b={b} />
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </CatalogSection>
-            ) : null}
-          </div>
+          {normalLot ? (
+            <CatalogSection title={t('dungeon.chestLoot')} testId="dungeon-chest-loot">
+              <LotteryTable slots={normalLot} b={b} columns />
+            </CatalogSection>
+          ) : null}
+          {specialLot ? (
+            <CatalogSection title={t('dungeon.techChest')} testId="dungeon-tech-chest">
+              <LotteryTable slots={specialLot} b={b} columns />
+            </CatalogSection>
+          ) : null}
+          {d.bossRewards.length ? <BossRewardsSection d={d} b={b} /> : null}
+
+          {/* One probability footnote for every loot table above (was repeated
+              under each table). */}
+          {normalLot || specialLot || d.bossRewards.length ? (
+            <p className="text-xs text-muted-foreground">{t('dungeon.lootNote')}</p>
+          ) : null}
 
           <Link to="/dungeons" className="inline-block text-sm text-primary hover:underline">
             {t('dungeon.backToList')}
