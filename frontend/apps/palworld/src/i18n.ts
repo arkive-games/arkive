@@ -6,6 +6,7 @@ import { CATALOG_STRINGS } from './catalogStrings'
 import { DUNGEON_STRINGS } from './dungeonStrings'
 import { PAL_STRINGS } from './palStrings'
 import { QUEST_STRINGS } from './questStrings'
+import { RECYCLER_STRINGS } from './recyclerStrings'
 
 export const LANGUAGES = ['en-US', 'de-DE', 'es-ES', 'es-MX', 'fr-FR', 'id-ID', 'it-IT', 'ja-JP', 'ko-KR', 'pl-PL', 'pt-BR', 'ru-RU', 'th-TH', 'tr-TR', 'vi-VN', 'zh-CN', 'zh-TW'] as const
 export type Language = (typeof LANGUAGES)[number]
@@ -813,6 +814,7 @@ for (const lng of LANGUAGES) {
       tech: CATALOG_STRINGS[lng].tech,
       quest: QUEST_STRINGS[lng] ?? QUEST_STRINGS['en-US'],
       dungeon: DUNGEON_STRINGS[lng] ?? DUNGEON_STRINGS['en-US'],
+      recycler: RECYCLER_STRINGS[lng] ?? RECYCLER_STRINGS['en-US'],
       catalogLoading: CATALOG_STRINGS[lng].loading,
       catalogShowMore: SHOW_MORE_LABELS[lng],
       more: MORE_LABELS[lng],

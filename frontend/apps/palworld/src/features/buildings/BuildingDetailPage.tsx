@@ -12,6 +12,8 @@ import {
   type TechBundle,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
+import { loadRecycler, type RecyclerFile } from '../../lib/recycler'
+import { RecyclerComparisonSection } from '../recycler/RecyclerSections'
 import { buildingTypeLabel, energyLabel } from '../catalog/labels'
 import {
   CatalogSection,
@@ -42,6 +44,19 @@ export default function BuildingDetailPage() {
 
   const [b, setB] = useState<Bundles | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  // Relic-recycler conversion odds. Loaded separately and best-effort: the
+  // page renders fully without it (only the recycler building shows it).
+  const [recycler, setRecycler] = useState<RecyclerFile | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    loadRecycler()
+      .then((r) => { if (!cancelled) setRecycler(r) })
+      .catch((err) => console.error(err))
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -179,6 +194,12 @@ export default function BuildingDetailPage() {
               </CatalogSection>
             </div>
           </div>
+
+          {/* Relic-conversion odds: full width — the five-tier comparison
+              table doesn't fit next to the sidebar. */}
+          {recycler && recycler.building === id ? (
+            <RecyclerComparisonSection file={recycler} items={b.items} />
+          ) : null}
 
           <Link to="/buildings" className="inline-block text-sm text-primary hover:underline">
             {t('building.backToList')}

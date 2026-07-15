@@ -12,6 +12,8 @@ import {
   type TechBundle,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
+import { loadRecycler, type RecyclerFile } from '../../lib/recycler'
+import { RecyclerRecipeSection } from '../recycler/RecyclerSections'
 import { itemTypeLabel } from '../catalog/labels'
 import {
   CatalogSection,
@@ -58,6 +60,9 @@ export default function ItemDetailPage() {
   // Dungeon loot dataset for the "found in dungeons" obtain row. Loaded
   // separately and best-effort: the page renders fully without it.
   const [dungeons, setDungeons] = useState<DungeonsBundle | null>(null)
+  // Relic-recycler odds for the "conversion outputs" section on relic items;
+  // best-effort like the dungeons dataset.
+  const [recycler, setRecycler] = useState<RecyclerFile | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -79,6 +84,9 @@ export default function ItemDetailPage() {
     let cancelled = false
     loadDungeons(lng)
       .then((d) => { if (!cancelled) setDungeons(d) })
+      .catch((err) => console.error(err))
+    loadRecycler()
+      .then((r) => { if (!cancelled) setRecycler(r) })
       .catch((err) => console.error(err))
     return () => {
       cancelled = true
@@ -113,6 +121,7 @@ export default function ItemDetailPage() {
       const foodRows = food ? FOOD_KEYS.filter((k) => food[k] != null && food[k] !== 0) : []
       const equipRows = equip ? EQUIP_KEYS.filter((k) => equip[k] != null && equip[k] !== 0) : []
       const elementLabel = item.element ? b.pals.enums.elements[item.element] ?? item.element : ''
+      const recyclerRecipe = recycler?.recipes.find((r) => r.input === id)
 
       body = (
         <div className="space-y-6">
@@ -227,6 +236,15 @@ export default function ItemDetailPage() {
                     </div>
                   ) : null}
                 </CatalogSection>
+              ) : null}
+
+              {recycler && recyclerRecipe ? (
+                <RecyclerRecipeSection
+                  file={recycler}
+                  recipe={recyclerRecipe}
+                  items={b.items}
+                  buildings={b.buildings}
+                />
               ) : null}
 
               {item.usedInItems?.length || item.usedInBuildings?.length ? (
