@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
-import { Skull, Swords } from 'lucide-react'
+import { Fish, Skull, Swords } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
@@ -198,8 +198,24 @@ function RewardEntryRow({ tier, entry, b }: { tier: RewardTier; entry: RewardEnt
 function DungeonCard({ d, b }: { d: DungeonEntry; b: Bundles }) {
   const { t } = useTranslation()
   const name = b.dungeons.text[d.id]?.name ?? d.id
-  const bosses = d.enemies?.boss ?? []
-  const normals = d.enemies?.normal ?? []
+  const e = d.enemies ?? {}
+  // Row per spawn bucket. When deeper floors exist (the Terraria-collab
+  // dungeon), the base pool reads "Floor 1" instead of the generic "Enemies".
+  const enemyRows = [
+    { key: 'boss', label: t('dungeon.boss'), icon: Swords, tone: 'text-destructive', list: e.boss },
+    { key: 'midBoss', label: t('dungeon.midBoss'), icon: Swords, tone: 'text-muted-foreground', list: e.midBoss },
+    {
+      key: 'normal',
+      label: e.floor2 ? t('dungeon.floor', { n: 1 }) : t('dungeon.enemies'),
+      icon: Skull, tone: 'text-muted-foreground', list: e.normal,
+    },
+    { key: 'floor2', label: t('dungeon.floor', { n: 2 }), icon: Skull, tone: 'text-muted-foreground', list: e.floor2 },
+    { key: 'floor3', label: t('dungeon.floor', { n: 3 }), icon: Skull, tone: 'text-muted-foreground', list: e.floor3 },
+    { key: 'floor4', label: t('dungeon.floor', { n: 4 }), icon: Skull, tone: 'text-muted-foreground', list: e.floor4 },
+    { key: 'fishing', label: t('dungeon.fishing'), icon: Fish, tone: 'text-muted-foreground', list: e.fishing },
+  ]
+    .map((r) => ({ ...r, list: r.list ?? [] }))
+    .filter((r) => r.list.length)
   const normalLot = d.chests?.normal ? b.dungeons.file.lotteries[d.chests.normal] : undefined
   const specialLot = d.chests?.special ? b.dungeons.file.lotteries[d.chests.special] : undefined
 
@@ -214,40 +230,24 @@ function DungeonCard({ d, b }: { d: DungeonEntry; b: Bundles }) {
         </span>
       </div>
 
-      {bosses.length || normals.length ? (
+      {enemyRows.length ? (
         <div className="mb-4 space-y-2">
-          {bosses.length ? (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-destructive">
-                <Swords className="size-3.5" aria-hidden />
-                {t('dungeon.boss')}
+          {enemyRows.map((row) => (
+            <div key={row.key} className="flex flex-wrap items-center gap-1.5">
+              <span className={`inline-flex items-center gap-1 text-xs font-semibold ${row.tone}`}>
+                <row.icon className="size-3.5" aria-hidden />
+                {row.label}
               </span>
-              {bosses.map((e, i) => (
-                <span key={`${e.pal}-${i}`} className="inline-flex items-center gap-1">
-                  <PalLink id={e.pal} name={b.pals.text[e.pal]?.name ?? e.pal} icon={b.pals.byId.get(e.pal)?.icon} />
+              {row.list.map((en, i) => (
+                <span key={`${en.pal}-${i}`} className="inline-flex items-center gap-1">
+                  <PalLink id={en.pal} name={b.pals.text[en.pal]?.name ?? en.pal} icon={b.pals.byId.get(en.pal)?.icon} />
                   <span className="text-xs tabular-nums text-muted-foreground">
-                    Lv.{e.lvMin === e.lvMax ? e.lvMin : `${e.lvMin}–${e.lvMax}`}
+                    Lv.{en.lvMin === en.lvMax ? en.lvMin : `${en.lvMin}–${en.lvMax}`}
                   </span>
                 </span>
               ))}
             </div>
-          ) : null}
-          {normals.length ? (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-                <Skull className="size-3.5" aria-hidden />
-                {t('dungeon.enemies')}
-              </span>
-              {normals.map((e, i) => (
-                <span key={`${e.pal}-${i}`} className="inline-flex items-center gap-1">
-                  <PalLink id={e.pal} name={b.pals.text[e.pal]?.name ?? e.pal} icon={b.pals.byId.get(e.pal)?.icon} />
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    Lv.{e.lvMin === e.lvMax ? e.lvMin : `${e.lvMin}–${e.lvMax}`}
-                  </span>
-                </span>
-              ))}
-            </div>
-          ) : null}
+          ))}
         </div>
       ) : null}
 

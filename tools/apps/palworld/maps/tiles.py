@@ -95,7 +95,8 @@ def _icon_source_path(raw: Path, name: str) -> Path | None:
     pal = raw / "Texture/PalIcon/Normal" / f"{name}.png"
     if pal.exists():
         return pal
-    return None
+    # Collab pal icons sit in subfolders (e.g. Normal/Yakushima/).
+    return next((raw / "Texture/PalIcon/Normal").rglob(f"{name}.png"), None)
 
 
 def _save_webp(img: Image.Image, dest: Path) -> None:

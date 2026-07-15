@@ -119,14 +119,18 @@ def build_dataset(parsed: dict) -> dict:
                 pal_id_order.setdefault(p["id"], True)
 
     pal_subtypes = []
+    en_names = names_by_lang["en-US"]
     for pid in pal_id_order:
         z = z_for_id(pid)
         zi = z["zukanIndex"] if isinstance(z["zukanIndex"], (int, float)) else -1
-        # Wild creatures without a Paldeck number (Yakushima dungeon monsters,
-        # cave bats, …) aren't catchable Pals. They're dungeon-instanced spawns
-        # that stack on a single dungeon-entrance point, so drop them entirely
-        # rather than surfacing a separate "enemy" category on the map.
-        if zi <= 0:
+        # Wild creatures without a Paldeck number: the Terraria-collab
+        # (Yakushima) creatures are real catchable Pals with their own name and
+        # icon — keep them (their markers sit on the dungeon-entrance point the
+        # instanced spawners are placed at). Nameless/iconless internal
+        # codenames would render as raw ids, so those stay dropped.
+        if zi <= 0 and not (
+            _pal_icon(pal_icons, pid) and (en_names.get(_base_id(pid)) or en_names.get(pid))
+        ):
             continue
         pal_subtypes.append({
             "id": pid, "category": "pal",

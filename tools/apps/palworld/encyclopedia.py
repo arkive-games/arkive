@@ -1,8 +1,9 @@
 """Encyclopedia stage: emit per-Pal encyclopedia data + the global passive list.
 
-Reuses the breeding stage's roster/name logic (a Pal is catalogued iff
-``IsPal`` and ``CombiRank != 9999`` and ``ZukanIndex >= 1`` and it has a real
-name and a normal icon). For each such Pal we gather base stats, elements, work
+Reuses the breeding stage's roster/name logic (a Pal is in the roster iff
+``IsPal`` and ``CombiRank != 9999`` and it has a real name and a normal icon —
+see ``breeding._is_roster``; the uncatalogued Terraria-collab creatures pass
+with ``ZukanIndex -1``). For each such Pal we gather base stats, elements, work
 suitability, its partner skill, its active-skill learnset, innate passives and
 kill drops from the raw CUE4Parse tables under ``DataTable``.
 
@@ -33,7 +34,7 @@ from pathlib import Path
 import yaml
 from PIL import Image
 
-from .breeding import _has_real_name, _names_by_lang
+from .breeding import _icon_paths, _is_roster, _names_by_lang, _roster_sort_key
 from .env import require_dir
 from .maps.common import read_rows, round2, write_json
 from .maps.extract import JA_TAG, L10N_LANG_TAGS
@@ -194,16 +195,6 @@ def _text_by_lang(raw: Path, rel: str, prefix: str) -> dict[str, dict]:
 
 def _all_tags() -> list[str]:
     return [JA_TAG, *L10N_LANG_TAGS.values()]
-
-
-def _is_roster(cid: str, r: dict, names_by_lang: dict, raw_icons: set) -> bool:
-    return (
-        r.get("IsPal") is True
-        and r.get("CombiRank") != 9999
-        and (r.get("ZukanIndex", -1) or -1) >= 1
-        and _has_real_name(names_by_lang, cid)
-        and f"T_{cid}_icon_normal" in raw_icons
-    )
 
 
 def _stats(r: dict) -> dict:
@@ -799,7 +790,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     passive_main = read_rows(raw / "DataTable/PassiveSkill/DT_PassiveSkill_Main.json")
     drop_rows = read_rows(raw / "DataTable/Character/DT_PalDropItem.json")
     names_by_lang = _names_by_lang(raw)
-    raw_icons = {p.stem for p in (raw / "Texture/PalIcon/Normal").iterdir() if p.suffix == ".png"}
+    icon_paths = _icon_paths(raw)
 
     waza_by_id = _waza_lookup(waza_data)
 
@@ -808,7 +799,8 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     for row in waza_master.values():
         learnsets.setdefault(row.get("PalId"), []).append(row)
 
-    roster = {cid: r for cid, r in mon.items() if _is_roster(cid, r, names_by_lang, raw_icons)}
+    roster = {cid: r for cid, r in mon.items() if _is_roster(cid, r, names_by_lang, icon_paths)}
+    row_index = {cid: i for i, cid in enumerate(mon)}
     summon_recipes = _summon_recipes(raw, set(roster))
     egg_tiers, egg_families = _egg_config(raw)
     gear_types = _gear_types(raw)
@@ -853,7 +845,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "summonable": cid in summon_recipes,
             **({"summonMaterials": summon_recipes[cid]} if cid in summon_recipes else {}),
         })
-    pals.sort(key=lambda p: (p["zukanIndex"], p["zukanIndexSuffix"], p["id"]))
+    pals.sort(key=lambda p: _roster_sort_key(p["zukanIndex"], p["zukanIndexSuffix"], row_index[p["id"]]))
 
     # Filter facets: only the element / work / reaction values actually present in
     # the roster (canonical order), so the frontend hides chips with no pals.

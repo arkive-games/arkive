@@ -23,8 +23,12 @@ one per random-dungeon type; the map's portal markers carry the same ids — see
   item is weight-drawn (``WeightInSlot``) with a count range and a
   ``TreasureBoxGrade`` (1–6, the chest tier the item appears in).
 * ``Character/DT_CapturedCagePal`` — the caged-pal pool per cage lottery name.
-* ``Dungeon/DT_DungeonEnemySpawnDataTable`` — Normal/Boss spawner sheets per
-  area, resolved to pal + level ranges.
+* ``Dungeon/DT_DungeonEnemySpawnDataTable`` — enemy spawner sheets per area,
+  resolved to pal + level ranges. Ranks map to buckets via ``_RANK_KEY``:
+  Normal + Monster → ``normal``, the collab dungeon's deeper floors
+  Normal02–04 → ``floor2``–``floor4``, MidBoss → ``midBoss`` (the alpha
+  mini-boss pool), FishPal → ``fishing`` (interior fishing spots),
+  Boss → ``boss``. NPCHuman sheets (human enemies, not pals) are skipped.
 
 Outputs:
   data-palworld/dungeons.json                  {dungeons, lotteries, eggPools, cagePools}
@@ -54,6 +58,17 @@ _ITEM_SPAWNER_TYPE = "EPalDungeonItemSpawnerType::"
 _SKIP_AREAS = {"TestDebug01"}
 # Reward tiers in ascending-difficulty display order.
 _TIER_ORDER = ["Easy01", "Medium01", "Hard01", "Hard02", "Hard03"]
+
+# Enemy-spawn rank buckets → emitted keys. ``Monster`` (aggressive interior
+# spawns) merges into ``normal``; ``Normal02``–``04`` are the Terraria-collab
+# dungeon's deeper floors (cavern/mushroom/hallow); ``NPCHuman`` sheets carry
+# human NPCs only (no pals) and are skipped.
+_RANK_KEY = {
+    "Normal": "normal", "Monster": "normal",
+    "Normal02": "floor2", "Normal03": "floor3", "Normal04": "floor4",
+    "MidBoss": "midBoss", "FishPal": "fishing", "Boss": "boss",
+}
+_ENEMY_KEY_ORDER = ["normal", "floor2", "floor3", "floor4", "midBoss", "fishing", "boss"]
 
 # Boss-reward blueprint stems → entry kind. Junk piles are long-hold scrap
 # chests with their own item lottery, so they render as chests too.
@@ -256,7 +271,9 @@ def run_dungeons(raw: Path, data_out: Path) -> dict:
         area = r.get("SpawnAreaId")
         if area not in exp_by_area:
             continue
-        rank = (r.get("RankType") or "").split("::")[-1].lower()
+        rank = _RANK_KEY.get((r.get("RankType") or "").split("::")[-1])
+        if not rank:
+            continue
         path = _bp_path(raw, (r.get("SpawnerBlueprintSoftClass") or {}).get("AssetPathName"))
         pals = _sheet_pals(_bp_props(path)) if path else []
         if not pals:
@@ -288,7 +305,7 @@ def run_dungeons(raw: Path, data_out: Path) -> dict:
         }
         enemies = enemies_by_area.get(area)
         if enemies:
-            d["enemies"] = {k: enemies[k] for k in ("normal", "boss") if k in enemies}
+            d["enemies"] = {k: enemies[k] for k in _ENEMY_KEY_ORDER if k in enemies}
         dungeons.append(d)
 
     lotteries = {}

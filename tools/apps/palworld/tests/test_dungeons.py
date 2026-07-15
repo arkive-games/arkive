@@ -62,9 +62,25 @@ def test_dungeons_integration(tmp_path):
         {"kind": "chest", "weight": 1.0, "lottery": "Forest001_Dungeon_Elixir"},
     ]
 
-    # Enemies: normal mobs + the dungeon boss with level ranges.
+    # Enemies: normal mobs + the dungeon boss with level ranges. Monster-rank
+    # interior spawns merge into normal; MidBoss and FishPal ranks get their
+    # own buckets.
     assert forest["enemies"]["boss"] and forest["enemies"]["normal"]
     assert all(e["lvMin"] <= e["lvMax"] for r in forest["enemies"].values() for e in r)
+    assert any(e["pal"] == "CatVampire" for e in forest["enemies"]["normal"])  # Monster rank
+    assert any(e["pal"] == "Werewolf" for e in forest["enemies"]["midBoss"])
+    assert any(e["pal"] == "JellyfishFairy" for e in forest["enemies"]["fishing"])
+
+    # The Terraria-collab dungeon spans four floor sheets (Normal..Normal04);
+    # each floor is emitted so the deeper-floor creatures aren't lost.
+    yaku = dungeons["Yakushima001"]["enemies"]
+    assert [e["pal"] for e in yaku["boss"]] == ["YakushimaBoss001"]
+    assert any(e["pal"] == "YakushimaMonster001" for e in yaku["normal"])
+    assert any(e["pal"] == "YakushimaMonster001_Red" for e in yaku["floor2"])
+    assert any(e["pal"] == "MushroomDragon" for e in yaku["floor3"])
+    assert {"YakushimaMonster001_Rainbow", "YakushimaMonster002"} <= {
+        e["pal"] for e in yaku["floor4"]
+    }
 
     # Locale files: real names per language, no blanks, dungeon set matches.
     en = json.loads((tmp_path / "locales/en-US/dungeons.json").read_text(encoding="utf-8"))

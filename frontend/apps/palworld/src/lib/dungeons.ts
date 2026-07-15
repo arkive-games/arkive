@@ -54,7 +54,19 @@ export interface DungeonEntry {
    *  guaranteed technology-book chest. Values are lottery names. */
   chests?: { normal?: string; special?: string }
   bossRewards: RewardTier[]
-  enemies?: { normal?: DungeonEnemy[]; boss?: DungeonEnemy[] }
+  /** Enemy pools by spawn bucket: `normal` = interior spawns (incl. the
+   *  aggressive Monster-rank sheet), `floor2`–`floor4` = the Terraria-collab
+   *  dungeon's deeper floors, `midBoss` = the alpha mini-boss pool,
+   *  `fishing` = interior fishing spots, `boss` = the boss room. */
+  enemies?: {
+    normal?: DungeonEnemy[]
+    floor2?: DungeonEnemy[]
+    floor3?: DungeonEnemy[]
+    floor4?: DungeonEnemy[]
+    midBoss?: DungeonEnemy[]
+    fishing?: DungeonEnemy[]
+    boss?: DungeonEnemy[]
+  }
 }
 export interface DungeonsFile {
   dungeons: DungeonEntry[]

@@ -14,3 +14,12 @@ export function formatPalId(zukanIndex?: number, suffix?: string): IdLabelValue 
 export function palIdText(id?: IdLabelValue): string | undefined {
   return id ? `${id.text}${id.accent ?? ''}` : undefined
 }
+
+/**
+ * Sortable Paldeck position: uncatalogued pals (zukanIndex <= 0, e.g. the
+ * Terraria-collab creatures) sort after every numbered pal instead of first.
+ * Ties keep the dataset's emitted order (Array.prototype.sort is stable).
+ */
+export function zukanOrder(zukanIndex: number): number {
+  return zukanIndex <= 0 ? Number.MAX_SAFE_INTEGER : zukanIndex
+}

@@ -65,27 +65,41 @@ def _has_real_name(names_by_lang: dict, cid: str) -> bool:
     return bool(n) and n != "-"
 
 
+def _icon_paths(raw: Path) -> dict[str, Path]:
+    """{stem: path} of every pal icon under ``Texture/PalIcon/Normal``, searched
+    recursively: the Terraria-collab (Yakushima) creatures keep theirs in a
+    ``Yakushima/`` subfolder."""
+    return {p.stem: p for p in (raw / "Texture/PalIcon/Normal").rglob("*.png")}
+
+
+def _is_roster(cid: str, r: dict, names_by_lang: dict, icon_stems) -> bool:
+    """Catalogued or collab Pals with a real name and icon. Excludes
+    placeholders/unreleased content (CombiRank 9999, name "-") and internal
+    boss/quest/tower variants (no icon of their own). No ZukanIndex gate: the
+    Terraria-collab creatures are real catchable Pals with ZukanIndex -1."""
+    return (
+        r.get("IsPal") is True
+        and r.get("CombiRank") != 9999
+        and _has_real_name(names_by_lang, cid)
+        and f"T_{cid}_icon_normal" in icon_stems
+    )
+
+
+def _roster_sort_key(zukan_index: int, zukan_suffix: str, row_index: int):
+    """Paldeck order, with uncatalogued (ZukanIndex < 1) collab Pals last in
+    their DataTable row order."""
+    return (zukan_index < 1, zukan_index, zukan_suffix, row_index)
+
+
 def run_breeding(raw: Path, data_out: Path, res_out: Path) -> None:
     raw, data_out, res_out = Path(raw), Path(data_out), Path(res_out)
 
     mon = read_rows(raw / "DataTable/Character/DT_PalMonsterParameter.json")
     combi = read_rows(raw / "DataTable/Character/DT_PalCombiUnique.json")
     names_by_lang = _names_by_lang(raw)
-    raw_icons = {p.stem for p in (raw / "Texture/PalIcon/Normal").iterdir() if p.suffix == ".png"}
+    icon_paths = _icon_paths(raw)
 
-    # Roster: catalogued, breedable Pals with a real name and icon. Excludes
-    # placeholders/unreleased content (CombiRank 9999, ZukanIndex < 1, name "-")
-    # and internal quest/tower variants (no name / no icon).
-    def is_roster(cid: str, r: dict) -> bool:
-        return (
-            r.get("IsPal") is True
-            and r.get("CombiRank") != 9999
-            and (r.get("ZukanIndex", -1) or -1) >= 1
-            and _has_real_name(names_by_lang, cid)
-            and f"T_{cid}_icon_normal" in raw_icons
-        )
-
-    roster = {cid: r for cid, r in mon.items() if is_roster(cid, r)}
+    roster = {cid: r for cid, r in mon.items() if _is_roster(cid, r, names_by_lang, icon_paths)}
 
     # Internal row index (order Pals appear in DT_PalMonsterParameter) — the
     # game's rank-average tie-break prefers the lower index. Only relative order
@@ -130,7 +144,7 @@ def run_breeding(raw: Path, data_out: Path, res_out: Path) -> None:
         }
         for cid, r in roster.items()
     ]
-    pals.sort(key=lambda p: (p["zukanIndex"], p["zukanIndexSuffix"], p["id"]))
+    pals.sort(key=lambda p: _roster_sort_key(p["zukanIndex"], p["zukanIndexSuffix"], p["idx"]))
 
     # Unique combos where both parents and the child resolve to the roster.
     combos = []
@@ -179,7 +193,7 @@ def run_breeding(raw: Path, data_out: Path, res_out: Path) -> None:
         dest = icons_dir / f"{p['icon']}.webp"
         if dest.exists():
             continue
-        src = raw / "Texture/PalIcon/Normal" / f"{p['icon']}.png"
+        src = icon_paths[p["icon"]]
         with Image.open(src) as img:
             img = img.convert("RGBA") if img.mode not in ("RGB", "RGBA") else img
             img.save(dest, "WEBP", quality=90, method=6)

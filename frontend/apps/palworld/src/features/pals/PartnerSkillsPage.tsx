@@ -16,6 +16,7 @@ import {
   type PalsBundle,
 } from '../../lib/pals'
 import { elementIconUrl, palIconUrl } from '../../lib/assets'
+import { zukanOrder } from '../../lib/palId'
 import { filterStrings } from './filterStrings'
 import { PalPageLoading } from './components'
 
@@ -90,12 +91,12 @@ export default function PartnerSkillsPage() {
       const sign = powerSort === 'desc' ? -1 : 1
       return filtered.sort((a, b) => {
         if ((a.power == null) !== (b.power == null)) return a.power == null ? 1 : -1
-        return sign * ((a.power ?? 0) - (b.power ?? 0)) || a.zukanIndex - b.zukanIndex
+        return sign * ((a.power ?? 0) - (b.power ?? 0)) || zukanOrder(a.zukanIndex) - zukanOrder(b.zukanIndex)
       })
     }
     return filtered.sort(
       (a, b) =>
-        a.zukanIndex - b.zukanIndex ||
+        zukanOrder(a.zukanIndex) - zukanOrder(b.zukanIndex) ||
         a.zukanIndexSuffix.localeCompare(b.zukanIndexSuffix) ||
         a.palId.localeCompare(b.palId),
     )

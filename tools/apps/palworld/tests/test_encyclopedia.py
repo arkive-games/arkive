@@ -16,9 +16,24 @@ def test_encyclopedia_integration(tmp_path):
     pals, passives = out["pals"], out["passives"]
     by_id = {p["id"]: p for p in pals}
 
-    # Roster matches the breeding stage's catalogued-Pal filter.
-    assert len(pals) == 286
-    assert all(p["zukanIndex"] >= 1 and p["icon"].startswith("T_") for p in pals)
+    # Roster matches the breeding stage's filter: 286 catalogued Pals plus the
+    # 11 uncatalogued Terraria-collab creatures (ZukanIndex -1, icons under the
+    # PalIcon/Normal/Yakushima subfolder).
+    assert len(pals) == 297
+    assert all(p["icon"].startswith("T_") for p in pals)
+    uncatalogued = [p["id"] for p in pals if p["zukanIndex"] < 1]
+    assert uncatalogued == [
+        "YakushimaMonster001", "YakushimaMonster001_Blue", "YakushimaMonster001_Red",
+        "YakushimaMonster001_Purple", "YakushimaMonster001_Pink", "YakushimaMonster001_Rainbow",
+        "YakushimaMonster002", "YakushimaMonster003", "YakushimaMonster003_Purple",
+        "YakushimaBoss001", "YakushimaBoss001_Small",
+    ]
+    # Uncatalogued pals sort last (after every Paldeck-numbered pal).
+    assert [p["id"] for p in pals[-len(uncatalogued):]] == uncatalogued
+    slime = by_id["YakushimaMonster001"]
+    assert slime["elements"] == ["Leaf"]
+    assert slime["stats"]["hp"] == 65
+    assert slime["work"] == {"Transport": 1}
 
     # A known Pal's stats / elements / work / drops / learnset.
     anubis = by_id["Anubis"]
@@ -87,6 +102,8 @@ def test_encyclopedia_integration(tmp_path):
     # Locale files: 17 languages, non-mojibake real text for a known Pal.
     en_pals = json.loads((data_out / "locales/en-US/pals.json").read_text(encoding="utf-8"))
     assert en_pals["Anubis"]["name"] == "Anubis"
+    assert en_pals["YakushimaMonster001"]["name"] == "Green Slime"
+    assert en_pals["YakushimaBoss001"]["name"] == "Eye of Cthulhu"
     assert en_pals["Anubis"]["description"]
     assert en_pals["Anubis"]["partnerSkill"]["name"]
     zh_name = json.loads((data_out / "locales/zh-CN/pals.json").read_text(encoding="utf-8"))["Anubis"]["name"]

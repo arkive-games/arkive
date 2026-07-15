@@ -965,9 +965,8 @@ def run_extract(raw: Path) -> dict:
                 poi["nameByLng"] = name_by_lng
         pois.append(poi)
 
-    pal_icons = sorted(
-        p.stem for p in (raw / "Texture/PalIcon/Normal").iterdir() if p.suffix == ".png"
-    )
+    # Recursive: the Terraria-collab (Yakushima) pal icons live in a subfolder.
+    pal_icons = sorted(p.stem for p in (raw / "Texture/PalIcon/Normal").rglob("*.png"))
     pal_icon_set = set(pal_icons)
 
     # Predators: BP_PalSpawner_Sheets_*_PreBOSS_* actors in the cells.

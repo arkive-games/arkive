@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { Element, PalEntry, PalsBundle, WorkType } from '../../lib/pals'
+import { zukanOrder } from '../../lib/palId'
 
 /** Pals-list filter state. Elements & work are AND (a pal must match every
  *  selected one); reactions and sizes are OR (a pal has exactly one of each). */
@@ -56,7 +57,8 @@ export function filterPals(bundle: Pick<PalsBundle, 'pals' | 'text'>, f: PalFilt
     return true
   })
   const byIndex = (a: PalEntry, b: PalEntry) =>
-    a.zukanIndex - b.zukanIndex || a.zukanIndexSuffix.localeCompare(b.zukanIndexSuffix)
+    zukanOrder(a.zukanIndex) - zukanOrder(b.zukanIndex) ||
+    a.zukanIndexSuffix.localeCompare(b.zukanIndexSuffix)
   if (f.works.length) {
     const maxLvl = (p: PalEntry) => Math.max(...f.works.map((w) => p.work[w] ?? 0))
     return [...out].sort((a, b) => maxLvl(b) - maxLvl(a) || byIndex(a, b))
