@@ -63,7 +63,12 @@ export function TopNav({ active }: { active: NavKey }) {
       rightExtras={
         <>
           <ThemeToggle labels={{ auto: t('themeAuto'), light: t('themeLight'), dark: t('themeDark') }} />
-          <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} dev={import.meta.env.DEV} />
+          <BuildInfo
+            commit={__BUILD_GIT_COMMIT__}
+            buildTime={__BUILD_TIME__}
+            dev={import.meta.env.DEV}
+            gameVersion={import.meta.env.VITE_GAME_VERSION}
+          />
         </>
       }
     />

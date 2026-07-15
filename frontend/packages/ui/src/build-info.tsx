@@ -9,12 +9,15 @@ export interface BuildInfoProps {
   buildTime: string | number
   /** When true (pass `import.meta.env.DEV`): commit shows "dev", time shows last page-load. */
   dev?: boolean
+  /** Game version the site's data was built from (wire to `VITE_GAME_VERSION`). Row is hidden when unset. */
+  gameVersion?: string
   /** Repository link opened by the icon. Defaults to the monorepo. */
   repoUrl?: string
   /** Injectable labels so apps can localize; the package stays i18n-free. */
   labels?: {
     commit?: string
     buildTime?: string
+    gameVersion?: string
     /** Accessible name for the icon link. */
     repo?: string
   }
@@ -46,6 +49,7 @@ function BuildInfo({
   commit,
   buildTime,
   dev = false,
+  gameVersion,
   repoUrl = "https://github.com/arkive-games/arkive",
   labels,
   className,
@@ -89,6 +93,12 @@ function BuildInfo({
           </dd>
           <dt className="text-muted-foreground">{labels?.buildTime ?? "Built"}</dt>
           <dd className="font-mono">{displayTime}</dd>
+          {gameVersion && (
+            <>
+              <dt className="text-muted-foreground">{labels?.gameVersion ?? "Game"}</dt>
+              <dd className="font-mono">{gameVersion}</dd>
+            </>
+          )}
         </dl>
       </HoverCardContent>
     </HoverCard>
