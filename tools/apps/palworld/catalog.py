@@ -486,8 +486,37 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     bp_sources = collect_sources(raw, data_out, item_rows, item_id_set)
     dungeon_items = dungeon_lottery_items(data_out)
     recycler_items = recycler_output_items(data_out)
+    # noSource: blueprint-family items unreachable through ANY channel. Beyond
+    # the direct channels (field lotteries / shrines / merchants / raids /
+    # arena, pal drops, dungeon lotteries, recycler outputs), schematics can be
+    # crafted from 5x the tier below — so obtainability closes transitively
+    # over those upgrade recipes: a schematic whose recipe's blueprint
+    # materials are all obtainable is obtainable (non-blueprint materials are
+    # assumed obtainable; only schematic roots gate the chain).
+    no_source_ids: set = set()
     if dungeon_items is None or recycler_items is None:
         print("catalog: WARNING dungeons.json/recycler.json missing — noSource not stamped")
+    else:
+        bp_ids = [iid for iid in item_ids if iid.startswith("Blueprint_")]
+        obtainable = {
+            iid for iid in bp_ids
+            if iid in bp_sources or iid in dungeon_items or iid in recycler_items
+            or iid in dropped_by or iid in dropped_by_boss
+        }
+        changed = True
+        while changed:
+            changed = False
+            for iid in bp_ids:
+                if iid in obtainable:
+                    continue
+                rc = recipe_by_product.get(iid)
+                mats = [m["item"] for m in _materials(rc, 5)] if rc else []
+                if mats and all(
+                    not m.startswith("Blueprint_") or m in obtainable for m in mats
+                ):
+                    obtainable.add(iid)
+                    changed = True
+        no_source_ids = {iid for iid in bp_ids if iid not in obtainable}
     items = []
     for iid in item_ids:
         r = item_rows[iid]
@@ -542,18 +571,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             entry["unlocksCraft"] = sorted(unlocks_craft[iid])
         if iid in bp_sources:
             entry["sources"] = bp_sources[iid]
-        # Blueprint-family items reachable through NO channel at all: no field
-        # lottery / shrine / merchant / arena source, no pal drop, no dungeon
-        # chest or boss lottery, not a relic-recycler output.
-        if (
-            iid.startswith("Blueprint_")
-            and dungeon_items is not None
-            and recycler_items is not None
-            and iid not in bp_sources
-            and "droppedBy" not in entry
-            and iid not in dungeon_items
-            and iid not in recycler_items
-        ):
+        if iid in no_source_ids:
             entry["noSource"] = True
         if iid in partner_for:
             entry["partnerFor"] = sorted(partner_for[iid])
