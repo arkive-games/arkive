@@ -2,7 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
-import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
+import {
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
   buildChildIndex,
@@ -19,10 +30,12 @@ import {
   type NameMap,
   type TreePath,
 } from '../../lib/breeding'
+import { findChains } from '../../lib/breedingChains'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { CatalogDataProvider } from '../catalog/components'
 import { PalPicker } from './PalPicker'
 import { BreedingTreeView } from './BreedingTreeView'
+import { BreedingChainsView } from './BreedingChainsView'
 import { RecipeCard, buildRecipeMeta } from './RecipeCard'
 
 // Cap on rendered cards; a target-only query can match >1000 parent pairs. Set
@@ -44,12 +57,33 @@ export default function BreedingPage() {
   const aSel = search.a ?? null
   const bSel = search.b ?? null
   const cSel = search.c ?? null
+  // Multi-generation planner mode: active while a generation budget is set.
+  const gen = search.gen ?? null
 
   const setParam = useCallback(
     (key: 'a' | 'b' | 'c', id: string | null) => {
       // A picker change invalidates the drill-down (its root recipe belonged
       // to the previous query), so it also exits tree mode.
       navigate({ search: (prev) => ({ ...prev, [key]: id ?? undefined, tree: undefined }) })
+    },
+    [navigate],
+  )
+
+  const setMode = useCallback(
+    (mode: 'recipes' | 'chains') => {
+      // The planner has no Parent B and no drill-down; both are dropped on
+      // entry. The A / Child selection survives mode switches.
+      navigate({
+        search: (prev) =>
+          mode === 'chains' ? { a: prev.a, c: prev.c, gen: prev.gen ?? 2 } : { a: prev.a, b: prev.b, c: prev.c },
+      })
+    },
+    [navigate],
+  )
+
+  const setGen = useCallback(
+    (g: 2 | 3) => {
+      navigate({ search: (prev) => ({ ...prev, gen: g }) })
     },
     [navigate],
   )
@@ -114,13 +148,14 @@ export default function BreedingPage() {
   const engine = useMemo(() => (payload ? makeEngine(payload.data) : null), [payload])
 
   // Drop any query selection that isn't a real roster Pal, and prune tree nodes
-  // that don't resolve to real recipes anymore (replace, not push).
+  // that don't resolve to real recipes anymore (replace, not push). The
+  // drill-down tree doesn't exist in planner mode, so `gen` evicts `tree`.
   useEffect(() => {
     if (!payload || !engine) return
     const ids = new Set(payload.data.pals.map((p) => p.id))
     const keep = (v?: string) => (v && ids.has(v) ? v : undefined)
-    const tree = search.tree ? sanitizeTree(engine, ids, search.tree) : undefined
-    const cleaned = { a: keep(search.a), b: keep(search.b), c: keep(search.c), tree }
+    const tree = search.tree && search.gen == null ? sanitizeTree(engine, ids, search.tree) : undefined
+    const cleaned = { a: keep(search.a), b: keep(search.b), c: keep(search.c), tree, gen: search.gen }
     if (
       cleaned.a !== search.a ||
       cleaned.b !== search.b ||
@@ -129,12 +164,12 @@ export default function BreedingPage() {
     ) {
       navigate({ search: cleaned, replace: true })
     }
-  }, [payload, engine, search.a, search.b, search.c, search.tree, navigate])
+  }, [payload, engine, search.a, search.b, search.c, search.tree, search.gen, navigate])
 
   // child -> recipes index powering the tree sections. A full-roster scan
   // (~n²/2 pair resolutions), so it is only built when tree mode is entered;
   // the boolean dep keeps it stable across drill navigations.
-  const treeActive = search.tree != null
+  const treeActive = search.tree != null && gen == null
   const childIndex = useMemo(
     () => (engine && payload && treeActive ? buildChildIndex(engine, payload.data) : null),
     [engine, payload, treeActive],
@@ -150,9 +185,16 @@ export default function BreedingPage() {
   const meta = useMemo(() => buildRecipeMeta(payload?.data.pals ?? []), [payload])
 
   const result = useMemo(() => {
-    if (!payload || !engine) return { list: [] as Combo[], total: 0, browsingSpecial: false }
+    if (!payload || !engine || gen != null) return { list: [] as Combo[], total: 0, browsingSpecial: false }
     return queryFormulas(engine, payload.data, { a: aSel, b: bSel, c: cSel })
-  }, [payload, engine, aSel, bSel, cSel])
+  }, [payload, engine, aSel, bSel, cSel, gen])
+
+  // Planner-mode chains: a couple of full-roster scans (~n²/2 resolutions,
+  // <100 ms) per A/C/gen change — computed only while the mode is active.
+  const chains = useMemo(
+    () => (gen != null && payload && engine && aSel && cSel ? findChains(engine, payload.data, aSel, cSel, gen) : null),
+    [gen, payload, engine, aSel, cSel],
+  )
 
   const hasFilter = aSel != null || bSel != null || cSel != null
 
@@ -177,6 +219,14 @@ export default function BreedingPage() {
     <TooltipProvider delayDuration={200}>
       <ContentPage active="/breeding" title={t('breeding.navBreeding')} heading>
         <CatalogDataProvider pals={pals ?? undefined}>
+          <div className="mb-3 inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/40 p-0.5">
+            <Button variant={gen == null ? 'secondary' : 'ghost'} size="sm" onClick={() => setMode('recipes')}>
+              {t('breeding.modeRecipes')}
+            </Button>
+            <Button variant={gen == null ? 'ghost' : 'secondary'} size="sm" onClick={() => setMode('chains')}>
+              {t('breeding.modeChains')}
+            </Button>
+          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <PalPicker
               label={t('breeding.parentA')}
@@ -186,14 +236,16 @@ export default function BreedingPage() {
               onChange={(id) => setParam('a', id)}
               labels={pickerLabels}
             />
-            <PalPicker
-              label={t('breeding.parentB')}
-              pals={payload?.data.pals ?? []}
-              names={payload?.names ?? {}}
-              value={bSel}
-              onChange={(id) => setParam('b', id)}
-              labels={pickerLabels}
-            />
+            {gen == null ? (
+              <PalPicker
+                label={t('breeding.parentB')}
+                pals={payload?.data.pals ?? []}
+                names={payload?.names ?? {}}
+                value={bSel}
+                onChange={(id) => setParam('b', id)}
+                labels={pickerLabels}
+              />
+            ) : null}
             <PalPicker
               label={t('breeding.child')}
               pals={payload?.data.pals ?? []}
@@ -202,13 +254,38 @@ export default function BreedingPage() {
               onChange={(id) => setParam('c', id)}
               labels={pickerLabels}
             />
+            {gen != null ? (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground">{t('breeding.maxGenerations')}</span>
+                <Select value={String(gen)} onValueChange={(v) => setGen(Number(v) === 3 ? 3 : 2)}>
+                  <SelectTrigger className="!h-11 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-2">
             <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              {result.browsingSpecial
-                ? t('breeding.showingSpecial')
-                : t('breeding.combinations', { count: result.total })}
+              {gen != null
+                ? chains
+                  ? // Direct recipes count individually (the group renders one card
+                    // per partner); a multi-step chain is one entry.
+                    t('breeding.chainCount', {
+                      count: chains.reduce(
+                        (n, ch) => n + (ch.steps.length === 1 ? ch.steps[0].partners.length : 1),
+                        0,
+                      ),
+                    })
+                  : t('breeding.chainPrompt')
+                : result.browsingSpecial
+                  ? t('breeding.showingSpecial')
+                  : t('breeding.combinations', { count: result.total })}
               {/* Same badge as the Passive Skills page; the tip covers the breeding side. */}
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -238,7 +315,7 @@ export default function BreedingPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate({ search: {} })}
+                  onClick={() => navigate({ search: gen != null ? { gen } : {} })}
                 >
                   {t('breeding.clear')}
                 </Button>
@@ -248,6 +325,26 @@ export default function BreedingPage() {
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
+          ) : gen != null ? (
+            !aSel || !cSel ? (
+              <div className="mt-8 text-center text-sm text-muted-foreground">{t('breeding.chainPrompt')}</div>
+            ) : chains && chains.length === 0 ? (
+              <div className="mt-8 text-center text-sm text-muted-foreground">
+                {t('breeding.noChains', { count: gen })}
+              </div>
+            ) : chains ? (
+              <BreedingChainsView
+                // Remount on a query change to reset per-group and per-step caps.
+                key={`${aSel}|${cSel}|${gen}`}
+                chains={chains}
+                names={payload?.names ?? {}}
+                meta={meta}
+                uniqueLabel={t('breeding.unique')}
+                favs={favs}
+                onToggleFav={toggleFav}
+                favLabel={t('breeding.favorite')}
+              />
+            ) : null
           ) : search.tree && engine && childIndex ? (
             <BreedingTreeView
               root={search.tree}

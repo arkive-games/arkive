@@ -74,7 +74,7 @@ const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`)
  * order-independent, but the display should keep the parent the user picked on
  * its side). Genders travel with their parent when swapped.
  */
-function orient(f: Combo, fixedId: string, slot: 'a' | 'b'): Combo {
+export function orient(f: Combo, fixedId: string, slot: 'a' | 'b'): Combo {
   if (f.a === f.b) return f
   const needSwap = slot === 'a' ? f.a !== fixedId : f.b !== fixedId
   return needSwap ? { ...f, a: f.b, b: f.a, ag: f.bg, bg: f.ag } : f

@@ -42,6 +42,23 @@ export interface BreedingStrings {
   selfOnly: string
   /** Reveal the next batch of recipes in a tree section. */
   showMoreRecipes: string
+  /** Mode toggle: classic recipe list vs the multi-generation planner. */
+  modeRecipes: string
+  modeChains: string
+  /** Multi-gen planner: generation-budget select label. */
+  maxGenerations: string
+  /** Prompt while Parent A / Child are not both chosen. */
+  chainPrompt: string
+  /** Result count line in planner mode. */
+  chainCount: string
+  /** Group headers, by chain length. */
+  chainDirect: string
+  chainTwoGen: string
+  chainThreeGen: string
+  /** No chain reaches the target within the generation budget. */
+  noChains: string
+  /** Expander revealing every partner option of a chain step. */
+  showAllPartners: string
 }
 
 export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
@@ -70,6 +87,16 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'How to breed the parents',
     selfOnly: "Can't be bred from other Pals — catch one instead.",
     showMoreRecipes: 'Show {{count}} more',
+    modeRecipes: 'Recipes',
+    modeChains: 'Multi-generation',
+    maxGenerations: 'Max generations',
+    chainPrompt: 'Pick Parent A and a Child to plan a breeding chain.',
+    chainCount: '{{count}} chains',
+    chainDirect: 'Direct recipes',
+    chainTwoGen: '2-generation chains',
+    chainThreeGen: '3-generation chains',
+    noChains: 'No breeding chain within {{count}} generations — try more generations or another parent.',
+    showAllPartners: 'Show all {{count}} partners',
     mutationTip:
       'Breeding rarely produces a Mutated Egg — the hatched Pal is mutated and gains a mutation-exclusive passive skill. An Extravagant Vegetable Cake at the Breeding Farm makes mutations more likely and talents grow more easily.',
   },
@@ -98,6 +125,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Zucht der Eltern anzeigen',
     selfOnly: 'Kann nicht aus anderen Pals gezüchtet werden — fange stattdessen eins.',
     showMoreRecipes: '{{count}} weitere anzeigen',
+    modeRecipes: 'Rezepte',
+    modeChains: 'Mehrgenerationen',
+    maxGenerations: 'Max. Generationen',
+    chainPrompt: 'Wähle Elternteil A und einen Nachkommen, um eine Zuchtkette zu planen.',
+    chainCount: '{{count}} Ketten',
+    chainDirect: 'Direkte Rezepte',
+    chainTwoGen: 'Ketten über 2 Generationen',
+    chainThreeGen: 'Ketten über 3 Generationen',
+    noChains:
+      'Keine Zuchtkette innerhalb von {{count}} Generationen — versuche mehr Generationen oder ein anderes Elternteil.',
+    showAllPartners: 'Alle {{count}} Partner anzeigen',
     mutationTip:
       'Bei der Zucht entsteht selten ein Mutiertes Ei — der geschlüpfte Pal ist mutiert und erhält ein mutationsexklusives Passiv. Eine Exquisite Gemüsetorte in der Zuchtfarm lässt Mutationen häufiger auftreten und Talente leichter wachsen.',
   },
@@ -126,6 +164,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Ver cómo criar a los progenitores',
     selfOnly: 'No se puede criar a partir de otros Pals — captura uno.',
     showMoreRecipes: 'Mostrar {{count}} más',
+    modeRecipes: 'Recetas',
+    modeChains: 'Multigeneración',
+    maxGenerations: 'Generaciones máx.',
+    chainPrompt: 'Elige el progenitor A y una cría para planificar una cadena de crianza.',
+    chainCount: '{{count}} cadenas',
+    chainDirect: 'Recetas directas',
+    chainTwoGen: 'Cadenas de 2 generaciones',
+    chainThreeGen: 'Cadenas de 3 generaciones',
+    noChains:
+      'No hay ninguna cadena de crianza en {{count}} generaciones — prueba con más generaciones u otro progenitor.',
+    showAllPartners: 'Mostrar los {{count}} compañeros',
     mutationTip:
       'La crianza rara vez produce un Huevo metamorfo: el Pal que nace está mutado y obtiene una pasiva exclusiva de mutación. Un Pastel de verduras selectas en el Criadero hace más probables las mutaciones y facilita el desarrollo del talento.',
   },
@@ -154,6 +203,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Ver cómo criar a los progenitores',
     selfOnly: 'No se puede criar a partir de otros Pals — captura uno.',
     showMoreRecipes: 'Mostrar {{count}} más',
+    modeRecipes: 'Recetas',
+    modeChains: 'Multigeneración',
+    maxGenerations: 'Generaciones máx.',
+    chainPrompt: 'Elige el progenitor A y una cría para planificar una cadena de crianza.',
+    chainCount: '{{count}} cadenas',
+    chainDirect: 'Recetas directas',
+    chainTwoGen: 'Cadenas de 2 generaciones',
+    chainThreeGen: 'Cadenas de 3 generaciones',
+    noChains:
+      'No hay ninguna cadena de crianza en {{count}} generaciones — prueba con más generaciones u otro progenitor.',
+    showAllPartners: 'Mostrar los {{count}} compañeros',
     mutationTip:
       'La crianza rara vez produce un Huevo mutado: el Pal que nace está mutado y obtiene una pasiva exclusiva de mutación. Un Pastel de verduras de lujo en el Criadero aumenta la probabilidad de mutaciones y facilita el crecimiento del talento.',
   },
@@ -182,6 +242,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Voir comment obtenir les parents',
     selfOnly: "Impossible à obtenir en élevant d'autres Pals — capturez-en un.",
     showMoreRecipes: 'Afficher {{count}} de plus',
+    modeRecipes: 'Recettes',
+    modeChains: 'Multi-générations',
+    maxGenerations: 'Générations max.',
+    chainPrompt: "Choisissez le parent A et un enfant pour planifier une chaîne d'élevage.",
+    chainCount: '{{count}} chaînes',
+    chainDirect: 'Recettes directes',
+    chainTwoGen: 'Chaînes en 2 générations',
+    chainThreeGen: 'Chaînes en 3 générations',
+    noChains:
+      "Aucune chaîne d'élevage en {{count}} générations — essayez plus de générations ou un autre parent.",
+    showAllPartners: 'Afficher les {{count}} partenaires',
     mutationTip:
       "L'élevage produit rarement un Œuf mutant — le Pal qui en éclot est muté et obtient une compétence passive exclusive de mutation. Un Gâteau aux légumes raffiné à l'Élevage rend les mutations plus fréquentes et facilite le développement des talents.",
   },
@@ -210,6 +281,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Lihat cara menernakkan induknya',
     selfOnly: 'Tidak bisa diternakkan dari Pal lain — tangkap saja.',
     showMoreRecipes: 'Tampilkan {{count}} lagi',
+    modeRecipes: 'Resep',
+    modeChains: 'Multigenerasi',
+    maxGenerations: 'Generasi maks.',
+    chainPrompt: 'Pilih Induk A dan Anak untuk merencanakan rantai ternak.',
+    chainCount: '{{count}} rantai',
+    chainDirect: 'Resep langsung',
+    chainTwoGen: 'Rantai 2 generasi',
+    chainThreeGen: 'Rantai 3 generasi',
+    noChains:
+      'Tidak ada rantai ternak dalam {{count}} generasi — coba lebih banyak generasi atau induk lain.',
+    showAllPartners: 'Tampilkan semua {{count}} pasangan',
     mutationTip:
       'Ternak kadang menghasilkan Telur Mutasi — Pal yang menetas bermutasi dan mendapat pasif khusus mutasi. Kue Sayuran Mewah di Tempat Pembiakkan membuat mutasi lebih mungkin terjadi dan bakat lebih mudah berkembang.',
   },
@@ -238,6 +320,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Vedi come ottenere i genitori',
     selfOnly: 'Non si può ottenere allevando altri Pal — catturane uno.',
     showMoreRecipes: 'Mostra altri {{count}}',
+    modeRecipes: 'Ricette',
+    modeChains: 'Multigenerazione',
+    maxGenerations: 'Generazioni max',
+    chainPrompt: 'Scegli il genitore A e un cucciolo per pianificare una catena di allevamento.',
+    chainCount: '{{count}} catene',
+    chainDirect: 'Ricette dirette',
+    chainTwoGen: 'Catene da 2 generazioni',
+    chainThreeGen: 'Catene da 3 generazioni',
+    noChains:
+      'Nessuna catena di allevamento entro {{count}} generazioni — prova con più generazioni o un altro genitore.',
+    showAllPartners: 'Mostra tutti i {{count}} partner',
     mutationTip:
       "Dall'allevamento nasce raramente un Uovo mutante: il Pal che si schiude è mutato e ottiene un'abilità passiva da mutazione. Una Torta di verdure gourmet nel Ranch per Pal rende più probabili le mutazioni e facilita lo sviluppo dei talenti.",
   },
@@ -266,6 +359,16 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: '親の交配方法を表示',
     selfOnly: '他のパルの交配では入手できません。捕獲しましょう。',
     showMoreRecipes: 'さらに{{count}}件表示',
+    modeRecipes: 'レシピ',
+    modeChains: '多世代',
+    maxGenerations: '最大世代数',
+    chainPrompt: '親 A と子を選ぶと交配チェーンを計算します。',
+    chainCount: 'チェーン {{count}} 件',
+    chainDirect: '直接レシピ',
+    chainTwoGen: '2世代チェーン',
+    chainThreeGen: '3世代チェーン',
+    noChains: '{{count}}世代以内の交配チェーンが見つかりません。世代数を増やすか別の親を試してください。',
+    showAllPartners: 'パートナー全{{count}}体を表示',
     mutationTip:
       '交配ではまれに突然変異タマゴが生まれ、孵化したパルは突然変異して専用のパッシブスキルを得ます。配合牧場に豪華野菜ケーキを入れると突然変異が起こりやすくなり、才能も伸びやすくなります。',
   },
@@ -294,6 +397,16 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: '부모 교배 방법 보기',
     selfOnly: '다른 팰의 교배로는 얻을 수 없습니다. 포획하세요.',
     showMoreRecipes: '{{count}}개 더 보기',
+    modeRecipes: '레시피',
+    modeChains: '다세대',
+    maxGenerations: '최대 세대 수',
+    chainPrompt: '부모 A와 자식을 선택하면 교배 체인을 계산합니다.',
+    chainCount: '체인 {{count}}개',
+    chainDirect: '직접 레시피',
+    chainTwoGen: '2세대 체인',
+    chainThreeGen: '3세대 체인',
+    noChains: '{{count}}세대 안에 교배 체인이 없습니다. 세대 수를 늘리거나 다른 부모를 시도하세요.',
+    showAllPartners: '파트너 {{count}}마리 모두 보기',
     mutationTip:
       '교배에서는 드물게 돌연변이 알이 나오며, 부화한 팰은 돌연변이가 되어 전용 패시브 스킬을 얻습니다. 배합 목장에 호화 야채 케이크를 넣으면 돌연변이 확률이 증가하고 재능도 오르기 쉬워집니다.',
   },
@@ -322,6 +435,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Zobacz, jak wyhodować rodziców',
     selfOnly: 'Nie da się wyhodować z innych Pali — złap jednego.',
     showMoreRecipes: 'Pokaż {{count}} więcej',
+    modeRecipes: 'Receptury',
+    modeChains: 'Wielopokoleniowa',
+    maxGenerations: 'Maks. pokoleń',
+    chainPrompt: 'Wybierz rodzica A i potomka, aby zaplanować łańcuch hodowli.',
+    chainCount: 'Łańcuchy: {{count}}',
+    chainDirect: 'Receptury bezpośrednie',
+    chainTwoGen: 'Łańcuchy 2-pokoleniowe',
+    chainThreeGen: 'Łańcuchy 3-pokoleniowe',
+    noChains:
+      'Brak łańcucha hodowli w {{count}} pokoleniach — spróbuj więcej pokoleń lub innego rodzica.',
+    showAllPartners: 'Pokaż wszystkich partnerów: {{count}}',
     mutationTip:
       'Hodowla rzadko daje Zmutowane jajo — wykluty Pal jest zmutowany i otrzymuje pasywną umiejętność dostępną tylko z mutacji. Wykwintne ciasto warzywne na Farmie hodowlanej zwiększa szansę na mutacje i ułatwia rozwój talentów.',
   },
@@ -350,6 +474,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Ver como obter os progenitores',
     selfOnly: 'Não pode ser obtido pela reprodução de outros Pals — capture um.',
     showMoreRecipes: 'Mostrar mais {{count}}',
+    modeRecipes: 'Receitas',
+    modeChains: 'Multigeração',
+    maxGenerations: 'Gerações máx.',
+    chainPrompt: 'Escolha o progenitor A e um filhote para planejar uma cadeia de reprodução.',
+    chainCount: '{{count}} cadeias',
+    chainDirect: 'Receitas diretas',
+    chainTwoGen: 'Cadeias de 2 gerações',
+    chainThreeGen: 'Cadeias de 3 gerações',
+    noChains:
+      'Nenhuma cadeia de reprodução em {{count}} gerações — tente mais gerações ou outro progenitor.',
+    showAllPartners: 'Mostrar todos os {{count}} parceiros',
     mutationTip:
       'A reprodução raramente produz um Ovo Mutante — o Pal que nasce é mutante e ganha uma passiva exclusiva de mutação. Um Bolo de Verduras Extravagante na Fazenda de Acasalamento aumenta a chance de mutação e facilita o crescimento dos talentos.',
   },
@@ -378,6 +513,17 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Показать, как вывести родителей',
     selfOnly: 'Нельзя вывести из других палов — поймайте его.',
     showMoreRecipes: 'Показать ещё {{count}}',
+    modeRecipes: 'Рецепты',
+    modeChains: 'Несколько поколений',
+    maxGenerations: 'Макс. поколений',
+    chainPrompt: 'Выберите родителя A и потомка, чтобы спланировать цепочку разведения.',
+    chainCount: 'Цепочек: {{count}}',
+    chainDirect: 'Прямые рецепты',
+    chainTwoGen: 'Цепочки в 2 поколения',
+    chainThreeGen: 'Цепочки в 3 поколения',
+    noChains:
+      'Нет цепочки разведения в пределах {{count}} поколений — попробуйте больше поколений или другого родителя.',
+    showAllPartners: 'Показать всех партнёров: {{count}}',
     mutationTip:
       'При разведении изредка появляется Мутировавшее яйцо — вылупившийся пал мутирует и получает эксклюзивный пассивный навык мутации. Роскошный овощной торт на Племенной ферме повышает вероятность мутаций и облегчает развитие талантов.',
   },
@@ -406,6 +552,16 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'ดูวิธีผสมพันธุ์ให้ได้พ่อแม่',
     selfOnly: 'ไม่สามารถได้จากการผสมพันธุ์ Pal อื่น — จับเอาแทน',
     showMoreRecipes: 'แสดงอีก {{count}} รายการ',
+    modeRecipes: 'สูตร',
+    modeChains: 'หลายรุ่น',
+    maxGenerations: 'จำนวนรุ่นสูงสุด',
+    chainPrompt: 'เลือกพ่อแม่ A และลูกเพื่อวางแผนสายการผสมพันธุ์',
+    chainCount: '{{count}} สาย',
+    chainDirect: 'สูตรโดยตรง',
+    chainTwoGen: 'สาย 2 รุ่น',
+    chainThreeGen: 'สาย 3 รุ่น',
+    noChains: 'ไม่พบสายการผสมพันธุ์ภายใน {{count}} รุ่น — ลองเพิ่มจำนวนรุ่นหรือเปลี่ยนพ่อแม่',
+    showAllPartners: 'แสดงคู่ผสมทั้งหมด {{count}} ตัว',
     mutationTip:
       'การผสมพันธุ์มีโอกาสน้อยมากที่จะได้ไข่แปรสภาพกะทันหัน — พัลที่ฟักออกมาจะกลายพันธุ์และได้รับสกิลติดตัวเฉพาะการกลายพันธุ์ เค้กผักชั้นเลิศในฟาร์มขยายพันธุ์จะทำให้เกิดการกลายพันธุ์ได้ง่ายขึ้นและพัฒนาศักยภาพได้เร็วขึ้น',
   },
@@ -434,6 +590,16 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Ebeveynlerin nasıl üretileceğini gör',
     selfOnly: "Başka Pal'lerden üretilemez — bir tane yakala.",
     showMoreRecipes: '{{count}} tane daha göster',
+    modeRecipes: 'Tarifler',
+    modeChains: 'Çok nesilli',
+    maxGenerations: 'Maks. nesil',
+    chainPrompt: 'Bir üretme zinciri planlamak için Ebeveyn A ve bir yavru seç.',
+    chainCount: '{{count}} zincir',
+    chainDirect: 'Doğrudan tarifler',
+    chainTwoGen: '2 nesillik zincirler',
+    chainThreeGen: '3 nesillik zincirler',
+    noChains: '{{count}} nesil içinde üretme zinciri yok — daha fazla nesil veya başka bir ebeveyn dene.',
+    showAllPartners: 'Tüm {{count}} eşi göster',
     mutationTip:
       "Üretme sırasında nadiren mutasyona uğramış bir yumurta (Aniden Dönüşmüş) çıkar — yumurtadan çıkan Pal mutasyonludur ve mutasyona özel bir pasif beceri kazanır. Üretim Çiftliği'ndeki Lüks Sebze Pastası mutasyon olasılığını artırır ve yeteneklerin gelişimini kolaylaştırır.",
   },
@@ -462,6 +628,16 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: 'Xem cách nhân giống bố mẹ',
     selfOnly: 'Không thể nhân giống từ Pal khác — hãy bắt một con.',
     showMoreRecipes: 'Hiện thêm {{count}}',
+    modeRecipes: 'Công thức',
+    modeChains: 'Nhiều thế hệ',
+    maxGenerations: 'Số thế hệ tối đa',
+    chainPrompt: 'Chọn Bố mẹ A và Con để lập chuỗi nhân giống.',
+    chainCount: '{{count}} chuỗi',
+    chainDirect: 'Công thức trực tiếp',
+    chainTwoGen: 'Chuỗi 2 thế hệ',
+    chainThreeGen: 'Chuỗi 3 thế hệ',
+    noChains: 'Không có chuỗi nhân giống trong {{count}} thế hệ — thử thêm thế hệ hoặc bố mẹ khác.',
+    showAllPartners: 'Hiện tất cả {{count}} bạn ghép',
     mutationTip:
       'Nhân giống hiếm khi tạo ra Trứng Đột Biến — Pal nở ra bị đột biến và nhận kỹ năng bị động chỉ có từ đột biến. Bánh Rau Củ Thượng Hạng ở Trang Trại Phối Giống giúp đột biến dễ xảy ra hơn và tài năng cũng dễ phát triển hơn.',
   },
@@ -490,6 +666,16 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: '查看父母的配种方式',
     selfOnly: '无法通过其他帕鲁配种获得——请直接捕捉。',
     showMoreRecipes: '再显示 {{count}} 条',
+    modeRecipes: '配方',
+    modeChains: '多代计划',
+    maxGenerations: '最多代数',
+    chainPrompt: '选择父母 A 和子代，规划多代配种路线。',
+    chainCount: '{{count}} 条路线',
+    chainDirect: '直接配方',
+    chainTwoGen: '两代路线',
+    chainThreeGen: '三代路线',
+    noChains: '在 {{count}} 代以内没有可行的配种路线——试试增加代数或更换父母。',
+    showAllPartners: '显示全部 {{count}} 个配对',
     mutationTip:
       '配种偶尔会产下突变帕鲁蛋——孵化出的帕鲁会发生突然变异，获得突然变异专属的被动技能。在配种牧场放入豪华蔬菜蛋糕可提高突然变异的概率，潜力值也更容易上升。',
   },
@@ -518,6 +704,16 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     expandRecipe: '查看父母的配種方式',
     selfOnly: '無法透過其他帕魯配種獲得——請直接捕捉。',
     showMoreRecipes: '再顯示 {{count}} 筆',
+    modeRecipes: '配方',
+    modeChains: '多代計劃',
+    maxGenerations: '最多代數',
+    chainPrompt: '選擇父母 A 和子代，規劃多代配種路線。',
+    chainCount: '{{count}} 條路線',
+    chainDirect: '直接配方',
+    chainTwoGen: '兩代路線',
+    chainThreeGen: '三代路線',
+    noChains: '在 {{count}} 代以內沒有可行的配種路線——試試增加代數或更換父母。',
+    showAllPartners: '顯示全部 {{count}} 個配對',
     mutationTip:
       '配種偶爾會產下突變帕魯蛋——孵化出的帕魯會發生突然變異，獲得突然變異專屬的被動技能。在配種牧場放入豪華蔬菜蛋糕可提高突然變異的機率，潛力值也更容易上升。',
   },

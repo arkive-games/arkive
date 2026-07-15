@@ -77,6 +77,8 @@ export interface BreedingSearch {
   c?: string
   /** Focused-recipe drill-down (multi-layer breeding tree); see BreedTreeNode. */
   tree?: BreedTreeNode
+  /** Multi-generation planner mode: generation budget (present = mode active). */
+  gen?: 2 | 3
 }
 const breedingRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -87,6 +89,7 @@ const breedingRoute = createRoute({
     b: typeof s.b === 'string' ? s.b : undefined,
     c: typeof s.c === 'string' ? s.c : undefined,
     tree: parseTreeParam(s.tree),
+    gen: s.gen === 2 || s.gen === '2' ? 2 : s.gen === 3 || s.gen === '3' ? 3 : undefined,
   }),
   component: BreedingPage,
 })

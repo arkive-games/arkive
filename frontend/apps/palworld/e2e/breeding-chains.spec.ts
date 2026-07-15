@@ -1,0 +1,48 @@
+import { test, expect } from '@playwright/test'
+
+// Multi-generation planner: pick Parent A + Child + a generation budget, and
+// the page lists breeding chains grouped by length (direct first). The mode
+// lives in the `?gen=` search param.
+
+test('multi-gen mode lists direct recipes and 2-gen chains, no 3-gen group at gen=2', async ({ page }) => {
+  // SheepBall → PinkRabbit has direct recipes AND multi-gen chains.
+  await page.goto('/breeding?gen=2&a=SheepBall&c=PinkRabbit')
+
+  await expect(page.getByText('Direct recipes')).toBeVisible()
+  await expect(page.getByText('2-generation chains')).toBeVisible()
+  await expect(page.getByText('3-generation chains')).toHaveCount(0)
+
+  // Chain cards render with one row per step; step rows carry partner chips.
+  const chains = page.getByTestId('breeding-chain')
+  expect(await chains.count()).toBeGreaterThan(0)
+})
+
+test('gen=3 adds the 3-generation group', async ({ page }) => {
+  await page.goto('/breeding?gen=3&a=SheepBall&c=PinkRabbit')
+  await expect(page.getByText('3-generation chains')).toBeVisible()
+})
+
+test('mode toggle enters and leaves the planner, keeping the selection', async ({ page }) => {
+  await page.goto('/breeding?a=SheepBall&c=PinkRabbit')
+
+  // Classic mode by default: Parent B picker exists, no group headers.
+  await expect(page.getByText('Parent B')).toBeVisible()
+  await expect(page.getByText('Direct recipes')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Multi-generation' }).click()
+  await expect(page).toHaveURL(/gen=2/)
+  await expect(page.getByText('Parent B')).toHaveCount(0)
+  await expect(page.getByText('Max generations')).toBeVisible()
+  await expect(page.getByText('Direct recipes')).toBeVisible()
+
+  // Back to recipes: gen drops from the URL, Parent B returns.
+  await page.getByRole('button', { name: 'Recipes', exact: true }).click()
+  await expect(page).not.toHaveURL(/gen=/)
+  await expect(page.getByText('Parent B')).toBeVisible()
+})
+
+test('unreachable target shows the empty-chains message', async ({ page }) => {
+  // Jetragon (JetDragon) is a legendary: self-bred only, so no chain can reach it.
+  await page.goto('/breeding?gen=3&a=SheepBall&c=JetDragon')
+  await expect(page.getByText(/No breeding chain within 3 generations/)).toBeVisible()
+})

@@ -33,9 +33,9 @@ export function buildRecipeMeta(pals: BreedingPal[]): RecipeMeta {
 }
 
 // Gold ring + glow marking a legendary Pal's icon (self-bred only).
-const LEGENDARY_ICON = 'ring-2 ring-amber-400 shadow-[0_0_6px_1px_rgba(251,191,36,0.55)]'
+export const LEGENDARY_ICON = 'ring-2 ring-amber-400 shadow-[0_0_6px_1px_rgba(251,191,36,0.55)]'
 
-function GenderMark({ g }: { g?: Gender }) {
+export function GenderMark({ g }: { g?: Gender }) {
   if (!g) return null
   return (
     <span
@@ -47,7 +47,7 @@ function GenderMark({ g }: { g?: Gender }) {
   )
 }
 
-function PalChip({
+export function PalChip({
   id,
   names,
   meta,
