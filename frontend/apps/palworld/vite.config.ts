@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
 
@@ -61,4 +62,8 @@ export default defineConfig({
     staticDirPlugin('palworld-res', '/palres', RES_DIR),
   ],
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+  define: {
+    __BUILD_TIME__: JSON.stringify(process.env.BUILD_TIME ?? Date.now().toString()),
+    __BUILD_GIT_COMMIT__: JSON.stringify(execSync('git rev-parse HEAD').toString().trim()),
+  },
 })

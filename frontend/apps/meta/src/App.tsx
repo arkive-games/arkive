@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
-import { SiteFooter } from '@gamemap/ui'
+import { BuildInfo, SiteFooter } from '@gamemap/ui'
 import { ArrowUpRight } from 'lucide-react'
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import { SITES } from './sites'
@@ -21,7 +21,10 @@ export default function App() {
           menuLabel: t('language'),
         }}
         rightExtras={
-          <ThemeToggle labels={{ auto: t('theme.auto'), light: t('theme.light'), dark: t('theme.dark') }} />
+          <>
+            <ThemeToggle labels={{ auto: t('theme.auto'), light: t('theme.light'), dark: t('theme.dark') }} />
+            <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} />
+          </>
         }
       />
 

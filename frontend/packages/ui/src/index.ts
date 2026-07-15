@@ -1,5 +1,6 @@
 export * from "./accordion"
 export * from "./alert-dialog"
+export * from "./build-info"
 export * from "./button"
 export * from "./card"
 export * from "./checkbox"

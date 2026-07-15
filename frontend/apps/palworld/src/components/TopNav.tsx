@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
+import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 
@@ -60,7 +61,10 @@ export function TopNav({ active }: { active: NavKey }) {
         menuLabel: 'language',
       }}
       rightExtras={
-        <ThemeToggle labels={{ auto: t('themeAuto'), light: t('themeLight'), dark: t('themeDark') }} />
+        <>
+          <ThemeToggle labels={{ auto: t('themeAuto'), light: t('themeLight'), dark: t('themeDark') }} />
+          <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} />
+        </>
       }
     />
   )

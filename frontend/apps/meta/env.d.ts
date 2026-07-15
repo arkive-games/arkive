@@ -1,4 +1,7 @@
 /// <reference types="vite/client" />
+declare const __BUILD_TIME__: string
+declare const __BUILD_GIT_COMMIT__: string
+
 interface ImportMetaEnv {
   readonly VITE_AION2_URL?: string
   readonly VITE_PAL_URL?: string

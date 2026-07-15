@@ -4,7 +4,13 @@ import { Link } from "@tanstack/react-router";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ShellTopBar } from "@gamemap/map-shell";
-import { Button, Popover, PopoverContent, PopoverTrigger } from "@gamemap/ui";
+import {
+  BuildInfo,
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@gamemap/ui";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
@@ -75,32 +81,35 @@ export default function TopNavbar() {
         menuLabel: t("common:menu.switchTheme", "Switch theme"),
       }}
       rightExtras={
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              data-testid="contact-menu"
-              aria-label={t("common:menu.contact", "Contact us")}
-              title={t("common:menu.contact", "Contact us")}
+        <>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                data-testid="contact-menu"
+                aria-label={t("common:menu.contact", "Contact us")}
+                title={t("common:menu.contact", "Contact us")}
+              >
+                <Mail className="size-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="max-h-[70vh] w-[300px] overflow-y-auto"
             >
-              <Mail className="size-5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            align="end"
-            className="max-h-[70vh] w-[300px] overflow-y-auto"
-          >
-            <div className="mb-2 text-base font-semibold">
-              {t("common:rightSidebar.contact.title", "Communication & Contact")}
-            </div>
-            <div className="prose prose-sm dark:prose-invert max-w-none break-words text-sm [&_a]:text-primary">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {t("common:rightSidebar.contact.content")}
-              </ReactMarkdown>
-            </div>
-          </PopoverContent>
-        </Popover>
+              <div className="mb-2 text-base font-semibold">
+                {t("common:rightSidebar.contact.title", "Communication & Contact")}
+              </div>
+              <div className="prose prose-sm dark:prose-invert max-w-none break-words text-sm [&_a]:text-primary">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {t("common:rightSidebar.contact.content")}
+                </ReactMarkdown>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} />
+        </>
       }
     />
   );
