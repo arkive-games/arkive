@@ -17,11 +17,12 @@ const p = (kind: LayoutPoint['kind'], sub: string | null, x = 0, y = 0, z = 0): 
 
 describe('layoutsByDungeon', () => {
   it('groups layouts preserving emitted order', () => {
+    const bounds = { x: 0, y: 0, w: 1, h: 1 }
     const file: DungeonLayoutsFile = {
       layouts: [
-        { dungeon: 'Forest001', variant: '01', points: [] },
-        { dungeon: 'Forest001', variant: '02', points: [] },
-        { dungeon: 'Grass001', variant: '01', points: [] },
+        { dungeon: 'Forest001', variant: '01', bounds, points: [] },
+        { dungeon: 'Forest001', variant: '02', bounds, points: [] },
+        { dungeon: 'Grass001', variant: '01', bounds, points: [] },
       ],
     }
     const map = layoutsByDungeon(file)

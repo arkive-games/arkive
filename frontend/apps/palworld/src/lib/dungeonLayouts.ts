@@ -1,4 +1,4 @@
-import { dataUrl } from './urls'
+import { dataUrl, RES_BASE } from './urls'
 
 // --- data shapes (mirror dungeon-layouts.json, emitted by
 // tools/palworld/dungeon_layouts.py) -------------------------------------
@@ -23,6 +23,11 @@ export interface LayoutPoint {
 export interface DungeonLayout {
   dungeon: string
   variant: string
+  /** Shared world-cm frame of the footprint image and the points. */
+  bounds: { x: number; y: number; w: number; h: number }
+  /** True when a floor-plan underlay exists at
+   *  `<RES_BASE>/layouts/<dungeon>_<variant>.webp` (same frame as bounds). */
+  footprint?: boolean
   points: LayoutPoint[]
 }
 
@@ -41,6 +46,11 @@ export function loadDungeonLayouts(): Promise<DungeonLayoutsFile> {
     })
   }
   return cached
+}
+
+/** Floor-plan underlay image URL (only meaningful when `footprint` is set). */
+export function layoutFootprintUrl(lay: DungeonLayout): string {
+  return `${RES_BASE}/layouts/${lay.dungeon}_${lay.variant}.webp`
 }
 
 /** Layouts grouped per dungeon, variants in emitted (sorted) order. */

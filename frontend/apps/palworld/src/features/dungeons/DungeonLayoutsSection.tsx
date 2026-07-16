@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Map as MapIcon, Skull, Package } from 'lucide-react'
-import { loadDungeonLayouts, layoutsByDungeon, pointCounts, type DungeonLayout } from '../../lib/dungeonLayouts'
+import {
+  loadDungeonLayouts,
+  layoutFootprintUrl,
+  layoutsByDungeon,
+  pointCounts,
+  type DungeonLayout,
+} from '../../lib/dungeonLayouts'
 import { CatalogSection } from '../catalog/components'
 
 const TIER_DOT: [string, string][] = [
@@ -59,6 +65,14 @@ export function DungeonLayoutsSection({ dungeonId }: { dungeonId: string }) {
                 <MapIcon className="size-3.5 text-muted-foreground" aria-hidden />
                 {t('dungeon.layout.name', { variant: lay.variant })}
               </div>
+              {lay.footprint ? (
+                <img
+                  src={layoutFootprintUrl(lay)}
+                  alt=""
+                  loading="lazy"
+                  className="mt-1.5 h-16 w-full rounded object-contain opacity-70 dark:opacity-40 dark:invert"
+                />
+              ) : null}
               <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   {TIER_DOT.map(([key, cls]) =>

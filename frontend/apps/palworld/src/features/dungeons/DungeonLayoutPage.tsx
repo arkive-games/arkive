@@ -6,6 +6,7 @@ import { ContentPage } from '../../components/ContentPage'
 import {
   loadDungeonLayouts,
   layoutBounds,
+  layoutFootprintUrl,
   layoutsByDungeon,
   type DungeonLayout,
   type LayoutPoint,
@@ -56,10 +57,10 @@ const CATEGORIES: Category[] = [
   { key: 'enemy.fishing', label: 'fishing', match: (p) => p.kind === 'enemy' && p.sub === 'fishing', shape: 'circle', cls: 'fill-cyan-500' },
   { key: 'chest.normal', label: 'layout.chests', match: (p) => p.kind === 'chest' && p.sub === 'normal', shape: 'square', cls: 'fill-amber-500' },
   { key: 'chest.special', label: 'techChest', match: (p) => p.kind === 'chest' && p.sub === 'special', shape: 'square', cls: 'fill-violet-500' },
-  { key: 'reward.easy', label: 'tier.easy', match: (p) => p.kind === 'reward' && p.sub === 'easy', shape: 'diamond', cls: 'fill-emerald-500', size: 1.2 },
-  { key: 'reward.medium', label: 'tier.medium', match: (p) => p.kind === 'reward' && p.sub === 'medium', shape: 'diamond', cls: 'fill-amber-500', size: 1.2 },
-  { key: 'reward.hard', label: 'tier.hard', match: (p) => p.kind === 'reward' && p.sub === 'hard', shape: 'diamond', cls: 'fill-rose-500', size: 1.2 },
-  { key: 'reward.bonus', label: 'tier.bonus', match: (p) => p.kind === 'reward' && p.sub === 'bonus', shape: 'diamond', cls: 'fill-violet-500', size: 1.2 },
+  { key: 'reward.easy', label: 'layout.rewardEasy', match: (p) => p.kind === 'reward' && p.sub === 'easy', shape: 'diamond', cls: 'fill-emerald-500', size: 1.2 },
+  { key: 'reward.medium', label: 'layout.rewardMedium', match: (p) => p.kind === 'reward' && p.sub === 'medium', shape: 'diamond', cls: 'fill-amber-500', size: 1.2 },
+  { key: 'reward.hard', label: 'layout.rewardHard', match: (p) => p.kind === 'reward' && p.sub === 'hard', shape: 'diamond', cls: 'fill-rose-500', size: 1.2 },
+  { key: 'reward.bonus', label: 'layout.elixirChest', match: (p) => p.kind === 'reward' && p.sub === 'bonus', shape: 'diamond', cls: 'fill-violet-500', size: 1.2 },
   { key: 'exit', label: 'layout.exit', match: (p) => p.kind === 'exit', shape: 'triangle', cls: 'fill-green-500', size: 1.3 },
   { key: 'bossDoor', label: 'layout.bossDoor', match: (p) => p.kind === 'bossDoor', shape: 'bar', cls: 'fill-rose-600', size: 1.3 },
   { key: 'enemy.midBoss', label: 'midBoss', match: (p) => p.kind === 'enemy' && p.sub === 'midBoss', shape: 'ring', cls: 'stroke-orange-500 fill-orange-500', size: 1.3 },
@@ -128,7 +129,13 @@ function scaleLength(widthMeters: number): number {
 
 function LayoutPlot({ layout, hidden }: { layout: DungeonLayout; hidden: Set<string> }) {
   const { t } = useTranslation()
-  const b = layoutBounds(layout.points)
+  // World-cm frame shared with the footprint image (falls back to the
+  // points' own bounding box for artifacts predating `bounds`).
+  const fb = layout.bounds
+  const pb = layoutBounds(layout.points)
+  const b = fb
+    ? { minX: fb.x, minY: fb.y, width: fb.w, height: fb.h }
+    : { minX: pb.minX, minY: pb.minY, width: pb.width, height: pb.height }
   // Marker unit: keeps dots readable across dungeon footprints of any size.
   const u = Math.max(b.width, b.height) / 90
   const groups = CATEGORIES.map((c) => ({
@@ -147,6 +154,17 @@ function LayoutPlot({ layout, hidden }: { layout: DungeonLayout; hidden: Set<str
         data-testid="dungeon-layout-plot"
         role="img"
       >
+        {layout.footprint ? (
+          <image
+            href={layoutFootprintUrl(layout)}
+            x={b.minX}
+            y={b.minY}
+            width={b.width}
+            height={b.height}
+            preserveAspectRatio="none"
+            className="opacity-70 dark:opacity-40 dark:invert"
+          />
+        ) : null}
         {groups.map(({ c, pts }) =>
           pts.map((p, i) => (
             <Marker

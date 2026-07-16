@@ -87,6 +87,11 @@ def test_point_shape_and_sanity(out):
         if enemies:
             assert any(p["sub"] == "boss" for p in enemies), (
                 lay["dungeon"], lay["variant"])
+        # Shared coordinate frame: every point sits inside the bounds.
+        b = lay["bounds"]
+        for p in lay["points"]:
+            assert b["x"] <= p["x"] <= b["x"] + b["w"], (lay["dungeon"], lay["variant"], p)
+            assert b["y"] <= p["y"] <= b["y"] + b["h"], (lay["dungeon"], lay["variant"], p)
         xs = [p["x"] for p in lay["points"]]
         ys = [p["y"] for p in lay["points"]]
         for p in lay["points"]:
@@ -101,3 +106,20 @@ def test_multifloor_collab_dungeon(out):
     lay = _by_dungeon(out)["Yakushima001"]["01"]
     subs = {p["sub"] for p in lay["points"] if p["kind"] == "enemy"}
     assert {"floor2", "floor3", "floor4", "boss"} <= subs
+
+
+def test_footprints(out, tmp_path):
+    # Classic dungeons carry their geometry in the grid cell → footprint.
+    idx = _by_dungeon(out)
+    assert idx["Forest001"]["04"].get("footprint") is True
+    # Rendering one layout produces a WebP aligned to its bounds.
+    from palworld.dungeon_layouts import _FOOT_SIZE, _render_footprint
+
+    lay = idx["Forest001"]["04"]
+    img_path = tmp_path / "f.webp"
+    _render_footprint([(lay["bounds"]["x"], lay["bounds"]["y"])], lay["bounds"], img_path)
+    from PIL import Image
+
+    with Image.open(img_path) as im:
+        assert max(im.size) == _FOOT_SIZE
+        assert im.mode == "RGBA"
