@@ -85,19 +85,26 @@ MerchantEntry {
   id: string            // shop-group key (e.g. "Village_Shop_1"); caravan union = "Caravan"
   currency: string      // item id from DT_ItemShopSettingData_Common; default "Money"
   icon?: string         // NPC portrait stem (icons/<stem>), from the vendor NPC
+  vendor?: string       // vendor BP class stem (e.g. "SalesPerson_Weapon_2"), for future joins
   products: [{ item: string, price: number, num: number }]  // price = OverridePrice || item base Price
-  npcIds?: string[]     // vendor NPC identity keys, for the map-location join
 }
 ```
 
-- **Name / icon**: resolved from the owning vendor NPC via the existing `_npc_name_icon`
-  resolver (localized `nameByLng` → `merchants.json` locale files; portrait stem → `icon`).
-  The join is vendor-BP class (e.g. `BP_NPC_SalesPerson_Weapon_2`) → NPC identity key used by
-  the marker pipeline (`SalesPerson_Weapon_2`). Merchants whose NPC has no localized name fall
-  back to app-side i18n strings (`merchant.name.<id>`), mirroring the `bp.area.*` pattern.
-- **Locations**: reuse the emitted `npc` markers. The detail page shows a "view on map" chip
-  per map the merchant's NPC appears on, using the same marker search pattern as shrine chips
-  (`search={ map, q: merchantName }`). No new coordinate emission for v1.
+- **Shop-group ↔ vendor join (verified 2026-07-16):** each vendor NPC BP under
+  `Blueprint/Character/NPC/**` carries `itemShopSimpleLotteryTableName` → a
+  `DT_ItemShopLotteryData_Common` table → `lotteryDataArray[].ShopGroupName`. Mapping is ~1:1
+  across 44 vendor BPs. `merchants.py` scans that subtree (fast — 319 files) to build
+  `group → vendor-BP-stem`.
+- **Name / icon**: the vendor BP stem is humanized into an app-side i18n label per merchant
+  (`merchant.name.<id>`), 17 languages, mirroring the `bp.area.*` pattern — merchant vendor
+  NPCs are generically named in the game (SalesPerson, Trader…), so a curated label reads
+  better than the raw NPC name. Icon: best-effort portrait stem when the vendor BP resolves to
+  a `DT_PalCharacterIconDataTable` row; omitted otherwise.
+- **Locations: deferred to a follow-up (v2).** The emitted `npc` markers collapse to generic
+  ids and drop the vendor identity, and merchant NPCs share generic names, so a reliable
+  "view on map" join needs marker-pipeline changes (stamping vendor identity on merchant
+  markers). Out of scope for this pass; `vendor` is emitted now so a later stage can do the
+  join without re-deriving it. The merchant detail page ships without a map section for v1.
 
 ### `catalog.py` merchant source shape
 
@@ -121,8 +128,8 @@ MerchantEntry {
 - `features/merchants/MerchantListPage.tsx` (`/merchants`): browsable index (mirror
   `/items` list — search + grid of name/icon/currency).
 - `features/merchants/MerchantDetailPage.tsx` (`/merchants/$id`): header (portrait + name +
-  currency label), inventory grid (item chips with price + currency glyph), "view on map"
-  chips for each map the merchant appears on. Not-found + loading states like item pages.
+  currency label) and an inventory grid (item chips with price + currency glyph). Not-found +
+  loading states like item pages. (No map section in v1 — see Locations above.)
 - `ItemSources.tsx` merchant chip: resolve merchant name from the merchants bundle, link to
   `/merchants/$id`, show price + currency glyph.
 - Router: register `/merchants` and `/merchants/$id`. Nav: add a "Merchants" entry.
@@ -141,7 +148,7 @@ MerchantEntry {
 
 **frontend**
 - Item detail renders `sources` rows for a non-blueprint item.
-- Merchant detail renders inventory + a map chip; merchant list lists all emitted merchants.
+- Merchant detail renders the inventory; merchant list lists all emitted merchants.
 
 ## Files touched
 
@@ -155,7 +162,9 @@ MerchantEntry {
 
 ## Out of scope / deferred
 
-- Embedded coordinate pins on merchant pages (using marker query chips instead for v1).
+- **Merchant map locations** — needs marker-pipeline changes to stamp vendor identity on
+  merchant NPC markers (the emitted markers currently drop it). `vendor` is emitted now to
+  make the future join cheap.
 - Any pruning of the 38 individual caravan pages vs the aggregated one — deferred to user
   review after the first build (`AGGREGATE_CARAVAN` toggle preserved for this).
 - `noSource` for non-blueprint items.
