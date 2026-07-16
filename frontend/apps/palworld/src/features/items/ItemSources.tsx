@@ -4,8 +4,9 @@ import { Link } from '@tanstack/react-router'
 import { HoverCard, HoverCardTrigger } from '@gamemap/ui'
 import { formatChance } from '../../lib/dungeons'
 import { loadAreas, type AreaInfo } from '../../lib/areas'
-import type { BlueprintSource, ItemEntry, ItemsBundle } from '../../lib/catalog'
+import type { ItemSource, ItemEntry, ItemsBundle } from '../../lib/catalog'
 import type { PalsBundle } from '../../lib/pals'
+import type { MerchantsBundle } from '../../lib/merchants'
 import type { RecyclerFile } from '../../lib/recycler'
 import {
   CatalogSection,
@@ -117,7 +118,7 @@ function RegionChip({
   info,
   label,
 }: {
-  s: BlueprintSource
+  s: ItemSource
   info: AreaInfo | undefined
   label: string
 }) {
@@ -152,14 +153,16 @@ function SourceChip({
   items,
   pals,
   areas,
+  merchants,
 }: {
-  s: BlueprintSource
+  s: ItemSource
   /** Localized name of the schematic (shrine markers are labelled by it). */
   itemName: string
   items: ItemsBundle
   pals: PalsBundle
   /** Loot index (areas.json) — null while loading / unavailable. */
   areas: Record<string, AreaInfo> | null
+  merchants: MerchantsBundle | null
 }) {
   const { t } = useTranslation()
   const areaLabel = useAreaLabel(items)
@@ -208,14 +211,25 @@ function SourceChip({
     case 'merchant': {
       const cur = s.currency ?? 'Money'
       const icon = items.byId.get(cur)?.icon
-      const shop = s.shop ?? ''
-      return (
+      const mid = s.merchant ?? ''
+      const m = merchants?.byId.get(mid)
+      const label = m ? t(`merchant.name.${m.nameKey}`, mid) : mid
+      const price = (
+        <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
+          {icon ? <ItemGlyph icon={icon} size={16} /> : null}
+          <span className="tabular-nums">{s.price}</span>
+        </span>
+      )
+      // Link to the merchant page when we can resolve it; otherwise a static fact.
+      return m ? (
+        <Link to="/merchants/$id" params={{ id: mid }} className={CHIP} title={items.text[cur]?.name ?? cur}>
+          {label}
+          {price}
+        </Link>
+      ) : (
         <span className={FACT_CHIP} title={items.text[cur]?.name ?? cur}>
-          {t(`bp.shop.${shop}`, shop)}
-          <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
-            {icon ? <ItemGlyph icon={icon} size={16} /> : null}
-            <span className="tabular-nums">{s.price}</span>
-          </span>
+          {label}
+          {price}
         </span>
       )
     }
@@ -248,25 +262,27 @@ function recyclerChance(recipe: RecyclerFile['recipes'][number], id: string): nu
   return (1 - miss) * 100
 }
 
-/** Acquisition rows for a blueprint item's "How to obtain" section: one row
- *  per channel kind, plus the relic-recycler inverse ("recycle these relics").
- *  Renders the no-source note when the schematic has no channel at all. */
-export function BlueprintSourceRows({
+/** Acquisition rows for an item's "How to obtain" section: one row per channel
+ *  kind, plus the relic-recycler inverse ("recycle these relics"). Renders the
+ *  no-source note when a blueprint has no channel at all. */
+export function ItemSourceRows({
   item,
   items,
   pals,
+  merchants,
   recycler,
   className,
 }: {
   item: ItemEntry
   items: ItemsBundle
   pals: PalsBundle
+  merchants: MerchantsBundle | null
   recycler: RecyclerFile | null
   className?: string
 }) {
   const { t } = useTranslation()
   const areas = useAreas()
-  const byKind = new Map<string, BlueprintSource[]>()
+  const byKind = new Map<string, ItemSource[]>()
   for (const s of item.sources ?? []) {
     const lst = byKind.get(s.kind)
     if (lst) lst.push(s)
@@ -291,6 +307,7 @@ export function BlueprintSourceRows({
                 items={items}
                 pals={pals}
                 areas={areas}
+                merchants={merchants}
               />
             ))}
           </div>

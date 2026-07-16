@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from '@tanstack/react-router'
-import { Map, PawPrint, Package, Hammer, Menu, FlaskConical, ScrollText, Heart, Sparkles, Swords, HandHeart, Castle } from 'lucide-react'
+import { Map, PawPrint, Package, Hammer, Menu, FlaskConical, ScrollText, Heart, Sparkles, Swords, HandHeart, Castle, Store } from 'lucide-react'
 import { cn, Sheet, SheetContent, SheetHeader, SheetTitle } from '@gamemap/ui'
 import { ThemeToggle } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
@@ -15,6 +15,7 @@ function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/pals')) return '/pals'
   if (pathname.startsWith('/items')) return '/items'
   if (pathname.startsWith('/buildings')) return '/buildings'
+  if (pathname.startsWith('/merchants')) return '/merchants'
   if (pathname.startsWith('/technology')) return '/technology'
   if (pathname.startsWith('/dungeons')) return '/dungeons'
   if (pathname.startsWith('/quests')) return '/quests'
@@ -39,6 +40,7 @@ export function BottomTabBar() {
     { key: '/buildings', label: t('building.title'), icon: Hammer },
   ]
   const more: Tab[] = [
+    { key: '/merchants', label: t('merchant.title'), icon: Store },
     { key: '/technology', label: t('tech.title'), icon: FlaskConical },
     { key: '/dungeons', label: t('dungeon.title'), icon: Castle },
     { key: '/quests', label: t('quest.title'), icon: ScrollText },

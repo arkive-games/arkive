@@ -85,7 +85,7 @@ export function CatalogNotFound({
   backLabel,
 }: {
   message: string
-  to: '/items' | '/buildings' | '/quests' | '/dungeons'
+  to: '/items' | '/buildings' | '/merchants' | '/quests' | '/dungeons'
   backLabel: string
 }) {
   return (

@@ -33,8 +33,9 @@ export interface EquipStats {
   magazine?: number
 }
 
-/** One acquisition channel of a blueprint (schematic) item, emitted by
- *  tools/palworld/blueprint_sources.py. Kind-discriminated:
+/** One acquisition channel of an item, emitted by
+ *  tools/palworld/item_sources.py (+ merchants.py for the merchant kind).
+ *  Kind-discriminated:
  *  - chest/fishing/supply/camp/oilrig: `area` names the region (labels.json
  *    `area` for game-localized islands/rigs, `bp.area.*` UI strings for the
  *    mainland biomes); `grade` is the chest tier, `chance` the best per-roll
@@ -43,9 +44,10 @@ export interface EquipStats {
  *  - salvage: `rank` of the fishing junk spot.
  *  - raid: `pal` is the summoning-altar boss.
  *  - shrine: `count` of Ancient Shrines granting it.
- *  - merchant: `shop` key (bp.shop.*), `price` in `currency` (an item id).
+ *  - merchant: `merchant` is the merchant id (→ merchants.json), `price` in
+ *    `currency` (an item id).
  *  - arena: `rank` row name (bp.arenaRank.*), `repeat` for repeat-clear. */
-export interface BlueprintSource {
+export interface ItemSource {
   kind:
     | 'chest' | 'fishing' | 'salvage' | 'supply' | 'camp' | 'oilrig'
     | 'treasureMap' | 'raid' | 'shrine' | 'merchant' | 'arena'
@@ -56,11 +58,14 @@ export interface BlueprintSource {
   rank?: number | string
   pal?: string
   count?: number
-  shop?: string
+  merchant?: string
   price?: number
   currency?: string
   repeat?: boolean
 }
+
+/** @deprecated use {@link ItemSource} — kept as an alias during the rename. */
+export type BlueprintSource = ItemSource
 
 export interface ItemEntry {
   id: string
@@ -91,8 +96,9 @@ export interface ItemEntry {
   unlockTech?: string[]
   /** Items whose recipe this item unlocks (inverse of recipe.unlockItemId). */
   unlocksCraft?: string[]
-  /** Acquisition channels (blueprint-family items only). */
-  sources?: BlueprintSource[]
+  /** Acquisition channels (chests / fishing / camps / merchants / raids /
+   *  arena / shrines) — emitted for every item, not just blueprints. */
+  sources?: ItemSource[]
   /** Blueprint with NO acquisition channel at all (also no pal drop, dungeon
    *  lottery or recycler output) — dead data as far as players are concerned. */
   noSource?: boolean

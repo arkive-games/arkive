@@ -26,7 +26,7 @@ import {
   CatalogSection,
   ItemLink,
 } from '../catalog/components'
-import { ChanceBadge, TierBadge, useAreaLabel } from '../items/BlueprintSections'
+import { ChanceBadge, TierBadge, useAreaLabel } from '../items/ItemSources'
 import { CLUSTER_TIERS, ZoomTierWatcher } from '../maps/embedCluster'
 
 /** Loot-spot pin scale on the embedded map (chest icons are dense; keep small). */

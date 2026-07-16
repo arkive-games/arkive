@@ -12,9 +12,10 @@ import {
   type TechBundle,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
+import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
 import { loadRecycler, type RecyclerFile } from '../../lib/recycler'
 import { RecyclerRecipeSection } from '../recycler/RecyclerSections'
-import { BlueprintSourceRows, UnlocksCraftSection } from './BlueprintSections'
+import { ItemSourceRows, UnlocksCraftSection } from './ItemSources'
 import { itemTypeLabel } from '../catalog/labels'
 import {
   CatalogSection,
@@ -64,6 +65,8 @@ export default function ItemDetailPage() {
   // Relic-recycler odds for the "conversion outputs" section on relic items;
   // best-effort like the dungeons dataset.
   const [recycler, setRecycler] = useState<RecyclerFile | null>(null)
+  // Merchant catalog, so the merchant source chips can name + link merchants.
+  const [merchants, setMerchants] = useState<MerchantsBundle | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -88,6 +91,9 @@ export default function ItemDetailPage() {
       .catch((err) => console.error(err))
     loadRecycler()
       .then((r) => { if (!cancelled) setRecycler(r) })
+      .catch((err) => console.error(err))
+    loadMerchants()
+      .then((m) => { if (!cancelled) setMerchants(m) })
       .catch((err) => console.error(err))
     return () => {
       cancelled = true
@@ -222,10 +228,11 @@ export default function ItemDetailPage() {
                         </div>
                       </div>
                     ) : null}
-                    <BlueprintSourceRows
+                    <ItemSourceRows
                       item={item}
                       items={b.items}
                       pals={b.pals}
+                      merchants={merchants}
                       recycler={recycler}
                     />
                     {item.unlockTech?.length ? (

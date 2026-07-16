@@ -5,7 +5,7 @@ import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 
-export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/technology' | '/dungeons' | '/quests'
+export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests'
 
 /**
  * Unified top navigation shared by every page (map, Paldeck, breeding). The
@@ -35,6 +35,7 @@ export function TopNav({ active }: { active: NavKey }) {
       children: [
         { key: '/items', label: t('item.title'), active: active === '/items' },
         { key: '/buildings', label: t('building.title'), active: active === '/buildings' },
+        { key: '/merchants', label: t('merchant.title'), active: active === '/merchants' },
         { key: '/technology', label: t('tech.title'), active: active === '/technology' },
         { key: '/dungeons', label: t('dungeon.title'), active: active === '/dungeons' },
         { key: '/quests', label: t('quest.title'), active: active === '/quests' },

@@ -21,6 +21,8 @@ import ItemListPage from './features/items/ItemListPage'
 import ItemDetailPage from './features/items/ItemDetailPage'
 import BuildingListPage from './features/buildings/BuildingListPage'
 import BuildingDetailPage from './features/buildings/BuildingDetailPage'
+import MerchantListPage from './features/merchants/MerchantListPage'
+import MerchantDetailPage from './features/merchants/MerchantDetailPage'
 import TechnologyPage from './features/technology/TechnologyPage'
 import DungeonListPage from './features/dungeons/DungeonListPage'
 import DungeonDetailPage from './features/dungeons/DungeonDetailPage'
@@ -150,6 +152,16 @@ const buildingDetailRoute = createRoute({
   path: '/buildings/$id',
   component: BuildingDetailPage,
 })
+const merchantsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/merchants',
+  component: MerchantListPage,
+})
+const merchantDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/merchants/$id',
+  component: MerchantDetailPage,
+})
 export interface TechnologySearch {
   /** Tech id to scroll to and highlight on load, e.g. /technology?tech=Workbench */
   tech?: string
@@ -214,6 +226,8 @@ const routeTree = rootRoute.addChildren([
   itemDetailRoute,
   buildingsRoute,
   buildingDetailRoute,
+  merchantsRoute,
+  merchantDetailRoute,
   technologyRoute,
   dungeonsRoute,
   dungeonDetailRoute,
