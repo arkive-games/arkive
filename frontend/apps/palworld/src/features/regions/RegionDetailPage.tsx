@@ -27,6 +27,7 @@ import {
   ItemLink,
 } from '../catalog/components'
 import { ChanceBadge, TierBadge, useAreaLabel } from '../items/BlueprintSections'
+import { CLUSTER_TIERS, ZoomTierWatcher } from '../maps/embedCluster'
 
 /** Loot-spot pin scale on the embedded map (chest icons are dense; keep small). */
 const PIN_SCALE = 0.8
@@ -56,8 +57,69 @@ interface Loaded {
   pals: PalsBundle
 }
 
-/** Embedded mini-map of one map's loot spots for the area, pins per subtype. */
+/** One rendered pin: an exact loot spot (`count` 1, keeps its named region for
+ *  the tooltip) or a same-subtype cluster drawn with a count badge. */
+interface RenderSpot {
+  pos: L.LatLng
+  subtype: string
+  count: number
+  region?: string
+}
+
+/** Grid-bucket the spots per subtype (chest clusters never swallow the
+ *  fishing spot next door); `cell: 0` shows every exact spot. */
+function clusterSpots(map: MapMeta, spots: LootSpot[], cell: number): RenderSpot[] {
+  if (cell === 0) {
+    return spots.map((p) => ({
+      pos: dataToLatLng(map, p.x, p.y),
+      subtype: p.subtype,
+      count: 1,
+      region: p.region,
+    }))
+  }
+  interface Bucket {
+    latSum: number
+    lngSum: number
+    count: number
+    subtype: string
+    first: RenderSpot
+  }
+  const buckets = new Map<string, Bucket>()
+  for (const p of spots) {
+    const pos = dataToLatLng(map, p.x, p.y)
+    const key = `${p.subtype}:${Math.floor(pos.lng / cell)}:${Math.floor(pos.lat / cell)}`
+    let b = buckets.get(key)
+    if (!b) {
+      b = {
+        latSum: 0,
+        lngSum: 0,
+        count: 0,
+        subtype: p.subtype,
+        first: { pos, subtype: p.subtype, count: 1, region: p.region },
+      }
+      buckets.set(key, b)
+    }
+    b.latSum += pos.lat
+    b.lngSum += pos.lng
+    b.count += 1
+  }
+  return [...buckets.values()].map((b) =>
+    b.count === 1
+      ? b.first
+      : {
+          pos: new L.LatLng(b.latSum / b.count, b.lngSum / b.count),
+          subtype: b.subtype,
+          count: b.count,
+        },
+  )
+}
+
+/** Embedded mini-map of one map's loot spots for the area: pins per subtype,
+ *  dynamically clustered by zoom (same tiers as the pal spawn map). */
 function RegionLootMap({ area, data, taxonomy }: { area: string; data: MapData; taxonomy: Taxonomy }) {
+  // Coarsest tier by default — matches the initial fit-to-bounds zoom; the
+  // watcher corrects it on mount if the map opens more zoomed in.
+  const [tier, setTier] = useState(0)
   const subtypeDef = (id: string) => taxonomy.subtypes.find((s) => s.id === id)
 
   const maxBounds = useMemo(
@@ -75,22 +137,21 @@ function RegionLootMap({ area, data, taxonomy }: { area: string; data: MapData; 
     return b.pad(0.12)
   }, [data, maxBounds])
 
-  // One pin per subtype present in the spot list (createPinIcon caches the
-  // underlying DivIcon by visual signature, so this stays cheap).
-  const pins = useMemo(() => {
-    const m = new Map<string, L.DivIcon>()
-    for (const p of data.spots) {
-      if (m.has(p.subtype)) continue
-      const def = taxonomy.subtypes.find((s) => s.id === p.subtype)
-      m.set(
-        p.subtype,
-        def?.icon
-          ? createPinIcon(palworldAssets.markerIconUrl(def.icon, data.map), PIN_SCALE, false)
-          : createPinIcon('', PIN_SCALE, false, { variant: 'pin', innerColor: def?.color }),
-      )
-    }
-    return m
-  }, [taxonomy, data])
+  // Re-cluster only when the map data or the zoom tier changes.
+  const markers = useMemo(
+    () => clusterSpots(data.map, data.spots, CLUSTER_TIERS[tier].cell),
+    [data, tier],
+  )
+
+  // createPinIcon caches the underlying DivIcon by visual signature, so
+  // building per marker stays cheap.
+  const iconFor = (m: RenderSpot) => {
+    const def = subtypeDef(m.subtype)
+    const badge = m.count > 1 ? { count: m.count } : {}
+    return def?.icon
+      ? createPinIcon(palworldAssets.markerIconUrl(def.icon, data.map), PIN_SCALE, false, badge)
+      : createPinIcon('', PIN_SCALE, false, { variant: 'pin', innerColor: def?.color, ...badge })
+  }
 
   return (
     <div className="relative isolate h-96 overflow-hidden rounded-lg border border-border">
@@ -111,15 +172,16 @@ function RegionLootMap({ area, data, taxonomy }: { area: string; data: MapData; 
         className="h-full w-full"
       >
         <GameMapTiles selectedMap={data.map} assets={palworldAssets} />
-        {data.spots.map((p) => {
+        <ZoomTierWatcher onTier={setTier} />
+        {markers.map((m, i) => {
           const label = [
-            subtypeDef(p.subtype)?.name ?? p.subtype,
-            p.region ? data.regionNames[p.region]?.name : undefined,
+            subtypeDef(m.subtype)?.name ?? m.subtype,
+            m.count > 1 ? `×${m.count}` : m.region ? data.regionNames[m.region]?.name : undefined,
           ]
             .filter(Boolean)
             .join(' · ')
           return (
-            <Marker key={p.id} position={dataToLatLng(data.map, p.x, p.y)} icon={pins.get(p.subtype)}>
+            <Marker key={i} position={m.pos} icon={iconFor(m)}>
               <Tooltip direction="top">{label}</Tooltip>
             </Marker>
           )

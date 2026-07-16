@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
-import { MapContainer, Marker, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Tooltip } from 'react-leaflet'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Moon } from 'lucide-react'
@@ -10,6 +10,7 @@ import { cn } from '@gamemap/ui'
 import { palworldAssets, palIconUrl } from '../../../lib/assets'
 import { loadPalSpawns, type PalSpawns, type SpawnKind, type SpawnPoint } from '../../../lib/pals'
 import { dataUrl } from '../../../lib/urls'
+import { CLUSTER_TIERS, ZoomTierWatcher } from '../../maps/embedCluster'
 
 type MapsLocale = Record<string, { name: string; shortName?: string }>
 
@@ -44,47 +45,16 @@ const BOSS_RING = '#ef4444'
 // Night-restricted wild points ring indigo (boss identity wins over night).
 const NIGHT_RING = '#818cf8'
 
-// --- dynamic clustering ------------------------------------------------------
-// Wild spawn points cluster into count-badged pins when zoomed out and split
-// apart as you zoom in (bosses never cluster). Clusters are square grid
-// buckets in map-image px; a cell renders at `cell * 2^zoom` screen px, so
-// each tier's cell keeps cluster pins ≥ ~44px apart (one pin width) at the
-// tier's minimum zoom. `cell: 0` = no clustering, every exact point shows.
-const CLUSTER_TIERS = [
-  { minZoom: -Infinity, cell: 704 },
-  { minZoom: -3, cell: 352 },
-  { minZoom: -2, cell: 176 },
-  { minZoom: -1, cell: 88 },
-  { minZoom: 0, cell: 0 },
-]
+// Dynamic clustering: tiers + zoom watcher shared by the embedded mini-maps
+// (see features/maps/embedCluster). Wild spawn points cluster into
+// count-badged pins when zoomed out and split apart as you zoom in (bosses
+// never cluster).
 // Above this many wild points, the deepest tier keeps clustering (with a cell
 // fine enough to only merge same-spawner stacks) instead of showing all — a
 // few common pals carry 1.5k–4.9k exact points (spawner grids sit ~50 m
 // apart) and mounting that many divIcon markers at once janks the page.
 const SHOW_ALL_MAX = 1500
 const DENSE_FINEST_CELL = 44
-
-function tierFor(zoom: number): number {
-  let tier = 0
-  for (let i = 1; i < CLUSTER_TIERS.length; i++) if (zoom >= CLUSTER_TIERS[i].minZoom) tier = i
-  return tier
-}
-
-/** Reports the map's cluster tier into parent state. Listens to the raw zoom
- *  stream but the value only changes at tier boundaries, so a continuous
- *  smooth-wheel glide re-renders the markers at most once per crossing. */
-function ZoomTierWatcher({ onTier }: { onTier: (tier: number) => void }) {
-  const map = useMap()
-  useEffect(() => {
-    const update = () => onTier(tierFor(map.getZoom()))
-    update()
-    map.on('zoom', update)
-    return () => {
-      map.off('zoom', update)
-    }
-  }, [map, onTier])
-  return null
-}
 
 /** One rendered pin: an exact spawn point (`count` 1) or a cluster of nearby
  *  wild points (`count` > 1, drawn with a count badge at the centroid). */
