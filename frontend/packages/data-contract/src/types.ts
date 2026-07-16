@@ -203,6 +203,15 @@ export interface MarkerInstance {
    * "view dungeon loot" link.
    */
   dungeonArea?: string;
+  /**
+   * Blueprint-sources area key carried by loot-spawner markers (palworld
+   * chests / fishing spots / supply points / camps / oil-rig boxes, e.g.
+   * `Grass`, `Sakurajima`, `Oilrig`): the item-lottery pool family the spawner
+   * draws from — the same key an item's chest/fishing/supply/camp `sources`
+   * entries use. Joins placed markers to the per-item "how to obtain" data
+   * (region detail page + source hovercard).
+   */
+  lootArea?: string;
 }
 
 export interface RegionInstance {

@@ -53,6 +53,14 @@ export interface BlueprintStrings {
   noSource: string
   /** Items-list filter chip for the same. */
   noSourceFilter: string
+  /** Region hovercard footer ("open the region detail page"). */
+  viewRegion: string
+  /** Region detail-page header eyebrow. */
+  regionTag: string
+  /** Region detail-page map section title. */
+  regionSpots: string
+  /** Region detail-page reverse-index section title. */
+  regionBlueprints: string
 }
 
 export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
@@ -75,6 +83,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Repeatable',
     noSource: 'No known way to obtain this schematic — it does not appear in any loot table, shop or reward.',
     noSourceFilter: 'No known source',
+    viewRegion: 'View region',
+    regionTag: 'Region',
+    regionSpots: 'Loot locations',
+    regionBlueprints: 'Blueprints from this region',
   },
   'de-DE': {
     unlocksCraft: 'Schaltet Herstellung frei',
@@ -95,6 +107,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Wiederholbar',
     noSource: 'Keine bekannte Bezugsquelle — dieser Bauplan erscheint in keiner Beutetabelle, keinem Shop und keiner Belohnung.',
     noSourceFilter: 'Keine bekannte Quelle',
+    viewRegion: 'Region ansehen',
+    regionTag: 'Region',
+    regionSpots: 'Fundorte',
+    regionBlueprints: 'Baupläne aus dieser Region',
   },
   'es-ES': {
     unlocksCraft: 'Desbloquea la fabricación',
@@ -115,6 +131,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Repetible',
     noSource: 'No hay forma conocida de obtener este plano: no aparece en ninguna tabla de botín, tienda ni recompensa.',
     noSourceFilter: 'Sin fuente conocida',
+    viewRegion: 'Ver región',
+    regionTag: 'Región',
+    regionSpots: 'Ubicaciones de botín',
+    regionBlueprints: 'Planos de esta región',
   },
   'es-MX': {
     unlocksCraft: 'Desbloquea la fabricación',
@@ -135,6 +155,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Repetible',
     noSource: 'No hay forma conocida de obtener este plano: no aparece en ninguna tabla de botín, tienda ni recompensa.',
     noSourceFilter: 'Sin fuente conocida',
+    viewRegion: 'Ver región',
+    regionTag: 'Región',
+    regionSpots: 'Ubicaciones de botín',
+    regionBlueprints: 'Planos de esta región',
   },
   'fr-FR': {
     unlocksCraft: 'Débloque la fabrication',
@@ -155,6 +179,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Répétable',
     noSource: "Aucun moyen connu d'obtenir ce plan : il n'apparaît dans aucune table de butin, boutique ni récompense.",
     noSourceFilter: 'Aucune source connue',
+    viewRegion: 'Voir la région',
+    regionTag: 'Région',
+    regionSpots: 'Emplacements de butin',
+    regionBlueprints: 'Plans de cette région',
   },
   'id-ID': {
     unlocksCraft: 'Membuka pembuatan',
@@ -175,6 +203,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Dapat diulang',
     noSource: 'Tidak ada cara yang diketahui untuk mendapatkan cetak biru ini — tidak muncul di tabel jarahan, toko, atau hadiah mana pun.',
     noSourceFilter: 'Sumber tidak diketahui',
+    viewRegion: 'Lihat wilayah',
+    regionTag: 'Wilayah',
+    regionSpots: 'Lokasi jarahan',
+    regionBlueprints: 'Cetak biru dari wilayah ini',
   },
   'it-IT': {
     unlocksCraft: 'Sblocca la fabbricazione',
@@ -195,6 +227,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Ripetibile',
     noSource: 'Nessun modo noto per ottenere questo progetto: non compare in alcuna tabella del bottino, negozio o ricompensa.',
     noSourceFilter: 'Nessuna fonte nota',
+    viewRegion: 'Vedi regione',
+    regionTag: 'Regione',
+    regionSpots: 'Punti di bottino',
+    regionBlueprints: 'Progetti da questa regione',
   },
   'ja-JP': {
     unlocksCraft: '製作可能になるアイテム',
@@ -215,6 +251,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: '繰り返し入手可',
     noSource: 'この設計図の入手方法は確認されていません。ルートテーブル・ショップ・報酬のいずれにも登場しません。',
     noSourceFilter: '入手方法なし',
+    viewRegion: '地域を見る',
+    regionTag: '地域',
+    regionSpots: '入手スポット',
+    regionBlueprints: 'この地域で入手できる設計図',
   },
   'ko-KR': {
     unlocksCraft: '제작 해금',
@@ -235,6 +275,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: '반복 획득 가능',
     noSource: '이 도면의 입수 방법이 확인되지 않았습니다. 어떤 전리품 테이블, 상점, 보상에도 등장하지 않습니다.',
     noSourceFilter: '입수처 없음',
+    viewRegion: '지역 보기',
+    regionTag: '지역',
+    regionSpots: '획득 위치',
+    regionBlueprints: '이 지역에서 얻는 도면',
   },
   'pl-PL': {
     unlocksCraft: 'Odblokowuje wytwarzanie',
@@ -255,6 +299,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Powtarzalne',
     noSource: 'Nie ma znanego sposobu zdobycia tego schematu — nie występuje w żadnej tabeli łupów, sklepie ani nagrodzie.',
     noSourceFilter: 'Brak znanego źródła',
+    viewRegion: 'Zobacz region',
+    regionTag: 'Region',
+    regionSpots: 'Miejsca łupów',
+    regionBlueprints: 'Schematy z tego regionu',
   },
   'pt-BR': {
     unlocksCraft: 'Desbloqueia a fabricação',
@@ -275,6 +323,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Repetível',
     noSource: 'Não há forma conhecida de obter este projeto — ele não aparece em nenhuma tabela de saque, loja ou recompensa.',
     noSourceFilter: 'Sem fonte conhecida',
+    viewRegion: 'Ver região',
+    regionTag: 'Região',
+    regionSpots: 'Locais de saque',
+    regionBlueprints: 'Projetos desta região',
   },
   'ru-RU': {
     unlocksCraft: 'Открывает создание',
@@ -295,6 +347,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Повторяемо',
     noSource: 'Способ получения этого чертежа неизвестен — он не встречается ни в таблицах добычи, ни в магазинах, ни в наградах.',
     noSourceFilter: 'Источник неизвестен',
+    viewRegion: 'Открыть регион',
+    regionTag: 'Регион',
+    regionSpots: 'Места добычи',
+    regionBlueprints: 'Чертежи из этого региона',
   },
   'th-TH': {
     unlocksCraft: 'ปลดล็อกการคราฟต์',
@@ -315,6 +371,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'รับซ้ำได้',
     noSource: 'ยังไม่พบวิธีได้รับพิมพ์เขียวนี้ — ไม่ปรากฏในตารางดรอป ร้านค้า หรือรางวัลใด ๆ',
     noSourceFilter: 'ไม่ทราบแหล่งที่มา',
+    viewRegion: 'ดูภูมิภาค',
+    regionTag: 'ภูมิภาค',
+    regionSpots: 'จุดดรอปของ',
+    regionBlueprints: 'พิมพ์เขียวจากภูมิภาคนี้',
   },
   'tr-TR': {
     unlocksCraft: 'Üretimi açar',
@@ -335,6 +395,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Tekrarlanabilir',
     noSource: 'Bu planı elde etmenin bilinen bir yolu yok — hiçbir ganimet tablosunda, dükkânda veya ödülde görünmüyor.',
     noSourceFilter: 'Bilinen kaynak yok',
+    viewRegion: 'Bölgeyi gör',
+    regionTag: 'Bölge',
+    regionSpots: 'Ganimet konumları',
+    regionBlueprints: 'Bu bölgeden planlar',
   },
   'vi-VN': {
     unlocksCraft: 'Mở khóa chế tạo',
@@ -355,6 +419,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: 'Có thể lặp lại',
     noSource: 'Chưa có cách nào được biết để nhận bản thiết kế này — nó không xuất hiện trong bất kỳ bảng vật phẩm, cửa hàng hay phần thưởng nào.',
     noSourceFilter: 'Không rõ nguồn',
+    viewRegion: 'Xem khu vực',
+    regionTag: 'Khu vực',
+    regionSpots: 'Vị trí chiến lợi phẩm',
+    regionBlueprints: 'Bản thiết kế từ khu vực này',
   },
   'zh-CN': {
     unlocksCraft: '解锁制作',
@@ -375,6 +443,10 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: '可重复获取',
     noSource: '暂无已知获取途径——该设计图不出现在任何掉落表、商店或奖励中。',
     noSourceFilter: '无已知来源',
+    viewRegion: '查看区域',
+    regionTag: '区域',
+    regionSpots: '获取地点',
+    regionBlueprints: '本区域可获得的设计图',
   },
   'zh-TW': {
     unlocksCraft: '解鎖製作',
@@ -395,5 +467,9 @@ export const BLUEPRINT_STRINGS: Record<Language, BlueprintStrings> = {
     repeatClear: '可重複獲取',
     noSource: '暫無已知取得途徑——該設計圖不出現在任何掉落表、商店或獎勵中。',
     noSourceFilter: '無已知來源',
+    viewRegion: '查看區域',
+    regionTag: '區域',
+    regionSpots: '取得地點',
+    regionBlueprints: '本區域可取得的設計圖',
   },
 }

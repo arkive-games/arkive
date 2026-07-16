@@ -40,6 +40,9 @@ export interface MarkerRow {
   warpTo?: { map: string; id: string }
   /** Dungeon portals: the dungeon SpawnAreaId (keys dungeons.json loot). */
   dungeonArea?: string
+  /** Loot spawners (chest/fishing/supply/camp/oilrigTreasure): the blueprint-
+   *  sources area key their lottery pool belongs to (areas.json index). */
+  lootArea?: string
 }
 export type MarkerLocale = Record<string, { name?: string; description?: string }>
 export interface TypesLocale {

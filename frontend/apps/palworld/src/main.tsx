@@ -27,6 +27,7 @@ import DungeonDetailPage from './features/dungeons/DungeonDetailPage'
 import DungeonLayoutPage from './features/dungeons/DungeonLayoutPage'
 import QuestListPage from './features/quests/QuestListPage'
 import QuestDetailPage from './features/quests/QuestDetailPage'
+import RegionDetailPage from './features/regions/RegionDetailPage'
 import PassivesPage from './features/pals/PassivesPage'
 import ActiveSkillsPage from './features/pals/ActiveSkillsPage'
 import ActiveSkillDetailPage from './features/pals/ActiveSkillDetailPage'
@@ -193,6 +194,13 @@ const questDetailRoute = createRoute({
   path: '/quests/$id',
   component: QuestDetailPage,
 })
+// Loot-region detail page ($id = a blueprint-sources area key, e.g. "Grass",
+// "Sakurajima", "Oilrig") — linked from item pages' chest/fishing/… chips.
+const regionDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/regions/$id',
+  component: RegionDetailPage,
+})
 const routeTree = rootRoute.addChildren([
   mapRoute,
   breedingRoute,
@@ -212,6 +220,7 @@ const routeTree = rootRoute.addChildren([
   dungeonLayoutRoute,
   questsRoute,
   questDetailRoute,
+  regionDetailRoute,
 ])
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
 declare module '@tanstack/react-router' {

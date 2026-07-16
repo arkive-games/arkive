@@ -1,10 +1,21 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
+import { HoverCard, HoverCardTrigger } from '@gamemap/ui'
 import { formatChance } from '../../lib/dungeons'
+import { loadAreas, type AreaInfo } from '../../lib/areas'
 import type { BlueprintSource, ItemEntry, ItemsBundle } from '../../lib/catalog'
 import type { PalsBundle } from '../../lib/pals'
 import type { RecyclerFile } from '../../lib/recycler'
-import { CatalogSection, CHIP, ItemGlyph, ItemLink, PalLink } from '../catalog/components'
+import {
+  CatalogSection,
+  CHIP,
+  HoverCardBody,
+  ItemGlyph,
+  ItemLink,
+  PalLink,
+  useNested,
+} from '../catalog/components'
 
 // Display order of the acquisition-channel rows (mirrors the tools emitter's
 // KIND_ORDER); the relic-recycler inverse row renders after all of these.
@@ -17,7 +28,7 @@ const KIND_ORDER = [
 const FACT_CHIP =
   'inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm'
 
-function ChanceBadge({ pct }: { pct: number }) {
+export function ChanceBadge({ pct }: { pct: number }) {
   return (
     <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium tabular-nums text-primary">
       {formatChance(pct)}%
@@ -25,7 +36,7 @@ function ChanceBadge({ pct }: { pct: number }) {
   )
 }
 
-function TierBadge({ grade }: { grade?: number }) {
+export function TierBadge({ grade }: { grade?: number }) {
   const { t } = useTranslation()
   if (!grade) return null
   return (
@@ -37,9 +48,102 @@ function TierBadge({ grade }: { grade?: number }) {
 
 /** Localized area name: game world-map name (islands, oil rigs) when the
  *  labels file has one, else the app-side biome noun. */
-function useAreaLabel(items: ItemsBundle) {
+export function useAreaLabel(items: ItemsBundle) {
   const { t } = useTranslation()
   return (area: string) => items.areaLabels[area] ?? t(`bp.area.${area}`, area)
+}
+
+/** The areas.json loot index, loaded once per session. Best-effort: `null`
+ *  while loading or when the data host has no index yet — area chips then
+ *  degrade to plain (non-link) facts. */
+export function useAreas(): Record<string, AreaInfo> | null {
+  const [areas, setAreas] = useState<Record<string, AreaInfo> | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    loadAreas()
+      .then((f) => {
+        if (!cancelled) setAreas(f.areas)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  return areas
+}
+
+/** Marker subtype (areas.json / markers.json) -> acquisition-channel kind
+ *  (bp.kind.* label) for the loot subtypes the region features cover. */
+export const LOOT_SUBTYPE_KIND: Record<string, string> = {
+  chest: 'chest',
+  fishing: 'fishing',
+  supply: 'supply',
+  camp: 'camp',
+  oilrigTreasure: 'oilrig',
+}
+
+/** Hovercard body for a region chip: localized region name + how many loot
+ *  spots of each kind the map data holds there. */
+function RegionSummary({ area, info, label }: { area: string; info: AreaInfo; label: string }) {
+  const { t } = useTranslation()
+  const counts = new Map<string, number>()
+  for (const subs of Object.values(info.maps)) {
+    for (const [sub, n] of Object.entries(subs)) counts.set(sub, (counts.get(sub) ?? 0) + n)
+  }
+  return (
+    <div className="flex flex-col gap-2 text-left">
+      <div>
+        <div className="text-sm font-semibold leading-tight">{label}</div>
+        <div className="font-mono text-xs text-muted-foreground">{area}</div>
+      </div>
+      <div className="flex flex-col gap-1">
+        {[...counts].map(([sub, n]) => (
+          <div key={sub} className="flex items-baseline justify-between gap-3 text-xs">
+            <span className="text-muted-foreground">{t(`bp.kind.${LOOT_SUBTYPE_KIND[sub] ?? sub}`)}</span>
+            <span className="tabular-nums">×{n}</span>
+          </div>
+        ))}
+      </div>
+      <span className="text-xs text-primary">{t('bp.viewRegion')} →</span>
+    </div>
+  )
+}
+
+/** Area fact chip for chest/fishing/supply/camp/oilrig sources. When the loot
+ *  index knows the area, the chip links to the region detail page and carries
+ *  a hovercard with the area's loot-spot counts; otherwise a plain fact. */
+function RegionChip({
+  s,
+  info,
+  label,
+}: {
+  s: BlueprintSource
+  info: AreaInfo | undefined
+  label: string
+}) {
+  const nested = useNested()
+  const body = (
+    <>
+      {label}
+      <TierBadge grade={s.grade} />
+      {s.chance != null ? <ChanceBadge pct={s.chance} /> : null}
+    </>
+  )
+  if (!info) return <span className={FACT_CHIP}>{body}</span>
+  const link = (
+    <Link to="/regions/$id" params={{ id: s.area! }} className={CHIP} data-testid="bp-region-chip">
+      {body}
+    </Link>
+  )
+  if (nested) return link
+  return (
+    <HoverCard openDelay={120} closeDelay={120}>
+      <HoverCardTrigger asChild>{link}</HoverCardTrigger>
+      <HoverCardBody className="w-60">
+        <RegionSummary area={s.area!} info={info} label={label} />
+      </HoverCardBody>
+    </HoverCard>
+  )
 }
 
 function SourceChip({
@@ -47,12 +151,15 @@ function SourceChip({
   itemName,
   items,
   pals,
+  areas,
 }: {
   s: BlueprintSource
   /** Localized name of the schematic (shrine markers are labelled by it). */
   itemName: string
   items: ItemsBundle
   pals: PalsBundle
+  /** Loot index (areas.json) — null while loading / unavailable. */
+  areas: Record<string, AreaInfo> | null
 }) {
   const { t } = useTranslation()
   const areaLabel = useAreaLabel(items)
@@ -122,14 +229,9 @@ function SourceChip({
         </span>
       )
     default:
-      // chest / fishing / supply / camp / oilrig — an area fact with tier + odds.
-      return (
-        <span className={FACT_CHIP}>
-          {areaLabel(s.area!)}
-          <TierBadge grade={s.grade} />
-          {s.chance != null ? <ChanceBadge pct={s.chance} /> : null}
-        </span>
-      )
+      // chest / fishing / supply / camp / oilrig — an area fact with tier +
+      // odds, linking to the region page when the loot index knows the area.
+      return <RegionChip s={s} info={areas?.[s.area!]} label={areaLabel(s.area!)} />
   }
 }
 
@@ -163,6 +265,7 @@ export function BlueprintSourceRows({
   className?: string
 }) {
   const { t } = useTranslation()
+  const areas = useAreas()
   const byKind = new Map<string, BlueprintSource[]>()
   for (const s of item.sources ?? []) {
     const lst = byKind.get(s.kind)
@@ -187,6 +290,7 @@ export function BlueprintSourceRows({
                 itemName={items.text[item.id]?.name ?? item.id}
                 items={items}
                 pals={pals}
+                areas={areas}
               />
             ))}
           </div>
