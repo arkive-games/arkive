@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Button, cn } from '@gamemap/ui'
@@ -7,8 +7,6 @@ import { buildChainTree, type BreedChain, type ChainStep, type ChainTreeNode } f
 import { PalHover } from '../catalog/components'
 import { GenderMark, LEGENDARY_ICON, PalChip, RecipeCard, type RecipeMeta } from './RecipeCard'
 
-// Partner chips shown per step before the "+N" expander.
-const PARTNER_CAP = 8
 // Chain cards shown per group before the show-more button.
 const GROUP_CAP = 40
 // Tree view: first-step groups shown initially per generation section.
@@ -17,8 +15,6 @@ const TREE_ROOT_CAP = 5
 const TREE_CHILD_CAP = 1
 // Tree view: rows revealed per show-more click.
 const TREE_MORE = 10
-// Tree view: partner chips per row, thinning with depth to keep deep rows quiet.
-const TREE_PARTNER_CAPS = [PARTNER_CAP, 5, 3, 2]
 // Tree view: per-depth indent of the fixed-parent column (desktop grid layout;
 // static classes so Tailwind sees them).
 const TREE_INDENT = ['', 'sm:pl-6', 'sm:pl-12', 'sm:pl-18', 'sm:pl-24', 'sm:pl-30']
@@ -35,42 +31,51 @@ interface ChainsCtx {
  * the Paldeck, hover card included. Unique combos keep the amber mark; the two
  * gendered combos render both genders ("♀× Wixen♂" reads "fixed ♀ × partner ♂").
  */
-function PartnerChip({ f, ctx }: { f: Combo; ctx: ChainsCtx }) {
+function PartnerChip({ f, ctx, plain }: { f: Combo; ctx: ChainsCtx; plain?: boolean }) {
   const m = ctx.meta.get(f.b)
+  const className = cn(
+    'inline-flex max-w-44 items-center gap-1 rounded-full border py-0.5 pl-0.5 pr-2 hover:text-primary',
+    f.unique
+      ? 'border-amber-400/70 bg-amber-400/10 hover:border-amber-400'
+      : 'border-border bg-background hover:border-primary/50',
+  )
+  const content = (
+    <>
+      {m?.icon ? (
+        <img
+          src={palIconUrl(m.icon)}
+          alt=""
+          loading="lazy"
+          className={cn(
+            'size-5 shrink-0 rounded-full bg-black/5 object-contain dark:bg-white/10',
+            m.legendary && LEGENDARY_ICON,
+          )}
+        />
+      ) : null}
+      <span className="truncate text-xs">
+        {f.ag ? (
+          <>
+            <GenderMark g={f.ag} />
+            <span className="text-muted-foreground">×</span>
+          </>
+        ) : null}
+        {ctx.names[f.b] ?? f.b}
+        <GenderMark g={f.bg} />
+      </span>
+    </>
+  )
+  // Plain variant: identical geometry without the link/hover-card, used for the
+  // pre-paint measuring pass (mounting hundreds of hover cards is not free).
+  if (plain) return <span className={className}>{content}</span>
   return (
     <PalHover id={f.b}>
       <Link
         to="/pals/$id"
         params={{ id: f.b }}
         title={f.unique ? ctx.uniqueLabel : undefined}
-        className={cn(
-          'inline-flex max-w-44 items-center gap-1 rounded-full border py-0.5 pl-0.5 pr-2 hover:text-primary',
-          f.unique
-            ? 'border-amber-400/70 bg-amber-400/10 hover:border-amber-400'
-            : 'border-border bg-background hover:border-primary/50',
-        )}
+        className={className}
       >
-        {m?.icon ? (
-          <img
-            src={palIconUrl(m.icon)}
-            alt=""
-            loading="lazy"
-            className={cn(
-              'size-5 shrink-0 rounded-full bg-black/5 object-contain dark:bg-white/10',
-              m.legendary && LEGENDARY_ICON,
-            )}
-          />
-        ) : null}
-        <span className="truncate text-xs">
-          {f.ag ? (
-            <>
-              <GenderMark g={f.ag} />
-              <span className="text-muted-foreground">×</span>
-            </>
-          ) : null}
-          {ctx.names[f.b] ?? f.b}
-          <GenderMark g={f.bg} />
-        </span>
+        {content}
       </Link>
     </PalHover>
   )
@@ -81,15 +86,73 @@ function PartnerChip({ f, ctx }: { f: Combo; ctx: ChainsCtx }) {
  * wrapping flex on narrow screens (chips can't shrink, a rigid grid would
  * overflow); from sm up it dissolves (contents) into the enclosing card's
  * shared 5-column grid so +, = and the child column align across rows.
- * `depth` (tree view) indents the fixed-parent column and thins the partner
- * cap, keeping deeper rows quieter.
+ * `depth` (tree view) indents the fixed-parent column.
+ *
+ * The partner cap is measured, not fixed: while `cap` is null every chip is
+ * rendered plain, a layout effect counts how many landed on the first line and
+ * clamps to that (minus one slot for the "+N" expander, never below 1) before
+ * the browser paints. Re-measured on window resize and language change.
  */
 function StepRow({ step, final, ctx, depth = 0 }: { step: ChainStep; final: boolean; ctx: ChainsCtx; depth?: number }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
-  const cap = TREE_PARTNER_CAPS[Math.min(depth, TREE_PARTNER_CAPS.length - 1)]
-  const partners = expanded ? step.partners : step.partners.slice(0, cap)
-  const hidden = step.partners.length - partners.length
+  const [cap, setCap] = useState<number | null>(null)
+  const boxRef = useRef<HTMLSpanElement>(null)
+  const total = step.partners.length
+
+  // Re-measure (cap → null) on viewport resize.
+  useEffect(() => {
+    let timer: number | undefined
+    const onResize = () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => setCap(null), 150)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
+
+  // Re-measure when the display language changes chip widths. Guarded on the
+  // actual reference so it fires only on a real change — an unconditional
+  // reset here would run at mount (twice under StrictMode) and clobber the
+  // cap the layout effect just set, leaving every row stuck measuring.
+  const prevNames = useRef(ctx.names)
+  useEffect(() => {
+    if (prevNames.current !== ctx.names) {
+      prevNames.current = ctx.names
+      setCap(null)
+    }
+  }, [ctx.names])
+
+  // Measure how many chips fit on the first line, then clamp to that (leaving a
+  // slot for the "+N" expander, never below 1). Runs while cap is null with all
+  // partners rendered plain; the card grid is already balanced at layout-effect
+  // time, so the wrap is final. No ResizeObserver: it would re-fire on the
+  // height change our own clamp causes, resetting cap in a feedback cycle.
+  useLayoutEffect(() => {
+    if (cap !== null) return
+    const el = boxRef.current
+    if (!el) return
+    const chips = [...el.children].filter((c) => c.tagName !== 'BUTTON') as HTMLElement[]
+    if (chips.length === 0) {
+      setCap(total)
+      return
+    }
+    // Chips on the first flex line share the first chip's offsetTop.
+    const firstTop = chips[0].offsetTop
+    let fit = 0
+    for (const c of chips) {
+      if (c.offsetTop <= firstTop + 4) fit++
+      else break
+    }
+    setCap(fit >= total ? total : Math.max(1, fit - 1))
+  }, [cap, total])
+
+  const measuring = cap === null
+  const partners = expanded || measuring ? step.partners : step.partners.slice(0, cap)
+  const hidden = total - partners.length
   return (
     <div className="flex flex-wrap items-center gap-1.5 sm:contents">
       {/* Indent lives inside the first grid cell: the levels above render as
@@ -98,21 +161,21 @@ function StepRow({ step, final, ctx, depth = 0 }: { step: ChainStep; final: bool
         <PalChip id={step.fixed} names={ctx.names} meta={ctx.meta} />
       </span>
       <span className="px-1 text-muted-foreground">+</span>
-      <span className="flex min-w-0 flex-wrap items-center gap-1">
+      <span ref={boxRef} className="flex min-w-0 flex-wrap items-center gap-1">
         {partners.map((f) => (
-          <PartnerChip key={comboKey(f)} f={f} ctx={ctx} />
+          <PartnerChip key={comboKey(f)} f={f} ctx={ctx} plain={measuring} />
         ))}
         {hidden > 0 ? (
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            aria-label={t('breeding.showAllPartners', { count: step.partners.length })}
-            title={t('breeding.showAllPartners', { count: step.partners.length })}
+            aria-label={t('breeding.showAllPartners', { count: total })}
+            title={t('breeding.showAllPartners', { count: total })}
             className="rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             +{hidden}
           </button>
-        ) : expanded && step.partners.length > cap ? (
+        ) : expanded && cap !== null && total > cap ? (
           <button
             type="button"
             onClick={() => setExpanded(false)}
