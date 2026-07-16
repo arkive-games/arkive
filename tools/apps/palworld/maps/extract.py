@@ -318,6 +318,106 @@ def _actor_location(actor: dict, exports: list) -> dict | None:
     return {"X": x, "Y": y, "Z": z} if found else None
 
 
+# Region trigger volumes: the game's named-region definitions. One placed
+# BP_PalRegionTriggerBox_C / BP_PalRegionTriggerSphere_C actor per region
+# (124 across the persistent level + world-partition cells), each carrying
+# `AreaName.Key` (a DT_WorldMapAreaData row) and its geometry as a transform
+# chain: the root DefaultSceneRoot (location/yaw/scale) x the Box/Sphere child
+# component (own relative transform + BoxExtent/SphereRadius, engine default
+# 32). BOTH levels must be composed — island volumes carry their scale on the
+# child component, mainland ones on the root; reading only the root yields
+# 32-unit boxes.
+_REGION_TRIGGER_TYPES = {"BP_PalRegionTriggerBox_C": "box", "BP_PalRegionTriggerSphere_C": "sphere"}
+
+
+def _region_volume(actor: dict, exports: list) -> dict | None:
+    """World-space volume of one region trigger actor: rotated box (half
+    extents hx/hy, z half-range hz) or circle (hx == hy), in world units."""
+    props = actor.get("Properties") or {}
+    area = (props.get("AreaName") or {}).get("Key")
+    if not area or area == "None":
+        return None
+    path = (props.get("RootComponent") or {}).get("ObjectPath") or ""
+    root: dict = {}
+    if path:
+        idx = int(path.rsplit(".", 1)[-1])
+        if idx < len(exports):
+            root = exports[idx].get("Properties") or {}
+    comp: dict = {}
+    aname = actor.get("Name") or ""
+    for e in exports:
+        outer = e.get("Outer")
+        outer_name = outer.get("ObjectName", "") if isinstance(outer, dict) else str(outer or "")
+        if aname and aname in outer_name and e.get("Type") in ("BoxComponent", "SphereComponent"):
+            comp = e.get("Properties") or {}
+            break
+    rl, rs, rr = root.get("RelativeLocation"), root.get("RelativeScale3D") or {}, root.get("RelativeRotation") or {}
+    cl, cs, cr = comp.get("RelativeLocation") or {}, comp.get("RelativeScale3D") or {}, comp.get("RelativeRotation") or {}
+    if rl is None and not cl:
+        return None  # locationless actor (mirrors the poi skip)
+    rl = rl or {}
+    rsx, rsy, rsz = rs.get("X", 1), rs.get("Y", 1), rs.get("Z", 1)
+    yaw0 = math.radians(rr.get("Yaw", 0) or 0)
+    ox, oy = cl.get("X", 0) * rsx, cl.get("Y", 0) * rsy
+    ext = comp.get("BoxExtent") or {}
+    shape = _REGION_TRIGGER_TYPES[actor["Type"]]
+    if shape == "sphere":
+        r = comp.get("SphereRadius", 32.0) * cs.get("X", 1) * rsx
+        hx = hy = r
+        hz = comp.get("SphereRadius", 32.0) * cs.get("Z", 1) * rsz
+    else:
+        hx = ext.get("X", 32.0) * cs.get("X", 1) * rsx
+        hy = ext.get("Y", 32.0) * cs.get("Y", 1) * rsy
+        hz = ext.get("Z", 32.0) * cs.get("Z", 1) * rsz
+    return {
+        "area": area, "shape": shape,
+        "x": rl.get("X", 0) + ox * math.cos(yaw0) - oy * math.sin(yaw0),
+        "y": rl.get("Y", 0) + ox * math.sin(yaw0) + oy * math.cos(yaw0),
+        "z": rl.get("Z", 0) + cl.get("Z", 0) * rsz,
+        "hx": abs(hx), "hy": abs(hy), "hz": abs(hz),
+        "yaw": (rr.get("Yaw", 0) or 0) + (cr.get("Yaw", 0) or 0),
+    }
+
+
+def _extract_region_volumes(raw: Path) -> list[dict]:
+    """All placed region trigger volumes (persistent level + cells)."""
+    cells_dir = raw / _CELLS_REL
+    files = [raw / "Maps/MainWorld_5/PL_MainWorld5.json"]
+    if cells_dir.is_dir():
+        files += [cells_dir / rel for rel in _grep_files(cells_dir, "PalRegionTrigger", ["MainGrid*.json"])]
+    volumes = []
+    for f in files:
+        if not f.exists():
+            continue
+        exports = json.loads(f.read_text(encoding="utf-8"))
+        for actor in exports:
+            if actor.get("Type") in _REGION_TRIGGER_TYPES:
+                v = _region_volume(actor, exports)
+                if v:
+                    volumes.append(v)
+    volumes.sort(key=lambda v: v["area"])
+    return volumes
+
+
+def _region_names(raw: Path) -> dict:
+    """{areaKey: {lng: localizedName}} — DT_WorldMapAreaData rows joined onto
+    the world-map text table (the same names the in-game map shows)."""
+    area_table = raw / "DataTable/WorldMapAreaData/DT_WorldMapAreaData.json"
+    if not area_table.exists():
+        return {}
+    area_rows = read_rows(area_table)
+    text = _read_text_by_lang(raw, "DT_WorldMap_Common_Text_Common.json")
+    out = {}
+    for key, row in area_rows.items():
+        msg = row.get("MsgID")
+        if not msg or msg == "None":
+            continue
+        by_lng = {tag: name for tag, table in text.items() if (name := table.get(msg))}
+        if by_lng:
+            out[key] = by_lng
+    return out
+
+
 def _grep_files(cwd: Path, pattern: str, includes: list[str]) -> list[str]:
     args = ["grep", "-rlEi", *[f"--include={g}" for g in includes], pattern, "."]
     r = subprocess.run(args, cwd=cwd, capture_output=True, text=True, encoding="utf-8")
@@ -1079,6 +1179,7 @@ def run_extract(raw: Path) -> dict:
         "effigyNames": effigy_names, "effigyIcons": effigy_icons,
         "effigyDescriptions": effigy_descs, "npcs": npcs,
         "newTypeCandidates": new_type_candidates,
+        "regionVolumes": _extract_region_volumes(raw), "regionNames": _region_names(raw),
     }
 
 

@@ -87,6 +87,24 @@ PARSED = {
         "YakushimaMonster001": {"zukanIndex": -1, "zukanIndexSuffix": ""},
     },
     "palIcons": ["T_Kitsunebi_icon_normal", "T_SheepBall_icon_normal"],
+    # Region trigger volumes (world units): a big surface region over the origin
+    # markers, and a small tower volume enclosing the copper node — overlapping
+    # in 2D but the tower separates in Z, so the copper marker resolves to the
+    # more-specific tower while other origin markers fall to the surface region.
+    "regionVolumes": [
+        {"area": "Grass_001", "shape": "box", "x": 200, "y": 200, "z": 5,
+         "hx": 5000, "hy": 5000, "hz": 1000, "yaw": 0},
+        {"area": "Tower_Grass", "shape": "box", "x": 100, "y": 100, "z": 0,
+         "hx": 50, "hy": 50, "hz": 50, "yaw": 0},
+        # Named in the area table but with no placed markers inside — still emitted.
+        {"area": "Frost_001", "shape": "sphere", "x": 300000, "y": 300000, "z": 0,
+         "hx": 8000, "hy": 8000, "hz": 8000, "yaw": 0},
+    ],
+    "regionNames": {
+        "Grass_001": {"en-US": "Windswept Island", "zh-CN": "zh Grass"},
+        "Tower_Grass": {"en-US": "Rayne Tower (Grasslands)", "zh-CN": "zh Tower"},
+        "Frost_001": {"en-US": "Astral Mountains"},
+    },
 }
 
 
@@ -205,13 +223,48 @@ def test_raw_world_coords_reproduce_pixel(ds):
     assert py == pytest.approx(1975.62, abs=0.1)
 
 
-def test_empty_regions_and_full_locale_trees(ds):
-    assert ds["regions"]["MainWorld"] == []
+def test_full_locale_trees(ds):
     assert list(ds["locales"].keys()) == LANGUAGES
     for lng in LANGUAGES:
         assert ds["locales"][lng]["maps"]["MainWorld"]["name"]
         assert ds["locales"][lng]["types"]["subtypes"]["fastTravel"]["name"]
-        assert ds["locales"][lng]["regions"]["MainWorld"] == {}
+    # WorldTree has no region volumes → its region tree stays empty.
+    assert ds["regions"]["WorldTree"] == []
+    for lng in LANGUAGES:
+        assert ds["locales"][lng]["regions"]["WorldTree"] == {}
+
+
+def test_region_polygons_in_pixel_space_with_localized_names(ds):
+    regions = {r["id"]: r for r in ds["regions"]["MainWorld"]}
+    # One RegionInstance per named volume, typed by key.
+    assert regions["Grass_001"]["type"] == "region"
+    assert regions["Tower_Grass"]["type"] == "tower"
+    # Box → 4 corners + closing point, all inside the 8192² pixel grid.
+    ring = regions["Grass_001"]["borders"][0]
+    assert len(ring) == 5 and ring[0] == ring[-1]
+    assert all(0 <= px <= 8192 and 0 <= py <= 8192 for px, py in ring)
+    # Sphere → 24-gon (+ close).
+    assert len(regions["Frost_001"]["borders"][0]) == 25
+    # Localized names come from the area-data → world-map-text join; missing
+    # langs fall back to en-US.
+    assert ds["locales"]["en-US"]["regions"]["MainWorld"]["Grass_001"]["name"] == "Windswept Island"
+    assert ds["locales"]["zh-CN"]["regions"]["MainWorld"]["Tower_Grass"]["name"] == "zh Tower"
+    assert ds["locales"]["fr-FR"]["regions"]["MainWorld"]["Frost_001"]["name"] == "Astral Mountains"
+
+
+def test_markers_stamped_with_containing_region(ds):
+    by_sub = {}
+    for mk in ds["markers"]["MainWorld"]:
+        by_sub.setdefault(mk["subtype"], []).append(mk)
+    # Copper node (100,100,z0) sits inside both the surface region and the tower,
+    # but the smaller tower wins via its 3D (Z) containment.
+    assert by_sub["copper"][0]["region"] == "Tower_Grass"
+    # A fast-travel point at the origin is outside the tower's Z band → the
+    # surface region is the 2D fallback.
+    assert by_sub["fastTravel"][0]["region"] == "Grass_001"
+    # The WorldTree-bound fast-travel point has no volume → no region field.
+    wt = [m for m in ds["markers"]["WorldTree"] if m["subtype"] == "fastTravel"]
+    assert wt and "region" not in wt[0]
 
 
 def test_default_active_flag_only_on_curated_subtypes(ds):

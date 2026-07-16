@@ -6,6 +6,7 @@ locales) from ``parsed.json`` and the hand-authored ``data_src/types.yaml``.
 
 from __future__ import annotations
 
+import math
 import re
 import shutil
 from pathlib import Path
@@ -97,6 +98,61 @@ def build_dataset(parsed: dict) -> dict:
         },
         "orientation": _orient_json(ORIENTATIONS[m["id"]]),
     } for m in src["maps"]]
+
+    # --- named regions (trigger volumes, see extract._extract_region_volumes) --
+    # Interior volumes (caves / fixed dungeons / towers) overlap the surface
+    # regions in 2D but separate in Z: a marker claims one only by a full 3D
+    # hit, while the 2D fallback (markers above/below every volume's z-range,
+    # e.g. on a mountain top) considers surface regions alone.
+    def _region_type(key: str) -> str:
+        k = key.lower()
+        if "undergroundcave" in k:
+            return "cave"
+        if "fixeddungeon" in k:
+            return "dungeon"
+        if k.startswith("tower_"):
+            return "tower"
+        return "region"
+
+    region_names = parsed.get("regionNames") or {}
+    region_volumes: dict[str, list] = {mid: [] for mid in map_ids}
+    for v in parsed.get("regionVolumes") or []:
+        # Drop volumes the game itself doesn't name (no DT_WorldMapAreaData row)
+        # so no marker ever carries an unlabeled region key.
+        if v["area"] not in region_names:
+            continue
+        mid = assign_map({"X": v["x"], "Y": v["y"]}, assign_order)
+        if mid:
+            region_volumes[mid].append({**v, "type": _region_type(v["area"])})
+    if not any(region_volumes.values()):
+        print("emit: WARNING no region volumes in parsed.json — re-run extract for regions")
+
+    def _make_region_lookup(volumes: list):
+        vols = sorted(volumes, key=lambda v: v["hx"] * v["hy"])  # most specific first
+
+        def _hit2d(v: dict, x: float, y: float) -> bool:
+            dx, dy = x - v["x"], y - v["y"]
+            a = math.radians(-v["yaw"])
+            lx = dx * math.cos(a) - dy * math.sin(a)
+            ly = dx * math.sin(a) + dy * math.cos(a)
+            if v["shape"] == "sphere":
+                return lx * lx + ly * ly <= v["hx"] * v["hx"]
+            return abs(lx) <= v["hx"] and abs(ly) <= v["hy"]
+
+        def lookup(x: float, y: float, z: float | None) -> str | None:
+            surface2d = None
+            for v in vols:
+                if not _hit2d(v, x, y):
+                    continue
+                if z is not None and abs(z - v["z"]) <= v["hz"]:
+                    return v["area"]
+                if surface2d is None and v["type"] == "region":
+                    surface2d = v["area"]
+            return surface2d
+
+        return lookup
+
+    region_lookup = {mid: _make_region_lookup(region_volumes[mid]) for mid in map_ids}
 
     # Per-pal subtypes: one per distinct wild-spawn pal, ordered by ZukanIndex.
     pal_spawn_cfg = next(s for s in src["subtypes"] if s["id"] == "palSpawn")
@@ -432,6 +488,9 @@ def build_dataset(parsed: dict) -> dict:
                     "id": mid_id, "subtype": s["id"], "category": subtype_cat[s["id"]],
                     "x": c["x"], "y": c["y"], "z": c["z"],
                 }
+                region = region_lookup[mid](c["x"], c["y"], c.get("z"))
+                if region:
+                    marker["region"] = region
                 if c.get("icon"):
                     marker["icon"] = c["icon"]
                 if c.get("pal"):
@@ -478,6 +537,51 @@ def build_dataset(parsed: dict) -> dict:
         if ref:
             marker["warpTo"] = ref
 
+    # --- region polygons (pixel space) + localized names --------------------
+    # GameMapBorders projects borders with a raw vertical flip (NOT the
+    # world->pixel transform it applies to markers), so the polygon must be
+    # emitted already in map-pixel space. Box volumes become their four rotated
+    # corners; spheres a 24-gon. Only areas the game actually names are kept
+    # (a volume with no DT_WorldMapAreaData text is internal).
+    def _volume_polygon(mid: str, v: dict) -> list:
+        cx, cy, yaw = v["x"], v["y"], math.radians(v["yaw"])
+        cos, sin = math.cos(yaw), math.sin(yaw)
+        if v["shape"] == "sphere":
+            local = [
+                (v["hx"] * math.cos(2 * math.pi * k / 24), v["hx"] * math.sin(2 * math.pi * k / 24))
+                for k in range(24)
+            ]
+        else:
+            hx, hy = v["hx"], v["hy"]
+            local = [(-hx, -hy), (hx, -hy), (hx, hy), (-hx, hy)]
+        ring = []
+        for lx, ly in local:
+            wx = cx + lx * cos - ly * sin
+            wy = cy + lx * sin + ly * cos
+            px, py = transforms[mid]({"X": wx, "Y": wy})
+            ring.append([round2(px), round2(py)])
+        ring.append(ring[0])  # close the ring
+        return ring
+
+    regions = {mid: [] for mid in map_ids}
+    for mid in map_ids:
+        for v in sorted(region_volumes[mid], key=lambda v: v["area"]):
+            if v["area"] not in region_names:
+                continue  # unnamed internal volume
+            regions[mid].append({
+                "id": v["area"], "name": v["area"], "type": v["type"],
+                "borders": [_volume_polygon(mid, v)],
+            })
+
+    region_loc = {lng: {mid: {} for mid in map_ids} for lng in languages}
+    for mid in map_ids:
+        for r in regions[mid]:
+            names = region_names.get(r["name"]) or {}
+            for lng in languages:
+                nm = names.get(lng) or names.get("en-US")
+                if nm:
+                    region_loc[lng][mid][r["name"]] = {"name": nm}
+
     locales = {}
     for lng in languages:
         locales[lng] = {
@@ -492,7 +596,7 @@ def build_dataset(parsed: dict) -> dict:
                 },
             },
             "markers": marker_loc[lng],
-            "regions": {mid: {} for mid in map_ids},
+            "regions": region_loc[lng],
         }
 
     # Order the per-pal spawn files deterministically (points by coords, maps in
@@ -514,7 +618,6 @@ def build_dataset(parsed: dict) -> dict:
             ordered[mid] = mp
         spawns[pid] = {"maps": ordered}
 
-    regions = {mid: [] for mid in map_ids}
     return {"maps": maps, "types": types, "markers": markers, "regions": regions, "locales": locales, "spawns": spawns}
 
 
