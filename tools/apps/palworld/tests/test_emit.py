@@ -42,6 +42,24 @@ PARSED = {
          "warpPartnerSource": "WA_EXIT"},
         {"subtype": "warpAltar", "sourceName": "WA_EXIT", "location": {"X": 400000, "Y": -600000, "Z": 0},
          "warpPartnerSource": "WA_ENT"},
+        # Loot spawners carry their lottery fields (extract._make_loot_resolver);
+        # emit classifies them to the blueprint-sources area key (lootArea).
+        {"subtype": "chest", "sourceName": "TB_1", "location": {"X": 500, "Y": 500, "Z": 0},
+         "lootFields": ["Grass01"]},
+        {"subtype": "chest", "sourceName": "TB_2", "location": {"X": 600, "Y": 600, "Z": 0},
+         "lootFields": ["Grass02"]},
+        # Element chest: no resolvable pool -> no lootFields -> no lootArea.
+        {"subtype": "chest", "sourceName": "TB_E", "location": {"X": 700, "Y": 700, "Z": 0}},
+        # A fishing spot's 01/02 pools collapse to one area key.
+        {"subtype": "fishing", "sourceName": "FS_1", "location": {"X": 800, "Y": 800, "Z": 0},
+         "lootFields": ["Grass01_Fishing", "Grass02_Fishing"]},
+        # WorldTree-bound fishing spot (assign_map puts it on the other map).
+        {"subtype": "fishing", "sourceName": "FS_WT", "location": {"X": 400000, "Y": -600000, "Z": 0},
+         "lootFields": ["WorldTree02_Fishing", "WorldTree_Treasure_Fishing"]},
+        {"subtype": "supply", "sourceName": "SU_1", "location": {"X": 900, "Y": 900, "Z": 0},
+         "lootFields": ["Grass_Supply"]},
+        {"subtype": "camp", "sourceName": "EC_1", "location": {"X": 1100, "Y": 1100, "Z": 0},
+         "lootFields": ["EnemyCamp_Forest01"]},
     ],
     "bosses": [
         {"key": "0", "characterId": "BOSS_Kitsunebi", "level": 12, "location": {"X": 5000, "Y": 5000, "Z": 0},
@@ -329,6 +347,59 @@ def test_non_completable_subtypes_omit_the_flag(ds):
     # Emit-only-when-true, like defaultActive: repeatable markers carry no key.
     assert "canComplete" not in _subtype_row(ds, "location", "fastTravel")
     assert "canComplete" not in _subtype_row(ds, "resource", "copper")
+
+
+# --- loot areas (marker lootArea + areas.json index) -------------------------
+
+
+def test_loot_spawners_stamped_with_blueprint_source_area(ds):
+    by_sub = {}
+    for mk in ds["markers"]["MainWorld"]:
+        by_sub.setdefault(mk["subtype"], []).append(mk)
+    # Chests: field -> the same area key blueprint_sources emits (Grass01 and
+    # Grass02 both collapse to "Grass"); unresolved chests carry no key.
+    chest_areas = [m.get("lootArea") for m in by_sub["chest"]]
+    assert sorted(a for a in chest_areas if a) == ["Grass", "Grass"]
+    assert None in chest_areas  # the element chest
+    # Fishing: the spot's 01/02 pools agree on one area.
+    assert by_sub["fishing"][0]["lootArea"] == "Grass"
+    # Supply points and camps join through their own field families.
+    assert by_sub["supply"][0]["lootArea"] == "Grass"
+    assert next(m for m in by_sub["camp"] if m.get("lootArea"))["lootArea"] == "Forest"
+    # The WorldTree fishing spot lands on the WorldTree map with its area.
+    wt_fish = [m for m in ds["markers"]["WorldTree"] if m["subtype"] == "fishing"]
+    assert wt_fish and wt_fish[0]["lootArea"] == "WorldTree"
+
+
+def test_areas_index_counts_markers_per_map_and_subtype(ds):
+    assert ds["areas"]["Grass"] == {"maps": {"MainWorld": {"chest": 2, "fishing": 1, "supply": 1}}}
+    assert ds["areas"]["Forest"] == {"maps": {"MainWorld": {"camp": 1}}}
+    assert ds["areas"]["WorldTree"] == {"maps": {"WorldTree": {"fishing": 1}}}
+    # Deterministic ordering: area keys sorted alphabetically.
+    assert list(ds["areas"]) == sorted(ds["areas"])
+
+
+def test_fishing_and_supply_subtypes_defined(ds):
+    coll = next(c for c in ds["types"]["categories"] if c["id"] == "collectible")
+    by_id = {s["id"]: s for s in coll["subtypes"]}
+    assert by_id["fishing"]["icon"] == "T_Fishing_FishPondIcon"
+    assert by_id["supply"]["color"] == "#f97316"
+    assert ds["locales"]["en-US"]["types"]["subtypes"]["fishing"]["name"] == "Fishing Spot"
+    assert ds["locales"]["ja-JP"]["types"]["subtypes"]["supply"]["name"] == "補給物資"
+
+
+def test_run_emit_writes_areas_index(tmp_path):
+    import json
+
+    from palworld.maps.emit import run_emit
+
+    parsed_dir = tmp_path / "parsed"
+    parsed_dir.mkdir()
+    (parsed_dir / "parsed.json").write_text(json.dumps(PARSED), encoding="utf-8")
+    out = tmp_path / "out"
+    run_emit(parsed_dir, out)
+    areas = json.loads((out / "areas.json").read_text(encoding="utf-8"))["areas"]
+    assert areas["Grass"]["maps"]["MainWorld"]["chest"] == 2
 
 
 # --- per-pal exact spawn points (spawns/<palId>.json) ------------------------

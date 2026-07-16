@@ -83,6 +83,10 @@ def _icon_source_path(raw: Path, name: str) -> Path | None:
     build = raw / "Texture/BuildObject/PNG" / f"{name}.png"
     if name.startswith("T_icon_buildObject_") and build.exists():
         return build
+    # Fishing-minigame UI icons (the fishing-spot marker uses the pond icon).
+    fishing = raw / "Texture/UI/Fishing" / f"{name}.png"
+    if name.startswith("T_Fishing_") and fishing.exists():
+        return fishing
     # Inventory item icons (resource materials, etc.) live in the sibling
     # `Content/Others` tree, not under `Content/Pal`. e.g. ore/oil markers use
     # T_itemicon_Material_<Item>.

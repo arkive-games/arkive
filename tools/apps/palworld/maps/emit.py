@@ -13,6 +13,7 @@ from pathlib import Path
 
 import yaml
 
+from ..blueprint_sources import _classify
 from .bounds import assign_map
 from .cluster import cluster_points
 from .common import js_round, round2, write_json
@@ -27,6 +28,24 @@ _TYPES_YAML = _HERE.parent / "data_src" / "types.yaml"
 _BOSS_PREFIX = re.compile(r"^BOSS_", re.IGNORECASE)
 
 _NPC_VERSION_SUFFIX = re.compile(r"_v?\d+$")
+
+# Source kinds whose blueprint_sources entries carry an ``area`` key — the
+# namespace marker ``lootArea`` joins against (salvage/treasureMap/… don't).
+_AREA_KINDS = {"chest", "fishing", "supply", "camp", "oilrig"}
+
+
+def _loot_area(fields: list) -> str | None:
+    """The blueprint-sources area key a spawner's lottery fields classify to.
+    A spawner's fields (e.g. a fishing spot's 01/02 pools) are expected to
+    agree on one area; disagreement is a data change worth a warning."""
+    areas: list[str] = []
+    for f in fields:
+        cls = _classify(f)
+        if cls and cls[0] in _AREA_KINDS and cls[1] not in areas:
+            areas.append(cls[1])
+    if len(areas) > 1:
+        print(f"emit: WARNING loot fields {fields} span areas {areas}; using {areas[0]}")
+    return areas[0] if areas else None
 
 
 def _base_id(pid: str) -> str:
@@ -332,6 +351,12 @@ def build_dataset(parsed: dict) -> dict:
         # Ancient Shrine reward (schematic item + Dog Coins) for the popup.
         if p.get("reward"):
             c["reward"] = p["reward"]
+        # Loot spawners (chests, fishing spots, supply points, camps, oil-rig
+        # boxes): the blueprint-sources area key their lottery fields belong to.
+        if p.get("lootFields"):
+            area = _loot_area(p["lootFields"])
+            if area:
+                c["lootArea"] = area
         # Warp altars: partner altar's sourceName, resolved to the partner's
         # final marker id after id assignment below.
         if p.get("warpPartnerSource"):
@@ -511,6 +536,8 @@ def build_dataset(parsed: dict) -> dict:
                     marker["drops"] = c["drops"]
                 if c.get("dungeonArea"):
                     marker["dungeonArea"] = c["dungeonArea"]
+                if c.get("lootArea"):
+                    marker["lootArea"] = c["lootArea"]
                 marker["images"] = []
                 marker["contributors"] = []
                 marker["indexInSubtype"] = i + 1
@@ -618,7 +645,26 @@ def build_dataset(parsed: dict) -> dict:
             ordered[mid] = mp
         spawns[pid] = {"maps": ordered}
 
-    return {"maps": maps, "types": types, "markers": markers, "regions": regions, "locales": locales, "spawns": spawns}
+    # --- loot-area index (areas.json) ----------------------------------------
+    # Per blueprint-sources area key: which map(s) its loot spawners sit on and
+    # how many markers of each subtype — enough for the item page's region
+    # hovercard (counts + link target) without fetching the full markers files.
+    area_counts: dict[str, dict] = {}
+    for mid in map_ids:
+        for m in markers[mid]:
+            la = m.get("lootArea")
+            if not la:
+                continue
+            per_map = area_counts.setdefault(la, {}).setdefault(mid, {})
+            per_map[m["subtype"]] = per_map.get(m["subtype"], 0) + 1
+    areas = {
+        area: {"maps": {mid: dict(sorted(area_counts[area][mid].items()))
+                        for mid in map_ids if mid in area_counts[area]}}
+        for area in sorted(area_counts)
+    }
+
+    return {"maps": maps, "types": types, "markers": markers, "regions": regions,
+            "locales": locales, "spawns": spawns, "areas": areas}
 
 
 def run_emit(parsed_dir: Path, data_out: Path) -> None:
@@ -630,6 +676,7 @@ def run_emit(parsed_dir: Path, data_out: Path) -> None:
 
     w("maps.json", {"maps": ds["maps"]})
     w("types.json", ds["types"])
+    w("areas.json", {"areas": ds["areas"]})
     for mid, lst in ds["markers"].items():
         w(f"markers/{mid}.json", {"markers": lst})
     for mid, lst in ds["regions"].items():

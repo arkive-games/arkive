@@ -50,6 +50,61 @@ def _make_fixture_raw(root: Path) -> Path:
                         "SourceDestinationLevelObjectId": "GUID-D2"}},
         {"Properties": {"RelativeLocation": {"X": -750000, "Y": 10000, "Z": 40000}}},
     ])
+    # Loot spawners in a second cell: chests resolving via class CDO, instance
+    # override, and the WorldTree runtime-bound fallback, plus a fishing spot,
+    # a supply point and a camp (see extract._make_loot_resolver).
+    _wj(raw / "Maps/MainWorld_5/PL_MainWorld5/_Generated_/MainGrid_L0_loot.json", [
+        {"Type": "BP_PalMapObjectSpawner_Treasure_Grass_Grade_01_C", "Name": "TB_CDO",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.1"}}},
+        {"Properties": {"RelativeLocation": {"X": 100, "Y": 100, "Z": 0}}},
+        {"Type": "BP_PalMapObjectSpawner_Treasure_Grass_Grade_01_C", "Name": "TB_OVR",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.3"},
+                        "FieldLotteryName": {"Key": "Volcano01"}}},
+        {"Properties": {"RelativeLocation": {"X": 300, "Y": 300, "Z": 0}}},
+        {"Type": "BP_PalMapObjectSpawner_Treasure_WorldTree_C", "Name": "TB_WT",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.5"}}},
+        {"Properties": {"RelativeLocation": {"X": 500, "Y": 500, "Z": 0}}},
+        {"Type": "BP_FishingSpot_A_Common_C", "Name": "FS1",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.7"}}},
+        {"Properties": {"RelativeLocation": {"X": 700, "Y": 700, "Z": 0}}},
+        {"Type": "BP_SupplySpawner_Grass01_C", "Name": "SU1",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.9"}}},
+        {"Properties": {"RelativeLocation": {"X": 900, "Y": 900, "Z": 0}}},
+        {"Type": "BP_NPCCampSpawner_Believer_01_C", "Name": "EC1",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.11"}}},
+        {"Properties": {"RelativeLocation": {"X": 1100, "Y": 1100, "Z": 0}}},
+        # A camp whose RewardName ("Viking1") matches no EnemyCamp_* family.
+        {"Type": "BP_NPCCampSpawner_Viking_01_C", "Name": "EC_V",
+         "Properties": {"RootComponent": {"ObjectPath": "cell.13"},
+                        "RewardName": "Viking1"}},
+        {"Properties": {"RelativeLocation": {"X": 1300, "Y": 1300, "Z": 0}}},
+    ])
+    # Spawner blueprints (class-default loot fields; CDO export = Default__*).
+    _wj(raw / "Blueprint/MapObject/Spawner/BP_PalMapObjectSpawner_Treasure_Grass_Grade_01.json", [
+        {"Name": "Default__BP_PalMapObjectSpawner_Treasure_Grass_Grade_01_C",
+         "Properties": {"FieldLotteryName": {"Key": "Grass01"}}},
+    ])
+    _wj(raw / "Blueprint/MapObject/Object/FIshing/FishingSpot/MW5_Common/BP_FishingSpot_A_Common.json", [
+        {"Name": "Default__BP_FishingSpot_A_Common_C",
+         "Properties": {"SpotLotteryName": {"Key": "FishingSpot_A_Ocean_Common"}}},
+    ])
+    _wj(raw / "Blueprint/Supply/BP_SupplySpawner_Grass01.json", [
+        {"Name": "Default__BP_SupplySpawner_Grass01_C",
+         "Properties": {"CapsuleLotteryName": {"Key": "Grass_Supply"}}},
+    ])
+    _wj(raw / "Blueprint/Spawner/EnemyCamp/SpawnerVariant/BP_NPCCampSpawner_Believer_01.json", [
+        {"Name": "Default__BP_NPCCampSpawner_Believer_01_C",
+         "Properties": {"RewardName": "Forest1"}},
+    ])
+    # Camp RewardName labels are matched against the real EnemyCamp_* fields.
+    _wj(raw / "DataTable/Common/DT_FieldLotteryNameDataTable.json", [{"Rows": {
+        "EnemyCamp_Forest01": {}, "EnemyCamp_ForestGoal": {}, "Grass01": {},
+    }}])
+    _wj(raw / "DataTable/Fishing/DT_PalFishingSpotLotteryDataTable.json", [{"Rows": {
+        "1": {"LotteryName": "FishingSpot_A_Ocean_Common", "GainItemLotteryName": "Grass01_Fishing"},
+        "2": {"LotteryName": "FishingSpot_A_Ocean_Common", "GainItemLotteryName": "Grass02_Fishing"},
+        "3": {"LotteryName": "FishingSpot_A_Ocean_Common", "GainItemLotteryName": "Grass01_Fishing"},
+    }}])
     # World-map display names (base = ja SourceString; L10N folders below).
     _wj(raw / "DataTable/Text/DT_WorldMap_Common_Text_Common.json", [{"Rows": {
         "WORLDMAP_NAME_MainMap": {"TextData": {"SourceString": "ja-JP Main"}},
@@ -157,6 +212,26 @@ def test_links_warp_altar_pairs(tmp_path):
     assert altars["WA1"]["warpPartnerSource"] == "WA2"
     assert altars["WA2"]["warpPartnerSource"] == "WA1"
     assert "warpDestId" not in altars["WA1"]
+
+
+def test_resolves_loot_fields_for_placed_spawners(tmp_path):
+    # Each placed loot spawner resolves its lottery field(s): instance property
+    # over class CDO; fishing spots via SpotLotteryName -> lottery-table gains
+    # (deduped, sorted); WorldTree chests via the runtime-bound fallback; camps
+    # via RewardName -> EnemyCamp_* family.
+    raw = _make_fixture_raw(tmp_path)
+    out = run_extract(raw)
+    loot = {p["sourceName"]: p.get("lootFields") for p in out["pois"]}
+    assert loot["TB_CDO"] == ["Grass01"]
+    assert loot["TB_OVR"] == ["Volcano01"]
+    assert loot["TB_WT"] == ["WorldTree_Treasure"]
+    assert loot["FS1"] == ["Grass01_Fishing", "Grass02_Fishing"]
+    assert loot["SU1"] == ["Grass_Supply"]
+    assert loot["EC1"] == ["EnemyCamp_Forest01"]
+    # A camp label naming no EnemyCamp_* family (Viking) stays unstamped, as do
+    # non-loot subtypes.
+    assert loot["EC_V"] is None
+    assert loot["HS1"] is None
 
 
 @pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")

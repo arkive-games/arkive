@@ -56,6 +56,12 @@ CELL_CLASSES = [
     ("camp", re.compile(r"^BP_NPCCampSpawner_.+_C$")),
     # Post-1.0 Oil Rig raid treasure boxes; exact `_C` excludes `_Goal_C`.
     ("oilrigTreasure", re.compile(r"^BP_OilrigTreasureBoxSpawner_C$")),
+    # Wild fishing spots (overworld + oil rigs). The `_Dungeon_` variants are
+    # instanced dungeon interiors and BP_FishingSpotPalSpawner_C is the
+    # fish-shadow PAL spawner — both excluded.
+    ("fishing", re.compile(r"^BP_FishingSpot_(?!Dungeon_).+_C$")),
+    # Supply-drop landing points (one BP_SupplySpawner_<Field>01 per biome).
+    ("supply", re.compile(r"^BP_SupplySpawner_.+_C$")),
     # Mineable resources that live only in the cells (no persistent-level
     # BoxPlacementTool deposit): crude-oil fields, Sky Island ore (Soralite),
     # World Tree ore (Paloxite). Copper/coal/quartz/sulfur come from the level.
@@ -80,7 +86,8 @@ CELL_GREP = (
     "BP_LevelObject_OilField_C|BP_PalMapObjectSpawner_SkyIslandOre_C|"
     "BP_PalMapObjectSpawner_WorldTreeOre_C|BP_LevelObject_Note_C|"
     "BP_LevelObject_ItemPickupTower_C|BP_LevelObject_HealSpring_C|"
-    "BP_LevelObject_SkylandWarpAlter_C|BP_LevelObject_WarpAltar_WorldTree"
+    "BP_LevelObject_SkylandWarpAlter_C|BP_LevelObject_WarpAltar_WorldTree|"
+    "BP_FishingSpot_|BP_SupplySpawner_"
 )
 
 # NPC spawners placed on the map: the generic BP_MonoNPCSpawner_C carries a
@@ -426,7 +433,115 @@ def _grep_files(cwd: Path, pattern: str, includes: list[str]) -> list[str]:
     return [ln for ln in r.stdout.split("\n") if ln.strip()]
 
 
-def _extract_cell_pois(raw: Path) -> list[dict]:
+# Loot-lottery linkage: which DT_ItemLotteryDataTable FieldName pool a placed
+# loot spawner draws from. Each spawner blueprint carries the pool as a class
+# default (chests/oil-rig boxes: FieldLotteryName; supply points:
+# CapsuleLotteryName; camps: RewardName, an EnemyCamp_* field minus its prefix;
+# fishing spots: SpotLotteryName -> DT_PalFishingSpotLotteryDataTable rows ->
+# GainItemLotteryName). Placed actors may override the property per instance
+# (e.g. Volcano_Grade_02 chests overridden to Volcano01), so the instance value
+# wins over the CDO. ``emit`` classifies the fields into the same area keys
+# blueprint_sources emits (marker ``lootArea``), joining placed markers to the
+# per-item "how to obtain" chest/fishing/supply/camp channels.
+_LOOT_SUBTYPES = {"chest", "oilrigTreasure", "camp", "fishing", "supply"}
+
+# Spawner classes with NO lottery field anywhere (CDO or instances) whose pool
+# is bound at runtime. WorldTree chests draw from the WorldTree treasure family
+# — the family names the map unambiguously (see blueprint_sources docstring).
+# Element chests (BP_..._Treasure_Element_*) stay unmapped: their pool is
+# genuinely unresolved in the export.
+_LOOT_FIELD_FALLBACK = {"BP_PalMapObjectSpawner_Treasure_WorldTree_C": "WorldTree_Treasure"}
+
+# Spawner blueprint locations scanned for class-default loot fields:
+# (relative dir, glob, recursive).
+_LOOT_BP_DIRS = [
+    ("Blueprint/MapObject/Spawner", "BP_PalMapObjectSpawner_Treasure_*.json", False),
+    ("Blueprint/OilRig/TreasureBoxSpawner", "BP_OilrigTreasureBoxSpawner*.json", False),
+    ("Blueprint/MapObject/Object/FIshing/FishingSpot", "BP_FishingSpot_*.json", True),  # sic: FIshing
+    ("Blueprint/Supply", "BP_SupplySpawner_*.json", False),
+    ("Blueprint/Spawner/EnemyCamp", "BP_NPCCampSpawner_*.json", True),
+]
+
+
+def _cdo_props(bp: Path) -> dict:
+    for obj in json.loads(bp.read_text(encoding="utf-8")):
+        if (obj.get("Name") or "").startswith("Default__"):
+            return obj.get("Properties") or {}
+    return {}
+
+
+def _prop_name(props: dict, key: str) -> str | None:
+    """An FName-ish property as a plain string: FieldLotteryName-style structs
+    ({"Key": ...}) and bare strings (camp RewardName) both occur."""
+    v = props.get(key)
+    if isinstance(v, dict):
+        v = v.get("Key")
+    return v if v and v != "None" else None
+
+
+def _loot_tokens(s: str) -> frozenset:
+    """Case/digit/Goal-insensitive token set for matching a camp RewardName to
+    its EnemyCamp_* lottery field: 'SeaBase_Desert_1' and
+    'EnemyCamp_Desert_Seabase_Goal' both reduce to {'desert', 'seabase'}."""
+    s = re.sub(r"Goal", "", re.sub(r"\d+", "", s))
+    return frozenset(t for t in re.split(r"_+", s.lower()) if t)
+
+
+def _make_loot_resolver(raw: Path):
+    """resolve(subtype, actorType, actorProps) -> list of lottery FieldNames
+    (or None) for the loot subtypes in ``_LOOT_SUBTYPES``."""
+    defaults: dict[str, dict] = {}  # class Type -> CDO properties
+    for rel, pattern, recursive in _LOOT_BP_DIRS:
+        d = raw / rel
+        if not d.is_dir():
+            continue
+        for bp in sorted(d.rglob(pattern) if recursive else d.glob(pattern)):
+            defaults[f"{bp.stem}_C"] = _cdo_props(bp)
+
+    # Camps: RewardName is a reward LABEL ('Forest1', 'SeaBase_Desert_1'), not
+    # a field — the game binds it to an EnemyCamp_* pool at runtime. Match by
+    # token set against the real fields so only camps whose label names an
+    # actual EnemyCamp family get stamped (Viking camps match nothing).
+    camp_field_by_tokens: dict[frozenset, str] = {}
+    field_table = raw / "DataTable/Common/DT_FieldLotteryNameDataTable.json"
+    if field_table.exists():
+        for key in sorted(read_rows(field_table)):
+            if key.startswith("EnemyCamp_"):
+                camp_field_by_tokens.setdefault(_loot_tokens(key[len("EnemyCamp_"):]), key)
+
+    # Fishing: spot lottery -> the distinct item pools its rows draw from (a
+    # spot's 01/02 pools always collapse to one area key downstream).
+    gain_by_spot: dict[str, set] = {}
+    fish_table = raw / "DataTable/Fishing/DT_PalFishingSpotLotteryDataTable.json"
+    if fish_table.exists():
+        for r in read_rows(fish_table).values():
+            gain = r.get("GainItemLotteryName")
+            if gain and gain != "None":
+                gain_by_spot.setdefault(r.get("LotteryName"), set()).add(gain)
+
+    def resolve(subtype: str, actor_type: str, props: dict) -> list[str] | None:
+        cdo = defaults.get(actor_type) or {}
+        if subtype in ("chest", "oilrigTreasure", "supply"):
+            key = "CapsuleLotteryName" if subtype == "supply" else "FieldLotteryName"
+            field = (
+                _prop_name(props, key) or _prop_name(cdo, key)
+                or _LOOT_FIELD_FALLBACK.get(actor_type)
+            )
+            return [field] if field else None
+        if subtype == "camp":
+            reward = _prop_name(props, "RewardName") or _prop_name(cdo, "RewardName")
+            field = camp_field_by_tokens.get(_loot_tokens(reward)) if reward else None
+            return [field] if field else None
+        if subtype == "fishing":
+            spot = _prop_name(props, "SpotLotteryName") or _prop_name(cdo, "SpotLotteryName")
+            gains = sorted(gain_by_spot.get(spot, ())) if spot else []
+            return gains or None
+        return None
+
+    return resolve
+
+
+def _extract_cell_pois(raw: Path, loot_resolver=None) -> list[dict]:
     cells_dir = raw / _CELLS_REL
     files = _grep_files(
         cells_dir, CELL_GREP,
@@ -471,6 +586,10 @@ def _extract_cell_pois(raw: Path) -> list[dict]:
                 dest = (exp.get("Properties") or {}).get("SourceDestinationLevelObjectId")
                 if dest:
                     poi["warpDestId"] = dest
+            if loot_resolver and subtype in _LOOT_SUBTYPES:
+                fields = loot_resolver(subtype, t, exp.get("Properties") or {})
+                if fields:
+                    poi["lootFields"] = fields
             pois.append(poi)
     return pois
 
@@ -830,7 +949,7 @@ def run_extract(raw: Path) -> dict:
                     poi["nameByLng"] = nm
         pois.append(poi)
     _strip_entrance_suffixes([p["nameByLng"] for p in pois if p["subtype"] == "tower" and "nameByLng" in p])
-    pois.extend(_extract_cell_pois(raw))
+    pois.extend(_extract_cell_pois(raw, _make_loot_resolver(raw)))
     # Notes and shrines are scanned from both the level and the cells; dedup the union.
     pois = _dedup_pois_by_location(pois, {"note", "ancientShrine"})
     # Warp altars: resolve each altar's partner via the persistent-level

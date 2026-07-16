@@ -111,6 +111,19 @@ subtypes:
     category: collectible
     icon: T_icon_buildObject_ItemChest
     names: { en-US: Chest, ja-JP: 宝箱, de-DE: Truhe, es-ES: Cofre, es-MX: Cofre, fr-FR: Coffre, id-ID: Peti, it-IT: Forziere, ko-KR: 상자, pl-PL: Skrzynia, pt-BR: Baú, ru-RU: Сундук, th-TH: หีบสมบัติ, tr-TR: Sandık, vi-VN: Rương, zh-CN: 宝箱, zh-TW: 寶箱 }
+  - id: fishing
+    category: collectible
+    # The game's fishing-minigame pond icon (Texture/UI/Fishing); names are the
+    # "fishing spot" noun from its own FISHING_AREA_DIFFICULTY_* UI strings
+    # (per-language, difficulty qualifier stripped).
+    icon: T_Fishing_FishPondIcon
+    names: { en-US: Fishing Spot, ja-JP: 釣り場, de-DE: Angelplatz, es-ES: Zona de pesca, es-MX: Zona de pesca, fr-FR: Point de pêche, id-ID: Tempat Pemancingan, it-IT: Punto di pesca, ko-KR: 낚시터, pl-PL: Łowisko, pt-BR: Local de pesca, ru-RU: Место для рыбалки, th-TH: จุดตกปลา, tr-TR: Balık Tutma Alanı, vi-VN: Khu Vực Câu Cá, zh-CN: 垂钓场, zh-TW: 釣場 }
+  - id: supply
+    category: collectible
+    # Supply-drop landing points. The game ships no map/compass icon for the
+    # capsule, so a colored pin; names are MAPOBJECT_NAME_SupplyDrop verbatim.
+    color: "#f97316"
+    names: { en-US: Supplies, ja-JP: 補給物資, de-DE: Versorgungslieferung, es-ES: Suministros, es-MX: Suministros, fr-FR: Ressources, id-ID: Pasokan Item, it-IT: Cassa di rifornimento, ko-KR: 보급 물자, pl-PL: Zasoby, pt-BR: Suprimentos, ru-RU: Ресурсы поддержки, th-TH: ยุทโธปกรณ์สนับสนุน, tr-TR: Malzemeler, vi-VN: Hàng Tiếp Tế, zh-CN: 补给物资, zh-TW: 補給物資 }
   - id: lifmunkEffigy
     category: effigy
     canComplete: true
