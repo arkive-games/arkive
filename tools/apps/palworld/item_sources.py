@@ -1,9 +1,11 @@
-"""Blueprint acquisition sources, collected for the catalog stage.
+"""Item acquisition sources, collected for the catalog stage.
 
-Answers "how do I get this schematic?" for every blueprint-family item
-(``Blueprint_*``). Each channel that references blueprint item ids in the raw
-export is walked and folded into a compact per-item ``sources`` list that
-``catalog.py`` attaches to the emitted item entries:
+Answers "how do I get this item?" for **every** item (not just the
+``Blueprint_*`` schematics — the blueprint-only restriction was lifted so
+regular items surface their chest / fishing / camp / raid / arena / shrine
+channels too). Each channel that references item ids in the raw export is
+walked and folded into a compact per-item ``sources`` list that ``catalog.py``
+attaches to the emitted item entries:
 
 * ``DT_ItemLotteryDataTable`` + ``DT_FieldLotteryNameDataTable`` — the shared
   field-lottery machinery (same slot math as dungeons.py: independent per-slot
@@ -28,15 +30,15 @@ export is walked and folded into a compact per-item ``sources`` list that
 * ``DT_ItemPickupDataTable`` x the already-emitted ``markers/*.json`` — Ancient
   Shrines. Only shrines actually placed on a map count (the pickup table also
   holds unplaced test rows); the join is on the marker's resolved reward item.
-* ``DT_ItemShopCreateData_Common`` — merchants. The NPC-to-shop-group chain
-  (NPC ``BP_PalShopVenderDataComponent.itemShopSimpleLotteryTableName`` ->
-  ``DT_ItemShopLotteryData`` -> group) was resolved once by hand into _SHOPS;
-  a warning fires if a group outside that map ever sells a blueprint.
-  Currency comes from ``DT_ItemShopSettingData_Common`` (gold otherwise).
 * ``DT_ArenaSoloRewardTable`` — PvP arena first/repeat clear rewards per rank.
 * ``Blueprint/RaidBoss/DT_PalRaidBoss_Common`` — summoning-altar raid rewards
   (``SuccessItemList`` per summon row; the row's ``InfoList`` names the boss
   pal, ``RAID_``-prefixed with a ``_2`` suffix on the hard-mode rows).
+
+Merchants are collected separately by ``merchants.py`` (which also emits the
+``merchants.json`` catalog) and merged into ``sources`` by ``catalog.py`` — the
+shop-group scan lives there so the per-merchant pages and the per-item merchant
+chips stay consistent.
 
 Pal / boss drops and dungeon lotteries are NOT re-collected here — the item
 entries already carry ``droppedBy`` and the dungeons dataset already backs the
@@ -57,20 +59,11 @@ _NONE = {None, "None", ""}
 _GRADE = "EPalMapObjectTreasureGradeType::Grade"
 
 # Lottery-field family kinds keyed by recognizable prefixes / suffixes; the
-# order below is the emitted display order of the kinds.
+# order below is the emitted display order of the kinds. ``merchant`` sits here
+# for frontend parity, but merchant entries are produced by ``merchants.py`` and
+# merged in by ``catalog.py`` — ``collect_sources`` never emits that kind.
 KIND_ORDER = ["chest", "fishing", "salvage", "supply", "camp", "oilrig",
               "treasureMap", "raid", "shrine", "merchant", "arena"]
-
-# Blueprint-selling shop groups -> stable shop keys the frontend labels.
-# Derived from the vendor NPC blueprints (see module docstring); re-derive if
-# the warning below ever fires for a new group.
-_SHOPS = {
-    "Village_Shop_1": "village",
-    "Desert_Shop_2": "desertWeapon",
-    "Volcano_Shop_2": "volcanoWeapon",
-    "Medal_Shop_1": "medal",
-    "Arena_Shop_1": "arena",
-}
 
 # Area keys whose display names come from the game's world-map text; emitted
 # into labels.json (catalog.py). The remaining keys (mainland biome nouns +
@@ -95,6 +88,21 @@ _AREA_ALIAS = {
 
 _TRAILING_NUM = re.compile(r"_?\d+$")
 
+# The overworld regions a treasure-chest / fishing / supply / faction-camp
+# lottery family can name. The blueprint-only pass only ever hit these, but
+# regular items also appear in many OTHER lottery families that share the same
+# table shape yet model different systems — pal-carry pools
+# (``CharacterSpawnItem_*``), expedition rewards (``Expedition_*``), dungeon
+# reward pools (``*_Dungeon_*``, already surfaced by the "found in dungeons"
+# row), elemental/fruit/junk gathering sub-pools, and dev/test rows. Those are
+# out of scope for the region-chest channels, so an area kind whose key isn't
+# one of these is dropped (see ``_classify``). Oil-rig keys are gated separately
+# (they are their own kind).
+KNOWN_AREAS = {
+    "Grass", "Forest", "Desert", "Snow", "Volcano",
+    "Sakurajima", "DarkIsland", "SkyIsland", "WorldTree", "Yakushima",
+}
+
 
 def _area_key(base: str) -> str:
     """Canonical area key for a lottery-field base: 'DarkIsland02' ->
@@ -111,9 +119,18 @@ def _area_key(base: str) -> str:
     return _AREA_ALIAS.get(base, base)
 
 
+def _region(kind: str, base: str) -> tuple[str, str] | None:
+    """(kind, areaKey) for an overworld-region channel, or None when the field
+    resolves to a region outside KNOWN_AREAS (a different system — see the
+    KNOWN_AREAS note)."""
+    area = _area_key(base)
+    return (kind, area) if area in KNOWN_AREAS else None
+
+
 def _classify(field: str) -> tuple[str, str] | None:
-    """(kind, areaKey-or-extra) for a lottery FieldName; None -> not an
-    acquisition channel (relic recycling is reported via recycler.json)."""
+    """(kind, areaKey-or-extra) for a lottery FieldName; None -> not a region /
+    acquisition channel (relic recycling is reported via recycler.json; pools
+    outside KNOWN_AREAS model other systems)."""
     if field.startswith("AncientRelicRecycler"):
         return None
     if m := re.fullmatch(r"Salvage_Rank(\d+)", field):
@@ -121,7 +138,7 @@ def _classify(field: str) -> tuple[str, str] | None:
     if re.fullmatch(r"TreasureMap\d+", field):
         return "treasureMap", field
     if field.startswith("EnemyCamp_"):
-        return "camp", _area_key(field[len("EnemyCamp_"):])
+        return _region("camp", field[len("EnemyCamp_"):])
     if field.startswith("Oilrig_Mini"):
         return "oilrig", "OilrigMini"
     if field.startswith("Oilrig_Large"):
@@ -130,14 +147,10 @@ def _classify(field: str) -> tuple[str, str] | None:
         return "oilrig", "Oilrig"
     if "_Fishing" in field or "_FishPond" in field:
         base = re.sub(r"_(Fishing|FishPond)$", "", field)
-        return "fishing", _area_key(base)
+        return _region("fishing", base)
     if field.endswith("_Supply"):
-        return "supply", _area_key(field[: -len("_Supply")])
-    return "chest", _area_key(field)
-
-
-def _is_blueprint(iid: str) -> bool:
-    return iid.startswith("Blueprint_")
+        return _region("supply", field[: -len("_Supply")])
+    return _region("chest", field)
 
 
 def _merge_graded(bucket: dict, key: tuple, grade: int, chance: float) -> None:
@@ -153,8 +166,9 @@ def _merge_graded(bucket: dict, key: tuple, grade: int, chance: float) -> None:
 
 
 def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set) -> dict[str, list]:
-    """{itemId: [source entries]} for every blueprint-family item with at
-    least one acquisition channel. Entry order: KIND_ORDER, then area key."""
+    """{itemId: [source entries]} for every item with at least one acquisition
+    channel (merchants excluded — see module docstring). Entry order:
+    KIND_ORDER, then area key."""
     raw, data_out = Path(raw), Path(data_out)
 
     # --- field lotteries -----------------------------------------------------
@@ -170,7 +184,7 @@ def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set
     graded: dict[str, dict[tuple, dict]] = defaultdict(dict)  # itemId -> {(kind, extra): {grade, chance}}
     for r in lottery_rows.values():
         iid = r.get("StaticItemId")
-        if iid in _NONE or not _is_blueprint(iid) or iid not in item_id_set:
+        if iid in _NONE or iid not in item_id_set:
             continue
         field = r.get("FieldName")
         cls = _classify(field)
@@ -220,24 +234,6 @@ def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set
     else:
         print("catalog: WARNING markers/ missing — run maps first (no shrine sources)")
 
-    # --- merchants ------------------------------------------------------------
-    shop_rows = read_rows(raw / "DataTable/ItemShop/DT_ItemShopCreateData_Common.json")
-    setting_rows = read_rows(raw / "DataTable/ItemShop/DT_ItemShopSettingData_Common.json")
-    for group, row in shop_rows.items():
-        shop = _SHOPS.get(group)
-        for p in row.get("productDataArray") or []:
-            iid = p.get("StaticItemId")
-            if iid in _NONE or not _is_blueprint(iid) or iid not in item_id_set:
-                continue
-            if not shop:
-                print(f"catalog: WARNING blueprint {iid} sold by unmapped shop group {group}")
-                continue
-            price = p.get("OverridePrice") or int((item_rows.get(iid) or {}).get("Price", 0))
-            currency = (setting_rows.get(group) or {}).get("CurrencyItemID") or "Money"
-            sources[iid].append(
-                {"kind": "merchant", "shop": shop, "price": price, "currency": currency}
-            )
-
     # --- summoning-altar raid rewards -----------------------------------------
     raid_rows = read_rows(raw / "Blueprint/RaidBoss/DT_PalRaidBoss_Common.json")
     raid_by_item: dict[str, dict[str, float]] = defaultdict(dict)  # iid -> {pal: rate}
@@ -248,7 +244,7 @@ def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set
         pal = re.sub(r"_\d+$", "", pal.removeprefix("RAID_"))
         for e in row.get("SuccessItemList") or []:
             iid = (e.get("ItemName") or {}).get("Key")
-            if iid in _NONE or not _is_blueprint(iid) or iid not in item_id_set:
+            if iid in _NONE or iid not in item_id_set:
                 continue
             rate = e.get("Rate", 0.0) or 0.0
             raid_by_item[iid][pal] = max(raid_by_item[iid].get(pal, 0.0), rate)
@@ -262,7 +258,7 @@ def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set
         for key, repeat in (("FirstClearReward", False), ("RepeatClearReward", True)):
             for e in row.get(key) or []:
                 iid = (e.get("ItemName") or {}).get("Key")
-                if iid in _NONE or not _is_blueprint(iid) or iid not in item_id_set:
+                if iid in _NONE or iid not in item_id_set:
                     continue
                 entry = {"kind": "arena", "rank": rank}
                 if repeat:

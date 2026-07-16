@@ -43,6 +43,7 @@ Outputs:
   data-palworld/items.json                 {items: [ItemEntry]}
   data-palworld/buildings.json             {buildings: [BuildingEntry]}
   data-palworld/technology.json            {techs: [TechEntry]}
+  data-palworld/merchants.json             {merchants: [MerchantEntry]}  (merchants.py)
   data-palworld/locales/<tag>/items.json       {id: {name, description?}}
   data-palworld/locales/<tag>/buildings.json   {id: {name, description?}}
   data-palworld/locales/<tag>/technology.json  {id: {name, description?,
@@ -64,12 +65,13 @@ from pathlib import Path
 
 from PIL import Image
 
-from .blueprint_sources import (
+from .item_sources import (
     AREA_TEXT_IDS,
     collect_sources,
     dungeon_lottery_items,
     recycler_output_items,
 )
+from .merchants import collect_merchants
 from .encyclopedia import _all_tags, _read_text, _strip, _text_by_lang
 from .env import require_dir
 from .maps.common import read_rows, round2, write_json
@@ -484,6 +486,11 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     # earlier stages; without them the stamp would produce false positives, so
     # it is skipped (with a warning) when either is missing.
     bp_sources = collect_sources(raw, data_out, item_rows, item_id_set)
+    # merchants: emitted as their own catalog AND merged into each item's source
+    # list (the merchant channel). One shop-group scan feeds both.
+    merchants, merchant_sources = collect_merchants(raw, item_rows, item_id_set)
+    for iid, msrc in merchant_sources.items():
+        bp_sources.setdefault(iid, []).extend(msrc)
     dungeon_items = dungeon_lottery_items(data_out)
     recycler_items = recycler_output_items(data_out)
     # noSource: blueprint-family items unreachable through ANY channel. Beyond
@@ -738,6 +745,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     write_json(data_out / "items.json", {"items": items})
     write_json(data_out / "buildings.json", {"buildings": bld_out})
     write_json(data_out / "technology.json", {"techs": techs})
+    write_json(data_out / "merchants.json", {"merchants": merchants})
 
     # --- localized text ------------------------------------------------------
     # JA base tables (tags[0] == JA_TAG): the only source with real strings for
@@ -865,9 +873,10 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
 
     print(
         f"catalog: {len(items)} items, {len(bld_out)} buildings, {len(techs)} techs, "
-        f"{len(tags)} locales, {converted} building icons, {item_icons} item icons converted"
+        f"{len(merchants)} merchants, {len(tags)} locales, {converted} building icons, "
+        f"{item_icons} item icons converted"
     )
-    return {"items": items, "buildings": bld_out, "techs": techs}
+    return {"items": items, "buildings": bld_out, "techs": techs, "merchants": merchants}
 
 
 if __name__ == "__main__":

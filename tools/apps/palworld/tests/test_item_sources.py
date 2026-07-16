@@ -1,6 +1,6 @@
 import pytest
 
-from palworld.blueprint_sources import (
+from palworld.item_sources import (
     KIND_ORDER,
     collect_sources,
     dungeon_lottery_items,
@@ -67,21 +67,15 @@ def test_shrines(sources):
     assert shrine and shrine[0]["count"] >= 1
 
 
-def test_merchants(sources):
-    def merchant(iid):
-        return next(s for s in sources[iid] if s["kind"] == "merchant")
-
-    # Village clothier sells the base hat schematics for gold (item Price).
-    assert merchant("Blueprint_Head003_1") == {
-        "kind": "merchant", "shop": "village", "price": 500, "currency": "Money",
-    }
-    # Medal trader prices in Dog Coins, arena shop in Battle Tickets.
-    assert merchant("Blueprint_Spear_ForestBoss_5") == {
-        "kind": "merchant", "shop": "medal", "price": 600, "currency": "DogCoin",
-    }
-    assert merchant("Blueprint_OctaviaRevolver_5") == {
-        "kind": "merchant", "shop": "arena", "price": 1300, "currency": "BattleTicket",
-    }
+def test_non_blueprint_items_have_sources(sources):
+    # The blueprint-only gate was lifted: regular (non-schematic) items now
+    # surface their field-lottery channels too. At least one non-blueprint item
+    # has sources, and collect_sources never emits the merchant kind (merchants
+    # are collected by merchants.py and merged in catalog.py).
+    non_bp = [iid for iid in sources if not iid.startswith("Blueprint_")]
+    assert non_bp, "expected non-blueprint items to gain acquisition sources"
+    all_entries = [s for lst in sources.values() for s in lst]
+    assert not any(s["kind"] == "merchant" for s in all_entries)
 
 
 def test_raid_and_arena(sources):
