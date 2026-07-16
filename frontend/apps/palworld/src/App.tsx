@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearch } from '@tanstack/react-router'
-import { GameMapView, type EngineMarker, type MapRef } from '@gamemap/map-engine'
+import { GameMapView, worldToPixel, type EngineMarker, type MapRef } from '@gamemap/map-engine'
 import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
-import type { MarkerTypeSubtype } from '@gamemap/data-contract'
+import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
-  loadStatic, loadMarkers,
-  type MapMeta, type Taxonomy, type TypesLocale, type MapsLocale, type MarkerRow, type MarkerLocale
+  loadStatic, loadMarkers, loadRegions,
+  type MapMeta, type Taxonomy, type TypesLocale, type MapsLocale, type MarkerRow, type MarkerLocale, type RegionLocale
 } from './lib/data'
 import { palworldAssets, workIconUrl, noteImageUrl } from './lib/assets'
 import { loadPals, type PalsBundle } from './lib/pals'
@@ -19,6 +19,19 @@ import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/Rewar
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
+
+// Ray-casting point-in-polygon (point + ring both in map-pixel space).
+function pointInPolygon(x: number, y: number, poly: number[][]): boolean {
+  let inside = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i]
+    const [xj, yj] = poly[j]
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      inside = !inside
+    }
+  }
+  return inside
+}
 
 // A purely-numeric query is an exact Paldeck-id lookup: search only the idLabel
 // field, no prefix/fuzzy, so "11"/"011" find only No.011 — not the 110-119
@@ -128,6 +141,9 @@ export default function App() {
   // When on, marker names show as permanent labels; when off, they appear on
   // hover (handled by the engine). Off by default to keep the map uncluttered.
   const [showLabels, setShowLabels] = useState(false)
+  // Named-region overlay (borders + hover highlight). Off by default.
+  const [showRegions, setShowRegions] = useState(false)
+  const [regionData, setRegionData] = useState<{ mapId: string; regions: RegionInstance[]; l10n: RegionLocale } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -216,6 +232,18 @@ export default function App() {
     return () => { cancelled = true }
   }, [mapId, lng, t])
 
+  // Named regions for the current map (best-effort — the map renders without
+  // them). Feeds the region overlay, the marker-popup region line, and the
+  // cursor status bar's subzone lookup.
+  useEffect(() => {
+    let cancelled = false
+    setRegionData(null)
+    loadRegions(mapId, lng)
+      .then((d) => { if (!cancelled) setRegionData({ mapId, ...d }) })
+      .catch((err) => console.error(err))
+    return () => { cancelled = true }
+  }, [mapId, lng])
+
   // Persist the selection per map. Guarded on the loaded markers belonging to
   // the CURRENT map: right after a map switch the old selection coexists with
   // the new mapId for one commit, and writing then would corrupt the new
@@ -262,6 +290,7 @@ export default function App() {
         x: m.x,
         y: m.y,
         z: m.z,
+        region: m.region,
         icon: m.icon,
         image: m.image,
         indexInSubtype: m.indexInSubtype,
@@ -425,7 +454,47 @@ export default function App() {
     [mapId],
   )
 
-  const subzoneAt = useCallback(() => '', [])
+  // Localized region name by id (from regions/<map>.json l10n).
+  const regionName = useCallback(
+    (id?: string) => (id && regionData?.l10n[id]?.name) || '',
+    [regionData],
+  )
+
+  // Cursor → localized region name for the status bar. The cursor is in DATA
+  // (world) space; region borders are map-pixel polygons, so project the
+  // cursor with the same world→pixel transform, then pick the smallest-area
+  // SURFACE region containing it (interior cave/dungeon/tower volumes overlap
+  // in 2D and the flat cursor has no Z to disambiguate). Surface regions are
+  // pre-sorted by pixel area ascending so the first hit is the most specific.
+  const surfaceRegionsByArea = useMemo(() => {
+    if (!regionData || regionData.mapId !== mapId) return []
+    const area = (ring: number[][]) => {
+      let s = 0
+      for (let i = 0; i < ring.length - 1; i++) {
+        s += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1]
+      }
+      return Math.abs(s) / 2
+    }
+    return regionData.regions
+      .filter((r) => r.type === 'region')
+      .map((r) => ({ r, a: r.borders.reduce((sum, p) => sum + area(p), 0) }))
+      .sort((x, y) => x.a - y.a)
+      .map((x) => x.r)
+  }, [regionData, mapId])
+
+  const subzoneAt = useCallback(
+    (x: number, y: number) => {
+      if (!map || !surfaceRegionsByArea.length) return ''
+      const p = worldToPixel(map, x, y)
+      for (const r of surfaceRegionsByArea) {
+        if (r.borders.some((ring) => pointInPolygon(p.x, p.y, ring))) {
+          return regionName(r.id) || r.name
+        }
+      }
+      return ''
+    },
+    [map, surfaceRegionsByArea, regionName],
+  )
 
   const labels = useMemo(() => ({
     copyPosition: t('copyPosition'),
@@ -442,6 +511,7 @@ export default function App() {
     const g = toGameCoords(mapId, marker.x, marker.y, marker.z)
     const { text: coordText, aria: coordAria } = formatCoords(g.x, g.y, g.z)
     const catText = [catLabel, subLabel].filter(Boolean).join(' / ')
+    const regionLabel = regionName(marker.region)
     // The coords get their own element so the axis-labeled aria/title (which
     // number is X/Y/Z) rides only on the coordinate, not the whole meta line.
     const metaLine = (
@@ -450,6 +520,11 @@ export default function App() {
         <span aria-label={coordAria} title={coordAria}>
           {coordText}
         </span>
+        {regionLabel ? (
+          <span className="ml-1 text-muted-foreground" data-testid="marker-region">
+            · {regionLabel}
+          </span>
+        ) : null}
       </>
     )
     const count = marker.count
@@ -579,7 +654,7 @@ export default function App() {
         ) : null}
       </MarkerPopupCard>
     )
-  }, [staticData, t, mapId, palsBundle, toggleCompleted, markerRowById, followWarpLink])
+  }, [staticData, t, mapId, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName])
 
   if (loadError) {
     return (
@@ -631,6 +706,12 @@ export default function App() {
           onClick: () => setShowLabels((v) => !v),
           active: showLabels,
         },
+        {
+          id: 'show-regions',
+          label: t('showRegions'),
+          onClick: () => setShowRegions((v) => !v),
+          active: showRegions,
+        },
       ]}
       classNames={{
         controlButton: 'bg-secondary text-secondary-foreground',
@@ -665,10 +746,10 @@ export default function App() {
       mapRef={mapRef}
       map={map}
       markers={engineMarkers}
-      regions={[]}
+      regions={showRegions && regionData?.mapId === mapId ? regionData.regions : []}
       visibleSubtypes={visible}
       showLabels={showLabels}
-      showBorders={false}
+      showBorders={showRegions}
       lodEnabled={false}
       selectedMarkerId={selectedMarkerId}
       forceShowIds={forceShowIds}

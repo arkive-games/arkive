@@ -1,4 +1,4 @@
-import type { GameMapMeta, MarkerPinVariant, MarkerTypeSubtype } from '@gamemap/data-contract'
+import type { GameMapMeta, MarkerPinVariant, MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import { dataUrl } from './urls'
 
 const j = async <T>(url: string): Promise<T> => {
@@ -20,6 +20,9 @@ export interface MarkerRow {
   zukanIndexSuffix?: string
   id: string; subtype: string; category?: string; x: number; y: number; z?: number
   icon?: string; indexInSubtype: number
+  /** Named region containing this marker (regions/<map>.json id); absent when
+   *  the marker sits outside every region volume. */
+  region?: string
   /** Game illustration stem (notes) → resource `notes/<image>.webp`. */
   image?: string
   /** Spawn points merged into this cluster marker (absent/1 = not a cluster). */
@@ -44,6 +47,7 @@ export interface TypesLocale {
   subtypes: Record<string, { name: string; description?: string }>
 }
 export type MapsLocale = Record<string, { name: string; shortName?: string }>
+export type RegionLocale = Record<string, { name: string }>
 
 interface TypesFile {
   categories: {
@@ -80,4 +84,17 @@ export async function loadMarkers(mapId: string, lng: string) {
     j<MarkerLocale>(dataUrl(`locales/${lng}/markers/${mapId}.json`)),
   ])
   return { markers: markersFile.markers, l10n }
+}
+
+/** Named regions for one map + their localized names. Best-effort: a map with
+ *  no regions/<map>.json (or an old data build without one) yields empty. */
+export async function loadRegions(
+  mapId: string,
+  lng: string,
+): Promise<{ regions: RegionInstance[]; l10n: RegionLocale }> {
+  const [regionsFile, l10n] = await Promise.all([
+    j<{ regions: RegionInstance[] }>(dataUrl(`regions/${mapId}.json`)).catch(() => ({ regions: [] })),
+    j<RegionLocale>(dataUrl(`locales/${lng}/regions/${mapId}.json`)).catch(() => ({})),
+  ])
+  return { regions: regionsFile.regions, l10n }
 }
