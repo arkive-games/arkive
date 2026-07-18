@@ -133,7 +133,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'HP',
       meleeAttack: 'Melee Attack',
-      shotAttack: 'Ranged Attack',
+      shotAttack: 'Attack',
       defense: 'Defense',
       craftSpeed: 'Work Speed',
       stamina: 'Stamina',
@@ -205,7 +205,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'LP',
       meleeAttack: 'Nahkampfangriff',
-      shotAttack: 'Fernkampfangriff',
+      shotAttack: 'Angriff',
       defense: 'Verteidigung',
       craftSpeed: 'Arbeitstempo',
       stamina: 'Ausdauer',
@@ -277,7 +277,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'PS',
       meleeAttack: 'Ataque cuerpo a cuerpo',
-      shotAttack: 'Ataque a distancia',
+      shotAttack: 'Ataque',
       defense: 'Defensa',
       craftSpeed: 'Velocidad de trabajo',
       stamina: 'Aguante',
@@ -349,7 +349,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'PS',
       meleeAttack: 'Ataque cuerpo a cuerpo',
-      shotAttack: 'Ataque a distancia',
+      shotAttack: 'Ataque',
       defense: 'Defensa',
       craftSpeed: 'Velocidad de trabajo',
       stamina: 'Aguante',
@@ -421,7 +421,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'PV',
       meleeAttack: 'Attaque de mêlée',
-      shotAttack: 'Attaque à distance',
+      shotAttack: 'Attaque',
       defense: 'Défense',
       craftSpeed: 'Vitesse de travail',
       stamina: 'Endurance',
@@ -493,7 +493,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'HP',
       meleeAttack: 'Serangan Jarak Dekat',
-      shotAttack: 'Serangan Jarak Jauh',
+      shotAttack: 'Serangan',
       defense: 'Pertahanan',
       craftSpeed: 'Kecepatan Kerja',
       stamina: 'Stamina',
@@ -565,7 +565,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'PS',
       meleeAttack: 'Attacco in mischia',
-      shotAttack: 'Attacco a distanza',
+      shotAttack: 'Attacco',
       defense: 'Difesa',
       craftSpeed: 'Velocità di lavoro',
       stamina: 'Vigore',
@@ -637,7 +637,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'HP',
       meleeAttack: '近接攻撃',
-      shotAttack: '遠隔攻撃',
+      shotAttack: '攻撃',
       defense: '防御',
       craftSpeed: '作業速度',
       stamina: 'スタミナ',
@@ -709,7 +709,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'HP',
       meleeAttack: '근접 공격',
-      shotAttack: '원거리 공격',
+      shotAttack: '공격',
       defense: '방어',
       craftSpeed: '작업 속도',
       stamina: '스태미나',
@@ -781,7 +781,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'PŻ',
       meleeAttack: 'Atak wręcz',
-      shotAttack: 'Atak dystansowy',
+      shotAttack: 'Atak',
       defense: 'Obrona',
       craftSpeed: 'Tempo pracy',
       stamina: 'Wytrzymałość',
@@ -853,7 +853,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'PV',
       meleeAttack: 'Ataque corpo a corpo',
-      shotAttack: 'Ataque à distância',
+      shotAttack: 'Ataque',
       defense: 'Defesa',
       craftSpeed: 'Velocidade de trabalho',
       stamina: 'Vigor',
@@ -925,7 +925,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'ОЗ',
       meleeAttack: 'Ближняя атака',
-      shotAttack: 'Дальняя атака',
+      shotAttack: 'Атака',
       defense: 'Защита',
       craftSpeed: 'Скорость работы',
       stamina: 'Выносливость',
@@ -997,7 +997,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'HP',
       meleeAttack: 'โจมตีระยะประชิด',
-      shotAttack: 'โจมตีระยะไกล',
+      shotAttack: 'โจมตี',
       defense: 'ป้องกัน',
       craftSpeed: 'ความเร็วในการทำงาน',
       stamina: 'สตามินา',
@@ -1069,7 +1069,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'CP',
       meleeAttack: 'Yakın Dövüş Saldırısı',
-      shotAttack: 'Menzilli Saldırı',
+      shotAttack: 'Saldırı',
       defense: 'Savunma',
       craftSpeed: 'İş Hızı',
       stamina: 'Dayanıklılık',
@@ -1141,7 +1141,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: 'HP',
       meleeAttack: 'Tấn công cận chiến',
-      shotAttack: 'Tấn công tầm xa',
+      shotAttack: 'Tấn công',
       defense: 'Phòng thủ',
       craftSpeed: 'Tốc độ làm việc',
       stamina: 'Thể lực',
@@ -1213,7 +1213,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: '生命值',
       meleeAttack: '近战攻击',
-      shotAttack: '远程攻击',
+      shotAttack: '攻击',
       defense: '防御',
       craftSpeed: '工作速度',
       stamina: '耐力',
@@ -1285,7 +1285,7 @@ export const PAL_STRINGS: Record<Language, PalStrings> = {
     stat: {
       hp: '生命值',
       meleeAttack: '近戰攻擊',
-      shotAttack: '遠程攻擊',
+      shotAttack: '攻擊',
       defense: '防禦',
       craftSpeed: '工作速度',
       stamina: '耐力',
