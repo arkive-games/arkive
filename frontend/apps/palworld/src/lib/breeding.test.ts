@@ -18,6 +18,11 @@ import { makeEngine, type BreedingData } from './breeding'
  *     QueenBee  (No.068, 1790, idx 453) ← lower Paldeck → the Paldeck tie-break trap
  *
  * Only "higher rank wins" satisfies both.
+ *
+ * The engine now reads the game's own tie-break column, CombiDuplicatePriority
+ * (`dup`), DESCENDING — for every eligible pal it equals rank×100, so these two
+ * in-game-verified cases still pin the behavior (fixtures omit `dup` and use the
+ * rank×100 fallback). The last suite pins that `dup` beats rank when they diverge.
  */
 const data: BreedingData = {
   pals: [
@@ -48,5 +53,20 @@ describe('makeEngine rank-average tie-break (higher CombiRank wins)', () => {
     const engine = makeEngine(data)
     expect(engine.childOf('Broncherry', 'Relaxaurus').map((c) => c.c)).toEqual(['Palumba'])
     expect(engine.childOf('DeerGround', 'ElecPanda').map((c) => c.c)).toEqual(['WhiteMoth'])
+  })
+})
+
+describe('makeEngine tie-break follows CombiDuplicatePriority when it diverges from rank', () => {
+  it('an explicit higher dup beats the higher rank', () => {
+    // Same tie as Case 1 (target 1235, Palumba 1240 vs Nitemary 1230), but with
+    // authored dup values inverting the rank order: Nitemary must win.
+    const diverged: BreedingData = {
+      pals: data.pals.map((p) =>
+        p.id === 'Nitemary' ? { ...p, dup: 999999 } : p.id === 'Palumba' ? { ...p, dup: 1 } : p,
+      ),
+      combos: [],
+    }
+    const engine = makeEngine(diverged)
+    expect(engine.childOf('Relaxaurus', 'Broncherry').map((c) => c.c)).toEqual(['Nitemary'])
   })
 })

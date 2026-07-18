@@ -9,6 +9,11 @@ export interface BreedingPal {
   icon: string
   /** CombiRank (breeding power); lower = rarer. */
   rank: number
+  /** CombiDuplicatePriority — the game's rank-average tie-break column, read
+   *  DESCENDING. Equals rank×100 for every eligible pal today (so it matches
+   *  the in-game-verified higher-rank behavior); optional so older cached data
+   *  falls back to that identity. */
+  dup?: number
   /** DataTable (DT_PalMonsterParameter) row order. Present in the emitted data
    *  but no longer used for the tie-break — the game rounds ties up by rank. */
   idx: number
@@ -85,8 +90,10 @@ export function orient(f: Combo, fixedId: string, slot: 'a' | 'b'): Combo {
  *   1. same species  -> that species
  *   2. unique combo  -> its child (order-independent; two rows are gender-specific)
  *   3. rank-average  -> childRank = floor((rankA + rankB + 1) / 2); the eligible Pal
- *      with the nearest CombiRank, equal-distance ties broken toward the HIGHER
- *      CombiRank (round half up — matching the +1 above and verified in-game).
+ *      with the nearest CombiRank, equal-distance ties broken by the game's own
+ *      CombiDuplicatePriority column read DESCENDING (`dup`, = rank×100 for every
+ *      eligible pal today — so this reproduces the in-game-verified "higher
+ *      CombiRank wins" behavior while following the data if a patch decouples them).
  * Fallback candidates exclude combo-only children and legendaries (`breedChild`),
  * so you can never breed something rarer than your rarest parent.
  */
@@ -123,14 +130,18 @@ export function makeEngine(data: BreedingData): BreedingEngine {
         const b = byId.get(bId)
         if (!a || !b) return []
         const target = Math.floor((a.rank + b.rank + 1) / 2)
-        // Tie-break: on an equal-distance tie the game takes the HIGHER CombiRank
-        // (round half up — the same bias as the +1 in `target`). Verified against
-        // in-game hatches. This is NOT DataTable row order (`idx`) nor Paldeck
-        // order — both mispredict some ties. Same-rank ties fall back to Paldeck
-        // order (ZukanIndex, base form before variant) for determinism.
+        // Tie-break: equal-distance ties resolve by the game's own
+        // CombiDuplicatePriority column, read DESCENDING. For every eligible pal
+        // it currently equals rank×100, so this is behavior-identical to the
+        // in-game-verified "higher CombiRank wins" rule (which itself falsified
+        // row order `idx` and Paldeck order) — but it follows the data should a
+        // patch ever decouple priority from rank. Equal-priority ties fall back
+        // to Paldeck order (ZukanIndex, base form before variant) for determinism.
+        // See docs/superpowers/specs/2026-07-19-palworld-breeding-tie-matrix.md.
+        const dupOf = (p: BreedingPal): number => p.dup ?? p.rank * 100
         const better = (p: BreedingPal, q: BreedingPal): boolean =>
-          p.rank !== q.rank
-            ? p.rank > q.rank
+          dupOf(p) !== dupOf(q)
+            ? dupOf(p) > dupOf(q)
             : p.zukanIndex !== q.zukanIndex
               ? p.zukanIndex < q.zukanIndex
               : p.zukanIndexSuffix !== q.zukanIndexSuffix

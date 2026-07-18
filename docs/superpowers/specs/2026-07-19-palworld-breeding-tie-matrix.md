@@ -18,8 +18,8 @@ instead of relying on a handful of past hatches.
 
 | method | tie pick | equivalent to |
 |---|---|---|
-| current engine (memory: verified on some hatches) | **higher rank** | dup-priority **descending** |
-| CombiDuplicatePriority ascending (lower wins) | **lower rank** | dup-priority **ascending** |
+| **current engine (since 2026-07-19)**: CombiDuplicatePriority **descending** | **higher rank** (pool priority = rank x 100) | the previously verified higher-rank rule |
+| CombiDuplicatePriority ascending (lower wins) | **lower rank** | the mirror hypothesis this matrix can falsify |
 
 Because priority = rank x 100 in the pool, the two candidate orderings are mirror images:
 **they disagree on every one of the 182 ties below.** One in-game hatch of ANY row settles
@@ -220,8 +220,9 @@ other parent pair summing to 2 x target works too.
 
 1. Pick a row, breed the example parents, hatch the egg. The high-target rows (#170+) use
    early-game starters (Lamball / Vixy / Teafant / Chikipi) - cheapest to test.
-2. Child = the **higher-rank pick** column -> current engine correct (priority read descending).
-3. Child = the **dup-asc pick** column -> the engine tie-break must be flipped to lower rank.
+2. Child = the **higher-rank pick** column -> current engine correct (priority read descending,
+   as implemented in lib/breeding.ts).
+3. Child = the **dup-asc pick** column -> flip the engine to read the priority ascending.
 4. Anything else -> the pair hit an unhandled special case; note the parents and child.
 
 Caveat: examples listing legendaries (Frostallion, ...) or Yakushima-collab parents (Green

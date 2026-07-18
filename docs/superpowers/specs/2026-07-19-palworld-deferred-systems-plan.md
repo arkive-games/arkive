@@ -101,7 +101,7 @@ No new route; makes plantation/production buildings actually informative.
 | `FirstDefeatRewardItemID` ✅ | pal `bossFirstDefeatReward` (BOSS_ row) | line under Boss Drops |
 | dungeon `WeightInSpawnAreaAndRank` | per-enemy share % | encounter list percentages |
 | dungeon `PostfixTextId` | localized type suffix | dungeon names ("… Ruins") |
-| breeding `CombiDuplicatePriority` | analysed 2026-07-19: pool-wide it equals `CombiRank x 100` (order-equivalent to rank); zero same-rank pairs among eligible children | all 182 possible step-3 ties + hatchable example parents: `2026-07-19-palworld-breeding-tie-matrix.md` — one hatch settles the direction |
+| breeding `CombiDuplicatePriority` ✅ | adopted 2026-07-19: emitted as `dup`; engine tie-break reads it DESCENDING (predictions unchanged — pool priority = rank x 100) | verification checklist stays: `2026-07-19-palworld-breeding-tie-matrix.md` (182 ties + 9 subspecies probes) |
 
 ## Explicitly NOT planned
 

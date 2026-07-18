@@ -143,8 +143,13 @@ def run_breeding(raw: Path, data_out: Path, res_out: Path) -> None:
             "zukanIndex": r["ZukanIndex"],
             "zukanIndexSuffix": r.get("ZukanIndexSuffix", "") or "",
             "icon": f"T_{cid}_icon_normal",
-            # Breeding power + tie-break index for the rank-average fallback.
+            # Breeding power + tie-break inputs for the rank-average fallback.
+            # `dup` (CombiDuplicatePriority) is the game's own tie-break column,
+            # read DESCENDING by the engine; for the eligible pool it equals
+            # rank*100 today, so predictions match the verified higher-rank rule
+            # while surviving a patch that decouples the two.
             "rank": r["CombiRank"],
+            "dup": r.get("CombiDuplicatePriority", r["CombiRank"] * 100),
             "idx": row_index[cid],
             # Eligible as a rank-average child? Combo-only children and Pals the
             # game flags IgnoreCombi (legendaries: self-bred only) are not.
