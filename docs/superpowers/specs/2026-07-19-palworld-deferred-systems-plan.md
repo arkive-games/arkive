@@ -99,8 +99,8 @@ No new route; makes plantation/production buildings actually informative.
 | passive `LotteryWeight` ✅ | binary 5/100 → `lotteryWeight` on rare tier | "Rare roll" chip on PassivesPage |
 | caravan lottery `Weight` ✅ | `rollPct` per multi-lottery shop group | "Stock roll chance" row on merchant page |
 | `FirstDefeatRewardItemID` ✅ | pal `bossFirstDefeatReward` (BOSS_ row) | line under Boss Drops |
-| dungeon `WeightInSpawnAreaAndRank` | per-enemy share % | encounter list percentages |
-| dungeon `PostfixTextId` | localized type suffix | dungeon names ("… Ruins") |
+| dungeon `WeightInSpawnAreaAndRank` | investigated 2026-07-19: **dead in export** — all 59 (area, rank) buckets hold exactly one spawner sheet | not added (would read 100% everywhere) |
+| dungeon `PostfixTextId` | investigated 2026-07-19: **dead in export** — single uniform value whose text is the dev placeholder `{DungeonName}の洞窟(仮)` | not added |
 | breeding `CombiDuplicatePriority` ✅ | adopted 2026-07-19: emitted as `dup`; engine tie-break reads it DESCENDING (predictions unchanged — pool priority = rank x 100) | verification checklist stays: `2026-07-19-palworld-breeding-tie-matrix.md` (182 ties + 9 subspecies probes) |
 
 ## Explicitly NOT planned

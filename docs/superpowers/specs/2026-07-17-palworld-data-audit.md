@@ -514,6 +514,8 @@ would add bytes with zero signal. Verified by scanning the raw table.
 | `EffectType2`/`EffectValue2` (DT_WazaDataTable) | set on **1** of 384 rows |
 | `Item_03_Id/Num` (DT_ItemPickupDataTable) | `None` on all 107 rows (and `Item_02` is only ever `DogCoin`) |
 | `NumUnit` (DT_ItemLotteryDataTable) | always `1` |
+| `WeightInSpawnAreaAndRank` (DT_DungeonEnemySpawnDataTable) | every (area, rank) bucket holds exactly **one** spawner sheet (59/59) — a share % would be 100% everywhere |
+| `PostfixTextId` (DT_DungeonSpawnAreaDataTable) | single value `DUNGEON_NAME_TYPE_01` on all areas; its text is the dev placeholder `{DungeonName}の洞窟(仮)` |
 
 ### B. Engine / asset plumbing — no player-facing meaning
 
@@ -620,4 +622,5 @@ last row's leftovers.
 | merchant lottery `Weight` | wandering-caravan stock rarity | ✅ merchant `rollPct` |
 | `DT_PalInvader(+Reward)` / BaseCamp tables / farming trio / `DT_PaldexDistributionData` | raids, base-camp, farming, spawn clouds | ✅ /raids, /basecamp, building rows, paldex clouds |
 | breeding `CombiDuplicatePriority` | rank-average tie-break | ✅ adopted 2026-07-19: emitted as `dup`, engine reads it DESCENDING (pool priority = rank x 100, so predictions are unchanged vs the verified higher-rank rule); 182-tie + 9-probe checklist: `2026-07-19-palworld-breeding-tie-matrix.md` |
-| still open | dungeon enemy-share % (`WeightInSpawnAreaAndRank`), dungeon name suffix (`PostfixTextId`), `DT_FishingBaitItem` + a fishing page | pending |
+| dungeon enemy-share % / name suffix | investigated 2026-07-19 | **dead in export** (moved to §10-A): every (area, rank) bucket has one sheet; the postfix is a uniform dev placeholder |
+| still open | `DT_FishingBaitItem` + a dedicated fishing page | pending |
