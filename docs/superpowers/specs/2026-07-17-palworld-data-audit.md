@@ -1,6 +1,8 @@
 # Palworld Data Audit — DataTables → Website Coverage, Candidates, and Cross-Reference Integrity
 
-Date: 2026-07-17 (audit) · **Updated 2026-07-17 — candidates implemented (see §0)**
+Date: 2026-07-17 (audit) · **Updated through 2026-07-19 — §0 Updates 1–5: all Tier-1/Tier-2
+candidates, cross-reference fixes, drop-reason taxonomy, and the full deferred-systems plan
+(items 1–8) are implemented; §5/§8/§10 statuses reflect current state.**
 
 ## 0. Implementation changelog (candidates added)
 
@@ -232,12 +234,12 @@ No building HP column exists in this table (HP lives in the actor Blueprint comp
 USED. Dropped: `IconName` (**why: §10-C redundant** — the tile icon is derived from the
 unlocked item/building), `Tier` (**why: §10-C redundant** — `LevelCap` already drives ordering).
 
-### DT_LabResearchDataTable (`Lab/`, 168 rows) — largely unmodeled
+### DT_LabResearchDataTable (`Lab/`, 168 rows) — ✅ now fully modeled (Update 4)
 
-Only `TextId` leaks through (as a tech's `requireResearchName`). The **entire research-lab
-upgrade system** — `EffectType`/`EffectValue` (e.g. +10% craft speed), materials, work — is
-DROPPED (**why: §10-F deferred** — it needs a dedicated research page; a page could be built
-almost entirely from these columns).
+At audit time only `TextId` leaked through (as a tech's `requireResearchName`); the research
+system was §10-F deferred. Since Update 4 the whole table — category, `EffectType`/`EffectValue`,
+materials, work, prerequisite chain, essential flag — is emitted as `research.json` and rendered
+on the **/research** page (with tech `requireResearch` cross-links both ways).
 
 ### Loot machinery (shared)
 
@@ -261,13 +263,13 @@ The single richest table and the biggest reservoir of unused data.
 | column | class | notes |
 |---|---|---|
 | ZukanIndex(+Suffix), Size, Rarity, ElementType1/2, Hp, MeleeAttack, ShotAttack, Defense, CraftSpeed, Stamina, FoodAmount, CaptureRateCorrect, Price, MaleProbability, SlowWalk/Walk/Run/RideSprint/Transport/Swim speeds, AIResponse, Nocturnal, WorkSuitability_* (13), BestWorkSuitability, PassiveSkill1..4, Tribe, CombiRank, IgnoreCombi | USED | stats/work/filters/breeding |
-| Support, Friendship_HP/ShotAttack/Defense/CraftSpeed, Enemy{MaxHP,ReceiveDamage,InflictDamage,WazaCoolTime}Rate, Predator, MaxFullStomach | ADDED | now support / friendship / enemyScaling / predator, + maxFullStomach rendered (see §9) |
+| Support, Friendship_HP/ShotAttack/Defense/CraftSpeed, Enemy{MaxHP,ReceiveDamage,InflictDamage,WazaCoolTime}Rate, Predator, MaxFullStomach, ExpRatio, FirstDefeatRewardItemID | ADDED | support / friendship / enemyScaling / predator / maxFullStomach / stats.expRatio / bossFirstDefeatReward (see §9) |
 | **GenusCategory** | EMITTED-ONLY | `pals[].genus` in JSON but no frontend renders it |
 | Edible | DROPPED | **why: §10-A dead in export** — uniformly `true` across the roster |
 | SwimDashSpeed | DROPPED | **why: §10-C redundant** — tracks `SwimSpeed` (already shown) |
-| FullStomachDecreaseRate, ExpRatio, StatusResistUpRate, ViewingDistance/Angle, HearingRate, NooseTrap, BiologicalGrade, CombiDuplicatePriority | DROPPED | **why: §10-D niche** — hunger drain / senses / detection-AI internals / breeding tie-break |
+| FullStomachDecreaseRate, StatusResistUpRate, ViewingDistance/Angle, HearingRate, NooseTrap, BiologicalGrade, CombiDuplicatePriority | DROPPED | **why: §10-A/D** — uniform-in-export (hunger drain, senses) / unclear semantics / breeding tie-break needing in-game verification |
 | Mesh capsule/size, Organization, Weapon/WeaponEquip, boss-variant flags (IsBoss/IsTowerBoss/…) | DROPPED | **why: §10-B engine plumbing** |
-| FirstDefeatRewardItemID | DROPPED | **why: §10-F deferred** — first-defeat reward, no surface yet |
+| ~~FirstDefeatRewardItemID~~ | ADDED | `bossFirstDefeatReward` line under Boss Drops (Update 4) |
 
 ### Other pals tables (all USED except as noted)
 
@@ -286,8 +288,10 @@ The single richest table and the biggest reservoir of unused data.
   Still dropped: `LotteryWeight` (**why: §10-F deferred** — roll odds, no surface yet),
   `TargetElementType` (**why: §10-D niche** — element scoping), non-mutation `Add*` flags
   (**why: §10-D niche** — applicability).
-- **DT_PalDropItem** (1044) — 10 drop slots, USED. `Level` dropped (**why: §10-E collapsed** —
-  per-level variation merged to the best rate across rows).
+- **DT_PalDropItem** (1044) — 10 drop slots, USED. `Level` is no longer fully collapsed: each
+  drop now carries `minLevel` when the item only appears in level-banded rows ("Lv N+" chip —
+  the §10-E1 fix, Update 4). Per-level *rate scaling* on the same item is still merged to the
+  best rate (MimicDog-style, 2 pals).
 - **DT_PalCombiUnique** (258) — unique breeding recipes, fully USED.
 - **DT_PalBPClass** (940) — resolves ranch-production BP path; AssetPathName USED.
 - Text tables (`DT_PalNameText`, `DT_PalLongDescriptionText`, `DT_PalFirstActivatedInfoText`,
@@ -315,7 +319,7 @@ Pipeline: `maps/extract.py` + `maps/emit.py` → `maps.json`, `markers/<map>.jso
 | DT_ItemPickupDataTable | 107 | shrine reward slots 1–2 USED. `Item_03` slot dropped — **why: §10-D niche** (third reward slot, rarely populated). |
 | DT_NoteMasterDataTable (+Desc, +Texture) | 64 | collectible notes fully USED. |
 | DT_MapRespawnPointInfoText | 199 | fast-travel/tower names USED. `SpawnPoint_*` description text dropped — **why: §10-D niche** (only names consumed). |
-| DT_PlayerStatusRankMasterDataTable | 279 | **NOT read as a table** — RelicType ordering hand-mirrored in `extract.RELIC_TYPE_INDEX`. Columns (`RequiredRelicNum`/`EffectRate`/`ResetRequiredMoney`) dropped — **why: §10-F deferred** (effigy buff system unmodeled). |
+| DT_PlayerStatusRankMasterDataTable | 279 | **✅ now read as a table** (Update 4): `relic_type_index(raw)` replaced the hand-mirrored ordinal, and the full ladder is emitted as `effigies.json` (13 types × 279 ranks, localized names; UI surface still minimal). |
 | DT_PalFishingSpotLotteryDataTable / DT_PalFishShadowDataTable | 1252 / 135 | **ADDED:** whole fishing dataset → `fishing.json` (§9) — shadow→pal, level band, day/night, difficulty, item pool. |
 
 ---
@@ -348,23 +352,22 @@ Pipeline: `dungeons.py`, `merchants.py`, `item_sources.py`, `quests.py` → `dun
 
 ## 5. Candidates to add (prioritized, cross-domain)
 
-### Tier 1 — whole tables not yet touched (high value) — roadmap (✅ #2 PalExpTable, #3 DT_StatusEffectFood, #7 fishing dataset done in §0; rest pending, each needs a new frontend surface)
+### Tier 1 — whole tables not yet touched (high value) — ✅ ALL IMPLEMENTED (Updates 1–5) except the DT_FishingBaitItem sliver
 
-1. **DT_PaldexDistributionData** (365) — per-Pal day/night spawn-coordinate clouds. The
-   authoritative "where does this Pal spawn" layer, directly plottable via the existing
-   world→pixel transform. Biggest single win.
-2. **DT_PalExpTable** (100) — per-level EXP curve (player + Pal); trivial to emit, needed on
-   every Pal/player page.
-3. **DT_StatusEffectFood** (54) + **DT_FishingBaitItem** (9) — turn food/bait from bare icons
-   into functional pages (buff type/value/duration; catch-rate modifiers).
-4. **DT_MapObjectAssignData** (271) + **DT_MapObjectFarmCrop** (18) + **DT_MapObjectItemProduct**
-   (16) — base-building/farming trio: work-suitability requirements, crop grow times/yields,
-   passive producer rates. Makes build-object pages genuinely useful.
-5. **DT_PalInvader** (240) + **DT_PalInvaderReward** (76) — base-raid wave composition + loot,
-   keyed by biome/grade.
-6. **DT_BaseCampTask** (35) + **DT_BaseCampLevelData** (35) — base-camp progression checklist.
-7. **DT_PalFishingSpotLotteryDataTable** (1252) — the full fishing-spot dataset (already
-   present in the export, entirely unused): fish shadow, level band, day/night, difficulty.
+1. **DT_PaldexDistributionData** (365) — ✅ Paldex habitat clouds in `spawns/<pal>.json` +
+   day/night toggle on the pal spawn map (Update 5).
+2. **DT_PalExpTable** (100) — ✅ `exp.json` (Update 1).
+3. **DT_StatusEffectFood** (54) — ✅ item `foodBuff` + Food Buff section (Updates 1/3).
+   **DT_FishingBaitItem** (9) — still pending (bait catch-rate modifiers; natural companion
+   to a future fishing page).
+4. **DT_MapObjectAssignData** + **DT_MapObjectFarmCrop** + **DT_MapObjectItemProduct** — ✅
+   building `workReq`/`workers`/`crop`/`produces` + detail rows (Update 4).
+5. **DT_PalInvader** (240) + **DT_PalInvaderReward** (76) — ✅ `invaders.json` + `/raids`
+   page (Update 5).
+6. **DT_BaseCampTask** + **DT_BaseCampLevelData** — ✅ `basecamp.json` + `/basecamp` page
+   (Update 4).
+7. **DT_PalFishingSpotLotteryDataTable** (1252) — ✅ `fishing.json` (Update 2; dedicated
+   fishing page still a follow-up).
 
 Secondary: `DT_FriendshipRankTable` (bond thresholds), `DT_CharacterUpgradeMasterDataTable`
 (condensing), `DT_WazaMasterTamago` (egg learnset), `DT_PalShopCreateData` (creature vendors),
@@ -443,15 +446,16 @@ frontend degrades gracefully — "Show regions" on WorldTree produces nothing an
 
 ## 8. Pipeline hygiene notes (not data-correctness, but worth flagging)
 
-- **Stale intermediate:** `tools/apps/palworld/parsed/parsed.json` predates region extraction
-  (no `regionVolumes`/`regionNames`). Emitted MainWorld regions are fresher. Re-running `emit`
-  off the stale parsed.json would drop **all** regions (emit prints a warning for exactly this).
-  A reproducibility trap.
-- **`DT_PlayerStatusRankMasterDataTable`** relic ordering is duplicated by hand in
-  `extract.RELIC_TYPE_INDEX` instead of read from the table — silent breakage risk on a game
-  patch that reorders relic types.
+- **Stale intermediate (resolved in practice, trap remains):** `parsed.json` has since been
+  regenerated (Updates 2/5, now incl. regions + paldex), but the general rule stands — always
+  re-run `maps extract` before `maps emit`, or regions drop (emit warns).
+- ~~**`DT_PlayerStatusRankMasterDataTable`** relic ordering duplicated by hand~~ — **fixed in
+  Update 4**: `extract.relic_type_index(raw)` reads the table.
 - **`TreasureBoxGrade` → `grade`** flows to the UI but its meaning (chest tier) remains
   UNVERIFIED (consistent with existing memory).
+- **Emit's spawn-file ordering pass drops unknown keys** — bit the paldex clouds in Update 5
+  (fixed by whitelisting the cloud keys); worth remembering when adding future spawn-file
+  fields.
 
 ## 9. Added since the audit (no longer dropped)
 
@@ -473,6 +477,16 @@ recipe `CraftExpRate`→craftExp (craft section), building `BuildExpRate`→buil
 `bIsProhibitedInRaidBossArea`→baseOnly/hubOnly/noRaidArea (placement row), pal
 `ExpRatio`→stats.expRatio ("EXP yield" detail row), arena reward `Min`/`Max`→source qty
 (`×20` on the Bronze Giga-Sphere chip).
+
+**Deferred-systems plan (2026-07-19, Updates 4–5):** drop `Level`→per-drop `minLevel` ("Lv N+"
+chip); the whole `DT_LabResearchDataTable`→`research.json` + /research;
+`DT_PlayerStatusRankMasterDataTable`→`effigies.json` (+ table-read relic index);
+`DT_MapObjectAssignData`/`FarmCrop`/`ItemProductDataTable`→building
+workReq/workers/crop/produces; `DT_BaseCampLevelData`/`Task`→`basecamp.json` + /basecamp;
+`DT_PalInvader(+Reward)`→`invaders.json` + /raids; `DT_PaldexDistributionData`→paldex habitat
+clouds in `spawns/`; raid `InfoList[0].Level`→summonLevel; pal
+`FirstDefeatRewardItemID`→bossFirstDefeatReward; passive `LotteryWeight`→rare-roll flag;
+shop lottery `Weight`→merchant `rollPct`.
 
 ## 10. Why each still-dropped column is dropped
 
@@ -567,7 +581,8 @@ those the *item sets differ across levels*. Example — Anubis: Lv 0 drops
 unconditionally, so **level-gated drops (World Tree relics, awakening materials) appear to
 drop from any-level spawns — they don't**. The 2 remaining pals (MimicDog, BOSS_MimicDog,
 9 level bands) keep the same items but scale rates/counts, so best-rate overstates low-level
-farms. **Fix planned** (deferred-systems plan §1): emit a per-drop `minLevel`.
+farms. **✅ Fixed (Update 4):** each drop now carries `minLevel` (843 drops) and the UI shows a
+"Lv N+" chip; only the same-item rate scaling (the 2 MimicDog forms) remains merged.
 
 **E2. `Power` vs `DisplayPower` (DT_WazaDataTable) — negligible.** Of 380 rows with both,
 only **3** differ (`Unique_LegendDeer_RadiantPurge_Otomo`, `GrassGolem[_Dark]_PartnerSkill`)
@@ -592,12 +607,16 @@ emit shape, frontend surface, effort, and recommended order — in
 `docs/superpowers/specs/2026-07-19-palworld-deferred-systems-plan.md` (the per-level-drops
 fidelity fix from §10-E1 is its first item). Listed here so the classification is complete:
 
-| columns / tables | the system it would power |
-|---|---|
-| `DT_LabResearchDataTable` `EffectType`/`EffectValue`/materials/work | the research-lab upgrade system (a dedicated page) |
-| `DT_PlayerStatusRankMasterDataTable` `RequiredRelicNum`/`EffectRate`/`ResetRequiredMoney` | effigy (Lifmunk) buff progression |
-| `DT_PalMonsterParameter` `FirstDefeatRewardItemID`, `ExpRatio` | first-defeat rewards + XP-yield notes on pal pages |
-| `DT_PassiveSkill_Main` `LotteryWeight` | how commonly a passive rolls (rarity odds) |
-| raid `EggPalIDAndWeight`, `InfoList` level/moveset | summon-ritual boss stats + capture pool |
-| merchant lottery `Weight` | wandering-caravan stock rarity |
-| `DT_PalInvader(+Reward)`, `DT_BaseCampTask`/`LevelData`, `DT_MapObjectAssignData`/`FarmCrop`/`ItemProduct`, `DT_PaldexDistributionData` | base-raids, base-camp progression, farming, per-species spawn clouds |
+**Status 2026-07-19: every F item below is implemented** (Updates 4–5 / plan doc) except the
+last row's leftovers.
+
+| columns / tables | the system it powers | status |
+|---|---|---|
+| `DT_LabResearchDataTable` effects/materials/work | research-lab upgrade system | ✅ `research.json` + /research |
+| `DT_PlayerStatusRankMasterDataTable` ladder | effigy (Lifmunk) buff progression | ✅ `effigies.json` (+ table-read relic index); UI surface still minimal |
+| `DT_PalMonsterParameter` `FirstDefeatRewardItemID`, `ExpRatio` | first-defeat rewards + XP yield | ✅ bossFirstDefeatReward + stats.expRatio |
+| `DT_PassiveSkill_Main` `LotteryWeight` | passive roll rarity | ✅ "Rare roll" chip (binary 5/100) |
+| raid `EggPalIDAndWeight`, `InfoList` level | summon-ritual boss stats + pool | ✅ summonLevel; pools proved single-pal (moveset not surfaced) |
+| merchant lottery `Weight` | wandering-caravan stock rarity | ✅ merchant `rollPct` |
+| `DT_PalInvader(+Reward)` / BaseCamp tables / farming trio / `DT_PaldexDistributionData` | raids, base-camp, farming, spawn clouds | ✅ /raids, /basecamp, building rows, paldex clouds |
+| still open | dungeon enemy-share % (`WeightInSpawnAreaAndRank`), dungeon name suffix (`PostfixTextId`), breeding `CombiDuplicatePriority` (needs in-game verification), `DT_FishingBaitItem` + a fishing page | pending |
