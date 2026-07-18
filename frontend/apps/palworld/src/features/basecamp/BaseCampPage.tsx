@@ -41,7 +41,7 @@ export default function BaseCampPage() {
   return (
     <ContentPage
       active="/basecamp"
-      title={t('basecamp.title', { defaultValue: 'Base Camp' })}
+      title={t('basecamp.title')}
       heading
     >
       {loadError ? (
@@ -51,26 +51,23 @@ export default function BaseCampPage() {
       ) : (
         <CatalogDataProvider buildings={buildings}>
           <p className="mb-4 text-sm text-muted-foreground">
-            {t('basecamp.caption', {
-              defaultValue:
-                'Per base level: the Pal worker cap, how many bases your guild can hold, and the tasks to reach the next level.',
-            })}
+            {t('basecamp.caption')}
           </p>
           <div className="overflow-x-auto rounded-lg border border-border bg-card">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <th className="w-px whitespace-nowrap px-3 py-2 font-medium">
-                    {t('basecamp.level', { defaultValue: 'Level' })}
+                    {t('basecamp.level')}
                   </th>
                   <th className="w-px whitespace-nowrap px-3 py-2 text-right font-medium">
-                    {t('basecamp.workers', { defaultValue: 'Workers' })}
+                    {t('basecamp.workers')}
                   </th>
                   <th className="w-px whitespace-nowrap px-3 py-2 text-right font-medium">
-                    {t('basecamp.bases', { defaultValue: 'Bases' })}
+                    {t('basecamp.bases')}
                   </th>
                   <th className="w-full px-3 py-2 font-medium">
-                    {t('basecamp.tasks', { defaultValue: 'Level-up tasks' })}
+                    {t('basecamp.tasks')}
                   </th>
                 </tr>
               </thead>
@@ -102,10 +99,7 @@ export default function BaseCampPage() {
                                 key={i}
                                 className="rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
                               >
-                                {t('basecamp.workerTask', {
-                                  defaultValue: '{{n}} Pal workers',
-                                  n: task.workers,
-                                })}
+                                {t('basecamp.workerTask', { n: task.workers })}
                               </span>
                             ),
                           )}

@@ -91,7 +91,7 @@ export default function RaidsPage() {
   return (
     <ContentPage
       active="/raids"
-      title={t('raids.title', { defaultValue: 'Base Raids' })}
+      title={t('raids.title')}
       heading
       maxWidth="max-w-5xl"
     >
@@ -102,10 +102,7 @@ export default function RaidsPage() {
       ) : (
         <CatalogDataProvider pals={pals} items={items} buildings={buildings}>
           <p className="mb-3 text-sm text-muted-foreground">
-            {t('raids.caption', {
-              defaultValue:
-                'Invader groups that can attack your base, by biome: base-grade range, wave composition, and clear rewards.',
-            })}
+            {t('raids.caption')}
           </p>
           <div className="mb-4 flex flex-wrap gap-1.5">
             {['all', ...biomes].map((b) => (
@@ -120,9 +117,7 @@ export default function RaidsPage() {
                     : 'bg-secondary text-secondary-foreground hover:bg-accent')
                 }
               >
-                {b === 'all'
-                  ? t('raids.all', { defaultValue: 'All' })
-                  : t(`raids.biome.${b}`, { defaultValue: b })}
+                {b === 'all' ? t('raids.all') : t(`raids.biome.${b}`, { defaultValue: b })}
               </button>
             ))}
             <span className="self-center text-sm text-muted-foreground">{list.length}</span>
@@ -139,14 +134,14 @@ export default function RaidsPage() {
                     {t(`raids.biome.${r.biome}`, { defaultValue: r.biome })}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {t('raids.grade', { defaultValue: 'Base grade' })}{' '}
+                    {t('raids.grade')}{' '}
                     <span className="tabular-nums">
                       {r.gradeMin === r.gradeMax ? r.gradeMin : `${r.gradeMin}–${r.gradeMax}`}
                     </span>
                   </span>
                   {r.condition ? (
                     <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-                      {t('raids.condition', { defaultValue: 'Requires placed' })}:
+                      {t('raids.condition')}:
                       <BuildingLink
                         id={r.condition}
                         name={buildings.text[r.condition]?.name ?? r.condition}
@@ -163,7 +158,7 @@ export default function RaidsPage() {
                     <div key={`${w.wave}-${wi}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                       {r.waves.length > 1 ? (
                         <span className="w-14 shrink-0 text-xs text-muted-foreground">
-                          {t('raids.wave', { defaultValue: 'Wave {{n}}', n: w.wave })}
+                          {t('raids.wave', { n: w.wave })}
                         </span>
                       ) : null}
                       {w.enemies.map((e, i) => (
@@ -175,7 +170,7 @@ export default function RaidsPage() {
                 {r.rewards.length ? (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2">
                     <span className="text-xs text-muted-foreground">
-                      {t('raids.rewards', { defaultValue: 'Rewards' })}:
+                      {t('raids.rewards')}:
                     </span>
                     {r.rewards.map((rw) => (
                       <span key={rw.item} className="inline-flex items-center gap-1">

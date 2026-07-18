@@ -8,20 +8,182 @@ import {
   loadTech,
   type ItemsBundle,
   type ResearchBundle,
+  type ResearchProject,
   type TechBundle,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle, type WorkType } from '../../lib/pals'
 import { workIconUrl } from '../../lib/assets'
+import { buildResearchTrees, type ResearchTreeNode } from '../../lib/researchTree'
 import {
   CatalogDataProvider,
   CatalogPageLoading,
-  MaterialChip,
+  ItemGlyph,
+  ItemHover,
 } from '../catalog/components'
 import { IconImg } from '../pals/components/atoms'
 
-/** Research Lab catalog: every lab project grouped by its work-suitability
- *  category — effect, material costs, lab work, prerequisite chain, and the
- *  technologies a gate project unlocks (inverse of `tech.requireResearch`). */
+/** Compact material cost chip for tree nodes: item icon + count only (the
+ *  name shows in the hover card / on the linked item page). */
+function MaterialGlyph({ id, icon, count }: { id: string; icon?: string; count: number }) {
+  return (
+    <ItemHover id={id}>
+      <Link
+        to="/items/$id"
+        params={{ id }}
+        className="inline-flex items-center gap-0.5 rounded-md border border-border bg-secondary/40 px-1 py-0.5 transition hover:border-primary/60 hover:bg-accent"
+      >
+        {icon ? <ItemGlyph icon={icon} size={16} /> : null}
+        <span className="text-xs tabular-nums text-muted-foreground">×{count}</span>
+      </Link>
+    </ItemHover>
+  )
+}
+
+function NodeCard({
+  p,
+  research,
+  items,
+  tech,
+  pals,
+  techIds,
+}: {
+  p: ResearchProject
+  research: ResearchBundle
+  items: ItemsBundle
+  tech: TechBundle
+  pals: PalsBundle
+  techIds: string[]
+}) {
+  const { t } = useTranslation()
+  const v = p.effect?.value ?? 0
+  return (
+    <div
+      className={
+        'w-44 rounded-lg border bg-card px-2.5 py-2 shadow-sm ' +
+        (p.essential ? 'border-amber-400/60' : 'border-border')
+      }
+      data-testid="research-node"
+    >
+      <div className="text-sm font-medium leading-tight">
+        {research.text[p.id]?.name ?? p.id}
+      </div>
+      {p.effect ? (
+        <div className="mt-1 text-xs leading-tight text-emerald-600 dark:text-emerald-400">
+          {t(`research.effect.${p.effect.type}`, { defaultValue: p.effect.type })}{' '}
+          <span className="tabular-nums">{v > 0 ? `+${v}` : v}%</span>
+          {p.effect.work ? (
+            <span className="ml-1 text-muted-foreground">
+              ({pals.enums.work[p.effect.work as WorkType] ?? p.effect.work})
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {p.essential ? (
+        <div className="mt-1">
+          <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-300">
+            {t('research.essential')}
+          </span>
+        </div>
+      ) : null}
+      <div className="mt-1.5 flex flex-wrap items-center gap-1">
+        {p.materials.map((m) => (
+          <MaterialGlyph key={m.item} id={m.item} icon={items.byId.get(m.item)?.icon} count={m.count} />
+        ))}
+      </div>
+      <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+        {t('research.work')}: {p.work.toLocaleString()}
+      </div>
+      {techIds.map((tid) => (
+        <Link
+          key={tid}
+          to="/technology"
+          search={{ tech: tid }}
+          className="mt-1 block text-xs font-medium text-sky-600 hover:underline dark:text-sky-400"
+        >
+          {t('research.unlocksTech')}: {tech.text[tid]?.name ?? tid}
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+/** One tree node plus its subtree, with in-game-style right-angle connector
+ *  lines: a stub below the parent, a rail across the children row, and a stub
+ *  into each child. */
+function TreeNode({
+  node,
+  research,
+  items,
+  tech,
+  pals,
+  techsByResearch,
+}: {
+  node: ResearchTreeNode
+  research: ResearchBundle
+  items: ItemsBundle
+  tech: TechBundle
+  pals: PalsBundle
+  techsByResearch: Map<string, string[]>
+}) {
+  const kids = node.children
+  return (
+    <div className="flex flex-col items-center">
+      <NodeCard
+        p={node.project}
+        research={research}
+        items={items}
+        tech={tech}
+        pals={pals}
+        techIds={techsByResearch.get(node.project.id) ?? []}
+      />
+      {kids.length ? (
+        <>
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-start">
+            {kids.map((child, i) => (
+              <div key={child.project.id} className="flex flex-col">
+                <div className="relative h-4">
+                  {kids.length > 1 ? (
+                    <div
+                      className={
+                        'absolute top-0 h-px bg-border ' +
+                        (i === 0
+                          ? 'left-1/2 right-0'
+                          : i === kids.length - 1
+                            ? 'left-0 right-1/2'
+                            : 'left-0 right-0')
+                      }
+                    />
+                  ) : null}
+                  <div className="absolute left-1/2 top-0 h-4 w-px -translate-x-1/2 bg-border" />
+                </div>
+                <div className="px-1.5">
+                  <TreeNode
+                    node={child}
+                    research={research}
+                    items={items}
+                    tech={tech}
+                    pals={pals}
+                    techsByResearch={techsByResearch}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+function countNodes(node: ResearchTreeNode): number {
+  return 1 + node.children.reduce((sum, c) => sum + countNodes(c), 0)
+}
+
+/** Research Lab catalog: one tab per work-suitability category, rendering the
+ *  category's projects as the in-game prerequisite tree — effect, material
+ *  costs, lab work, and the technologies a gate project unlocks (inverse of
+ *  `tech.requireResearch`). */
 export default function ResearchPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -31,6 +193,7 @@ export default function ResearchPage() {
   const [tech, setTech] = useState<TechBundle | null>(null)
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [activeCat, setActiveCat] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -52,20 +215,11 @@ export default function ResearchPage() {
     }
   }, [lng, t])
 
-  // Category groups in first-seen (game) order.
-  const groups = useMemo(() => {
-    if (!research) return []
-    const order: string[] = []
-    const byCat = new Map<string, typeof research.projects>()
-    for (const p of research.projects) {
-      if (!byCat.has(p.category)) {
-        byCat.set(p.category, [])
-        order.push(p.category)
-      }
-      byCat.get(p.category)!.push(p)
-    }
-    return order.map((cat) => ({ cat, projects: byCat.get(cat)! }))
-  }, [research])
+  // One prerequisite tree per category, in first-seen (game) order.
+  const trees = useMemo(
+    () => (research ? buildResearchTrees(research.projects) : []),
+    [research],
+  )
 
   // Technologies gated behind each research project (tech.requireResearch inverse).
   const techsByResearch = useMemo(() => {
@@ -80,10 +234,12 @@ export default function ResearchPage() {
     return out
   }, [tech])
 
+  const current = trees.find((tr) => tr.category === activeCat) ?? trees[0]
+
   return (
     <ContentPage
       active="/research"
-      title={t('research.title', { defaultValue: 'Research' })}
+      title={t('research.title')}
       heading
       maxWidth="max-w-5xl"
     >
@@ -93,81 +249,58 @@ export default function ResearchPage() {
         <CatalogPageLoading />
       ) : (
         <CatalogDataProvider items={items} tech={tech} pals={pals}>
-          <p className="mb-4 text-sm text-muted-foreground">
-            {t('research.caption', {
-              defaultValue:
-                'Research Lab projects by work category: the buff granted, material cost, lab work, and prerequisite chain.',
-            })}
-          </p>
-          <div className="space-y-8">
-            {groups.map(({ cat, projects }) => (
-              <section key={cat}>
-                <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
-                  <IconImg src={workIconUrl(cat as WorkType)} alt="" size={20} />
-                  {pals.enums.work[cat as WorkType] ?? cat}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {projects.length}
+          <p className="mb-4 text-sm text-muted-foreground">{t('research.caption')}</p>
+          <div className="mb-6 flex flex-wrap gap-1.5" role="tablist">
+            {trees.map(({ category, roots }) => {
+              const active = category === current?.category
+              const count = roots.reduce((sum, r) => sum + countNodes(r), 0)
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setActiveCat(category)}
+                  className={
+                    'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition ' +
+                    (active
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground hover:bg-accent')
+                  }
+                >
+                  <IconImg src={workIconUrl(category as WorkType)} alt="" size={16} />
+                  {pals.enums.work[category as WorkType] ?? category}
+                  <span
+                    className={
+                      'text-xs tabular-nums ' +
+                      (active ? 'text-primary-foreground/70' : 'text-muted-foreground')
+                    }
+                  >
+                    {count}
                   </span>
-                </h2>
-                <div className="divide-y divide-border/60 rounded-lg border border-border bg-card">
-                  {projects.map((p) => (
-                    <div key={p.id} className="px-4 py-3" data-testid="research-row">
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span className="font-medium">{research.text[p.id]?.name ?? p.id}</span>
-                        {p.effect ? (
-                          <span className="text-sm text-emerald-600 dark:text-emerald-400">
-                            {t(`research.effect.${p.effect.type}`, { defaultValue: p.effect.type })}{' '}
-                            <span className="tabular-nums">+{p.effect.value}%</span>
-                            {p.effect.work ? (
-                              <span className="ml-1 text-xs text-muted-foreground">
-                                ({pals.enums.work[p.effect.work as WorkType] ?? p.effect.work})
-                              </span>
-                            ) : null}
-                          </span>
-                        ) : null}
-                        {p.essential ? (
-                          <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-300">
-                            {t('research.essential', { defaultValue: 'Essential' })}
-                          </span>
-                        ) : null}
-                        <span className="ml-auto text-xs tabular-nums text-muted-foreground">
-                          {t('research.work', { defaultValue: 'Work' })}: {p.work}
-                        </span>
-                      </div>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                        {p.materials.map((m) => (
-                          <MaterialChip
-                            key={m.item}
-                            id={m.item}
-                            name={items.text[m.item]?.name ?? m.item}
-                            icon={items.byId.get(m.item)?.icon}
-                            count={m.count}
-                          />
-                        ))}
-                        {p.requires ? (
-                          <span className="text-xs text-muted-foreground">
-                            {t('research.requires', { defaultValue: 'Requires' })}:{' '}
-                            {research.text[p.requires]?.name ?? p.requires}
-                          </span>
-                        ) : null}
-                        {(techsByResearch.get(p.id) ?? []).map((tid) => (
-                          <Link
-                            key={tid}
-                            to="/technology"
-                            search={{ tech: tid }}
-                            className="rounded bg-sky-500/15 px-1.5 py-0.5 text-xs font-medium text-sky-600 hover:underline dark:text-sky-400"
-                          >
-                            {t('research.unlocksTech', { defaultValue: 'Unlocks' })}:{' '}
-                            {tech.text[tid]?.name ?? tid}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
+                </button>
+              )
+            })}
+          </div>
+          {current ? (
+            <div className="overflow-x-auto pb-4">
+              <div className="flex min-w-full justify-center">
+                <div className="w-max space-y-8">
+                  {current.roots.map((root) => (
+                    <TreeNode
+                      key={root.project.id}
+                      node={root}
+                      research={research}
+                      items={items}
+                      tech={tech}
+                      pals={pals}
+                      techsByResearch={techsByResearch}
+                    />
                   ))}
                 </div>
-              </section>
-            ))}
-          </div>
+              </div>
+            </div>
+          ) : null}
         </CatalogDataProvider>
       )}
     </ContentPage>

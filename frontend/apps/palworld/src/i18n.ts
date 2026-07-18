@@ -1,6 +1,7 @@
 import i18n from 'i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
+import { BASECAMP_STRINGS } from './basecampStrings'
 import { BLUEPRINT_STRINGS } from './blueprintStrings'
 import { MERCHANT_STRINGS } from './merchantStrings'
 import { BREEDING_STRINGS } from './breedingStrings'
@@ -8,7 +9,9 @@ import { CATALOG_STRINGS } from './catalogStrings'
 import { DUNGEON_STRINGS } from './dungeonStrings'
 import { PAL_STRINGS } from './palStrings'
 import { QUEST_STRINGS } from './questStrings'
+import { RAIDS_STRINGS } from './raidsStrings'
 import { RECYCLER_STRINGS } from './recyclerStrings'
+import { RESEARCH_STRINGS } from './researchStrings'
 
 export const LANGUAGES = ['en-US', 'de-DE', 'es-ES', 'es-MX', 'fr-FR', 'id-ID', 'it-IT', 'ja-JP', 'ko-KR', 'pl-PL', 'pt-BR', 'ru-RU', 'th-TH', 'tr-TR', 'vi-VN', 'zh-CN', 'zh-TW'] as const
 export type Language = (typeof LANGUAGES)[number]
@@ -900,6 +903,9 @@ for (const lng of LANGUAGES) {
       },
       dungeon: DUNGEON_STRINGS[lng] ?? DUNGEON_STRINGS['en-US'],
       recycler: RECYCLER_STRINGS[lng] ?? RECYCLER_STRINGS['en-US'],
+      research: RESEARCH_STRINGS[lng] ?? RESEARCH_STRINGS['en-US'],
+      raids: RAIDS_STRINGS[lng] ?? RAIDS_STRINGS['en-US'],
+      basecamp: BASECAMP_STRINGS[lng] ?? BASECAMP_STRINGS['en-US'],
       catalogLoading: CATALOG_STRINGS[lng].loading,
       catalogShowMore: SHOW_MORE_LABELS[lng],
       more: MORE_LABELS[lng],
