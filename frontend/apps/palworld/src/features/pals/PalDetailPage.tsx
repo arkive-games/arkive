@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Zap } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Moon, Zap } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
@@ -20,6 +20,7 @@ import { palIconUrl } from '../../lib/assets'
 import { formatPalId } from '../../lib/palId'
 import { loadItems, loadTech, type ItemsBundle, type TechBundle } from '../../lib/catalog'
 import { loadDungeons, dungeonsByPal, type DungeonsBundle } from '../../lib/dungeons'
+import { loadFishing, type FishingFile } from '../../lib/fishing'
 import { CatalogDataProvider, ItemLink, MaterialChip } from '../catalog/components'
 import { filterStrings } from './filterStrings'
 import {
@@ -261,7 +262,19 @@ export default function PalDetailPage() {
   // cross-links (reverse of DungeonDetailPage / TechDetails).
   const [dungeons, setDungeons] = useState<DungeonsBundle | null>(null)
   const [tech, setTech] = useState<TechBundle | null>(null)
+  // Fishing dataset, for the "caught by fishing" reverse — best-effort.
+  const [fishing, setFishing] = useState<FishingFile | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    loadFishing()
+      .then((f) => { if (!cancelled) setFishing(f) })
+      .catch((err) => console.error(err))
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -325,6 +338,29 @@ export default function PalDetailPage() {
 
     // Cross-links (reverse of DungeonDetailPage encounters / TechDetails requirePal).
     const palDungeons = dungeons ? [...(dungeonsByPal(dungeons.file).get(pal.id) ?? [])].sort() : []
+    // Fishing reverse: areas where this pal is a catchable fish, aggregated
+    // (level band widened, best draw share kept, night flag when every catch is).
+    const fishingAreas: { area: string; lvMin: number; lvMax: number; share: number; night: boolean }[] = []
+    if (fishing) {
+      const byArea = new Map<string, { lvMin: number; lvMax: number; share: number; night: boolean }>()
+      for (const s of fishing.spots) {
+        for (const f of s.fish) {
+          if (f.pal !== pal.id) continue
+          const a = s.area ?? 'other'
+          const cur = byArea.get(a)
+          if (cur) {
+            cur.lvMin = Math.min(cur.lvMin, f.lvMin)
+            cur.lvMax = Math.max(cur.lvMax, f.lvMax)
+            cur.share = Math.max(cur.share, f.sharePct)
+            cur.night = cur.night && !!f.night
+          } else {
+            byArea.set(a, { lvMin: f.lvMin, lvMax: f.lvMax, share: f.sharePct, night: !!f.night })
+          }
+        }
+      }
+      for (const [a, v] of byArea) fishingAreas.push({ area: a, ...v })
+      fishingAreas.sort((x, y) => y.share - x.share)
+    }
     const unlockedTechs = tech ? tech.techs.filter((tt) => tt.requirePal === pal.id) : []
     // Enemy-form scaling multipliers (alpha/boss), only when they diverge from 1.
     const enemyScaling = pal.enemyScaling
@@ -597,6 +633,26 @@ export default function PalDetailPage() {
                       className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:text-primary hover:underline"
                     >
                       {dungeons?.text[did]?.name ?? did}
+                    </Link>
+                  ))}
+                </div>
+              </PalSection>
+            ) : null}
+
+            {fishingAreas.length ? (
+              <PalSection title={t('pal.section.fishing', { defaultValue: 'Caught by Fishing' })}>
+                <div className="flex flex-wrap gap-1.5">
+                  {fishingAreas.map((f) => (
+                    <Link
+                      key={f.area}
+                      to="/fishing"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:text-primary hover:underline"
+                    >
+                      {items?.areaLabels[f.area] ?? t(`bp.area.${f.area}`, { defaultValue: f.area })}
+                      <span className="tabular-nums text-muted-foreground">
+                        Lv{f.lvMin === f.lvMax ? f.lvMin : `${f.lvMin}–${f.lvMax}`} · {f.share}%
+                      </span>
+                      {f.night ? <Moon className="size-3 text-indigo-400" /> : null}
                     </Link>
                   ))}
                 </div>

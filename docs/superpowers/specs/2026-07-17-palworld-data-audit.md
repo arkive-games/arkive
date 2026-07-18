@@ -127,6 +127,18 @@ pal **first-defeat reward** (109). Still pending: invaders page, Paldex clouds, 
 share %, dungeon name suffix. Verification: 85 tools + 94 frontend tests pass, `tsc -b` clean,
 /basecamp + /research live-checked.
 
+### Update 6 — fishing page + baits; breeding tie-break adopted (2026-07-19)
+
+**/fishing** page: bait table (DT_FishingBaitItem — attraction/hit-bar/miss-penalty/drop-bonus
+modifiers) + all 115 spot pools grouped by blueprint-sources region (per-spot classifier reuses
+item_sources._classify on the item pool), each fish row a linked pal with shadow size, draw
+share, level band, night gate and Rare/Alpha/King odds; BOSS_ shadow catches are normalized to
+the base roster id with an **Alpha** chip (822 entries). Pal pages gain a **"Caught by
+Fishing"** reverse section (area chips with level band + best share). This closes the last
+open audit item. Separately, the breeding engine now reads **CombiDuplicatePriority**
+(descending) for the step-3 tie-break — predictions unchanged (pool priority = rank × 100);
+the tie matrix stays as the in-game falsification checklist.
+
 ### Update 5 — plan items 7 + 8 (2026-07-19)
 
 **#7 Base raids — ✅** `invaders.py` → `invaders.json` (76 raids / 240 waves from
@@ -358,16 +370,16 @@ Pipeline: `dungeons.py`, `merchants.py`, `item_sources.py`, `quests.py` → `dun
    day/night toggle on the pal spawn map (Update 5).
 2. **DT_PalExpTable** (100) — ✅ `exp.json` (Update 1).
 3. **DT_StatusEffectFood** (54) — ✅ item `foodBuff` + Food Buff section (Updates 1/3).
-   **DT_FishingBaitItem** (9) — still pending (bait catch-rate modifiers; natural companion
-   to a future fishing page).
+   **DT_FishingBaitItem** (9) — ✅ emitted into `fishing.json` `baits` and shown on `/fishing`
+   (Update 6).
 4. **DT_MapObjectAssignData** + **DT_MapObjectFarmCrop** + **DT_MapObjectItemProduct** — ✅
    building `workReq`/`workers`/`crop`/`produces` + detail rows (Update 4).
 5. **DT_PalInvader** (240) + **DT_PalInvaderReward** (76) — ✅ `invaders.json` + `/raids`
    page (Update 5).
 6. **DT_BaseCampTask** + **DT_BaseCampLevelData** — ✅ `basecamp.json` + `/basecamp` page
    (Update 4).
-7. **DT_PalFishingSpotLotteryDataTable** (1252) — ✅ `fishing.json` (Update 2; dedicated
-   fishing page still a follow-up).
+7. **DT_PalFishingSpotLotteryDataTable** (1252) — ✅ `fishing.json` (Update 2) + the dedicated
+   `/fishing` page (Update 6).
 
 Secondary: `DT_FriendshipRankTable` (bond thresholds), `DT_CharacterUpgradeMasterDataTable`
 (condensing), `DT_WazaMasterTamago` (egg learnset), `DT_PalShopCreateData` (creature vendors),
@@ -609,8 +621,8 @@ emit shape, frontend surface, effort, and recommended order — in
 `docs/superpowers/specs/2026-07-19-palworld-deferred-systems-plan.md` (the per-level-drops
 fidelity fix from §10-E1 is its first item). Listed here so the classification is complete:
 
-**Status 2026-07-19: every F item below is implemented** (Updates 4–5 / plan doc) except the
-last row's leftovers.
+**Status 2026-07-19: every F item below is implemented** (Updates 4–6 / plan doc) — with the
+fishing page landed, **nothing in the audit remains open**.
 
 | columns / tables | the system it powers | status |
 |---|---|---|
@@ -623,4 +635,4 @@ last row's leftovers.
 | `DT_PalInvader(+Reward)` / BaseCamp tables / farming trio / `DT_PaldexDistributionData` | raids, base-camp, farming, spawn clouds | ✅ /raids, /basecamp, building rows, paldex clouds |
 | breeding `CombiDuplicatePriority` | rank-average tie-break | ✅ adopted 2026-07-19: emitted as `dup`, engine reads it DESCENDING (pool priority = rank x 100, so predictions are unchanged vs the verified higher-rank rule); 182-tie + 9-probe checklist: `2026-07-19-palworld-breeding-tie-matrix.md` |
 | dungeon enemy-share % / name suffix | investigated 2026-07-19 | **dead in export** (moved to §10-A): every (area, rank) bucket has one sheet; the postfix is a uniform dev placeholder |
-| still open | `DT_FishingBaitItem` + a dedicated fishing page | pending |
+| `DT_FishingBaitItem` + fishing page | bait minigame modifiers + the spot pools | ✅ done 2026-07-19: `/fishing` page (baits table + 115 spot pools grouped by region, alpha catches normalized to roster ids) + pal-page "Caught by Fishing" reverse |

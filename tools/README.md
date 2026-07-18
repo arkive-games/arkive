@@ -35,7 +35,7 @@ uv run python -m palworld.maps tiles      # map tiles → resource-palworld
 | `dungeons` | `dungeons.json` | `DT_Dungeon*`, `DT_CapturedCagePal` |
 | `recycler` | `recycler.json` | recycler Blueprint + lottery tables |
 | `quests` | `quests.json` | `DT_PalQuestData`, `DT_PalQuestLocationData` |
-| `fishing` | `fishing.json` | `DT_PalFishingSpotLotteryDataTable`, `DT_PalFishShadowDataTable` |
+| `fishing` | `fishing.json` | `DT_PalFishingSpotLotteryDataTable`, `DT_PalFishShadowDataTable`, `DT_FishingBaitItem` |
 | `basecamp` | `basecamp.json` | `DT_BaseCampLevelData`, `DT_BaseCampTask` |
 | `effigies` | `effigies.json` | `DT_PlayerStatusRankMasterDataTable` |
 | `research` | `research.json` | `DT_LabResearchDataTable`, `DT_LabResearchText` |
