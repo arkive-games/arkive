@@ -1,4 +1,43 @@
 
+## Palworld pipeline
+
+Transforms the raw Palworld UE export into the `data-palworld/` + `resource-palworld/`
+artifact repos. Paths come from `tools/.env` (no defaults — see `apps/palworld/env.py`):
+`PALWORLD_RAW` (export root `…/Content/Pal`), `PALWORLD_DATA_OUT`, `PALWORLD_RES_OUT`.
+
+Each stage is a standalone module run with `uv run python -m palworld.<stage>` from the
+`tools/` dir. Run order matters — `catalog` reads `pals.json` (drop inversion) and
+`dungeons.json`/`recycler.json` (source stamping), and `maps emit` reads a fresh
+`parsed.json` (regenerate it via `maps extract` first, or regions are dropped):
+
+```bash
+uv run python -m palworld.encyclopedia   # then catalog's deps below
+uv run python -m palworld.dungeons
+uv run python -m palworld.recycler
+uv run python -m palworld.catalog         # items/buildings/tech/merchants (+ item_sources)
+uv run python -m palworld.breeding
+uv run python -m palworld.quests
+uv run python -m palworld.fishing
+uv run python -m palworld.maps extract    # heavy: reads .umap actors → parsed.json
+uv run python -m palworld.maps emit       # parsed.json → markers/regions/spawns/areas
+uv run python -m palworld.maps tiles      # map tiles → resource-palworld
+```
+
+| Stage (module) | Emits (`data-palworld/`) | Primary raw tables |
+|---|---|---|
+| `encyclopedia` | `pals.json`, `passives.json`, `exp.json` | `DT_PalMonsterParameter`, `DT_Waza*`, `DT_PartnerSkill*`, `DT_PassiveSkill_Main`, `DT_PalDropItem`, `DT_PalExpTable` |
+| `catalog` (+ `merchants`, `item_sources`) | `items.json`, `buildings.json`, `technology.json`, `merchants.json` | `DT_ItemDataTable`, `DT_ItemRecipeDataTable`, `DT_BuildObjectDataTable`, `DT_TechnologyRecipeUnlock`, `DT_StatusEffectFood`, `DT_ItemShop*`, `DT_PalRaidBoss`, `DT_ArenaSoloRewardTable` |
+| `breeding` | `breeding.json` | `DT_PalCombiUnique`, `DT_PalMonsterParameter` |
+| `dungeons` | `dungeons.json` | `DT_Dungeon*`, `DT_CapturedCagePal` |
+| `recycler` | `recycler.json` | recycler Blueprint + lottery tables |
+| `quests` | `quests.json` | `DT_PalQuestData`, `DT_PalQuestLocationData` |
+| `fishing` | `fishing.json` | `DT_PalFishingSpotLotteryDataTable`, `DT_PalFishShadowDataTable` |
+| `maps` | `maps.json`, `markers/<map>.json`, `regions/<map>.json`, `spawns/<pal>.json`, `areas.json` | `DT_PalWildSpawner`, `DT_PalSpawnerPlacement`, `DT_WorldMapAreaData`, region-trigger `.umap` actors |
+
+All localized text is emitted per-language under `locales/<tag>/`. Field-level coverage —
+which raw columns reach the site vs. are dropped, and the candidates since added — is tracked
+in `docs/superpowers/specs/2026-07-17-palworld-data-audit.md`.
+
 ## Raw data input (added Phase 0)
 The tools transform the raw game export into the `data/` and `resource/` repos.
 Copy `.env.example` to `.env` and set `RAW_DATA_PATH` to the export root
