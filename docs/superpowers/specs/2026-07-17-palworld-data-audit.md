@@ -135,8 +135,9 @@ are weighted variant compositions — displayed as separate lines.
 
 **#8 Paldex habitat clouds — ✅** `DT_PaldexDistributionData` day/night point clouds emitted
 as an *additional* layer in `spawns/<pal>.json` (`paldexDay`/`paldexNight`, `[x, y]` pairs,
-stride-sampled to ≤800 per list — raw max was 10.6k), split per map; **344** pals carry
-clouds and **110** Paldex-only pals gained spawn files (283 → 393). `PalSpawnMap` gains a
+stride-sampled to ≤800 per list — raw max was 10.6k), split per map; **246** roster pals carry
+clouds and 5 Paldex-only subspecies gained spawn files (283 → 288 — BOSS_/RAID_ codename
+rows are skipped: their clouds are the fixed alpha locations already shown as boss markers). `PalSpawnMap` gains a
 "Paldex habitat: Day / Night" toggle rendering canvas CircleMarkers; spawner points (with
 level/pack/share detail) remain the primary layer. Regions/markers unchanged (123 / 8404).
 Caught in review: emit's spawn-file ordering pass rebuilt map dicts keeping only

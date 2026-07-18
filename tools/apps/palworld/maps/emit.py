@@ -480,6 +480,11 @@ def build_dataset(parsed: dict) -> dict:
     # day/night point clouds, split per map, as compact [x, y] pairs alongside the
     # spawner-derived points (which keep the level/pack/share detail).
     for pid, dn in (parsed.get("paldex") or {}).items():
+        # Skip boss/raid codename rows: their clouds are the fixed alpha
+        # locations the map already shows as boss markers, and the frontend
+        # only ever fetches spawn files by roster pal id.
+        if re.match(r"^(boss|raid|gym)_", pid, re.I):
+            continue
         if not is_real_pal(pid):
             continue
         for key, pts in (("paldexDay", dn.get("day") or []), ("paldexNight", dn.get("night") or [])):

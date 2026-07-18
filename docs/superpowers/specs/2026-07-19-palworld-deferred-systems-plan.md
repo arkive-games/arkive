@@ -83,7 +83,7 @@ No new route; makes plantation/production buildings actually informative.
 - **Frontend:** new `/raids` page (filter by biome/grade); pal cross-link ("attacks bases
   in X"); item reverse ("raid reward").
 
-## 8. Paldex distribution clouds (MED, effort M — needs a design decision) — ✅ DONE 2026-07-19 (additional layer, ≤800-pt stride sample per list, day/night toggle on PalSpawnMap; 344 pals carry clouds, +110 Paldex-only spawn files)
+## 8. Paldex distribution clouds (MED, effort M — needs a design decision) — ✅ DONE 2026-07-19 (additional layer, ≤800-pt stride sample per list, day/night toggle on PalSpawnMap; 246 roster pals carry clouds; BOSS_/RAID_ codename rows skipped)
 
 - **Data:** `DT_PaldexDistributionData` (365 — per-pal day/night spawn coordinate arrays).
 - **Decision needed:** overlaps the spawner-derived `spawns/<pal>.json`. Proposal: emit as
