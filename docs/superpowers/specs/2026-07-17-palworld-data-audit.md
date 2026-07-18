@@ -619,4 +619,4 @@ last row's leftovers.
 | raid `EggPalIDAndWeight`, `InfoList` level | summon-ritual boss stats + pool | ✅ summonLevel; pools proved single-pal (moveset not surfaced) |
 | merchant lottery `Weight` | wandering-caravan stock rarity | ✅ merchant `rollPct` |
 | `DT_PalInvader(+Reward)` / BaseCamp tables / farming trio / `DT_PaldexDistributionData` | raids, base-camp, farming, spawn clouds | ✅ /raids, /basecamp, building rows, paldex clouds |
-| still open | dungeon enemy-share % (`WeightInSpawnAreaAndRank`), dungeon name suffix (`PostfixTextId`), breeding `CombiDuplicatePriority` (needs in-game verification), `DT_FishingBaitItem` + a fishing page | pending |
+| still open | dungeon enemy-share % (`WeightInSpawnAreaAndRank`), dungeon name suffix (`PostfixTextId`), breeding `CombiDuplicatePriority` (within the eligible pool it equals `CombiRank x 100`, so it is order-equivalent to rank; the full 182-tie test checklist is `2026-07-19-palworld-breeding-tie-matrix.md`), `DT_FishingBaitItem` + a fishing page | pending |
