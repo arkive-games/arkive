@@ -21,6 +21,7 @@ uv run python -m palworld.fishing
 uv run python -m palworld.basecamp
 uv run python -m palworld.effigies
 uv run python -m palworld.research
+uv run python -m palworld.invaders
 uv run python -m palworld.maps extract    # heavy: reads .umap actors → parsed.json
 uv run python -m palworld.maps emit       # parsed.json → markers/regions/spawns/areas
 uv run python -m palworld.maps tiles      # map tiles → resource-palworld
@@ -38,6 +39,7 @@ uv run python -m palworld.maps tiles      # map tiles → resource-palworld
 | `basecamp` | `basecamp.json` | `DT_BaseCampLevelData`, `DT_BaseCampTask` |
 | `effigies` | `effigies.json` | `DT_PlayerStatusRankMasterDataTable` |
 | `research` | `research.json` | `DT_LabResearchDataTable`, `DT_LabResearchText` |
+| `invaders` | `invaders.json` | `DT_PalInvader`, `DT_PalInvaderReward` |
 | `maps` | `maps.json`, `markers/<map>.json`, `regions/<map>.json`, `spawns/<pal>.json`, `areas.json` | `DT_PalWildSpawner`, `DT_PalSpawnerPlacement`, `DT_WorldMapAreaData`, region-trigger `.umap` actors |
 
 All localized text is emitted per-language under `locales/<tag>/`. Field-level coverage —

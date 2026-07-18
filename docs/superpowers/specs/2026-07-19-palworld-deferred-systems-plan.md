@@ -74,7 +74,7 @@ No new route; makes plantation/production buildings actually informative.
   [{pal, weight}]`.
 - **Frontend:** the pal page summon section gains "Boss Lv N" + an egg-pool row.
 
-## 7. Base raids / invaders page (MED, effort M-L) — pending
+## 7. Base raids / invaders page (MED, effort M-L) — ✅ DONE 2026-07-19 (/raids; rows sharing a Wave number are weighted variant compositions)
 
 - **Data:** `DT_PalInvader` (240 — biome, grade range, up to 5 enemy groups with level
   ranges) + `DT_PalInvaderReward` (76 — per-group reward lotteries).
@@ -83,7 +83,7 @@ No new route; makes plantation/production buildings actually informative.
 - **Frontend:** new `/raids` page (filter by biome/grade); pal cross-link ("attacks bases
   in X"); item reverse ("raid reward").
 
-## 8. Paldex distribution clouds (MED, effort M — needs a design decision) — pending
+## 8. Paldex distribution clouds (MED, effort M — needs a design decision) — ✅ DONE 2026-07-19 (additional layer, ≤800-pt stride sample per list, day/night toggle on PalSpawnMap; 344 pals carry clouds, +110 Paldex-only spawn files)
 
 - **Data:** `DT_PaldexDistributionData` (365 — per-pal day/night spawn coordinate arrays).
 - **Decision needed:** overlaps the spawner-derived `spawns/<pal>.json`. Proposal: emit as

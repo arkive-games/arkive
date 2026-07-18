@@ -31,6 +31,7 @@ import QuestListPage from './features/quests/QuestListPage'
 import QuestDetailPage from './features/quests/QuestDetailPage'
 import BaseCampPage from './features/basecamp/BaseCampPage'
 import ResearchPage from './features/research/ResearchPage'
+import RaidsPage from './features/raids/RaidsPage'
 import RegionDetailPage from './features/regions/RegionDetailPage'
 import PassivesPage from './features/pals/PassivesPage'
 import ActiveSkillsPage from './features/pals/ActiveSkillsPage'
@@ -218,6 +219,11 @@ const researchRoute = createRoute({
   path: '/research',
   component: ResearchPage,
 })
+const raidsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/raids',
+  component: RaidsPage,
+})
 // Loot-region detail page ($id = a blueprint-sources area key, e.g. "Grass",
 // "Sakurajima", "Oilrig") — linked from item pages' chest/fishing/… chips.
 const regionDetailRoute = createRoute({
@@ -248,6 +254,7 @@ const routeTree = rootRoute.addChildren([
   questDetailRoute,
   basecampRoute,
   researchRoute,
+  raidsRoute,
   regionDetailRoute,
 ])
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })

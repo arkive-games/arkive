@@ -295,7 +295,13 @@ export interface SpawnPoint {
   /** Pack size range (formatted, e.g. `3` or `1–3`); present when >1 spawn together. */
   pack?: string
 }
-export interface PalSpawns { map: GameMapMeta; points: SpawnPoint[] }
+export interface PalSpawns {
+  map: GameMapMeta
+  points: SpawnPoint[]
+  /** Paldex habitat clouds (game's own day/night point clouds, [x, y] world
+   *  coords, sampled to ≤800 per list). Absent when the Paldex has none. */
+  paldex?: { day: [number, number][]; night: [number, number][] }
+}
 
 // spawns/<palId>.json (emitted by tools/…/emit.py): the pal's pre-cluster
 // placements plus fieldBoss/predator points, keyed by map id.
@@ -308,6 +314,8 @@ interface SpawnFile {
         numMin?: number; numMax?: number; weightPct?: number; radius?: number
       }[]
       bosses?: { x: number; y: number; z: number; kind: string; level?: number; nightOnly?: boolean }[]
+      paldexDay?: [number, number][]
+      paldexNight?: [number, number][]
     }
   >
 }
@@ -349,7 +357,11 @@ export async function loadPalSpawns(palId: string): Promise<PalSpawns[]> {
         night: b.nightOnly,
       })
     }
-    if (points.length > 0) out.push({ map, points })
+    const paldex =
+      m.paldexDay?.length || m.paldexNight?.length
+        ? { day: m.paldexDay ?? [], night: m.paldexNight ?? [] }
+        : undefined
+    if (points.length > 0 || paldex) out.push({ map, points, ...(paldex ? { paldex } : {}) })
   }
   return out
 }

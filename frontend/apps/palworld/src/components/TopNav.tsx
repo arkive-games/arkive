@@ -5,7 +5,7 @@ import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 
-export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research'
+export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids'
 
 /**
  * Unified top navigation shared by every page (map, Paldeck, breeding). The
@@ -48,6 +48,11 @@ export function TopNav({ active }: { active: NavKey }) {
           key: '/basecamp',
           label: t('basecamp.title', { defaultValue: 'Base Camp' }),
           active: active === '/basecamp',
+        },
+        {
+          key: '/raids',
+          label: t('raids.title', { defaultValue: 'Base Raids' }),
+          active: active === '/raids',
         },
       ],
     },

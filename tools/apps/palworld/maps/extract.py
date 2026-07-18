@@ -130,6 +130,36 @@ def relic_type_index(raw: Path) -> dict[str, int]:
     return out
 
 
+# Paldex habitat clouds: cap each day/night point list by uniform stride
+# sampling — the biggest cloud is ~10k points (MimicDog) and a map overlay
+# needs density, not every point (deferred-systems plan §8 size gate).
+_PALDEX_CAP = 800
+
+
+def _paldex_distribution(raw: Path) -> dict[str, dict]:
+    """{palId: {day: [{X,Y}…], night: […]}} from DT_PaldexDistributionData —
+    the game's own per-species habitat point clouds (day/night). Missing table
+    (minimal fixtures) ⇒ {}."""
+    path = raw / "DataTable/UI/DT_PaldexDistributionData.json"
+    if not path.exists():
+        return {}
+
+    def sample(locs: list) -> list:
+        pts = [{"X": p["X"], "Y": p["Y"]} for p in locs]
+        if len(pts) <= _PALDEX_CAP:
+            return pts
+        stride = len(pts) / _PALDEX_CAP
+        return [pts[int(i * stride)] for i in range(_PALDEX_CAP)]
+
+    out: dict[str, dict] = {}
+    for pid, r in read_rows(path).items():
+        day = sample((r.get("dayTimeLocations") or {}).get("Locations") or [])
+        night = sample((r.get("nightTimeLocations") or {}).get("Locations") or [])
+        if day or night:
+            out[pid] = {"day": day, "night": night}
+    return out
+
+
 def _relic_type_of(raw: Path, pal: str) -> str | None:
     """Read the `EPalRelicType` a per-pal effigy grants, from its level-object BP."""
     p = raw / "Blueprint/MapObject/Object/LevelObject" / f"BP_LevelObject_Relic_{pal}.json"
@@ -1355,6 +1385,7 @@ def run_extract(raw: Path) -> dict:
         "effigyDescriptions": effigy_descs, "npcs": npcs,
         "newTypeCandidates": new_type_candidates,
         "regionVolumes": _extract_region_volumes(raw), "regionNames": _region_names(raw),
+        "paldex": _paldex_distribution(raw),
     }
 
 

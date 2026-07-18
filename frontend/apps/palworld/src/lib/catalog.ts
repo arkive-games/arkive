@@ -441,6 +441,43 @@ export function loadResearch(lng: string): Promise<ResearchBundle> {
   return p
 }
 
+// --- base raids / invaders ------------------------------------------------------
+/** One enemy slot of a raid wave: a roster pal id or a human-NPC codename. */
+export interface RaidEnemy {
+  char: string
+  /** Companion pal the NPC fights with. */
+  otomo?: string
+  lvMin: number
+  lvMax: number
+  count: number
+}
+export interface RaidWave {
+  wave: number
+  exp?: number
+  enemies: RaidEnemy[]
+}
+export interface RaidEntry {
+  id: string
+  /** EPalBiomeType name (Meadow, Forest, …) — app-side label. */
+  biome: string
+  gradeMin: number
+  gradeMax: number
+  weight: number
+  /** Only triggers while this building is placed (e.g. Factory_Money). */
+  condition?: string
+  waves: RaidWave[]
+  rewards: { item: string; rate: number; min: number; max: number }[]
+}
+export interface InvadersFile { raids: RaidEntry[] }
+
+let invadersCache: Promise<InvadersFile> | null = null
+
+/** Load (and cache) the base-raid dataset (language-independent). */
+export function loadInvaders(): Promise<InvadersFile> {
+  if (!invadersCache) invadersCache = j<InvadersFile>(dataUrl(`invaders.json`))
+  return invadersCache
+}
+
 // --- building icon -----------------------------------------------------------
 /** Building icon (e.g. `build_Workbench`). Item icons live under the game's
  *  /Game/Others/InventoryItemIcon tree, which isn't in the current raw export. */

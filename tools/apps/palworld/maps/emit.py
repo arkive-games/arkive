@@ -476,6 +476,22 @@ def build_dataset(parsed: dict) -> dict:
                 if s.get("radius"):
                     point["radius"] = s["radius"]
                 _spawn_entry(p["id"], mid, "points").append(point)
+    # Paldex habitat clouds (deferred-systems plan §8): the game's own per-species
+    # day/night point clouds, split per map, as compact [x, y] pairs alongside the
+    # spawner-derived points (which keep the level/pack/share detail).
+    for pid, dn in (parsed.get("paldex") or {}).items():
+        if not is_real_pal(pid):
+            continue
+        for key, pts in (("paldexDay", dn.get("day") or []), ("paldexNight", dn.get("night") or [])):
+            per_map: dict[str, list] = {}
+            for p in pts:
+                mid = assign_map(p, assign_order)
+                if mid:
+                    per_map.setdefault(mid, []).append([js_round(p["X"]), js_round(p["Y"])])
+            for mid, arr in per_map.items():
+                maps_ = spawn_files.setdefault(pid, {"maps": {}})["maps"]
+                maps_.setdefault(mid, {})[key] = arr
+
     for mid in map_ids:
         for pal_id, points in by_map_pal[mid].items():
             for c in cluster_points(points, radius):
@@ -648,6 +664,9 @@ def build_dataset(parsed: dict) -> dict:
                 )
             if "bosses" in by_map[mid]:
                 mp["bosses"] = sorted(by_map[mid]["bosses"], key=lambda b: (b["kind"], b["x"], b["y"]))
+            for cloud_key in ("paldexDay", "paldexNight"):
+                if cloud_key in by_map[mid]:
+                    mp[cloud_key] = by_map[mid][cloud_key]
             ordered[mid] = mp
         spawns[pid] = {"maps": ordered}
 

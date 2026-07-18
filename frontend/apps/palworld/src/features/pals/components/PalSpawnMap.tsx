@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
-import { MapContainer, Marker, Tooltip } from 'react-leaflet'
+import { CircleMarker, MapContainer, Marker, Tooltip } from 'react-leaflet'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Moon } from 'lucide-react'
@@ -166,6 +166,8 @@ export function PalSpawnMap({
   // Coarsest tier by default — matches the initial fit-to-bounds zoom; the
   // watcher corrects it on mount if a map opens more zoomed in.
   const [tier, setTier] = useState(0)
+  // Paldex habitat cloud overlay: off / day / night (game's own point clouds).
+  const [cloud, setCloud] = useState<'off' | 'day' | 'night'>('off')
 
   useEffect(() => {
     let cancelled = false
@@ -259,6 +261,32 @@ export function PalSpawnMap({
         </div>
       ) : null}
 
+      {current.paldex ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">
+            {t('pal.habitatLabel', { defaultValue: 'Paldex habitat' })}:
+          </span>
+          {(['day', 'night'] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setCloud(cloud === k ? 'off' : k)}
+              data-testid={`habitat-${k}`}
+              className={cn(
+                'rounded px-2 py-0.5 text-xs font-medium',
+                cloud === k
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground hover:bg-accent',
+              )}
+            >
+              {k === 'day'
+                ? t('pal.habitatDay', { defaultValue: 'Day' })
+                : t('pal.habitatNight', { defaultValue: 'Night' })}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div
         className={cn(
           'relative isolate overflow-hidden rounded-lg border border-border',
@@ -284,6 +312,21 @@ export function PalSpawnMap({
         >
           <GameMapTiles selectedMap={map} assets={palworldAssets} />
           <ZoomTierWatcher onTier={setTier} />
+          {cloud !== 'off' && current.paldex
+            ? (current.paldex[cloud] ?? []).map(([x, y], i) => (
+                <CircleMarker
+                  key={`${cloud}-${i}`}
+                  center={dataToLatLng(map, x, y)}
+                  radius={3}
+                  pathOptions={{
+                    color: cloud === 'day' ? '#f59e0b' : '#6366f1',
+                    weight: 1,
+                    fillColor: cloud === 'day' ? '#f59e0b' : '#6366f1',
+                    fillOpacity: 0.45,
+                  }}
+                />
+              ))
+            : null}
           {markers.map((m, i) => (
             <Marker key={i} position={m.pos} icon={iconFor(m)}>
               {m.level || m.pack ? (

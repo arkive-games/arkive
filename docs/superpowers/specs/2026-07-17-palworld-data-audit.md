@@ -125,6 +125,23 @@ pal **first-defeat reward** (109). Still pending: invaders page, Paldex clouds, 
 share %, dungeon name suffix. Verification: 85 tools + 94 frontend tests pass, `tsc -b` clean,
 /basecamp + /research live-checked.
 
+### Update 5 — plan items 7 + 8 (2026-07-19)
+
+**#7 Base raids — ✅** `invaders.py` → `invaders.json` (76 raids / 240 waves from
+`DT_PalInvader(+Reward)`) + a **/raids** page: biome filter, grade band, wave composition
+(roster pals linked, human NPCs as labels, Otomo companions, level bands, head counts),
+clear rewards, and the `Factory_Money`-conditioned police raid. Rows sharing a Wave number
+are weighted variant compositions — displayed as separate lines.
+
+**#8 Paldex habitat clouds — ✅** `DT_PaldexDistributionData` day/night point clouds emitted
+as an *additional* layer in `spawns/<pal>.json` (`paldexDay`/`paldexNight`, `[x, y]` pairs,
+stride-sampled to ≤800 per list — raw max was 10.6k), split per map; **344** pals carry
+clouds and **110** Paldex-only pals gained spawn files (283 → 393). `PalSpawnMap` gains a
+"Paldex habitat: Day / Night" toggle rendering canvas CircleMarkers; spawner points (with
+level/pack/share detail) remain the primary layer. Regions/markers unchanged (123 / 8404).
+Caught in review: emit's spawn-file ordering pass rebuilt map dicts keeping only
+`points`/`bosses` — the cloud keys are now carried through.
+
 ## What this is
 
 A full audit of the Palworld data pipeline: which raw game **DataTables** feed the
