@@ -1054,38 +1054,81 @@ def run_extract(raw: Path) -> dict:
     # ``OnlyTime`` is the spawn system's only time restriction: ``Night`` rows
     # spawn only at night, ``Undefined`` rows any time (no Day-only rows exist).
     # A pal is night-only at a spawner iff every row listing it there is Night.
+    # Per-spawner aggregation. A SpawnerName spans many rows; each row carries a
+    # ``Weight`` (row-level spawn probability) and up to 3 pal slots with a level
+    # band + pack-size range (``NumMin_n``/``NumMax_n``). We aggregate per pal:
+    # widen the level + pack bands, sum the row weights the pal appears in
+    # (``_w``), and track the spawner's total row weight (``wild_total``) so a
+    # per-pal spawn share can be derived. ``OnlyTime`` Night ⇒ night-only (unless
+    # any listing row is any-time).
     wild_by_name: dict[str, dict[str, dict]] = {}
+    wild_total: dict[str, float] = {}
     for r in wild_rows.values():
         name = r["SpawnerName"]
+        weight = r.get("Weight", 0) or 0
+        wild_total[name] = wild_total.get(name, 0) + weight
         is_night = r.get("OnlyTime") == "EPalOneDayTimeType::Night"
+        counted: set[str] = set()  # weight counts once per row per pal
         for n in (1, 2, 3):
             pid = r.get(f"Pal_{n}")
             if not pid or pid == "None":
                 continue
             slot = wild_by_name.setdefault(name, {})
             lv_min, lv_max = r[f"LvMin_{n}"], r[f"LvMax_{n}"]
+            num_min = r.get(f"NumMin_{n}", 1) or 1
+            num_max = r.get(f"NumMax_{n}", 1) or 1
             cur = slot.get(pid)
             if cur:
                 cur["lvMin"] = min(cur["lvMin"], lv_min)
                 cur["lvMax"] = max(cur["lvMax"], lv_max)
+                cur["numMin"] = min(cur["numMin"], num_min)
+                cur["numMax"] = max(cur["numMax"], num_max)
+                if pid not in counted:
+                    cur["_w"] += weight
                 if not is_night:
                     cur.pop("nightOnly", None)
             else:
-                slot[pid] = {"id": pid, "lvMin": lv_min, "lvMax": lv_max}
+                slot[pid] = {
+                    "id": pid, "lvMin": lv_min, "lvMax": lv_max,
+                    "numMin": num_min, "numMax": num_max, "_w": weight,
+                }
                 if is_night:
                     slot[pid]["nightOnly"] = True
+            counted.add(pid)
+
+    def _pal_spawn_list(name: str) -> list[dict]:
+        """Emit-ready per-pal entries for a spawner: level band, pack size (when
+        >1) and spawn share % (``weightPct``, omitted at a trivial 100%)."""
+        total = wild_total.get(name, 0) or 1
+        out = []
+        for p in wild_by_name[name].values():
+            e = {"id": p["id"], "lvMin": p["lvMin"], "lvMax": p["lvMax"]}
+            if p.get("nightOnly"):
+                e["nightOnly"] = True
+            if p["numMax"] > 1 or p["numMin"] > 1:
+                e["numMin"], e["numMax"] = p["numMin"], p["numMax"]
+            share = round(p["_w"] / total * 100)
+            if 0 < share < 100:
+                e["weightPct"] = share
+            out.append(e)
+        return out
+
     place_rows = read_rows(raw / "DataTable/Spawner/DT_PalSpawnerPlacement.json")
     pal_spawns = []
     for r in place_rows.values():
         if r.get("SpawnerType") != "EPalSpawnedCharacterType::Common":
             continue
-        pals = wild_by_name.get(r["SpawnerName"])
-        if not pals:
+        name = r["SpawnerName"]
+        if not wild_by_name.get(name):
             continue
-        pal_spawns.append({
-            "spawnerName": r["SpawnerName"], "pals": list(pals.values()),
+        entry = {
+            "spawnerName": name, "pals": _pal_spawn_list(name),
             "location": {"X": r["Location"]["X"], "Y": r["Location"]["Y"], "Z": r["Location"].get("Z", 0)},
-        })
+        }
+        radius = r.get("StaticRadius", 0) or 0
+        if radius:
+            entry["radius"] = radius
+        pal_spawns.append(entry)
 
     # Paldeck order metadata.
     mon_param = read_rows(raw / "DataTable/Character/DT_PalMonsterParameter.json")

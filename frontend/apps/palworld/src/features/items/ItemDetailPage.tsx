@@ -7,9 +7,11 @@ import {
   loadItems,
   loadBuildings,
   loadTech,
+  loadQuests,
   type ItemsBundle,
   type BuildingsBundle,
   type TechBundle,
+  type QuestsBundle,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
@@ -67,6 +69,9 @@ export default function ItemDetailPage() {
   const [recycler, setRecycler] = useState<RecyclerFile | null>(null)
   // Merchant catalog, so the merchant source chips can name + link merchants.
   const [merchants, setMerchants] = useState<MerchantsBundle | null>(null)
+  // Quests, for the "reward from quest" reverse link (inverse of QuestDetailPage
+  // reward items). Best-effort like the others.
+  const [quests, setQuests] = useState<QuestsBundle | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -95,10 +100,19 @@ export default function ItemDetailPage() {
     loadMerchants()
       .then((m) => { if (!cancelled) setMerchants(m) })
       .catch((err) => console.error(err))
+    loadQuests(lng)
+      .then((q) => { if (!cancelled) setQuests(q) })
+      .catch((err) => console.error(err))
     return () => {
       cancelled = true
     }
   }, [lng])
+
+  // Quests that reward this item (reverse of QuestDetailPage reward list).
+  const rewardingQuests = useMemo(() => {
+    if (!quests) return []
+    return quests.quests.filter((q) => q.rewardItems?.some((r) => r.item === id))
+  }, [quests, id])
 
   // Dungeons whose chest / boss-reward lotteries can drop the current item.
   const itemDungeons = useMemo(() => {
@@ -140,7 +154,8 @@ export default function ItemDetailPage() {
         itemDungeons.length ||
         item.sources?.length ||
         item.noSource ||
-        recyclerYields
+        recyclerYields ||
+        rewardingQuests.length
 
       body = (
         <div className="space-y-6">
@@ -189,6 +204,18 @@ export default function ItemDetailPage() {
                     <div>
                       {t('item.work')}: <span className="text-foreground tabular-nums">{item.recipe.work}</span>
                     </div>
+                    {item.recipe.productCount && item.recipe.productCount > 1 ? (
+                      <div>
+                        {t('item.yields')}:{' '}
+                        <span className="text-foreground tabular-nums">×{item.recipe.productCount}</span>
+                      </div>
+                    ) : null}
+                    {item.recipe.craftExp ? (
+                      <div>
+                        {t('item.craftExp', { defaultValue: 'Craft EXP' })}:{' '}
+                        <span className="text-foreground tabular-nums">{item.recipe.craftExp}</span>
+                      </div>
+                    ) : null}
                     {item.recipe.unlockItemId ? (
                       <div>
                         {t('item.unlockItem')}:{' '}
@@ -208,6 +235,59 @@ export default function ItemDetailPage() {
               ) : null}
 
               <UnlocksCraftSection item={item} items={b.items} />
+
+              {/* Skill card: the active skill this item teaches a pal (links to
+                  the active-skill detail page; name from the game skill locale). */}
+              {item.grantsSkill ? (
+                <CatalogSection title={t('item.section.teaches')}>
+                  <Link
+                    to="/active-skills/$id"
+                    params={{ id: item.grantsSkill }}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
+                  >
+                    {b.pals.skills[item.grantsSkill]?.name ?? item.grantsSkill}
+                  </Link>
+                </CatalogSection>
+              ) : null}
+
+              {/* Armor / accessory: passive skills granted when equipped. Passives
+                  have no detail page, so these are name facts (game passive locale). */}
+              {item.itemPassives?.length ? (
+                <CatalogSection title={t('item.section.grantsPassives')}>
+                  <div className="flex flex-wrap gap-1.5">
+                    {item.itemPassives.map((pid) => (
+                      <span
+                        key={pid}
+                        className="inline-flex items-center rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm"
+                      >
+                        {b.pals.passiveText[pid]?.name ?? pid}
+                      </span>
+                    ))}
+                  </div>
+                </CatalogSection>
+              ) : null}
+
+              {/* Cooked-dish buff: timed effect(s) granted when eaten. */}
+              {item.foodBuff ? (
+                <CatalogSection title={t('item.section.foodBuff', { defaultValue: 'Food Buff' })}>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {item.foodBuff.effects.map((e) => (
+                      <span
+                        key={e.type}
+                        className="inline-flex items-center gap-1 rounded-md border border-border bg-emerald-500/10 px-2 py-1 text-sm font-medium text-emerald-600 dark:text-emerald-400"
+                      >
+                        {t(`item.foodEffect.${e.type}`, { defaultValue: e.type })}
+                        <span className="tabular-nums">+{e.value}</span>
+                      </span>
+                    ))}
+                    {item.foodBuff.time ? (
+                      <span className="text-xs text-muted-foreground">
+                        {t('item.duration', { defaultValue: 'Duration' })}: {item.foodBuff.time}s
+                      </span>
+                    ) : null}
+                  </div>
+                </CatalogSection>
+              ) : null}
 
               {hasObtain ? (
                 <CatalogSection title={t('item.section.obtain')}>
@@ -260,6 +340,25 @@ export default function ItemDetailPage() {
                               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
                             >
                               {dungeons?.text[d.id]?.name ?? d.id}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {rewardingQuests.length ? (
+                      <div>
+                        <div className="mb-1.5 text-xs text-muted-foreground">
+                          {t('item.rewardFromQuest', { defaultValue: 'Quest reward' })}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {rewardingQuests.map((q) => (
+                            <Link
+                              key={q.id}
+                              to="/quests/$id"
+                              params={{ id: q.id }}
+                              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
+                            >
+                              {quests?.text[q.id]?.title ?? q.id}
                             </Link>
                           ))}
                         </div>
@@ -332,6 +431,24 @@ export default function ItemDetailPage() {
                   {equipRows.map((k) => (
                     <StatRow key={k} label={t(`item.equip.${k}`)} value={equip![k]} />
                   ))}
+                  {item.corruption ? (
+                    <StatRow
+                      label={t('item.corruption', { defaultValue: 'Sanity drain' })}
+                      value={item.corruption}
+                    />
+                  ) : null}
+                  {item.pvpBanned ? (
+                    <StatRow
+                      label={t('item.pvp', { defaultValue: 'PvP' })}
+                      value={t('item.pvpBanned', { defaultValue: 'Restricted' })}
+                    />
+                  ) : null}
+                  {item.notConsumed ? (
+                    <StatRow
+                      label={t('item.consumable', { defaultValue: 'On use' })}
+                      value={t('item.notConsumed', { defaultValue: 'Not consumed' })}
+                    />
+                  ) : null}
                 </InfoRows>
               </CatalogSection>
             </div>

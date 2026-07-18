@@ -279,6 +279,10 @@ def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set
                 entry = {"kind": "arena", "rank": rank}
                 if repeat:
                     entry["repeat"] = True
+                # reward quantity range (e.g. 20× Giga Spheres at Bronze).
+                mn, mx = e.get("Min", 1) or 1, e.get("Max", 1) or 1
+                if mn > 1 or mx > 1:
+                    entry["min"], entry["max"] = mn, mx
                 sources[iid].append(entry)
 
     # Sections append in code order, not KIND_ORDER (shrine before raid, etc.);

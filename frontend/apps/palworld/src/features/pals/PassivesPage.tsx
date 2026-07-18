@@ -90,6 +90,7 @@ export default function PassivesPage() {
         search: stripPassiveTags(description).toLowerCase(),
         rank: bundle.passivesById.get(id)?.rank ?? 0,
         mutation: bundle.passivesById.get(id)?.mutation ?? false,
+        invoke: bundle.passivesById.get(id)?.invoke ?? [],
         categories: passiveCategories(id, bundle),
         pals: palsByPassive.get(id) ?? [],
       }
@@ -252,7 +253,7 @@ export default function PassivesPage() {
                   <PassiveText text={r.description} />
                 </p>
               ) : null}
-              {r.pals.length || r.categories.length || r.mutation ? (
+              {r.pals.length || r.categories.length || r.mutation || r.invoke.length ? (
                 <div className="mt-auto space-y-2 pt-2">
                   {r.pals.length ? (
                     <div className="flex flex-wrap items-center gap-1">
@@ -300,6 +301,28 @@ export default function PassivesPage() {
                           className="rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
                         >
                           {t(`passive.category.${c}`)}
+                        </span>
+                      ))}
+                      {r.invoke.map((scope) => (
+                        <span
+                          key={scope}
+                          title={t('passive.invokeTip', {
+                            defaultValue: 'When this passive is active',
+                          })}
+                          className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 ring-1 ring-inset ring-amber-500/30 dark:text-amber-300"
+                        >
+                          {t(`passive.invoke.${scope}`, { defaultValue: scope })}
+                        </span>
+                      ))}
+                    </div>
+                  ) : r.invoke.length ? (
+                    <div className="flex flex-wrap gap-1">
+                      {r.invoke.map((scope) => (
+                        <span
+                          key={scope}
+                          className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 ring-1 ring-inset ring-amber-500/30 dark:text-amber-300"
+                        >
+                          {t(`passive.invoke.${scope}`, { defaultValue: scope })}
                         </span>
                       ))}
                     </div>

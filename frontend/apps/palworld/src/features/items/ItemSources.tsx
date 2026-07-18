@@ -185,10 +185,26 @@ function SourceChip({
       )
     case 'raid': {
       const pid = s.pal!
+      // Reward quantity range (emitted only when >1); collapse min==max to "×N".
+      const qty =
+        s.min != null && s.max != null && (s.min > 1 || s.max > 1)
+          ? s.min === s.max
+            ? `×${s.max}`
+            : `×${s.min}–${s.max}`
+          : null
       return (
         <span className="inline-flex items-center gap-1.5">
           <PalLink id={pid} name={pals.text[pid]?.name ?? pid} icon={pals.byId.get(pid)?.icon} />
-          {s.chance != null ? <ChanceBadge pct={s.chance} /> : null}
+          {qty ? (
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{qty}</span>
+          ) : null}
+          {s.anyOne ? (
+            <span className="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              {t('bp.guaranteed')}
+            </span>
+          ) : s.chance != null ? (
+            <ChanceBadge pct={s.chance} />
+          ) : null}
         </span>
       )
     }
@@ -233,15 +249,25 @@ function SourceChip({
         </span>
       )
     }
-    case 'arena':
+    case 'arena': {
+      const qty =
+        s.min != null && s.max != null && (s.min > 1 || s.max > 1)
+          ? s.min === s.max
+            ? `×${s.max}`
+            : `×${s.min}–${s.max}`
+          : null
       return (
         <span className={FACT_CHIP}>
           {t(`bp.arenaRank.${s.rank}`, String(s.rank))}
+          {qty ? (
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{qty}</span>
+          ) : null}
           <span className="shrink-0 text-xs text-muted-foreground">
             {s.repeat ? t('bp.repeatClear') : t('bp.firstClear')}
           </span>
         </span>
       )
+    }
     default:
       // chest / fishing / supply / camp / oilrig — an area fact with tier +
       // odds, linking to the region page when the loot index knows the area.

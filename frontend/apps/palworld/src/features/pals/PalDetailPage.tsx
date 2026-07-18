@@ -18,7 +18,8 @@ import { simulateCondense } from '../../lib/condenser'
 import { RecipeCard, buildRecipeMeta } from '../breeding/RecipeCard'
 import { palIconUrl } from '../../lib/assets'
 import { formatPalId } from '../../lib/palId'
-import { loadItems, type ItemsBundle } from '../../lib/catalog'
+import { loadItems, loadTech, type ItemsBundle, type TechBundle } from '../../lib/catalog'
+import { loadDungeons, dungeonsByPal, type DungeonsBundle } from '../../lib/dungeons'
 import { CatalogDataProvider, ItemLink, MaterialChip } from '../catalog/components'
 import { filterStrings } from './filterStrings'
 import {
@@ -41,17 +42,19 @@ const STAT_KEYS = [
   'meleeAttack',
   'shotAttack',
   'defense',
+  'support',
   'craftSpeed',
   'stamina',
   'foodAmount',
+  'maxFullStomach',
   'captureRate',
   'price',
 ] as const
 
-// The Base Stats card shows the first 7 (combat) stats through Food; the
+// The Base Stats card shows the first 8 (combat) stats through Food; the
 // remaining stats move to a "Details" card placed below Work Suitability.
-const PRIMARY_STAT_KEYS = STAT_KEYS.slice(0, 7)
-const SECONDARY_STAT_KEYS = STAT_KEYS.slice(7)
+const PRIMARY_STAT_KEYS = STAT_KEYS.slice(0, 8)
+const SECONDARY_STAT_KEYS = STAT_KEYS.slice(8)
 
 // Movement speeds (raw world units). A `-1` value is the game's "no such speed"
 // sentinel and renders as an em-dash.
@@ -254,17 +257,23 @@ export default function PalDetailPage() {
   const [breeding, setBreeding] = useState<{ data: BreedingData; names: NameMap } | null>(null)
   // Items catalog: powers the hover cards of item chips (e.g. the egg badge).
   const [items, setItems] = useState<ItemsBundle | null>(null)
+  // Dungeons + tech: back the "found in dungeons" and "capturing unlocks tech"
+  // cross-links (reverse of DungeonDetailPage / TechDetails).
+  const [dungeons, setDungeons] = useState<DungeonsBundle | null>(null)
+  const [tech, setTech] = useState<TechBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    Promise.all([loadPals(lng), loadBreeding(lng), loadItems(lng)])
-      .then(([b, br, it]) => {
+    Promise.all([loadPals(lng), loadBreeding(lng), loadItems(lng), loadDungeons(lng), loadTech(lng)])
+      .then(([b, br, it, dg, tc]) => {
         if (cancelled) return
         setBundle(b)
         setBreeding(br)
         setItems(it)
+        setDungeons(dg)
+        setTech(tc)
       })
       .catch((err) => {
         console.error(err)
@@ -313,6 +322,21 @@ export default function PalDetailPage() {
       : breedable
         ? t('pal.breedingOnly')
         : t('pal.noSpawns')
+
+    // Cross-links (reverse of DungeonDetailPage encounters / TechDetails requirePal).
+    const palDungeons = dungeons ? [...(dungeonsByPal(dungeons.file).get(pal.id) ?? [])].sort() : []
+    const unlockedTechs = tech ? tech.techs.filter((tt) => tt.requirePal === pal.id) : []
+    // Enemy-form scaling multipliers (alpha/boss), only when they diverge from 1.
+    const enemyScaling = pal.enemyScaling
+      ? (
+          [
+            ['maxHp', 'HP'],
+            ['receiveDamage', 'Dmg taken'],
+            ['inflictDamage', 'Dmg dealt'],
+            ['wazaCoolTime', 'Cooldown'],
+          ] as const
+        ).filter(([k]) => pal.enemyScaling![k] != null)
+      : []
 
     body = (
       <div className="space-y-6">
@@ -535,6 +559,44 @@ export default function PalDetailPage() {
                 </div>
               ) : null}
             </PalSection>
+
+            {palDungeons.length ? (
+              <PalSection title={t('pal.section.dungeons', { defaultValue: 'Found in Dungeons' })}>
+                <div className="flex flex-wrap gap-1.5">
+                  {palDungeons.map((did) => (
+                    <Link
+                      key={did}
+                      to="/dungeons/$id"
+                      params={{ id: did }}
+                      className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:text-primary hover:underline"
+                    >
+                      {dungeons?.text[did]?.name ?? did}
+                    </Link>
+                  ))}
+                </div>
+              </PalSection>
+            ) : null}
+
+            {unlockedTechs.length ? (
+              <PalSection title={t('pal.section.unlocksTech', { defaultValue: 'Unlocks Technology' })}>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  {t('pal.unlocksTechNote', { defaultValue: 'Capturing this Pal unlocks:' })}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {unlockedTechs.map((tt) => (
+                    <Link
+                      key={tt.id}
+                      to="/technology"
+                      search={{ tech: tt.id }}
+                      className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:text-primary hover:underline"
+                    >
+                      {tech?.text[tt.id]?.name ?? tt.id}
+                      <span className="text-muted-foreground">Lv{tt.level}</span>
+                    </Link>
+                  ))}
+                </div>
+              </PalSection>
+            ) : null}
           </div>
 
           {/* Sidebar */}
@@ -575,6 +637,18 @@ export default function PalDetailPage() {
                 ))}
                 <StatRow label={t('pal.stat.size')} value={pal.size || '—'} />
                 <StatRow label={t('pal.stat.rarity')} value={pal.rarity} />
+                {pal.predator ? (
+                  <StatRow
+                    label={t('pal.stat.predator', { defaultValue: 'Predator' })}
+                    value={t('common.yes', { defaultValue: 'Yes' })}
+                  />
+                ) : null}
+                {pal.stats.expRatio ? (
+                  <StatRow
+                    label={t('pal.stat.expRatio', { defaultValue: 'EXP yield' })}
+                    value={pal.stats.expRatio}
+                  />
+                ) : null}
                 <StatRow
                   label={t('pal.stat.egg')}
                   value={
@@ -602,6 +676,36 @@ export default function PalDetailPage() {
                 ))}
               </InfoRows>
             </PalSection>
+
+            {pal.friendship && Object.keys(pal.friendship).length ? (
+              <PalSection title={t('pal.section.friendship', { defaultValue: 'Condense Growth' })}>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  {t('pal.friendshipNote', { defaultValue: 'Stat gain per soul-condense level.' })}
+                </p>
+                <InfoRows>
+                  {(['hp', 'shotAttack', 'defense', 'craftSpeed'] as const)
+                    .filter((k) => pal.friendship![k] != null)
+                    .map((k) => (
+                      <StatRow key={k} label={t(`pal.stat.${k}`)} value={`+${pal.friendship![k]}`} />
+                    ))}
+                </InfoRows>
+              </PalSection>
+            ) : null}
+
+            {enemyScaling.length ? (
+              <PalSection title={t('pal.section.enemyScaling', { defaultValue: 'Enemy Scaling' })}>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  {t('pal.enemyScalingNote', {
+                    defaultValue: 'Multipliers applied to the wild alpha / boss form.',
+                  })}
+                </p>
+                <InfoRows>
+                  {enemyScaling.map(([k, label]) => (
+                    <StatRow key={k} label={label} value={`×${pal.enemyScaling![k]}`} />
+                  ))}
+                </InfoRows>
+              </PalSection>
+            ) : null}
 
             {pal.drops.length ? (
               <PalSection title={t('pal.section.drops')}>

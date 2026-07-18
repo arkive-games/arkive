@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from ..blueprint_sources import _classify
+from ..item_sources import _classify
 from .bounds import assign_map
 from .cluster import cluster_points
 from .common import js_round, round2, write_json
@@ -469,6 +469,12 @@ def build_dataset(parsed: dict) -> dict:
                 point = {**_spawn_xyz(s["location"]), "lvMin": p["lvMin"], "lvMax": p["lvMax"]}
                 if p.get("nightOnly"):
                     point["nightOnly"] = True
+                if p.get("numMax"):
+                    point["numMin"], point["numMax"] = p["numMin"], p["numMax"]
+                if p.get("weightPct"):
+                    point["weightPct"] = p["weightPct"]
+                if s.get("radius"):
+                    point["radius"] = s["radius"]
                 _spawn_entry(p["id"], mid, "points").append(point)
     for mid in map_ids:
         for pal_id, points in by_map_pal[mid].items():

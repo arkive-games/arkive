@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
 import { elementIconUrl, workIconUrl } from '../../../lib/assets'
 import type { CondenseEntry } from '../../../lib/condenser'
@@ -155,12 +156,13 @@ export function ActiveSkillRow({
   description?: string
 }) {
   const hasDesc = !!description
-  const top = hasDesc ? 'pt-2' : 'py-2'
+  const hasDetail = hasDesc || !!skill.effect
+  const top = hasDetail ? 'pt-2' : 'py-2'
   return (
     <>
       <tr className="border-t border-border/60">
         <td
-          rowSpan={hasDesc ? 2 : 1}
+          rowSpan={hasDetail ? 2 : 1}
           className="px-1 pr-2 text-center align-middle tabular-nums text-muted-foreground"
         >
           {skill.level}
@@ -168,7 +170,13 @@ export function ActiveSkillRow({
         <td className={cn('pr-2 align-top', top)}>
           <div className="flex items-center gap-1.5 font-medium">
             <IconImg src={elementIconUrl(skill.element as Element)} alt="" size={16} />
-            {name}
+            <Link
+              to="/active-skills/$id"
+              params={{ id: skill.wazaId }}
+              className="hover:text-primary hover:underline"
+            >
+              {name}
+            </Link>
           </div>
         </td>
         <td className={cn('whitespace-nowrap pr-2 text-right align-top tabular-nums', top)}>{skill.power || '—'}</td>
@@ -180,10 +188,20 @@ export function ActiveSkillRow({
           {formatSkillRange(skill.minRange, skill.maxRange)}
         </td>
       </tr>
-      {hasDesc ? (
+      {hasDetail ? (
         <tr>
           <td colSpan={5} className="pb-2 pr-2 text-xs text-muted-foreground">
             {description}
+            {skill.effect ? (
+              <span
+                className={cn(
+                  'inline-flex items-center rounded bg-sky-500/10 px-1.5 py-0.5 font-medium text-sky-500',
+                  description ? 'ml-2' : '',
+                )}
+              >
+                {skill.effect.type} +{skill.effect.value}
+              </span>
+            ) : null}
           </td>
         </tr>
       ) : null}

@@ -12,9 +12,20 @@ export interface Recipe {
   work: number
   unlockItemId?: string
   materials: Material[]
+  /** Output quantity per craft; present only for batch recipes (>1, e.g. ammo,
+   *  Money, medicine). Absent ⇒ 1. */
+  productCount?: number
+  /** Player EXP awarded per craft (CraftExpRate); absent when 0. */
+  craftExp?: number
   /** Production buildings that can craft this item (building ids, in the
    *  game's build-menu order — base tier first). */
   craftedAt?: string[]
+}
+/** Timed buff a cooked dish grants when eaten (DT_StatusEffectFood): one or two
+ *  effect types with magnitude, and the duration in seconds. */
+export interface FoodBuff {
+  effects: { type: string; value: number }[]
+  time?: number
 }
 export interface FoodEffect {
   satiety?: number
@@ -62,6 +73,12 @@ export interface ItemSource {
   price?: number
   currency?: string
   repeat?: boolean
+  /** Raid reward quantity range (present when >1). */
+  min?: number
+  max?: number
+  /** Raid pick-one guaranteed reward (SuccessAnyOneItemList): you always get one
+   *  item from the set, so no per-item `chance`. */
+  anyOne?: boolean
 }
 
 /** @deprecated use {@link ItemSource} — kept as an alias during the rename. */
@@ -86,7 +103,19 @@ export interface ItemEntry {
   icon?: string
   element?: string
   food?: FoodEffect
+  /** Timed buff granted when eaten (cooked dishes). */
+  foodBuff?: FoodBuff
+  /** Sanity drain per use (CorruptionFactor); absent when 0. */
+  corruption?: number
+  /** Item is restricted in PvP (bNotAvailableInPVP). */
+  pvpBanned?: boolean
+  /** Reusable consumable — not used up on use (bNotConsumed; the Lanterns). */
+  notConsumed?: boolean
   equip?: EquipStats
+  /** Active skill (Waza id) this item teaches a pal (skill cards). */
+  grantsSkill?: string
+  /** Passive skill ids this item grants when equipped (armor/accessories). */
+  itemPassives?: string[]
   recipe?: Recipe
   /** Pals that drop this item; `isBoss` marks drops exclusive to the boss form. */
   droppedBy?: { id: string; isBoss?: boolean }[]
@@ -114,6 +143,18 @@ export interface BuildingEntry {
   work: number
   materials: Material[]
   energyType?: string
+  /** Power consumed per second while working (ConsumeEnergySpeed); absent when 0. */
+  energyDrain?: number
+  /** Max installable in one base camp (InstallMaxNumInBaseCamp); absent when unlimited. */
+  maxPerBase?: number
+  /** Player EXP awarded on build (BuildExpRate); absent when 0. */
+  buildExp?: number
+  /** Can be recolored with the paint sprayer (bIsPaintable). */
+  paintable?: boolean
+  /** Placement restrictions: base-camp only / near-Palbox only / not in raid arenas. */
+  baseOnly?: boolean
+  hubOnly?: boolean
+  noRaidArea?: boolean
   unlockTech?: string[]
   icon?: string
 }

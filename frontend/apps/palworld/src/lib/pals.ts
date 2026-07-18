@@ -34,11 +34,22 @@ export const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL'] as const
 // --- data shapes (mirror pals.json / passives.json) --------------------------
 export interface PalStats {
   hp: number; meleeAttack: number; shotAttack: number; defense: number
+  support: number
   craftSpeed: number; stamina: number; foodAmount: number; maxFullStomach: number
-  captureRate: number; price: number; maleProbability: number
+  captureRate: number; expRatio: number; price: number; maleProbability: number
   slowWalkSpeed: number
   walkSpeed: number; runSpeed: number; rideSprintSpeed: number; transportSpeed: number
   swimSpeed: number
+}
+/** Per-level stat growth from soul-condensing (DT_PalMonsterParameter
+ *  Friendship_* columns); only the non-zero growth stats are present. */
+export interface PalFriendship {
+  hp?: number; shotAttack?: number; defense?: number; craftSpeed?: number
+}
+/** Enemy-form stat multipliers vs. the base block (baseline 1.0); only values
+ *  that diverge from 1.0 are present (alpha/boss scaling). */
+export interface PalEnemyScaling {
+  maxHp?: number; receiveDamage?: number; inflictDamage?: number; wazaCoolTime?: number
 }
 export interface ActiveSkill {
   wazaId: string; level: number; element: string; category: string
@@ -50,6 +61,9 @@ export interface ActiveSkill {
    *  element × rarity, so exactly the tiered skills are obtainable from a fruit;
    *  `None` skills are learned by leveling only. See {@link isSkillFruitSkill}. */
   strength?: string
+  /** On-hit status ailment the skill applies (Wetness/Poison/Darkness/…) with
+   *  its magnitude, from DT_WazaDataTable EffectType1/EffectValue1. */
+  effect?: { type: string; value: number }
 }
 
 /** True when an active skill is obtainable from a Skill Fruit (it carries a
@@ -113,8 +127,14 @@ export interface PalEntry {
    *  primary-element family + rarity tier, from BP_PalGameSetting). */
   egg: string
   nocturnal: boolean
+  /** Predator species (DT_PalMonsterParameter Predator) — hunts other Pals. */
+  predator?: boolean
   reaction: string
   stats: PalStats
+  /** Per-level condense growth (absent when the pal has no non-zero growth). */
+  friendship?: PalFriendship
+  /** Enemy-form stat multipliers (absent when all are the 1.0 no-op). */
+  enemyScaling?: PalEnemyScaling
   work: Partial<Record<WorkType, number>>
   bestWork: WorkType
   partnerSkill: PartnerSkill
@@ -133,7 +153,11 @@ export interface PalEntry {
 export interface PassiveEffect { type: string; value: number; target: string }
 /** `mutation` marks a mutation-pool passive (game `AddMutationPal`): exclusive to
  *  mutated Pals or grafted via a disposable implant at the Operating Table. */
-export interface Passive { id: string; rank: number; effects: PassiveEffect[]; mutation?: boolean }
+export interface Passive {
+  id: string; rank: number; effects: PassiveEffect[]; mutation?: boolean
+  /** When the passive is active (worker/riding/reserve/onTeam/active/baseCamp/always). */
+  invoke?: string[]
+}
 
 /** Filter facets emitted by the pipeline: only the values actually present in the
  *  roster (canonical order), so the Paldeck filters hide chips with no pals. */
@@ -253,7 +277,11 @@ export function loadPals(lng: string): Promise<PalsBundle> {
 export type SpawnKind = 'wild' | 'boss'
 /** `night` marks a night-restricted point (spawner OnlyTime=Night) — the pal
  *  appears there only at night. */
-export interface SpawnPoint { x: number; y: number; level?: string; kind: SpawnKind; night?: boolean }
+export interface SpawnPoint {
+  x: number; y: number; level?: string; kind: SpawnKind; night?: boolean
+  /** Pack size range (formatted, e.g. `3` or `1–3`); present when >1 spawn together. */
+  pack?: string
+}
 export interface PalSpawns { map: GameMapMeta; points: SpawnPoint[] }
 
 // spawns/<palId>.json (emitted by tools/…/emit.py): the pal's pre-cluster
@@ -262,7 +290,10 @@ interface SpawnFile {
   maps: Record<
     string,
     {
-      points?: { x: number; y: number; z: number; lvMin: number; lvMax: number; nightOnly?: boolean }[]
+      points?: {
+        x: number; y: number; z: number; lvMin: number; lvMax: number; nightOnly?: boolean
+        numMin?: number; numMax?: number; weightPct?: number; radius?: number
+      }[]
       bosses?: { x: number; y: number; z: number; kind: string; level?: number; nightOnly?: boolean }[]
     }
   >
@@ -291,6 +322,9 @@ export async function loadPalSpawns(palId: string): Promise<PalSpawns[]> {
       kind: 'wild' as const,
       level: p.lvMin === p.lvMax ? `Lv.${p.lvMin}` : `Lv.${p.lvMin}–${p.lvMax}`,
       night: p.nightOnly,
+      pack: p.numMax
+        ? p.numMin === p.numMax ? `${p.numMax}` : `${p.numMin}–${p.numMax}`
+        : undefined,
     }))
     // Boss points last, so they render on top of overlapping wild ones.
     for (const b of m.bosses ?? []) {

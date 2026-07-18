@@ -190,6 +190,42 @@ export default function BuildingDetailPage() {
                   {level != null ? <StatRow label={t('building.level')} value={level} /> : null}
                   {bld.work ? <StatRow label={t('building.work')} value={bld.work} /> : null}
                   {energy ? <StatRow label={t('building.energy')} value={energy} /> : null}
+                  {bld.energyDrain ? (
+                    <StatRow
+                      label={t('building.energyDrain', { defaultValue: 'Power use' })}
+                      value={`${bld.energyDrain}/s`}
+                    />
+                  ) : null}
+                  {bld.maxPerBase ? (
+                    <StatRow
+                      label={t('building.maxPerBase', { defaultValue: 'Max per base' })}
+                      value={bld.maxPerBase}
+                    />
+                  ) : null}
+                  {bld.buildExp ? (
+                    <StatRow
+                      label={t('building.buildExp', { defaultValue: 'Build EXP' })}
+                      value={bld.buildExp}
+                    />
+                  ) : null}
+                  {bld.paintable ? (
+                    <StatRow
+                      label={t('building.paintable', { defaultValue: 'Paintable' })}
+                      value={t('common.yes', { defaultValue: 'Yes' })}
+                    />
+                  ) : null}
+                  {bld.baseOnly || bld.hubOnly || bld.noRaidArea ? (
+                    <StatRow
+                      label={t('building.placement', { defaultValue: 'Placement' })}
+                      value={[
+                        bld.baseOnly ? t('building.baseOnly', { defaultValue: 'Base camp only' }) : null,
+                        bld.hubOnly ? t('building.hubOnly', { defaultValue: 'Near Palbox only' }) : null,
+                        bld.noRaidArea ? t('building.noRaidArea', { defaultValue: 'Not in raid arenas' }) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    />
+                  ) : null}
                 </InfoRows>
               </CatalogSection>
             </div>

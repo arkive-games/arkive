@@ -63,6 +63,8 @@ interface RenderMarker {
   kind: SpawnKind
   night?: boolean
   level?: string
+  /** Pack size (single points only; clusters omit it). */
+  pack?: string
   count: number
 }
 
@@ -91,7 +93,7 @@ function clusterPoints(
       continue
     }
     if (cell === 0) {
-      wild.push({ pos, kind: 'wild', night: p.night, level: p.level, count: 1 })
+      wild.push({ pos, kind: 'wild', night: p.night, level: p.level, pack: p.pack, count: 1 })
       continue
     }
     const key = `${Math.floor(pos.lng / cell)}:${Math.floor(pos.lat / cell)}`
@@ -123,7 +125,7 @@ function clusterPoints(
   for (const b of buckets.values()) {
     if (b.count === 1) {
       const { pos, p } = b.first
-      wild.push({ pos, kind: 'wild', night: p.night, level: p.level, count: 1 })
+      wild.push({ pos, kind: 'wild', night: p.night, level: p.level, pack: p.pack, count: 1 })
       continue
     }
     wild.push({
@@ -284,7 +286,12 @@ export function PalSpawnMap({
           <ZoomTierWatcher onTier={setTier} />
           {markers.map((m, i) => (
             <Marker key={i} position={m.pos} icon={iconFor(m)}>
-              {m.level ? <Tooltip direction="top">{m.level}</Tooltip> : null}
+              {m.level || m.pack ? (
+                <Tooltip direction="top">
+                  {m.level}
+                  {m.pack ? `${m.level ? ' · ' : ''}×${m.pack}` : ''}
+                </Tooltip>
+              ) : null}
             </Marker>
           ))}
         </MapContainer>

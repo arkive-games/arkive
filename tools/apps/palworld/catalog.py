@@ -591,6 +591,16 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         equip = _equip(r)
         if equip:
             entry["equip"] = equip
+        # weapon/consumable detail flags: sanity drain per use (CorruptionFactor)
+        # and PvP-restricted items — both niche "detail section" facts.
+        corruption = round2(r.get("CorruptionFactor", 0.0))
+        if corruption:
+            entry["corruption"] = corruption
+        if r.get("bNotAvailableInPVP"):
+            entry["pvpBanned"] = True
+        # reusable consumables (bNotConsumed=true: the Lanterns) — not used up.
+        if r.get("bNotConsumed"):
+            entry["notConsumed"] = True
         # skill cards teach a pal an active skill (WazaID); armor/accessory items
         # grant passive skills (PassiveSkillName1..4) — both link into datasets the
         # site already carries (active skills, passives).
@@ -611,6 +621,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             pc = int(rc.get("Product_Count", 1) or 1)
             if pc > 1:
                 recipe["productCount"] = pc
+            craft_exp = round2(rc.get("CraftExpRate", 0.0))
+            if craft_exp:
+                recipe["craftExp"] = craft_exp
             gate = rc.get("UnlockItemID")
             if gate and gate not in _NONE:
                 recipe["unlockItemId"] = gate
@@ -702,6 +715,19 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         max_per_base = r.get("InstallMaxNumInBaseCamp", 0) or 0
         if max_per_base > 0:
             entry["maxPerBase"] = int(max_per_base)
+        build_exp = round2(r.get("BuildExpRate", 0.0))
+        if build_exp:
+            entry["buildExp"] = build_exp
+        if r.get("bIsPaintable"):
+            entry["paintable"] = True
+        # placement restrictions: base-camp-only (beds), palbox-hub-proximity-only
+        # (defense turrets), and raid-arena-prohibited (beds/medical).
+        if r.get("bIsInstallOnlyOnBase"):
+            entry["baseOnly"] = True
+        if r.get("bIsInstallOnlyHubAround"):
+            entry["hubOnly"] = True
+        if r.get("bIsProhibitedInRaidBossArea"):
+            entry["noRaidArea"] = True
         if bid in bld_unlock_tech:
             entry["unlockTech"] = sorted(bld_unlock_tech[bid])
         # icon

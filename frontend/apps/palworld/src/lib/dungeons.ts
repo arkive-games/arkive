@@ -184,6 +184,32 @@ export function notableDrops(
     .slice(0, cap)
 }
 
+/** Reverse index: pal id → dungeons it can appear in (enemy spawns, mimic
+ *  ambushes, and caged/egg reward pools). Backs the pal page's "found in
+ *  dungeons" cross-link (inverse of DungeonDetailPage's encounter list). */
+export function dungeonsByPal(file: DungeonsFile): Map<string, Set<string>> {
+  const out = new Map<string, Set<string>>()
+  const add = (pal: string, id: string) => {
+    let set = out.get(pal)
+    if (!set) out.set(pal, (set = new Set()))
+    set.add(id)
+  }
+  for (const d of file.dungeons) {
+    const e = d.enemies ?? {}
+    for (const list of [e.normal, e.floor2, e.floor3, e.floor4, e.midBoss, e.fishing, e.boss]) {
+      for (const en of list ?? []) add(en.pal, d.id)
+    }
+    for (const t of d.bossRewards) {
+      for (const entry of t.entries) {
+        for (const p of entry.pals ?? []) add(p.pal, d.id)
+        for (const p of (entry.eggPool && file.eggPools[entry.eggPool]) || []) add(p.pal, d.id)
+        for (const p of (entry.cagePool && file.cagePools[entry.cagePool]) || []) add(p.pal, d.id)
+      }
+    }
+  }
+  return out
+}
+
 /** Reverse index: item id → dungeons whose loot tables can drop it. */
 export function dungeonsByItem(file: DungeonsFile): Map<string, Set<string>> {
   const out = new Map<string, Set<string>>()

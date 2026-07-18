@@ -3,8 +3,8 @@ import type { PalEntry, PalStats } from '../../lib/pals'
 import { EMPTY_FILTER, filterPals, isFilterActive } from './useFilteredPals'
 
 const STATS: PalStats = {
-  hp: 0, meleeAttack: 0, shotAttack: 0, defense: 0, craftSpeed: 0, stamina: 0,
-  foodAmount: 0, maxFullStomach: 0, captureRate: 0, price: 0, maleProbability: 50,
+  hp: 0, meleeAttack: 0, shotAttack: 0, defense: 0, support: 0, craftSpeed: 0, stamina: 0,
+  foodAmount: 0, maxFullStomach: 0, captureRate: 0, expRatio: 0, price: 0, maleProbability: 50,
   slowWalkSpeed: 0, walkSpeed: 0, runSpeed: 0, rideSprintSpeed: 0,
   transportSpeed: 0, swimSpeed: 0,
 }
