@@ -1,29 +1,5 @@
 {
   "rewrites": [
-    { "source": "/breeding", "destination": "/index.html" },
-    { "source": "/breeding*", "destination": "/index.html" },
-    { "source": "/pals", "destination": "/index.html" },
-    { "source": "/pals*", "destination": "/index.html" },
-    { "source": "/pals/*", "destination": "/index.html" },
-    { "source": "/passives", "destination": "/index.html" },
-    { "source": "/passives*", "destination": "/index.html" },
-    { "source": "/active-skills", "destination": "/index.html" },
-    { "source": "/active-skills*", "destination": "/index.html" },
-    { "source": "/active-skills/*", "destination": "/index.html" },
-    { "source": "/items", "destination": "/index.html" },
-    { "source": "/items*", "destination": "/index.html" },
-    { "source": "/items/*", "destination": "/index.html" },
-    { "source": "/buildings", "destination": "/index.html" },
-    { "source": "/buildings*", "destination": "/index.html" },
-    { "source": "/buildings/*", "destination": "/index.html" },
-    { "source": "/technology", "destination": "/index.html" },
-    { "source": "/technology*", "destination": "/index.html" },
-    { "source": "/quests", "destination": "/index.html" },
-    { "source": "/quests*", "destination": "/index.html" },
-    { "source": "/quests/*", "destination": "/index.html" },
-    { "source": "/wiki", "destination": "/index.html" },
-    { "source": "/wiki*", "destination": "/index.html" },
-    { "source": "/wiki/*", "destination": "/index.html" },
-    { "source": "/wiki/:type/:slug", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
