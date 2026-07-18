@@ -112,7 +112,12 @@ export interface PartnerSkill {
   effects?: PartnerEffect[]
   action?: PartnerAction
 }
-export interface Drop { item: string; rate: number; min: number; max: number }
+export interface Drop {
+  item: string; rate: number; min: number; max: number
+  /** The drop only occurs from pals at/above this level (level-banded rows in
+   *  DT_PalDropItem, e.g. Anubis' World Tree relics are Lv 80+). Absent ⇒ any level. */
+  minLevel?: number
+}
 
 export interface PalEntry {
   id: string
@@ -144,10 +149,16 @@ export interface PalEntry {
   /** Kill drops of the boss form (BOSS_<id> row in DT_PalDropItem); absent when
    *  the pal has no boss variant with non-zero drop rates. */
   bossDrops?: Drop[]
+  /** One-time reward item for the first defeat of the boss form. */
+  bossFirstDefeatReward?: string
   /** True when the pal is obtained at the Summoning Altar (DT_PalRaidBoss). */
   summonable: boolean
   /** Materials + counts to craft this pal's summon item (only when summonable). */
   summonMaterials?: { item: string; count: number }[]
+  /** The summoned boss's fight level. */
+  summonLevel?: number
+  /** Weighted reward pool when the ritual can yield more than one pal. */
+  summonEggPool?: { pal: string; weight: number }[]
 }
 
 export interface PassiveEffect { type: string; value: number; target: string }
@@ -157,6 +168,8 @@ export interface Passive {
   id: string; rank: number; effects: PassiveEffect[]; mutation?: boolean
   /** When the passive is active (worker/riding/reserve/onTeam/active/baseCamp/always). */
   invoke?: string[]
+  /** Random-roll weight; present only for the rare tier (5 vs the normal 100). */
+  lotteryWeight?: number
 }
 
 /** Filter facets emitted by the pipeline: only the values actually present in the

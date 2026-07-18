@@ -5,7 +5,7 @@ import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 
-export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests'
+export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research'
 
 /**
  * Unified top navigation shared by every page (map, Paldeck, breeding). The
@@ -37,8 +37,18 @@ export function TopNav({ active }: { active: NavKey }) {
         { key: '/buildings', label: t('building.title'), active: active === '/buildings' },
         { key: '/merchants', label: t('merchant.title'), active: active === '/merchants' },
         { key: '/technology', label: t('tech.title'), active: active === '/technology' },
+        {
+          key: '/research',
+          label: t('research.title', { defaultValue: 'Research' }),
+          active: active === '/research',
+        },
         { key: '/dungeons', label: t('dungeon.title'), active: active === '/dungeons' },
         { key: '/quests', label: t('quest.title'), active: active === '/quests' },
+        {
+          key: '/basecamp',
+          label: t('basecamp.title', { defaultValue: 'Base Camp' }),
+          active: active === '/basecamp',
+        },
       ],
     },
   ]

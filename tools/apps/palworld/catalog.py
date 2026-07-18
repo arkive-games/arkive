@@ -247,6 +247,49 @@ def _craft_specs(raw: Path, building_ids: set) -> dict:
     return specs
 
 
+_WORK_SUIT = "EPalWorkSuitability::"
+
+
+def _work_reqs(assign_rows: dict) -> dict[str, dict]:
+    """{lowercased MapObjectId: {req: [(suitability, rank)…], workers: n}} from
+    DT_MapObjectAssignData (rows keyed ``<MapObjectId>_<slot>``). Primary and
+    Multi* suitability slots both count; suitability-None rows still contribute
+    the worker-slot count."""
+    out: dict[str, dict] = {}
+    for key, r in assign_rows.items():
+        oid = re.sub(r"_\d+$", "", key).lower()
+        info = out.setdefault(oid, {"req": [], "workers": 0})
+        pairs = [(_strip(r.get("WorkSuitability"), _WORK_SUIT), r.get("WorkSuitabilityRank", 1) or 1)]
+        for i in (1, 2):
+            pairs.append(
+                (_strip(r.get(f"MultiWorkSuitability{i}"), _WORK_SUIT), r.get(f"MultiRequiredRank{i}", 1) or 1)
+            )
+        for suit, rank in pairs:
+            if suit and suit != "None" and (suit, rank) not in info["req"]:
+                info["req"].append((suit, rank))
+        info["workers"] = max(info["workers"], r.get("WorkerMaxNum", 0) or 0)
+    return out
+
+
+def _crop_links(raw: Path, building_ids: set) -> dict[str, str]:
+    """{building id: DT_MapObjectFarmCrop row key} — each plantation building's
+    BP carries a ``CropDataId`` naming its crop row (the building id itself is
+    unreliable: ``FarmBlockV2_wheet`` vs crop ``Wheat``)."""
+    out: dict[str, str] = {}
+    bp_dir = raw / "Blueprint/MapObject/BuildObject"
+    if not bp_dir.is_dir():
+        return out
+    rx = re.compile(r'"CropDataId"\s*:\s*\{[^{}]*?"Key"\s*:\s*"([^"]+)"')
+    for f in bp_dir.glob("BP_BuildObject_*.json"):
+        bid = f.stem[len("BP_BuildObject_"):]
+        if bid not in building_ids:
+            continue
+        m = rx.search(f.read_text(encoding="utf-8", errors="ignore"))
+        if m and m.group(1) not in _NONE:
+            out[bid] = m.group(1)
+    return out
+
+
 def _crafted_at(r: dict, specs: dict, bld_rows: dict) -> list[str]:
     """Production buildings that can craft item row ``r``, in the game's
     build-menu order (``SortId``, unique within a TypeA category — all craft
@@ -311,6 +354,11 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     # cooked-food buffs: item id -> [{type, value}] + duration (WorkSpeed/Attack/
     # Defense/HungerResist/SANResist boosts a dish grants when eaten).
     food_effect_rows = read_rows(raw / "DataTable/Item/DT_StatusEffectFood.json")
+    # farming trio (deferred-systems plan §2): station work-suitability
+    # requirements, plantation crops, and passive producers.
+    assign_rows = read_rows(raw / "DataTable/MapObject/DT_MapObjectAssignData_Common.json")
+    crop_rows = read_rows(raw / "DataTable/MapObject/DT_MapObjectFarmCrop.json")
+    product_rows = read_rows(raw / "DataTable/MapObject/DT_MapObjectItemProductDataTable_Common.json")
 
     # --- localized text (all layered ja base + per-language) -----------------
     item_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_ItemNameText_Common.json", "ITEM_NAME_")
@@ -671,6 +719,10 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             img.save(dest, "WEBP", quality=90, method=6)
         return 1
 
+    # farming/production joins for the building entries below.
+    work_reqs = _work_reqs(assign_rows)
+    crop_links = _crop_links(raw, building_id_set)
+
     bld_out = []
     png_dirs = [raw / "Texture/BuildObject/PNG", raw / "Texture/BuildObject/Icon"]
     # A few buildings have no icon-table row (or a "None" AssetPathName) and no
@@ -728,6 +780,34 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
             entry["hubOnly"] = True
         if r.get("bIsProhibitedInRaidBossArea"):
             entry["noRaidArea"] = True
+        # work-suitability requirement(s) + pal worker slots (assign data).
+        wr = work_reqs.get(bid.lower())
+        if wr:
+            if wr["req"]:
+                entry["workReq"] = [{"type": s, "rank": rk} for s, rk in wr["req"]]
+            if wr["workers"] > 0:
+                entry["workers"] = wr["workers"]
+        # plantation crop: what it grows, grow time, yield, seed cost.
+        crop = crop_rows.get(crop_links.get(bid, ""))
+        if crop:
+            c: dict = {
+                "item": crop.get("CropItemId"),
+                "time": crop.get("GrowupTime", 0),
+                "yield": crop.get("CropItemNum", 0),
+            }
+            seed, seed_num = crop.get("MaterialItem1_Id"), crop.get("MaterialItem1_Num", 0) or 0
+            if seed not in _NONE and seed_num > 0:
+                c["seed"] = {"item": seed, "count": seed_num}
+            entry["crop"] = c
+        # passive producer (Well, quarries, oil pump): item + work per unit +
+        # automatic work per second (=> one item every work/autoPerSec seconds).
+        prod = product_rows.get(bid) or _ci(product_rows, bid)
+        if prod:
+            entry["produces"] = {
+                "item": prod.get("Product_Id"),
+                "work": round2(prod.get("RequiredWorkAmount", 0.0)),
+                "autoPerSec": round2(prod.get("AutoWorkAmountBySec", 0.0)),
+            }
         if bid in bld_unlock_tech:
             entry["unlockTech"] = sorted(bld_unlock_tech[bid])
         # icon

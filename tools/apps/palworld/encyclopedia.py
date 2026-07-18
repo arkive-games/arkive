@@ -640,10 +640,17 @@ def _partner_skill(r: dict, waza_by_id: dict, passive_main: dict, partner_def: d
 
 
 def _drops(cid: str, drop_rows: dict) -> list:
+    """Union of a pal's drop rows, best rate per item. Rows are level-banded
+    (``Level`` 0 = base, 10..80 = "from pal level N"): 126 pals gate extra drops
+    behind a band (Anubis Lv80 adds World Tree relics + awakening materials), so
+    each drop carries ``minLevel`` when the item never appears in a lower band —
+    without it the union misreads as unconditional (audit §10-E1)."""
     best: dict[str, dict] = {}
+    min_lv: dict[str, int] = {}
     for r in drop_rows.values():
         if r.get("CharacterID") != cid:
             continue
+        lv = r.get("Level", 0) or 0
         for i in range(1, 11):
             item = r.get(f"ItemId{i}")
             if item in _NONE:
@@ -653,7 +660,14 @@ def _drops(cid: str, drop_rows: dict) -> list:
             prev = best.get(item)
             if prev is None or rate > prev["rate"]:
                 best[item] = entry
-    out = list(best.values())
+            cur = min_lv.get(item)
+            if cur is None or lv < cur:
+                min_lv[item] = lv
+    out = []
+    for item, entry in best.items():
+        if min_lv.get(item, 0) > 0:
+            entry["minLevel"] = min_lv[item]
+        out.append(entry)
     out.sort(key=lambda d: (-d["rate"], d["item"]))
     return out
 
@@ -805,33 +819,44 @@ def _recipe_materials(rec: dict) -> list[dict]:
     return mats
 
 
-def _summon_recipes(raw: Path, roster: set[str]) -> dict[str, list[dict]]:
-    """{palId: [{item, count}]} for pals obtained at the Summoning Altar.
+def _summon_recipes(raw: Path, roster: set[str]) -> dict[str, dict]:
+    """{palId: {materials, level?, eggPool?}} for Summoning-Altar pals.
 
     ``DT_PalRaidBoss`` keys each summon ritual by its summon-item id
     (``PalSummon_<pal>``); the pal you receive is the ritual's
     ``EggPalIDAndWeight`` reward (a ``RAID_``/``BOSS_`` codename mapping to a
     roster id). The materials + counts are that summon item's crafting recipe
     (``DT_ItemRecipeDataTable``) — e.g. 4× the pal's "fragment" parts. Higher
-    difficulty ``*_2`` rituals are skipped in favour of the base one."""
+    difficulty ``*_2`` rituals are skipped in favour of the base one.
+    ``level`` is the summoned boss's fight level (``InfoList[0].Level``);
+    ``eggPool`` the weighted reward pool when the ritual can yield more than
+    one pal (deferred-systems plan §6)."""
     raid = read_rows(raw / "Blueprint/RaidBoss/DT_PalRaidBoss.json")
     recipes = read_rows(raw / "DataTable/Item/DT_ItemRecipeDataTable.json")
-    out: dict[str, list[dict]] = {}
+    out: dict[str, dict] = {}
     for key, r in raid.items():
         if key.endswith("_2"):
             continue
-        pals = set()
+        # Pool entries dedupe by roster id: RAID_/BOSS_ codenames of the same
+        # pal (normal vs hard reward form) collapse into one weight.
+        weights: dict[str, float] = {}
         for egg in r.get("EggPalIDAndWeight") or []:
             k = (egg.get("Key") or {}).get("Key")
             if k:
                 pid = _SUMMON_PREFIX.sub("", k)
                 if pid in roster:
-                    pals.add(pid)
-        if not pals:
+                    weights[pid] = weights.get(pid, 0) + (egg.get("Value", 0) or 0)
+        pool = [{"pal": pid, "weight": round2(w)} for pid, w in weights.items()]
+        if not pool:
             continue
-        mats = _recipe_materials(recipes.get(key, {}))
-        for pid in pals:
-            out.setdefault(pid, mats)
+        info: dict = {"materials": _recipe_materials(recipes.get(key, {}))}
+        level = ((r.get("InfoList") or [{}])[0]).get("Level", 0) or 0
+        if level > 0:
+            info["level"] = level
+        if len(pool) > 1:
+            info["eggPool"] = pool
+        for entry in pool:
+            out.setdefault(entry["pal"], info)
     return out
 
 
@@ -857,6 +882,9 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
         learnsets.setdefault(row.get("PalId"), []).append(row)
 
     roster = {cid: r for cid, r in mon.items() if _is_roster(cid, r, names_by_lang, icon_paths)}
+    # BOSS_ variant rows, probed case-insensitively (`Boss_Anubis` vs
+    # `BOSS_BadCatgirl`) — they carry the one-time first-defeat reward.
+    mon_ci = {k.lower(): v for k, v in mon.items()}
     row_index = {cid: i for i, cid in enumerate(mon)}
     summon_recipes = _summon_recipes(raw, set(roster))
     egg_tiers, egg_families = _egg_config(raw)
@@ -906,8 +934,22 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "passives": _passives_of(r),
             "drops": _drops(cid, drop_rows),
             **({"bossDrops": boss_drops} if boss_drops else {}),
+            **(
+                {"bossFirstDefeatReward": frd}
+                if (frd := (mon_ci.get(f"boss_{cid.lower()}") or {}).get("FirstDefeatRewardItemID"))
+                and frd not in _NONE
+                else {}
+            ),
             "summonable": cid in summon_recipes,
-            **({"summonMaterials": summon_recipes[cid]} if cid in summon_recipes else {}),
+            **(
+                {
+                    "summonMaterials": summon_recipes[cid]["materials"],
+                    **({"summonLevel": lv} if (lv := summon_recipes[cid].get("level")) else {}),
+                    **({"summonEggPool": ep} if (ep := summon_recipes[cid].get("eggPool")) else {}),
+                }
+                if cid in summon_recipes
+                else {}
+            ),
         })
     pals.sort(key=lambda p: _roster_sort_key(p["zukanIndex"], p["zukanIndexSuffix"], row_index[p["id"]]))
 
@@ -930,6 +972,9 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "effects": _passive_effects(v),
             # when the passive is active (worker/riding/on-team/always/base-camp).
             **({"invoke": inv} if (inv := [tok for f, tok in _INVOKE_FLAGS.items() if v.get(f) is True]) else {}),
+            # random-roll weight: displayable passives are 100 (normal) or 5
+            # (rare) — emitted only for the rare tier.
+            **({"lotteryWeight": lw} if (lw := v.get("LotteryWeight", 100)) != 100 else {}),
             # Mutation-pool passives (AddMutationPal): exclusive to mutated Pals
             # (hatched from Mutated Eggs) or grafted via a disposable implant at
             # the Operating Table. Flagged for the Passive Skills page.
@@ -971,7 +1016,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     partner_waza = {p["partnerSkill"].get("wazaId") for p in pals if p["partnerSkill"].get("wazaId")}
     all_waza = sorted(active_waza | partner_waza)
     unlock_items = {p["partnerSkill"]["unlockItem"] for p in pals if p["partnerSkill"].get("unlockItem")}
-    summon_mats = {m["item"] for mats in summon_recipes.values() for m in mats}
+    summon_mats = {m["item"] for info in summon_recipes.values() for m in info["materials"]}
     item_ids = sorted({d["item"] for p in pals for d in p["drops"]} | unlock_items | summon_mats)
     effect_types = sorted({e["type"] for p in pals for e in p["partnerSkill"].get("effects", [])})
     target_types = sorted({e["target"] for p in pals for e in p["partnerSkill"].get("effects", [])})

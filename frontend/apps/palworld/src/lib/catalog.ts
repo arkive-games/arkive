@@ -155,6 +155,14 @@ export interface BuildingEntry {
   baseOnly?: boolean
   hubOnly?: boolean
   noRaidArea?: boolean
+  /** Work-suitability requirement(s) to operate the station (type + min rank). */
+  workReq?: { type: string; rank: number }[]
+  /** Pal worker slots the station supports. */
+  workers?: number
+  /** Plantation crop: grown item, grow time (s), yield per harvest, seed cost. */
+  crop?: { item: string; time: number; yield: number; seed?: { item: string; count: number } }
+  /** Passive producer: one `item` per `work`/`autoPerSec` seconds of auto work. */
+  produces?: { item: string; work: number; autoPerSec: number }
   unlockTech?: string[]
   icon?: string
 }
@@ -362,6 +370,73 @@ export function loadQuests(lng: string): Promise<QuestsBundle> {
   if (!p) {
     p = fetchQuests(lng)
     questsCache.set(lng, p)
+  }
+  return p
+}
+
+// --- base camp progression ----------------------------------------------------
+/** One level-up task: either a pal-worker count or N of a build object. */
+export interface BasecampTask {
+  workers?: number
+  object?: string
+  count?: number
+}
+export interface BasecampLevel {
+  level: number
+  /** Pal-worker cap at this level. */
+  workers: number
+  /** Bases the guild may hold at this level. */
+  bases: number
+  /** Requirements to advance from this level (absent when none). */
+  tasks?: BasecampTask[]
+}
+export interface BasecampFile { levels: BasecampLevel[] }
+
+let basecampCache: Promise<BasecampFile> | null = null
+
+/** Load (and cache) the base-camp progression dataset (language-independent). */
+export function loadBasecamp(): Promise<BasecampFile> {
+  if (!basecampCache) basecampCache = j<BasecampFile>(dataUrl(`basecamp.json`))
+  return basecampCache
+}
+
+// --- research lab -------------------------------------------------------------
+/** One research-lab project (data-palworld/research.json). */
+export interface ResearchProject {
+  id: string
+  /** Work-suitability category the lab bench belongs to (Handcraft, Mining, …). */
+  category: string
+  work: number
+  materials: Material[]
+  /** Granted effect (absent for TechnologyUnlock gate projects): type + value,
+   *  optionally scoped to one work suitability. */
+  effect?: { type: string; value: number; work?: string }
+  /** Prerequisite project id (research chain). */
+  requires?: string
+  /** Marked essential in-game. */
+  essential?: boolean
+}
+export interface ResearchBundle {
+  projects: ResearchProject[]
+  byId: Map<string, ResearchProject>
+  text: Record<string, { name: string }>
+}
+
+const researchCache = new Map<string, Promise<ResearchBundle>>()
+
+/** Load (and cache per language) the research-lab dataset. */
+export function loadResearch(lng: string): Promise<ResearchBundle> {
+  let p = researchCache.get(lng)
+  if (!p) {
+    p = Promise.all([
+      j<{ projects: ResearchProject[] }>(dataUrl(`research.json`)),
+      j<Record<string, { name: string }>>(dataUrl(`locales/${lng}/research.json`)),
+    ]).then(([file, text]) => ({
+      projects: file.projects,
+      byId: new Map(file.projects.map((r) => [r.id, r])),
+      text,
+    }))
+    researchCache.set(lng, p)
   }
   return p
 }

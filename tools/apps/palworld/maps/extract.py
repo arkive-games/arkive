@@ -107,15 +107,27 @@ EFFIGY_VARIANT_RX = re.compile(r"^BP_LevelObject_Relic_([A-Za-z0-9]+)_C$")
 
 # Each effigy relic grants one player status buff (its BP's `EPalRelicType`).
 # The buff's localized name/description is the Statue-of-Power UI text
-# `BUILDUP_PLAYER_STATUS[_DESC]_<NN>`, where NN is the relic type's index below
-# (same order as DT_PlayerStatusRankMasterDataTable).
-RELIC_TYPE_INDEX = {
-    "CapturePower": 0, "HungerReduction": 1, "SwimSpeed": 2, "FoodDecayReduction": 3,
-    "JumpPower": 4, "GliderSpeed": 5, "ClimbSpeed": 6, "StatusAilmentResist": 7,
-    "StaminaReduction": 8, "SphereHoming": 9, "ExpBonus": 10, "RainbowPassiveRate": 11,
-    "MoveSpeed": 12,
-}
+# `BUILDUP_PLAYER_STATUS[_DESC]_<NN>`, where NN is the relic type's first-seen
+# index in DT_PlayerStatusRankMasterDataTable row order.
 _RELIC_TYPE_RX = re.compile(r"EPalRelicType::([A-Za-z]+)")
+
+
+def relic_type_index(raw: Path) -> dict[str, int]:
+    """{RelicType: BUILDUP text index} read from the rank master table's row
+    order (was a hand-mirrored constant — a game patch reordering relic types
+    would have silently mismatched every effigy buff description). Empty when
+    the table is absent (minimal test fixtures) — effigy buff descriptions are
+    then simply not emitted."""
+    path = raw / "DataTable/Player/DT_PlayerStatusRankMasterDataTable.json"
+    if not path.exists():
+        return {}
+    rows = read_rows(path)
+    out: dict[str, int] = {}
+    for r in rows.values():
+        rtype = (r.get("RelicType") or "").replace("EPalRelicType::", "")
+        if rtype and rtype != "None" and rtype not in out:
+            out[rtype] = len(out)
+    return out
 
 
 def _relic_type_of(raw: Path, pal: str) -> str | None:
@@ -127,11 +139,11 @@ def _relic_type_of(raw: Path, pal: str) -> str | None:
     return m.group(1) if m else None
 
 
-def _relic_buff_desc(rtype: str | None, buildup: dict) -> dict:
+def _relic_buff_desc(rtype: str | None, buildup: dict, relic_idx: dict[str, int]) -> dict:
     """The Statue-of-Power status description for an EPalRelicType, per language.
 
     ``buildup`` is {tag: {key: string}}; returns {tag: description} or ``{}``."""
-    idx = RELIC_TYPE_INDEX.get(rtype) if rtype else None
+    idx = relic_idx.get(rtype) if rtype else None
     if idx is None:
         return {}
     dkey = f"BUILDUP_PLAYER_STATUS_DESC_{idx:02d}"
@@ -1309,6 +1321,7 @@ def run_extract(raw: Path) -> dict:
     effigy_names: dict[str, dict] = {}  # effigy subtype id -> {tag: name}
     effigy_icons: dict[str, str] = {}   # effigy subtype id -> relic item icon stem
     effigy_descs: dict[str, dict] = {}  # effigy subtype id -> {tag: buff description}
+    relic_idx = relic_type_index(raw)
     for poi in pois:
         pal = poi.get("effigyPal")
         if not pal or poi["subtype"] in effigy_names:
@@ -1322,7 +1335,7 @@ def run_extract(raw: Path) -> dict:
             # "T_itemicon_Relic_<NN>" (resolved from Others/InventoryItemIcon).
             effigy_icons[poi["subtype"]] = "T_itemicon_" + key[len("ITEM_NAME_"):]
         # Buff description: the relic's EPalRelicType -> Statue-of-Power status text.
-        desc = _relic_buff_desc(_relic_type_of(raw, pal), buildup)
+        desc = _relic_buff_desc(_relic_type_of(raw, pal), buildup, relic_idx)
         if desc:
             effigy_descs[poi["subtype"]] = desc
 
@@ -1330,7 +1343,7 @@ def run_extract(raw: Path) -> dict:
     # EPalRelicType in its BP: it grants the default Capture Power buff (index 0,
     # the effect Lifmunk Effigies feed into at the Statue of Power). Give it the
     # same player-attribute description every pal effigy carries.
-    base_desc = _relic_buff_desc("CapturePower", buildup)
+    base_desc = _relic_buff_desc("CapturePower", buildup, relic_idx)
     if base_desc:
         effigy_descs.setdefault("lifmunkEffigy", base_desc)
 

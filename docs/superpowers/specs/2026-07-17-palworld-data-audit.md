@@ -110,6 +110,21 @@ New i18n labels use `t(key, { defaultValue })` (English fallback, translatable l
 editing all 17 language blocks. Verification: 85 tools + 76 frontend tests pass, `tsc -b` clean,
 live-checked (Boar, Curry, Passives) on `localhost:15174`.
 
+### Update 4 — deferred-systems plan items 1–6 + 9 implemented (2026-07-19)
+
+Per `docs/superpowers/specs/2026-07-19-palworld-deferred-systems-plan.md` (statuses marked
+there): **per-level drop gates** (`minLevel` on 843 drops + "Lv N+" chip — the §10-E1 fidelity
+fix), **farming trio** (building `workReq`/`workers`/`crop`/`produces` + BuildingDetailPage
+rows; crop join via the BP `CropDataId`, not the misspelled building ids), **/basecamp** page
+(35 levels + task chips + building reverse row), **effigies.json** (13 buff types × 279 ranks,
+localized; `RELIC_TYPE_INDEX` now read from the table — §8 fragility fixed), **/research**
+page (168 lab projects grouped by work category with effects, chains, and tech unlock links),
+**summon boss level** (5 rituals; egg pools proved single-pal after RAID_/BOSS_ dedup), plus
+small follow-ups: passive **Rare roll** chip (19), merchant **Stock roll chance** (`rollPct`),
+pal **first-defeat reward** (109). Still pending: invaders page, Paldex clouds, dungeon enemy
+share %, dungeon name suffix. Verification: 85 tools + 94 frontend tests pass, `tsc -b` clean,
+/basecamp + /research live-checked.
+
 ## What this is
 
 A full audit of the Palworld data pipeline: which raw game **DataTables** feed the

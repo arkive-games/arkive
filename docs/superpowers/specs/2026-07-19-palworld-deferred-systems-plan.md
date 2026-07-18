@@ -8,7 +8,7 @@ Conventions: emits follow the existing per-stage module pattern (`uv run python 
 palworld.<stage>`); localized text goes to `locales/<tag>/`; new UI labels use
 `t(key, { defaultValue })` (English fallback) as established.
 
-## 1. Per-level drop tables (fidelity fix — HIGH, effort S-M)
+## 1. Per-level drop tables (fidelity fix — HIGH, effort S-M) — ✅ DONE 2026-07-19
 
 **Why first:** the §10-E investigation showed the current drop collapse is the one
 aggregation with real player-facing distortion: **126 pals** gate drops behind level bands
@@ -23,7 +23,7 @@ the site shows the union as unconditional.
   (`DropRow` in `features/pals/components`).
 - **Files:** `encyclopedia.py _drops`, `lib/pals.ts Drop`, `DropRow`.
 
-## 2. Farming trio — building-page enrichment (HIGH, effort M)
+## 2. Farming trio — building-page enrichment (HIGH, effort M) — ✅ DONE 2026-07-19
 
 No new route; makes plantation/production buildings actually informative.
 
@@ -38,7 +38,7 @@ No new route; makes plantation/production buildings actually informative.
 - **Risk:** MapObjectAssignData covers non-building map objects too — filter to the
   emitted building set.
 
-## 3. Base-camp progression (MED-HIGH, effort S-M)
+## 3. Base-camp progression (MED-HIGH, effort S-M) — ✅ DONE 2026-07-19 (/basecamp)
 
 - **Data:** `DT_BaseCampLevelData` (35 — worker/base caps per level),
   `DT_BaseCampTask` (35 — the build-object tasks required per level-up).
@@ -46,7 +46,7 @@ No new route; makes plantation/production buildings actually informative.
 - **Frontend:** a compact `/basecamp` page (single table) + reverse chip on the task
   buildings ("required for base level N"). Route + BottomTabBar entry.
 
-## 4. Effigy progression + hygiene fix (MED-HIGH, effort S)
+## 4. Effigy progression + hygiene fix (MED-HIGH, effort S) — ✅ DONE 2026-07-19 (effigies.json; UI pending)
 
 - **Data:** `DT_PlayerStatusRankMasterDataTable` (279 — RelicType × Rank →
   RequiredRelicNum, EffectRate, ResetRequiredMoney).
@@ -56,7 +56,7 @@ No new route; makes plantation/production buildings actually informative.
 - **Frontend:** section on the map's effigy marker popup or a small stats card on a
   future /stats page; minimal.
 
-## 5. Research Lab page (HIGH value, effort M-L)
+## 5. Research Lab page (HIGH value, effort M-L) — ✅ DONE 2026-07-19 (/research)
 
 - **Data:** `DT_LabResearchDataTable` (168 — category, effect type/value, materials, work,
   prerequisite chain, essential flag) + `DT_LabResearchText` (names, already localized).
@@ -66,7 +66,7 @@ No new route; makes plantation/production buildings actually informative.
   list); cross-links: tech `requireResearch` → project; item → "used in research" reverse.
 - **Note:** effect-type enum needs a small label map (like passive effect types).
 
-## 6. Summoning-altar boss detail (MED, effort S)
+## 6. Summoning-altar boss detail (MED, effort S) — ✅ DONE 2026-07-19 (boss level; egg pools turned out single-pal after RAID_/BOSS_ dedup)
 
 - **Data:** `DT_PalRaidBoss_Common` `InfoList[0].Level` (boss level) +
   `EggPalIDAndWeight[]` (post-fight egg/capture pool with weights).
@@ -74,7 +74,7 @@ No new route; makes plantation/production buildings actually informative.
   [{pal, weight}]`.
 - **Frontend:** the pal page summon section gains "Boss Lv N" + an egg-pool row.
 
-## 7. Base raids / invaders page (MED, effort M-L)
+## 7. Base raids / invaders page (MED, effort M-L) — pending
 
 - **Data:** `DT_PalInvader` (240 — biome, grade range, up to 5 enemy groups with level
   ranges) + `DT_PalInvaderReward` (76 — per-group reward lotteries).
@@ -83,7 +83,7 @@ No new route; makes plantation/production buildings actually informative.
 - **Frontend:** new `/raids` page (filter by biome/grade); pal cross-link ("attacks bases
   in X"); item reverse ("raid reward").
 
-## 8. Paldex distribution clouds (MED, effort M — needs a design decision)
+## 8. Paldex distribution clouds (MED, effort M — needs a design decision) — pending
 
 - **Data:** `DT_PaldexDistributionData` (365 — per-pal day/night spawn coordinate arrays).
 - **Decision needed:** overlaps the spawner-derived `spawns/<pal>.json`. Proposal: emit as
@@ -96,9 +96,9 @@ No new route; makes plantation/production buildings actually informative.
 
 | item | emit | surface |
 |---|---|---|
-| passive `LotteryWeight` | `weight` on passives.json | rarity hint on PassivesPage |
-| caravan lottery `Weight` | per shop-group roll weight | note on Caravan merchant page |
-| `FirstDefeatRewardItemID` | pal `firstDefeatReward` | pal Details row + item reverse |
+| passive `LotteryWeight` ✅ | binary 5/100 → `lotteryWeight` on rare tier | "Rare roll" chip on PassivesPage |
+| caravan lottery `Weight` ✅ | `rollPct` per multi-lottery shop group | "Stock roll chance" row on merchant page |
+| `FirstDefeatRewardItemID` ✅ | pal `bossFirstDefeatReward` (BOSS_ row) | line under Boss Drops |
 | dungeon `WeightInSpawnAreaAndRank` | per-enemy share % | encounter list percentages |
 | dungeon `PostfixTextId` | localized type suffix | dungeon names ("… Ruins") |
 | breeding `CombiDuplicatePriority` | data into breeding.json | engine tie-break completeness — **verify in-game before changing engine logic** (memory: rank ties break to higher CombiRank; dup-priority likely only breaks same-rank species ties) |

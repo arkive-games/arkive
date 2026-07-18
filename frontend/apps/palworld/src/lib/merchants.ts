@@ -19,6 +19,9 @@ export interface MerchantProduct {
 export interface MerchantEntry {
   /** Shop-group id (e.g. `Village_Shop_1`); the Caravan aggregate is `Caravan`. */
   id: string
+  /** Chance (%) a wandering vendor's stock rolls this group (multi-group
+   *  lottery tables only — fixed-stock merchants omit it). */
+  rollPct?: number
   /** Vendor-type slug for the display name (`merchant.name.<nameKey>`). */
   nameKey: string
   /** Currency item id (`Money` = gold, or `DogCoin` / `BountyProof_1` / …). */

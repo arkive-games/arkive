@@ -11,7 +11,8 @@ import {
   type BuildingsBundle,
   type TechBundle,
 } from '../../lib/catalog'
-import { loadPals, type PalsBundle } from '../../lib/pals'
+import { loadPals, type PalsBundle, type WorkType } from '../../lib/pals'
+import { loadBasecamp, type BasecampFile } from '../../lib/catalog'
 import { loadRecycler, type RecyclerFile } from '../../lib/recycler'
 import { RecyclerComparisonSection } from '../recycler/RecyclerSections'
 import { buildingTypeLabel, energyLabel } from '../catalog/labels'
@@ -47,16 +48,30 @@ export default function BuildingDetailPage() {
   // Relic-recycler conversion odds. Loaded separately and best-effort: the
   // page renders fully without it (only the recycler building shows it).
   const [recycler, setRecycler] = useState<RecyclerFile | null>(null)
+  // Base-camp progression, for the "required for base level N" reverse fact.
+  const [basecamp, setBasecamp] = useState<BasecampFile | null>(null)
 
   useEffect(() => {
     let cancelled = false
     loadRecycler()
       .then((r) => { if (!cancelled) setRecycler(r) })
       .catch((err) => console.error(err))
+    loadBasecamp()
+      .then((f) => { if (!cancelled) setBasecamp(f) })
+      .catch((err) => console.error(err))
     return () => {
       cancelled = true
     }
   }, [])
+
+  // Base levels whose level-up tasks require building this object.
+  const baseTaskLevels = useMemo(
+    () =>
+      (basecamp?.levels ?? [])
+        .filter((lv) => lv.tasks?.some((task) => task.object === id))
+        .map((lv) => lv.level),
+    [basecamp, id],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -226,7 +241,85 @@ export default function BuildingDetailPage() {
                         .join(' · ')}
                     />
                   ) : null}
+                  {bld.workReq?.length ? (
+                    <StatRow
+                      label={t('building.workReq', { defaultValue: 'Pal work' })}
+                      value={bld.workReq
+                        .map((w) => `${b.pals.enums.work[w.type as WorkType] ?? w.type} Lv${w.rank}`)
+                        .join(' · ')}
+                    />
+                  ) : null}
+                  {bld.workers ? (
+                    <StatRow
+                      label={t('building.workers', { defaultValue: 'Worker slots' })}
+                      value={bld.workers}
+                    />
+                  ) : null}
+                  {baseTaskLevels.length ? (
+                    <StatRow
+                      label={t('building.baseTask', { defaultValue: 'Base-camp task' })}
+                      value={
+                        <Link to="/basecamp" className="text-primary hover:underline">
+                          {t('building.baseTaskLevels', {
+                            defaultValue: 'Level {{levels}}',
+                            levels: baseTaskLevels.join(', '),
+                          })}
+                        </Link>
+                      }
+                    />
+                  ) : null}
+                  {bld.produces ? (
+                    <StatRow
+                      label={t('building.produces', { defaultValue: 'Produces' })}
+                      value={
+                        <span className="inline-flex items-center gap-1.5">
+                          <ItemLink
+                            id={bld.produces.item}
+                            name={b.items.text[bld.produces.item]?.name ?? bld.produces.item}
+                            icon={b.items.byId.get(bld.produces.item)?.icon}
+                          />
+                          {bld.produces.autoPerSec > 0 ? (
+                            <span className="text-xs text-muted-foreground">
+                              {t('building.producesEvery', {
+                                defaultValue: '1 per {{s}}s',
+                                s: Math.round(bld.produces.work / bld.produces.autoPerSec),
+                              })}
+                            </span>
+                          ) : null}
+                        </span>
+                      }
+                    />
+                  ) : null}
                 </InfoRows>
+                {bld.crop ? (
+                  <div className="mt-3 space-y-1 text-sm">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      {t('building.crop', { defaultValue: 'Grows' })}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <ItemLink
+                        id={bld.crop.item}
+                        name={b.items.text[bld.crop.item]?.name ?? bld.crop.item}
+                        icon={b.items.byId.get(bld.crop.item)?.icon}
+                      />
+                      <span className="tabular-nums text-muted-foreground">×{bld.crop.yield}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t('building.growTime', { defaultValue: '{{s}}s to grow', s: bld.crop.time })}
+                      </span>
+                      {bld.crop.seed ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          {t('building.seed', { defaultValue: 'Seed' })}:
+                          <ItemLink
+                            id={bld.crop.seed.item}
+                            name={b.items.text[bld.crop.seed.item]?.name ?? bld.crop.seed.item}
+                            icon={b.items.byId.get(bld.crop.seed.item)?.icon}
+                          />
+                          ×{bld.crop.seed.count}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
               </CatalogSection>
             </div>
           </div>

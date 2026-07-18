@@ -131,6 +131,12 @@ export default function MerchantDetailPage() {
                   }
                 />
                 <StatRow label={t('merchant.forSale')} value={products.length} />
+                {merchant.rollPct ? (
+                  <StatRow
+                    label={t('merchant.rollPct', { defaultValue: 'Stock roll chance' })}
+                    value={`${merchant.rollPct}%`}
+                  />
+                ) : null}
               </InfoRows>
             </CatalogSection>
           </div>

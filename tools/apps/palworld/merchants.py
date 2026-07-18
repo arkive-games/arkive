@@ -128,6 +128,28 @@ def _vendor_by_group(raw: Path) -> dict[str, str]:
     return out
 
 
+def _roll_shares(raw: Path) -> dict[str, int]:
+    """{shopGroup: roll %} for groups drawn from a multi-group lottery table —
+    the chance a wandering vendor's stock rolls that group (deferred plan §9).
+    Groups in single-group tables (fixed stock) are omitted."""
+    lottery = read_rows(raw / "DataTable/ItemShop/DT_ItemShopLotteryData_Common.json")
+    out: dict[str, int] = {}
+    for row in lottery.values():
+        entries = [
+            (x.get("ShopGroupName"), x.get("Weight", 0) or 0)
+            for x in (row.get("lotteryDataArray") or [])
+            if x.get("ShopGroupName") not in _NONE
+        ]
+        total = sum(w for _, w in entries)
+        if len(entries) < 2 or total <= 0:
+            continue
+        for g, w in entries:
+            pct = round(w / total * 100)
+            if 0 < pct < 100:
+                out[g] = pct
+    return out
+
+
 def _load_groups(raw: Path, item_rows: dict, item_id_set: set) -> dict[str, dict]:
     """{shopGroup: {currency, vendor?, products:[{item, price, num?}]}} for
     every group that sells at least one shipped item."""
@@ -176,12 +198,15 @@ def collect_merchants(
     its ``{kind: 'merchant', merchant, price, currency}`` source entries, with
     caravan groups collapsed onto ``Caravan`` (lowest price kept)."""
     groups = _load_groups(raw, item_rows, item_id_set)
+    roll_shares = _roll_shares(raw)
 
     merchants: list[dict] = []
     for g, info in groups.items():
         entry = {"id": g, "nameKey": _name_key(g, info.get("vendor")), "currency": info["currency"]}
         if info.get("vendor"):
             entry["vendor"] = info["vendor"]
+        if g in roll_shares:
+            entry["rollPct"] = roll_shares[g]
         entry["products"] = info["products"]
         merchants.append(entry)
 

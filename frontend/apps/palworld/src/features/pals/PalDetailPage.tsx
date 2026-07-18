@@ -542,8 +542,13 @@ export default function PalDetailPage() {
               />
               {pal.summonable && pal.summonMaterials?.length ? (
                 <div className="mt-3">
-                  <div className="mb-1 text-xs font-medium text-muted-foreground">
+                  <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
                     {t('pal.summonMaterials')}
+                    {pal.summonLevel ? (
+                      <span className="rounded bg-red-500/15 px-1.5 py-0.5 font-medium tabular-nums text-red-600 dark:text-red-400">
+                        {t('pal.summonLevel', { defaultValue: 'Boss Lv{{n}}', n: pal.summonLevel })}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {pal.summonMaterials.map((m) => (
@@ -556,6 +561,27 @@ export default function PalDetailPage() {
                       />
                     ))}
                   </div>
+                  {pal.summonEggPool?.length ? (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {t('pal.summonEggPool', { defaultValue: 'Reward pool' })}:{' '}
+                      {pal.summonEggPool.map((e, i) => {
+                        const total = pal.summonEggPool!.reduce((s, x) => s + x.weight, 0) || 1
+                        return (
+                          <span key={e.pal}>
+                            {i > 0 ? ' · ' : ''}
+                            <Link
+                              to="/pals/$id"
+                              params={{ id: e.pal }}
+                              className="text-primary hover:underline"
+                            >
+                              {bundle.text[e.pal]?.name ?? e.pal}
+                            </Link>{' '}
+                            ({Math.round((e.weight / total) * 100)}%)
+                          </span>
+                        )
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </PalSection>
@@ -719,6 +745,7 @@ export default function PalDetailPage() {
                       rate={d.rate}
                       min={d.min}
                       max={d.max}
+                      minLevel={d.minLevel}
                     />
                   ))}
                 </div>
@@ -737,9 +764,20 @@ export default function PalDetailPage() {
                       rate={d.rate}
                       min={d.min}
                       max={d.max}
+                      minLevel={d.minLevel}
                     />
                   ))}
                 </div>
+                {pal.bossFirstDefeatReward ? (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {t('pal.firstDefeatReward', { defaultValue: 'First-defeat reward' })}:{' '}
+                    <ItemLink
+                      id={pal.bossFirstDefeatReward}
+                      name={bundle.items[pal.bossFirstDefeatReward] ?? pal.bossFirstDefeatReward}
+                      icon={bundle.itemIcon[pal.bossFirstDefeatReward]}
+                    />
+                  </div>
+                ) : null}
               </PalSection>
             ) : null}
 

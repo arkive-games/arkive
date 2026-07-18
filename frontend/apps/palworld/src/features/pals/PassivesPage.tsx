@@ -91,6 +91,7 @@ export default function PassivesPage() {
         rank: bundle.passivesById.get(id)?.rank ?? 0,
         mutation: bundle.passivesById.get(id)?.mutation ?? false,
         invoke: bundle.passivesById.get(id)?.invoke ?? [],
+        rareRoll: (bundle.passivesById.get(id)?.lotteryWeight ?? 100) < 100,
         categories: passiveCategories(id, bundle),
         pals: palsByPassive.get(id) ?? [],
       }
@@ -253,7 +254,7 @@ export default function PassivesPage() {
                   <PassiveText text={r.description} />
                 </p>
               ) : null}
-              {r.pals.length || r.categories.length || r.mutation || r.invoke.length ? (
+              {r.pals.length || r.categories.length || r.mutation || r.invoke.length || r.rareRoll ? (
                 <div className="mt-auto space-y-2 pt-2">
                   {r.pals.length ? (
                     <div className="flex flex-wrap items-center gap-1">
@@ -279,7 +280,7 @@ export default function PassivesPage() {
                       ))}
                     </div>
                   ) : null}
-                  {r.categories.length || r.mutation ? (
+                  {r.categories.length || r.mutation || r.rareRoll ? (
                     <div className="flex flex-wrap gap-1">
                       {r.mutation ? (
                         <Tooltip>
@@ -314,6 +315,16 @@ export default function PassivesPage() {
                           {t(`passive.invoke.${scope}`, { defaultValue: scope })}
                         </span>
                       ))}
+                      {r.rareRoll ? (
+                        <span
+                          title={t('passive.rareRollTip', {
+                            defaultValue: 'Low random-roll weight — appears far less often',
+                          })}
+                          className="rounded bg-fuchsia-500/15 px-1.5 py-0.5 text-xs font-medium text-fuchsia-600 ring-1 ring-inset ring-fuchsia-500/30 dark:text-fuchsia-300"
+                        >
+                          {t('passive.rareRoll', { defaultValue: 'Rare roll' })}
+                        </span>
+                      ) : null}
                     </div>
                   ) : r.invoke.length ? (
                     <div className="flex flex-wrap gap-1">
