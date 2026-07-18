@@ -50,6 +50,20 @@ _STR = "EPalWazaStrength::"
 _EFFT = "EPalPassiveSkillEffectType::"
 _TGT = "EPalPassiveSkillEffectTargetType::"
 _TRIG = "EPalPartnerSkillTriggerType::"
+_ADD_EFFT = "EPalAdditionalEffectType::"
+
+# Passive-skill "invoke" flags — when a passive is active. Emitted as short
+# camelCase tokens so the Passive Skills page can show scope (worker / riding /
+# on-team / always / base-camp).
+_INVOKE_FLAGS = {
+    "InvokeWorker": "worker",
+    "InvokeRiding": "riding",
+    "InvokeReserve": "reserve",
+    "InvokeInOtomo": "onTeam",
+    "InvokeActiveOtomo": "active",
+    "InvokeInBaseCamp": "baseCamp",
+    "InvokeAlways": "always",
+}
 
 # The 9 element types (EPalElementType names, enum order).
 ELEMENTS = ["Normal", "Fire", "Water", "Leaf", "Electricity", "Ice", "Earth", "Dark", "Dragon"]
@@ -208,6 +222,7 @@ def _stats(r: dict) -> dict:
         "meleeAttack": r.get("MeleeAttack", 0),
         "shotAttack": r.get("ShotAttack", 0),
         "defense": r.get("Defense", 0),
+        "support": r.get("Support", 0),
         "craftSpeed": r.get("CraftSpeed", 0),
         "stamina": r.get("Stamina", 0),
         "foodAmount": r.get("FoodAmount", 0),
@@ -222,6 +237,31 @@ def _stats(r: dict) -> dict:
         "transportSpeed": r.get("TransportSpeed", 0),
         "swimSpeed": r.get("SwimSpeed", 0),
     }
+
+
+def _friendship(r: dict) -> dict:
+    """Per-level stat growth from soul-condensing (Friendship_* columns)."""
+    f = {
+        "hp": round2(r.get("Friendship_HP", 0.0)),
+        "shotAttack": round2(r.get("Friendship_ShotAttack", 0.0)),
+        "defense": round2(r.get("Friendship_Defense", 0.0)),
+        "craftSpeed": round2(r.get("Friendship_CraftSpeed", 0.0)),
+    }
+    return {k: v for k, v in f.items() if v}
+
+
+def _enemy_scaling(r: dict) -> dict:
+    """Enemy-form stat multipliers vs. the base block (all baseline 1.0). Only
+    emitted when a value diverges from 1.0 — explains why field bosses are far
+    tankier (large maxHp multipliers) and weak wild pals die fast as enemies
+    (receiveDamage > 1)."""
+    s = {
+        "maxHp": round2(r.get("EnemyMaxHPRate", 1.0)),
+        "receiveDamage": round2(r.get("EnemyReceiveDamageRate", 1.0)),
+        "inflictDamage": round2(r.get("EnemyInflictDamageRate", 1.0)),
+        "wazaCoolTime": round2(r.get("EnemyWazaCoolTimeRate", 1.0)),
+    }
+    return {k: v for k, v in s.items() if v != 1}
 
 
 def _work(r: dict) -> dict:
@@ -265,6 +305,15 @@ def _learnset_for(cid: str, grouped: dict[str, list]) -> list:
     return best[1] if best else []
 
 
+def _waza_effect(w: dict) -> dict:
+    """On-hit status ailment an active skill applies (Wetness / Poison / …) with
+    its magnitude. Returns ``{"effect": {type, value}}`` or ``{}``."""
+    et = _strip(w.get("EffectType1"), _ADD_EFFT)
+    if not et or et == "None":
+        return {}
+    return {"effect": {"type": et, "value": w.get("EffectValue1", 0) or 0}}
+
+
 def _active_skills(cid: str, learnset: list, waza_by_id: dict) -> list:
     out = []
     for row in learnset:
@@ -285,6 +334,7 @@ def _active_skills(cid: str, learnset: list, waza_by_id: dict) -> list:
             # the fruit farm's lottery draws by element × rarity, so exactly the
             # tiered skills are obtainable from fruit; "None" = default (level) only.
             "strength": _strip(w.get("Strength"), _STR),
+            **_waza_effect(w),
         })
     out.sort(key=lambda s: (s["level"], s["wazaId"]))
     return out
@@ -794,6 +844,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     partner_def = read_rows(raw / "DataTable/PartnerSkill/DT_PartnerSkill.json")
     passive_main = read_rows(raw / "DataTable/PassiveSkill/DT_PassiveSkill_Main.json")
     drop_rows = read_rows(raw / "DataTable/Character/DT_PalDropItem.json")
+    exp_rows = read_rows(raw / "DataTable/Exp/DT_PalExpTable.json")
     names_by_lang = _names_by_lang(raw)
     icon_paths = _icon_paths(raw)
 
@@ -844,6 +895,8 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "nocturnal": bool(r.get("Nocturnal")),
             "reaction": r.get("AIResponse") or "None",
             "stats": _stats(r),
+            **({"friendship": fr} if (fr := _friendship(r)) else {}),
+            **({"enemyScaling": es} if (es := _enemy_scaling(r)) else {}),
             "work": _work(r),
             "bestWork": _strip(r.get("BestWorkSuitability"), _WORK),
             "partnerSkill": partner,
@@ -873,6 +926,8 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
             "id": pid,
             "rank": v.get("Rank", 0),
             "effects": _passive_effects(v),
+            # when the passive is active (worker/riding/on-team/always/base-camp).
+            **({"invoke": inv} if (inv := [tok for f, tok in _INVOKE_FLAGS.items() if v.get(f) is True]) else {}),
             # Mutation-pool passives (AddMutationPal): exclusive to mutated Pals
             # (hatched from Mutated Eggs) or grafted via a disposable implant at
             # the Operating Table. Flagged for the Passive Skills page.
@@ -883,6 +938,19 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
 
     write_json(data_out / "pals.json", {"pals": pals, "filters": filters})
     write_json(data_out / "passives.json", {"passives": passives})
+
+    # level/EXP curve (DT_PalExpTable, keyed by level 1..N). Player and Pal have
+    # separate "EXP to next level" / cumulative columns.
+    exp_levels = []
+    for lvl, er in sorted(exp_rows.items(), key=lambda kv: int(kv[0])):
+        exp_levels.append({
+            "level": int(lvl),
+            "playerNext": er.get("NextEXP", 0),
+            "playerTotal": er.get("TotalEXP", 0),
+            "palNext": er.get("PalNextEXP", 0),
+            "palTotal": er.get("PalTotalEXP", 0),
+        })
+    write_json(data_out / "exp.json", {"levels": exp_levels})
 
     # ---- Localized text ----------------------------------------------------
     # CharacterID-keyed tables read with lowercased keys (probe with cid.lower()).
@@ -907,6 +975,16 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     target_types = sorted({e["target"] for p in pals for e in p["partnerSkill"].get("effects", [])})
     pal_ids = [p["id"] for p in pals]
     passive_ids = [p["id"] for p in passives]
+    # Armor / accessory passive skills granted by items (catalog's itemPassives)
+    # live outside the displayable-pal set, but their names are in the same skill-
+    # name text table. Collect them so the passives locale can resolve them for the
+    # item pages; the passives LIST/page stays the 115 displayable (names only).
+    item_passive_ids = sorted({
+        p
+        for r in read_rows(raw / "DataTable/Item/DT_ItemDataTable_Common.json").values()
+        for i in range(1, 5)
+        if (p := r.get(f"PassiveSkillName{i}")) and p not in _NONE
+    })
 
     # Partner-skill effect/target labels: hand-authored taxonomy
     # (data_src/partner_effects.yaml), per language, falling back lang -> en-US ->
@@ -972,6 +1050,20 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
         for pid in passive_ids:
             s = {"name": tname.get(f"PASSIVE_{pid}", "")}
             d = tdesc.get(passive_desc_key(pid))
+            if d:
+                s["description"] = d
+            passives_loc[pid] = s
+        # Item-granted (armor/accessory) passives: outside the displayable set, so
+        # no OverrideDescMsgID — resolve name/desc by the default PASSIVE_<id> key.
+        # Skip any without a localized name (the item page falls back to the id).
+        for pid in item_passive_ids:
+            if pid in passives_loc:
+                continue
+            name = tname.get(f"PASSIVE_{pid}", "")
+            if not name:
+                continue
+            s = {"name": name}
+            d = tdesc.get(f"PASSIVE_{pid}")
             if d:
                 s["description"] = d
             passives_loc[pid] = s

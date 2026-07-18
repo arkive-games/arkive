@@ -342,6 +342,55 @@ export const GLOBAL_SEARCH_LOADING_LABELS: Record<Language, string> = {
   'th-TH': 'กำลังโหลด…', 'tr-TR': 'Yükleniyor…', 'vi-VN': 'Đang tải…', 'zh-CN': '加载中…',
   'zh-TW': '載入中…',
 }
+// Item detail: batch-recipe output-quantity label (rendered "Yields ×N").
+export const ITEM_YIELDS_LABELS: Record<Language, string> = {
+  'en-US': 'Yields', 'de-DE': 'Ertrag', 'es-ES': 'Produce', 'es-MX': 'Produce', 'fr-FR': 'Produit',
+  'id-ID': 'Menghasilkan', 'it-IT': 'Produce', 'ja-JP': '生産量', 'ko-KR': '생산량', 'pl-PL': 'Daje',
+  'pt-BR': 'Produz', 'ru-RU': 'Выход', 'th-TH': 'ได้รับ', 'tr-TR': 'Üretim', 'vi-VN': 'Sản lượng',
+  'zh-CN': '产出', 'zh-TW': '產出',
+}
+// Item detail: section title for a skill card that teaches an active skill.
+export const ITEM_TEACHES_LABELS: Record<Language, string> = {
+  'en-US': 'Teaches skill', 'de-DE': 'Lehrt Fähigkeit', 'es-ES': 'Enseña habilidad',
+  'es-MX': 'Enseña habilidad', 'fr-FR': 'Enseigne une compétence', 'id-ID': 'Mengajarkan skill',
+  'it-IT': 'Insegna abilità', 'ja-JP': '習得スキル', 'ko-KR': '습득 스킬', 'pl-PL': 'Naucza umiejętności',
+  'pt-BR': 'Ensina habilidade', 'ru-RU': 'Обучает навыку', 'th-TH': 'สอนสกิล', 'tr-TR': 'Yetenek öğretir',
+  'vi-VN': 'Dạy kỹ năng', 'zh-CN': '习得技能', 'zh-TW': '習得技能',
+}
+// Item detail: section title for armor/accessories that grant passive skills.
+export const ITEM_GRANTS_PASSIVES_LABELS: Record<Language, string> = {
+  'en-US': 'Grants passive skills', 'de-DE': 'Verleiht passive Fähigkeiten',
+  'es-ES': 'Otorga habilidades pasivas', 'es-MX': 'Otorga habilidades pasivas',
+  'fr-FR': 'Confère des compétences passives', 'id-ID': 'Memberikan skill pasif',
+  'it-IT': 'Conferisce abilità passive', 'ja-JP': '付与パッシブスキル', 'ko-KR': '부여 패시브 스킬',
+  'pl-PL': 'Nadaje umiejętności pasywne', 'pt-BR': 'Concede habilidades passivas',
+  'ru-RU': 'Даёт пассивные навыки', 'th-TH': 'มอบสกิลติดตัว', 'tr-TR': 'Pasif yetenek verir',
+  'vi-VN': 'Trao nội tại', 'zh-CN': '赋予被动技能', 'zh-TW': '賦予被動技能',
+}
+// Item sources: raid pick-one guaranteed reward badge (SuccessAnyOneItemList).
+export const BP_GUARANTEED_LABELS: Record<Language, string> = {
+  'en-US': 'Guaranteed', 'de-DE': 'Garantiert', 'es-ES': 'Garantizado', 'es-MX': 'Garantizado',
+  'fr-FR': 'Garanti', 'id-ID': 'Dijamin', 'it-IT': 'Garantito', 'ja-JP': '確定', 'ko-KR': '확정',
+  'pl-PL': 'Gwarantowane', 'pt-BR': 'Garantido', 'ru-RU': 'Гарантированно', 'th-TH': 'การันตี',
+  'tr-TR': 'Garantili', 'vi-VN': 'Đảm bảo', 'zh-CN': '必得', 'zh-TW': '必得',
+}
+// Merchant detail: finite per-restock buy limit (Stock > 0).
+export const MERCHANT_STOCK_LABELS: Record<Language, string> = {
+  'en-US': 'Stock: {{count}}', 'de-DE': 'Vorrat: {{count}}', 'es-ES': 'Existencias: {{count}}',
+  'es-MX': 'Existencias: {{count}}', 'fr-FR': 'Stock : {{count}}', 'id-ID': 'Stok: {{count}}',
+  'it-IT': 'Scorta: {{count}}', 'ja-JP': '在庫: {{count}}', 'ko-KR': '재고: {{count}}',
+  'pl-PL': 'Zapas: {{count}}', 'pt-BR': 'Estoque: {{count}}', 'ru-RU': 'Запас: {{count}}',
+  'th-TH': 'สต็อก: {{count}}', 'tr-TR': 'Stok: {{count}}', 'vi-VN': 'Kho: {{count}}',
+  'zh-CN': '库存：{{count}}', 'zh-TW': '庫存：{{count}}',
+}
+// Merchant detail: one-time-only purchase flag (ProductType OnlyPurchaseOne).
+export const MERCHANT_ONCE_ONLY_LABELS: Record<Language, string> = {
+  'en-US': 'One-time purchase', 'de-DE': 'Einmaliger Kauf', 'es-ES': 'Compra única',
+  'es-MX': 'Compra única', 'fr-FR': 'Achat unique', 'id-ID': 'Beli sekali', 'it-IT': 'Acquisto unico',
+  'ja-JP': '一度のみ購入可', 'ko-KR': '1회 구매 한정', 'pl-PL': 'Zakup jednorazowy',
+  'pt-BR': 'Compra única', 'ru-RU': 'Одноразовая покупка', 'th-TH': 'ซื้อได้ครั้งเดียว',
+  'tr-TR': 'Tek seferlik alım', 'vi-VN': 'Mua một lần', 'zh-CN': '仅限购买一次', 'zh-TW': '僅限購買一次',
+}
 
 const resources = {
   'en-US': {
@@ -828,12 +877,27 @@ for (const lng of LANGUAGES) {
     {
       breeding: BREEDING_STRINGS[lng],
       pal: PAL_STRINGS[lng],
-      item: CATALOG_STRINGS[lng].item,
+      // Base item chrome plus the Tier-2 additions (batch yield + skill-card /
+      // accessory grant sections), kept as standalone labels to avoid churning
+      // the 17 CATALOG_STRINGS language blocks.
+      item: {
+        ...CATALOG_STRINGS[lng].item,
+        yields: ITEM_YIELDS_LABELS[lng],
+        section: {
+          ...CATALOG_STRINGS[lng].item.section,
+          teaches: ITEM_TEACHES_LABELS[lng],
+          grantsPassives: ITEM_GRANTS_PASSIVES_LABELS[lng],
+        },
+      },
       building: CATALOG_STRINGS[lng].building,
       tech: CATALOG_STRINGS[lng].tech,
       quest: QUEST_STRINGS[lng] ?? QUEST_STRINGS['en-US'],
-      bp: BLUEPRINT_STRINGS[lng] ?? BLUEPRINT_STRINGS['en-US'],
-      merchant: MERCHANT_STRINGS[lng] ?? MERCHANT_STRINGS['en-US'],
+      bp: { ...(BLUEPRINT_STRINGS[lng] ?? BLUEPRINT_STRINGS['en-US']), guaranteed: BP_GUARANTEED_LABELS[lng] },
+      merchant: {
+        ...(MERCHANT_STRINGS[lng] ?? MERCHANT_STRINGS['en-US']),
+        stock: MERCHANT_STOCK_LABELS[lng],
+        onceOnly: MERCHANT_ONCE_ONLY_LABELS[lng],
+      },
       dungeon: DUNGEON_STRINGS[lng] ?? DUNGEON_STRINGS['en-US'],
       recycler: RECYCLER_STRINGS[lng] ?? RECYCLER_STRINGS['en-US'],
       catalogLoading: CATALOG_STRINGS[lng].loading,

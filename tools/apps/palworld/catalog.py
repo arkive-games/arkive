@@ -67,6 +67,7 @@ from PIL import Image
 
 from .item_sources import (
     AREA_TEXT_IDS,
+    KIND_ORDER,
     collect_sources,
     dungeon_lottery_items,
     recycler_output_items,
@@ -79,6 +80,7 @@ from .maps.common import read_rows, round2, write_json
 _ITEM_A = "EPalItemTypeA::"
 _ITEM_B = "EPalItemTypeB::"
 _ELEM = "EPalElementType::"
+_WAZA = "EPalWazaID::"
 _BLD_A = "EPalBuildObjectTypeA::"
 _BLD_B = "EPalBuildObjectTypeB::"
 _BLD_UI = "EPalBuildObjectTypeForUIDisplay::"
@@ -172,6 +174,27 @@ def _food(r: dict) -> dict:
         "concentration": r.get("RestoreConcentration", 0) or 0,
     }
     return {k: v for k, v in f.items() if v}
+
+
+_FOOD_EFFT = "EPalFoodStatusEffectType::"
+
+
+def _food_buff(row: dict | None) -> dict:
+    """Timed buffs a cooked dish grants (DT_StatusEffectFood). Returns
+    ``{"effects": [{type, value}], "time": seconds}`` or ``{}``."""
+    if not row:
+        return {}
+    effects = []
+    for i in (1, 2):
+        et = (row.get(f"EffectType{i}") or "").replace(_FOOD_EFFT, "")
+        if et and et != "None":
+            effects.append({"type": et, "value": row.get(f"EffectValue{i}", 0) or 0})
+    if not effects:
+        return {}
+    out = {"effects": effects}
+    if row.get("EffectTime"):
+        out["time"] = int(row["EffectTime"])
+    return out
 
 
 def _equip(r: dict) -> dict:
@@ -285,6 +308,9 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     # research-lab projects: some techs unlock only after a lab research
     # completes (tech RequireResearchId -> lab row -> TextId -> localized name).
     lab_rows = read_rows(raw / "DataTable/Lab/DT_LabResearchDataTable.json")
+    # cooked-food buffs: item id -> [{type, value}] + duration (WorkSpeed/Attack/
+    # Defense/HungerResist/SANResist boosts a dish grants when eaten).
+    food_effect_rows = read_rows(raw / "DataTable/Item/DT_StatusEffectFood.json")
 
     # --- localized text (all layered ja base + per-language) -----------------
     item_name_by_lang = _text_by_lang(raw, "DataTable/Text/DT_ItemNameText_Common.json", "ITEM_NAME_")
@@ -481,7 +507,7 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     # crafting stations per item (from building Blueprint converter params)
     craft_specs = _craft_specs(raw, building_id_set)
     # blueprint acquisition channels (chests / fishing / camps / shrines /
-    # merchants / arena, see blueprint_sources.py) + the acquisition sets the
+    # merchants / arena, see item_sources.py) + the acquisition sets the
     # noSource stamp additionally checks. Both sibling datasets are emitted by
     # earlier stages; without them the stamp would produce false positives, so
     # it is skipped (with a warning) when either is missing.
@@ -491,6 +517,12 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
     merchants, merchant_sources = collect_merchants(raw, item_rows, item_id_set)
     for iid, msrc in merchant_sources.items():
         bp_sources.setdefault(iid, []).extend(msrc)
+    # merchant entries are appended after collect_sources' KIND_ORDER sort, so a
+    # final stable re-sort restores the intended display order (merchant sits
+    # before arena) for every item that carries a merchant channel.
+    _kind_rank = {k: i for i, k in enumerate(KIND_ORDER)}
+    for lst in bp_sources.values():
+        lst.sort(key=lambda s: _kind_rank[s["kind"]])
     dungeon_items = dungeon_lottery_items(data_out)
     recycler_items = recycler_output_items(data_out)
     # noSource: blueprint-family items unreachable through ANY channel. Beyond
@@ -553,12 +585,32 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         food = _food(r)
         if food:
             entry["food"] = food
+        food_buff = _food_buff(food_effect_rows.get(iid))
+        if food_buff:
+            entry["foodBuff"] = food_buff
         equip = _equip(r)
         if equip:
             entry["equip"] = equip
+        # skill cards teach a pal an active skill (WazaID); armor/accessory items
+        # grant passive skills (PassiveSkillName1..4) — both link into datasets the
+        # site already carries (active skills, passives).
+        waza = _strip(r.get("WazaID"), _WAZA)
+        if waza and waza != "None":
+            entry["grantsSkill"] = waza
+        item_passives = [
+            p for i in range(1, 5)
+            if (p := r.get(f"PassiveSkillName{i}")) and p not in _NONE
+        ]
+        if item_passives:
+            entry["itemPassives"] = item_passives
         rc = recipe_by_product.get(iid)
         if rc:
             recipe = {"work": round2(rc.get("WorkAmount", 0.0)), "materials": _materials(rc, 5)}
+            # output quantity per craft — batch recipes (ammo, money, medicine)
+            # yield >1; omitted for the singleton majority.
+            pc = int(rc.get("Product_Count", 1) or 1)
+            if pc > 1:
+                recipe["productCount"] = pc
             gate = rc.get("UnlockItemID")
             if gate and gate not in _NONE:
                 recipe["unlockItemId"] = gate
@@ -640,6 +692,16 @@ def run_catalog(raw: Path, data_out: Path, res_out: Path) -> dict:
         energy = _strip(r.get("RequiredEnergyType"), _ENERGY)
         if energy and energy != "None":
             entry["energyType"] = energy
+        # base-planning stats: power consumed per second while working, and the
+        # per-base install cap. Both 0 when N/A. (BuildCapacity is uniformly 0 in
+        # this export — storage capacity lives in the building Blueprint, not the
+        # DataTable — so it is not emitted.)
+        drain = r.get("ConsumeEnergySpeed", 0) or 0
+        if drain > 0:
+            entry["energyDrain"] = round2(drain)
+        max_per_base = r.get("InstallMaxNumInBaseCamp", 0) or 0
+        if max_per_base > 0:
+            entry["maxPerBase"] = int(max_per_base)
         if bid in bld_unlock_tech:
             entry["unlockTech"] = sorted(bld_unlock_tech[bid])
         # icon

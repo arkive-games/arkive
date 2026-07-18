@@ -9,6 +9,11 @@ export interface MerchantProduct {
   price: number
   /** Quantity sold per purchase; omitted when 1. */
   num?: number
+  /** Finite per-restock buy limit (DT_ItemShopCreateData Stock > 0); omitted for
+   *  unlimited/default stock. */
+  stock?: number
+  /** One-time-only purchase (ProductType OnlyPurchaseOne). */
+  onceOnly?: boolean
 }
 
 export interface MerchantEntry {

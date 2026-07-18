@@ -87,11 +87,22 @@ export default function MerchantDetailPage() {
                     key={p.item}
                     className="flex items-center justify-between gap-3 rounded-md border border-border bg-secondary/40 px-2 py-1"
                   >
-                    <ItemLink
-                      id={p.item}
-                      name={items.text[p.item]?.name ?? p.item}
-                      icon={items.byId.get(p.item)?.icon}
-                    />
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <ItemLink
+                        id={p.item}
+                        name={items.text[p.item]?.name ?? p.item}
+                        icon={items.byId.get(p.item)?.icon}
+                      />
+                      {p.onceOnly ? (
+                        <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                          {t('merchant.onceOnly')}
+                        </span>
+                      ) : p.stock ? (
+                        <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">
+                          {t('merchant.stock', { count: p.stock })}
+                        </span>
+                      ) : null}
+                    </span>
                     <span className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
                       {p.num && p.num > 1 ? (
                         <span className="tabular-nums">×{p.num}</span>

@@ -236,7 +236,7 @@ def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set
 
     # --- summoning-altar raid rewards -----------------------------------------
     raid_rows = read_rows(raw / "Blueprint/RaidBoss/DT_PalRaidBoss_Common.json")
-    raid_by_item: dict[str, dict[str, float]] = defaultdict(dict)  # iid -> {pal: rate}
+    raid_by_item: dict[str, dict[str, dict]] = defaultdict(dict)  # iid -> {pal: {rate,min,max}}
     for row in raid_rows.values():
         pal = (((row.get("InfoList") or [{}])[0].get("PalId")) or {}).get("Key")
         if pal in _NONE:
@@ -247,10 +247,26 @@ def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set
             if iid in _NONE or iid not in item_id_set:
                 continue
             rate = e.get("Rate", 0.0) or 0.0
-            raid_by_item[iid][pal] = max(raid_by_item[iid].get(pal, 0.0), rate)
+            cur = raid_by_item[iid].get(pal)
+            if cur is None or rate > cur["rate"]:
+                raid_by_item[iid][pal] = {"rate": rate, "min": e.get("Min", 1) or 1, "max": e.get("Max", 1) or 1}
+        # pick-one guaranteed rewards (SuccessAnyOneItemList): you always get one
+        # item from this set (e.g. work-suitability tickets). Flagged `anyOne`.
+        for e in row.get("SuccessAnyOneItemList") or []:
+            iid = (e.get("ItemName") or {}).get("Key")
+            if iid in _NONE or iid not in item_id_set:
+                continue
+            raid_by_item[iid].setdefault(pal, {"rate": 0.0, "min": e.get("Num", 1) or 1, "max": e.get("Num", 1) or 1, "anyOne": True})
     for iid, pals in raid_by_item.items():
-        for pal, rate in sorted(pals.items()):
-            sources[iid].append({"kind": "raid", "pal": pal, "chance": round2(rate)})
+        for pal, info in sorted(pals.items()):
+            entry = {"kind": "raid", "pal": pal}
+            if info.get("anyOne"):
+                entry["anyOne"] = True
+            else:
+                entry["chance"] = round2(info["rate"])
+            if info["max"] > 1 or info["min"] > 1:
+                entry["min"], entry["max"] = info["min"], info["max"]
+            sources[iid].append(entry)
 
     # --- arena clear rewards ---------------------------------------------------
     arena_rows = read_rows(raw / "DataTable/Arena/DT_ArenaSoloRewardTable.json")
@@ -264,6 +280,12 @@ def collect_sources(raw: Path, data_out: Path, item_rows: dict, item_id_set: set
                 if repeat:
                     entry["repeat"] = True
                 sources[iid].append(entry)
+
+    # Sections append in code order, not KIND_ORDER (shrine before raid, etc.);
+    # a final stable sort restores the intended display order while preserving
+    # each section's intra-kind ordering (area/rank).
+    for lst in sources.values():
+        lst.sort(key=lambda s: kind_rank[s["kind"]])
 
     return dict(sources)
 

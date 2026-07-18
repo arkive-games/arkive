@@ -146,6 +146,13 @@ def _load_groups(raw: Path, item_rows: dict, item_id_set: set) -> dict[str, dict
             num = p.get("ProductNum", 1) or 1
             if num != 1:
                 entry["num"] = num
+            # Stock: -1 = unlimited, 0 = default (unspecified), >0 = a fixed
+            # per-restock buy limit — emit only the actionable finite caps.
+            stock = p.get("Stock", 0) or 0
+            if stock > 0:
+                entry["stock"] = int(stock)
+            if (p.get("ProductType") or "").endswith("OnlyPurchaseOne"):
+                entry["onceOnly"] = True
             products.append(entry)
         if not products:
             continue
