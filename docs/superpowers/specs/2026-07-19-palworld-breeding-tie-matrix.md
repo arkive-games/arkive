@@ -227,3 +227,28 @@ other parent pair summing to 2 x target works too.
 Caveat: examples listing legendaries (Frostallion, ...) or Yakushima-collab parents (Green
 Slime, ...) assume those species breed as normal rank-average parents - if the game refuses
 the pair, use any other two parents whose ranks sum to 2 x target.
+
+## Appendix — 9 subspecies probes (stronger than any tie)
+
+Across the WHOLE table, `CombiDuplicatePriority = CombiRank x 100` for 743 of 753 IsPal
+rows. The 10 exceptions: `BOSS_KingWhale_otomo` (699, non-breedable codename) and the 9
+element subspecies below, which carry tiny sequential priorities (571-581). They are
+combo-only children; our engine excludes them from rank-average candidates entirely.
+
+None of their ranks collides with an eligible rank, so a parent pair whose target lands
+EXACTLY on a subspecies rank discriminates harder than any tie: if the game included them
+as candidates, the subspecies would win at distance 0 **regardless of tie-break
+direction**; if (as community lore says) they never hatch from rank-average, the nearest
+normal species (third column) should appear, proving the game excludes them like our engine.
+
+| subspecies (rank, dup) | target | engine predicts (dist) | if subspecies hatches | example parents |
+|---|---|---|---|---|
+| Turtacle Terra (1330, 577) | 1330 | **Mammorest** (1340, ±10) | engine must include subspecies as candidates | Aegidron + Herbil (30+2630); Knocklem + Dazzi (260+2400) |
+| Pengullet Lux (2490, 572) | 2490 | **Muffly** (2480, ±10) | engine must include subspecies as candidates | Valentail + Chikipi (1900+3080); Rayhound + Vixy (1920+3060) |
+| Azurobe Cryst (1220, 578) | 1220 | **Quivern** (1210, ±10) | engine must include subspecies as candidates | Aegidron + Turtacle (30+2410); Ophydia + Dazemu (230+2210) |
+| Fuack Ignis (2300, 575) | 2300 | **Dumud** (2290, ±10) | engine must include subspecies as candidates | Shroomer + Chikipi (1520+3080); Bakemi + Vixy (1540+3060) |
+| Killamari Primo (2540, 571) | 2540 | **Gloopie** (2530, ±10) | engine must include subspecies as candidates | Souffline + Chikipi (2000+3080); Lunaris + Teafant (2010+3070) |
+| Penking Lux (1850, 573) | 1850 | **Azurobe** (1830, ±20) | engine must include subspecies as candidates | Whalaska + Foxparks (710+2990); Gildane + Clovee (730+2970) |
+| Celaray Lux (2380, 574) | 2380 | **Cawgnito** (2370, ±10) | engine must include subspecies as candidates | Lapiron + Chikipi (1680+3080); Beakon + Teafant (1690+3070) |
+| Dumud Gild (1620, 576) | 1620 | **Vanwyrm** (1650, ±30) | engine must include subspecies as candidates | Ophydia + Sparkit (230+3010); Knocklem + Fuack (260+2980) |
+| Finsider Ignis (2240, 581) | 2240 | **Yakumo** (2230, ±10) | engine must include subspecies as candidates | Dynamoff + Chikipi (1400+3080); Leafan + Teafant (1410+3070) |
