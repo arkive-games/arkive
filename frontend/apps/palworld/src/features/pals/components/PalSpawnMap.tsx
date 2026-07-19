@@ -264,7 +264,7 @@ export function PalSpawnMap({
       {current.paldex ? (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-muted-foreground">
-            {t('pal.habitatLabel', { defaultValue: 'Paldex habitat' })}:
+            {t('pal.habitatLabel')}:
           </span>
           {(['day', 'night'] as const).map((k) => (
             <button
@@ -279,9 +279,7 @@ export function PalSpawnMap({
                   : 'bg-secondary text-secondary-foreground hover:bg-accent',
               )}
             >
-              {k === 'day'
-                ? t('pal.habitatDay', { defaultValue: 'Day' })
-                : t('pal.habitatNight', { defaultValue: 'Night' })}
+              {k === 'day' ? t('pal.habitatDay') : t('pal.habitatNight')}
             </button>
           ))}
         </div>

@@ -315,6 +315,9 @@ export default function PalDetailPage() {
     // The game's single BestWorkSuitability is highlighted: the condenser
     // upgrades it first (stars 1 and 3), so it matters mechanically.
     const condensed = simulateCondense(pal.work, pal.bestWork)
+    // Per-BOND-RANK flat gains (Friendship_* — the trust system, NOT the
+    // condenser), shown inline on the matching base-stat rows.
+    const bondGrowth: Partial<Record<(typeof STAT_KEYS)[number], number>> = pal.friendship ?? {}
     const partnerName = text?.partnerSkill?.name
     const ps = pal.partnerSkill
     const partnerDesc =
@@ -362,14 +365,15 @@ export default function PalDetailPage() {
       fishingAreas.sort((x, y) => y.share - x.share)
     }
     const unlockedTechs = tech ? tech.techs.filter((tt) => tt.requirePal === pal.id) : []
-    // Enemy-form scaling multipliers (alpha/boss), only when they diverge from 1.
+    // Enemy-form scaling multipliers (alpha/boss), only when they diverge from
+    // 1. Labels are i18n keys (HP / cooldown reuse the stat & skill labels).
     const enemyScaling = pal.enemyScaling
       ? (
           [
-            ['maxHp', 'HP'],
-            ['receiveDamage', 'Dmg taken'],
-            ['inflictDamage', 'Dmg dealt'],
-            ['wazaCoolTime', 'Cooldown'],
+            ['maxHp', 'pal.stat.hp'],
+            ['receiveDamage', 'pal.dmgTaken'],
+            ['inflictDamage', 'pal.dmgDealt'],
+            ['wazaCoolTime', 'pal.cooldown'],
           ] as const
         ).filter(([k]) => pal.enemyScaling![k] != null)
       : []
@@ -582,7 +586,7 @@ export default function PalDetailPage() {
                     {t('pal.summonMaterials')}
                     {pal.summonLevel ? (
                       <span className="rounded bg-red-500/15 px-1.5 py-0.5 font-medium tabular-nums text-red-600 dark:text-red-400">
-                        {t('pal.summonLevel', { defaultValue: 'Boss Lv{{n}}', n: pal.summonLevel })}
+                        {t('pal.summonLevel', { n: pal.summonLevel })}
                       </span>
                     ) : null}
                   </div>
@@ -599,7 +603,7 @@ export default function PalDetailPage() {
                   </div>
                   {pal.summonEggPool?.length ? (
                     <div className="mt-2 text-xs text-muted-foreground">
-                      {t('pal.summonEggPool', { defaultValue: 'Reward pool' })}:{' '}
+                      {t('pal.summonEggPool')}:{' '}
                       {pal.summonEggPool.map((e, i) => {
                         const total = pal.summonEggPool!.reduce((s, x) => s + x.weight, 0) || 1
                         return (
@@ -623,7 +627,7 @@ export default function PalDetailPage() {
             </PalSection>
 
             {palDungeons.length ? (
-              <PalSection title={t('pal.section.dungeons', { defaultValue: 'Found in Dungeons' })}>
+              <PalSection title={t('pal.section.dungeons')}>
                 <div className="flex flex-wrap gap-1.5">
                   {palDungeons.map((did) => (
                     <Link
@@ -640,7 +644,7 @@ export default function PalDetailPage() {
             ) : null}
 
             {fishingAreas.length ? (
-              <PalSection title={t('pal.section.fishing', { defaultValue: 'Caught by Fishing' })}>
+              <PalSection title={t('pal.section.fishing')}>
                 <div className="flex flex-wrap gap-1.5">
                   {fishingAreas.map((f) => (
                     <Link
@@ -660,9 +664,9 @@ export default function PalDetailPage() {
             ) : null}
 
             {unlockedTechs.length ? (
-              <PalSection title={t('pal.section.unlocksTech', { defaultValue: 'Unlocks Technology' })}>
+              <PalSection title={t('pal.section.unlocksTech')}>
                 <p className="mb-2 text-xs text-muted-foreground">
-                  {t('pal.unlocksTechNote', { defaultValue: 'Capturing this Pal unlocks:' })}
+                  {t('pal.unlocksTechNote')}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {unlockedTechs.map((tt) => (
@@ -686,9 +690,30 @@ export default function PalDetailPage() {
             <PalSection title={t('pal.section.stats')}>
               <InfoRows>
                 {PRIMARY_STAT_KEYS.map((k) => (
-                  <StatRow key={k} label={t(`pal.stat.${k}`)} value={pal.stats[k]} />
+                  <StatRow
+                    key={k}
+                    label={t(`pal.stat.${k}`)}
+                    value={
+                      bondGrowth[k] != null ? (
+                        <>
+                          {pal.stats[k]}
+                          <span className="text-emerald-600 dark:text-emerald-400">
+                            {' '}+{bondGrowth[k]}
+                          </span>
+                        </>
+                      ) : (
+                        pal.stats[k]
+                      )
+                    }
+                  />
                 ))}
               </InfoRows>
+              {Object.keys(bondGrowth).length ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  <span className="text-emerald-600 dark:text-emerald-400">+N</span>{' '}
+                  {t('pal.friendshipNote')}
+                </p>
+              ) : null}
             </PalSection>
 
             {workEntries.length ? (
@@ -720,16 +745,10 @@ export default function PalDetailPage() {
                 <StatRow label={t('pal.stat.size')} value={pal.size || '—'} />
                 <StatRow label={t('pal.stat.rarity')} value={pal.rarity} />
                 {pal.predator ? (
-                  <StatRow
-                    label={t('pal.stat.predator', { defaultValue: 'Predator' })}
-                    value={t('common.yes', { defaultValue: 'Yes' })}
-                  />
+                  <StatRow label={t('pal.stat.predator')} value={t('pal.yes')} />
                 ) : null}
                 {pal.stats.expRatio ? (
-                  <StatRow
-                    label={t('pal.stat.expRatio', { defaultValue: 'EXP yield' })}
-                    value={pal.stats.expRatio}
-                  />
+                  <StatRow label={t('pal.stat.expRatio')} value={pal.stats.expRatio} />
                 ) : null}
                 <StatRow
                   label={t('pal.stat.egg')}
@@ -759,31 +778,14 @@ export default function PalDetailPage() {
               </InfoRows>
             </PalSection>
 
-            {pal.friendship && Object.keys(pal.friendship).length ? (
-              <PalSection title={t('pal.section.friendship', { defaultValue: 'Condense Growth' })}>
-                <p className="mb-2 text-xs text-muted-foreground">
-                  {t('pal.friendshipNote', { defaultValue: 'Stat gain per soul-condense level.' })}
-                </p>
-                <InfoRows>
-                  {(['hp', 'shotAttack', 'defense', 'craftSpeed'] as const)
-                    .filter((k) => pal.friendship![k] != null)
-                    .map((k) => (
-                      <StatRow key={k} label={t(`pal.stat.${k}`)} value={`+${pal.friendship![k]}`} />
-                    ))}
-                </InfoRows>
-              </PalSection>
-            ) : null}
-
             {enemyScaling.length ? (
-              <PalSection title={t('pal.section.enemyScaling', { defaultValue: 'Enemy Scaling' })}>
+              <PalSection title={t('pal.section.enemyScaling')}>
                 <p className="mb-2 text-xs text-muted-foreground">
-                  {t('pal.enemyScalingNote', {
-                    defaultValue: 'Multipliers applied to the wild alpha / boss form.',
-                  })}
+                  {t('pal.enemyScalingNote')}
                 </p>
                 <InfoRows>
                   {enemyScaling.map(([k, label]) => (
-                    <StatRow key={k} label={label} value={`×${pal.enemyScaling![k]}`} />
+                    <StatRow key={k} label={t(label)} value={`×${pal.enemyScaling![k]}`} />
                   ))}
                 </InfoRows>
               </PalSection>

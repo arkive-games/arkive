@@ -176,6 +176,66 @@ export const PASSIVE_INNATE_TIP_LABELS: Record<Language, string> = {
   'zh-CN': '固有被动：特定帕鲁天生必定携带该被动。',
   'zh-TW': '固有被動：特定帕魯天生必定攜帶該被動。',
 }
+// Passive Skills page: "when is this passive active" scope chips (tokens from
+// the pipeline's _INVOKE_FLAGS: worker / riding / reserve / onTeam / active /
+// baseCamp / always).
+export const PASSIVE_INVOKE_LABELS: Record<Language, Record<string, string>> = {
+  'en-US': { worker: 'While working', riding: 'While riding', reserve: 'In reserve', onTeam: 'On team', active: 'While summoned', baseCamp: 'At base', always: 'Always' },
+  'de-DE': { worker: 'Bei der Arbeit', riding: 'Beim Reiten', reserve: 'In Reserve', onTeam: 'Im Team', active: 'Wenn beschworen', baseCamp: 'Im Lager', always: 'Immer' },
+  'es-ES': { worker: 'Al trabajar', riding: 'Al montar', reserve: 'En reserva', onTeam: 'En el equipo', active: 'Al estar invocado', baseCamp: 'En el campamento', always: 'Siempre' },
+  'es-MX': { worker: 'Al trabajar', riding: 'Al montar', reserve: 'En reserva', onTeam: 'En el equipo', active: 'Al estar invocado', baseCamp: 'En el campamento', always: 'Siempre' },
+  'fr-FR': { worker: 'Au travail', riding: 'En monture', reserve: 'En réserve', onTeam: 'Dans l’équipe', active: 'Une fois invoqué', baseCamp: 'Au camp', always: 'Toujours' },
+  'id-ID': { worker: 'Saat bekerja', riding: 'Saat ditunggangi', reserve: 'Cadangan', onTeam: 'Di tim', active: 'Saat dipanggil', baseCamp: 'Di markas', always: 'Selalu' },
+  'it-IT': { worker: 'Al lavoro', riding: 'In sella', reserve: 'In riserva', onTeam: 'In squadra', active: 'Quando evocato', baseCamp: 'Al campo base', always: 'Sempre' },
+  'ja-JP': { worker: '作業中', riding: '騎乗中', reserve: '控え時', onTeam: '手持ちにいる時', active: '出撃中', baseCamp: '拠点にいる時', always: '常時' },
+  'ko-KR': { worker: '작업 중', riding: '탑승 중', reserve: '대기 중', onTeam: '팀에 있을 때', active: '소환 중', baseCamp: '거점에 있을 때', always: '항상' },
+  'pl-PL': { worker: 'Podczas pracy', riding: 'Podczas jazdy', reserve: 'W rezerwie', onTeam: 'W drużynie', active: 'Po przywołaniu', baseCamp: 'W bazie', always: 'Zawsze' },
+  'pt-BR': { worker: 'Ao trabalhar', riding: 'Ao montar', reserve: 'Na reserva', onTeam: 'Na equipe', active: 'Quando invocado', baseCamp: 'Na base', always: 'Sempre' },
+  'ru-RU': { worker: 'Во время работы', riding: 'Верхом', reserve: 'В резерве', onTeam: 'В отряде', active: 'Когда призван', baseCamp: 'В лагере', always: 'Всегда' },
+  'th-TH': { worker: 'ขณะทำงาน', riding: 'ขณะขี่', reserve: 'ขณะสำรอง', onTeam: 'อยู่ในทีม', active: 'ขณะออกสู้', baseCamp: 'อยู่ในฐาน', always: 'ตลอดเวลา' },
+  'tr-TR': { worker: 'Çalışırken', riding: 'Binerken', reserve: 'Yedekte', onTeam: 'Takımda', active: 'Çağrılmışken', baseCamp: 'Üsteyken', always: 'Her zaman' },
+  'vi-VN': { worker: 'Khi làm việc', riding: 'Khi cưỡi', reserve: 'Khi dự bị', onTeam: 'Trong đội', active: 'Khi được triệu hồi', baseCamp: 'Ở căn cứ', always: 'Luôn luôn' },
+  'zh-CN': { worker: '工作时', riding: '骑乘时', reserve: '待命时', onTeam: '在队伍中', active: '出战时', baseCamp: '在据点时', always: '常驻' },
+  'zh-TW': { worker: '工作時', riding: '騎乘時', reserve: '待命時', onTeam: '在隊伍中', active: '出戰時', baseCamp: '在據點時', always: '常駐' },
+}
+// Passive Skills page: tooltip on the invoke-scope chips.
+export const PASSIVE_INVOKE_TIP_LABELS: Record<Language, string> = {
+  'en-US': 'When this passive is active', 'de-DE': 'Wann dieses Passiv aktiv ist',
+  'es-ES': 'Cuándo está activa esta pasiva', 'es-MX': 'Cuándo está activa esta pasiva',
+  'fr-FR': 'Quand cette compétence passive est active', 'id-ID': 'Kapan pasif ini aktif',
+  'it-IT': 'Quando questa passiva è attiva', 'ja-JP': 'このパッシブが有効になる状況',
+  'ko-KR': '이 패시브가 적용되는 상황', 'pl-PL': 'Kiedy ta pasywka działa',
+  'pt-BR': 'Quando esta passiva está ativa', 'ru-RU': 'Когда действует эта пассивная способность',
+  'th-TH': 'เงื่อนไขที่สกิลติดตัวนี้ทำงาน', 'tr-TR': 'Bu pasifin etkin olduğu durumlar',
+  'vi-VN': 'Khi nội tại này có hiệu lực', 'zh-CN': '该被动生效的场景', 'zh-TW': '該被動生效的場景',
+}
+// Passive Skills page: low random-roll-weight badge + its tooltip.
+export const PASSIVE_RARE_ROLL_LABELS: Record<Language, string> = {
+  'en-US': 'Rare roll', 'de-DE': 'Seltener Wurf', 'es-ES': 'Tirada rara', 'es-MX': 'Tirada rara',
+  'fr-FR': 'Tirage rare', 'id-ID': 'Undian langka', 'it-IT': 'Estrazione rara', 'ja-JP': '低出現率',
+  'ko-KR': '희귀 출현', 'pl-PL': 'Rzadki los', 'pt-BR': 'Sorteio raro', 'ru-RU': 'Редкий ролл',
+  'th-TH': 'สุ่มติดยาก', 'tr-TR': 'Nadir çekiliş', 'vi-VN': 'Tỷ lệ hiếm', 'zh-CN': '低概率词条',
+  'zh-TW': '低機率詞條',
+}
+export const PASSIVE_RARE_ROLL_TIP_LABELS: Record<Language, string> = {
+  'en-US': 'Low random-roll weight — appears far less often',
+  'de-DE': 'Geringes Zufallsgewicht – erscheint deutlich seltener',
+  'es-ES': 'Peso de aparición bajo: sale con mucha menos frecuencia',
+  'es-MX': 'Peso de aparición bajo: sale con mucha menos frecuencia',
+  'fr-FR': 'Faible poids de tirage — apparaît bien plus rarement',
+  'id-ID': 'Bobot acak rendah — jauh lebih jarang muncul',
+  'it-IT': 'Peso di estrazione basso: compare molto più raramente',
+  'ja-JP': '抽選の重みが低く、出現頻度がかなり低い',
+  'ko-KR': '무작위 출현 가중치가 낮아 훨씬 드물게 나타납니다',
+  'pl-PL': 'Niska waga losowania — pojawia się znacznie rzadziej',
+  'pt-BR': 'Peso de sorteio baixo — aparece com muito menos frequência',
+  'ru-RU': 'Низкий вес при случайном выборе — выпадает гораздо реже',
+  'th-TH': 'น้ำหนักการสุ่มต่ำ — ปรากฏน้อยกว่ามาก',
+  'tr-TR': 'Rastgele seçim ağırlığı düşük — çok daha nadir görülür',
+  'vi-VN': 'Trọng số ngẫu nhiên thấp — xuất hiện hiếm hơn nhiều',
+  'zh-CN': '随机权重很低，出现频率远低于其他词条',
+  'zh-TW': '隨機權重很低，出現頻率遠低於其他詞條',
+}
 // Active Skills page: element filter-group label.
 export const ACTIVE_SKILL_ELEMENT_LABELS: Record<Language, string> = {
   'en-US': 'Element', 'de-DE': 'Element', 'es-ES': 'Elemento', 'es-MX': 'Elemento', 'fr-FR': 'Élément',
@@ -933,6 +993,10 @@ for (const lng of LANGUAGES) {
         mutationTip: PASSIVE_MUTATION_TIP_LABELS[lng],
         innate: PASSIVE_INNATE_LABELS[lng],
         innateTip: PASSIVE_INNATE_TIP_LABELS[lng],
+        invoke: PASSIVE_INVOKE_LABELS[lng],
+        invokeTip: PASSIVE_INVOKE_TIP_LABELS[lng],
+        rareRoll: PASSIVE_RARE_ROLL_LABELS[lng],
+        rareRollTip: PASSIVE_RARE_ROLL_TIP_LABELS[lng],
       },
       activeSkill: {
         element: ACTIVE_SKILL_ELEMENT_LABELS[lng],

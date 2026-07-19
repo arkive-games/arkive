@@ -137,7 +137,7 @@ export interface PalEntry {
   predator?: boolean
   reaction: string
   stats: PalStats
-  /** Per-level condense growth (absent when the pal has no non-zero growth). */
+  /** Per-trust-rank stat growth (absent when the pal has no non-zero growth). */
   friendship?: PalFriendship
   /** Enemy-form stat multipliers (absent when all are the 1.0 no-op). */
   enemyScaling?: PalEnemyScaling

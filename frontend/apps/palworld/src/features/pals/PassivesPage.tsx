@@ -307,9 +307,7 @@ export default function PassivesPage() {
                       {r.invoke.map((scope) => (
                         <span
                           key={scope}
-                          title={t('passive.invokeTip', {
-                            defaultValue: 'When this passive is active',
-                          })}
+                          title={t('passive.invokeTip')}
                           className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 ring-1 ring-inset ring-amber-500/30 dark:text-amber-300"
                         >
                           {t(`passive.invoke.${scope}`, { defaultValue: scope })}
@@ -317,12 +315,10 @@ export default function PassivesPage() {
                       ))}
                       {r.rareRoll ? (
                         <span
-                          title={t('passive.rareRollTip', {
-                            defaultValue: 'Low random-roll weight — appears far less often',
-                          })}
+                          title={t('passive.rareRollTip')}
                           className="rounded bg-fuchsia-500/15 px-1.5 py-0.5 text-xs font-medium text-fuchsia-600 ring-1 ring-inset ring-fuchsia-500/30 dark:text-fuchsia-300"
                         >
-                          {t('passive.rareRoll', { defaultValue: 'Rare roll' })}
+                          {t('passive.rareRoll')}
                         </span>
                       ) : null}
                     </div>
