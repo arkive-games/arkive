@@ -3,9 +3,10 @@ import { Link } from '@tanstack/react-router'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
 import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
+import { getGameVersion } from '../lib/urls'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 
-export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids'
+export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing'
 
 /**
  * Unified top navigation shared by every page (map, Paldeck, breeding). The
@@ -54,6 +55,11 @@ export function TopNav({ active }: { active: NavKey }) {
           label: t('raids.title', { defaultValue: 'Base Raids' }),
           active: active === '/raids',
         },
+        {
+          key: '/fishing',
+          label: t('fishing.title', { defaultValue: 'Fishing' }),
+          active: active === '/fishing',
+        },
       ],
     },
   ]
@@ -83,7 +89,7 @@ export function TopNav({ active }: { active: NavKey }) {
             commit={__BUILD_GIT_COMMIT__}
             buildTime={__BUILD_TIME__}
             dev={import.meta.env.DEV}
-            gameVersion={import.meta.env.VITE_GAME_VERSION}
+            gameVersion={getGameVersion()}
           />
         </>
       }
