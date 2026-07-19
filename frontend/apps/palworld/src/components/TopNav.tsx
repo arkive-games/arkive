@@ -6,7 +6,7 @@ import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { getGameVersion } from '../lib/urls'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 
-export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing'
+export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing'
 
 /**
  * Unified top navigation shared by every page (map, Paldeck, breeding). The
@@ -28,6 +28,11 @@ export function TopNav({ active }: { active: NavKey }) {
         { key: '/passives', label: t('pal.section.passives'), active: active === '/passives' },
         { key: '/active-skills', label: t('pal.section.activeSkills'), active: active === '/active-skills' },
         { key: '/partner-skills', label: t('partner.title'), active: active === '/partner-skills' },
+        {
+          key: '/stat-simulator',
+          label: t('sim.title', { defaultValue: 'Stat Simulator' }),
+          active: active === '/stat-simulator',
+        },
       ],
     },
     {

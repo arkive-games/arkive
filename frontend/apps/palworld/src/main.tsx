@@ -34,6 +34,7 @@ import ResearchPage from './features/research/ResearchPage'
 import RaidsPage from './features/raids/RaidsPage'
 import FishingPage from './features/fishing/FishingPage'
 import RegionDetailPage from './features/regions/RegionDetailPage'
+import StatSimulatorPage from './features/simulator/StatSimulatorPage'
 import PassivesPage from './features/pals/PassivesPage'
 import ActiveSkillsPage from './features/pals/ActiveSkillsPage'
 import ActiveSkillDetailPage from './features/pals/ActiveSkillDetailPage'
@@ -230,6 +231,18 @@ const fishingRoute = createRoute({
   path: '/fishing',
   component: FishingPage,
 })
+export interface StatSimulatorSearch {
+  /** Pal to simulate, e.g. /stat-simulator?pal=Anubis */
+  pal?: string
+}
+const statSimulatorRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/stat-simulator',
+  validateSearch: (s: Record<string, unknown>): StatSimulatorSearch => ({
+    pal: typeof s.pal === 'string' ? s.pal : undefined,
+  }),
+  component: StatSimulatorPage,
+})
 // Loot-region detail page ($id = a blueprint-sources area key, e.g. "Grass",
 // "Sakurajima", "Oilrig") — linked from item pages' chest/fishing/… chips.
 const regionDetailRoute = createRoute({
@@ -262,6 +275,7 @@ const routeTree = rootRoute.addChildren([
   researchRoute,
   raidsRoute,
   fishingRoute,
+  statSimulatorRoute,
   regionDetailRoute,
 ])
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
