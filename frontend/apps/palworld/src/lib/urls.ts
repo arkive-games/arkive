@@ -8,6 +8,11 @@ export const RES_BASE = import.meta.env.VITE_RESOURCE_BASE_URL ?? '/palres'
 // failure) data URLs stay bare and caching falls back to revalidation.
 let dataVersion: string | undefined
 
+// Game client version the data artifact was exported from (version.json
+// `gameVersion`, stamped by tools from the export's DefaultGame.ini). Shown in
+// the top-bar build-info hovercard; undefined hides the row.
+let gameVersion: string | undefined
+
 export async function initDataVersion(timeoutMs = 2500): Promise<void> {
   try {
     // Race a timeout so a hung CDN can't block first render — the app then
@@ -20,12 +25,18 @@ export async function initDataVersion(timeoutMs = 2500): Promise<void> {
       timeout,
     ])
     if (r.ok) {
-      const v = ((await r.json()) as { version?: unknown }).version
-      if (typeof v === 'string' && v) dataVersion = v
+      const body = (await r.json()) as { version?: unknown; gameVersion?: unknown }
+      if (typeof body.version === 'string' && body.version) dataVersion = body.version
+      if (typeof body.gameVersion === 'string' && body.gameVersion) gameVersion = body.gameVersion
     }
   } catch {
     /* unversioned artifact or unreachable — fall back to bare URLs */
   }
+}
+
+/** Game client version of the data artifact (resolved by initDataVersion). */
+export function getGameVersion(): string | undefined {
+  return gameVersion
 }
 
 /** URL of a data-artifact file (path relative to the artifact root). */

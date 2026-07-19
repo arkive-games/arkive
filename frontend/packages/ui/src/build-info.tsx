@@ -9,7 +9,7 @@ export interface BuildInfoProps {
   buildTime: string | number
   /** When true (pass `import.meta.env.DEV`): commit shows "dev", time shows last page-load. */
   dev?: boolean
-  /** Game version the site's data was built from (wire to `VITE_GAME_VERSION`). Row is hidden when unset. */
+  /** Game version the site's data was built from (from the data artifact's `version.json` or `VITE_GAME_VERSION`). Row is hidden when unset. */
   gameVersion?: string
   /** Repository link opened by the icon. Defaults to the monorepo. */
   repoUrl?: string
