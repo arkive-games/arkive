@@ -41,8 +41,9 @@ export interface PalStats {
   walkSpeed: number; runSpeed: number; rideSprintSpeed: number; transportSpeed: number
   swimSpeed: number
 }
-/** Per-level stat growth from soul-condensing (DT_PalMonsterParameter
- *  Friendship_* columns); only the non-zero growth stats are present. */
+/** Per-BOND-RANK flat stat gains (DT_PalMonsterParameter Friendship_*): the
+ *  trust/friendship system adds these species-specific amounts per rank (up
+ *  to rank 10). Only the non-zero growth stats are present. */
 export interface PalFriendship {
   hp?: number; shotAttack?: number; defense?: number; craftSpeed?: number
 }

@@ -21,7 +21,7 @@ in the pipeline, the dataset regenerated, and the frontend data contracts extend
 | buildings | `energyDrain` | `ConsumeEnergySpeed` | 45 | catalog.py |
 | buildings | `maxPerBase` | `InstallMaxNumInBaseCamp` | 4 | catalog.py |
 | pals | `stats.support` | `Support` (4th combat stat) | all | encyclopedia.py |
-| pals | `friendship` {hp,shotAttack,defense,craftSpeed} | `Friendship_*` condense growth | most | encyclopedia.py |
+| pals | `friendship` {hp,shotAttack,defense,craftSpeed} | `Friendship_*` bond-rank growth | most | encyclopedia.py |
 | pals | `enemyScaling` {maxHp,receiveDamage,…} | `Enemy*Rate` (baseline 1.0) | ~110 | encyclopedia.py |
 | pals | active-skill `effect` {type,value} | DT_WazaDataTable `EffectType1`/`EffectValue1` | many | encyclopedia.py |
 | passives | `invoke` [worker/riding/…] | DT_PassiveSkill_Main `Invoke*` flags | 115 | encyclopedia.py |
@@ -98,7 +98,7 @@ checked on `localhost:15174`.
   `quests[].rewardItems`).
 
 **Dropped/emitted data now rendered in lower detail sections (not the top stat cards):**
-pal **Condense Growth** (`friendship`), **Enemy Scaling** (`enemyScaling`), **Predator** flag,
+pal **Bond Growth** (`friendship` — per trust rank; initially mislabeled condense), **Enemy Scaling** (`enemyScaling`), **Predator** flag,
 and active-skill on-hit **effect** badge; item **Food Buff** (`foodBuff`), **Sanity drain**
 (`corruption`), **PvP** restriction (`pvpBanned`) — plus `grantsSkill`/`itemPassives`/
 `recipe.productCount`/merchant `stock`/raid `min–max`/`anyOne` (wired concurrently); building

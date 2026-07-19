@@ -241,7 +241,10 @@ def _stats(r: dict) -> dict:
 
 
 def _friendship(r: dict) -> dict:
-    """Per-level stat growth from soul-condensing (Friendship_* columns)."""
+    """Per-BOND-RANK flat stat gains (Friendship_* columns): the trust /
+    friendship system (DT_FriendshipRankTable, ranks up to 10) adds these
+    species-specific amounts per rank — NOT the condenser (that bonus is the
+    global +5%/star GenkaiToppa rate in BP_PalGameSetting)."""
     f = {
         "hp": round2(r.get("Friendship_HP", 0.0)),
         "shotAttack": round2(r.get("Friendship_ShotAttack", 0.0)),
