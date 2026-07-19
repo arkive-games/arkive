@@ -7,6 +7,7 @@ import { MERCHANT_STRINGS } from './merchantStrings'
 import { BREEDING_STRINGS } from './breedingStrings'
 import { CATALOG_STRINGS } from './catalogStrings'
 import { DUNGEON_STRINGS } from './dungeonStrings'
+import { FISHING_STRINGS } from './fishingStrings'
 import { PAL_STRINGS } from './palStrings'
 import { QUEST_STRINGS } from './questStrings'
 import { RAIDS_STRINGS } from './raidsStrings'
@@ -962,6 +963,7 @@ for (const lng of LANGUAGES) {
         onceOnly: MERCHANT_ONCE_ONLY_LABELS[lng],
       },
       dungeon: DUNGEON_STRINGS[lng] ?? DUNGEON_STRINGS['en-US'],
+      fishing: FISHING_STRINGS[lng] ?? FISHING_STRINGS['en-US'],
       recycler: RECYCLER_STRINGS[lng] ?? RECYCLER_STRINGS['en-US'],
       research: RESEARCH_STRINGS[lng] ?? RESEARCH_STRINGS['en-US'],
       raids: RAIDS_STRINGS[lng] ?? RAIDS_STRINGS['en-US'],

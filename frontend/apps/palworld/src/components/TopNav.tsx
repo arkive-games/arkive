@@ -57,7 +57,7 @@ export function TopNav({ active }: { active: NavKey }) {
         },
         {
           key: '/fishing',
-          label: t('fishing.title', { defaultValue: 'Fishing' }),
+          label: t('fishing.title'),
           active: active === '/fishing',
         },
       ],

@@ -49,11 +49,11 @@ function SpotCard({
             <PalLink id={f.pal} name={pals.text[f.pal]?.name ?? f.pal} icon={pals.byId.get(f.pal)?.icon} />
             {f.alpha ? (
               <span className="rounded bg-red-500/15 px-1 py-0.5 text-xs font-medium text-red-600 dark:text-red-400">
-                {t('fishing.alpha', { defaultValue: 'Alpha' })}
+                {t('fishing.alpha')}
               </span>
             ) : null}
             <span className="rounded bg-secondary px-1 py-0.5 text-xs text-secondary-foreground">
-              {t('fishing.shadow', { defaultValue: 'Shadow' })} {f.size}
+              {t('fishing.shadow')} {f.size}
             </span>
             {f.night ? <Moon className="size-3.5 text-indigo-400" aria-label={t('pal.nightOnly')} /> : null}
             <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -63,9 +63,9 @@ function SpotCard({
             {f.rare || (f.boss && !f.alpha) || f.king ? (
               <span className="shrink-0 text-xs text-fuchsia-500">
                 {[
-                  f.rare ? `${t('fishing.rare', { defaultValue: 'Rare' })} ${f.rare}%` : null,
-                  f.boss && !f.alpha ? `${t('fishing.bossFish', { defaultValue: 'Alpha' })} ${f.boss}%` : null,
-                  f.king ? `${t('fishing.king', { defaultValue: 'King' })} ${f.king}%` : null,
+                  f.rare ? `${t('fishing.rare')} ${f.rare}%` : null,
+                  f.boss && !f.alpha ? `${t('fishing.alpha')} ${f.boss}%` : null,
+                  f.king ? `${t('fishing.king')} ${f.king}%` : null,
                 ]
                   .filter(Boolean)
                   .join(' · ')}
@@ -136,7 +136,7 @@ export default function FishingPage() {
   return (
     <ContentPage
       active="/fishing"
-      title={t('fishing.title', { defaultValue: 'Fishing' })}
+      title={t('fishing.title')}
       heading
       maxWidth="max-w-5xl"
     >
@@ -147,24 +147,21 @@ export default function FishingPage() {
       ) : (
         <CatalogDataProvider pals={pals} items={items}>
           <p className="mb-3 text-sm text-muted-foreground">
-            {t('fishing.caption', {
-              defaultValue:
-                'Every fishing-spot pool by region: the fish each shadow resolves to, its draw share, catch-level band, night-only catches and special-variant odds — plus what each bait changes.',
-            })}
+            {t('fishing.caption')}
           </p>
 
           <h2 className="mb-2 text-lg font-semibold">
-            {t('fishing.baits', { defaultValue: 'Baits' })}
+            {t('fishing.baits')}
           </h2>
           <div className="mb-6 overflow-x-auto rounded-lg border border-border bg-card">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="px-3 py-2 font-medium">{t('fishing.bait', { defaultValue: 'Bait' })}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('fishing.attract', { defaultValue: 'Attraction' })}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('fishing.hitBar', { defaultValue: 'Hit bar' })}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('fishing.missFight', { defaultValue: 'Miss penalty' })}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('fishing.dropBonus', { defaultValue: 'Drop bonus' })}</th>
+                  <th className="px-3 py-2 font-medium">{t('fishing.bait')}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t('fishing.attract')}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t('fishing.hitBar')}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t('fishing.missFight')}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t('fishing.dropBonus')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -200,7 +197,7 @@ export default function FishingPage() {
                     : 'bg-secondary text-secondary-foreground hover:bg-accent')
                 }
               >
-                {a === 'all' ? t('fishing.all', { defaultValue: 'All regions' }) : areaLabel(a)}
+                {a === 'all' ? t('fishing.all') : areaLabel(a)}
               </button>
             ))}
           </div>
@@ -213,14 +210,14 @@ export default function FishingPage() {
                   <h2 className="mb-2 flex items-baseline gap-2 text-lg font-semibold">
                     {areaLabel(a)}
                     <span className="text-sm font-normal text-muted-foreground">
-                      {byArea.get(a)!.length} {t('fishing.spots', { defaultValue: 'spot pools' })}
+                      {byArea.get(a)!.length} {t('fishing.spots')}
                     </span>
                     <Link
                       to="/regions/$id"
                       params={{ id: a }}
                       className="text-sm font-normal text-primary hover:underline"
                     >
-                      {t('fishing.viewRegion', { defaultValue: 'Region page' })}
+                      {t('fishing.viewRegion')}
                     </Link>
                   </h2>
                   <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
