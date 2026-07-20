@@ -1275,7 +1275,10 @@ def run_extract(raw: Path) -> dict:
 
     # Recursive: the Terraria-collab (Yakushima) pal icons live in a subfolder.
     pal_icons = sorted(p.stem for p in (raw / "Texture/PalIcon/Normal").rglob("*.png"))
-    pal_icon_set = set(pal_icons)
+    # Lowercased for case-insensitive membership (UE is case-insensitive; exporters
+    # disagree on filename casing for the odd asset). Canonical stems are still what
+    # gets emitted below.
+    pal_icon_set = {s.lower() for s in pal_icons}
 
     # Predators: BP_PalSpawner_Sheets_*_PreBOSS_* actors in the cells.
     predator_prefix = {JA_TAG: _prefix(raw / "DataTable/Text/DT_NamePrefixText_Common.json")}
@@ -1329,7 +1332,7 @@ def run_extract(raw: Path) -> dict:
             icon_stem = f"T_{base}_icon_normal"
             nm = predator_name(base)
             entry = {"pal": info["pal"], "level": info["level"], "location": location}
-            if icon_stem in pal_icon_set:
+            if icon_stem.lower() in pal_icon_set:
                 entry["icon"] = icon_stem
             if nm:
                 entry["nameByLng"] = nm

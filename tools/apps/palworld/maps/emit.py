@@ -75,8 +75,11 @@ def _pal_name(names: dict, pid: str) -> str:
 
 
 def _pal_icon(pal_icons: set, pid: str) -> str | None:
+    # ``pal_icons`` holds lowercased stems: UE is case-insensitive and exporters
+    # disagree on filename casing for the odd asset. Match case-insensitively but
+    # return the canonical stem (matches the webp the breeding stage writes).
     stem = f"T_{_base_id(pid)}_icon_normal"
-    return stem if stem in pal_icons else None
+    return stem if stem.lower() in pal_icons else None
 
 
 def _orient_json(o) -> dict:
@@ -88,7 +91,7 @@ def build_dataset(parsed: dict) -> dict:
     bounds = parsed["bounds"]
     map_names = parsed["mapNames"]
     names_by_lang = parsed["namesByLang"]
-    pal_icons = set(parsed["palIcons"])
+    pal_icons = {s.lower() for s in parsed["palIcons"]}
     pal_meta = parsed.get("palMeta") or {}
     languages = src["languages"]
     missing = [lng for lng in languages if not names_by_lang.get(lng)]

@@ -76,10 +76,13 @@ def _has_real_name(names_by_lang: dict, cid: str) -> bool:
 
 
 def _icon_paths(raw: Path) -> dict[str, Path]:
-    """{stem: path} of every pal icon under ``Texture/PalIcon/Normal``, searched
-    recursively: the Terraria-collab (Yakushima) creatures keep theirs in a
-    ``Yakushima/`` subfolder."""
-    return {p.stem: p for p in (raw / "Texture/PalIcon/Normal").rglob("*.png")}
+    """{lowercased stem: path} of every pal icon under ``Texture/PalIcon/Normal``,
+    searched recursively: the Terraria-collab (Yakushima) creatures keep theirs in
+    a ``Yakushima/`` subfolder. Keys are lowercased because UE is case-insensitive
+    and exporters disagree on filename casing for the odd asset (e.g. the pak
+    stores ``T_Thunderdog_Ice`` but the pal id — and FModel — use ``ThunderDog``);
+    a case-sensitive match would silently drop the pal."""
+    return {p.stem.lower(): p for p in (raw / "Texture/PalIcon/Normal").rglob("*.png")}
 
 
 def _is_roster(cid: str, r: dict, names_by_lang: dict, icon_stems) -> bool:
@@ -91,7 +94,7 @@ def _is_roster(cid: str, r: dict, names_by_lang: dict, icon_stems) -> bool:
         r.get("IsPal") is True
         and r.get("CombiRank") != 9999
         and _has_real_name(names_by_lang, cid)
-        and f"T_{cid}_icon_normal" in icon_stems
+        and f"T_{cid}_icon_normal".lower() in icon_stems
     )
 
 
@@ -204,7 +207,7 @@ def run_breeding(raw: Path, data_out: Path, res_out: Path) -> None:
         dest = icons_dir / f"{p['icon']}.webp"
         if dest.exists():
             continue
-        src = icon_paths[p["icon"]]
+        src = icon_paths[p["icon"].lower()]
         with Image.open(src) as img:
             img = img.convert("RGBA") if img.mode not in ("RGB", "RGBA") else img
             img.save(dest, "WEBP", quality=90, method=6)
