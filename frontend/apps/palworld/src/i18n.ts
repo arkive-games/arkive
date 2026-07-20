@@ -13,6 +13,7 @@ import { QUEST_STRINGS } from './questStrings'
 import { RAIDS_STRINGS } from './raidsStrings'
 import { RECYCLER_STRINGS } from './recyclerStrings'
 import { RESEARCH_STRINGS } from './researchStrings'
+import { SIM_STRINGS } from './simulatorStrings'
 
 export const LANGUAGES = ['en-US', 'de-DE', 'es-ES', 'es-MX', 'fr-FR', 'id-ID', 'it-IT', 'ja-JP', 'ko-KR', 'pl-PL', 'pt-BR', 'ru-RU', 'th-TH', 'tr-TR', 'vi-VN', 'zh-CN', 'zh-TW'] as const
 export type Language = (typeof LANGUAGES)[number]
@@ -966,6 +967,7 @@ for (const lng of LANGUAGES) {
       fishing: FISHING_STRINGS[lng] ?? FISHING_STRINGS['en-US'],
       recycler: RECYCLER_STRINGS[lng] ?? RECYCLER_STRINGS['en-US'],
       research: RESEARCH_STRINGS[lng] ?? RESEARCH_STRINGS['en-US'],
+      sim: SIM_STRINGS[lng] ?? SIM_STRINGS['en-US'],
       raids: RAIDS_STRINGS[lng] ?? RAIDS_STRINGS['en-US'],
       basecamp: BASECAMP_STRINGS[lng] ?? BASECAMP_STRINGS['en-US'],
       catalogLoading: CATALOG_STRINGS[lng].loading,

@@ -28,11 +28,7 @@ export function TopNav({ active }: { active: NavKey }) {
         { key: '/passives', label: t('pal.section.passives'), active: active === '/passives' },
         { key: '/active-skills', label: t('pal.section.activeSkills'), active: active === '/active-skills' },
         { key: '/partner-skills', label: t('partner.title'), active: active === '/partner-skills' },
-        {
-          key: '/stat-simulator',
-          label: t('sim.title', { defaultValue: 'Stat Simulator' }),
-          active: active === '/stat-simulator',
-        },
+        { key: '/stat-simulator', label: t('sim.title'), active: active === '/stat-simulator' },
       ],
     },
     {

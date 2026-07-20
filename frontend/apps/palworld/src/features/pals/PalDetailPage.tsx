@@ -714,6 +714,14 @@ export default function PalDetailPage() {
                   {t('pal.friendshipNote')}
                 </p>
               ) : null}
+              <p className="mt-2 text-xs text-muted-foreground">{t('pal.statsBaseNote')}</p>
+              <Link
+                to="/stat-simulator"
+                search={{ pal: pal.id }}
+                className="mt-1.5 inline-block text-xs text-primary hover:underline"
+              >
+                {t('pal.openSimulator')}
+              </Link>
             </PalSection>
 
             {workEntries.length ? (

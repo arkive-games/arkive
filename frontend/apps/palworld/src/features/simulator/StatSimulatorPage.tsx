@@ -159,7 +159,7 @@ function SimPalPicker({
           className="h-11 w-full max-w-md justify-start gap-2 px-2.5 font-normal"
           data-testid="sim-pal-picker"
         >
-          {selected ? row(selected) : <span className="text-muted-foreground">{t('sim.pickPal', { defaultValue: 'Select a pal…' })}</span>}
+          {selected ? row(selected) : <span className="text-muted-foreground">{t('sim.pickPal')}</span>}
           <ChevronsUpDown className="ml-1 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -260,13 +260,13 @@ export default function StatSimulatorPage() {
 
   const statLabel: Record<'hp' | 'attack' | 'defense', string> = {
     hp: t('pal.stat.hp'),
-    attack: t('sim.attack', { defaultValue: 'Attack' }),
+    attack: t('pal.stat.shotAttack'),
     defense: t('pal.stat.defense'),
   }
 
   const ivText = (sol: { min: number; max: number } | null, entered: boolean) => {
     if (!entered) return <span className="text-muted-foreground">—</span>
-    if (!sol) return <span className="text-destructive">{t('sim.noMatch', { defaultValue: 'no match' })}</span>
+    if (!sol) return <span className="text-destructive">{t('sim.noMatch')}</span>
     return (
       <span className="font-semibold tabular-nums">
         {sol.min === sol.max ? sol.min : `${sol.min}–${sol.max}`}
@@ -276,19 +276,14 @@ export default function StatSimulatorPage() {
   }
 
   return (
-    <ContentPage active="/stat-simulator" title={t('sim.title', { defaultValue: 'Stat Simulator' })} heading>
+    <ContentPage active="/stat-simulator" title={t('sim.title')} heading>
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !pals ? (
         <CatalogPageLoading />
       ) : (
         <>
-          <p className="mb-3 text-sm text-muted-foreground">
-            {t('sim.caption', {
-              defaultValue:
-                'Compute the exact in-game stats of any pal from its enhancements — or enter the displayed stats to reveal the hidden IVs (talents).',
-            })}
-          </p>
+          <p className="mb-3 text-sm text-muted-foreground">{t('sim.caption')}</p>
 
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <SimPalPicker pals={pals} value={palId} onChange={setPalId} t={t} />
@@ -296,7 +291,7 @@ export default function StatSimulatorPage() {
               <span className="text-sm text-muted-foreground">
                 <PalLink id={pal.id} name={pals.text[pal.id]?.name ?? pal.id} icon={pal.icon} />
                 <span className="ml-2 tabular-nums">
-                  {t('sim.baseLine', { defaultValue: 'base' })}: HP {pal.stats.hp} ·{' '}
+                  {t('sim.base')}: HP {pal.stats.hp} ·{' '}
                   {statLabel.attack} {pal.stats.shotAttack} · {statLabel.defense} {pal.stats.defense} ·{' '}
                   {t('pal.stat.craftSpeed')} {pal.stats.craftSpeed}
                 </span>
@@ -317,23 +312,21 @@ export default function StatSimulatorPage() {
                     : 'bg-secondary text-secondary-foreground hover:bg-accent',
                 )}
               >
-                {m === 'calc'
-                  ? t('sim.modeCalc', { defaultValue: 'Calculate stats' })
-                  : t('sim.modeSolve', { defaultValue: 'Find hidden IVs' })}
+                {m === 'calc' ? t('sim.modeCalc') : t('sim.modeSolve')}
               </button>
             ))}
           </div>
 
           {!pal ? (
             <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-              {t('sim.pickPal', { defaultValue: 'Select a pal…' })}
+              {t('sim.pickPal')}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,20rem)_1fr]">
               {/* enhancement inputs */}
               <div className="space-y-4 rounded-lg border border-border bg-card p-4">
                 <NumberField
-                  label={t('sim.level', { defaultValue: 'Level' })}
+                  label={t('sim.level')}
                   value={level}
                   onChange={setLevel}
                   min={1}
@@ -342,12 +335,12 @@ export default function StatSimulatorPage() {
                 />
                 <div className="grid grid-cols-2 gap-3">
                   <StarPicker
-                    label={t('sim.stars', { defaultValue: 'Condense stars' })}
+                    label={t('sim.stars')}
                     value={stars}
                     onChange={setStars}
                   />
                   <NumberField
-                    label={t('sim.bond', { defaultValue: 'Trust rank' })}
+                    label={t('sim.bond')}
                     value={bond}
                     onChange={setBond}
                     min={0}
@@ -365,13 +358,13 @@ export default function StatSimulatorPage() {
                   )}
                 >
                   <Sparkles className="size-4" />
-                  {t('sim.awakening', { defaultValue: 'Awakening' })}
+                  {t('sim.awakening')}
                   <span className="ml-auto text-xs text-muted-foreground">×1.1</span>
                 </button>
 
                 <div>
                   <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t('sim.souls', { defaultValue: 'Soul ranks (Statue of Power)' })}
+                    {t('sim.souls')}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <NumberField label={statLabel.hp} value={souls.hp} onChange={(v) => setSouls({ ...souls, hp: v })} min={0} max={MAX_SOUL} />
@@ -384,7 +377,7 @@ export default function StatSimulatorPage() {
                 {mode === 'calc' ? (
                   <div>
                     <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {t('sim.ivs', { defaultValue: 'IVs (hidden talents)' })}
+                      {t('sim.ivs')}
                     </div>
                     <div className="space-y-2">
                       <NumberField label={statLabel.hp} value={iv.hp} onChange={(v) => setIv({ ...iv, hp: v })} min={0} max={MAX_IV} slider />
@@ -395,7 +388,7 @@ export default function StatSimulatorPage() {
                 ) : (
                   <div>
                     <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {t('sim.observed', { defaultValue: 'Displayed stats (from the game)' })}
+                      {t('sim.observed')}
                     </div>
                     <div className="space-y-2">
                       {(['hp', 'attack', 'defense'] as const).map((k) => (
@@ -424,10 +417,10 @@ export default function StatSimulatorPage() {
                     <table className="w-full text-sm" data-testid="sim-results">
                       <thead>
                         <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                          <th className="py-2 pr-3 font-medium">{t('sim.stat', { defaultValue: 'Stat' })}</th>
-                          <th className="py-2 pr-3 text-right font-medium">{t('sim.stageLevel', { defaultValue: 'Level + IV' })}</th>
-                          <th className="py-2 pr-3 text-right font-medium">{t('sim.stageCondense', { defaultValue: 'Condensed' })}</th>
-                          <th className="py-2 text-right font-medium">{t('sim.stageFinal', { defaultValue: 'Final' })}</th>
+                          <th className="py-2 pr-3 font-medium">{t('sim.stat')}</th>
+                          <th className="py-2 pr-3 text-right font-medium">{t('sim.stageLevel')}</th>
+                          <th className="py-2 pr-3 text-right font-medium">{t('sim.stageCondense')}</th>
+                          <th className="py-2 text-right font-medium">{t('sim.stageFinal')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -448,16 +441,13 @@ export default function StatSimulatorPage() {
                       </tbody>
                     </table>
                     <p className="mt-3 text-xs text-muted-foreground">
-                      {t('sim.stageNote', {
-                        defaultValue:
-                          'Each stage is truncated before the next multiplier, exactly as the game computes it. Work speed ignores level and IVs.',
-                      })}
+                      {t('sim.stageNote')}
                     </p>
                   </div>
                 ) : mode === 'solve' && solved ? (
                   <div data-testid="sim-solved">
                     <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {t('sim.solvedIvs', { defaultValue: 'Solved IVs' })}
+                      {t('sim.solvedIvs')}
                     </div>
                     <div className="divide-y divide-border/60">
                       {(['hp', 'attack', 'defense'] as const).map((k) => (
@@ -468,11 +458,7 @@ export default function StatSimulatorPage() {
                       ))}
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground">
-                      {t('sim.solveNote', {
-                        defaultValue:
-                          'Set level, stars, souls, trust rank and awakening to match the pal, then enter its displayed stats. “No match” means one of those settings is off. Expected work speed with these settings: {{craft}}.',
-                        craft: solved.craftExpected,
-                      })}
+                      {t('sim.solveNote', { craft: solved.craftExpected })}
                     </p>
                   </div>
                 ) : null}
