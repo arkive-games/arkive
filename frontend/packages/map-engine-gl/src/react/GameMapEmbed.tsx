@@ -59,14 +59,28 @@ export interface EmbedPin {
 
 export interface GameMapEmbedProps {
   map: GameMapMeta;
+  /**
+   * Asset-URL resolver. Read ONCE, when the GL stack is built (a `map` /
+   * `minZoom` / `theme` change rebuilds it). Swapping in a resolver that returns
+   * DIFFERENT urls for the same inputs therefore has no effect until the next
+   * rebuild — pass a reference-stable resolver, as the apps do.
+   */
   assets: MapAssets;
   pins: EmbedPin[];
   onPinClick?: (id: string) => void;
-  /** Zoom floor. Defaults to {@link EMBED_MIN_ZOOM}. */
+  /** Zoom floor. Defaults to {@link EMBED_MIN_ZOOM}. Changing it rebuilds. */
   minZoom?: number;
-  /** `pins` fits the pin bounds (default), `map` opens on the whole map. */
+  /**
+   * `pins` fits the pin bounds (default), `map` opens on the whole map. Applied
+   * when the stack is built, so a later change only takes effect on a rebuild.
+   */
   initialFit?: "pins" | "map";
-  /** Pin colours; defaults to the engine's own palette. */
+  /**
+   * Pin colours; defaults to the engine's own palette. The colours are baked into
+   * the pin bitmaps, so a new theme VALUE rebuilds the stack (the marker layer
+   * takes its theme at construction). Cheap and rare — but pass a stable object
+   * anyway, or every render pays for a rebuild.
+   */
   theme?: PinTheme;
   className?: string;
 }
@@ -157,6 +171,11 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
   liveRef.current = { assets, theme, pins, onPinClick, initialFit };
 
   const layerMarkers = useMemo(() => toLayerMarkers(pins), [pins]);
+  // The pin bitmaps bake the theme's colours in and `MarkerLayer` takes its theme
+  // at construction, so a new palette has to rebuild the stack. Keyed on the
+  // VALUE, not the object, so a caller who rebuilds the object every render (but
+  // not its contents) does not thrash the GL context.
+  const themeKey = useMemo(() => JSON.stringify(theme), [theme]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -233,11 +252,15 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
       camera.removeAllListeners();
       renderer.dispose();
     };
-  }, [map, minZoom]);
+  }, [map, minZoom, themeKey]);
 
+  // The rebuild keys belong in HERE too, not just above: a rebuild starts a fresh
+  // (empty) `MarkerLayer`, and `pins` that kept its identity across the switch —
+  // a module constant, or a memo keyed on something else — would never be pushed
+  // again, leaving an embed with tiles and no pins at all.
   useEffect(() => {
     layerRef.current?.setMarkers(layerMarkers);
-  }, [layerMarkers]);
+  }, [layerMarkers, map, minZoom, themeKey]);
 
   return (
     <div ref={rootRef} className={className ? `gmgl-embed ${className}` : "gmgl-embed"}>

@@ -16,8 +16,8 @@ import type { Point } from "./types.ts";
  * space with y DOWN** — the same convention as the tile grid and as `tools`'
  * canonical dataset — so {@link dataToPoint} is exactly {@link worldToPixel}.
  * There is NO vertical flip anywhere in this engine: data space, scene space and
- * screen space all have y down, and the y-down convention is realised by the
- * three.js projection set up by the renderer (Task 3). Do not add a flip.
+ * screen space all have y down, and the y-down convention is realised once, by the
+ * three.js projection `renderer.ts` sets up. Do not add a flip.
  *
  * `mapHeight`/`mapWidth` are the pixel size of the full tile grid
  * (`tile* × tilesCount*`, e.g. 8192 for World_L_A).

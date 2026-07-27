@@ -44,9 +44,9 @@ import type { MarkerTypeSubtype } from "@gamemap/data-contract";
  * Colours used by the pin bitmaps. Copied from `@gamemap/map-engine`'s
  * `theme.ts` so the core needs no React-layer import.
  *
- * NOTE for Task 6: when `src/react/theme.ts` lands it should re-export these two
- * names rather than redeclare them, so `src/index.ts` keeps exporting exactly
- * one `PinTheme`.
+ * `src/react/theme.ts` RE-EXPORTS these two names (and adds `MapTheme` for the
+ * chrome on top) rather than redeclaring them, so `src/index.ts` exports exactly
+ * one `PinTheme` — keep it that way.
  */
 export interface PinTheme {
   /** Fallback "pin" variant: dark translucent outer disc background. */

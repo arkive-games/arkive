@@ -25,6 +25,32 @@ import type { PixelBounds, Point } from "../core/types.ts";
 export const MAX_LABELS = 300;
 
 /**
+ * Culling pad as a FRACTION OF THE VIEWPORT on each side — Leaflet's
+ * `VIEWPORT_PAD`. It keeps a ring of off-screen labels mounted so panning slides
+ * them in from outside instead of popping them into existence at the edge.
+ *
+ * Converted to map pixels by {@link cullPadPx} before it reaches
+ * `Camera.visibleBounds`, which takes map pixels.
+ */
+export const LABEL_VIEWPORT_PAD = 0.5;
+
+/**
+ * {@link LABEL_VIEWPORT_PAD} in MAP pixels for the camera's current zoom.
+ *
+ * The pad is defined in screen space (half a viewport), and one map pixel is
+ * `camera.scale()` screen pixels, hence the division: zoomed in, half a viewport
+ * is a small slice of the map; zoomed out, a large one. The larger of the two
+ * axes is used so the ring is symmetric, which is what makes the pad
+ * pan-direction-independent.
+ */
+export function cullPadPx(camera: Camera): number {
+  const scale = camera.scale();
+  if (!(scale > 0)) return 0;
+  const longest = Math.max(camera.viewportWidth, camera.viewportHeight);
+  return (longest * LABEL_VIEWPORT_PAD) / scale;
+}
+
+/**
  * Vertical offset of a label/tooltip box's BOTTOM edge above the marker's
  * anchor, in CSS pixels — the Leaflet engine's `Tooltip offset={[0, -18]}` with
  * `direction="top"`.
@@ -102,7 +128,9 @@ export function collectLabelSources(
 }
 
 /**
- * Labels inside `bounds`, at most `cap` of them.
+ * Labels inside `bounds`, at most `cap` of them. `bounds` is expected to be
+ * PADDED (see {@link cullPadPx}) so labels are mounted just outside the viewport
+ * and slide in rather than popping in at the edge.
  *
  * The overflow is SKIPPED rather than prioritised: any ranking (by tier, by
  * distance from the centre) would make labels appear and disappear as the view
@@ -241,7 +269,7 @@ export class MarkerOverlay {
       );
     }
     if (!this.labelsEnabled) return;
-    const visible = cullLabelSources(this.sources, camera.visibleBounds(0));
+    const visible = cullLabelSources(this.sources, camera.visibleBounds(cullPadPx(camera)));
     for (let i = 0; i < visible.length; i++) {
       const source = visible[i];
       const node = this.ensureLabelNode(i);

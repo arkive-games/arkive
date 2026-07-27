@@ -117,7 +117,8 @@ interface VisibilityContext {
  *
  * Viewport culling is deliberately absent: the GPU draws the whole set in one
  * call, so culling would only add work (the Leaflet engine culls because each
- * marker is DOM). DOM overlay labels still cull — that is Task 6's business.
+ * marker is DOM). The DOM overlay's labels DO cull, in
+ * `react/markerOverlay.ts` — they are real nodes.
  */
 export function isMarkerVisible(
   marker: Pick<LayerMarker, "id" | "subtype" | "tier">,

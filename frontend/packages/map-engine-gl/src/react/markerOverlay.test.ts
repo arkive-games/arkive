@@ -177,6 +177,19 @@ describe("MarkerOverlay", () => {
     expect(overlay.visibleLabelTexts()).toEqual(["A"]);
   });
 
+  it("pre-mounts labels in the half-viewport pad outside the view", () => {
+    overlay.setLabelsEnabled(true);
+    // Viewport 800x600 at zoom 0 → visible x ∈ [100, 900]. The pad is half of the
+    // longest axis (800 × 0.5 = 400 map px at this scale), so 1250 is inside the
+    // ring and 1400 is beyond it.
+    overlay.setLabelSources([
+      { id: "ring", text: "Ring", x: 1250, y: 500 },
+      { id: "far", text: "Far", x: 1400, y: 500 },
+    ]);
+    overlay.reposition(camera);
+    expect(overlay.visibleLabelTexts()).toEqual(["Ring"]);
+  });
+
   it("culls labels to the viewport and reuses its nodes", () => {
     overlay.setLabelsEnabled(true);
     overlay.setLabelSources([

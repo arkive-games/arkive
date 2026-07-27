@@ -13,7 +13,7 @@ import type {
   GlMapRef,
 } from "./engineTypes.ts";
 import { DEFAULT_MAP_THEME } from "./theme.ts";
-import { MapEngine, ZOOM_STEP, popupTransform } from "./mapEngine.ts";
+import { MapEngine, ZOOM_STEP } from "./mapEngine.ts";
 import MapContextMenu, { type ContextMenuState } from "./MapContextMenu.tsx";
 import MapStatusBar from "./MapStatusBar.tsx";
 import MapZoomControl from "./MapZoomControl.tsx";
@@ -246,9 +246,14 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   // Declared BEFORE the fly effect on purpose: when the app swaps in a new
   // suppression id in the same commit that changes the selection, the re-arm must
   // run first so the new id gets its own suppressed first fly.
+  //
+  // `mapId`/`themeKey` re-arm it too, because the fly effect below re-runs on a
+  // rebuild: without them a rebuild would fly to the already-selected marker and
+  // stomp the view `keptViewRef` just restored — the exact thing the suppression
+  // exists to prevent.
   useEffect(() => {
     suppressConsumedRef.current = false;
-  }, [suppressInitialFlyForId]);
+  }, [suppressInitialFlyForId, mapId, themeKey]);
 
   // Keyed on the selected marker's COORDS, never on the marker object: an
   // `EngineMarker` is rebuilt whenever app-side state folded into it changes (a
@@ -282,27 +287,20 @@ const GameMapView: React.FC<GameMapViewProps> = ({
 
   // -------------------------------------------------------------------- popup ---
 
-  // Layout effect, not an effect: the popup must be positioned before the browser
-  // paints it, or it flashes at the root's top-left corner for one frame.
+  /**
+   * A LAYOUT effect, and that is the whole positioning story: refs are attached
+   * and layout effects run inside the commit, BEFORE the browser paints, so the
+   * popup's transform is already written the first time it is painted. There is
+   * deliberately no render-time projection to "pre-place" it — that would mean
+   * reading the mutable engine during render, which a discarded concurrent render
+   * makes meaningless.
+   */
   useLayoutEffect(() => {
     const engine = engineRef.current;
     if (!engine) return;
     engine.setPopupElement(popupRef.current);
     engine.setPopupAnchor(selectedMarker ? selectedMarker.id : null);
   }, [selectedMarker, mapId, themeKey]);
-
-  /**
-   * Best-effort inline transform for the popup's very first paint. The layout
-   * effect above is authoritative; this only spares the popup a one-frame jump
-   * when React mounts it, and reads no layout.
-   */
-  const initialPopupTransform = useMemo(() => {
-    const engine = engineRef.current;
-    if (!engine || !selectedMarker) return undefined;
-    const projected = engine.project(selectedMarker.x, selectedMarker.y);
-    return popupTransform({ x: projected.sx, y: projected.sy });
-    // Recomputed with the anchor; the effect fixes up everything else.
-  }, [selectedMarker]);
 
   // --------------------------------------------------------------- handles ---
 
@@ -379,7 +377,6 @@ const GameMapView: React.FC<GameMapViewProps> = ({
         <div
           ref={popupRef}
           className="gmgl-popup"
-          style={initialPopupTransform ? { transform: initialPopupTransform } : undefined}
         >
           {/* Selection is the ONLY source of truth for whether this is open:
               there is no close button and no close-on-click, so the popup and

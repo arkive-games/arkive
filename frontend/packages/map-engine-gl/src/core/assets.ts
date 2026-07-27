@@ -5,11 +5,11 @@ import type { GameMapMeta } from "@gamemap/data-contract";
  * itself). No default exists — every game must provide one.
  *
  * Copied verbatim from `@gamemap/map-engine`'s `engineTypes.ts` so the core can
- * be used without the React layer. Task 6 ports the FULL prop contract
- * (`GameMapViewProps`, `EngineMarker`, labels, theme) into
- * `src/react/engineTypes.ts` and will re-export this interface from there — this
- * module stays the single definition so `src/core/` never depends on the React
- * layer.
+ * be used without the React layer. `src/react/engineTypes.ts` carries the rest of
+ * the prop contract (`GameMapViewProps`, `EngineMarker`, labels, theme) and
+ * RE-EXPORTS this interface rather than redeclaring it — this module is the single
+ * definition, which is what keeps `src/core/` independent of the React layer and
+ * keeps the barrel from exporting two `MapAssets`.
  */
 export interface MapAssets {
   /**

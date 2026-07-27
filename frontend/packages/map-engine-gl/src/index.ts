@@ -1,9 +1,9 @@
 // @gamemap/map-engine-gl — game-agnostic WebGL (three.js) map engine.
 //
 // Feature parity target: @gamemap/map-engine (Leaflet), same injection
-// contracts. `src/core/` stays framework-free and DOM-free so the same core can
-// later drive a WeChat mini-program canvas; the React layer (added in a later
-// task) is the only part allowed to touch the DOM.
+// contracts. `src/core/` is framework-free and DOM-free so the same core can also
+// drive a WeChat mini-program canvas; `src/react/` — the components exported at
+// the bottom of this file — is the only part that touches the DOM.
 //
 // Component chrome is styled by the static stylesheet
 // `@gamemap/map-engine-gl/engine-gl.css`, which the consuming app imports once.

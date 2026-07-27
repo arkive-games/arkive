@@ -60,7 +60,7 @@ import type { Point } from "./types.ts";
  *   it deliberately does not also emit `gestureend`.
  * - The camera's `change` event drives repainting; this file never renders.
  *
- * ## Element requirements (the React layer's stylesheet, Task 6)
+ * ## Element requirements (met by `.gmgl-map-canvas` in `engine-gl.css`)
  * - `touch-action: none`, or the browser consumes touch pointermoves for
  *   scrolling before they arrive.
  * - `user-select: none` (plus `-webkit-user-select`), or dragging across the DOM

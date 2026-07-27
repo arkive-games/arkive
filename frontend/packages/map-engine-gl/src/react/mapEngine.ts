@@ -62,6 +62,20 @@ import type { MapTheme } from "./theme.ts";
  * controller and the overlay nodes. It does NOT create the DOM elements it is
  * handed (root, canvas, overlay container, popup) — React does, and React removes
  * them.
+ *
+ * ## It lives under `src/react/`, but it contains no React
+ * There is not one import from `react` below, and there is no reason a WeChat
+ * mini-program host could not lift this file wholesale. Exactly four things tie it
+ * to a browser, all of them small and all of them replaceable:
+ *  - `./domEnv.ts` — element measurement, DPR detection, CSS-token resolution;
+ *  - the popup, which is an `HTMLElement` handed in and positioned by writing
+ *    `style.transform`;
+ *  - `MarkerOverlay`, which creates DOM nodes for the tooltip and the labels;
+ *  - `./cursorStore.ts`, a plain observable that happens to feed a React
+ *    component.
+ * It sits here (and is not exported from the barrel) because `GameMapView` is its
+ * only consumer today; a second host is the moment to move it to `src/core/`
+ * behind a small host adapter, not before.
  */
 
 /** Zoom range, identical to the Leaflet engine's map container. */
@@ -192,7 +206,18 @@ export class MapEngine {
       createBackend: (canvas) => createRenderBackend(canvas as HTMLCanvasElement),
       width,
       height,
-      observeSize: (onResize) => observeElementSize(opts.root, onResize),
+      observeSize: (onResize) =>
+        observeElementSize(opts.root, (w, h) => {
+          onResize(w, h);
+          // Leaflet fires `moveend` after a resize, so its consumers get a report
+          // there; this keeps that path alive. `report` is coalesced against the
+          // last reported view, so it stays SILENT unless the resize actually
+          // moved the view — which today it never does (the centre clamp is
+          // viewport-independent by design, see `camera.ts`). Wired anyway: a
+          // resize is exactly the event a future viewport-dependent clamp would
+          // change the view on, and a missing report is worse than none.
+          this.report();
+        }),
     });
     const invalidate = (): void => this.renderer.invalidate();
 
