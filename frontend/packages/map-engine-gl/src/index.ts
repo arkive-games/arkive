@@ -15,4 +15,6 @@ export * from "./core/gestureMath.ts";
 export * from "./core/gestures.ts";
 export * from "./core/renderer.ts";
 export * from "./core/tileLayer.ts";
+export * from "./core/pinAtlas.ts";
+export * from "./core/markerLayer.ts";
 export * from "./core/vectorLayer.ts";
