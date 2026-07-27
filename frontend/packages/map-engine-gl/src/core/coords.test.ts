@@ -34,6 +34,23 @@ const worldMap: GameMapMeta = {
   orientation: { pxAxis: "Y", flipX: false, flipY: true },
 };
 
+// aion2's shipping orientation (`pxAxis: "X"`, no flips — see workspace
+// CLAUDE.md). The grid and the world bounds are deliberately non-square and
+// asymmetric so that transposing the two axes cannot pass: W/H = 8192/4096 and
+// the X/Y world ranges differ (4000 vs 8000).
+const aion2Map: GameMapMeta = {
+  id: "World_L_A",
+  name: "World_L_A",
+  type: "world",
+  tileWidth: 256,
+  tileHeight: 256,
+  tilesCountX: 32,
+  tilesCountY: 16,
+  isVisible: true,
+  worldBounds: { min: { x: -1000, y: -2000 }, max: { x: 3000, y: 6000 } },
+  orientation: { pxAxis: "X", flipX: false, flipY: false },
+};
+
 describe("coords", () => {
   it("mapWidthOf / mapHeightOf = tile size * tiles count", () => {
     expect(mapWidthOf(map)).toBe(8192);
@@ -50,9 +67,10 @@ describe("coords", () => {
   });
 
   it("dataToPoint agrees with the Leaflet engine via the height flip", () => {
-    const p = dataToPoint(map, 100, 0);
-    // What map-engine's dataToLatLng would have produced.
-    expect(mapHeightOf(map) - p.y).toBe(8192);
+    const p = dataToPoint(map, 100, 1000);
+    expect(p.y).toBe(1000);
+    // What map-engine's dataToLatLng would have produced for the same data.
+    expect(mapHeightOf(map) - p.y).toBe(7192);
     expect(p.x).toBe(100);
   });
 
@@ -83,6 +101,29 @@ describe("worldToPixel / pixelToWorld", () => {
     expect(worldToPixel(worldMap, -1099400, -724400)).toMatchObject({ x: 0, y: 8192 });
     // (maxX,maxY) → top-right pixel.
     expect(worldToPixel(worldMap, 349400, 724400)).toMatchObject({ x: 8192, y: 0 });
+  });
+
+  it("maps aion2-style world coords to pixels (pxAxis=X, no flips)", () => {
+    // world X drives pixel x over a 4000-wide range on an 8192px axis,
+    // world Y drives pixel y over an 8000-tall range on a 4096px axis.
+    expect(worldToPixel(aion2Map, -1000, -2000)).toEqual({ x: 0, y: 0 });
+    expect(worldToPixel(aion2Map, 3000, 6000)).toEqual({ x: 8192, y: 4096 });
+    expect(worldToPixel(aion2Map, 1000, 2000)).toEqual({ x: 4096, y: 2048 });
+    // Off-centre: the axes are not interchangeable.
+    expect(worldToPixel(aion2Map, 0, 0)).toEqual({ x: 2048, y: 1024 });
+  });
+
+  it("pixelToWorld ∘ worldToPixel = identity for pxAxis=X too", () => {
+    for (const [x, y] of [
+      [0, 0],
+      [-999.5, 5999.25],
+      [2500, -1500],
+    ]) {
+      const p = worldToPixel(aion2Map, x, y);
+      const back = pixelToWorld(aion2Map, p.x, p.y);
+      expect(back.x).toBeCloseTo(x, 6);
+      expect(back.y).toBeCloseTo(y, 6);
+    }
   });
 
   it("pixelToWorld ∘ worldToPixel = identity", () => {

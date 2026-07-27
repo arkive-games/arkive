@@ -1,4 +1,5 @@
 import type { GameMapMeta } from "@gamemap/data-contract";
+import type { Point } from "./types.ts";
 
 /**
  * Coordinate conversion between DATA space and the GL scene's pixel space.
@@ -13,9 +14,10 @@ import type { GameMapMeta } from "@gamemap/data-contract";
  * UP, so that engine ends every conversion with one vertical flip
  * (`lat = mapHeight - py`, `lng = px`). This engine renders in **image-pixel
  * space with y DOWN** — the same convention as the tile grid and as `tools`'
- * canonical dataset — so {@link dataToPoint} is exactly {@link worldToPixel}
- * with no flip at all. The vertical flip lives only in the camera projection
- * (screen y is also down, so in practice there is no flip anywhere).
+ * canonical dataset — so {@link dataToPoint} is exactly {@link worldToPixel}.
+ * There is NO vertical flip anywhere in this engine: data space, scene space and
+ * screen space all have y down, and the y-down convention is realised by the
+ * three.js projection set up by the renderer (Task 3). Do not add a flip.
  *
  * `mapHeight`/`mapWidth` are the pixel size of the full tile grid
  * (`tile* × tilesCount*`, e.g. 8192 for World_L_A).
@@ -41,7 +43,7 @@ export function worldToPixel(
   map: GameMapMeta,
   x: number,
   y: number,
-): { x: number; y: number } {
+): Point {
   const b = map.worldBounds;
   const o = map.orientation;
   if (!b || !o) return { x, y };
@@ -63,7 +65,7 @@ export function pixelToWorld(
   map: GameMapMeta,
   px: number,
   py: number,
-): { x: number; y: number } {
+): Point {
   const b = map.worldBounds;
   const o = map.orientation;
   if (!b || !o) return { x: px, y: py };
@@ -92,7 +94,7 @@ export function dataToPoint(
   map: GameMapMeta,
   x: number,
   y: number,
-): { x: number; y: number } {
+): Point {
   return worldToPixel(map, x, y);
 }
 
@@ -101,6 +103,6 @@ export function pointToData(
   map: GameMapMeta,
   px: number,
   py: number,
-): { x: number; y: number } {
+): Point {
   return pixelToWorld(map, px, py);
 }

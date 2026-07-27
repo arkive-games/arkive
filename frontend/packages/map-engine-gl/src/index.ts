@@ -7,5 +7,6 @@
 //
 // Component chrome will be styled by the static stylesheet
 // `@gamemap/map-engine-gl/engine-gl.css`, which the consuming app imports once.
+export * from "./core/types.ts";
 export * from "./core/coords.ts";
 export * from "./core/camera.ts";
