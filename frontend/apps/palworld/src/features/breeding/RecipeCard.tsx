@@ -147,13 +147,16 @@ export function RecipeCard({ f, names, meta, uniqueLabel, fav, hideResult, onSel
     <div
       className={cn(
         'relative grid items-center gap-1.5 rounded-lg border px-3 py-2 text-sm',
+        // With a result, phones get two rows (A + B, then = C below) so the
+        // three names aren't crushed into unreadable truncations; sm+ keeps
+        // the single-row A + B = C layout.
         hideResult
           ? hasActions
             ? 'grid-cols-[1fr_auto_1fr_auto]'
             : 'grid-cols-[1fr_auto_1fr]'
           : hasActions
-            ? 'grid-cols-[1fr_auto_1fr_auto_1fr_auto]'
-            : 'grid-cols-[1fr_auto_1fr_auto_1fr]',
+            ? 'grid-cols-[1fr_auto_1fr_auto] sm:grid-cols-[1fr_auto_1fr_auto_1fr_auto]'
+            : 'grid-cols-[1fr_auto_1fr] sm:grid-cols-[1fr_auto_1fr_auto_1fr]',
         f.unique
           ? 'border-amber-400/70 bg-amber-400/10 ring-1 ring-amber-400/30'
           : 'border-border bg-card',
@@ -185,10 +188,12 @@ export function RecipeCard({ f, names, meta, uniqueLabel, fav, hideResult, onSel
       <span className="text-muted-foreground">+</span>
       <PalChip id={f.b} names={names} meta={meta} gender={f.bg} />
       {hideResult ? null : (
-        <>
+        // Phone: one full-width flex row below the parents. sm+: display
+        // contents dissolves the wrapper so `=` and C are grid cells again.
+        <span className="order-last col-span-full flex min-w-0 items-center gap-1.5 sm:contents">
           <span className="text-muted-foreground">=</span>
           <PalChip id={f.c} names={names} meta={meta} emphasis />
-        </>
+        </span>
       )}
       {hasActions ? (
         <span className="ml-1 flex items-center">

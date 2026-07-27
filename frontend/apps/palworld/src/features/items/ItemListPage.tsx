@@ -149,7 +149,7 @@ export default function ItemListPage() {
               tech={bundles?.tech}
               pals={bundles?.pals}
             >
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
+              <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
                 {shown.map((i) => (
                   <HoverCard key={i.id} openDelay={120} closeDelay={120}>
                     <HoverCardTrigger asChild>

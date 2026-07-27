@@ -837,8 +837,10 @@ export default function StatSimulatorPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm" data-testid="sim-results">
                     <thead>
+                      {/* Stat + In-game columns stay pinned while the delta
+                          stages scroll horizontally on narrow screens. */}
                       <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                        <th className="py-2 pr-3 font-medium">{t('sim.stat')}</th>
+                        <th className="sticky left-0 bg-card py-2 pr-3 font-medium">{t('sim.stat')}</th>
                         <th className="py-2 pr-3 text-right font-medium">{t('sim.colBase')}</th>
                         <th className="py-2 pr-3 text-right font-medium">+{t('sim.awakening')}</th>
                         <th className="py-2 pr-3 text-right font-medium">+{t('sim.colTrust')}</th>
@@ -847,13 +849,15 @@ export default function StatSimulatorPage() {
                         <th className="py-2 pr-3 text-right font-medium">+{t('sim.colSouls')}</th>
                         <th className="py-2 pr-3 text-right font-medium">+{t('sim.colPassive')}</th>
                         <th className="py-2 pr-3 text-right font-medium">{t('sim.stageFinal')}</th>
-                        <th className="py-2 text-right font-medium">{t('sim.colInGame')}</th>
+                        <th className="sticky right-0 border-l border-border/60 bg-card py-2 pl-2 text-right font-medium">
+                          {t('sim.colInGame')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {rows!.map((row) => (
                         <tr key={row.key} className="border-t border-border/60">
-                          <td className="py-1.5 pr-3">{statLabel[row.key]}</td>
+                          <td className="sticky left-0 bg-card py-1.5 pr-3">{statLabel[row.key]}</td>
                           <td className="py-1.5 pr-3 text-right tabular-nums text-muted-foreground">
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -869,7 +873,9 @@ export default function StatSimulatorPage() {
                           {row.deltas.map(deltaCell)}
                           {deltaCell(row.passiveDelta, 99)}
                           <td className="py-1.5 pr-3 text-right text-base font-semibold tabular-nums">{row.final}</td>
-                          <td className="py-1.5 text-right">{inGameCell(row)}</td>
+                          <td className="sticky right-0 border-l border-border/60 bg-card py-1.5 pl-2 text-right">
+                            {inGameCell(row)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

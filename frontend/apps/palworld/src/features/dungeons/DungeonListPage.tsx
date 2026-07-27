@@ -73,7 +73,7 @@ export default function DungeonListPage() {
                   className="flex items-center gap-3 px-4 py-3 transition hover:bg-accent"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium">{b.dungeons.text[d.id]?.name ?? d.id}</div>
+                    <div className="font-medium">{b.dungeons.text[d.id]?.name ?? d.id}</div>
                     <div className="font-mono text-xs text-muted-foreground">{d.id}</div>
                   </div>
                   {range ? (

@@ -25,6 +25,30 @@ test('More sheet opens and navigates to a secondary route', async ({ page }) => 
   await expect(page).toHaveURL(/\/technology$/)
 })
 
+test('active skills render as cards, not the wide table', async ({ page }) => {
+  await page.goto('/active-skills')
+  await expect(page.getByTestId('active-skill-row').first()).toBeVisible()
+  await expect(page.locator('table')).toHaveCount(0)
+})
+
+test('partner skills render as cards, not the wide table', async ({ page }) => {
+  await page.goto('/partner-skills')
+  await expect(page.getByTestId('partner-skill-row').first()).toBeVisible()
+  await expect(page.locator('table')).toHaveCount(0)
+})
+
+test('stat simulator keeps the in-game column pinned inside the viewport', async ({ page }) => {
+  await page.goto('/stat-simulator?pal=Anubis')
+  const input = page.getByTestId('sim-ingame-hp')
+  await input.scrollIntoViewIfNeeded()
+  await expect(input).toBeVisible()
+  // Sticky right column: the IV-solver input must sit fully inside the
+  // 390px viewport without horizontal scrolling.
+  const box = (await input.boundingBox())!
+  expect(box.x).toBeGreaterThanOrEqual(0)
+  expect(box.x + box.width).toBeLessThanOrEqual(390)
+})
+
 test('map page shows FABs that open filter and search sheets', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('.leaflet-container')).toBeVisible()

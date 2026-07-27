@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import { Input } from '@gamemap/ui'
+import { Input, useIsMobile } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
@@ -30,6 +30,8 @@ export default function PartnerSkillsPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const fs = filterStrings(lng)
+  // Phones get stacked cards instead of the 720px-wide table.
+  const isMobile = useIsMobile()
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -153,6 +155,82 @@ export default function PartnerSkillsPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (
         <PalPageLoading />
+      ) : isMobile ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setPowerSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
+            className="mb-2 inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+            data-testid="partner-skill-power-sort"
+          >
+            {t('pal.power')}
+            {powerSort === 'desc' ? (
+              <ArrowDown className="size-3" />
+            ) : powerSort === 'asc' ? (
+              <ArrowUp className="size-3" />
+            ) : null}
+          </button>
+          <ul className="space-y-2">
+            {list.map((s) => (
+              <li key={s.palId} data-testid="partner-skill-row">
+                <Link
+                  to="/pals/$id"
+                  params={{ id: s.palId }}
+                  data-testid="partner-skill-pal-link"
+                  className="block rounded-lg border border-border bg-card p-3 transition hover:bg-accent/40"
+                >
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={palIconUrl(s.palIcon)}
+                      alt=""
+                      width={28}
+                      height={28}
+                      className="size-7 shrink-0 rounded-full object-contain"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.visibility = 'hidden'
+                      }}
+                    />
+                    <span className="min-w-0 flex-1 truncate font-medium">{s.palName}</span>
+                    {s.power != null ? (
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {t('pal.power')}: <span className="font-medium text-foreground">{s.power}</span>
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5 text-sm font-medium">
+                    {s.element ? (
+                      <img
+                        src={elementIconUrl(s.element)}
+                        alt=""
+                        width={16}
+                        height={16}
+                        className="size-4 shrink-0 object-contain"
+                      />
+                    ) : null}
+                    <span className="min-w-0 truncate">{s.name}</span>
+                  </div>
+                  {s.description ? (
+                    <p className="line-clamp-2 text-xs text-muted-foreground">{s.description}</p>
+                  ) : null}
+                  {s.categories.length ? (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {s.categories.map((c) => (
+                        <span
+                          key={c}
+                          className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium whitespace-nowrap text-secondary-foreground"
+                          data-testid={`partner-skill-category-${c}`}
+                        >
+                          {t(`partner.category.${c}`)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full min-w-[720px] border-collapse text-sm">

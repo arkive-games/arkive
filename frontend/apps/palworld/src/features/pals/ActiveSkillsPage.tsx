@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
-import { Input } from '@gamemap/ui'
+import { Input, useIsMobile } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
@@ -19,6 +19,8 @@ import { PalPageLoading, formatSkillRange } from './components'
 export default function ActiveSkillsPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  // Phones get stacked cards instead of the 720px-wide table.
+  const isMobile = useIsMobile()
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -137,6 +139,56 @@ export default function ActiveSkillsPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (
         <PalPageLoading />
+      ) : isMobile ? (
+        <ul className="space-y-2">
+          {list.map((s) => (
+            <li key={s.wazaId} data-testid="active-skill-row">
+              <Link
+                to="/active-skills/$id"
+                params={{ id: s.wazaId }}
+                data-testid="active-skill-link"
+                className="block rounded-lg border border-border bg-card p-3 transition hover:bg-accent/40"
+              >
+                <div className="flex items-center gap-2">
+                  <img
+                    src={elementIconUrl(s.element)}
+                    alt=""
+                    width={18}
+                    height={18}
+                    className="size-[18px] shrink-0 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.visibility = 'hidden'
+                    }}
+                  />
+                  <span className="min-w-0 flex-1 truncate font-medium">{s.name || s.wazaId}</span>
+                  {s.isFruit ? (
+                    <span
+                      className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+                      data-testid="fruit-yes"
+                    >
+                      {t('activeSkill.fruit')}
+                    </span>
+                  ) : null}
+                </div>
+                {s.name && s.description ? (
+                  <p className="mt-1 whitespace-pre-line text-xs text-muted-foreground">{s.description}</p>
+                ) : null}
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span>{t(s.melee ? 'pal.melee' : 'pal.ranged')}</span>
+                  <span className="tabular-nums">
+                    {t('pal.power')}: <span className="font-medium text-foreground">{s.power || '—'}</span>
+                  </span>
+                  <span className="tabular-nums">
+                    {t('pal.cooldown')}: {s.coolTime}s
+                  </span>
+                  <span className="tabular-nums">
+                    {t('pal.range')}: {formatSkillRange(s.minRange, s.maxRange)}
+                  </span>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full min-w-[720px] border-collapse text-sm">
