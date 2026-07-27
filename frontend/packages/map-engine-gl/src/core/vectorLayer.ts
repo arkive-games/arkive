@@ -33,9 +33,19 @@ import type { PixelBounds, Point } from "./types.ts";
  * {@link VectorLayer.setHovered}. Only the hovered region gets a real mesh, so a
  * region set of any size costs zero geometry until the cursor is over one.
  *
- * `regionAt` deliberately reproduces the app's own `pointInPolygon` +
- * smallest-area-wins lookup (palworld `App.tsx` `subzoneAt`), so the region the
- * map highlights and the region the status bar names can never disagree.
+ * `regionAt` reproduces the *algorithm* of the app's own lookup (palworld
+ * `App.tsx` `subzoneAt`): the same `pointInPolygon` ray cast, the same
+ * smallest-area-wins tie-break.
+ *
+ * It does NOT automatically produce the same ANSWER, and that is worth spelling
+ * out: `subzoneAt` first filters `r.type === 'region'` (surface regions only),
+ * while the app hands the engine *every* region — MainWorld ships 81 `region`
+ * volumes plus 42 `cave`/`dungeon`/`tower` ones. The interior volumes are small,
+ * so they sort first and legitimately win `regionAt` while the status bar keeps
+ * naming the surface region containing them. Today's Leaflet engine behaves the
+ * same way (its base fills are unfiltered too), so this is parity, not a bug —
+ * but a consumer that wants the two aligned can pass
+ * {@link VectorLayerOptions.regionFilter} (e.g. `r => r.type === 'region'`).
  *
  * ## Rings are polygons, never holes
  * `RegionInstance.borders` is an array of rings, and Leaflet renders each ring
@@ -75,6 +85,16 @@ import type { PixelBounds, Point } from "./types.ts";
  *    edge as its own `<Polyline>`; three's `computeLineDistances` accumulates
  *    across segments instead, which would make short edges land inside a gap and
  *    vanish.
+ * 3. CAPS: a dashed fat line has BUTT caps — the shader skips the endcap
+ *    geometry under `USE_DASH` — while Leaflet's SVG default is `round`. At
+ *    width 3 that is a sub-pixel difference at each dash end; it is not worth
+ *    chasing in the visual pass.
+ *
+ * Hover materials are created ONCE and only their geometry is swapped: a fresh
+ * `LineMaterial`/`MeshBasicMaterial` per hover change would be the sole owner of
+ * its program cache key, so disposing it destroys the GL program and the next
+ * region crossing recompiles the fat-line shader on the render thread — exactly
+ * the per-crossing hitch the Leaflet original was refactored to avoid.
  *
  * ## Colours
  * Leaflet styles regions with `var(--primary, #2E97FF)`; a GL shader cannot read
@@ -286,6 +306,12 @@ export function edgeKey(a: readonly number[], b: readonly number[]): string {
  * - `visibleRegions` is NOT applied. Leaflet's `BorderSegments` is built from
  *   the unfiltered `regions` array (only the interactive base fills are
  *   filtered), so hidden regions still contribute borders.
+ *
+ * ONE deliberate deviation: an edge whose endpoints are identical (a duplicated
+ * consecutive ring point) is dropped. Leaflet would paint a round-cap dot; the
+ * fat-line vertex shader normalises the segment direction, so a zero-length
+ * segment produces NaN vertices and can blank the whole draw call. No shipped
+ * region has one — this keeps a future data glitch from taking the borders out.
  */
 export function dedupeRegionEdges(regions: readonly RegionInstance[]): BorderEdge[] {
   const edges = new Map<string, BorderEdge>();
@@ -294,6 +320,7 @@ export function dedupeRegionEdges(regions: readonly RegionInstance[]): BorderEdg
       for (let i = 0; i < ring.length - 1; i++) {
         const a = ring[i];
         const b = ring[i + 1];
+        if (a[0] === b[0] && a[1] === b[1]) continue;
         const key = edgeKey(a, b);
         const existing = edges.get(key);
         if (existing) existing.regions.push(region.name);
@@ -367,6 +394,14 @@ export interface VectorLayerOptions {
   colors?: Partial<VectorColors>;
   /** Hovered-region fill opacity. Default {@link DEFAULT_HOVER_FILL_OPACITY}. */
   hoverFillOpacity?: number;
+  /**
+   * Opt-in extra predicate deciding which regions can be hovered, on top of
+   * `visibleRegions`. Leaflet has no equivalent — the default (`undefined`)
+   * accepts every region, which is Leaflet's behaviour. Pass
+   * `r => r.type === "region"` to make {@link VectorLayer.regionAt} agree with
+   * palworld's surface-only `subzoneAt` (see the file header).
+   */
+  regionFilter?: (region: RegionInstance) => boolean;
   /** Draw order. Default `LayerOrder.vectors`. */
   order?: number;
 }
@@ -395,13 +430,14 @@ export class VectorLayer implements RenderLayer {
   private map: GameMapMeta;
   private readonly invalidate: () => void;
   private colors: VectorColors;
-  private hoverFillOpacity: number;
+  private readonly hoverFillOpacity: number;
+  private readonly regionFilter: ((region: RegionInstance) => boolean) | undefined;
 
   /** Ingested regions, sorted by area ASCENDING (smallest-area hit wins). */
   private records: RegionRecord[] = [];
   private byId = new Map<string, RegionRecord>();
   private edges: BorderEdge[] = [];
-  private visibleRegions: Set<string> | undefined;
+  private visibleRegions: ReadonlySet<string> | undefined;
   private showBorders = false;
   private hoveredId: string | null = null;
   private lines: OverlayLine[] = [];
@@ -410,6 +446,14 @@ export class VectorLayer implements RenderLayer {
   private dashedBorders: LineSegments2 | null = null;
   private solidBorders: LineSegments2 | null = null;
   private overlayObject: LineSegments2 | null = null;
+
+  /**
+   * Hover materials, created on first use and reused for the lifetime of the
+   * layer (or until {@link setColors}) — see the file header: recreating them
+   * per hover change recompiles a shader program on every region crossing.
+   */
+  private hoverFillMaterial: MeshBasicMaterial | null = null;
+  private hoverBorderMaterial: LineMaterial | null = null;
 
   /** Camera-derived uniforms, applied to every material as it is created. */
   private viewScale = 1;
@@ -422,6 +466,7 @@ export class VectorLayer implements RenderLayer {
     this.invalidate = opts.invalidate;
     this.colors = { ...DEFAULT_VECTOR_COLORS, ...opts.colors };
     this.hoverFillOpacity = opts.hoverFillOpacity ?? DEFAULT_HOVER_FILL_OPACITY;
+    this.regionFilter = opts.regionFilter;
     this.order = opts.order ?? LayerOrder.vectors;
     this.object3D.name = "vectors";
   }
@@ -445,7 +490,14 @@ export class VectorLayer implements RenderLayer {
       };
     });
     this.records.sort((a, b) => a.area - b.area);
-    this.byId = new Map(this.records.map((r) => [r.region.id, r]));
+    // FIRST wins on a duplicate id, and `records` is sorted by area ascending, so
+    // the record an id resolves to is the same one `regionAt` would have returned
+    // for a point inside it. (Ids are unique in the shipped data; last-wins would
+    // silently highlight the wrong part if they ever weren't.)
+    this.byId = new Map();
+    for (const record of this.records) {
+      if (!this.byId.has(record.region.id)) this.byId.set(record.region.id, record);
+    }
     this.edges = dedupeRegionEdges(regions);
     // A hovered region that no longer exists must not keep a mesh alive.
     if (this.hoveredId !== null && !this.byId.has(this.hoveredId)) {
@@ -457,27 +509,32 @@ export class VectorLayer implements RenderLayer {
   }
 
   /**
-   * Which regions take part in hover. `undefined` means ALL — the opposite
-   * default from the marker subtype filter, and the same as Leaflet's
-   * `!visibleRegions || visibleRegions.has(region.name)`.
+   * Which regions take part in hover, keyed on `region.**name**` — exactly
+   * Leaflet's `!visibleRegions || visibleRegions.has(region.name)`. `undefined`
+   * means ALL, the opposite default from the marker subtype filter.
    *
-   * Leaflet matches on `name`; ids are accepted too so a consumer holding ids
-   * does not silently get an empty map.
+   * Name-only on purpose: accepting ids as well would make a region visible
+   * whenever its id happened to equal a *different* region's name, and no test
+   * would ever catch that. A consumer holding ids should map them to names (or
+   * use {@link VectorLayerOptions.regionFilter}).
+   *
+   * No identity short-circuit: a caller that mutates its Set in place and calls
+   * again must not be silently ignored (`markerLayer.setVisibility` behaves the
+   * same way).
    */
-  setVisibleRegions(regions: Set<string> | undefined): void {
-    if (this.disposed || regions === this.visibleRegions) return;
+  setVisibleRegions(regions: ReadonlySet<string> | undefined): void {
+    if (this.disposed) return;
     this.visibleRegions = regions;
     // The hovered region may have just been filtered out.
     this.rebuildHover();
     this.invalidate();
   }
 
+  /** Whether a region can be hovered: `visibleRegions` ∧ `regionFilter`. */
   private isVisible(record: RegionRecord): boolean {
+    if (this.regionFilter && !this.regionFilter(record.region)) return false;
     if (!this.visibleRegions) return true;
-    return (
-      this.visibleRegions.has(record.region.name) ||
-      this.visibleRegions.has(record.region.id)
-    );
+    return this.visibleRegions.has(record.region.name);
   }
 
   setShowBorders(show: boolean): void {
@@ -508,6 +565,12 @@ export class VectorLayer implements RenderLayer {
     this.invalidate();
   }
 
+  /**
+   * Re-colour everything (the host resolved `--primary` differently, e.g. dark
+   * mode). This is the ONLY path that recreates the hover materials, so it is
+   * also the only one that can cost a shader compile — a theme flip, not a
+   * pointermove.
+   */
   setColors(colors: Partial<VectorColors>): void {
     if (this.disposed) return;
     const next = { ...this.colors, ...colors };
@@ -515,6 +578,7 @@ export class VectorLayer implements RenderLayer {
       return;
     }
     this.colors = next;
+    this.disposeHoverMaterials();
     this.rebuildBorders();
     this.rebuildHover();
     this.rebuildOverlayLines();
@@ -534,11 +598,13 @@ export class VectorLayer implements RenderLayer {
   /**
    * Region under a MAP-PIXEL point, or `null`. Overlaps resolve to the
    * SMALLEST-AREA region: cave/dungeon volumes overlap their surface region in
-   * 2D and a flat cursor has no Z, so the most specific one wins (same rule as
-   * the app's `subzoneAt`).
+   * 2D and a flat cursor has no Z, so the most specific one wins — the same
+   * tie-break as the app's `subzoneAt`, though not necessarily the same answer
+   * unless the caller also matches its `type` filter (see the file header).
    *
-   * Only regions that pass {@link setVisibleRegions} are considered — Leaflet
-   * only makes the filtered base fills interactive.
+   * Only regions that pass {@link setVisibleRegions} and
+   * {@link VectorLayerOptions.regionFilter} are considered — Leaflet only makes
+   * the filtered base fills interactive.
    *
    * Cost per call: one bbox compare per region (records are pre-sorted by area,
    * so the answer is usually found in the first few), then one bbox compare and
@@ -580,12 +646,13 @@ export class VectorLayer implements RenderLayer {
     this.object3D.add(this.dashedBorders);
   }
 
-  /** Hovered-region fill + its solid borders. The only per-hover work. */
+  /**
+   * Hovered-region fill + its solid borders — the only per-hover work, and it
+   * allocates GEOMETRY ONLY: both materials are hoisted (see the file header) so
+   * a region crossing never destroys a GL program.
+   */
   private rebuildHover(): void {
-    this.disposeMesh(this.hoverFill);
-    this.hoverFill = null;
-    this.disposeLine(this.solidBorders);
-    this.solidBorders = null;
+    this.detachHoverObjects();
 
     const record = this.hoveredId !== null ? this.byId.get(this.hoveredId) : undefined;
     if (!record || !this.isVisible(record)) return;
@@ -596,17 +663,7 @@ export class VectorLayer implements RenderLayer {
         const geometry = new BufferGeometry();
         geometry.setAttribute("position", new BufferAttribute(positions, 3));
         geometry.setIndex(new BufferAttribute(index, 1));
-        const material = new MeshBasicMaterial({
-          color: new Color(this.colors.region),
-          transparent: true,
-          opacity: this.hoverFillOpacity,
-          // Layer group order decides stacking; every layer sits at z = 0.
-          depthTest: false,
-          depthWrite: false,
-          // The y-flipped projection reverses winding — see renderer.ts.
-          side: DoubleSide,
-        });
-        this.hoverFill = new Mesh(geometry, material);
+        this.hoverFill = new Mesh(geometry, this.getHoverFillMaterial());
         this.hoverFill.name = "region-hover-fill";
         this.hoverFill.renderOrder = CHILD_ORDER.hoverFill;
         this.object3D.add(this.hoverFill);
@@ -619,17 +676,65 @@ export class VectorLayer implements RenderLayer {
     const name = record.region.name;
     const hoveredEdges = this.edges.filter((e) => e.regions.includes(name));
     if (hoveredEdges.length === 0) return;
-    const material = this.makeLineMaterial({
-      color: this.colors.region,
-      linewidth: BORDER_WIDTH,
-      opacity: 1,
-      // Leaflet's hovered dashArray is "1 0" — a solid line.
-      dash: 0,
-      gap: 0,
-    });
-    this.solidBorders = this.makeSegments(hoveredEdges, material, CHILD_ORDER.solidBorders);
+    this.solidBorders = this.makeSegments(
+      hoveredEdges,
+      this.getHoverBorderMaterial(),
+      CHILD_ORDER.solidBorders,
+    );
     this.solidBorders.name = "region-borders-solid";
     this.object3D.add(this.solidBorders);
+  }
+
+  /** Detach the hover objects and free their geometry; materials are kept. */
+  private detachHoverObjects(): void {
+    if (this.hoverFill) {
+      this.object3D.remove(this.hoverFill);
+      this.hoverFill.geometry.dispose();
+      this.hoverFill = null;
+    }
+    if (this.solidBorders) {
+      this.object3D.remove(this.solidBorders);
+      this.solidBorders.geometry.dispose();
+      this.solidBorders = null;
+    }
+  }
+
+  private getHoverFillMaterial(): MeshBasicMaterial {
+    if (!this.hoverFillMaterial) {
+      this.hoverFillMaterial = new MeshBasicMaterial({
+        color: new Color(this.colors.region),
+        transparent: true,
+        opacity: this.hoverFillOpacity,
+        // Layer group order decides stacking; every layer sits at z = 0.
+        depthTest: false,
+        depthWrite: false,
+        // The y-flipped projection reverses winding — see renderer.ts.
+        side: DoubleSide,
+      });
+    }
+    return this.hoverFillMaterial;
+  }
+
+  private getHoverBorderMaterial(): LineMaterial {
+    if (!this.hoverBorderMaterial) {
+      this.hoverBorderMaterial = this.makeLineMaterial({
+        color: this.colors.region,
+        linewidth: BORDER_WIDTH,
+        opacity: 1,
+        // Leaflet's hovered dashArray is "1 0" — a solid line.
+        dash: 0,
+        gap: 0,
+      });
+    }
+    return this.hoverBorderMaterial;
+  }
+
+  /** Drop the cached hover materials so the next hover picks up new colours. */
+  private disposeHoverMaterials(): void {
+    this.hoverFillMaterial?.dispose();
+    this.hoverFillMaterial = null;
+    this.hoverBorderMaterial?.dispose();
+    this.hoverBorderMaterial = null;
   }
 
   private rebuildOverlayLines(): void {
@@ -682,10 +787,10 @@ export class VectorLayer implements RenderLayer {
     setSegmentDistances(geometry, segments);
     const object = new LineSegments2(geometry, material);
     object.renderOrder = renderOrder;
-    // Fat lines are camera-facing quads built in the shader; three's frustum
-    // culling uses the geometry's bounding sphere, which for a segment soup
-    // spanning the whole map is useless and (with `setPositions` alone) not
-    // always computed. Culling is the tile layer's job here.
+    // `setPositions` does compute the bounding box and sphere, but for a segment
+    // soup spanning the whole map that sphere always intersects the frustum, so
+    // the per-frame test is pure overhead. Off it goes; culling at the object
+    // level is meaningless for one map-sized object anyway.
     object.frustumCulled = false;
     return object;
   }
@@ -705,13 +810,12 @@ export class VectorLayer implements RenderLayer {
       depthTest: false,
       depthWrite: false,
       side: DoubleSide,
+      // `LineMaterial`'s constructor runs `setValues` after `super()`, and
+      // `dashed` is a real accessor, so this does add the `USE_DASH` define.
       dashed: spec.dash > 0,
       dashSize: spec.dash,
       gapSize: spec.gap,
     });
-    // `dashed` via the constructor does not add the shader define in every three
-    // version — set it through the accessor, which does.
-    material.dashed = spec.dash > 0;
     this.applyView(material);
     return material;
   }
@@ -722,10 +826,16 @@ export class VectorLayer implements RenderLayer {
     material.dashScale = this.viewScale;
   }
 
+  /**
+   * Every live `LineMaterial`. The hover border material is listed directly, not
+   * via `solidBorders`: it outlives the object that uses it, and a stale
+   * `resolution`/`dashScale` on it would show up the moment the next hover
+   * attaches geometry to it.
+   */
   private eachLineMaterial(fn: (material: LineMaterial) => void): void {
-    for (const object of [this.dashedBorders, this.solidBorders, this.overlayObject]) {
-      if (object) fn(object.material);
-    }
+    if (this.dashedBorders) fn(this.dashedBorders.material);
+    if (this.hoverBorderMaterial) fn(this.hoverBorderMaterial);
+    if (this.overlayObject) fn(this.overlayObject.material);
   }
 
   // ----------------------------------------------------------------- frame ---
@@ -749,8 +859,12 @@ export class VectorLayer implements RenderLayer {
   }
 
   /**
-   * Explicit viewport setter for hosts that resize without a camera change
-   * (`LineMaterial.resolution` going stale is the classic fat-line bug).
+   * ESCAPE HATCH, not part of the normal flow: with `MapRenderer` a resize goes
+   * `setSize` → `camera.setViewport` → the next `update(camera)`, which syncs the
+   * resolution already. This exists only for a host that drives the layer without
+   * that camera path (the weapp target), because a stale
+   * `LineMaterial.resolution` is the classic fat-line width bug. Overwritten by
+   * the next `update` whose camera viewport differs.
    */
   setResolution(width: number, height: number): void {
     if (this.disposed || (width === this.viewWidth && height === this.viewHeight)) return;
@@ -769,24 +883,17 @@ export class VectorLayer implements RenderLayer {
     object.material.dispose();
   }
 
-  private disposeMesh(mesh: Mesh<BufferGeometry, MeshBasicMaterial> | null): void {
-    if (!mesh) return;
-    this.object3D.remove(mesh);
-    mesh.geometry.dispose();
-    mesh.material.dispose();
-  }
-
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     this.disposeLine(this.dashedBorders);
-    this.disposeLine(this.solidBorders);
     this.disposeLine(this.overlayObject);
-    this.disposeMesh(this.hoverFill);
     this.dashedBorders = null;
-    this.solidBorders = null;
     this.overlayObject = null;
-    this.hoverFill = null;
+    // Hover objects share the hoisted materials, so their geometry goes first and
+    // the materials once, here.
+    this.detachHoverObjects();
+    this.disposeHoverMaterials();
     this.records = [];
     this.byId.clear();
     this.edges = [];

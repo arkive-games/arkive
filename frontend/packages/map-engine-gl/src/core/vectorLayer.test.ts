@@ -169,6 +169,22 @@ describe("dedupeRegionEdges", () => {
     expect(dedupeRegionEdges([region("closed", [square(0, 0, 10)])])).toHaveLength(4);
   });
 
+  it("drops zero-length edges (they would NaN out the fat-line shader)", () => {
+    const edges = dedupeRegionEdges([
+      region("dup", [
+        [
+          [0, 0],
+          [0, 0],
+          [10, 0],
+          [10, 10],
+          [0, 0],
+        ],
+      ]),
+    ]);
+    expect(edges).toHaveLength(3);
+    expect(edges.every((e) => e.a[0] !== e.b[0] || e.a[1] !== e.b[1])).toBe(true);
+  });
+
   it("includes regions hidden by visibleRegions (Leaflet filters only the base fills)", () => {
     const { layer } = makeLayer();
     layer.setRegions([left, right]);
@@ -317,7 +333,7 @@ describe("VectorLayer.regionAt", () => {
     layer.dispose();
   });
 
-  it("honours visibleRegions (undefined = all, empty = none, by name or id)", () => {
+  it("honours visibleRegions (undefined = all, empty = none, keyed on NAME)", () => {
     const { layer } = makeLayer();
     const a = region("a-id", [square(0, 0, 100)], { name: "Alpha" });
     layer.setRegions([a]);
@@ -326,16 +342,42 @@ describe("VectorLayer.regionAt", () => {
     layer.setVisibleRegions(new Set<string>());
     expect(layer.regionAt({ x: 50, y: 50 })).toBeNull();
 
-    // Leaflet filters on region.name.
-    layer.setVisibleRegions(new Set(["Alpha"]));
-    expect(layer.regionAt({ x: 50, y: 50 })).toBe("a-id");
-
-    // Ids are accepted too, so a consumer holding ids is not silently empty.
+    // Leaflet filters on region.name — and ONLY on it, so an id must not match.
     layer.setVisibleRegions(new Set(["a-id"]));
+    expect(layer.regionAt({ x: 50, y: 50 })).toBeNull();
+
+    layer.setVisibleRegions(new Set(["Alpha"]));
     expect(layer.regionAt({ x: 50, y: 50 })).toBe("a-id");
 
     layer.setVisibleRegions(undefined);
     expect(layer.regionAt({ x: 50, y: 50 })).toBe("a-id");
+    layer.dispose();
+  });
+
+  it("re-reads a Set mutated in place (no identity short-circuit)", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 100)])]);
+    const visible = new Set<string>();
+    layer.setVisibleRegions(visible);
+    expect(layer.regionAt({ x: 50, y: 50 })).toBeNull();
+    visible.add("a");
+    layer.setVisibleRegions(visible);
+    expect(layer.regionAt({ x: 50, y: 50 })).toBe("a");
+    layer.dispose();
+  });
+
+  it("applies the opt-in regionFilter on top of visibleRegions", () => {
+    // palworld's `subzoneAt` looks at surface regions only; the engine gets all
+    // of them. This option is how Task 6/7 can align the two.
+    const { layer } = makeLayer({ regionFilter: (r) => r.type === "region" });
+    layer.setRegions([
+      region("cave", [square(40, 40, 10)], { type: "cave" }),
+      region("surface", [square(0, 0, 100)]),
+    ]);
+    // Without the filter the smaller cave would win this point.
+    expect(layer.regionAt({ x: 45, y: 45 })).toBe("surface");
+    layer.setHovered("cave");
+    expect(layer.hoverFillObject).toBeNull();
     layer.dispose();
   });
 });
@@ -414,6 +456,21 @@ describe("segmentPositions / setSegmentDistances", () => {
     expect([...flat]).toEqual([1, 2, 0, 3, 4, 0]);
   });
 
+  it("leaves a segment shorter than the dash entirely solid", () => {
+    // The motivating case for the per-segment reset: a 3 px edge with dash 8 / gap
+    // 5. Distance 0..3 sits wholly inside the first dash → the edge is drawn. Had
+    // the distances accumulated (three's computeLineDistances), the same edge
+    // could start at, say, 9 and be discarded as gap.
+    const segments = [{ a: [0, 0], b: [3, 0] }];
+    const geometry = new LineSegmentsGeometry();
+    geometry.setPositions(segmentPositions(segments));
+    setSegmentDistances(geometry, segments);
+    expect(geometry.attributes.instanceDistanceStart.getX(0)).toBe(0);
+    expect(geometry.attributes.instanceDistanceEnd.getX(0)).toBeCloseTo(3, 6);
+    expect(3).toBeLessThan(BORDER_DASH);
+    geometry.dispose();
+  });
+
   it("restarts the dash cycle on every segment (Leaflet draws one polyline per edge)", () => {
     const segments = [
       { a: [0, 0], b: [3, 4] }, // length 5
@@ -438,6 +495,16 @@ describe("segmentPositions / setSegmentDistances", () => {
 describe("VectorLayer borders", () => {
   const left = region("left", [square(0, 0, 10)]);
   const right = region("right", [square(10, 0, 10)]);
+
+  it("renders nothing when there are no regions at all", () => {
+    const { layer } = makeLayer();
+    layer.setShowBorders(true);
+    expect(layer.dashedBordersObject).toBeNull();
+    layer.setRegions([]);
+    expect(layer.dashedBordersObject).toBeNull();
+    expect(layer.object3D.children).toHaveLength(0);
+    layer.dispose();
+  });
 
   it("renders nothing until showBorders is on", () => {
     const { layer } = makeLayer();
@@ -541,6 +608,30 @@ describe("VectorLayer hover fill", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(layer.hoverFillObject).not.toBe(old);
     layer.dispose();
+  });
+
+  it("REUSES the hover materials across crossings (no shader recompile per hover)", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)]), region("b", [square(10, 0, 10)])]);
+    layer.setShowBorders(true);
+    layer.setHovered("a");
+    const fillMaterial = layer.hoverFillObject!.material;
+    const borderMaterial = layer.solidBordersObject!.material;
+    const fillSpy = vi.spyOn(fillMaterial, "dispose");
+    const borderSpy = vi.spyOn(borderMaterial, "dispose");
+
+    layer.setHovered("b");
+    layer.setHovered(null);
+    layer.setHovered("a");
+
+    // Same instances, never disposed: only geometry churns per crossing.
+    expect(layer.hoverFillObject!.material).toBe(fillMaterial);
+    expect(layer.solidBordersObject!.material).toBe(borderMaterial);
+    expect(fillSpy).not.toHaveBeenCalled();
+    expect(borderSpy).not.toHaveBeenCalled();
+    layer.dispose();
+    expect(fillSpy).toHaveBeenCalledTimes(1);
+    expect(borderSpy).toHaveBeenCalledTimes(1);
   });
 
   it("draws nothing for an unknown or filtered-out region", () => {
@@ -648,6 +739,29 @@ describe("VectorLayer overlay lines", () => {
     layer.dispose();
   });
 
+  it("treats undefined like an empty list (the prop is optional)", () => {
+    const { layer } = makeLayer();
+    layer.setOverlayLines(undefined);
+    expect(layer.overlayLinesObject).toBeNull();
+    layer.setOverlayLines([{ id: "a", from: { x: 0, y: 0 }, to: { x: 10, y: 0 } }]);
+    const object = layer.overlayLinesObject!;
+    const spy = vi.spyOn(object.geometry, "dispose");
+    layer.setOverlayLines(undefined);
+    expect(layer.overlayLinesObject).toBeNull();
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(layer.object3D.children).not.toContain(object);
+    layer.dispose();
+  });
+
+  it("snapshots the caller's array (a later in-place mutation is not picked up)", () => {
+    const { layer } = makeLayer();
+    const lines = [{ id: "a", from: { x: 0, y: 0 }, to: { x: 10, y: 0 } }];
+    layer.setOverlayLines(lines);
+    lines.push({ id: "b", from: { x: 0, y: 5 }, to: { x: 10, y: 5 } });
+    expect(segmentCount(layer.overlayLinesObject)).toBe(1);
+    layer.dispose();
+  });
+
   it("re-projects on setMap", () => {
     const { layer } = makeLayer({ map: pixelMap });
     layer.setOverlayLines([{ id: "a", from: { x: 100, y: 200 }, to: { x: 300, y: 400 } }]);
@@ -661,6 +775,68 @@ describe("VectorLayer overlay lines", () => {
       expected.x,
       4,
     );
+    layer.dispose();
+  });
+});
+
+// ---------------------------------------------------------------- setColors ---
+
+describe("VectorLayer.setColors", () => {
+  function fullLayer() {
+    const made = makeLayer();
+    made.layer.setRegions([region("a", [square(0, 0, 10)]), region("b", [square(10, 0, 10)])]);
+    made.layer.setShowBorders(true);
+    made.layer.setHovered("a");
+    made.layer.setOverlayLines([{ id: "l", from: { x: 0, y: 0 }, to: { x: 10, y: 0 } }]);
+    return made;
+  }
+
+  it("re-colours borders, hover fill and overlay defaults", () => {
+    const { layer } = fullLayer();
+    layer.setColors({ region: "#ff0000", overlayLine: "#00ff00" });
+    const red = new Color("#ff0000").getHexString();
+    expect(layer.dashedBordersObject!.material.color.getHexString()).toBe(red);
+    expect(layer.solidBordersObject!.material.color.getHexString()).toBe(red);
+    expect(layer.hoverFillObject!.material.color.getHexString()).toBe(red);
+    // Overlay colours live on the geometry (the material stays white).
+    const colors = layer.overlayLinesObject!.geometry.attributes.instanceColorStart;
+    const green = new Color("#00ff00");
+    expect(colors.getX(0)).toBeCloseTo(green.r, 5);
+    expect(colors.getY(0)).toBeCloseTo(green.g, 5);
+    layer.dispose();
+  });
+
+  it("disposes the materials it replaces, including the hoisted hover ones", () => {
+    const { layer } = fullLayer();
+    const spies = [
+      layer.dashedBordersObject!.material,
+      layer.solidBordersObject!.material,
+      layer.hoverFillObject!.material,
+      layer.overlayLinesObject!.material,
+    ].map((m) => vi.spyOn(m, "dispose"));
+    layer.setColors({ region: "#ff0000" });
+    for (const spy of spies) expect(spy).toHaveBeenCalledTimes(1);
+    layer.dispose();
+  });
+
+  it("keeps the hovered region, its geometry and the camera state", () => {
+    const { layer } = fullLayer();
+    layer.update(makeCamera(1, [640, 480]));
+    layer.setColors({ region: "#ff0000" });
+    expect(layer.hovered).toBe("a");
+    expect(segmentCount(layer.solidBordersObject)).toBe(4);
+    expect(segmentCount(layer.dashedBordersObject)).toBe(7);
+    const material = layer.dashedBordersObject!.material;
+    expect(material.dashScale).toBe(2);
+    expect([material.resolution.x, material.resolution.y]).toEqual([640, 480]);
+    layer.dispose();
+  });
+
+  it("is a no-op when neither colour changed", () => {
+    const { layer } = fullLayer();
+    const before = layer.dashedBordersObject!;
+    layer.setColors({ region: DEFAULT_VECTOR_COLORS.region });
+    expect(layer.dashedBordersObject).toBe(before);
     layer.dispose();
   });
 });
@@ -698,6 +874,25 @@ describe("VectorLayer.update", () => {
     layer.dispose();
   });
 
+  it("does nothing at all when the camera state is unchanged", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)])]);
+    layer.setShowBorders(true);
+    const material = layer.dashedBordersObject!.material;
+    const camera = makeCamera(0);
+    layer.update(camera);
+    // Poke the uniform behind the layer's back: an early-returning update leaves
+    // it alone, a recomputing one would restore it. This is what keeps the
+    // per-frame cost at two number compares.
+    material.dashScale = 99;
+    layer.update(camera);
+    expect(material.dashScale).toBe(99);
+    // A real change still gets through.
+    layer.update(makeCamera(1));
+    expect(material.dashScale).toBe(2);
+    layer.dispose();
+  });
+
   it("applies the current camera state to materials created later", () => {
     const { layer } = makeLayer();
     layer.update(makeCamera(1, [640, 480]));
@@ -717,6 +912,36 @@ describe("VectorLayer lifecycle", () => {
     const { layer } = makeLayer();
     expect(layer.order).toBe(LayerOrder.vectors);
     expect(layer.object3D.name).toBe("vectors");
+    layer.dispose();
+  });
+
+  it("stacks children like Leaflet: fill under borders, solid over dashed, lines on top", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)]), region("b", [square(10, 0, 10)])]);
+    layer.setShowBorders(true);
+    layer.setHovered("a");
+    layer.setOverlayLines([{ id: "l", from: { x: 0, y: 0 }, to: { x: 10, y: 0 } }]);
+    const order = (o: { renderOrder: number } | null) => o!.renderOrder;
+    expect(order(layer.hoverFillObject)).toBeLessThan(order(layer.dashedBordersObject));
+    expect(order(layer.dashedBordersObject)).toBeLessThan(order(layer.solidBordersObject));
+    expect(order(layer.solidBordersObject)).toBeLessThan(order(layer.overlayLinesObject));
+    layer.dispose();
+  });
+
+  it("resolves a duplicate region id to the smallest-area record, like regionAt", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([
+      region("dup", [square(0, 0, 100)]),
+      region("dup", [square(40, 40, 10)]),
+    ]);
+    expect(layer.regionAt({ x: 45, y: 45 })).toBe("dup");
+    layer.setHovered("dup");
+    // 10×10 → 2 triangles; the 100×100 record would be the same count, so check
+    // the geometry's extent instead.
+    const positions = layer.hoverFillObject!.geometry.getAttribute("position");
+    let maxX = -Infinity;
+    for (let i = 0; i < positions.count; i++) maxX = Math.max(maxX, positions.getX(i));
+    expect(maxX).toBe(50);
     layer.dispose();
   });
 
