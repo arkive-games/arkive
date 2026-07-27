@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearch } from '@tanstack/react-router'
-import { GameMapView, worldToPixel, type EngineMarker, type MapRef } from '@gamemap/map-engine'
+import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, type MapRef } from '@gamemap/map-engine'
+import { GameMapView as GlGameMapView, type GlMapRef } from '@gamemap/map-engine-gl'
 import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
@@ -91,6 +92,10 @@ export default function App() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const mapRef = useRef<MapRef>(null)
+  // Separate handle for the WebGL engine (`?engine=gl`): its ref is a small
+  // engine-agnostic handle, NOT an `L.Map`, so it must never be threaded into
+  // Leaflet-typed code.
+  const glMapRef = useRef<GlMapRef | null>(null)
   const isMobile = useIsMobile()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [searchSheetOpen, setSearchSheetOpen] = useState(false)
@@ -104,7 +109,7 @@ export default function App() {
 
   // Deep-link params (?map=… & ?q=…): open a given map with the search box
   // prefilled — used by the Paldeck "view on full map" link.
-  const { q: initialQuery, map: mapParam } = useSearch({ from: '/' })
+  const { q: initialQuery, map: mapParam, engine: engineParam } = useSearch({ from: '/' })
 
   const [staticData, setStaticData] = useState<{
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
@@ -741,34 +746,44 @@ export default function App() {
     />
   )
 
-  const mapView = (
-    <GameMapView
-      mapRef={mapRef}
-      map={map}
-      markers={engineMarkers}
-      regions={showRegions && regionData?.mapId === mapId ? regionData.regions : []}
-      visibleSubtypes={visible}
-      showLabels={showLabels}
-      showBorders={showRegions}
-      lodEnabled={false}
-      selectedMarkerId={selectedMarkerId}
-      forceShowIds={forceShowIds}
-      selectedPosition={selectedPosition}
-      initialView={initialView}
-      onViewChange={saveView}
-      suppressInitialFlyForId={restoredMarkerId}
-      overlayLines={overlayLines}
-      onToggleMarker={onToggleMarker}
-      subzoneAt={subzoneAt}
-      displayCoords={displayCoords}
-      flyToDuration={0.5}
-      assets={palworldAssets}
-      theme={palworldTheme}
-      exposeTestHandle={import.meta.env.DEV}
-      renderPopupContent={renderPopupContent}
-      labels={labels}
-    />
-  )
+  // Every prop except the engine handle, built ONCE and shared by both engines:
+  // the GL engine's props are field-for-field identical to the Leaflet engine's
+  // apart from `mapRef`, so constructing them twice would let the two paths
+  // silently drift.
+  const sharedMapProps: Omit<GameMapViewProps, 'mapRef'> = {
+    map,
+    markers: engineMarkers,
+    regions: showRegions && regionData?.mapId === mapId ? regionData.regions : [],
+    visibleSubtypes: visible,
+    showLabels,
+    showBorders: showRegions,
+    lodEnabled: false,
+    selectedMarkerId,
+    forceShowIds,
+    selectedPosition,
+    initialView,
+    onViewChange: saveView,
+    suppressInitialFlyForId: restoredMarkerId,
+    overlayLines,
+    onToggleMarker,
+    subzoneAt,
+    displayCoords,
+    flyToDuration: 0.5,
+    assets: palworldAssets,
+    theme: palworldTheme,
+    exposeTestHandle: import.meta.env.DEV,
+    renderPopupContent,
+    labels,
+  }
+
+  // `?engine=gl` swaps in the WebGL engine; anything else keeps Leaflet (the
+  // default). Only the ref differs — see `glMapRef` above.
+  const mapView =
+    engineParam === 'gl' ? (
+      <GlGameMapView {...sharedMapProps} mapRef={glMapRef} />
+    ) : (
+      <GameMapView {...sharedMapProps} mapRef={mapRef} />
+    )
 
   if (isMobile) {
     return (

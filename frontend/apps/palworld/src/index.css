@@ -95,3 +95,15 @@ html {
 .dark .leaflet-container {
   background: #0c161e;
 }
+
+/* Same void colour for the WebGL engine (`?engine=gl`): its canvas is cleared to
+   transparent, so the map root's background shows through exactly where the
+   Leaflet container's does. Kept next to the rule above so the two engines'
+   backgrounds can't drift apart. */
+.gmgl-map-root {
+  background: #cfe4ef;
+}
+
+.dark .gmgl-map-root {
+  background: #0c161e;
+}

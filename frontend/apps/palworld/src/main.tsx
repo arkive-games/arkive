@@ -10,6 +10,12 @@ import {
 import { ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell'
 import 'leaflet/dist/leaflet.css'
 import '@gamemap/map-engine/engine.css'
+// The WebGL engine (mounted only behind `?engine=gl`, see App.tsx) ships its own
+// stylesheet. Loaded unconditionally and BEFORE index.css for the same reason
+// engine.css is: every rule in it is scoped to a `gmgl-` class, so it cannot
+// touch the Leaflet path, and importing it here (rather than from App.tsx) keeps
+// app CSS last so `index.css` can still override engine chrome.
+import '@gamemap/map-engine-gl/engine-gl.css'
 import './index.css'
 import './i18n'
 import App from './App'
@@ -73,6 +79,12 @@ export interface MapSearch {
   q?: string
   /** Open a specific map instead of the default MainWorld. */
   map?: string
+  /**
+   * Render engine opt-in: `gl` mounts the WebGL (three.js) map engine instead of
+   * the default Leaflet one. Experimental escape hatch for side-by-side
+   * comparison — Leaflet stays the default and nothing else changes.
+   */
+  engine?: 'gl'
 }
 const mapRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -80,6 +92,7 @@ const mapRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): MapSearch => ({
     q: typeof s.q === 'string' ? s.q : undefined,
     map: typeof s.map === 'string' ? s.map : undefined,
+    engine: s.engine === 'gl' ? 'gl' : undefined,
   }),
   component: App,
 })
