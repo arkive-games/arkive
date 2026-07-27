@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { InstancedBufferGeometry, Mesh, ShaderMaterial } from "three";
 import type { GameMapMeta, MarkerTypeSubtype } from "@gamemap/data-contract";
 import type { MapAssets } from "./assets.ts";
 import { Camera } from "./camera.ts";
@@ -12,8 +13,8 @@ import {
   visibleTierForZoom,
   type LayerMarker,
 } from "./markerLayer.ts";
-import { PinAtlas, SELECTED_SCALE, type PinCanvas, type PinContext2D } from "./pinAtlas.ts";
-import { LayerOrder } from "./renderer.ts";
+import { PIN_BASE_SIZE, PinAtlas, SELECTED_SCALE, type PinCanvas, type PinContext2D } from "./pinAtlas.ts";
+import { LayerOrder, type RenderFrameContext } from "./renderer.ts";
 
 // ------------------------------------------------------------------ fixtures ---
 
@@ -103,26 +104,32 @@ function makeCamera(over: { zoom?: number; center?: { x: number; y: number } } =
   });
 }
 
+function makeAtlas(over: { pageSize?: number } = {}): PinAtlas {
+  return new PinAtlas({
+    createCanvas: fakeCanvas,
+    loadImage: () => Promise.resolve({ width: 40, height: 40 }),
+    devicePixelRatio: 1,
+    pageSize: over.pageSize ?? 1024,
+  });
+}
+
 function makeLayer(
   markers: LayerMarker[],
   over: {
     camera?: Camera;
+    atlas?: PinAtlas;
+    map?: GameMapMeta;
     visibleSubtypes?: ReadonlySet<string> | undefined;
     forceShowIds?: ReadonlySet<string>;
     lodEnabled?: boolean;
   } = {},
-): { layer: MarkerLayer; camera: Camera; invalidate: () => void } {
+): { layer: MarkerLayer; camera: Camera; atlas: PinAtlas; invalidate: MockInvalidate } {
   const camera = over.camera ?? makeCamera();
   const invalidate = vi.fn();
-  const atlas = new PinAtlas({
-    createCanvas: fakeCanvas,
-    loadImage: () => Promise.resolve({ width: 40, height: 40 }),
-    devicePixelRatio: 1,
-    pageSize: 1024,
-  });
+  const atlas = over.atlas ?? makeAtlas();
   const layer = new MarkerLayer({
     camera,
-    map: makeMap(),
+    map: over.map ?? makeMap(),
     assets,
     invalidate,
     atlas,
@@ -134,7 +141,31 @@ function makeLayer(
     },
   });
   layer.setMarkers(markers);
-  return { layer, camera, invalidate };
+  return { layer, camera, atlas, invalidate };
+}
+
+type MockInvalidate = ReturnType<typeof vi.fn>;
+
+/** One frame's worth of renderer context (see `renderer.ts`). */
+function frame(pixelRatio: number): RenderFrameContext {
+  return { pixelRatio };
+}
+
+/** The instanced batches the layer attached, in scene order. */
+function batches(layer: MarkerLayer): Mesh<InstancedBufferGeometry, ShaderMaterial>[] {
+  return layer.object3D.children as Mesh<InstancedBufferGeometry, ShaderMaterial>[];
+}
+
+function instanceCountOf(mesh: Mesh<InstancedBufferGeometry, ShaderMaterial>): number {
+  return mesh.geometry.instanceCount;
+}
+
+function centreOf(
+  mesh: Mesh<InstancedBufferGeometry, ShaderMaterial>,
+  slot: number,
+): { x: number; y: number } {
+  const array = mesh.geometry.getAttribute("aCenter").array as Float32Array;
+  return { x: array[slot * 2], y: array[slot * 2 + 1] };
 }
 
 // ================================================================= LOD tiers ===
@@ -389,12 +420,23 @@ describe("fanOutPositions", () => {
 
 describe("MarkerLayer.hitTest", () => {
   it("hits inside the sprite's screen rect and misses outside it", () => {
-    // Marker at the camera centre → screen (400, 300); 40 × 1.25 = 50px box.
+    // Marker at the camera centre → screen (400, 300); Leaflet's 40px wrapper.
     const { layer } = makeLayer([marker({ id: "m1" })]);
     expect(layer.hitTest({ x: 400, y: 300 })).toBe("m1");
-    expect(layer.hitTest({ x: 424, y: 324 })).toBe("m1");
-    expect(layer.hitTest({ x: 426, y: 300 })).toBeNull();
-    expect(layer.hitTest({ x: 400, y: 326 })).toBeNull();
+    expect(layer.hitTest({ x: 419, y: 319 })).toBe("m1");
+    expect(layer.hitTest({ x: 421, y: 300 })).toBeNull();
+    expect(layer.hitTest({ x: 400, y: 321 })).toBeNull();
+    layer.dispose();
+  });
+
+  it("uses the 40px wrapper box, not the overflowing icon", () => {
+    // iconScale 2 paints an 80px icon, but the DOM `<img>` is pointer-transparent
+    // — only the 40px wrapper is clickable, at any scale.
+    const { layer } = makeLayer([
+      marker({ id: "big", subtypeMeta: subtype({ iconScale: 2 }) }),
+    ]);
+    expect(layer.hitTest({ x: 419, y: 300 })).toBe("big");
+    expect(layer.hitTest({ x: 421, y: 300 })).toBeNull();
     layer.dispose();
   });
 
@@ -408,22 +450,22 @@ describe("MarkerLayer.hitTest", () => {
     camera.setView({ x: 4000, y: 3000 }, 1);
     // zoom 1: the same marker is now 200 CSS px right of centre...
     expect(layer.hitTest({ x: 600, y: 300 })).toBe("m1");
-    // ...and the sprite is still 50 CSS px wide (screen-constant size).
+    // ...and the sprite is still 40 CSS px wide (screen-constant size).
     expect(layer.hitTest({ x: 500, y: 300 })).toBeNull();
-    expect(layer.hitTest({ x: 624, y: 300 })).toBe("m1");
-    expect(layer.hitTest({ x: 626, y: 300 })).toBeNull();
+    expect(layer.hitTest({ x: 619, y: 300 })).toBe("m1");
+    expect(layer.hitTest({ x: 621, y: 300 })).toBeNull();
     layer.dispose();
   });
 
   it("enlarges the hit rect by the 1.2 selection scale", () => {
     const { layer } = makeLayer([marker({ id: "m1" })]);
-    // 50px box → half 25: 28px out misses.
-    expect(layer.hitTest({ x: 428, y: 300 })).toBeNull();
+    // 40px box → half 20: 22px out misses.
+    expect(layer.hitTest({ x: 422, y: 300 })).toBeNull();
     layer.setSelected("m1");
-    // 50 × 1.2 = 60px box → half 30: the same point now hits.
-    expect(50 * SELECTED_SCALE).toBe(60);
-    expect(layer.hitTest({ x: 428, y: 300 })).toBe("m1");
-    expect(layer.hitTest({ x: 431, y: 300 })).toBeNull();
+    // 40 × 1.2 = 48px box → half 24: the same point now hits.
+    expect(PIN_BASE_SIZE * SELECTED_SCALE).toBe(48);
+    expect(layer.hitTest({ x: 422, y: 300 })).toBe("m1");
+    expect(layer.hitTest({ x: 425, y: 300 })).toBeNull();
     layer.dispose();
   });
 
@@ -446,6 +488,48 @@ describe("MarkerLayer.hitTest", () => {
     ]);
     layer.setSelected("right");
     expect(layer.hitTest({ x: 402, y: 300 })).toBe("right");
+    layer.dispose();
+  });
+
+  it("breaks an exact tie by atlas page before marker index — as the GPU does", () => {
+    // Batches draw in page order (`renderOrder = page`), so a LOWER-index marker
+    // on a HIGHER page still draws on top. Set that up by filling page 0 to its
+    // last slot before the layer resolves anything.
+    const atlas = makeAtlas({ pageSize: 128 });
+    const shared = subtype({ id: "shared", name: "shared", icon: undefined, pinVariant: "pin", color: "#aa0000" });
+    const other = subtype({ id: "other", name: "other", icon: undefined, pinVariant: "pin", color: "#00bb00" });
+    for (let i = 0; i < 8; i++) {
+      atlas.get({
+        variant: "pin",
+        iconUrl: "",
+        iconScale: 1.25,
+        completed: false,
+        dot: `#0000${i}${i}`,
+        ring: "rgba(255,255,255,0.9)",
+        selected: false,
+        theme: {
+          pinDiscBg: "rgba(0,0,0,0.6)",
+          pinBorder: "rgba(255,255,255,1)",
+          pinDot: "#2E97FF",
+          circularBorder: "rgba(255,255,255,0.9)",
+          completedAccent: "#22c55e",
+        },
+      });
+    }
+    const { layer } = makeLayer(
+      [
+        // idx 0 takes page 0's last slot with the `shared` appearance.
+        marker({ id: "warm", subtype: "shared", subtypeMeta: shared, x: 6000, y: 6000 }),
+        // idx 1 needs a new appearance → page 1.
+        marker({ id: "onPage1", subtype: "other", subtypeMeta: other, x: 4010, y: 3000 }),
+        // idx 2 reuses the `shared` appearance → back on page 0.
+        marker({ id: "onPage0", subtype: "shared", subtypeMeta: shared, x: 4000, y: 3000 }),
+      ],
+      { atlas, visibleSubtypes: new Set(["shared", "other"]) },
+    );
+    expect(atlas.pageCount).toBe(2);
+    // Equidistant from both centres → the one the GPU draws last must win.
+    expect(layer.hitTest({ x: 405, y: 300 })).toBe("onPage1");
     layer.dispose();
   });
 
@@ -519,11 +603,22 @@ describe("MarkerLayer plumbing", () => {
     expect(layer.object3D.children).toHaveLength(0);
   });
 
-  it("keeps working after the map changes", () => {
-    const { layer } = makeLayer([marker({ id: "m1" })]);
-    layer.setMap(makeMap({ id: "WorldTree" }));
+  it("reprojects every marker when the map changes", () => {
+    // A world-coordinate map: DATA is NOT pixels, so a dropped reprojection shows.
+    const world = makeMap({
+      id: "WorldTree",
+      worldBounds: { min: { x: 0, y: 0 }, max: { x: 1000, y: 1000 } },
+      orientation: { pxAxis: "X", flipX: false, flipY: false },
+    });
+    const { layer } = makeLayer([marker({ id: "m1", x: 500, y: 250 })]);
+    // Legacy map: DATA passes through untouched.
+    expect(layer.positionOf("m1")).toEqual({ x: 500, y: 250 });
+    layer.setMap(world);
+    // 8192px grid over a 1000-unit world → ×8.192.
+    expect(layer.positionOf("m1")).toEqual({ x: 4096, y: 2048 });
     expect(layer.visibleMarkerIds()).toEqual(["m1"]);
-    expect(layer.positionOf("m1")).toEqual({ x: 4000, y: 3000 });
+    // ...and the instance buffer carries the reprojected centre.
+    expect(centreOf(batches(layer)[0], 0)).toEqual({ x: 4096, y: 2048 });
     layer.dispose();
   });
 
@@ -532,5 +627,188 @@ describe("MarkerLayer plumbing", () => {
     layer.dispose();
     layer.dispose();
     expect(layer.visibleMarkerCount).toBe(0);
+  });
+});
+
+// ========================================================= instance buffers ===
+
+describe("MarkerLayer instance buffers", () => {
+  it("fills far past the initial capacity without corrupting instance data", () => {
+    // 300 > INITIAL_BATCH_CAPACITY (256): the presize path must kick in.
+    const markers = Array.from({ length: 300 }, (_, i) =>
+      marker({ id: `m${i}`, x: 1000 + i, y: 2000 + i * 2 }),
+    );
+    const { layer } = makeLayer(markers);
+    expect(layer.visibleMarkerCount).toBe(300);
+    const mesh = batches(layer)[0];
+    expect(instanceCountOf(mesh)).toBe(300);
+    // Spot-check the first, a middle and the last instance.
+    expect(centreOf(mesh, 0)).toEqual({ x: 1000, y: 2000 });
+    expect(centreOf(mesh, 150)).toEqual({ x: 1150, y: 2300 });
+    expect(centreOf(mesh, 299)).toEqual({ x: 1299, y: 2598 });
+    const sizes = mesh.geometry.getAttribute("aSize").array as Float32Array;
+    expect(sizes[299]).toBeGreaterThan(0);
+    layer.dispose();
+  });
+
+  it("shrinks the drawn count when markers go away", () => {
+    const markers = Array.from({ length: 10 }, (_, i) =>
+      marker({ id: `m${i}`, x: 1000 + i * 10 }),
+    );
+    const { layer } = makeLayer(markers);
+    expect(instanceCountOf(batches(layer)[0])).toBe(10);
+    layer.setMarkers(markers.slice(0, 2));
+    expect(layer.visibleMarkerCount).toBe(2);
+    expect(instanceCountOf(batches(layer)[0])).toBe(2);
+    // Filtering everything out hides the mesh rather than leaving stale quads.
+    layer.setVisibility({ visibleSubtypes: new Set() });
+    expect(instanceCountOf(batches(layer)[0])).toBe(0);
+    expect(batches(layer)[0].visible).toBe(false);
+    layer.dispose();
+  });
+
+  it("pushes the camera scale into every batch — the screen-constant mechanism", () => {
+    const atlas = makeAtlas({ pageSize: 128 });
+    // Two appearances that will not share a page (9 pins fit a 128px page).
+    const markers = Array.from({ length: 12 }, (_, i) =>
+      marker({
+        id: `m${i}`,
+        subtype: `s${i}`,
+        x: 1000 + i * 50,
+        subtypeMeta: subtype({
+          id: `s${i}`,
+          name: `s${i}`,
+          icon: undefined,
+          pinVariant: "pin",
+          color: `#0000${i.toString(16).padStart(2, "0")}`,
+        }),
+      }),
+    );
+    const camera = makeCamera({ zoom: 0 });
+    const { layer } = makeLayer(markers, {
+      atlas,
+      camera,
+      visibleSubtypes: new Set(markers.map((m) => m.subtype)),
+    });
+    expect(atlas.pageCount).toBeGreaterThan(1);
+    expect(batches(layer).length).toBe(atlas.pageCount);
+
+    layer.update(camera, frame(1));
+    for (const mesh of batches(layer)) {
+      expect(mesh.material.uniforms.uScale.value).toBe(1);
+    }
+    camera.setView(camera.center, 2);
+    layer.update(camera, frame(1));
+    for (const mesh of batches(layer)) {
+      expect(mesh.material.uniforms.uScale.value).toBe(4);
+    }
+    layer.dispose();
+  });
+
+  it("draws pages in page order so hitTest's tie rule matches the GPU", () => {
+    const atlas = makeAtlas({ pageSize: 128 });
+    const markers = Array.from({ length: 12 }, (_, i) =>
+      marker({
+        id: `m${i}`,
+        subtype: `s${i}`,
+        x: 1000 + i * 50,
+        subtypeMeta: subtype({
+          id: `s${i}`,
+          name: `s${i}`,
+          icon: undefined,
+          pinVariant: "pin",
+          color: `#0000${i.toString(16).padStart(2, "0")}`,
+        }),
+      }),
+    );
+    const { layer } = makeLayer(markers, {
+      atlas,
+      visibleSubtypes: new Set(markers.map((m) => m.subtype)),
+    });
+    const orders = batches(layer).map((mesh) => mesh.renderOrder);
+    expect(orders).toEqual(orders.map((_, i) => i));
+    layer.dispose();
+  });
+});
+
+// ==================================================== device pixel ratio ===
+
+describe("MarkerLayer device pixel ratio", () => {
+  it("recomposes the atlas when the renderer's ratio changes", () => {
+    const atlas = makeAtlas();
+    const { layer, camera } = makeLayer([marker({ id: "m1" })], { atlas });
+    expect(atlas.devicePixelRatio).toBe(1);
+    const before = atlas.pageTexture(0);
+
+    layer.update(camera, frame(2));
+    expect(atlas.devicePixelRatio).toBe(2);
+    // The old page textures were disposed, so the batches must have rebound.
+    const mesh = batches(layer)[0];
+    expect(mesh.material.uniforms.uMap.value).toBe(atlas.pageTexture(0));
+    expect(mesh.material.uniforms.uMap.value).not.toBe(before);
+    expect(instanceCountOf(mesh)).toBe(1);
+    // Sprites stay the same CSS size, so hit-testing is unaffected.
+    expect(layer.hitTest({ x: 400, y: 300 })).toBe("m1");
+    layer.dispose();
+  });
+
+  it("does no work while the ratio holds steady", () => {
+    const atlas = makeAtlas();
+    const { layer, camera, invalidate } = makeLayer([marker({ id: "m1" })], { atlas });
+    layer.update(camera, frame(1));
+    invalidate.mockClear();
+    layer.update(camera, frame(1));
+    layer.update(camera, frame(1));
+    expect(invalidate).not.toHaveBeenCalled();
+    layer.dispose();
+  });
+
+  it("rebinds a SHARED atlas recomposed by another layer", () => {
+    const atlas = makeAtlas();
+    const first = makeLayer([marker({ id: "a" })], { atlas });
+    const second = makeLayer([marker({ id: "b", x: 4100 })], { atlas });
+    // The first layer to see the new ratio recomposes for everyone.
+    first.layer.update(first.camera, frame(2));
+    expect(atlas.generation).toBe(1);
+    second.layer.update(second.camera, frame(2));
+    expect(batches(second.layer)[0].material.uniforms.uMap.value).toBe(atlas.pageTexture(0));
+    expect(instanceCountOf(batches(second.layer)[0])).toBe(1);
+    first.layer.dispose();
+    second.layer.dispose();
+  });
+
+  it("composes an owned atlas at the ratio it was handed at construction", () => {
+    const invalidate = vi.fn();
+    const layer = new MarkerLayer({
+      camera: makeCamera(),
+      map: makeMap(),
+      assets,
+      invalidate,
+      devicePixelRatio: 2,
+      visibility: { visibleSubtypes: new Set(["chest"]) },
+      // No atlas: the layer builds one. The browser canvas factory is never
+      // reached because nothing is composed until `setMarkers`.
+    });
+    expect(layer.isDisposed).toBe(false);
+    layer.dispose();
+  });
+});
+
+// ================================================== resilience ===
+
+describe("MarkerLayer resilience", () => {
+  it("retries markers the atlas refused instead of caching the failure", () => {
+    // `PinAtlas.get` also returns null once disposed, so caching null would leave
+    // a layer sharing someone else's atlas permanently blank.
+    const atlas = makeAtlas();
+    const refuse = vi.spyOn(atlas, "get").mockReturnValue(null);
+    const { layer } = makeLayer([marker({ id: "m1" })], { atlas });
+    expect(layer.hitTest({ x: 400, y: 300 })).toBeNull();
+    expect(batches(layer)).toHaveLength(0);
+
+    refuse.mockRestore();
+    layer.setVisibility({ visibleSubtypes: new Set(["chest"]) });
+    expect(layer.hitTest({ x: 400, y: 300 })).toBe("m1");
+    layer.dispose();
   });
 });

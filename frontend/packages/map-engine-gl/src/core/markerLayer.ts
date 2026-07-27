@@ -19,7 +19,7 @@ import {
   type PinEntry,
   type PinTheme,
 } from "./pinAtlas.ts";
-import { LayerOrder, type RenderLayer } from "./renderer.ts";
+import { LayerOrder, type RenderFrameContext, type RenderLayer } from "./renderer.ts";
 import type { Point } from "./types.ts";
 
 /**
@@ -49,10 +49,19 @@ import type { Point } from "./types.ts";
  *
  * ## Rebuilds
  * The instance buffers are rebuilt wholesale on `setMarkers`, `setSelected`,
- * `setVisibility` and (only when LOD is on) when a tier threshold is crossed.
- * That is O(markers) with no allocation beyond the occasional capacity growth —
- * sub-millisecond at the ~4k markers the palworld maps carry — and, crucially,
- * it never happens while merely panning or zooming.
+ * `setVisibility`, a device-pixel-ratio change and (only when LOD is on) when a
+ * tier threshold is crossed. That is O(markers) with no allocation once each
+ * batch has been sized to the visible count — sub-millisecond at the ~4k markers
+ * the palworld maps carry — and, crucially, it never happens while merely panning
+ * or zooming.
+ *
+ * ## Draw order
+ * Batch `renderOrder` is the atlas page index, so pages draw in page order rather
+ * than in three's internal-id order, and instances draw in ascending marker index
+ * within a page. The composite key `(page, index)` is therefore the real
+ * top-to-bottom order, and it is exactly the key {@link MarkerLayer.hitTest}
+ * breaks ties with — what you click is what you see. The selected marker gets its
+ * own batch far above every page (Leaflet's `zIndexOffset: 1000`).
  */
 
 // -------------------------------------------------------------- visibility ---
@@ -289,31 +298,32 @@ function bindBatchAttributes(batch: Batch): void {
 }
 
 /**
- * Double the instance buffers, preserving what is already written.
+ * Size a batch for `needed` instances BEFORE it is filled, so a rebuild never
+ * reallocates part-way through.
  *
- * The replaced attributes' GPU buffers are only released when the geometry is
- * disposed, so a batch leaks at most `log2(finalCapacity / 256)` small buffers
- * over its lifetime — four ~16 KB buffers at the ~4k markers the palworld maps
- * carry, and none at all once the capacity has settled.
+ * Called once per batch per rebuild with the total visible count, and the
+ * capacity is that count exactly (not a doubling), so a stable marker set
+ * allocates exactly once for the layer's whole life. That matters beyond the
+ * memcpys it saves: three's `WebGLAttributes` only deletes buffers on the
+ * geometry's dispose event, which iterates the geometry's CURRENT attributes — a
+ * replaced `InstancedBufferAttribute` therefore never gets its GPU buffer
+ * deleted. Nothing is copied because the caller has just reset `count` to 0 and
+ * is about to overwrite everything.
  */
-function growBatch(batch: Batch, needed: number): void {
-  let capacity = batch.capacity;
-  while (capacity < needed) capacity *= 2;
-  const center = instancedAttribute(2, capacity);
-  const size = instancedAttribute(1, capacity);
-  const uv = instancedAttribute(4, capacity);
-  (center.array as Float32Array).set(batch.aCenter.array as Float32Array);
-  (size.array as Float32Array).set(batch.aSize.array as Float32Array);
-  (uv.array as Float32Array).set(batch.aUvRect.array as Float32Array);
-  batch.aCenter = center;
-  batch.aSize = size;
-  batch.aUvRect = uv;
+function ensureCapacity(batch: Batch, needed: number): void {
+  if (needed <= batch.capacity) return;
+  const capacity = Math.max(INITIAL_BATCH_CAPACITY, needed);
+  batch.aCenter = instancedAttribute(2, capacity);
+  batch.aSize = instancedAttribute(1, capacity);
+  batch.aUvRect = instancedAttribute(4, capacity);
   batch.capacity = capacity;
   bindBatchAttributes(batch);
 }
 
 function pushInstance(batch: Batch, x: number, y: number, entry: PinEntry): void {
-  if (batch.count + 1 > batch.capacity) growBatch(batch, batch.count + 1);
+  // Defensive: `ensureCapacity` is called with the visible count before the fill
+  // loop, so this can only trigger if that contract is ever broken.
+  if (batch.count + 1 > batch.capacity) ensureCapacity(batch, batch.count + 1);
   const i = batch.count++;
   const centers = batch.aCenter.array as Float32Array;
   centers[i * 2] = x;
@@ -350,17 +360,31 @@ export interface MarkerLayerOptions {
   invalidate: () => void;
   /**
    * Pin bitmap cache. Defaults to a browser {@link PinAtlas} wired to
-   * `invalidate`; inject one to share it (or to test without a DOM). An injected
-   * atlas is NOT disposed with the layer.
+   * `invalidate`; inject one to share it (safe across themes — the signature is
+   * theme-fingerprinted) or to test without a DOM. An injected atlas is NOT
+   * disposed with the layer, but its DPR IS kept in sync with the renderer's, and
+   * every layer sharing it reacts to the resulting {@link PinAtlas.generation}
+   * bump.
    */
   atlas?: PinAtlas;
+  /**
+   * Ratio the atlas composes at, for the frames before the first `update`.
+   * Only used when this layer creates the atlas; after that the renderer's
+   * per-frame `RenderFrameContext.pixelRatio` is authoritative. Passing the
+   * renderer's `pixelRatioUsed` here avoids one throwaway compose at mount.
+   */
+  devicePixelRatio?: number;
   theme?: PinTheme;
   visibility?: MarkerVisibility;
   order?: number;
 }
 
-/** Draw order of the selected marker, above every page batch (Leaflet: zIndexOffset 1000). */
-const SELECTED_RENDER_ORDER = 1;
+/**
+ * Draw order of the selected marker's batch. Page batches use their page index,
+ * so this only has to sit above any plausible page count (Leaflet:
+ * `zIndexOffset: 1000`).
+ */
+const SELECTED_RENDER_ORDER = 1_000_000;
 
 export class MarkerLayer implements RenderLayer {
   readonly object3D = new Group();
@@ -378,8 +402,13 @@ export class MarkerLayer implements RenderLayer {
   private markers: readonly LayerMarker[] = [];
   private positions: Point[] = [];
   private indexById = new Map<string, number>();
-  /** Atlas entry per marker index; `undefined` = not resolved yet. */
-  private entries: (PinEntry | null | undefined)[] = [];
+  /**
+   * Atlas entry per marker index; `undefined` = not resolved yet. A failed
+   * resolution is deliberately NOT cached: `PinAtlas.get` also returns null once
+   * the atlas is disposed, and caching that would leave a layer sharing someone
+   * else's atlas permanently blank.
+   */
+  private entries: (PinEntry | undefined)[] = [];
   /** Indices of visible markers; only `[0, visibleCount)` is meaningful. */
   private visibleIdx: number[] = [];
   private visibleCount = 0;
@@ -390,6 +419,8 @@ export class MarkerLayer implements RenderLayer {
   private forceShowIds: ReadonlySet<string> | undefined;
   private lodEnabled = false;
   private lastTier: number;
+  /** Last {@link PinAtlas.generation} this layer's batches were bound to. */
+  private atlasGeneration: number;
 
   private readonly batches = new Map<number, Batch>();
   private readonly batchList: Batch[] = [];
@@ -403,7 +434,13 @@ export class MarkerLayer implements RenderLayer {
     this.invalidate = opts.invalidate;
     this.theme = opts.theme;
     this.ownsAtlas = !opts.atlas;
-    this.atlas = opts.atlas ?? new PinAtlas({ onUpdate: opts.invalidate });
+    this.atlas =
+      opts.atlas ??
+      new PinAtlas({
+        onUpdate: opts.invalidate,
+        devicePixelRatio: opts.devicePixelRatio,
+      });
+    this.atlasGeneration = this.atlas.generation;
     // An icon image arriving changes a page's pixels, never an entry's rect or
     // size — so a repaint is all that is needed, never a rebuild.
     this.unsubscribeAtlas = this.atlas.addUpdateListener(opts.invalidate);
@@ -428,7 +465,7 @@ export class MarkerLayer implements RenderLayer {
     this.positions = fanOutPositions(markers, (x, y) => dataToPoint(this.map, x, y));
     this.indexById = new Map<string, number>();
     for (let i = 0; i < markers.length; i++) this.indexById.set(markers[i].id, i);
-    this.entries = new Array<PinEntry | null | undefined>(markers.length);
+    this.entries = new Array<PinEntry | undefined>(markers.length);
     this.selectedIndex = this.selectedId ? (this.indexById.get(this.selectedId) ?? -1) : -1;
     this.rebuild();
   }
@@ -439,7 +476,7 @@ export class MarkerLayer implements RenderLayer {
     this.map = map;
     this.positions = fanOutPositions(this.markers, (x, y) => dataToPoint(this.map, x, y));
     // Icon URLs may be map-dependent (`markerIconUrl(icon, map)`).
-    this.entries = new Array<PinEntry | null | undefined>(this.markers.length);
+    this.entries = new Array<PinEntry | undefined>(this.markers.length);
     this.rebuild();
   }
 
@@ -507,15 +544,15 @@ export class MarkerLayer implements RenderLayer {
    * The topmost marker whose sprite covers `screenPt` (CSS pixels from the
    * canvas' top-left), or null.
    *
-   * Hit rects are the pin's CONTENT box in screen pixels — 40px (or the scaled
-   * icon), grown by 1.2 for the selected marker, and excluding the transparent
-   * padding the baked drop-shadow needs. Because sprites are screen-constant the
-   * rect is zoom-independent; only its centre moves.
+   * Hit rects are Leaflet's DivIcon WRAPPER box in screen pixels — a flat 40, or
+   * 48 when selected, independent of `iconScale` and of whether the icon loaded
+   * (see `PinGeometry.hitSize` in `pinAtlas.ts` for why). Because sprites are
+   * screen-constant the rect is zoom-independent; only its centre moves.
    *
    * Preference order: the selected marker (its popup is open, so it must stay
    * clickable under overlapping neighbours — Leaflet lifts it with
    * `zIndexOffset: 1000`), then the candidate whose centre is nearest the point,
-   * ties going to the later marker (drawn on top).
+   * ties going to whichever the GPU draws last.
    */
   hitTest(screenPt: Point): string | null {
     if (this.disposed || this.visibleCount === 0) return null;
@@ -525,6 +562,7 @@ export class MarkerLayer implements RenderLayer {
     const halfH = this.camera.viewportHeight / 2;
     let best = -1;
     let bestDistance = Number.POSITIVE_INFINITY;
+    let bestPage = -1;
     for (let k = 0; k < this.visibleCount; k++) {
       const i = this.visibleIdx[k];
       const entry = this.entries[i];
@@ -539,9 +577,21 @@ export class MarkerLayer implements RenderLayer {
       if (dx < -half || dx > half || dy < -half || dy > half) continue;
       if (i === this.selectedIndex) return this.markers[i].id;
       const distance = dx * dx + dy * dy;
-      if (distance <= bestDistance) {
+      if (distance < bestDistance) {
         bestDistance = distance;
         best = i;
+        bestPage = entry.page;
+        continue;
+      }
+      // Exact tie: take whichever the GPU draws LAST, i.e. the larger
+      // (page, index) — batches use their page as `renderOrder` and instances
+      // are pushed in ascending marker index. See the class comment.
+      if (
+        distance === bestDistance &&
+        (entry.page > bestPage || (entry.page === bestPage && i > best))
+      ) {
+        best = i;
+        bestPage = entry.page;
       }
     }
     return best >= 0 ? this.markers[best].id : null;
@@ -550,12 +600,29 @@ export class MarkerLayer implements RenderLayer {
   // -------------------------------------------------------------- rendering ---
 
   /**
-   * Per-frame work: push the current scale to every batch (that is what keeps
-   * sprites screen-constant) and, when LOD is on, rebuild if the zoom crossed a
-   * tier threshold. O(pages) in the common case — never O(markers).
+   * Per-frame work: keep the atlas at the renderer's device pixel ratio, push the
+   * current scale to every batch (that is what keeps sprites screen-constant)
+   * and, when LOD is on, rebuild if the zoom crossed a tier threshold. O(pages)
+   * in the common case — never O(markers).
+   *
+   * The DPR is taken from the frame context rather than from `window` so the
+   * atlas and the drawing buffer are the same resolution by construction, whether
+   * the host pinned `maxPixelRatio`, the user ctrl+scrolled, or the window moved
+   * to a differently-scaled panel. The generation check (rather than just the
+   * ratio) is what makes a SHARED atlas safe: whichever layer notices first
+   * recomposes, and the others rebind on the bump.
    */
-  update(camera: Camera): void {
+  update(camera: Camera, ctx?: RenderFrameContext): void {
     if (this.disposed) return;
+    if (ctx && ctx.pixelRatio > 0) this.atlas.setDevicePixelRatio(ctx.pixelRatio);
+    if (this.atlas.generation !== this.atlasGeneration) {
+      this.atlasGeneration = this.atlas.generation;
+      // Every page texture was disposed; the entries and batches that referenced
+      // them are gone with it.
+      this.clearBatches();
+      this.entries = new Array<PinEntry | undefined>(this.markers.length);
+      this.rebuild();
+    }
     if (this.lodEnabled) {
       const tier = visibleTierForZoom(camera.zoom);
       if (tier !== this.lastTier) {
@@ -598,6 +665,11 @@ export class MarkerLayer implements RenderLayer {
           ? this.ensureSelectedBatch(entry.page)
           : this.ensureBatch(entry.page);
       if (!batch) continue;
+      // First instance of this rebuild: size the buffers once, up front. The
+      // selected batch only ever holds one instance.
+      if (batch.count === 0) {
+        ensureCapacity(batch, batch === this.selectedBatch ? 1 : this.visibleCount);
+      }
       pushInstance(batch, position.x, position.y, entry);
     }
 
@@ -606,7 +678,12 @@ export class MarkerLayer implements RenderLayer {
     this.invalidate();
   }
 
-  /** Resolve (and cache) a marker's atlas entry. */
+  /**
+   * Resolve a marker's atlas entry, caching only SUCCESS. A null means the atlas
+   * refused (bitmap larger than a page) or was disposed by whoever else owns it;
+   * caching that would make the failure permanent for the rest of the layer's
+   * life, so the next rebuild retries — a signature build and a map miss.
+   */
   private entryFor(index: number): PinEntry | null {
     const cached = this.entries[index];
     if (cached !== undefined) return cached;
@@ -617,7 +694,7 @@ export class MarkerLayer implements RenderLayer {
       theme: this.theme,
     });
     const entry = this.atlas.get(spec);
-    this.entries[index] = entry;
+    if (entry) this.entries[index] = entry;
     return entry;
   }
 
@@ -626,11 +703,26 @@ export class MarkerLayer implements RenderLayer {
     if (existing) return existing;
     const texture = this.atlas.pageTexture(page);
     if (!texture) return null;
-    const batch = createBatch(page, texture, 0);
+    // `renderOrder = page`: pages must draw in page order, not in whatever order
+    // three's internal object ids happen to give them, so that the draw order
+    // matches the `(page, index)` key `hitTest` resolves ties with.
+    const batch = createBatch(page, texture, page);
     this.batches.set(page, batch);
     this.batchList.push(batch);
     this.object3D.add(batch.mesh);
     return batch;
+  }
+
+  /** Drop every batch (the page textures they sample are gone). */
+  private clearBatches(): void {
+    this.object3D.clear();
+    for (const batch of this.batchList) disposeBatch(batch);
+    this.batchList.length = 0;
+    this.batches.clear();
+    if (this.selectedBatch) {
+      disposeBatch(this.selectedBatch);
+      this.selectedBatch = null;
+    }
   }
 
   /**
@@ -654,14 +746,7 @@ export class MarkerLayer implements RenderLayer {
     if (this.disposed) return;
     this.disposed = true;
     this.unsubscribeAtlas();
-    this.object3D.clear();
-    for (const batch of this.batchList) disposeBatch(batch);
-    this.batchList.length = 0;
-    this.batches.clear();
-    if (this.selectedBatch) {
-      disposeBatch(this.selectedBatch);
-      this.selectedBatch = null;
-    }
+    this.clearBatches();
     this.markers = [];
     this.positions = [];
     this.entries = [];

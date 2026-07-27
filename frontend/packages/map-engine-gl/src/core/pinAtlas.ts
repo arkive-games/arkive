@@ -20,15 +20,22 @@ import type { MarkerTypeSubtype } from "@gamemap/data-contract";
  * `GameMarker.tsx`; each deliberate approximation is called out in a comment
  * starting with `APPROXIMATION:` so the visual pass has a checklist.
  *
- * Cache key: EXACTLY the Leaflet engine's visual signature
- * `variant|innerIcon|iconScale|completed|dot|ring|selected|fragmentType|count`
- * ({@link pinSignature}). The theme is fixed per game at startup, so — like the
- * Leaflet cache — it is deliberately NOT part of the key.
+ * Cache key: the Leaflet engine's visual signature
+ * `variant|innerIcon|iconScale|completed|dot|ring|selected|fragmentType|count`,
+ * plus a theme fingerprint ({@link pinSignature}). The fingerprint is the one
+ * deliberate DIVERGENCE from the Leaflet key: that cache is module-global and
+ * omits the theme on the assumption it is fixed per game at startup, which
+ * silently collides as soon as two themes coexist (palworld's
+ * `completedAccent: #4fa8ff` vs the default green) or the host flips dark mode at
+ * runtime. Here one atlas can safely serve several themes.
  *
- * Portability: no DOM globals. The 2D surface, the image loader and the device
- * pixel ratio all arrive through options ({@link PinAtlasOptions}); the browser
- * defaults are the only place `document`/`Image` are touched, and both are
- * feature-detected. A WeChat mini-program supplies its own factories.
+ * Portability: no DOM globals except in the explicitly-named browser defaults
+ * ({@link createDomCanvasFactory}, {@link createDomImageLoader}), both
+ * feature-detected. In particular the device pixel ratio is NEVER read from
+ * `window` — it arrives from the renderer's per-frame
+ * `RenderFrameContext.pixelRatio` via {@link PinAtlas.setDevicePixelRatio}, so
+ * the atlas and the drawing buffer can never disagree (browser zoom, or a window
+ * dragged between a 2x panel and a 1x monitor).
  */
 
 // ------------------------------------------------------------------- theme ---
@@ -229,13 +236,25 @@ export function showsCount(spec: Pick<PinSpec, "count">): boolean {
 }
 
 /**
- * The Leaflet engine's icon-cache key, character for character:
- * `variant|innerIcon|iconScale|completed|dot|ring|selected|fragmentType|count`.
- * The theme is intentionally absent (fixed per game at startup).
+ * The theme colours that reach the pixels but are NOT already covered by `dot`
+ * (which is `subtypeColor ?? theme.pinDot`) or `ring` (`… ?? circularBorder`):
+ * the pin disc's fill and hairline, and the badge accent. Two themes with the
+ * same three produce byte-identical bitmaps, so the fingerprint is exactly as
+ * coarse as it can be without colliding.
+ */
+export function pinThemeFingerprint(theme: PinTheme): string {
+  return `${theme.pinDiscBg}|${theme.pinBorder}|${theme.completedAccent}`;
+}
+
+/**
+ * The Leaflet engine's icon-cache key —
+ * `variant|innerIcon|iconScale|completed|dot|ring|selected|fragmentType|count` —
+ * followed by {@link pinThemeFingerprint}. See the file header for why the theme
+ * is folded in here but not in Leaflet.
  */
 export function pinSignature(spec: PinSpec): string {
   const count = showsCount(spec) ? spec.count : "";
-  return `${spec.variant}|${spec.iconUrl}|${spec.iconScale}|${spec.completed ? 1 : 0}|${spec.dot}|${spec.ring}|${spec.selected ? 1 : 0}|${spec.fragmentType ?? ""}|${count}`;
+  return `${spec.variant}|${spec.iconUrl}|${spec.iconScale}|${spec.completed ? 1 : 0}|${spec.dot}|${spec.ring}|${spec.selected ? 1 : 0}|${spec.fragmentType ?? ""}|${count}|${pinThemeFingerprint(spec.theme)}`;
 }
 
 /** The marker fields pin resolution reads. `EngineMarker` satisfies it. */
@@ -342,9 +361,20 @@ export interface PinGeometry {
    */
   size: number;
   /**
-   * Edge of the visible content box in CSS pixels — what {@link PinSpec} covers
-   * on screen, and therefore the hit rect. Excludes the selection shadow's
-   * transparent padding, which must not be clickable.
+   * Edge of the clickable box in CSS pixels.
+   *
+   * This is the Leaflet DivIcon's WRAPPER box — a flat `40`, or `48` when
+   * selected — and deliberately NOT the content box. In the DOM the wrapper is
+   * the only hittable element: both `<img>` variants set `pointerEvents: none`,
+   * so an `iconScale > 1` icon overflowing the 40px wrapper is visible but not
+   * clickable. Deriving the rect from the content instead would make a
+   * 1.25-scaled pin 25% easier to hit than Leaflet's, changing which marker wins
+   * in a dense cluster — and would also have made the box depend on whether an
+   * icon loaded (a 404'd image pin paints a 30px disc).
+   *
+   * The selection scale is included because Leaflet scales the wrapper itself;
+   * the selection shadow's transparent padding is not, since it must not be
+   * clickable.
    */
   hitSize: number;
   /** `30` for the pin variant, `40 × iconScale` otherwise (Leaflet's rule). */
@@ -398,7 +428,7 @@ export function pinGeometry(spec: PinSpec): PinGeometry {
   }
   return {
     size: Math.ceil(extent) * 2,
-    hitSize: contentBox * (spec.selected ? SELECTED_SCALE : 1),
+    hitSize: PIN_BASE_SIZE * (spec.selected ? SELECTED_SCALE : 1),
     contentSize,
     badgeOffset,
   };
@@ -514,10 +544,14 @@ function drawPinContent(
   imageFailed: boolean,
 ): void {
   const wantsImage = spec.variant !== "pin" && spec.iconUrl !== "";
-  if (!wantsImage || imageFailed) {
+  if (!wantsImage) {
     drawPinDisc(ctx, spec, dpr);
   } else if (spec.variant === "circular") {
-    drawCircularIcon(ctx, spec, geom, dpr, image);
+    // A 404'd portrait keeps its ring and backing: a boss whose image is missing
+    // must stay a red-ringed circle, not degrade into a generic blue dot.
+    drawCircularIcon(ctx, spec, geom, dpr, imageFailed ? null : image);
+  } else if (imageFailed) {
+    drawPinDisc(ctx, spec, dpr);
   } else if (image) {
     drawImageIcon(ctx, geom, image);
   }
@@ -821,6 +855,15 @@ export class ShelfPacker {
     return this.pageSize;
   }
 
+  /** Forget everything packed so far (the atlas recomposes at a new DPR). */
+  reset(): void {
+    this.pageIndex = 0;
+    this.shelfY = 0;
+    this.shelfHeight = 0;
+    this.cursorX = 0;
+    this.packed = 0;
+  }
+
   add(w: number, h: number): AtlasRect | null {
     if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
     const width = Math.ceil(w);
@@ -874,7 +917,13 @@ export interface PinAtlasOptions {
   createCanvas?: PinCanvasFactory;
   /** Default: {@link createDomImageLoader}. */
   loadImage?: PinImageLoader;
-  /** Bitmap resolution. Default: the browser DPR capped at 2, else 1. */
+  /**
+   * Bitmap resolution. Default 1 — the atlas never reads `window`. The owner is
+   * expected to pass (and keep updating, via
+   * {@link PinAtlas.setDevicePixelRatio}) the renderer's capped ratio; the
+   * marker layer does that automatically from every frame's
+   * `RenderFrameContext.pixelRatio`.
+   */
   devicePixelRatio?: number;
   /** Page edge in device pixels. Default {@link ATLAS_PAGE_SIZE}. */
   pageSize?: number;
@@ -901,17 +950,6 @@ interface AtlasEntry {
   rect: AtlasRect;
 }
 
-/** DPR cap: 2 is plenty for a 40px pin and quarters the atlas footprint vs 4x. */
-const MAX_ATLAS_DPR = 2;
-
-function defaultDevicePixelRatio(): number {
-  if (typeof window !== "undefined" && typeof window.devicePixelRatio === "number") {
-    const dpr = window.devicePixelRatio;
-    if (dpr > 0) return Math.min(dpr, MAX_ATLAS_DPR);
-  }
-  return 1;
-}
-
 /**
  * Signature-keyed cache of composed pin bitmaps, packed into `CanvasTexture`
  * pages. One `get` per marker per rebuild is cheap: a string build plus a map
@@ -922,14 +960,21 @@ function defaultDevicePixelRatio(): number {
  * the DOM does before an `<img>` decodes), and recomposed in place when the
  * image arrives; the entry's rect and size never change, so no caller has to
  * rebuild anything — it only needs a repaint, which is what the update
- * listeners are for. A load failure falls back to the `pin` dot.
+ * listeners are for. A load failure falls back to the `pin` dot (except the
+ * circular variant, which keeps its ring).
+ *
+ * SAFE TO SHARE between layers, including layers with different themes: the
+ * signature carries a theme fingerprint. What a sharer must respect is
+ * {@link generation} — a DPR change throws every page away, so a consumer holding
+ * page textures has to notice and rebind.
  */
 export class PinAtlas {
   private readonly createCanvas: PinCanvasFactory;
   private readonly loadImage: PinImageLoader;
-  private readonly dpr: number;
+  private dpr: number;
   private readonly packer: ShelfPacker;
   private readonly pageSize: number;
+  private generationCounter = 0;
   private readonly pages: AtlasPage[] = [];
   private readonly entries = new Map<string, AtlasEntry>();
   private readonly images = new Map<string, ImageSlot>();
@@ -939,10 +984,7 @@ export class PinAtlas {
   constructor(opts: PinAtlasOptions = {}) {
     this.createCanvas = opts.createCanvas ?? createDomCanvasFactory();
     this.loadImage = opts.loadImage ?? createDomImageLoader();
-    this.dpr =
-      opts.devicePixelRatio && opts.devicePixelRatio > 0
-        ? opts.devicePixelRatio
-        : defaultDevicePixelRatio();
+    this.dpr = opts.devicePixelRatio && opts.devicePixelRatio > 0 ? opts.devicePixelRatio : 1;
     this.pageSize = opts.pageSize && opts.pageSize > 0 ? Math.floor(opts.pageSize) : ATLAS_PAGE_SIZE;
     this.packer = new ShelfPacker(this.pageSize, ATLAS_PADDING);
     if (opts.onUpdate) this.listeners.add(opts.onUpdate);
@@ -950,6 +992,42 @@ export class PinAtlas {
 
   get devicePixelRatio(): number {
     return this.dpr;
+  }
+
+  /**
+   * Bumped every time the pages are thrown away and recomposed (currently: a DPR
+   * change). Consumers that hold page textures must compare it each frame and
+   * rebind when it moves — the old textures are disposed.
+   */
+  get generation(): number {
+    return this.generationCounter;
+  }
+
+  /**
+   * Recompose every pin at a new device pixel ratio, discarding the pages.
+   *
+   * Without this the atlas would be frozen at its construction ratio: dragging
+   * the window onto a 2x panel (or ctrl+scrolling browser zoom) makes the
+   * renderer rebuild its drawing buffer while the pins stay 1x and get upscaled
+   * with `LinearFilter` and no mipmaps; a host that pins the renderer to 1x gets
+   * the reverse, a 4x-oversized atlas downscaled without mipmaps.
+   *
+   * Entry KEYS are unchanged (the signature has no DPR in it), so already-loaded
+   * icons and pending loads carry straight over. Returns whether anything moved.
+   */
+  setDevicePixelRatio(dpr: number): boolean {
+    if (this.disposed) return false;
+    if (!(dpr > 0) || !Number.isFinite(dpr) || dpr === this.dpr) return false;
+    this.dpr = dpr;
+    this.generationCounter++;
+    for (const page of this.pages) page.texture.dispose();
+    this.pages.length = 0;
+    this.entries.clear();
+    this.packer.reset();
+    // Pending image loads keep their waiter keys: the recomposed entries reuse
+    // the very same keys, so `onImageSettled` still finds them.
+    this.notify();
+    return true;
   }
 
   get pageCount(): number {

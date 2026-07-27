@@ -16,6 +16,7 @@ import {
   countPillWidth,
   pinGeometry,
   pinSignature,
+  pinThemeFingerprint,
   resolvePinSpec,
   showsCount,
   type AtlasRect,
@@ -143,7 +144,10 @@ describe("pinSignature", () => {
           count: 7,
         }),
       ),
-    ).toBe("circular|/i/a.webp|0.9|1|#111111|#ff0000|1|air|7");
+    ).toBe(
+      // Leaflet's nine fields, then the theme fingerprint this engine adds.
+      `circular|/i/a.webp|0.9|1|#111111|#ff0000|1|air|7|${pinThemeFingerprint(DEFAULT_PIN_THEME)}`,
+    );
   });
 
   it("collapses identical specs onto one key (the cache hit)", () => {
@@ -181,13 +185,32 @@ describe("pinSignature", () => {
     expect(showsCount({ count: undefined })).toBe(false);
     expect(showsCount({ count: 1 })).toBe(false);
     expect(showsCount({ count: 2 })).toBe(true);
-    expect(pinSignature(spec({ count: 1 })).endsWith("||")).toBe(true);
-    expect(pinSignature(spec({ count: 12 })).endsWith("|12")).toBe(true);
+    const fingerprint = pinThemeFingerprint(DEFAULT_PIN_THEME);
+    expect(pinSignature(spec({ count: 1 })).endsWith(`||${fingerprint}`)).toBe(true);
+    expect(pinSignature(spec({ count: 12 })).endsWith(`|12|${fingerprint}`)).toBe(true);
   });
 
-  it("excludes the theme, exactly like the Leaflet icon cache", () => {
-    const other: PinTheme = { ...DEFAULT_PIN_THEME, completedAccent: "#4fa8ff" };
-    expect(pinSignature(spec({ theme: other }))).toBe(pinSignature(spec()));
+  it("separates themes whose colours reach the pixels", () => {
+    // palworld's accent vs the default green: same pin, different check colour.
+    const palworld: PinTheme = { ...DEFAULT_PIN_THEME, completedAccent: "#4fa8ff" };
+    expect(pinSignature(spec({ theme: palworld }))).not.toBe(pinSignature(spec()));
+    expect(pinThemeFingerprint(palworld)).not.toBe(pinThemeFingerprint(DEFAULT_PIN_THEME));
+
+    for (const field of ["pinDiscBg", "pinBorder", "completedAccent"] as const) {
+      const theme: PinTheme = { ...DEFAULT_PIN_THEME, [field]: "#123456" };
+      expect(pinSignature(spec({ theme })), field).not.toBe(pinSignature(spec()));
+    }
+  });
+
+  it("ignores theme fields that cannot reach the pixels", () => {
+    // `pinDot`/`circularBorder` only ever arrive through `dot`/`ring`, which are
+    // already in the key — folding them in again would split the cache for free.
+    const theme: PinTheme = {
+      ...DEFAULT_PIN_THEME,
+      pinDot: "#010101",
+      circularBorder: "#020202",
+    };
+    expect(pinSignature(spec({ theme }))).toBe(pinSignature(spec()));
   });
 });
 
@@ -382,13 +405,23 @@ describe("pinGeometry", () => {
     expect(image.contentSize).toBe(PIN_BASE_SIZE * DEFAULT_ICON_SCALE);
     // badgeOffset = 40/2 - 50/2 + 3 → the badge hangs 2px outside the 40px box.
     expect(image.badgeOffset).toBe(-2);
-    expect(image.hitSize).toBe(50);
 
     const pin = pinGeometry(spec({ variant: "pin", iconScale: DEFAULT_ICON_SCALE }));
     expect(pin.contentSize).toBe(30);
     expect(pin.badgeOffset).toBe(8);
-    // The content is smaller than the 40px box, so the box is the hit target.
-    expect(pin.hitSize).toBe(PIN_BASE_SIZE);
+  });
+
+  it("uses Leaflet's 40px wrapper as the hit box, whatever the content does", () => {
+    // The DOM wrapper is the only hittable element (both `<img>` variants set
+    // `pointerEvents: none`), so scale and variant must not change the box.
+    for (const variant of ["image", "circular", "pin"] as const) {
+      for (const iconScale of [0.9, 1, 1.25, 2]) {
+        expect(pinGeometry(spec({ variant, iconScale })).hitSize).toBe(PIN_BASE_SIZE);
+      }
+    }
+    expect(pinGeometry(spec({ iconScale: 2, selected: true })).hitSize).toBe(
+      PIN_BASE_SIZE * SELECTED_SCALE,
+    );
   });
 
   it("never clips the content", () => {
@@ -405,6 +438,11 @@ describe("pinGeometry", () => {
     expect(selected.hitSize).toBeCloseTo(plain.hitSize * SELECTED_SCALE, 10);
     // ...and pads the bitmap further for the baked drop-shadow.
     expect(selected.size).toBeGreaterThan(plain.size * SELECTED_SCALE);
+  });
+
+  it("never lets the selection shadow's padding become clickable", () => {
+    const selected = pinGeometry(spec({ selected: true }));
+    expect(selected.hitSize).toBeLessThan(selected.size);
   });
 
   it("reserves room for the count pill's overhang", () => {
@@ -506,12 +544,40 @@ describe("ShelfPacker", () => {
 // ================================================================ composing ===
 
 /**
- * `composePinBitmap` creates its canvases in a fixed order: the OUTPUT canvas
- * first, then the content scratch, then (only when selected) the shadow-lifted
- * scratch. Content assertions therefore read `created[1]`.
+ * Identify the canvases `composePinBitmap` used by their ROLE rather than by
+ * creation order, so reordering the internal allocations can't silently point
+ * these assertions at the wrong surface.
+ *
+ * The roles are distinguishable from the op log alone: a canvas that draws
+ * another canvas is a compositor (the shadow-lift pass and the output canvas);
+ * the one that never does is where the pin itself was drawn; and the output
+ * canvas is the compositor nothing else draws FROM.
  */
+function roles(created: FakeCanvas[]): {
+  content: FakeCanvas;
+  output: FakeCanvas;
+  compositors: FakeCanvas[];
+} {
+  const isCanvas = (value: unknown): value is FakeCanvas =>
+    created.includes(value as FakeCanvas);
+  const compositors = created.filter((canvas) =>
+    canvas.ops.some((op) => op.op === "drawImage" && isCanvas(op.args[0])),
+  );
+  const sources = new Set<FakeCanvas>();
+  for (const canvas of created) {
+    for (const op of canvas.ops) {
+      if (op.op === "drawImage" && isCanvas(op.args[0])) sources.add(op.args[0]);
+    }
+  }
+  const content = created.filter((canvas) => !compositors.includes(canvas));
+  const output = compositors.filter((canvas) => !sources.has(canvas));
+  expect(content, "exactly one canvas holds the drawn pin").toHaveLength(1);
+  expect(output, "exactly one canvas is the composed output").toHaveLength(1);
+  return { content: content[0], output: output[0], compositors };
+}
+
 function contentOps(created: FakeCanvas[]): Op[] {
-  return created[1].ops;
+  return roles(created).content.ops;
 }
 
 function opsMatching(ops: Op[], op: string): Op[] {
@@ -597,7 +663,7 @@ describe("composePinBitmap", () => {
       image: fakeImage(40, 40),
     });
     // The output canvas receives exactly one draw: the whole group, dimmed.
-    const outputDraws = opsMatching(created[0].ops, "drawImage");
+    const outputDraws = opsMatching(roles(created).output.ops, "drawImage");
     expect(outputDraws).toHaveLength(1);
     expect(outputDraws[0].args[5]).toBe(COMPLETED_ALPHA);
   });
@@ -660,19 +726,40 @@ describe("composePinBitmap", () => {
       createCanvas: factory,
       devicePixelRatio: 1,
     });
-    // content canvas + lifted canvas + output canvas
-    expect(created).toHaveLength(3);
-    const lifted = created[2];
-    const scales = lifted.ops.filter((op) => op.op === "scale");
+    const { output, compositors } = roles(created);
+    // The shadow lift is a second compositing stage between content and output.
+    expect(compositors).toHaveLength(2);
+    const lifted = compositors.filter((canvas) => canvas !== output);
+    expect(lifted).toHaveLength(1);
+    const scales = opsMatching(lifted[0].ops, "scale");
     expect(scales.some((op) => op.args[0] === SELECTED_SCALE)).toBe(true);
     // Two shadow passes plus the un-shadowed copy on top.
-    expect(lifted.ops.filter((op) => op.op === "drawImage")).toHaveLength(3);
+    expect(opsMatching(lifted[0].ops, "drawImage")).toHaveLength(3);
   });
 
   it("skips the lift entirely when not selected", () => {
     const { factory, created } = makeCanvasFactory();
     composePinBitmap({ spec: spec({ variant: "pin" }), createCanvas: factory });
-    expect(created).toHaveLength(2);
+    // Content straight to output: one compositing stage, one draw.
+    const { output, compositors } = roles(created);
+    expect(compositors).toEqual([output]);
+    expect(opsMatching(output.ops, "drawImage")).toHaveLength(1);
+  });
+
+  it("keeps the circular ring and backing when the portrait 404s", () => {
+    const { factory, created } = makeCanvasFactory();
+    composePinBitmap({
+      spec: spec({ variant: "circular", iconScale: 1, ring: "#ff0000" }),
+      createCanvas: factory,
+      image: null,
+      imageFailed: true,
+    });
+    const ops = contentOps(created);
+    // Still a red-ringed 40px circle, NOT the 30px blue dot fallback.
+    expect(opsMatching(ops, "arc").map((op) => op.args[2])).toEqual([20, 20.75]);
+    const strokes = opsMatching(ops, "stroke");
+    expect(strokes[strokes.length - 1].args).toEqual(["#ff0000", 1.5]);
+    expect(opsMatching(ops, "drawImage")).toHaveLength(0);
   });
 });
 
@@ -823,5 +910,70 @@ describe("PinAtlas", () => {
 
   it("defaults its page size to the 2048² safe maximum", () => {
     expect(ATLAS_PAGE_SIZE).toBe(2048);
+  });
+
+  it("defaults to 1x rather than reading `window`", () => {
+    const { factory } = makeCanvasFactory();
+    // A DOM-free host (and a node test) must get a deterministic ratio.
+    expect(new PinAtlas({ createCanvas: factory, loadImage: () => Promise.reject(new Error()) })
+      .devicePixelRatio).toBe(1);
+  });
+
+  it("recomposes every pin at a new device pixel ratio", () => {
+    const { atlas, onUpdate } = makeAtlas();
+    const before = atlas.get(spec({ variant: "pin" }));
+    expect(before).not.toBeNull();
+    const firstTexture = atlas.pageTexture(0);
+    const generation = atlas.generation;
+    onUpdate.mockClear();
+
+    expect(atlas.setDevicePixelRatio(2)).toBe(true);
+    expect(atlas.devicePixelRatio).toBe(2);
+    // Pages are gone: their textures were disposed, so consumers must rebind.
+    expect(atlas.generation).toBe(generation + 1);
+    expect(atlas.pageCount).toBe(0);
+    expect(atlas.entryCount).toBe(0);
+    expect(onUpdate).toHaveBeenCalled();
+
+    const after = atlas.get(spec({ variant: "pin" }));
+    expect(after).not.toBeNull();
+    // Same logical sprite size, twice the bitmap, and a brand-new texture.
+    expect((after as { size: number }).size).toBe((before as { size: number }).size);
+    const width = ((after as { u1: number }).u1 - (after as { u0: number }).u0) * 128;
+    expect(width).toBeCloseTo((before as { size: number }).size * 2, 6);
+    expect(atlas.pageTexture(0)).not.toBe(firstTexture);
+  });
+
+  it("ignores a device pixel ratio that is unchanged or nonsense", () => {
+    const { atlas } = makeAtlas();
+    atlas.get(spec({ variant: "pin" }));
+    const generation = atlas.generation;
+    expect(atlas.setDevicePixelRatio(1)).toBe(false);
+    expect(atlas.setDevicePixelRatio(0)).toBe(false);
+    expect(atlas.setDevicePixelRatio(-2)).toBe(false);
+    expect(atlas.setDevicePixelRatio(Number.NaN)).toBe(false);
+    expect(atlas.generation).toBe(generation);
+    expect(atlas.entryCount).toBe(1);
+  });
+
+  it("carries a pending icon load across a DPR change", async () => {
+    let resolveImage: ((image: PinDrawable) => void) | null = null;
+    const { atlas, onUpdate } = makeAtlas({
+      loadImage: () =>
+        new Promise<PinDrawable>((resolve) => {
+          resolveImage = resolve;
+        }),
+    });
+    atlas.get(spec({ iconScale: 1 }));
+    atlas.setDevicePixelRatio(2);
+    const entry = atlas.get(spec({ iconScale: 1 }));
+    expect(entry).not.toBeNull();
+    onUpdate.mockClear();
+    (resolveImage as unknown as (image: PinDrawable) => void)(fakeImage(40, 40));
+    await Promise.resolve();
+    await Promise.resolve();
+    // The recomposed entry has the same key, so the in-flight load still finds it.
+    expect(onUpdate).toHaveBeenCalled();
+    expect(atlas.get(spec({ iconScale: 1 }))).toBe(entry);
   });
 });
