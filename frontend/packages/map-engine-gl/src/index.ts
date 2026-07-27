@@ -10,3 +10,5 @@
 export * from "./core/types.ts";
 export * from "./core/coords.ts";
 export * from "./core/camera.ts";
+export * from "./core/gestureMath.ts";
+export * from "./core/gestures.ts";
