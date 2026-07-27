@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadBuildings,
+  loadHumanNames,
   loadInvaders,
   loadItems,
   type BuildingsBundle,
@@ -11,6 +12,7 @@ import {
   type RaidEnemy,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
+import { palIconUrl } from '../../lib/assets'
 import {
   BuildingLink,
   CatalogDataProvider,
@@ -19,18 +21,43 @@ import {
   PalLink,
 } from '../catalog/components'
 
-/** One wave enemy: a roster pal links to its page; human NPCs render as a
- *  plain chip (they have no detail page); an Otomo companion pal links too. */
-function EnemyChip({ e, pals }: { e: RaidEnemy; pals: PalsBundle }) {
+/** One wave enemy: a roster pal links to its page; a human NPC renders as a
+ *  plain chip (no detail page) with its portrait and localized name; an Otomo
+ *  companion pal links too. */
+function EnemyChip({
+  e,
+  pals,
+  humans,
+  humanNames,
+}: {
+  e: RaidEnemy
+  pals: PalsBundle
+  humans: NonNullable<InvadersFile['humans']>
+  humanNames: Record<string, string>
+}) {
   const pal = pals.byId.get(e.char)
   const otomo = e.otomo ? pals.byId.get(e.otomo) : undefined
+  const humanIcon = humans[e.char]?.icon
   return (
     <span className="inline-flex items-center gap-1.5">
       {pal ? (
         <PalLink id={pal.id} name={pals.text[pal.id]?.name ?? pal.id} icon={pal.icon} />
       ) : (
-        <span className="rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm">
-          {e.char}
+        <span
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm"
+          title={e.char}
+        >
+          {humanIcon ? (
+            <img
+              src={palIconUrl(humanIcon)}
+              alt=""
+              width={20}
+              height={20}
+              loading="lazy"
+              className="size-5 shrink-0 rounded-full object-contain"
+            />
+          ) : null}
+          {humanNames[e.char] ?? e.char}
         </span>
       )}
       {otomo ? (
@@ -54,19 +81,21 @@ export default function RaidsPage() {
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [items, setItems] = useState<ItemsBundle | null>(null)
   const [buildings, setBuildings] = useState<BuildingsBundle | null>(null)
+  const [humanNames, setHumanNames] = useState<Record<string, string>>({})
   const [loadError, setLoadError] = useState<string | null>(null)
   const [biome, setBiome] = useState('all')
 
   useEffect(() => {
     let cancelled = false
     setLoadError(null)
-    Promise.all([loadInvaders(), loadPals(lng), loadItems(lng), loadBuildings(lng)])
-      .then(([f, p, i, b]) => {
+    Promise.all([loadInvaders(), loadPals(lng), loadItems(lng), loadBuildings(lng), loadHumanNames(lng)])
+      .then(([f, p, i, b, h]) => {
         if (cancelled) return
         setFile(f)
         setPals(p)
         setItems(i)
         setBuildings(b)
+        setHumanNames(h)
       })
       .catch((err) => {
         console.error(err)
@@ -162,7 +191,13 @@ export default function RaidsPage() {
                         </span>
                       ) : null}
                       {w.enemies.map((e, i) => (
-                        <EnemyChip key={`${e.char}-${i}`} e={e} pals={pals} />
+                        <EnemyChip
+                          key={`${e.char}-${i}`}
+                          e={e}
+                          pals={pals}
+                          humans={file.humans ?? {}}
+                          humanNames={humanNames}
+                        />
                       ))}
                     </div>
                   ))}

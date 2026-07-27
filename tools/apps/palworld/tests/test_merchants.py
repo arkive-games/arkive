@@ -33,9 +33,11 @@ def test_merchant_entries(result):
     assert by_id["Arena_Shop_1"]["currency"] == "BattleTicket"
     assert by_id["Village_Shop_1"]["currency"] == "Money"
 
-    # name-key classification (vendor-stem aware: Volcano _Shop_2 is a weapon vendor).
-    assert by_id["Village_Shop_1"]["nameKey"] == "general"
+    # name-key classification: a specialised vendor stem wins (Volcano _Shop_2
+    # is a weapon vendor); generic vendors take the location-flavored group key.
+    assert by_id["Village_Shop_1"]["nameKey"] == "village"
     assert by_id["Volcano_Shop_2"]["nameKey"] == "weapon"
+    assert by_id["Volcano_Shop_1"]["nameKey"] == "volcano"
     assert by_id["Medal_Shop_1"]["nameKey"] == "medal"
 
 

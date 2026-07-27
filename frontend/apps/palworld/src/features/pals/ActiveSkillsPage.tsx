@@ -8,12 +8,13 @@ import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
   buildActiveSkills,
+  humanizeWazaId,
   ELEMENTS,
   type Element,
   type ActiveSkillEntry,
   type PalsBundle,
 } from '../../lib/pals'
-import { elementIconUrl } from '../../lib/assets'
+import { elementIconUrl, hasElementIcon } from '../../lib/assets'
 import { PalPageLoading, formatSkillRange } from './components'
 
 export default function ActiveSkillsPage() {
@@ -150,17 +151,18 @@ export default function ActiveSkillsPage() {
                 className="block rounded-lg border border-border bg-card p-3 transition hover:bg-accent/40"
               >
                 <div className="flex items-center gap-2">
-                  <img
-                    src={elementIconUrl(s.element)}
-                    alt=""
-                    width={18}
-                    height={18}
-                    className="size-[18px] shrink-0 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.visibility = 'hidden'
-                    }}
-                  />
-                  <span className="min-w-0 flex-1 truncate font-medium">{s.name || s.wazaId}</span>
+                  {hasElementIcon(s.element) ? (
+                    <img
+                      src={elementIconUrl(s.element)}
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="size-[18px] shrink-0 object-contain"
+                    />
+                  ) : (
+                    <span className="size-[18px] shrink-0" aria-hidden />
+                  )}
+                  <span className="min-w-0 flex-1 truncate font-medium">{s.name || humanizeWazaId(s.wazaId)}</span>
                   {s.isFruit ? (
                     <span
                       className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
@@ -170,7 +172,7 @@ export default function ActiveSkillsPage() {
                     </span>
                   ) : null}
                 </div>
-                {s.name && s.description ? (
+                {s.description ? (
                   <p className="mt-1 whitespace-pre-line text-xs text-muted-foreground">{s.description}</p>
                 ) : null}
                 <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
@@ -217,21 +219,24 @@ export default function ActiveSkillsPage() {
                       data-testid="active-skill-link"
                       className="group flex max-w-full items-center gap-2 font-medium hover:text-primary"
                     >
-                      <img
-                        src={elementIconUrl(s.element)}
-                        alt=""
-                        width={18}
-                        height={18}
-                        className="size-[18px] shrink-0 object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.visibility = 'hidden'
-                        }}
-                      />
-                      <span className="min-w-0 truncate group-hover:underline">{s.name}</span>
+                      {hasElementIcon(s.element) ? (
+                        <img
+                          src={elementIconUrl(s.element)}
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="size-[18px] shrink-0 object-contain"
+                        />
+                      ) : (
+                        <span className="size-[18px] shrink-0" aria-hidden />
+                      )}
+                      <span className="min-w-0 truncate group-hover:underline">
+                        {s.name || humanizeWazaId(s.wazaId)}
+                      </span>
                     </Link>
                   </td>
                   <td className="px-2 py-1.5 text-xs whitespace-pre-line text-muted-foreground">
-                    {s.name ? s.description : s.wazaId}
+                    {s.description}
                   </td>
                   <td className="whitespace-nowrap px-2 py-1.5 text-muted-foreground">
                     {t(s.melee ? 'pal.melee' : 'pal.ranged')}

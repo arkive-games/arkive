@@ -381,6 +381,16 @@ export function resolveCharacterNames(
 }
 
 // --- active-skill catalog (Active Skills list + per-skill detail pages) ------
+
+/** Readable fallback for a skill with no L10N name (a few boss-only skills,
+ *  e.g. `Unique_WorldTreeDragon_PaldiumExplosion` → "Paldium Explosion").
+ *  Derived from the id's last segment, not a translation — it renders the
+ *  same in every locale. */
+export function humanizeWazaId(wazaId: string): string {
+  const last = wazaId.split('_').pop() || wazaId
+  return last.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+}
+
 /** A pal that learns an active skill by leveling, and the level it learns it at. */
 export interface ActiveSkillPalRef { id: string; name: string; icon: string; level: number }
 /** One distinct active skill: element-invariant metadata, its Skill-Fruit flag,

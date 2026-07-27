@@ -15,7 +15,7 @@ import {
   type PartnerSkillEntry,
   type PalsBundle,
 } from '../../lib/pals'
-import { elementIconUrl, palIconUrl } from '../../lib/assets'
+import { elementIconUrl, hasElementIcon, palIconUrl } from '../../lib/assets'
 import { zukanOrder } from '../../lib/palId'
 import { filterStrings } from './filterStrings'
 import { PalPageLoading } from './components'
@@ -199,7 +199,7 @@ export default function PartnerSkillsPage() {
                     ) : null}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5 text-sm font-medium">
-                    {s.element ? (
+                    {s.element && hasElementIcon(s.element) ? (
                       <img
                         src={elementIconUrl(s.element)}
                         alt=""
@@ -290,7 +290,7 @@ export default function PartnerSkillsPage() {
                       params={{ id: s.palId }}
                       className="group inline-flex max-w-full items-center gap-1.5 font-medium hover:text-primary"
                     >
-                      {s.element ? (
+                      {s.element && hasElementIcon(s.element) ? (
                         <img
                           src={elementIconUrl(s.element)}
                           alt=""

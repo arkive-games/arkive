@@ -1088,9 +1088,15 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
         write_json(data_out / "locales" / tag / "pals.json", pals_loc)
 
         skills_loc = {}
+        # A few text keys mis-case the waza id (ACTION_SKILL_RailBolt vs waza
+        # `Railbolt`, ...UpperCut vs `Uppercut`, ...Inkjet vs `InkJet`), so an
+        # exact miss retries case-insensitively before giving up.
+        tname_ci = {k.lower(): v for k, v in tname.items()}
+        tdesc_ci = {k.lower(): v for k, v in tdesc.items()}
         for wid in all_waza:
-            s = {"name": tname.get(f"ACTION_SKILL_{wid}", "")}
-            d = tdesc.get(f"ACTION_SKILL_{wid}")
+            key = f"ACTION_SKILL_{wid}"
+            s = {"name": tname.get(key) or tname_ci.get(key.lower(), "")}
+            d = tdesc.get(key) or tdesc_ci.get(key.lower())
             if d:
                 s["description"] = d
             skills_loc[wid] = s

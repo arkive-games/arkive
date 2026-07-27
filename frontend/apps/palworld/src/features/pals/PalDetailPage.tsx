@@ -6,6 +6,7 @@ import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
   gearCategory,
+  humanizeWazaId,
   passiveDescription,
   resolveCharacterNames,
   type PalsBundle,
@@ -547,7 +548,7 @@ export default function PalDetailPage() {
                       <ActiveSkillRow
                         key={`${s.wazaId}-${s.level}`}
                         skill={s}
-                        name={bundle.skills[s.wazaId]?.name ?? s.wazaId}
+                        name={bundle.skills[s.wazaId]?.name || humanizeWazaId(s.wazaId)}
                         typeLabel={t(s.category === 'Melee' ? 'pal.melee' : 'pal.ranged')}
                         description={resolveCharacterNames(bundle.skills[s.wazaId]?.description, bundle.text)}
                       />

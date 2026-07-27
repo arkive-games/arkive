@@ -64,13 +64,16 @@ _VENDOR_NAME_KEY = {
     "ArenaShop": "arena",
 }
 
-# Fallback keyed by the shop-group name prefix, used when the vendor BP can't be
-# resolved (e.g. groups with no simple-lottery vendor, like the vagrant traders).
+# Location-flavored slug keyed by the shop-group name prefix. For generically
+# named vendors (SalesPerson_*) this wins over the vendor map, so the six
+# same-typed town shops don't all render as an identical "Merchant" card; it is
+# also the fallback when the vendor BP can't be resolved (e.g. groups with no
+# simple-lottery vendor, like the vagrant traders).
 _GROUP_NAME_KEY = {
-    "Village": "general",
-    "Desert": "general",
-    "Volcano": "general",
-    "Wander": "general",
+    "Village": "village",
+    "Desert": "desert",
+    "Volcano": "volcano",
+    "Wander": "wander",
     "Dungeon": "dungeon",
     "Caravan": "caravan",
     "Medal": "medal",
@@ -80,7 +83,10 @@ _GROUP_NAME_KEY = {
 }
 
 # Emit order of the merchant list, by name-key.
-_KEY_ORDER = ["general", "weapon", "caravan", "dungeon", "medal", "bounty", "arena", "vagrant"]
+_KEY_ORDER = [
+    "village", "desert", "volcano", "wander", "general", "weapon",
+    "caravan", "dungeon", "medal", "bounty", "arena", "vagrant",
+]
 
 _LOTTERY_TBL_RX = re.compile(
     r'"itemShop(?:Simple)?LotteryTableName"\s*:\s*(?:\{[^{}]*?"Key"\s*:\s*)?"([^"]+)"'
@@ -88,18 +94,24 @@ _LOTTERY_TBL_RX = re.compile(
 
 
 def _name_key(group: str, vendor: str | None) -> str:
-    """Merchant name-key slug for a shop group. Vendor-stem map wins (it knows
-    Desert/Volcano ``_Shop_2`` are weapon vendors); caravan vendors collapse;
-    else fall back to the group-name prefix; else warn + 'general'."""
+    """Merchant name-key slug for a shop group. A specialised vendor stem wins
+    (it knows Desert/Volcano ``_Shop_2`` are weapon vendors) and caravan
+    vendors collapse; a generic vendor ('general') defers to the group-name
+    prefix so town shops get location-flavored labels; else warn + 'general'."""
+    vkey = None
     if vendor:
         if vendor in _VENDOR_NAME_KEY:
-            return _VENDOR_NAME_KEY[vendor]
-        if vendor.startswith(("SalesPerson_Caravan", "Male_Trader01")):
+            vkey = _VENDOR_NAME_KEY[vendor]
+        elif vendor.startswith(("SalesPerson_Caravan", "Male_Trader01")):
             return "caravan"
+    if vkey and vkey != "general":
+        return vkey
     prefix = re.split(r"_(?:Shop|Trader)", group, maxsplit=1)[0]
     key = _GROUP_NAME_KEY.get(prefix)
     if key:
         return key
+    if vkey:
+        return vkey
     print(f"merchants: WARNING unmapped shop group {group} (vendor {vendor}) — using 'general'")
     return "general"
 

@@ -21,6 +21,10 @@ export interface MerchantStrings {
   notFound: string
   /** Vendor-type display names (nameKey from merchants.json). */
   name: {
+    village: string
+    desert: string
+    volcano: string
+    wander: string
     general: string
     weapon: string
     caravan: string
@@ -42,6 +46,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Back to merchants',
     notFound: 'Merchant “{{id}}” not found',
     name: {
+      village: 'Village Merchant', desert: 'Desert Merchant',
+      volcano: 'Volcano Merchant', wander: 'Roaming Merchant',
       general: 'Merchant', weapon: 'Weapons Merchant', caravan: 'Wandering Caravan',
       dungeon: 'Dungeon Merchant', medal: 'Medal Merchant', bounty: 'Bounty Merchant',
       arena: 'Arena Shop', vagrant: 'Wandering Trader',
@@ -56,6 +62,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Zurück zu den Händlern',
     notFound: 'Händler „{{id}}“ nicht gefunden',
     name: {
+      village: 'Dorfhändler', desert: 'Wüstenhändler',
+      volcano: 'Vulkanhändler', wander: 'Umherziehender Händler',
       general: 'Händler', weapon: 'Waffenhändler', caravan: 'Wanderkarawane',
       dungeon: 'Dungeon-Händler', medal: 'Medaillenhändler', bounty: 'Kopfgeld-Händler',
       arena: 'Arena-Shop', vagrant: 'Wanderhändler',
@@ -70,6 +78,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Volver a los mercaderes',
     notFound: 'Mercader «{{id}}» no encontrado',
     name: {
+      village: 'Mercader del pueblo', desert: 'Mercader del desierto',
+      volcano: 'Mercader del volcán', wander: 'Mercader itinerante',
       general: 'Mercader', weapon: 'Mercader de armas', caravan: 'Caravana errante',
       dungeon: 'Mercader de mazmorra', medal: 'Mercader de medallas', bounty: 'Mercader de recompensas',
       arena: 'Tienda de la arena', vagrant: 'Comerciante errante',
@@ -84,6 +94,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Volver a los mercaderes',
     notFound: 'Mercader «{{id}}» no encontrado',
     name: {
+      village: 'Mercader del pueblo', desert: 'Mercader del desierto',
+      volcano: 'Mercader del volcán', wander: 'Mercader itinerante',
       general: 'Mercader', weapon: 'Mercader de armas', caravan: 'Caravana errante',
       dungeon: 'Mercader de mazmorra', medal: 'Mercader de medallas', bounty: 'Mercader de recompensas',
       arena: 'Tienda de la arena', vagrant: 'Comerciante errante',
@@ -98,6 +110,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Retour aux marchands',
     notFound: 'Marchand « {{id}} » introuvable',
     name: {
+      village: 'Marchand du village', desert: 'Marchand du désert',
+      volcano: 'Marchand du volcan', wander: 'Marchand itinérant',
       general: 'Marchand', weapon: "Marchand d'armes", caravan: 'Caravane itinérante',
       dungeon: 'Marchand de donjon', medal: 'Marchand de médailles', bounty: 'Marchand de primes',
       arena: "Boutique de l'arène", vagrant: 'Marchand ambulant',
@@ -112,6 +126,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Kembali ke pedagang',
     notFound: 'Pedagang “{{id}}” tidak ditemukan',
     name: {
+      village: 'Pedagang desa', desert: 'Pedagang gurun',
+      volcano: 'Pedagang gunung berapi', wander: 'Pedagang keliling',
       general: 'Pedagang', weapon: 'Pedagang senjata', caravan: 'Karavan pengembara',
       dungeon: 'Pedagang dungeon', medal: 'Pedagang medali', bounty: 'Pedagang buronan',
       arena: 'Toko arena', vagrant: 'Saudagar keliling',
@@ -126,6 +142,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Torna ai mercanti',
     notFound: 'Mercante «{{id}}» non trovato',
     name: {
+      village: 'Mercante del villaggio', desert: 'Mercante del deserto',
+      volcano: 'Mercante del vulcano', wander: 'Mercante itinerante',
       general: 'Mercante', weapon: 'Armaiolo', caravan: 'Carovana errante',
       dungeon: 'Mercante del dungeon', medal: 'Mercante di medaglie', bounty: 'Mercante delle taglie',
       arena: "Negozio dell'arena", vagrant: 'Mercante ambulante',
@@ -140,6 +158,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: '商人一覧に戻る',
     notFound: '商人「{{id}}」が見つかりません',
     name: {
+      village: '村の商人', desert: '砂漠の商人',
+      volcano: '火山の商人', wander: '巡回商人',
       general: '商人', weapon: '武器商人', caravan: '行商キャラバン',
       dungeon: 'ダンジョン商人', medal: 'メダル商人', bounty: '賞金首商人',
       arena: 'アリーナショップ', vagrant: '放浪の行商人',
@@ -154,6 +174,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: '상인 목록으로',
     notFound: '상인 “{{id}}”을(를) 찾을 수 없습니다',
     name: {
+      village: '마을 상인', desert: '사막 상인',
+      volcano: '화산 상인', wander: '순회 상인',
       general: '상인', weapon: '무기 상인', caravan: '유랑 상단',
       dungeon: '던전 상인', medal: '메달 상인', bounty: '현상금 상인',
       arena: '아레나 상점', vagrant: '떠돌이 상인',
@@ -168,6 +190,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Powrót do handlarzy',
     notFound: 'Nie znaleziono handlarza „{{id}}”',
     name: {
+      village: 'Handlarz wioskowy', desert: 'Handlarz pustynny',
+      volcano: 'Handlarz wulkaniczny', wander: 'Handlarz obwoźny',
       general: 'Handlarz', weapon: 'Handlarz bronią', caravan: 'Wędrowna karawana',
       dungeon: 'Handlarz z lochu', medal: 'Handlarz medalami', bounty: 'Handlarz nagród',
       arena: 'Sklep areny', vagrant: 'Wędrowny kupiec',
@@ -182,6 +206,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Voltar aos mercadores',
     notFound: 'Mercador “{{id}}” não encontrado',
     name: {
+      village: 'Mercador da vila', desert: 'Mercador do deserto',
+      volcano: 'Mercador do vulcão', wander: 'Mercador itinerante',
       general: 'Mercador', weapon: 'Mercador de armas', caravan: 'Caravana errante',
       dungeon: 'Mercador de masmorra', medal: 'Mercador de medalhas', bounty: 'Mercador de recompensas',
       arena: 'Loja da arena', vagrant: 'Comerciante errante',
@@ -196,6 +222,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Назад к торговцам',
     notFound: 'Торговец «{{id}}» не найден',
     name: {
+      village: 'Деревенский торговец', desert: 'Торговец пустыни',
+      volcano: 'Торговец вулкана', wander: 'Разъездной торговец',
       general: 'Торговец', weapon: 'Торговец оружием', caravan: 'Странствующий караван',
       dungeon: 'Торговец подземелья', medal: 'Торговец медалями', bounty: 'Торговец наградами',
       arena: 'Магазин арены', vagrant: 'Бродячий торговец',
@@ -210,6 +238,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'กลับไปหน้าพ่อค้า',
     notFound: 'ไม่พบพ่อค้า “{{id}}”',
     name: {
+      village: 'พ่อค้าหมู่บ้าน', desert: 'พ่อค้าทะเลทราย',
+      volcano: 'พ่อค้าภูเขาไฟ', wander: 'พ่อค้าสัญจร',
       general: 'พ่อค้า', weapon: 'พ่อค้าอาวุธ', caravan: 'กองคาราวานเร่ร่อน',
       dungeon: 'พ่อค้าดันเจียน', medal: 'พ่อค้าเหรียญ', bounty: 'พ่อค้าค่าหัว',
       arena: 'ร้านค้าอารีนา', vagrant: 'พ่อค้าเร่',
@@ -224,6 +254,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Tüccarlara dön',
     notFound: '“{{id}}” tüccarı bulunamadı',
     name: {
+      village: 'Köy tüccarı', desert: 'Çöl tüccarı',
+      volcano: 'Volkan tüccarı', wander: 'Gezici tüccar',
       general: 'Tüccar', weapon: 'Silah tüccarı', caravan: 'Gezgin kervan',
       dungeon: 'Zindan tüccarı', medal: 'Madalya tüccarı', bounty: 'Ödül tüccarı',
       arena: 'Arena dükkânı', vagrant: 'Gezgin satıcı',
@@ -238,6 +270,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: 'Quay lại danh sách thương nhân',
     notFound: 'Không tìm thấy thương nhân “{{id}}”',
     name: {
+      village: 'Thương nhân làng', desert: 'Thương nhân sa mạc',
+      volcano: 'Thương nhân núi lửa', wander: 'Thương nhân lưu động',
       general: 'Thương nhân', weapon: 'Người bán vũ khí', caravan: 'Đoàn lữ hành',
       dungeon: 'Thương nhân hầm ngục', medal: 'Thương nhân huy chương', bounty: 'Thương nhân tiền thưởng',
       arena: 'Cửa hàng đấu trường', vagrant: 'Thương nhân lang thang',
@@ -252,6 +286,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: '返回商人列表',
     notFound: '未找到商人“{{id}}”',
     name: {
+      village: '村庄商人', desert: '沙漠商人',
+      volcano: '火山商人', wander: '流动商人',
       general: '商人', weapon: '武器商人', caravan: '流浪商队',
       dungeon: '地牢商人', medal: '奖章商人', bounty: '悬赏商人',
       arena: '竞技场商店', vagrant: '流浪商人',
@@ -266,6 +302,8 @@ export const MERCHANT_STRINGS: Record<Language, MerchantStrings> = {
     backToList: '返回商人列表',
     notFound: '找不到商人「{{id}}」',
     name: {
+      village: '村莊商人', desert: '沙漠商人',
+      volcano: '火山商人', wander: '流動商人',
       general: '商人', weapon: '武器商人', caravan: '流浪商隊',
       dungeon: '地城商人', medal: '獎章商人', bounty: '懸賞商人',
       arena: '競技場商店', vagrant: '流浪商人',

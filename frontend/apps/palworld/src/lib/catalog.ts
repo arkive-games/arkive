@@ -468,7 +468,12 @@ export interface RaidEntry {
   waves: RaidWave[]
   rewards: { item: string; rate: number; min: number; max: number }[]
 }
-export interface InvadersFile { raids: RaidEntry[] }
+export interface InvadersFile {
+  raids: RaidEntry[]
+  /** Human-NPC enemies' portrait stems (localized names live in
+   *  locales/<lng>/humans.json). */
+  humans?: Record<string, { icon?: string }>
+}
 
 let invadersCache: Promise<InvadersFile> | null = null
 
@@ -476,6 +481,19 @@ let invadersCache: Promise<InvadersFile> | null = null
 export function loadInvaders(): Promise<InvadersFile> {
   if (!invadersCache) invadersCache = j<InvadersFile>(dataUrl(`invaders.json`))
   return invadersCache
+}
+
+const humansCache = new Map<string, Promise<Record<string, string>>>()
+
+/** Localized display names for the human-NPC raid enemies (id → name). */
+export function loadHumanNames(lng: string): Promise<Record<string, string>> {
+  let p = humansCache.get(lng)
+  if (!p) {
+    // Absent for not-yet-emitted datasets — degrade to raw codenames.
+    p = j<Record<string, string>>(dataUrl(`locales/${lng}/humans.json`)).catch(() => ({}))
+    humansCache.set(lng, p)
+  }
+  return p
 }
 
 // --- building icon -----------------------------------------------------------

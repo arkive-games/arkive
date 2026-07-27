@@ -34,7 +34,7 @@ test('merchant-sold blueprint shows shop and price', async ({ page }) => {
   await page.goto('/items/Blueprint_Head003_1')
   const sources = page.getByTestId('bp-sources')
   await expect(sources).toContainText('Merchants')
-  await expect(sources).toContainText('Village merchant')
+  await expect(sources).toContainText('Village Merchant')
   await expect(sources).toContainText('500')
   // And the schematic unlocks the headband recipe.
   await expect(page.getByTestId('bp-unlocks-craft').getByRole('link')).toHaveAttribute(

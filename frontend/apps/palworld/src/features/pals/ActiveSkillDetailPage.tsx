@@ -6,10 +6,11 @@ import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
   buildActiveSkills,
+  humanizeWazaId,
   type Element,
   type PalsBundle,
 } from '../../lib/pals'
-import { elementIconUrl, palIconUrl } from '../../lib/assets'
+import { elementIconUrl, hasElementIcon, palIconUrl } from '../../lib/assets'
 import { CatalogDataProvider, PalHover } from '../catalog/components'
 import { PalSection, InfoRows, StatRow, PalPageLoading, ElementBadge, formatSkillRange } from './components'
 
@@ -70,16 +71,15 @@ export default function ActiveSkillDetailPage() {
         {backLink}
         {/* Header */}
         <div className="flex items-center gap-4">
-          <img
-            src={elementIconUrl(skill.element)}
-            alt=""
-            className="size-14 shrink-0 object-contain"
-            onError={(e) => {
-              e.currentTarget.style.visibility = 'hidden'
-            }}
-          />
+          {hasElementIcon(skill.element) ? (
+            <img
+              src={elementIconUrl(skill.element)}
+              alt=""
+              className="size-14 shrink-0 object-contain"
+            />
+          ) : null}
           <div className="min-w-0">
-            <h1 className="text-3xl font-bold break-words">{skill.name || skill.wazaId}</h1>
+            <h1 className="text-3xl font-bold break-words">{skill.name || humanizeWazaId(skill.wazaId)}</h1>
             <div className="mt-0.5 font-mono text-xs text-muted-foreground">{skill.wazaId}</div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <ElementBadge element={skill.element as Element} label={bundle.enums.elements[skill.element] ?? skill.element} />

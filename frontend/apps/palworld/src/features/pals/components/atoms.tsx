@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
-import { elementIconUrl, workIconUrl } from '../../../lib/assets'
+import { elementIconUrl, hasElementIcon, workIconUrl } from '../../../lib/assets'
 import type { CondenseEntry } from '../../../lib/condenser'
 import type { ActiveSkill, Element, WorkType } from '../../../lib/pals'
 
@@ -45,7 +45,7 @@ export function ElementBadge({
 }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-      <IconImg src={elementIconUrl(element)} alt="" size={size} />
+      {hasElementIcon(element) ? <IconImg src={elementIconUrl(element)} alt="" size={size} /> : null}
       {label}
     </span>
   )
@@ -169,7 +169,11 @@ export function ActiveSkillRow({
         </td>
         <td className={cn('pr-2 align-top', top)}>
           <div className="flex items-center gap-1.5 font-medium">
-            <IconImg src={elementIconUrl(skill.element as Element)} alt="" size={16} />
+            {hasElementIcon(skill.element) ? (
+              <IconImg src={elementIconUrl(skill.element as Element)} alt="" size={16} />
+            ) : (
+              <span className="size-4 shrink-0" aria-hidden />
+            )}
             <Link
               to="/active-skills/$id"
               params={{ id: skill.wazaId }}

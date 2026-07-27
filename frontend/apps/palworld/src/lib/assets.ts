@@ -14,8 +14,10 @@ export const palworldAssets: MapAssets = {
 export const noteImageUrl = (stem: string): string => `${RES_BASE}/notes/${stem}.webp`
 /** Pal roster icon (e.g. `T_Anubis_icon_normal`). */
 export const palIconUrl = (icon: string): string => `${RES_BASE}/icons/${icon}.webp`
-/** Element badge icon; every element has one. */
+/** Element badge icon; the nine real elements have one — boss-only skills
+ *  carry element "None", which has no icon file (gate with hasElementIcon). */
 export const elementIconUrl = (element: string): string => `${RES_BASE}/icons/element_${element}.webp`
+export const hasElementIcon = (element: string): boolean => element !== 'None'
 /** Work-suitability icon; OilExtraction has none (callers fall back to the label). */
 export const workIconUrl = (work: string): string => `${RES_BASE}/icons/work_${work}.webp`
 /** Inventory item icon (e.g. `item_Wood`); present only for items whose icon
