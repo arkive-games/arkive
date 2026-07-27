@@ -1,0 +1,8 @@
+/*
+ * @gamemap/map-engine-gl chrome styles (map root, popup, tooltip, status bar,
+ * zoom control, context menu).
+ *
+ * Placeholder: filled in with the React overlay layer. Tailwind-free by design —
+ * only `var(--token, fallback)` reads so the host app's theme (incl. `.dark`)
+ * flows through, exactly like the Leaflet engine's `engine.css`.
+ */

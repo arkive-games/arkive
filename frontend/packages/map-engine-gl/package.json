@@ -1,0 +1,40 @@
+{
+  "name": "@gamemap/map-engine-gl",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "sideEffects": [
+    "./src/index.ts",
+    "./src/engine-gl.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./engine-gl.css": "./src/engine-gl.css"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gamemap/data-contract": "workspace:*",
+    "earcut": "^3.2.3",
+    "three": "^0.185.1"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/earcut": "^3.0.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@types/three": "^0.185.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.9"
+  }
+}
