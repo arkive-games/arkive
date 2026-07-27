@@ -253,6 +253,26 @@ function flickLeft(h: ReturnType<typeof makeHarness>): void {
   h.up(1, 450, 400);
 }
 
+// `GestureTarget` is a structural subset for weapp portability — it must never
+// stop accepting the DOM elements the React layer actually passes. These bodies
+// are type-checked by `pnpm check` and never executed against a real DOM; if
+// `attachGestures` needs a cast at a call site again, this file stops compiling.
+describe("GestureTarget accepts DOM elements without a cast", () => {
+  it("type-checks canvas / element / a non-DOM stub", () => {
+    const onCanvas = (canvas: HTMLCanvasElement, cam: Camera) =>
+      attachGestures(canvas, cam);
+    const onElement = (element: HTMLElement, cam: Camera) => attachGestures(element, cam);
+    // A host with no DOM at all and its own event shape stays valid too.
+    const weappCanvas = {
+      addEventListener(_type: string, _listener: (ev: { detail: number }) => void) {},
+      removeEventListener(_type: string, _listener: (ev: { detail: number }) => void) {},
+    } satisfies GestureTarget;
+    const onWeapp = (cam: Camera) => attachGestures(weappCanvas, cam);
+
+    expect([onCanvas, onElement, onWeapp].every((f) => typeof f === "function")).toBe(true);
+  });
+});
+
 describe("drag pan", () => {
   it("moves the map the same direction as the finger", () => {
     const h = makeHarness();

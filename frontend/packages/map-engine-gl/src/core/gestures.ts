@@ -86,9 +86,26 @@ import type { Point } from "./types.ts";
 export const POINTER_STALE_MS = 10_000;
 
 /**
- * The subset of an element this binding uses — `HTMLElement` satisfies it
- * structurally. Capture and rect are optional so a non-DOM host (or a test
- * stub) can omit them.
+ * A listener as seen by {@link GestureTarget}. The event parameter is
+ * deliberately `any`, because this one position has to stay assignable BOTH ways:
+ * to the DOM's `EventListenerOrEventListenerObject` (so an `HTMLCanvasElement`
+ * is a `GestureTarget` with no cast at the call site — that union contains
+ * `EventListenerObject`, which no function type can absorb) and to a non-DOM
+ * host's narrowly typed listener (so a weapp canvas adapter is one too).
+ *
+ * Every narrower type excludes one side: `(ev: never) => void` rejects every DOM
+ * element, `(ev: Event) => void` rejects non-DOM hosts, and a generic parameter
+ * rejects any host whose listener names a concrete event type. The handlers in
+ * this file declare the concrete shapes they need
+ * ({@link GesturePointerEvent} & co), so nothing downstream is `any`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
+export type GestureEventListener = (ev: any) => void;
+
+/**
+ * The subset of an element this binding uses — `HTMLElement` (and
+ * `HTMLCanvasElement`) satisfies it structurally, with no cast. Capture and rect
+ * are optional so a non-DOM host (or a test stub) can omit them.
  *
  * Without `setPointerCapture`, moves that leave the element are not delivered,
  * so a drag ending outside it leaves the pointer booked and the gesture
@@ -99,12 +116,12 @@ export const POINTER_STALE_MS = 10_000;
 export interface GestureTarget {
   addEventListener(
     type: string,
-    listener: (ev: never) => void,
+    listener: GestureEventListener,
     options?: { passive?: boolean; capture?: boolean } | boolean,
   ): void;
   removeEventListener(
     type: string,
-    listener: (ev: never) => void,
+    listener: GestureEventListener,
     options?: { passive?: boolean; capture?: boolean } | boolean,
   ): void;
   getBoundingClientRect?(): { left: number; top: number };
@@ -711,18 +728,19 @@ export function attachGestures(
   type ListenOptions = { passive?: boolean; capture?: boolean } | undefined;
   const bound: {
     type: string;
-    listener: (ev: never) => void;
+    listener: GestureEventListener;
     options: ListenOptions;
   }[] = [];
 
+  /**
+   * Register a handler that declares the event shape it needs; no cast, because
+   * {@link GestureEventListener} accepts any of them. The options are stored and
+   * replayed on removal — `capture` is part of a listener's identity, so dropping
+   * it would silently leak capturing listeners.
+   */
   function listen<E>(type: string, handler: (e: E) => void, options?: ListenOptions): void {
-    // One cast for the whole file: the structural event interfaces above are
-    // what the handlers actually need, and `GestureTarget` accepts any handler.
-    const listener = handler as unknown as (ev: never) => void;
-    el.addEventListener(type, listener, options);
-    // The options are replayed on removal — `capture` is part of a listener's
-    // identity, so dropping it would silently leak capturing listeners.
-    bound.push({ type, listener, options });
+    el.addEventListener(type, handler, options);
+    bound.push({ type, listener: handler, options });
   }
 
   listen<GesturePointerEvent>("pointerdown", onPointerDown);
