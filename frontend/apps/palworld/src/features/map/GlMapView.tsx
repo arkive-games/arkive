@@ -1,0 +1,18 @@
+// Lazy boundary for the WebGL (three.js) map engine (`?engine=gl`).
+//
+// three r185 + its fat-line addon + earcut are ~1.5 MB of JS that ONLY the
+// opt-in GL path needs; a static import puts all of it in the entry chunk, so
+// every visitor of the default (Leaflet) map downloaded and parsed it. App.tsx
+// pulls this module in with `lazy()` instead, which moves the engine — and, via
+// the stylesheet import below, its CSS — into a chunk fetched on demand.
+//
+// The CSS import lives HERE rather than in main.tsx on purpose: that is what
+// makes Vite emit it as part of the lazy chunk instead of the entry stylesheet.
+// It therefore lands in the cascade AFTER `index.css`, but nothing changes as a
+// result: every rule in engine-gl.css is scoped to a `gmgl-` class, and the only
+// `gmgl-` rules the app itself defines (`.gmgl-map-root` background in
+// index.css) set properties engine-gl.css does not touch.
+import { GameMapView } from '@gamemap/map-engine-gl'
+import '@gamemap/map-engine-gl/engine-gl.css'
+
+export default GameMapView

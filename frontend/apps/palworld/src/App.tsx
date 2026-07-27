@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearch } from '@tanstack/react-router'
 import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, type MapRef } from '@gamemap/map-engine'
-import { GameMapView as GlGameMapView, type GlMapRef } from '@gamemap/map-engine-gl'
+// The WebGL engine is code-split: three.js is ~1.5 MB that only `?engine=gl`
+// needs, so it must not sit in the entry chunk with the default Leaflet path.
+// The `GlMapRef` type import erases at build time and costs nothing.
+import type { GlMapRef } from '@gamemap/map-engine-gl'
+const GlGameMapView = lazy(() => import('./features/map/GlMapView'))
 import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
@@ -777,10 +781,26 @@ export default function App() {
   }
 
   // `?engine=gl` swaps in the WebGL engine; anything else keeps Leaflet (the
-  // default). Only the ref differs — see `glMapRef` above.
+  // default). Only the ref differs — see `glMapRef` above. The GL branch is
+  // additionally behind a lazy boundary (see features/map/GlMapView), so it
+  // needs a Suspense fallback for the one chunk fetch. The fallback just holds
+  // the map area open, borrowing the `.gmgl-map-root` void colour from index.css
+  // (`flex-1` stands in for the sizing engine-gl.css normally supplies, since
+  // that stylesheet arrives with the chunk) so there is no flash of a
+  // differently-coloured panel.
   const mapView =
     engineParam === 'gl' ? (
-      <GlGameMapView {...sharedMapProps} mapRef={glMapRef} />
+      <Suspense
+        fallback={
+          <div
+            className="gmgl-map-root flex-1"
+            role="status"
+            aria-label={t('catalogLoading')}
+          />
+        }
+      >
+        <GlGameMapView {...sharedMapProps} mapRef={glMapRef} />
+      </Suspense>
     ) : (
       <GameMapView {...sharedMapProps} mapRef={mapRef} />
     )

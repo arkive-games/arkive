@@ -10,12 +10,9 @@ import {
 import { ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell'
 import 'leaflet/dist/leaflet.css'
 import '@gamemap/map-engine/engine.css'
-// The WebGL engine (mounted only behind `?engine=gl`, see App.tsx) ships its own
-// stylesheet. Loaded unconditionally and BEFORE index.css for the same reason
-// engine.css is: every rule in it is scoped to a `gmgl-` class, so it cannot
-// touch the Leaflet path, and importing it here (rather than from App.tsx) keeps
-// app CSS last so `index.css` can still override engine chrome.
-import '@gamemap/map-engine-gl/engine-gl.css'
+// The WebGL engine's own stylesheet is NOT imported here: it rides along with the
+// engine's lazy chunk (see features/map/GlMapView) so `?engine=gl` is the only
+// path that pays for it.
 import './index.css'
 import './i18n'
 import App from './App'
