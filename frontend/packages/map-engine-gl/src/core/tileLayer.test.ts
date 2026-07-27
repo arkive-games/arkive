@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { Texture } from "three";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { DoubleSide, LinearFilter, SRGBColorSpace, Texture } from "three";
 import type { GameMapMeta } from "@gamemap/data-contract";
 import type { MapAssets } from "./assets.ts";
 import { Camera } from "./camera.ts";
@@ -7,6 +7,7 @@ import { LayerOrder } from "./renderer.ts";
 import {
   isEmptyTileRange,
   isInGrid,
+  sortTilesFromCentre,
   TileLayer,
   tileKey,
   tileRangeCount,
@@ -120,6 +121,34 @@ describe("visibleTileRange", () => {
     expect(
       visibleTileRange(bounds(1000, 1000, 1500, 1500), 256, 32, 32, Number.NaN),
     ).toEqual({ minX: 3, minY: 3, maxX: 5, maxY: 5 });
+  });
+});
+
+describe("sortTilesFromCentre", () => {
+  it("orders by Manhattan distance from the view centre to each tile centre", () => {
+    // Centre at (640, 640) = the centre of tile (2,2) for 256 px tiles.
+    const tiles = [
+      { x: 0, y: 0 },
+      { x: 2, y: 2 },
+      { x: 3, y: 2 },
+      { x: 2, y: 4 },
+    ];
+    expect(sortTilesFromCentre(tiles, { x: 640, y: 640 }, 256)).toEqual([
+      { x: 2, y: 2 },
+      { x: 3, y: 2 },
+      { x: 2, y: 4 },
+      { x: 0, y: 0 },
+    ]);
+  });
+
+  it("keeps the original order for equidistant tiles", () => {
+    const tiles = [
+      { x: 3, y: 2 },
+      { x: 1, y: 2 },
+      { x: 2, y: 1 },
+      { x: 2, y: 3 },
+    ];
+    expect(sortTilesFromCentre([...tiles], { x: 640, y: 640 }, 256)).toEqual(tiles);
   });
 });
 
@@ -339,6 +368,100 @@ describe("TileLayer texture creation throttle", () => {
     expect(loader.loads).toHaveLength(1);
     layer.update(camera);
     expect(loader.loads).toHaveLength(2);
+  });
+
+  it("clamps a zero or negative budget to 1 so the loop always progresses", () => {
+    for (const budget of [0, -5, Number.NaN]) {
+      const { layer, camera, loader, invalidate } = setup({
+        maxNewTilesPerFrame: budget,
+      });
+      layer.update(camera);
+      expect(loader.loads.length).toBeGreaterThanOrEqual(1);
+      // Progress was made, so the follow-up frame is not a spin.
+      expect(invalidate).toHaveBeenCalled();
+    }
+  });
+
+  it("spends the throttled budget from the view centre outwards", () => {
+    // The default mount view: the whole 8192² map at MIN_ZOOM, ~1000 tiles.
+    const { layer, camera, map, loader } = setup({
+      zoom: -3,
+      center: { x: 4096, y: 4096 },
+    });
+    expect(visibleCount(camera, map)).toBeGreaterThan(500);
+
+    layer.update(camera);
+    expect(loader.loads).toHaveLength(4);
+    // Tile indices of the first batch, parsed back out of the stub urls.
+    const first = loader.loads.map((l) => {
+      const [x, y] = l.url.split("/")[1].replace(".webp", "").split("_");
+      return { x: Number(x), y: Number(y) };
+    });
+    // The view centre sits on the boundary of tiles 15/16 in both axes, so the
+    // four tiles touching the centre are exactly the nearest ones.
+    expect(first.map((t) => tileKey(t.x, t.y)).sort()).toEqual([
+      "15:15",
+      "15:16",
+      "16:15",
+      "16:16",
+    ]);
+
+    // ...and the next batch is the ring around them, not row 0.
+    layer.update(camera);
+    for (const load of loader.loads.slice(4)) {
+      const [x, y] = load.url.split("/")[1].replace(".webp", "").split("_");
+      expect(Math.abs(Number(x) - 15.5)).toBeLessThanOrEqual(2.5);
+      expect(Math.abs(Number(y) - 15.5)).toBeLessThanOrEqual(2.5);
+    }
+  });
+});
+
+describe("TileLayer y-down + sampling contract", () => {
+  // These are the renderer's contract, not cosmetics: `flipY = true` (three's
+  // default) renders every tile vertically mirrored under the flipped
+  // projection, and back-face culling would discard the quads entirely.
+  it("configures tile textures and materials for the flipped projection", () => {
+    const { layer, camera } = setup({ maxNewTilesPerFrame: 999 });
+    layer.update(camera);
+    const mesh = layer.object3D.children[0] as unknown as {
+      material: {
+        side: number;
+        transparent: boolean;
+        depthTest: boolean;
+        depthWrite: boolean;
+        map: Texture;
+      };
+    };
+    expect(mesh.material.side).toBe(DoubleSide);
+    expect(mesh.material.transparent).toBe(true);
+    expect(mesh.material.depthTest).toBe(false);
+    expect(mesh.material.depthWrite).toBe(false);
+
+    const texture = mesh.material.map;
+    expect(texture.flipY).toBe(false);
+    expect(texture.generateMipmaps).toBe(false);
+    expect(texture.minFilter).toBe(LinearFilter);
+    expect(texture.magFilter).toBe(LinearFilter);
+    expect(texture.colorSpace).toBe(SRGBColorSpace);
+  });
+});
+
+describe("TileLayer square-tile invariant", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("warns for a non-square map instead of failing silently", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    setup({ map: makeMap({ tileHeight: 512 }) });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toContain("non-square");
+  });
+
+  it("stays quiet for a square map", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    setup();
+    expect(warn).not.toHaveBeenCalled();
   });
 });
 
@@ -569,17 +692,34 @@ describe("WatermarkLayer", () => {
     layer.update(camera);
     const material = (
       layer.object3D.children[0] as unknown as {
-        material: { visible: boolean; opacity: number };
+        material: {
+          visible: boolean;
+          opacity: number;
+          side: number;
+          transparent: boolean;
+          depthTest: boolean;
+          depthWrite: boolean;
+          map: Texture | null;
+        };
       }
     ).material;
     // Nothing is drawn before the image arrives (an untextured material would
     // flash a white sheet over the map).
     expect(material.visible).toBe(false);
     expect(material.opacity).toBeCloseTo(0.2, 9);
+    // Same y-down contract as the tile layer.
+    expect(material.side).toBe(DoubleSide);
+    expect(material.transparent).toBe(true);
+    expect(material.depthTest).toBe(false);
+    expect(material.depthWrite).toBe(false);
 
     loader.loads[0].resolve();
     expect(invalidate).toHaveBeenCalled();
     expect(material.visible).toBe(true);
+    expect(material.map?.flipY).toBe(false);
+    expect(material.map?.generateMipmaps).toBe(false);
+    expect(material.map?.minFilter).toBe(LinearFilter);
+    expect(material.map?.colorSpace).toBe(SRGBColorSpace);
 
     const expected = tileRangeCount(
       visibleTileRange(camera.visibleBounds(0), 256, 4, 4, 1),

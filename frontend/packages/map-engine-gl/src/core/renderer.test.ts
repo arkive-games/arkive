@@ -5,6 +5,7 @@ import {
   LayerOrder,
   MapRenderer,
   type MapRendererOptions,
+  type RenderFrameContext,
   type RenderLayer,
 } from "./renderer.ts";
 
@@ -79,7 +80,7 @@ function stubLayer(order: number) {
   return {
     object3D: new Group(),
     order,
-    update: vi.fn<(camera: Camera) => void>(),
+    update: vi.fn<(camera: Camera, ctx: RenderFrameContext) => void>(),
     dispose: vi.fn<() => void>(),
   };
 }
@@ -125,6 +126,62 @@ describe("MapRenderer scheduling (render-on-demand)", () => {
     expect(h.backend.render).toHaveBeenCalledTimes(2);
     h.flush();
     expect(h.backend.render).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps scheduling when the frame source hands out handle 0", () => {
+    // A frame handle of 0 is legitimate; the scheduler must not treat it as
+    // "a frame is pending" forever.
+    const queue: (() => void)[] = [];
+    const h = harness({
+      requestFrame: (cb) => {
+        queue.push(cb);
+        return 0;
+      },
+    });
+    expect(queue).toHaveLength(1);
+    queue.shift()?.();
+    expect(h.renderer.isFramePending()).toBe(false);
+    h.renderer.invalidate();
+    expect(queue).toHaveLength(1);
+    queue.shift()?.();
+    expect(h.backend.render).toHaveBeenCalledTimes(2);
+  });
+
+  it("throws instead of wedging when there is no frame source at all", () => {
+    // Precondition: this is the node test environment, with no global rAF.
+    expect(typeof requestAnimationFrame).toBe("undefined");
+    expect(
+      () =>
+        new MapRenderer({
+          camera: new Camera({
+            mapWidthPx: 100,
+            mapHeightPx: 100,
+            minZoom: 0,
+            maxZoom: 0,
+            viewportWidth: 10,
+            viewportHeight: 10,
+          }),
+          createBackend: () => ({
+            setPixelRatio: () => {},
+            setSize: () => {},
+            render: () => {},
+            dispose: () => {},
+          }),
+        }),
+    ).toThrow(/requestFrame/);
+  });
+
+  it("skips the draw entirely while the viewport is degenerate", () => {
+    const h = harness({ width: 0, height: 0 });
+    h.flush();
+    // A 0×0 frustum would divide by zero and fill the projection with NaN.
+    expect(h.backend.render).not.toHaveBeenCalled();
+    expect(Number.isFinite(h.renderer.projectionCamera.projectionMatrix.elements[0])).toBe(
+      true,
+    );
+    h.renderer.setSize(800, 600);
+    h.flush();
+    expect(h.backend.render).toHaveBeenCalledTimes(1);
   });
 
   it("drives a fly animation from its own loop, then stops", () => {
@@ -208,16 +265,63 @@ describe("MapRenderer layers", () => {
     expect(h.renderer.scene.children).toEqual([h.renderer.sceneRoot]);
   });
 
-  it("updates every layer with the camera before each render", () => {
-    const h = harness();
+  it("updates every layer with the camera and the frame context", () => {
+    const h = harness({ devicePixelRatio: 2 });
     const layer = stubLayer(LayerOrder.tiles);
     h.renderer.addLayer(layer);
     h.flush();
-    expect(layer.update).toHaveBeenCalledWith(h.camera);
+    expect(layer.update).toHaveBeenCalledWith(h.camera, { pixelRatio: 2 });
     const calls = layer.update.mock.calls.length;
     h.camera.panBy(50, 50);
     h.flush();
     expect(layer.update.mock.calls.length).toBe(calls + 1);
+  });
+
+  it("hands every layer of one frame the same context", () => {
+    const seen: unknown[] = [];
+    const h = harness();
+    const a = stubLayer(LayerOrder.tiles);
+    const b = stubLayer(LayerOrder.markers);
+    a.update.mockImplementation((_c, ctx) => {
+      seen.push(ctx);
+    });
+    b.update.mockImplementation((_c, ctx) => {
+      seen.push(ctx);
+    });
+    h.renderer.addLayer(a);
+    h.renderer.addLayer(b);
+    h.flush();
+    expect(seen).toHaveLength(2);
+    expect(seen[0]).toBe(seen[1]);
+  });
+
+  it("reports the live pixel ratio through the frame context", () => {
+    const canvas = {
+      width: 0,
+      height: 0,
+      ownerDocument: { defaultView: { devicePixelRatio: 1 } },
+    };
+    const emits: ((w: number, h: number) => void)[] = [];
+    const h = harness({
+      devicePixelRatio: undefined,
+      canvas,
+      observeSize: (cb) => {
+        emits.push(cb);
+        return () => {};
+      },
+    });
+    const layer = stubLayer(LayerOrder.markers);
+    h.renderer.addLayer(layer);
+    h.flush();
+    expect(layer.update).toHaveBeenLastCalledWith(h.camera, { pixelRatio: 1 });
+
+    // The window moved to a 2x panel: the observer fires and the ratio follows,
+    // so an atlas composed at DPR can recompose.
+    canvas.ownerDocument.defaultView.devicePixelRatio = 2;
+    emits[0](1200, 801);
+    h.flush();
+    expect(h.renderer.pixelRatioUsed).toBe(2);
+    expect(layer.update).toHaveBeenLastCalledWith(h.camera, { pixelRatio: 2 });
   });
 
   it("lets a layer request a follow-up frame from its update", () => {
@@ -261,6 +365,53 @@ describe("MapRenderer size + pixel ratio", () => {
     const h = harness({ devicePixelRatio: 3 });
     expect(h.backend.setPixelRatio).toHaveBeenLastCalledWith(2);
     expect(h.renderer.pixelRatioUsed).toBe(2);
+  });
+
+  it("re-reads the canvas DPR on resize (monitor change), still capped", () => {
+    const canvas = {
+      width: 0,
+      height: 0,
+      ownerDocument: { defaultView: { devicePixelRatio: 1 } },
+    };
+    const emits: ((w: number, h: number) => void)[] = [];
+    const h = harness({
+      devicePixelRatio: undefined,
+      canvas,
+      observeSize: (cb) => {
+        emits.push(cb);
+        return () => {};
+      },
+    });
+    expect(h.renderer.pixelRatioUsed).toBe(1);
+
+    canvas.ownerDocument.defaultView.devicePixelRatio = 3;
+    emits[0](1200, 800); // same CSS size, new ratio
+    expect(h.backend.setPixelRatio).toHaveBeenLastCalledWith(2); // cap holds
+    expect(h.renderer.pixelRatioUsed).toBe(2);
+
+    canvas.ownerDocument.defaultView.devicePixelRatio = 1.5;
+    emits[0](1200, 800);
+    expect(h.renderer.pixelRatioUsed).toBe(1.5);
+  });
+
+  it("keeps an explicitly pinned pixel ratio across resizes", () => {
+    const canvas = {
+      width: 0,
+      height: 0,
+      ownerDocument: { defaultView: { devicePixelRatio: 1 } },
+    };
+    const emits: ((w: number, h: number) => void)[] = [];
+    const h = harness({
+      devicePixelRatio: 1,
+      canvas,
+      observeSize: (cb) => {
+        emits.push(cb);
+        return () => {};
+      },
+    });
+    canvas.ownerDocument.defaultView.devicePixelRatio = 2;
+    emits[0](640, 480);
+    expect(h.renderer.pixelRatioUsed).toBe(1);
   });
 
   it("reads the pixel ratio from the canvas' own window", () => {

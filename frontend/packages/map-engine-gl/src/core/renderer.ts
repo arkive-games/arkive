@@ -68,11 +68,15 @@ export const LayerOrder = {
  *   group's `renderOrder` as the *group order* of everything below it, so one
  *   number sorts a whole layer against the others. The renderer assigns
  *   `object3D.renderOrder = order ?? 0` on attach — do not set it yourself.
- * - `update(camera)` runs immediately before every render, after the projection
- *   has been synced. This is where a layer rebuilds camera-dependent content
- *   (visible tiles, culled sprites). It may call the renderer's `invalidate`
- *   (injected into the layer by its owner) to ask for a follow-up frame; that is
- *   how throttled work spreads over frames without a continuous loop.
+ * - `update(camera, ctx)` runs immediately before every render, after the
+ *   projection has been synced. This is where a layer rebuilds camera-dependent
+ *   content (visible tiles, culled sprites). Both parameters are optional to
+ *   declare: `update(camera)` — or no `update` at all — satisfies the interface.
+ *   It may call the renderer's `invalidate` to ask for a follow-up frame; that is
+ *   how throttled work spreads over frames without a continuous loop. (Layers
+ *   receive `invalidate` as a constructor option from whoever builds them rather
+ *   than on attach — deliberate: a layer needs it from its own async callbacks,
+ *   not only inside `update`.)
  * - `dispose()` releases geometries, materials and textures. The renderer calls
  *   it for every still-attached layer in {@link MapRenderer.dispose};
  *   {@link MapRenderer.removeLayer} does NOT (a caller pulling a layer out keeps
@@ -83,11 +87,29 @@ export const LayerOrder = {
  *   opaque marker material would draw UNDER the transparent tiles no matter what
  *   its group order says.
  */
+/**
+ * Per-frame state that is NOT part of the camera, handed to every layer's
+ * `update`. One value for the whole frame, so two layers can never disagree
+ * about (say) the pixel ratio their bitmaps were composed at.
+ *
+ * A fresh object is passed each frame; treat it as read-only and do not retain
+ * it — read what you need and keep your own copy.
+ */
+export interface RenderFrameContext {
+  /**
+   * The (capped) device pixel ratio the drawing buffer is currently using. The
+   * marker atlas composes bitmaps at this ratio, so it must recompose when the
+   * value changes (browser zoom, or a window dragged between a 2x panel and a
+   * 1x monitor).
+   */
+  readonly pixelRatio: number;
+}
+
 export interface RenderLayer {
   readonly object3D: Object3D;
   /** Draw-order bucket; lower renders first. Defaults to 0. */
   readonly order?: number;
-  update?(camera: Camera): void;
+  update?(camera: Camera, ctx: RenderFrameContext): void;
   dispose(): void;
 }
 
@@ -129,7 +151,11 @@ export interface MapRendererOptions {
    */
   width?: number;
   height?: number;
-  /** Overrides the DPR read from the canvas' window. */
+  /**
+   * PINS the device pixel ratio, overriding what the canvas' window reports (and
+   * suppressing the re-read on resize). Leave unset in the browser so a DPR
+   * change actually reaches the drawing buffer.
+   */
   devicePixelRatio?: number;
   /** DPR cap; 2 is plenty for map tiles and halves the fill cost on 3x phones. */
   maxPixelRatio?: number;
@@ -144,7 +170,12 @@ export interface MapRendererOptions {
   /**
    * Optional size source (a `ResizeObserver` in the browser, wired by the React
    * layer). Called once with a callback; the returned function is invoked on
-   * {@link MapRenderer.dispose}.
+   * {@link MapRenderer.dispose}. Every notification also re-reads the canvas'
+   * device pixel ratio, so a monitor change repairs itself.
+   *
+   * Browser zoom can change the DPR WITHOUT changing the element's CSS size (no
+   * ResizeObserver notification); a host that cares should also call
+   * {@link MapRenderer.setSize} from a `matchMedia('(resolution: …)')` listener.
    */
   observeSize?: (onResize: (width: number, height: number) => void) => () => void;
 }
@@ -153,8 +184,11 @@ const DEFAULT_MAX_PIXEL_RATIO = 2;
 
 function defaultRequestFrame(cb: () => void): number {
   if (typeof requestAnimationFrame === "function") return requestAnimationFrame(cb);
-  // No frame source: nothing renders. Such a host must inject `requestFrame`.
-  return 0;
+  // Failing loudly beats a renderer that reports "frame pending" forever and
+  // never paints: a host without rAF (a mini-program canvas) must inject one.
+  throw new Error(
+    "MapRenderer: no requestAnimationFrame in this environment — pass `requestFrame`.",
+  );
 }
 
 function defaultCancelFrame(handle: number): void {
@@ -197,20 +231,43 @@ export class MapRenderer {
   private readonly root = new Group();
   private readonly projection = new OrthographicCamera();
 
+  /**
+   * Kept so the device pixel ratio can be RE-READ later: the browser changes it
+   * under us (zoom, a window dragged to a monitor with a different scale factor)
+   * and a ratio frozen at construction means a permanently blurry — or 2x
+   * over-rendered — map until the component remounts.
+   */
+  private readonly canvasRef: RendererCanvas | undefined;
+  /** Set when the caller pinned the ratio; suppresses the re-read. */
+  private readonly fixedPixelRatio: number | undefined;
+
   private layers: RenderLayer[] = [];
   private width: number;
   private height: number;
   private pixelRatio: number;
   private dirty = true;
+  /**
+   * Tracked separately from {@link frameHandle} because a handle of `0` is a
+   * legitimate value for an injected frame source — keying "is a frame pending"
+   * off the handle would wedge the scheduler forever.
+   */
+  private framePending = false;
   private frameHandle: number | null = null;
   private disposed = false;
 
   constructor(opts: MapRendererOptions) {
     this.camera = opts.camera;
+    this.canvasRef = opts.canvas;
+    this.fixedPixelRatio = Number.isFinite(opts.devicePixelRatio)
+      ? opts.devicePixelRatio
+      : undefined;
     this.requestFrame = opts.requestFrame ?? defaultRequestFrame;
     this.cancelFrame = opts.cancelFrame ?? defaultCancelFrame;
     this.now = opts.now ?? defaultNow;
-    this.maxPixelRatio = sizeOr(opts.maxPixelRatio, DEFAULT_MAX_PIXEL_RATIO);
+    this.maxPixelRatio =
+      Number.isFinite(opts.maxPixelRatio) && (opts.maxPixelRatio as number) > 0
+        ? (opts.maxPixelRatio as number)
+        : DEFAULT_MAX_PIXEL_RATIO;
     this.backend = opts.createBackend
       ? opts.createBackend(opts.canvas)
       : createWebGLBackend(opts.canvas);
@@ -219,10 +276,7 @@ export class MapRenderer {
 
     this.width = sizeOr(opts.width, this.camera.viewportWidth);
     this.height = sizeOr(opts.height, this.camera.viewportHeight);
-    this.pixelRatio = Math.min(
-      sizeOr(opts.devicePixelRatio, canvasPixelRatio(opts.canvas)) || 1,
-      this.maxPixelRatio,
-    );
+    this.pixelRatio = this.capRatio(this.currentPixelRatio());
     this.backend.setPixelRatio(this.pixelRatio);
     // `updateStyle: false`: the host sizes the canvas element (CSS `100%` in the
     // React layer), the backend only owns the drawing buffer. Also keeps the
@@ -232,8 +286,10 @@ export class MapRenderer {
 
     this.camera.on("change", this.onCameraChange);
     if (opts.observeSize) {
+      // Re-read the DPR on every notification: a window dragged between panels
+      // of different scale factors resizes AND changes the ratio.
       this.unobserveSize = opts.observeSize((w, h) => {
-        this.setSize(w, h);
+        this.setSize(w, h, this.currentPixelRatio());
       });
     }
     // One frame to paint the initial view; after it runs the loop goes quiet.
@@ -297,11 +353,12 @@ export class MapRenderer {
 
   /** Whether a frame is pending. Idle must mean `false` (render-on-demand). */
   isFramePending(): boolean {
-    return this.frameHandle !== null;
+    return this.framePending;
   }
 
   private scheduleFrame(): void {
-    if (this.disposed || this.frameHandle !== null) return;
+    if (this.disposed || this.framePending) return;
+    this.framePending = true;
     this.frameHandle = this.requestFrame(this.onFrame);
   }
 
@@ -310,6 +367,7 @@ export class MapRenderer {
   };
 
   private readonly onFrame = (): void => {
+    this.framePending = false;
     this.frameHandle = null;
     if (this.disposed) return;
 
@@ -339,8 +397,14 @@ export class MapRenderer {
   }
 
   private draw(): void {
+    // A zero-width or zero-height viewport (mounted but not yet measured, or a
+    // hidden container) would make the frustum degenerate — `left === right`
+    // divides by zero and fills the projection matrix with NaN, which then leaks
+    // into anything projecting through it. There is nothing to see anyway.
+    if (this.camera.viewportWidth <= 0 || this.camera.viewportHeight <= 0) return;
     this.syncProjection();
-    for (const layer of this.layers) layer.update?.(this.camera);
+    const ctx: RenderFrameContext = { pixelRatio: this.pixelRatio };
+    for (const layer of this.layers) layer.update?.(this.camera, ctx);
     this.backend.render(this.threeScene, this.projection);
   }
 
@@ -381,12 +445,15 @@ export class MapRenderer {
    * disagree, or the projection stops matching `pixelToScreen`). No-op when
    * nothing changed, so a ResizeObserver firing on every layout pass costs
    * nothing.
+   *
+   * `dpr` is optional and capped like the constructor's; pass it whenever the
+   * ratio may have changed (the built-in `observeSize` wiring does).
    */
   setSize(width: number, height: number, dpr?: number): void {
     if (this.disposed) return;
     const w = sizeOr(width, this.width);
     const h = sizeOr(height, this.height);
-    const ratio = Math.min(sizeOr(dpr, this.pixelRatio) || 1, this.maxPixelRatio);
+    const ratio = this.capRatio(sizeOr(dpr, this.pixelRatio));
     if (w === this.width && h === this.height && ratio === this.pixelRatio) return;
     this.width = w;
     this.height = h;
@@ -411,6 +478,15 @@ export class MapRenderer {
     return this.pixelRatio;
   }
 
+  /** The pinned ratio, or whatever the canvas' window reports right now. */
+  private currentPixelRatio(): number {
+    return this.fixedPixelRatio ?? canvasPixelRatio(this.canvasRef);
+  }
+
+  private capRatio(ratio: number): number {
+    return Math.min(ratio > 0 ? ratio : 1, this.maxPixelRatio);
+  }
+
   // ---------------------------------------------------------------- teardown ---
 
   /**
@@ -422,8 +498,9 @@ export class MapRenderer {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    if (this.frameHandle !== null) {
-      this.cancelFrame(this.frameHandle);
+    if (this.framePending) {
+      if (this.frameHandle !== null) this.cancelFrame(this.frameHandle);
+      this.framePending = false;
       this.frameHandle = null;
     }
     this.camera.off("change", this.onCameraChange);

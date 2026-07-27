@@ -14,7 +14,7 @@ import type { GameMapMeta } from "@gamemap/data-contract";
 import type { MapAssets } from "./assets.ts";
 import type { Camera } from "./camera.ts";
 import { LayerOrder, type RenderLayer } from "./renderer.ts";
-import type { PixelBounds } from "./types.ts";
+import type { PixelBounds, Point } from "./types.ts";
 
 /**
  * The base map tile layer: one textured quad per visible tile of the map's
@@ -200,6 +200,13 @@ export const MAX_NEW_TILES_PER_FRAME = 4;
 export const TILE_CACHE_FACTOR = 2;
 
 export interface TileLayerOptions {
+  /**
+   * INVARIANT: square tiles (`tileHeight === tileWidth`). Both shipping games
+   * satisfy it and the Leaflet engine has the same limitation (Leaflet's
+   * `tileSize` is one number), so the layer indexes and scales both axes by
+   * `tileWidth`. A map that breaks it would be mis-scaled AND mis-indexed
+   * vertically, so the constructor warns rather than failing silently.
+   */
   map: GameMapMeta;
   assets: MapAssets;
   /** Ask the renderer for another frame (texture arrived, work left over). */
@@ -208,7 +215,11 @@ export interface TileLayerOptions {
   loader?: TileLoader;
   /** Extra ring of tiles loaded around the viewport. Default 1. */
   padTiles?: number;
-  /** Textures created per frame. Default {@link MAX_NEW_TILES_PER_FRAME}. */
+  /**
+   * Textures created per frame. Default {@link MAX_NEW_TILES_PER_FRAME}; clamped
+   * to at least 1, because a budget of 0 would defer forever and keep asking for
+   * frames — an idle map must cost 0 fps.
+   */
   maxNewTilesPerFrame?: number;
   /** LRU capacity multiplier. Default {@link TILE_CACHE_FACTOR}. */
   cacheFactor?: number;
@@ -223,8 +234,33 @@ interface TileEntry {
   texture: Texture | null;
   /** Cancels an in-flight load; null once the load settled. */
   cancel: (() => void) | null;
-  /** A failed tile stays cached so a missing tile is not re-requested forever. */
-  failed: boolean;
+}
+
+/** A tile still to be created, in the order it should be created. */
+interface MissingTile {
+  x: number;
+  y: number;
+}
+
+/**
+ * Order pending tiles by Manhattan distance from `centre` (map pixels) to each
+ * tile's centre — Leaflet's `_addTilesFromCenterOut`.
+ *
+ * It only matters when the throttle bites, and then it matters a lot: the
+ * default mount view is the whole map at MIN_ZOOM, which is ~1000 tiles for an
+ * 8192² map. Filling row-major would paint a corner wipe from the top-left over
+ * several seconds while the middle of the screen — where the user is looking —
+ * stays empty. Sorted in place; ties keep their (row-major) order.
+ */
+export function sortTilesFromCentre<T extends MissingTile>(
+  tiles: T[],
+  centre: Point,
+  tileSize: number,
+): T[] {
+  const cost = (t: T): number =>
+    Math.abs(tileCentre(t.x, tileSize) - centre.x) +
+    Math.abs(tileCentre(t.y, tileSize) - centre.y);
+  return tiles.sort((a, b) => cost(a) - cost(b));
 }
 
 export class TileLayer implements RenderLayer {
@@ -255,10 +291,16 @@ export class TileLayer implements RenderLayer {
     this.invalidate = opts.invalidate;
     this.loader = opts.loader ?? createTileLoader();
     this.padTiles = opts.padTiles ?? 1;
-    this.maxNewPerFrame = opts.maxNewTilesPerFrame ?? MAX_NEW_TILES_PER_FRAME;
+    // At least 1: a budget of 0 would defer every tile forever, and each
+    // deferral asks for another frame — a permanent 60 fps loop that never
+    // paints a tile.
+    this.maxNewPerFrame = Number.isFinite(opts.maxNewTilesPerFrame)
+      ? Math.max(1, Math.floor(opts.maxNewTilesPerFrame as number))
+      : MAX_NEW_TILES_PER_FRAME;
     this.cacheFactor = opts.cacheFactor ?? TILE_CACHE_FACTOR;
     this.order = opts.order ?? LayerOrder.tiles;
     this.object3D.name = "tiles";
+    warnIfNonSquare(opts.map);
   }
 
   /** Square tile edge in map pixels — Leaflet's `tileSize = tileWidth`. */
@@ -275,10 +317,11 @@ export class TileLayer implements RenderLayer {
     if (this.disposed || map === this.map) return;
     this.clearTiles();
     this.map = map;
+    warnIfNonSquare(map);
     this.invalidate();
   }
 
-  /** Tiles currently held (ready, pending or failed). For tests/diagnostics. */
+  /** Tiles currently held (ready, pending or dead-url). For tests/diagnostics. */
   get cachedCount(): number {
     return this.cache.size;
   }
@@ -291,8 +334,9 @@ export class TileLayer implements RenderLayer {
   update(camera: Camera): void {
     if (this.disposed) return;
     const size = this.tileSize;
+    const bounds = camera.visibleBounds(0);
     const range = visibleTileRange(
-      camera.visibleBounds(0),
+      bounds,
       size,
       this.map.tilesCountX,
       this.map.tilesCountY,
@@ -300,8 +344,7 @@ export class TileLayer implements RenderLayer {
     );
 
     const visible = new Set<string>();
-    let budget = this.maxNewPerFrame;
-    let deferred = false;
+    const missing: MissingTile[] = [];
 
     if (!isEmptyTileRange(range)) {
       for (let y = range.minY; y <= range.maxY; y++) {
@@ -316,17 +359,26 @@ export class TileLayer implements RenderLayer {
             if (existing.mesh) existing.mesh.visible = true;
             continue;
           }
-          // Throttle: uploading a screenful of textures in one frame is the
-          // classic slippy-map hitch. The rest are picked up next frame.
-          if (budget <= 0) {
-            deferred = true;
-            continue;
-          }
-          budget--;
-          this.beginTile(x, y);
+          missing.push({ x, y });
         }
       }
     }
+
+    // Throttle: uploading a screenful of textures in one frame is the classic
+    // slippy-map hitch, so only `maxNewPerFrame` start here and the rest are
+    // picked up on later frames. When that bites, spend the budget from the view
+    // centre outwards (Leaflet's `_addTilesFromCenterOut`) — otherwise a
+    // whole-map mount view fills as a corner wipe.
+    const deferred = missing.length > this.maxNewPerFrame;
+    if (deferred) {
+      sortTilesFromCentre(
+        missing,
+        { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 },
+        size,
+      );
+      missing.length = this.maxNewPerFrame;
+    }
+    for (const tile of missing) this.beginTile(tile.x, tile.y);
 
     for (const [key, entry] of this.cache) {
       if (!visible.has(key) && entry.mesh) entry.mesh.visible = false;
@@ -345,14 +397,14 @@ export class TileLayer implements RenderLayer {
   private beginTile(x: number, y: number): void {
     if (!isInGrid(x, y, this.map.tilesCountX, this.map.tilesCountY)) return;
     const key = tileKey(x, y);
-    const entry: TileEntry = { x, y, mesh: null, texture: null, cancel: null, failed: false };
+    const entry: TileEntry = { x, y, mesh: null, texture: null, cancel: null };
+    // Cached BEFORE the url is resolved: the entry's mere existence is what stops
+    // an empty or failing tile from being requested again on every frame. Such a
+    // tile is only retried once it has been evicted and comes back into view.
     this.cache.set(key, entry);
 
     const url = this.assets.tileUrl(this.map, x, y);
-    if (!url) {
-      entry.failed = true;
-      return;
-    }
+    if (!url) return;
     entry.cancel = this.loader.load(
       url,
       (texture) => {
@@ -367,7 +419,6 @@ export class TileLayer implements RenderLayer {
       },
       () => {
         entry.cancel = null;
-        if (this.cache.get(key) === entry) entry.failed = true;
       },
     );
   }
@@ -448,6 +499,21 @@ export class TileLayer implements RenderLayer {
 /** Centre coordinate of tile index `i` along one axis. */
 function tileCentre(i: number, size: number): number {
   return i * size + size / 2;
+}
+
+/**
+ * The layer's square-tile invariant (see {@link TileLayerOptions.map}) cannot be
+ * enforced — a map that breaks it still renders, just wrongly — so say so once
+ * instead of leaving a mis-scaled map to be debugged from a screenshot.
+ */
+function warnIfNonSquare(map: GameMapMeta): void {
+  if (map.tileHeight === map.tileWidth) return;
+  if (typeof console === "undefined") return;
+  console.warn(
+    `[map-engine-gl] map "${map.id}" has non-square tiles ` +
+      `(${map.tileWidth}×${map.tileHeight}); the tile layer indexes and scales ` +
+      `both axes by tileWidth, so rows will be misplaced.`,
+  );
 }
 
 // --------------------------------------------------------------- watermark ---
