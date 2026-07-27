@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import type { PalStats } from './pals'
 import {
+  applyPassive,
+  applyPassiveHp,
+  applyPassives,
   calcAttack,
   calcCraft,
   calcDefense,
   calcHp,
   calcStats,
+  passiveMul,
   solveIV,
   solveIVs,
   type EnhanceInputs,
@@ -111,6 +115,53 @@ describe('craft speed', () => {
   it('adds bond growth before the tribe multiplier', () => {
     const r = calcCraft(stats(100, 100, 100, 100), { craftSpeed: 1 }, inputs({ bond: 10 }))
     expect(r.s0).toBe(Math.floor(110 * 0.7))
+  })
+})
+
+describe('passive-skill layer (spec 2026-07-23)', () => {
+  // Worked example: Anubis at level 60, IV 100, 4 stars, soul 20, no bond/awake.
+  // Legend (+20 ATK, +20 DEF) + Musclehead (+30 ATK) → P_ATK=50, P_DEF=20.
+  const s = stats(100, 116, 100)
+  const inp = inputs({ level: 60, stars: 4, soulHp: 20, soulAttack: 20, soulDefense: 20 })
+  // permanent results from the worked example
+  const perm = calcStats(s, undefined, { hp: 100, attack: 100, defense: 100 }, inp)
+
+  it('passiveMul clamps at 0.10', () => {
+    expect(passiveMul(-90)).toBeCloseTo(0.10)
+    expect(passiveMul(-200)).toBeCloseTo(0.10)
+    expect(passiveMul(0)).toBeCloseTo(1.0)
+    expect(passiveMul(50)).toBeCloseTo(1.5)
+  })
+
+  it('ATK_withPassive = floor(1492 × 1.50) = 2238', () => {
+    expect(perm.attack.final).toBe(1492)
+    expect(applyPassive(1492, 50)).toBe(2238)
+  })
+
+  it('DEF_withPassive = floor(1219 × 1.20) = 1462', () => {
+    expect(perm.defense.final).toBe(1219)
+    expect(applyPassive(1219, 20)).toBe(1462)
+  })
+
+  it('HP passive uses trunc_to_0.001 then floor (FixedPoint64 path)', () => {
+    // 9024 × 1.0 = 9024 (integer, no visible effect at M=1)
+    expect(applyPassiveHp(9024, 0)).toBe(9024)
+    // Fractional case: HP × M is non-integer; trunc_to_0.001 matters
+    // floor(floor(1234 × 1.15 × 1000 + ε) / 1000) = floor(1419.1) = 1419
+    expect(applyPassiveHp(1234, 15)).toBe(1419)
+  })
+
+  it('applyPassives bundles all four stats', () => {
+    const r = applyPassives(perm, { hp: 0, attack: 50, defense: 20, craft: 0 })
+    expect(r.attack).toBe(2238)
+    expect(r.defense).toBe(1462)
+    expect(r.hp).toBe(perm.hp.final)
+    expect(r.craft).toBe(perm.craft.final)
+  })
+
+  it('negative passive below clamp still produces 10%', () => {
+    expect(applyPassive(1000, -90)).toBe(100)
+    expect(applyPassive(1000, -200)).toBe(100)
   })
 })
 

@@ -4,8 +4,9 @@ import type { PalFriendship, PalStats } from './pals'
 // (docs/superpowers/specs/2026-07-19-palworld-stat-formula.md): awakening
 // multiplies only the original species base, bond growth is folded in before
 // IV/level scaling, and each stage truncates before the next multiplier
-// (level/IV → condense → souls). Craft speed is level-independent with its
-// own ×0.7 tribe multiplier and a hard-coded 10%/star condense bonus.
+// (level/IV → condense → souls → passive). Craft speed is level-independent
+// with its own ×0.7 tribe multiplier and a hard-coded 10%/star condense bonus.
+// The passive layer (added 2026-07-23) is the final *_withBuff multiplier.
 
 export const STAT_CONSTANTS = {
   talentRate: 0.003,
@@ -28,6 +29,19 @@ export const MAX_IV = 100
 export const MAX_STARS = 4
 export const MAX_SOUL = 20
 export const MAX_BOND = 10
+/** Lowest passive % that has any effect beyond the clamp (−90 → ×0.10). */
+export const MIN_PASSIVE_PCT = -90
+
+/** Per-stat sum of applicable passive-skill percentage-point values.
+ *  E.g. Legend (+20 ATK) + Musclehead (+30 ATK) → attack: 50.
+ *  Distinct effect values add; the native aggregator clamps the combined
+ *  multiplier to a minimum of 10% (i.e. P = −90 is the effective floor). */
+export interface PassiveInputs {
+  hp: number
+  attack: number
+  defense: number
+  craft: number
+}
 
 /** Every enhancement knob except the per-stat IVs. */
 export interface EnhanceInputs {
@@ -133,6 +147,38 @@ export function calcStats(
     attack: calcAttack(stats, friendship, iv.attack, inp),
     defense: calcDefense(stats, friendship, iv.defense, inp),
     craft: calcCraft(stats, friendship, inp),
+  }
+}
+
+// ── Passive-skill layer ────────────────────────────────────────────────────
+
+/** Combined passive multiplier, clamped to a minimum of 10%:
+ *  M = max(0.10, 1 + P / 100). */
+export function passiveMul(p: number): number {
+  return Math.max(0.10, 1 + p / 100)
+}
+
+/** HP passive: native stores the result as FixedPoint64 at 0.001 precision
+ *  (trunc_to_0.001 then floor), unlike the integer path of other stats. */
+export function applyPassiveHp(hp: number, p: number): number {
+  return Math.floor(fl(hp * passiveMul(p) * 1000) / 1000)
+}
+
+/** Attack, Defense, or CraftSpeed passive: plain floor of stat × multiplier. */
+export function applyPassive(stat: number, p: number): number {
+  return fl(stat * passiveMul(p))
+}
+
+/** Apply the passive layer to a completed CalcResult. */
+export function applyPassives(
+  result: CalcResult,
+  passive: PassiveInputs,
+): { hp: number; attack: number; defense: number; craft: number } {
+  return {
+    hp: applyPassiveHp(result.hp.final, passive.hp),
+    attack: applyPassive(result.attack.final, passive.attack),
+    defense: applyPassive(result.defense.final, passive.defense),
+    craft: applyPassive(result.craft.final, passive.craft),
   }
 }
 

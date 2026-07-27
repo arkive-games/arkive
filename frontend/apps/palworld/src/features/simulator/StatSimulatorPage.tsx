@@ -24,14 +24,18 @@ import { loadPals, type PalEntry, type PalsBundle } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
 import { formatPalId, palIdText } from '../../lib/palId'
 import {
+  applyPassive,
+  applyPassiveHp,
   calcAttack,
   calcCraft,
   calcDefense,
   calcHp,
+  passiveMul,
   solveIV,
   MAX_BOND,
   MAX_IV,
   MAX_LEVEL,
+  MIN_PASSIVE_PCT,
   MAX_SOUL,
   MAX_STARS,
   STAT_CONSTANTS,
@@ -59,7 +63,13 @@ interface DeltaCell {
 interface ResultRow {
   key: RowKey
   base: { v: number; tip: ReactNode }
+  /** Five enhancement deltas (awaken → trust → IV → stars → souls). */
   deltas: (DeltaCell | null)[]
+  /** Permanent stat after all five enhancement stages (pre-passive). */
+  permanent: number
+  /** Passive delta as the sixth delta cell. */
+  passiveDelta: DeltaCell
+  /** Final in-game value: permanent + passive layer. */
   final: number
 }
 
@@ -80,6 +90,7 @@ type ParamKind =
   | 'souls'
   | 'soulRate'
   | 'tribe'
+  | 'passive'
 
 /** One color per formula parameter, stable across every tooltip so the same
  *  quantity (level, per-level coefficient, …) is always recognizable. The
@@ -102,6 +113,7 @@ const PARAM_COLORS: Record<ParamKind, string> = {
   souls: 'text-cyan-300 dark:text-cyan-600',
   soulRate: 'text-blue-300 dark:text-blue-600',
   tribe: 'text-purple-300 dark:text-purple-600',
+  passive: 'text-indigo-300 dark:text-indigo-600',
 }
 
 /** A colored formula parameter. */
@@ -287,6 +299,7 @@ export default function StatSimulatorPage() {
   const [bond, setBond] = useState(0)
   const [awake, setAwake] = useState(false)
   const [souls, setSouls] = useState({ hp: 0, attack: 0, defense: 0, craft: 0 })
+  const [passives, setPassives] = useState({ hp: 0, attack: 0, defense: 0, craft: 0 })
   const [iv, setIv] = useState<Record<CombatKey, number>>({ hp: 100, attack: 100, defense: 100 })
   /** In-game column entries (per stat). They persist after blur: an entry
    *  that no IV can produce stays visible in red until the user changes it,
@@ -312,7 +325,7 @@ export default function StatSimulatorPage() {
 
   const palId = search.pal ?? null
   const pal = palId && pals ? pals.byId.get(palId) ?? null : null
-  useEffect(() => setEntered({}), [palId])
+  useEffect(() => { setEntered({}); setPassives({ hp: 0, attack: 0, defense: 0, craft: 0 }) }, [palId])
   const setPalId = (id: string | null) =>
     void navigate({ search: (s) => ({ ...s, pal: id ?? undefined }), replace: true })
 
@@ -473,7 +486,28 @@ export default function StatSimulatorPage() {
           ),
         },
       ],
-      final: full.final,
+      permanent: full.final,
+      passiveDelta: (() => {
+        const pp = passives[k]
+        const m = passiveMul(pp)
+        const withP = k === 'hp' ? applyPassiveHp(full.final, pp) : applyPassive(full.final, pp)
+        return {
+          d: withP - full.final,
+          tip: (
+            <>
+              <div>
+                <P kind="prev" v={full.final} /> × max(0.10, 1 + <P kind="passive" v={pp} /> / 100)
+                {' '}= {withP}
+              </div>
+              <Legend kind="prev" v={full.final} label={t('sim.fPrev')} />
+              <Legend kind="passive" v={pp} label={t('sim.fPassiveP')} />
+              {k === 'hp' ? <div className="text-muted-foreground/70">HP: trunc × 0.001 then floor</div> : null}
+              <div>{fmt(m)} — effective multiplier</div>
+            </>
+          ),
+        }
+      })(),
+      final: k === 'hp' ? applyPassiveHp(full.final, passives.hp) : applyPassive(full.final, passives[k]),
     }
   }
 
@@ -548,22 +582,48 @@ export default function StatSimulatorPage() {
           ),
         },
       ],
-      final: cf.final,
+      permanent: cf.final,
+      passiveDelta: (() => {
+        const pp = passives.craft
+        const m = passiveMul(pp)
+        const withP = applyPassive(cf.final, pp)
+        return {
+          d: withP - cf.final,
+          tip: (
+            <>
+              <div>
+                <P kind="prev" v={cf.final} /> × max(0.10, 1 + <P kind="passive" v={pp} /> / 100)
+                {' '}= {withP}
+              </div>
+              <Legend kind="prev" v={cf.final} label={t('sim.fPrev')} />
+              <Legend kind="passive" v={pp} label={t('sim.fPassiveP')} />
+              <div>{fmt(m)} — effective multiplier</div>
+            </>
+          ),
+        }
+      })(),
+      final: applyPassive(cf.final, passives.craft),
     }
   }
 
   const rows: ResultRow[] | null = pal ? [combatRow('hp'), combatRow('attack'), combatRow('defense'), craftRow()] : null
 
+  /** Apply the passive layer on top of a permanent stat (IV-varying solve path). */
+  const withPassive = (k: CombatKey, perm: number) =>
+    k === 'hp' ? applyPassiveHp(perm, passives.hp) : applyPassive(perm, passives[k])
+
   /** Typing an in-game stat solves the hidden IV: keep the current IV when it
    *  already matches (several IVs can share one displayed value), otherwise
    *  snap to the nearest matching bound. No match → leave the IVs alone; the
-   *  entry stays set and renders red with a warning tooltip. */
+   *  entry stays set and renders red with a warning tooltip.
+   *  The solver runs through the passive layer so the observed value matches
+   *  what the game displays when the same passives are active. */
   const onInGameChange = (k: RowKey, v: string) => {
     setEntered((e) => ({ ...e, [k]: v }))
     if (!pal || k === 'craft') return
     const n = Number(v)
     if (v.trim() === '' || !Number.isFinite(n)) return
-    const sol = solveIV(n, (cand) => CALC[k](pal.stats, pal.friendship, cand, inputs).final)
+    const sol = solveIV(n, (cand) => withPassive(k, CALC[k](pal.stats, pal.friendship, cand, inputs).final))
     if (sol) setIv((prev) => ({ ...prev, [k]: clamp(prev[k], sol.min, sol.max) }))
   }
   /** Blur only drops empty or already-matching entries; a mismatched entry
@@ -597,7 +657,7 @@ export default function StatSimulatorPage() {
       if (v == null || v.trim() === '') continue
       const n = Number(v)
       if (!Number.isFinite(n)) continue
-      const sol = solveIV(n, (cand) => CALC[k](pal.stats, pal.friendship, cand, inputs).final)
+      const sol = solveIV(n, (cand) => withPassive(k, CALC[k](pal.stats, pal.friendship, cand, inputs).final))
       if (sol)
         setIv((prev) => {
           const next = clamp(prev[k], sol.min, sol.max)
@@ -605,7 +665,7 @@ export default function StatSimulatorPage() {
         })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pal, level, stars, bond, awake, souls, entered])
+  }, [pal, level, stars, bond, awake, souls, passives, entered])
 
   const inGameCell = (row: ResultRow) => {
     if (!pal) return null
@@ -750,6 +810,18 @@ export default function StatSimulatorPage() {
 
                 <div>
                   <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t('sim.passives')}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumberField label={statLabel.hp} value={passives.hp} onChange={(v) => setPassives({ ...passives, hp: v })} min={MIN_PASSIVE_PCT} max={300} />
+                    <NumberField label={statLabel.attack} value={passives.attack} onChange={(v) => setPassives({ ...passives, attack: v })} min={MIN_PASSIVE_PCT} max={300} />
+                    <NumberField label={statLabel.defense} value={passives.defense} onChange={(v) => setPassives({ ...passives, defense: v })} min={MIN_PASSIVE_PCT} max={300} />
+                    <NumberField label={statLabel.craft} value={passives.craft} onChange={(v) => setPassives({ ...passives, craft: v })} min={MIN_PASSIVE_PCT} max={300} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t('sim.ivs')}
                   </div>
                   <div className="space-y-2">
@@ -773,6 +845,7 @@ export default function StatSimulatorPage() {
                         <th className="py-2 pr-3 text-right font-medium">+{t('sim.colIv')}</th>
                         <th className="py-2 pr-3 text-right font-medium">+{t('sim.colStars')}</th>
                         <th className="py-2 pr-3 text-right font-medium">+{t('sim.colSouls')}</th>
+                        <th className="py-2 pr-3 text-right font-medium">+{t('sim.colPassive')}</th>
                         <th className="py-2 pr-3 text-right font-medium">{t('sim.stageFinal')}</th>
                         <th className="py-2 text-right font-medium">{t('sim.colInGame')}</th>
                       </tr>
@@ -794,6 +867,7 @@ export default function StatSimulatorPage() {
                             </Tooltip>
                           </td>
                           {row.deltas.map(deltaCell)}
+                          {deltaCell(row.passiveDelta, 99)}
                           <td className="py-1.5 pr-3 text-right text-base font-semibold tabular-nums">{row.final}</td>
                           <td className="py-1.5 text-right">{inGameCell(row)}</td>
                         </tr>
