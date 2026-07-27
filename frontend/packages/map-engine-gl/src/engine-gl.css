@@ -1,8 +1,313 @@
-/*
- * @gamemap/map-engine-gl chrome styles (map root, popup, tooltip, status bar,
- * zoom control, context menu).
+/* @gamemap/map-engine-gl static styles — the engine is Tailwind-free, so the
+ * chrome its components render (map shell, DOM overlay, marker tooltip/labels,
+ * selected-marker popup, zoom control, status bar, context menu) is styled here.
+ * The consuming app must import this file once:
  *
- * Placeholder: filled in with the React overlay layer. Tailwind-free by design —
- * only `var(--token, fallback)` reads so the host app's theme (incl. `.dark`)
- * flows through, exactly like the Leaflet engine's `engine.css`.
+ *   import "@gamemap/map-engine-gl/engine-gl.css";
+ *
+ * Colors reference the host app's design-token CSS variables when present
+ * (shadcn-style: --popover, --card, --border, ...) and fall back to the AION2
+ * Lanhu light palette, so the engine renders sensibly on its own — and so the
+ * host's dark mode flows through with no engine involvement.
+ *
+ * NAMING: every root-scoped class is `gmgl-` so this sheet can be loaded
+ * alongside `@gamemap/map-engine/engine.css` (both engines coexist behind the
+ * app's `?engine=gl` flag) without either restyling the other. The ONE exception
+ * is `gm-popup-card`, which is the class the APP's popup card carries — the same
+ * card component is rendered by both engines, so the pointer triangle below has
+ * to key on the same name.
  */
+
+/* ---- GameMapView shell ---------------------------------------------- */
+
+/* Map root. `isolation: isolate` gives the map its own stacking context so its
+ * internal high z-indexes (overlay 400, popup 700, controls 1000, context menu
+ * 5000) stay contained and don't paint over body-level portals (dialogs,
+ * tooltips). */
+.gmgl-map-root {
+  flex: 1 1 0%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  cursor: default;
+}
+
+/* Empty state shown when no map is selected. */
+.gmgl-map-empty {
+  flex: 1 1 0%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted-foreground, rgba(0, 0, 0, 0.6));
+}
+
+/* The GL surface fills the root. Three properties are load-bearing for the
+ * gesture layer, not cosmetic:
+ *  - `touch-action: none`, or the browser consumes touch pointermoves for
+ *    scrolling before they reach the pan handler;
+ *  - `user-select: none`, or a drag that crosses the overlay starts a native
+ *    text selection mid-pan;
+ *  - `display: block`, or the canvas' inline baseline adds a few stray pixels
+ *    below it. */
+.gmgl-map-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---- DOM overlay (marker labels + hover tooltip) --------------------- */
+
+/* Never interactive: pointer events must reach the canvas underneath, or a label
+ * would swallow the click that selects the marker it names. Its children are
+ * created imperatively by `MarkerOverlay` (React renders it empty). */
+.gmgl-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Marker name label / hover tooltip. Positioned by `transform` only (see
+ * `labelTransform`), so no layout is read while panning.
+ *
+ * Two seam-avoidance details, mirroring the popup pointer below:
+ *  1. the border is transparent (not var(--border)) — a visible bottom border
+ *     would draw a line across the top of the down-pointing ::after tip;
+ *  2. the shadow is a `filter: drop-shadow`, NOT a `box-shadow`. box-shadow
+ *     outlines the rectangular body only, so it paints a seam across the base of
+ *     the triangle; drop-shadow follows the combined body + triangle silhouette
+ *     as one shape. */
+.gmgl-label,
+.gmgl-tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: 16rem;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--card, #ffffff);
+  color: var(--foreground, #3d3d3d);
+  font-size: 0.75rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
+}
+
+/* The downward tip, in the body colour. */
+.gmgl-label::after,
+.gmgl-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  /* Overlap by 1px so the tip's flat top fuses with the box bottom — both are
+   * var(--card), so there is no seam and no sub-pixel gap. */
+  margin-top: -1px;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--card, #ffffff);
+}
+
+/* The hovered marker's name must stay readable inside a dense cluster. */
+.gmgl-tooltip {
+  z-index: 1;
+}
+
+/* ---- Selected-marker popup ------------------------------------------- */
+
+/* Anchored above the marker's fanned position; `transform` is written by the
+ * engine, so `left`/`top` stay at the root's origin. 320px matches the app's card
+ * so the pointer triangle lands on the card's true centre. */
+.gmgl-popup {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 700;
+  width: 320px;
+}
+
+/* Borderless card (a 1px border otherwise leaves a seam line across the top of
+ * the triangle) and the offset parent for the ::after pointer below. The app's
+ * renderPopupContent root element must carry the `gm-popup-card` class — the same
+ * contract as the Leaflet engine. */
+.gmgl-popup .gm-popup-card {
+  position: relative;
+  border-color: transparent !important;
+}
+
+/* Downward triangle pointer, in the card surface colour (theme-aware), centred
+ * under the card with a soft drop shadow. */
+.gmgl-popup .gm-popup-card::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  /* Overlap the card by 1px so its flat top fuses with the card bottom (the card
+   * height is fractional, so a flush top: 100% leaves a 1px hairline). */
+  margin-top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 9px solid var(--card, #ffffff);
+  /* Shadow offset (3) ≥ blur (2), so it casts only downward — no halo line above
+   * the triangle where it joins the card. */
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.12));
+}
+
+/* ---- Context menu ---------------------------------------------------- */
+
+.gmgl-context-menu {
+  position: absolute;
+  z-index: 5000;
+  min-width: 190px;
+  padding: 0.25rem 0;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 0.375rem;
+  background-color: var(--popover, #ffffff);
+  color: var(--popover-foreground, #3d3d3d);
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.gmgl-context-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gmgl-context-menu-item:hover {
+  background-color: var(--accent, #e5f0ff);
+  color: var(--accent-foreground, #3d3d3d);
+}
+
+/* ---- Zoom control (Lanhu-style +/− pill, bottom-right) --------------- */
+
+.gmgl-zoom {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gmgl-zoom-pill {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  /* shadow-md + ring-1 ring-black/5 */
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1),
+    0 0 0 1px rgb(0 0 0 / 0.05);
+}
+
+.gmgl-zoom-btn {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gmgl-zoom-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.gmgl-zoom-divider {
+  height: 1px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ---- Status bar (bottom-left footer + cursor pill) -------------------- */
+
+.gmgl-statusbar {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  user-select: none;
+}
+
+.gmgl-statusbar-stack {
+  position: absolute;
+  bottom: 22px;
+  left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  color: #ffffff;
+}
+
+.gmgl-statusbar-footer {
+  font-size: 0.75rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.gmgl-statusbar-pill {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  border-radius: 12px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.gmgl-statusbar-coords {
+  font-variant-numeric: tabular-nums;
+}
+
+.gmgl-statusbar-subzone {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Lightweight embed (GameMapEmbed) -------------------------------- */
+
+/* No chrome: just a positioned box for the canvas. The host sizes it (the embeds
+ * are fixed-height cards), so no `flex: 1` here. */
+.gmgl-embed {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}

@@ -5,7 +5,7 @@
 // later drive a WeChat mini-program canvas; the React layer (added in a later
 // task) is the only part allowed to touch the DOM.
 //
-// Component chrome will be styled by the static stylesheet
+// Component chrome is styled by the static stylesheet
 // `@gamemap/map-engine-gl/engine-gl.css`, which the consuming app imports once.
 export * from "./core/types.ts";
 export * from "./core/assets.ts";
@@ -18,3 +18,34 @@ export * from "./core/tileLayer.ts";
 export * from "./core/pinAtlas.ts";
 export * from "./core/markerLayer.ts";
 export * from "./core/vectorLayer.ts";
+
+// ---- React layer -----------------------------------------------------------
+// The same names `@gamemap/map-engine` exports, so an app can switch engines by
+// changing one import. `MapAssets` (core/assets.ts) and `PinTheme` /
+// `DEFAULT_PIN_THEME` (core/pinAtlas.ts) are already exported above — the React
+// layer re-exports the very same declarations rather than shadowing them.
+export type {
+  EngineMarker,
+  GameMapViewLabels,
+  GameMapViewProps,
+  GlMapRef,
+} from "./react/engineTypes.ts";
+export { DEFAULT_MAP_THEME } from "./react/theme.ts";
+export type { MapTheme } from "./react/theme.ts";
+export * from "./react/cursorStore.ts";
+export {
+  MAX_ZOOM,
+  MIN_ZOOM,
+  POPUP_OFFSET_Y,
+  ZOOM_STEP,
+} from "./react/mapEngine.ts";
+export {
+  MAX_LABELS,
+  collectLabelSources,
+  cullLabelSources,
+  markerLabelText,
+} from "./react/markerOverlay.ts";
+export type { LabelSource } from "./react/markerOverlay.ts";
+export { default as GameMapView } from "./react/GameMapView.tsx";
+export { default as GameMapEmbed } from "./react/GameMapEmbed.tsx";
+export type { EmbedPin, GameMapEmbedProps } from "./react/GameMapEmbed.tsx";
