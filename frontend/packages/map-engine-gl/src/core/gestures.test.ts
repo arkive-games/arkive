@@ -1,22 +1,33 @@
 import { describe, expect, it, vi } from "vitest";
 import { Camera, type CameraOptions } from "./camera.ts";
-import { centerForZoomAround } from "./gestureMath.ts";
+import {
+  centerForZoomAround,
+  INERTIA_TAU_MS,
+  WHEEL_SETTLE_EPSILON,
+} from "./gestureMath.ts";
 import {
   attachGestures,
-  type GestureContextMenuEvent,
+  POINTER_STALE_MS,
   type GestureOptions,
+  type GesturePointEvent,
   type GestureTarget,
 } from "./gestures.ts";
 
 /**
  * The gesture binding is exercised against a REAL {@link Camera} plus a stub
- * element, an injected clock and an injected frame scheduler — no DOM, no timers.
+ * element, an injected clock, frame scheduler and timer — no DOM, no real time.
  * That is the whole point of the injection contract: the drag/pinch/wheel state
  * machine and every sign convention are verifiable, deterministically, in node.
  *
  * Tests speak ELEMENT-LOCAL coordinates; the harness adds the stub's bounding
  * rect offset before dispatching, so the local↔client conversion is covered too.
+ *
+ * `pump()` stands in for the renderer's render-on-demand loop, which is what
+ * drives `camera.tick` for the double-tap zoom (this layer no longer does).
  */
+
+/** One 60 Hz frame — the interval the wheel interpolation factor is defined for. */
+const FRAME = 1000 / 60;
 
 interface HarnessOptions {
   camera?: Partial<CameraOptions>;
@@ -34,6 +45,7 @@ function makeHarness(options: HarnessOptions = {}) {
   let clock = 1000;
   let nextHandle = 1;
   const pending = new Map<number, () => void>();
+  const timers = new Map<number, { due: number; cb: () => void }>();
 
   const el: GestureTarget = {
     addEventListener(type, listener, opts) {
@@ -70,8 +82,10 @@ function makeHarness(options: HarnessOptions = {}) {
   let flyEnds = 0;
   camera.on("gestureend", () => gestureEnds++);
   camera.on("flyend", () => flyEnds++);
+  const invalidate = vi.fn();
+  const taps: GesturePointEvent[] = [];
 
-  const detach = attachGestures(el, camera, {
+  const controller = attachGestures(el, camera, {
     now: () => clock,
     requestFrame: (cb) => {
       const handle = nextHandle++;
@@ -81,6 +95,16 @@ function makeHarness(options: HarnessOptions = {}) {
     cancelFrame: (handle) => {
       pending.delete(handle);
     },
+    setTimer: (cb, ms) => {
+      const handle = nextHandle++;
+      timers.set(handle, { due: clock + ms, cb });
+      return handle;
+    },
+    clearTimer: (handle) => {
+      timers.delete(handle);
+    },
+    invalidate,
+    onTap: (e) => taps.push(e),
     // Pinned so the wheel maths is DPR-independent in tests (DPR 1 ⇒ 2).
     wheelPixelFactor: 2,
     ...options.gestures,
@@ -92,36 +116,71 @@ function makeHarness(options: HarnessOptions = {}) {
     for (const fn of [...set]) (fn as unknown as (e: unknown) => void)(ev);
   }
 
+  /** Advance the clock and fire every timer that came due, in order. */
+  function tickClock(ms: number): void {
+    clock += ms;
+    for (;;) {
+      let nextId: number | null = null;
+      let next: { due: number; cb: () => void } | null = null;
+      for (const [id, timer] of timers) {
+        if (timer.due <= clock && (next === null || timer.due < next.due)) {
+          nextId = id;
+          next = timer;
+        }
+      }
+      if (nextId === null || next === null) return;
+      timers.delete(nextId);
+      next.cb();
+    }
+  }
+
   const offsetX = rect?.left ?? 0;
   const offsetY = rect?.top ?? 0;
 
   return {
     el,
     camera,
-    detach,
+    controller,
+    detach: () => controller.detach(),
     captured,
     released,
     registrations,
+    invalidate,
+    taps,
     listenerCount: () => [...listeners.values()].reduce((n, s) => n + s.size, 0),
     pendingFrames: () => pending.size,
+    pendingTimers: () => timers.size,
     gestureEnds: () => gestureEnds,
     flyEnds: () => flyEnds,
     now: () => clock,
     advance(ms: number) {
-      clock += ms;
+      tickClock(ms);
     },
     /** Advance the clock, then run exactly one generation of scheduled frames. */
-    frame(dtMs = 16) {
-      clock += dtMs;
+    frame(dtMs = FRAME) {
+      tickClock(dtMs);
       const batch = [...pending.values()];
       pending.clear();
       for (const cb of batch) cb();
     },
     /** Run frames until nothing is scheduled; returns how many ran. */
-    runFrames(dtMs = 16, max = 1000) {
+    runFrames(dtMs = FRAME, max = 1000) {
       let n = 0;
       while (pending.size > 0 && n < max) {
         this.frame(dtMs);
+        n++;
+      }
+      return n;
+    },
+    /** What the renderer does: advance time and tick a running camera animation. */
+    pump(dtMs = FRAME) {
+      tickClock(dtMs);
+      if (camera.isAnimating()) camera.tick(clock);
+    },
+    pumpUntilDone(dtMs = FRAME, max = 1000) {
+      let n = 0;
+      while (camera.isAnimating() && n < max) {
+        this.pump(dtMs);
         n++;
       }
       return n;
@@ -135,11 +194,12 @@ function makeHarness(options: HarnessOptions = {}) {
         ...extra,
       });
     },
-    move(id: number, x: number, y: number) {
+    move(id: number, x: number, y: number, extra: Record<string, unknown> = {}) {
       dispatch("pointermove", {
         pointerId: id,
         clientX: x + offsetX,
         clientY: y + offsetY,
+        ...extra,
       });
     },
     up(id: number, x: number, y: number) {
@@ -155,6 +215,9 @@ function makeHarness(options: HarnessOptions = {}) {
         clientX: x + offsetX,
         clientY: y + offsetY,
       });
+    },
+    lostCapture(id: number) {
+      dispatch("lostpointercapture", { pointerId: id, clientX: 0, clientY: 0 });
     },
     wheel(x: number, y: number, deltaY: number, deltaMode = 0) {
       const preventDefault = vi.fn();
@@ -178,6 +241,16 @@ function makeHarness(options: HarnessOptions = {}) {
     },
     dispatch,
   };
+}
+
+/** A hard flick left: 150 px of content in 30 ms = 5 px/ms. */
+function flickLeft(h: ReturnType<typeof makeHarness>): void {
+  h.down(1, 600, 400);
+  for (const x of [550, 500, 450]) {
+    h.advance(10);
+    h.move(1, x, 400);
+  }
+  h.up(1, 450, 400);
 }
 
 describe("drag pan", () => {
@@ -247,6 +320,18 @@ describe("drag pan", () => {
     expect(h.camera.center).toEqual({ x: 4096, y: 4096 });
   });
 
+  // `moved` is observed from the camera, not from "we asked it to pan", so a drag
+  // the clamp swallowed must not report a view change that never happened.
+  it("stays silent for a drag the centre clamp swallowed", () => {
+    const h = makeHarness({ camera: { center: { x: 0, y: 4096 } } });
+    h.down(1, 600, 400);
+    h.advance(16);
+    h.move(1, 700, 400); // pushes the centre further left, into the clamp
+    expect(h.camera.center).toEqual({ x: 0, y: 4096 });
+    h.up(1, 700, 400);
+    expect(h.gestureEnds()).toBe(0);
+  });
+
   it("ends the gesture immediately when the release has no velocity", () => {
     const h = makeHarness();
     h.down(1, 600, 400);
@@ -262,21 +347,10 @@ describe("drag pan", () => {
 });
 
 describe("drag inertia", () => {
-  function flick() {
-    const h = makeHarness();
-    h.down(1, 600, 400);
-    for (const x of [550, 500, 450]) {
-      h.advance(10);
-      h.move(1, x, 400);
-    }
-    // 150 px of content in 30 ms = 5 px/ms leftward.
-    expect(h.camera.center.x).toBe(4246);
-    h.up(1, 450, 400);
-    return h;
-  }
-
   it("coasts in the drag direction, monotonically, then ends once", () => {
-    const h = flick();
+    const h = makeHarness();
+    flickLeft(h);
+    expect(h.camera.center.x).toBe(4246);
     expect(h.pendingFrames()).toBe(1);
     expect(h.gestureEnds()).toBe(0);
 
@@ -298,14 +372,39 @@ describe("drag inertia", () => {
     expect(h.pendingFrames()).toBe(0);
   });
 
+  it("coasts the same distance at 30 and 120 Hz", () => {
+    const slow = makeHarness();
+    flickLeft(slow);
+    slow.runFrames(32);
+    const fast = makeHarness();
+    flickLeft(fast);
+    fast.runFrames(8);
+    expect(slow.camera.center.x).toBeCloseTo(fast.camera.center.x, 0);
+  });
+
+  it("caps one frame's step so a background-tab stall cannot teleport the map", () => {
+    const h = makeHarness();
+    flickLeft(h);
+    const before = h.camera.center.x;
+    // 5 s between frames: integrating that would coast the full 600 px at once.
+    h.frame(5000);
+    const capped = 5 * INERTIA_TAU_MS * (1 - Math.exp(-64 / INERTIA_TAU_MS));
+    expect(h.camera.center.x - before).toBeCloseTo(capped, 6);
+    expect(h.camera.center.x - before).toBeLessThan(260);
+  });
+
+  it("treats a clock that went backwards as a zero-length frame", () => {
+    const h = makeHarness();
+    flickLeft(h);
+    const before = h.camera.center.x;
+    h.frame(-100);
+    expect(h.camera.center.x).toBe(before);
+    expect(h.pendingFrames()).toBe(1); // still coasting, not aborted
+  });
+
   it("is cancelled by the next pointerdown, without a stray gesture end", () => {
     const h = makeHarness();
-    h.down(1, 600, 400);
-    for (const x of [550, 500, 450]) {
-      h.advance(10);
-      h.move(1, x, 400);
-    }
-    h.up(1, 450, 400);
+    flickLeft(h);
     h.frame(16);
     const stopped = h.camera.center.x;
     expect(h.pendingFrames()).toBe(1);
@@ -422,18 +521,18 @@ describe("smooth wheel zoom", () => {
     expect(h.camera.zoom).toBe(0); // nothing until the first frame
     expect(h.pendingFrames()).toBe(1);
 
-    h.frame(16);
-    expect(h.camera.zoom).toBeCloseTo(0.18, 12); // 30% of the gap
-    h.frame(16);
+    h.frame(FRAME);
+    expect(h.camera.zoom).toBeCloseTo(0.18, 12); // 30% of the gap at 60 Hz
+    h.frame(FRAME);
     expect(h.camera.zoom).toBeCloseTo(0.306, 12);
     expect(h.gestureEnds()).toBe(0);
 
-    // 200 ms of silence: the final frame snaps to the exact target and ends.
+    // 200 ms of silence: the idle deadline snaps to the exact target and ends.
     h.advance(200);
-    h.frame(0);
     expect(h.camera.zoom).toBeCloseTo(0.6, 12);
     expect(h.gestureEnds()).toBe(1);
     expect(h.pendingFrames()).toBe(0);
+    expect(h.pendingTimers()).toBe(0);
 
     // Zoomed toward the cursor: the anchored pixel never left it.
     const under = h.camera.pixelToScreen(anchorPx.x, anchorPx.y);
@@ -444,11 +543,10 @@ describe("smooth wheel zoom", () => {
   it("accumulates further notches into the same gesture", () => {
     const h = makeHarness();
     h.wheel(700, 300, -100);
-    h.frame(16);
+    h.frame(FRAME);
     h.wheel(700, 300, -100);
     h.wheel(700, 300, -100);
     h.advance(200);
-    h.frame(16);
     expect(h.camera.zoom).toBeCloseTo(1.8, 12);
     expect(h.gestureEnds()).toBe(1);
   });
@@ -457,7 +555,6 @@ describe("smooth wheel zoom", () => {
     const h = makeHarness();
     for (let i = 0; i < 20; i++) h.wheel(600, 400, 100);
     h.advance(200);
-    h.frame(16);
     expect(h.camera.zoom).toBe(-3);
     expect(h.gestureEnds()).toBe(1);
   });
@@ -466,7 +563,6 @@ describe("smooth wheel zoom", () => {
     const h = makeHarness({ gestures: { sensitivity: 8 } });
     h.wheel(700, 300, -100);
     h.advance(200);
-    h.frame(16);
     expect(h.camera.zoom).toBeCloseTo(1.2, 12);
   });
 
@@ -474,13 +570,41 @@ describe("smooth wheel zoom", () => {
     const h = makeHarness();
     h.wheel(600, 400, -100);
     h.advance(200);
-    h.runFrames(16);
     expect(h.camera.zoom).toBeCloseTo(0.6, 12);
     h.wheel(600, 400, -100);
     h.advance(200);
-    h.runFrames(16);
     expect(h.camera.zoom).toBeCloseTo(1.2, 12);
     expect(h.gestureEnds()).toBe(2);
+  });
+
+  it("glides at the same rate per unit of time at 60 and 120 Hz", () => {
+    const slow = makeHarness();
+    slow.wheel(700, 300, -100);
+    for (let i = 0; i < 5; i++) slow.frame(FRAME);
+    const fast = makeHarness();
+    fast.wheel(700, 300, -100);
+    for (let i = 0; i < 10; i++) fast.frame(FRAME / 2);
+    expect(fast.camera.zoom).toBeCloseTo(slow.camera.zoom, 9);
+    // ...and both are still mid-glide (the idle deadline has not fired).
+    expect(slow.camera.zoom).toBeLessThan(0.6);
+    expect(slow.camera.zoom).toBeGreaterThan(0.4);
+  });
+
+  // Every frame is a full GL repaint, so the loop must stop once the remaining
+  // gap is invisible instead of spinning until the idle deadline.
+  it("stops asking for frames once converged, and still ends on the deadline", () => {
+    const h = makeHarness();
+    h.wheel(700, 300, -0.2); // a tiny trackpad nudge: target ≈ 0.0012
+    const frames = h.runFrames(FRAME, 200);
+    expect(frames).toBeLessThan(12); // fewer than the 200 ms window holds
+    expect(Math.abs(0.0012 - h.camera.zoom)).toBeLessThanOrEqual(WHEEL_SETTLE_EPSILON);
+    expect(h.controller.isGesturing()).toBe(true); // not over yet
+    expect(h.gestureEnds()).toBe(0);
+
+    h.advance(200);
+    expect(h.camera.zoom).toBeCloseTo(0.0012, 12);
+    expect(h.controller.isGesturing()).toBe(false);
+    expect(h.gestureEnds()).toBe(1);
   });
 
   it("registers the wheel listener as non-passive so it can preventDefault", () => {
@@ -488,10 +612,38 @@ describe("smooth wheel zoom", () => {
     const wheel = h.registrations.find((r) => r.type === "wheel");
     expect(wheel?.options).toEqual({ passive: false });
   });
+
+  it("wheeling mid-drag is one burst: no gesture end while a pointer is down", () => {
+    const h = makeHarness();
+    h.down(1, 600, 400);
+    h.advance(16);
+    h.move(1, 700, 400);
+    expect(h.camera.center.x).toBe(3996);
+
+    h.wheel(700, 300, -100);
+    h.runFrames(FRAME, 5);
+    h.advance(200); // the wheel deadline fires with the finger still down
+    expect(h.camera.zoom).toBeCloseTo(0.6, 12);
+    expect(h.gestureEnds()).toBe(0);
+
+    h.advance(200);
+    h.up(1, 700, 400);
+    expect(h.gestureEnds()).toBe(1);
+  });
 });
 
 describe("double-tap zoom", () => {
-  it("zooms +1 toward the tapped point, animated, ending once", () => {
+  function doubleTap(h: ReturnType<typeof makeHarness>, x = 700, y = 300): void {
+    h.down(1, x, y);
+    h.advance(50);
+    h.up(1, x, y);
+    h.advance(100);
+    h.down(1, x, y);
+    h.advance(50);
+    h.up(1, x, y);
+  }
+
+  it("zooms +1 toward the tapped point, animated by the frame owner", () => {
     const h = makeHarness();
     const anchorPx = h.camera.screenToPixel(700, 300);
     const expected = centerForZoomAround(
@@ -504,30 +656,60 @@ describe("double-tap zoom", () => {
     );
     expect(expected).toEqual({ x: 4146, y: 4046 });
 
-    h.down(1, 700, 300);
-    h.advance(50);
-    h.up(1, 700, 300);
-    expect(h.camera.isAnimating()).toBe(false);
-    h.advance(100);
-    h.down(1, 700, 300);
-    h.advance(50);
-    h.up(1, 700, 300);
+    doubleTap(h);
 
-    // Animated, not instant.
+    // Animated, not instant — and this layer runs no loop of its own: it asks
+    // the host to pump instead.
     expect(h.camera.isAnimating()).toBe(true);
     expect(h.camera.zoom).toBe(0);
-    expect(h.pendingFrames()).toBe(1);
+    expect(h.pendingFrames()).toBe(0);
+    expect(h.invalidate).toHaveBeenCalledTimes(1);
 
-    const frames = h.runFrames(25);
-    expect(frames).toBeGreaterThan(5); // ~0.25 s at 25 ms/frame
+    const pumps = h.pumpUntilDone(25);
+    expect(pumps).toBeGreaterThan(5); // ~0.25 s at 25 ms/frame
     expect(h.camera.zoom).toBe(1);
     expect(h.camera.center.x).toBeCloseTo(expected.x, 9);
     expect(h.camera.center.y).toBeCloseTo(expected.y, 9);
     const under = h.camera.pixelToScreen(anchorPx.x, anchorPx.y);
     expect(under.x).toBeCloseTo(700, 6);
     expect(under.y).toBeCloseTo(300, 6);
-    expect(h.gestureEnds()).toBe(1);
+    // Reported through `flyend` only — no duplicate notification.
     expect(h.flyEnds()).toBe(1);
+    expect(h.gestureEnds()).toBe(0);
+  });
+
+  // The bug: an unclamped target zoom solved a centre for a scale the camera
+  // refuses, so a double-tap at the zoom limit slid the map sideways.
+  it("does nothing at maxZoom", () => {
+    const h = makeHarness({ camera: { zoom: 2 } });
+    doubleTap(h, 1100, 50);
+    expect(h.camera.zoom).toBe(2);
+    expect(h.camera.center).toEqual({ x: 4096, y: 4096 });
+    expect(h.camera.isAnimating()).toBe(false);
+    expect(h.invalidate).not.toHaveBeenCalled();
+    expect(h.flyEnds()).toBe(0);
+    expect(h.gestureEnds()).toBe(0);
+    expect(h.pendingFrames()).toBe(0);
+  });
+
+  it("does nothing at minZoom with a negative zoomDelta", () => {
+    const h = makeHarness({ camera: { zoom: -3 }, gestures: { zoomDelta: -1 } });
+    doubleTap(h, 1100, 50);
+    expect(h.camera.zoom).toBe(-3);
+    expect(h.camera.center).toEqual({ x: 4096, y: 4096 });
+    expect(h.camera.isAnimating()).toBe(false);
+    expect(h.gestureEnds()).toBe(0);
+  });
+
+  it("clamps a step that overshoots the limit, keeping the anchor honest", () => {
+    const h = makeHarness({ camera: { zoom: 1.75 } });
+    const anchorPx = h.camera.screenToPixel(700, 300);
+    doubleTap(h);
+    h.pumpUntilDone(25);
+    expect(h.camera.zoom).toBe(2); // 1.75 + 1 clamped
+    const under = h.camera.pixelToScreen(anchorPx.x, anchorPx.y);
+    expect(under.x).toBeCloseTo(700, 6);
+    expect(under.y).toBeCloseTo(300, 6);
   });
 
   it("needs two quick taps at the same spot", () => {
@@ -570,14 +752,8 @@ describe("double-tap zoom", () => {
 
   it("honours a custom zoomDelta", () => {
     const h = makeHarness({ gestures: { zoomDelta: 0.25 } });
-    h.down(1, 600, 400);
-    h.advance(50);
-    h.up(1, 600, 400);
-    h.advance(100);
-    h.down(1, 600, 400);
-    h.advance(50);
-    h.up(1, 600, 400);
-    h.runFrames(25);
+    doubleTap(h, 600, 400);
+    h.pumpUntilDone(25);
     expect(h.camera.zoom).toBe(0.25);
   });
 
@@ -625,7 +801,7 @@ describe("taking over camera animations", () => {
   it("reports exactly one gesture end for a wheel glide cut short by a click", () => {
     const h = makeHarness();
     h.wheel(600, 400, -100);
-    h.frame(16);
+    h.frame(FRAME);
     expect(h.camera.zoom).toBeGreaterThan(0);
 
     h.down(1, 600, 400); // interrupts the glide — nothing reported yet
@@ -636,7 +812,9 @@ describe("taking over camera animations", () => {
     expect(h.gestureEnds()).toBe(1);
   });
 
-  it("a pointerdown during the double-tap zoom cancels it silently", () => {
+  // An interrupted double-tap zoom leaves the camera mid-flight; that view must
+  // still reach the host, or the persisted view keeps the pre-zoom value.
+  it("reports the view change of a double-tap zoom interrupted mid-flight", () => {
     const h = makeHarness();
     h.down(1, 700, 300);
     h.advance(50);
@@ -645,20 +823,190 @@ describe("taking over camera animations", () => {
     h.down(1, 700, 300);
     h.advance(50);
     h.up(1, 700, 300);
-    h.frame(25);
     expect(h.camera.isAnimating()).toBe(true);
+
+    h.pump(25);
+    h.pump(25);
+    const interrupted = h.camera.zoom;
+    expect(interrupted).toBeGreaterThan(0);
+    expect(interrupted).toBeLessThan(1);
 
     h.down(1, 700, 300);
     expect(h.camera.isAnimating()).toBe(false);
-    expect(h.pendingFrames()).toBe(0);
     expect(h.gestureEnds()).toBe(0);
     expect(h.flyEnds()).toBe(0);
+
+    h.advance(20);
+    h.up(1, 700, 300);
+    // The half-finished zoom is where the map stands, and it is reported once.
+    expect(h.camera.zoom).toBe(interrupted);
+    expect(h.gestureEnds()).toBe(1);
+  });
+});
+
+describe("lost pointers", () => {
+  it("reclaims a pointer whose capture was lost, so the next drag is clean", () => {
+    const h = makeHarness();
+    h.down(11, 600, 400);
+    h.advance(16);
+    h.move(11, 500, 400);
+    expect(h.camera.center.x).toBe(4196);
+
+    // The `pointerup` never arrives; only the implicit capture release does.
+    h.lostCapture(11);
+    expect(h.controller.isGesturing()).toBe(false);
+    expect(h.gestureEnds()).toBe(1);
+
+    // A fresh finger (new id, as touch always does) is a plain drag, not a pinch.
+    h.advance(16);
+    h.down(12, 600, 400);
+    h.advance(16);
+    h.move(12, 700, 400);
+    expect(h.camera.zoom).toBe(0);
+    expect(h.camera.center.x).toBe(4096);
+  });
+
+  it("sweeps a pointer gone silent for too long when the next press arrives", () => {
+    const h = makeHarness();
+    h.down(11, 600, 400);
+    h.advance(16);
+    h.move(11, 500, 400); // 100 px of pan
+    expect(h.camera.center.x).toBe(4196);
+    // No pointerup, no lostpointercapture, no further events: a ghost.
+
+    h.advance(POINTER_STALE_MS + 1);
+    h.down(12, 600, 400);
+    expect(h.controller.isGesturing()).toBe(true);
+    h.advance(16);
+    h.move(12, 700, 400);
+    // A one-finger drag: the centre moves by the finger delta and zoom is intact.
+    expect(h.camera.zoom).toBe(0);
+    expect(h.camera.center.x).toBe(4096);
+    h.advance(250); // rest before lifting, so no fling muddies the assertion
+    h.up(12, 700, 400);
+    // One report covers both the ghost's pan and this drag's.
+    expect(h.gestureEnds()).toBe(1);
+    expect(h.controller.isGesturing()).toBe(false);
+  });
+
+  it("reclaims a mouse pointer that reports no buttons held", () => {
+    const h = makeHarness();
+    h.down(1, 600, 400, { buttons: 1 });
+    h.advance(16);
+    h.move(1, 500, 400, { buttons: 1 });
+    expect(h.camera.center.x).toBe(4196);
+
+    // The button was released outside the element: do not keep panning.
+    h.advance(16);
+    h.move(1, 300, 400, { buttons: 0 });
+    expect(h.camera.center.x).toBe(4196);
+    expect(h.controller.isGesturing()).toBe(false);
+    expect(h.gestureEnds()).toBe(1);
+
+    h.advance(16);
+    h.move(1, 100, 400, { buttons: 0 });
+    expect(h.camera.center.x).toBe(4196);
+  });
+
+  it("treats a repeated pointerdown id as a re-press, not a second finger", () => {
+    const h = makeHarness();
+    h.down(1, 600, 400);
+    h.advance(16);
+    h.down(1, 500, 400);
+    h.advance(16);
+    h.move(1, 600, 400);
+    expect(h.camera.zoom).toBe(0); // no pinch
+    expect(h.camera.center.x).toBe(3996); // +100 relative to the re-press
+  });
+
+  it("does not wedge after two lost pointers", () => {
+    const h = makeHarness();
+    h.down(11, 500, 400);
+    h.down(12, 700, 400);
+    h.advance(POINTER_STALE_MS + 1);
+    // Both ghosts would otherwise block every future press.
+    h.down(13, 600, 400);
+    expect(h.controller.isGesturing()).toBe(true);
+    h.advance(16);
+    h.move(13, 700, 400);
+    expect(h.camera.zoom).toBe(0);
+    expect(h.camera.center.x).toBe(3996);
+  });
+});
+
+describe("isGesturing", () => {
+  it("tracks pointer, fling and wheel activity", () => {
+    const h = makeHarness();
+    expect(h.controller.isGesturing()).toBe(false);
+
+    h.down(1, 600, 400);
+    expect(h.controller.isGesturing()).toBe(true);
+    h.advance(16);
+    h.move(1, 550, 400);
+    h.advance(250); // rest before lifting: no fling
+    h.up(1, 550, 400);
+    expect(h.controller.isGesturing()).toBe(false);
+
+    flickLeft(h);
+    expect(h.controller.isGesturing()).toBe(true); // coasting
+    h.runFrames(16);
+    expect(h.controller.isGesturing()).toBe(false);
+
+    h.wheel(600, 400, -100);
+    expect(h.controller.isGesturing()).toBe(true);
+    h.advance(200);
+    expect(h.controller.isGesturing()).toBe(false);
+  });
+});
+
+describe("tap passthrough", () => {
+  it("reports a tap with screen and pixel coordinates", () => {
+    const h = makeHarness({ rect: { left: 20, top: 10 } });
+    h.down(1, 700, 300);
+    h.advance(40);
+    h.up(1, 700, 300);
+    expect(h.taps).toHaveLength(1);
+    expect(h.taps[0].screenX).toBe(700);
+    expect(h.taps[0].screenY).toBe(300);
+    expect(h.taps[0].pixel).toEqual({ x: 4196, y: 3996 });
+  });
+
+  it("does not report a drag, a long press or a pinch as a tap", () => {
+    const h = makeHarness();
+    h.down(1, 600, 400);
+    h.advance(16);
+    h.move(1, 500, 400);
+    h.up(1, 500, 400);
+
+    h.down(1, 600, 400);
+    h.advance(500);
+    h.up(1, 600, 400);
+
+    h.down(1, 500, 400);
+    h.down(2, 700, 400);
+    h.advance(20);
+    h.up(2, 700, 400);
+    h.up(1, 500, 400);
+    expect(h.taps).toEqual([]);
+  });
+
+  it("reports only the FIRST tap of a double tap (the second is the zoom)", () => {
+    const h = makeHarness();
+    h.down(1, 700, 300);
+    h.advance(50);
+    h.up(1, 700, 300);
+    h.advance(100);
+    h.down(1, 700, 300);
+    h.advance(50);
+    h.up(1, 700, 300);
+    expect(h.taps).toHaveLength(1);
+    expect(h.camera.isAnimating()).toBe(true);
   });
 });
 
 describe("context menu", () => {
   it("prevents the default menu and reports screen + pixel coordinates", () => {
-    const seen: GestureContextMenuEvent[] = [];
+    const seen: GesturePointEvent[] = [];
     // A non-zero element rect: the payload must be element-local, not client.
     const h = makeHarness({
       rect: { left: 20, top: 10 },
@@ -679,7 +1027,7 @@ describe("context menu", () => {
   });
 
   it("treats event coordinates as element-local when there is no rect", () => {
-    const seen: GestureContextMenuEvent[] = [];
+    const seen: GesturePointEvent[] = [];
     const h = makeHarness({
       rect: null,
       gestures: { onContextMenu: (e) => seen.push(e) },
@@ -692,7 +1040,7 @@ describe("context menu", () => {
 describe("detach", () => {
   it("removes every listener", () => {
     const h = makeHarness();
-    expect(h.listenerCount()).toBe(6);
+    expect(h.listenerCount()).toBe(7);
     h.detach();
     expect(h.listenerCount()).toBe(0);
 
@@ -704,14 +1052,17 @@ describe("detach", () => {
     expect(h.pendingFrames()).toBe(0);
   });
 
+  it("unsubscribes from the camera", () => {
+    const h = makeHarness();
+    h.detach();
+    // A camera change after detach must not be able to emit anything later.
+    h.camera.panBy(100, 0);
+    expect(h.gestureEnds()).toBe(0);
+  });
+
   it("cancels a running inertia animation", () => {
     const h = makeHarness();
-    h.down(1, 600, 400);
-    for (const x of [550, 500, 450]) {
-      h.advance(10);
-      h.move(1, x, 400);
-    }
-    h.up(1, 450, 400);
+    flickLeft(h);
     expect(h.pendingFrames()).toBe(1);
     h.detach();
     expect(h.pendingFrames()).toBe(0);
@@ -720,25 +1071,14 @@ describe("detach", () => {
     expect(h.camera.center.x).toBe(settled);
   });
 
-  it("cancels a running wheel glide", () => {
+  it("cancels a running wheel glide and its idle deadline", () => {
     const h = makeHarness();
     h.wheel(600, 400, -100);
     expect(h.pendingFrames()).toBe(1);
+    expect(h.pendingTimers()).toBe(1);
     h.detach();
     expect(h.pendingFrames()).toBe(0);
-  });
-
-  it("cancels a running double-tap zoom loop", () => {
-    const h = makeHarness();
-    h.down(1, 700, 300);
-    h.advance(50);
-    h.up(1, 700, 300);
-    h.advance(100);
-    h.down(1, 700, 300);
-    h.advance(50);
-    h.up(1, 700, 300);
-    expect(h.pendingFrames()).toBe(1);
-    h.detach();
-    expect(h.pendingFrames()).toBe(0);
+    expect(h.pendingTimers()).toBe(0);
+    expect(h.controller.isGesturing()).toBe(false);
   });
 });

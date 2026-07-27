@@ -4,6 +4,7 @@ import {
   accumulateWheelTarget,
   centerDeltaForDrag,
   centerForZoomAround,
+  clampZoom,
   DEFAULT_WHEEL_SENSITIVITY,
   DOUBLE_CLICK_ZOOM_DELTA,
   DOUBLE_CLICK_ZOOM_SECONDS,
@@ -25,6 +26,8 @@ import {
   velocityFrom,
   WHEEL_IDLE_MS,
   WHEEL_LERP,
+  wheelLerpFactor,
+  WHEEL_SETTLE_EPSILON,
   WHEEL_ZOOM_FACTOR,
   wheelTargetDelta,
   type PointerSample,
@@ -42,7 +45,7 @@ describe("centerDeltaForDrag", () => {
 
 describe("pointer sampling", () => {
   it("keeps only the trailing window, and always the newest sample", () => {
-    let s: PointerSample[] = [];
+    let s: readonly PointerSample[] = [];
     for (const t of [0, 40, 80, 120, 160]) s = pushSample(s, { x: t, y: 0, t });
     // Window 100 ms ending at 160 → 80/120/160 (60 is older than the window).
     expect(s.map((p) => p.t)).toEqual([80, 120, 160]);
@@ -57,8 +60,9 @@ describe("pointer sampling", () => {
   });
 
   it("ignores non-finite samples", () => {
-    const s = pushSample([{ x: 0, y: 0, t: 0 }], { x: Number.NaN, y: 0, t: 10 });
-    expect(s).toEqual([{ x: 0, y: 0, t: 0 }]);
+    const input = [{ x: 0, y: 0, t: 0 }];
+    const s = pushSample(input, { x: Number.NaN, y: 0, t: 10 });
+    expect(s).toBe(input); // no allocation for a sample that changes nothing
   });
 
   it("averages velocity over the window in px/ms", () => {
@@ -83,7 +87,7 @@ describe("pointer sampling", () => {
 
   it("holding still before release cancels the fling", () => {
     // The drag itself was fast (2 px/ms)...
-    let s: PointerSample[] = [];
+    let s: readonly PointerSample[] = [];
     s = pushSample(s, { x: 0, y: 0, t: 1000 });
     s = pushSample(s, { x: 100, y: 0, t: 1050 });
     expect(hasInertia(velocityFrom(s))).toBe(true);
@@ -332,6 +336,47 @@ describe("wheel zoom (Leaflet port)", () => {
   it("ends the gesture after 200 ms of wheel silence", () => {
     expect(WHEEL_IDLE_MS).toBe(200);
   });
+
+  it("makes the glide frame-rate independent (Leaflet's flat 0.3 per frame is not)", () => {
+    // At exactly 60 Hz the factor IS Leaflet's, so the ported feel is preserved.
+    expect(wheelLerpFactor(1000 / 60)).toBeCloseTo(WHEEL_LERP, 12);
+    // Two 120 Hz frames compose into one 60 Hz frame.
+    const half = wheelLerpFactor(1000 / 120);
+    expect((1 - half) ** 2).toBeCloseTo(1 - WHEEL_LERP, 12);
+    // Same wall clock, wildly different refresh rates → same remaining gap.
+    function glide(dt: number, ms: number): number {
+      let z = 0;
+      for (let t = 0; t < ms - 1e-9; t += dt) z = lerpZoom(z, 1.8, wheelLerpFactor(dt));
+      return z;
+    }
+    expect(glide(1000 / 120, 100)).toBeCloseTo(glide(1000 / 60, 100), 9);
+    expect(glide(1000 / 240, 100)).toBeCloseTo(glide(1000 / 60, 100), 9);
+  });
+
+  it("treats a zero/negative/non-finite frame as no progress", () => {
+    for (const dt of [0, -5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(wheelLerpFactor(dt)).toBe(0);
+    }
+    expect(wheelLerpFactor(16, 1)).toBe(1); // a factor of 1 always lands
+    expect(wheelLerpFactor(16, Number.NaN)).toBeCloseTo(wheelLerpFactor(16), 12);
+    expect(wheelLerpFactor(16, 0.3, 0)).toBeCloseTo(0.3, 12); // broken reference
+  });
+
+  it("has a settle epsilon below a tenth of a pixel at the viewport edge", () => {
+    // A zoom gap g moves a point 600 px from the centre by ~600 × ln2 × g px.
+    expect(600 * Math.LN2 * WHEEL_SETTLE_EPSILON).toBeLessThan(0.1);
+  });
+});
+
+describe("clampZoom", () => {
+  it("clamps into range and leaves broken input alone", () => {
+    expect(clampZoom(5, -3, 2)).toBe(2);
+    expect(clampZoom(-9, -3, 2)).toBe(-3);
+    expect(clampZoom(0.25, -3, 2)).toBe(0.25);
+    expect(clampZoom(1, 2, -3)).toBe(1); // inverted range
+    expect(clampZoom(Number.NaN, -3, 2)).toBeNaN();
+    expect(clampZoom(9, Number.NaN, Number.NaN)).toBe(9);
+  });
 });
 
 describe("double-click zoom", () => {
@@ -385,6 +430,52 @@ describe("double-click zoom", () => {
       expect(predicted.x).toBeCloseTo(cam.center.x, 9);
       expect(predicted.y).toBeCloseTo(cam.center.y, 9);
     }
+  });
+
+  // The bug this pins: an UNCLAMPED nextZoom solves the centre for a scale the
+  // camera will refuse, so `flyTo` lands at the clamped zoom with a centre that
+  // belongs to another one — a spurious pan on a gesture that should be inert.
+  it("is NOT equivalent to zoomAround when nextZoom is out of range", () => {
+    function cameraAtMax() {
+      return new Camera({
+        mapWidthPx: 8192,
+        mapHeightPx: 8192,
+        minZoom: -3,
+        maxZoom: 2,
+        viewportWidth: 1200,
+        viewportHeight: 800,
+        center: { x: 4096, y: 4096 },
+        zoom: 2,
+      });
+    }
+    const anchor = { x: 1100, y: 50 };
+    const cam = cameraAtMax();
+    const unclamped = centerForZoomAround(
+      cam.center,
+      cam.zoom,
+      cam.viewportWidth,
+      cam.viewportHeight,
+      anchor,
+      3, // camera.zoom + 1, past maxZoom
+    );
+    cam.zoomAround(anchor, 1); // the camera clamps the zoom first: nothing moves
+    expect(cam.zoom).toBe(2);
+    expect(cam.center).toEqual({ x: 4096, y: 4096 });
+    expect(unclamped.x).not.toBeCloseTo(4096, 0);
+    expect(unclamped.y).not.toBeCloseTo(4096, 0);
+
+    // Clamping first is what makes them agree — and reveals the gesture is inert.
+    const nextZoom = clampZoom(2 + 1, cam.minZoom, cam.maxZoom);
+    expect(nextZoom).toBe(cam.zoom);
+    const clamped = centerForZoomAround(
+      cam.center,
+      cam.zoom,
+      cam.viewportWidth,
+      cam.viewportHeight,
+      anchor,
+      nextZoom,
+    );
+    expect(clamped).toEqual({ x: 4096, y: 4096 });
   });
 
   it("falls back to the current centre for non-finite input", () => {

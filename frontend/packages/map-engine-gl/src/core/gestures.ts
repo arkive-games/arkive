@@ -3,6 +3,7 @@ import {
   accumulateWheelTarget,
   centerDeltaForDrag,
   centerForZoomAround,
+  clampZoom,
   DEFAULT_WHEEL_PIXEL_FACTOR,
   DEFAULT_WHEEL_SENSITIVITY,
   DOUBLE_CLICK_ZOOM_DELTA,
@@ -18,6 +19,8 @@ import {
   pushSample,
   velocityFrom,
   WHEEL_IDLE_MS,
+  wheelLerpFactor,
+  WHEEL_SETTLE_EPSILON,
   type PointerSample,
   type TapRecord,
 } from "./gestureMath.ts";
@@ -25,37 +28,73 @@ import type { Point } from "./types.ts";
 
 /**
  * The DOM binding for map gestures: pointer drag with inertia, two-pointer
- * pinch, smooth wheel zoom, double-tap zoom, context-menu passthrough.
+ * pinch, smooth wheel zoom, double-tap zoom, tap and context-menu passthrough.
  *
- * Deliberately thin — it owns event plumbing and gesture *state machine* only;
- * every number it feeds the camera comes from `gestureMath.ts`. It touches no
- * global except the injectable `requestAnimationFrame`/`cancelAnimationFrame`/
- * `performance.now()` defaults, and reaches the DOM only through the element it
- * is handed, so a WeChat mini-program can supply its own event source and clock.
+ * Deliberately thin — it owns event plumbing and the gesture *state machine*
+ * only; every number it feeds the camera comes from `gestureMath.ts`. It touches
+ * no global except the injectable `requestAnimationFrame`/`cancelAnimationFrame`/
+ * `setTimeout`/`clearTimeout`/`performance.now()` defaults, and reaches the DOM
+ * only through the element it is handed, so a WeChat mini-program can supply its
+ * own event source and clock.
  *
- * Interaction contract with the {@link Camera}:
+ * ## Interaction contract with the {@link Camera}
  * - Every gesture first cancels an in-flight `flyTo` — a user dragging during a
  *   programmatic fly always wins.
- * - `camera.emitGestureEnd()` fires exactly once per gesture that moved the
- *   view, at the moment it settles: inertia below threshold, pinch release,
- *   200 ms of wheel silence, or the end of the double-tap zoom animation. A tap
- *   or a drag that never moved the camera stays silent, so the React layer's
- *   `onViewChange` is not woken by every click. (The double-tap zoom rides on
- *   `flyTo`, so it emits `flyend` as well — a consumer subscribing to both must
- *   coalesce.)
- * - The camera's own `change` event drives repainting; this file never renders.
+ * - This layer NEVER pumps {@link Camera.tick}. The frame owner does (the
+ *   renderer's render-on-demand loop ticks while `camera.isAnimating()`), so the
+ *   double-tap zoom just calls `flyTo` and returns. Because `flyTo` itself emits
+ *   no event, the host must `invalidate()` after a programmatic camera animation
+ *   for it to be pumped at all — that is what {@link GestureOptions.invalidate}
+ *   is for, and the renderer documents the same requirement.
+ * - `gestureend` fires once per burst of interaction that actually changed the
+ *   view, when it settles: inertia below threshold, pinch/drag release, 200 ms of
+ *   wheel silence. "Actually changed" is observed from the camera's own `change`
+ *   event, so dragging while pinned against the centre clamp reports nothing;
+ *   conversely a change left behind by an interrupted animation is inherited and
+ *   reported by the gesture that interrupted it — never zero notifications for a
+ *   view that moved. (A programmatic `setView`/`flyTo`/resize also arms the flag,
+ *   so a later gesture may re-report a view the host already knew about. Since
+ *   `onViewChange` reports the current view, one extra report is harmless where a
+ *   missing one is not.)
+ * - The double-tap zoom rides on `flyTo`, so it reports through `flyend` only —
+ *   it deliberately does not also emit `gestureend`.
+ * - The camera's `change` event drives repainting; this file never renders.
  *
- * Requires `touch-action: none` on the element, or the browser eats touch
- * pointermoves for scrolling before they arrive (the React layer's stylesheet
- * sets it).
+ * ## Element requirements (the React layer's stylesheet, Task 6)
+ * - `touch-action: none`, or the browser consumes touch pointermoves for
+ *   scrolling before they arrive.
+ * - `user-select: none` (plus `-webkit-user-select`), or dragging across the DOM
+ *   overlay's labels/popups starts a native text selection mid-pan.
+ * - `-webkit-user-drag: none` / `draggable="false"` on overlay images, or
+ *   dragging one starts a native image drag which swallows the rest of the pan.
  */
+
+/**
+ * How long a pointer may go unheard before a new press treats it as lost, in ms.
+ *
+ * A pointer whose `pointerup` never arrives (an event swallowed upstream, a
+ * host without pointer capture, an element replaced mid-gesture) would otherwise
+ * stay booked forever: one ghost turns the next one-finger drag into a bogus
+ * pinch, two ghosts wedge the layer permanently. `lostpointercapture` and a
+ * `buttons === 0` move both reclaim a pointer immediately; this sweep is the
+ * last resort for hosts that provide neither.
+ *
+ * The window is deliberately long: a finger really held motionless emits no
+ * events either, and the cost of sweeping it too early (a two-finger gesture
+ * starting as a pan) is worse than the cost of unwedging a little later.
+ */
+export const POINTER_STALE_MS = 10_000;
 
 /**
  * The subset of an element this binding uses — `HTMLElement` satisfies it
  * structurally. Capture and rect are optional so a non-DOM host (or a test
- * stub) can omit them; without `setPointerCapture` a drag simply ends when the
- * pointer leaves the element, and without `getBoundingClientRect` event
- * coordinates are assumed to already be element-local.
+ * stub) can omit them.
+ *
+ * Without `setPointerCapture`, moves that leave the element are not delivered,
+ * so a drag ending outside it leaves the pointer booked and the gesture
+ * unfinished until {@link POINTER_STALE_MS} (or the next event for that id)
+ * reclaims it. Without `getBoundingClientRect`, event coordinates are assumed to
+ * already be element-local.
  */
 export interface GestureTarget {
   addEventListener(
@@ -66,7 +105,7 @@ export interface GestureTarget {
   removeEventListener(
     type: string,
     listener: (ev: never) => void,
-    options?: { capture?: boolean } | boolean,
+    options?: { passive?: boolean; capture?: boolean } | boolean,
   ): void;
   getBoundingClientRect?(): { left: number; top: number };
   setPointerCapture?(pointerId: number): void;
@@ -80,6 +119,11 @@ export interface GesturePointerEvent {
   clientY: number;
   /** Mouse button; anything above 0 (right/middle) is ignored. */
   button?: number;
+  /**
+   * Bitmask of buttons currently held. On a `pointermove` for a pointer we
+   * believe is down, `0` proves it was released without us hearing about it.
+   */
+  buttons?: number;
   preventDefault?: () => void;
 }
 
@@ -99,17 +143,23 @@ export interface GestureMouseEvent {
   preventDefault?: () => void;
 }
 
-/** Payload of the `contextmenu` passthrough. */
-export interface GestureContextMenuEvent {
+/** A location reported to the host, in both spaces it could need. */
+export interface GesturePointEvent {
   /**
    * Element-local CSS pixels — the camera's screen space, NOT the DOM's
    * `MouseEvent.screenX` (which is monitor-relative).
    */
   screenX: number;
   screenY: number;
-  /** The same point in map-pixel space, for "copy position". */
+  /** The same point in map-pixel space (marker hit-testing, "copy position"). */
   pixel: Point;
 }
+
+/** Payload of the `contextmenu` passthrough. */
+export type GestureContextMenuEvent = GesturePointEvent;
+
+/** Payload of the tap passthrough. */
+export type GestureTapEvent = GesturePointEvent;
 
 export interface GestureOptions {
   /**
@@ -119,7 +169,10 @@ export interface GestureOptions {
    */
   requestFrame?: (cb: () => void) => number;
   cancelFrame?: (handle: number) => void;
-  /** Monotonic clock in ms. Must be the same clock the camera's `tick` receives. */
+  /** One-shot timer, for the wheel-idle deadline. Defaults to `setTimeout`. */
+  setTimer?: (cb: () => void, ms: number) => number;
+  clearTimer?: (handle: number) => void;
+  /** Monotonic clock in ms. Must be the same clock `camera.tick` receives. */
   now?: () => number;
   /** Wheel zoom speed multiplier; matches the Leaflet map's `smoothSensitivity`. */
   sensitivity?: number;
@@ -130,19 +183,60 @@ export interface GestureOptions {
   wheelPixelFactor?: number;
   /** Zoom levels added by one double-click/double-tap. */
   zoomDelta?: number;
+  /**
+   * Called after this layer starts a camera animation (the double-tap zoom).
+   * Wire it to the renderer's `invalidate()`: `flyTo` emits nothing, so without
+   * it a render-on-demand host never pumps `camera.tick` and the animation never
+   * runs.
+   */
+  invalidate?: () => void;
+  /**
+   * A tap (short press, barely moved) — for marker selection and background
+   * deselect, so the React layer does not have to re-derive tap-vs-drag from a
+   * DOM `click` (which fires after a 500 px drag too).
+   *
+   * Fires for a single tap and for the FIRST tap of a double tap, never for the
+   * second: a double tap is a zoom, and toggling the selection twice on the way
+   * there is never what the user meant.
+   */
+  onTap?: (e: GestureTapEvent) => void;
   /** Called on `contextmenu` after `preventDefault()`. */
   onContextMenu?: (e: GestureContextMenuEvent) => void;
 }
 
+/** What {@link attachGestures} returns. */
+export interface GestureController {
+  /** Remove every listener, cancel every pending frame/timer, unsubscribe. */
+  detach(): void;
+  /**
+   * Whether a gesture is in progress: a pointer is down, a fling is coasting, or
+   * a wheel burst has not gone quiet. The React layer uses it to suppress hover
+   * hit-testing mid-drag and to keep its fly-to controller from fighting the
+   * user. (A double-tap zoom is a camera animation, not a gesture — ask
+   * {@link Camera.isAnimating} for that.)
+   */
+  isGesturing(): boolean;
+}
+
 function defaultRequestFrame(cb: () => void): number {
   if (typeof requestAnimationFrame === "function") return requestAnimationFrame(cb);
-  // No frame source: animated gestures (inertia/wheel glide/double-tap) simply
-  // do not run. Such a host must inject `requestFrame`.
+  // No frame source: animated gestures (inertia, wheel glide) simply do not
+  // run. Such a host must inject `requestFrame`.
   return 0;
 }
 
 function defaultCancelFrame(handle: number): void {
   if (typeof cancelAnimationFrame === "function") cancelAnimationFrame(handle);
+}
+
+function defaultSetTimer(cb: () => void, ms: number): number {
+  // The handle is opaque (a number in the DOM, an object in node) — the cast
+  // keeps the injectable signature simple and is undone in defaultClearTimer.
+  return setTimeout(cb, ms) as unknown as number;
+}
+
+function defaultClearTimer(handle: number): void {
+  clearTimeout(handle as unknown as ReturnType<typeof setTimeout>);
 }
 
 function defaultNow(): number {
@@ -165,16 +259,18 @@ function defaultWheelPixelFactor(el: GestureTarget): number {
 }
 
 /**
- * Bind gestures to `el`, driving `camera`. Returns a detach function that
- * removes every listener and cancels every pending frame — call it on unmount.
+ * Bind gestures to `el`, driving `camera`. Returns a {@link GestureController};
+ * call `detach()` on unmount.
  */
 export function attachGestures(
   el: GestureTarget,
   camera: Camera,
   opts: GestureOptions = {},
-): () => void {
+): GestureController {
   const requestFrame = opts.requestFrame ?? defaultRequestFrame;
   const cancelFrame = opts.cancelFrame ?? defaultCancelFrame;
+  const setTimer = opts.setTimer ?? defaultSetTimer;
+  const clearTimer = opts.clearTimer ?? defaultClearTimer;
   const now = opts.now ?? defaultNow;
   const sensitivity = Number.isFinite(opts.sensitivity)
     ? (opts.sensitivity as number)
@@ -186,29 +282,39 @@ export function attachGestures(
     ? (opts.wheelPixelFactor as number)
     : defaultWheelPixelFactor(el);
 
-  // --- pointer state: id → last element-local position, in press order -------
-  const pointers = new Map<number, Point>();
+  // --- pointer state: id → last element-local position + when it was last
+  // heard from (the staleness sweep), in press order ---------------------------
+  const pointers = new Map<number, PointerSample>();
   /** The pointer currently panning, or null while pinching / idle. */
   let dragId: number | null = null;
   let pinching = false;
-  let samples: PointerSample[] = [];
+  let samples: readonly PointerSample[] = [];
   /** Press that may still turn out to be a tap (null once it cannot). */
   let pressed: TapRecord | null = null;
   /** The previous completed tap, for double-tap recognition. */
   let lastTap: TapRecord | null = null;
-  /** Whether the current gesture has actually moved the camera (gates `gestureend`). */
+  /**
+   * Whether the view has changed since the last `gestureend`. Set from the
+   * camera's own `change` event rather than from "we asked it to move", so a pan
+   * that the clamp swallowed reports nothing.
+   */
   let moved = false;
 
-  // --- animation loops (at most one of the three runs at a time) -------------
+  // --- animation loops -------------------------------------------------------
   let inertiaVelocity: Point | null = null;
   let inertiaFrame: number | null = null;
   let inertiaLastMs = 0;
   let wheelActive = false;
   let wheelFrame: number | null = null;
+  let wheelIdleTimer: number | null = null;
   let wheelTarget = 0;
   let wheelAnchor: Point = { x: 0, y: 0 };
-  let wheelLastMs = 0;
-  let flyFrame: number | null = null;
+  let wheelFrameMs = 0;
+
+  const onCameraChange = (): void => {
+    moved = true;
+  };
+  camera.on("change", onCameraChange);
 
   function localPoint(e: { clientX: number; clientY: number }): Point {
     const rect = el.getBoundingClientRect?.();
@@ -222,6 +328,20 @@ export function attachGestures(
     return Number.isFinite(p.x) && Number.isFinite(p.y);
   }
 
+  function pointPayload(p: Point): GesturePointEvent {
+    return {
+      screenX: p.x,
+      screenY: p.y,
+      pixel: camera.screenToPixel(p.x, p.y),
+    };
+  }
+
+  /** One frame's elapsed time, capped and guarded against a clock going backwards. */
+  function frameDelta(sinceMs: number): number {
+    const raw = now() - sinceMs;
+    return Math.min(Math.max(Number.isFinite(raw) ? raw : 0, 0), INERTIA_MAX_STEP_MS);
+  }
+
   function stopInertia(): void {
     if (inertiaFrame !== null) cancelFrame(inertiaFrame);
     inertiaFrame = null;
@@ -231,26 +351,21 @@ export function attachGestures(
   function stopWheel(): void {
     if (wheelFrame !== null) cancelFrame(wheelFrame);
     wheelFrame = null;
+    if (wheelIdleTimer !== null) clearTimer(wheelIdleTimer);
+    wheelIdleTimer = null;
     wheelActive = false;
   }
 
-  function stopFly(): void {
-    if (flyFrame !== null) cancelFrame(flyFrame);
-    flyFrame = null;
-  }
-
   /**
-   * Drop any camera motion this gesture is taking over from. Cancelling the fly
-   * loop BEFORE `cancelAnimation()` matters: the loop must never observe the
-   * cancellation, or it would report a `gestureend` for a gesture that was
-   * interrupted rather than finished.
+   * Drop the camera animation this gesture is taking over from. Nothing is
+   * emitted: the interrupted animation's view change stays recorded in `moved`
+   * and is reported when this gesture settles.
    */
   function takeOverCameraMotion(): void {
-    stopFly();
     camera.cancelAnimation();
   }
 
-  /** Emit `gestureend` iff this gesture moved the view, then reset the flag. */
+  /** Emit `gestureend` iff the view changed since the last one, then re-arm. */
   function settle(): void {
     if (moved) camera.emitGestureEnd();
     moved = false;
@@ -258,11 +373,46 @@ export function attachGestures(
 
   // ------------------------------------------------------------------ drag ---
 
+  /**
+   * Forget pointers we have not heard from in {@link POINTER_STALE_MS}. Called
+   * before a press is accepted, which is the only moment a ghost can do damage.
+   */
+  function sweepStalePointers(): void {
+    if (pointers.size === 0) return;
+    const t = now();
+    for (const [id, at] of [...pointers]) {
+      if (t - at.t > POINTER_STALE_MS) forgetPointer(id);
+    }
+  }
+
+  /** Drop a pointer from the gesture without any tap/fling interpretation. */
+  function forgetPointer(id: number): void {
+    if (!pointers.delete(id)) return;
+    try {
+      el.releasePointerCapture?.(id);
+    } catch {
+      // Never captured, or already released.
+    }
+    if (dragId === id) dragId = null;
+    if (pointers.size < 2) pinching = false;
+    if (pointers.size === 1) {
+      // Promote the survivor so the gesture keeps working with one finger.
+      const [survivor] = [...pointers.keys()];
+      const at = pointers.get(survivor) as PointerSample;
+      dragId = survivor;
+      samples = pushSample([], { x: at.x, y: at.y, t: now() });
+    } else if (pointers.size === 0) {
+      pressed = null;
+      samples = [];
+    }
+  }
+
   function onPointerDown(e: GesturePointerEvent): void {
     // Right/middle button: no drag (the right button is the context menu).
     if (typeof e.button === "number" && e.button > 0) return;
+    sweepStalePointers();
     // A third finger joins nothing; the pinch keeps its original two pointers.
-    if (pointers.size >= 2) return;
+    if (pointers.size >= 2 && !pointers.has(e.pointerId)) return;
     const p = localPoint(e);
     if (!finite(p)) return;
 
@@ -276,14 +426,16 @@ export function attachGestures(
     }
 
     const t = now();
-    pointers.set(e.pointerId, p);
+    // A repeated id is a re-press of a pointer whose release we missed, not a
+    // second finger: `set` overwrites, so the gesture stays single-pointer.
+    pointers.set(e.pointerId, { x: p.x, y: p.y, t });
     if (pointers.size === 1) {
       dragId = e.pointerId;
       pinching = false;
       samples = pushSample([], { x: p.x, y: p.y, t });
       pressed = { x: p.x, y: p.y, t };
       // `moved` is deliberately NOT reset: if this press interrupted a wheel
-      // glide or a fling that had already moved the view, that pending
+      // glide or a fly that had already moved the view, that pending
       // `gestureend` is inherited and reported when this gesture settles — one
       // notification per burst of interaction, never zero.
     } else {
@@ -300,39 +452,40 @@ export function attachGestures(
   function onPointerMove(e: GesturePointerEvent): void {
     const prev = pointers.get(e.pointerId);
     if (!prev) return;
+    // The pointer is up and we never heard the `pointerup`: reclaim it instead of
+    // panning the map with a pointer the user is no longer pressing.
+    if (e.buttons === 0) {
+      forgetPointer(e.pointerId);
+      settle();
+      return;
+    }
     const p = localPoint(e);
     if (!finite(p)) return;
+    const t = now();
 
     if (pinching && pointers.size === 2) {
       const ids = [...pointers.keys()];
-      const beforeA = pointers.get(ids[0]) as Point;
-      const beforeB = pointers.get(ids[1]) as Point;
+      const beforeA = pointers.get(ids[0]) as PointerSample;
+      const beforeB = pointers.get(ids[1]) as PointerSample;
       const afterA = ids[0] === e.pointerId ? p : beforeA;
       const afterB = ids[1] === e.pointerId ? p : beforeB;
-      pointers.set(e.pointerId, p);
+      pointers.set(e.pointerId, { x: p.x, y: p.y, t });
       const update = pinchUpdate(beforeA, beforeB, afterA, afterB);
       if (!update) return;
       // Pan first, then zoom around where the fingers are now — see pinchUpdate.
       if (update.centerDelta.x !== 0 || update.centerDelta.y !== 0) {
         camera.panBy(update.centerDelta.x, update.centerDelta.y);
-        moved = true;
       }
-      if (update.dz !== 0) {
-        camera.zoomAround(update.anchor, update.dz);
-        moved = true;
-      }
+      if (update.dz !== 0) camera.zoomAround(update.anchor, update.dz);
       return;
     }
 
-    pointers.set(e.pointerId, p);
+    pointers.set(e.pointerId, { x: p.x, y: p.y, t });
     if (e.pointerId !== dragId) return;
 
     const delta = centerDeltaForDrag({ x: p.x - prev.x, y: p.y - prev.y });
-    if (delta.x !== 0 || delta.y !== 0) {
-      camera.panBy(delta.x, delta.y);
-      moved = true;
-    }
-    samples = pushSample(samples, { x: p.x, y: p.y, t: now() });
+    if (delta.x !== 0 || delta.y !== 0) camera.panBy(delta.x, delta.y);
+    samples = pushSample(samples, { x: p.x, y: p.y, t });
   }
 
   function onPointerUp(e: GesturePointerEvent): void {
@@ -341,6 +494,18 @@ export function attachGestures(
 
   function onPointerCancel(e: GesturePointerEvent): void {
     finishPointer(e, true);
+  }
+
+  /**
+   * The implicit release that follows every `pointerup`/`pointercancel` — and
+   * the only signal a host gives us when one of those never arrives (the
+   * element was replaced, the event was swallowed upstream). Harmless when the
+   * pointer is already gone.
+   */
+  function onLostPointerCapture(e: GesturePointerEvent): void {
+    if (!pointers.has(e.pointerId)) return;
+    forgetPointer(e.pointerId);
+    if (pointers.size === 0) settle();
   }
 
   /**
@@ -364,8 +529,8 @@ export function attachGestures(
       // CURRENT position, so the first move after the release pans by that
       // finger's own delta and nothing jumps. Velocity sampling restarts, so a
       // pinch release cannot fling.
-      const survivor = [...pointers.keys()][0];
-      const at = pointers.get(survivor) as Point;
+      const [survivor] = [...pointers.keys()];
+      const at = pointers.get(survivor) as PointerSample;
       dragId = survivor;
       pinching = false;
       pressed = null;
@@ -399,6 +564,7 @@ export function attachGestures(
         startDoubleTapZoom(release);
         return;
       }
+      opts.onTap?.(pointPayload(release));
     } else {
       lastTap = null;
     }
@@ -415,6 +581,7 @@ export function attachGestures(
   // --------------------------------------------------------------- inertia ---
 
   function startInertia(velocity: Point): void {
+    stopInertia();
     inertiaVelocity = velocity;
     inertiaLastMs = now();
     inertiaFrame = requestFrame(inertiaTick);
@@ -425,17 +592,12 @@ export function attachGestures(
     const velocity = inertiaVelocity;
     if (!velocity) return;
 
-    const t = now();
-    const raw = t - inertiaLastMs;
-    const dt = Math.min(Math.max(Number.isFinite(raw) ? raw : 0, 0), INERTIA_MAX_STEP_MS);
-    inertiaLastMs = t;
+    const dt = frameDelta(inertiaLastMs);
+    inertiaLastMs = now();
 
     const step = inertiaStep(velocity, dt);
     const delta = centerDeltaForDrag(step.offset);
-    if (delta.x !== 0 || delta.y !== 0) {
-      camera.panBy(delta.x, delta.y);
-      moved = true;
-    }
+    if (delta.x !== 0 || delta.y !== 0) camera.panBy(delta.x, delta.y);
     inertiaVelocity = step.velocity;
     if (!hasInertia(step.velocity)) {
       inertiaVelocity = null;
@@ -468,41 +630,59 @@ export function attachGestures(
       camera.maxZoom,
     );
     wheelAnchor = anchor;
-    wheelLastMs = now();
-    if (wheelFrame === null) wheelFrame = requestFrame(wheelTick);
+
+    // The gesture ends 200 ms after the LAST wheel event, on a timer rather than
+    // by polling the clock from the frame loop: the loop can then stop as soon as
+    // the zoom has converged (every frame is a full repaint), and a throttled
+    // frame source cannot delay the end of the gesture.
+    if (wheelIdleTimer !== null) clearTimer(wheelIdleTimer);
+    wheelIdleTimer = setTimer(onWheelIdle, WHEEL_IDLE_MS);
+    if (wheelFrame === null) {
+      wheelFrameMs = now();
+      wheelFrame = requestFrame(wheelTick);
+    }
   }
 
   function wheelTick(): void {
     wheelFrame = null;
     if (!wheelActive) return;
 
+    const dt = frameDelta(wheelFrameMs);
+    wheelFrameMs = now();
     const current = camera.zoom;
-    const next = lerpZoom(current, wheelTarget);
-    if (next !== current) {
-      camera.zoomAround(wheelAnchor, next - current);
-      moved = true;
-    }
+    const next = lerpZoom(current, wheelTarget, wheelLerpFactor(dt));
+    if (next !== current) camera.zoomAround(wheelAnchor, next - current);
 
-    if (now() - wheelLastMs >= WHEEL_IDLE_MS) {
-      // Land exactly on the accumulated target: the geometric interpolation
-      // leaves ~1% of the gap after 200 ms at 60 Hz. Invisible, but it would
-      // otherwise be the value reported to `onViewChange` and persisted.
-      const rest = wheelTarget - camera.zoom;
-      if (rest !== 0) {
-        camera.zoomAround(wheelAnchor, rest);
-        moved = true;
-      }
-      wheelActive = false;
-      settle();
-      return;
-    }
+    // Converged (to well under a pixel of movement): idle until the deadline.
+    if (Math.abs(wheelTarget - camera.zoom) <= WHEEL_SETTLE_EPSILON) return;
     wheelFrame = requestFrame(wheelTick);
+  }
+
+  function onWheelIdle(): void {
+    wheelIdleTimer = null;
+    if (!wheelActive) return;
+    // Land exactly on the accumulated target: the geometric interpolation leaves
+    // ~1% of the gap after 200 ms at 60 Hz. Invisible, but it would otherwise be
+    // the value reported to `onViewChange` and persisted.
+    const rest = wheelTarget - camera.zoom;
+    if (rest !== 0) camera.zoomAround(wheelAnchor, rest);
+    if (wheelFrame !== null) cancelFrame(wheelFrame);
+    wheelFrame = null;
+    wheelActive = false;
+    // Wheeling mid-drag (trackpad zoom while a finger/button is down) is one
+    // burst of interaction: let the pointer gesture report it, so `gestureend`
+    // never fires while a pointer is still down.
+    if (pointers.size === 0) settle();
   }
 
   // ------------------------------------------------------- double-tap zoom ---
 
   function startDoubleTapZoom(at: TapRecord): void {
-    const nextZoom = camera.zoom + zoomDelta;
+    const nextZoom = clampZoom(camera.zoom + zoomDelta, camera.minZoom, camera.maxZoom);
+    // At a zoom limit the gesture is inert. Without this the unclamped target
+    // scale would solve for a centre the clamped zoom does not belong to, and
+    // `flyTo` would happily animate that pan.
+    if (nextZoom === camera.zoom) return;
     const target = centerForZoomAround(
       camera.center,
       camera.zoom,
@@ -511,23 +691,10 @@ export function attachGestures(
       at,
       nextZoom,
     );
-    moved = false;
     camera.flyTo(target, nextZoom, DOUBLE_CLICK_ZOOM_SECONDS);
-    if (!camera.isAnimating()) {
-      // Duration disabled: `flyTo` already applied the view and emitted `flyend`.
-      camera.emitGestureEnd();
-      return;
-    }
-    flyFrame = requestFrame(flyTick);
-  }
-
-  function flyTick(): void {
-    flyFrame = null;
-    if (camera.tick(now())) {
-      flyFrame = requestFrame(flyTick);
-      return;
-    }
-    camera.emitGestureEnd();
+    // `flyTo` emits nothing, so the frame owner has to be woken to pump `tick`.
+    // The animation reports itself through `flyend`; this layer stays out of it.
+    opts.invalidate?.();
   }
 
   // ---------------------------------------------------------- context menu ---
@@ -536,49 +703,56 @@ export function attachGestures(
     e.preventDefault?.();
     const p = localPoint(e);
     if (!finite(p)) return;
-    opts.onContextMenu?.({
-      screenX: p.x,
-      screenY: p.y,
-      pixel: camera.screenToPixel(p.x, p.y),
-    });
+    opts.onContextMenu?.(pointPayload(p));
   }
 
   // ------------------------------------------------------------- plumbing ---
 
-  const bound: { type: string; listener: (ev: never) => void }[] = [];
+  type ListenOptions = { passive?: boolean; capture?: boolean } | undefined;
+  const bound: {
+    type: string;
+    listener: (ev: never) => void;
+    options: ListenOptions;
+  }[] = [];
 
-  function listen<E>(
-    type: string,
-    handler: (e: E) => void,
-    options?: { passive?: boolean },
-  ): void {
+  function listen<E>(type: string, handler: (e: E) => void, options?: ListenOptions): void {
     // One cast for the whole file: the structural event interfaces above are
     // what the handlers actually need, and `GestureTarget` accepts any handler.
     const listener = handler as unknown as (ev: never) => void;
     el.addEventListener(type, listener, options);
-    bound.push({ type, listener });
+    // The options are replayed on removal — `capture` is part of a listener's
+    // identity, so dropping it would silently leak capturing listeners.
+    bound.push({ type, listener, options });
   }
 
   listen<GesturePointerEvent>("pointerdown", onPointerDown);
   listen<GesturePointerEvent>("pointermove", onPointerMove);
   listen<GesturePointerEvent>("pointerup", onPointerUp);
   listen<GesturePointerEvent>("pointercancel", onPointerCancel);
+  listen<GesturePointerEvent>("lostpointercapture", onLostPointerCapture);
   // Not passive: wheel-zoom must stop the page from scrolling.
   listen<GestureWheelEvent>("wheel", onWheel, { passive: false });
   listen<GestureMouseEvent>("contextmenu", onContextMenu);
 
-  return function detach(): void {
-    for (const { type, listener } of bound) el.removeEventListener(type, listener);
-    bound.length = 0;
-    stopInertia();
-    stopWheel();
-    stopFly();
-    pointers.clear();
-    samples = [];
-    dragId = null;
-    pinching = false;
-    pressed = null;
-    lastTap = null;
-    moved = false;
+  return {
+    detach(): void {
+      for (const { type, listener, options } of bound) {
+        el.removeEventListener(type, listener, options);
+      }
+      bound.length = 0;
+      camera.off("change", onCameraChange);
+      stopInertia();
+      stopWheel();
+      pointers.clear();
+      samples = [];
+      dragId = null;
+      pinching = false;
+      pressed = null;
+      lastTap = null;
+      moved = false;
+    },
+    isGesturing(): boolean {
+      return pointers.size > 0 || inertiaVelocity !== null || wheelActive;
+    },
   };
 }

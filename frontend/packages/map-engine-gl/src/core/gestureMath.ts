@@ -103,13 +103,13 @@ export function pushSample(
   samples: readonly PointerSample[],
   sample: PointerSample,
   windowMs: number = VELOCITY_WINDOW_MS,
-): PointerSample[] {
+): readonly PointerSample[] {
   if (
     !Number.isFinite(sample.x) ||
     !Number.isFinite(sample.y) ||
     !Number.isFinite(sample.t)
   ) {
-    return samples.slice();
+    return samples;
   }
   const win = Number.isFinite(windowMs) && windowMs >= 0 ? windowMs : VELOCITY_WINDOW_MS;
   const out = [...samples, sample];
@@ -275,8 +275,20 @@ export const DEFAULT_WHEEL_SENSITIVITY = 4;
 /** Fraction of the remaining distance to the target zoom covered per frame (Leaflet's 0.3). */
 export const WHEEL_LERP = 0.3;
 
+/** The frame length {@link WHEEL_LERP} is defined for: Leaflet's rAF loop at 60 Hz. */
+export const WHEEL_LERP_FRAME_MS = 1000 / 60;
+
 /** Wheel silence after which the zoom gesture is considered finished, in ms (Leaflet's 200). */
 export const WHEEL_IDLE_MS = 200;
+
+/**
+ * Zoom gap (in levels) at which the wheel glide is close enough to stop asking
+ * for frames — the idle deadline lands the remainder exactly.
+ *
+ * 1e-4 zoom levels is ~0.007% of scale: under a tenth of a pixel of movement at
+ * the edge of a 1200 px viewport, i.e. nothing a display can show.
+ */
+export const WHEEL_SETTLE_EPSILON = 1e-4;
 
 /**
  * Leaflet's default pixel-mode divisor (`2 × devicePixelRatio`) at DPR 1.
@@ -329,6 +341,22 @@ export function wheelTargetDelta(
 }
 
 /**
+ * Clamp a zoom level into `[minZoom, maxZoom]`, tolerating a broken range or a
+ * non-finite input (both leave the value untouched rather than inventing one).
+ *
+ * The {@link Camera} clamps internally as well; this exists because callers must
+ * know the CLAMPED zoom *before* solving anything from it — see
+ * {@link centerForZoomAround}.
+ */
+export function clampZoom(z: number, minZoom: number, maxZoom: number): number {
+  if (!Number.isFinite(z)) return z;
+  const lo = Number.isFinite(minZoom) ? minZoom : z;
+  const hi = Number.isFinite(maxZoom) ? maxZoom : z;
+  if (lo > hi) return z;
+  return z < lo ? lo : z > hi ? hi : z;
+}
+
+/**
  * Add one wheel event to the accumulated target zoom, clamped to the camera's
  * range (Leaflet's `_limitZoom` guard). Clamping as it accumulates is what keeps
  * a long scroll burst against the zoom limit from building up a debt that has to
@@ -342,11 +370,33 @@ export function accumulateWheelTarget(
   maxZoom: number,
 ): number {
   const base = Number.isFinite(target) ? target : 0;
-  const next = base + wheelTargetDelta(delta, sensitivity);
-  const lo = Number.isFinite(minZoom) ? minZoom : next;
-  const hi = Number.isFinite(maxZoom) ? maxZoom : next;
-  if (lo > hi) return next;
-  return next < lo ? lo : next > hi ? hi : next;
+  return clampZoom(base + wheelTargetDelta(delta, sensitivity), minZoom, maxZoom);
+}
+
+/**
+ * The interpolation factor for a frame of length `dtMs`, so the glide covers the
+ * same ground per unit of TIME at any refresh rate: `1 − (1 − factor)^(dt/16.67)`.
+ *
+ * Leaflet applies a flat 0.3 per rAF callback, which makes its wheel zoom
+ * arrive ~2× faster on a 120 Hz phone than on a 60 Hz monitor. This engine
+ * targets both, and `inertiaStep` already guarantees frame-rate independence for
+ * the fling, so the wheel matches: at exactly 60 Hz the factor IS Leaflet's 0.3,
+ * and two 120 Hz frames compose to the same 0.3 (`(1−f)² = 0.7`).
+ *
+ * A non-positive `dtMs` contributes nothing; the step is not capped here — the
+ * caller caps `dt` (a frame after a background-tab stall would otherwise jump
+ * straight to the target).
+ */
+export function wheelLerpFactor(
+  dtMs: number,
+  factor: number = WHEEL_LERP,
+  frameMs: number = WHEEL_LERP_FRAME_MS,
+): number {
+  const f = Number.isFinite(factor) ? (factor < 0 ? 0 : factor > 1 ? 1 : factor) : WHEEL_LERP;
+  if (!(dtMs > 0) || !Number.isFinite(dtMs)) return 0;
+  if (!(frameMs > 0) || !Number.isFinite(frameMs)) return f;
+  if (f >= 1) return 1;
+  return 1 - Math.pow(1 - f, dtMs / frameMs);
 }
 
 /**
@@ -354,6 +404,9 @@ export function accumulateWheelTarget(
  * current zoom to the accumulated target. Geometric, so it converges
  * monotonically without ever overshooting (~1% of the gap left after the 200 ms
  * idle window at 60 Hz — the DOM binding snaps that remainder away on end).
+ *
+ * `factor` is per FRAME. Pass {@link wheelLerpFactor} to make it per unit of
+ * time instead, which is what the DOM binding does.
  *
  * NOT ported from Leaflet: its `Math.floor(zoom * 100) / 100` quantization. That
  * exists to keep Leaflet's zoom pipeline on tidy values, but it biases every
@@ -426,8 +479,18 @@ export function isDoubleTap(
  * anchor. That is what makes the double-click zoom *animated* yet still anchored
  * at the click point.
  *
- * Unclamped by design: `flyTo` clamps its target, so the anchor drifts near the
- * map edge exactly as it does for an instant `zoomAround`.
+ * THE CALLER MUST PASS AN ALREADY-CLAMPED `nextZoom` (see {@link clampZoom}).
+ * `nextZoom` is the target SCALE the centre is solved for, so handing this an
+ * out-of-range zoom and relying on `Camera.flyTo` to clamp it afterwards does
+ * NOT work: the camera clamps the zoom first and solves the centre from the
+ * clamped value, while this would return the centre for the unclamped one — the
+ * fly would then land at the right zoom but a wrong, panned centre. At a zoom
+ * limit the clamped `nextZoom` equals the current zoom, which is the caller's cue
+ * that the gesture is inert.
+ *
+ * The CENTRE, by contrast, is deliberately left unclamped: `flyTo` clamps it, so
+ * the anchor drifts near the map edge exactly as it does for an instant
+ * `zoomAround`.
  */
 export function centerForZoomAround(
   center: Point,
