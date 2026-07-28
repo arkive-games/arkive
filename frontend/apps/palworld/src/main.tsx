@@ -39,6 +39,7 @@ import PassivesPage from './features/pals/PassivesPage'
 import ActiveSkillsPage from './features/pals/ActiveSkillsPage'
 import ActiveSkillDetailPage from './features/pals/ActiveSkillDetailPage'
 import PartnerSkillsPage from './features/pals/PartnerSkillsPage'
+import ChangelogPage from './features/changelog/ChangelogPage'
 import { BottomTabBar } from './components/BottomTabBar'
 import { initDataVersion } from './lib/urls'
 
@@ -250,6 +251,13 @@ const regionDetailRoute = createRoute({
   path: '/regions/$id',
   component: RegionDetailPage,
 })
+// Site version history. Not a nav item — reached from the footer version link
+// and the top-bar build hovercard.
+const changelogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/changelog',
+  component: ChangelogPage,
+})
 const routeTree = rootRoute.addChildren([
   mapRoute,
   breedingRoute,
@@ -277,6 +285,7 @@ const routeTree = rootRoute.addChildren([
   fishingRoute,
   statSimulatorRoute,
   regionDetailRoute,
+  changelogRoute,
 ])
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
 declare module '@tanstack/react-router' {

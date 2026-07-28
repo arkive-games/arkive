@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
 import { cn, SiteFooter } from '@gamemap/ui'
 import { TopNav, type NavKey } from './TopNav'
+import { SITE_VERSION } from '../lib/siteVersion'
 
 export interface ContentPageProps {
   /** Active nav key, drives desktop top-nav highlight + is used by tests. */
@@ -54,6 +56,7 @@ export function ContentPage({ active, title, heading = false, children }: Conten
             homeUrl={import.meta.env.VITE_HOME_URL}
             githubUrl={import.meta.env.VITE_GITHUB_URL}
             icpBeian={import.meta.env.VITE_ICP_BEIAN}
+            versionLink={<Link to="/changelog">v{SITE_VERSION}</Link>}
           />
         </div>
       </div>

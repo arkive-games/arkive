@@ -4,9 +4,10 @@ import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
 import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { getGameVersion } from '../lib/urls'
+import { SITE_VERSION } from '../lib/siteVersion'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 
-export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing'
+export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing' | '/changelog'
 
 /**
  * Unified top navigation shared by every page (map, Paldeck, breeding). The
@@ -91,6 +92,8 @@ export function TopNav({ active }: { active: NavKey }) {
             buildTime={__BUILD_TIME__}
             dev={import.meta.env.DEV}
             gameVersion={getGameVersion()}
+            siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
+            labels={{ siteVersion: t('changelog.title') }}
           />
         </>
       }

@@ -6,6 +6,7 @@ import { BLUEPRINT_STRINGS } from './blueprintStrings'
 import { MERCHANT_STRINGS } from './merchantStrings'
 import { BREEDING_STRINGS } from './breedingStrings'
 import { CATALOG_STRINGS } from './catalogStrings'
+import { CHANGELOG_STRINGS } from './changelogStrings'
 import { DUNGEON_STRINGS } from './dungeonStrings'
 import { FISHING_STRINGS } from './fishingStrings'
 import { PAL_STRINGS } from './palStrings'
@@ -967,6 +968,7 @@ for (const lng of LANGUAGES) {
       fishing: FISHING_STRINGS[lng] ?? FISHING_STRINGS['en-US'],
       recycler: RECYCLER_STRINGS[lng] ?? RECYCLER_STRINGS['en-US'],
       research: RESEARCH_STRINGS[lng] ?? RESEARCH_STRINGS['en-US'],
+      changelog: CHANGELOG_STRINGS[lng] ?? CHANGELOG_STRINGS['en-US'],
       sim: SIM_STRINGS[lng] ?? SIM_STRINGS['en-US'],
       raids: RAIDS_STRINGS[lng] ?? RAIDS_STRINGS['en-US'],
       basecamp: BASECAMP_STRINGS[lng] ?? BASECAMP_STRINGS['en-US'],

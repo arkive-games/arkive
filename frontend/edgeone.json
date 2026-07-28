@@ -40,6 +40,8 @@
     { "source": "/stat-simulator", "destination": "/index.html" },
     { "source": "/stat-simulator*", "destination": "/index.html" },
     { "source": "/regions/*", "destination": "/index.html" },
+    { "source": "/changelog", "destination": "/index.html" },
+    { "source": "/changelog*", "destination": "/index.html" },
     { "source": "/wiki", "destination": "/index.html" },
     { "source": "/wiki*", "destination": "/index.html" },
     { "source": "/wiki/*", "destination": "/index.html" },
