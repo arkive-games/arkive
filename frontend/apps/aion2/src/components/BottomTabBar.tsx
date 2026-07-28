@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "@tanstack/react-router";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import {
   BookOpen,
   Map as MapIcon,
@@ -22,6 +20,7 @@ import {
 } from "@gamemap/ui";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
+import SiteInfo from "@/components/SiteInfo";
 
 // Same archive entry the desktop top bar links to; on mobile that notice is not
 // rendered, so the link lives in the More sheet instead.
@@ -203,14 +202,7 @@ export default function BottomTabBar() {
           </div>
 
           <div className="mt-3 border-t border-border pt-3">
-            <div className="mb-1 text-xs font-semibold text-muted-foreground">
-              {t("common:siteInfo.contact.title", "Communication & Contact")}
-            </div>
-            <div className="prose prose-sm dark:prose-invert max-w-none break-words text-sm [&_a]:text-primary">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {t("common:siteInfo.contact.content")}
-              </ReactMarkdown>
-            </div>
+            <SiteInfo />
             <a
               href={ARCHIVE_URL}
               target="_blank"

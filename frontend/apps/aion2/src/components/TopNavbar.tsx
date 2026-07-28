@@ -1,8 +1,6 @@
 import { Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { ShellTopBar } from "@gamemap/map-shell";
 import {
   BuildInfo,
@@ -14,6 +12,7 @@ import {
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
+import SiteInfo from "@/components/SiteInfo";
 import { SITE_VERSION } from "@/lib/siteVersion";
 
 // "abyss" is disabled for now — kept in the Theme type + CSS for easy re-enable,
@@ -104,14 +103,7 @@ export default function TopNavbar() {
               align="end"
               className="max-h-[70vh] w-[300px] overflow-y-auto"
             >
-              <div className="mb-2 text-base font-semibold">
-                {t("common:siteInfo.contact.title", "Communication & Contact")}
-              </div>
-              <div className="prose prose-sm dark:prose-invert max-w-none break-words text-sm [&_a]:text-primary">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {t("common:siteInfo.contact.content")}
-                </ReactMarkdown>
-              </div>
+              <SiteInfo />
             </PopoverContent>
           </Popover>
           <BuildInfo
