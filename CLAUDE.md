@@ -70,6 +70,24 @@ landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTran
   `text-base`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`) so text stays consistent
   and scales with the root `font-size` set in each app's `index.css`. If a needed size
   isn't on the scale, prefer rem over px. Floor for in-content text is `text-xs` (12px).
+- **Version history (bump at commit):** each frontend app owns
+  `frontend/apps/<app>/src/changelog.json`, newest entry first — `entries[0]` **is** that
+  app's current version, shown in the footer and the top-bar build hovercard, and
+  rendered at `/changelog`. **Not every commit gets a version.** Bump only when a
+  commit ships something a visitor would notice, and do it **in the same commit** as
+  the change itself:
+  - `MINOR` — a new user-facing feature or page. `PATCH` — a batch of visible fixes
+    or polish. `MAJOR` — a site-level reinvention (rare; aion2 `1.0.0` was the
+    Phase-2 rebuild).
+  - Write all three locales (`en-US`, `zh-CN`, `zh-TW`); other locales fall back to
+    English. Describe the **user-visible change**, not the implementation.
+  - **No entry** for internal-only work: refactors, tooling, tests, docs, CI, or
+    data-pipeline plumbing with no visible effect.
+  - Append mechanically instead of hand-editing JSON (from `frontend/`):
+    `pnpm changelog:add --app palworld --bump minor --kind feature --en "…" --zh-cn "…" --zh-tw "…"`
+    where `--kind` ∈ `feature|improvement|fix|data`; add `--append` for a second
+    bullet on the version you just created. `pnpm test` validates version ordering,
+    dates and locale coverage.
 
 ## Notes
 - Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo
