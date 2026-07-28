@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const PHONE = { width: 390, height: 844 };
+const DESKTOP = { width: 1280, height: 800 };
 
 test.describe("mobile chrome", () => {
   test.use({ viewport: PHONE });
@@ -13,21 +14,19 @@ test.describe("mobile chrome", () => {
     expect(content).toContain("viewport-fit=cover");
   });
 
-  // Fixed by the "hide desktop top bar below md" task. Until then the bar
-  // measures ~518px in a 390px viewport and the lang/theme/contact buttons sit
-  // outside the viewport entirely.
-  test.fail("KNOWN DEFECT: top bar overflows the viewport", async ({ page }) => {
+  test("desktop top bar is not rendered on phones", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
-    // The bar only reaches its overflowing width once the i18n strings have
-    // arrived over HTTP — measuring right after goto sees a still-empty bar.
-    await page
-      .locator('header a[href="https://archive.tc-imba.com/"]')
-      .waitFor({ state: "attached" });
-    const overflow = await page.evaluate(() => {
-      const h = document.querySelector("header");
-      return h ? h.scrollWidth - h.clientWidth : 0;
-    });
-    expect(overflow).toBe(0);
+    // The overflowing 518px-wide bar is gone; the mobile header and the bottom
+    // tab bar navigate instead. Assert it EXISTS but is not visible —
+    // toBeHidden() alone also passes when the element is simply absent, which
+    // would make this test green against a missing testid.
+    const topbar = page.getByTestId("desktop-topbar");
+    await expect(topbar).toHaveCount(1);
+    await expect(topbar).toBeHidden();
+    const scrollW = await page.evaluate(
+      () => document.documentElement.scrollWidth,
+    );
+    expect(scrollW).toBe(390);
   });
 
   // Fixed by the "mobile map branch" task. Until then the 346px sidebar leaves
@@ -61,5 +60,20 @@ test.describe("mobile chrome", () => {
     await expect(sheet.getByTestId("more-lang-zh-CN")).toBeVisible();
     await expect(sheet.getByTestId("more-theme-dark")).toBeVisible();
     await expect(sheet.getByTestId("more-archive")).toBeVisible();
+  });
+});
+
+test.describe("desktop is unchanged", () => {
+  test.use({ viewport: DESKTOP });
+
+  test("top bar shows, tab bar does not", async ({ page }) => {
+    await page.goto("/wiki?lng=en-US");
+    await expect(page.getByTestId("desktop-topbar")).toBeVisible();
+    const bar = page.getByTestId("bottom-tab-bar");
+    await expect(bar).toHaveCount(1);
+    await expect(bar).toBeHidden();
+    await expect(page.getByTestId("lang-menu")).toBeVisible();
+    await expect(page.getByTestId("theme-menu")).toBeVisible();
+    await expect(page.getByTestId("contact-menu")).toBeVisible();
   });
 });

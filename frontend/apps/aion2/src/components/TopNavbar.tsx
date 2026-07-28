@@ -31,11 +31,16 @@ export default function TopNavbar() {
   return (
     <ShellTopBar
       classNames={{
-        root: "bg-topnavbar text-foreground",
+        // Below md this bar overflowed the viewport (518px of content in 390px),
+        // pushing the language, theme and contact buttons off-screen with no way
+        // to reach them. BottomTabBar's More sheet carries them on phones, so
+        // the desktop bar simply does not render there. `md:flex` restores
+        // ShellTopBar's own base `flex` at desktop widths.
+        root: "hidden bg-topnavbar text-foreground md:flex",
         right: "text-[#3D3D3D] dark:text-white/85",
       }}
       leftSlot={
-        <>
+        <div data-testid="desktop-topbar" className="flex items-center gap-6">
           <Link
             to="/"
             className="text-lg font-bold tracking-tight text-[#2E97FF] select-none"
@@ -59,7 +64,7 @@ export default function TopNavbar() {
               {ARCHIVE_URL}
             </a>
           </div>
-        </>
+        </div>
       }
       search={<GlobalSearchWidget />}
       languageSwitcher={{
