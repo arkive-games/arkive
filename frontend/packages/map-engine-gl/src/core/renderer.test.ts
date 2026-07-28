@@ -433,10 +433,38 @@ describe("MapRenderer size + pixel ratio", () => {
     expect(h.backend.setSize).toHaveBeenLastCalledWith(640, 480, false);
     expect(h.camera.viewportWidth).toBe(640);
     expect(h.camera.viewportHeight).toBe(480);
-    expect(h.renderer.isFramePending()).toBe(true);
     h.flush();
     // The projection follows the new viewport.
     expect(h.renderer.projectionCamera.right).toBeCloseTo(320, 9);
+  });
+
+  /**
+   * Resizing the drawing buffer reallocates and CLEARS it, and the browser
+   * delivers ResizeObserver callbacks after layout but before paint. Deferring
+   * the repaint to the next animation frame therefore composites one frame of
+   * empty canvas — and an animated container (a 300 ms sidebar collapse) resizes
+   * every frame, so that is a sustained blink, not a single flicker. The repaint
+   * has to happen inside `setSize`.
+   */
+  it("repaints synchronously on resize so no cleared frame is ever composited", () => {
+    const h = harness();
+    h.flush();
+    const drawn = h.backend.render.mock.calls.length;
+    h.renderer.setSize(640, 480);
+    expect(h.backend.render.mock.calls.length).toBe(drawn + 1);
+    // ...and with the NEW projection, not the pre-resize one.
+    expect(h.renderer.projectionCamera.right).toBeCloseTo(320, 9);
+  });
+
+  it("does not draw a degenerate frame when the container measures zero", () => {
+    const h = harness();
+    h.flush();
+    const drawn = h.backend.render.mock.calls.length;
+    h.renderer.setSize(0, 0);
+    expect(h.backend.render.mock.calls.length).toBe(drawn);
+    // The pending repaint survives, so the first real measurement still paints.
+    h.renderer.setSize(800, 600);
+    expect(h.backend.render.mock.calls.length).toBe(drawn + 1);
   });
 
   it("ignores a no-op resize and invalid sizes", () => {

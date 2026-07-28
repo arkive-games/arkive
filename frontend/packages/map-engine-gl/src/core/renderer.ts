@@ -448,6 +448,16 @@ export class MapRenderer {
    *
    * `dpr` is optional and capped like the constructor's; pass it whenever the
    * ratio may have changed (the built-in `observeSize` wiring does).
+   *
+   * The repaint here is SYNCHRONOUS, unlike every other mutation, which merely
+   * marks the scene dirty. Changing the drawing-buffer size reallocates and
+   * clears it, and the browser delivers `ResizeObserver` callbacks after layout
+   * but *before* paint — so scheduling the repaint for the next animation frame
+   * would composite this frame with an empty canvas. A container that animates
+   * its size (a 300 ms sidebar collapse) resizes on every frame of the
+   * animation, which turns that into a sustained blink rather than one dropped
+   * frame. Drawing here costs nothing extra: it is the same draw, moved earlier
+   * in the same frame.
    */
   setSize(width: number, height: number, dpr?: number): void {
     if (this.disposed) return;
@@ -463,7 +473,12 @@ export class MapRenderer {
     }
     this.backend.setSize(w, h, false);
     this.camera.setViewport(w, h);
-    this.invalidate();
+    // A zero-sized container has nothing to draw and `draw()` would bail anyway;
+    // leave the work marked dirty so the first real measurement paints it. The
+    // frame `camera.setViewport`'s `change` already queued stays queued either
+    // way and no-ops on the `dirty` check once we have drawn.
+    if (w > 0 && h > 0) this.render();
+    else this.invalidate();
   }
 
   get viewportWidth(): number {
