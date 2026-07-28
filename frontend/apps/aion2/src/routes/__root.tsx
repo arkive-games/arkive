@@ -4,6 +4,7 @@ import { GameMapProvider } from "@/context/GameMapContext";
 import { MarkersProvider } from "@/context/MarkersContext";
 import { GameDataProvider } from "@/context/GameDataContext";
 import { ThemeMapBridge } from "@/context/ThemeMapBridge";
+import BottomTabBar from "@/components/BottomTabBar";
 
 export const Route = createRootRoute({
   component: () => (
@@ -13,6 +14,9 @@ export const Route = createRootRoute({
         <MarkersProvider>
           <GameDataProvider>
             <Outlet />
+            {/* Mobile-only (md:hidden inside). Mounted here so one instance
+                serves every route — map and wiki alike. */}
+            <BottomTabBar />
           </GameDataProvider>
         </MarkersProvider>
       </GameMapProvider>

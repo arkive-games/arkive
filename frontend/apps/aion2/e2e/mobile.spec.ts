@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 
 const PHONE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 800 };
 
 test.describe("mobile chrome", () => {
   test.use({ viewport: PHONE });
@@ -39,5 +38,28 @@ test.describe("mobile chrome", () => {
     await el.waitFor({ state: "visible" });
     const box = await el.boundingBox();
     expect(box!.width).toBeGreaterThanOrEqual(380);
+  });
+
+  test("bottom tab bar navigates and marks the active tab", async ({ page }) => {
+    await page.goto("/wiki?lng=en-US");
+    const bar = page.getByTestId("bottom-tab-bar");
+    await expect(bar).toBeVisible();
+
+    await page.getByTestId("tab-quest").click();
+    await expect(page).toHaveURL(/\/wiki\/quest/);
+    await expect(page.getByTestId("tab-quest")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
+  });
+
+  test("language and theme are reachable in the More sheet", async ({ page }) => {
+    await page.goto("/wiki?lng=en-US");
+    await page.getByTestId("tab-more").click();
+    const sheet = page.getByTestId("more-sheet");
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByTestId("more-lang-zh-CN")).toBeVisible();
+    await expect(sheet.getByTestId("more-theme-dark")).toBeVisible();
+    await expect(sheet.getByTestId("more-archive")).toBeVisible();
   });
 });

@@ -128,3 +128,14 @@ globalSearch:
     npc: "NPC"
     item: "物品"
     markers: "地圖標記"
+
+# Bottom-tab-bar labels (mobile only). Short forms on purpose: five
+# tabs share a 390px bar. Values reuse strings already approved
+# elsewhere in the platform - do not invent new translations here.
+mobileNav:
+  map: "地圖"
+  quest: "任務"
+  npc: "NPC"
+  item: "物品"
+  wiki: "Wiki"
+  more: "更多"

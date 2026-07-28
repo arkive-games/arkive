@@ -192,3 +192,14 @@ globalSearch:
     npc: "NPCs"
     item: "Items"
     markers: "Map markers"
+
+# Bottom-tab-bar labels (mobile only). Short forms on purpose: five
+# tabs share a 390px bar. Values reuse strings already approved
+# elsewhere in the platform - do not invent new translations here.
+mobileNav:
+  map: "Map"
+  quest: "Quests"
+  npc: "NPCs"
+  item: "Items"
+  wiki: "Wiki"
+  more: "More"
