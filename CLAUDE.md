@@ -93,6 +93,11 @@ landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTran
     where `--kind` ∈ `feature|improvement|fix|data`; add `--append` for a second
     bullet on the version you just created. `pnpm test` validates version ordering,
     dates, SHAs and locale coverage.
+  - **Rebasing after stamping invalidates the SHA.** A rebase rewrites the feature
+    commit, orphaning the SHA the entry recorded — the JSON still validates and the
+    tests still pass, but the compare link 404s once pushed. So after any rebase (in
+    particular when integrating a worktree branch), run `pnpm changelog:verify` and
+    re-point the newest entries at their rewritten SHAs.
 
 ## Notes
 - Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo
