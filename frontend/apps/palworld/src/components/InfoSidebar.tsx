@@ -7,6 +7,11 @@ const COLLAPSED_KEY = 'palworld.map.siteInfoCollapsed'
 /** Below this, 346 + 320 would leave the map column a sliver. */
 const FIRST_VISIT_MIN_WIDTH = 1200
 
+/**
+ * Expanded on a first-ever visit so the feedback invite is actually seen, then
+ * the visitor's own choice wins forever. Storage lives here rather than in the
+ * shell package, which must stay storage-free.
+ */
 function readCollapsed(): boolean {
   try {
     const stored = localStorage.getItem(COLLAPSED_KEY)
