@@ -276,3 +276,98 @@ test.describe('mobile', () => {
     await expect(page.getByTestId('marker-search')).toBeVisible()
   })
 })
+
+/**
+ * Engine selection: the GL engine is the DEFAULT, the top-bar switcher swaps
+ * engines live, and the choice is persisted in localStorage under
+ * `palworld.map.engine` (see src/lib/mapEngineChoice.ts).
+ *
+ * These tests deliberately visit `/` with NO `?engine=` param — that is the
+ * whole point — and drive the switcher, so they must not use `openGlMap`.
+ */
+test.describe('engine selection', () => {
+  const STORAGE_KEY = 'palworld.map.engine'
+  const glCanvas = (page: Page) => page.getByTestId('gl-map-canvas')
+  const leafletContainer = (page: Page) => page.locator('.leaflet-container')
+  const storedEngine = (page: Page) =>
+    page.evaluate((k) => localStorage.getItem(k), STORAGE_KEY)
+
+  /** Open the switcher and pick an engine. */
+  async function pickEngine(page: Page, choice: 'gl' | 'leaflet') {
+    await page.getByTestId('engine-menu').click()
+    await page.getByTestId(`engine-${choice}`).click()
+  }
+
+  test('defaults to the GL engine with no param and empty storage', async ({ page }) => {
+    await page.goto('/')
+    expect(await storedEngine(page)).toBeNull()
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+    await page.waitForFunction(() => !!window.__glMap, null, { timeout: 20_000 })
+    await expect(leafletContainer(page)).toHaveCount(0)
+  })
+
+  test('the switcher swaps engines both ways without a reload', async ({ page }) => {
+    await page.goto('/')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+
+    await pickEngine(page, 'leaflet')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    await expect(glCanvas(page)).toHaveCount(0)
+    // The GL handle is published by the view, so it goes away with the engine.
+    await page.waitForFunction(() => !window.__glMap, null, { timeout: 20_000 })
+
+    await pickEngine(page, 'gl')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+    await expect(leafletContainer(page)).toHaveCount(0)
+    await page.waitForFunction(() => !!window.__glMap, null, { timeout: 20_000 })
+  })
+
+  test('the picked engine survives a reload of a param-free URL', async ({ page }) => {
+    await page.goto('/')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+
+    await pickEngine(page, 'leaflet')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    expect(await storedEngine(page)).toBe('leaflet')
+
+    await page.goto('/')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    await expect(glCanvas(page)).toHaveCount(0)
+
+    await pickEngine(page, 'gl')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+    expect(await storedEngine(page)).toBe('gl')
+
+    await page.goto('/')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+    await expect(leafletContainer(page)).toHaveCount(0)
+  })
+
+  test('?engine= wins for the visit but never overwrites the stored choice', async ({ page }) => {
+    // Store "gl" the way a user would, then arrive via a shared leaflet link.
+    await page.goto('/')
+    await pickEngine(page, 'leaflet')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    await pickEngine(page, 'gl')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+    expect(await storedEngine(page)).toBe('gl')
+
+    await page.goto('/?engine=leaflet')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    await expect(glCanvas(page)).toHaveCount(0)
+    // The link must not have rewritten the saved preference…
+    expect(await storedEngine(page)).toBe('gl')
+    // …and dropping the param restores it.
+    await page.goto('/')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+  })
+
+  test('switching with an explicit ?engine= present rewrites the param', async ({ page }) => {
+    await page.goto('/?engine=gl')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+    await pickEngine(page, 'leaflet')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    await expect(page).toHaveURL(/[?&]engine=leaflet\b/)
+    expect(await storedEngine(page)).toBe('leaflet')
+  })
+})

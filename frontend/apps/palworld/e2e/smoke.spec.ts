@@ -3,9 +3,14 @@ import { test, expect } from '@playwright/test'
 // Markers render as Leaflet divIcons: a .leaflet-marker-icon div whose
 // innerHTML contains an <img> with the icon URL. Tiles are served from
 // /palres/tiles/<MapId>/<MapId>_XX_YY.webp by the Vite dev middleware.
+//
+// The WebGL engine is now the DEFAULT map engine (see lib/mapEngineChoice), and
+// it draws everything into one canvas with no per-marker DOM — so every test
+// here pins `?engine=leaflet` to keep asserting the Leaflet engine it was
+// written for. The GL engine has its own spec (gl-map.spec.ts).
 
 test('renders MainWorld tiles', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await expect(
     page.locator('img.leaflet-tile[src*="/palres/tiles/MainWorld/"]').first(),
@@ -13,7 +18,7 @@ test('renders MainWorld tiles', async ({ page }) => {
 })
 
 test('fast-travel markers are present', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   // divIcon markers: .leaflet-marker-icon wrapping an <img src="...T_icon_compass_FTtower.webp">
   await expect(
@@ -24,7 +29,7 @@ test('fast-travel markers are present', async ({ page }) => {
 })
 
 test('toggling a subtype hides its markers', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   const ftMarkers = page.locator(
     '.leaflet-marker-pane .leaflet-marker-icon img[src*="T_icon_compass_FTtower"]',
@@ -36,7 +41,7 @@ test('toggling a subtype hides its markers', async ({ page }) => {
 })
 
 test('switching language to ko-KR localizes UI and data labels', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await page.getByTestId('lang-menu').click()
   await page.getByTestId('lang-ko-KR').click()
@@ -55,7 +60,7 @@ test('data fetches carry the artifact-version cache-buster', async ({ page }) =>
       dataRequests.push(url.pathname + url.search)
     }
   })
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(
     page.locator('.leaflet-marker-pane .leaflet-marker-icon img[src*="T_icon_compass_FTtower"]').first(),
   ).toBeVisible({ timeout: 15_000 })
@@ -64,7 +69,7 @@ test('data fetches carry the artifact-version cache-buster', async ({ page }) =>
 })
 
 test('map switch swaps tile URLs', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await expect(
     page.locator('img.leaflet-tile[src*="/palres/tiles/MainWorld/"]').first(),

@@ -1,13 +1,14 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearch } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, type MapRef } from '@gamemap/map-engine'
-// The WebGL engine is code-split: three.js is ~1.5 MB that only `?engine=gl`
-// needs, so it must not sit in the entry chunk with the default Leaflet path.
-// The `GlMapRef` type import erases at build time and costs nothing.
+// The WebGL engine is code-split: three.js is ~1.5 MB that only the GL path
+// needs, so it must not sit in the entry chunk with the Leaflet one — non-map
+// routes never fetch it. The `GlMapRef` type import erases at build time and
+// costs nothing.
 import type { GlMapRef } from '@gamemap/map-engine-gl'
 const GlGameMapView = lazy(() => import('./features/map/GlMapView'))
-import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
+import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -24,6 +25,7 @@ import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/Rewar
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
+import { resolveMapEngine, writeMapEngine, type MapEngineChoice } from './lib/mapEngineChoice'
 
 // Ray-casting point-in-polygon (point + ring both in map-pixel space).
 function pointInPolygon(x: number, y: number, poly: number[][]): boolean {
@@ -96,10 +98,10 @@ export default function App() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const mapRef = useRef<MapRef>(null)
-  // Separate handle for the WebGL engine (`?engine=gl`): its ref is a small
-  // engine-agnostic handle, NOT an `L.Map`, so it must never be threaded into
-  // Leaflet-typed code.
+  // Separate handle for the WebGL engine: its ref is a small engine-agnostic
+  // handle, NOT an `L.Map`, so it must never be threaded into Leaflet-typed code.
   const glMapRef = useRef<GlMapRef | null>(null)
+  const navigate = useNavigate({ from: '/' })
   const isMobile = useIsMobile()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [searchSheetOpen, setSearchSheetOpen] = useState(false)
@@ -130,6 +132,37 @@ export default function App() {
   const { completed, toggleCompleted } = useCompletedMarkers(mapId)
   // Per-map view (center/zoom) + selected marker, persisted across reloads.
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId)
+
+  // Which engine renders the map. See `lib/mapEngineChoice` for the precedence
+  // (`?engine=` for this visit > stored choice > the `gl` default); held in state
+  // so the top-bar switcher swaps engines live, without a reload.
+  const [engine, setEngine] = useState<MapEngineChoice>(() => resolveMapEngine(engineParam))
+  // A later navigation can change `?engine=` (back/forward, an in-app link) —
+  // mirror it into state the same way `?map=` is mirrored above.
+  useEffect(() => {
+    if (engineParam && engineParam !== engine) setEngine(engineParam)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engineParam])
+  // The view handed to the engine that is currently mounted. `initialView` is
+  // frozen at page mount, but `onViewChange` streams the live camera to storage —
+  // so on an engine swap the incoming engine gets a FRESH read instead, otherwise
+  // it would restore the camera the page loaded with and the swap would jump.
+  const [mountView, setMountView] = useState<MapViewState | null>(initialView)
+  // Switching maps loads that map's own remembered view (stable identity, so this
+  // is a no-op re-render at mount).
+  useEffect(() => { setMountView(initialView) }, [initialView])
+  const chooseEngine = useCallback((choice: MapEngineChoice) => {
+    if (choice === engine) return
+    setMountView(readMapView(mapViewStore, mapId).view)
+    setEngine(choice)
+    writeMapEngine(choice)
+    // Keep an explicit `?engine=` in sync so the URL can't contradict what is on
+    // screen; don't ADD one when absent (the stored choice already covers it).
+    // `replace` so switching engines doesn't pile up history entries.
+    if (engineParam) {
+      void navigate({ search: (prev) => ({ ...prev, engine: choice }), replace: true })
+    }
+  }, [engine, engineParam, mapId, navigate])
   // Marker id restored from storage for the current markers load — passed to
   // the engine so the restore does NOT fly (the restored center wins). Cleared
   // when a reload starts and set again by each restore, which re-arms the
@@ -765,7 +798,7 @@ export default function App() {
     selectedMarkerId,
     forceShowIds,
     selectedPosition,
-    initialView,
+    initialView: mountView,
     onViewChange: saveView,
     suppressInitialFlyForId: restoredMarkerId,
     overlayLines,
@@ -780,16 +813,15 @@ export default function App() {
     labels,
   }
 
-  // `?engine=gl` swaps in the WebGL engine; anything else keeps Leaflet (the
-  // default). Only the ref differs — see `glMapRef` above. The GL branch is
-  // additionally behind a lazy boundary (see features/map/GlMapView), so it
-  // needs a Suspense fallback for the one chunk fetch. The fallback just holds
-  // the map area open, borrowing the `.gmgl-map-root` void colour from index.css
-  // (`flex-1` stands in for the sizing engine-gl.css normally supplies, since
-  // that stylesheet arrives with the chunk) so there is no flash of a
-  // differently-coloured panel.
+  // The WebGL engine (the default) or Leaflet. Only the ref differs — see
+  // `glMapRef` above. The GL branch is additionally behind a lazy boundary (see
+  // features/map/GlMapView), so it needs a Suspense fallback for the one chunk
+  // fetch. The fallback just holds the map area open, borrowing the
+  // `.gmgl-map-root` void colour from index.css (`flex-1` stands in for the
+  // sizing engine-gl.css normally supplies, since that stylesheet arrives with
+  // the chunk) so there is no flash of a differently-coloured panel.
   const mapView =
-    engineParam === 'gl' ? (
+    engine === 'gl' ? (
       <Suspense
         fallback={
           <div
@@ -860,7 +892,7 @@ export default function App() {
     <h1 className="sr-only">{t('title')}</h1>
     <ShellLayout
       className="bg-background text-foreground"
-      topBar={<TopNav active="/" />}
+      topBar={<TopNav active="/" engine={engine} onEngineChange={chooseEngine} />}
       sidebar={
         <ShellSidebar
           collapseLabel={t('collapse')}

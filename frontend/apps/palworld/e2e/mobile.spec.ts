@@ -49,8 +49,12 @@ test('stat simulator keeps the in-game column pinned inside the viewport', async
   expect(box.x + box.width).toBeLessThanOrEqual(390)
 })
 
+// This one test pins `?engine=leaflet`: the WebGL engine is the default now (see
+// lib/mapEngineChoice) and renders no `.leaflet-container`. The GL engine's own
+// mobile chrome is covered by gl-map.spec.ts; the other tests here never touch
+// the map surface, so they stay on the default engine.
 test('map page shows FABs that open filter and search sheets', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await page.getByTestId('map-fab-filter').click()
   await expect(page.getByTestId('filter-sheet')).toBeVisible()

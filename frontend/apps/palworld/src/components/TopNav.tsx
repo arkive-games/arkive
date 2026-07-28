@@ -5,6 +5,8 @@ import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { getGameVersion } from '../lib/urls'
 import { SITE_VERSION } from '../lib/siteVersion'
+import type { MapEngineChoice } from '../lib/mapEngineChoice'
+import { EngineToggle } from './EngineToggle'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 
 export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing' | '/changelog'
@@ -14,7 +16,16 @@ export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills
  * active page is highlighted via the shell's `nav` feature; routing stays here
  * so the shell package remains router-agnostic.
  */
-export function TopNav({ active }: { active: NavKey }) {
+export function TopNav({ active, engine, onEngineChange }: {
+  active: NavKey
+  /**
+   * Map-engine switcher, only meaningful on the map page: the choice is owned by
+   * `App` (it decides which engine to mount), so both the current value and the
+   * setter are passed in. Omitted by every other page.
+   */
+  engine?: MapEngineChoice
+  onEngineChange?: (choice: MapEngineChoice) => void
+}) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
 
@@ -86,6 +97,9 @@ export function TopNav({ active }: { active: NavKey }) {
       }}
       rightExtras={
         <>
+          {active === '/' && engine && onEngineChange && (
+            <EngineToggle value={engine} onChange={onEngineChange} />
+          )}
           <ThemeToggle labels={{ auto: t('themeAuto'), light: t('themeLight'), dark: t('themeDark') }} />
           <BuildInfo
             commit={__BUILD_GIT_COMMIT__}

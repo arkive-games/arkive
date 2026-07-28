@@ -11,8 +11,8 @@ import { ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell
 import 'leaflet/dist/leaflet.css'
 import '@gamemap/map-engine/engine.css'
 // The WebGL engine's own stylesheet is NOT imported here: it rides along with the
-// engine's lazy chunk (see features/map/GlMapView) so `?engine=gl` is the only
-// path that pays for it.
+// engine's lazy chunk (see features/map/GlMapView) so only the map route pays for
+// it — the catalog/detail pages never fetch it.
 import './index.css'
 import './i18n'
 import App from './App'
@@ -45,6 +45,7 @@ import PartnerSkillsPage from './features/pals/PartnerSkillsPage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import { BottomTabBar } from './components/BottomTabBar'
 import { initDataVersion } from './lib/urls'
+import { isMapEngineChoice, type MapEngineChoice } from './lib/mapEngineChoice'
 
 const THEME_KEY = 'palworld.theme'
 const themeStorage: ThemeStorage = {
@@ -77,11 +78,11 @@ export interface MapSearch {
   /** Open a specific map instead of the default MainWorld. */
   map?: string
   /**
-   * Render engine opt-in: `gl` mounts the WebGL (three.js) map engine instead of
-   * the default Leaflet one. Experimental escape hatch for side-by-side
-   * comparison — Leaflet stays the default and nothing else changes.
+   * Render-engine override for this visit: `gl` mounts the WebGL (three.js) map
+   * engine, `leaflet` the original one. When present it beats the persisted
+   * choice without overwriting it — see `lib/mapEngineChoice`.
    */
-  engine?: 'gl'
+  engine?: MapEngineChoice
 }
 const mapRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -89,7 +90,7 @@ const mapRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): MapSearch => ({
     q: typeof s.q === 'string' ? s.q : undefined,
     map: typeof s.map === 'string' ? s.map : undefined,
-    engine: s.engine === 'gl' ? 'gl' : undefined,
+    engine: isMapEngineChoice(s.engine) ? s.engine : undefined,
   }),
   component: App,
 })

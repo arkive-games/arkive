@@ -3,9 +3,13 @@ import { test, expect } from '@playwright/test'
 // Effigy & boss subtypes are completable: the popup pill toggles a per-map
 // completed set persisted in localStorage, and the subtype filter button
 // shows an X/N progress badge instead of a plain count.
+//
+// `?engine=leaflet` is pinned because the WebGL engine is the default now (see
+// lib/mapEngineChoice): reaching a boss popup here means clicking its
+// `.leaflet-marker-icon`, which only the Leaflet engine renders.
 
 test('marking a field boss completed flips the pill, badge, and survives reload', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
 
   // Completable subtypes render a progress badge (starts at 0/N).
@@ -41,7 +45,7 @@ test('marking a field boss completed flips the pill, badge, and survives reload'
 })
 
 test('non-completable subtypes keep a plain count (no slash)', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   const ft = page.getByTestId('subtype-toggle-fastTravel')
   await expect(ft).toBeVisible()
   await expect(ft).not.toContainText('/')

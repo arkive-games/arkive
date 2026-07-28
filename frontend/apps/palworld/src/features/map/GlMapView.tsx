@@ -1,10 +1,12 @@
-// Lazy boundary for the WebGL (three.js) map engine (`?engine=gl`).
+// Lazy boundary for the WebGL (three.js) map engine — the default engine, with
+// Leaflet as the alternative (see lib/mapEngineChoice).
 //
-// three r185 + its fat-line addon + earcut are ~1.5 MB of JS that ONLY the
-// opt-in GL path needs; a static import puts all of it in the entry chunk, so
-// every visitor of the default (Leaflet) map downloaded and parsed it. App.tsx
+// three r185 + its fat-line addon + earcut are ~1.5 MB of JS that ONLY the map
+// route needs; a static import puts all of it in the entry chunk, so every
+// visitor of the Paldeck/catalog pages downloaded and parsed it too. App.tsx
 // pulls this module in with `lazy()` instead, which moves the engine — and, via
-// the stylesheet import below, its CSS — into a chunk fetched on demand.
+// the stylesheet import below, its CSS — into a chunk fetched on demand (and
+// never at all by a visitor who picked Leaflet).
 //
 // The CSS import lives HERE rather than in main.tsx on purpose: that is what
 // makes Vite emit it as part of the lazy chunk instead of the entry stylesheet.

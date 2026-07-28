@@ -9,13 +9,17 @@ import { test, expect } from '@playwright/test'
 // other subtype uses the T_icon_compass_Teleport icon, so nth() below indexes
 // altars deterministically: first() = #1 (Sky Island, same-map pair),
 // nth(20) = #21 (the World Tree entrance).
+//
+// Both tests pin `?engine=leaflet`: the WebGL engine is the default now (see
+// lib/mapEngineChoice) and has no per-marker DOM or SVG overlay pane to assert
+// on, so the selectors below only exist on the Leaflet engine.
 
 const ALTAR_ICONS =
   '.leaflet-marker-pane .leaflet-marker-icon img[src*="T_icon_compass_Teleport"]'
 const DASHED_LINE = '.leaflet-overlay-pane path[stroke-dasharray]'
 
 test('selected altar shows connects-to link and a dashed line to its partner', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
 
   // warpAltar is not defaultActive — enable it.
@@ -53,7 +57,7 @@ test('selected altar shows connects-to link and a dashed line to its partner', a
 })
 
 test('world tree entrance altar links across maps and jumps to the exit', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
 
   await page.getByTestId('subtype-toggle-warpAltar').click()

@@ -484,6 +484,7 @@ const resources = {
       themeAuto: 'System',
       themeLight: 'Light',
       themeDark: 'Dark',
+      engineMenu: 'Map engine',
     },
   },
   'de-DE': {
@@ -511,6 +512,7 @@ const resources = {
       themeAuto: 'System',
       themeLight: 'Hell',
       themeDark: 'Dunkel',
+      engineMenu: 'Karten-Engine',
     },
   },
   'es-ES': {
@@ -538,6 +540,7 @@ const resources = {
       themeAuto: 'Sistema',
       themeLight: 'Claro',
       themeDark: 'Oscuro',
+      engineMenu: 'Motor del mapa',
     },
   },
   'es-MX': {
@@ -565,6 +568,7 @@ const resources = {
       themeAuto: 'Sistema',
       themeLight: 'Claro',
       themeDark: 'Oscuro',
+      engineMenu: 'Motor del mapa',
     },
   },
   'fr-FR': {
@@ -592,6 +596,7 @@ const resources = {
       themeAuto: 'Système',
       themeLight: 'Clair',
       themeDark: 'Sombre',
+      engineMenu: 'Moteur de carte',
     },
   },
   'id-ID': {
@@ -619,6 +624,7 @@ const resources = {
       themeAuto: 'Sistem',
       themeLight: 'Terang',
       themeDark: 'Gelap',
+      engineMenu: 'Mesin peta',
     },
   },
   'it-IT': {
@@ -646,6 +652,7 @@ const resources = {
       themeAuto: 'Sistema',
       themeLight: 'Chiaro',
       themeDark: 'Scuro',
+      engineMenu: 'Motore mappa',
     },
   },
   'ja-JP': {
@@ -673,6 +680,7 @@ const resources = {
       themeAuto: 'システム',
       themeLight: 'ライト',
       themeDark: 'ダーク',
+      engineMenu: 'マップエンジン',
     },
   },
   'ko-KR': {
@@ -700,6 +708,7 @@ const resources = {
       themeAuto: '시스템',
       themeLight: '라이트',
       themeDark: '다크',
+      engineMenu: '지도 엔진',
     },
   },
   'pl-PL': {
@@ -727,6 +736,7 @@ const resources = {
       themeAuto: 'System',
       themeLight: 'Jasny',
       themeDark: 'Ciemny',
+      engineMenu: 'Silnik mapy',
     },
   },
   'pt-BR': {
@@ -754,6 +764,7 @@ const resources = {
       themeAuto: 'Sistema',
       themeLight: 'Claro',
       themeDark: 'Escuro',
+      engineMenu: 'Motor do mapa',
     },
   },
   'ru-RU': {
@@ -781,6 +792,7 @@ const resources = {
       themeAuto: 'Система',
       themeLight: 'Светлая',
       themeDark: 'Тёмная',
+      engineMenu: 'Движок карты',
     },
   },
   'th-TH': {
@@ -808,6 +820,7 @@ const resources = {
       themeAuto: 'ระบบ',
       themeLight: 'สว่าง',
       themeDark: 'มืด',
+      engineMenu: 'เอนจินแผนที่',
     },
   },
   'tr-TR': {
@@ -835,6 +848,7 @@ const resources = {
       themeAuto: 'Sistem',
       themeLight: 'Açık',
       themeDark: 'Koyu',
+      engineMenu: 'Harita motoru',
     },
   },
   'vi-VN': {
@@ -862,6 +876,7 @@ const resources = {
       themeAuto: 'Hệ thống',
       themeLight: 'Sáng',
       themeDark: 'Tối',
+      engineMenu: 'Công cụ bản đồ',
     },
   },
   'zh-CN': {
@@ -889,6 +904,7 @@ const resources = {
       themeAuto: '跟随系统',
       themeLight: '浅色',
       themeDark: '深色',
+      engineMenu: '地图引擎',
     },
   },
   'zh-TW': {
@@ -916,6 +932,7 @@ const resources = {
       themeAuto: '跟隨系統',
       themeLight: '淺色',
       themeDark: '深色',
+      engineMenu: '地圖引擎',
     },
   },
 }
