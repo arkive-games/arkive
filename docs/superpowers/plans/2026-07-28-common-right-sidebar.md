@@ -24,6 +24,8 @@ Run everything from `E:\arkive-games\arkive\frontend` unless a step says otherwi
 - Commits must be signed. Plain `git commit` signs automatically; never pass `--no-gpg-sign`.
 - Stage explicit paths. Never `git add -A` — the user edits files concurrently.
 - Never hard-code pixel font sizes. Use Tailwind scale steps; `text-xs` is the floor for in-content text.
+- **Version bump at commit.** Each app owns `apps/<app>/src/changelog.json`, newest entry first, and a user-visible change must bump it *in the same commit*. This feature is one `MINOR` bump per app, on the commit that completes that app's visible feature: **Task 5** for aion2 (1.6.0 → 1.7.0) and **Task 8** for palworld (1.8.0 → 1.9.0). Tasks 3, 4, 6 and 7 are steps toward those releases and carry no entry of their own — one feature, one version. Use the helper rather than hand-editing JSON; `pnpm test` validates ordering, dates and locale coverage.
+- **Live testing happens after the merge back**, per the workspace convention. Inside the worktree, run unit tests, typecheck, lint, builds and Playwright (it starts its own server on its own port). The browser checks marked *deferred* below run once, together, after this branch is rebased onto `master` — a dev server in the worktree would collide with the fixed ports `15173`/`15174` that the main workspace already uses.
 
 ## File Structure
 
@@ -53,6 +55,8 @@ Run everything from `E:\arkive-games\arkive\frontend` unless a step says otherwi
 | `apps/aion2/src/components/TopNavbar.tsx` | Popover body → `<SiteInfo />` |
 | `apps/aion2/src/components/BottomTabBar.tsx` | Inline contact section → `<SiteInfo />` |
 | `apps/aion2/src/features/map/MapRoute.tsx` | Pass `rightSidebar` to `ShellLayout` |
+| `apps/aion2/src/changelog.json` | MINOR bump 1.6.0 → 1.7.0 (Task 5) |
+| `apps/palworld/src/changelog.json` | MINOR bump 1.8.0 → 1.9.0 (Task 8) |
 | `apps/palworld/src/i18n.ts` | Merge `siteInfo` bundle |
 | `apps/palworld/src/components/TopNav.tsx` | Add info popover to `rightExtras` |
 | `apps/palworld/src/components/BottomTabBar.tsx` | Add info section, make the sheet scrollable |
@@ -770,13 +774,9 @@ cd E:/arkive-games/arkive/frontend && pnpm --filter aion2 exec tsc --noEmit -p t
 
 Expected: no errors. Unused-import errors here mean step 2 or 3 left a dead import — remove it.
 
-- [ ] **Step 5: Check it in the browser**
+- [ ] **Step 5: Note the deferred browser check**
 
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:15173
-```
-
-If not `200`, start the server with `pnpm dev:aion2` (it binds `15173`). Then open `http://localhost:15173/?lng=zh-CN`, click the mail icon in the top bar, and confirm: the About section, the three discussion groups, the feedback hint, and a `1091411026` card with a working 复制 button. Switch to `?lng=en-US` and confirm the card is gone but the Discord links remain.
+*Deferred to the post-merge live-test pass (Task 10, Step 5).* What to look at then, at `http://localhost:15173/?lng=zh-CN`: click the mail icon in the top bar and confirm the About section, the three discussion groups, the feedback hint, and a `1091411026` card with a working 复制 button; then `?lng=en-US` and confirm the card is gone while the Discord links remain. Do not start a dev server in the worktree — port `15173` belongs to the main workspace.
 
 - [ ] **Step 6: Commit**
 
@@ -880,16 +880,36 @@ cd E:/arkive-games/arkive/frontend && pnpm --filter aion2 exec tsc --noEmit -p t
 
 Expected: no errors.
 
-- [ ] **Step 4: Check it in the browser**
+- [ ] **Step 4: Note the deferred browser check**
 
-Open `http://localhost:15173/?lng=zh-CN`. Confirm: the panel is open on the right on a first visit (clear the key with `localStorage.removeItem('aion2.siteInfoSidebarCollapsed')` then reload to retest), the tab on its left edge collapses it, the map redraws and fills the freed space without blank tiles, and the collapsed state survives a reload.
+*Deferred to the post-merge live-test pass (Task 10, Step 5).* What to look at then, at `http://localhost:15173/?lng=zh-CN`: the panel is open on the right on a first visit (`localStorage.removeItem('aion2.siteInfoSidebarCollapsed')` then reload to retest), the tab on its left edge collapses it, the map redraws and fills the freed space without blank tiles, and the collapsed state survives a reload.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Bump the aion2 version**
+
+This commit completes aion2's user-visible feature, so it carries the release entry.
+
+```bash
+cd E:/arkive-games/arkive/frontend
+pnpm changelog:add --app aion2 --bump minor --kind feature \
+  --en "New site info panel: what this site is, plus a channel for feedback and bug reports — in a right sidebar on the map, and from the top bar on any page." \
+  --zh-cn "新增站点信息面板：介绍本站并提供反馈交流渠道（QQ 群 1091411026），可在地图右侧栏或顶栏随时打开。" \
+  --zh-tw "新增站點資訊面板：介紹本站並提供回饋交流管道（QQ 群 1091411026），可在地圖右側欄或頂欄隨時開啟。"
+```
+
+Expected: `apps/aion2/src/changelog.json` gains a `1.7.0` entry at the top. Verify with:
+
+```bash
+cd E:/arkive-games/arkive/frontend && pnpm test changelog
+```
+
+Expected: PASS. A failure here means the version, date ordering or locale coverage is wrong — fix the JSON, do not skip the test.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 cd E:/arkive-games/arkive
-git add frontend/apps/aion2/src/features/map/sidebar/InfoSidebar.tsx frontend/apps/aion2/src/features/map/MapRoute.tsx
-git commit -m "feat(aion2): add the site-info right sidebar to the desktop map"
+git add frontend/apps/aion2/src/features/map/sidebar/InfoSidebar.tsx frontend/apps/aion2/src/features/map/MapRoute.tsx frontend/apps/aion2/src/changelog.json
+git commit -m "feat(aion2): add the site-info right sidebar to the desktop map (1.7.0)"
 ```
 
 ---
@@ -1314,13 +1334,9 @@ cd E:/arkive-games/arkive/frontend && pnpm --filter palworld exec tsc --noEmit -
 
 Expected: no errors.
 
-- [ ] **Step 5: Check it in the browser**
+- [ ] **Step 5: Note the deferred browser check**
 
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:15174
-```
-
-If not `200`, run `pnpm dev:palworld`. Open `http://localhost:15174/pals`, click the info icon: About + disclaimer, no QQ card in English. Switch to 简体中文 via the language menu and confirm the 交流与反馈 section and the `1091411026` card with a working 复制 button. Then narrow the window below 768px and check the More sheet shows the same section and scrolls.
+*Deferred to the post-merge live-test pass (Task 10, Step 5).* What to look at then, at `http://localhost:15174/pals`: click the info icon — About + disclaimer, no QQ card in English; switch to 简体中文 via the language menu and confirm the 交流与反馈 section and the `1091411026` card with a working 复制 button; then narrow the window below 768px and check the More sheet shows the same section and scrolls.
 
 - [ ] **Step 6: Commit**
 
@@ -1418,16 +1434,36 @@ cd E:/arkive-games/arkive/frontend && pnpm --filter palworld exec tsc --noEmit -
 
 Expected: no errors.
 
-- [ ] **Step 4: Check it in the browser**
+- [ ] **Step 4: Note the deferred browser check**
 
-Open `http://localhost:15174/`. Confirm the panel is open on the right on a first visit (`localStorage.removeItem('palworld.siteInfoSidebarCollapsed')` then reload to retest), the left-edge tab collapses it, the Leaflet map fills the freed width with no blank tiles, and the state survives a reload. Also confirm the left filter sidebar's tab still works and the two tabs do not overlap.
+*Deferred to the post-merge live-test pass (Task 10, Step 5).* What to look at then, at `http://localhost:15174/`: the panel is open on the right on a first visit (`localStorage.removeItem('palworld.siteInfoSidebarCollapsed')` then reload to retest), the left-edge tab collapses it, the Leaflet map fills the freed width with no blank tiles, and the state survives a reload. Also confirm the left filter sidebar's tab still works and the two tabs do not overlap.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Bump the palworld version**
+
+This commit completes palworld's user-visible feature, so it carries the release entry.
+
+```bash
+cd E:/arkive-games/arkive/frontend
+pnpm changelog:add --app palworld --bump minor --kind feature \
+  --en "New site info panel: what this site is, plus a channel for feedback and bug reports — in a right sidebar on the map, and from the top bar on any page." \
+  --zh-cn "新增站点信息面板：介绍本站并提供反馈交流渠道（QQ 群 1091411026），可在地图右侧栏或顶栏随时打开。" \
+  --zh-tw "新增站點資訊面板：介紹本站並提供回饋交流管道（QQ 群 1091411026），可在地圖右側欄或頂欄隨時開啟。"
+```
+
+Expected: `apps/palworld/src/changelog.json` gains a `1.9.0` entry at the top. Verify with:
+
+```bash
+cd E:/arkive-games/arkive/frontend && pnpm test changelog
+```
+
+Expected: PASS.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 cd E:/arkive-games/arkive
-git add frontend/apps/palworld/src/components/InfoSidebar.tsx frontend/apps/palworld/src/App.tsx
-git commit -m "feat(palworld): add the site-info right sidebar to the desktop map"
+git add frontend/apps/palworld/src/components/InfoSidebar.tsx frontend/apps/palworld/src/App.tsx frontend/apps/palworld/src/changelog.json
+git commit -m "feat(palworld): add the site-info right sidebar to the desktop map (1.9.0)"
 ```
 
 ---
@@ -1624,17 +1660,17 @@ cd E:/arkive-games/arkive/frontend && E2E_PORT=5199 pnpm e2e:aion2; pnpm e2e:pal
 
 Expected: aion2 — the 1 pre-existing `wiki.spec.ts` embedded-map POI failure and nothing else; palworld — the 2 pre-existing failures (ko-KR smoke, dungeons "Hard · bonus") and nothing else. Any other failure is a regression from this work. Run the palworld suite twice if `breeding` or `global-search` flake — they only flake under full-suite load.
 
-- [ ] **Step 5: Visual confirmation on both apps**
+- [ ] **Step 5: Merge back, then live-test**
 
-With `pnpm dev:aion2` (15173) and `pnpm dev:palworld` (15174) running, at a 1280×800 window check on each: both sidebar tabs are reachable and do not overlap, the map fills the space after collapsing the right sidebar with no blank tiles, and the panel is legible in light, dark, and (aion2) its theme variants.
-
-- [ ] **Step 6: Commit anything outstanding**
+Everything above runs in the worktree. Live testing happens on `master`, per the workspace convention: integrate with **rebase**, never a merge commit.
 
 ```bash
 cd E:/arkive-games/arkive && git status --short
 ```
 
-Expected: clean. If the builds emitted tracked artifacts, do not commit them — check whether `dist/` is ignored first.
+Expected: clean (if the builds emitted tracked artifacts, do not commit them — confirm `dist/` is ignored first). Then rebase the branch onto `master` and fast-forward `master` onto it. Report to the user before doing this rather than pushing anywhere.
+
+With `pnpm dev:aion2` (15173) and `pnpm dev:palworld` (15174) running on `master`, work through the four deferred checks (Task 4 Step 5, Task 5 Step 4, Task 7 Step 5, Task 8 Step 4). Then, at 1280×800 on each app: both sidebar tabs are reachable and do not overlap, the map fills the space after collapsing the right sidebar with no blank tiles, the panel is legible in light, dark and (aion2) its theme variants, and `/changelog` shows the new version entry.
 
 ---
 
@@ -1661,6 +1697,8 @@ Expected: clean. If the builds emitted tracked artifacts, do not commit them —
 | e2e across both apps, desktop + phone | 9 |
 | `check:shell` stays green | 1, 2, 10 |
 | Baseline-aware e2e comparison | 10 |
+| Version bump in the same commit (aion2 1.7.0, palworld 1.9.0) | 5, 8 |
+| Live testing only after the rebase back onto `master` | 10 |
 
 **Deviations from the spec, both deliberate:**
 
