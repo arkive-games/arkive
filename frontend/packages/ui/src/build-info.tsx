@@ -1,3 +1,5 @@
+import * as React from "react"
+
 import { GitHubIcon } from "./github-icon"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card"
 import { cn } from "./utils"
@@ -11,6 +13,13 @@ export interface BuildInfoProps {
   dev?: boolean
   /** Game version the site's data was built from (from the data artifact's `version.json` or `VITE_GAME_VERSION`). Row is hidden when unset. */
   gameVersion?: string
+  /**
+   * Site version link, e.g. `<Link to="/changelog">v1.8.0</Link>`. Row is hidden
+   * when unset. A slot, not an href, so the app supplies its own router link.
+   */
+  siteVersion?: React.ReactNode
+  /** Force the hovercard open. Test-only escape hatch; Radix hover never fires in jsdom. */
+  defaultOpen?: boolean
   /** Repository link opened by the icon. Defaults to the monorepo. */
   repoUrl?: string
   /** Injectable labels so apps can localize; the package stays i18n-free. */
@@ -18,6 +27,7 @@ export interface BuildInfoProps {
     commit?: string
     buildTime?: string
     gameVersion?: string
+    siteVersion?: string
     /** Accessible name for the icon link. */
     repo?: string
   }
@@ -50,6 +60,8 @@ function BuildInfo({
   buildTime,
   dev = false,
   gameVersion,
+  siteVersion,
+  defaultOpen,
   repoUrl = "https://github.com/arkive-games/arkive",
   labels,
   className,
@@ -58,7 +70,7 @@ function BuildInfo({
   const displayTime = dev ? toISO(Date.now()) : toISO(Number(buildTime))
 
   return (
-    <HoverCard openDelay={100}>
+    <HoverCard openDelay={100} defaultOpen={defaultOpen}>
       <HoverCardTrigger asChild>
         <a
           href={repoUrl}
@@ -76,6 +88,12 @@ function BuildInfo({
       </HoverCardTrigger>
       <HoverCardContent side="bottom" align="end" className="w-auto p-3 text-sm">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+          {siteVersion && (
+            <>
+              <dt className="text-muted-foreground">{labels?.siteVersion ?? "Version"}</dt>
+              <dd className="font-mono">{siteVersion}</dd>
+            </>
+          )}
           <dt className="text-muted-foreground">{labels?.commit ?? "Commit"}</dt>
           <dd>
             {dev ? (

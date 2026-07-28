@@ -11,12 +11,18 @@ export interface SiteFooterProps extends React.ComponentProps<"footer"> {
   githubUrl?: string
   /** ICP filing record (China). Wire to VITE_ICP_BEIAN in each app. */
   icpBeian?: string
+  /**
+   * Site version link, e.g. `<Link to="/changelog">v1.8.0</Link>`. A slot rather
+   * than an href so each app supplies its own router link (client-side nav).
+   */
+  versionLink?: React.ReactNode
 }
 
 function SiteFooter({
   homeUrl = "https://tc-imba.com",
   githubUrl = "https://github.com/arkive-games",
   icpBeian = "沪ICP备2025152827号-1",
+  versionLink,
   className,
   ...props
 }: SiteFooterProps) {
@@ -44,6 +50,14 @@ function SiteFooter({
           </a>
         </span>
         <span>© 2025-2026</span>
+        {versionLink ? (
+          <span
+            data-testid="site-footer-version"
+            className="underline-offset-4 hover:text-foreground [&_a:hover]:underline"
+          >
+            {versionLink}
+          </span>
+        ) : null}
         <a
           href={githubUrl}
           target="_blank"
