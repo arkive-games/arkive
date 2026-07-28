@@ -845,6 +845,9 @@ export default function InfoSidebar() {
       // which is all a visitor needs to decide whether to click it.
       collapseLabel={label}
       expandLabel={label}
+      // Names the <aside> landmark, so screen-reader landmark navigation can
+      // tell this sidebar apart from the filter sidebar on the same page.
+      label={label}
       classNames={{
         root: "border-l border-border bg-card text-card-foreground",
         collapseButton: "text-[#3D3D3D] bg-[color:var(--color-sidebar-collapse)]",
@@ -1404,6 +1407,9 @@ export function InfoSidebar() {
       // The tab names what it opens rather than saying "Collapse"/"Expand".
       collapseLabel={label}
       expandLabel={label}
+      // Names the <aside> landmark, so screen-reader landmark navigation can
+      // tell this sidebar apart from the filter sidebar on the same page.
+      label={label}
       classNames={{
         root: 'border-l border-border bg-gradient-to-b from-card to-background text-sm text-card-foreground',
         collapseButton: 'bg-secondary text-secondary-foreground',
