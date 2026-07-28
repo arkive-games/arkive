@@ -21,6 +21,7 @@ import { toGameCoords } from './lib/coords'
 import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
+import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
@@ -773,6 +774,9 @@ export default function App() {
       resolveSearchOptions={palIdLookup}
       searchOptions={PAL_SEARCH_OPTIONS}
       variant={variant}
+      // The right sidebar's collapse tab hangs 32px into the map column at
+      // y≈100px; clear it so it never lands on the results list.
+      classNames={variant === 'floating' ? { root: 'right-11' } : undefined}
     />
   )
 
@@ -911,6 +915,7 @@ export default function App() {
           {filterPanel}
         </ShellSidebar>
       }
+      rightSidebar={<InfoSidebar />}
     >
       <main className="relative flex min-w-0 flex-1 overflow-hidden">
         {mapView}
