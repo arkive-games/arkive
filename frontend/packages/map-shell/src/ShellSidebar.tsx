@@ -6,10 +6,15 @@ export interface ShellSidebarProps {
   width?: number
   /**
    * Which edge the sidebar sits on. Only the collapse toggle differs: it hangs
-   * off the outward edge and its chevron points away from the content. The
-   * right toggle's testid is suffixed (`sidebar-toggle-right`) so existing
-   * `sidebar-toggle` selectors keep resolving to exactly one element once a
-   * second sidebar is on the page.
+   * off the outward edge (32px, `w-8`) and its chevron points away from the
+   * content. The right toggle's testid is suffixed (`sidebar-toggle-right`) so
+   * existing `sidebar-toggle` selectors keep resolving to exactly one element
+   * once a second sidebar is on the page.
+   *
+   * The toggle overhangs into the neighbouring column — it has to, since a
+   * collapsed sidebar is 0px wide and the tab must stay clickable. Overlays
+   * floating in that column need matching clearance; see the `right-11` on each
+   * app's floating SearchPanel.
    */
   side?: "left" | "right"
   /** Accessible name for the sidebar landmark, e.g. "Filters" or "About". */
@@ -127,7 +132,10 @@ export function ShellSidebar({
         )}
       >
         <Chevron className="h-4 w-4" />
-        <span className="mt-0.5 whitespace-normal px-0.5 text-center text-xs leading-tight">
+        {/* `break-words` matters: hosts pass a content label here, and the tab
+            is only 32px wide. Long unbreakable words (e.g. Italian
+            "Informazioni") would otherwise spill out of the tab. */}
+        <span className="mt-0.5 break-words whitespace-normal px-0.5 text-center text-xs leading-tight">
           {collapsed ? expandLabel : collapseLabel}
         </span>
       </button>

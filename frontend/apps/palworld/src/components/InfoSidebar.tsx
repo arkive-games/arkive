@@ -4,7 +4,7 @@ import { ShellSidebar } from '@gamemap/map-shell'
 import { SiteInfo } from './SiteInfo'
 
 const COLLAPSED_KEY = 'palworld.map.siteInfoCollapsed'
-/** Below this, 346 + 320 would leave the map column a sliver. */
+/** Below this, 346 (left sidebar) + 320 (this one) leaves the map a sliver. */
 const FIRST_VISIT_MIN_WIDTH = 1200
 
 /**
