@@ -4,6 +4,8 @@ import { cn } from "@gamemap/ui"
 export interface ShellLayoutProps {
   /** Sidebar on the left, below the top bar (e.g. <ShellSidebar/>). */
   sidebar: ReactNode
+  /** Optional second sidebar on the right, below the top bar. */
+  rightSidebar?: ReactNode
   /** Full-width top bar across the whole page. */
   topBar: ReactNode
   /** Main content, below the top bar. */
@@ -16,13 +18,20 @@ export interface ShellLayoutProps {
  * sidebar on the left and the main content filling the rest. The sidebar
  * therefore starts below the top bar and never overlaps it.
  */
-export function ShellLayout({ sidebar, topBar, children, className }: ShellLayoutProps) {
+export function ShellLayout({
+  sidebar,
+  rightSidebar,
+  topBar,
+  children,
+  className,
+}: ShellLayoutProps) {
   return (
     <div className={cn("flex h-dvh w-screen flex-col overflow-hidden", className)}>
       {topBar}
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {sidebar}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">{children}</div>
+        {rightSidebar}
       </div>
     </div>
   )

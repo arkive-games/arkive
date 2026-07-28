@@ -4,6 +4,11 @@ import { cn, ScrollArea } from "@gamemap/ui"
 
 export interface ShellSidebarProps {
   width?: number
+  /**
+   * Which edge the sidebar sits on. Only the collapse toggle differs: it hangs
+   * off the outward edge and its chevron points away from the content.
+   */
+  side?: "left" | "right"
   defaultCollapsed?: boolean
   collapsed?: boolean
   onCollapsedChange?: (collapsed: boolean) => void
@@ -28,6 +33,7 @@ export interface ShellSidebarProps {
 
 export function ShellSidebar({
   width = 346,
+  side = "left",
   defaultCollapsed = false,
   collapsed: collapsedProp,
   onCollapsedChange,
@@ -91,15 +97,22 @@ export function ShellSidebar({
       </ScrollArea>
       <button
         type="button"
-        data-testid="sidebar-toggle"
+        data-testid={side === "right" ? "sidebar-toggle-right" : "sidebar-toggle"}
         onClick={toggle}
         aria-label={collapsed ? expandLabel : collapseLabel}
         className={cn(
-          "absolute top-[100px] right-0 z-[20000] flex h-12 w-8 translate-x-full select-none flex-col items-center justify-center rounded-r-md rounded-l-none",
+          "absolute top-[100px] z-[20000] flex h-12 w-8 select-none flex-col items-center justify-center",
+          side === "right"
+            ? "left-0 -translate-x-full rounded-l-md rounded-r-none"
+            : "right-0 translate-x-full rounded-r-md rounded-l-none",
           classNames?.collapseButton,
         )}
       >
-        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        {(side === "right" ? !collapsed : collapsed) ? (
+          <ChevronRight className="h-4 w-4" />
+        ) : (
+          <ChevronLeft className="h-4 w-4" />
+        )}
         <span className="mt-0.5 whitespace-normal px-0.5 text-center text-xs leading-tight">
           {collapsed ? expandLabel : collapseLabel}
         </span>
