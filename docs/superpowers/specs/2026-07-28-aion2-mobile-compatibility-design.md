@@ -210,3 +210,50 @@ edges rather than breaking layout.
 - Review the finished diff with Codex as a second opinion (explicitly requested for this task,
   overriding the standing "no Codex delegation" convention), then verify each finding
   independently before acting on it — implementation itself stays first-party.
+
+## Addendum — defects found during implementation review (2026-07-28)
+
+Six bugs surfaced after the eight planned changes were in place. All are fixed and
+regression-tested; they are recorded here because several are traps any similar mobile port
+would hit.
+
+1. **Nested modal stacking.** `@gamemap/ui` ships `AlertDialog` at `z-50` and `Sheet` at
+   `z-[3000]`, and both portal to `<body>`. "Clear completed", reached from inside the mobile
+   filter sheet, therefore opened *behind* the sheet and looked frozen. Fixed in the app's
+   `index.css` (`[data-slot="alert-dialog-overlay"]` → 3050, `…-content` → 3100) rather than in
+   the shared package, which this work must not modify.
+2. **Map position lost on rotation.** 390×844 rotated to landscape is **844px wide**, which
+   crosses the 767px breakpoint and swaps the two layout trees, remounting Leaflet.
+   `useMapViewMemory` memoizes `initialView` per map id, so the remount replayed the page-load
+   view — panning then rotating snapped the user back to the whole-map default. The engine
+   consumes `initialView` at mount only, so it is now re-read from storage whenever the layout
+   flips.
+3. **Stale forced markers.** Closing the search sheet unmounts `SearchPanel`, which therefore
+   never reports an empty result set; `forceShowIds` kept the previous query's markers pinned to
+   the map with no visible search to explain them.
+4. **More sheet survived to desktop.** The tab-bar `<nav>` is `md:hidden`, but its `Sheet`
+   portals to `<body>` and is not covered by that class.
+5. **Sheet open-state survived the breakpoint**, so rotating back re-opened a sheet unbidden.
+6. **`activeTab` used bare prefixes**, so `/wiki/quests` and `/wiki/quest-log` both lit the
+   Quests tab. Now whole-segment matching.
+
+Smaller hardening in the same pass: FABs and the More button are `SheetTrigger`s so Radix
+returns focus to them on close; the mobile header pads by `safe-area-inset-top` (required once
+`viewport-fit=cover` is set); type-hub chips revert to `display: inline` at `md` so desktop text
+wrapping is byte-identical.
+
+**A unified single-tree layout was tried and reverted.** Rendering one `ShellLayout` with null
+slots on mobile would avoid the remount entirely, but it crashed Leaflet on resize
+(`Cannot read properties of null (reading '_targets')`). The two-tree form matches palworld and
+is the shipped shape; the remount is accepted and its only user-visible cost (a brief tile
+reload on rotation) is tolerated now that the view position survives.
+
+**Three tests were passing for the wrong reason** and were rewritten: `toBeHidden()` also passes
+for an *absent* element; a `toHaveCount(0)` assertion held regardless of the CSS it meant to
+guard; and the top-bar overflow probe measured before the i18n strings had loaded over HTTP, so
+it saw a still-narrow bar. Assume any green mobile assertion is suspect until it has been seen
+to fail against the unfixed code.
+
+**Also found, not fixed (out of scope):** palworld has the same zoom-pill-under-the-tab-bar
+defect this spec fixes for aion2 — its mobile map anchors the engine's zoom control 0.75rem from
+the bottom, underneath its own 56px tab bar.
