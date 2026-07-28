@@ -7,3 +7,8 @@ export const SEARCH_DEBOUNCE_MS = 300;
 export const MAP_FLY_TO_DURATION = 0.5;
 /** ICP filing record shown in the map footer (same string in every language). */
 export const ICP_RECORD = "沪ICP备2025152827号-1";
+/**
+ * Feedback / suggestions / bug-report group, shared by both sites. Kept in
+ * code rather than the locale files: a group number is not a translation.
+ */
+export const FEEDBACK_QQ_GROUP = "1091411026";

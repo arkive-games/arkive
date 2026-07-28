@@ -2,18 +2,33 @@ import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SiteInfoPanel, type SiteInfoSection } from "@gamemap/map-shell";
+import { FEEDBACK_QQ_GROUP } from "@/lib/constants";
 
 /**
- * Feedback / suggestions / bug-report group, shared by both sites. Kept in
- * code rather than the locale files: a group number is not a translation.
+ * i18next resolves `fallbackLng` BEFORE `defaultValue`, so a plain
+ * `t(key, "")` on a key the active locale omits returns the zh-CN text (this
+ * app falls back to zh-CN everywhere), not "". Pinning `fallbackLng: false`
+ * limits the lookup to the active locale, so "" really means "this locale
+ * does not define the key".
  */
-export const FEEDBACK_QQ_GROUP = "1091411026";
+const LOCALE_ONLY = { defaultValue: "", fallbackLng: false } as const;
 
 /** Renders one locale value as GitHub-flavoured markdown. */
 function Body({ children }: { children: string }) {
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none break-words">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noopener noreferrer">
+              {children}
+            </a>
+          ),
+        }}
+      >
+        {children}
+      </ReactMarkdown>
     </div>
   );
 }
@@ -35,8 +50,8 @@ export default function SiteInfo({ className }: { className?: string }) {
     },
   ];
 
-  const contactContent = t("common:siteInfo.contact.content", "");
-  const feedbackHint = isZh ? t("common:siteInfo.feedback.hint", "") : "";
+  const contactContent = t("common:siteInfo.contact.content", LOCALE_ONLY);
+  const feedbackHint = isZh ? t("common:siteInfo.feedback.hint", LOCALE_ONLY) : "";
   if (contactContent || feedbackHint) {
     sections.push({
       title: t("common:siteInfo.contact.title", "Communication & Contact"),
