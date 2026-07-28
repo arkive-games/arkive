@@ -49,20 +49,36 @@ function VersionHistory({
     )
   }
 
+  const lastIndex = entries.length - 1
+
   return (
-    <ol className={cn("space-y-8", className)}>
+    <ol className={cn("relative", className)}>
       {entries.map((entry, i) => (
         <li
           key={entry.version}
           data-testid="changelog-entry"
           data-version={entry.version}
-          className="relative border-l border-border pl-5"
+          // Vertical rhythm is padding, not margin, so consecutive spine
+          // segments abut instead of being broken up by collapsed gaps.
+          className={cn("relative pl-8", i === lastIndex ? "pb-0" : "pb-8")}
         >
+          {/* Spine segment: starts inside this marker and ends at the top edge of
+              the next one, so the whole list reads as a single line. Skipped on
+              the last entry, which is where the timeline terminates. */}
+          {i !== lastIndex ? (
+            <span
+              aria-hidden
+              data-testid="changelog-spine"
+              className="absolute left-1.5 top-2 -bottom-2 w-px bg-border"
+            />
+          ) : null}
+          {/* Rendered after the spine so it paints over it: a hollow marker with
+              the page background masks the line, giving dot–line–dot. */}
           <span
             aria-hidden
             className={cn(
-              "absolute -left-[5px] top-1.5 size-2.5 rounded-full",
-              i === 0 ? "bg-primary" : "bg-border",
+              "absolute left-0 top-2 size-3 rounded-full border-2 bg-background",
+              i === 0 ? "border-primary" : "border-border",
             )}
           />
           <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">

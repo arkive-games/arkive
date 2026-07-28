@@ -94,6 +94,18 @@ describe("VersionHistory", () => {
     expect(screen.getByText(SHA_A.slice(0, 7))).toBeTruthy()
   })
 
+  // One segment per gap between markers: the timeline terminates at the last
+  // entry rather than trailing off past it.
+  it("connects the markers with one spine segment per gap", () => {
+    render(<VersionHistory entries={ENTRIES} />)
+    expect(screen.getAllByTestId("changelog-spine")).toHaveLength(ENTRIES.length - 1)
+  })
+
+  it("draws no spine for a single entry", () => {
+    render(<VersionHistory entries={[ENTRIES[0]]} />)
+    expect(screen.queryAllByTestId("changelog-spine")).toHaveLength(0)
+  })
+
   it("renders the empty state for no entries", () => {
     render(<VersionHistory entries={[]} labels={{ empty: "Nothing yet" }} />)
     expect(screen.getByText("Nothing yet")).toBeTruthy()
