@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.10.0",
+      "date": "2026-07-29",
+      "commit": "a58e0b0c0d31ef883fd591b934daa0dcbea94725",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Version history page — every release, what changed, and a link to the exact commits, at /changelog.",
+            "zh-CN": "新增更新历史页面：在 /changelog 查看每个版本的变更内容，并可跳转到对应提交。",
+            "zh-TW": "新增更新歷史頁面：在 /changelog 查看每個版本的變更內容，並可跳轉到對應提交。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.9.1",
       "date": "2026-07-28",
       "commit": "8672b75c86fc6232ea6cfd39c6d33bf7675b5bdb",
