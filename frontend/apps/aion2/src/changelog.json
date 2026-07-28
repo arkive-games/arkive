@@ -1,0 +1,266 @@
+{
+  "entries": [
+    {
+      "version": "1.5.0",
+      "date": "2026-07-28",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Phone layout: bottom tab bar, a compact wiki header, and a full-screen map with filter and search sheets.",
+            "zh-CN": "手机端改版：底部标签栏、精简的百科页头，以及全屏地图与筛选/搜索抽屉。",
+            "zh-TW": "手機版改版：底部標籤欄、精簡的百科頁首，以及全螢幕地圖與篩選/搜尋抽屜。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "2026-07-15",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Build information in the top bar: commit, build time and the game version the data came from.",
+            "zh-CN": "顶栏新增构建信息：提交、构建时间与数据对应的游戏版本。",
+            "zh-TW": "頂欄新增建置資訊：提交、建置時間與資料對應的遊戲版本。"
+          }
+        },
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Data caches now refresh as soon as new game data ships, instead of waiting to expire.",
+            "zh-CN": "游戏数据更新后缓存会立即失效，不再等待过期。",
+            "zh-TW": "遊戲資料更新後快取會立即失效，不再等待過期。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.3.1",
+      "date": "2026-07-13",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The map remembers your position, zoom and selected marker for each map separately.",
+            "zh-CN": "地图会分别记住每张地图的位置、缩放与选中标记。",
+            "zh-TW": "地圖會分別記住每張地圖的位置、縮放與選取標記。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "2026-07-12",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Search the whole site from the top bar, across wiki entries and every map's markers.",
+            "zh-CN": "顶栏支持全站搜索，覆盖百科条目与所有地图的标记。",
+            "zh-TW": "頂欄支援全站搜尋，涵蓋百科條目與所有地圖的標記。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "date": "2026-07-03",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Korean interface using the game's official terminology, and native language names in the switcher.",
+            "zh-CN": "新增韩语界面，术语对齐游戏官方译名；语言切换器改用各语言的母语名称。",
+            "zh-TW": "新增韓語介面，術語對齊遊戲官方譯名；語言切換器改用各語言的母語名稱。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2026-07-02",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Wiki: quest walkthroughs, NPC and item pages, type hubs, and embedded point-of-interest maps.",
+            "zh-CN": "上线百科：任务攻略、NPC 与道具页面、分类导航页，以及内嵌坐标地图。",
+            "zh-TW": "上線百科：任務攻略、NPC 與道具頁面、分類導覽頁，以及內嵌座標地圖。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Map markers and wiki entries link to each other, with ?marker and ?pos deep links.",
+            "zh-CN": "地图标记与百科条目互相跳转，并支持 ?marker 与 ?pos 深度链接。",
+            "zh-TW": "地圖標記與百科條目互相跳轉，並支援 ?marker 與 ?pos 深度連結。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-07-01",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The site is rebuilt from scratch: a new map canvas with smooth zoom and zoom-based detail levels, a redesigned sidebar and marker popups, and faithful dark mode.",
+            "zh-CN": "全站重构上线：全新地图画布，支持平滑缩放与按缩放级别分层显示；重新设计侧栏与标记弹窗；深色模式配色还原。",
+            "zh-TW": "全站重構上線：全新地圖畫布，支援平滑縮放與依縮放級別分層顯示；重新設計側欄與標記彈窗；深色模式配色還原。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Legacy tools — character profiles, crafting, leaderboards and artifacts — remain on the archived old version, linked from the top bar.",
+            "zh-CN": "角色档案、制作计算、排行榜与神器等旧功能保留在归档的旧版站点，可从顶栏进入。",
+            "zh-TW": "角色檔案、製作計算、排行榜與神器等舊功能保留在封存的舊版站點，可從頂欄進入。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.9.1",
+      "date": "2026-04-10",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Dark mode for artifacts, item data updates, and the Reshanta abyss map.",
+            "zh-CN": "神器页面支持深色模式，更新道具数据，新增深渊地图（雷莎恩塔）。",
+            "zh-TW": "神器頁面支援深色模式，更新道具資料，新增深淵地圖（雷薩恩塔）。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.9.0",
+      "date": "2026-02-25",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rebuilt artifacts: season 2 matching, artifact cards, and admin review.",
+            "zh-CN": "神器功能重做：第二赛季匹配、神器卡片与管理员审核。",
+            "zh-TW": "神器功能重做：第二賽季配對、神器卡片與管理員審核。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.8.0",
+      "date": "2026-01-26",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Server leaderboards and an artifact editor that accepts contributor submissions.",
+            "zh-CN": "新增服务器排行榜与神器编辑器，支持贡献者投稿。",
+            "zh-TW": "新增伺服器排行榜與神器編輯器，支援貢獻者投稿。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.7.0",
+      "date": "2026-01-18",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Character profiles: stats, titles, skins, rankings and boards, with a phone layout.",
+            "zh-CN": "新增角色档案：属性、称号、外观、排名与看板，并适配手机端。",
+            "zh-TW": "新增角色檔案：屬性、稱號、外觀、排名與看板，並適配手機版。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.6.0",
+      "date": "2025-12-20",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Crafting calculator, per-marker feedback, a light and dark switch, and a reworked top bar.",
+            "zh-CN": "新增制作计算器、单个标记反馈、浅色/深色切换，并重做顶栏。",
+            "zh-TW": "新增製作計算機、單一標記回饋、淺色/深色切換，並重做頂欄。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.5.0",
+      "date": "2025-12-11",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Pet database with search, contributor credits, and a dedicated marker icon set.",
+            "zh-CN": "新增宠物资料库与搜索、贡献者名单，以及专用标记图标集。",
+            "zh-TW": "新增寵物資料庫與搜尋、貢獻者名單，以及專用標記圖示集。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.4.0",
+      "date": "2025-12-07",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Accounts with login and registration, marker comments, player-submitted markers, and feedback with screenshots.",
+            "zh-CN": "新增账号注册登录、标记评论、玩家投稿标记，以及可附截图的反馈功能。",
+            "zh-TW": "新增帳號註冊登入、標記留言、玩家投稿標記，以及可附截圖的意見回饋功能。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.3.0",
+      "date": "2025-11-22",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Region outlines and labels, a collapsible sidebar, an intro dialog, announcements, and an English translation.",
+            "zh-CN": "新增区域轮廓与名称、可折叠侧栏、新手引导弹窗、公告栏与英文翻译。",
+            "zh-TW": "新增區域輪廓與名稱、可折疊側欄、新手引導彈窗、公告欄與英文翻譯。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.2.0",
+      "date": "2025-11-20",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Real game map tiles, additional maps, WebP artwork served from a CDN, and right-click to copy coordinates.",
+            "zh-CN": "接入真实游戏地图切片，新增更多地图，静态资源改为 CDN 上的 WebP，右键可复制坐标。",
+            "zh-TW": "接入真實遊戲地圖切片，新增更多地圖，靜態資源改為 CDN 上的 WebP，右鍵可複製座標。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.1.0",
+      "date": "2025-11-17",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "First interactive AION2 map: marker filters, completion tracking, dark mode, and shareable map positions.",
+            "zh-CN": "AION2 互动地图首发：标记筛选、完成度记录、深色模式与可分享的地图位置。",
+            "zh-TW": "AION2 互動地圖首發：標記篩選、完成度記錄、深色模式與可分享的地圖位置。"
+          }
+        }
+      ]
+    }
+  ]
+}
