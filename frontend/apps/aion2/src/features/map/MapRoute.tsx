@@ -31,6 +31,7 @@ import { aionAssets } from "@/features/map/aionAssets";
 import { aionTheme } from "@/features/map/aionTheme";
 import MarkerPopupContent from "@/features/map/popup/MarkerPopupContent";
 import Sidebar from "@/features/map/sidebar/Sidebar";
+import InfoSidebar from "./sidebar/InfoSidebar";
 import SelectMap from "@/features/map/sidebar/SelectMap";
 import MarkerTypesSection from "@/features/map/sidebar/MarkerTypesSection";
 import TopNavbar from "@/components/TopNavbar";
@@ -441,6 +442,7 @@ export default function MapRoute() {
       className="bg-background text-foreground"
       topBar={<TopNavbar />}
       sidebar={<Sidebar />}
+      rightSidebar={<InfoSidebar />}
     >
       <div className="relative flex flex-1 overflow-hidden">
         {mapView}
