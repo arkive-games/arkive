@@ -242,6 +242,11 @@ Append inside the existing `test.describe("mobile chrome", …)` block in
   // outside the viewport entirely.
   test.fail("KNOWN DEFECT: top bar overflows the viewport", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
+    // The bar only reaches its overflowing width once the i18n strings have
+    // arrived over HTTP — measuring right after goto sees a still-empty bar.
+    await page
+      .locator('header a[href="https://archive.tc-imba.com/"]')
+      .waitFor({ state: "attached" });
     const overflow = await page.evaluate(() => {
       const h = document.querySelector("header");
       return h ? h.scrollWidth - h.clientWidth : 0;
@@ -268,8 +273,10 @@ E2E_PORT=15173 pnpm e2e mobile.spec.ts 2>&1 | tail -20
 ```
 
 Expected: 3 passed. The two `test.fail` tests count as passing *because* they fail — Playwright
-inverts them. If either reports "expected to fail but passed", the defect is already gone and you
-should stop and re-audit rather than continue.
+inverts them. If either reports "expected to fail but passed", do NOT assume the defect is gone:
+first check you are not measuring before the page finished loading (this exact trap cost a cycle —
+the top bar is narrow until its i18n strings arrive, hence the explicit `waitFor` above). Only
+after ruling that out should you re-audit.
 
 - [ ] **Step 3: Commit**
 
