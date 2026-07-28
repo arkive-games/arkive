@@ -3,13 +3,23 @@ import type { Language } from './i18n'
 // Site-info / feedback strings, merged into the `translation` namespace under a
 // `siteInfo` key (see i18n.ts). `contact` is present only for locales that have
 // a real channel to point at — the QQ group is Chinese-only, so the other
-// locales render the intro and disclaimer alone.
+// locales render the intro and disclaimer alone. Absence of the field IS the
+// gate, so consumers must pin contact lookups to the active locale
+// (`fallbackLng: false`): i18next resolves the fallback chain before
+// `defaultValue`, so a plain read would hand every locale en-US's `contact` the
+// moment en-US gains one. That is safe here because the table is total — every
+// locale supplies every non-optional field.
 export interface SiteInfoStrings {
   /** Right-sidebar toggle tab text; also the popover's aria-label. */
   tab: string
   /** Heading of the intro section. */
   title: string
-  /** One paragraph per entry: what the site is, then the disclaimer. */
+  /**
+   * One paragraph per entry: what the site is, then the disclaimer. The only
+   * array-valued key in the bundle — read it with `{ returnObjects: true }`
+   * (i18next otherwise returns a "returned an object instead of string"
+   * placeholder and merely warns) and cast, since `t` types it `$SpecialObject`.
+   */
   body: string[]
   contact?: {
     title: string
@@ -21,15 +31,13 @@ export interface SiteInfoStrings {
   copied: string
 }
 
-const DISCLAIMER_EN = 'Not affiliated with, endorsed by, or sponsored by Pocketpair, Inc.'
-
 export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
   'en-US': {
     tab: 'About',
     title: 'About this site',
     body: [
       'An unofficial, fan-made interactive map and database for Palworld. All game data is extracted from the game files.',
-      DISCLAIMER_EN,
+      'Not affiliated with, endorsed by, or sponsored by Pocketpair, Inc.',
     ],
     copy: 'Copy',
     copied: 'Copied',

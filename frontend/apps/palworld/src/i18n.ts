@@ -990,6 +990,10 @@ for (const lng of LANGUAGES) {
       sim: SIM_STRINGS[lng] ?? SIM_STRINGS['en-US'],
       raids: RAIDS_STRINGS[lng] ?? RAIDS_STRINGS['en-US'],
       basecamp: BASECAMP_STRINGS[lng] ?? BASECAMP_STRINGS['en-US'],
+      // No `?? ['en-US']`: this table is a total `Record<Language, …>`, so the
+      // index can't miss. (Same is true of most siblings above — their fallback
+      // is vestigial; only QUEST_STRINGS is genuinely `Partial`.) Keep it off:
+      // siteInfo.contact is gated on locale-only reads, see siteInfoStrings.ts.
       siteInfo: SITE_INFO_STRINGS[lng],
       catalogLoading: CATALOG_STRINGS[lng].loading,
       catalogShowMore: SHOW_MORE_LABELS[lng],
