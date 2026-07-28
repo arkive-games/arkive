@@ -1,9 +1,14 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { SiteInfoPanel } from "./SiteInfoPanel"
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  // A stub set by one test must not leak into the next — future tests in
+  // this file should not silently inherit whatever the previous test left.
+  Reflect.deleteProperty(navigator, "clipboard")
+})
 
 const sections = [
   { title: "About", body: <p>An unofficial fan site.</p> },
@@ -64,10 +69,13 @@ describe("SiteInfoPanel", () => {
   it("copies the number and swaps the button label", async () => {
     const writeText = vi.fn<(s: string) => Promise<void>>(() => Promise.resolve())
     stubClipboard(writeText)
-    const { getByTestId } = render(
+    const { getByTestId, getByRole } = render(
       <SiteInfoPanel sections={sections} feedbackGroup={group} />,
     )
-    const button = getByTestId("site-info-copy")
+    // Accessible name after the id/aria-labelledby wiring is "Copy QQ group
+    // 1091411026" (own label + group label + number) — go through the role
+    // query so nothing can silently drop the label from the accessible name.
+    const button = getByRole("button", { name: "Copy QQ group 1091411026" })
     expect(button.textContent).toContain("Copy")
     fireEvent.click(button)
     expect(writeText).toHaveBeenCalledWith("1091411026")
@@ -84,5 +92,43 @@ describe("SiteInfoPanel", () => {
     await waitFor(() => expect(writeText).toHaveBeenCalled())
     expect(getByTestId("site-info-copy").textContent).toContain("Copy")
     expect(getByTestId("site-info-copy").textContent).not.toContain("Copied")
+  })
+
+  it("reverts the label once the copied window elapses", async () => {
+    vi.useFakeTimers()
+    try {
+      stubClipboard(vi.fn(() => Promise.resolve()))
+      const { getByTestId } = render(<SiteInfoPanel sections={sections} feedbackGroup={group} />)
+      fireEvent.click(getByTestId("site-info-copy"))
+      await act(() => vi.advanceTimersByTimeAsync(0)) // flush the writeText promise
+      expect(getByTestId("site-info-copy").textContent).toContain("Copied")
+      await act(() => vi.advanceTimersByTimeAsync(2000))
+      expect(getByTestId("site-info-copy").textContent).toContain("Copy")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("extends the copied window on a second click instead of inheriting the first timer", async () => {
+    vi.useFakeTimers()
+    try {
+      stubClipboard(vi.fn(() => Promise.resolve()))
+      const { getByTestId } = render(<SiteInfoPanel sections={sections} feedbackGroup={group} />)
+      const button = getByTestId("site-info-copy")
+      fireEvent.click(button)
+      await act(() => vi.advanceTimersByTimeAsync(0))
+      expect(getByTestId("site-info-copy").textContent).toContain("Copied")
+
+      await act(() => vi.advanceTimersByTimeAsync(1900))
+      fireEvent.click(getByTestId("site-info-copy"))
+      await act(() => vi.advanceTimersByTimeAsync(0))
+
+      await act(() => vi.advanceTimersByTimeAsync(200))
+      // With the bug (setCopied(true) as a no-op re-copy), the first timer
+      // fired at 2000ms and this would already read "Copy".
+      expect(getByTestId("site-info-copy").textContent).toContain("Copied")
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
