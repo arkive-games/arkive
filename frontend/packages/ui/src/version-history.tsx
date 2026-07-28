@@ -69,7 +69,10 @@ function VersionHistory({
             <span
               aria-hidden
               data-testid="changelog-spine"
-              className="absolute left-1.5 top-2 -bottom-2 w-px bg-border"
+              // left-1.5 is the marker's centre (size-3 at left-0); the
+              // translate centres the 1px rule on it instead of leaving it a
+              // half-pixel to the right.
+              className="absolute left-1.5 top-2 -bottom-2 w-px -translate-x-1/2 bg-border"
             />
           ) : null}
           {/* Rendered after the spine so it paints over it: a hollow marker with
