@@ -30,13 +30,16 @@ with an empty changelog every time the other shipped.
 | MINOR | A user-facing feature or page ships. |
 | PATCH | A batch of visible fixes or polish. |
 
-**`frontend/apps/<app>/changelog.json` is the sole source of truth.** Entry `[0]`
-*is* the app's current version. The apps' `package.json` versions stay at
+**`frontend/apps/<app>/src/changelog.json` is the sole source of truth.** Entry
+`[0]` *is* the app's current version. The apps' `package.json` versions stay at
 `0.0.0` (they are `private` and unpublished) so there is no second copy to drift.
 
 ## Data format
 
-`frontend/apps/<app>/changelog.json`, newest entry first:
+`frontend/apps/<app>/src/changelog.json`, newest entry first. It lives inside
+`src/` because both apps' `tsconfig.app.json` set `"include": ["src", "env.d.ts"]`
+— a file at the app root would fall outside the program. Both tsconfigs also need
+`"resolveJsonModule": true` added, which they currently lack.
 
 ```jsonc
 {
@@ -120,7 +123,7 @@ easy to forget.
 
 The `CLAUDE.md` rule states:
 
-- Each app owns `frontend/apps/<app>/changelog.json`, newest entry first.
+- Each app owns `frontend/apps/<app>/src/changelog.json`, newest entry first.
 - Not every commit gets a version. Bump when a commit ships something a visitor
   would notice — a new page, a new feature, a visible fix batch — in the **same
   commit** as the change itself.
@@ -153,7 +156,9 @@ rather than by commit scope. Dates come from the last commit in each cluster.
   `// @vitest-environment jsdom` pragma convention): groups changes under their
   version, renders one badge per `kind`, marks entry `[0]` as current, and
   renders an empty state for zero entries.
-- Data validation test over both `changelog.json` files: parses, versions
+- Data validation test per app (`apps/<app>/src/changelog.test.ts`) using a
+  `validateChangelog` helper exported from `@gamemap/ui`, so the rule lives in one
+  place and each app asserts its own file: parses, versions
   strictly descending by semver, dates non-increasing, every change carries all
   three locales, every `kind` is in the enum.
 - e2e per app: `/changelog` renders the current version and the footer version
