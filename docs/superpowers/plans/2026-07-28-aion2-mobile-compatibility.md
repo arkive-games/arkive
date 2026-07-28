@@ -42,15 +42,16 @@ E2E_PORT=15173 pnpm e2e
 
 `reuseExistingServer: true`, so an already-running dev server on that port is reused.
 
-**Two pre-existing failures. Do not try to fix them, and do not let them mask your own.** Before
-you start, capture the baseline:
+**The baseline is green — 26 passed, 0 failed** (measured 2026-07-28 at `7bf9529`). There is
+nothing to pre-excuse, so any red test is yours. Confirm it yourself before starting:
 
 ```bash
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Record which tests fail. The known one is the wiki embedded-map POI assertion, which fails
-deterministically on `master`. Any *additional* failure after your change is yours.
+Expected: `26 passed`. If anything fails here, stop and investigate before writing code — an
+older note claimed the wiki embedded-map POI test failed deterministically, and it does not
+anymore, so a failure would mean something changed.
 
 **The breakpoint.** Mobile is `< 768px`. In CSS that is the *absence* of a `md:` prefix — write the
 mobile style bare and the desktop style with `md:`. In TS it is `useIsMobile()` from `@gamemap/ui`,
@@ -115,8 +116,8 @@ cd frontend/apps/aion2
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Write down the failing test names. Expected: the wiki embedded-map POI test fails; everything else
-passes. This is your comparison point for every later task.
+Expected: **26 passed, 0 failed**. This is your comparison point for every later task — the
+baseline is clean, so "same as baseline" from here on means zero failures.
 
 - [ ] **Step 2: Write the failing test**
 
@@ -197,7 +198,7 @@ guarantee is the code change plus the existing suite not regressing.
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: same failures as the Step 1 baseline, plus `mobile.spec.ts` passing. No new failures.
+Expected: 26 passed plus the new `mobile.spec.ts` test. No failures.
 
 - [ ] **Step 8: Commit**
 
@@ -649,8 +650,7 @@ Expected: PASS (5 passed — the 3 from Tasks 1-2 plus the 2 new ones).
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: the Step-1 baseline failures only. The tab bar is `md:hidden`, so no desktop test should
-notice it.
+Expected: all green. The tab bar is `md:hidden`, so no desktop test should notice it.
 
 - [ ] **Step 9: Commit**
 
@@ -797,7 +797,7 @@ Expected: PASS (6 passed).
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: Step-1 baseline failures only.
+Expected: all green (no failures).
 
 - [ ] **Step 7: Commit**
 
@@ -935,7 +935,7 @@ Expected: PASS (7 passed).
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: Step-1 baseline failures only.
+Expected: all green (no failures).
 
 - [ ] **Step 7: Commit**
 
@@ -1400,7 +1400,7 @@ zoom control, each sheet opens and scrolls, and closing a sheet leaves the map i
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: Step-1 baseline failures only.
+Expected: all green (no failures).
 
 - [ ] **Step 8: Commit**
 
@@ -1528,9 +1528,9 @@ cd frontend/apps/aion2
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -40
 ```
 
-Expected: exactly the Task-1 Step-1 baseline failures, plus 12 passing mobile/desktop assertions.
-**If any additional test fails, it is a regression from this work — fix it before proceeding, and
-do not describe the suite as green.**
+Expected: **zero failures** — the 26 original tests plus 12 new mobile/desktop assertions.
+**Any failure is a regression from this work. Fix it before proceeding, and never describe the
+suite as green while something is red.**
 
 - [ ] **Step 2: Lint, typecheck, build**
 
@@ -1588,8 +1588,8 @@ review suggestions unexamined, and push back on any that are wrong.
 
 - [ ] **Step 8: Report honestly**
 
-State the final suite result with numbers, name the pre-existing failures explicitly as
-pre-existing (having reproduced them on `master`), and list anything deferred.
+State the final suite result with real numbers from the run. The baseline was clean, so there
+are no pre-existing failures to hide behind. List anything deferred.
 
 ---
 

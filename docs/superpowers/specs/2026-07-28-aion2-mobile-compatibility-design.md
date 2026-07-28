@@ -196,9 +196,9 @@ edges rather than breaking layout.
 - The new `e2e/mobile.spec.ts`, plus the existing aion2 suite for regressions. Run with
   `E2E_PORT` set — the aion2 Playwright config defaults to `5173`, which collides with a running
   palworld server.
-- **Known pre-existing failure, not caused by this work:** the wiki embedded-map POI test fails
-  deterministically on `master`. Reproduce it on `master` before and after so the comparison is
-  honest, and report it as pre-existing rather than silently accepting a red suite.
+- **The aion2 baseline is clean.** Measured on 2026-07-28 at `7bf9529`: **26 passed, 0 failed**.
+  (An older note claimed the wiki embedded-map POI test failed deterministically; it passes now.)
+  So there is nothing to pre-excuse — any red test after this work is a regression from it.
 - Desktop regression check at ≥768px: layout visually unchanged from `master`.
 
 ## Rollout / isolation
