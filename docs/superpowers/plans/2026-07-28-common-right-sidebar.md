@@ -1682,6 +1682,14 @@ Expected: clean (if the builds emitted tracked artifacts, do not commit them —
 
 With `pnpm dev:aion2` (15173) and `pnpm dev:palworld` (15174) running on `master`, work through the four deferred checks (Task 4 Step 5, Task 5 Step 4, Task 7 Step 5, Task 8 Step 4). Then, at 1280×800 on each app: both sidebar tabs are reachable and do not overlap, the map fills the space after collapsing the right sidebar with no blank tiles, the panel is legible in light, dark and (aion2) its theme variants, and `/changelog` shows the new version entry.
 
+**Cosmetic findings deferred here from code review** — each needs eyes, not reasoning:
+
+1. **The two apps' body text will not match.** aion2 wraps its markdown in `prose prose-sm`, which sets both `font-size: 0.875rem` and the typography plugin's default body gray on its own element, overriding the panel's `text-xs … text-muted-foreground`. palworld passes plain `<p>` elements, so it *will* render at 12px muted. Decide which is right and make them agree — the panel's docstring claims it renders identically everywhere.
+2. **More-sheet heading weight.** The panel's section titles are `text-sm font-semibold text-foreground`, while the sibling "Switch language" / "Switch theme" blocks directly above are `text-xs font-semibold text-muted-foreground` (`BottomTabBar.tsx:157,181`). The site-info block reads heavier than its neighbours. If it needs fixing, a `titleClassName` prop on the panel is the minimal lever.
+3. **The archive link looks attached to the QQ card.** aion2's `ARCHIVE_URL` anchor sits at `mt-2` (8px) below the panel, tighter than the panel's internal `gap-4`, so it reads as part of the card rather than its own item.
+4. **Copy-button width jitter.** The label swaps 复制→已复制 / Copy→Copied, so the button grows for ~2s and the number column shrinks. Judged low-risk (the number has room at 320px) but unverified — watch for the card twitching or the number re-wrapping on click.
+5. **Trigger/content mismatch on aion2.** The top-bar trigger is a `Mail` icon labelled "Contact us", but the panel now leads with "About this site" (palworld uses an `Info` icon labelled from `siteInfo.tab`). Decide whether aion2's trigger should follow palworld, which is a visible UI change and so an owner call.
+
 ---
 
 ## Self-Review
