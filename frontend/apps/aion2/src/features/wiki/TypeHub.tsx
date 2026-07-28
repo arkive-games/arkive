@@ -85,7 +85,7 @@ export default function TypeHub({ type }: { type: string }) {
     sections: SectionChip[],
   ) {
     return (
-      <ul className="mt-2 flex flex-wrap gap-2 text-sm">
+      <ul className="mt-2 flex flex-wrap gap-x-2 gap-y-2.5 text-sm md:gap-y-2">
         {sections.map((s) => (
           <li key={s.slug}>
             {bucket === "both" ? (
@@ -93,7 +93,7 @@ export default function TypeHub({ type }: { type: string }) {
                 to="/wiki/$type/$slug"
                 params={{ type, slug: groupSlug }}
                 hash={s.slug}
-                className="rounded bg-secondary px-2 py-0.5 hover:bg-accent"
+                className="inline-flex min-h-9 items-center rounded bg-secondary px-2.5 py-1.5 hover:bg-accent md:min-h-0 md:px-2 md:py-0.5"
               >
                 {t(`wiki/taxonomy:sections.${s.slug}.name`)} - {s.count}
               </Link>
@@ -103,7 +103,7 @@ export default function TypeHub({ type }: { type: string }) {
                 params={{ type, slug: groupSlug }}
                 search={{ faction: bucket }}
                 hash={s.slug}
-                className="rounded bg-secondary px-2 py-0.5 hover:bg-accent"
+                className="inline-flex min-h-9 items-center rounded bg-secondary px-2.5 py-1.5 hover:bg-accent md:min-h-0 md:px-2 md:py-0.5"
               >
                 {t(`wiki/taxonomy:sections.${s.slug}.name`)} - {s.count}
               </Link>

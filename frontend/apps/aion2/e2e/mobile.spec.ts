@@ -129,6 +129,14 @@ test.describe("mobile chrome", () => {
     await expect(sheet.getByTestId("more-archive")).toBeVisible();
   });
 
+  test("type-hub section chips are touch-sized", async ({ page }) => {
+    await page.goto("/wiki/item?lng=en-US");
+    const chip = page.locator('main a[href*="#"]').first();
+    await chip.waitFor({ state: "visible" });
+    const box = await chip.boundingBox();
+    expect(box!.height).toBeGreaterThanOrEqual(36);
+  });
+
   test("wiki pages get a compact header and clear the tab bar", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
     await expect(page.getByTestId("wiki-mobile-header")).toBeVisible();
@@ -159,6 +167,14 @@ test.describe("desktop is unchanged", () => {
     await expect(page.getByTestId("lang-menu")).toBeVisible();
     await expect(page.getByTestId("theme-menu")).toBeVisible();
     await expect(page.getByTestId("contact-menu")).toBeVisible();
+  });
+
+  test("type-hub chips stay compact on desktop", async ({ page }) => {
+    await page.goto("/wiki/item?lng=en-US");
+    const chip = page.locator('main a[href*="#"]').first();
+    await chip.waitFor({ state: "visible" });
+    const box = await chip.boundingBox();
+    expect(box!.height).toBeLessThanOrEqual(28);
   });
 
   test("sidebar still renders the marker-types section", async ({ page }) => {
