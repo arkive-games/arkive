@@ -59,10 +59,18 @@ drift); popover-only with no sidebar (drops the requested mirroring).
 
 ## Architecture
 
-### `packages/ui/src/site-info-panel.tsx` (new)
+### `packages/map-shell/src/SiteInfoPanel.tsx` (new)
 
 Presentational only. No i18n, no storage, no `react-markdown` — palworld does not depend on
 `react-markdown` (only aion2 does), so the panel accepts already-rendered nodes.
+
+**Amended 2026-07-28 (was `packages/ui/src/site-info-panel.tsx`):** it lives in `map-shell`
+instead. `map-shell` already carries the React component test setup this needs
+(`@testing-library/react` devDep + the `// @vitest-environment jsdom` docblock pattern used by
+`FilterPanel.test.tsx`), already depends on `@gamemap/ui`, and is already the package both apps
+import shell chrome from on every page (`ShellTopBar` in both top bars, `ThemeToggle` in both
+bottom tab bars). `packages/ui` has no test tooling at all, so hosting it there would mean adding
+devDependencies purely to test one component. It uses none of the tokens `check:shell` forbids.
 
 ```ts
 export interface SiteInfoSection {
