@@ -14,6 +14,14 @@ import {
   type MapViewStore,
   type SearchItem,
 } from "@gamemap/map-shell";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  useIsMobile,
+} from "@gamemap/ui";
+import { Search as SearchIcon, SlidersHorizontal } from "lucide-react";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { useGameData } from "@/context/GameDataContext";
@@ -22,6 +30,8 @@ import { aionAssets } from "@/features/map/aionAssets";
 import { aionTheme } from "@/features/map/aionTheme";
 import MarkerPopupContent from "@/features/map/popup/MarkerPopupContent";
 import Sidebar from "@/features/map/sidebar/Sidebar";
+import SelectMap from "@/features/map/sidebar/SelectMap";
+import MarkerTypesSection from "@/features/map/sidebar/MarkerTypesSection";
 import TopNavbar from "@/components/TopNavbar";
 import { getQueryParam, parseIconUrl } from "@/lib/url";
 import { ICP_RECORD, MAP_FLY_TO_DURATION } from "@/lib/constants";
@@ -62,6 +72,13 @@ export default function MapRoute() {
     useGameData();
   const subzoneAt = useSubzoneLookup();
   const { t } = useTranslation();
+
+  // Below md the 346px sidebar left the map ~44px wide, so the mobile branch
+  // (at the end of this component, after every hook) renders the map full-screen
+  // and moves the sidebar's contents into bottom sheets.
+  const isMobile = useIsMobile();
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [searchSheetOpen, setSearchSheetOpen] = useState(false);
 
   // Engine chrome strings, resolved app-side (the engine itself is i18n-free).
   const labels = useMemo<GameMapViewLabels>(
@@ -268,6 +285,121 @@ export default function MapRoute() {
     saveMarker(selectedMarkerId);
   }, [selectedMarkerId, selectedMap, markersMapId, saveMarker]);
 
+  // Defined once and rendered by both branches, so the phone and desktop paths
+  // can never drift in what they pass to the engine or the search index.
+  const mapView = (
+    <GameMapView
+      mapRef={mapRef}
+      map={selectedMap}
+      markers={engineMarkers}
+      regions={regions}
+      visibleSubtypes={visibleSubtypes}
+      visibleRegions={visibleRegions}
+      showLabels={showLabels}
+      showBorders={showBorders}
+      lodEnabled={lodEnabled}
+      selectedMarkerId={selectedMarkerId}
+      forceShowIds={forceShowIds}
+      selectedPosition={selectedPosition}
+      initialView={initialView}
+      onViewChange={saveView}
+      suppressInitialFlyForId={restoredMarkerId}
+      onToggleMarker={handleToggleMarker}
+      subzoneAt={subzoneAt}
+      flyToDuration={MAP_FLY_TO_DURATION}
+      assets={aionAssets}
+      theme={aionTheme}
+      labels={labels}
+      renderPopupContent={renderPopupContent}
+      exposeTestHandle={import.meta.env.DEV}
+    />
+  );
+
+  const searchPanel = (variant: "floating" | "inline") => (
+    <SearchPanel
+      items={searchItems}
+      onSelect={setSelectedMarkerId}
+      onFlyTo={setSelectedPosition}
+      onResultsChange={setSearchResultIds}
+      initialQuery={initialQuery}
+      labels={searchLabels}
+      searchFields={["name", "description"]}
+      resultAside={(itm) => subzoneAt(itm.x, itm.y) || undefined}
+      variant={variant}
+    />
+  );
+
+  if (isMobile) {
+    return (
+      <div className="aion2-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+        {/* Same flex chain as the desktop ShellLayout: the map root needs a
+            definite height or Leaflet sizes to zero on mount. */}
+        <main className="relative flex min-w-0 flex-1 overflow-hidden">
+          {mapView}
+        </main>
+
+        {/* Floating actions. They sit in one right-hand column with the
+            engine's zoom pill: tab bar, then zoom (lifted to 3.75rem by
+            index.css), then these above it — so nothing overlaps and
+            everything stays tappable. */}
+        <div
+          className="absolute right-3 z-[700] flex flex-col gap-2"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 8.5rem)" }}
+        >
+          <button
+            type="button"
+            data-testid="map-fab-search"
+            aria-label={t("common:ui.search", "Search")}
+            onClick={() => setSearchSheetOpen(true)}
+            className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
+          >
+            <SearchIcon className="size-5" />
+          </button>
+          <button
+            type="button"
+            data-testid="map-fab-filter"
+            aria-label={t("common:menu.markerTypes", "Marker Types")}
+            onClick={() => setFilterSheetOpen(true)}
+            className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-lg"
+          >
+            <SlidersHorizontal className="size-5" />
+          </button>
+        </div>
+
+        <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+          <SheetContent
+            side="bottom"
+            data-testid="filter-sheet"
+            className="max-h-[85dvh]"
+          >
+            <SheetHeader>
+              <SheetTitle className="sr-only">
+                {t("common:menu.markerTypes", "Marker Types")}
+              </SheetTitle>
+              <SelectMap />
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <MarkerTypesSection />
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <Sheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
+          <SheetContent
+            side="bottom"
+            data-testid="search-sheet"
+            className="h-[70dvh]"
+          >
+            <SheetTitle className="sr-only">
+              {t("common:ui.search", "Search")}
+            </SheetTitle>
+            {searchPanel("inline")}
+          </SheetContent>
+        </Sheet>
+      </div>
+    );
+  }
+
   return (
     <ShellLayout
       className="bg-background text-foreground"
@@ -275,41 +407,8 @@ export default function MapRoute() {
       sidebar={<Sidebar />}
     >
       <div className="relative flex flex-1 overflow-hidden">
-        <GameMapView
-          mapRef={mapRef}
-          map={selectedMap}
-          markers={engineMarkers}
-          regions={regions}
-          visibleSubtypes={visibleSubtypes}
-          visibleRegions={visibleRegions}
-          showLabels={showLabels}
-          showBorders={showBorders}
-          lodEnabled={lodEnabled}
-          selectedMarkerId={selectedMarkerId}
-          forceShowIds={forceShowIds}
-          selectedPosition={selectedPosition}
-          initialView={initialView}
-          onViewChange={saveView}
-          suppressInitialFlyForId={restoredMarkerId}
-          onToggleMarker={handleToggleMarker}
-          subzoneAt={subzoneAt}
-          flyToDuration={MAP_FLY_TO_DURATION}
-          assets={aionAssets}
-          theme={aionTheme}
-          labels={labels}
-          renderPopupContent={renderPopupContent}
-          exposeTestHandle={import.meta.env.DEV}
-        />
-        <SearchPanel
-          items={searchItems}
-          onSelect={setSelectedMarkerId}
-          onFlyTo={setSelectedPosition}
-          onResultsChange={setSearchResultIds}
-          initialQuery={initialQuery}
-          labels={searchLabels}
-          searchFields={["name", "description"]}
-          resultAside={(itm) => subzoneAt(itm.x, itm.y) || undefined}
-        />
+        {mapView}
+        {searchPanel("floating")}
       </div>
     </ShellLayout>
   );

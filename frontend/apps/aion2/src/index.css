@@ -309,3 +309,15 @@ body {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(221, 245, 255, 0.372) 58.57%, rgba(238, 204, 255, 0) 100%);
     border-image: linear-gradient(178deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)) 1 1;
 }
+
+/* Lift the map engine's own chrome clear of the fixed bottom tab bar on phones.
+   The engine anchors its zoom pill 0.75rem and its status footer 22px from the
+   bottom, which the 54px tab bar covered outright — the zoom-out button was
+   completely untappable. Scoped to the full-screen mobile map so the wiki's
+   EmbeddedMap keeps the engine's default placement. */
+@media (max-width: 767px) {
+    .aion2-mobile-map .gm-zoom,
+    .aion2-mobile-map .gm-statusbar-stack {
+        bottom: calc(env(safe-area-inset-bottom) + 3.75rem);
+    }
+}

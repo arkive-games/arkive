@@ -28,14 +28,82 @@ test.describe("mobile chrome", () => {
     expect(scrollW).toBe(390);
   });
 
-  // Fixed by the "mobile map branch" task. Until then the 346px sidebar leaves
-  // the Leaflet container ~44px wide.
-  test.fail("KNOWN DEFECT: map is a sliver next to the sidebar", async ({ page }) => {
+  test("map fills the viewport width", async ({ page }) => {
     await page.goto("/?map=World_L_A&lng=en-US");
     const el = page.locator(".leaflet-container");
     await el.waitFor({ state: "visible" });
     const box = await el.boundingBox();
+    // Was ~44px, squeezed beside the 346px desktop sidebar.
     expect(box!.width).toBeGreaterThanOrEqual(380);
+    // And it has a real height, not a collapsed flex child.
+    expect(box!.height).toBeGreaterThanOrEqual(500);
+    await expect(page.getByTestId("marker-types-section")).toHaveCount(0);
+  });
+
+  test("filter and search sheets open from their FABs", async ({ page }) => {
+    await page.goto("/?map=World_L_A&lng=en-US");
+    await page.locator(".leaflet-container").waitFor({ state: "visible" });
+
+    await page.getByTestId("map-fab-filter").click();
+    const filterSheet = page.getByTestId("filter-sheet");
+    await expect(filterSheet).toBeVisible();
+    await expect(filterSheet.getByTestId("marker-types-section")).toBeVisible();
+    await expect(filterSheet.getByTestId("show-names-toggle")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(filterSheet).toBeHidden();
+
+    await page.getByTestId("map-fab-search").click();
+    const searchSheet = page.getByTestId("search-sheet");
+    await expect(searchSheet).toBeVisible();
+    // Searching must still work from inside the sheet, not just render.
+    await searchSheet.getByTestId("marker-search").fill("a");
+    await expect(searchSheet.getByTestId("search-results")).toBeVisible();
+  });
+
+  test("map chrome is not trapped behind the bottom tab bar", async ({ page }) => {
+    await page.goto("/?map=World_L_A&lng=en-US");
+    await page.locator(".leaflet-container").waitFor({ state: "visible" });
+    const barTop = (await page.getByTestId("bottom-tab-bar").boundingBox())!.y;
+
+    // Every zoom button must be fully above the tab bar, or it cannot be
+    // tapped. The zoom-out half used to sit entirely underneath it.
+    const buttons = page.locator(".gm-zoom-btn");
+    const n = await buttons.count();
+    expect(n).toBeGreaterThan(0);
+    for (let i = 0; i < n; i++) {
+      const b = (await buttons.nth(i).boundingBox())!;
+      expect(b.y + b.height).toBeLessThanOrEqual(barTop);
+    }
+
+    // The FABs must clear the tab bar too, and must not overlap the zoom pill.
+    const zoom = (await page.locator(".gm-zoom").boundingBox())!;
+    for (const id of ["map-fab-search", "map-fab-filter"]) {
+      const f = (await page.getByTestId(id).boundingBox())!;
+      expect(f.y + f.height).toBeLessThanOrEqual(barTop);
+      expect(f.y + f.height).toBeLessThanOrEqual(zoom.y);
+    }
+  });
+
+  test("toggling a subtype in the filter sheet changes the map", async ({ page }) => {
+    await page.goto("/?map=World_L_A&lng=en-US");
+    await page.locator(".leaflet-container").waitFor({ state: "visible" });
+    await expect
+      .poll(() => page.locator(".leaflet-marker-icon").count())
+      .toBeGreaterThan(0);
+    const before = await page.locator(".leaflet-marker-icon").count();
+
+    await page.getByTestId("map-fab-filter").click();
+    const sheet = page.getByTestId("filter-sheet");
+    await sheet.waitFor({ state: "visible" });
+    await sheet
+      .locator("button")
+      .filter({ hasText: /^Hide all$/ })
+      .first()
+      .click();
+
+    await expect
+      .poll(() => page.locator(".leaflet-marker-icon").count())
+      .toBeLessThan(before);
   });
 
   test("bottom tab bar navigates and marks the active tab", async ({ page }) => {
