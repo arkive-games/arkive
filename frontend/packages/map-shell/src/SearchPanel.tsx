@@ -216,15 +216,21 @@ export function SearchPanel({
   return (
     <div
       className={cn(
+        // The floating column spans the map's full height but only *renders*
+        // a search bar (and a results panel once there is a query), so
+        // `pointer-events-none` here with `auto` on each visible child. With
+        // `auto` on the root the empty area below the bar silently swallowed
+        // every click in a 290px-wide strip of the map — including marker
+        // popups that opened underneath it.
         variant === "floating"
-          ? "pointer-events-auto absolute top-3 right-3 bottom-3 z-[600] flex w-[290px] flex-col gap-2"
+          ? "pointer-events-none absolute top-3 right-3 bottom-3 z-[600] flex w-[290px] flex-col gap-2"
           : "flex h-full min-h-0 w-full flex-col gap-2",
         classNames?.root,
       )}
       data-testid="search-panel"
     >
       {/* Search bar */}
-      <div className="flex items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur">
+      <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur">
         <svg
           className="size-4 shrink-0 text-muted-foreground"
           viewBox="0 0 24 24"
@@ -262,7 +268,7 @@ export function SearchPanel({
 
       {/* Results panel */}
       {hasQuery && (
-        <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-popover/95 shadow-sm backdrop-blur">
+        <div className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-popover/95 shadow-sm backdrop-blur">
           <div className="border-b border-border px-3 py-2 text-center text-xs text-muted-foreground">
             {labels.resultsCount(results.length)}
           </div>
