@@ -1,13 +1,15 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
+import { Info } from 'lucide-react'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
-import { BuildInfo } from '@gamemap/ui'
+import { BuildInfo, Button, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { getGameVersion } from '../lib/urls'
 import { SITE_VERSION } from '../lib/siteVersion'
 import type { MapEngineChoice } from '../lib/mapEngineChoice'
 import { EngineToggle } from './EngineToggle'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
+import { SiteInfo } from './SiteInfo'
 
 export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing' | '/changelog'
 
@@ -100,6 +102,22 @@ export function TopNav({ active, engine, onEngineChange }: {
           {active === '/' && engine && onEngineChange && (
             <EngineToggle value={engine} onChange={onEngineChange} />
           )}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                data-testid="contact-menu"
+                aria-label={t('siteInfo.tab')}
+                title={t('siteInfo.tab')}
+              >
+                <Info className="size-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="max-h-[70vh] w-[320px] overflow-y-auto">
+              <SiteInfo />
+            </PopoverContent>
+          </Popover>
           <ThemeToggle labels={{ auto: t('themeAuto'), light: t('themeLight'), dark: t('themeDark') }} />
           <BuildInfo
             commit={__BUILD_GIT_COMMIT__}

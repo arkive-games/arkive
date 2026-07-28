@@ -13,6 +13,7 @@ import {
   useStoredMapEngine,
 } from '../lib/mapEngineChoice'
 import type { NavKey } from './TopNav'
+import { SiteInfo } from './SiteInfo'
 
 type Tab = { key: NavKey; label: string; icon: typeof Map }
 
@@ -101,6 +102,7 @@ export function BottomTabBar() {
         <SheetContent
           side="bottom"
           data-testid="more-sheet"
+          className="max-h-[85dvh] overflow-y-auto"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
         >
           <SheetHeader>
@@ -166,6 +168,10 @@ export function BottomTabBar() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="mt-3 border-t border-border pt-3">
+            <SiteInfo />
           </div>
         </SheetContent>
       </Sheet>
