@@ -5,10 +5,14 @@ import {
   resolveChangelog,
   resolveText,
   validateChangelog,
+  versionUrl,
   type ChangelogFile,
 } from "./changelog"
 
 const TEXT = { "en-US": "English", "zh-CN": "简体", "zh-TW": "繁體" }
+const SHA_A = "0123456789abcdef0123456789abcdef01234567"
+const SHA_B = "89abcdef0123456789abcdef0123456789abcdef"
+const REPO = "https://github.com/arkive-games/arkive"
 
 describe("resolveText", () => {
   it("returns the exact locale when present", () => {
@@ -46,30 +50,101 @@ describe("compareVersions", () => {
 })
 
 describe("resolveChangelog", () => {
-  it("resolves every change for the given locale, preserving order", () => {
+  it("resolves every change for the locale and carries the commit through", () => {
     const file: ChangelogFile = {
       entries: [
-        { version: "1.1.0", date: "2026-07-02", changes: [{ kind: "feature", text: TEXT }] },
-        { version: "1.0.0", date: "2026-07-01", changes: [{ kind: "fix", text: TEXT }] },
+        {
+          version: "1.1.0",
+          date: "2026-07-02",
+          commit: SHA_B,
+          changes: [{ kind: "feature", text: TEXT }],
+        },
+        {
+          version: "1.0.0",
+          date: "2026-07-01",
+          commit: SHA_A,
+          changes: [{ kind: "fix", text: TEXT }],
+        },
       ],
     }
     expect(resolveChangelog(file, "zh-CN")).toEqual([
-      { version: "1.1.0", date: "2026-07-02", changes: [{ kind: "feature", text: "简体" }] },
-      { version: "1.0.0", date: "2026-07-01", changes: [{ kind: "fix", text: "简体" }] },
+      {
+        version: "1.1.0",
+        date: "2026-07-02",
+        commit: SHA_B,
+        changes: [{ kind: "feature", text: "简体" }],
+      },
+      {
+        version: "1.0.0",
+        date: "2026-07-01",
+        commit: SHA_A,
+        changes: [{ kind: "fix", text: "简体" }],
+      },
     ])
+  })
+})
+
+describe("versionUrl", () => {
+  it("compares against the previous release when there is one", () => {
+    expect(versionUrl(REPO, { commit: SHA_B }, { commit: SHA_A })).toBe(
+      `${REPO}/compare/${SHA_A}...${SHA_B}`,
+    )
+  })
+
+  it("links the single commit for the oldest release", () => {
+    expect(versionUrl(REPO, { commit: SHA_A })).toBe(`${REPO}/commit/${SHA_A}`)
+  })
+
+  it("does not double up on a trailing slash in the repo url", () => {
+    expect(versionUrl(`${REPO}/`, { commit: SHA_A })).toBe(`${REPO}/commit/${SHA_A}`)
   })
 })
 
 describe("validateChangelog", () => {
   const valid: ChangelogFile = {
     entries: [
-      { version: "1.1.0", date: "2026-07-02", changes: [{ kind: "feature", text: TEXT }] },
-      { version: "1.0.0", date: "2026-07-01", changes: [{ kind: "fix", text: TEXT }] },
+      {
+        version: "1.1.0",
+        date: "2026-07-02",
+        commit: SHA_B,
+        changes: [{ kind: "feature", text: TEXT }],
+      },
+      {
+        version: "1.0.0",
+        date: "2026-07-01",
+        commit: SHA_A,
+        changes: [{ kind: "fix", text: TEXT }],
+      },
     ],
   }
 
   it("reports no problems for a well-formed file", () => {
     expect(validateChangelog(valid)).toEqual([])
+  })
+
+  it("rejects a missing commit", () => {
+    const bad = {
+      entries: [{ version: "1.0.0", date: "2026-07-01", changes: valid.entries[1].changes }],
+    }
+    expect(validateChangelog(bad)).toContain(
+      "entries[0] (1.0.0): commit undefined is not a 40-character SHA",
+    )
+  })
+
+  it("rejects an abbreviated commit", () => {
+    const bad = {
+      entries: [
+        {
+          version: "1.0.0",
+          date: "2026-07-01",
+          commit: "0123456",
+          changes: valid.entries[1].changes,
+        },
+      ],
+    }
+    expect(validateChangelog(bad)).toContain(
+      'entries[0] (1.0.0): commit "0123456" is not a 40-character SHA',
+    )
   })
 
   it("rejects a non-object", () => {

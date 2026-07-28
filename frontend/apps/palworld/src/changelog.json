@@ -1,22 +1,9 @@
 {
   "entries": [
     {
-      "version": "1.8.0",
-      "date": "2026-07-28",
-      "changes": [
-        {
-          "kind": "feature",
-          "text": {
-            "en-US": "Version history page — every release and what changed, at /changelog.",
-            "zh-CN": "新增更新历史页面：在 /changelog 查看每个版本的变更内容。",
-            "zh-TW": "新增更新歷史頁面：在 /changelog 查看每個版本的變更內容。"
-          }
-        }
-      ]
-    },
-    {
-      "version": "1.7.1",
+      "version": "1.17.1",
       "date": "2026-07-27",
+      "commit": "7bf95292e91aabc3a2a2428c86827aa01a4ecbb6",
       "changes": [
         {
           "kind": "fix",
@@ -29,8 +16,9 @@
       ]
     },
     {
-      "version": "1.7.0",
+      "version": "1.17.0",
       "date": "2026-07-27",
+      "commit": "8ab2d2fc88c8ee624e4b5c8f0640078882f32c93",
       "changes": [
         {
           "kind": "improvement",
@@ -43,13 +31,14 @@
       ]
     },
     {
-      "version": "1.6.0",
+      "version": "1.16.0",
       "date": "2026-07-27",
+      "commit": "9b6f5f8b6a358ef00e3dbc902aca4b45db730e2b",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "The stat simulator now accounts for passive skills.",
+            "en-US": "The stat simulator accounts for passive skills.",
             "zh-CN": "属性模拟器新增被动技能计算层。",
             "zh-TW": "屬性模擬器新增被動技能計算層。"
           }
@@ -57,13 +46,14 @@
       ]
     },
     {
-      "version": "1.5.0",
+      "version": "1.15.0",
       "date": "2026-07-22",
+      "commit": "61ece77f349cea1b633fd703bb03498b472736cf",
       "changes": [
         {
           "kind": "improvement",
           "text": {
-            "en-US": "The stat simulator's separate modes are merged into a single annotated delta table.",
+            "en-US": "The simulator's separate modes are merged into one annotated delta table.",
             "zh-CN": "属性模拟器的多个模式合并为一张带注释的差值表。",
             "zh-TW": "屬性模擬器的多個模式合併為一張帶註解的差值表。"
           }
@@ -71,35 +61,44 @@
       ]
     },
     {
-      "version": "1.4.0",
+      "version": "1.14.1",
       "date": "2026-07-20",
+      "commit": "ad94ea66cd58a265cd0504415dd9f7f4c417a2e2",
       "changes": [
         {
-          "kind": "feature",
+          "kind": "improvement",
           "text": {
-            "en-US": "Pal stat simulator: solves a captured pal's hidden individual values from its stats.",
-            "zh-CN": "新增帕鲁属性模拟器：可由已捕获帕鲁的面板属性反解隐藏个体值。",
-            "zh-TW": "新增帕魯屬性模擬器：可由已捕獲帕魯的面板屬性反解隱藏個體值。"
+            "en-US": "The simulator is translated into all 17 languages, with corrected base-stat notes.",
+            "zh-CN": "属性模拟器完成 17 种语言本地化，并修正基础属性说明。",
+            "zh-TW": "屬性模擬器完成 17 種語言本地化，並修正基礎屬性說明。"
           }
         }
       ]
     },
     {
-      "version": "1.3.0",
+      "version": "1.14.0",
       "date": "2026-07-19",
+      "commit": "97f13e63c0380389805146d2dfcf083f9ddb8f52",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Base Raids, Fishing and Research pages.",
-            "zh-CN": "新增基地袭击、钓鱼与研究页面。",
-            "zh-TW": "新增基地襲擊、釣魚與研究頁面。"
+            "en-US": "Pal stat simulator that solves hidden individual values from a captured pal's stats.",
+            "zh-CN": "新增帕鲁属性模拟器，可由已捕获帕鲁的面板属性反解隐藏个体值。",
+            "zh-TW": "新增帕魯屬性模擬器，可由已捕獲帕魯的面板屬性反解隱藏個體值。"
           }
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.13.0",
+      "date": "2026-07-19",
+      "commit": "bc33fe352b3fd4b5aa1ddb47f7aa4eb76f1368ee",
+      "changes": [
         {
           "kind": "data",
           "text": {
-            "en-US": "The top bar now shows which game version the site's data was built from.",
+            "en-US": "The top bar shows which game version the site's data was built from.",
             "zh-CN": "顶栏显示站点数据对应的游戏版本。",
             "zh-TW": "頂欄顯示站點資料對應的遊戲版本。"
           }
@@ -107,13 +106,59 @@
       ]
     },
     {
-      "version": "1.2.0",
-      "date": "2026-07-18",
+      "version": "1.12.0",
+      "date": "2026-07-19",
+      "commit": "0de5d8b32316c4486564bcea0dd82390bb5874d3",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Where-to-get information for every item, plus a merchants catalog with stock and purchase limits.",
+            "en-US": "Research page with category tabs and a prerequisite tree.",
+            "zh-CN": "新增研究页面，含分类标签与前置条件树。",
+            "zh-TW": "新增研究頁面，含分類標籤與前置條件樹。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.11.0",
+      "date": "2026-07-19",
+      "commit": "86220b1fdca78e9656ef400e1370b1a41fa689e5",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Fishing page with bait modifiers.",
+            "zh-CN": "新增钓鱼页面，含鱼饵加成。",
+            "zh-TW": "新增釣魚頁面，含魚餌加成。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.10.0",
+      "date": "2026-07-19",
+      "commit": "54f06bba3329dc4f25fe011549dd9e8e62bcb75c",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Base Raids page, and habitat clouds on the Paldeck.",
+            "zh-CN": "新增基地袭击页面；图鉴显示栖息地范围。",
+            "zh-TW": "新增基地襲擊頁面；圖鑑顯示棲息地範圍。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.9.0",
+      "date": "2026-07-18",
+      "commit": "71771cae435153581653e001f1bebb115dcc8fcf",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Where to get every item, plus a merchants catalog with stock and purchase limits.",
             "zh-CN": "所有道具均标注获取途径；新增商人图鉴，含库存与购买上限。",
             "zh-TW": "所有道具均標註取得途徑；新增商人圖鑑，含庫存與購買上限。"
           }
@@ -121,15 +166,129 @@
       ]
     },
     {
-      "version": "1.1.0",
+      "version": "1.8.0",
       "date": "2026-07-16",
+      "commit": "a140a7bda1a856f9a3ed191ef994d75842cd033a",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Named map regions with overlays, and a page per region listing every loot spot inside it.",
-            "zh-CN": "地图显示区域名称与范围，并为每个区域生成页面，列出区域内所有采集点。",
-            "zh-TW": "地圖顯示區域名稱與範圍，並為每個區域產生頁面，列出區域內所有採集點。"
+            "en-US": "Named map regions with overlays, and a page per region listing its loot spots.",
+            "zh-CN": "地图显示区域名称与范围，并为每个区域生成页面，列出区域内的采集点。",
+            "zh-TW": "地圖顯示區域名稱與範圍，並為每個區域產生頁面，列出區域內的採集點。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.7.0",
+      "date": "2026-07-15",
+      "commit": "9d2c53b5c4bdc6ae7298e1805d5405ad85e8b83a",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Dungeon interior layout pages.",
+            "zh-CN": "新增地牢内部布局页面。",
+            "zh-TW": "新增地牢內部佈局頁面。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.6.0",
+      "date": "2026-07-15",
+      "commit": "176e03eaf25752ab8fae6043643b0529b49f3f44",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Build info in the top bar, and data caches refresh as soon as new data ships.",
+            "zh-CN": "顶栏新增构建信息；数据更新后缓存立即失效。",
+            "zh-TW": "頂欄新增建置資訊；資料更新後快取立即失效。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Planner tree view refined into generation sections.",
+            "zh-CN": "规划器树状视图改为按世代分区展示。",
+            "zh-TW": "規劃器樹狀檢視改為按世代分區展示。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.5.0",
+      "date": "2026-07-15",
+      "commit": "3260f3d6dcd44998bdba4581e400decb2ce0a445",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Blueprint pages show the craft target and every way to get it; boss drops split from normal drops.",
+            "zh-CN": "图纸页面显示制作目标与所有获取途径；Boss 掉落与普通掉落分开列出。",
+            "zh-TW": "圖紙頁面顯示製作目標與所有取得途徑；Boss 掉落與普通掉落分開列出。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "2026-07-15",
+      "commit": "0ddb7cd9f34d22f6fd302ff6e50f46830e649f62",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Tabbed full-width boss rewards with deduped loot tables.",
+            "zh-CN": "Boss 奖励改为通栏标签页，掉落表已去重合并。",
+            "zh-TW": "Boss 獎勵改為通欄標籤頁，掉落表已去重合併。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "2026-07-15",
+      "commit": "4a12cd982513c737aa45e766de0b32b1655fbb74",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Relic recycler conversion odds, spelled out roll by roll.",
+            "zh-CN": "新增遗物回收转换概率，逐次抽取详细列出。",
+            "zh-TW": "新增遺物回收轉換機率，逐次抽取詳細列出。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "date": "2026-07-15",
+      "commit": "728fef58914ccc44ff556473a8587a33295cfbda",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "A page per dungeon, with entrance mini-maps.",
+            "zh-CN": "每个地牢都有独立页面，并附入口小地图。",
+            "zh-TW": "每個地牢都有獨立頁面，並附入口小地圖。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2026-07-15",
+      "commit": "cbca28b7579f80dbf91a330d17fe08dc56b727fe",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Multi-generation breeding planner.",
+            "zh-CN": "新增多世代配种规划器。",
+            "zh-TW": "新增多世代配種規劃器。"
           }
         }
       ]
@@ -137,191 +296,570 @@
     {
       "version": "1.0.0",
       "date": "2026-07-15",
+      "commit": "b161a36aa2823f5ab47b3c9f180619985e3b895d",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Dungeons: loot lists, a page per dungeon, and interior layout maps.",
-            "zh-CN": "上线地牢功能：掉落列表、独立地牢页面与内部布局图。",
-            "zh-TW": "上線地牢功能：掉落列表、獨立地牢頁面與內部佈局圖。"
+            "en-US": "Dungeons: loot lists, wired into the map and item pages.",
+            "zh-CN": "上线地牢功能：掉落列表，并与地图和道具页面互通。",
+            "zh-TW": "上線地牢功能：掉落列表，並與地圖和道具頁面互通。"
           }
-        },
+        }
+      ]
+    },
+    {
+      "version": "0.28.0",
+      "date": "2026-07-14",
+      "commit": "312f876d731298c84f66caf7660809acd9d02dac",
+      "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Multi-generation breeding planner covering 2 to 6 generations, with a tree view.",
-            "zh-CN": "新增多世代配种规划器，支持 2 至 6 代，并提供树状视图。",
-            "zh-TW": "新增多世代配種規劃器，支援 2 至 6 代，並提供樹狀檢視。"
+            "en-US": "Condenser projection, night-only spawn info, and exact spawn positions on pal pages.",
+            "zh-CN": "新增浓缩强化预测、仅夜间出现提示，帕鲁页显示精确刷新点。",
+            "zh-TW": "新增濃縮強化預測、僅夜間出現提示，帕魯頁顯示精確刷新點。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.27.0",
+      "date": "2026-07-14",
+      "commit": "b274eb2deaef5bc2f889ef67f50e8b35cc216ab2",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Partner Skills page, with per-pal ranch tables.",
+            "zh-CN": "新增伙伴技能页面，并显示每只帕鲁的牧场产出表。",
+            "zh-TW": "新增夥伴技能頁面，並顯示每隻帕魯的牧場產出表。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.26.1",
+      "date": "2026-07-13",
+      "commit": "1f2a34856a297bf360a6cee77edf7bc44131d306",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The map remembers position, zoom and selection per map; items show what drops them.",
+            "zh-CN": "地图分别记住每张地图的位置、缩放与选中标记；道具显示掉落来源。",
+            "zh-TW": "地圖分別記住每張地圖的位置、縮放與選取標記；道具顯示掉落來源。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.26.0",
+      "date": "2026-07-13",
+      "commit": "37b6961a56e3d01e26ab297239a1e2998a5ff147",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Pal size filters in the list, table and card views.",
+            "zh-CN": "帕鲁列表、表格与卡片视图均支持体型筛选。",
+            "zh-TW": "帕魯列表、表格與卡片檢視均支援體型篩選。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.25.0",
+      "date": "2026-07-13",
+      "commit": "03ce90259cf316cd90b5c558b1b86a5e3c23310d",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Multi-layer breeding tree — drill into how to breed each parent.",
+            "zh-CN": "新增多层配种树，可逐层查看每个亲代的配方。",
+            "zh-TW": "新增多層配種樹，可逐層查看每個親代的配方。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.0",
+      "date": "2026-07-12",
+      "commit": "0d30d7febe8e90d56abaf967e5239f1696b7d420",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Warp-altar connections, shrine unlock badges, and kill-drop badges in popups.",
+            "zh-CN": "弹窗显示传送祭坛互通关系、神殿解锁物品徽标与击杀掉落。",
+            "zh-TW": "彈窗顯示傳送祭壇互通關係、神殿解鎖物品徽標與擊殺掉落。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.23.0",
+      "date": "2026-07-12",
+      "commit": "45ef6f1f92cfbb3d32566346def63ac9e9da31fd",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Search the whole site from the top bar.",
+            "zh-CN": "顶栏支持全站搜索。",
+            "zh-TW": "頂欄支援全站搜尋。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.22.0",
+      "date": "2026-07-11",
+      "commit": "449356a1a3364886fd194919c92f6d1f8e9d81d7",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Catalog grids load as you scroll, and the breeding page explains mutations.",
+            "zh-CN": "图鉴列表改为滚动加载；配种页新增突然变异说明。",
+            "zh-TW": "圖鑑列表改為滾動載入；配種頁新增突然變異說明。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.21.0",
+      "date": "2026-07-11",
+      "commit": "250959e273f4aa4586ed9d3511f3c987a89091ba",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Mark map markers as complete — saved in your browser.",
+            "zh-CN": "地图标记可标记为已完成，保存在本地浏览器。",
+            "zh-TW": "地圖標記可標記為已完成，儲存在本機瀏覽器。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.20.1",
+      "date": "2026-07-10",
+      "commit": "1aaae86f440fbdabd406b2a2aa29d1524bd282da",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Raw game ids everywhere, per-pal egg badges, and kind pills on hover cards.",
+            "zh-CN": "全站显示游戏原始 ID；帕鲁显示对应蛋类徽标；悬浮卡片顶部标注类型。",
+            "zh-TW": "全站顯示遊戲原始 ID；帕魯顯示對應蛋類徽標；懸浮卡片頂部標註類型。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.20.0",
+      "date": "2026-07-10",
+      "commit": "58a54e9ffa8de21958cdb62e0a15f795dff129b3",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Filters and buildings follow the game's own ordering in every language.",
+            "zh-CN": "筛选项与建筑在所有语言下均按游戏内顺序排列。",
+            "zh-TW": "篩選項與建築在所有語言下均按遊戲內順序排列。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.19.0",
+      "date": "2026-07-10",
+      "commit": "2bcd315def55b65402245dca34d69618f71a2489",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Richer item hover cards with unified material chips.",
+            "zh-CN": "道具悬浮卡片信息更丰富，材料标签在全站统一。",
+            "zh-TW": "道具懸浮卡片資訊更豐富，材料標籤在全站統一。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.18.1",
+      "date": "2026-07-09",
+      "commit": "401fb96c914b34c128da29982ee2b3dbd8fc6049",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Themed transparent map void with a feathered coastline.",
+            "zh-CN": "地图海域外改为随主题的透明底色，海岸线带羽化过渡。",
+            "zh-TW": "地圖海域外改為隨主題的透明底色，海岸線帶羽化過渡。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.18.0",
+      "date": "2026-07-09",
+      "commit": "9cce075f18cd9328ed99fb72383674e6e526a6d2",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Pal hover card on every pal link.",
+            "zh-CN": "所有帕鲁链接均支持悬浮卡片。",
+            "zh-TW": "所有帕魯連結均支援懸浮卡片。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.17.1",
+      "date": "2026-07-09",
+      "commit": "94189619de818bf5cc6eff411e8c8e52f6660376",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Mutation-pool passives are flagged, and pal stats split into Base Stats and Details.",
+            "zh-CN": "标注突然变异专属被动；帕鲁属性拆分为基础属性与详细信息两张卡片。",
+            "zh-TW": "標註突然變異專屬被動；帕魯屬性拆分為基礎屬性與詳細資訊兩張卡片。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.17.0",
+      "date": "2026-07-09",
+      "commit": "890217ef19408f4adfbdcfcf8366f9277593d6fd",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Ancient Shrine rewards and note images in marker popups.",
+            "zh-CN": "标记弹窗显示远古神殿奖励与笔记图片。",
+            "zh-TW": "標記彈窗顯示遠古神殿獎勵與筆記圖片。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.16.0",
+      "date": "2026-07-08",
+      "commit": "d156abef2ba6b1f621da47032282f8e6be3943de",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Active Skills catalog with a page per skill.",
+            "zh-CN": "新增主动技能图鉴，每个技能都有独立页面。",
+            "zh-TW": "新增主動技能圖鑑，每個技能都有獨立頁面。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.15.0",
+      "date": "2026-07-08",
+      "commit": "c6a0a3c76ff52ad809a6973e2d34a935d9b97117",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Note illustrations, and effigy relic icons with their buff descriptions.",
+            "zh-CN": "新增笔记插图，以及雕像遗物图标与增益说明。",
+            "zh-TW": "新增筆記插圖，以及雕像遺物圖示與增益說明。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.1",
+      "date": "2026-07-08",
+      "commit": "4044433ad38392d9eb992a520dd6717807f0a392",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "One content width everywhere, 8-column square card grids, and 3D coordinates.",
+            "zh-CN": "统一页面内容宽度，图鉴改为 8 列方形卡片，坐标显示三维数值。",
+            "zh-TW": "統一頁面內容寬度，圖鑑改為 8 欄方形卡片，座標顯示三維數值。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.0",
+      "date": "2026-07-08",
+      "commit": "8a5a8da2160a60764cd680e7e43a24e3ccb1377c",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Hover cards and toggle chip filters across every catalog.",
+            "zh-CN": "所有图鉴均支持悬浮卡片与标签式筛选。",
+            "zh-TW": "所有圖鑑均支援懸浮卡片與標籤式篩選。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.13.0",
+      "date": "2026-07-08",
+      "commit": "7f2f7fe6b6acb67c2fd75860aa785ca26e068fc3",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Each passive lists the pals that carry it innately.",
+            "zh-CN": "被动技能页列出天生携带该技能的帕鲁。",
+            "zh-TW": "被動技能頁列出天生攜帶該技能的帕魯。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.12.1",
+      "date": "2026-07-08",
+      "commit": "9fca1837afb95d1771ca7349a50fe53e23ad38e3",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Passive rarity tiers, synthesized descriptions, and category filters.",
+            "zh-CN": "被动技能显示稀有度等级、自动合成的描述文本，并支持分类筛选。",
+            "zh-TW": "被動技能顯示稀有度等級、自動合成的描述文字，並支援分類篩選。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.12.0",
+      "date": "2026-07-08",
+      "commit": "447a1f3eaee9bb87b3049088843afc32c4e0bcf2",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Passive Skills page.",
+            "zh-CN": "新增被动技能页面。",
+            "zh-TW": "新增被動技能頁面。"
           }
         }
       ]
     },
     {
       "version": "0.11.0",
-      "date": "2026-07-14",
+      "date": "2026-07-07",
+      "commit": "57a557ac63d42a9e713cdab69308e8f3e4be61ee",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Partner Skills page, condenser projection, night-only spawn info, and exact spawn positions on pal pages.",
-            "zh-CN": "新增伙伴技能页、浓缩强化预测、仅夜间出现提示，帕鲁页显示精确刷新点。",
-            "zh-TW": "新增夥伴技能頁、濃縮強化預測、僅夜間出現提示，帕魯頁顯示精確刷新點。"
+            "en-US": "Phone layout: bottom tab bar and a full-screen map with filter and search sheets.",
+            "zh-CN": "手机端改版：底部标签栏、全屏地图与筛选/搜索抽屉。",
+            "zh-TW": "手機版改版：底部標籤欄、全螢幕地圖與篩選/搜尋抽屜。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Map filters and pal-list filters are remembered between visits.",
+            "zh-CN": "地图筛选与帕鲁列表筛选会被记住。",
+            "zh-TW": "地圖篩選與帕魯列表篩選會被記住。"
           }
         }
       ]
     },
     {
       "version": "0.10.0",
-      "date": "2026-07-13",
+      "date": "2026-07-07",
+      "commit": "d9d18dd06c32a506cd3fbc0c1600335fd6e40b7b",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Multi-layer breeding tree — drill into how to breed each parent — plus pal size filters.",
-            "zh-CN": "新增多层配种树，可逐层查看每个亲代的配方；并新增帕鲁体型筛选。",
-            "zh-TW": "新增多層配種樹，可逐層查看每個親代的配方；並新增帕魯體型篩選。"
+            "en-US": "Quest log, map NPCs, and boss, summon and breeding acquisition on pal pages.",
+            "zh-CN": "新增任务列表与地图 NPC；帕鲁页显示 Boss、召唤与配种获取途径。",
+            "zh-TW": "新增任務列表與地圖 NPC；帕魯頁顯示 Boss、召喚與配種取得途徑。"
           }
-        },
+        }
+      ]
+    },
+    {
+      "version": "0.9.1",
+      "date": "2026-07-06",
+      "commit": "3b6d51ff3833df0d9c855022a79f029998e29a47",
+      "changes": [
         {
           "kind": "improvement",
           "text": {
-            "en-US": "The map remembers your position, zoom and selected marker for each map separately.",
-            "zh-CN": "地图会分别记住每张地图的位置、缩放与选中标记。",
-            "zh-TW": "地圖會分別記住每張地圖的位置、縮放與選取標記。"
+            "en-US": "Pal-page filters and list view, plus item sort ids and crafting stations.",
+            "zh-CN": "帕鲁页新增筛选与列表视图；道具显示排序编号与制作台。",
+            "zh-TW": "帕魯頁新增篩選與列表檢視；道具顯示排序編號與製作台。"
           }
         }
       ]
     },
     {
       "version": "0.9.0",
-      "date": "2026-07-12",
+      "date": "2026-07-06",
+      "commit": "af8e75f5dfb66f4829d76f4ae4c4c85775870e63",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Search the whole site from the top bar. Warp altars show their connections, and boss and pal popups list kill drops.",
-            "zh-CN": "顶栏支持全站搜索；传送祭坛显示互通关系，Boss 与帕鲁弹窗显示击杀掉落。",
-            "zh-TW": "頂欄支援全站搜尋；傳送祭壇顯示互通關係，Boss 與帕魯彈窗顯示擊殺掉落。"
+            "en-US": "Tech tree rebuilt to the in-game normal and ancient layout, in game order in every language.",
+            "zh-CN": "科技树按游戏内普通/古代布局重做，并在所有语言下保持游戏内顺序。",
+            "zh-TW": "科技樹按遊戲內普通/古代佈局重做，並在所有語言下保持遊戲內順序。"
           }
         }
       ]
     },
     {
       "version": "0.8.0",
-      "date": "2026-07-11",
+      "date": "2026-07-06",
+      "commit": "92f1e6a9c7503dbe78acb38e0ac66c106cb36274",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Mark map markers as complete — saved in your browser. Catalog grids now load as you scroll.",
-            "zh-CN": "地图标记可标记为已完成（保存在本地浏览器）；图鉴列表改为滚动加载。",
-            "zh-TW": "地圖標記可標記為已完成（儲存在本機瀏覽器）；圖鑑列表改為滾動載入。"
+            "en-US": "Item, building and technology encyclopedias.",
+            "zh-CN": "新增道具、建筑与科技图鉴。",
+            "zh-TW": "新增道具、建築與科技圖鑑。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.7.1",
+      "date": "2026-07-05",
+      "commit": "4d04f80fc4cce115f34f397bb005223fe1f0b936",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Shareable breeding links, a unified top nav, partner-skill effects, and search-driven marker highlighting.",
+            "zh-CN": "配种结果可分享链接；统一顶部导航；显示伙伴技能效果；搜索可高亮地图标记。",
+            "zh-TW": "配種結果可分享連結；統一頂部導覽；顯示夥伴技能效果；搜尋可高亮地圖標記。"
           }
         }
       ]
     },
     {
       "version": "0.7.0",
-      "date": "2026-07-10",
+      "date": "2026-07-05",
+      "commit": "42fae3e88220f49bce724bcb1a87675cc2ff2fdc",
       "changes": [
         {
-          "kind": "improvement",
+          "kind": "feature",
           "text": {
-            "en-US": "Catalogs follow the game's own ordering in every language, with richer item and building cards and effigy relics.",
-            "zh-CN": "图鉴在所有语言下均按游戏内顺序排列，道具与建筑卡片信息更丰富，并加入雕像遗物。",
-            "zh-TW": "圖鑑在所有語言下均按遊戲內順序排列，道具與建築卡片資訊更豐富，並加入雕像遺物。"
+            "en-US": "Paldeck pal encyclopedia.",
+            "zh-CN": "新增帕鲁图鉴。",
+            "zh-TW": "新增帕魯圖鑑。"
           }
         }
       ]
     },
     {
       "version": "0.6.0",
-      "date": "2026-07-08",
+      "date": "2026-07-05",
+      "commit": "426b091a013bc989b0c77fe79f32780e50ec5797",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Passive Skills and Active Skills catalogs, with hover cards on every pal, item, building and tech link.",
-            "zh-CN": "新增被动技能与主动技能图鉴；帕鲁、道具、建筑、科技链接均支持悬浮卡片。",
-            "zh-TW": "新增被動技能與主動技能圖鑑；帕魯、道具、建築、科技連結均支援懸浮卡片。"
+            "en-US": "Breeding calculator with saved favourite recipes.",
+            "zh-CN": "新增配种计算器，可收藏配方。",
+            "zh-TW": "新增配種計算機，可收藏配方。"
           }
         }
       ]
     },
     {
       "version": "0.5.0",
-      "date": "2026-07-07",
+      "date": "2026-07-04",
+      "commit": "d84d8c3963ff1e1570097d8f8645e05941f368c3",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Quest log and map NPCs.",
-            "zh-CN": "新增任务列表与地图 NPC。",
-            "zh-TW": "新增任務列表與地圖 NPC。"
+            "en-US": "Hover tooltips, spawn-count badges on clusters, and marker counts on filter buttons.",
+            "zh-CN": "新增悬停提示、聚合点的刷新数量徽标，以及筛选按钮上的标记计数。",
+            "zh-TW": "新增懸停提示、聚合點的刷新數量徽標，以及篩選按鈕上的標記計數。"
           }
         },
         {
           "kind": "improvement",
           "text": {
-            "en-US": "Phone layout: bottom tab bar and a full-screen map with filter and search sheets.",
-            "zh-CN": "手机端改版：底部标签栏、全屏地图与筛选/搜索抽屉。",
-            "zh-TW": "手機版改版：底部標籤欄、全螢幕地圖與篩選/搜尋抽屜。"
+            "en-US": "Full-height sidebar with the Palworld logo above the map selector.",
+            "zh-CN": "侧栏改为通高布局，地图选择器上方显示帕鲁标志。",
+            "zh-TW": "側欄改為通高佈局，地圖選擇器上方顯示帕魯標誌。"
           }
         }
       ]
     },
     {
       "version": "0.4.0",
-      "date": "2026-07-06",
+      "date": "2026-07-04",
+      "commit": "d693d915ffdd1912a1e878d5601608f39566f25b",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Item, building and technology encyclopedias. The tech tree mirrors the in-game normal and ancient layout.",
-            "zh-CN": "新增道具、建筑与科技图鉴；科技树按游戏内普通/古代布局还原。",
-            "zh-TW": "新增道具、建築與科技圖鑑；科技樹按遊戲內普通/古代佈局還原。"
+            "en-US": "Paldeck numbers on pals, and in-game coordinates in the readout, copy button and popups.",
+            "zh-CN": "帕鲁显示图鉴编号；坐标读数、复制按钮与弹窗均改用游戏内坐标。",
+            "zh-TW": "帕魯顯示圖鑑編號；座標讀數、複製按鈕與彈窗均改用遊戲內座標。"
           }
         }
       ]
     },
     {
       "version": "0.3.0",
-      "date": "2026-07-05",
+      "date": "2026-07-04",
+      "commit": "f57a5fb391fa38feff2d32a9e5b6ffd7f151333a",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Breeding calculator with saved favourites and shareable links, plus the Paldeck pal encyclopedia.",
-            "zh-CN": "上线配种计算器（可收藏配方、分享链接）与帕鲁图鉴。",
-            "zh-TW": "上線配種計算機（可收藏配方、分享連結）與帕魯圖鑑。"
+            "en-US": "Marker search, plus light and dark themes that follow your system.",
+            "zh-CN": "新增标记搜索，以及跟随系统的浅色/深色主题。",
+            "zh-TW": "新增標記搜尋，以及跟隨系統的淺色/深色主題。"
           }
         }
       ]
     },
     {
       "version": "0.2.0",
-      "date": "2026-07-04",
+      "date": "2026-07-03",
+      "commit": "15bf4b4366a9fa66b3c6253771eb034340c64b7d",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Marker search, light and dark themes, in-game coordinates, Paldeck numbers, and hover tooltips.",
-            "zh-CN": "新增标记搜索、浅色/深色主题、游戏内坐标、帕鲁图鉴编号与悬停提示。",
-            "zh-TW": "新增標記搜尋、淺色/深色主題、遊戲內座標、帕魯圖鑑編號與懸停提示。"
+            "en-US": "16-language interface.",
+            "zh-CN": "界面支持 16 种语言。",
+            "zh-TW": "介面支援 16 種語言。"
           }
         }
       ]
     },
     {
       "version": "0.1.0",
-      "date": "2026-07-03",
+      "date": "2026-07-02",
+      "commit": "9d0377cb239d74a66afd4a54bc5b7692b889897b",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Interactive Palworld map: markers, sidebar filters, map switching, and a 16-language interface.",
-            "zh-CN": "《幻兽帕鲁》互动地图上线：标记、侧栏筛选、地图切换，界面支持 16 种语言。",
-            "zh-TW": "《幻獸帕魯》互動地圖上線：標記、側欄篩選、地圖切換，介面支援 16 種語言。"
+            "en-US": "Interactive Palworld map: markers, sidebar filters and map switching.",
+            "zh-CN": "《幻兽帕鲁》互动地图上线：标记、侧栏筛选与地图切换。",
+            "zh-TW": "《幻獸帕魯》互動地圖上線：標記、側欄篩選與地圖切換。"
           }
         }
       ]

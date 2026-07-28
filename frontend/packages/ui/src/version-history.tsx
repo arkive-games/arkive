@@ -1,4 +1,4 @@
-import type { ChangeKind, ResolvedEntry } from "./changelog"
+import { versionUrl, type ChangeKind, type ResolvedEntry } from "./changelog"
 import { cn } from "./utils"
 
 export interface VersionHistoryLabels {
@@ -15,6 +15,8 @@ export interface VersionHistoryProps {
   entries: ResolvedEntry[]
   /** Injectable labels so the package stays i18n-free. */
   labels?: VersionHistoryLabels
+  /** Repository the version links point into. Defaults to the monorepo. */
+  repoUrl?: string
   className?: string
 }
 
@@ -33,7 +35,12 @@ const KIND_CLASS: Record<ChangeKind, string> = {
  * Presentational only — it takes already-resolved text and injected labels, so
  * the package needs no i18n runtime and no router.
  */
-function VersionHistory({ entries, labels, className }: VersionHistoryProps) {
+function VersionHistory({
+  entries,
+  labels,
+  repoUrl = "https://github.com/arkive-games/arkive",
+  className,
+}: VersionHistoryProps) {
   if (entries.length === 0) {
     return (
       <p data-testid="changelog-empty" className={cn("text-sm text-muted-foreground", className)}>
@@ -59,10 +66,29 @@ function VersionHistory({ entries, labels, className }: VersionHistoryProps) {
             )}
           />
           <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h2 className="font-mono text-lg font-semibold">v{entry.version}</h2>
+            {/* Links to the compare range against the previous release — which is
+                the NEXT array element, since entries run newest-first. */}
+            <h2 className="font-mono text-lg font-semibold">
+              <a
+                href={versionUrl(repoUrl, entry, entries[i + 1])}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline-offset-4 hover:underline"
+              >
+                v{entry.version}
+              </a>
+            </h2>
             <time dateTime={entry.date} className="text-sm text-muted-foreground">
               {entry.date}
             </time>
+            <a
+              href={`${repoUrl.replace(/\/$/, "")}/commit/${entry.commit}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              {entry.commit.slice(0, 7)}
+            </a>
             {i === 0 && labels?.current ? (
               <span
                 data-testid="changelog-current"

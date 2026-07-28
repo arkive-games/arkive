@@ -19,6 +19,12 @@ export interface ChangelogEntry {
   version: string
   /** YYYY-MM-DD */
   date: string
+  /**
+   * Full 40-character SHA of the last commit in this release. Abbreviated SHAs
+   * are rejected: they are ambiguous over a repo's lifetime, and the compare
+   * links below are permanent URLs.
+   */
+  commit: string
   changes: Change[]
 }
 
@@ -35,6 +41,7 @@ export interface ResolvedChange {
 export interface ResolvedEntry {
   version: string
   date: string
+  commit: string
   changes: ResolvedChange[]
 }
 
@@ -52,6 +59,7 @@ const FALLBACK_CHAIN: Record<string, readonly string[]> = { "zh-TW": ["zh-CN"] }
 
 const SEMVER = /^\d+\.\d+\.\d+$/
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+const FULL_SHA = /^[0-9a-f]{40}$/
 
 /** Pick the best available text for `locale`. Empty values count as absent. */
 export function resolveText(text: Record<string, string>, locale: string): string {
@@ -73,11 +81,29 @@ export function compareVersions(a: string, b: string): number {
   return 0
 }
 
+/**
+ * Permanent GitHub URL for a release. With a previous release it is a compare
+ * range — every commit the release contained, which is what a reader of release
+ * notes wants. The oldest release has nothing to compare against, so it falls
+ * back to its single commit.
+ */
+export function versionUrl(
+  repoUrl: string,
+  entry: Pick<ChangelogEntry, "commit">,
+  previous?: Pick<ChangelogEntry, "commit">,
+): string {
+  const base = repoUrl.replace(/\/$/, "")
+  return previous
+    ? `${base}/compare/${previous.commit}...${entry.commit}`
+    : `${base}/commit/${entry.commit}`
+}
+
 /** Collapse every change's locale map down to one string for `locale`. */
 export function resolveChangelog(file: ChangelogFile, locale: string): ResolvedEntry[] {
   return file.entries.map((entry) => ({
     version: entry.version,
     date: entry.date,
+    commit: entry.commit,
     changes: entry.changes.map((change) => ({
       kind: change.kind,
       text: resolveText(change.text, locale),
@@ -108,6 +134,9 @@ export function validateChangelog(raw: unknown): string[] {
     const label = `${at} (${entry.version})`
     if (typeof entry.date !== "string" || !ISO_DATE.test(entry.date)) {
       problems.push(`${label}: date ${JSON.stringify(entry.date)} is not YYYY-MM-DD`)
+    }
+    if (typeof entry.commit !== "string" || !FULL_SHA.test(entry.commit)) {
+      problems.push(`${label}: commit ${JSON.stringify(entry.commit)} is not a 40-character SHA`)
     }
     if (i > 0) {
       const prev = entries[i - 1]
