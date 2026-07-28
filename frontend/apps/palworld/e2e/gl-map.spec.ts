@@ -370,4 +370,110 @@ test.describe('engine selection', () => {
     await expect(page).toHaveURL(/[?&]engine=leaflet\b/)
     expect(await storedEngine(page)).toBe('leaflet')
   })
+
+  /**
+   * Regression: a pick that happens to MATCH the stored value still has to take
+   * effect when `?engine=` is overriding it. Storing `leaflet` and then arriving
+   * on `?engine=gl` renders GL while storage says `leaflet`, so picking "Leaflet"
+   * writes nothing new — the switcher must act on the pick itself rather than on a
+   * change to the stored value, or the click silently does nothing.
+   */
+  test('a pick matching the stored value still overrides an opposing ?engine=', async ({ page }) => {
+    await page.goto('/')
+    await pickEngine(page, 'leaflet')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    expect(await storedEngine(page)).toBe('leaflet')
+
+    // Stored `leaflet`, but the URL forces GL.
+    await page.goto('/?engine=gl')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+    expect(await storedEngine(page)).toBe('leaflet')
+
+    // Picking the already-stored engine must still switch the map and the URL.
+    await pickEngine(page, 'leaflet')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    await expect(glCanvas(page)).toHaveCount(0)
+    await expect(page).toHaveURL(/[?&]engine=leaflet\b/)
+  })
+
+  /**
+   * The mobile layout renders no top bar, so the switcher lives in the More sheet
+   * instead. It reaches the map through the shared `mapEngineStore` — the sheet is
+   * mounted by the ROOT route, not by App — which is what these assertions cover.
+   */
+  test.describe('mobile More sheet', () => {
+    test.use({ viewport: { width: 390, height: 844 } })
+
+    /** Open the More sheet and tap an engine pill. */
+    async function pickEngineOnMobile(page: Page, choice: 'gl' | 'leaflet') {
+      await page.getByTestId('tab-more').click()
+      await expect(page.getByTestId('more-sheet')).toBeVisible()
+      await page.getByTestId(`more-engine-${choice}`).click()
+      // Tapping a pill must NOT close the sheet — the user needs to see the
+      // active state move, exactly as the language buttons behave.
+      await expect(page.getByTestId('more-sheet')).toBeVisible()
+      await expect(page.getByTestId(`more-engine-${choice}`)).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+    }
+
+    test('the pills switch engines and the choice persists', async ({ page }) => {
+      await page.goto('/')
+      await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+
+      await pickEngineOnMobile(page, 'leaflet')
+      await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+      await expect(glCanvas(page)).toHaveCount(0)
+      expect(await storedEngine(page)).toBe('leaflet')
+
+      // Persisted: a param-free reload keeps Leaflet.
+      await page.goto('/')
+      await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+      await expect(glCanvas(page)).toHaveCount(0)
+
+      await pickEngineOnMobile(page, 'gl')
+      await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+      await expect(leafletContainer(page)).toHaveCount(0)
+      expect(await storedEngine(page)).toBe('gl')
+    })
+
+    test('the pills are reachable off the map and highlight the ?engine= override', async ({
+      page,
+    }) => {
+      // The sheet is mounted by the root route, so the row shows everywhere.
+      await page.goto('/pals')
+      await page.getByTestId('tab-more').click()
+      await expect(page.getByTestId('more-engine-gl')).toHaveAttribute('aria-pressed', 'true')
+      await page.keyboard.press('Escape')
+
+      // An override must highlight the engine actually rendering, not the stored
+      // one, or the pills would contradict the map.
+      await page.goto('/?engine=leaflet')
+      await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+      await page.getByTestId('tab-more').click()
+      await expect(page.getByTestId('more-engine-leaflet')).toHaveAttribute('aria-pressed', 'true')
+      await expect(page.getByTestId('more-engine-gl')).toHaveAttribute('aria-pressed', 'false')
+      // …and the override still hasn't touched storage.
+      expect(await storedEngine(page)).toBeNull()
+    })
+
+    // Same regression as the desktop case above, through the mobile pills: the
+    // pill must act on the tap, not on a change to the stored value.
+    test('a pill matching the stored value still overrides an opposing ?engine=', async ({ page }) => {
+      await page.goto('/')
+      await pickEngineOnMobile(page, 'leaflet')
+      await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+      await page.keyboard.press('Escape')
+
+      await page.goto('/?engine=gl')
+      await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+      expect(await storedEngine(page)).toBe('leaflet')
+
+      await pickEngineOnMobile(page, 'leaflet')
+      await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+      await expect(glCanvas(page)).toHaveCount(0)
+      await expect(page).toHaveURL(/[?&]engine=leaflet\b/)
+    })
+  })
 })

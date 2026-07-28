@@ -7,20 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@gamemap/ui'
-import type { MapEngineChoice } from '../lib/mapEngineChoice'
-
-/**
- * The two engine labels are proper nouns (a library and a rendering API), so
- * they are constants rather than i18n keys — translating them would duplicate an
- * untranslatable string across all 17 locales. Only the menu's own label
- * (`engineMenu`) is localized.
- */
-const ENGINE_OPTIONS: { value: MapEngineChoice; label: string }[] = [
-  { value: 'gl', label: 'WebGL (three.js)' },
-  { value: 'leaflet', label: 'Leaflet' },
-]
+import {
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  type MapEngineChoice,
+} from '../lib/mapEngineChoice'
 
 export interface EngineToggleProps {
+  /** The engine actually rendering, which `?engine=` can override. */
   value: MapEngineChoice
   onChange: (choice: MapEngineChoice) => void
 }
@@ -30,6 +24,10 @@ export interface EngineToggleProps {
  * language / theme menus (ghost icon `Button` trigger + a checked item per
  * option) so it reads as part of the same cluster; the `Cpu` glyph keeps it
  * visually distinct from `Languages` and `Settings`.
+ *
+ * Purely presentational: it owns no precedence logic, it just reports the pick
+ * (App hands it `mapEngineStore.set`). The mobile equivalent lives in
+ * `BottomTabBar`, since the mobile layout renders no top bar.
  */
 export function EngineToggle({ value, onChange }: EngineToggleProps) {
   const { t } = useTranslation()
@@ -48,14 +46,14 @@ export function EngineToggle({ value, onChange }: EngineToggleProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-[2000]">
-        {ENGINE_OPTIONS.map((option) => (
+        {MAP_ENGINE_CHOICES.map((choice) => (
           <DropdownMenuItem
-            key={option.value}
-            data-testid={`engine-${option.value}`}
-            onSelect={() => onChange(option.value)}
+            key={choice}
+            data-testid={`engine-${choice}`}
+            onSelect={() => onChange(choice)}
           >
-            <span className="flex-1">{option.label}</span>
-            {value === option.value && <CheckIcon className="size-4" />}
+            <span className="flex-1">{MAP_ENGINE_LABELS[choice].full}</span>
+            {value === choice && <CheckIcon className="size-4" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

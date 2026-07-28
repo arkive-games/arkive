@@ -5,6 +5,13 @@ import { Map, PawPrint, Package, Hammer, Menu, FlaskConical, ScrollText, Heart, 
 import { cn, Sheet, SheetContent, SheetHeader, SheetTitle } from '@gamemap/ui'
 import { ThemeToggle } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
+import {
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  resolveMapEngine,
+  useChooseMapEngine,
+  useStoredMapEngine,
+} from '../lib/mapEngineChoice'
 import type { NavKey } from './TopNav'
 
 type Tab = { key: NavKey; label: string; icon: typeof Map }
@@ -29,9 +36,18 @@ function activeKey(pathname: string): NavKey {
 export function BottomTabBar() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const active = activeKey(pathname)
   const [moreOpen, setMoreOpen] = useState(false)
+  // The map-engine switcher lives here too, because the mobile layout renders no
+  // top bar at all (that is where the desktop dropdown sits). The store is shared,
+  // so tapping a pill swaps the engine on the map page behind the sheet. The
+  // `?engine=` param is folded in with the same precedence App uses, so the
+  // highlighted pill matches what is actually on screen when the map was opened
+  // through an explicit override.
+  const storedEngine = useStoredMapEngine()
+  const activeEngine = resolveMapEngine((search as { engine?: unknown }).engine, storedEngine)
+  const chooseEngine = useChooseMapEngine()
 
   const primary: Tab[] = [
     { key: '/', label: t('breeding.navMap'), icon: Map },
@@ -125,6 +141,31 @@ export function BottomTabBar() {
               ))}
             </div>
             <ThemeToggle labels={{ auto: t('themeAuto'), light: t('themeLight'), dark: t('themeDark') }} />
+          </div>
+          {/* Tapping a pill deliberately leaves the sheet OPEN (unlike the nav
+              links above) so the active state visibly moves, as the language
+              buttons already behave. */}
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
+            <span className="text-xs text-muted-foreground">{t('engineMenu')}</span>
+            <div className="flex gap-1">
+              {MAP_ENGINE_CHOICES.map((choice) => (
+                <button
+                  key={choice}
+                  type="button"
+                  data-testid={`more-engine-${choice}`}
+                  aria-pressed={activeEngine === choice}
+                  onClick={() => chooseEngine(choice)}
+                  className={cn(
+                    'rounded px-2 py-1 text-xs',
+                    activeEngine === choice
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground',
+                  )}
+                >
+                  {MAP_ENGINE_LABELS[choice].short}
+                </button>
+              ))}
+            </div>
           </div>
         </SheetContent>
       </Sheet>
