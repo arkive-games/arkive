@@ -7,12 +7,13 @@ test.describe("site info — desktop", () => {
   test("the right sidebar shows the feedback group in zh-CN", async ({ page }) => {
     await page.goto("/?lng=zh-CN");
     await expect(page.getByTestId("sidebar-toggle-right")).toBeVisible();
-    await expect(page.getByTestId("site-info-group-number").first()).toHaveText(QQ_GROUP);
+    await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
+    await expect(page.getByTestId("site-info-group-number")).toHaveText(QQ_GROUP);
   });
 
   test("no feedback group in en-US, but the contact section survives", async ({ page }) => {
     await page.goto("/?lng=en-US");
-    await expect(page.getByTestId("site-info-panel").first()).toBeVisible();
+    await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
     await expect(page.getByTestId("site-info-group-number")).toHaveCount(0);
     await expect(page.getByText("discord.gg/cqn9sKbWPU").first()).toBeVisible();
   });
@@ -25,7 +26,8 @@ test.describe("site info — desktop", () => {
   test("collapsing the right sidebar is remembered across reloads", async ({ page }) => {
     await page.goto("/?lng=zh-CN");
     const toggle = page.getByTestId("sidebar-toggle-right");
-    await expect(page.getByTestId("site-info-group-number").first()).toBeVisible();
+    await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
+    await expect(page.getByTestId("site-info-group-number")).toBeVisible();
     await toggle.click();
     await expect(page.getByTestId("site-info-group-number")).toHaveCount(0);
     await page.reload();
@@ -39,14 +41,32 @@ test.describe("site info — desktop", () => {
     await expect(page.getByTestId("site-info-panel")).toBeVisible();
     await expect(page.getByTestId("site-info-group-number")).toHaveText(QQ_GROUP);
   });
+
+  test("the popover opens alongside the sidebar panel on the map", async ({ page }) => {
+    await page.goto("/?lng=zh-CN");
+    await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
+    await page.getByTestId("contact-menu").click();
+    await expect(page.getByTestId("site-info-panel")).toHaveCount(2);
+    await expect(page.getByTestId("site-info-group-number").nth(1)).toHaveText(QQ_GROUP);
+  });
+
+  test("the right sidebar is a named landmark reporting its expanded state", async ({ page }) => {
+    await page.goto("/?lng=en-US");
+    await expect(page.getByRole("complementary", { name: "About" })).toBeVisible();
+    const toggle = page.getByTestId("sidebar-toggle-right");
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  });
 });
 
 test.describe("site info — phone", () => {
   test.use({ viewport: PHONE });
 
-  test("the More sheet carries the panel and no right sidebar exists", async ({ page }) => {
-    await page.goto("/wiki?lng=zh-CN");
-    await expect(page.getByTestId("sidebar-toggle-right")).toHaveCount(0);
+  test("the More sheet carries the panel, and a phone map has no right sidebar", async ({ page }) => {
+    await page.goto("/?lng=zh-CN");
+    await expect(page.getByTestId("tab-more")).toBeVisible(); // page really rendered
+    await expect(page.getByTestId("sidebar-toggle-right")).toHaveCount(0); // now meaningful
     await page.getByTestId("tab-more").click();
     await expect(page.getByTestId("site-info-panel")).toBeVisible();
     await expect(page.getByTestId("site-info-group-number")).toHaveText(QQ_GROUP);
