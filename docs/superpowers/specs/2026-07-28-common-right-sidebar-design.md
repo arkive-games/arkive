@@ -152,7 +152,7 @@ Three per app, all rendering the same `SiteInfoPanel`.
   `bg-gradient-to-b from-card to-background`, with `border-l` instead of `border-r`.
 
 Width 346 matches the left sidebar so the map is symmetric. The toggle tab label is
-`siteInfo.tabLabel` (not the generic collapse/expand strings) so the tab names what it opens.
+`siteInfo.tab` (not the generic collapse/expand strings) so the tab names what it opens.
 
 Mobile needs no work here: neither app's mobile map branch renders `ShellSidebar`.
 
@@ -190,12 +190,13 @@ Everything else is per-locale text under a `siteInfo` key group:
 
 | Key | Purpose |
 |---|---|
-| `siteInfo.tabLabel` | Right-sidebar toggle tab text; popover `aria-label` |
+| `siteInfo.tab` | Right-sidebar toggle tab text; popover `aria-label` |
 | `siteInfo.title` | Panel heading |
-| `siteInfo.body` | Short intro + "unofficial fan project, not affiliated with NCSoft / Pocketpair" |
+| `siteInfo.body` | Short intro + "unofficial fan project, not affiliated with NCSOFT / Pocketpair" |
 | `siteInfo.contact.title` | Contact section heading |
-| `siteInfo.contact.body` | Per-locale contact prose (optional) |
-| `siteInfo.copy` / `siteInfo.copied` | Copy button states |
+| contact prose (optional) | aion2: `siteInfo.contact.content` (legacy key name kept for a minimal rename diff). palworld: `siteInfo.contact.hint` |
+| copy button states | aion2: `ui.copy` / `ui.copied` (generic verbs, shared group). palworld: `siteInfo.copy` / `siteInfo.copied` |
+| `siteInfo.feedback.label` / `.hint` | aion2 zh only: card caption above the number, and the invitation sentence |
 
 `siteInfo.body` is 2-3 sentences. It is deliberately **not** a copy of aion2's long `introModal`
 text (ownership, GPL, anti-scam warnings); that modal keeps its own keys and its own job. It is
@@ -205,7 +206,7 @@ Keys map onto `SiteInfoPanelProps` as:
 
 ```
 sections[0] = { title: siteInfo.title,         body: <siteInfo.body> }
-sections[1] = { title: siteInfo.contact.title, body: <siteInfo.contact.body> }   // omitted when absent
+sections[1] = { title: siteInfo.contact.title, body: <contact prose> }   // omitted when absent
 feedbackGroup = isZh ? { label, number: QQ_GROUP, copyLabel, copiedLabel } : undefined
 ```
 
@@ -216,10 +217,10 @@ panel's own section headings.
 
 ### aion2 — `public/locales/<lng>/common.yaml`
 
-Rename the legacy `rightSidebar.*` group to `siteInfo.*` and add the new keys. `contact.body`
+Rename the legacy `rightSidebar.*` group to `siteInfo.*` and add the new keys. `contact.content`
 inherits today's per-locale prose, so nothing regresses:
 
-| Locale | `contact.body` |
+| Locale | `contact.content` |
 |---|---|
 | `zh-CN` | existing three AION2 groups (246681864 / 197791140 / 791286881) |
 | `zh-TW` | **missing today** — author from zh-CN (this file has no `rightSidebar` keys at all) |

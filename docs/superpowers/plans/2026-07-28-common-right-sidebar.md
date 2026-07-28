@@ -714,7 +714,10 @@ export default function SiteInfo({ className }: { className?: string }) {
       body: (
         <>
           {contactContent && <Body>{contactContent}</Body>}
-          {feedbackHint && <p className="mt-1">{feedbackHint}</p>}
+          {/* Also through <Body>: a bare <p> would inherit the panel's text-xs
+              while the markdown above renders at prose-sm, putting two
+              adjacent paragraphs in one section at two different sizes. */}
+          {feedbackHint && <Body>{feedbackHint}</Body>}
         </>
       ),
     });
@@ -729,8 +732,9 @@ export default function SiteInfo({ className }: { className?: string }) {
           ? {
               label: t("common:siteInfo.feedback.label", "QQ"),
               number: FEEDBACK_QQ_GROUP,
-              copyLabel: t("common:siteInfo.copy", "Copy"),
-              copiedLabel: t("common:siteInfo.copied", "Copied"),
+              // Generic UI verbs live in the shared `ui` group, not `siteInfo`.
+              copyLabel: t("common:ui.copy", "Copy"),
+              copiedLabel: t("common:ui.copied", "Copied"),
             }
           : undefined
       }
