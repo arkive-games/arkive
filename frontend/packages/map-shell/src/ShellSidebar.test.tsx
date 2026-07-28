@@ -56,4 +56,22 @@ describe("ShellSidebar", () => {
     expect(getAllByTestId("sidebar-toggle")).toHaveLength(1)
     expect(getAllByTestId("sidebar-toggle-right")).toHaveLength(1)
   })
+
+  it.each([
+    ["left", false, "left"],
+    ["left", true, "right"],
+    ["right", false, "right"],
+    ["right", true, "left"],
+  ] as const)(
+    "on the %s side with collapsed=%s, chevron points %s-ward",
+    (side, collapsed, expected) => {
+      const { getByTestId } = render(
+        <ShellSidebar {...labels} side={side} collapsed={collapsed} />,
+      )
+      const toggle = getByTestId(side === "right" ? "sidebar-toggle-right" : "sidebar-toggle")
+      expect(toggle.querySelector(`.lucide-chevron-${expected}`)).toBeTruthy()
+      const other = expected === "left" ? "right" : "left"
+      expect(toggle.querySelector(`.lucide-chevron-${other}`)).toBeNull()
+    },
+  )
 })

@@ -6,9 +6,14 @@ export interface ShellSidebarProps {
   width?: number
   /**
    * Which edge the sidebar sits on. Only the collapse toggle differs: it hangs
-   * off the outward edge and its chevron points away from the content.
+   * off the outward edge and its chevron points away from the content. The
+   * right toggle's testid is suffixed (`sidebar-toggle-right`) so existing
+   * `sidebar-toggle` selectors keep resolving to exactly one element once a
+   * second sidebar is on the page.
    */
   side?: "left" | "right"
+  /** Accessible name for the sidebar landmark, e.g. "Filters" or "About". */
+  label?: string
   defaultCollapsed?: boolean
   collapsed?: boolean
   onCollapsedChange?: (collapsed: boolean) => void
@@ -26,6 +31,12 @@ export interface ShellSidebarProps {
   classNames?: {
     root?: string
     scrollArea?: string
+    /**
+     * The collapse button's edge position and corner rounding are owned by
+     * the `side` prop and cannot be overridden here: `left-*`/`right-*` are
+     * separate tailwind-merge conflict groups, so e.g. `right-4` merges
+     * alongside the existing `left-0` instead of replacing it.
+     */
     collapseButton?: string
     content?: string
   }
@@ -34,6 +45,7 @@ export interface ShellSidebarProps {
 export function ShellSidebar({
   width = 346,
   side = "left",
+  label,
   defaultCollapsed = false,
   collapsed: collapsedProp,
   onCollapsedChange,
@@ -54,9 +66,14 @@ export function ShellSidebar({
     onCollapsedChange?.(next)
   }
   const showMapSelector = mapSelector !== undefined && mapSelector.maps.length >= 2
+  // Points the way the panel's inner edge will move: outward when expanded (a
+  // click closes it), inward when collapsed (a click opens it).
+  const chevronPointsRight = side === "right" ? !collapsed : collapsed
+  const Chevron = chevronPointsRight ? ChevronRight : ChevronLeft
 
   return (
     <aside
+      aria-label={label}
       className={cn(
         "relative flex h-full shrink-0 flex-col transition-all duration-300",
         classNames?.root,
@@ -100,6 +117,7 @@ export function ShellSidebar({
         data-testid={side === "right" ? "sidebar-toggle-right" : "sidebar-toggle"}
         onClick={toggle}
         aria-label={collapsed ? expandLabel : collapseLabel}
+        aria-expanded={!collapsed}
         className={cn(
           "absolute top-[100px] z-[20000] flex h-12 w-8 select-none flex-col items-center justify-center",
           side === "right"
@@ -108,11 +126,7 @@ export function ShellSidebar({
           classNames?.collapseButton,
         )}
       >
-        {(side === "right" ? !collapsed : collapsed) ? (
-          <ChevronRight className="h-4 w-4" />
-        ) : (
-          <ChevronLeft className="h-4 w-4" />
-        )}
+        <Chevron className="h-4 w-4" />
         <span className="mt-0.5 whitespace-normal px-0.5 text-center text-xs leading-tight">
           {collapsed ? expandLabel : collapseLabel}
         </span>
