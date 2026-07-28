@@ -40,6 +40,8 @@ ui:
   noData: "暫無數據"
   noDescription: "無描述"
   add: "添加"
+  copy: "複製"
+  copied: "已複製"
 
 leaderboard:
   artifactRegionRanking: "神器占比大區排名"
@@ -152,6 +154,10 @@ changelog:
     fix: "修復"
     data: "資料"
 
+# Site-info panel (right sidebar / top-bar popover / mobile More sheet).
+# `contact.content` keeps its legacy name (it predates this group); the new
+# one-line invitation is `feedback.hint`. `feedback:` is zh-only — en-US and
+# ko-KR carry their channel in `contact.content` instead.
 siteInfo:
   tab: "關於"
   title: "關於本站"
@@ -168,6 +174,4 @@ siteInfo:
          ③群 791286881  
   feedback:
     label: "回饋 QQ 群"
-    hint: "歡迎加入回饋群提出建議、回報問題或回報 bug。"
-  copy: "複製"
-  copied: "已複製"
+    hint: "上面的群組用於玩家交流；如有建議或問題，請加入下方的回饋群。"

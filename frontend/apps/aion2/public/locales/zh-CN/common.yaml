@@ -32,6 +32,8 @@ ui:
   noData: "暂无数据"
   noDescription: "无描述"
   add: "添加"
+  copy: "复制"
+  copied: "已复制"
 
 auth:
   login: "登录"
@@ -224,6 +226,10 @@ donateModal:
   body: "游戏攻略网站维护需要大量时间和精力，如果想要支持我们，可以通过下面的支付宝二维码，你的小小心意是支持我们的动力"
 
 
+# Site-info panel (right sidebar / top-bar popover / mobile More sheet).
+# `contact.content` keeps its legacy name (it predates this group); the new
+# one-line invitation is `feedback.hint`. `feedback:` is zh-only — en-US and
+# ko-KR carry their channel in `contact.content` instead.
 siteInfo:
   tab: "关于"
   title: "关于本站"
@@ -240,9 +246,7 @@ siteInfo:
          ③群 791286881  
   feedback:
     label: "反馈 QQ 群"
-    hint: "欢迎加入反馈群提出建议、反馈问题或报告 bug。"
-  copy: "复制"
-  copied: "已复制"
+    hint: "上面的群用于玩家交流；如有建议或问题，请加入下方的反馈群。"
 
 crafting:
   select: "选择要替换的装备"

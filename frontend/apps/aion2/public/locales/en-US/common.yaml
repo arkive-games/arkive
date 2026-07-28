@@ -25,6 +25,8 @@ ui:
   noData: "No Data"
   noDescription: "No description"
   add: "Add"
+  copy: "Copy"
+  copied: "Copied"
 
 theme:
   auto: "Auto (Change with Map)"
@@ -168,11 +170,15 @@ introModal:
     Maintaining a game guide website requires a tremendous amount of time and effort. If you wish to support us, you may do so via the Alipay QR code below — your kindness is what keeps this project moving forward ❤
 
   
+# Site-info panel (right sidebar / top-bar popover / mobile More sheet).
+# `contact.content` keeps its legacy name (it predates this group). This
+# locale has no `feedback:` key — the QQ card is zh-only; the Discord
+# invite in `contact.content` is this locale's channel instead.
 siteInfo:
   tab: "About"
   title: "About this site"
   body: |-
-    An unofficial, fan-made interactive map and database for AION2, built and maintained by the 苏烟攻略组 (Suyn AION2 Team). All game data is extracted from the game files, and the site is free to use.
+    This site is an unofficial, fan-made interactive map and database for AION2, built and maintained by the **苏烟攻略组 (Suyn AION2 Team)**. All game data is extracted from the game files, and the site will always remain free to use.
 
     Not affiliated with, endorsed by, or sponsored by NCSOFT.
   contact:
@@ -180,8 +186,6 @@ siteInfo:
     content: |
       1. **Our Aion 2 Discussion Discord:** https://discord.gg/cqn9sKbWPU
       2. For the latest Aion 2 news and active discussions, check out the Aion 2 Global Discord – **the biggest Aion 2's community** we’re happy to collaborate with: https://discord.gg/aion2global
-  copy: "Copy"
-  copied: "Copied"
 
 race:
   light: "Elyos"
