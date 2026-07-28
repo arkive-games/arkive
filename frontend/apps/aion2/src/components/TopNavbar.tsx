@@ -105,11 +105,11 @@ export default function TopNavbar() {
               className="max-h-[70vh] w-[300px] overflow-y-auto"
             >
               <div className="mb-2 text-base font-semibold">
-                {t("common:rightSidebar.contact.title", "Communication & Contact")}
+                {t("common:siteInfo.contact.title", "Communication & Contact")}
               </div>
               <div className="prose prose-sm dark:prose-invert max-w-none break-words text-sm [&_a]:text-primary">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {t("common:rightSidebar.contact.content")}
+                  {t("common:siteInfo.contact.content")}
                 </ReactMarkdown>
               </div>
             </PopoverContent>

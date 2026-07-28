@@ -204,11 +204,11 @@ export default function BottomTabBar() {
 
           <div className="mt-3 border-t border-border pt-3">
             <div className="mb-1 text-xs font-semibold text-muted-foreground">
-              {t("common:rightSidebar.contact.title", "Communication & Contact")}
+              {t("common:siteInfo.contact.title", "Communication & Contact")}
             </div>
             <div className="prose prose-sm dark:prose-invert max-w-none break-words text-sm [&_a]:text-primary">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {t("common:rightSidebar.contact.content")}
+                {t("common:siteInfo.contact.content")}
               </ReactMarkdown>
             </div>
             <a
