@@ -15,6 +15,7 @@ import { RAIDS_STRINGS } from './raidsStrings'
 import { RECYCLER_STRINGS } from './recyclerStrings'
 import { RESEARCH_STRINGS } from './researchStrings'
 import { SIM_STRINGS } from './simulatorStrings'
+import { SITE_INFO_STRINGS } from './siteInfoStrings'
 
 export const LANGUAGES = ['en-US', 'de-DE', 'es-ES', 'es-MX', 'fr-FR', 'id-ID', 'it-IT', 'ja-JP', 'ko-KR', 'pl-PL', 'pt-BR', 'ru-RU', 'th-TH', 'tr-TR', 'vi-VN', 'zh-CN', 'zh-TW'] as const
 export type Language = (typeof LANGUAGES)[number]
@@ -989,6 +990,7 @@ for (const lng of LANGUAGES) {
       sim: SIM_STRINGS[lng] ?? SIM_STRINGS['en-US'],
       raids: RAIDS_STRINGS[lng] ?? RAIDS_STRINGS['en-US'],
       basecamp: BASECAMP_STRINGS[lng] ?? BASECAMP_STRINGS['en-US'],
+      siteInfo: SITE_INFO_STRINGS[lng],
       catalogLoading: CATALOG_STRINGS[lng].loading,
       catalogShowMore: SHOW_MORE_LABELS[lng],
       more: MORE_LABELS[lng],
