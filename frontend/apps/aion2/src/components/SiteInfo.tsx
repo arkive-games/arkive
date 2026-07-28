@@ -9,7 +9,8 @@ import { FEEDBACK_QQ_GROUP } from "@/lib/constants";
  * `t(key, "")` on a key the active locale omits returns the zh-CN text (this
  * app falls back to zh-CN everywhere), not "". Pinning `fallbackLng: false`
  * limits the lookup to the active locale, so "" really means "this locale
- * does not define the key".
+ * does not define the key". palworld's adapter mirrors this — keep the two in
+ * step.
  */
 const LOCALE_ONLY = { defaultValue: "", fallbackLng: false } as const;
 

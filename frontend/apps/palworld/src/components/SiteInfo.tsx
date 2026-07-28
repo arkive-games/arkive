@@ -19,8 +19,11 @@ const LOCALE_ONLY = { defaultValue: '', fallbackLng: false } as const
 function Paragraphs({ lines }: { lines: string[] }) {
   return (
     <>
-      {lines.map((line) => (
-        <p key={line} className="mb-1 last:mb-0">
+      {/* Index keys: the array is static and never reordered, and a translator
+          duplicating a line would otherwise collide. Matches SiteInfoPanel's
+          own sections.map. */}
+      {lines.map((line, i) => (
+        <p key={i} className="mb-1 last:mb-0">
           {line}
         </p>
       ))}
