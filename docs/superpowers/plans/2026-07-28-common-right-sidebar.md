@@ -1232,12 +1232,21 @@ function Paragraphs({ lines }: { lines: string[] }) {
  * top-bar popover and the mobile More sheet. The contact section exists only
  * for locales that have a channel — currently zh-CN and zh-TW.
  */
+/**
+ * i18next resolves `fallbackLng` BEFORE `defaultValue`, so a plain
+ * `t(key, '')` on a key this locale omits returns the en-US value. Pinning
+ * `fallbackLng: false` makes "" mean "this locale has no contact channel" —
+ * safe because SITE_INFO_STRINGS is a total Record<Language, …>, so no locale
+ * needs the fallback for anything else. (Mirrors aion2's LOCALE_ONLY.)
+ */
+const LOCALE_ONLY = { defaultValue: '', fallbackLng: false } as const
+
 export function SiteInfo({ className }: { className?: string }) {
   const { t } = useTranslation()
   const body = t('siteInfo.body', { returnObjects: true }) as string[]
-  const contactTitle = t('siteInfo.contact.title', { defaultValue: '' })
-  const contactHint = t('siteInfo.contact.hint', { defaultValue: '' })
-  const groupLabel = t('siteInfo.contact.groupLabel', { defaultValue: '' })
+  const contactTitle = t('siteInfo.contact.title', LOCALE_ONLY)
+  const contactHint = t('siteInfo.contact.hint', LOCALE_ONLY)
+  const groupLabel = t('siteInfo.contact.groupLabel', LOCALE_ONLY)
 
   const sections: SiteInfoSection[] = [
     {
@@ -1268,7 +1277,7 @@ export function SiteInfo({ className }: { className?: string }) {
 }
 ```
 
-The presence of `siteInfo.contact.groupLabel` is itself the locale gate — only zh-CN and zh-TW define `contact`, and `fallbackLng: 'en-US'` cannot supply it because en-US has no `contact` either.
+The presence of `siteInfo.contact.groupLabel` is itself the locale gate — only zh-CN and zh-TW define `contact`. **That gate is only safe because the read is locale-pinned.** Measured against the installed i18next: a plain `t(key)` returns the *key name* (truthy, so the card would render labelled `siteInfo.contact.groupLabel`); a plain `t(key, '')` returns en-US's value if en-US ever gains a `contact`, which would make all 17 locales render the Chinese QQ card with nothing failing or warning. aion2 already has an en-US contact channel (a Discord invite), so this is a realistic invariant to break — hence `LOCALE_ONLY` rather than a bare default.
 
 - [ ] **Step 2: Add the top-bar popover**
 
