@@ -889,7 +889,7 @@ Expected: no errors.
 
 - [ ] **Step 4: Note the deferred browser check**
 
-*Deferred to the post-merge live-test pass (Task 10, Step 5).* What to look at then, at `http://localhost:15173/?lng=zh-CN`: the panel is open on the right on a first visit (`localStorage.removeItem('aion2.siteInfoSidebarCollapsed')` then reload to retest), the tab on its left edge collapses it, the map redraws and fills the freed space without blank tiles, and the collapsed state survives a reload.
+*Deferred to the post-merge live-test pass (Task 10, Step 5).* What to look at then, at `http://localhost:15173/?lng=zh-CN`: the panel is open on the right on a first visit (`localStorage.removeItem('aion2.map.siteInfoCollapsed')` then reload to retest, in a window at least 1200px wide), the tab on its left edge collapses it, the map redraws and fills the freed space without blank tiles, and the collapsed state survives a reload. Also check the tab is legible in dark and abyss themes, and that it does not cover the floating search results.
 
 - [ ] **Step 5: Bump the aion2 version**
 
@@ -974,7 +974,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     tab: 'Info',
     title: 'Über diese Seite',
     body: [
-      'Eine unofficielle, von Fans erstellte interaktive Karte und Datenbank für Palworld. Alle Spieldaten stammen aus den Spieldateien.',
+      'Eine unoffizielle, von Fans erstellte interaktive Karte und Datenbank für Palworld. Alle Spieldaten stammen aus den Spieldateien.',
       'Nicht mit Pocketpair, Inc. verbunden und weder von ihnen unterstützt noch gesponsert.',
     ],
     copy: 'Kopieren',
@@ -1371,7 +1371,9 @@ import { useTranslation } from 'react-i18next'
 import { ShellSidebar } from '@gamemap/map-shell'
 import { SiteInfo } from './SiteInfo'
 
-const COLLAPSED_KEY = 'palworld.siteInfoSidebarCollapsed'
+const COLLAPSED_KEY = 'palworld.map.siteInfoCollapsed'
+/** Below this, 346 + 320 would leave the map column a sliver. */
+const FIRST_VISIT_MIN_WIDTH = 1200
 
 /**
  * Expanded on a first-ever visit so the feedback invite is actually seen, then
@@ -1380,10 +1382,17 @@ const COLLAPSED_KEY = 'palworld.siteInfoSidebarCollapsed'
  */
 function readCollapsed(): boolean {
   try {
-    return localStorage.getItem(COLLAPSED_KEY) === '1'
+    const stored = localStorage.getItem(COLLAPSED_KEY)
+    if (stored !== null) return stored === '1'
   } catch {
-    return false
+    /* no storage */
   }
+  // No recorded choice: expanded so the feedback invite is actually seen —
+  // except on a narrow desktop, where the map would have nothing left.
+  // useIsMobile switches at 768px, so the desktop tree renders from 768 up:
+  // at 768 the map column would be 102px and the floating search panel, at
+  // 290px, would be wider than its own container.
+  return window.innerWidth < FIRST_VISIT_MIN_WIDTH
 }
 
 function writeCollapsed(collapsed: boolean): void {
@@ -1436,6 +1445,10 @@ In `apps/palworld/src/App.tsx`, add `import { InfoSidebar } from './components/I
 
 The mobile branch returns at line 773, so phones are unaffected.
 
+**Also clear the floating search panel**, exactly as Task 5 did for aion2. `ShellSidebar`'s right-side toggle is `absolute top-[100px] left-0 -translate-x-full z-[20000]`, so it hangs 32px *outside* the `<aside>` and into the map column at y≈100–148. palworld's desktop tree renders `searchPanel('floating')` at `App.tsx:857` with the identical geometry to aion2's, so the tab would paint over the search results (`20000 > 600`). Give the floating variant the same `right-11` clearance aion2 uses — read palworld's `searchPanel` definition (~line 725) and its `classNames` support before choosing the lever, rather than assuming it matches aion2's shape.
+
+Note palworld needs **no contrast fix**: its `collapseButton` already uses `bg-secondary text-secondary-foreground`, which themes correctly. That was an aion2-only problem caused by its bespoke `--color-sidebar-collapse` token.
+
 - [ ] **Step 3: Verify types and lint**
 
 ```bash
@@ -1446,7 +1459,7 @@ Expected: no errors.
 
 - [ ] **Step 4: Note the deferred browser check**
 
-*Deferred to the post-merge live-test pass (Task 10, Step 5).* What to look at then, at `http://localhost:15174/`: the panel is open on the right on a first visit (`localStorage.removeItem('palworld.siteInfoSidebarCollapsed')` then reload to retest), the left-edge tab collapses it, the Leaflet map fills the freed width with no blank tiles, and the state survives a reload. Also confirm the left filter sidebar's tab still works and the two tabs do not overlap.
+*Deferred to the post-merge live-test pass (Task 10, Step 5).* What to look at then, at `http://localhost:15174/`: the panel is open on the right on a first visit (`localStorage.removeItem('palworld.map.siteInfoCollapsed')` then reload to retest, in a window at least 1200px wide), the left-edge tab collapses it, the Leaflet map fills the freed width with no blank tiles, and the state survives a reload. Also confirm the left filter sidebar's tab still works, the two tabs do not overlap, and the right tab does not cover the floating search results.
 
 - [ ] **Step 5: Bump the palworld version**
 
@@ -1483,6 +1496,12 @@ git commit -m "feat(palworld): add the site-info right sidebar to the desktop ma
 **Files:**
 - Create: `apps/aion2/e2e/site-info.spec.ts`
 - Create: `apps/palworld/e2e/site-info.spec.ts`
+
+**Three locator constraints this feature imposes — the specs below already respect them, so preserve them when editing:**
+
+1. **`data-testid="site-info-panel"` is not unique on the map page.** The sidebar panel is persistently mounted on desktop, so opening the top-bar popover puts two in the DOM and Playwright strict mode fails an unscoped `getByTestId`. That is why every popover test navigates to a **non-map** page first (`/wiki`, `/pals`), where no sidebar exists, and why map-page assertions use `.first()`.
+2. **`page.locator("aside")` now matches two elements.** Existing specs (`smoke.spec.ts`, `popup-blink.spec.ts`) use `.first()` and still resolve to the left sidebar, so they are safe — but do not add new bare `aside` locators. Use `getByTestId("sidebar-toggle-right")`, or `getByRole("complementary", { name })`, which is what the `label` prop exists for.
+3. **The specs depend on the sidebar starting expanded.** `readCollapsed()` returns collapsed on a first visit below 1200px viewport width. Playwright's `devices["Desktop Chrome"]` is 1280×720, comfortably above it — but any spec that sets a narrower desktop viewport would see it collapsed. Don't set one without accounting for that.
 
 - [ ] **Step 1: Write the aion2 spec**
 
