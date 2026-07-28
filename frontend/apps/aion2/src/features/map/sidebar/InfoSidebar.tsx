@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import { ShellSidebar } from "@gamemap/map-shell";
 import SiteInfo from "@/components/SiteInfo";
 
-const COLLAPSED_KEY = "aion2.siteInfoSidebarCollapsed";
+const COLLAPSED_KEY = "aion2.map.siteInfoCollapsed";
+
+/** Below this, 346 (left sidebar) + 320 (this one) would leave the map column a sliver. */
+const FIRST_VISIT_MIN_WIDTH = 1200;
 
 /**
  * Expanded on a first-ever visit so the feedback invite is actually seen, then
@@ -12,10 +15,15 @@ const COLLAPSED_KEY = "aion2.siteInfoSidebarCollapsed";
  */
 function readCollapsed(): boolean {
   try {
-    return localStorage.getItem(COLLAPSED_KEY) === "1";
+    const stored = localStorage.getItem(COLLAPSED_KEY);
+    if (stored !== null) return stored === "1";
   } catch {
-    return false;
+    /* no storage — fall through to the width-based default */
   }
+  // No recorded choice: expanded so the feedback invite is actually seen —
+  // except on a narrow desktop, where the map would have nothing left. This
+  // is a client-only SPA (no SSR), so `window` is always present here.
+  return window.innerWidth < FIRST_VISIT_MIN_WIDTH;
 }
 
 function writeCollapsed(collapsed: boolean): void {
@@ -49,7 +57,8 @@ export default function InfoSidebar() {
       label={label}
       classNames={{
         root: "border-l border-border bg-card text-card-foreground",
-        collapseButton: "text-[#3D3D3D] bg-[color:var(--color-sidebar-collapse)]",
+        collapseButton:
+          "text-[color:var(--color-sidebar-collapse-fg)] bg-[color:var(--color-sidebar-collapse)]",
         content: "px-3 pt-3",
       }}
     >

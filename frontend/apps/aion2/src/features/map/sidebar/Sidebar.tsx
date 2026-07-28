@@ -19,9 +19,11 @@ export default function Sidebar() {
     <ShellSidebar
       collapseLabel={t("common:menu.collapse", "Collapse")}
       expandLabel={t("common:menu.expand", "Expand")}
+      label={t("common:menu.markerTypes", "Marker Types")}
       classNames={{
         root: "text-foreground bg-[image:var(--background-image-sidebar)]",
-        collapseButton: "text-[#3D3D3D] bg-[color:var(--color-sidebar-collapse)]",
+        collapseButton:
+          "text-[color:var(--color-sidebar-collapse-fg)] bg-[color:var(--color-sidebar-collapse)]",
       }}
       backgroundSlot={
         <div

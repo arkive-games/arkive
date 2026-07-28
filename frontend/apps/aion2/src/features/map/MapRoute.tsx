@@ -31,7 +31,7 @@ import { aionAssets } from "@/features/map/aionAssets";
 import { aionTheme } from "@/features/map/aionTheme";
 import MarkerPopupContent from "@/features/map/popup/MarkerPopupContent";
 import Sidebar from "@/features/map/sidebar/Sidebar";
-import InfoSidebar from "./sidebar/InfoSidebar";
+import InfoSidebar from "@/features/map/sidebar/InfoSidebar";
 import SelectMap from "@/features/map/sidebar/SelectMap";
 import MarkerTypesSection from "@/features/map/sidebar/MarkerTypesSection";
 import TopNavbar from "@/components/TopNavbar";
@@ -351,6 +351,9 @@ export default function MapRoute() {
       searchFields={["name", "description"]}
       resultAside={(itm) => subzoneAt(itm.x, itm.y) || undefined}
       variant={variant}
+      // The right sidebar's collapse tab hangs 32px into the map column at
+      // y≈100px; clear it so it never lands on the results list.
+      classNames={variant === "floating" ? { root: "right-11" } : undefined}
     />
   );
 
