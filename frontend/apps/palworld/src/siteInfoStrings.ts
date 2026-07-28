@@ -38,7 +38,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     tab: 'Info',
     title: 'Über diese Seite',
     body: [
-      'Eine unofficielle, von Fans erstellte interaktive Karte und Datenbank für Palworld. Alle Spieldaten stammen aus den Spieldateien.',
+      'Eine unoffizielle, von Fans erstellte interaktive Karte und Datenbank für Palworld. Alle Spieldaten stammen aus den Spieldateien.',
       'Nicht mit Pocketpair, Inc. verbunden und weder von ihnen unterstützt noch gesponsert.',
     ],
     copy: 'Kopieren',
@@ -79,7 +79,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Tentang situs ini',
     body: [
       'Peta interaktif dan basis data Palworld tidak resmi yang dibuat oleh penggemar. Semua data game diambil dari file game.',
-      'Tidak berafiliasi, didukung, atau disponsori oleh Pocketpair, Inc.',
+      'Tidak berafiliasi dengan, didukung, atau disponsori oleh Pocketpair, Inc.',
     ],
     copy: 'Salin',
     copied: 'Tersalin',
@@ -119,7 +119,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'O tej stronie',
     body: [
       'Nieoficjalna, stworzona przez fanów interaktywna mapa i baza danych do Palworld. Wszystkie dane pochodzą z plików gry.',
-      'Niepowiązane z Pocketpair, Inc.; bez ich poparcia ani sponsoringu.',
+      'Niepowiązane z Pocketpair, Inc.; bez jej poparcia ani sponsoringu.',
     ],
     copy: 'Kopiuj',
     copied: 'Skopiowano',
@@ -139,7 +139,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'О сайте',
     body: [
       'Неофициальная фанатская интерактивная карта и база данных по Palworld. Все игровые данные извлечены из файлов игры.',
-      'Не связано с Pocketpair, Inc., не одобрено и не финансируется ею.',
+      'Не связано с Pocketpair, Inc., не одобрено и не спонсируется ею.',
     ],
     copy: 'Копировать',
     copied: 'Скопировано',
@@ -178,7 +178,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     tab: '关于',
     title: '关于本站',
     body: [
-      '本站是由玩家制作的《帕鲁世界》非官方互动地图与资料库，所有游戏数据均从游戏文件中提取。',
+      '本站是由玩家制作的《幻兽帕鲁》非官方互动地图与资料库，所有游戏数据均从游戏文件中提取。',
       '本站与 Pocketpair, Inc. 无隶属关系，也未获其授权或赞助。',
     ],
     contact: {
@@ -193,12 +193,12 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     tab: '關於',
     title: '關於本站',
     body: [
-      '本站是由玩家製作的《帕魯世界》非官方互動地圖與資料庫，所有遊戲資料均自遊戲檔案中擷取。',
+      '本站是由玩家製作的《幻獸帕魯》非官方互動地圖與資料庫，所有遊戲資料均自遊戲檔案中擷取。',
       '本站與 Pocketpair, Inc. 無隸屬關係，也未獲其授權或贊助。',
     ],
     contact: {
       title: '交流與回饋',
-      hint: '歡迎加入 QQ 群提出建議、回報問題或回報 bug。',
+      hint: '歡迎加入 QQ 群提出建議、回報問題或提交 bug。',
       groupLabel: 'QQ 群',
     },
     copy: '複製',
