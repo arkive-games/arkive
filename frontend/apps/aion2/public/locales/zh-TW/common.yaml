@@ -139,3 +139,15 @@ mobileNav:
   item: "物品"
   wiki: "Wiki"
   more: "更多"
+
+# Version-history page (/changelog). The entry text itself lives in
+# src/changelog.json with its own per-locale strings.
+changelog:
+  title: "更新歷史"
+  current: "目前"
+  empty: "暫無記錄。"
+  kind:
+    feature: "新增"
+    improvement: "最佳化"
+    fix: "修復"
+    data: "資料"

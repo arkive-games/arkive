@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as WikiRouteRouteImport } from './routes/wiki/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WikiIndexRouteImport } from './routes/wiki/index'
 import { Route as WikiTypeIndexRouteImport } from './routes/wiki/$type/index'
 import { Route as WikiTypeSlugRouteImport } from './routes/wiki/$type/$slug'
 
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WikiRouteRoute = WikiRouteRouteImport.update({
   id: '/wiki',
   path: '/wiki',
@@ -44,12 +50,14 @@ const WikiTypeSlugRoute = WikiTypeSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/wiki': typeof WikiRouteRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/wiki/': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
   '/wiki/$type/': typeof WikiTypeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/changelog': typeof ChangelogRoute
   '/wiki': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
   '/wiki/$type': typeof WikiTypeIndexRoute
@@ -58,26 +66,47 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/wiki': typeof WikiRouteRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/wiki/': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
   '/wiki/$type/': typeof WikiTypeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/wiki' | '/wiki/' | '/wiki/$type/$slug' | '/wiki/$type/'
+  fullPaths:
+    | '/'
+    | '/wiki'
+    | '/changelog'
+    | '/wiki/'
+    | '/wiki/$type/$slug'
+    | '/wiki/$type/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/wiki' | '/wiki/$type/$slug' | '/wiki/$type'
+  to: '/' | '/changelog' | '/wiki' | '/wiki/$type/$slug' | '/wiki/$type'
   id:
-    '__root__' | '/' | '/wiki' | '/wiki/' | '/wiki/$type/$slug' | '/wiki/$type/'
+    | '__root__'
+    | '/'
+    | '/wiki'
+    | '/changelog'
+    | '/wiki/'
+    | '/wiki/$type/$slug'
+    | '/wiki/$type/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   WikiRouteRoute: typeof WikiRouteRouteWithChildren
+  ChangelogRoute: typeof ChangelogRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wiki': {
       id: '/wiki'
       path: '/wiki'
@@ -135,6 +164,7 @@ const WikiRouteRouteWithChildren = WikiRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   WikiRouteRoute: WikiRouteRouteWithChildren,
+  ChangelogRoute: ChangelogRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

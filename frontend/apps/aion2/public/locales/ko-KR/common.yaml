@@ -203,3 +203,15 @@ mobileNav:
   item: "아이템"
   wiki: "Wiki"
   more: "더보기"
+
+# Version-history page (/changelog). The entry text itself lives in
+# src/changelog.json with its own per-locale strings.
+changelog:
+  title: "업데이트 내역"
+  current: "현재"
+  empty: "아직 항목이 없습니다."
+  kind:
+    feature: "신규"
+    improvement: "개선"
+    fix: "수정"
+    data: "데이터"

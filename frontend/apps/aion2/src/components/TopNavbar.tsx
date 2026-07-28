@@ -14,6 +14,7 @@ import {
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
+import { SITE_VERSION } from "@/lib/siteVersion";
 
 // "abyss" is disabled for now — kept in the Theme type + CSS for easy re-enable,
 // but not offered in the switcher.
@@ -118,6 +119,8 @@ export default function TopNavbar() {
             buildTime={__BUILD_TIME__}
             dev={import.meta.env.DEV}
             gameVersion={import.meta.env.VITE_GAME_VERSION}
+            siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
+            labels={{ siteVersion: t("common:changelog.title") }}
           />
         </>
       }
