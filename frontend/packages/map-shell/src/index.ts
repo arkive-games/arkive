@@ -6,6 +6,8 @@ export {
   type ShellNavItem,
 } from "./ShellTopBar"
 export { ShellSidebar, type ShellSidebarProps } from "./ShellSidebar"
+export { SiteInfoPanel } from "./SiteInfoPanel"
+export type { SiteInfoPanelProps, SiteInfoSection, SiteInfoFeedbackGroup } from "./SiteInfoPanel"
 export {
   FilterPanel,
   type FilterPanelProps,
