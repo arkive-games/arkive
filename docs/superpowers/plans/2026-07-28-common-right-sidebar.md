@@ -1578,10 +1578,12 @@ test.describe("site info — phone", () => {
 - [ ] **Step 2: Run the aion2 spec**
 
 ```bash
-cd E:/arkive-games/arkive/frontend && E2E_PORT=5199 pnpm e2e:aion2 site-info
+cd E:/arkive-games/arkive/apps/aion2 && E2E_PORT=5199 npx playwright test e2e/site-info.spec.ts
 ```
 
 Expected: 6 passed. `E2E_PORT` is mandatory — the default `5173` reuses whatever already listens there.
+
+**Note:** `pnpm e2e:aion2 site-info` does **not** filter by filename — the extra argument is swallowed and the full suite runs. Invoke `npx playwright test <path>` from the app directory when you want one spec file.
 
 - [ ] **Step 3: Write the palworld spec**
 
