@@ -196,9 +196,12 @@ edges rather than breaking layout.
 - The new `e2e/mobile.spec.ts`, plus the existing aion2 suite for regressions. Run with
   `E2E_PORT` set — the aion2 Playwright config defaults to `5173`, which collides with a running
   palworld server.
-- **The aion2 baseline is clean.** Measured on 2026-07-28 at `7bf9529`: **26 passed, 0 failed**.
-  (An older note claimed the wiki embedded-map POI test failed deterministically; it passes now.)
-  So there is nothing to pre-excuse — any red test after this work is a regression from it.
+- **Known pre-existing failure, not caused by this work:** `wiki.spec.ts` → "quest page embedded
+  map shows only POI pins" renders 0 marker icons. Measured on pristine `7bf9529`: **25 passed,
+  1 failed, 3 runs out of 3**, and it also fails 3/3 in isolation. Verified to fail identically
+  with and without the changes in this spec. The expected green result for aion2 is therefore
+  "25 passed, 1 failed (embedded map)". Run the suite 2-3× before trusting any baseline — a single
+  cold-cache run was observed passing 26/26, which is misleading.
 - Desktop regression check at ≥768px: layout visually unchanged from `master`.
 
 ## Rollout / isolation

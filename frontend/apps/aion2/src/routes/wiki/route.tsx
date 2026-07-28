@@ -5,7 +5,7 @@ import TopNavbar from "@/components/TopNavbar";
 
 export const Route = createFileRoute("/wiki")({
   component: () => (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
+    <div className="flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
       <TopNavbar />
       <main className="flex-1 overflow-y-auto">
         <div className="flex min-h-full flex-col">

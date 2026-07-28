@@ -42,16 +42,19 @@ E2E_PORT=15173 pnpm e2e
 
 `reuseExistingServer: true`, so an already-running dev server on that port is reused.
 
-**The baseline is green — 26 passed, 0 failed** (measured 2026-07-28 at `7bf9529`). There is
-nothing to pre-excuse, so any red test is yours. Confirm it yourself before starting:
+**One pre-existing failure. Do not try to fix it, and do not let it mask yours.** Capture the
+baseline before touching anything, and **run it at least twice** — one run is not enough to
+characterise this suite:
 
 ```bash
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
+E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: `26 passed`. If anything fails here, stop and investigate before writing code — an
-older note claimed the wiki embedded-map POI test failed deterministically, and it does not
-anymore, so a failure would mean something changed.
+Expected: **25 passed, 1 failed** — the failure being `wiki.spec.ts` → "quest page embedded map
+shows only POI pins" (renders 0 marker icons). Measured 3/3 on pristine `7bf9529`, and it fails
+3/3 in isolation too. A single cold-cache run was once observed passing 26/26; that is the
+outlier, so do not conclude the suite is green from one run. Any *other* failure is yours.
 
 **The breakpoint.** Mobile is `< 768px`. In CSS that is the *absence* of a `md:` prefix — write the
 mobile style bare and the desktop style with `md:`. In TS it is `useIsMobile()` from `@gamemap/ui`,
@@ -116,8 +119,8 @@ cd frontend/apps/aion2
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: **26 passed, 0 failed**. This is your comparison point for every later task — the
-baseline is clean, so "same as baseline" from here on means zero failures.
+Expected: **25 passed, 1 failed (embedded map POI)**. This is your comparison point for every
+later task: "same as baseline" below always means *that one failure and no other*.
 
 - [ ] **Step 2: Write the failing test**
 
@@ -198,7 +201,7 @@ guarantee is the code change plus the existing suite not regressing.
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: 26 passed plus the new `mobile.spec.ts` test. No failures.
+Expected: 26 passed (25 + the new `mobile.spec.ts` test), still 1 failed (embedded map POI).
 
 - [ ] **Step 8: Commit**
 
@@ -650,7 +653,7 @@ Expected: PASS (5 passed — the 3 from Tasks 1-2 plus the 2 new ones).
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: all green. The tab bar is `md:hidden`, so no desktop test should notice it.
+Expected: baseline failure only. The tab bar is `md:hidden`, so no desktop test should notice it.
 
 - [ ] **Step 9: Commit**
 
@@ -797,7 +800,7 @@ Expected: PASS (6 passed).
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: all green (no failures).
+Expected: the embedded-map POI failure only — no others.
 
 - [ ] **Step 7: Commit**
 
@@ -935,7 +938,7 @@ Expected: PASS (7 passed).
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: all green (no failures).
+Expected: the embedded-map POI failure only — no others.
 
 - [ ] **Step 7: Commit**
 
@@ -1400,7 +1403,7 @@ zoom control, each sheet opens and scrolls, and closing a sheet leaves the map i
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -30
 ```
 
-Expected: all green (no failures).
+Expected: the embedded-map POI failure only — no others.
 
 - [ ] **Step 8: Commit**
 
@@ -1528,9 +1531,10 @@ cd frontend/apps/aion2
 E2E_PORT=15173 pnpm e2e 2>&1 | tail -40
 ```
 
-Expected: **zero failures** — the 26 original tests plus 12 new mobile/desktop assertions.
-**Any failure is a regression from this work. Fix it before proceeding, and never describe the
-suite as green while something is red.**
+Expected: the 25 originally-passing tests plus 12 new mobile/desktop assertions all passing,
+with the embedded-map POI test still the *only* failure.
+**Any other failure is a regression from this work. Fix it before proceeding, and never call the
+suite green while something unexpected is red.**
 
 - [ ] **Step 2: Lint, typecheck, build**
 
@@ -1588,8 +1592,9 @@ review suggestions unexamined, and push back on any that are wrong.
 
 - [ ] **Step 8: Report honestly**
 
-State the final suite result with real numbers from the run. The baseline was clean, so there
-are no pre-existing failures to hide behind. List anything deferred.
+State the final suite result with real numbers from the run, and name the embedded-map POI
+failure explicitly as pre-existing — having reproduced it on the base commit, not merely
+asserted it. List anything deferred.
 
 ---
 
