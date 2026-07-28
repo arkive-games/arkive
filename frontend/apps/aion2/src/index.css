@@ -321,3 +321,18 @@ body {
         bottom: calc(env(safe-area-inset-bottom) + 3.75rem);
     }
 }
+
+/* "Clear completed" opens an AlertDialog from inside the mobile filter sheet,
+   and both portal to <body> as siblings. @gamemap/ui ships the alert dialog at
+   z-50 while a Sheet sits at z-3000, so the confirm rendered *behind* the sheet
+   and the UI looked frozen. Lift alert dialogs above sheet level: a modal
+   confirm should always be the topmost layer. (Fixed here rather than in the
+   shared package, which this work must not modify. Desktop is unaffected —
+   nothing there sits between z-50 and z-3100.) */
+[data-slot="alert-dialog-overlay"] {
+    z-index: 3050;
+}
+
+[data-slot="alert-dialog-content"] {
+    z-index: 3100;
+}

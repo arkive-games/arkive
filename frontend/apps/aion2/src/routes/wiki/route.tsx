@@ -19,7 +19,11 @@ function WikiLayout() {
            would have to be threaded through the router. */
         <header
           data-testid="wiki-mobile-header"
-          className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-topnavbar px-4"
+          className="flex min-h-12 shrink-0 items-center justify-between border-b border-border bg-topnavbar px-4"
+          /* viewport-fit=cover lets content sit under a notch / status bar in
+             standalone mode, so pad the top by the inset (0 in a normal
+             browser, where the chrome already occupies that space). */
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
           <Link
             to="/"

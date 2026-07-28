@@ -19,18 +19,35 @@ for (const route of ROUTES) {
     const r = await page.evaluate(() => ({
       scrollW: document.documentElement.scrollWidth,
       innerW: window.innerWidth,
-      bar: !!document.querySelector('[data-testid="bottom-tab-bar"]'),
-      // anything wider than the viewport inside main content
-      wide: [...document.querySelectorAll("main *, [data-testid] *")]
+      // Visible, not merely present: a mistakenly `hidden md:hidden` bar would
+      // otherwise pass.
+      bar: (() => {
+        const el = document.querySelector('[data-testid="bottom-tab-bar"]');
+        if (!el) return "missing";
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 ? "visible" : "hidden";
+      })(),
+      // Overflow on EITHER edge. Includes the [data-testid] elements themselves
+      // (not just their descendants), so the tab bar / FABs / sheets / mobile
+      // header are measured too.
+      wide: [
+        ...document.querySelectorAll("main, main *, [data-testid], [data-testid] *"),
+      ]
         .filter((e) => {
           const b = e.getBoundingClientRect();
-          return b.width > 0 && b.right > 391 && !e.closest(".leaflet-pane") && !e.closest(".gm-map-canvas");
+          if (b.width <= 0) return false;
+          if (e.closest(".leaflet-pane") || e.closest(".gm-map-canvas")) return false;
+          return b.right > 391 || b.left < -1;
         })
         .slice(0, 3)
-        .map((e) => (e.className || "").toString().slice(0, 45)),
+        .map((e) => {
+          const b = e.getBoundingClientRect();
+          const id = e.getAttribute("data-testid");
+          return `${id ? "#" + id : (e.className || "").toString().slice(0, 35)} [${Math.round(b.left)},${Math.round(b.right)}]`;
+        }),
     }));
     expect(r.scrollW, "horizontal overflow").toBe(r.innerW);
-    expect(r.bar, "tab bar mounted").toBe(true);
+    expect(r.bar, "tab bar visible").toBe("visible");
     expect(r.wide, "elements past the right edge").toEqual([]);
   });
 }

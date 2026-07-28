@@ -17,6 +17,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
+  useIsMobile,
 } from "@gamemap/ui";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
@@ -40,12 +42,20 @@ type ActiveTab = "map" | "quest" | "npc" | "item" | "more";
  * Which tab owns the current path. Bare `/wiki` and any wiki path that is not
  * one of the three typed tabs resolve to "more", because Wiki home lives in the
  * More sheet — that keeps exactly one tab highlighted at all times.
+ *
+ * `pathname` comes from the router with the basepath already stripped, so these
+ * comparisons stay correct when the app is served under a sub-path.
  */
 export function activeTab(pathname: string): ActiveTab {
-  if (pathname.startsWith("/wiki/quest")) return "quest";
-  if (pathname.startsWith("/wiki/npc")) return "npc";
-  if (pathname.startsWith("/wiki/item")) return "item";
-  if (pathname.startsWith("/wiki")) return "more";
+  // Whole-segment matching, not a bare prefix: `startsWith("/wiki/quest")`
+  // would also claim `/wiki/quests` and `/wiki/quest-log`, both of which the
+  // `$type` route param happily accepts.
+  for (const { type } of WIKI_TABS) {
+    if (pathname === `/wiki/${type}` || pathname.startsWith(`/wiki/${type}/`)) {
+      return type;
+    }
+  }
+  if (pathname === "/wiki" || pathname.startsWith("/wiki/")) return "more";
   return "map";
 }
 
@@ -54,6 +64,7 @@ export default function BottomTabBar() {
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
   const active = activeTab(pathname);
+  const isMobile = useIsMobile();
   const [moreOpen, setMoreOpen] = useState(false);
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
 
@@ -62,6 +73,13 @@ export default function BottomTabBar() {
     setMoreOpen(false);
   }, [pathname]);
 
+  // The <nav> is md:hidden, but the sheet portals to <body> and is therefore
+  // NOT hidden by that class. Without this, an open More sheet stays draped
+  // over the desktop layout after a rotation past 768px.
+  useEffect(() => {
+    if (!isMobile) setMoreOpen(false);
+  }, [isMobile]);
+
   const itemCls = (isActive: boolean) =>
     cn(
       "flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-xs font-medium transition-colors",
@@ -69,52 +87,53 @@ export default function BottomTabBar() {
     );
 
   return (
-    <>
-      <nav
-        data-testid="bottom-tab-bar"
-        className="fixed inset-x-0 bottom-0 z-[2500] flex border-t border-border bg-card text-card-foreground md:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    <nav
+      data-testid="bottom-tab-bar"
+      className="fixed inset-x-0 bottom-0 z-[2500] flex border-t border-border bg-card text-card-foreground md:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <Link
+        to="/"
+        data-testid="tab-map"
+        data-active={active === "map"}
+        className={itemCls(active === "map")}
       >
+        <MapIcon className="size-5" />
+        <span className="max-w-full truncate px-0.5">
+          {t("common:mobileNav.map")}
+        </span>
+      </Link>
+
+      {WIKI_TABS.map(({ type, labelKey, icon: Icon }) => (
         <Link
-          to="/"
-          data-testid="tab-map"
-          data-active={active === "map"}
-          className={itemCls(active === "map")}
+          key={type}
+          to="/wiki/$type"
+          params={{ type }}
+          data-testid={`tab-${type}`}
+          data-active={active === type}
+          className={itemCls(active === type)}
         >
-          <MapIcon className="size-5" />
-          <span className="max-w-full truncate px-0.5">
-            {t("common:mobileNav.map")}
-          </span>
+          <Icon className="size-5" />
+          <span className="max-w-full truncate px-0.5">{t(labelKey)}</span>
         </Link>
+      ))}
 
-        {WIKI_TABS.map(({ type, labelKey, icon: Icon }) => (
-          <Link
-            key={type}
-            to="/wiki/$type"
-            params={{ type }}
-            data-testid={`tab-${type}`}
-            data-active={active === type}
-            className={itemCls(active === type)}
-          >
-            <Icon className="size-5" />
-            <span className="max-w-full truncate px-0.5">{t(labelKey)}</span>
-          </Link>
-        ))}
-
-        <button
-          type="button"
-          data-testid="tab-more"
-          data-active={active === "more"}
-          aria-label={t("common:mobileNav.more")}
-          onClick={() => setMoreOpen(true)}
-          className={itemCls(active === "more")}
-        >
-          <Menu className="size-5" />
-          <span className="px-0.5">{t("common:mobileNav.more")}</span>
-        </button>
-      </nav>
-
+      {/* SheetTrigger rather than a bare button: Radix then knows the trigger
+          and returns focus to it when the sheet closes via Escape or the X. */}
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetTrigger asChild>
+          <button
+            type="button"
+            data-testid="tab-more"
+            data-active={active === "more"}
+            aria-label={t("common:mobileNav.more")}
+            className={itemCls(active === "more")}
+          >
+            <Menu className="size-5" />
+            <span className="px-0.5">{t("common:mobileNav.more")}</span>
+          </button>
+        </SheetTrigger>
+
         <SheetContent
           side="bottom"
           data-testid="more-sheet"
@@ -204,6 +223,6 @@ export default function BottomTabBar() {
           </div>
         </SheetContent>
       </Sheet>
-    </>
+    </nav>
   );
 }

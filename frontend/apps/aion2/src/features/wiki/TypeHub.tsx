@@ -93,7 +93,8 @@ export default function TypeHub({ type }: { type: string }) {
                 to="/wiki/$type/$slug"
                 params={{ type, slug: groupSlug }}
                 hash={s.slug}
-                className="inline-flex min-h-9 items-center rounded bg-secondary px-2.5 py-1.5 hover:bg-accent md:min-h-0 md:px-2 md:py-0.5"
+                data-testid={`section-chip-${s.slug}`}
+                className="inline-flex min-h-9 items-center rounded bg-secondary px-2.5 py-1.5 hover:bg-accent md:inline md:min-h-0 md:px-2 md:py-0.5"
               >
                 {t(`wiki/taxonomy:sections.${s.slug}.name`)} - {s.count}
               </Link>
@@ -103,7 +104,8 @@ export default function TypeHub({ type }: { type: string }) {
                 params={{ type, slug: groupSlug }}
                 search={{ faction: bucket }}
                 hash={s.slug}
-                className="inline-flex min-h-9 items-center rounded bg-secondary px-2.5 py-1.5 hover:bg-accent md:min-h-0 md:px-2 md:py-0.5"
+                data-testid={`section-chip-${s.slug}`}
+                className="inline-flex min-h-9 items-center rounded bg-secondary px-2.5 py-1.5 hover:bg-accent md:inline md:min-h-0 md:px-2 md:py-0.5"
               >
                 {t(`wiki/taxonomy:sections.${s.slug}.name`)} - {s.count}
               </Link>

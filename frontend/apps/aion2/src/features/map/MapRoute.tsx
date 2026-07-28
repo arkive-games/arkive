@@ -19,6 +19,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
   useIsMobile,
 } from "@gamemap/ui";
 import { Search as SearchIcon, SlidersHorizontal } from "lucide-react";
@@ -107,6 +108,17 @@ export default function MapRoute() {
   // Per-map view (center/zoom) + selected marker, persisted across reloads.
   const mapId = selectedMap?.id ?? "";
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId);
+  // The engine consumes `initialView` at mount only, and the hook memoizes it
+  // per map id — so on the remount caused by a breakpoint switch it would
+  // replay the view from page load (or the whole-map default, if nothing was
+  // stored yet) and throw away wherever the user had panned to. Re-read the
+  // persisted value whenever the layout flips, so the remount lands where the
+  // user actually was.
+  const initialViewForMount = useMemo(
+    () => readMapView(mapViewStore, mapId).view ?? initialView,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mapId, isMobile],
+  );
   // Marker id restored from storage — passed to the engine so the restore does
   // NOT fly (the restored center wins); a later manual selection flies again.
   const [restoredMarkerId, setRestoredMarkerId] = useState<string | null>(null);
@@ -115,6 +127,18 @@ export default function MapRoute() {
   // when its subtype filter is off (the engine bypasses the filter for these).
   const [searchResultIds, setSearchResultIds] = useState<string[]>([]);
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds]);
+  // Crossing the breakpoint swaps the two trees below, which remounts Leaflet
+  // (a phone rotated to landscape is 844px wide, so this is a real path). Any
+  // sheet that was open belongs to the tree being torn down, so reset it —
+  // otherwise rotating back pops it open again unbidden.
+  useEffect(() => {
+    if (!isMobile) {
+      setFilterSheetOpen(false);
+      setSearchSheetOpen(false);
+      setSearchResultIds([]);
+    }
+  }, [isMobile]);
+
 
   // Prefill the search box from a `?q=` deep link (read once on mount, like the
   // marker/pos deep link below).
@@ -301,7 +325,7 @@ export default function MapRoute() {
       selectedMarkerId={selectedMarkerId}
       forceShowIds={forceShowIds}
       selectedPosition={selectedPosition}
-      initialView={initialView}
+      initialView={initialViewForMount}
       onViewChange={saveView}
       suppressInitialFlyForId={restoredMarkerId}
       onToggleMarker={handleToggleMarker}
@@ -341,61 +365,73 @@ export default function MapRoute() {
         {/* Floating actions. They sit in one right-hand column with the
             engine's zoom pill: tab bar, then zoom (lifted to 3.75rem by
             index.css), then these above it — so nothing overlaps and
-            everything stays tappable. */}
+            everything stays tappable. Each FAB is its own sheet's
+            SheetTrigger, so Radix returns focus to it on close. */}
         <div
           className="absolute right-3 z-[700] flex flex-col gap-2"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 8.5rem)" }}
         >
-          <button
-            type="button"
-            data-testid="map-fab-search"
-            aria-label={t("common:ui.search", "Search")}
-            onClick={() => setSearchSheetOpen(true)}
-            className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
+          {/* Closing the sheet unmounts SearchPanel, so it never reports an
+              empty result set — clear it here, or the map keeps force-showing
+              the last query's markers with no visible search to explain why. */}
+          <Sheet
+            open={searchSheetOpen}
+            onOpenChange={(open) => {
+              setSearchSheetOpen(open);
+              if (!open) setSearchResultIds([]);
+            }}
           >
-            <SearchIcon className="size-5" />
-          </button>
-          <button
-            type="button"
-            data-testid="map-fab-filter"
-            aria-label={t("common:menu.markerTypes", "Marker Types")}
-            onClick={() => setFilterSheetOpen(true)}
-            className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-lg"
-          >
-            <SlidersHorizontal className="size-5" />
-          </button>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                data-testid="map-fab-search"
+                aria-label={t("common:ui.search", "Search")}
+                className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
+              >
+                <SearchIcon className="size-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              data-testid="search-sheet"
+              className="h-[70dvh]"
+            >
+              <SheetTitle className="sr-only">
+                {t("common:ui.search", "Search")}
+              </SheetTitle>
+              {searchPanel("inline")}
+            </SheetContent>
+          </Sheet>
+
+          <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                data-testid="map-fab-filter"
+                aria-label={t("common:menu.markerTypes", "Marker Types")}
+                className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-lg"
+              >
+                <SlidersHorizontal className="size-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              data-testid="filter-sheet"
+              className="max-h-[85dvh]"
+            >
+              <SheetHeader>
+                <SheetTitle className="sr-only">
+                  {t("common:menu.markerTypes", "Marker Types")}
+                </SheetTitle>
+                <SelectMap />
+              </SheetHeader>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <MarkerTypesSection />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
-        <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-          <SheetContent
-            side="bottom"
-            data-testid="filter-sheet"
-            className="max-h-[85dvh]"
-          >
-            <SheetHeader>
-              <SheetTitle className="sr-only">
-                {t("common:menu.markerTypes", "Marker Types")}
-              </SheetTitle>
-              <SelectMap />
-            </SheetHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <MarkerTypesSection />
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        <Sheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
-          <SheetContent
-            side="bottom"
-            data-testid="search-sheet"
-            className="h-[70dvh]"
-          >
-            <SheetTitle className="sr-only">
-              {t("common:ui.search", "Search")}
-            </SheetTitle>
-            {searchPanel("inline")}
-          </SheetContent>
-        </Sheet>
       </div>
     );
   }

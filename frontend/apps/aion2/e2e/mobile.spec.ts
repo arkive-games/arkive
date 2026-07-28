@@ -16,12 +16,16 @@ test.describe("mobile chrome", () => {
 
   test("desktop top bar is not rendered on phones", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
-    // The overflowing 518px-wide bar is not mounted at all; the mobile header
-    // and the bottom tab bar navigate instead. A count of 0 would also pass
-    // against a typo'd testid, so the desktop block below asserts the same
-    // testid IS present and visible at 1280px — the pair is what makes this
-    // meaningful.
+    // The overflowing 518px-wide bar is gone. Assert the invariant that
+    // actually matters rather than one testid's absence: exactly one <header>
+    // exists, it is the mobile one, and none of the desktop-only controls that
+    // used to sit off-screen are present anywhere.
+    await expect(page.locator("header")).toHaveCount(1);
+    await expect(page.getByTestId("wiki-mobile-header")).toBeVisible();
     await expect(page.getByTestId("desktop-topbar")).toHaveCount(0);
+    await expect(page.getByTestId("lang-menu")).toHaveCount(0);
+    await expect(page.getByTestId("theme-menu")).toHaveCount(0);
+    await expect(page.getByTestId("contact-menu")).toHaveCount(0);
     const scrollW = await page.evaluate(
       () => document.documentElement.scrollWidth,
     );
@@ -131,10 +135,17 @@ test.describe("mobile chrome", () => {
 
   test("type-hub section chips are touch-sized", async ({ page }) => {
     await page.goto("/wiki/item?lng=en-US");
-    const chip = page.locator('main a[href*="#"]').first();
-    await chip.waitFor({ state: "visible" });
-    const box = await chip.boundingBox();
-    expect(box!.height).toBeGreaterThanOrEqual(36);
+    // Scoped to real TypeHub chips: `main a[href*="#"]` would also match any
+    // unrelated in-page anchor and could pass while every chip stayed 24px.
+    const chips = page.locator('[data-testid^="section-chip-"]');
+    await chips.first().waitFor({ state: "visible" });
+    const n = await chips.count();
+    expect(n).toBeGreaterThan(10);
+    // Check a spread of them, not just the first.
+    for (const i of [0, Math.floor(n / 2), n - 1]) {
+      const box = await chips.nth(i).boundingBox();
+      expect(box!.height, `chip ${i} of ${n}`).toBeGreaterThanOrEqual(36);
+    }
   });
 
   test("wiki pages get a compact header and clear the tab bar", async ({ page }) => {
@@ -169,11 +180,22 @@ test.describe("desktop is unchanged", () => {
     await expect(page.getByTestId("contact-menu")).toBeVisible();
   });
 
+  test("an open More sheet does not survive to desktop", async ({ page }) => {
+    // The <nav> is md:hidden but the sheet portals to <body>, so without an
+    // explicit close it stayed draped over the desktop layout after a rotation.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/wiki?lng=en-US");
+    await page.getByTestId("tab-more").click();
+    await expect(page.getByTestId("more-sheet")).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(page.getByTestId("more-sheet")).toHaveCount(0);
+  });
+
   test("type-hub chips stay compact on desktop", async ({ page }) => {
     await page.goto("/wiki/item?lng=en-US");
-    const chip = page.locator('main a[href*="#"]').first();
-    await chip.waitFor({ state: "visible" });
-    const box = await chip.boundingBox();
+    const chips = page.locator('[data-testid^="section-chip-"]');
+    await chips.first().waitFor({ state: "visible" });
+    const box = await chips.first().boundingBox();
     expect(box!.height).toBeLessThanOrEqual(28);
   });
 
