@@ -1,17 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { Sparkles } from "lucide-react";
 import { ShellSidebar } from "@gamemap/map-shell";
 import { useTheme } from "@/context/ThemeContext";
-import { useGameMap } from "@/context/GameMapContext";
 import { getStaticUrl } from "@/lib/url";
 import Logo from "./Logo";
 import SelectMap from "./SelectMap";
-import MarkerTypes from "./MarkerTypes";
+import MarkerTypesSection from "./MarkerTypesSection";
 
 export default function Sidebar() {
   const { t } = useTranslation(["common"]);
   const { realTheme } = useTheme();
-  const { selectedMap } = useGameMap();
 
   const isLight = realTheme === "light";
   const bgUrl = getStaticUrl(
@@ -39,20 +36,7 @@ export default function Sidebar() {
       headerSlot={<Logo />}
       mapSelectorSlot={<SelectMap />}
     >
-      {selectedMap && (
-        <div className="w-full">
-          {/* Static section header — no longer collapsible. */}
-          <div className="flex items-center gap-2 px-4 py-4">
-            <span className="flex h-4 w-4 items-center justify-center">
-              <Sparkles className="h-3.5 w-3.5 fill-primary text-primary" />
-            </span>
-            <span className="truncate text-base font-bold leading-[16px]">
-              {t("common:menu.markerTypes", "Marker Types")}
-            </span>
-          </div>
-          <MarkerTypes />
-        </div>
-      )}
+      <MarkerTypesSection />
     </ShellSidebar>
   );
 }

@@ -92,4 +92,10 @@ test.describe("desktop is unchanged", () => {
     await expect(page.getByTestId("theme-menu")).toBeVisible();
     await expect(page.getByTestId("contact-menu")).toBeVisible();
   });
+
+  test("sidebar still renders the marker-types section", async ({ page }) => {
+    await page.goto("/?map=World_L_A&lng=en-US");
+    await expect(page.getByTestId("marker-types-section")).toBeVisible();
+    await expect(page.getByTestId("show-names-toggle")).toBeVisible();
+  });
 });
