@@ -16,13 +16,12 @@ test.describe("mobile chrome", () => {
 
   test("desktop top bar is not rendered on phones", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
-    // The overflowing 518px-wide bar is gone; the mobile header and the bottom
-    // tab bar navigate instead. Assert it EXISTS but is not visible —
-    // toBeHidden() alone also passes when the element is simply absent, which
-    // would make this test green against a missing testid.
-    const topbar = page.getByTestId("desktop-topbar");
-    await expect(topbar).toHaveCount(1);
-    await expect(topbar).toBeHidden();
+    // The overflowing 518px-wide bar is not mounted at all; the mobile header
+    // and the bottom tab bar navigate instead. A count of 0 would also pass
+    // against a typo'd testid, so the desktop block below asserts the same
+    // testid IS present and visible at 1280px — the pair is what makes this
+    // meaningful.
+    await expect(page.getByTestId("desktop-topbar")).toHaveCount(0);
     const scrollW = await page.evaluate(
       () => document.documentElement.scrollWidth,
     );
@@ -60,6 +59,23 @@ test.describe("mobile chrome", () => {
     await expect(sheet.getByTestId("more-lang-zh-CN")).toBeVisible();
     await expect(sheet.getByTestId("more-theme-dark")).toBeVisible();
     await expect(sheet.getByTestId("more-archive")).toBeVisible();
+  });
+
+  test("wiki pages get a compact header and clear the tab bar", async ({ page }) => {
+    await page.goto("/wiki?lng=en-US");
+    await expect(page.getByTestId("wiki-mobile-header")).toBeVisible();
+    // Global search must stay reachable now that the desktop bar is hidden.
+    await page.getByTestId("global-search-button").click();
+    await expect(page.getByPlaceholder(/Search quests/i)).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    // The footer is the last element in the scroll column, so it carries the
+    // clearance for the fixed tab bar.
+    const pad = await page.evaluate(() => {
+      const f = document.querySelector("footer");
+      return f ? parseFloat(getComputedStyle(f).paddingBottom) : 0;
+    });
+    expect(pad).toBeGreaterThanOrEqual(64);
   });
 });
 
