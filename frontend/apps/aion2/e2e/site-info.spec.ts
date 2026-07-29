@@ -50,6 +50,41 @@ test.describe("site info — desktop", () => {
     await expect(page.getByTestId("site-info-group-number").nth(1)).toHaveText(QQ_GROUP);
   });
 
+  // The sidebar's collapse tab overhangs into the map column and used to carry
+  // z-20000 — above Radix's portalled popover (z-2000) — so it painted over the
+  // open popover and won the hit test there. Assert the popover is genuinely on
+  // top wherever the two overlap, rather than just that both exist.
+  test("the collapse tab does not cover the open popover", async ({ page }) => {
+    await page.goto("/?lng=en-US");
+    const toggle = page.getByTestId("sidebar-toggle-right");
+    await expect(toggle).toBeVisible();
+    await page.getByTestId("contact-menu").click();
+    const popover = page.getByTestId("site-info-panel").nth(1);
+    await expect(popover).toBeVisible();
+
+    const tab = await toggle.boundingBox();
+    const pop = await popover.boundingBox();
+    if (!tab || !pop) throw new Error("expected both the tab and the popover to have a box");
+
+    const overlapsX = tab.x < pop.x + pop.width && pop.x < tab.x + tab.width;
+    const overlapsY = tab.y < pop.y + pop.height && pop.y < tab.y + tab.height;
+    if (!overlapsX || !overlapsY) return; // no overlap on this viewport: nothing to prove
+
+    // Topmost element at the tab's centre must belong to the popover, not the tab.
+    const owner = await page.evaluate(
+      ({ x, y }) => {
+        const el = document.elementFromPoint(x, y);
+        return {
+          inPopover: !!el?.closest('[data-testid="site-info-panel"]'),
+          inTab: !!el?.closest('[data-testid="sidebar-toggle-right"]'),
+        };
+      },
+      { x: tab.x + tab.width / 2, y: tab.y + tab.height / 2 },
+    );
+    expect(owner.inTab).toBe(false);
+    expect(owner.inPopover).toBe(true);
+  });
+
   test("the right sidebar is a named landmark reporting its expanded state", async ({ page }) => {
     await page.goto("/?lng=en-US");
     await expect(page.getByRole("complementary", { name: "About" })).toBeVisible();

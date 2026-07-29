@@ -124,7 +124,12 @@ export function ShellSidebar({
         aria-label={collapsed ? expandLabel : collapseLabel}
         aria-expanded={!collapsed}
         className={cn(
-          "absolute top-[100px] z-[20000] flex h-12 w-8 select-none flex-col items-center justify-center",
+          // z-700 is the floating-map-control tier: above the map surface and
+          // the search overlay (z-600), but BELOW Radix's portalled layers
+          // (popover z-2000, sheet z-3000). It used to be z-20000, which put
+          // this 32px tab on top of the top-bar popover — opaque, and winning
+          // the hit test, so clicking the popover's edge collapsed the sidebar.
+          "absolute top-[100px] z-[700] flex h-12 w-8 select-none flex-col items-center justify-center",
           side === "right"
             ? "left-0 -translate-x-full rounded-l-md rounded-r-none"
             : "right-0 translate-x-full rounded-r-md rounded-l-none",

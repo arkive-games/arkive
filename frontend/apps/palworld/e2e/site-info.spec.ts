@@ -3,10 +3,13 @@ import { test, expect } from '@playwright/test'
 const PHONE = { width: 390, height: 844 }
 const QQ_GROUP = '1091411026'
 
+// Deliberately engine-agnostic: the site-info panel is map-engine-independent,
+// so these run on whatever `lib/mapEngineChoice` defaults to (currently the
+// WebGL engine, which renders no `.leaflet-container` at all). Readiness is
+// gated on the sidebar's own toggle rather than a Leaflet DOM node.
 test.describe('site info — desktop', () => {
   test('the right sidebar renders, without a feedback group in English', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('.leaflet-container')).toBeVisible()
     await expect(page.getByTestId('sidebar-toggle-right')).toBeVisible()
     await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
     await expect(page.getByTestId('site-info-group-number')).toHaveCount(0)
@@ -25,7 +28,7 @@ test.describe('site info — desktop', () => {
 
   test('switching to zh-CN reveals the feedback group', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('.leaflet-container')).toBeVisible()
+    await expect(page.getByTestId('sidebar-toggle-right')).toBeVisible()
     await page.getByTestId('lang-menu').click()
     await page.getByTestId('lang-zh-CN').click()
     await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
