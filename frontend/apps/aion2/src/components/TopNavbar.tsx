@@ -1,4 +1,4 @@
-import { Mail } from "lucide-react";
+import { Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { ShellTopBar } from "@gamemap/map-shell";
@@ -93,10 +93,14 @@ export default function TopNavbar() {
                 variant="ghost"
                 size="icon"
                 data-testid="contact-menu"
-                aria-label={t("common:menu.contact", "Contact us")}
-                title={t("common:menu.contact", "Contact us")}
+                // The panel leads with "About this site" and carries contact as
+                // its second section, so it's labelled for what it opens —
+                // matching palworld's trigger. The testid keeps its historical
+                // name so existing specs and selectors still resolve.
+                aria-label={t("common:siteInfo.tab", "About")}
+                title={t("common:siteInfo.tab", "About")}
               >
-                <Mail className="size-5" />
+                <Info className="size-5" />
               </Button>
             </PopoverTrigger>
             <PopoverContent

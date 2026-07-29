@@ -78,7 +78,11 @@ export function SiteInfoPanel({ sections, feedbackGroup, className }: SiteInfoPa
           {section.title && (
             <div className="text-sm font-semibold text-foreground">{section.title}</div>
           )}
-          <div className="text-xs leading-relaxed break-words text-muted-foreground [&_a]:text-primary [&_a]:underline">
+          {/* text-sm, not the text-xs floor: this is prose meant to be read, in
+              a 320px column. Hosts that wrap their body in Tailwind Typography
+              must point --tw-prose-body at the muted token so both sites match
+              on colour as well as size. */}
+          <div className="text-sm leading-relaxed break-words text-muted-foreground [&_a]:text-primary [&_a]:underline">
             {section.body}
           </div>
         </div>
