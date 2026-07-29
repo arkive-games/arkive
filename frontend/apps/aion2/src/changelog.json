@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.11.0",
+      "date": "2026-07-29",
+      "commit": "bbc7e5e70b153032c9e5ff534ff875d3d9c3d303",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New site info panel: what this site is, plus a channel for feedback and bug reports — in a right sidebar on the map, and from the top bar on any page.",
+            "zh-CN": "新增站点信息面板：介绍本站并提供反馈交流渠道（QQ 群 1091411026），可在地图右侧栏或顶栏随时打开。",
+            "zh-TW": "新增站點資訊面板：介紹本站並提供回饋交流管道（QQ 群 1091411026），可在地圖右側欄或頂欄隨時開啟。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.10.0",
       "date": "2026-07-29",
       "commit": "a58e0b0c0d31ef883fd591b934daa0dcbea94725",
