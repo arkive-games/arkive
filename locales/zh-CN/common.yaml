@@ -32,6 +32,8 @@ ui:
   noData: "暂无数据"
   noDescription: "无描述"
   add: "添加"
+  copy: "复制"
+  copied: "已复制"
 
 auth:
   login: "登录"
@@ -224,10 +226,17 @@ donateModal:
   body: "游戏攻略网站维护需要大量时间和精力，如果想要支持我们，可以通过下面的支付宝二维码，你的小小心意是支持我们的动力"
 
 
-rightSidebar:
-  members:
-    title: "攻略组成员"
-    content: "苏烟、双酿、物语、阡陌夕晨、小海、言本卿、粥棵儿、落花千树、Marry、焦糖云朵大麦茶、煎饺"
+# Site-info panel (right sidebar / top-bar popover / mobile More sheet).
+# `contact.content` keeps its legacy name (it predates this group); the new
+# one-line invitation is `feedback.hint`. `feedback:` is zh-only — en-US and
+# ko-KR carry their channel in `contact.content` instead.
+siteInfo:
+  tab: "关于"
+  title: "关于本站"
+  body: |-
+    本站是由 **苏烟攻略组** 搭建与维护的《永恒之塔 2》非官方互动地图与资料库，游戏数据均从游戏文件中提取，永久免费开放。
+
+    本站与 NCSOFT 无隶属关系，也未获其授权或背书。AION2 及相关游戏内容的一切权利均归 NCSOFT 所有。
   contact:
     title: "交流与联系方式"
     content: |
@@ -235,9 +244,9 @@ rightSidebar:
          ①群 246681864  
          ②群 197791140  
          ③群 791286881  
-  donation:
-    title: "赞助"
-    content: "游戏攻略网站维护需要大量时间和精力，如果想要支持我们，可以通过下面的支付宝二维码，你的小小心意是支持我们的动力"
+  feedback:
+    label: "反馈 QQ 群"
+    hint: "上面的群用于玩家交流；如有建议或问题，请加入下方的反馈群。"
 
 crafting:
   select: "选择要替换的装备"
@@ -297,3 +306,26 @@ globalSearch:
     npc: "NPC"
     item: "物品"
     markers: "地图标记"
+
+# Bottom-tab-bar labels (mobile only). Short forms on purpose: five
+# tabs share a 390px bar. Values reuse strings already approved
+# elsewhere in the platform - do not invent new translations here.
+mobileNav:
+  map: "地图"
+  quest: "任务"
+  npc: "NPC"
+  item: "物品"
+  wiki: "Wiki"
+  more: "更多"
+
+# Version-history page (/changelog). The entry text itself lives in
+# src/changelog.json with its own per-locale strings.
+changelog:
+  title: "更新历史"
+  current: "当前"
+  empty: "暂无记录。"
+  kind:
+    feature: "新增"
+    improvement: "优化"
+    fix: "修复"
+    data: "数据"

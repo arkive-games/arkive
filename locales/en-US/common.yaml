@@ -25,6 +25,8 @@ ui:
   noData: "No Data"
   noDescription: "No description"
   add: "Add"
+  copy: "Copy"
+  copied: "Copied"
 
 theme:
   auto: "Auto (Change with Map)"
@@ -168,14 +170,22 @@ introModal:
     Maintaining a game guide website requires a tremendous amount of time and effort. If you wish to support us, you may do so via the Alipay QR code below — your kindness is what keeps this project moving forward ❤
 
   
-rightSidebar:
-  members:
-    title: "Members"
+# Site-info panel (right sidebar / top-bar popover / mobile More sheet).
+# `contact.content` keeps its legacy name (it predates this group). This
+# locale has no `feedback:` key — the QQ card is zh-only; the Discord
+# invite in `contact.content` is this locale's channel instead.
+siteInfo:
+  tab: "About"
+  title: "About this site"
+  body: |-
+    This site is an unofficial, fan-made interactive map and database for AION2, built and maintained by the **苏烟攻略组 (Suyn AION2 Team)**. All game data is extracted from the game files, and the site will always remain free to use.
+
+    Not affiliated with, endorsed by, or sponsored by NCSOFT. AION2 and all related game content are the property of NCSOFT.
   contact:
     title: "Communication & Contact"
     content: |
       1. **Our Aion 2 Discussion Discord:** https://discord.gg/cqn9sKbWPU
-      2. For the latest Aion 2 news and active discussions, check out the Aion 2 Global Discord – **the biggest Aion 2's community** we’re happy to collaborate with: https://discord.gg/aion2global
+      2. For the latest Aion 2 news and active discussions, check out the Aion 2 Global Discord – **the biggest Aion 2 community** we’re happy to collaborate with: https://discord.gg/aion2global
 
 race:
   light: "Elyos"
@@ -192,3 +202,26 @@ globalSearch:
     npc: "NPCs"
     item: "Items"
     markers: "Map markers"
+
+# Bottom-tab-bar labels (mobile only). Short forms on purpose: five
+# tabs share a 390px bar. Values reuse strings already approved
+# elsewhere in the platform - do not invent new translations here.
+mobileNav:
+  map: "Map"
+  quest: "Quests"
+  npc: "NPCs"
+  item: "Items"
+  wiki: "Wiki"
+  more: "More"
+
+# Version-history page (/changelog). The entry text itself lives in
+# src/changelog.json with its own per-locale strings.
+changelog:
+  title: "Version History"
+  current: "Current"
+  empty: "No entries yet."
+  kind:
+    feature: "New"
+    improvement: "Improved"
+    fix: "Fixed"
+    data: "Data"

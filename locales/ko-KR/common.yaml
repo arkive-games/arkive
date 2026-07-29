@@ -25,6 +25,8 @@ ui:
   noData: "데이터 없음"
   noDescription: "설명 없음"
   add: "추가"
+  copy: "복사"
+  copied: "복사됨"
 
 theme:
   auto: "자동 (지도에 따라 변경)"
@@ -168,9 +170,17 @@ introModal:
     게임 공략 웹사이트를 운영하는 데에는 막대한 시간과 노력이 필요합니다. 저희를 응원하고 싶으시다면 아래의 Alipay QR 코드로 후원하실 수 있습니다 — 여러분의 마음이 이 프로젝트를 계속 나아가게 합니다 ❤
 
 
-rightSidebar:
-  members:
-    title: "멤버"
+# Site-info panel (right sidebar / top-bar popover / mobile More sheet).
+# `contact.content` keeps its legacy name (it predates this group). This
+# locale has no `feedback:` key — the QQ card is zh-only; the Discord
+# invite in `contact.content` is this locale's channel instead.
+siteInfo:
+  tab: "소개"
+  title: "사이트 소개"
+  body: |-
+    이 사이트는 苏烟攻略组 (Suyn AION2 Team)이 제작하고 운영하는 AION2 비공식 인터랙티브 지도 및 데이터베이스입니다. 모든 게임 데이터는 게임 파일에서 추출했으며, 언제나 무료로 이용할 수 있습니다.
+
+    NCSOFT와 제휴 관계가 없으며, NCSOFT의 승인이나 후원을 받지 않았습니다. AION2 및 관련 게임 콘텐츠의 모든 권리는 NCSOFT에 있습니다.
   contact:
     title: "소통 & 문의"
     content: |
@@ -192,3 +202,26 @@ globalSearch:
     npc: "NPC"
     item: "아이템"
     markers: "지도 마커"
+
+# Bottom-tab-bar labels (mobile only). Short forms on purpose: five
+# tabs share a 390px bar. Values reuse strings already approved
+# elsewhere in the platform - do not invent new translations here.
+mobileNav:
+  map: "지도"
+  quest: "퀘스트"
+  npc: "NPC"
+  item: "아이템"
+  wiki: "Wiki"
+  more: "더보기"
+
+# Version-history page (/changelog). The entry text itself lives in
+# src/changelog.json with its own per-locale strings.
+changelog:
+  title: "업데이트 내역"
+  current: "현재"
+  empty: "아직 항목이 없습니다."
+  kind:
+    feature: "신규"
+    improvement: "개선"
+    fix: "수정"
+    data: "데이터"

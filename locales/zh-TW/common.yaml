@@ -40,6 +40,8 @@ ui:
   noData: "暫無數據"
   noDescription: "無描述"
   add: "添加"
+  copy: "複製"
+  copied: "已複製"
 
 leaderboard:
   artifactRegionRanking: "神器占比大區排名"
@@ -128,3 +130,49 @@ globalSearch:
     npc: "NPC"
     item: "物品"
     markers: "地圖標記"
+
+# Bottom-tab-bar labels (mobile only). Short forms on purpose: five
+# tabs share a 390px bar. Values reuse strings already approved
+# elsewhere in the platform - do not invent new translations here.
+mobileNav:
+  map: "地圖"
+  quest: "任務"
+  npc: "NPC"
+  item: "物品"
+  wiki: "Wiki"
+  more: "更多"
+
+# Version-history page (/changelog). The entry text itself lives in
+# src/changelog.json with its own per-locale strings.
+changelog:
+  title: "更新歷史"
+  current: "目前"
+  empty: "暫無記錄。"
+  kind:
+    feature: "新增"
+    improvement: "最佳化"
+    fix: "修復"
+    data: "資料"
+
+# Site-info panel (right sidebar / top-bar popover / mobile More sheet).
+# `contact.content` keeps its legacy name (it predates this group); the new
+# one-line invitation is `feedback.hint`. `feedback:` is zh-only — en-US and
+# ko-KR carry their channel in `contact.content` instead.
+siteInfo:
+  tab: "關於"
+  title: "關於本站"
+  body: |-
+    本站是由 **蘇煙攻略組** 搭建與維護的《永恆之塔 2》非官方互動地圖與資料庫，遊戲資料均自遊戲檔案中擷取，永久免費開放。
+
+    本站與 NCSOFT 無隸屬關係，也未獲其授權或背書。AION2 及相關遊戲內容的一切權利均歸 NCSOFT 所有。
+  contact:
+    title: "交流與聯絡方式"
+    content: |
+      1. 永恆之塔 2 交流群：  
+         ①群 246681864  
+         ②群 197791140  
+         ③群 791286881  
+      2. **AION2 交流 Discord：** https://discord.gg/cqn9sKbWPU
+  feedback:
+    label: "回饋 QQ 群"
+    hint: "上面的群組用於玩家交流；如有建議或問題，請加入下方的回饋群。"
