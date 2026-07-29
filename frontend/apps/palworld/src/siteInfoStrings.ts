@@ -37,7 +37,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'About this site',
     body: [
       'An unofficial, fan-made interactive map and database for Palworld. All game data is extracted from the game files.',
-      'Not affiliated with, endorsed by, or sponsored by Pocketpair, Inc.',
+      'Not affiliated with, endorsed by, or sponsored by Pocketpair, Inc. Palworld and all related game content are the property of Pocketpair, Inc.',
     ],
     copy: 'Copy',
     copied: 'Copied',
@@ -47,7 +47,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Über diese Seite',
     body: [
       'Eine unoffizielle, von Fans erstellte interaktive Karte und Datenbank für Palworld. Alle Spieldaten stammen aus den Spieldateien.',
-      'Nicht mit Pocketpair, Inc. verbunden und weder von ihnen unterstützt noch gesponsert.',
+      'Nicht mit Pocketpair, Inc. verbunden und weder von ihnen unterstützt noch gesponsert. Palworld und alle zugehörigen Spielinhalte sind Eigentum von Pocketpair, Inc.',
     ],
     copy: 'Kopieren',
     copied: 'Kopiert',
@@ -57,7 +57,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Acerca de este sitio',
     body: [
       'Un mapa interactivo y una base de datos de Palworld no oficiales, creados por aficionados. Todos los datos se extraen de los archivos del juego.',
-      'Sin afiliación, respaldo ni patrocinio de Pocketpair, Inc.',
+      'Sin afiliación, respaldo ni patrocinio de Pocketpair, Inc. Palworld y todo el contenido de juego relacionado son propiedad de Pocketpair, Inc.',
     ],
     copy: 'Copiar',
     copied: 'Copiado',
@@ -67,7 +67,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Acerca de este sitio',
     body: [
       'Un mapa interactivo y una base de datos de Palworld no oficiales, hechos por fans. Todos los datos se extraen de los archivos del juego.',
-      'Sin afiliación, respaldo ni patrocinio de Pocketpair, Inc.',
+      'Sin afiliación, respaldo ni patrocinio de Pocketpair, Inc. Palworld y todo el contenido de juego relacionado son propiedad de Pocketpair, Inc.',
     ],
     copy: 'Copiar',
     copied: 'Copiado',
@@ -77,7 +77,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'À propos de ce site',
     body: [
       'Une carte interactive et une base de données non officielles pour Palworld, réalisées par des fans. Toutes les données proviennent des fichiers du jeu.',
-      'Sans lien avec Pocketpair, Inc., ni approuvé ni sponsorisé par elle.',
+      'Sans lien avec Pocketpair, Inc., ni approuvé ni sponsorisé par elle. Palworld et tout le contenu de jeu associé sont la propriété de Pocketpair, Inc.',
     ],
     copy: 'Copier',
     copied: 'Copié',
@@ -87,7 +87,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Tentang situs ini',
     body: [
       'Peta interaktif dan basis data Palworld tidak resmi yang dibuat oleh penggemar. Semua data game diambil dari file game.',
-      'Tidak berafiliasi dengan, didukung, atau disponsori oleh Pocketpair, Inc.',
+      'Tidak berafiliasi dengan, didukung, atau disponsori oleh Pocketpair, Inc. Palworld dan semua konten game terkait adalah milik Pocketpair, Inc.',
     ],
     copy: 'Salin',
     copied: 'Tersalin',
@@ -97,7 +97,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Informazioni sul sito',
     body: [
       'Una mappa interattiva e un database non ufficiali per Palworld, creati dai fan. Tutti i dati di gioco sono estratti dai file del gioco.',
-      'Non affiliato, approvato o sponsorizzato da Pocketpair, Inc.',
+      'Non affiliato, approvato o sponsorizzato da Pocketpair, Inc. Palworld e tutti i contenuti di gioco correlati sono di proprietà di Pocketpair, Inc.',
     ],
     copy: 'Copia',
     copied: 'Copiato',
@@ -107,7 +107,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'このサイトについて',
     body: [
       'ファンが制作した非公式のパルワールド インタラクティブマップ＆データベースです。ゲームデータはすべてゲームファイルから抽出しています。',
-      'Pocketpair, Inc. とは一切関係がなく、承認や後援も受けていません。',
+      'Pocketpair, Inc. とは一切関係がなく、承認や後援も受けていません。パルワールドおよび関連するすべてのゲームコンテンツの権利は Pocketpair, Inc. に帰属します。',
     ],
     copy: 'コピー',
     copied: 'コピーしました',
@@ -117,7 +117,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: '사이트 소개',
     body: [
       '팬이 제작한 비공식 팰월드 인터랙티브 지도 및 데이터베이스입니다. 모든 게임 데이터는 게임 파일에서 추출했습니다.',
-      'Pocketpair, Inc.와 제휴 관계가 없으며, 승인이나 후원을 받지 않았습니다.',
+      'Pocketpair, Inc.와 제휴 관계가 없으며, 승인이나 후원을 받지 않았습니다. 팰월드 및 관련된 모든 게임 콘텐츠에 대한 권리는 Pocketpair, Inc.에 있습니다.',
     ],
     copy: '복사',
     copied: '복사됨',
@@ -127,7 +127,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'O tej stronie',
     body: [
       'Nieoficjalna, stworzona przez fanów interaktywna mapa i baza danych do Palworld. Wszystkie dane pochodzą z plików gry.',
-      'Niepowiązane z Pocketpair, Inc.; bez jej poparcia ani sponsoringu.',
+      'Niepowiązane z Pocketpair, Inc.; bez jej poparcia ani sponsoringu. Palworld i cała powiązana zawartość gry są własnością Pocketpair, Inc.',
     ],
     copy: 'Kopiuj',
     copied: 'Skopiowano',
@@ -137,7 +137,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Sobre este site',
     body: [
       'Um mapa interativo e banco de dados não oficiais de Palworld, feitos por fãs. Todos os dados do jogo são extraídos dos arquivos do jogo.',
-      'Sem afiliação, endosso ou patrocínio da Pocketpair, Inc.',
+      'Sem afiliação, endosso ou patrocínio da Pocketpair, Inc. Palworld e todo o conteúdo de jogo relacionado são propriedade da Pocketpair, Inc.',
     ],
     copy: 'Copiar',
     copied: 'Copiado',
@@ -147,7 +147,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'О сайте',
     body: [
       'Неофициальная фанатская интерактивная карта и база данных по Palworld. Все игровые данные извлечены из файлов игры.',
-      'Не связано с Pocketpair, Inc., не одобрено и не спонсируется ею.',
+      'Не связано с Pocketpair, Inc., не одобрено и не спонсируется ею. Palworld и весь связанный игровой контент являются собственностью Pocketpair, Inc.',
     ],
     copy: 'Копировать',
     copied: 'Скопировано',
@@ -157,7 +157,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'เกี่ยวกับเว็บไซต์นี้',
     body: [
       'แผนที่แบบอินเทอร์แอกทีฟและฐานข้อมูล Palworld ที่แฟน ๆ ทำขึ้นอย่างไม่เป็นทางการ ข้อมูลเกมทั้งหมดดึงมาจากไฟล์เกม',
-      'ไม่มีความเกี่ยวข้อง ไม่ได้รับการรับรอง และไม่ได้รับการสนับสนุนจาก Pocketpair, Inc.',
+      'ไม่มีความเกี่ยวข้อง ไม่ได้รับการรับรอง และไม่ได้รับการสนับสนุนจาก Pocketpair, Inc. Palworld และเนื้อหาเกมที่เกี่ยวข้องทั้งหมดเป็นทรัพย์สินของ Pocketpair, Inc.',
     ],
     copy: 'คัดลอก',
     copied: 'คัดลอกแล้ว',
@@ -167,7 +167,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Bu site hakkında',
     body: [
       'Palworld için hayranlar tarafından yapılmış resmi olmayan etkileşimli harita ve veri tabanı. Tüm oyun verileri oyun dosyalarından çıkarılmıştır.',
-      'Pocketpair, Inc. ile bağlantılı değildir; onaylanmamış ve desteklenmemiştir.',
+      "Pocketpair, Inc. ile bağlantılı değildir; onaylanmamış ve desteklenmemiştir. Palworld ve ilgili tüm oyun içerikleri Pocketpair, Inc.'e aittir.",
     ],
     copy: 'Kopyala',
     copied: 'Kopyalandı',
@@ -177,7 +177,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: 'Giới thiệu về trang này',
     body: [
       'Bản đồ tương tác và cơ sở dữ liệu Palworld không chính thức do người hâm mộ thực hiện. Toàn bộ dữ liệu được trích xuất từ tệp của game.',
-      'Không liên kết, không được Pocketpair, Inc. chứng thực hoặc tài trợ.',
+      'Không liên kết, không được Pocketpair, Inc. chứng thực hoặc tài trợ. Palworld và toàn bộ nội dung trò chơi liên quan đều thuộc quyền sở hữu của Pocketpair, Inc.',
     ],
     copy: 'Sao chép',
     copied: 'Đã sao chép',
@@ -187,7 +187,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: '关于本站',
     body: [
       '本站是由玩家制作的《幻兽帕鲁》非官方互动地图与资料库，所有游戏数据均从游戏文件中提取。',
-      '本站与 Pocketpair, Inc. 无隶属关系，也未获其授权或赞助。',
+      '本站与 Pocketpair, Inc. 无隶属关系，也未获其授权或赞助。幻兽帕鲁及相关游戏内容的一切权利均归 Pocketpair, Inc. 所有。',
     ],
     contact: {
       title: '交流与反馈',
@@ -202,7 +202,7 @@ export const SITE_INFO_STRINGS: Record<Language, SiteInfoStrings> = {
     title: '關於本站',
     body: [
       '本站是由玩家製作的《幻獸帕魯》非官方互動地圖與資料庫，所有遊戲資料均自遊戲檔案中擷取。',
-      '本站與 Pocketpair, Inc. 無隸屬關係，也未獲其授權或贊助。',
+      '本站與 Pocketpair, Inc. 無隸屬關係，也未獲其授權或贊助。幻獸帕魯及相關遊戲內容的一切權利均歸 Pocketpair, Inc. 所有。',
     ],
     contact: {
       title: '交流與回饋',

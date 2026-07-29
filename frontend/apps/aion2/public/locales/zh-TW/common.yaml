@@ -164,7 +164,7 @@ siteInfo:
   body: |-
     本站是由 **蘇煙攻略組** 搭建與維護的《永恆之塔 2》非官方互動地圖與資料庫，遊戲資料均自遊戲檔案中擷取，永久免費開放。
 
-    本站與 NCSOFT 無隸屬關係，也未獲其授權或背書。
+    本站與 NCSOFT 無隸屬關係，也未獲其授權或背書。AION2 及相關遊戲內容的一切權利均歸 NCSOFT 所有。
   contact:
     title: "交流與聯絡方式"
     content: |
@@ -172,6 +172,7 @@ siteInfo:
          ①群 246681864  
          ②群 197791140  
          ③群 791286881  
+      2. **AION2 交流 Discord：** https://discord.gg/cqn9sKbWPU
   feedback:
     label: "回饋 QQ 群"
     hint: "上面的群組用於玩家交流；如有建議或問題，請加入下方的回饋群。"

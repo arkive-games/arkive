@@ -180,12 +180,12 @@ siteInfo:
   body: |-
     This site is an unofficial, fan-made interactive map and database for AION2, built and maintained by the **苏烟攻略组 (Suyn AION2 Team)**. All game data is extracted from the game files, and the site will always remain free to use.
 
-    Not affiliated with, endorsed by, or sponsored by NCSOFT.
+    Not affiliated with, endorsed by, or sponsored by NCSOFT. AION2 and all related game content are the property of NCSOFT.
   contact:
     title: "Communication & Contact"
     content: |
       1. **Our Aion 2 Discussion Discord:** https://discord.gg/cqn9sKbWPU
-      2. For the latest Aion 2 news and active discussions, check out the Aion 2 Global Discord – **the biggest Aion 2's community** we’re happy to collaborate with: https://discord.gg/aion2global
+      2. For the latest Aion 2 news and active discussions, check out the Aion 2 Global Discord – **the biggest Aion 2 community** we’re happy to collaborate with: https://discord.gg/aion2global
 
 race:
   light: "Elyos"
