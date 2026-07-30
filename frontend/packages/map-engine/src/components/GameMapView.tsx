@@ -119,6 +119,43 @@ const DeselectOnMapClick: React.FC<{ onDeselect: () => void }> = ({
 };
 
 /**
+ * Keeps Leaflet's cached container size in step with the element's real size.
+ *
+ * Leaflet measures its container once and then only re-measures on a window
+ * `resize` — it does not observe the element. So anything that changes the map
+ * column's width WITHOUT resizing the window leaves Leaflet believing it is
+ * still the old size: it renders tiles for the old viewport and the freed strip
+ * stays permanently blank. Panning and zooming do not heal it, because both
+ * work from the same stale size. Collapsing either map sidebar does exactly
+ * this.
+ *
+ * The debounce outlasts the sidebar's 300ms width transition, so the map is
+ * measured once at its final size rather than ~20 times on the way there.
+ * `invalidateSize` keeps the centre fixed by default, so the user's view does
+ * not jump.
+ */
+const CONTAINER_RESIZE_DEBOUNCE_MS = 350;
+
+const ContainerResizeWatcher: React.FC = () => {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    if (typeof ResizeObserver === "undefined") return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const observer = new ResizeObserver(() => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => map.invalidateSize(), CONTAINER_RESIZE_DEBOUNCE_MS);
+    });
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+      if (timer) clearTimeout(timer);
+    };
+  }, [map]);
+  return null;
+};
+
+/**
  * Publishes the Leaflet map instance on `window` so e2e tests can project DATA
  * coords through the real map (verifying the vertical flip). Dev/test gating
  * lives in the app via the `exposeTestHandle` prop.
@@ -456,6 +493,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
           zoomOutLabel={labels.zoomOut}
         />
         <ViewportWatcher onChange={handleViewport} />
+        <ContainerResizeWatcher />
         <DeselectOnMapClick onDeselect={() => onToggleMarker(null)} />
         {exposeTestHandle && <TestMapHandle />}
         <CursorTracker map={selectedMap} />
