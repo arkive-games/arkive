@@ -21,7 +21,6 @@
     "@tailwindcss/vite": "^4.1.17",
     "@tanstack/react-router": "^1.140.0",
     "altcha": "^2.2.4",
-    "dompurify": "^3.3.0",
     "embla-carousel": "^8.6.0",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
