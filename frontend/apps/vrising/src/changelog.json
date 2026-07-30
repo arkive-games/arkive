@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "version": "1.0.0",
+      "date": "2026-07-30",
+      "commit": "b96e60b485cdf76552a9cb6e78dc5dc4b16c8aa6",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New V Rising interactive map: the full Vardoran world map with all 372 game regions outlined, searchable and filterable.",
+            "zh-CN": "全新夜族崛起互动地图：完整的瓦尔多兰世界地图，标出全部 372 个游戏区域，支持搜索与筛选。",
+            "zh-TW": "全新夜族崛起互動地圖：完整的瓦爾多蘭世界地圖，標出全部 372 個遊戲區域，支援搜尋與篩選。"
+          }
+        }
+      ]
+    }
+  ]
+}
