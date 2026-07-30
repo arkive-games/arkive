@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@source "../../../packages/ui/src";
+@source "../../../packages/map-shell/src";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Palette follows the game's own look: parchment and ink by day, deep slate by
+   night, with the crimson of the spire as the primary and the gold used by the
+   game's own [gold] keyword markup as the accent. */
+:root {
+  --radius: 0.625rem;
+  --background: #F6F1E7;  --foreground: #241C16;
+  --card: #FFFDF8;        --card-foreground: #241C16;
+  --popover: #FFFDF8;     --popover-foreground: #241C16;
+  --primary: #A32C1E;     --primary-foreground: #FFF6EC;
+  --secondary: #EADFC8;   --secondary-foreground: #3A2C22;
+  --muted: #EFE7D6;       --muted-foreground: #6B5B4A;
+  --accent: #B8860B;      --accent-foreground: #FFF6EC;
+  --destructive: #B4231A; --destructive-foreground: #ffffff;
+  --border: rgba(36, 28, 22, 0.16);
+  --input: #EADFC8;       --ring: #A32C1E;
+}
+
+.dark {
+  --background: #14110F;  --foreground: #EDE4D6;
+  --card: #1E1A17;        --card-foreground: #EDE4D6;
+  --popover: #1E1A17;     --popover-foreground: #EDE4D6;
+  --primary: #E2543F;     --primary-foreground: #17110F;
+  --secondary: #2C2622;   --secondary-foreground: #EDE4D6;
+  --muted: #272220;       --muted-foreground: #A2937F;
+  --accent: #E3B341;      --accent-foreground: #17110F;
+  --destructive: #E2543F; --destructive-foreground: #17110F;
+  --border: rgba(237, 228, 214, 0.16);
+  --input: #2C2622;       --ring: #E2543F;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Desktop readability: raise the rem base from the browser default 16px. */
+html { font-size: 17px; }
+
+/* The game's own keyword highlight, used by card and relic text. */
+.card-keyword { color: var(--accent); font-weight: 600; }

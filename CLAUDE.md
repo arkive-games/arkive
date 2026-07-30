@@ -6,18 +6,18 @@ messages rescoped to `type(scope):`). The derived-artifact repos `data/` and `re
 their per-game variants) remain **separate**, pulled over HTTP.
 
 ## Layout
-- `frontend/` — pnpm workspace: `apps/` (aion2, palworld) + `packages/` (ui, map-engine,
+- `frontend/` — pnpm workspace: `apps/` (aion2, palworld, sts2) + `packages/` (ui, map-engine,
   map-shell, data-contract). React 19 / Vite / Tailwind / shadcn / Leaflet.
 - `backend/`  — FastAPI + PostgreSQL + S3; dynamic/user data only. One **shared** service
   (auth, comments, uploads, artifact voting) — not per-game.
-- `tools/`    — Python (uv): `apps/` (aion2, palworld pipelines) + `packages/` (shared
+- `tools/`    — Python (uv): `apps/` (aion2, palworld, sts2 pipelines) + `packages/` (shared
   framework `tools`, generated `backend-client`). Transforms the raw game export into the
   `data/` + `resource/` artifacts.
 - `docs/`, `CLAUDE.md`, `.claude/`, `BOOTSTRAP.md` — workspace meta (also here).
 
 Separate artifact repos (NOT in this monorepo; served over HTTP):
-- `resource/` (+`resource-palworld/`) — derived WebP image set under a `UI/` root.
-- `data/` (+`data-palworld/`) — derived parsed dataset (markers, regions, tables, locales).
+- `resource/` (+`resource-palworld/`, `resource-sts2/`) — derived WebP image set under a `UI/` root.
+- `data/` (+`data-palworld/`, `data-sts2/`) — derived parsed dataset (markers, regions, tables, locales).
 
 ## Data-flow contract
 Raw game export (`G:\NCSoft\Export\Exports\AION2\Content\`, Perforce later)
@@ -65,7 +65,7 @@ landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTran
   (`git@github.com:...`); SSH works via `HOME` set in `~/.claude/settings.json` env plus
   `core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe` in the global gitconfig.
 - **Dev server ports (fixed per app):** aion2 → `http://localhost:15173`, palworld →
-  `http://localhost:15174`. A dev server is often already running; before asking the user to
+  `http://localhost:15174`, sts2 → `http://localhost:15175`. A dev server is often already running; before asking the user to
   start one, probe the app's port first
   (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:15174`). Only ask the user to
   start/set up the server if nothing responds. (Note: `5173`/`5174` may be taken by unrelated

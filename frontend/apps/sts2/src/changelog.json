@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "version": "0.1.0",
+      "date": "2026-07-30",
+      "commit": "8acfc727089444a3cd163a19db22028cc84ade0f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New Slay the Spire 2 wiki: browse every card with its cost, rarity, keywords and exact numbers, and every playable character with their starting stats.",
+            "zh-CN": "全新杀戮尖塔 2 资料库：可浏览全部卡牌（含费用、稀有度、关键字与具体数值）以及全部可游玩角色的初始属性。",
+            "zh-TW": "全新殺戮尖塔 2 資料庫：可瀏覽全部卡牌（含費用、稀有度、關鍵字與具體數值）以及全部可遊玩角色的初始屬性。"
+          }
+        }
+      ]
+    }
+  ]
+}
