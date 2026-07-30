@@ -277,27 +277,53 @@ byte-exactly.
 ```
 
 **The node section lives at the end of the file**, not the front. It is a self-describing
-tree of 72-byte `NodeHeader` records:
+tree of **variable-length** `NodeHeader` records:
 
 ```
-ulong NodeTypeHash; Hash128 Id; int Size, NextSiblingOffset, ChildrenCount;
-long MetadataStartingOffset; int MetadataSize; long DataStartingOffset, DataSize
+0   ulong   NodeTypeHash
+8   Hash128 Id
+24  int     Size                 <- the record's own length; this is the stride
+28  int     NextSiblingOffset    <- offset from the node-section start; -1 on the last sibling
+32  int     ChildrenCount
+36          (4 bytes padding)
+40  long    MetadataStartingOffset
+48  long    MetadataSize         <- a long, not an int
+56  long    DataStartingOffset   <- an ABSOLUTE file offset; add no section base
+64  long    DataSize
 ```
+
+**Corrected 2026-07-30 during implementation — the original reading of this structure was
+wrong in three ways** and is recorded here so it is not repeated: the stride is *not* a fixed
+72 bytes, `NextSiblingOffset` is *not* a subtree length, and the longs do *not* start at +32.
+In the reference file the node section is 552 bytes = one 72-byte world node + six 80-byte
+children, which only decodes if the stride is read from each record's own `Size`. Proof for
+the absolute-offset reading: treating `DataStartingOffset` as section-relative (152 + 152)
+throws immediately, while the absolute reading (152) yields exactly 87 / 49 / 6,198 / 3,496.
 
 All 1,183 files are `FileVersion` 77 with exactly 6 children under `WorldNodeType`:
-`ArchetypesNodeType` (rev 1), `BlobAssetsNodeType` (rev 1),
-`SharedAndManagedComponentsNodeType` (rev 0), `EnabledBitsNodeType` (rev 0),
-`ChunksNodeType` (rev 1), `BufferDataNodeType` (rev 1).
+`ArchetypesNodeType`, `BlobAssetsNodeType`, `SharedAndManagedComponentsNodeType`,
+`EnabledBitsNodeType`, `ChunksNodeType`, `BufferDataNodeType`.
+
+**All six children share one `NodeTypeHash` (`7ff5f067a875f185`); only the root's differs
+(`587eb6cb58e1c891`).** Node kind is therefore identified by **position, not by hash**. Any
+"cross-check that every file agrees on the hash→kind binding" test is vacuous — it verifies
+consistency, never identity.
 
 `FileVersion` 77 maps to **Unity Entities 1.1.0-pre.3 … 1.2.4** (1.0.x = 76, 1.3.2+ = 78).
 
 The archetypes node layout is `int typeCount`, `ulong[typeCount] StableTypeHash`,
 `int archetypeCount`, then per archetype `int entityCount, int componentTypeCount,
-int[] typeIndexIntoHashTable`. Verified on
-`018be26374d7ad94d99c57e637f5cc42.0.entities`: **87 types, 49 archetypes, 6,198 entities,
-3,496 of 3,496 bytes consumed exactly.** Its `ChunksNode` payload is
-`3,637,248 = 222 × 16,384` — raw 16 KiB archetype chunks (`kChunkSize = 16384`,
+int[] typeRefs`. Verified on `018be26374d7ad94d99c57e637f5cc42.0.entities`: **87 types,
+49 archetypes, 6,198 entities, 3,496 of 3,496 bytes consumed exactly.** Its `ChunksNode`
+payload is `3,637,248 = 222 × 16,384` — raw 16 KiB archetype chunks (`kChunkSize = 16384`,
 `kBufferOffset = 64`, `kSerializedHeaderSize = 40`).
+
+**`typeRefs` are Unity `TypeIndex` values, not bare table indices.** They carry flag bits in
+the high bits, so a naive `ref >= typeCount` bounds check rejects real files (observed
+`536870936`). Mask with Unity's `ClearFlagsMask` (`0x007FFFFF`) to get the table index. In the
+reference file 37 of 600 refs are flagged; game-wide 7,946 refs carry `0x20000000`. Which
+component property that bit denotes is version-specific and remains **unidentified** — unex
+preserves the raw values rather than discarding the flags.
 
 **Component type names are not in the files.** Stunlock baked with
 `SerializeComponentTypeNames = false`: 0 hits for `DebugSectionNodeType` /
@@ -314,10 +340,13 @@ commented out in Unity's source (noted there as inconsistent between IL2CPP and 
 which removes a variable.
 
 `.entityheader` files have no magic — a raw little-endian section table with an embedded
-nested `DOTSBIN!` block, and the subscene name in plaintext in the tail. 229 unique scene
-names recovered, e.g. `Farbane_Mid11_Quarry_Territory`, `Dunley_Mid02_Colosseum_Territory`,
-`Curse_SpiderCave01_Territory`. Of these, 22 are `GameData_*` scenes forming the ECS game
-database (`GameData_Gameplay` 130,857,088 B, `GameData_Abilities`, `GameData_Castle`,
+nested `DOTSBIN!` block, and the subscene name in plaintext in the tail. **166 unique scene
+names** recovered from the 218 header files, e.g. `Farbane_Mid11_Quarry_Territory`,
+`Dunley_Mid02_Colosseum_Territory`, `Curse_SpiderCave01_Territory`. (An earlier figure of 229
+was wrong and is corrected here: 229 exceeds the 218 header files, so it cannot have been one
+name per header. Name recovery is a documented tail-plaintext heuristic, labelled as such in
+the emitted coverage artifact, not an exact parse.) Among them, 22 are `GameData_*` scenes
+forming the ECS game database (`GameData_Gameplay` 130,857,088 B, `GameData_Abilities`, `GameData_Castle`,
 `GameData_SpawnChains`, …), each with a `_Server` twin.
 
 Unity's own serialization source is readable at `needle-mirror/com.unity.entities`
