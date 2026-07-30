@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 
-const APPS = ['palworld', 'aion2', 'sts2']
+const APPS = ['palworld', 'aion2', 'sts2', 'vrising']
 const root = path.resolve(import.meta.dirname, '..')
 
 let failed = 0
