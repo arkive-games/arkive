@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.11.1",
+      "date": "2026-07-30",
+      "commit": "e410a83a8f7ef3bda486310c551e5eb353bd13a6",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed the map leaving a blank strip after collapsing a sidebar.",
+            "zh-CN": "修复收起侧边栏后地图残留空白区域的问题。",
+            "zh-TW": "修復收起側邊欄後地圖殘留空白區域的問題。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.11.0",
       "date": "2026-07-29",
       "commit": "f9741f4b3a1d0a77b9050eef61bc8da72f7dd7c8",
