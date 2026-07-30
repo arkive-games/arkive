@@ -1,0 +1,42 @@
+languages: ["en-US", "zh-CN", "zh-TW"]
+
+map:
+  id: Vardoran
+  type: world
+  names:
+    en-US: Vardoran
+    zh-CN: 瓦尔多兰
+    zh-TW: 瓦爾多蘭
+
+categories:
+  - id: regions
+    pinVariant: image
+    names:
+      en-US: Regions
+      zh-CN: 区域
+      zh-TW: 區域
+    subtypes:
+      - id: poi
+        icon: MapIcon_CavePassage
+        iconScale: 0.8
+        defaultActive: true
+        names:
+          en-US: Point of interest
+          zh-CN: 兴趣点
+          zh-TW: 興趣點
+        descriptions:
+          en-US: A named area outline the game draws on the world map. Names are not yet recoverable from the game files, so each is labelled by its internal access id.
+          zh-CN: 游戏在世界地图上绘制的区域轮廓。区域名称目前无法从游戏文件中还原，因此以内部访问 ID 标注。
+          zh-TW: 遊戲在世界地圖上繪製的區域輪廓。區域名稱目前無法從遊戲檔案中還原，因此以內部存取 ID 標註。
+      - id: territory
+        icon: MapIcon_PlayerCastle
+        iconScale: 0.8
+        defaultActive: true
+        names:
+          en-US: Territory
+          zh-CN: 领地
+          zh-TW: 領地
+        descriptions:
+          en-US: A territory outline the game draws on the world map. Names are not yet recoverable from the game files, so each is labelled by its internal access id.
+          zh-CN: 游戏在世界地图上绘制的领地轮廓。名称目前无法从游戏文件中还原，因此以内部访问 ID 标注。
+          zh-TW: 遊戲在世界地圖上繪製的領地輪廓。名稱目前無法從遊戲檔案中還原，因此以內部存取 ID 標註。
