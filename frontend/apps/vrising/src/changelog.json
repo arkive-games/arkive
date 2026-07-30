@@ -1,9 +1,9 @@
 {
   "entries": [
     {
-      "version": "1.0.0",
+      "version": "0.1.0",
       "date": "2026-07-30",
-      "commit": "b96e60b485cdf76552a9cb6e78dc5dc4b16c8aa6",
+      "commit": "daf40a33b86e70d11d79f328e55acafd873a46fc",
       "changes": [
         {
           "kind": "feature",
