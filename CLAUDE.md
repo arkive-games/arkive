@@ -51,6 +51,13 @@ The orientation is expected to hold for all maps (same engine), but **re-verify 
 landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTransform`).
 
 ## Conventions
+- **Language:** the project language is **English**. Everything written into the repo —
+  commit messages, code, identifiers, comments, docs, test names — must be pure English
+  (no CJK, no mixed-language text). The only exception is locale/translation data whose
+  whole purpose is to carry other languages (`zh-CN`/`zh-TW`/`ko-KR`/… message catalogs,
+  `changelog.json` locale strings, game-sourced display names).
+  **In session conversation, reply in whatever language the user is writing in** — that
+  choice affects chat only, never repo content.
 - **New features:** open a git worktree for the work (isolate from the current workspace).
 - **Merging back:** integrate with rebase (not merge commits).
 - **Live testing:** when work needs live testing, merge it back first (with rebase), then test.
