@@ -60,8 +60,14 @@ in `tools/apps/vrising/maps/calibration.py` along with its IoU, margin and
 `CALIBRATION_METHOD` (`fitted` or `by-eye`). Re-derive with
 `python -m vrising.maps calibrate`; that stage never writes the accepted values, so a re-run
 cannot silently move every marker. **Region names do not exist yet** — localization is keyed by
-bare GUID and the 229 real names sit in `.entityheader` subscene names (a later `unex` phase),
-so regions ship labelled by `AccessID` and nothing is invented.
+bare GUID and the real names sit in `.entityheader` subscene names (166 unique, recovered by
+`unex coverage` as a tail-plaintext heuristic), so regions ship labelled by `AccessID` and
+nothing is invented.
+
+Note the current calibration is `by-eye`: the automated IoU gate was unreachable by
+construction (the 372 silhouettes cover only ~41% of the landmass, capping IoU at 0.409), so
+acceptance rests on containment 0.9165, 369/372 markers landing inside their own region
+polygon, and human review of `calibration/accepted_overlay.png`.
 
 ## Conventions
 - **Language:** the project language is **English**. Everything written into the repo —
