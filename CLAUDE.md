@@ -6,18 +6,18 @@ messages rescoped to `type(scope):`). The derived-artifact repos `data/` and `re
 their per-game variants) remain **separate**, pulled over HTTP.
 
 ## Layout
-- `frontend/` — pnpm workspace: `apps/` (aion2, palworld, sts2) + `packages/` (ui, map-engine,
+- `frontend/` — pnpm workspace: `apps/` (aion2, palworld, sts2, vrising) + `packages/` (ui, map-engine,
   map-shell, data-contract). React 19 / Vite / Tailwind / shadcn / Leaflet.
 - `backend/`  — FastAPI + PostgreSQL + S3; dynamic/user data only. One **shared** service
   (auth, comments, uploads, artifact voting) — not per-game.
-- `tools/`    — Python (uv): `apps/` (aion2, palworld, sts2 pipelines) + `packages/` (shared
+- `tools/`    — Python (uv): `apps/` (aion2, palworld, sts2, vrising pipelines) + `packages/` (shared
   framework `tools`, generated `backend-client`). Transforms the raw game export into the
   `data/` + `resource/` artifacts.
 - `docs/`, `CLAUDE.md`, `.claude/`, `BOOTSTRAP.md` — workspace meta (also here).
 
 Separate artifact repos (NOT in this monorepo; served over HTTP):
-- `resource/` (+`resource-palworld/`, `resource-sts2/`) — derived WebP image set under a `UI/` root.
-- `data/` (+`data-palworld/`, `data-sts2/`) — derived parsed dataset (markers, regions, tables, locales).
+- `resource/` (+`resource-palworld/`, `resource-sts2/`, `resource-vrising/`) — derived WebP image set under a `UI/` root.
+- `data/` (+`data-palworld/`, `data-sts2/`, `data-vrising/`) — derived parsed dataset (markers, regions, tables, locales).
 
 ## Data-flow contract
 Raw game export (`G:\NCSoft\Export\Exports\AION2\Content\`, Perforce later)
@@ -50,6 +50,19 @@ Dawn Legion Base = upper-left. This matches the raw **map image** (image Y incre
 The orientation is expected to hold for all maps (same engine), but **re-verify per map** via
 landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTransform`).
 
+## Coordinate transform — V Rising
+V Rising ships **no** `WorldBoundBox` equivalent, so the transform was **derived**, not read:
+the mask rasters are 0.5 world units per pixel (verified 372/372), which fixes the 6080×6080
+map image at a 3040×3040 world span and leaves only an offset plus one of 8 orientations. The
+offset comes from FFT cross-correlation of the composited region silhouettes against the map's
+land mask (argmax correlation == argmax IoU under pure translation). The accepted result lives
+in `tools/apps/vrising/maps/calibration.py` along with its IoU, margin and
+`CALIBRATION_METHOD` (`fitted` or `by-eye`). Re-derive with
+`python -m vrising.maps calibrate`; that stage never writes the accepted values, so a re-run
+cannot silently move every marker. **Region names do not exist yet** — localization is keyed by
+bare GUID and the 229 real names sit in `.entityheader` subscene names (a later `unex` phase),
+so regions ship labelled by `AccessID` and nothing is invented.
+
 ## Conventions
 - **Language:** the project language is **English**. Everything written into the repo —
   commit messages, code, identifiers, comments, docs, test names — must be pure English
@@ -65,7 +78,7 @@ landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTran
   (`git@github.com:...`); SSH works via `HOME` set in `~/.claude/settings.json` env plus
   `core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe` in the global gitconfig.
 - **Dev server ports (fixed per app):** aion2 → `http://localhost:15173`, palworld →
-  `http://localhost:15174`, sts2 → `http://localhost:15175`. A dev server is often already running; before asking the user to
+  `http://localhost:15174`, sts2 → `http://localhost:15175`, vrising → `http://localhost:15176`. A dev server is often already running; before asking the user to
   start one, probe the app's port first
   (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:15174`). Only ask the user to
   start/set up the server if nothing responds. (Note: `5173`/`5174` may be taken by unrelated
