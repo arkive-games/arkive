@@ -36,6 +36,22 @@
             "zh-CN": "修复两张地图：深渊 Reshanta（C）此前只显示四分之一区域；另有一张没有地图图片的深渊战场地图已从地图列表中移除。",
             "zh-TW": "修復兩張地圖：深淵 Reshanta（C）此前只顯示四分之一區域；另有一張沒有地圖圖片的深淵戰場地圖已從地圖列表中移除。"
           }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Reworked the phone More panel to match the rest of the site: language now opens its own page with the current choice shown inline, and theme is a compact three-way switch.",
+            "zh-CN": "重做手机端「更多」面板：语言改为单独一页打开并直接显示当前选择，主题改为紧凑的三档切换。",
+            "zh-TW": "重做手機端「更多」面板：語言改為單獨一頁開啟並直接顯示當前選擇，主題改為緊湊的三檔切換。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The map renderer can now be switched on phones too, from the More panel — previously it was only reachable from the desktop top bar.",
+            "zh-CN": "手机端也能切换地图渲染引擎了，入口在「更多」面板中——此前只有桌面端顶栏可以切换。",
+            "zh-TW": "手機端也能切換地圖渲染引擎了，入口在「更多」面板中——此前只有桌面端頂欄可以切換。"
+          }
         }
       ]
     },
