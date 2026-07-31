@@ -3,9 +3,14 @@ import { test, expect } from '@playwright/test'
 // Markers render as Leaflet divIcons: a .leaflet-marker-icon div whose innerHTML
 // contains an <img> with the icon URL. Tiles come from
 // /vrisingres/tiles/Vardoran/Vardoran_XX_YY.webp via the Vite dev middleware.
+//
+// Every map test here pins `?engine=leaflet`: the WebGL engine is the default
+// now (see lib/mapEngineChoice) and draws everything into one canvas, so there
+// are no `.leaflet-*` elements to assert on. The GL engine and the switcher have
+// their own spec (engine.spec.ts).
 
 test('renders Vardoran tiles', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await expect(
     page.locator('img.leaflet-tile[src*="/vrisingres/tiles/Vardoran/"]').first(),
@@ -17,7 +22,7 @@ test('tile URLs use the 5x5 grid and never index past it', async ({ page }) => {
   page.on('request', (r) => {
     if (r.url().includes('/vrisingres/tiles/Vardoran/')) tiles.push(r.url())
   })
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(
     page.locator('img.leaflet-tile[src*="/vrisingres/tiles/Vardoran/"]').first(),
   ).toBeVisible({ timeout: 15_000 })
@@ -31,7 +36,7 @@ test('tile URLs use the 5x5 grid and never index past it', async ({ page }) => {
 })
 
 test('region markers render with their game icons', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await expect(
     page.locator('.leaflet-marker-pane .leaflet-marker-icon img[src*="MapIcon_"]').first(),
@@ -39,7 +44,7 @@ test('region markers render with their game icons', async ({ page }) => {
 })
 
 test('toggling a subtype hides its markers', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   const pins = page.locator('.leaflet-marker-pane .leaflet-marker-icon img[src*="MapIcon_CavePassage"]')
   await expect(pins.first()).toBeVisible({ timeout: 15_000 })
   await page.getByTestId('subtype-toggle-poi').click()
@@ -47,7 +52,7 @@ test('toggling a subtype hides its markers', async ({ page }) => {
 })
 
 test('selecting a marker opens a popup naming its region', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   // 372 region markers overlap heavily at the whole-map zoom, so a hit-tested
   // click lands on a stacked sibling — dispatch the click on the element
@@ -67,7 +72,7 @@ test('data fetches carry the artifact-version cache-buster', async ({ page }) =>
       dataRequests.push(url.pathname + url.search)
     }
   })
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(
     page.locator('.leaflet-marker-pane .leaflet-marker-icon').first(),
   ).toBeVisible({ timeout: 15_000 })
@@ -76,7 +81,7 @@ test('data fetches carry the artifact-version cache-buster', async ({ page }) =>
 })
 
 test('switching language localizes both UI chrome and data labels', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await page.getByTestId('lang-menu').click()
   await page.getByTestId('lang-zh-CN').click()

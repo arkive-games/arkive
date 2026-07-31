@@ -1,16 +1,30 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ShellTopBar, useTheme, type Theme } from '@gamemap/map-shell'
-import { BuildInfo } from '@gamemap/ui'
+import { BuildInfo, EngineToggle } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { getGameVersion } from '../lib/urls'
+import {
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  type MapEngineChoice,
+} from '../lib/mapEngineChoice'
 
 export type NavKey = '/' | '/changelog'
 
 const ITEMS: { key: NavKey; labelKey: string }[] = [{ key: '/', labelKey: 'nav.map' }]
 
-export function TopNav({ active }: { active: NavKey }) {
+export function TopNav({ active, engine, onEngineChange }: {
+  active: NavKey
+  /**
+   * Map-engine switcher, only meaningful on the map page: the choice is owned by
+   * `MapPage` (it decides which engine to mount), so both the current value and
+   * the setter are passed in. Omitted by every other page.
+   */
+  engine?: MapEngineChoice
+  onEngineChange?: (choice: MapEngineChoice) => void
+}) {
   const { t, i18n } = useTranslation()
   const { theme, setTheme } = useTheme()
 
@@ -51,13 +65,24 @@ export function TopNav({ active }: { active: NavKey }) {
         menuLabel: t('themeMenu'),
       }}
       rightExtras={
-        <BuildInfo
-          commit={__BUILD_GIT_COMMIT__}
-          buildTime={__BUILD_TIME__}
-          dev={import.meta.env.DEV}
-          gameVersion={getGameVersion()}
-          siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
-        />
+        <>
+          {engine && onEngineChange && (
+            <EngineToggle
+              value={engine}
+              choices={MAP_ENGINE_CHOICES}
+              labels={MAP_ENGINE_LABELS}
+              onChange={onEngineChange}
+              label={t('engineMenu')}
+            />
+          )}
+          <BuildInfo
+            commit={__BUILD_GIT_COMMIT__}
+            buildTime={__BUILD_TIME__}
+            dev={import.meta.env.DEV}
+            gameVersion={getGameVersion()}
+            siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
+          />
+        </>
       }
     />
   )

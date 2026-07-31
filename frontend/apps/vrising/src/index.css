@@ -68,3 +68,9 @@ html { font-size: 17px; }
 /* The map image's own parchment is warm; the Leaflet void behind it is themed
    so the cleared out-of-border area reads correctly in both themes. */
 .leaflet-container { background: var(--muted); }
+
+/* Same void colour for the WebGL engine: its canvas is cleared to transparent,
+   so the map root's background shows through exactly where the Leaflet
+   container's does. Kept next to the rule above so the two engines'
+   backgrounds can't drift apart. */
+.gmgl-map-root { background: var(--muted); }

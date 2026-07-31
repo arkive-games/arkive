@@ -10,18 +10,26 @@ import MapPage from './features/map/MapPage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import { themeStorage } from './lib/storage'
 import { initDataVersion } from './lib/urls'
+import { isMapEngineChoice, type MapEngineChoice } from './lib/mapEngineChoice'
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> })
 
 export interface MapSearch {
   /** Prefill the marker search box. */
   q?: string
+  /**
+   * Render-engine override for this visit: `gl` mounts the WebGL (three.js) map
+   * engine, `leaflet` the original one. When present it beats the persisted
+   * choice without overwriting it — see `lib/mapEngineChoice`.
+   */
+  engine?: MapEngineChoice
 }
 const mapRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   validateSearch: (s: Record<string, unknown>): MapSearch => ({
     q: typeof s.q === 'string' ? s.q : undefined,
+    engine: isMapEngineChoice(s.engine) ? s.engine : undefined,
   }),
   component: MapPage,
 })

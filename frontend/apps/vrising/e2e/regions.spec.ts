@@ -2,9 +2,13 @@ import { test, expect } from '@playwright/test'
 
 // Region polygons render as SVG paths in the Leaflet overlay pane. They are on
 // by default (see MapPage's showRegions initial state).
+//
+// These pin `?engine=leaflet`: the WebGL engine is the default now (see
+// lib/mapEngineChoice) and draws borders into its canvas, so there is no
+// `.leaflet-overlay-pane svg path` to count.
 
 test('region polygons are drawn on load', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   const paths = page.locator('.leaflet-overlay-pane svg path')
   await expect(paths.first()).toBeVisible({ timeout: 15_000 })
@@ -12,7 +16,7 @@ test('region polygons are drawn on load', async ({ page }) => {
 })
 
 test('toggling the region control removes the polygons', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   const paths = page.locator('.leaflet-overlay-pane svg path')
   await expect(paths.first()).toBeVisible({ timeout: 15_000 })
   await page.getByRole('button', { name: 'Show regions' }).click()
@@ -22,7 +26,7 @@ test('toggling the region control removes the polygons', async ({ page }) => {
 test('every drawn polygon stays inside the 6080px canvas', async ({ page }) => {
   // A calibration error large enough to push regions off the tile grid would
   // show here as coordinates outside 0..6080 in DATA space.
-  await page.goto('/')
+  await page.goto('/?engine=leaflet')
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await expect(page.locator('.leaflet-overlay-pane svg path').first()).toBeVisible({ timeout: 15_000 })
   const bad = await page.evaluate(async () => {

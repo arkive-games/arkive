@@ -13,6 +13,7 @@
   "dependencies": {
     "@gamemap/data-contract": "workspace:*",
     "@gamemap/map-engine": "workspace:*",
+    "@gamemap/map-engine-gl": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
     "@gamemap/ui": "workspace:*",
     "@tanstack/react-router": "^1.170.16",
