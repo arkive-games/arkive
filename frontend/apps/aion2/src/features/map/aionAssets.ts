@@ -8,11 +8,17 @@ import { getStaticUrl, parseIconUrl } from "@/lib/url";
 export const aionAssets: MapAssets = {
   // Tiles are named "<Map>_XX_YY.webp" with 2-digit zero padding, under the
   // resource repo's UI/Map/WorldMap/<Map>/Res/ folder.
-  tileUrl(map: GameMapMeta, x: number, y: number): string {
+  //
+  // `level` is the pyramid level the engine resolved from the map's
+  // `tileLevels` (0 = the native tiles the game ships). Downscaled levels live
+  // in a `z-<L>` subfolder; level 0 keeps its original path, so every tile URL
+  // that existed before the pyramid still resolves.
+  tileUrl(map: GameMapMeta, x: number, y: number, level = 0): string {
     const xStr = String(x).padStart(2, "0");
     const yStr = String(y).padStart(2, "0");
+    const dir = level > 0 ? `Res/z-${level}` : "Res";
     return getStaticUrl(
-      `UI/Map/WorldMap/${map.name}/Res/${map.name}_${xStr}_${yStr}.webp`,
+      `UI/Map/WorldMap/${map.name}/${dir}/${map.name}_${xStr}_${yStr}.webp`,
     );
   },
   // parseIconUrl supplies the hidden-marker fallback icon for empty paths and

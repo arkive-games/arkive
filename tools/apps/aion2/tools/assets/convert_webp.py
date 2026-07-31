@@ -29,10 +29,20 @@ Usage (from the ``tools`` repo root, with uv)::
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
 from PIL import Image
+
+
+def _exceeds(image_path: Path, max_size: int) -> bool:
+    """True when an existing output is still larger than the cap."""
+    try:
+        with Image.open(image_path) as img:
+            return max(img.size) > max_size
+    except Exception:  # noqa: BLE001 - unreadable output: reconvert it
+        return True
 
 
 def convert_tree(
@@ -42,8 +52,21 @@ def convert_tree(
     quality: int = 90,
     lossless: bool = False,
     force: bool = False,
+    max_size: int | None = None,
+    include: "re.Pattern[str] | None" = None,
 ) -> tuple[int, int]:
     """Convert every ``*.png`` under ``src_root`` to ``*.webp`` under ``dest_root``.
+
+    ``include`` filters by file NAME (not path) when the source tree holds more
+    than the site serves: the world-map folders carry ``_Masked_`` and
+    ``_TransparentMapPath_`` variants next to the real tiles, 77 MB of art the
+    frontend never requests.
+
+    ``max_size`` caps the longest edge (never enlarges). The icon trees ship at
+    256px for a UI that renders them at 32-56px, so capping at conversion time
+    is worth roughly 4x on those trees. Leave it unset for anything that is not
+    an icon -- map tiles are 1024px by design, and ``Texture/ETC`` /
+    ``Texture/BG`` hold 512x256 tooltip frames and a 1024x1024 window plate.
 
     Returns ``(converted, skipped)`` counts.
     """
@@ -62,17 +85,28 @@ def convert_tree(
     converted = 0
     skipped = 0
     for src_file in pngs:
+        if include is not None and not include.match(src_file.name):
+            continue
         rel = src_file.relative_to(rel_base)
         dest_file = (dest_root / rel).with_suffix(".webp")
 
         if not force and dest_file.exists():
             if dest_file.stat().st_mtime >= src_file.stat().st_mtime:
-                skipped += 1
-                continue
+                # An up-to-date output still has to be reconverted when it
+                # predates the cap -- otherwise lowering max_size is a silent
+                # no-op across the whole tree, since every .webp is newer than
+                # the .png it came from.
+                if max_size is None or not _exceeds(dest_file, max_size):
+                    skipped += 1
+                    continue
 
         dest_file.parent.mkdir(parents=True, exist_ok=True)
         try:
             with Image.open(src_file) as img:
+                if max_size is not None and max(img.size) > max_size:
+                    # thumbnail() preserves aspect ratio and only ever shrinks.
+                    img = img.copy()
+                    img.thumbnail((max_size, max_size), Image.LANCZOS)
                 if lossless:
                     img.save(dest_file, "WEBP", lossless=True)
                 else:
@@ -109,6 +143,15 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Reconvert even if an up-to-date .webp exists",
     )
+    parser.add_argument(
+        "--max-size",
+        type=int,
+        default=None,
+        help=(
+            "Cap the longest edge in pixels (never enlarges). Use for icon "
+            "trees only -- not for map tiles or full-size UI plates."
+        ),
+    )
     args = parser.parse_args(argv)
 
     converted, skipped = convert_tree(
@@ -117,6 +160,7 @@ def main(argv: list[str] | None = None) -> int:
         quality=args.quality,
         lossless=args.lossless,
         force=args.force,
+        max_size=args.max_size,
     )
     print(f"Done: {converted} converted, {skipped} skipped (up-to-date).")
     return 0

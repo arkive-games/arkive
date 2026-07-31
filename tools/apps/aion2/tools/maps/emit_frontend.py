@@ -372,6 +372,7 @@ def build_maps_yaml(parsed: dict[str, dict]) -> dict:
     for image-only maps with no WorldMap metadata, by counting the raw tiles."""
     from .worldmap import WorldMapMeta
     from . import worldmap_path
+    from ..assets.pyramid import pyramid_levels
 
     maps = []
     for name, meta in sorted(MAP_META.items(), key=lambda kv: kv[1]["order"]):
@@ -391,18 +392,32 @@ def build_maps_yaml(parsed: dict[str, dict]) -> dict:
                 tiles_x, tiles_y = counted
         # MapId from parse when available (else keep a deterministic id).
         map_id = str(parsed.get(name, {}).get("MapId", name))
+        # A map can have WorldMap metadata (bounds, sector grid) and still ship
+        # no tile art at all -- Abyss_Battlefield_A is declared 4x4 by its
+        # sector data but has zero tile images in the export, so offering it in
+        # the picker means a map that 404s every tile. Keep the entry (markers
+        # and bounds still reference it) but do not offer it.
+        has_art = _count_raw_tiles(name) is not None
         entry = {
             "id": map_id,
             "name": name,
             "type": meta["type"],
             "order": meta["order"],
-            "isVisible": meta["isVisible"],
+            "isVisible": meta["isVisible"] and has_art,
             "tileWidth": tile,
             "tileHeight": tile,
         }
         if tiles_x is not None:
             entry["tilesCountX"] = tiles_x
             entry["tilesCountY"] = tiles_y
+            # Downscaled levels available under Res/z-<L> (see
+            # aion2.tools.assets.pyramid). Per-map, not a global constant: the
+            # grids run 8x8 down to 2x2 and a 2x2 map bottoms out after one
+            # halving. Omitted at 0 so the contract's "absent => single level"
+            # stays the default.
+            levels = pyramid_levels(tiles_x, tiles_y) if has_art else 0
+            if levels:
+                entry["tileLevels"] = levels
         maps.append(entry)
     return {"maps": maps}
 

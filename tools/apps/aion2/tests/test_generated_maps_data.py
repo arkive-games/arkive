@@ -47,7 +47,28 @@ def test_generated_maps_json_visibility():
     # Reshanta_B was removed from the game; the new abyss maps replaced it.
     assert "Abyss_Reshanta_B" not in maps
     assert maps["Abyss_Reshanta_D"]["isVisible"] is True
-    assert maps["Abyss_Battlefield_A"]["isVisible"] is True
+    # Abyss_Battlefield_A has WorldMap metadata (a 4x4 sector grid, tileWidth
+    # 1020) but the export ships NO tile art for it, so every tile 404s and
+    # picking it showed an empty map. Kept in maps.json -- markers and bounds
+    # still reference it -- but no longer offered.
+    assert maps["Abyss_Battlefield_A"]["isVisible"] is False
+
+
+def test_pyramid_levels_match_the_grid():
+    """tileLevels must be per-map: a 2x2 map bottoms out after one halving.
+
+    Both engines resolve a level-L tile with ceil(count / 2**L), so a level
+    declared here has to exist on disk with ceil-sized counts -- see
+    aion2.tools.assets.pyramid.
+    """
+    from aion2.tools.assets.pyramid import pyramid_levels
+
+    maps = json.loads((DATA / "maps.json").read_text(encoding="utf-8"))["maps"]
+    for m in maps:
+        if not m.get("isVisible") or not m.get("tilesCountX"):
+            continue
+        expected = pyramid_levels(m["tilesCountX"], m["tilesCountY"])
+        assert m.get("tileLevels", 0) == expected, m["name"]
 
 
 def test_fragments_have_valid_type():
