@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "1.22.0",
+      "date": "2026-07-31",
+      "commit": "5fc353447f1c8272634d6abe50008d8bbe8c75e9",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Redesigned the map picker: a proper card with a map thumbnail, a clear hover state and a highlighted current map, instead of the old gradient bar.",
+            "zh-CN": "重做地图选择器：改为带地图缩略图的卡片，悬停状态清晰、当前地图高亮，取代原来的渐变条。",
+            "zh-TW": "重做地圖選擇器：改為帶地圖縮圖的卡片，懸停狀態清晰、目前地圖高亮，取代原來的漸層條。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The breeding calculator now uses square tiles on phones — icon, name and breeding rank — three per line as A + B = C, for both the parent pickers and every recipe.",
+            "zh-CN": "手机端配种计算器改用方块卡片（图标、名称、配种等级），父母选择与每条配方均为「A + B = C」三格一行。",
+            "zh-TW": "手機端配種計算器改用方塊卡片（圖示、名稱、配種等級），父母選擇與每條配方均為「A + B = C」三格一行。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.21.1",
       "date": "2026-07-31",
       "commit": "1f95b2947adf585c1877a96c5c4e2a4f97474ef7",
