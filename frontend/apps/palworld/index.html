@@ -2,11 +2,16 @@
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
+    <!-- Machine translation rewrites text nodes into <font> wrappers, which
+         detaches the nodes React still holds; the next unmount then throws
+         "Failed to execute 'removeChild' on 'Node'". These sites ship their
+         own i18n, so opting out costs nothing they do not already provide. -->
+    <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Palworld Map</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root" class="notranslate" translate="no"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
