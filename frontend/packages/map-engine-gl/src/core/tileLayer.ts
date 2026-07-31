@@ -61,9 +61,19 @@ export function tileRangeCount(range: TileRange): number {
   return (range.maxX - range.minX + 1) * (range.maxY - range.minY + 1);
 }
 
-/** Cache/identity key of a tile. */
-export function tileKey(x: number, y: number): string {
-  return `${x}:${y}`;
+/** Cache/identity key of a tile at a pyramid level. */
+export function tileKey(level: number, x: number, y: number): string {
+  return `${level}:${x}:${y}`;
+}
+
+/**
+ * Pyramid level for a camera zoom: the deepest level whose tiles are still
+ * displayed at ≤ native resolution (`floor(-zoom)`), clamped to what the map
+ * ships (`tileLevels`). Level 0 from zoom > -1 upward.
+ */
+export function levelForZoom(zoom: number, tileLevels: number): number {
+  if (!Number.isFinite(zoom) || tileLevels <= 0) return 0;
+  return Math.min(Math.floor(tileLevels), Math.max(0, Math.floor(-zoom)));
 }
 
 /** Whether `(x, y)` addresses a tile that actually exists in the grid. */
@@ -228,6 +238,7 @@ export interface TileLayerOptions {
 }
 
 interface TileEntry {
+  level: number;
   x: number;
   y: number;
   mesh: Mesh<PlaneGeometry, MeshBasicMaterial> | null;
@@ -333,15 +344,13 @@ export class TileLayer implements RenderLayer {
    */
   update(camera: Camera): void {
     if (this.disposed) return;
-    const size = this.tileSize;
+    const levels = Math.max(0, this.map.tileLevels ?? 0);
+    const level = levelForZoom(camera.zoom, levels);
+    const size = this.tileSize * 2 ** level;
+    const countX = Math.ceil(this.map.tilesCountX / 2 ** level);
+    const countY = Math.ceil(this.map.tilesCountY / 2 ** level);
     const bounds = camera.visibleBounds(0);
-    const range = visibleTileRange(
-      bounds,
-      size,
-      this.map.tilesCountX,
-      this.map.tilesCountY,
-      this.padTiles,
-    );
+    const range = visibleTileRange(bounds, size, countX, countY, this.padTiles);
 
     const visible = new Set<string>();
     const missing: MissingTile[] = [];
@@ -349,7 +358,7 @@ export class TileLayer implements RenderLayer {
     if (!isEmptyTileRange(range)) {
       for (let y = range.minY; y <= range.maxY; y++) {
         for (let x = range.minX; x <= range.maxX; x++) {
-          const key = tileKey(x, y);
+          const key = tileKey(level, x, y);
           visible.add(key);
           const existing = this.cache.get(key);
           if (existing) {
@@ -378,7 +387,7 @@ export class TileLayer implements RenderLayer {
       );
       missing.length = this.maxNewPerFrame;
     }
-    for (const tile of missing) this.beginTile(tile.x, tile.y);
+    for (const tile of missing) this.beginTile(level, tile.x, tile.y);
 
     for (const [key, entry] of this.cache) {
       if (!visible.has(key) && entry.mesh) entry.mesh.visible = false;
@@ -394,16 +403,18 @@ export class TileLayer implements RenderLayer {
    * belt-and-braces (the range is already clamped): `assets.tileUrl` must never
    * be called for a tile the grid does not contain.
    */
-  private beginTile(x: number, y: number): void {
-    if (!isInGrid(x, y, this.map.tilesCountX, this.map.tilesCountY)) return;
-    const key = tileKey(x, y);
-    const entry: TileEntry = { x, y, mesh: null, texture: null, cancel: null };
+  private beginTile(level: number, x: number, y: number): void {
+    const countX = Math.ceil(this.map.tilesCountX / 2 ** level);
+    const countY = Math.ceil(this.map.tilesCountY / 2 ** level);
+    if (!isInGrid(x, y, countX, countY)) return;
+    const key = tileKey(level, x, y);
+    const entry: TileEntry = { level, x, y, mesh: null, texture: null, cancel: null };
     // Cached BEFORE the url is resolved: the entry's mere existence is what stops
     // an empty or failing tile from being requested again on every frame. Such a
     // tile is only retried once it has been evicted and comes back into view.
     this.cache.set(key, entry);
 
-    const url = this.assets.tileUrl(this.map, x, y);
+    const url = this.assets.tileUrl(this.map, x, y, level);
     if (!url) return;
     entry.cancel = this.loader.load(
       url,
@@ -426,7 +437,7 @@ export class TileLayer implements RenderLayer {
   /** Build the quad for a loaded tile and place it in map-pixel space. */
   private attach(entry: TileEntry, texture: Texture): void {
     configureTileTexture(texture);
-    const size = this.tileSize;
+    const size = this.tileSize * 2 ** entry.level;
     const material = new MeshBasicMaterial({
       map: texture,
       transparent: true,

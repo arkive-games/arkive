@@ -7,6 +7,7 @@ import { LayerOrder } from "./renderer.ts";
 import {
   isEmptyTileRange,
   isInGrid,
+  levelForZoom,
   sortTilesFromCentre,
   TileLayer,
   tileKey,
@@ -278,9 +279,9 @@ describe("TileLayer grid + out-of-grid rejection", () => {
     });
     layer.update(camera);
     const calls = (assets.tileUrl as ReturnType<typeof vi.fn>).mock.calls.map(
-      ([, x, y]) => tileKey(x as number, y as number),
+      ([, x, y]) => tileKey(0, x as number, y as number),
     );
-    expect(calls.sort()).toEqual(["0:0", "0:1", "1:0", "1:1"]);
+    expect(calls.sort()).toEqual(["0:0:0", "0:0:1", "0:1:0", "0:1:1"]);
     expect(invalidate).toHaveBeenCalled(); // textures arrived
   });
 
@@ -399,11 +400,11 @@ describe("TileLayer texture creation throttle", () => {
     });
     // The view centre sits on the boundary of tiles 15/16 in both axes, so the
     // four tiles touching the centre are exactly the nearest ones.
-    expect(first.map((t) => tileKey(t.x, t.y)).sort()).toEqual([
-      "15:15",
-      "15:16",
-      "16:15",
-      "16:16",
+    expect(first.map((t) => tileKey(0, t.x, t.y)).sort()).toEqual([
+      "0:15:15",
+      "0:15:16",
+      "0:16:15",
+      "0:16:16",
     ]);
 
     // ...and the next batch is the ring around them, not row 0.
@@ -748,5 +749,91 @@ describe("WatermarkLayer", () => {
     layer.dispose();
     expect(layer.object3D.children).toHaveLength(0);
     expect(loader.loads[0].texture.dispose).toHaveBeenCalled();
+  });
+});
+
+// ----------------------------------------------------------------- pyramid ---
+
+const PYRAMID_MAP: GameMapMeta = {
+  id: "M",
+  name: "M",
+  type: "world",
+  tileWidth: 1024,
+  tileHeight: 1024,
+  tilesCountX: 8,
+  tilesCountY: 8,
+  isVisible: true,
+  tileLevels: 3,
+};
+
+describe("levelForZoom", () => {
+  it("stays at native level near full zoom", () => {
+    expect(levelForZoom(0, 3)).toBe(0);
+    expect(levelForZoom(-0.99, 3)).toBe(0);
+    expect(levelForZoom(1.5, 3)).toBe(0);
+  });
+  it("halves per zoom step out and clamps to the available levels", () => {
+    expect(levelForZoom(-1, 3)).toBe(1);
+    expect(levelForZoom(-2.4, 3)).toBe(2);
+    expect(levelForZoom(-3, 3)).toBe(3);
+    expect(levelForZoom(-4, 3)).toBe(3);
+  });
+  it("is 0 for single-level maps regardless of zoom", () => {
+    expect(levelForZoom(-4, 0)).toBe(0);
+  });
+});
+
+describe("TileLayer pyramid", () => {
+  const makeLayer = (map: GameMapMeta, urls: string[]) =>
+    new TileLayer({
+      map,
+      assets: {
+        tileUrl: (_m, x, y, level = 0) => {
+          const u = `t/${level}/${x}_${y}`;
+          urls.push(u);
+          return u;
+        },
+        markerIconUrl: () => "",
+      },
+      invalidate: () => {},
+      loader: { load: () => () => {} }, // never resolves; we only assert URLs
+      maxNewTilesPerFrame: 99,
+      padTiles: 0,
+    });
+
+  it("requests the single z-3 tile at whole-map zoom", () => {
+    const urls: string[] = [];
+    const layer = makeLayer(PYRAMID_MAP, urls);
+    const camera = new Camera({
+      mapWidthPx: 8192,
+      mapHeightPx: 8192,
+      minZoom: -4,
+      maxZoom: 2,
+      viewportWidth: 400,
+      viewportHeight: 300,
+    });
+    camera.setView({ x: 4096, y: 4096 }, -4);
+    layer.update(camera);
+    expect(urls).toEqual(["t/3/0_0"]);
+    layer.dispose();
+  });
+
+  it("requests level-0 tiles near full zoom and keys the cache per level", () => {
+    const urls: string[] = [];
+    const layer = makeLayer(PYRAMID_MAP, urls);
+    const camera = new Camera({
+      mapWidthPx: 8192,
+      mapHeightPx: 8192,
+      minZoom: -4,
+      maxZoom: 2,
+      viewportWidth: 400,
+      viewportHeight: 300,
+    });
+    camera.setView({ x: 4096, y: 4096 }, 0);
+    layer.update(camera);
+    expect(urls.length).toBeGreaterThan(0);
+    expect(urls.every((u) => u.startsWith("t/0/"))).toBe(true);
+    expect(tileKey(3, 0, 0)).not.toBe(tileKey(0, 0, 0));
+    layer.dispose();
   });
 });
