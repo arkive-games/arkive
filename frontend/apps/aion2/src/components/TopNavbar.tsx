@@ -5,10 +5,16 @@ import { ShellTopBar } from "@gamemap/map-shell";
 import {
   BuildInfo,
   Button,
+  EngineToggle,
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@gamemap/ui";
+import {
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  type MapEngineChoice,
+} from "@/lib/mapEngineChoice";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
@@ -23,7 +29,18 @@ const THEME_OPTIONS: Theme[] = ["auto", "light", "dark"];
 // (the nav tabs 首页/职业BD/… are hidden until those pages are ported).
 const ARCHIVE_URL = "https://archive.tc-imba.com/";
 
-export default function TopNavbar() {
+/**
+ * `engine`/`onEngineChange` are optional because this bar is also the wiki's
+ * (ContentLayout renders it too), and the renderer switcher only means anything
+ * on the map. MapRoute is the only caller that passes them.
+ */
+export default function TopNavbar({
+  engine,
+  onEngineChange,
+}: {
+  engine?: MapEngineChoice;
+  onEngineChange?: (choice: MapEngineChoice) => void;
+} = {}) {
   const { t } = useTranslation(["common", "wiki"]);
   const { theme, setTheme } = useTheme();
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
@@ -87,6 +104,15 @@ export default function TopNavbar() {
       }}
       rightExtras={
         <>
+          {engine && onEngineChange && (
+            <EngineToggle
+              value={engine}
+              choices={MAP_ENGINE_CHOICES}
+              labels={MAP_ENGINE_LABELS}
+              onChange={onEngineChange}
+              label={t("common:menu.switchEngine", "Map renderer")}
+            />
+          )}
           <Popover>
             <PopoverTrigger asChild>
               <Button

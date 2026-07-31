@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearch } from "@tanstack/react-router";
 import {
   GameMapView,
   type EngineMarker,
   type GameMapViewLabels,
   type MapRef,
 } from "@gamemap/map-engine";
+import type { GlMapRef } from "@gamemap/map-engine-gl";
 import {
   ShellLayout,
   SearchPanel,
@@ -36,7 +38,15 @@ import SelectMap from "@/features/map/sidebar/SelectMap";
 import MarkerTypesSection from "@/features/map/sidebar/MarkerTypesSection";
 import TopNavbar from "@/components/TopNavbar";
 import { getQueryParam, parseIconUrl } from "@/lib/url";
+import {
+  resolveMapEngine,
+  useChooseMapEngine,
+  useStoredMapEngine,
+} from "@/lib/mapEngineChoice";
 import { ICP_RECORD, MAP_FLY_TO_DURATION } from "@/lib/constants";
+
+// three.js + earcut are ~1.5 MB that only this route needs — see GlMapView.
+const GlGameMapView = lazy(() => import("@/features/map/GlMapView"));
 
 // Per-map view + selection persistence (center, zoom, selected marker), fed
 // into useMapViewMemory. The storage-free shell hook gets storage through this
@@ -59,6 +69,15 @@ const mapViewStore: MapViewStore = {
 
 export default function MapRoute() {
   const mapRef = useRef<MapRef>(null);
+  // The one prop the two engines do not share: Leaflet hands back an L.Map,
+  // the GL engine a small {getCenter,getZoom,flyTo,project,dispose} handle.
+  const glMapRef = useRef<GlMapRef | null>(null);
+  // A valid `?engine=` wins for this visit; otherwise the stored choice, which
+  // itself defaults to GL. Precedence lives in the shell, not here.
+  const engineParam = useSearch({ from: "/", select: (s) => s.engine });
+  const storedEngine = useStoredMapEngine();
+  const engine = resolveMapEngine(engineParam, storedEngine);
+  const chooseEngine = useChooseMapEngine();
   const appliedDeepLink = useRef(false);
   // Whether the deep link actually navigated somewhere (marker or position) —
   // in that case the stored selection must NOT be restored on top of it.
@@ -110,15 +129,16 @@ export default function MapRoute() {
   const mapId = selectedMap?.id ?? "";
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId);
   // The engine consumes `initialView` at mount only, and the hook memoizes it
-  // per map id — so on the remount caused by a breakpoint switch it would
-  // replay the view from page load (or the whole-map default, if nothing was
-  // stored yet) and throw away wherever the user had panned to. Re-read the
-  // persisted value whenever the layout flips, so the remount lands where the
-  // user actually was.
+  // per map id — so on the remount caused by a breakpoint switch (or by
+  // swapping the renderer, which unmounts one engine and mounts the other) it
+  // would replay the view from page load (or the whole-map default, if nothing
+  // was stored yet) and throw away wherever the user had panned to. Re-read the
+  // persisted value whenever either flips, so the remount lands where the user
+  // actually was.
   const initialViewForMount = useMemo(
     () => readMapView(mapViewStore, mapId).view ?? initialView,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mapId, isMobile],
+    [mapId, isMobile, engine],
   );
   // Marker id restored from storage — passed to the engine so the restore does
   // NOT fly (the restored center wins); a later manual selection flies again.
@@ -310,35 +330,45 @@ export default function MapRoute() {
     saveMarker(selectedMarkerId);
   }, [selectedMarkerId, selectedMap, markersMapId, saveMarker]);
 
+  // Every prop except `mapRef`, so the two engines cannot drift apart. The
+  // engines' prop types are field-for-field identical bar that one ref.
+  const sharedMapProps = {
+    map: selectedMap,
+    markers: engineMarkers,
+    regions,
+    visibleSubtypes,
+    visibleRegions,
+    showLabels,
+    showBorders,
+    lodEnabled,
+    selectedMarkerId,
+    forceShowIds,
+    selectedPosition,
+    initialView: initialViewForMount,
+    onViewChange: saveView,
+    suppressInitialFlyForId: restoredMarkerId,
+    onToggleMarker: handleToggleMarker,
+    subzoneAt,
+    flyToDuration: MAP_FLY_TO_DURATION,
+    assets: aionAssets,
+    theme: aionTheme,
+    labels,
+    renderPopupContent,
+    exposeTestHandle: import.meta.env.DEV,
+  };
+
   // Defined once and rendered by both branches, so the phone and desktop paths
   // can never drift in what they pass to the engine or the search index.
-  const mapView = (
-    <GameMapView
-      mapRef={mapRef}
-      map={selectedMap}
-      markers={engineMarkers}
-      regions={regions}
-      visibleSubtypes={visibleSubtypes}
-      visibleRegions={visibleRegions}
-      showLabels={showLabels}
-      showBorders={showBorders}
-      lodEnabled={lodEnabled}
-      selectedMarkerId={selectedMarkerId}
-      forceShowIds={forceShowIds}
-      selectedPosition={selectedPosition}
-      initialView={initialViewForMount}
-      onViewChange={saveView}
-      suppressInitialFlyForId={restoredMarkerId}
-      onToggleMarker={handleToggleMarker}
-      subzoneAt={subzoneAt}
-      flyToDuration={MAP_FLY_TO_DURATION}
-      assets={aionAssets}
-      theme={aionTheme}
-      labels={labels}
-      renderPopupContent={renderPopupContent}
-      exposeTestHandle={import.meta.env.DEV}
-    />
-  );
+  const mapView =
+    engine === "gl" ? (
+      // No fallback content: the chunk is small and `.gmgl-map-root`'s
+      // background already fills the box, so a spinner would only flash.
+      <Suspense fallback={null}>
+        <GlGameMapView mapRef={glMapRef} {...sharedMapProps} />
+      </Suspense>
+    ) : (
+      <GameMapView mapRef={mapRef} {...sharedMapProps} />
+    );
 
   const searchPanel = (variant: "floating" | "inline") => (
     <SearchPanel
@@ -443,7 +473,7 @@ export default function MapRoute() {
   return (
     <ShellLayout
       className="bg-background text-foreground"
-      topBar={<TopNavbar />}
+      topBar={<TopNavbar engine={engine} onEngineChange={chooseEngine} />}
       sidebar={<Sidebar />}
       rightSidebar={<InfoSidebar />}
     >
