@@ -402,9 +402,9 @@ export interface RecipeCardProps {
  * section. The star / expand actions are only rendered when `fav` / `onSelect`
  * are given.
  *
- * `variant='tile'` is the phone layout: the same recipe as three squares in one
- * line (two with `hideResult`), separators between them, and the badge/actions
- * on a bottom bar.
+ * `variant='tile'` is the phone layout: the same recipe as ALWAYS three squares
+ * in one line (it ignores `hideResult` — see that prop), separators between
+ * them, and the actions in a column to their right.
  */
 export function RecipeCard({
   f,
@@ -444,12 +444,12 @@ export function RecipeCard({
     return (
       <div
         data-testid="breeding-recipe"
-        // The amber frame is the whole "special combo" signal here: a ~2.5rem
+        // The amber frame is the visual "special combo" signal here: a ~2.5rem
         // action column has no room for the pill, and a third item stacked in it
-        // would outgrow the squares and stretch the card. The label still reaches
-        // assistive tech and a long-press.
+        // would outgrow the squares and stretch the card. `title` serves a mouse;
+        // the sr-only span below carries the label for assistive tech, because
+        // `aria-label` on a generic div is not reliably exposed.
         title={f.unique ? uniqueLabel : undefined}
-        aria-label={f.unique ? uniqueLabel : undefined}
         data-unique={f.unique ? '' : undefined}
         className={cn(
           'grid items-center gap-1 rounded-lg border p-1.5 text-sm',
@@ -465,6 +465,7 @@ export function RecipeCard({
         )}
         onClick={onCardClick}
       >
+        {f.unique ? <span className="sr-only">{uniqueLabel}</span> : null}
         {/* Always three squares, even where `hideResult` asks for two: two
             squares stretch to half the row each and dwarf the three-square
             cards above them, so the drill-down sections would change size as

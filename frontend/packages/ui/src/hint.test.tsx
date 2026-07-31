@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { Hint } from "./hint"
@@ -13,22 +13,41 @@ afterEach(cleanup)
  * all, so every test here has to install one. The stub parses the max-width out
  * of the query instead of hard-coding `matches`, so a future change to the
  * breakpoint query cannot make these tests silently assert the wrong side of it.
+ *
+ * `matches` is a getter and the registered listeners are really called on a
+ * width change: `useIsMobile` samples the query once on mount and then only
+ * updates from the `change` event, so a stub that swallowed listeners could
+ * never move the hook off its initial value — which is exactly what a
+ * rotation test needs to exercise.
  */
-function setViewportWidth(width: number) {
+let viewportWidth = 1024
+const mediaListeners = new Set<() => void>()
+
+function installMatchMedia() {
   window.matchMedia = ((query: string) => {
     const max = /max-width:\s*(\d+)px/.exec(query)
     return {
-      matches: max ? width <= Number(max[1]) : false,
+      get matches() {
+        return max ? viewportWidth <= Number(max[1]) : false
+      },
       media: query,
       onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
+      addEventListener: (_: string, cb: () => void) => void mediaListeners.add(cb),
+      removeEventListener: (_: string, cb: () => void) => void mediaListeners.delete(cb),
+      addListener: (cb: () => void) => void mediaListeners.add(cb),
+      removeListener: (cb: () => void) => void mediaListeners.delete(cb),
       dispatchEvent: () => false,
     }
   }) as typeof window.matchMedia
 }
+
+function setViewportWidth(width: number) {
+  viewportWidth = width
+  installMatchMedia()
+  for (const cb of [...mediaListeners]) cb()
+}
+
+afterEach(() => mediaListeners.clear())
 
 const DESKTOP = MOBILE_MAX_WIDTH + 1
 const PHONE = 390
@@ -140,6 +159,62 @@ describe("Hint on mobile", () => {
     fireEvent.click(icon)
     expect(screen.getByTestId("hint-sheet")).toBeTruthy()
     expect(toggled).toBe(1)
+  })
+
+  // A Fragment passes `React.isValidElement`, so it used to take the clone
+  // path — and React drops every prop but key/children when rendering one, which
+  // left the trigger inert: no role, no tab stop, no way to open the sheet.
+  it("gives a fragment child a real trigger instead of cloning it into nothing", () => {
+    setViewportWidth(PHONE)
+    renderHint(
+      <Hint content="Explained." title="Subject">
+        <>
+          <span data-testid="part-a">a</span>
+          <span>b</span>
+        </>
+      </Hint>,
+    )
+    const trigger = screen.getByRole("button")
+    expect(trigger.getAttribute("tabindex")).toBe("0")
+    expect(trigger.contains(screen.getByTestId("part-a"))).toBe(true)
+    fireEvent.click(trigger)
+    expect(screen.getByTestId("hint-sheet")).toBeTruthy()
+  })
+
+  it("does the same for a bare text child", () => {
+    setViewportWidth(PHONE)
+    renderHint(
+      <Hint content="Explained." title="Subject">
+        just text
+      </Hint>,
+    )
+    fireEvent.click(screen.getByRole("button"))
+    expect(screen.getByTestId("hint-sheet")).toBeTruthy()
+  })
+
+  // Rotating a phone crosses the breakpoint (390x844 is 844px wide in
+  // landscape). A surviving open state made the sheet reopen by itself on the
+  // way back to portrait.
+  it("forgets an open sheet when the viewport leaves mobile", () => {
+    setViewportWidth(PHONE)
+    const ui = (
+      <Hint content="Explained." title="Subject">
+        <span data-testid="badge">badge</span>
+      </Hint>
+    )
+    const { rerender } = renderHint(ui)
+    fireEvent.click(screen.getByTestId("badge"))
+    expect(screen.getByTestId("hint-sheet")).toBeTruthy()
+
+    // Rotate to landscape: the desktop branch renders, so no sheet.
+    act(() => setViewportWidth(DESKTOP))
+    rerender(<TooltipProvider delayDuration={0}>{ui}</TooltipProvider>)
+    expect(screen.queryByTestId("hint-sheet")).toBeNull()
+
+    // Back to portrait — it must NOT come back on its own.
+    act(() => setViewportWidth(PHONE))
+    rerender(<TooltipProvider delayDuration={0}>{ui}</TooltipProvider>)
+    expect(screen.queryByTestId("hint-sheet")).toBeNull()
   })
 
   it("falls back to an sr-only heading built from the injected srTitle", () => {

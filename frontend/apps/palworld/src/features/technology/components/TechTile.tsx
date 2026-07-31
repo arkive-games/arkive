@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   cn,
@@ -39,6 +39,12 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
   const { t } = useTranslation()
   const isMobile = useIsMobile()
   const [sheetOpen, setSheetOpen] = useState(false)
+  // Rotating a phone crosses the mobile breakpoint (390x844 is 844px wide in
+  // landscape), and a surviving open state would reopen the sheet by itself on
+  // the way back to portrait.
+  useEffect(() => {
+    if (!isMobile) setSheetOpen(false)
+  }, [isMobile])
   const ancient = tech.isBoss
   const type = techType(tech)
   const name = resolvers.name(tech)

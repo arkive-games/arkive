@@ -301,7 +301,11 @@ export default function PassivesPage() {
                       ))}
                     </div>
                   ) : null}
-                  {r.categories.length || r.mutation || r.rareRoll ? (
+                  {/* `r.invoke.length` belongs in this guard: the branch below
+                      renders the same invoke badges WITHOUT their hint, so a
+                      passive whose only badge is an invoke scope lost the
+                      explanation entirely. */}
+                  {r.categories.length || r.mutation || r.rareRoll || r.invoke.length ? (
                     <div className="flex flex-wrap gap-1">
                       {r.mutation ? (
                         <Hint
@@ -353,17 +357,6 @@ export default function PassivesPage() {
                           </span>
                         </Hint>
                       ) : null}
-                    </div>
-                  ) : r.invoke.length ? (
-                    <div className="flex flex-wrap gap-1">
-                      {r.invoke.map((scope) => (
-                        <span
-                          key={scope}
-                          className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 ring-1 ring-inset ring-amber-500/30 dark:text-amber-300"
-                        >
-                          {t(`passive.invoke.${scope}`, { defaultValue: scope })}
-                        </span>
-                      ))}
                     </div>
                   ) : null}
                 </div>

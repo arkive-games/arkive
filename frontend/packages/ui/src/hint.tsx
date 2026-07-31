@@ -108,10 +108,26 @@ export function Hint({
   const isMobile = useIsMobile()
   const [open, setOpen] = React.useState(false)
 
+  // Drop the open state when the viewport leaves mobile, or it survives the
+  // trip and reopens on the way back: rotating a phone crosses this breakpoint
+  // (a 390x844 handset is 844px wide in landscape), so the sheet would pop up
+  // again by itself after a rotate out and back. Declared before the early
+  // return below so the hook order never changes.
+  React.useEffect(() => {
+    if (!isMobile) setOpen(false)
+  }, [isMobile])
+
+  // Both breakpoints need a single real element to attach to: Radix `asChild`
+  // throws on a string or an array, and a Fragment — which passes
+  // `isValidElement` — silently drops any prop but `key`/`children` at render,
+  // so cloning one yields an inert trigger. Anything else gets a plain span.
+  const canAttach = React.isValidElement(children) && children.type !== React.Fragment
+  const wrapped = canAttach ? children : <span className="inline-flex">{children}</span>
+
   if (!isMobile) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipTrigger asChild>{wrapped}</TooltipTrigger>
         <TooltipContent
           className={contentClassName}
           side={side}
@@ -156,7 +172,7 @@ export function Hint({
         </button>
       </span>
     )
-  } else if (React.isValidElement(children)) {
+  } else if (canAttach) {
     // Clone rather than wrap so the trigger's own layout/`data-testid` survive
     // untouched — the same contract `TooltipTrigger asChild` has on desktop.
     const child = children as React.ReactElement<TriggerProps>
