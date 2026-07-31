@@ -26,7 +26,14 @@ export default function App() {
         rightExtras={
           <>
             <ThemeToggle labels={{ auto: t('theme.auto'), light: t('theme.light'), dark: t('theme.dark') }} />
-            <BuildInfo commit={__BUILD_GIT_COMMIT__} buildTime={__BUILD_TIME__} dev={import.meta.env.DEV} />
+            {/* No repo inside a toy: the hovercard's commit link leaves
+                bilibili.com, so there the hash is plain text. */}
+            <BuildInfo
+              commit={__BUILD_GIT_COMMIT__}
+              buildTime={__BUILD_TIME__}
+              dev={import.meta.env.DEV}
+              repoUrl={IS_TOY ? null : undefined}
+            />
           </>
         }
       />
@@ -75,8 +82,8 @@ export default function App() {
           bilibili.com, and the ICP record describes OUR hosting — it says
           nothing about a page served by Bilibili, so displaying it there is
           simply wrong. The toy therefore keeps the same footer band as plain
-          text. BuildInfo stays in both builds: its only link is a commit page
-          tucked inside a hovercard, same as the live palworld toy ships. */}
+          text. BuildInfo stays in both builds, but with no repo in a toy so its
+          commit hash is plain text rather than a link off the platform. */}
       {IS_TOY ? (
         <footer className="border-t border-border px-4 py-4 text-center text-xs text-muted-foreground">
           {t('brand')} © 2025-2026

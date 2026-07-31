@@ -16,7 +16,12 @@ export interface VersionHistoryProps {
   /** Injectable labels so the package stays i18n-free. */
   labels?: VersionHistoryLabels
   /** Repository the version links point into. Defaults to the monorepo. */
-  repoUrl?: string
+  /**
+   * Repository the version / commit links point at. Defaults to the monorepo.
+   * Pass `null` to render both as plain text — a build with no route to the
+   * public web (a Bilibili toy) would otherwise fill the page with dead links.
+   */
+  repoUrl?: string | null
   className?: string
 }
 
@@ -86,28 +91,40 @@ function VersionHistory({
           />
           <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
             {/* Links to the compare range against the previous release — which is
-                the NEXT array element, since entries run newest-first. */}
+                the NEXT array element, since entries run newest-first. With no
+                repo (a Bilibili toy, which cannot reach GitHub) the version and
+                hash stay as plain text rather than becoming dead links. */}
             <h2 className="font-mono text-lg font-semibold">
-              <a
-                href={versionUrl(repoUrl, entry, entries[i + 1])}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline-offset-4 hover:underline"
-              >
-                v{entry.version}
-              </a>
+              {repoUrl ? (
+                <a
+                  href={versionUrl(repoUrl, entry, entries[i + 1])}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  v{entry.version}
+                </a>
+              ) : (
+                <>v{entry.version}</>
+              )}
             </h2>
             <time dateTime={entry.date} className="text-sm text-muted-foreground">
               {entry.date}
             </time>
-            <a
-              href={`${repoUrl.replace(/\/$/, "")}/commit/${entry.commit}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              {entry.commit.slice(0, 7)}
-            </a>
+            {repoUrl ? (
+              <a
+                href={`${repoUrl.replace(/\/$/, "")}/commit/${entry.commit}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                {entry.commit.slice(0, 7)}
+              </a>
+            ) : (
+              <span className="font-mono text-xs text-muted-foreground">
+                {entry.commit.slice(0, 7)}
+              </span>
+            )}
             {i === 0 && labels?.current ? (
               <span
                 data-testid="changelog-current"

@@ -23,9 +23,11 @@ export interface BuildInfoProps {
   defaultOpen?: boolean
   /**
    * Repository the commit link inside the hovercard points at. Defaults to the
-   * monorepo. The icon trigger itself does not navigate anywhere.
+   * monorepo. The icon trigger itself does not navigate anywhere. Pass `null`
+   * to render the hash as plain text — a build with no route to the public web
+   * (a Bilibili toy) would otherwise show a dead link.
    */
-  repoUrl?: string
+  repoUrl?: string | null
   /** Injectable labels so apps can localize; the package stays i18n-free. */
   labels?: {
     commit?: string
@@ -108,7 +110,7 @@ function BuildInfo({
           )}
           <dt className="text-muted-foreground">{labels?.commit ?? "Commit"}</dt>
           <dd>
-            {dev ? (
+            {dev || !repoUrl ? (
               <span className="font-mono">{displayCommit}</span>
             ) : (
               <a

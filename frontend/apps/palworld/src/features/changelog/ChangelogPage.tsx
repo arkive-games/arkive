@@ -4,6 +4,7 @@ import { VersionHistory, resolveChangelog } from '@gamemap/ui'
 
 import { ContentPage } from '../../components/ContentPage'
 import { changelog } from '../../lib/siteVersion'
+import { REPO_URL } from '../../lib/brand'
 
 export default function ChangelogPage() {
   const { t, i18n } = useTranslation()
@@ -14,6 +15,9 @@ export default function ChangelogPage() {
     <ContentPage active="/changelog" title={t('changelog.title')} heading>
       <VersionHistory
         entries={entries}
+        // null in a toy build: versions and hashes render as plain text rather
+        // than one dead GitHub link per release.
+        repoUrl={REPO_URL}
         labels={{
           current: t('changelog.current'),
           empty: t('changelog.empty'),

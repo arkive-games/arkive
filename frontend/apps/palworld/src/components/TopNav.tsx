@@ -4,7 +4,7 @@ import { Info } from 'lucide-react'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
 import { BuildInfo, Button, EngineToggle, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
-import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
+import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL, REPO_URL } from '../lib/brand'
 import { getGameVersion } from '../lib/urls'
 import { SITE_VERSION } from '../lib/siteVersion'
 import {
@@ -156,6 +156,9 @@ export function TopNav({ active, engine, onEngineChange }: {
             buildTime={__BUILD_TIME__}
             dev={import.meta.env.DEV}
             gameVersion={getGameVersion()}
+            // null in a toy build: the hash then renders as plain text instead
+            // of a GitHub link the page can't reach.
+            repoUrl={REPO_URL}
             siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
             // Every row label is injected: the package's own defaults are
             // English-only, so an unlabelled row stayed English next to the

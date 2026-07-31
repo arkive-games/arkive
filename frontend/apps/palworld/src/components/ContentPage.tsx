@@ -5,6 +5,12 @@ import { SlidersHorizontal } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle, cn, useIsMobile, SiteFooter } from '@gamemap/ui'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
+import {
+  ARKIVE_HOME_LINK_PROPS,
+  ARKIVE_HOME_URL,
+  GITHUB_ORG_URL,
+  ICP_BEIAN,
+} from '../lib/brand'
 
 export interface ContentPageProps {
   /** Active nav key, drives desktop top-nav highlight + is used by tests. */
@@ -130,11 +136,15 @@ export function ContentPage({
               {children}
             </div>
             {/* On mobile the footer (last scroll element) clears the fixed bottom tab bar. */}
+            {/* Every outbound link goes through lib/brand, so a toy build points
+                the brand at the sibling portal toy and drops the links it cannot
+                reach — rather than falling back to the public-web defaults. */}
             <SiteFooter
               className="pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-4"
-              homeUrl={import.meta.env.VITE_HOME_URL}
-              githubUrl={import.meta.env.VITE_GITHUB_URL}
-              icpBeian={import.meta.env.VITE_ICP_BEIAN}
+              homeUrl={ARKIVE_HOME_URL}
+              homeLinkProps={ARKIVE_HOME_LINK_PROPS}
+              githubUrl={GITHUB_ORG_URL}
+              icpBeian={ICP_BEIAN}
               versionLink={<Link to="/changelog">v{SITE_VERSION}</Link>}
             />
           </div>

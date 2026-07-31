@@ -7,10 +7,24 @@ import { cn } from "./utils"
 export interface SiteFooterProps extends React.ComponentProps<"footer"> {
   /** Main-site link for the brand name. Wire to VITE_HOME_URL in each app. */
   homeUrl?: string
-  /** GitHub organization link. Wire to VITE_GITHUB_URL in each app. */
-  githubUrl?: string
-  /** ICP filing record (China). Wire to VITE_ICP_BEIAN in each app. */
-  icpBeian?: string
+  /**
+   * Extra attributes for the brand link, spread last so it can clear the
+   * new-tab default: a same-origin target (a sibling Bilibili toy) should
+   * navigate in place, so that app passes `{ target: undefined, rel: undefined }`.
+   */
+  homeLinkProps?: React.ComponentProps<"a">
+  /**
+   * GitHub organization link. Wire to VITE_GITHUB_URL in each app. Pass `null`
+   * to omit the link — a build that cannot reach the public web (a Bilibili
+   * toy) must not render a dead icon.
+   */
+  githubUrl?: string | null
+  /**
+   * ICP filing record (China). Wire to VITE_ICP_BEIAN in each app. Pass `null`
+   * to omit it: the filing describes OUR hosting, so showing it on a page
+   * served by somebody else is simply wrong.
+   */
+  icpBeian?: string | null
   /**
    * Site version link, e.g. `<Link to="/changelog">v1.8.0</Link>`. A slot rather
    * than an href so each app supplies its own router link (client-side nav).
@@ -20,6 +34,7 @@ export interface SiteFooterProps extends React.ComponentProps<"footer"> {
 
 function SiteFooter({
   homeUrl = "https://tc-imba.com",
+  homeLinkProps,
   githubUrl = "https://github.com/arkive-games",
   icpBeian = "沪ICP备2025152827号-1",
   versionLink,
@@ -44,7 +59,9 @@ function SiteFooter({
             href={homeUrl}
             target="_blank"
             rel="noopener noreferrer"
+            data-testid="site-footer-home"
             className="font-medium underline-offset-4 hover:text-foreground hover:underline"
+            {...homeLinkProps}
           >
             Arkive Games (藏舟攻略网)
           </a>
@@ -58,23 +75,29 @@ function SiteFooter({
             {versionLink}
           </span>
         ) : null}
-        <a
-          href={githubUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="GitHub"
-          className="hover:text-foreground"
-        >
-          <GitHubIcon className="size-4" />
-        </a>
-        <a
-          href="https://beian.miit.gov.cn/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline-offset-4 hover:text-foreground hover:underline"
-        >
-          {icpBeian}
-        </a>
+        {githubUrl ? (
+          <a
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            data-testid="site-footer-github"
+            className="hover:text-foreground"
+          >
+            <GitHubIcon className="size-4" />
+          </a>
+        ) : null}
+        {icpBeian ? (
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="site-footer-icp"
+            className="underline-offset-4 hover:text-foreground hover:underline"
+          >
+            {icpBeian}
+          </a>
+        ) : null}
       </div>
     </footer>
   )
