@@ -120,7 +120,8 @@ export function TopNav({ active, engine, onEngineChange }: {
         languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
         current: lng,
         onChange: (code) => void i18n.changeLanguage(code),
-        menuLabel: 'language',
+        // Reaches the trigger as aria-label + title, so it must be translated.
+        menuLabel: t('settings.language'),
       }}
       rightExtras={
         <>
@@ -156,7 +157,16 @@ export function TopNav({ active, engine, onEngineChange }: {
             dev={import.meta.env.DEV}
             gameVersion={getGameVersion()}
             siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
-            labels={{ siteVersion: t('changelog.title') }}
+            // Every row label is injected: the package's own defaults are
+            // English-only, so an unlabelled row stayed English next to the
+            // translated version row.
+            labels={{
+              siteVersion: t('changelog.title'),
+              commit: t('build.commit'),
+              buildTime: t('build.time'),
+              gameVersion: t('build.game'),
+              repo: t('build.info'),
+            }}
           />
         </>
       }

@@ -66,6 +66,45 @@ export const SETTINGS_THEME_LABELS: Record<Language, string> = {
   'zh-CN': '主题', 'zh-TW': '主題',
 }
 
+/**
+ * Top-bar build badge (`BuildInfo`) labels. The package ships English defaults
+ * for these rows, so without injection the hovercard stayed English in all 17
+ * locales while the version row next to it was translated.
+ */
+export const BUILD_INFO_LABELS: Record<Language, string> = {
+  'en-US': 'Build info', 'de-DE': 'Build-Infos', 'es-ES': 'Información de compilación',
+  'es-MX': 'Información de compilación', 'fr-FR': 'Infos de build', 'id-ID': 'Info build',
+  'it-IT': 'Info build', 'ja-JP': 'ビルド情報', 'ko-KR': '빌드 정보',
+  'pl-PL': 'Informacje o kompilacji', 'pt-BR': 'Informações da compilação',
+  'ru-RU': 'Информация о сборке', 'th-TH': 'ข้อมูลบิลด์', 'tr-TR': 'Derleme bilgisi',
+  'vi-VN': 'Thông tin bản dựng', 'zh-CN': '构建信息', 'zh-TW': '建置資訊',
+}
+
+/** Git commit of the build. */
+export const BUILD_COMMIT_LABELS: Record<Language, string> = {
+  'en-US': 'Commit', 'de-DE': 'Commit', 'es-ES': 'Commit', 'es-MX': 'Commit', 'fr-FR': 'Commit',
+  'id-ID': 'Commit', 'it-IT': 'Commit', 'ja-JP': 'コミット', 'ko-KR': '커밋', 'pl-PL': 'Commit',
+  'pt-BR': 'Commit', 'ru-RU': 'Коммит', 'th-TH': 'คอมมิต', 'tr-TR': 'Commit', 'vi-VN': 'Commit',
+  'zh-CN': '提交', 'zh-TW': '提交',
+}
+
+/** When the site was built. */
+export const BUILD_TIME_LABELS: Record<Language, string> = {
+  'en-US': 'Built', 'de-DE': 'Erstellt', 'es-ES': 'Compilado', 'es-MX': 'Compilado',
+  'fr-FR': 'Compilé', 'id-ID': 'Dibangun', 'it-IT': 'Compilato', 'ja-JP': 'ビルド日時',
+  'ko-KR': '빌드', 'pl-PL': 'Zbudowano', 'pt-BR': 'Compilado', 'ru-RU': 'Сборка',
+  'th-TH': 'บิลด์เมื่อ', 'tr-TR': 'Derleme', 'vi-VN': 'Bản dựng', 'zh-CN': '构建时间',
+  'zh-TW': '建置時間',
+}
+
+/** Game version the site's data was extracted from. */
+export const BUILD_GAME_LABELS: Record<Language, string> = {
+  'en-US': 'Game', 'de-DE': 'Spiel', 'es-ES': 'Juego', 'es-MX': 'Juego', 'fr-FR': 'Jeu',
+  'id-ID': 'Game', 'it-IT': 'Gioco', 'ja-JP': 'ゲーム', 'ko-KR': '게임', 'pl-PL': 'Gra',
+  'pt-BR': 'Jogo', 'ru-RU': 'Игра', 'th-TH': 'เกม', 'tr-TR': 'Oyun', 'vi-VN': 'Game',
+  'zh-CN': '游戏版本', 'zh-TW': '遊戲版本',
+}
+
 /** Back button on the mobile sheet's sub-pages. */
 export const SETTINGS_BACK_LABELS: Record<Language, string> = {
   'en-US': 'Back', 'de-DE': 'Zurück', 'es-ES': 'Atrás', 'es-MX': 'Atrás', 'fr-FR': 'Retour',
