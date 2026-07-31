@@ -52,6 +52,14 @@
             "zh-CN": "手机端也能切换地图渲染引擎了，入口在「更多」面板中——此前只有桌面端顶栏可以切换。",
             "zh-TW": "手機端也能切換地圖渲染引擎了，入口在「更多」面板中——此前只有桌面端頂欄可以切換。"
           }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Navigation and section headings now read a step larger than body text, and the top bar keeps its controls reachable on narrower windows.",
+            "zh-CN": "顶栏导航与小节标题的字号提升到正文之上；窗口较窄时顶栏右侧的按钮不再被挤出屏幕。",
+            "zh-TW": "頂欄導覽與小節標題的字號提升到正文之上；視窗較窄時頂欄右側的按鈕不再被擠出螢幕。"
+          }
         }
       ]
     },

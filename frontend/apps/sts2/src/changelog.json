@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.0",
+      "date": "2026-08-01",
+      "commit": "dc1c893180e14efd24cd7a93f70d9787dee8a38a",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Navigation and section headings now read a step larger than body text, matching the other Arkive sites.",
+            "zh-CN": "顶栏导航与小节标题的字号提升到正文之上，与其他藏舟站点保持一致。",
+            "zh-TW": "頂欄導覽與小節標題的字號提升到正文之上，與其他藏舟站點保持一致。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.1.0",
       "date": "2026-07-30",
       "commit": "72dd927bffc76f2f281b887c128acb72ed9f209a",

@@ -1,6 +1,37 @@
 {
   "entries": [
     {
+      "version": "1.23.0",
+      "date": "2026-08-01",
+      "commit": "dc1c893180e14efd24cd7a93f70d9787dee8a38a",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Navigation and section headings now read a step larger than body text, and the site name in the top bar matches the other Arkive sites.",
+            "zh-CN": "顶栏导航与小节标题的字号提升到正文之上，顶栏站点名也与其他藏舟站点统一。",
+            "zh-TW": "頂欄導覽與小節標題的字號提升到正文之上，頂欄站點名也與其他藏舟站點統一。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "On phones, multi-generation breeding chains now use the same A + B = C square layout as the Recipes tab, with a +N badge to reveal the other partners for a step.",
+            "zh-CN": "手机端的多世代配种链改用与「配方」页一致的 A + B = C 方格布局，每一步可点 +N 展开其余可选伙伴。",
+            "zh-TW": "手機端的多世代配種鏈改用與「配方」頁一致的 A + B = C 方格佈局，每一步可點 +N 展開其餘可選夥伴。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed a crash on the breeding page and others when the browser's page translation was active.",
+            "zh-CN": "修复浏览器网页翻译开启时，配种页等页面崩溃的问题。",
+            "zh-TW": "修復瀏覽器網頁翻譯開啟時，配種頁等頁面崩潰的問題。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.22.3",
       "date": "2026-08-01",
       "commit": "229e54cbd0eabf87bb1294c5dc4123a934ffc012",
