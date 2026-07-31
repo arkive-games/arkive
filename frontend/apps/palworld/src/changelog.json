@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.21.1",
+      "date": "2026-07-31",
+      "commit": "1f95b2947adf585c1877a96c5c4e2a4f97474ef7",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed the page reloading itself on iPhone/iPad when opening a pal's detail page — map views now use a fraction of the memory.",
+            "zh-CN": "修复 iPhone/iPad 打开帕鲁详情页时页面自动刷新的问题——地图视图的内存占用大幅降低。",
+            "zh-TW": "修復 iPhone/iPad 開啟帕魯詳情頁時頁面自動重新整理的問題——地圖視圖的記憶體佔用大幅降低。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.21.0",
       "date": "2026-07-31",
       "commit": "1640ac33bcd971ed50d03dbaace8c7d8c05b3eff",
