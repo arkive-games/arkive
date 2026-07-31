@@ -1,6 +1,53 @@
 {
   "entries": [
     {
+      "version": "1.21.0",
+      "date": "2026-07-31",
+      "commit": "fdcb7f14b2cf20b0b48cf264ca8dd8bc8910f4da",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Reworked the phone layout: the bottom tabs now lead with Map, Breeding, Technology and Items, and the More sheet reaches every page on the site.",
+            "zh-CN": "重做手机版布局：底部标签栏改为地图、配种、科技、道具，「更多」面板可进入站内所有页面。",
+            "zh-TW": "重做手機版佈局：底部標籤欄改為地圖、配種、科技、道具，「更多」面板可進入站內所有頁面。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "On phones, list-page filters moved into a filter button in the page header, with a dot when a filter is active.",
+            "zh-CN": "手机端列表页的筛选条件收进页头的筛选按钮中，有筛选生效时按钮会显示小圆点。",
+            "zh-TW": "手機端列表頁的篩選條件收進頁首的篩選按鈕中，有篩選生效時按鈕會顯示小圓點。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Phone settings are easier to read: the language picker is one row that opens its own page, the theme is a three-way switch, and text is slightly larger throughout.",
+            "zh-CN": "手机端设置更易读：语言改为单行入口并展开独立页面，主题改为三选开关，整体文字略微放大。",
+            "zh-TW": "手機端設定更易讀：語言改為單行入口並展開獨立頁面，主題改為三選開關，整體文字略微放大。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The header and the about panel now link to the Arkive hub, where the other game sites live.",
+            "zh-CN": "页头与「关于」面板新增藏舟攻略网入口，可前往其他游戏站点。",
+            "zh-TW": "頁首與「關於」面板新增藏舟攻略網入口，可前往其他遊戲站點。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed the map selector being untappable inside the phone filter sheet, and the build badge in the top bar no longer navigates away.",
+            "zh-CN": "修复手机端筛选面板内地图选择器无法点击的问题；顶栏的版本徽标不再跳转外部页面。",
+            "zh-TW": "修復手機端篩選面板內地圖選擇器無法點擊的問題；頂欄的版本徽標不再跳轉外部頁面。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.20.1",
       "date": "2026-07-30",
       "commit": "e410a83a8f7ef3bda486310c551e5eb353bd13a6",
