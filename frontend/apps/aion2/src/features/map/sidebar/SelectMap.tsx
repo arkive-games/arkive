@@ -8,7 +8,10 @@ export default function SelectMap() {
 
   return (
     <ShellMapSelect
-      classNames={{ wrapper: "mt-5" }}
+      // max-md:pr-8: on phones this sits in the filter sheet's header, whose
+      // close button is absolutely positioned in that top-right corner — keep
+      // the full-width trigger (and its chevron) out from under it.
+      classNames={{ wrapper: "mt-5 max-md:pr-8" }}
       maps={maps.map((m) => ({ id: m.name, label: t(`maps:${m.name}.name`, m.name) }))}
       activeMapId={selectedMap?.name ?? ""}
       onSelectMap={(id) => setSelectedMap(maps.find((m) => m.name === id))}

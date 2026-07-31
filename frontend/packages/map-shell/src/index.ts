@@ -17,7 +17,7 @@ export {
   type FilterControl,
 } from "./FilterPanel"
 export { deriveEyeState, syncExpanded, type EyeState } from "./filter-logic"
-export { ShellMapSelect, type ShellMapSelectProps } from "./ShellMapSelect"
+export { ShellMapSelect, type ShellMapOption, type ShellMapSelectProps } from "./ShellMapSelect"
 export { IdLabel, type IdLabelValue, type IdLabelProps } from "./IdLabel"
 export { MarkerPopupCard, type MarkerPopupCardProps } from "./MarkerPopupCard"
 export { SearchPanel, type SearchPanelProps, type SearchItem, type SearchPanelLabels } from "./SearchPanel"

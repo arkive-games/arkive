@@ -704,19 +704,21 @@ export default function App() {
 
   const mapSelect = (
     <ShellMapSelect
-      classNames={{ wrapper: 'mb-3' }}
+      // max-md:pr-8: on phones this same element is the filter sheet's header,
+      // whose close button is absolutely positioned in that top-right corner —
+      // keep the full-width trigger (and its chevron) out from under it.
+      classNames={{ wrapper: 'mb-3 max-md:pr-8' }}
       maps={staticData.maps.map((m) => ({
         id: m.id,
         label: staticData.mapsL10n[m.id]?.shortName ?? staticData.mapsL10n[m.id]?.name ?? m.id,
+        // The top pyramid level is a single tile covering the whole map, so it
+        // doubles as a ready-made thumbnail — and the active map's copy is
+        // already in the browser cache, since that is the level the renderer
+        // draws when zoomed out.
+        icon: <img src={palworldAssets.tileUrl(m, 0, 0, m.tileLevels)} alt="" loading="lazy" />,
       }))}
       activeMapId={mapId}
       onSelectMap={setMapId}
-      barStyle={{
-        background:
-          'linear-gradient(90deg, rgba(53,208,232,0) 0%, rgba(53,208,232,0.35) 54%, rgba(53,208,232,0) 100%)',
-        borderImage:
-          'linear-gradient(90deg, rgba(53,208,232,0), rgba(53,208,232,0.9), rgba(53,208,232,0)) 1',
-      }}
     />
   )
 

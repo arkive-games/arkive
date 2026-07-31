@@ -29,4 +29,33 @@ describe("ShellMapSelect", () => {
     )
     expect(getByTestId("map-select").textContent).toContain("Select a map")
   })
+
+  it("shows the active map's leading glyph in the trigger", () => {
+    const withIcons = maps.map((m) => ({
+      ...m,
+      icon: <img src={`/${m.id}.webp`} alt="" />,
+    }))
+    const { getByTestId } = render(
+      <ShellMapSelect maps={withIcons} activeMapId="asmodae" onSelectMap={vi.fn()} />,
+    )
+    const icons = getByTestId("map-select").querySelectorAll("img")
+    // Only the active map's glyph — the others live in the listbox, which Radix
+    // mounts on open.
+    expect(icons).toHaveLength(1)
+    expect(icons[0].getAttribute("src")).toBe("/asmodae.webp")
+  })
+
+  it("ignores the deprecated barStyle instead of reviving the gradient band", () => {
+    const { container } = render(
+      <ShellMapSelect
+        maps={maps}
+        activeMapId="asmodae"
+        onSelectMap={vi.fn()}
+        barStyle={{ background: "red" }}
+        classNames={{ bar: "should-not-render" }}
+      />,
+    )
+    expect(container.querySelector("[style*='red']")).toBeNull()
+    expect(container.querySelector(".should-not-render")).toBeNull()
+  })
 })
