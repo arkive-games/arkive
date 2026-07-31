@@ -57,20 +57,25 @@ export default function TopNavbar({
         right: "text-[#3D3D3D] dark:text-white/85",
       }}
       leftSlot={
-        <div data-testid="desktop-topbar" className="flex items-center gap-6">
+        <div data-testid="desktop-topbar" className="flex min-w-0 items-center gap-6">
           <Link
             to="/"
-            className="text-lg font-bold tracking-tight text-[#2E97FF] select-none"
+            className="shrink-0 text-lg font-bold tracking-tight text-[#2E97FF] select-none"
           >
             AION2
           </Link>
           <Link
             to="/wiki"
-            className="text-sm text-foreground/80 hover:text-foreground"
+            className="shrink-0 text-lg text-foreground/80 hover:text-foreground"
           >
             {t("wiki:nav.wiki")}
           </Link>
-          <div className="text-sm text-[#3D3D3D] dark:text-white/80">
+          {/* Stays at text-sm: this is an auxiliary notice, not navigation, and
+              it is the longest string in the bar. `min-w-0 truncate` is what
+              keeps it on one line — the bar is a fixed h-12 with no
+              overflow-hidden, so without them a wrap renders a second line
+              outside the bar background and over the page beneath. */}
+          <div className="min-w-0 truncate text-sm text-[#3D3D3D] dark:text-white/80">
             已更新第四赛季新地图，全新版本重制中，旧版入口：
             <a
               href={ARCHIVE_URL}

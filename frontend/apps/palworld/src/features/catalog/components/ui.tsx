@@ -25,7 +25,7 @@ export function CatalogSection({
       )}
       data-testid={testId}
     >
-      {title ? <h2 className="mb-3 text-sm font-semibold">{title}</h2> : null}
+      {title ? <h2 className="mb-3 text-lg font-semibold">{title}</h2> : null}
       {children}
     </section>
   )

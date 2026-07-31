@@ -32,7 +32,8 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      // Inherited body size before, so a card's title matched its own body copy.
+      className={cn("text-lg leading-none font-semibold", className)}
       {...props}
     />
   )

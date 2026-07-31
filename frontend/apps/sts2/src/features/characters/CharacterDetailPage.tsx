@@ -84,7 +84,7 @@ export default function CharacterDetailPage() {
 
           {text?.cardsModifierTitle || text?.cardsModifierDescription ? (
             <section className="rounded-lg border border-border bg-card p-4">
-              <h2 className="mb-1 text-sm font-semibold">{text.cardsModifierTitle ?? t('character.cardsModifier')}</h2>
+              <h2 className="mb-1 text-lg font-semibold">{text.cardsModifierTitle ?? t('character.cardsModifier')}</h2>
               {text.cardsModifierDescription ? (
                 <p className="text-sm text-muted-foreground">{text.cardsModifierDescription}</p>
               ) : null}

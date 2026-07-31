@@ -102,7 +102,7 @@ export function TopNav({ active, engine, onEngineChange }: {
           data-testid="brand-link"
           aria-label={t('brandHome')}
           title={t('brandHome')}
-          className="hidden shrink-0 items-center whitespace-nowrap text-sm font-bold tracking-tight text-foreground transition-colors hover:text-primary lg:inline-flex"
+          className="hidden shrink-0 items-center whitespace-nowrap text-lg font-bold tracking-tight text-foreground transition-colors hover:text-primary lg:inline-flex"
         >
           {t('brand')}
         </a>

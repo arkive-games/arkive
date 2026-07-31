@@ -76,7 +76,9 @@ export function SiteInfoPanel({ sections, feedbackGroup, className }: SiteInfoPa
       {sections.map((section, i) => (
         <div key={i} className="flex flex-col gap-1">
           {section.title && (
-            <div className="text-sm font-semibold text-foreground">{section.title}</div>
+            // text-lg over text-sm body: at text-sm it was the same size as the
+            // prose beneath it, so the section had no visible heading at all.
+            <div className="text-lg font-semibold text-foreground">{section.title}</div>
           )}
           {/* text-sm, not the text-xs floor: this is prose meant to be read, in
               a 320px column. Hosts that wrap their body in Tailwind Typography

@@ -36,7 +36,7 @@ export function WikiCard({
       className="rounded-md border border-border bg-card p-4 text-card-foreground shadow-sm"
       data-testid={testId}
     >
-      <h2 className="mb-3 text-sm font-semibold">{title}</h2>
+      <h2 className="mb-3 text-lg font-semibold">{title}</h2>
       {children}
     </section>
   );

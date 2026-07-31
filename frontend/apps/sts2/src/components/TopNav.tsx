@@ -22,7 +22,7 @@ export function TopNav({ active }: { active: NavKey }) {
     <ShellTopBar
       classNames={{ root: 'border-b border-border bg-card' }}
       leftSlot={
-        <Link to="/" className="text-base font-bold tracking-tight text-primary">
+        <Link to="/" className="text-lg font-bold tracking-tight text-primary">
           {t('siteTitle')}
         </Link>
       }

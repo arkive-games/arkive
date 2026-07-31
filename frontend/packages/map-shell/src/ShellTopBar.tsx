@@ -74,7 +74,12 @@ export function ShellTopBar({
   return (
     <header className={cn("flex h-12 shrink-0 items-center gap-6 px-4", classNames?.root)}>
       {(leftSlot || nav) && (
-        <div className={cn("flex items-center gap-6", classNames?.left)}>
+        // `min-w-0` so this side can actually yield: without it the wrapper
+        // refuses to shrink below its content, so a long left slot pushes the
+        // right-hand controls clean off the viewport instead of letting its own
+        // `truncate` engage. aion2's notice did exactly that — six icons,
+        // search included, sat past the right edge between 768 and ~1000px.
+        <div className={cn("flex min-w-0 items-center gap-6", classNames?.left)}>
           {leftSlot}
           {nav?.items.map((item) =>
             item.children && item.children.length > 0 ? (
@@ -87,7 +92,9 @@ export function ShellTopBar({
           )}
         </div>
       )}
-      <div className={cn("ml-auto flex items-center gap-1", classNames?.right)}>
+      {/* `shrink-0`: the controls are icon-sized already and must stay reachable,
+          so pressure goes to the left slot, which can truncate. */}
+      <div className={cn("ml-auto flex shrink-0 items-center gap-1", classNames?.right)}>
         {search}
         {languageSwitcher && (
           <DropdownMenu>
@@ -151,10 +158,18 @@ export function ShellTopBar({
   )
 }
 
-/** Base + active/inactive classes for a top-bar nav item (link or dropdown trigger). */
+/**
+ * Base + active/inactive classes for a top-bar nav item (link or dropdown trigger).
+ *
+ * `text-lg`, deliberately a step ABOVE body text: navigation is chrome the eye
+ * should find first, and it used to be `text-sm` — a step BELOW the prose it sat
+ * above, which read as an afterthought. The bar's `h-12` is 3rem = 51px at the
+ * 17px root, so a 1.125rem line box (28.9px) still clears it with room to spare;
+ * the pressure from this change is horizontal, not vertical.
+ */
 function navItemClass(active: boolean | undefined, nav: ShellTopBarNav): string {
   return cn(
-    "text-sm transition-colors",
+    "text-lg transition-colors",
     active
       ? cn("font-semibold text-primary", nav.classNames?.itemActive)
       : cn("text-foreground/70 hover:text-foreground", nav.classNames?.item),
@@ -182,7 +197,10 @@ function NavDropdown({ item, nav }: { item: ShellNavItem; nav: ShellTopBarNav })
           <DropdownMenuItem key={child.key} asChild>
             {nav.renderItem(
               child,
-              cn("w-full", child.active ? "font-semibold text-primary" : "text-foreground"),
+              // `text-lg` to match the trigger these sit under — they are the
+              // same navigation, one level down. DropdownMenuItem's own default
+              // is text-sm, which is right for settings menus and wrong here.
+              cn("w-full text-lg", child.active ? "font-semibold text-primary" : "text-foreground"),
             )}
           </DropdownMenuItem>
         ))}

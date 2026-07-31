@@ -29,11 +29,11 @@ export function PalSection({
       {title ? (
         action != null ? (
           <div className="mb-3 flex items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold">{title}</h2>
+            <h2 className="text-lg font-semibold">{title}</h2>
             {action}
           </div>
         ) : (
-          <h2 className="mb-3 text-sm font-semibold">{title}</h2>
+          <h2 className="mb-3 text-lg font-semibold">{title}</h2>
         )
       ) : null}
       {children}

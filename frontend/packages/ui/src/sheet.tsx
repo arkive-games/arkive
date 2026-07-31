@@ -91,7 +91,10 @@ function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPr
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("text-base font-semibold", className)}
+      // A step above body text, like DialogTitle/AlertDialogTitle (both text-lg)
+      // — it was the odd one out at text-base, giving a sheet's heading no size
+      // hierarchy over its own content.
+      className={cn("text-lg font-semibold", className)}
       {...props}
     />
   )
