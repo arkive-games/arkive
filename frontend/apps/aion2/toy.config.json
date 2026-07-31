@@ -1,0 +1,10 @@
+{
+  "slug": "arkive-aion2",
+  "title": "永恒之塔2 · Arkive",
+  "visibility": "public",
+  "poster": "toy-poster.png",
+  "dataDir": "data-aion2",
+  "resourceDir": "resource-aion2",
+  "dataBase": "a2data",
+  "resourceBase": "a2res"
+}
