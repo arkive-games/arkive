@@ -17,6 +17,9 @@ describe('vrising changelog.json', () => {
   })
 
   it('starts at the launch entry', () => {
-    expect(file.entries.at(-1)).toMatchObject({ version: '1.0.0' })
+    // 0.1.0, not 1.0.0: vrising is an early build, so it deliberately starts
+    // below 1.x (same as sts2). A 1.0.0 here would claim a maturity the app
+    // does not have yet.
+    expect(file.entries.at(-1)).toMatchObject({ version: '0.1.0' })
   })
 })
