@@ -5,7 +5,7 @@ import { Button, cn } from '@gamemap/ui'
 import { comboKey, favKey, palIconUrl, type Combo, type NameMap } from '../../lib/breeding'
 import { buildChainTree, type BreedChain, type ChainStep, type ChainTreeNode } from '../../lib/breedingChains'
 import { PalHover } from '../catalog/components'
-import { GenderMark, LEGENDARY_ICON, PalChip, RecipeCard, type RecipeMeta } from './RecipeCard'
+import { GenderMark, LEGENDARY_ICON, PalChip, RecipeCard, type BreedingVariant, type RecipeMeta } from './RecipeCard'
 
 // Chain cards shown per group before the show-more button.
 const GROUP_CAP = 40
@@ -406,6 +406,13 @@ export interface BreedingChainsViewProps extends ChainsCtx {
   favs: Set<string>
   onToggleFav: (key: string) => void
   favLabel: string
+  /**
+   * Card layout of the direct-recipe group (phones get the square tiles). The
+   * multi-generation chain rows keep their chips at every width: a step offers a
+   * variable number of partner options, which a fixed three-square row can't
+   * express.
+   */
+  variant: BreedingVariant
 }
 
 /**
@@ -413,7 +420,7 @@ export interface BreedingChainsViewProps extends ChainsCtx {
  * (normal recipe cards, favouritable) first, then 2- and 3-generation chains.
  * Remount (via key) on a query change to reset the per-group caps.
  */
-export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, ...ctx }: BreedingChainsViewProps) {
+export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, variant, ...ctx }: BreedingChainsViewProps) {
   const { t } = useTranslation()
 
   // Group chains by step count so the view works for any maxGen (2–6).
@@ -443,6 +450,7 @@ export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, ...ctx
                   meta={ctx.meta}
                   uniqueLabel={ctx.uniqueLabel}
                   fav={{ isFav: favs.has(fk), onToggle: () => onToggleFav(fk), label: favLabel }}
+                  variant={variant}
                 />
               )
             })}

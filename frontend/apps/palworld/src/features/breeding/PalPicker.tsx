@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Check, ChevronsUpDown, X, Zap } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus, X, Zap } from 'lucide-react'
 import {
   Button,
   Command,
@@ -16,6 +16,18 @@ import {
 import type { BreedingPal, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
 import { formatPalId, palIdText } from '../../lib/palId'
+import {
+  LEGENDARY_ICON,
+  TILE_FOOTER,
+  TILE_FRAME,
+  TILE_HEADER,
+  TILE_META,
+  TILE_NAME,
+  TileIcon,
+  TileIconPlaceholder,
+  TileRank,
+  type BreedingVariant,
+} from './RecipeCard'
 
 function PalIcon({ pal }: { pal: BreedingPal }) {
   return (
@@ -25,7 +37,7 @@ function PalIcon({ pal }: { pal: BreedingPal }) {
       loading="lazy"
       className={cn(
         'size-6 shrink-0 rounded-full bg-black/5 object-contain dark:bg-white/10',
-        pal.legendary && 'ring-2 ring-amber-400 shadow-[0_0_6px_1px_rgba(251,191,36,0.55)]',
+        pal.legendary && LEGENDARY_ICON,
       )}
     />
   )
@@ -56,11 +68,20 @@ export interface PalPickerProps {
   value: string | null
   onChange: (id: string | null) => void
   labels: { anyPal: string; searchPal: string; noPalFound: string }
+  /**
+   * `tile` renders the trigger as a square (icon + name + metadata) instead of
+   * the wide desktop combobox, so the three pickers fit one phone line as
+   * `A + B = C`. The list inside the popover is the same either way.
+   */
+  variant?: BreedingVariant
+  /** Which slot this picker fills — only used to tag the tile for tests. */
+  slot?: 'a' | 'b' | 'c'
 }
 
-export function PalPicker({ label, pals, names, value, onChange, labels }: PalPickerProps) {
+export function PalPicker({ label, pals, names, value, onChange, labels, variant = 'row', slot }: PalPickerProps) {
   const [open, setOpen] = useState(false)
   const selected = value ? pals.find((p) => p.id === value) ?? null : null
+  const tile = variant === 'tile'
 
   // cmdk filters on each item's `value`; index name + id so both are searchable.
   const searchText = useMemo(() => {
@@ -72,45 +93,118 @@ export function PalPicker({ label, pals, names, value, onChange, labels }: PalPi
     return m
   }, [pals, names])
 
+  // Clearing back to "any Pal". On tiles the × in the header strip is small, so
+  // the popover also opens with an explicit "Any Pal" row (a full-width target).
+  const clear = () => onChange(null)
+
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+    <div className={tile ? 'min-w-0' : 'flex flex-col gap-1.5'}>
+      {tile ? null : <span className="text-xs font-medium text-muted-foreground">{label}</span>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="h-11 w-full justify-start gap-2 px-2.5 font-normal"
-          >
-            {selected ? (
-              <>
-                <PalIcon pal={selected} />
-                <span className="truncate">{names[selected.id] ?? selected.id}</span>
-                <PalMeta pal={selected} />
-              </>
-            ) : (
-              <span className="text-muted-foreground">{labels.anyPal}</span>
-            )}
-            {selected ? (
-              <span
-                role="button"
-                tabIndex={-1}
-                aria-label={labels.anyPal}
-                className="ml-1 rounded p-0.5 hover:bg-accent"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onChange(null)
-                }}
-              >
-                <X className="size-4 opacity-60" />
+          {tile ? (
+            <button
+              type="button"
+              role="combobox"
+              aria-expanded={open}
+              // The visible label lives in the strip, but the button's own name
+              // must still say which slot it is and what is in it.
+              aria-label={`${label}: ${selected ? names[selected.id] ?? selected.id : labels.anyPal}`}
+              data-testid={slot ? `breeding-pick-${slot}` : 'breeding-pick'}
+              className={cn(
+                TILE_FRAME,
+                'hover:border-primary/60 hover:bg-accent',
+                // Dashed + muted while unset: an empty picker reads as "any
+                // Pal" (the query's actual meaning), not as a broken card.
+                selected ? 'border-border bg-card' : 'border-dashed border-border bg-muted/30',
+              )}
+            >
+              {/* No uppercase/tracking here (unlike the building tile's type
+                  strip): "Parent A" in caps is measurably wider and would
+                  truncate on a 320px screen. */}
+              <span className={cn(TILE_HEADER, 'font-medium')}>
+                <span className="min-w-0 flex-1 truncate">{label}</span>
+                {selected ? (
+                  <span
+                    role="button"
+                    tabIndex={-1}
+                    aria-label={labels.anyPal}
+                    title={labels.anyPal}
+                    className="-mr-0.5 shrink-0 rounded p-0.5 hover:bg-accent"
+                    onClick={(e) => {
+                      // Keep the click off the trigger, or clearing would also
+                      // open the list.
+                      e.stopPropagation()
+                      clear()
+                    }}
+                  >
+                    <X className="size-3 opacity-60" />
+                  </span>
+                ) : (
+                  <ChevronsUpDown className="size-3 shrink-0 opacity-50" />
+                )}
               </span>
-            ) : (
-              <ChevronsUpDown className="ml-auto size-4 shrink-0 opacity-50" />
-            )}
-          </Button>
+              {selected ? (
+                <TileIcon icon={selected.icon} legendary={selected.legendary} />
+              ) : (
+                <TileIconPlaceholder />
+              )}
+              <span className={TILE_FOOTER}>
+                <span className={cn(TILE_NAME, !selected && 'font-normal text-muted-foreground')}>
+                  {selected ? names[selected.id] ?? selected.id : labels.anyPal}
+                </span>
+                {selected ? (
+                  // Breeding power only — same line as the recipe tiles below.
+                  // The Paldeck id would push it into truncation (see TILE_META)
+                  // and it is right there in the list this tile opens.
+                  <span className={TILE_META}>
+                    <TileRank rank={selected.rank} />
+                  </span>
+                ) : null}
+              </span>
+            </button>
+          ) : (
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="h-11 w-full justify-start gap-2 px-2.5 font-normal"
+            >
+              {selected ? (
+                <>
+                  <PalIcon pal={selected} />
+                  <span className="truncate">{names[selected.id] ?? selected.id}</span>
+                  <PalMeta pal={selected} />
+                </>
+              ) : (
+                <span className="text-muted-foreground">{labels.anyPal}</span>
+              )}
+              {selected ? (
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  aria-label={labels.anyPal}
+                  className="ml-1 rounded p-0.5 hover:bg-accent"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    clear()
+                  }}
+                >
+                  <X className="size-4 opacity-60" />
+                </span>
+              ) : (
+                <ChevronsUpDown className="ml-auto size-4 shrink-0 opacity-50" />
+              )}
+            </Button>
+          )}
         </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <PopoverContent
+          // A tile trigger is far narrower than the list needs, so the tile
+          // variant sizes to the viewport instead of the trigger (Radix shifts
+          // it back inside the screen for the edge tiles).
+          className={cn('p-0', tile ? 'w-[min(20rem,calc(100vw-1.5rem))]' : 'w-[var(--radix-popover-trigger-width)]')}
+          align="start"
+        >
           <Command
             filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0)}
           >
@@ -118,6 +212,22 @@ export function PalPicker({ label, pals, names, value, onChange, labels }: PalPi
             <CommandList>
               <CommandEmpty>{labels.noPalFound}</CommandEmpty>
               <CommandGroup>
+                {tile ? (
+                  <CommandItem
+                    value={labels.anyPal}
+                    onSelect={() => {
+                      clear()
+                      setOpen(false)
+                    }}
+                    className="gap-2"
+                  >
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50 text-muted-foreground">
+                      <Plus className="size-3.5" />
+                    </span>
+                    <span className="truncate text-muted-foreground">{labels.anyPal}</span>
+                    <Check className={cn('ml-auto size-4 shrink-0', value ? 'opacity-0' : 'opacity-100')} />
+                  </CommandItem>
+                ) : null}
                 {pals.map((p) => (
                   <CommandItem
                     key={p.id}

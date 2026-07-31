@@ -13,7 +13,7 @@ import {
   type NameMap,
   type TreePath,
 } from '../../lib/breeding'
-import { RecipeCard, type RecipeMeta } from './RecipeCard'
+import { RecipeCard, type BreedingVariant, type RecipeMeta } from './RecipeCard'
 
 // Recipes shown per "how to breed X" section before the show-more button;
 // each click reveals another batch.
@@ -26,6 +26,8 @@ interface TreeCtx {
   meta: RecipeMeta
   uniqueLabel: string
   selectLabel: string
+  /** Card layout of every recipe in the tree (phones get the square tiles). */
+  variant: BreedingVariant
   /** Replace the subtree at `path` (`undefined` collapses it). */
   onChange: (path: TreePath, sub: BreedTreeNode | undefined) => void
 }
@@ -85,6 +87,7 @@ function ParentSection({
                 hideResult
                 onSelect={() => ctx.onChange(path, toNode(f))}
                 selectLabel={ctx.selectLabel}
+                variant={ctx.variant}
               />
             ))}
           </div>
@@ -116,7 +119,7 @@ function NodeView({ node, path, ctx }: { node: BreedTreeNode; path: TreePath; ct
     <div>
       <div className="flex items-center gap-1">
         <div className="min-w-0 flex-1 sm:max-w-xl">
-          <RecipeCard f={combo} names={ctx.names} meta={ctx.meta} uniqueLabel={ctx.uniqueLabel} />
+          <RecipeCard f={combo} names={ctx.names} meta={ctx.meta} uniqueLabel={ctx.uniqueLabel} variant={ctx.variant} />
         </div>
         <Button
           variant="ghost"
@@ -147,12 +150,13 @@ export function BreedingTreeView({
   meta,
   uniqueLabel,
   selectLabel,
+  variant,
   onChange,
 }: Omit<TreeCtx, 'onChange'> & {
   root: BreedTreeNode
   onChange: TreeCtx['onChange']
 }) {
-  const ctx: TreeCtx = { engine, index, names, meta, uniqueLabel, selectLabel, onChange }
+  const ctx: TreeCtx = { engine, index, names, meta, uniqueLabel, selectLabel, variant, onChange }
   return (
     <div className="mt-2">
       <NodeView node={root} path={[]} ctx={ctx} />

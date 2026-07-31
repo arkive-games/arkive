@@ -13,6 +13,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  cn,
+  useIsMobile,
 } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
@@ -36,7 +38,7 @@ import { CatalogDataProvider } from '../catalog/components'
 import { PalPicker } from './PalPicker'
 import { BreedingTreeView } from './BreedingTreeView'
 import { BreedingChainsTreeView, BreedingChainsView } from './BreedingChainsView'
-import { RecipeCard, buildRecipeMeta } from './RecipeCard'
+import { RecipeCard, TileSep, buildRecipeMeta, type BreedingVariant } from './RecipeCard'
 
 // Cap on rendered cards; a target-only query can match >1000 parent pairs. Set
 // above the default browse list (~365: every Pal + special combos) so that view
@@ -48,6 +50,7 @@ const FAV_STORAGE_KEY = 'palworld.breeding.favs'
 export default function BreedingPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const isMobile = useIsMobile()
 
   // The URL query (?a=&b=&c=) is the source of truth for the selections, so a
   // pick updates the address bar and pushes a history entry (Back undoes it),
@@ -218,6 +221,68 @@ export default function BreedingPage() {
     noPalFound: t('breeding.noPalFound'),
   }
 
+  // Phones swap every `A + B = C` row (the pickers and the recipe cards) for
+  // three squares in one line; desktop keeps the chip rows. Decided once here
+  // and threaded down, so a card and the picker above it can never disagree.
+  const variant: BreedingVariant = isMobile ? 'tile' : 'row'
+  const pickerProps = {
+    pals: payload?.data.pals ?? [],
+    names: payload?.names ?? {},
+    labels: pickerLabels,
+    variant,
+  }
+  const pickerA = (
+    <PalPicker
+      {...pickerProps}
+      slot="a"
+      label={t('breeding.parentA')}
+      value={aSel}
+      onChange={(id) => setParam('a', id)}
+    />
+  )
+  const pickerB = (
+    <PalPicker
+      {...pickerProps}
+      slot="b"
+      label={t('breeding.parentB')}
+      value={bSel}
+      onChange={(id) => setParam('b', id)}
+    />
+  )
+  const pickerC = (
+    <PalPicker
+      {...pickerProps}
+      slot="c"
+      label={t('breeding.child')}
+      value={cSel}
+      onChange={(id) => setParam('c', id)}
+    />
+  )
+  const genControl =
+    gen == null ? null : (
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">{t('breeding.maxGenerations')}</span>
+        <Select
+          value={String(gen)}
+          onValueChange={(v) => {
+            const n = Number(v)
+            setGen(n === 3 ? 3 : n === 4 ? 4 : n === 5 ? 5 : n === 6 ? 6 : 2)
+          }}
+        >
+          <SelectTrigger className="!h-11 w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="2">2</SelectItem>
+            <SelectItem value="3">3</SelectItem>
+            <SelectItem value="4">4</SelectItem>
+            <SelectItem value="5">5</SelectItem>
+            <SelectItem value="6">6</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    )
+
   return (
     <TooltipProvider delayDuration={200}>
       <ContentPage active="/breeding" title={t('breeding.navBreeding')} heading>
@@ -230,57 +295,42 @@ export default function BreedingPage() {
               {t('breeding.modeChains')}
             </Button>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <PalPicker
-              label={t('breeding.parentA')}
-              pals={payload?.data.pals ?? []}
-              names={payload?.names ?? {}}
-              value={aSel}
-              onChange={(id) => setParam('a', id)}
-              labels={pickerLabels}
-            />
-            {gen == null ? (
-              <PalPicker
-                label={t('breeding.parentB')}
-                pals={payload?.data.pals ?? []}
-                names={payload?.names ?? {}}
-                value={bSel}
-                onChange={(id) => setParam('b', id)}
-                labels={pickerLabels}
-              />
-            ) : null}
-            <PalPicker
-              label={t('breeding.child')}
-              pals={payload?.data.pals ?? []}
-              names={payload?.names ?? {}}
-              value={cSel}
-              onChange={(id) => setParam('c', id)}
-              labels={pickerLabels}
-            />
-            {gen != null ? (
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground">{t('breeding.maxGenerations')}</span>
-                <Select
-                  value={String(gen)}
-                  onValueChange={(v) => {
-                    const n = Number(v)
-                    setGen(n === 3 ? 3 : n === 4 ? 4 : n === 5 ? 5 : n === 6 ? 6 : 2)
-                  }}
-                >
-                  <SelectTrigger className="!h-11 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="6">6</SelectItem>
-                  </SelectContent>
-                </Select>
+          {isMobile ? (
+            // Phone: the selection reads as the recipe it builds — `A + B = C`
+            // (planner mode has no Parent B, so it is just `A = C`, with the
+            // generation budget on its own row underneath rather than a fourth,
+            // dangling square).
+            <div className="space-y-2" data-testid="breeding-picker-row">
+              <div
+                className={cn(
+                  'grid items-center gap-1',
+                  gen == null
+                    ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]'
+                    : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
+                )}
+              >
+                {pickerA}
+                {gen == null ? (
+                  <>
+                    <TileSep>+</TileSep>
+                    {pickerB}
+                  </>
+                ) : null}
+                {/* Planner mode isn't one pairing, so its separator is an arrow
+                    ("from A, reach C") rather than an equals sign. */}
+                <TileSep>{gen == null ? '=' : '→'}</TileSep>
+                {pickerC}
               </div>
-            ) : null}
-          </div>
+              {genControl}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {pickerA}
+              {gen == null ? pickerB : null}
+              {pickerC}
+              {genControl}
+            </div>
+          )}
 
           <div className="mt-4 flex items-center justify-between gap-2">
             <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -388,6 +438,7 @@ export default function BreedingPage() {
                 favs={favs}
                 onToggleFav={toggleFav}
                 favLabel={t('breeding.favorite')}
+                variant={variant}
               />
             ) : null
           ) : search.tree && engine && childIndex ? (
@@ -400,6 +451,7 @@ export default function BreedingPage() {
               uniqueLabel={t('breeding.unique')}
               selectLabel={t('breeding.expandRecipe')}
               onChange={updateTree}
+              variant={variant}
             />
           ) : (
             <>
@@ -416,6 +468,7 @@ export default function BreedingPage() {
                       fav={{ isFav: favs.has(fk), onToggle: () => toggleFav(fk), label: t('breeding.favorite') }}
                       onSelect={() => updateTree([], { a: f.a, b: f.b, ag: f.ag, bg: f.bg })}
                       selectLabel={t('breeding.expandRecipe')}
+                      variant={variant}
                     />
                   )
                 })}
