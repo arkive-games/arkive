@@ -49,12 +49,13 @@ export interface EngineMarker extends MarkerInstance {
  */
 export interface MapAssets {
   /**
-   * URL of the map tile at grid indices (x, y). The engine tile layer rejects
-   * out-of-range indices (it returns "" itself, without calling this) rather
-   * than clamping, so implementations only ever see indices inside the grid.
+   * URL of the map tile at grid indices (x, y) of pyramid level `level`
+   * (halvings from native; 0/omitted = native level 0). The engine only asks
+   * for levels ≤ `map.tileLevels ?? 0`, and rejects out-of-range indices for
+   * the level's grid (`ceil(tilesCount / 2^level)`) rather than clamping.
    * Orientation: (x=0, y=0) is the top-left tile; y increases downward.
    */
-  tileUrl(map: GameMapMeta, x: number, y: number): string;
+  tileUrl(map: GameMapMeta, x: number, y: number, level?: number): string;
   /**
    * URL for a marker's game-icon image. `icon` may be "" / undefined (subtype
    * without an icon) — implementations decide the fallback. `map` is provided

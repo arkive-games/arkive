@@ -14,6 +14,31 @@ type GameTileLayerOptions = L.TileLayerOptions &
     isWatermark?: boolean;
   };
 
+export interface TileGridRef {
+  level: number;
+  x: number;
+  y: number;
+}
+
+/**
+ * Leaflet tile coords (z = the clamped NATIVE zoom Leaflet chose, y negative
+ * above the CRS.Simple origin) → pyramid level + top-left-origin grid indices.
+ * Null = outside the level's grid (noWrap: no tile requested).
+ */
+export function resolveTileCoords(
+  map: GameMapMeta,
+  coords: { x: number; y: number; z: number },
+): TileGridRef | null {
+  const levels = Math.max(0, map.tileLevels ?? 0);
+  const level = Math.min(levels, Math.max(0, -coords.z));
+  const countX = Math.ceil(map.tilesCountX / 2 ** level);
+  const countY = Math.ceil(map.tilesCountY / 2 ** level);
+  const x = coords.x;
+  const y = countY + coords.y;
+  if (x < 0 || y < 0 || x >= countX || y >= countY) return null;
+  return { level, x, y };
+}
+
 class GameTileLayer extends L.TileLayer {
   private readonly gameOptions: GameTileLayerOptions;
 
@@ -25,28 +50,11 @@ class GameTileLayer extends L.TileLayer {
 
   getTileUrl(coords: L.Coords): string {
     const { selectedMap, assets, isWatermark } = this.gameOptions;
-
-    // Leaflet coords.x, coords.y are tile indices; the vertical index is
-    // converted to the game's tile grid before URL resolution.
-    const x = coords.x;
-    const y = selectedMap.tilesCountY + coords.y;
-
-    // Reject out-of-grid indices (noWrap): empty URL, no tile requested.
-    if (
-      x < 0 ||
-      y < 0 ||
-      x >= selectedMap.tilesCountX ||
-      y >= selectedMap.tilesCountY
-    ) {
-      return "";
-    }
-
-    if (isWatermark) {
-      return assets.watermarkUrl ?? "";
-    }
-
+    const ref = resolveTileCoords(selectedMap, coords);
+    if (!ref) return "";
+    if (isWatermark) return assets.watermarkUrl ?? "";
     // The engine owns grid math; the app owns URL construction.
-    return assets.tileUrl(selectedMap, x, y);
+    return assets.tileUrl(selectedMap, ref.x, ref.y, ref.level);
   }
 }
 
@@ -61,7 +69,7 @@ const GameMapTiles: React.FC<GameTilesProps> = ({ selectedMap, assets }) => {
       minZoom: map.getMinZoom(),
       maxZoom: map.getMaxZoom(),
       maxNativeZoom: 0,
-      minNativeZoom: 0,
+      minNativeZoom: -(selectedMap.tileLevels ?? 0),
     });
 
     layer.addTo(map);

@@ -102,9 +102,10 @@ marker-type taxonomy:
 
 URL resolution is injected; the engine never builds URLs:
 
-- `tileUrl(map, x, y)` — tile at grid indices; `(0, 0)` is the top-left tile,
-  `y` increases downward. The tile layer rejects out-of-grid indices itself,
-  so implementations only see valid indices.
+- `tileUrl(map, x, y, level = 0)` — tile at grid indices of pyramid level
+  `level` (halvings from native); `(0, 0)` is the top-left tile, `y` increases
+  downward. The tile layer rejects out-of-grid indices itself, so
+  implementations only see valid indices.
 - `markerIconUrl(icon, map)` — marker game-icon URL; `icon` may be
   `""`/`undefined`, implementations pick the fallback. `map` allows per-map
   variants (e.g. AION2 swaps Light→Dark icons on dark maps).
