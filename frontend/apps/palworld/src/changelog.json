@@ -3,7 +3,7 @@
     {
       "version": "1.22.0",
       "date": "2026-07-31",
-      "commit": "5fc353447f1c8272634d6abe50008d8bbe8c75e9",
+      "commit": "a6dbb7e44aef006ea7ea3f0e2737ba63e4c8336c",
       "changes": [
         {
           "kind": "improvement",
@@ -19,6 +19,14 @@
             "en-US": "The breeding calculator now uses square tiles on phones — icon, name and breeding rank — three per line as A + B = C, for both the parent pickers and every recipe.",
             "zh-CN": "手机端配种计算器改用方块卡片（图标、名称、配种等级），父母选择与每条配方均为「A + B = C」三格一行。",
             "zh-TW": "手機端配種計算器改用方塊卡片（圖示、名稱、配種等級），父母選擇與每條配方均為「A + B = C」三格一行。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The version details in the top bar are now translated (commit, build time and game version), as is the language menu's label.",
+            "zh-CN": "顶栏的版本详情（提交、构建时间、游戏版本）与语言菜单标签现已本地化。",
+            "zh-TW": "頂欄的版本詳情（提交、建置時間、遊戲版本）與語言選單標籤現已本地化。"
           }
         }
       ]
