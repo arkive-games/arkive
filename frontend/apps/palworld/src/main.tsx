@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
+  createHashHistory,
   createRootRoute,
   createRoute,
   createRouter,
@@ -298,7 +299,12 @@ const routeTree = rootRoute.addChildren([
   regionDetailRoute,
   changelogRoute,
 ])
-const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
+// Toy builds (VITE_TOY, see scripts/toy-build.mjs) are served under
+// https://www.bilibili.com/toy/<slug>/ where only index.html exists as a real
+// file — deep links must live in the hash or refreshes 404.
+const router = import.meta.env.VITE_TOY
+  ? createRouter({ routeTree, history: createHashHistory(), basepath: '/' })
+  : createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router

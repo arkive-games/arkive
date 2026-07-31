@@ -1,0 +1,9 @@
+{
+  "slug": "arkive-palworld",
+  "title": "幻兽帕鲁 · Arkive",
+  "visibility": "public",
+  "dataDir": "data-palworld",
+  "resourceDir": "resource-palworld",
+  "dataBase": "data",
+  "resourceBase": "palres"
+}
