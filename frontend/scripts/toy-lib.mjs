@@ -105,12 +105,25 @@ export function checkPackage(dir) {
 }
 
 /**
+ * Real `toy mylist --json` records (verified 2026-07-31, CLI v0.3.2) carry no
+ * `slug`/`sub_dir` field at all — the slug only appears as a path segment in
+ * `url` (e.g. `https://www.bilibili.com/toy/<slug>/index.html`). Extract it
+ * from there as a fallback for records that don't expose `slug`/`sub_dir`
+ * directly (kept in case a future CLI version adds one).
+ */
+export function slugFromToyUrl(url) {
+  if (typeof url !== 'string') return null
+  const m = url.match(/\/toy\/([^/]+)\//)
+  return m ? m[1] : null
+}
+
+/**
  * create-vs-update decision: local history record wins, then a slug match in
  * mylist, else create. A history record only matches when it carries no
  * `slug`/`sub_dir` field (unverified real-CLI shape, so id alone is trusted)
  * or when that field equals the `slug` argument — a record for a different
- * toy is skipped. mylist matches always require `slug`/`sub_dir` to equal
- * `slug`.
+ * toy is skipped. mylist matches require `slug`/`sub_dir` to equal `slug`,
+ * or — since real records carry neither — the slug extracted from `url`.
  */
 export function decidePublishAction({ history, mylist, slug }) {
   const fromHistory = (history ?? []).find((r) => {
@@ -121,7 +134,11 @@ export function decidePublishAction({ history, mylist, slug }) {
   if (fromHistory) {
     return { mode: 'update', id: String(fromHistory.id), reason: 'local publish history has a record for this package dir' }
   }
-  const fromMylist = (mylist ?? []).find((t) => t && (t.slug === slug || t.sub_dir === slug))
+  const fromMylist = (mylist ?? []).find((t) => {
+    if (!t) return false
+    if (t.slug === slug || t.sub_dir === slug) return true
+    return slugFromToyUrl(t.url) === slug
+  })
   if (fromMylist) {
     return { mode: 'update', id: String(fromMylist.id), reason: `mylist has a toy with slug "${slug}"` }
   }

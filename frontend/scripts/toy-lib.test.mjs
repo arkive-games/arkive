@@ -6,6 +6,7 @@ import {
   validateToyConfig,
   checkPackage,
   decidePublishAction,
+  slugFromToyUrl,
   parseArgs,
 } from './toy-lib.mjs'
 
@@ -113,6 +114,28 @@ describe('decidePublishAction', () => {
       slug: 'arkive-palworld',
     })
     expect(action).toEqual({ mode: 'update', id: '123', reason: expect.stringContaining('history') })
+  })
+  it('matches a real-shape mylist record (no slug/sub_dir, slug embedded in url)', () => {
+    const action = decidePublishAction({
+      history: [],
+      mylist: [
+        { id: 16422826778624, url: 'https://www.bilibili.com/toy/merge-creeper/index.html' },
+        { id: 999, url: 'https://www.bilibili.com/toy/arkive-palworld/index.html' },
+      ],
+      slug: 'arkive-palworld',
+    })
+    expect(action).toEqual({ mode: 'update', id: '999', reason: expect.stringContaining('mylist') })
+  })
+})
+
+describe('slugFromToyUrl', () => {
+  it('extracts the slug path segment', () => {
+    expect(slugFromToyUrl('https://www.bilibili.com/toy/merge-creeper/index.html')).toBe('merge-creeper')
+  })
+  it('returns null for a non-toy or malformed url', () => {
+    expect(slugFromToyUrl('https://www.bilibili.com/video/BV1xx')).toBeNull()
+    expect(slugFromToyUrl(undefined)).toBeNull()
+    expect(slugFromToyUrl(null)).toBeNull()
   })
 })
 
