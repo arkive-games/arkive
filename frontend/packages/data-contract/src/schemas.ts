@@ -27,6 +27,7 @@ export const gameMapMetaSchema = z.object({
   tileHeight: z.number(),
   tilesCountX: z.number(),
   tilesCountY: z.number(),
+  tileLevels: z.number().int().nonnegative().optional(),
   isVisible: z.boolean(),
 }) satisfies z.ZodType<GameMapMeta>;
 

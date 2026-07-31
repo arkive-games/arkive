@@ -34,6 +34,13 @@ export interface GameMapMeta {
   tileHeight: number;
   tilesCountX: number;
   tilesCountY: number;
+  /**
+   * Number of downscaled halving tile levels available IN ADDITION to the
+   * native level 0 (3 ⇒ tiles/<Map>/z-1..z-3 exist, each level halving the
+   * previous one's map coverage per tile). Absent or 0 ⇒ single-level tiles,
+   * the pre-pyramid behavior.
+   */
+  tileLevels?: number;
   isVisible: boolean;
   /** World-space bounding box that maps onto the full pixel grid. */
   worldBounds?: { min: { x: number; y: number }; max: { x: number; y: number } };
