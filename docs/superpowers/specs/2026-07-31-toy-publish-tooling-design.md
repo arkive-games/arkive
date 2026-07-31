@@ -39,7 +39,7 @@ pnpm toy:publish --app palworld --submit     # same upload, submit for review
 ```json
 {
   "slug": "arkive-palworld",
-  "title": "幻兽帕鲁攻略站",
+  "title": "幻兽帕鲁 · Arkive",
   "visibility": "public",
   "poster": "toy-poster.png",
   "dataDir": "data-palworld",
