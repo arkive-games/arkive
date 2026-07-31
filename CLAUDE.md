@@ -126,6 +126,16 @@ polygon, and human review of `calibration/accepted_overlay.png`.
     re-point the newest entries at their rewritten SHAs.
 
 ## Notes
+- **Bilibili Toy publishing:** each app can ship as a single self-contained toy
+  (site + data + resource bundled). `frontend/apps/<app>/toy.config.json` holds the
+  identity (slug is permanent once published; palworld is live as `arkive-palworld`).
+  Commands (from `frontend/`): `pnpm toy:build --app <app>` → `dist-toy/`;
+  `pnpm toy:serve --app <app>` to smoke-test under `/toy/<slug>/`;
+  `pnpm toy:publish --app <app>` uploads a preview (submits nothing), `--submit`
+  submits for review, `--dry-run` stops before any mutating CLI call. Review
+  submission REQUIRES a poster (server error 307009 otherwise) even though preview
+  works without one. Toy builds use hash routing via `VITE_TOY`. Spec:
+  `docs/superpowers/specs/2026-07-31-toy-publish-tooling-design.md`.
 - Frontend `UI/` assets (game tiles + marker icons) come from the `resource/` repo
   (`resource/UI/...`). Dev: a Vite middleware serves `../resource/UI` at `/UI`
   (`frontend/vite.config.ts`, `RESOURCE_UI_DIR` override). Prod: set
