@@ -3,8 +3,6 @@
   "title": "永恒之塔2 · Arkive",
   "visibility": "public",
   "poster": "toy-poster.png",
-  "dataDir": "data-aion2",
-  "resourceDir": "resource-aion2",
-  "dataBase": "a2data",
-  "resourceBase": "a2res"
+  "dataUrl": "https://data-aion2.tc-imba.com",
+  "resourceUrl": "https://resource-aion2.tc-imba.com"
 }

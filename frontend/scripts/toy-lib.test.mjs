@@ -5,6 +5,7 @@ import path from 'node:path'
 import {
   validateToyConfig,
   bundlesArtifacts,
+  fetchesArtifacts,
   checkPackage,
   decidePublishAction,
   slugFromToyUrl,
@@ -27,6 +28,19 @@ const SITE_ONLY_CONFIG = {
   title: '藏舟攻略网 · Arkive',
   visibility: 'public',
   poster: 'toy-poster.png',
+}
+
+// aion2: site only, artifacts fetched from the same CDN the website uses.
+const URL_ONLY = {
+  dataUrl: 'https://data-aion2.tc-imba.com',
+  resourceUrl: 'https://resource-aion2.tc-imba.com',
+}
+const URL_CONFIG = {
+  slug: 'arkive-aion2',
+  title: '永恒之塔2 · Arkive',
+  visibility: 'public',
+  poster: 'toy-poster.png',
+  ...URL_ONLY,
 }
 
 describe('validateToyConfig', () => {
@@ -62,12 +76,40 @@ describe('validateToyConfig', () => {
   it('rejects an artifact key present but empty', () => {
     expect(() => validateToyConfig({ ...GOOD_CONFIG, dataDir: '' })).toThrow(/dataDir/)
   })
+
+  // Fetching artifacts instead of bundling them — aion2, whose 29k files made
+  // the platform time out generating a preview even though the size passed.
+  it('accepts absolute artifact URLs with no bundling keys', () => {
+    expect(() => validateToyConfig(URL_CONFIG)).not.toThrow()
+  })
+  it('rejects artifact URLs alongside bundling keys', () => {
+    expect(() => validateToyConfig({ ...GOOD_CONFIG, ...URL_ONLY })).toThrow(/mutually exclusive/)
+  })
+  it('rejects one artifact URL without the other', () => {
+    const { resourceUrl, ...half } = URL_CONFIG
+    expect(() => validateToyConfig(half)).toThrow(/are a pair/)
+  })
+  it('rejects a relative or non-https artifact URL', () => {
+    for (const dataUrl of ['/data', 'data', '//data.example.com', 'http://data.example.com']) {
+      expect(() => validateToyConfig({ ...URL_CONFIG, dataUrl })).toThrow(/absolute URL|must be https/)
+    }
+  })
+  it('rejects a trailing slash (the app joins path segments itself)', () => {
+    expect(() => validateToyConfig({ ...URL_CONFIG, dataUrl: 'https://data.example.com/' }))
+      .toThrow(/must not end in/)
+  })
 })
 
-describe('bundlesArtifacts', () => {
+describe('bundlesArtifacts / fetchesArtifacts', () => {
   it('is true for a game config and false for a site-only one', () => {
     expect(bundlesArtifacts(validateToyConfig(GOOD_CONFIG))).toBe(true)
     expect(bundlesArtifacts(validateToyConfig(SITE_ONLY_CONFIG))).toBe(false)
+  })
+  it('separates fetching from bundling and from a pure site', () => {
+    expect(fetchesArtifacts(validateToyConfig(URL_CONFIG))).toBe(true)
+    expect(bundlesArtifacts(validateToyConfig(URL_CONFIG))).toBe(false)
+    expect(fetchesArtifacts(validateToyConfig(GOOD_CONFIG))).toBe(false)
+    expect(fetchesArtifacts(validateToyConfig(SITE_ONLY_CONFIG))).toBe(false)
   })
 })
 

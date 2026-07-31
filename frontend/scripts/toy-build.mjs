@@ -11,7 +11,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { parseArgs, loadToyConfig, bundlesArtifacts, siblingRepo, checkPackage, packageSize } from './toy-lib.mjs'
+import { parseArgs, loadToyConfig, bundlesArtifacts, fetchesArtifacts, siblingRepo, checkPackage, packageSize } from './toy-lib.mjs'
 
 const FRONTEND = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -41,14 +41,19 @@ if (withArtifacts) {
   if (!resDir) fail(`artifact repo "${cfg.resourceDir}" not found in ancestor dirs (override with TOY_RES_DIR)`)
 }
 
+const withArtifactUrls = fetchesArtifacts(cfg)
+
 const outDir = path.join(appDir, 'dist-toy')
-// A site-only toy gets no VITE_DATA_BASE_URL/VITE_RESOURCE_BASE_URL at all:
-// there is no folder for them to point at, and an app that fetched from one
-// should be failing loudly at build config time rather than at runtime.
+// Three shapes:
+//   bundled  — relative folder names, resolved inside the package
+//   fetched  — absolute https URLs on the same CDN the website uses
+//   neither  — a pure site (the portal): no vars at all, so an app that did
+//              try to fetch fails loudly at build config time, not at runtime
 const env = {
   ...process.env,
   VITE_TOY: '1',
   ...(withArtifacts ? { VITE_DATA_BASE_URL: cfg.dataBase, VITE_RESOURCE_BASE_URL: cfg.resourceBase } : {}),
+  ...(withArtifactUrls ? { VITE_DATA_BASE_URL: cfg.dataUrl, VITE_RESOURCE_BASE_URL: cfg.resourceUrl } : {}),
 }
 
 console.log(`toy-build: building ${app} (slug ${cfg.slug})`)
@@ -82,6 +87,9 @@ if (withArtifacts) {
     fs.rmSync(outDir, { recursive: true, force: true })
     fail(`copying artifact repos failed: ${e.message}`)
   }
+} else if (withArtifactUrls) {
+  console.log(`toy-build: fetching artifacts at runtime — data ${cfg.dataUrl}, resource ${cfg.resourceUrl}`)
+  console.log('toy-build: (those hosts must send Access-Control-Allow-Origin; WebGL textures need it too)')
 } else {
   console.log('toy-build: site-only toy — no data/resource artifacts bundled')
 }

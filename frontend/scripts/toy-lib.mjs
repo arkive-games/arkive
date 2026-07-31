@@ -15,6 +15,21 @@ const FOLDER_RE = /^[A-Za-z0-9._-]+$/
  * `VITE_DATA_BASE_URL` pointing at a folder the build never copies.
  */
 export const ARTIFACT_KEYS = ['dataDir', 'resourceDir', 'dataBase', 'resourceBase']
+/**
+ * The alternative to bundling: point the app at the same CDN the website uses
+ * and ship only the site. A pair, and mutually exclusive with ARTIFACT_KEYS.
+ *
+ * Why this exists: aion2's artifacts are 29k files, and while the platform
+ * accepted the 130 MB upload it returned 504 on every attempt to generate the
+ * preview — palworld bundles fine at 4.4k files, so the per-file work is what
+ * does not scale. Fetching cross-origin is viable because the hosts send
+ * `Access-Control-Allow-Origin: *` and the GL engine already sets
+ * `crossOrigin: "anonymous"` on its tile and icon loaders (a WebGL texture
+ * needs that even when the server permits it; a plain <img> would not).
+ *
+ * The trade: the toy stops being self-contained, so it breaks if the CDN does.
+ */
+export const ARTIFACT_URL_KEYS = ['dataUrl', 'resourceUrl']
 // Entries that must never ship inside a toy package.
 const FORBIDDEN = new Set(['.git', 'node_modules', 'toy.yaml', '.DS_Store', '__MACOSX'])
 
@@ -42,6 +57,11 @@ export function parseArgs(argv, booleanFlags = []) {
 /** True when this toy bundles data/resource artifact repos (validated config). */
 export function bundlesArtifacts(cfg) {
   return cfg.dataDir !== undefined
+}
+
+/** True when this toy fetches its artifacts from absolute URLs instead. */
+export function fetchesArtifacts(cfg) {
+  return cfg.dataUrl !== undefined
 }
 
 export function validateToyConfig(cfg) {
@@ -79,7 +99,47 @@ export function validateToyConfig(cfg) {
       throw new Error(`toy.config.json: dataBase and resourceBase must differ, both are "${cfg.dataBase}"`)
     }
   }
+  validateArtifactUrls(cfg)
   return cfg
+}
+
+function validateArtifactUrls(cfg) {
+  const present = ARTIFACT_URL_KEYS.filter((key) => cfg[key] !== undefined)
+  if (present.length === 0) return
+  if (present.length !== ARTIFACT_URL_KEYS.length) {
+    const missing = ARTIFACT_URL_KEYS.filter((key) => cfg[key] === undefined)
+    throw new Error(
+      `toy.config.json: ${ARTIFACT_URL_KEYS.join('/')} are a pair — got ${present.join(', ')} ` +
+      `but missing ${missing.join(', ')}`,
+    )
+  }
+  if (bundlesArtifacts(cfg)) {
+    throw new Error(
+      `toy.config.json: ${ARTIFACT_URL_KEYS.join('/')} and ${ARTIFACT_KEYS.join('/')} are mutually ` +
+      'exclusive — a toy either bundles its artifacts or fetches them, not both',
+    )
+  }
+  for (const key of ARTIFACT_URL_KEYS) {
+    const value = cfg[key]
+    if (typeof value !== 'string' || value === '') {
+      throw new Error(`toy.config.json: "${key}" must be a non-empty string`)
+    }
+    // Absolute https only: a toy is served from https://www.bilibili.com, so a
+    // protocol-relative or http URL is mixed content the browser will block,
+    // and a relative one would resolve inside the package that has no files.
+    let url
+    try {
+      url = new URL(value)
+    } catch {
+      throw new Error(`toy.config.json: "${key}" must be an absolute URL, got "${value}"`)
+    }
+    if (url.protocol !== 'https:') {
+      throw new Error(`toy.config.json: "${key}" must be https, got "${value}"`)
+    }
+    if (value.endsWith('/')) {
+      throw new Error(`toy.config.json: "${key}" must not end in "/" (the app joins path segments itself), got "${value}"`)
+    }
+  }
 }
 
 export function loadToyConfig(appDir) {
