@@ -1,6 +1,7 @@
 import * as React from "react"
 
-import { GitHubIcon } from "./github-icon"
+import { GitCommitHorizontal } from "lucide-react"
+
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card"
 import { cn } from "./utils"
 
@@ -20,7 +21,10 @@ export interface BuildInfoProps {
   siteVersion?: React.ReactNode
   /** Force the hovercard open. Test-only escape hatch; Radix hover never fires in jsdom. */
   defaultOpen?: boolean
-  /** Repository link opened by the icon. Defaults to the monorepo. */
+  /**
+   * Repository the commit link inside the hovercard points at. Defaults to the
+   * monorepo. The icon trigger itself does not navigate anywhere.
+   */
   repoUrl?: string
   /** Injectable labels so apps can localize; the package stays i18n-free. */
   labels?: {
@@ -28,7 +32,7 @@ export interface BuildInfoProps {
     buildTime?: string
     gameVersion?: string
     siteVersion?: string
-    /** Accessible name for the icon link. */
+    /** Accessible name for the badge trigger. */
     repo?: string
   }
   className?: string
@@ -49,9 +53,16 @@ function toISO(ms: number): string {
 }
 
 /**
- * Top-bar build badge shared by every app: a GitHub icon linking to the repo,
- * with a hovercard showing the commit hash (linked to the commit page) and the
- * build time in ISO 8601 format.
+ * Top-bar build badge shared by every app: a commit icon whose hovercard shows
+ * the commit hash (linked to the commit page), the build time in ISO 8601 format
+ * and, when supplied, the site/game versions.
+ *
+ * The trigger is a deliberately inert `<button>`: it is a disclosure affordance
+ * for the hovercard, not a link. It used to be an anchor to the repository, which
+ * meant a stray click on a badge that only *looks* informational threw the
+ * visitor off the site to GitHub. Everything worth reaching from here — the
+ * commit, the changelog — is a real link inside the card, so the trigger itself
+ * navigates nowhere.
  *
  * Pass `dev={import.meta.env.DEV}` to show "dev" + last page-load time in dev mode.
  */
@@ -71,20 +82,21 @@ function BuildInfo({
 
   return (
     <HoverCard openDelay={100} defaultOpen={defaultOpen}>
+      {/* One child only, as `asChild` requires. `type="button"` so the badge can
+          never submit a surrounding form, and no onClick at all — the click is a
+          no-op by design; only hover/focus matter here. */}
       <HoverCardTrigger asChild>
-        <a
-          href={repoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
           data-testid="build-info"
-          aria-label={labels?.repo ?? "GitHub repository"}
+          aria-label={labels?.repo ?? "Build info"}
           className={cn(
-            "inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground",
+            "inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
             className,
           )}
         >
-          <GitHubIcon className="size-5" />
-        </a>
+          <GitCommitHorizontal className="size-5" aria-hidden />
+        </button>
       </HoverCardTrigger>
       <HoverCardContent side="bottom" align="end" className="w-auto p-3 text-sm">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
