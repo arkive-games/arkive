@@ -1,0 +1,75 @@
+#!/usr/bin/env node
+// Build a frontend app as a self-contained Bilibili Toy package:
+//   pnpm toy:build --app palworld
+// Output: frontend/apps/<app>/dist-toy/ = vite build (relative base, hash
+// routing via VITE_TOY) + the data-<app> and resource-<app> artifact repos.
+// Spec: docs/superpowers/specs/2026-07-31-toy-publish-tooling-design.md
+import { execSync } from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
+import { parseArgs, loadToyConfig, siblingRepo, checkPackage, packageSize } from './toy-lib.mjs'
+
+const FRONTEND = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+function fail(message) {
+  console.error(`toy-build: ${message}`)
+  process.exit(1)
+}
+
+let args
+try { args = parseArgs(process.argv.slice(2)) } catch (e) { fail(e.message) }
+const app = args.app
+if (!app) fail('--app is required (e.g. --app palworld)')
+const appDir = path.join(FRONTEND, 'apps', app)
+if (!fs.existsSync(appDir)) fail(`no such app: ${appDir}`)
+
+let cfg
+try { cfg = loadToyConfig(appDir) } catch (e) { fail(e.message) }
+
+const dataDir = process.env.TOY_DATA_DIR ?? siblingRepo(appDir, cfg.dataDir)
+const resDir = process.env.TOY_RES_DIR ?? siblingRepo(appDir, cfg.resourceDir)
+if (!dataDir) fail(`artifact repo "${cfg.dataDir}" not found in ancestor dirs (override with TOY_DATA_DIR)`)
+if (!resDir) fail(`artifact repo "${cfg.resourceDir}" not found in ancestor dirs (override with TOY_RES_DIR)`)
+
+const outDir = path.join(appDir, 'dist-toy')
+const env = {
+  ...process.env,
+  VITE_TOY: '1',
+  VITE_DATA_BASE_URL: cfg.dataBase,
+  VITE_RESOURCE_BASE_URL: cfg.resourceBase,
+}
+
+console.log(`toy-build: building ${app} (slug ${cfg.slug})`)
+execSync(`pnpm --filter ${app} exec tsc -b`, { cwd: FRONTEND, stdio: 'inherit' })
+execSync(`pnpm --filter ${app} exec vite build --base ./ --outDir dist-toy --emptyOutDir`, {
+  cwd: FRONTEND,
+  stdio: 'inherit',
+  env,
+})
+
+// Bundle the artifact repos. Excluded: VCS dirs and edgeone.json (host config,
+// not content the app fetches).
+const copyFilter = (src) => {
+  const base = path.basename(src)
+  if (base === '.git') return false
+  if (base === 'edgeone.json') return false
+  return true
+}
+console.log(`toy-build: copying ${dataDir} -> ${cfg.dataBase}/`)
+fs.cpSync(dataDir, path.join(outDir, cfg.dataBase), { recursive: true, filter: copyFilter })
+console.log(`toy-build: copying ${resDir} -> ${cfg.resourceBase}/`)
+fs.cpSync(resDir, path.join(outDir, cfg.resourceBase), { recursive: true, filter: copyFilter })
+
+const { errors, warnings } = checkPackage(outDir)
+for (const w of warnings) console.warn(`toy-build: WARN ${w}`)
+if (errors.length) {
+  for (const e of errors) console.error(`toy-build: ERROR ${e}`)
+  fail('package self-check failed — fix the above before publishing')
+}
+
+const { bytes, files } = packageSize(outDir)
+console.log(`toy-build: OK — ${outDir}`)
+console.log(`toy-build: ${files} files, ${(bytes / 1024 / 1024).toFixed(1)} MB uncompressed`)
+console.log('toy-build: (the platform size limit is server-side; the publish API is the authority)')
