@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
+import { ArrowUpRight } from 'lucide-react'
 import { SiteInfoPanel, type SiteInfoSection } from '@gamemap/map-shell'
+import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 
 /**
  * Feedback / suggestions / bug-report group, shared by both sites. Kept in
@@ -32,6 +34,30 @@ function Paragraphs({ lines }: { lines: string[] }) {
 }
 
 /**
+ * "This site is one of several" blurb plus a link out to the portal. The
+ * anchor inherits the panel's link colour/underline; `text-primary` is spelled
+ * out anyway so the affordance survives a host that drops that rule.
+ */
+function ArkiveSection({ blurb, brand, homeLabel }: { blurb: string; brand: string; homeLabel: string }) {
+  return (
+    <>
+      <p className="mb-1">{blurb}</p>
+      <a
+        href={ARKIVE_HOME_URL}
+        {...ARKIVE_HOME_LINK_PROPS}
+        aria-label={homeLabel}
+        title={homeLabel}
+        data-testid="site-info-arkive-link"
+        className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+      >
+        {brand}
+        <ArrowUpRight className="size-4 shrink-0" aria-hidden="true" />
+      </a>
+    </>
+  )
+}
+
+/**
  * Site information and feedback, rendered in the map's right sidebar, the
  * top-bar popover and the mobile More sheet. The contact section exists only
  * for locales that have a channel — currently zh-CN and zh-TW.
@@ -39,6 +65,7 @@ function Paragraphs({ lines }: { lines: string[] }) {
 export function SiteInfo({ className }: { className?: string }) {
   const { t } = useTranslation()
   const body = t('siteInfo.body', { returnObjects: true }) as string[]
+  const brand = t('brand')
   const contactTitle = t('siteInfo.contact.title', LOCALE_ONLY)
   const contactHint = t('siteInfo.contact.hint', LOCALE_ONLY)
   const groupLabel = t('siteInfo.contact.groupLabel', LOCALE_ONLY)
@@ -47,6 +74,12 @@ export function SiteInfo({ className }: { className?: string }) {
     {
       title: t('siteInfo.title'),
       body: <Paragraphs lines={Array.isArray(body) ? body : [String(body)]} />,
+    },
+    // Between the about body and the locale-gated contact card: the portal is
+    // context for what this site is, not a support channel.
+    {
+      title: brand,
+      body: <ArkiveSection blurb={t('siteInfo.arkive')} brand={brand} homeLabel={t('brandHome')} />,
     },
   ]
   if (contactTitle && contactHint) {

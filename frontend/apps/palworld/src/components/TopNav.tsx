@@ -4,6 +4,7 @@ import { Info } from 'lucide-react'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
 import { BuildInfo, Button, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
+import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 import { getGameVersion } from '../lib/urls'
 import { SITE_VERSION } from '../lib/siteVersion'
 import type { MapEngineChoice } from '../lib/mapEngineChoice'
@@ -82,6 +83,27 @@ export function TopNav({ active, engine, onEngineChange }: {
   return (
     <ShellTopBar
       classNames={{ root: 'hidden border-b border-border bg-card text-card-foreground md:flex' }}
+      leftSlot={
+        /*
+         * Brand wordmark, first item in the shell's left cluster (which uses
+         * `gap-6`, so no margin is needed here). Hidden below `lg` rather than
+         * shrunk: between `md` and `lg` the nav labels plus the right-hand
+         * cluster already fill the 12-unit-tall row, and the zh-CN wordmark is
+         * the longest string in it — dropping the brand keeps the navigation,
+         * the more important half, uncramped. `shrink-0` + `whitespace-nowrap`
+         * stop it from wrapping or being squeezed once it is visible.
+         */
+        <a
+          href={ARKIVE_HOME_URL}
+          {...ARKIVE_HOME_LINK_PROPS}
+          data-testid="brand-link"
+          aria-label={t('brandHome')}
+          title={t('brandHome')}
+          className="hidden shrink-0 items-center whitespace-nowrap text-sm font-bold tracking-tight text-foreground transition-colors hover:text-primary lg:inline-flex"
+        >
+          {t('brand')}
+        </a>
+      }
       nav={{
         items,
         renderItem: (item, className) => (

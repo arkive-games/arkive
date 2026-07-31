@@ -56,6 +56,25 @@ test.describe('site info — desktop', () => {
     await expect(page.getByTestId('site-info-panel')).toBeVisible()
   })
 
+  test('the panel points at the Arkive portal', async ({ page }) => {
+    await page.goto('/pals')
+    await page.getByTestId('contact-menu').click()
+    const panel = page.getByTestId('site-info-panel').first()
+    await expect(panel).toBeVisible()
+    // Blurb: assert the ASCII tail, the head carries the CJK brand alias.
+    await expect(panel).toContainText('ad-free game guide sites')
+    const link = panel.getByTestId('site-info-arkive-link')
+    await expect(link).toBeVisible()
+    await expect(link).toContainText('Arkive')
+    await expect(link).toHaveAttribute('aria-label', 'Arkive home')
+    // Not pinned to a literal URL: the target is build-time config
+    // (`VITE_HOME_URL`, or a same-origin path in a toy build).
+    await expect(link).toHaveAttribute('href', /.+/)
+    // Web build only — a toy build spreads no target/rel.
+    await expect(link).toHaveAttribute('target', '_blank')
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
   test('the right sidebar is a named landmark reporting its expanded state', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('complementary', { name: 'About' })).toBeVisible()

@@ -7,6 +7,14 @@ import { MERCHANT_STRINGS } from './merchantStrings'
 import { BREEDING_STRINGS } from './breedingStrings'
 import { CATALOG_STRINGS } from './catalogStrings'
 import { CHANGELOG_STRINGS } from './changelogStrings'
+import {
+  BRAND_ABOUT_LABELS,
+  BRAND_HOME_LABELS,
+  BRAND_LABELS,
+  SETTINGS_BACK_LABELS,
+  SETTINGS_LANGUAGE_LABELS,
+  SETTINGS_THEME_LABELS,
+} from './chromeStrings'
 import { DUNGEON_STRINGS } from './dungeonStrings'
 import { FISHING_STRINGS } from './fishingStrings'
 import { PAL_STRINGS } from './palStrings'
@@ -994,7 +1002,14 @@ for (const lng of LANGUAGES) {
       // index can't miss. (Same is true of most siblings above — their fallback
       // is vestigial; only QUEST_STRINGS is genuinely `Partial`.) Keep it off:
       // siteInfo.contact is gated on locale-only reads, see siteInfoStrings.ts.
-      siteInfo: SITE_INFO_STRINGS[lng],
+      siteInfo: { ...SITE_INFO_STRINGS[lng], arkive: BRAND_ABOUT_LABELS[lng] },
+      brand: BRAND_LABELS[lng],
+      brandHome: BRAND_HOME_LABELS[lng],
+      settings: {
+        language: SETTINGS_LANGUAGE_LABELS[lng],
+        theme: SETTINGS_THEME_LABELS[lng],
+        back: SETTINGS_BACK_LABELS[lng],
+      },
       catalogLoading: CATALOG_STRINGS[lng].loading,
       catalogShowMore: SHOW_MORE_LABELS[lng],
       more: MORE_LABELS[lng],
