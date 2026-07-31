@@ -1,6 +1,45 @@
 {
   "entries": [
     {
+      "version": "1.12.0",
+      "date": "2026-07-31",
+      "commit": "9e1495dc49a4c3bfd352899947d679028447b36f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The map now draws with a new WebGL renderer by default, so panning and zooming stay smooth even with every marker turned on.",
+            "zh-CN": "地图默认改用全新的 WebGL 渲染引擎，即使显示全部标记，拖动和缩放依然流畅。",
+            "zh-TW": "地圖預設改用全新的 WebGL 渲染引擎，即使顯示全部標記，拖曳和縮放依然流暢。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Prefer the classic renderer? Switch engines from the map-engine button in the top bar — your choice is remembered.",
+            "zh-CN": "想用原来的渲染方式？可在顶栏的「地图引擎」按钮切换，所选引擎会被记住。",
+            "zh-TW": "想用原來的渲染方式？可在頂欄的「地圖引擎」按鈕切換，所選引擎會被記住。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Zooming out is much lighter on memory: the map now loads smaller pre-scaled tiles instead of the full-resolution grid, and every icon ships at a size the page actually uses.",
+            "zh-CN": "缩小地图时的内存占用大幅降低：改为加载预先缩放的小尺寸瓦片，不再加载整套原图；图标也改为按页面实际显示尺寸提供。",
+            "zh-TW": "縮小地圖時的記憶體佔用大幅降低：改為載入預先縮放的小尺寸圖磚，不再載入整套原圖；圖示也改為按頁面實際顯示尺寸提供。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed two broken maps: Reshanta (C) was only showing a quarter of its area, and an Abyss battlefield map with no artwork has been removed from the map picker.",
+            "zh-CN": "修复两张地图：深渊 Reshanta（C）此前只显示四分之一区域；另有一张没有地图图片的深渊战场地图已从地图列表中移除。",
+            "zh-TW": "修復兩張地圖：深淵 Reshanta（C）此前只顯示四分之一區域；另有一張沒有地圖圖片的深淵戰場地圖已從地圖列表中移除。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.11.1",
       "date": "2026-07-30",
       "commit": "e410a83a8f7ef3bda486310c551e5eb353bd13a6",
