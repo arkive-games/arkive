@@ -1,6 +1,45 @@
 {
   "entries": [
     {
+      "version": "1.23.0",
+      "date": "2026-07-31",
+      "commit": "f0d40d88381a256c0b9392ede90ea3aac6af161a",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Tidier breeding calculator on phones: every recipe keeps three squares even inside a drill-down, the favourite and drill-down buttons moved beside the squares instead of onto their own row, and the card heading a drill-down now closes it.",
+            "zh-CN": "手机端配种计算器更紧凑：展开配方后每张卡片仍保持三格，收藏与展开按钮移到方格右侧而不再单独占一行，展开中的卡片按钮改为关闭。",
+            "zh-TW": "手機端配種計算器更緊湊：展開配方後每張卡片仍保持三格，收藏與展開按鈕移到方格右側而不再單獨佔一行，展開中的卡片按鈕改為關閉。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "In multi-generation planning the formula keeps all three squares, with the generation budget in the middle one — tap it to change.",
+            "zh-CN": "多代计划的公式同样保持三格，中间一格为最多代数，点击即可修改。",
+            "zh-TW": "多代計劃的公式同樣保持三格，中間一格為最多代數，點擊即可修改。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Explanations that only appeared on hover are now reachable on touch: tapping a badge such as Mutation opens the note in a card from the bottom of the screen.",
+            "zh-CN": "此前只能悬停查看的说明现在手机上也能看到：点按「突然变异」等标记会从屏幕底部弹出说明卡片。",
+            "zh-TW": "此前只能懸停檢視的說明現在手機上也能看到：點按「突然變異」等標記會從螢幕底部彈出說明卡片。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "On phones, technology tiles were dead squares — their cost, materials and unlocks could not be opened at all. Tapping one now shows the full details.",
+            "zh-CN": "修复手机端科技方块无法点开的问题：此前所需点数、材料与解锁内容完全无法查看，现在点按即可显示完整详情。",
+            "zh-TW": "修復手機端科技方塊無法點開的問題：此前所需點數、材料與解鎖內容完全無法檢視，現在點按即可顯示完整詳情。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.22.1",
       "date": "2026-07-31",
       "commit": "e610e3d8e7d2aff5afe20caee39b812adff7cd9a",
