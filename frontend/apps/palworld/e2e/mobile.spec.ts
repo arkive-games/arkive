@@ -13,16 +13,89 @@ test('bottom tabs navigate between sections', async ({ page }) => {
   await page.goto('/')
   await page.getByTestId('tab-/items').click()
   await expect(page).toHaveURL(/\/items$/)
-  await page.getByTestId('tab-/buildings').click()
-  await expect(page).toHaveURL(/\/buildings$/)
+  await page.getByTestId('tab-/technology').click()
+  await expect(page).toHaveURL(/\/technology$/)
 })
 
 test('More sheet opens and navigates to a secondary route', async ({ page }) => {
   await page.goto('/')
   await page.getByTestId('tab-more').click()
   await expect(page.getByTestId('more-sheet')).toBeVisible()
-  await page.getByTestId('more-/technology').click()
-  await expect(page).toHaveURL(/\/technology$/)
+  await page.getByTestId('more-/buildings').click()
+  await expect(page).toHaveURL(/\/buildings$/)
+})
+
+// Every page the desktop nav offers must be reachable from the phone: the More
+// grid is the only door to the pages that lost their bottom-tab slot.
+test('More sheet exposes every secondary page', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('tab-more').click()
+  for (const key of [
+    '/pals',
+    '/buildings',
+    '/merchants',
+    '/dungeons',
+    '/quests',
+    '/passives',
+    '/active-skills',
+    '/partner-skills',
+    '/stat-simulator',
+    '/research',
+    '/basecamp',
+    '/raids',
+    '/fishing',
+  ]) {
+    await expect(page.getByTestId(`more-${key}`)).toHaveAttribute('href', new RegExp(`${key}$`))
+  }
+})
+
+test('the More tab highlights while a secondary page is open', async ({ page }) => {
+  await page.goto('/fishing')
+  // `text-primary` is what `itemCls` gives the active slot.
+  await expect(page.getByTestId('tab-more')).toHaveClass(/text-primary/)
+  await expect(page.getByTestId('tab-/items')).not.toHaveClass(/text-primary/)
+})
+
+test('the language picker is a sub-page of the same sheet', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('tab-more').click()
+  // Main body: one row, not a wall of language pills.
+  await expect(page.getByTestId('more-lang-zh-CN')).toHaveCount(0)
+  await page.getByTestId('more-lang-open').click()
+  // Still the same sheet — no second modal on top of it.
+  await expect(page.getByTestId('more-sheet')).toHaveCount(1)
+  await expect(page.getByTestId('more-/pals')).toHaveCount(0)
+  await page.getByTestId('more-lang-back').click()
+  await expect(page.getByTestId('more-/pals')).toBeVisible()
+
+  await page.getByTestId('more-lang-open').click()
+  await page.getByTestId('more-lang-zh-CN').click()
+  // Picking a language applies it and drops back to the main body.
+  await expect(page.getByTestId('more-/pals')).toBeVisible()
+  await expect(page.getByTestId('more-lang-open')).toContainText('简体中文')
+
+  // Reopening always starts on the main body, never on the sub-page.
+  await page.keyboard.press('Escape')
+  await page.getByTestId('tab-more').click()
+  await expect(page.getByTestId('more-lang-open')).toBeVisible()
+})
+
+test('theme is a segmented control with the active tab pressed', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('tab-more').click()
+  await expect(page.getByTestId('more-theme-auto')).toHaveAttribute('aria-pressed', 'true')
+  await page.getByTestId('more-theme-dark').click()
+  await expect(page.getByTestId('more-theme-dark')).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('more-theme-auto')).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.locator('html')).toHaveClass(/dark/)
+})
+
+test('the More sheet header carries the Arkive brand link', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('tab-more').click()
+  const brand = page.getByTestId('more-brand')
+  await expect(brand).toBeVisible()
+  await expect(brand).toHaveAttribute('href', /.+/)
 })
 
 test('active skills render as cards, not the wide table', async ({ page }) => {
