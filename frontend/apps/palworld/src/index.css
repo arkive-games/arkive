@@ -82,6 +82,14 @@ html {
   font-size: 17px;
 }
 
+/* Phones (< 768px, the `useIsMobile` breakpoint) sit closer to the eye but the
+   text is physically much smaller, so nudge the same knob up one step there. */
+@media (max-width: 767px) {
+  html {
+    font-size: 18px;
+  }
+}
+
 /* Region outside the map image (Leaflet void). The tiles are generated with the
    out-of-border void cleared to transparent (tools: palworld.maps.slice_tiles),
    so this background shows through both beyond the image bounds AND inside the
