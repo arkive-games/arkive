@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.0",
+      "date": "2026-07-31",
+      "commit": "21cb673700a70e0950259ebb6c92012382d99f0f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Choose between the WebGL and Leaflet map renderers; WebGL is now the default.",
+            "zh-CN": "可在 WebGL 与 Leaflet 地图渲染器之间切换，现默认使用 WebGL。",
+            "zh-TW": "可在 WebGL 與 Leaflet 地圖渲染器之間切換，現預設使用 WebGL。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.1.0",
       "date": "2026-07-30",
       "commit": "daf40a33b86e70d11d79f328e55acafd873a46fc",
