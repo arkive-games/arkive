@@ -38,10 +38,19 @@ async function clickInViewportMarker(page: Page) {
 // We open a popup, let everything settle, then observe the popup pane's
 // childList while dragging. A blink = the popup node removed then re-added
 // (>= 2 child mutations). With a stable `position` it should be zero.
+//
+// LEAFLET-ONLY, pinned with `?engine=leaflet`. Both the failure mode and the
+// measurement are react-leaflet's: a popup LAYER torn down and re-opened by the
+// `position` dep of react-leaflet's lifecycle effect, counted as childList
+// mutations of `.leaflet-popup-pane`. The WebGL engine (the default) has no
+// popup layer — its popup is a plain `.gmgl-popup` div mounted from
+// `selectedMarkerId` alone and repositioned imperatively, so there is no
+// equivalent to observe. gl-map.spec.ts covers that the GL popup opens on a
+// marker click and closes on a background click.
 test("dragging the map does not blink the open marker popup", async ({
   page,
 }) => {
-  await page.goto("/?map=World_L_A&lng=en-US");
+  await page.goto("/?engine=leaflet&map=World_L_A&lng=en-US");
   await page
     .locator(".leaflet-marker-icon")
     .first()

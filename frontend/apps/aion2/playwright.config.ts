@@ -1,6 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = process.env.E2E_PORT ?? "5173";
+// NOT 5173: `reuseExistingServer` means a stray dev server on that port (this
+// machine routinely has one, and it is not always aion2) would be tested
+// instead of a freshly started aion2. 15188 sits next to aion2's own dev port
+// (15173, see CLAUDE.md) and is not handed to any app.
+const port = process.env.E2E_PORT ?? "15188";
 
 export default defineConfig({
   testDir: "./e2e",

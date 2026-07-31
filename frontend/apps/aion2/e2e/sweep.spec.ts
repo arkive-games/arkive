@@ -36,7 +36,21 @@ for (const route of ROUTES) {
         .filter((e) => {
           const b = e.getBoundingClientRect();
           if (b.width <= 0) return false;
-          if (e.closest(".leaflet-pane") || e.closest(".gm-map-canvas")) return false;
+          // Map INTERNALS are exempt on both engines: their roots clip
+          // (`overflow: hidden`), so a marker or a name label whose box sticks
+          // out past the map's edge is drawn cropped and cannot widen the page.
+          // `.gmgl-map-root` is the WebGL engine's counterpart of the Leaflet
+          // pane / `.gm-map-canvas` pair already listed here — its
+          // `.gmgl-label` name tags overhang exactly the way Leaflet tooltips
+          // inside `.leaflet-pane` do. The real overflow guard is the
+          // `scrollW === innerW` assertion below, which stays unconditional.
+          if (
+            e.closest(".leaflet-pane") ||
+            e.closest(".gm-map-canvas") ||
+            e.closest(".gmgl-map-root")
+          ) {
+            return false;
+          }
           return b.right > 391 || b.left < -1;
         })
         .slice(0, 3)

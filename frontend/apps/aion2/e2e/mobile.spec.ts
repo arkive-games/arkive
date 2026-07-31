@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { ENGINES, mapRoot, openMap, zoomButtons, zoomPill } from "./engines";
 
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 800 };
@@ -32,21 +33,25 @@ test.describe("mobile chrome", () => {
     expect(scrollW).toBe(390);
   });
 
-  test("map fills the viewport width", async ({ page }) => {
-    await page.goto("/?map=World_L_A&lng=en-US");
-    const el = page.locator(".leaflet-container");
-    await el.waitFor({ state: "visible" });
-    const box = await el.boundingBox();
-    // Was ~44px, squeezed beside the 346px desktop sidebar.
-    expect(box!.width).toBeGreaterThanOrEqual(380);
-    // And it has a real height, not a collapsed flex child.
-    expect(box!.height).toBeGreaterThanOrEqual(500);
-    await expect(page.getByTestId("marker-types-section")).toHaveCount(0);
-  });
+  // Both engines: the mobile map layout is app CSS, but each engine brings its
+  // own root element, and only the one actually mounted can prove the box is
+  // full-width. (`.leaflet-container` vs the GL `<canvas>`.)
+  for (const engine of ENGINES) {
+    test(`map fills the viewport width [${engine}]`, async ({ page }) => {
+      await openMap(page, engine);
+      const box = await mapRoot(page, engine).boundingBox();
+      // Was ~44px, squeezed beside the 346px desktop sidebar.
+      expect(box!.width).toBeGreaterThanOrEqual(380);
+      // And it has a real height, not a collapsed flex child.
+      expect(box!.height).toBeGreaterThanOrEqual(500);
+      await expect(page.getByTestId("marker-types-section")).toHaveCount(0);
+    });
+  }
 
+  // Default engine only: the sheets are app chrome, nothing here touches the
+  // renderer beyond needing a mounted map underneath.
   test("filter and search sheets open from their FABs", async ({ page }) => {
-    await page.goto("/?map=World_L_A&lng=en-US");
-    await page.locator(".leaflet-container").waitFor({ state: "visible" });
+    await openMap(page, "gl");
 
     await page.getByTestId("map-fab-filter").click();
     const filterSheet = page.getByTestId("filter-sheet");
@@ -64,51 +69,69 @@ test.describe("mobile chrome", () => {
     await expect(searchSheet.getByTestId("search-results")).toBeVisible();
   });
 
-  test("map chrome is not trapped behind the bottom tab bar", async ({ page }) => {
-    await page.goto("/?map=World_L_A&lng=en-US");
-    await page.locator(".leaflet-container").waitFor({ state: "visible" });
-    const barTop = (await page.getByTestId("bottom-tab-bar").boundingBox())!.y;
+  // Both engines, and this one has bitten before: the lift that clears the tab
+  // bar is CSS keyed on the zoom pill's class, and the two engines emit
+  // DIFFERENT prefixes (`.gm-zoom` vs `.gmgl-zoom`). A rule that matches
+  // nothing reports no error — the zoom-out button just silently goes
+  // untappable again — so the assertion has to run per engine.
+  for (const engine of ENGINES) {
+    test(`map chrome is not trapped behind the bottom tab bar [${engine}]`, async ({
+      page,
+    }) => {
+      await openMap(page, engine);
+      const barTop = (await page.getByTestId("bottom-tab-bar").boundingBox())!.y;
 
-    // Every zoom button must be fully above the tab bar, or it cannot be
-    // tapped. The zoom-out half used to sit entirely underneath it.
-    const buttons = page.locator(".gm-zoom-btn");
-    const n = await buttons.count();
-    expect(n).toBeGreaterThan(0);
-    for (let i = 0; i < n; i++) {
-      const b = (await buttons.nth(i).boundingBox())!;
-      expect(b.y + b.height).toBeLessThanOrEqual(barTop);
-    }
+      // Every zoom button must be fully above the tab bar, or it cannot be
+      // tapped. The zoom-out half used to sit entirely underneath it.
+      const buttons = zoomButtons(page, engine);
+      const n = await buttons.count();
+      expect(n).toBeGreaterThan(0);
+      for (let i = 0; i < n; i++) {
+        const b = (await buttons.nth(i).boundingBox())!;
+        expect(b.y + b.height).toBeLessThanOrEqual(barTop);
+      }
 
-    // The FABs must clear the tab bar too, and must not overlap the zoom pill.
-    const zoom = (await page.locator(".gm-zoom").boundingBox())!;
-    for (const id of ["map-fab-search", "map-fab-filter"]) {
-      const f = (await page.getByTestId(id).boundingBox())!;
-      expect(f.y + f.height).toBeLessThanOrEqual(barTop);
-      expect(f.y + f.height).toBeLessThanOrEqual(zoom.y);
-    }
-  });
+      // The FABs must clear the tab bar too, and must not overlap the zoom pill.
+      const zoom = (await zoomPill(page, engine).boundingBox())!;
+      for (const id of ["map-fab-search", "map-fab-filter"]) {
+        const f = (await page.getByTestId(id).boundingBox())!;
+        expect(f.y + f.height).toBeLessThanOrEqual(barTop);
+        expect(f.y + f.height).toBeLessThanOrEqual(zoom.y);
+      }
+    });
+  }
 
-  test("toggling a subtype in the filter sheet changes the map", async ({ page }) => {
-    await page.goto("/?map=World_L_A&lng=en-US");
-    await page.locator(".leaflet-container").waitFor({ state: "visible" });
-    await expect
-      .poll(() => page.locator(".leaflet-marker-icon").count())
-      .toBeGreaterThan(0);
-    const before = await page.locator(".leaflet-marker-icon").count();
+  // Both engines. What is counted differs because GL markers are not DOM: the
+  // Leaflet engine has one node per marker, while the GL engine puts only the
+  // permanent NAME LABELS in the DOM (`.gmgl-label`, which are POOLED — hidden
+  // ones stay in the tree, hence `:visible`). Labels are on by default in
+  // aion2, and a label can never outlive its pin, so they track what the canvas
+  // draws closely enough for a "did the filter reach the map" assertion.
+  // gl-map.spec.ts proves the same thing against the canvas itself, by clicking.
+  for (const engine of ENGINES) {
+    test(`toggling a subtype in the filter sheet changes the map [${engine}]`, async ({
+      page,
+    }) => {
+      await openMap(page, engine);
+      const drawn = page.locator(
+        engine === "gl" ? ".gmgl-label:visible" : ".leaflet-marker-icon",
+      );
 
-    await page.getByTestId("map-fab-filter").click();
-    const sheet = page.getByTestId("filter-sheet");
-    await sheet.waitFor({ state: "visible" });
-    await sheet
-      .locator("button")
-      .filter({ hasText: /^Hide all$/ })
-      .first()
-      .click();
+      await expect.poll(() => drawn.count(), { timeout: 10_000 }).toBeGreaterThan(0);
+      const before = await drawn.count();
 
-    await expect
-      .poll(() => page.locator(".leaflet-marker-icon").count())
-      .toBeLessThan(before);
-  });
+      await page.getByTestId("map-fab-filter").click();
+      const sheet = page.getByTestId("filter-sheet");
+      await sheet.waitFor({ state: "visible" });
+      await sheet
+        .locator("button")
+        .filter({ hasText: /^Hide all$/ })
+        .first()
+        .click();
+
+      await expect.poll(() => drawn.count(), { timeout: 10_000 }).toBeLessThan(before);
+    });
+  }
 
   test("bottom tab bar navigates and marks the active tab", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");

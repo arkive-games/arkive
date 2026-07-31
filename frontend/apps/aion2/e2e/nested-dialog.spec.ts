@@ -1,16 +1,22 @@
 import { test, expect } from "@playwright/test";
+import { openMap } from "./engines";
 
 /**
  * "Clear completed" lives inside the mobile filter sheet, and its AlertDialog
  * portals to <body> as a sibling of the sheet. If the dialog's stacking order
  * is below the sheet's, the confirm buttons render behind the sheet and the UI
  * looks frozen.
+ *
+ * Runs on the WebGL engine — the DEFAULT one, and the one whose map root opens
+ * its own stacking context (`isolation: isolate` on `.gmgl-map-root`), so it is
+ * also the interesting case for a portalled dialog. Nothing here is
+ * Leaflet-specific: the map is only a backdrop, so the old `.leaflet-container`
+ * wait is just replaced by the GL canvas.
  */
 test.use({ viewport: { width: 390, height: 844 } });
 
 test("Clear completed confirm is above the filter sheet", async ({ page }) => {
-  await page.goto("/?map=World_L_A&lng=en-US");
-  await page.locator(".leaflet-container").waitFor({ state: "visible" });
+  await openMap(page, "gl");
   await page.getByTestId("map-fab-filter").click();
   const sheet = page.getByTestId("filter-sheet");
   await sheet.waitFor({ state: "visible" });

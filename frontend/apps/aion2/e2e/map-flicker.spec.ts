@@ -3,10 +3,17 @@ import { test, expect } from "@playwright/test";
 // Regression: moving the cursor must NOT repaint the whole region SVG overlay
 // (root cause of the marker/tooltip "blink"). We assert the overlay pane sees
 // only minimal mutations during a mousemove burst that doesn't cross regions.
+//
+// LEAFLET-ONLY, pinned with `?engine=leaflet`. The bug being guarded is a
+// react-leaflet one — every region `<path>` in `.leaflet-overlay-pane` being
+// restyled on each mousemove — and the metric IS the DOM mutation count of that
+// pane. The WebGL engine (the default) draws regions into the canvas, so it has
+// no overlay pane, no per-region nodes and therefore nothing to churn: the
+// assertion is not portable, it is void there.
 test("cursor movement does not churn the region overlay (no flicker)", async ({
   page,
 }) => {
-  await page.goto("/?map=World_L_A&lng=en-US");
+  await page.goto("/?engine=leaflet&map=World_L_A&lng=en-US");
   await page.locator(".leaflet-marker-icon").first().waitFor({ timeout: 20_000 });
 
   // Labels on (permanent tooltips present) to mirror the reported scenario.

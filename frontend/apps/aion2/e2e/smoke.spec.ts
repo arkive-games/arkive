@@ -1,9 +1,20 @@
 import { test, expect } from "@playwright/test";
 
+// The three map-rendering tests below pin `?engine=leaflet`: each of them
+// asserts on DOM that only the Leaflet engine produces — one `img` per tile
+// (`.leaflet-tile-loaded`), one node per marker (`.leaflet-marker-icon`), and
+// `.leaflet-popup`. The WebGL engine has been the DEFAULT since 9e1495d and
+// draws all three into a single canvas, so there is nothing to count or click
+// there; its equivalents (canvas + handle + no console errors, marker click →
+// popup, subtype filter → what the canvas draws) live in gl-map.spec.ts.
+//
+// The rest of this file is engine-agnostic app chrome and stays on the default
+// engine, which is exactly what it should be smoking.
+
 test("map renders tiles and markers from local data, no console errors", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-  await page.goto("/?map=World_L_A");
+  await page.goto("/?engine=leaflet&map=World_L_A");
   await expect(page.locator(".leaflet-container")).toBeVisible();
   await expect(page.locator(".leaflet-tile-loaded").first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15_000 });
@@ -11,7 +22,7 @@ test("map renders tiles and markers from local data, no console errors", async (
 });
 
 test("type filter toggles marker visibility", async ({ page }) => {
-  await page.goto("/?map=World_L_A&lng=en-US");
+  await page.goto("/?engine=leaflet&map=World_L_A&lng=en-US");
   await page.locator(".leaflet-marker-icon").first().waitFor({ timeout: 15_000 });
   // LOD is off by default, so the subtype toggle alone governs visibility.
   const before = await page.locator(".leaflet-marker-icon").count();
@@ -30,7 +41,7 @@ test("search returns hits", async ({ page }) => {
 });
 
 test("clicking a marker opens a local popup", async ({ page }) => {
-  await page.goto("/?map=World_L_A&lng=en-US");
+  await page.goto("/?engine=leaflet&map=World_L_A&lng=en-US");
   await page.locator(".leaflet-marker-icon").first().waitFor({ timeout: 15_000 });
   // LOD is off by default, so higher-tier markers also render at the default zoom,
   // giving the in-viewport / clear-of-sidebar search plenty of clickable candidates.
