@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.22.3",
+      "date": "2026-08-01",
+      "commit": "229e54cbd0eabf87bb1294c5dc4123a934ffc012",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed the phone More panel staying open over the desktop layout after rotating a phone to landscape.",
+            "zh-CN": "修复手机横屏后，「更多」面板仍覆盖在桌面版布局之上的问题。",
+            "zh-TW": "修復手機橫螢幕後，「更多」面板仍覆蓋在桌面版佈局之上的問題。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.22.2",
       "date": "2026-07-31",
       "commit": "f0d40d88381a256c0b9392ede90ea3aac6af161a",
