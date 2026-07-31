@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.22.1",
+      "date": "2026-07-31",
+      "commit": "e610e3d8e7d2aff5afe20caee39b812adff7cd9a",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "In the Bilibili toy build, the footer link now leads to the Arkive portal toy, and links that cannot work there (repository, filing record, release links) are no longer shown.",
+            "zh-CN": "哔哩哔哩小玩具版本中，页脚链接改为指向藏舟攻略小玩具；在该环境下无法访问的链接（仓库、备案、版本发布）不再显示。",
+            "zh-TW": "嗶哩嗶哩小玩具版本中，頁腳連結改為指向藏舟攻略小玩具；在該環境下無法存取的連結（倉庫、備案、版本發布）不再顯示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.22.0",
       "date": "2026-07-31",
       "commit": "a6dbb7e44aef006ea7ea3f0e2737ba63e4c8336c",
