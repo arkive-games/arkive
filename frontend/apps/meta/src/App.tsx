@@ -3,7 +3,10 @@ import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
 import { BuildInfo, SiteFooter } from '@gamemap/ui'
 import { ArrowUpRight } from 'lucide-react'
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
-import { SITES } from './sites'
+import { VISIBLE_SITES, siteHref } from './sites'
+
+/** Bilibili Toy build (see sites.ts) — a sealed same-origin /toy/<slug>/ directory. */
+const IS_TOY = Boolean(import.meta.env.VITE_TOY)
 
 export default function App() {
   const { t, i18n } = useTranslation()
@@ -29,11 +32,22 @@ export default function App() {
       />
 
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-10">
-        <div className="grid gap-6 sm:grid-cols-2">
-          {SITES.map((site) => (
+        {/* Two columns only when there are at least two cards: a toy build shows
+            just the games that have a toy, and a lone half-width card looks broken. */}
+        <div
+          className={
+            VISIBLE_SITES.length > 1
+              ? 'grid gap-6 sm:grid-cols-2'
+              : 'mx-auto grid w-full max-w-xl gap-6'
+          }
+        >
+          {VISIBLE_SITES.map((site) => (
+            /* No target="_blank" in either build: a toy navigates in place
+               (popping tabs out of Bilibili's own page chrome is jarring and
+               unreliable), and the web portal has always done the same. */
             <a
               key={site.id}
-              href={site.url}
+              href={siteHref(site)}
               className="group relative block aspect-video overflow-hidden rounded-2xl border border-border shadow-xl shadow-black/25 ring-1 ring-black/5 transition-shadow duration-300 outline-none hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-ring"
             >
               <img
@@ -56,11 +70,24 @@ export default function App() {
         </div>
       </main>
 
-      <SiteFooter
-        homeUrl={import.meta.env.VITE_HOME_URL}
-        githubUrl={import.meta.env.VITE_GITHUB_URL}
-        icpBeian={import.meta.env.VITE_ICP_BEIAN}
-      />
+      {/* The shared SiteFooter links out to the public site, the GitHub org and
+          our ICP filing. None of those belong in a toy: they all leave
+          bilibili.com, and the ICP record describes OUR hosting — it says
+          nothing about a page served by Bilibili, so displaying it there is
+          simply wrong. The toy therefore keeps the same footer band as plain
+          text. BuildInfo stays in both builds: its only link is a commit page
+          tucked inside a hovercard, same as the live palworld toy ships. */}
+      {IS_TOY ? (
+        <footer className="border-t border-border px-4 py-4 text-center text-xs text-muted-foreground">
+          {t('brand')} © 2025-2026
+        </footer>
+      ) : (
+        <SiteFooter
+          homeUrl={import.meta.env.VITE_HOME_URL}
+          githubUrl={import.meta.env.VITE_GITHUB_URL}
+          icpBeian={import.meta.env.VITE_ICP_BEIAN}
+        />
+      )}
     </div>
   )
 }

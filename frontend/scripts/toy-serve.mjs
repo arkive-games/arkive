@@ -4,6 +4,8 @@
 // Mounts dist-toy at /toy/<slug>/ exactly like the platform. Deliberately NO
 // SPA fallback: hash routing needs none, and a 404 here means a root-absolute
 // path bug that would also break on the platform.
+// Package-shape agnostic: it serves whatever dist-toy contains, so a site-only
+// toy (the `arkive` portal, no data/resource folders) needs nothing special.
 import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -19,6 +21,8 @@ const MIME = {
   '.json': 'application/json',
   '.webp': 'image/webp',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import {
   validateToyConfig,
+  bundlesArtifacts,
   checkPackage,
   decidePublishAction,
   slugFromToyUrl,
@@ -18,6 +19,14 @@ const GOOD_CONFIG = {
   resourceDir: 'resource-palworld',
   dataBase: 'data',
   resourceBase: 'palres',
+}
+
+// The portal (apps/meta): pure site, nothing to fetch, so no artifact keys.
+const SITE_ONLY_CONFIG = {
+  slug: 'arkive',
+  title: '藏舟攻略网 · Arkive',
+  visibility: 'public',
+  poster: 'toy-poster.png',
 }
 
 describe('validateToyConfig', () => {
@@ -38,6 +47,27 @@ describe('validateToyConfig', () => {
   it('rejects dataBase/resourceBase containing path separators', () => {
     expect(() => validateToyConfig({ ...GOOD_CONFIG, dataBase: 'a/b' })).toThrow(/dataBase/)
     expect(() => validateToyConfig({ ...GOOD_CONFIG, resourceBase: '../x' })).toThrow(/resourceBase/)
+  })
+  it('rejects dataBase equal to resourceBase (they become sibling folders)', () => {
+    expect(() => validateToyConfig({ ...GOOD_CONFIG, resourceBase: 'data' })).toThrow(/must differ/)
+  })
+  it('accepts a site-only config with no artifact keys', () => {
+    expect(() => validateToyConfig(SITE_ONLY_CONFIG)).not.toThrow()
+  })
+  it('rejects a partial artifact group', () => {
+    const { resourceDir, ...missingOne } = GOOD_CONFIG
+    expect(() => validateToyConfig(missingOne)).toThrow(/all-or-nothing/)
+    expect(() => validateToyConfig({ ...SITE_ONLY_CONFIG, dataBase: 'data' })).toThrow(/all-or-nothing/)
+  })
+  it('rejects an artifact key present but empty', () => {
+    expect(() => validateToyConfig({ ...GOOD_CONFIG, dataDir: '' })).toThrow(/dataDir/)
+  })
+})
+
+describe('bundlesArtifacts', () => {
+  it('is true for a game config and false for a site-only one', () => {
+    expect(bundlesArtifacts(validateToyConfig(GOOD_CONFIG))).toBe(true)
+    expect(bundlesArtifacts(validateToyConfig(SITE_ONLY_CONFIG))).toBe(false)
   })
 })
 

@@ -7,6 +7,14 @@ import path from 'node:path'
 export const VISIBILITIES = ['link-only', 'password', 'public']
 const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/
 const FOLDER_RE = /^[A-Za-z0-9._-]+$/
+/**
+ * The artifact-bundling keys, an all-or-nothing group: a game app ships its
+ * `data-<app>` + `resource-<app>` repos inside the package, while the portal
+ * (`apps/meta`, slug `arkive`) is pure site with nothing to fetch. A partial
+ * set is always a mistake — e.g. a `dataBase` with no `dataDir` would inject
+ * `VITE_DATA_BASE_URL` pointing at a folder the build never copies.
+ */
+export const ARTIFACT_KEYS = ['dataDir', 'resourceDir', 'dataBase', 'resourceBase']
 // Entries that must never ship inside a toy package.
 const FORBIDDEN = new Set(['.git', 'node_modules', 'toy.yaml', '.DS_Store', '__MACOSX'])
 
@@ -31,8 +39,13 @@ export function parseArgs(argv, booleanFlags = []) {
   return out
 }
 
+/** True when this toy bundles data/resource artifact repos (validated config). */
+export function bundlesArtifacts(cfg) {
+  return cfg.dataDir !== undefined
+}
+
 export function validateToyConfig(cfg) {
-  for (const key of ['slug', 'title', 'visibility', 'dataDir', 'resourceDir', 'dataBase', 'resourceBase']) {
+  for (const key of ['slug', 'title', 'visibility']) {
     if (typeof cfg[key] !== 'string' || cfg[key] === '') {
       throw new Error(`toy.config.json: missing or empty "${key}"`)
     }
@@ -43,9 +56,27 @@ export function validateToyConfig(cfg) {
   if (!VISIBILITIES.includes(cfg.visibility)) {
     throw new Error(`toy.config.json: visibility must be one of ${VISIBILITIES.join('|')}`)
   }
-  for (const key of ['dataBase', 'resourceBase']) {
-    if (!FOLDER_RE.test(cfg[key])) {
-      throw new Error(`toy.config.json: "${key}" must be a plain folder name, got "${cfg[key]}"`)
+  for (const key of ARTIFACT_KEYS) {
+    if (cfg[key] !== undefined && (typeof cfg[key] !== 'string' || cfg[key] === '')) {
+      throw new Error(`toy.config.json: "${key}" must be a non-empty string when present`)
+    }
+  }
+  const present = ARTIFACT_KEYS.filter((key) => cfg[key] !== undefined)
+  if (present.length !== 0 && present.length !== ARTIFACT_KEYS.length) {
+    const missing = ARTIFACT_KEYS.filter((key) => cfg[key] === undefined)
+    throw new Error(
+      `toy.config.json: ${ARTIFACT_KEYS.join('/')} are all-or-nothing — got ${present.join(', ')} ` +
+      `but missing ${missing.join(', ')} (omit all four for a site-only toy such as the portal)`,
+    )
+  }
+  if (bundlesArtifacts(cfg)) {
+    for (const key of ['dataBase', 'resourceBase']) {
+      if (!FOLDER_RE.test(cfg[key])) {
+        throw new Error(`toy.config.json: "${key}" must be a plain folder name, got "${cfg[key]}"`)
+      }
+    }
+    if (cfg.dataBase === cfg.resourceBase) {
+      throw new Error(`toy.config.json: dataBase and resourceBase must differ, both are "${cfg.dataBase}"`)
     }
   }
   return cfg

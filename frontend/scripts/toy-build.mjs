@@ -3,13 +3,15 @@
 //   pnpm toy:build --app palworld
 // Output: frontend/apps/<app>/dist-toy/ = vite build (relative base, hash
 // routing via VITE_TOY) + the data-<app> and resource-<app> artifact repos.
+// Site-only toys (no artifact keys in the config, e.g. the `arkive` portal)
+// skip the artifact lookup/copy entirely.
 // Spec: docs/superpowers/specs/2026-07-31-toy-publish-tooling-design.md
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { parseArgs, loadToyConfig, siblingRepo, checkPackage, packageSize } from './toy-lib.mjs'
+import { parseArgs, loadToyConfig, bundlesArtifacts, siblingRepo, checkPackage, packageSize } from './toy-lib.mjs'
 
 const FRONTEND = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -29,17 +31,24 @@ if (!fs.existsSync(appDir)) fail(`no such app: ${appDir}`)
 let cfg
 try { cfg = loadToyConfig(appDir) } catch (e) { fail(e.message) }
 
-const dataDir = process.env.TOY_DATA_DIR ?? siblingRepo(appDir, cfg.dataDir)
-const resDir = process.env.TOY_RES_DIR ?? siblingRepo(appDir, cfg.resourceDir)
-if (!dataDir) fail(`artifact repo "${cfg.dataDir}" not found in ancestor dirs (override with TOY_DATA_DIR)`)
-if (!resDir) fail(`artifact repo "${cfg.resourceDir}" not found in ancestor dirs (override with TOY_RES_DIR)`)
+const withArtifacts = bundlesArtifacts(cfg)
+let dataDir
+let resDir
+if (withArtifacts) {
+  dataDir = process.env.TOY_DATA_DIR ?? siblingRepo(appDir, cfg.dataDir)
+  resDir = process.env.TOY_RES_DIR ?? siblingRepo(appDir, cfg.resourceDir)
+  if (!dataDir) fail(`artifact repo "${cfg.dataDir}" not found in ancestor dirs (override with TOY_DATA_DIR)`)
+  if (!resDir) fail(`artifact repo "${cfg.resourceDir}" not found in ancestor dirs (override with TOY_RES_DIR)`)
+}
 
 const outDir = path.join(appDir, 'dist-toy')
+// A site-only toy gets no VITE_DATA_BASE_URL/VITE_RESOURCE_BASE_URL at all:
+// there is no folder for them to point at, and an app that fetched from one
+// should be failing loudly at build config time rather than at runtime.
 const env = {
   ...process.env,
   VITE_TOY: '1',
-  VITE_DATA_BASE_URL: cfg.dataBase,
-  VITE_RESOURCE_BASE_URL: cfg.resourceBase,
+  ...(withArtifacts ? { VITE_DATA_BASE_URL: cfg.dataBase, VITE_RESOURCE_BASE_URL: cfg.resourceBase } : {}),
 }
 
 console.log(`toy-build: building ${app} (slug ${cfg.slug})`)
@@ -51,29 +60,30 @@ execSync(`pnpm --filter ${app} exec vite build --base ./ --outDir dist-toy --emp
 })
 
 // Bundle the artifact repos. Excluded: VCS dirs and edgeone.json (host config,
-// not content the app fetches).
-const copyFilter = (src) => {
-  const base = path.basename(src)
-  if (base === '.git') return false
-  if (base === 'edgeone.json') return false
-  return true
-}
-if (cfg.dataBase === cfg.resourceBase) {
-  fail(`dataBase and resourceBase must differ, both are "${cfg.dataBase}"`)
-}
-const dataOut = path.join(outDir, cfg.dataBase)
-const resOut = path.join(outDir, cfg.resourceBase)
-if (fs.existsSync(dataOut)) fail(`output collision: ${dataOut} already exists (vite output clashes with dataBase)`)
-if (fs.existsSync(resOut)) fail(`output collision: ${resOut} already exists (vite output clashes with resourceBase)`)
+// not content the app fetches). Skipped entirely for a site-only toy.
+if (withArtifacts) {
+  const copyFilter = (src) => {
+    const base = path.basename(src)
+    if (base === '.git') return false
+    if (base === 'edgeone.json') return false
+    return true
+  }
+  const dataOut = path.join(outDir, cfg.dataBase)
+  const resOut = path.join(outDir, cfg.resourceBase)
+  if (fs.existsSync(dataOut)) fail(`output collision: ${dataOut} already exists (vite output clashes with dataBase)`)
+  if (fs.existsSync(resOut)) fail(`output collision: ${resOut} already exists (vite output clashes with resourceBase)`)
 
-try {
-  console.log(`toy-build: copying ${dataDir} -> ${cfg.dataBase}/`)
-  fs.cpSync(dataDir, dataOut, { recursive: true, filter: copyFilter })
-  console.log(`toy-build: copying ${resDir} -> ${cfg.resourceBase}/`)
-  fs.cpSync(resDir, resOut, { recursive: true, filter: copyFilter })
-} catch (e) {
-  fs.rmSync(outDir, { recursive: true, force: true })
-  fail(`copying artifact repos failed: ${e.message}`)
+  try {
+    console.log(`toy-build: copying ${dataDir} -> ${cfg.dataBase}/`)
+    fs.cpSync(dataDir, dataOut, { recursive: true, filter: copyFilter })
+    console.log(`toy-build: copying ${resDir} -> ${cfg.resourceBase}/`)
+    fs.cpSync(resDir, resOut, { recursive: true, filter: copyFilter })
+  } catch (e) {
+    fs.rmSync(outDir, { recursive: true, force: true })
+    fail(`copying artifact repos failed: ${e.message}`)
+  }
+} else {
+  console.log('toy-build: site-only toy — no data/resource artifacts bundled')
 }
 
 const { errors, warnings } = checkPackage(outDir)

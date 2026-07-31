@@ -79,10 +79,19 @@ const mylist = Array.isArray(mylistRaw) ? mylistRaw : mylistRaw?.list ?? []
 const action = decidePublishAction({ history, mylist, slug: cfg.slug })
 console.log(`toy-publish: ${action.mode} (${action.reason})`)
 
+// The poster is a create-time argument only. Review submission REQUIRES one
+// (server error 307009) even though preview works without it, so a create with
+// `poster` configured is the moment it gets set. On update we deliberately do
+// not re-send it: `toy update <id> <path> --poster` is unverified, while a
+// metadata-only `toy update <id> --poster <file>` is the documented way to
+// change a cover — so we print that hint instead of guessing a flag.
 let posterPath
 if (action.mode === 'create' && cfg.poster) {
   posterPath = path.resolve(appDir, cfg.poster)
   if (!fs.existsSync(posterPath)) fail(`poster not found: ${posterPath}`)
+}
+if (action.mode === 'update' && cfg.poster) {
+  console.log(`toy-publish: note — the poster is not re-sent on update; set/replace it with \`toy update ${action.id} --poster ${path.resolve(appDir, cfg.poster)}\``)
 }
 const argv = action.mode === 'create'
   ? ['create', distDir,

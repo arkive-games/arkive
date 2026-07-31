@@ -117,5 +117,8 @@ pt-BR, ru-RU, th-TH, tr-TR, vi-VN, zh-CN, zh-TW`) get values. Game names ("AION2
 
 - Translation quality for 17 locales is machine-assisted; strings are short and
   low-stakes (marketing descriptions), acceptable for a personal hub.
-- The two logo assets are copied into `apps/meta/public` because the meta site is a
-  separate deployment and cannot reach the sub-apps' public dirs at runtime.
+- The two logo assets are copied into `apps/meta/src/assets` because the meta site is a
+  separate deployment and cannot reach the sub-apps' public dirs at runtime. They live
+  under `src/` (imported, not served from `public/`) so Vite hashes them and rewrites
+  the URL against the build's base — a root-absolute `/palworld-bg.webp` would 404 in
+  the Bilibili toy build, which is served from `/toy/arkive/`.
