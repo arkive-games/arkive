@@ -22,6 +22,7 @@ let args
 try { args = parseArgs(process.argv.slice(2)) } catch (e) { fail(e.message) }
 const app = args.app
 if (!app) fail('--app is required (e.g. --app palworld)')
+if (!/^[a-z0-9-]+$/.test(app)) fail(`invalid app name "${app}"`)
 const appDir = path.join(FRONTEND, 'apps', app)
 if (!fs.existsSync(appDir)) fail(`no such app: ${appDir}`)
 
@@ -57,10 +58,23 @@ const copyFilter = (src) => {
   if (base === 'edgeone.json') return false
   return true
 }
-console.log(`toy-build: copying ${dataDir} -> ${cfg.dataBase}/`)
-fs.cpSync(dataDir, path.join(outDir, cfg.dataBase), { recursive: true, filter: copyFilter })
-console.log(`toy-build: copying ${resDir} -> ${cfg.resourceBase}/`)
-fs.cpSync(resDir, path.join(outDir, cfg.resourceBase), { recursive: true, filter: copyFilter })
+if (cfg.dataBase === cfg.resourceBase) {
+  fail(`dataBase and resourceBase must differ, both are "${cfg.dataBase}"`)
+}
+const dataOut = path.join(outDir, cfg.dataBase)
+const resOut = path.join(outDir, cfg.resourceBase)
+if (fs.existsSync(dataOut)) fail(`output collision: ${dataOut} already exists (vite output clashes with dataBase)`)
+if (fs.existsSync(resOut)) fail(`output collision: ${resOut} already exists (vite output clashes with resourceBase)`)
+
+try {
+  console.log(`toy-build: copying ${dataDir} -> ${cfg.dataBase}/`)
+  fs.cpSync(dataDir, dataOut, { recursive: true, filter: copyFilter })
+  console.log(`toy-build: copying ${resDir} -> ${cfg.resourceBase}/`)
+  fs.cpSync(resDir, resOut, { recursive: true, filter: copyFilter })
+} catch (e) {
+  fs.rmSync(outDir, { recursive: true, force: true })
+  fail(`copying artifact repos failed: ${e.message}`)
+}
 
 const { errors, warnings } = checkPackage(outDir)
 for (const w of warnings) console.warn(`toy-build: WARN ${w}`)
