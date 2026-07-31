@@ -2,13 +2,16 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Info } from 'lucide-react'
 import { ShellTopBar, ThemeToggle, type ShellNavItem } from '@gamemap/map-shell'
-import { BuildInfo, Button, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
+import { BuildInfo, Button, EngineToggle, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 import { getGameVersion } from '../lib/urls'
 import { SITE_VERSION } from '../lib/siteVersion'
-import type { MapEngineChoice } from '../lib/mapEngineChoice'
-import { EngineToggle } from './EngineToggle'
+import {
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  type MapEngineChoice,
+} from '../lib/mapEngineChoice'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 import { SiteInfo } from './SiteInfo'
 
@@ -122,7 +125,13 @@ export function TopNav({ active, engine, onEngineChange }: {
       rightExtras={
         <>
           {active === '/' && engine && onEngineChange && (
-            <EngineToggle value={engine} onChange={onEngineChange} />
+            <EngineToggle
+              value={engine}
+              choices={MAP_ENGINE_CHOICES}
+              labels={MAP_ENGINE_LABELS}
+              onChange={onEngineChange}
+              label={t('engineMenu')}
+            />
           )}
           <Popover>
             <PopoverTrigger asChild>
