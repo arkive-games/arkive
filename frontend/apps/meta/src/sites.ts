@@ -35,7 +35,7 @@ export const SITES: SiteCard[] = [
   {
     id: 'aion2',
     url: import.meta.env.VITE_AION2_URL ?? 'https://aion2.tc-imba.com',
-    // No aion2 toy yet — add its slug here when one is published.
+    toySlug: 'arkive-aion2',
     bg: aion2Bg,
     nameKey: 'site.aion2.name',
     descKey: 'site.aion2.desc',
