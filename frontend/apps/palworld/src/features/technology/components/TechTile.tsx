@@ -100,21 +100,26 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
     return (
       <>
         {tile}
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetContent
-            side="bottom"
-            data-testid="tech-tile-sheet"
-            className="max-h-[85dvh]"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
-          >
-            <SheetHeader>
-              <SheetTitle>{name}</SheetTitle>
-            </SheetHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <TechDetails tech={tech} resolvers={resolvers} />
-            </div>
-          </SheetContent>
-        </Sheet>
+        {/* Mounted only while open. The tech tree renders all 588 tiles at once
+            (no incremental reveal), so a permanently-mounted dialog root per
+            tile would be 588 of them; the cost is losing the close animation. */}
+        {sheetOpen ? (
+          <Sheet open onOpenChange={setSheetOpen}>
+            <SheetContent
+              side="bottom"
+              data-testid="tech-tile-sheet"
+              className="max-h-[85dvh]"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+            >
+              <SheetHeader>
+                <SheetTitle>{name}</SheetTitle>
+              </SheetHeader>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <TechDetails tech={tech} resolvers={resolvers} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        ) : null}
       </>
     )
   }
