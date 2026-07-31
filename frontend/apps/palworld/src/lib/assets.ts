@@ -4,8 +4,10 @@ import { RES_BASE } from './urls'
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
 export const palworldAssets: MapAssets = {
-  tileUrl: (map, x, y) =>
-    `${RES_BASE}/tiles/${map.id}/${map.id}_${pad2(x)}_${pad2(y)}.webp`,
+  // Level 0 tiles sit flat in tiles/<Map>/; pyramid levels in tiles/<Map>/z-<L>/
+  // (same XX_YY naming). See the tile-pyramid design spec.
+  tileUrl: (map, x, y, level = 0) =>
+    `${RES_BASE}/tiles/${map.id}/${level > 0 ? `z-${level}/` : ''}${map.id}_${pad2(x)}_${pad2(y)}.webp`,
   markerIconUrl: (icon) =>
     icon ? `${RES_BASE}/icons/${icon}.webp` : '',
 }
