@@ -6,6 +6,7 @@ import {
   validateToyConfig,
   checkPackage,
   decidePublishAction,
+  parseArgs,
 } from './toy-lib.mjs'
 
 const GOOD_CONFIG = {
@@ -96,5 +97,36 @@ describe('decidePublishAction', () => {
   it('creates when neither knows the slug', () => {
     const action = decidePublishAction({ history: [], mylist: [], slug: 'arkive-palworld' })
     expect(action.mode).toBe('create')
+  })
+  it('skips a history record whose slug does not match', () => {
+    const action = decidePublishAction({
+      history: [{ id: '123', slug: 'other' }],
+      mylist: [{ id: '456', slug: 'arkive-palworld' }],
+      slug: 'arkive-palworld',
+    })
+    expect(action).toEqual({ mode: 'update', id: '456', reason: expect.stringContaining('mylist') })
+  })
+  it('matches a history record with no slug field by id alone', () => {
+    const action = decidePublishAction({
+      history: [{ id: '123' }],
+      mylist: [],
+      slug: 'arkive-palworld',
+    })
+    expect(action).toEqual({ mode: 'update', id: '123', reason: expect.stringContaining('history') })
+  })
+})
+
+describe('parseArgs', () => {
+  it('parses value flags', () => {
+    expect(parseArgs(['--app', 'palworld'])).toEqual({ app: 'palworld' })
+  })
+  it('parses boolean flags via the second parameter', () => {
+    expect(parseArgs(['--submit'], ['submit'])).toEqual({ submit: true })
+  })
+  it('throws when a flag is missing its value', () => {
+    expect(() => parseArgs(['--app'])).toThrow(/needs a value/)
+  })
+  it('throws when a flag is followed by another flag', () => {
+    expect(() => parseArgs(['--app', '--submit'])).toThrow(/needs a value/)
   })
 })

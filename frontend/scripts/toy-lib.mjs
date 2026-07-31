@@ -106,10 +106,18 @@ export function checkPackage(dir) {
 
 /**
  * create-vs-update decision: local history record wins, then a slug match in
- * mylist, else create. Field names tolerate both `slug` and `sub_dir`.
+ * mylist, else create. A history record only matches when it carries no
+ * `slug`/`sub_dir` field (unverified real-CLI shape, so id alone is trusted)
+ * or when that field equals the `slug` argument — a record for a different
+ * toy is skipped. mylist matches always require `slug`/`sub_dir` to equal
+ * `slug`.
  */
 export function decidePublishAction({ history, mylist, slug }) {
-  const fromHistory = (history ?? []).find((r) => r && r.id != null)
+  const fromHistory = (history ?? []).find((r) => {
+    if (!r || r.id == null) return false
+    const recordSlug = r.slug ?? r.sub_dir
+    return recordSlug == null || recordSlug === slug
+  })
   if (fromHistory) {
     return { mode: 'update', id: String(fromHistory.id), reason: 'local publish history has a record for this package dir' }
   }
