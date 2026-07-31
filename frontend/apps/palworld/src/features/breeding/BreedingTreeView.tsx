@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X } from 'lucide-react'
 import { Button } from '@gamemap/ui'
 import {
   comboKey,
@@ -117,19 +116,19 @@ function NodeView({ node, path, ctx }: { node: BreedTreeNode; path: TreePath; ct
 
   return (
     <div>
-      <div className="flex items-center gap-1">
-        <div className="min-w-0 flex-1 sm:max-w-xl">
-          <RecipeCard f={combo} names={ctx.names} meta={ctx.meta} uniqueLabel={ctx.uniqueLabel} variant={ctx.variant} />
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t('breeding.collapse')}
-          title={t('breeding.collapse')}
-          onClick={() => ctx.onChange(path, undefined)}
-        >
-          <X className="size-4" />
-        </Button>
+      {/* The collapse × lives in the card's own action column (where an
+          expandable card shows the tree icon) instead of floating beside it:
+          on a phone an outside button stole width from the three squares. */}
+      <div className="min-w-0 sm:max-w-xl">
+        <RecipeCard
+          f={combo}
+          names={ctx.names}
+          meta={ctx.meta}
+          uniqueLabel={ctx.uniqueLabel}
+          variant={ctx.variant}
+          onClose={() => ctx.onChange(path, undefined)}
+          closeLabel={t('breeding.collapse')}
+        />
       </div>
       <ParentSection palId={node.a} chosen={node.l} path={[...path, 'l']} ctx={ctx} />
       <ParentSection palId={node.b} chosen={node.r} path={[...path, 'r']} ctx={ctx} />

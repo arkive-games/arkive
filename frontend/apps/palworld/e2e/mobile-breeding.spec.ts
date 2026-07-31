@@ -76,6 +76,73 @@ test('a recipe card is three tiles in one line with + and = between them', async
   await expect(card.getByRole('button', { name: 'Favorite' })).toBeVisible()
 })
 
+test('the card actions sit beside the squares, star above tree, on no extra row', async ({ page }) => {
+  await page.goto('/breeding')
+
+  const card = page.getByTestId('breeding-recipe').first()
+  const fav = card.getByTestId('breeding-fav')
+  const expand = card.getByTestId('breeding-expand')
+  const lastTile = card.getByTestId('breeding-tile').last()
+
+  const [bf, be, bt] = await Promise.all([fav.boundingBox(), expand.boundingBox(), lastTile.boundingBox()])
+  // Right of the last square, not under it.
+  expect(bf!.x).toBeGreaterThan(bt!.x + bt!.width - 2)
+  expect(be!.x).toBeGreaterThan(bt!.x + bt!.width - 2)
+  // Stacked vertically, favourite on top.
+  expect(bf!.y).toBeLessThan(be!.y)
+  // Both stay level with the squares — an extra row would push them below.
+  expect(bf!.y).toBeGreaterThanOrEqual(bt!.y - 2)
+  expect(be!.y + be!.height).toBeLessThanOrEqual(bt!.y + bt!.height + 2)
+})
+
+test('drilling in keeps three tiles and swaps the tree button for a closing ×', async ({ page }) => {
+  await page.goto('/breeding')
+
+  await page.getByTestId('breeding-recipe').first().getByTestId('breeding-expand').click()
+  await expect(page).toHaveURL(/tree=/)
+
+  // The pinned card heading the drill-down closes it instead of expanding.
+  const pinned = page.getByTestId('breeding-recipe').first()
+  await expect(pinned.getByTestId('breeding-collapse')).toBeVisible()
+  await expect(pinned.getByTestId('breeding-expand')).toHaveCount(0)
+
+  // Cards inside a "how to breed X" section keep all three squares, so they are
+  // the same size as everything above them (they used to drop the result).
+  const nested = page.getByTestId('breeding-recipe').nth(1)
+  await expect(nested.getByTestId('breeding-tile')).toHaveCount(3)
+  await expect(nested.getByTestId('breeding-tile-sep')).toHaveText(['+', '='])
+
+  await pinned.getByTestId('breeding-collapse').click()
+  await expect(page).not.toHaveURL(/tree=/)
+})
+
+test('multi-generation puts the generation budget in the middle square', async ({ page }) => {
+  await page.goto('/breeding')
+  await page.getByRole('button', { name: 'Multi-generation' }).click()
+
+  const row = page.getByTestId('breeding-picker-row')
+  // Still a three-tile formula: A + <budget> = C.
+  await expect(row.getByTestId('breeding-tile-sep')).toHaveText(['+', '='])
+  await expect(row.getByTestId('breeding-pick-b')).toHaveCount(0)
+  const genTile = page.getByTestId('breeding-pick-gen')
+  await expect(genTile).toBeVisible()
+  await expect(genTile).toContainText('2')
+
+  const [ba, bg, bc] = await Promise.all([
+    row.getByTestId('breeding-pick-a').boundingBox(),
+    genTile.boundingBox(),
+    row.getByTestId('breeding-pick-c').boundingBox(),
+  ])
+  expect(Math.abs(ba!.y - bg!.y)).toBeLessThanOrEqual(1)
+  expect(ba!.x).toBeLessThan(bg!.x)
+  expect(bg!.x).toBeLessThan(bc!.x)
+
+  await genTile.click()
+  await page.getByTestId('breeding-gen-4').click()
+  await expect(page).toHaveURL(/gen=4/)
+  await expect(genTile).toContainText('4')
+})
+
 // The narrowest phone still in use (320px): the three squares plus the two
 // separators must fit without a horizontal scrollbar.
 test('nothing overflows horizontally at 320px', async ({ page }) => {

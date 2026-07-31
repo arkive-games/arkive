@@ -4,16 +4,13 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { ArrowLeft, List, ListTree } from 'lucide-react'
 import {
   Button,
+  Hint,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-  cn,
   useIsMobile,
 } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
@@ -39,6 +36,7 @@ import { PalPicker } from './PalPicker'
 import { BreedingTreeView } from './BreedingTreeView'
 import { BreedingChainsTreeView, BreedingChainsView } from './BreedingChainsView'
 import { RecipeCard, TileSep, buildRecipeMeta, type BreedingVariant } from './RecipeCard'
+import { GenPicker, toGenChoice } from './GenPicker'
 
 // Cap on rendered cards; a target-only query can match >1000 parent pairs. Set
 // above the default browse list (~365: every Pal + special combos) so that view
@@ -258,6 +256,17 @@ export default function BreedingPage() {
       onChange={(id) => setParam('c', id)}
     />
   )
+  // Phone: the budget as the formula's middle square (see the picker row).
+  const genTile =
+    gen == null ? null : (
+      <GenPicker
+        label={t('breeding.maxGenerations')}
+        value={toGenChoice(gen)}
+        onChange={setGen}
+        format={(g) => String(g)}
+      />
+    )
+  // Desktop keeps the labelled select next to the wide comboboxes.
   const genControl =
     gen == null ? null : (
       <div className="flex flex-col gap-1.5">
@@ -296,32 +305,19 @@ export default function BreedingPage() {
             </Button>
           </div>
           {isMobile ? (
-            // Phone: the selection reads as the recipe it builds — `A + B = C`
-            // (planner mode has no Parent B, so it is just `A = C`, with the
-            // generation budget on its own row underneath rather than a fourth,
-            // dangling square).
-            <div className="space-y-2" data-testid="breeding-picker-row">
-              <div
-                className={cn(
-                  'grid items-center gap-1',
-                  gen == null
-                    ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]'
-                    : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
-                )}
-              >
-                {pickerA}
-                {gen == null ? (
-                  <>
-                    <TileSep>+</TileSep>
-                    {pickerB}
-                  </>
-                ) : null}
-                {/* Planner mode isn't one pairing, so its separator is an arrow
-                    ("from A, reach C") rather than an equals sign. */}
-                <TileSep>{gen == null ? '=' : '→'}</TileSep>
-                {pickerC}
-              </div>
-              {genControl}
+            // Phone: the selection reads as the recipe it builds — `A + B = C`.
+            // The planner takes no Parent B (it finds the partners itself), so
+            // that square carries the generation budget instead: same three-tile
+            // formula, no dangling slot, and no extra row for the budget.
+            <div
+              className="grid items-center gap-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]"
+              data-testid="breeding-picker-row"
+            >
+              {pickerA}
+              <TileSep>+</TileSep>
+              {gen == null ? pickerB : genTile}
+              <TileSep>=</TileSep>
+              {pickerC}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -348,19 +344,23 @@ export default function BreedingPage() {
                 : result.browsingSpecial
                   ? t('breeding.showingSpecial')
                   : t('breeding.combinations', { count: result.total })}
-              {/* Same badge as the Passive Skills page; the tip covers the breeding side. */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    data-testid="breeding-mutation-info"
-                    className="inline-flex cursor-help items-center gap-1 rounded bg-violet-500/15 px-1.5 py-0.5 text-xs font-medium text-violet-600 ring-1 ring-inset ring-violet-500/30 dark:text-violet-300"
-                  >
-                    <span className="inline-block size-1.5 rounded-full bg-violet-500" />
-                    {t('passive.mutation')}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">{t('breeding.mutationTip')}</TooltipContent>
-              </Tooltip>
+              {/* Same badge as the Passive Skills page; the tip covers the
+                  breeding side. `Hint`, not a bare tooltip: the badge is inert,
+                  so on a phone it becomes the tap target for a bottom sheet —
+                  hover never fires there and the explanation was unreachable. */}
+              <Hint
+                title={t('passive.mutation')}
+                content={t('breeding.mutationTip')}
+                contentClassName="max-w-xs"
+              >
+                <span
+                  data-testid="breeding-mutation-info"
+                  className="inline-flex cursor-help items-center gap-1 rounded bg-violet-500/15 px-1.5 py-0.5 text-xs font-medium text-violet-600 ring-1 ring-inset ring-violet-500/30 dark:text-violet-300"
+                >
+                  <span className="inline-block size-1.5 rounded-full bg-violet-500" />
+                  {t('passive.mutation')}
+                </span>
+              </Hint>
             </span>
             <span className="flex shrink-0 items-center gap-1">
               {gen != null && chains && chains.length > 0 ? (

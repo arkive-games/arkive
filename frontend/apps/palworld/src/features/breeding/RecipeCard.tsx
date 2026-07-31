@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ListTree, Plus, Sparkles, Star, Zap } from 'lucide-react'
+import { CircleHelp, ListTree, Plus, Sparkles, Star, X, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import type { BreedingPal, Combo, Gender, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
@@ -194,6 +194,20 @@ export function TileIconPlaceholder() {
   )
 }
 
+/**
+ * Stands in for a Pal that will never be chosen: the planner's middle slot,
+ * where the partner is whatever the search finds rather than an input. Solid
+ * (not dashed like {@link TileIconPlaceholder}) because the tile IS set — it
+ * carries the generation budget — so it must not read as an empty picker.
+ */
+export function TileIconUnknown() {
+  return (
+    <span className="relative my-0.5 flex aspect-square min-h-0 flex-1 items-center justify-center self-center rounded-full bg-black/5 text-muted-foreground dark:bg-white/10">
+      <CircleHelp className="size-4" />
+    </span>
+  )
+}
+
 /** The `+` / `=` between two tiles: an `auto` grid column of its own. */
 export function TileSep({ children }: { children: string }) {
   return (
@@ -280,21 +294,25 @@ export function PalTile({
 
 // --- recipe card -------------------------------------------------------------
 
-/** The star / expand buttons, shared by both variants (roomier on tiles). */
+/**
+ * The card's buttons: favourite first, then the drill-down — or, on a card that
+ * IS the drill-down, a × that collapses it instead (`onClose` replaces
+ * `onSelect`'s slot; a focused node cannot be expanded again).
+ *
+ * Order matters: the tile variant stacks these vertically beside the squares,
+ * and the user asked for the star on top with the tree/× under it.
+ */
 function CardActions({
   fav,
   onSelect,
   selectLabel,
+  onClose,
+  closeLabel,
   roomy,
-}: Pick<RecipeCardProps, 'fav' | 'onSelect' | 'selectLabel'> & { roomy: boolean }) {
+}: Pick<RecipeCardProps, 'fav' | 'onSelect' | 'selectLabel' | 'onClose' | 'closeLabel'> & { roomy: boolean }) {
   const btn = cn('rounded text-muted-foreground hover:bg-accent hover:text-foreground', roomy ? 'p-2' : 'p-1')
   return (
     <>
-      {onSelect ? (
-        <button type="button" onClick={onSelect} aria-label={selectLabel} title={selectLabel} className={btn}>
-          <ListTree className="size-4" />
-        </button>
-      ) : null}
       {fav ? (
         <button
           type="button"
@@ -302,9 +320,33 @@ function CardActions({
           aria-label={fav.label}
           aria-pressed={fav.isFav}
           title={fav.label}
+          data-testid="breeding-fav"
           className={btn}
         >
           <Star className={cn('size-4', fav.isFav && 'fill-amber-400 text-amber-400')} />
+        </button>
+      ) : null}
+      {onClose ? (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={closeLabel}
+          title={closeLabel}
+          data-testid="breeding-collapse"
+          className={btn}
+        >
+          <X className="size-4" />
+        </button>
+      ) : onSelect ? (
+        <button
+          type="button"
+          onClick={onSelect}
+          aria-label={selectLabel}
+          title={selectLabel}
+          data-testid="breeding-expand"
+          className={btn}
+        >
+          <ListTree className="size-4" />
         </button>
       ) : null}
     </>
@@ -323,6 +365,9 @@ export interface RecipeCardProps {
    * breeding section, where every recipe produces the same (current) Pal, so the
    * result is redundant — and dropping it leaves room for the full parent chips
    * in that narrow column.
+   *
+   * Ignored by `variant='tile'`, which always draws three squares so cards keep
+   * one size down a drill-down (two squares would each stretch to half the row).
    */
   hideResult?: boolean
   /**
@@ -333,6 +378,14 @@ export interface RecipeCardProps {
   onSelect?: () => void
   /** Accessible label / tooltip for the select affordance. */
   selectLabel?: string
+  /**
+   * Collapses the drill-down this card heads. Takes `onSelect`'s slot in the
+   * action column and renders a × — the card is already expanded, so offering
+   * "expand" again would be a no-op.
+   */
+  onClose?: () => void
+  /** Accessible label / tooltip for the collapse affordance. */
+  closeLabel?: string
   /**
    * `tile` switches to the phone layout (three squares in one line). Threaded
    * from the page rather than read from `useIsMobile()` here, so the Paldeck's
@@ -362,11 +415,22 @@ export function RecipeCard({
   hideResult,
   onSelect,
   selectLabel,
+  onClose,
+  closeLabel,
   variant = 'row',
 }: RecipeCardProps) {
-  const hasActions = Boolean(fav || onSelect)
+  // `onClose` and `onSelect` share one slot, so at most two buttons render.
+  const buttonCount = (fav ? 1 : 0) + (onClose || onSelect ? 1 : 0)
+  const hasActions = buttonCount > 0
   const actions = hasActions ? (
-    <CardActions fav={fav} onSelect={onSelect} selectLabel={selectLabel} roomy={variant === 'tile'} />
+    <CardActions
+      fav={fav}
+      onSelect={onSelect}
+      selectLabel={selectLabel}
+      onClose={onClose}
+      closeLabel={closeLabel}
+      roomy={variant === 'tile'}
+    />
   ) : null
   // Inner pal links and action buttons keep their own behavior.
   const onCardClick = onSelect
@@ -380,44 +444,42 @@ export function RecipeCard({
     return (
       <div
         data-testid="breeding-recipe"
+        // The amber frame is the whole "special combo" signal here: a ~2.5rem
+        // action column has no room for the pill, and a third item stacked in it
+        // would outgrow the squares and stretch the card. The label still reaches
+        // assistive tech and a long-press.
+        title={f.unique ? uniqueLabel : undefined}
+        aria-label={f.unique ? uniqueLabel : undefined}
+        data-unique={f.unique ? '' : undefined}
         className={cn(
           'grid items-center gap-1 rounded-lg border p-1.5 text-sm',
           // `minmax(0,1fr)` tile columns + `auto` separator columns: the three
           // squares split whatever the separators leave, so the row fits a
-          // 320px viewport (~77px per tile) without horizontal scrolling.
-          hideResult
-            ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'
+          // 320px viewport without horizontal scrolling. The trailing `auto` is
+          // the action column, which is only present when there is one.
+          hasActions
+            ? 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto]'
             : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]',
           f.unique ? 'border-amber-400/70 bg-amber-400/10 ring-1 ring-amber-400/30' : 'border-border bg-card',
           onSelect && 'cursor-pointer transition-shadow hover:ring-2 hover:ring-primary/40',
         )}
         onClick={onCardClick}
       >
+        {/* Always three squares, even where `hideResult` asks for two: two
+            squares stretch to half the row each and dwarf the three-square
+            cards above them, so the drill-down sections would change size as
+            you descend. The result tile is redundant inside a "how to breed X"
+            section (it is always X) but keeping it holds the rhythm. */}
         <PalTile id={f.a} names={names} meta={meta} gender={f.ag} />
         <TileSep>+</TileSep>
         <PalTile id={f.b} names={names} meta={meta} gender={f.bg} />
-        {hideResult ? null : (
-          <>
-            <TileSep>=</TileSep>
-            <PalTile id={f.c} names={names} meta={meta} emphasis />
-          </>
-        )}
-        {f.unique || actions ? (
-          // Bottom bar instead of the row card's floating badge + right-hand
-          // action column: at phone widths the full card width belongs to the
-          // three squares, and a row of its own gives the star / expand buttons
-          // a comfortable touch target.
-          <span className="col-span-full flex items-center gap-2 px-0.5">
-            {f.unique ? (
-              // `min-w-0` + truncate: a long translation of the label must eat
-              // itself, never widen the card past the viewport.
-              <span className={cn(UNIQUE_PILL, 'min-w-0')} title={uniqueLabel}>
-                <Sparkles className="size-3 shrink-0" />
-                <span className="truncate">{uniqueLabel}</span>
-              </span>
-            ) : null}
-            {actions ? <span className="ml-auto flex shrink-0 items-center">{actions}</span> : null}
-          </span>
+        <TileSep>=</TileSep>
+        <PalTile id={f.c} names={names} meta={meta} emphasis />
+        {actions ? (
+          // A column beside the squares rather than a bar under them: a row of
+          // its own cost a whole line per card, and these cards stack. Two
+          // buttons at most, so the column stays shorter than a square.
+          <span className="flex flex-col items-center justify-center gap-0.5">{actions}</span>
         ) : null}
       </div>
     )
@@ -451,7 +513,9 @@ export function RecipeCard({
           className={cn(
             UNIQUE_PILL,
             'absolute -top-2',
-            fav && onSelect ? 'right-14' : hasActions ? 'right-8' : 'right-2',
+            // Clear however many buttons the action cell holds, so the pill
+            // never lands on one.
+            buttonCount === 2 ? 'right-14' : buttonCount === 1 ? 'right-8' : 'right-2',
           )}
           title={uniqueLabel}
         >
