@@ -135,6 +135,7 @@ def test_two_maps_with_tiling(ds):
     assert [m["id"] for m in ds["maps"]] == ["MainWorld", "WorldTree"]
     m0 = ds["maps"][0]
     assert (m0["tileWidth"], m0["tileHeight"], m0["tilesCountX"], m0["tilesCountY"], m0["isVisible"]) == (1024, 1024, 8, 8, True)
+    assert m0["tileLevels"] == 3
 
 
 def test_map_name_and_shortname_from_game_worldmap_l10n(ds):

@@ -83,7 +83,7 @@ const GameMapTiles: React.FC<GameTilesProps> = ({ selectedMap, assets }) => {
           minZoom: map.getMinZoom(),
           maxZoom: map.getMaxZoom(),
           maxNativeZoom: 0,
-          minNativeZoom: 0,
+          minNativeZoom: -(selectedMap.tileLevels ?? 0),
           opacity: 0.2,
         })
       : null;
