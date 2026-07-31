@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Input } from '@gamemap/ui'
-import { ContentPage } from '../../components/ContentPage'
+import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { loadQuests, type QuestsBundle } from '../../lib/catalog'
 import { CatalogPageLoading } from '../catalog/components'
 import { questTypeLabel } from './labels'
@@ -50,8 +50,38 @@ export default function QuestListPage() {
 
   const tabs = ['all', ...types]
 
+  // Quest-type filter — inline on desktop, behind the mobile header's filter icon
+  // (see ContentPage). The node carries its own row wrapper so the desktop markup
+  // is unchanged; the search box and the result count stay on the page.
+  const filters = (
+    <div className="flex flex-wrap gap-1.5" data-testid="quest-type-filter">
+      {tabs.map((tab) => (
+        <button
+          key={tab}
+          type="button"
+          onClick={() => setType(tab)}
+          data-testid={`quest-type-${tab}`}
+          className={
+            'rounded-md px-3 py-1.5 text-sm transition ' +
+            (type === tab
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-secondary text-secondary-foreground hover:bg-accent')
+          }
+        >
+          {tab === 'all' ? t('quest.all') : questTypeLabel(tab, t)}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
-    <ContentPage active="/quests" title={t('quest.title')} heading>
+    <ContentPage
+      active="/quests"
+      title={t('quest.title')}
+      heading
+      filters={filters}
+      filtersActive={type !== 'all'}
+    >
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Input
               value={query}
@@ -59,23 +89,7 @@ export default function QuestListPage() {
               placeholder={t('quest.searchPlaceholder')}
               className="max-w-sm"
             />
-            <div className="flex flex-wrap gap-1.5">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setType(tab)}
-                  className={
-                    'rounded-md px-3 py-1.5 text-sm transition ' +
-                    (type === tab
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-accent')
-                  }
-                >
-                  {tab === 'all' ? t('quest.all') : questTypeLabel(tab, t)}
-                </button>
-              ))}
-            </div>
+            <ContentPageFilters />
             {bundle ? (
               <span className="text-sm text-muted-foreground">
                 {t('quest.count', { count: list.length })}

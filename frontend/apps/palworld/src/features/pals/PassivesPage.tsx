@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
-import { ContentPage } from '../../components/ContentPage'
+import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
@@ -145,10 +145,94 @@ export default function PassivesPage() {
     )
   }, [all, query, raritySel, categorySel, mutationOnly, innateOnly])
 
+  // Rarity + category chips — inline on desktop, behind the mobile header's
+  // filter icon (see ContentPage). The search box stays on the page: it is not a
+  // filter. The chip tooltips are lifted above the filter sheet's stacking
+  // context so they stay readable when opened from inside it.
+  const filters = bundle ? (
+    <>
+      <FilterRow label={t('filters.rarity')} testId="passive-rarity-filter">
+        {rarities.map((key) => (
+          <FilterChip
+            key={key}
+            active={raritySel.includes(key)}
+            onClick={() => setRaritySel((s) => toggleValue(s, key))}
+            testId={`rarity-${key}`}
+          >
+            <PassiveRarity rank={repRank(key)} />
+          </FilterChip>
+        ))}
+      </FilterRow>
+      <FilterRow label={t('filters.category')} testId="passive-category-filter">
+        {categories.map((c) => (
+          <FilterChip
+            key={c}
+            active={categorySel.includes(c)}
+            onClick={() => setCategorySel((s) => toggleValue(s, c))}
+            testId={`category-${c}`}
+          >
+            {t(`passive.category.${c}`)}
+          </FilterChip>
+        ))}
+        {hasNone ? (
+          <FilterChip
+            active={categorySel.includes('none')}
+            onClick={() => setCategorySel((s) => toggleValue(s, 'none'))}
+            testId="category-none"
+          >
+            {t('passive.category.none')}
+          </FilterChip>
+        ) : null}
+        {hasInnate ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <FilterChip
+                  active={innateOnly}
+                  onClick={() => setInnateOnly((v) => !v)}
+                  testId="category-innate"
+                >
+                  <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
+                  {t('passive.innate')}
+                </FilterChip>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="z-[3100] max-w-xs">{t('passive.innateTip')}</TooltipContent>
+          </Tooltip>
+        ) : null}
+        {hasMutation ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <FilterChip
+                  active={mutationOnly}
+                  onClick={() => setMutationOnly((v) => !v)}
+                  testId="category-mutation"
+                >
+                  <span className="inline-block size-1.5 rounded-full bg-violet-500" />
+                  {t('passive.mutation')}
+                </FilterChip>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="z-[3100] max-w-xs">{t('passive.mutationTip')}</TooltipContent>
+          </Tooltip>
+        ) : null}
+      </FilterRow>
+    </>
+  ) : undefined
+
   return (
     <TooltipProvider delayDuration={200}>
     <CatalogDataProvider pals={bundle ?? undefined}>
-    <ContentPage active="/passives" title={t('pal.section.passives')} heading>
+    <ContentPage
+      active="/passives"
+      title={t('pal.section.passives')}
+      heading
+      filters={filters}
+      filtersActive={
+        raritySel.length > 0 || categorySel.length > 0 || innateOnly || mutationOnly
+      }
+    >
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
           value={query}
@@ -163,77 +247,7 @@ export default function PassivesPage() {
           </span>
         ) : null}
       </div>
-      {bundle ? (
-        <div className="mb-4 space-y-1.5">
-          <FilterRow label={t('filters.rarity')} testId="passive-rarity-filter">
-            {rarities.map((key) => (
-              <FilterChip
-                key={key}
-                active={raritySel.includes(key)}
-                onClick={() => setRaritySel((s) => toggleValue(s, key))}
-                testId={`rarity-${key}`}
-              >
-                <PassiveRarity rank={repRank(key)} />
-              </FilterChip>
-            ))}
-          </FilterRow>
-          <FilterRow label={t('filters.category')} testId="passive-category-filter">
-            {categories.map((c) => (
-              <FilterChip
-                key={c}
-                active={categorySel.includes(c)}
-                onClick={() => setCategorySel((s) => toggleValue(s, c))}
-                testId={`category-${c}`}
-              >
-                {t(`passive.category.${c}`)}
-              </FilterChip>
-            ))}
-            {hasNone ? (
-              <FilterChip
-                active={categorySel.includes('none')}
-                onClick={() => setCategorySel((s) => toggleValue(s, 'none'))}
-                testId="category-none"
-              >
-                {t('passive.category.none')}
-              </FilterChip>
-            ) : null}
-            {hasInnate ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex">
-                    <FilterChip
-                      active={innateOnly}
-                      onClick={() => setInnateOnly((v) => !v)}
-                      testId="category-innate"
-                    >
-                      <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
-                      {t('passive.innate')}
-                    </FilterChip>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">{t('passive.innateTip')}</TooltipContent>
-              </Tooltip>
-            ) : null}
-            {hasMutation ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex">
-                    <FilterChip
-                      active={mutationOnly}
-                      onClick={() => setMutationOnly((v) => !v)}
-                      testId="category-mutation"
-                    >
-                      <span className="inline-block size-1.5 rounded-full bg-violet-500" />
-                      {t('passive.mutation')}
-                    </FilterChip>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">{t('passive.mutationTip')}</TooltipContent>
-              </Tooltip>
-            ) : null}
-          </FilterRow>
-        </div>
-      ) : null}
+      <ContentPageFilters className="mb-4 space-y-1.5" />
 
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>

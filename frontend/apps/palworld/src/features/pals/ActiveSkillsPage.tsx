@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
 import { Input, useIsMobile } from '@gamemap/ui'
-import { ContentPage } from '../../components/ContentPage'
+import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
@@ -77,8 +77,61 @@ export default function ActiveSkillsPage() {
       )
   }, [all, query, elementSel, typeSel, sourceSel])
 
+  // Element / type / source chips — inline on desktop, behind the mobile
+  // header's filter icon (see ContentPage). The search box stays on the page: it
+  // is not a filter.
+  const filters = bundle ? (
+    <>
+      <FilterRow label={t('activeSkill.element')} testId="active-skill-element-filter">
+        {elements.map((e) => (
+          <FilterChip
+            key={e}
+            active={elementSel.includes(e)}
+            onClick={() => setElementSel((s) => toggleValue(s, e) as Element[])}
+            testId={`element-${e}`}
+          >
+            <span className="inline-flex items-center gap-1">
+              <img src={elementIconUrl(e)} alt="" width={16} height={16} className="size-4 object-contain" />
+              {bundle.enums.elements[e] ?? e}
+            </span>
+          </FilterChip>
+        ))}
+      </FilterRow>
+      <FilterRow label={t('pal.type')} testId="active-skill-type-filter">
+        {(['melee', 'ranged'] as const).map((tp) => (
+          <FilterChip
+            key={tp}
+            active={typeSel.includes(tp)}
+            onClick={() => setTypeSel((s) => toggleValue(s, tp))}
+            testId={`type-${tp}`}
+          >
+            {t(tp === 'melee' ? 'pal.melee' : 'pal.ranged')}
+          </FilterChip>
+        ))}
+      </FilterRow>
+      <FilterRow label={t('activeSkill.fruit')} testId="active-skill-source-filter">
+        {(['fruit', 'default'] as const).map((src) => (
+          <FilterChip
+            key={src}
+            active={sourceSel.includes(src)}
+            onClick={() => setSourceSel((s) => toggleValue(s, src))}
+            testId={`source-${src}`}
+          >
+            {t(src === 'fruit' ? 'activeSkill.has' : 'activeSkill.hasNot')}
+          </FilterChip>
+        ))}
+      </FilterRow>
+    </>
+  ) : undefined
+
   return (
-    <ContentPage active="/active-skills" title={t('pal.section.activeSkills')} heading>
+    <ContentPage
+      active="/active-skills"
+      title={t('pal.section.activeSkills')}
+      heading
+      filters={filters}
+      filtersActive={elementSel.length > 0 || typeSel.length > 0 || sourceSel.length > 0}
+    >
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
           value={query}
@@ -92,49 +145,7 @@ export default function ActiveSkillsPage() {
         ) : null}
       </div>
 
-      {bundle ? (
-        <div className="mb-4 space-y-1.5">
-          <FilterRow label={t('activeSkill.element')} testId="active-skill-element-filter">
-            {elements.map((e) => (
-              <FilterChip
-                key={e}
-                active={elementSel.includes(e)}
-                onClick={() => setElementSel((s) => toggleValue(s, e) as Element[])}
-                testId={`element-${e}`}
-              >
-                <span className="inline-flex items-center gap-1">
-                  <img src={elementIconUrl(e)} alt="" width={16} height={16} className="size-4 object-contain" />
-                  {bundle.enums.elements[e] ?? e}
-                </span>
-              </FilterChip>
-            ))}
-          </FilterRow>
-          <FilterRow label={t('pal.type')} testId="active-skill-type-filter">
-            {(['melee', 'ranged'] as const).map((tp) => (
-              <FilterChip
-                key={tp}
-                active={typeSel.includes(tp)}
-                onClick={() => setTypeSel((s) => toggleValue(s, tp))}
-                testId={`type-${tp}`}
-              >
-                {t(tp === 'melee' ? 'pal.melee' : 'pal.ranged')}
-              </FilterChip>
-            ))}
-          </FilterRow>
-          <FilterRow label={t('activeSkill.fruit')} testId="active-skill-source-filter">
-            {(['fruit', 'default'] as const).map((src) => (
-              <FilterChip
-                key={src}
-                active={sourceSel.includes(src)}
-                onClick={() => setSourceSel((s) => toggleValue(s, src))}
-                testId={`source-${src}`}
-              >
-                {t(src === 'fruit' ? 'activeSkill.has' : 'activeSkill.hasNot')}
-              </FilterChip>
-            ))}
-          </FilterRow>
-        </div>
-      ) : null}
+      <ContentPageFilters className="mb-4 space-y-1.5" />
 
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>

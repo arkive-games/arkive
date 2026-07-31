@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { HoverCard, HoverCardTrigger, Input } from '@gamemap/ui'
-import { ContentPage } from '../../components/ContentPage'
+import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadItems,
@@ -97,8 +97,40 @@ export default function ItemListPage() {
   // HoverCard tiles at once is a DOM-size problem, not a data one.
   const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'items')
 
+  // Category chips — inline on desktop, behind the mobile header's filter icon
+  // (see ContentPage). The search box stays on the page: it is not a filter.
+  const filters = bundle ? (
+    <FilterRow label={t('filters.category')} testId="item-category-filter">
+      {categories.map((c) => (
+        <FilterChip
+          key={c}
+          active={cats.includes(c)}
+          onClick={() => setCats((s) => toggleValue(s, c))}
+          testId={`item-cat-${c}`}
+        >
+          {itemTypeLabel(c, bundle.typeLabels)}
+        </FilterChip>
+      ))}
+      {cats.includes('Blueprint') ? (
+        <FilterChip
+          active={noSourceOnly}
+          onClick={() => setNoSourceOnly((v) => !v)}
+          testId="item-nosource-filter"
+        >
+          {t('bp.noSourceFilter')}
+        </FilterChip>
+      ) : null}
+    </FilterRow>
+  ) : undefined
+
   return (
-    <ContentPage active="/items" title={t('item.title')} heading>
+    <ContentPage
+      active="/items"
+      title={t('item.title')}
+      heading
+      filters={filters}
+      filtersActive={cats.length > 0 || noSourceActive}
+    >
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
               value={query}
@@ -112,31 +144,7 @@ export default function ItemListPage() {
               </span>
             ) : null}
           </div>
-          {bundle ? (
-            <div className="mb-4">
-              <FilterRow label={t('filters.category')} testId="item-category-filter">
-                {categories.map((c) => (
-                  <FilterChip
-                    key={c}
-                    active={cats.includes(c)}
-                    onClick={() => setCats((s) => toggleValue(s, c))}
-                    testId={`item-cat-${c}`}
-                  >
-                    {itemTypeLabel(c, bundle.typeLabels)}
-                  </FilterChip>
-                ))}
-                {cats.includes('Blueprint') ? (
-                  <FilterChip
-                    active={noSourceOnly}
-                    onClick={() => setNoSourceOnly((v) => !v)}
-                    testId="item-nosource-filter"
-                  >
-                    {t('bp.noSourceFilter')}
-                  </FilterChip>
-                ) : null}
-              </FilterRow>
-            </div>
-          ) : null}
+          <ContentPageFilters className="mb-4" />
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>

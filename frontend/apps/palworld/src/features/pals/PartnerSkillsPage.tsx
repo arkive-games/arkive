@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp } from 'lucide-react'
 import { Input, useIsMobile } from '@gamemap/ui'
-import { ContentPage } from '../../components/ContentPage'
+import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
@@ -104,8 +104,49 @@ export default function PartnerSkillsPage() {
     )
   }, [all, query, categorySel, elementSel, powerSort])
 
+  // Category + element chips — inline on desktop, behind the mobile header's
+  // filter icon (see ContentPage). The search box and the power-sort control stay
+  // on the page: neither is a filter.
+  const filters = bundle ? (
+    <>
+      <FilterRow label={t('filters.category')} testId="partner-skill-category-filter">
+        {categories.map((c) => (
+          <FilterChip
+            key={c}
+            active={categorySel.includes(c)}
+            onClick={() => setCategorySel((s) => toggleValue(s, c) as PartnerCategory[])}
+            testId={`category-${c}`}
+          >
+            {t(`partner.category.${c}`)}
+          </FilterChip>
+        ))}
+      </FilterRow>
+      <FilterRow label={t('activeSkill.element')} testId="partner-skill-element-filter">
+        {elements.map((e) => (
+          <FilterChip
+            key={e}
+            active={elementSel.includes(e)}
+            onClick={() => setElementSel((s) => toggleValue(s, e) as Element[])}
+            testId={`element-${e}`}
+          >
+            <span className="inline-flex items-center gap-1">
+              <img src={elementIconUrl(e)} alt="" width={16} height={16} className="size-4 object-contain" />
+              {bundle.enums.elements[e] ?? e}
+            </span>
+          </FilterChip>
+        ))}
+      </FilterRow>
+    </>
+  ) : undefined
+
   return (
-    <ContentPage active="/partner-skills" title={t('partner.title')} heading>
+    <ContentPage
+      active="/partner-skills"
+      title={t('partner.title')}
+      heading
+      filters={filters}
+      filtersActive={categorySel.length > 0 || elementSel.length > 0}
+    >
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
           value={query}
@@ -119,37 +160,7 @@ export default function PartnerSkillsPage() {
         ) : null}
       </div>
 
-      {bundle ? (
-        <div className="mb-4 space-y-1.5">
-          <FilterRow label={t('filters.category')} testId="partner-skill-category-filter">
-            {categories.map((c) => (
-              <FilterChip
-                key={c}
-                active={categorySel.includes(c)}
-                onClick={() => setCategorySel((s) => toggleValue(s, c) as PartnerCategory[])}
-                testId={`category-${c}`}
-              >
-                {t(`partner.category.${c}`)}
-              </FilterChip>
-            ))}
-          </FilterRow>
-          <FilterRow label={t('activeSkill.element')} testId="partner-skill-element-filter">
-            {elements.map((e) => (
-              <FilterChip
-                key={e}
-                active={elementSel.includes(e)}
-                onClick={() => setElementSel((s) => toggleValue(s, e) as Element[])}
-                testId={`element-${e}`}
-              >
-                <span className="inline-flex items-center gap-1">
-                  <img src={elementIconUrl(e)} alt="" width={16} height={16} className="size-4 object-contain" />
-                  {bundle.enums.elements[e] ?? e}
-                </span>
-              </FilterChip>
-            ))}
-          </FilterRow>
-        </div>
-      ) : null}
+      <ContentPageFilters className="mb-4 space-y-1.5" />
 
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>

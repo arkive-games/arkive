@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@gamemap/ui'
-import { ContentPage } from '../../components/ContentPage'
+import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadItems,
@@ -92,8 +92,31 @@ export default function BuildingListPage() {
     [items, bundle, tech, pals],
   )
 
+  // Category chips — inline on desktop, behind the mobile header's filter icon
+  // (see ContentPage). The search box stays on the page: it is not a filter.
+  const filters = bundle ? (
+    <FilterRow label={t('filters.category')} testId="building-category-filter">
+      {categories.map((c) => (
+        <FilterChip
+          key={c}
+          active={cats.includes(c)}
+          onClick={() => setCats((s) => toggleValue(s, c))}
+          testId={`building-cat-${c}`}
+        >
+          {buildingTypeLabel(c, bundle.typeLabels)}
+        </FilterChip>
+      ))}
+    </FilterRow>
+  ) : undefined
+
   return (
-    <ContentPage active="/buildings" title={t('building.title')} heading>
+    <ContentPage
+      active="/buildings"
+      title={t('building.title')}
+      heading
+      filters={filters}
+      filtersActive={cats.length > 0}
+    >
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
               value={query}
@@ -107,22 +130,7 @@ export default function BuildingListPage() {
               </span>
             ) : null}
           </div>
-          {bundle ? (
-            <div className="mb-4">
-              <FilterRow label={t('filters.category')} testId="building-category-filter">
-                {categories.map((c) => (
-                  <FilterChip
-                    key={c}
-                    active={cats.includes(c)}
-                    onClick={() => setCats((s) => toggleValue(s, c))}
-                    testId={`building-cat-${c}`}
-                  >
-                    {buildingTypeLabel(c, bundle.typeLabels)}
-                  </FilterChip>
-                ))}
-              </FilterRow>
-            </div>
-          ) : null}
+          <ContentPageFilters className="mb-4" />
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>

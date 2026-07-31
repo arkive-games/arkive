@@ -39,11 +39,13 @@ function Chip({
   active,
   onClick,
   title,
+  testId,
   children,
 }: {
   active: boolean
   onClick: () => void
   title?: string
+  testId?: string
   children: React.ReactNode
 }) {
   return (
@@ -52,6 +54,7 @@ function Chip({
       onClick={onClick}
       title={title}
       aria-pressed={active}
+      data-testid={testId}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition',
         active
@@ -126,6 +129,8 @@ export function PalFilters({
               active={filter.elements.includes(e)}
               onClick={() => onChange({ ...filter, elements: toggle(filter.elements, e) })}
               title={bundle.enums.elements[e] ?? e}
+              // Stable hooks for tests: the visible label is localized game text.
+              testId={`pal-element-${e}`}
             >
               <Glyph src={elementIconUrl(e)} size={16} />
               {bundle.enums.elements[e] ?? e}
@@ -142,6 +147,7 @@ export function PalFilters({
               active={filter.works.includes(w)}
               onClick={() => onChange({ ...filter, works: toggle(filter.works, w) })}
               title={bundle.enums.work[w] ?? w}
+              testId={`pal-work-${w}`}
             >
               <Glyph src={workIconUrl(w)} size={16} />
               {bundle.enums.work[w] ?? w}
@@ -205,7 +211,10 @@ export function PalFilters({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-0" align="start">
+          {/* Lifted above the mobile filter sheet (z-3000): on phones this whole
+              block is mounted inside that sheet, and the popover's default
+              z-index would put the item list behind it. */}
+          <PopoverContent className="z-[3100] w-72 p-0" align="start">
             <Command>
               <CommandInput placeholder={fs.lootPlaceholder} className="text-sm" />
               <CommandList>

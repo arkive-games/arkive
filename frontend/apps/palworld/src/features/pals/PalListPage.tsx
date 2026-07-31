@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Input } from '@gamemap/ui'
-import { ContentPage } from '../../components/ContentPage'
+import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { CatalogDataProvider } from '../catalog/components'
 import { PalCard, PalFilters, PalPageLoading, PalTable } from './components'
 import { filterStrings } from './filterStrings'
-import { EMPTY_FILTER, useFilteredPals, type PalFilter } from './useFilteredPals'
+import { EMPTY_FILTER, isFilterActive, useFilteredPals, type PalFilter } from './useFilteredPals'
 
 // Persist the pal-list filter across reloads.
 const PAL_FILTER_KEY = 'palworld.pals.filter'
@@ -58,7 +58,17 @@ export default function PalListPage() {
   const roster = useFilteredPals(bundle, filter)
 
   return (
-    <ContentPage active="/pals" title={t('pal.title')} heading>
+    <ContentPage
+      active="/pals"
+      title={t('pal.title')}
+      heading
+      // Inline on desktop, behind the mobile header's filter icon (see
+      // ContentPage). The search box and the grid/list switch stay on the page.
+      filters={bundle ? <PalFilters bundle={bundle} filter={filter} onChange={setFilter} /> : undefined}
+      // The query lives in the on-page search box, so it must not dot the icon —
+      // only the facets inside the sheet count as "filters active".
+      filtersActive={isFilterActive({ ...filter, query: '' })}
+    >
         <CatalogDataProvider pals={bundle ?? undefined}>
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
@@ -92,11 +102,7 @@ export default function PalListPage() {
             </div>
           </div>
 
-          {bundle ? (
-            <div className="mb-4">
-              <PalFilters bundle={bundle} filter={filter} onChange={setFilter} />
-            </div>
-          ) : null}
+          <ContentPageFilters className="mb-4" />
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
