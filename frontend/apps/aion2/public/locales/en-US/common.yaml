@@ -33,6 +33,12 @@ theme:
   light: "Day Mode (Elyos)"
   dark: "Night Mode (Asmodian)"
   abyss: "Dawn Mode (Abyss)"
+  # Terse forms for the phone "More" sheet, where the segmented theme
+  # control has no room for the flavoured names above.
+  short:
+    auto: "Auto"
+    light: "Day"
+    dark: "Night"
 
 fragmentType:
   ground: "Ground"

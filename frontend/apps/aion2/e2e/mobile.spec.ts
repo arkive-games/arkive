@@ -146,14 +146,25 @@ test.describe("mobile chrome", () => {
     );
   });
 
-  test("language and theme are reachable in the More sheet", async ({ page }) => {
+  test("language, theme and renderer are reachable in the More sheet", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
     await page.getByTestId("tab-more").click();
     const sheet = page.getByTestId("more-sheet");
     await expect(sheet).toBeVisible();
-    await expect(sheet.getByTestId("more-lang-zh-CN")).toBeVisible();
+    // Theme and renderer sit on the main body; language is a drill-down, so the
+    // sheet shows only the current value until its row is opened.
     await expect(sheet.getByTestId("more-theme-dark")).toBeVisible();
+    await expect(sheet.getByTestId("more-engine-leaflet")).toBeVisible();
     await expect(sheet.getByTestId("more-archive")).toBeVisible();
+    await expect(sheet.getByTestId("more-lang-zh-CN")).toHaveCount(0);
+
+    await sheet.getByTestId("more-lang-open").click();
+    await expect(sheet.getByTestId("more-lang-zh-CN")).toBeVisible();
+    // Picking a language returns to the main body rather than leaving the user
+    // on a sub-page with nothing left to do.
+    await sheet.getByTestId("more-lang-zh-CN").click();
+    await expect(sheet.getByTestId("more-theme-dark")).toBeVisible();
+    await expect(sheet.getByTestId("more-lang-back")).toHaveCount(0);
   });
 
   test("type-hub section chips are touch-sized", async ({ page }) => {

@@ -19,6 +19,12 @@ theme:
   light: "白天模式（天族）"
   dark: "夜晚模式（魔族）"
   abyss: "黃昏模式（深淵）"
+  # Terse forms for the phone "More" sheet, where the segmented theme
+  # control has no room for the flavoured names above.
+  short:
+    auto: "自動"
+    light: "白天"
+    dark: "夜晚"
 
 fragmentType:
   ground: "地面"

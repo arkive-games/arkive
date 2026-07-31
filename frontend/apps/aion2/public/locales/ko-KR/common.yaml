@@ -33,6 +33,12 @@ theme:
   light: "낮 모드 (천족)"
   dark: "밤 모드 (마족)"
   abyss: "새벽 모드 (어비스)"
+  # Terse forms for the phone "More" sheet, where the segmented theme
+  # control has no room for the flavoured names above.
+  short:
+    auto: "자동"
+    light: "낮"
+    dark: "밤"
 
 fragmentType:
   ground: "지상"

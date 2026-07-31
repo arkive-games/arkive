@@ -6,6 +6,11 @@ export {
   type ShellNavItem,
 } from "./ShellTopBar"
 export { ShellSidebar, type ShellSidebarProps } from "./ShellSidebar"
+export {
+  ShellBottomNav,
+  type ShellBottomNavProps,
+  type ShellBottomTab,
+} from "./ShellBottomNav"
 export { SiteInfoPanel } from "./SiteInfoPanel"
 export type { SiteInfoPanelProps, SiteInfoSection, SiteInfoFeedbackGroup } from "./SiteInfoPanel"
 export {

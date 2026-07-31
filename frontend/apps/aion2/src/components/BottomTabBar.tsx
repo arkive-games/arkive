@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useSearch } from "@tanstack/react-router";
 import {
   BookOpen,
   Map as MapIcon,
@@ -9,18 +8,18 @@ import {
   ScrollText,
   Users,
 } from "lucide-react";
-import {
-  cn,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  useIsMobile,
-} from "@gamemap/ui";
+import { ShellBottomNav } from "@gamemap/map-shell";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import SiteInfo from "@/components/SiteInfo";
+import {
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  resolveMapEngine,
+  useChooseMapEngine,
+  useStoredMapEngine,
+  type MapEngineChoice,
+} from "@/lib/mapEngineChoice";
 
 // Same archive entry the desktop top bar links to; on mobile that notice is not
 // rendered, so the link lives in the More sheet instead.
@@ -63,158 +62,115 @@ export default function BottomTabBar() {
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
   const active = activeTab(pathname);
-  const isMobile = useIsMobile();
-  const [moreOpen, setMoreOpen] = useState(false);
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
 
-  // A tap that navigates must not leave the sheet covering the destination.
-  useEffect(() => {
-    setMoreOpen(false);
-  }, [pathname]);
-
-  // The <nav> is md:hidden, but the sheet portals to <body> and is therefore
-  // NOT hidden by that class. Without this, an open More sheet stays draped
-  // over the desktop layout after a rotation past 768px.
-  useEffect(() => {
-    if (!isMobile) setMoreOpen(false);
-  }, [isMobile]);
-
-  const itemCls = (isActive: boolean) =>
-    cn(
-      "flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-xs font-medium transition-colors",
-      isActive ? "text-primary" : "text-muted-foreground",
-    );
+  // The renderer switcher lives here because the mobile layout renders no top
+  // bar at all — without it a phone could not leave the WebGL default. Reading
+  // `?engine=` with the same precedence MapRoute uses keeps the highlighted
+  // choice matching what is actually on screen. `strict: false` because this bar
+  // is mounted from the root route, which does not declare the param.
+  const engineParam = useSearch({ strict: false, select: (s) => (s as { engine?: unknown }).engine });
+  const activeEngine = resolveMapEngine(engineParam, useStoredMapEngine());
+  const chooseEngine = useChooseMapEngine();
 
   return (
-    <nav
-      data-testid="bottom-tab-bar"
-      className="fixed inset-x-0 bottom-0 z-[2500] flex border-t border-border bg-card text-card-foreground md:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
-      <Link
-        to="/"
-        data-testid="tab-map"
-        data-active={active === "map"}
-        className={itemCls(active === "map")}
-      >
-        <MapIcon className="size-5" />
-        <span className="max-w-full truncate px-0.5">
-          {t("common:mobileNav.map")}
-        </span>
-      </Link>
-
-      {WIKI_TABS.map(({ type, labelKey, icon: Icon }) => (
-        <Link
-          key={type}
-          to="/wiki/$type"
-          params={{ type }}
-          data-testid={`tab-${type}`}
-          data-active={active === type}
-          className={itemCls(active === type)}
-        >
-          <Icon className="size-5" />
-          <span className="max-w-full truncate px-0.5">{t(labelKey)}</span>
-        </Link>
-      ))}
-
-      {/* SheetTrigger rather than a bare button: Radix then knows the trigger
-          and returns focus to it when the sheet closes via Escape or the X. */}
-      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetTrigger asChild>
-          <button
-            type="button"
-            data-testid="tab-more"
-            data-active={active === "more"}
-            aria-label={t("common:mobileNav.more")}
-            className={itemCls(active === "more")}
-          >
-            <Menu className="size-5" />
-            <span className="px-0.5">{t("common:mobileNav.more")}</span>
-          </button>
-        </SheetTrigger>
-
-        <SheetContent
-          side="bottom"
-          data-testid="more-sheet"
-          className="max-h-[85dvh] overflow-y-auto"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
-        >
-          <SheetHeader>
-            <SheetTitle>{t("common:mobileNav.more")}</SheetTitle>
-          </SheetHeader>
-
-          <Link
-            to="/wiki"
-            data-testid="more-wiki"
-            onClick={() => setMoreOpen(false)}
-            className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm font-medium"
-          >
-            <BookOpen className="size-5" />
-            {t("common:mobileNav.wiki")}
+    <ShellBottomNav
+      pathname={pathname}
+      tabs={[
+        {
+          key: "map",
+          label: t("common:mobileNav.map"),
+          icon: <MapIcon className="size-5" />,
+          active: active === "map",
+        },
+        ...WIKI_TABS.map(({ type, labelKey, icon: Icon }) => ({
+          key: type,
+          label: t(labelKey),
+          icon: <Icon className="size-5" />,
+          active: active === type,
+        })),
+      ]}
+      renderTab={(tab, className) =>
+        tab.key === "map" ? (
+          <Link to="/" data-testid="tab-map" data-active={tab.active} className={className}>
+            {tab.icon}
+            <span className="max-w-full truncate px-0.5">{tab.label}</span>
           </Link>
-
-          <div className="mt-3 border-t border-border pt-3">
-            <div className="mb-1 text-xs font-semibold text-muted-foreground">
-              {t("common:menu.switchLanguage", "Switch language")}
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {SUPPORTED_LANGUAGES.map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  data-testid={`more-lang-${code}`}
-                  onClick={() => void i18n.changeLanguage(code)}
-                  className={cn(
-                    "min-h-9 rounded px-3 py-1.5 text-sm",
-                    currentLng === code
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground",
-                  )}
-                >
-                  {LANGUAGE_LABELS[code]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-3 border-t border-border pt-3">
-            <div className="mb-1 text-xs font-semibold text-muted-foreground">
-              {t("common:menu.switchTheme", "Switch theme")}
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {THEME_OPTIONS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  data-testid={`more-theme-${value}`}
-                  onClick={() => setTheme(value)}
-                  className={cn(
-                    "min-h-9 rounded px-3 py-1.5 text-sm",
-                    theme === value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground",
-                  )}
-                >
-                  {t(`common:theme.${value}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-3 border-t border-border pt-3">
-            <SiteInfo />
-            <a
-              href={ARCHIVE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="more-archive"
-              className="mt-2 inline-block text-sm text-primary hover:underline"
-            >
-              {ARCHIVE_URL}
-            </a>
-          </div>
-        </SheetContent>
-      </Sheet>
-    </nav>
+        ) : (
+          <Link
+            to="/wiki/$type"
+            params={{ type: tab.key }}
+            data-testid={`tab-${tab.key}`}
+            data-active={tab.active}
+            className={className}
+          >
+            {tab.icon}
+            <span className="max-w-full truncate px-0.5">{tab.label}</span>
+          </Link>
+        )
+      }
+      more={{
+        label: t("common:mobileNav.more"),
+        icon: <Menu className="size-5" />,
+        active: active === "more",
+        title: t("common:mobileNav.more"),
+      }}
+      grid={{
+        items: [
+          {
+            key: "wiki",
+            label: t("common:mobileNav.wiki"),
+            icon: <BookOpen className="size-5" />,
+            active: active === "more",
+          },
+        ],
+        renderItem: (item, className) => (
+          <Link key={item.key} to="/wiki" data-testid="more-wiki" className={className}>
+            {item.icon}
+            <span className="text-center leading-tight">{item.label}</span>
+          </Link>
+        ),
+      }}
+      language={{
+        languages: SUPPORTED_LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
+        current: currentLng,
+        onChange: (code) => void i18n.changeLanguage(code),
+        rowLabel: t("common:menu.switchLanguage", "Switch language"),
+        backLabel: t("common:settings.back", "Back"),
+      }}
+      theme={{
+        // The terse labels, not the flavoured ones the desktop dropdown uses:
+        // "Auto (Change with Map)" / "Day Mode (Elyos)" overflowed the
+        // segmented control and truncated to ambiguity at phone width.
+        options: THEME_OPTIONS.map((value) => ({
+          value,
+          label: t(`common:theme.short.${value}`),
+        })),
+        current: theme,
+        onChange: (value) => setTheme(value as Theme),
+        rowLabel: t("common:menu.switchTheme", "Switch theme"),
+      }}
+      engine={{
+        choices: MAP_ENGINE_CHOICES.map((choice) => ({
+          value: choice,
+          label: MAP_ENGINE_LABELS[choice].short,
+        })),
+        current: activeEngine,
+        onChange: (value) => chooseEngine(value as MapEngineChoice),
+        rowLabel: t("common:menu.switchEngine", "Map renderer"),
+      }}
+      extra={
+        <a
+          href={ARCHIVE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="more-archive"
+          className="inline-block text-sm text-primary hover:underline"
+        >
+          {ARCHIVE_URL}
+        </a>
+      }
+      footer={<SiteInfo />}
+    />
   );
 }
