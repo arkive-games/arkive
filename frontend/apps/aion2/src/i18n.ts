@@ -37,6 +37,15 @@ function isGameDataNs(ns: string): boolean {
   );
 }
 
+/**
+ * The app-UI catalogues are authored as `.yaml`, but a Bilibili toy is served
+ * by a host that 404s that extension (verified 2026-07-31: `.html`, `.js`,
+ * `.css`, `.webp`, `.svg`, `.png` all serve, `.yaml` does not). `toy-build`
+ * rewrites them to `.json` in the package, so the toy build asks for `.json`.
+ * Both parse through `yaml.parse`, which accepts JSON as a YAML subset.
+ */
+const APP_LOCALE_EXT = import.meta.env.VITE_TOY ? "json" : "yaml";
+
 function localeLoadPath(lngs: string[], nss: string[]): string {
   const lng = lngs[0];
   const ns = nss[0];
@@ -46,8 +55,8 @@ function localeLoadPath(lngs: string[], nss: string[]): string {
     const root = dataBase ? `${dataBase}/locales` : `/data/locales`;
     return `${root}/${lng}/${ns}.json?${q}`;
   }
-  // Hand-authored app-UI strings → YAML in public/locales.
-  return `${base}/locales/${lng}/${ns}.yaml?${q}`;
+  // Hand-authored app-UI strings → public/locales.
+  return `${base}/locales/${lng}/${ns}.${APP_LOCALE_EXT}?${q}`;
 }
 
 const LEGACY_TAGS: Record<string, string> = { en: "en-US" };

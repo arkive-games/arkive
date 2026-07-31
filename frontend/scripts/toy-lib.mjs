@@ -245,6 +245,47 @@ export function toyBinCandidates(env = process.env) {
   return out
 }
 
+/**
+ * Rewrite every `*.yaml` in a package to `*.json`, returning the count.
+ *
+ * The toy content host 404s `.yaml` (verified 2026-07-31 against a real
+ * preview: `.html`, `.js`, `.css`, `.webp`, `.svg` and `.png` all serve, only
+ * `.yaml` does not), and an app whose UI catalogues are YAML would render
+ * untranslated with no clue why. Apps that read these back must ask for
+ * `.json` in a toy build; `yaml.parse` accepts either, JSON being a subset.
+ */
+export function countYaml(dir) {
+  let n = 0
+  const walk = (d) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const full = path.join(d, entry.name)
+      if (entry.isDirectory()) walk(full)
+      else if (/\.ya?ml$/i.test(entry.name)) n++
+    }
+  }
+  if (fs.existsSync(dir)) walk(dir)
+  return n
+}
+
+export function yamlToJson(dir, parse) {
+  let converted = 0
+  const walk = (d) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const full = path.join(d, entry.name)
+      if (entry.isDirectory()) {
+        walk(full)
+      } else if (/\.ya?ml$/i.test(entry.name)) {
+        const doc = parse(fs.readFileSync(full, 'utf8'))
+        fs.writeFileSync(full.replace(/\.ya?ml$/i, '.json'), JSON.stringify(doc))
+        fs.rmSync(full)
+        converted++
+      }
+    }
+  }
+  if (fs.existsSync(dir)) walk(dir)
+  return converted
+}
+
 /** Recursive size + file count, for the build summary. */
 export function packageSize(dir) {
   let bytes = 0

@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import {
   validateToyConfig,
   bundlesArtifacts,
   fetchesArtifacts,
+  yamlToJson,
   checkPackage,
   decidePublishAction,
   slugFromToyUrl,
@@ -147,6 +148,36 @@ describe('checkPackage', () => {
     const { errors } = checkPackage(dir)
     expect(errors.join('\n')).toMatch(/\.git/)
     expect(errors.join('\n')).toMatch(/toy\.yaml/)
+  })
+})
+
+describe('yamlToJson', () => {
+  let dir
+  beforeEach(() => { dir = mkdtempSync(path.join(tmpdir(), 'toy-yaml-')) })
+  afterEach(() => { rmSync(dir, { recursive: true, force: true }) })
+
+  // Stand-in for `yaml.parse`; the real one is injected by toy-build.
+  const parse = (text) => JSON.parse(text)
+
+  it('replaces nested .yaml with .json and removes the source', () => {
+    mkdirSync(path.join(dir, 'locales', 'zh-CN'), { recursive: true })
+    const yaml = path.join(dir, 'locales', 'zh-CN', 'common.yaml')
+    writeFileSync(yaml, '{"a":{"b":"c"}}')
+    expect(yamlToJson(dir, parse)).toBe(1)
+    expect(existsSync(yaml)).toBe(false)
+    const json = path.join(dir, 'locales', 'zh-CN', 'common.json')
+    expect(JSON.parse(readFileSync(json, 'utf8'))).toEqual({ a: { b: 'c' } })
+  })
+  it('leaves other extensions alone', () => {
+    writeFileSync(path.join(dir, 'index.html'), '<html></html>')
+    writeFileSync(path.join(dir, 'a.json'), '{}')
+    expect(yamlToJson(dir, parse)).toBe(0)
+    expect(existsSync(path.join(dir, 'index.html'))).toBe(true)
+  })
+  it('handles the .yml spelling too', () => {
+    writeFileSync(path.join(dir, 'x.yml'), '{"k":1}')
+    expect(yamlToJson(dir, parse)).toBe(1)
+    expect(existsSync(path.join(dir, 'x.json'))).toBe(true)
   })
 })
 

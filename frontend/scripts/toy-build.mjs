@@ -7,11 +7,12 @@
 // skip the artifact lookup/copy entirely.
 // Spec: docs/superpowers/specs/2026-07-31-toy-publish-tooling-design.md
 import { execSync } from 'node:child_process'
+import { createRequire } from 'node:module'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { parseArgs, loadToyConfig, bundlesArtifacts, fetchesArtifacts, siblingRepo, checkPackage, packageSize } from './toy-lib.mjs'
+import { parseArgs, loadToyConfig, bundlesArtifacts, fetchesArtifacts, siblingRepo, checkPackage, packageSize, yamlToJson, countYaml } from './toy-lib.mjs'
 
 const FRONTEND = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -92,6 +93,31 @@ if (withArtifacts) {
   console.log('toy-build: (those hosts must send Access-Control-Allow-Origin; WebGL textures need it too)')
 } else {
   console.log('toy-build: site-only toy — no data/resource artifacts bundled')
+}
+
+// The toy content host 404s .yaml, so anything the app fetches as YAML has to
+// become JSON here (see yamlToJson). Only the app's own files: a bundled
+// artifact repo is served from this package too, but its catalogues are
+// already JSON.
+{
+  // Resolved from the APP, not this script: `yaml` is the app's dependency,
+  // and converting with the same version the app parses with is what keeps the
+  // rewrite faithful.
+  const appRequire = createRequire(path.join(appDir, 'package.json'))
+  let parse
+  try {
+    ;({ parse } = appRequire('yaml'))
+  } catch {
+    parse = null
+  }
+  const yamlCount = countYaml(outDir)
+  if (yamlCount && !parse) {
+    fail(`${yamlCount} .yaml file(s) in the package but "yaml" is not resolvable from ${app} — the toy host 404s .yaml, so they must be converted`)
+  }
+  if (parse) {
+    const converted = yamlToJson(outDir, parse)
+    if (converted) console.log(`toy-build: rewrote ${converted} .yaml file(s) to .json (the toy host does not serve .yaml)`)
+  }
 }
 
 const { errors, warnings } = checkPackage(outDir)
