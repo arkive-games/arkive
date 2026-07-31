@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
+import { Hint, Input, TooltipProvider } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
@@ -147,8 +147,9 @@ export default function PassivesPage() {
 
   // Rarity + category chips — inline on desktop, behind the mobile header's
   // filter icon (see ContentPage). The search box stays on the page: it is not a
-  // filter. The chip tooltips are lifted above the filter sheet's stacking
-  // context so they stay readable when opened from inside it.
+  // filter. The explained chips use `mobileTrigger="icon"`: their tap already
+  // toggles the filter, so the hint gets its own ⓘ button instead of stealing it.
+  // The desktop tooltips stay lifted above the filter sheet's stacking context.
   const filters = bundle ? (
     <>
       <FilterRow label={t('filters.rarity')} testId="passive-rarity-filter">
@@ -184,38 +185,44 @@ export default function PassivesPage() {
           </FilterChip>
         ) : null}
         {hasInnate ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex">
-                <FilterChip
-                  active={innateOnly}
-                  onClick={() => setInnateOnly((v) => !v)}
-                  testId="category-innate"
-                >
-                  <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
-                  {t('passive.innate')}
-                </FilterChip>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent className="z-[3100] max-w-xs">{t('passive.innateTip')}</TooltipContent>
-          </Tooltip>
+          <Hint
+            title={t('passive.innate')}
+            content={t('passive.innateTip')}
+            contentClassName="z-[3100] max-w-xs"
+            mobileTrigger="icon"
+            iconTestId="category-innate-hint"
+          >
+            <span className="inline-flex">
+              <FilterChip
+                active={innateOnly}
+                onClick={() => setInnateOnly((v) => !v)}
+                testId="category-innate"
+              >
+                <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
+                {t('passive.innate')}
+              </FilterChip>
+            </span>
+          </Hint>
         ) : null}
         {hasMutation ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex">
-                <FilterChip
-                  active={mutationOnly}
-                  onClick={() => setMutationOnly((v) => !v)}
-                  testId="category-mutation"
-                >
-                  <span className="inline-block size-1.5 rounded-full bg-violet-500" />
-                  {t('passive.mutation')}
-                </FilterChip>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent className="z-[3100] max-w-xs">{t('passive.mutationTip')}</TooltipContent>
-          </Tooltip>
+          <Hint
+            title={t('passive.mutation')}
+            content={t('passive.mutationTip')}
+            contentClassName="z-[3100] max-w-xs"
+            mobileTrigger="icon"
+            iconTestId="category-mutation-hint"
+          >
+            <span className="inline-flex">
+              <FilterChip
+                active={mutationOnly}
+                onClick={() => setMutationOnly((v) => !v)}
+                testId="category-mutation"
+              >
+                <span className="inline-block size-1.5 rounded-full bg-violet-500" />
+                {t('passive.mutation')}
+              </FilterChip>
+            </span>
+          </Hint>
         ) : null}
       </FilterRow>
     </>
@@ -297,18 +304,19 @@ export default function PassivesPage() {
                   {r.categories.length || r.mutation || r.rareRoll ? (
                     <div className="flex flex-wrap gap-1">
                       {r.mutation ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span
-                              data-testid="passive-mutation-badge"
-                              className="inline-flex cursor-help items-center gap-1 rounded bg-violet-500/15 px-1.5 py-0.5 text-xs font-medium text-violet-600 ring-1 ring-inset ring-violet-500/30 dark:text-violet-300"
-                            >
-                              <span className="inline-block size-1.5 rounded-full bg-violet-500" />
-                              {t('passive.mutation')}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">{t('passive.mutationTip')}</TooltipContent>
-                        </Tooltip>
+                        <Hint
+                          title={t('passive.mutation')}
+                          content={t('passive.mutationTip')}
+                          contentClassName="max-w-xs"
+                        >
+                          <span
+                            data-testid="passive-mutation-badge"
+                            className="inline-flex cursor-help items-center gap-1 rounded bg-violet-500/15 px-1.5 py-0.5 text-xs font-medium text-violet-600 ring-1 ring-inset ring-violet-500/30 dark:text-violet-300"
+                          >
+                            <span className="inline-block size-1.5 rounded-full bg-violet-500" />
+                            {t('passive.mutation')}
+                          </span>
+                        </Hint>
                       ) : null}
                       {r.categories.map((c) => (
                         <span
@@ -318,22 +326,32 @@ export default function PassivesPage() {
                           {t(`passive.category.${c}`)}
                         </span>
                       ))}
+                      {/* These two carried their explanation in a native `title`,
+                          which a touch screen can never show. Same treatment as
+                          the mutation badge next to them, so all three badges in
+                          this row now explain themselves the same way. */}
                       {r.invoke.map((scope) => (
-                        <span
+                        <Hint
                           key={scope}
-                          title={t('passive.invokeTip')}
-                          className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 ring-1 ring-inset ring-amber-500/30 dark:text-amber-300"
+                          title={t(`passive.invoke.${scope}`, { defaultValue: scope })}
+                          content={t('passive.invokeTip')}
+                          contentClassName="max-w-xs"
                         >
-                          {t(`passive.invoke.${scope}`, { defaultValue: scope })}
-                        </span>
+                          <span className="cursor-help rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-600 ring-1 ring-inset ring-amber-500/30 dark:text-amber-300">
+                            {t(`passive.invoke.${scope}`, { defaultValue: scope })}
+                          </span>
+                        </Hint>
                       ))}
                       {r.rareRoll ? (
-                        <span
-                          title={t('passive.rareRollTip')}
-                          className="rounded bg-fuchsia-500/15 px-1.5 py-0.5 text-xs font-medium text-fuchsia-600 ring-1 ring-inset ring-fuchsia-500/30 dark:text-fuchsia-300"
+                        <Hint
+                          title={t('passive.rareRoll')}
+                          content={t('passive.rareRollTip')}
+                          contentClassName="max-w-xs"
                         >
-                          {t('passive.rareRoll')}
-                        </span>
+                          <span className="cursor-help rounded bg-fuchsia-500/15 px-1.5 py-0.5 text-xs font-medium text-fuchsia-600 ring-1 ring-inset ring-fuchsia-500/30 dark:text-fuchsia-300">
+                            {t('passive.rareRoll')}
+                          </span>
+                        </Hint>
                       ) : null}
                     </div>
                   ) : r.invoke.length ? (

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
+import { cn, Hint, TooltipProvider } from '@gamemap/ui'
 import { elementIconUrl, hasElementIcon, workIconUrl } from '../../../lib/assets'
 import type { CondenseEntry } from '../../../lib/condenser'
 import type { ActiveSkill, Element, WorkType } from '../../../lib/pals'
@@ -104,22 +104,30 @@ export function WorkSuitability({
       </span>
       {upgraded ? (
         <TooltipProvider delayDuration={200}>
-          <Tooltip>
-            <TooltipTrigger asChild>{badge}</TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              {condenseTitle ? <div className="mb-1 font-medium">{condenseTitle}</div> : null}
-              <div className="space-y-0.5 tabular-nums">
-                {condense.stars.map((s) => (
-                  <div key={s.star} className="flex justify-between gap-4">
-                    <span>★{s.star}</span>
-                    <span>
-                      Lv{s.from} → {s.to}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </TooltipContent>
-          </Tooltip>
+          {/* `srTitle` rather than `title`: the breakdown already carries its own
+              heading line, so the mobile sheet names itself for screen readers
+              without printing the same words twice. */}
+          <Hint
+            srTitle={condenseTitle}
+            contentClassName="max-w-xs"
+            content={
+              <>
+                {condenseTitle ? <div className="mb-1 font-medium">{condenseTitle}</div> : null}
+                <div className="space-y-0.5 tabular-nums">
+                  {condense.stars.map((s) => (
+                    <div key={s.star} className="flex justify-between gap-4">
+                      <span>★{s.star}</span>
+                      <span>
+                        Lv{s.from} → {s.to}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            }
+          >
+            {badge}
+          </Hint>
         </TooltipProvider>
       ) : (
         badge

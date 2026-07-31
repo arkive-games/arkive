@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Hint, TooltipProvider, cn } from '@gamemap/ui'
 import { formatChance } from '../../lib/dungeons'
 import {
   anyRollChance,
@@ -116,6 +117,10 @@ export function RecyclerComparisonSection({ file, items }: { file: RecyclerFile;
   }, [file])
 
   return (
+    // The per-roll `Hint` inside the table needs a tooltip provider, and neither
+    // host page (item / building detail) supplies one. 200ms matches the delay
+    // the rest of the app uses.
+    <TooltipProvider delayDuration={200}>
     <CatalogSection title={t('recycler.title')} testId="recycler-comparison">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse text-sm">
@@ -150,24 +155,34 @@ export function RecyclerComparisonSection({ file, items }: { file: RecyclerFile;
                     return (
                       <td key={r.input} className="px-2 py-2 align-top">
                         {g ? (
-                          <div
-                            className="space-y-0.5"
-                            title={
-                              g.rolls.length > 1
-                                ? `${t('recycler.upTo', { count: g.rolls.length })} · ${g.rolls.map((p) => formatChance(p)).join('% / ')}%`
-                                : undefined
-                            }
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <ChanceBadge pct={anyRollChance(g.rolls)} />
-                              <CountRange g={g} />
-                            </div>
-                            {g.rolls.length > 1 ? (
-                              <div className="text-xs tabular-nums text-muted-foreground">
-                                {t('recycler.rolls', { count: g.rolls.length })}
+                          (() => {
+                            const multi = g.rolls.length > 1
+                            const breakdown = `${t('recycler.upTo', { count: g.rolls.length })} · ${g.rolls.map((p) => formatChance(p)).join('% / ')}%`
+                            const cell = (
+                              <div className={cn('space-y-0.5', multi && 'cursor-help')}>
+                                <div className="flex items-center gap-1.5">
+                                  <ChanceBadge pct={anyRollChance(g.rolls)} />
+                                  <CountRange g={g} />
+                                </div>
+                                {multi ? (
+                                  <div className="text-xs tabular-nums text-muted-foreground">
+                                    {t('recycler.rolls', { count: g.rolls.length })}
+                                  </div>
+                                ) : null}
                               </div>
-                            ) : null}
-                          </div>
+                            )
+                            // The cell shows the combined chance; the per-roll
+                            // split lived in a `title`, which no touch device
+                            // can reach. `Hint` keeps it a hover tooltip on
+                            // desktop and a tap-opened sheet on a phone.
+                            return multi ? (
+                              <Hint srTitle={breakdown} content={breakdown}>
+                                {cell}
+                              </Hint>
+                            ) : (
+                              cell
+                            )
+                          })()
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
@@ -185,6 +200,7 @@ export function RecyclerComparisonSection({ file, items }: { file: RecyclerFile;
         <p className="text-xs text-muted-foreground">{t('recycler.note')}</p>
       </div>
     </CatalogSection>
+    </TooltipProvider>
   )
 }
 

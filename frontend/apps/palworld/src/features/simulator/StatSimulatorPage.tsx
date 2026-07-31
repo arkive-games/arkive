@@ -10,13 +10,11 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  Hint,
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
   cn,
 } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
@@ -683,44 +681,47 @@ export default function StatSimulatorPage() {
       tip = t('sim.ivMatch', { range: sol ? (sol.min === sol.max ? String(sol.min) : `${sol.min}–${sol.max}`) : '—' })
     }
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <input
-            type="number"
-            min={0}
-            value={text}
-            onChange={(e) => onInGameChange(row.key, e.target.value)}
-            onBlur={() => onInGameBlur(row.key, row.final)}
-            data-testid={`sim-ingame-${row.key}`}
-            className={cn(
-              'h-7 w-24 rounded-md border bg-background px-2 text-right text-sm font-semibold tabular-nums',
-              invalid ? 'border-destructive text-destructive' : 'border-border',
-            )}
-          />
-        </TooltipTrigger>
-        <TooltipContent className={cn('whitespace-pre-line', invalid && 'bg-destructive text-white')}>
-          {tip}
-        </TooltipContent>
-      </Tooltip>
+      // Icon mode: the field is editable, so a tap has to land in the input and
+      // open the keyboard — the IV-match hint gets its own ⓘ button beside it.
+      <Hint
+        title={t('sim.colInGame')}
+        content={tip}
+        contentClassName={cn('whitespace-pre-line', invalid && 'bg-destructive text-white')}
+        bodyClassName={invalid ? 'text-destructive' : undefined}
+        mobileTrigger="icon"
+        iconTestId={`sim-ingame-hint-${row.key}`}
+      >
+        <input
+          type="number"
+          min={0}
+          value={text}
+          onChange={(e) => onInGameChange(row.key, e.target.value)}
+          onBlur={() => onInGameBlur(row.key, row.final)}
+          data-testid={`sim-ingame-${row.key}`}
+          className={cn(
+            'h-7 w-24 rounded-md border bg-background px-2 text-right text-sm font-semibold tabular-nums',
+            invalid ? 'border-destructive text-destructive' : 'border-border',
+          )}
+        />
+      </Hint>
     )
   }
 
-  const deltaCell = (cell: DeltaCell | null, i: number) => (
+  /** `label` is the row's stat name — it titles the mobile hint sheet, which
+   *  (unlike a tooltip pinned to the cell) has no column context of its own. */
+  const deltaCell = (cell: DeltaCell | null, i: number, label: string) => (
     <td key={i} className="py-1.5 pr-3 text-right tabular-nums">
       {cell ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span
-              className={cn(
-                'cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2',
-                cell.d ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground',
-              )}
-            >
-              +{cell.d}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent className="text-left tabular-nums">{cell.tip}</TooltipContent>
-        </Tooltip>
+        <Hint title={label} content={cell.tip} contentClassName="text-left tabular-nums">
+          <span
+            className={cn(
+              'cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2',
+              cell.d ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground',
+            )}
+          >
+            +{cell.d}
+          </span>
+        </Hint>
       ) : (
         <span className="text-muted-foreground">—</span>
       )}
@@ -859,19 +860,18 @@ export default function StatSimulatorPage() {
                         <tr key={row.key} className="border-t border-border/60">
                           <td className="sticky left-0 bg-card py-1.5 pr-3">{statLabel[row.key]}</td>
                           <td className="py-1.5 pr-3 text-right tabular-nums text-muted-foreground">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
-                                  {row.base.v}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent className="text-left tabular-nums">
-                                {row.base.tip}
-                              </TooltipContent>
-                            </Tooltip>
+                            <Hint
+                              title={statLabel[row.key]}
+                              content={row.base.tip}
+                              contentClassName="text-left tabular-nums"
+                            >
+                              <span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
+                                {row.base.v}
+                              </span>
+                            </Hint>
                           </td>
-                          {row.deltas.map(deltaCell)}
-                          {deltaCell(row.passiveDelta, 99)}
+                          {row.deltas.map((cell, i) => deltaCell(cell, i, statLabel[row.key]))}
+                          {deltaCell(row.passiveDelta, 99, statLabel[row.key])}
                           <td className="py-1.5 pr-3 text-right text-base font-semibold tabular-nums">{row.final}</td>
                           <td className="sticky right-0 border-l border-border/60 bg-card py-1.5 pl-2 text-right">
                             {inGameCell(row)}
