@@ -45,23 +45,34 @@ if (!fs.existsSync(path.join(root, 'index.html'))) {
 }
 const prefix = `/toy/${cfg.slug}/`
 const port = Number(args.port ?? 15180)
+if (Number.isNaN(port)) fail(`invalid --port "${args.port}"`)
 
-http.createServer((req, res) => {
-  const url = decodeURIComponent((req.url ?? '/').split('?')[0])
-  if (url === '/' || url === `/toy/${cfg.slug}`) {
-    res.writeHead(302, { Location: `${prefix}index.html` })
-    res.end()
-    return
+const server = http.createServer((req, res) => {
+  try {
+    const url = decodeURIComponent((req.url ?? '/').split('?')[0])
+    if (url === '/' || url === `/toy/${cfg.slug}`) {
+      res.writeHead(302, { Location: `${prefix}index.html` })
+      res.end()
+      return
+    }
+    if (!url.startsWith(prefix)) { res.writeHead(404); res.end('outside toy prefix'); return }
+    let rel = url.slice(prefix.length)
+    if (rel === '') rel = 'index.html'
+    const file = path.resolve(path.join(root, rel))
+    if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+      res.writeHead(404); res.end('not found'); return
+    }
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] ?? 'application/octet-stream' })
+    fs.createReadStream(file).on('error', () => {
+      if (!res.headersSent) res.writeHead(500)
+      res.end()
+    }).pipe(res)
+  } catch {
+    if (!res.headersSent) res.writeHead(400)
+    res.end('bad request')
   }
-  if (!url.startsWith(prefix)) { res.writeHead(404); res.end('outside toy prefix'); return }
-  let rel = url.slice(prefix.length)
-  if (rel === '') rel = 'index.html'
-  const file = path.resolve(path.join(root, rel))
-  if (!file.startsWith(root) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
-    res.writeHead(404); res.end('not found'); return
-  }
-  res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] ?? 'application/octet-stream' })
-  fs.createReadStream(file).pipe(res)
-}).listen(port, () => {
+})
+server.on('error', (e) => fail(e.message))
+server.listen(port, '127.0.0.1', () => {
   console.log(`toy-serve: http://localhost:${port}${prefix}index.html`)
 })
