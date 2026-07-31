@@ -37,5 +37,16 @@ export {
   type MapViewState,
   type MapViewStore,
 } from "./mapViewMemory"
+export {
+  DEFAULT_MAP_ENGINE,
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  createMapEngineStore,
+  isMapEngineChoice,
+  resolveMapEngine,
+  type MapEngineChoice,
+  type MapEngineStorage,
+  type MapEngineStore,
+} from "./mapEngineChoice"
 export { ThemeProvider, useTheme, type Theme, type ThemeStorage } from "./theme/ThemeProvider"
 export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./theme/ThemeToggle"
