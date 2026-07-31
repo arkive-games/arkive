@@ -2,6 +2,7 @@
   "slug": "arkive-palworld",
   "title": "幻兽帕鲁 · Arkive",
   "visibility": "public",
+  "poster": "toy-poster.png",
   "dataDir": "data-palworld",
   "resourceDir": "resource-palworld",
   "dataBase": "data",
