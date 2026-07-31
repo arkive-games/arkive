@@ -19,6 +19,7 @@ from .cluster import cluster_points
 from .common import js_round, round2, write_json
 from .extract import read_parsed
 from .orientation import ORIENTATIONS
+from .tiles import COUNT, LEVELS, TILE
 from .transform import make_inverse_transform, make_transform
 
 SIZE = 8192
@@ -112,7 +113,8 @@ def build_dataset(parsed: dict) -> dict:
 
     maps = [{
         "id": m["id"], "name": m["id"], "type": "world",
-        "tileWidth": 1024, "tileHeight": 1024, "tilesCountX": 8, "tilesCountY": 8,
+        "tileWidth": TILE, "tileHeight": TILE, "tilesCountX": COUNT, "tilesCountY": COUNT,
+        "tileLevels": LEVELS,
         "isVisible": True,
         "worldBounds": {
             "min": {"x": bounds[m["id"]]["min"]["X"], "y": bounds[m["id"]]["min"]["Y"]},

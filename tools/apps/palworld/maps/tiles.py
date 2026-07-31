@@ -20,6 +20,10 @@ Image.MAX_IMAGE_PIXELS = None  # source maps are 8192x8192
 MAP_IMAGES = {"MainWorld": "Texture/UI/Map/T_WorldMap.png", "WorldTree": "Texture/UI/Map/T_TreeMap.png"}
 TILE = 1024
 COUNT = 8
+# Downscaled halving pyramid levels emitted alongside level 0 (z-1..z-3;
+# z-3 = the whole map in one TILE-px tile). Mirrored into maps.json as
+# `tileLevels` so the frontend engines know the levels exist.
+LEVELS = 3
 # Long-edge cap for note illustrations (they only render in a small popup).
 NOTE_MAX_EDGE = 1024
 # The border art is a bright cyan glow line (the map's true edge) with a dark
@@ -141,23 +145,33 @@ def _clear_void(img: Image.Image, tol: int, inset: int) -> Image.Image:
 
 
 def slice_tiles(raw: Path, res_out: Path) -> None:
-    """Slice each world map image into 8x8 ``TILE``-px WebP tiles, with the
-    out-of-border void cleared to transparent (see ``_clear_void`` /
-    ``VOID_PARAMS``). Kept separate from icon/note conversion so tiles can be
-    regenerated on their own.
+    """Slice each world map image into the pyramid: level 0 is the native 8x8
+    ``TILE``-px grid (flat in ``tiles/<Map>/``); levels 1..``LEVELS`` halve the
+    (void-cleared) image per step into ``tiles/<Map>/z-<L>/``, so far-out views
+    fetch a handful of small tiles instead of the full-resolution grid. Kept
+    separate from icon/note conversion so tiles can be regenerated on their own.
     """
     raw, res_out = Path(raw), Path(res_out)
     for map_id, img_rel in MAP_IMAGES.items():
         dir_ = res_out / "tiles" / map_id
-        dir_.mkdir(parents=True, exist_ok=True)
         params = VOID_PARAMS[map_id]
         with Image.open(raw / img_rel) as img:
             img = _clear_void(img, params["tol"], params["inset"])
-            for x in range(COUNT):
-                for y in range(COUNT):
-                    tile = img.crop((x * TILE, y * TILE, (x + 1) * TILE, (y + 1) * TILE))
-                    _save_webp(tile, dir_ / f"{map_id}_{x:02d}_{y:02d}.webp")
-        print(f"tiles: {map_id} 64 tiles")
+            total = 0
+            for lvl in range(LEVELS + 1):
+                count = COUNT >> lvl
+                if count == 0:
+                    break
+                lvl_dir = dir_ if lvl == 0 else dir_ / f"z-{lvl}"
+                lvl_dir.mkdir(parents=True, exist_ok=True)
+                size = TILE * count
+                src = img if lvl == 0 else img.resize((size, size), Image.LANCZOS)
+                for x in range(count):
+                    for y in range(count):
+                        tile = src.crop((x * TILE, y * TILE, (x + 1) * TILE, (y + 1) * TILE))
+                        _save_webp(tile, lvl_dir / f"{map_id}_{x:02d}_{y:02d}.webp")
+                total += count * count
+        print(f"tiles: {map_id} {total} tiles across {LEVELS + 1} levels")
 
 
 def convert_notes(raw: Path, data_out: Path, res_out: Path) -> None:
