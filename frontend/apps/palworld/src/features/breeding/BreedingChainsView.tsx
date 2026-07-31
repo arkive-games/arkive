@@ -1,11 +1,20 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Button, cn } from '@gamemap/ui'
 import { comboKey, favKey, palIconUrl, type Combo, type NameMap } from '../../lib/breeding'
 import { buildChainTree, type BreedChain, type ChainStep, type ChainTreeNode } from '../../lib/breedingChains'
 import { PalHover } from '../catalog/components'
-import { GenderMark, LEGENDARY_ICON, PalChip, RecipeCard, type BreedingVariant, type RecipeMeta } from './RecipeCard'
+import {
+  GenderMark,
+  LEGENDARY_ICON,
+  PalChip,
+  PalTile,
+  RecipeCard,
+  TileSep,
+  type BreedingVariant,
+  type RecipeMeta,
+} from './RecipeCard'
 
 // Chain cards shown per group before the show-more button.
 const GROUP_CAP = 40
@@ -193,6 +202,68 @@ function StepRow({ step, final, ctx, depth = 0 }: { step: ChainStep; final: bool
   )
 }
 
+/**
+ * One chain step as three squares, for phones — the same A + B = C shape the
+ * Recipes tab uses, so the two tabs read as one feature.
+ *
+ * The middle square is the wrinkle: a step's partners are every Pal that pairs
+ * with the fixed parent for this child, commonly five to ten of them, so there
+ * is no single "B". It shows one representative square with a `+N` badge and
+ * expands to a grid of the rest on tap. That keeps all three columns equal
+ * width, which is what makes it read as squares rather than as a row.
+ */
+function StepTiles({ step, final, ctx }: { step: ChainStep; final: boolean; ctx: ChainsCtx }) {
+  const { t } = useTranslation()
+  const [expanded, setExpanded] = useState(false)
+  const [lead, ...rest] = step.partners
+  if (!lead) return null
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
+        <PalTile id={step.fixed} names={ctx.names} meta={ctx.meta} />
+        <TileSep>+</TileSep>
+        <div className="relative min-w-0">
+          <PalTile id={lead.b} names={ctx.names} meta={ctx.meta} gender={lead.bg} />
+          {rest.length > 0 && (
+            <button
+              type="button"
+              data-testid="chain-partners-toggle"
+              aria-expanded={expanded}
+              onClick={() => setExpanded((v) => !v)}
+              title={
+                expanded
+                  ? t('breeding.collapse')
+                  : t('breeding.showAllPartners', { count: step.partners.length })
+              }
+              aria-label={
+                expanded
+                  ? t('breeding.collapse')
+                  : t('breeding.showAllPartners', { count: step.partners.length })
+              }
+              // Overlaid on the square's corner rather than placed beside it: a
+              // fourth column would break the equal thirds.
+              className="absolute -right-1 -top-1 z-10 min-w-6 rounded-full border border-border bg-background px-1 text-xs font-medium text-muted-foreground shadow-sm"
+            >
+              {expanded ? '−' : `+${rest.length}`}
+            </button>
+          )}
+        </div>
+        <TileSep>=</TileSep>
+        <PalTile id={step.child} names={ctx.names} meta={ctx.meta} emphasis={final} />
+      </div>
+      {expanded && (
+        // Same tile width as the three above (a third of the row), so the
+        // alternatives read as more of the middle square, not a new control.
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(33.333%-0.25rem)))] gap-1">
+          {rest.map((f) => (
+            <PalTile key={comboKey(f)} id={f.b} names={ctx.names} meta={ctx.meta} gender={f.bg} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** One chain entry: a step row per generation. */
 function ChainCard({ chain, ctx }: { chain: BreedChain; ctx: ChainsCtx }) {
   return (
@@ -204,7 +275,16 @@ function ChainCard({ chain, ctx }: { chain: BreedChain; ctx: ChainsCtx }) {
       className="flex flex-col gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm sm:grid sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] sm:items-center"
     >
       {chain.steps.map((s, i) => (
-        <StepRow key={s.child} step={s} final={i === chain.steps.length - 1} ctx={ctx} />
+        <Fragment key={s.child}>
+          {/* Squares below sm, chip row from sm up: the tiles need a third of
+              the width each to stay legible, which only a phone column gives. */}
+          <div className="sm:hidden">
+            <StepTiles step={s} final={i === chain.steps.length - 1} ctx={ctx} />
+          </div>
+          <div className="hidden sm:contents">
+            <StepRow step={s} final={i === chain.steps.length - 1} ctx={ctx} />
+          </div>
+        </Fragment>
       ))}
     </div>
   )
@@ -212,7 +292,7 @@ function ChainCard({ chain, ctx }: { chain: BreedChain; ctx: ChainsCtx }) {
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <h2 className="mb-2 mt-4 text-sm font-semibold">
+    <h2 className="mb-2 mt-4 text-lg font-semibold">
       {label} <span className="font-normal text-muted-foreground">({count})</span>
     </h2>
   )
