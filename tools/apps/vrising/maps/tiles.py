@@ -25,6 +25,7 @@ from ..markers.portraits import (
     BOSS_SMALL_PORTRAITS,
     boss_portrait_icon,
 )
+from ..markers.resource_icons import RESOURCE_ICON_SOURCES, RESOURCE_ICONS
 from .extract import WORLD_MAP
 
 Image.MAX_IMAGE_PIXELS = None  # the source map is 6080x6080 (~37 MPx)
@@ -41,6 +42,7 @@ ICON_PREFIXES = ("MapIcon_", "MiniMapMask")
 # future site card. Long edge in px.
 PREVIEW_EDGE = 1520
 BOSS_ICON_EDGE = 160
+RESOURCE_ICON_EDGE = 160
 
 
 def tile_grid(size: int, tile: int = TILE) -> tuple[int, int]:
@@ -166,6 +168,38 @@ def convert_boss_portrait_icons(
     return written
 
 
+def convert_resource_icons(
+    raw: Path,
+    res_out: Path,
+    source_mapping: Mapping[str, str] = RESOURCE_ICON_SOURCES,
+) -> int:
+    """Convert reviewed game item sprites to lightweight resource marker icons."""
+    raw, res_out = Path(raw), Path(res_out)
+    icon_dir = res_out / "icons"
+    icon_dir.mkdir(parents=True, exist_ok=True)
+    missing: list[str] = []
+    written = 0
+    for kind, texture_stem in sorted(source_mapping.items()):
+        src = raw / "Texture2D" / f"{texture_stem}.png"
+        if not src.is_file():
+            missing.append(f"{kind} -> {texture_stem}")
+            continue
+        icon_stem = RESOURCE_ICONS.get(kind)
+        if icon_stem is None:
+            raise RuntimeError(f"no marker icon stem for reviewed resource {kind}")
+        with Image.open(src) as im:
+            icon = im.convert("RGBA")
+            icon.thumbnail((RESOURCE_ICON_EDGE, RESOURCE_ICON_EDGE), Image.LANCZOS)
+            _save_webp(icon, icon_dir / f"{icon_stem}.webp")
+        written += 1
+    if missing:
+        raise RuntimeError(
+            "reviewed resource icons are missing from the unex export: "
+            + ", ".join(missing)
+        )
+    return written
+
+
 def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
     """Full resource build. ``data_out`` is unused today (no data-driven icon
     list — the whole MapIcon set is converted) but kept in the signature so the
@@ -186,3 +220,5 @@ def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
     print(f"boss portraits: {portraits} converted")
     boss_icons = convert_boss_portrait_icons(raw, res_out)
     print(f"boss icons: {boss_icons} converted")
+    resource_icons = convert_resource_icons(raw, res_out)
+    print(f"resource icons: {resource_icons} converted")

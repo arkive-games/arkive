@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 
 from .portraits import boss_portrait_icon, boss_portrait_path
+from .resource_icons import resource_icon
 
 
 RESOURCE_KINDS = (
@@ -150,6 +151,9 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
             pool_id = None
         count = int(resource.get("sourceCount", 1))
         detail = classification["detail"]
+        icon = resource_icon(kind)
+        if icon is None:
+            raise ValueError(f"public resource kind {kind} has no reviewed icon")
         append_marker(
             {
                 "id": marker_id,
@@ -158,6 +162,7 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
                 **_marker_position(position),
                 "images": [],
                 "contributors": [],
+                "icon": icon,
                 "resourceKind": kind,
                 "resourceDetail": detail,
                 **({"count": count} if count > 1 else {}),
