@@ -1,5 +1,5 @@
 """Tiles stage: the single 6080x6080 world map into a WebP tile grid, plus the
-``MapIcon_*`` sprites the marker pins use.
+``MapIcon_*`` sprites and reviewed boss portraits the marker pins use.
 
 Convention is palworld's, unchanged (``tools/apps/palworld/maps/tiles.py``):
 ONE native zoom level, tiles at ``<res>/tiles/<MapId>/<MapId>_<xx>_<yy>.webp``
@@ -20,7 +20,11 @@ from pathlib import Path
 
 from PIL import Image
 
-from ..markers.portraits import BOSS_PORTRAITS
+from ..markers.portraits import (
+    BOSS_PORTRAITS,
+    BOSS_SMALL_PORTRAITS,
+    boss_portrait_icon,
+)
 from .extract import WORLD_MAP
 
 Image.MAX_IMAGE_PIXELS = None  # the source map is 6080x6080 (~37 MPx)
@@ -36,6 +40,7 @@ ICON_PREFIXES = ("MapIcon_", "MiniMapMask")
 # A preview render of the whole map, handy for calibration review and for a
 # future site card. Long edge in px.
 PREVIEW_EDGE = 1520
+BOSS_ICON_EDGE = 160
 
 
 def tile_grid(size: int, tile: int = TILE) -> tuple[int, int]:
@@ -106,7 +111,7 @@ def convert_boss_portraits(
     res_out: Path,
     mapping: Mapping[str, str] = BOSS_PORTRAITS,
 ) -> int:
-    """Convert reviewed V Blood portraits to stable prefab-keyed WebP files."""
+    """Convert reviewed large V Blood portraits to prefab-keyed WebP files."""
     raw, res_out = Path(raw), Path(res_out)
     portrait_dir = res_out / "bosses"
     portrait_dir.mkdir(parents=True, exist_ok=True)
@@ -118,11 +123,44 @@ def convert_boss_portraits(
             missing.append(f"{prefab_name} -> {texture_stem}")
             continue
         with Image.open(src) as im:
-            _save_webp(im.convert("RGBA"), portrait_dir / f"{prefab_name}.webp")
+            portrait = im.convert("RGBA")
+            _save_webp(portrait, portrait_dir / f"{prefab_name}.webp")
         written += 1
     if missing:
         raise RuntimeError(
             "reviewed V Blood portraits are missing from the unex export: "
+            + ", ".join(missing)
+        )
+    return written
+
+
+def convert_boss_portrait_icons(
+    raw: Path,
+    res_out: Path,
+    mapping: Mapping[str, str] = BOSS_SMALL_PORTRAITS,
+) -> int:
+    """Convert the game's small V Blood portraits to lightweight marker icons."""
+    raw, res_out = Path(raw), Path(res_out)
+    icon_dir = res_out / "icons"
+    icon_dir.mkdir(parents=True, exist_ok=True)
+    missing: list[str] = []
+    written = 0
+    for prefab_name, texture_stem in sorted(mapping.items()):
+        src = raw / "Texture2D" / f"{texture_stem}.png"
+        if not src.is_file():
+            missing.append(f"{prefab_name} -> {texture_stem}")
+            continue
+        icon_stem = boss_portrait_icon(prefab_name)
+        if icon_stem is None:
+            raise RuntimeError(f"no marker icon stem for reviewed boss {prefab_name}")
+        with Image.open(src) as im:
+            icon = im.convert("RGBA")
+            icon.thumbnail((BOSS_ICON_EDGE, BOSS_ICON_EDGE), Image.LANCZOS)
+            _save_webp(icon, icon_dir / f"{icon_stem}.webp")
+        written += 1
+    if missing:
+        raise RuntimeError(
+            "reviewed small V Blood portraits are missing from the unex export: "
             + ", ".join(missing)
         )
     return written
@@ -146,3 +184,5 @@ def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
     print(f"icons: {icons} converted")
     portraits = convert_boss_portraits(raw, res_out)
     print(f"boss portraits: {portraits} converted")
+    boss_icons = convert_boss_portrait_icons(raw, res_out)
+    print(f"boss icons: {boss_icons} converted")

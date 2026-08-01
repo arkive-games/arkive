@@ -21,6 +21,7 @@ from .extract import (
     read_scene_guid,
     world_position,
 )
+from .localization import localize_fixed_bosses
 
 
 SERVER_ENTITY_SCENES_RELATIVE = Path(
@@ -346,6 +347,7 @@ def extract_fixed_boss_markers(
         prefab_names,
         vblood_metadata,
     )
+    fixed = localize_fixed_bosses(fixed, game_root)
     output_dir.mkdir(parents=True, exist_ok=True)
     write_json(output_dir / "bosses.fixed.json", fixed)
     summary = {

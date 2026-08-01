@@ -58,6 +58,19 @@ BOSS_PORTRAITS: dict[str, str] = {
     "CHAR_Winter_Yeti_VBlood": "Portrait_Large_Normal_TerrorclawOgre",
 }
 
+BOSS_SMALL_PORTRAIT_OVERRIDES = {
+    "CHAR_Gloomrot_Monster_VBlood": "Portrait_Small_Normal_Monster2",
+    "CHAR_Manticore_VBlood": "Portrait_Small_Normal_WingedHorror2",
+}
+BOSS_SMALL_PORTRAITS = {
+    prefab_name: BOSS_SMALL_PORTRAIT_OVERRIDES.get(
+        prefab_name,
+        texture_stem.replace("Portrait_Large_", "Portrait_Small_", 1),
+    )
+    for prefab_name, texture_stem in BOSS_PORTRAITS.items()
+}
+BOSS_PORTRAIT_ICON_PREFIX = "BossPortrait_"
+
 
 def boss_portrait_path(prefab_name: str) -> str | None:
     """Resource-relative WebP path for a reviewed fixed V Blood portrait."""
@@ -66,4 +79,17 @@ def boss_portrait_path(prefab_name: str) -> str | None:
     return f"bosses/{prefab_name}.webp"
 
 
-__all__ = ["BOSS_PORTRAITS", "boss_portrait_path"]
+def boss_portrait_icon(prefab_name: str) -> str | None:
+    """Marker-icon stem for a reviewed fixed V Blood portrait."""
+    if prefab_name not in BOSS_PORTRAITS:
+        return None
+    return f"{BOSS_PORTRAIT_ICON_PREFIX}{prefab_name}"
+
+
+__all__ = [
+    "BOSS_PORTRAITS",
+    "BOSS_PORTRAIT_ICON_PREFIX",
+    "BOSS_SMALL_PORTRAITS",
+    "boss_portrait_icon",
+    "boss_portrait_path",
+]

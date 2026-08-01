@@ -194,6 +194,7 @@ export default function MapPage() {
         bossLevel: m.bossLevel,
         bossAct: m.bossAct,
         bossRegion: m.bossRegion,
+        icon: m.icon,
         indexInSubtype: m.indexInSubtype,
         images: (m.images ?? []).map(markerImageUrl),
         contributors: [] as string[],

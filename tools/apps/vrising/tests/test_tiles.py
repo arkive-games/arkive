@@ -6,6 +6,7 @@ from vrising.maps.tiles import (
     COUNT,
     MAP_ID,
     TILE,
+    convert_boss_portrait_icons,
     convert_boss_portraits,
     slice_tiles,
     tile_grid,
@@ -83,6 +84,9 @@ def test_convert_boss_portraits_writes_prefab_keyed_webp(tmp_path):
     Image.new("RGBA", (16, 8), (80, 20, 120, 255)).save(
         src / "Portrait_Large_Normal_Iva.png"
     )
+    Image.new("RGBA", (8, 16), (20, 120, 80, 255)).save(
+        src / "Portrait_Small_Normal_Iva.png"
+    )
     res_out = tmp_path / "res"
 
     written = convert_boss_portraits(
@@ -90,9 +94,19 @@ def test_convert_boss_portraits_writes_prefab_keyed_webp(tmp_path):
         res_out,
         {"CHAR_Gloomrot_Iva_VBlood": "Portrait_Large_Normal_Iva"},
     )
+    icons_written = convert_boss_portrait_icons(
+        tmp_path,
+        res_out,
+        {"CHAR_Gloomrot_Iva_VBlood": "Portrait_Small_Normal_Iva"},
+    )
 
     portrait = res_out / "bosses" / "CHAR_Gloomrot_Iva_VBlood.webp"
+    icon = res_out / "icons" / "BossPortrait_CHAR_Gloomrot_Iva_VBlood.webp"
     assert written == 1
+    assert icons_written == 1
     assert portrait.is_file()
+    assert icon.is_file()
     with Image.open(portrait) as image:
         assert image.size == (16, 8)
+    with Image.open(icon) as image:
+        assert image.size == (8, 16)

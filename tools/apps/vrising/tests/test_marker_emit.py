@@ -129,3 +129,20 @@ def test_fixed_boss_marker_includes_its_reviewed_portrait():
     )
 
     assert payload["markers"][0]["images"] == [f"bosses/{prefab}.webp"]
+    assert payload["markers"][0]["icon"] == f"BossPortrait_{prefab}"
+
+
+def test_fixed_boss_marker_keeps_official_localized_names():
+    boss = _boss("CHAR_Gloomrot_Iva_VBlood", "Ziva the Engineer")
+    boss["localizedNames"] = {
+        "en-US": "Ziva the Engineer",
+        "zh-CN": "工程师齐瓦",
+        "zh-TW": "工程師齊瓦",
+    }
+    payload = build_marker_payload(
+        [],
+        [{"boss": boss, "worldPosition": [7.0, 8.0, 9.0]}],
+    )
+
+    label = next(iter(payload["labels"].values()))
+    assert label["localizedNames"] == boss["localizedNames"]

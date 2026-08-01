@@ -42,7 +42,7 @@ categories:
           zh-TW: 遊戲在世界地圖上繪製的領地輪廓。名稱目前無法從遊戲檔案中還原，因此以內部存取 ID 標註。
 
   - id: bosses
-    pinVariant: pin
+    pinVariant: circular
     names:
       en-US: V Blood bosses
       zh-CN: V 型血首领

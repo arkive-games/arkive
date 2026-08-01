@@ -34,6 +34,7 @@ export interface MarkerRow {
   bossLevel?: number | null
   bossAct?: string | null
   bossRegion?: string | null
+  icon?: string
   images?: string[]
 }
 

@@ -151,14 +151,20 @@ def build_dataset(
             },
             # Access-id labels are identical in every locale on purpose: they are
             # ids, not names, and the game ships no names to translate.
-            "markers": {
-                MAP_ID: {
-                    mid: marker_payload["labels"].get(mid, {"name": label})
-                    for mid, label in marker_labels.items()
-                }
-            },
+            "markers": {MAP_ID: {}},
             "regions": {MAP_ID: {rid: {"name": label} for rid, label in region_labels.items()}},
         }
+        for mid, label in marker_labels.items():
+            source = marker_payload["labels"].get(mid, {"name": label})
+            localized_names = source.get("localizedNames", {})
+            locales[lng]["markers"][MAP_ID][mid] = {
+                "name": localized_names.get(lng, source["name"]),
+                **(
+                    {"description": source["description"]}
+                    if source.get("description")
+                    else {}
+                ),
+            }
 
     return {
         "maps": maps,
