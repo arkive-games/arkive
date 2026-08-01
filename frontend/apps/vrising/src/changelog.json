@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.4.0",
+      "date": "2026-08-01",
+      "commit": "e4eb06d605583ce99204c9650ad3a7439213c626",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added curated core-material locations and fixed V Blood boss spawns to the interactive map.",
+            "zh-CN": "互动地图新增精选核心材料点位和固定 V 型血首领出生点。",
+            "zh-TW": "互動地圖新增精選核心材料點位和固定 V 型血首領出生點。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.3.0",
       "date": "2026-08-01",
       "commit": "dc1c893180e14efd24cd7a93f70d9787dee8a38a",
