@@ -35,5 +35,11 @@ playwright-report/
 # Claude local worktrees / settings
 .claude/
 
+# Brainstorming visual companion (local mockups)
+.superpowers/
+
+# Scratch copies of third-party reference sources (not ours to vendor)
+_lostark_ref/
+
 # Local debug screenshots (repo root only)
 /*.png
