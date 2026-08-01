@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.0",
+      "date": "2026-08-01",
+      "commit": "37bd56db307b5f8496988cf4cec323c56cca87a2",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Fixed V Blood bosses now use official localized names and circular in-game portrait markers.",
+            "zh-CN": "固定 V 型血首领现使用游戏官方中文名和圆形游戏内头像标记。",
+            "zh-TW": "固定 V 型血首領現使用遊戲官方中文名和圓形遊戲內頭像標記。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.5.0",
       "date": "2026-08-01",
       "commit": "1b97e80179c751eee980991d398e1084bd549600",
