@@ -8,6 +8,7 @@ from vrising.maps.tiles import (
     TILE,
     convert_boss_portrait_icons,
     convert_boss_portraits,
+    convert_resource_icons,
     slice_tiles,
     tile_grid,
 )
@@ -110,3 +111,24 @@ def test_convert_boss_portraits_writes_prefab_keyed_webp(tmp_path):
         assert image.size == (16, 8)
     with Image.open(icon) as image:
         assert image.size == (8, 16)
+
+
+def test_convert_resource_icons_writes_reviewed_lightweight_webp(tmp_path):
+    src = tmp_path / "Texture2D"
+    src.mkdir(parents=True)
+    Image.new("RGBA", (320, 240), (190, 110, 50, 255)).save(
+        src / "CopperOre.png"
+    )
+    res_out = tmp_path / "res"
+
+    written = convert_resource_icons(
+        tmp_path,
+        res_out,
+        {"copper": "CopperOre"},
+    )
+
+    icon = res_out / "icons" / "ResourceIcon_Copper.webp"
+    assert written == 1
+    assert icon.is_file()
+    with Image.open(icon) as image:
+        assert max(image.size) <= 160

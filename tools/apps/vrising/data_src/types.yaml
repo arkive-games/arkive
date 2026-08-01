@@ -60,7 +60,7 @@ categories:
           zh-CN: 从游戏场景中提取的、拥有一个或多个固定出生位置的 V 型血首领。
           zh-TW: 從遊戲場景中擷取的、擁有一個或多個固定出生位置的 V 型血首領。
   - id: resources
-    pinVariant: pin
+    pinVariant: circular
     names:
       en-US: Resources
       zh-CN: 资源

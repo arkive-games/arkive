@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from vrising.markers.emit import build_marker_payload
+from vrising.markers.resource_icons import RESOURCE_ICONS, RESOURCE_ICON_SOURCES
 
 
 def _boss(name: str, display: str) -> dict:
@@ -27,6 +28,24 @@ def test_marker_payload_uses_unity_xz_for_the_map_and_keeps_height():
     (marker,) = payload["markers"]
     assert (marker["x"], marker["y"], marker["z"]) == (10.0, 20.0, 3.5)
     assert marker["subtype"] == "resource-quartz"
+    assert marker["icon"] == "ResourceIcon_Quartz"
+
+
+def test_every_public_resource_kind_has_one_reviewed_icon():
+    expected = {
+        "copper",
+        "crystal",
+        "emery",
+        "gem",
+        "iron",
+        "mechanical",
+        "quartz",
+        "silver",
+        "sulfur",
+    }
+    assert set(RESOURCE_ICONS) == expected
+    assert set(RESOURCE_ICON_SOURCES) == expected
+    assert len(set(RESOURCE_ICONS.values())) == len(expected)
 
 
 def test_dense_ordinary_and_mixed_random_resources_are_not_emitted():

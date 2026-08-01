@@ -85,6 +85,7 @@ def test_taxonomy_carries_both_subtypes_with_icons():
     assert ids["poi"]["icon"] == "MapIcon_CavePassage"
     assert ids["territory"]["defaultActive"] is True
     assert categories["bosses"]["pinVariant"] == "circular"
+    assert categories["resources"]["pinVariant"] == "circular"
     assert {s["id"] for s in categories["resources"]["subtypes"]} >= {
         "resource-quartz",
         "resource-copper",
