@@ -62,7 +62,10 @@ export default function MapPage() {
   const [staticData, setStaticData] = useState<{
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
   } | null>(null)
-  const [markerData, setMarkerData] = useState<{ markers: MarkerRow[]; l10n: MarkerLocale } | null>(null)
+  const [markerData, setMarkerData] = useState<{
+    markers: MarkerRow[]
+    l10n: MarkerLocale
+  } | null>(null)
   const [regionData, setRegionData] = useState<{ regions: RegionInstance[]; l10n: RegionLocale } | null>(null)
   const [visible, setVisible] = useState<Set<string>>(() => restoredVisible ?? new Set())
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
@@ -165,23 +168,44 @@ export default function MapPage() {
       const loc = markerData.l10n[m.id]
       const subtypeL10n = staticData.typesL10n.subtypes[m.subtype]
       const subLabel = subtypeL10n?.name ?? m.subtype
+      const genericResourceName = m.category === 'resources' && (
+        m.resourceDetail === m.resourceKind
+        || m.resourceDetail === 'mixed'
+        || m.resourceDetail?.startsWith('random_')
+      )
+      const detailNameKey = {
+        rift_crystal: 'marker.riftCrystal',
+        emery_container: 'marker.emeryContainer',
+        iron_mine_cart: 'marker.ironMineCart',
+        silver_mine_cart: 'marker.silverMineCart',
+      }[m.resourceDetail ?? '']
       return {
         id: m.id,
         subtype: m.subtype,
         category: m.category,
         x: m.x,
         y: m.y,
+        z: m.z,
         region: m.region,
+        resourceKind: m.resourceKind,
+        resourceDetail: m.resourceDetail,
+        movement: m.movement,
+        bossPrefab: m.bossPrefab,
+        bossLevel: m.bossLevel,
+        bossAct: m.bossAct,
+        bossRegion: m.bossRegion,
         indexInSubtype: m.indexInSubtype,
         images: [] as string[],
         contributors: [] as string[],
-        localizedName: loc?.name ?? subLabel,
+        localizedName: detailNameKey
+          ? t(detailNameKey)
+          : genericResourceName ? subLabel : (loc?.name ?? subLabel),
         localizedDescription: loc?.description ?? subtypeL10n?.description,
         subtypeLabel: subLabel,
         subtypeMeta: subtypeMetaMap.get(m.subtype),
       }
     })
-  }, [staticData, markerData, subtypeMetaMap])
+  }, [staticData, markerData, subtypeMetaMap, t])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
 

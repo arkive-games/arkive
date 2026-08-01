@@ -27,6 +27,7 @@ from .calibration import (
 )
 from .extract import read_parsed
 from .tiles import COUNT, TILE
+from ..markers.emit import load_marker_payload
 
 _HERE = Path(__file__).resolve().parent
 _TYPES_YAML = _HERE.parent / "data_src" / "types.yaml"
@@ -34,7 +35,9 @@ _TYPES_YAML = _HERE.parent / "data_src" / "types.yaml"
 _VALID_CALIBRATION = {"fitted", "by-eye"}
 
 
-def build_dataset(parsed: dict, regions: list[dict]) -> dict:
+def build_dataset(
+    parsed: dict, regions: list[dict], marker_payload: dict | None = None
+) -> dict:
     if CALIBRATION_METHOD not in _VALID_CALIBRATION:
         raise RuntimeError(
             f"CALIBRATION_METHOD is {CALIBRATION_METHOD!r}; it must be one of "
@@ -69,17 +72,24 @@ def build_dataset(parsed: dict, regions: list[dict]) -> dict:
     # though the displayed text comes from locales/<lng>/types.json. palworld and
     # sts2 both satisfy it by echoing the id, so do the same rather than
     # duplicating English into the language-neutral file.
+    category_fields = ("pinVariant", "icon", "color")
+    subtype_fields = (
+        "icon",
+        "iconScale",
+        "pinVariant",
+        "color",
+        "defaultActive",
+        "canComplete",
+    )
     types = {
         "categories": [{
             "id": c["id"],
             "name": c["id"],
-            **({"pinVariant": c["pinVariant"]} if c.get("pinVariant") else {}),
+            **{field: c[field] for field in category_fields if field in c},
             "subtypes": [{
                 "id": s["id"],
                 "name": s["id"],
-                **({"icon": s["icon"]} if s.get("icon") else {}),
-                **({"iconScale": s["iconScale"]} if s.get("iconScale") else {}),
-                **({"defaultActive": True} if s.get("defaultActive") else {}),
+                **{field: s[field] for field in subtype_fields if field in s},
             } for s in c["subtypes"]],
         } for c in src["categories"]],
     }
@@ -108,6 +118,17 @@ def build_dataset(parsed: dict, regions: list[dict]) -> dict:
             "indexInSubtype": counters[subtype],
         })
 
+    marker_payload = marker_payload or {
+        "markers": [],
+        "labels": {},
+    }
+    for marker in marker_payload["markers"]:
+        marker_id = marker["id"]
+        if marker_id in marker_labels:
+            raise RuntimeError(f"marker id {marker_id} collides with a region marker")
+        marker_labels[marker_id] = marker_payload["labels"][marker_id]["name"]
+        markers.append(marker)
+
     region_labels = {r["id"]: r["name"] for r in regions}
 
     locales: dict[str, dict] = {}
@@ -130,7 +151,12 @@ def build_dataset(parsed: dict, regions: list[dict]) -> dict:
             },
             # Access-id labels are identical in every locale on purpose: they are
             # ids, not names, and the game ships no names to translate.
-            "markers": {MAP_ID: {mid: {"name": label} for mid, label in marker_labels.items()}},
+            "markers": {
+                MAP_ID: {
+                    mid: marker_payload["labels"].get(mid, {"name": label})
+                    for mid, label in marker_labels.items()
+                }
+            },
             "regions": {MAP_ID: {rid: {"name": label} for rid, label in region_labels.items()}},
         }
 
@@ -154,7 +180,8 @@ def run_emit(parsed_dir: Path, data_out: Path) -> None:
     import json
     regions = json.loads(regions_path.read_text(encoding="utf-8"))["regions"]
 
-    ds = build_dataset(parsed, regions)
+    marker_payload = load_marker_payload(parsed_dir / "markers")
+    ds = build_dataset(parsed, regions, marker_payload)
 
     def w(rel, obj):
         write_json(data_out / rel, obj)

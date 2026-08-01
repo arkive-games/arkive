@@ -77,12 +77,21 @@ def test_index_in_subtype_counts_per_subtype_from_one():
 
 def test_taxonomy_carries_both_subtypes_with_icons():
     ds = build_dataset(_parsed(), _regions())
-    (cat,) = ds["types"]["categories"]
+    categories = {cat["id"]: cat for cat in ds["types"]["categories"]}
+    cat = categories["regions"]
     assert cat["id"] == "regions"
     ids = {s["id"]: s for s in cat["subtypes"]}
     assert set(ids) == {"poi", "territory"}
     assert ids["poi"]["icon"] == "MapIcon_CavePassage"
     assert ids["territory"]["defaultActive"] is True
+    assert categories["bosses"]["pinVariant"] == "pin"
+    assert {s["id"] for s in categories["resources"]["subtypes"]} >= {
+        "resource-quartz",
+        "resource-copper",
+        "resource-iron",
+        "resource-silver",
+        "resource-mechanical",
+    }
 
 
 def test_locales_cover_every_language_and_namespace():
@@ -90,9 +99,41 @@ def test_locales_cover_every_language_and_namespace():
     assert set(ds["locales"]) == {"en-US", "zh-CN", "zh-TW"}
     for lng, loc in ds["locales"].items():
         assert loc["maps"]["Vardoran"]["name"], lng
-        assert set(loc["types"]["subtypes"]) == {"poi", "territory"}
+        assert set(loc["types"]["subtypes"]) >= {
+            "poi",
+            "territory",
+            "boss-fixed",
+            "resource-quartz",
+            "resource-iron",
+            "resource-mechanical",
+        }
         assert set(loc["markers"]["Vardoran"]) == {"poi_000", "terr_000"}
         assert set(loc["regions"]["Vardoran"]) == {"poi_000", "terr_000"}
+
+
+def test_marker_payload_is_merged_without_changing_world_coordinates():
+    payload = {
+        "markers": [
+            {
+                "id": "boss-test",
+                "category": "bosses",
+                "subtype": "boss-fixed",
+                "x": -12.0,
+                "y": 34.0,
+                "z": 2.0,
+                "images": [],
+                "contributors": [],
+                "indexInSubtype": 1,
+            }
+        ],
+        "labels": {"boss-test": {"name": "Test Boss", "description": "Level 1"}},
+        "resourcePools": [],
+    }
+    ds = build_dataset(_parsed(), _regions(), payload)
+    marker = next(m for m in ds["markers"]["Vardoran"] if m["id"] == "boss-test")
+    assert (marker["x"], marker["y"], marker["z"]) == (-12.0, 34.0, 2.0)
+    for loc in ds["locales"].values():
+        assert loc["markers"]["Vardoran"]["boss-test"]["name"] == "Test Boss"
 
 
 def test_region_labels_are_identical_across_locales():

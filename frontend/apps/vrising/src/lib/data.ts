@@ -23,9 +23,17 @@ export interface MarkerRow {
   /** RAW WORLD coordinates — the engine projects them via the map's worldBounds. */
   x: number
   y: number
+  z?: number
   /** Region polygon this marker belongs to (regions/<map>.json id). */
   region?: string
   indexInSubtype: number
+  resourceKind?: string
+  resourceDetail?: string
+  movement?: 'fixed'
+  bossPrefab?: string
+  bossLevel?: number | null
+  bossAct?: string | null
+  bossRegion?: string | null
 }
 
 export type MarkerLocale = Record<string, { name?: string; description?: string }>
@@ -43,9 +51,11 @@ interface TypesFile {
     subtypes: {
       id: string
       icon?: string
+      color?: string
       iconScale?: number
       pinVariant?: MarkerPinVariant
       defaultActive?: boolean
+      canComplete?: boolean
     }[]
   }[]
 }
@@ -76,7 +86,10 @@ export async function loadMarkers(mapId: string, lng: string) {
     j<{ markers: MarkerRow[] }>(dataUrl(`markers/${mapId}.json`)),
     j<MarkerLocale>(dataUrl(`locales/${lng}/markers/${mapId}.json`)),
   ])
-  return { markers: markersFile.markers, l10n }
+  return {
+    markers: markersFile.markers,
+    l10n,
+  }
 }
 
 /** Region polygons (PIXEL space) + their labels. Best-effort: the map renders
