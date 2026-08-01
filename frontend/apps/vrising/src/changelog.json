@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.0",
+      "date": "2026-08-01",
+      "commit": "1b97e80179c751eee980991d398e1084bd549600",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added official in-game portraits to fixed V Blood boss map popups.",
+            "zh-CN": "固定 V 型血首领的地图弹窗现已显示游戏内官方肖像。",
+            "zh-TW": "固定 V 型血首領的地圖彈窗現已顯示遊戲內官方肖像。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "date": "2026-08-01",
       "commit": "e4eb06d605583ce99204c9650ad3a7439213c626",
