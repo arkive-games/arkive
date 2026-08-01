@@ -34,6 +34,7 @@ export interface MarkerRow {
   bossLevel?: number | null
   bossAct?: string | null
   bossRegion?: string | null
+  images?: string[]
 }
 
 export type MarkerLocale = Record<string, { name?: string; description?: string }>

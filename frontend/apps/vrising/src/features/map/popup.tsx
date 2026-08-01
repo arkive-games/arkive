@@ -54,6 +54,14 @@ export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactN
       description={marker.localizedDescription}
       noDescriptionLabel={t('noDescription')}
     >
+      {marker.images?.[0] ? (
+        <img
+          src={marker.images[0]}
+          alt=""
+          loading="lazy"
+          className="mt-3 aspect-[4/3] w-full rounded-md object-contain"
+        />
+      ) : null}
       {vrising.movement ? (
         <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
           <div className="flex justify-between gap-3">

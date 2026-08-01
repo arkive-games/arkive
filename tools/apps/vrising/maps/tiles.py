@@ -15,10 +15,12 @@ exactly. Non-1024 tile sizes are established (aion2's Abyss_Battlefield_A ships
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from PIL import Image
 
+from ..markers.portraits import BOSS_PORTRAITS
 from .extract import WORLD_MAP
 
 Image.MAX_IMAGE_PIXELS = None  # the source map is 6080x6080 (~37 MPx)
@@ -99,6 +101,33 @@ def convert_icons(raw: Path, res_out: Path) -> int:
     return written
 
 
+def convert_boss_portraits(
+    raw: Path,
+    res_out: Path,
+    mapping: Mapping[str, str] = BOSS_PORTRAITS,
+) -> int:
+    """Convert reviewed V Blood portraits to stable prefab-keyed WebP files."""
+    raw, res_out = Path(raw), Path(res_out)
+    portrait_dir = res_out / "bosses"
+    portrait_dir.mkdir(parents=True, exist_ok=True)
+    missing: list[str] = []
+    written = 0
+    for prefab_name, texture_stem in sorted(mapping.items()):
+        src = raw / "Texture2D" / f"{texture_stem}.png"
+        if not src.is_file():
+            missing.append(f"{prefab_name} -> {texture_stem}")
+            continue
+        with Image.open(src) as im:
+            _save_webp(im.convert("RGBA"), portrait_dir / f"{prefab_name}.webp")
+        written += 1
+    if missing:
+        raise RuntimeError(
+            "reviewed V Blood portraits are missing from the unex export: "
+            + ", ".join(missing)
+        )
+    return written
+
+
 def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
     """Full resource build. ``data_out`` is unused today (no data-driven icon
     list — the whole MapIcon set is converted) but kept in the signature so the
@@ -115,3 +144,5 @@ def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
     print(f"tiles: preview {PREVIEW_EDGE}px")
     icons = convert_icons(raw, res_out)
     print(f"icons: {icons} converted")
+    portraits = convert_boss_portraits(raw, res_out)
+    print(f"boss portraits: {portraits} converted")
