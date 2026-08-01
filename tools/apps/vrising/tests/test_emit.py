@@ -84,7 +84,7 @@ def test_taxonomy_carries_both_subtypes_with_icons():
     assert set(ids) == {"poi", "territory"}
     assert ids["poi"]["icon"] == "MapIcon_CavePassage"
     assert ids["territory"]["defaultActive"] is True
-    assert categories["bosses"]["pinVariant"] == "pin"
+    assert categories["bosses"]["pinVariant"] == "circular"
     assert {s["id"] for s in categories["resources"]["subtypes"]} >= {
         "resource-quartz",
         "resource-copper",
@@ -134,6 +134,46 @@ def test_marker_payload_is_merged_without_changing_world_coordinates():
     assert (marker["x"], marker["y"], marker["z"]) == (-12.0, 34.0, 2.0)
     for loc in ds["locales"].values():
         assert loc["markers"]["Vardoran"]["boss-test"]["name"] == "Test Boss"
+
+
+def test_marker_payload_uses_game_localized_boss_names():
+    payload = {
+        "markers": [
+            {
+                "id": "boss-ziva",
+                "category": "bosses",
+                "subtype": "boss-fixed",
+                "x": -12.0,
+                "y": 34.0,
+                "images": [],
+                "contributors": [],
+                "indexInSubtype": 1,
+            }
+        ],
+        "labels": {
+            "boss-ziva": {
+                "name": "Ziva the Engineer",
+                "localizedNames": {
+                    "en-US": "Ziva the Engineer",
+                    "zh-CN": "工程师齐瓦",
+                    "zh-TW": "工程師齊瓦",
+                },
+            }
+        },
+        "resourcePools": [],
+    }
+
+    ds = build_dataset(_parsed(), _regions(), payload)
+
+    assert ds["locales"]["en-US"]["markers"]["Vardoran"]["boss-ziva"]["name"] == (
+        "Ziva the Engineer"
+    )
+    assert ds["locales"]["zh-CN"]["markers"]["Vardoran"]["boss-ziva"]["name"] == (
+        "工程师齐瓦"
+    )
+    assert ds["locales"]["zh-TW"]["markers"]["Vardoran"]["boss-ziva"]["name"] == (
+        "工程師齊瓦"
+    )
 
 
 def test_region_labels_are_identical_across_locales():

@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import re
 
-from .portraits import boss_portrait_path
+from .portraits import boss_portrait_icon, boss_portrait_path
 
 
 RESOURCE_KINDS = (
@@ -88,7 +88,12 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
     counters: Counter[str] = Counter()
     marker_ids: set[str] = set()
 
-    def append_marker(marker: dict, name: str, description: str = "") -> None:
+    def append_marker(
+        marker: dict,
+        name: str,
+        description: str = "",
+        localized_names: dict[str, str] | None = None,
+    ) -> None:
         marker_id = marker["id"]
         if marker_id in marker_ids:
             raise ValueError(f"duplicate marker id {marker_id}")
@@ -98,6 +103,7 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
         markers.append(marker)
         labels[marker_id] = {
             "name": name,
+            **({"localizedNames": localized_names} if localized_names else {}),
             **({"description": description} if description else {}),
         }
 
@@ -164,6 +170,8 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
         boss = record["boss"]
         position = record["worldPosition"]
         portrait = boss_portrait_path(boss["prefabName"])
+        portrait_icon = boss_portrait_icon(boss["prefabName"])
+        localized_names = boss.get("localizedNames")
         marker_id = (
             f"boss-{_slug(boss['prefabName'])}-"
             f"{_digest(boss['prefabName'], position)}"
@@ -176,13 +184,15 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
                 **_marker_position(position),
                 "images": [portrait] if portrait else [],
                 "contributors": [],
+                **({"icon": portrait_icon} if portrait_icon else {}),
                 "movement": "fixed",
                 "bossPrefab": boss["prefabName"],
                 "bossLevel": boss.get("level"),
                 "bossAct": boss.get("act"),
                 "bossRegion": boss.get("region"),
             },
-            boss["displayName"],
+            (localized_names or {}).get("en-US", boss["displayName"]),
+            localized_names=localized_names,
         )
 
     return {
