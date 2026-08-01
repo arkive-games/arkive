@@ -40,3 +40,56 @@ categories:
           en-US: A territory outline the game draws on the world map. Names are not yet recoverable from the game files, so each is labelled by its internal access id.
           zh-CN: 游戏在世界地图上绘制的领地轮廓。名称目前无法从游戏文件中还原，因此以内部访问 ID 标注。
           zh-TW: 遊戲在世界地圖上繪製的領地輪廓。名稱目前無法從遊戲檔案中還原，因此以內部存取 ID 標註。
+
+  - id: bosses
+    pinVariant: pin
+    names:
+      en-US: V Blood bosses
+      zh-CN: V 型血首领
+      zh-TW: V 型血首領
+    subtypes:
+      - id: boss-fixed
+        color: "#d74747"
+        defaultActive: true
+        names:
+          en-US: Fixed bosses
+          zh-CN: 固定首领
+          zh-TW: 固定首領
+        descriptions:
+          en-US: A V Blood boss with one or more fixed spawn positions found in the game scenes.
+          zh-CN: 从游戏场景中提取的、拥有一个或多个固定出生位置的 V 型血首领。
+          zh-TW: 從遊戲場景中擷取的、擁有一個或多個固定出生位置的 V 型血首領。
+  - id: resources
+    pinVariant: pin
+    names:
+      en-US: Resources
+      zh-CN: 资源
+      zh-TW: 資源
+    subtypes:
+      - id: resource-copper
+        color: "#c87542"
+        names: { en-US: Copper, zh-CN: 铜矿, zh-TW: 銅礦 }
+      - id: resource-crystal
+        color: "#d65bc2"
+        names: { en-US: Rift crystals, zh-CN: 裂隙水晶（冥河碎片）, zh-TW: 裂隙水晶（冥河碎片） }
+      - id: resource-emery
+        color: "#8f7b66"
+        names: { en-US: Emery nodes and containers, zh-CN: 金刚砂矿与容器, zh-TW: 金剛砂礦與容器 }
+      - id: resource-gem
+        color: "#9f62d6"
+        names: { en-US: Gem veins, zh-CN: 宝石矿脉, zh-TW: 寶石礦脈 }
+      - id: resource-iron
+        color: "#778594"
+        names: { en-US: Iron, zh-CN: 铁矿, zh-TW: 鐵礦 }
+      - id: resource-mechanical
+        color: "#80a6ad"
+        names: { en-US: Tech Scrap deposits, zh-CN: 科技废料资源点, zh-TW: 科技廢料資源點 }
+      - id: resource-quartz
+        color: "#e6d7c9"
+        names: { en-US: Quartz, zh-CN: 石英, zh-TW: 石英 }
+      - id: resource-silver
+        color: "#b9c6d2"
+        names: { en-US: Silver, zh-CN: 银矿, zh-TW: 銀礦 }
+      - id: resource-sulfur
+        color: "#d7ca3c"
+        names: { en-US: Sulfur, zh-CN: 硫磺, zh-TW: 硫磺 }

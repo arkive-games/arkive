@@ -2,6 +2,15 @@ import type { ReactNode } from 'react'
 import type { EngineMarker } from '@gamemap/map-engine'
 import { MarkerPopupCard, formatCoords } from '@gamemap/map-shell'
 
+type VrisingMarker = EngineMarker & {
+  resourceKind?: string
+  resourceDetail?: string
+  movement?: 'fixed'
+  bossLevel?: number | null
+  bossAct?: string | null
+  bossRegion?: string | null
+}
+
 export interface PopupDeps {
   t: (key: string, opts?: Record<string, unknown>) => string
   /** Localized region label for a region id (regions/<map>.json l10n). */
@@ -16,6 +25,7 @@ export interface PopupDeps {
  */
 export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactNode {
   const { t, regionName, categoryName } = deps
+  const vrising = marker as VrisingMarker
   const catId = marker.subtypeMeta?.category ?? marker.category
   const catLabel = categoryName(catId)
   const subLabel = marker.subtypeLabel ?? marker.subtype
@@ -43,6 +53,33 @@ export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactN
       metaLine={metaLine}
       description={marker.localizedDescription}
       noDescriptionLabel={t('noDescription')}
-    />
+    >
+      {vrising.movement ? (
+        <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
+          <div className="flex justify-between gap-3">
+            <span className="text-muted-foreground">{t('marker.movement')}</span>
+            <span>{t(`marker.${vrising.movement}`)}</span>
+          </div>
+          {vrising.bossLevel != null ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground">{t('marker.level')}</span>
+              <span>{vrising.bossLevel}</span>
+            </div>
+          ) : null}
+          {vrising.bossAct ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground">{t('marker.act')}</span>
+              <span>{vrising.bossAct}</span>
+            </div>
+          ) : null}
+          {vrising.bossRegion ? (
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground">{t('marker.gameRegion')}</span>
+              <span>{vrising.bossRegion}</span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </MarkerPopupCard>
   )
 }
