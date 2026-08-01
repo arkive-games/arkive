@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.7.0",
+      "date": "2026-08-01",
+      "commit": "a783680dd4e62f7027a3aa68e955c473bf9e86b6",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Core resource locations now use circular in-game item icons with category-colored borders.",
+            "zh-CN": "核心资源点现使用游戏内物品图标与分类彩色圆形边框。",
+            "zh-TW": "核心資源點現使用遊戲內物品圖示與分類彩色圓形邊框。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "date": "2026-08-01",
       "commit": "37bd56db307b5f8496988cf4cec323c56cca87a2",
