@@ -21,7 +21,7 @@ import {
   type MapMeta, type MarkerLocale, type MarkerRow, type MapsLocale,
   type RegionLocale, type Taxonomy, type TypesLocale,
 } from '../../lib/data'
-import { vrisingAssets } from '../../lib/assets'
+import { markerImageUrl, vrisingAssets } from '../../lib/assets'
 import { mapViewStore, readVisibleSubtypes, writeVisibleSubtypes } from '../../lib/storage'
 import { resolveMapEngine, useChooseMapEngine, useStoredMapEngine } from '../../lib/mapEngineChoice'
 import { vrisingTheme } from '../../theme'
@@ -195,7 +195,7 @@ export default function MapPage() {
         bossAct: m.bossAct,
         bossRegion: m.bossRegion,
         indexInSubtype: m.indexInSubtype,
-        images: [] as string[],
+        images: (m.images ?? []).map(markerImageUrl),
         contributors: [] as string[],
         localizedName: detailNameKey
           ? t(detailNameKey)

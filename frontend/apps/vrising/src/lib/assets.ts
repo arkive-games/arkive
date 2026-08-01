@@ -16,3 +16,6 @@ export const vrisingAssets: MapAssets = {
 
 /** Whole-map preview WebP written by the tiles stage. */
 export const mapPreviewUrl = (mapId: string): string => `${RES_BASE}/preview/${mapId}.webp`
+
+/** Resolve a resource-relative marker image emitted by the data pipeline. */
+export const markerImageUrl = (path: string): string => `${RES_BASE}/${path.replace(/^\/+/, '')}`

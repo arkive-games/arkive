@@ -119,3 +119,13 @@ def test_fixed_boss_marker_keeps_level_and_real_spawn_position():
     assert marker["movement"] == "fixed"
     assert (marker["x"], marker["y"], marker["z"]) == (7.0, 9.0, 8.0)
     assert marker["bossLevel"] == 48
+
+
+def test_fixed_boss_marker_includes_its_reviewed_portrait():
+    prefab = "CHAR_Gloomrot_Iva_VBlood"
+    payload = build_marker_payload(
+        [],
+        [{"boss": _boss(prefab, "Ziva"), "worldPosition": [7.0, 8.0, 9.0]}],
+    )
+
+    assert payload["markers"][0]["images"] == [f"bosses/{prefab}.webp"]

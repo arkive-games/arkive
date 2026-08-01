@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 import re
 
+from .portraits import boss_portrait_path
+
 
 RESOURCE_KINDS = (
     "copper",
@@ -161,6 +163,7 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
     for record in fixed_bosses:
         boss = record["boss"]
         position = record["worldPosition"]
+        portrait = boss_portrait_path(boss["prefabName"])
         marker_id = (
             f"boss-{_slug(boss['prefabName'])}-"
             f"{_digest(boss['prefabName'], position)}"
@@ -171,7 +174,7 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
                 "category": "bosses",
                 "subtype": "boss-fixed",
                 **_marker_position(position),
-                "images": [],
+                "images": [portrait] if portrait else [],
                 "contributors": [],
                 "movement": "fixed",
                 "bossPrefab": boss["prefabName"],
