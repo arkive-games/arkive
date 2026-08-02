@@ -1,5 +1,23 @@
 # Lost Ark Calc Core Implementation Plan
 
+> ## ⚠️ SUPERSEDED — do not execute
+>
+> Written 2026-08-02, superseded the same day by
+> `2026-08-02-lostark-data-pipeline.md`.
+>
+> This plan sourced ~400 coefficients by scraping a fan site's `calculator.js`. Investigation
+> then found **every one of those constants in the game's own `EFTable_BattlePoint.db`**, along
+> with authoritative zh-CN and ko-KR names in `EFTable_GameMsg.db`. The fan site also proved to
+> carry a level-70 simplification and self-described estimates, so scraping it would have baked
+> in known-wrong values.
+>
+> **Task 4 (extract tables from the reference) and Task 10 (golden vectors) are void.**
+>
+> Tasks 1–3 and 5–9 remain broadly sound as *engine* work — the formula structure they encode was
+> verified against the game tables and holds — but their table imports must be re-pointed at the
+> pipeline's output. Read the superseding plan; it reuses the verified formula content from here
+> rather than rediscovering it.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a verified, pure TypeScript combat-power engine for Lost Ark covering both the DPS and support roles, proven correct against golden vectors harvested from the reference site.

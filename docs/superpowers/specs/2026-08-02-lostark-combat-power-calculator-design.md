@@ -1,36 +1,67 @@
 # Lost Ark combat power calculator — design
 
 **Date:** 2026-08-02
-**Status:** approved, ready for implementation planning
+**Status:** REVISED 2026-08-02 — coefficients now sourced from game data, not the fan site
 **App:** `frontend/apps/lostark` (new)
 
 ## Goal
 
 Ship the first page of a new `lostark` site: a combat power (战斗力) calculator covering both
 the damage-dealer (输出战斗力) and support (辅助战斗力) roles, on one page with a tab switch.
-It needs **no game data** — no `data-lostark/` or `resource-lostark/` artifact repos, no
-pipeline stage in `tools/`. The whole feature is a form, a pure calculation, and a breakdown.
 
-This is deliberately the first thing built for lostark: it is self-contained, so it validates
-the app scaffold and theme without waiting on the data export.
+## Revision note — where the numbers come from
 
-## Reference and provenance
+The original version of this spec assumed the calculator needed **no game data**, and would port
+~400 coefficients out of a fan site's `calculator.js`. Investigation on 2026-08-02 disproved that
+premise: **every constant is in the game's own tables**, and the game data is strictly richer
+than the fan site's transcription.
 
-Modelled on <https://lostark-cn.pages.dev/html/dps> (and its `support.html` sibling), whose
-`js/calculator.js` ships unminified with every coefficient table inline.
+Evidence, from `EFTable_BattlePoint.db` (16,707 rows) in the extracted CN client:
 
-What we take and what we don't:
+| BattlePoint `Type` | PrimaryKey 1 (DPS) | PrimaryKey 2 (support) | Fan-site constant it matches |
+| --- | --- | --- | --- |
+| 1 | `288` | `124` | `baseRate` 0.000288 / 0.000124 |
+| 2 | — | `12` | heal rate 0.0012 |
+| 3 | `ValueB` 2945 @ level 70 | `476` @ level 70 | `FIXED_COMBAT_LEVEL_AMPS` |
+| 5 | `75` | `160` | evolution 0.0075 / 0.016 |
+| 6 | `70` | `72` | enlightenment 0.007 / 0.0072 |
+| 7 | `20` | `20` | leap 0.002 |
+| 9 | `2` | — | leap karma 0.0002 |
+| 29 | 13,272 rows keyed by Ark-core id × points | | `dpsArkCoreValues` |
 
-- **Taken:** the numeric coefficient tables and the formula structure. These are *facts about
-  the game* — gear base stats per item level, engraving percentages, core values. Facts aren't
-  authored expression.
-- **Not taken:** their code. `calculator.js` reads inputs straight off the DOM inside
-  `calcDps()` and writes results back into elements, which is why it cannot be unit-tested.
-  We re-implement the math as typed, pure modules of our own.
-- **Credit:** the reference is credited by name and link in the app footer.
+Two findings make the game source clearly better, not merely equivalent:
 
-Reference sources are pulled to a gitignored `_lostark_ref/` scratch dir for extraction and
-are never vendored into the repo.
+1. **The fan site's "constants" are parameterised in the game.** It hardcodes
+   `FIXED_COMBAT_LEVEL_AMPS = { dps: 0.2945, support: 0.0476 }` and comments that combat level is
+   "a formula constant in the current version". `BattlePoint` Type 3 is actually a table over
+   combat levels 55–70 (dps 0.0895 → 0.2945). The fan site's model is a level-70 simplification
+   that is simply wrong for a sub-70 character.
+2. **The fan site ships acknowledged estimates.** Its `fixedEstherWeapons` carries the comment
+   that the 艾拉3 +9 attack and stage amp are 推算值 — inferred from public stage data — and
+   "can be replaced with official CN server data later". That replacement is exactly what
+   sourcing from the game achieves.
+
+Localization is also solved: `EFTable_GameMsg.db` has `GameMsg_Chinese` and `GameMsg_Korean`
+(694,755 rows each), keyed by the ids the data tables reference. `tip.name.ability_adrenaline1`
+resolves to 肾上腺素, `sys.arkgrid.core_order_sun` to 秩序之日 — the very strings the fan site
+hardcoded, now available authoritatively and in two languages.
+
+## Provenance
+
+**Primary source: the game.** Coefficients, ids and display names come from the extracted client
+tables. These are facts about the game, sourced first-hand.
+
+**The fan site is demoted to a cross-check oracle.** <https://lostark-cn.pages.dev/html/dps>
+remains useful for one thing: verifying our engine's *structure* — the order of operations, which
+amps are multiplicative, the round-then-sum on support. Where our numbers and theirs disagree we
+investigate, and where the disagreement traces to one of their acknowledged estimates or their
+level-70 simplification, **the game data wins**.
+
+We do not copy their code. Their `calculator.js` reads inputs straight off the DOM inside
+`calcDps()`, which is why it cannot be unit-tested; we implement our own pure modules. The site is
+credited by name and link in the app footer for the structural insight.
+
+Fan-site sources live in a gitignored `_lostark_ref/` scratch dir and are never vendored.
 
 ## Decisions
 
@@ -38,22 +69,27 @@ are never vendored into the repo.
 | --- | --- |
 | Roles | Both 输出 and 辅助, in the first release |
 | Page structure | One page, tab switch between roles |
-| Locales | **zh-CN only.** Term tables are keyed lookups so locales are a later data change |
+| Coefficient source | **Game tables**, via a `tools/apps/lostark` pipeline into `data-lostark` |
+| Locales | **zh-CN and ko-KR**, both authoritative from `GameMsg`. en-US deferred |
 | Save features | Autosave + JSON export/import. **No** named build profiles |
 | Math location | Pure `src/calc/` module inside the app (not a workspace package) |
 | Layout | Sticky score rail (score + composition pinned beside the form) |
-| Verification | Playwright-harvested golden vectors, committed as a fixture |
+| Verification | Fan-site cross-check vectors, with game data authoritative on conflict |
 | Dev port | `15177` (next free after vrising's `15176`) |
 
-### Why zh-CN only
+### Locales
 
-The ~120 game terms (engravings, cores, affix lines, gear tiers) exist in the reference only in
-Chinese. Project convention forbids inventing translations, and no Lost Ark export was found on
-this machine to source official en-US/zh-TW names from. Rather than ship invented English or
-block the release on term extraction, the calculator ships single-locale with every term behind
-a keyed lookup — adding locales later is a data change, not a refactor.
+`GameMsg` gives us Chinese and Korean, both first-hand, so the calculator ships **zh-CN and
+ko-KR**. This satisfies the convention against inventing translations — every term is a game
+string resolved through its own key.
 
-This is a deliberate, documented divergence from the other four sites' tri-locale setup.
+**en-US is deferred, and the reason is specific:** the extracted client is the CN build, whose
+`EFTable_GameMsg.db` contains exactly two tables, `GameMsg_Chinese` and `GameMsg_Korean`. There
+is no English in this data. `lostark-explorer` supports NAEU archive crypto, so extracting an
+NAEU install would yield English — that is the unblock, and it is a data task, not a code task.
+Until then the language switcher offers zh-CN and ko-KR only.
+
+zh-TW is not available either and is not faked from zh-CN.
 
 ### Why not a workspace package
 
@@ -137,6 +173,51 @@ Non-obvious routing to preserve:
   `0.0072`; combat stats `×0.0003` over crit+spec+swift vs `×0.0004` over spec+swift only.
 - Ark-stone axes differ entirely: attack/boss/extra vs brand/ally-attack/ally-damage.
 
+## Data pipeline
+
+The monorepo's established shape is *extractor tool → pipeline → artifact repo → frontend*
+(uex/unex/gdex → `tools/apps/<game>` → `data-<game>` → app). Lost Ark slots into it with one
+difference worth stating plainly:
+
+**We do not need a new first-party extractor.** uex, unex and gdex exist because Unreal, Unity
+and Godot ship proprietary containers that needed a decoder written. For Lost Ark that role is
+already filled by **`lostark-explorer`** (`D:\lostark-explorer`, a .NET solution you already
+develop), which handles `.lpk`/`.ipk`/`.upk`/`.bnk` decryption. Its output at
+`D:\lostark-extracted\EFGame` is **908 plain SQLite databases**. Writing a fourth extractor to
+re-do decryption already solved would be duplicated work.
+
+So the pipeline is the only new tool:
+
+```
+Lost Ark client
+  --lostark-explorer-->  D:\lostark-extracted\EFGame\...\TableData\EFTable_*.db   (908 SQLite)
+  --tools/apps/lostark-->  data-lostark/   (coefficients + locales, JSON)
+  --HTTP-->  frontend/apps/lostark
+```
+
+`tools/apps/lostark` is Python under uv, matching the other four pipelines. It reads the EFTable
+DBs read-only and emits:
+
+| Artifact | Source tables |
+| --- | --- |
+| `battlepoint/{dps,support}.json` | `EFTable_BattlePoint` split by PrimaryKey |
+| `arkgrid/cores.json` | `EFTable_ArkGridCore`, `ArkGridCoreOption`, BattlePoint Type 29 |
+| `engravings.json` | `EFTable_AbilityEngrave`, `AbilityStone*` |
+| `gear.json` | `EFTable_Item`, `ItemAmplification*` |
+| `accessories.json`, `bracelet.json` | `ItemAccessory*`, `ItemBracelet*` |
+| `locales/{zh-CN,ko-KR}.json` | `EFTable_GameMsg` `GameMsg_Chinese` / `GameMsg_Korean` |
+
+Two pipeline concerns to design for:
+
+- **Localized strings carry markup.** Values include `<font color='…'>`, `<img src='…'>` and
+  templating like `<$CALC %2 <$TABLE_COMBATEFFECT Action0ArgA 608111000/>/100/>`. The pipeline
+  strips presentational markup and must **either resolve or explicitly reject** rows whose text
+  depends on `<$TABLE_*>` lookups, rather than shipping raw template syntax to the UI. This is
+  the same class of problem as sts2's card text needing `vars`.
+- **The extracted tree is not in the repo and is machine-local.** Its path belongs in
+  `tools/.env` like the other pipelines, and a missing var must raise rather than silently
+  defaulting.
+
 ## Architecture
 
 ```
@@ -208,14 +289,26 @@ Three layers.
 **Unit (vitest, on `src/calc/`).** Every table lookup, every clamp, the shared chain, and
 specifically support's round-then-sum.
 
-**Golden vectors.** A one-off harvest script drives the live reference in Playwright, sets ~30
-loadouts — empty, fully maxed, randomised mid-range, and one isolating each subsystem — reads
-its rendered score, and commits the input/output pairs as a JSON fixture. Vitest asserts our
-engine reproduces each within the reference's own stated `±0.01%` tolerance.
+**Pipeline contract tests (pytest, on `tools/apps/lostark`).** The extraction is now the place a
+wrong number can enter, so it is where the assertions belong: BattlePoint Type 1 yields exactly
+two rows (288 / 124), Type 3 covers levels 55–70 for both roles, every Ark-core id in Type 29
+resolves to a row in `ArkGridCore`, and every emitted locale key resolves in `GameMsg`. A table
+that silently loses rows after a patch fails here rather than in the UI.
 
-This exists because roughly 400 coefficients are being transcribed, and a single wrong cell is
-invisible to review but fatal to trust. Once committed the fixture runs offline; the harvest
-script is re-run only when the reference updates its numbers for a new game patch.
+**Cross-check vectors, not golden vectors.** The fan site is no longer the source of truth, so it
+can no longer define pass/fail. It remains valuable as an independent implementation to compare
+against: a script drives it in Playwright over ~30 loadouts and records its scores, and a test
+reports the delta against our engine.
+
+That test is **informational for known-divergent inputs and strict elsewhere**. We expect
+disagreement in two places and must not "fix" our engine to match:
+
+- any loadout below combat level 70, where the fan site applies its level-70 constant;
+- 艾拉3 Esther weapons, where the fan site uses its acknowledged 推算值 estimates.
+
+Everywhere else a mismatch is a real bug in our engine, and the itemised named amp rows make it
+traceable to the offending row. Where we disagree and the cause isn't one of the two above, the
+resolution is to re-read the game table — not to match the fan site.
 
 **E2E (Playwright).** Tab switch preserves both roles' state, autosave survives reload,
 export→import round-trips, account-shared values propagate across tabs.
@@ -227,19 +320,25 @@ server — use an explicit `E2E_PORT`.
 
 - Named build profiles with history and delta-vs-reference comparison (the reference's
   `calculator-workspace.js`). A clear follow-up feature with its own changelog entry.
-- en-US / zh-TW locales, pending a source for official term names.
-- Any use of the Lost Ark data export; no `data-lostark/` or `resource-lostark/` repo, no
-  `tools/apps/lostark` pipeline.
-- The reference's honing-prediction page (`honing.html`).
+- en-US and zh-TW locales, pending an NAEU extraction (see Locales above).
+- `resource-lostark/` — the calculator needs no images. Icons referenced by the tables
+  (`ArkGridCore.Icon`) are a later concern if the UI wants them.
+- The fan site's honing-prediction page (`honing.html`).
 - Bilibili Toy packaging.
+- Any change to `lostark-explorer` itself. We consume its output; if a needed table turns out to
+  be unextracted, that becomes a separate task in that repo.
 
 ## Follow-ups
 
+- Create the `data-lostark` artifact repo (private, matching `data-palworld` et al.) and wire the
+  pipeline's output to it.
 - Bump `frontend/apps/lostark/src/changelog.json` **after** the feature commit — the entry pins
   the SHA of the commit it describes, so it cannot be in that commit. `MINOR` for a new page.
-  Write all three locales even though the UI ships zh-CN.
+  Write all three changelog locales even though the UI ships zh-CN and ko-KR.
 - Register `dev:lostark` / `build:lostark` / `lint:lostark` / `preview:lostark` / `e2e:lostark`
   in the workspace root `package.json`, and add `check:calc`.
+- Extract an NAEU install with `lostark-explorer` to unblock en-US, then add the locale as a
+  data change.
 - Add the app to the `meta` landing site once it has something to link to.
 - Work on a git worktree branched from local `master` (not `origin/master`, which would silently
   drop unpushed work), and integrate with rebase. Re-run `pnpm changelog:verify` after the
