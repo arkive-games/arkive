@@ -10,14 +10,14 @@ their per-game variants) remain **separate**, pulled over HTTP.
   map-shell, data-contract). React 19 / Vite / Tailwind / shadcn / Leaflet.
 - `backend/`  — FastAPI + PostgreSQL + S3; dynamic/user data only. One **shared** service
   (auth, comments, uploads, artifact voting) — not per-game.
-- `tools/`    — Python (uv): `apps/` (aion2, palworld, sts2, vrising pipelines) + `packages/` (shared
+- `tools/`    — Python (uv): `apps/` (aion2, lostark, palworld, sts2, vrising pipelines) + `packages/` (shared
   framework `tools`, generated `backend-client`). Transforms the raw game export into the
   `data/` + `resource/` artifacts.
 - `docs/`, `CLAUDE.md`, `.claude/`, `BOOTSTRAP.md` — workspace meta (also here).
 
 Separate artifact repos (NOT in this monorepo; served over HTTP):
 - `resource/` (+`resource-palworld/`, `resource-sts2/`, `resource-vrising/`) — derived WebP image set under a `UI/` root.
-- `data/` (+`data-palworld/`, `data-sts2/`, `data-vrising/`) — derived parsed dataset (markers, regions, tables, locales).
+- `data/` (+`data-palworld/`, `data-sts2/`, `data-vrising/`, `data-lostark/`) — derived parsed dataset (markers, regions, tables, locales).
 
 ## Data-flow contract
 Raw game export (`G:\NCSoft\Export\Exports\AION2\Content\`, Perforce later)
@@ -124,6 +124,25 @@ polygon, and human review of `calibration/accepted_overlay.png`.
     tests still pass, but the compare link 404s once pushed. So after any rebase (in
     particular when integrating a worktree branch), run `pnpm changelog:verify` and
     re-point the newest entries at their rewritten SHAs.
+
+## Lost Ark — no first-party extractor
+Lost Ark is the one game whose extractor we do **not** own. uex/unex/gdex exist because Unreal,
+Unity and Godot ship containers needing a decoder written; Lost Ark's `.lpk`/`.ipk`/`.upk` are
+already handled by **`lostark-explorer`** (`D:\lostark-explorer`, .NET). Its output is **908
+plain SQLite databases** at `D:\lostark-extracted\EFGame\...\ClientData\TableData`, so
+`tools/apps/lostark` reads them directly and no fourth extractor is warranted.
+
+Combat power lives in `EFTable_BattlePoint` (16,707 rows): `PrimaryKey` 1 = damage dealer,
+2 = support; `Type` selects the coefficient (1 = base rate, 3 = per-combat-level amp,
+5/6/7/9 = evolution/enlightenment/leap/leap-karma, 29 = per-Ark-core values). Rates are scaled
+integers — divisor varies by Type. Gear stats are `EFTable_ItemLevelOption` keyed by
+`SecondaryKey` = item level, with `Str`/`Agi`/`Int` carrying the same main stat once per class
+stat. Names come from `EFTable_GameMsg` (`GameMsg_Chinese`, `GameMsg_Korean` — **no English**;
+en-US needs an NAEU extraction).
+
+Beware: BattlePoint Type 29 references 72 Ark-core ids that exist in **no other table** (a `…7xx`
+suffix series). They are dropped and the count reported in `version.json`. `Type 10` is a
+per-item-group honing table, *not* item levels.
 
 ## Notes
 - **Bilibili Toy publishing:** each app can ship as a single self-contained toy
