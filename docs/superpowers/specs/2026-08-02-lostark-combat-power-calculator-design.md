@@ -51,7 +51,15 @@ hardcoded, now available authoritatively and in two languages.
 **Primary source: the game.** Coefficients, ids and display names come from the extracted client
 tables. These are facts about the game, sourced first-hand.
 
-**The fan site is demoted to a cross-check oracle.** <https://lostark-cn.pages.dev/html/dps>
+**Revised 2026-08-03 — the fan site is also a fallback, not only an oracle.**
+Investigation established that the client does *not* expose three systems the reference models:
+engravings (no BattlePoint Type is keyed by `AbilityEngrave` ids), avatars (no Type carries
+`{0.005, 0.01, 0.02}` at any scaling) and the support max-HP constants. Shipping a calculator
+that silently omits them would be worse than using the reference's numbers, so those live in a
+generated `fansite.generated.ts` whose header states it is not client data. Everything the game
+does expose comes from `data-lostark` and overrides it. The UI names which is which.
+
+**Otherwise the fan site is a cross-check oracle.** <https://lostark-cn.pages.dev/html/dps>
 remains useful for one thing: verifying our engine's *structure* — the order of operations, which
 amps are multiplicative, the round-then-sum on support. Where our numbers and theirs disagree we
 investigate, and where the disagreement traces to one of their acknowledged estimates or their
