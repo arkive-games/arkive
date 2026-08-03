@@ -20,6 +20,14 @@
             "zh-CN": "现会说明每项系数的来源：游戏客户端数据表，或客户端未提供时所用的参考站数据。",
             "zh-TW": "現會說明每項係數的來源：遊戲客戶端資料表，或客戶端未提供時所用的參考站資料。"
           }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Bracelet affix lines are now part of the calculation, completing coverage of every system the reference calculator models.",
+            "zh-CN": "手镯词条现已纳入计算，参考计算器涵盖的系统至此全部支持。",
+            "zh-TW": "手鐲詞條現已納入計算，參考計算器涵蓋的系統至此全部支援。"
+          }
         }
       ]
     },
