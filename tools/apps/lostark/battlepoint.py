@@ -33,6 +33,14 @@ _SCALARS = {
 # ValueA = combat level, ValueB = amp x 1e-4. Levels 55-70.
 _TYPE_COMBAT_LEVEL = 3
 
+# ValueA = weapon quality 0-100, ValueB = amp x 1e-4. Damage dealer only --
+# support has no weapon-quality amp. The table is 4-decimal rounded and is NOT
+# reproducible by the quadratic the fan site fits to it.
+_TYPE_WEAPON_QUALITY = 4
+
+# ValueA = amp x 1e-4 gained per karma evolution stage.
+_TYPE_KARMA_STAGE_STEP = 8
+
 # ValueA = ArkGridCore id, ValueB = activated points, ValueC = amp x 1e-4.
 _TYPE_ARK_CORE = 29
 
@@ -43,6 +51,7 @@ def extract(tables: Tables) -> dict[str, dict]:
     """Combat power coefficients keyed by role."""
     out: dict[str, dict] = {DPS: {}, SUPPORT: {}}
     levels: dict[str, dict[str, float]] = defaultdict(dict)
+    quality: dict[str, dict[str, float]] = defaultdict(dict)
     cores: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
 
     for row in tables.read("BattlePoint"):
@@ -56,6 +65,10 @@ def extract(tables: Tables) -> dict[str, dict]:
             out[role][key] = row["ValueA"] / divisor
         elif kind == _TYPE_COMBAT_LEVEL:
             levels[role][str(row["ValueA"])] = row["ValueB"] / _RATE_DIVISOR
+        elif kind == _TYPE_WEAPON_QUALITY:
+            quality[role][str(row["ValueA"])] = row["ValueB"] / _RATE_DIVISOR
+        elif kind == _TYPE_KARMA_STAGE_STEP:
+            out[role]["karma_stage_step"] = row["ValueA"] / _RATE_DIVISOR
         elif kind == _TYPE_ARK_CORE:
             core = str(row["ValueA"])
             cores[role][core][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
@@ -64,6 +77,11 @@ def extract(tables: Tables) -> dict[str, dict]:
         out[role]["combat_level_amp"] = dict(
             sorted(levels[role].items(), key=lambda kv: int(kv[0]))
         )
+        # Damage dealer only; omitted rather than emitted empty for support.
+        if quality[role]:
+            out[role]["weapon_quality_amp"] = dict(
+                sorted(quality[role].items(), key=lambda kv: int(kv[0]))
+            )
         out[role]["ark_core_values"] = {
             core: dict(sorted(points.items(), key=lambda kv: int(kv[0])))
             for core, points in sorted(cores[role].items(), key=lambda kv: int(kv[0]))

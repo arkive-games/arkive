@@ -69,3 +69,24 @@ def test_both_roles_are_populated(coeffs):
     for role in (DPS, SUPPORT):
         assert coeffs[role]["combat_level_amp"], role
         assert coeffs[role]["ark_core_values"], role
+
+
+def test_weapon_quality_is_a_table_and_dps_only(coeffs):
+    """The fan site fits (10 + 0.002*q^2)/100 to this table; the fit is inexact.
+
+    It agrees at only 21 of 101 quality values, deviating by up to 0.0599% of the
+    amp -- above the fan site's own stated +/-0.01% tolerance. The table wins.
+    """
+    quality = coeffs[DPS]["weapon_quality_amp"]
+    assert set(quality) == {str(q) for q in range(101)}
+    assert quality["0"] == pytest.approx(0.1)
+    assert quality["100"] == pytest.approx(0.3)
+    # Points where the fan site's quadratic disagrees with the game.
+    assert quality["1"] == pytest.approx(0.1001)
+    assert quality["41"] == pytest.approx(0.1337)
+    assert "weapon_quality_amp" not in coeffs[SUPPORT]
+
+
+def test_karma_stage_step(coeffs):
+    for role in (DPS, SUPPORT):
+        assert coeffs[role]["karma_stage_step"] == pytest.approx(0.006), role
