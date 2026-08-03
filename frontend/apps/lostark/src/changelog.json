@@ -1,0 +1,35 @@
+{
+  "entries": [
+    {
+      "version": "0.1.0",
+      "date": "2026-08-03",
+      "commit": "a18f365dfba90fe88a19a9f742c6d63bf5951bfe",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New Lost Ark combat power calculator for damage dealers and supports, with a live breakdown of every amplifier.",
+            "zh-CN": "全新命运方舟战斗力计算器，支持输出与辅助两种角色，并实时展示每一项增幅的构成。",
+            "zh-TW": "全新命運方舟戰鬥力計算器，支援輸出與輔助兩種角色，並即時展示每一項增幅的構成。"
+          }
+        },
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Coefficients and names come from the game's own client tables, so combat level and weapon quality use the real per-level values rather than a fitted curve.",
+            "zh-CN": "系数与名称直接取自游戏客户端数据表，战斗等级与武器品质使用逐级真实数值，而非拟合公式。",
+            "zh-TW": "係數與名稱直接取自遊戲客戶端資料表，戰鬥等級與武器品質使用逐級真實數值，而非擬合公式。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Your loadout is saved automatically and can be exported to or imported from a JSON file.",
+            "zh-CN": "配装会自动保存，并可导出为 JSON 文件或从文件导入。",
+            "zh-TW": "配裝會自動儲存，並可匯出為 JSON 檔案或從檔案匯入。"
+          }
+        }
+      ]
+    }
+  ]
+}
