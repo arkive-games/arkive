@@ -150,3 +150,24 @@ test('accessory affix lines compound', async ({ page }) => {
   // 1.02^2 - 1 = 0.0404 -> 4.04%
   await expect(rail.getByText('4.04%')).toBeVisible()
 })
+
+test('card sets have their own per-set curve', async ({ page }) => {
+  await ready(page)
+  const rail = page.locator('aside')
+
+  // Set 1015 is one of six damage-dealer sets reaching 0.15 at stage 6.
+  await page.getByLabel('卡牌套装').selectOption('1015')
+  await page.getByLabel('觉醒阶段').selectOption('6')
+  await expect(rail.getByText('15%')).toBeVisible()
+
+  // Set 1005 is weaker at the same stage, so cards are not one global table.
+  await page.getByLabel('卡牌套装').selectOption('1005')
+  await expect(rail.getByText('15%')).toHaveCount(0)
+})
+
+test('pet ranch uses the game tier value', async ({ page }) => {
+  await ready(page)
+  // Top tier is 0.0077; the fan site's middle tier (0.00539) is a mistranscription.
+  await page.getByLabel('牧场特技').selectOption({ label: '+0.77%' })
+  await expect(page.locator('aside').getByText('0.77%')).toBeVisible()
+})

@@ -19,6 +19,10 @@ export interface RoleCoefficients {
   gem_values: Record<string, Record<string, number>>
   /** Accessory affix effect id -> amp. */
   accessory_line_values: Record<string, number>
+  /** Card set id -> awakening stage -> amp. */
+  card_set_values: Record<string, Record<string, number>>
+  /** Pet ranch tier id -> amp. */
+  pet_ranch_values: Record<string, number>
   orb_values: Record<string, { points?: number; amp?: number; heal_amp?: number }>
 }
 
@@ -69,6 +73,12 @@ export interface Loadout {
   accessoryLines: string[]
   /** Equipped gems: tier and level per slot. Up to 11 in game. */
   gems: GemSlot[]
+  /** Card set id, or '' for none. */
+  cardSetId: string
+  /** Awakening stage 1-6; 0 for none. */
+  cardStage: number
+  /** Pet ranch tier id, or '' for none. */
+  petRanchId: string
   /** Paradise orb id, or '' for none. */
   orbId: string
   /** Support only: Paladin has a higher vitality factor than Bard/Artist. */

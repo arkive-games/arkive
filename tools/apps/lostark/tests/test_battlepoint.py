@@ -171,3 +171,29 @@ def test_accessory_line_id_spaces_differ_by_role(coeffs):
     # Damage-dealer ids are CombatEffect PrimaryKeys; support ids are not.
     assert all(int(k) > 600_000_000 for k in coeffs[DPS]["accessory_line_values"])
     assert all(int(k) < 10_000 for k in coeffs[SUPPORT]["accessory_line_values"])
+
+
+def test_card_sets_are_per_set_not_global(coeffs):
+    """Type 27 gives every card set its own curve over awakening stages 1-6.
+
+    The fan site models cards as one global 18/24/30 table. Six damage-dealer
+    sets match the numbers it hardcoded, which is presumably where they came
+    from, but 38 sets exist and they differ.
+    """
+    dps = coeffs[DPS]["card_set_values"]
+    assert len(dps) == 38
+    matching = [
+        cid
+        for cid, stages in dps.items()
+        if {stages.get("4"), stages.get("5"), stages.get("6")} == {0.07, 0.11, 0.15}
+    ]
+    assert len(matching) == 6, matching
+    # Support's best-known set reproduces its 0.06 / 0.12 / 0.21.
+    sup = coeffs[SUPPORT]["card_set_values"]["1004"]
+    assert (sup["4"], sup["5"], sup["6"]) == pytest.approx((0.06, 0.12, 0.21))
+
+
+def test_pet_ranch_tiers(coeffs):
+    """The game's middle tier is 0.0054; the fan site transcribed 0.00539."""
+    pet = coeffs[DPS]["pet_ranch_values"]
+    assert [pet[k] for k in sorted(pet, key=int)] == pytest.approx([0.0031, 0.0054, 0.0077])

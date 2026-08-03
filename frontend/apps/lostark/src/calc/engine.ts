@@ -201,6 +201,17 @@ export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] 
   }, 1)
   rows.push({ name: '宝石', value: gemProduct - 1 })
 
+  rows.push({
+    name: '卡牌',
+    value: loadout.cardSetId
+      ? (coeffs.card_set_values[loadout.cardSetId]?.[String(loadout.cardStage)] ?? 0)
+      : 0,
+  })
+  rows.push({
+    name: '牧场',
+    value: loadout.petRanchId ? (coeffs.pet_ranch_values[loadout.petRanchId] ?? 0) : 0,
+  })
+
   const orb = loadout.orbId ? coeffs.orb_values[loadout.orbId] : undefined
   rows.push({ name: '乐园宝珠', value: orb?.amp ?? 0 })
 

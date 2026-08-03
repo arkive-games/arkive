@@ -44,6 +44,16 @@ _TYPE_KARMA_STAGE_STEP = 8
 # ValueA = ArkGridCore id, ValueB = activated points, ValueC = amp x 1e-4.
 _TYPE_ARK_CORE = 29
 
+# Card sets. ValueA = card-set id (38 sets), ValueB = awakening stage 1-6,
+# ValueC = amp x 1e-4. The fan site models cards as one global 18/24/30 table;
+# the game has a distinct curve per set, and six damage-dealer sets happen to
+# match the numbers it hardcoded.
+_TYPE_CARD_SET = 27
+
+# Pet ranch perk tiers. ValueA = tier id (30000/31000/32000), ValueB = amp x 1e-4.
+# The game says 0.0031 / 0.0054 / 0.0077; the fan site's middle value is 0.00539.
+_TYPE_PET_RANCH = 28
+
 # Accessory affix lines. ValueB is the effect id, ValueC the amp x 1e-4.
 # 12 per role: four tiers x three grades. The damage-dealer ids are
 # EFTable_CombatEffect PrimaryKeys whose Desc resolves through GameMsg; the
@@ -84,6 +94,8 @@ def extract(tables: Tables) -> dict[str, dict]:
     gems: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
     orbs: dict[str, dict[str, dict[str, float]]] = defaultdict(dict)
     lines: dict[str, dict[str, float]] = defaultdict(dict)
+    cards: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
+    pet: dict[str, dict[str, float]] = defaultdict(dict)
 
     for row in tables.read("BattlePoint"):
         role = _ROLE_BY_PRIMARY_KEY.get(row["PrimaryKey"])
@@ -103,6 +115,10 @@ def extract(tables: Tables) -> dict[str, dict]:
         elif kind == _TYPE_ARK_CORE:
             core = str(row["ValueA"])
             cores[role][core][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
+        elif kind == _TYPE_CARD_SET:
+            cards[role][str(row["ValueA"])][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
+        elif kind == _TYPE_PET_RANCH:
+            pet[role][str(row["ValueA"])] = row["ValueB"] / _RATE_DIVISOR
         elif kind == _TYPE_ACCESSORY_LINE:
             lines[role][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
         elif kind == _TYPE_GEM:
@@ -139,6 +155,13 @@ def extract(tables: Tables) -> dict[str, dict]:
             tier: dict(sorted(levels_.items(), key=lambda kv: int(kv[0])))
             for tier, levels_ in sorted(gems[role].items(), key=lambda kv: int(kv[0]))
         }
+        out[role]["card_set_values"] = {
+            cid: dict(sorted(stages.items(), key=lambda kv: int(kv[0])))
+            for cid, stages in sorted(cards[role].items(), key=lambda kv: int(kv[0]))
+        }
+        out[role]["pet_ranch_values"] = dict(
+            sorted(pet[role].items(), key=lambda kv: int(kv[0]))
+        )
         out[role]["accessory_line_values"] = dict(
             sorted(lines[role].items(), key=lambda kv: int(kv[0]))
         )

@@ -23,6 +23,9 @@ export function defaultLoadout(): Loadout {
     cores: Array.from({ length: 6 }, () => ({ id: '', optionIndex: 0 })),
     gems: Array.from({ length: GEM_SLOTS }, () => ({ tier: '', level: 1 })),
     accessoryLines: Array.from({ length: ACCESSORY_LINES }, () => ''),
+    cardSetId: '',
+    cardStage: 0,
+    petRanchId: '',
     orbId: '',
     supportClass: 'bard',
   }
@@ -86,8 +89,11 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
   num('arkLeap', 0, 999)
   num('karmaEvolutionStage', 0, 99)
   num('karmaLeapLevel', 0, 999)
+  num('cardStage', 0, 6)
   str('armourGroup')
   str('weaponId')
+  str('cardSetId')
+  str('petRanchId')
   str('orbId')
 
   if (raw.cores !== undefined) {

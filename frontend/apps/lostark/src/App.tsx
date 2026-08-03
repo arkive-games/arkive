@@ -410,6 +410,42 @@ export default function App() {
             ))}
           </Section>
 
+          <Section title="卡牌与牧场">
+            <SelectField
+              label="卡牌套装"
+              value={loadout.cardSetId}
+              onChange={(v) => set('cardSetId', v)}
+              options={[
+                { value: '', label: '无' },
+                ...Object.keys(coeffs.card_set_values).map((id) => ({ value: id, label: id })),
+              ]}
+            />
+            <SelectField
+              label="觉醒阶段"
+              value={String(loadout.cardStage)}
+              onChange={(v) => set('cardStage', Number(v))}
+              options={[
+                { value: '0', label: '未觉醒' },
+                ...Object.keys(coeffs.card_set_values[loadout.cardSetId] ?? {}).map((st) => ({
+                  value: st,
+                  label: `${st} 阶`,
+                })),
+              ]}
+            />
+            <SelectField
+              label="牧场特技"
+              value={loadout.petRanchId}
+              onChange={(v) => set('petRanchId', v)}
+              options={[
+                { value: '', label: '无' },
+                ...Object.entries(coeffs.pet_ranch_values).map(([id, amp]) => ({
+                  value: id,
+                  label: `+${(amp * 100).toFixed(2)}%`,
+                })),
+              ]}
+            />
+          </Section>
+
           <Section title="乐园宝珠">
             <SelectField
               label="宝珠"
