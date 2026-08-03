@@ -136,7 +136,7 @@ LOSTARK_DATA_OUT=E:/arkive-games/data-lostark
 Run:
 ```bash
 cd tools && uv run python -c "
-from apps.lostark.env import require_dir
+from lostark.env import require_dir
 try:
     require_dir('LOSTARK_DEFINITELY_UNSET')
 except RuntimeError as e:
@@ -167,7 +167,7 @@ import sqlite3
 
 import pytest
 
-from apps.lostark.db import Tables, rows
+from lostark.db import Tables, rows
 
 
 def _make_db(path, name, cols, data):
@@ -211,7 +211,7 @@ def test_open_is_read_only(tmp_path):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `cd tools && uv run pytest apps/lostark/tests/test_db.py -v`
-Expected: FAIL — `ModuleNotFoundError: apps.lostark.db`
+Expected: FAIL — `ModuleNotFoundError: lostark.db`
 
 - [ ] **Step 3: Implement**
 
@@ -298,9 +298,9 @@ the extraction.
 ```python
 import pytest
 
-from apps.lostark.battlepoint import DPS, SUPPORT, extract
-from apps.lostark.db import Tables
-from apps.lostark.env import optional_dir
+from lostark.battlepoint import DPS, SUPPORT, extract
+from lostark.db import Tables
+from lostark.env import optional_dir
 
 TABLES = optional_dir("LOSTARK_TABLES")
 pytestmark = pytest.mark.skipif(TABLES is None, reason="LOSTARK_TABLES not set")
@@ -354,7 +354,7 @@ def test_ark_core_values_cover_every_core(coeffs):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `cd tools && uv run pytest apps/lostark/tests/test_battlepoint.py -v`
-Expected: FAIL — `ModuleNotFoundError: apps.lostark.battlepoint`
+Expected: FAIL — `ModuleNotFoundError: lostark.battlepoint`
 
 - [ ] **Step 3: Implement**
 
@@ -445,9 +445,9 @@ git commit -m "feat(lostark): extract BattlePoint coefficients per role"
 ```python
 import pytest
 
-from apps.lostark.db import Tables
-from apps.lostark.env import optional_dir
-from apps.lostark.itemlevel import extract
+from lostark.db import Tables
+from lostark.env import optional_dir
+from lostark.itemlevel import extract
 
 TABLES = optional_dir("LOSTARK_TABLES")
 pytestmark = pytest.mark.skipif(TABLES is None, reason="LOSTARK_TABLES not set")
@@ -488,7 +488,7 @@ def test_defence_is_preserved(gear):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `cd tools && uv run pytest apps/lostark/tests/test_itemlevel.py -v`
-Expected: FAIL — `ModuleNotFoundError: apps.lostark.itemlevel`
+Expected: FAIL — `ModuleNotFoundError: lostark.itemlevel`
 
 - [ ] **Step 3: Implement**
 
@@ -556,9 +556,9 @@ git commit -m "feat(lostark): extract gear stats per item level"
 ```python
 import pytest
 
-from apps.lostark.arkgrid import extract
-from apps.lostark.db import Tables
-from apps.lostark.env import optional_dir
+from lostark.arkgrid import extract
+from lostark.db import Tables
+from lostark.env import optional_dir
 
 TABLES = optional_dir("LOSTARK_TABLES")
 pytestmark = pytest.mark.skipif(TABLES is None, reason="LOSTARK_TABLES not set")
@@ -581,7 +581,7 @@ def test_core_carries_grade_and_localization_keys(cores):
 
 
 def test_every_battlepoint_core_id_resolves(cores):
-    from apps.lostark.battlepoint import DPS, extract as bp_extract
+    from lostark.battlepoint import DPS, extract as bp_extract
 
     values = bp_extract(Tables(TABLES))[DPS]["ark_core_values"]
     unresolved = sorted(set(values) - set(cores))
@@ -591,7 +591,7 @@ def test_every_battlepoint_core_id_resolves(cores):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `cd tools && uv run pytest apps/lostark/tests/test_arkgrid.py -v`
-Expected: FAIL — `ModuleNotFoundError: apps.lostark.arkgrid`
+Expected: FAIL — `ModuleNotFoundError: lostark.arkgrid`
 
 - [ ] **Step 3: Implement**
 
@@ -648,9 +648,9 @@ are **rejected loudly**, never shipped raw.
 ```python
 import pytest
 
-from apps.lostark.db import Tables
-from apps.lostark.env import optional_dir
-from apps.lostark.locales import LOCALES, has_template, resolve, strip_markup
+from lostark.db import Tables
+from lostark.env import optional_dir
+from lostark.locales import LOCALES, has_template, resolve, strip_markup
 
 
 def test_strip_markup_removes_font_and_img():
@@ -690,7 +690,7 @@ def test_missing_key_is_reported_not_silently_dropped():
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `cd tools && uv run pytest apps/lostark/tests/test_locales.py -v`
-Expected: FAIL — `ModuleNotFoundError: apps.lostark.locales`
+Expected: FAIL — `ModuleNotFoundError: lostark.locales`
 
 - [ ] **Step 3: Implement**
 
@@ -776,9 +776,9 @@ import json
 
 import pytest
 
-from apps.lostark.db import Tables
-from apps.lostark.emit import build, write
-from apps.lostark.env import optional_dir
+from lostark.db import Tables
+from lostark.emit import build, write
+from lostark.env import optional_dir
 
 TABLES = optional_dir("LOSTARK_TABLES")
 pytestmark = pytest.mark.skipif(TABLES is None, reason="LOSTARK_TABLES not set")
@@ -824,7 +824,7 @@ def test_write_refuses_a_path_inside_the_source(dataset):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `cd tools && uv run pytest apps/lostark/tests/test_emit.py -v`
-Expected: FAIL — `ModuleNotFoundError: apps.lostark.emit`
+Expected: FAIL — `ModuleNotFoundError: lostark.emit`
 
 - [ ] **Step 3: Implement**
 
@@ -897,7 +897,7 @@ dataset. Pick one and make the test pass without weakening it; the guard exists 
 `tools/apps/lostark/__main__.py`:
 
 ```python
-"""python -m apps.lostark emit"""
+"""python -m lostark emit"""
 
 from __future__ import annotations
 
@@ -910,7 +910,7 @@ from .env import require_dir
 
 def main(argv: list[str]) -> int:
     if argv[1:2] != ["emit"]:
-        print("usage: python -m apps.lostark emit", file=sys.stderr)
+        print("usage: python -m lostark emit", file=sys.stderr)
         return 2
     tables = Tables(require_dir("LOSTARK_TABLES"))
     out = require_dir("LOSTARK_DATA_OUT")
@@ -929,7 +929,7 @@ if __name__ == "__main__":
 Run:
 ```bash
 cd tools && uv run pytest apps/lostark -v
-uv run python -m apps.lostark emit
+uv run python -m lostark emit
 ```
 Expected: all tests pass; the emit prints `wrote 7 files to …`. Inspect
 `battlepoint/dps.json` and confirm `base_rate` is `0.000288` and `combat_level_amp` has 16 entries.
@@ -946,7 +946,7 @@ git commit -m "feat(lostark): emit the data-lostark dataset"
 ## Phase exit criteria
 
 - [ ] `cd tools && uv run pytest apps/lostark` green
-- [ ] `uv run python -m apps.lostark emit` writes 7 files
+- [ ] `uv run python -m lostark emit` writes 7 files
 - [ ] `battlepoint/dps.json` `base_rate` == 0.000288 and `combat_level_amp` covers levels 55–70
 - [ ] `gear/item-levels.json` has head main 57721 / vit 7293 and weapon 100036 at level 1640
 - [ ] Every BattlePoint Ark-core id resolves in `arkgrid/cores.json`
