@@ -44,6 +44,14 @@ _TYPE_KARMA_STAGE_STEP = 8
 # ValueA = ArkGridCore id, ValueB = activated points, ValueC = amp x 1e-4.
 _TYPE_ARK_CORE = 29
 
+# Accessory affix lines. ValueB is the effect id, ValueC the amp x 1e-4.
+# 12 per role: four tiers x three grades. The damage-dealer ids are
+# EFTable_CombatEffect PrimaryKeys whose Desc resolves through GameMsg; the
+# support ids (6000-6032) live in a separate id space with no CombatEffect row.
+# Verified against the fan site: dps 55/120/200 are its 对敌人造成的伤害
+# +0.55/1.20/2.00%, and support 80/180/300 are its 武器攻击力 +0.80/1.80/3.00%.
+_TYPE_ACCESSORY_LINE = 17
+
 # ValueA = gem tier (3 or 4), ValueB = gem level 1-10, ValueC = amp x 1e-4.
 # Verified against the fan site: tier 4 levels 6-10 reproduce its dpsGemData
 # battle values exactly. The game additionally covers tier 3 and levels 1-5,
@@ -75,6 +83,7 @@ def extract(tables: Tables) -> dict[str, dict]:
     gem_options: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
     gems: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
     orbs: dict[str, dict[str, dict[str, float]]] = defaultdict(dict)
+    lines: dict[str, dict[str, float]] = defaultdict(dict)
 
     for row in tables.read("BattlePoint"):
         role = _ROLE_BY_PRIMARY_KEY.get(row["PrimaryKey"])
@@ -94,6 +103,8 @@ def extract(tables: Tables) -> dict[str, dict]:
         elif kind == _TYPE_ARK_CORE:
             core = str(row["ValueA"])
             cores[role][core][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
+        elif kind == _TYPE_ACCESSORY_LINE:
+            lines[role][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
         elif kind == _TYPE_GEM:
             gems[role][str(row["ValueA"])][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
         elif kind == _TYPE_GEM_OPTION:
@@ -128,5 +139,8 @@ def extract(tables: Tables) -> dict[str, dict]:
             tier: dict(sorted(levels_.items(), key=lambda kv: int(kv[0])))
             for tier, levels_ in sorted(gems[role].items(), key=lambda kv: int(kv[0]))
         }
+        out[role]["accessory_line_values"] = dict(
+            sorted(lines[role].items(), key=lambda kv: int(kv[0]))
+        )
         out[role]["orb_values"] = dict(sorted(orbs[role].items(), key=lambda kv: int(kv[0])))
     return out

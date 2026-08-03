@@ -17,6 +17,8 @@ export interface RoleCoefficients {
   gem_option_values: Record<string, Record<string, number>>
   /** Gem tier -> level -> amp. */
   gem_values: Record<string, Record<string, number>>
+  /** Accessory affix effect id -> amp. */
+  accessory_line_values: Record<string, number>
   orb_values: Record<string, { points?: number; amp?: number; heal_amp?: number }>
 }
 
@@ -60,6 +62,11 @@ export interface Loadout {
   karmaEvolutionStage: number
   karmaLeapLevel: number
   cores: CoreSelection[]
+  /**
+   * Accessory affix lines: five accessories (necklace, 2 earrings, 2 rings)
+   * with three lines each. Values are effect ids into accessory_line_values.
+   */
+  accessoryLines: string[]
   /** Equipped gems: tier and level per slot. Up to 11 in game. */
   gems: GemSlot[]
   /** Paradise orb id, or '' for none. */

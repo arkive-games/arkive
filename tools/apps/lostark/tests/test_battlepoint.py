@@ -147,3 +147,27 @@ def test_gem_values_match_the_fan_site_where_they_overlap(coeffs):
 
 def test_support_gem_values_differ_from_dps(coeffs):
     assert coeffs[SUPPORT]["gem_values"]["4"]["10"] == pytest.approx(0.125)
+
+
+def test_accessory_line_values_match_the_fan_site(coeffs):
+    """Type 17 is accessory affix lines: four tiers x three grades per role."""
+    dps = coeffs[DPS]["accessory_line_values"]
+    support = coeffs[SUPPORT]["accessory_line_values"]
+    assert len(dps) == 12
+    assert len(support) == 12
+
+    # Fan site: 对敌人造成的伤害 +0.55% / +1.20% / +2.00%.
+    assert dps["621000000"] == pytest.approx(0.0055)
+    assert dps["621000001"] == pytest.approx(0.012)
+    assert dps["621000002"] == pytest.approx(0.02)
+
+    # Fan site: 武器攻击力 +0.80% / +1.80% / +3.00%.
+    assert support["6000"] == pytest.approx(0.008)
+    assert support["6001"] == pytest.approx(0.018)
+    assert support["6002"] == pytest.approx(0.03)
+
+
+def test_accessory_line_id_spaces_differ_by_role(coeffs):
+    # Damage-dealer ids are CombatEffect PrimaryKeys; support ids are not.
+    assert all(int(k) > 600_000_000 for k in coeffs[DPS]["accessory_line_values"])
+    assert all(int(k) < 10_000 for k in coeffs[SUPPORT]["accessory_line_values"])

@@ -186,6 +186,13 @@ export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] 
     })
   })
 
+  // Affix lines each multiply independently, like gems.
+  const lineProduct = loadout.accessoryLines.reduce(
+    (acc, id) => acc * (1 + (id ? (coeffs.accessory_line_values[id] ?? 0) : 0)),
+    1,
+  )
+  rows.push({ name: '首饰词条', value: lineProduct - 1 })
+
   // Each gem multiplies independently, so the group's combined amp is
   // product(1 + gem_i) - 1 rather than a plain sum.
   const gemProduct = loadout.gems.reduce((acc, g) => {

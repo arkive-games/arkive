@@ -4,6 +4,8 @@ export const STORAGE_KEY = 'lostark.loadout.v1'
 export const SCHEMA_VERSION = 1
 /** The game caps a build at 11 gems. */
 export const GEM_SLOTS = 11
+/** Five accessories, three affix lines each. */
+export const ACCESSORY_LINES = 15
 
 export function defaultLoadout(): Loadout {
   return {
@@ -20,6 +22,7 @@ export function defaultLoadout(): Loadout {
     karmaLeapLevel: 0,
     cores: Array.from({ length: 6 }, () => ({ id: '', optionIndex: 0 })),
     gems: Array.from({ length: GEM_SLOTS }, () => ({ tier: '', level: 1 })),
+    accessoryLines: Array.from({ length: ACCESSORY_LINES }, () => ''),
     orbId: '',
     supportClass: 'bard',
   }
@@ -105,6 +108,17 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
         }
         return { id, optionIndex: idx }
       })
+    }
+  }
+
+  if (raw.accessoryLines !== undefined) {
+    const lines = raw.accessoryLines
+    if (!Array.isArray(lines)) {
+      rejected.push('accessoryLines: not an array')
+    } else {
+      base.accessoryLines = base.accessoryLines.map((slot, i) =>
+        typeof lines[i] === 'string' ? (lines[i] as string) : slot,
+      )
     }
   }
 

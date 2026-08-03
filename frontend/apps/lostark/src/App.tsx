@@ -332,6 +332,38 @@ export default function App() {
             ))}
           </Section>
 
+          <Section title="首饰词条">
+            <p className="text-xs text-muted">项链、耳环×2、戒指×2，每件 3 条；各条独立相乘。</p>
+            {['项链', '耳环 1', '耳环 2', '戒指 1', '戒指 2'].map((piece, p) => (
+              <div key={piece} className="space-y-1">
+                <div className="text-xs text-muted">{piece}</div>
+                {[0, 1, 2].map((n) => {
+                  const idx = p * 3 + n
+                  return (
+                    <select
+                      key={n}
+                      aria-label={`${piece} 词条 ${n + 1}`}
+                      value={loadout.accessoryLines[idx] ?? ''}
+                      onChange={(e) => {
+                        const lines = [...loadout.accessoryLines]
+                        lines[idx] = e.target.value
+                        set('accessoryLines', lines)
+                      }}
+                      className="w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
+                    >
+                      <option value="">无</option>
+                      {Object.entries(coeffs.accessory_line_values).map(([id, amp]) => (
+                        <option key={id} value={id}>
+                          +{(amp * 100).toFixed(2)}%
+                        </option>
+                      ))}
+                    </select>
+                  )
+                })}
+              </div>
+            ))}
+          </Section>
+
           <Section title="宝石">
             <p className="text-xs text-muted">
               最多 {loadout.gems.length} 颗；每颗独立相乘。

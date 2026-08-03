@@ -137,3 +137,16 @@ test('discloses which systems are not yet covered', async ({ page }) => {
   // the omission must be visible next to the score.
   await expect(page.locator('aside').getByText('部分系统尚未纳入计算')).toBeVisible()
 })
+
+test('accessory affix lines compound', async ({ page }) => {
+  await ready(page)
+  const rail = page.locator('aside')
+
+  // Highest damage-dealer tier: 621000002 at 2.00%.
+  await page.getByLabel('项链 词条 1').selectOption('621000002')
+  await expect(rail.getByText('2%')).toBeVisible()
+
+  await page.getByLabel('项链 词条 2').selectOption('621000002')
+  // 1.02^2 - 1 = 0.0404 -> 4.04%
+  await expect(rail.getByText('4.04%')).toBeVisible()
+})
