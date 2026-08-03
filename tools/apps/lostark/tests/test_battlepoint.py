@@ -197,3 +197,16 @@ def test_pet_ranch_tiers(coeffs):
     """The game's middle tier is 0.0054; the fan site transcribed 0.00539."""
     pet = coeffs[DPS]["pet_ranch_values"]
     assert [pet[k] for k in sorted(pet, key=int)] == pytest.approx([0.0031, 0.0054, 0.0077])
+
+
+def test_chosen_weapon_top_grade_matches_the_fan_site(coeffs):
+    """Type 23's top grade is 0.019, the fan site's chosenWeaponAmp.
+
+    Its higher 艾拉3 values (0.02375, 0.0285) are absent from the game data,
+    matching its own comment that those are estimates for unreleased content.
+    """
+    for role in (DPS, SUPPORT):
+        values = coeffs[role]["chosen_weapon_values"]
+        assert len(values) == 6, role
+        assert max(values.values()) == pytest.approx(0.019), role
+        assert 0.02375 not in values.values()

@@ -44,6 +44,13 @@ _TYPE_KARMA_STAGE_STEP = 8
 # ValueA = ArkGridCore id, ValueB = activated points, ValueC = amp x 1e-4.
 _TYPE_ARK_CORE = 29
 
+# Chosen ("神选") weapon amp. ValueA = weapon family, ValueB = graded weapon id,
+# ValueC = amp x 1e-4. Identical for both roles. The top grade is 0.019, which
+# is exactly the fan site's chosenWeaponAmp. Its higher 艾拉3 values (0.02375,
+# 0.0285) are absent here, consistent with its own note that those are
+# estimates for unreleased content.
+_TYPE_CHOSEN_WEAPON = 23
+
 # Card sets. ValueA = card-set id (38 sets), ValueB = awakening stage 1-6,
 # ValueC = amp x 1e-4. The fan site models cards as one global 18/24/30 table;
 # the game has a distinct curve per set, and six damage-dealer sets happen to
@@ -96,6 +103,7 @@ def extract(tables: Tables) -> dict[str, dict]:
     lines: dict[str, dict[str, float]] = defaultdict(dict)
     cards: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
     pet: dict[str, dict[str, float]] = defaultdict(dict)
+    chosen: dict[str, dict[str, float]] = defaultdict(dict)
 
     for row in tables.read("BattlePoint"):
         role = _ROLE_BY_PRIMARY_KEY.get(row["PrimaryKey"])
@@ -115,6 +123,8 @@ def extract(tables: Tables) -> dict[str, dict]:
         elif kind == _TYPE_ARK_CORE:
             core = str(row["ValueA"])
             cores[role][core][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
+        elif kind == _TYPE_CHOSEN_WEAPON:
+            chosen[role][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
         elif kind == _TYPE_CARD_SET:
             cards[role][str(row["ValueA"])][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
         elif kind == _TYPE_PET_RANCH:
@@ -155,6 +165,9 @@ def extract(tables: Tables) -> dict[str, dict]:
             tier: dict(sorted(levels_.items(), key=lambda kv: int(kv[0])))
             for tier, levels_ in sorted(gems[role].items(), key=lambda kv: int(kv[0]))
         }
+        out[role]["chosen_weapon_values"] = dict(
+            sorted(chosen[role].items(), key=lambda kv: int(kv[0]))
+        )
         out[role]["card_set_values"] = {
             cid: dict(sorted(stages.items(), key=lambda kv: int(kv[0])))
             for cid, stages in sorted(cards[role].items(), key=lambda kv: int(kv[0]))

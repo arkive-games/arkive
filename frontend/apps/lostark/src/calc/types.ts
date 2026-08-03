@@ -23,6 +23,8 @@ export interface RoleCoefficients {
   card_set_values: Record<string, Record<string, number>>
   /** Pet ranch tier id -> amp. */
   pet_ranch_values: Record<string, number>
+  /** Chosen (神选) weapon id -> amp. */
+  chosen_weapon_values: Record<string, number>
   orb_values: Record<string, { points?: number; amp?: number; heal_amp?: number }>
 }
 
@@ -73,6 +75,8 @@ export interface Loadout {
   accessoryLines: string[]
   /** Equipped gems: tier and level per slot. Up to 11 in game. */
   gems: GemSlot[]
+  /** Chosen weapon id, or '' for a normal weapon. */
+  chosenWeaponId: string
   /** Card set id, or '' for none. */
   cardSetId: string
   /** Awakening stage 1-6; 0 for none. */

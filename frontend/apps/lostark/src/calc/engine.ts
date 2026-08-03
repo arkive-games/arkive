@@ -202,6 +202,12 @@ export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] 
   rows.push({ name: '宝石', value: gemProduct - 1 })
 
   rows.push({
+    name: '神选武器',
+    value: loadout.chosenWeaponId
+      ? (coeffs.chosen_weapon_values[loadout.chosenWeaponId] ?? 0)
+      : 0,
+  })
+  rows.push({
     name: '卡牌',
     value: loadout.cardSetId
       ? (coeffs.card_set_values[loadout.cardSetId]?.[String(loadout.cardStage)] ?? 0)

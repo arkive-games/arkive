@@ -219,6 +219,18 @@ export default function App() {
                 label: `${w.id} · ${w.attack.toLocaleString('zh-CN')}`,
               }))}
             />
+            <SelectField
+              label="神选武器"
+              value={loadout.chosenWeaponId}
+              onChange={(v) => set('chosenWeaponId', v)}
+              options={[
+                { value: '', label: '普通武器' },
+                ...Object.entries(coeffs.chosen_weapon_values).map(([id, amp]) => ({
+                  value: id,
+                  label: `+${(amp * 100).toFixed(2)}%`,
+                })),
+              ]}
+            />
             <NumberField
               label="武器品质"
               value={loadout.weaponQuality}

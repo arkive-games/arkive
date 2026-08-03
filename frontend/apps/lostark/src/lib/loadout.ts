@@ -23,6 +23,7 @@ export function defaultLoadout(): Loadout {
     cores: Array.from({ length: 6 }, () => ({ id: '', optionIndex: 0 })),
     gems: Array.from({ length: GEM_SLOTS }, () => ({ tier: '', level: 1 })),
     accessoryLines: Array.from({ length: ACCESSORY_LINES }, () => ''),
+    chosenWeaponId: '',
     cardSetId: '',
     cardStage: 0,
     petRanchId: '',
@@ -92,6 +93,7 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
   num('cardStage', 0, 6)
   str('armourGroup')
   str('weaponId')
+  str('chosenWeaponId')
   str('cardSetId')
   str('petRanchId')
   str('orbId')
