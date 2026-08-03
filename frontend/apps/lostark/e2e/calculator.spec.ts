@@ -114,3 +114,18 @@ test('import reports what it rejected instead of applying it silently', async ({
   // The out-of-range value must not have been applied.
   await expect(page.getByLabel('武器品质')).toHaveValue('0')
 })
+
+test('gems multiply independently', async ({ page }) => {
+  await ready(page)
+  const rail = page.locator('aside')
+
+  await page.getByLabel('宝石 1 层级').selectOption('4')
+  await page.getByLabel('宝石 1 等级').selectOption('10')
+  // Tier 4 level 10 is 0.0704 in EFTable_BattlePoint Type 22.
+  await expect(rail.getByText('7.04%')).toBeVisible()
+
+  await page.getByLabel('宝石 2 层级').selectOption('4')
+  await page.getByLabel('宝石 2 等级').selectOption('10')
+  // Two gems compound: 1.0704^2 - 1 = 0.14575616 -> 14.58%.
+  await expect(rail.getByText('14.58%')).toBeVisible()
+})

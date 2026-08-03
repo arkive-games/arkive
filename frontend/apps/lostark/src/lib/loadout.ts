@@ -1,7 +1,9 @@
-import type { Loadout, Role, SupportClass } from '@/calc/types'
+import type { GemSlot, Loadout, Role, SupportClass } from '@/calc/types'
 
 export const STORAGE_KEY = 'lostark.loadout.v1'
 export const SCHEMA_VERSION = 1
+/** The game caps a build at 11 gems. */
+export const GEM_SLOTS = 11
 
 export function defaultLoadout(): Loadout {
   return {
@@ -17,6 +19,7 @@ export function defaultLoadout(): Loadout {
     karmaEvolutionStage: 0,
     karmaLeapLevel: 0,
     cores: Array.from({ length: 6 }, () => ({ id: '', optionIndex: 0 })),
+    gems: Array.from({ length: GEM_SLOTS }, () => ({ tier: '', level: 1 })),
     orbId: '',
     supportClass: 'bard',
   }
@@ -101,6 +104,25 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
           rejected.push(`cores[${i}].optionIndex: ${String(c.optionIndex)}`)
         }
         return { id, optionIndex: idx }
+      })
+    }
+  }
+
+  if (raw.gems !== undefined) {
+    const gems = raw.gems
+    if (!Array.isArray(gems)) {
+      rejected.push('gems: not an array')
+    } else {
+      base.gems = base.gems.map((slot, i): GemSlot => {
+        const g = gems[i] as Record<string, unknown> | undefined
+        if (!g || typeof g !== 'object') return slot
+        const tier = g.tier === '3' || g.tier === '4' ? g.tier : ''
+        if (g.tier !== undefined && g.tier !== '' && tier === '') {
+          rejected.push(`gems[${i}].tier: ${String(g.tier)}`)
+        }
+        const level =
+          typeof g.level === 'number' && g.level >= 1 && g.level <= 10 ? g.level : 1
+        return { tier, level }
       })
     }
   }

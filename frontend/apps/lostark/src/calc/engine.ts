@@ -181,6 +181,14 @@ export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] 
     })
   })
 
+  // Each gem multiplies independently, so the group's combined amp is
+  // product(1 + gem_i) - 1 rather than a plain sum.
+  const gemProduct = loadout.gems.reduce((acc, g) => {
+    const value = g.tier ? (coeffs.gem_values[g.tier]?.[String(g.level)] ?? 0) : 0
+    return acc * (1 + value)
+  }, 1)
+  rows.push({ name: '宝石', value: gemProduct - 1 })
+
   const orb = loadout.orbId ? coeffs.orb_values[loadout.orbId] : undefined
   rows.push({ name: '乐园宝珠', value: orb?.amp ?? 0 })
 

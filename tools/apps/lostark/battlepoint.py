@@ -44,6 +44,12 @@ _TYPE_KARMA_STAGE_STEP = 8
 # ValueA = ArkGridCore id, ValueB = activated points, ValueC = amp x 1e-4.
 _TYPE_ARK_CORE = 29
 
+# ValueA = gem tier (3 or 4), ValueB = gem level 1-10, ValueC = amp x 1e-4.
+# Verified against the fan site: tier 4 levels 6-10 reproduce its dpsGemData
+# battle values exactly. The game additionally covers tier 3 and levels 1-5,
+# which the fan site omits.
+_TYPE_GEM = 22
+
 # ValueA = ArkGridGemOption group id, ValueB = option level, ValueC = amp x 1e-4.
 # Joins 720/720 against EFTable_ArkGridGemOption (PrimaryKey, SecondaryKey).
 _TYPE_GEM_OPTION = 31
@@ -67,6 +73,7 @@ def extract(tables: Tables) -> dict[str, dict]:
     quality: dict[str, dict[str, float]] = defaultdict(dict)
     cores: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
     gem_options: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
+    gems: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
     orbs: dict[str, dict[str, dict[str, float]]] = defaultdict(dict)
 
     for row in tables.read("BattlePoint"):
@@ -87,6 +94,8 @@ def extract(tables: Tables) -> dict[str, dict]:
         elif kind == _TYPE_ARK_CORE:
             core = str(row["ValueA"])
             cores[role][core][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
+        elif kind == _TYPE_GEM:
+            gems[role][str(row["ValueA"])][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
         elif kind == _TYPE_GEM_OPTION:
             group = str(row["ValueA"])
             gem_options[role][group][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
@@ -114,6 +123,10 @@ def extract(tables: Tables) -> dict[str, dict]:
         out[role]["gem_option_values"] = {
             group: dict(sorted(levels_.items(), key=lambda kv: int(kv[0])))
             for group, levels_ in sorted(gem_options[role].items(), key=lambda kv: int(kv[0]))
+        }
+        out[role]["gem_values"] = {
+            tier: dict(sorted(levels_.items(), key=lambda kv: int(kv[0])))
+            for tier, levels_ in sorted(gems[role].items(), key=lambda kv: int(kv[0]))
         }
         out[role]["orb_values"] = dict(sorted(orbs[role].items(), key=lambda kv: int(kv[0])))
     return out

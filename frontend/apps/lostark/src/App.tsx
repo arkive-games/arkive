@@ -332,6 +332,52 @@ export default function App() {
             ))}
           </Section>
 
+          <Section title="宝石">
+            <p className="text-xs text-muted">
+              最多 {loadout.gems.length} 颗；每颗独立相乘。
+            </p>
+            {loadout.gems.map((gem, i) => (
+              <Field key={i} label={`宝石 ${i + 1}`}>
+                <div className="flex gap-2">
+                  <select
+                    aria-label={`宝石 ${i + 1} 层级`}
+                    value={gem.tier}
+                    onChange={(e) => {
+                      const gems = [...loadout.gems]
+                      gems[i] = { ...gems[i], tier: e.target.value }
+                      set('gems', gems)
+                    }}
+                    className="min-w-0 flex-1 rounded-md border border-line bg-bg px-2 py-1 text-sm"
+                  >
+                    <option value="">未镶嵌</option>
+                    {Object.keys(coeffs.gem_values).map((t) => (
+                      <option key={t} value={t}>
+                        T{t}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label={`宝石 ${i + 1} 等级`}
+                    value={gem.level}
+                    disabled={!gem.tier}
+                    onChange={(e) => {
+                      const gems = [...loadout.gems]
+                      gems[i] = { ...gems[i], level: Number(e.target.value) }
+                      set('gems', gems)
+                    }}
+                    className="w-24 rounded-md border border-line bg-bg px-2 py-1 text-sm disabled:opacity-40"
+                  >
+                    {Object.keys(coeffs.gem_values[gem.tier] ?? {}).map((lv) => (
+                      <option key={lv} value={lv}>
+                        {lv} 级
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </Field>
+            ))}
+          </Section>
+
           <Section title="乐园宝珠">
             <SelectField
               label="宝珠"

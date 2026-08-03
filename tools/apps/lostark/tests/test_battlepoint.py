@@ -131,3 +131,19 @@ def test_orb_values_split_by_role(coeffs):
     # The fan site hardcodes 0.013 for one orb type; the game grants it to four.
     assert len(support) == 4
     assert all(v["heal_amp"] == pytest.approx(0.013) for v in support.values())
+
+
+def test_gem_values_match_the_fan_site_where_they_overlap(coeffs):
+    """Type 22 is gem tier x level. Tier 4 levels 6-10 reproduce the fan site's
+    dpsGemData battle values exactly; the game also covers tier 3 and levels 1-5.
+    """
+    gems = coeffs[DPS]["gem_values"]
+    assert set(gems) == {"3", "4"}
+    assert set(gems["4"]) == {str(i) for i in range(1, 11)}
+    expected = {"6": 0.0448, "7": 0.0512, "8": 0.0576, "9": 0.064, "10": 0.0704}
+    for level, value in expected.items():
+        assert gems["4"][level] == pytest.approx(value), level
+
+
+def test_support_gem_values_differ_from_dps(coeffs):
+    assert coeffs[SUPPORT]["gem_values"]["4"]["10"] == pytest.approx(0.125)

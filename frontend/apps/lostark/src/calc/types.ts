@@ -15,6 +15,8 @@ export interface RoleCoefficients {
   weapon_quality_amp?: Record<string, number>
   ark_core_values: Record<string, Record<string, number>>
   gem_option_values: Record<string, Record<string, number>>
+  /** Gem tier -> level -> amp. */
+  gem_values: Record<string, Record<string, number>>
   orb_values: Record<string, { points?: number; amp?: number; heal_amp?: number }>
 }
 
@@ -58,6 +60,8 @@ export interface Loadout {
   karmaEvolutionStage: number
   karmaLeapLevel: number
   cores: CoreSelection[]
+  /** Equipped gems: tier and level per slot. Up to 11 in game. */
+  gems: GemSlot[]
   /** Paradise orb id, or '' for none. */
   orbId: string
   /** Support only: Paladin has a higher vitality factor than Bard/Artist. */
@@ -65,6 +69,13 @@ export interface Loadout {
 }
 
 export type SupportClass = 'bard' | 'paladin'
+
+export interface GemSlot {
+  /** Gem tier ('3' or '4'); '' for an empty slot. */
+  tier: string
+  /** Gem level 1-10. */
+  level: number
+}
 
 export interface AmpRow {
   name: string
