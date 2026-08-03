@@ -69,3 +69,23 @@ def test_orphans_are_absent_from_every_other_table(cores, coeffs):
 def test_localization_keys_are_present_on_every_core(cores):
     missing = [cid for cid, c in cores.items() if not c["name_key"]]
     assert missing == [], f"cores with no name key: {missing[:10]}"
+
+
+def test_option_points_map_index_to_threshold(cores):
+    """BattlePoint Type 29 keys by option index 1-6, not by point total.
+
+    ArkGridCore.ReqOptionPoint1..6 carries the thresholds those indexes unlock,
+    which is what turns a user's "20 points" into a value lookup.
+    """
+    core = cores["673000005"]
+    assert core["option_points"] == {
+        "1": 10, "2": 14, "3": 17, "4": 18, "5": 19, "6": 20,
+    }
+
+
+def test_every_core_with_values_has_option_points(cores, coeffs):
+    from lostark.arkgrid import partition_values
+
+    kept, _ = partition_values(coeffs[DPS]["ark_core_values"], cores)
+    missing = [cid for cid in kept if not cores[cid]["option_points"]]
+    assert missing == [], f"cores with values but no point thresholds: {missing[:5]}"

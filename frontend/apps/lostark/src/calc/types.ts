@@ -32,8 +32,12 @@ export interface GearPiece {
 export interface CoreSelection {
   /** ArkGridCore id, or '' for an empty slot. */
   id: string
-  /** Activated points. */
-  points: number
+  /**
+   * Option index 1-6, NOT a point total. BattlePoint Type 29 is keyed by this
+   * index; `CoreMeta.option_points` maps it to the point threshold shown to the
+   * user. 0 means no option activated.
+   */
+  optionIndex: number
 }
 
 /** Everything the user can set. Plain data so it serialises straight to JSON. */

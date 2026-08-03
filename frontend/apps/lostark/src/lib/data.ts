@@ -30,6 +30,8 @@ export interface CoreMeta {
   gem_slot_point: number
   category_key: string
   name_key: string
+  /** Option index (1-6) -> activated-point threshold that unlocks it. */
+  option_points: Record<string, number>
 }
 
 export interface Dataset {

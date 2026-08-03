@@ -20,7 +20,7 @@ function defaultLoadout(): Loadout {
     arkLeap: 0,
     karmaEvolutionStage: 0,
     karmaLeapLevel: 0,
-    cores: Array.from({ length: 6 }, () => ({ id: '', points: 0 })),
+    cores: Array.from({ length: 6 }, () => ({ id: '', optionIndex: 0 })),
     orbId: '',
   }
 }
@@ -249,19 +249,26 @@ export default function App() {
                       </option>
                     ))}
                   </select>
-                  <input
+                  <select
                     aria-label={`核心 ${i + 1} 点数`}
-                    type="number"
-                    min={0}
-                    max={20}
-                    value={core.points}
+                    value={core.optionIndex}
+                    disabled={!core.id}
                     onChange={(e) => {
                       const cores = [...loadout.cores]
-                      cores[i] = { ...cores[i], points: Number(e.target.value) || 0 }
+                      cores[i] = { ...cores[i], optionIndex: Number(e.target.value) }
                       set('cores', cores)
                     }}
-                    className="w-16 rounded-md border border-line bg-bg px-2 py-1 text-right text-sm"
-                  />
+                    className="w-24 rounded-md border border-line bg-bg px-2 py-1 text-sm disabled:opacity-40"
+                  >
+                    <option value={0}>未激活</option>
+                    {Object.entries(data.cores[core.id]?.option_points ?? {}).map(
+                      ([index, threshold]) => (
+                        <option key={index} value={index}>
+                          {threshold}P
+                        </option>
+                      ),
+                    )}
+                  </select>
                 </div>
               </Field>
             ))}

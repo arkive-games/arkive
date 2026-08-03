@@ -134,10 +134,11 @@ export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] 
   }
 
   loadout.cores.forEach((core, index) => {
-    const byPoints = core.id ? coeffs.ark_core_values[core.id] : undefined
+    // Keyed by option index (1-6), not by the point threshold the user picks.
+    const byOption = core.id ? coeffs.ark_core_values[core.id] : undefined
     rows.push({
       name: `方舟核心 ${index + 1}`,
-      value: byPoints?.[String(core.points)] ?? 0,
+      value: byOption?.[String(core.optionIndex)] ?? 0,
     })
   })
 

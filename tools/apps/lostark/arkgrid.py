@@ -12,15 +12,27 @@ from .db import Tables
 
 
 def extract(tables: Tables) -> dict[str, dict]:
-    """Core metadata as ``{core_id: {...}}``."""
+    """Core metadata as ``{core_id: {...}}``.
+
+    ``option_points`` maps the option index BattlePoint Type 29 uses in ``ValueB``
+    (1-6) to the activated-point threshold that unlocks it (typically 10, 14, 17,
+    18, 19, 20). Without it a caller cannot turn "20 points" into a value lookup,
+    because Type 29 is keyed by the index and not by the threshold.
+    """
     out: dict[str, dict] = {}
     for row in tables.read("ArkGridCore"):
+        points = {
+            str(i): row[f"ReqOptionPoint{i}"]
+            for i in range(1, 7)
+            if row.get(f"ReqOptionPoint{i}")
+        }
         out[str(row["PrimaryKey"])] = {
             "group_id": row["GroupId"],
             "grade": row["Grade"],
             "gem_slot_point": row["GemSlotPoint"],
             "category_key": row["CoreBookCategoryString"],
             "name_key": row["CoreBookString"],
+            "option_points": points,
         }
     return dict(sorted(out.items(), key=lambda kv: int(kv[0])))
 
