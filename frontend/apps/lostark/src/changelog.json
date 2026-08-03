@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.2.0",
+      "date": "2026-08-03",
+      "commit": "08cac9774ea80d92b64c11845ebf32e6d598bd5b",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Engravings, avatars, roster stats, cards, pet ranch perks, accessory affixes and chosen weapons are now included in the calculation.",
+            "zh-CN": "刻印、时装、远征队属性、卡牌、牧场特技、首饰词条与神选武器现已纳入战斗力计算。",
+            "zh-TW": "刻印、時裝、遠征隊屬性、卡牌、牧場特技、首飾詞條與神選武器現已納入戰鬥力計算。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Each amplifier now shows where its coefficient came from: the game client, or the reference site where the client does not expose it.",
+            "zh-CN": "现会说明每项系数的来源：游戏客户端数据表，或客户端未提供时所用的参考站数据。",
+            "zh-TW": "現會說明每項係數的來源：遊戲客戶端資料表，或客戶端未提供時所用的參考站資料。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.1.0",
       "date": "2026-08-03",
       "commit": "a18f365dfba90fe88a19a9f742c6d63bf5951bfe",
