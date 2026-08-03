@@ -339,7 +339,12 @@ server — use an explicit `E2E_PORT`.
   in the workspace root `package.json`, and add `check:calc`.
 - Extract an NAEU install with `lostark-explorer` to unblock en-US, then add the locale as a
   data change.
-- Add the app to the `meta` landing site once it has something to link to.
+- **Add the app to the `meta` landing site — blocked on deployment, not on code.**
+  Verified 2026-08-03: `aion2.tc-imba.com` returns 200 while `lostark.tc-imba.com` and
+  `sts2.tc-imba.com` are unreachable. The grid lists only aion2 and palworld precisely because a
+  `SiteCard` needs a live URL, and sts2 and vrising are absent for the same reason. Adding a card
+  now would ship a dead link, which is worse than an absent one. Do it when the subdomain
+  answers; it needs a `SiteCard` entry plus background art in `apps/meta/src/assets/`.
 - Work on a git worktree branched from local `master` (not `origin/master`, which would silently
   drop unpushed work), and integrate with rebase. Re-run `pnpm changelog:verify` after the
   rebase, since rebasing orphans stamped SHAs.

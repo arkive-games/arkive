@@ -26,10 +26,15 @@ const MAIN_STAT_FLAT = 477
 /**
  * Structural constants for the support heal component.
  *
- * UNLIKE every coefficient in `RoleCoefficients`, these are NOT yet sourced from
- * the game tables — they come from the reference fan site's reverse-engineering.
- * A search of EFTable_BattlePoint found no row carrying 27722 or 1700, so the
- * BattlePoint types that hold them are still undecoded (11-28 remain open).
+ * UNLIKE every coefficient in `RoleCoefficients`, these are NOT sourced from the
+ * game tables — they come from the reference fan site's reverse-engineering.
+ *
+ * Three searches failed to find them (2026-08-03): EFTable_BattlePoint carries
+ * no row with 27722 or 1700; a scan of all 779 tables found 27722 only in
+ * SummonNpcLevel, which is unrelated; and neither PCAdjustmentLevelStat (PvP
+ * adjustment flags) nor CharInfoStatMinMax (stat clamps) holds a player base
+ * vitality. 27722 is most likely a level-70 character's base Con, computed
+ * rather than stored.
  *
  * Treat them as provisional: the heal score's shape is right, its absolute value
  * is only as good as these three numbers.
