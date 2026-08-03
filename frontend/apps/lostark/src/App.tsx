@@ -1,44 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
-import { armourGroups, evaluate, productAmp, weaponOptions } from '@/calc/engine'
-import type { Loadout, Role } from '@/calc/types'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { armourGroups, evaluate, weaponOptions } from '@/calc/engine'
+import type { Loadout, Role, SupportClass } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
+import {
+  STORAGE_KEY,
+  defaultLoadout,
+  exportLoadout,
+  parseLoadout,
+  restoreLoadout,
+} from '@/lib/loadout'
 import { Field, NumberField, Section, SelectField } from '@/components/Fields'
 import { ScoreRail } from '@/components/ScoreRail'
-
-const STORAGE_KEY = 'lostark.loadout.v1'
-
-function defaultLoadout(): Loadout {
-  return {
-    role: 'dps',
-    combatLevel: 70,
-    itemLevel: 1640,
-    armourGroup: '',
-    weaponId: '',
-    weaponQuality: 0,
-    arkEvolution: 0,
-    arkEnlightenment: 0,
-    arkLeap: 0,
-    karmaEvolutionStage: 0,
-    karmaLeapLevel: 0,
-    cores: Array.from({ length: 6 }, () => ({ id: '', optionIndex: 0 })),
-    orbId: '',
-  }
-}
-
-function restore(): Loadout {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return defaultLoadout()
-    return { ...defaultLoadout(), ...(JSON.parse(raw) as Partial<Loadout>) }
-  } catch {
-    return defaultLoadout()
-  }
-}
 
 export default function App() {
   const [data, setData] = useState<Dataset | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [loadout, setLoadout] = useState<Loadout>(restore)
+  const [notice, setNotice] = useState<string | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
+  const [loadout, setLoadout] = useState<Loadout>(restoreLoadout)
 
   useEffect(() => {
     loadDataset().then(setData).catch((e: Error) => setError(e.message))
@@ -56,6 +35,30 @@ export default function App() {
 
   const set = <K extends keyof Loadout>(key: K, value: Loadout[K]) =>
     setLoadout((l) => ({ ...l, [key]: value }))
+
+  function download() {
+    const blob = new Blob([exportLoadout(loadout)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `lostark-${loadout.role}-${loadout.itemLevel}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function importFile(file: File) {
+    try {
+      const { loadout: next, rejected } = parseLoadout(JSON.parse(await file.text()))
+      setLoadout(next)
+      setNotice(
+        rejected.length
+          ? `已导入，但忽略了 ${rejected.length} 项：${rejected.slice(0, 3).join('；')}`
+          : '已导入',
+      )
+    } catch (e) {
+      setNotice(`导入失败：${(e as Error).message}`)
+    }
+  }
 
   const coeffs = data ? data[loadout.role] : null
 
@@ -146,7 +149,51 @@ export default function App() {
             </button>
           ))}
         </div>
+        <div className="flex gap-2">
+          <button
+            onClick={download}
+            className="rounded-md border border-line px-3 py-1 text-xs hover:border-accent"
+          >
+            导出
+          </button>
+          <button
+            onClick={() => fileInput.current?.click()}
+            className="rounded-md border border-line px-3 py-1 text-xs hover:border-accent"
+          >
+            导入
+          </button>
+          <button
+            onClick={() => {
+              setLoadout(defaultLoadout())
+              setNotice('已清空')
+            }}
+            className="rounded-md border border-line px-3 py-1 text-xs hover:border-accent"
+          >
+            清空
+          </button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="application/json"
+            aria-label="导入配装文件"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) void importFile(f)
+              e.target.value = ''
+            }}
+          />
+        </div>
       </header>
+
+      {notice && (
+        <p
+          role="status"
+          className="mb-3 rounded-lg border border-line bg-panel px-3 py-2 text-xs text-muted"
+        >
+          {notice}
+        </p>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_18rem] lg:items-start">
         <div className="space-y-4">
@@ -179,6 +226,17 @@ export default function App() {
               max={100}
               onChange={(v) => set('weaponQuality', v)}
             />
+            {loadout.role === 'support' && (
+              <SelectField
+                label="职业"
+                value={loadout.supportClass}
+                onChange={(v) => set('supportClass', v as SupportClass)}
+                options={[
+                  { value: 'bard', label: '吟游诗人 / 墨灵' },
+                  { value: 'paladin', label: '圣骑士' },
+                ]}
+              />
+            )}
             <NumberField
               label="战斗等级"
               value={loadout.combatLevel}
@@ -287,7 +345,7 @@ export default function App() {
           </Section>
         </div>
 
-        <ScoreRail result={result} total={productAmp(result.components[0].amps)} />
+        <ScoreRail result={result} />
       </div>
 
       <footer className="mt-10 text-xs text-muted">

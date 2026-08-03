@@ -60,7 +60,11 @@ export interface Loadout {
   cores: CoreSelection[]
   /** Paradise orb id, or '' for none. */
   orbId: string
+  /** Support only: Paladin has a higher vitality factor than Bard/Artist. */
+  supportClass: SupportClass
 }
+
+export type SupportClass = 'bard' | 'paladin'
 
 export interface AmpRow {
   name: string
@@ -76,10 +80,14 @@ export interface ScoreComponent {
 }
 
 export interface Result {
+  /** One component for damage dealers; two (support + heal) for supports. */
   components: ScoreComponent[]
+  /** Sum of each component's ALREADY-ROUNDED score. */
   total: number
   mainStat: number
   weaponAttack: number
   baseAttack: number
   basicAttack: number
+  /** Support only. */
+  maxHp?: number
 }

@@ -23,6 +23,26 @@ import type {
 /** Piece ids in EFTable_ItemLevelOption are per-slot; the weapon carries MaxDam. */
 const MAIN_STAT_FLAT = 477
 
+/**
+ * Structural constants for the support heal component.
+ *
+ * UNLIKE every coefficient in `RoleCoefficients`, these are NOT yet sourced from
+ * the game tables — they come from the reference fan site's reverse-engineering.
+ * A search of EFTable_BattlePoint found no row carrying 27722 or 1700, so the
+ * BattlePoint types that hold them are still undecoded (11-28 remain open).
+ *
+ * Treat them as provisional: the heal score's shape is right, its absolute value
+ * is only as good as these three numbers.
+ */
+const VITALITY_FLAT = 27722
+const HP_FIXED_AMP = 0.17
+const KARMA_EVOLUTION_HP = 400
+
+const SUPPORT_VITALITY_FACTOR: Record<string, number> = {
+  bard: 2,
+  paladin: 2.1,
+}
+
 export function round(value: number, digits = 2): number {
   return Number(value.toFixed(Math.max(0, Math.min(6, digits))))
 }
@@ -55,18 +75,37 @@ export function armourGroups(gear: GearByLevel, itemLevel: number): string[] {
     .sort()
 }
 
+/** Sum one stat across the five armour slots of a group. */
+function gearStatTotal(
+  gear: GearByLevel,
+  itemLevel: number,
+  group: string,
+  stat: 'main' | 'vitality',
+): number {
+  const pieces = gear[String(itemLevel)]
+  if (!pieces) return 0
+  return Object.entries(pieces).reduce(
+    (total, [id, p]) => (id.startsWith(group) ? total + (p[stat] ?? 0) : total),
+    0,
+  )
+}
+
 /** Sum the main stat across the five armour slots of one group. */
 export function gearMainTotal(
   gear: GearByLevel,
   itemLevel: number,
   group: string,
 ): number {
-  const pieces = gear[String(itemLevel)]
-  if (!pieces) return 0
-  return Object.entries(pieces).reduce(
-    (total, [id, p]) => (id.startsWith(group) ? total + (p.main ?? 0) : total),
-    0,
-  )
+  return gearStatTotal(gear, itemLevel, group, 'main')
+}
+
+/** Sum vitality across the five armour slots of one group. */
+export function gearVitalityTotal(
+  gear: GearByLevel,
+  itemLevel: number,
+  group: string,
+): number {
+  return gearStatTotal(gear, itemLevel, group, 'vitality')
 }
 
 /** Weapon ids at this item level, with their attack values. */
@@ -159,21 +198,57 @@ export function evaluate(
   const basicAttack = baseAttack
   const amps = buildAmps(loadout, coeffs)
 
-  const component: ScoreComponent = {
+  const primary: ScoreComponent = {
     key: loadout.role,
-    label: loadout.role === 'dps' ? '输出战斗力' : '辅助战斗力',
+    label: loadout.role === 'dps' ? '输出战斗力' : '支援战斗力',
     base: basicAttack * coeffs.base_rate,
     amps,
     score: 0,
   }
-  component.score = round(component.base * productAmp(amps), 2)
+  primary.score = round(primary.base * productAmp(amps), 2)
+
+  if (loadout.role !== 'support' || coeffs.heal_rate === undefined) {
+    return {
+      components: [primary],
+      total: primary.score,
+      mainStat,
+      weaponAttack,
+      baseAttack,
+      basicAttack,
+    }
+  }
+
+  // Support emits a SECOND component. Its amps are a different set from the
+  // support-score amps -- the orb contributes a heal amp here rather than the
+  // damage amp it contributes above.
+  const vitality =
+    gearVitalityTotal(gear, loadout.itemLevel, loadout.armourGroup) + VITALITY_FLAT
+  const factor = SUPPORT_VITALITY_FACTOR[loadout.supportClass] ?? 2
+  const maxHp =
+    (vitality * factor + loadout.karmaEvolutionStage * KARMA_EVOLUTION_HP) *
+    (1 + HP_FIXED_AMP)
+
+  const orb = loadout.orbId ? coeffs.orb_values[loadout.orbId] : undefined
+  const healAmps: AmpRow[] = [{ name: '乐园宝珠', value: orb?.heal_amp ?? 0 }]
+
+  const heal: ScoreComponent = {
+    key: 'heal',
+    label: '恢复战斗力',
+    base: maxHp * coeffs.heal_rate,
+    amps: healAmps,
+    score: 0,
+  }
+  heal.score = round(heal.base * productAmp(healAmps), 2)
 
   return {
-    components: [component],
-    total: component.score,
+    components: [primary, heal],
+    // Each half is rounded BEFORE summing; rounding the total instead gives a
+    // different answer.
+    total: round(primary.score + heal.score, 2),
     mainStat,
     weaponAttack,
     baseAttack,
     basicAttack,
+    maxHp,
   }
 }
