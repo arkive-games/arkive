@@ -992,7 +992,24 @@ Still undecoded — 11–28 and 31–34. Their shapes, profiled 2026-08-03, as a
 | 25 | 20 | both | 162..165 | 5..20 | 10..630 | — |
 | 27 | 154 | both | 1001..1058 | 1..6 | 50..2100 | id × grade |
 | 31 | 720 | both | 2001..2013 | 1..120 | 3..1500 | id × level, large |
-| 33/34 | 14 | split | 657800001… | 12..130 | 480..1000 | keyed by item id |
+| 33/34 | 14 | split | **id is in ValueA** 657800001… | 12..130 | 480..1000 | **Paradise Orb** |
 
-The ones with an id-shaped `ValueB` (17, 20, 23, 33, 34) can be attributed by joining that id
-against `EFTable_Item`; that join is the fastest route to naming the rest.
+**Attributions found 2026-08-03** by scanning every table for the distinctive ids as
+`PrimaryKey` (the `EFTable_Item` join does *not* work — these are not item ids):
+
+- **Type 33/34 → `EFTable_TrinityOrbItem`, 10/10 ids resolve.** This is 乐园宝珠, the Paradise
+  Orb system. The table carries `TrinityOrbBaseForce` and `TrinityOrbBasePower`, which line up
+  with the fan site's 宝具力 input and its `base + perMillion × (power / 1e6)` model. Note the id
+  sits in `ValueA` here, not `ValueB`.
+- **Type 17 → `EFTable_CombatEffect`** (unique hit, 11,055 rows). Rows carry a
+  `tip.desc.combateffect_<id>` GameMsg key, `Ratio`, and `Action*` columns. This is the same
+  table `ArkGridCoreOption` descriptions reference through `<$TABLE_COMBATEFFECT …/>`, so
+  resolving it also unblocks those templated strings.
+- **Type 20 → `CombatEffect` or `SkillBuff`** (2 candidates); `CombatEffect` is the likely one
+  given Type 17.
+- **Type 23 → `GameAction` / `ItemDisassembly` / `ItemEvolutionOption` / `SceneReplay`**
+  (4 candidates); `ItemEvolutionOption` is the plausible one for combat power.
+
+Types 27 and 31 use small ids (1001, 2001) that collide across dozens of tables, so id-scanning
+cannot attribute them — decode those by row shape or by matching their values against a known
+system's numbers instead.
