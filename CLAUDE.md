@@ -135,9 +135,14 @@ plain SQLite databases** at `D:\lostark-extracted\EFGame\...\ClientData\TableDat
 Combat power lives in `EFTable_BattlePoint` (16,707 rows): `PrimaryKey` 1 = damage dealer,
 2 = support; `Type` selects the coefficient. Decoded so far: 1 = base rate, 2 = heal rate,
 3 = per-combat-level amp (55–70), 4 = per-weapon-quality amp (0–100, DPS only),
-5/6/7/9 = evolution/enlightenment/leap/leap-karma, 8 = karma stage step, 29 = per-Ark-core
-values. Rates are scaled integers — **the divisor varies by Type** (1e6 for Type 1, 1e4 for the
-rest). Still undecoded: 11–28, 30–34.
+5/6/7/9 = evolution/enlightenment/leap/leap-karma, 8 = karma stage step, 22 = gem tier×level,
+29 = per-Ark-core values, 31 = gem-option group×level, 33/34 = paradise orb. Rates are scaled
+integers — **the divisor varies by Type** (1e6 for Type 1, 1e4 for the rest). Still undecoded:
+11–21, 23–28, 30.
+
+Two traps in the decoded ones. Type 29's `ValueB` is an **option index 1–6**, not a point total —
+`ArkGridCore.ReqOptionPoint1..6` maps it to the 10/14/17/18/19/20 the UI shows. Types 33 and 34
+are **not symmetric**: 33 puts the amp in `ValueC`, 34 in `ValueB`.
 
 **The fan site's formulas are fits, not the real tables.** Three cases found so far: it pins
 combat level at 70 and calls it a constant (the game tables 55–70); it fits

@@ -976,7 +976,12 @@ Decoded but not a coefficient — 10 is a per-item-group honing table (`ValueA` 
 `ValueB` = step, `ValueC` = value), **not** item levels. Do not repeat that dead end.
 30 is four support-only Ark-core ids (673122003–673122006), all present in `ArkGridCore`.
 
-Still undecoded — 11–28 and 31–34. Their shapes, profiled 2026-08-03, as a starting point:
+Also decoded and extracted since — 22 (gem tier×level; tier 4 levels 6-10 reproduce the fan
+site's dpsGemData exactly, and the game adds tier 3 and levels 1-5), 31 (gem options, joining
+720/720 against `ArkGridGemOption` and split 360/360 between roles), 33/34 (paradise orb via
+`TrinityOrbItem`; asymmetric — 33 stores the amp in `ValueC`, 34 in `ValueB`).
+
+Still undecoded — 11-21, 23-28, 30. Their shapes, profiled 2026-08-03, as a starting point:
 
 | Type | rows | roles | ValueA | ValueB | ValueC | likely |
 | --- | --- | --- | --- | --- | --- | --- |
