@@ -1,0 +1,35 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: oklch(0.16 0.02 265);
+  --color-panel: oklch(0.21 0.02 265);
+  --color-line: oklch(0.31 0.02 265);
+  --color-ink: oklch(0.93 0.01 265);
+  --color-muted: oklch(0.66 0.02 265);
+  --color-accent: oklch(0.78 0.14 82);
+}
+
+html {
+  font-size: 17px;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--color-ink);
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(58% 50% at 50% 0%, oklch(0.3 0.06 82 / 0.28), transparent 70%),
+    radial-gradient(40% 40% at 100% 100%, oklch(0.3 0.05 265 / 0.3), transparent 72%);
+  background-attachment: fixed;
+}
+
+/* Number inputs: hide the spinner so the dense grids stay readable. */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  appearance: textfield;
+}
