@@ -135,19 +135,27 @@ plain SQLite databases** at `D:\lostark-extracted\EFGame\...\ClientData\TableDat
 Combat power lives in `EFTable_BattlePoint` (16,707 rows): `PrimaryKey` 1 = damage dealer,
 2 = support; `Type` selects the coefficient. Decoded so far: 1 = base rate, 2 = heal rate,
 3 = per-combat-level amp (55–70), 4 = per-weapon-quality amp (0–100, DPS only),
-5/6/7/9 = evolution/enlightenment/leap/leap-karma, 8 = karma stage step, 22 = gem tier×level,
-29 = per-Ark-core values, 31 = gem-option group×level, 33/34 = paradise orb. Rates are scaled
-integers — **the divisor varies by Type** (1e6 for Type 1, 1e4 for the rest). Still undecoded:
-11–21, 23–28, 30.
+5/6/7/9 = evolution/enlightenment/leap/leap-karma, 8 = karma stage step, 17 = accessory affix
+lines, 22 = gem tier×level, 23 = chosen weapon, 27 = card sets, 28 = pet ranch, 29 = per-Ark-core
+values, 31 = gem-option group×level, 33/34 = paradise orb. Rates are scaled integers — **the
+divisor varies by Type** (1e6 for Type 1, 1e4 for the rest). Still undecoded: 11–16, 19–21,
+24–26, 30 (engravings, bracelet, transcendence, avatars and roster bonuses live among them).
+
+**The method that works** is matching a system's distinctive *value set* against the table — e.g.
+`{700, 1100, 1500}` for cards. Matching single values, or id columns against other tables'
+PrimaryKeys, both produce false positives; see the plan for the write-ups.
 
 Two traps in the decoded ones. Type 29's `ValueB` is an **option index 1–6**, not a point total —
 `ArkGridCore.ReqOptionPoint1..6` maps it to the 10/14/17/18/19/20 the UI shows. Types 33 and 34
 are **not symmetric**: 33 puts the amp in `ValueC`, 34 in `ValueB`.
 
-**The fan site's formulas are fits, not the real tables.** Three cases found so far: it pins
+**The fan site's formulas are fits, not the real tables.** Six divergences found so far: it pins
 combat level at 70 and calls it a constant (the game tables 55–70); it fits
 `(10 + 0.002·q²)/100` to the weapon-quality table, agreeing at only 21 of 101 values and
-deviating up to 0.0599%; and it self-documents its Esther weapon values as estimates. Prefer the
+deviating up to 0.0599%; it self-documents its Esther weapon values as estimates (absent from the
+client, so genuinely unreleased); it grants the 0.013 orb heal amp to one orb where the game
+grants it to four; it mistranscribes the middle pet-ranch tier as 0.00539 rather than 0.0054; and
+it models cards as one global table when the game gives each of 38 sets its own curve. Prefer the
 table every time.
 
 Gear stats are `EFTable_ItemLevelOption` keyed by

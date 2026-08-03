@@ -1041,6 +1041,35 @@ not an id). So engraving combat power is **not** stored per-engraving in BattleP
 flows through `EFTable_CombatEffect` (which Type 17 is keyed by) rather than a direct table, so
 that is where the next attempt should start.
 
-What would actually work: pick one system, set it to a known state in-game or on the fan site,
-and match the resulting delta against candidate rows. Structural inference alone has been
-exhausted.
+### What did work (2026-08-03)
+
+Matching a system's distinctive **value set** rather than single values. A signature like
+`{700, 1100, 1500}` (the fan site's card amps ×1e⁴) is specific enough to identify a Type where
+any one of those numbers alone is not. This cracked four more systems in one pass:
+
+- **Type 27 → card sets.** 38 sets, each with its own curve over awakening stages 1-6. Six
+  damage-dealer sets hit the fan site's 0.07/0.11/0.15, presumably where it got them, but sets
+  genuinely differ — modelling cards as one global table is wrong.
+- **Type 28 → pet ranch.** 0.0031 / 0.0054 / 0.0077. The fan site has 0.00539 for the middle
+  tier: a mistranscription.
+- **Type 23 → chosen (神选) weapon.** Top grade 0.019, matching `chosenWeaponAmp`. The fan
+  site's higher 艾拉3 values are absent from the client, matching its own note that they are
+  estimates for unreleased content.
+- **Type 17 → accessory affix lines** (found earlier via `CombatEffect`).
+
+### Still open, with leads
+
+| Type | Shape | Hypothesis (UNVERIFIED — do not ship) |
+| --- | --- | --- |
+| 12 | A=100-108, B=1-2, C=0.02-0.12 | two-stage set effect; elixir or transcendence |
+| 25 | A=162-165 (4 groups), B=5/10/15/20, C varies | transcendence — B looks like its milestones |
+| 21 | support only, B=11181-11184, C=0.049→0.028 | four descending grades |
+| 15/19 | B = stat ids (49, 50, 74, 76, 124), C=0.3-1.0 | stat→attack conversion weights |
+| 11/13/14 | large id spaces | — |
+| 16/24/26/30 | 2-5 rows each | — |
+
+Avatar (时装) was **not** found: no Type carries `{0.005, 0.01, 0.02}` at any plausible scaling.
+Engravings are likewise absent as a keyed system (see the negative result above).
+
+For these, structural inference is exhausted. The next step is empirical: set one system to a
+known state in-game, read the combat power delta, and match it against candidate rows.
