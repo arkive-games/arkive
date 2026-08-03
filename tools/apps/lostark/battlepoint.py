@@ -44,6 +44,19 @@ _TYPE_KARMA_STAGE_STEP = 8
 # ValueA = ArkGridCore id, ValueB = activated points, ValueC = amp x 1e-4.
 _TYPE_ARK_CORE = 29
 
+# ValueA = ArkGridGemOption group id, ValueB = option level, ValueC = amp x 1e-4.
+# Joins 720/720 against EFTable_ArkGridGemOption (PrimaryKey, SecondaryKey).
+_TYPE_GEM_OPTION = 31
+
+# Paradise orb (TrinityOrbItem). The two roles use different columns:
+#   Type 33 (dps)     ValueA = orb id, ValueB = points, ValueC = amp x 1e-4
+#   Type 34 (support) ValueA = orb id, ValueB = heal amp x 1e-4, ValueC unused
+# The support value is a flat 130 -> 0.013, matching the fan site's hardcoded
+# heal amp -- but the game grants it to four orb ids, not the single one the fan
+# site special-cases.
+_TYPE_ORB_DPS = 33
+_TYPE_ORB_SUPPORT = 34
+
 _RATE_DIVISOR = 10_000
 
 
@@ -53,6 +66,8 @@ def extract(tables: Tables) -> dict[str, dict]:
     levels: dict[str, dict[str, float]] = defaultdict(dict)
     quality: dict[str, dict[str, float]] = defaultdict(dict)
     cores: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
+    gem_options: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
+    orbs: dict[str, dict[str, dict[str, float]]] = defaultdict(dict)
 
     for row in tables.read("BattlePoint"):
         role = _ROLE_BY_PRIMARY_KEY.get(row["PrimaryKey"])
@@ -72,6 +87,16 @@ def extract(tables: Tables) -> dict[str, dict]:
         elif kind == _TYPE_ARK_CORE:
             core = str(row["ValueA"])
             cores[role][core][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
+        elif kind == _TYPE_GEM_OPTION:
+            group = str(row["ValueA"])
+            gem_options[role][group][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
+        elif kind == _TYPE_ORB_DPS:
+            orbs[role][str(row["ValueA"])] = {
+                "points": row["ValueB"],
+                "amp": row["ValueC"] / _RATE_DIVISOR,
+            }
+        elif kind == _TYPE_ORB_SUPPORT:
+            orbs[role][str(row["ValueA"])] = {"heal_amp": row["ValueB"] / _RATE_DIVISOR}
 
     for role in (DPS, SUPPORT):
         out[role]["combat_level_amp"] = dict(
@@ -86,4 +111,9 @@ def extract(tables: Tables) -> dict[str, dict]:
             core: dict(sorted(points.items(), key=lambda kv: int(kv[0])))
             for core, points in sorted(cores[role].items(), key=lambda kv: int(kv[0]))
         }
+        out[role]["gem_option_values"] = {
+            group: dict(sorted(levels_.items(), key=lambda kv: int(kv[0])))
+            for group, levels_ in sorted(gem_options[role].items(), key=lambda kv: int(kv[0]))
+        }
+        out[role]["orb_values"] = dict(sorted(orbs[role].items(), key=lambda kv: int(kv[0])))
     return out

@@ -90,3 +90,44 @@ def test_weapon_quality_is_a_table_and_dps_only(coeffs):
 def test_karma_stage_step(coeffs):
     for role in (DPS, SUPPORT):
         assert coeffs[role]["karma_stage_step"] == pytest.approx(0.006), role
+
+
+def test_gem_option_values_join_the_gem_option_table(coeffs):
+    """Type 31 keys (group, level) cover EFTable_ArkGridGemOption exactly.
+
+    The 720 option rows are split between the roles rather than duplicated:
+    360 damage-dealer option groups and 360 support ones, disjoint.
+    """
+    from lostark.db import Tables
+
+    def pairs_for(role):
+        return {
+            (int(g), int(lv))
+            for g, levels in coeffs[role]["gem_option_values"].items()
+            for lv in levels
+        }
+
+    dps, support = pairs_for(DPS), pairs_for(SUPPORT)
+    assert len(dps) == 360
+    assert len(support) == 360
+    assert dps.isdisjoint(support)
+
+    with Tables(TABLES).connect("ArkGridGemOption") as con:
+        options = {
+            (r[0], r[1])
+            for r in con.execute("SELECT PrimaryKey, SecondaryKey FROM ArkGridGemOption")
+        }
+    assert dps | support == options
+
+
+def test_orb_values_split_by_role(coeffs):
+    """Type 33 puts the amp in ValueC; Type 34 puts it in ValueB. Not symmetric."""
+    dps = coeffs[DPS]["orb_values"]
+    support = coeffs[SUPPORT]["orb_values"]
+    assert len(dps) == 10
+    assert dps["657820001"]["amp"] == pytest.approx(0.1)
+    assert "heal_amp" not in dps["657820001"]
+
+    # The fan site hardcodes 0.013 for one orb type; the game grants it to four.
+    assert len(support) == 4
+    assert all(v["heal_amp"] == pytest.approx(0.013) for v in support.values())
