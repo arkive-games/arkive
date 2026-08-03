@@ -75,6 +75,8 @@ export interface Loadout {
   accessoryLines: string[]
   /** Equipped gems: tier and level per slot. Up to 11 in game. */
   gems: GemSlot[]
+  /** Bracelet line ids (fan-site sourced); '' for an empty slot. */
+  braceletLines: string[]
   /** Five engraving slots. */
   engravings: EngravingSlot[]
   /** Avatar tiers for head / top / bottom / weapon. */

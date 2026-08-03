@@ -15,6 +15,8 @@ import {
   COMBAT_STAT,
   STONE_BASIC,
   avatarAmp,
+  dpsBraceletLines,
+  supportBraceletLines,
   dpsEngravingBase,
   dpsEngravingBooks,
   dpsEngravingStones,
@@ -103,6 +105,18 @@ export function stoneBasic(engravings: { name: string; stone: number }[]): numbe
     .filter((e) => e.name)
     .reduce((sum, e) => sum + e.stone, 0)
   return total >= STONE_BASIC.threshold ? STONE_BASIC.amp : 0
+}
+
+/**
+ * Bracelet line amp. Fan-site sourced.
+ *
+ * Lines compound rather than sum, matching the reference's productAmp(...) - 1.
+ */
+export function braceletAmp(ids: string[], role: 'dps' | 'support'): number {
+  const table: { id: string; value: number }[] =
+    role === 'support' ? supportBraceletLines : dpsBraceletLines
+  const byId = new Map(table.map((l) => [l.id, l.value]))
+  return ids.reduce((acc, id) => acc * (1 + (id ? (byId.get(id) ?? 0) : 0)), 1) - 1
 }
 
 export function totalAvatarAmp(avatars: string[]): number {
@@ -245,6 +259,11 @@ export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] 
       name: `方舟核心 ${index + 1}`,
       value: byOption?.[String(core.optionIndex)] ?? 0,
     })
+  })
+
+  rows.push({
+    name: '手镯',
+    value: braceletAmp(loadout.braceletLines, loadout.role),
   })
 
   // Engravings compound, like gems and affix lines.

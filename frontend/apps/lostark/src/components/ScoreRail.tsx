@@ -35,7 +35,7 @@ export function ScoreRail({ result }: { result: Result }) {
         <span className="font-medium text-ink">系数来源。</span>
         装备、战斗等级、武器品质、方舟被动与业力、星阵核心、首饰词条、宝石、卡牌、牧场特技、
         神选武器、乐园宝珠取自游戏客户端数据表；刻印、时装、远征队与辅助生命值常数取自参考站，
-        游戏数据表中未能定位。手镯尚未纳入。
+        游戏数据表中未能定位。
       </p>
 
       <div className="rounded-xl border border-line bg-panel/70 px-4 py-3 backdrop-blur">

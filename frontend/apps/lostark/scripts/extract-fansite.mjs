@@ -70,6 +70,40 @@ for (const name of NAMES) {
   parts.push(`export const ${name} = ${JSON.stringify(value, null, 2)};`, '')
 }
 
+// Bracelet lines live inside the defaults object rather than a named const.
+const BACKSLASH = String.fromCharCode(92)
+function extractBraceletLines(role) {
+  const anchor = role === 'dps' ? 'const dpsDefaults = {' : 'const supportDefaults = {'
+  const start = source.indexOf(anchor)
+  const key = source.indexOf('braceletLines: [', start)
+  let i = source.indexOf('[', key)
+  let depth = 0, inStr = null, out = ''
+  for (; i < source.length; i++) {
+    const ch = source[i]
+    out += ch
+    if (inStr) { if (ch === inStr && source[i - 1] !== BACKSLASH) inStr = null; continue }
+    if (ch === '"' || ch === "'" || ch === '`') { inStr = ch; continue }
+    if (ch === '[') depth++
+    else if (ch === ']') { depth--; if (depth === 0) break }
+  }
+  return new Function(`return (${out});`)()
+}
+
+for (const role of ['dps', 'support']) {
+  // The two roles store different fields: dps uses `value`, support uses
+  // `support` (plus `heal` and `flatAttack`). Normalise to one shape so the
+  // engine does not need to branch on it.
+  const lines = extractBraceletLines(role).map((l, i) => ({
+    id: `${role}-${i}`,
+    side: l.side ?? '',
+    text: l.text,
+    value: role === 'support' ? (l.support ?? 0) : (l.value ?? 0),
+    heal: l.heal ?? 0,
+    flatAttack: l.flatAttack ?? 0,
+  }))
+  parts.push(`export const ${role}BraceletLines = ${JSON.stringify(lines, null, 2)};`, '')
+}
+
 // Small helpers the fan site expresses as functions rather than tables.
 parts.push(`/** Avatar (时装) tier -> amp. Fan-site avatarAmp(). */
 export const avatarAmp: Record<string, number> = {

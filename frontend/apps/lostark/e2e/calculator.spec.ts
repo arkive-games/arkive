@@ -205,3 +205,16 @@ test('roster stats feed the combat-stat amp', async ({ page }) => {
   // (2160 + 1000) * 0.0003 = 0.948 -> 94.8%
   await expect(page.locator('aside').getByText('94.8%')).toBeVisible()
 })
+
+test('bracelet lines compound', async ({ page }) => {
+  await ready(page)
+  const rail = page.locator('aside')
+
+  await page.getByLabel('手镯词条 1').selectOption({ index: 1 })
+  await expect(rail.getByText('手镯')).toBeVisible()
+  const one = await rail.locator('li').filter({ hasText: '手镯' }).innerText()
+
+  await page.getByLabel('手镯词条 2').selectOption({ index: 1 })
+  const two = await rail.locator('li').filter({ hasText: '手镯' }).innerText()
+  expect(two).not.toBe(one)
+})

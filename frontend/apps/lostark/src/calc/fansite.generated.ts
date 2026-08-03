@@ -886,6 +886,732 @@ export const supportLineEffects = {
   }
 };
 
+export const dpsBraceletLines = [
+  {
+    "id": "dps-0",
+    "side": "左",
+    "text": "暴击率增加3.4%。攻击触发暴击时，对敌人造成的伤害增加1.5%。",
+    "value": 0.035,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-1",
+    "side": "左",
+    "text": "暴击率增加4.2%。攻击触发暴击时，对敌人造成的伤害增加1.5%。",
+    "value": 0.04,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-2",
+    "side": "左",
+    "text": "暴击率增加5.0%。攻击触发暴击时，对敌人造成的伤害增加1.5%。",
+    "value": 0.045,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-3",
+    "side": "左",
+    "text": "暴击伤害增加6.8%。攻击触发暴击时,对敌人造成的伤害增加1.5%。",
+    "value": 0.035,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-4",
+    "side": "左",
+    "text": "暴击伤害增加8.4%。攻击触发暴击时,对敌人造成的伤害增加1.5%。",
+    "value": 0.04,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-5",
+    "side": "左",
+    "text": "暴击伤害增加10%。攻击触发暴击时,对敌人造成的伤害增加1.5%。",
+    "value": 0.045,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-6",
+    "side": "左",
+    "text": "额外伤害增加2.5%。恶魔与大恶魔系伤害量增加2.5%。",
+    "value": 0.035,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-7",
+    "side": "左",
+    "text": "额外伤害增加3.0%。恶魔与大恶魔系伤害量增加2.5%。",
+    "value": 0.04,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-8",
+    "side": "左",
+    "text": "额外伤害增加3.5%。恶魔与大恶魔系伤害量增加2.5%。",
+    "value": 0.045,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-9",
+    "side": "左",
+    "text": "技能的冷却时间增加2%，但对敌人造成的伤害增加4.5%。",
+    "value": 0.035,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-10",
+    "side": "左",
+    "text": "技能的冷却时间增加2%，但对敌人造成的伤害增加5.0%。",
+    "value": 0.04,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-11",
+    "side": "左",
+    "text": "技能的冷却时间增加2%，但对敌人造成的伤害增加5.5%。",
+    "value": 0.045,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-12",
+    "side": "左",
+    "text": "对敌人造成的伤害增加2%,对处于瘫痪状态的敌人造成的伤害增加4%。",
+    "value": 0.028,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-13",
+    "side": "左",
+    "text": "对敌人造成的伤害增加2.5%,对处于瘫痪状态的敌人造成的伤害增加4.5%。",
+    "value": 0.034,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-14",
+    "side": "左",
+    "text": "对敌人造成的伤害增加3%,对处于瘫痪状态的乱人造成的伤害增加5%。",
+    "value": 0.04,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-15",
+    "side": "左",
+    "text": "攻击命中时，10秒内每秒武器攻击力增加1160，攻击与移动速度提升1%。(最多6叠加)",
+    "value": 0.0188,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-16",
+    "side": "左",
+    "text": "攻击命中时，10秒内每秒武器攻击力增加1320，攻击与移动速度提升1%。(最多6叠加)",
+    "value": 0.0214,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-17",
+    "side": "左",
+    "text": "攻击命中时，10秒内每秒武器攻击力增加1480，攻击与移动速度提升1%。(最多6叠加)",
+    "value": 0.024,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-18",
+    "side": "左",
+    "text": "武器攻击力增加7200。自身生命值高于50%的情况下，攻击命中敌人时在5秒内武器攻击力增加2000。",
+    "value": 0.0054,
+    "heal": 0,
+    "flatAttack": 7200
+  },
+  {
+    "id": "dps-19",
+    "side": "左",
+    "text": "武器攻击力增加8100。自身生命值高于50%的情况下，攻击命中敌人时在5秒内武器攻击力增加2200。",
+    "value": 0.0059,
+    "heal": 0,
+    "flatAttack": 8100
+  },
+  {
+    "id": "dps-20",
+    "side": "左",
+    "text": "武器攻击力增加9000。自身生命值高于50%的情况下，攻击命中敌人时在5秒内武器攻击力增加2400。",
+    "value": 0.0065,
+    "heal": 0,
+    "flatAttack": 9000
+  },
+  {
+    "id": "dps-21",
+    "side": "左",
+    "text": "武器攻击力增加6900。攻击命中时，在120秒内每30秒武器攻击力增加130。（最多30叠加)",
+    "value": 0.0105,
+    "heal": 0,
+    "flatAttack": 6900
+  },
+  {
+    "id": "dps-22",
+    "side": "左",
+    "text": "武器攻击力增加7800。攻击命中时，在120秒内每30秒武器攻击力增加140。（最多30叠加)",
+    "value": 0.0113,
+    "heal": 0,
+    "flatAttack": 7800
+  },
+  {
+    "id": "dps-23",
+    "side": "左",
+    "text": "武器攻击力增加8700。攻击命中时，在120秒内每30秒武器攻击力增加150。（最多30叠加)",
+    "value": 0.0121,
+    "heal": 0,
+    "flatAttack": 8700
+  },
+  {
+    "id": "dps-24",
+    "side": "左",
+    "text": "武器攻击力+7200",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 7200
+  },
+  {
+    "id": "dps-25",
+    "side": "左",
+    "text": "武器攻击力+8100",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 8100
+  },
+  {
+    "id": "dps-26",
+    "side": "左",
+    "text": "武器攻击力+9000",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 9000
+  },
+  {
+    "id": "dps-27",
+    "side": "右",
+    "text": "对敌人造成的伤害增加2.0%。",
+    "value": 0.02,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-28",
+    "side": "右",
+    "text": "对敌人造成的伤害增加2.5%。",
+    "value": 0.025,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-29",
+    "side": "右",
+    "text": "对敌人造成的伤害增加3.0%。",
+    "value": 0.03,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-30",
+    "side": "右",
+    "text": "额外伤害 +3.00%",
+    "value": 0.023076,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-31",
+    "side": "右",
+    "text": "额外伤害 +3.50%",
+    "value": 0.026922,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-32",
+    "side": "右",
+    "text": "额外伤害 +4.00%",
+    "value": 0.030768,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-33",
+    "side": "右",
+    "text": "头部/背后攻击技能对敌人造成的伤害增加2.5%。",
+    "value": 0.0175,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-34",
+    "side": "右",
+    "text": "头部/背后攻击技能对敌人造成的伤害增加3%。",
+    "value": 0.021,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-35",
+    "side": "右",
+    "text": "头部/背后攻击技能对敌人造成的伤害增加3.5%。",
+    "value": 0.0245,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-36",
+    "side": "右",
+    "text": "非头背型攻击技能对敌人造成的伤害增加2.5%。不适用于觉醒技能。",
+    "value": 0.025,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-37",
+    "side": "右",
+    "text": "非头背型攻击技能对敌人造成的伤害增加3%。不适用于觉醒技能。",
+    "value": 0.03,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-38",
+    "side": "右",
+    "text": "非头背型攻击技能对敌人造成的伤害增加3.5%。不适用于觉醒技能。",
+    "value": 0.035,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-39",
+    "side": "右",
+    "text": "暴击率 +3.40%",
+    "value": 0.0238,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-40",
+    "side": "右",
+    "text": "暴击率 +4.20%",
+    "value": 0.0294,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-41",
+    "side": "右",
+    "text": "暴击率 +5.00%",
+    "value": 0.035,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-42",
+    "side": "右",
+    "text": "暴击伤害 +6.80%",
+    "value": 0.0226644,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-43",
+    "side": "右",
+    "text": "暴击伤害 +8.40%",
+    "value": 0.0279972,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-44",
+    "side": "右",
+    "text": "暴击伤害 +10.00%",
+    "value": 0.03333,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-45",
+    "side": "右",
+    "text": "命中时，目标暴击抗性-1.8%。我军攻击力强化效果+2%",
+    "value": 0.0126,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-46",
+    "side": "右",
+    "text": "命中时，目标暴击抗性-2.1%。我军攻击力强化效果+2.5%",
+    "value": 0.0147,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-47",
+    "side": "右",
+    "text": "命中时，目标暴击抗性-2.5%。我军攻击力强化效果+2.5%",
+    "value": 0.0175,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-48",
+    "side": "右",
+    "text": "命中时，目标暴击伤害抗性减少3.6%。我军攻击力强化效果+2%",
+    "value": 0.0126,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-49",
+    "side": "右",
+    "text": "命中时，目标暴击伤害抗性减少4.2%。我军攻击力强化效果+2.5%",
+    "value": 0.0147,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-50",
+    "side": "右",
+    "text": "命中时，目标暴击伤害抗性减少4.8%。我军攻击力强化效果+3%",
+    "value": 0.0175,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-51",
+    "side": "右",
+    "text": "命中时，目标防御力-1.8%。我军攻击力强化效果+2%",
+    "value": 0.0126,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-52",
+    "side": "右",
+    "text": "命中时，目标防御力-2.1%。我军攻击力强化效果+2.5%",
+    "value": 0.0147,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "dps-53",
+    "side": "右",
+    "text": "命中时，目标防御力-2.5%。我军攻击力强化效果+3.0%",
+    "value": 0.0175,
+    "heal": 0,
+    "flatAttack": 0
+  }
+];
+
+export const supportBraceletLines = [
+  {
+    "id": "support-0",
+    "side": "",
+    "text": "攻击命中时，10秒内每秒武器攻击力增加1160，攻击与移动速度提升1%。(最多6叠加)",
+    "value": 0.0188,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-1",
+    "side": "",
+    "text": "攻击命中时，10秒内每秒武器攻击力增加1320，攻击与移动速度提升1%。(最多6叠加)",
+    "value": 0.0214,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-2",
+    "side": "",
+    "text": "攻击命中时，10秒内每秒武器攻击力增加1480，攻击与移动速度提升1%。(最多6叠加)",
+    "value": 0.024,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-3",
+    "side": "",
+    "text": "武器攻击力增加7200。自身生命值高于50%的情况下，攻击命中敌人时在5秒内武器攻击力增加2000。",
+    "value": 0.0054,
+    "heal": 0,
+    "flatAttack": 7200
+  },
+  {
+    "id": "support-4",
+    "side": "",
+    "text": "武器攻击力增加8100。自身生命值高于50%的情况下，攻击命中敌人时在5秒内武器攻击力增加2200。",
+    "value": 0.0059,
+    "heal": 0,
+    "flatAttack": 8100
+  },
+  {
+    "id": "support-5",
+    "side": "",
+    "text": "武器攻击力增加9000。自身生命值高于50%的情况下，攻击命中敌人时在5秒内武器攻击力增加2400。",
+    "value": 0.0065,
+    "heal": 0,
+    "flatAttack": 9000
+  },
+  {
+    "id": "support-6",
+    "side": "",
+    "text": "武器攻击力增加6900。攻击命中时，在120秒内每30秒武器攻击力增加130。（最多30叠加)",
+    "value": 0.0105,
+    "heal": 0,
+    "flatAttack": 6900
+  },
+  {
+    "id": "support-7",
+    "side": "",
+    "text": "武器攻击力增加7800。攻击命中时，在120秒内每30秒武器攻击力增加140。（最多30叠加)",
+    "value": 0.0113,
+    "heal": 0,
+    "flatAttack": 7800
+  },
+  {
+    "id": "support-8",
+    "side": "",
+    "text": "武器攻击力增加8700。攻击命中时，在120秒内每30秒武器攻击力增加150。（最多30叠加)",
+    "value": 0.0121,
+    "heal": 0,
+    "flatAttack": 8700
+  },
+  {
+    "id": "support-9",
+    "side": "",
+    "text": "我军攻击力强化效果+4%",
+    "value": 0.03,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-10",
+    "side": "",
+    "text": "我军攻击力强化效果+5%",
+    "value": 0.0375,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-11",
+    "side": "",
+    "text": "我军攻击力强化效果+6%",
+    "value": 0.045,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-12",
+    "side": "",
+    "text": "我军伤害量强化效果+6%",
+    "value": 0.03,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-13",
+    "side": "",
+    "text": "我军伤害量强化效果+7.5%",
+    "value": 0.0375,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-14",
+    "side": "",
+    "text": "我军伤害量强化效果+9%",
+    "value": 0.045,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-15",
+    "side": "",
+    "text": "命中时，目标防御力-1.8%。我军攻击力强化效果+2%",
+    "value": 0.0906,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-16",
+    "side": "",
+    "text": "命中时，目标防御力-2.1%。我军攻击力强化效果+2.5%",
+    "value": 0.107,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-17",
+    "side": "",
+    "text": "命中时，目标防御力-2.5%。我军攻击力强化效果+3.0%",
+    "value": 0.1275,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-18",
+    "side": "",
+    "text": "命中时，目标暴击抗性-1.8%。我军攻击力强化效果+2%",
+    "value": 0.0906,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-19",
+    "side": "",
+    "text": "命中时，目标暴击抗性-2.1%。我军攻击力强化效果+2.5%",
+    "value": 0.107,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-20",
+    "side": "",
+    "text": "命中时，目标暴击抗性-2.5%。我军攻击力强化效果+2.5%",
+    "value": 0.1275,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-21",
+    "side": "",
+    "text": "命中时，目标暴击伤害抗性减少3.6%。我军攻击力强化效果+2%",
+    "value": 0.0906,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-22",
+    "side": "",
+    "text": "命中时，目标暴击伤害抗性减少4.2%。我军攻击力强化效果+2.5%",
+    "value": 0.107,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-23",
+    "side": "",
+    "text": "命中时，目标暴击伤害抗性减少4.8%。我军攻击力强化效果+3%",
+    "value": 0.1275,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-24",
+    "side": "",
+    "text": "获得保护型组队效果的对象在5秒内伤害提升0.9%，攻击力强化效果提升2%",
+    "value": 0.0906,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-25",
+    "side": "",
+    "text": "获得保护型组队效果的对象在5秒内伤害提升1.1%，攻击力强化效果提升2.5%",
+    "value": 0.107,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-26",
+    "side": "",
+    "text": "获得保护型组队效果的对象在5秒内伤害提升1.3%，攻击力强化效果提升3%",
+    "value": 0.1275,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-27",
+    "side": "",
+    "text": "队友保护及恢复效果增加2.5%",
+    "value": 0,
+    "heal": 0.017,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-28",
+    "side": "",
+    "text": "队友保护及恢复效果增加3.0%",
+    "value": 0,
+    "heal": 0.021,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-29",
+    "side": "",
+    "text": "队友保护及恢复效果增加3.5%",
+    "value": 0,
+    "heal": 0.0245,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-30",
+    "side": "",
+    "text": "最大生命值 +11200",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-31",
+    "side": "",
+    "text": "最大生命值 +14000",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-32",
+    "side": "",
+    "text": "最大生命值 +16800",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 0
+  },
+  {
+    "id": "support-33",
+    "side": "",
+    "text": "武器攻击力+7200",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 7200
+  },
+  {
+    "id": "support-34",
+    "side": "",
+    "text": "武器攻击力+8100",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 8100
+  },
+  {
+    "id": "support-35",
+    "side": "",
+    "text": "武器攻击力+9000",
+    "value": 0,
+    "heal": 0,
+    "flatAttack": 9000
+  }
+];
+
 /** Avatar (时装) tier -> amp. Fan-site avatarAmp(). */
 export const avatarAmp: Record<string, number> = {
   传说: 0.02,

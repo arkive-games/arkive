@@ -2,7 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { armourGroups, evaluate, weaponOptions } from '@/calc/engine'
 import type { Loadout, Role, SupportClass } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
-import { dpsEngravingBase, supportEngravingBase } from '@/calc/fansite.generated'
+import {
+  dpsBraceletLines,
+  dpsEngravingBase,
+  supportBraceletLines,
+  supportEngravingBase,
+} from '@/calc/fansite.generated'
 import {
   STORAGE_KEY,
   defaultLoadout,
@@ -342,6 +347,28 @@ export default function App() {
                   </select>
                 </div>
               </Field>
+            ))}
+          </Section>
+
+          <Section title="手镯">
+            <p className="text-xs text-muted">系数来自参考站，非游戏数据表。</p>
+            {loadout.braceletLines.map((id, i) => (
+              <SelectField
+                key={i}
+                label={`手镯词条 ${i + 1}`}
+                value={id}
+                onChange={(v) => {
+                  const list = [...loadout.braceletLines]
+                  list[i] = v
+                  set('braceletLines', list)
+                }}
+                options={[
+                  { value: '', label: '无' },
+                  ...(loadout.role === 'support' ? supportBraceletLines : dpsBraceletLines).map(
+                    (l) => ({ value: l.id, label: `${l.side} +${(l.value * 100).toFixed(2)}%` }),
+                  ),
+                ]}
+              />
             ))}
           </Section>
 

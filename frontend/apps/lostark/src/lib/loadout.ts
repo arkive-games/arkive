@@ -8,6 +8,8 @@ export const GEM_SLOTS = 11
 export const ACCESSORY_LINES = 15
 /** Five engraving slots. */
 export const ENGRAVING_SLOTS = 5
+/** Three bracelet lines. */
+export const BRACELET_LINES = 3
 
 export function defaultLoadout(): Loadout {
   return {
@@ -25,6 +27,7 @@ export function defaultLoadout(): Loadout {
     cores: Array.from({ length: 6 }, () => ({ id: '', optionIndex: 0 })),
     gems: Array.from({ length: GEM_SLOTS }, () => ({ tier: '', level: 1 })),
     accessoryLines: Array.from({ length: ACCESSORY_LINES }, () => ''),
+    braceletLines: Array.from({ length: BRACELET_LINES }, () => ''),
     engravings: Array.from({ length: ENGRAVING_SLOTS }, () => ({
       name: '', book: 0, stone: 0,
     })),
@@ -124,6 +127,14 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
         return { id, optionIndex: idx }
       })
     }
+  }
+
+  if (raw.braceletLines !== undefined) {
+    const bl = raw.braceletLines
+    if (!Array.isArray(bl)) rejected.push('braceletLines: not an array')
+    else base.braceletLines = base.braceletLines.map((d, i) =>
+      typeof bl[i] === 'string' ? (bl[i] as string) : d,
+    )
   }
 
   if (raw.engravings !== undefined) {
