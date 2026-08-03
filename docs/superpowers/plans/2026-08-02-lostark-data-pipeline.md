@@ -966,7 +966,33 @@ needs them. Each is a new module following the Task 3–6 pattern:
 - **Advanced honing** — `ItemAmplificationBase` (992 rows) / `ItemAmplificationBonus`.
 - **Cards, avatars, karma** — `ArcanaCard`, `AvatarGrade`, and the karma tables.
 
-The mapping from BattlePoint `Type` to system is only decoded for Types 1, 2, 3, 5, 6, 7, 9 and
-29. Types 4, 8, 10–28 and 30–34 remain undecoded; several are likely to cover the systems above,
-so decode them before assuming a value lives elsewhere. Type 10 was checked and is a per-item-group
-honing table (`ValueA` = group id, `ValueB` = step, `ValueC` = value), **not** item levels.
+**BattlePoint Type decoding status** (updated 2026-08-03):
+
+Decoded and extracted — 1 (base rate), 2 (heal rate), 3 (combat level 55–70), 4 (weapon quality
+0–100, DPS only), 5/6/7/9 (evolution / enlightenment / leap / leap-karma), 8 (karma stage step),
+29 (Ark-core values).
+
+Decoded but not a coefficient — 10 is a per-item-group honing table (`ValueA` = group id,
+`ValueB` = step, `ValueC` = value), **not** item levels. Do not repeat that dead end.
+30 is four support-only Ark-core ids (673122003–673122006), all present in `ArkGridCore`.
+
+Still undecoded — 11–28 and 31–34. Their shapes, profiled 2026-08-03, as a starting point:
+
+| Type | rows | roles | ValueA | ValueB | ValueC | likely |
+| --- | --- | --- | --- | --- | --- | --- |
+| 11 | 61 | support | 1301 | 5..93 | 3080..5040 | item-group honing, support |
+| 12 | 23 | both | 100..108 | 1..2 | 200..1400 | small tiered system |
+| 13 | 115 | both | 10100..15005 | 1..5 | 2..450 | id × level → value |
+| 14 | 25 | support | 12002..15008 | 1..5 | 90..588 | as 13, support-side |
+| 15 | 8 | both | 1..3 | 0..124 | 700..10000 | — |
+| 17 | 24 | both | 4..29 | 621000010… | 24..300 | keyed by item id |
+| 20 | 196 | both | 3..4 | 605000001… | 49..1275 | keyed by item id |
+| 22 | 40 | both | 3..4 | 1..10 | 20..1250 | tier × level |
+| 23 | 12 | both | 6..8 | 1100106… | 50..190 | keyed by item id |
+| 25 | 20 | both | 162..165 | 5..20 | 10..630 | — |
+| 27 | 154 | both | 1001..1058 | 1..6 | 50..2100 | id × grade |
+| 31 | 720 | both | 2001..2013 | 1..120 | 3..1500 | id × level, large |
+| 33/34 | 14 | split | 657800001… | 12..130 | 480..1000 | keyed by item id |
+
+The ones with an id-shaped `ValueB` (17, 20, 23, 33, 34) can be attributed by joining that id
+against `EFTable_Item`; that join is the fastest route to naming the rest.

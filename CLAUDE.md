@@ -133,9 +133,19 @@ plain SQLite databases** at `D:\lostark-extracted\EFGame\...\ClientData\TableDat
 `tools/apps/lostark` reads them directly and no fourth extractor is warranted.
 
 Combat power lives in `EFTable_BattlePoint` (16,707 rows): `PrimaryKey` 1 = damage dealer,
-2 = support; `Type` selects the coefficient (1 = base rate, 3 = per-combat-level amp,
-5/6/7/9 = evolution/enlightenment/leap/leap-karma, 29 = per-Ark-core values). Rates are scaled
-integers — divisor varies by Type. Gear stats are `EFTable_ItemLevelOption` keyed by
+2 = support; `Type` selects the coefficient. Decoded so far: 1 = base rate, 2 = heal rate,
+3 = per-combat-level amp (55–70), 4 = per-weapon-quality amp (0–100, DPS only),
+5/6/7/9 = evolution/enlightenment/leap/leap-karma, 8 = karma stage step, 29 = per-Ark-core
+values. Rates are scaled integers — **the divisor varies by Type** (1e6 for Type 1, 1e4 for the
+rest). Still undecoded: 11–28, 30–34.
+
+**The fan site's formulas are fits, not the real tables.** Three cases found so far: it pins
+combat level at 70 and calls it a constant (the game tables 55–70); it fits
+`(10 + 0.002·q²)/100` to the weapon-quality table, agreeing at only 21 of 101 values and
+deviating up to 0.0599%; and it self-documents its Esther weapon values as estimates. Prefer the
+table every time.
+
+Gear stats are `EFTable_ItemLevelOption` keyed by
 `SecondaryKey` = item level, with `Str`/`Agi`/`Int` carrying the same main stat once per class
 stat. Names come from `EFTable_GameMsg` (`GameMsg_Chinese`, `GameMsg_Korean` — **no English**;
 en-US needs an NAEU extraction).
