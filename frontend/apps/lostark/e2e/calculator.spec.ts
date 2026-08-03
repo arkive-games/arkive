@@ -73,8 +73,9 @@ test('support emits two components that are summed', async ({ page }) => {
   await expect(page.locator('aside').getByText('支援战斗力').first()).toBeVisible()
   await expect(page.locator('aside').getByText('恢复战斗力').first()).toBeVisible()
   await expect(page.locator('aside').getByText('最大生命值')).toBeVisible()
-  // Support has no weapon-quality amp in the game data.
-  await expect(page.locator('aside').getByText('武器品质')).toHaveCount(0)
+  // Support has no weapon-quality amp in the game data. Scoped to the amp
+  // list, since the coverage notice also mentions 武器品质 by name.
+  await expect(page.locator('aside li').filter({ hasText: '武器品质' })).toHaveCount(0)
 })
 
 test('the loadout survives a reload', async ({ page }) => {
@@ -128,4 +129,11 @@ test('gems multiply independently', async ({ page }) => {
   await page.getByLabel('宝石 2 等级').selectOption('10')
   // Two gems compound: 1.0704^2 - 1 = 0.14575616 -> 14.58%.
   await expect(rail.getByText('14.58%')).toBeVisible()
+})
+
+test('discloses which systems are not yet covered', async ({ page }) => {
+  await ready(page)
+  // A calculator that silently omits half the systems shows a wrong number;
+  // the omission must be visible next to the score.
+  await expect(page.locator('aside').getByText('部分系统尚未纳入计算')).toBeVisible()
 })

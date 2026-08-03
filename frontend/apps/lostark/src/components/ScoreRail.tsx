@@ -31,6 +31,13 @@ export function ScoreRail({ result }: { result: Result }) {
         )}
       </div>
 
+      <p className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-muted">
+        <span className="font-medium text-ink">部分系统尚未纳入计算。</span>
+        当前已覆盖：装备、战斗等级、武器品质、方舟被动与业力、星阵核心、宝石、乐园宝珠。
+        尚未覆盖：刻印、首饰、手镯、超越、卡牌、时装、远征队与宠物加成。
+        因此这里的数值低于游戏内实际战斗力，仅可用于比较上述系统的相对收益。
+      </p>
+
       <div className="rounded-xl border border-line bg-panel/70 px-4 py-3 backdrop-blur">
         <h2 className="mb-2 text-xs font-medium text-muted">战力构成</h2>
         <dl className="space-y-1 text-xs">

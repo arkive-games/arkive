@@ -1018,3 +1018,29 @@ Still undecoded — 11-21, 23-28, 30. Their shapes, profiled 2026-08-03, as a st
 Types 27 and 31 use small ids (1001, 2001) that collide across dozens of tables, so id-scanning
 cannot attribute them — decode those by row shape or by matching their values against a known
 system's numbers instead.
+
+### Failed approach — do not repeat (2026-08-03)
+
+Two systematic attempts to decode the rest both dead-ended. They are recorded because each
+*looks* like it should work:
+
+1. **Scanning for the fan site's known values** (card 0.15/0.11/0.07, avatar 0.02/0.01/0.005,
+   pet 0.0077, combat-stat 0.0003) inside BattlePoint. The scaled integers are small — 1500, 200,
+   77, 3 — and appear across 10+ Types by coincidence. No signal.
+
+2. **Matching each undecoded Type's id column against every table's `PrimaryKey` set**, accepting
+   ≥95% coverage. This works only for large sparse ids (it correctly found
+   Type 30 → `ArkGridCore` and, earlier, Types 33/34 → `TrinityOrbItem`). For small dense ranges
+   it is worthless: `AchievementChat` has PrimaryKeys 1–4, `AnnounceCategory` 1–203,
+   `BalanceLevelMapping` 1–2000, so *any* small integer set matches them at 100%. It confidently
+   reported "Type 13 → NpcStat" and "Type 12 → AnnounceCategory", which are nonsense.
+
+**A relevant negative result:** no BattlePoint Type is keyed by `EFTable_AbilityEngrave`
+PrimaryKeys (95 ids; the single apparent hit is Type 34's `ValueB=130`, which is the value 0.013,
+not an id). So engraving combat power is **not** stored per-engraving in BattlePoint. It likely
+flows through `EFTable_CombatEffect` (which Type 17 is keyed by) rather than a direct table, so
+that is where the next attempt should start.
+
+What would actually work: pick one system, set it to a known state in-game or on the fan site,
+and match the resulting delta against candidate rows. Structural inference alone has been
+exhausted.
