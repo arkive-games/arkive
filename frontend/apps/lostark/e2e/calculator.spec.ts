@@ -32,8 +32,10 @@ test('computes a score from the game tables at the default loadout', async ({ pa
   await expect(rail.getByText('284,958')).toBeVisible()
   await expect(rail.getByText('100,036')).toBeVisible()
 
-  // Combat level 70 (0.2945) x weapon quality 0 (0.10) = 1.4240.
-  await expect(rail.getByText('×1.4240')).toBeVisible()
+  // Combat level 70 (0.2945) x quality 0 (0.10) x combat stats (2160*0.0003).
+  // The fan site shows exactly this at an empty loadout, which corroborates
+  // the whole chain.
+  await expect(rail.getByText("×2.3467")).toBeVisible()
 })
 
 test('weapon quality is a table lookup, not a fitted curve', async ({ page }) => {
@@ -131,11 +133,12 @@ test('gems multiply independently', async ({ page }) => {
   await expect(rail.getByText('14.58%')).toBeVisible()
 })
 
-test('discloses which systems are not yet covered', async ({ page }) => {
+test('discloses where each coefficient came from', async ({ page }) => {
   await ready(page)
-  // A calculator that silently omits half the systems shows a wrong number;
-  // the omission must be visible next to the score.
-  await expect(page.locator('aside').getByText('部分系统尚未纳入计算')).toBeVisible()
+  // Most systems come from the client tables; a few could not be located there
+  // and use the reference site instead. Which is which must be visible.
+  await expect(page.locator('aside').getByText('系数来源')).toBeVisible()
+  await expect(page.locator('aside').getByText('取自参考站')).toBeVisible()
 })
 
 test('accessory affix lines compound', async ({ page }) => {
@@ -170,4 +173,35 @@ test('pet ranch uses the game tier value', async ({ page }) => {
   // Top tier is 0.0077; the fan site's middle tier (0.00539) is a mistranscription.
   await page.getByLabel('牧场特技').selectOption({ label: '+0.77%' })
   await expect(page.locator('aside').getByText('0.77%')).toBeVisible()
+})
+
+test('engravings compound and grant the stone basic bonus', async ({ page }) => {
+  await ready(page)
+  const rail = page.locator('aside')
+
+  await page.getByLabel('刻印 1', { exact: true }).selectOption('怨恨')
+  // Base 0.18 with no book or stone.
+  await expect(rail.getByText('18%')).toBeVisible()
+
+  // Two engravings compound rather than sum: 1.18 * 1.152 - 1 = 0.35936.
+  await page.getByLabel('刻印 2', { exact: true }).selectOption('肾上腺素')
+  await expect(rail.getByText('35.94%')).toBeVisible()
+})
+
+test('avatars scale main stat', async ({ page }) => {
+  await ready(page)
+  const before = await page.locator('aside').getByText(/^284,958$/).count()
+  expect(before).toBe(1)
+  // 传说 is +2% main stat.
+  await page.getByLabel('头部').selectOption('传说')
+  await expect(page.locator('aside').getByText('290,657')).toBeVisible()
+})
+
+test('roster stats feed the combat-stat amp', async ({ page }) => {
+  await ready(page)
+  // (2160 + 0) * 0.0003 = 0.648 -> 64.8%
+  await expect(page.locator('aside').getByText('64.8%')).toBeVisible()
+  await page.getByLabel('会心').fill('1000')
+  // (2160 + 1000) * 0.0003 = 0.948 -> 94.8%
+  await expect(page.locator('aside').getByText('94.8%')).toBeVisible()
 })

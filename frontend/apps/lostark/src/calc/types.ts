@@ -75,6 +75,12 @@ export interface Loadout {
   accessoryLines: string[]
   /** Equipped gems: tier and level per slot. Up to 11 in game. */
   gems: GemSlot[]
+  /** Five engraving slots. */
+  engravings: EngravingSlot[]
+  /** Avatar tiers for head / top / bottom / weapon. */
+  avatars: string[]
+  /** Roster (远征队) combat stats, added to the 战斗特性 base. */
+  roster: { crit: number; spec: number; swift: number }
   /** Chosen weapon id, or '' for a normal weapon. */
   chosenWeaponId: string
   /** Card set id, or '' for none. */
@@ -90,6 +96,15 @@ export interface Loadout {
 }
 
 export type SupportClass = 'bard' | 'paladin'
+
+export interface EngravingSlot {
+  /** Engraving name as keyed in the fan-site tables; '' for an empty slot. */
+  name: string
+  /** Relic book stage 0-4. */
+  book: number
+  /** Ability stone level 0-4. */
+  stone: number
+}
 
 export interface GemSlot {
   /** Gem tier ('3' or '4'); '' for an empty slot. */

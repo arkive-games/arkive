@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { armourGroups, evaluate, weaponOptions } from '@/calc/engine'
 import type { Loadout, Role, SupportClass } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
+import { dpsEngravingBase, supportEngravingBase } from '@/calc/fansite.generated'
 import {
   STORAGE_KEY,
   defaultLoadout,
@@ -341,6 +342,84 @@ export default function App() {
                   </select>
                 </div>
               </Field>
+            ))}
+          </Section>
+
+          <Section title="刻印">
+            <p className="text-xs text-muted">系数来自参考站，非游戏数据表。</p>
+            {loadout.engravings.map((eng, i) => (
+              <div key={i} className="flex gap-2">
+                <select
+                  aria-label={`刻印 ${i + 1}`}
+                  value={eng.name}
+                  onChange={(e) => {
+                    const list = [...loadout.engravings]
+                    list[i] = { ...list[i], name: e.target.value }
+                    set('engravings', list)
+                  }}
+                  className="min-w-0 flex-1 rounded-md border border-line bg-bg px-2 py-1 text-sm"
+                >
+                  <option value="">无</option>
+                  {Object.keys(
+                    loadout.role === 'support' ? supportEngravingBase : dpsEngravingBase,
+                  ).map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+                <select
+                  aria-label={`刻印 ${i + 1} 遗物书`}
+                  value={eng.book}
+                  disabled={!eng.name}
+                  onChange={(e) => {
+                    const list = [...loadout.engravings]
+                    list[i] = { ...list[i], book: Number(e.target.value) }
+                    set('engravings', list)
+                  }}
+                  className="w-20 rounded-md border border-line bg-bg px-2 py-1 text-sm disabled:opacity-40"
+                >
+                  {[0, 1, 2, 3, 4].map((v) => <option key={v} value={v}>书 {v}</option>)}
+                </select>
+                <select
+                  aria-label={`刻印 ${i + 1} 能力石`}
+                  value={eng.stone}
+                  disabled={!eng.name}
+                  onChange={(e) => {
+                    const list = [...loadout.engravings]
+                    list[i] = { ...list[i], stone: Number(e.target.value) }
+                    set('engravings', list)
+                  }}
+                  className="w-20 rounded-md border border-line bg-bg px-2 py-1 text-sm disabled:opacity-40"
+                >
+                  {[0, 1, 2, 3, 4].map((v) => <option key={v} value={v}>石 {v}</option>)}
+                </select>
+              </div>
+            ))}
+          </Section>
+
+          <Section title="时装与远征队">
+            <p className="text-xs text-muted">系数来自参考站，非游戏数据表。</p>
+            {['头部', '上装', '下装', '武器'].map((slot, i) => (
+              <SelectField
+                key={slot}
+                label={slot}
+                value={loadout.avatars[i] ?? '无'}
+                onChange={(v) => {
+                  const list = [...loadout.avatars]
+                  list[i] = v
+                  set('avatars', list)
+                }}
+                options={['无', '稀有', '英雄', '传说'].map((t) => ({ value: t, label: t }))}
+              />
+            ))}
+            {(['crit', 'spec', 'swift'] as const).map((k) => (
+              <NumberField
+                key={k}
+                label={{ crit: '会心', spec: '专长', swift: '迅捷' }[k]}
+                value={loadout.roster[k]}
+                min={0}
+                max={99999}
+                onChange={(v) => set('roster', { ...loadout.roster, [k]: v })}
+              />
             ))}
           </Section>
 

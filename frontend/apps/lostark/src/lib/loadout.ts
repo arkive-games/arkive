@@ -1,4 +1,4 @@
-import type { GemSlot, Loadout, Role, SupportClass } from '@/calc/types'
+import type { EngravingSlot, GemSlot, Loadout, Role, SupportClass } from '@/calc/types'
 
 export const STORAGE_KEY = 'lostark.loadout.v1'
 export const SCHEMA_VERSION = 1
@@ -6,6 +6,8 @@ export const SCHEMA_VERSION = 1
 export const GEM_SLOTS = 11
 /** Five accessories, three affix lines each. */
 export const ACCESSORY_LINES = 15
+/** Five engraving slots. */
+export const ENGRAVING_SLOTS = 5
 
 export function defaultLoadout(): Loadout {
   return {
@@ -23,6 +25,11 @@ export function defaultLoadout(): Loadout {
     cores: Array.from({ length: 6 }, () => ({ id: '', optionIndex: 0 })),
     gems: Array.from({ length: GEM_SLOTS }, () => ({ tier: '', level: 1 })),
     accessoryLines: Array.from({ length: ACCESSORY_LINES }, () => ''),
+    engravings: Array.from({ length: ENGRAVING_SLOTS }, () => ({
+      name: '', book: 0, stone: 0,
+    })),
+    avatars: ['无', '无', '无', '无'],
+    roster: { crit: 0, spec: 0, swift: 0 },
     chosenWeaponId: '',
     cardSetId: '',
     cardStage: 0,
@@ -116,6 +123,50 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
         }
         return { id, optionIndex: idx }
       })
+    }
+  }
+
+  if (raw.engravings !== undefined) {
+    const eng = raw.engravings
+    if (!Array.isArray(eng)) {
+      rejected.push('engravings: not an array')
+    } else {
+      base.engravings = base.engravings.map((slot, i): EngravingSlot => {
+        const e = eng[i] as Record<string, unknown> | undefined
+        if (!e || typeof e !== 'object') return slot
+        const clamp = (v: unknown, key: string) => {
+          if (typeof v !== 'number' || v < 0 || v > 4) {
+            if (v !== undefined) rejected.push(`engravings[${i}].${key}: ${String(v)}`)
+            return 0
+          }
+          return v
+        }
+        return {
+          name: typeof e.name === 'string' ? e.name : '',
+          book: clamp(e.book, 'book'),
+          stone: clamp(e.stone, 'stone'),
+        }
+      })
+    }
+  }
+
+  if (raw.avatars !== undefined) {
+    const av = raw.avatars
+    if (!Array.isArray(av)) rejected.push('avatars: not an array')
+    else base.avatars = base.avatars.map((d, i) => (typeof av[i] === 'string' ? (av[i] as string) : d))
+  }
+
+  if (raw.roster !== undefined) {
+    const r = raw.roster as Record<string, unknown> | undefined
+    if (!r || typeof r !== 'object') {
+      rejected.push('roster: not an object')
+    } else {
+      for (const key of ['crit', 'spec', 'swift'] as const) {
+        const v = r[key]
+        if (v === undefined) continue
+        if (typeof v !== 'number' || v < 0 || v > 99999) rejected.push(`roster.${key}: ${String(v)}`)
+        else base.roster[key] = v
+      }
     }
   }
 

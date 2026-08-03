@@ -11,6 +11,17 @@
  * breakdown, and so a wrong total is traceable to the row that caused it.
  */
 
+import {
+  COMBAT_STAT,
+  STONE_BASIC,
+  avatarAmp,
+  dpsEngravingBase,
+  dpsEngravingBooks,
+  dpsEngravingStones,
+  supportEngravingBase,
+  supportEngravingBooks,
+  supportEngravingStones,
+} from './fansite.generated'
 import type {
   AmpRow,
   GearByLevel,
@@ -46,6 +57,56 @@ const KARMA_EVOLUTION_HP = 400
 const SUPPORT_VITALITY_FACTOR: Record<string, number> = {
   bard: 2,
   paladin: 2.1,
+}
+
+/**
+ * Engraving amp for one slot.
+ *
+ * Fan-site sourced (see fansite.generated.ts): the client has no BattlePoint
+ * Type keyed by AbilityEngrave ids, so there is nothing to prefer over this.
+ */
+export function engravingAmp(
+  slot: { name: string; book: number; stone: number },
+  role: 'dps' | 'support',
+): number {
+  if (!slot.name) return 0
+  const num = (v: unknown) => (typeof v === 'number' ? v : 0)
+  if (role === 'support') {
+    // Support tables split each entry into support / heal channels; only the
+    // support channel feeds the support score.
+    const base = supportEngravingBase[slot.name as keyof typeof supportEngravingBase] as
+      | { support: number }
+      | undefined
+    const book = supportEngravingBooks[slot.name as keyof typeof supportEngravingBooks] as
+      | { support: number[] }
+      | undefined
+    const stone = supportEngravingStones[slot.name as keyof typeof supportEngravingStones] as
+      | { support: number[] }
+      | undefined
+    return (
+      num(base?.support) + num(book?.support?.[slot.book]) + num(stone?.support?.[slot.stone])
+    )
+  }
+  const base = dpsEngravingBase[slot.name as keyof typeof dpsEngravingBase] as number | undefined
+  const book = dpsEngravingBooks[slot.name as keyof typeof dpsEngravingBooks] as
+    | number[]
+    | undefined
+  const stone = dpsEngravingStones[slot.name as keyof typeof dpsEngravingStones] as
+    | number[]
+    | undefined
+  return num(base) + num(book?.[slot.book]) + num(stone?.[slot.stone])
+}
+
+/** Basic-attack bonus once total ability-stone levels reach the threshold. */
+export function stoneBasic(engravings: { name: string; stone: number }[]): number {
+  const total = engravings
+    .filter((e) => e.name)
+    .reduce((sum, e) => sum + e.stone, 0)
+  return total >= STONE_BASIC.threshold ? STONE_BASIC.amp : 0
+}
+
+export function totalAvatarAmp(avatars: string[]): number {
+  return avatars.reduce((sum, tier) => sum + (avatarAmp[tier] ?? 0), 0)
 }
 
 export function round(value: number, digits = 2): number {
@@ -186,6 +247,22 @@ export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] 
     })
   })
 
+  // Engravings compound, like gems and affix lines.
+  const engProduct = loadout.engravings.reduce(
+    (acc, e) => acc * (1 + engravingAmp(e, loadout.role)),
+    1,
+  )
+  rows.push({ name: '刻印效果', value: engProduct - 1 })
+
+  // Combat stats: damage dealers count crit+spec+swift, supports spec+swift.
+  const statSum =
+    loadout.role === 'support'
+      ? loadout.roster.spec + loadout.roster.swift
+      : loadout.roster.crit + loadout.roster.spec + loadout.roster.swift
+  const statRate =
+    loadout.role === 'support' ? COMBAT_STAT.supportRate : COMBAT_STAT.dpsRate
+  rows.push({ name: '战斗特性', value: (COMBAT_STAT.base + statSum) * statRate })
+
   // Affix lines each multiply independently, like gems.
   const lineProduct = loadout.accessoryLines.reduce(
     (acc, id) => acc * (1 + (id ? (coeffs.accessory_line_values[id] ?? 0) : 0)),
@@ -229,10 +306,12 @@ export function evaluate(
   coeffs: RoleCoefficients,
   gear: GearByLevel,
 ): Result {
-  const mainStat = gearMainTotal(gear, loadout.itemLevel, loadout.armourGroup) + MAIN_STAT_FLAT
+  const mainStat =
+    (gearMainTotal(gear, loadout.itemLevel, loadout.armourGroup) + MAIN_STAT_FLAT) *
+    (1 + totalAvatarAmp(loadout.avatars))
   const weaponAttack = weaponAttackOf(gear, loadout.itemLevel, loadout.weaponId)
   const baseAttack = round(Math.sqrt((weaponAttack * mainStat) / 6), 2)
-  const basicAttack = baseAttack
+  const basicAttack = baseAttack * (1 + stoneBasic(loadout.engravings))
   const amps = buildAmps(loadout, coeffs)
 
   const primary: ScoreComponent = {
