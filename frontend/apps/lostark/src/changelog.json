@@ -36,6 +36,14 @@
             "zh-CN": "方舟星阵改为游戏中的六格布局：选择品质后，滑杆只提供该核心可达的点数档位，并显示真实的游戏内效果说明。",
             "zh-TW": "方舟星陣改為遊戲中的六格佈局：選擇品質後，滑桿只提供該核心可達的點數檔位，並顯示真實的遊戲內效果說明。"
           }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Pick your class and class engraving: the role follows your choice, and each Ark Grid slot lists the six cores that class can actually equip, with their real effects stacked in a hovercard.",
+            "zh-CN": "可选择职业与职业刻印：角色定位随之切换，方舟星阵每格列出该职业实际可装配的六个核心，悬停图标可查看累计生效的全部效果。",
+            "zh-TW": "可選擇職業與職業刻印：角色定位隨之切換，方舟星陣每格列出該職業實際可裝配的六個核心，懸停圖示可查看累計生效的全部效果。"
+          }
         }
       ]
     },
