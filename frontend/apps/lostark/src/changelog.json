@@ -44,6 +44,14 @@
             "zh-CN": "可选择职业与职业刻印：角色定位随之切换，方舟星阵每格列出该职业实际可装配的六个核心，悬停图标可查看累计生效的全部效果。",
             "zh-TW": "可選擇職業與職業刻印：角色定位隨之切換，方舟星陣每格列出該職業實際可裝配的六個核心，懸停圖示可查看累計生效的全部效果。"
           }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed the Ark Grid point slider, whose first position showed the lowest threshold instead of 'not activated'.",
+            "zh-CN": "修正方舟星阵点数滑杆：首个档位原本显示最低点数，现正确显示为未激活。",
+            "zh-TW": "修正方舟星陣點數滑桿：首個檔位原本顯示最低點數，現正確顯示為未啟用。"
+          }
         }
       ]
     },
