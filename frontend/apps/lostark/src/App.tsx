@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { armourGroups, evaluate, weaponOptions } from '@/calc/engine'
-import type { Loadout, Role, SupportClass } from '@/calc/types'
+import type { Loadout } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
 import {
   dpsBraceletLines,
@@ -67,6 +67,27 @@ export default function App() {
     }
   }
 
+  const currentClass = data?.classes.find((c) => c.id === loadout.classId)
+  const currentSub = currentClass?.subclasses[loadout.subclassIndex]
+
+  // The sub-class decides the role, so the two stay in step rather than being
+  // separately settable and able to disagree.
+  useEffect(() => {
+    if (currentSub && currentSub.role !== loadout.role) {
+      setLoadout((l) => ({ ...l, role: currentSub.role }))
+    }
+  }, [currentSub, loadout.role])
+
+  function setClass(classId: number, subclassIndex: number) {
+    // Order-slot cores are class-specific, so a class change invalidates them.
+    setLoadout((l) => ({
+      ...l,
+      classId,
+      subclassIndex,
+      cores: l.cores.map(() => ({ id: '', optionIndex: 0 })),
+    }))
+  }
+
   const coeffs = data ? data[loadout.role] : null
 
   const result = useMemo(() => {
@@ -124,26 +145,45 @@ export default function App() {
         <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
           战斗力计算器
         </h1>
-        <div
-          role="tablist"
-          aria-label="角色类型"
-          className="flex gap-1 rounded-full border border-line bg-panel p-1"
-        >
-          {(['dps', 'support'] as Role[]).map((role) => (
-            <button
-              key={role}
-              role="tab"
-              aria-selected={loadout.role === role}
-              onClick={() => set('role', role)}
-              className={`rounded-full px-4 py-1 text-sm transition ${
-                loadout.role === role
-                  ? 'bg-accent text-bg font-medium'
-                  : 'text-muted hover:text-ink'
-              }`}
-            >
-              {role === 'dps' ? '输出' : '辅助'}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            aria-label="职业"
+            value={loadout.classId}
+            onChange={(e) => setClass(Number(e.target.value), 0)}
+            className="rounded-md border border-line bg-panel px-2 py-1 text-sm"
+          >
+            {data.classes
+              .filter((c) => c.subclasses.length > 0)
+              .map((c) => (
+                <option key={c.id} value={c.id}>
+                  {data.names[c.name_key ?? ''] ?? c.internal_name}
+                </option>
+              ))}
+          </select>
+          <div
+            role="tablist"
+            aria-label="职业刻印"
+            className="flex gap-1 rounded-full border border-line bg-panel p-1"
+          >
+            {(currentClass?.subclasses ?? []).map((sub, i) => (
+              <button
+                key={sub.ability_id}
+                role="tab"
+                aria-selected={loadout.subclassIndex === i}
+                onClick={() => setClass(loadout.classId, i)}
+                className={`rounded-full px-3 py-1 text-sm transition ${
+                  loadout.subclassIndex === i
+                    ? 'bg-accent text-bg font-medium'
+                    : 'text-muted hover:text-ink'
+                }`}
+              >
+                {data.names[sub.name_key] ?? sub.name_key}
+                <span className="ml-1 text-xs opacity-70">
+                  {sub.role === 'support' ? '辅助' : '输出'}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex gap-2">
           <button
@@ -234,17 +274,6 @@ export default function App() {
               max={100}
               onChange={(v) => set('weaponQuality', v)}
             />
-            {loadout.role === 'support' && (
-              <SelectField
-                label="职业"
-                value={loadout.supportClass}
-                onChange={(v) => set('supportClass', v as SupportClass)}
-                options={[
-                  { value: 'bard', label: '吟游诗人 / 墨灵' },
-                  { value: 'paladin', label: '圣骑士' },
-                ]}
-              />
-            )}
             <NumberField
               label="战斗等级"
               value={loadout.combatLevel}
@@ -298,6 +327,7 @@ export default function App() {
             <CoreGrid
               slots={data.slots[loadout.role]}
               cores={loadout.cores}
+              classId={loadout.classId}
               names={data.names}
               onChange={(i, next) => {
                 const list = [...loadout.cores]

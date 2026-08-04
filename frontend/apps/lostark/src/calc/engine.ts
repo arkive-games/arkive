@@ -56,10 +56,14 @@ const VITALITY_FLAT = 27722
 const HP_FIXED_AMP = 0.17
 const KARMA_EVOLUTION_HP = 400
 
-const SUPPORT_VITALITY_FACTOR: Record<string, number> = {
-  bard: 2,
-  paladin: 2.1,
-}
+/**
+ * Paladin carries a higher vitality factor than the other supports. Keyed by
+ * class id (105 HolyKnight, 113 HolyKnight_Female) so it follows the class
+ * selector rather than a second control that could disagree with it.
+ */
+const PALADIN_CLASS_IDS = new Set([105, 113])
+const PALADIN_VITALITY_FACTOR = 2.1
+const DEFAULT_VITALITY_FACTOR = 2
 
 /**
  * Engraving amp for one slot.
@@ -358,7 +362,9 @@ export function evaluate(
   // damage amp it contributes above.
   const vitality =
     gearVitalityTotal(gear, loadout.itemLevel, loadout.armourGroup) + VITALITY_FLAT
-  const factor = SUPPORT_VITALITY_FACTOR[loadout.supportClass] ?? 2
+  const factor = PALADIN_CLASS_IDS.has(loadout.classId)
+    ? PALADIN_VITALITY_FACTOR
+    : DEFAULT_VITALITY_FACTOR
   const maxHp =
     (vitality * factor + loadout.karmaEvolutionStage * KARMA_EVOLUTION_HP) *
     (1 + HP_FIXED_AMP)

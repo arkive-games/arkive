@@ -52,6 +52,10 @@ export interface CoreSelection {
 
 /** Everything the user can set. Plain data so it serialises straight to JSON. */
 export interface Loadout {
+  /** Player class id, driving core lists and gear names. */
+  classId: number
+  /** Index into that class's two sub-classes; decides dps vs support. */
+  subclassIndex: number
   role: Role
   combatLevel: number
   /** Item level driving the gear stat lookup. */
@@ -93,11 +97,7 @@ export interface Loadout {
   petRanchId: string
   /** Paradise orb id, or '' for none. */
   orbId: string
-  /** Support only: Paladin has a higher vitality factor than Bard/Artist. */
-  supportClass: SupportClass
 }
-
-export type SupportClass = 'bard' | 'paladin'
 
 export interface EngravingSlot {
   /** Engraving name as keyed in the fan-site tables; '' for an empty slot. */

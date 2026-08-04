@@ -34,6 +34,21 @@ export interface CoreMeta {
   option_points: Record<string, number>
 }
 
+export interface PlayerSubclass {
+  ability_id: number
+  name_key: string
+  /** Support sub-classes take the heal component. */
+  role: 'dps' | 'support'
+}
+
+export interface PlayerClass {
+  id: number
+  base_class: number
+  internal_name: string
+  name_key: string | null
+  subclasses: PlayerSubclass[]
+}
+
 export interface ArkGridGrade {
   core_id: string
   /** GameMsg key for the grade name (英雄 / 传说 / 遗物 / 古代). */
@@ -42,14 +57,12 @@ export interface ArkGridGrade {
   points: Record<string, number>
   /** Option index -> GameMsg key of the resolved effect description. */
   options: Record<string, string>
+  /** False for utility variants with no BattlePoint row; their amp is zero. */
+  scores: boolean
 }
 
 export interface ArkGridVariant {
-  /**
-   * Every core name that shares this value profile. Order slots merge 162
-   * interchangeable names onto one row; chaos sun/moon keep two distinct rows.
-   */
-  name_keys: string[]
+  name_key: string
   grades: Record<string, ArkGridGrade>
 }
 
@@ -58,7 +71,10 @@ export interface ArkGridSlot {
   name_key: string
   /** Frame index in the EFUI_ICONATLAS_* sprite sheet (96-101). */
   icon_index: number | null
-  variants: ArkGridVariant[]
+  /** Chaos slots are shared across classes and keyed "0". */
+  class_agnostic: boolean
+  /** Class id (or "0") -> the six cores that class can equip here. */
+  by_class: Record<string, ArkGridVariant[]>
 }
 
 export interface Dataset {
@@ -68,6 +84,7 @@ export interface Dataset {
   gear: GearByLevel
   cores: Record<string, CoreMeta>
   slots: { dps: ArkGridSlot[]; support: ArkGridSlot[] }
+  classes: PlayerClass[]
   names: Record<string, string>
 }
 
@@ -89,15 +106,16 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
     /* unversioned artifact or unreachable — fall back to bare URLs */
   }
 
-  const [version, dps, support, gear, cores, slots, names] = await Promise.all([
+  const [version, dps, support, gear, cores, slots, classes, names] = await Promise.all([
     json<DataVersion>('version.json'),
     json<RoleCoefficients>('battlepoint/dps.json'),
     json<RoleCoefficients>('battlepoint/support.json'),
     json<GearByLevel>('gear/item-levels.json'),
     json<Record<string, CoreMeta>>('arkgrid/cores.json'),
     json<{ dps: ArkGridSlot[]; support: ArkGridSlot[] }>('arkgrid/slots.json'),
+    json<PlayerClass[]>('classes.json'),
     json<Record<string, string>>(`locales/${locale}.json`),
   ])
 
-  return { version, dps, support, gear, cores, slots, names }
+  return { version, dps, support, gear, cores, slots, classes, names }
 }

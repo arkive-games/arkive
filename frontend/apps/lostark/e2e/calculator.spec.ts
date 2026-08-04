@@ -59,15 +59,19 @@ test('ark grid shows six slots, three per row', async ({ page }) => {
   }
 })
 
-test('a variant selector appears only where it changes the value', async ({ page }) => {
+test('chaos slots are shared across classes, order slots are not', async ({ page }) => {
   await ready(page)
-  // Grade alone decides the value for the three order slots and chaos star;
-  // chaos sun and moon carry two distinct value profiles, so they need a pick.
-  await expect(page.getByLabel('混沌之日 类型')).toBeVisible()
-  await expect(page.getByLabel('混沌之月 类型')).toBeVisible()
-  for (const name of ['秩序之日', '秩序之月', '秩序之星', '混沌之星']) {
-    await expect(page.getByLabel(`${name} 类型`)).toHaveCount(0)
-  }
+  const order = page.getByLabel('秩序之日 核心')
+  const chaos = page.getByLabel('混沌之日 核心')
+
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '圣骑士' })
+  const orderA = await order.locator('option').allTextContents()
+  const chaosA = await chaos.locator('option').allTextContents()
+
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '狂战士' })
+  expect(await order.locator('option').allTextContents()).not.toEqual(orderA)
+  // Chaos cores carry PCClass 0, so they must not change with the class.
+  expect(await chaos.locator('option').allTextContents()).toEqual(chaosA)
 })
 
 test('the point slider offers only eligible thresholds', async ({ page }) => {
@@ -87,7 +91,7 @@ test('the point slider offers only eligible thresholds', async ({ page }) => {
   }
 })
 
-test('equipping a core moves the score and shows its real description', async ({ page }) => {
+test('equipping a core moves the score', async ({ page }) => {
   await ready(page)
   const before = await score(page).textContent()
 
@@ -97,16 +101,17 @@ test('equipping a core moves the score and shows its real description', async ({
   await expect(score(page)).not.toHaveText(before ?? '')
   await expect(page.locator('aside').getByText('方舟核心 1')).toBeVisible()
 
-  // Descriptions arrive resolved, not as raw template directives.
+  // The active threshold shows on the card; the effect text lives in the
+  // hovercard, covered by its own test.
   const card = page.locator('article').filter({ hasText: '秩序之日' })
   await expect(card.getByText('20P')).toBeVisible()
-  await expect(card.locator('p')).not.toContainText('$TABLE')
-  await expect(card.locator('p')).not.toContainText('/>')
 })
 
 test('support emits two components that are summed', async ({ page }) => {
   await ready(page)
-  await page.getByRole('tab', { name: '辅助' }).click()
+  // The sub-class decides the role, so pick a class that has a support one.
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '圣骑士' })
+  await page.getByRole('tab', { name: /祝福光环/ }).click()
 
   // Rendered twice: once in the summary line, once as the component heading.
   await expect(page.locator('aside').getByText('支援战斗力').first()).toBeVisible()
@@ -254,4 +259,48 @@ test('bracelet lines compound', async ({ page }) => {
   await page.getByLabel('手镯词条 2').selectOption({ index: 1 })
   const two = await rail.locator('li').filter({ hasText: '手镯' }).innerText()
   expect(two).not.toBe(one)
+})
+
+test('the sub-class decides the role', async ({ page }) => {
+  await ready(page)
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '圣骑士' })
+
+  // 裁决许可 is the damage spec, 祝福光环 the support one.
+  await page.getByRole('tab', { name: /裁决许可/ }).click()
+  await expect(page.locator('aside').getByText('恢复战斗力')).toHaveCount(0)
+
+  await page.getByRole('tab', { name: /祝福光环/ }).click()
+  await expect(page.locator('aside').getByText('恢复战斗力').first()).toBeVisible()
+  await expect(page.locator('aside').getByText('最大生命值')).toBeVisible()
+})
+
+test('each class gets its own six cores per slot', async ({ page }) => {
+  await ready(page)
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '圣骑士' })
+  const sel = page.getByLabel('秩序之日 核心')
+  await expect(sel.locator('option')).toHaveCount(6)
+  const paladin = await sel.locator('option').allTextContents()
+
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '狂战士' })
+  await expect(sel.locator('option')).toHaveCount(6)
+  const berserker = await sel.locator('option').allTextContents()
+
+  // Order-slot cores are class-specific, so the lists must differ.
+  expect(berserker).not.toEqual(paladin)
+})
+
+test('the icon hovercard stacks every activated threshold', async ({ page }) => {
+  await ready(page)
+  await page.getByLabel('秩序之日 品质').selectOption('3')
+  await page.getByLabel('秩序之日 点数').fill('5')
+
+  await page.getByLabel('秩序之日 效果').hover()
+  const tip = page.getByRole('tooltip')
+  await expect(tip).toBeVisible()
+  // Effects stack, so reaching 20P shows all six thresholds, not just the last.
+  await expect(tip.locator('li')).toHaveCount(6)
+  for (const p of ['10P', '14P', '17P', '18P', '19P', '20P']) {
+    await expect(tip.getByText(p)).toBeVisible()
+  }
+  await expect(tip).not.toContainText('$TABLE')
 })

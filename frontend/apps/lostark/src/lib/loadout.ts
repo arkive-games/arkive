@@ -1,4 +1,4 @@
-import type { EngravingSlot, GemSlot, Loadout, Role, SupportClass } from '@/calc/types'
+import type { EngravingSlot, GemSlot, Loadout, Role } from '@/calc/types'
 
 export const STORAGE_KEY = 'lostark.loadout.v1'
 export const SCHEMA_VERSION = 1
@@ -13,6 +13,8 @@ export const BRACELET_LINES = 3
 
 export function defaultLoadout(): Loadout {
   return {
+    classId: 102,
+    subclassIndex: 0,
     role: 'dps',
     combatLevel: 70,
     itemLevel: 1640,
@@ -38,12 +40,10 @@ export function defaultLoadout(): Loadout {
     cardStage: 0,
     petRanchId: '',
     orbId: '',
-    supportClass: 'bard',
   }
 }
 
 const ROLES: Role[] = ['dps', 'support']
-const CLASSES: SupportClass[] = ['bard', 'paladin']
 
 /**
  * Coerce arbitrary parsed JSON into a Loadout, reporting what it rejected.
@@ -86,11 +86,6 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
     if (ROLES.includes(raw.role as Role)) base.role = raw.role as Role
     else rejected.push(`role: ${String(raw.role)}`)
   }
-  if (raw.supportClass !== undefined) {
-    if (CLASSES.includes(raw.supportClass as SupportClass)) {
-      base.supportClass = raw.supportClass as SupportClass
-    } else rejected.push(`supportClass: ${String(raw.supportClass)}`)
-  }
 
   num('combatLevel', 55, 70)
   num('itemLevel', 0, 9999)
@@ -101,6 +96,8 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
   num('karmaEvolutionStage', 0, 99)
   num('karmaLeapLevel', 0, 999)
   num('cardStage', 0, 6)
+  num('classId', 0, 999)
+  num('subclassIndex', 0, 1)
   str('armourGroup')
   str('weaponId')
   str('chosenWeaponId')
