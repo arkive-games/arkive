@@ -12,8 +12,19 @@ live = pytest.mark.skipif(
 )
 
 
-def test_strip_markup_removes_font_and_img():
-    assert strip_markup("<FONT COLOR='#99ff99'>4%</FONT>。") == "4%。"
+def test_strip_markup_keeps_the_games_colour_spans():
+    """The client's own colours are carried through, not re-derived."""
+    assert strip_markup("<FONT COLOR='#99ff99'>4%</FONT>。") == "<c #99ff99>4%</c>。"
+
+
+def test_strip_markup_drops_placeholder_coloured_spans():
+    # Core names use <font color='{0}'>: there is no colour to render, so the
+    # span goes and its close must go with it.
+    assert strip_markup("<font color='{0}'>连续击溃</font>") == "连续击溃"
+
+
+def test_strip_markup_drops_images_and_other_tags():
+    assert strip_markup(" <img src='x' width='0'></img>秩序之日") == "秩序之日"
 
 
 @pytest.fixture(scope="module")
@@ -26,7 +37,7 @@ def test_resolves_a_combateffect_lookup_inside_calc(resolver):
     # tip.desc.arkgrid_3150000 is
     #   暴击时对敌人造成的伤害增加<$CALC %2 <$TABLE_COMBATEFFECT Action0ArgA 608111000/>/100/>%
     out = resolver.text("tip.desc.arkgrid_3150000")
-    assert out == "暴击时对敌人造成的伤害增加0.55%。"
+    assert out == "暴击时对敌人造成的伤害增加<c #99ff99>0.55%</c>。"
 
 
 @live

@@ -142,7 +142,7 @@ export default function App() {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-4 sm:px-6">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           战斗力计算器
         </h1>
         <div className="flex flex-wrap items-center gap-2">
@@ -178,7 +178,7 @@ export default function App() {
                 }`}
               >
                 {data.names[sub.name_key] ?? sub.name_key}
-                <span className="ml-1 text-xs opacity-70">
+                <span className="ml-1 text-sm opacity-70">
                   {sub.role === 'support' ? '辅助' : '输出'}
                 </span>
               </button>
@@ -188,13 +188,13 @@ export default function App() {
         <div className="flex gap-2">
           <button
             onClick={download}
-            className="rounded-md border border-line px-3 py-1 text-xs hover:border-accent"
+            className="rounded-md border border-line px-3 py-1 text-sm hover:border-accent"
           >
             导出
           </button>
           <button
             onClick={() => fileInput.current?.click()}
-            className="rounded-md border border-line px-3 py-1 text-xs hover:border-accent"
+            className="rounded-md border border-line px-3 py-1 text-sm hover:border-accent"
           >
             导入
           </button>
@@ -203,7 +203,7 @@ export default function App() {
               setLoadout(defaultLoadout())
               setNotice('已清空')
             }}
-            className="rounded-md border border-line px-3 py-1 text-xs hover:border-accent"
+            className="rounded-md border border-line px-3 py-1 text-sm hover:border-accent"
           >
             清空
           </button>
@@ -225,7 +225,7 @@ export default function App() {
       {notice && (
         <p
           role="status"
-          className="mb-3 rounded-lg border border-line bg-panel px-3 py-2 text-xs text-muted"
+          className="mb-3 rounded-lg border border-line bg-panel px-3 py-2 text-sm text-muted"
         >
           {notice}
         </p>
@@ -338,7 +338,7 @@ export default function App() {
           </Section>
 
           <Section title="手镯">
-            <p className="text-xs text-muted">系数来自参考站，非游戏数据表。</p>
+            <p className="text-sm text-muted">系数来自参考站，非游戏数据表。</p>
             {loadout.braceletLines.map((id, i) => (
               <SelectField
                 key={i}
@@ -360,7 +360,7 @@ export default function App() {
           </Section>
 
           <Section title="刻印">
-            <p className="text-xs text-muted">系数来自参考站，非游戏数据表。</p>
+            <p className="text-sm text-muted">系数来自参考站，非游戏数据表。</p>
             {loadout.engravings.map((eng, i) => (
               <div key={i} className="flex gap-2">
                 <select
@@ -411,7 +411,7 @@ export default function App() {
           </Section>
 
           <Section title="时装与远征队">
-            <p className="text-xs text-muted">系数来自参考站，非游戏数据表。</p>
+            <p className="text-sm text-muted">系数来自参考站，非游戏数据表。</p>
             {['头部', '上装', '下装', '武器'].map((slot, i) => (
               <SelectField
                 key={slot}
@@ -438,10 +438,10 @@ export default function App() {
           </Section>
 
           <Section title="首饰词条">
-            <p className="text-xs text-muted">项链、耳环×2、戒指×2，每件 3 条；各条独立相乘。</p>
+            <p className="text-sm text-muted">项链、耳环×2、戒指×2，每件 3 条；各条独立相乘。</p>
             {['项链', '耳环 1', '耳环 2', '戒指 1', '戒指 2'].map((piece, p) => (
               <div key={piece} className="space-y-1">
-                <div className="text-xs text-muted">{piece}</div>
+                <div className="text-sm text-muted">{piece}</div>
                 {[0, 1, 2].map((n) => {
                   const idx = p * 3 + n
                   return (
@@ -470,7 +470,7 @@ export default function App() {
           </Section>
 
           <Section title="宝石">
-            <p className="text-xs text-muted">
+            <p className="text-sm text-muted">
               最多 {loadout.gems.length} 颗；每颗独立相乘。
             </p>
             {loadout.gems.map((gem, i) => (
@@ -567,7 +567,7 @@ export default function App() {
         <ScoreRail result={result} />
       </div>
 
-      <footer className="mt-10 text-xs text-muted">
+      <footer className="mt-10 text-sm text-muted">
         系数与名称取自游戏客户端数据表（<code>EFTable_BattlePoint</code> 等），
         由 <code>tools/apps/lostark</code> 导出。公式结构参考{' '}
         <a

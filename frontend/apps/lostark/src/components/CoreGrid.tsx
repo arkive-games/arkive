@@ -1,6 +1,7 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@gamemap/ui'
 import type { CoreSelection } from '@/calc/types'
 import type { ArkGridSlot, ArkGridVariant } from '@/lib/data'
+import { RichText, plainText } from './RichText'
 
 /**
  * Lost Ark's item-grade colours. The client stores grades as 0-3 and names them
@@ -64,15 +65,17 @@ function CoreCard({
   const variants: ArkGridVariant[] =
     slot.by_class[slot.class_agnostic ? '0' : String(classId)] ?? []
 
-  const variantIndex = Math.max(
-    0,
-    variants.findIndex((v) => Object.values(v.grades).some((g) => g.core_id === selection.id)),
+  // -1 means no core chosen at all, which is distinct from "core chosen, no
+  // grade": a core id encodes core AND grade, so without this the empty state
+  // would silently display variant 0 as though it were equipped.
+  const variantIndex = variants.findIndex((v) =>
+    Object.values(v.grades).some((g) => g.core_id === selection.id),
   )
-  const variant = variants[variantIndex]
+  const variant = variantIndex >= 0 ? variants[variantIndex] : undefined
   const gradeKey =
     Object.entries(variant?.grades ?? {}).find(([, g]) => g.core_id === selection.id)?.[0] ?? ''
   const style = gradeKey ? (GRADE_STYLE[gradeKey] ?? EMPTY) : EMPTY
-  const grade = gradeKey ? variant.grades[gradeKey] : undefined
+  const grade = gradeKey ? variant?.grades[gradeKey] : undefined
 
   // Only the thresholds this core unlocks, ascending.
   const points = Object.entries(grade?.points ?? {}).sort((a, b) => Number(a[1]) - Number(b[1]))
@@ -85,26 +88,35 @@ function CoreCard({
   const activeStop = points.findIndex(([index]) => index === String(selection.optionIndex)) + 1
 
   /**
-   * Option effects STACK: reaching 20P means every threshold up to 20P is live,
-   * not just the last one. So the hovercard lists all of them cumulatively.
+   * Every threshold the core offers, each flagged by whether the current point
+   * total reaches it. Effects STACK, so all rows up to `activeStop` are live at
+   * once; the rest are shown greyed so the card doubles as a preview of what
+   * more points would buy.
    */
-  const stacked = grade
+  const effects = grade
     ? points
-        .slice(0, activeStop)
-        .map(([index, threshold]) => ({
+        .map(([index, threshold], i) => ({
           threshold,
           text: names[grade.options[index] ?? ''] ?? '',
+          active: i < activeStop,
         }))
         .filter((row) => row.text)
     : []
 
   function pick(nextVariant: number, nextGrade: string) {
-    const v = variants[nextVariant]
-    if (!nextGrade || !v?.grades[nextGrade]) {
+    const v = nextVariant >= 0 ? variants[nextVariant] : undefined
+    if (!v) {
       onChange({ id: '', optionIndex: 0 })
       return
     }
-    onChange({ id: v.grades[nextGrade].core_id, optionIndex: 0 })
+    // Picking a core with no grade yet resolves to its lowest grade, since an id
+    // cannot exist without one.
+    const grade = v.grades[nextGrade] ? nextGrade : Object.keys(v.grades).sort()[0]
+    if (!grade) {
+      onChange({ id: '', optionIndex: 0 })
+      return
+    }
+    onChange({ id: v.grades[grade].core_id, optionIndex: 0 })
   }
 
   return (
@@ -115,28 +127,30 @@ function CoreCard({
       {/* Row 1 — which core, and at what quality. */}
       <div className="grid grid-cols-2 gap-2">
         <label className="block min-w-0">
-          <span className="text-xs text-muted">核心</span>
+          <span className="text-sm text-muted">核心</span>
           <select
             aria-label={`${slotName} 核心`}
             value={variantIndex}
-            onChange={(e) => pick(Number(e.target.value), gradeKey || '0')}
-            className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
+            onChange={(e) => pick(Number(e.target.value), gradeKey)}
+            className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-base"
           >
+            <option value={-1}>未选择</option>
             {variants.map((v, vi) => (
               <option key={vi} value={vi}>
-                {names[v.name_key] ?? v.name_key}
+                {plainText(names[v.name_key] ?? v.name_key)}
                 {Object.values(v.grades).every((g) => !g.scores) ? '（无战力）' : ''}
               </option>
             ))}
           </select>
         </label>
         <label className="block min-w-0">
-          <span className="text-xs text-muted">品质</span>
+          <span className="text-sm text-muted">品质</span>
           <select
             aria-label={`${slotName} 品质`}
             value={gradeKey}
+            disabled={variantIndex < 0}
             onChange={(e) => pick(variantIndex, e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
+            className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-base disabled:opacity-40"
           >
             <option value="">未装配</option>
             {Object.entries(variant?.grades ?? {}).map(([g, info]) => (
@@ -156,7 +170,7 @@ function CoreCard({
             <button
               type="button"
               aria-label={`${slotName} 效果`}
-              className="relative grid size-20 cursor-help place-items-center rounded-full transition-transform hover:scale-105"
+              className="relative grid size-28 cursor-help place-items-center rounded-full transition-transform hover:scale-105"
             >
               {/* The game's own socket ring (arkpassive_i1_nopack), used for
                   both empty and filled slots so the frame never moves. */}
@@ -179,14 +193,14 @@ function CoreCard({
                 <img
                   src={`cores/${slot.key}.png`}
                   alt=""
-                  width={56}
-                  height={56}
+                  width={84}
+                  height={84}
                   className="relative"
                 />
               ) : (
                 <span
                   aria-hidden
-                  className="relative text-2xl font-light leading-none text-muted"
+                  className="relative text-4xl font-light leading-none text-muted"
                 >
                   +
                 </span>
@@ -200,31 +214,44 @@ function CoreCard({
           >
             {/* The slot name lives here rather than on the card, keeping the
                 card itself to just the three controls. */}
-            <div className="text-sm font-medium">{slotName}</div>
+            <div className="text-base font-medium">{slotName}</div>
             {gradeKey ? (
               <div className="mt-0.5 text-xs" style={{ color: style.text }}>
-                {names[variant.name_key] ?? ''} · {names[grade!.name_key] ?? ''}
+                {plainText(names[variant?.name_key ?? ''] ?? '')} · {plainText(names[grade?.name_key ?? ''] ?? '')}
               </div>
             ) : (
-              <p className="mt-1 text-xs text-muted">未装配核心。</p>
+              <p className="mt-1 text-sm text-muted">未装配核心。</p>
             )}
-            {gradeKey && stacked.length === 0 && (
-              <p className="mt-2 text-xs text-muted">尚未激活任何点数。</p>
+            {gradeKey && effects.length === 0 && (
+              <p className="mt-2 text-sm text-muted">该核心没有可显示的效果。</p>
             )}
-            {stacked.length > 0 && (
-              <ul className="mt-2 space-y-2 border-t border-line/60 pt-2">
-                {stacked.map((row) => (
-                  <li key={row.threshold} className="flex gap-2 text-xs">
-                    <span
-                      className="shrink-0 font-medium tabular-nums"
-                      style={{ color: style.text }}
-                    >
-                      {row.threshold}P
-                    </span>
-                    <span className="whitespace-pre-line text-muted">{row.text}</span>
-                  </li>
-                ))}
-              </ul>
+            {effects.length > 0 && (
+              <>
+                <div className="mt-3 text-sm font-medium text-accent">核心属性</div>
+                <ul className="mt-1 space-y-1.5">
+                  {effects.map((row) => (
+                    <li key={row.threshold} className="flex gap-2 text-sm leading-snug">
+                      {/*
+                        Matches the in-game tooltip: the point tag is bracketed
+                        and gold once reached, grey before; the body is white with
+                        the game's own accent colours, or flat grey when the
+                        threshold is not active yet.
+                      */}
+                      <span
+                        className="shrink-0 font-medium tabular-nums"
+                        style={{ color: row.active ? 'var(--color-accent)' : 'var(--color-muted)' }}
+                      >
+                        [{row.threshold}P]
+                      </span>
+                      <span
+                        className={`whitespace-pre-line ${row.active ? 'text-ink' : 'text-muted'}`}
+                      >
+                        <RichText text={row.text} muted={!row.active} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </HoverCardContent>
         </HoverCard>
@@ -232,7 +259,7 @@ function CoreCard({
 
       {/* Row 3 — the point slider. */}
       <div>
-        <div className="flex items-baseline justify-between text-xs text-muted">
+        <div className="flex items-baseline justify-between text-sm text-muted">
           <span>点数</span>
           <span className="tabular-nums" style={{ color: style.text }}>
             {activeStop > 0 ? `${points[activeStop - 1][1]}P` : '未激活'}
@@ -262,7 +289,7 @@ function CoreCard({
           className="mt-1 w-full accent-accent disabled:opacity-40"
         />
         {/* One label per stop, so the ticks line up with the thumb positions. */}
-        <div className="flex justify-between text-xs text-muted">
+        <div className="flex justify-between text-sm text-muted">
           {Array.from({ length: stopCount }, (_, stop) => (
             <span
               key={stop}

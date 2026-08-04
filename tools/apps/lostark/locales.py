@@ -15,21 +15,14 @@ from __future__ import annotations
 import re
 
 from .db import Tables
-from .templates import Resolver
+from .templates import Resolver, strip_markup
 
 LOCALES = {"zh-CN": "GameMsg_Chinese", "ko-KR": "GameMsg_Korean"}
 
-_TAG = re.compile(r"<\s*/?\s*(?:font|img|br|b|i)\b[^>]*>", re.IGNORECASE)
 _TEMPLATE = re.compile(r"<\$[A-Z_]+")
-_WS = re.compile(r"\s+")
 
 # SQLite's default parameter limit is 999; stay well inside it.
 _CHUNK = 500
-
-
-def strip_markup(text: str) -> str:
-    """Remove presentational tags and collapse whitespace."""
-    return _WS.sub(" ", _TAG.sub("", text)).strip()
 
 
 def has_template(text: str) -> bool:

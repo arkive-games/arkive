@@ -87,6 +87,7 @@ test('the point slider offers only eligible thresholds', async ({ page }) => {
   const slider = page.getByLabel('秩序之日 点数')
   await expect(slider).toBeDisabled()
 
+  await page.getByLabel('秩序之日 核心').selectOption('0')
   await page.getByLabel('秩序之日 品质').selectOption('3')
   await expect(slider).toBeEnabled()
   // Seven stops for six thresholds: stop 0 is unactivated, stops 1..6 select
@@ -104,6 +105,7 @@ test('equipping a core moves the score', async ({ page }) => {
   await ready(page)
   const before = await score(page).textContent()
 
+  await page.getByLabel('秩序之日 核心').selectOption('0')
   await page.getByLabel('秩序之日 品质').selectOption('3')
   await page.getByLabel('秩序之日 点数').fill('6')
 
@@ -287,11 +289,12 @@ test('each class gets its own six cores per slot', async ({ page }) => {
   await ready(page)
   await page.getByLabel('职业', { exact: true }).selectOption({ label: '圣骑士' })
   const sel = page.getByLabel('秩序之日 核心')
-  await expect(sel.locator('option')).toHaveCount(6)
+  // Six cores plus the leading 未选择 option.
+  await expect(sel.locator('option')).toHaveCount(7)
   const paladin = await sel.locator('option').allTextContents()
 
   await page.getByLabel('职业', { exact: true }).selectOption({ label: '狂战士' })
-  await expect(sel.locator('option')).toHaveCount(6)
+  await expect(sel.locator('option')).toHaveCount(7)
   const berserker = await sel.locator('option').allTextContents()
 
   // Order-slot cores are class-specific, so the lists must differ.
@@ -300,6 +303,7 @@ test('each class gets its own six cores per slot', async ({ page }) => {
 
 test('the icon hovercard stacks every activated threshold', async ({ page }) => {
   await ready(page)
+  await page.getByLabel('秩序之日 核心').selectOption('0')
   await page.getByLabel('秩序之日 品质').selectOption('3')
   await page.getByLabel('秩序之日 点数').fill('6')
 
@@ -318,6 +322,7 @@ test('the icon hovercard stacks every activated threshold', async ({ page }) => 
 
 test('the hovercard survives moving the pointer onto it', async ({ page }) => {
   await ready(page)
+  await page.getByLabel('秩序之日 核心').selectOption('0')
   await page.getByLabel('秩序之日 品质').selectOption('3')
   await page.getByLabel('秩序之日 点数').fill('6')
 
@@ -334,6 +339,7 @@ test('the hovercard survives moving the pointer onto it', async ({ page }) => {
 
 test('the first slider stop is unactivated, not the lowest threshold', async ({ page }) => {
   await ready(page)
+  await page.getByLabel('秩序之日 核心').selectOption('0')
   await page.getByLabel('秩序之日 品质').selectOption('3')
 
   const slider = page.getByLabel('秩序之日 点数')
@@ -351,4 +357,35 @@ test('the first slider stop is unactivated, not the lowest threshold', async ({ 
   await expect(card.getByText('10P')).toBeVisible()
   await slider.fill('6')
   await expect(card.getByText('20P')).toBeVisible()
+})
+
+test('effect rows use the game\'s own colours', async ({ page }) => {
+  await ready(page)
+  // Unselected is now the default, so a core must be chosen before a grade.
+  await page.getByLabel('秩序之日 核心').selectOption('0')
+  await page.getByLabel('秩序之日 品质').selectOption('3')
+  await page.getByLabel('秩序之日 点数').fill('3')
+
+  await page.getByLabel('秩序之日 效果').hover()
+  const rows = page.locator('[data-slot="hover-card-content"] li')
+
+  // Every threshold is listed, not just the reached ones.
+  await expect(rows).toHaveCount(6)
+  await expect(rows.nth(0)).toContainText('[10P]')
+  await expect(rows.nth(5)).toContainText('[20P]')
+
+  // Numbers keep the client's green and "命运" its purple, because the pipeline
+  // carries the game's <FONT COLOR> spans through rather than re-deriving them.
+  const green = rows.nth(0).locator('span[style*="rgb(153, 255, 153)"]')
+  await expect(green.first()).toBeVisible()
+
+  // Unreached thresholds are flat grey: no accent spans at all.
+  await expect(rows.nth(5).locator('span[style*="rgb("]')).toHaveCount(0)
+})
+
+test('a core must be picked before a quality', async ({ page }) => {
+  await ready(page)
+  await expect(page.getByLabel('秩序之日 品质')).toBeDisabled()
+  await page.getByLabel('秩序之日 核心').selectOption('0')
+  await expect(page.getByLabel('秩序之日 品质')).toBeEnabled()
 })

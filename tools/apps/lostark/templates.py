@@ -14,8 +14,8 @@ Directive forms seen in the ark grid corpus:
   **Table names are case-insensitive**: both ``TABLE_COMBATEFFECT`` and
   ``TABLE_ArkGridCoreOption`` occur, so matching only ``[A-Z_]+`` silently
   truncates the latter and leaves fragments behind.
-* ``<$CALC %<digits> <arithmetic> />`` and ``<$CALC_COMMA …>`` — evaluate and
-  format. CALC_COMMA additionally groups thousands.
+* ``<$CALC [%<digits>] <arithmetic> />`` and ``<$CALC_COMMA …>`` — evaluate and
+  format. The precision prefix is optional. CALC_COMMA groups thousands.
 
 ``<$MACRO …>`` and ``<$PLAYER_INFO …>`` depend on runtime state and are left
 untouched rather than guessed at.
@@ -29,10 +29,14 @@ from functools import lru_cache
 from .db import Tables
 
 _TABLE = re.compile(r"<\$TABLE_(\w+)\s+(\w+)\s+(\d+)(?:\s+(\d+))?\s*/>", re.IGNORECASE)
-# The precision prefix is optional: <$CALC 3000 - 2000/> occurs without one.
-_CALC = re.compile(
-    r"<\$(CALC|CALC_COMMA)\s+(?:%(\d+)\s+)?([^<>]*?)\s*/>", re.IGNORECASE
-)
+_CALC = re.compile(r"<\$(CALC|CALC_COMMA)\s+(?:%(\d+)\s+)?([^<>]*?)\s*/>", re.IGNORECASE)
+
+# The client colours its own text — green for numbers, purple for "命运", yellow
+# for durations — so those spans are preserved rather than re-derived. Deriving
+# them from our own rules would miss cases the game marks up and we would not
+# think of.
+_FONT_COLOUR = re.compile(r"<FONT\s+COLOR='(#[0-9a-fA-F]{6})'\s*>", re.IGNORECASE)
+_FONT_CLOSE = re.compile(r"</FONT\s*>", re.IGNORECASE)
 _TAG = re.compile(r"<[^>]+>")
 _WS = re.compile(r"[ \t]+")
 _SAFE_EXPR = re.compile(r"^[\d\s+\-*/().]+$")
@@ -41,8 +45,40 @@ _MAX_PASSES = 6
 
 
 def strip_markup(text: str) -> str:
-    """Drop presentational tags, keep line breaks, collapse runs of spaces."""
-    return _WS.sub(" ", _TAG.sub("", text)).strip()
+    """Drop presentational tags but keep the game's literal-hex colour spans.
+
+    Emits ``<c #rrggbb>…</c>``, a deliberately tiny markup the frontend renders
+    as spans. Done as a single pass over every tag rather than
+    substitute-then-restore, which needed sentinel control characters that did
+    not survive being written through a shell.
+
+    Colour spans whose value is a template placeholder (``<font color='{0}'>``,
+    which core names use) are dropped along with their close: there is no colour
+    to render.
+    """
+    out: list[str] = []
+    depth = 0  # open <c> spans, so a close is only emitted when one is owed
+    pos = 0
+    for tag in _TAG.finditer(text):
+        out.append(text[pos : tag.start()])
+        pos = tag.end()
+        raw = tag.group(0)
+        # Keep unresolved directives intact. Dropping the marker but leaving its
+        # arithmetic tail produced strings like "*(300690/10000)+((1247+1524)/2))/>"
+        # -- mangled, and no longer detectable as needing runtime state.
+        if raw.startswith("<$"):
+            out.append(raw)
+            continue
+        colour = _FONT_COLOUR.fullmatch(raw)
+        if colour:
+            out.append(f"<c {colour.group(1).lower()}>")
+            depth += 1
+        elif _FONT_CLOSE.fullmatch(raw) and depth:
+            out.append("</c>")
+            depth -= 1
+        # Anything else — <img>, <br>, a placeholder-coloured <font> — is dropped.
+    out.append(text[pos:])
+    return _WS.sub(" ", "".join(out)).strip()
 
 
 class Resolver:
@@ -86,7 +122,9 @@ class Resolver:
     def _sub_tables(self, text: str) -> str:
         def one(m: re.Match) -> str:
             value = self._lookup(
-                m.group(1), m.group(2), int(m.group(3)),
+                m.group(1),
+                m.group(2),
+                int(m.group(3)),
                 int(m.group(4)) if m.group(4) else None,
             )
             # Leave the directive in place when the row is missing, so the
@@ -105,7 +143,8 @@ class Resolver:
                 value = eval(expr, {"__builtins__": {}}, {})  # noqa: S307 - guarded
             except Exception:
                 return m.group(0)
-            out = f"{value:,.{digits}f}" if m.group(1).upper() == "CALC_COMMA" else f"{value:.{digits}f}"
+            grouped = m.group(1).upper() == "CALC_COMMA"
+            out = f"{value:,.{digits}f}" if grouped else f"{value:.{digits}f}"
             # 4.00 -> 4, 0.55 -> 0.55
             if "." in out:
                 out = out.rstrip("0").rstrip(".")
@@ -123,7 +162,7 @@ class Resolver:
         return text
 
     def text(self, key: str) -> str | None:
-        """Resolved, markup-free display text for a GameMsg key."""
+        """Resolved display text for a GameMsg key, colour spans preserved."""
         with self.tables.connect("GameMsg") as con:
             row = con.execute(
                 f'SELECT MSG FROM "{self.locale_table}" WHERE KEY=?', (key,)

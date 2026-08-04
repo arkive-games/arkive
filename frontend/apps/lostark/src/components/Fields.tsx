@@ -10,8 +10,8 @@ export function Section({ title, children }: { title: string; children: ReactNod
         aria-expanded={open}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
-        <span className="text-sm font-medium">{title}</span>
-        <span className="text-xs text-muted">{open ? '▾' : '▸'}</span>
+        <span className="text-base font-medium">{title}</span>
+        <span className="text-sm text-muted">{open ? '▾' : '▸'}</span>
       </button>
       {open && <div className="space-y-2 border-t border-line px-4 py-3">{children}</div>}
     </section>
@@ -21,7 +21,7 @@ export function Section({ title, children }: { title: string; children: ReactNod
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex items-center justify-between gap-3">
-      <span className="shrink-0 text-xs text-muted">{label}</span>
+      <span className="shrink-0 text-sm text-muted">{label}</span>
       <span className="min-w-0 flex-1">{children}</span>
     </label>
   )
@@ -77,7 +77,7 @@ export function SelectField({
         aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
+        className="w-full rounded-md border border-line bg-bg px-2 py-1 text-base"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
