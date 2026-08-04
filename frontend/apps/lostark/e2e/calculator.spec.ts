@@ -295,7 +295,9 @@ test('the icon hovercard stacks every activated threshold', async ({ page }) => 
   await page.getByLabel('秩序之日 点数').fill('5')
 
   await page.getByLabel('秩序之日 效果').hover()
-  const tip = page.getByRole('tooltip')
+  // The shared HoverCard is Radix; its content carries no role, so target the
+  // data-slot the ui package sets.
+  const tip = page.locator('[data-slot="hover-card-content"]')
   await expect(tip).toBeVisible()
   // Effects stack, so reaching 20P shows all six thresholds, not just the last.
   await expect(tip.locator('li')).toHaveCount(6)
@@ -303,4 +305,20 @@ test('the icon hovercard stacks every activated threshold', async ({ page }) => 
     await expect(tip.getByText(p)).toBeVisible()
   }
   await expect(tip).not.toContainText('$TABLE')
+})
+
+test('the hovercard survives moving the pointer onto it', async ({ page }) => {
+  await ready(page)
+  await page.getByLabel('秩序之日 品质').selectOption('3')
+  await page.getByLabel('秩序之日 点数').fill('5')
+
+  const tip = page.locator('[data-slot="hover-card-content"]')
+  await page.getByLabel('秩序之日 效果').hover()
+  await expect(tip).toBeVisible()
+
+  // The whole point of using Radix over a hand-rolled tooltip: the pointer can
+  // travel off the small icon and onto the card without it closing, so the text
+  // is actually readable and scrollable.
+  await tip.hover()
+  await expect(tip).toBeVisible()
 })

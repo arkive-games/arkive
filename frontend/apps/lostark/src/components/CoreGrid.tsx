@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@gamemap/ui'
 import type { CoreSelection } from '@/calc/types'
 import type { ArkGridSlot, ArkGridVariant } from '@/lib/data'
 
@@ -59,9 +59,6 @@ function CoreCard({
   names: Record<string, string>
   onChange: (next: CoreSelection) => void
 }) {
-  const tipId = useId()
-  const [open, setOpen] = useState(false)
-
   const slotName = names[slot.name_key] ?? slot.key
   // Chaos slots are shared across classes and stored under "0".
   const variants: ArkGridVariant[] =
@@ -110,22 +107,58 @@ function CoreCard({
       style={{ borderColor: style.ring, background: style.wash }}
     >
       <header className="flex items-center gap-2">
-        {/* Hovering the icon reveals the stacked effects, which get long. */}
-        <button
-          type="button"
-          aria-label={`${slotName} 效果`}
-          aria-describedby={stacked.length ? tipId : undefined}
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setOpen(false)}
-          className="grid size-9 shrink-0 cursor-help place-items-center rounded-full border text-xs"
-          style={{ borderColor: style.ring, background: style.wash, color: style.text }}
-        >
-          {/* Circle placeholder; the real art is a UE3 texture in
-              EFUI_ICONATLAS_*, swapped in once those decode. */}
-          {slot.icon_index ?? '—'}
-        </button>
+        {/*
+          The shared HoverCard (Radix) rather than a hand-rolled tooltip: it
+          handles hover intent, so the pointer can travel from the small icon to
+          the card without it closing, and it portals out so the card is not
+          clipped by the grid.
+        */}
+        <HoverCard openDelay={120} closeDelay={120}>
+          <HoverCardTrigger asChild>
+            <button
+              type="button"
+              aria-label={`${slotName} 效果`}
+              className="grid size-9 shrink-0 cursor-help place-items-center rounded-full border text-xs"
+              style={{ borderColor: style.ring, background: style.wash, color: style.text }}
+            >
+              {/* Circle placeholder; the real frame comes from the atlas art. */}
+              {slot.icon_index ?? '—'}
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent
+            side="right"
+            align="start"
+            className="max-h-[22rem] w-80 overflow-auto border-line bg-panel text-ink"
+          >
+            {stacked.length === 0 ? (
+              <p className="text-xs text-muted">
+                {gradeKey ? '尚未激活任何点数。' : '未装配核心。'}
+              </p>
+            ) : (
+              <>
+                <div className="mb-2 text-sm font-medium">
+                  {names[variant.name_key] ?? ''}
+                  <span className="ml-2 text-xs" style={{ color: style.text }}>
+                    {names[grade!.name_key] ?? ''}
+                  </span>
+                </div>
+                <ul className="space-y-2">
+                  {stacked.map((row) => (
+                    <li key={row.threshold} className="flex gap-2 text-xs">
+                      <span
+                        className="shrink-0 tabular-nums font-medium"
+                        style={{ color: style.text }}
+                      >
+                        {row.threshold}P
+                      </span>
+                      <span className="whitespace-pre-line text-muted">{row.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </HoverCardContent>
+        </HoverCard>
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">{slotName}</div>
           <div className="truncate text-xs" style={{ color: style.text }}>
@@ -133,28 +166,6 @@ function CoreCard({
           </div>
         </div>
       </header>
-
-      {open && stacked.length > 0 && (
-        <div
-          id={tipId}
-          role="tooltip"
-          className="absolute left-3 right-3 top-14 z-20 max-h-72 overflow-auto rounded-lg border border-line bg-panel p-3 text-xs shadow-xl"
-        >
-          <div className="mb-1 font-medium text-ink">
-            {names[variant.name_key] ?? ''} · 已激活效果
-          </div>
-          <ul className="space-y-1.5">
-            {stacked.map((row) => (
-              <li key={row.threshold} className="flex gap-2">
-                <span className="shrink-0 tabular-nums" style={{ color: style.text }}>
-                  {row.threshold}P
-                </span>
-                <span className="whitespace-pre-line text-muted">{row.text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
 
       <label className="mt-2 block">
         <span className="text-xs text-muted">核心</span>
