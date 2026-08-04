@@ -28,6 +28,14 @@
             "zh-CN": "手镯词条现已纳入计算，参考计算器涵盖的系统至此全部支持。",
             "zh-TW": "手鐲詞條現已納入計算，參考計算器涵蓋的系統至此全部支援。"
           }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The Ark Grid is now six slot cards in the game's own layout: pick a grade, then drag a slider across only the point thresholds that core can reach, with the real in-game effect text.",
+            "zh-CN": "方舟星阵改为游戏中的六格布局：选择品质后，滑杆只提供该核心可达的点数档位，并显示真实的游戏内效果说明。",
+            "zh-TW": "方舟星陣改為遊戲中的六格佈局：選擇品質後，滑桿只提供該核心可達的點數檔位，並顯示真實的遊戲內效果說明。"
+          }
         }
       ]
     },
