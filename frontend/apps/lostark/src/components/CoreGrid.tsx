@@ -76,7 +76,13 @@ function CoreCard({
 
   // Only the thresholds this core unlocks, ascending.
   const points = Object.entries(grade?.points ?? {}).sort((a, b) => Number(a[1]) - Number(b[1]))
-  const activeAt = points.findIndex(([index]) => index === String(selection.optionIndex))
+  /**
+   * Slider stop 0 is "not activated"; stop i selects points[i - 1]. Indexing
+   * straight into `points` would leave the labels one position out of step,
+   * because there is always one more stop than there are thresholds.
+   */
+  const stopCount = points.length + 1
+  const activeStop = points.findIndex(([index]) => index === String(selection.optionIndex)) + 1
 
   /**
    * Option effects STACK: reaching 20P means every threshold up to 20P is live,
@@ -84,7 +90,7 @@ function CoreCard({
    */
   const stacked = grade
     ? points
-        .slice(0, activeAt + 1)
+        .slice(0, activeStop)
         .map(([index, threshold]) => ({
           threshold,
           text: names[grade.options[index] ?? ''] ?? '',
@@ -103,25 +109,58 @@ function CoreCard({
 
   return (
     <article
-      className="relative rounded-xl border p-3 transition-colors"
+      className="rounded-xl border p-3 transition-colors"
       style={{ borderColor: style.ring, background: style.wash }}
     >
-      <header className="flex items-center gap-2">
-        {/*
-          The shared HoverCard (Radix) rather than a hand-rolled tooltip: it
-          handles hover intent, so the pointer can travel from the small icon to
-          the card without it closing, and it portals out so the card is not
-          clipped by the grid.
-        */}
+      {/* Row 1 — which core, and at what quality. */}
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block min-w-0">
+          <span className="text-xs text-muted">核心</span>
+          <select
+            aria-label={`${slotName} 核心`}
+            value={variantIndex}
+            onChange={(e) => pick(Number(e.target.value), gradeKey || '0')}
+            className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
+          >
+            {variants.map((v, vi) => (
+              <option key={vi} value={vi}>
+                {names[v.name_key] ?? v.name_key}
+                {Object.values(v.grades).every((g) => !g.scores) ? '（无战力）' : ''}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block min-w-0">
+          <span className="text-xs text-muted">品质</span>
+          <select
+            aria-label={`${slotName} 品质`}
+            value={gradeKey}
+            onChange={(e) => pick(variantIndex, e.target.value)}
+            className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
+          >
+            <option value="">未装配</option>
+            {Object.entries(variant?.grades ?? {}).map(([g, info]) => (
+              <option key={g} value={g}>
+                {names[info.name_key] ?? `Grade ${g}`}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {/* Row 2 — the icon, large. It carries the hovercard, so it is the thing
+          you reach for to read what the core actually does. */}
+      <div className="my-3 flex justify-center">
         <HoverCard openDelay={120} closeDelay={120}>
           <HoverCardTrigger asChild>
             <button
               type="button"
               aria-label={`${slotName} 效果`}
-              className="grid size-9 shrink-0 cursor-help place-items-center rounded-full border text-xs"
+              className="grid size-20 cursor-help place-items-center rounded-full border-2 text-sm transition-transform hover:scale-105"
               style={{ borderColor: style.ring, background: style.wash, color: style.text }}
             >
-              {/* Circle placeholder; the real frame comes from the atlas art. */}
+              {/* Circle placeholder. EFUI_ARKGRID's textures are all Crunch
+                  compressed, so the real core art is not decodable yet. */}
               {slot.icon_index ?? '—'}
             </button>
           </HoverCardTrigger>
@@ -130,107 +169,78 @@ function CoreCard({
             align="start"
             className="max-h-[22rem] w-80 overflow-auto border-line bg-panel text-ink"
           >
-            {stacked.length === 0 ? (
-              <p className="text-xs text-muted">
-                {gradeKey ? '尚未激活任何点数。' : '未装配核心。'}
-              </p>
+            {/* The slot name lives here rather than on the card, keeping the
+                card itself to just the three controls. */}
+            <div className="text-sm font-medium">{slotName}</div>
+            {gradeKey ? (
+              <div className="mt-0.5 text-xs" style={{ color: style.text }}>
+                {names[variant.name_key] ?? ''} · {names[grade!.name_key] ?? ''}
+              </div>
             ) : (
-              <>
-                <div className="mb-2 text-sm font-medium">
-                  {names[variant.name_key] ?? ''}
-                  <span className="ml-2 text-xs" style={{ color: style.text }}>
-                    {names[grade!.name_key] ?? ''}
-                  </span>
-                </div>
-                <ul className="space-y-2">
-                  {stacked.map((row) => (
-                    <li key={row.threshold} className="flex gap-2 text-xs">
-                      <span
-                        className="shrink-0 tabular-nums font-medium"
-                        style={{ color: style.text }}
-                      >
-                        {row.threshold}P
-                      </span>
-                      <span className="whitespace-pre-line text-muted">{row.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
+              <p className="mt-1 text-xs text-muted">未装配核心。</p>
+            )}
+            {gradeKey && stacked.length === 0 && (
+              <p className="mt-2 text-xs text-muted">尚未激活任何点数。</p>
+            )}
+            {stacked.length > 0 && (
+              <ul className="mt-2 space-y-2 border-t border-line/60 pt-2">
+                {stacked.map((row) => (
+                  <li key={row.threshold} className="flex gap-2 text-xs">
+                    <span
+                      className="shrink-0 font-medium tabular-nums"
+                      style={{ color: style.text }}
+                    >
+                      {row.threshold}P
+                    </span>
+                    <span className="whitespace-pre-line text-muted">{row.text}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </HoverCardContent>
         </HoverCard>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-medium">{slotName}</div>
-          <div className="truncate text-xs" style={{ color: style.text }}>
-            {gradeKey ? (names[grade!.name_key] ?? `Grade ${gradeKey}`) : '未装配'}
-          </div>
-        </div>
-      </header>
+      </div>
 
-      <label className="mt-2 block">
-        <span className="text-xs text-muted">核心</span>
-        <select
-          aria-label={`${slotName} 核心`}
-          value={variantIndex}
-          onChange={(e) => pick(Number(e.target.value), gradeKey || '0')}
-          className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
-        >
-          {variants.map((v, vi) => (
-            <option key={vi} value={vi}>
-              {names[v.name_key] ?? v.name_key}
-              {Object.values(v.grades).every((g) => !g.scores) ? '（无战力）' : ''}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="mt-2 block">
-        <span className="text-xs text-muted">品质</span>
-        <select
-          aria-label={`${slotName} 品质`}
-          value={gradeKey}
-          onChange={(e) => pick(variantIndex, e.target.value)}
-          className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
-        >
-          <option value="">未装配</option>
-          {Object.entries(variant?.grades ?? {}).map(([g, info]) => (
-            <option key={g} value={g}>
-              {names[info.name_key] ?? `Grade ${g}`}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <div className="mt-3">
+      {/* Row 3 — the point slider. */}
+      <div>
         <div className="flex items-baseline justify-between text-xs text-muted">
           <span>点数</span>
           <span className="tabular-nums" style={{ color: style.text }}>
-            {activeAt >= 0 ? `${points[activeAt][1]}P` : '未激活'}
+            {activeStop > 0 ? `${points[activeStop - 1][1]}P` : '未激活'}
           </span>
         </div>
         {/*
-          A range over the eligible thresholds only. The value is a position in
-          `points`, not a raw P: the thresholds are irregular (10, 14, 17, 18,
-          19, 20) and a linear P slider would offer values the core cannot reach.
+          A range over the eligible thresholds only. Stop 0 is "not activated";
+          stop i selects points[i - 1]. The thresholds are irregular (10, 14, 17,
+          18, 19, 20), so a linear P slider would offer values the core cannot
+          reach, and indexing straight into them leaves the ticks one out of step.
         */}
         <input
           type="range"
           aria-label={`${slotName} 点数`}
-          min={-1}
-          max={points.length - 1}
+          min={0}
+          max={points.length}
           step={1}
-          value={activeAt}
+          value={activeStop}
           disabled={!gradeKey || points.length === 0}
           onChange={(e) => {
-            const at = Number(e.target.value)
-            onChange({ id: selection.id, optionIndex: at < 0 ? 0 : Number(points[at][0]) })
+            const stop = Number(e.target.value)
+            onChange({
+              id: selection.id,
+              optionIndex: stop === 0 ? 0 : Number(points[stop - 1][0]),
+            })
           }}
           className="mt-1 w-full accent-accent disabled:opacity-40"
         />
+        {/* One label per stop, so the ticks line up with the thumb positions. */}
         <div className="flex justify-between text-xs text-muted">
-          {points.map(([index, threshold]) => (
-            <span key={index} className={index === String(selection.optionIndex) ? 'text-ink' : ''}>
-              {threshold}
+          {Array.from({ length: stopCount }, (_, stop) => (
+            <span
+              key={stop}
+              className={stop === activeStop ? 'text-ink' : ''}
+              title={stop === 0 ? '未激活' : undefined}
+            >
+              {stop === 0 ? '—' : points[stop - 1][1]}
             </span>
           ))}
         </div>

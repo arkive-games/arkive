@@ -56,7 +56,15 @@ test('ark grid shows six slots, three per row', async ({ page }) => {
   await ready(page)
   for (const name of ['秩序之日', '秩序之月', '秩序之星', '混沌之日', '混沌之月', '混沌之星']) {
     await expect(page.getByLabel(`${name} 品质`)).toBeVisible()
+    await expect(page.getByLabel(`${name} 核心`)).toBeVisible()
   }
+})
+
+test('the slot name lives in the hovercard, not on the card', async ({ page }) => {
+  await ready(page)
+  const tip = page.locator('[data-slot="hover-card-content"]')
+  await page.getByLabel('秩序之日 效果').hover()
+  await expect(tip).toContainText('秩序之日')
 })
 
 test('chaos slots are shared across classes, order slots are not', async ({ page }) => {
@@ -81,11 +89,12 @@ test('the point slider offers only eligible thresholds', async ({ page }) => {
 
   await page.getByLabel('秩序之日 品质').selectOption('3')
   await expect(slider).toBeEnabled()
-  // Six options (10/14/17/18/19/20) indexed 0..5, with -1 meaning unactivated.
-  await expect(slider).toHaveAttribute('min', '-1')
-  await expect(slider).toHaveAttribute('max', '5')
+  // Seven stops for six thresholds: stop 0 is unactivated, stops 1..6 select
+  // 10/14/17/18/19/20.
+  await expect(slider).toHaveAttribute('min', '0')
+  await expect(slider).toHaveAttribute('max', '6')
 
-  const card = page.locator('article').filter({ hasText: '秩序之日' })
+  const card = page.locator('article').filter({ has: page.getByLabel('秩序之日 点数') })
   for (const p of ['10', '14', '17', '18', '19', '20']) {
     await expect(card.getByText(p, { exact: true })).toBeVisible()
   }
@@ -96,14 +105,14 @@ test('equipping a core moves the score', async ({ page }) => {
   const before = await score(page).textContent()
 
   await page.getByLabel('秩序之日 品质').selectOption('3')
-  await page.getByLabel('秩序之日 点数').fill('5')
+  await page.getByLabel('秩序之日 点数').fill('6')
 
   await expect(score(page)).not.toHaveText(before ?? '')
   await expect(page.locator('aside').getByText('方舟核心 1')).toBeVisible()
 
   // The active threshold shows on the card; the effect text lives in the
   // hovercard, covered by its own test.
-  const card = page.locator('article').filter({ hasText: '秩序之日' })
+  const card = page.locator('article').filter({ has: page.getByLabel('秩序之日 点数') })
   await expect(card.getByText('20P')).toBeVisible()
 })
 
@@ -292,7 +301,7 @@ test('each class gets its own six cores per slot', async ({ page }) => {
 test('the icon hovercard stacks every activated threshold', async ({ page }) => {
   await ready(page)
   await page.getByLabel('秩序之日 品质').selectOption('3')
-  await page.getByLabel('秩序之日 点数').fill('5')
+  await page.getByLabel('秩序之日 点数').fill('6')
 
   await page.getByLabel('秩序之日 效果').hover()
   // The shared HoverCard is Radix; its content carries no role, so target the
@@ -310,7 +319,7 @@ test('the icon hovercard stacks every activated threshold', async ({ page }) => 
 test('the hovercard survives moving the pointer onto it', async ({ page }) => {
   await ready(page)
   await page.getByLabel('秩序之日 品质').selectOption('3')
-  await page.getByLabel('秩序之日 点数').fill('5')
+  await page.getByLabel('秩序之日 点数').fill('6')
 
   const tip = page.locator('[data-slot="hover-card-content"]')
   await page.getByLabel('秩序之日 效果').hover()
@@ -321,4 +330,25 @@ test('the hovercard survives moving the pointer onto it', async ({ page }) => {
   // is actually readable and scrollable.
   await tip.hover()
   await expect(tip).toBeVisible()
+})
+
+test('the first slider stop is unactivated, not the lowest threshold', async ({ page }) => {
+  await ready(page)
+  await page.getByLabel('秩序之日 品质').selectOption('3')
+
+  const slider = page.getByLabel('秩序之日 点数')
+  const card = page.locator('article').filter({ has: page.getByLabel('秩序之日 点数') })
+
+  // Seven stops for six thresholds: stop 0 means nothing is activated. Indexing
+  // straight into the thresholds put 10P on stop 0 and left the tick labels one
+  // position out of step with the thumb.
+  await expect(slider).toHaveAttribute('min', '0')
+  await expect(slider).toHaveAttribute('max', '6')
+  await expect(slider).toHaveValue('0')
+  await expect(card.getByText('未激活')).toBeVisible()
+
+  await slider.fill('1')
+  await expect(card.getByText('10P')).toBeVisible()
+  await slider.fill('6')
+  await expect(card.getByText('20P')).toBeVisible()
 })
