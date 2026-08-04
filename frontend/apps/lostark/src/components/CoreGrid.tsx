@@ -4,15 +4,21 @@ import type { ArkGridSlot, ArkGridVariant } from '@/lib/data'
 import { RichText, plainText } from './RichText'
 
 /**
- * Lost Ark's item-grade colours. The client stores grades as 0-3 and names them
- * 英雄 / 传说 / 遗物 / 古代; these are the corresponding tints, kept as a border
- * plus wash so a filled slot reads at a glance.
+ * Lost Ark's item-grade colours, sampled from the game's own tooltip frames.
+ *
+ * `EFUI_TOOLTIP`'s two textures carry a bordered panel per grade; these are the
+ * characteristic hue of each frame's highlights, normalised to full value since
+ * the source art is shaded and reads muddy reused flat. Grades run 0-3 =
+ * 英雄 / 传说 / 遗物 / 古代.
+ *
+ * Those textures are Crunch-compressed, so this only became possible once laex
+ * could decode CRN.
  */
 const GRADE_STYLE: Record<string, { ring: string; wash: string; text: string }> = {
-  '0': { ring: 'oklch(0.62 0.20 300)', wash: 'oklch(0.62 0.20 300 / 0.16)', text: 'oklch(0.82 0.14 300)' },
-  '1': { ring: 'oklch(0.74 0.16 75)', wash: 'oklch(0.74 0.16 75 / 0.16)', text: 'oklch(0.86 0.13 80)' },
-  '2': { ring: 'oklch(0.66 0.19 40)', wash: 'oklch(0.66 0.19 40 / 0.16)', text: 'oklch(0.82 0.15 45)' },
-  '3': { ring: 'oklch(0.86 0.07 95)', wash: 'oklch(0.86 0.07 95 / 0.14)', text: 'oklch(0.92 0.06 95)' },
+  '0': { ring: '#b02ef2', wash: '#b02ef21f', text: '#d68cff' }, // 英雄  purple
+  '1': { ring: '#f2bf24', wash: '#f2bf241f', text: '#f5d268' }, // 传说  gold
+  '2': { ring: '#f28424', wash: '#f284241f', text: '#f5a768' }, // 遗物  orange-red
+  '3': { ring: '#edf2d6', wash: '#edf2d616', text: '#f2f5e4' }, // 古代  yellow-white
 }
 
 const EMPTY = { ring: 'var(--color-line)', wash: 'transparent', text: 'var(--color-muted)' }
