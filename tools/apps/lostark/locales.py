@@ -15,6 +15,7 @@ from __future__ import annotations
 import re
 
 from .db import Tables
+from .templates import Resolver
 
 LOCALES = {"zh-CN": "GameMsg_Chinese", "ko-KR": "GameMsg_Korean"}
 
@@ -50,6 +51,9 @@ def resolve(
 
     with tables.connect("GameMsg") as con:
         for locale, table in LOCALES.items():
+            # Descriptions embed their numbers as template directives, so each
+            # value goes through the resolver rather than being stripped raw.
+            resolver = Resolver(tables, locale_table=table)
             found: dict[str, str] = {}
             for start in range(0, len(wanted), _CHUNK):
                 chunk = wanted[start : start + _CHUNK]
@@ -57,7 +61,7 @@ def resolve(
                 for key, msg in con.execute(
                     f'SELECT KEY, MSG FROM "{table}" WHERE KEY IN ({placeholders})', chunk
                 ):
-                    found[key] = strip_markup(msg or "")
+                    found[key] = strip_markup(resolver.resolve(msg or ""))
 
             absent = [k for k in wanted if k not in found]
             if absent and missing == "raise":

@@ -24,14 +24,30 @@ def build(tables: Tables) -> dict[str, object]:
         coeffs[role]["ark_core_values"] = kept
         orphans[role] = dropped
 
-    keys = arkgrid.localization_keys(cores)
-    names = locales.resolve(tables, keys)
+    slots = arkgrid.slots(tables, cores, coeffs[battlepoint.DPS]["ark_core_values"])
+    support_slots = arkgrid.slots(
+        tables, cores, coeffs[battlepoint.SUPPORT]["ark_core_values"]
+    )
+
+    keys = set(arkgrid.localization_keys(cores))
+    keys.update(arkgrid.GRADE_NAME_KEYS.values())
+    for group in (slots, support_slots):
+        for slot in group:
+            keys.add(slot["name_key"])
+            for variant in slot["variants"]:
+                keys.update(variant["name_keys"])
+                for grade in variant["grades"].values():
+                    keys.update(grade["options"].values())
+    # A few option descriptions reference keys absent from one locale, so skip
+    # rather than fail the whole emit on them.
+    names = locales.resolve(tables, sorted(keys), missing="skip")
 
     dataset: dict[str, object] = {
         "battlepoint/dps.json": coeffs[battlepoint.DPS],
         "battlepoint/support.json": coeffs[battlepoint.SUPPORT],
         "gear/item-levels.json": gear,
         "arkgrid/cores.json": cores,
+        "arkgrid/slots.json": {"dps": slots, "support": support_slots},
         VERSION_FILE: {
             "source": "lostark-explorer",
             "generatedAt": datetime.now(UTC).isoformat(),
@@ -40,6 +56,7 @@ def build(tables: Tables) -> dict[str, object]:
                 "itemLevels": len(gear),
                 "arkCores": len(cores),
                 "localeKeys": len(keys),
+                "arkGridSlots": len(slots),
             },
             # Not silently dropped: BattlePoint carries core ids with no definition.
             "droppedArkCoreValues": {role: len(ids) for role, ids in orphans.items()},

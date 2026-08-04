@@ -26,6 +26,7 @@ def test_dataset_has_the_expected_files(dataset):
         "battlepoint/support.json",
         "gear/item-levels.json",
         "arkgrid/cores.json",
+        "arkgrid/slots.json",
         "locales/zh-CN.json",
         "locales/ko-KR.json",
         "version.json",
@@ -73,3 +74,32 @@ def test_write_refuses_a_path_inside_the_source(tmp_path, dataset):
 def test_write_allows_an_unrelated_path(tmp_path, dataset):
     write(dataset, tmp_path / "out", source=TABLES)
     assert (tmp_path / "out" / "version.json").exists()
+
+
+def test_slots_carry_resolved_option_descriptions(dataset):
+    """Option text must arrive with its numbers filled in, not as directives."""
+    slots = dataset["arkgrid/slots.json"]["dps"]
+    names = dataset["locales/zh-CN.json"]
+
+    described = 0
+    for slot in slots:
+        for variant in slot["variants"]:
+            for grade in variant["grades"].values():
+                for key in grade["options"].values():
+                    text = names.get(key)
+                    if text:
+                        described += 1
+                        assert "$TABLE" not in text, text[:80]
+                        assert "/>" not in text, text[:80]
+    assert described > 20, described
+
+
+def test_slot_grade_names_resolve(dataset):
+    names = dataset["locales/zh-CN.json"]
+    grades = {
+        g["name_key"]
+        for slot in dataset["arkgrid/slots.json"]["dps"]
+        for v in slot["variants"]
+        for g in v["grades"].values()
+    }
+    assert {names[k] for k in grades} == {"英雄", "传说", "遗物", "古代"}

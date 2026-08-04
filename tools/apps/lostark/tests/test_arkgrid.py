@@ -89,3 +89,38 @@ def test_every_core_with_values_has_option_points(cores, coeffs):
     kept, _ = partition_values(coeffs[DPS]["ark_core_values"], cores)
     missing = [cid for cid in kept if not cores[cid]["option_points"]]
     assert missing == [], f"cores with values but no point thresholds: {missing[:5]}"
+
+
+def test_slots_are_the_six_game_slots(cores, coeffs):
+    from lostark.arkgrid import partition_values, slots
+
+    kept, _ = partition_values(coeffs[DPS]["ark_core_values"], cores)
+    rows = slots(Tables(TABLES), cores, kept)
+    assert [s["key"] for s in rows] == [
+        "order_sun", "order_moon", "order_star",
+        "chaos_sun", "chaos_moon", "chaos_star",
+    ]
+    assert all(s["icon_index"] is not None for s in rows)
+
+
+def test_grade_alone_decides_value_except_for_chaos_sun_and_moon(cores, coeffs):
+    """Four slots need only a grade; two genuinely need a variant too."""
+    from lostark.arkgrid import partition_values, slots
+
+    kept, _ = partition_values(coeffs[DPS]["ark_core_values"], cores)
+    by_key = {s["key"]: s for s in slots(Tables(TABLES), cores, kept)}
+    for key in ("order_sun", "order_moon", "order_star", "chaos_star"):
+        assert len(by_key[key]["variants"]) == 1, key
+    for key in ("chaos_sun", "chaos_moon"):
+        assert len(by_key[key]["variants"]) == 2, key
+
+
+def test_every_variant_grade_carries_points_and_a_core_id(cores, coeffs):
+    from lostark.arkgrid import partition_values, slots
+
+    kept, _ = partition_values(coeffs[DPS]["ark_core_values"], cores)
+    for slot in slots(Tables(TABLES), cores, kept):
+        for variant in slot["variants"]:
+            for grade, info in variant["grades"].items():
+                assert info["core_id"] in kept, (slot["key"], grade)
+                assert info["points"], (slot["key"], grade)

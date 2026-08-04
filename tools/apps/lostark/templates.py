@@ -29,7 +29,10 @@ from functools import lru_cache
 from .db import Tables
 
 _TABLE = re.compile(r"<\$TABLE_(\w+)\s+(\w+)\s+(\d+)(?:\s+(\d+))?\s*/>", re.IGNORECASE)
-_CALC = re.compile(r"<\$(CALC|CALC_COMMA)\s+%(\d+)\s+([^<>]*?)\s*/>", re.IGNORECASE)
+# The precision prefix is optional: <$CALC 3000 - 2000/> occurs without one.
+_CALC = re.compile(
+    r"<\$(CALC|CALC_COMMA)\s+(?:%(\d+)\s+)?([^<>]*?)\s*/>", re.IGNORECASE
+)
 _TAG = re.compile(r"<[^>]+>")
 _WS = re.compile(r"[ \t]+")
 _SAFE_EXPR = re.compile(r"^[\d\s+\-*/().]+$")
@@ -94,7 +97,8 @@ class Resolver:
 
     def _sub_calc(self, text: str) -> str:
         def one(m: re.Match) -> str:
-            digits, expr = int(m.group(2)), m.group(3).strip()
+            digits = int(m.group(2)) if m.group(2) else 0
+            expr = m.group(3).strip()
             if not _SAFE_EXPR.match(expr):
                 return m.group(0)
             try:
