@@ -52,19 +52,56 @@ test('combat level below 70 uses the level table', async ({ page }) => {
   await expect(page.locator('aside').getByText('8.95%')).toBeVisible()
 })
 
-test('selecting an ark core with a point threshold changes the score', async ({ page }) => {
+test('ark grid shows six slots, three per row', async ({ page }) => {
+  await ready(page)
+  for (const name of ['秩序之日', '秩序之月', '秩序之星', '混沌之日', '混沌之月', '混沌之星']) {
+    await expect(page.getByLabel(`${name} 品质`)).toBeVisible()
+  }
+})
+
+test('a variant selector appears only where it changes the value', async ({ page }) => {
+  await ready(page)
+  // Grade alone decides the value for the three order slots and chaos star;
+  // chaos sun and moon carry two distinct value profiles, so they need a pick.
+  await expect(page.getByLabel('混沌之日 类型')).toBeVisible()
+  await expect(page.getByLabel('混沌之月 类型')).toBeVisible()
+  for (const name of ['秩序之日', '秩序之月', '秩序之星', '混沌之星']) {
+    await expect(page.getByLabel(`${name} 类型`)).toHaveCount(0)
+  }
+})
+
+test('the point slider offers only eligible thresholds', async ({ page }) => {
+  await ready(page)
+  const slider = page.getByLabel('秩序之日 点数')
+  await expect(slider).toBeDisabled()
+
+  await page.getByLabel('秩序之日 品质').selectOption('3')
+  await expect(slider).toBeEnabled()
+  // Six options (10/14/17/18/19/20) indexed 0..5, with -1 meaning unactivated.
+  await expect(slider).toHaveAttribute('min', '-1')
+  await expect(slider).toHaveAttribute('max', '5')
+
+  const card = page.locator('article').filter({ hasText: '秩序之日' })
+  for (const p of ['10', '14', '17', '18', '19', '20']) {
+    await expect(card.getByText(p, { exact: true })).toBeVisible()
+  }
+})
+
+test('equipping a core moves the score and shows its real description', async ({ page }) => {
   await ready(page)
   const before = await score(page).textContent()
 
-  const core = page.getByLabel('核心 1', { exact: true })
-  await core.selectOption({ index: 1 })
-  const points = page.getByLabel('核心 1 点数')
-  // Thresholds come from ArkGridCore.ReqOptionPoint*, not a free number field.
-  await expect(points.locator('option')).not.toHaveCount(1)
-  await points.selectOption({ index: 1 })
+  await page.getByLabel('秩序之日 品质').selectOption('3')
+  await page.getByLabel('秩序之日 点数').fill('5')
 
   await expect(score(page)).not.toHaveText(before ?? '')
   await expect(page.locator('aside').getByText('方舟核心 1')).toBeVisible()
+
+  // Descriptions arrive resolved, not as raw template directives.
+  const card = page.locator('article').filter({ hasText: '秩序之日' })
+  await expect(card.getByText('20P')).toBeVisible()
+  await expect(card.locator('p')).not.toContainText('$TABLE')
+  await expect(card.locator('p')).not.toContainText('/>')
 })
 
 test('support emits two components that are summed', async ({ page }) => {

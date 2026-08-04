@@ -34,12 +34,40 @@ export interface CoreMeta {
   option_points: Record<string, number>
 }
 
+export interface ArkGridGrade {
+  core_id: string
+  /** GameMsg key for the grade name (英雄 / 传说 / 遗物 / 古代). */
+  name_key: string
+  /** Option index (1-6) -> activated-point threshold. Irregular by design. */
+  points: Record<string, number>
+  /** Option index -> GameMsg key of the resolved effect description. */
+  options: Record<string, string>
+}
+
+export interface ArkGridVariant {
+  /**
+   * Every core name that shares this value profile. Order slots merge 162
+   * interchangeable names onto one row; chaos sun/moon keep two distinct rows.
+   */
+  name_keys: string[]
+  grades: Record<string, ArkGridGrade>
+}
+
+export interface ArkGridSlot {
+  key: string
+  name_key: string
+  /** Frame index in the EFUI_ICONATLAS_* sprite sheet (96-101). */
+  icon_index: number | null
+  variants: ArkGridVariant[]
+}
+
 export interface Dataset {
   version: DataVersion
   dps: RoleCoefficients
   support: RoleCoefficients
   gear: GearByLevel
   cores: Record<string, CoreMeta>
+  slots: { dps: ArkGridSlot[]; support: ArkGridSlot[] }
   names: Record<string, string>
 }
 
@@ -61,14 +89,15 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
     /* unversioned artifact or unreachable — fall back to bare URLs */
   }
 
-  const [version, dps, support, gear, cores, names] = await Promise.all([
+  const [version, dps, support, gear, cores, slots, names] = await Promise.all([
     json<DataVersion>('version.json'),
     json<RoleCoefficients>('battlepoint/dps.json'),
     json<RoleCoefficients>('battlepoint/support.json'),
     json<GearByLevel>('gear/item-levels.json'),
     json<Record<string, CoreMeta>>('arkgrid/cores.json'),
+    json<{ dps: ArkGridSlot[]; support: ArkGridSlot[] }>('arkgrid/slots.json'),
     json<Record<string, string>>(`locales/${locale}.json`),
   ])
 
-  return { version, dps, support, gear, cores, names }
+  return { version, dps, support, gear, cores, slots, names }
 }

@@ -17,6 +17,7 @@ import {
 } from '@/lib/loadout'
 import { Field, NumberField, Section, SelectField } from '@/components/Fields'
 import { ScoreRail } from '@/components/ScoreRail'
+import { CoreGrid } from '@/components/CoreGrid'
 
 export default function App() {
   const [data, setData] = useState<Dataset | null>(null)
@@ -99,17 +100,6 @@ export default function App() {
       setLoadout((l) => ({ ...l, weaponId: weapons[0].id }))
     }
   }, [weapons, loadout.weaponId])
-
-  const coreOptions = useMemo(() => {
-    if (!data || !coeffs) return []
-    return Object.keys(coeffs.ark_core_values)
-      .map((id) => ({
-        id,
-        label: data.names[data.cores[id]?.name_key ?? ''] ?? id,
-        grade: data.cores[id]?.grade ?? 0,
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'))
-  }, [data, coeffs])
 
   if (error) {
     return (
@@ -305,49 +295,16 @@ export default function App() {
           </Section>
 
           <Section title="方舟星阵核心">
-            {loadout.cores.map((core, i) => (
-              <Field key={i} label={`核心 ${i + 1}`}>
-                <div className="flex gap-2">
-                  <select
-                    aria-label={`核心 ${i + 1}`}
-                    value={core.id}
-                    onChange={(e) => {
-                      const cores = [...loadout.cores]
-                      cores[i] = { ...cores[i], id: e.target.value }
-                      set('cores', cores)
-                    }}
-                    className="min-w-0 flex-1 rounded-md border border-line bg-bg px-2 py-1 text-sm"
-                  >
-                    <option value="">未装配</option>
-                    {coreOptions.map((o) => (
-                      <option key={o.id} value={o.id}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label={`核心 ${i + 1} 点数`}
-                    value={core.optionIndex}
-                    disabled={!core.id}
-                    onChange={(e) => {
-                      const cores = [...loadout.cores]
-                      cores[i] = { ...cores[i], optionIndex: Number(e.target.value) }
-                      set('cores', cores)
-                    }}
-                    className="w-24 rounded-md border border-line bg-bg px-2 py-1 text-sm disabled:opacity-40"
-                  >
-                    <option value={0}>未激活</option>
-                    {Object.entries(data.cores[core.id]?.option_points ?? {}).map(
-                      ([index, threshold]) => (
-                        <option key={index} value={index}>
-                          {threshold}P
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </div>
-              </Field>
-            ))}
+            <CoreGrid
+              slots={data.slots[loadout.role]}
+              cores={loadout.cores}
+              names={data.names}
+              onChange={(i, next) => {
+                const list = [...loadout.cores]
+                list[i] = next
+                set('cores', list)
+              }}
+            />
           </Section>
 
           <Section title="手镯">
