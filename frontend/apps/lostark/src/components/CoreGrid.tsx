@@ -156,12 +156,41 @@ function CoreCard({
             <button
               type="button"
               aria-label={`${slotName} 效果`}
-              className="grid size-20 cursor-help place-items-center rounded-full border-2 text-sm transition-transform hover:scale-105"
-              style={{ borderColor: style.ring, background: style.wash, color: style.text }}
+              className="relative grid size-20 cursor-help place-items-center rounded-full transition-transform hover:scale-105"
             >
-              {/* Circle placeholder. EFUI_ARKGRID's textures are all Crunch
-                  compressed, so the real core art is not decodable yet. */}
-              {slot.icon_index ?? '—'}
+              {/* The game's own socket ring (arkpassive_i1_nopack), used for
+                  both empty and filled slots so the frame never moves. */}
+              <img
+                src="cores/frame.png"
+                alt=""
+                aria-hidden
+                className="absolute inset-0 size-full rounded-full"
+              />
+              {/* A grade-tinted ring over the socket, so quality still reads at
+                  a glance now that the frame itself is fixed. */}
+              <span
+                aria-hidden
+                className="absolute inset-0 rounded-full border-2"
+                style={{ borderColor: gradeKey ? style.ring : 'transparent' }}
+              />
+              {gradeKey ? (
+                // Real game art, cropped from the use_13 sheet of
+                // EFUI_ICONATLAS_U (row 2, columns 5-10 at 64px cells).
+                <img
+                  src={`cores/${slot.key}.png`}
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="relative"
+                />
+              ) : (
+                <span
+                  aria-hidden
+                  className="relative text-2xl font-light leading-none text-muted"
+                >
+                  +
+                </span>
+              )}
             </button>
           </HoverCardTrigger>
           <HoverCardContent
