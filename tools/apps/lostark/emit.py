@@ -6,7 +6,7 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import arkgrid, battlepoint, itemlevel, locales
+from . import arkgrid, battlepoint, classes, itemlevel, locales
 from .db import Tables
 
 VERSION_FILE = "version.json"
@@ -29,18 +29,24 @@ def build(tables: Tables) -> dict[str, object]:
         tables, cores, coeffs[battlepoint.SUPPORT]["ark_core_values"]
     )
 
+    class_rows = classes.extract(tables)
+
     keys = set(arkgrid.localization_keys(cores))
+    keys.update(classes.localization_keys(class_rows))
     keys.update(arkgrid.GRADE_NAME_KEYS.values())
     for group in (slots, support_slots):
         for slot in group:
             keys.add(slot["name_key"])
-            for variant in slot["variants"]:
-                keys.update(variant["name_keys"])
-                for grade in variant["grades"].values():
-                    keys.update(grade["options"].values())
+            for variants in slot["by_class"].values():
+                for variant in variants:
+                    keys.add(variant["name_key"])
+                    for grade in variant["grades"].values():
+                        keys.update(grade["options"].values())
     # A few option descriptions reference keys absent from one locale, so skip
     # rather than fail the whole emit on them.
     names = locales.resolve(tables, sorted(keys), missing="skip")
+    # Support sub-classes are flagged by name, so the pass needs resolved text.
+    class_rows = classes.extract(tables, names.get("zh-CN", {}))
 
     dataset: dict[str, object] = {
         "battlepoint/dps.json": coeffs[battlepoint.DPS],
@@ -48,6 +54,7 @@ def build(tables: Tables) -> dict[str, object]:
         "gear/item-levels.json": gear,
         "arkgrid/cores.json": cores,
         "arkgrid/slots.json": {"dps": slots, "support": support_slots},
+        "classes.json": class_rows,
         VERSION_FILE: {
             "source": "lostark-explorer",
             "generatedAt": datetime.now(UTC).isoformat(),
@@ -57,6 +64,7 @@ def build(tables: Tables) -> dict[str, object]:
                 "arkCores": len(cores),
                 "localeKeys": len(keys),
                 "arkGridSlots": len(slots),
+                "classes": len(class_rows),
             },
             # Not silently dropped: BattlePoint carries core ids with no definition.
             "droppedArkCoreValues": {role: len(ids) for role, ids in orphans.items()},

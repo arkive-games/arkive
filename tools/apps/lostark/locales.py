@@ -63,6 +63,24 @@ def resolve(
                 ):
                     found[key] = strip_markup(resolver.resolve(msg or ""))
 
+            # Some tables store their GameMsg key in a different case than the
+            # catalogue does — Ability.Name has tip.name.ability_URGENTRESCUE1
+            # where GameMsg keys it lowercase — and SQL IN is case-sensitive, so
+            # an exact-match-only pass silently loses those rows.
+            absent = [k for k in wanted if k not in found]
+            if absent:
+                lowered = {k.lower(): k for k in absent}
+                for start in range(0, len(absent), _CHUNK):
+                    chunk = [k.lower() for k in absent[start : start + _CHUNK]]
+                    placeholders = ",".join("?" * len(chunk))
+                    for key, msg in con.execute(
+                        f'SELECT KEY, MSG FROM "{table}" WHERE LOWER(KEY) IN ({placeholders})',
+                        chunk,
+                    ):
+                        original = lowered.get(key.lower())
+                        if original:
+                            found[original] = strip_markup(resolver.resolve(msg or ""))
+
             absent = [k for k in wanted if k not in found]
             if absent and missing == "raise":
                 raise KeyError(f"{locale}: {len(absent)} key(s) absent, e.g. {absent[:5]}")

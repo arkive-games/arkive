@@ -57,3 +57,14 @@ def test_resolve_handles_more_keys_than_one_sql_chunk():
     keys = [f"tip.name.core_{i}" for i in range(673000003, 673000009)] * 200
     out = resolve(Tables(TABLES), keys, missing="skip")
     assert len(out["zh-CN"]) <= 6
+
+
+@live
+def test_resolves_keys_whose_case_differs_from_gamemsg():
+    """Ability.Name stores uppercase keys that GameMsg holds lowercase.
+
+    SQL IN is case-sensitive, so an exact-match-only pass loses them entirely —
+    which silently dropped three of the four support sub-class names.
+    """
+    out = resolve(Tables(TABLES), ["tip.name.ability_URGENTRESCUE1"])
+    assert out["zh-CN"]["tip.name.ability_URGENTRESCUE1"] == "迫切救赎"

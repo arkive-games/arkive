@@ -27,6 +27,7 @@ def test_dataset_has_the_expected_files(dataset):
         "gear/item-levels.json",
         "arkgrid/cores.json",
         "arkgrid/slots.json",
+        "classes.json",
         "locales/zh-CN.json",
         "locales/ko-KR.json",
         "version.json",
@@ -83,14 +84,20 @@ def test_slots_carry_resolved_option_descriptions(dataset):
 
     described = 0
     for slot in slots:
-        for variant in slot["variants"]:
+        for variants in slot["by_class"].values():
+          for variant in variants:
             for grade in variant["grades"].values():
                 for key in grade["options"].values():
                     text = names.get(key)
-                    if text:
-                        described += 1
-                        assert "$TABLE" not in text, text[:80]
-                        assert "/>" not in text, text[:80]
+                    if not text:
+                        continue
+                    # $MACRO and $PLAYER_INFO depend on runtime state and are
+                    # deliberately left unresolved; everything else must resolve.
+                    if "$MACRO" in text or "$PLAYER_INFO" in text:
+                        continue
+                    described += 1
+                    assert "$TABLE" not in text, text[:80]
+                    assert "/>" not in text, text[:80]
     assert described > 20, described
 
 
@@ -99,7 +106,8 @@ def test_slot_grade_names_resolve(dataset):
     grades = {
         g["name_key"]
         for slot in dataset["arkgrid/slots.json"]["dps"]
-        for v in slot["variants"]
+        for variants in slot["by_class"].values()
+        for v in variants
         for g in v["grades"].values()
     }
     assert {names[k] for k in grades} == {"英雄", "传说", "遗物", "古代"}

@@ -68,16 +68,22 @@ GRADE_NAME_KEYS = {
 def slots(
     tables: Tables, cores: dict[str, dict], values: dict[str, dict[str, float]]
 ) -> list[dict]:
-    """The six slots, each with the variants that actually affect combat power.
+    """The six slots, each listing the cores a class can equip there.
 
-    Combat power is determined by **grade alone** for the three order slots and
-    for chaos star: every core in a given (category, grade) shares one value set,
-    across all 29 classes. Chaos sun and moon are the exception — at grades 1-3
-    their three variants carry two distinct value sets, so those slots need a
-    variant choice and the others do not.
+    Every ``(category, class, grade)`` holds exactly **six** cores — the six
+    variants that class can slot. Order slots are class-specific (``PCClass`` is
+    the class id); chaos slots are shared, stored under class ``"0"``.
 
-    Only cores with a non-zero value are considered: the rest are utility options
-    that never move the score, and offering them would imply otherwise.
+    Combat power is decided by grade alone for the three order slots and chaos
+    star: all six variants in a grade share one value set, and that set is the
+    same for every class. The variants still differ in their *effects*, which is
+    why they are all offered rather than collapsed.
+
+    **All six are listed, including those that contribute no combat power.** The
+    game lets a class equip any of the six, and some are utility options with no
+    BattlePoint row; hiding them would show three choices where the game shows
+    six. Their amp resolves to zero, and their effect text still explains what
+    they do.
     """
     option_desc = {
         str(row["PrimaryKey"]): row["Desc"]
@@ -85,8 +91,10 @@ def slots(
         if row["Desc"]
     }
     option_of_core: dict[str, dict[str, str]] = {}
+    class_of_core: dict[str, int] = {}
     for row in tables.read("ArkGridCore"):
         cid = str(row["PrimaryKey"])
+        class_of_core[cid] = row["PCClass"] or 0
         mapped = {}
         for i in range(1, 7):
             oid = row[f"Option{i}"]
@@ -94,33 +102,20 @@ def slots(
                 mapped[str(i)] = option_desc[str(oid)]
         option_of_core[cid] = mapped
 
-    by_category: dict[str, list[tuple[str, dict]]] = {}
+    # category -> class -> variant name -> grade -> core
+    tree: dict[str, dict[int, dict[str, dict[int, tuple[str, dict]]]]] = {}
     for cid, meta in cores.items():
-        if cid not in values:
-            continue
-        by_category.setdefault(meta["category_key"], []).append((cid, meta))
+        by_class = tree.setdefault(meta["category_key"], {})
+        by_name = by_class.setdefault(class_of_core.get(cid, 0), {})
+        by_name.setdefault(meta["name_key"], {})[meta["grade"]] = (cid, meta)
 
     out: list[dict] = []
     for category in SLOT_CATEGORIES:
-        entries = sorted(by_category.get(category, []), key=lambda kv: int(kv[0]))
-        # Group by the variant's own name; a variant spans grades.
-        variants: dict[str, dict[int, tuple[str, dict]]] = {}
-        for cid, meta in entries:
-            variants.setdefault(meta["name_key"], {})[meta["grade"]] = (cid, meta)
-
-        # Collapse by VALUE PROFILE, not by name. An order slot has 162
-        # value-carrying cores (six variants across 29 classes) that all share one
-        # profile per grade, so naming them separately would offer 162 choices that
-        # compute the same score. Cores whose profiles are identical are
-        # interchangeable here; their names are merged onto one row.
-        by_profile: dict[tuple, dict] = {}
-        for name_key, by_grade in variants.items():
-            profile = tuple(
-                (grade, tuple(sorted(values[cid].items())))
-                for grade, (cid, _) in sorted(by_grade.items())
-            )
-            row = by_profile.get(profile)
-            if row is None:
+        by_class = tree.get(category, {})
+        classes: dict[str, list[dict]] = {}
+        for class_id, by_name in sorted(by_class.items()):
+            variants = []
+            for name_key, by_grade in sorted(by_name.items()):
                 grades = {}
                 for grade, (cid, meta) in sorted(by_grade.items()):
                     grades[str(grade)] = {
@@ -128,30 +123,39 @@ def slots(
                         "name_key": GRADE_NAME_KEYS[grade],
                         "points": meta["option_points"],
                         "options": option_of_core.get(cid, {}),
+                        # False for utility variants with no BattlePoint row.
+                        "scores": cid in values,
                     }
-                by_profile[profile] = {"name_keys": [name_key], "grades": grades}
-            else:
-                row["name_keys"].append(name_key)
-
-        variant_rows = list(by_profile.values())
-        for row in variant_rows:
-            row["name_keys"] = sorted(row["name_keys"])
-        # Strongest first, so the default pick is what someone optimising combat
-        # power would choose.
-        variant_rows.sort(
-            key=lambda v: -max(
-                (max(values[g["core_id"]].values(), default=0.0) for g in v["grades"].values()),
-                default=0.0,
+                variants.append({"name_key": name_key, "grades": grades})
+            # Strongest first, so the default pick is what someone optimising
+            # combat power would choose.
+            variants.sort(
+                key=lambda v: -max(
+                    (
+                        max(values.get(g["core_id"], {}).values(), default=0.0)
+                        for g in v["grades"].values()
+                    ),
+                    default=0.0,
+                )
             )
-        )
+            classes[str(class_id)] = variants
+
+        any_class = next(iter(classes.values()), [])
         out.append(
             {
                 "key": category.rsplit(".", 1)[-1].removeprefix("core_"),
                 "name_key": category,
+                # Chaos slots are shared across classes; order slots are not.
+                "class_agnostic": list(classes) == ["0"],
                 "icon_index": next(
-                    (m["icon_index"] for _, m in entries if "icon_index" in m), None
+                    (
+                        cores[g["core_id"]]["icon_index"]
+                        for v in any_class
+                        for g in v["grades"].values()
+                    ),
+                    None,
                 ),
-                "variants": variant_rows,
+                "by_class": classes,
             }
         )
     return out

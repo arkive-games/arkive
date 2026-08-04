@@ -103,16 +103,27 @@ def test_slots_are_the_six_game_slots(cores, coeffs):
     assert all(s["icon_index"] is not None for s in rows)
 
 
-def test_grade_alone_decides_value_except_for_chaos_sun_and_moon(cores, coeffs):
-    """Four slots need only a grade; two genuinely need a variant too."""
+def test_order_slots_are_per_class_and_chaos_slots_are_shared(cores, coeffs):
     from lostark.arkgrid import partition_values, slots
 
     kept, _ = partition_values(coeffs[DPS]["ark_core_values"], cores)
     by_key = {s["key"]: s for s in slots(Tables(TABLES), cores, kept)}
-    for key in ("order_sun", "order_moon", "order_star", "chaos_star"):
-        assert len(by_key[key]["variants"]) == 1, key
-    for key in ("chaos_sun", "chaos_moon"):
-        assert len(by_key[key]["variants"]) == 2, key
+    for key in ("order_sun", "order_moon", "order_star"):
+        assert not by_key[key]["class_agnostic"], key
+        assert len(by_key[key]["by_class"]) == 29, key
+    for key in ("chaos_sun", "chaos_moon", "chaos_star"):
+        assert by_key[key]["class_agnostic"], key
+        assert list(by_key[key]["by_class"]) == ["0"], key
+
+
+def test_every_class_gets_six_cores_per_slot(cores, coeffs):
+    """The game gives each class exactly six variants in every slot."""
+    from lostark.arkgrid import partition_values, slots
+
+    kept, _ = partition_values(coeffs[DPS]["ark_core_values"], cores)
+    for slot in slots(Tables(TABLES), cores, kept):
+        for class_id, variants in slot["by_class"].items():
+            assert len(variants) == 6, (slot["key"], class_id, len(variants))
 
 
 def test_every_variant_grade_carries_points_and_a_core_id(cores, coeffs):
@@ -120,7 +131,9 @@ def test_every_variant_grade_carries_points_and_a_core_id(cores, coeffs):
 
     kept, _ = partition_values(coeffs[DPS]["ark_core_values"], cores)
     for slot in slots(Tables(TABLES), cores, kept):
-        for variant in slot["variants"]:
-            for grade, info in variant["grades"].items():
-                assert info["core_id"] in kept, (slot["key"], grade)
-                assert info["points"], (slot["key"], grade)
+        for variants in slot["by_class"].values():
+            for variant in variants:
+                for grade, info in variant["grades"].items():
+                    assert info["points"], (slot["key"], grade)
+                    # Utility variants have no BattlePoint row; flagged, not hidden.
+                    assert info["scores"] == (info["core_id"] in kept)
