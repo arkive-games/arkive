@@ -103,7 +103,13 @@ def test_type_21_is_support_only_and_defensive(by_id):
     """
     for suffix, amp in (("1", 0.049), ("2", 0.042), ("3", 0.035), ("4", 0.028)):
         line = by_id[f"e3-1118{suffix}"]
-        assert line["amp"][SUPPORT] == pytest.approx(amp), suffix
+        # heal_amp, NOT amp: Type 21 is the protection and recovery channel, so it
+        # feeds the support role's separate heal component the way the orb's and
+        # the engravings' heal amps do. It used to be merged into the score amp,
+        # which applied it to a base of 8.55 instead of 189.25.
+        assert line["heal_amp"][SUPPORT] == pytest.approx(amp), suffix
+        assert line["amp"][SUPPORT] == 0.0, suffix
+        assert line["heal_amp"][DPS] == 0.0, suffix
         assert line["amp"][DPS] == 0.0, suffix
 
 

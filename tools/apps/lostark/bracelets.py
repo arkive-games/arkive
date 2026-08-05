@@ -178,25 +178,33 @@ def _pool_tier(pool_id: int) -> int | None:
 def _amps(tables: Tables) -> tuple[dict[str, dict[tuple[int, int], int]], dict[str, dict[int, int]]]:
     """BattlePoint bracelet coefficients as ``(addon_amps, stat_ratios)`` per role.
 
-    ``addon_amps[role][(option_type, option_id)]`` is the raw ``ValueC`` of Type 20/21;
-    ``stat_ratios[role][channel]`` is the raw ``ValueC`` of Type 19. Both stay scaled so
-    the caller divides once, at the point it knows which formula applies.
+    ``addon_amps[role][…]`` is the raw ``ValueC`` of Type 20 (the attack channel) and
+    ``heal_amps[role][…]`` that of Type 21 (protection/heal). They are returned apart
+    because they feed DIFFERENT score components. ``stat_ratios[role][channel]`` is
+    Type 19. All stay scaled so the caller divides once, where it knows the formula.
     """
     addon: dict[str, dict[tuple[int, int], int]] = {DPS: {}, SUPPORT: {}}
+    heal: dict[str, dict[tuple[int, int], int]] = {DPS: {}, SUPPORT: {}}
     ratios: dict[str, dict[int, int]] = {DPS: {}, SUPPORT: {}}
     for row in tables.read("BattlePoint"):
         role = _ROLE_BY_PRIMARY_KEY.get(row["PrimaryKey"])
         if role is None:
             continue
         kind = row["Type"]
-        if kind in (_BP_ADDON_ATTACK, _BP_ADDON_DEFENSE):
+        if kind == _BP_ADDON_ATTACK:
             addon[role][(row["ValueA"], row["ValueB"])] = row["ValueC"]
+        elif kind == _BP_ADDON_DEFENSE:
+            # Type 21 is the protection/heal channel, kept SEPARATE from Type 20.
+            # Merging them filed a heal amp into the support score, which is the
+            # same mistake the engraving Type 10/11 split already corrects: the
+            # four Type-21 lines are support-only and read "队友保护与恢复效果提升".
+            heal[role][(row["ValueA"], row["ValueB"])] = row["ValueC"]
         elif kind == _BP_STAT_RATIO:
             # ValueA 1 keys by stat (ValueB); ValueA 2/3 are the support channels and
             # leave ValueB at 0, so the channel alone identifies the ratio.
             key = row["ValueB"] if row["ValueA"] == _RATIO_CHANNEL_STAT else row["ValueA"]
             ratios[role][key] = row["ValueC"]
-    return addon, ratios
+    return addon, heal, ratios
 
 
 def _name_keys(tables: Tables) -> tuple[dict[int, str], dict[int, str], dict[int, str]]:
@@ -237,7 +245,7 @@ def option_lines(tables: Tables) -> list[dict]:
     ``0.0`` when the game grants none — the basic and combat-trait columns score
     nothing here, and emitting them as absent would read as missing data.
     """
-    addon, ratios = _amps(tables)
+    addon, heal, ratios = _amps(tables)
     ability_desc, effect_desc, stat_alias = _name_keys(tables)
 
     grades: dict[tuple, set[int]] = defaultdict(set)
@@ -275,7 +283,16 @@ def option_lines(tables: Tables) -> list[dict]:
             name_key = _AMPLIFY_NAME_KEYS.get(option_type)
 
         amp = {}
+        # Type 21 lands here, apart from the score amp, because it feeds the
+        # support role's SEPARATE heal component. It is only ever populated for
+        # the four support-only protection/heal lines.
+        heal_amp = {}
         for role in (DPS, SUPPORT):
+            heal_amp[role] = (
+                heal[role].get((option_type, effect_id), 0) / _RATE_DIVISOR
+                if option_type in (_TYPE_ABILITY, _TYPE_COMBAT_EFFECT)
+                else 0.0
+            )
             if option_type in (_TYPE_ABILITY, _TYPE_COMBAT_EFFECT):
                 raw = addon[role].get((option_type, effect_id), 0)
                 amp[role] = raw / _RATE_DIVISOR
@@ -300,6 +317,7 @@ def option_lines(tables: Tables) -> list[dict]:
                 "tiers": sorted(tiers[key]),
                 "name_key": name_key,
                 "amp": amp,
+                "heal_amp": heal_amp,
             }
         )
     out.sort(

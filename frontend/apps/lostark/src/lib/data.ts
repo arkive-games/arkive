@@ -132,6 +132,12 @@ export interface BraceletLine {
   tiers: number[]
   name_key: string | null
   amp: { dps: number; support: number }
+  /**
+   * BattlePoint Type 21 — the protection/heal channel, kept apart from the score
+   * amp because it feeds the support role's separate heal component. Only the
+   * four support-only 队友保护与恢复 lines populate it.
+   */
+  heal_amp: { dps: number; support: number }
 }
 
 /**
@@ -280,8 +286,13 @@ export interface EngravingMeta {
    * Flat bonus once total stone levels reach `threshold`.
    *
    * A RAW STAT, not an amp: the client grants stat 150, which has no name in any
-   * table and no BattlePoint Type keyed to it. The fan site claims 0.015 combat
-   * power for it; that is uncorroborated, so it is not scored here.
+   * table and no BattlePoint Type keyed to it.
+   *
+   * The fan site claims 0.015 combat power for it. That is UNCORROBORATED but it
+   * IS applied — `stoneBasic()` multiplies basic attack by 1.015 once total stone
+   * levels reach the threshold. This comment previously said it was not scored,
+   * which was simply false. It stays applied because dropping it would understate
+   * every stone build, and it is disclosed in the score rail's source notice.
    */
   stoneLevelBonus: {
     threshold: number

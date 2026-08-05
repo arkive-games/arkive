@@ -28,6 +28,9 @@ const MAX_STONE_SLOTS = 2
 /** 遗物 — the grade a real build runs, so the one a fresh pick lands on. */
 const DEFAULT_GRADE = 4
 
+/** 英雄. The client folds a complete four-book epic set into the base row. */
+const EPIC_GRADE = 2
+
 export function EngravingGrid({
   meta,
   names,
@@ -59,6 +62,13 @@ export function EngravingGrid({
     })
 
   const stoneUsed = slots.filter((s) => s.name && s.stone > 0).length
+  // The game does not permit the same engraving twice, and five copies of 怨恨
+  // compounded to +159%. Each card therefore sees every option EXCEPT the ones
+  // its siblings hold.
+  const takenBy = new Map<string, number>()
+  slots.forEach((s, i) => {
+    if (s.name && !takenBy.has(s.name)) takenBy.set(s.name, i)
+  })
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -67,10 +77,10 @@ export function EngravingGrid({
           key={i}
           index={i}
           slot={slot}
-          options={options}
           meta={meta}
           names={names}
           scoring={scoring}
+          options={options.filter((o) => (takenBy.get(o.name) ?? i) === i)}
           role={role}
           amp={amps[i] ?? 0}
           // A slot keeps its own stone select once it has one; only slots
@@ -127,8 +137,22 @@ function EngravingCard({
    */
   const grid = picked?.amp[role] ?? {}
   const hasGrid = Object.keys(grid).length > 0
-  const defines = (grade: number, level: number) =>
-    !hasGrid || String(20 * slot.stone + 1 + 4 * (grade - 2) + level) in grid
+  /**
+   * Whether the client has a growth state for this (stone, grade, level).
+   *
+   * Two conditions, because the BattlePoint grid is LOOSER than the growth-state
+   * list. The grid has 61 cells per engraving but `EFTable_Ability`'s growth
+   * states (`OptionType00 = 28`) have 45: codes 21-24, 41-44, 61-64 and 81-84
+   * exist as amps with no state behind them. And all 1,890 growth rows read
+   * `영웅 4` — the client has NO partial-epic state anywhere — so epic is only
+   * ever offered complete, whatever the stone level. Without that second rule the
+   * same (grade, level) pair was offered or refused depending on an unrelated
+   * dial, which is incoherent on its face.
+   */
+  const definesAt = (stone: number, grade: number, level: number) =>
+    (grade !== EPIC_GRADE || level === meta.bookMaxLevel) &&
+    (!hasGrid || String(20 * stone + 1 + 4 * (grade - 2) + level) in grid)
+  const defines = (grade: number, level: number) => definesAt(slot.stone, grade, level)
 
   const gradeOptions = meta.grades.filter(
     (g) =>
@@ -249,7 +273,9 @@ function EngravingCard({
           }}
           className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
         >
-          <option value={0}>品质</option>
+          {/* Only while unset. Leaving it selectable let you zero a configured
+              engraving from the dial that is supposed to configure it. */}
+          {slot.grade ? null : <option value={0}>品质</option>}
           {/* Only grades the grid defines a cell for. 基本 (grade 1) is never on
               the ladder, and 英雄 drops out unless a level resolves. */}
           {gradeOptions.map((g) => (
@@ -285,7 +311,25 @@ function EngravingCard({
             value={slot.stone}
             disabled={!slot.name || stoneLocked}
             title={stoneLocked ? '最多两个刻印可镶嵌能力石' : undefined}
-            onChange={(e) => onChange({ ...slot, stone: Number(e.target.value) })}
+            onChange={(e) => {
+              const stone = Number(e.target.value)
+              // The valid lattice depends on the stone: at stone 0 英雄 has only
+              // level 4, at stone >= 1 it has none at all. Changing the stone
+              // without re-snapping left a book level with no cell — amp 0, and
+              // the select still DISPLAYED 4级 because React's value matched no
+              // option. The grade dial already did this; the stone dial did not.
+              const valid = Array.from({ length: meta.bookMaxLevel }, (_, i) => i + 1).filter(
+                (lv) => definesAt(stone, slot.grade, lv),
+              )
+              onChange({
+                ...slot,
+                stone,
+                book:
+                  slot.grade && !valid.includes(slot.book) ? (valid[0] ?? slot.book) : slot.book,
+                // A grade with no cell at the new stone level cannot stand either.
+                grade: slot.grade && valid.length === 0 ? 0 : slot.grade,
+              })
+            }}
             className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
           >
             {/* 石 abbreviates sys.ability.spec_tooltip_grade_0 (能力石); the full

@@ -10,10 +10,13 @@ import { braceletAmp, engravingAmpFromClient } from './engine'
  * so the multiply-vs-sum question belongs here, against the pure function.
  */
 describe('braceletAmp', () => {
+  const none = { dps: 0, support: 0 }
   const lines = [
-    { id: 'a', amp: { dps: 0.03, support: 0.01 } },
-    { id: 'b', amp: { dps: 0.02, support: 0.005 } },
-    { id: 'zero', amp: { dps: 0, support: 0 } },
+    { id: 'a', amp: { dps: 0.03, support: 0.01 }, heal_amp: none },
+    { id: 'b', amp: { dps: 0.02, support: 0.005 }, heal_amp: none },
+    { id: 'zero', amp: none, heal_amp: none },
+    // Type 21: a protection/heal line, which carries NO score amp.
+    { id: 'heal', amp: none, heal_amp: { dps: 0, support: 0.049 } },
   ]
 
   it('compounds rather than sums', () => {
@@ -34,6 +37,20 @@ describe('braceletAmp', () => {
 
   it('contributes nothing for lines the game grants no power', () => {
     expect(braceletAmp(['zero'], 'dps', lines)).toBe(0)
+  })
+
+  /**
+   * Type 21 is the protection/heal channel and belongs to the support role's
+   * separate heal component. Merging it into the score amp put a 4.9% amp on a
+   * base of 8.55 instead of 189.25 — a percent-level error, not a rounding one.
+   */
+  it('keeps the heal channel out of the score', () => {
+    expect(braceletAmp(['heal'], 'support', lines)).toBe(0)
+    expect(braceletAmp(['heal'], 'support', lines, 'heal')).toBeCloseTo(0.049, 10)
+  })
+
+  it('does not leak a heal amp into the dps role', () => {
+    expect(braceletAmp(['heal'], 'dps', lines, 'heal')).toBe(0)
   })
 })
 

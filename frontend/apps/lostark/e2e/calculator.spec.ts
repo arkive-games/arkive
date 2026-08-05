@@ -582,8 +582,9 @@ test('engraving quality offers only the growth ladder', async ({ page }) => {
   // The amp grid's book axis starts at epic, so 基本 (grade 1) is not on the
   // ladder — offering it would index a cell the client does not define.
   const grades = page.locator('select[aria-label="刻印 1 品质"] option')
-  // The first option doubles as the placeholder, so it reads 品质 rather than —.
-  await expect(grades).toHaveText(['品质', '英雄', '传说', '遗物'])
+  // The 品质 placeholder is gone once a grade is set — leaving it selectable let
+  // you zero a configured engraving from the dial meant to configure it.
+  await expect(grades).toHaveText(['英雄', '传说', '遗物'])
   await expect(page.locator('select[aria-label="刻印 1 等级"] option')).toHaveText([
     '1级',
     '2级',
@@ -865,4 +866,56 @@ test('the provenance notice no longer claims avatars or combat traits', async ({
   await expect(notice).toContainText('战斗特性')
   // Only the support HP constants and the ability-stone threshold amp are left.
   await expect(notice).toContainText('辅助生命值常数')
+})
+
+test('the same engraving cannot be equipped twice', async ({ page }) => {
+  await ready(page)
+  await pickEngraving(page, 1, '怨恨')
+
+  // The game does not permit duplicates, and five copies compounded to +159%.
+  await page.locator('[role="combobox"][aria-label^="刻印 2"]').click()
+  await page.locator('input[placeholder="搜索刻印…"]').fill('怨恨')
+  await expect(page.locator('[cmdk-item]')).toHaveCount(0)
+})
+
+test('the quality placeholder cannot re-zero a configured engraving', async ({ page }) => {
+  await ready(page)
+  await pickEngraving(page, 1, '怨恨')
+  // 品质 is a placeholder for an unset dial, not a value you can go back to.
+  await expect(page.locator('select[aria-label="刻印 1 品质"] option')).toHaveText([
+    '英雄',
+    '传说',
+    '遗物',
+  ])
+})
+
+test('epic is only ever offered complete, at every stone level', async ({ page }) => {
+  await ready(page)
+  await pickEngraving(page, 1, '怨恨')
+
+  // All 1,890 of the client's growth rows read 영웅 4: there is no partial-epic
+  // state anywhere. Offering 英雄 1-3级 at stone >= 1 meant the same (grade, level)
+  // pair was accepted or refused depending on an unrelated dial.
+  for (const stone of ['0', '1', '4']) {
+    await page.getByLabel('刻印 1 能力石').selectOption(stone)
+    await page.getByLabel('刻印 1 品质').selectOption('2')
+    await expect(page.locator('select[aria-label="刻印 1 等级"] option')).toHaveText(['4级'])
+    // And the dial must SHOW what it stores — it used to display 4级 while
+    // holding 1, because React's value matched no option.
+    await expect(page.getByLabel('刻印 1 等级')).toHaveValue('4')
+    await page.getByLabel('刻印 1 品质').selectOption('4')
+  }
+})
+
+test('a heal-only engraving reports its contribution on the card', async ({ page }) => {
+  await ready(page)
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '圣骑士' })
+  await page.getByRole('tab', { name: /祝福光环/ }).click()
+
+  // 妙手回春 scores only through BattlePoint Type 11, so reading the score channel
+  // alone showed "—" on a card contributing to the heal half.
+  await pickEngraving(page, 1, '妙手回春')
+  const card = page.locator('article').filter({ hasText: '刻印 1' }).first()
+  await expect(card).not.toContainText('—')
+  await expect(page.locator('aside').getByText('刻印恢复')).toBeVisible()
 })

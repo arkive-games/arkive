@@ -150,7 +150,11 @@ export function stoneBasic(engravings: { name: string; stone: number }[]): numbe
 }
 
 /** Just the fields of a bracelet line that scoring needs. */
-export type BraceletAmp = { id: string; amp: { dps: number; support: number } }
+export type BraceletAmp = {
+  id: string
+  amp: { dps: number; support: number }
+  heal_amp: { dps: number; support: number }
+}
 
 /**
  * Bracelet line amp, from the client's own tables.
@@ -161,13 +165,22 @@ export type BraceletAmp = { id: string; amp: { dps: number; support: number } }
  * and its heal column was half the game's amp with 0.0175 rounded to 0.017.
  *
  * Lines compound rather than sum, matching the reference's productAmp(...) - 1.
+ *
+ * `channel` splits Type 20 (attack) from Type 21 (protection/heal): the latter
+ * belongs to the support role's separate heal component, exactly as the orb's and
+ * the engravings' heal amps do. Merging them filed a heal amp into the support
+ * score, where the base is 8.55 against the heal component's 189.25 — so which
+ * half a 4.9% amp lands in moves the total by percent, not by rounding.
  */
 export function braceletAmp(
   ids: string[],
   role: 'dps' | 'support',
   lines: BraceletAmp[],
+  channel: 'score' | 'heal' = 'score',
 ): number {
-  const byId = new Map(lines.map((l) => [l.id, l.amp[role]]))
+  const byId = new Map(
+    lines.map((l) => [l.id, channel === 'heal' ? l.heal_amp[role] : l.amp[role]]),
+  )
   return ids.reduce((acc, id) => acc * (1 + (id ? (byId.get(id) ?? 0) : 0)), 1) - 1
 }
 
@@ -453,7 +466,9 @@ export function evaluate(
     (acc, e) => acc * (1 + engravingAmpFromClient(e, loadout.role, engravingsByName, 'heal')),
     1,
   )
+  const braceletHeal = braceletAmp(loadout.braceletLines, loadout.role, braceletLines, 'heal')
   const healAmps: AmpRow[] = [{ name: '乐园宝珠', value: orb?.heal_amp ?? 0 }]
+  if (braceletHeal) healAmps.push({ name: '手镯恢复', value: braceletHeal })
   if (engHealProduct !== 1) healAmps.push({ name: '刻印恢复', value: engHealProduct - 1 })
 
   const heal: ScoreComponent = {

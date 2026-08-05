@@ -173,8 +173,14 @@ export default function App() {
   /** Each engraving slot's own contribution, from the client's growth grid. */
   const engravingAmps = useMemo(
     () =>
-      loadout.engravings.map((slot) =>
-        engravingAmpFromClient(slot, loadout.role, engravingsByName),
+      // Both channels: a heal-only engraving (妙手回春 is the one) has an empty
+      // score grid, so reading only the score channel showed "—" on a card that
+      // was contributing 44.8% to the heal half. `scoringEngravings` already
+      // checks both, so the two disagreed.
+      loadout.engravings.map(
+        (slot) =>
+          engravingAmpFromClient(slot, loadout.role, engravingsByName) +
+          engravingAmpFromClient(slot, loadout.role, engravingsByName, 'heal'),
       ),
     [loadout.engravings, loadout.role, engravingsByName],
   )
