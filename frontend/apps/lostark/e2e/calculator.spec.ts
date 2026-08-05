@@ -694,16 +694,29 @@ test('the effect text scales with level and stone', async ({ page }) => {
     return text
   }
 
-  // AbilitySpecification: base 15%, plus the relic channel per level, plus the
-  // stone channel. Ability.Desc alone is stuck at 4% whatever the dials say,
-  // which is the bug this covers.
-  expect(await read()).toContain('15.75%')
+  // The ladder ACCUMULATES: a 遗物 engraving sits on a maxed legend channel, as
+  // the client's own Comment2 records every relic state as 영웅 4 / 전설 4 / 유물 N.
+  // 怨恨 base 15, legend[4] 3, relic[level] 0.75..3, stone[4] 6.
+  //
+  // These numbers are cross-checked against the amps, which are a different
+  // table: legend L4 = 0.18 at code 9, relic L1 = 0.1875 at code 10, relic L4 =
+  // 0.21 at code 13. An earlier version of this test asserted 15.75 / 18.00 /
+  // 24.00 — it had the omission of legend[4] written down as the expectation,
+  // and so locked the bug in.
+  expect(await read()).toContain('18.75%') // 遗物 1级, stone 0
 
   await page.getByLabel('刻印 1 等级').selectOption('4')
-  expect(await read()).toContain('18.00%')
+  expect(await read()).toContain('21.00%') // 遗物 4级 — matches amp 0.21
 
   await page.getByLabel('刻印 1 能力石').selectOption('4')
-  expect(await read()).toContain('24.00%')
+  expect(await read()).toContain('27.00%') // + stone[4] 6
+
+  // And the tooltip must not contradict the card corner, which reads the amp
+  // from a different table entirely.
+  await page.getByLabel('刻印 1 能力石').selectOption('0')
+  await page.getByLabel('刻印 1 等级').selectOption('4')
+  const card = page.locator('article').filter({ hasText: '刻印 1' }).first()
+  await expect(card).toContainText('+21.00%')
 })
 
 test('the shared footer is present', async ({ page }) => {
@@ -711,4 +724,51 @@ test('the shared footer is present', async ({ page }) => {
   const footer = page.locator('footer')
   await expect(footer).toBeVisible()
   await expect(footer).toContainText('Arkive Games')
+})
+
+test('the gear selectors show the game\'s own item names, not bare ids', async ({ page }) => {
+  await ready(page)
+  const armour = page.locator('[role="combobox"][aria-label^="防具套装"]')
+  const weapon = page.locator('[role="combobox"][aria-label^="武器"]')
+
+  // Default loadout: 狂战士 at item level 1640. The relic stat template carries
+  // two named series, so the set label shows both; the weapon is that class's
+  // own greatsword.
+  await expect(armour).toContainText('宿命决断')
+  await expect(armour).toContainText('疯狂决断')
+  await expect(armour).not.toHaveText(/^1015901/)
+  await expect(weapon).toContainText('宿命决断大剑')
+
+  // Grade and the stat-template id stay under each control, so a build is still
+  // identifiable exactly.
+  await expect(page.getByText('遗物 · 1015901')).toBeVisible()
+  await expect(page.getByText('遗物 · 10159000 · 100,036')).toBeVisible()
+})
+
+test('gear names follow the class, and so does the armour line', async ({ page }) => {
+  await ready(page)
+  const armour = page.locator('[role="combobox"][aria-label^="防具套装"]')
+  const weapon = page.locator('[role="combobox"][aria-label^="武器"]')
+
+  // A class only ever sees the armour of its own main stat: 狂战士 (Str) gets
+  // the ...01 line, 吟游诗人 (Int) the ...03 one, with the same numbers.
+  await expect(page.getByText('遗物 · 1015901')).toBeVisible()
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '吟游诗人' })
+  await expect(page.getByText('遗物 · 1015903')).toBeVisible()
+  await expect(armour).toContainText('宿命决断')
+  // The weapon name changes with the class even though the template does not.
+  await expect(weapon).toContainText('宿命决断丽雅的竖琴')
+  await expect(page.getByText('遗物 · 10159000 · 100,036')).toBeVisible()
+})
+
+test('the searchable gear lists can be filtered and picked by name', async ({ page }) => {
+  await ready(page)
+  const weapon = page.locator('[role="combobox"][aria-label^="武器"]')
+  await weapon.click()
+  await page.locator('input[placeholder="搜索武器…"]').fill('命运业火')
+  const rows = await page.locator('[cmdk-item]').allTextContents()
+  expect(rows).toHaveLength(1)
+  await page.locator('[cmdk-item]').first().click()
+  await expect(weapon).toContainText('命运业火大剑')
+  await expect(page.getByText('古代 · 11159000 · 100,036')).toBeVisible()
 })

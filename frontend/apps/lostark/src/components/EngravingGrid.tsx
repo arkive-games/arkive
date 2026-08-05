@@ -302,28 +302,14 @@ function EngravingCard({
   )
 }
 
-/** Grade number -> the channel that carries its per-level additions. */
+/**
+ * Ladder grade -> the channel carrying its per-level additions.
+ *
+ * Epic has no channel of its own: the client folds a complete four-book epic set
+ * into the `base` row, which is why `base` has a single step.
+ */
 const GRADE_CHANNEL: Record<number, 'legend' | 'relic'> = { 3: 'legend', 4: 'relic' }
 
-/**
- * The engraving's effect text with every number scaled to the current dials.
- *
- * `AbilitySpecification` splits an engraving's tooltip into channels: `base`
- * holds the complete sentence, and `legend` / `relic` / `stone` hold per-level
- * ADDITIONS to the same specs. So a spec's displayed value is
- * `base + gradeChannel[level] + stoneChannel[stoneLevel]`, and only the base
- * channel's sentence is rendered — the others read "additional {0}" and would be
- * double-counting if shown alongside it.
- *
- * 英雄 (grade 2) has no channel of its own: the client folds the four epic books
- * into the base row, which is why the base channel has a single step.
- *
- * A tooltip's `{0}`, `{1}` … index this channel's `specs` in order, while
- * `values[step]` is a 4-array indexed by `spec.index - 1` (SpecValue1..4).
- *
- * These are RAW tooltip values, deliberately not the combat power: 尖刺重锤
- * grants 36% crit damage but scores 0.1141.
- */
 function effectText(
   engraving: Engraving,
   slot: EngravingSlot,
@@ -333,10 +319,24 @@ function effectText(
   const tooltip = base?.tooltip_key ? names[base.tooltip_key] : undefined
   if (!base || !tooltip) return undefined
 
-  const gradeKey = GRADE_CHANNEL[slot.grade]
-  const gradeCh = gradeKey ? engraving.effect.find((c) => c.key === gradeKey) : undefined
-  const stoneCh =
-    slot.stone > 0 ? engraving.effect.find((c) => c.key === 'stone') : undefined
+  const channel = (key: string) => engraving.effect.find((c) => c.key === key)
+  const stoneCh = slot.stone > 0 ? channel('stone') : undefined
+
+  /**
+   * Every lower ladder grade at its max level, plus this grade at `level`.
+   * Sorted so a future grade slots in without reordering by hand.
+   */
+  const ladder = Object.entries(GRADE_CHANNEL)
+    .map(([g, key]) => ({ grade: Number(g), key }))
+    .sort((a, b) => a.grade - b.grade)
+  const steps = ladder
+    .filter((rung) => rung.grade <= slot.grade)
+    .map((rung) => ({
+      ch: channel(rung.key),
+      // A rung below the selected grade is maxed; the selected grade is at the
+      // chosen level.
+      step: rung.grade === slot.grade ? slot.book : maxStep(channel(rung.key)),
+    }))
 
   return tooltip.replace(/\{(\d+)\}/g, (whole, slotIndex: string) => {
     const spec = base.specs[Number(slotIndex)]
@@ -344,9 +344,15 @@ function effectText(
     const i = spec.index - 1
     const total =
       (base.values['1']?.[i] ?? 0) +
-      (gradeCh?.values[String(slot.book)]?.[i] ?? 0) +
+      steps.reduce((sum, s) => sum + (s.ch?.values[String(s.step)]?.[i] ?? 0), 0) +
       (stoneCh?.values[String(slot.stone)]?.[i] ?? 0)
     const unit = spec.unit_key ? (names[spec.unit_key] ?? '') : ''
     return `${(spec.negative ? -total : total).toFixed(spec.digits)}${unit}`
   })
+}
+
+/** The highest step a channel defines, as a string key. */
+function maxStep(channel: { values: Record<string, number[]> } | undefined): string {
+  if (!channel) return '0'
+  return String(Math.max(...Object.keys(channel.values).map(Number)))
 }
