@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.0",
+      "date": "2026-08-05",
+      "commit": "ca35629e12b40a708970ad49b21c46ef790ba727",
+      "changes": [
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Engraving combat power now comes from the game client, and class engravings are removed since the rework made them class identities.",
+            "zh-CN": "刻印战斗力系数改用游戏客户端数据表；改版后职业刻印已成为职业本身，故不再列出。",
+            "zh-TW": "刻印戰鬥力係數改用遊戲客戶端資料表；改版後職業刻印已成為職業本身，故不再列出。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.5.0",
       "date": "2026-08-05",
       "commit": "194b116e2d6784c4640b912ca16f7f08bc7d529e",
