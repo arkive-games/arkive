@@ -106,59 +106,32 @@ keyed by stat 150, and stat 150 has no name in any table (the same gap
 :mod:`lostark.bracelets` documents for its unnamed stat ids). It is emitted as a
 raw stat, not as an amp.
 
-Icon references follow the convention ``EFTable_ArkPassive`` uses, and it took
-some pinning down, so the rule and its evidence are recorded here:
+Icons: ``Icon`` + ``IconIndex`` is a **sprite file name**, resolved by a table
+--------------------------------------------------------------------------
 
-* ``Ability.Icon`` is an atlas **group** name, used verbatim (case-insensitively).
-  Its pages are the textures ``<group>_0``, ``<group>_1``, … — note that a group
-  name may itself end in digits, e.g. ``Ark_Passive_01`` has pages
-  ``ark_passive_01_0`` and ``ark_passive_01_1``. So the trailing number in a group
-  name is *not* a page number and must not be stripped.
-* ``IconIndex`` is a **flat, zero-based, row-major** cell index across those pages
-  in numeric order, with 64x64 cells.
-* Zero-based, not one-based. Several ``Ark_Passive_*`` groups have a maximum
-  ``IconIndex`` exactly equal to their exported cell count, which reads as
-  one-based — but those groups are missing a page from the extraction (``Acc``
-  overshoots its single exported page threefold, so gaps are common). The
-  semantics settle it: cross-checking ``SkillBuff`` names against the ``buff_0``
-  grid, cell 40 is a green "ZZZ" and is named 睡眠 (sleep), cell 53 is a gagged
-  mouth and is named 沉默 (silence), cell 50 an insect for 寄生 (parasite), cell
-  51 lightning for 触电, cell 43 a ball-and-chain for 减少移速, cell 49 cracked
-  ground for 地震, cell 52 a snare for 陷阱, cell 58 an eye for 视线, cell 122 a
-  flask for 增加法力. All nine land on the zero-based cell and on a thematically
-  unrelated one otherwise.
+``Ability.Icon = 'Buff'`` with ``IconIndex = 71`` names the sprite ``Buff_71.png``,
+and the client's own ``IconInfo.loa`` says which atlas page that sprite sits on and
+where. :mod:`lostark.icons` parses that table (44,121 sprites over the same 1,147
+pages the atlas packages hold) and is the only address used here; the arithmetic
+this module previously did is gone, because **all three of its assumptions are
+false**:
 
-**How far that is verified.** Those nine matches all sit on ``buff_0``, the first
-page of its group, and 34 of the 35 ``Buff``-group engravings have an index inside
-it (<= 245). Everything beyond a group's first page is arithmetically consistent —
-every crop is grid-aligned, centred and a complete single icon, and the ``Ability``
-group's 288 cells bound its highest reference of 278 tightly — but two spot checks
-elsewhere in these same groups do **not** line up semantically: ``SkillBuff`` names
-five consecutive raid body parts at ``Buff`` 575-579 where ``buff_2`` holds pet
-buffs, and names life-skill abilities at ``Ability`` 100-114 where ``ability_0``
-holds combat art. One extracted icon shows the symptom directly: ``sweetsong`` (a
-Bard engraving, ``Ability`` 275) lands on a cell carrying an 活动 event badge. So
-treat the ``buff_0`` region as verified and the rest as the client's own reference
-followed faithfully but uncorroborated.
+* Sprites are not stored in index order — ``Buff_61``/``Buff_62`` live on page
+  ``Buff_3``, not between ``Buff_60`` and ``Buff_63`` on ``Buff_0``.
+* Page order is not the numeric suffix — ``Ability_0.png`` is on page
+  ``Ability_1``, ``Ability_207.png`` on page ``Ability_0``.
+* The cell size is not fixed at 64x64 — the seven ``achieve_*``/``GL_Skill_01``
+  engravings resolve to 128x128 sprites.
 
-There is a second, older engraving icon set worth knowing about if the above ever
-needs re-deriving: the buff each engraving applies is a ``SkillBuff`` row named
-"<engraving name> <level>", and those rows point at ``Ability`` 24-90 — a uniform
-block of silhouette-and-energy icons, the pre-redesign art. Joining by name covers
-76 of the 95, in mixed groups, so it is not a drop-in replacement and is recorded
-rather than used.
+Concretely, of the 95 engravings the flat-index model placed **5** correctly, and a
+uniform "index - 2" (which the two relocated Buff sprites make look right around
+怨恨) placed **23**. The sprite table places all 95, and there is no longer any
+:data:`ICONLESS` case: the seven engravings previously written off as having no
+exported atlas resolve to real, on-theme art (尖刺重锤 a spiked mace, 愤怒之锤 a
+war hammer, 先发制人 a backstab, 炮击强化 an artillery barrage).
 
-Two groups the roster references have **no exported pages at all**:
-``achieve_03/04/06/07/08`` and ``GL_Skill_01``. All 22 ``EFUI_ICONATLAS_*``
-packages were searched; the similarly named ``achieve_0``…``achieve_27`` textures
-are the achievement illustration sheets on a 128px grid (the Achievement table's
-own ``achieve_04`` indices run 0..63, i.e. 64 cells on a 1024x1024 page), and the
-cells those seven engravings would land on are unrelated art — ``achieve_08`` 49 is
-the 战锤大师 achievement, which is at least on-theme for 愤怒之锤, but the crop is
-a 128px illustration, not an icon. So those seven get ``icon_slug = None`` rather
-than a wrong picture; see :data:`ICONLESS`. Five of them do have a ``SkillBuff``
-icon (``Ability`` 51/56/26/79 and ``Buff`` 234), which is a different column and
-therefore not silently substituted here.
+Two independent confirmations of the resolved set, and the ``SkillBuff`` fallback
+that is *not* needed any more, are recorded in :mod:`lostark.icons`.
 """
 
 from __future__ import annotations
@@ -167,6 +140,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+from . import icons
 from .battlepoint import DPS, SUPPORT
 from .db import Tables
 
@@ -176,20 +150,12 @@ CLASS = 2
 
 NAME_KEY_PREFIX = "tip.name.ability_"
 
-# 64x64 is the cell size of every icon group the engraving roster uses.
-CELL = 64
-
-# The seven engravings whose atlas group has no exported texture. Listed so the
-# gap is asserted rather than discovered as a missing file in the frontend.
-ICONLESS = {
-    "ruthless",
-    "super_charge",
-    "matt_critical",
-    "ki_master",
-    "free_bombardment",
-    "angryhammer",
-    "first_critical",
-}
+# Engravings with no icon. Empty, and kept as a named empty set rather than
+# deleted: it was non-empty while icons were addressed arithmetically (seven
+# engravings whose group looked like it had no exported page), and the sprite table
+# resolves all 95. A future patch adding a sprite the extraction lacks would refill
+# it, so callers keep the concept.
+ICONLESS: set[str] = set()
 
 # The engraving grade ladder, in the order the tooltip presents it. Both the label
 # and the colour come from GameMsg: ``sys.tooltip.engrave_grade_<tier>`` is the
@@ -656,72 +622,43 @@ def localization_keys(
     return sorted(keys)
 
 
-def atlas_pages(atlas_root: Path, group: str) -> list[Path]:
-    """The texture pages of ``group``, in the order ``IconIndex`` runs through them.
+def locate(
+    atlas_root: Path, icon_info: Path, group: str, index: int
+) -> tuple[Path, tuple[int, int, int, int]] | None:
+    """Resolve ``(group, index)`` to an atlas page and a crop box, or None.
 
-    ``atlas_root`` is a directory of per-package directories of PNGs, as produced
-    by ``laex textures``. Page order is the numeric suffix, and the group name is
-    matched whole — ``buff`` must not pick up ``buff_icon_0``.
+    A thin wrapper over :func:`lostark.icons.locate` for a one-off lookup: it
+    reparses ``IconInfo.loa`` on every call, so a loop over many icons should build
+    the sprite table and page index once (see :func:`write_icons`).
+
+    None means the sprite table has no such sprite, or its page is missing from the
+    extraction. Neither is an error here — the caller decides.
     """
-    pattern = re.compile(rf"^{re.escape(group.lower())}_(\d+)$")
-    found: list[tuple[int, Path]] = []
-    for path in Path(atlas_root).rglob("*.png"):
-        match = pattern.match(path.stem.lower())
-        if match:
-            found.append((int(match.group(1)), path))
-    return [path for _, path in sorted(found)]
-
-
-def cell_box(page_size: tuple[int, int], index: int) -> tuple[int, int, int, int] | None:
-    """The crop box of flat cell ``index`` on a page of ``page_size``, or None.
-
-    None when the page holds fewer than ``index + 1`` cells, which is how a caller
-    walks the pages of a group: subtract each page's cell count until the index
-    lands inside one.
-    """
-    width, height = page_size
-    columns, rows = width // CELL, height // CELL
-    if index >= columns * rows:
-        return None
-    x, y = (index % columns) * CELL, (index // columns) * CELL
-    return x, y, x + CELL, y + CELL
-
-
-def locate(atlas_root: Path, group: str, index: int) -> tuple[Path, tuple[int, int, int, int]] | None:
-    """Resolve ``(group, index)`` to a page and a crop box, or None when absent.
-
-    Absent means either the group has no exported pages or the index runs past the
-    last one. Both happen in this extraction and neither is an error here — the
-    caller decides whether a missing icon is fatal.
-    """
-    from PIL import Image
-
-    remaining = index
-    for page in atlas_pages(atlas_root, group):
-        with Image.open(page) as image:
-            box = cell_box(image.size, remaining)
-            if box is not None:
-                return page, box
-            remaining -= (image.width // CELL) * (image.height // CELL)
-    return None
+    return icons.locate(
+        icons.sprite_table(icon_info), icons.pages(atlas_root), group, index
+    )
 
 
 def write_icons(
-    engravings: dict[str, dict], atlas_root: Path, out_dir: Path
+    engravings: dict[str, dict], atlas_root: Path, icon_info: Path, out_dir: Path
 ) -> tuple[list[str], list[str]]:
-    """Write one ``<slug>.png`` per engraving at the atlas's native 64x64.
+    """Write one ``<slug>.png`` per engraving at the sprite's own size.
 
-    Returns ``(written, missing)`` slugs. Nothing is upscaled: the frontend gets
-    the game's own pixels and sizes them with CSS.
+    Returns ``(written, missing)`` slugs. Nothing is upscaled or padded to a common
+    size: the frontend gets the game's own pixels — 64x64 for 88 of the 95 and
+    128x128 for the seven that live on the ``Achieve_*`` pages — and sizes them
+    with CSS.
     """
     from PIL import Image
 
+    sprites = icons.sprite_table(icon_info)
+    pages = icons.pages(atlas_root)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[str] = []
     missing: list[str] = []
     for engraving in sorted(engravings.values(), key=lambda e: e["slug"]):
-        found = locate(atlas_root, engraving["icon"], engraving["icon_index"])
+        found = icons.locate(sprites, pages, engraving["icon"], engraving["icon_index"])
         if found is None:
             missing.append(engraving["slug"])
             continue

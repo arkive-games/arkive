@@ -11,6 +11,10 @@ Optional:
   LOSTARK_ICON_ATLAS  decoded UI icon atlas pages (``laex textures`` output, one
                       directory per package). Only needed to re-slice icon sets;
                       absent on a machine that just emits the dataset.
+  LOSTARK_ICON_INFO   the client's ``IconInfo.loa`` sprite table, which maps an
+                      ``Icon``/``IconIndex`` pair to an atlas page and rectangle
+                      (see :mod:`lostark.icons`). Needed alongside
+                      LOSTARK_ICON_ATLAS to slice icons.
 """
 
 from __future__ import annotations
@@ -37,5 +41,15 @@ def require_dir(name: str) -> Path:
 def optional_dir(name: str) -> Path | None:
     """Like :func:`require_dir` but ``None`` when unset (for skippable tests
     and genuinely optional inputs)."""
+    value = os.environ.get(name)
+    return Path(value) if value else None
+
+
+def optional_file(name: str) -> Path | None:
+    """The file configured under ``name``, or ``None`` when unset.
+
+    Same contract as :func:`optional_dir`; separate so a caller reads as what it
+    wants (``IconInfo.loa`` is a file, not a directory).
+    """
     value = os.environ.get(name)
     return Path(value) if value else None

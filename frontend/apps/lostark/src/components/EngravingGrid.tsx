@@ -10,9 +10,11 @@ import { RichText, plainText } from './RichText'
  * rework turned them into class identities, and the client agrees — none of the
  * 52 has an amp grid.
  *
- * Icons come from `Ability.Icon` + `Ability.IconIndex`: the group names an atlas
- * and the index is a cell across its pages at 64px. Four of the 43 have no icon
- * at all — their atlas group ships no texture — so those render a placeholder.
+ * Icons come from `Ability.Icon` + `Ability.IconIndex`, which together name a
+ * SPRITE FILE (`Buff_71`), not a cell coordinate — `IconInfo.loa` resolves it to
+ * a page and pixel offset. Every engraving resolves, so the placeholder branch
+ * below is defensive only; it used to fire for four of them under a wrong model
+ * that walked the atlas as a flat 64px grid.
  *
  * The two dials are the axes of the client's growth code,
  * `20 * stone + 1 + 4 * (grade - 2) + level`: a book grade+level, and a stone
@@ -118,9 +120,9 @@ function EngravingCard({
                 />
               ) : (
                 // Two different empties. A slot with nothing in it gets the
-                // usual `+`; an engraving whose atlas group ships no texture
-                // gets its first character, so four real picks do not read as
-                // unselected.
+                // usual `+`; an engraving with no resolvable sprite gets its
+                // first character so it does not read as unselected. No
+                // engraving currently takes the second branch.
                 <span
                   aria-hidden
                   className={`grid size-full place-items-center rounded-md border border-dashed leading-none ${
@@ -158,7 +160,7 @@ function EngravingCard({
             </div>
             {picked && !picked.icon_slug ? (
               <p className="mt-1 text-xs text-muted-foreground">
-                此刻印在客户端中没有图标资源。
+                客户端中未能解析此刻印的图标。
               </p>
             ) : null}
             {/* The four descriptions that held unresolved <$...> directives were

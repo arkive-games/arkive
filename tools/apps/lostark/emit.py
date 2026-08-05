@@ -98,8 +98,10 @@ def build(tables: Tables) -> dict[str, object]:
             "channels": {str(k): v for k, v in engravings.CHANNELS.items()},
             "stonePenalties": engraving_penalties,
             "stoneLevelBonus": stone_bonus,
-            # 7 of the 95 have icon_slug null: their atlas group ships no
-            # texture at all, so the UI must render a placeholder.
+            # Every engraving now resolves to an icon: IconInfo.loa turns
+            # Icon + IconIndex into a sprite file name rather than a cell
+            # coordinate, so nothing is left unaddressable. icon_slug is still
+            # nullable in the contract in case that changes.
             "engravings": engraving_rows,
         },
         "classes.json": class_rows,

@@ -1,13 +1,14 @@
 """Contract tests for the engraving roster, its icons and its grade strings."""
 
+import collections
+
 import pytest
 
-from lostark import locales
+from lostark import icons, locales
 from lostark.db import Tables
 from lostark.engravings import (
     BOOK_GRADES,
     BOOK_MAX_LEVEL,
-    CELL,
     CHANNELS,
     CLASS,
     GENERAL,
@@ -18,8 +19,6 @@ from lostark.engravings import (
     STONE_ENGRAVING_GROUP,
     STONE_MAX_LEVEL,
     UI_KEYS,
-    atlas_pages,
-    cell_box,
     effect_values,
     extract,
     growth_code,
@@ -31,16 +30,20 @@ from lostark.engravings import (
     stone_level_bonus,
     stone_penalties,
 )
-from lostark.env import optional_dir
+from lostark.env import optional_dir, optional_file
 
 TABLES = optional_dir("LOSTARK_TABLES")
 ATLAS = optional_dir("LOSTARK_ICON_ATLAS")
+ICON_INFO = optional_file("LOSTARK_ICON_INFO")
 
 needs_tables = pytest.mark.skipif(
     TABLES is None or not TABLES.exists(), reason="LOSTARK_TABLES not set"
 )
 needs_atlas = pytest.mark.skipif(
     ATLAS is None or not ATLAS.exists(), reason="LOSTARK_ICON_ATLAS not set"
+)
+needs_icon_info = pytest.mark.skipif(
+    ICON_INFO is None or not ICON_INFO.exists(), reason="LOSTARK_ICON_INFO not set"
 )
 
 # The growth code of "no stone, four epic books" — the cheapest state the client
@@ -262,29 +265,30 @@ def test_every_engraving_has_a_name_and_an_icon_reference(engravings):
 
 
 @needs_tables
-def test_iconless_engravings_are_exactly_the_unexported_groups(engravings):
-    """Four engravings point at atlas groups no package ships.
+def test_no_engraving_is_iconless(engravings):
+    """Every engraving has an icon, including the four on achievement pages.
 
-    achieve_03/04/06/07/08 and GL_Skill_01 have no <group>_<page> textures in any
-    of the 22 EFUI_ICONATLAS_* packages. They are flagged rather than pointed at
-    the similarly named achievement sheets, whose cells hold unrelated art.
+    These four used to be flagged iconless: their ``Icon`` reads ``achieve_03``
+    /``04``/``06``/``08``, and no package ships an ``achieve_03_<page>`` texture, so
+    an arithmetic model has nothing to address. The sprite table does not need one —
+    it names the page outright (``Achieve_20`` for ``achieve_03`` 40) and the art is
+    on theme: 尖刺重锤 a spiked mace, 愤怒之锤 a war hammer, 先发制人 a backstab.
     """
-    missing = {e["slug"] for e in engravings.values() if e["icon_slug"] is None}
-    # A subset of ICONLESS: the rest of that set were class engravings, which the
-    # roster no longer includes.
-    assert missing == {"first_critical", "matt_critical", "ruthless", "super_charge"}
-    assert missing <= ICONLESS
-    groups = {e["icon"] for e in engravings.values() if e["icon_slug"] is None}
-    assert groups == {"achieve_03", "achieve_04", "achieve_06", "achieve_08"}
-    # Everything else resolves, and its slug is its file name.
-    assert all(e["icon_slug"] == e["slug"] for e in engravings.values() if e["icon_slug"])
-    assert len(engravings) - len(missing) == 39
+    assert ICONLESS == set()
+    assert all(e["icon_slug"] == e["slug"] for e in engravings.values())
+    assert len(engravings) == 43
 
 
 @needs_tables
-def test_the_two_icon_groups_that_do_resolve_are_buff_and_ability(engravings):
-    groups = {e["icon"] for e in engravings.values() if e["icon_slug"]}
-    assert groups == {"Buff", "Ability"}
+def test_engraving_icon_groups_are_not_all_page_prefixes(engravings):
+    """The group name is a sprite-name prefix, not necessarily a page-name one.
+
+    Buff and Ability happen to be both; achieve_03/04/06/08 are only the former.
+    Pinned because it is the assumption whose failure was invisible: a group with
+    no matching pages used to read as "this engraving has no icon".
+    """
+    groups = {e["icon"] for e in engravings.values()}
+    assert groups == {"Buff", "Ability", "achieve_03", "achieve_04", "achieve_06", "achieve_08"}
 
 
 def test_growth_code_packs_the_two_dials_the_way_the_client_notes_do():
@@ -620,71 +624,85 @@ def test_stone_strings_are_the_clients_own_number_formats():
     assert "{0}" in table[UI_KEYS["grade_and_stage"]] and "{1}" in table[UI_KEYS["grade_and_stage"]]
 
 
-def test_cell_box_is_row_major_and_zero_based():
-    # 1024x1024 at 64px is a 16x16 grid; cell 0 is the top-left corner and cell 17
-    # is one row down and one column across.
-    assert cell_box((1024, 1024), 0) == (0, 0, CELL, CELL)
-    assert cell_box((1024, 1024), 17) == (CELL, CELL, 2 * CELL, 2 * CELL)
-    # A short page holds fewer cells and reports the overflow rather than wrapping.
-    assert cell_box((1024, 128), 31) is not None
-    assert cell_box((1024, 128), 32) is None
-
-
 @needs_atlas
-def test_atlas_group_matching_is_whole_name_not_prefix():
-    """Group names may end in digits, so the page suffix cannot be split off.
+@needs_icon_info
+def test_locate_reads_the_sprite_table_not_a_cell_grid():
+    """The three ways the old arithmetic went wrong, pinned as one test.
 
-    Ark_Passive_01's pages are ark_passive_01_0/_1 — evidence that the trailing
-    number in a group name belongs to the group. Matching by prefix would fold
-    ark_passive_01 into ark_passive and shift every index.
+    * 怨恨 is ``Buff`` 71 and its art — the demon hound head, confirmed in game — is
+      at (320, 256) on ``buff_0``, i.e. row 4 column 5. A flat 16x16 walk puts index
+      71 at (448, 256), two cells later, because ``Buff_61``/``Buff_62`` are stored
+      on ``buff_3``.
+    * ``handgunner`` is ``Buff`` 600 (the crossed revolvers) and lives on ``buff_3``,
+      not on the ``buff_2`` the cumulative walk computed.
+    * The ``achieve_*`` groups are not pages at all: ``achieve_03`` 40 is a 128x128
+      sprite on page ``Achieve_20``.
     """
-    assert [p.stem for p in atlas_pages(ATLAS, "Ark_Passive_01")] == [
-        "ark_passive_01_0",
-        "ark_passive_01_1",
-    ]
-    assert [p.stem for p in atlas_pages(ATLAS, "buff")] == [f"buff_{i}" for i in range(5)]
-    assert atlas_pages(ATLAS, "achieve_03") == []
-
-
-@needs_atlas
-def test_icon_index_runs_flat_across_the_pages_of_a_group():
-    """buff_0..buff_4 concatenate into one 912-cell index space.
-
-    Page cell counts are 256/256/112/256/32, so index 600 must land on buff_2 at
-    its local cell 88 — the case that proves the walk is cumulative rather than
-    per-page.
-    """
-    page, box = locate(ATLAS, "Buff", 600)
-    assert page.stem == "buff_2"
-    assert box == (8 * CELL, 5 * CELL, 9 * CELL, 6 * CELL)
-    page, _ = locate(ATLAS, "Buff", 255)
+    page, box = locate(ATLAS, ICON_INFO, "Buff", 71)
     assert page.stem == "buff_0"
-    page, _ = locate(ATLAS, "Buff", 256)
-    assert page.stem == "buff_1"
-    assert locate(ATLAS, "Buff", 912) is None
+    assert box == (320, 256, 384, 320)
+
+    page, box = locate(ATLAS, ICON_INFO, "Buff", 600)
+    assert page.stem == "buff_3"
+    assert box == (640, 192, 704, 256)
+
+    page, box = locate(ATLAS, ICON_INFO, "achieve_03", 40)
+    assert page.stem.lower() == "achieve_20"
+    assert box == (256, 256, 384, 384)
+
+    # A group/index the table does not define resolves to nothing rather than to a
+    # cell computed off the end of a page.
+    assert locate(ATLAS, ICON_INFO, "Buff", 912) is None
+    assert locate(ATLAS, ICON_INFO, "Buff", 258) is None
 
 
 @needs_atlas
+@needs_icon_info
 @needs_tables
-def test_every_resolvable_engraving_lands_inside_its_atlas(engravings):
-    for e in engravings.values():
-        found = locate(ATLAS, e["icon"], e["icon_index"])
-        assert (found is not None) == (e["icon_slug"] is not None), e["slug"]
+def test_every_engraving_resolves_to_a_sprite(engravings):
+    """All 95, with no ICONLESS survivors.
 
-
-@needs_tables
-def test_almost_every_buff_group_engraving_sits_on_the_verified_first_page(engravings):
-    """buff_0 is the region the nine semantic checks cover.
-
-    34 of the 35 Buff-group engravings index into it; only handgunner (600) reaches
-    a later page, where the flat walk is consistent but uncorroborated. Pinned so
-    that a patch moving more engravings past cell 255 is noticed, since it would
-    move them out of the verified region.
+    The seven ``achieve_*``/``GL_Skill_01`` engravings were previously reported as
+    having no exported atlas; they resolve to 128x128 sprites on the ``Achieve_*``
+    pages (except ``free_bombardment``, a 64x64 on ``GL_Skill_0``).
     """
-    buff = [e for e in engravings.values() if e["icon"] == "Buff"]
-    assert len(buff) == 29
-    beyond = sorted(e["slug"] for e in buff if e["icon_index"] > 255)
-    # handgunner (index 600) was the only one past the first page, and it is a
-    # class engraving, so the whole Buff-group roster now sits in the verified
-    # region.
-    assert beyond == []
+    assert ICONLESS == set()
+    sizes = set()
+    for e in engravings.values():
+        found = locate(ATLAS, ICON_INFO, e["icon"], e["icon_index"])
+        assert found is not None, (e["slug"], e["icon"], e["icon_index"])
+        assert e["icon_slug"] == e["slug"], e["slug"]
+        _page, (x0, y0, x1, y1) = found
+        sizes.add((x1 - x0, y1 - y0))
+    assert sizes == {(64, 64), (128, 128)}
+
+
+@needs_atlas
+@needs_icon_info
+@needs_tables
+def test_engraving_icons_span_seven_atlas_pages(engravings):
+    """Kept as a shape check, no longer as a "verified region" claim.
+
+    The old note here treated ``buff_0`` as the only trustworthy page, because the
+    only semantic evidence sat on it, and expected everything else to follow one
+    flat walk from there. The sprite table scatters the 43 icons over seven pages in
+    two packages — and two of the 29 ``Buff``-group engravings land on ``buff_3``,
+    which no cumulative walk over 64x64 cells would ever reach for an index below
+    256.
+    """
+    sprites = icons.sprite_table(ICON_INFO)
+    pages = icons.pages(ATLAS)
+    spread = collections.Counter(
+        icons.locate(sprites, pages, e["icon"], e["icon_index"])[0].stem
+        for e in engravings.values()
+    )
+    assert dict(spread) == {
+        "buff_0": 27,
+        "buff_3": 2,
+        "ability_0": 10,
+        "achieve_3": 1,
+        "achieve_4": 1,
+        "achieve_7": 1,
+        "achieve_20": 1,
+    }
+    assert len([e for e in engravings.values() if e["icon"] == "Buff"]) == 29

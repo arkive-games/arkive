@@ -117,6 +117,36 @@ Still fan-site sourced; not yet searched for in the client.
 **12, 13, 14, 15, 16, 24, 25, 26, 30.** Type 25 (`ValueA` 162–165, `ValueB`
 5/10/15/20) looks like a threshold ladder and is the best next candidate.
 
+## Icon addressing — resolved
+
+Recorded here because two wrong models shipped before the right one.
+
+`Ability.Icon` + `Ability.IconIndex` name a **sprite file** (`Buff_71`), not a
+cell coordinate. The client ships the table that resolves it: **`IconInfo.loa`**
+(`ClientData/XmlData/`), 44,121 records over 1,144 atlas textures, giving each
+sprite its page and pixel offset.
+
+Both earlier models treated the index as a flat, row-major 64px cell walk. That
+is wrong three ways: page order is not the numeric suffix (`Ability_0` lives on
+page `Ability_1`), cell size is not fixed (22,605 sprites are 64x64 but 14,944
+are 128x128), and sprites are not contiguous — `Buff_61` and `Buff_62` sit at the
+top-left of page `Buff_3`, not between `Buff_60` and `Buff_63` on `Buff_0`.
+
+That last one is why a constant −2 looked plausible: the flat walk reads exactly
+two cells late from index 63 onward. But it keeps drifting — −4 at index 213, −5
+at 224, −14 at 237 — and indices below 61 need no offset at all, which is why
+`身披重甲` (`Buff_46`) was correct at +0 while `怨恨` (`Buff_71`) needed −2.
+
+Scored on the 43 shipped engravings: **flat walk 5 correct, index−2 21 correct,
+sprite table 43**.
+
+The Crunch/DXT1 decoder was suspected and is **innocent**. The official CDN
+publishes the game's own cuts at
+`https://cdn.lostark.games.aws.dev/EFUI_IconAtlas/<Group>/<Group>_<n>.png`;
+`Buff_71.png` pixel-matches our decoded `Buff_0` cell at (320,256) to a mean
+absolute difference of 7.75 (neighbouring cells score 40+), i.e. DXT1
+quantisation alone.
+
 ## Method note
 
 What works for decoding a BattlePoint type is matching a system's distinctive
