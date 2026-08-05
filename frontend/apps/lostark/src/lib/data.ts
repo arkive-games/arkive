@@ -103,6 +103,40 @@ export interface ArkPassiveMeta {
   uiKeys: Record<string, string>
 }
 
+/**
+ * One selectable bracelet option line, from `ItemGradeOptionRandom` filtered to
+ * the `sys.bracelet.*` groups.
+ *
+ * `amp` is 0 for the many lines that grant no combat power (utility rolls).
+ * `name_key` is null for the eight stat ids the client resolves in code rather
+ * than in any table — those ship unnamed instead of with an invented label.
+ */
+export interface BraceletLine {
+  id: string
+  group_key: 'basic' | 'combat_trait' | 'engraving' | 'special'
+  /** ItemGradeOptionRandom.Type: 2 stat, 3 ability, 4 combat effect, 54/59 amplify. */
+  option_type: number
+  stat: number | null
+  effect_id: string | null
+  /** Percent x 100 for rate lines; flat otherwise. */
+  value: number
+  /** BraceletOptionGrade values seen; NOT unique per line. */
+  grades: number[]
+  /** Bracelet tiers (3, 4) whose pools offer this line. */
+  tiers: number[]
+  name_key: string | null
+  amp: { dps: number; support: number }
+}
+
+export interface BraceletMeta {
+  groups: { key: string; name_key: string }[]
+  /** The three groups every shipped bracelet pool offers. */
+  columns: string[]
+  uiKeys: Record<string, string>
+  lines: BraceletLine[]
+  unnamedStats: number[]
+}
+
 export interface Dataset {
   version: DataVersion
   dps: RoleCoefficients
@@ -111,6 +145,7 @@ export interface Dataset {
   cores: Record<string, CoreMeta>
   slots: { dps: ArkGridSlot[]; support: ArkGridSlot[] }
   arkPassive: ArkPassiveMeta
+  bracelets: BraceletMeta
   classes: PlayerClass[]
   names: Record<string, string>
 }
@@ -133,7 +168,7 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
     /* unversioned artifact or unreachable — fall back to bare URLs */
   }
 
-  const [version, dps, support, gear, cores, slots, arkPassive, classes, names] =
+  const [version, dps, support, gear, cores, slots, arkPassive, bracelets, classes, names] =
     await Promise.all([
       json<DataVersion>('version.json'),
       json<RoleCoefficients>('battlepoint/dps.json'),
@@ -142,9 +177,10 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
       json<Record<string, CoreMeta>>('arkgrid/cores.json'),
       json<{ dps: ArkGridSlot[]; support: ArkGridSlot[] }>('arkgrid/slots.json'),
       json<ArkPassiveMeta>('arkpassive/trees.json'),
+      json<BraceletMeta>('bracelets/options.json'),
       json<PlayerClass[]>('classes.json'),
       json<Record<string, string>>(`locales/${locale}.json`),
     ])
 
-  return { version, dps, support, gear, cores, slots, arkPassive, classes, names }
+  return { version, dps, support, gear, cores, slots, arkPassive, bracelets, classes, names }
 }

@@ -6,9 +6,7 @@ import { armourGroups, evaluate, weaponOptions } from '@/calc/engine'
 import type { Loadout } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
 import {
-  dpsBraceletLines,
   dpsEngravingBase,
-  supportBraceletLines,
   supportEngravingBase,
 } from '@/calc/fansite.generated'
 import {
@@ -21,6 +19,7 @@ import {
 import { Field, NumberField, Section, SelectField } from '@/components/Fields'
 import { ScoreRail } from '@/components/ScoreRail'
 import { CoreGrid } from '@/components/CoreGrid'
+import { BraceletColumns } from '@/components/BraceletColumns'
 import { ArkPassiveGrid } from '@/components/ArkPassiveGrid'
 
 export default function App() {
@@ -96,7 +95,7 @@ export default function App() {
 
   const result = useMemo(() => {
     if (!data || !coeffs) return null
-    return evaluate(loadout, coeffs, data.gear)
+    return evaluate(loadout, coeffs, data.gear, data.bracelets.lines)
   }, [data, coeffs, loadout])
 
   const itemLevels = useMemo(
@@ -337,26 +336,15 @@ export default function App() {
             />
           </Section>
 
-          <Section title="手镯">
-            <p className="text-sm text-muted-foreground">系数来自参考站，非游戏数据表。</p>
-            {loadout.braceletLines.map((id, i) => (
-              <SelectField
-                key={i}
-                label={`手镯词条 ${i + 1}`}
-                value={id}
-                onChange={(v) => {
-                  const list = [...loadout.braceletLines]
-                  list[i] = v
-                  set('braceletLines', list)
-                }}
-                options={[
-                  { value: '', label: '无' },
-                  ...(loadout.role === 'support' ? supportBraceletLines : dpsBraceletLines).map(
-                    (l) => ({ value: l.id, label: `${l.side} +${(l.value * 100).toFixed(2)}%` }),
-                  ),
-                ]}
-              />
-            ))}
+          {/* tip.name.enum_equipslot_bracelet */}
+          <Section title={data.names[data.bracelets.uiKeys.slot] ?? '手镯'}>
+            <BraceletColumns
+              meta={data.bracelets}
+              names={data.names}
+              role={loadout.role}
+              selected={loadout.braceletLines}
+              onChange={(next) => set('braceletLines', next)}
+            />
           </Section>
 
           <Section title="刻印">

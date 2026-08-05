@@ -15,8 +15,6 @@ import {
   COMBAT_STAT,
   STONE_BASIC,
   avatarAmp,
-  dpsBraceletLines,
-  supportBraceletLines,
   dpsEngravingBase,
   dpsEngravingBooks,
   dpsEngravingStones,
@@ -111,15 +109,25 @@ export function stoneBasic(engravings: { name: string; stone: number }[]): numbe
   return total >= STONE_BASIC.threshold ? STONE_BASIC.amp : 0
 }
 
+/** Just the fields of a bracelet line that scoring needs. */
+export type BraceletAmp = { id: string; amp: { dps: number; support: number } }
+
 /**
- * Bracelet line amp. Fan-site sourced.
+ * Bracelet line amp, from the client's own tables.
+ *
+ * The amps come from BattlePoint Types 19/20/21 joined to the option lines in
+ * `ItemGradeOptionRandom`. That replaced a hand-copied fan-site table which was
+ * a strict subset — the client reproduces all 45 of its values and adds 65 more,
+ * and its heal column was half the game's amp with 0.0175 rounded to 0.017.
  *
  * Lines compound rather than sum, matching the reference's productAmp(...) - 1.
  */
-export function braceletAmp(ids: string[], role: 'dps' | 'support'): number {
-  const table: { id: string; value: number }[] =
-    role === 'support' ? supportBraceletLines : dpsBraceletLines
-  const byId = new Map(table.map((l) => [l.id, l.value]))
+export function braceletAmp(
+  ids: string[],
+  role: 'dps' | 'support',
+  lines: BraceletAmp[],
+): number {
+  const byId = new Map(lines.map((l) => [l.id, l.amp[role]]))
   return ids.reduce((acc, id) => acc * (1 + (id ? (byId.get(id) ?? 0) : 0)), 1) - 1
 }
 
@@ -220,7 +228,11 @@ export function weaponAttackOf(
  * parameterises both, and fitting a curve to them (as the reference fan site
  * does) is measurably wrong.
  */
-export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] {
+export function buildAmps(
+  loadout: Loadout,
+  coeffs: RoleCoefficients,
+  braceletLines: BraceletAmp[] = [],
+): AmpRow[] {
   const rows: AmpRow[] = []
 
   rows.push({
@@ -267,7 +279,7 @@ export function buildAmps(loadout: Loadout, coeffs: RoleCoefficients): AmpRow[] 
 
   rows.push({
     name: '手镯',
-    value: braceletAmp(loadout.braceletLines, loadout.role),
+    value: braceletAmp(loadout.braceletLines, loadout.role, braceletLines),
   })
 
   // Engravings compound, like gems and affix lines.
@@ -328,6 +340,7 @@ export function evaluate(
   loadout: Loadout,
   coeffs: RoleCoefficients,
   gear: GearByLevel,
+  braceletLines: BraceletAmp[] = [],
 ): Result {
   const mainStat =
     (gearMainTotal(gear, loadout.itemLevel, loadout.armourGroup) + MAIN_STAT_FLAT) *
@@ -335,7 +348,7 @@ export function evaluate(
   const weaponAttack = weaponAttackOf(gear, loadout.itemLevel, loadout.weaponId)
   const baseAttack = round(Math.sqrt((weaponAttack * mainStat) / 6), 2)
   const basicAttack = baseAttack * (1 + stoneBasic(loadout.engravings))
-  const amps = buildAmps(loadout, coeffs)
+  const amps = buildAmps(loadout, coeffs, braceletLines)
 
   const primary: ScoreComponent = {
     key: loadout.role,

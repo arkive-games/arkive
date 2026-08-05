@@ -259,19 +259,6 @@ test('roster stats feed the combat-stat amp', async ({ page }) => {
   await expect(page.locator('aside').getByText('94.8%')).toBeVisible()
 })
 
-test('bracelet lines compound', async ({ page }) => {
-  await ready(page)
-  const rail = page.locator('aside')
-
-  await page.getByLabel('手镯词条 1').selectOption({ index: 1 })
-  await expect(rail.getByText('手镯')).toBeVisible()
-  const one = await rail.locator('li').filter({ hasText: '手镯' }).innerText()
-
-  await page.getByLabel('手镯词条 2').selectOption({ index: 1 })
-  const two = await rail.locator('li').filter({ hasText: '手镯' }).innerText()
-  expect(two).not.toBe(one)
-})
-
 test('the sub-class decides the role', async ({ page }) => {
   await ready(page)
   await page.getByLabel('职业', { exact: true }).selectOption({ label: '圣骑士' })
@@ -476,6 +463,39 @@ test('the karma hovercard uses the game format strings, not raw templates', asyn
   await expect(page.getByText('120P')).toBeVisible()
   await expect(page.getByText('4阶位').first()).toBeVisible()
   await expect(page.getByText('{0}')).toHaveCount(0)
+})
+
+test('bracelet offers the three groups the client ships', async ({ page }) => {
+  await ready(page)
+  // sys.bracelet.option_group_01/02/03. option_group_04 (特殊效果) exists but
+  // only the legacy pool 910000010 uses it, so it is not a fourth column.
+  for (const group of ['基本效果', '战斗特性', '刻印效果']) {
+    await expect(page.getByLabel(group)).toBeVisible()
+  }
+  await expect(page.getByLabel('特殊效果')).toHaveCount(0)
+})
+
+test('bracelet lines come from the client, not the fan-site subset', async ({ page }) => {
+  await ready(page)
+  // The fan site hard-codes 54 dps rows total. The client's engraving group
+  // alone offers far more, so a small count here means the old table is back.
+  const engraving = await page.locator('select[aria-label="刻印效果"] option').count()
+  expect(engraving).toBeGreaterThan(200)
+})
+
+test('picking a scoring bracelet line moves the score', async ({ page }) => {
+  await ready(page)
+  const before = await score(page).textContent()
+
+  const select = page.locator('select[aria-label="刻印效果"]')
+  // Scoring lines are the ones labelled with their amp.
+  const value = await select
+    .locator('option')
+    .evaluateAll((els) => els.find((e) => e.textContent?.includes('%'))?.getAttribute('value'))
+  await select.selectOption(value ?? '')
+
+  await expect(score(page)).not.toHaveText(before ?? '')
+  await expect(page.locator('aside').getByText('手镯')).toBeVisible()
 })
 
 test('the shared footer is present', async ({ page }) => {

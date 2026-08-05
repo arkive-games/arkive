@@ -6,7 +6,7 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import arkgrid, arkpassive, battlepoint, classes, itemlevel, locales
+from . import arkgrid, arkpassive, battlepoint, bracelets, classes, itemlevel, locales
 from .db import Tables
 
 VERSION_FILE = "version.json"
@@ -30,11 +30,13 @@ def build(tables: Tables) -> dict[str, object]:
     )
 
     class_rows = classes.extract(tables)
+    bracelet_lines = bracelets.option_lines(tables)
 
     keys = set(arkgrid.localization_keys(cores))
     keys.update(classes.localization_keys(class_rows))
     keys.update(arkgrid.GRADE_NAME_KEYS.values())
     keys.update(arkpassive.localization_keys())
+    keys.update(bracelets.localization_keys(bracelet_lines))
     for group in (slots, support_slots):
         for slot in group:
             keys.add(slot["name_key"])
@@ -59,6 +61,15 @@ def build(tables: Tables) -> dict[str, object]:
             "trees": arkpassive.trees(),
             "uiKeys": arkpassive.UI_KEYS,
         },
+        "bracelets/options.json": {
+            "groups": bracelets.option_groups(),
+            "columns": bracelets.COLUMN_KEYS,
+            "uiKeys": bracelets.UI_KEYS,
+            "lines": bracelet_lines,
+            # Stat ids the client names in code rather than in any table, so
+            # these lines ship without a name key instead of an invented one.
+            "unnamedStats": bracelets.unnamed_stats(bracelet_lines),
+        },
         "classes.json": class_rows,
         VERSION_FILE: {
             "source": "lostark-explorer",
@@ -67,6 +78,7 @@ def build(tables: Tables) -> dict[str, object]:
             "counts": {
                 "itemLevels": len(gear),
                 "arkCores": len(cores),
+                "braceletLines": len(bracelet_lines),
                 "localeKeys": len(keys),
                 "arkGridSlots": len(slots),
                 "classes": len(class_rows),
