@@ -149,10 +149,32 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
           }
           return v
         }
+        /**
+         * Grade must be on the growth ladder, not merely 0-4.
+         *
+         * The growth code is `20*stone + 1 + 4*(grade-2) + level`. Grade 1
+         * (基本) is NOT on the ladder — the picker never offers it — and feeding
+         * it in shifts the code down by four: with book 4 it lands on 21/41/61/81,
+         * which are real cells the UI can never select, so the score comes out
+         * WRONG rather than zero. Lower books go negative. Reject it here, at the
+         * trust boundary, rather than letting an imported file compute from a
+         * cell that belongs to a different loadout.
+         */
+        const gradeOf = (v: unknown) => {
+          if (v === undefined) return 0
+          if (typeof v !== 'number' || ![0, 2, 3, 4].includes(v)) {
+            rejected.push(`engravings[${i}].grade: ${String(v)}`)
+            return 0
+          }
+          return v
+        }
+        const grade = gradeOf(e.grade)
         return {
           name: typeof e.name === 'string' ? e.name : '',
-          grade: clamp(e.grade, 'grade'),
-          book: clamp(e.book, 'book'),
+          grade,
+          // The code has no level 0 within a grade, so a graded slot needs at
+          // least 1; an ungraded slot keeps 0.
+          book: grade ? Math.max(1, clamp(e.book, 'book')) : clamp(e.book, 'book'),
           stone: clamp(e.stone, 'stone'),
         }
       })

@@ -77,3 +77,38 @@ describe('engravingAmpFromClient channels', () => {
     expect(engravingAmpFromClient({ ...slot, grade: 0 }, 'support', byName, 'heal')).toBe(0)
   })
 })
+
+/**
+ * The growth code must never be indexed by a grade off the ladder.
+ *
+ * Grade 1 (基本) is not on it. The picker never offers it, but an imported
+ * loadout could carry it, and `20*stone + 1 + 4*(1-2) + book` then shifts four
+ * cells down: at book 4 it lands on 21/41/61/81, which are real cells the UI
+ * cannot select, so the score comes out WRONG rather than zero; at lower books it
+ * goes negative. `parseLoadout` rejects grade 1, and this pins the arithmetic
+ * that makes it dangerous so the guard is not removed as redundant.
+ */
+describe('growth code', () => {
+  const code = (stone: number, grade: number, level: number) =>
+    20 * stone + 1 + 4 * (grade - 2) + level
+
+  it('is injective over every selectable triple', () => {
+    const seen = new Map<number, string>()
+    for (const stone of [0, 1, 2, 3, 4]) {
+      for (const grade of [2, 3, 4]) {
+        for (const level of [1, 2, 3, 4]) {
+          const c = code(stone, grade, level)
+          expect(seen.has(c)).toBe(false)
+          seen.set(c, `${stone}/${grade}/${level}`)
+        }
+      }
+    }
+    expect(seen.size).toBe(60)
+  })
+
+  it('would collide with unselectable cells if grade 1 were allowed', () => {
+    // The reason parseLoadout rejects it rather than clamping it.
+    expect([1, 2, 3, 4].map((b) => code(1, 1, b))).toEqual([18, 19, 20, 21])
+    expect(code(0, 1, 1)).toBe(-2)
+  })
+})
