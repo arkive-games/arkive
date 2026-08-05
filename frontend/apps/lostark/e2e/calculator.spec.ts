@@ -624,6 +624,46 @@ test('engraving amps come from the client and both dials move the score', async 
   await expect(score(page)).not.toHaveText(atLevel4 ?? '')
 })
 
+test('no engraving grade+level pair can resolve to an undefined grid cell', async ({
+  page,
+}) => {
+  await ready(page)
+  await pickEngraving(page, 1, '怨恨')
+
+  // The growth code is 20*stone + 1 + 4*(grade-2) + level, but the lattice is
+  // NOT full: at stone 0 the client's grid starts at code 5, so 英雄 (grade 2)
+  // exists only at level 4 — epic is represented as a COMPLETE four-book set.
+  // Offering 英雄 levels 1-3 selected a cell that resolved to nothing and
+  // silently scored 0.
+  await page.getByLabel('刻印 1 品质').selectOption('2')
+  await expect(page.locator('select[aria-label="刻印 1 等级"] option')).toHaveText(['4级'])
+  // The level snaps rather than being left on an invalid value.
+  await expect(page.getByLabel('刻印 1 等级')).toHaveValue('4')
+
+  // 遗物 defines all four, so the dial reopens.
+  await page.getByLabel('刻印 1 品质').selectOption('4')
+  await expect(page.locator('select[aria-label="刻印 1 等级"] option')).toHaveText([
+    '1级',
+    '2级',
+    '3级',
+    '4级',
+  ])
+
+  // And every offered pair actually scores.
+  for (const grade of ['2', '3', '4']) {
+    await page.getByLabel('刻印 1 品质').selectOption(grade)
+    const levels = await page
+      .locator('select[aria-label="刻印 1 等级"] option')
+      .evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value))
+    for (const level of levels) {
+      await page.getByLabel('刻印 1 等级').selectOption(level)
+      await expect(page.locator('aside li').filter({ hasText: '刻印效果' })).not.toHaveText(
+        /0%$/,
+      )
+    }
+  }
+})
+
 test('the engraving picker searches and shows icons', async ({ page }) => {
   await ready(page)
   await page.locator('[role="combobox"][aria-label^="刻印 1"]').click()

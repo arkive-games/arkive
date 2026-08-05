@@ -34,6 +34,7 @@ export function EngravingGrid({
   slots,
   /** Names that carry combat power for this role, for the （无战力）marker. */
   scoring,
+  role,
   amps,
   onChange,
 }: {
@@ -41,6 +42,8 @@ export function EngravingGrid({
   names: Record<string, string>
   slots: EngravingSlot[]
   scoring: Set<string>
+  /** Which amp channel to read; decides which grid cells exist. */
+  role: 'dps' | 'support'
   /** Each slot's own combat-power contribution, for the card corner. */
   amps: number[]
   onChange: (index: number, next: EngravingSlot) => void
@@ -68,6 +71,7 @@ export function EngravingGrid({
           meta={meta}
           names={names}
           scoring={scoring}
+          role={role}
           amp={amps[i] ?? 0}
           // A slot keeps its own stone select once it has one; only slots
           // without a stone are locked out when two are already spent.
@@ -86,6 +90,7 @@ function EngravingCard({
   meta,
   names,
   scoring,
+  role,
   amp,
   stoneLocked,
   onChange,
@@ -96,6 +101,7 @@ function EngravingCard({
   meta: EngravingMeta
   names: Record<string, string>
   scoring: Set<string>
+  role: 'dps' | 'support'
   amp: number
   stoneLocked: boolean
   onChange: (next: EngravingSlot) => void
@@ -105,6 +111,35 @@ function EngravingCard({
   const grade = meta.grades.find((g) => g.grade === slot.grade)
   const desc = picked?.desc_key ? names[picked.desc_key] : undefined
   const effect = picked ? effectText(picked, slot, names) : undefined
+
+  /**
+   * Which (grade, level) pairs the client's grid actually defines.
+   *
+   * The growth code is `20*stone + 1 + 4*(grade-2) + level`, but the lattice is
+   * NOT full: at stone 0 the grid starts at code 5, so 英雄 (grade 2) exists only
+   * at level 4 — the client represents epic as a COMPLETE four-book set and has
+   * no partial epic cells. Offering 英雄 levels 1-3 let the picker select a cell
+   * that resolves to nothing and silently scored 0.
+   *
+   * Derived from the grid rather than hard-coded, so it cannot drift from the
+   * data. An engraving with no grid at all (15 of the 43 score nothing) keeps the
+   * full lattice, since no choice there changes the score.
+   */
+  const grid = picked?.amp[role] ?? {}
+  const hasGrid = Object.keys(grid).length > 0
+  const defines = (grade: number, level: number) =>
+    !hasGrid || String(20 * slot.stone + 1 + 4 * (grade - 2) + level) in grid
+
+  const gradeOptions = meta.grades.filter(
+    (g) =>
+      meta.bookGrades.includes(g.grade) &&
+      Array.from({ length: meta.bookMaxLevel }, (_, i) => i + 1).some((lv) =>
+        defines(g.grade, lv),
+      ),
+  )
+  const levelOptions = Array.from({ length: meta.bookMaxLevel }, (_, i) => i + 1).filter((lv) =>
+    defines(slot.grade, lv),
+  )
 
   const tooltip = (
     <>
@@ -198,20 +233,30 @@ function EngravingCard({
           aria-label={`${label} 品质`}
           value={slot.grade}
           disabled={!slot.name}
-          onChange={(e) => onChange({ ...slot, grade: Number(e.target.value) })}
+          onChange={(e) => {
+            const grade = Number(e.target.value)
+            // 英雄 exists only at level 4, so a grade change can invalidate the
+            // current level; snap to the first the new grade defines rather than
+            // leaving a selection that resolves to no cell.
+            const valid = Array.from({ length: meta.bookMaxLevel }, (_, i) => i + 1).filter(
+              (lv) => defines(grade, lv),
+            )
+            onChange({
+              ...slot,
+              grade,
+              book: grade && !valid.includes(slot.book) ? (valid[0] ?? slot.book) : slot.book,
+            })
+          }}
           className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
         >
           <option value={0}>品质</option>
-          {/* Only the growth ladder: epic / legend / relic. 基本 (grade 1) is
-              not on it — the amp grid's book axis starts at epic, so offering it
-              would index a cell the client does not define. */}
-          {meta.grades
-            .filter((g) => meta.bookGrades.includes(g.grade))
-            .map((g) => (
-              <option key={g.grade} value={g.grade}>
-                {plainText(names[g.name_key] ?? String(g.grade))}
-              </option>
-            ))}
+          {/* Only grades the grid defines a cell for. 基本 (grade 1) is never on
+              the ladder, and 英雄 drops out unless a level resolves. */}
+          {gradeOptions.map((g) => (
+            <option key={g.grade} value={g.grade}>
+              {plainText(names[g.name_key] ?? String(g.grade))}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -224,9 +269,10 @@ function EngravingCard({
             onChange={(e) => onChange({ ...slot, book: Number(e.target.value) })}
             className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
           >
-            {/* 1-based: the growth code has no level 0 within a grade. 级 is the
-                client's own unit, from ui_title_arkpassive_level. */}
-            {Array.from({ length: meta.bookMaxLevel }, (_, i) => i + 1).map((v) => (
+            {/* 1-based (the growth code has no level 0 within a grade) and
+                filtered to the levels this grade defines — 英雄 only has level 4.
+                级 is the client's own unit, from ui_title_arkpassive_level. */}
+            {levelOptions.map((v) => (
               <option key={v} value={v}>
                 {v}级
               </option>

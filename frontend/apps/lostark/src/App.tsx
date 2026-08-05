@@ -437,6 +437,7 @@ export default function App() {
               names={data.names}
               slots={loadout.engravings}
               scoring={scoringEngravings}
+              role={loadout.role}
               amps={engravingAmps}
               onChange={(i, next) => {
                 const list = [...loadout.engravings]
