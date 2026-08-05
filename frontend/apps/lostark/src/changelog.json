@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.0",
+      "date": "2026-08-05",
+      "commit": "194b116e2d6784c4640b912ca16f7f08bc7d529e",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Engravings are now five columns with the game's own icons and all 95 engravings, plus grade, level and ability-stone selection.",
+            "zh-CN": "刻印改为五栏展示，使用游戏原版图标并收录全部 95 个刻印，可选择品质、等级与能力石。",
+            "zh-TW": "刻印改為五欄展示，使用遊戲原版圖示並收錄全部 95 個刻印，可選擇品質、等級與能力石。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "date": "2026-08-05",
       "commit": "97cab345f446f5db45c97791568161564d9c971d",
