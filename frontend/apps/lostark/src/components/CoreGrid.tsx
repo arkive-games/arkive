@@ -4,24 +4,31 @@ import type { ArkGridSlot, ArkGridVariant } from '@/lib/data'
 import { RichText, plainText } from './RichText'
 
 /**
- * Lost Ark's item-grade colours, sampled from the game's own tooltip frames.
+ * Item-grade tints, resolved from CSS so a theme flip carries them.
  *
- * `EFUI_TOOLTIP`'s two textures carry a bordered panel per grade; these are the
- * characteristic hue of each frame's highlights, normalised to full value since
- * the source art is shaded and reads muddy reused flat. Grades run 0-3 =
- * 英雄 / 传说 / 遗物 / 古代.
- *
- * Those textures are Crunch-compressed, so this only became possible once laex
- * could decode CRN.
+ * The values live in index.css because the game's art is tuned for a dark UI:
+ * 古代's pale cream works as a border on dark but is unreadable as text on
+ * white, so the light theme needs its own set. Keeping them here as literals
+ * meant the label vanished in light mode.
  */
-const GRADE_STYLE: Record<string, { ring: string; wash: string; text: string }> = {
-  '0': { ring: '#b02ef2', wash: '#b02ef21f', text: '#d68cff' }, // 英雄  purple
-  '1': { ring: '#f2bf24', wash: '#f2bf241f', text: '#f5d268' }, // 传说  gold
-  '2': { ring: '#f28424', wash: '#f284241f', text: '#f5a768' }, // 遗物  orange-red
-  '3': { ring: '#edf2d6', wash: '#edf2d616', text: '#f2f5e4' }, // 古代  yellow-white
-}
+const GRADE_STYLE: Record<string, { ring: string; wash: string; text: string }> =
+  Object.fromEntries(
+    ['0', '1', '2', '3'].map((g) => [
+      g,
+      {
+        ring: `var(--grade-${g}-ring)`,
+        // color-mix keeps the wash tied to the ring rather than duplicating a
+        // hand-picked alpha per grade per theme.
+        wash: `color-mix(in oklab, var(--grade-${g}-ring) 12%, transparent)`,
+        text: `var(--grade-${g}-text)`,
+      },
+    ]),
+  )
 
-const EMPTY = { ring: 'var(--color-line)', wash: 'transparent', text: 'var(--color-muted)' }
+const EMPTY = { ring: 'var(--border)', wash: 'transparent', text: 'var(--muted-foreground)' }
+
+/** 遗物 — the quality a real build runs, so the one a fresh pick lands on. */
+const DEFAULT_GRADE = '2'
 
 export function CoreGrid({
   slots,
@@ -115,9 +122,13 @@ function CoreCard({
       onChange({ id: '', optionIndex: 0 })
       return
     }
-    // Picking a core with no grade yet resolves to its lowest grade, since an id
-    // cannot exist without one.
-    const grade = v.grades[nextGrade] ? nextGrade : Object.keys(v.grades).sort()[0]
+    // Picking a core with no grade yet lands on 遗物 (grade 2) — the quality
+    // people actually run — falling back to the highest grade the core offers
+    // when it has no 遗物 tier, then to its lowest.
+    const grade = v.grades[nextGrade]
+      ? nextGrade
+      : (DEFAULT_GRADE in v.grades ? DEFAULT_GRADE : Object.keys(v.grades).sort().pop()) ??
+        Object.keys(v.grades).sort()[0]
     if (!grade) {
       onChange({ id: '', optionIndex: 0 })
       return
@@ -133,12 +144,12 @@ function CoreCard({
       {/* Row 1 — which core, and at what quality. */}
       <div className="grid grid-cols-2 gap-2">
         <label className="block min-w-0">
-          <span className="text-sm text-muted">核心</span>
+          <span className="text-sm text-muted-foreground">核心</span>
           <select
             aria-label={`${slotName} 核心`}
             value={variantIndex}
             onChange={(e) => pick(Number(e.target.value), gradeKey)}
-            className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-base"
+            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-base"
           >
             <option value={-1}>未选择</option>
             {variants.map((v, vi) => (
@@ -150,13 +161,13 @@ function CoreCard({
           </select>
         </label>
         <label className="block min-w-0">
-          <span className="text-sm text-muted">品质</span>
+          <span className="text-sm text-muted-foreground">品质</span>
           <select
             aria-label={`${slotName} 品质`}
             value={gradeKey}
             disabled={variantIndex < 0}
             onChange={(e) => pick(variantIndex, e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-bg px-2 py-1 text-base disabled:opacity-40"
+            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-base disabled:opacity-40"
           >
             <option value="">未装配</option>
             {Object.entries(variant?.grades ?? {}).map(([g, info]) => (
@@ -178,8 +189,21 @@ function CoreCard({
               aria-label={`${slotName} 效果`}
               className="relative grid size-28 cursor-help place-items-center rounded-full transition-transform hover:scale-105"
             >
+              {/* Grade colour washing the socket's inner disc. Inset past the
+                  frame's own bevel so the tint sits behind the art rather than
+                  bleeding over the ring. */}
+              <span
+                aria-hidden
+                className="absolute inset-[6%] rounded-full"
+                style={{
+                  background: gradeKey
+                    ? `radial-gradient(circle at 50% 45%, color-mix(in oklab, ${style.ring} 55%, transparent), color-mix(in oklab, ${style.ring} 18%, transparent) 70%, transparent)`
+                    : 'transparent',
+                }}
+              />
               {/* The game's own socket ring (arkpassive_i1_nopack), used for
-                  both empty and filled slots so the frame never moves. */}
+                  both empty and filled slots so the frame never moves. Drawn
+                  over the wash so its bevel stays crisp. */}
               <img
                 src="cores/frame.png"
                 alt=""
@@ -196,17 +220,19 @@ function CoreCard({
               {gradeKey ? (
                 // Real game art, cropped from the use_13 sheet of
                 // EFUI_ICONATLAS_U (row 2, columns 5-10 at 64px cells).
+                // Upscaled past its native 64px: the frame's opening is most of
+                // the card, and at 84px the art floated in the middle of it.
                 <img
                   src={`cores/${slot.key}.png`}
                   alt=""
-                  width={84}
-                  height={84}
+                  width={104}
+                  height={104}
                   className="relative"
                 />
               ) : (
                 <span
                   aria-hidden
-                  className="relative text-4xl font-light leading-none text-muted"
+                  className="relative text-4xl font-light leading-none text-muted-foreground"
                 >
                   +
                 </span>
@@ -216,7 +242,7 @@ function CoreCard({
           <HoverCardContent
             side="right"
             align="start"
-            className="max-h-[22rem] w-80 overflow-auto border-line bg-panel text-ink"
+            className="max-h-[22rem] w-80 overflow-auto border-border bg-card text-foreground"
           >
             {/* The slot name lives here rather than on the card, keeping the
                 card itself to just the three controls. */}
@@ -226,10 +252,10 @@ function CoreCard({
                 {plainText(names[variant?.name_key ?? ''] ?? '')} · {plainText(names[grade?.name_key ?? ''] ?? '')}
               </div>
             ) : (
-              <p className="mt-1 text-sm text-muted">未装配核心。</p>
+              <p className="mt-1 text-sm text-muted-foreground">未装配核心。</p>
             )}
             {gradeKey && effects.length === 0 && (
-              <p className="mt-2 text-sm text-muted">该核心没有可显示的效果。</p>
+              <p className="mt-2 text-sm text-muted-foreground">该核心没有可显示的效果。</p>
             )}
             {effects.length > 0 && (
               <>
@@ -245,12 +271,12 @@ function CoreCard({
                       */}
                       <span
                         className="shrink-0 font-medium tabular-nums"
-                        style={{ color: row.active ? 'var(--color-accent)' : 'var(--color-muted)' }}
+                        style={{ color: row.active ? 'var(--color-accent)' : 'var(--muted-foreground)' }}
                       >
                         [{row.threshold}P]
                       </span>
                       <span
-                        className={`whitespace-pre-line ${row.active ? 'text-ink' : 'text-muted'}`}
+                        className={`whitespace-pre-line ${row.active ? 'text-foreground' : 'text-muted-foreground'}`}
                       >
                         <RichText text={row.text} muted={!row.active} />
                       </span>
@@ -265,7 +291,7 @@ function CoreCard({
 
       {/* Row 3 — the point slider. */}
       <div>
-        <div className="flex items-baseline justify-between text-sm text-muted">
+        <div className="flex items-baseline justify-between text-sm text-muted-foreground">
           <span>点数</span>
           <span className="tabular-nums" style={{ color: style.text }}>
             {activeStop > 0 ? `${points[activeStop - 1][1]}P` : '未激活'}
@@ -295,11 +321,11 @@ function CoreCard({
           className="mt-1 w-full accent-accent disabled:opacity-40"
         />
         {/* One label per stop, so the ticks line up with the thumb positions. */}
-        <div className="flex justify-between text-sm text-muted">
+        <div className="flex justify-between text-sm text-muted-foreground">
           {Array.from({ length: stopCount }, (_, stop) => (
             <span
               key={stop}
-              className={stop === activeStop ? 'text-ink' : ''}
+              className={stop === activeStop ? 'text-foreground' : ''}
               title={stop === 0 ? '未激活' : undefined}
             >
               {stop === 0 ? '—' : points[stop - 1][1]}

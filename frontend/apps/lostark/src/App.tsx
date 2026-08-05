@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
+import { BuildInfo, SiteFooter } from '@gamemap/ui'
+import changelog from './changelog.json'
 import { armourGroups, evaluate, weaponOptions } from '@/calc/engine'
 import type { Loadout } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
@@ -126,7 +129,7 @@ export default function App() {
     return (
       <main className="mx-auto max-w-2xl p-6">
         <h1 className="text-2xl font-semibold">战斗力计算器</h1>
-        <p className="mt-4 rounded-lg border border-line bg-panel p-4 text-sm text-muted">
+        <p className="mt-4 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
           数据加载失败：{error}
           <br />
           请确认 <code>data-lostark</code> 已生成（<code>uv run python -m lostark emit</code>）。
@@ -136,21 +139,46 @@ export default function App() {
   }
 
   if (!data || !coeffs || !result) {
-    return <main className="p-6 text-sm text-muted">加载中…</main>
+    return <main className="p-6 text-sm text-muted-foreground">加载中…</main>
   }
 
+  // entries[0] is this app's current version by convention.
+  const version = (changelog.entries[0]?.version ?? '0.0.0') as string
+
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-4 sm:px-6">
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          战斗力计算器
-        </h1>
+    <div className="flex min-h-dvh flex-col text-foreground">
+      <ShellTopBar
+        classNames={{
+          root: 'sticky top-0 z-20 border-b border-border bg-card/70 text-card-foreground backdrop-blur-md',
+        }}
+        leftSlot={
+          <span className="flex items-baseline gap-2">
+            {/* An h1, not a span: it is the page's title, and the tests and
+                screen readers both look for it by heading role. */}
+            <h1 className="text-lg font-semibold tracking-tight">战斗力计算器</h1>
+            <span className="text-sm text-muted-foreground">v{version}</span>
+          </span>
+        }
+        rightExtras={
+          <>
+            <ThemeToggle labels={{ auto: '自动', light: '浅色', dark: '深色' }} />
+            <BuildInfo
+              commit={__BUILD_GIT_COMMIT__}
+              buildTime={__BUILD_TIME__}
+              dev={import.meta.env.DEV}
+            />
+          </>
+        }
+      />
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-4 sm:px-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <select
             aria-label="职业"
             value={loadout.classId}
             onChange={(e) => setClass(Number(e.target.value), 0)}
-            className="rounded-md border border-line bg-panel px-2 py-1 text-sm"
+            className="rounded-md border border-border bg-card px-2 py-1 text-sm"
           >
             {data.classes
               .filter((c) => c.subclasses.length > 0)
@@ -163,7 +191,7 @@ export default function App() {
           <div
             role="tablist"
             aria-label="职业刻印"
-            className="flex gap-1 rounded-full border border-line bg-panel p-1"
+            className="flex gap-1 rounded-full border border-border bg-card p-1"
           >
             {(currentClass?.subclasses ?? []).map((sub, i) => (
               <button
@@ -174,7 +202,7 @@ export default function App() {
                 className={`rounded-full px-3 py-1 text-sm transition ${
                   loadout.subclassIndex === i
                     ? 'bg-accent text-bg font-medium'
-                    : 'text-muted hover:text-ink'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {data.names[sub.name_key] ?? sub.name_key}
@@ -188,13 +216,13 @@ export default function App() {
         <div className="flex gap-2">
           <button
             onClick={download}
-            className="rounded-md border border-line px-3 py-1 text-sm hover:border-accent"
+            className="rounded-md border border-border px-3 py-1 text-sm hover:border-accent"
           >
             导出
           </button>
           <button
             onClick={() => fileInput.current?.click()}
-            className="rounded-md border border-line px-3 py-1 text-sm hover:border-accent"
+            className="rounded-md border border-border px-3 py-1 text-sm hover:border-accent"
           >
             导入
           </button>
@@ -203,7 +231,7 @@ export default function App() {
               setLoadout(defaultLoadout())
               setNotice('已清空')
             }}
-            className="rounded-md border border-line px-3 py-1 text-sm hover:border-accent"
+            className="rounded-md border border-border px-3 py-1 text-sm hover:border-accent"
           >
             清空
           </button>
@@ -220,12 +248,12 @@ export default function App() {
             }}
           />
         </div>
-      </header>
+      </div>
 
       {notice && (
         <p
           role="status"
-          className="mb-3 rounded-lg border border-line bg-panel px-3 py-2 text-sm text-muted"
+          className="mb-3 rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground"
         >
           {notice}
         </p>
@@ -338,7 +366,7 @@ export default function App() {
           </Section>
 
           <Section title="手镯">
-            <p className="text-sm text-muted">系数来自参考站，非游戏数据表。</p>
+            <p className="text-sm text-muted-foreground">系数来自参考站，非游戏数据表。</p>
             {loadout.braceletLines.map((id, i) => (
               <SelectField
                 key={i}
@@ -360,7 +388,7 @@ export default function App() {
           </Section>
 
           <Section title="刻印">
-            <p className="text-sm text-muted">系数来自参考站，非游戏数据表。</p>
+            <p className="text-sm text-muted-foreground">系数来自参考站，非游戏数据表。</p>
             {loadout.engravings.map((eng, i) => (
               <div key={i} className="flex gap-2">
                 <select
@@ -371,7 +399,7 @@ export default function App() {
                     list[i] = { ...list[i], name: e.target.value }
                     set('engravings', list)
                   }}
-                  className="min-w-0 flex-1 rounded-md border border-line bg-bg px-2 py-1 text-sm"
+                  className="min-w-0 flex-1 rounded-md border border-border bg-background px-2 py-1 text-sm"
                 >
                   <option value="">无</option>
                   {Object.keys(
@@ -389,7 +417,7 @@ export default function App() {
                     list[i] = { ...list[i], book: Number(e.target.value) }
                     set('engravings', list)
                   }}
-                  className="w-20 rounded-md border border-line bg-bg px-2 py-1 text-sm disabled:opacity-40"
+                  className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
                 >
                   {[0, 1, 2, 3, 4].map((v) => <option key={v} value={v}>书 {v}</option>)}
                 </select>
@@ -402,7 +430,7 @@ export default function App() {
                     list[i] = { ...list[i], stone: Number(e.target.value) }
                     set('engravings', list)
                   }}
-                  className="w-20 rounded-md border border-line bg-bg px-2 py-1 text-sm disabled:opacity-40"
+                  className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
                 >
                   {[0, 1, 2, 3, 4].map((v) => <option key={v} value={v}>石 {v}</option>)}
                 </select>
@@ -411,7 +439,7 @@ export default function App() {
           </Section>
 
           <Section title="时装与远征队">
-            <p className="text-sm text-muted">系数来自参考站，非游戏数据表。</p>
+            <p className="text-sm text-muted-foreground">系数来自参考站，非游戏数据表。</p>
             {['头部', '上装', '下装', '武器'].map((slot, i) => (
               <SelectField
                 key={slot}
@@ -438,10 +466,10 @@ export default function App() {
           </Section>
 
           <Section title="首饰词条">
-            <p className="text-sm text-muted">项链、耳环×2、戒指×2，每件 3 条；各条独立相乘。</p>
+            <p className="text-sm text-muted-foreground">项链、耳环×2、戒指×2，每件 3 条；各条独立相乘。</p>
             {['项链', '耳环 1', '耳环 2', '戒指 1', '戒指 2'].map((piece, p) => (
               <div key={piece} className="space-y-1">
-                <div className="text-sm text-muted">{piece}</div>
+                <div className="text-sm text-muted-foreground">{piece}</div>
                 {[0, 1, 2].map((n) => {
                   const idx = p * 3 + n
                   return (
@@ -454,7 +482,7 @@ export default function App() {
                         lines[idx] = e.target.value
                         set('accessoryLines', lines)
                       }}
-                      className="w-full rounded-md border border-line bg-bg px-2 py-1 text-sm"
+                      className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm"
                     >
                       <option value="">无</option>
                       {Object.entries(coeffs.accessory_line_values).map(([id, amp]) => (
@@ -470,7 +498,7 @@ export default function App() {
           </Section>
 
           <Section title="宝石">
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               最多 {loadout.gems.length} 颗；每颗独立相乘。
             </p>
             {loadout.gems.map((gem, i) => (
@@ -484,7 +512,7 @@ export default function App() {
                       gems[i] = { ...gems[i], tier: e.target.value }
                       set('gems', gems)
                     }}
-                    className="min-w-0 flex-1 rounded-md border border-line bg-bg px-2 py-1 text-sm"
+                    className="min-w-0 flex-1 rounded-md border border-border bg-background px-2 py-1 text-sm"
                   >
                     <option value="">未镶嵌</option>
                     {Object.keys(coeffs.gem_values).map((t) => (
@@ -502,7 +530,7 @@ export default function App() {
                       gems[i] = { ...gems[i], level: Number(e.target.value) }
                       set('gems', gems)
                     }}
-                    className="w-24 rounded-md border border-line bg-bg px-2 py-1 text-sm disabled:opacity-40"
+                    className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
                   >
                     {Object.keys(coeffs.gem_values[gem.tier] ?? {}).map((lv) => (
                       <option key={lv} value={lv}>
@@ -567,11 +595,11 @@ export default function App() {
         <ScoreRail result={result} />
       </div>
 
-      <footer className="mt-10 text-sm text-muted">
+      <p className="mt-10 text-sm text-muted-foreground">
         系数与名称取自游戏客户端数据表（<code>EFTable_BattlePoint</code> 等），
         由 <code>tools/apps/lostark</code> 导出。公式结构参考{' '}
         <a
-          className="underline hover:text-ink"
+          className="underline hover:text-foreground"
           href="https://lostark-cn.pages.dev/html/dps"
           target="_blank"
           rel="noreferrer"
@@ -579,7 +607,14 @@ export default function App() {
           命运方舟工具箱
         </a>
         。数据生成于 {new Date(data.version.generatedAt).toLocaleString('zh-CN')}。
-      </footer>
+      </p>
+      </main>
+
+      <SiteFooter
+        homeUrl={import.meta.env.VITE_HOME_URL}
+        githubUrl={import.meta.env.VITE_GITHUB_URL}
+        icpBeian={import.meta.env.VITE_ICP_BEIAN}
+      />
     </div>
   )
 }

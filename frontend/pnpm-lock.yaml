@@ -198,6 +198,9 @@ importers:
 
   apps/lostark:
     dependencies:
+      '@gamemap/map-shell':
+        specifier: workspace:*
+        version: link:../../packages/map-shell
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui

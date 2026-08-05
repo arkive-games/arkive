@@ -4,16 +4,16 @@ import { useState } from 'react'
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   const [open, setOpen] = useState(true)
   return (
-    <section className="rounded-xl border border-line bg-panel/70 backdrop-blur">
+    <section className="rounded-xl border border-border bg-card/70 backdrop-blur">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
         <span className="text-base font-medium">{title}</span>
-        <span className="text-sm text-muted">{open ? '▾' : '▸'}</span>
+        <span className="text-sm text-muted-foreground">{open ? '▾' : '▸'}</span>
       </button>
-      {open && <div className="space-y-2 border-t border-line px-4 py-3">{children}</div>}
+      {open && <div className="space-y-2 border-t border-border px-4 py-3">{children}</div>}
     </section>
   )
 }
@@ -21,7 +21,7 @@ export function Section({ title, children }: { title: string; children: ReactNod
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex items-center justify-between gap-3">
-      <span className="shrink-0 text-sm text-muted">{label}</span>
+      <span className="shrink-0 text-sm text-muted-foreground">{label}</span>
       <span className="min-w-0 flex-1">{children}</span>
     </label>
   )
@@ -54,7 +54,7 @@ export function NumberField({
           const n = Number.isFinite(raw) ? raw : 0
           onChange(Math.min(max, Math.max(min, n)))
         }}
-        className="w-full rounded-md border border-line bg-bg px-2 py-1 text-right text-sm"
+        className="w-full rounded-md border border-border bg-background px-2 py-1 text-right text-sm"
       />
     </Field>
   )
@@ -77,7 +77,7 @@ export function SelectField({
         aria-label={label}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-line bg-bg px-2 py-1 text-base"
+        className="w-full rounded-md border border-border bg-background px-2 py-1 text-base"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

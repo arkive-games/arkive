@@ -389,3 +389,46 @@ test('a core must be picked before a quality', async ({ page }) => {
   await page.getByLabel('秩序之日 核心').selectOption('0')
   await expect(page.getByLabel('秩序之日 品质')).toBeEnabled()
 })
+
+test('the shared top bar carries the version and stays on screen', async ({ page }) => {
+  await ready(page)
+
+  // The version comes from changelog.json entries[0] rather than a literal, so
+  // assert the shape: a hard-coded string here would rot at the next bump.
+  await expect(page.getByText(/^v\d+\.\d+\.\d+$/)).toBeVisible()
+
+  const bar = page.locator('header').first()
+  await expect(bar).toHaveCSS('position', 'sticky')
+
+  // Scrolling past the fold must not take the bar with it.
+  await page.getByText('方舟星阵核心').scrollIntoViewIfNeeded()
+  await expect(page.getByRole('heading', { name: '战斗力计算器' })).toBeVisible()
+})
+
+test('the theme toggle cycles dark to auto to light and survives a reload', async ({ page }) => {
+  await ready(page)
+
+  const html = page.locator('html')
+  // defaultTheme is dark, so that is where an empty storage lands.
+  await expect(html).toHaveClass(/dark/)
+
+  // The button is labelled with the *current* theme and advances on click:
+  // dark -> auto -> light -> dark.
+  await page.getByRole('button', { name: '深色' }).click()
+  await expect(page.getByRole('button', { name: '自动' })).toBeVisible()
+
+  await page.getByRole('button', { name: '自动' }).click()
+  await expect(page.getByRole('button', { name: '浅色' })).toBeVisible()
+  await expect(html).not.toHaveClass(/dark/)
+
+  await page.reload()
+  await expect(page.getByRole('button', { name: '浅色' })).toBeVisible()
+  await expect(html).not.toHaveClass(/dark/)
+})
+
+test('the shared footer is present', async ({ page }) => {
+  await ready(page)
+  const footer = page.locator('footer')
+  await expect(footer).toBeVisible()
+  await expect(footer).toContainText('Arkive Games')
+})
