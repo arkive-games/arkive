@@ -2,6 +2,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@gamemap/ui'
 import type { EngravingSlot } from '@/calc/types'
 import type { Engraving, EngravingMeta } from '@/lib/data'
 import { RichText, plainText } from './RichText'
+import { EngravingPicker } from './EngravingPicker'
 
 /**
  * The five engraving slots as columns, each with the game's own icon.
@@ -98,6 +99,7 @@ function EngravingCard({
   const picked = options.find((o) => o.name === slot.name)?.engraving
   const grade = meta.grades.find((g) => g.grade === slot.grade)
   const desc = picked?.desc_key ? names[picked.desc_key] : undefined
+  const effect = picked ? effectText(picked, slot, names) : undefined
 
   return (
     <article className="min-w-0 rounded-xl border border-border bg-card p-3">
@@ -163,10 +165,14 @@ function EngravingCard({
                 客户端中未能解析此刻印的图标。
               </p>
             ) : null}
-            {/* The four descriptions that held unresolved <$...> directives were
-                all class engravings, so none remain — the guard stays as a
-                regression net. */}
-            {desc && !desc.includes('<$') ? (
+            {/* The scaled effect text. Ability.Desc is fixed at one level (怨恨
+                reads "4%" there no matter the books or stone), so it is only the
+                fallback when no channel resolves. */}
+            {effect ? (
+              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed">
+                <RichText text={effect} />
+              </p>
+            ) : desc && !desc.includes('<$') ? (
               <p className="mt-2 text-xs leading-relaxed">
                 <RichText text={desc} />
               </p>
@@ -180,31 +186,32 @@ function EngravingCard({
         </HoverCard>
       </div>
 
-      <select
-        aria-label={label}
-        value={slot.name}
-        onChange={(e) => {
-          const name = e.target.value
-          // Picking an engraving with no grade yet lands on 遗物, and clearing
-          // the slot drops the grade with it so an empty slot never keeps one.
-          onChange({
-            ...slot,
-            name,
-            grade: name ? (slot.grade || DEFAULT_GRADE) : 0,
-            // The growth code has no level 0, so a fresh pick starts at 1.
-            book: name ? Math.max(1, slot.book) : 0,
-          })
-        }}
-        className="mt-2 w-full rounded-md border border-border bg-background px-2 py-1 text-sm"
-      >
-        <option value="">无</option>
-        {options.map((o) => (
-          <option key={o.engraving.slug} value={o.name}>
-            {o.name}
-            {scoring.has(o.name) ? '' : '（无战力）'}
-          </option>
-        ))}
-      </select>
+      <div className="mt-2">
+        <EngravingPicker
+          label={label}
+          options={options}
+          value={slot.name}
+          scoring={scoring}
+          labels={{
+            // NOT uiKeys.empty: that resolves to "未装备刻印。", a tooltip
+            // sentence rather than a control label, and it overflows the trigger.
+            empty: '未选择',
+            search: '搜索刻印…',
+            notFound: '没有匹配的刻印',
+            noPower: '无战力',
+          }}
+          onChange={(name) =>
+            onChange({
+              ...slot,
+              name,
+              // Picking lands on 遗物, and the growth code has no level 0.
+              // Clearing drops both so an empty slot never keeps them.
+              grade: name ? slot.grade || DEFAULT_GRADE : 0,
+              book: name ? Math.max(1, slot.book) : 0,
+            })
+          }
+        />
+      </div>
 
       <label className="mt-2 block">
         <span className="text-xs text-muted-foreground">品质</span>
@@ -270,4 +277,53 @@ function EngravingCard({
       </div>
     </article>
   )
+}
+
+/** Grade number -> the channel that carries its per-level additions. */
+const GRADE_CHANNEL: Record<number, 'legend' | 'relic'> = { 3: 'legend', 4: 'relic' }
+
+/**
+ * The engraving's effect text with every number scaled to the current dials.
+ *
+ * `AbilitySpecification` splits an engraving's tooltip into channels: `base`
+ * holds the complete sentence, and `legend` / `relic` / `stone` hold per-level
+ * ADDITIONS to the same specs. So a spec's displayed value is
+ * `base + gradeChannel[level] + stoneChannel[stoneLevel]`, and only the base
+ * channel's sentence is rendered — the others read "additional {0}" and would be
+ * double-counting if shown alongside it.
+ *
+ * 英雄 (grade 2) has no channel of its own: the client folds the four epic books
+ * into the base row, which is why the base channel has a single step.
+ *
+ * A tooltip's `{0}`, `{1}` … index this channel's `specs` in order, while
+ * `values[step]` is a 4-array indexed by `spec.index - 1` (SpecValue1..4).
+ *
+ * These are RAW tooltip values, deliberately not the combat power: 尖刺重锤
+ * grants 36% crit damage but scores 0.1141.
+ */
+function effectText(
+  engraving: Engraving,
+  slot: EngravingSlot,
+  names: Record<string, string>,
+): string | undefined {
+  const base = engraving.effect.find((c) => c.key === 'base')
+  const tooltip = base?.tooltip_key ? names[base.tooltip_key] : undefined
+  if (!base || !tooltip) return undefined
+
+  const gradeKey = GRADE_CHANNEL[slot.grade]
+  const gradeCh = gradeKey ? engraving.effect.find((c) => c.key === gradeKey) : undefined
+  const stoneCh =
+    slot.stone > 0 ? engraving.effect.find((c) => c.key === 'stone') : undefined
+
+  return tooltip.replace(/\{(\d+)\}/g, (whole, slotIndex: string) => {
+    const spec = base.specs[Number(slotIndex)]
+    if (!spec) return whole
+    const i = spec.index - 1
+    const total =
+      (base.values['1']?.[i] ?? 0) +
+      (gradeCh?.values[String(slot.book)]?.[i] ?? 0) +
+      (stoneCh?.values[String(slot.stone)]?.[i] ?? 0)
+    const unit = spec.unit_key ? (names[spec.unit_key] ?? '') : ''
+    return `${(spec.negative ? -total : total).toFixed(spec.digits)}${unit}`
+  })
 }

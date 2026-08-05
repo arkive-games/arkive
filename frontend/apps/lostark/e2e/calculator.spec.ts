@@ -12,6 +12,27 @@ async function ready(page: Page) {
   await expect(page.locator('aside')).toBeVisible()
 }
 
+/**
+ * Pick an engraving through the searchable combobox.
+ *
+ * The picker is a Popover + cmdk list (the same pattern palworld's PalPicker
+ * uses), not a <select>, so it cannot be driven with selectOption.
+ */
+async function pickEngraving(page: Page, slot: number, query?: string) {
+  await page.locator(`[role="combobox"][aria-label^="刻印 ${slot}"]`).click()
+  if (query) await page.locator('input[placeholder="搜索刻印…"]').fill(query)
+  // Row 0 is the clear row when no query narrows the list, so skip past it.
+  await page.locator('[cmdk-item]').nth(query ? 0 : slot).click()
+}
+
+/** Open a slot's list and read back what it offers. */
+async function engravingRows(page: Page, slot: number) {
+  await page.locator(`[role="combobox"][aria-label^="刻印 ${slot}"]`).click()
+  const rows = await page.locator('[cmdk-item]').allTextContents()
+  await page.keyboard.press('Escape')
+  return rows
+}
+
 // addInitScript runs on every navigation, so guard with sessionStorage —
 // otherwise a reload wipes the very state the persistence test asserts.
 test.beforeEach(async ({ page }) => {
@@ -236,11 +257,11 @@ test('engravings compound, using the client amps', async ({ page }) => {
   // BattlePoint Type 10: 怨恨 0.1875, 肾上腺素 0.1625. The fan site instead
   // published 0.18 and 0.152 as "base" — its base is legend level 4 (code 9),
   // a different cell of the same grid.
-  await page.getByLabel('刻印 1', { exact: true }).selectOption('怨恨')
+  await pickEngraving(page, 1, '怨恨')
   await expect(rail.getByText('18.75%')).toBeVisible()
 
   // Compound rather than sum: 1.1875 * 1.1625 - 1 = 0.38047.
-  await page.getByLabel('刻印 2', { exact: true }).selectOption('肾上腺素')
+  await pickEngraving(page, 2, '肾上腺素')
   await expect(rail.getByText('38.05%')).toBeVisible()
 })
 
@@ -505,7 +526,7 @@ test('picking a scoring bracelet line moves the score', async ({ page }) => {
 test('engravings are five columns naming the 43 general ones', async ({ page }) => {
   await ready(page)
   for (let i = 1; i <= 5; i++) {
-    await expect(page.getByLabel(`刻印 ${i}`, { exact: true })).toBeVisible()
+    await expect(page.locator(`[role="combobox"][aria-label^="刻印 ${i}"]`)).toBeVisible()
     await expect(page.getByLabel(`刻印 ${i} 品质`)).toBeVisible()
     await expect(page.getByLabel(`刻印 ${i} 等级`)).toBeVisible()
     await expect(page.getByLabel(`刻印 ${i} 能力石`)).toBeVisible()
@@ -513,14 +534,12 @@ test('engravings are five columns naming the 43 general ones', async ({ page }) 
   // The 43 GENERAL engravings, plus the empty option. Class engravings are
   // excluded: the rework made them class identities and the client gives them no
   // amp grid. The old fan-site picker offered 17.
-  await expect(page.locator('select[aria-label="刻印 1"] option')).toHaveCount(44)
+  expect(await engravingRows(page, 1)).toHaveLength(44)
 })
 
 test('at most two engravings can carry an ability stone', async ({ page }) => {
   await ready(page)
-  for (let i = 1; i <= 3; i++) {
-    await page.getByLabel(`刻印 ${i}`, { exact: true }).selectOption({ index: i })
-  }
+  for (let i = 1; i <= 3; i++) await pickEngraving(page, i)
   await expect(page.getByLabel('刻印 3 能力石')).toBeEnabled()
 
   await page.getByLabel('刻印 1 能力石').selectOption('4')
@@ -541,7 +560,7 @@ test('a fresh engraving pick lands on 遗物 level 1', async ({ page }) => {
   await ready(page)
   await expect(page.getByLabel('刻印 1 品质')).toBeDisabled()
 
-  await page.getByLabel('刻印 1', { exact: true }).selectOption({ index: 1 })
+  await pickEngraving(page, 1)
   const grade = page.getByLabel('刻印 1 品质')
   await expect(grade).toBeEnabled()
   await expect(grade.locator('option:checked')).toHaveText('遗物')
@@ -549,7 +568,7 @@ test('a fresh engraving pick lands on 遗物 level 1', async ({ page }) => {
   await expect(page.getByLabel('刻印 1 等级').locator('option:checked')).toHaveText('1')
 
   // Clearing the slot drops the grade with it, so an empty slot never keeps one.
-  await page.getByLabel('刻印 1', { exact: true }).selectOption('')
+  await page.locator('[role="combobox"][aria-label^="刻印 1"] [role="button"]').click()
   await expect(grade.locator('option:checked')).toHaveText('—')
 })
 
@@ -561,16 +580,15 @@ test('engravings with no coefficient say so instead of scoring silently', async 
   // picker marks the rest rather than hiding them.
   // 15 of the 43 have no BattlePoint Type 10 grid — defensive and utility
   // engravings genuinely score nothing.
-  const marked = await page
-    .locator('select[aria-label="刻印 1"] option')
-    .evaluateAll((els) => els.filter((e) => e.textContent?.includes('（无战力）')).length)
+  const rows = await engravingRows(page, 1)
+  const marked = rows.filter((r) => r.includes('无战力')).length
   expect(marked).toBeGreaterThan(0)
   expect(marked).toBeLessThan(43)
 })
 
 test('engraving quality offers only the growth ladder', async ({ page }) => {
   await ready(page)
-  await page.getByLabel('刻印 1', { exact: true }).selectOption({ index: 1 })
+  await pickEngraving(page, 1)
 
   // The amp grid's book axis starts at epic, so 基本 (grade 1) is not on the
   // ladder — offering it would index a cell the client does not define.
@@ -591,7 +609,7 @@ test('engraving amps come from the client and both dials move the score', async 
   // 破釜沉舟 style: pick the first scoring engraving, then move each axis of the
   // growth code independently. BattlePoint Type 10 is a 2D grid, so both must
   // change the total.
-  await page.getByLabel('刻印 1', { exact: true }).selectOption({ index: 1 })
+  await pickEngraving(page, 1)
   const atLevel1 = await score(page).textContent()
 
   await page.getByLabel('刻印 1 等级').selectOption('4')
@@ -600,6 +618,48 @@ test('engraving amps come from the client and both dials move the score', async 
 
   await page.getByLabel('刻印 1 能力石').selectOption('4')
   await expect(score(page)).not.toHaveText(atLevel4 ?? '')
+})
+
+test('the engraving picker searches and shows icons', async ({ page }) => {
+  await ready(page)
+  await page.locator('[role="combobox"][aria-label^="刻印 1"]').click()
+
+  // Typing narrows to one row, and the list carries the game's icon per row.
+  await page.locator('input[placeholder="搜索刻印…"]').fill('怨恨')
+  await expect(page.locator('[cmdk-item]')).toHaveCount(1)
+  await expect(page.locator('[cmdk-item] img')).toHaveAttribute('src', 'engravings/grudge.png')
+
+  // The slug is indexed too, so the list is reachable without switching IME.
+  await page.locator('input[placeholder="搜索刻印…"]').fill('grudge')
+  await expect(page.locator('[cmdk-item]')).toHaveCount(1)
+
+  await page.locator('[cmdk-item]').first().click()
+  await expect(page.locator('[role="combobox"][aria-label^="刻印 1"]')).toContainText('怨恨')
+})
+
+test('the effect text scales with level and stone', async ({ page }) => {
+  await ready(page)
+  await pickEngraving(page, 1, '怨恨')
+
+  const tip = page.locator('[data-slot="hover-card-content"]')
+  const read = async () => {
+    await page.getByLabel('刻印 1 效果').hover()
+    await expect(tip).toBeVisible()
+    const text = await tip.innerText()
+    await page.mouse.move(2, 2)
+    return text
+  }
+
+  // AbilitySpecification: base 15%, plus the relic channel per level, plus the
+  // stone channel. Ability.Desc alone is stuck at 4% whatever the dials say,
+  // which is the bug this covers.
+  expect(await read()).toContain('15.75%')
+
+  await page.getByLabel('刻印 1 等级').selectOption('4')
+  expect(await read()).toContain('18.00%')
+
+  await page.getByLabel('刻印 1 能力石').selectOption('4')
+  expect(await read()).toContain('24.00%')
 })
 
 test('the shared footer is present', async ({ page }) => {

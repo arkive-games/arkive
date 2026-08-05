@@ -181,6 +181,37 @@ export interface Engraving {
   amp: { dps: Record<string, number>; support: Record<string, number> }
   /** The support heal channel, BattlePoint Type 11; only 妙手回春 has one. */
   heal_amp: { dps: Record<string, number>; support: Record<string, number> }
+  effect: EngravingEffectChannel[]
+}
+
+/**
+ * One growth channel of an engraving's per-level effect text.
+ *
+ * These are the RAW tooltip values, not combat power — 尖刺重锤 grants 36% crit
+ * damage but scores 0.1141. From `EFTable_AbilitySpecification`.
+ *
+ * The `base` channel's tooltip is the complete sentence; `legend` / `relic` /
+ * `stone` tooltips are "additional {0}" fragments. So the displayed number for a
+ * spec is `base + gradeChannel[level] + stoneChannel[stoneLevel]`.
+ *
+ * A tooltip's `{0}`, `{1}` … refer to this channel's `specs` in order, while
+ * `values[step]` is a 4-array indexed by `spec.index - 1` (SpecValue1..4).
+ */
+export interface EngravingEffectChannel {
+  /** AbilitySpecification.SecondaryKey. NOT the grade: 1 is the base, 2 never ships. */
+  channel: 0 | 1 | 3 | 4
+  key: 'stone' | 'base' | 'legend' | 'relic'
+  tooltip_key: string | null
+  specs: {
+    index: number
+    name_key: string
+    desc_key: string | null
+    unit_key: string | null
+    digits: number
+    negative: boolean
+  }[]
+  /** Step within the channel ("1".."4"; base has only "1") -> SpecValue1..4. */
+  values: Record<string, number[]>
 }
 
 export interface EngravingGrade {
