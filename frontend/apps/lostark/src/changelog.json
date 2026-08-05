@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.1",
+      "date": "2026-08-05",
+      "commit": "d858a1a480d225307b30c9cb9345cc05af127965",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Engraving icons are now the correct game art — they resolve through the client's own sprite table instead of a guessed atlas layout.",
+            "zh-CN": "刻印图标已修正为游戏原图——改用客户端自带的图集索引表定位，不再依赖推测的排布规则。",
+            "zh-TW": "刻印圖示已修正為遊戲原圖——改用客戶端自帶的圖集索引表定位，不再依賴推測的排布規則。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "date": "2026-08-05",
       "commit": "ca35629e12b40a708970ad49b21c46ef790ba727",
