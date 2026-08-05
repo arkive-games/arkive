@@ -13,6 +13,7 @@ from lostark.battlepoint import DPS, SUPPORT
 from lostark.bracelets import (
     COLUMN_KEYS,
     OPTION_GROUPS,
+    STAT_NAME_KEYS,
     UI_KEYS,
     localization_keys,
     option_groups,
@@ -197,14 +198,30 @@ def test_localization_keys_cover_the_group_labels_and_slot_headings(lines):
     assert set(UI_KEYS.values()) <= keys
 
 
-def test_unnamed_stats_are_the_basic_and_combat_trait_ids(lines):
-    """No table maps a StatType id to a GameMsg key, so eight stats have no name.
+def test_only_stat_11_is_still_unnamed(lines):
+    """Seven of the eight unnamed stats now have a name; the eighth has nothing to read.
 
-    Pinned so that a future patch shipping those aliases — or a new unnamed stat
+    ``ItemOptionAlias`` still carries none of them, but ``ArkPassive`` nodes
+    1010100…1010600 anchor 15-20 to the six combat traits and ``SkillBuff`` anchors 6
+    to 体力 — see :data:`lostark.bracelets.STAT_NAME_KEYS`. Stat **11** appears once
+    outside a bracelet, on a ``SkillBuff`` with no description, so it stays unnamed
+    rather than being guessed at.
+
+    Pinned so that a future patch shipping a real alias — or a new unnamed stat
     appearing in a scoring column — surfaces here.
     """
-    assert unnamed_stats(lines) == [6, 11, 15, 16, 17, 18, 19, 20]
+    assert unnamed_stats(lines) == [11]
     for line in lines:
         if line["name_key"] is None:
             assert line["amp"][DPS] == 0.0, line["id"]
             assert line["amp"][SUPPORT] == 0.0, line["id"]
+
+
+def test_the_recovered_stat_names_resolve():
+    """The seven recovered name keys are real GameMsg entries in both locales."""
+    names = locales.resolve(Tables(TABLES), sorted(STAT_NAME_KEYS.values()))
+    for locale, table in names.items():
+        for stat_id, key in sorted(STAT_NAME_KEYS.items()):
+            assert table.get(key, "").strip(), (locale, stat_id, key)
+    assert names["zh-CN"][STAT_NAME_KEYS[15]] == "会心"
+    assert names["ko-KR"][STAT_NAME_KEYS[15]] == "치명"

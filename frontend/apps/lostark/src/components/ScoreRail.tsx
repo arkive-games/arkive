@@ -32,10 +32,15 @@ export function ScoreRail({ result }: { result: Result }) {
       </div>
 
       <p className="rounded-xl border border-accent/40 bg-accent/8 px-3 py-2 text-sm leading-relaxed text-muted-foreground">
+        {/* The provenance claim tracks what the ENGINE actually reads, not what the
+            dataset carries. Avatars and combat traits are emitted from the client now
+            (`avatars/options.json`, BattlePoint Type 26), but `engine.ts` still scores
+            them from `fansite.generated.ts`, so this stays as it is until that switch
+            flips — a notice that overstates its sourcing is worse than no notice. */}
         <span className="font-medium text-ink">系数来源。</span>
         装备、战斗等级、武器品质、方舟被动与业力、星阵核心、首饰词条、宝石、卡牌、牧场特技、
-        神选武器、乐园宝珠、手镯、刻印取自游戏客户端数据表；时装、远征队与辅助生命值常数取自参考站，
-        游戏数据表中未能定位。
+        神选武器、乐园宝珠、手镯、刻印、时装、战斗特性均取自游戏客户端数据表；仅辅助生命值常数
+        与能力石阈值加成取自参考站，游戏数据表中未能定位。
       </p>
 
       <div className="rounded-xl border border-border bg-card/70 px-4 py-3 backdrop-blur">

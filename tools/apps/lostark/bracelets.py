@@ -66,13 +66,23 @@ damage +4.0%). Nothing is left unexplained on either role.
 * it drops the whole 0.0225 grade of the support amplify lines (``Value`` 300 and 450),
   offering three where the game offers four.
 
-**What is NOT in the extraction.** ``KeyStat`` ids 6/11 (basic group) and 15-20
-(combat-trait group) have no name anywhere: no table maps a stat id to a GameMsg
-key — the client resolves the ``StatType`` enum in code, and a full scan of all 779
-databases for ``enum_stattype_criticalhit`` finds nothing. Those 58 lines are still
-emitted, with ``name_key = None``, because dropping them would show two of the three
-columns as shorter than the game's. They also carry no combat power (no BattlePoint
-Type is keyed by them), so a caller can render them by group label and value alone.
+**Stat names come from ArkPassive, not from any alias table.** No table maps a
+``StatType`` id to a GameMsg key — a scan of all 779 databases for the literal
+``enum_stattype_criticalhit`` finds nothing, which is what an earlier pass concluded
+from. But the *key* exists in ``GameMsg``, and ``EFTable_ArkPassive`` supplies the
+missing half of the join: nodes ``1010100`` … ``1010600`` are named 会心 / 专长 /
+压制 / 迅捷 / 忍耐 / 异化 and their ``ArkPassiveOption`` rows grant stat ids
+**15 … 20** in that order (see :mod:`lostark.combatstats`, which needs the same
+anchor for BattlePoint Type 26). ``SkillBuff`` rows whose text reads 体力增加 pin
+**6** to 体力 the same way. :data:`STAT_NAME_KEYS` is that mapping, and it names 52
+of the 58 lines the module used to ship unnamed.
+
+**What is still NOT in the extraction:** ``KeyStat`` **11**. Its one appearance
+outside a bracelet is ``SkillBuff`` 7310, which carries no description, so there is
+nothing to read a name off. Its six lines are still emitted with
+``name_key = None``, because dropping them would show a column as shorter than the
+game's; they carry no combat power (no BattlePoint Type is keyed by them), so a
+caller can render them by group label and value alone.
 """
 
 from __future__ import annotations
@@ -105,6 +115,22 @@ UI_KEYS: dict[str, str] = {
     "title": "sys.bracelet.ui_title_bracelet_effect",
     "fixed_slot": "sys.bracelet.ui_title_fixed_enchant_slot",
     "random_slot": "sys.bracelet.ui_title_random_enchant_slot",
+}
+
+# Stat id -> GameMsg name key, for the ids ``ItemOptionAlias`` does not carry.
+#
+# NOT invented: 15-20 are anchored by ``ArkPassive`` nodes 1010100…1010600, whose own
+# names are 会心 / 专长 / 压制 / 迅捷 / 忍耐 / 异化 and whose options grant exactly
+# those ids in that order; 6 is anchored by the ``SkillBuff`` rows that grant it and
+# read 体力增加. See the module docstring.
+STAT_NAME_KEYS: dict[int, str] = {
+    6: "tip.name.enum_stattype_con",
+    15: "tip.name.enum_stattype_criticalhit",
+    16: "tip.name.enum_stattype_specialty",
+    17: "tip.name.enum_stattype_oppression",
+    18: "tip.name.enum_stattype_rapidity",
+    19: "tip.name.enum_stattype_endurance",
+    20: "tip.name.enum_stattype_mastery",
 }
 
 # ItemGradeOptionRandom.Type values a bracelet line can take.
@@ -187,6 +213,10 @@ def _name_keys(tables: Tables) -> tuple[dict[int, str], dict[int, str], dict[int
         # both of those duplicate text we already get from Desc.
         if row["AliasType"] == 1 and row["KeyStat"] and row["Name"]:
             stat.setdefault(row["KeyStat"], row["Name"])
+    # The alias table wins where it has an entry; STAT_NAME_KEYS only fills the ids it
+    # omits, so a future patch adding a real alias silently takes precedence.
+    for stat_id, name_key in STAT_NAME_KEYS.items():
+        stat.setdefault(stat_id, name_key)
     return ability, effect, stat
 
 

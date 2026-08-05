@@ -18,13 +18,22 @@ import {
   parseLoadout,
   restoreLoadout,
 } from '@/lib/loadout'
+import {
+  armourSetLabel,
+  gradePalette,
+  weaponLabel,
+} from '@/lib/gearLabels'
 import { Field, NumberField, Section, SelectField } from '@/components/Fields'
+import { SearchSelect } from '@/components/SearchSelect'
 import { ScoreRail } from '@/components/ScoreRail'
 import { CoreGrid } from '@/components/CoreGrid'
 import { BraceletColumns } from '@/components/BraceletColumns'
 import { EngravingGrid } from '@/components/EngravingGrid'
 import { plainText } from '@/components/RichText'
 import { ArkPassiveGrid } from '@/components/ArkPassiveGrid'
+import { AvatarSlots } from '@/components/AvatarSlots'
+import { CombatStatFields } from '@/components/CombatStatFields'
+import { EstherWeaponField } from '@/components/EstherWeaponField'
 
 export default function App() {
   const [data, setData] = useState<Dataset | null>(null)
@@ -172,7 +181,14 @@ export default function App() {
 
   const result = useMemo(() => {
     if (!data || !coeffs) return null
-    return evaluate(loadout, coeffs, data.gear, data.bracelets.lines, engravingsByName)
+    return evaluate(
+      loadout,
+      coeffs,
+      data.gear,
+      data.bracelets.lines,
+      engravingsByName,
+      data.avatars.options,
+    )
   }, [data, coeffs, loadout, engravingsByName])
 
   const itemLevels = useMemo(
@@ -180,10 +196,22 @@ export default function App() {
     [data],
   )
 
-  const groups = useMemo(
-    () => (data ? armourGroups(data.gear, loadout.itemLevel) : []),
-    [data, loadout.itemLevel],
-  )
+  /**
+   * The armour sets on offer, named for the selected class.
+   *
+   * A stat template is listed once per main stat (Str / Agi / Int) with the same
+   * numbers, and a class can only wear the one for its own stat — so the list is
+   * narrowed to the sets the class has items for, which is also what makes each
+   * label distinct. If nothing at this item level is named for the class — a
+   * template the pipeline could not join to an item — every group is offered, so
+   * the selector degrades to bare ids rather than to nothing.
+   */
+  const groups = useMemo(() => {
+    if (!data) return []
+    const all = armourGroups(data.gear, loadout.itemLevel)
+    const named = all.filter((g) => data.gearItems?.sets[g]?.series[String(loadout.classId)])
+    return named.length ? named : all
+  }, [data, loadout.itemLevel, loadout.classId])
   const weapons = useMemo(
     () => (data ? weaponOptions(data.gear, loadout.itemLevel) : []),
     [data, loadout.itemLevel],
@@ -221,6 +249,35 @@ export default function App() {
 
   // entries[0] is this app's current version by convention.
   const version = (changelog.entries[0]?.version ?? '0.0.0') as string
+
+  /** The client's own grade name (遗物 / 古代 / 神选英雄), or '' if unnamed. */
+  const gradeName = (grade: number | undefined) => {
+    const key = grade === undefined ? undefined : data.gearItems?.grades[String(grade)]
+    return key ? data.names[key] ?? '' : ''
+  }
+
+  /**
+   * A dot in the grade's own colour, from the palette in index.css.
+   *
+   * Esther has no colour there, so its dot is a transparent spacer: the rows
+   * stay aligned without claiming a colour the palette does not carry.
+   */
+  const gradeDot = (grade: number | undefined) => {
+    const palette = gradePalette(grade)
+    return (
+      <span
+        aria-hidden
+        className="size-2 shrink-0 rounded-full"
+        style={{
+          background: palette === null ? 'transparent' : `var(--grade-${palette}-ring)`,
+        }}
+      />
+    )
+  }
+
+  const armourGrade = data.gearItems?.sets[loadout.armourGroup]?.grade
+  const weaponGrade = data.gearItems?.weapons[loadout.weaponId]?.grade
+  const weaponAttack = weapons.find((w) => w.id === loadout.weaponId)?.attack
 
   return (
     <div className="flex min-h-dvh flex-col text-foreground">
@@ -345,32 +402,78 @@ export default function App() {
               onChange={(v) => set('itemLevel', Number(v))}
               options={itemLevels.map((lv) => ({ value: String(lv), label: String(lv) }))}
             />
-            <SelectField
-              label="防具套装"
-              value={loadout.armourGroup}
-              onChange={(v) => set('armourGroup', v)}
-              options={groups.map((g) => ({ value: g, label: g }))}
-            />
-            <SelectField
-              label="武器"
-              value={loadout.weaponId}
-              onChange={(v) => set('weaponId', v)}
-              options={weapons.map((w) => ({
-                value: w.id,
-                label: `${w.id} · ${w.attack.toLocaleString('zh-CN')}`,
-              }))}
-            />
-            <SelectField
-              label="神选武器"
+            {/* Both gear selectors are searchable: an item level offers several
+                sets and weapons, and they are picked by name. The stat-template
+                id stays under the control, so a build is still identifiable
+                exactly — the name alone is ambiguous across the three armour
+                lines the game splits by main stat. */}
+            <Field label="防具套装">
+              <div className="min-w-0">
+                <SearchSelect
+                  ariaLabel="防具套装"
+                  clearable={false}
+                  value={loadout.armourGroup}
+                  onChange={(v) => set('armourGroup', v)}
+                  options={groups.map((g) => ({
+                    value: g,
+                    label:
+                      armourSetLabel(data.gearItems, g, loadout.classId, data.names) || g,
+                    search: g,
+                    icon: gradeDot(data.gearItems?.sets[g]?.grade),
+                  }))}
+                  labels={{
+                    empty: '未选择',
+                    search: '搜索套装…',
+                    notFound: '没有匹配的套装',
+                  }}
+                />
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  {[gradeName(armourGrade), loadout.armourGroup].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+            </Field>
+            <Field label="武器">
+              <div className="min-w-0">
+                <SearchSelect
+                  ariaLabel="武器"
+                  clearable={false}
+                  value={loadout.weaponId}
+                  onChange={(v) => set('weaponId', v)}
+                  options={weapons.map((w) => ({
+                    value: w.id,
+                    label: weaponLabel(data.gearItems, w.id, loadout.classId, data.names) || w.id,
+                    search: w.id,
+                    icon: gradeDot(data.gearItems?.weapons[w.id]?.grade),
+                    meta: (
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {w.attack.toLocaleString('zh-CN')}
+                      </span>
+                    ),
+                  }))}
+                  labels={{
+                    empty: '未选择',
+                    search: '搜索武器…',
+                    notFound: '没有匹配的武器',
+                  }}
+                />
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  {[
+                    gradeName(weaponGrade),
+                    loadout.weaponId,
+                    weaponAttack?.toLocaleString('zh-CN'),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              </div>
+            </Field>
+            <EstherWeaponField
+              meta={data.esther}
+              names={data.names}
+              classId={loadout.classId}
+              role={loadout.role}
               value={loadout.chosenWeaponId}
               onChange={(v) => set('chosenWeaponId', v)}
-              options={[
-                { value: '', label: '普通武器' },
-                ...Object.entries(coeffs.chosen_weapon_values).map(([id, amp]) => ({
-                  value: id,
-                  label: `+${(amp * 100).toFixed(2)}%`,
-                })),
-              ]}
             />
             <NumberField
               label="武器品质"
@@ -447,31 +550,25 @@ export default function App() {
             />
           </Section>
 
-          <Section title="时装与远征队">
-            <p className="text-sm text-muted-foreground">系数来自参考站，非游戏数据表。</p>
-            {['头部', '上装', '下装', '武器'].map((slot, i) => (
-              <SelectField
-                key={slot}
-                label={slot}
-                value={loadout.avatars[i] ?? '无'}
-                onChange={(v) => {
-                  const list = [...loadout.avatars]
-                  list[i] = v
-                  set('avatars', list)
-                }}
-                options={['无', '稀有', '英雄', '传说'].map((t) => ({ value: t, label: t }))}
-              />
-            ))}
-            {(['crit', 'spec', 'swift'] as const).map((k) => (
-              <NumberField
-                key={k}
-                label={{ crit: '会心', spec: '专长', swift: '迅捷' }[k]}
-                value={loadout.roster[k]}
-                min={0}
-                max={99999}
-                onChange={(v) => set('roster', { ...loadout.roster, [k]: v })}
-              />
-            ))}
+          {/* sys.characterinfo.avatar_tab_title */}
+          <Section title={data.names[data.avatars.uiKeys.title] ?? '时装'}>
+            <AvatarSlots
+              meta={data.avatars}
+              names={data.names}
+              selected={loadout.avatars}
+              onChange={(next) => set('avatars', next)}
+            />
+          </Section>
+
+          {/* sys.characterinfo.stat_info_combat */}
+          <Section title={data.names[data.combatStats.uiKeys.title] ?? '战斗特性'}>
+            <CombatStatFields
+              meta={data.combatStats}
+              names={data.names}
+              rates={coeffs.combat_stat_rates}
+              values={loadout.combatStats}
+              onChange={(next) => set('combatStats', next)}
+            />
           </Section>
 
           <Section title="首饰词条">

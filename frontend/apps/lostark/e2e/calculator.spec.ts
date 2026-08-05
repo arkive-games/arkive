@@ -53,10 +53,14 @@ test('computes a score from the game tables at the default loadout', async ({ pa
   await expect(rail.getByText('284,958')).toBeVisible()
   await expect(rail.getByText('100,036')).toBeVisible()
 
-  // Combat level 70 (0.2945) x quality 0 (0.10) x combat stats (2160*0.0003).
-  // The fan site shows exactly this at an empty loadout, which corroborates
-  // the whole chain.
-  await expect(rail.getByText("×2.3467")).toBeVisible()
+  // Combat level 70 (0.2945) x quality 0 (0.10). NO combat-stat term: the fan
+  // site multiplied in a fixed 2160 trait base, but BattlePoint Type 26's ValueC
+  // is zero on all five rows and a scan of 779 tables finds 2160 nowhere. An
+  // empty loadout therefore has empty traits: 1.2945 x 1.10 = 1.4240.
+  //
+  // This previously asserted ×2.3467 — the fan site's invented base baked into
+  // our own expectation.
+  await expect(rail.getByText("×1.4240")).toBeVisible()
 })
 
 test('weapon quality is a table lookup, not a fitted curve', async ({ page }) => {
@@ -263,24 +267,6 @@ test('engravings compound, using the client amps', async ({ page }) => {
   // Compound rather than sum: 1.1875 * 1.1625 - 1 = 0.38047.
   await pickEngraving(page, 2, '肾上腺素')
   await expect(rail.getByText('38.05%')).toBeVisible()
-})
-
-test('avatars scale main stat', async ({ page }) => {
-  await ready(page)
-  const before = await page.locator('aside').getByText(/^284,958$/).count()
-  expect(before).toBe(1)
-  // 传说 is +2% main stat.
-  await page.getByLabel('头部').selectOption('传说')
-  await expect(page.locator('aside').getByText('290,657')).toBeVisible()
-})
-
-test('roster stats feed the combat-stat amp', async ({ page }) => {
-  await ready(page)
-  // (2160 + 0) * 0.0003 = 0.648 -> 64.8%
-  await expect(page.locator('aside').getByText('64.8%')).toBeVisible()
-  await page.getByLabel('会心').fill('1000')
-  // (2160 + 1000) * 0.0003 = 0.948 -> 94.8%
-  await expect(page.locator('aside').getByText('94.8%')).toBeVisible()
 })
 
 test('the sub-class decides the role', async ({ page }) => {
@@ -771,4 +757,112 @@ test('the searchable gear lists can be filtered and picked by name', async ({ pa
   await page.locator('[cmdk-item]').first().click()
   await expect(weapon).toContainText('命运业火大剑')
   await expect(page.getByText('古代 · 11159000 · 100,036')).toBeVisible()
+})
+
+test('avatars scale main stat, from the client grade ladder', async ({ page }) => {
+  await ready(page)
+
+  const before = await page.locator('aside').getByText(/^284,958$/).count()
+  expect(before).toBe(1)
+
+  // The slot label is the client's own tip.name.enum_equipslot_avatar_head, and the
+  // option label its grade name plus the amp read off ItemGradeOptionStatic:
+  // AddonValue00 200 on stat 7/8/9 (Str%/Agi%/Int%) at the 1e4 divisor = +2%.
+  await page.getByLabel('头部外观').selectOption({ label: '传说 +2.00%' })
+  await expect(page.locator('aside').getByText('290,657')).toBeVisible()
+
+  // Four slots, and they are the four the client gives an option at all: face 1,
+  // face 2, the instrument and the footstep effect carry none.
+  await expect(page.getByLabel('上装外观')).toBeVisible()
+  await expect(page.getByLabel('下装外观')).toBeVisible()
+  await expect(page.getByLabel('武器外观')).toBeVisible()
+
+  // Every slot offers the same three grades and nothing above 传说.
+  const grades = await page.getByLabel('武器外观').locator('option').allTextContents()
+  expect(grades).toEqual(['无', '稀有 +0.50%', '英雄 +1.00%', '传说 +2.00%'])
+})
+
+test('combat traits use the client rate, with no invented base', async ({ page }) => {
+  await ready(page)
+
+  // BattlePoint Type 26 carries a per-point rate and NO base: ValueC is zero on all
+  // five rows. So an untouched loadout scores nothing here, where the fan site
+  // started every character at (2160 * 0.0003) = 64.8%.
+  await expect(page.locator('aside').getByText('64.8%')).toHaveCount(0)
+
+  // ValueB 3 -> 0.0003 a point for a damage dealer.
+  await page.getByLabel('会心').fill('1000')
+  await expect(page.locator('aside').getByText('30%')).toBeVisible()
+
+  // The three the client scores for a damage dealer, and only those: ValueA is
+  // 1/2/4 = 会心/专长/迅捷, so 压制/忍耐/异化 must not be offered.
+  await expect(page.getByLabel('专长')).toBeVisible()
+  await expect(page.getByLabel('迅捷')).toBeVisible()
+  await expect(page.getByLabel('压制')).toHaveCount(0)
+  await expect(page.getByLabel('忍耐')).toHaveCount(0)
+  await expect(page.getByLabel('异化')).toHaveCount(0)
+})
+
+test('a support scores two traits at the higher rate', async ({ page }) => {
+  await ready(page)
+
+  await page.getByLabel('职业', { exact: true }).selectOption({ label: '吟游诗人' })
+  // 迫切救赎 is the support spec; the sub-class decides the role.
+  await page.getByRole('tab', { name: /迫切救赎/ }).click()
+
+  // Support drops 会心 entirely (Type 26 has no ValueA 1 row for PrimaryKey 2) and
+  // converts the other two at 0.0004 instead of 0.0003.
+  await expect(page.getByLabel('会心')).toHaveCount(0)
+  await page.getByLabel('专长').fill('1000')
+  await expect(page.locator('aside').getByText('40%')).toBeVisible()
+})
+
+test('the Esther weapon picker shows real weapon names', async ({ page }) => {
+  await ready(page)
+  const picker = page.locator('[role="combobox"][aria-label^="神选英雄武器"]')
+  test.skip((await picker.count()) === 0, 'needs the App.tsx wiring for the client-sourced panels')
+
+  await picker.click()
+  const rows = await page.locator('[cmdk-item]').allTextContents()
+  // Four generations x the two stages that grant an Esther option (6 and 8), plus
+  // the clear row. A 狂战士 gets 山之浩劫 and its three successors.
+  expect(rows).toHaveLength(9)
+  expect(rows.some((r) => r.includes('山之浩劫') && r.includes('第6阶段'))).toBe(true)
+  expect(rows.some((r) => r.includes('山之浩劫·崇天') && r.includes('第8阶段'))).toBe(true)
+
+  // 0.019 is the top amp BattlePoint Type 23 carries, and the highest the fan site
+  // publishes as real rather than as an estimate.
+  await page.locator('[cmdk-item]', { hasText: '山之浩劫·无垠 · 第8阶段' }).click()
+  await expect(page.locator('aside').getByText('1.9%')).toBeVisible()
+  await expect(picker).toContainText('山之浩劫·无垠')
+})
+
+test('the bracelet combat-trait column names its stats', async ({ page }) => {
+  await ready(page)
+  // Recovered from ArkPassive nodes 1010100…1010600, which name stat ids 15-20 --
+  // ItemOptionAlias carries none of them. The value rides along because the name
+  // alone does not identify a line: 会心 is offered at ten different values.
+  await page.locator('[role="combobox"][aria-label^="战斗特性"]').first().click()
+  const rows = await page.locator('[cmdk-item]').allTextContents()
+  expect(rows.some((r) => /^会心 \+\d+$/.test(r))).toBe(true)
+  expect(rows.some((r) => /^迅捷 \+\d+$/.test(r))).toBe(true)
+  // Nothing in this column should still be falling back to a bare id.
+  expect(rows.filter((r) => r.startsWith('属性 '))).toHaveLength(0)
+  await page.keyboard.press('Escape')
+
+  // Stat 11 is the one id nothing names: its only appearance outside a bracelet is a
+  // SkillBuff with no description, so those six lines keep the id-and-value fallback.
+  await page.locator('[role="combobox"][aria-label^="基本效果"]').first().click()
+  const basic = await page.locator('[cmdk-item]').allTextContents()
+  expect(basic.some((r) => /^体力 \+\d+$/.test(r))).toBe(true)
+  expect(basic.filter((r) => r.startsWith('属性 11 +'))).toHaveLength(6)
+})
+
+test('the provenance notice no longer claims avatars or combat traits', async ({ page }) => {
+  await ready(page)
+  const notice = page.locator('aside p').filter({ hasText: '系数来源' })
+  await expect(notice).toContainText('时装')
+  await expect(notice).toContainText('战斗特性')
+  // Only the support HP constants and the ability-stone threshold amp are left.
+  await expect(notice).toContainText('辅助生命值常数')
 })

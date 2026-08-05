@@ -1,4 +1,10 @@
 import type { GearByLevel, RoleCoefficients } from '@/calc/types'
+import {
+  loadStatPanels,
+  type AvatarMeta,
+  type CombatStatMeta,
+  type EstherMeta,
+} from '@/lib/statPanels'
 
 const DATA_BASE = import.meta.env.VITE_DATA_BASE_URL ?? '/data'
 
@@ -126,6 +132,38 @@ export interface BraceletLine {
   tiers: number[]
   name_key: string | null
   amp: { dps: number; support: number }
+}
+
+/**
+ * Names and grades for the gear the selectors offer, from `gear/items.json`.
+ *
+ * Keyed by `EFTable_ItemLevelOption.PrimaryKey` — a stat template, not an item —
+ * which is why the names are keyed by class id: one template covers all 29
+ * classes, and only a class fixes which item (and which name) it is.
+ *
+ * `set_key` is `ItemAssembly.TypeName`, the client's own name for the crafting
+ * category ('命运业火装备'), and is null for the families the client never names
+ * (relic gear and the Esther weapons are not craftable). The set label itself is
+ * derived from the piece names — see `gearLabels.ts`.
+ */
+export interface GearItems {
+  /** `Item.Grade` -> GameMsg key of the grade name (遗物 / 古代 / 神选英雄). */
+  grades: Record<string, string>
+  weapons: Record<
+    string,
+    { grade: number; set_key: string | null; names: Record<string, string[]> }
+  >
+  sets: Record<
+    string,
+    {
+      grade: number
+      set_key: string | null
+      /** Class id -> one entry per series, each the five piece name keys. */
+      series: Record<string, string[][]>
+    }
+  >
+  /** Templates no item references. Empty today; shipped rather than hidden. */
+  unnamed: string[]
 }
 
 export interface BraceletMeta {
@@ -268,11 +306,15 @@ export interface Dataset {
   dps: RoleCoefficients
   support: RoleCoefficients
   gear: GearByLevel
+  gearItems: GearItems
   cores: Record<string, CoreMeta>
   slots: { dps: ArkGridSlot[]; support: ArkGridSlot[] }
   arkPassive: ArkPassiveMeta
   bracelets: BraceletMeta
   engravings: EngravingMeta
+  avatars: AvatarMeta
+  combatStats: CombatStatMeta
+  esther: EstherMeta
   classes: PlayerClass[]
   names: Record<string, string>
 }
@@ -300,6 +342,7 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
     dps,
     support,
     gear,
+    gearItems,
     cores,
     slots,
     arkPassive,
@@ -307,11 +350,13 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
     engravings,
     classes,
     names,
+    panels,
   ] = await Promise.all([
       json<DataVersion>('version.json'),
       json<RoleCoefficients>('battlepoint/dps.json'),
       json<RoleCoefficients>('battlepoint/support.json'),
       json<GearByLevel>('gear/item-levels.json'),
+      json<GearItems>('gear/items.json'),
       json<Record<string, CoreMeta>>('arkgrid/cores.json'),
       json<{ dps: ArkGridSlot[]; support: ArkGridSlot[] }>('arkgrid/slots.json'),
       json<ArkPassiveMeta>('arkpassive/trees.json'),
@@ -319,6 +364,8 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
       json<EngravingMeta>('engravings/list.json'),
       json<PlayerClass[]>('classes.json'),
       json<Record<string, string>>(`locales/${locale}.json`),
+      // Uses dataUrl, so the version.json pre-fetch above already cache-busts it.
+      loadStatPanels(),
     ])
 
   return {
@@ -326,11 +373,15 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
     dps,
     support,
     gear,
+    gearItems,
     cores,
     slots,
     arkPassive,
     bracelets,
     engravings,
+    avatars: panels.avatars,
+    combatStats: panels.combatStats,
+    esther: panels.esther,
     classes,
     names,
   }

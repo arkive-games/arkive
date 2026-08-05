@@ -9,11 +9,15 @@ from pathlib import Path
 from . import (
     arkgrid,
     arkpassive,
+    avatars,
     battlepoint,
     bracelets,
     classes,
+    combatstats,
     engravings,
+    esther,
     itemlevel,
+    items,
     locales,
 )
 from .db import Tables
@@ -26,6 +30,7 @@ def build(tables: Tables) -> dict[str, object]:
     coeffs = battlepoint.extract(tables)
     cores = arkgrid.extract(tables)
     gear = itemlevel.extract(tables)
+    gear_items = items.extract(tables)
 
     orphans: dict[str, list[str]] = {}
     for role in (battlepoint.DPS, battlepoint.SUPPORT):
@@ -43,13 +48,21 @@ def build(tables: Tables) -> dict[str, object]:
     engraving_rows = engravings.extract(tables)
     engraving_penalties = engravings.stone_penalties(tables)
     stone_bonus = engravings.stone_level_bonus(tables)
+    avatar_options = avatars.options(tables)
+    avatar_combined = avatars.combined_slot(tables)
+    esther_generations = esther.generations(tables)
 
     keys = set(arkgrid.localization_keys(cores))
     keys.update(classes.localization_keys(class_rows))
+    gear_keys = items.localization_keys(gear_items)
+    keys.update(gear_keys)
     keys.update(arkgrid.GRADE_NAME_KEYS.values())
     keys.update(arkpassive.localization_keys())
     keys.update(bracelets.localization_keys(bracelet_lines))
     keys.update(engravings.localization_keys(engraving_rows, engraving_penalties))
+    keys.update(avatars.localization_keys())
+    keys.update(combatstats.localization_keys())
+    keys.update(esther.localization_keys(esther_generations))
     for group in (slots, support_slots):
         for slot in group:
             keys.add(slot["name_key"])
@@ -61,6 +74,16 @@ def build(tables: Tables) -> dict[str, object]:
     # A few option descriptions reference keys absent from one locale, so skip
     # rather than fail the whole emit on them.
     names = locales.resolve(tables, sorted(keys), missing="skip")
+    # Gear labels are the one place a missing string is not survivable: the
+    # selector would fall back to a bare numeric id, which is the very thing
+    # these names exist to replace. So they are checked rather than skipped.
+    for locale, table in names.items():
+        blank = [key for key in gear_keys if not (table.get(key) or "").strip()]
+        if blank:
+            raise KeyError(
+                f"{locale}: {len(blank)} gear name key(s) missing or blank, "
+                f"e.g. {blank[:5]}"
+            )
     # Support sub-classes are flagged by name, so the pass needs resolved text.
     class_rows = classes.extract(tables, names.get("zh-CN", {}))
     # Support class engravings are flagged by name too, so this pass also needs
@@ -71,6 +94,7 @@ def build(tables: Tables) -> dict[str, object]:
         "battlepoint/dps.json": coeffs[battlepoint.DPS],
         "battlepoint/support.json": coeffs[battlepoint.SUPPORT],
         "gear/item-levels.json": gear,
+        "gear/items.json": gear_items,
         "arkgrid/cores.json": cores,
         "arkgrid/slots.json": {"dps": slots, "support": support_slots},
         "arkpassive/trees.json": {
@@ -82,8 +106,9 @@ def build(tables: Tables) -> dict[str, object]:
             "columns": bracelets.COLUMN_KEYS,
             "uiKeys": bracelets.UI_KEYS,
             "lines": bracelet_lines,
-            # Stat ids the client names in code rather than in any table, so
-            # these lines ship without a name key instead of an invented one.
+            # Only KeyStat 11 is still unnamed: ArkPassive and SkillBuff
+            # recover 6 and 15-20, so bracelets.STAT_NAME_KEYS covers the rest.
+            # Its one non-bracelet appearance (SkillBuff 7310) has no text.
             "unnamedStats": bracelets.unnamed_stats(bracelet_lines),
         },
         "engravings/list.json": {
@@ -104,6 +129,29 @@ def build(tables: Tables) -> dict[str, object]:
             # nullable in the contract in case that changes.
             "engravings": engraving_rows,
         },
+        "avatars/options.json": {
+            "uiKeys": avatars.UI_KEYS,
+            "slots": avatars.slots(),
+            "grades": avatars.GRADES,
+            "options": avatar_options,
+            # A 上下装 garment fills the upper AND lower slot and its amp is
+            # exactly their sum, so it needs no slot of its own -- recorded
+            # rather than dropped.
+            "combinedSlot": avatar_combined,
+            "mainStatPercentStats": {
+                str(k): v for k, v in avatars.MAIN_STAT_PERCENT_STATS.items()
+            },
+        },
+        "combat/stats.json": {
+            "uiKeys": combatstats.UI_KEYS,
+            "stats": combatstats.stats(),
+        },
+        "esther/weapons.json": {
+            "uiKeys": esther.UI_KEYS,
+            "generations": esther_generations,
+            # Options the client defines but no equipped weapon can reach.
+            "unscoredOptionIds": esther.unscored_option_ids(tables),
+        },
         "classes.json": class_rows,
         VERSION_FILE: {
             "source": "lostark-explorer",
@@ -111,9 +159,13 @@ def build(tables: Tables) -> dict[str, object]:
             "locales": list(locales.LOCALES),
             "counts": {
                 "itemLevels": len(gear),
+                "gearWeapons": len(gear_items["weapons"]),
+                "gearSets": len(gear_items["sets"]),
                 "arkCores": len(cores),
                 "braceletLines": len(bracelet_lines),
                 "engravings": len(engraving_rows),
+                "avatarOptions": len(avatar_options),
+                "estherWeapons": sum(len(g["weapons"]) for g in esther_generations),
                 "engravingAmps": sum(
                     1
                     for e in engraving_rows.values()

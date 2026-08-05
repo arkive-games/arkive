@@ -12,9 +12,7 @@
  */
 
 import {
-  COMBAT_STAT,
   STONE_BASIC,
-  avatarAmp,
   dpsEngravingBase,
   dpsEngravingBooks,
   dpsEngravingStones,
@@ -173,8 +171,23 @@ export function braceletAmp(
   return ids.reduce((acc, id) => acc * (1 + (id ? (byId.get(id) ?? 0) : 0)), 1) - 1
 }
 
-export function totalAvatarAmp(avatars: string[]): number {
-  return avatars.reduce((sum, tier) => sum + (avatarAmp[tier] ?? 0), 0)
+/** Fields of an avatar option that scoring needs. */
+export type AvatarAmpSource = { id: string; amp: number }
+
+/**
+ * Total avatar main-stat amp, from the client's own tables.
+ *
+ * NOT a combat-power coefficient, which is why no BattlePoint Type carries it
+ * and the 35-member Type enum has no avatar member: the client's avatar bonus is
+ * an `ItemGradeOptionStatic` addon on stat 7/8/9 -- the PERCENTAGE variants of
+ * Str/Agi/Int -- so it scales `mainStat` before the attack formula.
+ *
+ * Ids are `<slot>-<grade>`. The amps are 0.005 / 0.01 / 0.02 by grade in all four
+ * slots, exactly the set the fan site published.
+ */
+export function totalAvatarAmp(ids: string[], options: AvatarAmpSource[] = []): number {
+  const byId = new Map(options.map((o) => [o.id, o.amp]))
+  return ids.reduce((sum, id) => sum + (id ? (byId.get(id) ?? 0) : 0), 0)
 }
 
 export function round(value: number, digits = 2): number {
@@ -333,13 +346,18 @@ export function buildAmps(
   rows.push({ name: '刻印效果', value: engProduct - 1 })
 
   // Combat stats: damage dealers count crit+spec+swift, supports spec+swift.
-  const statSum =
-    loadout.role === 'support'
-      ? loadout.roster.spec + loadout.roster.swift
-      : loadout.roster.crit + loadout.roster.spec + loadout.roster.swift
-  const statRate =
-    loadout.role === 'support' ? COMBAT_STAT.supportRate : COMBAT_STAT.dpsRate
-  rows.push({ name: '战斗特性', value: (COMBAT_STAT.base + statSum) * statRate })
+  // Combat traits, from BattlePoint Type 26 (`battlestat`). Both the rates and
+  // the per-role split are the client's: a damage dealer scores 会心/专长/迅捷 at
+  // 0.0003 a point, a support 专长/迅捷 at 0.0004. There is NO base -- ValueC is
+  // zero on all five rows -- so `combatStats` holds the character's real totals
+  // and the fan site's fixed 2160, which appears nowhere in 779 tables, is gone.
+  rows.push({
+    name: '战斗特性',
+    value: Object.entries(coeffs.combat_stat_rates).reduce(
+      (sum, [index, rate]) => sum + (loadout.combatStats[index] ?? 0) * rate,
+      0,
+    ),
+  })
 
   // Affix lines each multiply independently, like gems.
   const lineProduct = loadout.accessoryLines.reduce(
@@ -385,10 +403,11 @@ export function evaluate(
   gear: GearByLevel,
   braceletLines: BraceletAmp[] = [],
   engravingsByName: Map<string, EngravingAmpSource> = new Map(),
+  avatarOptions: AvatarAmpSource[] = [],
 ): Result {
   const mainStat =
     (gearMainTotal(gear, loadout.itemLevel, loadout.armourGroup) + MAIN_STAT_FLAT) *
-    (1 + totalAvatarAmp(loadout.avatars))
+    (1 + totalAvatarAmp(loadout.avatars, avatarOptions))
   const weaponAttack = weaponAttackOf(gear, loadout.itemLevel, loadout.weaponId)
   const baseAttack = round(Math.sqrt((weaponAttack * mainStat) / 6), 2)
   const basicAttack = baseAttack * (1 + stoneBasic(loadout.engravings))

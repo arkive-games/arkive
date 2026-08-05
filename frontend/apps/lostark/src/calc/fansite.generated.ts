@@ -4,9 +4,7 @@
 //
 // Every coefficient here is the fan site's reverse-engineering, kept only
 // for systems the extracted client does not expose in a decodable form:
-// engravings (no BattlePoint Type is keyed by AbilityEngrave ids), bracelet
-// lines, avatars (no Type carries {0.005, 0.01, 0.02} at any scaling) and
-// roster combat stats.
+// the engraving and affix-line text tables.
 //
 // Anything the game DOES expose lives in data-lostark and wins over this.
 // If a future decode finds one of these in the client, delete it from here.
@@ -1612,23 +1610,25 @@ export const supportBraceletLines = [
   }
 ];
 
-/** Avatar (时装) tier -> amp. Fan-site avatarAmp(). */
-export const avatarAmp: Record<string, number> = {
-  传说: 0.02,
-  英雄: 0.01,
-  稀有: 0.005,
-  无: 0,
-};
+/**
+ * @deprecated SUPERSEDED by `avatars/options.json` — delete with the engine patch.
+ *
+ * The client carries these very three numbers on the avatar item itself
+ * (`ItemGradeOptionStatic`, `AddonType00 = 2` on stat 7/8/9 = Str%/Agi%/Int%,
+ * `AddonValue00` 50/100/200 at the 1e4 divisor). Kept for one commit only, because
+ * `engine.ts` is owned elsewhere and still imports it. `scripts/extract-fansite.mjs`
+ * no longer emits it.
+ */
 
-/** Combat-stat base and per-point rates. Fan-site calcDps/calcSupport. */
-export const COMBAT_STAT = {
-  /** Base 战斗特性 before roster bonuses. */
-  base: 2160,
-  /** Damage dealers convert crit+spec+swift at this rate. */
-  dpsRate: 0.0003,
-  /** Supports convert spec+swift only, at this rate. */
-  supportRate: 0.0004,
-};
+/**
+ * @deprecated SUPERSEDED by `RoleCoefficients.combat_stat_rates` — delete with the
+ * engine patch.
+ *
+ * Both rates are BattlePoint Type 26 (`battlestat`) exactly, and its per-role stat
+ * split is the client's too. `base` is the one part that is NOT in the client: every
+ * Type 26 row leaves `ValueC` at zero, so the game reads real trait totals and this
+ * 2160 is a fan-site convenience. `scripts/extract-fansite.mjs` no longer emits it.
+ */
 
 /** Ability-stone basic-attack bonus once total stone levels reach 5. */
 export const STONE_BASIC = { threshold: 5, amp: 0.015 };

@@ -79,7 +79,7 @@ export function BraceletColumns({
                 elements cannot carry markup, so it goes below the select. */}
             <p className="mt-2 min-h-8 text-xs leading-relaxed">
               {line ? (
-                <RichText text={names[line.name_key ?? ''] ?? fallback(line)} />
+                <RichText text={lineText(line, names)} />
               ) : (
                 <span className="text-muted-foreground">—</span>
               )}
@@ -99,9 +99,22 @@ export function BraceletColumns({
  * being glued onto the label, so it stays right-aligned.
  */
 function plainLabel(line: BraceletLine, names: Record<string, string>): string {
-  return plainText(names[line.name_key ?? ''] ?? fallback(line))
-    .replace(/\s+/g, ' ')
-    .trim()
+  return plainText(lineText(line, names)).replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * The text for one line: its effect description, or `<stat name> +<value>`.
+ *
+ * A flat stat line (`option_type === 2`) has a name and a number, and the name
+ * alone does not identify the line — the combat-trait column offers 会心 at ten
+ * different values. So the value is appended, which is how the game's own tooltip
+ * reads it. Composing a client name with the row's own number is not the same as
+ * inventing a name.
+ */
+function lineText(line: BraceletLine, names: Record<string, string>): string {
+  const name = line.name_key ? names[line.name_key] : undefined
+  if (line.option_type === 2 && name) return `${name} +${line.value}`
+  return name ?? fallback(line)
 }
 
 /** A card's own contribution, for the top-right corner. */
@@ -115,11 +128,13 @@ function Amp({ value }: { value: number }) {
 }
 
 /**
- * Label for the eight stat ids the client names in code rather than in a table.
+ * Label for the stat ids that still have no name anywhere.
  *
- * No table maps `StatType` to a GameMsg key — a scan of all 779 databases finds
- * nothing — so rather than invent a name these are identified by their id and
- * value. They carry no combat power, so nothing is lost but the wording.
+ * `ItemOptionAlias` names none of the basic or combat-trait ids, but `ArkPassive`
+ * and `SkillBuff` between them recover seven of the eight (see
+ * `bracelets.STAT_NAME_KEYS`), so this now covers `KeyStat 11` alone — six lines,
+ * identified by id and value rather than by an invented name. They carry no combat
+ * power, so nothing is lost but the wording.
  */
 function fallback(line: BraceletLine): string {
   return line.stat !== null ? `属性 ${line.stat} +${line.value}` : `效果 ${line.id}`

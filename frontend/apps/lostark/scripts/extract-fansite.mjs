@@ -6,7 +6,13 @@
  * These are the systems the extracted game client does NOT expose in a form we
  * could decode. Everything the game *does* expose comes from data-lostark
  * instead and takes precedence; this file exists only to reach parity with the
- * reference on engravings, bracelet lines, avatars and roster stats.
+ * reference on the fan site's engraving and affix-line text tables.
+ *
+ * Three helpers this script used to emit are gone, because the client turned out
+ * to carry all three: the avatar main-stat amp (ItemGradeOptionStatic, stat 7/8/9
+ * -- {0.005, 0.01, 0.02} exactly), the combat-trait rates (BattlePoint Type 26,
+ * 0.0003 and 0.0004 exactly) and the Esther weapon names (a four-table join off
+ * BattlePoint Type 23's ValueB). Do not re-add them: data-lostark wins.
  *
  * Usage: node scripts/extract-fansite.mjs [path-to-calculator.js]
  */
@@ -56,9 +62,7 @@ const parts = [
   '//',
   '// Every coefficient here is the fan site\'s reverse-engineering, kept only',
   '// for systems the extracted client does not expose in a decodable form:',
-  '// engravings (no BattlePoint Type is keyed by AbilityEngrave ids), bracelet',
-  '// lines, avatars (no Type carries {0.005, 0.01, 0.02} at any scaling) and',
-  '// roster combat stats.',
+  '// the engraving and affix-line text tables.',
   '//',
   '// Anything the game DOES expose lives in data-lostark and wins over this.',
   '// If a future decode finds one of these in the client, delete it from here.',
@@ -104,29 +108,14 @@ for (const role of ['dps', 'support']) {
   parts.push(`export const ${role}BraceletLines = ${JSON.stringify(lines, null, 2)};`, '')
 }
 
-// Small helpers the fan site expresses as functions rather than tables.
-parts.push(`/** Avatar (时装) tier -> amp. Fan-site avatarAmp(). */
-export const avatarAmp: Record<string, number> = {
-  传说: 0.02,
-  英雄: 0.01,
-  稀有: 0.005,
-  无: 0,
-};
-
-/** Combat-stat base and per-point rates. Fan-site calcDps/calcSupport. */
-export const COMBAT_STAT = {
-  /** Base 战斗特性 before roster bonuses. */
-  base: 2160,
-  /** Damage dealers convert crit+spec+swift at this rate. */
-  dpsRate: 0.0003,
-  /** Supports convert spec+swift only, at this rate. */
-  supportRate: 0.0004,
-};
-
-/** Ability-stone basic-attack bonus once total stone levels reach 5. */
+// The one helper still not in the client. The ability-stone threshold of 5 IS
+// (AbilityStoneBase.LevelStage00, uniform across all 58 stones), but the amp it
+// grants is not: the option is a flat stat 150 add and no BattlePoint Type is keyed
+// to that stat.
+parts.push(`/** Ability-stone basic-attack bonus once total stone levels reach 5. */
 export const STONE_BASIC = { threshold: 5, amp: 0.015 };
 `)
 
 mkdirSync(OUT, { recursive: true })
 writeFileSync(resolve(OUT, 'fansite.generated.ts'), parts.join('\n'), 'utf8')
-console.log(`wrote fansite.generated.ts (${NAMES.length} tables + 3 helpers)`)
+console.log(`wrote fansite.generated.ts (${NAMES.length} tables + 1 helper)`)

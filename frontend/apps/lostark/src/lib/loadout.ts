@@ -10,6 +10,10 @@ export const ACCESSORY_LINES = 15
 export const ENGRAVING_SLOTS = 5
 /** Three bracelet lines. */
 export const BRACELET_LINES = 3
+/** The four avatar slots the client gives a main-stat bonus: head, upper, lower, weapon. */
+export const AVATAR_SLOTS = 4
+/** Combat-trait indices the client defines (1 会心 … 6 异化), for import validation. */
+export const COMBAT_STAT_INDICES = ['1', '2', '3', '4', '5', '6']
 
 export function defaultLoadout(): Loadout {
   return {
@@ -33,8 +37,13 @@ export function defaultLoadout(): Loadout {
     engravings: Array.from({ length: ENGRAVING_SLOTS }, () => ({
       name: '', grade: 0, book: 0, stone: 0,
     })),
-    avatars: ['无', '无', '无', '无'],
-    roster: { crit: 0, spec: 0, swift: 0 },
+    avatars: Array.from({ length: AVATAR_SLOTS }, () => ''),
+    // Empty rather than pre-filled: the client carries a per-point rate and no base
+    // trait total, so there is no number here we could source. The user reads their
+    // own totals off the game's 战斗特性 panel.
+    combatStats: {},
+    // Deprecated; here only so the engine and App still compile until they move to
+    // combatStats. See Loadout.roster.
     chosenWeaponId: '',
     cardSetId: '',
     cardStage: 0,
@@ -183,20 +192,51 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
 
   if (raw.avatars !== undefined) {
     const av = raw.avatars
-    if (!Array.isArray(av)) rejected.push('avatars: not an array')
-    else base.avatars = base.avatars.map((d, i) => (typeof av[i] === 'string' ? (av[i] as string) : d))
+    if (!Array.isArray(av)) {
+      rejected.push('avatars: not an array')
+    } else {
+      base.avatars = base.avatars.map((d, i) => {
+        const v = av[i]
+        if (typeof v !== 'string') return d
+        // Legacy files stored the fan site's tier NAME (无 / 稀有 / 英雄 / 传说).
+        // An id is `<slot>-<grade>` now, so a bare name would look valid, resolve to
+        // no option and quietly score zero. Named rather than dropped.
+        if (v && !/^[a-z_]+-\d+$/.test(v)) {
+          rejected.push(`avatars[${i}]: ${v} is not a slot-and-grade id`)
+          return d
+        }
+        return v
+      })
+    }
   }
 
+  /**
+   * `combatStats` replaced `roster`, and the two are NOT interchangeable.
+   *
+   * A `roster` value was a delta on top of the fan site's assumed 2160 base; a
+   * `combatStats` value is the character's whole total. Carrying the old numbers
+   * across would silently understate the score by that base, so an exported file
+   * from before the change has its three numbers rejected by name rather than
+   * migrated — the user re-reads them off the game panel, which is where they were
+   * always meant to come from.
+   */
   if (raw.roster !== undefined) {
-    const r = raw.roster as Record<string, unknown> | undefined
-    if (!r || typeof r !== 'object') {
-      rejected.push('roster: not an object')
+    rejected.push('roster: replaced by combatStats (totals, not roster-only deltas)')
+  }
+
+  if (raw.combatStats !== undefined) {
+    const stats = raw.combatStats as Record<string, unknown> | undefined
+    if (!stats || typeof stats !== 'object' || Array.isArray(stats)) {
+      rejected.push('combatStats: not an object')
     } else {
-      for (const key of ['crit', 'spec', 'swift'] as const) {
-        const v = r[key]
-        if (v === undefined) continue
-        if (typeof v !== 'number' || v < 0 || v > 99999) rejected.push(`roster.${key}: ${String(v)}`)
-        else base.roster[key] = v
+      for (const [key, v] of Object.entries(stats)) {
+        if (!COMBAT_STAT_INDICES.includes(key)) {
+          rejected.push(`combatStats.${key}: not a combat-trait index`)
+        } else if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 99999) {
+          rejected.push(`combatStats.${key}: ${String(v)}`)
+        } else {
+          base.combatStats[key] = v
+        }
       }
     }
   }

@@ -4,9 +4,27 @@
 which coefficient the row carries. The game stores rates as scaled integers, so
 each Type carries its own divisor.
 
-Only the Types below are decoded. The table has 35 distinct Types; the rest cover
-systems this pipeline does not emit yet (engravings, gems, accessories, honing).
-Undecoded rows are ignored rather than guessed at.
+Only the Types below are read. The table has 35 distinct Types; the rest cover
+systems this pipeline does not emit yet. Unread rows are ignored rather than
+guessed at.
+
+Every Type now has a *name*, though. ``GameMsg`` carries a 35-member
+``tip.name.enum_battlepointtype_*`` enum which maps onto the 35 Types with nothing
+left over on either side; :mod:`lostark.combatstats` writes the bijection out and
+the reasoning behind it. The ones still unread are
+
+===== ==================================== ==============================
+Type  enum name                            system
+===== ==================================== ==============================
+12    ``elixir_set``                       elixir set bonus (2 levels)
+13    ``elixir_grade_attack``              elixir option (5 levels)
+14    ``elixir_grade_defense``             …its support heal channel
+15    ``accessory_grinding_attack``        accessory stat ratios
+16    ``accessory_grinding_defense``       …its support heal channel
+24    ``transcendence_armor``              armour transcendence (all zero)
+25    ``transcendence_additional``         transcendence extra options
+30    ``arkgrid_core_defense``             ark core support heal channel
+===== ==================================== ==============================
 """
 
 from __future__ import annotations
@@ -57,6 +75,13 @@ _TYPE_CHOSEN_WEAPON = 23
 # match the numbers it hardcoded.
 _TYPE_CARD_SET = 27
 
+# Combat traits (战斗特性). ValueA = the trait index 1-6, ValueB = combat power per
+# point x 1e-4. Named ``battlestat`` by the enum bijection worked out in
+# :mod:`lostark.combatstats`, which also carries the evidence for the index. Three
+# traits score for a damage dealer (crit/specialty/swiftness) and two for a support
+# (specialty/swiftness) -- the fan site's own split, at its own two rates.
+_TYPE_COMBAT_STAT = 26
+
 # Pet ranch perk tiers. ValueA = tier id (30000/31000/32000), ValueB = amp x 1e-4.
 # The game says 0.0031 / 0.0054 / 0.0077; the fan site's middle value is 0.00539.
 _TYPE_PET_RANCH = 28
@@ -104,6 +129,7 @@ def extract(tables: Tables) -> dict[str, dict]:
     cards: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(dict))
     pet: dict[str, dict[str, float]] = defaultdict(dict)
     chosen: dict[str, dict[str, float]] = defaultdict(dict)
+    combat_stats: dict[str, dict[str, float]] = defaultdict(dict)
 
     for row in tables.read("BattlePoint"):
         role = _ROLE_BY_PRIMARY_KEY.get(row["PrimaryKey"])
@@ -129,6 +155,8 @@ def extract(tables: Tables) -> dict[str, dict]:
             cards[role][str(row["ValueA"])][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
         elif kind == _TYPE_PET_RANCH:
             pet[role][str(row["ValueA"])] = row["ValueB"] / _RATE_DIVISOR
+        elif kind == _TYPE_COMBAT_STAT:
+            combat_stats[role][str(row["ValueA"])] = row["ValueB"] / _RATE_DIVISOR
         elif kind == _TYPE_ACCESSORY_LINE:
             lines[role][str(row["ValueB"])] = row["ValueC"] / _RATE_DIVISOR
         elif kind == _TYPE_GEM:
@@ -174,6 +202,11 @@ def extract(tables: Tables) -> dict[str, dict]:
         }
         out[role]["pet_ranch_values"] = dict(
             sorted(pet[role].items(), key=lambda kv: int(kv[0]))
+        )
+        # Keyed by the trait index 1-6, and short by design: the client scores only
+        # three traits for a damage dealer and two for a support.
+        out[role]["combat_stat_rates"] = dict(
+            sorted(combat_stats[role].items(), key=lambda kv: int(kv[0]))
         )
         out[role]["accessory_line_values"] = dict(
             sorted(lines[role].items(), key=lambda kv: int(kv[0]))

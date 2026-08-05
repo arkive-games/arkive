@@ -22,9 +22,26 @@ The fan site fits `(10 + 0.002·q²)/100`. It agrees with the client's table at
 only **21 of 101** quality values, deviating up to **0.0599 percentage points**.
 Worst case is around quality 41: fan site 0.13362, client **0.1337**.
 
-### 3. Esther weapon values are estimates
-The fan site self-documents these as estimates. They are absent from the client,
-so they are genuinely unreleased — not a client-reading failure.
+### 3. Esther weapon values are estimates — and now we know what they are estimates *of*
+The fan site self-documents its higher Esther values as estimates. The client
+carries six amps (BattlePoint Type 23), topping out at **0.019**, which is exactly
+the highest value the fan site publishes as real.
+
+The join now shows the shape of the gap. `ValueB` is an
+`ItemEvolutionCommon.EstherOptionId`, and following it through
+`ItemQualityOption.EvolutionCommonId` to `Item.QualityOptionId` gives **four
+generations x 29 class weapons**, of which only evolution stages 6 and 8 grant an
+Esther option. Two findings:
+
+* Generation 4's *own* options, `4100106` and `4100108`, exist in
+  `ItemEvolutionCommon` but are **unreachable**: `ItemQualityOption` only routes
+  stage 110 to their track, and stage 110 grants no Esther option. BattlePoint
+  carries no amp for them either. That is content stubbed and not wired up — which
+  is what the fan site is estimating.
+* Generation 4 therefore scores **generation 3's amps**: the client routes its
+  stages 100–109 through `EvolutionCommonId 241200000`, which reuses
+  `3100106`/`3100108`. So the newest Esther weapon is worth the same as the previous
+  one at the same stage. Not a divergence, but surprising enough to record.
 
 ### 4. Paradise orb heal amp applies to four orbs, not one
 The fan site grants the 0.013 heal amp to a single orb; the client grants it to
@@ -81,6 +98,41 @@ did not fit `[4,5,7,8]` are real client behaviour: 尖刺重锤's stone unit is 
 against a book step of 2.0, and 肾上腺素's stone drives `SpecValue1` while its
 books drive `SpecValue2` — two different sub-effects.
 
+### 13. The combat-trait base of 2160 is a fan-site invention
+BattlePoint **Type 26** (`battlestat`) carries a **per-point rate and nothing
+else** — `ValueC` is zero on all five rows — and a scan of all 779 databases finds
+2160 only as row numbers, drop weights and three unrelated engraving amps.
+
+Both of the fan site's *rates* are the client's exactly (0.0003 for a damage dealer,
+0.0004 for a support), and so is its per-role split: `ValueA` is the combat-trait
+index 1–6 and the client lists `{1, 2, 4}` = 会心 / 专长 / 迅捷 for a damage dealer
+and `{2, 4}` for a support. What it adds on its own is a fixed 2160-point base,
+which inflates every character by `2160 * rate` — **+64.8%** for a damage dealer,
+**+86.4%** for a support — before a single stat is entered.
+
+The game reads the character's real trait totals (from accessories, the bracelet,
+elixirs, ark passive), so the calculator now asks for those instead of for a
+roster-only delta. **Needs in-game check** only in the sense of confirming that a
+character's panel totals reproduce the in-game combat power; the table itself is
+unambiguous.
+
+### 14. Avatars: the amps agree exactly, the slot model does not
+The fan site's `{稀有 0.005, 英雄 0.01, 传说 0.02}` is the client's
+`AddonValue00 {50, 100, 200}` at the 1e4 divisor, on `AddonStat00` 7/8/9 — the
+percentage variants of Str/Agi/Int. Same three numbers, same three grades, in all
+four slots. So this is a provenance fix rather than a numeric one.
+
+Two coverage differences do fall out of it:
+
+* The client has a **上下装 combined garment** (`Item.Category 90107`) that fills the
+  upper and lower slots at once and grants **2% at epic** — exactly an epic top plus
+  an epic bottom. The fan site's four-tier model cannot express it. It is
+  representable as upper+lower at the same grade, so the calculator does not offer a
+  fifth slot, but the equivalence is asserted in the pipeline rather than assumed.
+* No stat-bearing avatar exists above **legend**: there is no relic or ancient
+  avatar, and the face-1, face-2, instrument and footstep slots carry no option at
+  all (`StaticOptionId0 = 0`).
+
 ## Uncorroborated — the client has no answer
 
 These are still fan-site sourced because the client does not appear to carry
@@ -109,13 +161,84 @@ the rework turning them into class identities. Their power presumably reaches th
 score through `enlightenment_rate` (BattlePoint Type 6), which is **not
 verified**.
 
-### Costumes and expedition (时装 / 远征队)
-Still fan-site sourced; not yet searched for in the client.
+## Every BattlePoint type now has a name
 
-## Still-undecoded BattlePoint types
+`GameMsg` carries a **35-member** `tip.name.enum_battlepointtype_*` enum, and the
+table's `Type` column spans 0–34. Laying the two side by side, with the eleven
+already-decoded Types as anchors and the systems whose row shape is already known,
+leaves a **gap-free bijection**: every remaining enum name lands on exactly one
+remaining slot, with nothing left over on either side.
 
-**12, 13, 14, 15, 16, 24, 25, 26, 30.** Type 25 (`ValueA` 162–165, `ValueB`
-5/10/15/20) looks like a threshold ladder and is the best next candidate.
+| Type | enum name | state |
+|---|---|---|
+| 0 | `none` | no rows |
+| 1 | `base_attack_point` | read |
+| 2 | `base_health_point` | read |
+| 3 | `level` | read |
+| 4 | `weapon_quality` | read |
+| 5 | `arkpassive_evolution` | read |
+| 6 | `arkpassive_enlightment` | read |
+| 7 | `arkpassive_leap` | read |
+| 8 | `karma_evolutionrank` | read |
+| 9 | `karma_leaplevel` | read |
+| 10 | `ability_attack` | read (engravings) |
+| 11 | `ability_defense` | read (engraving heal channel) |
+| 12 | `elixir_set` | **not read** — `ValueA` 100–108 set id, `ValueB` 1–2 set level |
+| 13 | `elixir_grade_attack` | **not read** — `ValueA` option id, `ValueB` 1–5 level |
+| 14 | `elixir_grade_defense` | **not read** — support heal channel of 13 |
+| 15 | `accessory_grinding_attack` | **not read** — stat→ratio, same shape as 19 |
+| 16 | `accessory_grinding_defense` | **not read** — support heal channel of 15 |
+| 17 | `accessory_grinding_addontype_attack` | read (affix lines) |
+| 18 | `accessory_grinding_addontype_defense` | no rows |
+| 19 | `bracelet_stattype` | read |
+| 20 | `bracelet_addontype_attack` | read |
+| 21 | `bracelet_addontype_defense` | read |
+| 22 | `gem` | read |
+| 23 | `esther_weapon` | read |
+| 24 | `transcendence_armor` | **not read** — all values zero |
+| 25 | `transcendence_additional` | **not read** — `ValueA` 162–165, `ValueB` 5/10/15/20 |
+| 26 | `battlestat` | **read (new)** — combat traits, see divergence 13 |
+| 27 | `card_set` | read |
+| 28 | `pet_specialty` | read |
+| 29 | `arkgrid_core` | read |
+| 30 | `arkgrid_core_defense` | **not read** — ark-core support heal channel |
+| 31 | `arkgrid_gem` | read |
+| 32 | `arkgrid_gem_defense` | no rows |
+| 33 | `trinity_orb` | read |
+| 34 | `trinity_orb_defense` | read |
+
+Two things this settles:
+
+* **Type 25 was the wrong next candidate.** It looked like a threshold ladder and is
+  `transcendence_additional` — transcendence, not the roster bonus the calculator
+  needed. Type **26** was the answer, and it is only three rows for a damage dealer.
+* **No enum member mentions avatars.** That is why searching BattlePoint for
+  `{0.005, 0.01, 0.02}` was hopeless: the avatar bonus is a main-stat percentage on
+  the item (`ItemGradeOptionStatic`), not a combat-power coefficient at all.
+
+The remaining unread Types are all real systems the calculator does not model yet:
+**elixirs** (12/13/14), **accessory grinding stat ratios** (15/16), **transcendence**
+(24/25) and the **ark-core support heal channel** (30).
+
+## Stat ids — partially recovered
+
+An earlier pass recorded that no table maps a `StatType` id to a GameMsg key, and
+that a scan of all 779 databases for `enum_stattype_criticalhit` finds nothing. Both
+are true, but the *key* does exist in `GameMsg`, and two other tables supply the
+missing half of the join:
+
+* `EFTable_ArkPassive` nodes `1010100` … `1010600` are named 会心 / 专长 / 压制 /
+  迅捷 / 忍耐 / 异化 and their `ArkPassiveOption` rows grant stat ids **15 … 20** in
+  that order. That is the anchor for BattlePoint Type 26's 1–6 index *and* for the
+  bracelet's combat-trait column.
+* `SkillBuff` rows pin the flat main stats to **3/4/5/6** (Str/Agi/Int/Con) by the
+  text they print, and their **percentage** variants to **7/8/9**: buff 120000 grants
+  stat 7 with value 5000 and reads "力量增加50%", and 6110/6111/6112 grant stat 8 with
+  −3000/−5000/−7000 and read 敏捷减少 30% / 50% / 70%.
+
+`tools/apps/lostark/bracelets.py` now names **52 of the 58** lines it used to ship
+unnamed. Only `KeyStat 11` is left: its one appearance outside a bracelet is a
+`SkillBuff` with no description, so there is nothing to read a name off.
 
 ## Icon addressing — resolved
 
@@ -155,3 +278,19 @@ other tables' primary keys, both produce false positives. Types 19/20/21
 (bracelet) were confirmed by reproducing all 45 of the fan site's amps with
 nothing left over; Type 10 (engraving) by its `ValueA` ids all existing in
 `EFTable_Ability` and none in `EFTable_ItemLevelOption`.
+
+Two additions from the Type 26 pass:
+
+* **Read the enum first.** `tip.name.enum_battlepointtype_*` has one member per
+  `Type`, so a system can be found by *name* and then confirmed by shape, instead of
+  guessing shapes. It also tells you when to stop looking: no member mentions
+  avatars, and that negative was worth more than any further searching.
+* **A blank value set is a signal, not a dead end.** Type 26's `ValueC` being zero on
+  all five rows is what proved the fan site's 2160 base is its own — a *documented
+  absence* is a result, and pinning it in a test keeps a future patch honest.
+
+And one trap worth naming: **the amp you are looking for may not be an amp.** The
+avatar bonus was hunted in BattlePoint for a long time because the calculator treated
+it as a coefficient. It is an item stat (`ItemGradeOptionStatic` on a percentage stat
+id), and it was found in minutes once the question changed from "which Type carries
+0.02?" to "what does an avatar item *do*?".

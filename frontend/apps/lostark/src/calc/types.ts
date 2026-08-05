@@ -23,8 +23,18 @@ export interface RoleCoefficients {
   card_set_values: Record<string, Record<string, number>>
   /** Pet ranch tier id -> amp. */
   pet_ranch_values: Record<string, number>
-  /** Chosen (神选) weapon id -> amp. */
+  /** Chosen (神选) weapon id -> amp. Keyed by `ItemEvolutionCommon.EstherOptionId`. */
   chosen_weapon_values: Record<string, number>
+  /**
+   * Combat-trait index (1-6) -> combat power per point, from BattlePoint Type 26
+   * (`battlestat`).
+   *
+   * Short by design: three entries for a damage dealer (会心 / 专长 / 迅捷 at
+   * 0.0003) and two for a support (专长 / 迅捷 at 0.0004). A trait absent from the
+   * map earns nothing — the client grants no rate for 压制 / 忍耐 / 异化 to either
+   * role, and none for 会心 to a support.
+   */
+  combat_stat_rates: Record<string, number>
   orb_values: Record<string, { points?: number; amp?: number; heal_amp?: number }>
 }
 
@@ -83,10 +93,32 @@ export interface Loadout {
   braceletLines: string[]
   /** Five engraving slots. */
   engravings: EngravingSlot[]
-  /** Avatar tiers for head / top / bottom / weapon. */
+  /**
+   * Avatar option ids for the four stat-bearing slots, in `AvatarMeta.slots` order
+   * (head / upper body / lower body / weapon); '' for an empty slot.
+   *
+   * An id is `<slot key>-<Item.Grade>` (`head-4`), which is what
+   * `avatars/options.json` keys its main-stat amps by. It used to be a tier NAME
+   * copied from the fan site; the client carries the same three amps on the item
+   * itself, so the ids are now the client's own slot-and-grade pairs.
+   */
   avatars: string[]
-  /** Roster (远征队) combat stats, added to the 战斗特性 base. */
-  roster: { crit: number; spec: number; swift: number }
+  /**
+   * Combat-trait (战斗特性) totals, keyed by the client's trait index 1-6.
+   *
+   * These are the character's WHOLE totals, as the game's own panel shows them —
+   * not a roster-only delta on top of an assumed base. BattlePoint Type 26 carries
+   * a per-point rate and no base at all (`ValueC` is zero on all five rows), so the
+   * fan site's fixed 2160 was its own convenience and is gone.
+   */
+  combatStats: Record<string, number>
+  /**
+   * @deprecated Superseded by {@link combatStats}; delete with the engine patch.
+   *
+   * Kept only so `engine.ts` and `App.tsx` still compile while they are owned
+   * elsewhere. Nothing new should read it — a `roster` number is a delta on top of
+   * the fan site's invented 2160 base, and `combatStats` is the real total.
+   */
   /** Chosen weapon id, or '' for a normal weapon. */
   chosenWeaponId: string
   /** Card set id, or '' for none. */
