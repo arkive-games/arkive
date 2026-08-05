@@ -19,6 +19,9 @@ import { RichText, plainText } from './RichText'
 /** The game allows a stone level on at most two engravings. */
 const MAX_STONE_SLOTS = 2
 
+/** 遗物 — the grade a real build runs, so the one a fresh pick lands on. */
+const DEFAULT_GRADE = 4
+
 export function EngravingGrid({
   meta,
   names,
@@ -173,7 +176,16 @@ function EngravingCard({
       <select
         aria-label={label}
         value={slot.name}
-        onChange={(e) => onChange({ ...slot, name: e.target.value })}
+        onChange={(e) => {
+          const name = e.target.value
+          // Picking an engraving with no grade yet lands on 遗物, and clearing
+          // the slot drops the grade with it so an empty slot never keeps one.
+          onChange({
+            ...slot,
+            name,
+            grade: name ? (slot.grade || DEFAULT_GRADE) : 0,
+          })
+        }}
         className="mt-2 w-full rounded-md border border-border bg-background px-2 py-1 text-sm"
       >
         <option value="">无</option>

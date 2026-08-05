@@ -532,6 +532,20 @@ test('at most two engravings can carry an ability stone', async ({ page }) => {
   await expect(page.getByLabel('刻印 3 能力石')).toBeEnabled()
 })
 
+test('a fresh engraving pick lands on 遗物', async ({ page }) => {
+  await ready(page)
+  await expect(page.getByLabel('刻印 1 品质')).toBeDisabled()
+
+  await page.getByLabel('刻印 1', { exact: true }).selectOption({ index: 1 })
+  const grade = page.getByLabel('刻印 1 品质')
+  await expect(grade).toBeEnabled()
+  await expect(grade.locator('option:checked')).toHaveText('遗物')
+
+  // Clearing the slot drops the grade with it, so an empty slot never keeps one.
+  await page.getByLabel('刻印 1', { exact: true }).selectOption('')
+  await expect(grade.locator('option:checked')).toHaveText('—')
+})
+
 test('engravings with no coefficient say so instead of scoring silently', async ({
   page,
 }) => {
