@@ -231,3 +231,21 @@ def test_the_recovered_stat_names_resolve():
             assert table.get(key, "").strip(), (locale, stat_id, key)
     assert names["zh-CN"][STAT_NAME_KEYS[15]] == "会心"
     assert names["ko-KR"][STAT_NAME_KEYS[15]] == "치명"
+
+
+def test_the_heal_channel_is_support_only(lines):
+    """Type 21 must never carry a dps value, because nothing would read it.
+
+    The heal component only exists for the support role -- `evaluate` returns
+    early for a damage dealer -- so a Type-21 row under ``PrimaryKey 1`` would be
+    silently dropped rather than scored. That is a latent silent zero, so it is
+    asserted here: if a client update ever grants one, this fails loudly instead
+    of the amp quietly going missing.
+    """
+    offenders = [line["id"] for line in lines if line["heal_amp"][DPS]]
+    assert not offenders, offenders
+    # And the split is real: the four protection/recovery lines carry a heal amp
+    # and no score amp at all.
+    healing = [line for line in lines if line["heal_amp"][SUPPORT]]
+    assert len(healing) == 4
+    assert all(line["amp"][SUPPORT] == 0.0 for line in healing)
