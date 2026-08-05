@@ -6,7 +6,16 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import arkgrid, arkpassive, battlepoint, bracelets, classes, itemlevel, locales
+from . import (
+    arkgrid,
+    arkpassive,
+    battlepoint,
+    bracelets,
+    classes,
+    engravings,
+    itemlevel,
+    locales,
+)
 from .db import Tables
 
 VERSION_FILE = "version.json"
@@ -31,12 +40,14 @@ def build(tables: Tables) -> dict[str, object]:
 
     class_rows = classes.extract(tables)
     bracelet_lines = bracelets.option_lines(tables)
+    engraving_rows = engravings.extract(tables)
 
     keys = set(arkgrid.localization_keys(cores))
     keys.update(classes.localization_keys(class_rows))
     keys.update(arkgrid.GRADE_NAME_KEYS.values())
     keys.update(arkpassive.localization_keys())
     keys.update(bracelets.localization_keys(bracelet_lines))
+    keys.update(engravings.localization_keys(engraving_rows))
     for group in (slots, support_slots):
         for slot in group:
             keys.add(slot["name_key"])
@@ -50,6 +61,9 @@ def build(tables: Tables) -> dict[str, object]:
     names = locales.resolve(tables, sorted(keys), missing="skip")
     # Support sub-classes are flagged by name, so the pass needs resolved text.
     class_rows = classes.extract(tables, names.get("zh-CN", {}))
+    # Support class engravings are flagged by name too, so this pass also needs
+    # resolved text.
+    engraving_rows = engravings.extract(tables, names.get("zh-CN", {}))
 
     dataset: dict[str, object] = {
         "battlepoint/dps.json": coeffs[battlepoint.DPS],
@@ -70,6 +84,16 @@ def build(tables: Tables) -> dict[str, object]:
             # these lines ship without a name key instead of an invented one.
             "unnamedStats": bracelets.unnamed_stats(bracelet_lines),
         },
+        "engravings/list.json": {
+            "grades": engravings.GRADES,
+            "gradeColourKeys": {
+                str(k): v for k, v in engravings.GRADE_COLOUR_KEYS.items()
+            },
+            "uiKeys": engravings.UI_KEYS,
+            # 7 of the 95 have icon_slug null: their atlas group ships no
+            # texture at all, so the UI must render a placeholder.
+            "engravings": engraving_rows,
+        },
         "classes.json": class_rows,
         VERSION_FILE: {
             "source": "lostark-explorer",
@@ -79,6 +103,7 @@ def build(tables: Tables) -> dict[str, object]:
                 "itemLevels": len(gear),
                 "arkCores": len(cores),
                 "braceletLines": len(bracelet_lines),
+                "engravings": len(engraving_rows),
                 "localeKeys": len(keys),
                 "arkGridSlots": len(slots),
                 "classes": len(class_rows),

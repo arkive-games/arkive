@@ -498,6 +498,53 @@ test('picking a scoring bracelet line moves the score', async ({ page }) => {
   await expect(page.locator('aside').getByText('手镯')).toBeVisible()
 })
 
+test('engravings are five columns naming all 95 from the client', async ({ page }) => {
+  await ready(page)
+  for (let i = 1; i <= 5; i++) {
+    await expect(page.getByLabel(`刻印 ${i}`, { exact: true })).toBeVisible()
+    await expect(page.getByLabel(`刻印 ${i} 品质`)).toBeVisible()
+    await expect(page.getByLabel(`刻印 ${i} 等级`)).toBeVisible()
+    await expect(page.getByLabel(`刻印 ${i} 能力石`)).toBeVisible()
+  }
+  // 95 engravings from AbilityEngrave joined to Ability, plus the empty option.
+  // The old fan-site picker offered 17.
+  await expect(page.locator('select[aria-label="刻印 1"] option')).toHaveCount(96)
+})
+
+test('at most two engravings can carry an ability stone', async ({ page }) => {
+  await ready(page)
+  for (let i = 1; i <= 3; i++) {
+    await page.getByLabel(`刻印 ${i}`, { exact: true }).selectOption({ index: i })
+  }
+  await expect(page.getByLabel('刻印 3 能力石')).toBeEnabled()
+
+  await page.getByLabel('刻印 1 能力石').selectOption('4')
+  await page.getByLabel('刻印 2 能力石').selectOption('3')
+
+  // The third is locked out, but the two that hold a stone stay editable —
+  // otherwise a stone could never be cleared.
+  await expect(page.getByLabel('刻印 3 能力石')).toBeDisabled()
+  await expect(page.getByLabel('刻印 1 能力石')).toBeEnabled()
+  await expect(page.getByLabel('刻印 2 能力石')).toBeEnabled()
+
+  // Clearing one frees the third again.
+  await page.getByLabel('刻印 2 能力石').selectOption('0')
+  await expect(page.getByLabel('刻印 3 能力石')).toBeEnabled()
+})
+
+test('engravings with no coefficient say so instead of scoring silently', async ({
+  page,
+}) => {
+  await ready(page)
+  // The client ships 95 but the fan-site amp tables cover far fewer, so the
+  // picker marks the rest rather than hiding them.
+  const marked = await page
+    .locator('select[aria-label="刻印 1"] option')
+    .evaluateAll((els) => els.filter((e) => e.textContent?.includes('（无战力）')).length)
+  expect(marked).toBeGreaterThan(0)
+  expect(marked).toBeLessThan(95)
+})
+
 test('the shared footer is present', async ({ page }) => {
   await ready(page)
   const footer = page.locator('footer')

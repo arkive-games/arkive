@@ -100,8 +100,24 @@ export interface Loadout {
 }
 
 export interface EngravingSlot {
-  /** Engraving name as keyed in the fan-site tables; '' for an empty slot. */
+  /**
+   * Engraving name as keyed in the fan-site amp tables; '' for an empty slot.
+   *
+   * It stays the display NAME rather than the client's engraving id because the
+   * amps are still fan-site sourced — the client has no BattlePoint Type keyed
+   * by AbilityEngrave ids, so there is nothing to prefer over them. The picker
+   * offers all 95 client engravings and stores the resolved zh-CN name, which
+   * is what the amp tables key on.
+   */
   name: string
+  /**
+   * Engraving grade 1-4 (基本 / 英雄 / 传说 / 遗物), 0 for none.
+   *
+   * Display only: the fan-site amp tables key on name + book + stone, so the
+   * grade colours the name and nothing more. Kept because it is part of how the
+   * game presents an engraving, but it must not be read as scoring.
+   */
+  grade: number
   /** Relic book stage 0-4. */
   book: number
   /** Ability stone level 0-4. */

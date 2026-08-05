@@ -31,7 +31,7 @@ export function defaultLoadout(): Loadout {
     accessoryLines: Array.from({ length: ACCESSORY_LINES }, () => ''),
     braceletLines: Array.from({ length: BRACELET_LINES }, () => ''),
     engravings: Array.from({ length: ENGRAVING_SLOTS }, () => ({
-      name: '', book: 0, stone: 0,
+      name: '', grade: 0, book: 0, stone: 0,
     })),
     avatars: ['无', '无', '无', '无'],
     roster: { crit: 0, spec: 0, swift: 0 },
@@ -151,6 +151,7 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
         }
         return {
           name: typeof e.name === 'string' ? e.name : '',
+          grade: clamp(e.grade, 'grade'),
           book: clamp(e.book, 'book'),
           stone: clamp(e.stone, 'stone'),
         }

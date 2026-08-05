@@ -20,6 +20,7 @@ import { Field, NumberField, Section, SelectField } from '@/components/Fields'
 import { ScoreRail } from '@/components/ScoreRail'
 import { CoreGrid } from '@/components/CoreGrid'
 import { BraceletColumns } from '@/components/BraceletColumns'
+import { EngravingGrid } from '@/components/EngravingGrid'
 import { ArkPassiveGrid } from '@/components/ArkPassiveGrid'
 
 export default function App() {
@@ -92,6 +93,22 @@ export default function App() {
   }
 
   const coeffs = data ? data[loadout.role] : null
+
+  /**
+   * Engraving names the amp tables actually score.
+   *
+   * The client ships 95 engravings but the fan-site tables cover far fewer, and
+   * the amps are still fan-site sourced (no BattlePoint Type is keyed by
+   * AbilityEngrave ids). Marking the rest rather than hiding them keeps the
+   * picker honest: an engraving that scores 0 says so.
+   */
+  const scoringEngravings = useMemo(
+    () =>
+      new Set(
+        Object.keys(loadout.role === 'support' ? supportEngravingBase : dpsEngravingBase),
+      ),
+    [loadout.role],
+  )
 
   const result = useMemo(() => {
     if (!data || !coeffs) return null
@@ -347,55 +364,23 @@ export default function App() {
             />
           </Section>
 
-          <Section title="刻印">
-            <p className="text-sm text-muted-foreground">系数来自参考站，非游戏数据表。</p>
-            {loadout.engravings.map((eng, i) => (
-              <div key={i} className="flex gap-2">
-                <select
-                  aria-label={`刻印 ${i + 1}`}
-                  value={eng.name}
-                  onChange={(e) => {
-                    const list = [...loadout.engravings]
-                    list[i] = { ...list[i], name: e.target.value }
-                    set('engravings', list)
-                  }}
-                  className="min-w-0 flex-1 rounded-md border border-border bg-background px-2 py-1 text-sm"
-                >
-                  <option value="">无</option>
-                  {Object.keys(
-                    loadout.role === 'support' ? supportEngravingBase : dpsEngravingBase,
-                  ).map((n) => (
-                    <option key={n} value={n}>{n}</option>
-                  ))}
-                </select>
-                <select
-                  aria-label={`刻印 ${i + 1} 遗物书`}
-                  value={eng.book}
-                  disabled={!eng.name}
-                  onChange={(e) => {
-                    const list = [...loadout.engravings]
-                    list[i] = { ...list[i], book: Number(e.target.value) }
-                    set('engravings', list)
-                  }}
-                  className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
-                >
-                  {[0, 1, 2, 3, 4].map((v) => <option key={v} value={v}>书 {v}</option>)}
-                </select>
-                <select
-                  aria-label={`刻印 ${i + 1} 能力石`}
-                  value={eng.stone}
-                  disabled={!eng.name}
-                  onChange={(e) => {
-                    const list = [...loadout.engravings]
-                    list[i] = { ...list[i], stone: Number(e.target.value) }
-                    set('engravings', list)
-                  }}
-                  className="w-20 rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
-                >
-                  {[0, 1, 2, 3, 4].map((v) => <option key={v} value={v}>石 {v}</option>)}
-                </select>
-              </div>
-            ))}
+          {/* sys.ability.engrave_spec_title */}
+          <Section title={data.names[data.engravings.uiKeys.panel_title] ?? '刻印'}>
+            <p className="text-sm text-muted-foreground">
+              刻印名称与图标取自游戏客户端；系数仍来自参考站——客户端没有以刻印 id
+              为键的战斗力表，因此无可替代。
+            </p>
+            <EngravingGrid
+              meta={data.engravings}
+              names={data.names}
+              slots={loadout.engravings}
+              scoring={scoringEngravings}
+              onChange={(i, next) => {
+                const list = [...loadout.engravings]
+                list[i] = next
+                set('engravings', list)
+              }}
+            />
           </Section>
 
           <Section title="时装与远征队">

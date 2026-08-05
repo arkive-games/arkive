@@ -29,6 +29,7 @@ def test_dataset_has_the_expected_files(dataset):
         "arkgrid/slots.json",
         "arkpassive/trees.json",
         "bracelets/options.json",
+        "engravings/list.json",
         "classes.json",
         "locales/zh-CN.json",
         "locales/ko-KR.json",

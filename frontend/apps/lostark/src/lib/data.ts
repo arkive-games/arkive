@@ -137,6 +137,49 @@ export interface BraceletMeta {
   unnamedStats: number[]
 }
 
+/**
+ * One engraving, from `AbilityEngrave` joined to `Ability`.
+ *
+ * The join is authoritative, NOT `Ability.IsEngraveAbility` — that flag is true
+ * for 163 ids, 68 of which have no `AbilityEngrave` row (retired engravings).
+ *
+ * `icon_slug` is the file name under `public/engravings/`, or null for the seven
+ * whose atlas group ships no texture at all — render a placeholder rather than
+ * requesting a file that does not exist.
+ *
+ * `role` is null for general engravings: the client marks no engraving as damage
+ * or support, so only class engravings inherit one from their sub-class.
+ */
+export interface Engraving {
+  slug: string
+  /** AbilityEngrave.Type: 1 general (five levels), 2 class (four levels). */
+  type: 1 | 2
+  class_id: number | null
+  name_key: string
+  /** Four of these still hold unresolved template directives; check before showing. */
+  desc_key: string | null
+  icon: string
+  icon_index: number
+  icon_slug: string | null
+  /** Level ("1".."5") -> engraving points it costs. */
+  levels: Record<string, number>
+  role: 'dps' | 'support' | null
+}
+
+export interface EngravingGrade {
+  grade: number
+  key: 'basic' | 'epic' | 'legend' | 'relic'
+  name_key: string
+}
+
+export interface EngravingMeta {
+  grades: EngravingGrade[]
+  /** Grade number -> GameMsg key wrapping a name in that grade's colour. */
+  gradeColourKeys: Record<string, string>
+  uiKeys: Record<string, string>
+  engravings: Record<string, Engraving>
+}
+
 export interface Dataset {
   version: DataVersion
   dps: RoleCoefficients
@@ -146,6 +189,7 @@ export interface Dataset {
   slots: { dps: ArkGridSlot[]; support: ArkGridSlot[] }
   arkPassive: ArkPassiveMeta
   bracelets: BraceletMeta
+  engravings: EngravingMeta
   classes: PlayerClass[]
   names: Record<string, string>
 }
@@ -168,8 +212,19 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
     /* unversioned artifact or unreachable — fall back to bare URLs */
   }
 
-  const [version, dps, support, gear, cores, slots, arkPassive, bracelets, classes, names] =
-    await Promise.all([
+  const [
+    version,
+    dps,
+    support,
+    gear,
+    cores,
+    slots,
+    arkPassive,
+    bracelets,
+    engravings,
+    classes,
+    names,
+  ] = await Promise.all([
       json<DataVersion>('version.json'),
       json<RoleCoefficients>('battlepoint/dps.json'),
       json<RoleCoefficients>('battlepoint/support.json'),
@@ -178,9 +233,22 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
       json<{ dps: ArkGridSlot[]; support: ArkGridSlot[] }>('arkgrid/slots.json'),
       json<ArkPassiveMeta>('arkpassive/trees.json'),
       json<BraceletMeta>('bracelets/options.json'),
+      json<EngravingMeta>('engravings/list.json'),
       json<PlayerClass[]>('classes.json'),
       json<Record<string, string>>(`locales/${locale}.json`),
     ])
 
-  return { version, dps, support, gear, cores, slots, arkPassive, bracelets, classes, names }
+  return {
+    version,
+    dps,
+    support,
+    gear,
+    cores,
+    slots,
+    arkPassive,
+    bracelets,
+    engravings,
+    classes,
+    names,
+  }
 }

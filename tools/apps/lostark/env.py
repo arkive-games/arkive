@@ -5,6 +5,12 @@ Set the variables in ``tools/.env`` (see ``tools/.env.example``) or export them:
   LOSTARK_TABLES    lostark-explorer output: the ClientData/TableData directory
                     holding the EFTable_*.db SQLite files
   LOSTARK_DATA_OUT  data-lostark repo (dataset the frontend fetches)
+
+Optional:
+
+  LOSTARK_ICON_ATLAS  decoded UI icon atlas pages (``laex textures`` output, one
+                      directory per package). Only needed to re-slice icon sets;
+                      absent on a machine that just emits the dataset.
 """
 
 from __future__ import annotations
