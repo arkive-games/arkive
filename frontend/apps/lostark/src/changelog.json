@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.3.0",
+      "date": "2026-08-05",
+      "commit": "438365f1c246456b1b3d629c402370688e48d174",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Ark Passive now shows the three trees as cards with the game's own karma medallions, points and tier dials.",
+            "zh-CN": "方舟被动改为三张卡片展示，使用游戏原版业力徽章，并可调整点数与阶位。",
+            "zh-TW": "方舟被動改為三張卡片展示，使用遊戲原版業力徽章，並可調整點數與階位。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Light theme, shared top bar with theme switch and build info, and a shared footer.",
+            "zh-CN": "新增浅色主题，采用共享顶栏（含主题切换与构建信息）与共享页脚。",
+            "zh-TW": "新增淺色主題，採用共享頂欄（含主題切換與建置資訊）與共享頁腳。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-08-03",
       "commit": "08cac9774ea80d92b64c11845ebf32e6d598bd5b",
