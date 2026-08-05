@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.7.0",
+      "date": "2026-08-06",
+      "commit": "b16ad367da2e6933fe1b6e9de2ed7b54249ac3ba",
+      "changes": [
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Gear, weapon, avatar, combat-trait and Esther-weapon data now all come from the game client, with real item names throughout.",
+            "zh-CN": "装备、武器、时装、战斗特性与神选武器数据全部改用游戏客户端数据表，并显示游戏原版名称。",
+            "zh-TW": "裝備、武器、時裝、戰鬥特性與神選武器資料全部改用遊戲客戶端資料表，並顯示遊戲原版名稱。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.1",
       "date": "2026-08-05",
       "commit": "d858a1a480d225307b30c9cb9345cc05af127965",
