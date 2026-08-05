@@ -301,16 +301,6 @@ export interface EngravingMeta {
   }
 }
 
-/**
- * The growth code an (stone, grade, level) triple maps to.
- *
- * `code = 20 * stone + 1 + 4 * (grade - 2) + level`, with grade 2/3/4 =
- * epic/legend/relic. Spelled out by the client's own Comment2 notes on the
- * BattlePoint rows.
- */
-export function growthCode(stone: number, grade: number, level: number): number {
-  return 20 * stone + 1 + 4 * (grade - 2) + level
-}
 
 export interface Dataset {
   version: DataVersion

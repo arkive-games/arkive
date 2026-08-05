@@ -13,12 +13,6 @@
 
 import {
   STONE_BASIC,
-  dpsEngravingBase,
-  dpsEngravingBooks,
-  dpsEngravingStones,
-  supportEngravingBase,
-  supportEngravingBooks,
-  supportEngravingStones,
 } from './fansite.generated'
 import type {
   AmpRow,
@@ -101,44 +95,6 @@ export function engravingAmpFromClient(
   if (!e) return 0
   const code = String(20 * slot.stone + 1 + 4 * (slot.grade - 2) + slot.book)
   return (channel === 'heal' ? e.heal_amp[role][code] : e.amp[role][code]) ?? 0
-}
-
-/**
- * Engraving amp for one slot, fan-site sourced.
- *
- * Retained only for the values the client does not cover. Prefer
- * `engravingAmpFromClient`.
- */
-export function engravingAmp(
-  slot: { name: string; book: number; stone: number },
-  role: 'dps' | 'support',
-): number {
-  if (!slot.name) return 0
-  const num = (v: unknown) => (typeof v === 'number' ? v : 0)
-  if (role === 'support') {
-    // Support tables split each entry into support / heal channels; only the
-    // support channel feeds the support score.
-    const base = supportEngravingBase[slot.name as keyof typeof supportEngravingBase] as
-      | { support: number }
-      | undefined
-    const book = supportEngravingBooks[slot.name as keyof typeof supportEngravingBooks] as
-      | { support: number[] }
-      | undefined
-    const stone = supportEngravingStones[slot.name as keyof typeof supportEngravingStones] as
-      | { support: number[] }
-      | undefined
-    return (
-      num(base?.support) + num(book?.support?.[slot.book]) + num(stone?.support?.[slot.stone])
-    )
-  }
-  const base = dpsEngravingBase[slot.name as keyof typeof dpsEngravingBase] as number | undefined
-  const book = dpsEngravingBooks[slot.name as keyof typeof dpsEngravingBooks] as
-    | number[]
-    | undefined
-  const stone = dpsEngravingStones[slot.name as keyof typeof dpsEngravingStones] as
-    | number[]
-    | undefined
-  return num(base) + num(book?.[slot.book]) + num(stone?.[slot.stone])
 }
 
 /** Basic-attack bonus once total ability-stone levels reach the threshold. */

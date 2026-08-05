@@ -97,7 +97,10 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
   }
 
   num('combatLevel', 55, 70)
-  num('itemLevel', 0, 9999)
+  // Not 0: an item level below the table's floor yields baseAttack 0 and empty
+  // selectors, and the re-anchor effects cannot recover because they guard on a
+  // non-empty list. Rejecting it says so instead of showing a blank zero score.
+  num('itemLevel', 1, 9999)
   num('weaponQuality', 0, 100)
   num('arkEvolution', 0, 999)
   num('arkEnlightenment', 0, 999)

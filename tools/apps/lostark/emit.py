@@ -171,7 +171,9 @@ def build(tables: Tables) -> dict[str, object]:
                     for e in engraving_rows.values()
                     if e["amp"]["dps"] or e["amp"]["support"] or e["heal_amp"]["support"]
                 ),
-                "localeKeys": len(keys),
+                # The emitted tables, not the requested set: a key can resolve
+                # under different casing, so the two differ.
+                "localeKeys": max((len(t) for t in names.values()), default=0),
                 "arkGridSlots": len(slots),
                 "classes": len(class_rows),
             },
