@@ -163,7 +163,24 @@ export interface Engraving {
   icon_slug: string | null
   /** Level ("1".."5") -> engraving points it costs. */
   levels: Record<string, number>
+  /**
+   * Always null now that the roster is general engravings only — the client
+   * marks no general engraving as damage or support. Which channel one scores
+   * through is decided by whether it has a dps or support amp grid.
+   */
   role: 'dps' | 'support' | null
+  /** The reworked ("S3") ability id the amps are keyed by. */
+  reworked_id: string | null
+  /**
+   * Combat power per growth code, from BattlePoint Type 10.
+   *
+   * Empty per role where the game grants none — a defensive engraving scores
+   * nothing, and that is data rather than a gap. The grid is exactly additive
+   * over its stone and book axes.
+   */
+  amp: { dps: Record<string, number>; support: Record<string, number> }
+  /** The support heal channel, BattlePoint Type 11; only 妙手回春 has one. */
+  heal_amp: { dps: Record<string, number>; support: Record<string, number> }
 }
 
 export interface EngravingGrade {
@@ -178,6 +195,41 @@ export interface EngravingMeta {
   gradeColourKeys: Record<string, string>
   uiKeys: Record<string, string>
   engravings: Record<string, Engraving>
+  /** Book grades on the growth ladder, in order: 2 epic, 3 legend, 4 relic. */
+  bookGrades: number[]
+  bookMaxLevel: number
+  stoneMaxLevel: number
+  channels: Record<string, string>
+  /** The four penalty engravings a stone can carve. */
+  stonePenalties: {
+    ability_id: string
+    slug: string
+    name_key: string
+    amp: { dps: Record<string, number>; support: Record<string, number> }
+  }[]
+  /**
+   * Flat bonus once total stone levels reach `threshold`.
+   *
+   * A RAW STAT, not an amp: the client grants stat 150, which has no name in any
+   * table and no BattlePoint Type keyed to it. The fan site claims 0.015 combat
+   * power for it; that is uncorroborated, so it is not scored here.
+   */
+  stoneLevelBonus: {
+    threshold: number
+    option_id: string
+    by_grade: Record<string, { option_type: number; stat: number; value: number }>
+  }
+}
+
+/**
+ * The growth code an (stone, grade, level) triple maps to.
+ *
+ * `code = 20 * stone + 1 + 4 * (grade - 2) + level`, with grade 2/3/4 =
+ * epic/legend/relic. Spelled out by the client's own Comment2 notes on the
+ * BattlePoint rows.
+ */
+export function growthCode(stone: number, grade: number, level: number): number {
+  return 20 * stone + 1 + 4 * (grade - 2) + level
 }
 
 export interface Dataset {

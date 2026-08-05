@@ -2,13 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
 import { BuildInfo, SiteFooter } from '@gamemap/ui'
 import changelog from './changelog.json'
-import { armourGroups, evaluate, weaponOptions } from '@/calc/engine'
+import { armourGroups, evaluate, weaponOptions, type EngravingAmpSource } from '@/calc/engine'
 import type { Loadout } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
-import {
-  dpsEngravingBase,
-  supportEngravingBase,
-} from '@/calc/fansite.generated'
 import {
   STORAGE_KEY,
   defaultLoadout,
@@ -21,6 +17,7 @@ import { ScoreRail } from '@/components/ScoreRail'
 import { CoreGrid } from '@/components/CoreGrid'
 import { BraceletColumns } from '@/components/BraceletColumns'
 import { EngravingGrid } from '@/components/EngravingGrid'
+import { plainText } from '@/components/RichText'
 import { ArkPassiveGrid } from '@/components/ArkPassiveGrid'
 
 export default function App() {
@@ -95,25 +92,42 @@ export default function App() {
   const coeffs = data ? data[loadout.role] : null
 
   /**
-   * Engraving names the amp tables actually score.
+   * Engraving amps keyed by the display name the loadout stores.
    *
-   * The client ships 95 engravings but the fan-site tables cover far fewer, and
-   * the amps are still fan-site sourced (no BattlePoint Type is keyed by
-   * AbilityEngrave ids). Marking the rest rather than hiding them keeps the
-   * picker honest: an engraving that scores 0 says so.
+   * From BattlePoint Type 10/11 via the client's reworked ability ids. Built once
+   * per dataset so scoring is a map lookup rather than a scan of 43 rows.
    */
-  const scoringEngravings = useMemo(
-    () =>
-      new Set(
-        Object.keys(loadout.role === 'support' ? supportEngravingBase : dpsEngravingBase),
-      ),
-    [loadout.role],
-  )
+  const engravingsByName = useMemo(() => {
+    const map = new Map<string, EngravingAmpSource>()
+    if (!data) return map
+    for (const e of Object.values(data.engravings.engravings)) {
+      const name = plainText(data.names[e.name_key] ?? e.slug)
+      map.set(name, { slug: e.slug, amp: e.amp, heal_amp: e.heal_amp })
+    }
+    return map
+  }, [data])
+
+  /**
+   * Engraving names that carry combat power for the current role.
+   *
+   * 15 of the 43 general engravings score nothing in the client — defensive and
+   * utility ones genuinely have no grid. Marking them rather than hiding them
+   * keeps the picker honest.
+   */
+  const scoringEngravings = useMemo(() => {
+    const out = new Set<string>()
+    for (const [name, e] of engravingsByName) {
+      if (Object.keys(e.amp[loadout.role]).length || Object.keys(e.heal_amp[loadout.role]).length) {
+        out.add(name)
+      }
+    }
+    return out
+  }, [engravingsByName, loadout.role])
 
   const result = useMemo(() => {
     if (!data || !coeffs) return null
-    return evaluate(loadout, coeffs, data.gear, data.bracelets.lines)
-  }, [data, coeffs, loadout])
+    return evaluate(loadout, coeffs, data.gear, data.bracelets.lines, engravingsByName)
+  }, [data, coeffs, loadout, engravingsByName])
 
   const itemLevels = useMemo(
     () => (data ? Object.keys(data.gear).map(Number).sort((a, b) => a - b) : []),
@@ -367,8 +381,8 @@ export default function App() {
           {/* sys.ability.engrave_spec_title */}
           <Section title={data.names[data.engravings.uiKeys.panel_title] ?? '刻印'}>
             <p className="text-sm text-muted-foreground">
-              刻印名称与图标取自游戏客户端；系数仍来自参考站——客户端没有以刻印 id
-              为键的战斗力表，因此无可替代。
+              全部取自游戏客户端数据表（战斗力系数为 BattlePoint Type 10 / 11）。
+              仅收录 43 个通用刻印——改版后职业刻印已成为职业本身，客户端亦不再为其提供系数表。
             </p>
             <EngravingGrid
               meta={data.engravings}

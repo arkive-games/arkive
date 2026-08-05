@@ -164,8 +164,24 @@ stat. Names come from `EFTable_GameMsg` (`GameMsg_Chinese`, `GameMsg_Korean` —
 en-US needs an NAEU extraction).
 
 Beware: BattlePoint Type 29 references 72 Ark-core ids that exist in **no other table** (a `…7xx`
-suffix series). They are dropped and the count reported in `version.json`. `Type 10` is a
-per-item-group honing table, *not* item levels.
+suffix series). They are dropped and the count reported in `version.json`.
+
+**Correction (2026-08-05): `Type 10` is the engraving table, not a per-item-group honing table.**
+All 28 of its `ValueA` ids exist in `EFTable_Ability` and none in `EFTable_ItemLevelOption`.
+`ValueA` is a *reworked* ("S3") ability id — join the roster id through `EFTable_AbilityMapping`,
+which stores its 47 pairs both ways — `ValueB` is a growth code and `ValueC` the amp ×1e-4.
+Type 11 is the same shape for the support **heal** channel (one occupant, 妙手回春). The growth
+code composes the two dials the UI exposes:
+
+```
+code = 20 * stone_level + 1 + 4 * grade_step + book_level     # epic/legend/relic = 0/1/2
+```
+
+The stone is a second independent axis, **not** extra engraving levels, and the grid is exactly
+additive over the two axes (verified at every checkable cell of all 31 grids). Raw tooltip values
+live separately in `EFTable_AbilitySpecification` and are *not* the amps: 尖刺重锤 grants 36% crit
+damage but scores 0.1141. Class engravings (52 of the 95) have **no** per-level table and no amp
+anywhere — only the 43 general ones are covered.
 
 ## Notes
 - **Bilibili Toy publishing:** each app can ship as a single self-contained toy

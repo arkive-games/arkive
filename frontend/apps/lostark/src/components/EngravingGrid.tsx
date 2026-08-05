@@ -6,14 +6,18 @@ import { RichText, plainText } from './RichText'
 /**
  * The five engraving slots as columns, each with the game's own icon.
  *
- * Icons come from `Ability.Icon` + `Ability.IconIndex`: the group names an atlas
- * and the index is a flat, zero-based, row-major cell across its pages at 64px.
- * Seven of the 95 engravings have no icon at all — their atlas group ships no
- * texture — so those render the placeholder rather than a broken image.
+ * The roster is the 43 GENERAL engravings. Class engravings are excluded: the
+ * rework turned them into class identities, and the client agrees — none of the
+ * 52 has an amp grid.
  *
- * Only two slots may carry an ability-stone level, matching the game's two stone
- * engravings. The third and later stone selects disable themselves rather than
- * accepting a value that would overstate the score.
+ * Icons come from `Ability.Icon` + `Ability.IconIndex`: the group names an atlas
+ * and the index is a cell across its pages at 64px. Four of the 43 have no icon
+ * at all — their atlas group ships no texture — so those render a placeholder.
+ *
+ * The two dials are the axes of the client's growth code,
+ * `20 * stone + 1 + 4 * (grade - 2) + level`: a book grade+level, and a stone
+ * level. Only two slots may carry a stone, matching the game; the rest disable
+ * rather than accepting a value that would overstate the score.
  */
 
 /** The game allows a stone level on at most two engravings. */
@@ -26,7 +30,7 @@ export function EngravingGrid({
   meta,
   names,
   slots,
-  /** Names the fan-site amp tables actually score, for the （无战力）marker. */
+  /** Names that carry combat power for this role, for the （无战力）marker. */
   scoring,
   onChange,
 }: {
@@ -36,8 +40,8 @@ export function EngravingGrid({
   scoring: Set<string>
   onChange: (index: number, next: EngravingSlot) => void
 }) {
-  // Engravings sorted so the ones that actually move the score come first; with
-  // 95 options and only 26 scoring, alphabetical order buries the useful ones.
+  // Sorted so the ones that actually move the score come first: 15 of the 43
+  // score nothing, and alphabetical order buries the useful ones.
   const options = Object.values(meta.engravings)
     .map((e) => ({ engraving: e, name: plainText(names[e.name_key] ?? e.slug) }))
     .sort((a, b) => {
@@ -115,7 +119,7 @@ function EngravingCard({
               ) : (
                 // Two different empties. A slot with nothing in it gets the
                 // usual `+`; an engraving whose atlas group ships no texture
-                // gets its first character, so seven real picks do not read as
+                // gets its first character, so four real picks do not read as
                 // unselected.
                 <span
                   aria-hidden
@@ -157,8 +161,9 @@ function EngravingCard({
                 此刻印在客户端中没有图标资源。
               </p>
             ) : null}
-            {/* Four descriptions still hold unresolved <$...> directives, so
-                they are withheld rather than shown with template syntax. */}
+            {/* The four descriptions that held unresolved <$...> directives were
+                all class engravings, so none remain — the guard stays as a
+                regression net. */}
             {desc && !desc.includes('<$') ? (
               <p className="mt-2 text-xs leading-relaxed">
                 <RichText text={desc} />
@@ -166,7 +171,7 @@ function EngravingCard({
             ) : null}
             {slot.name && !scoring.has(slot.name) ? (
               <p className="mt-2 text-xs text-muted-foreground">
-                参考站未收录此刻印的系数，计为 0。
+                游戏数据表中此刻印没有战斗力系数，计为 0。
               </p>
             ) : null}
           </HoverCardContent>
@@ -184,6 +189,8 @@ function EngravingCard({
             ...slot,
             name,
             grade: name ? (slot.grade || DEFAULT_GRADE) : 0,
+            // The growth code has no level 0, so a fresh pick starts at 1.
+            book: name ? Math.max(1, slot.book) : 0,
           })
         }}
         className="mt-2 w-full rounded-md border border-border bg-background px-2 py-1 text-sm"
@@ -207,11 +214,16 @@ function EngravingCard({
           className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
         >
           <option value={0}>—</option>
-          {meta.grades.map((g) => (
-            <option key={g.grade} value={g.grade}>
-              {plainText(names[g.name_key] ?? String(g.grade))}
-            </option>
-          ))}
+          {/* Only the growth ladder: epic / legend / relic. 基本 (grade 1) is
+              not on it — the amp grid's book axis starts at epic, so offering it
+              would index a cell the client does not define. */}
+          {meta.grades
+            .filter((g) => meta.bookGrades.includes(g.grade))
+            .map((g) => (
+              <option key={g.grade} value={g.grade}>
+                {plainText(names[g.name_key] ?? String(g.grade))}
+              </option>
+            ))}
         </select>
       </label>
 
@@ -225,7 +237,8 @@ function EngravingCard({
             onChange={(e) => onChange({ ...slot, book: Number(e.target.value) })}
             className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
           >
-            {[0, 1, 2, 3, 4].map((v) => (
+            {/* 1-based: the growth code has no level 0 within a grade. */}
+            {Array.from({ length: meta.bookMaxLevel }, (_, i) => i + 1).map((v) => (
               <option key={v} value={v}>
                 {v}
               </option>
@@ -245,7 +258,7 @@ function EngravingCard({
             onChange={(e) => onChange({ ...slot, stone: Number(e.target.value) })}
             className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
           >
-            {[0, 1, 2, 3, 4].map((v) => (
+            {Array.from({ length: meta.stoneMaxLevel + 1 }, (_, i) => i).map((v) => (
               <option key={v} value={v}>
                 {v}
               </option>

@@ -41,13 +41,15 @@ def build(tables: Tables) -> dict[str, object]:
     class_rows = classes.extract(tables)
     bracelet_lines = bracelets.option_lines(tables)
     engraving_rows = engravings.extract(tables)
+    engraving_penalties = engravings.stone_penalties(tables)
+    stone_bonus = engravings.stone_level_bonus(tables)
 
     keys = set(arkgrid.localization_keys(cores))
     keys.update(classes.localization_keys(class_rows))
     keys.update(arkgrid.GRADE_NAME_KEYS.values())
     keys.update(arkpassive.localization_keys())
     keys.update(bracelets.localization_keys(bracelet_lines))
-    keys.update(engravings.localization_keys(engraving_rows))
+    keys.update(engravings.localization_keys(engraving_rows, engraving_penalties))
     for group in (slots, support_slots):
         for slot in group:
             keys.add(slot["name_key"])
@@ -90,6 +92,12 @@ def build(tables: Tables) -> dict[str, object]:
                 str(k): v for k, v in engravings.GRADE_COLOUR_KEYS.items()
             },
             "uiKeys": engravings.UI_KEYS,
+            "bookGrades": engravings.BOOK_GRADES,
+            "bookMaxLevel": engravings.BOOK_MAX_LEVEL,
+            "stoneMaxLevel": engravings.STONE_MAX_LEVEL,
+            "channels": {str(k): v for k, v in engravings.CHANNELS.items()},
+            "stonePenalties": engraving_penalties,
+            "stoneLevelBonus": stone_bonus,
             # 7 of the 95 have icon_slug null: their atlas group ships no
             # texture at all, so the UI must render a placeholder.
             "engravings": engraving_rows,
@@ -104,6 +112,11 @@ def build(tables: Tables) -> dict[str, object]:
                 "arkCores": len(cores),
                 "braceletLines": len(bracelet_lines),
                 "engravings": len(engraving_rows),
+                "engravingAmps": sum(
+                    1
+                    for e in engraving_rows.values()
+                    if e["amp"]["dps"] or e["amp"]["support"] or e["heal_amp"]["support"]
+                ),
                 "localeKeys": len(keys),
                 "arkGridSlots": len(slots),
                 "classes": len(class_rows),

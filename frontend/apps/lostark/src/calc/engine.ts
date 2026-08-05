@@ -63,11 +63,47 @@ const PALADIN_CLASS_IDS = new Set([105, 113])
 const PALADIN_VITALITY_FACTOR = 2.1
 const DEFAULT_VITALITY_FACTOR = 2
 
+/** The fields of an engraving that scoring needs. */
+export type EngravingAmpSource = {
+  slug: string
+  amp: { dps: Record<string, number>; support: Record<string, number> }
+  heal_amp: { dps: Record<string, number>; support: Record<string, number> }
+}
+
 /**
- * Engraving amp for one slot.
+ * Engraving amp for one slot, from the client's own table.
  *
- * Fan-site sourced (see fansite.generated.ts): the client has no BattlePoint
- * Type keyed by AbilityEngrave ids, so there is nothing to prefer over this.
+ * BattlePoint Type 10 keys the amps by a REWORKED ("S3") ability id rather than
+ * the roster id, which is why an earlier pass concluded no Type was keyed by
+ * engravings at all. `EFTable_AbilityMapping` joins the two.
+ *
+ * The grid is indexed by a growth code composing the stone and book dials:
+ * `20 * stone + 1 + 4 * (grade - 2) + level`. The stone is a second independent
+ * axis, NOT extra engraving levels, and the grid is exactly additive over the
+ * two — verified at every checkable cell of all 31 grids.
+ *
+ * Returns 0 for the 15 general engravings the game grants no power: defensive
+ * and utility ones genuinely score nothing.
+ */
+export function engravingAmpFromClient(
+  slot: { name: string; grade: number; book: number; stone: number },
+  role: 'dps' | 'support',
+  byName: Map<string, EngravingAmpSource>,
+): number {
+  if (!slot.name || !slot.grade) return 0
+  const e = byName.get(slot.name)
+  if (!e) return 0
+  const code = String(20 * slot.stone + 1 + 4 * (slot.grade - 2) + slot.book)
+  // The heal channel is a separate BattlePoint Type; it sums with the score one
+  // the same way the support role's two components do elsewhere.
+  return (e.amp[role][code] ?? 0) + (e.heal_amp[role][code] ?? 0)
+}
+
+/**
+ * Engraving amp for one slot, fan-site sourced.
+ *
+ * Retained only for the values the client does not cover. Prefer
+ * `engravingAmpFromClient`.
  */
 export function engravingAmp(
   slot: { name: string; book: number; stone: number },
@@ -232,6 +268,7 @@ export function buildAmps(
   loadout: Loadout,
   coeffs: RoleCoefficients,
   braceletLines: BraceletAmp[] = [],
+  engravingsByName: Map<string, EngravingAmpSource> = new Map(),
 ): AmpRow[] {
   const rows: AmpRow[] = []
 
@@ -284,7 +321,7 @@ export function buildAmps(
 
   // Engravings compound, like gems and affix lines.
   const engProduct = loadout.engravings.reduce(
-    (acc, e) => acc * (1 + engravingAmp(e, loadout.role)),
+    (acc, e) => acc * (1 + engravingAmpFromClient(e, loadout.role, engravingsByName)),
     1,
   )
   rows.push({ name: '刻印效果', value: engProduct - 1 })
@@ -341,6 +378,7 @@ export function evaluate(
   coeffs: RoleCoefficients,
   gear: GearByLevel,
   braceletLines: BraceletAmp[] = [],
+  engravingsByName: Map<string, EngravingAmpSource> = new Map(),
 ): Result {
   const mainStat =
     (gearMainTotal(gear, loadout.itemLevel, loadout.armourGroup) + MAIN_STAT_FLAT) *
@@ -348,7 +386,7 @@ export function evaluate(
   const weaponAttack = weaponAttackOf(gear, loadout.itemLevel, loadout.weaponId)
   const baseAttack = round(Math.sqrt((weaponAttack * mainStat) / 6), 2)
   const basicAttack = baseAttack * (1 + stoneBasic(loadout.engravings))
-  const amps = buildAmps(loadout, coeffs, braceletLines)
+  const amps = buildAmps(loadout, coeffs, braceletLines, engravingsByName)
 
   const primary: ScoreComponent = {
     key: loadout.role,
