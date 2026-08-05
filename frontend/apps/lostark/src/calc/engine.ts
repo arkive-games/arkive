@@ -84,19 +84,25 @@ export type EngravingAmpSource = {
  *
  * Returns 0 for the 15 general engravings the game grants no power: defensive
  * and utility ones genuinely score nothing.
+ *
+ * `channel` picks which BattlePoint type to read. Type 10 feeds the damage or
+ * support SCORE; Type 11 is the separate heal channel and must feed the heal
+ * component instead, exactly as the orb's heal amp does. Summing the two into
+ * one number counted 妙手回春's heal amp as support score — and since that
+ * engraving has no Type 10 cells at all, it inflated the wrong half of the
+ * total and left the heal half untouched.
  */
 export function engravingAmpFromClient(
   slot: { name: string; grade: number; book: number; stone: number },
   role: 'dps' | 'support',
   byName: Map<string, EngravingAmpSource>,
+  channel: 'score' | 'heal' = 'score',
 ): number {
   if (!slot.name || !slot.grade) return 0
   const e = byName.get(slot.name)
   if (!e) return 0
   const code = String(20 * slot.stone + 1 + 4 * (slot.grade - 2) + slot.book)
-  // The heal channel is a separate BattlePoint Type; it sums with the score one
-  // the same way the support role's two components do elsewhere.
-  return (e.amp[role][code] ?? 0) + (e.heal_amp[role][code] ?? 0)
+  return (channel === 'heal' ? e.heal_amp[role][code] : e.amp[role][code]) ?? 0
 }
 
 /**
@@ -421,7 +427,15 @@ export function evaluate(
     (1 + HP_FIXED_AMP)
 
   const orb = loadout.orbId ? coeffs.orb_values[loadout.orbId] : undefined
+  // Engraving heal amps (BattlePoint Type 11) belong here, not in the support
+  // score, for the same reason the orb's heal amp does. They compound like the
+  // score-side engraving amps.
+  const engHealProduct = loadout.engravings.reduce(
+    (acc, e) => acc * (1 + engravingAmpFromClient(e, loadout.role, engravingsByName, 'heal')),
+    1,
+  )
   const healAmps: AmpRow[] = [{ name: '乐园宝珠', value: orb?.heal_amp ?? 0 }]
+  if (engHealProduct !== 1) healAmps.push({ name: '刻印恢复', value: engHealProduct - 1 })
 
   const heal: ScoreComponent = {
     key: 'heal',

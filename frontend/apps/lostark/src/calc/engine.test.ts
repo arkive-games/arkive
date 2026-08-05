@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { braceletAmp } from './engine'
+import { braceletAmp, engravingAmpFromClient } from './engine'
 
 /**
  * Bracelet compounding used to be covered end-to-end by picking two lines in
@@ -34,5 +34,46 @@ describe('braceletAmp', () => {
 
   it('contributes nothing for lines the game grants no power', () => {
     expect(braceletAmp(['zero'], 'dps', lines)).toBe(0)
+  })
+})
+
+/**
+ * Engraving amps split across two BattlePoint types, and the split matters.
+ *
+ * Type 10 feeds the damage or support SCORE; Type 11 is the heal channel and
+ * belongs to the separate heal component, exactly as the orb's heal amp does.
+ * 妙手回春 is the only engraving with a Type 11 grid and it has NO Type 10 cells,
+ * so summing the two channels counted its heal amp as support score: it inflated
+ * the wrong half of the total and left the heal half at zero.
+ */
+describe('engravingAmpFromClient channels', () => {
+  const slot = { name: 'heal-one', grade: 4, book: 1, stone: 0 }
+  // grade 4, book 1, stone 0 -> 20*0 + 1 + 4*2 + 1 = 10
+  const byName = new Map([
+    [
+      'heal-one',
+      {
+        slug: 'heal_one',
+        amp: { dps: {}, support: {} },
+        heal_amp: { dps: {}, support: { '10': 0.35 } },
+      },
+    ],
+  ])
+
+  it('keeps the heal channel out of the score', () => {
+    expect(engravingAmpFromClient(slot, 'support', byName)).toBe(0)
+    expect(engravingAmpFromClient(slot, 'support', byName, 'score')).toBe(0)
+  })
+
+  it('reads the heal channel only when asked', () => {
+    expect(engravingAmpFromClient(slot, 'support', byName, 'heal')).toBeCloseTo(0.35, 10)
+  })
+
+  it('is zero for a role the grid does not cover', () => {
+    expect(engravingAmpFromClient(slot, 'dps', byName, 'heal')).toBe(0)
+  })
+
+  it('is zero without a grade, since the growth code needs one', () => {
+    expect(engravingAmpFromClient({ ...slot, grade: 0 }, 'support', byName, 'heal')).toBe(0)
   })
 })
