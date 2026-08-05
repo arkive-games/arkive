@@ -1,4 +1,3 @@
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@gamemap/ui'
 import type { EngravingSlot } from '@/calc/types'
 import type { Engraving, EngravingMeta } from '@/lib/data'
 import { RichText, plainText } from './RichText'
@@ -35,12 +34,15 @@ export function EngravingGrid({
   slots,
   /** Names that carry combat power for this role, for the （无战力）marker. */
   scoring,
+  amps,
   onChange,
 }: {
   meta: EngravingMeta
   names: Record<string, string>
   slots: EngravingSlot[]
   scoring: Set<string>
+  /** Each slot's own combat-power contribution, for the card corner. */
+  amps: number[]
   onChange: (index: number, next: EngravingSlot) => void
 }) {
   // Sorted so the ones that actually move the score come first: 15 of the 43
@@ -66,6 +68,7 @@ export function EngravingGrid({
           meta={meta}
           names={names}
           scoring={scoring}
+          amp={amps[i] ?? 0}
           // A slot keeps its own stone select once it has one; only slots
           // without a stone are locked out when two are already spent.
           stoneLocked={slot.stone === 0 && stoneUsed >= MAX_STONE_SLOTS}
@@ -83,6 +86,7 @@ function EngravingCard({
   meta,
   names,
   scoring,
+  amp,
   stoneLocked,
   onChange,
 }: {
@@ -92,6 +96,7 @@ function EngravingCard({
   meta: EngravingMeta
   names: Record<string, string>
   scoring: Set<string>
+  amp: number
   stoneLocked: boolean
   onChange: (next: EngravingSlot) => void
 }) {
@@ -101,128 +106,102 @@ function EngravingCard({
   const desc = picked?.desc_key ? names[picked.desc_key] : undefined
   const effect = picked ? effectText(picked, slot, names) : undefined
 
+  const tooltip = (
+    <>
+      <div className="text-base font-medium">
+        {slot.name ? (
+          // The grade's own colour, from sys.engrave.name_color_grade_*.
+          <RichText
+            text={
+              grade
+                ? (names[meta.gradeColourKeys[String(grade.grade)]] ?? '{0}').replace(
+                    '{0}',
+                    slot.name,
+                  )
+                : slot.name
+            }
+          />
+        ) : (
+          (plainText(names[meta.uiKeys.empty] ?? '') || '未选择')
+        )}
+      </div>
+      {picked && !picked.icon_slug ? (
+        <p className="mt-1 text-xs text-muted-foreground">客户端中未能解析此刻印的图标。</p>
+      ) : null}
+      {/* The scaled effect text. Ability.Desc is fixed at one level (怨恨 reads
+          "4%" there no matter the books or stone), so it is only the fallback
+          when no channel resolves. */}
+      {effect ? (
+        <p className="mt-2 whitespace-pre-line text-xs leading-relaxed">
+          <RichText text={effect} />
+        </p>
+      ) : desc && !desc.includes('<$') ? (
+        <p className="mt-2 text-xs leading-relaxed">
+          <RichText text={desc} />
+        </p>
+      ) : null}
+      {slot.name && !scoring.has(slot.name) ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          游戏数据表中此刻印没有战斗力系数，计为 0。
+        </p>
+      ) : null}
+    </>
+  )
+
   return (
     <article className="min-w-0 rounded-xl border border-border bg-card p-3">
-      {/* The icon, centred, carrying the description hovercard. */}
-      <div className="flex justify-center">
-        <HoverCard openDelay={120} closeDelay={120}>
-          <HoverCardTrigger asChild>
-            <button
-              type="button"
-              aria-label={`${label} 效果`}
-              className="relative grid size-16 cursor-help place-items-center rounded-md transition-transform hover:scale-105"
-            >
-              {picked?.icon_slug ? (
-                <img
-                  src={`engravings/${picked.icon_slug}.png`}
-                  alt=""
-                  width={64}
-                  height={64}
-                  className="rounded-md"
-                />
-              ) : (
-                // Two different empties. A slot with nothing in it gets the
-                // usual `+`; an engraving with no resolvable sprite gets its
-                // first character so it does not read as unselected. No
-                // engraving currently takes the second branch.
-                <span
-                  aria-hidden
-                  className={`grid size-full place-items-center rounded-md border border-dashed leading-none ${
-                    slot.name
-                      ? 'border-accent/50 text-xl font-medium text-foreground'
-                      : 'border-border text-2xl font-light text-muted-foreground'
-                  }`}
-                >
-                  {slot.name ? slot.name.slice(0, 1) : '+'}
-                </span>
-              )}
-            </button>
-          </HoverCardTrigger>
-          <HoverCardContent
-            side="right"
-            align="start"
-            className="max-h-80 w-72 overflow-auto border-border bg-card text-foreground"
-          >
-            <div className="text-base font-medium">
-              {slot.name ? (
-                // The grade's own colour, from sys.engrave.name_color_grade_*.
-                <RichText
-                  text={
-                    grade
-                      ? (names[meta.gradeColourKeys[String(grade.grade)]] ?? '{0}').replace(
-                          '{0}',
-                          slot.name,
-                        )
-                      : slot.name
-                  }
-                />
-              ) : (
-                (plainText(names[meta.uiKeys.empty] ?? '') || '未选择')
-              )}
-            </div>
-            {picked && !picked.icon_slug ? (
-              <p className="mt-1 text-xs text-muted-foreground">
-                客户端中未能解析此刻印的图标。
-              </p>
-            ) : null}
-            {/* The scaled effect text. Ability.Desc is fixed at one level (怨恨
-                reads "4%" there no matter the books or stone), so it is only the
-                fallback when no channel resolves. */}
-            {effect ? (
-              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed">
-                <RichText text={effect} />
-              </p>
-            ) : desc && !desc.includes('<$') ? (
-              <p className="mt-2 text-xs leading-relaxed">
-                <RichText text={desc} />
-              </p>
-            ) : null}
-            {slot.name && !scoring.has(slot.name) ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                游戏数据表中此刻印没有战斗力系数，计为 0。
-              </p>
-            ) : null}
-          </HoverCardContent>
-        </HoverCard>
+      {/* Slot number left, this card's own contribution right. */}
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <span className="text-sm font-medium">{label}</span>
+        {amp ? (
+          <span className="shrink-0 text-xs tabular-nums text-accent">
+            +{(amp * 100).toFixed(2)}%
+          </span>
+        ) : (
+          <span className="shrink-0 text-xs text-muted-foreground">—</span>
+        )}
       </div>
 
+      {/* The tile IS the picker trigger: large icon over the name. */}
+      <EngravingPicker
+        label={label}
+        options={options}
+        value={slot.name}
+        scoring={scoring}
+        tooltip={tooltip}
+        labels={{
+          // NOT uiKeys.empty: that resolves to "未装备刻印。", a tooltip
+          // sentence rather than a control label, and it overflows the tile.
+          empty: '未选择',
+          search: '搜索刻印…',
+          notFound: '没有匹配的刻印',
+          noPower: '无战力',
+        }}
+        onChange={(name) =>
+          onChange({
+            ...slot,
+            name,
+            // Picking lands on 遗物, and the growth code has no level 0.
+            // Clearing drops both so an empty slot never keeps them.
+            grade: name ? slot.grade || DEFAULT_GRADE : 0,
+            book: name ? Math.max(1, slot.book) : 0,
+          })
+        }
+      />
+
+      {/* Quality, then level and stone. Each carries its own name in its
+          options rather than in a label above it — 等级 and 能力石 have no empty
+          state (level starts at 1, stone 0 is a real value), so a placeholder
+          alone could not identify them. */}
       <div className="mt-2">
-        <EngravingPicker
-          label={label}
-          options={options}
-          value={slot.name}
-          scoring={scoring}
-          labels={{
-            // NOT uiKeys.empty: that resolves to "未装备刻印。", a tooltip
-            // sentence rather than a control label, and it overflows the trigger.
-            empty: '未选择',
-            search: '搜索刻印…',
-            notFound: '没有匹配的刻印',
-            noPower: '无战力',
-          }}
-          onChange={(name) =>
-            onChange({
-              ...slot,
-              name,
-              // Picking lands on 遗物, and the growth code has no level 0.
-              // Clearing drops both so an empty slot never keeps them.
-              grade: name ? slot.grade || DEFAULT_GRADE : 0,
-              book: name ? Math.max(1, slot.book) : 0,
-            })
-          }
-        />
-      </div>
-
-      <label className="mt-2 block">
-        <span className="text-xs text-muted-foreground">品质</span>
         <select
           aria-label={`${label} 品质`}
           value={slot.grade}
           disabled={!slot.name}
           onChange={(e) => onChange({ ...slot, grade: Number(e.target.value) })}
-          className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
+          className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
         >
-          <option value={0}>—</option>
+          <option value={0}>品质</option>
           {/* Only the growth ladder: epic / legend / relic. 基本 (grade 1) is
               not on it — the amp grid's book axis starts at epic, so offering it
               would index a cell the client does not define. */}
@@ -234,46 +213,44 @@ function EngravingCard({
               </option>
             ))}
         </select>
-      </label>
+      </div>
 
       <div className="mt-2 flex gap-2">
-        <label className="min-w-0 flex-1">
-          <span className="text-xs text-muted-foreground">等级</span>
+        <div className="min-w-0 flex-1">
           <select
             aria-label={`${label} 等级`}
             value={slot.book}
             disabled={!slot.name}
             onChange={(e) => onChange({ ...slot, book: Number(e.target.value) })}
-            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
+            className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
           >
-            {/* 1-based: the growth code has no level 0 within a grade. */}
+            {/* 1-based: the growth code has no level 0 within a grade. 级 is the
+                client's own unit, from ui_title_arkpassive_level. */}
             {Array.from({ length: meta.bookMaxLevel }, (_, i) => i + 1).map((v) => (
               <option key={v} value={v}>
-                {v}
+                {v}级
               </option>
             ))}
           </select>
-        </label>
-        <label className="min-w-0 flex-1">
-          {/* sys.ability.spec_tooltip_grade_0 — the client's word for the stone. */}
-          <span className="text-xs text-muted-foreground">
-            {plainText(names[meta.uiKeys.stone] ?? '') || '能力石'}
-          </span>
+        </div>
+        <div className="min-w-0 flex-1">
           <select
             aria-label={`${label} 能力石`}
             value={slot.stone}
             disabled={!slot.name || stoneLocked}
             title={stoneLocked ? '最多两个刻印可镶嵌能力石' : undefined}
             onChange={(e) => onChange({ ...slot, stone: Number(e.target.value) })}
-            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
+            className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
           >
+            {/* 石 abbreviates sys.ability.spec_tooltip_grade_0 (能力石); the full
+                word does not fit beside the level in a fifth of the row. */}
             {Array.from({ length: meta.stoneMaxLevel + 1 }, (_, i) => i).map((v) => (
               <option key={v} value={v}>
-                {v}
+                石{v}
               </option>
             ))}
           </select>
-        </label>
+        </div>
       </div>
     </article>
   )

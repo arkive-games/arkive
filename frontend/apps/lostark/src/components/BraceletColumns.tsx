@@ -1,5 +1,6 @@
 import type { BraceletLine, BraceletMeta } from '@/lib/data'
 import { RichText, plainText } from './RichText'
+import { SearchSelect } from './SearchSelect'
 
 /**
  * Bracelet option lines as three columns — 基本效果 / 战斗特性 / 刻印效果.
@@ -43,24 +44,37 @@ export function BraceletColumns({
         const line = lines.find((l) => l.id === current)
         return (
           <div key={column} className="min-w-0 rounded-xl border border-border bg-card p-3">
-            <div className="text-sm font-medium">{groupName(column)}</div>
-            <select
-              aria-label={groupName(column)}
-              value={current}
-              onChange={(e) => {
-                const next = [...selected]
-                next[i] = e.target.value
-                onChange(next)
-              }}
-              className="mt-2 w-full rounded-md border border-border bg-background px-2 py-1 text-base"
-            >
-              <option value="">未选择</option>
-              {lines.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {label(l, names, role)}
-                </option>
-              ))}
-            </select>
+            {/* Title left, this column's own contribution right. */}
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="min-w-0 truncate text-sm font-medium">{groupName(column)}</span>
+              <Amp value={line?.amp[role] ?? 0} />
+            </div>
+            <div className="mt-2">
+              <SearchSelect
+                ariaLabel={groupName(column)}
+                options={lines.map((l) => ({
+                  value: l.id,
+                  label: plainLabel(l, names),
+                  search: l.id,
+                  meta: l.amp[role] ? (
+                    <span className="shrink-0 text-xs tabular-nums text-accent">
+                      +{(l.amp[role] * 100).toFixed(2)}%
+                    </span>
+                  ) : undefined,
+                }))}
+                value={current}
+                onChange={(next) => {
+                  const list = [...selected]
+                  list[i] = next
+                  onChange(list)
+                }}
+                labels={{
+                  empty: '未选择',
+                  search: '搜索词条…',
+                  notFound: '没有匹配的词条',
+                }}
+              />
+            </div>
             {/* The full effect text, with the game's own colour spans. Option
                 elements cannot carry markup, so it goes below the select. */}
             <p className="mt-2 min-h-8 text-xs leading-relaxed">
@@ -78,19 +92,26 @@ export function BraceletColumns({
 }
 
 /**
- * A one-line label for the dropdown.
+ * A one-line label for the list.
  *
- * Effect text runs long and carries newlines, so it is truncated here and shown
- * in full under the select. Lines that score are suffixed with their amp, since
- * that is what the picker is actually for.
+ * Effect text runs long and carries newlines, so it is flattened here and shown
+ * in full under the picker. The amp rides along as the row's `meta` rather than
+ * being glued onto the label, so it stays right-aligned.
  */
-function label(line: BraceletLine, names: Record<string, string>, role: 'dps' | 'support'): string {
-  const text = plainText(names[line.name_key ?? ''] ?? fallback(line))
+function plainLabel(line: BraceletLine, names: Record<string, string>): string {
+  return plainText(names[line.name_key ?? ''] ?? fallback(line))
     .replace(/\s+/g, ' ')
     .trim()
-  const short = text.length > 34 ? `${text.slice(0, 33)}…` : text
-  const amp = line.amp[role]
-  return amp ? `${short} · +${(amp * 100).toFixed(2)}%` : short
+}
+
+/** A card's own contribution, for the top-right corner. */
+function Amp({ value }: { value: number }) {
+  if (!value) return <span className="shrink-0 text-xs text-muted-foreground">—</span>
+  return (
+    <span className="shrink-0 text-xs tabular-nums text-accent">
+      +{(value * 100).toFixed(2)}%
+    </span>
+  )
 }
 
 /**

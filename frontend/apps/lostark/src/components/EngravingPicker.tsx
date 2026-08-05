@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
-import { Check, ChevronsUpDown, Plus, X } from 'lucide-react'
+import { Check, Plus } from 'lucide-react'
 import {
-  Button,
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -16,12 +18,17 @@ import {
 import type { Engraving } from '@/lib/data'
 
 /**
- * Searchable engraving picker — the same Popover + cmdk pattern palworld's
- * PalPicker uses, on the same shared primitives.
+ * Engraving picker whose trigger IS the card's tile — large icon on the first
+ * line, name on the second — rather than a separate combobox row.
  *
- * A plain `<select>` was unusable at this size: 43 options with no way to type,
- * and the icon could only appear outside the control. Here the icon sits on every
- * row and on the trigger, and typing filters on name and slug.
+ * The list is the Popover + cmdk pattern palworld's PalPicker uses, on the same
+ * shared primitives. Typing filters on the name and the latin slug, so the list
+ * is reachable without switching IME.
+ *
+ * The tile is both the Popover trigger (click to choose) and the HoverCard
+ * trigger (hover to read the scaled effect text). Radix clones props onto the
+ * child, so nesting the two `asChild` triggers over one button gives both
+ * behaviours without a second affordance competing for the card's width.
  */
 
 export interface EngravingOption {
@@ -35,6 +42,7 @@ export function EngravingPicker({
   value,
   scoring,
   labels,
+  tooltip,
   onChange,
 }: {
   label: string
@@ -44,13 +52,13 @@ export function EngravingPicker({
   /** Names that carry combat power for the current role. */
   scoring: Set<string>
   labels: { empty: string; search: string; notFound: string; noPower: string }
+  /** Hovercard body — the scaled effect text, built by the card. */
+  tooltip: React.ReactNode
   onChange: (name: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const selected = value ? options.find((o) => o.name === value) ?? null : null
 
-  // cmdk filters on each item's `value`, so index the slug alongside the name —
-  // it makes the list reachable from a latin keyboard without switching IME.
   const searchText = useMemo(() => {
     const m = new Map<string, string>()
     for (const o of options) m.set(o.name, `${o.name} ${o.engraving.slug}`)
@@ -59,55 +67,53 @@ export function EngravingPicker({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          aria-label={`${label}: ${selected ? selected.name : labels.empty}`}
-          className="h-9 w-full justify-start gap-1.5 px-1.5 font-normal"
-        >
-          {selected ? (
-            <>
-              <Icon option={selected} className="size-5" />
-              <span className="min-w-0 flex-1 truncate text-left">{selected.name}</span>
+      <HoverCard openDelay={160} closeDelay={120}>
+        <HoverCardTrigger asChild>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              role="combobox"
+              aria-expanded={open}
+              aria-label={`${label}: ${selected ? selected.name : labels.empty}`}
+              className={cn(
+                'flex w-full flex-col items-center gap-1.5 rounded-lg border p-2 transition-colors',
+                selected
+                  ? 'border-border bg-background hover:border-accent/60 hover:bg-accent/10'
+                  : 'border-dashed border-border bg-muted/20 hover:border-accent/60 hover:bg-accent/10',
+              )}
+            >
+              {selected ? (
+                <TileIcon option={selected} />
+              ) : (
+                <span
+                  aria-hidden
+                  className="grid size-14 place-items-center rounded-md border border-dashed border-border text-2xl font-light leading-none text-muted-foreground"
+                >
+                  <Plus className="size-6" />
+                </span>
+              )}
               <span
-                role="button"
-                tabIndex={-1}
-                aria-label={labels.empty}
-                className="shrink-0 rounded p-0.5 hover:bg-accent"
-                onClick={(e) => {
-                  // Keep the click off the trigger, or clearing also opens the list.
-                  e.stopPropagation()
-                  onChange('')
-                }}
+                className={cn(
+                  'w-full truncate text-center text-sm',
+                  selected ? 'font-medium' : 'text-muted-foreground',
+                )}
               >
-                <X className="size-3.5 opacity-60" />
+                {selected ? selected.name : labels.empty}
               </span>
-            </>
-          ) : (
-            // No icon box on an empty trigger: the card already shows a large
-            // placeholder directly above it, and five columns leave too little
-            // width to spend on a second one.
-            <>
-              <span className="min-w-0 flex-1 truncate text-left text-muted-foreground">
-                {labels.empty}
-              </span>
-              <ChevronsUpDown className="size-3.5 shrink-0 opacity-50" />
-            </>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        // The column is far narrower than the list needs, so size to the
-        // viewport rather than the trigger; Radix shifts it back on-screen.
-        className="w-[min(20rem,calc(100vw-1.5rem))] p-0"
-        align="start"
-      >
+            </button>
+          </PopoverTrigger>
+        </HoverCardTrigger>
+        <HoverCardContent
+          side="right"
+          align="start"
+          className="max-h-80 w-72 overflow-auto border-border bg-card text-foreground"
+        >
+          {tooltip}
+        </HoverCardContent>
+      </HoverCard>
+      <PopoverContent className="w-[min(22rem,calc(100vw-1.5rem))] p-0" align="start">
         <Command
-          filter={(v, search) =>
-            v.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0
-          }
+          filter={(v, search) => (v.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0)}
         >
           <CommandInput placeholder={labels.search} />
           <CommandList>
@@ -125,7 +131,9 @@ export function EngravingPicker({
                   <Plus className="size-3.5" />
                 </span>
                 <span className="truncate text-muted-foreground">{labels.empty}</span>
-                <Check className={cn('ml-auto size-4 shrink-0', value ? 'opacity-0' : 'opacity-100')} />
+                <Check
+                  className={cn('ml-auto size-4 shrink-0', value ? 'opacity-0' : 'opacity-100')}
+                />
               </CommandItem>
               {options.map((o) => (
                 <CommandItem
@@ -137,17 +145,18 @@ export function EngravingPicker({
                   }}
                   className="gap-2"
                 >
-                  <Icon option={o} />
+                  <RowIcon option={o} />
                   <span className="min-w-0 flex-1 truncate">{o.name}</span>
                   {/* 15 of the 43 have no BattlePoint grid; say so on the row
                       rather than letting them silently score zero. */}
                   {scoring.has(o.name) ? null : (
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {labels.noPower}
-                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{labels.noPower}</span>
                   )}
                   <Check
-                    className={cn('size-4 shrink-0', o.name === value ? 'opacity-100' : 'opacity-0')}
+                    className={cn(
+                      'size-4 shrink-0',
+                      o.name === value ? 'opacity-100' : 'opacity-0',
+                    )}
                   />
                 </CommandItem>
               ))}
@@ -159,27 +168,43 @@ export function EngravingPicker({
   )
 }
 
-function Icon({ option, className }: { option: EngravingOption; className?: string }) {
+function TileIcon({ option }: { option: EngravingOption }) {
   const slug = option.engraving.icon_slug
-  if (!slug) {
-    // Defensive: every engraving resolves through IconInfo.loa today.
-    return (
-      <span
-        className={cn(
-          'grid size-6 shrink-0 place-items-center rounded border border-dashed border-border text-xs text-muted-foreground',
-          className,
-        )}
-      >
-        {option.name.slice(0, 1)}
-      </span>
-    )
-  }
+  if (!slug) return <Fallback name={option.name} className="size-14 text-xl" />
+  return (
+    <img
+      src={`engravings/${slug}.png`}
+      alt=""
+      width={56}
+      height={56}
+      className="size-14 rounded-md object-contain"
+    />
+  )
+}
+
+function RowIcon({ option }: { option: EngravingOption }) {
+  const slug = option.engraving.icon_slug
+  if (!slug) return <Fallback name={option.name} className="size-6 text-xs" />
   return (
     <img
       src={`engravings/${slug}.png`}
       alt=""
       loading="lazy"
-      className={cn('size-6 shrink-0 rounded bg-black/5 object-contain dark:bg-white/10', className)}
+      className="size-6 shrink-0 rounded bg-black/5 object-contain dark:bg-white/10"
     />
+  )
+}
+
+/** Defensive: every engraving resolves through IconInfo.loa today. */
+function Fallback({ name, className }: { name: string; className?: string }) {
+  return (
+    <span
+      className={cn(
+        'grid shrink-0 place-items-center rounded-md border border-dashed border-accent/50 font-medium text-foreground',
+        className,
+      )}
+    >
+      {name.slice(0, 1)}
+    </span>
   )
 }

@@ -40,6 +40,7 @@ export function ArkPassiveGrid({
   names,
   loadout,
   hasLeapKarma,
+  amps,
   onChange,
 }: {
   meta: ArkPassiveMeta
@@ -47,6 +48,8 @@ export function ArkPassiveGrid({
   loadout: Loadout
   /** Support coefficients omit the leap karma rate, so the dial is hidden. */
   hasLeapKarma: boolean
+  /** Each tree's own contribution, keyed by tree, for the card corner. */
+  amps: Record<string, number>
   onChange: (patch: Partial<Loadout>) => void
 }) {
   return (
@@ -59,6 +62,7 @@ export function ArkPassiveGrid({
           names={names}
           loadout={loadout}
           hasLeapKarma={hasLeapKarma}
+          amp={amps[tree.key] ?? 0}
           onChange={onChange}
         />
       ))}
@@ -72,6 +76,7 @@ function TreeCard({
   names,
   loadout,
   hasLeapKarma,
+  amp,
   onChange,
 }: {
   tree: ArkPassiveTree
@@ -79,6 +84,8 @@ function TreeCard({
   names: Record<string, string>
   loadout: Loadout
   hasLeapKarma: boolean
+  /** This tree's own contribution, shown in the card corner. */
+  amp: number
   onChange: (patch: Partial<Loadout>) => void
 }) {
   const name = plainText(names[tree.name_key] ?? tree.key)
@@ -107,14 +114,23 @@ function TreeCard({
           : 'transparent',
       }}
     >
-      {/* Row 1 — which tree. The name is the client's own enum label. */}
+      {/* Row 1 — the tree's name only (the client's own enum label), with this
+          card's own contribution in the corner. The tier used to sit here; it is
+          on the bottom line with the other two dials now. */}
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-base font-medium" style={{ color: lit ? tree.colour : undefined }}>
+        <span
+          className="min-w-0 truncate text-base font-medium"
+          style={{ color: lit ? tree.colour : undefined }}
+        >
           {name}
         </span>
-        <span className="text-sm text-muted-foreground">
-          {format(names[uiKeys.tier], tier)}
-        </span>
+        {amp ? (
+          <span className="shrink-0 text-xs tabular-nums text-accent">
+            +{(amp * 100).toFixed(2)}%
+          </span>
+        ) : (
+          <span className="shrink-0 text-xs text-muted-foreground">—</span>
+        )}
       </div>
 
       {/* Row 2 — the medallion, centred, carrying the hovercard. */}
@@ -181,52 +197,47 @@ function TreeCard({
         </HoverCard>
       </div>
 
-      {/* Row 3 — points, above the bottom line. */}
-      <label className="flex items-center justify-between gap-2">
-        <span className="text-sm text-muted-foreground">{POINTS_LABEL}</span>
+      {/* Row 3 — the three dials on one line: points, tier, level. Each
+          carries its name as the field's own placeholder rather than a label
+          above it, which is what lets all three fit. */}
+      <div className="mt-2 grid grid-cols-3 gap-2">
         <input
           type="number"
           aria-label={`${name} 点数`}
+          placeholder={POINTS_LABEL}
           min={0}
           max={MAX_POINTS}
-          value={points}
-          onChange={(e) => onChange({ [POINT_FIELD[tree.key]]: clamp(e.target.value, 0, MAX_POINTS) })}
-          className="w-24 rounded-md border border-border bg-background px-2 py-1 text-right text-base"
+          value={points || ''}
+          onChange={(e) =>
+            onChange({ [POINT_FIELD[tree.key]]: clamp(e.target.value, 0, MAX_POINTS) })
+          }
+          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-right text-sm"
         />
-      </label>
-
-      {/* Bottom line — tier and level. Each is present only where the client
-          gives the tree that dial. */}
-      <div className="mt-2 flex items-end gap-2 border-t border-border pt-2">
-        <label className="min-w-0 flex-1">
-          <span className="block text-sm text-muted-foreground">{unit(names[uiKeys.tier])}</span>
-          <select
-            aria-label={`${name} 阶位`}
-            value={tier}
-            disabled={!tree.rank_scores}
-            onChange={(e) => onChange({ karmaEvolutionStage: Number(e.target.value) })}
-            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-base disabled:opacity-40"
-          >
-            {Array.from({ length: tree.tiers + 1 }, (_, i) => (
-              <option key={i} value={i}>
-                {i === 0 ? '—' : i}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="min-w-0 flex-1">
-          <span className="block text-sm text-muted-foreground">等级</span>
-          <input
-            type="number"
-            aria-label={`${name} 等级`}
-            min={0}
-            max={100}
-            value={showLevel ? loadout.karmaLeapLevel : 0}
-            disabled={!showLevel}
-            onChange={(e) => onChange({ karmaLeapLevel: clamp(e.target.value, 0, 100) })}
-            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-right text-base disabled:opacity-40"
-          />
-        </label>
+        <select
+          aria-label={`${name} 阶位`}
+          value={tier}
+          disabled={!tree.rank_scores}
+          onChange={(e) => onChange({ karmaEvolutionStage: Number(e.target.value) })}
+          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
+        >
+          <option value={0}>{unit(names[uiKeys.tier])}</option>
+          {Array.from({ length: tree.tiers }, (_, i) => i + 1).map((i) => (
+            <option key={i} value={i}>
+              {format(names[uiKeys.tier], i)}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          aria-label={`${name} 等级`}
+          placeholder="等级"
+          min={0}
+          max={100}
+          value={showLevel ? loadout.karmaLeapLevel || '' : ''}
+          disabled={!showLevel}
+          onChange={(e) => onChange({ karmaLeapLevel: clamp(e.target.value, 0, 100) })}
+          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-right text-sm disabled:opacity-40"
+        />
       </div>
     </article>
   )

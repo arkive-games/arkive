@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
 import { BuildInfo, SiteFooter } from '@gamemap/ui'
 import changelog from './changelog.json'
-import { armourGroups, evaluate, weaponOptions, type EngravingAmpSource } from '@/calc/engine'
+import {
+  armourGroups,
+  engravingAmpFromClient,
+  evaluate,
+  weaponOptions,
+  type EngravingAmpSource,
+} from '@/calc/engine'
 import type { Loadout } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
 import {
@@ -123,6 +129,46 @@ export default function App() {
     }
     return out
   }, [engravingsByName, loadout.role])
+
+  /**
+   * Each ark-grid slot's own contribution, so a card can show it in its corner
+   * rather than making you find the matching row in the rail.
+   */
+  const coreAmps = useMemo(() => {
+    if (!coeffs) return []
+    return loadout.cores.map(
+      (core) => (core.id ? coeffs.ark_core_values[core.id]?.[String(core.optionIndex)] : 0) ?? 0,
+    )
+  }, [coeffs, loadout.cores])
+
+  /**
+   * Each Ark Passive tree's contribution. Evolution and Leap fold in their karma
+   * dial (BattlePoint Types 8 and 9) so the card corner matches what the tree as
+   * a whole adds, not just its points.
+   */
+  const arkPassiveAmps = useMemo<Record<string, number>>(() => {
+    if (!coeffs) return {} as Record<string, number>
+    return {
+      evolution:
+        Math.max(0, (loadout.arkEvolution - 40) * coeffs.evolution_rate) +
+        loadout.karmaEvolutionStage * coeffs.karma_stage_step,
+      enlightenment: loadout.arkEnlightenment * coeffs.enlightenment_rate,
+      leap:
+        loadout.arkLeap * coeffs.leap_rate +
+        (coeffs.leap_karma_rate !== undefined
+          ? loadout.karmaLeapLevel * coeffs.leap_karma_rate
+          : 0),
+    }
+  }, [coeffs, loadout])
+
+  /** Each engraving slot's own contribution, from the client's growth grid. */
+  const engravingAmps = useMemo(
+    () =>
+      loadout.engravings.map((slot) =>
+        engravingAmpFromClient(slot, loadout.role, engravingsByName),
+      ),
+    [loadout.engravings, loadout.role, engravingsByName],
+  )
 
   const result = useMemo(() => {
     if (!data || !coeffs) return null
@@ -349,6 +395,7 @@ export default function App() {
               names={data.names}
               loadout={loadout}
               hasLeapKarma={coeffs.leap_karma_rate !== undefined}
+              amps={arkPassiveAmps}
               onChange={(patch) => setLoadout((l) => ({ ...l, ...patch }))}
             />
           </Section>
@@ -359,6 +406,7 @@ export default function App() {
               cores={loadout.cores}
               classId={loadout.classId}
               names={data.names}
+              amps={coreAmps}
               onChange={(i, next) => {
                 const list = [...loadout.cores]
                 list[i] = next
@@ -389,6 +437,7 @@ export default function App() {
               names={data.names}
               slots={loadout.engravings}
               scoring={scoringEngravings}
+              amps={engravingAmps}
               onChange={(i, next) => {
                 const list = [...loadout.engravings]
                 list[i] = next

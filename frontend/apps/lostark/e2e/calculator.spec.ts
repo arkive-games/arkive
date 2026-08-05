@@ -484,8 +484,11 @@ test('the karma hovercard uses the game format strings, not raw templates', asyn
   // sys.arkpassive.ui_title_arkpassive_point is "{0}P" and
   // ui_title_list_item_tier is "{0}阶位" — a placeholder leaking through here
   // means a format string got rendered as a label.
-  await expect(page.getByText('120P')).toBeVisible()
-  await expect(page.getByText('4阶位').first()).toBeVisible()
+  const tip = page.locator('[data-slot="hover-card-content"]')
+  await expect(tip.getByText('120P')).toBeVisible()
+  // Scoped to the hovercard: 4阶位 is also an <option> on the tier select,
+  // and an option is never "visible" to Playwright.
+  await expect(tip.getByText('4阶位')).toBeVisible()
   await expect(page.getByText('{0}')).toHaveCount(0)
 })
 
@@ -503,7 +506,8 @@ test('bracelet lines come from the client, not the fan-site subset', async ({ pa
   await ready(page)
   // The fan site hard-codes 54 dps rows total. The client's engraving group
   // alone offers far more, so a small count here means the old table is back.
-  const engraving = await page.locator('select[aria-label="刻印效果"] option').count()
+  await page.locator('[role="combobox"][aria-label^="刻印效果"]').click()
+  const engraving = await page.locator('[cmdk-item]').count()
   expect(engraving).toBeGreaterThan(200)
 })
 
@@ -511,12 +515,9 @@ test('picking a scoring bracelet line moves the score', async ({ page }) => {
   await ready(page)
   const before = await score(page).textContent()
 
-  const select = page.locator('select[aria-label="刻印效果"]')
-  // Scoring lines are the ones labelled with their amp.
-  const value = await select
-    .locator('option')
-    .evaluateAll((els) => els.find((e) => e.textContent?.includes('%'))?.getAttribute('value'))
-  await select.selectOption(value ?? '')
+  // Scoring lines are the ones whose row carries an amp.
+  await page.locator('[role="combobox"][aria-label^="刻印效果"]').click()
+  await page.locator('[cmdk-item]').filter({ hasText: '%' }).first().click()
 
   await expect(score(page)).not.toHaveText(before ?? '')
   // Scoped to the amp list: the coverage notice also names 手镯 now.
@@ -565,11 +566,13 @@ test('a fresh engraving pick lands on 遗物 level 1', async ({ page }) => {
   await expect(grade).toBeEnabled()
   await expect(grade.locator('option:checked')).toHaveText('遗物')
   // The growth code has no level 0, so the level dial starts at 1.
-  await expect(page.getByLabel('刻印 1 等级').locator('option:checked')).toHaveText('1')
+  await expect(page.getByLabel('刻印 1 等级').locator('option:checked')).toHaveText('1级')
 
   // Clearing the slot drops the grade with it, so an empty slot never keeps one.
-  await page.locator('[role="combobox"][aria-label^="刻印 1"] [role="button"]').click()
-  await expect(grade.locator('option:checked')).toHaveText('—')
+  // Clearing through the list's own clear row; the tile trigger has no × now.
+  await page.locator('[role="combobox"][aria-label^="刻印 1"]').click()
+  await page.locator('[cmdk-item]').first().click()
+  await expect(grade.locator('option:checked')).toHaveText('品质')
 })
 
 test('engravings with no coefficient say so instead of scoring silently', async ({
@@ -593,12 +596,13 @@ test('engraving quality offers only the growth ladder', async ({ page }) => {
   // The amp grid's book axis starts at epic, so 基本 (grade 1) is not on the
   // ladder — offering it would index a cell the client does not define.
   const grades = page.locator('select[aria-label="刻印 1 品质"] option')
-  await expect(grades).toHaveText(['—', '英雄', '传说', '遗物'])
+  // The first option doubles as the placeholder, so it reads 品质 rather than —.
+  await expect(grades).toHaveText(['品质', '英雄', '传说', '遗物'])
   await expect(page.locator('select[aria-label="刻印 1 等级"] option')).toHaveText([
-    '1',
-    '2',
-    '3',
-    '4',
+    '1级',
+    '2级',
+    '3级',
+    '4级',
   ])
 })
 
@@ -643,7 +647,7 @@ test('the effect text scales with level and stone', async ({ page }) => {
 
   const tip = page.locator('[data-slot="hover-card-content"]')
   const read = async () => {
-    await page.getByLabel('刻印 1 效果').hover()
+    await page.locator('[role="combobox"][aria-label^="刻印 1"]').hover()
     await expect(tip).toBeVisible()
     const text = await tip.innerText()
     await page.mouse.move(2, 2)

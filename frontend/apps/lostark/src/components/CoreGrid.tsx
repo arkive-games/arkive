@@ -35,12 +35,15 @@ export function CoreGrid({
   cores,
   classId,
   names,
+  amps,
   onChange,
 }: {
   slots: ArkGridSlot[]
   cores: CoreSelection[]
   classId: number
   names: Record<string, string>
+  /** Each slot's own combat-power contribution, for the card corner. */
+  amps: number[]
   onChange: (index: number, next: CoreSelection) => void
 }) {
   return (
@@ -53,6 +56,7 @@ export function CoreGrid({
           classId={classId}
           selection={cores[i] ?? { id: '', optionIndex: 0 }}
           names={names}
+          amp={amps[i] ?? 0}
           onChange={(next) => onChange(i, next)}
         />
       ))}
@@ -65,12 +69,14 @@ function CoreCard({
   classId,
   selection,
   names,
+  amp,
   onChange,
 }: {
   slot: ArkGridSlot
   classId: number
   selection: CoreSelection
   names: Record<string, string>
+  amp: number
   onChange: (next: CoreSelection) => void
 }) {
   const slotName = names[slot.name_key] ?? slot.key
@@ -141,42 +147,52 @@ function CoreCard({
       className="rounded-xl border p-3 transition-colors"
       style={{ borderColor: style.ring, background: style.wash }}
     >
-      {/* Row 1 — which core, and at what quality. */}
-      <div className="grid grid-cols-2 gap-2">
-        <label className="block min-w-0">
-          <span className="text-sm text-muted-foreground">核心</span>
-          <select
-            aria-label={`${slotName} 核心`}
-            value={variantIndex}
-            onChange={(e) => pick(Number(e.target.value), gradeKey)}
-            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-base"
-          >
-            <option value={-1}>未选择</option>
-            {variants.map((v, vi) => (
-              <option key={vi} value={vi}>
-                {plainText(names[v.name_key] ?? v.name_key)}
-                {Object.values(v.grades).every((g) => !g.scores) ? '（无战力）' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block min-w-0">
-          <span className="text-sm text-muted-foreground">品质</span>
-          <select
-            aria-label={`${slotName} 品质`}
-            value={gradeKey}
-            disabled={variantIndex < 0}
-            onChange={(e) => pick(variantIndex, e.target.value)}
-            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1 text-base disabled:opacity-40"
-          >
-            <option value="">未装配</option>
-            {Object.entries(variant?.grades ?? {}).map(([g, info]) => (
-              <option key={g} value={g}>
-                {names[info.name_key] ?? `Grade ${g}`}
-              </option>
-            ))}
-          </select>
-        </label>
+      {/* Row 1 — the slot's own name, and what this card contributes. The
+          controls below carry their instruction as a placeholder option instead
+          of a label, which buys the card a title without growing taller. */}
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="min-w-0 truncate text-sm font-medium" style={{ color: gradeKey ? style.text : undefined }}>
+          {slotName}
+        </span>
+        {amp ? (
+          <span className="shrink-0 text-xs tabular-nums text-accent">
+            +{(amp * 100).toFixed(2)}%
+          </span>
+        ) : (
+          <span className="shrink-0 text-xs text-muted-foreground">—</span>
+        )}
+      </div>
+
+      {/* Row 2 — which core, and at what quality. */}
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <select
+          aria-label={`${slotName} 核心`}
+          value={variantIndex}
+          onChange={(e) => pick(Number(e.target.value), gradeKey)}
+          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-sm"
+        >
+          <option value={-1}>核心</option>
+          {variants.map((v, vi) => (
+            <option key={vi} value={vi}>
+              {plainText(names[v.name_key] ?? v.name_key)}
+              {Object.values(v.grades).every((g) => !g.scores) ? '（无战力）' : ''}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label={`${slotName} 品质`}
+          value={gradeKey}
+          disabled={variantIndex < 0}
+          onChange={(e) => pick(variantIndex, e.target.value)}
+          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
+        >
+          <option value="">品质</option>
+          {Object.entries(variant?.grades ?? {}).map(([g, info]) => (
+            <option key={g} value={g}>
+              {names[info.name_key] ?? `Grade ${g}`}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Row 2 — the icon, large. It carries the hovercard, so it is the thing
@@ -244,9 +260,11 @@ function CoreCard({
             align="start"
             className="max-h-[22rem] w-80 overflow-auto border-border bg-card text-foreground"
           >
-            {/* The slot name lives here rather than on the card, keeping the
-                card itself to just the three controls. */}
-            <div className="text-base font-medium">{slotName}</div>
+            {/* The slot name is on the card now, so the card's own title is
+                not repeated here; this leads with the equipped core. */}
+            <div className="text-base font-medium">
+              {variant ? plainText(names[variant.name_key] ?? variant.name_key) : slotName}
+            </div>
             {gradeKey ? (
               <div className="mt-0.5 text-xs" style={{ color: style.text }}>
                 {plainText(names[variant?.name_key ?? ''] ?? '')} · {plainText(names[grade?.name_key ?? ''] ?? '')}
