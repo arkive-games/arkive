@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.4.0",
+      "date": "2026-08-05",
+      "commit": "97cab345f446f5db45c97791568161564d9c971d",
+      "changes": [
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Bracelet options now come from the game client, picked as the three groups the game offers, with 65 more effects than before.",
+            "zh-CN": "手镯词条改用游戏客户端数据，按游戏原有的三组分栏选择，可选效果比此前多 65 项。",
+            "zh-TW": "手鍊詞條改用遊戲客戶端資料，按遊戲原有的三組分欄選擇，可選效果比此前多 65 項。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.3.0",
       "date": "2026-08-05",
       "commit": "438365f1c246456b1b3d629c402370688e48d174",
