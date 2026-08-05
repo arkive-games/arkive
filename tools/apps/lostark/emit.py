@@ -6,7 +6,7 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import arkgrid, battlepoint, classes, itemlevel, locales
+from . import arkgrid, arkpassive, battlepoint, classes, itemlevel, locales
 from .db import Tables
 
 VERSION_FILE = "version.json"
@@ -34,6 +34,7 @@ def build(tables: Tables) -> dict[str, object]:
     keys = set(arkgrid.localization_keys(cores))
     keys.update(classes.localization_keys(class_rows))
     keys.update(arkgrid.GRADE_NAME_KEYS.values())
+    keys.update(arkpassive.localization_keys())
     for group in (slots, support_slots):
         for slot in group:
             keys.add(slot["name_key"])
@@ -54,6 +55,10 @@ def build(tables: Tables) -> dict[str, object]:
         "gear/item-levels.json": gear,
         "arkgrid/cores.json": cores,
         "arkgrid/slots.json": {"dps": slots, "support": support_slots},
+        "arkpassive/trees.json": {
+            "trees": arkpassive.trees(),
+            "uiKeys": arkpassive.UI_KEYS,
+        },
         "classes.json": class_rows,
         VERSION_FILE: {
             "source": "lostark-explorer",

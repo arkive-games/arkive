@@ -21,6 +21,7 @@ import {
 import { Field, NumberField, Section, SelectField } from '@/components/Fields'
 import { ScoreRail } from '@/components/ScoreRail'
 import { CoreGrid } from '@/components/CoreGrid'
+import { ArkPassiveGrid } from '@/components/ArkPassiveGrid'
 
 export default function App() {
   const [data, setData] = useState<Dataset | null>(null)
@@ -311,44 +312,15 @@ export default function App() {
             />
           </Section>
 
-          <Section title="方舟被动 / 业力">
-            <NumberField
-              label="进化"
-              value={loadout.arkEvolution}
-              min={0}
-              max={200}
-              onChange={(v) => set('arkEvolution', v)}
+          {/* The section title is the client's own: sys.arkpassive.ui_title. */}
+          <Section title={data.names[data.arkPassive.uiKeys.title] ?? '方舟被动'}>
+            <ArkPassiveGrid
+              meta={data.arkPassive}
+              names={data.names}
+              loadout={loadout}
+              hasLeapKarma={coeffs.leap_karma_rate !== undefined}
+              onChange={(patch) => setLoadout((l) => ({ ...l, ...patch }))}
             />
-            <NumberField
-              label="顿悟"
-              value={loadout.arkEnlightenment}
-              min={0}
-              max={200}
-              onChange={(v) => set('arkEnlightenment', v)}
-            />
-            <NumberField
-              label="飞跃"
-              value={loadout.arkLeap}
-              min={0}
-              max={200}
-              onChange={(v) => set('arkLeap', v)}
-            />
-            <NumberField
-              label="进化阶段"
-              value={loadout.karmaEvolutionStage}
-              min={0}
-              max={6}
-              onChange={(v) => set('karmaEvolutionStage', v)}
-            />
-            {coeffs.leap_karma_rate !== undefined && (
-              <NumberField
-                label="飞跃等级"
-                value={loadout.karmaLeapLevel}
-                min={0}
-                max={100}
-                onChange={(v) => set('karmaLeapLevel', v)}
-              />
-            )}
           </Section>
 
           <Section title="方舟星阵核心">

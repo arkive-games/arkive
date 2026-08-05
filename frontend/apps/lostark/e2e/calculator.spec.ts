@@ -426,6 +426,58 @@ test('the theme toggle cycles dark to auto to light and survives a reload', asyn
   await expect(html).not.toHaveClass(/dark/)
 })
 
+test('ark passive renders three trees named by the client', async ({ page }) => {
+  await ready(page)
+  // tip.name.enum_arkpassivegroup_* — the enum behind ArkPassive.Group.
+  for (const tree of ['进化', '顿悟', '飞跃']) {
+    await expect(page.getByLabel(`${tree} 点数`)).toBeVisible()
+  }
+})
+
+test('only the dials the client actually scores are editable', async ({ page }) => {
+  await ready(page)
+  // BattlePoint Type 8 keys off the evolution tier and Type 9 off the leap
+  // level. Enlightenment has neither, so offering it both would be a lie.
+  await expect(page.getByLabel('进化 阶位')).toBeEnabled()
+  await expect(page.getByLabel('进化 等级')).toBeDisabled()
+  await expect(page.getByLabel('顿悟 阶位')).toBeDisabled()
+  await expect(page.getByLabel('顿悟 等级')).toBeDisabled()
+  await expect(page.getByLabel('飞跃 等级')).toBeEnabled()
+  await expect(page.getByLabel('飞跃 阶位')).toBeDisabled()
+})
+
+test('the medallion lights up with the tier and moves the score', async ({ page }) => {
+  await ready(page)
+  const card = page.locator('article', { has: page.getByLabel('进化 点数') })
+
+  // Nothing invested: no medallion, just the placeholder.
+  await expect(card.locator('img')).toHaveCount(0)
+
+  const before = await score(page).textContent()
+  await page.getByLabel('进化 点数').fill('120')
+  await page.getByLabel('进化 阶位').selectOption('4')
+
+  // Tier 4 art, from the use_12 sheet.
+  await expect(card.locator('img')).toHaveAttribute('src', 'karma/evolution_4.png')
+  await expect(score(page)).not.toHaveText(before ?? '')
+})
+
+test('the karma hovercard uses the game format strings, not raw templates', async ({
+  page,
+}) => {
+  await ready(page)
+  await page.getByLabel('进化 点数').fill('120')
+  await page.getByLabel('进化 阶位').selectOption('4')
+  await page.getByLabel('进化 业力').hover()
+
+  // sys.arkpassive.ui_title_arkpassive_point is "{0}P" and
+  // ui_title_list_item_tier is "{0}阶位" — a placeholder leaking through here
+  // means a format string got rendered as a label.
+  await expect(page.getByText('120P')).toBeVisible()
+  await expect(page.getByText('4阶位').first()).toBeVisible()
+  await expect(page.getByText('{0}')).toHaveCount(0)
+})
+
 test('the shared footer is present', async ({ page }) => {
   await ready(page)
   const footer = page.locator('footer')

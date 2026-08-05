@@ -77,6 +77,32 @@ export interface ArkGridSlot {
   by_class: Record<string, ArkGridVariant[]>
 }
 
+/**
+ * One of the three Ark Passive trees.
+ *
+ * `rank_scores` / `level_scores` are stated rather than inferred: BattlePoint
+ * Type 8 keys off the evolution rank and Type 9 off the leap level, and
+ * Enlightenment has neither, so the cards must not offer all three the same
+ * dials.
+ */
+export interface ArkPassiveTree {
+  key: 'evolution' | 'enlightenment' | 'leap'
+  group: number
+  name_key: string
+  karma_name_key: string
+  /** The client's own colour for this tree, from `tip.name.karma_<tree>01`. */
+  colour: string
+  /** Medallion tiers available on the `use_12` sheet. */
+  tiers: number
+  rank_scores: boolean
+  level_scores: boolean
+}
+
+export interface ArkPassiveMeta {
+  trees: ArkPassiveTree[]
+  uiKeys: Record<string, string>
+}
+
 export interface Dataset {
   version: DataVersion
   dps: RoleCoefficients
@@ -84,6 +110,7 @@ export interface Dataset {
   gear: GearByLevel
   cores: Record<string, CoreMeta>
   slots: { dps: ArkGridSlot[]; support: ArkGridSlot[] }
+  arkPassive: ArkPassiveMeta
   classes: PlayerClass[]
   names: Record<string, string>
 }
@@ -106,16 +133,18 @@ export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
     /* unversioned artifact or unreachable — fall back to bare URLs */
   }
 
-  const [version, dps, support, gear, cores, slots, classes, names] = await Promise.all([
-    json<DataVersion>('version.json'),
-    json<RoleCoefficients>('battlepoint/dps.json'),
-    json<RoleCoefficients>('battlepoint/support.json'),
-    json<GearByLevel>('gear/item-levels.json'),
-    json<Record<string, CoreMeta>>('arkgrid/cores.json'),
-    json<{ dps: ArkGridSlot[]; support: ArkGridSlot[] }>('arkgrid/slots.json'),
-    json<PlayerClass[]>('classes.json'),
-    json<Record<string, string>>(`locales/${locale}.json`),
-  ])
+  const [version, dps, support, gear, cores, slots, arkPassive, classes, names] =
+    await Promise.all([
+      json<DataVersion>('version.json'),
+      json<RoleCoefficients>('battlepoint/dps.json'),
+      json<RoleCoefficients>('battlepoint/support.json'),
+      json<GearByLevel>('gear/item-levels.json'),
+      json<Record<string, CoreMeta>>('arkgrid/cores.json'),
+      json<{ dps: ArkGridSlot[]; support: ArkGridSlot[] }>('arkgrid/slots.json'),
+      json<ArkPassiveMeta>('arkpassive/trees.json'),
+      json<PlayerClass[]>('classes.json'),
+      json<Record<string, string>>(`locales/${locale}.json`),
+    ])
 
-  return { version, dps, support, gear, cores, slots, classes, names }
+  return { version, dps, support, gear, cores, slots, arkPassive, classes, names }
 }
