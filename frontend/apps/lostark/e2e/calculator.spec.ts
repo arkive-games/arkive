@@ -482,10 +482,12 @@ test('bracelet offers the three groups the client ships', async ({ page }) => {
   await ready(page)
   // sys.bracelet.option_group_01/02/03. option_group_04 (特殊效果) exists but
   // only the legacy pool 910000010 uses it, so it is not a fourth column.
+  // Matched as a prefix on the combobox: getByLabel is a substring match, and the
+  // section chevrons are labelled 收起<title>, which contains the group name.
   for (const group of ['基本效果', '战斗特性', '刻印效果']) {
-    await expect(page.getByLabel(group)).toBeVisible()
+    await expect(page.locator(`[role="combobox"][aria-label^="${group}"]`)).toBeVisible()
   }
-  await expect(page.getByLabel('特殊效果')).toHaveCount(0)
+  await expect(page.locator('[role="combobox"][aria-label^="特殊效果"]')).toHaveCount(0)
 })
 
 test('bracelet lines come from the client, not the fan-site subset', async ({ page }) => {
@@ -918,4 +920,37 @@ test('a heal-only engraving reports its contribution on the card', async ({ page
   const card = page.locator('article').filter({ hasText: '刻印 1' }).first()
   await expect(card).not.toContainText('—')
   await expect(page.locator('aside').getByText('刻印恢复')).toBeVisible()
+})
+
+test('only the chevron collapses a section, not the header', async ({ page }) => {
+  await ready(page)
+  const title = page.locator('h2', { hasText: '方舟被动' }).first()
+  const section = page.locator('section', { has: title })
+  const body = section.locator('div.border-t')
+  const chevron = section.locator('button[aria-expanded]')
+
+  await expect(body).toBeVisible()
+  // The chevron names the action, so it cannot collide with a content label.
+  await expect(chevron).toHaveAttribute('aria-label', '收起方舟被动')
+
+  // The whole header used to be the button, so every attempt to select the title
+  // collapsed the section instead.
+  await title.click()
+  await expect(body).toBeVisible()
+
+  await chevron.click()
+  await expect(body).toBeHidden()
+  await expect(chevron).toHaveAttribute('aria-expanded', 'false')
+
+  await chevron.click()
+  await expect(body).toBeVisible()
+})
+
+test('the ark passive dials are left-aligned', async ({ page }) => {
+  await ready(page)
+  // Right-aligned numbers read as a total; these are inputs you type into, and
+  // they sit beside two selects whose text is left-aligned.
+  for (const label of ['进化 点数', '飞跃 等级']) {
+    await expect(page.getByLabel(label)).not.toHaveClass(/text-right/)
+  }
 })

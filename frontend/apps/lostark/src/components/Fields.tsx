@@ -1,18 +1,33 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 
+/**
+ * A titled panel with a collapse control.
+ *
+ * Only the chevron toggles. The whole header used to be the button, which meant
+ * every attempt to select the title text collapsed the section instead — an
+ * easy mis-click on a page you scroll through while reading.
+ */
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   const [open, setOpen] = useState(true)
   return (
     <section className="rounded-xl border border-border bg-card/70 backdrop-blur">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between px-4 py-3 text-left"
-      >
-        <span className="text-base font-medium">{title}</span>
-        <span className="text-sm text-muted-foreground">{open ? '▾' : '▸'}</span>
-      </button>
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        {/* Plain text, so it can be selected and read without side effects. */}
+        <h2 className="min-w-0 truncate text-base font-medium">{title}</h2>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          // Names the ACTION, not just the section: a bare title collides with
+          // content labels elsewhere on the page (战斗特性 is both a section and a
+          // bracelet column), and "collapse X" is what the button actually does.
+          aria-label={`${open ? '收起' : '展开'}${title}`}
+          className="-mr-1 shrink-0 rounded p-1 text-sm text-muted-foreground transition-colors hover:bg-accent/20 hover:text-foreground"
+        >
+          {open ? '▾' : '▸'}
+        </button>
+      </div>
       {open && <div className="space-y-2 border-t border-border px-4 py-3">{children}</div>}
     </section>
   )

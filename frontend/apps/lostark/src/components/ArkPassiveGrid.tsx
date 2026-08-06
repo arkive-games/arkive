@@ -211,7 +211,7 @@ function TreeCard({
           onChange={(e) =>
             onChange({ [POINT_FIELD[tree.key]]: clamp(e.target.value, 0, MAX_POINTS) })
           }
-          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-right text-sm"
+          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-sm"
         />
         <select
           aria-label={`${name} 阶位`}
@@ -236,7 +236,7 @@ function TreeCard({
           value={showLevel ? loadout.karmaLeapLevel || '' : ''}
           disabled={!showLevel}
           onChange={(e) => onChange({ karmaLeapLevel: clamp(e.target.value, 0, 100) })}
-          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-right text-sm disabled:opacity-40"
+          className="min-w-0 rounded-md border border-border bg-background px-2 py-1 text-sm disabled:opacity-40"
         />
       </div>
     </article>
