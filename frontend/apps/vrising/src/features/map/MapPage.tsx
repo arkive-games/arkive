@@ -26,6 +26,7 @@ import { mapViewStore, readVisibleSubtypes, writeVisibleSubtypes } from '../../l
 import { resolveMapEngine, useChooseMapEngine, useStoredMapEngine } from '../../lib/mapEngineChoice'
 import { vrisingTheme } from '../../theme'
 import { TopNav } from '../../components/TopNav'
+import { buildPatrolRouteLines } from './patrolRoutes'
 import { regionAt, sortRegionsByArea } from './subzone'
 import { renderMarkerPopup } from './popup'
 
@@ -69,6 +70,7 @@ export default function MapPage() {
   const [regionData, setRegionData] = useState<{ regions: RegionInstance[]; l10n: RegionLocale } | null>(null)
   const [visible, setVisible] = useState<Set<string>>(() => restoredVisible ?? new Set())
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
+  const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null)
   const [selectedPosition, setSelectedPosition] = useState<{ x: number; y: number } | null>(null)
   const [restoredMarkerId, setRestoredMarkerId] = useState<string | null>(null)
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
@@ -212,28 +214,10 @@ export default function MapPage() {
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
 
-  const patrolRouteLines = useMemo(() => {
-    const ambient: NonNullable<GameMapViewProps['overlayLines']> = []
-    const highlighted: NonNullable<GameMapViewProps['overlayLines']> = []
-    for (const marker of engineMarkers) {
-      if (!marker.route || marker.route.length < 2) continue
-      const selected = marker.id === selectedMarkerId
-      if (!selected && !visible.has(marker.subtype)) continue
-      const target = selected ? highlighted : ambient
-      for (let index = 1; index < marker.route.length; index += 1) {
-        const from = marker.route[index - 1]
-        const to = marker.route[index]
-        if (from.x === to.x && from.y === to.y) continue
-        target.push({
-          id: `${marker.id}-route-${index}`,
-          from,
-          to,
-          variant: selected ? 'highlight' : 'ambient',
-        })
-      }
-    }
-    return [...ambient, ...highlighted]
-  }, [engineMarkers, selectedMarkerId, visible])
+  const patrolRouteLines = useMemo(
+    () => buildPatrolRouteLines(engineMarkers, visible, hoveredMarkerId),
+    [engineMarkers, visible, hoveredMarkerId],
+  )
 
   const searchItems: SearchItem[] = useMemo(() => {
     if (!staticData || !map) return []
@@ -302,6 +286,9 @@ export default function MapPage() {
 
   const onToggleMarker = useCallback((id: string | null) => {
     setSelectedMarkerId((cur) => (cur === id ? null : id))
+  }, [])
+  const onHoverMarker = useCallback((id: string | null) => {
+    setHoveredMarkerId(id)
   }, [])
 
   const regionName = useCallback(
@@ -436,6 +423,7 @@ export default function MapPage() {
     suppressInitialFlyForId: restoredMarkerId,
     overlayLines: patrolRouteLines,
     onToggleMarker,
+    onHoverMarker,
     subzoneAt,
     flyToDuration: 0.5,
     assets: vrisingAssets,

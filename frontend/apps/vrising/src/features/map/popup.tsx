@@ -5,7 +5,7 @@ import { MarkerPopupCard, formatCoords } from '@gamemap/map-shell'
 type VrisingMarker = EngineMarker & {
   resourceKind?: string
   resourceDetail?: string
-  movement?: 'fixed'
+  movement?: 'fixed' | 'roaming'
   bossLevel?: number | null
   bossAct?: string | null
   bossRegion?: string | null
@@ -54,7 +54,7 @@ export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactN
       description={marker.localizedDescription}
       noDescriptionLabel={t('noDescription')}
     >
-      {marker.images?.[0] ? (
+      {marker.images?.[0] && !vrising.movement ? (
         <img
           src={marker.images[0]}
           alt=""

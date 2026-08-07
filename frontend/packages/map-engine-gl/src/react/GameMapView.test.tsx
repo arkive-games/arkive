@@ -443,6 +443,37 @@ describe("selected popup", () => {
 });
 
 describe("hover tooltip", () => {
+  it("reports marker hover transitions without repeating the same id", async () => {
+    const marker = makeMarker({ id: "m1", x: 200, y: 300, localizedName: "Alpha" });
+    const onHoverMarker = vi.fn();
+    const { container } = render(
+      <GameMapView
+        {...baseProps({ markers: [marker], onHoverMarker, exposeTestHandle: true })}
+      />,
+    );
+    const canvas = canvasOf(container);
+    const at = handle().project(200, 300);
+
+    act(() => {
+      canvas.dispatchEvent(pointer("pointermove", at.sx, at.sy, 0));
+    });
+    await flushFrames();
+    expect(onHoverMarker).toHaveBeenCalledTimes(1);
+    expect(onHoverMarker).toHaveBeenLastCalledWith("m1");
+
+    act(() => {
+      canvas.dispatchEvent(pointer("pointermove", at.sx + 1, at.sy + 1, 0));
+    });
+    await flushFrames();
+    expect(onHoverMarker).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      canvas.dispatchEvent(pointer("pointermove", at.sx + 200, at.sy + 200, 0));
+    });
+    await flushFrames();
+    expect(onHoverMarker).toHaveBeenLastCalledWith(null);
+  });
+
   it("shows the marker's name chain and nothing for the selected marker", async () => {
     const markers = [
       makeMarker({ id: "m1", x: 200, y: 300, localizedName: "", name: "Raw Name" }),
