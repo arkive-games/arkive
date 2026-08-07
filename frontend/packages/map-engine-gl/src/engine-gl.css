@@ -275,6 +275,9 @@
 }
 
 .gmgl-statusbar-footer {
+  position: absolute;
+  right: 4.25rem;
+  bottom: 0.75rem;
   font-size: 0.75rem;
   line-height: 1;
   color: rgba(255, 255, 255, 0.8);

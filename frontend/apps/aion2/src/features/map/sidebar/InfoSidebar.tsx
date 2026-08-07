@@ -51,7 +51,7 @@ export default function InfoSidebar() {
       classNames={{
         root: "border-l border-border bg-card text-card-foreground",
         collapseButton:
-          "top-4 border border-r-0 border-border bg-card text-[color:var(--arkive-orange)] shadow-sm",
+          "top-4 border border-r-0 border-border bg-card text-foreground shadow-sm dark:text-white",
         content: "px-4 pt-4",
       }}
     >

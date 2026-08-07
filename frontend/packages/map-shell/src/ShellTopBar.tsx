@@ -1,7 +1,6 @@
-import type { ReactNode } from "react"
+import { useState, type FocusEvent, type ReactNode } from "react"
 import {
   IconCheck,
-  IconChevronDown,
   IconLanguage,
   IconMoonStars,
 } from "@tabler/icons-react"
@@ -19,49 +18,41 @@ export interface ShellNavItem {
   key: string
   label: ReactNode
   active?: boolean
-  /**
-   * When present and non-empty, this item renders as a dropdown: `label` (+ a
-   * chevron) is the trigger and each child renders as a menu item via
-   * `renderItem`. Children are leaf links — nested `children` are ignored.
-   */
+  /** Optional leaf links shown in a hover menu. */
   children?: ShellNavItem[]
 }
 
 export interface ShellTopBarNav {
   items: ShellNavItem[]
-  /**
-   * Render one item as a link/button. The shell computes the class string
-   * (base + active/inactive, incl. per-site overrides) and passes it in — the
-   * app just wraps `label` in its router's Link. Keeps the shell router-agnostic.
-   */
+  /** Render one item as a link or button while the shell owns its visual state. */
   renderItem: (
     item: ShellNavItem,
     className: string,
     labelClassName?: string,
   ) => ReactNode
-  /** Per-site overrides appended to the default inactive / active classes. */
   classNames?: {
     item?: string
     itemActive?: string
     label?: string
     labelActive?: string
-    chevron?: string
   }
 }
 
 export interface ShellTopBarProps {
   leftSlot?: ReactNode
-  /** Highlighted navigation shown in the left area; the active item is styled distinctly. */
   nav?: ShellTopBarNav
   rightExtras?: ReactNode
-  /** Global search widget, rendered at the start of the right-side cluster. */
+  /** Legacy right-cluster search slot. Prefer centerSlot for utility search. */
   search?: ReactNode
+  /** Optional utility area visually separated from the right-side controls. */
+  centerSlot?: ReactNode
   languageSwitcher?: {
     languages: { code: string; label: string }[]
     current: string
     onChange: (code: string) => void
     menuLabel: string
     shortLabel?: string
+    icon?: ReactNode
   }
   themeSwitcher?: {
     options: { value: string; label: string }[]
@@ -73,6 +64,7 @@ export interface ShellTopBarProps {
   classNames?: {
     root?: string
     left?: string
+    center?: string
     right?: string
     trigger?: string
     menu?: string
@@ -84,38 +76,61 @@ export function ShellTopBar({
   nav,
   rightExtras,
   search,
+  centerSlot,
   languageSwitcher,
   themeSwitcher,
   classNames,
 }: ShellTopBarProps) {
+  const [hoveredNavKey, setHoveredNavKey] = useState<string | null>(null)
+
   return (
     <header className={cn("flex h-12 shrink-0 items-center gap-6 px-4", classNames?.root)}>
       {(leftSlot || nav) && (
-        // `min-w-0` so this side can actually yield: without it the wrapper
-        // refuses to shrink below its content, so a long left slot pushes the
-        // right-hand controls clean off the viewport instead of letting its own
-        // `truncate` engage. aion2's notice did exactly that — six icons,
-        // search included, sat past the right edge between 768 and ~1000px.
         <div className={cn("flex min-w-0 items-center gap-6", classNames?.left)}>
           {leftSlot}
-          {nav?.items.map((item) =>
-            item.children && item.children.length > 0 ? (
-              <NavDropdown key={item.key} item={item} nav={nav} />
+          {nav?.items.map((item) => {
+            const groupActive = item.active || item.children?.some((child) => child.active)
+            const highlighted = hoveredNavKey === null ? groupActive : hoveredNavKey === item.key
+            return item.children && item.children.length > 0 ? (
+              <NavDropdown
+                key={item.key}
+                item={item}
+                nav={nav}
+                highlighted={highlighted}
+                onHighlight={setHoveredNavKey}
+              />
             ) : (
-              <span key={item.key} className="inline-flex items-center">
+              <span
+                key={item.key}
+                className="inline-flex items-center"
+                onPointerEnter={() => setHoveredNavKey(item.key)}
+                onPointerLeave={() => setHoveredNavKey(null)}
+                onFocus={() => setHoveredNavKey(item.key)}
+                onBlur={() => setHoveredNavKey(null)}
+              >
                 {nav.renderItem(
                   item,
                   navItemClass(item.active, nav),
-                  navItemLabelClass(item.active, nav),
+                  navItemLabelClass(highlighted, nav),
                 )}
               </span>
-            ),
-          )}
+            )
+          })}
         </div>
       )}
-      {/* `shrink-0`: the controls are icon-sized already and must stay reachable,
-          so pressure goes to the left slot, which can truncate. */}
-      <div className={cn("ml-auto flex shrink-0 items-center gap-1", classNames?.right)}>
+      {centerSlot && (
+        <div className={cn("ml-auto hidden min-w-0 xl:flex", classNames?.center)}>
+          {centerSlot}
+        </div>
+      )}
+      <div
+        className={cn(
+          centerSlot
+            ? "ml-auto flex shrink-0 items-center gap-1 xl:ml-0"
+            : "ml-auto flex shrink-0 items-center gap-1",
+          classNames?.right,
+        )}
+      >
         {search}
         {languageSwitcher && (
           <DropdownMenu>
@@ -128,7 +143,7 @@ export function ShellTopBar({
                 title={languageSwitcher.menuLabel}
                 className={classNames?.trigger}
               >
-                <IconLanguage className="size-5" stroke={1.8} />
+                {languageSwitcher.icon ?? <IconLanguage className="size-5" stroke={1.8} />}
                 {languageSwitcher.shortLabel && (
                   <span className="text-sm font-semibold">{languageSwitcher.shortLabel}</span>
                 )}
@@ -185,15 +200,6 @@ export function ShellTopBar({
   )
 }
 
-/**
- * Base + active/inactive classes for a top-bar nav item (link or dropdown trigger).
- *
- * `text-lg`, deliberately a step ABOVE body text: navigation is chrome the eye
- * should find first, and it used to be `text-sm` — a step BELOW the prose it sat
- * above, which read as an afterthought. The bar's `h-12` is 3rem = 51px at the
- * 17px root, so a 1.125rem line box (28.9px) still clears it with room to spare;
- * the pressure from this change is horizontal, not vertical.
- */
 function navItemClass(active: boolean | undefined, nav: ShellTopBarNav): string {
   return cn(
     "text-lg transition-colors",
@@ -203,48 +209,87 @@ function navItemClass(active: boolean | undefined, nav: ShellTopBarNav): string 
   )
 }
 
-function navItemLabelClass(active: boolean | undefined, nav: ShellTopBarNav): string {
-  return cn(nav.classNames?.label, active && nav.classNames?.labelActive)
+function navItemLabelClass(highlighted: boolean | undefined, nav: ShellTopBarNav): string {
+  return cn(nav.classNames?.label, highlighted && nav.classNames?.labelActive)
 }
 
-/** A top-bar item that owns children: renders a dropdown of leaf links. */
-function NavDropdown({ item, nav }: { item: ShellNavItem; nav: ShellTopBarNav }) {
+function NavDropdown({
+  item,
+  nav,
+  highlighted,
+  onHighlight,
+}: {
+  item: ShellNavItem
+  nav: ShellTopBarNav
+  highlighted: boolean | undefined
+  onHighlight: (key: string | null) => void
+}) {
   const children = item.children ?? []
-  const groupActive = item.active || children.some((c) => c.active)
+  const groupActive = item.active || children.some((child) => child.active)
+  const [open, setOpen] = useState(false)
+  const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setOpen(false)
+      onHighlight(null)
+    }
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          data-testid={`nav-dropdown-${item.key}`}
-          className={cn(navItemClass(groupActive, nav), "inline-flex items-center gap-1")}
+    <div
+      className="relative inline-flex items-center"
+      onPointerEnter={() => {
+        setOpen(true)
+        onHighlight(item.key)
+      }}
+      onPointerLeave={() => {
+        setOpen(false)
+        onHighlight(null)
+      }}
+      onFocus={() => {
+        setOpen(true)
+        onHighlight(item.key)
+      }}
+      onBlur={closeWhenFocusLeaves}
+    >
+      <button
+        type="button"
+        data-testid={`nav-dropdown-${item.key}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setOpen(false)
+            onHighlight(null)
+            event.currentTarget.blur()
+          }
+        }}
+        className={cn(navItemClass(groupActive, nav), "inline-flex items-center")}
+      >
+        <span
+          data-slot="nav-item-label"
+          className={navItemLabelClass(highlighted, nav)}
         >
-          <span
-            data-slot="nav-item-label"
-            className={navItemLabelClass(groupActive, nav)}
-          >
-            {item.label}
-          </span>
-          <IconChevronDown
-            className={cn("size-4", nav.classNames?.chevron)}
-            stroke={1.8}
-            aria-hidden
-          />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="z-[2000]">
-        {children.map((child) => (
-          <DropdownMenuItem key={child.key} asChild>
-            {nav.renderItem(
-              child,
-              // `text-lg` to match the trigger these sit under — they are the
-              // same navigation, one level down. DropdownMenuItem's own default
-              // is text-sm, which is right for settings menus and wrong here.
-              cn("w-full text-lg", child.active ? "font-semibold text-primary" : "text-foreground"),
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {item.label}
+        </span>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-0 top-full z-[2000] min-w-44 overflow-hidden rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+        >
+          {children.map((child) => (
+            <div key={child.key} role="none" className="[&>a]:block">
+              {nav.renderItem(
+                child,
+                cn(
+                  "w-full rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none",
+                  child.active ? "font-semibold text-primary" : "text-foreground",
+                ),
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

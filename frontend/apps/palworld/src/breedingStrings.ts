@@ -661,7 +661,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
   },
   'zh-CN': {
     navMap: '地图',
-    navBreeding: '配种',
+    navBreeding: '配种路线',
     title: '配种计算器',
     parentA: '父母 A',
     parentB: '父母 B',
@@ -700,7 +700,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
   },
   'zh-TW': {
     navMap: '地圖',
-    navBreeding: '配種',
+    navBreeding: '配種路線',
     title: '配種計算器',
     parentA: '父母 A',
     parentB: '父母 B',

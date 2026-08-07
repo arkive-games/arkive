@@ -23,10 +23,11 @@ import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
+import { EngineToggle, Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
-import { resolveMapEngine, useChooseMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
+import { MAP_ENGINE_CHOICES, MAP_ENGINE_LABELS, resolveMapEngine, useChooseMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
+import { ICP_BEIAN } from './lib/brand'
 
 // Ray-casting point-in-polygon (point + ring both in map-pixel space).
 function pointInPolygon(x: number, y: number, poly: number[][]): boolean {
@@ -480,7 +481,7 @@ export default function App() {
       id: `warp-${sel.id}`,
       from: { x: sel.x, y: sel.y },
       to: { x: target.x, y: target.y },
-      color: '#35D0E8',
+      color: '#EE8A45',
     }]
   }, [selectedMarkerId, markerRowById, mapId])
 
@@ -538,6 +539,7 @@ export default function App() {
     noMapSelected: t('noMapSelected'),
     zoomIn: t('zoomIn'),
     zoomOut: t('zoomOut'),
+    footerText: ICP_BEIAN ?? undefined,
   }), [t])
 
   const renderPopupContent = useCallback((marker: EngineMarker) => {
@@ -782,7 +784,7 @@ export default function App() {
       searchOptions={PAL_SEARCH_OPTIONS}
       variant={variant}
       classNames={variant === 'floating'
-        ? { root: 'left-1/2 right-auto w-[360px] -translate-x-1/2' }
+        ? { root: 'left-1/2 right-auto w-[min(34rem,calc(100%-2rem))] -translate-x-1/2' }
         : undefined}
     />
   )
@@ -891,12 +893,15 @@ export default function App() {
     )
   }
 
+  const [mapGameName, ...mapSubtitleParts] = t('mapHeader').split(' · ')
+  const mapSubtitle = mapSubtitleParts.join(' · ')
+
   return (
     <>
     <h1 className="sr-only">{t('title')}</h1>
     <ShellLayout
       className="palworld-map-page bg-background text-foreground"
-      topBar={<TopNav active="/" engine={engine} onEngineChange={chooseEngine} />}
+      topBar={<TopNav active="/" />}
       sidebar={
         <ShellSidebar
           width={320}
@@ -905,7 +910,7 @@ export default function App() {
           classNames={{
             root: 'border-r border-[color:var(--pal-divider)] bg-[color:var(--pal-sidebar)] text-sm text-card-foreground shadow-[0.5rem_0_1.5rem_rgba(7,48,64,0.08)]',
             scrollArea: 'palworld-filter-scroll',
-            collapseButton: 'top-4 border border-l-0 border-[color:var(--pal-divider)] bg-card text-[color:var(--pal-gold-ink)] shadow-sm',
+            collapseButton: 'top-4 border border-l-0 border-[color:var(--pal-divider)] bg-card text-foreground shadow-sm dark:text-white',
             content: 'pb-2',
           }}
           headerSlot={
@@ -920,7 +925,8 @@ export default function App() {
                   className="max-h-12 w-auto max-w-52 object-contain object-left drop-shadow-md brightness-0 invert"
                 />
               }
-              title={t('mapHeader')}
+              gameName={mapGameName}
+              subtitle={mapSubtitle}
             />
           }
           mapSelectorSlot={mapSelect}
@@ -933,6 +939,15 @@ export default function App() {
       <main className="relative flex min-w-0 flex-1 overflow-hidden">
         {mapView}
         {searchPanel('floating')}
+        <div className="absolute right-12 top-3 z-[650]">
+          <EngineToggle
+            value={engine}
+            choices={MAP_ENGINE_CHOICES}
+            labels={MAP_ENGINE_LABELS}
+            onChange={chooseEngine}
+            label={t('engineMenu')}
+          />
+        </div>
       </main>
     </ShellLayout>
     </>

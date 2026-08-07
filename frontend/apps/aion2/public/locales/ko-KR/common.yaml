@@ -19,7 +19,7 @@ nav:
 # (각 언어의 자기 표기)를 사용합니다.
 language:
   label: "언어"
-  short: "한 / EN"
+  short: "음성"
 
 auth:
   login: "로그인"

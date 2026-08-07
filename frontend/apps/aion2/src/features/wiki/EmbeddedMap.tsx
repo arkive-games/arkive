@@ -141,7 +141,7 @@ export default function EmbeddedMap({
                 dataToLatLngTuple(map, x, y),
               )}
               pathOptions={{
-                color: "#2E97FF",
+                color: "#0F4C49",
                 weight: 1.5,
                 dashArray: "4 4",
                 fillOpacity: 0.15,
