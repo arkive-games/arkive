@@ -137,7 +137,7 @@ html {
   border-color: color-mix(in srgb, var(--primary) 22%, transparent);
   border-radius: 0.8rem;
   background: color-mix(in srgb, var(--popover) 94%, transparent);
-  box-shadow: 0 0.75rem 2rem rgba(7, 48, 64, 0.16);
+  box-shadow: 0 10px 30px rgba(7, 48, 64, 0.13);
 }
 
 .palworld-map-page [data-testid="search-panel"] [data-testid="marker-search"] {
@@ -173,7 +173,7 @@ html {
   border-color: var(--pal-divider);
   border-radius: 0.8rem;
   background: color-mix(in srgb, var(--popover) 96%, transparent);
-  box-shadow: 0 1rem 2.5rem rgba(7, 48, 64, 0.18);
+  box-shadow: 0 16px 40px rgba(7, 48, 64, 0.14);
 }
 
 .palworld-map-page .gm-zoom,
@@ -186,8 +186,8 @@ html {
 .palworld-map-page .gmgl-zoom-pill {
   border: 1px solid var(--pal-divider);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--card) 95%, transparent);
-  box-shadow: 0 0.5rem 1.5rem rgba(7, 48, 64, 0.16);
+  background: color-mix(in srgb, var(--card) 96%, transparent);
+  box-shadow: 0 8px 24px rgba(7, 48, 64, 0.14);
   backdrop-filter: blur(0.75rem);
 }
 

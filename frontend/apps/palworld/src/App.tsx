@@ -378,6 +378,7 @@ export default function App() {
 
   const searchLabels = useMemo(() => ({
     search: t('search'),
+    placeholder: t('mapSearchPlaceholder'),
     resultsCount: (n: number) => t('resultsCount', { count: n }),
     unnamed: t('unnamed'),
     noDescription: t('noDescription'),
@@ -703,22 +704,16 @@ export default function App() {
   if (!staticData) return <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">Loading…</div>
 
   const mapSelect = (
-    <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-2 border-b border-[color:var(--pal-divider)] px-3 py-3 max-md:pr-8">
-      <span className="text-sm font-bold text-foreground">
-        {t('mapRegion')}
-      </span>
+    <div className="px-3 py-3 max-md:pr-8">
       <ShellMapSelect
         classNames={{
-          trigger: 'min-h-11 rounded-lg border-[color:var(--pal-divider)] bg-card px-3 text-base font-semibold shadow-none hover:border-primary/50 hover:bg-[color:var(--pal-cyan-soft)]',
+          trigger: 'min-h-11 rounded-xl border-[color:var(--pal-divider)] bg-card px-3 text-base font-semibold shadow-none hover:border-primary/50 hover:bg-[color:var(--pal-cyan-soft)]',
           content: 'border-[color:var(--pal-divider)]',
           item: 'data-[state=checked]:bg-[color:var(--pal-cyan-soft)] data-[state=checked]:text-[color:var(--pal-ocean)]',
         }}
         maps={staticData.maps.map((m) => ({
           id: m.id,
           label: staticData.mapsL10n[m.id]?.shortName ?? staticData.mapsL10n[m.id]?.name ?? m.id,
-          // The top pyramid level is a single tile covering the whole map, so it
-          // doubles as a ready-made thumbnail and is already in the browser cache.
-          icon: <img src={palworldAssets.tileUrl(m, 0, 0, m.tileLevels)} alt="" loading="lazy" />,
         }))}
         activeMapId={mapId}
         onSelectMap={setMapId}
@@ -757,9 +752,9 @@ export default function App() {
       ]}
       classNames={{
         root: 'px-3 pb-4',
-        controls: 'mb-2 gap-2',
-        controlButton: 'h-9 min-h-9 justify-center rounded-md border border-[color:var(--pal-divider)] bg-card px-2 text-xs font-semibold text-muted-foreground shadow-none hover:border-primary/35 hover:bg-[color:var(--pal-cyan-soft)] hover:text-foreground',
-        controlButtonActive: 'border-primary/40 bg-[color:var(--pal-ocean)] text-white shadow-none hover:bg-[color:var(--pal-ocean)] hover:text-white',
+        controls: 'mb-2 grid-cols-2 gap-2',
+        controlButton: 'h-9 min-h-9 justify-center rounded-lg border border-[color:var(--pal-divider)] bg-card px-2 text-xs font-semibold text-muted-foreground shadow-none hover:border-primary/35 hover:bg-[color:var(--pal-cyan-soft)] hover:text-foreground',
+        controlButtonActive: 'border-primary/40 bg-[color:var(--pal-cyan-soft)] text-[color:var(--pal-ocean)] shadow-none hover:bg-[color:var(--pal-cyan-soft)] hover:text-[color:var(--pal-ocean)]',
         category: 'border-b border-[color:var(--pal-divider)] py-1.5 last:border-b-0',
         categoryHeader: 'min-h-10 pt-0 pb-0 text-foreground [&>svg]:size-5 [&>svg]:text-foreground/55',
         categoryEyeToggle: 'text-foreground/55 hover:bg-[color:var(--pal-cyan-soft)] hover:text-primary',

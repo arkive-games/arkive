@@ -51,6 +51,27 @@ export const MAP_HEADER_LABELS: Record<Language, string> = {
   'zh-TW': '幻獸帕魯 · 互動地圖',
 }
 
+/** Placeholder shared with the AION2 interactive-map search field. */
+export const MAP_SEARCH_PLACEHOLDER_LABELS: Record<Language, string> = {
+  'en-US': 'Search quests, NPCs, items, or map markers…',
+  'de-DE': 'Quests, NPCs, Gegenstände oder Kartenmarkierungen suchen…',
+  'es-ES': 'Buscar misiones, NPC, objetos o marcadores del mapa…',
+  'es-MX': 'Buscar misiones, NPC, objetos o marcadores del mapa…',
+  'fr-FR': 'Rechercher des quêtes, PNJ, objets ou marqueurs…',
+  'id-ID': 'Cari misi, NPC, item, atau penanda peta…',
+  'it-IT': 'Cerca missioni, PNG, oggetti o indicatori della mappa…',
+  'ja-JP': 'クエスト、NPC、アイテム、マップマーカーを検索…',
+  'ko-KR': '퀘스트, NPC, 아이템 또는 지도 마커 검색…',
+  'pl-PL': 'Szukaj zadań, NPC, przedmiotów lub znaczników mapy…',
+  'pt-BR': 'Buscar missões, NPCs, itens ou marcadores do mapa…',
+  'ru-RU': 'Поиск заданий, NPC, предметов или меток карты…',
+  'th-TH': 'ค้นหาภารกิจ NPC ไอเทม หรือหมุดแผนที่…',
+  'tr-TR': 'Görev, NPC, eşya veya harita işareti ara…',
+  'vi-VN': 'Tìm nhiệm vụ, NPC, vật phẩm hoặc điểm đánh dấu…',
+  'zh-CN': '搜索任务、NPC、物品、地图标记…',
+  'zh-TW': '搜尋任務、NPC、物品、地圖標記…',
+}
+
 /** Accessible name / tooltip for the brand link ("go to the Arkive home page"). */
 export const BRAND_HOME_LABELS: Record<Language, string> = {
   'en-US': 'Arkive home', 'de-DE': 'Arkive-Startseite', 'es-ES': 'Inicio de Arkive',
