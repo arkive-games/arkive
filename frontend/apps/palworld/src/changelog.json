@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.8",
+      "date": "2026-08-08",
+      "commit": "fb950c1bc5b2dad76dcd70c7e5f209e8a6e34b80",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed the renderer selector from the desktop map and mobile More sheet.",
+            "zh-CN": "移除桌面地图与手机更多面板中的地图渲染器选择入口。",
+            "zh-TW": "移除桌面地圖與手機更多面板中的地圖渲染器選擇入口。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.7",
       "date": "2026-08-08",
       "commit": "46b21c991b37c605421bbd19447fad0af7ee4831",
