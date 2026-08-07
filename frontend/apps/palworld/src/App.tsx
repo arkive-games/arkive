@@ -551,17 +551,12 @@ export default function App() {
     const { text: coordText, aria: coordAria } = formatCoords(g.x, g.y, g.z)
     const catText = [catLabel, subLabel].filter(Boolean).join(' / ')
     const regionLabel = regionName(marker.region)
-    // The coords get their own element so the axis-labeled aria/title (which
-    // number is X/Y/Z) rides only on the coordinate, not the whole meta line.
     const metaLine = (
       <>
-        {catText ? `${catText} ` : ''}
-        <span aria-label={coordAria} title={coordAria}>
-          {coordText}
-        </span>
+        {catText}
         {regionLabel ? (
-          <span className="ml-1 text-muted-foreground" data-testid="marker-region">
-            · {regionLabel}
+          <span className="text-muted-foreground" data-testid="marker-region">
+            {catText ? ' / ' : ''}{regionLabel}
           </span>
         ) : null}
       </>
@@ -577,22 +572,20 @@ export default function App() {
     // resolve drops from it — they show the relic item via EffigyItemBadge.
     const dropsPal = pal ?? (!isEffigy && marker.pal && palsBundle ? palsBundle.byId.get(marker.pal) : undefined)
     const drops = dropsPal?.drops ?? marker.drops
+    const iconName = marker.icon || marker.subtypeMeta?.icon || ''
+    const iconUrl = iconName && map ? palworldAssets.markerIconUrl(iconName, map) : undefined
     return (
       <MarkerPopupCard
         idLabel={idLabel}
         name={marker.localizedName || t('unnamed')}
+        icon={iconUrl ? <img src={iconUrl} alt="" className="size-7 object-contain" /> : undefined}
         metaLine={metaLine}
+        positionLabel={t('copyPosition')}
+        positionValue={<span aria-label={coordAria} title={coordAria}>{coordText}</span>}
         description={marker.localizedDescription}
         noDescriptionLabel={t('noDescription')}
+        images={marker.image ? [noteImageUrl(marker.image)] : undefined}
       >
-        {marker.image ? (
-          <img
-            src={noteImageUrl(marker.image)}
-            alt=""
-            loading="lazy"
-            className="mt-3 w-full rounded-md border border-border object-contain"
-          />
-        ) : null}
         {pal ? (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {pal.elements.map((e) => (
@@ -680,10 +673,10 @@ export default function App() {
               onClick={() => toggleCompleted(marker.id)}
               aria-pressed={!!marker.completed}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors',
+                'inline-flex min-h-8 items-center gap-1.5 rounded-md px-3 text-sm font-semibold transition-colors',
                 marker.completed
-                  ? 'bg-[rgba(85,179,76,0.12)] text-[#55B34C]'
-                  : 'border border-[#55B34C] text-[#55B34C] hover:bg-[rgba(85,179,76,0.08)]',
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-[color:var(--arkive-filter-active)] text-primary hover:bg-[color:var(--arkive-filter-hover)]',
               )}
             >
               <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -693,7 +686,7 @@ export default function App() {
         ) : null}
       </MarkerPopupCard>
     )
-  }, [staticData, t, mapId, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName])
+  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName])
 
   if (loadError) {
     return (
@@ -755,14 +748,14 @@ export default function App() {
       classNames={{
         root: 'px-3 pb-4',
         controls: 'mb-2 grid-cols-2 gap-2',
-        controlButton: 'h-9 min-h-9 justify-center rounded-lg border border-[color:var(--pal-divider)] bg-card px-2 text-xs font-semibold text-muted-foreground shadow-none hover:border-primary/35 hover:bg-[color:var(--pal-cyan-soft)] hover:text-foreground',
-        controlButtonActive: 'border-primary/40 bg-[color:var(--pal-cyan-soft)] text-[color:var(--pal-ocean)] shadow-none hover:bg-[color:var(--pal-cyan-soft)] hover:text-[color:var(--pal-ocean)]',
-        category: 'border-b border-[color:var(--pal-divider)] py-1.5 last:border-b-0',
+        controlButton: 'h-9 min-h-9 justify-center rounded-lg border border-[color:var(--arkive-divider)] bg-card px-2 text-xs font-semibold text-muted-foreground shadow-none hover:border-primary/35 hover:bg-[color:var(--arkive-filter-hover)] hover:text-foreground',
+        controlButtonActive: 'border-primary/40 bg-[color:var(--arkive-filter-active)] text-primary shadow-none hover:bg-[color:var(--arkive-filter-active)]',
+        category: 'border-b border-[color:var(--arkive-divider)] py-1.5 last:border-b-0',
         categoryHeader: 'min-h-10 pt-0 pb-0 text-foreground [&>svg]:size-5 [&>svg]:text-foreground/55',
-        categoryEyeToggle: 'text-foreground/55 hover:bg-[color:var(--pal-cyan-soft)] hover:text-primary',
+        categoryEyeToggle: 'text-foreground/55 hover:bg-[color:var(--arkive-filter-hover)] hover:text-primary',
         subtypeGrid: 'gap-x-2 gap-y-1.5 pb-2',
-        subtypeButton: 'h-auto min-h-9 rounded-md border border-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-65 hover:border-[color:var(--pal-divider)] hover:bg-card hover:text-foreground hover:opacity-100',
-        subtypeButtonActive: 'border-primary/20 bg-[color:var(--pal-cyan-soft)] font-semibold text-[color:var(--pal-ocean)] opacity-100 shadow-[inset_0.18rem_0_0_var(--pal-gold)]',
+        subtypeButton: 'h-auto min-h-9 rounded-md border border-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-65 hover:border-[color:var(--arkive-divider)] hover:bg-card hover:text-foreground hover:opacity-100',
+        subtypeButtonActive: 'border-primary/20 bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-[inset_0.18rem_0_0_var(--arkive-orange)]',
       }}
     />
   )
@@ -908,9 +901,9 @@ export default function App() {
           collapseLabel={t('collapse')}
           expandLabel={t('expand')}
           classNames={{
-            root: 'border-r border-[color:var(--pal-divider)] bg-[color:var(--pal-sidebar)] text-sm text-card-foreground shadow-[0.5rem_0_1.5rem_rgba(7,48,64,0.08)]',
+            root: 'border-r border-border bg-[color:var(--pal-sidebar)] text-foreground',
             scrollArea: 'palworld-filter-scroll',
-            collapseButton: 'top-4 border border-l-0 border-[color:var(--pal-divider)] bg-card text-foreground shadow-sm dark:text-white',
+            collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white',
             content: 'pb-2',
           }}
           headerSlot={

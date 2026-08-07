@@ -18,7 +18,7 @@ nav:
 # 语言显示名不做翻译：切换菜单使用 src/i18n.ts 中 LANGUAGE_LABELS 的本族语名称。
 language:
   label: "语言"
-  short: "语音"
+  short: "语言"
 
 ui:
   confirm: "确认"

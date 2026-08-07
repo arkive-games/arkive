@@ -19,7 +19,7 @@ nav:
 # (endonyms) from LANGUAGE_LABELS in src/i18n.ts.
 language:
   label: "Language"
-  short: "Voice"
+  short: "Language"
 
 auth:
   login: "Log in"

@@ -55,15 +55,14 @@ test.describe('site info — desktop', () => {
     await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
   })
 
-  test('the top-bar popover carries the panel on a catalog page', async ({ page }) => {
+  test('the desktop top bar omits the About shortcut', async ({ page }) => {
     await page.goto('/pals')
-    await page.getByTestId('contact-menu').click()
-    await expect(page.getByTestId('site-info-panel')).toBeVisible()
+    await expect(page.getByTestId('contact-menu')).toHaveCount(0)
   })
 
   test('the panel points at the Arkive portal', async ({ page }) => {
-    await page.goto('/pals')
-    await page.getByTestId('contact-menu').click()
+    await page.goto('/')
+    await page.getByTestId('sidebar-toggle-right').click()
     const panel = page.getByTestId('site-info-panel').first()
     await expect(panel).toBeVisible()
     // Blurb: assert the ASCII tail, the head carries the CJK brand alias.

@@ -28,6 +28,10 @@
   --border: rgba(15, 76, 73, 0.15);
   --input: #DDE8E1;
   --ring: #EE8A45;
+  --arkive-orange: #EE8A45;
+  --arkive-filter-active: #F3EEE8;
+  --arkive-filter-hover: #E4F0EA;
+  --arkive-divider: rgba(15, 76, 73, 0.12);
   --pal-ocean: #0F4C49;
   --pal-cyan-soft: #E3EDE7;
   --pal-sidebar: #EEF5F0;
@@ -60,6 +64,10 @@
   --border: rgba(211, 231, 220, 0.15);
   --input: #23403D;
   --ring: #F0A06A;
+  --arkive-orange: #F0A06A;
+  --arkive-filter-active: #3C3931;
+  --arkive-filter-hover: #294945;
+  --arkive-divider: rgba(211, 231, 220, 0.12);
   --pal-ocean: #9AC8B4;
   --pal-cyan-soft: #294945;
   --pal-sidebar: #132F2D;
@@ -256,7 +264,6 @@ html {
 }
 
 .palworld-topbar [data-testid="theme-menu"],
-.palworld-topbar [data-testid="contact-menu"],
 .palworld-topbar [data-testid="lang-menu"] {
   border: 1px solid var(--pal-divider);
   border-radius: 0.55rem;
@@ -264,7 +271,6 @@ html {
 }
 
 .palworld-topbar [data-testid="theme-menu"]:hover,
-.palworld-topbar [data-testid="contact-menu"]:hover,
 .palworld-topbar [data-testid="lang-menu"]:hover {
   background: var(--pal-cyan-soft);
 }

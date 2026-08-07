@@ -1,12 +1,10 @@
-import { IconInfoCircle, IconUserCircle, IconVolume } from '@tabler/icons-react'
+import { IconUserCircle } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ShellTopBar, useTheme, type ShellNavItem, type Theme } from '@gamemap/map-shell'
-import { Button, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
+import { Button } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
-import { GlobalSearchWidget } from './GlobalSearchWidget'
-import { SiteInfo } from './SiteInfo'
 
 function ArkiveMark() {
   return (
@@ -74,7 +72,6 @@ export function TopNav({ active }: { active: NavKey }) {
       classNames={{
         root: 'palworld-topbar hidden h-14 border-b border-border bg-card text-card-foreground md:flex',
         left: 'gap-4',
-        center: 'flex-1 justify-end',
         right: 'gap-2',
         trigger: 'h-9 gap-2 rounded-lg border border-border bg-card px-3 text-foreground shadow-none hover:bg-accent',
         menu: 'rounded-lg border-border bg-popover text-popover-foreground shadow-lg',
@@ -111,35 +108,12 @@ export function TopNav({ active }: { active: NavKey }) {
           </Link>
         ),
       }}
-      centerSlot={
-        <div className="flex items-center gap-1.5">
-          <GlobalSearchWidget />
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                data-testid="contact-menu"
-                aria-label={t('siteInfo.tab')}
-                title={t('siteInfo.tab')}
-                className="size-9 rounded-lg border border-border bg-card text-foreground shadow-none hover:bg-accent"
-              >
-                <IconInfoCircle className="size-5" stroke={1.8} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="max-h-[70vh] w-[320px] overflow-y-auto">
-              <SiteInfo />
-            </PopoverContent>
-          </Popover>
-        </div>
-      }
       languageSwitcher={{
         languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
         current: lng,
         onChange: (code) => void i18n.changeLanguage(code),
         menuLabel: t('settings.language'),
-        shortLabel: t('settings.voice'),
-        icon: <IconVolume className="size-5" stroke={1.8} />,
+        shortLabel: t('settings.language'),
       }}
       themeSwitcher={{
         options: themeOptions.map((value) => ({ value, label: t(`theme${value[0].toUpperCase()}${value.slice(1)}`) })),

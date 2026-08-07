@@ -1,4 +1,4 @@
-import { IconUserCircle, IconVolume } from "@tabler/icons-react";
+import { IconUserCircle } from "@tabler/icons-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ShellTopBar, type ShellNavItem } from "@gamemap/map-shell";
@@ -121,7 +121,6 @@ export default function TopNavbar() {
         onChange: (code) => void i18n.changeLanguage(code),
         menuLabel: t("common:menu.switchLanguage"),
         shortLabel: t("common:language.short"),
-        icon: <IconVolume className="size-5" stroke={1.8} />,
       }}
       themeSwitcher={{
         options: THEME_OPTIONS.map((value) => ({
