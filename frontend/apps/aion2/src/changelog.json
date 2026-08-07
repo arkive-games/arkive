@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.9",
+      "date": "2026-08-08",
+      "commit": "0a16dacca1e9ceb1d25e3e11a39b978c6088d5cd",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Unified every desktop page around Arkive's mist green, deep-sea teal, and warm orange palette; restored the wide map search, hover navigation, aligned game header, and lower-right filing record.",
+            "zh-CN": "桌面端全站统一为藏舟规范的雾绿色、深海青与暖橙主题，并恢复宽版地图搜索、悬停导航、统一游戏标题及右下角备案信息。",
+            "zh-TW": "桌面端全站統一為藏舟規範的霧綠色、深海青與暖橙主題，並恢復寬版地圖搜尋、懸停導覽、統一遊戲標題及右下角備案資訊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.8",
       "date": "2026-08-08",
       "commit": "250b3e5ec0185b728f9633ea87ac13c74ef57dd9",
