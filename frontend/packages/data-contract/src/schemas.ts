@@ -70,6 +70,11 @@ export const markerInstanceSchema = z.object({
   x: z.number(),
   y: z.number(),
   z: z.number().optional(),
+  route: z
+    .array(z.object({ x: z.number(), y: z.number(), z: z.number().optional() }))
+    .optional(),
+  routePrecision: z.literal("chunk-corridor").optional(),
+  movement: z.enum(["fixed", "roaming"]).optional(),
   images: z.array(z.string()),
   contributors: z.array(z.string()),
   icon: z.string().optional(),

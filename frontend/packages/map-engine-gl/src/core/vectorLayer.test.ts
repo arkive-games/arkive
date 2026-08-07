@@ -699,6 +699,43 @@ describe("VectorLayer overlay lines", () => {
     layer.dispose();
   });
 
+  it("separates ambient routes and selected-route highlights", () => {
+    const { layer } = makeLayer();
+    layer.setOverlayLines([
+      {
+        id: "ambient",
+        from: { x: 0, y: 0 },
+        to: { x: 10, y: 0 },
+        variant: "ambient",
+      },
+      { id: "link", from: { x: 0, y: 5 }, to: { x: 10, y: 5 } },
+      {
+        id: "highlight",
+        from: { x: 0, y: 10 },
+        to: { x: 10, y: 10 },
+        variant: "highlight",
+      },
+    ]);
+
+    const ambient = layer.ambientOverlayLinesObject!;
+    const normal = layer.overlayLinesObject!;
+    const highlight = layer.highlightOverlayLinesObject!;
+    expect(segmentCount(ambient)).toBe(1);
+    expect(segmentCount(normal)).toBe(1);
+    expect(segmentCount(highlight)).toBe(1);
+    expect(ambient.material.linewidth).toBe(1.5);
+    expect(ambient.material.opacity).toBeCloseTo(0.28, 6);
+    expect(ambient.material.dashSize).toBe(4);
+    expect(ambient.material.gapSize).toBe(8);
+    expect(highlight.material.linewidth).toBe(4);
+    expect(highlight.material.opacity).toBeCloseTo(0.92, 6);
+    expect(highlight.material.dashSize).toBe(10);
+    expect(highlight.material.gapSize).toBe(5);
+    expect(ambient.renderOrder).toBeLessThan(normal.renderOrder);
+    expect(normal.renderOrder).toBeLessThan(highlight.renderOrder);
+    layer.dispose();
+  });
+
   it("falls back to the injected default colour and honours per-line colours", () => {
     const { layer } = makeLayer({ colors: { overlayLine: "#ff0000" } });
     layer.setOverlayLines([

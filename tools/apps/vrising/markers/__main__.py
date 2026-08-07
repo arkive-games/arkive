@@ -1,4 +1,4 @@
-"""CLI for extracting curated V Rising resources and fixed V Blood spawns."""
+"""CLI for extracting curated V Rising resources and V Blood spawns."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from ..env import require_dir
-from .bosses import extract_fixed_boss_markers
+from .bosses import extract_boss_markers
 from .emit import load_marker_payload
 from .extract import ENTITY_SCENES_RELATIVE, extract_marker_audit
 
@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
         resources = extract_marker_audit(
             game_root / ENTITY_SCENES_RELATIVE, prefabs, PARSED_DIR
         )
-        bosses = extract_fixed_boss_markers(game_root, prefabs, vblood, PARSED_DIR)
+        bosses = extract_boss_markers(game_root, prefabs, vblood, PARSED_DIR)
         payload = load_marker_payload(PARSED_DIR)
         print(
             json.dumps(

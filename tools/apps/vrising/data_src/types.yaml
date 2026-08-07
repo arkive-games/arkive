@@ -59,6 +59,17 @@ categories:
           en-US: A V Blood boss with one or more fixed spawn positions found in the game scenes.
           zh-CN: 从游戏场景中提取的、拥有一个或多个固定出生位置的 V 型血首领。
           zh-TW: 從遊戲場景中擷取的、擁有一個或多個固定出生位置的 V 型血首領。
+      - id: boss-roaming
+        color: "#d74747"
+        defaultActive: true
+        names:
+          en-US: Roaming bosses
+          zh-CN: 巡逻首领
+          zh-TW: 巡邏首領
+        descriptions:
+          en-US: A V Blood boss following an ordered patrol corridor recovered from the game. The line connects 160-unit terrain chunks and does not claim within-chunk road precision.
+          zh-CN: 从游戏内恢复的、沿有序巡逻走廊移动的 V 型血首领。路线连接 160 单位地形区块，不代表区块内部道路的精确位置。
+          zh-TW: 從遊戲內復原的、沿有序巡邏走廊移動的 V 型血首領。路線連接 160 單位地形區塊，不代表區塊內部道路的精確位置。
   - id: resources
     pinVariant: circular
     names:

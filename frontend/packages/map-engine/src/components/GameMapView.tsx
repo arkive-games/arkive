@@ -525,9 +525,9 @@ const GameMapView: React.FC<GameMapViewProps> = ({
             ]}
             pathOptions={{
               color: line.color ?? theme.pinDot,
-              weight: 2.5,
-              opacity: 0.85,
-              dashArray: "8 8",
+              weight: line.variant === "ambient" ? 1.5 : line.variant === "highlight" ? 4 : 2.5,
+              opacity: line.variant === "ambient" ? 0.28 : line.variant === "highlight" ? 0.92 : 0.85,
+              dashArray: line.variant === "ambient" ? "4 8" : line.variant === "highlight" ? "10 5" : "8 8",
             }}
           />
         ))}

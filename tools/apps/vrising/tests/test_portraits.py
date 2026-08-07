@@ -8,11 +8,11 @@ from vrising.markers.portraits import (
 )
 
 
-def test_every_fixed_boss_has_one_unique_reviewed_portrait():
-    assert len(BOSS_PORTRAITS) == 47
-    assert len(set(BOSS_PORTRAITS.values())) == 47
-    assert len(BOSS_SMALL_PORTRAITS) == 47
-    assert len(set(BOSS_SMALL_PORTRAITS.values())) == 47
+def test_every_fixed_and_roaming_boss_has_one_unique_reviewed_portrait():
+    assert len(BOSS_PORTRAITS) == 62
+    assert len(set(BOSS_PORTRAITS.values())) == 62
+    assert len(BOSS_SMALL_PORTRAITS) == 62
+    assert len(set(BOSS_SMALL_PORTRAITS.values())) == 62
 
 
 def test_renamed_bosses_keep_their_reviewed_internal_portrait_names():
@@ -33,6 +33,10 @@ def test_renamed_bosses_keep_their_reviewed_internal_portrait_names():
     assert (
         BOSS_SMALL_PORTRAITS["CHAR_Manticore_VBlood"]
         == "Portrait_Small_Normal_WingedHorror2"
+    )
+    assert (
+        BOSS_SMALL_PORTRAITS["CHAR_Cursed_MountainBeast_VBlood"]
+        == "Portrait_Small_Normal_GorecrusherBehemoth2"
     )
 
 
