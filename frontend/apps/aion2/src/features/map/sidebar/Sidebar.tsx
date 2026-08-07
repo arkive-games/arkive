@@ -14,7 +14,7 @@ export default function Sidebar() {
       expandLabel={t("common:menu.expand", "Expand")}
       label={t("common:menu.markerTypes", "Marker Types")}
       classNames={{
-        root: "border-r border-border bg-[color:var(--arkive-sidebar)] text-foreground",
+        root: "border-r border-border bg-[color:var(--arkive-sidebar)] font-sans text-sm text-foreground",
         scrollArea: "aion2-filter-scroll",
         content: "pb-2",
         collapseButton:

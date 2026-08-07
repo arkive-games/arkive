@@ -72,7 +72,7 @@ export function SiteInfoPanel({ sections, feedbackGroup, className }: SiteInfoPa
   }, [number])
 
   return (
-    <div data-testid="site-info-panel" className={cn("flex flex-col gap-4", className)}>
+    <div data-testid="site-info-panel" className={cn("flex flex-col gap-4 font-sans text-sm", className)}>
       {sections.map((section, i) => (
         <div key={i} className="flex flex-col gap-1">
           {section.title && (

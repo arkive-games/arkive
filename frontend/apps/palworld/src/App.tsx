@@ -898,7 +898,7 @@ export default function App() {
           collapseLabel={t('collapse')}
           expandLabel={t('expand')}
           classNames={{
-            root: 'border-r border-border bg-[color:var(--pal-sidebar)] text-foreground',
+            root: 'border-r border-border bg-[color:var(--pal-sidebar)] font-sans text-sm text-foreground',
             scrollArea: 'palworld-filter-scroll',
             collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white',
             content: 'pb-2',

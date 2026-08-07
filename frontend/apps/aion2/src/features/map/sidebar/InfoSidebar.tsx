@@ -49,7 +49,7 @@ export default function InfoSidebar() {
       // tell this sidebar apart from the filter sidebar on the same page.
       label={label}
       classNames={{
-        root: "border-l border-border bg-card text-card-foreground",
+        root: "border-l border-border bg-card font-sans text-sm text-card-foreground",
         collapseButton:
           "top-4 border border-r-0 border-border bg-card text-foreground shadow-sm dark:text-white",
         content: "px-4 pt-4",

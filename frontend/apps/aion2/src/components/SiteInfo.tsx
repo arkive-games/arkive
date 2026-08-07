@@ -17,12 +17,9 @@ const LOCALE_ONLY = { defaultValue: "", fallbackLng: false } as const;
 /** Renders one locale value as GitHub-flavoured markdown. */
 function Body({ children }: { children: string }) {
   return (
-    // `prose` stays for list markers and link styling — Tailwind's preflight
-    // strips <ol> markers otherwise, and the contact block is a numbered list.
-    // But it also sets its own body colour, which overrode the panel's muted
-    // token and made aion2's body louder than palworld's. Point the plugin's
-    // variable at the same token so the two sites match.
-    <div className="prose prose-sm dark:prose-invert max-w-none break-words [--tw-prose-body:var(--color-muted-foreground)]">
+    // Match Palworld's plain paragraph rhythm exactly. List utilities replace
+    // the marker styles that Tailwind preflight removes from markdown output.
+    <div className="break-words text-sm leading-relaxed text-muted-foreground [&_li]:my-0.5 [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-1 [&_p:last-child]:mb-0 [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-5">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

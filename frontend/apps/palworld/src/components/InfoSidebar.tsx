@@ -46,7 +46,7 @@ export function InfoSidebar() {
       expandLabel={label}
       label={label}
       classNames={{
-        root: 'border-l border-border bg-card text-sm text-card-foreground shadow-[-0.5rem_0_1.5rem_rgba(7,48,64,0.08)]',
+        root: 'border-l border-border bg-card font-sans text-sm text-card-foreground shadow-[-0.5rem_0_1.5rem_rgba(7,48,64,0.08)]',
         collapseButton: 'top-4 border border-r-0 border-border bg-card text-foreground shadow-sm dark:text-white',
         content: 'px-4 pt-4',
       }}
