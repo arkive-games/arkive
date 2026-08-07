@@ -14,7 +14,9 @@ from typing import Iterable
 from ..common import write_json
 from .dots import BufferPatch, Chunk, DotsFile, DotsFormatError
 from .extract import (
+    CHUNK_SPAN,
     ENTITY_SCENES_RELATIVE,
+    WORLD_OFFSET,
     WORLD_ENTITIES_NAME,
     load_prefab_names,
     load_world_placements,
@@ -29,6 +31,8 @@ SERVER_ENTITY_SCENES_RELATIVE = Path(
 )
 
 VBLOOD_SOURCE_HASH = 0x0F6E12A8AC0F8BF6
+GLOBAL_PATROL_STATE_HASH = 0x306E805BE7E45A67
+PATROL_BUS_STOP_NODE_HASH = 0x60486F2701E5B081
 TRANSLATION_HASH = 0xA42DE7CC0763E5BE
 LOCAL_TO_WORLD_HASH = 0x97490261B3C2DE08
 UNIT_ENTRY_HASH = 0x65F288F216C36A6A
@@ -37,6 +41,14 @@ UNIT_ENTRY_HASH = 0x65F288F216C36A6A
 UNIT_ENTRY_SIZE = 16
 UNIT_ENTRY_CAPACITY = 8
 UNIT_BUFFER_STRIDE = 16 + UNIT_ENTRY_SIZE * UNIT_ENTRY_CAPACITY
+
+# PatrolBusStopNode has InternalBufferCapacity(6). Each node stores the
+# authored terrain chunk and a version-4 BusStopGuid. The GUID identifies the
+# road stop at runtime, but its exact within-chunk position is not serialized
+# in a form this static extractor can resolve.
+PATROL_NODE_SIZE = 20
+PATROL_NODE_CAPACITY = 6
+PATROL_BUFFER_STRIDE = 16 + PATROL_NODE_SIZE * PATROL_NODE_CAPACITY
 
 
 @dataclass(frozen=True)
@@ -47,6 +59,21 @@ class UnitEntry:
     custom_vblood_id: int
     custom_vblood_name: str | None
     base_stats_type: int
+
+
+@dataclass(frozen=True)
+class PatrolBusStop:
+    chunk_x: int
+    chunk_y: int
+    bus_stop_guid: str
+
+    @property
+    def world_position(self) -> tuple[float, float, float]:
+        return (
+            self.chunk_x * CHUNK_SPAN - WORLD_OFFSET + CHUNK_SPAN / 2,
+            0.0,
+            self.chunk_y * CHUNK_SPAN - WORLD_OFFSET + CHUNK_SPAN / 2,
+        )
 
 
 def _unique_name(prefab_names: dict[int, tuple[str, ...]], prefab_id: int) -> str:
@@ -169,6 +196,92 @@ def find_unit_entry_buffers(
     if len(candidates) != 1:
         raise DotsFormatError(
             f"{scene.path}: expected one unit-entry buffer layout in chunk "
+            f"{chunk.index}, found {len(candidates)}"
+        )
+    return candidates[0]
+
+
+def _is_version_4_guid(value: bytes | memoryview) -> bool:
+    return (
+        len(value) == 16
+        and (value[6] & 0xF0) == 0x40
+        and (value[8] & 0xC0) == 0x80
+    )
+
+
+def _patrol_nodes_at(
+    chunk_data: bytes,
+    base: int,
+    entity_count: int,
+    patches: dict[int, BufferPatch],
+) -> tuple[tuple[PatrolBusStop, ...], ...] | None:
+    entities: list[tuple[PatrolBusStop, ...]] = []
+    for entity_index in range(entity_count):
+        header_offset = base + entity_index * PATROL_BUFFER_STRIDE
+        pointer, length, capacity = struct.unpack_from("<Qii", chunk_data, header_offset)
+        if pointer != 0 or length <= 0 or capacity < length:
+            return None
+        if capacity == PATROL_NODE_CAPACITY:
+            data = memoryview(chunk_data)[
+                header_offset + 16 : header_offset + 16 + length * PATROL_NODE_SIZE
+            ]
+        else:
+            patch = patches.get(header_offset - 64)
+            if patch is None or patch.element_count != length or patch.capacity != capacity:
+                return None
+            if len(patch.data) < length * PATROL_NODE_SIZE:
+                return None
+            data = patch.data[: length * PATROL_NODE_SIZE]
+
+        nodes: list[PatrolBusStop] = []
+        for index in range(length):
+            offset = index * PATROL_NODE_SIZE
+            chunk_x, chunk_y, padding = struct.unpack_from("<bbH", data, offset)
+            guid = data[offset + 4 : offset + PATROL_NODE_SIZE]
+            if (
+                padding != 0
+                or not 0 <= chunk_x < 40
+                or not 0 <= chunk_y < 40
+                or not _is_version_4_guid(guid)
+            ):
+                return None
+            nodes.append(
+                PatrolBusStop(
+                    chunk_x=chunk_x,
+                    chunk_y=chunk_y,
+                    bus_stop_guid=bytes(guid).hex(),
+                )
+            )
+        entities.append(tuple(nodes))
+    return tuple(entities)
+
+
+def find_patrol_bus_stop_buffers(
+    scene: DotsFile,
+    chunk: Chunk,
+) -> tuple[tuple[PatrolBusStop, ...], ...]:
+    """Locate and validate authored patrol routes without a hard-coded offset."""
+    signature = scene.archetypes[chunk.archetype_index].signature
+    required = {
+        GLOBAL_PATROL_STATE_HASH,
+        PATROL_BUS_STOP_NODE_HASH,
+        UNIT_ENTRY_HASH,
+        VBLOOD_SOURCE_HASH,
+    }
+    if not required <= signature:
+        missing = ", ".join(f"0x{value:016x}" for value in sorted(required - signature))
+        raise DotsFormatError(f"{scene.path}: roaming V Blood components are missing: {missing}")
+    chunk_data = scene.data[chunk.file_offset : chunk.file_offset + chunk.size]
+    patches = _patch_map(scene.buffer_patches(), chunk.index)
+    candidates: list[tuple[tuple[PatrolBusStop, ...], ...]] = []
+    end = chunk.size - chunk.entity_count * PATROL_BUFFER_STRIDE
+    for base in range(64, end + 1, 16):
+        parsed = _patrol_nodes_at(chunk_data, base, chunk.entity_count, patches)
+        if parsed is not None:
+            candidates.append(parsed)
+    if len(candidates) != 1:
+        raise DotsFormatError(
+            f"{scene.path}: expected one patrol-node buffer layout in chunk "
             f"{chunk.index}, found {len(candidates)}"
         )
     return candidates[0]
@@ -329,7 +442,64 @@ def extract_fixed_bosses(
     )
 
 
-def extract_fixed_boss_markers(
+def extract_roaming_bosses(
+    server_entity_scenes: Path,
+    prefab_names: dict[int, tuple[str, ...]],
+    vblood_metadata: dict[str, dict],
+) -> list[dict]:
+    """Extract ordered chunk corridors for globally patrolling V Blood units."""
+    world_path = server_entity_scenes / WORLD_ENTITIES_NAME
+    if not world_path.is_file():
+        raise FileNotFoundError(f"bundled-server world scene is missing: {world_path}")
+    scene = DotsFile(world_path)
+    chunks = [
+        chunk
+        for chunk in scene.chunks
+        if {
+            GLOBAL_PATROL_STATE_HASH,
+            PATROL_BUS_STOP_NODE_HASH,
+            UNIT_ENTRY_HASH,
+            VBLOOD_SOURCE_HASH,
+        }
+        <= scene.archetypes[chunk.archetype_index].signature
+    ]
+    if len(chunks) != 1:
+        raise DotsFormatError(
+            f"{world_path}: expected one roaming V Blood chunk, found {len(chunks)}"
+        )
+
+    chunk = chunks[0]
+    units = find_unit_entry_buffers(scene, chunk, prefab_names)
+    routes = find_patrol_bus_stop_buffers(scene, chunk)
+    records: list[dict] = []
+    for entity_index, (entries, route) in enumerate(zip(units, routes, strict=True)):
+        bosses = [entry for entry in entries if entry.is_vblood]
+        if len(bosses) != 1:
+            raise DotsFormatError(
+                f"{world_path}: entity {entity_index} has {len(bosses)} V Blood units"
+            )
+        records.append(
+            {
+                "movement": "roaming",
+                "boss": _boss_payload(bosses[0], vblood_metadata),
+                "sourceScene": world_path.name,
+                "sourceChunkIndex": chunk.index,
+                "sourceEntityIndex": entity_index,
+                "routePrecision": "chunk-corridor",
+                "route": [
+                    {
+                        "terrainChunk": [node.chunk_x, node.chunk_y],
+                        "busStopGuid": node.bus_stop_guid,
+                        "worldPosition": list(node.world_position),
+                    }
+                    for node in route
+                ],
+            }
+        )
+    return sorted(records, key=lambda item: item["boss"]["prefabName"])
+
+
+def extract_boss_markers(
     game_root: Path,
     prefab_reference: Path,
     vblood_reference: Path,
@@ -348,13 +518,22 @@ def extract_fixed_boss_markers(
         vblood_metadata,
     )
     fixed = localize_fixed_bosses(fixed, game_root)
+    roaming = extract_roaming_bosses(
+        server_entity_scenes,
+        prefab_names,
+        vblood_metadata,
+    )
+    roaming = localize_fixed_bosses(roaming, game_root)
     output_dir.mkdir(parents=True, exist_ok=True)
     write_json(output_dir / "bosses.fixed.json", fixed)
+    write_json(output_dir / "bosses.roaming.json", roaming)
     summary = {
         "fixedBossPoints": len(fixed),
         "fixedBossPrefabCount": len(
             {item["boss"]["prefabName"] for item in fixed}
         ),
+        "roamingBosses": len(roaming),
+        "roamingRouteStops": sum(len(item["route"]) for item in roaming),
     }
     write_json(output_dir / "bosses.summary.json", summary)
     return summary
@@ -367,7 +546,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--vblood", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
-    summary = extract_fixed_boss_markers(
+    summary = extract_boss_markers(
         args.game_root, args.prefabs, args.vblood, args.output
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2))

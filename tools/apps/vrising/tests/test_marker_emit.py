@@ -165,3 +165,41 @@ def test_fixed_boss_marker_keeps_official_localized_names():
 
     label = next(iter(payload["labels"].values()))
     assert label["localizedNames"] == boss["localizedNames"]
+
+
+def test_roaming_boss_emits_one_marker_with_an_ordered_chunk_corridor():
+    prefab = "CHAR_Bandit_Chaosarrow_VBlood"
+    boss = _boss(prefab, "Lidia the Chaos Archer")
+    boss["localizedNames"] = {
+        "en-US": "Lidia the Chaos Archer",
+        "zh-CN": "混沌弓箭手莉迪亚",
+        "zh-TW": "混沌弓箭手莉迪亞",
+    }
+    payload = build_marker_payload(
+        [],
+        [],
+        [
+            {
+                "boss": boss,
+                "routePrecision": "chunk-corridor",
+                "route": [
+                    {"worldPosition": [10.0, 0.0, 20.0]},
+                    {"worldPosition": [30.0, 0.0, 40.0]},
+                    {"worldPosition": [50.0, 0.0, 60.0]},
+                ],
+            }
+        ],
+    )
+
+    (marker,) = payload["markers"]
+    assert marker["subtype"] == "boss-roaming"
+    assert marker["movement"] == "roaming"
+    assert marker["routePrecision"] == "chunk-corridor"
+    assert marker["route"] == [
+        {"x": 10.0, "y": 20.0, "z": 0.0},
+        {"x": 30.0, "y": 40.0, "z": 0.0},
+        {"x": 50.0, "y": 60.0, "z": 0.0},
+    ]
+    assert marker["icon"] == f"BossPortrait_{prefab}"
+    assert payload["summary"]["roamingBossMarkers"] == 1
+    assert payload["summary"]["roamingRouteStops"] == 3

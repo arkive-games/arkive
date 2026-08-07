@@ -147,6 +147,8 @@ export interface GameMapViewProps {
     to: { x: number; y: number };
     /** Stroke color; defaults to the theme's pin-dot accent. */
     color?: string;
+    /** Low-profile route, selected-route highlight, or the default link style. */
+    variant?: "ambient" | "highlight";
   }[];
   /**
    * Marker click / background click / popup close → selection toggle.

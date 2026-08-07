@@ -146,6 +146,14 @@ export const OVERLAY_LINE_WIDTH = 2.5;
 export const OVERLAY_LINE_DASH = 8;
 export const OVERLAY_LINE_GAP = 8;
 export const OVERLAY_LINE_OPACITY = 0.85;
+export const AMBIENT_LINE_WIDTH = 1.5;
+export const AMBIENT_LINE_DASH = 4;
+export const AMBIENT_LINE_GAP = 8;
+export const AMBIENT_LINE_OPACITY = 0.28;
+export const HIGHLIGHT_LINE_WIDTH = 4;
+export const HIGHLIGHT_LINE_DASH = 10;
+export const HIGHLIGHT_LINE_GAP = 5;
+export const HIGHLIGHT_LINE_OPACITY = 0.92;
 
 // -------------------------------------------------------------------- types ---
 
@@ -155,6 +163,7 @@ export interface OverlayLine {
   from: Point;
   to: Point;
   color?: string;
+  variant?: "ambient" | "highlight";
 }
 
 /** One de-duplicated border edge and the regions that claim it. */
@@ -420,7 +429,9 @@ const CHILD_ORDER = {
   hoverFill: 0,
   dashedBorders: 1,
   solidBorders: 2,
-  overlayLines: 3,
+  ambientLines: 3,
+  overlayLines: 4,
+  highlightLines: 5,
 } as const;
 
 export class VectorLayer implements RenderLayer {
@@ -446,6 +457,8 @@ export class VectorLayer implements RenderLayer {
   private dashedBorders: LineSegments2 | null = null;
   private solidBorders: LineSegments2 | null = null;
   private overlayObject: LineSegments2 | null = null;
+  private ambientOverlayObject: LineSegments2 | null = null;
+  private highlightOverlayObject: LineSegments2 | null = null;
 
   /**
    * Hover materials, created on first use and reused for the lifetime of the
@@ -739,30 +752,79 @@ export class VectorLayer implements RenderLayer {
 
   private rebuildOverlayLines(): void {
     this.disposeLine(this.overlayObject);
+    this.disposeLine(this.ambientOverlayObject);
+    this.disposeLine(this.highlightOverlayObject);
     this.overlayObject = null;
+    this.ambientOverlayObject = null;
+    this.highlightOverlayObject = null;
     if (this.lines.length === 0) return;
 
-    const segments = this.lines.map((line) => {
+    const groups = [
+      {
+        lines: this.lines.filter((line) => line.variant === "ambient"),
+        spec: {
+          linewidth: AMBIENT_LINE_WIDTH,
+          opacity: AMBIENT_LINE_OPACITY,
+          dash: AMBIENT_LINE_DASH,
+          gap: AMBIENT_LINE_GAP,
+        },
+        name: "ambient-overlay-lines",
+        order: CHILD_ORDER.ambientLines,
+      },
+      {
+        lines: this.lines.filter((line) => line.variant == null),
+        spec: {
+          linewidth: OVERLAY_LINE_WIDTH,
+          opacity: OVERLAY_LINE_OPACITY,
+          dash: OVERLAY_LINE_DASH,
+          gap: OVERLAY_LINE_GAP,
+        },
+        name: "overlay-lines",
+        order: CHILD_ORDER.overlayLines,
+      },
+      {
+        lines: this.lines.filter((line) => line.variant === "highlight"),
+        spec: {
+          linewidth: HIGHLIGHT_LINE_WIDTH,
+          opacity: HIGHLIGHT_LINE_OPACITY,
+          dash: HIGHLIGHT_LINE_DASH,
+          gap: HIGHLIGHT_LINE_GAP,
+        },
+        name: "highlight-overlay-lines",
+        order: CHILD_ORDER.highlightLines,
+      },
+    ];
+
+    this.ambientOverlayObject = this.buildOverlayObject(groups[0]);
+    this.overlayObject = this.buildOverlayObject(groups[1]);
+    this.highlightOverlayObject = this.buildOverlayObject(groups[2]);
+  }
+
+  private buildOverlayObject(group: {
+    lines: OverlayLine[];
+    spec: { linewidth: number; opacity: number; dash: number; gap: number };
+    name: string;
+    order: number;
+  }): LineSegments2 | null {
+    if (group.lines.length === 0) return null;
+    const segments = group.lines.map((line) => {
       const from = dataToPoint(this.map, line.from.x, line.from.y);
       const to = dataToPoint(this.map, line.to.x, line.to.y);
       return { a: [from.x, from.y], b: [to.x, to.y] };
     });
     const material = this.makeLineMaterial({
       color: "#ffffff",
-      linewidth: OVERLAY_LINE_WIDTH,
-      opacity: OVERLAY_LINE_OPACITY,
-      dash: OVERLAY_LINE_DASH,
-      gap: OVERLAY_LINE_GAP,
+      ...group.spec,
     });
     // Per-line colours in ONE draw call: the fat-line shader reads
     // `instanceColorStart/End` when the material has `vertexColors`. The
     // material colour above is therefore white (the multiplier's identity).
     material.vertexColors = true;
-    const object = this.makeSegments(segments, material, CHILD_ORDER.overlayLines);
-    const colors = new Float32Array(this.lines.length * 6);
+    const object = this.makeSegments(segments, material, group.order);
+    const colors = new Float32Array(group.lines.length * 6);
     const rgb = new Color();
-    for (let i = 0; i < this.lines.length; i++) {
-      rgb.set(this.lines[i].color ?? this.colors.overlayLine);
+    for (let i = 0; i < group.lines.length; i++) {
+      rgb.set(group.lines[i].color ?? this.colors.overlayLine);
       const o = i * 6;
       colors[o] = rgb.r;
       colors[o + 1] = rgb.g;
@@ -772,9 +834,9 @@ export class VectorLayer implements RenderLayer {
       colors[o + 5] = rgb.b;
     }
     object.geometry.setColors(colors);
-    object.name = "overlay-lines";
-    this.overlayObject = object;
+    object.name = group.name;
     this.object3D.add(object);
+    return object;
   }
 
   private makeSegments(
@@ -835,7 +897,9 @@ export class VectorLayer implements RenderLayer {
   private eachLineMaterial(fn: (material: LineMaterial) => void): void {
     if (this.dashedBorders) fn(this.dashedBorders.material);
     if (this.hoverBorderMaterial) fn(this.hoverBorderMaterial);
+    if (this.ambientOverlayObject) fn(this.ambientOverlayObject.material);
     if (this.overlayObject) fn(this.overlayObject.material);
+    if (this.highlightOverlayObject) fn(this.highlightOverlayObject.material);
   }
 
   // ----------------------------------------------------------------- frame ---
@@ -887,9 +951,13 @@ export class VectorLayer implements RenderLayer {
     if (this.disposed) return;
     this.disposed = true;
     this.disposeLine(this.dashedBorders);
+    this.disposeLine(this.ambientOverlayObject);
     this.disposeLine(this.overlayObject);
+    this.disposeLine(this.highlightOverlayObject);
     this.dashedBorders = null;
     this.overlayObject = null;
+    this.ambientOverlayObject = null;
+    this.highlightOverlayObject = null;
     // Hover objects share the hoisted materials, so their geometry goes first and
     // the materials once, here.
     this.detachHoverObjects();
@@ -925,6 +993,16 @@ export class VectorLayer implements RenderLayer {
   /** All overlay lines in one object (per-line colours via vertex colours). */
   get overlayLinesObject(): LineSegments2 | null {
     return this.overlayObject;
+  }
+
+  /** Low-profile route segments. */
+  get ambientOverlayLinesObject(): LineSegments2 | null {
+    return this.ambientOverlayObject;
+  }
+
+  /** Selected route segments. */
+  get highlightOverlayLinesObject(): LineSegments2 | null {
+    return this.highlightOverlayObject;
   }
 
   /** De-duplicated edge list currently held. */

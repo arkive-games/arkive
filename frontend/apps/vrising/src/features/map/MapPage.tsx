@@ -190,6 +190,8 @@ export default function MapPage() {
         resourceKind: m.resourceKind,
         resourceDetail: m.resourceDetail,
         movement: m.movement,
+        route: m.route,
+        routePrecision: m.routePrecision,
         bossPrefab: m.bossPrefab,
         bossLevel: m.bossLevel,
         bossAct: m.bossAct,
@@ -209,6 +211,29 @@ export default function MapPage() {
   }, [staticData, markerData, subtypeMetaMap, t])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
+
+  const patrolRouteLines = useMemo(() => {
+    const ambient: NonNullable<GameMapViewProps['overlayLines']> = []
+    const highlighted: NonNullable<GameMapViewProps['overlayLines']> = []
+    for (const marker of engineMarkers) {
+      if (!marker.route || marker.route.length < 2) continue
+      const selected = marker.id === selectedMarkerId
+      if (!selected && !visible.has(marker.subtype)) continue
+      const target = selected ? highlighted : ambient
+      for (let index = 1; index < marker.route.length; index += 1) {
+        const from = marker.route[index - 1]
+        const to = marker.route[index]
+        if (from.x === to.x && from.y === to.y) continue
+        target.push({
+          id: `${marker.id}-route-${index}`,
+          from,
+          to,
+          variant: selected ? 'highlight' : 'ambient',
+        })
+      }
+    }
+    return [...ambient, ...highlighted]
+  }, [engineMarkers, selectedMarkerId, visible])
 
   const searchItems: SearchItem[] = useMemo(() => {
     if (!staticData || !map) return []
@@ -409,6 +434,7 @@ export default function MapPage() {
     initialView: mountView,
     onViewChange: saveView,
     suppressInitialFlyForId: restoredMarkerId,
+    overlayLines: patrolRouteLines,
     onToggleMarker,
     subzoneAt,
     flyToDuration: 0.5,

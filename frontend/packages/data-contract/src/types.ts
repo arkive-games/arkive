@@ -140,6 +140,13 @@ export interface MarkerInstance {
    * marker — but surfaced in the coordinate readout so players can see altitude.
    */
   z?: number;
+  /** Ordered DATA-space path associated with the marker. Route points are not
+   * independent markers and therefore do not contribute to marker counts. */
+  route?: { x: number; y: number; z?: number }[];
+  /** Accuracy of a statically recovered route. */
+  routePrecision?: "chunk-corridor";
+  /** Whether the source entity has a fixed spawn or follows an authored route. */
+  movement?: "fixed" | "roaming";
   images: string[];
   contributors: string[];
   icon?: string;

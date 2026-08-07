@@ -1,4 +1,4 @@
-"""Convert curated V Rising resources and fixed V Blood spawns to map-contract data."""
+"""Convert curated V Rising resources and V Blood spawns to map-contract data."""
 
 from __future__ import annotations
 
@@ -81,7 +81,11 @@ def _resource_pool(record: dict) -> tuple[str, dict] | None:
     }
 
 
-def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dict:
+def build_marker_payload(
+    resources: list[dict],
+    fixed_bosses: list[dict],
+    roaming_bosses: list[dict] | None = None,
+) -> dict:
     """Build compact contract markers and labels for the curated public map."""
     markers: list[dict] = []
     labels: dict[str, dict[str, str]] = {}
@@ -200,6 +204,39 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
             localized_names=localized_names,
         )
 
+    roaming_bosses = roaming_bosses or []
+    for record in roaming_bosses:
+        boss = record["boss"]
+        route = [_marker_position(node["worldPosition"]) for node in record["route"]]
+        if len(route) < 2:
+            raise ValueError(f"roaming boss {boss['prefabName']} has fewer than two route stops")
+        portrait = boss_portrait_path(boss["prefabName"])
+        portrait_icon = boss_portrait_icon(boss["prefabName"])
+        if portrait is None or portrait_icon is None:
+            raise ValueError(f"roaming boss {boss['prefabName']} has no reviewed portrait")
+        localized_names = boss.get("localizedNames")
+        marker_id = f"boss-{_slug(boss['prefabName'])}-roaming"
+        append_marker(
+            {
+                "id": marker_id,
+                "category": "bosses",
+                "subtype": "boss-roaming",
+                **route[0],
+                "images": [portrait],
+                "contributors": [],
+                "icon": portrait_icon,
+                "movement": "roaming",
+                "bossPrefab": boss["prefabName"],
+                "bossLevel": boss.get("level"),
+                "bossAct": boss.get("act"),
+                "bossRegion": boss.get("region"),
+                "route": route,
+                "routePrecision": record["routePrecision"],
+            },
+            (localized_names or {}).get("en-US", boss["displayName"]),
+            localized_names=localized_names,
+        )
+
     return {
         "markers": markers,
         "labels": labels,
@@ -216,6 +253,8 @@ def build_marker_payload(resources: list[dict], fixed_bosses: list[dict]) -> dic
             "uniqueFixedBosses": len(
                 {item["boss"]["prefabName"] for item in fixed_bosses}
             ),
+            "roamingBossMarkers": len(roaming_bosses),
+            "roamingRouteStops": sum(len(item["route"]) for item in roaming_bosses),
             "resourcePools": len(pools),
             "markersBySubtype": dict(sorted(counters.items())),
         },
@@ -234,7 +273,11 @@ def load_marker_payload(output_dir: Path) -> dict:
             raise ValueError(f"{path} must contain a JSON array")
         return value
 
-    return build_marker_payload(read("resources.display.json"), read("bosses.fixed.json"))
+    return build_marker_payload(
+        read("resources.display.json"),
+        read("bosses.fixed.json"),
+        read("bosses.roaming.json"),
+    )
 
 
 __all__ = [

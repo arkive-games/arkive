@@ -29,7 +29,9 @@ export interface MarkerRow {
   indexInSubtype: number
   resourceKind?: string
   resourceDetail?: string
-  movement?: 'fixed'
+  movement?: 'fixed' | 'roaming'
+  route?: { x: number; y: number; z?: number }[]
+  routePrecision?: 'chunk-corridor'
   bossPrefab?: string
   bossLevel?: number | null
   bossAct?: string | null
