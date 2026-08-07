@@ -36,7 +36,7 @@ export interface ShellTopBarNav {
    */
   renderItem: (item: ShellNavItem, className: string) => ReactNode
   /** Per-site overrides appended to the default inactive / active classes. */
-  classNames?: { item?: string; itemActive?: string }
+  classNames?: { item?: string; itemActive?: string; chevron?: string }
 }
 
 export interface ShellTopBarProps {
@@ -202,7 +202,11 @@ function NavDropdown({ item, nav }: { item: ShellNavItem; nav: ShellTopBarNav })
           className={cn(navItemClass(groupActive, nav), "inline-flex items-center gap-1")}
         >
           {item.label}
-          <IconChevronDown className="size-4" stroke={1.8} aria-hidden />
+          <IconChevronDown
+            className={cn("size-4", nav.classNames?.chevron)}
+            stroke={1.8}
+            aria-hidden
+          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="z-[2000]">
