@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.4",
+      "date": "2026-08-08",
+      "commit": "6e11d3fa0a75cf1fcea20dda84df84b9c5dec6bd",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Matched the map picker, filter controls, floating search copy, and lower map navigation styling to AION2, and removed the map thumbnail from the picker.",
+            "zh-CN": "统一幻兽帕鲁与永恒之塔2的地图选择、筛选按钮、浮动搜索文案及右下角地图导航样式，并移除地图选择框前的缩略方块。",
+            "zh-TW": "統一幻獸帕魯與永恆之塔2的地圖選擇、篩選按鈕、浮動搜尋文案及右下角地圖導覽樣式，並移除地圖選擇框前的縮圖方塊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.3",
       "date": "2026-08-08",
       "commit": "7aadec6ac937025179299d75ccec22bec319e31e",
