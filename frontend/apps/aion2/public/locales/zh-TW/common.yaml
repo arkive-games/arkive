@@ -57,6 +57,7 @@ ui:
   add: "添加"
   copy: "複製"
   copied: "已複製"
+  copyFailed: "複製失敗"
 
 leaderboard:
   artifactRegionRanking: "神器占比大區排名"
