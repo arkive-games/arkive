@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.6",
+      "date": "2026-08-08",
+      "commit": "dc0866df391bcea39b45ad8618ad76eff71e1018",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Kept About and global search available beside the main navigation while preserving the simplified Voice, Theme, and Log in control group; hover menus now retain click and assistive-technology compatibility.",
+            "zh-CN": "在右上角保持语音、主题、登录精简结构的同时，将关于和全局搜索保留在导航中部；悬停菜单同时兼容点击与辅助技术。",
+            "zh-TW": "在右上角保持「語音、主題、登入」精簡結構的同時，將「關於」和全域搜尋保留在導覽中部；懸停選單同時相容點擊與輔助技術。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.5",
       "date": "2026-08-08",
       "commit": "0a16dacca1e9ceb1d25e3e11a39b978c6088d5cd",
