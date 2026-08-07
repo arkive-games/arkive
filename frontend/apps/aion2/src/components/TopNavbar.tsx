@@ -56,7 +56,7 @@ export default function TopNavbar() {
   return (
     <ShellTopBar
       classNames={{
-        root: "aion2-topbar hidden border-b border-border bg-card text-foreground md:flex",
+        root: "aion2-topbar hidden h-14 border-b border-border bg-card text-foreground md:flex",
         left: "gap-4",
         right: "gap-2",
         trigger:

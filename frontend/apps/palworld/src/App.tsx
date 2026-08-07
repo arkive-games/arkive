@@ -8,7 +8,7 @@ import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, ty
 // costs nothing.
 import type { GlMapRef } from '@gamemap/map-engine-gl'
 const GlGameMapView = lazy(() => import('./features/map/GlMapView'))
-import { FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
+import { FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -22,7 +22,6 @@ import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
-import { MapGameHeader } from './components/MapGameHeader'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
@@ -704,28 +703,27 @@ export default function App() {
   if (!staticData) return <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">Loading…</div>
 
   const mapSelect = (
-    <ShellMapSelect
-      // max-md:pr-8: on phones this same element is the filter sheet's header,
-      // whose close button is absolutely positioned in that top-right corner —
-      // keep the full-width trigger (and its chevron) out from under it.
-      classNames={{
-        wrapper: 'px-3 py-3 max-md:pr-8',
-        trigger: 'border-[color:var(--pal-divider)] bg-card shadow-none hover:border-primary/50 hover:bg-[color:var(--pal-cyan-soft)]',
-        content: 'border-[color:var(--pal-divider)]',
-        item: 'data-[state=checked]:bg-[color:var(--pal-cyan-soft)] data-[state=checked]:text-[color:var(--pal-ocean)]',
-      }}
-      maps={staticData.maps.map((m) => ({
-        id: m.id,
-        label: staticData.mapsL10n[m.id]?.shortName ?? staticData.mapsL10n[m.id]?.name ?? m.id,
-        // The top pyramid level is a single tile covering the whole map, so it
-        // doubles as a ready-made thumbnail — and the active map's copy is
-        // already in the browser cache, since that is the level the renderer
-        // draws when zoomed out.
-        icon: <img src={palworldAssets.tileUrl(m, 0, 0, m.tileLevels)} alt="" loading="lazy" />,
-      }))}
-      activeMapId={mapId}
-      onSelectMap={setMapId}
-    />
+    <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-2 border-b border-[color:var(--pal-divider)] px-3 py-3 max-md:pr-8">
+      <span className="text-sm font-bold text-foreground">
+        {t('mapRegion')}
+      </span>
+      <ShellMapSelect
+        classNames={{
+          trigger: 'min-h-11 rounded-lg border-[color:var(--pal-divider)] bg-card px-3 text-base font-semibold shadow-none hover:border-primary/50 hover:bg-[color:var(--pal-cyan-soft)]',
+          content: 'border-[color:var(--pal-divider)]',
+          item: 'data-[state=checked]:bg-[color:var(--pal-cyan-soft)] data-[state=checked]:text-[color:var(--pal-ocean)]',
+        }}
+        maps={staticData.maps.map((m) => ({
+          id: m.id,
+          label: staticData.mapsL10n[m.id]?.shortName ?? staticData.mapsL10n[m.id]?.name ?? m.id,
+          // The top pyramid level is a single tile covering the whole map, so it
+          // doubles as a ready-made thumbnail and is already in the browser cache.
+          icon: <img src={palworldAssets.tileUrl(m, 0, 0, m.tileLevels)} alt="" loading="lazy" />,
+        }))}
+        activeMapId={mapId}
+        onSelectMap={setMapId}
+      />
+    </div>
   )
 
   const filterPanel = (
@@ -916,9 +914,18 @@ export default function App() {
             content: 'pb-2',
           }}
           headerSlot={
-            <MapGameHeader
-              backgroundUrl={map ? palworldAssets.tileUrl(map, 0, 0, map.tileLevels) : undefined}
-              title={t('title')}
+            <ShellGameHeader
+              backgroundUrl={`${import.meta.env.BASE_URL}images/palworld-map-header.webp`}
+              backgroundPosition="center 42%"
+              shadeClassName="bg-[linear-gradient(180deg,rgba(4,35,48,0.12),rgba(4,35,48,0.88))]"
+              logo={
+                <img
+                  src={`${import.meta.env.BASE_URL}images/palworld-logo.webp`}
+                  alt="Palworld"
+                  className="max-h-12 w-auto max-w-52 object-contain object-left drop-shadow-md brightness-0 invert"
+                />
+              }
+              title={t('mapHeader')}
             />
           }
           mapSelectorSlot={mapSelect}

@@ -130,22 +130,6 @@ html {
   background: #0c161e;
 }
 
-/* The map page reads as an island field guide: one scenic game header, then
-   quiet catalogue controls that keep the map itself visually dominant. */
-.palworld-game-header-shade {
-  background:
-    linear-gradient(180deg, rgba(4, 35, 48, 0.2) 0%, rgba(4, 35, 48, 0.92) 100%),
-    linear-gradient(90deg, rgba(4, 35, 48, 0.72), transparent 72%);
-}
-
-.palworld-game-header::after {
-  position: absolute;
-  inset: auto 0 0;
-  height: 0.2rem;
-  background: linear-gradient(90deg, var(--pal-gold), color-mix(in srgb, var(--primary) 70%, transparent));
-  content: "";
-}
-
 .palworld-map-page .palworld-filter-scroll [data-radix-scroll-area-viewport] {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--primary) 35%, transparent) transparent;
@@ -225,10 +209,18 @@ html {
   color: var(--primary) !important;
 }
 
+.palworld-map-page .gm-zoom-divider,
+.palworld-map-page .gmgl-zoom-divider {
+  background: var(--pal-divider);
+}
+
 .palworld-map-page .gm-statusbar-stack,
 .palworld-map-page .gmgl-statusbar-stack {
   bottom: 0.85rem;
   left: 0.85rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--foreground);
 }
 
@@ -242,6 +234,19 @@ html {
   color: var(--muted-foreground);
   box-shadow: 0 0.4rem 1.1rem rgba(7, 48, 64, 0.12);
   backdrop-filter: blur(0.65rem);
+}
+
+.palworld-map-page .gm-statusbar-footer,
+.palworld-map-page .gmgl-statusbar-footer {
+  padding: 0.45rem 0.65rem;
+  line-height: 1;
+  color: var(--muted-foreground);
+}
+
+.palworld-map-page .gm-statusbar-pill,
+.palworld-map-page .gmgl-statusbar-pill {
+  min-height: 1.85rem;
+  padding-inline: 0.65rem;
 }
 
 .palworld-topbar {

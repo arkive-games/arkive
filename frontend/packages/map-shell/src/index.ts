@@ -6,6 +6,7 @@ export {
   type ShellNavItem,
 } from "./ShellTopBar"
 export { ShellSidebar, type ShellSidebarProps } from "./ShellSidebar"
+export { ShellGameHeader, type ShellGameHeaderProps } from "./ShellGameHeader"
 export {
   ShellBottomNav,
   type ShellBottomNavProps,

@@ -19,6 +19,38 @@ export const BRAND_LABELS: Record<Language, string> = {
   'zh-CN': '藏舟攻略 / Arkive', 'zh-TW': '藏舟攻略 / Arkive',
 }
 
+/** Arkive's brand promise, kept identical across every game map shell. */
+export const BRAND_SLOGAN_LABELS: Record<Language, string> = {
+  'en-US': 'Sail Games With Us.', 'de-DE': 'Sail Games With Us.', 'es-ES': 'Sail Games With Us.',
+  'es-MX': 'Sail Games With Us.', 'fr-FR': 'Sail Games With Us.', 'id-ID': 'Sail Games With Us.',
+  'it-IT': 'Sail Games With Us.', 'ja-JP': 'Sail Games With Us.', 'ko-KR': 'Sail Games With Us.',
+  'pl-PL': 'Sail Games With Us.', 'pt-BR': 'Sail Games With Us.', 'ru-RU': 'Sail Games With Us.',
+  'th-TH': 'Sail Games With Us.', 'tr-TR': 'Sail Games With Us.', 'vi-VN': 'Sail Games With Us.',
+  'zh-CN': '万千攻略，藏于一舟', 'zh-TW': '萬千攻略，藏於一舟',
+}
+
+/** Label paired with the map picker in the shared sidebar geometry. */
+export const MAP_REGION_LABELS: Record<Language, string> = {
+  'en-US': 'Map region', 'de-DE': 'Kartenregion', 'es-ES': 'Región', 'es-MX': 'Región',
+  'fr-FR': 'Région', 'id-ID': 'Wilayah peta', 'it-IT': 'Regione', 'ja-JP': 'マップエリア',
+  'ko-KR': '지도 지역', 'pl-PL': 'Region mapy', 'pt-BR': 'Região', 'ru-RU': 'Регион карты',
+  'th-TH': 'พื้นที่แผนที่', 'tr-TR': 'Harita bölgesi', 'vi-VN': 'Khu vực bản đồ',
+  'zh-CN': '地图区域', 'zh-TW': '地圖區域',
+}
+
+/** Game identity copy shown over the Palworld promotional artwork. */
+export const MAP_HEADER_LABELS: Record<Language, string> = {
+  'en-US': 'Palworld · Interactive Map', 'de-DE': 'Palworld · Interaktive Karte',
+  'es-ES': 'Palworld · Mapa interactivo', 'es-MX': 'Palworld · Mapa interactivo',
+  'fr-FR': 'Palworld · Carte interactive', 'id-ID': 'Palworld · Peta interaktif',
+  'it-IT': 'Palworld · Mappa interattiva', 'ja-JP': 'Palworld · インタラクティブマップ',
+  'ko-KR': 'Palworld · 인터랙티브 지도', 'pl-PL': 'Palworld · Mapa interaktywna',
+  'pt-BR': 'Palworld · Mapa interativo', 'ru-RU': 'Palworld · Интерактивная карта',
+  'th-TH': 'Palworld · แผนที่แบบโต้ตอบ', 'tr-TR': 'Palworld · İnteraktif harita',
+  'vi-VN': 'Palworld · Bản đồ tương tác', 'zh-CN': '幻兽帕鲁 · 互动地图',
+  'zh-TW': '幻獸帕魯 · 互動地圖',
+}
+
 /** Accessible name / tooltip for the brand link ("go to the Arkive home page"). */
 export const BRAND_HOME_LABELS: Record<Language, string> = {
   'en-US': 'Arkive home', 'de-DE': 'Arkive-Startseite', 'es-ES': 'Inicio de Arkive',

@@ -35,7 +35,7 @@ export default function InfoSidebar() {
   return (
     <ShellSidebar
       side="right"
-      width={320}
+      width={304}
       collapsed={collapsed}
       onCollapsedChange={(next) => {
         setCollapsed(next);
@@ -51,8 +51,8 @@ export default function InfoSidebar() {
       classNames={{
         root: "border-l border-border bg-card text-card-foreground",
         collapseButton:
-          "border border-r-0 border-border bg-card text-[color:var(--arkive-orange)] shadow-sm",
-        content: "px-3 pt-3",
+          "top-4 border border-r-0 border-border bg-card text-[color:var(--arkive-orange)] shadow-sm",
+        content: "px-4 pt-4",
       }}
     >
       <SiteInfo />

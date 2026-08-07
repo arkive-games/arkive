@@ -455,7 +455,7 @@ body {
     gap: 0.35rem;
     padding: 0.25rem 0.3rem 0.25rem 0.75rem;
     border-color: color-mix(in srgb, var(--primary) 18%, transparent);
-    border-radius: 0.75rem;
+    border-radius: 0.8rem;
     background: color-mix(in srgb, var(--popover) 94%, transparent);
     box-shadow: 0 10px 30px rgba(15, 76, 73, 0.13);
 }
@@ -476,7 +476,7 @@ body {
 
 .aion2-map-page [data-testid="search-panel"] [data-testid="search-submit"] {
     height: 2.35rem;
-    border-radius: 0.55rem;
+    border-radius: 0.6rem;
     padding-inline: 0.85rem;
     background: var(--primary);
     color: var(--primary-foreground);
@@ -490,7 +490,7 @@ body {
 
 .aion2-map-page [data-testid="search-panel"] > div:nth-child(2) {
     border-color: var(--border);
-    border-radius: 0.75rem;
+    border-radius: 0.8rem;
     background: color-mix(in srgb, var(--popover) 96%, transparent);
     box-shadow: 0 16px 40px rgba(15, 76, 73, 0.14);
 }
@@ -508,7 +508,7 @@ body {
     border-radius: 0.75rem;
     background: color-mix(in srgb, var(--card) 96%, transparent);
     box-shadow: 0 8px 24px rgba(15, 76, 73, 0.14);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(0.75rem);
 }
 
 .aion2-map-page .gm-zoom-btn,
@@ -547,8 +547,8 @@ body {
     border-radius: 0.65rem;
     background: color-mix(in srgb, var(--card) 94%, transparent) !important;
     color: var(--foreground);
-    box-shadow: 0 6px 18px rgba(15, 76, 73, 0.10);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 0.4rem 1.1rem rgba(15, 76, 73, 0.10);
+    backdrop-filter: blur(0.65rem);
 }
 
 .aion2-map-page .gm-statusbar-footer,
