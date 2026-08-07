@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.4",
+      "date": "2026-08-07",
+      "commit": "6ff4ef099056b9a626f7d7ee4bde383111453f38",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Redesigned the quest, NPC and monster, and item indexes as a shared game archive with guided categories, clearer counts, search results, consistent Arkive colors, and a centered active navigation marker.",
+            "zh-CN": "将任务、NPC与怪物、物品索引重新设计为统一的游戏资料馆，提供清晰的分类导航、数量、搜索结果与藏舟品牌配色，并修正百科选中短线的居中位置。",
+            "zh-TW": "將任務、NPC與怪物、物品索引重新設計為統一的遊戲資料館，提供清晰的分類導覽、數量、搜尋結果與藏舟品牌配色，並修正百科選中短線的置中位置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.3",
       "date": "2026-08-07",
       "commit": "9b3b78011fa8363db983a286e3cbafac57f31d30",
