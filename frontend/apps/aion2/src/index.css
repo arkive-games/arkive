@@ -53,6 +53,9 @@
    utility — the app already uses `bg-input` as a field fill. */
 :root {
     --radius: 0.625rem;
+    --arkive-nav-active: #0F4C49;
+    --arkive-nav-on-active: #FFFFFF;
+    --arkive-nav-accent: #EE8A45;
     --background: #F3FBFF;
     --foreground: #3D3D3D;
     --card: #FFFFFF;
@@ -77,6 +80,9 @@
 /* Lanhu "2魔族" dark board: purple-navy surfaces (panels/popups #2C293A,
    secondary surface/input #423F5A), white / #C2C2C2 text, blue #2E97FF accent. */
 .dark {
+    --arkive-nav-active: #9AC8B4;
+    --arkive-nav-on-active: #102D2B;
+    --arkive-nav-accent: #F0A06A;
     --background: #211E2D;
     --foreground: #ffffff;
     --card: #2C293A;
