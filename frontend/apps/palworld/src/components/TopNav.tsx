@@ -83,7 +83,7 @@ export function TopNav({ active }: { active: NavKey }) {
           data-testid="brand-link"
           aria-label={t('brandHome')}
           title={t('brandHome')}
-          className="hidden shrink-0 items-center gap-2.5 whitespace-nowrap pr-4 text-[color:var(--arkive-nav-active)] lg:inline-flex"
+          className="flex shrink-0 items-center gap-2.5 whitespace-nowrap pr-4 text-[color:var(--arkive-nav-active)]"
         >
           <ArkiveMark />
           <span className="flex flex-col leading-none">

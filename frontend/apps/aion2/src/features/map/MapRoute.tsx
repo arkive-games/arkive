@@ -389,7 +389,7 @@ export default function MapRoute() {
         variant === "floating"
           ? {
               root:
-                "top-3 right-auto bottom-3 left-1/2 w-[min(34rem,calc(100%-2rem))] -translate-x-1/2",
+                "top-3 right-auto bottom-3 left-1/2 w-[calc(100%-2rem)] min-w-72 max-w-[34rem] -translate-x-1/2",
             }
           : undefined
       }

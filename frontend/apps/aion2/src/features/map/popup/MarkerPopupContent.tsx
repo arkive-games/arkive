@@ -42,6 +42,7 @@ const MarkerPopupContent: React.FC<Props> = ({ marker }) => {
     .join(" / ");
   const name = marker.localizedName || t("common:markerSearch.unnamed", "Unnamed");
   const description = marker.localizedDescription || "";
+  const position = `${Math.round(marker.x)}, ${Math.round(marker.y)}`;
   const canComplete = sub?.canComplete !== false;
   const isCompleted =
     completedBySubtype[marker.subtype]?.has(marker.indexInSubtype) ?? false;
@@ -54,9 +55,14 @@ const MarkerPopupContent: React.FC<Props> = ({ marker }) => {
       icon={iconUrl ? <img src={iconUrl} alt="" className="size-7 object-contain" /> : undefined}
       metaLine={metaLine}
       positionLabel={t("common:markerActions.position", "Position")}
-      positionValue={<>{Math.round(marker.x)}, {Math.round(marker.y)}</>}
+      positionValue={position}
+      positionCopy={{
+        value: position,
+        copyLabel: t("common:map.copyPosition", "Copy position"),
+        copiedLabel: t("common:ui.copied", "Copied"),
+        failedLabel: t("common:ui.copyFailed", "Copy failed"),
+      }}
       description={description}
-      noDescriptionLabel={t("common:ui.noDescription", "No description")}
       images={marker.images?.map(resolveImage)}
     >
       {(marker.entity || canComplete) && (

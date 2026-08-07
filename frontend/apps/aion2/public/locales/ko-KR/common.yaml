@@ -35,6 +35,7 @@ ui:
   add: "추가"
   copy: "복사"
   copied: "복사됨"
+  copyFailed: "복사 실패"
 
 theme:
   label: "테마"

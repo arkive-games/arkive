@@ -577,10 +577,15 @@ export default function App() {
         name={marker.localizedName || t('unnamed')}
         icon={iconUrl ? <img src={iconUrl} alt="" className="size-7 object-contain" /> : undefined}
         metaLine={metaLine}
-        positionLabel={t('copyPosition')}
+        positionLabel={t('position')}
         positionValue={<span aria-label={coordAria} title={coordAria}>{coordText}</span>}
+        positionCopy={{
+          value: coordText,
+          copyLabel: t('copyPosition'),
+          copiedLabel: t('copied'),
+          failedLabel: t('copyFailed'),
+        }}
         description={marker.localizedDescription}
-        noDescriptionLabel={t('noDescription')}
         images={marker.image ? [noteImageUrl(marker.image)] : undefined}
       >
         {pal ? (
@@ -774,7 +779,7 @@ export default function App() {
       searchOptions={PAL_SEARCH_OPTIONS}
       variant={variant}
       classNames={variant === 'floating'
-        ? { root: 'left-1/2 right-auto w-[min(34rem,calc(100%-2rem))] -translate-x-1/2' }
+        ? { root: 'left-1/2 right-auto w-[calc(100%-2rem)] min-w-72 max-w-[34rem] -translate-x-1/2' }
         : undefined}
     />
   )
