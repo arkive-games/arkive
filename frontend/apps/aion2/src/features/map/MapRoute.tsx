@@ -236,6 +236,10 @@ export default function MapRoute() {
   const searchLabels = useMemo(
     () => ({
       search: t("common:ui.search", "Search"),
+      placeholder: t(
+        "common:globalSearch.placeholder",
+        "Search quests, NPCs, items, or map markers",
+      ),
       resultsCount: (n: number) =>
         t("common:search.resultsCount", {
           count: n,

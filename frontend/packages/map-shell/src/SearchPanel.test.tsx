@@ -10,6 +10,7 @@ afterEach(cleanup)
 
 const labels = {
   search: "Search",
+  placeholder: "Search quests, NPCs, items, or map markers",
   resultsCount: (n: number) => `${n} results`,
   unnamed: "Unnamed",
   noDescription: "No description",
@@ -63,6 +64,13 @@ const item = (over: Partial<SearchItem> & Pick<SearchItem, "id" | "name">): Sear
 const palworld = { searchFields: ["name", "idLabel"] as SearchField[], resolveSearchOptions: palworldNumericLookup }
 
 describe("SearchPanel", () => {
+  it("renders a descriptive placeholder independently from the submit label", () => {
+    renderSearchPanel([])
+
+    expect(screen.getByPlaceholderText(labels.placeholder)).toBeTruthy()
+    expect(screen.getByTestId("search-submit").textContent).toBe(labels.search)
+  })
+
   it("matches idLabel values in search queries", () => {
     renderSearchPanel([
       item({ id: "pal-037", name: "Catalog Pal", description: "Forest runner", idLabel: "No.037" }),

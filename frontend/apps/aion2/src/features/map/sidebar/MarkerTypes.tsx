@@ -19,9 +19,13 @@ import { parseIconUrl } from "@/lib/url";
 // Quiet neutral rows keep the dense filter list readable; selected rows use
 // the same warm-orange rail and tinted surface as the map marker treatment.
 const BUTTON_SKIN =
-  "h-auto min-h-9 rounded-md border-l-[3px] border-l-transparent bg-[color:var(--arkive-filter-idle)] px-2.5 text-foreground hover:bg-[color:var(--arkive-filter-hover)]";
+  "h-auto min-h-9 rounded-sm border-l-[3px] border-l-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-50 hover:bg-[color:var(--arkive-filter-hover)] hover:opacity-80";
 const BUTTON_SKIN_ACTIVE =
-  "border-l-[color:var(--arkive-orange)] bg-[color:var(--arkive-filter-active)] font-semibold text-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--arkive-orange)_14%,transparent)]";
+  "border-l-[color:var(--arkive-orange)] bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-none";
+const CONTROL_SKIN =
+  "h-8 min-h-8 rounded-none border-l-0 bg-card px-1.5 text-xs font-semibold text-muted-foreground hover:bg-[color:var(--arkive-filter-hover)] hover:text-foreground";
+const CONTROL_SKIN_ACTIVE =
+  "bg-[color:var(--arkive-filter-active)] text-primary shadow-[inset_0_-0.15rem_0_var(--arkive-orange)]";
 
 export default function MarkerTypes() {
   const { types, selectedMap } = useGameMap();
@@ -140,9 +144,10 @@ export default function MarkerTypes() {
         }}
         controls={controls}
         classNames={{
-          controls: "gap-x-2 gap-y-1.5",
-          controlButton: BUTTON_SKIN,
-          controlButtonActive: BUTTON_SKIN_ACTIVE,
+          controls:
+            "grid-cols-3 gap-px overflow-hidden rounded-md bg-[color:var(--arkive-divider)]",
+          controlButton: CONTROL_SKIN,
+          controlButtonActive: CONTROL_SKIN_ACTIVE,
           subtypeButton: BUTTON_SKIN,
           subtypeButtonActive: BUTTON_SKIN_ACTIVE,
           category:

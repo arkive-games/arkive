@@ -445,10 +445,40 @@ body {
 /* Floating map search: centered, quiet, and wide enough for real marker names. */
 .aion2-map-page [data-testid="search-panel"] > div:first-child {
     min-height: 3rem;
+    gap: 0.35rem;
+    padding: 0.25rem 0.3rem 0.25rem 0.75rem;
     border-color: color-mix(in srgb, var(--primary) 18%, transparent);
     border-radius: 0.75rem;
     background: color-mix(in srgb, var(--popover) 94%, transparent);
     box-shadow: 0 10px 30px rgba(15, 76, 73, 0.13);
+}
+
+.aion2-map-page [data-testid="search-panel"] [data-testid="marker-search"] {
+    height: 2.35rem;
+    font-size: 0.75rem;
+}
+
+.aion2-map-page [data-testid="search-panel"] [data-testid="search-scope-toggle"] {
+    height: 2.35rem;
+    padding-inline: 0.45rem;
+}
+
+.aion2-map-page [data-testid="search-panel"] [data-slot="search-divider"] {
+    display: none;
+}
+
+.aion2-map-page [data-testid="search-panel"] [data-testid="search-submit"] {
+    height: 2.35rem;
+    border-radius: 0.55rem;
+    padding-inline: 0.85rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.aion2-map-page [data-testid="search-panel"] [data-testid="search-submit"]:hover {
+    filter: brightness(0.96);
 }
 
 .aion2-map-page [data-testid="search-panel"] > div:nth-child(2) {
