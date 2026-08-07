@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.5",
+      "date": "2026-08-08",
+      "commit": "9acde2f119d900985fef68f2eeebe5afbf54d174",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Aligned the interactive-map frame with the Palworld explorer, including a shared scenic game header, sidebar widths, map picker, filters, search, and map controls while preserving the AION2 theme.",
+            "zh-CN": "互动地图现已与幻兽帕鲁采用同一套页面框架，统一游戏背景展示区、侧栏宽度、地图选择、筛选、搜索与地图控件尺寸，同时保留永恒之塔2的主题配色。",
+            "zh-TW": "互動地圖現已與幻獸帕魯採用同一套頁面框架，統一遊戲背景展示區、側欄寬度、地圖選擇、篩選、搜尋與地圖控制項尺寸，同時保留永恆之塔2的主題配色。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.4",
       "date": "2026-08-07",
       "commit": "6ff4ef099056b9a626f7d7ee4bde383111453f38",
