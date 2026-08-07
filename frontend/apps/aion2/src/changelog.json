@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.6",
+      "date": "2026-08-08",
+      "commit": "7aadec6ac937025179299d75ccec22bec319e31e",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Matched the map top bar height to the Palworld explorer so both game frames use the same vertical geometry.",
+            "zh-CN": "修正地图顶栏高度，使永恒之塔2与幻兽帕鲁使用完全一致的纵向框架尺寸。",
+            "zh-TW": "修正地圖頂欄高度，使永恆之塔2與幻獸帕魯使用完全一致的縱向框架尺寸。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.5",
       "date": "2026-08-08",
       "commit": "9acde2f119d900985fef68f2eeebe5afbf54d174",
