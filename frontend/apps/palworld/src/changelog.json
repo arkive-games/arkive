@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.3",
+      "date": "2026-08-08",
+      "commit": "7aadec6ac937025179299d75ccec22bec319e31e",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed the native sidebar scrollbar override so the game header and map picker match the AION2 explorer width exactly.",
+            "zh-CN": "移除侧栏原生滚动条覆盖，使游戏展示区与地图选择框的宽度和永恒之塔2完全一致。",
+            "zh-TW": "移除側欄原生捲軸覆寫，使遊戲展示區與地圖選擇框的寬度和永恆之塔2完全一致。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.2",
       "date": "2026-08-08",
       "commit": "9acde2f119d900985fef68f2eeebe5afbf54d174",
