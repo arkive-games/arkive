@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.1",
+      "date": "2026-08-07",
+      "commit": "3f20e77e0f4fd9c85053923e7da992b07d6f0a45",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Refined the interactive map with Arkive styling, consistent controls and marker popups, plus reliable scrolling through every filter category.",
+            "zh-CN": "焕新互动地图视觉，统一控件与点位弹窗风格，并修复筛选侧栏无法滚动浏览全部分类的问题。",
+            "zh-TW": "煥新互動地圖視覺，統一控制項與點位彈窗風格，並修復篩選側欄無法捲動瀏覽全部分類的問題。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.0",
       "date": "2026-07-31",
       "commit": "e3665ceec73b39ea7109d2c1d99f8cfae7453db6",
