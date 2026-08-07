@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.11",
+      "date": "2026-08-08",
+      "commit": "51de8138dfe69aad771c7254e6b86832b8264fad",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned the map sidebar and About panel typography with the shared Palworld presentation.",
+            "zh-CN": "统一互动地图左侧栏与关于面板的字体、字号、字重及间距，使其与幻兽帕鲁保持一致。",
+            "zh-TW": "統一互動地圖左側欄與關於面板的字體、字號、字重及間距，使其與幻獸帕魯保持一致。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.10",
       "date": "2026-08-08",
       "commit": "46b21c991b37c605421bbd19447fad0af7ee4831",
