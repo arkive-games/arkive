@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.3",
+      "date": "2026-08-07",
+      "commit": "ce363e4f517e86da8a6d73a618164f3d048afa32",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Unified the Map and Wiki navigation styling with consistent typography, a warm active underline, and a quieter Wiki dropdown indicator.",
+            "zh-CN": "统一地图与百科的导航样式，以一致的字体、暖橙选中短线和更克制的百科下拉箭头呈现。",
+            "zh-TW": "統一地圖與百科的導覽樣式，以一致的字體、暖橙選中短線和更克制的百科下拉箭頭呈現。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.2",
       "date": "2026-08-07",
       "commit": "4e8e506078d718922d4d0f11ea1b40e9fad04892",
