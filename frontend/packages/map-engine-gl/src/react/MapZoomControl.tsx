@@ -1,4 +1,5 @@
 import React from "react";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
 
 /**
  * Lanhu-style +/− zoom pill, pinned bottom-right inside the map. Same markup and
@@ -30,7 +31,7 @@ const MapZoomControl: React.FC<Props> = ({
         className="gmgl-zoom-btn"
         style={{ color: glyphColor }}
       >
-        +
+        <IconPlus className="size-4" stroke={1.8} aria-hidden />
       </button>
       <div className="gmgl-zoom-divider" />
       <button
@@ -40,7 +41,7 @@ const MapZoomControl: React.FC<Props> = ({
         className="gmgl-zoom-btn"
         style={{ color: glyphColor }}
       >
-        −
+        <IconMinus className="size-4" stroke={1.8} aria-hidden />
       </button>
     </div>
   </div>

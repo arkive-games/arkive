@@ -1,13 +1,17 @@
 import React from "react";
+import {
+  IconBook2,
+  IconCheck,
+  IconCircleCheckFilled,
+  IconMapPin,
+} from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Check } from "lucide-react";
-
-import type { MarkerWithTranslations } from "@/types/game";
+import { Card, CardContent, cn } from "@gamemap/ui";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
-import { Card, CardContent, cn } from "@gamemap/ui";
-import { getStaticUrl } from "@/lib/url";
+import type { MarkerWithTranslations } from "@/types/game";
+import { getStaticUrl, parseIconUrl } from "@/lib/url";
 
 type Props = {
   marker: MarkerWithTranslations;
@@ -18,121 +22,130 @@ function resolveImage(src: string): string {
 }
 
 const MarkerPopupContent: React.FC<Props> = ({ marker }) => {
-  const { types } = useGameMap();
+  const { types, selectedMap } = useGameMap();
   const { completedBySubtype, toggleMarkerCompleted } = useMarkers();
   const { t } = useTranslation(["common", "types", "wiki"]);
 
-  // Locate subtype meta across categories.
   const sub = types
-    .flatMap((c) => c.subtypes)
-    .find((s) => s.name === marker.subtype);
-
-  const name =
-    marker.localizedName || t("common:markerSearch.unnamed", "Unnamed");
-  const description = marker.localizedDescription || "";
-
-  // "Category / Subtype (x, y)" — e.g. "Location / Teleport (4708, 3924)".
+    .flatMap((category) => category.subtypes)
+    .find((subtype) => subtype.name === marker.subtype);
   const categoryId = sub?.category ?? marker.category;
   const categoryLabel = categoryId
     ? t(`types:categories.${categoryId}.name`, categoryId)
     : "";
   const subtypeLabel = t(`types:subtypes.${marker.subtype}.name`, marker.subtype);
-  const coords = `(${Math.round(marker.x)}, ${Math.round(marker.y)})`;
-  // Fragment kind (ground/air/water) appended after the subtype, e.g.
-  // "Collection / Monolith · Air".
   const fragmentTypeLabel = marker.fragmentType
     ? t(`common:fragmentType.${marker.fragmentType}`)
     : "";
-  const metaLine = [
-    [categoryLabel, subtypeLabel].filter(Boolean).join(" / "),
-    fragmentTypeLabel,
-  ]
+  const metaLine = [categoryLabel, subtypeLabel, fragmentTypeLabel]
     .filter(Boolean)
-    .join(" · ");
-
+    .join(" / ");
+  const name = marker.localizedName || t("common:markerSearch.unnamed", "Unnamed");
+  const description = marker.localizedDescription || "";
   const canComplete = sub?.canComplete !== false;
   const isCompleted =
     completedBySubtype[marker.subtype]?.has(marker.indexInSubtype) ?? false;
+  const iconName = sub?.icon ?? "";
+  const iconUrl = iconName && selectedMap ? parseIconUrl(iconName, selectedMap) : "";
 
   return (
     <Card
       data-testid="marker-popup-card"
-      // `gm-popup-card` is the engine.css hook that draws the popup's downward
-      // pointer triangle and suppresses the border seam (see engine.css).
-      className="gm-popup-card w-[320px] gap-0 py-0 rounded-[10px] border-border bg-card text-card-foreground shadow-lg"
+      className="gm-popup-card w-[320px] gap-0 overflow-hidden rounded-xl border-0 bg-card py-0 text-card-foreground shadow-[0_18px_50px_rgba(10,50,48,0.22)]"
     >
+      <div className="h-1 bg-[color:var(--arkive-orange)]" aria-hidden="true" />
       <CardContent className="flex flex-col px-4 py-4">
-        {/* Title */}
-        <div className="text-lg font-bold leading-snug text-[#3D3D3D] dark:text-white">
-          {name}
+        <div className="flex items-start gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[color:var(--arkive-filter-active)] ring-1 ring-[color:var(--arkive-divider)]">
+            {iconUrl ? (
+              <img src={iconUrl} alt="" className="size-7 object-contain" />
+            ) : (
+              <IconMapPin className="size-5 text-primary" stroke={1.8} />
+            )}
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-bold leading-snug text-foreground">{name}</h2>
+            {metaLine && (
+              <p className="mt-1 truncate text-xs font-medium text-muted-foreground">
+                {metaLine}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Category / subtype + coords */}
-        <div className="mt-2 text-sm leading-tight text-[rgba(0,0,0,0.6)] dark:text-[rgba(255,255,255,0.6)]">
-          {metaLine}
-          {metaLine ? " " : ""}
-          <span className="tabular-nums">{coords}</span>
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-[color:var(--arkive-filter-idle)] px-3 py-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <IconMapPin className="size-4 text-[color:var(--arkive-orange)]" stroke={1.8} />
+            {t("common:markerActions.position", "Position")}
+          </span>
+          <span className="font-mono font-semibold tabular-nums text-foreground">
+            {Math.round(marker.x)}, {Math.round(marker.y)}
+          </span>
         </div>
-        {marker.entity && (
-          <Link
-            to="/wiki/$type/$slug"
-            params={{
-              type: marker.entity.type,
-              slug: String(marker.entity.id),
-            }}
-            className="mt-1 inline-block text-sm text-primary hover:underline"
-            data-testid="popup-wiki-link"
-          >
-            {t("wiki:nav.wiki")} -&gt;
-          </Link>
-        )}
 
-        {/* Description (with dividers above/below); grey placeholder if none */}
-        <hr className="my-3 border-0 border-t border-border" />
         {description ? (
-          <div className="text-sm leading-relaxed text-[#3D3D3D] dark:text-white">
-            {description}
-          </div>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/85">{description}</p>
         ) : (
-          <div className="text-sm leading-relaxed text-[rgba(0,0,0,0.35)] italic dark:text-[rgba(255,255,255,0.35)]">
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground/70 italic">
             {t("common:ui.noDescription", "No description")}
-          </div>
+          </p>
         )}
 
-        {/* Image grid */}
         {marker.images?.length ? (
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {marker.images.map((src, i) => (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {marker.images.map((src, index) => (
               <img
-                key={`${src}-${i}`}
+                key={`${src}-${index}`}
                 src={resolveImage(src)}
                 alt=""
                 loading="lazy"
-                className="aspect-square w-full rounded-md object-cover"
+                className="aspect-[4/3] w-full rounded-lg object-cover ring-1 ring-border"
               />
             ))}
           </div>
         ) : null}
 
-        {/* Footer — completion pill */}
-        {canComplete && (
-          <div className="mt-4 flex items-center justify-end">
-            <button
-              type="button"
-              onClick={() => toggleMarkerCompleted(marker)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors",
-                isCompleted
-                  ? "bg-[rgba(85,179,76,0.12)] text-[#55B34C]"
-                  : "border border-[#55B34C] text-[#55B34C] hover:bg-[rgba(85,179,76,0.08)]",
-              )}
-              aria-pressed={isCompleted}
-            >
-              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-              {isCompleted
-                ? t("common:markerActions.markNotCompleted", "Completed")
-                : t("common:markerActions.markCompleted", "Mark as completed")}
-            </button>
+        {(marker.entity || canComplete) && (
+          <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3">
+            {marker.entity ? (
+              <Link
+                to="/wiki/$type/$slug"
+                params={{
+                  type: marker.entity.type,
+                  slug: String(marker.entity.id),
+                }}
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-primary hover:bg-accent"
+                data-testid="popup-wiki-link"
+              >
+                <IconBook2 className="size-4" stroke={1.8} />
+                {t("wiki:nav.wiki")}
+              </Link>
+            ) : (
+              <span />
+            )}
+
+            {canComplete && (
+              <button
+                type="button"
+                onClick={() => toggleMarkerCompleted(marker)}
+                className={cn(
+                  "inline-flex min-h-8 items-center gap-1.5 rounded-md px-3 text-sm font-semibold transition-colors",
+                  isCompleted
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-[color:var(--arkive-filter-active)] text-primary hover:bg-[color:var(--arkive-filter-hover)]",
+                )}
+                aria-pressed={isCompleted}
+              >
+                {isCompleted ? (
+                  <IconCircleCheckFilled className="size-4" />
+                ) : (
+                  <IconCheck className="size-4" stroke={1.8} />
+                )}
+                {isCompleted
+                  ? t("common:markerActions.markNotCompleted", "Completed")
+                  : t("common:markerActions.markCompleted", "Mark as completed")}
+              </button>
+            )}
           </div>
         )}
       </CardContent>

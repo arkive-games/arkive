@@ -1,19 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { ShellSidebar } from "@gamemap/map-shell";
-import { useTheme } from "@/context/ThemeContext";
-import { getStaticUrl } from "@/lib/url";
 import Logo from "./Logo";
-import SelectMap from "./SelectMap";
 import MarkerTypesSection from "./MarkerTypesSection";
+import SelectMap from "./SelectMap";
 
 export default function Sidebar() {
   const { t } = useTranslation(["common"]);
-  const { realTheme } = useTheme();
-
-  const isLight = realTheme === "light";
-  const bgUrl = getStaticUrl(
-    isLight ? "images/Sidebar_Light.webp" : "images/Sidebar_Dark.webp",
-  );
 
   return (
     <ShellSidebar
@@ -21,20 +13,12 @@ export default function Sidebar() {
       expandLabel={t("common:menu.expand", "Expand")}
       label={t("common:menu.markerTypes", "Marker Types")}
       classNames={{
-        root: "text-foreground bg-[image:var(--background-image-sidebar)]",
+        root: "border-r border-border bg-[color:var(--arkive-sidebar)] text-foreground",
+        scrollArea: "aion2-filter-scroll",
+        content: "pb-2",
         collapseButton:
-          "text-[color:var(--color-sidebar-collapse-fg)] bg-[color:var(--color-sidebar-collapse)]",
+          "border border-l-0 border-border bg-card text-[color:var(--arkive-orange)] shadow-sm",
       }}
-      backgroundSlot={
-        <div
-          className="pointer-events-none absolute inset-0 bg-no-repeat opacity-70"
-          style={{
-            backgroundImage: `url(${bgUrl})`,
-            backgroundSize: "346px auto",
-            backgroundPosition: "top left",
-          }}
-        />
-      }
       headerSlot={<Logo />}
       mapSelectorSlot={<SelectMap />}
     >

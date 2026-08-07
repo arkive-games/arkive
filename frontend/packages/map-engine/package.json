@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@gamemap/data-contract": "workspace:*",
+    "@tabler/icons-react": "^3.46.0",
     "lucide-react": "^1.29.0"
   },
   "peerDependencies": {

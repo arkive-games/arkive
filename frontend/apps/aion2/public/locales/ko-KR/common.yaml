@@ -4,6 +4,10 @@ siteTitle: "AION2\n인터랙티브 지도"
 mapSubtitle: "인터랙티브 지도"
 announcement: "어비스의 모노리스 위치 200곳이 업데이트되었습니다. 스크린샷은 추후 추가될 예정입니다."
 
+brand:
+  name: "Arkive 게임 가이드"
+  slogan: "모든 공략을 한 배에"
+
 nav:
   home: "홈"
   classBd: "클래스 BD"
@@ -15,6 +19,10 @@ nav:
 # (각 언어의 자기 표기)를 사용합니다.
 language:
   label: "언어"
+  short: "한 / EN"
+
+auth:
+  login: "로그인"
 
 ui:
   confirm: "확인"
@@ -29,6 +37,7 @@ ui:
   copied: "복사됨"
 
 theme:
+  label: "테마"
   auto: "자동 (지도에 따라 변경)"
   light: "낮 모드 (천족)"
   dark: "밤 모드 (마족)"
@@ -57,6 +66,8 @@ menu:
   maps: "지도"
   regions: "지역"
   markerTypes: "마커 종류"
+  mapRegion: "지도 지역"
+  markerDisplay: "마커 표시"
   showNamesOnPins: "이름 표시"
   showAllMarkers: "모두 표시"
   hideAllMarkers: "모두 숨기기"

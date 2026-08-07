@@ -1,5 +1,10 @@
 import type { ReactNode } from "react"
-import { CheckIcon, ChevronDown, Languages, Settings } from "lucide-react"
+import {
+  IconCheck,
+  IconChevronDown,
+  IconLanguage,
+  IconMoonStars,
+} from "@tabler/icons-react"
 import {
   Button,
   cn,
@@ -46,12 +51,14 @@ export interface ShellTopBarProps {
     current: string
     onChange: (code: string) => void
     menuLabel: string
+    shortLabel?: string
   }
   themeSwitcher?: {
     options: { value: string; label: string }[]
     current: string
     onChange: (value: string) => void
     menuLabel: string
+    shortLabel?: string
   }
   classNames?: {
     root?: string
@@ -101,13 +108,16 @@ export function ShellTopBar({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
+                size={languageSwitcher.shortLabel ? "default" : "icon"}
                 data-testid="lang-menu"
                 aria-label={languageSwitcher.menuLabel}
                 title={languageSwitcher.menuLabel}
                 className={classNames?.trigger}
               >
-                <Languages className="size-5" />
+                <IconLanguage className="size-5" stroke={1.8} />
+                {languageSwitcher.shortLabel && (
+                  <span className="text-sm font-semibold">{languageSwitcher.shortLabel}</span>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className={cn("z-[2000]", classNames?.menu)}>
@@ -118,7 +128,7 @@ export function ShellTopBar({
                   onSelect={() => languageSwitcher.onChange(code)}
                 >
                   <span className="flex-1">{label}</span>
-                  {languageSwitcher.current === code && <CheckIcon className="size-4" />}
+                  {languageSwitcher.current === code && <IconCheck className="size-4" stroke={1.8} />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -129,13 +139,16 @@ export function ShellTopBar({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
+                size={themeSwitcher.shortLabel ? "default" : "icon"}
                 data-testid="theme-menu"
                 aria-label={themeSwitcher.menuLabel}
                 title={themeSwitcher.menuLabel}
                 className={classNames?.trigger}
               >
-                <Settings className="size-5" />
+                <IconMoonStars className="size-5" stroke={1.8} />
+                {themeSwitcher.shortLabel && (
+                  <span className="text-sm font-semibold">{themeSwitcher.shortLabel}</span>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className={cn("z-[2000]", classNames?.menu)}>
@@ -146,7 +159,7 @@ export function ShellTopBar({
                   onSelect={() => themeSwitcher.onChange(value)}
                 >
                   <span className="flex-1">{label}</span>
-                  {themeSwitcher.current === value && <CheckIcon className="size-4" />}
+                  {themeSwitcher.current === value && <IconCheck className="size-4" stroke={1.8} />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -189,7 +202,7 @@ function NavDropdown({ item, nav }: { item: ShellNavItem; nav: ShellTopBarNav })
           className={cn(navItemClass(groupActive, nav), "inline-flex items-center gap-1")}
         >
           {item.label}
-          <ChevronDown className="size-4" aria-hidden />
+          <IconChevronDown className="size-4" stroke={1.8} aria-hidden />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="z-[2000]">
