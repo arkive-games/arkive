@@ -44,6 +44,8 @@ export type SearchPanelProps = {
    * "inline": fills its container (used inside a mobile bottom sheet).
    */
   variant?: "floating" | "inline"
+  /** Placement preset for the floating variant. Ignored by the inline variant. */
+  floatingPlacement?: "right" | "center"
   /**
    * Maps a result's DATA (x, y[, z]) to the coordinates shown on the card.
    * Default: identity. Fly-to still uses the raw DATA coords. An app supplies
@@ -127,6 +129,7 @@ export function SearchPanel({
   initialQuery,
   onResultsChange,
   variant = "floating",
+  floatingPlacement = "right",
 }: SearchPanelProps) {
   const [query, setQuery] = useState(initialQuery ?? "")
   const [debounced, setDebounced] = useState(initialQuery ?? "")
@@ -230,7 +233,12 @@ export function SearchPanel({
         // every click in a 290px-wide strip of the map — including marker
         // popups that opened underneath it.
         variant === "floating"
-          ? "pointer-events-none absolute top-3 right-3 bottom-3 z-[600] flex w-[290px] flex-col gap-2"
+          ? cn(
+              "pointer-events-none absolute top-3 bottom-3 z-[600] flex flex-col gap-2",
+              floatingPlacement === "center"
+                ? "left-1/2 right-auto w-[calc(100%-2rem)] min-w-72 max-w-[34rem] -translate-x-1/2"
+                : "right-3 w-[290px]",
+            )
           : "flex h-full min-h-0 w-full flex-col gap-2",
         classNames?.root,
       )}

@@ -7,7 +7,8 @@
     "node": ">=22.18"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./arkive-map-theme.css": "./src/arkive-map-theme.css"
   },
   "scripts": {
     "check": "tsc --noEmit"

@@ -29,6 +29,7 @@ type Overrides = {
   resolveSearchOptions?: (query: string) => SearchOptions | undefined
   searchOptions?: SearchOptions
   resultAside?: (item: SearchItem) => string | undefined
+  floatingPlacement?: "right" | "center"
 }
 
 function renderSearchPanel(items: SearchItem[], over: Overrides = {}) {
@@ -42,6 +43,7 @@ function renderSearchPanel(items: SearchItem[], over: Overrides = {}) {
       resolveSearchOptions={over.resolveSearchOptions}
       searchOptions={over.searchOptions}
       resultAside={over.resultAside}
+      floatingPlacement={over.floatingPlacement}
     />,
   )
 }
@@ -64,6 +66,24 @@ const item = (over: Partial<SearchItem> & Pick<SearchItem, "id" | "name">): Sear
 const palworld = { searchFields: ["name", "idLabel"] as SearchField[], resolveSearchOptions: palworldNumericLookup }
 
 describe("SearchPanel", () => {
+  it("keeps the legacy right placement as the floating default", () => {
+    const { getByTestId } = renderSearchPanel([])
+    const root = getByTestId("search-panel")
+
+    expect(root.className).toContain("right-3")
+    expect(root.className).toContain("w-[290px]")
+  })
+
+  it("applies the shared responsive centered floating geometry", () => {
+    const { getByTestId } = renderSearchPanel([], { floatingPlacement: "center" })
+    const root = getByTestId("search-panel")
+
+    expect(root.className).toContain("left-1/2")
+    expect(root.className).toContain("min-w-72")
+    expect(root.className).toContain("max-w-[34rem]")
+    expect(root.className).not.toContain("right-3")
+  })
+
   it("renders a descriptive placeholder independently from the submit label", () => {
     renderSearchPanel([])
 

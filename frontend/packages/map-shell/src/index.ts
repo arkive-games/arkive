@@ -5,6 +5,11 @@ export {
   type ShellTopBarNav,
   type ShellNavItem,
 } from "./ShellTopBar"
+export {
+  ArkiveMapTopBar,
+  type ArkiveMapTopBarProps,
+  type ArkiveMapTheme,
+} from "./ArkiveMapTopBar"
 export { ShellSidebar, type ShellSidebarProps } from "./ShellSidebar"
 export { ShellGameHeader, type ShellGameHeaderProps } from "./ShellGameHeader"
 export {

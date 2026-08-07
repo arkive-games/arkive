@@ -1,115 +1,39 @@
 @import "tailwindcss";
+@import "@gamemap/map-shell/arkive-map-theme.css";
 @source "../../../packages/ui/src";
 @source "../../../packages/map-shell/src";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.625rem;
-  --arkive-nav-active: #0F4C49;
-  --arkive-nav-on-active: #FFFFFF;
-  --arkive-nav-accent: #EE8A45;
-  --background: #EAF1EC;
-  --foreground: #153F3D;
-  --card: #F8FBF9;
-  --card-foreground: #153F3D;
-  --popover: #FCFEFC;
-  --popover-foreground: #153F3D;
-  --primary: #0F4C49;
-  --primary-foreground: #FFFFFF;
-  --secondary: #E3EDE7;
-  --secondary-foreground: #153F3D;
-  --muted: #E5EEE8;
-  --muted-foreground: #667D78;
-  --accent: #E3EDE7;
-  --accent-foreground: #153F3D;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: rgba(15, 76, 73, 0.15);
-  --input: #DDE8E1;
-  --ring: #EE8A45;
-  --arkive-orange: #EE8A45;
-  --arkive-filter-active: #F3EEE8;
-  --arkive-filter-hover: #E4F0EA;
-  --arkive-divider: rgba(15, 76, 73, 0.12);
   --pal-ocean: #0F4C49;
   --pal-cyan-soft: #E3EDE7;
   --pal-sidebar: #EEF5F0;
   --pal-divider: rgba(15, 76, 73, 0.14);
   --pal-gold: #EE8A45;
   --pal-gold-ink: #A9531D;
-  --arkive-mark-cutout: #F8FBF9;
 }
 
 .dark {
-  --arkive-nav-active: #9AC8B4;
-  --arkive-nav-on-active: #102D2B;
-  --arkive-nav-accent: #F0A06A;
-  --background: #0D2423;
-  --foreground: #E8F2ED;
-  --card: #173331;
-  --card-foreground: #E8F2ED;
-  --popover: #193735;
-  --popover-foreground: #E8F2ED;
-  --primary: #9AC8B4;
-  --primary-foreground: #102D2B;
-  --secondary: #23403D;
-  --secondary-foreground: #E8F2ED;
-  --muted: #23403D;
-  --muted-foreground: #A7BBB3;
-  --accent: #294945;
-  --accent-foreground: #F2F7F4;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: rgba(211, 231, 220, 0.15);
-  --input: #23403D;
-  --ring: #F0A06A;
-  --arkive-orange: #F0A06A;
-  --arkive-filter-active: #3C3931;
-  --arkive-filter-hover: #294945;
-  --arkive-divider: rgba(211, 231, 220, 0.12);
   --pal-ocean: #9AC8B4;
   --pal-cyan-soft: #294945;
   --pal-sidebar: #132F2D;
   --pal-divider: rgba(211, 231, 220, 0.13);
   --pal-gold: #F0A06A;
   --pal-gold-ink: #F0A06A;
-  --arkive-mark-cutout: #173331;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
   --color-input: var(--input);
-  --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Desktop readability: raise the rem base from the browser default 16px.
+/* The shared Arkive theme owns the desktop rem base.
    The app is rem-based (Tailwind), so this scales all text/spacing uniformly
    like a gentle zoom. Tunable knob for overall UI size (16.5–18px). */
-html {
-  font-size: 17px;
-}
-
 /* Phones (< 768px, the `useIsMobile` breakpoint) sit closer to the eye but the
    text is physically much smaller, so nudge the same knob up one step there. */
 @media (max-width: 767px) {
@@ -142,135 +66,4 @@ html {
 
 .dark .gmgl-map-root {
   background: #0c161e;
-}
-
-.palworld-map-page [data-testid="search-panel"] > div:first-child {
-  min-height: 3rem;
-  gap: 0.35rem;
-  padding: 0.25rem 0.3rem 0.25rem 0.75rem;
-  border-color: color-mix(in srgb, var(--primary) 22%, transparent);
-  border-radius: 0.8rem;
-  background: color-mix(in srgb, var(--popover) 94%, transparent);
-  box-shadow: 0 10px 30px rgba(7, 48, 64, 0.13);
-}
-
-.palworld-map-page [data-testid="search-panel"] [data-testid="marker-search"] {
-  height: 2.35rem;
-  font-size: 0.75rem;
-}
-
-.palworld-map-page [data-testid="search-panel"] [data-testid="search-scope-toggle"] {
-  height: 2.35rem;
-  padding-inline: 0.45rem;
-}
-
-.palworld-map-page [data-testid="search-panel"] [data-slot="search-divider"] {
-  display: none;
-}
-
-.palworld-map-page [data-testid="search-panel"] [data-testid="search-submit"] {
-  height: 2.35rem;
-  border-radius: 0.6rem;
-  padding-inline: 0.85rem;
-  background: var(--pal-ocean);
-  color: var(--background);
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.dark .palworld-map-page [data-testid="search-panel"] [data-testid="search-submit"] {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.palworld-map-page [data-testid="search-panel"] > div:nth-child(2) {
-  border-color: var(--pal-divider);
-  border-radius: 0.8rem;
-  background: color-mix(in srgb, var(--popover) 96%, transparent);
-  box-shadow: 0 16px 40px rgba(7, 48, 64, 0.14);
-}
-
-.palworld-map-page .gm-zoom,
-.palworld-map-page .gmgl-zoom {
-  right: 0.85rem;
-  bottom: 0.85rem;
-}
-
-.palworld-map-page .gm-zoom-pill,
-.palworld-map-page .gmgl-zoom-pill {
-  border: 1px solid var(--pal-divider);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--card) 96%, transparent);
-  box-shadow: 0 8px 24px rgba(7, 48, 64, 0.14);
-  backdrop-filter: blur(0.75rem);
-}
-
-.palworld-map-page .gm-zoom-btn,
-.palworld-map-page .gmgl-zoom-btn {
-  width: 2.5rem;
-  height: 2.5rem;
-  color: var(--foreground) !important;
-}
-
-.palworld-map-page .gm-zoom-btn:hover,
-.palworld-map-page .gmgl-zoom-btn:hover {
-  background: var(--pal-cyan-soft);
-  color: var(--primary) !important;
-}
-
-.palworld-map-page .gm-zoom-divider,
-.palworld-map-page .gmgl-zoom-divider {
-  background: var(--pal-divider);
-}
-
-.palworld-map-page .gm-statusbar-stack,
-.palworld-map-page .gmgl-statusbar-stack {
-  bottom: 0.85rem;
-  left: 0.85rem;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--foreground);
-}
-
-.palworld-map-page .gm-statusbar-footer,
-.palworld-map-page .gmgl-statusbar-footer,
-.palworld-map-page .gm-statusbar-pill,
-.palworld-map-page .gmgl-statusbar-pill {
-  border: 1px solid var(--pal-divider);
-  border-radius: 0.65rem;
-  background: color-mix(in srgb, var(--card) 94%, transparent) !important;
-  color: var(--muted-foreground);
-  box-shadow: 0 0.4rem 1.1rem rgba(7, 48, 64, 0.12);
-  backdrop-filter: blur(0.65rem);
-}
-
-.palworld-map-page .gm-statusbar-footer,
-.palworld-map-page .gmgl-statusbar-footer {
-  padding: 0.45rem 0.65rem;
-  line-height: 1;
-  color: var(--muted-foreground);
-}
-
-.palworld-map-page .gm-statusbar-pill,
-.palworld-map-page .gmgl-statusbar-pill {
-  min-height: 1.85rem;
-  padding-inline: 0.65rem;
-}
-
-.palworld-topbar {
-  --arkive-mark-cutout: var(--card);
-  box-shadow: 0 0.2rem 1rem rgba(7, 48, 64, 0.06);
-}
-
-.palworld-topbar [data-testid="theme-menu"],
-.palworld-topbar [data-testid="lang-menu"] {
-  border: 1px solid var(--pal-divider);
-  border-radius: 0.55rem;
-  background: var(--card);
-}
-
-.palworld-topbar [data-testid="theme-menu"]:hover,
-.palworld-topbar [data-testid="lang-menu"]:hover {
-  background: var(--pal-cyan-soft);
 }

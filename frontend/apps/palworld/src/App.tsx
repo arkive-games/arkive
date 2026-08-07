@@ -778,9 +778,7 @@ export default function App() {
       resolveSearchOptions={palIdLookup}
       searchOptions={PAL_SEARCH_OPTIONS}
       variant={variant}
-      classNames={variant === 'floating'
-        ? { root: 'left-1/2 right-auto w-[calc(100%-2rem)] min-w-72 max-w-[34rem] -translate-x-1/2' }
-        : undefined}
+      floatingPlacement="center"
     />
   )
 
@@ -895,7 +893,7 @@ export default function App() {
     <>
     <h1 className="sr-only">{t('title')}</h1>
     <ShellLayout
-      className="palworld-map-page bg-background text-foreground"
+      className="arkive-map-page palworld-map-page bg-background text-foreground"
       topBar={<TopNav active="/" />}
       sidebar={
         <ShellSidebar
