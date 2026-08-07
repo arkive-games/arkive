@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.2",
+      "date": "2026-08-08",
+      "commit": "9acde2f119d900985fef68f2eeebe5afbf54d174",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Aligned the interactive-map frame with AION2, restoring Arkive's slogan and using Palworld promotional art and logo inside the shared game header without changing the map's search behavior.",
+            "zh-CN": "互动地图现已与永恒之塔2采用同一套页面框架，恢复藏舟品宣语，并在统一尺寸的游戏展示区使用幻兽帕鲁宣传图与Logo，同时保留原有搜索行为。",
+            "zh-TW": "互動地圖現已與永恆之塔2採用同一套頁面框架，恢復藏舟品牌標語，並在統一尺寸的遊戲展示區使用幻獸帕魯宣傳圖與Logo，同時保留原有搜尋行為。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.1",
       "date": "2026-08-07",
       "commit": "a45f7faf171e9ba2ea6fc709ce24142e61dfc367",
