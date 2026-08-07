@@ -9,6 +9,7 @@ export default function Sidebar() {
 
   return (
     <ShellSidebar
+      width={320}
       collapseLabel={t("common:menu.collapse", "Collapse")}
       expandLabel={t("common:menu.expand", "Expand")}
       label={t("common:menu.markerTypes", "Marker Types")}
@@ -17,7 +18,7 @@ export default function Sidebar() {
         scrollArea: "aion2-filter-scroll",
         content: "pb-2",
         collapseButton:
-          "border border-l-0 border-border bg-card text-[color:var(--arkive-orange)] shadow-sm",
+          "top-4 border border-l-0 border-border bg-card text-[color:var(--arkive-orange)] shadow-sm",
       }}
       headerSlot={<Logo />}
       mapSelectorSlot={<SelectMap />}

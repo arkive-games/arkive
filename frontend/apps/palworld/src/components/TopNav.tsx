@@ -134,7 +134,7 @@ export function TopNav({ active, engine, onEngineChange }: {
           <ArkiveMark />
           <span className="flex flex-col leading-none">
             <strong className="text-base font-bold tracking-tight text-[color:var(--pal-ocean)]">{t('brand')}</strong>
-            <small className="mt-1 text-xs font-semibold tracking-[0.14em] text-[color:var(--pal-gold-ink)]">PALWORLD</small>
+            <small className="mt-1 text-xs font-semibold tracking-wide text-[color:var(--pal-gold-ink)]">{t('brandSlogan')}</small>
           </span>
         </a>
       }

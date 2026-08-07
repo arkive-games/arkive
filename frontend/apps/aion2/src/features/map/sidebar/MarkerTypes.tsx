@@ -19,13 +19,13 @@ import { parseIconUrl } from "@/lib/url";
 // Quiet neutral rows keep the dense filter list readable; selected rows use
 // the same warm-orange rail and tinted surface as the map marker treatment.
 const BUTTON_SKIN =
-  "h-auto min-h-9 rounded-sm border-l-[3px] border-l-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-50 hover:bg-[color:var(--arkive-filter-hover)] hover:opacity-80";
+  "h-auto min-h-9 rounded-md border border-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-65 hover:border-[color:var(--arkive-divider)] hover:bg-card hover:text-foreground hover:opacity-100";
 const BUTTON_SKIN_ACTIVE =
-  "border-l-[color:var(--arkive-orange)] bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-none";
+  "border-primary/20 bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-[inset_0.18rem_0_0_var(--arkive-orange)]";
 const CONTROL_SKIN =
-  "h-8 min-h-8 rounded-none border-l-0 bg-card px-1.5 text-xs font-semibold text-muted-foreground hover:bg-[color:var(--arkive-filter-hover)] hover:text-foreground";
+  "h-9 min-h-9 justify-center rounded-md border border-[color:var(--arkive-divider)] bg-card px-2 text-xs font-semibold text-muted-foreground shadow-none hover:border-primary/35 hover:bg-[color:var(--arkive-filter-hover)] hover:text-foreground";
 const CONTROL_SKIN_ACTIVE =
-  "bg-[color:var(--arkive-filter-active)] text-primary shadow-[inset_0_-0.15rem_0_var(--arkive-orange)]";
+  "border-primary/40 bg-[color:var(--arkive-filter-active)] text-primary shadow-none hover:bg-[color:var(--arkive-filter-active)]";
 
 export default function MarkerTypes() {
   const { types, selectedMap } = useGameMap();
@@ -144,8 +144,7 @@ export default function MarkerTypes() {
         }}
         controls={controls}
         classNames={{
-          controls:
-            "grid-cols-3 gap-px overflow-hidden rounded-md bg-[color:var(--arkive-divider)]",
+          controls: "mb-2 grid-cols-2 gap-2",
           controlButton: CONTROL_SKIN,
           controlButtonActive: CONTROL_SKIN_ACTIVE,
           subtypeButton: BUTTON_SKIN,
@@ -153,10 +152,10 @@ export default function MarkerTypes() {
           category:
             "border-b border-[color:var(--arkive-divider)] py-1.5 last:border-b-0",
           categoryHeader:
-            "min-h-10 pt-0 pb-0 text-foreground [&>svg]:size-5 [&>svg]:text-foreground/65",
+            "min-h-10 pt-0 pb-0 text-foreground [&>svg]:size-5 [&>svg]:text-foreground/55",
           categoryEyeToggle:
-            "text-foreground/65 hover:bg-[color:var(--arkive-filter-hover)] hover:text-primary",
-          subtypeGrid: "gap-x-2 gap-y-2 pb-2",
+            "text-foreground/55 hover:bg-[color:var(--arkive-filter-hover)] hover:text-primary",
+          subtypeGrid: "gap-x-2 gap-y-1.5 pb-2",
         }}
       />
 
