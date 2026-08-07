@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.1",
+      "date": "2026-08-07",
+      "commit": "a45f7faf171e9ba2ea6fc709ce24142e61dfc367",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The interactive map now uses an island field-guide layout with a scenic game header, clearer filter states, centered search, and a map-first collapsed information panel.",
+            "zh-CN": "互动地图现已采用群岛探险手册式布局，加入游戏场景页头、更清晰的筛选状态、居中搜索，并默认收起说明栏，让地图成为视觉中心。",
+            "zh-TW": "互動地圖現已採用群島探險手冊式佈局，加入遊戲場景頁首、更清晰的篩選狀態、置中搜尋，並預設收起說明欄，讓地圖成為視覺中心。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.0",
       "date": "2026-08-01",
       "commit": "dc1c893180e14efd24cd7a93f70d9787dee8a38a",
