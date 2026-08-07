@@ -201,6 +201,12 @@ damage but scores 0.1141. Class engravings (52 of the 95) have **no** per-level 
 anywhere — only the 43 general ones are covered.
 
 ## Notes
+- **Canonical desktop map UI contract:** Before changing shared interactive-map
+  chrome or adding another game, read
+  `docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml`. It defines shared ownership,
+  layout, navigation, sidebar, search, color, typography, icon, marker-popup,
+  localization, accessibility, and new-game verification rules. Cross-game UI
+  work must follow its shared-first change routing rather than patching one app.
 - **Bilibili Toy publishing:** each app can ship as a single self-contained toy
   (site + data + resource bundled). `frontend/apps/<app>/toy.config.json` holds the
   identity (slug is permanent once published; palworld is live as `arkive-palworld`).

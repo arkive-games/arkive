@@ -1,6 +1,7 @@
 /* src/index.css */
 
 @import 'tailwindcss';
+@import '@gamemap/map-shell/arkive-map-theme.css';
 
 @plugin "@tailwindcss/typography";
 @source "../../../packages/ui/src";
@@ -52,55 +53,14 @@
    NOTE: `--input` is defined but intentionally NOT exposed as the `--color-input`
    utility — the app already uses `bg-input` as a field fill. */
 :root {
-    --radius: 0.625rem;
-    --arkive-nav-active: #0F4C49;
-    --arkive-nav-on-active: #FFFFFF;
-    --arkive-nav-accent: #EE8A45;
-    --background: #EAF1EC;
-    --foreground: #153F3D;
-    --card: #F8FBF9;
-    --card-foreground: #153F3D;
-    --popover: #FCFEFC;
-    --popover-foreground: #153F3D;
-    --primary: #0F4C49;
-    --primary-foreground: #FFFFFF;
-    --secondary: #E3EDE7;
-    --secondary-foreground: #153F3D;
-    --muted: #E5EEE8;
-    --muted-foreground: #667D78;
-    --accent: #E3EDE7;
-    --accent-foreground: #153F3D;
     --destructive: #f31260;
     --destructive-foreground: #ffffff;
-    --border: rgba(15, 76, 73, 0.15);
-    --input: #DDE8E1;
-    --ring: #EE8A45;
 }
 
 /* Dark surfaces preserve the same mist-green, deep-sea teal, and warm-orange system. */
 .dark {
-    --arkive-nav-active: #9AC8B4;
-    --arkive-nav-on-active: #102D2B;
-    --arkive-nav-accent: #F0A06A;
-    --background: #0D2423;
-    --foreground: #E8F2ED;
-    --card: #173331;
-    --card-foreground: #E8F2ED;
-    --popover: #193735;
-    --popover-foreground: #E8F2ED;
-    --primary: #9AC8B4;
-    --primary-foreground: #102D2B;
-    --secondary: #23403D;
-    --secondary-foreground: #E8F2ED;
-    --muted: #23403D;
-    --muted-foreground: #A7BBB3;
-    --accent: #294945;
-    --accent-foreground: #F2F7F4;
     --destructive: #f31260;
     --destructive-foreground: #ffffff;
-    --border: rgba(211, 231, 220, 0.15);
-    --input: #23403D;
-    --ring: #F0A06A;
 }
 
 /* Abyss shares the dark core palette (same as hero.ts); only chrome accents differ. */
@@ -124,33 +84,6 @@
     --border: rgba(211, 231, 220, 0.15);
     --input: #23403D;
     --ring: #F0A06A;
-}
-
-/* Bridge raw tokens to Tailwind v4 color/radius utilities used by shadcn primitives. */
-@theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-card: var(--card);
-    --color-card-foreground: var(--card-foreground);
-    --color-popover: var(--popover);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-primary: var(--primary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-secondary: var(--secondary);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-muted: var(--muted);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-accent: var(--accent);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-destructive: var(--destructive);
-    --color-destructive-foreground: var(--destructive-foreground);
-    --color-border: var(--border);
-    --color-ring: var(--ring);
-
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
 }
 
 .dark {
@@ -227,18 +160,10 @@ body,
     height: 100%;
 }
 
-/* Desktop readability: raise the rem base from the browser default 16px.
+/* The shared Arkive theme owns the desktop rem base.
    The app is rem-based (Tailwind), so this scales all text/spacing uniformly
    like a gentle zoom. Tunable knob for overall UI size (16.5–18px). */
-html {
-    font-size: 17px;
-}
 
-/* OPTIONAL: some base background and font */
-body {
-    font-family: "Noto Sans", "Noto Sans SC", "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    sans-serif;
-}
 
 
 /* Leaflet container needs explicit size, we’ll also set via className */
@@ -357,84 +282,10 @@ body {
     z-index: 3100;
 }
 
-/* ===== Arkive reference surfaces ======================================
+/* App-specific scrollbar treatment for Arkive reference surfaces.
    Maps and wiki indexes are long-stay reference surfaces: mist green keeps
    dense information calm, deep-sea teal carries hierarchy, and warm orange
    is reserved for selection and orientation. */
-.aion2-map-page,
-.aion2-wiki-page {
-    --background: #EAF1EC;
-    --foreground: #153F3D;
-    --card: #F8FBF9;
-    --card-foreground: #153F3D;
-    --popover: #FCFEFC;
-    --popover-foreground: #153F3D;
-    --primary: #0F4C49;
-    --primary-foreground: #FFFFFF;
-    --muted: #E5EEE8;
-    --muted-foreground: #667D78;
-    --accent: #E3EDE7;
-    --accent-foreground: #153F3D;
-    --border: rgba(15, 76, 73, 0.15);
-    --ring: #EE8A45;
-    --arkive-orange: #EE8A45;
-    --arkive-sidebar: #EEF5F0;
-    --arkive-filter-idle: #E8EFEB;
-    --arkive-filter-active: #F3EEE8;
-    --arkive-filter-hover: #DEEAE3;
-    --arkive-divider: rgba(15, 76, 73, 0.12);
-    --arkive-mark-cutout: #F8FBF9;
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-card: var(--card);
-    --color-card-foreground: var(--card-foreground);
-    --color-popover: var(--popover);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-primary: var(--primary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-muted: var(--muted);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-accent: var(--accent);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-border: var(--border);
-    --color-ring: var(--ring);
-}
-
-.dark .aion2-map-page,
-.dark .aion2-wiki-page {
-    --background: #0D2423;
-    --foreground: #E8F2ED;
-    --card: #173331;
-    --card-foreground: #E8F2ED;
-    --popover: #193735;
-    --popover-foreground: #E8F2ED;
-    --primary: #9AC8B4;
-    --primary-foreground: #102D2B;
-    --muted: #23403D;
-    --muted-foreground: #A7BBB3;
-    --accent: #294945;
-    --accent-foreground: #F2F7F4;
-    --border: rgba(211, 231, 220, 0.15);
-    --ring: #F0A06A;
-    --arkive-orange: #F0A06A;
-    --arkive-sidebar: #132F2D;
-    --arkive-filter-idle: #203D3A;
-    --arkive-filter-active: #3C3931;
-    --arkive-filter-hover: #294945;
-    --arkive-divider: rgba(211, 231, 220, 0.12);
-    --arkive-mark-cutout: #173331;
-}
-
-.aion2-topbar {
-    height: 3.5rem;
-    padding-inline: 1.25rem;
-    box-shadow: 0 1px 12px rgba(15, 76, 73, 0.05);
-}
-
-.aion2-topbar > div:first-child > a:first-child {
-    border-right: 1px solid var(--border);
-}
-
 .aion2-filter-scroll [data-slot="scroll-area-viewport"] {
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
@@ -446,142 +297,4 @@ body {
 
 .aion2-filter-scroll [data-slot="scroll-area-thumb"] {
     background: color-mix(in srgb, var(--primary) 30%, transparent);
-}
-
-/* Floating map search: centered, quiet, and wide enough for real marker names. */
-.aion2-map-page [data-testid="search-panel"] > div:first-child {
-    min-height: 3rem;
-    gap: 0.35rem;
-    padding: 0.25rem 0.3rem 0.25rem 0.75rem;
-    border-color: color-mix(in srgb, var(--primary) 18%, transparent);
-    border-radius: 0.8rem;
-    background: color-mix(in srgb, var(--popover) 94%, transparent);
-    box-shadow: 0 10px 30px rgba(15, 76, 73, 0.13);
-}
-
-.aion2-map-page [data-testid="search-panel"] [data-testid="marker-search"] {
-    height: 2.35rem;
-    font-size: 0.75rem;
-}
-
-.aion2-map-page [data-testid="search-panel"] [data-testid="search-scope-toggle"] {
-    height: 2.35rem;
-    padding-inline: 0.45rem;
-}
-
-.aion2-map-page [data-testid="search-panel"] [data-slot="search-divider"] {
-    display: none;
-}
-
-.aion2-map-page [data-testid="search-panel"] [data-testid="search-submit"] {
-    height: 2.35rem;
-    border-radius: 0.6rem;
-    padding-inline: 0.85rem;
-    background: var(--primary);
-    color: var(--primary-foreground);
-    font-size: 0.75rem;
-    font-weight: 800;
-}
-
-.aion2-map-page [data-testid="search-panel"] [data-testid="search-submit"]:hover {
-    filter: brightness(0.96);
-}
-
-.aion2-map-page [data-testid="search-panel"] > div:nth-child(2) {
-    border-color: var(--border);
-    border-radius: 0.8rem;
-    background: color-mix(in srgb, var(--popover) 96%, transparent);
-    box-shadow: 0 16px 40px rgba(15, 76, 73, 0.14);
-}
-
-/* Both renderers expose parallel chrome names; one rule keeps them identical. */
-.aion2-map-page .gm-zoom,
-.aion2-map-page .gmgl-zoom {
-    right: 0.85rem;
-    bottom: 0.85rem;
-}
-
-.aion2-map-page .gm-zoom-pill,
-.aion2-map-page .gmgl-zoom-pill {
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    background: color-mix(in srgb, var(--card) 96%, transparent);
-    box-shadow: 0 8px 24px rgba(15, 76, 73, 0.14);
-    backdrop-filter: blur(0.75rem);
-}
-
-.aion2-map-page .gm-zoom-btn,
-.aion2-map-page .gmgl-zoom-btn {
-    width: 2.5rem;
-    height: 2.5rem;
-    color: var(--foreground) !important;
-}
-
-.aion2-map-page .gm-zoom-btn:hover,
-.aion2-map-page .gmgl-zoom-btn:hover {
-    background: var(--accent);
-    color: var(--primary) !important;
-}
-
-.aion2-map-page .gm-zoom-divider,
-.aion2-map-page .gmgl-zoom-divider {
-    background: var(--border);
-}
-
-.aion2-map-page .gm-statusbar-stack,
-.aion2-map-page .gmgl-statusbar-stack {
-    bottom: 0.85rem;
-    left: 0.85rem;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.4rem;
-    color: var(--foreground);
-}
-
-.aion2-map-page .gm-statusbar-footer,
-.aion2-map-page .gmgl-statusbar-footer,
-.aion2-map-page .gm-statusbar-pill,
-.aion2-map-page .gmgl-statusbar-pill {
-    border: 1px solid var(--border);
-    border-radius: 0.65rem;
-    background: color-mix(in srgb, var(--card) 94%, transparent) !important;
-    color: var(--foreground);
-    box-shadow: 0 0.4rem 1.1rem rgba(15, 76, 73, 0.10);
-    backdrop-filter: blur(0.65rem);
-}
-
-.aion2-map-page .gm-statusbar-footer,
-.aion2-map-page .gmgl-statusbar-footer {
-    padding: 0.45rem 0.65rem;
-    line-height: 1;
-    color: var(--muted-foreground);
-}
-
-.aion2-map-page .gm-statusbar-pill,
-.aion2-map-page .gmgl-statusbar-pill {
-    min-height: 1.85rem;
-    padding-inline: 0.65rem;
-}
-
-.aion2-map-page .leaflet-tooltip.gm-marker-tooltip,
-.aion2-map-page .gmgl-label,
-.aion2-map-page .gmgl-tooltip {
-    border-radius: 0.45rem;
-    background: var(--card);
-    color: var(--foreground);
-    filter: drop-shadow(0 3px 5px rgba(15, 49, 47, 0.24));
-}
-
-.aion2-map-page .leaflet-tooltip.gm-marker-tooltip::before {
-    border-top-color: var(--card) !important;
-}
-
-.aion2-map-page .gmgl-label::after,
-.aion2-map-page .gmgl-tooltip::after {
-    border-top-color: var(--card);
-}
-
-.aion2-map-page .gm-marker-popup .gm-popup-card::after,
-.aion2-map-page .gmgl-popup .gm-popup-card::after {
-    border-top-color: var(--card);
 }

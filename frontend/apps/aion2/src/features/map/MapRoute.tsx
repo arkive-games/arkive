@@ -385,14 +385,7 @@ export default function MapRoute() {
       variant={variant}
       // The right sidebar's collapse tab hangs 32px into the map column at
       // y≈100px; clear it so it never lands on the results list.
-      classNames={
-        variant === "floating"
-          ? {
-              root:
-                "top-3 right-auto bottom-3 left-1/2 w-[calc(100%-2rem)] min-w-72 max-w-[34rem] -translate-x-1/2",
-            }
-          : undefined
-      }
+      floatingPlacement="center"
     />
   );
 
@@ -481,7 +474,7 @@ export default function MapRoute() {
 
   return (
     <ShellLayout
-      className="aion2-map-page bg-background text-foreground"
+      className="arkive-map-page aion2-map-page bg-background text-foreground"
       topBar={<TopNavbar />}
       sidebar={<Sidebar />}
       rightSidebar={<InfoSidebar />}
