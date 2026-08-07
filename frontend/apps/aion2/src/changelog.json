@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.7",
+      "date": "2026-08-08",
+      "commit": "6e11d3fa0a75cf1fcea20dda84df84b9c5dec6bd",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Expanded the map picker to the full sidebar width and matched its filter-button corners and spacing to the Palworld explorer.",
+            "zh-CN": "将地图选择框调整为侧栏整行宽度，并统一永恒之塔2与幻兽帕鲁筛选按钮的圆角和间距。",
+            "zh-TW": "將地圖選擇框調整為側欄整行寬度，並統一永恆之塔2與幻獸帕魯篩選按鈕的圓角和間距。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.6",
       "date": "2026-08-08",
       "commit": "7aadec6ac937025179299d75ccec22bec319e31e",
