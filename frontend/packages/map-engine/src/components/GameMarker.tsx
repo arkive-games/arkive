@@ -29,6 +29,7 @@ type Props = {
   /** Show the permanent marker-name tooltip. */
   showLabels: boolean;
   onSelectMarker?: (markerId: string) => void;
+  onHoverMarker?: (markerId: string | null) => void;
   selected?: boolean;
   /** Reference-stable app adapters; this component is memoized. */
   assets: MapAssets;
@@ -46,6 +47,7 @@ const GameMarkerInner: React.FC<Props> = ({
   position,
   showLabels,
   onSelectMarker,
+  onHoverMarker,
   selected = false,
   assets,
   theme,
@@ -140,6 +142,12 @@ const GameMarkerInner: React.FC<Props> = ({
       eventHandlers={{
         click: () => {
           onSelectMarker?.(marker.id);
+        },
+        mouseover: () => {
+          onHoverMarker?.(marker.id);
+        },
+        mouseout: () => {
+          onHoverMarker?.(null);
         },
       }}
     >

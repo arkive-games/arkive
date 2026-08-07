@@ -74,6 +74,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   suppressInitialFlyForId,
   overlayLines,
   onToggleMarker,
+  onHoverMarker,
   subzoneAt,
   flyToDuration,
   mapRef,
@@ -103,6 +104,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   const liveRef = useRef({
     map: selectedMap,
     onToggleMarker,
+    onHoverMarker,
     onViewChange,
     flyToDuration,
     initialView,
@@ -112,6 +114,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   liveRef.current = {
     map: selectedMap,
     onToggleMarker,
+    onHoverMarker,
     onViewChange,
     flyToDuration,
     initialView,
@@ -165,6 +168,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
       initialView: kept ?? liveRef.current.initialView,
       flyToDuration: () => liveRef.current.flyToDuration,
       onSelect: (id) => liveRef.current.onToggleMarker(id),
+      onHover: (id) => liveRef.current.onHoverMarker?.(id),
       onViewChange: (view) => liveRef.current.onViewChange?.(view),
       onContextMenu: (state) => setContextMenu(state),
     });

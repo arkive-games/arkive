@@ -130,6 +130,8 @@ export interface MapEngineOptions {
   flyToDuration: () => number;
   /** A tap on a marker (id) or on the background (null). */
   onSelect: (markerId: string | null) => void;
+  /** Hovered marker id, or `null` when the pointer leaves every marker. */
+  onHover: (markerId: string | null) => void;
   /** End of gesture / end of fly / mount, coalesced, in DATA space. */
   onViewChange: (view: { x: number; y: number; zoom: number }) => void;
   /** Open the context menu, or close it (`null`). */
@@ -164,6 +166,7 @@ export class MapEngine {
   private popupNeedsAutoPan = false;
 
   private lastPointer: Point | null = null;
+  private reportedHoverMarkerId: string | null = null;
   private hoveredMarkerId: string | null = null;
   /** Re-entrancy guard for the overlay pass (auto-pan moves the camera). */
   private overlayRunning = false;
@@ -531,6 +534,7 @@ export class MapEngine {
     if (this.disposed) return;
     this.lastPointer = null;
     cursorStore.clear();
+    this.reportHover(null);
     this.hoveredMarkerId = null;
     this.overlay.setTooltip(null, null);
     this.vectors.setHovered(null);
@@ -612,6 +616,7 @@ export class MapEngine {
     if (this.gestures.isGesturing()) return;
 
     const hitId = this.markerLayer.hitTest(pointer);
+    this.reportHover(hitId);
     // The selected marker has a popup; Leaflet gives it no tooltip either.
     const tooltipId = hitId && hitId !== this.selectedId ? hitId : null;
     if (tooltipId !== this.hoveredMarkerId) {
@@ -632,6 +637,12 @@ export class MapEngine {
 
     const pixel = this.camera.screenToPixel(pointer.x, pointer.y);
     this.vectors.setHovered(this.vectors.regionAt(pixel));
+  }
+
+  private reportHover(markerId: string | null): void {
+    if (markerId === this.reportedHoverMarkerId) return;
+    this.reportedHoverMarkerId = markerId;
+    this.opts.onHover(markerId);
   }
 
   private rebuildLabels(): void {
@@ -705,6 +716,7 @@ export class MapEngine {
    */
   dispose(): void {
     if (this.disposed) return;
+    this.reportHover(null);
     this.disposed = true;
     this.opts.canvas.removeEventListener("pointermove", this.onPointerMove);
     this.opts.canvas.removeEventListener("pointerleave", this.onPointerLeave);

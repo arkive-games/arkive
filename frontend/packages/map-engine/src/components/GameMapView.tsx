@@ -188,6 +188,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   suppressInitialFlyForId,
   overlayLines,
   onToggleMarker,
+  onHoverMarker,
   subzoneAt,
   flyToDuration,
   mapRef,
@@ -201,6 +202,11 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<RegionInstance | undefined>(
     undefined,
+  );
+
+  useEffect(
+    () => () => onHoverMarker?.(null),
+    [onHoverMarker],
   );
   // Restored view (persistence): applied to the MapContainer at mount only —
   // the container is keyed by map id, so a per-map value takes effect on each
@@ -540,6 +546,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
             position={position}
             showLabels={showLabels}
             onSelectMarker={onToggleMarker}
+            onHoverMarker={onHoverMarker}
             selected={selectedMarkerId === marker.id}
             assets={assets}
             theme={theme}

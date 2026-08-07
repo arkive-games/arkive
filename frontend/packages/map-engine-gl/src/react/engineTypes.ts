@@ -172,6 +172,8 @@ export interface GameMapViewProps {
    * Marker tap / background tap → selection toggle. `null` always deselects.
    */
   onToggleMarker: (markerId: string | null) => void;
+  /** Marker pointer enter/leave. Fires only when the hovered marker changes. */
+  onHoverMarker?: (markerId: string | null) => void;
   /** `(x, y)` DATA-space → localized subzone name, for the cursor status bar. */
   subzoneAt: (x: number, y: number) => string;
   /** Duration (seconds) of the fly-to animation on selection. */
