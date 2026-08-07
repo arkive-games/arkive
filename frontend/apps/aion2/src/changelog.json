@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.2",
+      "date": "2026-08-07",
+      "commit": "4e8e506078d718922d4d0f11ea1b40e9fad04892",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Restored the approved map filter and search styling, improved inactive marker contrast, and reframed the AION2 banner around both characters.",
+            "zh-CN": "恢复已确认的地图筛选与搜索栏样式，增强关闭标记的灰调对比，并调整 AION2 横幅以完整呈现双人物。",
+            "zh-TW": "恢復已確認的地圖篩選與搜尋列樣式，增強關閉標記的灰調對比，並調整 AION2 橫幅以完整呈現雙人物。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.1",
       "date": "2026-08-07",
       "commit": "3f20e77e0f4fd9c85053923e7da992b07d6f0a45",
