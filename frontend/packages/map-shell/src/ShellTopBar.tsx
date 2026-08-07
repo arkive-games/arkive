@@ -34,9 +34,19 @@ export interface ShellTopBarNav {
    * (base + active/inactive, incl. per-site overrides) and passes it in — the
    * app just wraps `label` in its router's Link. Keeps the shell router-agnostic.
    */
-  renderItem: (item: ShellNavItem, className: string) => ReactNode
+  renderItem: (
+    item: ShellNavItem,
+    className: string,
+    labelClassName?: string,
+  ) => ReactNode
   /** Per-site overrides appended to the default inactive / active classes. */
-  classNames?: { item?: string; itemActive?: string; chevron?: string }
+  classNames?: {
+    item?: string
+    itemActive?: string
+    label?: string
+    labelActive?: string
+    chevron?: string
+  }
 }
 
 export interface ShellTopBarProps {
@@ -93,7 +103,11 @@ export function ShellTopBar({
               <NavDropdown key={item.key} item={item} nav={nav} />
             ) : (
               <span key={item.key} className="inline-flex items-center">
-                {nav.renderItem(item, navItemClass(item.active, nav))}
+                {nav.renderItem(
+                  item,
+                  navItemClass(item.active, nav),
+                  navItemLabelClass(item.active, nav),
+                )}
               </span>
             ),
           )}
@@ -189,6 +203,10 @@ function navItemClass(active: boolean | undefined, nav: ShellTopBarNav): string 
   )
 }
 
+function navItemLabelClass(active: boolean | undefined, nav: ShellTopBarNav): string {
+  return cn(nav.classNames?.label, active && nav.classNames?.labelActive)
+}
+
 /** A top-bar item that owns children: renders a dropdown of leaf links. */
 function NavDropdown({ item, nav }: { item: ShellNavItem; nav: ShellTopBarNav }) {
   const children = item.children ?? []
@@ -201,7 +219,12 @@ function NavDropdown({ item, nav }: { item: ShellNavItem; nav: ShellTopBarNav })
           data-testid={`nav-dropdown-${item.key}`}
           className={cn(navItemClass(groupActive, nav), "inline-flex items-center gap-1")}
         >
-          {item.label}
+          <span
+            data-slot="nav-item-label"
+            className={navItemLabelClass(groupActive, nav)}
+          >
+            {item.label}
+          </span>
           <IconChevronDown
             className={cn("size-4", nav.classNames?.chevron)}
             stroke={1.8}

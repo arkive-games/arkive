@@ -7,6 +7,19 @@ nav: { wiki: "Wiki" }
 home:
   title: "AION2 Wiki"
   subtitle: "Auto-generated from game data"
+hub:
+  archive: "AION2 Game Archive"
+  description:
+    quest: "Find quests by storyline, faction, and chapter."
+    npc: "Find NPCs, monsters, and bosses by role and region."
+    item: "Browse equipment, consumables, materials, and currency by use."
+  entries: "indexed entries"
+  categories: "Category index"
+  browse: "Browse the archive"
+  searchHint: "Enter a name to find a specific entry"
+  resultId: "ID {{id}}"
+  groupCount: "{{count}} categories"
+  groupEntries: "{{count}} entries"
 quest:
   breadcrumb: "Breadcrumb"
   objectives: "Objectives"

@@ -7,6 +7,19 @@ nav: { wiki: "위키" }
 home:
   title: "AION2 위키"
   subtitle: "게임 데이터에서 자동 생성됨"
+hub:
+  archive: "AION2 게임 자료관"
+  description:
+    quest: "스토리, 진영, 챕터별로 퀘스트 자료를 찾습니다."
+    npc: "역할과 지역별로 NPC, 몬스터, 보스를 찾습니다."
+    item: "용도별로 장비, 소비 아이템, 재료, 화폐를 탐색합니다."
+  entries: "개 자료"
+  categories: "분류 목록"
+  browse: "자료관 탐색"
+  searchHint: "이름을 입력해 항목을 바로 찾기"
+  resultId: "ID {{id}}"
+  groupCount: "분류 {{count}}개"
+  groupEntries: "{{count}}개"
 quest:
   breadcrumb: "탐색 경로"
   objectives: "목표"

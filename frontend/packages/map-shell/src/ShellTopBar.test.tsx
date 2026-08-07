@@ -5,9 +5,19 @@ import { ShellTopBar, type ShellNavItem } from "./ShellTopBar"
 
 afterEach(cleanup)
 
-const renderItem = (item: ShellNavItem, className: string) => (
+const renderItem = (
+  item: ShellNavItem,
+  className: string,
+  labelClassName?: string,
+) => (
   <a href={`#${item.key}`} className={className} data-testid={`link-${item.key}`}>
-    {item.label}
+    {labelClassName ? (
+      <span data-slot="nav-item-label" className={labelClassName}>
+        {item.label}
+      </span>
+    ) : (
+      item.label
+    )}
   </a>
 )
 
@@ -70,5 +80,33 @@ describe("ShellTopBar nav", () => {
     const trigger = getByTestId("nav-dropdown-database")
     expect(trigger.querySelector("svg")?.getAttribute("class")).toContain("size-3")
     expect(trigger.querySelector("svg")?.getAttribute("class")).toContain("opacity-50")
+  })
+
+  it("anchors an active dropdown indicator to the text label", () => {
+    const items: ShellNavItem[] = [
+      {
+        key: "database",
+        label: "Database",
+        active: true,
+        children: [{ key: "/items", label: "Items" }],
+      },
+    ]
+    const { getByTestId } = render(
+      <ShellTopBar
+        nav={{
+          items,
+          renderItem,
+          classNames: {
+            label: "relative",
+            labelActive: "after:absolute after:left-1/2",
+          },
+        }}
+      />,
+    )
+
+    const label = getByTestId("nav-dropdown-database").querySelector(
+      '[data-slot="nav-item-label"]',
+    )
+    expect(label?.getAttribute("class")).toContain("after:left-1/2")
   })
 })
