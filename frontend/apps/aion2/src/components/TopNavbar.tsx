@@ -66,13 +66,13 @@ export default function TopNavbar() {
       leftSlot={
         <a
           href="https://tc-imba.com/"
-          className="flex shrink-0 items-center gap-2.5 pr-4 text-primary"
+          className="flex shrink-0 items-center gap-2.5 pr-4 text-[color:var(--arkive-nav-active)]"
           aria-label={t("common:brand.name")}
         >
           <ArkiveMark />
           <span className="flex flex-col leading-none">
             <strong className="text-base font-bold tracking-tight">{t("common:brand.name")}</strong>
-            <small className="mt-1 text-xs font-semibold text-[color:var(--arkive-orange)]">
+            <small className="mt-1 text-xs font-semibold text-[color:var(--arkive-nav-accent)]">
               {t("common:brand.slogan")}
             </small>
           </span>
@@ -82,9 +82,9 @@ export default function TopNavbar() {
         items: navItems,
         classNames: {
           item:
-            "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-foreground/70 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-foreground/70 hover:text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
           itemActive:
-            "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-primary after:pointer-events-none after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[color:var(--arkive-orange)] after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-[color:var(--arkive-nav-active)] after:pointer-events-none after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[color:var(--arkive-nav-accent)] after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
           chevron: "size-3 opacity-50 transition-opacity group-hover:opacity-70",
         },
         renderItem: (item, className) => {
@@ -126,7 +126,7 @@ export default function TopNavbar() {
       rightExtras={
         <Button
           type="button"
-          className="h-9 gap-2 rounded-lg bg-primary px-4 text-primary-foreground hover:bg-primary/90"
+          className="h-9 gap-2 rounded-lg bg-[color:var(--arkive-nav-active)] px-4 text-[color:var(--arkive-nav-on-active)] hover:brightness-95"
           aria-label={t("common:auth.login")}
         >
           <IconUserCircle className="size-5" stroke={1.8} />
