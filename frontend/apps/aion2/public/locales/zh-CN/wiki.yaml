@@ -7,6 +7,19 @@ nav: { wiki: "百科" }
 home:
   title: "AION2 百科"
   subtitle: "由游戏数据自动生成"
+hub:
+  archive: "AION2 游戏资料馆"
+  description:
+    quest: "按任务线、阵营与章节查找任务资料。"
+    npc: "按角色类型与活动区域查找 NPC、怪物和首领。"
+    item: "按用途与物品类别浏览装备、消耗品、材料和货币。"
+  entries: "条资料"
+  categories: "分类目录"
+  browse: "浏览资料馆"
+  searchHint: "输入名称，直接查找具体条目"
+  resultId: "编号 {{id}}"
+  groupCount: "{{count}} 个分类"
+  groupEntries: "{{count}} 条"
 quest:
   breadcrumb: "导航路径"
   objectives: "任务目标"

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { SiteFooter, useIsMobile } from "@gamemap/ui";
+import { cn, SiteFooter, useIsMobile } from "@gamemap/ui";
 
 import TopNavbar from "@/components/TopNavbar";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
@@ -10,7 +10,15 @@ import { SITE_VERSION } from "@/lib/siteVersion";
  * Shared chrome for every non-map page (wiki + changelog): desktop top bar or a
  * compact mobile utility bar, a max-width scroll column, and the site footer.
  */
-export default function ContentLayout({ children }: { children: ReactNode }) {
+export default function ContentLayout({
+  children,
+  className,
+  contentClassName,
+}: {
+  children: ReactNode;
+  className?: string;
+  contentClassName?: string;
+}) {
   // Exactly ONE of the two bars is mounted, rather than CSS-hiding one: both
   // contain a GlobalSearchWidget, and two of those in the DOM means two
   // elements share `data-testid="global-search-button"` — which breaks strict
@@ -18,7 +26,12 @@ export default function ContentLayout({ children }: { children: ReactNode }) {
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+    <div
+      className={cn(
+        "flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground",
+        className,
+      )}
+    >
       {isMobile ? (
         /* Compact utility bar. Deliberately NOT a page title: every wiki page
            already renders its own <h1>, so a title here would duplicate it and
@@ -44,7 +57,14 @@ export default function ContentLayout({ children }: { children: ReactNode }) {
       )}
       <main className="flex-1 overflow-y-auto">
         <div className="flex min-h-full flex-col">
-          <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</div>
+          <div
+            className={cn(
+              "mx-auto w-full max-w-5xl flex-1 px-4 py-6",
+              contentClassName,
+            )}
+          >
+            {children}
+          </div>
           {/* Last element in the scroll column, so its bottom padding is what
               lifts content clear of the fixed bottom tab bar + safe area. */}
           <SiteFooter
