@@ -285,7 +285,7 @@ test.describe('mobile', () => {
  * These tests deliberately visit `/` with NO `?engine=` param — that is the
  * whole point — and drive the switcher, so they must not use `openGlMap`.
  */
-test.describe('engine selection', () => {
+test.describe.skip('removed engine-selection controls', () => {
   const STORAGE_KEY = 'palworld.map.engine'
   const glCanvas = (page: Page) => page.getByTestId('gl-map-canvas')
   const leafletContainer = (page: Page) => page.locator('.leaflet-container')
@@ -475,5 +475,26 @@ test.describe('engine selection', () => {
       await expect(glCanvas(page)).toHaveCount(0)
       await expect(page).toHaveURL(/[?&]engine=leaflet\b/)
     })
+  })
+})
+
+test.describe('engine rendering without public controls', () => {
+  const glCanvas = (page: Page) => page.getByTestId('gl-map-canvas')
+  const leafletContainer = (page: Page) => page.locator('.leaflet-container')
+
+  test('desktop map chrome omits the renderer switcher', async ({ page }) => {
+    await page.goto('/')
+    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByTestId('engine-menu')).toHaveCount(0)
+  })
+
+  test('mobile More sheet omits renderer choices', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/?engine=leaflet')
+    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
+    await page.getByTestId('tab-more').click()
+    await expect(page.getByTestId('more-sheet')).toBeVisible()
+    await expect(page.getByTestId('more-engine-gl')).toHaveCount(0)
+    await expect(page.getByTestId('more-engine-leaflet')).toHaveCount(0)
   })
 })
