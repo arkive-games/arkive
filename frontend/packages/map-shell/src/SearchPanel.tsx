@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import MiniSearch, { type SearchOptions, type SearchResult } from "minisearch"
-import { IconSearch } from "@tabler/icons-react"
+import { IconChevronDown, IconSearch } from "@tabler/icons-react"
 import { cn } from "@gamemap/ui"
 import { formatCoords } from "./coordFormat"
 import { searchTokenize } from "./searchTokenizer"
@@ -24,6 +24,7 @@ export type SearchField = "name" | "description" | "idLabel"
 
 export type SearchPanelLabels = {
   search: string
+  placeholder?: string
   resultsCount: (n: number) => string
   unnamed: string
   noDescription: string
@@ -242,19 +243,22 @@ export function SearchPanel({
           data-testid="marker-search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={labels.search}
+          placeholder={labels.placeholder ?? labels.search}
           className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
         <button
           type="button"
+          data-testid="search-scope-toggle"
           onClick={() => setScope((s) => (s === "both" ? "name" : "both"))}
-          className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+          className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           {scope === "name" ? labels.scopeName : labels.scopeAll}
+          <IconChevronDown className="size-4" stroke={1.8} aria-hidden />
         </button>
-        <span className="text-muted-foreground/50">|</span>
+        <span data-slot="search-divider" className="text-muted-foreground/50">|</span>
         <button
           type="button"
+          data-testid="search-submit"
           onClick={() => setDebounced(query)}
           className="shrink-0 text-sm font-medium text-primary"
         >
