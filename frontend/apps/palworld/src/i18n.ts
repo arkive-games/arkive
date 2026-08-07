@@ -19,9 +19,11 @@ import {
   MAP_HEADER_LABELS,
   MAP_REGION_LABELS,
   MAP_SEARCH_PLACEHOLDER_LABELS,
+  LOGIN_LABELS,
   SETTINGS_BACK_LABELS,
   SETTINGS_LANGUAGE_LABELS,
   SETTINGS_THEME_LABELS,
+  VOICE_LABELS,
 } from './chromeStrings'
 import { DUNGEON_STRINGS } from './dungeonStrings'
 import { FISHING_STRINGS } from './fishingStrings'
@@ -365,12 +367,12 @@ export const PARTNER_TRIGGER_LABELS: Record<Language, Record<string, string>> = 
   'zh-CN': { OpenTreasure: '开启宝箱时触发', PalRevive: '帕鲁倒下时触发', PlayerRevive: '玩家倒下时触发' },
   'zh-TW': { OpenTreasure: '開啟寶箱時觸發', PalRevive: '帕魯倒下時觸發', PlayerRevive: '玩家倒下時觸發' },
 }
-// Top-nav dropdown group label for pal-related pages (Paldeck/Breeding/Passives).
+// Top-nav dropdown group label for pal-related reference pages.
 export const PALS_GROUP_LABELS: Record<Language, string> = {
   'en-US': 'Pals', 'de-DE': 'Pals', 'es-ES': 'Pals', 'es-MX': 'Pals', 'fr-FR': 'Pals',
   'id-ID': 'Pals', 'it-IT': 'Pals', 'ja-JP': 'パル', 'ko-KR': '팰', 'pl-PL': 'Pals',
   'pt-BR': 'Pals', 'ru-RU': 'Палы', 'th-TH': 'Pals', 'tr-TR': 'Pals', 'vi-VN': 'Pals',
-  'zh-CN': '帕鲁', 'zh-TW': '帕魯',
+  'zh-CN': '帕鲁相关', 'zh-TW': '帕魯相關',
 }
 // Map popup completion pill (effigies / bosses): action + done states.
 export const MARK_COMPLETED_LABELS: Record<Language, string> = {
@@ -1019,9 +1021,11 @@ for (const lng of LANGUAGES) {
       mapSearchPlaceholder: MAP_SEARCH_PLACEHOLDER_LABELS[lng],
       settings: {
         language: SETTINGS_LANGUAGE_LABELS[lng],
+        voice: VOICE_LABELS[lng],
         theme: SETTINGS_THEME_LABELS[lng],
         back: SETTINGS_BACK_LABELS[lng],
       },
+      auth: { login: LOGIN_LABELS[lng] },
       build: {
         info: BUILD_INFO_LABELS[lng],
         commit: BUILD_COMMIT_LABELS[lng],

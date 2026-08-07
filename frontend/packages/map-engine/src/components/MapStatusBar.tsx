@@ -29,12 +29,12 @@ const MapStatusBar: React.FC<Props> = ({
 
   return (
     <div className="gm-statusbar">
+      {footerText && (
+        <span className="gm-statusbar-footer">
+          {footerText}
+        </span>
+      )}
       <div className="gm-statusbar-stack">
-        {footerText && (
-          <span className="gm-statusbar-footer">
-            {footerText}
-          </span>
-        )}
         <div
           data-testid="map-coords"
           className="gm-statusbar-pill"

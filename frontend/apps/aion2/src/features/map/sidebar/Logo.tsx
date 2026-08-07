@@ -19,13 +19,8 @@ export default function Logo() {
           className="max-h-12 w-auto max-w-52 object-contain object-left drop-shadow-md"
         />
       }
-      title={
-        <>
-          <span className="font-bold">AION2</span>
-          <span className="mx-2 text-white/55" aria-hidden>·</span>
-          {t("common:mapSubtitle", "Interactive Map")}
-        </>
-      }
+      gameName="AION2"
+      subtitle={t("common:mapSubtitle", "Interactive Map")}
     />
   );
 }

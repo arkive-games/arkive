@@ -111,6 +111,23 @@ export const SETTINGS_LANGUAGE_LABELS: Record<Language, string> = {
   'zh-CN': '语言', 'zh-TW': '語言',
 }
 
+/** Compact top-bar label for the spoken-language selector. */
+export const VOICE_LABELS: Record<Language, string> = {
+  'en-US': 'Voice', 'de-DE': 'Sprache', 'es-ES': 'Voz', 'es-MX': 'Voz', 'fr-FR': 'Voix',
+  'id-ID': 'Suara', 'it-IT': 'Voce', 'ja-JP': '音声', 'ko-KR': '음성', 'pl-PL': 'Głos',
+  'pt-BR': 'Voz', 'ru-RU': 'Голос', 'th-TH': 'เสียง', 'tr-TR': 'Ses', 'vi-VN': 'Giọng nói',
+  'zh-CN': '语音', 'zh-TW': '語音',
+}
+
+/** Account entry shared by every desktop page. */
+export const LOGIN_LABELS: Record<Language, string> = {
+  'en-US': 'Log in', 'de-DE': 'Anmelden', 'es-ES': 'Iniciar sesión', 'es-MX': 'Iniciar sesión',
+  'fr-FR': 'Connexion', 'id-ID': 'Masuk', 'it-IT': 'Accedi', 'ja-JP': 'ログイン',
+  'ko-KR': '로그인', 'pl-PL': 'Zaloguj się', 'pt-BR': 'Entrar', 'ru-RU': 'Войти',
+  'th-TH': 'เข้าสู่ระบบ', 'tr-TR': 'Giriş yap', 'vi-VN': 'Đăng nhập',
+  'zh-CN': '登录', 'zh-TW': '登入',
+}
+
 /** Settings row label for the theme tabs. */
 export const SETTINGS_THEME_LABELS: Record<Language, string> = {
   'en-US': 'Theme', 'de-DE': 'Design', 'es-ES': 'Tema', 'es-MX': 'Tema', 'fr-FR': 'Thème',

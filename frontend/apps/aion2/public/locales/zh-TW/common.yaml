@@ -17,7 +17,7 @@ nav:
 # 語言顯示名不做翻譯：切換選單使用 src/i18n.ts 中 LANGUAGE_LABELS 的本族語名稱。
 language:
   label: "語言"
-  short: "中 / EN"
+  short: "語音"
 
 auth:
   login: "登入"

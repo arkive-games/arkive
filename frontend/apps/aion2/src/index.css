@@ -11,32 +11,32 @@
 @custom-variant abyss (&:is(.abyss *));
 
 @theme {
-    --color-topnavbar: #E3EDF2;
-    --background-image-sidebar: linear-gradient(180deg, rgba(243, 251, 255, 1) 0%, rgba(243, 251, 255, 1) 100%);;
-    --color-sidebar-collapse: #D3E2EA;
-    --color-sidebar-collapse-fg: #3D3D3D;
-    --color-sidebar-button: rgba(122, 192, 225, 0.20);
-    --color-input: rgba(185, 185, 185, 0.2);
-    --color-input-2: #F6F6F6;
+    --color-topnavbar: #E3EDE7;
+    --background-image-sidebar: linear-gradient(180deg, #EEF5F0 0%, #EEF5F0 100%);
+    --color-sidebar-collapse: #DDEAE2;
+    --color-sidebar-collapse-fg: #153F3D;
+    --color-sidebar-button: rgba(15, 76, 73, 0.10);
+    --color-input: rgba(15, 76, 73, 0.08);
+    --color-input-2: #F8FBF9;
     --color-character-input: rgba(255, 255, 255, 0.10);
-    --color-character-card: #E5F0FF;
-    --color-character-equipment: #F3FBFF;
-    --color-search: rgba(247, 252, 255, 1);
+    --color-character-card: #E5EEE8;
+    --color-character-equipment: #EAF1EC;
+    --color-search: #F8FBF9;
     --color-search-item: rgba(82, 82, 82, 0.04);
-    --color-crafting-item: rgba(243, 251, 255, 1);
+    --color-crafting-item: #F8FBF9;
     --color-crafting-sum: rgba(255, 255, 255, 0.2);
     --color-map-alert: rgba(255, 255, 255, 0.7);
-    --background-image-crafting-page: linear-gradient(180deg, #F0F6FF 0%, #E6F0FF 37%, #BED8FF 64%, #A6CAFD 81%, #8DBCFF 90%, #C1DAFF 100%);
-    --background-image-crafting-equipment-view: linear-gradient(180deg, rgba(205, 231, 255, 0) 0%, rgba(21, 110, 194, 0.3) 66%, rgba(201, 229, 255, 0) 100%);
+    --background-image-crafting-page: linear-gradient(180deg, #F8FBF9 0%, #EAF1EC 45%, #D4E4DA 100%);
+    --background-image-crafting-equipment-view: linear-gradient(180deg, rgba(154, 200, 180, 0) 0%, rgba(15, 76, 73, 0.18) 66%, rgba(154, 200, 180, 0) 100%);
     --background-image-crafting-tab: linear-gradient(180deg, rgba(244, 244, 244, 0) 0%, rgba(255, 255, 255, 0.2) 100%);
-    --background-image-character-page: linear-gradient( 180deg, #B7D4FF 0%, #DFECFF 100%);
+    --background-image-character-page: linear-gradient(180deg, #D4E4DA 0%, #EEF5F0 100%);
     --color-crafting-border: rgba(137, 137, 137, 0.30);
-    --color-leaderboard-page: #E7F1FF;
-    --background-image-page: linear-gradient(180deg, #F3FBFF 0%, #F3FBFF 100%);
-    --color-star: #EAC120;
+    --color-leaderboard-page: #E5EEE8;
+    --background-image-page: linear-gradient(180deg, #EAF1EC 0%, #EAF1EC 100%);
+    --color-star: #EE8A45;
     --color-artifact-contributor-bg: rgba(82, 82, 82, 0.04);
-    --background-image-artifact-server-1: linear-gradient(135deg, #DBEDFF 0%, #F3FBFF 100%);
-    --background-image-artifact-server-2: linear-gradient(225deg, #EFE5FF 0%, #F3FBFF 100%);
+    --background-image-artifact-server-1: linear-gradient(135deg, #DCEAE2 0%, #F8FBF9 100%);
+    --background-image-artifact-server-2: linear-gradient(225deg, #F7E7DA 0%, #F8FBF9 100%);
 
     --color-grade-common: rgba(0, 0, 0, .68);
     --color-grade-rare: #00870b;
@@ -56,75 +56,74 @@
     --arkive-nav-active: #0F4C49;
     --arkive-nav-on-active: #FFFFFF;
     --arkive-nav-accent: #EE8A45;
-    --background: #F3FBFF;
-    --foreground: #3D3D3D;
-    --card: #FFFFFF;
-    --card-foreground: #3D3D3D;
-    --popover: #FFFFFF;
-    --popover-foreground: #3D3D3D;
-    --primary: #2E97FF;
+    --background: #EAF1EC;
+    --foreground: #153F3D;
+    --card: #F8FBF9;
+    --card-foreground: #153F3D;
+    --popover: #FCFEFC;
+    --popover-foreground: #153F3D;
+    --primary: #0F4C49;
     --primary-foreground: #FFFFFF;
-    --secondary: #7828c8;
-    --secondary-foreground: #ffffff;
-    --muted: #E5F0FF;
-    --muted-foreground: rgba(0,0,0,0.6);
-    --accent: #E5F0FF;
-    --accent-foreground: #3D3D3D;
+    --secondary: #E3EDE7;
+    --secondary-foreground: #153F3D;
+    --muted: #E5EEE8;
+    --muted-foreground: #667D78;
+    --accent: #E3EDE7;
+    --accent-foreground: #153F3D;
     --destructive: #f31260;
     --destructive-foreground: #ffffff;
-    --border: rgba(0,0,0,0.1);
-    --input: #ebebec;
-    --ring: #2E97FF;
+    --border: rgba(15, 76, 73, 0.15);
+    --input: #DDE8E1;
+    --ring: #EE8A45;
 }
 
-/* Lanhu "2魔族" dark board: purple-navy surfaces (panels/popups #2C293A,
-   secondary surface/input #423F5A), white / #C2C2C2 text, blue #2E97FF accent. */
+/* Dark surfaces preserve the same mist-green, deep-sea teal, and warm-orange system. */
 .dark {
     --arkive-nav-active: #9AC8B4;
     --arkive-nav-on-active: #102D2B;
     --arkive-nav-accent: #F0A06A;
-    --background: #211E2D;
-    --foreground: #ffffff;
-    --card: #2C293A;
-    --card-foreground: #ffffff;
-    --popover: #2C293A;
-    --popover-foreground: #ffffff;
-    --primary: #2e97ff;
-    --primary-foreground: #ffffff;
-    --secondary: #7828c8;
-    --secondary-foreground: #ffffff;
-    --muted: #423F5A;
-    --muted-foreground: #C2C2C2;
-    --accent: #423F5A;
-    --accent-foreground: #ffffff;
+    --background: #0D2423;
+    --foreground: #E8F2ED;
+    --card: #173331;
+    --card-foreground: #E8F2ED;
+    --popover: #193735;
+    --popover-foreground: #E8F2ED;
+    --primary: #9AC8B4;
+    --primary-foreground: #102D2B;
+    --secondary: #23403D;
+    --secondary-foreground: #E8F2ED;
+    --muted: #23403D;
+    --muted-foreground: #A7BBB3;
+    --accent: #294945;
+    --accent-foreground: #F2F7F4;
     --destructive: #f31260;
     --destructive-foreground: #ffffff;
-    --border: rgba(255,255,255,0.12);
-    --input: #423F5A;
-    --ring: #2e97ff;
+    --border: rgba(211, 231, 220, 0.15);
+    --input: #23403D;
+    --ring: #F0A06A;
 }
 
 /* Abyss shares the dark core palette (same as hero.ts); only chrome accents differ. */
 .abyss {
-    --background: #000000;
-    --foreground: #ffffff;
-    --card: #18181b;
-    --card-foreground: #ffffff;
-    --popover: #18181b;
-    --popover-foreground: #ffffff;
-    --primary: #2e97ff;
-    --primary-foreground: #ffffff;
-    --secondary: #7828c8;
-    --secondary-foreground: #ffffff;
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-    --accent: #3f3f46;
-    --accent-foreground: #ffffff;
+    --background: #0D2423;
+    --foreground: #E8F2ED;
+    --card: #173331;
+    --card-foreground: #E8F2ED;
+    --popover: #193735;
+    --popover-foreground: #E8F2ED;
+    --primary: #9AC8B4;
+    --primary-foreground: #102D2B;
+    --secondary: #23403D;
+    --secondary-foreground: #E8F2ED;
+    --muted: #23403D;
+    --muted-foreground: #A7BBB3;
+    --accent: #294945;
+    --accent-foreground: #F2F7F4;
     --destructive: #f31260;
     --destructive-foreground: #ffffff;
-    --border: #26262a;
-    --input: #26262a;
-    --ring: #2e97ff;
+    --border: rgba(211, 231, 220, 0.15);
+    --input: #23403D;
+    --ring: #F0A06A;
 }
 
 /* Bridge raw tokens to Tailwind v4 color/radius utilities used by shadcn primitives. */
@@ -155,19 +154,19 @@
 }
 
 .dark {
-    --color-topnavbar: #393047;
-    --background-image-sidebar: linear-gradient(180deg, #2C293A 0%, #2C293A 100%);
-    --color-sidebar-collapse: #4C4A52;
-    --color-sidebar-collapse-fg: #E6E6E6;
+    --color-topnavbar: #173331;
+    --background-image-sidebar: linear-gradient(180deg, #132F2D 0%, #132F2D 100%);
+    --color-sidebar-collapse: #294945;
+    --color-sidebar-collapse-fg: #FFFFFF;
     --color-sidebar-button: rgba(255, 255, 255, 0.08);
     --color-crafting-item: rgba(255, 255, 255, 0.1);
     --color-crafting-sum: rgba(255, 255, 255, 0.2);
     --color-map-alert: rgba(0, 0, 0, 0.7);
-    --background-image-crafting-page: linear-gradient(180deg, #2C2249 0%, #7561B2 100%, #413661 100%);
-    --background-image-crafting-equipment-view: linear-gradient(180deg, rgba(205, 231, 255, 0) 0%, rgba(21, 110, 194, 0.3) 66%, rgba(201, 229, 255, 0) 100%);
+    --background-image-crafting-page: linear-gradient(180deg, #0D2423 0%, #173331 55%, #23403D 100%);
+    --background-image-crafting-equipment-view: linear-gradient(180deg, rgba(154, 200, 180, 0) 0%, rgba(154, 200, 180, 0.18) 66%, rgba(154, 200, 180, 0) 100%);
     --background-image-crafting-tab: linear-gradient(180deg, rgba(244, 244, 244, 0) 0%, rgba(255, 255, 255, 0.2) 100%);
     --color-crafting-border: rgba(255, 255, 255, 0.30);
-    --background-image-page: linear-gradient( 180deg, #2C2249 0%, #7561B2 100%, #413661 100%);
+    --background-image-page: linear-gradient(180deg, #0D2423 0%, #173331 100%);
     --color-character-card: rgba(255, 255, 255, 0.1);
     --color-character-equipment: rgba(0, 0, 0, 0.2);
     --color-grade-common: rgba(255, 255, 255, .93);
@@ -178,16 +177,16 @@
     --color-grade-mythic: #d33939;
     --color-grade-special: #34b798;
 
-    --background-image-artifact-server-1: linear-gradient( 90deg, rgba(32,76,152,0) 0%, #204C98 100%);
-    --background-image-artifact-server-2: linear-gradient( 90deg, rgba(154,39,255,0.3) 0%, rgba(154,39,255,0) 100%);
+    --background-image-artifact-server-1: linear-gradient(90deg, rgba(15, 76, 73, 0) 0%, #0F4C49 100%);
+    --background-image-artifact-server-2: linear-gradient(90deg, rgba(238, 138, 69, 0.22) 0%, rgba(238, 138, 69, 0) 100%);
     --color-artifact-contributor-bg: rgba(0, 0, 0, 0.2);
 }
 
 .abyss {
-    --color-topnavbar: #A33535;
-    --background-image-sidebar: linear-gradient(180deg, #564B4B 0%, #190202 100%);
-    --color-sidebar-collapse: #4C4A52;
-    --color-sidebar-collapse-fg: #E6E6E6;
+    --color-topnavbar: #173331;
+    --background-image-sidebar: linear-gradient(180deg, #132F2D 0%, #0D2423 100%);
+    --color-sidebar-collapse: #294945;
+    --color-sidebar-collapse-fg: #FFFFFF;
 }
 
 .text-grade-common { color: var(--color-grade-common); }

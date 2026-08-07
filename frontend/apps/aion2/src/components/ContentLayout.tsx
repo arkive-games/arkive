@@ -46,7 +46,7 @@ export default function ContentLayout({
         >
           <Link
             to="/"
-            className="text-lg font-bold tracking-tight text-[#2E97FF] select-none"
+            className="text-lg font-bold tracking-tight text-primary select-none"
           >
             AION2
           </Link>

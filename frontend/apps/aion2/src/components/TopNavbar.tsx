@@ -1,4 +1,4 @@
-import { IconUserCircle } from "@tabler/icons-react";
+import { IconUserCircle, IconVolume } from "@tabler/icons-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ShellTopBar, type ShellNavItem } from "@gamemap/map-shell";
@@ -6,7 +6,7 @@ import { Button } from "@gamemap/ui";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/i18n";
 
-const THEME_OPTIONS: Theme[] = ["auto", "light", "dark"];
+const THEME_OPTIONS: Theme[] = ["light", "dark"];
 
 function ArkiveMark() {
   return (
@@ -88,7 +88,6 @@ export default function TopNavbar() {
           label: "relative inline-flex h-full items-center",
           labelActive:
             "after:pointer-events-none after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[color:var(--arkive-nav-accent)] after:content-['']",
-          chevron: "size-3 opacity-50 transition-opacity group-hover:opacity-70",
         },
         renderItem: (item, className, labelClassName) => {
           const label = labelClassName ? (
@@ -122,6 +121,7 @@ export default function TopNavbar() {
         onChange: (code) => void i18n.changeLanguage(code),
         menuLabel: t("common:menu.switchLanguage"),
         shortLabel: t("common:language.short"),
+        icon: <IconVolume className="size-5" stroke={1.8} />,
       }}
       themeSwitcher={{
         options: THEME_OPTIONS.map((value) => ({

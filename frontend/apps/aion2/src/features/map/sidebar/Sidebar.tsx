@@ -18,7 +18,7 @@ export default function Sidebar() {
         scrollArea: "aion2-filter-scroll",
         content: "pb-2",
         collapseButton:
-          "top-4 border border-l-0 border-border bg-card text-[color:var(--arkive-orange)] shadow-sm",
+          "top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white",
       }}
       headerSlot={<Logo />}
       mapSelectorSlot={<SelectMap />}

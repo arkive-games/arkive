@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render } from "@testing-library/react"
+import { cleanup, fireEvent, render } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { ShellTopBar, type ShellNavItem } from "./ShellTopBar"
 
@@ -59,7 +59,7 @@ describe("ShellTopBar nav", () => {
     expect(getByTestId("nav-dropdown-database").className).toContain("text-primary")
   })
 
-  it("allows sites to soften the dropdown chevron independently", () => {
+  it("opens child links on hover without rendering a chevron", () => {
     const items: ShellNavItem[] = [
       {
         key: "database",
@@ -67,19 +67,17 @@ describe("ShellTopBar nav", () => {
         children: [{ key: "/items", label: "Items" }],
       },
     ]
-    const { getByTestId } = render(
-      <ShellTopBar
-        nav={{
-          items,
-          renderItem,
-          classNames: { chevron: "size-3 opacity-50" },
-        }}
-      />,
+    const { getByTestId, queryByTestId } = render(
+      <ShellTopBar nav={{ items, renderItem }} />,
     )
 
     const trigger = getByTestId("nav-dropdown-database")
-    expect(trigger.querySelector("svg")?.getAttribute("class")).toContain("size-3")
-    expect(trigger.querySelector("svg")?.getAttribute("class")).toContain("opacity-50")
+    expect(trigger.querySelector("svg")).toBeNull()
+    expect(queryByTestId("link-/items")).toBeNull()
+    fireEvent.pointerEnter(trigger)
+    expect(getByTestId("link-/items")).toBeTruthy()
+    fireEvent.pointerLeave(trigger.parentElement!)
+    expect(queryByTestId("link-/items")).toBeNull()
   })
 
   it("anchors an active dropdown indicator to the text label", () => {
