@@ -25,6 +25,13 @@
   --border: rgba(14, 42, 60, 0.15);
   --input: #DCEEF5;
   --ring: #0E9BB5;
+  --pal-ocean: #0A4254;
+  --pal-cyan-soft: #E5F5F8;
+  --pal-sidebar: #F4FAFC;
+  --pal-divider: rgba(10, 66, 84, 0.14);
+  --pal-gold: #F2C94C;
+  --pal-gold-ink: #9A6B00;
+  --arkive-mark-cutout: #FFFFFF;
 }
 
 .dark {
@@ -47,6 +54,13 @@
   --border: rgba(232, 244, 250, 0.15);
   --input: #1C4A66;
   --ring: #35D0E8;
+  --pal-ocean: #A9ECF3;
+  --pal-cyan-soft: rgba(53, 208, 232, 0.1);
+  --pal-sidebar: #102F40;
+  --pal-divider: rgba(232, 244, 250, 0.13);
+  --pal-gold: #FFD75E;
+  --pal-gold-ink: #FFD75E;
+  --arkive-mark-cutout: #12344A;
 }
 
 @theme inline {
@@ -114,4 +128,137 @@ html {
 
 .dark .gmgl-map-root {
   background: #0c161e;
+}
+
+/* The map page reads as an island field guide: one scenic game header, then
+   quiet catalogue controls that keep the map itself visually dominant. */
+.palworld-game-header-shade {
+  background:
+    linear-gradient(180deg, rgba(4, 35, 48, 0.2) 0%, rgba(4, 35, 48, 0.92) 100%),
+    linear-gradient(90deg, rgba(4, 35, 48, 0.72), transparent 72%);
+}
+
+.palworld-game-header::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 0.2rem;
+  background: linear-gradient(90deg, var(--pal-gold), color-mix(in srgb, var(--primary) 70%, transparent));
+  content: "";
+}
+
+.palworld-map-page .palworld-filter-scroll [data-radix-scroll-area-viewport] {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 35%, transparent) transparent;
+}
+
+.palworld-map-page [data-testid="search-panel"] > div:first-child {
+  min-height: 3rem;
+  gap: 0.35rem;
+  padding: 0.25rem 0.3rem 0.25rem 0.75rem;
+  border-color: color-mix(in srgb, var(--primary) 22%, transparent);
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--popover) 94%, transparent);
+  box-shadow: 0 0.75rem 2rem rgba(7, 48, 64, 0.16);
+}
+
+.palworld-map-page [data-testid="search-panel"] [data-testid="marker-search"] {
+  height: 2.35rem;
+  font-size: 0.75rem;
+}
+
+.palworld-map-page [data-testid="search-panel"] [data-testid="search-scope-toggle"] {
+  height: 2.35rem;
+  padding-inline: 0.45rem;
+}
+
+.palworld-map-page [data-testid="search-panel"] [data-slot="search-divider"] {
+  display: none;
+}
+
+.palworld-map-page [data-testid="search-panel"] [data-testid="search-submit"] {
+  height: 2.35rem;
+  border-radius: 0.6rem;
+  padding-inline: 0.85rem;
+  background: var(--pal-ocean);
+  color: var(--background);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.dark .palworld-map-page [data-testid="search-panel"] [data-testid="search-submit"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.palworld-map-page [data-testid="search-panel"] > div:nth-child(2) {
+  border-color: var(--pal-divider);
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--popover) 96%, transparent);
+  box-shadow: 0 1rem 2.5rem rgba(7, 48, 64, 0.18);
+}
+
+.palworld-map-page .gm-zoom,
+.palworld-map-page .gmgl-zoom {
+  right: 0.85rem;
+  bottom: 0.85rem;
+}
+
+.palworld-map-page .gm-zoom-pill,
+.palworld-map-page .gmgl-zoom-pill {
+  border: 1px solid var(--pal-divider);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--card) 95%, transparent);
+  box-shadow: 0 0.5rem 1.5rem rgba(7, 48, 64, 0.16);
+  backdrop-filter: blur(0.75rem);
+}
+
+.palworld-map-page .gm-zoom-btn,
+.palworld-map-page .gmgl-zoom-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--foreground) !important;
+}
+
+.palworld-map-page .gm-zoom-btn:hover,
+.palworld-map-page .gmgl-zoom-btn:hover {
+  background: var(--pal-cyan-soft);
+  color: var(--primary) !important;
+}
+
+.palworld-map-page .gm-statusbar-stack,
+.palworld-map-page .gmgl-statusbar-stack {
+  bottom: 0.85rem;
+  left: 0.85rem;
+  color: var(--foreground);
+}
+
+.palworld-map-page .gm-statusbar-footer,
+.palworld-map-page .gmgl-statusbar-footer,
+.palworld-map-page .gm-statusbar-pill,
+.palworld-map-page .gmgl-statusbar-pill {
+  border: 1px solid var(--pal-divider);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--card) 94%, transparent) !important;
+  color: var(--muted-foreground);
+  box-shadow: 0 0.4rem 1.1rem rgba(7, 48, 64, 0.12);
+  backdrop-filter: blur(0.65rem);
+}
+
+.palworld-topbar {
+  --arkive-mark-cutout: var(--card);
+  box-shadow: 0 0.2rem 1rem rgba(7, 48, 64, 0.06);
+}
+
+.palworld-topbar [data-testid="theme-menu"],
+.palworld-topbar [data-testid="contact-menu"],
+.palworld-topbar [data-testid="lang-menu"] {
+  border: 1px solid var(--pal-divider);
+  border-radius: 0.55rem;
+  background: var(--card);
+}
+
+.palworld-topbar [data-testid="theme-menu"]:hover,
+.palworld-topbar [data-testid="contact-menu"]:hover,
+.palworld-topbar [data-testid="lang-menu"]:hover {
+  background: var(--pal-cyan-soft);
 }

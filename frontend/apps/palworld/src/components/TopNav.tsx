@@ -15,6 +15,27 @@ import {
 import { GlobalSearchWidget } from './GlobalSearchWidget'
 import { SiteInfo } from './SiteInfo'
 
+function ArkiveMark() {
+  return (
+    <svg viewBox="0 0 320 285" className="size-9" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M160 24C95 24 47 70 47 136c0 30 10 54 31 71 55 16 109 16 164 0 21-18 31-41 31-71 0-66-48-112-113-112Z"
+      />
+      <path fill="currentColor" d="M63 207c35-13 68-13 97 0 30 13 63 13 99-1-28 29-61 37-99 25-38-11-70-19-97-24Z" />
+      <path fill="currentColor" d="M75 235c33-10 61-10 85 1 24 11 53 9 87-4-24 32-53 41-87 27-34-12-62-20-85-24Z" />
+      <path
+        fill="var(--arkive-mark-cutout, #ffffff)"
+        d="M73 72c10-13 24-20 41-20h92c17 0 31 7 41 20l14 37c7 18 4 25-10 29l-22-13c-7-4-13-5-19-4l-10 56c-3 14-9 23-19 28h-42c-10-5-16-14-19-28l-10-56c-6-1-12 0-19 4l-22 13c-14-4-17-11-10-29l14-37Z"
+      />
+      <path fill="currentColor" d="M92 105h12V93h12v12h12v12h-12v12h-12v-12H92Z" />
+      <circle fill="currentColor" cx="205" cy="101" r="7" />
+      <circle fill="currentColor" cx="222" cy="117" r="7" />
+      <path fill="currentColor" d="m160 91 35 98h-35ZM154 82h12v119h-12Z" />
+    </svg>
+  )
+}
+
 export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing' | '/changelog'
 
 /**
@@ -85,13 +106,19 @@ export function TopNav({ active, engine, onEngineChange }: {
 
   return (
     <ShellTopBar
-      classNames={{ root: 'hidden border-b border-border bg-card text-card-foreground md:flex' }}
+      classNames={{
+        root: 'palworld-topbar hidden h-14 border-b border-border bg-card text-card-foreground md:flex',
+        left: 'gap-4',
+        right: 'gap-1.5',
+        trigger: 'h-9 rounded-lg border border-border bg-card px-2.5 text-foreground shadow-none hover:bg-secondary',
+        menu: 'rounded-lg border-border bg-popover text-popover-foreground shadow-lg',
+      }}
       leftSlot={
         /*
-         * Brand wordmark, first item in the shell's left cluster (which uses
-         * `gap-6`, so no margin is needed here). Hidden below `lg` rather than
+         * Brand lockup, first item in the shell's left cluster. Hidden below
+         * `lg` rather than
          * shrunk: between `md` and `lg` the nav labels plus the right-hand
-         * cluster already fill the 12-unit-tall row, and the zh-CN wordmark is
+         * cluster already fill the top bar, and the zh-CN wordmark is
          * the longest string in it — dropping the brand keeps the navigation,
          * the more important half, uncramped. `shrink-0` + `whitespace-nowrap`
          * stop it from wrapping or being squeezed once it is visible.
@@ -102,16 +129,29 @@ export function TopNav({ active, engine, onEngineChange }: {
           data-testid="brand-link"
           aria-label={t('brandHome')}
           title={t('brandHome')}
-          className="hidden shrink-0 items-center whitespace-nowrap text-lg font-bold tracking-tight text-foreground transition-colors hover:text-primary lg:inline-flex"
+          className="hidden shrink-0 items-center gap-2.5 whitespace-nowrap pr-4 text-primary transition-colors hover:text-[color:var(--pal-ocean)] lg:inline-flex"
         >
-          {t('brand')}
+          <ArkiveMark />
+          <span className="flex flex-col leading-none">
+            <strong className="text-base font-bold tracking-tight text-[color:var(--pal-ocean)]">{t('brand')}</strong>
+            <small className="mt-1 text-xs font-semibold tracking-[0.14em] text-[color:var(--pal-gold-ink)]">PALWORLD</small>
+          </span>
         </a>
       }
       nav={{
         items,
-        renderItem: (item, className) => (
+        classNames: {
+          item: 'group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-foreground/65 hover:text-[color:var(--pal-ocean)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          itemActive: 'group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-[color:var(--pal-ocean)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          label: 'relative inline-flex h-full items-center',
+          labelActive: "after:pointer-events-none after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[color:var(--pal-gold)] after:content-['']",
+          chevron: 'size-3 opacity-50 transition-opacity group-hover:opacity-80',
+        },
+        renderItem: (item, className, labelClassName) => (
           <Link to={item.key as NavKey} className={className}>
-            {item.label}
+            {labelClassName ? (
+              <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
+            ) : item.label}
           </Link>
         ),
       }}
