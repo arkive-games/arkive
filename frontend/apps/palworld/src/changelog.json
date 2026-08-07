@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "1.24.0",
+      "date": "2026-08-08",
+      "commit": "5d53e380fec5fbcf653f79434e84d6cbb3a880e4",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Marker popups can now copy the exact displayed coordinates with success or failure feedback, and omit empty descriptions.",
+            "zh-CN": "地图点位详情现在可复制所显示的精确坐标，并提供成功或失败反馈；没有描述的点位不再显示空文案。",
+            "zh-TW": "地圖點位詳情現在可複製所顯示的精確座標，並提供成功或失敗回饋；沒有描述的點位不再顯示空文案。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Narrow desktop layouts keep the Arkive home link visible, scale map search to a usable minimum width, and align popup wording with AION2.",
+            "zh-CN": "窄桌面窗口现在会保留藏舟主页入口，让地图搜索栏缩放至可用下限，并统一点位详情文案。",
+            "zh-TW": "窄桌面視窗現在會保留藏舟首頁入口，讓地圖搜尋列縮放至可用下限，並統一點位詳情文案。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.9",
       "date": "2026-08-08",
       "commit": "51de8138dfe69aad771c7254e6b86832b8264fad",
