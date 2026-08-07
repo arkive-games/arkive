@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.8",
+      "date": "2026-08-08",
+      "commit": "250b3e5ec0185b728f9633ea87ac13c74ef57dd9",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed the redundant marker-display heading so the map picker flows directly into the filter-button grid, matching the shared sidebar composition.",
+            "zh-CN": "移除重复的“标记显示”标题，让地图选择框直接衔接筛选按钮网格，与统一侧栏构图保持一致。",
+            "zh-TW": "移除重複的「標記顯示」標題，讓地圖選擇框直接銜接篩選按鈕網格，與統一側欄構圖保持一致。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.7",
       "date": "2026-08-08",
       "commit": "6e11d3fa0a75cf1fcea20dda84df84b9c5dec6bd",
