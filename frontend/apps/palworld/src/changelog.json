@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.9",
+      "date": "2026-08-08",
+      "commit": "51de8138dfe69aad771c7254e6b86832b8264fad",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Standardized map sidebar and About panel typography across supported games.",
+            "zh-CN": "统一各游戏互动地图左侧栏与关于面板的字体、字号及间距。",
+            "zh-TW": "統一各遊戲互動地圖左側欄與關於面板的字體、字號及間距。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.8",
       "date": "2026-08-08",
       "commit": "fb950c1bc5b2dad76dcd70c7e5f209e8a6e34b80",
