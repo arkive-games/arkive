@@ -84,7 +84,7 @@ export default function TopNavbar() {
           item:
             "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-foreground/70 hover:text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
           itemActive:
-            "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
+            "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
           label: "relative inline-flex h-full items-center",
           labelActive:
             "after:pointer-events-none after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[color:var(--arkive-nav-accent)] after:content-['']",

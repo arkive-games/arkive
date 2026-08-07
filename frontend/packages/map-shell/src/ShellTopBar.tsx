@@ -1,4 +1,11 @@
-import { useState, type FocusEvent, type ReactNode } from "react"
+import {
+  cloneElement,
+  isValidElement,
+  useState,
+  type FocusEvent,
+  type ReactElement,
+  type ReactNode,
+} from "react"
 import {
   IconCheck,
   IconLanguage,
@@ -256,6 +263,10 @@ function NavDropdown({
         data-testid={`nav-dropdown-${item.key}`}
         aria-haspopup="menu"
         aria-expanded={open}
+        onClick={() => {
+          setOpen(true)
+          onHighlight(item.key)
+        }}
         onKeyDown={(event) => {
           if (event.key === "Escape") {
             setOpen(false)
@@ -277,17 +288,19 @@ function NavDropdown({
           role="menu"
           className="absolute left-0 top-full z-[2000] min-w-44 overflow-hidden rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg"
         >
-          {children.map((child) => (
-            <div key={child.key} role="none" className="[&>a]:block">
-              {nav.renderItem(
+          {children.map((child) => {
+            const rendered = nav.renderItem(
                 child,
                 cn(
                   "w-full rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none",
                   child.active ? "font-semibold text-primary" : "text-foreground",
                 ),
-              )}
-            </div>
-          ))}
+              )
+            const menuItem = isValidElement(rendered)
+              ? cloneElement(rendered as ReactElement<{ role?: string }>, { role: "menuitem" })
+              : rendered
+            return <div key={child.key} role="none" className="[&>a]:block">{menuItem}</div>
+          })}
         </div>
       )}
     </div>

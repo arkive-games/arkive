@@ -1,11 +1,12 @@
-import { IconUserCircle, IconVolume } from '@tabler/icons-react'
+import { IconInfoCircle, IconUserCircle, IconVolume } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ShellTopBar, useTheme, type ShellNavItem, type Theme } from '@gamemap/map-shell'
-import { Button } from '@gamemap/ui'
+import { Button, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 import { GlobalSearchWidget } from './GlobalSearchWidget'
+import { SiteInfo } from './SiteInfo'
 
 function ArkiveMark() {
   return (
@@ -98,7 +99,7 @@ export function TopNav({ active }: { active: NavKey }) {
         items,
         classNames: {
           item: 'group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-foreground/70 hover:text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]',
-          itemActive: 'group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]',
+          itemActive: 'group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]',
           label: 'relative inline-flex h-full items-center',
           labelActive: "after:pointer-events-none after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[color:var(--arkive-nav-accent)] after:content-['']",
         },
@@ -110,7 +111,28 @@ export function TopNav({ active }: { active: NavKey }) {
           </Link>
         ),
       }}
-      centerSlot={<GlobalSearchWidget />}
+      centerSlot={
+        <div className="flex items-center gap-1.5">
+          <GlobalSearchWidget />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                data-testid="contact-menu"
+                aria-label={t('siteInfo.tab')}
+                title={t('siteInfo.tab')}
+                className="size-9 rounded-lg border border-border bg-card text-foreground shadow-none hover:bg-accent"
+              >
+                <IconInfoCircle className="size-5" stroke={1.8} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="max-h-[70vh] w-[320px] overflow-y-auto">
+              <SiteInfo />
+            </PopoverContent>
+          </Popover>
+        </div>
+      }
       languageSwitcher={{
         languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
         current: lng,
