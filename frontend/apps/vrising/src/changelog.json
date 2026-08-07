@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.8.1",
+      "date": "2026-08-08",
+      "commit": "c95cb616939c081d6489d6dca87f868a9bce7904",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Patrol routes now appear only while hovering a roaming boss, and boss detail cards no longer show large portraits.",
+            "zh-CN": "巡逻路线现在仅在鼠标悬停巡逻首领时显示，首领详情卡不再显示大幅头像。",
+            "zh-TW": "巡邏路線現在僅在滑鼠懸停巡邏首領時顯示，首領詳情卡不再顯示大幅頭像。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.0",
       "date": "2026-08-08",
       "commit": "dc568702dbcae6779434bd7381aac680a91f79e6",
