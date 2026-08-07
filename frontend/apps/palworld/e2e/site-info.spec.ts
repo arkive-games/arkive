@@ -10,13 +10,17 @@ const QQ_GROUP = '1091411026'
 test.describe('site info — desktop', () => {
   test('the right sidebar renders, without a feedback group in English', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByTestId('sidebar-toggle-right')).toBeVisible()
+    const toggle = page.getByTestId('sidebar-toggle-right')
+    await expect(toggle).toBeVisible()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await toggle.click()
     await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
     await expect(page.getByTestId('site-info-group-number')).toHaveCount(0)
   })
 
   test('the panel body renders localized prose, not a raw key', async ({ page }) => {
     await page.goto('/')
+    await page.getByTestId('sidebar-toggle-right').click()
     const panel = page.getByTestId('site-info-panel').first()
     await expect(panel).toContainText('About this site')
     await expect(panel).toContainText(
@@ -31,6 +35,7 @@ test.describe('site info — desktop', () => {
     await expect(page.getByTestId('sidebar-toggle-right')).toBeVisible()
     await page.getByTestId('lang-menu').click()
     await page.getByTestId('lang-zh-CN').click()
+    await page.getByTestId('sidebar-toggle-right').click()
     await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
     await expect(page.getByTestId('site-info-group-number')).toHaveText(QQ_GROUP)
   })
@@ -40,14 +45,14 @@ test.describe('site info — desktop', () => {
     await expect(page.getByTestId('sidebar-toggle')).toHaveCount(1)
   })
 
-  test('collapsing the right sidebar is remembered across reloads', async ({ page }) => {
+  test('opening the right sidebar is remembered across reloads', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
-    await page.getByTestId('sidebar-toggle-right').click()
     await expect(page.getByTestId('site-info-panel')).toHaveCount(0)
+    await page.getByTestId('sidebar-toggle-right').click()
+    await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
     await page.reload()
     await expect(page.getByTestId('sidebar-toggle-right')).toBeVisible()
-    await expect(page.getByTestId('site-info-panel')).toHaveCount(0)
+    await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
   })
 
   test('the top-bar popover carries the panel on a catalog page', async ({ page }) => {
@@ -75,13 +80,13 @@ test.describe('site info — desktop', () => {
     await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  test('the right sidebar is a named landmark reporting its expanded state', async ({ page }) => {
+  test('the right sidebar is a named landmark reporting its collapsed state', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('complementary', { name: 'About' })).toBeVisible()
+    await expect(page.getByRole('complementary', { name: 'About' })).toHaveCount(1)
     const toggle = page.getByTestId('sidebar-toggle-right')
-    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    await toggle.click()
     await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
   })
 })
 

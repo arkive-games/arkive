@@ -22,6 +22,7 @@ import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
+import { MapGameHeader } from './components/MapGameHeader'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
@@ -707,7 +708,12 @@ export default function App() {
       // max-md:pr-8: on phones this same element is the filter sheet's header,
       // whose close button is absolutely positioned in that top-right corner —
       // keep the full-width trigger (and its chevron) out from under it.
-      classNames={{ wrapper: 'mb-3 max-md:pr-8' }}
+      classNames={{
+        wrapper: 'px-3 py-3 max-md:pr-8',
+        trigger: 'border-[color:var(--pal-divider)] bg-card shadow-none hover:border-primary/50 hover:bg-[color:var(--pal-cyan-soft)]',
+        content: 'border-[color:var(--pal-divider)]',
+        item: 'data-[state=checked]:bg-[color:var(--pal-cyan-soft)] data-[state=checked]:text-[color:var(--pal-ocean)]',
+      }}
       maps={staticData.maps.map((m) => ({
         id: m.id,
         label: staticData.mapsL10n[m.id]?.shortName ?? staticData.mapsL10n[m.id]?.name ?? m.id,
@@ -752,10 +758,16 @@ export default function App() {
         },
       ]}
       classNames={{
-        controlButton: 'bg-secondary text-secondary-foreground',
-        controlButtonActive: 'bg-primary text-primary-foreground',
-        subtypeButton: 'bg-secondary text-secondary-foreground',
-        subtypeButtonActive: 'bg-primary text-primary-foreground',
+        root: 'px-3 pb-4',
+        controls: 'mb-2 gap-2',
+        controlButton: 'h-9 min-h-9 justify-center rounded-md border border-[color:var(--pal-divider)] bg-card px-2 text-xs font-semibold text-muted-foreground shadow-none hover:border-primary/35 hover:bg-[color:var(--pal-cyan-soft)] hover:text-foreground',
+        controlButtonActive: 'border-primary/40 bg-[color:var(--pal-ocean)] text-white shadow-none hover:bg-[color:var(--pal-ocean)] hover:text-white',
+        category: 'border-b border-[color:var(--pal-divider)] py-1.5 last:border-b-0',
+        categoryHeader: 'min-h-10 pt-0 pb-0 text-foreground [&>svg]:size-5 [&>svg]:text-foreground/55',
+        categoryEyeToggle: 'text-foreground/55 hover:bg-[color:var(--pal-cyan-soft)] hover:text-primary',
+        subtypeGrid: 'gap-x-2 gap-y-1.5 pb-2',
+        subtypeButton: 'h-auto min-h-9 rounded-md border border-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-65 hover:border-[color:var(--pal-divider)] hover:bg-card hover:text-foreground hover:opacity-100',
+        subtypeButtonActive: 'border-primary/20 bg-[color:var(--pal-cyan-soft)] font-semibold text-[color:var(--pal-ocean)] opacity-100 shadow-[inset_0.18rem_0_0_var(--pal-gold)]',
       }}
     />
   )
@@ -776,9 +788,9 @@ export default function App() {
       resolveSearchOptions={palIdLookup}
       searchOptions={PAL_SEARCH_OPTIONS}
       variant={variant}
-      // The right sidebar's collapse tab hangs 32px into the map column at
-      // y≈100px; clear it so it never lands on the results list.
-      classNames={variant === 'floating' ? { root: 'right-11' } : undefined}
+      classNames={variant === 'floating'
+        ? { root: 'left-1/2 right-auto w-[360px] -translate-x-1/2' }
+        : undefined}
     />
   )
 
@@ -890,27 +902,24 @@ export default function App() {
     <>
     <h1 className="sr-only">{t('title')}</h1>
     <ShellLayout
-      className="bg-background text-foreground"
+      className="palworld-map-page bg-background text-foreground"
       topBar={<TopNav active="/" engine={engine} onEngineChange={chooseEngine} />}
       sidebar={
         <ShellSidebar
+          width={320}
           collapseLabel={t('collapse')}
           expandLabel={t('expand')}
           classNames={{
-            root: 'border-r border-border bg-gradient-to-b from-card to-background text-sm text-card-foreground',
-            collapseButton: 'bg-secondary text-secondary-foreground',
-            content: 'px-3 pt-3',
+            root: 'border-r border-[color:var(--pal-divider)] bg-[color:var(--pal-sidebar)] text-sm text-card-foreground shadow-[0.5rem_0_1.5rem_rgba(7,48,64,0.08)]',
+            scrollArea: 'palworld-filter-scroll',
+            collapseButton: 'top-4 border border-l-0 border-[color:var(--pal-divider)] bg-card text-[color:var(--pal-gold-ink)] shadow-sm',
+            content: 'pb-2',
           }}
           headerSlot={
-            <div className="mb-3 px-1">
-              {/* Monochrome white logo: invert to black on the light sidebar,
-                  keep white on the dark sidebar. */}
-              <img
-                src={`${import.meta.env.BASE_URL}images/palworld-logo.webp`}
-                alt="Palworld"
-                className="h-auto w-full object-contain invert dark:invert-0"
-              />
-            </div>
+            <MapGameHeader
+              backgroundUrl={map ? palworldAssets.tileUrl(map, 0, 0, map.tileLevels) : undefined}
+              title={t('title')}
+            />
           }
           mapSelectorSlot={mapSelect}
         >
