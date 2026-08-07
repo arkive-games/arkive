@@ -18,6 +18,7 @@ import {
   BUILD_TIME_LABELS,
   MAP_HEADER_LABELS,
   MAP_REGION_LABELS,
+  MAP_SEARCH_PLACEHOLDER_LABELS,
   SETTINGS_BACK_LABELS,
   SETTINGS_LANGUAGE_LABELS,
   SETTINGS_THEME_LABELS,
@@ -1015,6 +1016,7 @@ for (const lng of LANGUAGES) {
       brandSlogan: BRAND_SLOGAN_LABELS[lng],
       mapHeader: MAP_HEADER_LABELS[lng],
       mapRegion: MAP_REGION_LABELS[lng],
+      mapSearchPlaceholder: MAP_SEARCH_PLACEHOLDER_LABELS[lng],
       settings: {
         language: SETTINGS_LANGUAGE_LABELS[lng],
         theme: SETTINGS_THEME_LABELS[lng],
