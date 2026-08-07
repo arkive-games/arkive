@@ -23,10 +23,10 @@ import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
-import { EngineToggle, Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
-import { MAP_ENGINE_CHOICES, MAP_ENGINE_LABELS, resolveMapEngine, useChooseMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
+import { resolveMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
 import { ICP_BEIAN } from './lib/brand'
 
 // Ray-casting point-in-polygon (point + ring both in map-pixel space).
@@ -135,14 +135,11 @@ export default function App() {
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId)
 
   // Which engine renders the map: the `?engine=` param for this visit, else the
-  // stored choice (see `lib/mapEngineChoice`). Derived, not state — the store is
-  // the single source of truth, so BOTH switchers (the desktop dropdown here and
-  // the mobile More sheet in BottomTabBar, which the root route renders and which
-  // therefore cannot see this component's state) swap the engine live through the
-  // one shared `useChooseMapEngine` action.
+  // stored choice (see `lib/mapEngineChoice`). The public renderer switcher was
+  // removed from the map chrome; the parameter remains useful for shared links,
+  // regression tests, and troubleshooting.
   const storedEngine = useStoredMapEngine()
   const engine = resolveMapEngine(engineParam, storedEngine)
-  const chooseEngine = useChooseMapEngine()
 
   // The view handed to the engine currently mounted. `initialView` is frozen at
   // page mount, but `onViewChange` streams the live camera into storage — so a
@@ -932,15 +929,6 @@ export default function App() {
       <main className="relative flex min-w-0 flex-1 overflow-hidden">
         {mapView}
         {searchPanel('floating')}
-        <div className="absolute right-12 top-3 z-[650]">
-          <EngineToggle
-            value={engine}
-            choices={MAP_ENGINE_CHOICES}
-            labels={MAP_ENGINE_LABELS}
-            onChange={chooseEngine}
-            label={t('engineMenu')}
-          />
-        </div>
       </main>
     </ShellLayout>
     </>

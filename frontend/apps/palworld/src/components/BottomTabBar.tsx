@@ -24,13 +24,6 @@ import {
 import { ShellBottomNav, useTheme, type Theme } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { ARKIVE_HOME_URL, ARKIVE_HOME_LINK_PROPS } from '../lib/brand'
-import {
-  MAP_ENGINE_CHOICES,
-  MAP_ENGINE_LABELS,
-  resolveMapEngine,
-  useChooseMapEngine,
-  useStoredMapEngine,
-} from '../lib/mapEngineChoice'
 import type { NavKey } from './TopNav'
 import { SiteInfo } from './SiteInfo'
 
@@ -68,18 +61,9 @@ export function BottomTabBar() {
   // resolved language degrades to English rather than indexing a label table
   // with a string the table has no entry for.
   const lng = LANGUAGES.find((code) => code === i18n.resolvedLanguage) ?? 'en-US'
-  const { pathname, search } = useLocation()
+  const { pathname } = useLocation()
   const active = activeKey(pathname)
   const { theme, setTheme } = useTheme()
-  // The map-engine switcher lives here too, because the mobile layout renders no
-  // top bar at all (that is where the desktop dropdown sits). The store is shared,
-  // so tapping a pill swaps the engine on the map page behind the sheet. The
-  // `?engine=` param is folded in with the same precedence App uses, so the
-  // highlighted pill matches what is actually on screen when the map was opened
-  // through an explicit override.
-  const storedEngine = useStoredMapEngine()
-  const activeEngine = resolveMapEngine((search as { engine?: unknown }).engine, storedEngine)
-  const chooseEngine = useChooseMapEngine()
 
   // Five slots is the most a phone can fit without shrinking the labels below
   // `text-xs`, so the bar carries the map plus the three most-used tools and
@@ -177,15 +161,6 @@ export function BottomTabBar() {
         current: theme,
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('settings.theme'),
-      }}
-      engine={{
-        choices: MAP_ENGINE_CHOICES.map((choice) => ({
-          value: choice,
-          label: MAP_ENGINE_LABELS[choice].short,
-        })),
-        current: activeEngine,
-        onChange: (value) => chooseEngine(value as typeof activeEngine),
-        rowLabel: t('engineMenu'),
       }}
       footer={<SiteInfo />}
     />
