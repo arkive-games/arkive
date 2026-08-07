@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "1.13.0",
+      "date": "2026-08-08",
+      "commit": "5d53e380fec5fbcf653f79434e84d6cbb3a880e4",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Marker popups can now copy the exact displayed coordinates with success or failure feedback, and omit empty descriptions.",
+            "zh-CN": "地图点位详情现在可复制所显示的精确坐标，并提供成功或失败反馈；没有描述的点位不再显示空文案。",
+            "zh-TW": "地圖點位詳情現在可複製所顯示的精確座標，並提供成功或失敗回饋；沒有描述的點位不再顯示空文案。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Map search now shrinks with narrower desktop windows while preserving a usable minimum width.",
+            "zh-CN": "地图搜索栏现在会随桌面窗口缩窄，同时保留可正常操作的最小宽度。",
+            "zh-TW": "地圖搜尋列現在會隨桌面視窗縮窄，同時保留可正常操作的最小寬度。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.11",
       "date": "2026-08-08",
       "commit": "51de8138dfe69aad771c7254e6b86832b8264fad",
