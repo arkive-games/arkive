@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.7",
+      "date": "2026-08-08",
+      "commit": "46b21c991b37c605421bbd19447fad0af7ee4831",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned Arkive branding, top-bar controls, filter states, marker details, and overflow labels with the shared map shell.",
+            "zh-CN": "统一藏舟品牌、顶栏操作、筛选状态、点位详情和溢出文字的共享地图样式。",
+            "zh-TW": "統一藏舟品牌、頂欄操作、篩選狀態、點位詳情和溢出文字的共享地圖樣式。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.6",
       "date": "2026-08-08",
       "commit": "dc0866df391bcea39b45ad8618ad76eff71e1018",

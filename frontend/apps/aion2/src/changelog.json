@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.12.10",
+      "date": "2026-08-08",
+      "commit": "46b21c991b37c605421bbd19447fad0af7ee4831",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned the language control, marker details, overflow labels, and sidebar game header with the shared map shell.",
+            "zh-CN": "统一语言切换、点位详情、溢出文字和侧栏游戏头图的共享地图样式。",
+            "zh-TW": "統一語言切換、點位詳情、溢出文字和側欄遊戲頭圖的共享地圖樣式。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.12.9",
       "date": "2026-08-08",
       "commit": "0a16dacca1e9ceb1d25e3e11a39b978c6088d5cd",
