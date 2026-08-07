@@ -13,6 +13,7 @@ import {
 } from "@gamemap/ui"
 import { deriveEyeState, syncExpanded } from "./filter-logic"
 import { IdLabel, type IdLabelValue } from "./IdLabel"
+import { OverflowMarquee } from "./OverflowMarquee"
 
 export interface FilterSubtype {
   id: string
@@ -206,9 +207,9 @@ export function FilterPanel({
                       )}
                     >
                       <div className="flex w-full items-center justify-between gap-2">
-                        <span className="flex min-w-0 items-center gap-1">
+                        <span className="flex min-w-0 flex-1 items-center gap-1">
                           {sub.icon}
-                          <span className="truncate text-left">{sub.label}</span>
+                          <OverflowMarquee text={sub.label} className="flex-1" />
                         </span>
                         {(sub.idLabel !== undefined || sub.badge !== undefined || sub.count !== undefined) && (
                           <span className="flex shrink-0 items-center gap-1.5 text-xs">

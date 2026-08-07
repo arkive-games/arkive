@@ -23,7 +23,6 @@ import {
   SETTINGS_BACK_LABELS,
   SETTINGS_LANGUAGE_LABELS,
   SETTINGS_THEME_LABELS,
-  VOICE_LABELS,
 } from './chromeStrings'
 import { DUNGEON_STRINGS } from './dungeonStrings'
 import { FISHING_STRINGS } from './fishingStrings'
@@ -1021,7 +1020,6 @@ for (const lng of LANGUAGES) {
       mapSearchPlaceholder: MAP_SEARCH_PLACEHOLDER_LABELS[lng],
       settings: {
         language: SETTINGS_LANGUAGE_LABELS[lng],
-        voice: VOICE_LABELS[lng],
         theme: SETTINGS_THEME_LABELS[lng],
         back: SETTINGS_BACK_LABELS[lng],
       },

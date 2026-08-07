@@ -13,10 +13,12 @@ import type { Language } from './i18n'
  * its Chinese name there; every other locale gets the Latin one only.
  */
 export const BRAND_LABELS: Record<Language, string> = {
-  'en-US': 'Arkive', 'de-DE': 'Arkive', 'es-ES': 'Arkive', 'es-MX': 'Arkive', 'fr-FR': 'Arkive',
-  'id-ID': 'Arkive', 'it-IT': 'Arkive', 'ja-JP': 'Arkive', 'ko-KR': 'Arkive', 'pl-PL': 'Arkive',
-  'pt-BR': 'Arkive', 'ru-RU': 'Arkive', 'th-TH': 'Arkive', 'tr-TR': 'Arkive', 'vi-VN': 'Arkive',
-  'zh-CN': '藏舟攻略 / Arkive', 'zh-TW': '藏舟攻略 / Arkive',
+  'en-US': 'Arkive Game Guides', 'de-DE': 'Arkive Game Guides', 'es-ES': 'Arkive Game Guides',
+  'es-MX': 'Arkive Game Guides', 'fr-FR': 'Arkive Game Guides', 'id-ID': 'Arkive Game Guides',
+  'it-IT': 'Arkive Game Guides', 'ja-JP': 'Arkive Game Guides', 'ko-KR': 'Arkive 게임 가이드',
+  'pl-PL': 'Arkive Game Guides', 'pt-BR': 'Arkive Game Guides', 'ru-RU': 'Arkive Game Guides',
+  'th-TH': 'Arkive Game Guides', 'tr-TR': 'Arkive Game Guides', 'vi-VN': 'Arkive Game Guides',
+  'zh-CN': '藏舟游戏攻略网', 'zh-TW': '藏舟遊戲攻略網',
 }
 
 /** Arkive's brand promise, kept identical across every game map shell. */
@@ -109,14 +111,6 @@ export const SETTINGS_LANGUAGE_LABELS: Record<Language, string> = {
   'id-ID': 'Bahasa', 'it-IT': 'Lingua', 'ja-JP': '言語', 'ko-KR': '언어', 'pl-PL': 'Język',
   'pt-BR': 'Idioma', 'ru-RU': 'Язык', 'th-TH': 'ภาษา', 'tr-TR': 'Dil', 'vi-VN': 'Ngôn ngữ',
   'zh-CN': '语言', 'zh-TW': '語言',
-}
-
-/** Compact top-bar label for the spoken-language selector. */
-export const VOICE_LABELS: Record<Language, string> = {
-  'en-US': 'Voice', 'de-DE': 'Sprache', 'es-ES': 'Voz', 'es-MX': 'Voz', 'fr-FR': 'Voix',
-  'id-ID': 'Suara', 'it-IT': 'Voce', 'ja-JP': '音声', 'ko-KR': '음성', 'pl-PL': 'Głos',
-  'pt-BR': 'Voz', 'ru-RU': 'Голос', 'th-TH': 'เสียง', 'tr-TR': 'Ses', 'vi-VN': 'Giọng nói',
-  'zh-CN': '语音', 'zh-TW': '語音',
 }
 
 /** Account entry shared by every desktop page. */

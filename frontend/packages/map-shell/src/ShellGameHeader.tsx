@@ -28,7 +28,7 @@ export function ShellGameHeader({
     <section
       data-testid="game-map-header"
       className={cn(
-        "relative min-h-32 w-full select-none overflow-hidden border-b border-border bg-cover text-white",
+        "relative min-h-32 w-full select-none overflow-hidden bg-cover text-white",
         className,
       )}
       style={{ backgroundImage: `url(${backgroundUrl})`, backgroundPosition }}
