@@ -81,8 +81,11 @@ export default function TopNavbar() {
       nav={{
         items: navItems,
         classNames: {
-          item: "text-sm font-semibold text-foreground/70 hover:text-primary",
-          itemActive: "text-sm font-bold text-primary",
+          item:
+            "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-foreground/70 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          itemActive:
+            "group relative inline-flex h-10 items-center rounded-sm px-1 text-sm font-semibold text-primary after:pointer-events-none after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[color:var(--arkive-orange)] after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          chevron: "size-3 opacity-50 transition-opacity group-hover:opacity-70",
         },
         renderItem: (item, className) => {
           return item.key === "map" ? (

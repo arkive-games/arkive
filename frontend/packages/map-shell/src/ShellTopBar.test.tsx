@@ -48,4 +48,27 @@ describe("ShellTopBar nav", () => {
     const { getByTestId } = render(<ShellTopBar nav={{ items, renderItem }} />)
     expect(getByTestId("nav-dropdown-database").className).toContain("text-primary")
   })
+
+  it("allows sites to soften the dropdown chevron independently", () => {
+    const items: ShellNavItem[] = [
+      {
+        key: "database",
+        label: "Database",
+        children: [{ key: "/items", label: "Items" }],
+      },
+    ]
+    const { getByTestId } = render(
+      <ShellTopBar
+        nav={{
+          items,
+          renderItem,
+          classNames: { chevron: "size-3 opacity-50" },
+        }}
+      />,
+    )
+
+    const trigger = getByTestId("nav-dropdown-database")
+    expect(trigger.querySelector("svg")?.getAttribute("class")).toContain("size-3")
+    expect(trigger.querySelector("svg")?.getAttribute("class")).toContain("opacity-50")
+  })
 })
