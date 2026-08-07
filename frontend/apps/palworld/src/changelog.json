@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.23.5",
+      "date": "2026-08-08",
+      "commit": "0a16dacca1e9ceb1d25e3e11a39b978c6088d5cd",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Unified Arkive colors across every desktop page, restored the wide map search, split Breeding Routes into its own navigation entry, added hover menus, and aligned the map header and controls with AION2.",
+            "zh-CN": "桌面端全站统一为藏舟规范主题色，恢复宽版地图搜索，将配种路线独立为导航入口，并以悬停子菜单及统一标题和控件对齐永恒之塔2。",
+            "zh-TW": "桌面端全站統一為藏舟規範主題色，恢復寬版地圖搜尋，將配種路線獨立為導覽入口，並以懸停子選單及統一標題和控制項對齊永恆之塔2。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.23.4",
       "date": "2026-08-08",
       "commit": "6e11d3fa0a75cf1fcea20dda84df84b9c5dec6bd",
