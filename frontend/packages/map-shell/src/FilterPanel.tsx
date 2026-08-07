@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { IconEye, IconEyeOff } from "@tabler/icons-react"
 import {
   Accordion,
   AccordionContent,
@@ -175,10 +175,10 @@ export function FilterPanel({
                               classNames?.categoryEyeToggle,
                             )}
                           >
-                            {eyeState === "all" ? (
-                              <EyeOff className="h-3.5 w-3.5" />
+                            {eyeState === "none" ? (
+                              <IconEyeOff className="size-4" stroke={1.8} />
                             ) : (
-                              <Eye className="h-3.5 w-3.5" />
+                              <IconEye className="size-4" stroke={1.8} />
                             )}
                           </span>
                         </TooltipTrigger>

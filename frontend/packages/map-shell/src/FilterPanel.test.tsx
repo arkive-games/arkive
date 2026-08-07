@@ -40,6 +40,34 @@ describe("FilterPanel", () => {
     expect(onSet).toHaveBeenCalledWith("cat1", true)
   })
 
+  it("shows a closed eye only when every subtype in the category is hidden", () => {
+    const { getByLabelText, rerender } = render(
+      <FilterPanel
+        categories={categories}
+        onToggleSubtype={() => {}}
+        onSetCategory={() => {}}
+        categoryToggleLabels={{ show: "Show category", hide: "Hide category" }}
+      />,
+    )
+    expect(getByLabelText("Show category").querySelector(".tabler-icon-eye")).toBeTruthy()
+    expect(getByLabelText("Show category").querySelector(".tabler-icon-eye-off")).toBeNull()
+
+    rerender(
+      <FilterPanel
+        categories={[
+          {
+            ...categories[0],
+            subtypes: categories[0].subtypes.map((subtype) => ({ ...subtype, active: false })),
+          },
+        ]}
+        onToggleSubtype={() => {}}
+        onSetCategory={() => {}}
+        categoryToggleLabels={{ show: "Show category", hide: "Hide category" }}
+      />,
+    )
+    expect(getByLabelText("Show category").querySelector(".tabler-icon-eye-off")).toBeTruthy()
+  })
+
   it("renders the count, badge, and idLabel on the right of the button", () => {
     const { getByTestId } = render(
       <FilterPanel

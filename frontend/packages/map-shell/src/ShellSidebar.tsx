@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { cn, ScrollArea } from "@gamemap/ui"
 
 export interface ShellSidebarProps {
@@ -74,21 +74,24 @@ export function ShellSidebar({
   // Points the way the panel's inner edge will move: outward when expanded (a
   // click closes it), inward when collapsed (a click opens it).
   const chevronPointsRight = side === "right" ? !collapsed : collapsed
-  const Chevron = chevronPointsRight ? ChevronRight : ChevronLeft
+  const Chevron = chevronPointsRight ? IconChevronRight : IconChevronLeft
 
   return (
     <aside
       aria-label={label}
       className={cn(
-        "relative flex h-full shrink-0 flex-col transition-all duration-300",
+        "relative flex h-full min-h-0 shrink-0 flex-col transition-all duration-300",
         classNames?.root,
       )}
       style={{ width: collapsed ? 0 : width, maxWidth: width }}
     >
       {backgroundSlot}
-      <ScrollArea className={cn("h-full flex-1", classNames?.scrollArea)}>
+      <ScrollArea
+        data-testid="sidebar-scroll-area"
+        className={cn("min-h-0 flex-1 overflow-hidden", classNames?.scrollArea)}
+      >
         {!collapsed && (
-          <div className={cn("flex flex-col px-0 pb-4", classNames?.content)}>
+          <div className={cn("flex min-w-0 flex-col px-0 pb-4", classNames?.content)}>
             {headerSlot}
             {mapSelectorSlot ??
               (showMapSelector && (
@@ -136,7 +139,7 @@ export function ShellSidebar({
           classNames?.collapseButton,
         )}
       >
-        <Chevron className="h-4 w-4" />
+        <Chevron className="size-5" stroke={1.8} />
         {/* `break-words` matters: hosts pass a content label here, and the tab
             is only 32px wide. Long unbreakable words (e.g. Italian
             "Informazioni") would otherwise spill out of the tab. */}

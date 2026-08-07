@@ -19,8 +19,6 @@ type Props = {
  * re-render of the GL `GameMapView` re-runs the effects that own the renderer,
  * the layers and the gesture binding.
  */
-const TEXT_SHADOW = "0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.6)";
-
 const MapStatusBar: React.FC<Props> = ({
   displayCoords,
   subzoneAt,
@@ -35,14 +33,14 @@ const MapStatusBar: React.FC<Props> = ({
     <div className="gmgl-statusbar">
       <div className="gmgl-statusbar-stack">
         {footerText && (
-          <span className="gmgl-statusbar-footer" style={{ textShadow: TEXT_SHADOW }}>
+          <span className="gmgl-statusbar-footer">
             {footerText}
           </span>
         )}
         <div
           data-testid="map-coords"
           className="gmgl-statusbar-pill"
-          style={{ textShadow: TEXT_SHADOW, backgroundColor: pillBg }}
+          style={{ backgroundColor: pillBg }}
         >
           <span className="gmgl-statusbar-coords">
             {d ? `x:${Math.round(d.x)},y:${Math.round(d.y)}` : "x:--,y:--"}

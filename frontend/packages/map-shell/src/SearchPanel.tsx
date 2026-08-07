@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import MiniSearch, { type SearchOptions, type SearchResult } from "minisearch"
+import { IconSearch } from "@tabler/icons-react"
 import { cn } from "@gamemap/ui"
 import { formatCoords } from "./coordFormat"
 import { searchTokenize } from "./searchTokenizer"
@@ -209,6 +210,11 @@ export function SearchPanel({
     if (!item) return
     onSelect(id)
     onFlyTo({ x: item.x, y: item.y })
+    // The selected marker opens its own detail card at the destination. Close
+    // the result list so that card is not hidden behind the centered search
+    // overlay, while keeping the search field ready for the next lookup.
+    setQuery("")
+    setDebounced("")
   }
 
   const hasQuery = debounced.trim().length > 0
@@ -231,17 +237,7 @@ export function SearchPanel({
     >
       {/* Search bar */}
       <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur">
-        <svg
-          className="size-4 shrink-0 text-muted-foreground"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
+        <IconSearch className="size-4 shrink-0 text-muted-foreground" stroke={1.8} aria-hidden />
         <input
           data-testid="marker-search"
           value={query}

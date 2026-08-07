@@ -4,6 +4,10 @@ siteTitle: "AION2\n互动地图"
 mapSubtitle: "互动地图"
 announcement: ""
 
+brand:
+  name: "藏舟游戏攻略网"
+  slogan: "万千攻略，藏于一舟"
+
 nav:
   home: "首页"
   classBd: "职业BD"
@@ -14,6 +18,7 @@ nav:
 # 语言显示名不做翻译：切换菜单使用 src/i18n.ts 中 LANGUAGE_LABELS 的本族语名称。
 language:
   label: "语言"
+  short: "中 / EN"
 
 ui:
   confirm: "确认"
@@ -56,6 +61,7 @@ auth:
   altcha: "请先进行人机验证！"
 
 theme:
+  label: "主题"
   auto: "自动（随地图切换）"
   light: "白天模式（天族）"
   dark: "夜晚模式（魔族）"
@@ -84,6 +90,8 @@ menu:
   maps: "地图"
   regions: "区域"
   markerTypes: "标记类型"
+  mapRegion: "地图区域"
+  markerDisplay: "标记显示"
   showNamesOnPins: "显示标记名称"
   showAllMarkers: "全部显示"
   hideAllMarkers: "全部隐藏"

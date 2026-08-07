@@ -24,7 +24,7 @@ import {
   SheetTrigger,
   useIsMobile,
 } from "@gamemap/ui";
-import { Search as SearchIcon, SlidersHorizontal } from "lucide-react";
+import { IconAdjustmentsHorizontal, IconSearch } from "@tabler/icons-react";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { useGameData } from "@/context/GameDataContext";
@@ -40,7 +40,6 @@ import TopNavbar from "@/components/TopNavbar";
 import { getQueryParam, parseIconUrl } from "@/lib/url";
 import {
   resolveMapEngine,
-  useChooseMapEngine,
   useStoredMapEngine,
 } from "@/lib/mapEngineChoice";
 import { ICP_RECORD, MAP_FLY_TO_DURATION } from "@/lib/constants";
@@ -77,7 +76,6 @@ export default function MapRoute() {
   const engineParam = useSearch({ from: "/", select: (s) => s.engine });
   const storedEngine = useStoredMapEngine();
   const engine = resolveMapEngine(engineParam, storedEngine);
-  const chooseEngine = useChooseMapEngine();
   const appliedDeepLink = useRef(false);
   // Whether the deep link actually navigated somewhere (marker or position) —
   // in that case the stored selection must NOT be restored on top of it.
@@ -383,7 +381,14 @@ export default function MapRoute() {
       variant={variant}
       // The right sidebar's collapse tab hangs 32px into the map column at
       // y≈100px; clear it so it never lands on the results list.
-      classNames={variant === "floating" ? { root: "right-11" } : undefined}
+      classNames={
+        variant === "floating"
+          ? {
+              root:
+                "top-3 right-auto bottom-3 left-1/2 w-[min(34rem,calc(100%-2rem))] -translate-x-1/2",
+            }
+          : undefined
+      }
     />
   );
 
@@ -422,7 +427,7 @@ export default function MapRoute() {
                 aria-label={t("common:ui.search", "Search")}
                 className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
               >
-                <SearchIcon className="size-5" />
+                <IconSearch className="size-5" stroke={1.8} />
               </button>
             </SheetTrigger>
             <SheetContent
@@ -445,7 +450,7 @@ export default function MapRoute() {
                 aria-label={t("common:menu.markerTypes", "Marker Types")}
                 className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-lg"
               >
-                <SlidersHorizontal className="size-5" />
+                <IconAdjustmentsHorizontal className="size-5" stroke={1.8} />
               </button>
             </SheetTrigger>
             <SheetContent
@@ -472,8 +477,8 @@ export default function MapRoute() {
 
   return (
     <ShellLayout
-      className="bg-background text-foreground"
-      topBar={<TopNavbar engine={engine} onEngineChange={chooseEngine} />}
+      className="aion2-map-page bg-background text-foreground"
+      topBar={<TopNavbar />}
       sidebar={<Sidebar />}
       rightSidebar={<InfoSidebar />}
     >

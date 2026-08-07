@@ -17,6 +17,7 @@
     "@gamemap/map-engine-gl": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
     "@gamemap/ui": "workspace:*",
+    "@tabler/icons-react": "^3.46.0",
     "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.17",

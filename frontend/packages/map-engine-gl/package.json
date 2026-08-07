@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@gamemap/data-contract": "workspace:*",
+    "@tabler/icons-react": "^3.46.0",
     "earcut": "^3.2.3",
     "three": "^0.185.1"
   },

@@ -5,25 +5,18 @@ import SiteInfo from "@/components/SiteInfo";
 
 const COLLAPSED_KEY = "aion2.map.siteInfoCollapsed";
 
-/** Below this, 346 (left sidebar) + 320 (this one) would leave the map column a sliver. */
-const FIRST_VISIT_MIN_WIDTH = 1200;
-
 /**
- * Expanded on a first-ever visit so the feedback invite is actually seen, then
- * the visitor's own choice wins forever. Storage lives here rather than in the
- * shell package, which must stay storage-free.
+ * The map remains the primary surface on first visit, while the compact edge
+ * tab keeps site information one click away. A visitor's own choice then wins.
  */
 function readCollapsed(): boolean {
   try {
     const stored = localStorage.getItem(COLLAPSED_KEY);
     if (stored !== null) return stored === "1";
   } catch {
-    /* no storage — fall through to the width-based default */
+    /* no storage; fall through to the collapsed default */
   }
-  // No recorded choice: expanded so the feedback invite is actually seen —
-  // except on a narrow desktop, where the map would have nothing left. This
-  // is a client-only SPA (no SSR), so `window` is always present here.
-  return window.innerWidth < FIRST_VISIT_MIN_WIDTH;
+  return true;
 }
 
 function writeCollapsed(collapsed: boolean): void {
@@ -58,7 +51,7 @@ export default function InfoSidebar() {
       classNames={{
         root: "border-l border-border bg-card text-card-foreground",
         collapseButton:
-          "text-[color:var(--color-sidebar-collapse-fg)] bg-[color:var(--color-sidebar-collapse)]",
+          "border border-r-0 border-border bg-card text-[color:var(--arkive-orange)] shadow-sm",
         content: "px-3 pt-3",
       }}
     >

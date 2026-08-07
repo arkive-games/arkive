@@ -69,9 +69,20 @@ describe("ShellSidebar", () => {
         <ShellSidebar {...labels} side={side} collapsed={collapsed} />,
       )
       const toggle = getByTestId(side === "right" ? "sidebar-toggle-right" : "sidebar-toggle")
-      expect(toggle.querySelector(`.lucide-chevron-${expected}`)).toBeTruthy()
+      expect(toggle.querySelector(`.tabler-icon-chevron-${expected}`)).toBeTruthy()
       const other = expected === "left" ? "right" : "left"
-      expect(toggle.querySelector(`.lucide-chevron-${other}`)).toBeNull()
+      expect(toggle.querySelector(`.tabler-icon-chevron-${other}`)).toBeNull()
     },
   )
+
+  it("keeps the Radix scroll root shrinkable inside the full-height sidebar", () => {
+    const { getByTestId } = render(
+      <ShellSidebar {...labels}>
+        <div>Long filter list</div>
+      </ShellSidebar>,
+    )
+    const scrollArea = getByTestId("sidebar-scroll-area")
+    expect(scrollArea.className).toContain("min-h-0")
+    expect(scrollArea.className).toContain("overflow-hidden")
+  })
 })

@@ -3,6 +3,10 @@ appName: "AION2 地圖"
 siteTitle: "AION2 互動地圖"
 mapSubtitle: "互動地圖"
 
+brand:
+  name: "藏舟遊戲攻略網"
+  slogan: "萬千攻略，藏於一舟"
+
 nav:
   home: "首頁"
   classBd: "職業BD"
@@ -13,8 +17,13 @@ nav:
 # 語言顯示名不做翻譯：切換選單使用 src/i18n.ts 中 LANGUAGE_LABELS 的本族語名稱。
 language:
   label: "語言"
+  short: "中 / EN"
+
+auth:
+  login: "登入"
 
 theme:
+  label: "主題"
   auto: "自動（隨地圖切換）"
   light: "白天模式（天族）"
   dark: "夜晚模式（魔族）"
@@ -80,6 +89,8 @@ menu:
   maps: "地圖"
   regions: "區域"
   markerTypes: "標記類型"
+  mapRegion: "地圖區域"
+  markerDisplay: "標記顯示"
   showNamesOnPins: "在標記上顯示名稱"
   showAllMarkers: "全部顯示"
   hideAllMarkers: "全部隱藏"

@@ -1,5 +1,6 @@
 import React from "react";
 import { useMap } from "react-leaflet";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
 
 /**
  * Lanhu-style map controls (design "1天族"), pinned bottom-right inside the map:
@@ -33,7 +34,7 @@ const MapZoomControl: React.FC<Props> = ({
           className="gm-zoom-btn"
           style={{ color: glyphColor }}
         >
-          +
+          <IconPlus className="size-4" stroke={1.8} aria-hidden />
         </button>
         <div className="gm-zoom-divider" />
         <button
@@ -43,7 +44,7 @@ const MapZoomControl: React.FC<Props> = ({
           className="gm-zoom-btn"
           style={{ color: glyphColor }}
         >
-          −
+          <IconMinus className="size-4" stroke={1.8} aria-hidden />
         </button>
       </div>
     </div>

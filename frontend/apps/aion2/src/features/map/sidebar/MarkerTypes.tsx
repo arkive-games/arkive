@@ -11,16 +11,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@gamemap/ui";
-import { getCategoryIcon } from "@/features/map/categoryIcons";
 import { useGameMap } from "@/context/GameMapContext";
 import { useGameData } from "@/context/GameDataContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { parseIconUrl } from "@/lib/url";
 
-// Old getCommonButtonProps colours: inactive = var(--color-sidebar-button) bg,
-// #3D3D3D text (#C2C2C2 dark); active = primary blue (light) / violet (dark).
-const BUTTON_SKIN = "bg-[color:var(--color-sidebar-button)] text-[#3D3D3D] dark:text-[#C2C2C2]";
-const BUTTON_SKIN_ACTIVE = "bg-primary text-white dark:bg-[#7E52C1] dark:text-white";
+// Quiet neutral rows keep the dense filter list readable; selected rows use
+// the same warm-orange rail and tinted surface as the map marker treatment.
+const BUTTON_SKIN =
+  "h-auto min-h-9 rounded-md border-l-[3px] border-l-transparent bg-[color:var(--arkive-filter-idle)] px-2.5 text-foreground hover:bg-[color:var(--arkive-filter-hover)]";
+const BUTTON_SKIN_ACTIVE =
+  "border-l-[color:var(--arkive-orange)] bg-[color:var(--arkive-filter-active)] font-semibold text-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--arkive-orange)_14%,transparent)]";
 
 export default function MarkerTypes() {
   const { types, selectedMap } = useGameMap();
@@ -45,11 +46,9 @@ export default function MarkerTypes() {
   );
 
   const filterCategories: FilterCategory[] = renderableCategories.map((category) => {
-    const CatIcon = getCategoryIcon(category.name);
     return {
       id: category.name,
       label: t(`types:categories.${category.name}.name`, category.name),
-      icon: <CatIcon className="h-3.5 w-3.5" />,
       subtypes: category.subtypes
         .filter((sub) => (subtypeCounts[sub.name] ?? 0) > 0)
         .map((sub) => {
@@ -130,7 +129,7 @@ export default function MarkerTypes() {
   ];
 
   return (
-    <div className="flex w-full flex-col px-4 pb-4">
+    <div className="flex w-full flex-col px-3 pb-4">
       <FilterPanel
         categories={filterCategories}
         onToggleSubtype={handleToggleSubtype}
@@ -141,11 +140,18 @@ export default function MarkerTypes() {
         }}
         controls={controls}
         classNames={{
+          controls: "gap-x-2 gap-y-1.5",
           controlButton: BUTTON_SKIN,
           controlButtonActive: BUTTON_SKIN_ACTIVE,
           subtypeButton: BUTTON_SKIN,
           subtypeButtonActive: BUTTON_SKIN_ACTIVE,
-          categoryEyeToggle: "text-[#3D3D3D] dark:text-[#C2C2C2]",
+          category:
+            "border-b border-[color:var(--arkive-divider)] py-1.5 last:border-b-0",
+          categoryHeader:
+            "min-h-10 pt-0 pb-0 text-foreground [&>svg]:size-5 [&>svg]:text-foreground/65",
+          categoryEyeToggle:
+            "text-foreground/65 hover:bg-[color:var(--arkive-filter-hover)] hover:text-primary",
+          subtypeGrid: "gap-x-2 gap-y-2 pb-2",
         }}
       />
 
