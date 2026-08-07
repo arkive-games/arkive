@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.8.0",
+      "date": "2026-08-08",
+      "commit": "dc568702dbcae6779434bd7381aac680a91f79e6",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added 15 roaming V Blood bosses with official portraits and selectable patrol corridors recovered from the game.",
+            "zh-CN": "新增 15 名巡逻 V 型血首领，使用游戏官方头像，并显示从游戏数据中恢复的可选中巡逻走廊。",
+            "zh-TW": "新增 15 名巡邏 V 型血首領，使用遊戲官方頭像，並顯示從遊戲資料中復原的可選取巡邏走廊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.7.0",
       "date": "2026-08-01",
       "commit": "a783680dd4e62f7027a3aa68e955c473bf9e86b6",
