@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 
 /**
  * The map-engine switcher: the WebGL (three.js) engine is the DEFAULT, the
- * top-bar dropdown swaps engines live, and the choice is persisted under
+ * sidebar control swaps engines live, and the choice is persisted under
  * `vrising.map.engine` (see src/lib/mapEngineChoice.ts).
  *
  * The GL engine draws every marker into ONE canvas, so there is no per-marker
