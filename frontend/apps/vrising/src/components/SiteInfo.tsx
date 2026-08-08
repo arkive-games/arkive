@@ -8,19 +8,8 @@ export const FEEDBACK_QQ_GROUP = '1091411026'
 
 const LOCALE_ONLY = { defaultValue: '', fallbackLng: false } as const
 
-function Paragraphs({ lines }: { lines: string[] }) {
-  return (
-    <>
-      {lines.map((line, index) => (
-        <p key={index} className="mb-1 last:mb-0">{line}</p>
-      ))}
-    </>
-  )
-}
-
 export function SiteInfo({ className }: { className?: string }) {
   const { t } = useTranslation()
-  const body = t('siteInfo.body', { returnObjects: true }) as string[]
   const contactTitle = t('siteInfo.contact.title', LOCALE_ONLY)
   const contactHint = t('siteInfo.contact.hint', LOCALE_ONLY)
   const groupLabel = t('siteInfo.contact.groupLabel', LOCALE_ONLY)
@@ -28,20 +17,20 @@ export function SiteInfo({ className }: { className?: string }) {
   const sections: SiteInfoSection[] = [
     {
       title: t('siteInfo.title'),
-      body: <Paragraphs lines={Array.isArray(body) ? body : [String(body)]} />,
-    },
-    {
-      title: t('brand'),
       body: (
         <>
-          <p className="mb-1">{t('siteInfo.arkive')}</p>
-          <a
-            href={ARKIVE_HOME_URL}
-            {...ARKIVE_HOME_LINK_PROPS}
-            className="font-medium text-primary hover:underline"
-          >
-            {t('brandHome')}
-          </a>
+          <p className="mb-2">
+            {t('siteInfo.introBefore')}
+            <a
+              href={ARKIVE_HOME_URL}
+              {...ARKIVE_HOME_LINK_PROPS}
+              className="font-medium text-primary underline-offset-2 hover:underline"
+            >
+              {t('siteInfo.arkiveName')}
+            </a>
+            {t('siteInfo.introAfter')}
+          </p>
+          <p>{t('siteInfo.disclaimer')}</p>
         </>
       ),
     },

@@ -11,8 +11,8 @@ const SITE_VERSION = (JSON.parse(
 //
 // Every map test here pins `?engine=leaflet`: the WebGL engine is the default
 // now (see lib/mapEngineChoice) and draws everything into one canvas, so there
-// are no `.leaflet-*` elements to assert on. The GL engine and the switcher have
-// their own spec (engine.spec.ts).
+// are no `.leaflet-*` elements to assert on. Engine selection and persistence
+// have their own spec (engine.spec.ts).
 
 test('renders Vardoran tiles', async ({ page }) => {
   await page.goto('/?engine=leaflet')
@@ -93,6 +93,32 @@ test('switching language localizes both UI chrome and data labels', async ({ pag
   // App UI string (i18n resources) and a data-locale taxonomy label (types.json).
   await expect(page.getByRole('heading', { name: '夜族崛起互动地图' })).toBeVisible()
   await expect(page.getByText('兴趣点').first()).toBeVisible({ timeout: 10_000 })
+})
+
+test('About panel shows the linked Arkive attribution and Stunlock disclaimer', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('lang-menu').click()
+  await page.getByTestId('lang-zh-CN').click()
+  await page.getByTestId('sidebar-toggle-right').click()
+
+  const about = page.getByRole('complementary', { name: '关于' })
+  const arkiveLink = about.getByRole('link', { name: '藏舟攻略网' })
+  await expect(arkiveLink).toHaveAttribute('href', 'https://tc-imba.com')
+  await expect(about.getByText(/本站与 Stunlock Studios 无隶属关系/)).toBeVisible()
+  await expect(about.getByText('藏舟游戏攻略网')).toHaveCount(0)
+})
+
+test('hovering a roaming boss draws its patrol route in red', async ({ page }) => {
+  await page.goto('/?engine=leaflet')
+  const roamingBoss = page.locator(
+    '.leaflet-marker-icon:has(img[src*="BossPortrait_CHAR_Bandit_Chaosarrow_VBlood"])',
+  ).first()
+  await expect(roamingBoss).toBeVisible({ timeout: 15_000 })
+  await roamingBoss.dispatchEvent('mouseover')
+
+  await expect.poll(async () => page.locator('path.leaflet-interactive').evaluateAll(
+    (paths) => paths.filter((path) => path.getAttribute('stroke')?.toLowerCase() === '#e5484d').length,
+  )).toBeGreaterThan(0)
 })
 
 test('the changelog page renders the current version', async ({ page }) => {

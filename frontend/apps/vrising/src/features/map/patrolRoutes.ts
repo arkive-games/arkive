@@ -1,6 +1,7 @@
 import type { EngineMarker, GameMapViewProps } from '@gamemap/map-engine'
 
 type OverlayLines = NonNullable<GameMapViewProps['overlayLines']>
+const PATROL_ROUTE_COLOR = '#E5484D'
 
 /** Build the patrol corridor for the one roaming boss currently under the pointer. */
 export function buildPatrolRouteLines(
@@ -23,6 +24,7 @@ export function buildPatrolRouteLines(
       from,
       to,
       variant: 'highlight',
+      color: PATROL_ROUTE_COLOR,
     })
   }
 

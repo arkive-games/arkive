@@ -14,7 +14,7 @@ import {
   type FilterCategory, type MapViewState, type SearchItem,
 } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
-import { EngineToggle, Sheet, SheetContent, SheetHeader, SheetTitle, useIsMobile } from '@gamemap/ui'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon } from 'lucide-react'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -24,10 +24,7 @@ import {
 import { markerImageUrl, vrisingAssets } from '../../lib/assets'
 import { mapViewStore, readVisibleSubtypes, writeVisibleSubtypes } from '../../lib/storage'
 import {
-  MAP_ENGINE_CHOICES,
-  MAP_ENGINE_LABELS,
   resolveMapEngine,
-  useChooseMapEngine,
   useStoredMapEngine,
 } from '../../lib/mapEngineChoice'
 import { vrisingTheme } from '../../theme'
@@ -61,11 +58,10 @@ export default function MapPage() {
   const { q: initialQuery, engine: engineParam } = useSearch({ from: '/' })
 
   // Which engine renders the map: the `?engine=` param for this visit, else the
-  // stored choice (see `lib/mapEngineChoice`). Derived, not state — the store is
-  // the single source of truth, so the top-bar dropdown swaps the engine live.
+  // stored choice (see `lib/mapEngineChoice`). Derived, not state, so a saved
+  // preference and direct renderer links continue to work without sidebar UI.
   const storedEngine = useStoredMapEngine()
   const engine = resolveMapEngine(engineParam, storedEngine)
-  const chooseEngine = useChooseMapEngine()
 
   const [staticData, setStaticData] = useState<{
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
@@ -375,19 +371,6 @@ export default function MapPage() {
         activeMapId={MAP_ID}
         onSelectMap={() => undefined}
       />
-      <div className="mt-2 flex min-h-9 items-center justify-between rounded-lg border border-[color:var(--arkive-divider)] bg-card pl-3 pr-1 text-xs text-muted-foreground">
-        <span className="font-semibold">{t('engineMenu')}</span>
-        <span className="flex items-center gap-1 text-foreground">
-          <span className="font-medium">{MAP_ENGINE_LABELS[engine].full}</span>
-          <EngineToggle
-            value={engine}
-            choices={MAP_ENGINE_CHOICES}
-            labels={MAP_ENGINE_LABELS}
-            onChange={chooseEngine}
-            label={t('engineMenu')}
-          />
-        </span>
-      </div>
     </div>
   )
 
