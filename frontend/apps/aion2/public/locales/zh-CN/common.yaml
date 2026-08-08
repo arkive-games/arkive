@@ -247,19 +247,23 @@ donateModal:
 # ko-KR carry their channel in `contact.content` instead.
 siteInfo:
   tab: "关于"
-  title: "关于本站"
-  body: |-
-    本站是由 **苏烟攻略组** 搭建与维护的《永恒之塔 2》非官方互动地图与资料库，游戏数据均从游戏文件中提取，永久免费开放。
-
-    本站与 NCSOFT 无隶属关系，也未获其授权或背书。AION2 及相关游戏内容的一切权利均归 NCSOFT 所有。
+  aboutTitle: "关于本站"
+  arkiveName: "藏舟攻略网"
+  gameName: "永恒之塔 2"
+  introTemplate: "本站是由{arkive}搭建与维护的{game}非官方互动地图与资料库，游戏数据均从游戏文件中提取，永久免费开放。"
+  disclaimerTemplate: "本站与{developer}无隶属关系，也未获其授权或背书。{game}及相关游戏内容的一切权利均归{developer}所有。"
+  versionTitle: "版本更新记录"
+  viewVersionTemplate: "查看版本 {version}"
+  recentUpdatesTitle: "近期更新"
+  noRecentUpdates: "暂无更新记录。"
   contact:
-    title: "交流与联系方式"
     content: |
       1. 永恒之塔 2 交流群：  
          ①群 246681864  
          ②群 197791140  
          ③群 791286881  
   feedback:
+    title: "交流与反馈"
     label: "反馈 QQ 群"
     hint: "上面的群用于玩家交流；如有建议或问题，请加入下方的反馈群。"
 

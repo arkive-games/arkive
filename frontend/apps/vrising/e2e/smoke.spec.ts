@@ -104,8 +104,18 @@ test('About panel shows the linked Arkive attribution and Stunlock disclaimer', 
   const about = page.getByRole('complementary', { name: '关于' })
   const arkiveLink = about.getByRole('link', { name: '藏舟攻略网' })
   await expect(arkiveLink).toHaveAttribute('href', 'https://tc-imba.com')
-  await expect(about.getByText(/本站与 Stunlock Studios 无隶属关系/)).toBeVisible()
+  await expect(about.getByText('Stunlock Studios').first()).toBeVisible()
   await expect(about.getByText('藏舟游戏攻略网')).toHaveCount(0)
+})
+
+test('About panel opens recent text updates with release dates', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('sidebar-toggle-right').click()
+  await page.getByTestId('site-info-version-trigger').click()
+  const dialog = page.getByTestId('site-info-version-dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('time').first()).toHaveText(/^\d{4}-\d{2}-\d{2}$/)
+  await expect(dialog.locator('a')).toHaveCount(0)
 })
 
 test('hovering a roaming boss draws its patrol route in red', async ({ page }) => {

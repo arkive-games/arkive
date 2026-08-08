@@ -5,6 +5,7 @@ import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { getGameVersion } from '../lib/urls'
+import { SiteInfoDialog } from './SiteInfo'
 
 export type NavKey = '/' | '/cards' | '/characters' | '/changelog'
 
@@ -55,13 +56,16 @@ export function TopNav({ active }: { active: NavKey }) {
         menuLabel: t('themeMenu'),
       }}
       rightExtras={
-        <BuildInfo
-          commit={__BUILD_GIT_COMMIT__}
-          buildTime={__BUILD_TIME__}
-          dev={import.meta.env.DEV}
-          gameVersion={getGameVersion()}
-          siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
-        />
+        <div className="flex items-center gap-1">
+          <SiteInfoDialog />
+          <BuildInfo
+            commit={__BUILD_GIT_COMMIT__}
+            buildTime={__BUILD_TIME__}
+            dev={import.meta.env.DEV}
+            gameVersion={getGameVersion()}
+            siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
+          />
+        </div>
       }
     />
   )

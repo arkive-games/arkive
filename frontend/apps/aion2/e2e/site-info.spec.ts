@@ -4,19 +4,38 @@ import { ENGINES, openMap } from "./engines";
 const PHONE = { width: 390, height: 844 };
 const QQ_GROUP = "1091411026";
 
+async function openInfoSidebar(page: import("@playwright/test").Page) {
+  const toggle = page.getByTestId("sidebar-toggle-right");
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+}
+
 test.describe("site info — desktop", () => {
   test("the right sidebar shows the feedback group in zh-CN", async ({ page }) => {
     await page.goto("/?lng=zh-CN");
-    await expect(page.getByTestId("sidebar-toggle-right")).toBeVisible();
+    await openInfoSidebar(page);
     await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
     await expect(page.getByTestId("site-info-group-number")).toHaveText(QQ_GROUP);
   });
 
-  test("no feedback group in en-US, but the contact section survives", async ({ page }) => {
+  test("the shared feedback group and game contact both survive in en-US", async ({ page }) => {
     await page.goto("/?lng=en-US");
+    await openInfoSidebar(page);
     await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
-    await expect(page.getByTestId("site-info-group-number")).toHaveCount(0);
+    await expect(page.getByTestId("site-info-group-number")).toHaveText(QQ_GROUP);
     await expect(page.getByText("discord.gg/cqn9sKbWPU").first()).toBeVisible();
+  });
+
+  test("the version action opens recent text updates with release dates", async ({ page }) => {
+    await page.goto("/?lng=en-US");
+    await openInfoSidebar(page);
+    await page.getByTestId("site-info-version-trigger").click();
+    const dialog = page.getByTestId("site-info-version-dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator("time").first()).toHaveText(/^\d{4}-\d{2}-\d{2}$/);
+    await expect(dialog).not.toContainText(/^[0-9a-f]{7}$/);
   });
 
   test("the left sidebar toggle is still unique", async ({ page }) => {
@@ -27,6 +46,7 @@ test.describe("site info — desktop", () => {
   test("collapsing the right sidebar is remembered across reloads", async ({ page }) => {
     await page.goto("/?lng=zh-CN");
     const toggle = page.getByTestId("sidebar-toggle-right");
+    await openInfoSidebar(page);
     await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
     await expect(page.getByTestId("site-info-group-number")).toBeVisible();
     await toggle.click();
@@ -45,6 +65,7 @@ test.describe("site info — desktop", () => {
 
   test("the popover opens alongside the sidebar panel on the map", async ({ page }) => {
     await page.goto("/?lng=zh-CN");
+    await openInfoSidebar(page);
     await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
     await page.getByTestId("contact-menu").click();
     await expect(page.getByTestId("site-info-panel")).toHaveCount(2);
@@ -58,7 +79,7 @@ test.describe("site info — desktop", () => {
   test("the collapse tab does not cover the open popover", async ({ page }) => {
     await page.goto("/?lng=en-US");
     const toggle = page.getByTestId("sidebar-toggle-right");
-    await expect(toggle).toBeVisible();
+    await openInfoSidebar(page);
     await page.getByTestId("contact-menu").click();
     const popover = page.getByTestId("site-info-panel").nth(1);
     await expect(popover).toBeVisible();
@@ -90,9 +111,9 @@ test.describe("site info — desktop", () => {
     await page.goto("/?lng=en-US");
     await expect(page.getByRole("complementary", { name: "About" })).toBeVisible();
     const toggle = page.getByTestId("sidebar-toggle-right");
-    await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
 });
 
@@ -127,7 +148,7 @@ test.describe("map resize", () => {
     }) => {
       await openMap(page, engine, "lng=en-US");
       const toggle = page.getByTestId("sidebar-toggle-right");
-      await expect(toggle).toBeVisible();
+      await openInfoSidebar(page);
 
       const shortfall = async () =>
         engine === "leaflet"

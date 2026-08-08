@@ -1,32 +1,24 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { SiteInfoPanel, type SiteInfoSection } from "@gamemap/map-shell";
+import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from "@gamemap/map-shell";
+import { resolveChangelog } from "@gamemap/ui";
 import { FEEDBACK_QQ_GROUP } from "@/lib/constants";
+import { changelog, SITE_VERSION } from "@/lib/siteVersion";
 
-/**
- * i18next resolves `fallbackLng` BEFORE `defaultValue`, so a plain
- * `t(key, "")` on a key the active locale omits returns the zh-CN text (this
- * app falls back to zh-CN everywhere), not "". Pinning `fallbackLng: false`
- * limits the lookup to the active locale, so "" really means "this locale
- * does not define the key". palworld's adapter mirrors this — keep the two in
- * step.
- */
 const LOCALE_ONLY = { defaultValue: "", fallbackLng: false } as const;
+const ABOUT_HISTORY_START_VERSION = "1.13.1";
 
-/** Renders one locale value as GitHub-flavoured markdown. */
-function Body({ children }: { children: string }) {
+/** Renders game-owned community links as GitHub-flavoured markdown. */
+function ContactBody({ children }: { children: string }) {
   return (
-    // Match Palworld's plain paragraph rhythm exactly. List utilities replace
-    // the marker styles that Tailwind preflight removes from markdown output.
     <div className="break-words text-sm leading-relaxed text-muted-foreground [&_li]:my-0.5 [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-1 [&_p:last-child]:mb-0 [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-5">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
+          a: ({ href, children: label }) => (
+            <a href={href} target="_blank" rel="noopener noreferrer">{label}</a>
           ),
         }}
       >
@@ -36,55 +28,43 @@ function Body({ children }: { children: string }) {
   );
 }
 
-/**
- * Site information and feedback, rendered in three places: the map's right
- * sidebar, the top-bar popover and the mobile More sheet. The QQ group only
- * appears for Chinese locales — the other locales carry their own channel in
- * `siteInfo.contact.content` (Discord for en-US / ko-KR).
- */
 export default function SiteInfo({ className }: { className?: string }) {
   const { t, i18n } = useTranslation(["common"]);
-  const isZh = (i18n.resolvedLanguage ?? i18n.language ?? "").startsWith("zh");
-
-  const sections: SiteInfoSection[] = [
-    {
-      title: t("common:siteInfo.title", "About this site"),
-      body: <Body>{t("common:siteInfo.body")}</Body>,
-    },
-  ];
-
+  const lng = i18n.resolvedLanguage ?? i18n.language ?? "en-US";
+  const recentEntries = useMemo(() => resolveChangelog(changelog, lng), [lng]);
   const contactContent = t("common:siteInfo.contact.content", LOCALE_ONLY);
-  const feedbackHint = isZh ? t("common:siteInfo.feedback.hint", LOCALE_ONLY) : "";
-  if (contactContent || feedbackHint) {
-    sections.push({
-      title: t("common:siteInfo.contact.title", "Communication & Contact"),
-      body: (
-        <>
-          {contactContent && <Body>{contactContent}</Body>}
-          {/* Also through <Body>: a bare <p> would inherit the panel's text-xs
-              while the markdown above renders at prose-sm, putting two
-              adjacent paragraphs in one section at two different sizes. */}
-          {feedbackHint && <Body>{feedbackHint}</Body>}
-        </>
-      ),
-    });
-  }
+  const strings: ArkiveSiteInfoStrings = {
+    aboutTitle: t("common:siteInfo.aboutTitle"),
+    introTemplate: t("common:siteInfo.introTemplate"),
+    disclaimerTemplate: t("common:siteInfo.disclaimerTemplate"),
+    versionTitle: t("common:siteInfo.versionTitle"),
+    viewVersionTemplate: t("common:siteInfo.viewVersionTemplate"),
+    recentUpdatesTitle: t("common:siteInfo.recentUpdatesTitle"),
+    noRecentUpdates: t("common:siteInfo.noRecentUpdates"),
+    feedbackTitle: t("common:siteInfo.feedback.title"),
+    feedbackHint: t("common:siteInfo.feedback.hint"),
+    close: t("common:ui.close", "Close"),
+  };
 
   return (
-    <SiteInfoPanel
+    <ArkiveSiteInfo
       className={className}
-      sections={sections}
-      feedbackGroup={
-        isZh
-          ? {
-              label: t("common:siteInfo.feedback.label", "QQ"),
-              number: FEEDBACK_QQ_GROUP,
-              // Generic UI verbs live in the shared `ui` group, not `siteInfo`.
-              copyLabel: t("common:ui.copy", "Copy"),
-              copiedLabel: t("common:ui.copied", "Copied"),
-            }
-          : undefined
-      }
+      strings={strings}
+      arkiveName={t("common:siteInfo.arkiveName")}
+      arkiveHomeUrl="https://tc-imba.com/"
+      arkiveHomeLinkProps={{ target: "_blank", rel: "noopener noreferrer" }}
+      gameName={t("common:siteInfo.gameName")}
+      developerName="NCSOFT"
+      version={SITE_VERSION}
+      recentEntries={recentEntries}
+      historyStartVersion={ABOUT_HISTORY_START_VERSION}
+      gameContact={contactContent ? <ContactBody>{contactContent}</ContactBody> : undefined}
+      feedbackGroup={{
+        label: t("common:siteInfo.feedback.label"),
+        number: FEEDBACK_QQ_GROUP,
+        copyLabel: t("common:ui.copy", "Copy"),
+        copiedLabel: t("common:ui.copied", "Copied"),
+      }}
     />
   );
 }

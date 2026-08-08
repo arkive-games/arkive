@@ -194,16 +194,23 @@ introModal:
 # invite in `contact.content` is this locale's channel instead.
 siteInfo:
   tab: "About"
-  title: "About this site"
-  body: |-
-    This site is an unofficial, fan-made interactive map and database for AION2, built and maintained by the **苏烟攻略组 (Suyn AION2 Team)**. All game data is extracted from the game files, and the site will always remain free to use.
-
-    Not affiliated with, endorsed by, or sponsored by NCSOFT. AION2 and all related game content are the property of NCSOFT.
+  aboutTitle: "About this site"
+  arkiveName: "Arkive"
+  gameName: "AION2"
+  introTemplate: "This unofficial {game} interactive map and database is built and maintained by {arkive}. All game data is extracted from the game files, and the site will always remain free to use."
+  disclaimerTemplate: "This site is not affiliated with, authorized, or endorsed by {developer}. All rights to {game} and related game content belong to {developer}."
+  versionTitle: "Version updates"
+  viewVersionTemplate: "View version {version}"
+  recentUpdatesTitle: "Recent updates"
+  noRecentUpdates: "No updates yet."
   contact:
-    title: "Communication & Contact"
     content: |
       1. **Our Aion 2 Discussion Discord:** https://discord.gg/cqn9sKbWPU
       2. For the latest Aion 2 news and active discussions, check out the Aion 2 Global Discord – **the biggest Aion 2 community** we’re happy to collaborate with: https://discord.gg/aion2global
+  feedback:
+    title: "Community and feedback"
+    label: "Feedback QQ group"
+    hint: "The game-specific communities above are kept for player discussion. Use the feedback QQ group below to suggest improvements or report problems."
 
 race:
   light: "Elyos"
