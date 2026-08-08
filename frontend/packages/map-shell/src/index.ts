@@ -20,6 +20,8 @@ export {
 } from "./ShellBottomNav"
 export { SiteInfoPanel } from "./SiteInfoPanel"
 export type { SiteInfoPanelProps, SiteInfoSection, SiteInfoFeedbackGroup } from "./SiteInfoPanel"
+export { ArkiveSiteInfo } from "./ArkiveSiteInfo"
+export type { ArkiveSiteInfoProps, ArkiveSiteInfoStrings } from "./ArkiveSiteInfo"
 export {
   FilterPanel,
   type FilterPanelProps,

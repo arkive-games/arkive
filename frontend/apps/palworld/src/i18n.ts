@@ -8,7 +8,6 @@ import { BREEDING_STRINGS } from './breedingStrings'
 import { CATALOG_STRINGS } from './catalogStrings'
 import { CHANGELOG_STRINGS } from './changelogStrings'
 import {
-  BRAND_ABOUT_LABELS,
   BRAND_HOME_LABELS,
   BRAND_LABELS,
   BRAND_SLOGAN_LABELS,
@@ -1062,7 +1061,7 @@ for (const lng of LANGUAGES) {
       // index can't miss. (Same is true of most siblings above — their fallback
       // is vestigial; only QUEST_STRINGS is genuinely `Partial`.) Keep it off:
       // siteInfo.contact is gated on locale-only reads, see siteInfoStrings.ts.
-      siteInfo: { ...SITE_INFO_STRINGS[lng], arkive: BRAND_ABOUT_LABELS[lng] },
+      siteInfo: SITE_INFO_STRINGS[lng],
       brand: BRAND_LABELS[lng],
       brandHome: BRAND_HOME_LABELS[lng],
       brandSlogan: BRAND_SLOGAN_LABELS[lng],

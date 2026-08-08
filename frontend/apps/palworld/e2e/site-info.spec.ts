@@ -8,14 +8,14 @@ const QQ_GROUP = '1091411026'
 // WebGL engine, which renders no `.leaflet-container` at all). Readiness is
 // gated on the sidebar's own toggle rather than a Leaflet DOM node.
 test.describe('site info — desktop', () => {
-  test('the right sidebar renders, without a feedback group in English', async ({ page }) => {
+  test('the right sidebar renders with the shared feedback group in English', async ({ page }) => {
     await page.goto('/')
     const toggle = page.getByTestId('sidebar-toggle-right')
     await expect(toggle).toBeVisible()
     await expect(toggle).toHaveAttribute('aria-expanded', 'false')
     await toggle.click()
     await expect(page.getByTestId('site-info-panel')).toHaveCount(1)
-    await expect(page.getByTestId('site-info-group-number')).toHaveCount(0)
+    await expect(page.getByTestId('site-info-group-number')).toHaveText(QQ_GROUP)
   })
 
   test('the panel body renders localized prose, not a raw key', async ({ page }) => {
@@ -24,13 +24,13 @@ test.describe('site info — desktop', () => {
     const panel = page.getByTestId('site-info-panel').first()
     await expect(panel).toContainText('About this site')
     await expect(panel).toContainText(
-      'Not affiliated with, endorsed by, or sponsored by Pocketpair, Inc.',
+      'This site is not affiliated with, authorized, or endorsed by',
     )
     await expect(panel).not.toContainText('[object Object]')
     await expect(panel).not.toContainText('siteInfo.')
   })
 
-  test('switching to zh-CN reveals the feedback group', async ({ page }) => {
+  test('switching to zh-CN localizes the always-present feedback group', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByTestId('sidebar-toggle-right')).toBeVisible()
     await page.getByTestId('lang-menu').click()
@@ -65,18 +65,26 @@ test.describe('site info — desktop', () => {
     await page.getByTestId('sidebar-toggle-right').click()
     const panel = page.getByTestId('site-info-panel').first()
     await expect(panel).toBeVisible()
-    // Blurb: assert the ASCII tail, the head carries the CJK brand alias.
-    await expect(panel).toContainText('ad-free game guide sites')
+    await expect(panel).toContainText('built and maintained by')
     const link = panel.getByTestId('site-info-arkive-link')
     await expect(link).toBeVisible()
     await expect(link).toContainText('Arkive')
-    await expect(link).toHaveAttribute('aria-label', 'Arkive home')
     // Not pinned to a literal URL: the target is build-time config
     // (`VITE_HOME_URL`, or a same-origin path in a toy build).
     await expect(link).toHaveAttribute('href', /.+/)
     // Web build only — a toy build spreads no target/rel.
     await expect(link).toHaveAttribute('target', '_blank')
     await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  test('the version action opens recent text updates with release dates', async ({ page }) => {
+    await page.goto('/')
+    await page.getByTestId('sidebar-toggle-right').click()
+    await page.getByTestId('site-info-version-trigger').click()
+    const dialog = page.getByTestId('site-info-version-dialog')
+    await expect(dialog).toBeVisible()
+    await expect(dialog.locator('time').first()).toHaveText(/^\d{4}-\d{2}-\d{2}$/)
+    await expect(dialog.locator('a')).toHaveCount(0)
   })
 
   test('the right sidebar is a named landmark reporting its collapsed state', async ({ page }) => {

@@ -1,12 +1,22 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from '@gamemap/map-shell'
-import { resolveChangelog } from '@gamemap/ui'
-import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
+import {
+  Button,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  resolveChangelog,
+} from '@gamemap/ui'
 import { changelog, SITE_VERSION } from '../lib/siteVersion'
 
-export const FEEDBACK_QQ_GROUP = '1091411026'
-const ABOUT_HISTORY_START_VERSION = '0.9.2'
+const ARKIVE_HOME_URL = import.meta.env.VITE_HOME_URL ?? 'https://tc-imba.com'
+const FEEDBACK_QQ_GROUP = '1091411026'
+const ABOUT_HISTORY_START_VERSION = '0.2.1'
 
 export function SiteInfo({ className }: { className?: string }) {
   const { t, i18n } = useTranslation()
@@ -31,9 +41,9 @@ export function SiteInfo({ className }: { className?: string }) {
       strings={strings}
       arkiveName={t('siteInfo.arkiveName')}
       arkiveHomeUrl={ARKIVE_HOME_URL}
-      arkiveHomeLinkProps={ARKIVE_HOME_LINK_PROPS}
-      gameName={t('gameName')}
-      developerName="Stunlock Studios"
+      arkiveHomeLinkProps={{ target: '_blank', rel: 'noopener noreferrer' }}
+      gameName={t('siteInfo.gameName')}
+      developerName="Mega Crit"
       version={SITE_VERSION}
       recentEntries={recentEntries}
       historyStartVersion={ABOUT_HISTORY_START_VERSION}
@@ -44,5 +54,34 @@ export function SiteInfo({ className }: { className?: string }) {
         copiedLabel: t('siteInfo.copied'),
       }}
     />
+  )
+}
+
+export function SiteInfoDialog() {
+  const { t } = useTranslation()
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button type="button" variant="ghost" size="sm" data-testid="site-info-open">
+          {t('siteInfo.tab')}
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        showCloseButton={false}
+        className="max-h-[min(80dvh,44rem)] grid-rows-[auto_minmax(0,1fr)_auto]"
+      >
+        <DialogHeader>
+          <DialogTitle className="sr-only">{t('siteInfo.aboutTitle')}</DialogTitle>
+        </DialogHeader>
+        <div className="min-h-0 overflow-y-auto pr-1">
+          <SiteInfo />
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="outline">{t('siteInfo.close')}</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
