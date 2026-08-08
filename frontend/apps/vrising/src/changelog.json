@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.0",
+      "date": "2026-08-08",
+      "commit": "39e00808754b35ff75d26deecef76cc02f291f5f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Redesigned the V Rising map with the shared Arkive navigation, game header, filters, search, marker details, and About panel.",
+            "zh-CN": "以藏舟统一设计重制《夜族崛起》地图，更新导航、游戏头图、筛选、搜索、标记详情与关于面板。",
+            "zh-TW": "以藏舟統一設計重製《夜族崛起》地圖，更新導覽、遊戲頁首、篩選、搜尋、標記詳情與關於面板。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.1",
       "date": "2026-08-08",
       "commit": "c95cb616939c081d6489d6dca87f868a9bce7904",
