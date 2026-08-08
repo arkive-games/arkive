@@ -31,7 +31,7 @@ import './forum.css'
 type ForumChannel = 'hot' | 'general' | 'official' | 'games'
 type FeedTab = 'recommended' | 'latest' | 'featured'
 
-const POSTS_PER_PAGE = 3
+const POSTS_PER_PAGE = 5
 const MAX_VISIBLE_PAGES = 5
 
 interface ForumPageProps {
