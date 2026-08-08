@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.2",
+      "date": "2026-08-08",
+      "commit": "bff96b877b7f503c7d27422c51f0738918a6686f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Refreshed game pages with Arkive's shared neutral, blue, amber, and orange color system.",
+            "zh-CN": "游戏页面现已统一使用藏舟的中性黑白、蓝色、琥珀色与橙色色彩体系。",
+            "zh-TW": "遊戲頁面現已統一使用藏舟的中性黑白、藍色、琥珀色與橙色色彩體系。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.1",
       "date": "2026-08-08",
       "commit": "813009f0310477985d28784dcb182a998ba6c470",
