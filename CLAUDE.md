@@ -81,10 +81,19 @@ polygon, and human review of `calibration/accepted_overlay.png`.
   and CI reads it from there (`pnpm/action-setup` with `package_json_file:`) — bump the two
   together, never one alone. **pnpm 11 ignores the `pnpm` field of `package.json` entirely**
   (it only prints a `[WARN]`, the install still succeeds), so `overrides`, `allowBuilds`,
-  `patchedDependencies` and friends all belong in `frontend/pnpm-workspace.yaml`. Putting the
-  `vite → rolldown-vite` override in the wrong file silently swaps the bundler. Note also that
-  `allowBuilds` replaced `onlyBuiltDependencies`/`neverBuiltDependencies` in 11, and that
-  dependency build scripts do not run unless allow-listed there.
+  `patchedDependencies` and friends all belong in `frontend/pnpm-workspace.yaml` — put one in
+  `package.json` and it is quietly not applied. Note also that `allowBuilds` replaced
+  `onlyBuiltDependencies`/`neverBuiltDependencies` in 11, and that dependency build scripts do
+  not run unless allow-listed there.
+- **TypeScript is held at `~5.9.3` deliberately — do not bump it to 7.** TypeScript 7 (the
+  native port) ships with **no JS API**; a new one is expected in 7.1. Every tool that consumes
+  the compiler API therefore breaks on it, `typescript-eslint` included, which fails hard with
+  "does not support TS 7.0" and takes the lint script of all six apps down with it
+  (typescript-eslint#10940). The apps *build* fine on 7 — it is only the tooling around it that
+  cannot follow yet. Revisit once 7.1 ships a stable API and typescript-eslint supports it.
+- **Vite:** the apps track `vite` proper (8.x). The old `vite → rolldown-vite` alias/override is
+  gone: Vite 8 ships Rolldown natively, and every `rolldown-vite` release is now deprecated with
+  a notice pointing back at Vite 8. Don't reintroduce the alias.
 - **New features:** open a git worktree for the work (isolate from the current workspace).
 - **Merging back:** integrate with rebase (not merge commits).
 - **Live testing:** when work needs live testing, merge it back first (with rebase), then test.

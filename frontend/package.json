@@ -45,7 +45,7 @@
     "validate-data": "node packages/data-contract/scripts/validate-data.ts"
   },
   "devDependencies": {
-    "jsdom": "^29.1.1",
-    "vitest": "^4.1.9"
+    "jsdom": "^30.0.1",
+    "vitest": "^4.1.10"
   }
 }

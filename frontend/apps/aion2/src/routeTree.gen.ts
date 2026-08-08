@@ -9,13 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as WikiRouteRouteImport } from './routes/wiki/route'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as WikiIndexRouteImport } from './routes/wiki/index'
 import { Route as WikiTypeIndexRouteImport } from './routes/wiki/$type/index'
 import { Route as WikiTypeSlugRouteImport } from './routes/wiki/$type/$slug'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChangelogRoute = ChangelogRouteImport.update({
   id: '/changelog',
   path: '/changelog',
@@ -24,11 +29,6 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const WikiRouteRoute = WikiRouteRouteImport.update({
   id: '/wiki',
   path: '/wiki',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WikiIndexRoute = WikiIndexRouteImport.update({
@@ -100,6 +100,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/changelog': {
       id: '/changelog'
       path: '/changelog'
@@ -112,13 +119,6 @@ declare module '@tanstack/react-router' {
       path: '/wiki'
       fullPath: '/wiki'
       preLoaderRoute: typeof WikiRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wiki/': {
