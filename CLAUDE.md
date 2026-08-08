@@ -77,6 +77,14 @@ polygon, and human review of `calibration/accepted_overlay.png`.
   `changelog.json` locale strings, game-sourced display names).
   **In session conversation, reply in whatever language the user is writing in** — that
   choice affects chat only, never repo content.
+- **pnpm 11 (frontend):** `packageManager` in `frontend/package.json` pins the exact version,
+  and CI reads it from there (`pnpm/action-setup` with `package_json_file:`) — bump the two
+  together, never one alone. **pnpm 11 ignores the `pnpm` field of `package.json` entirely**
+  (it only prints a `[WARN]`, the install still succeeds), so `overrides`, `allowBuilds`,
+  `patchedDependencies` and friends all belong in `frontend/pnpm-workspace.yaml`. Putting the
+  `vite → rolldown-vite` override in the wrong file silently swaps the bundler. Note also that
+  `allowBuilds` replaced `onlyBuiltDependencies`/`neverBuiltDependencies` in 11, and that
+  dependency build scripts do not run unless allow-listed there.
 - **New features:** open a git worktree for the work (isolate from the current workspace).
 - **Merging back:** integrate with rebase (not merge commits).
 - **Live testing:** when work needs live testing, merge it back first (with rebase), then test.

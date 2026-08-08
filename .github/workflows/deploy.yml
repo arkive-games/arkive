@@ -28,7 +28,9 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          # Read the version from "packageManager" in the manifest rather than
+          # pinning it here, so CI cannot drift from local installs.
+          package_json_file: frontend/package.json
 
       - name: Setup Node
         uses: actions/setup-node@v4
