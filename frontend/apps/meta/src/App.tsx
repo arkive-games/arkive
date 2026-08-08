@@ -30,12 +30,15 @@ import {
   type SiteClickCounts,
 } from './sites'
 import { AllGamesPage } from './AllGamesPage'
+import { ForumPage } from './ForumPage'
 
 const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum', 'favorites'] as const
-type HomeView = 'discoverGames' | 'allGames'
+type HomeView = 'discoverGames' | 'allGames' | 'forum'
 
 function viewFromHash(): HomeView {
-  return window.location.hash === '#games' ? 'allGames' : 'discoverGames'
+  if (window.location.hash === '#games') return 'allGames'
+  if (window.location.hash === '#forum') return 'forum'
+  return 'discoverGames'
 }
 
 export default function App() {
@@ -130,6 +133,8 @@ export default function App() {
               </button>
             ) : item.key === 'discoverGames' ? (
               <a href="#explore" className={className}>{label}</a>
+            ) : item.key === 'forum' ? (
+              <a href="#forum" className={className}>{label}</a>
             ) : (
               <button
                 type="button"
@@ -169,6 +174,8 @@ export default function App() {
 
       {activeView === 'allGames' ? (
         <AllGamesPage sites={VISIBLE_SITES} onFavorite={showComingSoon} />
+      ) : activeView === 'forum' ? (
+        <ForumPage sites={VISIBLE_SITES} onComingSoon={showComingSoon} />
       ) : (
         <main>
           <section className="home-shell hero-section" aria-labelledby="home-heading">
