@@ -120,7 +120,7 @@ export function ArkiveMapTopBar({
   )
 }
 
-function ArkiveMark() {
+export function ArkiveMark() {
   return (
     <svg viewBox="0 0 320 285" className="size-9" aria-hidden="true">
       <path

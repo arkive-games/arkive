@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_TOY?: string
   readonly VITE_AION2_URL?: string
   readonly VITE_PAL_URL?: string
+  /** Optional JSON endpoint returning game ids mapped to aggregate click counts. */
+  readonly VITE_GAME_POPULARITY_URL?: string
   readonly VITE_HOME_URL?: string
   readonly VITE_GITHUB_URL?: string
   readonly VITE_ICP_BEIAN?: string
