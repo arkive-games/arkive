@@ -1,6 +1,6 @@
-import type { AnchorHTMLAttributes } from "react"
-import { IconUserCircle } from "@tabler/icons-react"
-import { Button } from "@gamemap/ui"
+import { useRef, useState, type AnchorHTMLAttributes, type FocusEvent } from "react"
+import { IconLogout, IconUserCircle } from "@tabler/icons-react"
+import { Button, cn } from "@gamemap/ui"
 import {
   ShellTopBar,
   type ShellTopBarNav,
@@ -29,7 +29,41 @@ export interface ArkiveMapTopBarProps {
   }
   loginLabel: string
   onLogin?: () => void
+  /**
+   * Session-aware account control. When supplied it replaces the bare
+   * `loginLabel`/`onLogin` button, which remains for hosts that have not
+   * adopted auth yet — sts2 and lostark still use the raw ShellTopBar, and a
+   * required prop here would break every existing caller at once.
+   *
+   * Purely presentational: the shell is grep-gated against fetch, storage,
+   * env and i18n, so state and strings both arrive from the host.
+   */
+  account?: ArkiveMapTopBarAccount
   className?: string
+}
+
+/** An extra entry in the signed-in menu, e.g. a link to a profile page. */
+export interface ArkiveMapTopBarAccountItem {
+  key: string
+  label: string
+  onSelect: () => void
+}
+
+export interface ArkiveMapTopBarAccount {
+  /**
+   * `loading` renders a neutral placeholder rather than "Sign in". Showing the
+   * signed-out state during the session probe makes a returning user believe
+   * they have been logged out, and they click it.
+   */
+  status: "loading" | "anonymous" | "authenticated"
+  /** Shown on the trigger when signed in. */
+  userName?: string
+  signInLabel: string
+  signOutLabel: string
+  accountLabel: string
+  onSignIn: () => void
+  onSignOut: () => void
+  items?: ArkiveMapTopBarAccountItem[]
 }
 
 export type ArkiveMapTheme = "auto" | "light" | "dark"
@@ -52,6 +86,7 @@ export function ArkiveMapTopBar({
   themeSwitcher,
   loginLabel,
   onLogin,
+  account,
   className,
 }: ArkiveMapTopBarProps) {
   return (
@@ -106,17 +141,159 @@ export function ArkiveMapTopBar({
         shortLabel: themeSwitcher.shortLabel,
       }}
       rightExtras={
-        <Button
-          type="button"
-          className="h-9 gap-2 rounded-lg bg-[color:var(--arkive-nav-active)] px-4 text-[color:var(--arkive-nav-on-active)] hover:brightness-95"
-          aria-label={loginLabel}
-          onClick={onLogin}
-        >
-          <IconUserCircle className="size-5" stroke={1.8} />
-          <span className="text-sm font-semibold">{loginLabel}</span>
-        </Button>
+        account ? (
+          <ShellAccountMenu account={account} />
+        ) : (
+          <Button
+            type="button"
+            className={ACCOUNT_TRIGGER_CLASS}
+            aria-label={loginLabel}
+            onClick={onLogin}
+          >
+            <IconUserCircle className="size-5" stroke={1.8} />
+            <span className="text-sm font-semibold">{loginLabel}</span>
+          </Button>
+        )
       }
     />
+  )
+}
+
+const ACCOUNT_TRIGGER_CLASS =
+  "h-9 gap-2 rounded-lg bg-[color:var(--arkive-nav-active)] px-4 text-[color:var(--arkive-nav-on-active)] hover:brightness-95"
+
+/**
+ * Signed-out button, or signed-in name with a menu.
+ *
+ * Exported so the apps that compose `ShellTopBar` directly rather than through
+ * `ArkiveMapTopBar` — sts2 and lostark — can drop the same control into their
+ * own `rightExtras` instead of reimplementing it.
+ *
+ * The menu is hover-driven with the same open/close semantics as the language
+ * and theme menus beside it, rather than a Radix DropdownMenu. Mixing a
+ * portalled overlay into this cluster is a known hit-testing and z-index trap:
+ * portalled content rendered inside a sheet has its pointer events swallowed by
+ * the overlay and goes dead rather than merely looking wrong.
+ */
+export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount }) {
+  const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  if (account.status === "loading") {
+    return (
+      <Button
+        type="button"
+        disabled
+        aria-busy="true"
+        aria-label={account.accountLabel}
+        data-testid="account-loading"
+        className={cn(ACCOUNT_TRIGGER_CLASS, "opacity-60")}
+      >
+        <IconUserCircle className="size-5" stroke={1.8} />
+      </Button>
+    )
+  }
+
+  if (account.status === "anonymous") {
+    return (
+      <Button
+        type="button"
+        className={ACCOUNT_TRIGGER_CLASS}
+        aria-label={account.signInLabel}
+        data-testid="account-sign-in"
+        onClick={account.onSignIn}
+      >
+        <IconUserCircle className="size-5" stroke={1.8} />
+        <span className="text-sm font-semibold">{account.signInLabel}</span>
+      </Button>
+    )
+  }
+
+  const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false)
+  }
+
+  const entries: ArkiveMapTopBarAccountItem[] = [
+    ...(account.items ?? []),
+    { key: "sign-out", label: account.signOutLabel, onSelect: account.onSignOut },
+  ]
+
+  return (
+    <div
+      className="relative inline-flex items-center"
+      onPointerEnter={() => setOpen(true)}
+      onPointerLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={closeWhenFocusLeaves}
+    >
+      <Button
+        ref={triggerRef}
+        type="button"
+        className={ACCOUNT_TRIGGER_CLASS}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={account.accountLabel}
+        title={account.userName ?? account.accountLabel}
+        data-testid="account-menu"
+        onClick={() => setOpen(true)}
+        onPointerUp={(event) => event.currentTarget.blur()}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setOpen(false)
+            event.currentTarget.blur()
+          }
+          if (event.key === "ArrowDown") {
+            event.preventDefault()
+            setOpen(true)
+            window.setTimeout(() => {
+              menuRef.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus()
+            }, 0)
+          }
+        }}
+      >
+        <IconUserCircle className="size-5" stroke={1.8} />
+        {/* A long display name must not push the nav around, so it is clamped
+            rather than allowed to size the trigger. */}
+        <span className="max-w-28 truncate text-sm font-semibold">
+          {account.userName ?? account.accountLabel}
+        </span>
+      </Button>
+      {open && (
+        <div
+          ref={menuRef}
+          role="menu"
+          aria-label={account.accountLabel}
+          className="absolute right-0 top-full z-[2000] min-w-40 overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+        >
+          {account.userName && (
+            <p className="truncate px-2 py-1.5 text-xs text-muted-foreground">{account.userName}</p>
+          )}
+          {entries.map((entry) => (
+            <button
+              key={entry.key}
+              type="button"
+              role="menuitem"
+              data-testid={`account-${entry.key}`}
+              className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+              onClick={() => {
+                setOpen(false)
+                entry.onSelect()
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setOpen(false)
+                  triggerRef.current?.focus()
+                }
+              }}
+            >
+              {entry.key === "sign-out" && <IconLogout className="size-4" stroke={1.8} />}
+              <span className="flex-1">{entry.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

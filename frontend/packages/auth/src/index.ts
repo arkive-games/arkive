@@ -15,6 +15,12 @@ export {
   type AuthStatus,
 } from "./AuthProvider"
 export { CoreClient, CORE_OPERATIONS, normaliseCode, type CoreClientOptions } from "./client"
+export {
+  CORE_API_PREFIX,
+  resolveAuthConfig,
+  type ResolveAuthConfigInput,
+  type ResolvedAuthConfig,
+} from "./config"
 export { createLocalTokenStorage, createMemoryTokenStorage } from "./storage"
 export { DEFAULT_AUTH_STRINGS, resolveAuthStrings, type AuthStrings } from "./strings"
 export {
