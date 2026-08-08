@@ -654,7 +654,7 @@ function ForumPostDetail({
             <img src={avatarUrl(post.avatarSeed)} alt="" />
             <div>
               <strong>{t(post.authorKey)}</strong>
-              <span>{t('forum.detail.byline', { author: t(post.authorKey), time: t(post.timeKey) })}</span>
+              <span>{t('forum.detail.byline', { time: t(post.timeKey) })}</span>
             </div>
           </div>
         </header>

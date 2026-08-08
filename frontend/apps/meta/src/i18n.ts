@@ -97,7 +97,7 @@ const resources = {
         pagination: { label: '帖子列表分页', previous: '上一页', next: '下一页', page: '第 {{page}} 页' },
         actions: { bookmark: '收藏帖子', like: '点赞帖子' },
         detail: {
-          openPost: '打开帖子：{{title}}', back: '返回帖子列表', byline: '{{author}} · {{time}}',
+          openPost: '打开帖子：{{title}}', back: '返回帖子列表', byline: '发布于 {{time}}',
           continuation: '这里会持续整理与主题相关的实测细节、更新补充与玩家经验。如果你有不同结论，欢迎在讨论区留下你的记录。',
           bookmark: '收藏', like: '点赞', discussion: '讨论', replyPlaceholder: '写下你的看法或补充...',
           accountId: '编号', followers: '粉丝数', authorBio: '长期整理 {{topic}} 相关攻略、路线与玩家经验。',
@@ -245,7 +245,7 @@ const resources = {
         pagination: { label: '帖子列表分頁', previous: '上一頁', next: '下一頁', page: '第 {{page}} 頁' },
         actions: { bookmark: '收藏帖子', like: '按讚帖子' },
         detail: {
-          openPost: '開啟帖子：{{title}}', back: '返回帖子列表', byline: '{{author}} · {{time}}',
+          openPost: '開啟帖子：{{title}}', back: '返回帖子列表', byline: '發佈於 {{time}}',
           continuation: '這裡會持續整理與主題相關的實測細節、更新補充與玩家經驗。如果你有不同結論，歡迎在討論區留下你的記錄。',
           bookmark: '收藏', like: '按讚', discussion: '討論', replyPlaceholder: '寫下你的看法或補充...',
           accountId: '編號', followers: '粉絲數', authorBio: '長期整理 {{topic}} 相關攻略、路線與玩家經驗。',
@@ -361,7 +361,7 @@ const resources = {
         pagination: { label: 'Post list pages', previous: 'Previous', next: 'Next', page: 'Page {{page}}' },
         actions: { bookmark: 'Bookmark post', like: 'Like post' },
         detail: {
-          openPost: 'Open post: {{title}}', back: 'Back to posts', byline: '{{author}} · {{time}}',
+          openPost: 'Open post: {{title}}', back: 'Back to posts', byline: 'Posted {{time}}',
           continuation: 'This post will keep collecting tested details, updates, and player experience related to the topic. If your results differ, add your notes to the discussion below.',
           bookmark: 'Bookmark', like: 'Like', discussion: 'Discussion', replyPlaceholder: 'Share your thoughts or add a detail...',
           accountId: 'Account ID', followers: 'Followers', authorBio: 'Long-time contributor of {{topic}} guides, routes, and player discoveries.',
@@ -462,7 +462,7 @@ const resources = {
         pagination: { label: '投稿一覧のページ', previous: '前のページ', next: '次のページ', page: '{{page}}ページ' },
         actions: { bookmark: '投稿を保存', like: '投稿にいいね' },
         detail: {
-          openPost: '投稿を開く：{{title}}', back: '投稿一覧に戻る', byline: '{{author}} · {{time}}',
+          openPost: '投稿を開く：{{title}}', back: '投稿一覧に戻る', byline: '{{time}}に投稿',
           continuation: 'この投稿では、テーマに関する検証結果、更新情報、プレイヤーの経験を引き続きまとめます。別の結果があれば討論で教えてください。',
           bookmark: '保存', like: 'いいね', discussion: '討論', replyPlaceholder: '感想や補足を書く...',
           accountId: '番号', followers: 'フォロワー', authorBio: '{{topic}}の攻略、ルート、プレイヤー情報を長期的に整理しています。',
@@ -551,7 +551,7 @@ const resources = {
         pagination: { label: '게시글 목록 페이지', previous: '이전', next: '다음', page: '{{page}}페이지' },
         actions: { bookmark: '게시글 저장', like: '게시글 좋아요' },
         detail: {
-          openPost: '게시글 열기: {{title}}', back: '게시글 목록으로', byline: '{{author}} · {{time}}',
+          openPost: '게시글 열기: {{title}}', back: '게시글 목록으로', byline: '{{time}} 게시',
           continuation: '이 글에서는 주제와 관련된 실험 세부 사항, 업데이트, 플레이어 경험을 계속 정리합니다. 다른 결과가 있다면 토론에 기록을 남겨 주세요.',
           bookmark: '저장', like: '좋아요', discussion: '토론', replyPlaceholder: '생각이나 보충 내용을 적어 주세요...',
           accountId: '번호', followers: '팔로워', authorBio: '{{topic}} 공략, 경로, 플레이어 경험을 꾸준히 정리합니다.',
