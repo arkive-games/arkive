@@ -1,0 +1,1 @@
+import{t as e}from"./createReactComponent-CJKal1Ps.js";var t=e(`outline`,`minus`,`Minus`,[[`path`,{d:`M5 12l14 0`,key:`svg-0`}]]),n=e(`outline`,`plus`,`Plus`,[[`path`,{d:`M12 5l0 14`,key:`svg-0`}],[`path`,{d:`M5 12l14 0`,key:`svg-1`}]]);export{t as n,n as t};

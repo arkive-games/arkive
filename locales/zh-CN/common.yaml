@@ -4,6 +4,10 @@ siteTitle: "AION2\n互动地图"
 mapSubtitle: "互动地图"
 announcement: ""
 
+brand:
+  name: "藏舟游戏攻略网"
+  slogan: "万千攻略，藏于一舟"
+
 nav:
   home: "首页"
   classBd: "职业BD"
@@ -14,6 +18,7 @@ nav:
 # 语言显示名不做翻译：切换菜单使用 src/i18n.ts 中 LANGUAGE_LABELS 的本族语名称。
 language:
   label: "语言"
+  short: "语言"
 
 ui:
   confirm: "确认"
@@ -34,6 +39,7 @@ ui:
   add: "添加"
   copy: "复制"
   copied: "已复制"
+  copyFailed: "复制失败"
 
 auth:
   login: "登录"
@@ -56,9 +62,10 @@ auth:
   altcha: "请先进行人机验证！"
 
 theme:
-  auto: "自动（随地图切换）"
-  light: "白天模式（天族）"
-  dark: "夜晚模式（魔族）"
+  label: "主题"
+  auto: "跟随系统"
+  light: "浅色模式"
+  dark: "深色模式"
   abyss: "黄昏模式（深渊）"
   # Terse forms for the phone "More" sheet, where the segmented theme
   # control has no room for the flavoured names above.
@@ -84,6 +91,8 @@ menu:
   maps: "地图"
   regions: "区域"
   markerTypes: "标记类型"
+  mapRegion: "地图区域"
+  markerDisplay: "标记显示"
   showNamesOnPins: "显示标记名称"
   showAllMarkers: "全部显示"
   hideAllMarkers: "全部隐藏"
@@ -173,9 +182,6 @@ markerSearch:
 search:
   resultsCount: "{{count}}个搜索结果"
   coords: "坐标：{{x}}，{{y}}"
-  scopeBoth: "全部"
-  scopeName: "名"
-  scopeToggle: "切换搜索范围"
 
 markerActions:
   markCompleted: "标记为已完成"
@@ -238,19 +244,23 @@ donateModal:
 # ko-KR carry their channel in `contact.content` instead.
 siteInfo:
   tab: "关于"
-  title: "关于本站"
-  body: |-
-    本站是由 **苏烟攻略组** 搭建与维护的《永恒之塔 2》非官方互动地图与资料库，游戏数据均从游戏文件中提取，永久免费开放。
-
-    本站与 NCSOFT 无隶属关系，也未获其授权或背书。AION2 及相关游戏内容的一切权利均归 NCSOFT 所有。
+  aboutTitle: "关于本站"
+  arkiveName: "藏舟攻略网"
+  gameName: "永恒之塔 2"
+  introTemplate: "本站是由{arkive}搭建与维护的{game}非官方互动地图与资料库，游戏数据均从游戏文件中提取，永久免费开放。"
+  disclaimerTemplate: "本站与{developer}无隶属关系，也未获其授权或背书。{game}及相关游戏内容的一切权利均归{developer}所有。"
+  versionTitle: "版本更新记录"
+  viewVersionTemplate: "查看版本 {version}"
+  recentUpdatesTitle: "近期更新"
+  noRecentUpdates: "暂无更新记录。"
   contact:
-    title: "交流与联系方式"
     content: |
       1. 永恒之塔 2 交流群：  
          ①群 246681864  
          ②群 197791140  
          ③群 791286881  
   feedback:
+    title: "交流与反馈"
     label: "反馈 QQ 群"
     hint: "上面的群用于玩家交流；如有建议或问题，请加入下方的反馈群。"
 

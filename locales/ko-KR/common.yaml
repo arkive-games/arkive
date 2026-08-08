@@ -4,6 +4,10 @@ siteTitle: "AION2\n인터랙티브 지도"
 mapSubtitle: "인터랙티브 지도"
 announcement: "어비스의 모노리스 위치 200곳이 업데이트되었습니다. 스크린샷은 추후 추가될 예정입니다."
 
+brand:
+  name: "Arkive 게임 가이드"
+  slogan: "모든 공략을 한 배에"
+
 nav:
   home: "홈"
   classBd: "클래스 BD"
@@ -15,6 +19,10 @@ nav:
 # (각 언어의 자기 표기)를 사용합니다.
 language:
   label: "언어"
+  short: "언어"
+
+auth:
+  login: "로그인"
 
 ui:
   confirm: "확인"
@@ -27,11 +35,13 @@ ui:
   add: "추가"
   copy: "복사"
   copied: "복사됨"
+  copyFailed: "복사 실패"
 
 theme:
-  auto: "자동 (지도에 따라 변경)"
-  light: "낮 모드 (천족)"
-  dark: "밤 모드 (마족)"
+  label: "테마"
+  auto: "시스템 설정 따르기"
+  light: "라이트 모드"
+  dark: "다크 모드"
   abyss: "새벽 모드 (어비스)"
   # Terse forms for the phone "More" sheet, where the segmented theme
   # control has no room for the flavoured names above.
@@ -57,6 +67,8 @@ menu:
   maps: "지도"
   regions: "지역"
   markerTypes: "마커 종류"
+  mapRegion: "지도 지역"
+  markerDisplay: "마커 표시"
   showNamesOnPins: "이름 표시"
   showAllMarkers: "모두 표시"
   hideAllMarkers: "모두 숨기기"
@@ -139,9 +151,6 @@ markerSearch:
 search:
   resultsCount: "결과 {{count}}건"
   coords: "좌표: {{x}}, {{y}}"
-  scopeBoth: "전체"
-  scopeName: "이름"
-  scopeToggle: "검색 범위 전환"
 
 introModal:
   version: "버전"
@@ -182,16 +191,23 @@ introModal:
 # invite in `contact.content` is this locale's channel instead.
 siteInfo:
   tab: "소개"
-  title: "사이트 소개"
-  body: |-
-    이 사이트는 苏烟攻略组 (Suyn AION2 Team)이 제작하고 운영하는 AION2 비공식 인터랙티브 지도 및 데이터베이스입니다. 모든 게임 데이터는 게임 파일에서 추출했으며, 언제나 무료로 이용할 수 있습니다.
-
-    NCSOFT와 제휴 관계가 없으며, NCSOFT의 승인이나 후원을 받지 않았습니다. AION2 및 관련 게임 콘텐츠의 모든 권리는 NCSOFT에 있습니다.
+  aboutTitle: "사이트 소개"
+  arkiveName: "Arkive"
+  gameName: "AION2"
+  introTemplate: "이 {game} 비공식 인터랙티브 지도 및 데이터베이스는 {arkive}에서 제작하고 운영합니다. 모든 게임 데이터는 게임 파일에서 추출했으며 언제나 무료로 이용할 수 있습니다."
+  disclaimerTemplate: "이 사이트는 {developer}와 제휴 관계가 없으며 승인이나 후원을 받지 않았습니다. {game} 및 관련 게임 콘텐츠의 모든 권리는 {developer}에 있습니다."
+  versionTitle: "버전 업데이트"
+  viewVersionTemplate: "버전 {version} 보기"
+  recentUpdatesTitle: "최근 업데이트"
+  noRecentUpdates: "업데이트 내역이 없습니다."
   contact:
-    title: "소통 & 문의"
     content: |
       1. **저희 Aion 2 토론 Discord:** https://discord.gg/cqn9sKbWPU
       2. 최신 Aion 2 소식과 활발한 토론은 Aion 2 Global Discord에서 확인하세요 — 저희가 기꺼이 협력하는 **최대 규모의 Aion 2 커뮤니티**입니다: https://discord.gg/aion2global
+  feedback:
+    title: "커뮤니티 및 피드백"
+    label: "피드백 QQ 그룹"
+    hint: "위 커뮤니티는 플레이어 교류용입니다. 개선 제안이나 문제 신고는 아래 피드백 QQ 그룹을 이용해 주세요."
 
 race:
   light: "천족"

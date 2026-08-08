@@ -3,6 +3,10 @@ appName: "AION2 地圖"
 siteTitle: "AION2 互動地圖"
 mapSubtitle: "互動地圖"
 
+brand:
+  name: "藏舟遊戲攻略網"
+  slogan: "萬千攻略，藏於一舟"
+
 nav:
   home: "首頁"
   classBd: "職業BD"
@@ -13,11 +17,16 @@ nav:
 # 語言顯示名不做翻譯：切換選單使用 src/i18n.ts 中 LANGUAGE_LABELS 的本族語名稱。
 language:
   label: "語言"
+  short: "語言"
+
+auth:
+  login: "登入"
 
 theme:
-  auto: "自動（隨地圖切換）"
-  light: "白天模式（天族）"
-  dark: "夜晚模式（魔族）"
+  label: "主題"
+  auto: "跟隨系統"
+  light: "淺色模式"
+  dark: "深色模式"
   abyss: "黃昏模式（深淵）"
   # Terse forms for the phone "More" sheet, where the segmented theme
   # control has no room for the flavoured names above.
@@ -48,6 +57,7 @@ ui:
   add: "添加"
   copy: "複製"
   copied: "已複製"
+  copyFailed: "複製失敗"
 
 leaderboard:
   artifactRegionRanking: "神器占比大區排名"
@@ -80,6 +90,8 @@ menu:
   maps: "地圖"
   regions: "區域"
   markerTypes: "標記類型"
+  mapRegion: "地圖區域"
+  markerDisplay: "標記顯示"
   showNamesOnPins: "在標記上顯示名稱"
   showAllMarkers: "全部顯示"
   hideAllMarkers: "全部隱藏"
@@ -113,9 +125,6 @@ markerSearch:
 search:
   resultsCount: "{{count}}個搜尋結果"
   coords: "座標：{{x}}，{{y}}"
-  scopeBoth: "全部"
-  scopeName: "名"
-  scopeToggle: "切換搜尋範圍"
 
 markerActions:
   markCompleted: "標記為已完成"
@@ -166,13 +175,16 @@ changelog:
 # ko-KR carry their channel in `contact.content` instead.
 siteInfo:
   tab: "關於"
-  title: "關於本站"
-  body: |-
-    本站是由 **蘇煙攻略組** 搭建與維護的《永恆之塔 2》非官方互動地圖與資料庫，遊戲資料均自遊戲檔案中擷取，永久免費開放。
-
-    本站與 NCSOFT 無隸屬關係，也未獲其授權或背書。AION2 及相關遊戲內容的一切權利均歸 NCSOFT 所有。
+  aboutTitle: "關於本站"
+  arkiveName: "藏舟攻略網"
+  gameName: "永恆之塔 2"
+  introTemplate: "本站是由{arkive}搭建與維護的{game}非官方互動地圖與資料庫，遊戲資料均從遊戲檔案中擷取，永久免費開放。"
+  disclaimerTemplate: "本站與{developer}無隸屬關係，也未獲其授權或背書。{game}及相關遊戲內容的一切權利均歸{developer}所有。"
+  versionTitle: "版本更新記錄"
+  viewVersionTemplate: "查看版本 {version}"
+  recentUpdatesTitle: "近期更新"
+  noRecentUpdates: "暫無更新記錄。"
   contact:
-    title: "交流與聯絡方式"
     content: |
       1. 永恆之塔 2 交流群：  
          ①群 246681864  
@@ -180,5 +192,6 @@ siteInfo:
          ③群 791286881  
       2. **AION2 交流 Discord：** https://discord.gg/cqn9sKbWPU
   feedback:
+    title: "交流與回饋"
     label: "回饋 QQ 群"
     hint: "上面的群組用於玩家交流；如有建議或問題，請加入下方的回饋群。"

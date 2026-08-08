@@ -1,0 +1,1 @@
+import{n as e}from"./vendor-react-DgOpyD-j.js";import{n as t}from"./Match-BfNxWwbp.js";import{t as n}from"./ContentLayout-B5rsSHcc.js";var r=e(),i=()=>(0,r.jsx)(n,{className:`aion2-wiki-page`,contentClassName:`max-w-6xl md:px-6 md:py-8`,children:(0,r.jsx)(t,{})});export{i as component};
