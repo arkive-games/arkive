@@ -36,9 +36,9 @@ describe('buildPatrolRouteLines', () => {
       'alpha',
     )
 
-    expect(lines.map((line) => [line.id, line.variant])).toEqual([
-      ['alpha-route-1', 'highlight'],
-      ['alpha-route-3', 'highlight'],
+    expect(lines.map((line) => [line.id, line.variant, line.color])).toEqual([
+      ['alpha-route-1', 'highlight', '#E5484D'],
+      ['alpha-route-3', 'highlight', '#E5484D'],
     ])
   })
 
