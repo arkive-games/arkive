@@ -51,6 +51,9 @@ interface ForumPost {
   avatarSeed: string
   authorNumber: string
   followerCount: number
+  commentCount: number
+  likeCount: number
+  bookmarkCount: number
   featured?: boolean
 }
 
@@ -84,6 +87,9 @@ const POSTS: ForumPost[] = [
     avatarSeed: 'arkive-dusk-raven',
     authorNumber: '10274831',
     followerCount: 1284,
+    commentCount: 1,
+    likeCount: 86,
+    bookmarkCount: 31,
     featured: true,
   },
   {
@@ -98,6 +104,9 @@ const POSTS: ForumPost[] = [
     avatarSeed: 'arkive-wind-string',
     authorNumber: '10039267',
     followerCount: 946,
+    commentCount: 1,
+    likeCount: 64,
+    bookmarkCount: 22,
     featured: true,
   },
   {
@@ -112,6 +121,9 @@ const POSTS: ForumPost[] = [
     avatarSeed: 'arkive-island-builder',
     authorNumber: '10357142',
     followerCount: 731,
+    commentCount: 1,
+    likeCount: 47,
+    bookmarkCount: 18,
   },
   {
     id: 'collection-progress',
@@ -124,6 +136,9 @@ const POSTS: ForumPost[] = [
     avatarSeed: 'arkive-paper-route',
     authorNumber: '10824695',
     followerCount: 418,
+    commentCount: 1,
+    likeCount: 23,
+    bookmarkCount: 9,
   },
   {
     id: 'community-guide',
@@ -136,6 +151,9 @@ const POSTS: ForumPost[] = [
     avatarSeed: 'arkive-community-team',
     authorNumber: '10000012',
     followerCount: 3276,
+    commentCount: 1,
+    likeCount: 112,
+    bookmarkCount: 40,
     featured: true,
   },
 ]
@@ -635,7 +653,13 @@ function ForumPostDetail({
   onBack: () => void
   onComingSoon: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const [liked, setLiked] = useState(false)
+  const [bookmarked, setBookmarked] = useState(false)
+  const [commentLiked, setCommentLiked] = useState(false)
+  const numberFormatter = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language)
+  const formatCount = (count: number) => numberFormatter.format(count)
+  const discussionId = `forum-discussion-${post.id}`
 
   return (
     <div className="forum-detail-stack">
@@ -646,9 +670,6 @@ function ForumPostDetail({
 
       <article className="forum-panel forum-detail-article">
         <header>
-          <div className="forum-detail-tags">
-            {post.tagKeys.map((key) => <span key={key}>{t(key)}</span>)}
-          </div>
           <h1>{t(post.titleKey)}</h1>
           <div className="forum-detail-byline">
             <img src={avatarUrl(post.avatarSeed)} alt="" />
@@ -656,6 +677,9 @@ function ForumPostDetail({
               <strong>{t(post.authorKey)}</strong>
               <span>{t('forum.detail.byline', { time: t(post.timeKey) })}</span>
             </div>
+          </div>
+          <div className="forum-detail-tags">
+            {post.tagKeys.map((key) => <span key={key}>{t(key)}</span>)}
           </div>
         </header>
 
@@ -666,26 +690,80 @@ function ForumPostDetail({
         </div>
 
         <footer className="forum-detail-actions">
-          <button type="button" onClick={onComingSoon}>
-            <IconBookmark className="size-4" stroke={1.8} aria-hidden="true" />
-            {t('forum.detail.bookmark')}
+          <button
+            type="button"
+            onClick={() => document.getElementById(discussionId)?.scrollIntoView({ behavior: 'auto', block: 'start' })}
+          >
+            <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
+            <span>{t('forum.detail.comments')}</span>
+            <strong>{formatCount(post.commentCount)}</strong>
           </button>
-          <button type="button" onClick={onComingSoon}>
+          <button type="button" aria-pressed={liked} onClick={() => setLiked((current) => !current)}>
             <IconThumbUp className="size-4" stroke={1.8} aria-hidden="true" />
-            {t('forum.detail.like')}
+            <span>{t('forum.detail.like')}</span>
+            <strong>{formatCount(post.likeCount + (liked ? 1 : 0))}</strong>
+          </button>
+          <button type="button" aria-pressed={bookmarked} onClick={() => setBookmarked((current) => !current)}>
+            <IconBookmark className="size-4" stroke={1.8} aria-hidden="true" />
+            <span>{t('forum.detail.bookmark')}</span>
+            <strong>{formatCount(post.bookmarkCount + (bookmarked ? 1 : 0))}</strong>
           </button>
         </footer>
       </article>
 
-      <section className="forum-panel forum-detail-discussion">
+      <section id={discussionId} className="forum-panel forum-detail-discussion">
         <header>
-          <IconMessageCircle className="size-5" stroke={1.8} aria-hidden="true" />
-          <h2>{t('forum.detail.discussion')}</h2>
+          <div>
+            <IconMessageCircle className="size-5" stroke={1.8} aria-hidden="true" />
+            <h2>{t('forum.detail.discussion')}</h2>
+          </div>
+          <span>{t('forum.detail.discussionCount', { count: post.commentCount })}</span>
         </header>
-        <div>
+        <div className="forum-detail-composer">
           <img src={avatarUrl('arkive-current-sailor')} alt="" />
           <button type="button" onClick={onComingSoon}>{t('forum.detail.replyPlaceholder')}</button>
         </div>
+
+        <article className="forum-comment-thread">
+          <div className="forum-comment-main">
+            <img src={avatarUrl('arkive-mistshore-notes')} alt="" />
+            <div>
+              <header>
+                <strong>{t('forum.detail.sampleCommentAuthor')}</strong>
+                <time>{t('forum.detail.sampleCommentTime')}</time>
+              </header>
+              <p>{t('forum.detail.sampleComment')}</p>
+              <footer>
+                <button
+                  type="button"
+                  aria-label={t('forum.detail.commentLikeLabel')}
+                  aria-pressed={commentLiked}
+                  onClick={() => setCommentLiked((current) => !current)}
+                >
+                  <IconThumbUp className="size-4" stroke={1.8} aria-hidden="true" />
+                  <span>{formatCount(12 + (commentLiked ? 1 : 0))}</span>
+                </button>
+                <button type="button" onClick={onComingSoon}>
+                  <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
+                  {t('forum.detail.reply')}
+                </button>
+              </footer>
+
+              <div className="forum-comment-reply">
+                <img src={avatarUrl(post.avatarSeed)} alt="" />
+                <div>
+                  <header>
+                    <strong>{t(post.authorKey)}</strong>
+                    <span className="forum-comment-author-badge">{t('forum.detail.authorBadge')}</span>
+                    <span>{t('forum.detail.replyingTo', { name: t('forum.detail.sampleCommentAuthor') })}</span>
+                    <time>{t('forum.detail.sampleReplyTime')}</time>
+                  </header>
+                  <p>{t('forum.detail.sampleReply')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
       </section>
     </div>
   )
