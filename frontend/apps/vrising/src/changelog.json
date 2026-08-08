@@ -3,7 +3,7 @@
     {
       "version": "0.4.0",
       "date": "2026-08-08",
-      "commit": "9a620e0e2e7b92b8ced0324e92ec1c3fb7fff2c5",
+      "commit": "9e0562c76810564d821071ee4913ba2bfdeb7005",
       "changes": [
         {
           "kind": "feature",
@@ -91,6 +91,14 @@
             "en-US": "Simplified map search to cover all configured fields without a separate scope selector.",
             "zh-CN": "地图搜索已简化为直接覆盖全部已配置字段，不再显示范围选择。",
             "zh-TW": "地圖搜尋已簡化為直接涵蓋全部已設定欄位，不再顯示範圍選擇。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Top-bar language and theme menus now open on hover, use clearer theme labels, and no longer retain mouse-focus outlines.",
+            "zh-CN": "顶部语言与主题菜单现在支持悬停展开，主题文案更加清晰，鼠标选择后不再残留焦点边框。",
+            "zh-TW": "頂部語言與主題選單現在支援懸停展開，主題文案更加清晰，滑鼠選擇後不再殘留焦點邊框。"
           }
         }
       ]
