@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   IconAdjustmentsHorizontal,
+  IconArrowLeft,
   IconBookmark,
   IconChevronDown,
   IconChevronLeft,
@@ -9,6 +10,7 @@ import {
   IconDeviceGamepad2,
   IconFlame,
   IconHash,
+  IconMessageCircle,
   IconMessages,
   IconPhoto,
   IconPinFilled,
@@ -47,6 +49,8 @@ interface ForumPost {
   copyKey: string
   tagKeys: string[]
   avatarSeed: string
+  authorNumber: string
+  followerCount: number
   featured?: boolean
 }
 
@@ -78,6 +82,8 @@ const POSTS: ForumPost[] = [
     copyKey: 'forum.posts.vrising.copy',
     tagKeys: ['forum.tags.vrising', 'forum.tags.guide'],
     avatarSeed: 'arkive-dusk-raven',
+    authorNumber: '10274831',
+    followerCount: 1284,
     featured: true,
   },
   {
@@ -90,6 +96,8 @@ const POSTS: ForumPost[] = [
     copyKey: 'forum.posts.aion2.copy',
     tagKeys: ['forum.tags.aion2', 'forum.tags.build'],
     avatarSeed: 'arkive-wind-string',
+    authorNumber: '10039267',
+    followerCount: 946,
     featured: true,
   },
   {
@@ -102,6 +110,8 @@ const POSTS: ForumPost[] = [
     copyKey: 'forum.posts.palworld.copy',
     tagKeys: ['forum.tags.palworld', 'forum.tags.testing'],
     avatarSeed: 'arkive-island-builder',
+    authorNumber: '10357142',
+    followerCount: 731,
   },
   {
     id: 'collection-progress',
@@ -112,6 +122,8 @@ const POSTS: ForumPost[] = [
     copyKey: 'forum.posts.general.copy',
     tagKeys: ['forum.tags.general'],
     avatarSeed: 'arkive-paper-route',
+    authorNumber: '10824695',
+    followerCount: 418,
   },
   {
     id: 'community-guide',
@@ -122,6 +134,8 @@ const POSTS: ForumPost[] = [
     copyKey: 'forum.posts.official.copy',
     tagKeys: ['forum.tags.official'],
     avatarSeed: 'arkive-community-team',
+    authorNumber: '10000012',
+    followerCount: 3276,
     featured: true,
   },
 ]
@@ -184,6 +198,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [followedUsers, setFollowedUsers] = useState<Set<string>>(() => new Set())
 
   const siteById = useMemo(
@@ -218,6 +233,9 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
     (activePage - 1) * POSTS_PER_PAGE,
     activePage * POSTS_PER_PAGE,
   )
+  const selectedPost = selectedPostId
+    ? POSTS.find((post) => post.id === selectedPostId) ?? null
+    : null
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -229,6 +247,17 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
     setChannel(nextChannel)
     if (nextChannel !== 'games') setGameFilter(null)
     setCurrentPage(1)
+    setSelectedPostId(null)
+  }
+
+  const openPost = (postId: string) => {
+    setSelectedPostId(postId)
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }
+
+  const closePost = () => {
+    setSelectedPostId(null)
+    window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
   const toggleFollow = (id: string) => {
@@ -292,6 +321,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                       setChannel('games')
                       setGameFilter(site.id)
                       setCurrentPage(1)
+                      setSelectedPostId(null)
                     }}
                   >
                     <span className="forum-game-logo" aria-hidden="true">
@@ -311,14 +341,23 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
         </aside>
 
         <section className="forum-content-column">
-          {renderSearch('forum-content-search')}
+          {selectedPost ? (
+            <ForumPostDetail
+              post={selectedPost}
+              image={selectedPost.gameId ? siteById.get(selectedPost.gameId)?.bg : undefined}
+              onBack={closePost}
+              onComingSoon={onComingSoon}
+            />
+          ) : (
+            <>
+              {renderSearch('forum-content-search')}
 
-          <button type="button" className="forum-mobile-compose" onClick={onComingSoon}>
-            <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
-            {t('forum.composer.action')}
-          </button>
+              <button type="button" className="forum-mobile-compose" onClick={onComingSoon}>
+                <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
+                {t('forum.composer.action')}
+              </button>
 
-          <section className="forum-pinned-section">
+              <section className="forum-pinned-section">
             <div className="forum-pinned-grid">
               <article className="forum-pinned-feature">
                 {siteById.get('aion2') && (
@@ -349,9 +388,9 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                 </article>
               </div>
             </div>
-          </section>
+              </section>
 
-          <section className="forum-feed-section">
+              <section className="forum-feed-section">
             <div className="forum-panel forum-feed-panel">
               <div className="forum-feed-toolbar">
                 <div role="tablist" aria-label={t('forum.feed.tabsLabel')}>
@@ -387,6 +426,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                         image={post.gameId ? siteById.get(post.gameId)?.bg : undefined}
                         followed={followedUsers.has(post.authorKey)}
                         onToggleFollow={() => toggleFollow(post.authorKey)}
+                        onOpen={() => openPost(post.id)}
                         onComingSoon={onComingSoon}
                       />
                     ))}
@@ -447,13 +487,23 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                 </div>
               )}
             </div>
-          </section>
+              </section>
+            </>
+          )}
         </section>
 
         <aside className="forum-right-rail" aria-label={t('forum.sidebar.label')}>
-          {renderSearch('forum-right-search')}
+          {selectedPost ? (
+            <ForumAuthorPostcard
+              post={selectedPost}
+              followed={followedUsers.has(selectedPost.authorKey)}
+              onToggleFollow={() => toggleFollow(selectedPost.authorKey)}
+            />
+          ) : (
+            <>
+              {renderSearch('forum-right-search')}
 
-          <section className="forum-panel forum-composer">
+              <section className="forum-panel forum-composer">
             <div className="forum-composer-entry">
               <img src={avatarUrl('arkive-current-sailor')} alt="" />
               <button type="button" onClick={onComingSoon}>{t('forum.composer.placeholder')}</button>
@@ -473,7 +523,9 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                 {t('forum.composer.action')}
               </button>
             </div>
-          </section>
+              </section>
+            </>
+          )}
 
           <section className="forum-panel forum-recommended-users">
             <header>
@@ -517,12 +569,14 @@ function ForumPostCard({
   image,
   followed,
   onToggleFollow,
+  onOpen,
   onComingSoon,
 }: {
   post: ForumPost
   image?: string
   followed: boolean
   onToggleFollow: () => void
+  onOpen: () => void
   onComingSoon: () => void
 }) {
   const { t } = useTranslation()
@@ -544,7 +598,14 @@ function ForumPostCard({
             {t(followed ? 'forum.users.following' : 'forum.users.follow')}
           </button>
         </div>
-        <h3>{t(post.titleKey)}</h3>
+        <button
+          type="button"
+          className="forum-post-title"
+          aria-label={t('forum.detail.openPost', { title: t(post.titleKey) })}
+          onClick={onOpen}
+        >
+          <h3>{t(post.titleKey)}</h3>
+        </button>
         <p>{t(post.copyKey)}</p>
         <div className="forum-post-tags">
           {post.tagKeys.map((key) => <span key={key}>{t(key)}</span>)}
@@ -560,5 +621,118 @@ function ForumPostCard({
         </button>
       </div>
     </article>
+  )
+}
+
+function ForumPostDetail({
+  post,
+  image,
+  onBack,
+  onComingSoon,
+}: {
+  post: ForumPost
+  image?: string
+  onBack: () => void
+  onComingSoon: () => void
+}) {
+  const { t } = useTranslation()
+
+  return (
+    <div className="forum-detail-stack">
+      <button type="button" className="forum-detail-back" onClick={onBack}>
+        <IconArrowLeft className="size-4" stroke={1.8} aria-hidden="true" />
+        {t('forum.detail.back')}
+      </button>
+
+      <article className="forum-panel forum-detail-article">
+        <header>
+          <div className="forum-detail-tags">
+            {post.tagKeys.map((key) => <span key={key}>{t(key)}</span>)}
+          </div>
+          <h1>{t(post.titleKey)}</h1>
+          <div className="forum-detail-byline">
+            <img src={avatarUrl(post.avatarSeed)} alt="" />
+            <div>
+              <strong>{t(post.authorKey)}</strong>
+              <span>{t('forum.detail.byline', { author: t(post.authorKey), time: t(post.timeKey) })}</span>
+            </div>
+          </div>
+        </header>
+
+        <div className="forum-detail-body">
+          <p className="forum-detail-lead">{t(post.copyKey)}</p>
+          {image && <img src={image} alt={t(post.titleKey)} loading="eager" />}
+          <p>{t('forum.detail.continuation')}</p>
+        </div>
+
+        <footer className="forum-detail-actions">
+          <button type="button" onClick={onComingSoon}>
+            <IconBookmark className="size-4" stroke={1.8} aria-hidden="true" />
+            {t('forum.detail.bookmark')}
+          </button>
+          <button type="button" onClick={onComingSoon}>
+            <IconThumbUp className="size-4" stroke={1.8} aria-hidden="true" />
+            {t('forum.detail.like')}
+          </button>
+        </footer>
+      </article>
+
+      <section className="forum-panel forum-detail-discussion">
+        <header>
+          <IconMessageCircle className="size-5" stroke={1.8} aria-hidden="true" />
+          <h2>{t('forum.detail.discussion')}</h2>
+        </header>
+        <div>
+          <img src={avatarUrl('arkive-current-sailor')} alt="" />
+          <button type="button" onClick={onComingSoon}>{t('forum.detail.replyPlaceholder')}</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function ForumAuthorPostcard({
+  post,
+  followed,
+  onToggleFollow,
+}: {
+  post: ForumPost
+  followed: boolean
+  onToggleFollow: () => void
+}) {
+  const { t, i18n } = useTranslation()
+  const headingId = `forum-author-${post.id}`
+  const followerCount = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language).format(post.followerCount)
+
+  return (
+    <section className="forum-panel forum-author-postcard" aria-labelledby={headingId}>
+      <div className="forum-author-postcard-cover" aria-hidden="true" />
+      <div className="forum-author-postcard-identity">
+        <img src={avatarUrl(post.avatarSeed)} alt="" />
+        <div>
+          <h2 id={headingId}>{t(post.authorKey)}</h2>
+          {post.featured && <small>{t('forum.feed.qualityAuthor')}</small>}
+        </div>
+      </div>
+      <dl>
+        <div>
+          <dt>{t('forum.detail.accountId')}</dt>
+          <dd>{post.authorNumber}</dd>
+        </div>
+        <div>
+          <dt>{t('forum.detail.followers')}</dt>
+          <dd>{followerCount}</dd>
+        </div>
+      </dl>
+      <p>{t('forum.detail.authorBio', { topic: t(post.tagKeys[0]) })}</p>
+      <button
+        type="button"
+        className={followed ? 'is-followed' : undefined}
+        aria-pressed={followed}
+        onClick={onToggleFollow}
+      >
+        {t(followed ? 'forum.users.following' : 'forum.users.follow')}
+      </button>
+    </section>
   )
 }
