@@ -1,24 +1,9 @@
 {
   "entries": [
     {
-      "version": "0.2.2",
+      "version": "0.3.0",
       "date": "2026-08-08",
-      "commit": "bff96b877b7f503c7d27422c51f0738918a6686f",
-      "changes": [
-        {
-          "kind": "improvement",
-          "text": {
-            "en-US": "Refreshed game pages with Arkive's shared neutral, blue, amber, and orange color system.",
-            "zh-CN": "游戏页面现已统一使用藏舟的中性黑白、蓝色、琥珀色与橙色色彩体系。",
-            "zh-TW": "遊戲頁面現已統一使用藏舟的中性黑白、藍色、琥珀色與橙色色彩體系。"
-          }
-        }
-      ]
-    },
-    {
-      "version": "0.2.1",
-      "date": "2026-08-08",
-      "commit": "813009f0310477985d28784dcb182a998ba6c470",
+      "commit": "9a620e0e2e7b92b8ced0324e92ec1c3fb7fff2c5",
       "changes": [
         {
           "kind": "improvement",
@@ -26,6 +11,14 @@
             "en-US": "Unified the About panel with Arkive attribution, developer rights, the shared feedback group, and dated site updates starting with this release.",
             "zh-CN": "统一“关于本站”面板，加入藏舟攻略网链接、开发商权利声明、反馈 QQ 群，并从本次版本起记录带日期的网站更新。",
             "zh-TW": "統一「關於本站」面板，加入藏舟攻略網連結、開發商權利聲明、反饋 QQ 群，並從本次版本起記錄帶日期的網站更新。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Refreshed game pages with Arkive's shared neutral, blue, amber, and orange color system.",
+            "zh-CN": "游戏页面现已统一使用藏舟的中性黑白、蓝色、琥珀色与橙色色彩体系。",
+            "zh-TW": "遊戲頁面現已統一使用藏舟的中性黑白、藍色、琥珀色與橙色色彩體系。"
           }
         }
       ]
