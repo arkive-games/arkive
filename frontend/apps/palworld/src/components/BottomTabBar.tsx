@@ -167,7 +167,7 @@ export function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('settings.theme'),
       }}
-      extra={<ArkiveMobileAccountRow locale={lng} label={t('login')} />}
+      extra={<ArkiveMobileAccountRow locale={lng} label={t('auth.login')} />}
       footer={<SiteInfo />}
     />
   )

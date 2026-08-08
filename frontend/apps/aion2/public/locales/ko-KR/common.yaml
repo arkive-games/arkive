@@ -9,6 +9,7 @@ brand:
   slogan: "모든 공략을 한 배에"
 
 nav:
+  wiki: "위키"
   home: "홈"
   classBd: "클래스 BD"
   crafting: "장비 제작"
@@ -82,6 +83,7 @@ menu:
   collapse: "접기"
   switchTheme: "테마 전환"
   switchLanguage: "언어 전환"
+  switchEngine: "지도 렌더러"
   contact: "문의하기"
   donate: "후원하기"
 
@@ -233,7 +235,7 @@ mobileNav:
   quest: "퀘스트"
   npc: "NPC"
   item: "아이템"
-  wiki: "Wiki"
+  wiki: "위키"
   more: "더보기"
 
 # Version-history page (/changelog). The entry text itself lives in

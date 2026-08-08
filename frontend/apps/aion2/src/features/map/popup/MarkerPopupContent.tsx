@@ -24,7 +24,7 @@ function resolveImage(src: string): string {
 const MarkerPopupContent: React.FC<Props> = ({ marker }) => {
   const { types, selectedMap } = useGameMap();
   const { completedBySubtype, toggleMarkerCompleted } = useMarkers();
-  const { t } = useTranslation(["common", "types", "wiki"]);
+  const { t } = useTranslation(["common", "types"]);
 
   const sub = types
     .flatMap((category) => category.subtypes)
@@ -78,7 +78,7 @@ const MarkerPopupContent: React.FC<Props> = ({ marker }) => {
               data-testid="popup-wiki-link"
             >
               <IconBook2 className="size-4" stroke={1.8} />
-              {t("wiki:nav.wiki")}
+              {t("common:nav.wiki")}
             </Link>
           ) : (
             <span />

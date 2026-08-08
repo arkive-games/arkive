@@ -8,6 +8,7 @@ brand:
   slogan: "萬千攻略，藏於一舟"
 
 nav:
+  wiki: "百科"
   home: "首頁"
   classBd: "職業BD"
   crafting: "裝備製作"
@@ -100,6 +101,7 @@ menu:
   selectMap: "選擇地圖"
   switchTheme: "切換主題"
   switchLanguage: "切換語言"
+  switchEngine: "地圖渲染器"
   contact: "聯絡我們"
   donate: "贊助"
   expand: "展開"
@@ -154,7 +156,7 @@ mobileNav:
   quest: "任務"
   npc: "NPC"
   item: "物品"
-  wiki: "Wiki"
+  wiki: "百科"
   more: "更多"
 
 # Version-history page (/changelog). The entry text itself lives in

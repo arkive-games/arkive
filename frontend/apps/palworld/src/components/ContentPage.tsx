@@ -111,7 +111,7 @@ export function ContentPage({
           homeLabel={t('brandHome')}
           brandName={brandName}
           pageTitle={title}
-          loginLabel={t('login')}
+          loginLabel={t('auth.login')}
           locale={lng}
           actions={inSheet ? (
             <button

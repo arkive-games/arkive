@@ -9,6 +9,7 @@ brand:
   slogan: "万千攻略，藏于一舟"
 
 nav:
+  wiki: "百科"
   home: "首页"
   classBd: "职业BD"
   crafting: "装备制作"
@@ -106,6 +107,7 @@ menu:
   lodToggle: "按缩放显示层级"
   switchLanguage: "切换语言"
   switchTheme: "切换主题"
+  switchEngine: "地图渲染器"
   showCategory: "显示全部"
   hideCategory: "隐藏全部"
   donate: "赞助我们"
@@ -331,7 +333,7 @@ mobileNav:
   quest: "任务"
   npc: "NPC"
   item: "物品"
-  wiki: "Wiki"
+  wiki: "百科"
   more: "更多"
 
 # Version-history page (/changelog). The entry text itself lives in

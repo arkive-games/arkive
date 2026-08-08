@@ -9,6 +9,7 @@ brand:
   slogan: "Every guide, aboard one ark"
 
 nav:
+  wiki: "Wiki"
   home: "Home"
   classBd: "Class BD"
   crafting: "Equip Crafting"
@@ -82,6 +83,7 @@ menu:
   collapse: "Collapse"
   switchTheme: "Switch theme"
   switchLanguage: "Switch language"
+  switchEngine: "Map renderer"
   contact: "Contact us"
   donate: "Donate"
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { Fragment, useEffect, useState, type ReactNode } from "react"
 import {
   IconCheck,
   IconChevronLeft,
@@ -216,17 +216,19 @@ export function ShellBottomNav({
               <>
                 {grid && grid.items.length > 0 && (
                   <div className="grid grid-cols-3 gap-2">
-                    {grid.items.map((item) =>
-                      grid.renderItem(
-                        item,
-                        cn(
-                          "flex min-h-20 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border p-3 text-xs font-medium active:scale-[0.98]",
-                          item.active
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card text-card-foreground",
-                        ),
-                      ),
-                    )}
+                    {grid.items.map((item) => (
+                      <Fragment key={item.key}>
+                        {grid.renderItem(
+                          item,
+                          cn(
+                            "flex min-h-20 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border p-3 text-xs font-medium active:scale-[0.98]",
+                            item.active
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-card text-card-foreground",
+                          ),
+                        )}
+                      </Fragment>
+                    ))}
                   </div>
                 )}
 

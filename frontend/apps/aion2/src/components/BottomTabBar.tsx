@@ -153,12 +153,9 @@ export default function BottomTabBar() {
         backLabel: t("common:settings.back", "Back"),
       }}
       theme={{
-        // The terse labels, not the flavoured ones the desktop dropdown uses:
-        // "Auto (Change with Map)" / "Day Mode (Elyos)" overflowed the
-        // segmented control and truncated to ambiguity at phone width.
         options: THEME_OPTIONS.map((value) => ({
           value,
-          label: t(`common:theme.short.${value}`),
+          label: t(`common:theme.${value}`),
         })),
         current: theme,
         onChange: (value) => setTheme(value as Theme),
@@ -171,7 +168,7 @@ export default function BottomTabBar() {
         })),
         current: activeEngine,
         onChange: (value) => chooseEngine(value as MapEngineChoice),
-        rowLabel: t("common:menu.switchEngine", "Map renderer"),
+        rowLabel: t("common:menu.switchEngine"),
       }}
       extra={
         <div className="space-y-3">
