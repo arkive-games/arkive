@@ -2,7 +2,7 @@ schema_version: "1.0.0"
 spec_id: "arkive.site"
 title: "Arkive Site Specification"
 status: "canonical"
-last_reviewed: "2026-08-08"
+last_reviewed: "2026-08-09"
 
 purpose:
   summary: >-
@@ -125,6 +125,9 @@ global_shell:
       - "auto"
       - "light"
       - "dark"
+    theme_behavior:
+      persistence: "One shared preference must follow the user between the portal and every game, including across approved Arkive subdomains."
+      auto: "Follow the operating-system color scheme; game maps and artwork must not override it."
     exclusions:
       - "About"
       - "Renderer selection"

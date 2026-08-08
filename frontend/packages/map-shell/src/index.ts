@@ -81,3 +81,11 @@ export {
 } from "./mapEngineChoice"
 export { ThemeProvider, useTheme, type Theme, type ThemeStorage } from "./theme/ThemeProvider"
 export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./theme/ThemeToggle"
+export {
+  ARKIVE_THEME_COOKIE_NAME,
+  ARKIVE_THEME_STORAGE_KEY,
+  createArkiveThemeStorage,
+  resolveArkiveThemeCookieDomain,
+  type ArkiveThemeStorageEnvironment,
+  type CreateArkiveThemeStorageOptions,
+} from "./theme/arkiveThemeStorage"

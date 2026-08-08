@@ -11,8 +11,8 @@ import {
 export type Theme = "auto" | "light" | "dark"
 
 /**
- * Persistence adapter injected by the app. The shell must stay storage-free
- * (no browser storage) so persistence lives with the host app.
+ * Persistence adapter injected by the app. Arkive surfaces should use
+ * createArkiveThemeStorage; injection remains useful for tests and embeds.
  */
 export type ThemeStorage = {
   get: () => Theme | null

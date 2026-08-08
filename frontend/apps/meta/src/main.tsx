@@ -1,28 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AuthProvider } from '@gamemap/auth'
-import { initBaiduAnalytics, ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell'
+import { createArkiveThemeStorage, initBaiduAnalytics, ThemeProvider } from '@gamemap/map-shell'
 import './index.css'
 import './i18n'
 import App from './App'
 import { AUTH_CONFIG } from './lib/auth'
 
-const THEME_KEY = 'meta.theme'
-const themeStorage: ThemeStorage = {
-  get: () => {
-    try {
-      const v = localStorage.getItem(THEME_KEY)
-      return v === 'light' || v === 'dark' || v === 'auto' ? (v as Theme) : null
-    } catch {
-      return null
-    }
-  },
-  set: (t) => {
-    try {
-      localStorage.setItem(THEME_KEY, t)
-    } catch { /* no storage */ }
-  },
-}
+const themeStorage = createArkiveThemeStorage({ legacyKeys: ['meta.theme'] })
 
 // Single-page, no router: the entry pageview hm.js reports is the whole visit.
 initBaiduAnalytics({

@@ -10,11 +10,10 @@ import {
 } from '@tanstack/react-router'
 import { AuthProvider } from '@gamemap/auth'
 import {
+  createArkiveThemeStorage,
   initBaiduAnalytics,
-  trackPageview,
   ThemeProvider,
-  type Theme,
-  type ThemeStorage,
+  trackPageview,
 } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
 import 'leaflet/dist/leaflet.css'
@@ -56,22 +55,7 @@ import { BottomTabBar } from './components/BottomTabBar'
 import { initDataVersion } from './lib/urls'
 import { isMapEngineChoice, type MapEngineChoice } from './lib/mapEngineChoice'
 
-const THEME_KEY = 'palworld.theme'
-const themeStorage: ThemeStorage = {
-  get: () => {
-    try {
-      const v = localStorage.getItem(THEME_KEY)
-      return v === 'light' || v === 'dark' || v === 'auto' ? (v as Theme) : null
-    } catch {
-      return null
-    }
-  },
-  set: (t) => {
-    try {
-      localStorage.setItem(THEME_KEY, t)
-    } catch { /* no storage */ }
-  },
-}
+const themeStorage = createArkiveThemeStorage({ legacyKeys: ['palworld.theme'] })
 
 const rootRoute = createRootRoute({
   component: () => (

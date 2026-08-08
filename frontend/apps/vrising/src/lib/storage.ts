@@ -1,23 +1,9 @@
-import type { Theme, ThemeStorage, MapViewStore } from '@gamemap/map-shell'
+import { createArkiveThemeStorage, type MapViewStore } from '@gamemap/map-shell'
 
-const THEME_KEY = 'vrising.theme'
 const VISIBLE_KEY = 'vrising.map.visibleSubtypes'
 const VIEW_KEY = 'vrising.map.view'
 
-/** Theme persistence, injected into ThemeProvider (map-shell owns no storage). */
-export const themeStorage: ThemeStorage = {
-  get: () => {
-    try {
-      const v = localStorage.getItem(THEME_KEY)
-      return v === 'light' || v === 'dark' || v === 'auto' ? (v as Theme) : null
-    } catch {
-      return null
-    }
-  },
-  set: (t) => {
-    try { localStorage.setItem(THEME_KEY, t) } catch { /* no storage */ }
-  },
-}
+export const themeStorage = createArkiveThemeStorage({ legacyKeys: ['vrising.theme'] })
 
 /** Per-map camera + selection persistence, injected into useMapViewMemory. */
 export const mapViewStore: MapViewStore = {

@@ -3,11 +3,10 @@ import { createRoot } from 'react-dom/client'
 import { createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { AuthProvider } from '@gamemap/auth'
 import {
+  createArkiveThemeStorage,
   initBaiduAnalytics,
-  trackPageview,
   ThemeProvider,
-  type Theme,
-  type ThemeStorage,
+  trackPageview,
 } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
@@ -20,16 +19,7 @@ import CharacterDetailPage from './features/characters/CharacterDetailPage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import { initDataVersion } from './lib/urls'
 
-const THEME_KEY = 'sts2.theme'
-const themeStorage: ThemeStorage = {
-  get: () => {
-    try {
-      const v = localStorage.getItem(THEME_KEY)
-      return v === 'light' || v === 'dark' || v === 'auto' ? (v as Theme) : null
-    } catch { return null }
-  },
-  set: (t) => { try { localStorage.setItem(THEME_KEY, t) } catch { /* no storage */ } },
-}
+const themeStorage = createArkiveThemeStorage({ legacyKeys: ['sts2.theme'] })
 
 const rootRoute = createRootRoute({ component: () => <Outlet /> })
 

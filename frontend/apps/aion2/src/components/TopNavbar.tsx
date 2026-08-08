@@ -77,7 +77,7 @@ export default function TopNavbar() {
           light: t("common:theme.light"),
           dark: t("common:theme.dark"),
         },
-        current: theme === "abyss" ? "auto" : theme,
+        current: theme,
         onChange: setTheme,
         menuLabel: t("common:menu.switchTheme"),
         shortLabel: t("common:theme.label"),

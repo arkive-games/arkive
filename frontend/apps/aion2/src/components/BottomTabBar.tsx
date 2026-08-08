@@ -24,7 +24,6 @@ import {
 // Same archive entry the desktop top bar links to; on mobile that notice is not
 // rendered, so the link lives in the More sheet instead.
 const ARCHIVE_URL = "https://archive.tc-imba.com/";
-// "abyss" is intentionally absent, matching TopNavbar.
 const THEME_OPTIONS: Theme[] = ["auto", "light", "dark"];
 
 /** The three wiki type slugs, in tab order. Confirmed against data/wiki/taxonomy.json. */
