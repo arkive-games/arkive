@@ -290,7 +290,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
             {t('forum.composer.action')}
           </button>
 
-          <section className="forum-pinned-section" aria-label={t('forum.pinned.title')}>
+          <section className="forum-pinned-section">
             <div className="forum-pinned-grid">
               <article className="forum-pinned-feature">
                 {siteById.get('aion2') && (
