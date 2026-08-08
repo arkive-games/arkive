@@ -395,6 +395,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                     <nav className="forum-pagination" aria-label={t('forum.pagination.label')}>
                       <button
                         type="button"
+                        aria-label={t('forum.pagination.previous')}
                         disabled={activePage === 1}
                         onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                       >
@@ -415,6 +416,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                       ))}
                       <button
                         type="button"
+                        aria-label={t('forum.pagination.next')}
                         disabled={activePage === totalPages}
                         onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
                       >
