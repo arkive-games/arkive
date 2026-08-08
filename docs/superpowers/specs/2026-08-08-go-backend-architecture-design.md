@@ -314,12 +314,22 @@ Verified against the real production data (13,278 accounts, dumped 2026-08-08):
   exist in production at all; that path is defensive only.
 - **No email collides once lowercased**, so the move to a lowercase-with-unique-constraint
   column is safe.
-- **Eleven pairs of names differ only by a trailing space** (`'a'` and `'a '`). The import
-  copies names verbatim rather than trimming, because trimming would silently rename real
-  users and then collide on the unique constraint. This is a pre-existing data-quality
-  question, deliberately left for a separate decision.
-- **One account's name is a single space**, which the `users_name_not_blank` check rejects.
-  It receives a deterministic placeholder derived from its own id.
+- **Eleven pairs of names differ only by a trailing space** (`'a'` and `'a '`), and 34 names
+  contain internal spaces. Neither is a problem, and neither is changed. `name` is a display
+  alias, not an identifier — login is by email alone — so spaces in it are legitimate and
+  whitespace variants are simply distinct users. The import copies names verbatim, so all
+  97 names containing a space survive untouched. (Trimming at import *would* have turned the
+  eleven pairs into unique-constraint collisions; not trimming avoids inventing the problem.)
+- **One account's name is a single space**, which is rejected by the `users_name_not_blank`
+  check that this schema adds and the legacy one did not have. It receives a deterministic
+  placeholder derived from its own id. This is the only account the import alters, and the
+  constraint is the only reason it needs altering: a wholly invisible display name is a real
+  UX problem next to a contributor credit.
+
+  Note that no whitespace-normalising rule is applied beyond this. If display-name
+  confusability ever needs addressing, whitespace is the weakest vector — Unicode homoglyphs
+  and bidirectional overrides are far more effective for impersonation — so the choice is a
+  real confusable-name policy or nothing, not a whitespace half-measure.
 
 Existing JWTs do **not** survive, by choice (see Authentication), so users sign in once
 after cutover.

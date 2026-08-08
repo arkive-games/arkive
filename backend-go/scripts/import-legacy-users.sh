@@ -12,16 +12,19 @@
 #     real unique constraint. Verified safe before writing this: the production
 #     data contains zero addresses that collide once lowercased.
 #
-#   - Display names are copied VERBATIM, not trimmed. Eleven pairs of production
-#     accounts differ only by a trailing space ('a' and 'a '), so trimming would
-#     silently rename real users and then collide on the unique constraint.
-#     Preserving them keeps the import faithful; the duplicates are a
-#     pre-existing data-quality question for a separate decision.
+#   - Display names are copied VERBATIM, including their spaces. `name` is a
+#     display alias, not an identifier — login is by email alone — so a space in
+#     one is legitimate, and two names differing only by whitespace are simply
+#     two distinct users. Production has 97 such names (63 with edge whitespace,
+#     34 with internal spaces) and none is modified. Trimming here *would* have
+#     turned eleven of them into unique-constraint collisions, so not trimming
+#     avoids inventing a problem rather than solving one.
 #
-#   - One account whose name is a single space would violate the
-#     users_name_not_blank check. It gets a deterministic placeholder derived
-#     from its own id ("user_<first 8 hex>"), which cannot collide and is
-#     traceable back to the row.
+#   - The single exception: one account whose name is just a space, which the
+#     users_name_not_blank check rejects. That check is new in this schema; the
+#     legacy one had none. It gets a deterministic placeholder derived from its
+#     own id ("user_<first 8 hex>"), which cannot collide and is traceable back
+#     to the row. This is the only row the import alters.
 #
 #   - Password hashes are copied unchanged. Every production hash is argon2id in
 #     PHC form, which this service verifies natively, so no password is reset
