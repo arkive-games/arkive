@@ -458,6 +458,21 @@
   font-size: 0.75rem;
 }
 
+.forum-post-author strong a,
+.forum-detail-byline strong a,
+.forum-author-postcard h2 a,
+.forum-recommended-users article strong a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.forum-post-author strong a:hover,
+.forum-detail-byline strong a:hover,
+.forum-author-postcard h2 a:hover,
+.forum-recommended-users article strong a:hover {
+  color: var(--arkive-nav-active);
+}
+
 .forum-post-author > span {
   color: var(--arkive-nav-active);
   font-weight: 700;

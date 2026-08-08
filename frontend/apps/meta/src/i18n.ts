@@ -15,6 +15,143 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 
 const BRAND_NAME = '藏舟游戏攻略网'
 
+const USER_SYSTEM_COPY = {
+  'zh-CN': {
+    notifications: {
+      label: '通知', open: '打开通知中心', menuLabel: '通知分类', center: '通知中心',
+      replies: '回复我的', mentions: '主动@我', likes: '收到的赞', system: '系统通知', settings: '通知设置',
+      inboxDescription: '集中查看与你相关的社区互动消息。',
+      settingsDescription: '选择希望接收的消息，设置会立即保存。',
+      markAllRead: '全部标为已读', allRead: '已全部读完', unread: '未读',
+      systemSender: '藏舟社区助手', systemPost: '社区使用规范更新',
+      items: {
+        reply: '回复了你在《{{post}}》中的留言', mention: '在《{{post}}》中提到了你',
+        like: '赞了你的帖子《{{post}}》', system: '发布了《{{post}}》',
+      },
+      settingGroups: { interaction: '互动消息', platform: '关注与平台消息' },
+      settingsRows: {
+        replies: { title: '回复提醒', description: '有人回复你的帖子或评论时通知你。' },
+        mentions: { title: '@提醒', description: '有人在帖子或评论中主动提到你时通知你。' },
+        likes: { title: '点赞提醒', description: '你的帖子或评论收到点赞时通知你。' },
+        follows: { title: '关注提醒', description: '有新用户关注你时通知你。' },
+        system: { title: '系统通知', description: '接收账号、安全和社区规则相关消息。' },
+        browser: { title: '浏览器通知', description: '允许藏舟在浏览器中发送桌面提醒。' },
+      },
+    },
+    account: {
+      open: '打开个人中心', center: '个人中心', edit: '编辑资料', favorites: '我的收藏', posts: '我的发帖',
+      comments: '我的评论', fans: '我的粉丝', following: '我的关注', privacy: '隐私设置', logout: '退出登录',
+      descriptions: {
+        edit: '更新头像、昵称和个人简介。', favorites: '查看你收藏的论坛帖子。', posts: '管理你发布过的内容。',
+        comments: '查看你参与过的讨论。', fans: '查看正在关注你的用户。', following: '管理你关注的社区用户。',
+        privacy: '决定其他用户可以看到哪些个人信息。',
+      },
+      changeAvatar: '更换头像', save: '保存资料', saved: '资料已保存',
+      fields: { displayName: '昵称', accountId: '藏舟编号', accountIdHelper: '编号由系统生成，暂不支持修改。', bio: '个人简介' },
+    },
+    currentUser: { name: '潮汐拾页', bio: '记录地图上的小发现，也收藏每一次有用的讨论。', badge: '我的主页' },
+    publicProfile: {
+      center: '个人主页', posts: '发帖', comments: '评论', favorites: '收藏', fans: '粉丝', following: '关注',
+      likesReceived: '获赞', accountId: '藏舟编号：{{id}}',
+      descriptions: {
+        posts: '查看该用户发布的社区内容。', comments: '查看该用户参与的公开讨论。', favorites: '查看该用户公开收藏的帖子。',
+        fans: '查看关注该用户的人。', following: '查看该用户正在关注的人。',
+      },
+      bios: {
+        vrising: '整理瓦尔多兰路线与首领情报，偶尔分享城堡建造心得。',
+        aion2: '研究职业搭配与副本节奏，希望每份攻略都能直接用上。',
+        palworld: '长期记录帕鲁生态、据点效率和多人世界测试结果。',
+      },
+    },
+    content: {
+      commentsCount: '{{count}} 条评论', likesCount: '{{count}} 个赞',
+      comment1: '这条路线补充得很清楚，我在第二个转角也找到了同样的资源点。',
+      comment2: '如果是多人世界，建议把准备阶段再提前一点，整体会更稳定。', viewDiscussion: '查看原讨论',
+    },
+    privacy: {
+      profile: { title: '公开个人资料', description: '允许其他用户查看你的昵称、简介和社区数据。' },
+      posts: { title: '公开发帖与评论', description: '允许其他用户从个人主页查看你的公开内容。' },
+      activity: { title: '显示在线活动', description: '向你关注的人显示最近的社区活动。' },
+    },
+  },
+  'zh-TW': {
+    notifications: {
+      label: '通知', open: '開啟通知中心', menuLabel: '通知分類', center: '通知中心',
+      replies: '回覆我的', mentions: '主動@我', likes: '收到的讚', system: '系統通知', settings: '通知設定',
+      inboxDescription: '集中查看與你相關的社群互動訊息。', settingsDescription: '選擇希望接收的訊息，設定會立即儲存。',
+      markAllRead: '全部標為已讀', allRead: '已全部讀完', unread: '未讀', systemSender: '藏舟社群助手', systemPost: '社群使用規範更新',
+      items: { reply: '回覆了你在《{{post}}》中的留言', mention: '在《{{post}}》中提到了你', like: '讚了你的文章《{{post}}》', system: '發布了《{{post}}》' },
+      settingGroups: { interaction: '互動訊息', platform: '關注與平台訊息' },
+      settingsRows: {
+        replies: { title: '回覆提醒', description: '有人回覆你的文章或留言時通知你。' }, mentions: { title: '@提醒', description: '有人主動提到你時通知你。' },
+        likes: { title: '按讚提醒', description: '你的文章或留言收到按讚時通知你。' }, follows: { title: '關注提醒', description: '有新使用者關注你時通知你。' },
+        system: { title: '系統通知', description: '接收帳號、安全和社群規則相關訊息。' }, browser: { title: '瀏覽器通知', description: '允許藏舟在瀏覽器中傳送桌面提醒。' },
+      },
+    },
+    account: {
+      open: '開啟個人中心', center: '個人中心', edit: '編輯資料', favorites: '我的收藏', posts: '我的發文', comments: '我的留言', fans: '我的粉絲', following: '我的關注', privacy: '隱私設定', logout: '登出',
+      descriptions: { edit: '更新頭像、暱稱和個人簡介。', favorites: '查看你收藏的論壇文章。', posts: '管理你發布過的內容。', comments: '查看你參與過的討論。', fans: '查看正在關注你的使用者。', following: '管理你關注的社群使用者。', privacy: '決定其他使用者可以看到哪些個人資訊。' },
+      changeAvatar: '更換頭像', save: '儲存資料', saved: '資料已儲存', fields: { displayName: '暱稱', accountId: '藏舟編號', accountIdHelper: '編號由系統產生，暫不支援修改。', bio: '個人簡介' },
+    },
+    currentUser: { name: '潮汐拾頁', bio: '記錄地圖上的小發現，也收藏每一次有用的討論。', badge: '我的主頁' },
+    publicProfile: {
+      center: '個人主頁', posts: '發文', comments: '留言', favorites: '收藏', fans: '粉絲', following: '關注', likesReceived: '獲讚', accountId: '藏舟編號：{{id}}',
+      descriptions: { posts: '查看該使用者發布的社群內容。', comments: '查看該使用者參與的公開討論。', favorites: '查看該使用者公開收藏的文章。', fans: '查看關注該使用者的人。', following: '查看該使用者正在關注的人。' },
+      bios: { vrising: '整理瓦爾多蘭路線與首領情報，偶爾分享城堡建造心得。', aion2: '研究職業搭配與副本節奏，希望每份攻略都能直接用上。', palworld: '長期記錄帕魯生態、據點效率和多人世界測試結果。' },
+    },
+    content: { commentsCount: '{{count}} 則留言', likesCount: '{{count}} 個讚', comment1: '這條路線補充得很清楚，我在第二個轉角也找到了相同的資源點。', comment2: '如果是多人世界，建議把準備階段再提前一點，整體會更穩定。', viewDiscussion: '查看原討論' },
+    privacy: { profile: { title: '公開個人資料', description: '允許其他使用者查看你的暱稱、簡介和社群資料。' }, posts: { title: '公開發文與留言', description: '允許其他使用者從個人主頁查看你的公開內容。' }, activity: { title: '顯示線上活動', description: '向你關注的人顯示最近的社群活動。' } },
+  },
+  'en-US': {
+    notifications: {
+      label: 'Notifications', open: 'Open notifications', menuLabel: 'Notification categories', center: 'Notifications', replies: 'Replies', mentions: 'Mentions', likes: 'Likes received', system: 'System notices', settings: 'Notification settings',
+      inboxDescription: 'Review community activity related to your account.', settingsDescription: 'Choose which messages you want to receive. Changes save immediately.', markAllRead: 'Mark all as read', allRead: 'All caught up', unread: 'Unread', systemSender: 'Arkive Community', systemPost: 'Community guidelines update',
+      items: { reply: 'replied to your comment on “{{post}}”', mention: 'mentioned you in “{{post}}”', like: 'liked your post “{{post}}”', system: 'published “{{post}}”' },
+      settingGroups: { interaction: 'Community activity', platform: 'Follows and platform messages' },
+      settingsRows: {
+        replies: { title: 'Reply alerts', description: 'Notify you when someone replies to your post or comment.' }, mentions: { title: 'Mention alerts', description: 'Notify you when someone mentions you in a post or comment.' }, likes: { title: 'Like alerts', description: 'Notify you when your posts or comments receive a like.' }, follows: { title: 'Follow alerts', description: 'Notify you when a new user follows you.' }, system: { title: 'System notices', description: 'Receive account, security, and community policy messages.' }, browser: { title: 'Browser notifications', description: 'Allow Arkive to send desktop alerts in your browser.' },
+      },
+    },
+    account: {
+      open: 'Open profile', center: 'Account center', edit: 'Edit profile', favorites: 'My favorites', posts: 'My posts', comments: 'My comments', fans: 'My followers', following: 'Following', privacy: 'Privacy settings', logout: 'Log out',
+      descriptions: { edit: 'Update your avatar, display name, and bio.', favorites: 'Review forum posts you have saved.', posts: 'Manage content you have published.', comments: 'Review discussions you have joined.', fans: 'See the people following you.', following: 'Manage the community members you follow.', privacy: 'Choose which profile details other people can see.' },
+      changeAvatar: 'Change avatar', save: 'Save profile', saved: 'Profile saved', fields: { displayName: 'Display name', accountId: 'Arkive ID', accountIdHelper: 'Your ID is generated by the system and cannot be changed.', bio: 'Bio' },
+    },
+    currentUser: { name: 'Tidebound Notes', bio: 'Saving small map discoveries and every discussion worth returning to.', badge: 'My profile' },
+    publicProfile: {
+      center: 'Profile', posts: 'Posts', comments: 'Comments', favorites: 'Favorites', fans: 'Followers', following: 'Following', likesReceived: 'Likes', accountId: 'Arkive ID: {{id}}',
+      descriptions: { posts: 'Browse this member’s community posts.', comments: 'Browse this member’s public discussions.', favorites: 'Browse posts this member has shared publicly.', fans: 'See the people following this member.', following: 'See the people this member follows.' },
+      bios: { vrising: 'Documenting Vardoran routes, boss intel, and the occasional castle build.', aion2: 'Studying class setups and dungeon pacing with practical guides in mind.', palworld: 'Tracking Pal ecosystems, base efficiency, and multiplayer test results.' },
+    },
+    content: { commentsCount: '{{count}} comments', likesCount: '{{count}} likes', comment1: 'This route update is clear. I found the same resource node after the second turn.', comment2: 'For multiplayer worlds, starting the preparation phase earlier makes the run much steadier.', viewDiscussion: 'View discussion' },
+    privacy: { profile: { title: 'Public profile', description: 'Let other members see your name, bio, and community stats.' }, posts: { title: 'Public posts and comments', description: 'Let other members browse your public activity from your profile.' }, activity: { title: 'Show recent activity', description: 'Show recent community activity to people you follow.' } },
+  },
+  'ja-JP': {
+    notifications: {
+      label: '通知', open: '通知センターを開く', menuLabel: '通知カテゴリー', center: '通知センター', replies: '返信', mentions: 'メンション', likes: '受け取ったいいね', system: 'システム通知', settings: '通知設定', inboxDescription: '自分に関連するコミュニティの反応を確認できます。', settingsDescription: '受け取る通知を選択します。変更はすぐに保存されます。', markAllRead: 'すべて既読にする', allRead: 'すべて確認済み', unread: '未読', systemSender: '蔵舟コミュニティ', systemPost: 'コミュニティガイドライン更新',
+      items: { reply: '「{{post}}」のコメントに返信しました', mention: '「{{post}}」であなたをメンションしました', like: '投稿「{{post}}」にいいねしました', system: '「{{post}}」を公開しました' }, settingGroups: { interaction: 'コミュニティ通知', platform: 'フォローとシステム通知' },
+      settingsRows: { replies: { title: '返信通知', description: '投稿やコメントに返信があったとき通知します。' }, mentions: { title: 'メンション通知', description: '投稿やコメントでメンションされたとき通知します。' }, likes: { title: 'いいね通知', description: '投稿やコメントにいいねが付いたとき通知します。' }, follows: { title: 'フォロー通知', description: '新しいフォロワーが増えたとき通知します。' }, system: { title: 'システム通知', description: 'アカウント、安全、コミュニティ規約の情報を受け取ります。' }, browser: { title: 'ブラウザ通知', description: 'ブラウザでデスクトップ通知を受け取ります。' } },
+    },
+    account: { open: 'プロフィールを開く', center: 'アカウントセンター', edit: 'プロフィール編集', favorites: 'お気に入り', posts: '自分の投稿', comments: '自分のコメント', fans: 'フォロワー', following: 'フォロー中', privacy: 'プライバシー設定', logout: 'ログアウト', descriptions: { edit: 'アバター、表示名、自己紹介を更新します。', favorites: '保存したフォーラム投稿を確認します。', posts: '公開したコンテンツを管理します。', comments: '参加したディスカッションを確認します。', fans: 'あなたをフォローしているユーザーを表示します。', following: 'フォローしているユーザーを管理します。', privacy: '他のユーザーに表示する情報を選択します。' }, changeAvatar: 'アバター変更', save: '保存', saved: '保存しました', fields: { displayName: '表示名', accountId: '蔵舟ID', accountIdHelper: 'IDはシステムで生成され、変更できません。', bio: '自己紹介' } },
+    currentUser: { name: '潮の手帳', bio: 'マップの小さな発見と、役立つディスカッションを記録しています。', badge: '自分のプロフィール' },
+    publicProfile: { center: 'プロフィール', posts: '投稿', comments: 'コメント', favorites: 'お気に入り', fans: 'フォロワー', following: 'フォロー中', likesReceived: 'いいね', accountId: '蔵舟ID：{{id}}', descriptions: { posts: 'このユーザーの投稿を表示します。', comments: '公開コメントを表示します。', favorites: '公開されたお気に入りを表示します。', fans: 'フォロワーを表示します。', following: 'フォロー中のユーザーを表示します。' }, bios: { vrising: 'ヴァルドランのルートとボス情報、城づくりの記録を共有しています。', aion2: 'クラス構成とダンジョン攻略を実用的にまとめています。', palworld: 'パルの生態、拠点効率、マルチプレイ検証を記録しています。' } },
+    content: { commentsCount: 'コメント {{count}}件', likesCount: 'いいね {{count}}件', comment1: 'ルートの補足が分かりやすく、2つ目の角でも同じ素材を確認できました。', comment2: 'マルチでは準備を少し早めると、全体がより安定します。', viewDiscussion: '元のディスカッションを見る' },
+    privacy: { profile: { title: 'プロフィールを公開', description: '名前、自己紹介、コミュニティ情報を公開します。' }, posts: { title: '投稿とコメントを公開', description: 'プロフィールから公開コンテンツを閲覧できるようにします。' }, activity: { title: '最近の活動を表示', description: 'フォロー中のユーザーに最近の活動を表示します。' } },
+  },
+  'ko-KR': {
+    notifications: {
+      label: '알림', open: '알림 센터 열기', menuLabel: '알림 분류', center: '알림 센터', replies: '내 답글', mentions: '내 멘션', likes: '받은 좋아요', system: '시스템 알림', settings: '알림 설정', inboxDescription: '내 계정과 관련된 커뮤니티 활동을 확인합니다.', settingsDescription: '받고 싶은 알림을 선택하세요. 변경 사항은 즉시 저장됩니다.', markAllRead: '모두 읽음', allRead: '모두 확인함', unread: '읽지 않음', systemSender: '장주 커뮤니티', systemPost: '커뮤니티 이용 규칙 업데이트',
+      items: { reply: '“{{post}}”의 댓글에 답글을 남겼습니다', mention: '“{{post}}”에서 회원님을 언급했습니다', like: '게시글 “{{post}}”을 좋아합니다', system: '“{{post}}”을 게시했습니다' }, settingGroups: { interaction: '커뮤니티 활동', platform: '팔로우 및 플랫폼 알림' },
+      settingsRows: { replies: { title: '답글 알림', description: '게시글이나 댓글에 답글이 달리면 알려드립니다.' }, mentions: { title: '멘션 알림', description: '게시글이나 댓글에서 언급되면 알려드립니다.' }, likes: { title: '좋아요 알림', description: '게시글이나 댓글에 좋아요가 달리면 알려드립니다.' }, follows: { title: '팔로우 알림', description: '새 사용자가 팔로우하면 알려드립니다.' }, system: { title: '시스템 알림', description: '계정, 보안, 커뮤니티 규칙 관련 메시지를 받습니다.' }, browser: { title: '브라우저 알림', description: '브라우저에서 데스크톱 알림을 받습니다.' } },
+    },
+    account: { open: '프로필 열기', center: '계정 센터', edit: '프로필 편집', favorites: '내 즐겨찾기', posts: '내 게시글', comments: '내 댓글', fans: '내 팔로워', following: '팔로잉', privacy: '개인정보 설정', logout: '로그아웃', descriptions: { edit: '아바타, 표시 이름, 소개를 수정합니다.', favorites: '저장한 포럼 게시글을 확인합니다.', posts: '내가 게시한 콘텐츠를 관리합니다.', comments: '참여한 토론을 확인합니다.', fans: '나를 팔로우하는 사용자를 확인합니다.', following: '팔로우 중인 사용자를 관리합니다.', privacy: '다른 사용자에게 공개할 정보를 선택합니다.' }, changeAvatar: '아바타 변경', save: '저장', saved: '저장됨', fields: { displayName: '표시 이름', accountId: '장주 ID', accountIdHelper: 'ID는 시스템에서 생성되며 변경할 수 없습니다.', bio: '소개' } },
+    currentUser: { name: '물결 기록장', bio: '지도 속 작은 발견과 다시 보고 싶은 토론을 기록합니다.', badge: '내 프로필' },
+    publicProfile: { center: '프로필', posts: '게시글', comments: '댓글', favorites: '즐겨찾기', fans: '팔로워', following: '팔로잉', likesReceived: '받은 좋아요', accountId: '장주 ID: {{id}}', descriptions: { posts: '이 사용자의 커뮤니티 게시글을 확인합니다.', comments: '이 사용자의 공개 댓글을 확인합니다.', favorites: '공개한 즐겨찾기 게시글을 확인합니다.', fans: '이 사용자의 팔로워를 확인합니다.', following: '이 사용자가 팔로우하는 사람을 확인합니다.' }, bios: { vrising: '바르도란 경로, 보스 정보, 성 건축 기록을 공유합니다.', aion2: '직업 조합과 던전 흐름을 실용적인 공략으로 정리합니다.', palworld: '팰 생태, 거점 효율, 멀티플레이 테스트를 기록합니다.' } },
+    content: { commentsCount: '댓글 {{count}}개', likesCount: '좋아요 {{count}}개', comment1: '경로 설명이 명확합니다. 두 번째 모퉁이에서도 같은 자원 지점을 찾았습니다.', comment2: '멀티플레이에서는 준비를 조금 일찍 시작하면 전체 진행이 더 안정적입니다.', viewDiscussion: '원문 토론 보기' },
+    privacy: { profile: { title: '프로필 공개', description: '이름, 소개, 커뮤니티 통계를 다른 사용자에게 공개합니다.' }, posts: { title: '게시글과 댓글 공개', description: '프로필에서 공개 활동을 볼 수 있도록 합니다.' }, activity: { title: '최근 활동 표시', description: '팔로우하는 사용자에게 최근 커뮤니티 활동을 표시합니다.' } },
+  },
+} as const
+
 const resources = {
   'zh-CN': {
     translation: {
@@ -33,6 +170,7 @@ const resources = {
       language: '语言',
       theme: { auto: '跟随系统', light: '浅色模式', dark: '深色模式', menu: '切换主题', short: '主题' },
       auth: { login: '登录' },
+      userSystem: USER_SYSTEM_COPY['zh-CN'],
       hero: {
         eyebrow: '欢迎来到藏舟',
         lead: '今天，从哪片',
@@ -183,6 +321,7 @@ const resources = {
       language: '語言',
       theme: { auto: '跟隨系統', light: '淺色模式', dark: '深色模式', menu: '切換主題', short: '主題' },
       auth: { login: '登入' },
+      userSystem: USER_SYSTEM_COPY['zh-TW'],
       hero: {
         eyebrow: '歡迎來到藏舟',
         lead: '今天，從哪片',
@@ -301,6 +440,7 @@ const resources = {
       language: 'Language',
       theme: { auto: 'Follow system', light: 'Light mode', dark: 'Dark mode', menu: 'Switch theme', short: 'Theme' },
       auth: { login: 'Log in' },
+      userSystem: USER_SYSTEM_COPY['en-US'],
       hero: {
         eyebrow: 'Welcome to Arkive',
         lead: 'Today, which',
@@ -411,6 +551,7 @@ const resources = {
       language: '言語',
       theme: { auto: 'システムに従う', light: 'ライトモード', dark: 'ダークモード', menu: 'テーマを切り替える', short: 'テーマ' },
       auth: { login: 'ログイン' },
+      userSystem: USER_SYSTEM_COPY['ja-JP'],
       hero: { eyebrow: '藏舟へようこそ', lead: '今日は、どの', highlight: 'ゲーム世界', tail: 'へ出航しますか？', description: 'クエストやマップを調べ、発見を大切に保存。好きな世界を自分のペースで楽しめます。', recommendation: '人気ゲームを優先表示' },
       search: { placeholder: 'ゲーム、クエスト、キャラクター、場所を検索', action: '検索する' },
       catalog: {
@@ -502,6 +643,7 @@ const resources = {
       language: '언어',
       theme: { auto: '시스템 설정 따르기', light: '라이트 모드', dark: '다크 모드', menu: '테마 전환', short: '테마' },
       auth: { login: '로그인' },
+      userSystem: USER_SYSTEM_COPY['ko-KR'],
       hero: { eyebrow: '장저우에 오신 것을 환영합니다', lead: '오늘은 어느', highlight: '게임 세계', tail: '로 떠날까요?', description: '퀘스트와 지도를 찾고 모든 발견을 간직하세요. 좋아하는 세계를 자신의 속도로 탐험할 수 있습니다.', recommendation: '인기 게임 우선 추천' },
       search: { placeholder: '게임, 퀘스트, 캐릭터 또는 장소 검색', action: '검색' },
       catalog: {

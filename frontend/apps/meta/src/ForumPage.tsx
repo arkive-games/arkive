@@ -26,6 +26,7 @@ import aion2Logo from './assets/aion2-logo.webp'
 import palworldLogo from './assets/palworld-logo.png'
 import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
+import { avatarUrl, publicProfileHref } from './userSystemData'
 import './forum.css'
 
 type ForumChannel = 'hot' | 'general' | 'official' | 'games'
@@ -190,10 +191,6 @@ const GAME_LOGOS: Record<string, string> = {
   palworld: palworldLogo,
   vrising: vrisingLogo,
   sts2: sts2Logo,
-}
-
-function avatarUrl(seed: string) {
-  return `https://i.pravatar.cc/128?u=${encodeURIComponent(seed)}`
 }
 
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
@@ -560,7 +557,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                   <article key={user.id}>
                     <img src={avatarUrl(user.avatarSeed)} alt="" loading="lazy" />
                     <span>
-                      <strong>{t(user.nameKey)}</strong>
+                      <strong><a href={publicProfileHref(user.id)}>{t(user.nameKey)}</a></strong>
                       <small>{t(user.descriptionKey)}</small>
                     </span>
                     <button
@@ -604,7 +601,7 @@ function ForumPostCard({
       <img className="forum-post-avatar" src={avatarUrl(post.avatarSeed)} alt="" loading="lazy" />
       <div className="forum-post-content">
         <div className="forum-post-author">
-          <strong>{t(post.authorKey)}</strong>
+          <strong><a href={publicProfileHref(post.authorNumber)}>{t(post.authorKey)}</a></strong>
           {post.featured && <span>{t('forum.feed.qualityAuthor')}</span>}
           <small>{t(post.timeKey)}</small>
           <button
@@ -674,7 +671,7 @@ function ForumPostDetail({
           <div className="forum-detail-byline">
             <img src={avatarUrl(post.avatarSeed)} alt="" />
             <div>
-              <strong>{t(post.authorKey)}</strong>
+              <strong><a href={publicProfileHref(post.authorNumber)}>{t(post.authorKey)}</a></strong>
               <span>{t('forum.detail.byline', { time: t(post.timeKey) })}</span>
             </div>
           </div>
@@ -788,7 +785,7 @@ function ForumAuthorPostcard({
       <div className="forum-author-postcard-identity">
         <img src={avatarUrl(post.avatarSeed)} alt="" />
         <div>
-          <h2 id={headingId}>{t(post.authorKey)}</h2>
+          <h2 id={headingId}><a href={publicProfileHref(post.authorNumber)}>{t(post.authorKey)}</a></h2>
           {post.featured && <small>{t('forum.feed.qualityAuthor')}</small>}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArkiveAccountControl } from '@gamemap/auth'
+import { ArkiveAccountControl, useAuth } from '@gamemap/auth'
 import {
   ArkiveMapTopBar,
   ArkiveMark,
@@ -31,15 +31,51 @@ import {
   type SiteClickCounts,
 } from './sites'
 import { AllGamesPage } from './AllGamesPage'
+import { AuthenticatedControls } from './AuthenticatedControls'
 import { ForumPage } from './ForumPage'
+import {
+  AccountCenterPage,
+  NotificationCenterPage,
+  PublicUserProfilePage,
+  type AccountSection,
+  type NotificationSection,
+  type PublicProfileSection,
+} from './UserSystemPages'
 
 const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum', 'favorites'] as const
-type HomeView = 'discoverGames' | 'allGames' | 'forum'
+type HomeRoute =
+  | { view: 'discoverGames' }
+  | { view: 'allGames' }
+  | { view: 'forum' }
+  | { view: 'notifications'; section: NotificationSection }
+  | { view: 'account'; section: AccountSection }
+  | { view: 'publicProfile'; userId: string; section: PublicProfileSection }
 
-function viewFromHash(): HomeView {
-  if (window.location.hash === '#games') return 'allGames'
-  if (window.location.hash === '#forum') return 'forum'
-  return 'discoverGames'
+const NOTIFICATION_SECTIONS = new Set<NotificationSection>(['replies', 'mentions', 'likes', 'system', 'settings'])
+const ACCOUNT_SECTIONS = new Set<AccountSection>(['edit', 'favorites', 'posts', 'comments', 'fans', 'following', 'privacy'])
+const PUBLIC_PROFILE_SECTIONS = new Set<PublicProfileSection>(['posts', 'comments', 'favorites', 'fans', 'following'])
+
+function routeFromHash(): HomeRoute {
+  const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
+  if (root === 'games') return { view: 'allGames' }
+  if (root === 'forum') return { view: 'forum' }
+  if (root === 'notifications') {
+    const section = NOTIFICATION_SECTIONS.has(value as NotificationSection)
+      ? value as NotificationSection
+      : 'settings'
+    return { view: 'notifications', section }
+  }
+  if (root === 'account') {
+    const section = ACCOUNT_SECTIONS.has(value as AccountSection) ? value as AccountSection : 'edit'
+    return { view: 'account', section }
+  }
+  if (root === 'user' && value) {
+    const section = PUBLIC_PROFILE_SECTIONS.has(detail as PublicProfileSection)
+      ? detail as PublicProfileSection
+      : 'posts'
+    return { view: 'publicProfile', userId: decodeURIComponent(value), section }
+  }
+  return { view: 'discoverGames' }
 }
 
 export default function App() {
@@ -47,7 +83,9 @@ export default function App() {
   const { theme, setTheme } = useTheme()
   const [clickCounts, setClickCounts] = useState<SiteClickCounts>({})
   const [noticeId, setNoticeId] = useState(0)
-  const [activeView, setActiveView] = useState<HomeView>(viewFromHash)
+  const [activeRoute, setActiveRoute] = useState<HomeRoute>(routeFromHash)
+  const auth = useAuth()
+  const isSignedIn = auth.status === 'authenticated'
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
   const brandName = getArkiveBrandName(lng, t('brand.name'))
 
@@ -63,7 +101,7 @@ export default function App() {
 
   useEffect(() => {
     const updateView = () => {
-      setActiveView(viewFromHash())
+      setActiveRoute(routeFromHash())
       window.scrollTo({ top: 0 })
     }
     window.addEventListener('hashchange', updateView)
@@ -82,11 +120,14 @@ export default function App() {
   )
   const featuredSite = firstPlayableSite(rankedSites)
   const showComingSoon = () => setNoticeId((value) => value + 1)
-
+  const logout = () => {
+    void auth.logout()
+    window.location.hash = '#top'
+  }
   const navItems: ShellNavItem[] = NAV_KEYS.map((key) => ({
     key,
     label: t(`nav.${key}`),
-    active: key === activeView,
+    active: key === activeRoute.view || (key === 'favorites' && activeRoute.view === 'account' && activeRoute.section === 'favorites'),
     children: key === 'allGames'
       ? VISIBLE_SITES.map((site) => ({
           key: `game:${site.id}`,
@@ -117,26 +158,14 @@ export default function App() {
             const game = item.key.startsWith('game:')
               ? VISIBLE_SITES.find((site) => item.key === `game:${site.id}`)
               : undefined
-            const gameHref = game ? siteHref(game) : undefined
-            return game && gameHref ? (
-              <a href={gameHref} className={className}>{label}</a>
-            ) : game ? (
-              // Announced but not open yet: keep it listed, without a href.
-              <button
-                type="button"
-                className={className}
-                onClick={(event) => {
-                  event.currentTarget.blur()
-                  showComingSoon()
-                }}
-              >
-                {label}
-                <span className="nav-soon-badge">{t('comingSoon.badge')}</span>
-              </button>
+            return game ? (
+              <a href={siteHref(game)} className={className}>{label}</a>
             ) : item.key === 'discoverGames' ? (
               <a href="#explore" className={className}>{label}</a>
             ) : item.key === 'forum' ? (
               <a href="#forum" className={className}>{label}</a>
+            ) : item.key === 'favorites' && isSignedIn ? (
+              <a href="#account/favorites" className={className}>{label}</a>
             ) : (
               <button
                 type="button"
@@ -170,14 +199,24 @@ export default function App() {
           shortLabel: t('theme.short'),
         }}
         loginLabel={t('auth.login')}
-        onLogin={showComingSoon}
-        accountSlot={<ArkiveAccountControl language={i18n.language} />}
+        accountSlot={isSignedIn
+          ? <AuthenticatedControls />
+          : <ArkiveAccountControl language={i18n.language} />}
       />
 
-      {activeView === 'allGames' ? (
+      {activeRoute.view === 'allGames' ? (
         <AllGamesPage sites={VISIBLE_SITES} onFavorite={showComingSoon} />
-      ) : activeView === 'forum' ? (
+      ) : activeRoute.view === 'forum' ? (
         <ForumPage sites={VISIBLE_SITES} onComingSoon={showComingSoon} />
+      ) : activeRoute.view === 'notifications' && isSignedIn ? (
+        <NotificationCenterPage section={activeRoute.section} />
+      ) : activeRoute.view === 'account' && isSignedIn ? (
+        <AccountCenterPage section={activeRoute.section} onLogout={logout} />
+      ) : activeRoute.view === 'publicProfile' ? (
+        <PublicUserProfilePage
+          userId={activeRoute.userId}
+          section={activeRoute.section}
+        />
       ) : (
         <main>
           <section className="home-shell hero-section" aria-labelledby="home-heading">
@@ -280,36 +319,24 @@ function FeaturedGame({ site }: { site: SiteCard }) {
 function GameCard({ site, onFavorite }: { site: SiteCard; onFavorite: () => void }) {
   const { t } = useTranslation()
   const name = t(site.nameKey)
-  const href = siteHref(site)
   const favorite = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     onFavorite()
   }
 
-  const body = (
-    <>
-      <span className="game-cover">
-        <img src={site.bg} alt={name} />
-        <span className="game-cover-shade" aria-hidden="true" />
-        {href && (
-          <span className="game-open-icon"><IconArrowUpRight className="size-5" stroke={1.8} /></span>
-        )}
-      </span>
-      <span className="game-card-copy">
-        <strong>{name}</strong>
-        {site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
-        <small>{t(site.descKey)}</small>
-      </span>
-    </>
-  )
-
   return (
-    <article className={site.comingSoon ? 'game-card is-soon' : 'game-card'}>
-      {href ? (
-        <a href={href} className="game-card-link group">{body}</a>
-      ) : (
-        <span className="game-card-link is-inert">{body}</span>
-      )}
+    <article className="game-card">
+      <a href={siteHref(site)} className="game-card-link group">
+        <span className="game-cover">
+          <img src={site.bg} alt={name} />
+          <span className="game-cover-shade" aria-hidden="true" />
+          <span className="game-open-icon"><IconArrowUpRight className="size-5" stroke={1.8} /></span>
+        </span>
+        <span className="game-card-copy">
+          <strong>{name}</strong>
+          <small>{t(site.descKey)}</small>
+        </span>
+      </a>
       <button type="button" className="bookmark-button" onClick={favorite} aria-label={t('action.favorite', { game: name })}>
         <IconBookmark className="size-5" stroke={1.8} />
       </button>
