@@ -3,14 +3,18 @@
 }
 
 .catalog-hero {
-  padding-block: clamp(4rem, 8vw, 7rem) 2.25rem;
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(28rem, 1.14fr);
+  align-items: end;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  padding-block: clamp(2.75rem, 4.5vw, 4rem) 1.5rem;
 }
 
 .catalog-eyebrow {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin: 0 0 1.1rem;
+  margin: 0 0 0.8rem;
   color: var(--home-deep);
   font-size: 0.875rem;
   font-weight: 750;
@@ -27,7 +31,7 @@
   max-width: 52rem;
   margin: 0;
   color: var(--foreground);
-  font-size: clamp(2.7rem, 5vw, 4.8rem);
+  font-size: clamp(2.55rem, 4vw, 3.9rem);
   font-weight: 850;
   letter-spacing: -0.055em;
   line-height: 1;
@@ -35,10 +39,14 @@
 
 .catalog-intro {
   max-width: 45rem;
-  margin: 1.25rem 0 0;
+  margin: 0.9rem 0 0;
   color: var(--muted-foreground);
   font-size: 0.875rem;
-  line-height: 1.8;
+  line-height: 1.65;
+}
+
+.catalog-controls {
+  min-width: 0;
 }
 
 .catalog-search {
@@ -46,7 +54,7 @@
   align-items: center;
   gap: 0.8rem;
   width: 100%;
-  margin-top: 2.45rem;
+  margin-top: 0;
   padding: 0.42rem 0.42rem 0.42rem 1rem;
   border: 1px solid var(--border);
   border-radius: 1rem;
@@ -153,7 +161,7 @@
 }
 
 .catalog-results {
-  padding-block: 1.25rem clamp(5rem, 9vw, 8rem);
+  padding-block: 0.85rem clamp(5rem, 9vw, 8rem);
 }
 
 .catalog-results-heading {
@@ -161,7 +169,7 @@
   align-items: end;
   justify-content: space-between;
   gap: 2rem;
-  margin-bottom: 1.3rem;
+  margin-bottom: 1rem;
 }
 
 .catalog-results-heading h2 {
@@ -180,8 +188,9 @@
 
 .catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
-  gap: 2rem 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(13.25rem, 100%), 1fr));
+  align-items: start;
+  gap: 1.45rem 1rem;
 }
 
 .catalog-game-card {
@@ -199,10 +208,10 @@
 .catalog-game-cover {
   position: relative;
   display: block;
-  aspect-ratio: 4 / 5.05;
+  aspect-ratio: 4 / 4.8;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 1.35rem;
+  border-radius: 1.1rem;
   background: var(--muted);
   box-shadow: 0 0.85rem 2.6rem color-mix(in srgb, var(--home-deep) 13%, transparent);
 }
@@ -275,7 +284,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0.95rem 0.2rem 0;
+  padding: 0.75rem 0.15rem 0;
 }
 
 .catalog-game-copy > strong {
@@ -302,6 +311,10 @@
   color: var(--muted-foreground);
   font-size: 0.75rem;
   line-height: 1.55;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .catalog-empty {
@@ -376,11 +389,13 @@
 
 @media (max-width: 47.99rem) {
   .catalog-hero {
-    padding-block: 3.2rem 1.75rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-block: 2.1rem 1.35rem;
   }
 
   .catalog-hero h1 {
-    font-size: clamp(2.55rem, 13vw, 4rem);
+    font-size: clamp(2.45rem, 10vw, 3.5rem);
   }
 
   .catalog-search {
@@ -407,6 +422,12 @@
     gap: 0.55rem;
   }
 
+  .catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(13.25rem, 100%), 1fr));
+  }
+}
+
+@media (max-width: 34.99rem) {
   .catalog-grid {
     grid-template-columns: 1fr;
   }

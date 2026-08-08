@@ -63,46 +63,50 @@ export function AllGamesPage({ sites, onFavorite }: AllGamesPageProps) {
   return (
     <main className="catalog-main">
       <section className="home-shell catalog-hero" aria-labelledby="catalog-heading">
-        <p className="catalog-eyebrow">
-          <span aria-hidden="true" />
-          {t('catalog.eyebrow')}
-        </p>
-        <h1 id="catalog-heading">{t('catalog.title')}</h1>
-        <p className="catalog-intro">{t('catalog.description')}</p>
+        <div className="catalog-hero-copy">
+          <p className="catalog-eyebrow">
+            <span aria-hidden="true" />
+            {t('catalog.eyebrow')}
+          </p>
+          <h1 id="catalog-heading">{t('catalog.title')}</h1>
+          <p className="catalog-intro">{t('catalog.description')}</p>
+        </div>
 
-        <form className="catalog-search" role="search" onSubmit={submitSearch}>
-          <IconSearch className="size-5 shrink-0" stroke={1.8} aria-hidden="true" />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value)
-              setPage(1)
-            }}
-            aria-label={t('catalog.searchPlaceholder')}
-            placeholder={t('catalog.searchPlaceholder')}
-          />
-          <button type="submit">{t('catalog.searchAction')}</button>
-        </form>
+        <div className="catalog-controls">
+          <form className="catalog-search" role="search" onSubmit={submitSearch}>
+            <IconSearch className="size-5 shrink-0" stroke={1.8} aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value)
+                setPage(1)
+              }}
+              aria-label={t('catalog.searchPlaceholder')}
+              placeholder={t('catalog.searchPlaceholder')}
+            />
+            <button type="submit">{t('catalog.searchAction')}</button>
+          </form>
 
-        <div className="catalog-categories" aria-label={t('catalog.categoryLabel')}>
-          <span>{t('catalog.categoryLabel')}</span>
-          <div>
-            {GAME_CATEGORIES.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={category === option ? 'is-active' : undefined}
-                aria-pressed={category === option}
-                onClick={() => {
-                  setCategory(option)
-                  setPage(1)
-                }}
-              >
-                <span>{t(`catalog.genre.${option}`)}</span>
-                <small>{categoryCounts[option]}</small>
-              </button>
-            ))}
+          <div className="catalog-categories" aria-label={t('catalog.categoryLabel')}>
+            <span>{t('catalog.categoryLabel')}</span>
+            <div>
+              {GAME_CATEGORIES.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={category === option ? 'is-active' : undefined}
+                  aria-pressed={category === option}
+                  onClick={() => {
+                    setCategory(option)
+                    setPage(1)
+                  }}
+                >
+                  <span>{t(`catalog.genre.${option}`)}</span>
+                  <small>{categoryCounts[option]}</small>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
