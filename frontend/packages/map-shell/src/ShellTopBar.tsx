@@ -1,6 +1,7 @@
 import {
   cloneElement,
   isValidElement,
+  useRef,
   useState,
   type FocusEvent,
   type ReactElement,
@@ -14,10 +15,6 @@ import {
 import {
   Button,
   cn,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
 } from "@gamemap/ui"
 
 export interface ShellNavItem {
@@ -37,6 +34,8 @@ export interface ShellTopBarNav {
     className: string,
     labelClassName?: string,
   ) => ReactNode
+  /** Optional action for a dropdown parent that also owns a destination. */
+  onDropdownTriggerClick?: (item: ShellNavItem) => void
   classNames?: {
     item?: string
     itemActive?: string
@@ -89,6 +88,7 @@ export function ShellTopBar({
   classNames,
 }: ShellTopBarProps) {
   const [hoveredNavKey, setHoveredNavKey] = useState<string | null>(null)
+  const [openUtilityMenu, setOpenUtilityMenu] = useState<"language" | "theme" | null>(null)
 
   return (
     <header className={cn("flex h-12 shrink-0 items-center gap-6 px-4", classNames?.root)}>
@@ -140,70 +140,148 @@ export function ShellTopBar({
       >
         {search}
         {languageSwitcher && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size={languageSwitcher.shortLabel ? "default" : "icon"}
-                data-testid="lang-menu"
-                aria-label={languageSwitcher.menuLabel}
-                title={languageSwitcher.menuLabel}
-                className={classNames?.trigger}
-              >
-                {languageSwitcher.icon ?? <IconLanguage className="size-5" stroke={1.8} />}
-                {languageSwitcher.shortLabel && (
-                  <span className="text-sm font-semibold">{languageSwitcher.shortLabel}</span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className={cn("z-[2000]", classNames?.menu)}>
-              {languageSwitcher.languages.map(({ code, label }) => (
-                <DropdownMenuItem
-                  key={code}
-                  data-testid={`lang-${code}`}
-                  onSelect={() => languageSwitcher.onChange(code)}
-                >
-                  <span className="flex-1">{label}</span>
-                  {languageSwitcher.current === code && <IconCheck className="size-4" stroke={1.8} />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <UtilityDropdown
+            id="language"
+            open={openUtilityMenu === "language"}
+            onOpenChange={(open) => setOpenUtilityMenu((current) =>
+              open ? "language" : current === "language" ? null : current
+            )}
+            options={languageSwitcher.languages.map(({ code, label }) => ({ value: code, label }))}
+            current={languageSwitcher.current}
+            onChange={languageSwitcher.onChange}
+            menuLabel={languageSwitcher.menuLabel}
+            shortLabel={languageSwitcher.shortLabel}
+            icon={languageSwitcher.icon ?? <IconLanguage className="size-5" stroke={1.8} />}
+            triggerClassName={classNames?.trigger}
+            menuClassName={classNames?.menu}
+          />
         )}
         {themeSwitcher && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size={themeSwitcher.shortLabel ? "default" : "icon"}
-                data-testid="theme-menu"
-                aria-label={themeSwitcher.menuLabel}
-                title={themeSwitcher.menuLabel}
-                className={classNames?.trigger}
-              >
-                <IconMoonStars className="size-5" stroke={1.8} />
-                {themeSwitcher.shortLabel && (
-                  <span className="text-sm font-semibold">{themeSwitcher.shortLabel}</span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className={cn("z-[2000]", classNames?.menu)}>
-              {themeSwitcher.options.map(({ value, label }) => (
-                <DropdownMenuItem
-                  key={value}
-                  data-testid={`theme-${value}`}
-                  onSelect={() => themeSwitcher.onChange(value)}
-                >
-                  <span className="flex-1">{label}</span>
-                  {themeSwitcher.current === value && <IconCheck className="size-4" stroke={1.8} />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <UtilityDropdown
+            id="theme"
+            open={openUtilityMenu === "theme"}
+            onOpenChange={(open) => setOpenUtilityMenu((current) =>
+              open ? "theme" : current === "theme" ? null : current
+            )}
+            options={themeSwitcher.options}
+            current={themeSwitcher.current}
+            onChange={themeSwitcher.onChange}
+            menuLabel={themeSwitcher.menuLabel}
+            shortLabel={themeSwitcher.shortLabel}
+            icon={<IconMoonStars className="size-5" stroke={1.8} />}
+            triggerClassName={classNames?.trigger}
+            menuClassName={classNames?.menu}
+          />
         )}
         {rightExtras}
       </div>
     </header>
+  )
+}
+
+function UtilityDropdown({
+  id,
+  open,
+  onOpenChange,
+  options,
+  current,
+  onChange,
+  menuLabel,
+  shortLabel,
+  icon,
+  triggerClassName,
+  menuClassName,
+}: {
+  id: "language" | "theme"
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  options: { value: string; label: string }[]
+  current: string
+  onChange: (value: string) => void
+  menuLabel: string
+  shortLabel?: string
+  icon: ReactNode
+  triggerClassName?: string
+  menuClassName?: string
+}) {
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) onOpenChange(false)
+  }
+
+  return (
+    <div
+      className="relative inline-flex items-center"
+      onPointerEnter={() => onOpenChange(true)}
+      onPointerLeave={() => onOpenChange(false)}
+      onFocus={() => onOpenChange(true)}
+      onBlur={closeWhenFocusLeaves}
+    >
+      <Button
+        ref={triggerRef}
+        variant="ghost"
+        size={shortLabel ? "default" : "icon"}
+        data-testid={`${id === "language" ? "lang" : "theme"}-menu`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={menuLabel}
+        title={menuLabel}
+        className={triggerClassName}
+        onClick={() => onOpenChange(true)}
+        onPointerUp={(event) => event.currentTarget.blur()}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            onOpenChange(false)
+            event.currentTarget.blur()
+          }
+          if (event.key === "ArrowDown") {
+            event.preventDefault()
+            onOpenChange(true)
+            window.setTimeout(() => {
+              menuRef.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus()
+            }, 0)
+          }
+        }}
+      >
+        {icon}
+        {shortLabel && <span className="text-sm font-semibold">{shortLabel}</span>}
+      </Button>
+      {open && (
+        <div
+          ref={menuRef}
+          role="menu"
+          aria-label={menuLabel}
+          className={cn(
+            "absolute right-0 top-full z-[2000] min-w-32 overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md",
+            menuClassName,
+          )}
+        >
+          {options.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              role="menuitem"
+              data-testid={`${id === "language" ? "lang" : "theme"}-${value}`}
+              className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+              onClick={() => {
+                onChange(value)
+                onOpenChange(false)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  onOpenChange(false)
+                  triggerRef.current?.focus()
+                }
+              }}
+            >
+              <span className="flex-1">{label}</span>
+              {current === value && <IconCheck className="size-4" stroke={1.8} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -264,7 +342,12 @@ function NavDropdown({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => {
-          setOpen(true)
+          if (nav.onDropdownTriggerClick) {
+            nav.onDropdownTriggerClick(item)
+            setOpen(false)
+          } else {
+            setOpen(true)
+          }
           onHighlight(item.key)
         }}
         onKeyDown={(event) => {

@@ -39,9 +39,9 @@ ui:
 
 theme:
   label: "Theme"
-  auto: "Auto (Change with Map)"
-  light: "Day Mode (Elyos)"
-  dark: "Night Mode (Asmodian)"
+  auto: "Follow system"
+  light: "Light mode"
+  dark: "Dark mode"
   abyss: "Dawn Mode (Abyss)"
   # Terse forms for the phone "More" sheet, where the segmented theme
   # control has no room for the flavoured names above.

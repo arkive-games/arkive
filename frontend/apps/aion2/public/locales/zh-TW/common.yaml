@@ -24,9 +24,9 @@ auth:
 
 theme:
   label: "主題"
-  auto: "自動（隨地圖切換）"
-  light: "白天模式（天族）"
-  dark: "夜晚模式（魔族）"
+  auto: "跟隨系統"
+  light: "淺色模式"
+  dark: "深色模式"
   abyss: "黃昏模式（深淵）"
   # Terse forms for the phone "More" sheet, where the segmented theme
   # control has no room for the flavoured names above.
