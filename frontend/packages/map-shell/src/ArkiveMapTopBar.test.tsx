@@ -64,14 +64,53 @@ describe("ArkiveMapTopBar", () => {
     expect(getByRole("button", { name: "Log in" })).toBeTruthy()
   })
 
-  it("owns the Auto, Light, Dark theme option order", () => {
+  it("opens utility menus on pointer hover", () => {
     const { getByTestId, getAllByRole } = renderTopBar()
 
-    fireEvent.pointerDown(getByTestId("theme-menu"), { button: 0, ctrlKey: false })
+    fireEvent.pointerEnter(getByTestId("lang-menu"))
+    expect(getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "English",
+      "Japanese",
+    ])
+
+    fireEvent.pointerEnter(getByTestId("theme-menu"))
     expect(getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
       "Auto",
       "Light",
       "Dark",
+    ])
+  })
+
+  it("clears pointer focus from utility triggers", () => {
+    const { getByTestId } = renderTopBar()
+    const trigger = getByTestId("theme-menu")
+
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+    fireEvent.pointerUp(trigger)
+    expect(document.activeElement).not.toBe(trigger)
+  })
+
+  it("keeps hover-open utility menus stable across pointer clicks", () => {
+    const { getByTestId, getAllByRole } = renderTopBar()
+    const themeTrigger = getByTestId("theme-menu")
+    const languageTrigger = getByTestId("lang-menu")
+
+    fireEvent.pointerEnter(themeTrigger, { pointerType: "mouse" })
+    fireEvent.pointerDown(themeTrigger, { pointerType: "mouse", button: 0 })
+    fireEvent.click(themeTrigger)
+    expect(getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "Auto",
+      "Light",
+      "Dark",
+    ])
+
+    fireEvent.pointerEnter(languageTrigger, { pointerType: "mouse" })
+    fireEvent.pointerDown(languageTrigger, { pointerType: "mouse", button: 0 })
+    fireEvent.click(languageTrigger)
+    expect(getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "English",
+      "Japanese",
     ])
   })
 })

@@ -79,6 +79,12 @@ export default function App() {
     key,
     label: t(`nav.${key}`),
     active: key === activeView,
+    children: key === 'allGames'
+      ? VISIBLE_SITES.map((site) => ({
+          key: `game:${site.id}`,
+          label: t(site.nameKey),
+        }))
+      : undefined,
   }))
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -89,17 +95,24 @@ export default function App() {
   return (
     <div id="top" className="min-h-dvh overflow-x-hidden text-foreground">
       <ArkiveMapTopBar
-        className="arkive-home-topbar"
         homeUrl="#top"
         homeLabel={t('brand.name')}
         brandName={t('brand.name')}
         brandSlogan={t('brand.slogan')}
         nav={{
           items: navItems,
+          onDropdownTriggerClick: (item) => {
+            if (item.key === 'allGames') window.location.hash = '#games'
+          },
           renderItem: (item, className, labelClassName) => {
             const label = <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
-            return item.key === 'discoverGames' || item.key === 'allGames' ? (
-              <a href={item.key === 'allGames' ? '#games' : '#explore'} className={className}>{label}</a>
+            const game = item.key.startsWith('game:')
+              ? VISIBLE_SITES.find((site) => item.key === `game:${site.id}`)
+              : undefined
+            return game ? (
+              <a href={siteHref(game)} className={className}>{label}</a>
+            ) : item.key === 'discoverGames' ? (
+              <a href="#explore" className={className}>{label}</a>
             ) : (
               <button
                 type="button"

@@ -72,9 +72,9 @@ export default function TopNavbar() {
       }}
       themeSwitcher={{
         labels: {
-          auto: t("common:theme.short.auto"),
-          light: t("common:theme.short.light"),
-          dark: t("common:theme.short.dark"),
+          auto: t("common:theme.auto"),
+          light: t("common:theme.light"),
+          dark: t("common:theme.dark"),
         },
         current: theme === "abyss" ? "auto" : theme,
         onChange: setTheme,

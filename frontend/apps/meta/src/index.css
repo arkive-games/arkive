@@ -30,7 +30,7 @@ body {
 button,
 a,
 input {
-  font: inherit;
+  font-family: inherit;
 }
 
 button,
@@ -38,9 +38,11 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible {
+main button:focus-visible,
+main a:focus-visible,
+main input:focus-visible,
+footer button:focus-visible,
+footer a:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
@@ -48,16 +50,6 @@ input:focus-visible {
 .home-shell {
   width: min(calc(100% - 3rem), var(--home-shell));
   margin-inline: auto;
-}
-
-.arkive-home-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  padding-inline: max(1.5rem, calc((100vw - var(--home-shell)) / 2));
-  background: color-mix(in srgb, var(--card) 92%, transparent);
-  box-shadow: 0 0.35rem 1.5rem color-mix(in srgb, var(--home-deep) 8%, transparent);
-  backdrop-filter: blur(1rem) saturate(140%);
 }
 
 .hero-section {
@@ -767,23 +759,6 @@ input:focus-visible {
 }
 
 @media (max-width: 62rem) {
-  .arkive-home-topbar {
-    gap: 0.75rem;
-    padding-inline: 1rem;
-  }
-
-  .arkive-home-topbar > div:first-of-type {
-    gap: 0.85rem;
-  }
-
-  .arkive-home-topbar > div:first-of-type a {
-    padding-right: 0.85rem;
-  }
-
-  .arkive-home-topbar > div:first-of-type a small {
-    display: none;
-  }
-
   .hero-section {
     grid-template-columns: 1fr;
     min-height: auto;
