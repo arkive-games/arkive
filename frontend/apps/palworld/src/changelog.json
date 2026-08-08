@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.24.3",
+      "date": "2026-08-08",
+      "commit": "eced41e798368b17019b814d28969ae02d35a696",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Top-bar language and theme menus now open on hover, use clearer theme labels, and no longer retain mouse-focus outlines.",
+            "zh-CN": "顶部语言与主题菜单现在支持悬停展开，主题文案更加清晰，鼠标选择后不再残留焦点边框。",
+            "zh-TW": "頂部語言與主題選單現在支援懸停展開，主題文案更加清晰，滑鼠選擇後不再殘留焦點邊框。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.24.2",
       "date": "2026-08-08",
       "commit": "bff96b877b7f503c7d27422c51f0738918a6686f",
