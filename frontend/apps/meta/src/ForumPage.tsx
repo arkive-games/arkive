@@ -323,10 +323,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
             </div>
           </section>
 
-          <section className="forum-feed-section" aria-labelledby="forum-feed-heading">
-            <div className="forum-section-heading">
-              <h2 id="forum-feed-heading">{t('forum.feed.title')}</h2>
-            </div>
+          <section className="forum-feed-section">
             <div className="forum-panel forum-feed-panel">
               <div className="forum-feed-toolbar">
                 <div role="tablist" aria-label={t('forum.feed.tabsLabel')}>

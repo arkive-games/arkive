@@ -196,7 +196,7 @@
   padding-inline: 1.15rem;
   border: 0;
   border-radius: 0.65rem;
-  color: var(--primary-foreground);
+  color: white;
   background: var(--primary);
   font-size: 0.75rem;
   font-weight: 750;
@@ -221,8 +221,6 @@
   justify-content: center;
   gap: 0.4rem;
   margin-top: 0.75rem;
-  color: var(--arkive-action-on);
-  background: var(--arkive-action);
 }
 
 .forum-pinned-section {
@@ -231,21 +229,6 @@
 
 .forum-feed-section {
   margin-top: 1.35rem;
-}
-
-.forum-section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.7rem;
-}
-
-.forum-section-heading h2 {
-  margin: 0;
-  color: var(--foreground);
-  font-size: 1rem;
-  font-weight: 800;
 }
 
 .forum-pinned-grid {
@@ -640,8 +623,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: var(--arkive-action-on);
-  background: var(--arkive-action);
+  color: white;
+  background: var(--primary);
   font-size: 0.75rem;
   font-weight: 750;
   white-space: nowrap;
