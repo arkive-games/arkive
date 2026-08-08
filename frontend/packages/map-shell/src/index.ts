@@ -16,6 +16,8 @@ export {
 } from "./ArkiveMapTopBar"
 export {
   ARKIVE_BRAND_NAME_EN,
+  ARKIVE_BRAND_NAME_JA,
+  ARKIVE_BRAND_NAME_KO,
   ARKIVE_BRAND_NAME_ZH_CN,
   ARKIVE_BRAND_NAME_ZH_TW,
   getArkiveBrandName,

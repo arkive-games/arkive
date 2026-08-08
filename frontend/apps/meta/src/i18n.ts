@@ -406,7 +406,7 @@ const resources = {
   },
   'ja-JP': {
     translation: {
-      brand: { name: BRAND_NAME, slogan: '万千の攻略を、一艘の舟に。', blurb: 'ゲームの知識、マップ、発見を整理し、好きな世界を自分のペースで旅できる資料館です。' },
+      brand: { name: '蔵舟ゲーム攻略サイト', slogan: '万千の攻略を、一艘の舟に。', blurb: 'ゲームの知識、マップ、発見を整理し、好きな世界を自分のペースで旅できる資料館です。' },
       nav: { discoverGames: 'ゲームを探す', allGames: 'すべてのゲーム', tools: 'ツールライブラリ', forum: 'フォーラム', favorites: 'お気に入り' },
       language: '言語',
       theme: { auto: 'システムに従う', light: 'ライトモード', dark: 'ダークモード', menu: 'テーマを切り替える', short: 'テーマ' },
@@ -497,7 +497,7 @@ const resources = {
   },
   'ko-KR': {
     translation: {
-      brand: { name: BRAND_NAME, slogan: '수많은 공략을 한 척의 배에.', blurb: '게임 속 지식과 지도, 발견을 모아 좋아하는 세계를 천천히 여행할 수 있도록 돕습니다.' },
+      brand: { name: '창저우 게임 공략 사이트', slogan: '수많은 공략을 한 척의 배에.', blurb: '게임 속 지식과 지도, 발견을 모아 좋아하는 세계를 천천히 여행할 수 있도록 돕습니다.' },
       nav: { discoverGames: '게임 찾기', allGames: '전체 게임', tools: '도구 모음', forum: '포럼', favorites: '내 즐겨찾기' },
       language: '언어',
       theme: { auto: '시스템 설정 따르기', light: '라이트 모드', dark: '다크 모드', menu: '테마 전환', short: '테마' },

@@ -15,7 +15,7 @@ import type { Language } from './i18n'
 export const BRAND_LABELS: Record<Language, string> = {
   'en-US': 'Arkive.games', 'de-DE': 'Arkive Game Guides', 'es-ES': 'Arkive Game Guides',
   'es-MX': 'Arkive Game Guides', 'fr-FR': 'Arkive Game Guides', 'id-ID': 'Arkive Game Guides',
-  'it-IT': 'Arkive Game Guides', 'ja-JP': 'Arkive Game Guides', 'ko-KR': 'Arkive 게임 가이드',
+  'it-IT': 'Arkive Game Guides', 'ja-JP': '蔵舟ゲーム攻略サイト', 'ko-KR': '창저우 게임 공략 사이트',
   'pl-PL': 'Arkive Game Guides', 'pt-BR': 'Arkive Game Guides', 'ru-RU': 'Arkive Game Guides',
   'th-TH': 'Arkive Game Guides', 'tr-TR': 'Arkive Game Guides', 'vi-VN': 'Arkive Game Guides',
   'zh-CN': '藏舟游戏攻略网', 'zh-TW': '藏舟遊戲攻略網',
