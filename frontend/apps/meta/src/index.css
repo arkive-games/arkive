@@ -333,6 +333,7 @@ input:focus-visible {
   background: transparent;
   font-size: 0.875rem;
   font-weight: 750;
+  text-decoration: none;
   cursor: pointer;
 }
 
