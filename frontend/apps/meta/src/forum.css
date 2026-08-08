@@ -85,12 +85,12 @@
   display: grid;
   gap: 0.1rem;
   margin-top: 0.15rem;
-  padding: 0.2rem 0 0.15rem 2.25rem;
+  padding: 0.2rem 0 0.15rem 1rem;
 }
 
 .forum-game-list > button {
   min-width: 0;
-  min-height: 2.25rem;
+  min-height: 2.75rem;
   padding: 0.35rem 0.45rem;
   border: 0;
   border-radius: 0.55rem;
@@ -113,17 +113,23 @@
   background: var(--arkive-filter-hover);
 }
 
-.forum-game-list > button > span {
+.forum-game-logo {
   display: grid;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 2rem;
+  height: 2rem;
   flex: none;
   place-items: center;
-  border-radius: 0.35rem;
-  color: var(--primary-foreground);
-  background: var(--primary);
-  font-size: 0.62rem;
-  font-weight: 800;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--muted);
+}
+
+.forum-game-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 0.18rem;
+  object-fit: contain;
 }
 
 .forum-community-note {
@@ -147,28 +153,8 @@
   min-width: 0;
 }
 
-.forum-page-heading {
-  padding: 0.25rem 0.15rem 0;
-}
-
-.forum-page-heading h1 {
-  margin: 0;
-  color: var(--foreground);
-  font-size: 1.5rem;
-  font-weight: 820;
-  letter-spacing: -0.03em;
-  line-height: 1.25;
-}
-
-.forum-page-heading p {
-  margin: 0.35rem 0 0;
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-}
-
 .forum-search {
   min-height: 3.25rem;
-  margin-top: 1rem;
   padding: 0.38rem 0.38rem 0.38rem 0.9rem;
   border: 1px solid var(--border);
   border-radius: 0.85rem;
@@ -178,6 +164,10 @@
   color: var(--muted-foreground);
   background: color-mix(in srgb, var(--card) 96%, transparent);
   box-shadow: 0 0.5rem 1.8rem color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.forum-content-search {
+  display: none;
 }
 
 .forum-search:focus-within {
@@ -235,7 +225,10 @@
   background: var(--arkive-action);
 }
 
-.forum-pinned-section,
+.forum-pinned-section {
+  margin-top: 0;
+}
+
 .forum-feed-section {
   margin-top: 1.35rem;
 }
@@ -253,22 +246,6 @@
   color: var(--foreground);
   font-size: 1rem;
   font-weight: 800;
-}
-
-.forum-section-heading > button {
-  padding: 0;
-  border: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  color: var(--muted-foreground);
-  background: transparent;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.forum-section-heading > button:hover {
-  color: var(--arkive-nav-active);
 }
 
 .forum-pinned-grid {
@@ -772,6 +749,14 @@
 
   .forum-right-rail {
     display: none;
+  }
+
+  .forum-content-search {
+    display: flex;
+  }
+
+  .forum-pinned-section {
+    margin-top: 1.35rem;
   }
 
   .forum-mobile-compose {

@@ -63,6 +63,7 @@ const resources = {
       forum: {
         title: '论坛',
         description: '攻略、发现与玩家经验，都在这里汇合。',
+        games: { aion2: '永恒之塔2', palworld: '幻兽帕鲁', vrising: '夜族崛起', sts2: '杀戮尖塔2' },
         channels: { label: '论坛频道', hot: '论坛热度', general: '综合交流', official: '官方咨询', games: '游戏' },
         community: { title: '一起维护友好交流', description: '发布前请确认内容与所选频道相关，并尊重每一种玩法。' },
         search: { placeholder: '搜索帖子、话题或用户', action: '搜索' },
@@ -203,6 +204,7 @@ const resources = {
       forum: {
         title: '論壇',
         description: '攻略、發現與玩家經驗，都在這裡匯合。',
+        games: { aion2: '永恆之塔2', palworld: '幻獸帕魯', vrising: '夜族崛起', sts2: '殺戮尖塔2' },
         channels: { label: '論壇頻道', hot: '論壇熱度', general: '綜合交流', official: '官方諮詢', games: '遊戲' },
         community: { title: '一起維護友好交流', description: '發佈前請確認內容與所選頻道相關，並尊重每一種玩法。' },
         search: { placeholder: '搜尋帖子、話題或使用者', action: '搜尋' },
@@ -311,6 +313,7 @@ const resources = {
       forum: {
         title: 'Forum',
         description: 'Guides, discoveries, and player experience meet here.',
+        games: { aion2: 'AION2', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
         channels: { label: 'Forum channels', hot: 'Trending', general: 'General', official: 'Official help', games: 'Games' },
         community: { title: 'Keep the conversation welcoming', description: 'Choose the channel that fits your post and respect every way of playing.' },
         search: { placeholder: 'Search posts, topics, or users', action: 'Search' },
@@ -404,6 +407,7 @@ const resources = {
       forum: {
         title: 'フォーラム',
         description: '攻略、発見、プレイヤーの経験が集まる場所です。',
+        games: { aion2: 'AION2', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
         channels: { label: 'フォーラムチャンネル', hot: '注目', general: '総合交流', official: '公式案内', games: 'ゲーム' },
         community: { title: '気持ちよく交流しましょう', description: '投稿に合うチャンネルを選び、それぞれの遊び方を尊重してください。' },
         search: { placeholder: '投稿、トピック、ユーザーを検索', action: '検索' },
@@ -485,6 +489,7 @@ const resources = {
       forum: {
         title: '포럼',
         description: '공략과 발견, 플레이어 경험이 이곳에 모입니다.',
+        games: { aion2: 'AION2', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
         channels: { label: '포럼 채널', hot: '인기', general: '자유 교류', official: '공식 안내', games: '게임' },
         community: { title: '즐거운 대화를 함께 만들어요', description: '글에 맞는 채널을 선택하고 서로 다른 플레이 방식을 존중해 주세요.' },
         search: { placeholder: '게시글, 주제 또는 사용자 검색', action: '검색' },

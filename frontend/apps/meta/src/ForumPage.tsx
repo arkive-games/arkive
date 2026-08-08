@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import {
   IconAdjustmentsHorizontal,
   IconChevronDown,
-  IconChevronRight,
   IconDeviceGamepad2,
   IconFlame,
   IconHash,
@@ -19,6 +18,10 @@ import {
   IconVideo,
 } from '@tabler/icons-react'
 import type { SiteCard } from './sites'
+import aion2Logo from './assets/aion2-logo.webp'
+import palworldLogo from './assets/palworld-logo.png'
+import sts2Logo from './assets/sts2-logo.png'
+import vrisingLogo from './assets/vrising-logo.png'
 import './forum.css'
 
 type ForumChannel = 'hot' | 'general' | 'official' | 'games'
@@ -145,6 +148,13 @@ const RECOMMENDED_USERS: RecommendedUser[] = [
   },
 ]
 
+const GAME_LOGOS: Record<string, string> = {
+  aion2: aion2Logo,
+  palworld: palworldLogo,
+  vrising: vrisingLogo,
+  sts2: sts2Logo,
+}
+
 function avatarUrl(seed: string) {
   return `https://i.pravatar.cc/128?u=${encodeURIComponent(seed)}`
 }
@@ -203,6 +213,20 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
     })
   }
 
+  const renderSearch = (placementClass: string) => (
+    <form className={`forum-search ${placementClass}`} role="search" onSubmit={submitSearch}>
+      <IconSearch className="size-5" stroke={1.8} aria-hidden="true" />
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        aria-label={t('forum.search.placeholder')}
+        placeholder={t('forum.search.placeholder')}
+      />
+      <button type="submit">{t('forum.search.action')}</button>
+    </form>
+  )
+
   return (
     <main className="forum-main">
       <div className="forum-shell">
@@ -242,8 +266,10 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                       setGameFilter(site.id)
                     }}
                   >
-                    <span aria-hidden="true">{t(site.nameKey).slice(0, 2)}</span>
-                    {t(site.nameKey)}
+                    <span className="forum-game-logo" aria-hidden="true">
+                      <img src={GAME_LOGOS[site.id]} alt="" />
+                    </span>
+                    {t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}
                   </button>
                 ))}
               </div>
@@ -257,37 +283,14 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
         </aside>
 
         <section className="forum-content-column">
-          <header className="forum-page-heading">
-            <h1>{t('forum.title')}</h1>
-            <p>{t('forum.description')}</p>
-          </header>
-
-          <form className="forum-search" role="search" onSubmit={submitSearch}>
-            <IconSearch className="size-5" stroke={1.8} aria-hidden="true" />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              aria-label={t('forum.search.placeholder')}
-              placeholder={t('forum.search.placeholder')}
-            />
-            <button type="submit">{t('forum.search.action')}</button>
-          </form>
+          {renderSearch('forum-content-search')}
 
           <button type="button" className="forum-mobile-compose" onClick={onComingSoon}>
             <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
             {t('forum.composer.action')}
           </button>
 
-          <section className="forum-pinned-section" aria-labelledby="forum-pinned-heading">
-            <div className="forum-section-heading">
-              <h2 id="forum-pinned-heading">{t('forum.pinned.title')}</h2>
-              <button type="button" onClick={onComingSoon}>
-                {t('forum.pinned.viewAll')}
-                <IconChevronRight className="size-4" stroke={1.8} aria-hidden="true" />
-              </button>
-            </div>
-
+          <section className="forum-pinned-section" aria-label={t('forum.pinned.title')}>
             <div className="forum-pinned-grid">
               <article className="forum-pinned-feature">
                 {siteById.get('aion2') && (
@@ -381,6 +384,8 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
         </section>
 
         <aside className="forum-right-rail" aria-label={t('forum.sidebar.label')}>
+          {renderSearch('forum-right-search')}
+
           <section className="forum-panel forum-composer">
             <div className="forum-composer-entry">
               <img src={avatarUrl('arkive-current-sailor')} alt="" />
