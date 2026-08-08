@@ -271,6 +271,9 @@ importers:
 
   apps/meta:
     dependencies:
+      '@gamemap/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell

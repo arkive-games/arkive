@@ -21,6 +21,7 @@ export {
   type ResolveAuthConfigInput,
   type ResolvedAuthConfig,
 } from "./config"
+export { AUTH_LOCALES, authStringsFor } from "./locales"
 export { createLocalTokenStorage, createMemoryTokenStorage } from "./storage"
 export { DEFAULT_AUTH_STRINGS, resolveAuthStrings, type AuthStrings } from "./strings"
 export {
