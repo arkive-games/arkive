@@ -1,0 +1,76 @@
+# ARCHIVED — the Python FastAPI stack, superseded by backend-go/docker-compose.yml.
+#
+# Renamed out of the way so that `docker compose` in this directory no longer
+# picks it up by accident. It is kept rather than deleted because at the time of
+# archiving it still described the running production deployment, and deleting a
+# live deployment's only description is how outages happen.
+#
+# This file still works. Because Compose derives the project name from the
+# directory, driving it explicitly from the same directory continues to control
+# the same containers:
+#
+#     docker compose -f docker-compose.archived.yml ps
+#     docker compose -f docker-compose.archived.yml down
+#
+# What replaces it, and what changed:
+#   - No Python image and no Celery worker; the Go service needs neither.
+#   - No Redis: nothing in the Go backend uses it yet.
+#   - The database is `arkive`, not `aion2`, since the backend now serves every
+#     game rather than aion2 alone. It is a DIFFERENT database, so bringing the
+#     new stack up does not touch this one's data.
+#   - A named volume instead of the ./data/postgres bind mount below.
+#
+# Delete this file once the Go service has taken over production traffic and
+# this stack's data has been migrated across.
+
+version: '3.5'
+services:
+  postgres:
+    image: postgres:18
+    restart: always
+    environment:
+      - POSTGRES_USER=aion2
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pass}
+      - POSTGRES_DB=aion2
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      - aion2-network
+    ports:
+      - "15432:5432"
+    command: postgres -c 'max_connections=1000'
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+  redis:
+    image: redis:8-alpine
+    restart: always
+    command: redis-server --requirepass aion2
+    networks:
+      - aion2-network
+    ports:
+      - "16379:6379"
+  core:
+    image: tcimba/aion2-backend
+    restart: always
+    volumes:
+      - ./aion2/backend:/root/aion2-backend/aion2/backend
+      - ./data/public:/root/aion2-backend/public
+    build:
+      context: .
+      args:
+        DOCKER_BUILDKIT: 1
+        PYPI_MIRROR: https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+    ports:
+      - "9000:9000"
+    networks:
+      - aion2-network
+    environment:
+      - DEBUG=${DEBUG:-false}
+      - HOST=core
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pass}
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+networks:
+  aion2-network:

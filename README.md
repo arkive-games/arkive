@@ -58,7 +58,12 @@ For production the client fetches from CDN/API base URLs (`VITE_RESOURCE_BASE_UR
 ## Develop — backend & tools
 
 ```bash
-# backend (FastAPI service; see backend/ for docker-compose + migrations)
+# backend — Go service, replaces the Python one. See backend-go/README.md.
+cd backend-go && docker compose up -d postgres && go run ./cmd/arkive   # API on :19000
+
+# backend (legacy FastAPI service, still serving production; being replaced)
+# Its compose files are renamed *.archived.yml so they are no longer picked up
+# automatically; drive them with `docker compose -f docker-compose.archived.yml`.
 cd backend && uv sync
 
 # tools (data pipeline)

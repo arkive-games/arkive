@@ -1,3 +1,17 @@
+# ARCHIVED — Celery workers for the Python FastAPI stack.
+#
+# Archived alongside docker-compose.archived.yml. The Go backend has no task
+# queue and no Redis, so these workers have no counterpart: the one background
+# job they ran (character preview generation) has not been ported.
+#
+# Still drivable explicitly if needed:
+#
+#     docker compose -f docker-compose-celery.archived.yml ps
+#
+# Note both workers point REDIS_HOST at the public hostname aion2.tc-imba.com
+# rather than at a service on the compose network, so they were reaching the
+# broker over the internet. Worth remembering if this job is ever reinstated.
+
 version: '3.5'
 services:
   celery_preview:
