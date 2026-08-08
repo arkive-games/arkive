@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs'
 import { test, expect } from '@playwright/test'
+
+const SITE_VERSION = (JSON.parse(
+  readFileSync(new URL('../src/changelog.json', import.meta.url), 'utf8'),
+) as { entries: { version: string }[] }).entries[0].version
 
 // Markers render as Leaflet divIcons: a .leaflet-marker-icon div whose innerHTML
 // contains an <img> with the icon URL. Tiles come from
@@ -90,8 +95,8 @@ test('switching language localizes both UI chrome and data labels', async ({ pag
   await expect(page.getByText('兴趣点').first()).toBeVisible({ timeout: 10_000 })
 })
 
-test('the changelog page renders the launch version', async ({ page }) => {
+test('the changelog page renders the current version', async ({ page }) => {
   await page.goto('/changelog')
   await expect(page.getByRole('heading', { name: /Changelog/i })).toBeVisible()
-  await expect(page.getByText('1.0.0').first()).toBeVisible()
+  await expect(page.getByText(SITE_VERSION).first()).toBeVisible()
 })

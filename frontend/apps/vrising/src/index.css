@@ -1,76 +1,35 @@
 @import "tailwindcss";
+@import "@gamemap/map-shell/arkive-map-theme.css";
 @source "../../../packages/ui/src";
 @source "../../../packages/map-shell/src";
 
 @custom-variant dark (&:is(.dark *));
 
-/* Palette follows the game's own look: aged parchment and iron by day, cold
-   crypt stone by night, with the blood crimson of the vampire UI as the
-   primary and the pale gold of its gothic filigree as the accent. */
 :root {
-  --radius: 0.5rem;
-  --background: #F2ECE1;  --foreground: #1C1714;
-  --card: #FBF7F0;        --card-foreground: #1C1714;
-  --popover: #FBF7F0;     --popover-foreground: #1C1714;
-  --primary: #8E1B22;     --primary-foreground: #FBF2EA;
-  --secondary: #E2D8C7;   --secondary-foreground: #332A22;
-  --muted: #E8E0D2;       --muted-foreground: #665A4C;
-  --accent: #A8853C;      --accent-foreground: #FBF2EA;
-  --destructive: #A6212A; --destructive-foreground: #ffffff;
-  --border: rgba(28, 23, 20, 0.16);
-  --input: #E2D8C7;       --ring: #8E1B22;
+  --destructive: #c63f45;
+  --destructive-foreground: #ffffff;
+  --vrising-map-void: #d8d2c4;
 }
 
 .dark {
-  --background: #100E0F;  --foreground: #E6DED4;
-  --card: #1A1718;        --card-foreground: #E6DED4;
-  --popover: #1A1718;     --popover-foreground: #E6DED4;
-  --primary: #D6404A;     --primary-foreground: #120E0F;
-  --secondary: #272223;   --secondary-foreground: #E6DED4;
-  --muted: #221E1F;       --muted-foreground: #9A8D80;
-  --accent: #D8B45E;      --accent-foreground: #120E0F;
-  --destructive: #D6404A; --destructive-foreground: #120E0F;
-  --border: rgba(230, 222, 212, 0.16);
-  --input: #272223;       --ring: #D6404A;
+  --destructive: #e05a61;
+  --destructive-foreground: #102d2b;
+  --vrising-map-void: #151a19;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
   --color-input: var(--input);
-  --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Desktop readability: raise the rem base from the browser default 16px. This
-   is the ONLY hard-coded pixel size in the app — every text size elsewhere is
-   a Tailwind scale step so it scales with this value. */
-html { font-size: 17px; }
+@media (max-width: 767px) {
+  html {
+    font-size: 18px;
+  }
+}
 
-/* The map image's own parchment is warm; the Leaflet void behind it is themed
-   so the cleared out-of-border area reads correctly in both themes. */
-.leaflet-container { background: var(--muted); }
-
-/* Same void colour for the WebGL engine: its canvas is cleared to transparent,
-   so the map root's background shows through exactly where the Leaflet
-   container's does. Kept next to the rule above so the two engines'
-   backgrounds can't drift apart. */
-.gmgl-map-root { background: var(--muted); }
+/* The map void is game-owned because it must blend with Vardoran's parchment
+   artwork. All interface chrome continues to use the shared Arkive tokens. */
+.leaflet-container,
+.gmgl-map-root {
+  background: var(--vrising-map-void);
+}

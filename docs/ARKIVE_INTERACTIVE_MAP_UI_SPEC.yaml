@@ -689,6 +689,7 @@ centralization_status:
   migrated_games:
     - "aion2"
     - "palworld"
+    - "vrising"
 
 ai_change_protocol:
   steps:

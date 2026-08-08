@@ -32,18 +32,11 @@ export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactN
   const { text: coordText, aria: coordAria } = formatCoords(marker.x, marker.y)
   const catText = [catLabel, subLabel].filter(Boolean).join(' / ')
   const regionLabel = regionName(marker.region)
-
-  // The coords get their own element so the axis-labeled aria/title rides only
-  // on the coordinate, not the whole meta line.
   const metaLine = (
     <>
-      {catText ? `${catText} ` : ''}
-      <span aria-label={coordAria} title={coordAria}>{coordText}</span>
-      {regionLabel ? (
-        <span className="ml-1 text-muted-foreground" data-testid="marker-region">
-          · {regionLabel}
-        </span>
-      ) : null}
+      {catText}
+      {catText && regionLabel ? <span aria-hidden="true"> / </span> : null}
+      {regionLabel ? <span data-testid="marker-region">{regionLabel}</span> : null}
     </>
   )
 
@@ -51,17 +44,17 @@ export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactN
     <MarkerPopupCard
       name={marker.localizedName || t('unnamed')}
       metaLine={metaLine}
+      positionLabel={t('coordinates')}
+      positionValue={<span aria-label={coordAria} title={coordAria}>{coordText}</span>}
+      positionCopy={{
+        value: coordText,
+        copyLabel: t('copyPosition'),
+        copiedLabel: t('copied'),
+        failedLabel: t('copyFailed'),
+      }}
       description={marker.localizedDescription}
-      noDescriptionLabel={t('noDescription')}
+      images={vrising.movement ? undefined : marker.images}
     >
-      {marker.images?.[0] && !vrising.movement ? (
-        <img
-          src={marker.images[0]}
-          alt=""
-          loading="lazy"
-          className="mt-3 aspect-[4/3] w-full rounded-md object-contain"
-        />
-      ) : null}
       {vrising.movement ? (
         <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
           <div className="flex justify-between gap-3">

@@ -9,12 +9,12 @@ import {
 // chunk (it arrives through the `lazy()` boundary below).
 import type { GlMapRef } from '@gamemap/map-engine-gl'
 import {
-  FilterPanel, SearchPanel, ShellLayout, ShellSidebar,
+  FilterPanel, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar,
   readMapView, useMapViewMemory,
   type FilterCategory, type MapViewState, type SearchItem,
 } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, useIsMobile } from '@gamemap/ui'
+import { EngineToggle, Sheet, SheetContent, SheetHeader, SheetTitle, useIsMobile } from '@gamemap/ui'
 import { SlidersHorizontal, Search as SearchIcon } from 'lucide-react'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -23,9 +23,16 @@ import {
 } from '../../lib/data'
 import { markerImageUrl, vrisingAssets } from '../../lib/assets'
 import { mapViewStore, readVisibleSubtypes, writeVisibleSubtypes } from '../../lib/storage'
-import { resolveMapEngine, useChooseMapEngine, useStoredMapEngine } from '../../lib/mapEngineChoice'
+import {
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  resolveMapEngine,
+  useChooseMapEngine,
+  useStoredMapEngine,
+} from '../../lib/mapEngineChoice'
 import { vrisingTheme } from '../../theme'
 import { TopNav } from '../../components/TopNav'
+import { InfoSidebar } from '../../components/InfoSidebar'
 import { buildPatrolRouteLines } from './patrolRoutes'
 import { regionAt, sortRegionsByArea } from './subzone'
 import { renderMarkerPopup } from './popup'
@@ -352,6 +359,38 @@ export default function MapPage() {
     )
   }
 
+  const mapSelect = (
+    <div className="px-3 py-3 max-md:pr-8">
+      <ShellMapSelect
+        classNames={{
+          trigger: 'min-h-11 rounded-xl border-border bg-card px-3 text-base font-semibold shadow-none hover:border-primary/40 hover:bg-card data-[state=open]:bg-card',
+          content: 'border-border bg-popover',
+        }}
+        maps={staticData.maps.map((item) => ({
+          id: item.id,
+          label: staticData.mapsL10n[item.id]?.shortName
+            ?? staticData.mapsL10n[item.id]?.name
+            ?? item.id,
+        }))}
+        activeMapId={MAP_ID}
+        onSelectMap={() => undefined}
+      />
+      <div className="mt-2 flex min-h-9 items-center justify-between rounded-lg border border-[color:var(--arkive-divider)] bg-card pl-3 pr-1 text-xs text-muted-foreground">
+        <span className="font-semibold">{t('engineMenu')}</span>
+        <span className="flex items-center gap-1 text-foreground">
+          <span className="font-medium">{MAP_ENGINE_LABELS[engine].full}</span>
+          <EngineToggle
+            value={engine}
+            choices={MAP_ENGINE_CHOICES}
+            labels={MAP_ENGINE_LABELS}
+            onChange={chooseEngine}
+            label={t('engineMenu')}
+          />
+        </span>
+      </div>
+    </div>
+  )
+
   const filterPanel = (
     <FilterPanel
       categories={filterCategories}
@@ -379,10 +418,16 @@ export default function MapPage() {
         },
       ]}
       classNames={{
-        controlButton: 'bg-secondary text-secondary-foreground',
-        controlButtonActive: 'bg-primary text-primary-foreground',
-        subtypeButton: 'bg-secondary text-secondary-foreground',
-        subtypeButtonActive: 'bg-primary text-primary-foreground',
+        root: 'px-3 pb-4',
+        controls: 'mb-2 grid-cols-2 gap-2',
+        controlButton: 'h-9 min-h-9 justify-center rounded-lg border border-[color:var(--arkive-divider)] bg-card px-2 text-xs font-semibold text-muted-foreground shadow-none hover:border-primary/35 hover:bg-[color:var(--arkive-filter-hover)] hover:text-foreground',
+        controlButtonActive: 'border-primary/40 bg-[color:var(--arkive-filter-active)] text-primary shadow-none hover:bg-[color:var(--arkive-filter-active)]',
+        category: 'border-b border-[color:var(--arkive-divider)] py-1.5 last:border-b-0',
+        categoryHeader: 'min-h-10 pt-0 pb-0 text-foreground [&>svg]:size-5 [&>svg]:text-foreground/55',
+        categoryEyeToggle: 'text-foreground/55 hover:bg-[color:var(--arkive-filter-hover)] hover:text-primary',
+        subtypeGrid: 'gap-x-2 gap-y-1.5 pb-2',
+        subtypeButton: 'h-auto min-h-9 rounded-md border border-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-65 hover:border-[color:var(--arkive-divider)] hover:bg-card hover:text-foreground hover:opacity-100',
+        subtypeButtonActive: 'border-primary/20 bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-[inset_0.18rem_0_0_var(--arkive-orange)]',
       }}
     />
   )
@@ -400,6 +445,7 @@ export default function MapPage() {
       // Only the generated region label is searchable.
       searchFields={['name']}
       variant={variant}
+      floatingPlacement="center"
     />
   )
 
@@ -485,9 +531,7 @@ export default function MapPage() {
 
         <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
           <SheetContent side="bottom" data-testid="filter-sheet" className="max-h-[85dvh]">
-            <SheetHeader>
-              <SheetTitle>{t('filter')}</SheetTitle>
-            </SheetHeader>
+            <SheetHeader>{mapSelect}</SheetHeader>
             <div className="min-h-0 flex-1 overflow-y-auto">{filterPanel}</div>
           </SheetContent>
         </Sheet>
@@ -506,21 +550,41 @@ export default function MapPage() {
     <>
       <h1 className="sr-only">{t('title')}</h1>
       <ShellLayout
-        className="bg-background text-foreground"
-        topBar={<TopNav active="/" engine={engine} onEngineChange={chooseEngine} />}
+        className="arkive-map-page vrising-map-page bg-background text-foreground"
+        topBar={<TopNav active="/" />}
         sidebar={
           <ShellSidebar
+            width={320}
             collapseLabel={t('collapse')}
             expandLabel={t('expand')}
+            label={t('filter')}
             classNames={{
-              root: 'border-r border-border bg-gradient-to-b from-card to-background text-sm text-card-foreground',
-              collapseButton: 'bg-secondary text-secondary-foreground',
-              content: 'px-3 pt-3',
+              root: 'border-r border-border bg-[color:var(--arkive-sidebar)] font-sans text-sm text-foreground',
+              collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white',
+              content: 'pb-2',
             }}
+            headerSlot={
+              <ShellGameHeader
+                backgroundUrl={`${import.meta.env.BASE_URL}images/vrising-map-header.webp`}
+                backgroundPosition="center 45%"
+                shadeClassName="bg-[linear-gradient(180deg,rgba(5,22,28,0.08),rgba(5,22,28,0.92))]"
+                logo={
+                  <img
+                    src={`${import.meta.env.BASE_URL}images/vrising-logo.webp`}
+                    alt="V Rising"
+                    className="max-h-12 w-auto max-w-52 object-contain object-left drop-shadow-md"
+                  />
+                }
+                gameName={t('gameName')}
+                subtitle={t('mapSubtitle')}
+              />
+            }
+            mapSelectorSlot={mapSelect}
           >
             {filterPanel}
           </ShellSidebar>
         }
+        rightSidebar={<InfoSidebar />}
       >
         <main className="relative flex min-w-0 flex-1 overflow-hidden">
           {mapView}
