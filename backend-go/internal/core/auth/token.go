@@ -13,14 +13,20 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/platform/config"
 )
 
-// Token audiences. The access audience is retained verbatim from
-// fastapi-users so access tokens issued by the Python service keep working
-// across cutover and nobody is logged out. Reset and verify tokens are
-// short-lived, so their formats are not held compatible.
+// Token audiences.
+//
+// These are Arkive's own, not the "fastapi-users:*" strings the Python service
+// used. The consequence is deliberate: tokens minted by the old service do not
+// validate here, so every signed-in user is logged out once at cutover and
+// signs in again. That is a one-time cost, and it buys a token vocabulary that
+// is not named after a dependency the project no longer has — and it means an
+// old token cannot keep granting access after the rewrite ships.
+//
+// Passwords are unaffected; see Hasher. Nobody is forced to reset one.
 const (
-	audienceAccess = "fastapi-users:auth"
-	audienceReset  = "fastapi-users:reset"
-	audienceVerify = "fastapi-users:verify"
+	audienceAccess = "arkive:auth"
+	audienceReset  = "arkive:reset"
+	audienceVerify = "arkive:verify"
 )
 
 // ErrInvalidToken covers every rejection reason. The cause is deliberately not

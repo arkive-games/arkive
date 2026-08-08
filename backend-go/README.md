@@ -47,6 +47,56 @@ DEBUG=true POSTGRES_URL='postgres://arkive:pass@localhost:5432/arkive?sslmode=di
 Then `http://localhost:9000/api/v1/core/docs` for the API reference, and
 `/api/v1/core/openapi.json` for the document itself.
 
+## Local stack
+
+```sh
+docker compose up -d postgres      # database only, on host port 15432
+docker compose up -d --build       # database + the Go service on host port 19000
+```
+
+`docker-compose.yml` replaces the Python service's compose: no Python image, no Celery,
+no Redis (the Go service uses none of them), the database is named `arkive` rather than
+`aion2`, and the API is published on **19000** because 9000 collides with MinIO on a typical
+dev box.
+
+## Working with production data locally
+
+Restore the production database alongside the new one, then import the accounts:
+
+```sh
+# 1. Dump production (read-only; nothing is written to the server)
+ssh root@<host> 'docker exec -i <pg-container> pg_dump -U aion2 -Fc --no-owner --no-acl aion2' \
+  > aion2.dump
+
+# 2. Restore it as a separate database in the local instance
+docker exec arkive-backend-postgres-1 psql -U arkive -d arkive -c 'CREATE DATABASE aion2_legacy'
+docker exec -i arkive-backend-postgres-1 pg_restore -U arkive -d aion2_legacy --no-owner --no-acl < aion2.dump
+
+# 3. Create the new schema, then import the accounts into it
+POSTGRES_URL='postgres://arkive:pass@127.0.0.1:15432/arkive?sslmode=disable' \
+  go run ./cmd/arkive migrate
+docker cp scripts/import-legacy-users.sh arkive-backend-postgres-1:/tmp/import.sh
+docker exec \
+  -e SOURCE_DSN='postgres://arkive:pass@localhost:5432/aion2_legacy' \
+  -e TARGET_DSN='postgres://arkive:pass@localhost:5432/arkive' \
+  arkive-backend-postgres-1 bash /tmp/import.sh
+```
+
+`aion2_legacy` keeps the full legacy dataset — markers, regions, abyss artifacts — for
+reference while the remaining modules are ported. `arkive` holds only what `core` owns.
+
+**The dump contains real addresses and password hashes. Keep it outside this repository.**
+Nothing under `backend-go/` should ever hold one; `.dockerignore` excludes `*.dump` so a
+stray copy cannot reach an image either.
+
+After importing, confirm every hash is readable by this service — a hash it cannot parse is
+a user who cannot log in:
+
+```sh
+ARKIVE_VERIFY_HASHES_URL='postgres://arkive:pass@127.0.0.1:15432/arkive?sslmode=disable' \
+  go test ./internal/core/auth/ -run TestEveryStoredHashIsReadable -v
+```
+
 ## Code generation
 
 Both tools are pinned as `go tool` dependencies; neither needs a global install.
@@ -92,8 +142,14 @@ Behaviour carried over deliberately:
 - **Existing password hashes keep working.** Argon2id and bcrypt hashes written by
   `pwdlib` both verify, asserted against real vectors from that library; a bcrypt hash is
   upgraded to Argon2id on the next successful login.
-- **Existing access tokens keep working.** The `fastapi-users:auth` audience is retained,
-  so nobody is logged out at cutover.
+Behaviour deliberately not carried over:
+
+- **Existing access tokens stop working.** The audiences are Arkive's own
+  (`arkive:auth`, not `fastapi-users:auth`), so a token minted by the old service is
+  rejected. Every signed-in user is logged out once and signs in again. That is the point:
+  a token issued before the rewrite should not keep granting access after it, and the
+  vocabulary should not be named after a dependency the project no longer has.
+  **Passwords are unaffected — nobody is asked to reset one.**
 
 Behaviour deliberately changed:
 

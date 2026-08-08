@@ -1,0 +1,74 @@
+# Local development and debugging stack for the Go backend.
+#
+# Differences from the Python service's compose this replaces:
+#   - no `core` Python image, no Celery worker, and no Redis. The Go service
+#     uses none of them; an unused broker is not carried over for symmetry.
+#   - the database is named `arkive`, not `aion2`, because the backend now
+#     serves every game rather than one.
+#   - data lives in a named volume instead of a ./data bind mount, which avoids
+#     the ownership problems a bind mount causes on Windows hosts.
+#
+# The host ports are deliberately not the defaults: 9000 collides with MinIO on
+# a typical dev box, so the API is published on 19000.
+#
+# DEBUG defaults to true here because this file is the local stack. In that mode
+# the service fills in development secrets. Running it anywhere real means
+# setting DEBUG=false plus JWT_SECRET_KEY and ALTCHA_HMAC_KEY — startup refuses
+# to continue with an empty or placeholder secret.
+
+name: arkive-backend
+
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME:-arkive}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-arkive}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-15432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # The service waits on this rather than on a fixed sleep, so migrations
+      # never race the first-boot initdb.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME:-arkive} -d ${POSTGRES_DATABASE:-arkive}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  core:
+    build:
+      context: .
+      args:
+        GOPROXY: ${GOPROXY:-https://goproxy.cn,direct}
+    image: arkive/backend-go
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-19000}:9000"
+    environment:
+      DEBUG: ${DEBUG:-true}
+      SERVER_PORT: 9000
+      # Empty means every module compiled into the binary. Set one name per
+      # process to split the service into per-game deployments.
+      ARKIVE_MODULES: ${ARKIVE_MODULES:-}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME:-arkive}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE:-arkive}
+      POSTGRES_SSLMODE: disable
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-}
+      ALTCHA_HMAC_KEY: ${ALTCHA_HMAC_KEY:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+      # The API is reached over plain HTTP locally, so a Secure cookie would
+      # never be stored by the browser.
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

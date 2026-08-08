@@ -87,7 +87,7 @@ func specConfig() config.Config {
 		Server: config.Server{APIPrefix: "/api/v1"},
 		Auth: config.Auth{
 			JWTSecret:           "openapi-generation-only",
-			JWTAudience:         "fastapi-users:auth",
+			JWTAudience:         "arkive:auth",
 			TokenLifetime:       14 * 24 * time.Hour,
 			ResetTokenLifetime:  time.Hour,
 			VerifyTokenLifetime: 24 * time.Hour,

@@ -99,7 +99,7 @@ func newHarness(t *testing.T) *harness {
 		Postgres: config.Postgres{URL: dsn, MaxConns: 5},
 		Auth: config.Auth{
 			JWTSecret:           "integration-test-secret",
-			JWTAudience:         "fastapi-users:auth",
+			JWTAudience:         "arkive:auth",
 			TokenLifetime:       time.Hour,
 			ResetTokenLifetime:  time.Hour,
 			VerifyTokenLifetime: time.Hour,
@@ -127,6 +127,12 @@ func newHarness(t *testing.T) *harness {
 		t.Fatalf("connect to test database: %v", err)
 	}
 	t.Cleanup(pool.Close)
+
+	// These tests destroy the schema, and the DSN comes from the environment,
+	// so a mistyped variable could point them at a database holding real
+	// accounts — imported production data lives on a neighbouring port. Refuse
+	// rather than trust the operator to have read the comment above.
+	guardAgainstRealData(t, ctx, pool)
 
 	// Each run starts from an empty schema so tests never inherit rows from a
 	// previous run.
@@ -156,6 +162,34 @@ func newHarness(t *testing.T) *harness {
 	}
 
 	return &harness{t: t, router: router, mailer: mailer, pool: pool, mod: mod}
+}
+
+// maxPreexistingAccounts is the largest core.users population these tests will
+// destroy. A handful of rows is a leftover run; thousands is somebody's data.
+const maxPreexistingAccounts = 50
+
+func guardAgainstRealData(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	t.Helper()
+
+	// Existence and population are two queries on purpose: Postgres plans a
+	// subquery regardless of which CASE branch would select it, so folding
+	// these together errors out on a database where the table is absent.
+	var exists bool
+	if err := pool.QueryRow(ctx, `SELECT to_regclass('core.users') IS NOT NULL`).Scan(&exists); err != nil {
+		t.Fatalf("inspect target database before wiping it: %v", err)
+	}
+	if !exists {
+		return
+	}
+
+	var accounts int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM core.users`).Scan(&accounts); err != nil {
+		t.Fatalf("count existing accounts before wiping them: %v", err)
+	}
+	if accounts > maxPreexistingAccounts {
+		t.Fatalf("refusing to run: core.users already holds %d accounts, which looks like real data.\n"+
+			"These tests DROP SCHEMA core. Point %s at a throwaway database.", accounts, dsnEnv)
+	}
 }
 
 // ---------------------------------------------------------------------------

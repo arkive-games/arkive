@@ -1,0 +1,6 @@
+.git
+.env
+*.dump
+*.sql.gz
+openapi/
+README.md

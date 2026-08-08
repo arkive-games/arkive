@@ -81,8 +81,9 @@ func (p Postgres) DSN() string {
 type Auth struct {
 	JWTSecret string
 
-	// JWTAudience is retained from fastapi-users so tokens issued by the
-	// Python service stay valid across cutover.
+	// JWTAudience scopes session tokens to this service. It is Arkive's own
+	// value, not the Python service's "fastapi-users:auth", so tokens issued
+	// before the rewrite are rejected and every user signs in once more.
 	JWTAudience string
 
 	TokenLifetime       time.Duration
@@ -138,7 +139,7 @@ func Load() (Config, error) {
 		},
 		Auth: Auth{
 			JWTSecret:           envString("JWT_SECRET_KEY", ""),
-			JWTAudience:         envString("JWT_AUDIENCE", "fastapi-users:auth"),
+			JWTAudience:         envString("JWT_AUDIENCE", "arkive:auth"),
 			TokenLifetime:       envDuration("JWT_LIFETIME", 14*24*time.Hour),
 			ResetTokenLifetime:  envDuration("RESET_TOKEN_LIFETIME", time.Hour),
 			VerifyTokenLifetime: envDuration("VERIFY_TOKEN_LIFETIME", 24*time.Hour),

@@ -42,10 +42,58 @@ func registry() (*module.Registry, error) {
 }
 
 func run(args []string) error {
-	if len(args) > 0 && args[0] == "openapi" {
-		return writeOpenAPI(args[1:])
+	if len(args) == 0 {
+		return serve()
 	}
-	return serve()
+	switch args[0] {
+	case "openapi":
+		return writeOpenAPI(args[1:])
+	case "migrate":
+		return migrate()
+	case "serve":
+		return serve()
+	default:
+		return fmt.Errorf("unknown command %q; use one of: serve, migrate, openapi", args[0])
+	}
+}
+
+// migrate applies every selected module's migration stream and exits.
+//
+// serve does this on boot too. Having it as its own command lets a deploy
+// migrate before it swaps traffic over, and lets an operator see a migration
+// fail without a half-started service to reason about.
+func migrate() error {
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	logger := newLogger(cfg.Debug)
+
+	reg, err := registry()
+	if err != nil {
+		return err
+	}
+	modules, err := reg.Select(cfg.Modules)
+	if err != nil {
+		return err
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	pool, err := db.Open(ctx, cfg.Postgres)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	for _, m := range modules {
+		if err := db.Migrate(ctx, pool, m.Schema(), m.Migrations()); err != nil {
+			return err
+		}
+		logger.Info("migrated", slog.String("module", m.Name()), slog.String("schema", m.Schema()))
+	}
+	return nil
 }
 
 func serve() error {

@@ -205,9 +205,12 @@ compatibility is free.
 retained** so existing hashes keep working, and any bcrypt hash is transparently rehashed to
 Argon2id on the next successful login.
 
-**Tokens.** HS256 JWT, `sub` = user id, `aud` = `fastapi-users:auth`, 14-day lifetime. The
-audience string is retained so tokens issued by the Python service survive cutover; it is
-configurable. Two transports over one strategy, as today:
+**Tokens.** HS256 JWT, `sub` = user id, `aud` = `arkive:auth`, 14-day lifetime. The
+audiences are Arkive's own rather than the Python service's `fastapi-users:*`, so tokens
+minted before the rewrite are rejected and every signed-in user signs in once more. That is
+deliberate: an old token should not keep granting access after the rewrite, and the
+vocabulary should not be named after a dependency the project no longer has. Passwords are
+unaffected. Two transports over one strategy, as today:
 
 - `Authorization: Bearer <token>` for API clients.
 - An httpOnly cookie for browsers.
@@ -300,8 +303,26 @@ The Go module is developed at `backend-go/` so the running Python service is unt
 cutover, `backend/` becomes `backend-python-archive/` and `backend-go/` becomes `backend/`.
 
 Because aion2's live data lives in the public schema of an existing database, cutover moves
-`users` into the new `core` schema. Existing password hashes (bcrypt or Argon2id) and
-existing JWTs both remain valid, so no user is logged out and no password reset is forced.
+`users` into the new `core` schema, via `scripts/import-legacy-users.sh`.
+
+Verified against the real production data (13,278 accounts, dumped 2026-08-08):
+
+- **Every hash is Argon2id at `v=19, m=65536,t=3,p=4`** with a 16-byte salt and 32-byte key
+  — exactly the configured parameters. `TestEveryStoredHashIsReadable` walks all 13,278 and
+  reports 0 unreadable, 0 needing a rehash and 0 false accepts, so no user is locked out, no
+  password reset is forced, and cutover triggers no rehash write storm. No bcrypt hashes
+  exist in production at all; that path is defensive only.
+- **No email collides once lowercased**, so the move to a lowercase-with-unique-constraint
+  column is safe.
+- **Eleven pairs of names differ only by a trailing space** (`'a'` and `'a '`). The import
+  copies names verbatim rather than trimming, because trimming would silently rename real
+  users and then collide on the unique constraint. This is a pre-existing data-quality
+  question, deliberately left for a separate decision.
+- **One account's name is a single space**, which the `users_name_not_blank` check rejects.
+  It receives a deterministic placeholder derived from its own id.
+
+Existing JWTs do **not** survive, by choice (see Authentication), so users sign in once
+after cutover.
 
 ## 12. Out of scope for this iteration
 
