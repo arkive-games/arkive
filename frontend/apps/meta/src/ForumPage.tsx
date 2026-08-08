@@ -146,7 +146,7 @@ const RECOMMENDED_USERS: RecommendedUser[] = [
 ]
 
 function avatarUrl(seed: string) {
-  return `https://picsum.photos/seed/${seed}/128/128`
+  return `https://i.pravatar.cc/128?u=${encodeURIComponent(seed)}`
 }
 
 export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
