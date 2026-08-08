@@ -1,0 +1,24 @@
+version: "2"
+sql:
+  - engine: postgresql
+    # sqlc models the schema from the same migration files goose runs, so a
+    # query referencing a column that does not exist fails the build rather
+    # than a request.
+    schema: internal/core/migrations
+    queries: db/queries/core
+    gen:
+      go:
+        package: coredb
+        out: internal/core/coredb
+        sql_package: pgx/v5
+        emit_empty_slices: true
+        emit_pointers_for_null_types: true
+        # The wire shapes are hand-written in the handler layer, so generated
+        # structs carry no JSON tags and cannot leak a column rename into the
+        # public API by accident.
+        emit_json_tags: false
+        overrides:
+          - db_type: uuid
+            go_type: github.com/google/uuid.UUID
+          - db_type: timestamptz
+            go_type: time.Time
