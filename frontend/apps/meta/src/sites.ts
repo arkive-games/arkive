@@ -8,12 +8,18 @@ export const IS_TOY = Boolean(import.meta.env.VITE_TOY)
 
 export interface SiteCard {
   id: string
-  url: string
+  /**
+   * Absent while `comingSoon` is set: an announced game has nothing to link to
+   * yet, so the hub cannot accidentally render a href for it.
+   */
+  url?: string
   toySlug?: string
   bg: string
   nameKey: string
   descKey: string
   featureKey: string
+  /** Listed and searchable, but not linked and never featured. */
+  comingSoon?: boolean
 }
 
 export type SiteClickCounts = Record<string, number>
@@ -63,11 +69,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'sts2',
-    url: resolveSiteUrl(
-      import.meta.env.VITE_STS2_URL,
-      'http://localhost:15175',
-      'https://sts2.tc-imba.com',
-    ),
+    comingSoon: true,
     bg: STS2_BG,
     nameKey: 'site.sts2.name',
     descKey: 'site.sts2.desc',
@@ -77,8 +79,15 @@ export const SITES: SiteCard[] = [
 
 export const VISIBLE_SITES: SiteCard[] = IS_TOY ? SITES.filter((site) => site.toySlug) : SITES
 
-export function siteHref(site: SiteCard): string {
+/** `undefined` for an announced game, so callers render an inert card instead of a link. */
+export function siteHref(site: SiteCard): string | undefined {
+  if (site.comingSoon) return undefined
   return IS_TOY && site.toySlug ? `/toy/${site.toySlug}/index.html` : site.url
+}
+
+/** The hero slot must never advertise a game nobody can open yet. */
+export function firstPlayableSite(sites: readonly SiteCard[]): SiteCard | undefined {
+  return sites.find((site) => !site.comingSoon)
 }
 
 /**

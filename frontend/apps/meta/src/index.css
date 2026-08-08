@@ -861,3 +861,47 @@ footer a:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --- Announced games ---------------------------------------------------------
+   A game may be listed before its site opens. It keeps its cover, description
+   and search entry, but has no href, so the card must also drop every
+   affordance that promises navigation: no open-arrow, no pointer cursor, and a
+   desaturated dashed cover so it reads as a placeholder rather than a link. */
+.soon-badge {
+  align-self: flex-start;
+  margin-top: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.game-card-link.is-inert,
+.catalog-game-link.is-inert {
+  cursor: default;
+}
+
+.game-card.is-soon .game-cover,
+.catalog-game-card.is-soon .catalog-game-cover {
+  border-style: dashed;
+}
+
+.game-card.is-soon .game-cover img,
+.catalog-game-card.is-soon .catalog-game-cover img {
+  filter: saturate(0.5);
+}
+
+.nav-soon-badge {
+  margin-left: 0.4rem;
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}

@@ -95,6 +95,7 @@ const resources = {
         kicker: '下一站正在整理',
         title: '更多游戏正在制作中',
         description: '新的地图与资料库正在陆续入馆。先把这片空位留给下一次启航。',
+        badge: '即将上线',
       },
       cta: {
         title: '把这次发现收进你的舟舱',
@@ -183,6 +184,7 @@ const resources = {
         kicker: '下一站正在整理',
         title: '更多遊戲正在製作中',
         description: '新的地圖與資料庫正在陸續入館。先把這片空位留給下一次啟航。',
+        badge: '即將上線',
       },
       cta: {
         title: '把這次發現收進你的舟艙',
@@ -251,6 +253,7 @@ const resources = {
         kicker: 'The next stop is being catalogued',
         title: 'More games are on the way',
         description: 'New maps and databases are joining the archive. This space is saved for your next voyage.',
+        badge: 'Coming soon',
       },
       cta: {
         title: 'Keep this discovery in your cabin',
@@ -301,7 +304,7 @@ const resources = {
         vrising: { name: 'V Rising', desc: 'ヴァルドランのインタラクティブマップと地域情報', feature: '地域、資源、探索ルートを確認できます。' },
         sts2: { name: 'Slay the Spire 2', desc: 'カード図鑑、キャラクター、デッキ構築情報', feature: '次の登頂に向けてカードとキャラクターを確認できます。' },
       },
-      comingSoon: { kicker: '次の寄港地を整理中', title: 'さらに多くのゲームを制作中', description: '新しいマップとデータベースを順次追加しています。次の航海をお楽しみに。' },
+      comingSoon: { kicker: '次の寄港地を整理中', title: 'さらに多くのゲームを制作中', description: '新しいマップとデータベースを順次追加しています。次の航海をお楽しみに。', badge: '近日公開' },
       cta: { title: 'この発見を舟の中へ', description: 'ログインすると攻略の保存、マップ進捗の同期、別の端末からの再開ができます。', action: 'ログイン / 登録' },
       footer: {
         browse: '見る', about: '藏舟について', service: 'サービス', discoverGames: 'ゲームを探す', guides: '攻略館', maps: 'インタラクティブマップ', database: '資料図鑑',
@@ -347,7 +350,7 @@ const resources = {
         vrising: { name: 'V Rising', desc: '바르도란 인터랙티브 지도와 지역 정보', feature: '바르도란의 지역과 자원, 탐험 경로를 확인하세요.' },
         sts2: { name: 'Slay the Spire 2', desc: '카드 도감, 캐릭터, 덱 구성 정보', feature: '다음 등반을 위해 카드와 캐릭터를 살펴보세요.' },
       },
-      comingSoon: { kicker: '다음 기착지를 정리 중', title: '더 많은 게임을 제작하고 있어요', description: '새로운 지도와 데이터베이스가 차례로 들어옵니다. 다음 항해를 기대해 주세요.' },
+      comingSoon: { kicker: '다음 기착지를 정리 중', title: '더 많은 게임을 제작하고 있어요', description: '새로운 지도와 데이터베이스가 차례로 들어옵니다. 다음 항해를 기대해 주세요.', badge: '출시 예정' },
       cta: { title: '이번 발견을 배 안에 보관하세요', description: '로그인하면 공략을 저장하고 지도 진행 상황을 동기화해 어느 기기에서든 이어갈 수 있습니다.', action: '로그인 / 가입' },
       footer: {
         browse: '둘러보기', about: '소개', service: '서비스', discoverGames: '게임 찾기', guides: '공략관', maps: '인터랙티브 지도', database: '자료 도감',

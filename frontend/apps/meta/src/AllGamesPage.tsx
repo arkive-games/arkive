@@ -175,28 +175,40 @@ function CatalogGameCard({ game, onFavorite }: { game: CatalogGame; onFavorite: 
     onFavorite()
   }
 
-  return (
-    <article className="catalog-game-card">
-      <a href={siteHref(game.site)} className="catalog-game-link">
-        <span className="catalog-game-cover">
-          <img src={game.site.bg} alt={name} />
-          <span className="catalog-game-shade" aria-hidden="true" />
+  const href = siteHref(game.site)
+  const body = (
+    <>
+      <span className="catalog-game-cover">
+        <img src={game.site.bg} alt={name} />
+        <span className="catalog-game-shade" aria-hidden="true" />
+        {href && (
           <span className="catalog-game-open" aria-hidden="true">
             <IconArrowUpRight className="size-5" stroke={1.8} />
           </span>
-        </span>
-        <span className="catalog-game-copy">
-          <strong>{name}</strong>
-          {game.categories.length > 0 && (
-            <span className="catalog-game-genres">
-              {game.categories.map((item) => (
-                <span key={item}>{t(`catalog.genre.${item}`)}</span>
-              ))}
-            </span>
-          )}
-          <small>{t(game.site.descKey)}</small>
-        </span>
-      </a>
+        )}
+      </span>
+      <span className="catalog-game-copy">
+        <strong>{name}</strong>
+        {game.site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
+        {game.categories.length > 0 && (
+          <span className="catalog-game-genres">
+            {game.categories.map((item) => (
+              <span key={item}>{t(`catalog.genre.${item}`)}</span>
+            ))}
+          </span>
+        )}
+        <small>{t(game.site.descKey)}</small>
+      </span>
+    </>
+  )
+
+  return (
+    <article className={game.site.comingSoon ? 'catalog-game-card is-soon' : 'catalog-game-card'}>
+      {href ? (
+        <a href={href} className="catalog-game-link">{body}</a>
+      ) : (
+        <span className="catalog-game-link is-inert">{body}</span>
+      )}
       <button
         type="button"
         className="catalog-bookmark"

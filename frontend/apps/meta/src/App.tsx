@@ -21,6 +21,7 @@ import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import {
   IS_TOY,
   VISIBLE_SITES,
+  firstPlayableSite,
   loadSiteClickCounts,
   rankSitesByClicks,
   siteHref,
@@ -73,7 +74,7 @@ export default function App() {
     () => rankSitesByClicks(VISIBLE_SITES, clickCounts),
     [clickCounts],
   )
-  const featuredSite = rankedSites[0]
+  const featuredSite = firstPlayableSite(rankedSites)
   const showComingSoon = () => setNoticeId((value) => value + 1)
   const navItems: ShellNavItem[] = NAV_KEYS.map((key) => ({
     key,
@@ -109,8 +110,22 @@ export default function App() {
             const game = item.key.startsWith('game:')
               ? VISIBLE_SITES.find((site) => item.key === `game:${site.id}`)
               : undefined
-            return game ? (
-              <a href={siteHref(game)} className={className}>{label}</a>
+            const gameHref = game ? siteHref(game) : undefined
+            return game && gameHref ? (
+              <a href={gameHref} className={className}>{label}</a>
+            ) : game ? (
+              // Announced but not open yet: keep it listed, without a href.
+              <button
+                type="button"
+                className={className}
+                onClick={(event) => {
+                  event.currentTarget.blur()
+                  showComingSoon()
+                }}
+              >
+                {label}
+                <span className="nav-soon-badge">{t('comingSoon.badge')}</span>
+              </button>
             ) : item.key === 'discoverGames' ? (
               <a href="#explore" className={className}>{label}</a>
             ) : (
@@ -253,24 +268,36 @@ function FeaturedGame({ site }: { site: SiteCard }) {
 function GameCard({ site, onFavorite }: { site: SiteCard; onFavorite: () => void }) {
   const { t } = useTranslation()
   const name = t(site.nameKey)
+  const href = siteHref(site)
   const favorite = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     onFavorite()
   }
 
-  return (
-    <article className="game-card">
-      <a href={siteHref(site)} className="game-card-link group">
-        <span className="game-cover">
-          <img src={site.bg} alt={name} />
-          <span className="game-cover-shade" aria-hidden="true" />
+  const body = (
+    <>
+      <span className="game-cover">
+        <img src={site.bg} alt={name} />
+        <span className="game-cover-shade" aria-hidden="true" />
+        {href && (
           <span className="game-open-icon"><IconArrowUpRight className="size-5" stroke={1.8} /></span>
-        </span>
-        <span className="game-card-copy">
-          <strong>{name}</strong>
-          <small>{t(site.descKey)}</small>
-        </span>
-      </a>
+        )}
+      </span>
+      <span className="game-card-copy">
+        <strong>{name}</strong>
+        {site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
+        <small>{t(site.descKey)}</small>
+      </span>
+    </>
+  )
+
+  return (
+    <article className={site.comingSoon ? 'game-card is-soon' : 'game-card'}>
+      {href ? (
+        <a href={href} className="game-card-link group">{body}</a>
+      ) : (
+        <span className="game-card-link is-inert">{body}</span>
+      )}
       <button type="button" className="bookmark-button" onClick={favorite} aria-label={t('action.favorite', { game: name })}>
         <IconBookmark className="size-5" stroke={1.8} />
       </button>
