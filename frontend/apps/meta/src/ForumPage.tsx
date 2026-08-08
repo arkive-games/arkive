@@ -2,11 +2,13 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   IconAdjustmentsHorizontal,
+  IconBookmark,
   IconChevronDown,
+  IconChevronLeft,
+  IconChevronRight,
   IconDeviceGamepad2,
   IconFlame,
   IconHash,
-  IconMessageCircle,
   IconMessages,
   IconPhoto,
   IconPinFilled,
@@ -26,6 +28,9 @@ import './forum.css'
 
 type ForumChannel = 'hot' | 'general' | 'official' | 'games'
 type FeedTab = 'recommended' | 'latest' | 'featured'
+
+const PAGE_SIZE = 1
+const MAX_VISIBLE_PAGES = 5
 
 interface ForumPageProps {
   sites: readonly SiteCard[]
@@ -159,6 +164,17 @@ function avatarUrl(seed: string) {
   return `https://i.pravatar.cc/128?u=${encodeURIComponent(seed)}`
 }
 
+function getVisiblePageNumbers(currentPage: number, totalPages: number) {
+  const windowSize = Math.min(MAX_VISIBLE_PAGES, totalPages)
+  const maxStart = Math.max(1, totalPages - windowSize + 1)
+  const start = Math.min(
+    Math.max(1, currentPage - Math.floor(windowSize / 2)),
+    maxStart,
+  )
+
+  return Array.from({ length: windowSize }, (_, index) => start + index)
+}
+
 export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
   const { t } = useTranslation()
   const [channel, setChannel] = useState<ForumChannel>('hot')
@@ -167,6 +183,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
   const [gamesExpanded, setGamesExpanded] = useState(true)
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [followedUsers, setFollowedUsers] = useState<Set<string>>(() => new Set())
 
   const siteById = useMemo(
@@ -194,14 +211,24 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
     return feedTab === 'latest' ? [...filtered].reverse() : filtered
   }, [channel, feedTab, gameFilter, submittedQuery, t])
 
+  const totalPages = Math.max(1, Math.ceil(visiblePosts.length / PAGE_SIZE))
+  const activePage = Math.min(currentPage, totalPages)
+  const visiblePageNumbers = getVisiblePageNumbers(activePage, totalPages)
+  const paginatedPosts = visiblePosts.slice(
+    (activePage - 1) * PAGE_SIZE,
+    activePage * PAGE_SIZE,
+  )
+
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmittedQuery(query)
+    setCurrentPage(1)
   }
 
   const selectChannel = (nextChannel: ForumChannel) => {
     setChannel(nextChannel)
     if (nextChannel !== 'games') setGameFilter(null)
+    setCurrentPage(1)
   }
 
   const toggleFollow = (id: string) => {
@@ -264,6 +291,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                     onClick={() => {
                       setChannel('games')
                       setGameFilter(site.id)
+                      setCurrentPage(1)
                     }}
                   >
                     <span className="forum-game-logo" aria-hidden="true">
@@ -334,7 +362,10 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                       role="tab"
                       aria-selected={feedTab === tab}
                       className={feedTab === tab ? 'is-active' : undefined}
-                      onClick={() => setFeedTab(tab)}
+                      onClick={() => {
+                        setFeedTab(tab)
+                        setCurrentPage(1)
+                      }}
                     >
                       {t(`forum.feed.${tab}`)}
                     </button>
@@ -347,16 +378,52 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
               </div>
 
               {visiblePosts.length > 0 ? (
-                <div className="forum-post-list">
-                  {visiblePosts.map((post) => (
-                    <ForumPostCard
-                      key={post.id}
-                      post={post}
-                      image={post.gameId ? siteById.get(post.gameId)?.bg : undefined}
-                      onComingSoon={onComingSoon}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="forum-post-list">
+                    {paginatedPosts.map((post) => (
+                      <ForumPostCard
+                        key={post.id}
+                        post={post}
+                        image={post.gameId ? siteById.get(post.gameId)?.bg : undefined}
+                        followed={followedUsers.has(post.authorKey)}
+                        onToggleFollow={() => toggleFollow(post.authorKey)}
+                        onComingSoon={onComingSoon}
+                      />
+                    ))}
+                  </div>
+                  {totalPages > 1 && (
+                    <nav className="forum-pagination" aria-label={t('forum.pagination.label')}>
+                      <button
+                        type="button"
+                        disabled={activePage === 1}
+                        onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      >
+                        <IconChevronLeft className="size-4" stroke={1.8} aria-hidden="true" />
+                        <span className="forum-pagination-label">{t('forum.pagination.previous')}</span>
+                      </button>
+                      {visiblePageNumbers.map((page) => (
+                        <button
+                          key={page}
+                          type="button"
+                          className={activePage === page ? 'is-active' : undefined}
+                          aria-current={activePage === page ? 'page' : undefined}
+                          aria-label={t('forum.pagination.page', { page })}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        disabled={activePage === totalPages}
+                        onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                      >
+                        <span className="forum-pagination-label">{t('forum.pagination.next')}</span>
+                        <IconChevronRight className="size-4" stroke={1.8} aria-hidden="true" />
+                      </button>
+                    </nav>
+                  )}
+                </>
               ) : (
                 <div className="forum-empty" role="status">
                   <IconSearch className="size-8" stroke={1.5} aria-hidden="true" />
@@ -370,6 +437,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                       setChannel('hot')
                       setGameFilter(null)
                       setFeedTab('recommended')
+                      setCurrentPage(1)
                     }}
                   >
                     {t('forum.empty.action')}
@@ -445,10 +513,14 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
 function ForumPostCard({
   post,
   image,
+  followed,
+  onToggleFollow,
   onComingSoon,
 }: {
   post: ForumPost
   image?: string
+  followed: boolean
+  onToggleFollow: () => void
   onComingSoon: () => void
 }) {
   const { t } = useTranslation()
@@ -461,6 +533,14 @@ function ForumPostCard({
           <strong>{t(post.authorKey)}</strong>
           {post.featured && <span>{t('forum.feed.qualityAuthor')}</span>}
           <small>{t(post.timeKey)}</small>
+          <button
+            type="button"
+            className="forum-post-follow"
+            aria-pressed={followed}
+            onClick={onToggleFollow}
+          >
+            {t(followed ? 'forum.users.following' : 'forum.users.follow')}
+          </button>
         </div>
         <h3>{t(post.titleKey)}</h3>
         <p>{t(post.copyKey)}</p>
@@ -470,8 +550,8 @@ function ForumPostCard({
         {image && <img className="forum-post-media" src={image} alt={t(post.titleKey)} loading="lazy" />}
       </div>
       <div className="forum-post-actions">
-        <button type="button" aria-label={t('forum.actions.comment')} onClick={onComingSoon}>
-          <IconMessageCircle className="size-4" stroke={1.8} />
+        <button type="button" aria-label={t('forum.actions.bookmark')} onClick={onComingSoon}>
+          <IconBookmark className="size-4" stroke={1.8} />
         </button>
         <button type="button" aria-label={t('forum.actions.like')} onClick={onComingSoon}>
           <IconThumbUp className="size-4" stroke={1.8} />

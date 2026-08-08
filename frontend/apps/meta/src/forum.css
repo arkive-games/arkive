@@ -1,4 +1,7 @@
 .forum-main {
+  --forum-border: color-mix(in srgb, var(--arkive-nav-active) 26%, var(--border));
+  --forum-focus-border: color-mix(in srgb, var(--arkive-nav-active) 58%, var(--border));
+  --forum-focus-shadow: color-mix(in srgb, var(--arkive-nav-active) 14%, transparent);
   min-height: calc(100dvh - 3.5rem);
   padding-block: 1.65rem 4rem;
 }
@@ -21,7 +24,7 @@
 }
 
 .forum-panel {
-  border: 1px solid var(--border);
+  border: 1px solid var(--forum-border);
   border-radius: 0.9rem;
   background: color-mix(in srgb, var(--card) 96%, transparent);
   box-shadow: 0 0.65rem 2rem color-mix(in srgb, var(--foreground) 5%, transparent);
@@ -156,7 +159,7 @@
 .forum-search {
   min-height: 3.25rem;
   padding: 0.38rem 0.38rem 0.38rem 0.9rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--forum-border);
   border-radius: 0.85rem;
   display: flex;
   align-items: center;
@@ -171,8 +174,8 @@
 }
 
 .forum-search:focus-within {
-  border-color: color-mix(in srgb, var(--ring) 72%, var(--border));
-  box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--ring) 15%, transparent);
+  border-color: var(--forum-focus-border);
+  box-shadow: 0 0 0 0.18rem var(--forum-focus-shadow);
 }
 
 .forum-search input {
@@ -183,6 +186,10 @@
   color: var(--foreground);
   background: transparent;
   font-size: 0.875rem;
+}
+
+.forum-search input:focus-visible {
+  outline: 0;
 }
 
 .forum-search input::placeholder {
@@ -234,7 +241,7 @@
 .forum-pinned-grid {
   min-height: 15.5rem;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 26%, var(--border));
+  border: 1px solid var(--forum-border);
   border-radius: 0.9rem;
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(14.5rem, 0.7fr);
@@ -458,6 +465,23 @@
   font-size: 0.75rem;
 }
 
+.forum-post-follow {
+  min-height: 1.7rem;
+  padding-inline: 0.45rem;
+  border: 0;
+  border-radius: 0.4rem;
+  color: var(--arkive-nav-active);
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.forum-post-follow:hover,
+.forum-post-follow[aria-pressed="true"] {
+  background: var(--arkive-filter-active);
+}
+
 .forum-post h3 {
   margin: 0.48rem 0 0;
   color: var(--foreground);
@@ -527,6 +551,55 @@
 .forum-composer-tools > button:not(.forum-publish-button):hover {
   color: var(--arkive-nav-active);
   background: var(--arkive-filter-active);
+}
+
+.forum-pagination {
+  padding: 1rem 1.2rem 1.15rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.forum-pagination button {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding-inline: 0.65rem;
+  border: 1px solid var(--forum-border);
+  border-radius: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  color: var(--muted-foreground);
+  background: var(--card);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.forum-pagination button:hover:not(:disabled) {
+  color: var(--arkive-nav-active);
+  border-color: var(--forum-focus-border);
+  background: var(--arkive-filter-hover);
+}
+
+.forum-pagination button:active:not(:disabled) {
+  transform: translateY(0.06rem);
+}
+
+.forum-pagination button.is-active {
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.forum-pagination button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .forum-empty {
@@ -866,6 +939,20 @@
     align-items: flex-start;
     flex-wrap: wrap;
   }
+
+  .forum-pagination {
+    padding-inline: 0.8rem;
+  }
+
+  .forum-pagination > button:first-child,
+  .forum-pagination > button:last-child {
+    width: 2.25rem;
+    padding-inline: 0;
+  }
+
+  .forum-pagination-label {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -874,6 +961,10 @@
   .forum-post,
   .forum-search button,
   .forum-mobile-compose {
+    transition: none;
+  }
+
+  .forum-pagination button {
     transition: none;
   }
 }
