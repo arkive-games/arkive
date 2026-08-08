@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.9.3",
+      "date": "2026-08-08",
+      "commit": "bff96b877b7f503c7d27422c51f0738918a6686f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Refreshed maps and reference pages with Arkive's shared neutral, blue, amber, and orange color system.",
+            "zh-CN": "地图与资料页现已统一使用藏舟的中性黑白、蓝色、琥珀色与橙色色彩体系。",
+            "zh-TW": "地圖與資料頁現已統一使用藏舟的中性黑白、藍色、琥珀色與橙色色彩體系。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Simplified map search to cover all configured fields without a separate scope selector.",
+            "zh-CN": "地图搜索已简化为直接覆盖全部已配置字段，不再显示范围选择。",
+            "zh-TW": "地圖搜尋已簡化為直接涵蓋全部已設定欄位，不再顯示範圍選擇。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.2",
       "date": "2026-08-08",
       "commit": "813009f0310477985d28784dcb182a998ba6c470",
