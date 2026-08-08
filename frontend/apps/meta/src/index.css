@@ -848,7 +848,8 @@ footer a:focus-visible {
 
   .coming-soon-toast {
     right: 1rem;
-    bottom: 1rem;
+    bottom: calc(4.5rem + env(safe-area-inset-bottom));
+    z-index: 2600;
   }
 }
 

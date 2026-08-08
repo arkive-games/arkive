@@ -67,7 +67,7 @@ export function MarkerPopupCard({
     <Card
       data-testid="marker-popup-card"
       className={cn(
-        "gm-popup-card w-[320px] gap-0 overflow-hidden rounded-xl border-0 bg-card py-0 text-card-foreground shadow-[0_18px_50px_rgba(10,50,48,0.22)]",
+        "gm-popup-card max-h-[min(72dvh,32rem)] w-[min(20rem,calc(100vw-2rem))] gap-0 overflow-y-auto rounded-xl border-0 bg-card py-0 text-card-foreground shadow-[0_18px_50px_rgba(10,50,48,0.22)] overscroll-contain",
         className,
       )}
     >

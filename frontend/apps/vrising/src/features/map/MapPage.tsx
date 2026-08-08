@@ -488,7 +488,7 @@ export default function MapPage() {
 
         <div
           className="absolute right-3 z-[700] flex flex-col gap-2"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4.75rem)' }}
         >
           <button
             type="button"

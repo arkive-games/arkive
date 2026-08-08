@@ -1,12 +1,9 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { ShellTopBar, useTheme, type Theme } from '@gamemap/map-shell'
-import { BuildInfo } from '@gamemap/ui'
+import { ArkiveMapTopBar, getArkiveBrandName, useTheme } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
-import { SITE_VERSION } from '../lib/siteVersion'
-import { getGameVersion } from '../lib/urls'
-import { SiteInfoDialog } from './SiteInfo'
+import { ARKIVE_HOME_URL } from '../lib/brand'
 
 export type NavKey = '/' | '/cards' | '/characters' | '/changelog'
 
@@ -19,15 +16,15 @@ const ITEMS: { key: NavKey; labelKey: string }[] = [
 export function TopNav({ active }: { active: NavKey }) {
   const { t, i18n } = useTranslation()
   const { theme, setTheme } = useTheme()
+  const lng = i18n.resolvedLanguage ?? 'en-US'
+  const brandName = getArkiveBrandName(lng, t('brand'))
 
   return (
-    <ShellTopBar
-      classNames={{ root: 'border-b border-border bg-card' }}
-      leftSlot={
-        <Link to="/" className="text-lg font-bold tracking-tight text-primary">
-          {t('siteTitle')}
-        </Link>
-      }
+    <ArkiveMapTopBar
+      homeUrl={ARKIVE_HOME_URL}
+      homeLabel={t('brandHome')}
+      brandName={brandName}
+      brandSlogan={t('brandSlogan')}
       nav={{
         items: ITEMS.map((item) => ({
           key: item.key,
@@ -42,33 +39,24 @@ export function TopNav({ active }: { active: NavKey }) {
       }}
       languageSwitcher={{
         languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code as Language] })),
-        current: i18n.resolvedLanguage ?? 'en-US',
+        current: lng,
         onChange: (code) => void i18n.changeLanguage(code),
         menuLabel: t('languageMenu'),
+        shortLabel: t('languageMenu'),
       }}
       themeSwitcher={{
-        options: [
-          { value: 'auto', label: t('themeAuto') },
-          { value: 'light', label: t('themeLight') },
-          { value: 'dark', label: t('themeDark') },
-        ],
+        labels: {
+          auto: t('themeAuto'),
+          light: t('themeLight'),
+          dark: t('themeDark'),
+        },
         current: theme,
-        onChange: (value) => setTheme(value as Theme),
+        onChange: setTheme,
         menuLabel: t('themeMenu'),
+        shortLabel: t('themeMenu'),
       }}
-      rightExtras={
-        <div className="flex items-center gap-1">
-          <ArkiveAccountControl language={i18n.language} />
-          <SiteInfoDialog />
-          <BuildInfo
-            commit={__BUILD_GIT_COMMIT__}
-            buildTime={__BUILD_TIME__}
-            dev={import.meta.env.DEV}
-            gameVersion={getGameVersion()}
-            siteVersion={<Link to="/changelog">v{SITE_VERSION}</Link>}
-          />
-        </div>
-      }
+      loginLabel={t('login')}
+      accountSlot={<ArkiveAccountControl language={i18n.language} />}
     />
   )
 }

@@ -1,0 +1,172 @@
+schema_version: "1.0.0"
+spec_id: "arkive.mobile-experience"
+title: "Arkive Mobile Web Experience Specification"
+status: "canonical"
+last_reviewed: "2026-08-09"
+
+references:
+  parent: "docs/ARKIVE_SITE_SPEC.yaml"
+  color_system: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
+  desktop_map_ui: "docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml"
+  repository_contract: "CLAUDE.md"
+  reading_rule: >-
+    Read the parent site specification first. Read this file for layouts and
+    interactions below the md breakpoint. Open the color or desktop map
+    specification only when that specialist scope is also part of the task.
+
+purpose:
+  summary: >-
+    Define one reusable mobile shell for the portal, game maps, encyclopedias,
+    databases, and tools without changing their desktop information architecture.
+  outcomes:
+    - "Every current product remains navigable and usable on a phone."
+    - "Map chrome protects the map center and exposes secondary work on demand."
+    - "A future game can adopt the mobile experience through shared components and configuration."
+
+scope:
+  breakpoint: "Below md, currently less than 768px"
+  target_viewports:
+    - "390x844"
+    - "430x932"
+    - "844x390 landscape transition"
+  included:
+    - "Portal, catalogs, forum, and scrollable game content"
+    - "Interactive maps, search, filters, marker details, settings, and account access"
+    - "Safe areas, viewport overflow, touch targets, and breakpoint transitions"
+  excluded:
+    - "Native application navigation patterns"
+    - "Desktop geometry owned by the desktop map specification"
+    - "New product features or new game data"
+
+governance:
+  shared_first_rule: >-
+    Cross-product mobile geometry and interaction belong in map-shell. A host
+    application supplies routes, labels, supported languages, game content,
+    and route-aware rendering only.
+  desktop_preservation_rule: >-
+    Mobile additions must remain hidden at md and above unless they improve a
+    shared primitive used by both layouts.
+  rotation_rule: >-
+    A sheet or mobile-only overlay must close when the viewport crosses to the
+    desktop breakpoint.
+
+component_registry:
+  root: "frontend/packages/map-shell/src"
+  components:
+    - name: "ArkiveMobileHeader"
+      file: "frontend/packages/map-shell/src/ArkiveMobileHeader.tsx"
+      owns: "Compact brand, optional page title, utility slot, and login access for scrollable pages"
+    - name: "ShellBottomNav"
+      file: "frontend/packages/map-shell/src/ShellBottomNav.tsx"
+      owns: "Primary mobile navigation, More sheet, language drill-down, theme options, and optional renderer control"
+    - name: "ArkiveMobileAccountRow"
+      file: "frontend/packages/map-shell/src/ArkiveMobileAccountRow.tsx"
+      owns: "Login entry inside the More sheet"
+    - name: "ArkiveEmailLoginDialog"
+      file: "frontend/packages/map-shell/src/ArkiveEmailLoginDialog.tsx"
+      owns: "Shared email login and registration presentation"
+    - name: "MarkerPopupCard"
+      file: "frontend/packages/map-shell/src/MarkerPopupCard.tsx"
+      owns: "Viewport-limited marker detail presentation"
+  host_owned:
+    - "Primary and secondary route inventory"
+    - "Localized route and control labels"
+    - "Supported language inventory"
+    - "Map search, filter, and renderer state adapters"
+
+content_pages:
+  shell:
+    header: "Use ArkiveMobileHeader. Do not compress the desktop top bar into a phone width."
+    bottom_navigation: "Use ShellBottomNav for route navigation and settings."
+    scrolling: "Keep one vertical content scroller and reserve space below its footer for the fixed navigation."
+  header:
+    height: "3.5rem before any safe-area inset"
+    required_content:
+      - "Arkive mark and localized brand name"
+      - "Current page title when available"
+      - "Login action"
+    optional_action_slot: "At most one page-owned utility such as search or filters."
+  layout:
+    columns: "Collapse multi-column compositions to one column."
+    horizontal_padding: "1rem"
+    horizontal_overflow: "Forbidden at the document level."
+
+interactive_maps:
+  shell:
+    header: "Omit the mobile header so the map keeps the maximum vertical field of view."
+    bottom_navigation: "Use ShellBottomNav for routes, language, theme, login, and optional renderer selection."
+    desktop_sidebar: "Replace the persistent sidebar with a filter bottom sheet."
+    desktop_search: "Replace the floating desktop search bar with a search action and bottom sheet."
+  floating_actions:
+    placement: "Right edge above the bottom navigation and safe area"
+    order: "Search above filters"
+    minimum_size: "3rem"
+    rule: "Do not place persistent controls over the central map reading area."
+  sheets:
+    filter_max_height: "85dvh"
+    search_height: "70dvh"
+    more_max_height: "90dvh"
+    scrolling: "Long sheet content scrolls internally with overscroll contained."
+  marker_details:
+    maximum_width: "Viewport width minus 2rem"
+    maximum_height: "The smaller of 72dvh and 32rem"
+    overflow: "Scroll inside the detail surface."
+    content_contract: "Follow the shared marker-detail contract from the desktop map specification."
+
+bottom_navigation:
+  fixed_slots:
+    maximum_primary_tabs: 4
+    additional_slot: "More"
+    minimum_height: "3.5rem plus the bottom safe-area inset"
+    label_size: "text-xs"
+  primary_selection: >-
+    Keep the highest-frequency destinations visible. Place lower-frequency
+    routes in the More grid without dropping any desktop destination.
+  more_sheet:
+    required:
+      - "Localized Arkive brand link"
+      - "Every route not present in the fixed strip"
+      - "Host-supported languages"
+      - "Follow system, light mode, and dark mode"
+      - "Login"
+    optional:
+      - "Map renderer when the host exposes more than one engine"
+      - "Site information and feedback"
+  touch:
+    minimum_target: "2.75rem, with 3rem preferred for isolated actions"
+    feedback: "Use active state feedback without decorative animation."
+
+safe_areas_and_viewports:
+  full_height: "Use h-dvh or min-h-dvh, never h-screen."
+  bottom_padding: "Fixed navigation and scroll footers include env(safe-area-inset-bottom)."
+  top_padding: "Standalone content headers may include env(safe-area-inset-top)."
+  overflow_check: "document.documentElement.scrollWidth must not exceed window.innerWidth."
+  keyboard_and_dialogs: "Focused inputs and centered dialogs must remain reachable when the software keyboard opens."
+
+accessibility:
+  rules:
+    - "Icon-only actions have localized accessible names."
+    - "Active navigation, toggles, and disclosures expose state semantically."
+    - "Sheets provide an accessible title and restore focus when closed."
+    - "Text and state differences do not rely on color alone."
+    - "Reduced motion preferences disable nonessential transitions."
+
+new_game_checklist:
+  - "Configure primary routes and the exhaustive More-route inventory."
+  - "Provide supported languages and all mobile control translations."
+  - "Connect the shared three-option theme preference."
+  - "Expose the shared login dialog from mobile chrome."
+  - "Move map search and filters into bottom sheets."
+  - "Lift map actions above the bottom navigation and safe area."
+  - "Use the shared marker popup and verify its internal scrolling."
+  - "Reserve footer space on every scrollable content route."
+  - "Verify portrait, landscape transition, light mode, dark mode, and no horizontal overflow."
+
+verification:
+  required:
+    - "Focused shared-component tests"
+    - "Production build for every affected application"
+    - "Portrait browser smoke test for every product"
+    - "Landscape breakpoint transition with an open sheet"
+    - "Search, filters, More, language, theme, login, and marker-detail flows"
+  evidence_policy: "Keep only final review evidence and remove browser artifacts before handoff."

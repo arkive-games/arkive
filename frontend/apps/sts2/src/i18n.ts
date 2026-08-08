@@ -36,6 +36,12 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 
 const en = {
   siteTitle: 'Slay the Spire 2 Wiki',
+  brand: 'Arkive.games',
+  brandSlogan: 'Sail Games With Us.',
+  brandHome: 'Arkive guide home',
+  login: 'Log in',
+  more: 'More',
+  back: 'Back',
   loadError: 'Failed to load data. Please try again later.',
   loading: 'Loading…',
   notFound: 'Not found.',
@@ -114,6 +120,12 @@ type Strings = typeof en
 
 const zhCN: Strings = {
   siteTitle: '杀戮尖塔 2 资料库',
+  brand: '藏舟游戏攻略网',
+  brandSlogan: '万千攻略，藏于一舟',
+  brandHome: '藏舟攻略首页',
+  login: '登录',
+  more: '更多',
+  back: '返回',
   loadError: '数据加载失败，请稍后重试。',
   loading: '加载中…',
   notFound: '未找到。',
@@ -191,6 +203,12 @@ const zhCN: Strings = {
 const zhTW: Strings = {
   ...zhCN,
   siteTitle: '殺戮尖塔 2 資料庫',
+  brand: '藏舟遊戲攻略網',
+  brandSlogan: '萬千攻略，藏於一舟',
+  brandHome: '藏舟攻略首頁',
+  login: '登入',
+  more: '更多',
+  back: '返回',
   loadError: '資料載入失敗，請稍後再試。',
   loading: '載入中…',
   notFound: '找不到。',

@@ -17,6 +17,7 @@ specification_router:
   read_when_needed:
     color_or_theme: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
     interactive_map_desktop_ui: "docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml"
+    mobile_web_experience: "docs/ARKIVE_MOBILE_EXPERIENCE_SPEC.yaml"
     repository_process_and_data_contract: "CLAUDE.md"
   historical_records:
     paths:
@@ -106,7 +107,10 @@ product_model:
       and artwork. It must reuse the cross-site shell and brand identity.
 
 global_shell:
-  shared_owner: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
+  desktop_shared_owner: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
+  mobile_shared_owners:
+    - "frontend/packages/map-shell/src/ArkiveMobileHeader.tsx"
+    - "frontend/packages/map-shell/src/ShellBottomNav.tsx"
   brand_block:
     content:
       - "Arkive mark"
@@ -178,6 +182,7 @@ shared_foundations:
 
 ownership_and_change_routing:
   shared_site_shell: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
+  shared_mobile_shell: "frontend/packages/map-shell/src/ArkiveMobileHeader.tsx and frontend/packages/map-shell/src/ShellBottomNav.tsx"
   shared_site_theme: "frontend/packages/map-shell/src/arkive-map-theme.css"
   home_page_composition: "frontend/apps/meta/src"
   game_route_configuration: "Each game application"

@@ -4,6 +4,7 @@ import { ArkiveAccountControl, useAuth } from '@gamemap/auth'
 import {
   ArkiveMapTopBar,
   ArkiveMark,
+  ArkiveMobileHeader,
   getArkiveBrandName,
   useTheme,
   type ShellNavItem,
@@ -41,6 +42,8 @@ import {
   type NotificationSection,
   type PublicProfileSection,
 } from './UserSystemPages'
+import { MetaMobileNav } from './MetaMobileNav'
+import { avatarUrl, CURRENT_USER_AVATAR_SEED } from './userSystemData'
 
 const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum', 'favorites'] as const
 type HomeRoute =
@@ -142,7 +145,28 @@ export default function App() {
   }
 
   return (
-    <div id="top" className="min-h-dvh overflow-x-hidden text-foreground">
+    <div id="top" className="min-h-dvh overflow-x-hidden pb-[calc(3.5rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
+      <ArkiveMobileHeader
+        homeUrl="#top"
+        homeLabel={brandName}
+        brandName={brandName}
+        loginLabel={t('auth.login')}
+        locale={lng}
+        onLoginSubmit={signIn}
+        accountControl={isSignedIn ? (
+          <a
+            href="#account/edit"
+            aria-label={t('userSystem.account.open')}
+            className="size-11 shrink-0 overflow-hidden rounded-full border-2 border-primary/45 bg-muted p-0.5"
+          >
+            <img
+              src={avatarUrl(CURRENT_USER_AVATAR_SEED, 96)}
+              alt=""
+              className="size-full rounded-full object-cover"
+            />
+          </a>
+        ) : undefined}
+      />
       <ArkiveMapTopBar
         homeUrl="#top"
         homeLabel={brandName}
@@ -288,6 +312,17 @@ export default function App() {
           </span>
         </div>
       )}
+
+      <MetaMobileNav
+        activeView={activeRoute.view}
+        noticeId={noticeId}
+        isSignedIn={isSignedIn}
+        language={lng}
+        theme={theme}
+        onLanguageChange={(code) => void i18n.changeLanguage(code)}
+        onThemeChange={setTheme}
+        onComingSoon={showComingSoon}
+      />
     </div>
   )
 }

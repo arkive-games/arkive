@@ -166,6 +166,8 @@ const resources = {
         tools: '工具库',
         forum: '论坛',
         favorites: '我的收藏',
+        more: '更多',
+        back: '返回',
       },
       language: '语言',
       theme: { auto: '跟随系统', light: '浅色模式', dark: '深色模式', menu: '切换主题', short: '主题' },
@@ -317,7 +319,7 @@ const resources = {
         slogan: '萬千攻略，藏於一舟',
         blurb: '我們整理遊戲裡的知識、地圖和發現，陪你慢慢走完每一個喜歡的世界。',
       },
-      nav: { discoverGames: '探索遊戲', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', favorites: '我的收藏' },
+      nav: { discoverGames: '探索遊戲', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', favorites: '我的收藏', more: '更多', back: '返回' },
       language: '語言',
       theme: { auto: '跟隨系統', light: '淺色模式', dark: '深色模式', menu: '切換主題', short: '主題' },
       auth: { login: '登入' },
@@ -436,7 +438,7 @@ const resources = {
         slogan: 'Sail Games With Us.',
         blurb: 'We gather game knowledge, maps, and discoveries so you can enjoy every world at your own pace.',
       },
-      nav: { discoverGames: 'Discover games', allGames: 'All games', tools: 'Tool library', forum: 'Forum', favorites: 'Favorites' },
+      nav: { discoverGames: 'Discover games', allGames: 'All games', tools: 'Tool library', forum: 'Forum', favorites: 'Favorites', more: 'More', back: 'Back' },
       language: 'Language',
       theme: { auto: 'Follow system', light: 'Light mode', dark: 'Dark mode', menu: 'Switch theme', short: 'Theme' },
       auth: { login: 'Log in' },
@@ -547,7 +549,7 @@ const resources = {
   'ja-JP': {
     translation: {
       brand: { name: '蔵舟ゲーム攻略サイト', slogan: '万千の攻略を、一艘の舟に。', blurb: 'ゲームの知識、マップ、発見を整理し、好きな世界を自分のペースで旅できる資料館です。' },
-      nav: { discoverGames: 'ゲームを探す', allGames: 'すべてのゲーム', tools: 'ツールライブラリ', forum: 'フォーラム', favorites: 'お気に入り' },
+      nav: { discoverGames: 'ゲームを探す', allGames: 'すべてのゲーム', tools: 'ツールライブラリ', forum: 'フォーラム', favorites: 'お気に入り', more: 'その他', back: '戻る' },
       language: '言語',
       theme: { auto: 'システムに従う', light: 'ライトモード', dark: 'ダークモード', menu: 'テーマを切り替える', short: 'テーマ' },
       auth: { login: 'ログイン' },
@@ -639,7 +641,7 @@ const resources = {
   'ko-KR': {
     translation: {
       brand: { name: '창저우 게임 공략 사이트', slogan: '수많은 공략을 한 척의 배에.', blurb: '게임 속 지식과 지도, 발견을 모아 좋아하는 세계를 천천히 여행할 수 있도록 돕습니다.' },
-      nav: { discoverGames: '게임 찾기', allGames: '전체 게임', tools: '도구 모음', forum: '포럼', favorites: '내 즐겨찾기' },
+      nav: { discoverGames: '게임 찾기', allGames: '전체 게임', tools: '도구 모음', forum: '포럼', favorites: '내 즐겨찾기', more: '더보기', back: '뒤로' },
       language: '언어',
       theme: { auto: '시스템 설정 따르기', light: '라이트 모드', dark: '다크 모드', menu: '테마 전환', short: '테마' },
       auth: { login: '로그인' },

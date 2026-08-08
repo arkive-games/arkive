@@ -1,5 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react"
-import { Check, ChevronLeft, ChevronRight, Globe, SunMoon } from "lucide-react"
+import {
+  IconCheck,
+  IconChevronLeft,
+  IconChevronRight,
+  IconLanguage,
+  IconMoonStars,
+} from "@tabler/icons-react"
 import {
   cn,
   Sheet,
@@ -94,7 +100,7 @@ type MorePane = "main" | "language"
  * phone width. Short labels still sit inline; long ones drop to their own line.
  */
 const ROW =
-  "flex w-full flex-wrap items-center justify-between gap-x-2 gap-y-1.5 rounded-lg border border-border px-3 py-2 text-sm"
+  "flex min-h-12 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1.5 rounded-lg border border-border px-3 py-2.5 text-sm"
 
 /** A small on/off pill, shared by the theme segments and the engine choices. */
 function pillClass(selected: boolean) {
@@ -144,7 +150,7 @@ export function ShellBottomNav({
 
   const tabClass = (active?: boolean) =>
     cn(
-      "flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-xs font-medium transition-colors",
+      "flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-xs font-medium transition-colors active:bg-accent/70",
       active ? "text-primary" : "text-muted-foreground",
       classNames?.tab,
       active && classNames?.tabActive,
@@ -155,7 +161,7 @@ export function ShellBottomNav({
       <nav
         data-testid="bottom-tab-bar"
         className={cn(
-          "fixed inset-x-0 bottom-0 z-[2500] flex border-t border-border bg-card text-card-foreground md:hidden",
+          "fixed inset-x-0 bottom-0 z-[2500] flex border-t border-border bg-card/97 text-card-foreground shadow-[0_-0.5rem_1.5rem_rgba(8,33,51,0.08)] backdrop-blur md:hidden",
           classNames?.root,
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -192,7 +198,7 @@ export function ShellBottomNav({
           <SheetContent
             side="bottom"
             data-testid="more-sheet"
-            className="max-h-[85dvh] overflow-y-auto"
+            className="max-h-[90dvh] overflow-y-auto rounded-t-xl"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
           >
             {/* `pr-8` keeps the header clear of the sheet's absolute close button. */}
@@ -214,7 +220,7 @@ export function ShellBottomNav({
                       grid.renderItem(
                         item,
                         cn(
-                          "flex flex-col items-center gap-1 rounded-lg border border-border p-3 text-xs font-medium",
+                          "flex min-h-20 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border p-3 text-xs font-medium active:scale-[0.98]",
                           item.active
                             ? "bg-primary text-primary-foreground"
                             : "bg-card text-card-foreground",
@@ -233,7 +239,7 @@ export function ShellBottomNav({
                     className={ROW}
                   >
                     <span className="flex min-w-0 items-center gap-2">
-                      <Globe className="size-4 shrink-0 text-muted-foreground" />
+                      <IconLanguage className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
                       {language.rowLabel}
                     </span>
                     <span className="flex min-w-0 items-center gap-1 text-muted-foreground">
@@ -241,13 +247,13 @@ export function ShellBottomNav({
                         {language.languages.find((l) => l.code === language.current)?.label ??
                           language.current}
                       </span>
-                      <ChevronRight className="size-4 shrink-0" />
+                      <IconChevronRight className="size-4 shrink-0" stroke={1.8} />
                     </span>
                   </button>
 
                   <div className={ROW}>
                     <span className="flex min-w-0 items-center gap-2">
-                      <SunMoon className="size-4 shrink-0 text-muted-foreground" />
+                      <IconMoonStars className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
                       {theme.rowLabel}
                     </span>
                     {/* Segmented control rather than a cycling toggle: every
@@ -306,7 +312,7 @@ export function ShellBottomNav({
                   onClick={() => setPane("main")}
                   className="-ml-1 inline-flex items-center gap-1 rounded px-1 py-1 text-sm font-medium text-muted-foreground"
                 >
-                  <ChevronLeft className="size-4" />
+                  <IconChevronLeft className="size-4" stroke={1.8} />
                   {language.backLabel}
                 </button>
                 <div className="mt-1 flex flex-col">
@@ -330,7 +336,7 @@ export function ShellBottomNav({
                       )}
                     >
                       <span className="truncate">{label}</span>
-                      {language.current === code && <Check className="size-4 shrink-0" />}
+                      {language.current === code && <IconCheck className="size-4 shrink-0" stroke={1.8} />}
                     </button>
                   ))}
                 </div>

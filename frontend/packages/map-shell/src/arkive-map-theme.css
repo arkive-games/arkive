@@ -232,3 +232,15 @@ body {
 .arkive-map-page .gmgl-popup .gm-popup-card::after {
   border-top-color: var(--card);
 }
+
+@media (max-width: 767px) {
+  .arkive-map-page .gmgl-popup {
+    width: min(20rem, calc(100vw - 2rem));
+  }
+
+  .arkive-map-page .gm-marker-popup .gm-popup-card,
+  .arkive-map-page .gmgl-popup .gm-popup-card {
+    max-height: min(72dvh, 32rem);
+    overscroll-behavior: contain;
+  }
+}

@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { cn, SiteFooter, useIsMobile } from "@gamemap/ui";
+import { ArkiveMobileHeader, getArkiveBrandName } from "@gamemap/map-shell";
 
 import TopNavbar from "@/components/TopNavbar";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
@@ -25,6 +27,9 @@ export default function ContentLayout({
   // elements share `data-testid="global-search-button"` — which breaks strict
   // locators in this app's existing e2e specs.
   const isMobile = useIsMobile();
+  const { t, i18n } = useTranslation("common");
+  const currentLng = i18n.resolvedLanguage ?? i18n.language;
+  const brandName = getArkiveBrandName(currentLng, t("brand.name"));
 
   return (
     <div
@@ -37,22 +42,15 @@ export default function ContentLayout({
         /* Compact utility bar. Deliberately NOT a page title: every wiki page
            already renders its own <h1>, so a title here would duplicate it and
            would have to be threaded through the router. */
-        <header
-          data-testid="wiki-mobile-header"
-          className="flex min-h-12 shrink-0 items-center justify-between border-b border-border bg-topnavbar px-4"
-          /* viewport-fit=cover lets content sit under a notch / status bar in
-             standalone mode, so pad the top by the inset (0 in a normal
-             browser, where the chrome already occupies that space). */
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-          <Link
-            to="/"
-            className="text-lg font-bold tracking-tight text-primary select-none"
-          >
-            AION2
-          </Link>
-          <GlobalSearchWidget />
-        </header>
+        <ArkiveMobileHeader
+          homeUrl={ARKIVE_HOME_URL}
+          homeLabel={t("brand.name")}
+          brandName={brandName}
+          pageTitle="AION2"
+          loginLabel={t("auth.login")}
+          locale={currentLng}
+          actions={<GlobalSearchWidget />}
+        />
       ) : (
         <TopNavbar />
       )}

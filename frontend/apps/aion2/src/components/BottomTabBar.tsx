@@ -8,7 +8,11 @@ import {
   ScrollText,
   Users,
 } from "lucide-react";
-import { ShellBottomNav } from "@gamemap/map-shell";
+import {
+  ArkiveMobileAccountRow,
+  ShellBottomNav,
+  getArkiveBrandName,
+} from "@gamemap/map-shell";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import SiteInfo from "@/components/SiteInfo";
@@ -20,6 +24,7 @@ import {
   useStoredMapEngine,
   type MapEngineChoice,
 } from "@/lib/mapEngineChoice";
+import { ARKIVE_HOME_URL } from "@/lib/brand";
 
 // Same archive entry the desktop top bar links to; on mobile that notice is not
 // rendered, so the link lives in the More sheet instead.
@@ -62,6 +67,7 @@ export default function BottomTabBar() {
   const { pathname } = useLocation();
   const active = activeTab(pathname);
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
+  const brandName = getArkiveBrandName(currentLng, t("common:brand.name"));
 
   // The renderer switcher lives here because the mobile layout renders no top
   // bar at all — without it a phone could not leave the WebGL default. Reading
@@ -113,6 +119,15 @@ export default function BottomTabBar() {
         icon: <Menu className="size-5" />,
         active: active === "more",
         title: t("common:mobileNav.more"),
+        brand: (
+          <a
+            href={ARKIVE_HOME_URL}
+            aria-label={t("common:brand.name")}
+            className="max-w-40 truncate text-sm font-bold text-primary hover:underline"
+          >
+            {brandName}
+          </a>
+        ),
       }}
       grid={{
         items: [
@@ -159,15 +174,21 @@ export default function BottomTabBar() {
         rowLabel: t("common:menu.switchEngine", "Map renderer"),
       }}
       extra={
-        <a
-          href={ARCHIVE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-testid="more-archive"
-          className="inline-block text-sm text-primary hover:underline"
-        >
-          {ARCHIVE_URL}
-        </a>
+        <div className="space-y-3">
+          <ArkiveMobileAccountRow
+            locale={currentLng}
+            label={t("common:auth.login")}
+          />
+          <a
+            href={ARCHIVE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="more-archive"
+            className="inline-block text-sm text-primary hover:underline"
+          >
+            {ARCHIVE_URL}
+          </a>
+        </div>
       }
       footer={<SiteInfo />}
     />

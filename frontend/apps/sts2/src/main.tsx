@@ -18,10 +18,18 @@ import CharacterListPage from './features/characters/CharacterListPage'
 import CharacterDetailPage from './features/characters/CharacterDetailPage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import { initDataVersion } from './lib/urls'
+import { BottomTabBar } from './components/BottomTabBar'
 
 const themeStorage = createArkiveThemeStorage({ legacyKeys: ['sts2.theme'] })
 
-const rootRoute = createRootRoute({ component: () => <Outlet /> })
+const rootRoute = createRootRoute({
+  component: () => (
+    <>
+      <Outlet />
+      <BottomTabBar />
+    </>
+  ),
+})
 
 const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: HomePage })
 const cardsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/cards', component: CardListPage })

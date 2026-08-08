@@ -90,9 +90,10 @@ describe("ShellBottomNav", () => {
 
   it("keeps the testids the e2e suites depend on", () => {
     const api = render(<ShellBottomNav {...props()} />)
-    expect(api.getByTestId("bottom-tab-bar")).toBeTruthy()
+    expect(api.getByTestId("bottom-tab-bar").className).toContain("backdrop-blur")
+    expect(api.getByTestId("tab-/").className).toContain("min-h-14")
     open(api)
-    expect(api.getByTestId("more-sheet")).toBeTruthy()
+    expect(api.getByTestId("more-sheet").className).toContain("max-h-[90dvh]")
     expect(api.getByTestId("more-lang-open")).toBeTruthy()
     expect(api.getByTestId("more-theme-auto")).toBeTruthy()
   })

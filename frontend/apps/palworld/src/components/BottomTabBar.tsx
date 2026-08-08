@@ -21,7 +21,12 @@ import {
   Swords,
   Tent,
 } from 'lucide-react'
-import { ShellBottomNav, useTheme, type Theme } from '@gamemap/map-shell'
+import {
+  ArkiveMobileAccountRow,
+  ShellBottomNav,
+  useTheme,
+  type Theme,
+} from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { ARKIVE_HOME_URL, ARKIVE_HOME_LINK_PROPS } from '../lib/brand'
 import type { NavKey } from './TopNav'
@@ -162,6 +167,7 @@ export function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('settings.theme'),
       }}
+      extra={<ArkiveMobileAccountRow locale={lng} label={t('login')} />}
       footer={<SiteInfo />}
     />
   )

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { SlidersHorizontal } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle, cn, useIsMobile, SiteFooter } from '@gamemap/ui'
+import { ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import {
@@ -91,9 +92,11 @@ export function ContentPage({
   filtersActive = false,
   children,
 }: ContentPageProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isMobile = useIsMobile()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const lng = i18n.resolvedLanguage ?? 'en-US'
+  const brandName = getArkiveBrandName(lng, t('brand'))
   // Phones only: on desktop the filters stay in the page flow, so no icon and no
   // sheet — and the pages without filters keep the plain title header.
   const inSheet = isMobile && filters != null
@@ -102,19 +105,22 @@ export function ContentPage({
     <FiltersContext.Provider value={{ node: filters ?? null, inSheet }}>
       <div className="flex h-dvh flex-col bg-background text-foreground">
         <TopNav active={active} />
-        <header
-          className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-card px-4 text-base font-semibold text-card-foreground md:hidden"
-          data-testid="mobile-header"
-        >
-          <span className="min-w-0 flex-1 truncate">{title}</span>
-          {inSheet ? (
+        <ArkiveMobileHeader
+          homeUrl={ARKIVE_HOME_URL}
+          homeLinkProps={ARKIVE_HOME_LINK_PROPS}
+          homeLabel={t('brandHome')}
+          brandName={brandName}
+          pageTitle={title}
+          loginLabel={t('login')}
+          locale={lng}
+          actions={inSheet ? (
             <button
               type="button"
               data-testid="mobile-filter-button"
               aria-label={t('filter')}
               aria-expanded={filterSheetOpen}
               onClick={() => setFilterSheetOpen(true)}
-              className="relative -mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:text-foreground"
+              className="relative flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-accent"
             >
               <SlidersHorizontal className="size-5" />
               {filtersActive ? (
@@ -125,8 +131,8 @@ export function ContentPage({
                 />
               ) : null}
             </button>
-          ) : null}
-        </header>
+          ) : undefined}
+        />
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="flex min-h-full flex-col">
             <div className={cn('mx-auto w-full flex-1 px-4 py-6', CONTENT_MAX_WIDTH)}>

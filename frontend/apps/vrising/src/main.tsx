@@ -13,8 +13,16 @@ import ChangelogPage from './features/changelog/ChangelogPage'
 import { themeStorage } from './lib/storage'
 import { initDataVersion } from './lib/urls'
 import { isMapEngineChoice, type MapEngineChoice } from './lib/mapEngineChoice'
+import { BottomTabBar } from './components/BottomTabBar'
 
-const rootRoute = createRootRoute({ component: () => <Outlet /> })
+const rootRoute = createRootRoute({
+  component: () => (
+    <>
+      <Outlet />
+      <BottomTabBar />
+    </>
+  ),
+})
 
 export interface MapSearch {
   /** Prefill the marker search box. */
