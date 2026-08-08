@@ -188,7 +188,7 @@
 
 .catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(13.25rem, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(12.5rem, 100%), 1fr));
   align-items: start;
   gap: 1.45rem 1rem;
 }
@@ -398,6 +398,18 @@
     font-size: clamp(2.45rem, 10vw, 3.5rem);
   }
 
+  .catalog-results-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(12.5rem, 100%), 1fr));
+  }
+}
+
+@media (max-width: 34.99rem) {
   .catalog-search {
     align-items: stretch;
     flex-wrap: wrap;
@@ -416,18 +428,6 @@
     flex-direction: column;
   }
 
-  .catalog-results-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.55rem;
-  }
-
-  .catalog-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(13.25rem, 100%), 1fr));
-  }
-}
-
-@media (max-width: 34.99rem) {
   .catalog-grid {
     grid-template-columns: 1fr;
   }
