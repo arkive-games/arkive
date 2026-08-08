@@ -108,6 +108,26 @@ polygon, and human review of `calibration/accepted_overlay.png`.
   apps — don't assume those are ours.)
 - **Implementation:** do all coding, design, planning, research, review, and
   verification directly. Codex delegation is disabled — do NOT delegate to Codex.
+- **Efficient execution:** treat unexpected task latency as a workflow defect to investigate,
+  document, and prevent from recurring. Follow this sequence for every task:
+  1. Preflight the repository with `git rev-parse --show-toplevel`, `git status --short --branch`,
+     and `git worktree list`; never infer the active repository from an old directory name.
+  2. Use one worktree for one coherent feature or review cycle and reuse it for small follow-up
+     adjustments. Do not create a new worktree for each button, label, spacing, or color change.
+  3. Route cross-game chrome changes through the shared packages first. Keep only game-owned
+     navigation, language, data, and assets in app code.
+  4. Scope discovery to tracked source with `rg`, `git grep`, or `git ls-files`; exclude
+     `node_modules`, build output, browser artifacts, caches, and old worktrees from broad scans.
+  5. Validate incrementally: related typecheck/tests while editing, the affected app build after
+     a coherent batch, cross-game browser smoke tests only for shared UI changes, and the complete
+     regression suite once before handoff or PR update.
+  6. Reuse existing fixed-port dev servers and one browser session. Keep only final QA evidence;
+     remove intermediate Playwright snapshots, logs, and generated output at closeout.
+  7. Before removing a worktree, verify its HEAD is contained in the integration branch and that
+     it has no tracked changes. Remove generated dependencies and artifacts first, then unregister
+     the worktree and delete its merged local branch.
+  8. Before a remote handoff, verify the signed commit, run a lightweight GitHub connectivity
+     check, push once, and read the PR back from GitHub.
 - **Typography / font sizes:** never hard-code pixel sizes (no `text-[13px]`,
   `font-size: 11px`). Always use the Tailwind scale steps (`text-xs`, `text-sm`,
   `text-base`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`) so text stays consistent
