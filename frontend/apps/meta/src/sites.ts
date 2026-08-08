@@ -1,35 +1,19 @@
-// Artwork is imported (not read from public/) so Vite hashes it and rewrites the
-// URL against the build's base. A toy is served from
-// https://www.bilibili.com/toy/<slug>/, where a root-absolute "/palworld-bg.webp"
-// 404s — and the package self-check only greps HTML, so such a reference would
-// fail silently at runtime. An import is verified at build time instead.
 import aion2Bg from './assets/aion2-bg.jpg'
 import palworldBg from './assets/palworld-bg.webp'
 
-/**
- * True in a Bilibili Toy build (`VITE_TOY=1`, set by scripts/toy-build.mjs).
- * A toy is a sealed same-origin directory under /toy/<slug>/: it can reach its
- * sibling toys by path, but the public web is another world.
- */
-const IS_TOY = Boolean(import.meta.env.VITE_TOY)
+export const IS_TOY = Boolean(import.meta.env.VITE_TOY)
 
 export interface SiteCard {
   id: string
-  /** Public URL of the game site (env-overridable, production subdomain default). */
   url: string
-  /**
-   * Slug of this game's own toy, when it has one. Toys live side by side under
-   * /toy/, so inside a toy build the card links there instead of to `url`.
-   * Games without a published toy are dropped from the grid (see VISIBLE_SITES)
-   * rather than shipping a link that cannot work.
-   */
   toySlug?: string
-  /** Card background, bundled and hashed by Vite. */
   bg: string
-  /** i18n keys under `translation`. */
   nameKey: string
   descKey: string
+  featureKey: string
 }
+
+export type SiteClickCounts = Record<string, number>
 
 export const SITES: SiteCard[] = [
   {
@@ -39,6 +23,7 @@ export const SITES: SiteCard[] = [
     bg: aion2Bg,
     nameKey: 'site.aion2.name',
     descKey: 'site.aion2.desc',
+    featureKey: 'site.aion2.feature',
   },
   {
     id: 'palworld',
@@ -47,16 +32,53 @@ export const SITES: SiteCard[] = [
     bg: palworldBg,
     nameKey: 'site.palworld.name',
     descKey: 'site.palworld.desc',
+    featureKey: 'site.palworld.feature',
   },
 ]
 
-/** Cards to render for the current target: every site on the web, only the ones with a toy inside a toy. */
 export const VISIBLE_SITES: SiteCard[] = IS_TOY ? SITES.filter((site) => site.toySlug) : SITES
 
-/**
- * Where a card points. `index.html` is spelled out because a toy directory has
- * no index redirect — /toy/<slug>/ alone 404s on the platform.
- */
 export function siteHref(site: SiteCard): string {
   return IS_TOY && site.toySlug ? `/toy/${site.toySlug}/index.html` : site.url
+}
+
+/**
+ * Keep popularity ordering independent from the page so a future analytics
+ * source can replace the current adapter without changing the visual layer.
+ * Ties preserve the curated SITES order.
+ */
+export function rankSitesByClicks(sites: SiteCard[], counts: SiteClickCounts): SiteCard[] {
+  return sites
+    .map((site, index) => ({ site, index }))
+    .sort((left, right) => {
+      const difference = (counts[right.site.id] ?? 0) - (counts[left.site.id] ?? 0)
+      return difference || left.index - right.index
+    })
+    .map(({ site }) => site)
+}
+
+/**
+ * Optional response shape: `{ "aion2": 120, "palworld": 98 }`.
+ * Without a configured endpoint the homepage uses a deterministic zero-count
+ * fallback. No traffic numbers are invented in the client.
+ */
+export async function loadSiteClickCounts(signal?: AbortSignal): Promise<SiteClickCounts> {
+  const endpoint = import.meta.env.VITE_GAME_POPULARITY_URL
+  if (!endpoint || IS_TOY) return {}
+
+  try {
+    const response = await fetch(endpoint, { signal, credentials: 'same-origin' })
+    if (!response.ok) return {}
+    const value: unknown = await response.json()
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+
+    return Object.fromEntries(
+      Object.entries(value).filter((entry): entry is [string, number] => {
+        const count = entry[1]
+        return typeof count === 'number' && Number.isFinite(count) && count >= 0
+      }),
+    )
+  } catch {
+    return {}
+  }
 }

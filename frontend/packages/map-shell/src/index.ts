@@ -7,6 +7,7 @@ export {
 } from "./ShellTopBar"
 export {
   ArkiveMapTopBar,
+  ArkiveMark,
   type ArkiveMapTopBarProps,
   type ArkiveMapTheme,
 } from "./ArkiveMapTopBar"
