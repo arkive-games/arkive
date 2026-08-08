@@ -28,6 +28,8 @@ dist-toy
 
 # Test & tooling artifacts
 .playwright-mcp/
+/.playwright-cli/
+/output/
 test-results/
 playwright-report/
 .screenshots/
