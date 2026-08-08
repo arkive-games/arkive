@@ -29,7 +29,7 @@ import './forum.css'
 type ForumChannel = 'hot' | 'general' | 'official' | 'games'
 type FeedTab = 'recommended' | 'latest' | 'featured'
 
-const PAGE_SIZE = 1
+const POSTS_PER_PAGE = 3
 const MAX_VISIBLE_PAGES = 5
 
 interface ForumPageProps {
@@ -211,12 +211,12 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
     return feedTab === 'latest' ? [...filtered].reverse() : filtered
   }, [channel, feedTab, gameFilter, submittedQuery, t])
 
-  const totalPages = Math.max(1, Math.ceil(visiblePosts.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(visiblePosts.length / POSTS_PER_PAGE))
   const activePage = Math.min(currentPage, totalPages)
   const visiblePageNumbers = getVisiblePageNumbers(activePage, totalPages)
   const paginatedPosts = visiblePosts.slice(
-    (activePage - 1) * PAGE_SIZE,
-    activePage * PAGE_SIZE,
+    (activePage - 1) * POSTS_PER_PAGE,
+    activePage * POSTS_PER_PAGE,
   )
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {

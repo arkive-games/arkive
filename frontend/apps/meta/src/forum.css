@@ -441,6 +441,8 @@
 
 .forum-post-content {
   min-width: 0;
+  max-block-size: 18.5rem;
+  overflow: hidden;
 }
 
 .forum-post-author {
@@ -484,10 +486,14 @@
 
 .forum-post h3 {
   margin: 0.48rem 0 0;
+  overflow: hidden;
   color: var(--foreground);
+  display: -webkit-box;
   font-size: 1rem;
   line-height: 1.45;
   letter-spacing: -0.01em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .forum-post-content > p {
@@ -502,10 +508,12 @@
 }
 
 .forum-post-tags {
+  max-height: 1.7rem;
   margin-top: 0.7rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+  overflow: hidden;
 }
 
 .forum-post-tags span {
