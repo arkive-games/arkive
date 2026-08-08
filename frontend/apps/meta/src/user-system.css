@@ -60,7 +60,8 @@
 }
 
 .notification-control:hover .notification-popover,
-.notification-control:focus-within .notification-popover {
+.notification-trigger:focus-visible + .notification-popover,
+.notification-popover:focus-within {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
