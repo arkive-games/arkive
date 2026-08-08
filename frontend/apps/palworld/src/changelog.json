@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.24.1",
+      "date": "2026-08-08",
+      "commit": "813009f0310477985d28784dcb182a998ba6c470",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Unified the About panel with Arkive attribution, developer rights, the shared feedback group, and dated site updates starting with this release.",
+            "zh-CN": "统一",
+            "zh-TW": "統一「關於本站」面板，加入藏舟攻略網連結、開發商權利聲明、反饋 QQ 群，並從本次版本起記錄帶日期的網站更新。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.24.0",
       "date": "2026-08-08",
       "commit": "5d53e380fec5fbcf653f79434e84d6cbb3a880e4",
