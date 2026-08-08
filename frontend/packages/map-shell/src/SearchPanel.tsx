@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import MiniSearch, { type SearchOptions, type SearchResult } from "minisearch"
-import { IconChevronDown, IconSearch } from "@tabler/icons-react"
+import { IconSearch } from "@tabler/icons-react"
 import { cn } from "@gamemap/ui"
 import { formatCoords } from "./coordFormat"
 import { searchTokenize } from "./searchTokenizer"
@@ -28,8 +28,6 @@ export type SearchPanelLabels = {
   resultsCount: (n: number) => string
   unnamed: string
   noDescription: string
-  scopeName: string
-  scopeAll: string
 }
 
 export type SearchPanelProps = {
@@ -106,8 +104,6 @@ export type SearchPanelProps = {
   onResultsChange?: (ids: string[]) => void
 }
 
-type Scope = "both" | "name"
-
 /**
  * Context-free right-side search overlay. MiniSearch with a letter/digit/CJK
  * tokenizer (so numeric-id, Latin and CJK queries all match) + prefix/fuzzy.
@@ -133,7 +129,6 @@ export function SearchPanel({
 }: SearchPanelProps) {
   const [query, setQuery] = useState(initialQuery ?? "")
   const [debounced, setDebounced] = useState(initialQuery ?? "")
-  const [scope, setScope] = useState<Scope>("both")
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(query), debounceMs)
@@ -179,13 +174,13 @@ export function SearchPanel({
   const results: SearchResult[] = useMemo(() => {
     const q = debounced.trim()
     if (!q) return []
-    // Layer the options: app-wide base (`searchOptions`) < the scope's fields <
+    // Layer the options: app-wide base (`searchOptions`) < configured fields <
     // an app-supplied per-query override (`resolveSearchOptions`, e.g. Palworld's
     // numeric-id lookup) which wins. `...undefined` spreads to nothing, so an
     // absent base or resolver simply drops out.
     const opts: SearchOptions = {
       ...searchOptions,
-      fields: scope === "name" ? ["name"] : searchFields,
+      fields: searchFields,
       ...resolveSearchOptions?.(q),
     }
     return miniSearch.search(q, opts).slice(0, 50)
@@ -193,7 +188,7 @@ export function SearchPanel({
     // same contents doesn't churn `results` every render — which, via the
     // onResultsChange effect below, would loop setState→render→setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced, miniSearch, scope, searchFields.join(","), resolveSearchOptions, searchOptions])
+  }, [debounced, miniSearch, searchFields.join(","), resolveSearchOptions, searchOptions])
 
   // Report the shown result ids so the host can force those markers onto the
   // map even when their subtype filter is off (see SearchPanelProps). Guarded
@@ -254,16 +249,6 @@ export function SearchPanel({
           placeholder={labels.placeholder ?? labels.search}
           className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
-        <button
-          type="button"
-          data-testid="search-scope-toggle"
-          onClick={() => setScope((s) => (s === "both" ? "name" : "both"))}
-          className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          {scope === "name" ? labels.scopeName : labels.scopeAll}
-          <IconChevronDown className="size-4" stroke={1.8} aria-hidden />
-        </button>
-        <span data-slot="search-divider" className="text-muted-foreground/50">|</span>
         <button
           type="button"
           data-testid="search-submit"

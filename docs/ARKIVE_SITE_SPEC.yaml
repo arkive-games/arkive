@@ -1,0 +1,198 @@
+schema_version: "1.0.0"
+spec_id: "arkive.site"
+title: "Arkive Site Specification"
+status: "canonical"
+last_reviewed: "2026-08-08"
+
+purpose:
+  summary: >-
+    Define Arkive's brand identity and the small set of experience rules shared
+    by the home page, game maps, encyclopedias, tools, and future web products.
+  reading_goal: >-
+    Read this file first, then open only the specialist specification required
+    by the task. Do not load historical plans to discover current UI rules.
+
+specification_router:
+  always_read: "docs/ARKIVE_SITE_SPEC.yaml"
+  read_when_needed:
+    color_or_theme: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
+    interactive_map_desktop_ui: "docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml"
+    repository_process_and_data_contract: "CLAUDE.md"
+  historical_records:
+    paths:
+      - "docs/superpowers/plans/"
+      - "docs/superpowers/specs/"
+    authority: "Historical context only; never overrides a canonical top-level Arkive specification."
+  conflict_resolution:
+    - "CLAUDE.md owns repository process, architecture, and data-flow rules."
+    - "This file owns brand identity and cross-site experience rules."
+    - "The color-system specification owns every color value and color role."
+    - "The interactive-map specification owns map-only layout and interaction rules."
+    - "A specialist specification may add detail within its scope but must not restate a parent rule."
+
+brand_identity:
+  brand_key: "Arkive"
+  official_site_name:
+    zh-CN: "藏舟游戏攻略网"
+  domain:
+    display: "www.Arkive.games"
+    canonical_url: "https://www.arkive.games"
+    current_temporary_url: "https://tc-imba.com"
+    rule: "Display the Arkive.games domain as the long-term brand domain; keep temporary deployment URLs in environment configuration."
+  slogan:
+    zh-CN: "万千攻略，藏于一舟"
+    en-US: "Sail Games With Us."
+  concept_glossary:
+    cang:
+      source_term: "藏"
+      meaning:
+        - "Collection"
+        - "Discovery"
+    zhou:
+      source_term: "舟"
+      meaning:
+        - "Carrying"
+        - "Exploration"
+        - "Navigation"
+    game_guides:
+      source_term: "游戏攻略"
+      meaning:
+        - "Knowledge"
+        - "Maps"
+        - "Tools"
+  interpretation: >-
+    Arkive is a welcoming vessel for game knowledge: it collects useful
+    discoveries, helps players navigate game worlds, and carries maps, guides,
+    and tools in one dependable place.
+
+experience_direction:
+  summary: "A gentle, approachable game archive that feels useful before it feels technical."
+  qualities:
+    - "Game-first"
+    - "Content-first"
+    - "Warm and close to players"
+    - "Relaxed but dependable"
+    - "Consistent across games"
+  avoid:
+    - "Generic technology-dashboard styling"
+    - "Cold futuristic decoration"
+    - "Game-specific chrome that fragments the Arkive identity"
+    - "Decorative containers around every content group"
+
+product_model:
+  home_page:
+    role: "The common discovery entrance for every Arkive game and product."
+    local_url: "http://localhost:15172"
+    navigation:
+      - key: "discoverGames"
+        label_zh-CN: "发现游戏"
+        behavior: "Navigate to the home-page game discovery section."
+      - key: "allGames"
+        label_zh-CN: "全部游戏"
+      - key: "tools"
+        label_zh-CN: "工具库"
+      - key: "forum"
+        label_zh-CN: "论坛"
+      - key: "favorites"
+        label_zh-CN: "我的收藏"
+    unfinished_destination: "Show the localized coming-soon notice; do not navigate to a dead route."
+  game_products:
+    rule: >-
+      A game may provide maps, encyclopedias, tools, routes, languages, data,
+      and artwork. It must reuse the cross-site shell and brand identity.
+
+global_shell:
+  shared_owner: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
+  brand_block:
+    content:
+      - "Arkive mark"
+      - "Localized official site name"
+      - "Localized slogan"
+    visibility: "Always visible whenever the desktop top bar is visible."
+    home_link: "Resolve through frontend/packages/map-shell/src/arkiveHome.ts."
+  navigation:
+    home_page: "Use product_model.home_page.navigation in the listed order."
+    game_pages: "Routes and labels are game-owned; geometry and interaction are shared."
+    active_state: "Use one shared active indicator and restore it after hover leaves."
+    dropdowns: "Open on pointer hover or keyboard focus; do not show a decorative chevron."
+  utilities:
+    order:
+      - "Language"
+      - "Theme"
+      - "Login"
+    language_options: "Game-owned because supported languages differ by game."
+    theme_options:
+      - "auto"
+      - "light"
+      - "dark"
+    exclusions:
+      - "About"
+      - "Renderer selection"
+      - "App-local search"
+      - "Unapproved utility controls"
+
+shared_foundations:
+  color:
+    owner: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
+    rule: "Use semantic tokens; never copy palette values into another specification."
+  typography:
+    desktop_root_size: "17px"
+    family_stack:
+      - "Noto Sans"
+      - "Noto Sans SC"
+      - "Noto Sans TC"
+      - "system-ui"
+      - "-apple-system"
+      - "BlinkMacSystemFont"
+      - "Segoe UI"
+      - "sans-serif"
+    allowed_scale:
+      - "text-xs"
+      - "text-sm"
+      - "text-base"
+      - "text-lg"
+      - "text-xl"
+      - "text-2xl"
+      - "text-3xl"
+    rules:
+      - "Use Tailwind standard text scale classes instead of hard-coded pixel sizes."
+      - "Text at the same hierarchy uses the same size, weight, and spacing across apps."
+      - "Body content must not be smaller than text-xs."
+      - "Use tabular numbers for coordinates, counts, and ids."
+  iconography:
+    primary_library: "@tabler/icons-react"
+    secondary_library: "lucide-react for existing app-specific content only"
+    standard_stroke: 1.8
+    rules:
+      - "Do not mix icon libraries inside one shared control."
+      - "Search the approved libraries before drawing an interface icon."
+      - "Use the same icon for the same action in every game."
+      - "Every icon-only action requires an accessible label."
+
+ownership_and_change_routing:
+  shared_site_shell: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
+  shared_site_theme: "frontend/packages/map-shell/src/arkive-map-theme.css"
+  home_page_composition: "frontend/apps/meta/src"
+  game_route_configuration: "Each game application"
+  rule: >-
+    Change shared code first for cross-site behavior. Per-game code may provide
+    content and configuration but must not override shared geometry, type,
+    colors, icons, or interaction semantics.
+
+localization_and_accessibility:
+  localization:
+    - "Brand copy uses the localized values in brand_identity."
+    - "No shared user-visible string is hard-coded in a component."
+    - "Every shared action ships for every locale supported by its host app."
+  accessibility:
+    - "Interactive elements use native buttons or links."
+    - "Toggle state uses aria-pressed or aria-expanded."
+    - "Keyboard focus uses the shared focus token."
+    - "Text and state differences never rely on color alone."
+
+maintenance:
+  rules:
+    - "Keep each rule in exactly one canonical specification."
+    - "Reference an owning specification instead of copying its values."
+    - "Update last_reviewed when a contract is intentionally reviewed."
+    - "When implementation and a canonical rule disagree, resolve the mismatch rather than documenting both."

@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { cn, SiteFooter } from '@gamemap/ui'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
+import { ARKIVE_HOME_URL } from '../lib/brand'
 
 export interface ContentPageProps {
   active: NavKey
@@ -32,7 +33,7 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
           </div>
           <SiteFooter
             className="pb-4"
-            homeUrl={import.meta.env.VITE_HOME_URL}
+            homeUrl={ARKIVE_HOME_URL}
             githubUrl={import.meta.env.VITE_GITHUB_URL}
             icpBeian={import.meta.env.VITE_ICP_BEIAN}
             versionLink={<Link to="/changelog">v{SITE_VERSION}</Link>}

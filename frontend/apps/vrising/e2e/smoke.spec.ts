@@ -103,7 +103,7 @@ test('About panel shows the linked Arkive attribution and Stunlock disclaimer', 
 
   const about = page.getByRole('complementary', { name: '关于' })
   const arkiveLink = about.getByRole('link', { name: '藏舟攻略网' })
-  await expect(arkiveLink).toHaveAttribute('href', 'https://tc-imba.com')
+  await expect(arkiveLink).toHaveAttribute('href', 'http://localhost:15172')
   await expect(about.getByText('Stunlock Studios').first()).toBeVisible()
   await expect(about.getByText('藏舟游戏攻略网')).toHaveCount(0)
 })

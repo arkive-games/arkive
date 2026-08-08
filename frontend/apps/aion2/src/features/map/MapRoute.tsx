@@ -247,8 +247,6 @@ export default function MapRoute() {
         }),
       unnamed: t("common:markerSearch.unnamed", "Unnamed marker"),
       noDescription: t("common:ui.noDescription", "No description"),
-      scopeName: t("common:search.scopeName", "Name"),
-      scopeAll: t("common:search.scopeBoth", "All"),
     }),
     [t],
   );

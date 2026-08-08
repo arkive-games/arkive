@@ -14,8 +14,6 @@ const labels = {
   resultsCount: (n: number) => `${n} results`,
   unnamed: "Unnamed",
   noDescription: "No description",
-  scopeName: "Name",
-  scopeAll: "All",
 }
 
 // The rule Palworld injects: a purely-numeric query is an exact Paldeck-id
@@ -89,6 +87,7 @@ describe("SearchPanel", () => {
 
     expect(screen.getByPlaceholderText(labels.placeholder)).toBeTruthy()
     expect(screen.getByTestId("search-submit").textContent).toBe(labels.search)
+    expect(screen.queryByTestId("search-scope-toggle")).toBeNull()
   })
 
   it("matches idLabel values in search queries", () => {

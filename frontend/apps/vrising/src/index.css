@@ -6,14 +6,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --destructive: #c63f45;
-  --destructive-foreground: #ffffff;
   --vrising-map-void: #d8d2c4;
 }
 
 .dark {
-  --destructive: #e05a61;
-  --destructive-foreground: #102d2b;
   --vrising-map-void: #151a19;
 }
 

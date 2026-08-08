@@ -1,7 +1,10 @@
 # Arkive Games — Meta Site Design
 
 **Date:** 2026-07-09
-**Status:** Approved (pending spec review)
+**Status:** Historical — superseded by `docs/ARKIVE_SITE_SPEC.yaml`
+
+This file preserves the original implementation decision only. Its brand copy,
+domain, port, navigation, game inventory, and theme notes are not current rules.
 
 ## Goal
 

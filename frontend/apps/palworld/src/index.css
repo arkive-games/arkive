@@ -6,25 +6,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --pal-ocean: #0F4C49;
-  --pal-cyan-soft: #E3EDE7;
-  --pal-sidebar: #EEF5F0;
-  --pal-divider: rgba(15, 76, 73, 0.14);
-  --pal-gold: #EE8A45;
-  --pal-gold-ink: #A9531D;
-}
-
-.dark {
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --pal-ocean: #9AC8B4;
-  --pal-cyan-soft: #294945;
-  --pal-sidebar: #132F2D;
-  --pal-divider: rgba(211, 231, 220, 0.13);
-  --pal-gold: #F0A06A;
-  --pal-gold-ink: #F0A06A;
+  --pal-ocean: var(--arkive-nav-active);
+  --pal-cyan-soft: var(--arkive-filter-active);
+  --pal-sidebar: var(--arkive-sidebar);
+  --pal-divider: var(--arkive-divider);
 }
 
 @theme inline {

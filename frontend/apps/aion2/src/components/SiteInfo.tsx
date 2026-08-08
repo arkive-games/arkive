@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from "@gamemap/map-shell";
 import { resolveChangelog } from "@gamemap/ui";
 import { FEEDBACK_QQ_GROUP } from "@/lib/constants";
+import { ARKIVE_HOME_URL } from "@/lib/brand";
 import { changelog, SITE_VERSION } from "@/lib/siteVersion";
 
 const LOCALE_ONLY = { defaultValue: "", fallbackLng: false } as const;
@@ -51,7 +52,7 @@ export default function SiteInfo({ className }: { className?: string }) {
       className={className}
       strings={strings}
       arkiveName={t("common:siteInfo.arkiveName")}
-      arkiveHomeUrl="https://tc-imba.com/"
+      arkiveHomeUrl={ARKIVE_HOME_URL}
       arkiveHomeLinkProps={{ target: "_blank", rel: "noopener noreferrer" }}
       gameName={t("common:siteInfo.gameName")}
       developerName="NCSOFT"

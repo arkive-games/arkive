@@ -120,7 +120,7 @@ const PARSEABLE_COLOR =
  * Resolve a CSS custom property from an element's computed style.
  *
  * GL shaders cannot read CSS variables, so the region/border colour the Leaflet
- * engine expresses as `var(--primary, #2E97FF)` has to be resolved here and
+ * engine expresses as `var(--primary, #0090FF)` has to be resolved here and
  * pushed into `VectorLayer.setColors`. Returns `null` when the property is unset
  * or is a notation three cannot parse, so the caller keeps its own default.
  */
