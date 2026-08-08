@@ -4,6 +4,7 @@ import { ArkiveAccountControl } from '@gamemap/auth'
 import {
   ArkiveMapTopBar,
   ArkiveMark,
+  getArkiveBrandName,
   useTheme,
   type ShellNavItem,
 } from '@gamemap/map-shell'
@@ -48,6 +49,7 @@ export default function App() {
   const [noticeId, setNoticeId] = useState(0)
   const [activeView, setActiveView] = useState<HomeView>(viewFromHash)
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
+  const brandName = getArkiveBrandName(lng, t('brand.name'))
 
   useEffect(() => {
     const controller = new AbortController()
@@ -102,8 +104,8 @@ export default function App() {
     <div id="top" className="min-h-dvh overflow-x-hidden text-foreground">
       <ArkiveMapTopBar
         homeUrl="#top"
-        homeLabel={t('brand.name')}
-        brandName={t('brand.name')}
+        homeLabel={brandName}
+        brandName={brandName}
         brandSlogan={t('brand.slogan')}
         nav={{
           items: navItems,

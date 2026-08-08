@@ -1,7 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArkiveAccountControl } from "@gamemap/auth";
-import { ArkiveMapTopBar, type ShellNavItem } from "@gamemap/map-shell";
+import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from "@gamemap/map-shell";
 import { useTheme } from "@/context/ThemeContext";
 import i18n, { LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/i18n";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
@@ -11,6 +11,7 @@ export default function TopNavbar() {
   const { pathname } = useLocation();
   const { theme, setTheme } = useTheme();
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
+  const brandName = getArkiveBrandName(currentLng, t("common:brand.name"));
 
   const navItems: ShellNavItem[] = [
     {
@@ -34,7 +35,7 @@ export default function TopNavbar() {
     <ArkiveMapTopBar
       homeUrl={ARKIVE_HOME_URL}
       homeLabel={t("common:brand.name")}
-      brandName={t("common:brand.name")}
+      brandName={brandName}
       brandSlogan={t("common:brand.slogan")}
       nav={{
         items: navItems,

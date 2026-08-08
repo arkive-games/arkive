@@ -13,7 +13,7 @@ import type { Language } from './i18n'
  * its Chinese name there; every other locale gets the Latin one only.
  */
 export const BRAND_LABELS: Record<Language, string> = {
-  'en-US': 'Arkive Game Guides', 'de-DE': 'Arkive Game Guides', 'es-ES': 'Arkive Game Guides',
+  'en-US': 'Arkive.games', 'de-DE': 'Arkive Game Guides', 'es-ES': 'Arkive Game Guides',
   'es-MX': 'Arkive Game Guides', 'fr-FR': 'Arkive Game Guides', 'id-ID': 'Arkive Game Guides',
   'it-IT': 'Arkive Game Guides', 'ja-JP': 'Arkive Game Guides', 'ko-KR': 'Arkive 게임 가이드',
   'pl-PL': 'Arkive Game Guides', 'pt-BR': 'Arkive Game Guides', 'ru-RU': 'Arkive Game Guides',

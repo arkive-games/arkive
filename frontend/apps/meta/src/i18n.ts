@@ -293,7 +293,7 @@ const resources = {
   'en-US': {
     translation: {
       brand: {
-        name: BRAND_NAME,
+        name: 'Arkive.games',
         slogan: 'Sail Games With Us.',
         blurb: 'We gather game knowledge, maps, and discoveries so you can enjoy every world at your own pace.',
       },

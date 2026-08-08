@@ -23,7 +23,7 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 const en = {
   title: 'V Rising Interactive Map',
   siteTitle: 'V Rising Map',
-  brand: 'Arkive Game Guides',
+  brand: 'Arkive.games',
   brandSlogan: 'Thousands of guides, all aboard',
   brandHome: 'Arkive guide home',
   gameName: 'V Rising',

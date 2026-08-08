@@ -14,6 +14,12 @@ export {
   type ArkiveMapTopBarProps,
   type ArkiveMapTheme,
 } from "./ArkiveMapTopBar"
+export {
+  ARKIVE_BRAND_NAME_EN,
+  ARKIVE_BRAND_NAME_ZH_CN,
+  ARKIVE_BRAND_NAME_ZH_TW,
+  getArkiveBrandName,
+} from "./ArkiveBrandName"
 export { ShellSidebar, type ShellSidebarProps } from "./ShellSidebar"
 export { ShellGameHeader, type ShellGameHeaderProps } from "./ShellGameHeader"
 export {

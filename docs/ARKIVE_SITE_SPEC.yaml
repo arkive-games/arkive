@@ -34,6 +34,8 @@ brand_identity:
   brand_key: "Arkive"
   official_site_name:
     zh-CN: "藏舟游戏攻略网"
+    zh-TW: "藏舟遊戲攻略網"
+    en-US: "Arkive.games"
   domain:
     display: "www.Arkive.games"
     canonical_url: "https://www.arkive.games"

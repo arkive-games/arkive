@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { ArkiveMapTopBar, useTheme, type ShellNavItem } from '@gamemap/map-shell'
+import { ArkiveMapTopBar, getArkiveBrandName, useTheme, type ShellNavItem } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 
@@ -10,6 +10,8 @@ export type NavKey = '/' | '/changelog'
 export function TopNav({ active }: { active: NavKey }) {
   const { t, i18n } = useTranslation()
   const { theme, setTheme } = useTheme()
+  const lng = i18n.resolvedLanguage ?? 'en-US'
+  const brandName = getArkiveBrandName(lng, t('brand'))
 
   const items: ShellNavItem[] = [
     { key: '/', label: t('nav.map'), active: active === '/' },
@@ -20,7 +22,7 @@ export function TopNav({ active }: { active: NavKey }) {
       homeUrl={ARKIVE_HOME_URL}
       homeLinkProps={ARKIVE_HOME_LINK_PROPS}
       homeLabel={t('brandHome')}
-      brandName={t('brand')}
+      brandName={brandName}
       brandSlogan={t('brandSlogan')}
       nav={{
         items,
@@ -34,7 +36,7 @@ export function TopNav({ active }: { active: NavKey }) {
       }}
       languageSwitcher={{
         languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code as Language] })),
-        current: i18n.resolvedLanguage ?? 'en-US',
+        current: lng,
         onChange: (code) => void i18n.changeLanguage(code),
         menuLabel: t('languageMenu'),
         shortLabel: t('languageMenu'),
