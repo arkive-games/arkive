@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ArkiveMapTopBar, type ShellNavItem } from "@gamemap/map-shell";
 import { useTheme } from "@/context/ThemeContext";
 import i18n, { LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/i18n";
+import { ARKIVE_HOME_URL } from "@/lib/brand";
 
 export default function TopNavbar() {
   const { t } = useTranslation(["common", "wiki"]);
@@ -30,7 +31,7 @@ export default function TopNavbar() {
 
   return (
     <ArkiveMapTopBar
-      homeUrl="https://tc-imba.com/"
+      homeUrl={ARKIVE_HOME_URL}
       homeLabel={t("common:brand.name")}
       brandName={t("common:brand.name")}
       brandSlogan={t("common:brand.slogan")}

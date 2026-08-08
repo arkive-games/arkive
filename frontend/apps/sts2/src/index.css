@@ -1,37 +1,16 @@
 @import "tailwindcss";
+@import "@gamemap/map-shell/arkive-map-theme.css";
 @source "../../../packages/ui/src";
 @source "../../../packages/map-shell/src";
 
 @custom-variant dark (&:is(.dark *));
 
-/* Palette follows the game's own look: parchment and ink by day, deep slate by
-   night, with the crimson of the spire as the primary and the gold used by the
-   game's own [gold] keyword markup as the accent. */
 :root {
-  --radius: 0.625rem;
-  --background: #F6F1E7;  --foreground: #241C16;
-  --card: #FFFDF8;        --card-foreground: #241C16;
-  --popover: #FFFDF8;     --popover-foreground: #241C16;
-  --primary: #A32C1E;     --primary-foreground: #FFF6EC;
-  --secondary: #EADFC8;   --secondary-foreground: #3A2C22;
-  --muted: #EFE7D6;       --muted-foreground: #6B5B4A;
-  --accent: #B8860B;      --accent-foreground: #FFF6EC;
-  --destructive: #B4231A; --destructive-foreground: #ffffff;
-  --border: rgba(36, 28, 22, 0.16);
-  --input: #EADFC8;       --ring: #A32C1E;
+  --sts2-keyword: #AB6400;
 }
 
 .dark {
-  --background: #14110F;  --foreground: #EDE4D6;
-  --card: #1E1A17;        --card-foreground: #EDE4D6;
-  --popover: #1E1A17;     --popover-foreground: #EDE4D6;
-  --primary: #E2543F;     --primary-foreground: #17110F;
-  --secondary: #2C2622;   --secondary-foreground: #EDE4D6;
-  --muted: #272220;       --muted-foreground: #A2937F;
-  --accent: #E3B341;      --accent-foreground: #17110F;
-  --destructive: #E2543F; --destructive-foreground: #17110F;
-  --border: rgba(237, 228, 214, 0.16);
-  --input: #2C2622;       --ring: #E2543F;
+  --sts2-keyword: #FFCA16;
 }
 
 @theme inline {
@@ -63,5 +42,5 @@
 /* Desktop readability: raise the rem base from the browser default 16px. */
 html { font-size: 17px; }
 
-/* The game's own keyword highlight, used by card and relic text. */
-.card-keyword { color: var(--accent); font-weight: 600; }
+/* Game-authored keyword text keeps a semantic amber treatment. */
+.card-keyword { color: var(--sts2-keyword); font-weight: 600; }

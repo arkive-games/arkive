@@ -1,6 +1,5 @@
-// Theme tokens for the engine-rendered chrome. Defaults reproduce the AION2
-// Lanhu design ("1天族") so the engine renders sensibly without a theme prop —
-// the same values `@gamemap/map-engine`'s `theme.ts` ships.
+// Theme tokens for engine-rendered chrome. Defaults follow Arkive's canonical
+// Radix palette and match `@gamemap/map-engine`.
 //
 // `PinTheme` / `DEFAULT_PIN_THEME` are RE-EXPORTED from the framework-free core
 // (`core/pinAtlas.ts` owns them, because composing pin bitmaps is core work).
@@ -22,6 +21,6 @@ export interface MapTheme extends PinTheme {
 
 export const DEFAULT_MAP_THEME: MapTheme = {
   ...DEFAULT_PIN_THEME,
-  zoomGlyph: "#3D3D3D",
-  statusPillBg: "rgba(216,216,216,0.7)",
+  zoomGlyph: "#202020",
+  statusPillBg: "rgba(249,249,249,0.94)",
 };

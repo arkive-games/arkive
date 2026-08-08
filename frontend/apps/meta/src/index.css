@@ -7,14 +7,9 @@
 
 :root {
   --home-shell: 82rem;
-  --home-orange: #EE8A45;
-  --home-deep: #0F4C49;
-  --home-mist: #9AC8B4;
-}
-
-.dark {
-  --home-orange: #F0A06A;
-  --home-deep: #9AC8B4;
+  --home-orange: var(--arkive-action);
+  --home-deep: var(--arkive-nav-active);
+  --home-mist: var(--arkive-filter-active);
 }
 
 html {
@@ -46,7 +41,7 @@ a {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible {
-  outline: 2px solid var(--home-orange);
+  outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
 
@@ -93,7 +88,7 @@ input:focus-visible {
   width: 1.4rem;
   height: 0.13rem;
   border-radius: 999rem;
-  background: var(--home-orange);
+  background: var(--arkive-nav-accent);
 }
 
 .hero-title {
@@ -141,8 +136,8 @@ input:focus-visible {
 }
 
 .hero-search:focus-within {
-  border-color: color-mix(in srgb, var(--home-orange) 70%, var(--border));
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--home-orange) 15%, transparent);
+  border-color: color-mix(in srgb, var(--ring) 70%, var(--border));
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--ring) 15%, transparent);
 }
 
 .hero-search input {
@@ -212,8 +207,8 @@ input:focus-visible {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(90deg, rgba(8, 30, 29, 0.92) 0%, rgba(8, 30, 29, 0.56) 52%, rgba(8, 30, 29, 0.14) 100%),
-    linear-gradient(0deg, rgba(5, 22, 21, 0.58), transparent 58%);
+    linear-gradient(90deg, rgba(9, 11, 13, 0.92) 0%, rgba(9, 11, 13, 0.56) 52%, rgba(9, 11, 13, 0.14) 100%),
+    linear-gradient(0deg, rgba(9, 11, 13, 0.58), transparent 58%);
 }
 
 .featured-route {
@@ -226,8 +221,8 @@ input:focus-visible {
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 50%;
-  color: #FFD1AE;
-  background: rgba(8, 30, 29, 0.34);
+  color: #FFE7B3;
+  background: rgba(17, 17, 17, 0.42);
   backdrop-filter: blur(0.5rem);
 }
 
@@ -242,7 +237,7 @@ input:focus-visible {
 
 .featured-label {
   margin-bottom: 0.85rem;
-  color: #FFD1AE;
+  color: #FFE7B3;
   font-size: 0.75rem;
   font-weight: 750;
   letter-spacing: 0.07em;
@@ -280,8 +275,8 @@ input:focus-visible {
   height: 2.15rem;
   place-items: center;
   border-radius: 50%;
-  color: #173B38;
-  background: #F0A06A;
+  color: var(--arkive-action-on);
+  background: var(--home-orange);
   transition: transform 180ms ease;
 }
 
@@ -394,7 +389,7 @@ input:focus-visible {
 .game-cover-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgba(4, 20, 19, 0.42), transparent 52%);
+  background: linear-gradient(0deg, rgba(9, 11, 13, 0.42), transparent 52%);
 }
 
 .game-open-icon {
@@ -406,7 +401,7 @@ input:focus-visible {
   height: 2.35rem;
   place-items: center;
   border-radius: 50%;
-  color: #153F3D;
+  color: #202020;
   background: rgba(255, 255, 255, 0.9);
   opacity: 0;
   transform: translateY(0.4rem);
@@ -429,7 +424,7 @@ input:focus-visible {
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.52);
   border-radius: 0.75rem;
-  color: #153F3D;
+  color: #202020;
   background: rgba(255, 255, 255, 0.88);
   cursor: pointer;
   backdrop-filter: blur(0.5rem);
@@ -437,8 +432,8 @@ input:focus-visible {
 }
 
 .bookmark-button:hover {
-  color: #8B4419;
-  background: #F0A06A;
+  color: var(--arkive-action-on);
+  background: var(--home-orange);
   transform: translateY(-0.1rem);
 }
 
@@ -462,17 +457,13 @@ input:focus-visible {
 
 .future-games {
   position: relative;
-  grid-column: span 3;
-  display: grid;
-  min-height: 100%;
-  overflow: hidden;
-  grid-template-columns: 0.9fr 1.1fr;
-  border: 1px solid color-mix(in srgb, var(--home-mist) 40%, var(--border));
-  border-radius: 1.35rem;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
   color: var(--foreground);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--home-mist) 24%, var(--card)), var(--card));
-  box-shadow: 0 0.65rem 2rem color-mix(in srgb, var(--home-deep) 9%, transparent);
+  background: transparent;
   text-align: left;
   cursor: pointer;
 }
@@ -480,11 +471,16 @@ input:focus-visible {
 .future-visual {
   position: relative;
   display: grid;
-  min-height: 19rem;
+  aspect-ratio: 4 / 5.55;
+  overflow: hidden;
   place-content: center;
+  border: 1px solid color-mix(in srgb, var(--home-mist) 40%, var(--border));
+  border-radius: 1.35rem;
   background:
     radial-gradient(circle at center, transparent 0 22%, color-mix(in srgb, var(--home-deep) 13%, transparent) 22.5% 23%, transparent 23.5% 39%, color-mix(in srgb, var(--home-deep) 10%, transparent) 39.5% 40%, transparent 40.5%),
-    linear-gradient(145deg, color-mix(in srgb, var(--home-deep) 12%, transparent), transparent);
+    linear-gradient(145deg, color-mix(in srgb, var(--home-deep) 12%, var(--card)), var(--card));
+  box-shadow: 0 0.65rem 2rem color-mix(in srgb, var(--home-deep) 9%, transparent);
+  transition: border-color 180ms ease, transform 180ms ease;
 }
 
 .future-visual > span {
@@ -507,46 +503,54 @@ input:focus-visible {
 .future-copy {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 2.2rem;
+  align-items: flex-start;
+  padding: 1rem 0.2rem 0;
 }
 
 .future-copy small {
-  color: var(--home-orange);
+  color: var(--arkive-nav-accent);
   font-size: 0.75rem;
   font-weight: 750;
   letter-spacing: 0.06em;
 }
 
 .future-copy strong {
-  margin-top: 0.75rem;
-  font-size: clamp(1.45rem, 2.5vw, 2.25rem);
-  font-weight: 820;
-  letter-spacing: -0.035em;
-  line-height: 1.12;
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 780;
+  line-height: 1.35;
 }
 
 .future-copy > span {
-  margin-top: 0.9rem;
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.35rem;
   color: var(--muted-foreground);
-  font-size: 0.875rem;
-  line-height: 1.7;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .future-copy i {
   display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
-  margin-top: 1.3rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  margin-top: 0.8rem;
   place-items: center;
   border-radius: 50%;
-  color: #153F3D;
+  color: var(--arkive-action-on);
   background: var(--home-orange);
   transition: transform 180ms ease;
 }
 
 .future-games:hover .future-copy i {
   transform: translateX(0.25rem);
+}
+
+.future-games:hover .future-visual {
+  border-color: color-mix(in srgb, var(--home-deep) 35%, var(--border));
+  transform: translateY(-0.1rem);
 }
 
 .join-section {
@@ -571,7 +575,7 @@ input:focus-visible {
   padding-inline: 1.45rem;
   border: 0;
   border-radius: 0.85rem;
-  color: #153F3D;
+  color: var(--arkive-action-on);
   background: var(--home-orange);
   font-size: 0.875rem;
   font-weight: 780;
@@ -610,7 +614,7 @@ input:focus-visible {
   height: 2.8rem;
   place-items: center;
   border-radius: 0.8rem;
-  color: #153F3D;
+  color: var(--home-deep);
   background: var(--home-mist);
 }
 
@@ -724,8 +728,8 @@ input:focus-visible {
   flex: none;
   place-items: center;
   border-radius: 0.75rem;
-  color: #153F3D;
-  background: var(--home-orange);
+  color: var(--background);
+  background: var(--arkive-nav-accent);
 }
 
 .coming-soon-toast > span:last-child {
@@ -759,10 +763,6 @@ input:focus-visible {
     gap: 1.5rem;
   }
 
-  .future-games {
-    grid-column: span 2;
-    min-height: 24rem;
-  }
 }
 
 @media (max-width: 62rem) {
@@ -853,14 +853,6 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 
-  .future-games {
-    grid-column: auto;
-    grid-template-columns: 1fr;
-  }
-
-  .future-visual {
-    min-height: 16rem;
-  }
 
   .join-section {
     gap: 1.7rem;

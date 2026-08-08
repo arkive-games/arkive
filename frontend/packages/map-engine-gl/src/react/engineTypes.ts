@@ -182,7 +182,7 @@ export interface GameMapViewProps {
   mapRef: RefObject<GlMapRef | null>;
   /** Asset-URL resolver (tiles, marker icons, watermark). Required — no default. */
   assets: MapAssets;
-  /** Color tokens for engine-rendered chrome; defaults to the AION2 Lanhu palette. */
+  /** Color tokens for engine-rendered chrome; defaults to Arkive's Radix palette. */
   theme?: MapTheme;
   /** Renders the selected marker's popup body (app-side content: links, actions...). */
   renderPopupContent: (marker: EngineMarker) => ReactNode;

@@ -95,8 +95,8 @@
   padding: 2px 6px;
   border: 1px solid transparent;
   border-radius: 4px;
-  background: var(--card, #ffffff);
-  color: var(--foreground, #3d3d3d);
+  background: var(--card, #F9F9F9);
+  color: var(--foreground, #202020);
   font-size: 0.75rem;
   line-height: 1.25;
   white-space: nowrap;
@@ -118,7 +118,7 @@
   transform: translateX(-50%);
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 6px solid var(--card, #ffffff);
+  border-top: 6px solid var(--card, #F9F9F9);
 }
 
 /* The hovered marker's name must stay readable inside a dense cluster. */
@@ -161,7 +161,7 @@
   transform: translateX(-50%);
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 9px solid var(--card, #ffffff);
+  border-top: 9px solid var(--card, #F9F9F9);
   /* Shadow offset (3) ≥ blur (2), so it casts only downward — no halo line above
    * the triangle where it joins the card. */
   filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.12));
@@ -176,8 +176,8 @@
   padding: 0.25rem 0;
   border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
   border-radius: 0.375rem;
-  background-color: var(--popover, #ffffff);
-  color: var(--popover-foreground, #3d3d3d);
+  background-color: var(--popover, #FCFCFC);
+  color: var(--popover-foreground, #202020);
   box-shadow:
     0 4px 6px -1px rgb(0 0 0 / 0.1),
     0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -198,8 +198,8 @@
 }
 
 .gmgl-context-menu-item:hover {
-  background-color: var(--accent, #e5f0ff);
-  color: var(--accent-foreground, #3d3d3d);
+  background-color: var(--accent, #E8E8E8);
+  color: var(--accent-foreground, #202020);
 }
 
 /* ---- Zoom control (Lanhu-style +/− pill, bottom-right) --------------- */

@@ -79,7 +79,7 @@ status bar. All inputs arrive through `GameMapViewProps`:
 | `flyToDuration` | `number` | Fly-to animation duration (seconds). |
 | `mapRef` | `RefObject<MapRef>` | Escape hatch to the Leaflet `L.Map` instance (`MapRef = L.Map \| null`). |
 | `assets` | `MapAssets` | Asset-URL resolver — **required, no default** (see below). |
-| `theme` | `MapTheme?` | Color tokens for engine chrome; defaults to `DEFAULT_MAP_THEME` (AION2 Lanhu palette). |
+| `theme` | `MapTheme?` | Color tokens for engine chrome; defaults to `DEFAULT_MAP_THEME` (Arkive Radix palette). |
 | `renderPopupContent` | `(marker: EngineMarker) => ReactNode` | App-side popup body (links, actions, wiki refs...). |
 | `labels` | `GameMapViewLabels?` | Engine-rendered UI strings (i18n stays app-side): `copyPosition`, `noMapSelected`, `zoomIn`, `zoomOut`, optional `footerText`. |
 | `exposeTestHandle` | `boolean?` | Dev/e2e only: publishes the Leaflet map on `window.__leafletMap`. |

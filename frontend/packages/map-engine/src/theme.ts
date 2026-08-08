@@ -1,5 +1,5 @@
-// Theme tokens for the engine-rendered chrome. Defaults reproduce the AION2
-// Lanhu design ("1天族") so the engine renders sensibly without a theme prop.
+// Theme tokens for engine-rendered chrome. Defaults follow Arkive's canonical
+// Radix palette so every current and future game inherits the same colors.
 
 /** Colors used by `createPinIcon` (marker pins + completion/fragment badges). */
 export interface PinTheme {
@@ -27,13 +27,13 @@ export interface MapTheme extends PinTheme {
 export const DEFAULT_PIN_THEME: PinTheme = {
   pinDiscBg: "rgba(0,0,0,0.6)", // 圆形 17 background
   pinBorder: "rgba(255,255,255,1)", // 0.5px hairline
-  pinDot: "#2E97FF", // 圆形 18 inner dot (rgba 46,150,255)
+  pinDot: "#0090FF",
   circularBorder: "rgba(255,255,255,0.9)", // creatures/pals: white hairline ring
-  completedAccent: "#22c55e",
+  completedAccent: "#30A46C",
 };
 
 export const DEFAULT_MAP_THEME: MapTheme = {
   ...DEFAULT_PIN_THEME,
-  zoomGlyph: "#3D3D3D",
-  statusPillBg: "rgba(216,216,216,0.7)",
+  zoomGlyph: "#202020",
+  statusPillBg: "rgba(249,249,249,0.94)",
 };

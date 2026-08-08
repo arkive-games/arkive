@@ -151,9 +151,6 @@ markerSearch:
 search:
   resultsCount: "{{count}} results"
   coords: "Coords: {{x}}, {{y}}"
-  scopeBoth: "All"
-  scopeName: "Name"
-  scopeToggle: "Toggle search scope"
 
 introModal:
   version: "Version"

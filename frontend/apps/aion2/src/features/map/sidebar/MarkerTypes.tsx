@@ -17,7 +17,7 @@ import { useMarkers } from "@/context/MarkersContext";
 import { parseIconUrl } from "@/lib/url";
 
 // Quiet neutral rows keep the dense filter list readable; selected rows use
-// the same warm-orange rail and tinted surface as the map marker treatment.
+// the same amber beacon rail and blue-tinted surface as the map marker treatment.
 const BUTTON_SKIN =
   "h-auto min-h-9 rounded-md border border-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-65 hover:border-[color:var(--arkive-divider)] hover:bg-card hover:text-foreground hover:opacity-100";
 const BUTTON_SKIN_ACTIVE =

@@ -182,9 +182,6 @@ markerSearch:
 search:
   resultsCount: "{{count}}个搜索结果"
   coords: "坐标：{{x}}，{{y}}"
-  scopeBoth: "全部"
-  scopeName: "名"
-  scopeToggle: "切换搜索范围"
 
 markerActions:
   markCompleted: "标记为已完成"

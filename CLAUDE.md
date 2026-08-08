@@ -128,6 +128,35 @@ polygon, and human review of `calibration/accepted_overlay.png`.
      the worktree and delete its merged local branch.
   8. Before a remote handoff, verify the signed commit, run a lightweight GitHub connectivity
      check, push once, and read the PR back from GitHub.
+  9. Classify the requested delivery before doing work: research summary, visual preview only,
+     code change, browser verification, or remote handoff. Do not silently expand one mode into
+     another. In particular, preview-only work must not modify production source, and research
+     requests must not turn into implementation.
+  10. Time-box open-ended design research to 15 minutes or six strong references, whichever
+      comes first. Report the useful patterns at that point and ask before widening the search.
+      Give a brief progress update at least every five minutes during any task that is not yet at
+      a verifiable milestone.
+  11. Use the follow-up fast path for a small fix inside the current coherent worktree: inspect
+      the owning file, make the smallest shared-first edit, run the affected app build or focused
+      test, then verify the exact user flow once. Do not create another worktree, rebuild every
+      app, or repeat full-page visual audits for a one-link, one-label, or one-state correction.
+      Run the complete suite once at closeout only when the accumulated change set warrants it.
+  12. Keep exactly one named Playwright session per active verification task. Reuse that session
+      for all routes, close it before handoff, and confirm that no task-owned `cliDaemon.js`
+      process remains; use `playwright-cli close-all`, then `playwright-cli kill-all` only for
+      stale daemons. On Windows, call `playwright-cli.cmd` or `npx.cmd` directly when PowerShell
+      script execution policy blocks the `.ps1` shims.
+  13. Treat browser snapshots, screenshots, traces, build output, generated previews, and dev
+      logs as disposable artifacts. Store them only in ignored locations, keep only the final
+      evidence needed for the current review, and remove it after verification. Never accumulate
+      dated preview variants or research captures at the repository root.
+  14. Keep local and production navigation explicit. The homepage is the single local browsing
+      entry at `http://localhost:15172`; in development its game cards must resolve to the fixed
+      local app ports, while production builds must continue to use production URLs. Environment
+      overrides retain highest priority.
+  15. Before deleting artifacts, prove that each target is ignored or generated, resolve its
+      absolute path inside this workspace, and check that no active dev server still owns it.
+      Never delete source assets or user-authored references merely because they are old.
 - **Typography / font sizes:** never hard-code pixel sizes (no `text-[13px]`,
   `font-size: 11px`). Always use the Tailwind scale steps (`text-xs`, `text-sm`,
   `text-base`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`) so text stays consistent
@@ -221,12 +250,12 @@ damage but scores 0.1141. Class engravings (52 of the 95) have **no** per-level 
 anywhere — only the 43 general ones are covered.
 
 ## Notes
-- **Canonical desktop map UI contract:** Before changing shared interactive-map
-  chrome or adding another game, read
-  `docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml`. It defines shared ownership,
-  layout, navigation, sidebar, search, color, typography, icon, marker-popup,
-  localization, accessibility, and new-game verification rules. Cross-game UI
-  work must follow its shared-first change routing rather than patching one app.
+- **Canonical site specifications:** Start with `docs/ARKIVE_SITE_SPEC.yaml` for
+  brand identity, cross-site experience rules, and the specification reading
+  router. Read `docs/ARKIVE_SITE_COLOR_SYSTEM.yaml` only for color or theme work,
+  and `docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml` only for desktop map UI work.
+  Files under `docs/superpowers/plans/` and `docs/superpowers/specs/` are historical
+  decision records; they never override these canonical top-level specifications.
 - **Bilibili Toy publishing:** each app can ship as a single self-contained toy
   (site + data + resource bundled). `frontend/apps/<app>/toy.config.json` holds the
   identity (slug is permanent once published; palworld is live as `arkive-palworld`).

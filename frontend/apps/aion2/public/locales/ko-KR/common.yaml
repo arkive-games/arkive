@@ -151,9 +151,6 @@ markerSearch:
 search:
   resultsCount: "결과 {{count}}건"
   coords: "좌표: {{x}}, {{y}}"
-  scopeBoth: "전체"
-  scopeName: "이름"
-  scopeToggle: "검색 범위 전환"
 
 introModal:
   version: "버전"

@@ -64,9 +64,9 @@ export interface PinTheme {
 export const DEFAULT_PIN_THEME: PinTheme = {
   pinDiscBg: "rgba(0,0,0,0.6)",
   pinBorder: "rgba(255,255,255,1)",
-  pinDot: "#2E97FF",
+  pinDot: "#0090FF",
   circularBorder: "rgba(255,255,255,0.9)",
-  completedAccent: "#22c55e",
+  completedAccent: "#30A46C",
 };
 
 // --------------------------------------------------- injected 2D surfaces ---

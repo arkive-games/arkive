@@ -4,6 +4,7 @@ import { cn, SiteFooter, useIsMobile } from "@gamemap/ui";
 
 import TopNavbar from "@/components/TopNavbar";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
+import { ARKIVE_HOME_URL } from "@/lib/brand";
 import { SITE_VERSION } from "@/lib/siteVersion";
 
 /**
@@ -69,7 +70,7 @@ export default function ContentLayout({
               lifts content clear of the fixed bottom tab bar + safe area. */}
           <SiteFooter
             className="pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-4"
-            homeUrl={import.meta.env.VITE_HOME_URL}
+            homeUrl={ARKIVE_HOME_URL}
             githubUrl={import.meta.env.VITE_GITHUB_URL}
             icpBeian={import.meta.env.VITE_ICP_BEIAN}
             versionLink={<Link to="/changelog">v{SITE_VERSION}</Link>}

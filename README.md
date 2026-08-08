@@ -18,6 +18,10 @@ kept in **separate artifact repos** and served over HTTP.
 | `tools/` | Data pipeline. `apps/{aion2,palworld}` extractors on a shared `packages/` framework; turns the raw game export into the `data-*` / `resource-*` artifacts. Python (uv). |
 | `docs/` | Design specs and implementation plans. |
 
+Current product and UI rules start at
+[`docs/ARKIVE_SITE_SPEC.yaml`](docs/ARKIVE_SITE_SPEC.yaml). It routes readers to
+the color and interactive-map specifications without requiring historical plans.
+
 ### Artifact repos (separate, served over HTTP — not in this monorepo)
 
 | Repo | Contents |

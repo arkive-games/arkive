@@ -331,8 +331,6 @@ export default function MapPage() {
     resultsCount: (n: number) => t('resultsCount', { count: n }),
     unnamed: t('unnamed'),
     noDescription: t('noDescription'),
-    scopeName: t('scopeName'),
-    scopeAll: t('scopeAll'),
   }), [t])
 
   const renderPopupContent = useCallback(

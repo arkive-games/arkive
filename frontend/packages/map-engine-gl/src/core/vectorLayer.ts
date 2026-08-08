@@ -97,7 +97,7 @@ import type { PixelBounds, Point } from "./types.ts";
  * the per-crossing hitch the Leaflet original was refactored to avoid.
  *
  * ## Colours
- * Leaflet styles regions with `var(--primary, #2E97FF)`; a GL shader cannot read
+ * Leaflet styles regions with `var(--primary, #0090FF)`; a GL shader cannot read
  * a CSS variable, so the resolved colour is injected
  * ({@link VectorLayerOptions.colors}, default {@link DEFAULT_VECTOR_COLORS}) and
  * the React layer is responsible for resolving the custom property (and for
@@ -108,7 +108,7 @@ import type { PixelBounds, Point } from "./types.ts";
 
 export interface VectorColors {
   /**
-   * Region fill + border colour. Leaflet: `var(--primary, #2E97FF)` — this is
+   * Region fill + border colour. Leaflet: `var(--primary, #0090FF)` — this is
    * that fallback.
    */
   region: string;
@@ -117,8 +117,8 @@ export interface VectorColors {
 }
 
 export const DEFAULT_VECTOR_COLORS: VectorColors = {
-  region: "#2E97FF",
-  overlayLine: "#2E97FF",
+  region: "#0090FF",
+  overlayLine: "#0090FF",
 };
 
 /**

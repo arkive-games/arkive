@@ -13,8 +13,8 @@ import {
   resolveChangelog,
 } from '@gamemap/ui'
 import { changelog, SITE_VERSION } from '../lib/siteVersion'
+import { ARKIVE_HOME_URL } from '../lib/brand'
 
-const ARKIVE_HOME_URL = import.meta.env.VITE_HOME_URL ?? 'https://tc-imba.com'
 const FEEDBACK_QQ_GROUP = '1091411026'
 const ABOUT_HISTORY_START_VERSION = '0.2.1'
 

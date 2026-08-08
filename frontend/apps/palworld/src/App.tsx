@@ -380,8 +380,6 @@ export default function App() {
     resultsCount: (n: number) => t('resultsCount', { count: n }),
     unnamed: t('unnamed'),
     noDescription: t('noDescription'),
-    scopeName: t('scopeName'),
-    scopeAll: t('scopeAll'),
   }), [t])
 
   const onToggle = useCallback((id: string) => {
@@ -478,7 +476,7 @@ export default function App() {
       id: `warp-${sel.id}`,
       from: { x: sel.x, y: sel.y },
       to: { x: target.x, y: target.y },
-      color: '#EE8A45',
+      color: '#FFC53D',
     }]
   }, [selectedMarkerId, markerRowById, mapId])
 

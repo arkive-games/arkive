@@ -24,8 +24,9 @@ const resources = {
         blurb: '我们整理游戏里的知识、地图和发现，陪你慢慢走完每一个喜欢的世界。',
       },
       nav: {
+        discoverGames: '发现游戏',
         allGames: '全部游戏',
-        mods: '模组库',
+        tools: '工具库',
         forum: '论坛',
         favorites: '我的收藏',
       },
@@ -60,6 +61,16 @@ const resources = {
           name: '幻兽帕鲁',
           desc: '地图、帕鲁图鉴与配种路线',
           feature: '从探索到配种，认识每一只帕鲁。',
+        },
+        vrising: {
+          name: '夜族崛起',
+          desc: '瓦尔多兰互动地图与区域资料',
+          feature: '追踪区域、资源与瓦尔多兰的探索路线。',
+        },
+        sts2: {
+          name: '杀戮尖塔2',
+          desc: '卡牌图鉴、角色资料与构筑知识',
+          feature: '查看卡牌与角色，整理下一次登塔思路。',
         },
       },
       comingSoon: {
@@ -104,7 +115,7 @@ const resources = {
         slogan: '萬千攻略，藏於一舟',
         blurb: '我們整理遊戲裡的知識、地圖和發現，陪你慢慢走完每一個喜歡的世界。',
       },
-      nav: { allGames: '全部遊戲', mods: '模組庫', forum: '論壇', favorites: '我的收藏' },
+      nav: { discoverGames: '探索遊戲', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', favorites: '我的收藏' },
       language: '語言',
       theme: { auto: '自動', light: '白天', dark: '黑夜', menu: '切換主題', short: '主題' },
       auth: { login: '登入' },
@@ -129,6 +140,8 @@ const resources = {
       site: {
         aion2: { name: 'AION2', desc: '互動地圖與遊戲資料庫', feature: '從地圖出發，找到每一個重要座標。' },
         palworld: { name: '幻獸帕魯', desc: '地圖、帕魯圖鑑與配種路線', feature: '從探索到配種，認識每一隻帕魯。' },
+        vrising: { name: '夜族崛起', desc: '瓦爾多蘭互動地圖與區域資料', feature: '追蹤區域、資源與瓦爾多蘭的探索路線。' },
+        sts2: { name: '殺戮尖塔2', desc: '卡牌圖鑑、角色資料與構築知識', feature: '查看卡牌與角色，整理下一次登塔思路。' },
       },
       comingSoon: {
         kicker: '下一站正在整理',
@@ -156,7 +169,7 @@ const resources = {
         slogan: 'Sail Games With Us.',
         blurb: 'We gather game knowledge, maps, and discoveries so you can enjoy every world at your own pace.',
       },
-      nav: { allGames: 'All games', mods: 'Mod library', forum: 'Forum', favorites: 'Favorites' },
+      nav: { discoverGames: 'Discover games', allGames: 'All games', tools: 'Tool library', forum: 'Forum', favorites: 'Favorites' },
       language: 'Language',
       theme: { auto: 'Auto', light: 'Light', dark: 'Dark', menu: 'Switch theme', short: 'Theme' },
       auth: { login: 'Log in' },
@@ -177,6 +190,8 @@ const resources = {
       site: {
         aion2: { name: 'AION2', desc: 'Interactive map and game database', feature: 'Start with the map and find every important coordinate.' },
         palworld: { name: 'Palworld', desc: 'Map, Paldeck, and breeding routes', feature: 'Explore, breed, and get to know every Pal.' },
+        vrising: { name: 'V Rising', desc: 'Vardoran interactive map and region guide', feature: 'Track regions, resources, and routes across Vardoran.' },
+        sts2: { name: 'Slay the Spire 2', desc: 'Card library, characters, and deckbuilding knowledge', feature: 'Study cards and characters before your next climb.' },
       },
       comingSoon: {
         kicker: 'The next stop is being catalogued',
@@ -200,7 +215,7 @@ const resources = {
   'ja-JP': {
     translation: {
       brand: { name: BRAND_NAME, slogan: '万千の攻略を、一艘の舟に。', blurb: 'ゲームの知識、マップ、発見を整理し、好きな世界を自分のペースで旅できる資料館です。' },
-      nav: { allGames: 'すべてのゲーム', mods: 'MODライブラリ', forum: 'フォーラム', favorites: 'お気に入り' },
+      nav: { discoverGames: 'ゲームを探す', allGames: 'すべてのゲーム', tools: 'ツールライブラリ', forum: 'フォーラム', favorites: 'お気に入り' },
       language: '言語',
       theme: { auto: '自動', light: 'ライト', dark: 'ダーク', menu: 'テーマを切り替える', short: 'テーマ' },
       auth: { login: 'ログイン' },
@@ -211,6 +226,8 @@ const resources = {
       site: {
         aion2: { name: 'AION2', desc: 'インタラクティブマップとゲームデータベース', feature: 'マップから始めて、大切な座標を見つけましょう。' },
         palworld: { name: 'Palworld', desc: 'マップ、パル図鑑、配合ルート', feature: '探索と配合を通して、すべてのパルを知りましょう。' },
+        vrising: { name: 'V Rising', desc: 'ヴァルドランのインタラクティブマップと地域情報', feature: '地域、資源、探索ルートを確認できます。' },
+        sts2: { name: 'Slay the Spire 2', desc: 'カード図鑑、キャラクター、デッキ構築情報', feature: '次の登頂に向けてカードとキャラクターを確認できます。' },
       },
       comingSoon: { kicker: '次の寄港地を整理中', title: 'さらに多くのゲームを制作中', description: '新しいマップとデータベースを順次追加しています。次の航海をお楽しみに。' },
       cta: { title: 'この発見を舟の中へ', description: 'ログインすると攻略の保存、マップ進捗の同期、別の端末からの再開ができます。', action: 'ログイン / 登録' },
@@ -226,7 +243,7 @@ const resources = {
   'ko-KR': {
     translation: {
       brand: { name: BRAND_NAME, slogan: '수많은 공략을 한 척의 배에.', blurb: '게임 속 지식과 지도, 발견을 모아 좋아하는 세계를 천천히 여행할 수 있도록 돕습니다.' },
-      nav: { allGames: '전체 게임', mods: '모드 보관함', forum: '포럼', favorites: '내 즐겨찾기' },
+      nav: { discoverGames: '게임 찾기', allGames: '전체 게임', tools: '도구 모음', forum: '포럼', favorites: '내 즐겨찾기' },
       language: '언어',
       theme: { auto: '자동', light: '라이트', dark: '다크', menu: '테마 전환', short: '테마' },
       auth: { login: '로그인' },
@@ -237,6 +254,8 @@ const resources = {
       site: {
         aion2: { name: 'AION2', desc: '인터랙티브 지도와 게임 데이터베이스', feature: '지도에서 시작해 중요한 좌표를 모두 찾아보세요.' },
         palworld: { name: 'Palworld', desc: '지도, 팰 도감, 교배 경로', feature: '탐험과 교배를 통해 모든 팰을 알아보세요.' },
+        vrising: { name: 'V Rising', desc: '바르도란 인터랙티브 지도와 지역 정보', feature: '바르도란의 지역과 자원, 탐험 경로를 확인하세요.' },
+        sts2: { name: 'Slay the Spire 2', desc: '카드 도감, 캐릭터, 덱 구성 정보', feature: '다음 등반을 위해 카드와 캐릭터를 살펴보세요.' },
       },
       comingSoon: { kicker: '다음 기착지를 정리 중', title: '더 많은 게임을 제작하고 있어요', description: '새로운 지도와 데이터베이스가 차례로 들어옵니다. 다음 항해를 기대해 주세요.' },
       cta: { title: '이번 발견을 배 안에 보관하세요', description: '로그인하면 공략을 저장하고 지도 진행 상황을 동기화해 어느 기기에서든 이어갈 수 있습니다.', action: '로그인 / 가입' },

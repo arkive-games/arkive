@@ -28,7 +28,7 @@ import {
   type SiteClickCounts,
 } from './sites'
 
-const NAV_KEYS = ['allGames', 'mods', 'forum', 'favorites'] as const
+const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum', 'favorites'] as const
 
 export default function App() {
   const { t, i18n } = useTranslation()
@@ -62,6 +62,7 @@ export default function App() {
   const navItems: ShellNavItem[] = NAV_KEYS.map((key) => ({
     key,
     label: t(`nav.${key}`),
+    active: key === 'discoverGames',
   }))
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -79,18 +80,23 @@ export default function App() {
         brandSlogan={t('brand.slogan')}
         nav={{
           items: navItems,
-          renderItem: (item, className, labelClassName) => (
-            <button
-              type="button"
-              className={className}
-              onClick={(event) => {
-                event.currentTarget.blur()
-                showComingSoon()
-              }}
-            >
-              <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
-            </button>
-          ),
+          renderItem: (item, className, labelClassName) => {
+            const label = <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
+            return item.key === 'discoverGames' ? (
+              <a href="#explore" className={className}>{label}</a>
+            ) : (
+              <button
+                type="button"
+                className={className}
+                onClick={(event) => {
+                  event.currentTarget.blur()
+                  showComingSoon()
+                }}
+              >
+                {label}
+              </button>
+            )
+          },
         }}
         languageSwitcher={{
           languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
@@ -143,7 +149,7 @@ export default function App() {
           )}
         </section>
 
-        <section className="home-shell explore-section" aria-labelledby="explore-heading">
+        <section id="explore" className="home-shell explore-section" aria-labelledby="explore-heading">
           <div className="section-heading">
             <div>
               <h2 id="explore-heading">{t('explore.title')}</h2>

@@ -1,3 +1,5 @@
+import { resolveArkiveHomeUrl } from '@gamemap/map-shell'
+
 /**
  * Where the "Arkive" brand link points.
  *
@@ -11,9 +13,11 @@
 /** True in a Bilibili Toy build (`VITE_TOY=1`, set by scripts/toy-build.mjs). */
 export const IS_TOY = Boolean(import.meta.env.VITE_TOY)
 
-export const ARKIVE_HOME_URL = IS_TOY
-  ? '/toy/arkive/index.html'
-  : (import.meta.env.VITE_HOME_URL ?? 'https://tc-imba.com')
+export const ARKIVE_HOME_URL = resolveArkiveHomeUrl({
+  envUrl: import.meta.env.VITE_HOME_URL,
+  dev: import.meta.env.DEV,
+  toy: IS_TOY,
+})
 
 /**
  * `target`/`rel` for that link. The web build opens the portal in a new tab so
