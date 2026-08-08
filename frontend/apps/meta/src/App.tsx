@@ -27,14 +27,21 @@ import {
   type SiteCard,
   type SiteClickCounts,
 } from './sites'
+import { AllGamesPage } from './AllGamesPage'
 
 const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum', 'favorites'] as const
+type HomeView = 'discoverGames' | 'allGames'
+
+function viewFromHash(): HomeView {
+  return window.location.hash === '#games' ? 'allGames' : 'discoverGames'
+}
 
 export default function App() {
   const { t, i18n } = useTranslation()
   const { theme, setTheme } = useTheme()
   const [clickCounts, setClickCounts] = useState<SiteClickCounts>({})
   const [noticeId, setNoticeId] = useState(0)
+  const [activeView, setActiveView] = useState<HomeView>(viewFromHash)
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
 
   useEffect(() => {
@@ -46,6 +53,15 @@ export default function App() {
   useEffect(() => {
     document.documentElement.lang = lng
   }, [lng])
+
+  useEffect(() => {
+    const updateView = () => {
+      setActiveView(viewFromHash())
+      window.scrollTo({ top: 0 })
+    }
+    window.addEventListener('hashchange', updateView)
+    return () => window.removeEventListener('hashchange', updateView)
+  }, [])
 
   useEffect(() => {
     if (!noticeId) return
@@ -62,7 +78,7 @@ export default function App() {
   const navItems: ShellNavItem[] = NAV_KEYS.map((key) => ({
     key,
     label: t(`nav.${key}`),
-    active: key === 'discoverGames',
+    active: key === activeView,
   }))
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -82,8 +98,8 @@ export default function App() {
           items: navItems,
           renderItem: (item, className, labelClassName) => {
             const label = <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
-            return item.key === 'discoverGames' ? (
-              <a href="#explore" className={className}>{label}</a>
+            return item.key === 'discoverGames' || item.key === 'allGames' ? (
+              <a href={item.key === 'allGames' ? '#games' : '#explore'} className={className}>{label}</a>
             ) : (
               <button
                 type="button"
@@ -120,8 +136,11 @@ export default function App() {
         onLogin={showComingSoon}
       />
 
-      <main>
-        <section className="home-shell hero-section" aria-labelledby="home-heading">
+      {activeView === 'allGames' ? (
+        <AllGamesPage sites={VISIBLE_SITES} onFavorite={showComingSoon} />
+      ) : (
+        <main>
+          <section className="home-shell hero-section" aria-labelledby="home-heading">
           <div className="hero-copy">
             <p className="hero-eyebrow">
               <span aria-hidden="true" />
@@ -147,18 +166,18 @@ export default function App() {
               <p>{t('comingSoon.title')}</p>
             </div>
           )}
-        </section>
+          </section>
 
-        <section id="explore" className="home-shell explore-section" aria-labelledby="explore-heading">
+          <section id="explore" className="home-shell explore-section" aria-labelledby="explore-heading">
           <div className="section-heading">
             <div>
               <h2 id="explore-heading">{t('explore.title')}</h2>
               <p>{t('explore.description')}</p>
             </div>
-            <button type="button" className="text-action" onClick={showComingSoon}>
+            <a href="#games" className="text-action">
               {t('action.browseAll')}
               <IconArrowRight className="size-4" stroke={1.8} aria-hidden="true" />
-            </button>
+            </a>
           </div>
 
           <div className="game-shelf">
@@ -167,16 +186,17 @@ export default function App() {
             ))}
             <ComingSoonCard onClick={showComingSoon} />
           </div>
-        </section>
+          </section>
 
-        <section className="home-shell join-section" aria-labelledby="join-heading">
+          <section className="home-shell join-section" aria-labelledby="join-heading">
           <div>
             <h2 id="join-heading">{t('cta.title')}</h2>
             <p>{t('cta.description')}</p>
           </div>
           <button type="button" onClick={showComingSoon}>{t('cta.action')}</button>
-        </section>
-      </main>
+          </section>
+        </main>
+      )}
 
       <HomeFooter onComingSoon={showComingSoon} />
 
