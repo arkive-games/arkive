@@ -601,6 +601,7 @@ export default function BreedingPage() {
             <>
               <div className="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2">
                 {shown.map((f) => {
+                  const fk = favKey(f)
                   return (
                     <RecipeCard
                       key={comboKey(f)}
@@ -608,6 +609,9 @@ export default function BreedingPage() {
                       names={payload?.names ?? {}}
                       meta={meta}
                       uniqueLabel={t('breeding.unique')}
+                      fav={{ isFav: favs.has(fk), onToggle: () => toggleFav(fk), label: t('breeding.favorite') }}
+                      onSelect={() => updateTree([], { a: f.a, b: f.b, ag: f.ag, bg: f.bg })}
+                      selectLabel={t('breeding.expandRecipe')}
                       variant={resultVariant}
                     />
                   )

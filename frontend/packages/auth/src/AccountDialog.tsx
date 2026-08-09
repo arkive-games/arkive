@@ -179,10 +179,13 @@ export function AccountDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* The width cap stays `sm:`-prefixed: a bare `max-w-md` lands in the same
+          tailwind-merge group as DialogContent's `max-w-[calc(100%-2rem)]` and
+          silently removes it, taking the phone's side gutter with it. */}
       <DialogContent
         showCloseButton={false}
         overlayClassName="z-[3000] bg-black/55 backdrop-blur-sm"
-        className="z-[3001] max-h-[calc(100dvh-2rem)] max-w-md gap-0 overflow-y-auto rounded-2xl border-border bg-card p-0 text-card-foreground shadow-2xl"
+        className="z-[3001] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto rounded-2xl border-border bg-card p-0 text-card-foreground shadow-2xl sm:max-w-md"
         data-testid="account-dialog"
       >
         <div className="relative border-b border-border bg-muted/30 px-6 pb-5 pt-7">

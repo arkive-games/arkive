@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useSearch } from "@tanstack/react-router";
 import {
   BookOpen,
   Map as MapIcon,
@@ -17,6 +17,14 @@ import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import SiteInfo from "@/components/SiteInfo";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
+import {
+  MAP_ENGINE_CHOICES,
+  MAP_ENGINE_LABELS,
+  resolveMapEngine,
+  useChooseMapEngine,
+  useStoredMapEngine,
+  type MapEngineChoice,
+} from "@/lib/mapEngineChoice";
 
 const THEME_OPTIONS: Theme[] = ["auto", "light", "dark"];
 
@@ -57,6 +65,15 @@ export default function BottomTabBar() {
   const active = activeTab(pathname);
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
   const brandName = getArkiveBrandName(currentLng, t("common:brand.name"));
+
+  // The renderer switcher lives here because the mobile layout renders no top
+  // bar at all — without it a phone could not leave the WebGL default. Reading
+  // `?engine=` with the same precedence MapRoute uses keeps the highlighted
+  // choice matching what is actually on screen. `strict: false` because this bar
+  // is mounted from the root route, which does not declare the param.
+  const engineParam = useSearch({ strict: false, select: (s) => (s as { engine?: unknown }).engine });
+  const activeEngine = resolveMapEngine(engineParam, useStoredMapEngine());
+  const chooseEngine = useChooseMapEngine();
 
   return (
     <ShellBottomNav
@@ -133,13 +150,25 @@ export default function BottomTabBar() {
         backLabel: t("common:settings.back", "Back"),
       }}
       theme={{
+        // The terse labels, not the flavoured ones the desktop dropdown uses:
+        // "Auto (Change with Map)" / "Day Mode (Elyos)" overflowed the
+        // segmented control and truncated to ambiguity at phone width.
         options: THEME_OPTIONS.map((value) => ({
           value,
-          label: t(`common:theme.${value}`),
+          label: t(`common:theme.short.${value}`),
         })),
         current: theme,
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t("common:menu.switchTheme", "Switch theme"),
+      }}
+      engine={{
+        choices: MAP_ENGINE_CHOICES.map((choice) => ({
+          value: choice,
+          label: MAP_ENGINE_LABELS[choice].short,
+        })),
+        current: activeEngine,
+        onChange: (value) => chooseEngine(value as MapEngineChoice),
+        rowLabel: t("common:menu.switchEngine", "Map renderer"),
       }}
       extra={
         <ArkiveAccountControl language={currentLng} variant="mobileRow" />
