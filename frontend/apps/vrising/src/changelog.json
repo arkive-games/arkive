@@ -3,7 +3,7 @@
     {
       "version": "0.9.0",
       "date": "2026-08-09",
-      "commit": "a956f7a933ddd0c43a929a97f415560bd5a0fd29",
+      "commit": "f24d4af51e48e32a29088cb654a16aa81f28750e",
       "changes": [
         {
           "kind": "feature",
@@ -18,7 +18,7 @@
     {
       "version": "0.8.0",
       "date": "2026-08-09",
-      "commit": "4dc0f03056d0dcedfb90404e4c845a418ea35465",
+      "commit": "752a7df6feb0f5a7fb88e59a465db68445bb56a4",
       "changes": [
         {
           "kind": "feature",
@@ -33,7 +33,7 @@
     {
       "version": "0.7.0",
       "date": "2026-08-09",
-      "commit": "1815972e982757fb60f88ed6d77bf9a582b02051",
+      "commit": "2a88d7bab76d025eb0638f72bc3d503e1097bd85",
       "changes": [
         {
           "kind": "data",
@@ -48,7 +48,7 @@
     {
       "version": "0.6.0",
       "date": "2026-08-09",
-      "commit": "e40ff2dc8ff875dca1db1ffa57f5d9b3b3c94ecd",
+      "commit": "957c2e5eb34462973420fdc3a8f13e373d870da5",
       "changes": [
         {
           "kind": "feature",
