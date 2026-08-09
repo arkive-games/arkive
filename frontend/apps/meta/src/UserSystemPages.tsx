@@ -45,6 +45,7 @@ import {
   avatarUrl,
   findPublicProfile,
   publicProfileHref,
+  RECOMMENDED_USERS,
 } from './userSystemData'
 import {
   useUserSystem,
@@ -127,11 +128,6 @@ const POST_FIXTURES = [
   { key: 'official', postId: 'community-guide', siteId: 'aion2' },
 ] as const
 
-const PEOPLE = [
-  { nameKey: 'forum.users.whiteDeer.name', descriptionKey: 'forum.users.whiteDeer.description', avatarSeed: 'arkive-white-deer', id: '10274831' },
-  { nameKey: 'forum.users.castleWatch.name', descriptionKey: 'forum.users.castleWatch.description', avatarSeed: 'arkive-castle-watch', id: '10039267' },
-  { nameKey: 'forum.users.ranchDuty.name', descriptionKey: 'forum.users.ranchDuty.description', avatarSeed: 'arkive-ranch-duty', id: '10357142' },
-] as const
 
 export function NotificationCenterPage({ section }: { section: NotificationSection }) {
   const { t } = useTranslation()
@@ -814,6 +810,19 @@ export function PublicUserProfilePage({
   const { state, toggleFollowedUser } = useUserSystem()
   const followed = state.followedUserIds.includes(userId)
 
+  // An unknown id has no profile to show. Rendering the first fixture instead --
+  // which is what the previous fallback did -- attributed one person's name, bio
+  // and follower counts to whatever id happened to be in the hash.
+  if (!profile) {
+    return (
+      <main className="user-system-main public-profile-main">
+        <div className="home-shell">
+          <EmptyAccountContent kind="posts" />
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="user-system-main public-profile-main">
       <div className="home-shell">
@@ -1088,11 +1097,11 @@ function PeopleList({ mode, ownProfile = false }: { mode: 'fans' | 'following'; 
   const { t } = useTranslation()
   const { state, toggleFollowedUser } = useUserSystem()
   const [previewFollowed, setPreviewFollowed] = useState<Set<string>>(
-    () => new Set(mode === 'following' ? PEOPLE.map((person) => person.id) : []),
+    () => new Set(mode === 'following' ? RECOMMENDED_USERS.map((person) => person.id) : []),
   )
   const visiblePeople = ownProfile
-    ? PEOPLE.filter((person) => state.followedUserIds.includes(person.id))
-    : PEOPLE
+    ? RECOMMENDED_USERS.filter((person) => state.followedUserIds.includes(person.id))
+    : RECOMMENDED_USERS
 
   const toggle = (id: string) => {
     if (ownProfile) {

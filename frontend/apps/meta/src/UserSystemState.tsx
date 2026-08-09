@@ -101,8 +101,36 @@ function localForumPosts(value: unknown): LocalForumPost[] {
       && typeof post.topic === 'string'
       && (post.imageSrc === null || typeof post.imageSrc === 'string')
       && (post.videoUrl === null || typeof post.videoUrl === 'string')
+      // Parseable, not merely a string: the account page formats this with
+      // Intl.DateTimeFormat, which throws RangeError on an Invalid Date. With no
+      // error boundary above it, a stored "yesterday" blanked the whole page.
       && typeof post.createdAt === 'string'
+      && !Number.isNaN(Date.parse(post.createdAt))
   })
+}
+
+/** Boolean-only merge: stored settings are untrusted JSON, and a non-boolean
+ *  reached `aria-checked` verbatim and made the toggle appear dead. */
+function booleanRecord<K extends string>(
+  defaults: Record<K, boolean>,
+  parsed: unknown,
+): Record<K, boolean> {
+  const source = (parsed ?? {}) as Partial<Record<K, unknown>>
+  const merged = { ...defaults }
+  for (const key of Object.keys(defaults) as K[]) {
+    if (typeof source[key] === 'boolean') merged[key] = source[key]
+  }
+  return merged
+}
+
+/** `window.localStorage` throws SecurityError on property access when the origin
+ *  has site data blocked, so even reading it must be guarded. */
+export function safeLocalStorage(): Storage | null {
+  try {
+    return typeof window === 'undefined' ? null : window.localStorage
+  } catch {
+    return null
+  }
 }
 
 export function readUserSystemState(storage: Pick<Storage, 'getItem'>, userId: string): UserSystemState {
@@ -118,10 +146,10 @@ export function readUserSystemState(storage: Pick<Storage, 'getItem'>, userId: s
           ? parsed.profile.avatarSrc
           : defaults.profile.avatarSrc,
       },
-      notificationSettings: { ...defaults.notificationSettings, ...parsed.notificationSettings },
+      notificationSettings: booleanRecord(defaults.notificationSettings, parsed.notificationSettings),
       readNotificationSections: stringArray(parsed.readNotificationSections)
         .filter((section): section is NotificationInboxSection => ['replies', 'mentions', 'likes', 'system'].includes(section)),
-      privacySettings: { ...defaults.privacySettings, ...parsed.privacySettings },
+      privacySettings: booleanRecord(defaults.privacySettings, parsed.privacySettings),
       followedUserIds: stringArray(parsed.followedUserIds),
       bookmarkedPostIds: stringArray(parsed.bookmarkedPostIds),
       likedPostIds: stringArray(parsed.likedPostIds),
@@ -153,21 +181,27 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
   }))
 
   useEffect(() => {
+    const storage = safeLocalStorage()
     setEntry({
       userId,
-      state: userId ? readUserSystemState(window.localStorage, userId) : createDefaultUserSystemState(),
+      state: userId && storage
+        ? readUserSystemState(storage, userId)
+        : createDefaultUserSystemState(),
     })
   }, [userId])
 
   const update = useCallback((mutate: (current: UserSystemState) => UserSystemState) => {
     if (!userId) return
     setEntry((currentEntry) => {
+      const storage = safeLocalStorage()
       const current = currentEntry.userId === userId
         ? currentEntry.state
-        : readUserSystemState(window.localStorage, userId)
+        : storage
+          ? readUserSystemState(storage, userId)
+          : createDefaultUserSystemState()
       const next = mutate(current)
       try {
-        writeUserSystemState(window.localStorage, userId, next)
+        if (storage) writeUserSystemState(storage, userId, next)
       } catch {
         // Keep the current session functional when storage is unavailable or full.
       }

@@ -9,6 +9,49 @@ export interface PublicProfileFixture {
   featuredPostKeys: string[]
 }
 
+export interface RecommendedUser {
+  id: string
+  nameKey: string
+  descriptionKey: string
+  avatarSeed: string
+}
+
+/**
+ * The forum's "who to follow" rail and the account pages' fans/following lists
+ * are the same four people, so they share one directory and one id per person.
+ * They previously carried two disjoint id sets — slugs here, numbers there —
+ * which made a follow taken in the forum invisible in the account pages. The
+ * numbers were worse than merely different: they collided with the post authors'
+ * `authorNumber` values in PUBLIC_PROFILE_FIXTURES below, so the same id denoted
+ * two different people depending on which page asked.
+ */
+export const RECOMMENDED_USERS: RecommendedUser[] = [
+  {
+    id: 'white-deer',
+    nameKey: 'forum.users.whiteDeer.name',
+    descriptionKey: 'forum.users.whiteDeer.description',
+    avatarSeed: 'arkive-white-deer',
+  },
+  {
+    id: 'castle-watch',
+    nameKey: 'forum.users.castleWatch.name',
+    descriptionKey: 'forum.users.castleWatch.description',
+    avatarSeed: 'arkive-castle-watch',
+  },
+  {
+    id: 'ranch-duty',
+    nameKey: 'forum.users.ranchDuty.name',
+    descriptionKey: 'forum.users.ranchDuty.description',
+    avatarSeed: 'arkive-ranch-duty',
+  },
+  {
+    id: 'spire-letter',
+    nameKey: 'forum.users.spireLetter.name',
+    descriptionKey: 'forum.users.spireLetter.description',
+    avatarSeed: 'arkive-spire-letter',
+  },
+]
+
 export const PUBLIC_PROFILE_FIXTURES: PublicProfileFixture[] = [
   {
     id: '10274831',
@@ -50,7 +93,11 @@ export function publicProfileHref(userId: string, section = 'posts') {
   return `#user/${encodeURIComponent(userId)}/${section}`
 }
 
-export function findPublicProfile(userId: string) {
+/**
+ * Undefined for an unknown id, deliberately. Falling back to the first fixture
+ * made every unrecognised `#user/<id>` render one specific person's name, bio and
+ * follower counts as if they were the requested user's.
+ */
+export function findPublicProfile(userId: string): PublicProfileFixture | undefined {
   return PUBLIC_PROFILE_FIXTURES.find((profile) => profile.id === userId)
-    ?? PUBLIC_PROFILE_FIXTURES[0]
 }

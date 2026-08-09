@@ -41,7 +41,7 @@ import palworldLogo from './assets/palworld-logo.png'
 import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
-import { avatarUrl, publicProfileHref } from './userSystemData'
+import { avatarUrl, findPublicProfile, publicProfileHref, RECOMMENDED_USERS } from './userSystemData'
 import { useUserSystem, type LocalForumPost } from './UserSystemState'
 import './forum.css'
 
@@ -119,6 +119,23 @@ function readForumImage(file: Blob) {
   })
 }
 
+/**
+ * `crypto.randomUUID` is `[SecureContext]`-only, so it is undefined over plain
+ * http -- which is exactly how the LAN/phone QA origin is served. Calling it
+ * there threw mid-publish and the dialog just sat there with nothing saved and
+ * no error shown. The `Date.now()` prefix already carries the uniqueness this
+ * needs; the suffix only has to break ties within the same millisecond.
+ */
+function localPostSuffix() {
+  // `typeof`, not a truthiness check: the DOM lib types randomUUID as always
+  // present, so TS narrows a plain `if` away (TS2774) even though the runtime
+  // value really is undefined outside a secure context.
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID()
+  }
+  return Math.trunc(Math.random() * 1e9).toString(36)
+}
+
 function isSafeVideoUrl(value: string) {
   if (!value) return true
   try {
@@ -127,13 +144,6 @@ function isSafeVideoUrl(value: string) {
   } catch {
     return false
   }
-}
-
-interface RecommendedUser {
-  id: string
-  nameKey: string
-  descriptionKey: string
-  avatarSeed: string
 }
 
 const CHANNELS: Array<{
@@ -230,32 +240,6 @@ const POSTS: ForumPost[] = [
   },
 ]
 
-const RECOMMENDED_USERS: RecommendedUser[] = [
-  {
-    id: 'white-deer',
-    nameKey: 'forum.users.whiteDeer.name',
-    descriptionKey: 'forum.users.whiteDeer.description',
-    avatarSeed: 'arkive-white-deer',
-  },
-  {
-    id: 'castle-watch',
-    nameKey: 'forum.users.castleWatch.name',
-    descriptionKey: 'forum.users.castleWatch.description',
-    avatarSeed: 'arkive-castle-watch',
-  },
-  {
-    id: 'ranch-duty',
-    nameKey: 'forum.users.ranchDuty.name',
-    descriptionKey: 'forum.users.ranchDuty.description',
-    avatarSeed: 'arkive-ranch-duty',
-  },
-  {
-    id: 'spire-letter',
-    nameKey: 'forum.users.spireLetter.name',
-    descriptionKey: 'forum.users.spireLetter.description',
-    avatarSeed: 'arkive-spire-letter',
-  },
-]
 
 const GAME_LOGOS: Record<string, string> = {
   aion2: aion2Logo,
@@ -329,7 +313,16 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     own: true,
   })), [currentAvatar, t, user?.id, user?.name, userSystemState.publishedPosts])
 
-  const allPosts = useMemo(() => [...localPosts, ...POSTS], [localPosts])
+  // `localPosts` is already newest-first (publishForumPost prepends), while the
+  // static POSTS fixtures are authored oldest-first. "Latest" therefore flips
+  // only the fixtures: reversing the combined list instead would sink the post
+  // the user just published to the very bottom of the feed.
+  const allPosts = useMemo(
+    () => (feedTab === 'latest'
+      ? [...localPosts, ...[...POSTS].reverse()]
+      : [...localPosts, ...POSTS]),
+    [feedTab, localPosts],
+  )
 
   const visiblePosts = useMemo(() => {
     const normalizedQuery = submittedQuery.trim().toLocaleLowerCase()
@@ -349,7 +342,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
       return searchable.includes(normalizedQuery)
     })
 
-    return feedTab === 'latest' ? [...filtered].reverse() : filtered
+    return filtered
   }, [allPosts, channel, feedTab, followingOnly, gameFilter, submittedQuery, t, userSystemState.followedUserIds])
 
   const totalPages = Math.max(1, Math.ceil(visiblePosts.length / POSTS_PER_PAGE))
@@ -720,7 +713,14 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
                   <article key={user.id}>
                     <img src={avatarUrl(user.avatarSeed)} alt="" loading="lazy" />
                     <span>
-                      <strong><a href={publicProfileHref(user.id)}>{t(user.nameKey)}</a></strong>
+                      {/* Linked only when a profile actually exists: these four
+                          have no fixture, and the lookup used to answer an
+                          unknown id with some other person's page. */}
+                      <strong>
+                        {findPublicProfile(user.id)
+                          ? <a href={publicProfileHref(user.id)}>{t(user.nameKey)}</a>
+                          : t(user.nameKey)}
+                      </strong>
                       <small>{t(user.descriptionKey)}</small>
                     </span>
                     <button
@@ -863,7 +863,7 @@ function ForumComposerDialog({
     }
 
     onPublish({
-      id: `local-${Date.now()}-${window.crypto.randomUUID()}`,
+      id: `local-${Date.now()}-${localPostSuffix()}`,
       title: normalizedTitle,
       content: normalizedContent,
       channel,
