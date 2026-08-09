@@ -1,0 +1,284 @@
+schema_version: "1.0.0"
+spec_id: "arkive.state-memory"
+title: "Arkive State Memory Specification"
+status: "canonical"
+last_reviewed: "2026-08-10"
+
+references:
+  parent: "docs/ARKIVE_SITE_SPEC.yaml"
+  mobile_experience: "docs/ARKIVE_MOBILE_EXPERIENCE_SPEC.yaml"
+  repository_contract: "CLAUDE.md"
+  reading_rule: >-
+    Read the parent site specification first. Read this file whenever a task
+    creates, restores, synchronizes, expires, clears, or migrates user-facing
+    state. Viewport-specific presentation remains owned by the mobile or
+    desktop specialist specification.
+
+purpose:
+  summary: >-
+    Define one state-memory contract for every Arkive web product, viewport,
+    and game so returning users can continue meaningful work without restoring
+    stale interface noise.
+  outcomes:
+    - "Desktop and mobile preserve the same task state when the task is semantically identical."
+    - "Every game uses the same state classes, precedence, retention, clearing, and migration rules."
+    - "A new game declares its memory inventory instead of inventing a storage mechanism."
+    - "Account-backed progress can cross games and devices without placing sensitive data in browser storage."
+
+scope:
+  products:
+    - "Portal and discovery pages"
+    - "Game maps, encyclopedias, catalogs, details, databases, and tools"
+    - "Account, favorites, progress, forum, feedback, and publishing surfaces"
+    - "Current and future desktop and mobile web experiences"
+  excluded:
+    - "Authentication credentials and authorization tokens"
+    - "Server caches, extracted game data, and build artifacts"
+    - "Native application state that never enters the web experience"
+
+principles:
+  rules:
+    - "Remember progress and deliberate preferences, not incidental interface motion."
+    - "Restoration must reduce repeated work and must never surprise the user with a stale modal or hidden result set."
+    - "The same semantic state uses one record across desktop and mobile; only presentation-only state may be viewport-scoped."
+    - "An explicit URL always wins for the current visit."
+    - "Every durable memory has a visible way to clear or restore its default."
+    - "Invalid, expired, unauthorized, or incompatible memory falls back safely to the product default."
+    - "Automatic saving stays quiet; do not show a toast for every stored change."
+
+state_classes:
+  shareable_route:
+    purpose: "State another person should be able to open with the same meaning."
+    examples:
+      - "Entity, map, tool target, or selected game"
+      - "A deliberate search or filter encoded for sharing"
+      - "A calculator configuration intentionally exposed as a share link"
+    primary_store: "URL path and search parameters"
+    retention: "As long as the URL remains valid"
+    rules:
+      - "Opening the URL must not overwrite a durable personal preference until the user changes that preference."
+      - "Keep URLs concise and omit values equal to defaults."
+  session_context:
+    purpose: "The browsing position needed to return to the same working surface."
+    examples:
+      - "Catalog query, page, reveal depth, and scroll position"
+      - "The list context behind a detail page"
+      - "An unsent picker query inside an active tool session"
+    primary_store: "History state first; sessionStorage when the context spans route entries"
+    retention: "Current browser tab or at most 24 hours"
+    rules:
+      - "Restore on Back or a direct return within the same task session."
+      - "Do not turn an old exploratory search into a permanent default."
+  device_preference:
+    purpose: "A deliberate, repeatable way the user wants Arkive to behave on this device."
+    examples:
+      - "Language, theme, catalog view mode, sort direction, and map display toggles"
+      - "Mobile detail disclosure preferences"
+      - "A preferred result density where the product offers a real choice"
+    primary_store: "Validated localStorage through the shared memory adapter"
+    retention: "Until cleared, replaced, or migrated"
+    rules:
+      - "Scope presentation-only preferences by desktop or mobile when the layouts have different meanings."
+      - "Do not scope semantic filters or tool inputs by viewport."
+  task_draft:
+    purpose: "User-authored or calculation work that would be costly to reconstruct."
+    examples:
+      - "Calculator selections, inputs, route plans, and results"
+      - "Forum posts, replies, feedback, and profile edits not yet submitted"
+      - "A multi-step build, loadout, breeding chain, or comparison"
+    primary_store: "Device storage for anonymous users; account draft service when authenticated and supported"
+    retention: "Until submitted or explicitly cleared, with a 30-day maximum for local drafts"
+    rules:
+      - "Clear a submitted draft only after the server confirms success."
+      - "Partition drafts by account id and surface id."
+      - "Show one quiet saved-state label only when losing the draft would be consequential."
+  durable_progress:
+    purpose: "User-owned records expected to survive devices, sessions, and product upgrades."
+    examples:
+      - "Favorites, completed markers, defeated bosses, collections, saved builds, and followed content"
+      - "The most recent meaningful destination used by Continue exploring"
+    primary_store: "Account service, with an optional validated local fallback for anonymous use"
+    retention: "Until the user removes it or the owning record is retired"
+    rules:
+      - "Synchronize by stable game-facing ids, never array positions or rendered labels."
+      - "Resolve conflicts explicitly by record type; do not silently replace a larger progress set with an older smaller set."
+  transient_ui:
+    purpose: "Short-lived state that must start clean."
+    examples:
+      - "Open sheets, dialogs, popovers, menus, and language drill-down panes"
+      - "Hover, focus, pressed state, keyboard visibility, loading, errors, and toasts"
+      - "Temporary map search result highlighting and destructive confirmations"
+    primary_store: "Component memory only"
+    retention: "Until the surface closes, navigates, reloads, or crosses an incompatible breakpoint"
+    rule: "Never persist or synchronize transient UI state."
+
+restore_precedence:
+  order:
+    - "Explicit URL state for the current visit"
+    - "Current history entry and valid session context"
+    - "Authenticated account state"
+    - "Valid device preference or anonymous fallback"
+    - "Product default"
+  rules:
+    - "A lower-precedence source fills only values absent from higher-precedence sources."
+    - "User interaction after restoration becomes the active source for subsequent saves."
+    - "Data-version validation runs before a restored value reaches a component."
+
+viewport_contract:
+  shared_across_desktop_and_mobile:
+    - "Selected entity, map, semantic filters, sort meaning, tool inputs, drafts, favorites, and progress"
+    - "Catalog query while the same browsing task remains active"
+  viewport_scoped:
+    - "Grid or list choice when one mode does not exist on both viewports"
+    - "Detail disclosure state when desktop always renders complete sections"
+    - "Presentation density explicitly offered as a user preference"
+  never_transfer:
+    - "Open mobile sheets or desktop dropdowns"
+    - "Scroll offsets between layouts with different content geometry"
+  breakpoint_rule: "Crossing a breakpoint closes transient overlays but preserves the semantic task state."
+
+surface_contracts:
+  portal:
+    remember:
+      - "Last meaningful game destination, route, entity or tool, title, timestamp, and optional progress summary"
+      - "Up to ten recent meaningful destinations, deduplicated by canonical destination id"
+    presentation:
+      - "Continue exploring uses a real stored destination, never popularity data disguised as history."
+      - "Do not show a continuation record when the destination is unavailable or older than 30 days."
+  catalogs_and_databases:
+    durable:
+      - "Facet selections, sort direction, and deliberate grid or list mode"
+    session_only:
+      - "Query, current page, incremental reveal depth, and scroll position"
+    restoration: "Restore the complete list context when returning from a detail page."
+    clear_action: "One Clear filters action resets facets, query, page, and the active result scope."
+  detail_pages:
+    durable:
+      - "Mobile disclosure preference by entity type and section id"
+    session_only:
+      - "Reading position when navigating back to the same detail entry"
+    rule: "Do not store a separate disclosure object for every entity when one type-level preference expresses the user's intent."
+  maps:
+    durable:
+      - "Last map, per-map camera, visible marker subtypes, selected marker, and deliberate label or boundary toggles"
+      - "Completion and collection progress through the durable-progress tier"
+    session_only:
+      - "An active search query while following a map-to-detail-to-map flow"
+    excluded:
+      - "Open search or filter sheet"
+      - "Hovered marker, cursor coordinates, temporary search highlights, and popup scroll position"
+  tools_and_calculators:
+    durable:
+      - "Mode, target entities, selections, numeric inputs, calculated route, and final result"
+    shareable: "Expose an explicit share action when the configuration is useful to another player."
+    clear_action: "Only an explicit Clear action returns the workflow to defaults."
+    rule: "A picker search string is session context, not part of the durable calculation."
+  forms_and_editors:
+    drafts:
+      - "Forum post title and body"
+      - "Reply, feedback, profile, and other multi-field authored content"
+    excluded:
+      - "Passwords, one-time codes, access tokens, payment data, and file bytes"
+    rule: "A draft is local to its account and destination and clears only after confirmed submission or explicit discard."
+  account_and_progress:
+    durable:
+      - "Favorites, follows, completion, collections, saved builds, and notification preferences"
+    logout: "Remove account-bound browser snapshots and drafts from the active device; keep anonymous interface preferences."
+
+shared_implementation_contract:
+  owner: "frontend/packages/state-memory"
+  rule: >-
+    All new persistence flows through the shared adapter. Game applications
+    declare records and consume typed values; they do not call localStorage or
+    sessionStorage directly for new features.
+  required_adapters:
+    - "URL and history adapter"
+    - "Session storage adapter"
+    - "Validated device storage adapter"
+    - "Account synchronization adapter"
+    - "No-op adapter for unavailable or restricted storage"
+  record_definition:
+    required_fields:
+      - "id"
+      - "game or site namespace"
+      - "state class"
+      - "schema version"
+      - "default value"
+      - "runtime validator"
+      - "retention or expiry"
+      - "clear behavior"
+      - "migration behavior"
+    optional_fields:
+      - "viewport scope"
+      - "account scope"
+      - "data-version dependency"
+      - "merge strategy"
+  key_format: "arkive.memory.v<schema>.<site-or-game>.<surface>.<record>"
+  event_contract:
+    - "Restore once before the owning interactive surface becomes usable."
+    - "Debounce high-frequency writes such as map movement, sliders, and text drafts."
+    - "Synchronize compatible device preferences across tabs without creating write loops."
+    - "Flush consequential drafts on visibility change when storage is available."
+
+validation_and_migration:
+  rules:
+    - "Parse stored values as unknown and validate before use."
+    - "Bound arrays, strings, and object depth before writing or restoring."
+    - "Migrate known prior schemas explicitly; discard unknown future or incompatible schemas."
+    - "Remove ids that no longer exist in the current data version while preserving valid siblings."
+    - "A failed restore must never block navigation or leave the page blank."
+    - "Storage unavailability degrades to current-session behavior without repeated errors."
+
+privacy_and_security:
+  rules:
+    - "Never store credentials, authorization tokens, passwords, or secrets through the state-memory system."
+    - "Treat authored drafts, recent history, and account snapshots as private data."
+    - "Partition account-bound keys by stable opaque account id and remove them on logout."
+    - "Do not use localStorage as a cross-subdomain transport. Use an approved parent-domain preference mechanism or the account service."
+    - "Do not record memory values in analytics events, console logs, or error messages."
+    - "Respect browser storage restrictions and private browsing without prompting the user to weaken them."
+
+clear_and_control:
+  surface_actions:
+    - "Catalogs expose Clear filters."
+    - "Tools expose Clear or New calculation."
+    - "Editors expose Discard draft when a draft exists."
+    - "Favorites and progress expose their domain-specific remove or reset action."
+  account_settings:
+    - "Clear recent activity"
+    - "Clear local drafts"
+    - "Reset interface preferences"
+    - "Reset game progress only behind a separate destructive confirmation"
+  feedback: "Confirm explicit destructive clearing once; automatic expiry and invalid-data cleanup stay silent."
+
+new_game_contract:
+  required_inventory:
+    - "List every remembered record and assign one state class."
+    - "Declare stable ids, defaults, validators, retention, clear actions, and schema versions."
+    - "Identify which semantic records must cross desktop and mobile."
+    - "Identify which durable records require account synchronization."
+    - "Declare data-version dependencies and a migration or discard strategy."
+  adoption_rule: "A game is not memory-complete while it persists state through app-local storage helpers."
+
+verification:
+  required_cases:
+    - "Reload, Back, Forward, direct URL, new tab, and browser restart"
+    - "Desktop-to-mobile and mobile-to-desktop breakpoint transitions"
+    - "Anonymous-to-authenticated adoption, logout, and account switching"
+    - "Expired, malformed, oversized, old-schema, and future-schema records"
+    - "Unavailable storage and private browsing"
+    - "Changed game-data versions with deleted ids"
+    - "Two tabs changing one compatible preference"
+    - "Explicit URL state overriding stored state without replacing the preference"
+    - "Clear, discard, submit success, and submit failure"
+  acceptance:
+    - "The user resumes meaningful work with no stale overlay or hidden content."
+    - "The restored state is semantically identical on desktop and mobile."
+    - "No sensitive value appears in browser storage, logs, analytics, or URLs."
+
+maintenance:
+  rules:
+    - "Keep storage and lifecycle rules in this specification rather than game documentation."
+    - "A game specification may list owned records but cannot redefine state classes or precedence."
+    - "Update this contract before introducing a new persistence tier or retention policy."
+    - "Update last_reviewed whenever the contract is intentionally reviewed."

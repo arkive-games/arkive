@@ -1,18 +1,20 @@
-schema_version: "1.2.0"
+schema_version: "1.3.0"
 spec_id: "arkive.mobile-experience"
 title: "Arkive Mobile Web Experience Specification"
 status: "canonical"
-last_reviewed: "2026-08-09"
+last_reviewed: "2026-08-10"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
   color_system: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
   desktop_map_ui: "docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml"
+  state_memory: "docs/ARKIVE_STATE_MEMORY_SPEC.yaml"
   repository_contract: "CLAUDE.md"
   reading_rule: >-
     Read the parent site specification first. Read this file for layouts and
-    interactions below the md breakpoint. Open the color or desktop map
-    specification only when that specialist scope is also part of the task.
+    interactions below the md breakpoint. Read the state-memory specification
+    for all persistence behavior. Open the color or desktop map specification
+    only when that specialist scope is also part of the task.
 
 purpose:
   summary: >-
@@ -242,7 +244,7 @@ detail_pages:
     - "Secondary skills, drops, locations, formulas, and cross-links"
   sections:
     control: "Long sections provide per-section expand and collapse actions plus expand-all and collapse-all."
-    memory: "Persist the user's mobile disclosure preference across reloads and entity navigation."
+    memory: "Use the mobile disclosure scope defined by the state-memory specification."
     default: "Expand only the small set needed to identify and evaluate the entity."
     desktop: "Always render complete desktop section content regardless of stored mobile state."
   dense_tables:
@@ -262,9 +264,7 @@ tools_and_calculators:
     layout: "Keep related selectors in one horizontal row when each remains readable; otherwise wrap as an intentional grid."
     content: "Show localized identity, game-facing number, and only the metadata needed for the choice."
     popup: "Search and selection share one surface rather than opening redundant nested selectors."
-  state_memory:
-    rule: "Preserve selections, mode settings, and calculated routes while navigating within the game product."
-    reset: "Only an explicit Clear action resets the workflow state."
+  memory_contract: "Preserve the semantic workflow through the shared state-memory specification; presentation-only mobile state remains viewport-scoped."
   results:
     mobile: "Transform wide calculation tables into stacked result groups."
     hierarchy: "Lead with the result name and final value; place contributing stages in a compact labeled grid."
@@ -333,6 +333,7 @@ new_game_checklist:
     - "Provide supported languages and all mobile control translations."
     - "Connect the shared follow-system, light, and dark theme preference."
     - "Expose login through the mobile content header, not the More sheet."
+    - "Register every remembered record through the shared state-memory contract."
   maps:
     - "Move map search and filters into bottom sheets."
     - "Remove the mobile renderer selector."
@@ -348,6 +349,7 @@ new_game_checklist:
     - "Verify required portrait widths, landscape transition, light mode, and dark mode."
     - "Verify there is no document-level horizontal overflow."
     - "Scan Chinese rendered text for untranslated Latin tokens and classify every remaining token."
+    - "Run the state-memory specification's restore, migration, clearing, and breakpoint cases."
 
 verification:
   static:
