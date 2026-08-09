@@ -26,7 +26,7 @@ export interface ArkiveMobileMapControlsProps {
 }
 
 const ACTION =
-  "relative flex size-12 touch-manipulation items-center justify-center rounded-xl border bg-card text-foreground shadow-[0_0.4rem_1.2rem_rgba(8,33,51,0.16)] transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+  "arkive-mobile-map-action relative flex size-12 touch-manipulation items-center justify-center rounded-lg border bg-card text-foreground shadow-[0_0.35rem_1rem_rgba(0,0,0,0.14)] transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 /**
  * Shared phone controls for full-bleed maps. The engine-owned zoom pill is
@@ -50,7 +50,7 @@ export function ArkiveMobileMapControls({
             data-testid="map-fab-search"
             aria-label={search.label}
             aria-expanded={search.open}
-            className={cn(ACTION, "border-primary bg-primary text-primary-foreground")}
+            className={cn(ACTION, "border-border text-[color:var(--arkive-nav-active)]")}
           >
             <IconSearch className="size-5" stroke={1.8} />
           </button>

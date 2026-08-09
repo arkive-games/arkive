@@ -17,12 +17,6 @@
   --color-input: var(--input);
 }
 
-@media (max-width: 767px) {
-  html {
-    font-size: 18px;
-  }
-}
-
 /* The map void is game-owned because it must blend with Vardoran's parchment
    artwork. All interface chrome continues to use the shared Arkive tokens. */
 .leaflet-container,

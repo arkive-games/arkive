@@ -22,10 +22,6 @@
 /* Phones (< 768px, the `useIsMobile` breakpoint) sit closer to the eye but the
    text is physically much smaller, so nudge the same knob up one step there. */
 @media (max-width: 767px) {
-  html {
-    font-size: 18px;
-  }
-
   .palworld-map-search > div:first-of-type,
   [data-content-scroll] input[type='search'] {
     border-color: color-mix(in srgb, var(--primary) 70%, transparent);

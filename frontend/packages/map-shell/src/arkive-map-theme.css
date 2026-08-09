@@ -243,6 +243,44 @@ body {
     --arkive-content-page-top-space: 17px;
   }
 
+  .arkive-mobile-header,
+  .arkive-bottom-nav {
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .arkive-bottom-tab svg,
+  .arkive-more-route svg {
+    stroke-width: 1.8;
+  }
+
+  .arkive-more-sheet,
+  [data-testid="mobile-filter-sheet"],
+  .arkive-mobile-map-sheet {
+    border-radius: 0.5rem 0.5rem 0 0;
+    background: var(--background);
+    box-shadow: 0 -0.75rem 2.5rem rgba(0, 0, 0, 0.16);
+  }
+
+  .arkive-more-sheet [data-slot="sheet-close"],
+  [data-testid="mobile-filter-sheet"] [data-slot="sheet-close"],
+  .arkive-mobile-map-sheet [data-slot="sheet-close"] {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.5rem;
+    background: var(--background);
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .arkive-content-page :where(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+    border-radius: 0.5rem;
+  }
+
+  [data-content-scroll] :where(input[type="search"], input[type="text"], select) {
+    border-radius: 0.5rem;
+  }
+
   .arkive-mobile-map-actions {
     bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
   }
@@ -253,15 +291,37 @@ body {
     bottom: calc(env(safe-area-inset-bottom) + 11.5rem);
   }
 
+  .arkive-mobile-map .gm-zoom-pill,
+  .arkive-mobile-map .gmgl-zoom-pill {
+    border-radius: 0.5rem;
+  }
+
+  .arkive-mobile-map .gm-zoom-btn,
+  .arkive-mobile-map .gmgl-zoom-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
   .arkive-mobile-map .gm-statusbar-stack,
   .arkive-mobile-map .gmgl-statusbar-stack {
     bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
   }
 
+  .arkive-mobile-map .gm-statusbar-footer,
+  .arkive-mobile-map .gmgl-statusbar-footer,
+  .arkive-mobile-map .gm-statusbar-pill,
+  .arkive-mobile-map .gmgl-statusbar-pill {
+    border-color: rgba(255, 255, 255, 0.18);
+    border-radius: 0.4rem;
+    background: rgba(25, 25, 25, 0.88) !important;
+    color: #EEEEEE;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
   .arkive-mobile-map-sheet {
     width: auto;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
     overflow: hidden;
   }
 

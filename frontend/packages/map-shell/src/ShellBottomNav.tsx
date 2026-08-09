@@ -100,12 +100,12 @@ type MorePane = "main" | "language"
  * phone width. Short labels still sit inline; long ones drop to their own line.
  */
 const ROW =
-  "flex min-h-11 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg border border-border px-3 py-2 text-sm"
+  "arkive-setting-row flex min-h-12 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg border border-border px-3 py-2 text-sm"
 
 /** A small on/off pill, shared by the theme segments and the engine choices. */
 function pillClass(selected: boolean) {
   return cn(
-    "min-w-0 whitespace-normal px-2 py-1 text-center text-xs font-medium leading-tight transition-colors",
+    "flex min-h-11 min-w-0 items-center justify-center whitespace-normal px-2 py-1 text-center text-xs font-semibold leading-tight transition-colors",
     selected ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
   )
 }
@@ -150,9 +150,9 @@ export function ShellBottomNav({
 
   const tabClass = (active?: boolean) =>
     cn(
-      "relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-xs font-medium transition-colors active:bg-accent/70",
+      "arkive-bottom-tab relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-1 px-0.5 py-1.5 text-xs font-semibold transition-colors active:bg-accent/70",
       active
-        ? "text-primary after:absolute after:left-1/2 after:top-0 after:h-0.5 after:w-6 after:-translate-x-1/2 after:rounded-full after:bg-primary"
+        ? "text-[color:var(--arkive-nav-active)] after:absolute after:left-1/2 after:top-0 after:h-[3px] after:w-10 after:-translate-x-1/2 after:rounded-b-sm after:bg-primary"
         : "text-muted-foreground",
       classNames?.tab,
       active && classNames?.tabActive,
@@ -163,7 +163,7 @@ export function ShellBottomNav({
       <nav
         data-testid="bottom-tab-bar"
         className={cn(
-          "fixed inset-x-0 bottom-0 z-[2500] flex min-h-[calc(3.5rem+env(safe-area-inset-bottom))] border-t border-border bg-card/97 text-card-foreground shadow-[0_-0.5rem_1.5rem_rgba(8,33,51,0.08)] backdrop-blur md:hidden",
+          "arkive-bottom-nav fixed inset-x-0 bottom-0 z-[2500] flex min-h-[calc(3.5rem+env(safe-area-inset-bottom))] border-t border-border bg-background/98 text-foreground md:hidden",
           classNames?.root,
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -201,8 +201,8 @@ export function ShellBottomNav({
           <SheetContent
             side="bottom"
             data-testid="more-sheet"
-            className="max-h-[90dvh] overflow-y-auto rounded-t-xl"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+            className="arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+3.5rem)] max-h-[min(90dvh,calc(100dvh-4.5rem))] overflow-y-auto rounded-t-lg border"
+            style={{ paddingBottom: "1rem" }}
           >
             {/* `pr-8` keeps the header clear of the sheet's absolute close button. */}
             <SheetHeader className="pr-8">
@@ -224,7 +224,7 @@ export function ShellBottomNav({
                         {grid.renderItem(
                           item,
                           cn(
-                            "flex min-h-16 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border px-1 py-2 text-xs font-medium active:scale-[0.98]",
+                            "arkive-more-route flex min-h-16 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border px-1 py-2 text-xs font-semibold active:scale-[0.98]",
                             item.active
                               ? "bg-primary text-primary-foreground"
                               : "bg-card text-card-foreground",

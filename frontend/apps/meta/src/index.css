@@ -789,39 +789,104 @@ footer a:focus-visible {
 }
 
 @media (max-width: 47.99rem) {
+  body {
+    background: var(--background);
+  }
+
   .home-shell {
     width: min(calc(100% - 2rem), var(--home-shell));
   }
 
   .hero-section {
-    padding-block: 3.2rem 4.5rem;
+    gap: 1.5rem;
+    min-height: auto;
+    padding-block: 1.5rem 2.75rem;
+  }
+
+  .hero-eyebrow {
+    margin-bottom: 0.75rem;
+    letter-spacing: 0;
+  }
+
+  .hero-eyebrow > span {
+    display: none;
   }
 
   .hero-title {
-    font-size: clamp(2.65rem, 13vw, 4.1rem);
+    font-size: 2.25rem;
+    letter-spacing: 0;
+    line-height: 1.12;
+  }
+
+  .hero-description {
+    margin-top: 0.9rem;
+    line-height: 1.65;
   }
 
   .hero-search {
-    align-items: stretch;
-    flex-wrap: wrap;
+    min-height: 3rem;
+    align-items: center;
+    gap: 0.55rem;
+    margin-top: 1.25rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+    border-color: var(--primary);
+    border-radius: 0.5rem;
+    box-shadow: none;
   }
 
   .hero-search input {
-    min-width: calc(100% - 2.2rem);
+    min-width: 0;
+    font-size: 0.75rem;
   }
 
   .hero-search button {
-    width: 100%;
+    width: auto;
+    min-height: 2.4rem;
+    padding-inline: 0.85rem;
+    border-radius: 0.4rem;
+    font-size: 0.75rem;
   }
 
   .featured-game,
   .featured-empty {
-    min-height: 27rem;
-    border-radius: 1.5rem 1.5rem 1.5rem 3rem;
+    min-height: 13rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.75rem 2rem color-mix(in srgb, var(--home-deep) 12%, transparent);
+  }
+
+  .featured-route {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .featured-content {
-    inset: auto 1.5rem 1.7rem;
+    inset: auto 1rem 1rem;
+  }
+
+  .featured-label {
+    margin-bottom: 0.35rem;
+    letter-spacing: 0;
+  }
+
+  .featured-content > strong {
+    font-size: 1.35rem;
+    letter-spacing: 0;
+    line-height: 1.15;
+  }
+
+  .featured-copy {
+    display: none;
+  }
+
+  .featured-link {
+    margin-top: 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .explore-section {
+    padding-block: 3rem;
   }
 
   .section-heading,
@@ -833,11 +898,41 @@ footer a:focus-visible {
 
   .game-shelf {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
+  .game-cover,
+  .future-visual {
+    aspect-ratio: 16 / 9;
+    border-radius: 0.5rem;
+  }
+
+  .game-open-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    opacity: 1;
+    transform: none;
+    background: var(--arkive-nav-accent);
+  }
+
+  .bookmark-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .section-heading h2,
+  .join-section h2 {
+    font-size: 1.75rem;
+    letter-spacing: 0;
+  }
 
   .join-section {
     gap: 1.7rem;
+    margin-bottom: 3rem;
+    padding: 1.5rem 0;
+    border-width: 1px 0 0;
+    border-radius: 0;
+    background: transparent;
   }
 
   .join-section button {

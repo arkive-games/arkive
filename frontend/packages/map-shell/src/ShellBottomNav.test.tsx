@@ -83,17 +83,20 @@ function open(api: ReturnType<typeof render>) {
 describe("ShellBottomNav", () => {
   it("renders each tab through the app's renderer, with the shell's classes", () => {
     const api = render(<ShellBottomNav {...props()} />)
-    expect(api.getByTestId("tab-/").className).toContain("text-primary")
+    expect(api.getByTestId("tab-/").className).toContain("text-[color:var(--arkive-nav-active)]")
     expect(api.getByTestId("tab-/x").className).toContain("text-muted-foreground")
     expect(api.getByTestId("i-map")).toBeTruthy()
   })
 
   it("keeps the testids the e2e suites depend on", () => {
     const api = render(<ShellBottomNav {...props()} />)
-    expect(api.getByTestId("bottom-tab-bar").className).toContain("backdrop-blur")
+    expect(api.getByTestId("bottom-tab-bar").className).toContain("arkive-bottom-nav")
+    expect(api.getByTestId("bottom-tab-bar").className).not.toContain("backdrop-blur")
     expect(api.getByTestId("tab-/").className).toContain("min-h-14")
     open(api)
-    expect(api.getByTestId("more-sheet").className).toContain("max-h-[90dvh]")
+    expect(api.getByTestId("more-sheet").className).toContain(
+      "max-h-[min(90dvh,calc(100dvh-4.5rem))]",
+    )
     expect(api.getByTestId("more-lang-open")).toBeTruthy()
     expect(api.getByTestId("more-theme-auto")).toBeTruthy()
   })

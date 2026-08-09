@@ -10,12 +10,10 @@ import {
 import { ArkiveAccountControl } from '@gamemap/auth'
 import {
   ShellBottomNav,
-  getArkiveBrandName,
   useTheme,
   type Theme,
 } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
-import { ARKIVE_HOME_URL } from '../lib/brand'
 import { SiteInfo } from './SiteInfo'
 import type { NavKey } from './TopNav'
 
@@ -32,7 +30,6 @@ export function BottomTabBar() {
   const { theme, setTheme } = useTheme()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const active = activeKey(pathname)
-  const brandName = getArkiveBrandName(lng, t('brand'))
 
   const tabs = [
     { key: '/', label: t('nav.home'), icon: <Home className="size-5" strokeWidth={1.8} /> },
@@ -54,7 +51,6 @@ export function BottomTabBar() {
         icon: <Menu className="size-5" strokeWidth={1.8} />,
         active: active === '/changelog',
         title: t('more'),
-        brand: <a href={ARKIVE_HOME_URL} className="max-w-40 truncate text-sm font-bold text-primary">{brandName}</a>,
       }}
       grid={{
         items: [{

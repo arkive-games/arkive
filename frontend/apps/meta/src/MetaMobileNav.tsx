@@ -9,7 +9,7 @@ import {
   IconUserCircle,
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import { ArkiveMark, ShellBottomNav, type ArkiveMapTheme } from '@gamemap/map-shell'
+import { ShellBottomNav, type ArkiveMapTheme } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 
 interface MetaMobileNavProps {
@@ -88,12 +88,6 @@ export function MetaMobileNav({
         label: t('nav.more'),
         icon: <IconMenu2 className="size-5" stroke={1.8} />,
         title: t('nav.more'),
-        brand: (
-          <a href="#top" className="inline-flex items-center gap-1.5 text-sm font-bold text-primary">
-            <span className="[&>svg]:size-6"><ArkiveMark /></span>
-            <span className="max-w-36 truncate">{t('brand.name')}</span>
-          </a>
-        ),
       }}
       grid={{
         items: [
