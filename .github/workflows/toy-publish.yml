@@ -35,7 +35,7 @@ on:
         # NEW toy, and a slug can never be changed afterwards.
         options: [all, meta, aion2, palworld]
       submit:
-        description: "Submit for review (leave off to only build a preview)"
+        description: "Submit for review (leave off to only upload and get a preview)"
         type: boolean
         default: false
 
@@ -55,8 +55,9 @@ jobs:
         # continuations preserves the newlines, which corrupts the expression.
         app: ${{ fromJSON(inputs.app == 'all' && '["meta","aion2","palworld"]' || format('["{0}"]', inputs.app)) }}
 
-    # Never let two runs upload to the same toy at once, and queue rather than
-    # cancel: an interrupted upload is a half-published bundle.
+    # Never let two runs upload to the same toy at once. `cancel-in-progress:
+    # false` lets a running upload finish; GitHub still keeps only one job queued
+    # behind it, which is fine because a queued job has uploaded nothing yet.
     concurrency:
       group: toy-${{ matrix.app }}
       cancel-in-progress: false
@@ -64,22 +65,51 @@ jobs:
     name: ${{ matrix.app }}${{ inputs.submit && ' (submit)' || ' (preview)' }}
 
     steps:
+      # Submitting three toys for human review from one click is exactly what the
+      # header says this workflow exists to avoid, so make the operator name one.
+      - name: Refuse a bulk submission
+        if: inputs.submit && inputs.app == 'all'
+        run: |
+          echo "::error::Pick a single app when submitting for review. Each submission is reviewed by a person; 'all' is for previews."
+          exit 1
+
       - name: Checkout
         # vite.config.ts stamps the build commit via `git rev-parse HEAD` at
         # config-load time, so this needs a real checkout, not a tarball.
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # Read the version from "packageManager" rather than pinning it here, so
+          # CI cannot drift from local installs.
+          package_json_file: frontend/package.json
+
+      - name: Setup Node
+        # Must follow the pnpm setup: `cache: pnpm` shells out to pnpm for the store.
+        # Also must precede every `node` call below, so they run on the pinned 22
+        # rather than whatever the runner image ships.
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
       - name: Read toy config
         id: cfg
+        working-directory: frontend
         run: |
           set -euo pipefail
-          config="frontend/apps/${{ matrix.app }}/toy.config.json"
-          [ -f "$config" ] || { echo "::error::$config not found — this app is not toy-configured"; exit 1; }
-          slug=$(node -e 'process.stdout.write(require(`./${process.argv[1]}`).slug)' "$config")
-          # `dataDir` present  => the bundle EMBEDS the artifacts (needs the private repos).
-          # `dataUrl`  present => the app fetches them from the CDN at runtime (needs nothing).
-          bundles=$(node -e 'process.stdout.write(String(require(`./${process.argv[1]}`).dataDir !== undefined))' "$config")
-          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          # loadToyConfig validates slug/title/visibility; parsing the JSON here by
+          # hand would skip that and let a malformed slug reach a write command.
+          read -r slug bundles < <(node -e '
+            import("./scripts/toy-lib.mjs").then(({ loadToyConfig, bundlesArtifacts }) => {
+              const cfg = loadToyConfig(`apps/${process.argv[1]}`)
+              process.stdout.write(`${cfg.slug} ${bundlesArtifacts(cfg)}`)
+            }).catch((e) => { console.error(e.message); process.exit(1) })
+          ' '${{ matrix.app }}')
+          # Delimited, so a value containing a newline cannot forge other outputs.
+          { echo "slug<<EOF"; echo "$slug"; echo "EOF"; } >> "$GITHUB_OUTPUT"
           echo "bundles=$bundles" >> "$GITHUB_OUTPUT"
           echo "Resolved slug=$slug, bundles artifacts=$bundles"
 
@@ -115,21 +145,6 @@ jobs:
           token: ${{ secrets.ARTIFACTS_TOKEN }}
           path: artifacts/resource
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          # Read the version from "packageManager" rather than pinning it here, so
-          # CI cannot drift from local installs.
-          package_json_file: frontend/package.json
-
-      - name: Setup Node
-        # Must follow the pnpm setup: `cache: pnpm` shells out to pnpm for the store.
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-
       - name: Install dependencies
         working-directory: frontend
         run: pnpm install --frozen-lockfile
@@ -138,12 +153,26 @@ jobs:
         env:
           # Pinned rather than floating: this CLI gates a public submission, so a
           # new release should be adopted deliberately, not silently mid-run.
-          VERSION: v0.3.2
-          BIN_DIR: ${{ runner.temp }}/toy-bin
+          TOY_VERSION: v0.3.2
         run: |
           set -euo pipefail
-          curl -fsSL https://boss.hdslb.com/toy-cli/toy/install.sh | bash
-          echo "${{ runner.temp }}/toy-bin" >> "$GITHUB_PATH"
+          # The published install.sh is fetched from an unversioned path and would
+          # run unreviewed in a job that goes on to hold two secrets. It only
+          # downloads a binary and checks its digest, so do exactly that instead.
+          base="https://boss.hdslb.com/toy-cli/toy/releases/${TOY_VERSION}"
+          dir="${RUNNER_TEMP}/toy-bin"
+          mkdir -p "$dir"
+          curl -fsSL "$base/toy_linux_amd64" -o "$dir/toy"
+          curl -fsSL "$base/toy_linux_amd64.sha256" -o "$dir/toy.sha256"
+          # The published digest file names the release artifact, not our filename.
+          expected=$(tr -d '\r\n' < "$dir/toy.sha256" | awk '{print $1}')
+          actual=$(sha256sum "$dir/toy" | awk '{print $1}')
+          if [ "$expected" != "$actual" ]; then
+            echo "::error::toy ${TOY_VERSION} checksum mismatch (expected $expected, got $actual)"
+            exit 1
+          fi
+          chmod +x "$dir/toy"
+          echo "$dir" >> "$GITHUB_PATH"
 
       - name: Verify session and resolve the toy id
         id: toy
@@ -157,8 +186,10 @@ jobs:
             exit 1
           fi
           # Resolving the id from the live list keeps ids out of the repo, where
-          # they would drift. A miss is fatal by design: see toy-resolve-id.mjs.
-          id=$(toy mylist --json | node frontend/scripts/toy-resolve-id.mjs '${{ steps.cfg.outputs.slug }}')
+          # they would drift. --size beats the default 20: the resolver refuses a
+          # truncated page rather than reporting a present toy as missing. A miss
+          # is fatal by design -- see toy-resolve-id.mjs.
+          id=$(toy mylist --json --size 100 | node frontend/scripts/toy-resolve-id.mjs "${{ steps.cfg.outputs.slug }}")
           echo "id=$id" >> "$GITHUB_OUTPUT"
           echo "Publishing to toy id=$id (slug=${{ steps.cfg.outputs.slug }})"
 
@@ -171,41 +202,41 @@ jobs:
         working-directory: frontend
         run: pnpm toy:build --app ${{ matrix.app }}
 
-      # Two calls, one command. Without --yes the CLI only uploads and returns a
-      # preview_url; --yes is what actually submits for review. Keeping the
-      # arguments identical means the reviewed bundle is the submitted bundle.
-      - name: Upload bundle and get a preview
-        id: preview
+      # ONE upload, whichever mode. Uploading for a preview and then again with
+      # --yes would send palworld's ~80 MB twice, doubling the exposure to the
+      # platform's size and file-count limits -- and it would collapse the
+      # preview-then-confirm gate into a single click. `submit` off is the preview
+      # run; a person looks at the URL, then dispatches again with it on.
+      #
+      # No --poster: it means "new cover", and scripts/toy-publish.mjs already
+      # settled that the poster is a create-time argument only. All three toys are
+      # published with a cover already, and sending one here would overwrite a
+      # cover changed in the console -- even on a preview-only run.
+      - name: ${{ inputs.submit && 'Submit for review' || 'Upload and get a preview' }}
         env:
           TOY_CLI_SESSION_TOKEN: ${{ secrets.TOY_CLI_SESSION_TOKEN }}
           TOY_NO_UPDATE_CHECK: "1"
+          SUBMIT: ${{ inputs.submit }}
         working-directory: frontend
         run: |
           set -euo pipefail
-          out=$(toy update '${{ steps.toy.outputs.id }}' "apps/${{ matrix.app }}/dist-toy" \
-                  --poster "apps/${{ matrix.app }}/toy-poster.png" --json)
+          args=(update '${{ steps.toy.outputs.id }}' "apps/${{ matrix.app }}/dist-toy" --json)
+          [ "$SUBMIT" = "true" ] && args+=(--yes)
+          out=$(toy "${args[@]}")
           echo "$out"
-          url=$(node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);process.stdout.write(j.preview_url??j.data?.preview_url??"")})' <<<"$out")
-          {
-            echo "### ${{ matrix.app }} → ${{ steps.cfg.outputs.slug }}"
-            echo ""
-            echo "Preview: ${url:-"(none returned)"}"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Submit for review
-        # Only on an explicit opt-in. The platform reviews every submission by
-        # hand, so this stays a decision a person makes, not a side effect of
-        # running the workflow.
-        if: inputs.submit
-        env:
-          TOY_CLI_SESSION_TOKEN: ${{ secrets.TOY_CLI_SESSION_TOKEN }}
-          TOY_NO_UPDATE_CHECK: "1"
-        working-directory: frontend
-        run: |
-          set -euo pipefail
-          # A poster is required at submission (the API rejects it otherwise), and
-          # this is the same bundle path the preview above just uploaded.
-          out=$(toy update '${{ steps.toy.outputs.id }}' "apps/${{ matrix.app }}/dist-toy" \
-                  --poster "apps/${{ matrix.app }}/toy-poster.png" --json --yes)
-          echo "$out"
-          node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s),d=j.data??j;console.log("Submitted: id="+(d.id??"?")+" status="+(d.status??"?"))})' <<<"$out" >> "$GITHUB_STEP_SUMMARY"
+          # Parse for the summary only, and never fail on it: by the time the CLI
+          # has answered, the upload (and the submission, with --yes) has already
+          # happened server-side. Failing here would report a successful publish as
+          # a failed run.
+          node -e '
+            let s = ""
+            process.stdin.on("data", (d) => (s += d)).on("end", () => {
+              let d = {}
+              try { const j = JSON.parse(s); d = j.data ?? j } catch { /* not JSON */ }
+              const lines = ["### ${{ matrix.app }} → ${{ steps.cfg.outputs.slug }}", ""]
+              if (d.preview_url) lines.push(`Preview: ${d.preview_url}`)
+              if (d.id || d.status) lines.push(`Submitted: id=${d.id ?? "?"} status=${d.status ?? "?"}`)
+              if (lines.length === 2) lines.push("(the CLI returned no preview_url or status — see the step log)")
+              console.log(lines.join("\n"))
+            })
+          ' <<<"$out" >> "$GITHUB_STEP_SUMMARY" || true
