@@ -111,7 +111,7 @@ test('partner skills render as cards, not the wide table', async ({ page }) => {
 
 test('stat simulator keeps the in-game column pinned inside the viewport', async ({ page }) => {
   await page.goto('/stat-simulator?pal=Anubis')
-  const input = page.getByTestId('sim-ingame-hp')
+  const input = page.getByTestId('sim-results-mobile').getByTestId('sim-ingame-hp')
   await input.scrollIntoViewIfNeeded()
   await expect(input).toBeVisible()
   // Sticky right column: the IV-solver input must sit fully inside the

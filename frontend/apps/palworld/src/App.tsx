@@ -27,6 +27,7 @@ import { cn, useIsMobile } from '@gamemap/ui'
 import { Check, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
 import { resolveMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
+import { mapMarkerLodTier } from './lib/mapMarkerLod'
 import { ICP_BEIAN } from './lib/brand'
 
 // Ray-casting point-in-polygon (point + ring both in map-pixel space).
@@ -310,6 +311,15 @@ export default function App() {
     return map
   }, [markerData])
 
+  // Marker count per subtype on the current map drives both the filter count
+  // and a presentation-only LOD tier for mobile map density.
+  const countBySubtype = useMemo(() => {
+    const counts = new Map<string, number>()
+    if (!markerData) return counts
+    for (const m of markerData.markers) counts.set(m.subtype, (counts.get(m.subtype) ?? 0) + 1)
+    return counts
+  }, [markerData])
+
   const engineMarkers: EngineMarker[] = useMemo(() => {
     if (!staticData || !markerData) return []
     return markerData.markers.map((m) => {
@@ -325,6 +335,7 @@ export default function App() {
         y: m.y,
         z: m.z,
         region: m.region,
+        tier: mapMarkerLodTier(countBySubtype.get(m.subtype) ?? 0),
         icon: m.icon,
         image: m.image,
         indexInSubtype: m.indexInSubtype,
@@ -350,7 +361,7 @@ export default function App() {
         dungeonArea: m.dungeonArea,
       }
     })
-  }, [staticData, markerData, subtypeMetaMap, completed])
+  }, [staticData, markerData, subtypeMetaMap, completed, countBySubtype])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
 
@@ -401,15 +412,6 @@ export default function App() {
       return next
     })
   }, [staticData])
-
-  // Marker count per subtype on the current map (drives the button count +
-  // hides subtypes absent from this map).
-  const countBySubtype = useMemo(() => {
-    const counts = new Map<string, number>()
-    if (!markerData) return counts
-    for (const m of markerData.markers) counts.set(m.subtype, (counts.get(m.subtype) ?? 0) + 1)
-    return counts
-  }, [markerData])
 
   // Completed count per subtype on the current map (X in the X/N filter badge).
   const completedBySubtype = useMemo(() => {

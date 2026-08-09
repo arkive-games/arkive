@@ -84,7 +84,7 @@ export default function PalListPage() {
               className="max-w-xs"
             />
             {bundle ? (
-              <span className="text-sm text-muted-foreground">
+              <span data-testid="pal-count" className="text-sm text-muted-foreground">
                 {t('pal.count', { count: roster.length })}
               </span>
             ) : null}
