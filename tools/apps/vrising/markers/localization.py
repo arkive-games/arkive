@@ -50,6 +50,29 @@ def _read_nodes(path: Path) -> list[tuple[str, str]]:
     return result
 
 
+def load_localized_guid_texts(
+    localization_dir: Path,
+    guids: Iterable[str],
+) -> dict[str, dict[str, str]]:
+    """Load an exact set of localization GUIDs in every supported locale."""
+    localization_dir = Path(localization_dir)
+    requested = {guid.lower() for guid in guids}
+    nodes = {
+        locale: dict(_read_nodes(localization_dir / filename))
+        for locale, filename in LOCALIZATION_FILES.items()
+    }
+    result: dict[str, dict[str, str]] = {}
+    for guid in sorted(requested):
+        localized: dict[str, str] = {}
+        for locale in LOCALIZATION_FILES:
+            text = nodes[locale].get(guid)
+            if not text:
+                raise ValueError(f"localization GUID {guid} has no {locale} text")
+            localized[locale] = text
+        result[guid] = localized
+    return result
+
+
 def load_boss_localized_names(
     localization_dir: Path,
     display_names: Iterable[str],
@@ -114,5 +137,6 @@ __all__ = [
     "LOCALIZATION_FILES",
     "LOCALIZATION_RELATIVE",
     "load_boss_localized_names",
+    "load_localized_guid_texts",
     "localize_fixed_bosses",
 ]

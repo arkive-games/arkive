@@ -4,7 +4,10 @@ import json
 
 import pytest
 
-from vrising.markers.localization import load_boss_localized_names
+from vrising.markers.localization import (
+    load_boss_localized_names,
+    load_localized_guid_texts,
+)
 
 
 def _write_language(path, nodes, *, lowercase: bool) -> None:
@@ -50,3 +53,18 @@ def test_missing_official_translation_is_rejected(tmp_path):
 
     with pytest.raises(ValueError, match="zh-CN"):
         load_boss_localized_names(tmp_path, ["Ziva the Engineer"])
+
+
+def test_exact_localization_guids_load_in_every_supported_locale(tmp_path):
+    guid = "8f2834f7-6abc-40d0-93f2-80c98bd35ee4"
+    _write_language(tmp_path / "English.json", [(guid, "Passive effect")], lowercase=False)
+    _write_language(tmp_path / "SChinese.json", [(guid, "被动效果")], lowercase=True)
+    _write_language(tmp_path / "TChinese.json", [(guid, "被動效果")], lowercase=True)
+
+    texts = load_localized_guid_texts(tmp_path, [guid.upper()])
+
+    assert texts[guid] == {
+        "en-US": "Passive effect",
+        "zh-CN": "被动效果",
+        "zh-TW": "被動效果",
+    }

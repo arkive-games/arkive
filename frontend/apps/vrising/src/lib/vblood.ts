@@ -29,6 +29,28 @@ export interface VBloodRewardRef {
   prefabName: string
 }
 
+export interface VBloodLocalizedText {
+  'en-US': string
+  'zh-CN': string
+  'zh-TW': string
+}
+
+export interface VBloodPassiveStatModification {
+  statType: string
+  modificationType: string
+  value: number
+  softCapValue: number
+  modifier: number
+}
+
+export interface VBloodPassiveRecord extends VBloodRewardRef {
+  school: 'Blood' | 'Chaos' | 'Frost' | 'Illusion' | 'Storm' | 'Unholy'
+  tier: number
+  name: VBloodLocalizedText
+  description: VBloodLocalizedText
+  statModifications: VBloodPassiveStatModification[]
+}
+
 export interface VBloodAbilityReward extends VBloodRewardRef {
   kind: 'passive' | 'shapeshift'
 }
@@ -54,12 +76,12 @@ export interface VBloodKnowledgeCatalog {
   tech: VBloodTechReward[]
   recipes: VBloodRewardRef[]
   blueprints: VBloodRewardRef[]
-  passives: VBloodRewardRef[]
+  passives: VBloodPassiveRecord[]
   shapeshifts: VBloodRewardRef[]
 }
 
 export interface VBloodRewardFile {
-  schemaVersion: 1
+  schemaVersion: 2
   bosses: VBloodRewardRecord[]
   catalog: VBloodKnowledgeCatalog
 }
@@ -70,7 +92,7 @@ export function loadVBloodRewards(): Promise<VBloodRewardFile> {
   rewardFilePromise ??= fetch(dataUrl('knowledge/vblood-rewards.json')).then(async (response) => {
     if (!response.ok) throw new Error(`V Blood rewards: ${response.status}`)
     const payload = await response.json() as VBloodRewardFile
-    if (payload.schemaVersion !== 1 || !Array.isArray(payload.bosses) || !payload.catalog) {
+    if (payload.schemaVersion !== 2 || !Array.isArray(payload.bosses) || !payload.catalog) {
       throw new Error('V Blood rewards: unsupported data schema')
     }
     return payload

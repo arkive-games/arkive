@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import struct
 
-from vrising.knowledge.rewards import _buffer_rows_at, _component_sequences
+import pytest
+
+from vrising.knowledge.rewards import (
+    _buffer_rows_at,
+    _component_sequences,
+    _parse_passive_identity,
+    _parse_passive_stat_element,
+)
 from vrising.markers.dots import BufferPatch, Chunk
 
 
@@ -64,3 +71,21 @@ def test_internal_capacity_buffer_reads_inline_and_overflow_values():
         {second_header - 64: overflow},
     ) == ((301, 302), overflow_values)
 
+
+def test_passive_identity_uses_the_verified_prefab_convention():
+    assert _parse_passive_identity("SpellPassive_Illusion_T03_FeralHaste") == (
+        "Illusion",
+        3,
+    )
+
+
+def test_passive_stat_element_reads_the_current_game_layout():
+    data = bytearray(36)
+    struct.pack_into("<iBB2xfffB3xfii", data, 0, 0, 56, 3, 0.08, 0.0, 1.0, 0, 0.0, 0, 0)
+
+    value = _parse_passive_stat_element(bytes(data), 0)
+
+    assert value is not None
+    assert value.stat_type == "DamageVsVBloods"
+    assert value.modification_type == "Add"
+    assert value.value == pytest.approx(0.08)
