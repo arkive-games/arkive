@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.0",
+      "date": "2026-08-10",
+      "commit": "c2a15831342f961a7f3df595c85497e83e38df2b",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Remembers card search and filter context across visits.",
+            "zh-CN": "在再次访问时恢复卡牌搜索和筛选条件。",
+            "zh-TW": "再次造訪時恢復卡牌搜尋和篩選條件。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "date": "2026-08-09",
       "commit": "086a6aae02e11864da424ed94e7ab00201a749fc",
