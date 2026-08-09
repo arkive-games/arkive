@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.26.2",
+      "date": "2026-08-09",
+      "commit": "dc6051da64e88b301d9dd04966c553cd9f8082f5",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Improved phone layouts across the Paldeck, breeding, fishing, research, technology, and stat simulator with mobile pagination and clearer controls.",
+            "zh-CN": "优化手机端帕鲁图鉴、配种、钓鱼、研究、科技与属性模拟器布局，并加入移动分页和更清晰的操作控件。",
+            "zh-TW": "最佳化手機端帕魯圖鑑、配種、釣魚、研究、科技與屬性模擬器版面，並加入行動分頁和更清楚的操作控制。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.25.0",
       "date": "2026-08-09",
       "commit": "086a6aae02e11864da424ed94e7ab00201a749fc",
