@@ -167,6 +167,11 @@ polygon, and human review of `calibration/accepted_overlay.png`.
   app's current version, shown in the footer and the top-bar build hovercard, and
   rendered at `/changelog`. Every entry pins a full 40-char commit SHA, and the page
   links each version to the GitHub compare range since the previous release.
+  Every current and future game's About panel has its own version history; this
+  isolation rule applies to all games, not only Palworld. Each history records
+  only changes to its owning game. Never copy another game's changes into it, and
+  never stamp site-wide shared UI, homepage, account, forum, or platform-
+  infrastructure changes into an individual game's changelog.
   **Not every commit gets a version.** Bump only when a commit ships something a
   visitor would notice:
   - **Commit the feature first, then add the entry in a follow-up commit.** The entry

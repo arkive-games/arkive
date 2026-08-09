@@ -105,6 +105,15 @@ product_model:
     rule: >-
       A game may provide maps, encyclopedias, tools, routes, languages, data,
       and artwork. It must reuse the cross-site shell and brand identity.
+  game_about:
+    scope: "Every current and future game has an About panel with its own version history."
+    shared_surface: "Use the shared Arkive About structure and presentation across games."
+    version_history:
+      isolation: "Display only updates owned by the game whose About panel is open."
+      exclusions:
+        - "Updates owned by another game"
+        - "Site-wide shared UI changes"
+        - "Home page, account, forum, or platform-infrastructure changes"
 
 global_shell:
   desktop_shared_owner: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
@@ -146,6 +155,26 @@ shared_foundations:
   color:
     owner: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
     rule: "Use semantic tokens; never copy palette values into another specification."
+  layout:
+    content_page_top_spacing:
+      desktop: "1.5rem"
+      mobile: "17px"
+      implementation_owner: "frontend/packages/map-shell/src/arkive-map-theme.css"
+      token: "--arkive-content-page-top-space"
+      utility_class: "arkive-content-page"
+      applies_to:
+        - "Every portal route except the home page"
+        - "Game encyclopedias, catalogs, detail pages, tools, account pages, notifications, and forum pages"
+      exclusions:
+        - "The portal home page and its discovery sections"
+        - "Full-bleed maps, canvases, and other workspaces whose content begins at the shell edge"
+      rule: >-
+        The first visible content surface starts this exact distance below the
+        active desktop top bar or mobile header. Page-owned CSS must consume the
+        shared token or utility class instead of defining a competing top gap.
+        The mobile value is fixed in pixels because some game apps intentionally
+        increase their root font size on phones; the physical gap must remain
+        consistent across apps.
   typography:
     desktop_root_size: "17px"
     family_stack:

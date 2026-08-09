@@ -1,4 +1,4 @@
-schema_version: "1.0.0"
+schema_version: "1.1.0"
 spec_id: "arkive.mobile-experience"
 title: "Arkive Mobile Web Experience Specification"
 status: "canonical"
@@ -16,157 +16,307 @@ references:
 
 purpose:
   summary: >-
-    Define one reusable mobile shell for the portal, game maps, encyclopedias,
-    databases, and tools without changing their desktop information architecture.
+    Define one reusable mobile experience for the portal, game maps,
+    encyclopedias, databases, and tools while preserving the desktop
+    information architecture and each game's data ownership.
   outcomes:
-    - "Every current product remains navigable and usable on a phone."
-    - "Map chrome protects the map center and exposes secondary work on demand."
-    - "A future game can adopt the mobile experience through shared components and configuration."
+    - "Every current product is navigable, readable, and operable on a phone."
+    - "High-density game data remains complete without becoming cramped or horizontally clipped."
+    - "A future game can adopt the experience through shared components and configuration."
 
 scope:
   breakpoint: "Below md, currently less than 768px"
-  target_viewports:
-    - "390x844"
-    - "430x932"
-    - "844x390 landscape transition"
+  required_viewports:
+    - "320x844 narrow portrait"
+    - "390x844 reference portrait"
+    - "430x932 wide portrait"
+    - "844x390 landscape breakpoint transition"
   included:
     - "Portal, catalogs, forum, and scrollable game content"
     - "Interactive maps, search, filters, marker details, settings, and account access"
-    - "Safe areas, viewport overflow, touch targets, and breakpoint transitions"
+    - "Safe areas, touch targets, overflow, adaptive data presentation, and state memory"
   excluded:
     - "Native application navigation patterns"
     - "Desktop geometry owned by the desktop map specification"
-    - "New product features or new game data"
+    - "New product features or invented game data"
+
+design_principles:
+  priority_order:
+    - "Task completion"
+    - "Readable game information"
+    - "Comfortable touch interaction"
+    - "Visual consistency"
+    - "Decoration"
+  rules:
+    - "Mobile may use its own composition when shrinking the desktop composition would harm usability."
+    - "Preserve content and capability unless a mobile exclusion is explicitly recorded here."
+    - "Prefer summary-first progressive disclosure over a very long first view."
+    - "High density means more useful information, not smaller type or compressed spacing."
+    - "Use cards only for discrete records, dialogs, or framed tools; never nest decorative cards."
+    - "Keep the central map and the first screen of content clear of persistent secondary controls."
 
 governance:
   shared_first_rule: >-
-    Cross-product mobile geometry and interaction belong in map-shell. A host
-    application supplies routes, labels, supported languages, game content,
-    and route-aware rendering only.
+    Cross-product mobile geometry and interaction belong in shared packages.
+    A host application supplies routes, labels, supported languages, game
+    content, and route-aware adapters only.
   desktop_preservation_rule: >-
-    Mobile additions must remain hidden at md and above unless they improve a
-    shared primitive used by both layouts.
-  rotation_rule: >-
-    A sheet or mobile-only overlay must close when the viewport crosses to the
-    desktop breakpoint.
+    Mobile-only composition remains hidden at md and above. A stored mobile
+    disclosure state must never hide desktop content.
+  breakpoint_transition_rule: >-
+    Sheets and mobile-only overlays close when the viewport crosses to the
+    desktop breakpoint. No portal may remain mounted over the desktop surface.
+  source_of_truth_rule: >-
+    Update this specification when a mobile interaction contract changes.
+    Historical plans and screenshots are reference material, not active rules.
 
-component_registry:
-  root: "frontend/packages/map-shell/src"
-  components:
-    - name: "ArkiveMobileHeader"
-      file: "frontend/packages/map-shell/src/ArkiveMobileHeader.tsx"
-      owns: "Compact brand, optional page title, utility slot, and login access for scrollable pages"
-    - name: "ShellBottomNav"
-      file: "frontend/packages/map-shell/src/ShellBottomNav.tsx"
-      owns: "Primary mobile navigation, More sheet, language drill-down, theme options, and optional renderer control"
-    - name: "ArkiveMobileAccountRow"
-      file: "frontend/packages/map-shell/src/ArkiveMobileAccountRow.tsx"
-      owns: "Login entry inside the More sheet"
-    - name: "ArkiveEmailLoginDialog"
-      file: "frontend/packages/map-shell/src/ArkiveEmailLoginDialog.tsx"
-      owns: "Shared email login and registration presentation"
-    - name: "MarkerPopupCard"
-      file: "frontend/packages/map-shell/src/MarkerPopupCard.tsx"
-      owns: "Viewport-limited marker detail presentation"
+ownership:
+  shared_shell:
+    - "frontend/packages/map-shell/src/ArkiveMobileHeader.tsx"
+    - "frontend/packages/map-shell/src/ShellBottomNav.tsx"
+  shared_interaction_primitives:
+    - "frontend/packages/map-shell/src/OverflowMarquee.tsx"
+    - "frontend/packages/map-shell/src/SearchPanel.tsx"
+    - "frontend/packages/map-shell/src/MarkerPopupCard.tsx"
+    - "frontend/packages/ui/src/hover-card.tsx"
+    - "frontend/packages/ui/src/site-footer.tsx"
+  current_content_shell_reference: "frontend/apps/palworld/src/components/ContentPage.tsx"
+  current_pagination_reference: "frontend/apps/palworld/src/components/MobilePagination.tsx"
   host_owned:
     - "Primary and secondary route inventory"
-    - "Localized route and control labels"
+    - "Localized route, setting, filter, and action labels"
     - "Supported language inventory"
-    - "Map search, filter, and renderer state adapters"
+    - "Game data, assets, filters, search semantics, and tool state"
+  routing_rule: >-
+    Fix shared behavior at its shared owner. Do not copy shell geometry or
+    interaction logic into every game application.
+  promotion_rule: >-
+    Before a second game adopts an app-local reference pattern, promote that
+    pattern into the appropriate shared package instead of copying its source.
 
-content_pages:
-  shell:
-    header: "Use ArkiveMobileHeader. Do not compress the desktop top bar into a phone width."
-    bottom_navigation: "Use ShellBottomNav for route navigation and settings."
-    scrolling: "Keep one vertical content scroller and reserve space below its footer for the fixed navigation."
-  header:
-    height: "3.5rem before any safe-area inset"
-    required_content:
+shell:
+  viewport:
+    height: "Use h-dvh or min-h-dvh, never h-screen."
+    document_overflow: "Horizontal document overflow is forbidden."
+    content_scroller: "Use one vertical content scroller between the mobile header and fixed bottom navigation."
+  content_pages:
+    header: "Use ArkiveMobileHeader instead of compressing the desktop top bar."
+    header_content:
       - "Arkive mark and localized brand name"
-      - "Current page title when available"
+      - "Current page title"
       - "Login action"
-    optional_action_slot: "At most one page-owned utility such as search or filters."
-  layout:
-    columns: "Collapse multi-column compositions to one column."
+    optional_header_action: "At most one page-owned action, normally search or filters."
+    layout: "Collapse multi-column compositions to one mobile reading flow."
     horizontal_padding: "1rem"
-    horizontal_overflow: "Forbidden at the document level."
+    top_spacing: "Use the shared content-page spacing contract owned by the parent specification."
+  interactive_maps:
+    header: "Omit the mobile header to protect the map's vertical field of view."
+    sidebar: "Replace the persistent desktop sidebar with a filter bottom sheet."
+    search: "Replace the floating desktop search column with a search action and bottom sheet."
 
-interactive_maps:
-  shell:
-    header: "Omit the mobile header so the map keeps the maximum vertical field of view."
-    bottom_navigation: "Use ShellBottomNav for routes, language, theme, login, and optional renderer selection."
-    desktop_sidebar: "Replace the persistent sidebar with a filter bottom sheet."
-    desktop_search: "Replace the floating desktop search bar with a search action and bottom sheet."
-  floating_actions:
-    placement: "Right edge above the bottom navigation and safe area"
-    order: "Search above filters"
-    minimum_size: "3rem"
-    rule: "Do not place persistent controls over the central map reading area."
-  sheets:
-    filter_max_height: "85dvh"
-    search_height: "70dvh"
-    more_max_height: "90dvh"
-    scrolling: "Long sheet content scrolls internally with overscroll contained."
+bottom_navigation:
+  composition:
+    maximum_visible_slots: 5
+    primary_tabs: "At most four highest-frequency destinations."
+    final_slot: "More"
+    minimum_height: "3.5rem plus the bottom safe-area inset"
+    labels: "Use one line at text-xs and truncate only as a last resort."
+  route_inventory: >-
+    Every desktop destination must remain reachable. Put lower-frequency routes
+    in the More grid without duplicating primary routes.
+  more_sheet:
+    layout: "Compact four-column route grid followed by settings and site information."
+    required:
+      - "Every secondary route"
+      - "Language drill-down using only host-supported languages"
+      - "Follow system, light mode, and dark mode"
+      - "Site information and feedback when provided"
+    excluded:
+      - "A duplicate Arkive brand header"
+      - "Login; account access belongs in ArkiveMobileHeader"
+      - "Map renderer selection"
+    behavior:
+      - "Reopen on the main pane rather than remembering a language sub-page."
+      - "Close after navigation and when crossing to the desktop breakpoint."
+      - "Scroll internally when its content exceeds 90dvh."
+  active_state: >-
+    Highlight the active route with icon and text treatment. When a route lives
+    in More, More carries the active state without pretending another tab is active.
+
+map_controls:
+  stack:
+    placement: "Right edge above the bottom navigation and safe area."
+    order: "Zoom controls, search, and filters form one non-overlapping vertical stack."
+    minimum_isolated_target: "3rem"
+    bottom_clearance: "No control may be covered by the bottom navigation."
+  renderer: "Do not expose a map-renderer selector on mobile."
+  search_sheet:
+    empty_state: "Use content height; do not leave a large blank results region."
+    populated_state: "Grow with results up to a viewport maximum, then scroll internally."
+    bottom_clearance: "Keep visible space between the sheet and fixed bottom navigation."
+    close_action: "Never overlap the input and remain visible in every theme."
+  filter_sheet:
+    maximum_height: "85dvh"
+    trigger: "Use a primary-colored outline, not a solid fill."
+    active_state: "Add a semantic active indicator in addition to the outline."
+    content: "Remove empty filter groups and options that produce no results."
   marker_details:
     maximum_width: "Viewport width minus 2rem"
     maximum_height: "The smaller of 72dvh and 32rem"
     overflow: "Scroll inside the detail surface."
-    content_contract: "Follow the shared marker-detail contract from the desktop map specification."
+    contract: "Follow the shared marker-detail content contract from the desktop map specification."
 
-bottom_navigation:
-  fixed_slots:
-    maximum_primary_tabs: 4
-    additional_slot: "More"
-    minimum_height: "3.5rem plus the bottom safe-area inset"
-    label_size: "text-xs"
-  primary_selection: >-
-    Keep the highest-frequency destinations visible. Place lower-frequency
-    routes in the More grid without dropping any desktop destination.
-  more_sheet:
-    required:
-      - "Localized Arkive brand link"
-      - "Every route not present in the fixed strip"
-      - "Host-supported languages"
-      - "Follow system, light mode, and dark mode"
-      - "Login"
-    optional:
-      - "Map renderer when the host exposes more than one engine"
-      - "Site information and feedback"
-  touch:
-    minimum_target: "2.75rem, with 3rem preferred for isolated actions"
-    feedback: "Use active state feedback without decorative animation."
+catalogs_and_lists:
+  search_and_filters:
+    search_border: "Use the semantic primary outline in light and dark themes."
+    filter_trigger: "Use a primary outline and neutral surface; a selected state must add background and text contrast."
+    filter_consistency: "Rarity, category, and other peer filters use the same geometry and state language."
+  card_grids:
+    default: "Use three columns for compact image-led catalog records when names and metadata remain readable."
+    fallback: "Use two columns or a list when three columns would clip essential identity."
+    geometry: "Stable tracks and media dimensions prevent content-driven layout shifts."
+  list_mode:
+    rule: "Expose every essential field without document-level horizontal scrolling."
+    wide_data: "Use a contained horizontal scroller only for a genuinely comparative table."
+  pagination:
+    use_when: "Paginate long mobile result sets instead of extending the page indefinitely."
+    controls:
+      - "Previous"
+      - "Up to five numbered pages centered around the current page"
+      - "Next"
+    behavior:
+      - "Reset to page one when search, filters, mode, or data scope changes."
+      - "Changing pages returns the content scroller to the top."
+      - "Desktop may keep its existing complete or virtualized presentation."
+    page_size: "Choose by record density; do not force one count across unlike catalogs."
 
-safe_areas_and_viewports:
-  full_height: "Use h-dvh or min-h-dvh, never h-screen."
-  bottom_padding: "Fixed navigation and scroll footers include env(safe-area-inset-bottom)."
-  top_padding: "Standalone content headers may include env(safe-area-inset-top)."
-  overflow_check: "document.documentElement.scrollWidth must not exceed window.innerWidth."
-  keyboard_and_dialogs: "Focused inputs and centered dialogs must remain reachable when the software keyboard opens."
+detail_pages:
+  entity_header:
+    composition: "Compact artwork, localized name, game-facing number, and essential badges."
+    localization: "Hide raw internal ids in Chinese UI unless they are required for a user workflow."
+    priority: "Name and identity come before secondary metadata."
+  reading_order:
+    - "Description or primary summary"
+    - "Base or high-frequency statistics"
+    - "Primary capabilities or suitability"
+    - "Secondary skills, drops, locations, formulas, and cross-links"
+  sections:
+    control: "Long sections provide per-section expand and collapse actions plus expand-all and collapse-all."
+    memory: "Persist the user's mobile disclosure preference across reloads and entity navigation."
+    default: "Expand only the small set needed to identify and evaluate the entity."
+    desktop: "Always render complete desktop section content regardless of stored mobile state."
+  dense_tables:
+    mobile: "Convert desktop tables into stacked records with a clear identity row and labeled metadata grid."
+    desktop: "Retain the comparative table when width permits."
+  missing_data: "Omit absent descriptions and untranslated raw keys instead of printing placeholders or internal ids."
+
+tools_and_calculators:
+  modes:
+    control: "Use a segmented control at the top for peer modes."
+    selected_state: "A strong primary surface uses primary-foreground text."
+    labels: "Use the user's task language, not internal implementation terms."
+  selectors:
+    layout: "Keep related selectors in one horizontal row when each remains readable; otherwise wrap as an intentional grid."
+    content: "Show localized identity, game-facing number, and only the metadata needed for the choice."
+    popup: "Search and selection share one surface rather than opening redundant nested selectors."
+  state_memory:
+    rule: "Preserve selections, mode settings, and calculated routes while navigating within the game product."
+    reset: "Only an explicit Clear action resets the workflow state."
+  results:
+    mobile: "Transform wide calculation tables into stacked result groups."
+    hierarchy: "Lead with the result name and final value; place contributing stages in a compact labeled grid."
+    explanations: "Put long formulas or method notes behind a disclosure."
+    duplication: "Do not repeat a route title or source-to-target label inside every repeated card."
+
+overlays_and_long_content:
+  popovers:
+    width: "No wider than the viewport minus 1rem."
+    height: "Cap to available viewport height and scroll internally."
+    stacking: "Render above fixed navigation and nearby cards."
+    close_action: "Use an approved icon with sufficient contrast in every theme."
+  hover_conversion: >-
+    Information that requires pointer hover on desktop must have a tap, icon,
+    disclosure, or sheet interaction on touch devices.
+  back_to_top:
+    threshold: "Reveal after the content scroller passes 500px."
+    placement: "Above the fixed bottom navigation and safe area."
+    motion: "Use instant scrolling when reduced motion is requested."
+
+text_and_localization:
+  typography: "Use the shared family and standard type scale from the parent specification."
+  letter_spacing: "Use normal letter spacing for mobile UI and content; do not tighten headings to make them fit."
+  hierarchy:
+    - "Page title, section title, labels, values, and helper text must remain visibly distinct."
+    - "Do not reduce text below the shared body-content floor to make a layout fit."
+  overflow:
+    identity_text: "Do not permanently ellipsize names or identifiers that users need to distinguish."
+    marquee: "When space is genuinely insufficient, use a one-direction loop rather than a reversing ping-pong animation."
+    grouped_metadata: "Scroll an icon and its associated number or value as one unit."
+    reduced_motion: "Disable automatic marquee motion and expose overflow through manual scrolling or disclosure."
+  chinese_ui:
+    - "Translate user-facing game terms, status effects, units, size codes, and standard labels."
+    - "Hide untranslated internal ids and unnecessary raw enum values."
+    - "Retain Latin characters only for official brands, legal records, versioned technical identifiers, or game-defined suffixes."
+    - "When a localized record name is missing, omit the record rather than exposing the English key as its name."
+
+footer:
+  mobile:
+    version_information: "Do not show site or game version identifiers in the bottom page footer."
+    dense_pages: "A content-heavy catalog may hide the entire mobile footer when the route shell already provides navigation."
+    clearance: "Any remaining footer content clears the fixed bottom navigation and safe area."
+  desktop: "Desktop footer and version-history access remain unchanged."
+
+safe_areas_and_input:
+  bottom_padding: "Fixed navigation, floating actions, sheets, and scroll content include env(safe-area-inset-bottom)."
+  top_padding: "Standalone mobile headers may include env(safe-area-inset-top)."
+  keyboard: "Focused inputs, centered dialogs, and submit actions remain reachable when the software keyboard opens."
+  touch_targets:
+    standard: "At least 2.75rem"
+    preferred_isolated: "3rem"
+    exception: "Compact pagination cells may be smaller when grouped with larger Previous and Next controls."
 
 accessibility:
   rules:
     - "Icon-only actions have localized accessible names."
-    - "Active navigation, toggles, and disclosures expose state semantically."
-    - "Sheets provide an accessible title and restore focus when closed."
+    - "Navigation, toggles, selected filters, and disclosures expose state semantically."
+    - "Sheets and dialogs provide an accessible title and restore focus when closed."
     - "Text and state differences do not rely on color alone."
-    - "Reduced motion preferences disable nonessential transitions."
+    - "The active control remains distinguishable in light and dark themes."
+    - "Reduced-motion preferences disable nonessential animation."
 
 new_game_checklist:
-  - "Configure primary routes and the exhaustive More-route inventory."
-  - "Provide supported languages and all mobile control translations."
-  - "Connect the shared three-option theme preference."
-  - "Expose the shared login dialog from mobile chrome."
-  - "Move map search and filters into bottom sheets."
-  - "Lift map actions above the bottom navigation and safe area."
-  - "Use the shared marker popup and verify its internal scrolling."
-  - "Reserve footer space on every scrollable content route."
-  - "Verify portrait, landscape transition, light mode, dark mode, and no horizontal overflow."
+  shell:
+    - "Configure four or fewer primary routes and an exhaustive More-route inventory."
+    - "Provide supported languages and all mobile control translations."
+    - "Connect the shared follow-system, light, and dark theme preference."
+    - "Expose login through the mobile content header, not the More sheet."
+  maps:
+    - "Move map search and filters into bottom sheets."
+    - "Remove the mobile renderer selector."
+    - "Lift zoom, search, filters, and marker details above the bottom navigation."
+    - "Use the shared marker popup and verify internal scrolling."
+  content:
+    - "Choose the catalog grid or list pattern from content needs."
+    - "Paginate long result sets and provide back-to-top behavior."
+    - "Add disclosure memory to long detail pages."
+    - "Create a mobile result presentation for every desktop table wider than the viewport."
+    - "Hide mobile footer version information."
+  validation:
+    - "Verify required portrait widths, landscape transition, light mode, and dark mode."
+    - "Verify there is no document-level horizontal overflow."
+    - "Scan Chinese rendered text for untranslated Latin tokens and classify every remaining token."
 
 verification:
-  required:
-    - "Focused shared-component tests"
-    - "Production build for every affected application"
-    - "Portrait browser smoke test for every product"
-    - "Landscape breakpoint transition with an open sheet"
-    - "Search, filters, More, language, theme, login, and marker-detail flows"
+  static:
+    - "Validate this YAML file."
+    - "Run focused shared-component tests for changed primitives."
+    - "Run the production build for every affected application."
+  browser:
+    - "Test 320x844, 390x844, and 430x932 portrait viewports."
+    - "Test the 844x390 transition with a sheet open."
+    - "Test light, dark, and follow-system themes."
+    - "Test navigation, More, language, theme, filters, search, dialogs, and back-to-top."
+    - "Test a shallow record and a data-heavy record for every changed detail or tool pattern."
+    - "Confirm documentElement.scrollWidth does not exceed documentElement.clientWidth."
+    - "Confirm persistent disclosure and tool state survives reload and entity navigation."
   evidence_policy: "Keep only final review evidence and remove browser artifacts before handoff."
