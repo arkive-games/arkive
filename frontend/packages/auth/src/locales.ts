@@ -24,6 +24,8 @@ const ZH_CN: AuthStrings = {
   emailPlaceholder: "you@example.com",
   passwordLabel: "密码",
   passwordPlaceholder: "至少 8 个字符",
+  showPassword: "显示密码",
+  hidePassword: "隐藏密码",
   nameLabel: "昵称",
   namePlaceholder: "其他人看到的名字",
 
@@ -89,6 +91,8 @@ const ZH_TW: AuthStrings = {
   emailPlaceholder: "you@example.com",
   passwordLabel: "密碼",
   passwordPlaceholder: "至少 8 個字元",
+  showPassword: "顯示密碼",
+  hidePassword: "隱藏密碼",
   nameLabel: "暱稱",
   namePlaceholder: "其他人看到的名字",
 

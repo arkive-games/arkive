@@ -19,6 +19,8 @@ export interface AuthStrings {
   emailPlaceholder: string
   passwordLabel: string
   passwordPlaceholder: string
+  showPassword: string
+  hidePassword: string
   nameLabel: string
   namePlaceholder: string
 
@@ -74,6 +76,8 @@ export const DEFAULT_AUTH_STRINGS: AuthStrings = {
   emailPlaceholder: "you@example.com",
   passwordLabel: "Password",
   passwordPlaceholder: "At least 8 characters",
+  showPassword: "Show password",
+  hidePassword: "Hide password",
   nameLabel: "Display name",
   namePlaceholder: "How others will see you",
 

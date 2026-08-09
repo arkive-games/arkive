@@ -1,13 +1,27 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react"
+import {
+  IconAlertCircle,
+  IconCheck,
+  IconEye,
+  IconEyeOff,
+  IconKey,
+  IconLock,
+  IconMail,
+  IconShieldCheck,
+  IconUser,
+  IconX,
+} from "@tabler/icons-react"
 import {
   Button,
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   Input,
 } from "@gamemap/ui"
+import { ArkiveMark } from "@gamemap/map-shell"
 
 import { AltchaAbortError, solveAltcha } from "./altcha"
 import { useAuth } from "./AuthProvider"
@@ -42,6 +56,7 @@ export function AccountDialog({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [token, setToken] = useState(resetToken ?? "")
+  const [showPassword, setShowPassword] = useState(false)
 
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -61,6 +76,7 @@ export function AccountDialog({
     setMode(initialMode)
     setToken(resetToken ?? "")
     setPassword("")
+    setShowPassword(false)
     setBusy(false)
     setMessage(null)
     setFailure(null)
@@ -78,6 +94,7 @@ export function AccountDialog({
 
   const switchMode = (next: AccountDialogMode) => {
     setMode(next)
+    setShowPassword(false)
     setFailure(null)
     setMessage(null)
     setProgress(null)
@@ -162,15 +179,67 @@ export function AccountDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" data-testid="account-dialog">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {mode === "forgot" && <DialogDescription>{strings.forgotDescription}</DialogDescription>}
-        </DialogHeader>
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="z-[3000] bg-black/55 backdrop-blur-sm"
+        className="z-[3001] max-h-[calc(100dvh-2rem)] max-w-md gap-0 overflow-y-auto rounded-2xl border-border bg-card p-0 text-card-foreground shadow-2xl"
+        data-testid="account-dialog"
+      >
+        <div className="relative border-b border-border bg-muted/30 px-6 pb-5 pt-7">
+          <div className="absolute inset-x-0 top-0 h-3 overflow-hidden text-primary" aria-hidden="true">
+            <svg viewBox="0 0 480 12" preserveAspectRatio="none" className="h-full w-full">
+              <path
+                d="M0 5C40 1 80 9 120 5S200 1 240 5s80 4 120 0 80-4 120 0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+              />
+              <path
+                d="M0 9c48-3 72 2 120 0s72-3 120 0 72 2 120 0 72-3 120 0"
+                fill="none"
+                stroke="currentColor"
+                strokeOpacity="0.28"
+                strokeWidth="1.5"
+              />
+            </svg>
+            <span className="absolute right-10 top-1 size-2 rounded-full bg-[color:var(--arkive-nav-accent)] ring-4 ring-card" />
+          </div>
 
-        <form onSubmit={submit} className="flex flex-col gap-4">
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-4 rounded-full text-muted-foreground hover:text-foreground"
+              aria-label={strings.close}
+              title={strings.close}
+            >
+              <IconX className="size-5" stroke={1.8} />
+            </Button>
+          </DialogClose>
+
+          <DialogHeader className="items-center pr-8 text-center sm:items-start sm:text-left">
+            <div className="flex items-center gap-3">
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary [--arkive-mark-cutout:var(--muted)]">
+                <ArkiveMark />
+              </span>
+              <DialogTitle className="text-2xl font-bold">{title}</DialogTitle>
+            </div>
+            {mode === "forgot" && (
+              <DialogDescription className="max-w-sm leading-relaxed">
+                {strings.forgotDescription}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+        </div>
+
+        <form onSubmit={submit} className="space-y-5 px-6 py-6">
           {mode === "register" && (
-            <Field label={strings.nameLabel} htmlFor="arkive-auth-name">
+            <Field
+              label={strings.nameLabel}
+              htmlFor="arkive-auth-name"
+              icon={<IconUser className="size-5" stroke={1.8} />}
+            >
               <Input
                 id="arkive-auth-name"
                 name="name"
@@ -178,13 +247,18 @@ export function AccountDialog({
                 required
                 value={name}
                 placeholder={strings.namePlaceholder}
+                className="h-11 rounded-xl bg-background pl-10 focus-visible:border-primary focus-visible:ring-primary/20"
                 onChange={(event) => setName(event.target.value)}
               />
             </Field>
           )}
 
           {mode !== "reset" && (
-            <Field label={strings.emailLabel} htmlFor="arkive-auth-email">
+            <Field
+              label={strings.emailLabel}
+              htmlFor="arkive-auth-email"
+              icon={<IconMail className="size-5" stroke={1.8} />}
+            >
               <Input
                 id="arkive-auth-email"
                 name="email"
@@ -193,18 +267,24 @@ export function AccountDialog({
                 required
                 value={email}
                 placeholder={strings.emailPlaceholder}
+                className="h-11 rounded-xl bg-background pl-10 focus-visible:border-primary focus-visible:ring-primary/20"
                 onChange={(event) => setEmail(event.target.value)}
               />
             </Field>
           )}
 
           {mode === "reset" && (
-            <Field label={strings.resetTokenLabel} htmlFor="arkive-auth-token">
+            <Field
+              label={strings.resetTokenLabel}
+              htmlFor="arkive-auth-token"
+              icon={<IconKey className="size-5" stroke={1.8} />}
+            >
               <Input
                 id="arkive-auth-token"
                 name="token"
                 required
                 value={token}
+                className="h-11 rounded-xl bg-background pl-10 focus-visible:border-primary focus-visible:ring-primary/20"
                 onChange={(event) => setToken(event.target.value)}
               />
             </Field>
@@ -214,11 +294,12 @@ export function AccountDialog({
             <Field
               label={mode === "reset" ? strings.newPasswordLabel : strings.passwordLabel}
               htmlFor="arkive-auth-password"
+              icon={<IconLock className="size-5" stroke={1.8} />}
             >
               <Input
                 id="arkive-auth-password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 // "new-password" tells a password manager to offer a generated
                 // one and stops it overwriting the field on the login form.
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
@@ -226,56 +307,90 @@ export function AccountDialog({
                 minLength={mode === "login" ? undefined : 8}
                 value={password}
                 placeholder={strings.passwordPlaceholder}
+                className="h-11 rounded-xl bg-background pl-10 pr-11 focus-visible:border-primary focus-visible:ring-primary/20"
                 onChange={(event) => setPassword(event.target.value)}
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-lg text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? strings.hidePassword : strings.showPassword}
+                title={showPassword ? strings.hidePassword : strings.showPassword}
+              >
+                {showPassword ? (
+                  <IconEyeOff className="size-5" stroke={1.8} />
+                ) : (
+                  <IconEye className="size-5" stroke={1.8} />
+                )}
+              </Button>
             </Field>
           )}
 
           {progress !== null && (
-            <p className="text-xs text-muted-foreground" role="status">
+            <StatusMessage icon={<IconShieldCheck className="size-5" stroke={1.8} />}>
               {progress >= 1 ? strings.challengeReady : strings.challengeSolving}
               {progress < 1 && ` ${Math.round(progress * 100)}%`}
-            </p>
+            </StatusMessage>
           )}
 
           {failure && (
-            <p
-              className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            <div
+              className="flex items-start gap-2 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
               role="alert"
               data-testid="account-dialog-error"
             >
-              {failure}
-            </p>
+              <IconAlertCircle className="mt-0.5 size-5 shrink-0" stroke={1.8} aria-hidden="true" />
+              <span>{failure}</span>
+            </div>
           )}
 
           {message && (
-            <p
-              className="rounded-md bg-muted px-3 py-2 text-sm text-foreground"
+            <div
+              className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2.5 text-sm text-foreground"
               role="status"
               data-testid="account-dialog-message"
             >
-              {message}
-            </p>
+              <IconCheck className="mt-0.5 size-5 shrink-0 text-primary" stroke={1.8} aria-hidden="true" />
+              <span>{message}</span>
+            </div>
           )}
 
-          <Button type="submit" disabled={busy} className="w-full">
+          <Button
+            type="submit"
+            disabled={busy}
+            className="h-11 w-full rounded-xl bg-[color:var(--arkive-nav-active)] font-semibold text-white hover:brightness-95"
+          >
             {busy ? strings.working : submitLabel}
           </Button>
-        </form>
 
-        <div className="flex flex-col gap-1 text-sm">
           {mode === "login" && (
-            <>
-              <LinkButton onClick={() => switchMode("register")}>
+            <div className="space-y-3 border-t border-border pt-5 text-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-full rounded-xl bg-background font-semibold"
+                onClick={() => switchMode("register")}
+              >
                 {strings.switchToRegister}
-              </LinkButton>
+              </Button>
               <LinkButton onClick={() => switchMode("forgot")}>{strings.forgotPassword}</LinkButton>
-            </>
+            </div>
           )}
           {mode !== "login" && (
-            <LinkButton onClick={() => switchMode("login")}>{strings.switchToLogin}</LinkButton>
+            <div className="border-t border-border pt-5 text-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-full rounded-xl bg-background font-semibold"
+                onClick={() => switchMode("login")}
+              >
+                {strings.switchToLogin}
+              </Button>
+            </div>
           )}
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )
@@ -284,30 +399,49 @@ export function AccountDialog({
 function Field({
   label,
   htmlFor,
+  icon,
   children,
 }: {
   label: string
   htmlFor: string
-  children: React.ReactNode
+  icon: ReactNode
+  children: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="space-y-2">
       {/* packages/ui has no label primitive, so this is a plain element rather
           than a new shared component for one consumer. */}
-      <label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
+      <label htmlFor={htmlFor} className="block text-sm font-semibold text-foreground">
         {label}
       </label>
-      {children}
+      <div className="relative">
+        <span
+          className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+        {children}
+      </div>
     </div>
   )
 }
 
-function LinkButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function StatusMessage({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5 text-sm text-muted-foreground" role="status">
+      <span className="shrink-0 text-primary" aria-hidden="true">{icon}</span>
+      <span>{children}</span>
+    </p>
+  )
+}
+
+function LinkButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="self-start text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="rounded-md px-2 py-1 text-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {children}
     </button>
