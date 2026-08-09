@@ -635,6 +635,28 @@ def build_markers(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
     return markers, locale
 
 
+def _ensure_lod_floor(markers: list[dict]) -> None:
+    """Guarantee the map has a tier-1 layer, in place.
+
+    Only tier 1 is drawn at the opening zoom, and a marker with no ``tier`` is
+    hidden outright while LOD is on. Tier 1 was reachable only through a subzone
+    with ``IconRank == 1`` (``SUBZONE_RANK_TO_TIER``); ``WORLD_MARKER_TIER`` has no
+    tier-1 entry at all. So a map with no rank-1 subzone -- Abyss_Battlefield_A,
+    whose 121 markers are every one of them tier 2 -- opened completely blank.
+
+    Rather than invent a ranking, promote whichever tier is already the lowest
+    present down to 1. That leaves maps which do have rank-1 subzones untouched,
+    and keeps the relative ordering of every other layer intact.
+    """
+    tiers = [m["tier"] for m in markers if m.get("tier") is not None]
+    if not tiers or min(tiers) == 1:
+        return
+    lowest = min(tiers)
+    for marker in markers:
+        if marker.get("tier") == lowest:
+            marker["tier"] = 1
+
+
 def build_regions(map_data: dict) -> tuple[list[dict], dict[str, dict]]:
     """Emit one region per subzone *name*, with the REAL polygon boundary.
 
@@ -818,6 +840,11 @@ def emit(only_map: str | None = None) -> None:
         if len(ids) != len(set(ids)):
             dupes = {i for i in ids if ids.count(i) > 1}
             raise SystemExit(f"{name}: duplicate marker ids: {sorted(dupes)[:5]}")
+
+        # Presentation guarantee, applied here rather than in build_markers so the
+        # builder keeps the real tier semantics (creatures are tier 3, and stay
+        # tier 3 to any caller that asks for them).
+        _ensure_lod_floor(markers)
 
         _write_json(DATA_REPO / "markers" / f"{name}.json", {"markers": markers})
         _write_json(DATA_REPO / "regions" / f"{name}.json", {"regions": regions})

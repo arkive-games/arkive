@@ -36,6 +36,41 @@ _TYPES_YAML = _HERE.parent / "data_src" / "types.yaml"
 _VALID_CALIBRATION = {"fitted", "by-eye"}
 
 
+def _stamp_lod_tiers(markers: list[dict], src: dict) -> None:
+    """Give every marker an LOD ``tier``, in place.
+
+    The frontend can cull markers by zoom, but both engines treat a marker with no
+    ``tier`` as hidden while culling is on, and only tier 1 is drawn at the opening
+    zoom. Emitting no tiers therefore meant the phone map drew nothing at all once
+    the frontend enabled culling.
+
+    Two rules, matching Palworld so the platform behaves the same way everywhere:
+    a subtype the taxonomy flags ``defaultActive`` is always tier 1 -- it was
+    curated to be visible in the overview, and density is the wrong signal for it
+    -- and everything else steps back by how crowded it is.
+    """
+    default_active = {
+        s["id"]
+        for c in src["categories"]
+        for s in c["subtypes"]
+        if s.get("defaultActive")
+    }
+    counts: dict[str, int] = {}
+    for marker in markers:
+        counts[marker["subtype"]] = counts.get(marker["subtype"], 0) + 1
+
+    for marker in markers:
+        subtype = marker["subtype"]
+        if subtype in default_active:
+            marker["tier"] = 1
+        elif counts[subtype] <= 50:
+            marker["tier"] = 1
+        elif counts[subtype] <= 250:
+            marker["tier"] = 2
+        else:
+            marker["tier"] = 3
+
+
 def build_dataset(
     parsed: dict, regions: list[dict], marker_payload: dict | None = None
 ) -> dict:
@@ -129,6 +164,8 @@ def build_dataset(
             raise RuntimeError(f"marker id {marker_id} collides with a region marker")
         marker_labels[marker_id] = marker_payload["labels"][marker_id]["name"]
         markers.append(marker)
+
+    _stamp_lod_tiers(markers, src)
 
     region_labels = {r["id"]: r["name"] for r in regions}
 
