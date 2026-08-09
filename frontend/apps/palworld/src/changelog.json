@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.26.3",
+      "date": "2026-08-09",
+      "commit": "10eaa6b89da0698d436daa7ed96868ad65f27249",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Simplified the mobile map with adaptive marker density, consistent search and filter controls, and sheets that stay clear of navigation.",
+            "zh-CN": "优化移动端地图总览，按缩放控制点位密度，统一搜索与筛选控件，并让底部面板避开导航栏。",
+            "zh-TW": "最佳化行動版地圖總覽，依縮放控制標記密度，統一搜尋與篩選控制項，並讓底部面板避開導覽列。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.26.2",
       "date": "2026-08-09",
       "commit": "ddc6759bfa5d4f79a0077f05543de11989d7a0fb",
