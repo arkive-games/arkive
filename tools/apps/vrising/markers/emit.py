@@ -257,12 +257,12 @@ def build_marker_payload(
                 "icon": "MapIcon_RespawnGateway",
                 "positionPrecision": record["positionPrecision"],
             },
+            # No localized_names: every other marker here takes its translations
+            # from the game (load_boss_localized_names), and hand-writing them in
+            # Python would both invent data and duplicate the navigation-waygate
+            # subtype block in data_src/types.yaml, which already carries the
+            # translated term and is the authored catalog for it.
             "Vampire Waygate",
-            localized_names={
-                "en-US": "Vampire Waygate",
-                "zh-CN": "吸血鬼传送门",
-                "zh-TW": "吸血鬼傳送門",
-            },
         )
 
     return {

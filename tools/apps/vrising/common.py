@@ -17,6 +17,18 @@ def round2(v: float) -> float:
     return math.floor(v * 100 + 0.5) / 100
 
 
+def from_f32(v: float) -> float:
+    """Drop the expansion noise ``struct.unpack('<f')`` leaves when widening to float64.
+
+    A stored 0.08 comes back as 0.07999999821186066 and serializes in full, so a
+    frontend formatting it as a percentage renders ``7.999999821186066%``. Seven
+    significant digits is exactly what float32 guarantees, so this restores the
+    authored value without inventing precision. ``round2`` is the wrong tool here:
+    these are stat multipliers, and it would turn a 0.5% bonus into 1%.
+    """
+    return float(f"{v:.7g}")
+
+
 def _canon(o):
     # Render integral floats as ints (JS: `1.0` serializes as `1`).
     if isinstance(o, bool):

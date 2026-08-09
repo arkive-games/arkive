@@ -21,7 +21,7 @@ import re
 import struct
 from typing import Callable, Iterable
 
-from ..common import write_json
+from ..common import from_f32, write_json
 from ..markers.bosses import SERVER_ENTITY_SCENES_RELATIVE, load_vblood_metadata
 from ..markers.dots import BufferPatch, Chunk, DotsFile, DotsFormatError
 from ..markers.extract import load_prefab_names
@@ -564,9 +564,9 @@ def _parse_passive_stat_element(
     return PassiveStatModification(
         stat_type=UNIT_STAT_TYPES[stat_type],
         modification_type=MODIFICATION_TYPES[modification_type],
-        value=value,
-        soft_cap_value=soft_cap_value,
-        modifier=modifier,
+        value=from_f32(value),
+        soft_cap_value=from_f32(soft_cap_value),
+        modifier=from_f32(modifier),
     )
 
 
