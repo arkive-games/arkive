@@ -163,7 +163,7 @@ function NumberField({
           value={value}
           onChange={(e) => onChange(clamp(Math.floor(Number(e.target.value) || 0), min, max))}
           className={cn(
-            'h-10 rounded-md border border-primary/35 bg-background px-2 text-sm tabular-nums sm:h-8 sm:border-border',
+            'h-11 rounded-md border border-primary/35 bg-background px-2 text-sm tabular-nums md:h-8 md:border-border',
             slider ? 'w-16 shrink-0' : 'w-full',
           )}
         />
@@ -176,14 +176,14 @@ function StarPicker({ label, value, onChange }: { label: string; value: number; 
   return (
     <div className="flex flex-col gap-1">
       <span className="text-sm font-medium text-muted-foreground sm:text-xs">{label}</span>
-      <div className="flex h-10 items-center gap-0 sm:h-8 sm:gap-1">
+      <div className="flex h-11 items-center gap-0 md:h-8 md:gap-1">
         {Array.from({ length: MAX_STARS }, (_, i) => i + 1).map((n) => (
           <button
             key={n}
             type="button"
             aria-label={`${label} ${n}`}
             onClick={() => onChange(n === value ? n - 1 : n)}
-            className="inline-flex size-9 items-center justify-center p-0.5 sm:size-auto"
+            className="inline-flex size-11 items-center justify-center p-0.5 md:size-auto"
           >
             <Star
               className={cn(
@@ -765,7 +765,7 @@ export default function StatSimulatorPage() {
           onBlur={() => onInGameBlur(row.key, row.final)}
           data-testid={`sim-ingame-${row.key}`}
           className={cn(
-            'h-10 w-24 rounded-md border bg-background px-2 text-right text-sm font-semibold tabular-nums md:h-7',
+            'h-11 w-24 rounded-md border bg-background px-2 text-right text-sm font-semibold tabular-nums md:h-7',
             invalid ? 'border-destructive text-destructive' : 'border-border',
           )}
         />
@@ -820,11 +820,12 @@ export default function StatSimulatorPage() {
         <TooltipProvider delayDuration={200}>
           <p className="mb-4 text-sm leading-6 text-muted-foreground">{t('sim.caption')}</p>
 
-          <div className="mb-4 space-y-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3 sm:space-y-0">
+          <div className="overflow-hidden rounded-lg border border-border bg-card md:contents">
+          <div className="space-y-2 p-3 md:mb-4 md:flex md:flex-wrap md:items-center md:gap-3 md:space-y-0 md:p-0">
             <SimPalPicker pals={pals} value={palId} onChange={setPalId} t={t} locale={lng} />
             {pal ? (
               <>
-                <div className="grid grid-cols-4 overflow-hidden rounded-md border border-primary/25 bg-primary/5 sm:hidden">
+                <div className="grid grid-cols-4 overflow-hidden rounded-md border border-primary/25 bg-primary/5 md:hidden">
                   {[
                     [statLabel.hp, pal.stats.hp],
                     [statLabel.attack, pal.stats.shotAttack],
@@ -837,7 +838,7 @@ export default function StatSimulatorPage() {
                     </div>
                   ))}
                 </div>
-                <span className="hidden text-sm text-muted-foreground sm:inline-flex sm:items-center">
+                <span className="hidden text-sm text-muted-foreground md:inline-flex md:items-center">
                   <PalLink id={pal.id} name={pals.text[pal.id]?.name ?? pal.id} icon={pal.icon} />
                   <span className="ml-2 tabular-nums">
                     {t('sim.base')}: {statLabel.hp} {pal.stats.hp} ·{' '}
@@ -850,13 +851,13 @@ export default function StatSimulatorPage() {
           </div>
 
           {!pal ? (
-            <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            <div className="border-t border-border p-6 text-center text-sm text-muted-foreground md:rounded-lg md:border md:bg-card">
               {t('sim.pickPal')}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-4">
+            <div className="grid grid-cols-1 gap-0 md:gap-3 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-4">
               {/* enhancement inputs */}
-              <div className="space-y-3 rounded-lg border border-primary/20 bg-card p-3 sm:space-y-4 sm:border-border sm:p-4">
+              <div className="space-y-3 border-t border-border bg-card p-3 md:rounded-lg md:border md:p-4">
                 <NumberField
                   label={t('sim.level')}
                   value={level}
@@ -883,7 +884,7 @@ export default function StatSimulatorPage() {
                   type="button"
                   onClick={() => setAwake(!awake)}
                   className={cn(
-                    'flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition',
+                    'flex min-h-11 w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition',
                     awake
                       ? 'border-fuchsia-500/50 bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400'
                       : 'border-border bg-secondary text-secondary-foreground hover:bg-accent',
@@ -931,7 +932,7 @@ export default function StatSimulatorPage() {
               </div>
 
               {/* results */}
-              <div className="overflow-hidden rounded-lg border border-primary/20 bg-card md:border-border md:p-4">
+              <div className="overflow-hidden border-t border-border bg-card md:rounded-lg md:border md:p-4">
                 <div className="divide-y divide-border/60 md:hidden" data-testid="sim-results-mobile">
                   {rows!.map((row) => {
                     const stages = [
@@ -1020,6 +1021,7 @@ export default function StatSimulatorPage() {
               </div>
             </div>
           )}
+          </div>
         </TooltipProvider>
       )}
     </ContentPage>
