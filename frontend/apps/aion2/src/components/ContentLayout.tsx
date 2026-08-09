@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArkiveAccountControl } from "@gamemap/auth";
 import { cn, SiteFooter, useIsMobile } from "@gamemap/ui";
@@ -18,10 +18,12 @@ export default function ContentLayout({
   children,
   className,
   contentClassName,
+  pageTitle,
 }: {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
+  pageTitle?: ReactNode;
 }) {
   // Exactly ONE of the two bars is mounted, rather than CSS-hiding one: both
   // contain a GlobalSearchWidget, and two of those in the DOM means two
@@ -29,8 +31,13 @@ export default function ContentLayout({
   // locators in this app's existing e2e specs.
   const isMobile = useIsMobile();
   const { t, i18n } = useTranslation("common");
+  const { pathname } = useLocation();
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
   const brandName = getArkiveBrandName(currentLng, t("brand.name"));
+  const wikiType = pathname.match(/^\/wiki\/(quest|npc|item)(?:\/|$)/)?.[1];
+  const mobileTitle = pageTitle ?? (wikiType
+    ? t(`mobileNav.${wikiType}`)
+    : t("mobileNav.wiki"));
 
   return (
     <div
@@ -40,14 +47,11 @@ export default function ContentLayout({
       )}
     >
       {isMobile ? (
-        /* Compact utility bar. Deliberately NOT a page title: every wiki page
-           already renders its own <h1>, so a title here would duplicate it and
-           would have to be threaded through the router. */
         <ArkiveMobileHeader
           homeUrl={ARKIVE_HOME_URL}
           homeLabel={t("brand.name")}
           brandName={brandName}
-          pageTitle="AION2"
+          pageTitle={mobileTitle}
           loginLabel={t("auth.login")}
           accountControl={<ArkiveAccountControl language={currentLng} variant="mobileHeader" />}
           actions={<GlobalSearchWidget />}

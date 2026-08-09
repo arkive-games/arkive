@@ -9,6 +9,7 @@ import {
 } from "@gamemap/map-engine";
 import type { GlMapRef } from "@gamemap/map-engine-gl";
 import {
+  ArkiveMobileMapControls,
   ShellLayout,
   SearchPanel,
   readMapView,
@@ -16,15 +17,7 @@ import {
   type MapViewStore,
   type SearchItem,
 } from "@gamemap/map-shell";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  useIsMobile,
-} from "@gamemap/ui";
-import { IconAdjustmentsHorizontal, IconSearch } from "@tabler/icons-react";
+import { useIsMobile } from "@gamemap/ui";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { useGameData } from "@/context/GameDataContext";
@@ -340,7 +333,7 @@ export default function MapRoute() {
     visibleRegions,
     showLabels,
     showBorders,
-    lodEnabled,
+    lodEnabled: isMobile || lodEnabled,
     selectedMarkerId,
     forceShowIds,
     selectedPosition,
@@ -389,83 +382,32 @@ export default function MapRoute() {
 
   if (isMobile) {
     return (
-      <div className="aion2-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+      <div className="arkive-mobile-map aion2-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
         {/* Same flex chain as the desktop ShellLayout: the map root needs a
             definite height or Leaflet sizes to zero on mount. */}
         <main className="relative flex min-w-0 flex-1 overflow-hidden">
           {mapView}
         </main>
 
-        {/* Floating actions. They sit in one right-hand column with the
-            engine's zoom pill: tab bar, then zoom (lifted to 3.75rem by
-            index.css), then these above it — so nothing overlaps and
-            everything stays tappable. Each FAB is its own sheet's
-            SheetTrigger, so Radix returns focus to it on close. */}
-        <div
-          className="absolute right-3 z-[700] flex flex-col gap-2"
-          style={{ bottom: "calc(env(safe-area-inset-bottom) + 8.5rem)" }}
-        >
-          {/* Closing the sheet unmounts SearchPanel, so it never reports an
-              empty result set — clear it here, or the map keeps force-showing
-              the last query's markers with no visible search to explain why. */}
-          <Sheet
-            open={searchSheetOpen}
-            onOpenChange={(open) => {
+        <ArkiveMobileMapControls
+          search={{
+            label: t("common:ui.search", "Search"),
+            open: searchSheetOpen,
+            onOpenChange: (open) => {
               setSearchSheetOpen(open);
               if (!open) setSearchResultIds([]);
-            }}
-          >
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                data-testid="map-fab-search"
-                aria-label={t("common:ui.search", "Search")}
-                className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
-              >
-                <IconSearch className="size-5" stroke={1.8} />
-              </button>
-            </SheetTrigger>
-            <SheetContent
-              side="bottom"
-              data-testid="search-sheet"
-              className="h-[70dvh]"
-            >
-              <SheetTitle className="sr-only">
-                {t("common:ui.search", "Search")}
-              </SheetTitle>
-              {searchPanel("inline")}
-            </SheetContent>
-          </Sheet>
-
-          <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                data-testid="map-fab-filter"
-                aria-label={t("common:menu.markerTypes", "Marker Types")}
-                className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-lg"
-              >
-                <IconAdjustmentsHorizontal className="size-5" stroke={1.8} />
-              </button>
-            </SheetTrigger>
-            <SheetContent
-              side="bottom"
-              data-testid="filter-sheet"
-              className="max-h-[85dvh]"
-            >
-              <SheetHeader>
-                <SheetTitle className="sr-only">
-                  {t("common:menu.markerTypes", "Marker Types")}
-                </SheetTitle>
-                <SelectMap />
-              </SheetHeader>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <MarkerTypesSection />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-
+            },
+            content: searchPanel("inline"),
+          }}
+          filter={{
+            label: t("common:menu.markerTypes", "Marker Types"),
+            open: filterSheetOpen,
+            onOpenChange: setFilterSheetOpen,
+            active: visibleSubtypes?.size !== allSubtypes.size,
+            header: <SelectMap />,
+            content: <MarkerTypesSection />,
+          }}
+        />
       </div>
     );
   }

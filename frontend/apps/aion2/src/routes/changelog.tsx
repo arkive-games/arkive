@@ -12,7 +12,7 @@ function ChangelogPage() {
   const entries = useMemo(() => resolveChangelog(changelog, lng), [lng]);
 
   return (
-    <ContentLayout>
+    <ContentLayout pageTitle={t("changelog.title")}>
       <h1 className="mb-6 text-3xl font-bold">{t("changelog.title")}</h1>
       <VersionHistory
         entries={entries}

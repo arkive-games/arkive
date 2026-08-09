@@ -243,6 +243,28 @@ body {
     --arkive-content-page-top-space: 17px;
   }
 
+  .arkive-mobile-map-actions {
+    bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
+  }
+
+  .arkive-mobile-map .gm-zoom,
+  .arkive-mobile-map .gmgl-zoom {
+    right: 0.75rem;
+    bottom: calc(env(safe-area-inset-bottom) + 11.5rem);
+  }
+
+  .arkive-mobile-map .gm-statusbar-stack,
+  .arkive-mobile-map .gmgl-statusbar-stack {
+    bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
+  }
+
+  .arkive-mobile-map-sheet {
+    width: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
   .arkive-map-page .gmgl-popup {
     width: min(20rem, calc(100vw - 2rem));
   }

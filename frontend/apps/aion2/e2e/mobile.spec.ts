@@ -91,13 +91,13 @@ test.describe("mobile chrome", () => {
         expect(b.y + b.height).toBeLessThanOrEqual(barTop);
       }
 
-      // The FABs must clear the tab bar too, and must not overlap the zoom pill.
+      // One ordered right-edge stack: zoom, search, filter, then navigation.
       const zoom = (await zoomPill(page, engine).boundingBox())!;
-      for (const id of ["map-fab-search", "map-fab-filter"]) {
-        const f = (await page.getByTestId(id).boundingBox())!;
-        expect(f.y + f.height).toBeLessThanOrEqual(barTop);
-        expect(f.y + f.height).toBeLessThanOrEqual(zoom.y);
-      }
+      const search = (await page.getByTestId("map-fab-search").boundingBox())!;
+      const filter = (await page.getByTestId("map-fab-filter").boundingBox())!;
+      expect(zoom.y + zoom.height).toBeLessThanOrEqual(search.y);
+      expect(search.y + search.height).toBeLessThanOrEqual(filter.y);
+      expect(filter.y + filter.height).toBeLessThanOrEqual(barTop);
     });
   }
 
@@ -146,15 +146,15 @@ test.describe("mobile chrome", () => {
     );
   });
 
-  test("language, theme and renderer are reachable in the More sheet", async ({ page }) => {
+  test("language and theme are reachable without a mobile renderer selector", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
     await page.getByTestId("tab-more").click();
     const sheet = page.getByTestId("more-sheet");
     await expect(sheet).toBeVisible();
-    // Theme and renderer sit on the main body; language is a drill-down, so the
+    // Theme sits on the main body; language is a drill-down, so the
     // sheet shows only the current value until its row is opened.
     await expect(sheet.getByTestId("more-theme-dark")).toBeVisible();
-    await expect(sheet.getByTestId("more-engine-leaflet")).toBeVisible();
+    await expect(sheet.locator('[data-testid^="more-engine-"]')).toHaveCount(0);
     await expect(sheet.getByTestId("more-archive")).toBeVisible();
     await expect(sheet.getByTestId("more-lang-zh-CN")).toHaveCount(0);
 

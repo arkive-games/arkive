@@ -228,24 +228,6 @@ body,
     border-image: linear-gradient(178deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)) 1 1;
 }
 
-/* Lift the map engine's own chrome clear of the fixed bottom tab bar on phones.
-   The engine anchors its zoom pill 0.75rem and its status footer 22px from the
-   bottom, which the 54px tab bar covered outright — the zoom-out button was
-   completely untappable. Scoped to the full-screen mobile map so the wiki's
-   EmbeddedMap keeps the engine's default placement. */
-@media (max-width: 767px) {
-    .aion2-mobile-map .gm-zoom,
-    .aion2-mobile-map .gm-statusbar-stack,
-    /* The GL engine renders the same chrome under `gmgl-` class names. Both
-       sets are listed because either engine can be the mounted one; omitting
-       these made the zoom-out button untappable again under the GL default,
-       and silently so — the Leaflet selectors simply never matched. */
-    .aion2-mobile-map .gmgl-zoom,
-    .aion2-mobile-map .gmgl-statusbar-stack {
-        bottom: calc(env(safe-area-inset-bottom) + 3.75rem);
-    }
-}
-
 /* Suspense gap: the GL engine arrives in a lazy chunk, so paint the map box in
    the map's own backdrop rather than letting the page background flash. */
 .gmgl-map-root {

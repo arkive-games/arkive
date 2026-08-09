@@ -150,8 +150,10 @@ export function ShellBottomNav({
 
   const tabClass = (active?: boolean) =>
     cn(
-      "flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-xs font-medium transition-colors active:bg-accent/70",
-      active ? "text-primary" : "text-muted-foreground",
+      "relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-xs font-medium transition-colors active:bg-accent/70",
+      active
+        ? "text-primary after:absolute after:left-1/2 after:top-0 after:h-0.5 after:w-6 after:-translate-x-1/2 after:rounded-full after:bg-primary"
+        : "text-muted-foreground",
       classNames?.tab,
       active && classNames?.tabActive,
     )
@@ -161,7 +163,7 @@ export function ShellBottomNav({
       <nav
         data-testid="bottom-tab-bar"
         className={cn(
-          "fixed inset-x-0 bottom-0 z-[2500] flex border-t border-border bg-card/97 text-card-foreground shadow-[0_-0.5rem_1.5rem_rgba(8,33,51,0.08)] backdrop-blur md:hidden",
+          "fixed inset-x-0 bottom-0 z-[2500] flex min-h-[calc(3.5rem+env(safe-area-inset-bottom))] border-t border-border bg-card/97 text-card-foreground shadow-[0_-0.5rem_1.5rem_rgba(8,33,51,0.08)] backdrop-blur md:hidden",
           classNames?.root,
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -187,6 +189,7 @@ export function ShellBottomNav({
               type="button"
               data-testid="tab-more"
               data-active={more.active}
+              aria-current={more.active ? "page" : undefined}
               aria-label={typeof more.label === "string" ? more.label : undefined}
               className={tabClass(more.active)}
             >

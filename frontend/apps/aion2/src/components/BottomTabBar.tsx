@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Link, useLocation, useSearch } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   BookOpen,
   Map as MapIcon,
@@ -8,23 +8,11 @@ import {
   ScrollText,
   Users,
 } from "lucide-react";
-import {
-  ShellBottomNav,
-  getArkiveBrandName,
-} from "@gamemap/map-shell";
+import { ShellBottomNav } from "@gamemap/map-shell";
 import { ArkiveAccountControl } from "@gamemap/auth";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import SiteInfo from "@/components/SiteInfo";
-import { ARKIVE_HOME_URL } from "@/lib/brand";
-import {
-  MAP_ENGINE_CHOICES,
-  MAP_ENGINE_LABELS,
-  resolveMapEngine,
-  useChooseMapEngine,
-  useStoredMapEngine,
-  type MapEngineChoice,
-} from "@/lib/mapEngineChoice";
 
 const THEME_OPTIONS: Theme[] = ["auto", "light", "dark"];
 
@@ -64,16 +52,6 @@ export default function BottomTabBar() {
   const { pathname } = useLocation();
   const active = activeTab(pathname);
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
-  const brandName = getArkiveBrandName(currentLng, t("common:brand.name"));
-
-  // The renderer switcher lives here because the mobile layout renders no top
-  // bar at all — without it a phone could not leave the WebGL default. Reading
-  // `?engine=` with the same precedence MapRoute uses keeps the highlighted
-  // choice matching what is actually on screen. `strict: false` because this bar
-  // is mounted from the root route, which does not declare the param.
-  const engineParam = useSearch({ strict: false, select: (s) => (s as { engine?: unknown }).engine });
-  const activeEngine = resolveMapEngine(engineParam, useStoredMapEngine());
-  const chooseEngine = useChooseMapEngine();
 
   return (
     <ShellBottomNav
@@ -94,7 +72,13 @@ export default function BottomTabBar() {
       ]}
       renderTab={(tab, className) =>
         tab.key === "map" ? (
-          <Link to="/" data-testid="tab-map" data-active={tab.active} className={className}>
+          <Link
+            to="/"
+            data-testid="tab-map"
+            data-active={tab.active}
+            aria-current={tab.active ? "page" : undefined}
+            className={className}
+          >
             {tab.icon}
             <span className="max-w-full truncate px-0.5">{tab.label}</span>
           </Link>
@@ -104,6 +88,7 @@ export default function BottomTabBar() {
             params={{ type: tab.key }}
             data-testid={`tab-${tab.key}`}
             data-active={tab.active}
+            aria-current={tab.active ? "page" : undefined}
             className={className}
           >
             {tab.icon}
@@ -116,15 +101,6 @@ export default function BottomTabBar() {
         icon: <Menu className="size-5" />,
         active: active === "more",
         title: t("common:mobileNav.more"),
-        brand: (
-          <a
-            href={ARKIVE_HOME_URL}
-            aria-label={t("common:brand.name")}
-            className="max-w-40 truncate text-sm font-bold text-primary hover:underline"
-          >
-            {brandName}
-          </a>
-        ),
       }}
       grid={{
         items: [
@@ -161,18 +137,9 @@ export default function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t("common:menu.switchTheme", "Switch theme"),
       }}
-      engine={{
-        choices: MAP_ENGINE_CHOICES.map((choice) => ({
-          value: choice,
-          label: MAP_ENGINE_LABELS[choice].short,
-        })),
-        current: activeEngine,
-        onChange: (value) => chooseEngine(value as MapEngineChoice),
-        rowLabel: t("common:menu.switchEngine", "Map renderer"),
-      }}
-      extra={
+      extra={active === "map" ? (
         <ArkiveAccountControl language={currentLng} variant="mobileRow" />
-      }
+      ) : undefined}
       footer={<SiteInfo />}
     />
   );

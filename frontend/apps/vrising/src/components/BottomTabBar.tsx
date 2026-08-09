@@ -4,12 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import {
   ShellBottomNav,
-  getArkiveBrandName,
   useTheme,
   type Theme,
 } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
-import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 import { SiteInfo } from './SiteInfo'
 import type { NavKey } from './TopNav'
 
@@ -27,7 +25,6 @@ export function BottomTabBar() {
   const { theme, setTheme } = useTheme()
   const lng = LANGUAGES.find((code) => code === i18n.resolvedLanguage) ?? 'en-US'
   const active = activeKey(pathname)
-  const brandName = getArkiveBrandName(lng, t('brand'))
   return (
     <ShellBottomNav
       pathname={pathname}
@@ -37,7 +34,12 @@ export function BottomTabBar() {
         { key: '/database', label: t('nav.database'), icon: <Database className="size-5" />, active: active === '/database' },
       ]}
       renderTab={(tab, className) => (
-        <Link to={tab.key as NavKey} className={className} data-testid={`tab-${String(tab.key).replace(/^\//, '') || 'map'}`}>
+        <Link
+          to={tab.key as NavKey}
+          className={className}
+          data-testid={`tab-${String(tab.key).replace(/^\//, '') || 'map'}`}
+          aria-current={tab.active ? 'page' : undefined}
+        >
           {tab.icon}
           <span className="max-w-full truncate">{tab.label}</span>
         </Link>
@@ -47,16 +49,6 @@ export function BottomTabBar() {
         icon: <Menu className="size-5" />,
         active: active === '/systems' || active === '/changelog',
         title: t('more'),
-        brand: (
-          <a
-            href={ARKIVE_HOME_URL}
-            {...ARKIVE_HOME_LINK_PROPS}
-            aria-label={t('brandHome')}
-            className="max-w-40 truncate text-sm font-bold text-primary hover:underline"
-          >
-            {brandName}
-          </a>
-        ),
       }}
       grid={{
         items: [
@@ -87,7 +79,7 @@ export function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('themeMenu'),
       }}
-      extra={<ArkiveAccountControl language={lng} variant="mobileRow" />}
+      extra={active === '/' ? <ArkiveAccountControl language={lng} variant="mobileRow" /> : undefined}
       footer={<SiteInfo />}
     />
   )

@@ -9,13 +9,12 @@ import {
 // chunk (it arrives through the `lazy()` boundary below).
 import type { GlMapRef } from '@gamemap/map-engine-gl'
 import {
-  FilterPanel, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar,
+  ArkiveMobileMapControls, FilterPanel, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar,
   readMapView, useMapViewMemory,
   type FilterCategory, type MapViewState, type SearchItem,
 } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, useIsMobile } from '@gamemap/ui'
-import { SlidersHorizontal, Search as SearchIcon } from 'lucide-react'
+import { useIsMobile } from '@gamemap/ui'
 import {
   loadStatic, loadMarkers, loadRegions,
   type MapMeta, type MarkerLocale, type MarkerRow, type MapsLocale,
@@ -442,7 +441,7 @@ export default function MapPage() {
     visibleSubtypes: visible,
     showLabels,
     showBorders: showRegions,
-    lodEnabled: false,
+    lodEnabled: isMobile,
     selectedMarkerId,
     forceShowIds,
     selectedPosition,
@@ -481,49 +480,31 @@ export default function MapPage() {
 
   if (isMobile) {
     return (
-      <div className="relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+      <div className="arkive-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
         <h1 className="sr-only">{t('title')}</h1>
         {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
             gets a definite height and Leaflet sizes correctly on mount. */}
         <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}</main>
 
-        <div
-          className="absolute right-3 z-[700] flex flex-col gap-2"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4.75rem)' }}
-        >
-          <button
-            type="button"
-            data-testid="map-fab-search"
-            aria-label={t('search')}
-            onClick={() => setSearchSheetOpen(true)}
-            className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
-          >
-            <SearchIcon className="size-5" />
-          </button>
-          <button
-            type="button"
-            data-testid="map-fab-filter"
-            aria-label={t('filter')}
-            onClick={() => setFilterSheetOpen(true)}
-            className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-lg"
-          >
-            <SlidersHorizontal className="size-5" />
-          </button>
-        </div>
-
-        <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-          <SheetContent side="bottom" data-testid="filter-sheet" className="max-h-[85dvh]">
-            <SheetHeader>{mapSelect}</SheetHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto">{filterPanel}</div>
-          </SheetContent>
-        </Sheet>
-
-        <Sheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
-          <SheetContent side="bottom" data-testid="search-sheet" className="h-[70dvh]">
-            <SheetTitle className="sr-only">{t('search')}</SheetTitle>
-            {searchPanel('inline')}
-          </SheetContent>
-        </Sheet>
+        <ArkiveMobileMapControls
+          search={{
+            label: t('search'),
+            open: searchSheetOpen,
+            onOpenChange: (open) => {
+              setSearchSheetOpen(open)
+              if (!open) setSearchResultIds([])
+            },
+            content: searchPanel('inline'),
+          }}
+          filter={{
+            label: t('filter'),
+            open: filterSheetOpen,
+            onOpenChange: setFilterSheetOpen,
+            active: visible.size !== staticData.types.subtypes.length,
+            header: mapSelect,
+            content: filterPanel,
+          }}
+        />
       </div>
     )
   }
