@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core"
+	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/module"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
@@ -95,12 +96,21 @@ func newHarness(t *testing.T) *harness {
 	return newHarnessWith(t, nil, nil)
 }
 
+// newHarnessWithMailer substitutes the mail transport, e.g. one that always
+// fails. Options are applied after the defaults, and WithMailer simply assigns,
+// so the later one wins over the capture mailer.
+func newHarnessWithMailer(t *testing.T, override auth.Mailer) *harness {
+	return newHarnessWith(t, nil, nil, core.WithMailer(override))
+}
+
 // newHarnessWith builds a harness with configuration or storage overridden.
 //
 // tweak runs after the defaults are assembled, so a test can lower a limit it
 // wants to reach; store replaces the in-memory object storage, which is how the
-// MinIO-backed test reuses this whole suite against a real server.
-func newHarnessWith(t *testing.T, tweak func(*config.Config), store blob.Store) *harness {
+// MinIO-backed test reuses this whole suite against a real server. extra is
+// variadic so a caller can add a module option without every existing call site
+// growing an argument.
+func newHarnessWith(t *testing.T, tweak func(*config.Config), store blob.Store, extra ...core.Option) *harness {
 	t.Helper()
 
 	dsn := os.Getenv(dsnEnv)
@@ -168,7 +178,8 @@ func newHarnessWith(t *testing.T, tweak func(*config.Config), store blob.Store) 
 	if store == nil {
 		store = blob.NewMemory()
 	}
-	mod := core.New(core.WithMailer(mailer), core.WithBlobStore(store))
+	opts := append([]core.Option{core.WithMailer(mailer), core.WithBlobStore(store)}, extra...)
+	mod := core.New(opts...)
 
 	if err := db.Migrate(ctx, pool, mod.Schema(), mod.Migrations()); err != nil {
 		t.Fatalf("migrate: %v", err)
@@ -1006,5 +1017,36 @@ func TestForgotPasswordLimitIsPerAddressNotGlobal(t *testing.T) {
 	// Exhausting one address must not lock everyone else out.
 	if res := h.forgotPassword("second@example.com"); res.status != http.StatusAccepted {
 		t.Fatalf("a different address must have its own allowance, got %d: %s", res.status, res.body)
+	}
+}
+
+// A mailer that always fails, to prove delivery problems cannot be used to
+// discover which addresses are registered.
+type failingMailer struct{}
+
+func (failingMailer) SendPasswordReset(context.Context, string, string) error {
+	return fmt.Errorf("smtp relay refused the message")
+}
+func (failingMailer) SendVerification(context.Context, string, string) error {
+	return fmt.Errorf("smtp relay refused the message")
+}
+
+func TestMailFailureDoesNotRevealWhetherAnAccountExists(t *testing.T) {
+	h := newHarnessWithMailer(t, failingMailer{})
+	if res := h.register("alice", "alice@example.com", "hunter2hunter2"); res.status != http.StatusCreated {
+		t.Fatalf("setup failed: %s", res.body)
+	}
+
+	// A real address reaches the mailer and fails; an unknown one returns early
+	// and never tries. If the failure surfaced, the difference would say which
+	// is which — which is precisely what this endpoint hides.
+	known := h.forgotPassword("alice@example.com")
+	unknown := h.forgotPassword("nobody@example.com")
+
+	if known.status != http.StatusAccepted || unknown.status != http.StatusAccepted {
+		t.Fatalf("statuses = %d and %d, want 202 for both", known.status, unknown.status)
+	}
+	if !bytes.Equal(known.body, unknown.body) {
+		t.Errorf("responses differ:\n known:   %s\n unknown: %s", known.body, unknown.body)
 	}
 }

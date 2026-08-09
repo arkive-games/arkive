@@ -49,6 +49,24 @@ services:
       AUTH_COOKIE_SECURE: "true"
       AUTH_COOKIE_SAMESITE: lax
 
+      # Counters and Altcha replay protection. Without these the service falls
+      # back to in-process state, which is per-process and lost on restart.
+      REDIS_ADDR: ${REDIS_ADDR:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+
+      # Mail. An empty SMTP_HOST keeps the logging mailer rather than failing
+      # every reset request.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Arkive}
+      RESET_URL_TEMPLATE: ${RESET_URL_TEMPLATE:-}
+
+      FORGOT_PER_HOUR_PER_IP: ${FORGOT_PER_HOUR_PER_IP:-5}
+      FORGOT_PER_HOUR_PER_EMAIL: ${FORGOT_PER_HOUR_PER_EMAIL:-3}
+
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?set ALLOWED_ORIGINS}
       ALLOW_CREDENTIALS: "true"
       # Lets a Bilibili Toy authenticate with a bearer token from an origin that

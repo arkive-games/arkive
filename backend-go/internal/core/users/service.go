@@ -490,8 +490,18 @@ func (s *Service) ForgotPassword(ctx context.Context, email string) error {
 	if err != nil {
 		return fmt.Errorf("issue reset token: %w", err)
 	}
+
+	// A delivery failure is logged, not returned.
+	//
+	// Returning it produced an account-enumeration oracle: an unknown address
+	// took the early return above and answered 202, while a real address
+	// reached the mailer and answered 500 when it failed. That difference
+	// discloses exactly which addresses are registered — the thing this
+	// endpoint's constant response exists to hide. The caller is told the same
+	// thing either way, and the operator finds the failure in the log.
 	if err := s.mailer.SendPasswordReset(ctx, u.Email, token); err != nil {
-		return fmt.Errorf("send reset mail: %w", err)
+		s.logger.ErrorContext(ctx, "could not send password reset mail",
+			slog.String("user_id", u.ID.String()), slog.Any("error", err))
 	}
 	return nil
 }
@@ -548,8 +558,11 @@ func (s *Service) RequestVerify(ctx context.Context, email string) error {
 	if err != nil {
 		return fmt.Errorf("issue verification token: %w", err)
 	}
+	// Logged rather than returned, for the same reason as the reset flow: this
+	// endpoint also answers identically for known and unknown addresses.
 	if err := s.mailer.SendVerification(ctx, u.Email, token); err != nil {
-		return fmt.Errorf("send verification mail: %w", err)
+		s.logger.ErrorContext(ctx, "could not send verification mail",
+			slog.String("user_id", u.ID.String()), slog.Any("error", err))
 	}
 	return nil
 }
