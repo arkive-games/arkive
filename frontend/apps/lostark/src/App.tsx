@@ -13,11 +13,12 @@ import {
 import type { Loadout } from '@/calc/types'
 import { loadDataset, type Dataset } from '@/lib/data'
 import {
-  STORAGE_KEY,
+  clearLoadout,
   defaultLoadout,
   exportLoadout,
   parseLoadout,
   restoreLoadout,
+  saveLoadout,
 } from '@/lib/loadout'
 import {
   armourSetLabel,
@@ -50,9 +51,7 @@ export default function App() {
   // Debounced autosave; the loadout is small so JSON cost is irrelevant.
   useEffect(() => {
     const id = setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(loadout))
-      } catch { /* private mode */ }
+      saveLoadout(loadout)
     }, 300)
     return () => clearTimeout(id)
   }, [loadout])
@@ -376,6 +375,7 @@ export default function App() {
           </button>
           <button
             onClick={() => {
+              clearLoadout()
               setLoadout(defaultLoadout())
               setNotice('已清空')
             }}

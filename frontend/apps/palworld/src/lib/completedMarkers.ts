@@ -1,26 +1,34 @@
 import { useCallback, useEffect, useState } from 'react'
+import { browserMemory, defineMemoryRecord, parseJson } from '@gamemap/state-memory'
 
 // Completed marker ids per map (marker ids are the tools' stable
 // "<map>-<subtype>-<index>" keys), persisted the same way as the
 // visible-subtype selection in App.tsx.
 const KEY_PREFIX = 'palworld.map.completed.'
 
+const completedRecord = (mapId: string) => defineMemoryRecord({
+  id: 'completed-markers',
+  namespace: 'palworld',
+  surface: 'map',
+  stateClass: 'durable_progress',
+  schemaVersion: '1.0.0',
+  defaultValue: () => [] as string[],
+  validate: (value: unknown): value is string[] =>
+    Array.isArray(value) && value.length <= 10_000 && value.every((item) => typeof item === 'string'),
+  legacyKeys: [KEY_PREFIX + mapId],
+  migrateLegacy: (raw: string) => {
+    const value = parseJson(raw)
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+  },
+})
+
 /** Read the persisted completed-marker ids for a map; empty set on any error. */
 export function readCompleted(mapId: string): Set<string> {
-  try {
-    const raw = localStorage.getItem(KEY_PREFIX + mapId)
-    if (!raw) return new Set()
-    const arr = JSON.parse(raw)
-    return new Set(Array.isArray(arr) ? arr.filter((v): v is string => typeof v === 'string') : [])
-  } catch {
-    return new Set()
-  }
+  return new Set(browserMemory.read(completedRecord(mapId), { partition: mapId }))
 }
 
 function writeCompleted(mapId: string, ids: Set<string>) {
-  try {
-    localStorage.setItem(KEY_PREFIX + mapId, JSON.stringify([...ids]))
-  } catch { /* no storage — feature degrades to non-persistent */ }
+  browserMemory.write(completedRecord(mapId), [...ids], { partition: mapId })
 }
 
 /** Toggle `id` in `ids`; returns a NEW set and persists it. */

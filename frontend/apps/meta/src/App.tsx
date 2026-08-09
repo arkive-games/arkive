@@ -46,6 +46,7 @@ import { MetaMobileNav } from './MetaMobileNav'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl } from './userSystemData'
 import { useUserSystem } from './UserSystemState'
+import { defineMemoryRecord, useMemoryState } from '@gamemap/state-memory'
 
 const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum', 'favorites'] as const
 type HomeRoute =
@@ -59,6 +60,37 @@ type HomeRoute =
 const NOTIFICATION_SECTIONS = new Set<NotificationSection>(['replies', 'mentions', 'likes', 'system', 'settings'])
 const ACCOUNT_SECTIONS = new Set<AccountSection>(['edit', 'favorites', 'posts', 'comments', 'fans', 'following', 'privacy'])
 const PUBLIC_PROFILE_SECTIONS = new Set<PublicProfileSection>(['posts', 'comments', 'favorites', 'fans', 'following'])
+interface RecentDestination {
+  id: string
+  gameId: string
+  route: string
+  title: string
+  timestamp: number
+}
+
+const recentDestinationsRecord = defineMemoryRecord({
+  id: 'recent-destinations', namespace: 'site', surface: 'portal', stateClass: 'durable_progress',
+  schemaVersion: '1.0.0', defaultValue: () => [] as RecentDestination[],
+  validate: (value: unknown): value is RecentDestination[] => Array.isArray(value)
+    && value.length <= 10
+    && value.every((item) => Boolean(item) && typeof item === 'object'
+      && typeof (item as RecentDestination).id === 'string'
+      && typeof (item as RecentDestination).gameId === 'string'
+      && typeof (item as RecentDestination).route === 'string'
+      && typeof (item as RecentDestination).title === 'string'
+      && typeof (item as RecentDestination).timestamp === 'number'),
+  retentionMs: 30 * 24 * 60 * 60 * 1_000,
+})
+
+function recentDestination(site: SiteCard, route: string, title: string): RecentDestination {
+  return {
+    id: `game:${site.id}`,
+    gameId: site.id,
+    route,
+    title,
+    timestamp: Date.now(),
+  }
+}
 function routeFromHash(): HomeRoute {
   const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
   if (root === 'games') return { view: 'allGames' }
@@ -127,6 +159,23 @@ export default function App() {
   const authStrings = authStringsFor(i18n.language)
   const isSignedIn = auth.status === 'authenticated'
   const { state: userSystemState, toggleFavoriteGame } = useUserSystem()
+  const [recentDestinations, setRecentDestinations] = useMemoryState(recentDestinationsRecord)
+  const [memoryNow] = useState(Date.now)
+  const rememberSite = (site: SiteCard) => {
+    const route = siteHref(site)
+    if (!route) return
+    const destination = recentDestination(site, route, t(site.nameKey))
+    setRecentDestinations((current) => [
+      destination,
+      ...current.filter((item) => item.id !== destination.id),
+    ].slice(0, 10))
+  }
+  const continueDestination = recentDestinations.find((destination) =>
+    memoryNow - destination.timestamp < 30 * 24 * 60 * 60 * 1_000
+    && VISIBLE_SITES.some((site) => site.id === destination.gameId && siteHref(site)))
+  const continueSite = continueDestination
+    ? VISIBLE_SITES.find((site) => site.id === continueDestination.gameId)
+    : undefined
   const currentAvatar = auth.user
     ? userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
     : avatarUrl('arkive-anonymous', 96)
@@ -191,7 +240,7 @@ export default function App() {
               : undefined
             const gameHref = game ? siteHref(game) : undefined
             return game && gameHref ? (
-              <a href={gameHref} className={className}>{label}</a>
+              <a href={gameHref} className={className} onClick={() => rememberSite(game)}>{label}</a>
             ) : game ? (
               // Announced but not open yet: keep it listed, without a href.
               <button
@@ -252,7 +301,11 @@ export default function App() {
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} strings={authStrings} />
 
       {activeRoute.view === 'allGames' ? (
-        <AllGamesPage sites={VISIBLE_SITES} onAuthRequired={() => setAccountOpen(true)} />
+        <AllGamesPage
+          sites={VISIBLE_SITES}
+          onAuthRequired={() => setAccountOpen(true)}
+          onOpenSite={rememberSite}
+        />
       ) : activeRoute.view === 'forum' ? (
         <ForumPage
           sites={VISIBLE_SITES}
@@ -287,10 +340,24 @@ export default function App() {
               <input type="search" aria-label={t('search.placeholder')} placeholder={t('search.placeholder')} />
               <button type="submit">{t('search.action')}</button>
             </form>
+            {continueDestination && continueSite ? (
+              <a
+                className="hero-continue"
+                href={siteHref(continueSite) ?? continueDestination.route}
+                onClick={() => rememberSite(continueSite)}
+              >
+                <IconCompass className="size-5" stroke={1.7} aria-hidden="true" />
+                <span>
+                  <small>{t('hero.continue')}</small>
+                  <strong>{t(continueSite.nameKey)}</strong>
+                </span>
+                <IconArrowRight className="size-4" stroke={1.8} aria-hidden="true" />
+              </a>
+            ) : null}
           </div>
 
           {featuredSite ? (
-            <FeaturedGame site={featuredSite} />
+            <FeaturedGame site={featuredSite} onOpen={() => rememberSite(featuredSite)} />
           ) : (
             <div className="featured-empty" aria-live="polite">
               <IconCompass className="size-10" stroke={1.5} />
@@ -324,6 +391,7 @@ export default function App() {
                   }
                   toggleFavoriteGame(site.id)
                 }}
+                onOpen={() => rememberSite(site)}
               />
             ))}
             <ComingSoonCard onClick={showComingSoon} />
@@ -366,12 +434,12 @@ export default function App() {
   )
 }
 
-function FeaturedGame({ site }: { site: SiteCard }) {
+function FeaturedGame({ site, onOpen }: { site: SiteCard; onOpen: () => void }) {
   const { t } = useTranslation()
   const name = t(site.nameKey)
 
   return (
-    <a className="featured-game group" href={siteHref(site)}>
+    <a className="featured-game group" href={siteHref(site)} onClick={onOpen}>
       <img src={site.bg} alt={name} />
       <span className="featured-shade" aria-hidden="true" />
       <span className="featured-route" aria-hidden="true">
@@ -390,7 +458,12 @@ function FeaturedGame({ site }: { site: SiteCard }) {
   )
 }
 
-function GameCard({ site, favorite, onFavorite }: { site: SiteCard; favorite: boolean; onFavorite: () => void }) {
+function GameCard({ site, favorite, onFavorite, onOpen }: {
+  site: SiteCard
+  favorite: boolean
+  onFavorite: () => void
+  onOpen: () => void
+}) {
   const { t } = useTranslation()
   const name = t(site.nameKey)
   const href = siteHref(site)
@@ -419,7 +492,7 @@ function GameCard({ site, favorite, onFavorite }: { site: SiteCard; favorite: bo
   return (
     <article className={site.comingSoon ? 'game-card is-soon' : 'game-card'}>
       {href ? (
-        <a href={href} className="game-card-link group">{body}</a>
+        <a href={href} className="game-card-link group" onClick={onOpen}>{body}</a>
       ) : (
         <span className="game-card-link is-inert">{body}</span>
       )}

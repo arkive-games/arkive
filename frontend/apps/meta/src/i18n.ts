@@ -293,6 +293,7 @@ const resources = {
         tail: '启航？',
         description: '查任务、找地图、收好每一次发现。这里不催你通关，只陪你把喜欢的世界看得更完整。',
         recommendation: '人气游戏优先推荐',
+        continue: '继续探索',
       },
       search: { placeholder: '搜索游戏、任务、角色或地点', action: '开始查找' },
       catalog: {
@@ -453,6 +454,7 @@ const resources = {
         tail: '啟航？',
         description: '查任務、找地圖、收好每一次發現。這裡不催你通關，只陪你把喜歡的世界看得更完整。',
         recommendation: '人氣遊戲優先推薦',
+        continue: '繼續探索',
       },
       search: { placeholder: '搜尋遊戲、任務、角色或地點', action: '開始查找' },
       catalog: {
@@ -581,6 +583,7 @@ const resources = {
         tail: 'will you sail into?',
         description: 'Find quests, maps, and every discovery worth keeping. Explore the worlds you love at your own pace.',
         recommendation: 'Popular game recommendation',
+        continue: 'Continue exploring',
       },
       search: { placeholder: 'Search games, quests, characters, or places', action: 'Search' },
       catalog: {
@@ -694,7 +697,7 @@ const resources = {
       theme: { auto: 'システムに従う', light: 'ライトモード', dark: 'ダークモード', menu: 'テーマを切り替える', short: 'テーマ' },
       auth: { login: 'ログイン' },
       userSystem: userSystemCopy('ja-JP'),
-      hero: { eyebrow: '藏舟へようこそ', lead: '今日は、どの', highlight: 'ゲーム世界', tail: 'へ出航しますか？', description: 'クエストやマップを調べ、発見を大切に保存。好きな世界を自分のペースで楽しめます。', recommendation: '人気ゲームを優先表示' },
+      hero: { eyebrow: '藏舟へようこそ', lead: '今日は、どの', highlight: 'ゲーム世界', tail: 'へ出航しますか？', description: 'クエストやマップを調べ、発見を大切に保存。好きな世界を自分のペースで楽しめます。', recommendation: '人気ゲームを優先表示', continue: '探索を続ける' },
       search: { placeholder: 'ゲーム、クエスト、キャラクター、場所を検索', action: '検索する' },
       catalog: {
         eyebrow: 'ゲーム資料館',
@@ -795,7 +798,7 @@ const resources = {
       theme: { auto: '시스템 설정 따르기', light: '라이트 모드', dark: '다크 모드', menu: '테마 전환', short: '테마' },
       auth: { login: '로그인' },
       userSystem: userSystemCopy('ko-KR'),
-      hero: { eyebrow: '장저우에 오신 것을 환영합니다', lead: '오늘은 어느', highlight: '게임 세계', tail: '로 떠날까요?', description: '퀘스트와 지도를 찾고 모든 발견을 간직하세요. 좋아하는 세계를 자신의 속도로 탐험할 수 있습니다.', recommendation: '인기 게임 우선 추천' },
+      hero: { eyebrow: '장저우에 오신 것을 환영합니다', lead: '오늘은 어느', highlight: '게임 세계', tail: '로 떠날까요?', description: '퀘스트와 지도를 찾고 모든 발견을 간직하세요. 좋아하는 세계를 자신의 속도로 탐험할 수 있습니다.', recommendation: '인기 게임 우선 추천', continue: '계속 탐색하기' },
       search: { placeholder: '게임, 퀘스트, 캐릭터 또는 장소 검색', action: '검색' },
       catalog: {
         eyebrow: '게임 자료관',

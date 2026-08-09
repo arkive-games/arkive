@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthError, useAuth } from '@gamemap/auth'
+import { browserMemory, defineMemoryRecord } from '@gamemap/state-memory'
 import Cropper, { type Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
 import {
@@ -248,18 +249,51 @@ export function AccountCenterPage({
   const auth = useAuth()
   const { state, updateLocalProfile } = useUserSystem()
   const user = auth.user
-  const [profile, setProfile] = useState(() => ({
-    name: user?.name ?? '',
-    email: user?.email ?? '',
+  const profileDraftRecord = useMemo(() => defineMemoryRecord({
+    id: 'profile', namespace: 'site', surface: 'account-editor', stateClass: 'task_draft',
+    schemaVersion: '1.0.0',
+    defaultValue: () => ({
+      name: user?.name ?? '',
+      email: user?.email ?? '',
+      bio: state.profile.bio,
+    }),
+    validate: (value: unknown): value is { name: string; email: string; bio: string } => {
+      if (!value || typeof value !== 'object') return false
+      const draft = value as Record<string, unknown>
+      return typeof draft.name === 'string' && draft.name.length <= 64
+        && typeof draft.email === 'string' && draft.email.length <= 320
+        && typeof draft.bio === 'string' && draft.bio.length <= 120
+    },
+    retentionMs: 30 * 24 * 60 * 60 * 1_000,
+    accountScoped: true,
+  }), [state.profile.bio, user?.email, user?.name])
+  const [profile, setProfile] = useState(() => user
+    ? browserMemory.read(profileDraftRecord, { accountId: user.id })
+    : ({
+    name: '',
+    email: '',
     bio: state.profile.bio,
-  }))
+    }))
+  const skipNextDraftWrite = useRef(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
     if (!user) return
-    setProfile({ name: user.name, email: user.email, bio: state.profile.bio })
-  }, [state.profile.bio, user])
+    setProfile(browserMemory.read(profileDraftRecord, { accountId: user.id }))
+  }, [profileDraftRecord, user])
+
+  useEffect(() => {
+    if (!user) return
+    if (skipNextDraftWrite.current) {
+      skipNextDraftWrite.current = false
+      return
+    }
+    const timeout = window.setTimeout(() => {
+      browserMemory.write(profileDraftRecord, profile, { accountId: user.id })
+    }, 300)
+    return () => window.clearTimeout(timeout)
+  }, [profile, profileDraftRecord, user])
 
   if (!user) return null
 
@@ -286,6 +320,8 @@ export function AccountCenterPage({
         await auth.refresh()
       }
       updateLocalProfile({ bio: nextProfile.bio })
+      skipNextDraftWrite.current = true
+      browserMemory.clear(profileDraftRecord, { accountId: user.id })
       setProfile(nextProfile)
       form.reset()
       setSaveStatus('saved')
@@ -350,6 +386,11 @@ export function AccountCenterPage({
                 setSaveStatus('idle')
                 setSaveError('')
               }}
+              onProfileChange={(field, value) => {
+                setSaveStatus('idle')
+                setSaveError('')
+                setProfile((current) => ({ ...current, [field]: value }))
+              }}
               onAvatarChange={(src) => updateLocalProfile({ avatarSrc: src })}
             />
           </section>
@@ -369,6 +410,7 @@ function AccountContent({
   saveError,
   onSave,
   onEdit,
+  onProfileChange,
   onAvatarChange,
 }: {
   section: AccountSection
@@ -380,6 +422,7 @@ function AccountContent({
   saveError: string
   onSave: (event: FormEvent<HTMLFormElement>) => Promise<void>
   onEdit: () => void
+  onProfileChange: (field: 'name' | 'email' | 'bio', value: string) => void
   onAvatarChange: (src: string) => void
 }) {
   const { t } = useTranslation()
@@ -392,16 +435,37 @@ function AccountContent({
           <AvatarUploadDialog currentSrc={avatarSrc} onChange={onAvatarChange} />
         </div>
         <FormField label={t('userSystem.account.fields.displayName')}>
-          <input name="displayName" defaultValue={profile.name} maxLength={64} required autoComplete="nickname" />
+          <input
+            name="displayName"
+            value={profile.name}
+            onChange={(event) => onProfileChange('name', event.target.value)}
+            maxLength={64}
+            required
+            autoComplete="nickname"
+          />
         </FormField>
         <FormField label={t('userSystem.account.fields.email')}>
-          <input name="email" type="email" defaultValue={profile.email} maxLength={320} required autoComplete="email" />
+          <input
+            name="email"
+            type="email"
+            value={profile.email}
+            onChange={(event) => onProfileChange('email', event.target.value)}
+            maxLength={320}
+            required
+            autoComplete="email"
+          />
         </FormField>
         <FormField label={t('userSystem.account.fields.accountId')} helper={t('userSystem.account.fields.accountIdHelper')}>
           <input value={userId} readOnly />
         </FormField>
         <FormField label={t('userSystem.account.fields.bio')}>
-          <textarea name="bio" defaultValue={profile.bio} maxLength={120} rows={4} />
+          <textarea
+            name="bio"
+            value={profile.bio}
+            onChange={(event) => onProfileChange('bio', event.target.value)}
+            maxLength={120}
+            rows={4}
+          />
         </FormField>
         <FormField
           label={t('userSystem.account.fields.password')}

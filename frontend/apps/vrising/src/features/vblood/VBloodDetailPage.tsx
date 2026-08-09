@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
 import { BookOpen, Check, ChevronLeft, FlaskConical, Hammer, MapPinned, Sparkles } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
@@ -13,6 +14,11 @@ import {
   type VBloodRewardRecord,
   type VBloodRewardRef,
 } from '../../lib/vblood'
+
+const rewardDisclosureRecord = defineMemoryRecord({
+  id: 'reward-lists-expanded', namespace: 'vrising', surface: 'vblood-detail', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
+})
 
 function RewardSection({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
@@ -37,7 +43,7 @@ function EmptyReward() {
 
 function RewardList({ values }: { values: (VBloodRewardRef | VBloodAbilityReward)[] }) {
   const { t } = useTranslation()
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useMemoryState(rewardDisclosureRecord)
   if (!values.length) return <EmptyReward />
   const visible = expanded ? values : values.slice(0, 8)
   return (

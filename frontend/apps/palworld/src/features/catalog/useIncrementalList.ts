@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { browserMemory, defineMemoryRecord, isFiniteNumber } from '@gamemap/state-memory'
 
 // Reveal chunk sizes. All catalog data is already in memory (static JSON
 // bundles), so this is purely a DOM-size control: the items grid would
@@ -13,11 +14,22 @@ const SENTINEL_ROOT_MARGIN = '800px'
 
 const STORAGE_PREFIX = 'palworld.reveal.'
 
+const revealRecord = (storageKey: string) => defineMemoryRecord({
+  id: 'reveal-depth',
+  namespace: 'palworld',
+  surface: 'catalog',
+  stateClass: 'session_context',
+  schemaVersion: '1.0.0',
+  defaultValue: () => INITIAL_COUNT,
+  validate: (value: unknown): value is number => isFiniteNumber(value) && value >= INITIAL_COUNT,
+  retentionMs: 24 * 60 * 60 * 1_000,
+  legacyKeys: [STORAGE_PREFIX + storageKey],
+  migrateLegacy: (raw: string) => Number(raw),
+})
+
 function restoreCount(storageKey: string | undefined): number {
   if (!storageKey) return INITIAL_COUNT
-  const raw = sessionStorage.getItem(STORAGE_PREFIX + storageKey)
-  const n = raw ? Number(raw) : NaN
-  return Number.isFinite(n) && n > INITIAL_COUNT ? n : INITIAL_COUNT
+  return browserMemory.read(revealRecord(storageKey), { partition: storageKey })
 }
 
 /**
@@ -27,7 +39,7 @@ function restoreCount(storageKey: string | undefined): number {
  * `showMore` is the manual fallback for the same step (keyboard users, no-IO
  * environments, deterministic e2e).
  *
- * `storageKey` persists the reveal depth in sessionStorage so list → detail →
+ * `storageKey` persists the reveal depth as session context so list → detail →
  * back restores the scroll position (the browser can only restore scroll if
  * the tiles are actually re-rendered). The count resets to the initial chunk
  * whenever `list` changes identity (new filter / query / language).
@@ -50,7 +62,7 @@ export function useIncrementalList<T>(list: T[], storageKey?: string) {
 
   useEffect(() => {
     if (!storageKey) return
-    sessionStorage.setItem(STORAGE_PREFIX + storageKey, String(count))
+    browserMemory.write(revealRecord(storageKey), count, { partition: storageKey })
   }, [count, storageKey])
 
   const showMore = useCallback(() => {

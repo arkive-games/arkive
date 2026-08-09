@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { ArrowDown01, ArrowUp10, Check, Sparkles, Star } from 'lucide-react'
+import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
+import { ArrowDown01, ArrowUp10, Check, RotateCcw, Sparkles, Star } from 'lucide-react'
 import {
   Button,
   Command,
@@ -45,6 +46,68 @@ type TFn = (k: string, o?: Record<string, unknown>) => string
 
 type CombatKey = 'hp' | 'attack' | 'defense'
 type RowKey = CombatKey | 'craft'
+
+const numberRecord = (id: string, defaultValue: number, min: number, max: number) => defineMemoryRecord({
+  id,
+  namespace: 'palworld',
+  surface: 'stat-simulator',
+  stateClass: 'task_draft' as const,
+  schemaVersion: '1.0.0',
+  defaultValue: () => defaultValue,
+  validate: (value: unknown): value is number =>
+    typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max,
+  retentionMs: 30 * 24 * 60 * 60 * 1_000,
+})
+
+const levelRecord = numberRecord('level', 60, 1, MAX_LEVEL)
+const starsRecord = numberRecord('stars', 0, 0, MAX_STARS)
+const bondRecord = numberRecord('bond', 0, 0, MAX_BOND)
+const awakeRecord = defineMemoryRecord({
+  id: 'awake', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
+  retentionMs: 30 * 24 * 60 * 60 * 1_000,
+})
+
+type FourStats = Record<RowKey, number>
+const isFourStats = (value: unknown): value is FourStats => {
+  if (!value || typeof value !== 'object') return false
+  const stats = value as Partial<FourStats>
+  return ['hp', 'attack', 'defense', 'craft'].every((key) =>
+    typeof stats[key as RowKey] === 'number' && Number.isFinite(stats[key as RowKey]))
+}
+const soulsRecord = defineMemoryRecord({
+  id: 'souls', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  schemaVersion: '1.0.0', defaultValue: () => ({ hp: 0, attack: 0, defense: 0, craft: 0 }),
+  validate: isFourStats, retentionMs: 30 * 24 * 60 * 60 * 1_000,
+})
+const passivesRecord = defineMemoryRecord({
+  id: 'passives', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  schemaVersion: '1.0.0', defaultValue: () => ({ hp: 0, attack: 0, defense: 0, craft: 0 }),
+  validate: isFourStats, retentionMs: 30 * 24 * 60 * 60 * 1_000,
+})
+const ivRecord = defineMemoryRecord({
+  id: 'iv', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  schemaVersion: '1.0.0', defaultValue: () => ({ hp: 100, attack: 100, defense: 100 }),
+  validate: (value: unknown): value is Record<CombatKey, number> => {
+    if (!value || typeof value !== 'object') return false
+    const stats = value as Partial<Record<CombatKey, number>>
+    return ['hp', 'attack', 'defense'].every((key) => {
+      const current = stats[key as CombatKey]
+      return typeof current === 'number' && Number.isFinite(current) && current >= 0 && current <= MAX_IV
+    })
+  },
+  retentionMs: 30 * 24 * 60 * 60 * 1_000,
+})
+const enteredRecord = defineMemoryRecord({
+  id: 'entered-values', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  schemaVersion: '1.0.0', defaultValue: () => ({} as Partial<Record<RowKey, string>>),
+  validate: (value: unknown): value is Partial<Record<RowKey, string>> => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+    return Object.entries(value).every(([key, entry]) =>
+      ['hp', 'attack', 'defense', 'craft'].includes(key) && typeof entry === 'string' && entry.length <= 32)
+  },
+  retentionMs: 30 * 24 * 60 * 60 * 1_000,
+})
 
 const CALC: Record<CombatKey, typeof calcHp> = { hp: calcHp, attack: calcAttack, defense: calcDefense }
 
@@ -358,18 +421,18 @@ export default function StatSimulatorPage() {
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
 
-  const [level, setLevel] = useState(60)
-  const [stars, setStars] = useState(0)
-  const [bond, setBond] = useState(0)
-  const [awake, setAwake] = useState(false)
-  const [souls, setSouls] = useState({ hp: 0, attack: 0, defense: 0, craft: 0 })
-  const [passives, setPassives] = useState({ hp: 0, attack: 0, defense: 0, craft: 0 })
-  const [iv, setIv] = useState<Record<CombatKey, number>>({ hp: 100, attack: 100, defense: 100 })
+  const [level, setLevel, clearLevel] = useMemoryState(levelRecord, { debounceMs: 150 })
+  const [stars, setStars, clearStars] = useMemoryState(starsRecord)
+  const [bond, setBond, clearBond] = useMemoryState(bondRecord, { debounceMs: 150 })
+  const [awake, setAwake, clearAwake] = useMemoryState(awakeRecord)
+  const [souls, setSouls, clearSouls] = useMemoryState(soulsRecord, { debounceMs: 150 })
+  const [passives, setPassives, clearPassives] = useMemoryState(passivesRecord, { debounceMs: 150 })
+  const [iv, setIv, clearIv] = useMemoryState(ivRecord, { debounceMs: 150 })
   /** In-game column entries (per stat). They persist after blur: an entry
    *  that no IV can produce stays visible in red until the user changes it,
    *  clears it, moves that stat's IV slider, or a settings change makes it
    *  solvable again. */
-  const [entered, setEntered] = useState<Partial<Record<RowKey, string>>>({})
+  const [entered, setEntered, clearEntered] = useMemoryState(enteredRecord, { debounceMs: 300 })
 
   useEffect(() => {
     let cancelled = false
@@ -389,9 +452,19 @@ export default function StatSimulatorPage() {
 
   const palId = search.pal ?? null
   const pal = palId && pals ? pals.byId.get(palId) ?? null : null
-  useEffect(() => { setEntered({}); setPassives({ hp: 0, attack: 0, defense: 0, craft: 0 }) }, [palId])
   const setPalId = (id: string | null) =>
     void navigate({ search: (s) => ({ ...s, pal: id ?? undefined }), replace: true })
+  const newCalculation = () => {
+    clearLevel()
+    clearStars()
+    clearBond()
+    clearAwake()
+    clearSouls()
+    clearPassives()
+    clearIv()
+    clearEntered()
+    setPalId(null)
+  }
 
   const inputs: EnhanceInputs = {
     level,
@@ -823,6 +896,10 @@ export default function StatSimulatorPage() {
           <div className="overflow-hidden rounded-lg border border-border bg-card md:contents">
           <div className="space-y-2 p-3 md:mb-4 md:flex md:flex-wrap md:items-center md:gap-3 md:space-y-0 md:p-0">
             <SimPalPicker pals={pals} value={palId} onChange={setPalId} t={t} locale={lng} />
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={newCalculation}>
+              <RotateCcw className="size-4" />
+              {t('sim.reset')}
+            </Button>
             {pal ? (
               <>
                 <div className="grid grid-cols-4 overflow-hidden rounded-md border border-primary/25 bg-primary/5 md:hidden">

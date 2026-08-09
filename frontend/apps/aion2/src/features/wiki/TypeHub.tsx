@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import MiniSearch, { type SearchResult } from "minisearch";
 
 import { Input } from "@gamemap/ui";
+import { defineMemoryRecord, isString, useMemoryState } from "@gamemap/state-memory";
 import { loadTaxonomy, loadWikiIndex } from "@/lib/wiki";
 import type { WikiGroup, WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
 
@@ -17,6 +18,11 @@ type SectionRaceCounts = Record<WikiIndexDoc["race"], number>;
 const BUCKETS: FactionBucket[] = ["light", "dark", "both"];
 const SECTION_LINK_CLASS =
   "group flex min-h-10 items-center justify-between gap-3 border-b border-border/70 px-1 py-2 text-sm transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-[color:var(--arkive-nav-active)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] md:min-h-0 md:py-1.5";
+const queryRecord = defineMemoryRecord({
+  id: "query", namespace: "aion2", surface: "wiki-catalog", stateClass: "session_context",
+  schemaVersion: "1.0.0", defaultValue: () => "", validate: isString,
+  retentionMs: 24 * 60 * 60 * 1_000,
+});
 
 function emptyBuckets(): Record<FactionBucket, SectionLink[]> {
   return { light: [], dark: [], both: [] };
@@ -53,12 +59,11 @@ export default function TypeHub({ type }: { type: string }) {
   const [tax, setTax] = useState<WikiTaxonomy | null>(null);
   const [docs, setDocs] = useState<WikiIndexDoc[]>([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useMemoryState(queryRecord, { partition: type, debounceMs: 200 });
 
   useEffect(() => {
     let live = true;
     setLoading(true);
-    setQ("");
     Promise.all([loadTaxonomy(), loadWikiIndex(type)])
       .then(([nextTax, index]) => {
         if (!live) return;

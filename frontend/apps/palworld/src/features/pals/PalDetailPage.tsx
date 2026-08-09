@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
+import { defineMemoryRecord, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ChevronLeft, ChevronRight, FoldVertical, Moon, UnfoldVertical, Zap } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
@@ -80,6 +81,23 @@ type CollapsibleSectionProps = Pick<
 >
 
 const DETAIL_SECTION_STORAGE = 'palworld.pal-detail.sections.v1'
+const detailSectionsRecord = defineMemoryRecord({
+  id: 'mobile-sections',
+  namespace: 'palworld',
+  surface: 'pal-detail',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => ({} as Record<string, boolean>),
+  validate: (value: unknown): value is Record<string, boolean> => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+    const entries = Object.entries(value)
+    return entries.length <= DETAIL_SECTION_IDS.length && entries.every(([key, expanded]) =>
+      DETAIL_SECTION_IDS.includes(key as DetailSectionId) && typeof expanded === 'boolean')
+  },
+  viewportScoped: true,
+  legacyKeys: [DETAIL_SECTION_STORAGE],
+  migrateLegacy: parseJson,
+})
 const DEFAULT_EXPANDED_SECTIONS = new Set<DetailSectionId>(['description', 'stats', 'work'])
 const DETAIL_SECTION_ORDER: Record<DetailSectionId, string> = {
   description: 'order-1',
@@ -311,14 +329,8 @@ export default function PalDetailPage() {
   // Fishing dataset, for the "caught by fishing" reverse — best-effort.
   const [fishing, setFishing] = useState<FishingFile | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [mobileSections, setMobileSections] = useState<Record<string, boolean>>(() => {
-    if (typeof window === 'undefined') return {}
-    try {
-      const stored = window.localStorage.getItem(DETAIL_SECTION_STORAGE)
-      return stored ? JSON.parse(stored) as Record<string, boolean> : {}
-    } catch {
-      return {}
-    }
+  const [mobileSections, setMobileSections] = useMemoryState(detailSectionsRecord, {
+    viewport: 'mobile',
   })
 
   const disclosureLabels = lng === 'zh-TW'
@@ -329,11 +341,6 @@ export default function PalDetailPage() {
 
   const saveMobileSections = (next: Record<string, boolean>) => {
     setMobileSections(next)
-    try {
-      window.localStorage.setItem(DETAIL_SECTION_STORAGE, JSON.stringify(next))
-    } catch {
-      // Storage can be unavailable in private or embedded browsing contexts.
-    }
   }
   const sectionExpanded = (section: DetailSectionId) =>
     mobileSections[section] ?? DEFAULT_EXPANDED_SECTIONS.has(section)

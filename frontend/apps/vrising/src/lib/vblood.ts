@@ -1,10 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { loadMarkers, type MarkerRow } from './data'
 import { markerImageUrl } from './assets'
 import { dataUrl } from './urls'
+import { browserMemory, defineMemoryRecord, isStringArray, parseJson, useMemoryState } from '@gamemap/state-memory'
 
 const MAP_ID = 'Vardoran'
 const COMPLETED_KEY = 'vrising.vblood.completed'
+const completedRecord = defineMemoryRecord({
+  id: 'completed-bosses', namespace: 'vrising', surface: 'vblood', stateClass: 'durable_progress',
+  schemaVersion: '1.0.0', defaultValue: () => [] as string[],
+  validate: (value: unknown): value is string[] => isStringArray(value, 1_000),
+  legacyKeys: [COMPLETED_KEY], migrateLegacy: parseJson,
+})
 
 export interface VBloodLocation {
   markerId: string
@@ -154,47 +161,21 @@ export async function loadVBloodBosses(lng: string): Promise<VBloodBoss[]> {
 }
 
 export function readCompletedVBlood(): Set<string> {
-  try {
-    const raw = localStorage.getItem(COMPLETED_KEY)
-    const parsed: unknown = raw ? JSON.parse(raw) : []
-    return new Set(
-      Array.isArray(parsed)
-        ? parsed.filter((value): value is string => typeof value === 'string')
-        : [],
-    )
-  } catch {
-    return new Set()
-  }
-}
-
-function writeCompletedVBlood(ids: Set<string>): void {
-  try {
-    localStorage.setItem(COMPLETED_KEY, JSON.stringify([...ids]))
-  } catch {
-    /* Storage is optional; completion still works for the current session. */
-  }
+  return new Set(browserMemory.read(completedRecord))
 }
 
 export function useCompletedVBlood() {
-  const [completed, setCompleted] = useState<Set<string>>(readCompletedVBlood)
-
-  useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (event.key === COMPLETED_KEY) setCompleted(readCompletedVBlood())
-    }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
-  }, [])
+  const [completedIds, setCompletedIds] = useMemoryState(completedRecord)
+  const completed = useMemo(() => new Set(completedIds), [completedIds])
 
   const toggleCompleted = useCallback((id: string) => {
-    setCompleted((previous) => {
+    setCompletedIds((previous) => {
       const next = new Set(previous)
       if (next.has(id)) next.delete(id)
       else next.add(id)
-      writeCompletedVBlood(next)
-      return next
+      return [...next]
     })
-  }, [])
+  }, [setCompletedIds])
 
   return { completed, toggleCompleted }
 }

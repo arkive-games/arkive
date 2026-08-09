@@ -1,6 +1,7 @@
-import { useMemo, useState, type FormEvent, type MouseEvent } from 'react'
+import { useMemo, type FormEvent, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
+import { defineMemoryRecord, isFiniteNumber, isString, useMemoryState } from '@gamemap/state-memory'
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -21,10 +22,27 @@ import { useUserSystem } from './UserSystemState'
 import './all-games.css'
 
 const PAGE_SIZE = 20
+const queryRecord = defineMemoryRecord({
+  id: 'query', namespace: 'site', surface: 'games-catalog', stateClass: 'session_context',
+  schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
+  retentionMs: 24 * 60 * 60 * 1_000,
+})
+const categoryRecord = defineMemoryRecord({
+  id: 'category', namespace: 'site', surface: 'games-catalog', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => 'all' as GameCategory,
+  validate: (value: unknown): value is GameCategory => GAME_CATEGORIES.includes(value as GameCategory),
+})
+const pageRecord = defineMemoryRecord({
+  id: 'page', namespace: 'site', surface: 'games-catalog', stateClass: 'session_context',
+  schemaVersion: '1.0.0', defaultValue: () => 1,
+  validate: (value: unknown): value is number => isFiniteNumber(value) && value >= 1,
+  retentionMs: 24 * 60 * 60 * 1_000,
+})
 
 interface AllGamesPageProps {
   sites: readonly SiteCard[]
   onAuthRequired: () => void
+  onOpenSite: (site: SiteCard) => void
 }
 
 interface CatalogGame {
@@ -34,13 +52,13 @@ interface CatalogGame {
   searchText: string
 }
 
-export function AllGamesPage({ sites, onAuthRequired }: AllGamesPageProps) {
+export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPageProps) {
   const { t } = useTranslation()
   const { status } = useAuth()
   const { state, toggleFavoriteGame } = useUserSystem()
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<GameCategory>('all')
-  const [page, setPage] = useState(1)
+  const [query, setQuery] = useMemoryState(queryRecord, { debounceMs: 200 })
+  const [category, setCategory] = useMemoryState(categoryRecord)
+  const [page, setPage] = useMemoryState(pageRecord)
 
   const entries = useMemo<CatalogGame[]>(
     () => sites.map((site) => ({
@@ -135,6 +153,7 @@ export function AllGamesPage({ sites, onAuthRequired }: AllGamesPageProps) {
                   }
                   toggleFavoriteGame(entry.site.id)
                 }}
+                onOpen={() => onOpenSite(entry.site)}
               />
             ))}
           </div>
@@ -186,10 +205,12 @@ function CatalogGameCard({
   game,
   favorite: isFavorite,
   onFavorite,
+  onOpen,
 }: {
   game: CatalogGame
   favorite: boolean
   onFavorite: () => void
+  onOpen: () => void
 }) {
   const { t } = useTranslation()
   const name = t(game.site.nameKey)
@@ -228,7 +249,7 @@ function CatalogGameCard({
   return (
     <article className={game.site.comingSoon ? 'catalog-game-card is-soon' : 'catalog-game-card'}>
       {href ? (
-        <a href={href} className="catalog-game-link">{body}</a>
+        <a href={href} className="catalog-game-link" onClick={onOpen}>{body}</a>
       ) : (
         <span className="catalog-game-link is-inert">{body}</span>
       )}

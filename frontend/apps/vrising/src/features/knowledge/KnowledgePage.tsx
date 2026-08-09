@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Anvil, BookOpen, Boxes, ChevronDown, FlaskConical, Hammer, Search, Shield, Sparkles, Swords } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { defineMemoryRecord, isFiniteNumber, isString, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import type { NavKey } from '../../components/TopNav'
 import {
@@ -31,6 +32,24 @@ const SYSTEMS: { key: SectionKey; icon: LucideIcon }[] = [
   { key: 'buildings', icon: Hammer },
   { key: 'research', icon: BookOpen },
 ]
+
+const createSectionRecord = (defaultSection: SectionKey) => defineMemoryRecord({
+  id: 'section', namespace: 'vrising', surface: 'knowledge', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => defaultSection,
+  validate: (value: unknown): value is SectionKey =>
+    ['items', 'weapons', 'armor', 'recipes', 'spells', 'passives', 'buildings', 'research'].includes(String(value)),
+})
+const queryRecord = defineMemoryRecord({
+  id: 'query', namespace: 'vrising', surface: 'knowledge', stateClass: 'session_context',
+  schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
+  retentionMs: 24 * 60 * 60 * 1_000,
+})
+const revealRecord = defineMemoryRecord({
+  id: 'reveal-depth', namespace: 'vrising', surface: 'knowledge', stateClass: 'session_context',
+  schemaVersion: '1.0.0', defaultValue: () => 48,
+  validate: (value: unknown): value is number => isFiniteNumber(value) && value >= 48,
+  retentionMs: 24 * 60 * 60 * 1_000,
+})
 
 function recordsFor(catalog: VBloodKnowledgeCatalog, key: SectionKey): CatalogRecord[] | null {
   if (key === 'recipes') return catalog.recipes
@@ -138,9 +157,15 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
   const active = (kind === 'database' ? '/database' : '/systems') as NavKey
   const defaultSection: SectionKey = kind === 'database' ? 'recipes' : 'passives'
   const [catalog, setCatalog] = useState<VBloodKnowledgeCatalog | null | undefined>(undefined)
-  const [selected, setSelected] = useState<SectionKey>(defaultSection)
-  const [query, setQuery] = useState('')
-  const [visibleCount, setVisibleCount] = useState(48)
+  const selectedRecord = useMemo(() => createSectionRecord(defaultSection), [defaultSection])
+  const [selected, setSelected] = useMemoryState(selectedRecord, { partition: kind })
+  const [query, setQuery] = useMemoryState(queryRecord, { partition: kind, debounceMs: 200 })
+  const [visibleCount, setVisibleCount] = useMemoryState(revealRecord, { partition: kind })
+
+  useEffect(() => {
+    const available = kind === 'database' ? DATABASE : SYSTEMS
+    if (!available.some(({ key }) => key === selected)) setSelected(defaultSection)
+  }, [defaultSection, kind, selected, setSelected])
 
   useEffect(() => {
     let cancelled = false

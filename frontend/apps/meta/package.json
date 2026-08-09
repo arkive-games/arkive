@@ -12,6 +12,7 @@
   "dependencies": {
     "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
+    "@gamemap/state-memory": "workspace:*",
     "@gamemap/ui": "workspace:*",
     "@tabler/icons-react": "^3.46.0",
     "i18next": "^26.3.6",

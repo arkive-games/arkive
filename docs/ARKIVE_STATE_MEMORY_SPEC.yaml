@@ -1,4 +1,4 @@
-schema_version: "1.0.0"
+schema_version: "1.1.0"
 spec_id: "arkive.state-memory"
 title: "Arkive State Memory Specification"
 status: "canonical"
@@ -259,6 +259,60 @@ new_game_contract:
     - "Identify which durable records require account synchronization."
     - "Declare data-version dependencies and a migration or discard strategy."
   adoption_rule: "A game is not memory-complete while it persists state through app-local storage helpers."
+
+implementation_inventory:
+  portal:
+    durable_progress:
+      - "Account-partitioned profile, preference, favorite, follow, bookmark, reaction, and authored-post state"
+      - "Up to ten recent playable-game destinations for Continue exploring"
+    device_preference:
+      - "All-games category"
+    session_context:
+      - "All-games query and page"
+    task_draft:
+      - "Account-partitioned forum post and profile editor drafts"
+  aion2:
+    durable_progress:
+      - "Per-map and per-subtype completed markers"
+    device_preference:
+      - "Map engine, camera, selection, visible subtypes, visible regions, labels, borders, level-of-detail, and information sidebar"
+      - "Wiki faction by entity group"
+    session_context:
+      - "Wiki query by entity type"
+  palworld:
+    durable_progress:
+      - "Per-map completed markers and breeding favorites"
+    device_preference:
+      - "Map engine, camera, selection, visible subtypes, labels, regions, and information sidebar"
+      - "Catalog facets, grid or list mode, mobile detail disclosure, and breeding generation preference"
+    session_context:
+      - "Catalog query, mobile page, incremental reveal depth, and breeding search context"
+    task_draft:
+      - "Stat simulator level, stars, trust, awakening, souls, passives, IVs, and entered values"
+  sts2:
+    device_preference:
+      - "Card catalog facets"
+    session_context:
+      - "Card catalog query"
+  vrising:
+    durable_progress:
+      - "Completed V Blood bosses"
+    device_preference:
+      - "Map engine, camera, selection, visible subtypes, labels, viewport-scoped regions, and information sidebar"
+      - "Knowledge section, V Blood act and completion filters, and detail reward disclosure"
+    session_context:
+      - "Knowledge and V Blood queries plus knowledge reveal depth"
+  lostark:
+    task_draft:
+      - "Complete combat-power loadout"
+  exclusions:
+    - "Authentication token storage remains owned by the authentication package."
+    - "Language detection remains owned by i18next."
+    - "Theme persistence remains owned by the shared theme adapter."
+  maintenance_rule: >-
+    Update this inventory in the same change that adds, removes, or reclassifies
+    a remembered record. Record implementations must import
+    @gamemap/state-memory rather than a browser storage global.
 
 verification:
   required_cases:

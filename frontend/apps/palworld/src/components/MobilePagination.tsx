@@ -1,9 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn, useIsMobile } from '@gamemap/ui'
+import { defineMemoryRecord, isFiniteNumber, useMemoryState } from '@gamemap/state-memory'
 
 const MAX_VISIBLE_PAGES = 5
+const pageRecord = defineMemoryRecord({
+  id: 'page',
+  namespace: 'palworld',
+  surface: 'catalog',
+  stateClass: 'session_context',
+  schemaVersion: '1.0.0',
+  defaultValue: () => 1,
+  validate: (value: unknown): value is number => isFiniteNumber(value) && value >= 1,
+  retentionMs: 24 * 60 * 60 * 1_000,
+})
 
 interface MobilePaginationOptions {
   pageSize?: number
@@ -15,16 +26,21 @@ export function useMobilePagination<T>(
   { pageSize = 24, resetKey = '' }: MobilePaginationOptions = {},
 ) {
   const isMobile = useIsMobile()
-  const [page, setPage] = useState(1)
+  const pagePartition = `${typeof window === 'undefined' ? 'catalog' : window.location.pathname}:${resetKey || 'default'}:${pageSize}`
+  const [page, setPage] = useMemoryState(pageRecord, { partition: pagePartition })
   const pageCount = isMobile ? Math.max(1, Math.ceil(items.length / pageSize)) : 1
+  const previousResetKey = useRef(resetKey)
 
   useEffect(() => {
+    if (previousResetKey.current === resetKey) return
+    previousResetKey.current = resetKey
     setPage(1)
-  }, [resetKey])
+  }, [resetKey, setPage])
 
   useEffect(() => {
+    if (items.length === 0) return
     setPage((current) => Math.min(current, pageCount))
-  }, [pageCount])
+  }, [items.length, pageCount, setPage])
 
   const visibleItems = useMemo(
     () => (isMobile ? items.slice((page - 1) * pageSize, page * pageSize) : items),
@@ -39,7 +55,7 @@ export function useMobilePagination<T>(
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       scroller.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
     },
-    [pageCount],
+    [pageCount, setPage],
   )
 
   return { isMobile, page, pageCount, visibleItems, goToPage }

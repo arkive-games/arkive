@@ -1,5 +1,19 @@
-import { describe, expect, it } from 'vitest'
-import { parseLoadout } from './loadout'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { clearLoadout, defaultLoadout, parseLoadout, restoreLoadout, saveLoadout } from './loadout'
+
+const store = new Map<string, string>()
+
+beforeEach(() => {
+  store.clear()
+  globalThis.localStorage = {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => void store.set(key, value),
+    removeItem: (key: string) => void store.delete(key),
+    clear: () => store.clear(),
+    key: (index: number) => [...store.keys()][index] ?? null,
+    get length() { return store.size },
+  } as Storage
+})
 
 /**
  * `parseLoadout` is the trust boundary for imported files, so what it accepts
@@ -37,5 +51,17 @@ describe('parseLoadout engraving grades', () => {
       engravings: [{ name: 'grudge', grade: 4, book: 0, stone: 0 }],
     })
     expect(loadout.engravings[0].book).toBeGreaterThanOrEqual(1)
+  })
+})
+
+describe('loadout draft memory', () => {
+  it('clears persisted work immediately', () => {
+    const changed = { ...defaultLoadout(), combatLevel: 62 }
+    expect(saveLoadout(changed)).toBe(true)
+    expect(restoreLoadout().combatLevel).toBe(62)
+
+    clearLoadout()
+
+    expect(restoreLoadout()).toEqual(defaultLoadout())
   })
 })

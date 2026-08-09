@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Input } from '@gamemap/ui'
+import { defineMemoryRecord, isString, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadPals, type PalsBundle } from '../../lib/pals'
@@ -12,18 +13,53 @@ import { EMPTY_FILTER, isFilterActive, useFilteredPals, type PalFilter } from '.
 // Persist the pal-list filter across reloads.
 const PAL_FILTER_KEY = 'palworld.pals.filter'
 
-/** Read the persisted filter, merged onto EMPTY_FILTER so a stored object with
- *  missing or since-added fields stays valid. */
-function readStoredFilter(): PalFilter {
-  try {
-    const raw = localStorage.getItem(PAL_FILTER_KEY)
-    if (!raw) return EMPTY_FILTER
-    return { ...EMPTY_FILTER, ...(JSON.parse(raw) as Partial<PalFilter>) }
-  } catch {
-    return EMPTY_FILTER
-  }
+function isPalFilter(value: unknown): value is PalFilter {
+  if (!value || typeof value !== 'object') return false
+  const filter = value as Partial<PalFilter>
+  return typeof filter.query === 'string' &&
+    Array.isArray(filter.elements) && filter.elements.every((item) => typeof item === 'string') &&
+    Array.isArray(filter.works) && filter.works.every((item) => typeof item === 'string') &&
+    Array.isArray(filter.reactions) && filter.reactions.every((item) => typeof item === 'string') &&
+    Array.isArray(filter.sizes) && filter.sizes.every((item) => typeof item === 'string') &&
+    typeof filter.nocturnal === 'boolean' &&
+    (filter.loot === null || typeof filter.loot === 'string')
 }
 
+const filterRecord = defineMemoryRecord({
+  id: 'filters',
+  namespace: 'palworld',
+  surface: 'pals-catalog',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => ({ ...EMPTY_FILTER }),
+  validate: isPalFilter,
+  legacyKeys: [PAL_FILTER_KEY],
+  migrateLegacy: (raw: string) => ({ ...EMPTY_FILTER, ...(parseJson(raw) as Partial<PalFilter>), query: '' }),
+})
+
+const queryRecord = defineMemoryRecord({
+  id: 'query',
+  namespace: 'palworld',
+  surface: 'pals-catalog',
+  stateClass: 'session_context',
+  schemaVersion: '1.0.0',
+  defaultValue: () => '',
+  validate: isString,
+  retentionMs: 24 * 60 * 60 * 1_000,
+})
+
+const viewRecord = defineMemoryRecord({
+  id: 'view-mode',
+  namespace: 'palworld',
+  surface: 'catalog',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => 'grid' as 'grid' | 'list',
+  validate: (value: unknown): value is 'grid' | 'list' => value === 'grid' || value === 'list',
+})
+
+/** Read the persisted filter, merged onto EMPTY_FILTER so a stored object with
+ *  missing or since-added fields stays valid. */
 export default function PalListPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -31,14 +67,14 @@ export default function PalListPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<PalFilter>(readStoredFilter)
-  const [view, setView] = useState<'grid' | 'list'>('grid')
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(PAL_FILTER_KEY, JSON.stringify(filter))
-    } catch { /* no storage */ }
-  }, [filter])
+  const [durableFilter, setDurableFilter] = useMemoryState(filterRecord)
+  const [query, setQuery] = useMemoryState(queryRecord, { partition: 'pals' })
+  const [view, setView] = useMemoryState(viewRecord)
+  const filter = { ...durableFilter, query }
+  const setFilter = (next: PalFilter) => {
+    setDurableFilter({ ...next, query: '' })
+    setQuery(next.query)
+  }
 
   useEffect(() => {
     let cancelled = false

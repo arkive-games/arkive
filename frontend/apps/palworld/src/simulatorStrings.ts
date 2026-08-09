@@ -11,6 +11,7 @@ export interface SimStrings {
   title: string
   caption: string
   pickPal: string
+  reset: string
   sortAscending: string
   sortDescending: string
   /** Prefix of the species base-value line shown next to the picker. */
@@ -84,6 +85,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Compute the exact in-game stats of any pal from its enhancements — or enter the displayed stats to reveal the hidden IVs (talents).',
     pickPal: 'Select a pal…',
+    reset: 'New calculation',
     sortAscending: 'Sort by number ascending',
     sortDescending: 'Sort by number descending',
     base: 'base',
@@ -129,6 +131,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Berechne die exakten Spielwerte eines Pals aus seinen Verstärkungen – oder gib die angezeigten Werte ein, um die versteckten IVs (Talente) zu ermitteln.',
     pickPal: 'Pal auswählen…',
+    reset: 'Neue Berechnung',
     sortAscending: 'Nach Nummer aufsteigend sortieren',
     sortDescending: 'Nach Nummer absteigend sortieren',
     base: 'Basis',
@@ -174,6 +177,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calcula las estadísticas exactas de cualquier pal en el juego a partir de sus mejoras, o introduce las estadísticas mostradas para revelar los IVs ocultos (talentos).',
     pickPal: 'Selecciona un pal…',
+    reset: 'Nuevo cálculo',
     sortAscending: 'Ordenar por número ascendente',
     sortDescending: 'Ordenar por número descendente',
     base: 'base',
@@ -219,6 +223,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calcula las estadísticas exactas de cualquier pal en el juego a partir de sus mejoras, o ingresa las estadísticas mostradas para revelar los IVs ocultos (talentos).',
     pickPal: 'Selecciona un pal…',
+    reset: 'Nuevo cálculo',
     sortAscending: 'Ordenar por número ascendente',
     sortDescending: 'Ordenar por número descendente',
     base: 'base',
@@ -264,6 +269,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calculez les statistiques exactes en jeu de n’importe quel pal à partir de ses améliorations — ou saisissez les statistiques affichées pour révéler les IV cachés (talents).',
     pickPal: 'Sélectionner un pal…',
+    reset: 'Nouveau calcul',
     sortAscending: 'Trier par numéro croissant',
     sortDescending: 'Trier par numéro décroissant',
     base: 'base',
@@ -309,6 +315,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Hitung statistik persis dalam game untuk pal mana pun dari peningkatannya — atau masukkan statistik yang ditampilkan untuk mengungkap IV tersembunyi (bakat).',
     pickPal: 'Pilih pal…',
+    reset: 'Perhitungan baru',
     sortAscending: 'Urutkan nomor dari kecil ke besar',
     sortDescending: 'Urutkan nomor dari besar ke kecil',
     base: 'dasar',
@@ -355,6 +362,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calcola le statistiche esatte in gioco di qualsiasi pal a partire dai suoi potenziamenti — oppure inserisci le statistiche mostrate per scoprire gli IV nascosti (talenti).',
     pickPal: 'Seleziona un pal…',
+    reset: 'Nuovo calcolo',
     sortAscending: 'Ordina per numero crescente',
     sortDescending: 'Ordina per numero decrescente',
     base: 'base',
@@ -400,6 +408,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       '強化状態からパルのゲーム内ステータスを正確に計算できます。表示ステータスを入力すれば、隠しステータスの個体値も逆算できます。',
     pickPal: 'パルを選択…',
+    reset: '新しい計算',
     sortAscending: '番号の昇順で並べ替え',
     sortDescending: '番号の降順で並べ替え',
     base: '基礎値',
@@ -445,6 +454,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       '강화 상태로부터 팰의 게임 내 스탯을 정확히 계산하거나, 표시된 스탯을 입력해 숨겨진 개체값을 역산할 수 있습니다.',
     pickPal: '팰 선택…',
+    reset: '새 계산',
     sortAscending: '번호 오름차순 정렬',
     sortDescending: '번호 내림차순 정렬',
     base: '기본값',
@@ -490,6 +500,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Oblicz dokładne statystyki dowolnego Pala w grze na podstawie jego ulepszeń — albo wpisz wyświetlane statystyki, aby poznać ukryte IV (talenty).',
     pickPal: 'Wybierz Pala…',
+    reset: 'Nowe obliczenie',
     sortAscending: 'Sortuj rosnąco według numeru',
     sortDescending: 'Sortuj malejąco według numeru',
     base: 'baza',
@@ -535,6 +546,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calcule os atributos exatos de qualquer Pal no jogo a partir dos seus aprimoramentos — ou insira os atributos exibidos para revelar os IVs ocultos (talentos).',
     pickPal: 'Selecione um pal…',
+    reset: 'Novo cálculo',
     sortAscending: 'Ordenar por número crescente',
     sortDescending: 'Ordenar por número decrescente',
     base: 'base',
@@ -580,6 +592,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Рассчитайте точные игровые характеристики любого пала по его усилениям — или введите отображаемые характеристики, чтобы узнать скрытые IV (таланты).',
     pickPal: 'Выберите пала…',
+    reset: 'Новый расчёт',
     sortAscending: 'Сортировать по номеру по возрастанию',
     sortDescending: 'Сортировать по номеру по убыванию',
     base: 'база',
@@ -625,6 +638,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'คำนวณค่าสถานะในเกมที่แม่นยำของพัลตัวใดก็ได้จากการเสริมพลังของมัน — หรือกรอกค่าสถานะที่แสดงเพื่อหาค่า IV ที่ซ่อนอยู่ (พรสวรรค์)',
     pickPal: 'เลือกพัล…',
+    reset: 'การคำนวณใหม่',
     sortAscending: 'เรียงตามหมายเลขจากน้อยไปมาก',
     sortDescending: 'เรียงตามหมายเลขจากมากไปน้อย',
     base: 'ค่าพื้นฐาน',
@@ -670,6 +684,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Herhangi bir Pal’in oyun içi değerlerini güçlendirmelerinden tam olarak hesaplayın — ya da gösterilen değerleri girerek gizli IV’leri (yetenekleri) ortaya çıkarın.',
     pickPal: 'Bir pal seçin…',
+    reset: 'Yeni hesaplama',
     sortAscending: 'Numaraya göre artan sırala',
     sortDescending: 'Numaraya göre azalan sırala',
     base: 'taban',
@@ -715,6 +730,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Tính chính xác chỉ số trong game của bất kỳ Pal nào từ các nâng cấp của nó — hoặc nhập chỉ số hiển thị để tìm ra IV ẩn (tiềm năng).',
     pickPal: 'Chọn một pal…',
+    reset: 'Phép tính mới',
     sortAscending: 'Sắp xếp số tăng dần',
     sortDescending: 'Sắp xếp số giảm dần',
     base: 'cơ bản',
@@ -760,6 +776,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       '根据强化状态精确计算任意帕鲁的游戏内属性，也可以输入游戏中显示的属性，反推隐藏的个体值（天赋）。',
     pickPal: '选择帕鲁…',
+    reset: '新建计算',
     sortAscending: '按编号升序排列',
     sortDescending: '按编号倒序排列',
     base: '基础值',
@@ -803,6 +820,7 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       '根據強化狀態精確計算任意帕魯的遊戲內屬性，也可以輸入遊戲中顯示的屬性，反推隱藏的個體值（天賦）。',
     pickPal: '選擇帕魯…',
+    reset: '新增計算',
     sortAscending: '按編號升序排列',
     sortDescending: '按編號倒序排列',
     base: '基礎值',

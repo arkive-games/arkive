@@ -34,7 +34,14 @@ async function freshStore(seed?: string, opts: { throws?: boolean } = {}) {
       }) as unknown as Storage
   vi.resetModules()
   const mod = await import('./mapEngineChoice')
-  return { ...mod, raw: () => backing.get(KEY) ?? null }
+  return {
+    ...mod,
+    raw: () => {
+      const canonical = [...backing.entries()].find(([key]) => key.includes('.palworld.map.engine'))?.[1]
+      if (!canonical) return null
+      return (JSON.parse(canonical) as { value?: string }).value ?? null
+    },
+  }
 }
 
 describe('isMapEngineChoice', () => {

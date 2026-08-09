@@ -17,6 +17,7 @@ import {
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import { useIsMobile } from '@gamemap/ui'
 import { ArkiveAccountControl } from '@gamemap/auth'
+import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
 import {
   loadStatic, loadMarkers, loadRegions,
   type MapMeta, type MarkerLocale, type MarkerRow, type MapsLocale,
@@ -36,6 +37,18 @@ import { regionAt, sortRegionsByArea } from './subzone'
 import { renderMarkerPopup } from './popup'
 
 const MAP_ID = 'Vardoran'
+const labelsRecord = defineMemoryRecord({
+  id: 'show-labels', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
+})
+const desktopRegionsRecord = defineMemoryRecord({
+  id: 'show-regions', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => true, validate: isBoolean, viewportScoped: true,
+})
+const mobileRegionsRecord = defineMemoryRecord({
+  ...desktopRegionsRecord,
+  defaultValue: () => false,
+})
 
 // The WebGL engine behind a lazy boundary — see features/map/GlMapView.
 const GlGameMapView = lazy(() => import('./GlMapView'))
@@ -78,9 +91,9 @@ export default function MapPage() {
   const [selectedPosition, setSelectedPosition] = useState<{ x: number; y: number } | null>(null)
   const [restoredMarkerId, setRestoredMarkerId] = useState<string | null>(null)
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
-  const [showLabels, setShowLabels] = useState(false)
-  const [showRegions, setShowRegions] = useState(true)
-  const [mobileShowRegions, setMobileShowRegions] = useState(false)
+  const [showLabels, setShowLabels] = useMemoryState(labelsRecord)
+  const [showRegions, setShowRegions] = useMemoryState(desktopRegionsRecord, { viewport: 'desktop' })
+  const [mobileShowRegions, setMobileShowRegions] = useMemoryState(mobileRegionsRecord, { viewport: 'mobile' })
   const [loadError, setLoadError] = useState<string | null>(null)
   const effectiveShowRegions = isMobile ? mobileShowRegions : showRegions
 

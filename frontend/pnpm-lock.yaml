@@ -35,6 +35,9 @@ importers:
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
+      '@gamemap/state-memory':
+        specifier: workspace:*
+        version: link:../../packages/state-memory
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -207,6 +210,9 @@ importers:
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
+      '@gamemap/state-memory':
+        specifier: workspace:*
+        version: link:../../packages/state-memory
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -283,6 +289,9 @@ importers:
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
+      '@gamemap/state-memory':
+        specifier: workspace:*
+        version: link:../../packages/state-memory
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -371,6 +380,9 @@ importers:
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
+      '@gamemap/state-memory':
+        specifier: workspace:*
+        version: link:../../packages/state-memory
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -462,6 +474,9 @@ importers:
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
+      '@gamemap/state-memory':
+        specifier: workspace:*
+        version: link:../../packages/state-memory
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -550,6 +565,9 @@ importers:
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
+      '@gamemap/state-memory':
+        specifier: workspace:*
+        version: link:../../packages/state-memory
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -790,6 +808,18 @@ importers:
       react-dom:
         specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
+  packages/state-memory:
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
