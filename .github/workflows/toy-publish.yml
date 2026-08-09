@@ -83,6 +83,20 @@ jobs:
           echo "bundles=$bundles" >> "$GITHUB_OUTPUT"
           echo "Resolved slug=$slug, bundles artifacts=$bundles"
 
+      # Checked before the two checkouts below rather than letting them fail: with
+      # no token they die inside actions/checkout on a generic git auth error that
+      # says nothing about which secret is missing or why this app needs one.
+      - name: Check artifact access is configured
+        if: steps.cfg.outputs.bundles == 'true'
+        env:
+          ARTIFACTS_TOKEN: ${{ secrets.ARTIFACTS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ARTIFACTS_TOKEN:-}" ]; then
+            echo "::error::ARTIFACTS_TOKEN is required for ${{ matrix.app }} because its bundle embeds the private artifact repos. Add a fine-grained PAT with Contents:Read on arkive-games/data-${{ matrix.app }} and arkive-games/resource-${{ matrix.app }}. (meta and aion2 need no such token.)"
+            exit 1
+          fi
+
       # palworld embeds ~80 MB of derived data and images that live in two private
       # repos outside this monorepo. toy-build resolves them from sibling
       # directories, which the TOY_*_DIR overrides below point at explicitly.
