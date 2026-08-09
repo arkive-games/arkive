@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.0",
+      "date": "2026-08-09",
+      "commit": "a956f7a933ddd0c43a929a97f415560bd5a0fd29",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Verified passive records can now be expanded to show official effects, school, tier, and stat links.",
+            "zh-CN": "已核验的被动记录现在可展开查看官方效果、学派、阶级与属性关联。",
+            "zh-TW": "已核驗的被動記錄現在可展開查看官方效果、學派、階級與屬性關聯。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.0",
       "date": "2026-08-09",
       "commit": "4dc0f03056d0dcedfb90404e4c845a418ea35465",
