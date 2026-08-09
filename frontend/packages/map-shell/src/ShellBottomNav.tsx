@@ -192,13 +192,10 @@ export function ShellBottomNav({
           >
             {/* `pr-8` keeps the header clear of the sheet's absolute close button. */}
             <SheetHeader className="pr-8">
-              <div className="flex items-center justify-between gap-2">
-                {/* The title tracks the visible body so the sub-page is
-                    announced, and SheetTitle stays mounted in both panes
-                    (Radix requires it). */}
-                <SheetTitle>{pane === "language" ? language.rowLabel : more.title}</SheetTitle>
-                {more.brand}
-              </div>
+              {/* The title tracks the visible body so the sub-page is
+                  announced, and SheetTitle stays mounted in both panes
+                  (Radix requires it). */}
+              <SheetTitle>{pane === "language" ? language.rowLabel : more.title}</SheetTitle>
             </SheetHeader>
 
             {pane === "main" ? (
