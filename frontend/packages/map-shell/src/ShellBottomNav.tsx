@@ -187,7 +187,7 @@ export function ShellBottomNav({
           <SheetContent
             side="bottom"
             data-testid="more-sheet"
-            className="arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(90dvh,calc(100dvh-5rem))] overflow-y-auto rounded-t-lg border"
+            className="arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(90dvh,calc(100dvh-5rem-env(safe-area-inset-bottom)))] overflow-y-auto rounded-t-lg border"
             style={{ paddingBottom: "1rem" }}
           >
             {/* `pr-8` keeps the header clear of the sheet's absolute close button. */}

@@ -41,7 +41,7 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
             {children}
           </div>
           <SiteFooter
-            className="pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-4"
+            className="pb-[calc(env(safe-area-inset-bottom)+4.5rem)] md:pb-4"
             homeUrl={ARKIVE_HOME_URL}
             githubUrl={import.meta.env.VITE_GITHUB_URL}
             icpBeian={import.meta.env.VITE_ICP_BEIAN}

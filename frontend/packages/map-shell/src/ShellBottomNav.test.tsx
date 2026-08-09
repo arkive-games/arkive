@@ -94,8 +94,11 @@ describe("ShellBottomNav", () => {
     expect(api.getByTestId("bottom-tab-bar").className).not.toContain("backdrop-blur")
     expect(api.getByTestId("tab-/").className).toContain("min-h-16")
     open(api)
+    // The cap must subtract the sheet's OWN bottom offset (4rem + safe area) plus
+    // 1rem of top clearance. Reserving a flat 5rem overflowed the viewport top by
+    // the safe-area inset on home-indicator phones and clipped the close button.
     expect(api.getByTestId("more-sheet").className).toContain(
-      "max-h-[min(90dvh,calc(100dvh-5rem))]",
+      "max-h-[min(90dvh,calc(100dvh-5rem-env(safe-area-inset-bottom)))]",
     )
     expect(api.getByTestId("more-lang-open")).toBeTruthy()
     expect(api.getByTestId("more-theme-auto")).toBeTruthy()

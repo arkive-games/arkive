@@ -20,8 +20,16 @@ export interface ArkiveMobileMapControlsProps {
   search: MobileMapSheet
   filter: MobileMapSheet & {
     active?: boolean
+    /** Localized suffix announced when `active` -- e.g. "filters modified". */
+    activeLabel?: string
     header?: ReactNode
   }
+  /**
+   * Account entry point for map routes. Full-bleed maps render no
+   * ArkiveMobileHeader, so without this the map -- which is `/` on aion2 and
+   * V Rising -- offers no way to sign in or out at all.
+   */
+  account?: ReactNode
   className?: string
 }
 
@@ -36,6 +44,7 @@ const ACTION =
 export function ArkiveMobileMapControls({
   search,
   filter,
+  account,
   className,
 }: ArkiveMobileMapControlsProps) {
   return (
@@ -43,6 +52,7 @@ export function ArkiveMobileMapControls({
       data-testid="mobile-map-controls"
       className={cn("arkive-mobile-map-actions absolute right-3 z-[700] flex flex-col gap-2", className)}
     >
+      {account}
       <Sheet open={search.open} onOpenChange={search.onOpenChange}>
         <SheetTrigger asChild>
           <button
@@ -71,9 +81,17 @@ export function ArkiveMobileMapControls({
             type="button"
             data-testid="map-fab-filter"
             data-active={filter.active === true}
-            aria-label={filter.label}
+            // No aria-pressed: this is a dialog trigger, so Radix already
+            // contributes aria-expanded/haspopup, and "pressed" would announce
+            // the FILTER state on a control whose own state is open/closed. The
+            // dot at the end of this button is decorative, so the changed state
+            // rides on the accessible name instead.
+            aria-label={
+              filter.active && filter.activeLabel
+                ? `${filter.label} (${filter.activeLabel})`
+                : filter.label
+            }
             aria-expanded={filter.open}
-            aria-pressed={filter.active === true}
             className={cn(
               ACTION,
               "border-primary text-primary",

@@ -156,7 +156,7 @@ test('map sheets clear navigation and the filter action exposes changed state', 
   const barTop = (await page.getByTestId('bottom-tab-bar').boundingBox())!.y
   const filterAction = page.getByTestId('map-fab-filter')
 
-  await expect(filterAction).toHaveAttribute('aria-pressed', 'false')
+  await expect(filterAction).toHaveAttribute('data-active', 'false')
   await page.getByTestId('map-fab-search').click()
   const searchSheet = page.getByTestId('search-sheet')
   await expect(searchSheet).toBeVisible()
@@ -172,7 +172,7 @@ test('map sheets clear navigation and the filter action exposes changed state', 
   await filterSheet.getByTestId('map-hide-all').click()
   await page.keyboard.press('Escape')
 
-  await expect(filterAction).toHaveAttribute('aria-pressed', 'true')
+  await expect(filterAction).toHaveAttribute('data-active', 'true')
   await expect(page.getByTestId('map-filter-active-indicator')).toBeVisible()
 })
 
