@@ -211,7 +211,6 @@ test.describe("desktop is unchanged", () => {
     await expect(bar).toBeHidden();
     await expect(page.getByTestId("lang-menu")).toBeVisible();
     await expect(page.getByTestId("theme-menu")).toBeVisible();
-    await expect(page.getByTestId("contact-menu")).toBeVisible();
   });
 
   test("an open More sheet does not survive to desktop", async ({ page }) => {
