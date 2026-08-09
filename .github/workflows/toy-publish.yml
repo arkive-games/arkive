@@ -1,0 +1,197 @@
+# Builds an app's Bilibili Toy bundle and pushes it to an EXISTING toy.
+#
+# Deliberately manual-only. The other workflow deploys on every push to master
+# because EdgeOne is our own hosting; this one publishes to a third-party platform
+# that puts every submission through human review, so firing it automatically
+# would queue reviews nobody asked for.
+#
+# `toy` has no --token flag and its help lists only --json, which reads as
+# "unautomatable". It is not: the binary honours TOY_CLI_SESSION_TOKEN (verified
+# against the shipped binary, v0.3.2, by removing ~/.toy/session.json and watching
+# `toy mylist` fail without the variable and succeed with it). The session file is
+# just {session_token, uid} with no expiry field, so the secret is the 64-char
+# session_token copied out of a local `toy login`.
+#
+# It DOES expire server-side. When this workflow starts failing with
+# "登录态已失效" or "尚未登录", the fix is a local `toy login` followed by
+# refreshing the secret -- not a change here.
+#
+# Secrets:
+#   TOY_CLI_SESSION_TOKEN  session_token from ~/.toy/session.json (all apps)
+#   ARTIFACTS_TOKEN        read access to the private data-/resource- repos,
+#                          needed by palworld only (see "bundle vs fetch" below)
+
+name: Publish Bilibili toy
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Which toy to publish"
+        type: choice
+        default: all
+        # Only these three have a toy.config.json and an already-published slug.
+        # sts2/vrising/lostark are absent on purpose: publishing them would mint a
+        # NEW toy, and a slug can never be changed afterwards.
+        options: [all, meta, aion2, palworld]
+      submit:
+        description: "Submit for review (leave off to only build a preview)"
+        type: boolean
+        default: false
+
+# Read-only: this pushes no branch and needs no write scope.
+permissions:
+  contents: read
+
+jobs:
+  toy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      # One toy's failure must not cancel the others' uploads.
+      fail-fast: false
+      matrix:
+        # Kept on one line on purpose: a folded block scalar with more-indented
+        # continuations preserves the newlines, which corrupts the expression.
+        app: ${{ fromJSON(inputs.app == 'all' && '["meta","aion2","palworld"]' || format('["{0}"]', inputs.app)) }}
+
+    # Never let two runs upload to the same toy at once, and queue rather than
+    # cancel: an interrupted upload is a half-published bundle.
+    concurrency:
+      group: toy-${{ matrix.app }}
+      cancel-in-progress: false
+
+    name: ${{ matrix.app }}${{ inputs.submit && ' (submit)' || ' (preview)' }}
+
+    steps:
+      - name: Checkout
+        # vite.config.ts stamps the build commit via `git rev-parse HEAD` at
+        # config-load time, so this needs a real checkout, not a tarball.
+        uses: actions/checkout@v4
+
+      - name: Read toy config
+        id: cfg
+        run: |
+          set -euo pipefail
+          config="frontend/apps/${{ matrix.app }}/toy.config.json"
+          [ -f "$config" ] || { echo "::error::$config not found — this app is not toy-configured"; exit 1; }
+          slug=$(node -e 'process.stdout.write(require(`./${process.argv[1]}`).slug)' "$config")
+          # `dataDir` present  => the bundle EMBEDS the artifacts (needs the private repos).
+          # `dataUrl`  present => the app fetches them from the CDN at runtime (needs nothing).
+          bundles=$(node -e 'process.stdout.write(String(require(`./${process.argv[1]}`).dataDir !== undefined))' "$config")
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          echo "bundles=$bundles" >> "$GITHUB_OUTPUT"
+          echo "Resolved slug=$slug, bundles artifacts=$bundles"
+
+      # palworld embeds ~80 MB of derived data and images that live in two private
+      # repos outside this monorepo. toy-build resolves them from sibling
+      # directories, which the TOY_*_DIR overrides below point at explicitly.
+      - name: Checkout data artifacts
+        if: steps.cfg.outputs.bundles == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: arkive-games/data-${{ matrix.app }}
+          token: ${{ secrets.ARTIFACTS_TOKEN }}
+          path: artifacts/data
+      - name: Checkout resource artifacts
+        if: steps.cfg.outputs.bundles == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: arkive-games/resource-${{ matrix.app }}
+          token: ${{ secrets.ARTIFACTS_TOKEN }}
+          path: artifacts/resource
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # Read the version from "packageManager" rather than pinning it here, so
+          # CI cannot drift from local installs.
+          package_json_file: frontend/package.json
+
+      - name: Setup Node
+        # Must follow the pnpm setup: `cache: pnpm` shells out to pnpm for the store.
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Install toy CLI
+        env:
+          # Pinned rather than floating: this CLI gates a public submission, so a
+          # new release should be adopted deliberately, not silently mid-run.
+          VERSION: v0.3.2
+          BIN_DIR: ${{ runner.temp }}/toy-bin
+        run: |
+          set -euo pipefail
+          curl -fsSL https://boss.hdslb.com/toy-cli/toy/install.sh | bash
+          echo "${{ runner.temp }}/toy-bin" >> "$GITHUB_PATH"
+
+      - name: Verify session and resolve the toy id
+        id: toy
+        env:
+          TOY_CLI_SESSION_TOKEN: ${{ secrets.TOY_CLI_SESSION_TOKEN }}
+          TOY_NO_UPDATE_CHECK: "1"
+        run: |
+          set -euo pipefail
+          if [ -z "${TOY_CLI_SESSION_TOKEN:-}" ]; then
+            echo "::error::TOY_CLI_SESSION_TOKEN is empty. Run \`toy login\` locally and copy session_token from ~/.toy/session.json."
+            exit 1
+          fi
+          # Resolving the id from the live list keeps ids out of the repo, where
+          # they would drift. A miss is fatal by design: see toy-resolve-id.mjs.
+          id=$(toy mylist --json | node frontend/scripts/toy-resolve-id.mjs '${{ steps.cfg.outputs.slug }}')
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "Publishing to toy id=$id (slug=${{ steps.cfg.outputs.slug }})"
+
+      - name: Build the toy bundle
+        env:
+          # Explicit overrides beat toy-build's ancestor-directory search, which
+          # would not find these under the runner's layout.
+          TOY_DATA_DIR: ${{ steps.cfg.outputs.bundles == 'true' && format('{0}/artifacts/data', github.workspace) || '' }}
+          TOY_RES_DIR: ${{ steps.cfg.outputs.bundles == 'true' && format('{0}/artifacts/resource', github.workspace) || '' }}
+        working-directory: frontend
+        run: pnpm toy:build --app ${{ matrix.app }}
+
+      # Two calls, one command. Without --yes the CLI only uploads and returns a
+      # preview_url; --yes is what actually submits for review. Keeping the
+      # arguments identical means the reviewed bundle is the submitted bundle.
+      - name: Upload bundle and get a preview
+        id: preview
+        env:
+          TOY_CLI_SESSION_TOKEN: ${{ secrets.TOY_CLI_SESSION_TOKEN }}
+          TOY_NO_UPDATE_CHECK: "1"
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          out=$(toy update '${{ steps.toy.outputs.id }}' "apps/${{ matrix.app }}/dist-toy" \
+                  --poster "apps/${{ matrix.app }}/toy-poster.png" --json)
+          echo "$out"
+          url=$(node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);process.stdout.write(j.preview_url??j.data?.preview_url??"")})' <<<"$out")
+          {
+            echo "### ${{ matrix.app }} → ${{ steps.cfg.outputs.slug }}"
+            echo ""
+            echo "Preview: ${url:-"(none returned)"}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Submit for review
+        # Only on an explicit opt-in. The platform reviews every submission by
+        # hand, so this stays a decision a person makes, not a side effect of
+        # running the workflow.
+        if: inputs.submit
+        env:
+          TOY_CLI_SESSION_TOKEN: ${{ secrets.TOY_CLI_SESSION_TOKEN }}
+          TOY_NO_UPDATE_CHECK: "1"
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          # A poster is required at submission (the API rejects it otherwise), and
+          # this is the same bundle path the preview above just uploaded.
+          out=$(toy update '${{ steps.toy.outputs.id }}' "apps/${{ matrix.app }}/dist-toy" \
+                  --poster "apps/${{ matrix.app }}/toy-poster.png" --json --yes)
+          echo "$out"
+          node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s),d=j.data??j;console.log("Submitted: id="+(d.id??"?")+" status="+(d.status??"?"))})' <<<"$out" >> "$GITHUB_STEP_SUMMARY"
