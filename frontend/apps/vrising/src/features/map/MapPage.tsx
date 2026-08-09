@@ -78,7 +78,9 @@ export default function MapPage() {
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
   const [showLabels, setShowLabels] = useState(false)
   const [showRegions, setShowRegions] = useState(true)
+  const [mobileShowRegions, setMobileShowRegions] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const effectiveShowRegions = isMobile ? mobileShowRegions : showRegions
 
   // Camera + selection persistence. `useMapViewMemory` is storage-free; the
   // adapter comes from lib/storage.
@@ -394,8 +396,10 @@ export default function MapPage() {
         {
           id: 'show-regions',
           label: t('showRegions'),
-          onClick: () => setShowRegions((v) => !v),
-          active: showRegions,
+          onClick: () => isMobile
+            ? setMobileShowRegions((value) => !value)
+            : setShowRegions((value) => !value),
+          active: effectiveShowRegions,
         },
       ]}
       classNames={{
@@ -437,10 +441,10 @@ export default function MapPage() {
   const sharedMapProps: Omit<GameMapViewProps, 'mapRef'> = {
     map,
     markers: engineMarkers,
-    regions: showRegions ? (regionData?.regions ?? []) : [],
+    regions: effectiveShowRegions ? (regionData?.regions ?? []) : [],
     visibleSubtypes: visible,
     showLabels,
-    showBorders: showRegions,
+    showBorders: effectiveShowRegions,
     lodEnabled: isMobile,
     selectedMarkerId,
     forceShowIds,
@@ -500,7 +504,7 @@ export default function MapPage() {
             label: t('filter'),
             open: filterSheetOpen,
             onOpenChange: setFilterSheetOpen,
-            active: visible.size !== staticData.types.subtypes.length,
+            active: visible.size !== staticData.types.subtypes.length || mobileShowRegions,
             header: mapSelect,
             content: filterPanel,
           }}
