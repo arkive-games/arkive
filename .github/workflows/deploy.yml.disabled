@@ -1,3 +1,16 @@
+# DISABLED — the sites are built and served by EdgeOne Pages, which pulls this
+# repository directly. This workflow published aion2 alone to GitHub Pages under
+# /aion2-interactive-map/, which is no longer where anyone reaches the site, and
+# every push spent CI minutes producing an artifact nobody served.
+#
+# Renamed rather than deleted so the build recipe stays readable if the Pages
+# build ever needs reproducing. GitHub only runs workflows named *.yml, so the
+# .disabled suffix is what actually stops it.
+#
+# Note the VITE_API_BASE_URL below was stale: it pointed at the aion2 SITE, not
+# an API. The API is api-arkive.tc-imba.com, configured per project in EdgeOne
+# Pages, because Vite inlines it at build time and the build happens there.
+
 name: Deploy to GitHub Pages
 
 on:

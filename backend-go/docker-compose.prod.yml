@@ -1,0 +1,64 @@
+# Production stack for the Go backend.
+#
+# Deliberately does NOT define a database. The host already runs PostgreSQL for
+# the Python service, holding the accounts this service inherits; standing up a
+# second instance would mean two copies of the same users diverging. This joins
+# that instance's network instead and uses its own `arkive` database, so the two
+# services share a server but never a schema.
+#
+# The API binds to loopback only. nginx terminates TLS for
+# api-arkive.tc-imba.com and proxies to it; publishing the port on 0.0.0.0 would
+# expose an untrusted plaintext endpoint alongside it.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+name: arkive-backend
+
+services:
+  core:
+    build:
+      context: .
+      args:
+        GOPROXY: ${GOPROXY:-https://goproxy.cn,direct}
+    image: arkive/backend-go
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${SERVER_PORT:-19000}:9000"
+    environment:
+      DEBUG: "false"
+      SERVER_PORT: 9000
+      ARKIVE_MODULES: ${ARKIVE_MODULES:-}
+
+      # `postgres` resolves on the shared network below; the credentials are the
+      # existing instance's, and ARKIVE_DATABASE is a separate database on it.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME:?set POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE:?set POSTGRES_DATABASE}
+      POSTGRES_SSLMODE: disable
+
+      # Startup refuses to continue if either is empty or a placeholder.
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
+      ALTCHA_HMAC_KEY: ${ALTCHA_HMAC_KEY:?set ALTCHA_HMAC_KEY}
+
+      # Scoped to the parent domain so one sign-in covers the homepage and every
+      # game subdomain.
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-.tc-imba.com}
+      AUTH_COOKIE_SECURE: "true"
+      AUTH_COOKIE_SAMESITE: lax
+
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?set ALLOWED_ORIGINS}
+      ALLOW_CREDENTIALS: "true"
+      # Lets a Bilibili Toy authenticate with a bearer token from an origin that
+      # is not on the list, without ever being granted credentials.
+      CORS_PUBLIC_FALLBACK: ${CORS_PUBLIC_FALLBACK:-true}
+
+    networks:
+      - shared
+
+networks:
+  shared:
+    external: true
+    name: ${SHARED_NETWORK:-aion2-interactive-map-backend_aion2-network}
