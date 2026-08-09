@@ -1,3 +1,7 @@
+export {
+  ArkiveAccountControl,
+  type ArkiveAccountControlProps,
+} from "./ArkiveAccountControl"
 export { AccountDialog, type AccountDialogMode, type AccountDialogProps } from "./AccountDialog"
 export {
   AltchaAbortError,

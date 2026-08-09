@@ -1,7 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
+import { AuthProvider } from '@gamemap/auth'
 import { ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell'
+import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 import './i18n'
 import HomePage from './features/home/HomePage'
@@ -48,7 +50,16 @@ void initDataVersion().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <ThemeProvider defaultTheme="auto" storage={themeStorage}>
-        <RouterProvider router={router} />
+        {/* Mounted unconditionally, with `enabled` doing the gating: mounting
+            the provider conditionally would change hook order between the Toy
+            build and the normal one. */}
+        <AuthProvider
+          baseUrl={AUTH_CONFIG.baseUrl}
+          transport={AUTH_CONFIG.transport}
+          enabled={AUTH_CONFIG.enabled}
+        >
+          <RouterProvider router={router} />
+        </AuthProvider>
       </ThemeProvider>
     </StrictMode>,
   )

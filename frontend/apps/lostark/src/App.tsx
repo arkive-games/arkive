@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
 import { BuildInfo, SiteFooter } from '@gamemap/ui'
 import changelog from './changelog.json'
@@ -301,6 +302,9 @@ export default function App() {
         }
         rightExtras={
           <>
+            {/* This app has no i18n and renders Chinese throughout, so the
+                locale is a literal rather than a lookup. */}
+            <ArkiveAccountControl language="zh-CN" />
             <ThemeToggle labels={{ auto: '自动', light: '浅色', dark: '深色' }} />
             <BuildInfo
               commit={__BUILD_GIT_COMMIT__}

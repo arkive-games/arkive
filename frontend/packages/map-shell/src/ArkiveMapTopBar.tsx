@@ -1,4 +1,10 @@
-import { useRef, useState, type AnchorHTMLAttributes, type FocusEvent } from "react"
+import {
+  useRef,
+  useState,
+  type AnchorHTMLAttributes,
+  type FocusEvent,
+  type ReactNode,
+} from "react"
 import { IconLogout, IconUserCircle } from "@tabler/icons-react"
 import { Button, cn } from "@gamemap/ui"
 import {
@@ -39,6 +45,15 @@ export interface ArkiveMapTopBarProps {
    * env and i18n, so state and strings both arrive from the host.
    */
   account?: ArkiveMapTopBarAccount
+  /**
+   * Rendered in the right-hand cluster instead of any built-in login control.
+   *
+   * This is how hosts pass @gamemap/auth's ArkiveAccountControl, which owns the
+   * trigger, the dialog and the session state together. The shell cannot import
+   * that package itself without dragging network access into a package whose
+   * whole point is not having any, so the composition happens at the host.
+   */
+  accountSlot?: ReactNode
   className?: string
 }
 
@@ -87,6 +102,7 @@ export function ArkiveMapTopBar({
   loginLabel,
   onLogin,
   account,
+  accountSlot,
   className,
 }: ArkiveMapTopBarProps) {
   return (
@@ -141,7 +157,9 @@ export function ArkiveMapTopBar({
         shortLabel: themeSwitcher.shortLabel,
       }}
       rightExtras={
-        account ? (
+        accountSlot ? (
+          accountSlot
+        ) : account ? (
           <ShellAccountMenu account={account} />
         ) : (
           <Button

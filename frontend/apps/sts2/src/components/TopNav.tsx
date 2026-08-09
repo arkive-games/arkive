@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import { ShellTopBar, useTheme, type Theme } from '@gamemap/map-shell'
 import { BuildInfo } from '@gamemap/ui'
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
@@ -57,6 +58,7 @@ export function TopNav({ active }: { active: NavKey }) {
       }}
       rightExtras={
         <div className="flex items-center gap-1">
+          <ArkiveAccountControl language={i18n.language} />
           <SiteInfoDialog />
           <BuildInfo
             commit={__BUILD_GIT_COMMIT__}

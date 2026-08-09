@@ -11,6 +11,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
     "@gamemap/ui": "workspace:*",
     "i18next": "^26.3.6",

@@ -13,6 +13,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@gamemap/map-shell": "workspace:*",
     "@gamemap/ui": "workspace:*",
     "@tabler/icons-react": "^3.46.0"
   },

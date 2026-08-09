@@ -15,6 +15,7 @@
     "@gamemap/data-contract": "workspace:*",
     "@gamemap/map-engine": "workspace:*",
     "@gamemap/map-engine-gl": "workspace:*",
+    "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
     "@gamemap/ui": "workspace:*",
     "@tabler/icons-react": "^3.46.0",

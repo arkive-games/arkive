@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { ArkiveAccountControl } from "@gamemap/auth";
 import { ArkiveMapTopBar, type ShellNavItem } from "@gamemap/map-shell";
 import { useTheme } from "@/context/ThemeContext";
 import i18n, { LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/i18n";
@@ -82,6 +83,7 @@ export default function TopNavbar() {
         shortLabel: t("common:theme.label"),
       }}
       loginLabel={t("common:auth.login")}
+      accountSlot={<ArkiveAccountControl language={currentLng} />}
     />
   );
 }

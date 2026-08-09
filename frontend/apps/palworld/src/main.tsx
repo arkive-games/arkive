@@ -8,7 +8,9 @@ import {
   Outlet,
   RouterProvider,
 } from '@tanstack/react-router'
+import { AuthProvider } from '@gamemap/auth'
 import { ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell'
+import { AUTH_CONFIG } from './lib/auth'
 import 'leaflet/dist/leaflet.css'
 import '@gamemap/map-engine/engine.css'
 // The WebGL engine's own stylesheet is NOT imported here: it rides along with the
@@ -318,7 +320,16 @@ void initDataVersion().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <ThemeProvider defaultTheme="auto" storage={themeStorage}>
-        <RouterProvider router={router} />
+        {/* Mounted unconditionally, with `enabled` doing the gating: mounting
+            the provider conditionally would change hook order between the Toy
+            build and the normal one. */}
+        <AuthProvider
+          baseUrl={AUTH_CONFIG.baseUrl}
+          transport={AUTH_CONFIG.transport}
+          enabled={AUTH_CONFIG.enabled}
+        >
+          <RouterProvider router={router} />
+        </AuthProvider>
       </ThemeProvider>
     </StrictMode>,
   )

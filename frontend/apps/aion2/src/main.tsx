@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createHashHistory, createRouter } from "@tanstack/react-router";
+import { AuthProvider } from "@gamemap/auth";
+import { AUTH_CONFIG } from "@/lib/auth";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
 // Static styles for the engine-rendered map chrome (zoom control, status bar,
@@ -23,7 +25,16 @@ const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <RouterProvider router={router} />
+      {/* Mounted unconditionally, with `enabled` doing the gating: mounting the
+          provider conditionally would change hook order between the Toy build
+          and the normal one. */}
+      <AuthProvider
+        baseUrl={AUTH_CONFIG.baseUrl}
+        transport={AUTH_CONFIG.transport}
+        enabled={AUTH_CONFIG.enabled}
+      >
+        <RouterProvider router={router} />
+      </AuthProvider>
     </React.StrictMode>,
   );
 }

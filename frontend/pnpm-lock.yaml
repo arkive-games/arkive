@@ -20,6 +20,9 @@ importers:
       '@devnomic/marquee':
         specifier: ^1.0.3
         version: 1.0.3(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@gamemap/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@gamemap/data-contract':
         specifier: workspace:*
         version: link:../../packages/data-contract
@@ -198,6 +201,9 @@ importers:
 
   apps/lostark:
     dependencies:
+      '@gamemap/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
@@ -347,6 +353,9 @@ importers:
 
   apps/palworld:
     dependencies:
+      '@gamemap/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@gamemap/data-contract':
         specifier: workspace:*
         version: link:../../packages/data-contract
@@ -444,6 +453,9 @@ importers:
 
   apps/sts2:
     dependencies:
+      '@gamemap/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
@@ -520,6 +532,9 @@ importers:
 
   apps/vrising:
     dependencies:
+      '@gamemap/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@gamemap/data-contract':
         specifier: workspace:*
         version: link:../../packages/data-contract
@@ -614,6 +629,9 @@ importers:
 
   packages/auth:
     dependencies:
+      '@gamemap/map-shell':
+        specifier: workspace:*
+        version: link:../map-shell
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../ui

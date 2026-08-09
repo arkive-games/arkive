@@ -28,6 +28,11 @@ export interface AuthContextValue {
   /** Last failure, for surfaces that render errors outside the dialog. */
   error: AuthError | null
   client: CoreClient
+  /**
+   * False when no API is configured. Exposed so the account control can hide
+   * itself rather than every host repeating the check at the call site.
+   */
+  enabled: boolean
 
   login(email: string, password: string): Promise<User>
   register(input: { name: string; email: string; password: string; altcha: string }): Promise<User>
@@ -181,13 +186,14 @@ export function AuthProvider({
       user,
       error,
       client,
+      enabled,
       login,
       register,
       logout,
       refresh: probe,
       clearError: () => setError(null),
     }),
-    [status, user, error, client, login, register, logout, probe],
+    [status, user, error, client, enabled, login, register, logout, probe],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

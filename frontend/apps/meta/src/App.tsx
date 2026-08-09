@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AccountDialog, authStringsFor, useAuth } from '@gamemap/auth'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import {
   ArkiveMapTopBar,
   ArkiveMark,
   useTheme,
-  type ArkiveMapTopBarAccount,
   type ShellNavItem,
 } from '@gamemap/map-shell'
 import {
@@ -20,7 +19,6 @@ import {
   IconSparkles,
 } from '@tabler/icons-react'
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
-import { AUTH_CONFIG } from './lib/auth'
 import {
   IS_TOY,
   VISIBLE_SITES,
@@ -80,24 +78,6 @@ export default function App() {
   const featuredSite = firstPlayableSite(rankedSites)
   const showComingSoon = () => setNoticeId((value) => value + 1)
 
-  const auth = useAuth()
-  const [accountOpen, setAccountOpen] = useState(false)
-  const authStrings = authStringsFor(i18n.language)
-  // Hidden entirely when no API is configured, rather than offering a sign-in
-  // that cannot complete.
-  const account: ArkiveMapTopBarAccount | undefined = AUTH_CONFIG.enabled
-    ? {
-        status: auth.status,
-        userName: auth.user?.name,
-        signInLabel: authStrings.signIn,
-        signOutLabel: authStrings.signOut,
-        accountLabel: authStrings.account,
-        onSignIn: () => setAccountOpen(true),
-        onSignOut: () => {
-          void auth.logout()
-        },
-      }
-    : undefined
   const navItems: ShellNavItem[] = NAV_KEYS.map((key) => ({
     key,
     label: t(`nav.${key}`),
@@ -184,12 +164,8 @@ export default function App() {
         }}
         loginLabel={t('auth.login')}
         onLogin={showComingSoon}
-        account={account}
+        accountSlot={<ArkiveAccountControl language={i18n.language} />}
       />
-
-      {AUTH_CONFIG.enabled && (
-        <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} strings={authStrings} />
-      )}
 
       {activeView === 'allGames' ? (
         <AllGamesPage sites={VISIBLE_SITES} onFavorite={showComingSoon} />
