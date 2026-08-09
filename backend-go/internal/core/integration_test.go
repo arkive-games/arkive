@@ -341,6 +341,13 @@ func (h *harness) solveAltcha() string {
 	return ""
 }
 
+// forgotPassword requests a reset, solving the proof-of-work gate first.
+func (h *harness) forgotPassword(email string) response {
+	h.t.Helper()
+	return h.do(http.MethodPost, "/auth/forgot-password?altcha="+h.solveAltcha(),
+		map[string]string{"email": email})
+}
+
 // register creates an account through the public endpoint.
 func (h *harness) register(name, email, password string) response {
 	h.t.Helper()
@@ -790,8 +797,8 @@ func TestForgotPasswordDoesNotDiscloseWhetherAnAccountExists(t *testing.T) {
 		t.Fatalf("setup failed: %s", res.body)
 	}
 
-	known := h.do(http.MethodPost, "/auth/forgot-password", map[string]string{"email": "alice@example.com"})
-	unknown := h.do(http.MethodPost, "/auth/forgot-password", map[string]string{"email": "nobody@example.com"})
+	known := h.forgotPassword("alice@example.com")
+	unknown := h.forgotPassword("nobody@example.com")
 
 	if known.status != http.StatusAccepted || unknown.status != http.StatusAccepted {
 		t.Fatalf("statuses = %d and %d, want 202 for both", known.status, unknown.status)
@@ -810,9 +817,7 @@ func TestPasswordResetLinkWorksOnceAndInvalidatesTheOldPassword(t *testing.T) {
 		t.Fatalf("setup failed: %s", res.body)
 	}
 
-	if res := h.do(http.MethodPost, "/auth/forgot-password", map[string]string{
-		"email": "alice@example.com",
-	}); res.status != http.StatusAccepted {
+	if res := h.forgotPassword("alice@example.com"); res.status != http.StatusAccepted {
 		t.Fatalf("forgot-password = %d: %s", res.status, res.body)
 	}
 	token := h.mailer.reset("alice@example.com")
@@ -932,5 +937,74 @@ func TestModuleOwnsOnlyItsOwnSchema(t *testing.T) {
 	}
 	if len(strays) > 0 {
 		t.Fatalf("core migrations created objects outside their schema: %v", strays)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Reset-request abuse controls
+// ---------------------------------------------------------------------------
+
+func TestForgotPasswordRequiresAnAltchaSolution(t *testing.T) {
+	h := newHarness(t)
+
+	// Without the gate a single request mails a real person on demand.
+	res := h.do(http.MethodPost, "/auth/forgot-password", map[string]string{
+		"email": "alice@example.com",
+	})
+	if res.status != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, want 422: %s", res.status, res.body)
+	}
+}
+
+func TestForgotPasswordIsLimitedPerAddress(t *testing.T) {
+	h := newHarness(t)
+	if res := h.register("alice", "alice@example.com", "hunter2hunter2"); res.status != http.StatusCreated {
+		t.Fatalf("setup failed: %s", res.body)
+	}
+
+	// The default allowance is 3 per address per hour. Each attempt solves a
+	// fresh challenge, so this is not the replay check doing the work.
+	for i := 1; i <= 3; i++ {
+		if res := h.forgotPassword("alice@example.com"); res.status != http.StatusAccepted {
+			t.Fatalf("request %d = %d, want 202: %s", i, res.status, res.body)
+		}
+	}
+
+	res := h.forgotPassword("alice@example.com")
+	if res.status != http.StatusTooManyRequests {
+		t.Fatalf("the fourth request must be refused, got %d: %s", res.status, res.body)
+	}
+	if got := res.errorCode(t); got != "RateLimitExceededError" {
+		t.Errorf("errorCode = %q, want RateLimitExceededError", got)
+	}
+}
+
+// The per-address limit must not become an account-enumeration oracle: an
+// address that exists and one that does not have to behave identically.
+func TestForgotPasswordLimitAppliesToUnknownAddressesToo(t *testing.T) {
+	h := newHarness(t)
+
+	for i := 1; i <= 3; i++ {
+		if res := h.forgotPassword("nobody@example.com"); res.status != http.StatusAccepted {
+			t.Fatalf("request %d = %d, want 202: %s", i, res.status, res.body)
+		}
+	}
+	res := h.forgotPassword("nobody@example.com")
+	if res.status != http.StatusTooManyRequests {
+		t.Fatalf("an unknown address must be throttled the same way, got %d", res.status)
+	}
+}
+
+func TestForgotPasswordLimitIsPerAddressNotGlobal(t *testing.T) {
+	h := newHarness(t)
+
+	for i := 1; i <= 3; i++ {
+		if res := h.forgotPassword("first@example.com"); res.status != http.StatusAccepted {
+			t.Fatalf("first address request %d = %d", i, res.status)
+		}
+	}
+	// Exhausting one address must not lock everyone else out.
+	if res := h.forgotPassword("second@example.com"); res.status != http.StatusAccepted {
+		t.Fatalf("a different address must have its own allowance, got %d: %s", res.status, res.body)
 	}
 }

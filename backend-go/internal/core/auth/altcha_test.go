@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -26,22 +27,22 @@ func fixedClock(at time.Time) func() time.Time {
 }
 
 func TestVerifyAcceptsPythonGeneratedSolution(t *testing.T) {
-	a := NewAltcha(referenceAltchaKey, 2000, 10*time.Minute)
-	a.now = fixedClock(referenceAltchaExpiry.Add(-time.Minute))
+	a := NewAltcha(referenceAltchaKey, 2000, 10*time.Minute, nil)
+	setClock(a, referenceAltchaExpiry.Add(-time.Minute))
 
-	if err := a.Verify(referenceAltchaPayload); err != nil {
+	if err := a.Verify(context.Background(), referenceAltchaPayload); err != nil {
 		t.Fatalf("rejected a solution the Python service would accept: %v", err)
 	}
 }
 
 func TestVerifyRejectsReplay(t *testing.T) {
-	a := NewAltcha(referenceAltchaKey, 2000, 10*time.Minute)
-	a.now = fixedClock(referenceAltchaExpiry.Add(-time.Minute))
+	a := NewAltcha(referenceAltchaKey, 2000, 10*time.Minute, nil)
+	setClock(a, referenceAltchaExpiry.Add(-time.Minute))
 
-	if err := a.Verify(referenceAltchaPayload); err != nil {
+	if err := a.Verify(context.Background(), referenceAltchaPayload); err != nil {
 		t.Fatalf("first use should succeed: %v", err)
 	}
-	err := a.Verify(referenceAltchaPayload)
+	err := a.Verify(context.Background(), referenceAltchaPayload)
 	if !errors.Is(err, ErrAltcha) {
 		t.Fatalf("want ErrAltcha on replay, got %v", err)
 	}
@@ -51,10 +52,10 @@ func TestVerifyRejectsReplay(t *testing.T) {
 }
 
 func TestVerifyRejectsExpiredChallenge(t *testing.T) {
-	a := NewAltcha(referenceAltchaKey, 2000, 10*time.Minute)
-	a.now = fixedClock(referenceAltchaExpiry.Add(time.Second))
+	a := NewAltcha(referenceAltchaKey, 2000, 10*time.Minute, nil)
+	setClock(a, referenceAltchaExpiry.Add(time.Second))
 
-	err := a.Verify(referenceAltchaPayload)
+	err := a.Verify(context.Background(), referenceAltchaPayload)
 	if !errors.Is(err, ErrAltcha) {
 		t.Fatalf("want ErrAltcha, got %v", err)
 	}
@@ -64,18 +65,18 @@ func TestVerifyRejectsExpiredChallenge(t *testing.T) {
 }
 
 func TestVerifyRejectsWrongKey(t *testing.T) {
-	a := NewAltcha("a different key", 2000, 10*time.Minute)
-	a.now = fixedClock(referenceAltchaExpiry.Add(-time.Minute))
+	a := NewAltcha("a different key", 2000, 10*time.Minute, nil)
+	setClock(a, referenceAltchaExpiry.Add(-time.Minute))
 
-	if err := a.Verify(referenceAltchaPayload); !errors.Is(err, ErrAltcha) {
+	if err := a.Verify(context.Background(), referenceAltchaPayload); !errors.Is(err, ErrAltcha) {
 		t.Fatalf("a payload signed with another key must be rejected, got %v", err)
 	}
 }
 
 func TestCreateVerifyRoundTrip(t *testing.T) {
-	a := NewAltcha("round-trip-key", 500, 10*time.Minute)
+	a := NewAltcha("round-trip-key", 500, 10*time.Minute, nil)
 	now := time.Unix(1_700_000_000, 0)
-	a.now = fixedClock(now)
+	setClock(a, now)
 
 	challenge, err := a.Create()
 	if err != nil {
@@ -93,14 +94,14 @@ func TestCreateVerifyRoundTrip(t *testing.T) {
 		t.Fatal("could not solve our own challenge within maxNumber")
 	}
 
-	if err := a.Verify(encodeSolution(t, challenge, number)); err != nil {
+	if err := a.Verify(context.Background(), encodeSolution(t, challenge, number)); err != nil {
 		t.Fatalf("Verify rejected a correct solution: %v", err)
 	}
 }
 
 func TestVerifyRejectsTamperedNumber(t *testing.T) {
-	a := NewAltcha("tamper-key", 500, 10*time.Minute)
-	a.now = fixedClock(time.Unix(1_700_000_000, 0))
+	a := NewAltcha("tamper-key", 500, 10*time.Minute, nil)
+	setClock(a, time.Unix(1_700_000_000, 0))
 
 	challenge, err := a.Create()
 	if err != nil {
@@ -113,14 +114,14 @@ func TestVerifyRejectsTamperedNumber(t *testing.T) {
 
 	// A wrong answer carrying a valid signature must still fail, otherwise the
 	// proof-of-work is decorative.
-	if err := a.Verify(encodeSolution(t, challenge, number+1)); !errors.Is(err, ErrAltcha) {
+	if err := a.Verify(context.Background(), encodeSolution(t, challenge, number+1)); !errors.Is(err, ErrAltcha) {
 		t.Fatalf("tampered solution must be rejected, got %v", err)
 	}
 }
 
 func TestVerifyRejectsMalformedPayloads(t *testing.T) {
-	a := NewAltcha(referenceAltchaKey, 2000, 10*time.Minute)
-	a.now = fixedClock(referenceAltchaExpiry.Add(-time.Minute))
+	a := NewAltcha(referenceAltchaKey, 2000, 10*time.Minute, nil)
+	setClock(a, referenceAltchaExpiry.Add(-time.Minute))
 
 	cases := map[string]string{
 		"empty":          "",
@@ -133,7 +134,7 @@ func TestVerifyRejectsMalformedPayloads(t *testing.T) {
 
 	for name, payload := range cases {
 		t.Run(name, func(t *testing.T) {
-			if err := a.Verify(payload); !errors.Is(err, ErrAltcha) {
+			if err := a.Verify(context.Background(), payload); !errors.Is(err, ErrAltcha) {
 				t.Fatalf("want ErrAltcha, got %v", err)
 			}
 		})
@@ -141,8 +142,8 @@ func TestVerifyRejectsMalformedPayloads(t *testing.T) {
 }
 
 func TestVerifyRejectsSaltWithoutExpiry(t *testing.T) {
-	a := NewAltcha("no-expiry-key", 100, 10*time.Minute)
-	a.now = fixedClock(time.Unix(1_700_000_000, 0))
+	a := NewAltcha("no-expiry-key", 100, 10*time.Minute, nil)
+	setClock(a, time.Unix(1_700_000_000, 0))
 
 	// Hand-build a correctly signed challenge whose salt carries no expiry:
 	// the signature is valid, so only the expiry check can reject it.
@@ -157,7 +158,7 @@ func TestVerifyRejectsSaltWithoutExpiry(t *testing.T) {
 		Signature: a.sign(ch),
 	})
 
-	if err := a.Verify(payload); !errors.Is(err, ErrAltcha) {
+	if err := a.Verify(context.Background(), payload); !errors.Is(err, ErrAltcha) {
 		t.Fatalf("a challenge that never expires must be rejected, got %v", err)
 	}
 }
@@ -167,25 +168,25 @@ func TestVerifyRejectsSaltWithoutExpiry(t *testing.T) {
 // one, issued after the first has expired, should evict the first.
 func TestSpentEntriesAreSweptAfterExpiry(t *testing.T) {
 	const maxNumber = 200
-	a := NewAltcha("sweep-key", maxNumber, 10*time.Minute)
+	a := NewAltcha("sweep-key", maxNumber, 10*time.Minute, nil)
 
 	start := time.Unix(1_700_000_000, 0)
-	a.now = fixedClock(start)
+	setClock(a, start)
 	first := solveFresh(t, a, maxNumber)
-	if err := a.Verify(first); err != nil {
+	if err := a.Verify(context.Background(), first); err != nil {
 		t.Fatalf("first challenge should verify: %v", err)
 	}
-	if len(a.spent) != 1 {
-		t.Fatalf("want 1 spent entry, got %d", len(a.spent))
+	if len(spentEntries(a)) != 1 {
+		t.Fatalf("want 1 spent entry, got %d", len(spentEntries(a)))
 	}
 
-	a.now = fixedClock(start.Add(time.Hour)) // past the first challenge's expiry
+	setClock(a, start.Add(time.Hour)) // past the first challenge's expiry
 	second := solveFresh(t, a, maxNumber)
-	if err := a.Verify(second); err != nil {
+	if err := a.Verify(context.Background(), second); err != nil {
 		t.Fatalf("second challenge should verify: %v", err)
 	}
-	if len(a.spent) != 1 {
-		t.Fatalf("the expired entry should have been swept, leaving 1; got %d", len(a.spent))
+	if len(spentEntries(a)) != 1 {
+		t.Fatalf("the expired entry should have been swept, leaving 1; got %d", len(spentEntries(a)))
 	}
 }
 
@@ -230,4 +231,22 @@ func encodeRaw(t *testing.T, s solution) string {
 		t.Fatalf("marshal solution: %v", err)
 	}
 	return base64.StdEncoding.EncodeToString(raw)
+}
+
+// setClock advances both the issuer and its in-process replay store, which keep
+// separate clocks now that the store is pluggable.
+func setClock(a *Altcha, at time.Time) {
+	clock := fixedClock(at)
+	a.now = clock
+	if store, ok := a.store.(*memoryReplayStore); ok {
+		store.now = clock
+	}
+}
+
+func spentEntries(a *Altcha) map[string]time.Time {
+	store, ok := a.store.(*memoryReplayStore)
+	if !ok {
+		return nil
+	}
+	return store.spent
 }

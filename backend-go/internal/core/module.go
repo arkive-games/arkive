@@ -13,6 +13,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -25,6 +26,8 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/module"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/ratelimit"
+	"github.com/redis/go-redis/v9"
 )
 
 //go:embed all:migrations
@@ -116,9 +119,45 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		d.Logger.Warn("object storage is not configured; avatar uploads will be refused")
 	}
 
+	// Redis is optional. Without it, rate limits and Altcha replay protection
+	// fall back to in-process state: correct for one process, but forgotten on
+	// restart, which reopens the replay window for unexpired challenges.
+	var (
+		limits ratelimit.Limiter = ratelimit.NewMemory()
+		replay auth.ReplayStore  = auth.NewMemoryReplayStore()
+	)
+	if addr := d.Config.Redis.Addr; addr != "" {
+		rdb := redis.NewClient(&redis.Options{
+			Addr:     addr,
+			Password: d.Config.Redis.Password,
+			DB:       d.Config.Redis.DB,
+		})
+		limits = ratelimit.NewRedis(rdb, ratelimit.NewMemory(), d.Logger)
+		replay = auth.NewRedisReplayStore(rdb)
+		d.Logger.Info("using redis for rate limits and replay protection", slog.String("addr", addr))
+	} else {
+		d.Logger.Warn("no REDIS_ADDR configured; rate limits and altcha replay protection are per-process and reset on restart")
+	}
+
 	mailer := m.mailer
 	if mailer == nil {
-		mailer = auth.NewLogMailer(d.Logger)
+		smtpCfg := auth.SMTPConfig{
+			Host:             d.Config.Auth.SMTPHost,
+			Port:             d.Config.Auth.SMTPPort,
+			Username:         d.Config.Auth.SMTPUsername,
+			Password:         d.Config.Auth.SMTPPassword,
+			FromName:         d.Config.Auth.SMTPFromName,
+			ResetURLTemplate: d.Config.Auth.ResetURLTemplate,
+		}
+		if smtpCfg.Configured() {
+			mailer = auth.NewSMTPMailer(smtpCfg, d.Logger)
+			d.Logger.Info("sending mail via smtp relay", slog.String("host", smtpCfg.Host))
+		} else {
+			// Deliberate: an unconfigured deployment records tokens rather than
+			// failing every reset request outright.
+			mailer = auth.NewLogMailer(d.Logger)
+			d.Logger.Warn("no SMTP_HOST configured; reset tokens will be logged, not emailed")
+		}
 	}
 	service := users.NewService(queries, hasher, tokens, mailer, blobs, d.Logger)
 
@@ -143,12 +182,20 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 
 	a := humachi.New(r, cfg)
 
-	handlers := httpapi.NewHandlers(service, tokens, auth.NewAltcha(
-		d.Config.Auth.AltchaHMACKey,
-		d.Config.Auth.AltchaMaxNumber,
-		altchaChallengeTTL,
-	), auth.NewRateLimiter(d.Config.Auth.RegisterPerMinute),
-		auth.NewRateLimiter(d.Config.S3.AvatarUploadsPerMinute), d.Config.Auth)
+	handlers := httpapi.NewHandlers(
+		service,
+		tokens,
+		auth.NewAltcha(
+			d.Config.Auth.AltchaHMACKey,
+			d.Config.Auth.AltchaMaxNumber,
+			altchaChallengeTTL,
+			replay,
+		),
+		auth.NewRateLimiter(d.Config.Auth.RegisterPerMinute),
+		auth.NewRateLimiter(d.Config.S3.AvatarUploadsPerMinute),
+		limits,
+		d.Config.Auth,
+	)
 
 	handlers.RegisterAuthRoutes(a)
 	handlers.RegisterUserRoutes(a)

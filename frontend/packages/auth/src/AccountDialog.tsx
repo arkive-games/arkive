@@ -136,12 +136,26 @@ export function AccountDialog({
           break
         }
 
-        case "forgot":
-          await client.forgotPassword(email)
+        case "forgot": {
+          // Same gate as registration, and solved on submit rather than on open
+          // so a visitor who only signs in never pays for the work.
+          const controller = new AbortController()
+          abort.current = controller
+
+          setProgress(0)
+          const challenge = await client.getAltchaChallenge()
+          const solution = await solveAltcha(challenge, {
+            signal: controller.signal,
+            onProgress: setProgress,
+          })
+          setProgress(null)
+
+          await client.forgotPassword(email, solution)
           // Deliberately unconditional: the API does not disclose whether the
           // address exists, and neither does this message.
           setMessage(strings.forgotSent)
           break
+        }
 
         case "reset":
           await client.resetPassword(token, password)

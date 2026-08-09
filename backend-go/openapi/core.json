@@ -803,6 +803,19 @@
       "post": {
         "description": "Always reports success, whether or not the address is registered, so that the endpoint cannot be used to discover accounts.",
         "operationId": "forgotPassword",
+        "parameters": [
+          {
+            "description": "Base64-encoded Altcha proof-of-work solution from /auth/altcha",
+            "explode": false,
+            "in": "query",
+            "name": "altcha",
+            "required": true,
+            "schema": {
+              "description": "Base64-encoded Altcha proof-of-work solution from /auth/altcha",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

@@ -27,9 +27,21 @@ type Config struct {
 
 	Server   Server
 	Postgres Postgres
+	Redis    Redis
 	Auth     Auth
 	CORS     CORS
 	S3       S3
+}
+
+// Redis holds cache/counter settings.
+//
+// Optional: with no address configured, rate limiting and Altcha replay
+// protection fall back to in-process state, which is correct for one process
+// but forgets everything on restart.
+type Redis struct {
+	Addr     string
+	Password string
+	DB       int
 }
 
 // Server holds HTTP listener settings.
@@ -102,6 +114,24 @@ type Auth struct {
 
 	// RegisterPerMinute is the per-IP registration rate limit.
 	RegisterPerMinute int
+
+	// Password-reset limits. The per-address limit is the one that prevents a
+	// chosen person being mail-bombed; the per-IP limit alone is bypassed by
+	// rotating source addresses.
+	ForgotPerHourPerIP    int
+	ForgotPerHourPerEmail int
+
+	// Mail delivery. Empty SMTPHost keeps the logging mailer, so a deployment
+	// without mail configured degrades to recording tokens rather than failing
+	// every reset request.
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUsername string
+	SMTPPassword string
+	SMTPFromName string
+
+	// ResetURLTemplate receives the token via %s.
+	ResetURLTemplate string
 
 	// Argon2 parameters. Defaults match what pwdlib writes, so hashes stay
 	// mutually readable during cutover.
@@ -183,6 +213,11 @@ func Load() (Config, error) {
 			SSLMode:  envString("POSTGRES_SSLMODE", "disable"),
 			MaxConns: envInt("POSTGRES_MAX_CONNS", 10),
 		},
+		Redis: Redis{
+			Addr:     envString("REDIS_ADDR", ""),
+			Password: envString("REDIS_PASSWORD", ""),
+			DB:       envInt("REDIS_DB", 0),
+		},
 		Auth: Auth{
 			JWTSecret:           envString("JWT_SECRET_KEY", ""),
 			JWTAudience:         envString("JWT_AUDIENCE", "arkive:auth"),
@@ -200,6 +235,17 @@ func Load() (Config, error) {
 			AltchaMaxNumber: int64(envInt("ALTCHA_MAX_NUMBER", 50000)),
 
 			RegisterPerMinute: envInt("REGISTER_PER_MINUTE", 5),
+
+			ForgotPerHourPerIP:    envInt("FORGOT_PER_HOUR_PER_IP", 5),
+			ForgotPerHourPerEmail: envInt("FORGOT_PER_HOUR_PER_EMAIL", 3),
+
+			SMTPHost:     envString("SMTP_HOST", ""),
+			SMTPPort:     envInt("SMTP_PORT", 465),
+			SMTPUsername: envString("SMTP_USERNAME", ""),
+			SMTPPassword: envString("SMTP_PASSWORD", ""),
+			SMTPFromName: envString("SMTP_FROM_NAME", "Arkive"),
+
+			ResetURLTemplate: envString("RESET_URL_TEMPLATE", "https://tc-imba.com/user?reset=%s"),
 
 			Argon2Memory:      uint32(envInt("ARGON2_MEMORY_KIB", 65536)),
 			Argon2Iterations:  uint32(envInt("ARGON2_ITERATIONS", 3)),

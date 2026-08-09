@@ -8,6 +8,7 @@ package httpapi
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -17,6 +18,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/config"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/ratelimit"
 )
 
 // Handlers holds everything the core endpoints need.
@@ -32,14 +34,35 @@ type Handlers struct {
 	// their picture.
 	avatarLimiter *auth.RateLimiter
 
+	// limits is the shared, Redis-backed limiter used for password resets. It
+	// coexists with the two in-process RateLimiters above rather than replacing
+	// them: those predate it and key differently, and folding them together is a
+	// change worth making on its own rather than inside a mail feature.
+	limits ratelimit.Limiter
+
 	cfg config.Auth
 }
 
 // NewHandlers builds the core module's HTTP handlers.
-func NewHandlers(svc *users.Service, tokens *auth.Tokens, altcha *auth.Altcha, limiter, avatarLimiter *auth.RateLimiter, cfg config.Auth) *Handlers {
+func NewHandlers(
+	svc *users.Service,
+	tokens *auth.Tokens,
+	altcha *auth.Altcha,
+	limiter, avatarLimiter *auth.RateLimiter,
+	limits ratelimit.Limiter,
+	cfg config.Auth,
+) *Handlers {
+	if limits == nil {
+		limits = ratelimit.NewMemory()
+	}
 	return &Handlers{
-		users: svc, tokens: tokens, altcha: altcha,
-		limiter: limiter, avatarLimiter: avatarLimiter, cfg: cfg,
+		users:         svc,
+		tokens:        tokens,
+		altcha:        altcha,
+		limiter:       limiter,
+		avatarLimiter: avatarLimiter,
+		limits:        limits,
+		cfg:           cfg,
 	}
 }
 
@@ -106,6 +129,16 @@ type emailInput struct {
 	Body EmailBody
 }
 
+// forgotPasswordInput gates the reset request behind proof of work.
+//
+// Without it, one HTTP request mails a real person on demand: an attacker can
+// mail-bomb a chosen address, and every message spends the sending quota. The
+// challenge makes each attempt cost measurable client CPU.
+type forgotPasswordInput struct {
+	Altcha string `query:"altcha" required:"true" doc:"Base64-encoded Altcha proof-of-work solution from /auth/altcha"`
+	Body   EmailBody
+}
+
 type tokenInput struct {
 	Body TokenBody
 }
@@ -157,7 +190,7 @@ func (h *Handlers) RegisterAuthRoutes(a huma.API) {
 			http.StatusTooManyRequests,
 		},
 	}, func(ctx context.Context, in *registerInput) (*api.Response[users.UserRead], error) {
-		if err := h.altcha.Verify(in.Altcha); err != nil {
+		if err := h.altcha.Verify(ctx, in.Altcha); err != nil {
 			return nil, apierr.New(apierr.AltchaChallenge, "challenge verification failed").Wrap(err)
 		}
 		user, err := h.users.Register(ctx, users.RegisterInput{
@@ -265,7 +298,21 @@ func (h *Handlers) RegisterAuthRoutes(a huma.API) {
 		Description:   "Always reports success, whether or not the address is registered, so that the endpoint cannot be used to discover accounts.",
 		Tags:          []string{"auth"},
 		DefaultStatus: http.StatusAccepted,
-	}, func(ctx context.Context, in *emailInput) (*api.Response[api.Empty], error) {
+		Middlewares:   huma.Middlewares{h.rateLimitForgotPassword},
+	}, func(ctx context.Context, in *forgotPasswordInput) (*api.Response[api.Empty], error) {
+		if err := h.altcha.Verify(ctx, in.Altcha); err != nil {
+			return nil, apierr.New(apierr.AltchaChallenge, "challenge verification failed").Wrap(err)
+		}
+
+		// Limited per address as well as per IP, and applied BEFORE the account
+		// is looked up. Limiting only addresses that exist would make the
+		// limiter itself an account-enumeration oracle and undo the constant
+		// response this endpoint deliberately returns.
+		if !h.allowForgotPasswordFor(ctx, in.Body.Email) {
+			return nil, apierr.New(apierr.RateLimitExceeded,
+				"too many reset requests for this address; please wait")
+		}
+
 		if err := h.users.ForgotPassword(ctx, in.Body.Email); err != nil {
 			return nil, err
 		}
@@ -327,6 +374,57 @@ func (h *Handlers) rateLimit(ctx huma.Context, next func(huma.Context)) {
 		return
 	}
 	next(ctx)
+}
+
+// Fallback allowances used when configuration leaves a limit unset.
+//
+// ratelimit treats a zero limit as "no rule", which is the right primitive but
+// the wrong default here: a config that forgets to set these would silently
+// remove the only thing standing between an attacker and unlimited mail. These
+// values apply instead, so protection has to be disabled deliberately rather
+// than by omission.
+const (
+	defaultForgotPerHourPerIP    = 5
+	defaultForgotPerHourPerEmail = 3
+)
+
+func orDefault(configured, fallback int) int {
+	if configured <= 0 {
+		return fallback
+	}
+	return configured
+}
+
+// rateLimitForgotPassword throttles reset requests per client IP.
+func (h *Handlers) rateLimitForgotPassword(ctx huma.Context, next func(huma.Context)) {
+	ip := auth.ClientIP(ctx.RemoteAddr(), ctx.Header("X-Forwarded-For"))
+	rule := ratelimit.Rule{Limit: orDefault(h.cfg.ForgotPerHourPerIP, defaultForgotPerHourPerIP), Window: time.Hour}
+
+	if !h.limits.Allow(ctx.Context(), ratelimit.Key("forgot", "ip", ip), rule).Allowed {
+		err := apierr.New(apierr.RateLimitExceeded, "too many reset requests; please wait")
+		ctx.SetStatus(err.GetStatus())
+		ctx.SetHeader("Content-Type", "application/json")
+		writeJSON(ctx, err)
+		return
+	}
+	next(ctx)
+}
+
+// allowForgotPasswordFor throttles reset requests per target address.
+//
+// This is the limit that stops one person being mail-bombed: without it the
+// per-IP cap is trivially bypassed from a handful of addresses, and every
+// message spends real sending quota. It is checked before the account lookup
+// and applied to any syntactically valid address, so an address that exists and
+// one that does not behave identically — otherwise the limiter would leak
+// exactly what the endpoint's constant response is designed to hide.
+func (h *Handlers) allowForgotPasswordFor(ctx context.Context, email string) bool {
+	normalised := strings.ToLower(strings.TrimSpace(email))
+	if normalised == "" {
+		return true // let validation reject it, not the limiter
+	}
+	rule := ratelimit.Rule{Limit: orDefault(h.cfg.ForgotPerHourPerEmail, defaultForgotPerHourPerEmail), Window: time.Hour}
+	return h.limits.Allow(ctx, ratelimit.Key("forgot", "email", normalised), rule).Allowed
 }
 
 // sessionCookie builds the session cookie. maxAge below zero expires it.

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { IconSettings } from "@tabler/icons-react"
 import { Button } from "@gamemap/ui"
 import {
@@ -13,6 +13,7 @@ import {
 import { AccountDialog } from "./AccountDialog"
 import { useAuth } from "./AuthProvider"
 import { authStringsFor } from "./locales"
+import { consumeResetToken } from "./resetLink"
 import type { AuthStrings } from "./strings"
 
 export interface ArkiveAccountControlProps {
@@ -64,6 +65,20 @@ export function ArkiveAccountControl({
 }: ArkiveAccountControlProps) {
   const auth = useAuth()
   const [open, setOpen] = useState(false)
+  const [resetToken, setResetToken] = useState<string | null>(null)
+
+  // A visitor arriving from an emailed link lands on /user?reset=<token>. The
+  // token is read once and stripped from the address bar immediately: it is a
+  // credential, and leaving it in the URL puts it in browser history and in the
+  // Referer of every later third-party request.
+  useEffect(() => {
+    const token = consumeResetToken()
+    if (token) {
+      setResetToken(token)
+      setOpen(true)
+    }
+  }, [])
+
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   // The same assembly the phone sheet uses, rather than a second copy of it:
@@ -138,7 +153,13 @@ export function ArkiveAccountControl({
   return (
     <>
       {anonymousTrigger}
-      <AccountDialog open={open} onOpenChange={setOpen} strings={strings} />
+      <AccountDialog
+        open={open}
+        onOpenChange={setOpen}
+        strings={strings}
+        initialMode={resetToken ? "reset" : "login"}
+        resetToken={resetToken ?? undefined}
+      />
       {settingsPanel}
     </>
   )

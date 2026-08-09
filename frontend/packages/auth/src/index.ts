@@ -27,6 +27,13 @@ export {
   type ResolvedAuthConfig,
 } from "./config"
 export { AUTH_LOCALES, authStringsFor } from "./locales"
+export {
+  RESET_PATH,
+  RESET_QUERY_PARAM,
+  consumeResetToken,
+  readResetLink,
+  type ResetLink,
+} from "./resetLink"
 export { createLocalTokenStorage, createMemoryTokenStorage } from "./storage"
 export { DEFAULT_AUTH_STRINGS, resolveAuthStrings, type AuthStrings } from "./strings"
 export {

@@ -155,8 +155,14 @@ export class CoreClient {
 
   // -- password and address -----------------------------------------------
 
-  async forgotPassword(email: string): Promise<void> {
-    await this.enveloped<unknown>(CORE_OPERATIONS.forgotPassword.path, {
+  /**
+   * Requests a reset link. Gated by proof of work, because one call to this
+   * endpoint mails a real person: without the gate an attacker can mail-bomb a
+   * chosen address, and every message spends the sending quota.
+   */
+  async forgotPassword(email: string, altcha: string): Promise<void> {
+    const path = `${CORE_OPERATIONS.forgotPassword.path}?altcha=${encodeURIComponent(altcha)}`
+    await this.enveloped<unknown>(path, {
       method: "POST",
       body: JSON.stringify({ email }),
     })
