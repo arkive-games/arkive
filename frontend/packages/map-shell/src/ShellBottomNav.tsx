@@ -100,7 +100,7 @@ type MorePane = "main" | "language"
  * phone width. Short labels still sit inline; long ones drop to their own line.
  */
 const ROW =
-  "flex min-h-12 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1.5 rounded-lg border border-border px-3 py-2.5 text-sm"
+  "flex min-h-11 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg border border-border px-3 py-2 text-sm"
 
 /** A small on/off pill, shared by the theme segments and the engine choices. */
 function pillClass(selected: boolean) {
@@ -215,13 +215,13 @@ export function ShellBottomNav({
             {pane === "main" ? (
               <>
                 {grid && grid.items.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-1.5">
                     {grid.items.map((item) => (
                       <Fragment key={item.key}>
                         {grid.renderItem(
                           item,
                           cn(
-                            "flex min-h-20 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border p-3 text-xs font-medium active:scale-[0.98]",
+                            "flex min-h-16 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border px-1 py-2 text-xs font-medium active:scale-[0.98]",
                             item.active
                               ? "bg-primary text-primary-foreground"
                               : "bg-card text-card-foreground",

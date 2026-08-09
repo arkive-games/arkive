@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Link, useLocation, useSearch } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   BookOpen,
   Map as MapIcon,
@@ -16,19 +16,8 @@ import {
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import SiteInfo from "@/components/SiteInfo";
-import {
-  MAP_ENGINE_CHOICES,
-  MAP_ENGINE_LABELS,
-  resolveMapEngine,
-  useChooseMapEngine,
-  useStoredMapEngine,
-  type MapEngineChoice,
-} from "@/lib/mapEngineChoice";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
 
-// Same archive entry the desktop top bar links to; on mobile that notice is not
-// rendered, so the link lives in the More sheet instead.
-const ARCHIVE_URL = "https://archive.tc-imba.com/";
 const THEME_OPTIONS: Theme[] = ["auto", "light", "dark"];
 
 /** The three wiki type slugs, in tab order. Confirmed against data/wiki/taxonomy.json. */
@@ -68,15 +57,6 @@ export default function BottomTabBar() {
   const active = activeTab(pathname);
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
   const brandName = getArkiveBrandName(currentLng, t("common:brand.name"));
-
-  // The renderer switcher lives here because the mobile layout renders no top
-  // bar at all — without it a phone could not leave the WebGL default. Reading
-  // `?engine=` with the same precedence MapRoute uses keeps the highlighted
-  // choice matching what is actually on screen. `strict: false` because this bar
-  // is mounted from the root route, which does not declare the param.
-  const engineParam = useSearch({ strict: false, select: (s) => (s as { engine?: unknown }).engine });
-  const activeEngine = resolveMapEngine(engineParam, useStoredMapEngine());
-  const chooseEngine = useChooseMapEngine();
 
   return (
     <ShellBottomNav
@@ -161,31 +141,11 @@ export default function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t("common:menu.switchTheme", "Switch theme"),
       }}
-      engine={{
-        choices: MAP_ENGINE_CHOICES.map((choice) => ({
-          value: choice,
-          label: MAP_ENGINE_LABELS[choice].short,
-        })),
-        current: activeEngine,
-        onChange: (value) => chooseEngine(value as MapEngineChoice),
-        rowLabel: t("common:menu.switchEngine"),
-      }}
       extra={
-        <div className="space-y-3">
-          <ArkiveMobileAccountRow
-            locale={currentLng}
-            label={t("common:auth.login")}
-          />
-          <a
-            href={ARCHIVE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="more-archive"
-            className="inline-block text-sm text-primary hover:underline"
-          >
-            {ARCHIVE_URL}
-          </a>
-        </div>
+        <ArkiveMobileAccountRow
+          locale={currentLng}
+          label={t("common:auth.login")}
+        />
       }
       footer={<SiteInfo />}
     />

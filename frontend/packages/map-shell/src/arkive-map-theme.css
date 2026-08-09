@@ -1,5 +1,6 @@
 :root {
   --radius: 0.625rem;
+  --arkive-content-page-top-space: 1.5rem;
   --arkive-nav-active: #0D74CE;
   --arkive-nav-on-active: #FFFFFF;
   --arkive-nav-accent: #AB6400;
@@ -99,6 +100,10 @@ html {
 
 body {
   font-family: "Noto Sans", "Noto Sans SC", "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.arkive-content-page {
+  padding-top: var(--arkive-content-page-top-space);
 }
 
 .arkive-map-topbar {
@@ -234,6 +239,10 @@ body {
 }
 
 @media (max-width: 767px) {
+  :root {
+    --arkive-content-page-top-space: 17px;
+  }
+
   .arkive-map-page .gmgl-popup {
     width: min(20rem, calc(100vw - 2rem));
   }

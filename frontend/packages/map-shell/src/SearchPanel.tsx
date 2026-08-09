@@ -234,7 +234,7 @@ export function SearchPanel({
                 ? "left-1/2 right-auto w-[calc(100%-2rem)] min-w-72 max-w-[34rem] -translate-x-1/2"
                 : "right-3 w-[290px]",
             )
-          : "flex h-full min-h-0 w-full flex-col gap-2",
+          : "flex min-h-0 max-h-full w-full flex-col gap-2",
         classNames?.root,
       )}
       data-testid="search-panel"

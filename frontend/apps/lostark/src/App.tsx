@@ -239,7 +239,7 @@ export default function App() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-2xl p-6">
+      <main className="arkive-content-page mx-auto max-w-2xl px-6 pb-6">
         <h1 className="text-2xl font-semibold">战斗力计算器</h1>
         <p className="mt-4 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
           数据加载失败：{error}
@@ -251,7 +251,11 @@ export default function App() {
   }
 
   if (!data || !coeffs || !result) {
-    return <main className="p-6 text-sm text-muted-foreground">加载中…</main>
+    return (
+      <main className="arkive-content-page px-6 pb-6 text-sm text-muted-foreground">
+        加载中…
+      </main>
+    )
   }
 
   // entries[0] is this app's current version by convention.
@@ -315,7 +319,7 @@ export default function App() {
         }
       />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-4 sm:px-6">
+      <main className="arkive-content-page mx-auto w-full max-w-6xl flex-1 px-4 pb-16 sm:px-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <select

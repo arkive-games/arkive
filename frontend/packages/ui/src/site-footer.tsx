@@ -70,7 +70,7 @@ function SiteFooter({
         {versionLink ? (
           <span
             data-testid="site-footer-version"
-            className="underline-offset-4 hover:text-foreground [&_a:hover]:underline"
+            className="hidden underline-offset-4 hover:text-foreground md:inline [&_a:hover]:underline"
           >
             {versionLink}
           </span>
