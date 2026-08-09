@@ -278,6 +278,7 @@ body {
   }
 
   [data-content-scroll] :where(input[type="search"], input[type="text"], select) {
+    min-height: 2.75rem;
     border-radius: 0.5rem;
   }
 

@@ -75,24 +75,19 @@ export default function PalListPage() {
       filtersActive={isFilterActive({ ...filter, query: '' })}
     >
         <CatalogDataProvider pals={bundle ?? undefined}>
-          <div className="mb-3 flex flex-wrap items-center gap-3">
+          <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 md:flex md:flex-wrap">
             <Input
               type="search"
               value={filter.query}
               onChange={(e) => setFilter({ ...filter, query: e.target.value })}
               placeholder={t('pal.searchPlaceholder')}
-              className="max-w-xs"
+              className="order-1 max-w-none md:max-w-xs"
             />
-            {bundle ? (
-              <span data-testid="pal-count" className="text-sm text-muted-foreground">
-                {t('pal.count', { count: roster.length })}
-              </span>
-            ) : null}
-            <div className="ml-auto inline-flex overflow-hidden rounded-md border border-border">
+            <div className="order-2 inline-flex overflow-hidden rounded-md border border-border md:order-3 md:ml-auto">
               <Button
                 variant={view === 'grid' ? 'secondary' : 'ghost'}
                 size="sm"
-                className="h-8 rounded-none"
+                className="h-11 rounded-none md:h-8"
                 onClick={() => setView('grid')}
               >
                 {fs.gridView}
@@ -100,12 +95,17 @@ export default function PalListPage() {
               <Button
                 variant={view === 'list' ? 'secondary' : 'ghost'}
                 size="sm"
-                className="h-8 rounded-none"
+                className="h-11 rounded-none md:h-8"
                 onClick={() => setView('list')}
               >
                 {fs.listView}
               </Button>
             </div>
+            {bundle ? (
+              <span data-testid="pal-count" className="order-3 col-span-2 text-sm text-muted-foreground md:order-2">
+                {t('pal.count', { count: roster.length })}
+              </span>
+            ) : null}
           </div>
 
           <ContentPageFilters className="mb-4" />
