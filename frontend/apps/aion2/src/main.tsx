@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createHashHistory, createRouter } from "@tanstack/react-router";
 import { AuthProvider } from "@gamemap/auth";
+import { initBaiduAnalytics, trackPageview } from "@gamemap/map-shell";
 import { AUTH_CONFIG } from "@/lib/auth";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
@@ -20,6 +21,14 @@ const router = import.meta.env.VITE_TOY
 declare module "@tanstack/react-router" {
   interface Register { router: typeof router; }
 }
+
+// Baidu Tongji counts the entry page only, so the router reports every
+// client-side navigation after it.
+initBaiduAnalytics({
+  dev: import.meta.env.DEV,
+  toy: Boolean(import.meta.env.VITE_TOY),
+});
+router.subscribe("onResolved", () => trackPageview());
 
 const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {

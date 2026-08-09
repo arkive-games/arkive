@@ -9,7 +9,13 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { AuthProvider } from '@gamemap/auth'
-import { ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell'
+import {
+  initBaiduAnalytics,
+  trackPageview,
+  ThemeProvider,
+  type Theme,
+  type ThemeStorage,
+} from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
 import 'leaflet/dist/leaflet.css'
 import '@gamemap/map-engine/engine.css'
@@ -312,6 +318,14 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
+
+// Baidu Tongji counts the entry page only, so the router reports every
+// client-side navigation after it.
+initBaiduAnalytics({
+  dev: import.meta.env.DEV,
+  toy: Boolean(import.meta.env.VITE_TOY),
+})
+router.subscribe('onResolved', () => trackPageview())
 
 // Resolve the data-artifact version before first render so every data fetch
 // carries its ?v= cache-buster (initDataVersion never rejects and times out

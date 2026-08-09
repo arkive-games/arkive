@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AuthProvider } from '@gamemap/auth'
-import { ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell'
+import { initBaiduAnalytics, ThemeProvider, type Theme, type ThemeStorage } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 import App from './App'
@@ -28,6 +28,12 @@ const themeStorage: ThemeStorage = {
     }
   },
 }
+
+// Single-page, no router: the entry pageview hm.js reports is the whole visit.
+initBaiduAnalytics({
+  dev: import.meta.env.DEV,
+  toy: Boolean(import.meta.env.VITE_TOY),
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
