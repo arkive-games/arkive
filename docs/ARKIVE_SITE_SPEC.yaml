@@ -1,4 +1,4 @@
-schema_version: "1.0.0"
+schema_version: "1.1.0"
 spec_id: "arkive.site"
 title: "Arkive Site Specification"
 status: "canonical"
@@ -71,10 +71,12 @@ brand_identity:
     and tools in one dependable place.
 
 experience_direction:
-  summary: "A gentle, approachable game archive that feels useful before it feels technical."
+  summary: "A game-world encyclopedia with a quiet tool layer: useful before technical, and content before chrome."
   qualities:
     - "Game-first"
     - "Content-first"
+    - "Encyclopedic but approachable"
+    - "Quiet, work-focused tools"
     - "Warm and close to players"
     - "Relaxed but dependable"
     - "Consistent across games"
@@ -83,6 +85,7 @@ experience_direction:
     - "Cold futuristic decoration"
     - "Game-specific chrome that fragments the Arkive identity"
     - "Decorative containers around every content group"
+  mobile_detail: "Detailed mobile composition and geometry are owned by docs/ARKIVE_MOBILE_EXPERIENCE_SPEC.yaml."
 
 product_model:
   home_page:
@@ -172,11 +175,12 @@ shared_foundations:
         The first visible content surface starts this exact distance below the
         active desktop top bar or mobile header. Page-owned CSS must consume the
         shared token or utility class instead of defining a competing top gap.
-        The mobile value is fixed in pixels because some game apps intentionally
-        increase their root font size on phones; the physical gap must remain
-        consistent across apps.
+        The mobile value is fixed in pixels so the physical gap remains
+        consistent across apps. Detailed mobile geometry belongs to the mobile
+        experience specification.
   typography:
     desktop_root_size: "17px"
+    mobile_root_size: "17px"
     family_stack:
       - "Noto Sans"
       - "Noto Sans SC"

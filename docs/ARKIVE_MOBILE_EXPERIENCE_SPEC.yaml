@@ -1,4 +1,4 @@
-schema_version: "1.1.0"
+schema_version: "1.2.0"
 spec_id: "arkive.mobile-experience"
 title: "Arkive Mobile Web Experience Specification"
 status: "canonical"
@@ -39,6 +39,28 @@ scope:
     - "Native application navigation patterns"
     - "Desktop geometry owned by the desktop map specification"
     - "New product features or invented game data"
+
+design_direction:
+  summary: "A game-world encyclopedia with a quiet tool layer."
+  calibration:
+    design_variance: 5
+    motion_intensity: 2
+    visual_density: 8
+  chrome: "Shared chrome stays neutral and never adopts a game's brand color."
+  semantic_emphasis:
+    navigation_and_selection: "Use the blue semantic roles owned by the color-system specification."
+    focus_and_orientation: "Use the amber semantic roles owned by the color-system specification."
+    high_value_actions: "Reserve orange semantic roles for high-value actions."
+    rule: "Reference semantic tokens from the color-system specification; never copy color values here."
+
+foundations:
+  root_font_size: "17px on desktop and mobile"
+  interface_surface_radius: "0.5rem, approximately 8px"
+  page_gutter: "1rem, approximately 16px"
+  touch_target: "At least 2.75rem, approximately 44px"
+  isolated_map_target: "3rem, approximately 48px"
+  bottom_navigation: "Approximately 4rem plus the bottom safe-area inset"
+  letter_spacing: "Normal; never tighten mobile text to make it fit."
 
 design_principles:
   priority_order:
@@ -101,11 +123,12 @@ shell:
     content_scroller: "Use one vertical content scroller between the mobile header and fixed bottom navigation."
   content_pages:
     header: "Use ArkiveMobileHeader instead of compressing the desktop top bar."
+    header_height: "Approximately 3.5rem before the top safe-area inset."
     header_content:
       - "Arkive mark and localized brand name"
       - "Current page title"
-      - "Login action"
-    optional_header_action: "At most one page-owned action, normally search or filters."
+      - "At most one page action or account control"
+    optional_header_action: "Use at most one page-owned action, normally search or filters; otherwise expose the account control."
     layout: "Collapse multi-column compositions to one mobile reading flow."
     horizontal_padding: "1rem"
     top_spacing: "Use the shared content-page spacing contract owned by the parent specification."
@@ -119,7 +142,7 @@ bottom_navigation:
     maximum_visible_slots: 5
     primary_tabs: "At most four highest-frequency destinations."
     final_slot: "More"
-    minimum_height: "3.5rem plus the bottom safe-area inset"
+    minimum_height: "4rem plus the bottom safe-area inset"
     labels: "Use one line at text-xs and truncate only as a last resort."
   route_inventory: >-
     Every desktop destination must remain reachable. Put lower-frequency routes
@@ -140,8 +163,9 @@ bottom_navigation:
       - "Close after navigation and when crossing to the desktop breakpoint."
       - "Scroll internally when its content exceeds 90dvh."
   active_state: >-
-    Highlight the active route with icon and text treatment. When a route lives
-    in More, More carries the active state without pretending another tab is active.
+    Highlight the active route with a line, icon, and text treatment so state is
+    never conveyed by color alone. When a route lives in More, More carries the
+    active state without pretending another tab is active.
 
 map_controls:
   stack:
@@ -149,6 +173,7 @@ map_controls:
     order: "Zoom controls, search, and filters form one non-overlapping vertical stack."
     minimum_isolated_target: "3rem"
     bottom_clearance: "No control may be covered by the bottom navigation."
+    visual_composition: "Zoom, search, and filters read as one right-edge vertical control stack."
   renderer: "Do not expose a map-renderer selector on mobile."
   search_sheet:
     empty_state: "Use content height; do not leave a large blank results region."
@@ -160,19 +185,33 @@ map_controls:
     trigger: "Use a primary-colored outline, not a solid fill."
     active_state: "Add a semantic active indicator in addition to the outline."
     content: "Remove empty filter groups and options that produce no results."
+  triggers:
+    search: "Use a neutral surface with a blue semantic search icon."
+    filter: "Use a blue semantic outline and add an amber semantic indicator when filters are active."
+  coordinate_and_status_pills: "Use compact dark overlays with high-contrast text on mobile maps."
   marker_details:
     maximum_width: "Viewport width minus 2rem"
     maximum_height: "The smaller of 72dvh and 32rem"
     overflow: "Scroll inside the detail surface."
     contract: "Follow the shared marker-detail content contract from the desktop map specification."
 
+portal_home:
+  first_screen: "Lead with discovery or a continue task, never a marketing hero."
+  search: "Use a compact inline search control."
+  featured_game: "Present a real continue-exploring record with useful state, not a decorative promotion."
+  game_media: "Use inspectable game artwork in a stable 16:9 frame."
+  join_section: "Keep the participation section unframed and separate it with a divider."
+
 catalogs_and_lists:
+  toolbar:
+    composition: "Place search and the view switch on the same row."
+    narrow_phone: "Move the result count summary below the toolbar when horizontal space is insufficient."
   search_and_filters:
     search_border: "Use the semantic primary outline in light and dark themes."
     filter_trigger: "Use a primary outline and neutral surface; a selected state must add background and text contrast."
     filter_consistency: "Rarity, category, and other peer filters use the same geometry and state language."
   card_grids:
-    default: "Use three columns for compact image-led catalog records when names and metadata remain readable."
+    default: "Use three columns for compact image-led catalog records with short names when identity remains readable."
     fallback: "Use two columns or a list when three columns would clip essential identity."
     geometry: "Stable tracks and media dimensions prevent content-driven layout shifts."
   list_mode:
@@ -191,6 +230,7 @@ catalogs_and_lists:
     page_size: "Choose by record density; do not force one count across unlike catalogs."
 
 detail_pages:
+  composition: "Lead with a summary-first identity block, then use collapsible sections for depth."
   entity_header:
     composition: "Compact artwork, localized name, game-facing number, and essential badges."
     localization: "Hide raw internal ids in Chinese UI unless they are required for a user workflow."
@@ -211,6 +251,9 @@ detail_pages:
   missing_data: "Omit absent descriptions and untranslated raw keys instead of printing placeholders or internal ids."
 
 tools_and_calculators:
+  workflow_surface:
+    composition: "Selector, input, and result form one continuous framed workflow."
+    separation: "Use internal dividers instead of separate decorative cards."
   modes:
     control: "Use a segmented control at the top for peer modes."
     selected_state: "A strong primary surface uses primary-foreground text."

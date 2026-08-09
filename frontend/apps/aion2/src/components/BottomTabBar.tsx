@@ -9,7 +9,6 @@ import {
   Users,
 } from "lucide-react";
 import { ShellBottomNav } from "@gamemap/map-shell";
-import { ArkiveAccountControl } from "@gamemap/auth";
 import { useTheme, type Theme } from "@/context/ThemeContext";
 import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import SiteInfo from "@/components/SiteInfo";
@@ -137,9 +136,6 @@ export default function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t("common:menu.switchTheme", "Switch theme"),
       }}
-      extra={active === "map" ? (
-        <ArkiveAccountControl language={currentLng} variant="mobileRow" />
-      ) : undefined}
       footer={<SiteInfo />}
     />
   );

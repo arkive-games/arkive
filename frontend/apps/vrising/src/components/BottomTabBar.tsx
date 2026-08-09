@@ -1,7 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { BookOpen, Database, History, Map, Menu, Swords } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { ArkiveAccountControl } from '@gamemap/auth'
 import {
   ShellBottomNav,
   useTheme,
@@ -79,7 +78,6 @@ export function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('themeMenu'),
       }}
-      extra={active === '/' ? <ArkiveAccountControl language={lng} variant="mobileRow" /> : undefined}
       footer={<SiteInfo />}
     />
   )

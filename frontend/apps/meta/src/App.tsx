@@ -152,7 +152,7 @@ export default function App() {
   }
 
   return (
-    <div id="top" className="min-h-dvh overflow-x-hidden pb-[calc(3.5rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
+    <div id="top" className="min-h-dvh overflow-x-hidden pb-[calc(4rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
       <ArkiveMobileHeader
         homeUrl="#top"
         homeLabel={brandName}

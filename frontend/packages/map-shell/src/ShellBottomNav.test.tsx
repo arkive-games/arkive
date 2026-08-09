@@ -92,10 +92,10 @@ describe("ShellBottomNav", () => {
     const api = render(<ShellBottomNav {...props()} />)
     expect(api.getByTestId("bottom-tab-bar").className).toContain("arkive-bottom-nav")
     expect(api.getByTestId("bottom-tab-bar").className).not.toContain("backdrop-blur")
-    expect(api.getByTestId("tab-/").className).toContain("min-h-14")
+    expect(api.getByTestId("tab-/").className).toContain("min-h-16")
     open(api)
     expect(api.getByTestId("more-sheet").className).toContain(
-      "max-h-[min(90dvh,calc(100dvh-4.5rem))]",
+      "max-h-[min(90dvh,calc(100dvh-5rem))]",
     )
     expect(api.getByTestId("more-lang-open")).toBeTruthy()
     expect(api.getByTestId("more-theme-auto")).toBeTruthy()
@@ -144,35 +144,14 @@ describe("ShellBottomNav", () => {
     })
   })
 
-  it("marks the selected theme and engine with aria-pressed", () => {
-    const api = render(
-      <ShellBottomNav
-        {...props({
-          engine: {
-            choices: [
-              { value: "gl", label: "GL" },
-              { value: "leaflet", label: "DOM" },
-            ],
-            current: "gl",
-            onChange: vi.fn(),
-            rowLabel: "Renderer",
-          },
-        })}
-      />,
-    )
+  it("marks the selected theme with aria-pressed", () => {
+    const api = render(<ShellBottomNav {...props()} />)
     open(api)
     expect(api.getByTestId("more-theme-auto").getAttribute("aria-pressed")).toBe("true")
     const darkTheme = api.getByTestId("more-theme-dark")
     expect(darkTheme.getAttribute("aria-pressed")).toBe("false")
     expect(darkTheme.className).toContain("whitespace-normal")
     expect(darkTheme.className).not.toContain("truncate")
-    expect(api.getByTestId("more-engine-gl").getAttribute("aria-pressed")).toBe("true")
-  })
-
-  it("omits the engine row entirely for a single-engine app", () => {
-    const api = render(<ShellBottomNav {...props()} />)
-    open(api)
-    expect(api.queryByTestId("more-engine-gl")).toBeNull()
   })
 
   it("closes when the path changes, so the sheet cannot cover its destination", () => {
@@ -194,11 +173,10 @@ describe("ShellBottomNav", () => {
     expect(api.queryByTestId("more-sheet")).toBeNull()
   })
 
-  it("renders the grid, brand, extra and footer slots where given", () => {
+  it("renders the grid and footer slots where given", () => {
     const api = render(
       <ShellBottomNav
         {...props({
-          more: { label: "More", icon: <i />, title: "More", brand: <a data-testid="brand">Arkive</a> },
           grid: {
             items: [{ key: "w", label: "Wiki", icon: <i />, active: true }],
             renderItem: (item, className) => (
@@ -207,14 +185,11 @@ describe("ShellBottomNav", () => {
               </a>
             ),
           },
-          extra: <span data-testid="extra" />,
           footer: <span data-testid="footer" />,
         })}
       />,
     )
     open(api)
-    expect(api.getByTestId("brand")).toBeTruthy()
-    expect(api.getByTestId("extra")).toBeTruthy()
     expect(api.getByTestId("footer")).toBeTruthy()
     // An active grid item is filled, matching the tab-strip convention.
     expect(api.getByTestId("grid-w").className).toContain("bg-primary")

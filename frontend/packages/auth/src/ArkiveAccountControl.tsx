@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from "react"
 import {
   ArkiveMobileAccountButton,
-  ArkiveMobileAccountRow,
   ShellAccountMenu,
   type ArkiveMapTopBarAccountItem,
 } from "@gamemap/map-shell"
@@ -23,7 +22,7 @@ export interface ArkiveAccountControlProps {
   /** Extra entries in the signed-in menu, e.g. a link to a profile page. */
   items?: ArkiveMapTopBarAccountItem[]
   /** Adapts the anonymous trigger to its host surface. */
-  variant?: "topbar" | "mobileHeader" | "mobileRow"
+  variant?: "topbar" | "mobileHeader"
   /** Rendered instead of nothing when auth is unavailable. */
   fallback?: ReactNode
 }
@@ -74,10 +73,8 @@ export function ArkiveAccountControl({
     items,
   }
 
-  const anonymousTrigger = auth.status === "anonymous" && variant !== "topbar"
-    ? variant === "mobileHeader"
-      ? <ArkiveMobileAccountButton label={strings.signIn} onClick={() => setOpen(true)} />
-      : <ArkiveMobileAccountRow label={strings.signIn} onSelect={() => setOpen(true)} />
+  const anonymousTrigger = auth.status === "anonymous" && variant === "mobileHeader"
+    ? <ArkiveMobileAccountButton label={strings.signIn} onClick={() => setOpen(true)} />
     : <ShellAccountMenu account={account} />
 
   return (

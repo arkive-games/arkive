@@ -42,8 +42,6 @@ export interface ShellBottomNavProps {
     /** True when the current page is reachable only through this sheet. */
     active?: boolean
     title: ReactNode
-    /** Header slot beside the title, e.g. a link out to the brand hub. */
-    brand?: ReactNode
   }
   /** Secondary pages, as a card grid inside the sheet. */
   grid?: {
@@ -68,15 +66,6 @@ export interface ShellBottomNavProps {
     onChange: (value: string) => void
     rowLabel: ReactNode
   }
-  /** Renderer switcher. Omit for an app with only one engine. */
-  engine?: {
-    choices: { value: string; label: string }[]
-    current: string
-    onChange: (value: string) => void
-    rowLabel: ReactNode
-  }
-  /** App-specific rows, below the settings block. */
-  extra?: ReactNode
   /** Rendered last, e.g. the site-info panel. */
   footer?: ReactNode
   /**
@@ -102,7 +91,7 @@ type MorePane = "main" | "language"
 const ROW =
   "arkive-setting-row flex min-h-12 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg border border-border px-3 py-2 text-sm"
 
-/** A small on/off pill, shared by the theme segments and the engine choices. */
+/** A small on/off pill shared by the theme segments. */
 function pillClass(selected: boolean) {
   return cn(
     "flex min-h-11 min-w-0 items-center justify-center whitespace-normal px-2 py-1 text-center text-xs font-semibold leading-tight transition-colors",
@@ -112,8 +101,7 @@ function pillClass(selected: boolean) {
 
 /**
  * The phone navigation: a fixed tab strip plus the "More" sheet holding
- * everything that does not fit — secondary pages, language, theme, the renderer
- * switcher and the site-info panel.
+ * secondary pages, language, theme, and the site-info panel.
  *
  * Shared so the apps cannot drift into two different mobile designs, which is
  * exactly what had happened: one had a drill-down language picker and a
@@ -126,8 +114,6 @@ export function ShellBottomNav({
   grid,
   language,
   theme,
-  engine,
-  extra,
   footer,
   pathname,
   classNames,
@@ -150,7 +136,7 @@ export function ShellBottomNav({
 
   const tabClass = (active?: boolean) =>
     cn(
-      "arkive-bottom-tab relative flex min-h-14 flex-1 touch-manipulation flex-col items-center justify-center gap-1 px-0.5 py-1.5 text-xs font-semibold transition-colors active:bg-accent/70",
+      "arkive-bottom-tab relative flex min-h-16 flex-1 touch-manipulation flex-col items-center justify-center gap-1 px-0.5 py-1.5 text-xs font-semibold transition-colors active:bg-accent/70",
       active
         ? "text-[color:var(--arkive-nav-active)] after:absolute after:left-1/2 after:top-0 after:h-[3px] after:w-10 after:-translate-x-1/2 after:rounded-b-sm after:bg-primary"
         : "text-muted-foreground",
@@ -163,7 +149,7 @@ export function ShellBottomNav({
       <nav
         data-testid="bottom-tab-bar"
         className={cn(
-          "arkive-bottom-nav fixed inset-x-0 bottom-0 z-[2500] flex min-h-[calc(3.5rem+env(safe-area-inset-bottom))] border-t border-border bg-background/98 text-foreground md:hidden",
+          "arkive-bottom-nav fixed inset-x-0 bottom-0 z-[2500] flex min-h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-border bg-background/98 text-foreground md:hidden",
           classNames?.root,
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -201,7 +187,7 @@ export function ShellBottomNav({
           <SheetContent
             side="bottom"
             data-testid="more-sheet"
-            className="arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+3.5rem)] max-h-[min(90dvh,calc(100dvh-4.5rem))] overflow-y-auto rounded-t-lg border"
+            className="arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(90dvh,calc(100dvh-5rem))] overflow-y-auto rounded-t-lg border"
             style={{ paddingBottom: "1rem" }}
           >
             {/* `pr-8` keeps the header clear of the sheet's absolute close button. */}
@@ -284,29 +270,6 @@ export function ShellBottomNav({
                   </div>
                 </div>
 
-                {engine && (
-                  // Tapping a choice deliberately leaves the sheet OPEN (unlike
-                  // the grid links) so the active state visibly moves.
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
-                    <span className="text-xs text-muted-foreground">{engine.rowLabel}</span>
-                    <div className="flex gap-1">
-                      {engine.choices.map(({ value, label }) => (
-                        <button
-                          key={value}
-                          type="button"
-                          data-testid={`more-engine-${value}`}
-                          aria-pressed={engine.current === value}
-                          onClick={() => engine.onChange(value)}
-                          className={cn("rounded", pillClass(engine.current === value))}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {extra && <div className="mt-3 border-t border-border pt-3">{extra}</div>}
                 {footer && <div className="mt-3 border-t border-border pt-3">{footer}</div>}
               </>
             ) : (

@@ -20,7 +20,6 @@ export {
   type ArkiveMobileAccountButtonProps,
   type ArkiveMobileHeaderProps,
 } from "./ArkiveMobileHeader"
-export { ArkiveMobileAccountRow, type ArkiveMobileAccountRowProps } from "./ArkiveMobileAccountRow"
 export {
   ArkiveMobileMapControls,
   type ArkiveMobileMapControlsProps,

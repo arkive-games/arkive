@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from "@testing-library/react"
+import { cleanup, render } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { ArkiveMobileAccountRow } from "./ArkiveMobileAccountRow"
 import { ArkiveMobileHeader } from "./ArkiveMobileHeader"
 
 afterEach(cleanup)
@@ -25,17 +24,6 @@ describe("Arkive mobile chrome", () => {
     expect(api.getByText("Card library")).toBeTruthy()
     expect(api.getByRole("button", { name: "Search" })).toBeTruthy()
     expect(api.getByRole("button", { name: "Log in" })).toBeTruthy()
-  })
-
-  it("delegates the More sheet account action to the host", () => {
-    let selected = false
-    const api = render(
-      <ArkiveMobileAccountRow label="Log in" onSelect={() => { selected = true }} />,
-    )
-
-    fireEvent.click(api.getByRole("button", { name: "Log in" }))
-
-    expect(selected).toBe(true)
   })
 
   it("accepts a signed-in account control in place of the login dialog", () => {
