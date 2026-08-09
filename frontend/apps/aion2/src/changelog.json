@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.15.0",
+      "date": "2026-08-10",
+      "commit": "c2a15831342f961a7f3df595c85497e83e38df2b",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Remembers map display choices, completion progress, and wiki browsing context.",
+            "zh-CN": "记住地图显示选项、完成进度和维基浏览上下文。",
+            "zh-TW": "記住地圖顯示選項、完成進度和 Wiki 瀏覽內容。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.14.1",
       "date": "2026-08-09",
       "commit": "8bc793d8dfb1eb915bd162bcec24a24aae036fc3",
