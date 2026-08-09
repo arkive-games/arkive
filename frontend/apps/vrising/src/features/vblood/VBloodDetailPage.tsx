@@ -3,7 +3,16 @@ import { Link, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Check, ChevronLeft, FlaskConical, Hammer, MapPinned, Sparkles } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
-import { loadVBloodBosses, useCompletedVBlood, type VBloodBoss } from '../../lib/vblood'
+import {
+  loadVBloodBosses,
+  loadVBloodRewards,
+  rewardDisplayName,
+  useCompletedVBlood,
+  type VBloodAbilityReward,
+  type VBloodBoss,
+  type VBloodRewardRecord,
+  type VBloodRewardRef,
+} from '../../lib/vblood'
 
 function RewardSection({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
@@ -17,13 +26,47 @@ function RewardSection({ icon, title, children }: { icon: ReactNode; title: stri
   )
 }
 
-function PendingData() {
+function EmptyReward() {
   const { t } = useTranslation()
   return (
     <div className="rounded-lg border border-dashed border-border bg-muted/30 px-3 py-4 text-sm leading-relaxed text-muted-foreground">
-      <p className="font-medium text-foreground">{t('vblood.rewardPendingTitle')}</p>
-      <p className="mt-1">{t('vblood.rewardPending')}</p>
+      {t('vblood.rewardNone')}
     </div>
+  )
+}
+
+function RewardList({ values }: { values: (VBloodRewardRef | VBloodAbilityReward)[] }) {
+  const { t } = useTranslation()
+  const [expanded, setExpanded] = useState(false)
+  if (!values.length) return <EmptyReward />
+  const visible = expanded ? values : values.slice(0, 8)
+  return (
+    <>
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {visible.map((value) => (
+          <li key={`${value.prefabId}-${value.prefabName}`} className="min-w-0 rounded-lg border border-primary/10 bg-secondary/45 px-3 py-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="min-w-0 text-sm font-semibold leading-snug">{rewardDisplayName(value.prefabName)}</p>
+              {'kind' in value ? (
+                <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                  {t(`vblood.${value.kind}`)}
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-1 truncate font-mono text-xs text-muted-foreground" title={value.prefabName}>{value.prefabName}</p>
+          </li>
+        ))}
+      </ul>
+      {values.length > 8 ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="mt-3 text-sm font-semibold text-primary transition hover:underline"
+        >
+          {expanded ? t('vblood.showLess') : t('vblood.showMore', { count: values.length - 8 })}
+        </button>
+      ) : null}
+    </>
   )
 }
 
@@ -32,21 +75,30 @@ export default function VBloodDetailPage() {
   const { id } = useParams({ from: '/vblood/$id' })
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const [boss, setBoss] = useState<VBloodBoss | null | undefined>(undefined)
+  const [rewards, setRewards] = useState<VBloodRewardRecord | null | undefined>(undefined)
   const { completed, toggleCompleted } = useCompletedVBlood()
 
   useEffect(() => {
     let cancelled = false
     setBoss(undefined)
-    loadVBloodBosses(lng)
-      .then((rows) => { if (!cancelled) setBoss(rows.find((row) => row.id === id) ?? null) })
+    setRewards(undefined)
+    Promise.all([loadVBloodBosses(lng), loadVBloodRewards()])
+      .then(([rows, rewardFile]) => {
+        if (cancelled) return
+        setBoss(rows.find((row) => row.id === id) ?? null)
+        setRewards(rewardFile.bosses.find((row) => row.bossPrefab === id) ?? null)
+      })
       .catch((error: unknown) => {
         console.error(error)
-        if (!cancelled) setBoss(null)
+        if (!cancelled) {
+          setBoss(null)
+          setRewards(null)
+        }
       })
     return () => { cancelled = true }
   }, [id, lng])
 
-  if (boss === undefined) {
+  if (boss === undefined || rewards === undefined) {
     return <ContentPage active="/vblood" title={t('vblood.title')}><div className="py-20 text-center text-muted-foreground">{t('loading')}</div></ContentPage>
   }
   if (!boss) {
@@ -110,10 +162,10 @@ export default function VBloodDetailPage() {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <RewardSection icon={<Sparkles className="size-4" />} title={t('vblood.abilities')}><PendingData /></RewardSection>
-        <RewardSection icon={<FlaskConical className="size-4" />} title={t('vblood.recipes')}><PendingData /></RewardSection>
-        <RewardSection icon={<Hammer className="size-4" />} title={t('vblood.buildings')}><PendingData /></RewardSection>
-        <RewardSection icon={<BookOpen className="size-4" />} title={t('vblood.research')}><PendingData /></RewardSection>
+        <RewardSection icon={<Sparkles className="size-4" />} title={t('vblood.abilities')}><RewardList values={rewards?.abilities ?? []} /></RewardSection>
+        <RewardSection icon={<FlaskConical className="size-4" />} title={t('vblood.recipes')}><RewardList values={rewards?.recipes ?? []} /></RewardSection>
+        <RewardSection icon={<Hammer className="size-4" />} title={t('vblood.buildings')}><RewardList values={rewards?.blueprints ?? []} /></RewardSection>
+        <RewardSection icon={<BookOpen className="size-4" />} title={t('vblood.research')}><RewardList values={rewards?.tech ?? []} /></RewardSection>
       </div>
     </ContentPage>
   )

@@ -28,6 +28,7 @@ from .calibration import (
 from .extract import read_parsed
 from .tiles import COUNT, TILE
 from ..markers.emit import load_marker_payload
+from ..knowledge.rewards import load_vblood_reward_payload
 
 _HERE = Path(__file__).resolve().parent
 _TYPES_YAML = _HERE.parent / "data_src" / "types.yaml"
@@ -187,6 +188,9 @@ def run_emit(parsed_dir: Path, data_out: Path) -> None:
     regions = json.loads(regions_path.read_text(encoding="utf-8"))["regions"]
 
     marker_payload = load_marker_payload(parsed_dir / "markers")
+    reward_payload = load_vblood_reward_payload(
+        parsed_dir / "knowledge" / "vblood-rewards.json"
+    )
     ds = build_dataset(parsed, regions, marker_payload)
 
     def w(rel, obj):
@@ -204,6 +208,7 @@ def run_emit(parsed_dir: Path, data_out: Path) -> None:
         for mid in ds["markers"]:
             w(f"locales/{lng}/markers/{mid}.json", loc["markers"][mid])
             w(f"locales/{lng}/regions/{mid}.json", loc["regions"][mid])
+    w("knowledge/vblood-rewards.json", reward_payload)
 
     for mid, lst in ds["markers"].items():
         print(f"emit: {mid} {len(lst)} markers, {len(ds['regions'][mid])} regions")

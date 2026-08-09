@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { loadVBloodBosses, readCompletedVBlood } from './vblood'
+import { loadVBloodBosses, readCompletedVBlood, rewardDisplayName } from './vblood'
 
 const markerPayload = {
   markers: [
@@ -39,5 +39,12 @@ describe('V Blood catalog', () => {
   it('ignores malformed completion storage', () => {
     localStorage.setItem('vrising.vblood.completed', '{bad')
     expect(readCompletedVBlood()).toEqual(new Set())
+  })
+
+  it('turns verified prefab identifiers into readable labels', () => {
+    expect(rewardDisplayName('Recipe_Weapon_GreatSword_T08_Sanguine'))
+      .toBe('Weapon Great Sword T08 Sanguine')
+    expect(rewardDisplayName('AB_Shapeshift_Wolf_Group'))
+      .toBe('Shapeshift Wolf Group')
   })
 })

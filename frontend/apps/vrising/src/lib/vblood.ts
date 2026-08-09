@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { loadMarkers, type MarkerRow } from './data'
 import { markerImageUrl } from './assets'
+import { dataUrl } from './urls'
 
 const MAP_ID = 'Vardoran'
 const COMPLETED_KEY = 'vrising.vblood.completed'
@@ -21,6 +22,60 @@ export interface VBloodBoss {
   movement: 'fixed' | 'roaming'
   portrait?: string
   locations: VBloodLocation[]
+}
+
+export interface VBloodRewardRef {
+  prefabId: number
+  prefabName: string
+}
+
+export interface VBloodAbilityReward extends VBloodRewardRef {
+  kind: 'passive' | 'shapeshift'
+}
+
+export interface VBloodTechReward extends VBloodRewardRef {
+  recipes: VBloodRewardRef[]
+  blueprints: VBloodRewardRef[]
+  passives: VBloodRewardRef[]
+  shapeshifts: VBloodRewardRef[]
+}
+
+export interface VBloodRewardRecord {
+  bossPrefabId: number
+  bossPrefab: string
+  displayName: string
+  tech: VBloodTechReward[]
+  recipes: VBloodRewardRef[]
+  blueprints: VBloodRewardRef[]
+  abilities: VBloodAbilityReward[]
+}
+
+interface VBloodRewardFile {
+  schemaVersion: 1
+  bosses: VBloodRewardRecord[]
+}
+
+let rewardFilePromise: Promise<VBloodRewardFile> | undefined
+
+export function loadVBloodRewards(): Promise<VBloodRewardFile> {
+  rewardFilePromise ??= fetch(dataUrl('knowledge/vblood-rewards.json')).then(async (response) => {
+    if (!response.ok) throw new Error(`V Blood rewards: ${response.status}`)
+    const payload = await response.json() as VBloodRewardFile
+    if (payload.schemaVersion !== 1 || !Array.isArray(payload.bosses)) {
+      throw new Error('V Blood rewards: unsupported data schema')
+    }
+    return payload
+  })
+  return rewardFilePromise
+}
+
+export function rewardDisplayName(prefabName: string): string {
+  return prefabName
+    .replace(/^(?:Recipe_|Tech_|TM_|BP_|AB_|SpellPassive_)/, '')
+    .replace(/_/g, ' ')
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function movementOf(marker: MarkerRow): 'fixed' | 'roaming' {
