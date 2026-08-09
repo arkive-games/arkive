@@ -3,14 +3,14 @@
     {
       "version": "1.14.1",
       "date": "2026-08-09",
-      "commit": "27f27db9ca8bf989f9820363d8fa966d52fb077b",
+      "commit": "8bc793d8dfb1eb915bd162bcec24a24aae036fc3",
       "changes": [
         {
           "kind": "improvement",
           "text": {
-            "en-US": "Rebuilt the mobile map and content chrome with clear control stacking, adaptive marker density, and safer bottom sheets.",
-            "zh-CN": "重置移动端地图与内容导航，统一控件层级、按缩放显示点位，并优化底部面板。",
-            "zh-TW": "重置行動版地圖與內容導覽，統一控制項層級、依縮放顯示標記，並最佳化底部面板。"
+            "en-US": "Rebuilt the mobile map and wiki navigation: search, filter and zoom controls now stack in one predictable column, bottom sheets stay clear of the navigation bar, and zooming out thins the densest marker layers.",
+            "zh-CN": "重置移动端地图与百科导航：搜索、筛选与缩放控件排成一列，底部面板不再遮挡导航栏，缩小时自动精简最密集的点位图层。",
+            "zh-TW": "重置行動版地圖與百科導覽：搜尋、篩選與縮放控制項排成一欄，底部面板不再遮擋導覽列，縮小時自動精簡最密集的標記圖層。"
           }
         }
       ]
