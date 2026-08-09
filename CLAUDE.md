@@ -190,6 +190,24 @@ polygon, and human review of `calibration/accepted_overlay.png`.
     tests still pass, but the compare link 404s once pushed. So after any rebase (in
     particular when integrating a worktree branch), run `pnpm changelog:verify` and
     re-point the newest entries at their rewritten SHAs.
+- **Routes and `edgeone.json` (update both in the same commit):** each app owns
+  `frontend/apps/<app>/edgeone.json`, holding the rewrites EdgeOne needs to serve a
+  client-side route that has no file behind it. **Add a route without adding its rule
+  and nothing looks broken** — the page works in dev and via in-app navigation, then
+  404s on reload, deep link, or anything shared. The workflow's post-deploy check
+  requests a deep link precisely to catch this.
+  - Rules are **enumerated, never a `/*` catch-all.** EdgeOne rewrites support no
+    negation and no filesystem fallback, so a catch-all shadows the static assets. The
+    catch-all was tried (`1181cdf7`) and reverted (`ebdc6e04`); see `c0b21212`.
+  - Every path needs **both** `"/x"` and `"/x*"`, because matching is against path
+    **plus query** (`3a6d89c0`) — `/x?tab=1` misses a bare `/x` rule. Nested paths add
+    `"/x/*"`, which also covers deeper children (`/dungeons/*` serves
+    `/dungeons/:id/layouts/:variant`).
+  - `meta` has no file and needs none: it has no router, only hash-toggled views.
+  - The file sits in the app directory, **not** `public/`. `.github/workflows/deploy.yml`
+    copies it into `dist/` at deploy time (EdgeOne reads it from the upload root), while
+    `public/` would also copy it into the Toy bundle — which `scripts/toy-build.mjs`
+    deliberately excludes it from as host config rather than content.
 
 ## Lost Ark — no first-party extractor
 Lost Ark is the one game whose extractor we do **not** own. uex/unex/gdex exist because Unreal,
@@ -256,6 +274,24 @@ anywhere — only the 43 general ones are covered.
   and `docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml` only for desktop map UI work.
   Files under `docs/superpowers/plans/` and `docs/superpowers/specs/` are historical
   decision records; they never override these canonical top-level specifications.
+- **Production deploys (EdgeOne, built here):** `.github/workflows/deploy.yml` builds
+  `meta`, `aion2`, `palworld` and `vrising` on a push touching `frontend/**`, then
+  uploads each `dist/` with `edgeone makers deploy -n <project>`. EdgeOne itself runs
+  **no build** for this repo — that is the point: its free tier caps builds at 500/month,
+  while this repo is public so standard-runner Actions minutes are unmetered. The
+  `data`/`resource` repos still use EdgeOne's own Git integration; this is per-project.
+  Two consequences worth knowing before changing anything here:
+  - **The target projects must be of the "direct upload" type.** The CLI refuses to
+    deploy into a Git-connected project (`edgeone makers deploy -h` says so) and the two
+    types cannot be converted — a Git project has to be replaced, not reconfigured. Note
+    `-n` **creates** a project when the name is free, so a typo publishes to a new empty
+    project rather than failing; the names live in the workflow matrix to be reviewed.
+  - **`VITE_*` values belong in the workflow, not the console.** Vite inlines them at
+    build time, so moving the build moved the config. Only `VITE_DATA_BASE_URL` and
+    `VITE_RESOURCE_BASE_URL` are still needed (meta needs neither); everything else has
+    an in-code production default. An absent matrix key renders as `""`, which the apps
+    resolve with `??` rather than truthiness — that builds green and 404s every fetch, so
+    the workflow guards for it explicitly.
 - **Bilibili Toy publishing:** each app can ship as a single self-contained toy
   (site + data + resource bundled). `frontend/apps/<app>/toy.config.json` holds the
   identity (slug is permanent once published; palworld is live as `arkive-palworld`).

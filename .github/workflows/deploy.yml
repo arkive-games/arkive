@@ -1,0 +1,201 @@
+# Builds the four EdgeOne-hosted apps here and uploads each dist with the EdgeOne
+# CLI, replacing the platform's own Git-triggered build.
+#
+# Why not let EdgeOne build: its build settings live in a console nobody reviews,
+# so the values drift silently — VITE_API_BASE_URL pointed at the aion2 SITE
+# rather than the API until 591daff7 caught it. Building here puts the recipe in
+# review, and a direct-upload project consumes none of EdgeOne's 500 builds/month.
+# This repo is public, so standard-runner minutes are free: neither meter is
+# charged.
+#
+# The cost is that the target projects must be of the "direct upload" type. The
+# CLI refuses to deploy into a Git-connected project and the two types cannot be
+# converted, so each project here was recreated rather than reconfigured.
+
+name: Deploy to EdgeOne Pages
+
+on:
+  push:
+    branches: [master]
+    # Nothing outside the frontend can change what gets uploaded, so a tools/ or
+    # docs/ commit must not redeploy four production sites.
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+# Unlike the retired GitHub Pages workflow this pushes no branch and needs no
+# write scope anywhere.
+permissions:
+  contents: read
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      # Four independent sites on four independent domains deserve four
+      # independent fates: one app's broken build must not hold back the others.
+      fail-fast: false
+      matrix:
+        app: [meta, aion2, palworld, vrising]
+        include:
+          # `project` is the EdgeOne project name. It is spelled out here rather
+          # than derived from `app` because `deploy -n` CREATES a project when the
+          # name is free — a typo would silently publish to a new empty project
+          # instead of failing.
+          #
+          # `domain` arms the post-deploy check. Leave it out while an app still
+          # points at its old Git-connected project, or the check would verify the
+          # site this workflow did not deploy.
+          #
+          # `data_base_url` / `resource_base_url` are the ONLY build-time values
+          # these apps still need. Everything else resolves from an in-code
+          # production default: the API from packages/auth/src/config.ts, the home
+          # link from packages/map-shell/src/arkiveHome.ts, the footer from
+          # packages/ui/src/site-footer.tsx, the sibling-site links from
+          # apps/meta/src/sites.ts.
+          - app: meta
+            project: arkive-meta
+            smoke_path: /
+          - app: aion2
+            project: arkive-aion2
+            smoke_path: /wiki
+            data_base_url: https://data-aion2.tc-imba.com
+            resource_base_url: https://resource-aion2.tc-imba.com
+          - app: palworld
+            project: arkive-palworld
+            smoke_path: /breeding
+            data_base_url: https://data-palworld.tc-imba.com
+            resource_base_url: https://resource-palworld.tc-imba.com
+          - app: vrising
+            project: arkive-vrising
+            smoke_path: /changelog
+            data_base_url: https://data-vrising.tc-imba.com
+            resource_base_url: https://resource-vrising.tc-imba.com
+
+    # Two pushes in quick succession must not race the same project. Queue rather
+    # than cancel: an interrupted upload is a half-published site.
+    concurrency:
+      group: edgeone-${{ matrix.app }}
+      cancel-in-progress: false
+
+    name: ${{ matrix.app }}
+
+    steps:
+      - name: Checkout
+        # vite.config.ts stamps the build commit via `git rev-parse HEAD` at
+        # config-load time, so this needs a real checkout rather than a tarball.
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # Read the version from "packageManager" in the manifest rather than
+          # pinning it here, so CI cannot drift from local installs.
+          package_json_file: frontend/package.json
+
+      - name: Setup Node
+        # Must follow the pnpm setup: `cache: pnpm` shells out to pnpm to locate
+        # the store.
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Check this app's build variables are present
+        # An absent matrix key renders as "", and the apps resolve these with `??`
+        # rather than truthiness (apps/palworld/src/lib/urls.ts). So an empty value
+        # does not fall back to the production host — it makes every data fetch
+        # relative to the site's own origin, and the build still SUCCEEDS. Fail
+        # here, where it is visible, instead of shipping a site whose data 404s.
+        if: matrix.app != 'meta'
+        env:
+          DATA_BASE_URL: ${{ matrix.data_base_url }}
+          RESOURCE_BASE_URL: ${{ matrix.resource_base_url }}
+        run: |
+          [ -n "$DATA_BASE_URL" ] || { echo "::error::data_base_url is empty for ${{ matrix.app }}"; exit 1; }
+          [ -n "$RESOURCE_BASE_URL" ] || { echo "::error::resource_base_url is empty for ${{ matrix.app }}"; exit 1; }
+
+      - name: Build
+        working-directory: frontend
+        env:
+          # Public URLs, so they live in the workflow rather than in repository
+          # secrets: a value nobody can read during review is a value nobody
+          # notices going stale.
+          #
+          # VITE_PUBLIC_BASE is deliberately unset. The retired Pages workflow set
+          # it to /aion2-interactive-map/; EdgeOne serves each app at its domain
+          # root. VITE_TOY is likewise unset — it switches the apps to the hash
+          # routing the Bilibili Toy build needs.
+          VITE_DATA_BASE_URL: ${{ matrix.data_base_url }}
+          VITE_RESOURCE_BASE_URL: ${{ matrix.resource_base_url }}
+        run: pnpm --filter ${{ matrix.app }} build
+
+      - name: Add the EdgeOne host config to the upload
+        # EdgeOne reads edgeone.json from the ROOT of the uploaded directory, so it
+        # has to be copied in beside index.html. It is kept in the app directory
+        # rather than apps/<app>/public/ because Vite copies publicDir into every
+        # build — including the separate dist-toy build, whose packer deliberately
+        # excludes this filename as host config rather than content
+        # (frontend/scripts/toy-build.mjs).
+        #
+        # meta has no client-side router and so needs no rewrites; a file that goes
+        # missing for any other app surfaces as a failing deep-link check below.
+        working-directory: frontend
+        run: |
+          src="apps/${{ matrix.app }}/edgeone.json"
+          if [ -f "$src" ]; then
+            cp "$src" "apps/${{ matrix.app }}/dist/edgeone.json"
+            echo "included $src"
+          else
+            echo "no $src — ${{ matrix.app }} needs no host rules"
+          fi
+
+      - name: Deploy to EdgeOne Pages
+        working-directory: frontend
+        env:
+          # The only secret this workflow needs.
+          EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
+        # Pinned: an unpinned `npx edgeone` is a floating dependency sitting in the
+        # deploy path of four production sites.
+        run: >
+          npx --yes edgeone@1.6.21 makers deploy apps/${{ matrix.app }}/dist
+          -n ${{ matrix.project }}
+          -t "$EDGEONE_API_TOKEN"
+          -e production
+
+      - name: Verify the live site serves this build
+        # Requests a DEEP LINK, which has no file behind it, and compares the entry
+        # bundle the live site returns against the one just built. That single
+        # check proves three things: the upload landed, edgeone.json travelled with
+        # it (otherwise the deep link 404s), and the deployed build is this one.
+        #
+        # Inert until `domain` is filled in for the app, which happens once it has
+        # actually been cut over to its direct-upload project.
+        if: matrix.domain != ''
+        working-directory: frontend
+        run: |
+          entry_of() {
+            sed -n 's/.*<script[^>]*type="module"[^>]*src="\([^"]*\)".*/\1/p' | head -1
+          }
+          built=$(entry_of < "apps/${{ matrix.app }}/dist/index.html")
+          [ -n "$built" ] || { echo "::error::no module entry in the built index.html"; exit 1; }
+          echo "built entry: $built"
+
+          url="https://${{ matrix.domain }}${{ matrix.smoke_path }}"
+          for attempt in 1 2 3 4 5 6; do
+            live=$(curl -fsS --max-time 20 "$url" | entry_of) || live=""
+            if [ "$live" = "$built" ]; then
+              echo "$url serves $live"
+              exit 0
+            fi
+            echo "attempt $attempt: live=${live:-<none>} expected=$built — waiting for propagation"
+            sleep 20
+          done
+          echo "::error::$url does not serve $built"
+          exit 1

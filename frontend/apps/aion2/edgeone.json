@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/changelog", "destination": "/index.html" },
+    { "source": "/changelog*", "destination": "/index.html" },
+    { "source": "/wiki", "destination": "/index.html" },
+    { "source": "/wiki*", "destination": "/index.html" },
+    { "source": "/wiki/*", "destination": "/index.html" },
+    { "source": "/wiki/:type/:slug", "destination": "/index.html" }
+  ]
+}
