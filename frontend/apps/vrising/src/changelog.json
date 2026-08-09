@@ -3,7 +3,7 @@
     {
       "version": "0.9.1",
       "date": "2026-08-09",
-      "commit": "6c8e98a5e97134dbeb36ded5638630d7b51d33bb",
+      "commit": "4554dab5a250f2e2715bd6604ef2c66cb68e3277",
       "changes": [
         {
           "kind": "improvement",
@@ -11,6 +11,14 @@
             "en-US": "Rebuilt the mobile map and content chrome with clear control stacking, adaptive marker density, and safer bottom sheets.",
             "zh-CN": "重置移动端地图与内容导航，统一控件层级、按缩放显示点位，并优化底部面板。",
             "zh-TW": "重置行動版地圖與內容導覽，統一控制項層級、依縮放顯示標記，並最佳化底部面板。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Mobile map overviews now start without region outlines obscuring landmarks.",
+            "zh-CN": "移动端地图总览默认隐藏区域轮廓，避免遮挡地标。",
+            "zh-TW": "行動版地圖總覽預設隱藏區域輪廓，避免遮擋地標。"
           }
         }
       ]
