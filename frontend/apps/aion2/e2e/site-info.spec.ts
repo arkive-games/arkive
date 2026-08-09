@@ -58,7 +58,6 @@ test.describe("site info — desktop", () => {
 
   test("the top-bar popover carries the panel on a wiki page", async ({ page }) => {
     await page.goto("/wiki?lng=zh-CN");
-    await page.getByTestId("contact-menu").click();
     await expect(page.getByTestId("site-info-panel")).toBeVisible();
     await expect(page.getByTestId("site-info-group-number")).toHaveText(QQ_GROUP);
   });
@@ -67,7 +66,6 @@ test.describe("site info — desktop", () => {
     await page.goto("/?lng=zh-CN");
     await openInfoSidebar(page);
     await expect(page.getByTestId("site-info-panel")).toHaveCount(1);
-    await page.getByTestId("contact-menu").click();
     await expect(page.getByTestId("site-info-panel")).toHaveCount(2);
     await expect(page.getByTestId("site-info-group-number").nth(1)).toHaveText(QQ_GROUP);
   });
@@ -80,7 +78,6 @@ test.describe("site info — desktop", () => {
     await page.goto("/?lng=en-US");
     const toggle = page.getByTestId("sidebar-toggle-right");
     await openInfoSidebar(page);
-    await page.getByTestId("contact-menu").click();
     const popover = page.getByTestId("site-info-panel").nth(1);
     await expect(popover).toBeVisible();
 
