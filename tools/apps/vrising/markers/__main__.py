@@ -11,6 +11,7 @@ from ..env import require_dir
 from .bosses import extract_boss_markers
 from .emit import load_marker_payload
 from .extract import ENTITY_SCENES_RELATIVE, extract_marker_audit
+from .navigation import extract_navigation_points
 
 
 PARSED_DIR = Path(__file__).resolve().parent.parent / "parsed" / "markers"
@@ -41,10 +42,18 @@ def main(argv: list[str] | None = None) -> int:
             game_root / ENTITY_SCENES_RELATIVE, prefabs, PARSED_DIR
         )
         bosses = extract_boss_markers(game_root, prefabs, vblood, PARSED_DIR)
+        navigation = extract_navigation_points(
+            game_root / ENTITY_SCENES_RELATIVE, PARSED_DIR
+        )
         payload = load_marker_payload(PARSED_DIR)
         print(
             json.dumps(
-                {"resources": resources, "bosses": bosses, "emit": payload["summary"]},
+                {
+                    "resources": resources,
+                    "bosses": bosses,
+                    "navigation": navigation,
+                    "emit": payload["summary"],
+                },
                 ensure_ascii=False,
                 indent=2,
             )

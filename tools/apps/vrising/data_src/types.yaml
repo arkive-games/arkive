@@ -104,3 +104,23 @@ categories:
       - id: resource-sulfur
         color: "#d7ca3c"
         names: { en-US: Sulfur, zh-CN: 硫磺, zh-TW: 硫磺 }
+  - id: navigation
+    pinVariant: circular
+    names:
+      en-US: Navigation
+      zh-CN: 导航
+      zh-TW: 導航
+    subtypes:
+      - id: navigation-waygate
+        icon: MapIcon_RespawnGateway
+        iconScale: 0.86
+        color: "#3b82c4"
+        defaultActive: true
+        names:
+          en-US: Vampire Waygates
+          zh-CN: 吸血鬼传送门
+          zh-TW: 吸血鬼傳送門
+        descriptions:
+          en-US: A waygate terrain chunk identified in the authored game scene. The marker is placed at the 160-unit chunk centre and may be offset from the exact entrance.
+          zh-CN: 从游戏场景中确认的传送门地形区块。标记位于 160 单位区块的中心，可能与实际入口存在偏移。
+          zh-TW: 從遊戲場景中確認的傳送門地形區塊。標記位於 160 單位區塊的中心，可能與實際入口存在偏移。

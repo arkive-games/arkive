@@ -9,6 +9,7 @@ type VrisingMarker = EngineMarker & {
   bossLevel?: number | null
   bossAct?: string | null
   bossRegion?: string | null
+  positionPrecision?: 'terrain-chunk-center'
 }
 
 export interface PopupDeps {
@@ -55,6 +56,11 @@ export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactN
       description={marker.localizedDescription}
       images={vrising.movement ? undefined : marker.images}
     >
+      {vrising.positionPrecision === 'terrain-chunk-center' ? (
+        <div className="mt-3 border-t border-border pt-3 text-sm text-muted-foreground">
+          {t('marker.terrainChunkPrecision')}
+        </div>
+      ) : null}
       {vrising.movement ? (
         <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
           <div className="flex justify-between gap-3">

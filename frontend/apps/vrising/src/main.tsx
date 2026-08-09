@@ -10,6 +10,9 @@ import './index.css'
 import './i18n'
 import MapPage from './features/map/MapPage'
 import ChangelogPage from './features/changelog/ChangelogPage'
+import VBloodListPage from './features/vblood/VBloodListPage'
+import VBloodDetailPage from './features/vblood/VBloodDetailPage'
+import KnowledgePage from './features/knowledge/KnowledgePage'
 import { themeStorage } from './lib/storage'
 import { initDataVersion } from './lib/urls'
 import { isMapEngineChoice, type MapEngineChoice } from './lib/mapEngineChoice'
@@ -52,7 +55,38 @@ const changelogRoute = createRoute({
   component: ChangelogPage,
 })
 
-const routeTree = rootRoute.addChildren([mapRoute, changelogRoute])
+const vbloodRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/vblood',
+  component: VBloodListPage,
+})
+
+const vbloodDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/vblood/$id',
+  component: VBloodDetailPage,
+})
+
+const databaseRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/database',
+  component: () => <KnowledgePage kind="database" />,
+})
+
+const systemsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/systems',
+  component: () => <KnowledgePage kind="systems" />,
+})
+
+const routeTree = rootRoute.addChildren([
+  mapRoute,
+  vbloodRoute,
+  vbloodDetailRoute,
+  databaseRoute,
+  systemsRoute,
+  changelogRoute,
+])
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
 declare module '@tanstack/react-router' {

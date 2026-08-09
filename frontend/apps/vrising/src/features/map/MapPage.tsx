@@ -197,6 +197,7 @@ export default function MapPage() {
         movement: m.movement,
         route: m.route,
         routePrecision: m.routePrecision,
+        positionPrecision: m.positionPrecision,
         bossPrefab: m.bossPrefab,
         bossLevel: m.bossLevel,
         bossAct: m.bossAct,

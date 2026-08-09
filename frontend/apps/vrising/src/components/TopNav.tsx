@@ -5,7 +5,7 @@ import { ArkiveMapTopBar, getArkiveBrandName, useTheme, type ShellNavItem } from
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 
-export type NavKey = '/' | '/changelog'
+export type NavKey = '/' | '/vblood' | '/database' | '/systems' | '/changelog'
 
 export function TopNav({ active }: { active: NavKey }) {
   const { t, i18n } = useTranslation()
@@ -15,6 +15,9 @@ export function TopNav({ active }: { active: NavKey }) {
 
   const items: ShellNavItem[] = [
     { key: '/', label: t('nav.map'), active: active === '/' },
+    { key: '/vblood', label: t('nav.vblood'), active: active === '/vblood' },
+    { key: '/database', label: t('nav.database'), active: active === '/database' },
+    { key: '/systems', label: t('nav.systems'), active: active === '/systems' },
   ]
 
   return (

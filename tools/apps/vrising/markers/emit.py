@@ -85,6 +85,7 @@ def build_marker_payload(
     resources: list[dict],
     fixed_bosses: list[dict],
     roaming_bosses: list[dict] | None = None,
+    navigation: list[dict] | None = None,
 ) -> dict:
     """Build compact contract markers and labels for the curated public map."""
     markers: list[dict] = []
@@ -237,6 +238,33 @@ def build_marker_payload(
             localized_names=localized_names,
         )
 
+    navigation = navigation or []
+    for record in navigation:
+        if record.get("kind") != "waygate":
+            raise ValueError(f"unsupported navigation kind {record.get('kind')}")
+        if record.get("positionPrecision") != "terrain-chunk-center":
+            raise ValueError("waygate marker must declare terrain-chunk-center precision")
+        position = record["worldPosition"]
+        marker_id = f"navigation-waygate-{_slug(record['chunkName'])}"
+        append_marker(
+            {
+                "id": marker_id,
+                "category": "navigation",
+                "subtype": "navigation-waygate",
+                **_marker_position(position),
+                "images": [],
+                "contributors": [],
+                "icon": "MapIcon_RespawnGateway",
+                "positionPrecision": record["positionPrecision"],
+            },
+            "Vampire Waygate",
+            localized_names={
+                "en-US": "Vampire Waygate",
+                "zh-CN": "吸血鬼传送门",
+                "zh-TW": "吸血鬼傳送門",
+            },
+        )
+
     return {
         "markers": markers,
         "labels": labels,
@@ -255,6 +283,7 @@ def build_marker_payload(
             ),
             "roamingBossMarkers": len(roaming_bosses),
             "roamingRouteStops": sum(len(item["route"]) for item in roaming_bosses),
+            "navigationMarkers": len(navigation),
             "resourcePools": len(pools),
             "markersBySubtype": dict(sorted(counters.items())),
         },
@@ -277,6 +306,7 @@ def load_marker_payload(output_dir: Path) -> dict:
         read("resources.display.json"),
         read("bosses.fixed.json"),
         read("bosses.roaming.json"),
+        read("navigation.json"),
     )
 
 

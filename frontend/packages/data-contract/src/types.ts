@@ -145,6 +145,9 @@ export interface MarkerInstance {
   route?: { x: number; y: number; z?: number }[];
   /** Accuracy of a statically recovered route. */
   routePrecision?: "chunk-corridor";
+  /** Precision of a point derived from authored terrain metadata rather than
+   * an object-level transform. */
+  positionPrecision?: "terrain-chunk-center";
   /** Whether the source entity has a fixed spawn or follows an authored route. */
   movement?: "fixed" | "roaming";
   images: string[];

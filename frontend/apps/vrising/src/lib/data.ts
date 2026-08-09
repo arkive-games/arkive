@@ -32,6 +32,7 @@ export interface MarkerRow {
   movement?: 'fixed' | 'roaming'
   route?: { x: number; y: number; z?: number }[]
   routePrecision?: 'chunk-corridor'
+  positionPrecision?: 'terrain-chunk-center'
   bossPrefab?: string
   bossLevel?: number | null
   bossAct?: string | null

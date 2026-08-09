@@ -1,5 +1,5 @@
-import { Link, useLocation, useSearch } from '@tanstack/react-router'
-import { History, Map, Menu } from 'lucide-react'
+import { Link, useLocation } from '@tanstack/react-router'
+import { BookOpen, Database, History, Map, Menu, Swords } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
   ArkiveMobileAccountRow,
@@ -10,19 +10,15 @@ import {
 } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
-import {
-  MAP_ENGINE_CHOICES,
-  MAP_ENGINE_LABELS,
-  resolveMapEngine,
-  useChooseMapEngine,
-  useStoredMapEngine,
-  type MapEngineChoice,
-} from '../lib/mapEngineChoice'
 import { SiteInfo } from './SiteInfo'
 import type { NavKey } from './TopNav'
 
 function activeKey(pathname: string): NavKey {
-  return pathname.startsWith('/changelog') ? '/changelog' : '/'
+  if (pathname.startsWith('/vblood')) return '/vblood'
+  if (pathname.startsWith('/database')) return '/database'
+  if (pathname.startsWith('/systems')) return '/systems'
+  if (pathname.startsWith('/changelog')) return '/changelog'
+  return '/'
 }
 
 export function BottomTabBar() {
@@ -32,24 +28,16 @@ export function BottomTabBar() {
   const lng = LANGUAGES.find((code) => code === i18n.resolvedLanguage) ?? 'en-US'
   const active = activeKey(pathname)
   const brandName = getArkiveBrandName(lng, t('brand'))
-  const engineParam = useSearch({
-    strict: false,
-    select: (search) => (search as { engine?: unknown }).engine,
-  })
-  const activeEngine = resolveMapEngine(engineParam, useStoredMapEngine())
-  const chooseEngine = useChooseMapEngine()
-
   return (
     <ShellBottomNav
       pathname={pathname}
-      tabs={[{
-        key: '/',
-        label: t('nav.map'),
-        icon: <Map className="size-5" />,
-        active: active === '/',
-      }]}
+      tabs={[
+        { key: '/', label: t('nav.map'), icon: <Map className="size-5" />, active: active === '/' },
+        { key: '/vblood', label: t('nav.vblood'), icon: <Swords className="size-5" />, active: active === '/vblood' },
+        { key: '/database', label: t('nav.database'), icon: <Database className="size-5" />, active: active === '/database' },
+      ]}
       renderTab={(tab, className) => (
-        <Link to="/" className={className} data-testid="tab-map">
+        <Link to={tab.key as NavKey} className={className} data-testid={`tab-${String(tab.key).replace(/^\//, '') || 'map'}`}>
           {tab.icon}
           <span className="max-w-full truncate">{tab.label}</span>
         </Link>
@@ -57,7 +45,7 @@ export function BottomTabBar() {
       more={{
         label: t('more'),
         icon: <Menu className="size-5" />,
-        active: active === '/changelog',
+        active: active === '/systems' || active === '/changelog',
         title: t('more'),
         brand: (
           <a
@@ -71,12 +59,10 @@ export function BottomTabBar() {
         ),
       }}
       grid={{
-        items: [{
-          key: '/changelog',
-          label: t('nav.changelog'),
-          icon: <History className="size-5" />,
-          active: active === '/changelog',
-        }],
+        items: [
+          { key: '/systems', label: t('nav.systems'), icon: <BookOpen className="size-5" />, active: active === '/systems' },
+          { key: '/changelog', label: t('nav.changelog'), icon: <History className="size-5" />, active: active === '/changelog' },
+        ],
         renderItem: (item, className) => (
           <Link to={item.key as NavKey} className={className} data-testid="more-changelog">
             {item.icon}
@@ -100,15 +86,6 @@ export function BottomTabBar() {
         current: theme,
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('themeMenu'),
-      }}
-      engine={{
-        choices: MAP_ENGINE_CHOICES.map((choice) => ({
-          value: choice,
-          label: MAP_ENGINE_LABELS[choice].short,
-        })),
-        current: activeEngine,
-        onChange: (value) => chooseEngine(value as MapEngineChoice),
-        rowLabel: t('mapRenderer'),
       }}
       extra={<ArkiveMobileAccountRow locale={lng} label={t('login')} />}
       footer={<SiteInfo />}

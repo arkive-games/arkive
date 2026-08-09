@@ -203,3 +203,26 @@ def test_roaming_boss_emits_one_marker_with_an_ordered_chunk_corridor():
     assert marker["icon"] == f"BossPortrait_{prefab}"
     assert payload["summary"]["roamingBossMarkers"] == 1
     assert payload["summary"]["roamingRouteStops"] == 3
+
+
+def test_waygate_marker_keeps_its_reviewed_position_precision():
+    payload = build_marker_payload(
+        [],
+        [],
+        [],
+        [
+            {
+                "kind": "waygate",
+                "chunkName": "Farbane_Mid18_Waypoint_Territory",
+                "worldPosition": [-1680.0, 0.0, -1520.0],
+                "positionPrecision": "terrain-chunk-center",
+            }
+        ],
+    )
+
+    (marker,) = payload["markers"]
+    assert marker["category"] == "navigation"
+    assert marker["subtype"] == "navigation-waygate"
+    assert marker["positionPrecision"] == "terrain-chunk-center"
+    assert marker["icon"] == "MapIcon_RespawnGateway"
+    assert payload["summary"]["navigationMarkers"] == 1
