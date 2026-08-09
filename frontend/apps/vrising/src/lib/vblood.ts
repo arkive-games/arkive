@@ -50,9 +50,18 @@ export interface VBloodRewardRecord {
   abilities: VBloodAbilityReward[]
 }
 
-interface VBloodRewardFile {
+export interface VBloodKnowledgeCatalog {
+  tech: VBloodTechReward[]
+  recipes: VBloodRewardRef[]
+  blueprints: VBloodRewardRef[]
+  passives: VBloodRewardRef[]
+  shapeshifts: VBloodRewardRef[]
+}
+
+export interface VBloodRewardFile {
   schemaVersion: 1
   bosses: VBloodRewardRecord[]
+  catalog: VBloodKnowledgeCatalog
 }
 
 let rewardFilePromise: Promise<VBloodRewardFile> | undefined
@@ -61,7 +70,7 @@ export function loadVBloodRewards(): Promise<VBloodRewardFile> {
   rewardFilePromise ??= fetch(dataUrl('knowledge/vblood-rewards.json')).then(async (response) => {
     if (!response.ok) throw new Error(`V Blood rewards: ${response.status}`)
     const payload = await response.json() as VBloodRewardFile
-    if (payload.schemaVersion !== 1 || !Array.isArray(payload.bosses)) {
+    if (payload.schemaVersion !== 1 || !Array.isArray(payload.bosses) || !payload.catalog) {
       throw new Error('V Blood rewards: unsupported data schema')
     }
     return payload

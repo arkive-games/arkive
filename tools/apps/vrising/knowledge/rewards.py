@@ -515,9 +515,35 @@ def build_vblood_reward_payload(
             value["bossPrefab"],
         )
     )
+    catalog_tech = sorted(
+        tech_rewards.values(), key=lambda value: value.tech.prefab_name
+    )
+    catalog_recipes = sorted(
+        _deduplicate(value for tech in catalog_tech for value in tech.recipes),
+        key=lambda value: value.prefab_name,
+    )
+    catalog_blueprints = sorted(
+        _deduplicate(value for tech in catalog_tech for value in tech.blueprints),
+        key=lambda value: value.prefab_name,
+    )
+    catalog_passives = sorted(
+        _deduplicate(value for tech in catalog_tech for value in tech.passives),
+        key=lambda value: value.prefab_name,
+    )
+    catalog_shapeshifts = sorted(
+        _deduplicate(value for tech in catalog_tech for value in tech.shapeshifts),
+        key=lambda value: value.prefab_name,
+    )
     return {
         "schemaVersion": 1,
         "bosses": records,
+        "catalog": {
+            "tech": [value.as_json() for value in catalog_tech],
+            "recipes": [value.as_json() for value in catalog_recipes],
+            "blueprints": [value.as_json() for value in catalog_blueprints],
+            "passives": [value.as_json() for value in catalog_passives],
+            "shapeshifts": [value.as_json() for value in catalog_shapeshifts],
+        },
         "source": {
             "gameplayScenes": [f"{value}.0.entities" for value in GAMEPLAY_SCENE_GUIDS],
             "techScene": f"{TECH_SCENE_GUID}.0.entities",
@@ -538,6 +564,10 @@ def build_vblood_reward_payload(
             "blueprintLinks": sum(len(value["blueprints"]) for value in records),
             "abilityLinks": sum(len(value["abilities"]) for value in records),
             "techCatalogEntries": len(tech_rewards),
+            "recipeCatalogEntries": len(catalog_recipes),
+            "blueprintCatalogEntries": len(catalog_blueprints),
+            "passiveCatalogEntries": len(catalog_passives),
+            "shapeshiftCatalogEntries": len(catalog_shapeshifts),
         },
     }
 
@@ -567,6 +597,7 @@ def load_vblood_reward_payload(path: Path) -> dict[str, object]:
         not isinstance(payload, dict)
         or payload.get("schemaVersion") != 1
         or not isinstance(payload.get("bosses"), list)
+        or not isinstance(payload.get("catalog"), dict)
         or not isinstance(payload.get("summary"), dict)
     ):
         raise ValueError(f"{path}: invalid V Blood reward payload")
@@ -580,4 +611,3 @@ __all__ = [
     "extract_vblood_rewards",
     "load_vblood_reward_payload",
 ]
-
