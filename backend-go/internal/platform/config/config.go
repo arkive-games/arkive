@@ -115,6 +115,18 @@ type Auth struct {
 type CORS struct {
 	AllowedOrigins   []string
 	AllowCredentials bool
+
+	// PublicFallback answers an unlisted origin with a wildcard and no
+	// credentials, instead of refusing it.
+	//
+	// This is what lets a Bilibili Toy sign in. A Toy runs as a third-party
+	// iframe on bilibili.com, where the session cookie is blocked by the
+	// browser whatever CORS says, so it authenticates with a bearer token and
+	// sends no credentials. Such a request cannot ride an existing session, so
+	// answering it with "*" grants no access the caller did not already have a
+	// token for — while cookie-bearing requests stay restricted to
+	// AllowedOrigins.
+	PublicFallback bool
 }
 
 // Load reads configuration from the environment and validates it.
@@ -164,6 +176,7 @@ func Load() (Config, error) {
 		CORS: CORS{
 			AllowedOrigins:   envList("ALLOWED_ORIGINS", []string{"*"}),
 			AllowCredentials: envBool("ALLOW_CREDENTIALS", true),
+			PublicFallback:   envBool("CORS_PUBLIC_FALLBACK", false),
 		},
 	}
 
