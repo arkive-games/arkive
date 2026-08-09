@@ -36,7 +36,7 @@ export interface ArkiveSiteInfoProps {
   gameName: string
   developerName: string
   version: string
-  /** Locale-resolved newest-first entries. Only the first three eligible entries are shown. */
+  /** Locale-resolved newest-first entries. Every eligible entry is shown. */
   recentEntries: ResolvedEntry[]
   /**
    * First release eligible for this About dialog. Older site history is
@@ -101,7 +101,6 @@ function RecentUpdatesDialog({
   entries,
 }: Pick<ArkiveSiteInfoProps, "strings" | "version"> & { entries: ResolvedEntry[] }) {
   const label = strings.viewVersionTemplate.replace("{version}", version)
-  const recent = entries.slice(0, 3)
 
   return (
     <Dialog>
@@ -116,9 +115,9 @@ function RecentUpdatesDialog({
           <DialogTitle>{strings.recentUpdatesTitle}</DialogTitle>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto pr-1">
-          {recent.length > 0 ? (
+          {entries.length > 0 ? (
             <ol className="space-y-4">
-              {recent.map((entry) => (
+              {entries.map((entry) => (
                 <li key={entry.version}>
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                     <span className="font-mono text-sm font-semibold text-foreground">

@@ -73,7 +73,7 @@ describe("ArkiveSiteInfo", () => {
     expect(queryByText("1234567")).toBeNull()
   })
 
-  it("starts About history at the configured release and keeps later updates", () => {
+  it("shows every version since the configured start release", () => {
     const { getByTestId, getByText, queryByText } = render(
       <ArkiveSiteInfo
         strings={strings}
@@ -82,7 +82,7 @@ describe("ArkiveSiteInfo", () => {
         gameName="Palworld"
         developerName="Pocketpair, Inc."
         version="1.2.4"
-        historyStartVersion="1.2.3"
+        historyStartVersion="1.2.1"
         recentEntries={[
           {
             version: "1.2.4",
@@ -94,10 +94,25 @@ describe("ArkiveSiteInfo", () => {
             version: "1.2.3",
             date: "2026-08-08",
             commit: "1234567890123456789012345678901234567890",
-            changes: [{ kind: "improvement", text: "About history starts here." }],
+            changes: [{ kind: "improvement", text: "A second update." }],
           },
           {
             version: "1.2.2",
+            date: "2026-08-07",
+            commit: "1123456789012345678901234567890123456789",
+            changes: [{ kind: "data", text: "A third update." }],
+          },
+          {
+            version: "1.2.1",
+            date: "2026-08-06",
+            commit: "2123456789012345678901234567890123456789",
+            changes: [{
+              kind: "fix",
+              text: "About history starts here as the fourth visible release.",
+            }],
+          },
+          {
+            version: "1.2.0",
             date: "2026-08-01",
             commit: "0123456789012345678901234567890123456789",
             changes: [{ kind: "feature", text: "An older site release." }],
@@ -109,7 +124,7 @@ describe("ArkiveSiteInfo", () => {
 
     fireEvent.click(getByTestId("site-info-version-trigger"))
     expect(getByText("A later update.")).toBeTruthy()
-    expect(getByText("About history starts here.")).toBeTruthy()
+    expect(getByText("About history starts here as the fourth visible release.")).toBeTruthy()
     expect(queryByText("An older site release.")).toBeNull()
   })
 
