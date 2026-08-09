@@ -7,7 +7,7 @@
   grid-template-columns: minmax(0, 0.86fr) minmax(28rem, 1.14fr);
   align-items: end;
   gap: clamp(2rem, 5vw, 4.5rem);
-  padding-block: clamp(2.75rem, 4.5vw, 4rem) 1.5rem;
+  padding-block: var(--arkive-content-page-top-space) 1.5rem;
 }
 
 .catalog-eyebrow {
@@ -280,6 +280,12 @@
   transform: translateY(-0.08rem);
 }
 
+.catalog-bookmark.is-active {
+  border-color: color-mix(in srgb, var(--primary) 58%, var(--border));
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+}
+
 .catalog-game-copy {
   display: flex;
   flex-direction: column;
@@ -391,7 +397,7 @@
   .catalog-hero {
     grid-template-columns: 1fr;
     gap: 1.5rem;
-    padding-block: 2.1rem 1.35rem;
+    padding-block: var(--arkive-content-page-top-space) 1.35rem;
   }
 
   .catalog-hero h1 {

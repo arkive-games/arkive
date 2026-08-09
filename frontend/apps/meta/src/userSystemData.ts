@@ -1,6 +1,3 @@
-export const CURRENT_USER_ID = '10851724'
-export const CURRENT_USER_AVATAR_SEED = 'arkive-current-sailor'
-
 export interface PublicProfileFixture {
   id: string
   nameKey: string

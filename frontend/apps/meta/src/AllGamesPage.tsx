@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@gamemap/auth'
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -16,13 +17,14 @@ import {
   type GameCategory,
 } from './gameCatalog'
 import { siteHref, type SiteCard } from './sites'
+import { useUserSystem } from './UserSystemState'
 import './all-games.css'
 
 const PAGE_SIZE = 20
 
 interface AllGamesPageProps {
   sites: readonly SiteCard[]
-  onFavorite: () => void
+  onAuthRequired: () => void
 }
 
 interface CatalogGame {
@@ -32,8 +34,10 @@ interface CatalogGame {
   searchText: string
 }
 
-export function AllGamesPage({ sites, onFavorite }: AllGamesPageProps) {
+export function AllGamesPage({ sites, onAuthRequired }: AllGamesPageProps) {
   const { t } = useTranslation()
+  const { status } = useAuth()
+  const { state, toggleFavoriteGame } = useUserSystem()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<GameCategory>('all')
   const [page, setPage] = useState(1)
@@ -123,7 +127,14 @@ export function AllGamesPage({ sites, onFavorite }: AllGamesPageProps) {
               <CatalogGameCard
                 key={entry.site.id}
                 game={entry}
-                onFavorite={onFavorite}
+                favorite={state.favoriteGameIds.includes(entry.site.id)}
+                onFavorite={() => {
+                  if (status !== 'authenticated') {
+                    onAuthRequired()
+                    return
+                  }
+                  toggleFavoriteGame(entry.site.id)
+                }}
               />
             ))}
           </div>
@@ -171,10 +182,18 @@ export function AllGamesPage({ sites, onFavorite }: AllGamesPageProps) {
   )
 }
 
-function CatalogGameCard({ game, onFavorite }: { game: CatalogGame; onFavorite: () => void }) {
+function CatalogGameCard({
+  game,
+  favorite: isFavorite,
+  onFavorite,
+}: {
+  game: CatalogGame
+  favorite: boolean
+  onFavorite: () => void
+}) {
   const { t } = useTranslation()
   const name = t(game.site.nameKey)
-  const favorite = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleFavorite = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     onFavorite()
   }
@@ -215,8 +234,9 @@ function CatalogGameCard({ game, onFavorite }: { game: CatalogGame; onFavorite: 
       )}
       <button
         type="button"
-        className="catalog-bookmark"
-        onClick={favorite}
+        className={isFavorite ? 'catalog-bookmark is-active' : 'catalog-bookmark'}
+        onClick={handleFavorite}
+        aria-pressed={isFavorite}
         aria-label={t('action.favorite', { game: name })}
       >
         <IconBookmark className="size-5" stroke={1.8} />

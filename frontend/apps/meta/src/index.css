@@ -430,6 +430,12 @@ footer a:focus-visible {
   transform: translateY(-0.1rem);
 }
 
+.bookmark-button.is-active {
+  border-color: color-mix(in srgb, var(--primary) 58%, var(--border));
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+}
+
 .game-card-copy {
   display: flex;
   flex-direction: column;
@@ -697,8 +703,8 @@ footer a:focus-visible {
 
 .coming-soon-toast {
   position: fixed;
-  right: 1.5rem;
-  bottom: 1.5rem;
+  top: 50%;
+  left: 50%;
   z-index: 100;
   display: flex;
   max-width: min(24rem, calc(100vw - 3rem));
@@ -741,8 +747,8 @@ footer a:focus-visible {
 }
 
 @keyframes toast-in {
-  from { opacity: 0; transform: translateY(0.7rem); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 0.7rem)); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
 }
 
 @media (max-width: 74rem) {
@@ -847,8 +853,6 @@ footer a:focus-visible {
   }
 
   .coming-soon-toast {
-    right: 1rem;
-    bottom: calc(4.5rem + env(safe-area-inset-bottom));
     z-index: 2600;
   }
 }

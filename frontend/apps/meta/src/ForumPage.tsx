@@ -1,9 +1,21 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@gamemap/auth'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@gamemap/ui'
 import {
   IconAdjustmentsHorizontal,
   IconArrowLeft,
   IconBookmark,
+  IconCheck,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
@@ -19,14 +31,18 @@ import {
   IconSearch,
   IconSpeakerphone,
   IconThumbUp,
+  IconTrash,
   IconVideo,
+  IconX,
 } from '@tabler/icons-react'
 import type { SiteCard } from './sites'
 import aion2Logo from './assets/aion2-logo.webp'
 import palworldLogo from './assets/palworld-logo.png'
 import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
+import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl, publicProfileHref } from './userSystemData'
+import { useUserSystem, type LocalForumPost } from './UserSystemState'
 import './forum.css'
 
 type ForumChannel = 'hot' | 'general' | 'official' | 'games'
@@ -38,24 +54,79 @@ const MAX_VISIBLE_PAGES = 5
 interface ForumPageProps {
   sites: readonly SiteCard[]
   onComingSoon: () => void
+  onAuthRequired: () => void
 }
 
 interface ForumPost {
   id: string
   channel: Exclude<ForumChannel, 'hot'>
   gameId?: string
-  authorKey: string
-  timeKey: string
-  titleKey: string
-  copyKey: string
-  tagKeys: string[]
+  authorKey?: string
+  author?: string
+  timeKey?: string
+  time?: string
+  titleKey?: string
+  title?: string
+  copyKey?: string
+  copy?: string
+  tagKeys?: string[]
+  tags?: string[]
   avatarSeed: string
+  avatarSrc?: string
   authorNumber: string
   followerCount: number
   commentCount: number
   likeCount: number
   bookmarkCount: number
+  imageSrc?: string
+  videoUrl?: string
+  own?: boolean
   featured?: boolean
+}
+
+type ComposerFocus = 'body' | 'image' | 'video' | 'topic'
+
+function postAuthor(post: ForumPost, t: TFunction) {
+  return post.author ?? (post.authorKey ? t(post.authorKey) : '')
+}
+
+function postTime(post: ForumPost, t: TFunction) {
+  return post.time ?? (post.timeKey ? t(post.timeKey) : '')
+}
+
+function postTitle(post: ForumPost, t: TFunction) {
+  return post.title ?? (post.titleKey ? t(post.titleKey) : '')
+}
+
+function postCopy(post: ForumPost, t: TFunction) {
+  return post.copy ?? (post.copyKey ? t(post.copyKey) : '')
+}
+
+function postTags(post: ForumPost, t: TFunction) {
+  return post.tags ?? (post.tagKeys ?? []).map((key) => t(key))
+}
+
+const COMPOSER_TOPICS = ['guide', 'question', 'testing', 'discussion'] as const
+const FORUM_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const FORUM_IMAGE_MAX_BYTES = 2 * 1024 * 1024
+
+function readForumImage(file: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.addEventListener('load', () => resolve(String(reader.result ?? '')))
+    reader.addEventListener('error', () => reject(reader.error))
+    reader.readAsDataURL(file)
+  })
+}
+
+function isSafeVideoUrl(value: string) {
+  if (!value) return true
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:'
+  } catch {
+    return false
+  }
 }
 
 interface RecommendedUser {
@@ -204,8 +275,16 @@ function getVisiblePageNumbers(currentPage: number, totalPages: number) {
   return Array.from({ length: windowSize }, (_, index) => start + index)
 }
 
-export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
+export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProps) {
   const { t } = useTranslation()
+  const { status, user } = useAuth()
+  const {
+    state: userSystemState,
+    toggleBookmarkedPost,
+    toggleFollowedUser,
+    toggleLikedPost,
+    publishForumPost,
+  } = useUserSystem()
   const [channel, setChannel] = useState<ForumChannel>('hot')
   const [feedTab, setFeedTab] = useState<FeedTab>('recommended')
   const [gameFilter, setGameFilter] = useState<string | null>(null)
@@ -214,32 +293,64 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
-  const [followedUsers, setFollowedUsers] = useState<Set<string>>(() => new Set())
+  const [followingOnly, setFollowingOnly] = useState(false)
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [composerFocus, setComposerFocus] = useState<ComposerFocus>('body')
+  const [publishNotice, setPublishNotice] = useState(false)
+  const signedIn = status === 'authenticated'
+  const currentAvatar = userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
 
   const siteById = useMemo(
     () => new Map(sites.map((site) => [site.id, site])),
     [sites],
   )
 
+  const localPosts = useMemo<ForumPost[]>(() => userSystemState.publishedPosts.map((post) => ({
+    id: post.id,
+    channel: post.channel,
+    gameId: post.gameId ?? undefined,
+    author: user?.name ?? '',
+    timeKey: 'forum.time.today',
+    title: post.title,
+    copy: post.content,
+    tags: [
+      ...(post.gameId ? [t(`forum.games.${post.gameId}`)] : []),
+      t(`forum.composer.topics.${post.topic}`),
+    ],
+    avatarSeed: user?.id ?? 'arkive-anonymous',
+    avatarSrc: currentAvatar,
+    authorNumber: user?.id ?? '',
+    followerCount: 0,
+    commentCount: 0,
+    likeCount: 0,
+    bookmarkCount: 0,
+    imageSrc: post.imageSrc ?? undefined,
+    videoUrl: post.videoUrl ?? undefined,
+    own: true,
+  })), [currentAvatar, t, user?.id, user?.name, userSystemState.publishedPosts])
+
+  const allPosts = useMemo(() => [...localPosts, ...POSTS], [localPosts])
+
   const visiblePosts = useMemo(() => {
     const normalizedQuery = submittedQuery.trim().toLocaleLowerCase()
-    const filtered = POSTS.filter((post) => {
+    const filtered = allPosts.filter((post) => {
       if (channel !== 'hot' && post.channel !== channel) return false
       if (gameFilter && post.gameId !== gameFilter) return false
       if (feedTab === 'featured' && !post.featured) return false
+      if (followingOnly && !userSystemState.followedUserIds.includes(post.authorNumber)) return false
       if (!normalizedQuery) return true
 
       const searchable = [
-        t(post.authorKey),
-        t(post.titleKey),
-        t(post.copyKey),
-        ...post.tagKeys.map((key) => t(key)),
+        postAuthor(post, t),
+        postTitle(post, t),
+        postCopy(post, t),
+        ...postTags(post, t),
       ].join(' ').toLocaleLowerCase()
       return searchable.includes(normalizedQuery)
     })
 
     return feedTab === 'latest' ? [...filtered].reverse() : filtered
-  }, [channel, feedTab, gameFilter, submittedQuery, t])
+  }, [allPosts, channel, feedTab, followingOnly, gameFilter, submittedQuery, t, userSystemState.followedUserIds])
 
   const totalPages = Math.max(1, Math.ceil(visiblePosts.length / POSTS_PER_PAGE))
   const activePage = Math.min(currentPage, totalPages)
@@ -249,8 +360,14 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
     activePage * POSTS_PER_PAGE,
   )
   const selectedPost = selectedPostId
-    ? POSTS.find((post) => post.id === selectedPostId) ?? null
+    ? allPosts.find((post) => post.id === selectedPostId) ?? null
     : null
+
+  useEffect(() => {
+    if (!publishNotice) return
+    const timeout = window.setTimeout(() => setPublishNotice(false), 2600)
+    return () => window.clearTimeout(timeout)
+  }, [publishNotice])
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -276,12 +393,40 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
   }
 
   const toggleFollow = (id: string) => {
-    setFollowedUsers((current) => {
-      const next = new Set(current)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+    if (!signedIn) {
+      onAuthRequired()
+      return
+    }
+    toggleFollowedUser(id)
+  }
+
+  const runAuthenticated = (action: () => void) => {
+    if (!signedIn) {
+      onAuthRequired()
+      return
+    }
+    action()
+  }
+
+  const compose = (focus: ComposerFocus = 'body') => {
+    if (!signedIn) {
+      onAuthRequired()
+      return
+    }
+    setComposerFocus(focus)
+    setComposerOpen(true)
+  }
+
+  const publish = (post: LocalForumPost) => {
+    publishForumPost(post)
+    setComposerOpen(false)
+    setPublishNotice(true)
+    setChannel(post.channel)
+    setGameFilter(post.gameId)
+    setFeedTab('recommended')
+    setCurrentPage(1)
+    setSelectedPostId(post.id)
+    window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
   const renderSearch = (placementClass: string) => (
@@ -299,7 +444,8 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
   )
 
   return (
-    <main className="forum-main">
+    <>
+      <main className="forum-main">
       <div className="forum-shell">
         <aside className="forum-left-rail" aria-label={t('forum.channels.label')}>
           <nav className="forum-panel forum-channel-panel">
@@ -359,15 +505,19 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
           {selectedPost ? (
             <ForumPostDetail
               post={selectedPost}
-              image={selectedPost.gameId ? siteById.get(selectedPost.gameId)?.bg : undefined}
+              image={selectedPost.imageSrc ?? (!selectedPost.own && selectedPost.gameId
+                ? siteById.get(selectedPost.gameId)?.bg
+                : undefined)}
               onBack={closePost}
               onComingSoon={onComingSoon}
+              onAuthRequired={onAuthRequired}
+              currentAvatar={currentAvatar}
             />
           ) : (
             <>
               {renderSearch('forum-content-search')}
 
-              <button type="button" className="forum-mobile-compose" onClick={onComingSoon}>
+              <button type="button" className="forum-mobile-compose" onClick={() => compose('body')}>
                 <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
                 {t('forum.composer.action')}
               </button>
@@ -425,7 +575,15 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                     </button>
                   ))}
                 </div>
-                <button type="button" className="forum-following-filter" onClick={onComingSoon}>
+                <button
+                  type="button"
+                  className={followingOnly ? 'forum-following-filter is-active' : 'forum-following-filter'}
+                  aria-pressed={followingOnly}
+                  onClick={() => runAuthenticated(() => {
+                    setFollowingOnly((current) => !current)
+                    setCurrentPage(1)
+                  })}
+                >
                   <IconAdjustmentsHorizontal className="size-4" stroke={1.8} aria-hidden="true" />
                   {t('forum.feed.followingOnly')}
                 </button>
@@ -438,11 +596,16 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
                       <ForumPostCard
                         key={post.id}
                         post={post}
-                        image={post.gameId ? siteById.get(post.gameId)?.bg : undefined}
-                        followed={followedUsers.has(post.authorKey)}
-                        onToggleFollow={() => toggleFollow(post.authorKey)}
+                        image={post.imageSrc ?? (!post.own && post.gameId
+                          ? siteById.get(post.gameId)?.bg
+                          : undefined)}
+                        followed={userSystemState.followedUserIds.includes(post.authorNumber)}
+                        bookmarked={userSystemState.bookmarkedPostIds.includes(post.id)}
+                        liked={userSystemState.likedPostIds.includes(post.id)}
+                        onToggleFollow={() => toggleFollow(post.authorNumber)}
+                        onToggleBookmark={() => runAuthenticated(() => toggleBookmarkedPost(post.id))}
+                        onToggleLike={() => runAuthenticated(() => toggleLikedPost(post.id))}
                         onOpen={() => openPost(post.id)}
-                        onComingSoon={onComingSoon}
                       />
                     ))}
                   </div>
@@ -511,8 +674,8 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
           {selectedPost ? (
             <ForumAuthorPostcard
               post={selectedPost}
-              followed={followedUsers.has(selectedPost.authorKey)}
-              onToggleFollow={() => toggleFollow(selectedPost.authorKey)}
+              followed={userSystemState.followedUserIds.includes(selectedPost.authorNumber)}
+              onToggleFollow={() => toggleFollow(selectedPost.authorNumber)}
             />
           ) : (
             <>
@@ -520,20 +683,20 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
 
               <section className="forum-panel forum-composer">
             <div className="forum-composer-entry">
-              <img src={avatarUrl('arkive-current-sailor')} alt="" />
-              <button type="button" onClick={onComingSoon}>{t('forum.composer.placeholder')}</button>
+              <img src={currentAvatar} alt={user?.name ?? ''} />
+              <button type="button" onClick={() => compose('body')}>{t('forum.composer.placeholder')}</button>
             </div>
             <div className="forum-composer-tools">
-              <button type="button" aria-label={t('forum.composer.image')} onClick={onComingSoon}>
+              <button type="button" aria-label={t('forum.composer.image')} onClick={() => compose('image')}>
                 <IconPhoto className="size-5" stroke={1.8} />
               </button>
-              <button type="button" aria-label={t('forum.composer.video')} onClick={onComingSoon}>
+              <button type="button" aria-label={t('forum.composer.video')} onClick={() => compose('video')}>
                 <IconVideo className="size-5" stroke={1.8} />
               </button>
-              <button type="button" aria-label={t('forum.composer.topic')} onClick={onComingSoon}>
+              <button type="button" aria-label={t('forum.composer.topic')} onClick={() => compose('topic')}>
                 <IconHash className="size-5" stroke={1.8} />
               </button>
-              <button type="button" className="forum-publish-button" onClick={onComingSoon}>
+              <button type="button" className="forum-publish-button" onClick={() => compose('body')}>
                 <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
                 {t('forum.composer.action')}
               </button>
@@ -552,7 +715,7 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
             </header>
             <div>
               {RECOMMENDED_USERS.map((user) => {
-                const followed = followedUsers.has(user.id)
+                const followed = userSystemState.followedUserIds.includes(user.id)
                 return (
                   <article key={user.id}>
                     <img src={avatarUrl(user.avatarSeed)} alt="" loading="lazy" />
@@ -575,7 +738,328 @@ export function ForumPage({ sites, onComingSoon }: ForumPageProps) {
           </section>
         </aside>
       </div>
-    </main>
+      </main>
+      <ForumComposerDialog
+        open={composerOpen}
+        focus={composerFocus}
+        sites={sites}
+        initialChannel={channel === 'games' || gameFilter ? 'games' : 'general'}
+        initialGameId={gameFilter}
+        avatarSrc={currentAvatar}
+        authorName={user?.name ?? ''}
+        onOpenChange={setComposerOpen}
+        onPublish={publish}
+      />
+      {publishNotice && (
+        <div className="forum-publish-toast" role="status">
+          <IconCheck className="size-5" stroke={2} aria-hidden="true" />
+          {t('forum.composer.published')}
+        </div>
+      )}
+    </>
+  )
+}
+
+function ForumComposerDialog({
+  open,
+  focus,
+  sites,
+  initialChannel,
+  initialGameId,
+  avatarSrc,
+  authorName,
+  onOpenChange,
+  onPublish,
+}: {
+  open: boolean
+  focus: ComposerFocus
+  sites: readonly SiteCard[]
+  initialChannel: 'general' | 'games'
+  initialGameId: string | null
+  avatarSrc: string
+  authorName: string
+  onOpenChange: (open: boolean) => void
+  onPublish: (post: LocalForumPost) => void
+}) {
+  const { t } = useTranslation()
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [channel, setChannel] = useState<'general' | 'games'>(initialChannel)
+  const [gameId, setGameId] = useState<string | null>(initialGameId)
+  const [topic, setTopic] = useState<(typeof COMPOSER_TOPICS)[number]>('discussion')
+  const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const [imageName, setImageName] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
+  const [error, setError] = useState('')
+  const titleRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const imageButtonRef = useRef<HTMLButtonElement>(null)
+  const videoRef = useRef<HTMLInputElement>(null)
+  const topicRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    setTitle('')
+    setContent('')
+    setChannel(initialChannel)
+    setGameId(initialGameId)
+    setTopic('discussion')
+    setImageSrc(null)
+    setImageName('')
+    setVideoUrl('')
+    setError('')
+  }, [initialChannel, initialGameId, open])
+
+  useEffect(() => {
+    if (!open) return
+    const timeout = window.setTimeout(() => {
+      if (focus === 'image') imageButtonRef.current?.focus()
+      else if (focus === 'video') videoRef.current?.focus()
+      else if (focus === 'topic') topicRef.current?.focus()
+      else titleRef.current?.focus()
+    })
+    return () => window.clearTimeout(timeout)
+  }, [focus, open])
+
+  const selectImage = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0]
+    event.currentTarget.value = ''
+    if (!file) return
+    if (!FORUM_IMAGE_TYPES.has(file.type) || file.size > FORUM_IMAGE_MAX_BYTES) {
+      setError(t('forum.composer.errors.image'))
+      return
+    }
+    try {
+      setImageSrc(await readForumImage(file))
+      setImageName(file.name)
+      setError('')
+    } catch {
+      setError(t('forum.composer.errors.image'))
+    }
+  }
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const normalizedTitle = title.trim()
+    const normalizedContent = content.trim()
+    const normalizedVideoUrl = videoUrl.trim()
+    if (normalizedTitle.length < 2) {
+      setError(t('forum.composer.errors.title'))
+      titleRef.current?.focus()
+      return
+    }
+    if (normalizedContent.length < 10) {
+      setError(t('forum.composer.errors.content'))
+      return
+    }
+    if (channel === 'games' && !gameId) {
+      setError(t('forum.composer.errors.game'))
+      return
+    }
+    if (!isSafeVideoUrl(normalizedVideoUrl)) {
+      setError(t('forum.composer.errors.video'))
+      videoRef.current?.focus()
+      return
+    }
+
+    onPublish({
+      id: `local-${Date.now()}-${window.crypto.randomUUID()}`,
+      title: normalizedTitle,
+      content: normalizedContent,
+      channel,
+      gameId: channel === 'games' ? gameId : null,
+      topic,
+      imageSrc,
+      videoUrl: normalizedVideoUrl || null,
+      createdAt: new Date().toISOString(),
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="forum-publish-dialog z-[3001]"
+        overlayClassName="z-[3000] bg-black/55 backdrop-blur-sm"
+        showCloseButton={false}
+      >
+        <form className="forum-publish-form" onSubmit={submit}>
+          <DialogHeader className="forum-publish-header">
+            <img src={avatarSrc} alt="" />
+            <div>
+              <DialogTitle>{t('forum.composer.dialogTitle')}</DialogTitle>
+              <DialogDescription className="sr-only">{t('forum.composer.dialogDescription')}</DialogDescription>
+              <span>{authorName}</span>
+            </div>
+            <DialogClose asChild>
+              <button type="button" className="forum-publish-close" aria-label={t('forum.composer.close')}>
+                <IconX className="size-5" stroke={1.8} aria-hidden="true" />
+              </button>
+            </DialogClose>
+          </DialogHeader>
+
+          <div className="forum-publish-layout">
+            <div className="forum-publish-editor">
+              <label htmlFor="forum-post-title">
+                <span>{t('forum.composer.postTitle')}</span>
+                <small>{title.length}/80</small>
+              </label>
+              <input
+                ref={titleRef}
+                id="forum-post-title"
+                value={title}
+                maxLength={80}
+                onChange={(event) => {
+                  setTitle(event.target.value)
+                  setError('')
+                }}
+                placeholder={t('forum.composer.postTitlePlaceholder')}
+              />
+
+              <label htmlFor="forum-post-content">
+                <span>{t('forum.composer.content')}</span>
+                <small>{content.length}/5000</small>
+              </label>
+              <textarea
+                id="forum-post-content"
+                value={content}
+                maxLength={5000}
+                onChange={(event) => {
+                  setContent(event.target.value)
+                  setError('')
+                }}
+                placeholder={t('forum.composer.contentPlaceholder')}
+              />
+
+              {imageSrc && (
+                <figure className="forum-publish-image-preview">
+                  <img src={imageSrc} alt={imageName} />
+                  <figcaption>{imageName}</figcaption>
+                  <button
+                    type="button"
+                    aria-label={t('forum.composer.removeImage')}
+                    onClick={() => {
+                      setImageSrc(null)
+                      setImageName('')
+                    }}
+                  >
+                    <IconTrash className="size-4" stroke={1.8} aria-hidden="true" />
+                  </button>
+                </figure>
+              )}
+            </div>
+
+            <aside className="forum-publish-settings">
+              <fieldset>
+                <legend>{t('forum.composer.destination')}</legend>
+                <div className="forum-publish-channel-options">
+                  {(['general', 'games'] as const).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={channel === value}
+                      onClick={() => {
+                        setChannel(value)
+                        setError('')
+                      }}
+                    >
+                      {value === 'general'
+                        ? <IconMessages className="size-5" stroke={1.8} aria-hidden="true" />
+                        : <IconDeviceGamepad2 className="size-5" stroke={1.8} aria-hidden="true" />}
+                      {t(`forum.composer.channels.${value}`)}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              {channel === 'games' && (
+                <fieldset>
+                  <legend>{t('forum.composer.selectGame')}</legend>
+                  <div className="forum-publish-game-options">
+                    {sites.map((site) => (
+                      <button
+                        key={site.id}
+                        type="button"
+                        aria-pressed={gameId === site.id}
+                        onClick={() => {
+                          setGameId(site.id)
+                          setError('')
+                        }}
+                      >
+                        <img src={GAME_LOGOS[site.id]} alt="" />
+                        <span>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</span>
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+
+              <fieldset>
+                <legend>{t('forum.composer.topicLabel')}</legend>
+                <div className="forum-publish-topic-options">
+                  {COMPOSER_TOPICS.map((value, index) => (
+                    <button
+                      ref={index === 0 ? topicRef : undefined}
+                      key={value}
+                      type="button"
+                      aria-pressed={topic === value}
+                      onClick={() => setTopic(value)}
+                    >
+                      <IconHash className="size-4" stroke={1.8} aria-hidden="true" />
+                      {t(`forum.composer.topics.${value}`)}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>{t('forum.composer.media')}</legend>
+                <input
+                  ref={imageInputRef}
+                  className="sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => void selectImage(event)}
+                />
+                <button
+                  ref={imageButtonRef}
+                  type="button"
+                  className="forum-publish-media-button"
+                  onClick={() => imageInputRef.current?.click()}
+                >
+                  <IconPhoto className="size-5" stroke={1.8} aria-hidden="true" />
+                  {t(imageSrc ? 'forum.composer.replaceImage' : 'forum.composer.image')}
+                </button>
+                <label className="forum-publish-video-field" htmlFor="forum-post-video">
+                  <span><IconVideo className="size-5" stroke={1.8} aria-hidden="true" />{t('forum.composer.video')}</span>
+                  <input
+                    ref={videoRef}
+                    id="forum-post-video"
+                    type="url"
+                    value={videoUrl}
+                    onChange={(event) => {
+                      setVideoUrl(event.target.value)
+                      setError('')
+                    }}
+                    placeholder={t('forum.composer.videoPlaceholder')}
+                  />
+                </label>
+              </fieldset>
+            </aside>
+          </div>
+
+          <DialogFooter className="forum-publish-footer">
+            <span className="forum-publish-error" role="alert">{error}</span>
+            <DialogClose asChild>
+              <button type="button" className="forum-publish-cancel">{t('forum.composer.cancel')}</button>
+            </DialogClose>
+            <button type="submit" className="forum-publish-submit">
+              <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
+              {t('forum.composer.publish')}
+            </button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -583,55 +1067,69 @@ function ForumPostCard({
   post,
   image,
   followed,
+  bookmarked,
+  liked,
   onToggleFollow,
+  onToggleBookmark,
+  onToggleLike,
   onOpen,
-  onComingSoon,
 }: {
   post: ForumPost
   image?: string
   followed: boolean
+  bookmarked: boolean
+  liked: boolean
   onToggleFollow: () => void
+  onToggleBookmark: () => void
+  onToggleLike: () => void
   onOpen: () => void
-  onComingSoon: () => void
 }) {
   const { t } = useTranslation()
 
   return (
     <article className="forum-post">
-      <img className="forum-post-avatar" src={avatarUrl(post.avatarSeed)} alt="" loading="lazy" />
+      <img className="forum-post-avatar" src={post.avatarSrc ?? avatarUrl(post.avatarSeed)} alt="" loading="lazy" />
       <div className="forum-post-content">
         <div className="forum-post-author">
-          <strong><a href={publicProfileHref(post.authorNumber)}>{t(post.authorKey)}</a></strong>
+          <strong><a href={post.own ? '#account/posts' : publicProfileHref(post.authorNumber)}>{postAuthor(post, t)}</a></strong>
           {post.featured && <span>{t('forum.feed.qualityAuthor')}</span>}
-          <small>{t(post.timeKey)}</small>
-          <button
-            type="button"
-            className="forum-post-follow"
-            aria-pressed={followed}
-            onClick={onToggleFollow}
-          >
-            {t(followed ? 'forum.users.following' : 'forum.users.follow')}
-          </button>
+          <small>{postTime(post, t)}</small>
+          {!post.own && (
+            <button
+              type="button"
+              className="forum-post-follow"
+              aria-pressed={followed}
+              onClick={onToggleFollow}
+            >
+              {t(followed ? 'forum.users.following' : 'forum.users.follow')}
+            </button>
+          )}
         </div>
         <button
           type="button"
           className="forum-post-title"
-          aria-label={t('forum.detail.openPost', { title: t(post.titleKey) })}
+          aria-label={t('forum.detail.openPost', { title: postTitle(post, t) })}
           onClick={onOpen}
         >
-          <h3>{t(post.titleKey)}</h3>
+          <h3>{postTitle(post, t)}</h3>
         </button>
-        <p>{t(post.copyKey)}</p>
+        <p>{postCopy(post, t)}</p>
         <div className="forum-post-tags">
-          {post.tagKeys.map((key) => <span key={key}>{t(key)}</span>)}
+          {postTags(post, t).map((tag) => <span key={tag}>{tag}</span>)}
         </div>
-        {image && <img className="forum-post-media" src={image} alt={t(post.titleKey)} loading="lazy" />}
+        {image && <img className="forum-post-media" src={image} alt={postTitle(post, t)} loading="lazy" />}
+        {post.videoUrl && (
+          <a className="forum-post-video" href={post.videoUrl} target="_blank" rel="noreferrer">
+            <IconVideo className="size-4" stroke={1.8} aria-hidden="true" />
+            {t('forum.composer.openVideo')}
+          </a>
+        )}
       </div>
       <div className="forum-post-actions">
-        <button type="button" aria-label={t('forum.actions.bookmark')} onClick={onComingSoon}>
+        <button type="button" aria-label={t('forum.actions.bookmark')} aria-pressed={bookmarked} onClick={onToggleBookmark}>
           <IconBookmark className="size-4" stroke={1.8} />
         </button>
-        <button type="button" aria-label={t('forum.actions.like')} onClick={onComingSoon}>
+        <button type="button" aria-label={t('forum.actions.like')} aria-pressed={liked} onClick={onToggleLike}>
           <IconThumbUp className="size-4" stroke={1.8} />
         </button>
       </div>
@@ -644,19 +1142,38 @@ function ForumPostDetail({
   image,
   onBack,
   onComingSoon,
+  onAuthRequired,
+  currentAvatar,
 }: {
   post: ForumPost
   image?: string
   onBack: () => void
   onComingSoon: () => void
+  onAuthRequired: () => void
+  currentAvatar: string
 }) {
   const { t, i18n } = useTranslation()
-  const [liked, setLiked] = useState(false)
-  const [bookmarked, setBookmarked] = useState(false)
-  const [commentLiked, setCommentLiked] = useState(false)
+  const { status, user } = useAuth()
+  const {
+    state,
+    toggleBookmarkedPost,
+    toggleLikedComment,
+    toggleLikedPost,
+  } = useUserSystem()
+  const liked = state.likedPostIds.includes(post.id)
+  const bookmarked = state.bookmarkedPostIds.includes(post.id)
+  const commentId = `${post.id}:sample-comment`
+  const commentLiked = state.likedCommentIds.includes(commentId)
   const numberFormatter = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language)
   const formatCount = (count: number) => numberFormatter.format(count)
   const discussionId = `forum-discussion-${post.id}`
+  const runAuthenticated = (action: () => void) => {
+    if (status !== 'authenticated') {
+      onAuthRequired()
+      return
+    }
+    action()
+  }
 
   return (
     <div className="forum-detail-stack">
@@ -667,23 +1184,29 @@ function ForumPostDetail({
 
       <article className="forum-panel forum-detail-article">
         <header>
-          <h1>{t(post.titleKey)}</h1>
+          <h1>{postTitle(post, t)}</h1>
           <div className="forum-detail-byline">
-            <img src={avatarUrl(post.avatarSeed)} alt="" />
+            <img src={post.avatarSrc ?? avatarUrl(post.avatarSeed)} alt="" />
             <div>
-              <strong><a href={publicProfileHref(post.authorNumber)}>{t(post.authorKey)}</a></strong>
-              <span>{t('forum.detail.byline', { time: t(post.timeKey) })}</span>
+              <strong><a href={post.own ? '#account/posts' : publicProfileHref(post.authorNumber)}>{postAuthor(post, t)}</a></strong>
+              <span>{t('forum.detail.byline', { time: postTime(post, t) })}</span>
             </div>
           </div>
           <div className="forum-detail-tags">
-            {post.tagKeys.map((key) => <span key={key}>{t(key)}</span>)}
+            {postTags(post, t).map((tag) => <span key={tag}>{tag}</span>)}
           </div>
         </header>
 
         <div className="forum-detail-body">
-          <p className="forum-detail-lead">{t(post.copyKey)}</p>
-          {image && <img src={image} alt={t(post.titleKey)} loading="eager" />}
-          <p>{t('forum.detail.continuation')}</p>
+          <p className="forum-detail-lead">{postCopy(post, t)}</p>
+          {image && <img src={image} alt={postTitle(post, t)} loading="eager" />}
+          {post.videoUrl && (
+            <a className="forum-detail-video" href={post.videoUrl} target="_blank" rel="noreferrer">
+              <IconVideo className="size-5" stroke={1.8} aria-hidden="true" />
+              {t('forum.composer.openVideo')}
+            </a>
+          )}
+          {!post.own && <p>{t('forum.detail.continuation')}</p>}
         </div>
 
         <footer className="forum-detail-actions">
@@ -695,12 +1218,12 @@ function ForumPostDetail({
             <span>{t('forum.detail.comments')}</span>
             <strong>{formatCount(post.commentCount)}</strong>
           </button>
-          <button type="button" aria-pressed={liked} onClick={() => setLiked((current) => !current)}>
+          <button type="button" aria-pressed={liked} onClick={() => runAuthenticated(() => toggleLikedPost(post.id))}>
             <IconThumbUp className="size-4" stroke={1.8} aria-hidden="true" />
             <span>{t('forum.detail.like')}</span>
             <strong>{formatCount(post.likeCount + (liked ? 1 : 0))}</strong>
           </button>
-          <button type="button" aria-pressed={bookmarked} onClick={() => setBookmarked((current) => !current)}>
+          <button type="button" aria-pressed={bookmarked} onClick={() => runAuthenticated(() => toggleBookmarkedPost(post.id))}>
             <IconBookmark className="size-4" stroke={1.8} aria-hidden="true" />
             <span>{t('forum.detail.bookmark')}</span>
             <strong>{formatCount(post.bookmarkCount + (bookmarked ? 1 : 0))}</strong>
@@ -717,11 +1240,12 @@ function ForumPostDetail({
           <span>{t('forum.detail.discussionCount', { count: post.commentCount })}</span>
         </header>
         <div className="forum-detail-composer">
-          <img src={avatarUrl('arkive-current-sailor')} alt="" />
-          <button type="button" onClick={onComingSoon}>{t('forum.detail.replyPlaceholder')}</button>
+          <img src={currentAvatar} alt={user?.name ?? ''} />
+          <button type="button" onClick={() => runAuthenticated(onComingSoon)}>{t('forum.detail.replyPlaceholder')}</button>
         </div>
 
-        <article className="forum-comment-thread">
+        {post.commentCount > 0 ? (
+          <article className="forum-comment-thread">
           <div className="forum-comment-main">
             <img src={avatarUrl('arkive-mistshore-notes')} alt="" />
             <div>
@@ -735,22 +1259,22 @@ function ForumPostDetail({
                   type="button"
                   aria-label={t('forum.detail.commentLikeLabel')}
                   aria-pressed={commentLiked}
-                  onClick={() => setCommentLiked((current) => !current)}
+                  onClick={() => runAuthenticated(() => toggleLikedComment(commentId))}
                 >
                   <IconThumbUp className="size-4" stroke={1.8} aria-hidden="true" />
                   <span>{formatCount(12 + (commentLiked ? 1 : 0))}</span>
                 </button>
-                <button type="button" onClick={onComingSoon}>
+                <button type="button" onClick={() => runAuthenticated(onComingSoon)}>
                   <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
                   {t('forum.detail.reply')}
                 </button>
               </footer>
 
               <div className="forum-comment-reply">
-                <img src={avatarUrl(post.avatarSeed)} alt="" />
+                <img src={post.avatarSrc ?? avatarUrl(post.avatarSeed)} alt="" />
                 <div>
                   <header>
-                    <strong>{t(post.authorKey)}</strong>
+                    <strong>{postAuthor(post, t)}</strong>
                     <span className="forum-comment-author-badge">{t('forum.detail.authorBadge')}</span>
                     <span>{t('forum.detail.replyingTo', { name: t('forum.detail.sampleCommentAuthor') })}</span>
                     <time>{t('forum.detail.sampleReplyTime')}</time>
@@ -760,7 +1284,10 @@ function ForumPostDetail({
               </div>
             </div>
           </div>
-        </article>
+          </article>
+        ) : (
+          <p className="forum-comment-empty">{t('forum.detail.noComments')}</p>
+        )}
       </section>
     </div>
   )
@@ -783,9 +1310,9 @@ function ForumAuthorPostcard({
     <section className="forum-panel forum-author-postcard" aria-labelledby={headingId}>
       <div className="forum-author-postcard-cover" aria-hidden="true" />
       <div className="forum-author-postcard-identity">
-        <img src={avatarUrl(post.avatarSeed)} alt="" />
+        <img src={post.avatarSrc ?? avatarUrl(post.avatarSeed)} alt="" />
         <div>
-          <h2 id={headingId}><a href={publicProfileHref(post.authorNumber)}>{t(post.authorKey)}</a></h2>
+          <h2 id={headingId}><a href={post.own ? '#account/posts' : publicProfileHref(post.authorNumber)}>{postAuthor(post, t)}</a></h2>
           {post.featured && <small>{t('forum.feed.qualityAuthor')}</small>}
         </div>
       </div>
@@ -799,15 +1326,17 @@ function ForumAuthorPostcard({
           <dd>{followerCount}</dd>
         </div>
       </dl>
-      <p>{t('forum.detail.authorBio', { topic: t(post.tagKeys[0]) })}</p>
-      <button
-        type="button"
-        className={followed ? 'is-followed' : undefined}
-        aria-pressed={followed}
-        onClick={onToggleFollow}
-      >
-        {t(followed ? 'forum.users.following' : 'forum.users.follow')}
-      </button>
+      <p>{t('forum.detail.authorBio', { topic: postTags(post, t)[0] ?? t('forum.channels.general') })}</p>
+      {!post.own && (
+        <button
+          type="button"
+          className={followed ? 'is-followed' : undefined}
+          aria-pressed={followed}
+          onClick={onToggleFollow}
+        >
+          {t(followed ? 'forum.users.following' : 'forum.users.follow')}
+        </button>
+      )}
     </section>
   )
 }

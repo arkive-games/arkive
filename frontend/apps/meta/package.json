@@ -19,6 +19,7 @@
     "lucide-react": "^1.29.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-easy-crop": "^6.2.3",
     "react-i18next": "^17.0.11"
   },
   "devDependencies": {

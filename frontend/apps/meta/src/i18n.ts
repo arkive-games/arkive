@@ -42,11 +42,16 @@ const USER_SYSTEM_COPY = {
       open: '打开个人中心', center: '个人中心', edit: '编辑资料', favorites: '我的收藏', posts: '我的发帖',
       comments: '我的评论', fans: '我的粉丝', following: '我的关注', privacy: '隐私设置', logout: '退出登录',
       descriptions: {
-        edit: '更新头像、昵称和个人简介。', favorites: '查看你收藏的论坛帖子。', posts: '管理你发布过的内容。',
+        edit: '更新头像、昵称和个人简介。', favorites: '集中查看你收藏的游戏、帖子及其他内容。', posts: '管理你发布过的内容。',
         comments: '查看你参与过的讨论。', fans: '查看正在关注你的用户。', following: '管理你关注的社区用户。',
         privacy: '决定其他用户可以看到哪些个人信息。',
       },
       changeAvatar: '更换头像', save: '保存资料', saved: '资料已保存',
+      avatarDialog: {
+        title: '更换头像', description: '从藏舟角色中选择，或上传你自己的头像。', presets: '藏舟头像', custom: '上传自定义头像', presetLabel: '使用第 {{number}} 个头像', requirements: '支持 JPG、PNG、WebP，文件不超过 2MB；可在保存前缩放并裁切为正方形。',
+        preview: '头像预览', choose: '选择图片', replace: '重新选择', zoom: '缩放', zoomIn: '放大', zoomOut: '缩小', reset: '重置位置', editor: '头像裁切区域', processing: '处理中…', cancel: '取消', confirm: '保存头像', close: '关闭更换头像窗口',
+        errors: { type: '请选择JPG、PNG或WebP格式的图片。', size: '图片不能超过2MB，请重新选择。', read: '无法读取或裁切图片，请重新选择。' },
+      },
       fields: { displayName: '昵称', accountId: '藏舟编号', accountIdHelper: '编号由系统生成，暂不支持修改。', bio: '个人简介' },
     },
     currentUser: { name: '潮汐拾页', bio: '记录地图上的小发现，也收藏每一次有用的讨论。', badge: '我的主页' },
@@ -54,7 +59,7 @@ const USER_SYSTEM_COPY = {
       center: '个人主页', posts: '发帖', comments: '评论', favorites: '收藏', fans: '粉丝', following: '关注',
       likesReceived: '获赞', accountId: '藏舟编号：{{id}}',
       descriptions: {
-        posts: '查看该用户发布的社区内容。', comments: '查看该用户参与的公开讨论。', favorites: '查看该用户公开收藏的帖子。',
+        posts: '查看该用户发布的社区内容。', comments: '查看该用户参与的公开讨论。', favorites: '查看该用户公开收藏的游戏、帖子及其他内容。',
         fans: '查看关注该用户的人。', following: '查看该用户正在关注的人。',
       },
       bios: {
@@ -90,13 +95,13 @@ const USER_SYSTEM_COPY = {
     },
     account: {
       open: '開啟個人中心', center: '個人中心', edit: '編輯資料', favorites: '我的收藏', posts: '我的發文', comments: '我的留言', fans: '我的粉絲', following: '我的關注', privacy: '隱私設定', logout: '登出',
-      descriptions: { edit: '更新頭像、暱稱和個人簡介。', favorites: '查看你收藏的論壇文章。', posts: '管理你發布過的內容。', comments: '查看你參與過的討論。', fans: '查看正在關注你的使用者。', following: '管理你關注的社群使用者。', privacy: '決定其他使用者可以看到哪些個人資訊。' },
-      changeAvatar: '更換頭像', save: '儲存資料', saved: '資料已儲存', fields: { displayName: '暱稱', accountId: '藏舟編號', accountIdHelper: '編號由系統產生，暫不支援修改。', bio: '個人簡介' },
+      descriptions: { edit: '更新頭像、暱稱和個人簡介。', favorites: '集中查看你收藏的遊戲、文章及其他內容。', posts: '管理你發布過的內容。', comments: '查看你參與過的討論。', fans: '查看正在關注你的使用者。', following: '管理你關注的社群使用者。', privacy: '決定其他使用者可以看到哪些個人資訊。' },
+      changeAvatar: '更換頭像', save: '儲存資料', saved: '資料已儲存', avatarDialog: { title: '更換頭像', description: '從藏舟角色中選擇，或上傳你自己的頭像。', presets: '藏舟頭像', custom: '上傳自訂頭像', presetLabel: '使用第 {{number}} 個頭像', requirements: '支援 JPG、PNG、WebP，檔案不超過 2MB；可在儲存前縮放並裁切為正方形。', preview: '頭像預覽', choose: '選擇圖片', replace: '重新選擇', zoom: '縮放', zoomIn: '放大', zoomOut: '縮小', reset: '重設位置', editor: '頭像裁切區域', processing: '處理中…', cancel: '取消', confirm: '儲存頭像', close: '關閉更換頭像視窗', errors: { type: '請選擇JPG、PNG或WebP格式的圖片。', size: '圖片不能超過2MB，請重新選擇。', read: '無法讀取或裁切圖片，請重新選擇。' } }, fields: { displayName: '暱稱', accountId: '藏舟編號', accountIdHelper: '編號由系統產生，暫不支援修改。', bio: '個人簡介' },
     },
     currentUser: { name: '潮汐拾頁', bio: '記錄地圖上的小發現，也收藏每一次有用的討論。', badge: '我的主頁' },
     publicProfile: {
       center: '個人主頁', posts: '發文', comments: '留言', favorites: '收藏', fans: '粉絲', following: '關注', likesReceived: '獲讚', accountId: '藏舟編號：{{id}}',
-      descriptions: { posts: '查看該使用者發布的社群內容。', comments: '查看該使用者參與的公開討論。', favorites: '查看該使用者公開收藏的文章。', fans: '查看關注該使用者的人。', following: '查看該使用者正在關注的人。' },
+      descriptions: { posts: '查看該使用者發布的社群內容。', comments: '查看該使用者參與的公開討論。', favorites: '查看該使用者公開收藏的遊戲、文章及其他內容。', fans: '查看關注該使用者的人。', following: '查看該使用者正在關注的人。' },
       bios: { vrising: '整理瓦爾多蘭路線與首領情報，偶爾分享城堡建造心得。', aion2: '研究職業搭配與副本節奏，希望每份攻略都能直接用上。', palworld: '長期記錄帕魯生態、據點效率和多人世界測試結果。' },
     },
     content: { commentsCount: '{{count}} 則留言', likesCount: '{{count}} 個讚', comment1: '這條路線補充得很清楚，我在第二個轉角也找到了相同的資源點。', comment2: '如果是多人世界，建議把準備階段再提前一點，整體會更穩定。', viewDiscussion: '查看原討論' },
@@ -114,13 +119,13 @@ const USER_SYSTEM_COPY = {
     },
     account: {
       open: 'Open profile', center: 'Account center', edit: 'Edit profile', favorites: 'My favorites', posts: 'My posts', comments: 'My comments', fans: 'My followers', following: 'Following', privacy: 'Privacy settings', logout: 'Log out',
-      descriptions: { edit: 'Update your avatar, display name, and bio.', favorites: 'Review forum posts you have saved.', posts: 'Manage content you have published.', comments: 'Review discussions you have joined.', fans: 'See the people following you.', following: 'Manage the community members you follow.', privacy: 'Choose which profile details other people can see.' },
-      changeAvatar: 'Change avatar', save: 'Save profile', saved: 'Profile saved', fields: { displayName: 'Display name', accountId: 'Arkive ID', accountIdHelper: 'Your ID is generated by the system and cannot be changed.', bio: 'Bio' },
+      descriptions: { edit: 'Update your avatar, display name, and bio.', favorites: 'Review your saved games, posts, and other content.', posts: 'Manage content you have published.', comments: 'Review discussions you have joined.', fans: 'See the people following you.', following: 'Manage the community members you follow.', privacy: 'Choose which profile details other people can see.' },
+      changeAvatar: 'Change avatar', save: 'Save profile', saved: 'Profile saved', avatarDialog: { title: 'Change avatar', description: 'Choose an Arkive character or upload your own image.', presets: 'Arkive avatars', custom: 'Upload a custom avatar', presetLabel: 'Use avatar {{number}}', requirements: 'Use a JPG, PNG, or WebP up to 2 MB. Zoom and crop it to a square before saving.', preview: 'Avatar preview', choose: 'Choose image', replace: 'Choose another', zoom: 'Zoom', zoomIn: 'Zoom in', zoomOut: 'Zoom out', reset: 'Reset position', editor: 'Avatar crop area', processing: 'Processing…', cancel: 'Cancel', confirm: 'Save avatar', close: 'Close avatar window', errors: { type: 'Choose a JPG, PNG, or WebP image.', size: 'The image cannot be larger than 2 MB.', read: 'This image could not be read or cropped. Choose another image.' } }, fields: { displayName: 'Display name', accountId: 'Arkive ID', accountIdHelper: 'Your ID is generated by the system and cannot be changed.', bio: 'Bio' },
     },
     currentUser: { name: 'Tidebound Notes', bio: 'Saving small map discoveries and every discussion worth returning to.', badge: 'My profile' },
     publicProfile: {
       center: 'Profile', posts: 'Posts', comments: 'Comments', favorites: 'Favorites', fans: 'Followers', following: 'Following', likesReceived: 'Likes', accountId: 'Arkive ID: {{id}}',
-      descriptions: { posts: 'Browse this member’s community posts.', comments: 'Browse this member’s public discussions.', favorites: 'Browse posts this member has shared publicly.', fans: 'See the people following this member.', following: 'See the people this member follows.' },
+      descriptions: { posts: 'Browse this member’s community posts.', comments: 'Browse this member’s public discussions.', favorites: 'Browse this member’s publicly saved games, posts, and other content.', fans: 'See the people following this member.', following: 'See the people this member follows.' },
       bios: { vrising: 'Documenting Vardoran routes, boss intel, and the occasional castle build.', aion2: 'Studying class setups and dungeon pacing with practical guides in mind.', palworld: 'Tracking Pal ecosystems, base efficiency, and multiplayer test results.' },
     },
     content: { commentsCount: '{{count}} comments', likesCount: '{{count}} likes', comment1: 'This route update is clear. I found the same resource node after the second turn.', comment2: 'For multiplayer worlds, starting the preparation phase earlier makes the run much steadier.', viewDiscussion: 'View discussion' },
@@ -132,7 +137,7 @@ const USER_SYSTEM_COPY = {
       items: { reply: '「{{post}}」のコメントに返信しました', mention: '「{{post}}」であなたをメンションしました', like: '投稿「{{post}}」にいいねしました', system: '「{{post}}」を公開しました' }, settingGroups: { interaction: 'コミュニティ通知', platform: 'フォローとシステム通知' },
       settingsRows: { replies: { title: '返信通知', description: '投稿やコメントに返信があったとき通知します。' }, mentions: { title: 'メンション通知', description: '投稿やコメントでメンションされたとき通知します。' }, likes: { title: 'いいね通知', description: '投稿やコメントにいいねが付いたとき通知します。' }, follows: { title: 'フォロー通知', description: '新しいフォロワーが増えたとき通知します。' }, system: { title: 'システム通知', description: 'アカウント、安全、コミュニティ規約の情報を受け取ります。' }, browser: { title: 'ブラウザ通知', description: 'ブラウザでデスクトップ通知を受け取ります。' } },
     },
-    account: { open: 'プロフィールを開く', center: 'アカウントセンター', edit: 'プロフィール編集', favorites: 'お気に入り', posts: '自分の投稿', comments: '自分のコメント', fans: 'フォロワー', following: 'フォロー中', privacy: 'プライバシー設定', logout: 'ログアウト', descriptions: { edit: 'アバター、表示名、自己紹介を更新します。', favorites: '保存したフォーラム投稿を確認します。', posts: '公開したコンテンツを管理します。', comments: '参加したディスカッションを確認します。', fans: 'あなたをフォローしているユーザーを表示します。', following: 'フォローしているユーザーを管理します。', privacy: '他のユーザーに表示する情報を選択します。' }, changeAvatar: 'アバター変更', save: '保存', saved: '保存しました', fields: { displayName: '表示名', accountId: '蔵舟ID', accountIdHelper: 'IDはシステムで生成され、変更できません。', bio: '自己紹介' } },
+    account: { open: 'プロフィールを開く', center: 'アカウントセンター', edit: 'プロフィール編集', favorites: 'お気に入り', posts: '自分の投稿', comments: '自分のコメント', fans: 'フォロワー', following: 'フォロー中', privacy: 'プライバシー設定', logout: 'ログアウト', descriptions: { edit: 'アバター、表示名、自己紹介を更新します。', favorites: '保存したゲーム、投稿、その他のコンテンツを確認します。', posts: '公開したコンテンツを管理します。', comments: '参加したディスカッションを確認します。', fans: 'あなたをフォローしているユーザーを表示します。', following: 'フォローしているユーザーを管理します。', privacy: '他のユーザーに表示する情報を選択します。' }, changeAvatar: 'アバター変更', save: '保存', saved: '保存しました', avatarDialog: { title: 'アバター変更', description: '藏舟キャラクターから選ぶか、自分の画像をアップロードします。', presets: '藏舟アバター', custom: '画像をアップロード', presetLabel: 'アバター{{number}}を使用', requirements: '2MB以下のJPG・PNG・WebP画像を、保存前に正方形へ拡大・切り抜きできます。', preview: 'アバタープレビュー', choose: '画像を選択', replace: '別の画像を選択', zoom: '拡大率', zoomIn: '拡大', zoomOut: '縮小', reset: '位置をリセット', editor: 'アバター切り抜き範囲', processing: '処理中…', cancel: 'キャンセル', confirm: 'アバターを保存', close: 'アバター変更画面を閉じる', errors: { type: 'JPG、PNG、WebP形式の画像を選択してください。', size: '画像は2MB以下にしてください。', read: '画像を読み込みまたは切り抜きできません。別の画像を選択してください。' } }, fields: { displayName: '表示名', accountId: '蔵舟ID', accountIdHelper: 'IDはシステムで生成され、変更できません。', bio: '自己紹介' } },
     currentUser: { name: '潮の手帳', bio: 'マップの小さな発見と、役立つディスカッションを記録しています。', badge: '自分のプロフィール' },
     publicProfile: { center: 'プロフィール', posts: '投稿', comments: 'コメント', favorites: 'お気に入り', fans: 'フォロワー', following: 'フォロー中', likesReceived: 'いいね', accountId: '蔵舟ID：{{id}}', descriptions: { posts: 'このユーザーの投稿を表示します。', comments: '公開コメントを表示します。', favorites: '公開されたお気に入りを表示します。', fans: 'フォロワーを表示します。', following: 'フォロー中のユーザーを表示します。' }, bios: { vrising: 'ヴァルドランのルートとボス情報、城づくりの記録を共有しています。', aion2: 'クラス構成とダンジョン攻略を実用的にまとめています。', palworld: 'パルの生態、拠点効率、マルチプレイ検証を記録しています。' } },
     content: { commentsCount: 'コメント {{count}}件', likesCount: 'いいね {{count}}件', comment1: 'ルートの補足が分かりやすく、2つ目の角でも同じ素材を確認できました。', comment2: 'マルチでは準備を少し早めると、全体がより安定します。', viewDiscussion: '元のディスカッションを見る' },
@@ -144,13 +149,121 @@ const USER_SYSTEM_COPY = {
       items: { reply: '“{{post}}”의 댓글에 답글을 남겼습니다', mention: '“{{post}}”에서 회원님을 언급했습니다', like: '게시글 “{{post}}”을 좋아합니다', system: '“{{post}}”을 게시했습니다' }, settingGroups: { interaction: '커뮤니티 활동', platform: '팔로우 및 플랫폼 알림' },
       settingsRows: { replies: { title: '답글 알림', description: '게시글이나 댓글에 답글이 달리면 알려드립니다.' }, mentions: { title: '멘션 알림', description: '게시글이나 댓글에서 언급되면 알려드립니다.' }, likes: { title: '좋아요 알림', description: '게시글이나 댓글에 좋아요가 달리면 알려드립니다.' }, follows: { title: '팔로우 알림', description: '새 사용자가 팔로우하면 알려드립니다.' }, system: { title: '시스템 알림', description: '계정, 보안, 커뮤니티 규칙 관련 메시지를 받습니다.' }, browser: { title: '브라우저 알림', description: '브라우저에서 데스크톱 알림을 받습니다.' } },
     },
-    account: { open: '프로필 열기', center: '계정 센터', edit: '프로필 편집', favorites: '내 즐겨찾기', posts: '내 게시글', comments: '내 댓글', fans: '내 팔로워', following: '팔로잉', privacy: '개인정보 설정', logout: '로그아웃', descriptions: { edit: '아바타, 표시 이름, 소개를 수정합니다.', favorites: '저장한 포럼 게시글을 확인합니다.', posts: '내가 게시한 콘텐츠를 관리합니다.', comments: '참여한 토론을 확인합니다.', fans: '나를 팔로우하는 사용자를 확인합니다.', following: '팔로우 중인 사용자를 관리합니다.', privacy: '다른 사용자에게 공개할 정보를 선택합니다.' }, changeAvatar: '아바타 변경', save: '저장', saved: '저장됨', fields: { displayName: '표시 이름', accountId: '장주 ID', accountIdHelper: 'ID는 시스템에서 생성되며 변경할 수 없습니다.', bio: '소개' } },
+    account: { open: '프로필 열기', center: '계정 센터', edit: '프로필 편집', favorites: '내 즐겨찾기', posts: '내 게시글', comments: '내 댓글', fans: '내 팔로워', following: '팔로잉', privacy: '개인정보 설정', logout: '로그아웃', descriptions: { edit: '아바타, 표시 이름, 소개를 수정합니다.', favorites: '저장한 게임, 게시글 및 기타 콘텐츠를 확인합니다.', posts: '내가 게시한 콘텐츠를 관리합니다.', comments: '참여한 토론을 확인합니다.', fans: '나를 팔로우하는 사용자를 확인합니다.', following: '팔로우 중인 사용자를 관리합니다.', privacy: '다른 사용자에게 공개할 정보를 선택합니다.' }, changeAvatar: '아바타 변경', save: '저장', saved: '저장됨', avatarDialog: { title: '아바타 변경', description: 'Arkive 캐릭터를 선택하거나 내 이미지를 업로드하세요.', presets: 'Arkive 아바타', custom: '이미지 업로드', presetLabel: '{{number}}번 아바타 사용', requirements: '2MB 이하의 JPG, PNG, WebP 이미지를 저장 전에 정사각형으로 확대하고 자를 수 있습니다.', preview: '아바타 미리보기', choose: '이미지 선택', replace: '다른 이미지 선택', zoom: '확대/축소', zoomIn: '확대', zoomOut: '축소', reset: '위치 초기화', editor: '아바타 자르기 영역', processing: '처리 중…', cancel: '취소', confirm: '아바타 저장', close: '아바타 변경 창 닫기', errors: { type: 'JPG, PNG 또는 WebP 이미지를 선택하세요.', size: '이미지는 2MB 이하여야 합니다.', read: '이미지를 읽거나 자를 수 없습니다. 다른 이미지를 선택하세요.' } }, fields: { displayName: '표시 이름', accountId: '장주 ID', accountIdHelper: 'ID는 시스템에서 생성되며 변경할 수 없습니다.', bio: '소개' } },
     currentUser: { name: '물결 기록장', bio: '지도 속 작은 발견과 다시 보고 싶은 토론을 기록합니다.', badge: '내 프로필' },
-    publicProfile: { center: '프로필', posts: '게시글', comments: '댓글', favorites: '즐겨찾기', fans: '팔로워', following: '팔로잉', likesReceived: '받은 좋아요', accountId: '장주 ID: {{id}}', descriptions: { posts: '이 사용자의 커뮤니티 게시글을 확인합니다.', comments: '이 사용자의 공개 댓글을 확인합니다.', favorites: '공개한 즐겨찾기 게시글을 확인합니다.', fans: '이 사용자의 팔로워를 확인합니다.', following: '이 사용자가 팔로우하는 사람을 확인합니다.' }, bios: { vrising: '바르도란 경로, 보스 정보, 성 건축 기록을 공유합니다.', aion2: '직업 조합과 던전 흐름을 실용적인 공략으로 정리합니다.', palworld: '팰 생태, 거점 효율, 멀티플레이 테스트를 기록합니다.' } },
+    publicProfile: { center: '프로필', posts: '게시글', comments: '댓글', favorites: '즐겨찾기', fans: '팔로워', following: '팔로잉', likesReceived: '받은 좋아요', accountId: '장주 ID: {{id}}', descriptions: { posts: '이 사용자의 커뮤니티 게시글을 확인합니다.', comments: '이 사용자의 공개 댓글을 확인합니다.', favorites: '이 사용자가 공개한 게임, 게시글 및 기타 즐겨찾기를 확인합니다.', fans: '이 사용자의 팔로워를 확인합니다.', following: '이 사용자가 팔로우하는 사람을 확인합니다.' }, bios: { vrising: '바르도란 경로, 보스 정보, 성 건축 기록을 공유합니다.', aion2: '직업 조합과 던전 흐름을 실용적인 공략으로 정리합니다.', palworld: '팰 생태, 거점 효율, 멀티플레이 테스트를 기록합니다.' } },
     content: { commentsCount: '댓글 {{count}}개', likesCount: '좋아요 {{count}}개', comment1: '경로 설명이 명확합니다. 두 번째 모퉁이에서도 같은 자원 지점을 찾았습니다.', comment2: '멀티플레이에서는 준비를 조금 일찍 시작하면 전체 진행이 더 안정적입니다.', viewDiscussion: '원문 토론 보기' },
     privacy: { profile: { title: '프로필 공개', description: '이름, 소개, 커뮤니티 통계를 다른 사용자에게 공개합니다.' }, posts: { title: '게시글과 댓글 공개', description: '프로필에서 공개 활동을 볼 수 있도록 합니다.' }, activity: { title: '최근 활동 표시', description: '팔로우하는 사용자에게 최근 커뮤니티 활동을 표시합니다.' } },
   },
 } as const
+
+const USER_SYSTEM_AUTH_COPY = {
+  'zh-CN': {
+    account: {
+      saving: '保存中...',
+      emptyBio: '暂未填写个人简介。',
+      errors: { emailExists: '这个邮箱已被其他账号使用。', saveFailed: '资料保存失败，请稍后重试。' },
+      fields: {
+        email: '邮箱', password: '新密码', passwordPlaceholder: '不修改请留空',
+        verifiedHelper: '账号邮箱已验证。填写新密码即可同时修改密码。',
+        unverifiedHelper: '账号邮箱尚未验证。填写新密码即可同时修改密码。',
+      },
+    },
+    content: { favoriteGames: '收藏的游戏', favoritePosts: '收藏的帖子' },
+    empty: {
+      favorites: { title: '还没有收藏', description: '在游戏目录或论坛中点击收藏后，内容会显示在这里。' },
+      posts: { title: '还没有发帖', description: '你发布的论坛内容会显示在这里。' },
+      comments: { title: '还没有评论', description: '你参与的公开讨论会显示在这里。' },
+      fans: { title: '还没有粉丝', description: '关注你的用户会显示在这里。' },
+      following: { title: '还没有关注用户', description: '在论坛或个人主页关注用户后，会显示在这里。' },
+    },
+  },
+  'zh-TW': {
+    account: {
+      saving: '儲存中...',
+      emptyBio: '尚未填寫個人簡介。',
+      errors: { emailExists: '這個信箱已被其他帳號使用。', saveFailed: '資料儲存失敗，請稍後再試。' },
+      fields: {
+        email: '電子信箱', password: '新密碼', passwordPlaceholder: '不修改請留空',
+        verifiedHelper: '帳號信箱已驗證。填寫新密碼即可同時修改密碼。',
+        unverifiedHelper: '帳號信箱尚未驗證。填寫新密碼即可同時修改密碼。',
+      },
+    },
+    content: { favoriteGames: '收藏的遊戲', favoritePosts: '收藏的文章' },
+    empty: {
+      favorites: { title: '尚無收藏', description: '在遊戲目錄或論壇中點選收藏後，內容會顯示在這裡。' },
+      posts: { title: '尚未發文', description: '你發布的論壇內容會顯示在這裡。' },
+      comments: { title: '尚無留言', description: '你參與的公開討論會顯示在這裡。' },
+      fans: { title: '尚無粉絲', description: '關注你的使用者會顯示在這裡。' },
+      following: { title: '尚未關注使用者', description: '在論壇或個人主頁關注使用者後，會顯示在這裡。' },
+    },
+  },
+  'en-US': {
+    account: {
+      saving: 'Saving...',
+      emptyBio: 'No bio added yet.',
+      errors: { emailExists: 'That email is already used by another account.', saveFailed: 'Your profile could not be saved. Please try again.' },
+      fields: {
+        email: 'Email', password: 'New password', passwordPlaceholder: 'Leave blank to keep your password',
+        verifiedHelper: 'Your account email is verified. Enter a new password to change it.',
+        unverifiedHelper: 'Your account email is not verified. Enter a new password to change it.',
+      },
+    },
+    content: { favoriteGames: 'Saved games', favoritePosts: 'Saved posts' },
+    empty: {
+      favorites: { title: 'Nothing saved yet', description: 'Games and forum posts you save will appear here.' },
+      posts: { title: 'No posts yet', description: 'Forum posts you publish will appear here.' },
+      comments: { title: 'No comments yet', description: 'Public discussions you join will appear here.' },
+      fans: { title: 'No followers yet', description: 'People who follow you will appear here.' },
+      following: { title: 'Not following anyone yet', description: 'People you follow from the forum or a profile will appear here.' },
+    },
+  },
+  'ja-JP': {
+    account: {
+      saving: '保存中...', emptyBio: '自己紹介はまだありません。',
+      errors: { emailExists: 'このメールアドレスは既に使用されています。', saveFailed: 'プロフィールを保存できませんでした。もう一度お試しください。' },
+      fields: { email: 'メールアドレス', password: '新しいパスワード', passwordPlaceholder: '変更しない場合は空欄', verifiedHelper: 'メールアドレスは確認済みです。', unverifiedHelper: 'メールアドレスは未確認です。' },
+    },
+    content: { favoriteGames: '保存したゲーム', favoritePosts: '保存した投稿' },
+    empty: {
+      favorites: { title: '保存済み項目はありません', description: '保存したゲームや投稿がここに表示されます。' },
+      posts: { title: '投稿はまだありません', description: '公開した投稿がここに表示されます。' },
+      comments: { title: 'コメントはまだありません', description: '参加した公開ディスカッションがここに表示されます。' },
+      fans: { title: 'フォロワーはまだいません', description: 'あなたをフォローしたユーザーがここに表示されます。' },
+      following: { title: 'フォロー中のユーザーはいません', description: 'フォローしたユーザーがここに表示されます。' },
+    },
+  },
+  'ko-KR': {
+    account: {
+      saving: '저장 중...', emptyBio: '아직 자기소개가 없습니다.',
+      errors: { emailExists: '이미 다른 계정에서 사용 중인 이메일입니다.', saveFailed: '프로필을 저장하지 못했습니다. 다시 시도해 주세요.' },
+      fields: { email: '이메일', password: '새 비밀번호', passwordPlaceholder: '변경하지 않으려면 비워 두세요', verifiedHelper: '계정 이메일이 인증되었습니다.', unverifiedHelper: '계정 이메일이 아직 인증되지 않았습니다.' },
+    },
+    content: { favoriteGames: '저장한 게임', favoritePosts: '저장한 게시물' },
+    empty: {
+      favorites: { title: '저장한 항목이 없습니다', description: '저장한 게임과 게시물이 여기에 표시됩니다.' },
+      posts: { title: '아직 게시물이 없습니다', description: '작성한 게시물이 여기에 표시됩니다.' },
+      comments: { title: '아직 댓글이 없습니다', description: '참여한 공개 토론이 여기에 표시됩니다.' },
+      fans: { title: '아직 팔로워가 없습니다', description: '나를 팔로우한 사용자가 여기에 표시됩니다.' },
+      following: { title: '팔로우 중인 사용자가 없습니다', description: '팔로우한 사용자가 여기에 표시됩니다.' },
+    },
+  },
+} as const
+
+function userSystemCopy(language: Language) {
+  const base = USER_SYSTEM_COPY[language]
+  const auth = USER_SYSTEM_AUTH_COPY[language]
+  return {
+    ...base,
+    account: {
+      ...base.account,
+      ...auth.account,
+      fields: { ...base.account.fields, ...auth.account.fields },
+    },
+    content: { ...base.content, ...auth.content },
+    empty: auth.empty,
+  }
+}
 
 const resources = {
   'zh-CN': {
@@ -172,7 +285,7 @@ const resources = {
       language: '语言',
       theme: { auto: '跟随系统', light: '浅色模式', dark: '深色模式', menu: '切换主题', short: '主题' },
       auth: { login: '登录' },
-      userSystem: USER_SYSTEM_COPY['zh-CN'],
+      userSystem: userSystemCopy('zh-CN'),
       hero: {
         eyebrow: '欢迎来到藏舟',
         lead: '今天，从哪片',
@@ -207,7 +320,16 @@ const resources = {
         channels: { label: '论坛频道', hot: '论坛热度', general: '综合交流', official: '官方咨询', games: '游戏' },
         community: { title: '一起维护友好交流', description: '发布前请确认内容与所选频道相关，并尊重每一种玩法。' },
         search: { placeholder: '搜索帖子、话题或用户', action: '搜索' },
-        composer: { placeholder: '分享攻略、提问或新发现...', action: '发布', image: '添加图片', video: '添加视频', topic: '添加话题' },
+        composer: {
+          placeholder: '分享攻略、提问或新发现...', action: '发布', image: '添加图片', video: '添加视频', topic: '添加话题',
+          dialogTitle: '发布新帖子', dialogDescription: '填写帖子内容并选择发布频道。', close: '关闭发布窗口',
+          postTitle: '标题', postTitlePlaceholder: '写一个清楚的标题', content: '正文', contentPlaceholder: '分享你的攻略、问题或新发现',
+          destination: '发布到', channels: { general: '综合交流', games: '游戏频道' }, selectGame: '选择游戏', topicLabel: '话题',
+          topics: { guide: '攻略分享', question: '问题求助', testing: '数据测试', discussion: '交流讨论' },
+          media: '图片与视频', replaceImage: '更换图片', removeImage: '删除图片', videoPlaceholder: '粘贴视频链接',
+          cancel: '取消', publish: '发布帖子', published: '帖子已发布', openVideo: '查看视频',
+          errors: { title: '标题至少需要 2 个字。', content: '正文至少需要 10 个字。', game: '请选择帖子所属的游戏。', image: '请选择不超过 2MB 的 JPG、PNG 或 WebP 图片。', video: '请输入有效的 HTTP 或 HTTPS 视频链接。' },
+        },
         pinned: {
           title: '置顶',
           viewAll: '查看全部',
@@ -239,7 +361,7 @@ const resources = {
         detail: {
           openPost: '打开帖子：{{title}}', back: '返回帖子列表', byline: '发布于 {{time}}',
           continuation: '这里会持续整理与主题相关的实测细节、更新补充与玩家经验。如果你有不同结论，欢迎在讨论区留下你的记录。',
-          bookmark: '收藏', like: '点赞', comments: '留言', discussion: '讨论', discussionCount: '{{count}} 条留言', replyPlaceholder: '写下你的看法或补充...',
+          bookmark: '收藏', like: '点赞', comments: '留言', discussion: '讨论', discussionCount: '{{count}} 条留言', noComments: '还没有留言。', replyPlaceholder: '写下你的看法或补充...',
           sampleCommentAuthor: '雾岸拾光', sampleCommentTime: '2小时前', sampleComment: '整理得很清楚，关键步骤和容易遗漏的地方都能快速找到。我按这个思路试了一遍，体验确实顺畅不少。',
           commentLikeLabel: '点赞这条留言', reply: '回复', authorBadge: '作者', replyingTo: '回复 {{name}}', sampleReplyTime: '1小时前', sampleReply: '感谢补充，我会把后续实测结果继续更新在正文里。',
           accountId: '编号', followers: '粉丝数', authorBio: '长期整理 {{topic}} 相关攻略、路线与玩家经验。',
@@ -323,7 +445,7 @@ const resources = {
       language: '語言',
       theme: { auto: '跟隨系統', light: '淺色模式', dark: '深色模式', menu: '切換主題', short: '主題' },
       auth: { login: '登入' },
-      userSystem: USER_SYSTEM_COPY['zh-TW'],
+      userSystem: userSystemCopy('zh-TW'),
       hero: {
         eyebrow: '歡迎來到藏舟',
         lead: '今天，從哪片',
@@ -358,7 +480,16 @@ const resources = {
         channels: { label: '論壇頻道', hot: '論壇熱度', general: '綜合交流', official: '官方諮詢', games: '遊戲' },
         community: { title: '一起維護友好交流', description: '發佈前請確認內容與所選頻道相關，並尊重每一種玩法。' },
         search: { placeholder: '搜尋帖子、話題或使用者', action: '搜尋' },
-        composer: { placeholder: '分享攻略、提問或新發現...', action: '發佈', image: '新增圖片', video: '新增影片', topic: '新增話題' },
+        composer: {
+          placeholder: '分享攻略、提問或新發現...', action: '發佈', image: '新增圖片', video: '新增影片', topic: '新增話題',
+          dialogTitle: '發佈新文章', dialogDescription: '填寫文章內容並選擇發佈頻道。', close: '關閉發佈視窗',
+          postTitle: '標題', postTitlePlaceholder: '寫一個清楚的標題', content: '正文', contentPlaceholder: '分享你的攻略、問題或新發現',
+          destination: '發佈到', channels: { general: '綜合交流', games: '遊戲頻道' }, selectGame: '選擇遊戲', topicLabel: '話題',
+          topics: { guide: '攻略分享', question: '問題求助', testing: '數據測試', discussion: '交流討論' },
+          media: '圖片與影片', replaceImage: '更換圖片', removeImage: '刪除圖片', videoPlaceholder: '貼上影片連結',
+          cancel: '取消', publish: '發佈文章', published: '文章已發佈', openVideo: '查看影片',
+          errors: { title: '標題至少需要 2 個字。', content: '正文至少需要 10 個字。', game: '請選擇文章所屬的遊戲。', image: '請選擇不超過 2MB 的 JPG、PNG 或 WebP 圖片。', video: '請輸入有效的 HTTP 或 HTTPS 影片連結。' },
+        },
         pinned: {
           title: '置頂',
           viewAll: '查看全部',
@@ -390,7 +521,7 @@ const resources = {
         detail: {
           openPost: '開啟帖子：{{title}}', back: '返回帖子列表', byline: '發佈於 {{time}}',
           continuation: '這裡會持續整理與主題相關的實測細節、更新補充與玩家經驗。如果你有不同結論，歡迎在討論區留下你的記錄。',
-          bookmark: '收藏', like: '按讚', comments: '留言', discussion: '討論', discussionCount: '{{count}} 則留言', replyPlaceholder: '寫下你的看法或補充...',
+          bookmark: '收藏', like: '按讚', comments: '留言', discussion: '討論', discussionCount: '{{count}} 則留言', noComments: '還沒有留言。', replyPlaceholder: '寫下你的看法或補充...',
           sampleCommentAuthor: '霧岸拾光', sampleCommentTime: '2小時前', sampleComment: '整理得很清楚，關鍵步驟和容易遺漏的地方都能快速找到。我照這個思路試了一遍，體驗確實順暢不少。',
           commentLikeLabel: '按讚這則留言', reply: '回覆', authorBadge: '作者', replyingTo: '回覆 {{name}}', sampleReplyTime: '1小時前', sampleReply: '感謝補充，我會把後續實測結果繼續更新在正文裡。',
           accountId: '編號', followers: '粉絲數', authorBio: '長期整理 {{topic}} 相關攻略、路線與玩家經驗。',
@@ -442,7 +573,7 @@ const resources = {
       language: 'Language',
       theme: { auto: 'Follow system', light: 'Light mode', dark: 'Dark mode', menu: 'Switch theme', short: 'Theme' },
       auth: { login: 'Log in' },
-      userSystem: USER_SYSTEM_COPY['en-US'],
+      userSystem: userSystemCopy('en-US'),
       hero: {
         eyebrow: 'Welcome to Arkive',
         lead: 'Today, which',
@@ -477,7 +608,16 @@ const resources = {
         channels: { label: 'Forum channels', hot: 'Trending', general: 'General', official: 'Official help', games: 'Games' },
         community: { title: 'Keep the conversation welcoming', description: 'Choose the channel that fits your post and respect every way of playing.' },
         search: { placeholder: 'Search posts, topics, or users', action: 'Search' },
-        composer: { placeholder: 'Share a guide, question, or discovery...', action: 'Post', image: 'Add image', video: 'Add video', topic: 'Add topic' },
+        composer: {
+          placeholder: 'Share a guide, question, or discovery...', action: 'Post', image: 'Add image', video: 'Add video', topic: 'Add topic',
+          dialogTitle: 'Create a post', dialogDescription: 'Write your post and choose where to publish it.', close: 'Close post composer',
+          postTitle: 'Title', postTitlePlaceholder: 'Write a clear title', content: 'Post', contentPlaceholder: 'Share your guide, question, or discovery',
+          destination: 'Post to', channels: { general: 'General', games: 'Game channel' }, selectGame: 'Choose a game', topicLabel: 'Topic',
+          topics: { guide: 'Guide', question: 'Question', testing: 'Data test', discussion: 'Discussion' },
+          media: 'Image and video', replaceImage: 'Replace image', removeImage: 'Remove image', videoPlaceholder: 'Paste a video link',
+          cancel: 'Cancel', publish: 'Publish post', published: 'Post published', openVideo: 'View video',
+          errors: { title: 'Enter a title with at least 2 characters.', content: 'Enter at least 10 characters in the post.', game: 'Choose the game this post belongs to.', image: 'Choose a JPG, PNG, or WebP image no larger than 2 MB.', video: 'Enter a valid HTTP or HTTPS video link.' },
+        },
         pinned: {
           title: 'Pinned',
           viewAll: 'View all',
@@ -509,7 +649,7 @@ const resources = {
         detail: {
           openPost: 'Open post: {{title}}', back: 'Back to posts', byline: 'Posted {{time}}',
           continuation: 'This post will keep collecting tested details, updates, and player experience related to the topic. If your results differ, add your notes to the discussion below.',
-          bookmark: 'Bookmark', like: 'Like', comments: 'Comments', discussion: 'Discussion', discussionCount: 'Comments {{count}}', replyPlaceholder: 'Share your thoughts or add a detail...',
+          bookmark: 'Bookmark', like: 'Like', comments: 'Comments', discussion: 'Discussion', discussionCount: 'Comments {{count}}', noComments: 'No comments yet.', replyPlaceholder: 'Share your thoughts or add a detail...',
           sampleCommentAuthor: 'Mistshore Notes', sampleCommentTime: '2 hours ago', sampleComment: 'This is clearly organized, and the key steps and easy-to-miss details are quick to find. I tried the same approach and the whole run felt much smoother.',
           commentLikeLabel: 'Like this comment', reply: 'Reply', authorBadge: 'Author', replyingTo: 'Replying to {{name}}', sampleReplyTime: '1 hour ago', sampleReply: 'Thanks for adding this. I will keep the post updated as more test results come in.',
           accountId: 'Account ID', followers: 'Followers', authorBio: 'Long-time contributor of {{topic}} guides, routes, and player discoveries.',
@@ -553,7 +693,7 @@ const resources = {
       language: '言語',
       theme: { auto: 'システムに従う', light: 'ライトモード', dark: 'ダークモード', menu: 'テーマを切り替える', short: 'テーマ' },
       auth: { login: 'ログイン' },
-      userSystem: USER_SYSTEM_COPY['ja-JP'],
+      userSystem: userSystemCopy('ja-JP'),
       hero: { eyebrow: '藏舟へようこそ', lead: '今日は、どの', highlight: 'ゲーム世界', tail: 'へ出航しますか？', description: 'クエストやマップを調べ、発見を大切に保存。好きな世界を自分のペースで楽しめます。', recommendation: '人気ゲームを優先表示' },
       search: { placeholder: 'ゲーム、クエスト、キャラクター、場所を検索', action: '検索する' },
       catalog: {
@@ -581,7 +721,16 @@ const resources = {
         channels: { label: 'フォーラムチャンネル', hot: '注目', general: '総合交流', official: '公式案内', games: 'ゲーム' },
         community: { title: '気持ちよく交流しましょう', description: '投稿に合うチャンネルを選び、それぞれの遊び方を尊重してください。' },
         search: { placeholder: '投稿、トピック、ユーザーを検索', action: '検索' },
-        composer: { placeholder: '攻略、質問、新しい発見を共有...', action: '投稿', image: '画像を追加', video: '動画を追加', topic: 'トピックを追加' },
+        composer: {
+          placeholder: '攻略、質問、新しい発見を共有...', action: '投稿', image: '画像を追加', video: '動画を追加', topic: 'トピックを追加',
+          dialogTitle: '新しい投稿', dialogDescription: '投稿内容と公開先を選択します。', close: '投稿画面を閉じる',
+          postTitle: 'タイトル', postTitlePlaceholder: '内容が伝わるタイトル', content: '本文', contentPlaceholder: '攻略、質問、新しい発見を共有',
+          destination: '投稿先', channels: { general: '総合交流', games: 'ゲームチャンネル' }, selectGame: 'ゲームを選択', topicLabel: 'トピック',
+          topics: { guide: '攻略共有', question: '質問', testing: 'データ検証', discussion: '交流・雑談' },
+          media: '画像と動画', replaceImage: '画像を変更', removeImage: '画像を削除', videoPlaceholder: '動画リンクを貼り付け',
+          cancel: 'キャンセル', publish: '投稿する', published: '投稿しました', openVideo: '動画を見る',
+          errors: { title: 'タイトルは2文字以上で入力してください。', content: '本文は10文字以上で入力してください。', game: '投稿先のゲームを選択してください。', image: '2MB以下のJPG、PNG、WebP画像を選択してください。', video: '有効なHTTPまたはHTTPSの動画リンクを入力してください。' },
+        },
         pinned: {
           title: '固定',
           viewAll: 'すべて見る',
@@ -613,7 +762,7 @@ const resources = {
         detail: {
           openPost: '投稿を開く：{{title}}', back: '投稿一覧に戻る', byline: '{{time}}に投稿',
           continuation: 'この投稿では、テーマに関する検証結果、更新情報、プレイヤーの経験を引き続きまとめます。別の結果があれば討論で教えてください。',
-          bookmark: '保存', like: 'いいね', comments: 'コメント', discussion: '討論', discussionCount: 'コメント {{count}}件', replyPlaceholder: '感想や補足を書く...',
+          bookmark: '保存', like: 'いいね', comments: 'コメント', discussion: '討論', discussionCount: 'コメント {{count}}件', noComments: 'コメントはまだありません。', replyPlaceholder: '感想や補足を書く...',
           sampleCommentAuthor: '霧岸の記録', sampleCommentTime: '2時間前', sampleComment: 'とてもわかりやすく整理されていて、重要な手順や見落としやすい点をすぐに確認できました。同じやり方を試すと、かなり進めやすかったです。',
           commentLikeLabel: 'このコメントにいいね', reply: '返信', authorBadge: '作者', replyingTo: '{{name}}さんへ返信', sampleReplyTime: '1時間前', sampleReply: '補足ありがとうございます。今後の検証結果も本文に更新していきます。',
           accountId: '番号', followers: 'フォロワー', authorBio: '{{topic}}の攻略、ルート、プレイヤー情報を長期的に整理しています。',
@@ -645,7 +794,7 @@ const resources = {
       language: '언어',
       theme: { auto: '시스템 설정 따르기', light: '라이트 모드', dark: '다크 모드', menu: '테마 전환', short: '테마' },
       auth: { login: '로그인' },
-      userSystem: USER_SYSTEM_COPY['ko-KR'],
+      userSystem: userSystemCopy('ko-KR'),
       hero: { eyebrow: '장저우에 오신 것을 환영합니다', lead: '오늘은 어느', highlight: '게임 세계', tail: '로 떠날까요?', description: '퀘스트와 지도를 찾고 모든 발견을 간직하세요. 좋아하는 세계를 자신의 속도로 탐험할 수 있습니다.', recommendation: '인기 게임 우선 추천' },
       search: { placeholder: '게임, 퀘스트, 캐릭터 또는 장소 검색', action: '검색' },
       catalog: {
@@ -673,7 +822,16 @@ const resources = {
         channels: { label: '포럼 채널', hot: '인기', general: '자유 교류', official: '공식 안내', games: '게임' },
         community: { title: '즐거운 대화를 함께 만들어요', description: '글에 맞는 채널을 선택하고 서로 다른 플레이 방식을 존중해 주세요.' },
         search: { placeholder: '게시글, 주제 또는 사용자 검색', action: '검색' },
-        composer: { placeholder: '공략, 질문 또는 새로운 발견을 공유하세요...', action: '게시', image: '이미지 추가', video: '동영상 추가', topic: '주제 추가' },
+        composer: {
+          placeholder: '공략, 질문 또는 새로운 발견을 공유하세요...', action: '게시', image: '이미지 추가', video: '동영상 추가', topic: '주제 추가',
+          dialogTitle: '새 게시글 작성', dialogDescription: '게시글 내용과 게시할 채널을 선택합니다.', close: '게시글 작성 창 닫기',
+          postTitle: '제목', postTitlePlaceholder: '내용을 알 수 있는 제목을 입력하세요', content: '본문', contentPlaceholder: '공략, 질문 또는 새로운 발견을 공유하세요',
+          destination: '게시 위치', channels: { general: '종합 교류', games: '게임 채널' }, selectGame: '게임 선택', topicLabel: '주제',
+          topics: { guide: '공략 공유', question: '질문', testing: '데이터 테스트', discussion: '자유 토론' },
+          media: '이미지 및 동영상', replaceImage: '이미지 변경', removeImage: '이미지 삭제', videoPlaceholder: '동영상 링크 붙여넣기',
+          cancel: '취소', publish: '게시글 등록', published: '게시글이 등록되었습니다', openVideo: '동영상 보기',
+          errors: { title: '제목을 2자 이상 입력하세요.', content: '본문을 10자 이상 입력하세요.', game: '게시글이 속한 게임을 선택하세요.', image: '2MB 이하의 JPG, PNG 또는 WebP 이미지를 선택하세요.', video: '올바른 HTTP 또는 HTTPS 동영상 링크를 입력하세요.' },
+        },
         pinned: {
           title: '고정',
           viewAll: '전체 보기',
@@ -705,7 +863,7 @@ const resources = {
         detail: {
           openPost: '게시글 열기: {{title}}', back: '게시글 목록으로', byline: '{{time}} 게시',
           continuation: '이 글에서는 주제와 관련된 실험 세부 사항, 업데이트, 플레이어 경험을 계속 정리합니다. 다른 결과가 있다면 토론에 기록을 남겨 주세요.',
-          bookmark: '저장', like: '좋아요', comments: '댓글', discussion: '토론', discussionCount: '댓글 {{count}}개', replyPlaceholder: '생각이나 보충 내용을 적어 주세요...',
+          bookmark: '저장', like: '좋아요', comments: '댓글', discussion: '토론', discussionCount: '댓글 {{count}}개', noComments: '아직 댓글이 없습니다.', replyPlaceholder: '생각이나 보충 내용을 적어 주세요...',
           sampleCommentAuthor: '안개 해안 기록', sampleCommentTime: '2시간 전', sampleComment: '핵심 단계와 놓치기 쉬운 부분을 빠르게 찾을 수 있게 잘 정리되었어요. 같은 방법으로 직접 해 보니 훨씬 부드럽게 진행했습니다.',
           commentLikeLabel: '이 댓글 좋아요', reply: '답글', authorBadge: '작성자', replyingTo: '{{name}}님에게 답글', sampleReplyTime: '1시간 전', sampleReply: '보충해 주셔서 고마워요. 추가 실험 결과도 본문에 계속 업데이트하겠습니다.',
           accountId: '번호', followers: '팔로워', authorBio: '{{topic}} 공략, 경로, 플레이어 경험을 꾸준히 정리합니다.',

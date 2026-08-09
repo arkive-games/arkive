@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArkiveAccountControl, useAuth } from '@gamemap/auth'
+import { AccountDialog, ArkiveAccountControl, authStringsFor, useAuth } from '@gamemap/auth'
 import {
   ArkiveMapTopBar,
   ArkiveMark,
@@ -43,7 +43,9 @@ import {
   type PublicProfileSection,
 } from './UserSystemPages'
 import { MetaMobileNav } from './MetaMobileNav'
-import { avatarUrl, CURRENT_USER_AVATAR_SEED } from './userSystemData'
+import { DEFAULT_AVATAR_SRC } from './avatarPresets'
+import { avatarUrl } from './userSystemData'
+import { useUserSystem } from './UserSystemState'
 
 const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum', 'favorites'] as const
 type HomeRoute =
@@ -57,7 +59,6 @@ type HomeRoute =
 const NOTIFICATION_SECTIONS = new Set<NotificationSection>(['replies', 'mentions', 'likes', 'system', 'settings'])
 const ACCOUNT_SECTIONS = new Set<AccountSection>(['edit', 'favorites', 'posts', 'comments', 'fans', 'following', 'privacy'])
 const PUBLIC_PROFILE_SECTIONS = new Set<PublicProfileSection>(['posts', 'comments', 'favorites', 'fans', 'following'])
-
 function routeFromHash(): HomeRoute {
   const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
   if (root === 'games') return { view: 'allGames' }
@@ -87,8 +88,6 @@ export default function App() {
   const [clickCounts, setClickCounts] = useState<SiteClickCounts>({})
   const [noticeId, setNoticeId] = useState(0)
   const [activeRoute, setActiveRoute] = useState<HomeRoute>(routeFromHash)
-  const auth = useAuth()
-  const isSignedIn = auth.status === 'authenticated'
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
   const brandName = getArkiveBrandName(lng, t('brand.name'))
 
@@ -123,6 +122,17 @@ export default function App() {
   )
   const featuredSite = firstPlayableSite(rankedSites)
   const showComingSoon = () => setNoticeId((value) => value + 1)
+  const auth = useAuth()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const authStrings = authStringsFor(i18n.language)
+  const isSignedIn = auth.status === 'authenticated'
+  const { state: userSystemState, toggleFavoriteGame } = useUserSystem()
+  const currentAvatar = auth.user
+    ? userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
+    : avatarUrl('arkive-anonymous', 96)
+  const signIn = async (credentials: { email: string; password: string }) => {
+    await auth.login(credentials.email, credentials.password)
+  }
   const logout = () => {
     void auth.logout()
     window.location.hash = '#top'
@@ -153,6 +163,7 @@ export default function App() {
         loginLabel={t('auth.login')}
         locale={lng}
         onLoginSubmit={signIn}
+        onRegister={() => setAccountOpen(true)}
         accountControl={isSignedIn ? (
           <a
             href="#account/edit"
@@ -160,8 +171,8 @@ export default function App() {
             className="size-11 shrink-0 overflow-hidden rounded-full border-2 border-primary/45 bg-muted p-0.5"
           >
             <img
-              src={avatarUrl(CURRENT_USER_AVATAR_SEED, 96)}
-              alt=""
+              src={currentAvatar}
+              alt={auth.user?.name ?? ''}
               className="size-full rounded-full object-cover"
             />
           </a>
@@ -182,8 +193,22 @@ export default function App() {
             const game = item.key.startsWith('game:')
               ? VISIBLE_SITES.find((site) => item.key === `game:${site.id}`)
               : undefined
-            return game ? (
-              <a href={siteHref(game)} className={className}>{label}</a>
+            const gameHref = game ? siteHref(game) : undefined
+            return game && gameHref ? (
+              <a href={gameHref} className={className}>{label}</a>
+            ) : game ? (
+              // Announced but not open yet: keep it listed, without a href.
+              <button
+                type="button"
+                className={className}
+                onClick={(event) => {
+                  event.currentTarget.blur()
+                  showComingSoon()
+                }}
+              >
+                {label}
+                <span className="nav-soon-badge">{t('comingSoon.badge')}</span>
+              </button>
             ) : item.key === 'discoverGames' ? (
               <a href="#explore" className={className}>{label}</a>
             ) : item.key === 'forum' ? (
@@ -228,10 +253,16 @@ export default function App() {
           : <ArkiveAccountControl language={i18n.language} />}
       />
 
+      <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} strings={authStrings} />
+
       {activeRoute.view === 'allGames' ? (
-        <AllGamesPage sites={VISIBLE_SITES} onFavorite={showComingSoon} />
+        <AllGamesPage sites={VISIBLE_SITES} onAuthRequired={() => setAccountOpen(true)} />
       ) : activeRoute.view === 'forum' ? (
-        <ForumPage sites={VISIBLE_SITES} onComingSoon={showComingSoon} />
+        <ForumPage
+          sites={VISIBLE_SITES}
+          onComingSoon={showComingSoon}
+          onAuthRequired={() => setAccountOpen(true)}
+        />
       ) : activeRoute.view === 'notifications' && isSignedIn ? (
         <NotificationCenterPage section={activeRoute.section} />
       ) : activeRoute.view === 'account' && isSignedIn ? (
@@ -240,6 +271,7 @@ export default function App() {
         <PublicUserProfilePage
           userId={activeRoute.userId}
           section={activeRoute.section}
+          onAuthRequired={() => setAccountOpen(true)}
         />
       ) : (
         <main>
@@ -285,7 +317,18 @@ export default function App() {
 
           <div className="game-shelf">
             {rankedSites.map((site) => (
-              <GameCard key={site.id} site={site} onFavorite={showComingSoon} />
+              <GameCard
+                key={site.id}
+                site={site}
+                favorite={userSystemState.favoriteGameIds.includes(site.id)}
+                onFavorite={() => {
+                  if (!isSignedIn) {
+                    setAccountOpen(true)
+                    return
+                  }
+                  toggleFavoriteGame(site.id)
+                }}
+              />
             ))}
             <ComingSoonCard onClick={showComingSoon} />
           </div>
@@ -351,28 +394,46 @@ function FeaturedGame({ site }: { site: SiteCard }) {
   )
 }
 
-function GameCard({ site, onFavorite }: { site: SiteCard; onFavorite: () => void }) {
+function GameCard({ site, favorite, onFavorite }: { site: SiteCard; favorite: boolean; onFavorite: () => void }) {
   const { t } = useTranslation()
   const name = t(site.nameKey)
-  const favorite = (event: MouseEvent<HTMLButtonElement>) => {
+  const href = siteHref(site)
+  const favoriteGame = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     onFavorite()
   }
 
-  return (
-    <article className="game-card">
-      <a href={siteHref(site)} className="game-card-link group">
-        <span className="game-cover">
-          <img src={site.bg} alt={name} />
-          <span className="game-cover-shade" aria-hidden="true" />
+  const body = (
+    <>
+      <span className="game-cover">
+        <img src={site.bg} alt={name} />
+        <span className="game-cover-shade" aria-hidden="true" />
+        {href && (
           <span className="game-open-icon"><IconArrowUpRight className="size-5" stroke={1.8} /></span>
-        </span>
-        <span className="game-card-copy">
-          <strong>{name}</strong>
-          <small>{t(site.descKey)}</small>
-        </span>
-      </a>
-      <button type="button" className="bookmark-button" onClick={favorite} aria-label={t('action.favorite', { game: name })}>
+        )}
+      </span>
+      <span className="game-card-copy">
+        <strong>{name}</strong>
+        {site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
+        <small>{t(site.descKey)}</small>
+      </span>
+    </>
+  )
+
+  return (
+    <article className={site.comingSoon ? 'game-card is-soon' : 'game-card'}>
+      {href ? (
+        <a href={href} className="game-card-link group">{body}</a>
+      ) : (
+        <span className="game-card-link is-inert">{body}</span>
+      )}
+      <button
+        type="button"
+        className={favorite ? 'bookmark-button is-active' : 'bookmark-button'}
+        onClick={favoriteGame}
+        aria-pressed={favorite}
+        aria-label={t('action.favorite', { game: name })}
+      >
         <IconBookmark className="size-5" stroke={1.8} />
       </button>
     </article>
