@@ -1,4 +1,12 @@
 
+## Lord of Mysteries database
+
+The `lom` pipeline discovers the equipment, affix, sealed-item, effect, and
+Chinese localization tables recorded by the installed client's UFS manifest.
+It builds a traceable SQLite database from the manifest, optional raw JSON table
+exports, and an optional normalized interchange document. See
+`apps/lom/README.md` for the schema and commands.
+
 ## Palworld pipeline
 
 Transforms the raw Palworld UE export into the `data-palworld/` + `resource-palworld/`
