@@ -3,7 +3,7 @@
     {
       "version": "1.26.3",
       "date": "2026-08-09",
-      "commit": "2e930e5f674965cb8aaa86cdd1c2cf280ba09aec",
+      "commit": "26bc0028cefe4751e4d87d86a6b976b8818aeed1",
       "changes": [
         {
           "kind": "improvement",
@@ -11,6 +11,22 @@
             "en-US": "Simplified the mobile map with adaptive marker density, consistent search and filter controls, and sheets that stay clear of navigation.",
             "zh-CN": "优化移动端地图总览，按缩放控制点位密度，统一搜索与筛选控件，并让底部面板避开导航栏。",
             "zh-TW": "最佳化行動版地圖總覽，依縮放控制標記密度，統一搜尋與篩選控制項，並讓底部面板避開導覽列。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Mobile catalogs now keep search and view controls together, move counts below on narrow screens, and use compact three-column image grids.",
+            "zh-CN": "移动端图鉴现在将搜索与视图切换保持在同一行，窄屏时把数量移至下方，并采用紧凑的三列图片网格。",
+            "zh-TW": "行動版圖鑑現在將搜尋與檢視切換保持在同一列，窄螢幕時把數量移至下方，並採用緊湊的三欄圖片網格。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Mobile simulators now present selectors, inputs, and results as one continuous workflow with the final value first.",
+            "zh-CN": "移动端模拟器现在将选择、输入与结果整合为连续工作流，并优先展示最终数值。",
+            "zh-TW": "行動版模擬器現在將選擇、輸入與結果整合為連續工作流程，並優先顯示最終數值。"
           }
         }
       ]
