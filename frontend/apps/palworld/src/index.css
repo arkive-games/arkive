@@ -26,20 +26,6 @@
     font-size: 18px;
   }
 
-  /* Keep the map engine's controls in the same right-side stack as the map
-     actions: zoom sits above Search/Filter, while status clears the fixed tab
-     bar. Both engines expose parallel class names. */
-  .palworld-mobile-map .gm-zoom,
-  .palworld-mobile-map .gmgl-zoom {
-    right: 0.75rem;
-    bottom: calc(env(safe-area-inset-bottom) + 11.5rem);
-  }
-
-  .palworld-mobile-map .gm-statusbar-stack,
-  .palworld-mobile-map .gmgl-statusbar-stack {
-    bottom: calc(env(safe-area-inset-bottom) + 3.75rem);
-  }
-
   .palworld-map-search > div:first-of-type,
   [data-content-scroll] input[type='search'] {
     border-color: color-mix(in srgb, var(--primary) 70%, transparent);

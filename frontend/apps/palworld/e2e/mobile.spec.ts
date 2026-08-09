@@ -90,12 +90,11 @@ test('theme is a segmented control with the active tab pressed', async ({ page }
   await expect(page.locator('html')).toHaveClass(/dark/)
 })
 
-test('the More sheet header carries the Arkive brand link', async ({ page }) => {
+test('the More sheet omits duplicate brand and renderer controls', async ({ page }) => {
   await page.goto('/')
   await page.getByTestId('tab-more').click()
-  const brand = page.getByTestId('more-brand')
-  await expect(brand).toBeVisible()
-  await expect(brand).toHaveAttribute('href', /.+/)
+  await expect(page.getByTestId('more-brand')).toHaveCount(0)
+  await expect(page.locator('[data-testid^="more-engine-"]')).toHaveCount(0)
 })
 
 test('active skills render as cards, not the wide table', async ({ page }) => {
@@ -136,4 +135,58 @@ test('map page shows FABs that open filter and search sheets', async ({ page }) 
   await page.getByTestId('map-fab-search').click()
   await expect(page.getByTestId('search-sheet')).toBeVisible()
   await expect(page.getByTestId('marker-search')).toBeVisible()
+})
+
+test('map controls form one ordered stack above navigation', async ({ page }) => {
+  await page.goto('/?engine=leaflet')
+  await expect(page.locator('.leaflet-container')).toBeVisible()
+
+  const barTop = (await page.getByTestId('bottom-tab-bar').boundingBox())!.y
+  const zoom = (await page.locator('.gm-zoom-pill').boundingBox())!
+  const search = (await page.getByTestId('map-fab-search').boundingBox())!
+  const filter = (await page.getByTestId('map-fab-filter').boundingBox())!
+
+  expect(zoom.y + zoom.height).toBeLessThanOrEqual(search.y)
+  expect(search.y + search.height).toBeLessThanOrEqual(filter.y)
+  expect(filter.y + filter.height).toBeLessThanOrEqual(barTop)
+})
+
+test('map sheets clear navigation and the filter action exposes changed state', async ({ page }) => {
+  await page.goto('/?engine=leaflet')
+  const barTop = (await page.getByTestId('bottom-tab-bar').boundingBox())!.y
+  const filterAction = page.getByTestId('map-fab-filter')
+
+  await expect(filterAction).toHaveAttribute('aria-pressed', 'false')
+  await page.getByTestId('map-fab-search').click()
+  const searchSheet = page.getByTestId('search-sheet')
+  await expect(searchSheet).toBeVisible()
+  const searchBox = (await searchSheet.boundingBox())!
+  expect(searchBox.y + searchBox.height).toBeLessThanOrEqual(barTop)
+
+  await page.keyboard.press('Escape')
+  await filterAction.click()
+  const filterSheet = page.getByTestId('filter-sheet')
+  await expect(filterSheet).toBeVisible()
+  const filterBox = (await filterSheet.boundingBox())!
+  expect(filterBox.y + filterBox.height).toBeLessThanOrEqual(barTop)
+  await filterSheet.getByTestId('map-hide-all').click()
+  await page.keyboard.press('Escape')
+
+  await expect(filterAction).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('map-filter-active-indicator')).toBeVisible()
+})
+
+test('mobile overview uses adaptive marker density', async ({ page }) => {
+  await page.goto('/?engine=leaflet')
+  const markers = page.locator('.leaflet-marker-icon')
+  await expect.poll(() => markers.count(), { timeout: 15_000 }).toBeGreaterThan(0)
+  expect(await markers.count()).toBeLessThan(100)
+})
+
+test('an open map sheet does not survive the landscape breakpoint', async ({ page }) => {
+  await page.goto('/?engine=leaflet')
+  await page.getByTestId('map-fab-filter').click()
+  await expect(page.getByTestId('filter-sheet')).toBeVisible()
+  await page.setViewportSize({ width: 844, height: 390 })
+  await expect(page.getByTestId('filter-sheet')).toHaveCount(0)
 })

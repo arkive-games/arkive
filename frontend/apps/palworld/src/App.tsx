@@ -8,7 +8,7 @@ import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, ty
 // costs nothing.
 import type { GlMapRef } from '@gamemap/map-engine-gl'
 const GlGameMapView = lazy(() => import('./features/map/GlMapView'))
-import { FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
+import { ArkiveMobileMapControls, FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -23,8 +23,8 @@ import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, cn, useIsMobile } from '@gamemap/ui'
-import { SlidersHorizontal, Search as SearchIcon, Check, Moon } from 'lucide-react'
+import { cn, useIsMobile } from '@gamemap/ui'
+import { Check, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
 import { resolveMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
 import { ICP_BEIAN } from './lib/brand'
@@ -730,19 +730,27 @@ export default function App() {
           id: 'show-all',
           label: t('showAll'),
           onClick: () => setVisible(new Set(staticData.types.subtypes.map((s) => s.id))),
+          testId: 'map-show-all',
         },
-        { id: 'hide-all', label: t('hideAll'), onClick: () => setVisible(new Set()) },
+        {
+          id: 'hide-all',
+          label: t('hideAll'),
+          onClick: () => setVisible(new Set()),
+          testId: 'map-hide-all',
+        },
         {
           id: 'show-tooltip',
           label: t('showTooltip'),
           onClick: () => setShowLabels((v) => !v),
           active: showLabels,
+          testId: 'map-show-labels',
         },
         {
           id: 'show-regions',
           label: t('showRegions'),
           onClick: () => setShowRegions((v) => !v),
           active: showRegions,
+          testId: 'map-show-regions',
         },
       ]}
       classNames={{
@@ -792,7 +800,7 @@ export default function App() {
     visibleSubtypes: visible,
     showLabels,
     showBorders: showRegions,
-    lodEnabled: false,
+    lodEnabled: isMobile,
     selectedMarkerId,
     forceShowIds,
     selectedPosition,
@@ -836,55 +844,39 @@ export default function App() {
     )
 
   if (isMobile) {
+    const defaultVisible = staticData.types.subtypes.filter((subtype) => subtype.defaultActive)
+    const filtersActive =
+      showLabels ||
+      showRegions ||
+      visible.size !== defaultVisible.length ||
+      defaultVisible.some((subtype) => !visible.has(subtype.id))
+
     return (
-      <div className="arkive-map-page palworld-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+      <div className="arkive-map-page arkive-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
         <h1 className="sr-only">{t('title')}</h1>
         {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
             gets a definite height and Leaflet sizes correctly on mount. */}
         <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}</main>
 
-        {/* Floating actions; sit above the bottom tab bar (h-14) + safe area. */}
-        <div
-          className="absolute right-3 z-[700] flex flex-col gap-2"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4.5rem)' }}
-        >
-          <button
-            type="button"
-            data-testid="map-fab-search"
-            aria-label={t('search')}
-            onClick={() => setSearchSheetOpen(true)}
-            className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
-          >
-            <SearchIcon className="size-5" />
-          </button>
-          <button
-            type="button"
-            data-testid="map-fab-filter"
-            aria-label={t('filter')}
-            onClick={() => setFilterSheetOpen(true)}
-            className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-lg"
-          >
-            <SlidersHorizontal className="size-5" />
-          </button>
-        </div>
-
-        <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-          <SheetContent side="bottom" data-testid="filter-sheet" className="max-h-[85dvh]">
-            <SheetHeader>{mapSelect}</SheetHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto">{filterPanel}</div>
-          </SheetContent>
-        </Sheet>
-
-        <Sheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
-          <SheetContent
-            side="bottom"
-            data-testid="search-sheet"
-            className="max-h-[70dvh] overflow-hidden pb-[calc(env(safe-area-inset-bottom)+2rem)] pt-14"
-          >
-            <SheetTitle className="sr-only">{t('search')}</SheetTitle>
-            {searchPanel('inline')}
-          </SheetContent>
-        </Sheet>
+        <ArkiveMobileMapControls
+          search={{
+            label: t('search'),
+            open: searchSheetOpen,
+            onOpenChange: (open) => {
+              setSearchSheetOpen(open)
+              if (!open) setSearchResultIds([])
+            },
+            content: searchPanel('inline'),
+          }}
+          filter={{
+            label: t('filter'),
+            open: filterSheetOpen,
+            onOpenChange: setFilterSheetOpen,
+            active: filtersActive,
+            header: mapSelect,
+            content: filterPanel,
+          }}
+        />
       </div>
     )
   }
