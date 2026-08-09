@@ -12,9 +12,11 @@ import {
   ArkiveMobileMapControls, FilterPanel, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar,
   readMapView, useMapViewMemory,
   type FilterCategory, type MapViewState, type SearchItem,
+  canUseLodTiers,
 } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import { useIsMobile } from '@gamemap/ui'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import {
   loadStatic, loadMarkers, loadRegions,
   type MapMeta, type MarkerLocale, type MarkerRow, type MapsLocale,
@@ -445,7 +447,10 @@ export default function MapPage() {
     visibleSubtypes: visible,
     showLabels,
     showBorders: effectiveShowRegions,
-    lodEnabled: isMobile,
+    // Vardoran's 372 markers carry no `tier` yet, and LOD hides every tier-less
+    // marker -- enabling it unconditionally rendered a completely empty phone
+    // map. This turns itself on once the pipeline emits tiers.
+    lodEnabled: isMobile && canUseLodTiers(engineMarkers),
     selectedMarkerId,
     forceShowIds,
     selectedPosition,
@@ -491,6 +496,9 @@ export default function MapPage() {
         <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}</main>
 
         <ArkiveMobileMapControls
+          // The map route renders no header, so this is the only account surface
+          // on V Rising's landing page.
+          account={<ArkiveAccountControl language={i18n.resolvedLanguage ?? i18n.language} variant="mobileHeader" />}
           search={{
             label: t('search'),
             open: searchSheetOpen,

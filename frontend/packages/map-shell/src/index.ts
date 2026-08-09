@@ -97,6 +97,7 @@ export {
   type MapEngineStorage,
   type MapEngineStore,
 } from "./mapEngineChoice"
+export { canUseLodTiers } from "./markerLod"
 export { ThemeProvider, useTheme, type Theme, type ThemeStorage } from "./theme/ThemeProvider"
 export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./theme/ThemeToggle"
 // The concrete browser adapter lives in @gamemap/ui: this package is storage-free

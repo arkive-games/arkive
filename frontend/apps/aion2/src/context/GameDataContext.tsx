@@ -25,6 +25,26 @@ type GameDataContextValue = {
 
 const GameDataContext = createContext<GameDataContextValue | null>(null);
 
+/**
+ * The subtypes a map opens with: the whole "location" category, plus abyss
+ * fragments. Exported because the mobile filter button needs the same answer to
+ * decide whether the user has changed anything -- comparing against *all*
+ * subtypes instead marked the filter as modified on every first visit, since the
+ * default set is a strict subset.
+ */
+export function defaultVisibleSubtypeKeys(
+  all: Map<string, MarkerTypeSubtype>,
+  selectedMap: GameMapMeta,
+): Set<string> {
+  const keys = new Set<string>();
+  all.forEach((sub, name) => {
+    if (sub.category === "location" || (sub.name === "fragments" && selectedMap.type === "abyss")) {
+      keys.add(name);
+    }
+  });
+  return keys;
+}
+
 type GameDataProviderProps = {
   children: React.ReactNode;
 };
@@ -69,7 +89,13 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
   const [visibleRegions, setVisibleRegions] = useState<Set<string> | undefined>(undefined);
   const [allSubtypes, setAllSubtypes] = useState<Map<string, MarkerTypeSubtype>>(new Map());
   const [showBorders, setShowBorders] = useState<boolean>(false);
-  const [lodEnabled, setLodEnabled] = useState<boolean>(false);
+  // Phones open with LOD on -- the full marker set is unreadable at phone width.
+  // This is a *default*, not a forced value: forcing it left the sidebar's "Auto
+  // detail by zoom" switch reporting OFF while culling was on, and turning it off
+  // did nothing. 767 matches MOBILE_MAX_WIDTH and the CSS media query.
+  const [lodEnabled, setLodEnabled] = useState<boolean>(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
+  );
 
   // const { regions } = useMarkers(selectedMap?.name);
 
@@ -95,14 +121,7 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
     if (visible) {
       setVisibleSubtypes(visible);
     } else {
-      // DEFAULT: only "location" subtypes
-      const defaultKeys = new Set<string>();
-      all.forEach((sub, name) => {
-        if (sub.category === "location" || (sub.name === "fragments" && selectedMap.type === "abyss")) {
-          defaultKeys.add(name);
-        }
-      });
-      setVisibleSubtypes(defaultKeys);
+      setVisibleSubtypes(defaultVisibleSubtypeKeys(all, selectedMap));
     }
   }, [selectedMap, types]);
 

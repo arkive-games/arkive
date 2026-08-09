@@ -16,11 +16,13 @@ import {
   useMapViewMemory,
   type MapViewStore,
   type SearchItem,
+  canUseLodTiers,
 } from "@gamemap/map-shell";
 import { useIsMobile } from "@gamemap/ui";
+import { ArkiveAccountControl } from "@gamemap/auth";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
-import { useGameData } from "@/context/GameDataContext";
+import { defaultVisibleSubtypeKeys, useGameData } from "@/context/GameDataContext";
 import { useSubzoneLookup } from "@/features/map/useSubzoneLookup";
 import { aionAssets } from "@/features/map/aionAssets";
 import { aionTheme } from "@/features/map/aionTheme";
@@ -83,7 +85,19 @@ export default function MapRoute() {
   const { visibleSubtypes, visibleRegions, showBorders, lodEnabled, allSubtypes } =
     useGameData();
   const subzoneAt = useSubzoneLookup();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  // Whether the user has actually changed the marker filter. Compared against the
+  // map's DEFAULT set, not against every subtype: the default is a strict subset
+  // (the "location" category), so an all-subtypes comparison reported "changed"
+  // on a first visit with no interaction and could never read as unchanged.
+  const filtersChangedFromDefault = useMemo(() => {
+    if (!selectedMap || !visibleSubtypes || allSubtypes.size === 0) return false;
+    const defaults = defaultVisibleSubtypeKeys(allSubtypes, selectedMap);
+    if (defaults.size !== visibleSubtypes.size) return true;
+    for (const key of defaults) if (!visibleSubtypes.has(key)) return true;
+    return false;
+  }, [selectedMap, visibleSubtypes, allSubtypes]);
 
   // Below md the 346px sidebar left the map ~44px wide, so the mobile branch
   // (at the end of this component, after every hook) renders the map full-screen
@@ -333,7 +347,9 @@ export default function MapRoute() {
     visibleRegions,
     showLabels,
     showBorders,
-    lodEnabled: isMobile || lodEnabled,
+    // Data-gated: Abyss_Battlefield_A's 121 markers are all tier 2, so LOD would
+    // draw nothing there at the mount zoom. The switch stays the user's.
+    lodEnabled: lodEnabled && canUseLodTiers(engineMarkers),
     selectedMarkerId,
     forceShowIds,
     selectedPosition,
@@ -390,6 +406,9 @@ export default function MapRoute() {
         </main>
 
         <ArkiveMobileMapControls
+          // The map route renders no header, so this is the only account surface
+          // on aion2's landing page.
+          account={<ArkiveAccountControl language={i18n.resolvedLanguage ?? i18n.language} variant="mobileHeader" />}
           search={{
             label: t("common:ui.search", "Search"),
             open: searchSheetOpen,
@@ -403,7 +422,7 @@ export default function MapRoute() {
             label: t("common:menu.markerTypes", "Marker Types"),
             open: filterSheetOpen,
             onOpenChange: setFilterSheetOpen,
-            active: visibleSubtypes?.size !== allSubtypes.size,
+            active: filtersChangedFromDefault,
             header: <SelectMap />,
             content: <MarkerTypesSection />,
           }}

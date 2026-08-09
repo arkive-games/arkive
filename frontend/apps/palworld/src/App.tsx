@@ -8,7 +8,7 @@ import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, ty
 // costs nothing.
 import type { GlMapRef } from '@gamemap/map-engine-gl'
 const GlGameMapView = lazy(() => import('./features/map/GlMapView'))
-import { ArkiveMobileMapControls, FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
+import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -320,6 +320,11 @@ export default function App() {
     return counts
   }, [markerData])
 
+  const defaultActiveSubtypes = useMemo(
+    () => new Set(staticData?.types.subtypes.filter((s) => s.defaultActive).map((s) => s.id) ?? []),
+    [staticData],
+  )
+
   const engineMarkers: EngineMarker[] = useMemo(() => {
     if (!staticData || !markerData) return []
     return markerData.markers.map((m) => {
@@ -335,7 +340,10 @@ export default function App() {
         y: m.y,
         z: m.z,
         region: m.region,
-        tier: mapMarkerLodTier(countBySubtype.get(m.subtype) ?? 0),
+        tier: mapMarkerLodTier(
+          countBySubtype.get(m.subtype) ?? 0,
+          defaultActiveSubtypes.has(m.subtype),
+        ),
         icon: m.icon,
         image: m.image,
         indexInSubtype: m.indexInSubtype,
@@ -361,7 +369,7 @@ export default function App() {
         dungeonArea: m.dungeonArea,
       }
     })
-  }, [staticData, markerData, subtypeMetaMap, completed, countBySubtype])
+  }, [staticData, markerData, subtypeMetaMap, completed, countBySubtype, defaultActiveSubtypes])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
 
@@ -802,7 +810,7 @@ export default function App() {
     visibleSubtypes: visible,
     showLabels,
     showBorders: showRegions,
-    lodEnabled: isMobile,
+    lodEnabled: isMobile && canUseLodTiers(engineMarkers),
     selectedMarkerId,
     forceShowIds,
     selectedPosition,
