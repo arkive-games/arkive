@@ -20,6 +20,7 @@ export {
 } from "./AuthProvider"
 export { CoreClient, CORE_OPERATIONS, normaliseCode, type CoreClientOptions } from "./client"
 export {
+  ARKIVE_PRODUCTION_API_URL,
   CORE_API_PREFIX,
   resolveAuthConfig,
   type ResolveAuthConfigInput,

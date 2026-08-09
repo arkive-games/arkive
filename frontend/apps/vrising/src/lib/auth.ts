@@ -1,4 +1,4 @@
-import { resolveAuthConfig } from '@gamemap/auth'
+import { ARKIVE_PRODUCTION_API_URL, resolveAuthConfig } from '@gamemap/auth'
 
 import { IS_TOY } from './brand'
 
@@ -13,10 +13,16 @@ import { IS_TOY } from './brand'
  * bilibili.com, where the httpOnly cookie that gives SSO across the game
  * subdomains is blocked outright by Safari and Firefox.
  *
- * With no VITE_API_BASE_URL set the result is disabled and the account control
- * hides itself, which is the state every build is in until the API is deployed.
+ * Production builds fall back to the deployed backend, so no per-project build
+ * variable is needed. A build with neither the variable nor that fallback —
+ * a development build with nothing configured — resolves to disabled, and the
+ * account control hides itself rather than offering a sign-in that cannot work.
  */
 export const AUTH_CONFIG = resolveAuthConfig({
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+  // Falls back to the deployed backend in production builds so the six sites
+  // need no per-project build variable; VITE_API_BASE_URL still wins when set.
+  apiBaseUrl:
+    import.meta.env.VITE_API_BASE_URL ??
+    (import.meta.env.PROD ? ARKIVE_PRODUCTION_API_URL : undefined),
   isToy: IS_TOY,
 })

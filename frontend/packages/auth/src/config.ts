@@ -31,6 +31,20 @@ export interface ResolvedAuthConfig {
 export const CORE_API_PREFIX = "/api/v1/core"
 
 /**
+ * The deployed backend origin.
+ *
+ * A default in code rather than a per-project build variable, for the same
+ * reason the data and resource hosts have defaults (`VITE_DATA_BASE_URL ??
+ * '/data'`): the hostname is public, stable, and identical for all six sites.
+ * Six copies of it in a console are six chances to typo one and six places to
+ * edit when it moves, none of them visible in review.
+ *
+ * VITE_API_BASE_URL still overrides it, which is what local development and any
+ * future staging environment use.
+ */
+export const ARKIVE_PRODUCTION_API_URL = "https://api-arkive.tc-imba.com"
+
+/**
  * Decides where the API is and how the session travels.
  *
  * Kept here rather than duplicated in six apps so the transport rule has one
