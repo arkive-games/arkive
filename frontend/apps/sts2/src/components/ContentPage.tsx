@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import { cn, SiteFooter } from '@gamemap/ui'
 import { ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
@@ -31,7 +32,7 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
         brandName={brandName}
         pageTitle={title}
         loginLabel={t('login')}
-        locale={lng}
+        accountControl={<ArkiveAccountControl language={lng} variant="mobileHeader" />}
       />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex min-h-full flex-col">

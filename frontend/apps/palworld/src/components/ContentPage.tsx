@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowUp, SlidersHorizontal } from 'lucide-react'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import { Sheet, SheetContent, SheetTitle, cn, useIsMobile, SiteFooter } from '@gamemap/ui'
 import { ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
@@ -137,7 +138,7 @@ export function ContentPage({
           brandName={brandName}
           pageTitle={title}
           loginLabel={t('auth.login')}
-          locale={lng}
+          accountControl={<ArkiveAccountControl language={lng} variant="mobileHeader" />}
           actions={inSheet ? (
             <button
               type="button"

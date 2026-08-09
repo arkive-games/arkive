@@ -7,8 +7,8 @@ import {
   Menu,
   Users,
 } from 'lucide-react'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import {
-  ArkiveMobileAccountRow,
   ShellBottomNav,
   getArkiveBrandName,
   useTheme,
@@ -86,7 +86,7 @@ export function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('themeMenu'),
       }}
-      extra={<ArkiveMobileAccountRow locale={lng} label={t('login')} />}
+      extra={<ArkiveAccountControl language={lng} variant="mobileRow" />}
       footer={<SiteInfo />}
     />
   )

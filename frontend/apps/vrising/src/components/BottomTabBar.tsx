@@ -1,8 +1,8 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { BookOpen, Database, History, Map, Menu, Swords } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import {
-  ArkiveMobileAccountRow,
   ShellBottomNav,
   getArkiveBrandName,
   useTheme,
@@ -87,7 +87,7 @@ export function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('themeMenu'),
       }}
-      extra={<ArkiveMobileAccountRow locale={lng} label={t('login')} />}
+      extra={<ArkiveAccountControl language={lng} variant="mobileRow" />}
       footer={<SiteInfo />}
     />
   )

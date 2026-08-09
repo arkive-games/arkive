@@ -1,11 +1,7 @@
-import type { AnchorHTMLAttributes, ReactNode } from "react"
+import type { AnchorHTMLAttributes, ComponentProps, ReactNode } from "react"
 import { IconUserCircle } from "@tabler/icons-react"
 import { cn } from "@gamemap/ui"
-import {
-  ArkiveEmailLoginDialog,
-  type ArkiveEmailLoginCredentials,
-} from "./ArkiveEmailLoginDialog"
-import { ArkiveMark } from "./ArkiveMark"
+import { ArkiveMark } from "./ArkiveMapTopBar"
 
 type HomeLinkProps = Omit<
   AnchorHTMLAttributes<HTMLAnchorElement>,
@@ -21,9 +17,7 @@ export interface ArkiveMobileHeaderProps {
   actions?: ReactNode
   accountControl?: ReactNode
   loginLabel: string
-  locale: string
-  onLoginSubmit?: (credentials: ArkiveEmailLoginCredentials) => void | Promise<void>
-  onRegister?: () => void
+  onLogin?: () => void
   className?: string
 }
 
@@ -41,9 +35,7 @@ export function ArkiveMobileHeader({
   actions,
   accountControl,
   loginLabel,
-  locale,
-  onLoginSubmit,
-  onRegister,
+  onLogin,
   className,
 }: ArkiveMobileHeaderProps) {
   return (
@@ -76,22 +68,32 @@ export function ArkiveMobileHeader({
       {actions}
 
       {accountControl ?? (
-        <ArkiveEmailLoginDialog
-          locale={locale}
-          onSubmit={onLoginSubmit}
-          onRegister={onRegister}
-          trigger={(
-            <button
-              type="button"
-              aria-label={loginLabel}
-              title={loginLabel}
-              className="flex size-11 shrink-0 items-center justify-center rounded-lg text-[color:var(--arkive-nav-active)] transition-colors active:bg-accent"
-            >
-              <IconUserCircle className="size-6" stroke={1.8} />
-            </button>
-          )}
-        />
+        <ArkiveMobileAccountButton label={loginLabel} onClick={onLogin} />
       )}
     </header>
+  )
+}
+
+export interface ArkiveMobileAccountButtonProps extends Omit<
+  ComponentProps<"button">,
+  "aria-label" | "children" | "className" | "title" | "type"
+> {
+  label: string
+}
+
+export function ArkiveMobileAccountButton({
+  label,
+  ...buttonProps
+}: ArkiveMobileAccountButtonProps) {
+  return (
+    <button
+      {...buttonProps}
+      type="button"
+      aria-label={label}
+      title={label}
+      className="flex size-11 shrink-0 items-center justify-center rounded-lg text-[color:var(--arkive-nav-active)] transition-colors active:bg-accent"
+    >
+      <IconUserCircle className="size-6" stroke={1.8} />
+    </button>
   )
 }

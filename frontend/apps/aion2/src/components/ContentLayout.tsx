@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { ArkiveAccountControl } from "@gamemap/auth";
 import { cn, SiteFooter, useIsMobile } from "@gamemap/ui";
 import { ArkiveMobileHeader, getArkiveBrandName } from "@gamemap/map-shell";
 
@@ -48,7 +49,7 @@ export default function ContentLayout({
           brandName={brandName}
           pageTitle="AION2"
           loginLabel={t("auth.login")}
-          locale={currentLng}
+          accountControl={<ArkiveAccountControl language={currentLng} variant="mobileHeader" />}
           actions={<GlobalSearchWidget />}
         />
       ) : (

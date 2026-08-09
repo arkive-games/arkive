@@ -130,9 +130,6 @@ export default function App() {
   const currentAvatar = auth.user
     ? userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
     : avatarUrl('arkive-anonymous', 96)
-  const signIn = async (credentials: { email: string; password: string }) => {
-    await auth.login(credentials.email, credentials.password)
-  }
   const logout = () => {
     void auth.logout()
     window.location.hash = '#top'
@@ -161,9 +158,6 @@ export default function App() {
         homeLabel={brandName}
         brandName={brandName}
         loginLabel={t('auth.login')}
-        locale={lng}
-        onLoginSubmit={signIn}
-        onRegister={() => setAccountOpen(true)}
         accountControl={isSignedIn ? (
           <a
             href="#account/edit"
@@ -176,7 +170,9 @@ export default function App() {
               className="size-full rounded-full object-cover"
             />
           </a>
-        ) : undefined}
+        ) : (
+          <ArkiveAccountControl language={i18n.language} variant="mobileHeader" />
+        )}
       />
       <ArkiveMapTopBar
         homeUrl="#top"

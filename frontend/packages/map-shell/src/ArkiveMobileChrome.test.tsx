@@ -16,7 +16,6 @@ describe("Arkive mobile chrome", () => {
         brandName="Arkive.games"
         pageTitle="Card library"
         loginLabel="Log in"
-        locale="en-US"
         actions={<button type="button">Search</button>}
       />,
     )
@@ -28,15 +27,15 @@ describe("Arkive mobile chrome", () => {
     expect(api.getByRole("button", { name: "Log in" })).toBeTruthy()
   })
 
-  it("opens the shared email login dialog from the More sheet account row", () => {
-    const api = render(<ArkiveMobileAccountRow locale="en-US" label="Log in" />)
+  it("delegates the More sheet account action to the host", () => {
+    let selected = false
+    const api = render(
+      <ArkiveMobileAccountRow label="Log in" onSelect={() => { selected = true }} />,
+    )
 
     fireEvent.click(api.getByRole("button", { name: "Log in" }))
 
-    expect(api.getByRole("dialog")).toBeTruthy()
-    expect(api.getByRole("heading", { name: "Log in to Arkive" })).toBeTruthy()
-    expect(api.getByLabelText("Email")).toBeTruthy()
-    expect(api.getByLabelText("Password")).toBeTruthy()
+    expect(selected).toBe(true)
   })
 
   it("accepts a signed-in account control in place of the login dialog", () => {
@@ -46,7 +45,6 @@ describe("Arkive mobile chrome", () => {
         homeLabel="Arkive home"
         brandName="Arkive.games"
         loginLabel="Log in"
-        locale="en-US"
         accountControl={<a href="#account" aria-label="Account">Avatar</a>}
       />,
     )

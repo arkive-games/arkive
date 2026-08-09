@@ -1,5 +1,10 @@
 import { useState, type ReactNode } from "react"
-import { ShellAccountMenu, type ArkiveMapTopBarAccountItem } from "@gamemap/map-shell"
+import {
+  ArkiveMobileAccountButton,
+  ArkiveMobileAccountRow,
+  ShellAccountMenu,
+  type ArkiveMapTopBarAccountItem,
+} from "@gamemap/map-shell"
 
 import { AccountDialog } from "./AccountDialog"
 import { useAuth } from "./AuthProvider"
@@ -17,6 +22,8 @@ export interface ArkiveAccountControlProps {
   strings?: Partial<AuthStrings>
   /** Extra entries in the signed-in menu, e.g. a link to a profile page. */
   items?: ArkiveMapTopBarAccountItem[]
+  /** Adapts the anonymous trigger to its host surface. */
+  variant?: "topbar" | "mobileHeader" | "mobileRow"
   /** Rendered instead of nothing when auth is unavailable. */
   fallback?: ReactNode
 }
@@ -38,6 +45,7 @@ export function ArkiveAccountControl({
   language,
   strings: overrides,
   items,
+  variant = "topbar",
   fallback = null,
 }: ArkiveAccountControlProps) {
   const auth = useAuth()
@@ -53,22 +61,28 @@ export function ArkiveAccountControl({
     ? { ...base, ...overrides, errors: { ...base.errors, ...overrides.errors } }
     : base
 
+  const account = {
+    status: auth.status,
+    userName: auth.user?.name,
+    signInLabel: strings.signIn,
+    signOutLabel: strings.signOut,
+    accountLabel: strings.account,
+    onSignIn: () => setOpen(true),
+    onSignOut: () => {
+      void auth.logout()
+    },
+    items,
+  }
+
+  const anonymousTrigger = auth.status === "anonymous" && variant !== "topbar"
+    ? variant === "mobileHeader"
+      ? <ArkiveMobileAccountButton label={strings.signIn} onClick={() => setOpen(true)} />
+      : <ArkiveMobileAccountRow label={strings.signIn} onSelect={() => setOpen(true)} />
+    : <ShellAccountMenu account={account} />
+
   return (
     <>
-      <ShellAccountMenu
-        account={{
-          status: auth.status,
-          userName: auth.user?.name,
-          signInLabel: strings.signIn,
-          signOutLabel: strings.signOut,
-          accountLabel: strings.account,
-          onSignIn: () => setOpen(true),
-          onSignOut: () => {
-            void auth.logout()
-          },
-          items,
-        }}
-      />
+      {anonymousTrigger}
       <AccountDialog open={open} onOpenChange={setOpen} strings={strings} />
     </>
   )
