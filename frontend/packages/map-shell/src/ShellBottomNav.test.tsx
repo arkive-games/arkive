@@ -159,7 +159,10 @@ describe("ShellBottomNav", () => {
     )
     open(api)
     expect(api.getByTestId("more-theme-auto").getAttribute("aria-pressed")).toBe("true")
-    expect(api.getByTestId("more-theme-dark").getAttribute("aria-pressed")).toBe("false")
+    const darkTheme = api.getByTestId("more-theme-dark")
+    expect(darkTheme.getAttribute("aria-pressed")).toBe("false")
+    expect(darkTheme.className).toContain("whitespace-normal")
+    expect(darkTheme.className).not.toContain("truncate")
     expect(api.getByTestId("more-engine-gl").getAttribute("aria-pressed")).toBe("true")
   })
 

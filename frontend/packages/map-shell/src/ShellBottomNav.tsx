@@ -105,7 +105,7 @@ const ROW =
 /** A small on/off pill, shared by the theme segments and the engine choices. */
 function pillClass(selected: boolean) {
   return cn(
-    "min-w-0 truncate px-2 py-1 text-xs font-medium transition-colors",
+    "min-w-0 whitespace-normal px-2 py-1 text-center text-xs font-medium leading-tight transition-colors",
     selected ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
   )
 }
