@@ -9,12 +9,8 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { AuthProvider } from '@gamemap/auth'
-import {
-  createArkiveThemeStorage,
-  initBaiduAnalytics,
-  ThemeProvider,
-  trackPageview,
-} from '@gamemap/map-shell'
+import { createArkiveThemeStorage } from '@gamemap/ui'
+import { initBaiduAnalytics, ThemeProvider, trackPageview } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
 import 'leaflet/dist/leaflet.css'
 import '@gamemap/map-engine/engine.css'

@@ -1,4 +1,5 @@
-import { createArkiveThemeStorage, type MapViewStore } from '@gamemap/map-shell'
+import { createArkiveThemeStorage } from '@gamemap/ui'
+import { type MapViewStore } from '@gamemap/map-shell'
 
 const VISIBLE_KEY = 'vrising.map.visibleSubtypes'
 const VIEW_KEY = 'vrising.map.view'

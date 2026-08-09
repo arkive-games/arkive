@@ -96,11 +96,5 @@ export {
 } from "./mapEngineChoice"
 export { ThemeProvider, useTheme, type Theme, type ThemeStorage } from "./theme/ThemeProvider"
 export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./theme/ThemeToggle"
-export {
-  ARKIVE_THEME_COOKIE_NAME,
-  ARKIVE_THEME_STORAGE_KEY,
-  createArkiveThemeStorage,
-  resolveArkiveThemeCookieDomain,
-  type ArkiveThemeStorageEnvironment,
-  type CreateArkiveThemeStorageOptions,
-} from "./theme/arkiveThemeStorage"
+// The concrete browser adapter lives in @gamemap/ui: this package is storage-free
+// (see `check:shell`), so it may define the ThemeStorage port but never implement it.

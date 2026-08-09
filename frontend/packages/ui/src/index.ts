@@ -23,3 +23,10 @@ export * from "./tooltip"
 export * from "./use-is-mobile"
 export * from "./version-history"
 export { cn } from "./utils"
+// Only the factory is public. The cookie name, storage key and domain policy stay
+// private so an app cannot bypass the adapter and write `arkive.theme` itself.
+export {
+  createArkiveThemeStorage,
+  type ArkiveThemeStorageEnvironment,
+  type CreateArkiveThemeStorageOptions,
+} from "./arkive-theme-storage"

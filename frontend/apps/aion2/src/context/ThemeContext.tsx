@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
+import { createArkiveThemeStorage } from "@gamemap/ui";
 import {
-  createArkiveThemeStorage,
   ThemeProvider as SharedThemeProvider,
   useTheme,
   type Theme,

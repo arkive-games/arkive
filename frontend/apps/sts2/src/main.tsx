@@ -2,12 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { AuthProvider } from '@gamemap/auth'
-import {
-  createArkiveThemeStorage,
-  initBaiduAnalytics,
-  ThemeProvider,
-  trackPageview,
-} from '@gamemap/map-shell'
+import { createArkiveThemeStorage } from '@gamemap/ui'
+import { initBaiduAnalytics, ThemeProvider, trackPageview } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 import './i18n'

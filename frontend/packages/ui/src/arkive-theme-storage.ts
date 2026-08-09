@@ -1,4 +1,13 @@
-import type { Theme, ThemeStorage } from "./ThemeProvider"
+// Declared here rather than imported from @gamemap/map-shell: map-shell already
+// depends on this package, so importing back would close a cycle. These are
+// structurally identical to map-shell's `Theme`/`ThemeStorage`, which is all
+// `<ThemeProvider storage={...}>` needs -- TypeScript matches them by shape.
+type Theme = "auto" | "light" | "dark"
+
+type ThemeStorage = {
+  get: () => Theme | null
+  set: (theme: Theme) => void
+}
 
 export const ARKIVE_THEME_STORAGE_KEY = "arkive.theme"
 export const ARKIVE_THEME_COOKIE_NAME = "arkive.theme"

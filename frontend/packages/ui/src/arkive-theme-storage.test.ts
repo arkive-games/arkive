@@ -4,7 +4,7 @@ import {
   createArkiveThemeStorage,
   resolveArkiveThemeCookieDomain,
   type ArkiveThemeStorageEnvironment,
-} from "./arkiveThemeStorage"
+} from "./arkive-theme-storage"
 
 function createEnvironment({
   hostname = "localhost",
