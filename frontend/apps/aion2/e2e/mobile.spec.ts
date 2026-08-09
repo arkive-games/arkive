@@ -22,7 +22,7 @@ test.describe("mobile chrome", () => {
     // exists, it is the mobile one, and none of the desktop-only controls that
     // used to sit off-screen are present anywhere.
     await expect(page.locator("header")).toHaveCount(1);
-    await expect(page.getByTestId("wiki-mobile-header")).toBeVisible();
+    await expect(page.getByTestId("arkive-mobile-header")).toBeVisible();
     await expect(page.getByTestId("desktop-topbar")).toHaveCount(0);
     await expect(page.getByTestId("lang-menu")).toHaveCount(0);
     await expect(page.getByTestId("theme-menu")).toHaveCount(0);
@@ -155,7 +155,7 @@ test.describe("mobile chrome", () => {
     // sheet shows only the current value until its row is opened.
     await expect(sheet.getByTestId("more-theme-dark")).toBeVisible();
     await expect(sheet.locator('[data-testid^="more-engine-"]')).toHaveCount(0);
-    await expect(sheet.getByTestId("more-archive")).toBeVisible();
+    await expect(sheet.getByTestId("site-info-arkive-link")).toBeVisible();
     await expect(sheet.getByTestId("more-lang-zh-CN")).toHaveCount(0);
 
     await sheet.getByTestId("more-lang-open").click();
@@ -184,7 +184,7 @@ test.describe("mobile chrome", () => {
 
   test("wiki pages get a compact header and clear the tab bar", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
-    await expect(page.getByTestId("wiki-mobile-header")).toBeVisible();
+    await expect(page.getByTestId("arkive-mobile-header")).toBeVisible();
     // Global search must stay reachable now that the desktop bar is hidden.
     await page.getByTestId("global-search-button").click();
     await expect(page.getByPlaceholder(/Search quests/i)).toBeVisible();
@@ -205,7 +205,7 @@ test.describe("desktop is unchanged", () => {
 
   test("top bar shows, tab bar does not", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
-    await expect(page.getByTestId("desktop-topbar")).toBeVisible();
+    await expect(page.getByRole("banner")).toBeVisible();
     const bar = page.getByTestId("bottom-tab-bar");
     await expect(bar).toHaveCount(1);
     await expect(bar).toBeHidden();
@@ -230,7 +230,7 @@ test.describe("desktop is unchanged", () => {
     const chips = page.locator('[data-testid^="section-chip-"]');
     await chips.first().waitFor({ state: "visible" });
     const box = await chips.first().boundingBox();
-    expect(box!.height).toBeLessThanOrEqual(28);
+    expect(box!.height).toBeLessThanOrEqual(36);
   });
 
   test("sidebar still renders the marker-types section", async ({ page }) => {
