@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@gamemap/ui'
+import { cn, useIsMobile } from '@gamemap/ui'
 import { elementIconUrl, itemIconUrl, palIconUrl, workIconUrl } from '../../../lib/assets'
 import { formatPalId } from '../../../lib/palId'
 import { WORK_TYPES, type PalEntry, type PalsBundle } from '../../../lib/pals'
@@ -101,9 +101,128 @@ function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
   )
 }
 
+function MobilePalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
+  const { t, i18n } = useTranslation()
+  const fs = filterStrings(i18n.resolvedLanguage ?? 'en-US')
+  const pid = formatPalId(pal.zukanIndex, pal.zukanIndexSuffix)
+  const name = bundle.text[pal.id]?.name ?? pal.id
+  const works = WORK_TYPES.filter((work) => pal.work[work] != null).sort(
+    (a, b) => (pal.work[b] ?? 0) - (pal.work[a] ?? 0),
+  )
+
+  return (
+    <article className="rounded-lg border border-primary/25 bg-card p-3 shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <img
+          src={palIconUrl(pal.icon)}
+          alt=""
+          width={44}
+          height={44}
+          loading="lazy"
+          className="size-11 shrink-0 object-contain"
+        />
+        <div className="min-w-0 flex-1">
+          <PalHover id={pal.id}>
+            <Link
+              to="/pals/$id"
+              params={{ id: pal.id }}
+              className="block truncate text-sm font-semibold hover:text-primary"
+            >
+              {name}
+            </Link>
+          </PalHover>
+          <div className="text-xs tabular-nums text-muted-foreground">
+            {pid ? `${pid.text}${pid.accent ?? ''}` : pal.id}
+          </div>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          {pal.elements.map((element) => (
+            <Glyph
+              key={element}
+              src={elementIconUrl(element)}
+              size={20}
+              title={bundle.enums.elements[element] ?? element}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-2 border-t border-border/60 pt-2">
+        <div className="mb-1 text-xs font-medium text-muted-foreground">{fs.col.work}</div>
+        <div className="flex flex-wrap gap-1">
+          {works.map((work) => (
+            <span
+              key={work}
+              className={cn(
+                'inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs tabular-nums',
+                work === pal.bestWork
+                  ? 'bg-amber-500/10 ring-1 ring-inset ring-amber-500/60'
+                  : 'bg-secondary/60',
+              )}
+            >
+              <Glyph src={workIconUrl(work)} size={16} />
+              <span>{bundle.enums.work[work] ?? work}</span>
+              <span className="font-semibold">Lv{pal.work[work]}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">{fs.col.nocturnal}</dt>
+          <dd>{pal.nocturnal ? fs.yes : '—'}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">{t('pal.stat.size')}</dt>
+          <dd>{pal.size || '—'}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">{fs.col.reaction}</dt>
+          <dd className="truncate">{fs.reactions[pal.reaction] ?? pal.reaction}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">{fs.col.rarity}</dt>
+          <dd className="tabular-nums">{pal.rarity}</dd>
+        </div>
+      </dl>
+
+      {pal.drops.length > 0 ? (
+        <div className="mt-2 flex flex-wrap items-center gap-1 border-t border-border/60 pt-2">
+          <span className="mr-1 text-xs text-muted-foreground">{fs.col.drops}</span>
+          {pal.drops.map((drop) => (
+            <Link
+              key={drop.item}
+              to="/items/$id"
+              params={{ id: drop.item }}
+              className="inline-flex items-center gap-1 rounded bg-secondary/60 px-1.5 py-1 text-xs hover:text-primary"
+            >
+              {bundle.itemIcon[drop.item] ? (
+                <Glyph src={itemIconUrl(bundle.itemIcon[drop.item])} size={18} />
+              ) : null}
+              <span>{bundle.items[drop.item] ?? drop.item}</span>
+              <span className="tabular-nums text-muted-foreground">{drop.rate}%</span>
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </article>
+  )
+}
+
 export function PalTable({ pals, bundle }: { pals: PalEntry[]; bundle: PalsBundle }) {
   const { t, i18n } = useTranslation()
   const fs = filterStrings(i18n.resolvedLanguage ?? 'en-US')
+  const isMobile = useIsMobile()
+  if (isMobile) {
+    return (
+      <div className="space-y-2" data-testid="pal-mobile-list">
+        {pals.map((pal) => (
+          <MobilePalRow key={pal.id} pal={pal} bundle={bundle} />
+        ))}
+      </div>
+    )
+  }
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full min-w-[720px] border-collapse text-sm">

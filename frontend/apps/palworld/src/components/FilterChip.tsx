@@ -5,16 +5,26 @@ import { cn } from '@gamemap/ui'
 export function FilterChip({
   active,
   onClick,
+  tone = 'default',
   title,
   testId,
   children,
 }: {
   active: boolean
   onClick: () => void
+  tone?: 'default' | 'blue'
   title?: string
   testId?: string
   children: ReactNode
 }) {
+  const stateClass = tone === 'blue'
+    ? active
+      ? 'border-primary bg-primary font-semibold text-primary-foreground shadow-sm ring-2 ring-primary/20'
+      : 'border-primary/40 bg-primary/5 text-foreground shadow-xs hover:border-primary/70 hover:bg-primary/10'
+      : active
+        ? 'border-primary bg-primary/15 text-foreground'
+        : 'border-border bg-secondary/40 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+
   return (
     <button
       type="button"
@@ -24,9 +34,7 @@ export function FilterChip({
       data-testid={testId}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition',
-        active
-          ? 'border-primary bg-primary/15 text-foreground'
-          : 'border-border bg-secondary/40 text-muted-foreground hover:border-primary/50 hover:text-foreground',
+        stateClass,
       )}
     >
       {children}

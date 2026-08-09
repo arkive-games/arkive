@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadItems,
@@ -85,6 +86,11 @@ export default function BuildingListPage() {
   // Same auto-scroll reveal as the items page; 494 tiles is mild, but the
   // shared behavior also speeds first paint.
   const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'buildings')
+  const mobilePaging = useMobilePagination(list, {
+    pageSize: 24,
+    resetKey: `${query}|${cats.join(',')}`,
+  })
+  const displayed = mobilePaging.isMobile ? mobilePaging.visibleItems : shown
 
   const iname = (id: string) => items?.text[id]?.name ?? id
   const techResolvers = useMemo(
@@ -119,6 +125,7 @@ export default function BuildingListPage() {
     >
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('building.searchPlaceholder')}
@@ -139,7 +146,7 @@ export default function BuildingListPage() {
           ) : (
             <CatalogDataProvider items={items ?? undefined} buildings={bundle} tech={tech}>
               <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
-                {shown.map((b) => (
+                {displayed.map((b) => (
                   <BuildingTile
                     key={b.id}
                     building={b}
@@ -151,13 +158,21 @@ export default function BuildingListPage() {
                   />
                 ))}
               </div>
-              <RevealFooter
-                shownCount={shown.length}
-                remaining={remaining}
-                showMore={showMore}
-                sentinelRef={sentinelRef}
-                testId="building-show-more"
-              />
+              {mobilePaging.isMobile ? (
+                <MobilePagination
+                  page={mobilePaging.page}
+                  pageCount={mobilePaging.pageCount}
+                  onPageChange={mobilePaging.goToPage}
+                />
+              ) : (
+                <RevealFooter
+                  shownCount={shown.length}
+                  remaining={remaining}
+                  showMore={showMore}
+                  sentinelRef={sentinelRef}
+                  testId="building-show-more"
+                />
+              )}
             </CatalogDataProvider>
           )}
     </ContentPage>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { HoverCard, HoverCardTrigger, Input } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadItems,
@@ -96,6 +97,11 @@ export default function ItemListPage() {
   // Auto-scroll reveal: the full list is in memory, but mounting ~1,900
   // HoverCard tiles at once is a DOM-size problem, not a data one.
   const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'items')
+  const mobilePaging = useMobilePagination(list, {
+    pageSize: 24,
+    resetKey: `${query}|${cats.join(',')}|${noSourceActive}`,
+  })
+  const displayed = mobilePaging.isMobile ? mobilePaging.visibleItems : shown
 
   // Category chips — inline on desktop, behind the mobile header's filter icon
   // (see ContentPage). The search box stays on the page: it is not a filter.
@@ -130,9 +136,11 @@ export default function ItemListPage() {
       heading
       filters={filters}
       filtersActive={cats.length > 0 || noSourceActive}
+      hideMobileFooter
     >
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('item.searchPlaceholder')}
@@ -158,7 +166,7 @@ export default function ItemListPage() {
               pals={bundles?.pals}
             >
               <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
-                {shown.map((i) => (
+                {displayed.map((i) => (
                   <HoverCard key={i.id} openDelay={120} closeDelay={120}>
                     <HoverCardTrigger asChild>
                       <Link
@@ -194,13 +202,21 @@ export default function ItemListPage() {
                   </HoverCard>
                 ))}
               </div>
-              <RevealFooter
-                shownCount={shown.length}
-                remaining={remaining}
-                showMore={showMore}
-                sentinelRef={sentinelRef}
-                testId="item-show-more"
-              />
+              {mobilePaging.isMobile ? (
+                <MobilePagination
+                  page={mobilePaging.page}
+                  pageCount={mobilePaging.pageCount}
+                  onPageChange={mobilePaging.goToPage}
+                />
+              ) : (
+                <RevealFooter
+                  shownCount={shown.length}
+                  remaining={remaining}
+                  showMore={showMore}
+                  sentinelRef={sentinelRef}
+                  testId="item-show-more"
+                />
+              )}
             </CatalogDataProvider>
           )}
     </ContentPage>

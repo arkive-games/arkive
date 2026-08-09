@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { ArrowLeft, List, ListTree } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import {
   Button,
   Hint,
@@ -14,6 +14,7 @@ import {
   useIsMobile,
 } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
   buildChildIndex,
   comboKey,
@@ -34,9 +35,9 @@ import { loadPals, type PalsBundle } from '../../lib/pals'
 import { CatalogDataProvider } from '../catalog/components'
 import { PalPicker } from './PalPicker'
 import { BreedingTreeView } from './BreedingTreeView'
-import { BreedingChainsTreeView, BreedingChainsView } from './BreedingChainsView'
+import { BreedingChainsView } from './BreedingChainsView'
 import { RecipeCard, TileSep, buildRecipeMeta, type BreedingVariant } from './RecipeCard'
-import { GenPicker, toGenChoice } from './GenPicker'
+import { GenPicker, toGenChoice, type GenChoice } from './GenPicker'
 
 // Cap on rendered cards; a target-only query can match >1000 parent pairs. Set
 // above the default browse list (~365: every Pal + special combos) so that view
@@ -44,6 +45,16 @@ import { GenPicker, toGenChoice } from './GenPicker'
 const RENDER_CAP = 500
 
 const FAV_STORAGE_KEY = 'palworld.breeding.favs'
+const LAST_CHAIN_GEN_STORAGE_KEY = 'palworld.breeding.lastChainGen'
+const SEARCH_MEMORY_STORAGE_KEY = 'palworld.breeding.searchMemory'
+
+interface BreedingSearchMemory {
+  a?: string
+  b?: string
+  c?: string
+  gen?: GenChoice
+  routeGen?: number
+}
 
 export default function BreedingPage() {
   const { t, i18n } = useTranslation()
@@ -60,6 +71,69 @@ export default function BreedingPage() {
   const cSel = search.c ?? null
   // Multi-generation planner mode: active while a generation budget is set.
   const gen = search.gen ?? null
+  const [selectedChainGeneration, setSelectedChainGeneration] = useState<number | null>(null)
+  const searchMemoryReady = useRef(false)
+  const [lastChainGen, setLastChainGen] = useState<GenChoice>(() => {
+    if (search.gen != null) return toGenChoice(search.gen)
+    try {
+      return toGenChoice(Number(localStorage.getItem(LAST_CHAIN_GEN_STORAGE_KEY)))
+    } catch {
+      return 2
+    }
+  })
+
+  useEffect(() => {
+    if (searchMemoryReady.current) return
+    searchMemoryReady.current = true
+    if (aSel || bSel || cSel || gen != null) return
+
+    try {
+      const raw = sessionStorage.getItem(SEARCH_MEMORY_STORAGE_KEY)
+      if (!raw) return
+      const saved = JSON.parse(raw) as BreedingSearchMemory
+      const savedGen = [2, 3, 4, 5, 6].includes(Number(saved.gen)) ? toGenChoice(Number(saved.gen)) : undefined
+      if (!saved.a && !saved.b && !saved.c && savedGen == null) return
+      setSelectedChainGeneration(typeof saved.routeGen === 'number' ? saved.routeGen : null)
+      navigate({
+        search: {
+          a: typeof saved.a === 'string' ? saved.a : undefined,
+          b: typeof saved.b === 'string' ? saved.b : undefined,
+          c: typeof saved.c === 'string' ? saved.c : undefined,
+          gen: savedGen,
+        },
+        replace: true,
+      })
+    } catch {
+      // A malformed or unavailable session store should behave like no memory.
+    }
+  }, [aSel, bSel, cSel, gen, navigate])
+
+  useEffect(() => {
+    if (!searchMemoryReady.current || (!aSel && !bSel && !cSel && gen == null)) return
+    try {
+      const memory: BreedingSearchMemory = {
+        a: aSel ?? undefined,
+        b: bSel ?? undefined,
+        c: cSel ?? undefined,
+        gen: gen ?? undefined,
+        routeGen: selectedChainGeneration ?? undefined,
+      }
+      sessionStorage.setItem(SEARCH_MEMORY_STORAGE_KEY, JSON.stringify(memory))
+    } catch {
+      // Session storage can be unavailable in private browsing.
+    }
+  }, [aSel, bSel, cSel, gen, selectedChainGeneration])
+
+  useEffect(() => {
+    if (gen == null) return
+    const next = toGenChoice(gen)
+    setLastChainGen(next)
+    try {
+      localStorage.setItem(LAST_CHAIN_GEN_STORAGE_KEY, String(next))
+    } catch {
+      // Storage can be unavailable in private browsing; in-memory recall still works.
+    }
+  }, [gen])
 
   const setParam = useCallback(
     (key: 'a' | 'b' | 'c', id: string | null) => {
@@ -76,18 +150,30 @@ export default function BreedingPage() {
       // entry. The A / Child selection survives mode switches.
       navigate({
         search: (prev) =>
-          mode === 'chains' ? { a: prev.a, c: prev.c, gen: prev.gen ?? 2 } : { a: prev.a, b: prev.b, c: prev.c },
+          mode === 'chains'
+            ? { a: prev.a, c: prev.c, gen: prev.gen ?? lastChainGen }
+            : { a: prev.a, b: prev.b, c: prev.c },
       })
     },
-    [navigate],
+    [lastChainGen, navigate],
   )
 
   const setGen = useCallback(
-    (g: 2 | 3 | 4 | 5 | 6) => {
+    (g: GenChoice) => {
       navigate({ search: (prev) => ({ ...prev, gen: g }) })
     },
     [navigate],
   )
+
+  const clearSearch = useCallback(() => {
+    try {
+      sessionStorage.removeItem(SEARCH_MEMORY_STORAGE_KEY)
+    } catch {
+      // Clearing the visible state still works without session storage.
+    }
+    setSelectedChainGeneration(null)
+    navigate({ search: gen != null ? { gen } : {} })
+  }, [gen, navigate])
 
   const [payload, setPayload] = useState<{ data: BreedingData; names: NameMap } | null>(null)
   // Full Pal bundle, loaded only to power the pal hover cards on recipe chips.
@@ -156,9 +242,7 @@ export default function BreedingPage() {
     const ids = new Set(payload.data.pals.map((p) => p.id))
     const keep = (v?: string) => (v && ids.has(v) ? v : undefined)
     const tree = search.tree && search.gen == null ? sanitizeTree(engine, ids, search.tree) : undefined
-    // The tree layout (`view`) only exists in planner mode.
-    const view = search.gen != null ? search.view : undefined
-    const cleaned = { a: keep(search.a), b: keep(search.b), c: keep(search.c), tree, gen: search.gen, view }
+    const cleaned = { a: keep(search.a), b: keep(search.b), c: keep(search.c), tree, gen: search.gen, view: undefined }
     if (
       cleaned.a !== search.a ||
       cleaned.b !== search.b ||
@@ -199,6 +283,49 @@ export default function BreedingPage() {
     () => (gen != null && payload && engine && aSel && cSel ? findChains(engine, payload.data, aSel, cSel, gen) : null),
     [gen, payload, engine, aSel, cSel],
   )
+  const availableChainGenerations = useMemo(
+    () =>
+      chains
+        ? [...new Set(chains.map((chain) => chain.steps.length))].filter((generation) => generation > 1).sort((a, b) => a - b)
+        : [],
+    [chains],
+  )
+  const chainGenerationCounts = useMemo(() => {
+    const counts = new Map<number, number>()
+    for (const chain of chains ?? []) {
+      const generation = chain.steps.length
+      if (generation > 1) counts.set(generation, (counts.get(generation) ?? 0) + 1)
+    }
+    return counts
+  }, [chains])
+  const activeChainGeneration = useMemo(() => {
+    if (!isMobile || availableChainGenerations.length === 0) return null
+    return selectedChainGeneration != null && availableChainGenerations.includes(selectedChainGeneration)
+      ? selectedChainGeneration
+      : availableChainGenerations[0]
+  }, [availableChainGenerations, isMobile, selectedChainGeneration])
+  const displayedChains = useMemo(
+    () =>
+      chains && activeChainGeneration != null
+        ? chains.filter((chain) => chain.steps.length === activeChainGeneration)
+        : chains,
+    [activeChainGeneration, chains],
+  )
+  const resultSummary =
+    gen != null
+      ? chains
+        ? `${t('total')} ${t('breeding.chainCount', {
+            count: chains.reduce(
+              (count, chain) => count + (chain.steps.length === 1 ? chain.steps[0].partners.length : 1),
+              0,
+            ),
+          })}`
+        : t('breeding.chainPrompt')
+      : result.browsingSpecial
+        ? t('breeding.showingSpecial')
+        : result.total === 0
+          ? t('breeding.zeroRouteSummary', { count: result.total })
+          : t('breeding.chainCount', { count: result.total })
 
   const hasFilter = aSel != null || bSel != null || cSel != null
 
@@ -211,7 +338,11 @@ export default function BreedingPage() {
     for (const f of result.list) (favs.has(favKey(f)) ? fav : rest).push(f)
     return [...fav, ...rest]
   }, [result.list, favs])
-  const shown = ordered.slice(0, RENDER_CAP)
+  const mobilePaging = useMobilePagination(ordered, {
+    pageSize: 20,
+    resetKey: `${aSel ?? ''}|${bSel ?? ''}|${cSel ?? ''}`,
+  })
+  const shown = mobilePaging.isMobile ? mobilePaging.visibleItems : ordered.slice(0, RENDER_CAP)
 
   const pickerLabels = {
     anyPal: t('breeding.anyPal'),
@@ -219,15 +350,15 @@ export default function BreedingPage() {
     noPalFound: t('breeding.noPalFound'),
   }
 
-  // Phones swap every `A + B = C` row (the pickers and the recipe cards) for
-  // three squares in one line; desktop keeps the chip rows. Decided once here
-  // and threaded down, so a card and the picker above it can never disagree.
-  const variant: BreedingVariant = isMobile ? 'tile' : 'row'
+  // Phone pickers keep the three-slot formula, while result cards use the
+  // denser row layout shared with the multi-generation results.
+  const pickerVariant: BreedingVariant = isMobile ? 'tile' : 'row'
+  const resultVariant: BreedingVariant = isMobile ? 'compact' : 'row'
   const pickerProps = {
     pals: payload?.data.pals ?? [],
     names: payload?.names ?? {},
     labels: pickerLabels,
-    variant,
+    variant: pickerVariant,
   }
   const pickerA = (
     <PalPicker
@@ -256,7 +387,7 @@ export default function BreedingPage() {
       onChange={(id) => setParam('c', id)}
     />
   )
-  // Phone: the budget as the formula's middle square (see the picker row).
+  // Phone: the budget sits below the source-to-target selection row.
   const genTile =
     gen == null ? null : (
       <GenPicker
@@ -294,31 +425,55 @@ export default function BreedingPage() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <ContentPage active="/breeding" title={t('breeding.navBreeding')} heading>
+      <ContentPage active="/breeding" title={t('breeding.navBreeding')} heading hideMobileFooter>
         <CatalogDataProvider pals={pals ?? undefined}>
-          <div className="mb-3 inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/40 p-0.5">
-            <Button variant={gen == null ? 'secondary' : 'ghost'} size="sm" onClick={() => setMode('recipes')}>
+          <div className="mb-3 inline-flex items-center gap-0.5 rounded-lg border border-primary/30 bg-primary/5 p-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-pressed={gen == null}
+              className={gen == null ? 'bg-primary !text-white hover:bg-primary/90 hover:!text-white' : 'text-primary hover:bg-primary/10 hover:text-primary'}
+              onClick={() => setMode('recipes')}
+            >
               {t('breeding.modeRecipes')}
             </Button>
-            <Button variant={gen == null ? 'ghost' : 'secondary'} size="sm" onClick={() => setMode('chains')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-pressed={gen != null}
+              className={gen != null ? 'bg-primary !text-white hover:bg-primary/90 hover:!text-white' : 'text-primary hover:bg-primary/10 hover:text-primary'}
+              onClick={() => setMode('chains')}
+            >
               {t('breeding.modeChains')}
             </Button>
           </div>
           {isMobile ? (
-            // Phone: the selection reads as the recipe it builds — `A + B = C`.
-            // The planner takes no Parent B (it finds the partners itself), so
-            // that square carries the generation budget instead: same three-tile
-            // formula, no dangling slot, and no extra row for the budget.
-            <div
-              className="grid items-center gap-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]"
-              data-testid="breeding-picker-row"
-            >
-              {pickerA}
-              <TileSep>+</TileSep>
-              {gen == null ? pickerB : genTile}
-              <TileSep>=</TileSep>
-              {pickerC}
-            </div>
+            // Recipes retain the familiar A + B = C equation. Planner mode
+            // gives the source and target enough width for full Pal identity,
+            // then places the generation budget in a compact secondary row.
+            gen == null ? (
+              <div
+                className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1"
+                data-testid="breeding-picker-row"
+              >
+                {pickerA}
+                <TileSep>+</TileSep>
+                {pickerB}
+                <TileSep>=</TileSep>
+                {pickerC}
+              </div>
+            ) : (
+              <div
+                className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1"
+                data-testid="breeding-picker-row"
+              >
+                {pickerA}
+                <TileSep>+</TileSep>
+                {genTile}
+                <TileSep>=</TileSep>
+                {pickerC}
+              </div>
+            )
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {pickerA}
@@ -328,22 +483,9 @@ export default function BreedingPage() {
             </div>
           )}
 
-          <div className="mt-4 flex items-center justify-between gap-2">
-            <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              {gen != null
-                ? chains
-                  ? // Direct recipes count individually (the group renders one card
-                    // per partner); a multi-step chain is one entry.
-                    t('breeding.chainCount', {
-                      count: chains.reduce(
-                        (n, ch) => n + (ch.steps.length === 1 ? ch.steps[0].partners.length : 1),
-                        0,
-                      ),
-                    })
-                  : t('breeding.chainPrompt')
-                : result.browsingSpecial
-                  ? t('breeding.showingSpecial')
-                  : t('breeding.combinations', { count: result.total })}
+          <div className="mt-4 flex min-w-0 items-center justify-between gap-2">
+            <span className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
+              <span className="min-w-0 flex-1">{resultSummary}</span>
               {/* Same badge as the Passive Skills page; the tip covers the
                   breeding side. `Hint`, not a bare tooltip: the badge is inert,
                   so on a phone it becomes the tap target for a bottom sheet —
@@ -363,30 +505,6 @@ export default function BreedingPage() {
               </Hint>
             </span>
             <span className="flex shrink-0 items-center gap-1">
-              {gen != null && chains && chains.length > 0 ? (
-                <span className="mr-1 inline-flex items-center gap-0.5 rounded-md border border-border p-0.5">
-                  <Button
-                    variant={search.view === 'tree' ? 'ghost' : 'secondary'}
-                    size="icon"
-                    className="size-7"
-                    aria-label={t('breeding.viewList')}
-                    title={t('breeding.viewList')}
-                    onClick={() => navigate({ search: (prev) => ({ ...prev, view: undefined }) })}
-                  >
-                    <List className="size-4" />
-                  </Button>
-                  <Button
-                    variant={search.view === 'tree' ? 'secondary' : 'ghost'}
-                    size="icon"
-                    className="size-7"
-                    aria-label={t('breeding.viewTree')}
-                    title={t('breeding.viewTree')}
-                    onClick={() => navigate({ search: (prev) => ({ ...prev, view: 'tree' }) })}
-                  >
-                    <ListTree className="size-4" />
-                  </Button>
-                </span>
-              ) : null}
               {search.tree ? (
                 <Button
                   variant="ghost"
@@ -401,13 +519,47 @@ export default function BreedingPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate({ search: gen != null ? { gen } : {} })}
+                  onClick={clearSearch}
                 >
                   {t('breeding.clear')}
                 </Button>
               ) : null}
             </span>
           </div>
+          {isMobile && availableChainGenerations.length > 0 ? (
+            <div
+              className="mt-3 flex items-center gap-2 overflow-x-auto pb-1"
+              role="navigation"
+              aria-label={t('breeding.modeChains')}
+            >
+              {availableChainGenerations.map((generation) => {
+                const selected = generation === activeChainGeneration
+                return (
+                  <Button
+                    key={generation}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={selected}
+                    data-testid={`breeding-generation-jump-${generation}`}
+                    className={
+                      selected
+                        ? 'shrink-0 gap-1.5 border-primary bg-primary !text-white hover:bg-primary/90 hover:!text-white'
+                        : 'shrink-0 gap-1.5 border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary'
+                    }
+                    onClick={() => setSelectedChainGeneration(generation)}
+                  >
+                    <span>
+                      {t('breeding.chainNGen', { count: generation })}
+                      {lng.startsWith('zh') ? '（' : ' ('}
+                      {chainGenerationCounts.get(generation) ?? 0}
+                      {lng.startsWith('zh') ? '）' : ')'}
+                    </span>
+                  </Button>
+                )
+              })}
+            </div>
+          ) : null}
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
@@ -418,27 +570,19 @@ export default function BreedingPage() {
               <div className="mt-8 text-center text-sm text-muted-foreground">
                 {t('breeding.noChains', { count: gen })}
               </div>
-            ) : chains && search.view === 'tree' ? (
-              <BreedingChainsTreeView
-                // Remount on a query change to reset the reveal caps.
-                key={`${aSel}|${cSel}|${gen}`}
-                chains={chains}
-                names={payload?.names ?? {}}
-                meta={meta}
-                uniqueLabel={t('breeding.unique')}
-              />
-            ) : chains ? (
+            ) : chains && displayedChains ? (
               <BreedingChainsView
                 // Remount on a query change to reset per-group and per-step caps.
-                key={`${aSel}|${cSel}|${gen}`}
-                chains={chains}
+                key={`${aSel}|${cSel}|${gen}|${activeChainGeneration ?? 'all'}`}
+                chains={displayedChains}
                 names={payload?.names ?? {}}
                 meta={meta}
                 uniqueLabel={t('breeding.unique')}
                 favs={favs}
                 onToggleFav={toggleFav}
                 favLabel={t('breeding.favorite')}
-                variant={variant}
+                variant={pickerVariant}
+                hideMultiGroupHeader={activeChainGeneration != null}
               />
             ) : null
           ) : search.tree && engine && childIndex ? (
@@ -451,13 +595,12 @@ export default function BreedingPage() {
               uniqueLabel={t('breeding.unique')}
               selectLabel={t('breeding.expandRecipe')}
               onChange={updateTree}
-              variant={variant}
+              variant={resultVariant}
             />
           ) : (
             <>
               <div className="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-2">
                 {shown.map((f) => {
-                  const fk = favKey(f)
                   return (
                     <RecipeCard
                       key={comboKey(f)}
@@ -465,19 +608,21 @@ export default function BreedingPage() {
                       names={payload?.names ?? {}}
                       meta={meta}
                       uniqueLabel={t('breeding.unique')}
-                      fav={{ isFav: favs.has(fk), onToggle: () => toggleFav(fk), label: t('breeding.favorite') }}
-                      onSelect={() => updateTree([], { a: f.a, b: f.b, ag: f.ag, bg: f.bg })}
-                      selectLabel={t('breeding.expandRecipe')}
-                      variant={variant}
+                      variant={resultVariant}
                     />
                   )
                 })}
               </div>
-              {result.total > shown.length ? (
+              {!mobilePaging.isMobile && result.total > shown.length ? (
                 <div className="mt-3 text-center text-sm text-muted-foreground">
                   {t('breeding.more', { count: result.total - shown.length })}
                 </div>
               ) : null}
+              <MobilePagination
+                page={mobilePaging.page}
+                pageCount={mobilePaging.pageCount}
+                onPageChange={mobilePaging.goToPage}
+              />
             </>
           )}
         </CatalogDataProvider>

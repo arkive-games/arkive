@@ -1,12 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Moon, Zap } from 'lucide-react'
+import { ChevronLeft, ChevronRight, FoldVertical, Moon, UnfoldVertical, Zap } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
   gearCategory,
-  humanizeWazaId,
   passiveDescription,
   resolveCharacterNames,
   type PalsBundle,
@@ -68,6 +67,49 @@ const SPEED_KEYS = [
   'transportSpeed',
   'swimSpeed',
 ] as const
+
+const DETAIL_SECTION_IDS = [
+  'description', 'stats', 'work', 'partnerSkill', 'activeSkills', 'details',
+  'passives', 'spawns', 'dungeons', 'fishing', 'unlocksTech', 'enemyScaling',
+  'drops', 'bossDrops', 'breeding',
+] as const
+type DetailSectionId = (typeof DETAIL_SECTION_IDS)[number]
+type CollapsibleSectionProps = Pick<
+  ComponentProps<typeof PalSection>,
+  'collapsible' | 'expanded' | 'onExpandedChange' | 'expandLabel' | 'collapseLabel' | 'className'
+>
+
+const DETAIL_SECTION_STORAGE = 'palworld.pal-detail.sections.v1'
+const DEFAULT_EXPANDED_SECTIONS = new Set<DetailSectionId>(['description', 'stats', 'work'])
+const DETAIL_SECTION_ORDER: Record<DetailSectionId, string> = {
+  description: 'order-1',
+  stats: 'order-2',
+  work: 'order-3',
+  partnerSkill: 'order-4',
+  activeSkills: 'order-5',
+  details: 'order-6',
+  passives: 'order-7',
+  spawns: 'order-8',
+  dungeons: 'order-9',
+  fishing: 'order-10',
+  unlocksTech: 'order-11',
+  enemyScaling: 'order-12',
+  drops: 'order-[13]',
+  bossDrops: 'order-[14]',
+  breeding: 'order-[15]',
+}
+
+function palSizeLabel(size: string, locale: string): string {
+  if (!locale.startsWith('zh')) return size
+  const labels: Record<string, string> = locale === 'zh-TW'
+    ? { XS: '超小型', S: '小型', M: '中型', L: '大型', XL: '超大型' }
+    : { XS: '超小型', S: '小型', M: '中型', L: '大型', XL: '超大型' }
+  return labels[size] ?? ''
+}
+
+function secondsLabel(value: number, locale: string): string {
+  return locale.startsWith('zh') ? `${value} 秒` : `${value}s`
+}
 
 // Join per-rank values with " / ", but collapse to a single value when every rank
 // is identical (e.g. 100 / 100 / 100 / 100 / 100 → 100).
@@ -139,10 +181,12 @@ function BreedingLinks({
   pal,
   data,
   names,
+  sectionProps,
 }: {
   pal: PalEntry
   data: BreedingData
   names: NameMap
+  sectionProps?: CollapsibleSectionProps
 }) {
   const { t } = useTranslation()
   const [page, setPage] = useState(0)
@@ -160,7 +204,7 @@ function BreedingLinks({
   const sectionTitle = t('pal.section.breeding')
   if (parents.length === 0) {
     return (
-      <PalSection title={sectionTitle}>
+      <PalSection title={sectionTitle} {...sectionProps}>
         <p className="text-sm text-muted-foreground">{t('pal.noBreeding')}</p>
       </PalSection>
     )
@@ -180,6 +224,7 @@ function BreedingLinks({
   return (
     <PalSection
       title={sectionTitle}
+      {...sectionProps}
       action={
         <Link
           to="/breeding"
@@ -266,6 +311,44 @@ export default function PalDetailPage() {
   // Fishing dataset, for the "caught by fishing" reverse — best-effort.
   const [fishing, setFishing] = useState<FishingFile | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [mobileSections, setMobileSections] = useState<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const stored = window.localStorage.getItem(DETAIL_SECTION_STORAGE)
+      return stored ? JSON.parse(stored) as Record<string, boolean> : {}
+    } catch {
+      return {}
+    }
+  })
+
+  const disclosureLabels = lng === 'zh-TW'
+    ? { expand: '展開本節', collapse: '收合本節', expandAll: '展開全部', collapseAll: '收合全部' }
+    : lng === 'zh-CN'
+      ? { expand: '展开本节', collapse: '收起本节', expandAll: '展开全部', collapseAll: '收起全部' }
+      : { expand: 'Expand section', collapse: 'Collapse section', expandAll: 'Expand all', collapseAll: 'Collapse all' }
+
+  const saveMobileSections = (next: Record<string, boolean>) => {
+    setMobileSections(next)
+    try {
+      window.localStorage.setItem(DETAIL_SECTION_STORAGE, JSON.stringify(next))
+    } catch {
+      // Storage can be unavailable in private or embedded browsing contexts.
+    }
+  }
+  const sectionExpanded = (section: DetailSectionId) =>
+    mobileSections[section] ?? DEFAULT_EXPANDED_SECTIONS.has(section)
+  const sectionProps = (section: DetailSectionId): CollapsibleSectionProps => ({
+    collapsible: true,
+    expanded: sectionExpanded(section),
+    onExpandedChange: (expanded) => saveMobileSections({ ...mobileSections, [section]: expanded }),
+    expandLabel: disclosureLabels.expand,
+    collapseLabel: disclosureLabels.collapse,
+    className: DETAIL_SECTION_ORDER[section],
+  })
+  const allSectionsExpanded = DETAIL_SECTION_IDS.every(sectionExpanded)
+  const setAllSectionsExpanded = (expanded: boolean) => {
+    saveMobileSections(Object.fromEntries(DETAIL_SECTION_IDS.map((section) => [section, expanded])))
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -326,6 +409,7 @@ export default function PalDetailPage() {
       (ps.wazaId ? resolveCharacterNames(bundle.skills[ps.wazaId]?.description, bundle.text) : '')
     const unlockItemName = ps.unlockItem ? bundle.items[ps.unlockItem] ?? ps.unlockItem : ''
     const gearCat = gearCategory(ps.gear)
+    const localizedActiveSkills = pal.activeSkills.filter((skill) => bundle.skills[skill.wazaId]?.name.trim())
 
     // When a pal has no wild/boss spawns, say how it's obtained. A breeding
     // recipe is only a *real* acquisition path if the pal isn't one of its own
@@ -380,30 +464,32 @@ export default function PalDetailPage() {
       : []
 
     body = (
-      <div className="space-y-6">
+      <div className="space-y-3 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <img
             src={palIconUrl(pal.icon)}
             alt=""
-            className="size-20 shrink-0 object-contain"
+            className="size-16 shrink-0 object-contain sm:size-20"
           />
           <div className="min-w-0">
             {pid ? (
               <div className="text-sm tabular-nums text-muted-foreground">
-                {pid.text}
+                {lng.startsWith('zh') ? `编号 ${pid.text.replace(/^No\./, '')}` : pid.text}
                 {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
               </div>
             ) : null}
-            <h1 className="text-3xl font-bold">{text?.name ?? pal.id}</h1>
-            <div className="mt-0.5 font-mono text-xs text-muted-foreground">{pal.id}</div>
+            <h1 className="text-2xl font-bold sm:text-3xl">{text?.name ?? pal.id}</h1>
+            {!lng.startsWith('zh') ? (
+              <div className="mt-0.5 font-mono text-xs text-muted-foreground">{pal.id}</div>
+            ) : null}
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               {pal.elements.map((e) => (
                 <ElementBadge key={e} element={e} label={bundle.enums.elements[e] ?? e} />
               ))}
               {pal.size ? (
                 <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-                  {t('pal.stat.size')}: {pal.size}
+                  {t('pal.stat.size')}: {palSizeLabel(pal.size, lng)}
                 </span>
               ) : null}
               <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
@@ -418,11 +504,22 @@ export default function PalDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex justify-end md:hidden">
+          <button
+            type="button"
+            onClick={() => setAllSectionsExpanded(!allSectionsExpanded)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-3 text-sm font-medium text-primary transition hover:bg-primary/10"
+          >
+            {allSectionsExpanded ? <FoldVertical className="size-4" /> : <UnfoldVertical className="size-4" />}
+            {allSectionsExpanded ? disclosureLabels.collapseAll : disclosureLabels.expandAll}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_320px] md:gap-6">
           {/* Main column */}
-          <div className="space-y-6 md:order-1">
+          <div className="contents md:order-1 md:block md:space-y-6">
             {text?.description ? (
-              <PalSection title={t('pal.section.description')}>
+              <PalSection title={t('pal.section.description')} {...sectionProps('description')}>
                 <p className="text-sm leading-relaxed whitespace-pre-line">
                   {resolveCharacterNames(text.description, bundle.text)}
                 </p>
@@ -430,7 +527,7 @@ export default function PalDetailPage() {
             ) : null}
 
             {partnerName ? (
-              <PalSection title={t('pal.section.partnerSkill')}>
+              <PalSection title={t('pal.section.partnerSkill')} {...sectionProps('partnerSkill')}>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium">{partnerName}</span>
                   {gearCat ? (
@@ -486,7 +583,7 @@ export default function PalDetailPage() {
                     ) : ps.action.effectTime > 0 ? (
                       <li className="flex items-baseline justify-between gap-3">
                         <span className="text-muted-foreground">{t('pal.effectTime')}</span>
-                        <span className="shrink-0 tabular-nums">{ps.action.effectTime}s</span>
+                        <span className="shrink-0 tabular-nums">{secondsLabel(ps.action.effectTime, lng)}</span>
                       </li>
                     ) : null}
                     {ps.coolTimeByRank?.length ? (
@@ -499,7 +596,7 @@ export default function PalDetailPage() {
                     ) : ps.action.coolTime > 0 ? (
                       <li className="flex items-baseline justify-between gap-3">
                         <span className="text-muted-foreground">{t('pal.cooldown')}</span>
-                        <span className="shrink-0 tabular-nums">{ps.action.coolTime}s</span>
+                        <span className="shrink-0 tabular-nums">{secondsLabel(ps.action.coolTime, lng)}</span>
                       </li>
                     ) : null}
                     {ps.action.execCost > 0 ? (
@@ -530,10 +627,10 @@ export default function PalDetailPage() {
               </PalSection>
             ) : null}
 
-            {pal.activeSkills.length ? (
-              <PalSection title={t('pal.section.activeSkills')}>
+            {localizedActiveSkills.length ? (
+              <PalSection title={t('pal.section.activeSkills')} {...sectionProps('activeSkills')}>
                 <table className="w-full text-sm">
-                  <thead>
+                  <thead className="hidden sm:table-header-group">
                     <tr className="text-left text-xs text-muted-foreground">
                       <th className="w-px whitespace-nowrap pb-1 pr-2 text-center font-medium">{t('pal.lv')}</th>
                       <th className="w-full pb-1 pr-2 font-medium">{t('pal.skill')}</th>
@@ -544,13 +641,21 @@ export default function PalDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pal.activeSkills.map((s) => (
+                    {localizedActiveSkills.map((s) => (
                       <ActiveSkillRow
                         key={`${s.wazaId}-${s.level}`}
                         skill={s}
-                        name={bundle.skills[s.wazaId]?.name || humanizeWazaId(s.wazaId)}
+                        name={bundle.skills[s.wazaId]!.name}
                         typeLabel={t(s.category === 'Melee' ? 'pal.melee' : 'pal.ranged')}
                         description={resolveCharacterNames(bundle.skills[s.wazaId]?.description, bundle.text)}
+                        locale={lng}
+                        labels={{
+                          level: t('pal.lv'),
+                          power: t('pal.power'),
+                          cooldown: t('pal.cooldown'),
+                          type: t('pal.type'),
+                          range: t('pal.range'),
+                        }}
                       />
                     ))}
                   </tbody>
@@ -559,7 +664,7 @@ export default function PalDetailPage() {
             ) : null}
 
             {pal.passives.length ? (
-              <PalSection title={t('pal.section.passives')}>
+              <PalSection title={t('pal.section.passives')} {...sectionProps('passives')}>
                 <div className="divide-y divide-border/60">
                   {pal.passives.map((pidStr) => (
                     <PassiveRow
@@ -573,7 +678,7 @@ export default function PalDetailPage() {
               </PalSection>
             ) : null}
 
-            <PalSection title={t('pal.section.spawns')}>
+            <PalSection title={t('pal.section.spawns')} {...sectionProps('spawns')}>
               <PalSpawnMap
                 palId={pal.id}
                 palIcon={pal.icon}
@@ -628,7 +733,7 @@ export default function PalDetailPage() {
             </PalSection>
 
             {palDungeons.length ? (
-              <PalSection title={t('pal.section.dungeons')}>
+              <PalSection title={t('pal.section.dungeons')} {...sectionProps('dungeons')}>
                 <div className="flex flex-wrap gap-1.5">
                   {palDungeons.map((did) => (
                     <Link
@@ -645,7 +750,7 @@ export default function PalDetailPage() {
             ) : null}
 
             {fishingAreas.length ? (
-              <PalSection title={t('pal.section.fishing')}>
+              <PalSection title={t('pal.section.fishing')} {...sectionProps('fishing')}>
                 <div className="flex flex-wrap gap-1.5">
                   {fishingAreas.map((f) => (
                     <Link
@@ -655,7 +760,7 @@ export default function PalDetailPage() {
                     >
                       {items?.areaLabels[f.area] ?? t(`bp.area.${f.area}`, { defaultValue: f.area })}
                       <span className="tabular-nums text-muted-foreground">
-                        Lv{f.lvMin === f.lvMax ? f.lvMin : `${f.lvMin}–${f.lvMax}`} · {f.share}%
+                        {lng.startsWith('zh') ? '等级' : 'Lv'} {f.lvMin === f.lvMax ? f.lvMin : `${f.lvMin}–${f.lvMax}`} · {f.share}%
                       </span>
                       {f.night ? <Moon className="size-3 text-indigo-400" /> : null}
                     </Link>
@@ -665,7 +770,7 @@ export default function PalDetailPage() {
             ) : null}
 
             {unlockedTechs.length ? (
-              <PalSection title={t('pal.section.unlocksTech')}>
+              <PalSection title={t('pal.section.unlocksTech')} {...sectionProps('unlocksTech')}>
                 <p className="mb-2 text-xs text-muted-foreground">
                   {t('pal.unlocksTechNote')}
                 </p>
@@ -678,7 +783,7 @@ export default function PalDetailPage() {
                       className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground hover:text-primary hover:underline"
                     >
                       {tech?.text[tt.id]?.name ?? tt.id}
-                      <span className="text-muted-foreground">Lv{tt.level}</span>
+                      <span className="text-muted-foreground">{lng.startsWith('zh') ? '等级' : 'Lv'} {tt.level}</span>
                     </Link>
                   ))}
                 </div>
@@ -687,8 +792,8 @@ export default function PalDetailPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6 md:order-2">
-            <PalSection title={t('pal.section.stats')}>
+          <div className="contents md:order-2 md:block md:space-y-6">
+            <PalSection title={t('pal.section.stats')} {...sectionProps('stats')}>
               <InfoRows>
                 {PRIMARY_STAT_KEYS.map((k) => (
                   <StatRow
@@ -711,7 +816,9 @@ export default function PalDetailPage() {
               </InfoRows>
               {Object.keys(bondGrowth).length ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  <span className="text-emerald-600 dark:text-emerald-400">+N</span>{' '}
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    {lng.startsWith('zh') ? '+成长值' : '+N'}
+                  </span>{' '}
                   {t('pal.friendshipNote')}
                 </p>
               ) : null}
@@ -726,7 +833,7 @@ export default function PalDetailPage() {
             </PalSection>
 
             {workEntries.length ? (
-              <PalSection title={t('pal.section.work')}>
+              <PalSection title={t('pal.section.work')} {...sectionProps('work')}>
                 <div className="space-y-1.5">
                   {workEntries.map(([w, lvl]) => (
                     <WorkSuitability
@@ -737,6 +844,7 @@ export default function PalDetailPage() {
                       highlight={w === pal.bestWork}
                       condense={condensed.get(w)}
                       condenseTitle={t('pal.condenseTitle')}
+                      levelLabel={lng.startsWith('zh') ? '等级' : 'Lv'}
                     />
                   ))}
                   <p className="text-xs text-muted-foreground">
@@ -746,12 +854,12 @@ export default function PalDetailPage() {
               </PalSection>
             ) : null}
 
-            <PalSection title={t('pal.section.details')}>
+            <PalSection title={t('pal.section.details')} {...sectionProps('details')}>
               <InfoRows>
                 {SECONDARY_STAT_KEYS.map((k) => (
                   <StatRow key={k} label={t(`pal.stat.${k}`)} value={pal.stats[k]} />
                 ))}
-                <StatRow label={t('pal.stat.size')} value={pal.size || '—'} />
+                <StatRow label={t('pal.stat.size')} value={pal.size ? palSizeLabel(pal.size, lng) : '—'} />
                 <StatRow label={t('pal.stat.rarity')} value={pal.rarity} />
                 {pal.predator ? (
                   <StatRow label={t('pal.stat.predator')} value={t('pal.yes')} />
@@ -788,7 +896,7 @@ export default function PalDetailPage() {
             </PalSection>
 
             {enemyScaling.length ? (
-              <PalSection title={t('pal.section.enemyScaling')}>
+              <PalSection title={t('pal.section.enemyScaling')} {...sectionProps('enemyScaling')}>
                 <p className="mb-2 text-xs text-muted-foreground">
                   {t('pal.enemyScalingNote')}
                 </p>
@@ -801,7 +909,7 @@ export default function PalDetailPage() {
             ) : null}
 
             {pal.drops.length ? (
-              <PalSection title={t('pal.section.drops')}>
+              <PalSection title={t('pal.section.drops')} {...sectionProps('drops')}>
                 <div className="divide-y divide-border/60">
                   {pal.drops.map((d) => (
                     <DropRow
@@ -820,7 +928,7 @@ export default function PalDetailPage() {
             ) : null}
 
             {pal.bossDrops?.length ? (
-              <PalSection title={t('pal.section.bossDrops')}>
+              <PalSection title={t('pal.section.bossDrops')} {...sectionProps('bossDrops')}>
                 <div className="divide-y divide-border/60">
                   {pal.bossDrops.map((d) => (
                     <DropRow
@@ -849,7 +957,12 @@ export default function PalDetailPage() {
             ) : null}
 
             {breeding ? (
-              <BreedingLinks pal={pal} data={breeding.data} names={breeding.names} />
+              <BreedingLinks
+                pal={pal}
+                data={breeding.data}
+                names={breeding.names}
+                sectionProps={sectionProps('breeding')}
+              />
             ) : null}
           </div>
         </div>

@@ -777,6 +777,7 @@ export default function App() {
       searchOptions={PAL_SEARCH_OPTIONS}
       variant={variant}
       floatingPlacement="center"
+      classNames={variant === 'inline' ? { root: 'palworld-map-search max-h-[calc(70dvh-5.5rem)]' } : undefined}
     />
   )
 
@@ -836,7 +837,7 @@ export default function App() {
 
   if (isMobile) {
     return (
-      <div className="relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+      <div className="arkive-map-page palworld-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
         <h1 className="sr-only">{t('title')}</h1>
         {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
             gets a definite height and Leaflet sizes correctly on mount. */}
@@ -875,7 +876,11 @@ export default function App() {
         </Sheet>
 
         <Sheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
-          <SheetContent side="bottom" data-testid="search-sheet" className="h-[70dvh]">
+          <SheetContent
+            side="bottom"
+            data-testid="search-sheet"
+            className="max-h-[70dvh] overflow-hidden pb-[calc(env(safe-area-inset-bottom)+2rem)] pt-14"
+          >
             <SheetTitle className="sr-only">{t('search')}</SheetTitle>
             {searchPanel('inline')}
           </SheetContent>

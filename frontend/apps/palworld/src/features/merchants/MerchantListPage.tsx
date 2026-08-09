@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Input } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
 import { CatalogPageLoading, ItemGlyph } from '../catalog/components'
@@ -50,11 +51,13 @@ export default function MerchantListPage() {
       )
     // Emit order from the tools is already grouped by vendor type.
   }, [merchants, query]) // eslint-disable-line react-hooks/exhaustive-deps
+  const mobilePaging = useMobilePagination(list, { pageSize: 18, resetKey: query })
 
   return (
     <ContentPage active="/merchants" title={t('merchant.title')} heading>
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('merchant.searchPlaceholder')}
@@ -73,7 +76,7 @@ export default function MerchantListPage() {
         <CatalogPageLoading />
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((m) => {
+          {mobilePaging.visibleItems.map((m) => {
             const curIcon = items.byId.get(m.currency)?.icon
             return (
               <Link
@@ -97,6 +100,11 @@ export default function MerchantListPage() {
           })}
         </div>
       )}
+      <MobilePagination
+        page={mobilePaging.page}
+        pageCount={mobilePaging.pageCount}
+        onPageChange={mobilePaging.goToPage}
+      />
     </ContentPage>
   )
 }

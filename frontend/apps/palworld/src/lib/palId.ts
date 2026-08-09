@@ -23,3 +23,36 @@ export function palIdText(id?: IdLabelValue): string | undefined {
 export function zukanOrder(zukanIndex: number): number {
   return zukanIndex <= 0 ? Number.MAX_SAFE_INTEGER : zukanIndex
 }
+
+export type ZukanSortDirection = 'ascending' | 'descending'
+
+type ZukanSortable = {
+  id: string
+  zukanIndex: number
+  zukanIndexSuffix?: string
+}
+
+/**
+ * Order numbered pals by Paldeck number while always keeping uncatalogued
+ * entries at the end, regardless of the selected direction.
+ */
+export function compareZukan(
+  a: ZukanSortable,
+  b: ZukanSortable,
+  direction: ZukanSortDirection,
+): number {
+  const aOrder = zukanOrder(a.zukanIndex)
+  const bOrder = zukanOrder(b.zukanIndex)
+  const aUncatalogued = aOrder === Number.MAX_SAFE_INTEGER
+  const bUncatalogued = bOrder === Number.MAX_SAFE_INTEGER
+
+  if (aUncatalogued !== bUncatalogued) return aUncatalogued ? 1 : -1
+  if (aUncatalogued) return a.id.localeCompare(b.id)
+
+  const numberedOrder =
+    aOrder - bOrder ||
+    (a.zukanIndexSuffix ?? '').localeCompare(b.zukanIndexSuffix ?? '') ||
+    a.id.localeCompare(b.id)
+
+  return direction === 'ascending' ? numberedOrder : -numberedOrder
+}

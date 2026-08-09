@@ -64,6 +64,7 @@ export function WorkSuitability({
   highlight,
   condense,
   condenseTitle,
+  levelLabel = 'Lv',
 }: {
   work: WorkType
   level: number
@@ -72,6 +73,7 @@ export function WorkSuitability({
   highlight?: boolean
   condense?: CondenseEntry
   condenseTitle?: string
+  levelLabel?: string
 }) {
   const upgraded = condense && condense.final > level
   const badge = (
@@ -81,7 +83,7 @@ export function WorkSuitability({
         upgraded && 'cursor-help',
       )}
     >
-      Lv{level}
+      {levelLabel}{levelLabel === 'Lv' ? '' : ' '}{level}
       {upgraded ? (
         <span className="text-emerald-600 dark:text-emerald-400"> →{condense.final}</span>
       ) : null}
@@ -118,7 +120,7 @@ export function WorkSuitability({
                     <div key={s.star} className="flex justify-between gap-4">
                       <span>★{s.star}</span>
                       <span>
-                        Lv{s.from} → {s.to}
+                        {levelLabel}{levelLabel === 'Lv' ? '' : ' '}{s.from} → {s.to}
                       </span>
                     </div>
                   ))}
@@ -139,13 +141,29 @@ export function WorkSuitability({
 /** Format an active-skill range (raw world units → metres). Returns '—' when
  * the skill has no meaningful reach. Shows `min–max m` when a minimum exists,
  * otherwise just the maximum reach. */
-export function formatSkillRange(minRange: number, maxRange: number): string {
+export function formatSkillRange(minRange: number, maxRange: number, locale = 'en-US'): string {
   if (!maxRange || maxRange <= 0) return '—'
   const m = (u: number) => {
     const v = u / 100
     return Number.isInteger(v) ? `${v}` : v.toFixed(1)
   }
-  return minRange > 0 ? `${m(minRange)}–${m(maxRange)} m` : `${m(maxRange)} m`
+  const unit = locale.startsWith('zh') ? '米' : 'm'
+  return minRange > 0 ? `${m(minRange)}–${m(maxRange)} ${unit}` : `${m(maxRange)} ${unit}`
+}
+
+const ZH_SKILL_EFFECTS: Record<string, string> = {
+  Burn: '燃烧',
+  Darkness: '黑暗',
+  Electrical: '触电',
+  Freeze: '冻结',
+  IvyCling: '缠绕',
+  Muddy: '泥泞',
+  Poison: '中毒',
+  Wetness: '潮湿',
+}
+
+function activeSkillEffectLabel(type: string, locale: string): string {
+  return locale.startsWith('zh') ? ZH_SKILL_EFFECTS[type] ?? '' : type
 }
 
 /** One active skill, rendered as two rows inside a <tbody>: the first row holds
@@ -157,18 +175,25 @@ export function ActiveSkillRow({
   name,
   typeLabel,
   description,
+  locale = 'en-US',
+  labels,
 }: {
   skill: ActiveSkill
   name: string
   typeLabel: string
   description?: string
+  locale?: string
+  labels?: { level: string; power: string; cooldown: string; type: string; range: string }
 }) {
   const hasDesc = !!description
-  const hasDetail = hasDesc || !!skill.effect
+  const effectLabel = skill.effect ? activeSkillEffectLabel(skill.effect.type, locale) : ''
+  const hasDetail = hasDesc || !!effectLabel
   const top = hasDetail ? 'pt-2' : 'py-2'
+  const cooldown = locale.startsWith('zh') ? `${skill.coolTime} 秒` : `${skill.coolTime}s`
+  const range = formatSkillRange(skill.minRange, skill.maxRange, locale)
   return (
     <>
-      <tr className="border-t border-border/60">
+      <tr className="hidden border-t border-border/60 sm:table-row">
         <td
           rowSpan={hasDetail ? 2 : 1}
           className="px-1 pr-2 text-center align-middle tabular-nums text-muted-foreground"
@@ -193,30 +218,72 @@ export function ActiveSkillRow({
         </td>
         <td className={cn('whitespace-nowrap pr-2 text-right align-top tabular-nums', top)}>{skill.power || '—'}</td>
         <td className={cn('whitespace-nowrap pr-2 text-right align-top tabular-nums text-muted-foreground', top)}>
-          {skill.coolTime}s
+          {cooldown}
         </td>
         <td className={cn('whitespace-nowrap pr-2 align-top text-muted-foreground', top)}>{typeLabel}</td>
         <td className={cn('whitespace-nowrap text-right align-top tabular-nums text-muted-foreground', top)}>
-          {formatSkillRange(skill.minRange, skill.maxRange)}
+          {range}
         </td>
       </tr>
       {hasDetail ? (
-        <tr>
+        <tr className="hidden sm:table-row">
           <td colSpan={5} className="pb-2 pr-2 text-xs text-muted-foreground">
             {description}
-            {skill.effect ? (
+            {skill.effect && effectLabel ? (
               <span
                 className={cn(
                   'inline-flex items-center rounded bg-sky-500/10 px-1.5 py-0.5 font-medium text-sky-500',
                   description ? 'ml-2' : '',
                 )}
               >
-                {skill.effect.type} +{skill.effect.value}
+                {effectLabel} +{skill.effect.value}
               </span>
             ) : null}
           </td>
         </tr>
       ) : null}
+      <tr className="border-t border-border/60 sm:hidden">
+        <td colSpan={6} className="py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-primary">
+              {labels?.level ?? 'Lv'} {skill.level}
+            </span>
+            {hasElementIcon(skill.element) ? (
+              <IconImg src={elementIconUrl(skill.element as Element)} alt="" size={18} />
+            ) : null}
+            <Link
+              to="/active-skills/$id"
+              params={{ id: skill.wazaId }}
+              className="min-w-0 truncate text-sm font-semibold hover:text-primary hover:underline"
+            >
+              {name}
+            </Link>
+          </div>
+          <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 rounded-md bg-secondary/55 px-2.5 py-2 text-xs">
+            {[
+              [labels?.power ?? 'Power', skill.power || '—'],
+              [labels?.cooldown ?? 'Cooldown', cooldown],
+              [labels?.type ?? 'Type', typeLabel],
+              [labels?.range ?? 'Range', range],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="flex min-w-0 justify-between gap-2">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="truncate font-medium tabular-nums">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {description || effectLabel ? (
+            <div className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              {description}
+              {skill.effect && effectLabel ? (
+                <span className={cn('inline-flex rounded bg-sky-500/10 px-1.5 py-0.5 font-medium text-sky-600 dark:text-sky-400', description && 'ml-2')}>
+                  {effectLabel} +{skill.effect.value}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </td>
+      </tr>
     </>
   )
 }
@@ -244,15 +311,15 @@ const TIER_COLOR: Record<number, string> = { 1: RANK_WHITE, 2: RANK_GOLD, 3: RAN
  *  (via a CSS mask) and flipped for debuffs. `color` overrides the rank tint
  *  (e.g. to stay visible on a same-coloured title bar). Rank 0 renders
  *  nothing. */
-export function PassiveRarity({ rank, color }: { rank: number | undefined; color?: string }) {
+export function PassiveRarity({ rank, color, label = 'Rank' }: { rank: number | undefined; color?: string; label?: string }) {
   if (!rank) return null
   const count = Math.min(Math.abs(rank), 5)
   const url = `${import.meta.env.BASE_URL}images/passive-rank/arrow_${String(count).padStart(2, '0')}.webp`
   return (
     <span
       role="img"
-      aria-label={`Rank ${rank}`}
-      title={`Rank ${rank}`}
+      aria-label={`${label} ${rank}`}
+      title={`${label} ${rank}`}
       className="inline-block size-4 shrink-0"
       style={{
         backgroundColor: color ?? (rank < 0 ? RANK_RED : TIER_COLOR[passiveRarityTier(rank)]),

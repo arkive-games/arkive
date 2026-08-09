@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ContentPage } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
   loadBuildings,
   loadHumanNames,
@@ -116,6 +117,7 @@ export default function RaidsPage() {
     () => (file?.raids ?? []).filter((r) => biome === 'all' || r.biome === biome),
     [file, biome],
   )
+  const mobilePaging = useMobilePagination(list, { pageSize: 12, resetKey: biome })
 
   return (
     <ContentPage
@@ -152,7 +154,7 @@ export default function RaidsPage() {
             <span className="self-center text-sm text-muted-foreground">{list.length}</span>
           </div>
           <div className="space-y-3">
-            {list.map((r) => (
+            {mobilePaging.visibleItems.map((r) => (
               <div
                 key={r.id}
                 className="rounded-lg border border-border bg-card p-4"
@@ -225,6 +227,11 @@ export default function RaidsPage() {
               </div>
             ))}
           </div>
+          <MobilePagination
+            page={mobilePaging.page}
+            pageCount={mobilePaging.pageCount}
+            onPageChange={mobilePaging.goToPage}
+          />
         </CatalogDataProvider>
       )}
     </ContentPage>

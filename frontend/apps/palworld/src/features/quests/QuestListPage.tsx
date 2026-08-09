@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Input } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadQuests, type QuestsBundle } from '../../lib/catalog'
 import { CatalogPageLoading } from '../catalog/components'
 import { questTypeLabel } from './labels'
@@ -49,6 +50,7 @@ export default function QuestListPage() {
   }, [bundle, query, type])
 
   const tabs = ['all', ...types]
+  const mobilePaging = useMobilePagination(list, { pageSize: 20, resetKey: `${query}|${type}` })
 
   // Quest-type filter — inline on desktop, behind the mobile header's filter icon
   // (see ContentPage). The node carries its own row wrapper so the desktop markup
@@ -84,6 +86,7 @@ export default function QuestListPage() {
     >
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Input
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('quest.searchPlaceholder')}
@@ -103,7 +106,7 @@ export default function QuestListPage() {
             <CatalogPageLoading />
           ) : (
             <ul className="divide-y divide-border/60 rounded-lg border border-border bg-card">
-              {list.map((quest) => (
+              {mobilePaging.visibleItems.map((quest) => (
                 <li key={quest.id}>
                   <Link
                     to="/quests/$id"
@@ -134,6 +137,11 @@ export default function QuestListPage() {
               ))}
             </ul>
           )}
+          <MobilePagination
+            page={mobilePaging.page}
+            pageCount={mobilePaging.pageCount}
+            onPageChange={mobilePaging.goToPage}
+          />
     </ContentPage>
   )
 }

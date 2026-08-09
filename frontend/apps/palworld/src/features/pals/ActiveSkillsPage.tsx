@@ -4,11 +4,11 @@ import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
 import { Input, useIsMobile } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
   buildActiveSkills,
-  humanizeWazaId,
   ELEMENTS,
   type Element,
   type ActiveSkillEntry,
@@ -76,6 +76,10 @@ export default function ActiveSkillsPage() {
           a.wazaId.localeCompare(b.wazaId),
       )
   }, [all, query, elementSel, typeSel, sourceSel])
+  const mobilePaging = useMobilePagination(list, {
+    pageSize: 20,
+    resetKey: `${query}|${elementSel.join(',')}|${typeSel.join(',')}|${sourceSel.join(',')}`,
+  })
 
   // Element / type / source chips — inline on desktop, behind the mobile
   // header's filter icon (see ContentPage). The search box stays on the page: it
@@ -134,6 +138,7 @@ export default function ActiveSkillsPage() {
     >
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
@@ -153,7 +158,7 @@ export default function ActiveSkillsPage() {
         <PalPageLoading />
       ) : isMobile ? (
         <ul className="space-y-2">
-          {list.map((s) => (
+          {mobilePaging.visibleItems.map((s) => (
             <li key={s.wazaId} data-testid="active-skill-row">
               <Link
                 to="/active-skills/$id"
@@ -173,7 +178,7 @@ export default function ActiveSkillsPage() {
                   ) : (
                     <span className="size-[18px] shrink-0" aria-hidden />
                   )}
-                  <span className="min-w-0 flex-1 truncate font-medium">{s.name || humanizeWazaId(s.wazaId)}</span>
+                  <span className="min-w-0 flex-1 truncate font-medium">{s.name}</span>
                   {s.isFruit ? (
                     <span
                       className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
@@ -192,10 +197,10 @@ export default function ActiveSkillsPage() {
                     {t('pal.power')}: <span className="font-medium text-foreground">{s.power || '—'}</span>
                   </span>
                   <span className="tabular-nums">
-                    {t('pal.cooldown')}: {s.coolTime}s
+                    {t('pal.cooldown')}: {lng.startsWith('zh') ? `${s.coolTime} 秒` : `${s.coolTime}s`}
                   </span>
                   <span className="tabular-nums">
-                    {t('pal.range')}: {formatSkillRange(s.minRange, s.maxRange)}
+                    {t('pal.range')}: {formatSkillRange(s.minRange, s.maxRange, lng)}
                   </span>
                 </div>
               </Link>
@@ -242,7 +247,7 @@ export default function ActiveSkillsPage() {
                         <span className="size-[18px] shrink-0" aria-hidden />
                       )}
                       <span className="min-w-0 truncate group-hover:underline">
-                        {s.name || humanizeWazaId(s.wazaId)}
+                        {s.name}
                       </span>
                     </Link>
                   </td>
@@ -254,10 +259,10 @@ export default function ActiveSkillsPage() {
                   </td>
                   <td className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">{s.power || '—'}</td>
                   <td className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums text-muted-foreground">
-                    {s.coolTime}s
+                    {lng.startsWith('zh') ? `${s.coolTime} 秒` : `${s.coolTime}s`}
                   </td>
                   <td className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums text-muted-foreground">
-                    {formatSkillRange(s.minRange, s.maxRange)}
+                    {formatSkillRange(s.minRange, s.maxRange, lng)}
                   </td>
                   <td className="px-2 py-1.5 text-center">
                     {s.isFruit ? (
@@ -280,6 +285,11 @@ export default function ActiveSkillsPage() {
           </table>
         </div>
       )}
+      <MobilePagination
+        page={mobilePaging.page}
+        pageCount={mobilePaging.pageCount}
+        onPageChange={mobilePaging.goToPage}
+      />
     </ContentPage>
   )
 }

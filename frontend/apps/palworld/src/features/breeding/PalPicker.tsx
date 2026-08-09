@@ -13,19 +13,14 @@ import {
   PopoverTrigger,
   cn,
 } from '@gamemap/ui'
+import { OverflowMarquee } from '@gamemap/map-shell'
 import type { BreedingPal, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
 import { formatPalId, palIdText } from '../../lib/palId'
 import {
   LEGENDARY_ICON,
-  TILE_FOOTER,
   TILE_FRAME,
   TILE_HEADER,
-  TILE_META,
-  TILE_NAME,
-  TileIcon,
-  TileIconPlaceholder,
-  TileRank,
   type BreedingVariant,
 } from './RecipeCard'
 
@@ -81,6 +76,8 @@ export interface PalPickerProps {
 export function PalPicker({ label, pals, names, value, onChange, labels, variant = 'row', slot }: PalPickerProps) {
   const [open, setOpen] = useState(false)
   const selected = value ? pals.find((p) => p.id === value) ?? null : null
+  const selectedPalId = selected ? formatPalId(selected.zukanIndex, selected.zukanIndexSuffix) : undefined
+  const selectedPalIdText = palIdText(selectedPalId)
   const tile = variant === 'tile'
 
   // cmdk filters on each item's `value`; index name + id so both are searchable.
@@ -113,16 +110,16 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
               data-testid={slot ? `breeding-pick-${slot}` : 'breeding-pick'}
               className={cn(
                 TILE_FRAME,
-                'hover:border-primary/60 hover:bg-accent',
+                'h-20 !aspect-auto border-primary/40 hover:border-primary/70 hover:bg-accent',
                 // Dashed + muted while unset: an empty picker reads as "any
                 // Pal" (the query's actual meaning), not as a broken card.
-                selected ? 'border-border bg-card' : 'border-dashed border-border bg-muted/30',
+                selected ? 'bg-card' : 'border-dashed bg-muted/30',
               )}
             >
               {/* No uppercase/tracking here (unlike the building tile's type
                   strip): "Parent A" in caps is measurably wider and would
                   truncate on a 320px screen. */}
-              <span className={cn(TILE_HEADER, 'font-medium')}>
+              <span className={cn(TILE_HEADER, '!bg-primary/10 font-medium !text-primary')}>
                 <span className="min-w-0 flex-1 truncate">{label}</span>
                 {selected ? (
                   <span
@@ -145,23 +142,50 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
                 )}
               </span>
               {selected ? (
-                <TileIcon icon={selected.icon} legendary={selected.legendary} />
-              ) : (
-                <TileIconPlaceholder />
-              )}
-              <span className={TILE_FOOTER}>
-                <span className={cn(TILE_NAME, !selected && 'font-normal text-muted-foreground')}>
-                  {selected ? names[selected.id] ?? selected.id : labels.anyPal}
-                </span>
-                {selected ? (
-                  // Breeding power only — same line as the recipe tiles below.
-                  // The Paldeck id would push it into truncation (see TILE_META)
-                  // and it is right there in the list this tile opens.
-                  <span className={TILE_META}>
-                    <TileRank rank={selected.rank} />
+                <span className="flex min-h-0 flex-1 flex-col">
+                  <span className="flex min-h-0 flex-1 items-center justify-center gap-1.5 px-1.5 text-left">
+                    <span
+                      className={cn(
+                        'relative size-8 shrink-0 rounded-full bg-black/5 dark:bg-white/10',
+                        selected.legendary && LEGENDARY_ICON,
+                      )}
+                    >
+                      <img
+                        src={palIconUrl(selected.icon)}
+                        alt=""
+                        loading="lazy"
+                        className="absolute inset-0 size-full rounded-full object-contain"
+                      />
+                    </span>
+                    <OverflowMarquee
+                      text={names[selected.id] ?? selected.id}
+                      auto
+                      className="text-sm font-semibold leading-tight"
+                    />
                   </span>
-                ) : null}
-              </span>
+                  <span className="flex shrink-0 items-center border-t border-primary/15 px-1 py-0.5 text-xs leading-tight tabular-nums text-foreground dark:text-white">
+                    <OverflowMarquee
+                      text={[selectedPalIdText, String(selected.rank)].filter(Boolean).join(' ')}
+                      auto
+                      className="min-w-0 flex-1"
+                      contentClassName="inline-flex min-w-full items-center justify-center gap-1 text-center"
+                    >
+                      {selectedPalIdText ? <span>{selectedPalIdText}</span> : null}
+                      <span className="inline-flex items-center gap-0.5">
+                        <Zap className="size-3 shrink-0" />
+                        {selected.rank}
+                      </span>
+                    </OverflowMarquee>
+                  </span>
+                </span>
+              ) : (
+                <span className="flex min-h-0 flex-1 items-center gap-1 px-1 text-left text-muted-foreground">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed border-primary/40 bg-primary/5">
+                    <Plus className="size-4" />
+                  </span>
+                  <span className="min-w-0 truncate text-xs">{labels.anyPal}</span>
+                </span>
+              )}
             </button>
           ) : (
             <Button

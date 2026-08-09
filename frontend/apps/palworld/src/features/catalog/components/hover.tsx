@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { cn, HoverCard, HoverCardTrigger, HoverCardContent } from '@gamemap/ui'
+import { cn, HoverCard, HoverCardTrigger, HoverCardContent, useIsMobile } from '@gamemap/ui'
 import type {
   ItemsBundle,
   BuildingsBundle,
@@ -54,8 +54,18 @@ export function HoverCardBody({
   side?: 'top' | 'right' | 'bottom' | 'left'
   align?: 'start' | 'center' | 'end'
 }) {
+  const isMobile = useIsMobile()
   return (
-    <HoverCardContent side={side} align={align} className={className}>
+    <HoverCardContent
+      side={isMobile ? 'bottom' : side}
+      align={isMobile ? 'center' : align}
+      collisionPadding={isMobile ? { top: 72, right: 8, bottom: 76, left: 8 } : 8}
+      className={cn(
+        className,
+        isMobile &&
+          'max-h-72 w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain touch-pan-y',
+      )}
+    >
       <NestedContext.Provider value={true}>{children}</NestedContext.Provider>
     </HoverCardContent>
   )
@@ -344,7 +354,19 @@ type ChipKind = 'item' | 'building' | 'pal'
 
 /** Wraps a chip trigger in the matching hover card. Renders the bare trigger
  *  when nested inside another hover card, or when the target isn't loaded. */
-function ChipHover({ kind, id, children }: { kind: ChipKind; id: string; children: ReactNode }) {
+function ChipHover({
+  kind,
+  id,
+  children,
+  side,
+  align,
+}: {
+  kind: ChipKind
+  id: string
+  children: ReactNode
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  align?: 'start' | 'center' | 'end'
+}) {
   const nested = useNested()
   const { items, buildings, pals } = useCatalogData()
 
@@ -366,7 +388,7 @@ function ChipHover({ kind, id, children }: { kind: ChipKind; id: string; childre
   return (
     <HoverCard openDelay={120} closeDelay={120}>
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
-      <HoverCardBody className="w-72">{body}</HoverCardBody>
+      <HoverCardBody side={side} align={align} className="w-72">{body}</HoverCardBody>
     </HoverCard>
   )
 }
@@ -375,9 +397,19 @@ function ChipHover({ kind, id, children }: { kind: ChipKind; id: string; childre
  *  trigger keeps its own styling (`asChild`); renders bare when nested in another
  *  hover card or when the pals bundle isn't in context. Use to enable the card on
  *  pal links that aren't the ready-made `PalLink` chip. */
-export function PalHover({ id, children }: { id: string; children: ReactNode }) {
+export function PalHover({
+  id,
+  children,
+  side,
+  align,
+}: {
+  id: string
+  children: ReactNode
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  align?: 'start' | 'center' | 'end'
+}) {
   return (
-    <ChipHover kind="pal" id={id}>
+    <ChipHover kind="pal" id={id} side={side} align={align}>
       {children}
     </ChipHover>
   )

@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Moon } from 'lucide-react'
+import { useIsMobile } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadFishing, type FishingFile, type FishingSpot } from '../../lib/fishing'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
@@ -84,12 +86,14 @@ function SpotCard({
 export default function FishingPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const isMobile = useIsMobile()
 
   const [file, setFile] = useState<FishingFile | null>(null)
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [items, setItems] = useState<ItemsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [area, setArea] = useState('all')
+  const [mobileSection, setMobileSection] = useState<'baits' | 'regions'>('baits')
 
   useEffect(() => {
     let cancelled = false
@@ -122,16 +126,22 @@ export default function FishingPage() {
   const areaLabel = (a: string) =>
     items?.areaLabels[a] ?? t(`bp.area.${a}`, { defaultValue: a })
 
-  const byArea = useMemo(() => {
+  const filteredSpots = useMemo(
+    () => (file?.spots ?? []).filter((spot) => area === 'all' || (spot.area ?? 'other') === area),
+    [area, file],
+  )
+  const mobilePaging = useMobilePagination(filteredSpots, { pageSize: 12, resetKey: area })
+  const displayedByArea = useMemo(() => {
     const out = new Map<string, FishingSpot[]>()
-    for (const s of file?.spots ?? []) {
+    for (const s of mobilePaging.visibleItems) {
       const a = s.area ?? 'other'
       const list = out.get(a) ?? []
       list.push(s)
       out.set(a, list)
     }
     return out
-  }, [file])
+  }, [mobilePaging.visibleItems])
+  const displayedAreas = areas.filter((candidate) => displayedByArea.has(candidate))
 
   return (
     <ContentPage
@@ -150,84 +160,211 @@ export default function FishingPage() {
             {t('fishing.caption')}
           </p>
 
-          <h2 className="mb-2 text-lg font-semibold">
-            {t('fishing.baits')}
-          </h2>
-          <div className="mb-6 overflow-x-auto rounded-lg border border-border bg-card">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="px-3 py-2 font-medium">{t('fishing.bait')}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('fishing.attract')}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('fishing.hitBar')}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('fishing.missFight')}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('fishing.dropBonus')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {file.baits.map((b) => (
-                  <tr key={b.item} className="border-t border-border/60">
-                    <td className="px-3 py-1.5">
-                      <ItemLink id={b.item} name={items.text[b.item]?.name ?? b.item} icon={items.byId.get(b.item)?.icon} />
-                    </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums">{b.attract ? `×${b.attract}` : '—'}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums">{b.hitBar ? `×${b.hitBar}` : '—'}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums">{b.missFight ? `×${b.missFight}` : '—'}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums">
-                      {b.palDropBonus || b.itemDropBonus
-                        ? `+${b.palDropBonus ?? 0}% / +${b.itemDropBonus ?? 0}%`
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mb-4 flex flex-wrap gap-1.5">
-            {['all', ...areas].map((a) => (
+          {isMobile ? (
+            <div
+              className="mb-4 grid grid-cols-2 gap-0.5 rounded-lg border border-primary/30 bg-primary/5 p-0.5"
+              role="tablist"
+              aria-label={t('fishing.title')}
+            >
               <button
-                key={a}
                 type="button"
-                onClick={() => setArea(a)}
+                role="tab"
+                aria-selected={mobileSection === 'baits'}
+                onClick={() => setMobileSection('baits')}
                 className={
-                  'rounded-md px-3 py-1.5 text-sm transition ' +
-                  (area === a
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-accent')
+                  'rounded-md px-3 py-2 text-sm font-medium transition ' +
+                  (mobileSection === 'baits'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-primary hover:bg-primary/10')
                 }
               >
-                {a === 'all' ? t('fishing.all') : areaLabel(a)}
+                {t('fishing.baits')}
               </button>
-            ))}
-          </div>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mobileSection === 'regions'}
+                onClick={() => setMobileSection('regions')}
+                className={
+                  'rounded-md px-3 py-2 text-sm font-medium transition ' +
+                  (mobileSection === 'regions'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-primary hover:bg-primary/10')
+                }
+              >
+                {t('mapRegion')}
+              </button>
+            </div>
+          ) : null}
 
-          <div className="space-y-8">
-            {areas
-              .filter((a) => area === 'all' || a === area)
-              .map((a) => (
-                <section key={a}>
-                  <h2 className="mb-2 flex items-baseline gap-2 text-lg font-semibold">
-                    {areaLabel(a)}
-                    <span className="text-sm font-normal text-muted-foreground">
-                      {byArea.get(a)!.length} {t('fishing.spots')}
-                    </span>
-                    <Link
-                      to="/regions/$id"
-                      params={{ id: a }}
-                      className="text-sm font-normal text-primary hover:underline"
+          {!isMobile || mobileSection === 'baits' ? (
+            <section>
+              <h2 className="mb-2 text-lg font-semibold">
+                {t('fishing.baits')}
+              </h2>
+              {isMobile ? (
+                <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-2">
+                  {file.baits.map((bait) => (
+                    <article
+                      key={bait.item}
+                      className="rounded-lg border border-primary/25 bg-card p-3 shadow-sm"
                     >
-                      {t('fishing.viewRegion')}
-                    </Link>
-                  </h2>
-                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                    {byArea.get(a)!.map((s) => (
-                      <SpotCard key={s.id} spot={s} pals={pals} t={t} />
+                      <ItemLink
+                        id={bait.item}
+                        name={items.text[bait.item]?.name ?? bait.item}
+                        icon={items.byId.get(bait.item)?.icon}
+                      />
+                      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-muted-foreground">{t('fishing.attract')}</dt>
+                          <dd className="tabular-nums">
+                            {bait.attract ? `×${bait.attract}` : '—'}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-muted-foreground">{t('fishing.hitBar')}</dt>
+                          <dd className="tabular-nums">
+                            {bait.hitBar ? `×${bait.hitBar}` : '—'}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-muted-foreground">{t('fishing.missFight')}</dt>
+                          <dd className="tabular-nums">
+                            {bait.missFight ? `×${bait.missFight}` : '—'}
+                          </dd>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                          <dt className="text-muted-foreground">{t('fishing.dropBonus')}</dt>
+                          <dd className="tabular-nums">
+                            {bait.palDropBonus || bait.itemDropBonus
+                              ? `+${bait.palDropBonus ?? 0}% / +${bait.itemDropBonus ?? 0}%`
+                              : '—'}
+                          </dd>
+                        </div>
+                      </dl>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="mb-6 overflow-x-auto rounded-lg border border-border bg-card">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                        <th className="px-3 py-2 font-medium">{t('fishing.bait')}</th>
+                        <th className="px-3 py-2 text-right font-medium">{t('fishing.attract')}</th>
+                        <th className="px-3 py-2 text-right font-medium">{t('fishing.hitBar')}</th>
+                        <th className="px-3 py-2 text-right font-medium">{t('fishing.missFight')}</th>
+                        <th className="px-3 py-2 text-right font-medium">{t('fishing.dropBonus')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {file.baits.map((bait) => (
+                        <tr key={bait.item} className="border-t border-border/60">
+                          <td className="px-3 py-1.5">
+                            <ItemLink
+                              id={bait.item}
+                              name={items.text[bait.item]?.name ?? bait.item}
+                              icon={items.byId.get(bait.item)?.icon}
+                            />
+                          </td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">
+                            {bait.attract ? `×${bait.attract}` : '—'}
+                          </td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">
+                            {bait.hitBar ? `×${bait.hitBar}` : '—'}
+                          </td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">
+                            {bait.missFight ? `×${bait.missFight}` : '—'}
+                          </td>
+                          <td className="px-3 py-1.5 text-right tabular-nums">
+                            {bait.palDropBonus || bait.itemDropBonus
+                              ? `+${bait.palDropBonus ?? 0}% / +${bait.itemDropBonus ?? 0}%`
+                              : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          ) : null}
+
+          {!isMobile || mobileSection === 'regions' ? (
+            <section>
+              {isMobile ? (
+                <div className="mb-4">
+                  <label
+                    htmlFor="fishing-region"
+                    className="mb-1.5 block text-xs font-semibold text-muted-foreground"
+                  >
+                    {t('mapRegion')}
+                  </label>
+                  <select
+                    id="fishing-region"
+                    value={area}
+                    onChange={(event) => setArea(event.target.value)}
+                    className="h-11 w-full rounded-lg border border-primary bg-card px-3 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-primary/25"
+                  >
+                    <option value="all">{t('fishing.all')}</option>
+                    {areas.map((candidate) => (
+                      <option key={candidate} value={candidate}>
+                        {areaLabel(candidate)}
+                      </option>
                     ))}
-                  </div>
-                </section>
-              ))}
-          </div>
+                  </select>
+                </div>
+              ) : (
+                <div className="mb-4 flex flex-wrap gap-1.5">
+                  {['all', ...areas].map((a) => (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => setArea(a)}
+                      className={
+                        'rounded-md px-3 py-1.5 text-sm transition ' +
+                        (area === a
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-accent')
+                      }
+                    >
+                      {a === 'all' ? t('fishing.all') : areaLabel(a)}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-8">
+                {displayedAreas.map((a) => (
+                  <section key={a}>
+                    <h2 className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-lg font-semibold">
+                      {areaLabel(a)}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        {displayedByArea.get(a)!.length} {t('fishing.spots')}
+                      </span>
+                      <Link
+                        to="/regions/$id"
+                        params={{ id: a }}
+                        className="text-sm font-normal text-primary hover:underline"
+                      >
+                        {t('fishing.viewRegion')}
+                      </Link>
+                    </h2>
+                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                      {displayedByArea.get(a)!.map((s) => (
+                        <SpotCard key={s.id} spot={s} pals={pals} t={t} />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+              <MobilePagination
+                page={mobilePaging.page}
+                pageCount={mobilePaging.pageCount}
+                onPageChange={mobilePaging.goToPage}
+              />
+            </section>
+          ) : null}
         </CatalogDataProvider>
       )}
     </ContentPage>

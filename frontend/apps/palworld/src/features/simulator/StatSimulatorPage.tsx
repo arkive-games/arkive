@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Check, ChevronsUpDown, Sparkles, Star } from 'lucide-react'
+import { ArrowDown01, ArrowUp10, Check, Sparkles, Star } from 'lucide-react'
 import {
   Button,
   Command,
@@ -20,7 +20,7 @@ import {
 import { ContentPage } from '../../components/ContentPage'
 import { loadPals, type PalEntry, type PalsBundle } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
-import { formatPalId, palIdText } from '../../lib/palId'
+import { compareZukan, formatPalId, palIdText, type ZukanSortDirection } from '../../lib/palId'
 import {
   applyPassive,
   applyPassiveHp,
@@ -144,7 +144,7 @@ function NumberField({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-muted-foreground sm:text-xs">{label}</span>
       <div className="flex items-center gap-2">
         {slider ? (
           <input
@@ -153,7 +153,7 @@ function NumberField({
             max={max}
             value={value}
             onChange={(e) => onChange(clamp(Number(e.target.value), min, max))}
-            className="h-1.5 flex-1 accent-primary"
+            className="h-2 flex-1 accent-primary sm:h-1.5"
           />
         ) : null}
         <input
@@ -163,8 +163,8 @@ function NumberField({
           value={value}
           onChange={(e) => onChange(clamp(Math.floor(Number(e.target.value) || 0), min, max))}
           className={cn(
-            'h-8 rounded-md border border-border bg-background px-2 text-sm tabular-nums',
-            slider ? 'w-16' : 'w-full',
+            'h-10 rounded-md border border-primary/35 bg-background px-2 text-sm tabular-nums sm:h-8 sm:border-border',
+            slider ? 'w-16 shrink-0' : 'w-full',
           )}
         />
       </div>
@@ -175,15 +175,15 @@ function NumberField({
 function StarPicker({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <div className="flex h-8 items-center gap-1">
+      <span className="text-sm font-medium text-muted-foreground sm:text-xs">{label}</span>
+      <div className="flex h-10 items-center gap-0 sm:h-8 sm:gap-1">
         {Array.from({ length: MAX_STARS }, (_, i) => i + 1).map((n) => (
           <button
             key={n}
             type="button"
             aria-label={`${label} ${n}`}
             onClick={() => onChange(n === value ? n - 1 : n)}
-            className="p-0.5"
+            className="inline-flex size-9 items-center justify-center p-0.5 sm:size-auto"
           >
             <Star
               className={cn(
@@ -203,18 +203,30 @@ function SimPalPicker({
   value,
   onChange,
   t,
+  locale,
 }: {
   pals: PalsBundle
   value: string | null
   onChange: (id: string | null) => void
   t: TFn
+  locale: string
 }) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [sortDirection, setSortDirection] = useState<ZukanSortDirection>('ascending')
+  const pickerControlRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const roster = useMemo(
-    () => [...pals.pals].sort((a, b) => a.zukanIndex - b.zukanIndex || a.id.localeCompare(b.id)),
-    [pals],
+    () => [...pals.pals].sort((a, b) => compareZukan(a, b, sortDirection)),
+    [pals, sortDirection],
   )
   const selected = value ? pals.byId.get(value) ?? null : null
+
+  useEffect(() => {
+    if (!open) return
+    const frame = requestAnimationFrame(() => searchInputRef.current?.focus())
+    return () => cancelAnimationFrame(frame)
+  }, [open, sortDirection])
 
   const searchText = useMemo(() => {
     const m = new Map<string, string>()
@@ -225,33 +237,86 @@ function SimPalPicker({
     return m
   }, [roster, pals])
 
-  const row = (p: PalEntry) => (
-    <>
-      <img src={palIconUrl(p.icon)} alt="" loading="lazy" className="size-6 shrink-0 rounded-full bg-black/5 object-contain dark:bg-white/10" />
-      <span className="truncate">{pals.text[p.id]?.name ?? p.id}</span>
-      <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">
-        {palIdText(formatPalId(p.zukanIndex, p.zukanIndexSuffix))}
-      </span>
-    </>
-  )
+  const row = (p: PalEntry) => {
+    const id = palIdText(formatPalId(p.zukanIndex, p.zukanIndexSuffix))
+    return (
+      <>
+        <img src={palIconUrl(p.icon)} alt="" loading="lazy" className="size-6 shrink-0 rounded-full bg-black/5 object-contain dark:bg-white/10" />
+        <span className="truncate">{pals.text[p.id]?.name ?? p.id}</span>
+        {id ? (
+          <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">
+            {locale.startsWith('zh') ? `编号 ${id.replace(/^No\./, '')}` : id}
+          </span>
+        ) : null}
+      </>
+    )
+  }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="h-11 w-full max-w-md justify-start gap-2 px-2.5 font-normal"
-          data-testid="sim-pal-picker"
+    <Command
+      key={sortDirection}
+      className="w-full max-w-md overflow-visible rounded-md bg-transparent"
+      filter={(v, s) => (v.toLowerCase().includes(s.toLowerCase().trim()) ? 1 : 0)}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <div ref={pickerControlRef} className="relative flex h-11 w-full overflow-hidden rounded-md border border-border bg-background shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 [&_[data-slot=command-input-wrapper]]:absolute [&_[data-slot=command-input-wrapper]]:inset-y-0 [&_[data-slot=command-input-wrapper]]:right-11 [&_[data-slot=command-input-wrapper]]:left-0 [&_[data-slot=command-input-wrapper]]:h-full [&_[data-slot=command-input-wrapper]]:border-0 [&_[data-slot=command-input-wrapper]]:px-2.5">
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                role="combobox"
+                aria-expanded={open}
+                aria-haspopup="listbox"
+                tabIndex={open ? -1 : 0}
+                className={cn(
+                  'flex min-w-0 flex-1 items-center gap-2 px-2.5 text-left text-sm outline-none',
+                  open && 'pointer-events-none invisible',
+                )}
+                data-testid={open ? undefined : 'sim-pal-picker'}
+                onClick={() => {
+                  setQuery('')
+                  setOpen(true)
+                }}
+              >
+                {selected ? row(selected) : <span className="text-muted-foreground">{t('sim.pickPal')}</span>}
+              </button>
+            </PopoverTrigger>
+            {open ? (
+              <CommandInput
+                ref={searchInputRef}
+                value={query}
+                onValueChange={setQuery}
+                placeholder={t('breeding.searchPal')}
+                className="h-full"
+                data-testid="sim-pal-picker"
+              />
+            ) : null}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={t(`sim.${sortDirection === 'ascending' ? 'sortAscending' : 'sortDescending'}`)}
+              aria-pressed={sortDirection === 'descending'}
+              title={t(`sim.${sortDirection === 'ascending' ? 'sortAscending' : 'sortDescending'}`)}
+              className="h-full w-11 rounded-none border-l border-border text-muted-foreground hover:text-foreground"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                setSortDirection((current) => current === 'ascending' ? 'descending' : 'ascending')
+                if (!open) setOpen(true)
+              }}
+              data-testid="sim-pal-sort"
+            >
+              {sortDirection === 'ascending' ? <ArrowDown01 /> : <ArrowUp10 />}
+            </Button>
+        </div>
+        <PopoverContent
+          className="w-[calc(var(--radix-popover-trigger-width)+2.75rem)] p-0"
+          align="start"
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => event.preventDefault()}
+          onInteractOutside={(event) => {
+            if (pickerControlRef.current?.contains(event.target as Node)) event.preventDefault()
+          }}
         >
-          {selected ? row(selected) : <span className="text-muted-foreground">{t('sim.pickPal')}</span>}
-          <ChevronsUpDown className="ml-1 size-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-        <Command filter={(v, s) => (v.toLowerCase().includes(s.toLowerCase().trim()) ? 1 : 0)}>
-          <CommandInput placeholder={t('breeding.searchPal')} />
           <CommandList>
             <CommandEmpty>{t('breeding.noPalFound')}</CommandEmpty>
             <CommandGroup>
@@ -262,6 +327,7 @@ function SimPalPicker({
                   onSelect={() => {
                     onChange(p.id)
                     setOpen(false)
+                    setQuery('')
                   }}
                   className="gap-2"
                 >
@@ -271,9 +337,9 @@ function SimPalPicker({
               ))}
             </CommandGroup>
           </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+    </Command>
   )
 }
 
@@ -699,7 +765,7 @@ export default function StatSimulatorPage() {
           onBlur={() => onInGameBlur(row.key, row.final)}
           data-testid={`sim-ingame-${row.key}`}
           className={cn(
-            'h-7 w-24 rounded-md border bg-background px-2 text-right text-sm font-semibold tabular-nums',
+            'h-10 w-24 rounded-md border bg-background px-2 text-right text-sm font-semibold tabular-nums md:h-7',
             invalid ? 'border-destructive text-destructive' : 'border-border',
           )}
         />
@@ -707,11 +773,20 @@ export default function StatSimulatorPage() {
     )
   }
 
-  /** `label` is the row's stat name — it titles the mobile hint sheet, which
-   *  (unlike a tooltip pinned to the cell) has no column context of its own. */
-  const deltaCell = (cell: DeltaCell | null, i: number, label: string) => (
-    <td key={i} className="py-1.5 pr-3 text-right tabular-nums">
-      {cell ? (
+  const baseContent = (row: ResultRow) => (
+    <Hint
+      title={statLabel[row.key]}
+      content={row.base.tip}
+      contentClassName="text-left tabular-nums"
+    >
+      <span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
+        {row.base.v}
+      </span>
+    </Hint>
+  )
+
+  const deltaContent = (cell: DeltaCell | null, label: string) => (
+    cell ? (
         <Hint title={label} content={cell.tip} contentClassName="text-left tabular-nums">
           <span
             className={cn(
@@ -724,7 +799,14 @@ export default function StatSimulatorPage() {
         </Hint>
       ) : (
         <span className="text-muted-foreground">—</span>
-      )}
+      )
+  )
+
+  /** `label` is the row's stat name — it titles the mobile hint sheet, which
+   *  (unlike a tooltip pinned to the cell) has no column context of its own. */
+  const deltaCell = (cell: DeltaCell | null, i: number, label: string) => (
+    <td key={i} className="py-1.5 pr-3 text-right tabular-nums">
+      {deltaContent(cell, label)}
     </td>
   )
 
@@ -736,19 +818,34 @@ export default function StatSimulatorPage() {
         <CatalogPageLoading />
       ) : (
         <TooltipProvider delayDuration={200}>
-          <p className="mb-3 text-sm text-muted-foreground">{t('sim.caption')}</p>
+          <p className="mb-4 text-sm leading-6 text-muted-foreground">{t('sim.caption')}</p>
 
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <SimPalPicker pals={pals} value={palId} onChange={setPalId} t={t} />
+          <div className="mb-4 space-y-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3 sm:space-y-0">
+            <SimPalPicker pals={pals} value={palId} onChange={setPalId} t={t} locale={lng} />
             {pal ? (
-              <span className="text-sm text-muted-foreground">
-                <PalLink id={pal.id} name={pals.text[pal.id]?.name ?? pal.id} icon={pal.icon} />
-                <span className="ml-2 tabular-nums">
-                  {t('sim.base')}: HP {pal.stats.hp} ·{' '}
-                  {statLabel.attack} {pal.stats.shotAttack} · {statLabel.defense} {pal.stats.defense} ·{' '}
-                  {statLabel.craft} {pal.stats.craftSpeed}
+              <>
+                <div className="grid grid-cols-4 overflow-hidden rounded-md border border-primary/25 bg-primary/5 sm:hidden">
+                  {[
+                    [statLabel.hp, pal.stats.hp],
+                    [statLabel.attack, pal.stats.shotAttack],
+                    [statLabel.defense, pal.stats.defense],
+                    [statLabel.craft, pal.stats.craftSpeed],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="min-w-0 border-r border-primary/15 px-1.5 py-2 text-center last:border-r-0">
+                      <div className="truncate text-xs text-muted-foreground">{label}</div>
+                      <div className="mt-0.5 font-semibold tabular-nums text-foreground">{value}</div>
+                    </div>
+                  ))}
+                </div>
+                <span className="hidden text-sm text-muted-foreground sm:inline-flex sm:items-center">
+                  <PalLink id={pal.id} name={pals.text[pal.id]?.name ?? pal.id} icon={pal.icon} />
+                  <span className="ml-2 tabular-nums">
+                    {t('sim.base')}: {statLabel.hp} {pal.stats.hp} ·{' '}
+                    {statLabel.attack} {pal.stats.shotAttack} · {statLabel.defense} {pal.stats.defense} ·{' '}
+                    {statLabel.craft} {pal.stats.craftSpeed}
+                  </span>
                 </span>
-              </span>
+              </>
             ) : null}
           </div>
 
@@ -757,9 +854,9 @@ export default function StatSimulatorPage() {
               {t('sim.pickPal')}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,20rem)_1fr]">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-4">
               {/* enhancement inputs */}
-              <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+              <div className="space-y-3 rounded-lg border border-primary/20 bg-card p-3 sm:space-y-4 sm:border-border sm:p-4">
                 <NumberField
                   label={t('sim.level')}
                   value={level}
@@ -797,8 +894,8 @@ export default function StatSimulatorPage() {
                   <span className="ml-auto text-xs text-muted-foreground">×1.1</span>
                 </button>
 
-                <div>
-                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <div className="border-t border-border/60 pt-3">
+                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:tracking-wide sm:text-muted-foreground">
                     {t('sim.souls')}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -809,8 +906,8 @@ export default function StatSimulatorPage() {
                   </div>
                 </div>
 
-                <div>
-                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <div className="border-t border-border/60 pt-3">
+                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:tracking-wide sm:text-muted-foreground">
                     {t('sim.passives')}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -821,8 +918,8 @@ export default function StatSimulatorPage() {
                   </div>
                 </div>
 
-                <div>
-                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <div className="border-t border-border/60 pt-3">
+                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:tracking-wide sm:text-muted-foreground">
                     {t('sim.ivs')}
                   </div>
                   <div className="space-y-2">
@@ -834,8 +931,44 @@ export default function StatSimulatorPage() {
               </div>
 
               {/* results */}
-              <div className="rounded-lg border border-border bg-card p-4">
-                <div className="overflow-x-auto">
+              <div className="overflow-hidden rounded-lg border border-primary/20 bg-card md:border-border md:p-4">
+                <div className="divide-y divide-border/60 md:hidden" data-testid="sim-results-mobile">
+                  {rows!.map((row) => {
+                    const stages = [
+                      { label: t('sim.colBase'), value: baseContent(row) },
+                      { label: t('sim.awakening'), value: deltaContent(row.deltas[0], statLabel[row.key]) },
+                      { label: t('sim.colTrust'), value: deltaContent(row.deltas[1], statLabel[row.key]) },
+                      { label: t('sim.colIv'), value: deltaContent(row.deltas[2], statLabel[row.key]) },
+                      { label: t('sim.colStars'), value: deltaContent(row.deltas[3], statLabel[row.key]) },
+                      { label: t('sim.colSouls'), value: deltaContent(row.deltas[4], statLabel[row.key]) },
+                      { label: t('sim.colPassive'), value: deltaContent(row.passiveDelta, statLabel[row.key]) },
+                    ]
+                    return (
+                      <section key={row.key} className="p-3">
+                        <div className="flex items-end justify-between gap-3">
+                          <h2 className="text-base font-semibold">{statLabel[row.key]}</h2>
+                          <div className="text-right">
+                            <div className="text-xs text-muted-foreground">{t('sim.stageFinal')}</div>
+                            <div className="text-xl font-bold tabular-nums text-primary">{row.final}</div>
+                          </div>
+                        </div>
+                        <dl className="mt-2 grid grid-cols-4 gap-1.5">
+                          {stages.map((stage) => (
+                            <div key={stage.label} className="min-w-0 rounded bg-secondary/55 px-1.5 py-2 text-center">
+                              <dt className="truncate text-xs text-muted-foreground">{stage.label}</dt>
+                              <dd className="mt-0.5 text-xs font-semibold tabular-nums">{stage.value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                        <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/60 pt-3">
+                          <span className="text-sm font-medium text-muted-foreground">{t('sim.colInGame')}</span>
+                          {inGameCell(row)}
+                        </div>
+                      </section>
+                    )
+                  })}
+                </div>
+                <div className="hidden overflow-x-auto md:block">
                   <table className="w-full text-sm" data-testid="sim-results">
                     <thead>
                       {/* Stat + In-game columns stay pinned while the delta
@@ -860,15 +993,7 @@ export default function StatSimulatorPage() {
                         <tr key={row.key} className="border-t border-border/60">
                           <td className="sticky left-0 bg-card py-1.5 pr-3">{statLabel[row.key]}</td>
                           <td className="py-1.5 pr-3 text-right tabular-nums text-muted-foreground">
-                            <Hint
-                              title={statLabel[row.key]}
-                              content={row.base.tip}
-                              contentClassName="text-left tabular-nums"
-                            >
-                              <span className="cursor-help underline decoration-dotted decoration-muted-foreground/50 underline-offset-2">
-                                {row.base.v}
-                              </span>
-                            </Hint>
+                            {baseContent(row)}
                           </td>
                           {row.deltas.map((cell, i) => deltaCell(cell, i, statLabel[row.key]))}
                           {deltaCell(row.passiveDelta, 99, statLabel[row.key])}
@@ -881,7 +1006,15 @@ export default function StatSimulatorPage() {
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">
+                <details className="border-t border-border/60 px-3 py-2 text-xs text-muted-foreground md:hidden">
+                  <summary className="cursor-pointer py-1 font-medium text-foreground">
+                    {t('pal.section.details')}
+                  </summary>
+                  <p className="pt-2 leading-relaxed">
+                    {t('sim.stageNote')} {t('sim.editNote')}
+                  </p>
+                </details>
+                <p className="mt-3 hidden text-xs text-muted-foreground md:block">
                   {t('sim.stageNote')} {t('sim.editNote')}
                 </p>
               </div>

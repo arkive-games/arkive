@@ -12,24 +12,24 @@ export function PalCard({ pal, name }: { pal: PalEntry; name: string }) {
       <Link
         to="/pals/$id"
         params={{ id: pal.id }}
-        className="group flex aspect-square flex-col items-center gap-1 rounded-lg border border-border bg-card p-3 text-center shadow-sm transition hover:border-primary/60 hover:bg-accent"
+        className="group flex aspect-square min-w-0 flex-col items-center overflow-hidden rounded-md border border-border bg-card text-center shadow-sm transition hover:border-primary/60 hover:bg-accent sm:p-3"
         data-testid="pal-card"
       >
         {pid ? (
-          <span className="w-full truncate text-xs tabular-nums text-muted-foreground">
+          <span className="w-full truncate bg-muted px-1.5 py-0.5 text-left text-xs font-medium tabular-nums text-muted-foreground sm:bg-transparent sm:px-0 sm:text-center sm:font-normal">
             {pid.text}
             {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
           </span>
         ) : null}
-        <div className="flex min-h-0 flex-1 items-center justify-center">
+        <div className="flex min-h-0 flex-1 items-center justify-center p-1 sm:p-0">
           <img
             src={palIconUrl(pal.icon)}
             alt=""
             loading="lazy"
-            className="size-16 shrink-0 object-contain"
+            className="size-11 shrink-0 object-contain min-[480px]:size-12 sm:size-16"
           />
         </div>
-        <span className="line-clamp-2 w-full text-xs font-medium leading-tight">{name}</span>
+        <span className="line-clamp-2 w-full px-1 pb-1 text-xs font-medium leading-tight sm:px-0 sm:pb-0">{name}</span>
       </Link>
     </PalHover>
   )

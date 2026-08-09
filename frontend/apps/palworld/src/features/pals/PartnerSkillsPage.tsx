@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp } from 'lucide-react'
 import { Input, useIsMobile } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
@@ -103,6 +104,10 @@ export default function PartnerSkillsPage() {
         a.palId.localeCompare(b.palId),
     )
   }, [all, query, categorySel, elementSel, powerSort])
+  const mobilePaging = useMobilePagination(list, {
+    pageSize: 20,
+    resetKey: `${query}|${categorySel.join(',')}|${elementSel.join(',')}|${powerSort ?? ''}`,
+  })
 
   // Category + element chips — inline on desktop, behind the mobile header's
   // filter icon (see ContentPage). The search box and the power-sort control stay
@@ -149,6 +154,7 @@ export default function PartnerSkillsPage() {
     >
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
@@ -182,7 +188,7 @@ export default function PartnerSkillsPage() {
             ) : null}
           </button>
           <ul className="space-y-2">
-            {list.map((s) => (
+            {mobilePaging.visibleItems.map((s) => (
               <li key={s.palId} data-testid="partner-skill-row">
                 <Link
                   to="/pals/$id"
@@ -268,7 +274,7 @@ export default function PartnerSkillsPage() {
               </tr>
             </thead>
             <tbody>
-              {list.map((s) => (
+              {mobilePaging.visibleItems.map((s) => (
                 <tr
                   key={s.palId}
                   data-testid="partner-skill-row"
@@ -338,6 +344,11 @@ export default function PartnerSkillsPage() {
           </table>
         </div>
       )}
+      <MobilePagination
+        page={mobilePaging.page}
+        pageCount={mobilePaging.pageCount}
+        onPageChange={mobilePaging.goToPage}
+      />
     </ContentPage>
   )
 }

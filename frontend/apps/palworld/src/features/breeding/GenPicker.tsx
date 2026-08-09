@@ -1,13 +1,7 @@
 import { useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger, cn } from '@gamemap/ui'
-import {
-  TILE_FOOTER,
-  TILE_FRAME,
-  TILE_HEADER,
-  TILE_NAME,
-  TileIconUnknown,
-} from './RecipeCard'
+import { TILE_FRAME, TILE_HEADER } from './RecipeCard'
 
 /** Generation budgets the planner offers (a chain of N breeding steps). */
 export const GEN_CHOICES = [2, 3, 4, 5, 6] as const
@@ -24,19 +18,11 @@ export interface GenPickerProps {
   onChange: (gen: GenChoice) => void
   /** Formats a budget for display, e.g. 3 → "3 generations". */
   format: (gen: number) => string
+  compact?: boolean
 }
 
-/**
- * The planner's middle square. Its slot is where Parent B sits in the recipe
- * formula, but the planner never takes a second parent — the whole point is that
- * it FINDS the partners. Rather than leave a hole (or a dangling two-square
- * row), the slot carries the generation budget: a `?` where the Pal icon would
- * be, the current budget as the name, and a tap to change it.
- *
- * Shares the tile geometry exported by RecipeCard, so it lines up pixel-for-
- * pixel with the Pal squares either side of it.
- */
-export function GenPicker({ label, value, onChange, format }: GenPickerProps) {
+/** Generation-budget picker with a compact phone layout and a full tile fallback. */
+export function GenPicker({ label, value, onChange, format, compact = false }: GenPickerProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -49,18 +35,32 @@ export function GenPicker({ label, value, onChange, format }: GenPickerProps) {
             aria-expanded={open}
             aria-label={`${label}: ${format(value)}`}
             data-testid="breeding-pick-gen"
-            className={cn(TILE_FRAME, 'border-border bg-card hover:border-primary/60 hover:bg-accent')}
+            className={cn(
+              TILE_FRAME,
+              compact
+                ? 'relative h-10 !aspect-auto flex-row items-center border-primary/40 bg-primary/5 px-3 hover:border-primary/70 hover:bg-primary/10'
+                : 'h-20 !aspect-auto border-primary/40 bg-card hover:border-primary/70 hover:bg-accent',
+            )}
           >
-            <span className={cn(TILE_HEADER, 'font-medium')}>
-              <span className="min-w-0 flex-1 truncate">{label}</span>
-              <ChevronsUpDown className="size-3 shrink-0 opacity-50" />
-            </span>
-            <TileIconUnknown />
-            <span className={TILE_FOOTER}>
-              {/* The number alone — a phone tile has ~90px, and the word
-                  "generations" is already on the strip above it. */}
-              <span className={cn(TILE_NAME, 'tabular-nums')}>{value}</span>
-            </span>
+            {compact ? (
+              <>
+                <span className="min-w-0 truncate text-xs font-medium text-primary">{label}</span>
+                <span className="absolute left-1/2 -translate-x-1/2 text-lg font-semibold tabular-nums text-primary">
+                  {value}
+                </span>
+                <ChevronsUpDown className="ml-auto size-4 shrink-0 text-primary/60" />
+              </>
+            ) : (
+              <>
+                <span className={cn(TILE_HEADER, '!bg-primary/10 font-medium !text-primary')}>
+                  <span className="min-w-0 flex-1 truncate">{label}</span>
+                  <ChevronsUpDown className="size-3 shrink-0 opacity-50" />
+                </span>
+                <span className="flex min-h-0 flex-1 items-center justify-center">
+                  <span className="text-2xl font-semibold tabular-nums text-primary">{value}</span>
+                </span>
+              </>
+            )}
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto min-w-[8rem] p-1" align="center">

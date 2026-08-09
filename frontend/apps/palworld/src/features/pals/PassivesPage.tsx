@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Hint, Input, TooltipProvider } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
@@ -64,9 +65,11 @@ export default function PassivesPage() {
     }
   }, [lng, t])
 
-  // All passives (union of ids with metadata and/or localized text), each with a
+  // All actual Pal passives from gameplay metadata, each with a
   // display description (real or synthesized), its rank, categories, and the
-  // pals that innately carry it (reverse of each pal's `passives` list).
+  // pals that innately carry it (reverse of each pal's `passives` list). The
+  // locale file also contains equipment-only effects with no Pal-passive
+  // metadata; those must not leak into this catalog as empty rank-0 entries.
   const all = useMemo(() => {
     if (!bundle) return []
     const palsByPassive = new Map<string, PalRef[]>()
@@ -77,10 +80,8 @@ export default function PassivesPage() {
         palsByPassive.set(pid, list)
       }
     }
-    const ids = new Set<string>()
-    for (const p of bundle.passives) ids.add(p.id)
-    for (const id of Object.keys(bundle.passiveText)) ids.add(id)
-    return [...ids].map((id) => {
+    return bundle.passives.map((passive) => {
+      const id = passive.id
       const description = passiveDescription(id, bundle)
       return {
         id,
@@ -88,10 +89,10 @@ export default function PassivesPage() {
         description,
         // Plain text (tags stripped) for case-insensitive search matching.
         search: stripPassiveTags(description).toLowerCase(),
-        rank: bundle.passivesById.get(id)?.rank ?? 0,
-        mutation: bundle.passivesById.get(id)?.mutation ?? false,
-        invoke: bundle.passivesById.get(id)?.invoke ?? [],
-        rareRoll: (bundle.passivesById.get(id)?.lotteryWeight ?? 100) < 100,
+        rank: passive.rank,
+        mutation: passive.mutation ?? false,
+        invoke: passive.invoke ?? [],
+        rareRoll: (passive.lotteryWeight ?? 100) < 100,
         categories: passiveCategories(id, bundle),
         pals: palsByPassive.get(id) ?? [],
       }
@@ -112,10 +113,6 @@ export default function PassivesPage() {
     return PASSIVE_CATEGORIES.filter((c) => present.has(c))
   }, [all])
 
-  // Whether any passive is uncategorized (debuffs / text-only) — drives the
-  // "None" filter option.
-  const hasNone = useMemo(() => all.some((p) => p.categories.length === 0), [all])
-
   // Whether any mutation-pool passive is present — drives the "Mutation" chip.
   const hasMutation = useMemo(() => all.some((p) => p.mutation), [all])
 
@@ -130,9 +127,7 @@ export default function PassivesPage() {
         .filter(
           (r) =>
             categorySel.length === 0 ||
-            categorySel.some((c) =>
-              c === 'none' ? r.categories.length === 0 : r.categories.includes(c as PassiveCategory),
-            ),
+            categorySel.some((c) => r.categories.includes(c as PassiveCategory)),
         )
         .filter((r) => !mutationOnly || r.mutation)
         .filter((r) => !innateOnly || r.pals.length > 0)
@@ -144,6 +139,10 @@ export default function PassivesPage() {
         .sort((a, b) => b.rank - a.rank || a.id.localeCompare(b.id))
     )
   }, [all, query, raritySel, categorySel, mutationOnly, innateOnly])
+  const mobilePaging = useMobilePagination(list, {
+    pageSize: 18,
+    resetKey: `${query}|${raritySel.join(',')}|${categorySel.join(',')}|${mutationOnly}|${innateOnly}`,
+  })
 
   // Rarity + category chips — inline on desktop, behind the mobile header's
   // filter icon (see ContentPage). The search box stays on the page: it is not a
@@ -158,6 +157,7 @@ export default function PassivesPage() {
             key={key}
             active={raritySel.includes(key)}
             onClick={() => setRaritySel((s) => toggleValue(s, key))}
+            tone="blue"
             testId={`rarity-${key}`}
           >
             <PassiveRarity rank={repRank(key)} />
@@ -170,20 +170,12 @@ export default function PassivesPage() {
             key={c}
             active={categorySel.includes(c)}
             onClick={() => setCategorySel((s) => toggleValue(s, c))}
+            tone="blue"
             testId={`category-${c}`}
           >
             {t(`passive.category.${c}`)}
           </FilterChip>
         ))}
-        {hasNone ? (
-          <FilterChip
-            active={categorySel.includes('none')}
-            onClick={() => setCategorySel((s) => toggleValue(s, 'none'))}
-            testId="category-none"
-          >
-            {t('passive.category.none')}
-          </FilterChip>
-        ) : null}
         {hasInnate ? (
           <Hint
             title={t('passive.innate')}
@@ -196,6 +188,7 @@ export default function PassivesPage() {
               <FilterChip
                 active={innateOnly}
                 onClick={() => setInnateOnly((v) => !v)}
+                tone="blue"
                 testId="category-innate"
               >
                 <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
@@ -216,6 +209,7 @@ export default function PassivesPage() {
               <FilterChip
                 active={mutationOnly}
                 onClick={() => setMutationOnly((v) => !v)}
+                tone="blue"
                 testId="category-mutation"
               >
                 <span className="inline-block size-1.5 rounded-full bg-violet-500" />
@@ -242,10 +236,11 @@ export default function PassivesPage() {
     >
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
-          className="max-w-sm"
+          className="max-w-sm border-primary/50 bg-primary/5 focus-visible:border-primary"
           data-testid="passive-search"
         />
         {bundle ? (
@@ -262,7 +257,7 @@ export default function PassivesPage() {
         <PalPageLoading />
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((r) => (
+          {mobilePaging.visibleItems.map((r) => (
             <div
               key={r.id}
               data-testid="passive-row"
@@ -325,7 +320,7 @@ export default function PassivesPage() {
                       {r.categories.map((c) => (
                         <span
                           key={c}
-                          className="rounded bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
+                          className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-xs text-foreground"
                         >
                           {t(`passive.category.${c}`)}
                         </span>
@@ -366,6 +361,11 @@ export default function PassivesPage() {
           ))}
         </div>
       )}
+      <MobilePagination
+        page={mobilePaging.page}
+        pageCount={mobilePaging.pageCount}
+        onPageChange={mobilePaging.goToPage}
+      />
     </ContentPage>
     </CatalogDataProvider>
     </TooltipProvider>

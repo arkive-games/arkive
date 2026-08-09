@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from '@tanstack/react-router'
 import {
-  ArrowUpRight,
   Calculator,
   Castle,
   Fish,
@@ -22,13 +21,11 @@ import {
   Tent,
 } from 'lucide-react'
 import {
-  ArkiveMobileAccountRow,
   ShellBottomNav,
   useTheme,
   type Theme,
 } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
-import { ARKIVE_HOME_URL, ARKIVE_HOME_LINK_PROPS } from '../lib/brand'
 import type { NavKey } from './TopNav'
 import { SiteInfo } from './SiteInfo'
 
@@ -126,19 +123,6 @@ export function BottomTabBar() {
         icon: <Menu className="size-5" />,
         active: moreActive,
         title: t('more'),
-        brand: (
-          <a
-            href={ARKIVE_HOME_URL}
-            {...ARKIVE_HOME_LINK_PROPS}
-            aria-label={t('brandHome')}
-            title={t('brandHome')}
-            data-testid="more-brand"
-            className="inline-flex min-w-0 items-center gap-0.5 text-sm font-bold text-primary hover:underline"
-          >
-            <span className="truncate">{t('brand')}</span>
-            <ArrowUpRight className="size-3.5 shrink-0" />
-          </a>
-        ),
       }}
       grid={{
         items: more.map(({ key, label, icon: Icon }) => ({
@@ -167,7 +151,6 @@ export function BottomTabBar() {
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('settings.theme'),
       }}
-      extra={<ArkiveMobileAccountRow locale={lng} label={t('auth.login')} />}
       footer={<SiteInfo />}
     />
   )

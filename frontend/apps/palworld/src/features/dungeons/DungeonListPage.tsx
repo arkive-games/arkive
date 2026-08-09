@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useSearch } from '@tanstack/react-router'
 import { ContentPage } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
 import { loadDungeons, dungeonLevelRange, type DungeonsBundle } from '../../lib/dungeons'
@@ -49,6 +50,7 @@ export default function DungeonListPage() {
         : [],
     [b],
   )
+  const mobilePaging = useMobilePagination(ordered, { pageSize: 18 })
 
   // Legacy deep link (/dungeons?d=<id>) → the dungeon's own page.
   if (legacyId) return <Navigate to="/dungeons/$id" params={{ id: legacyId }} replace />
@@ -61,7 +63,7 @@ export default function DungeonListPage() {
         <CatalogPageLoading />
       ) : (
         <ul className="divide-y divide-border/60 rounded-lg border border-border bg-card">
-          {ordered.map((d) => {
+          {mobilePaging.visibleItems.map((d) => {
             const range = dungeonLevelRange(d)
             const bosses = (d.enemies?.boss ?? []).slice(0, BOSS_PREVIEW_MAX)
             return (
@@ -106,6 +108,11 @@ export default function DungeonListPage() {
           })}
         </ul>
       )}
+      <MobilePagination
+        page={mobilePaging.page}
+        pageCount={mobilePaging.pageCount}
+        onPageChange={mobilePaging.goToPage}
+      />
     </ContentPage>
   )
 }

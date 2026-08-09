@@ -1,8 +1,9 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
-import { Input } from '@gamemap/ui'
+import { Input, useIsMobile } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
   loadItems,
   loadBuildings,
@@ -27,6 +28,7 @@ interface Bundles {
 export default function TechnologyPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const isMobile = useIsMobile()
 
   const { tech: focusId } = useSearch({ from: '/technology' })
 
@@ -86,6 +88,7 @@ export default function TechnologyPage() {
       regions.ancient.reduce((n, g) => n + g.techs.length, 0),
     [regions],
   )
+  const mobilePaging = useMobilePagination(levels, { pageSize: 8, resetKey: query })
 
   // Deep link (?tech=<id>): once the tiles are rendered, scroll the target into
   // view. TechTile also draws a highlight ring while the id is focused.
@@ -99,6 +102,23 @@ export default function TechnologyPage() {
     body = <div className="text-center text-destructive">{loadError}</div>
   } else if (!b || !resolvers) {
     body = <CatalogPageLoading />
+  } else if (isMobile) {
+    body = matchCount === 0 ? (
+      <div className="py-8 text-center text-muted-foreground">{t('tech.empty')}</div>
+    ) : (
+      <div>
+        <MobileTechLevels
+          levels={mobilePaging.visibleItems}
+          resolvers={resolvers}
+          focusId={focusId}
+        />
+        <MobilePagination
+          page={mobilePaging.page}
+          pageCount={mobilePaging.pageCount}
+          onPageChange={mobilePaging.goToPage}
+        />
+      </div>
+    )
   } else {
     body = (
       <div className="grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-8">
@@ -136,9 +156,10 @@ export default function TechnologyPage() {
   }
 
   return (
-    <ContentPage active="/technology" title={t('tech.title')} heading>
+    <ContentPage active="/technology" title={t('tech.title')} heading hideMobileFooter>
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Input
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('tech.searchPlaceholder')}
@@ -152,6 +173,40 @@ export default function TechnologyPage() {
           </div>
           {body}
     </ContentPage>
+  )
+}
+
+function MobileTechLevels({
+  levels,
+  resolvers,
+  focusId,
+}: {
+  levels: { level: number; normal: TechEntry[]; ancient: TechEntry[] }[]
+  resolvers: TechResolvers
+  focusId?: string
+}) {
+  const { t } = useTranslation()
+
+  return (
+    <section className="space-y-4">
+      {levels.map(({ level, normal, ancient }) => (
+        <div key={level} className="space-y-1.5">
+          <div className="sticky top-0 z-10 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-xs font-bold tabular-nums text-primary backdrop-blur">
+            {t('tech.level', { level })}
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {[...normal, ...ancient].map((tech) => (
+              <TechTile
+                key={tech.id}
+                tech={tech}
+                resolvers={resolvers}
+                highlighted={tech.id === focusId}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
   )
 }
 

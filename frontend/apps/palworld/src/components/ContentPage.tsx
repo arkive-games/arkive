@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { SlidersHorizontal } from 'lucide-react'
+import { ArrowUp, SlidersHorizontal } from 'lucide-react'
 import { Sheet, SheetContent, SheetTitle, cn, useIsMobile, SiteFooter } from '@gamemap/ui'
 import { ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
@@ -42,6 +42,8 @@ export interface ContentPageProps {
    * themselves are then off-screen).
    */
   filtersActive?: boolean
+  /** Hide the site footer on phones while keeping it on desktop. */
+  hideMobileFooter?: boolean
   children: ReactNode
 }
 
@@ -90,16 +92,39 @@ export function ContentPage({
   heading = false,
   filters,
   filtersActive = false,
+  hideMobileFooter = false,
   children,
 }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const isMobile = useIsMobile()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const [showBackToTop, setShowBackToTop] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   // Phones only: on desktop the filters stay in the page flow, so no icon and no
   // sheet — and the pages without filters keep the plain title header.
   const inSheet = isMobile && filters != null
+
+  useEffect(() => {
+    if (!isMobile) {
+      setShowBackToTop(false)
+      return
+    }
+    const scroller = scrollRef.current
+    if (!scroller) return
+    const onScroll = () => setShowBackToTop(scroller.scrollTop > 500)
+    onScroll()
+    scroller.addEventListener('scroll', onScroll, { passive: true })
+    return () => scroller.removeEventListener('scroll', onScroll)
+  }, [isMobile])
+
+  const scrollToTop = () => {
+    const scroller = scrollRef.current
+    if (!scroller) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    scroller.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
+  }
 
   return (
     <FiltersContext.Provider value={{ node: filters ?? null, inSheet }}>
@@ -120,7 +145,7 @@ export function ContentPage({
               aria-label={t('filter')}
               aria-expanded={filterSheetOpen}
               onClick={() => setFilterSheetOpen(true)}
-              className="relative flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-accent"
+              className="relative flex size-11 shrink-0 items-center justify-center rounded-lg border border-primary bg-card text-primary shadow-sm transition-colors hover:bg-primary/5 active:bg-primary/10"
             >
               <SlidersHorizontal className="size-5" />
               {filtersActive ? (
@@ -133,9 +158,15 @@ export function ContentPage({
             </button>
           ) : undefined}
         />
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div ref={scrollRef} data-content-scroll className="min-h-0 flex-1 overflow-y-auto">
           <div className="flex min-h-full flex-col">
-            <div className={cn('mx-auto w-full flex-1 px-4 py-6', CONTENT_MAX_WIDTH)}>
+            <div
+              className={cn(
+                'arkive-content-page mx-auto w-full flex-1 px-4 pb-6',
+                hideMobileFooter && 'pb-[calc(env(safe-area-inset-bottom)+7rem)] md:pb-6',
+                CONTENT_MAX_WIDTH,
+              )}
+            >
               {heading ? (
                 <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1>
               ) : null}
@@ -146,7 +177,10 @@ export function ContentPage({
                 the brand at the sibling portal toy and drops the links it cannot
                 reach — rather than falling back to the public-web defaults. */}
             <SiteFooter
-              className="pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-4"
+              className={cn(
+                'pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-4',
+                hideMobileFooter && 'hidden md:block',
+              )}
               homeUrl={ARKIVE_HOME_URL}
               homeLinkProps={ARKIVE_HOME_LINK_PROPS}
               githubUrl={GITHUB_ORG_URL}
@@ -155,6 +189,18 @@ export function ContentPage({
             />
           </div>
         </div>
+        {showBackToTop ? (
+          <button
+            type="button"
+            data-testid="content-back-to-top"
+            aria-label={t('backToTop')}
+            title={t('backToTop')}
+            onClick={scrollToTop}
+            className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] right-4 z-[2400] flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
+          >
+            <ArrowUp className="size-5" />
+          </button>
+        ) : null}
       </div>
 
       {inSheet ? (

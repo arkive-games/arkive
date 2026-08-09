@@ -11,6 +11,8 @@ export interface SimStrings {
   title: string
   caption: string
   pickPal: string
+  sortAscending: string
+  sortDescending: string
   /** Prefix of the species base-value line shown next to the picker. */
   base: string
   level: string
@@ -82,6 +84,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Compute the exact in-game stats of any pal from its enhancements — or enter the displayed stats to reveal the hidden IVs (talents).',
     pickPal: 'Select a pal…',
+    sortAscending: 'Sort by number ascending',
+    sortDescending: 'Sort by number descending',
     base: 'base',
     level: 'Level',
     stars: 'Condense stars',
@@ -125,6 +129,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Berechne die exakten Spielwerte eines Pals aus seinen Verstärkungen – oder gib die angezeigten Werte ein, um die versteckten IVs (Talente) zu ermitteln.',
     pickPal: 'Pal auswählen…',
+    sortAscending: 'Nach Nummer aufsteigend sortieren',
+    sortDescending: 'Nach Nummer absteigend sortieren',
     base: 'Basis',
     level: 'Stufe',
     stars: 'Entsafter-Sterne',
@@ -168,6 +174,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calcula las estadísticas exactas de cualquier pal en el juego a partir de sus mejoras, o introduce las estadísticas mostradas para revelar los IVs ocultos (talentos).',
     pickPal: 'Selecciona un pal…',
+    sortAscending: 'Ordenar por número ascendente',
+    sortDescending: 'Ordenar por número descendente',
     base: 'base',
     level: 'Nivel',
     stars: 'Estrellas de concentrado',
@@ -211,6 +219,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calcula las estadísticas exactas de cualquier pal en el juego a partir de sus mejoras, o ingresa las estadísticas mostradas para revelar los IVs ocultos (talentos).',
     pickPal: 'Selecciona un pal…',
+    sortAscending: 'Ordenar por número ascendente',
+    sortDescending: 'Ordenar por número descendente',
     base: 'base',
     level: 'Nivel',
     stars: 'Estrellas de concentrado',
@@ -254,6 +264,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calculez les statistiques exactes en jeu de n’importe quel pal à partir de ses améliorations — ou saisissez les statistiques affichées pour révéler les IV cachés (talents).',
     pickPal: 'Sélectionner un pal…',
+    sortAscending: 'Trier par numéro croissant',
+    sortDescending: 'Trier par numéro décroissant',
     base: 'base',
     level: 'Niveau',
     stars: 'Étoiles de condensation',
@@ -297,6 +309,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Hitung statistik persis dalam game untuk pal mana pun dari peningkatannya — atau masukkan statistik yang ditampilkan untuk mengungkap IV tersembunyi (bakat).',
     pickPal: 'Pilih pal…',
+    sortAscending: 'Urutkan nomor dari kecil ke besar',
+    sortDescending: 'Urutkan nomor dari besar ke kecil',
     base: 'dasar',
     level: 'Level',
     stars: 'Bintang ekstraksi',
@@ -341,6 +355,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calcola le statistiche esatte in gioco di qualsiasi pal a partire dai suoi potenziamenti — oppure inserisci le statistiche mostrate per scoprire gli IV nascosti (talenti).',
     pickPal: 'Seleziona un pal…',
+    sortAscending: 'Ordina per numero crescente',
+    sortDescending: 'Ordina per numero decrescente',
     base: 'base',
     level: 'Livello',
     stars: 'Stelle di potenziamento',
@@ -384,6 +400,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       '強化状態からパルのゲーム内ステータスを正確に計算できます。表示ステータスを入力すれば、隠しステータスの個体値も逆算できます。',
     pickPal: 'パルを選択…',
+    sortAscending: '番号の昇順で並べ替え',
+    sortDescending: '番号の降順で並べ替え',
     base: '基礎値',
     level: 'レベル',
     stars: '濃縮ランク（星）',
@@ -427,6 +445,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       '강화 상태로부터 팰의 게임 내 스탯을 정확히 계산하거나, 표시된 스탯을 입력해 숨겨진 개체값을 역산할 수 있습니다.',
     pickPal: '팰 선택…',
+    sortAscending: '번호 오름차순 정렬',
+    sortDescending: '번호 내림차순 정렬',
     base: '기본값',
     level: '레벨',
     stars: '농축 랭크(별)',
@@ -470,6 +490,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Oblicz dokładne statystyki dowolnego Pala w grze na podstawie jego ulepszeń — albo wpisz wyświetlane statystyki, aby poznać ukryte IV (talenty).',
     pickPal: 'Wybierz Pala…',
+    sortAscending: 'Sortuj rosnąco według numeru',
+    sortDescending: 'Sortuj malejąco według numeru',
     base: 'baza',
     level: 'Poziom',
     stars: 'Gwiazdki kondensacji',
@@ -513,6 +535,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Calcule os atributos exatos de qualquer Pal no jogo a partir dos seus aprimoramentos — ou insira os atributos exibidos para revelar os IVs ocultos (talentos).',
     pickPal: 'Selecione um pal…',
+    sortAscending: 'Ordenar por número crescente',
+    sortDescending: 'Ordenar por número decrescente',
     base: 'base',
     level: 'Nível',
     stars: 'Estrelas de condensação',
@@ -556,6 +580,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Рассчитайте точные игровые характеристики любого пала по его усилениям — или введите отображаемые характеристики, чтобы узнать скрытые IV (таланты).',
     pickPal: 'Выберите пала…',
+    sortAscending: 'Сортировать по номеру по возрастанию',
+    sortDescending: 'Сортировать по номеру по убыванию',
     base: 'база',
     level: 'Уровень',
     stars: 'Звёзды конденсации',
@@ -599,6 +625,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'คำนวณค่าสถานะในเกมที่แม่นยำของพัลตัวใดก็ได้จากการเสริมพลังของมัน — หรือกรอกค่าสถานะที่แสดงเพื่อหาค่า IV ที่ซ่อนอยู่ (พรสวรรค์)',
     pickPal: 'เลือกพัล…',
+    sortAscending: 'เรียงตามหมายเลขจากน้อยไปมาก',
+    sortDescending: 'เรียงตามหมายเลขจากมากไปน้อย',
     base: 'ค่าพื้นฐาน',
     level: 'เลเวล',
     stars: 'ดาวควบแน่น',
@@ -642,6 +670,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Herhangi bir Pal’in oyun içi değerlerini güçlendirmelerinden tam olarak hesaplayın — ya da gösterilen değerleri girerek gizli IV’leri (yetenekleri) ortaya çıkarın.',
     pickPal: 'Bir pal seçin…',
+    sortAscending: 'Numaraya göre artan sırala',
+    sortDescending: 'Numaraya göre azalan sırala',
     base: 'taban',
     level: 'Seviye',
     stars: 'Yoğunlaştırma yıldızları',
@@ -685,6 +715,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       'Tính chính xác chỉ số trong game của bất kỳ Pal nào từ các nâng cấp của nó — hoặc nhập chỉ số hiển thị để tìm ra IV ẩn (tiềm năng).',
     pickPal: 'Chọn một pal…',
+    sortAscending: 'Sắp xếp số tăng dần',
+    sortDescending: 'Sắp xếp số giảm dần',
     base: 'cơ bản',
     level: 'Cấp',
     stars: 'Sao tinh luyện',
@@ -728,6 +760,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       '根据强化状态精确计算任意帕鲁的游戏内属性，也可以输入游戏中显示的属性，反推隐藏的个体值（天赋）。',
     pickPal: '选择帕鲁…',
+    sortAscending: '按编号升序排列',
+    sortDescending: '按编号倒序排列',
     base: '基础值',
     level: '等级',
     stars: '浓缩星级',
@@ -769,6 +803,8 @@ export const SIM_STRINGS: Record<Language, SimStrings> = {
     caption:
       '根據強化狀態精確計算任意帕魯的遊戲內屬性，也可以輸入遊戲中顯示的屬性，反推隱藏的個體值（天賦）。',
     pickPal: '選擇帕魯…',
+    sortAscending: '按編號升序排列',
+    sortDescending: '按編號倒序排列',
     base: '基礎值',
     level: '等級',
     stars: '濃縮星級',

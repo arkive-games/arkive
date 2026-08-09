@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Input } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { CatalogDataProvider } from '../catalog/components'
 import { PalCard, PalFilters, PalPageLoading, PalTable } from './components'
@@ -56,6 +57,10 @@ export default function PalListPage() {
   }, [lng, t])
 
   const roster = useFilteredPals(bundle, filter)
+  const mobilePaging = useMobilePagination(roster, {
+    pageSize: 24,
+    resetKey: JSON.stringify(filter),
+  })
 
   return (
     <ContentPage
@@ -72,6 +77,7 @@ export default function PalListPage() {
         <CatalogDataProvider pals={bundle ?? undefined}>
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <Input
+              type="search"
               value={filter.query}
               onChange={(e) => setFilter({ ...filter, query: e.target.value })}
               placeholder={t('pal.searchPlaceholder')}
@@ -111,14 +117,19 @@ export default function PalListPage() {
           ) : roster.length === 0 ? (
             <div className="mt-12 text-center text-sm text-muted-foreground">{fs.noResults}</div>
           ) : view === 'list' ? (
-            <PalTable pals={roster} bundle={bundle} />
+            <PalTable pals={mobilePaging.visibleItems} bundle={bundle} />
           ) : (
             <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
-              {roster.map((p) => (
+              {mobilePaging.visibleItems.map((p) => (
                 <PalCard key={p.id} pal={p} name={bundle.text[p.id]?.name ?? p.id} />
               ))}
             </div>
           )}
+          <MobilePagination
+            page={mobilePaging.page}
+            pageCount={mobilePaging.pageCount}
+            onPageChange={mobilePaging.goToPage}
+          />
         </CatalogDataProvider>
     </ContentPage>
   )

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 
 /** A titled panel — the encyclopedia's section container. */
@@ -10,6 +11,11 @@ export function PalSection({
   children,
   className,
   testId,
+  collapsible = false,
+  expanded = true,
+  onExpandedChange,
+  expandLabel = 'Expand',
+  collapseLabel = 'Collapse',
 }: {
   title?: string
   /** Rendered right-aligned on the title row (e.g. a related-page link). */
@@ -17,26 +23,50 @@ export function PalSection({
   children: ReactNode
   className?: string
   testId?: string
+  /** Mobile-only disclosure. Desktop sections always remain fully visible. */
+  collapsible?: boolean
+  expanded?: boolean
+  onExpandedChange?: (expanded: boolean) => void
+  expandLabel?: string
+  collapseLabel?: string
 }) {
+  const heading = title ? (
+    <h2 className="min-w-0 flex-1 text-base font-semibold sm:text-lg">{title}</h2>
+  ) : null
+
   return (
     <section
       className={cn(
-        'rounded-lg border border-border bg-card p-4 text-card-foreground shadow-sm',
+        'rounded-lg border border-border bg-card p-3 text-card-foreground shadow-sm sm:p-4',
         className,
       )}
       data-testid={testId}
     >
       {title ? (
-        action != null ? (
-          <div className="mb-3 flex items-baseline justify-between gap-2">
-            <h2 className="text-lg font-semibold">{title}</h2>
-            {action}
-          </div>
-        ) : (
-          <h2 className="mb-3 text-lg font-semibold">{title}</h2>
-        )
+        <div
+          className={cn(
+            'flex items-center gap-2',
+            expanded || !collapsible ? 'mb-3' : '',
+            collapsible && 'md:mb-3',
+          )}
+        >
+          {heading}
+          {action != null ? <div className="shrink-0">{action}</div> : null}
+          {collapsible ? (
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-label={expanded ? collapseLabel : expandLabel}
+              title={expanded ? collapseLabel : expandLabel}
+              onClick={() => onExpandedChange?.(!expanded)}
+              className="-mr-1 inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-accent hover:text-foreground md:hidden"
+            >
+              <ChevronDown className={cn('size-5 transition-transform', expanded && 'rotate-180')} />
+            </button>
+          ) : null}
+        </div>
       ) : null}
-      {children}
+      <div className={cn(collapsible && !expanded && 'hidden md:block')}>{children}</div>
     </section>
   )
 }

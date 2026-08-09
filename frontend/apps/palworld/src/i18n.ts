@@ -64,6 +64,19 @@ export const MORE_LABELS: Record<Language, string> = {
   'pt-BR': 'Mais', 'ru-RU': 'Ещё', 'th-TH': 'เพิ่มเติม', 'tr-TR': 'Daha fazla', 'vi-VN': 'Thêm',
   'zh-CN': '更多', 'zh-TW': '更多',
 }
+export const BACK_TO_TOP_LABELS: Record<Language, string> = {
+  'en-US': 'Back to top', 'de-DE': 'Nach oben', 'es-ES': 'Volver arriba', 'es-MX': 'Volver arriba',
+  'fr-FR': 'Retour en haut', 'id-ID': 'Kembali ke atas', 'it-IT': 'Torna su', 'ja-JP': 'ページ上部へ',
+  'ko-KR': '맨 위로', 'pl-PL': 'Wróć na górę', 'pt-BR': 'Voltar ao topo', 'ru-RU': 'Наверх',
+  'th-TH': 'กลับขึ้นด้านบน', 'tr-TR': 'Başa dön', 'vi-VN': 'Lên đầu trang',
+  'zh-CN': '返回顶部', 'zh-TW': '返回頂部',
+}
+export const TOTAL_LABELS: Record<Language, string> = {
+  'en-US': 'Total', 'de-DE': 'Gesamt', 'es-ES': 'Total', 'es-MX': 'Total', 'fr-FR': 'Total',
+  'id-ID': 'Total', 'it-IT': 'Totale', 'ja-JP': '合計', 'ko-KR': '합계', 'pl-PL': 'Łącznie',
+  'pt-BR': 'Total', 'ru-RU': 'Всего', 'th-TH': 'รวม', 'tr-TR': 'Toplam', 'vi-VN': 'Tổng cộng',
+  'zh-CN': '合计', 'zh-TW': '合計',
+}
 // Catalog list pages: manual fallback for the scroll-triggered incremental
 // reveal ({{count}} = tiles not yet rendered).
 export const SHOW_MORE_LABELS: Record<Language, string> = {
@@ -1048,6 +1061,14 @@ for (const lng of LANGUAGES) {
       },
       catalogLoading: CATALOG_STRINGS[lng].loading,
       catalogShowMore: SHOW_MORE_LABELS[lng],
+      backToTop: BACK_TO_TOP_LABELS[lng],
+      pagination: {
+        label: `${BREEDING_STRINGS[lng].prevPage} / ${BREEDING_STRINGS[lng].nextPage}`,
+        previous: BREEDING_STRINGS[lng].prevPage,
+        next: BREEDING_STRINGS[lng].nextPage,
+        page: '{{page}}',
+      },
+      total: TOTAL_LABELS[lng],
       more: MORE_LABELS[lng],
       filter: FILTER_LABELS[lng],
       filters: {

@@ -50,6 +50,7 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
   const name = resolvers.name(tech)
   const image = resolvers.image(tech)
   const typeLabel = type === 'item' ? t('tech.typeItem') : t('tech.typeStructure')
+  const glyphSize = isMobile ? 40 : 72
 
   const tile = (
         <button
@@ -57,7 +58,6 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
           id={`tech-${tech.id}`}
           data-testid="tech-tile"
           aria-label={name}
-          title={name}
           // Inert on desktop (the hover card does the work); on a phone the tap
           // is the only way in, so it opens the sheet.
           onClick={isMobile ? () => setSheetOpen(true) : undefined}
@@ -72,7 +72,8 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
         >
           <span
             className={cn(
-              'flex items-center gap-2 px-2 py-0.5 text-xs font-medium uppercase tracking-wide',
+              'flex items-center py-0.5 text-xs font-medium uppercase tracking-wide',
+              isMobile ? 'gap-0.5 px-1' : 'gap-2 px-2',
               ancient
                 ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300'
                 : 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
@@ -84,19 +85,19 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
             </span>
           </span>
 
-          <span className="flex min-h-0 flex-1 items-center justify-center p-2">
+          <span className={cn('flex min-h-0 flex-1 items-center justify-center', isMobile ? 'p-1' : 'p-2')}>
             {image ? (
               image.kind === 'item' ? (
-                <ItemGlyph icon={image.icon} size={72} />
+                <ItemGlyph icon={image.icon} size={glyphSize} />
               ) : (
-                <BuildingGlyph icon={image.icon} size={72} />
+                <BuildingGlyph icon={image.icon} size={glyphSize} />
               )
             ) : (
-              <span className="size-16 rounded bg-secondary" aria-hidden />
+              <span className={cn('rounded bg-secondary', isMobile ? 'size-10' : 'size-16')} aria-hidden />
             )}
           </span>
 
-          <span className="block truncate px-2 pb-1.5 text-center text-xs font-medium leading-tight">
+          <span className={cn('block truncate text-center text-xs font-medium leading-tight', isMobile ? 'px-1 pb-1' : 'px-2 pb-1.5')}>
             {name}
           </span>
         </button>

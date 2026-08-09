@@ -382,15 +382,6 @@ export function resolveCharacterNames(
 
 // --- active-skill catalog (Active Skills list + per-skill detail pages) ------
 
-/** Readable fallback for a skill with no L10N name (a few boss-only skills,
- *  e.g. `Unique_WorldTreeDragon_PaldiumExplosion` → "Paldium Explosion").
- *  Derived from the id's last segment, not a translation — it renders the
- *  same in every locale. */
-export function humanizeWazaId(wazaId: string): string {
-  const last = wazaId.split('_').pop() || wazaId
-  return last.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-}
-
 /** A pal that learns an active skill by leveling, and the level it learns it at. */
 export interface ActiveSkillPalRef { id: string; name: string; icon: string; level: number }
 /** One distinct active skill: element-invariant metadata, its Skill-Fruit flag,
@@ -418,14 +409,16 @@ export function buildActiveSkills(bundle: PalsBundle): ActiveSkillEntry[] {
   for (const p of bundle.pals) {
     const palName = bundle.text[p.id]?.name ?? p.id
     for (const s of p.activeSkills) {
+      const localized = bundle.skills[s.wazaId]
+      // Some unreleased or boss-internal skills have no name in any shipped
+      // locale. Do not turn their internal ids into English-looking labels.
+      if (!localized?.name.trim()) continue
       let e = byId.get(s.wazaId)
       if (!e) {
         e = {
           wazaId: s.wazaId,
-          // Localized name; empty when the skill has no L10N entry (some
-          // boss/unreleased skills). Callers surface the raw `wazaId` instead.
-          name: bundle.skills[s.wazaId]?.name ?? '',
-          description: resolveCharacterNames(bundle.skills[s.wazaId]?.description, bundle.text),
+          name: localized.name,
+          description: resolveCharacterNames(localized.description, bundle.text),
           element: s.element as Element,
           melee: s.category === 'Melee',
           power: s.power,

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
+import { cn, useIsMobile } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadItems,
@@ -46,6 +47,7 @@ function NodeCard({
   tech,
   pals,
   techIds,
+  mobile = false,
 }: {
   p: ResearchProject
   research: ResearchBundle
@@ -53,15 +55,17 @@ function NodeCard({
   tech: TechBundle
   pals: PalsBundle
   techIds: string[]
+  mobile?: boolean
 }) {
   const { t } = useTranslation()
   const v = p.effect?.value ?? 0
   return (
     <div
-      className={
-        'w-44 rounded-lg border bg-card px-2.5 py-2 shadow-sm ' +
-        (p.essential ? 'border-amber-400/60' : 'border-border')
-      }
+      className={cn(
+        'rounded-lg border bg-card px-2.5 py-2 shadow-sm',
+        mobile ? 'w-full border-primary/25' : 'w-44',
+        p.essential ? 'border-amber-400/60' : !mobile && 'border-border',
+      )}
       data-testid="research-node"
     >
       <div className="text-sm font-medium leading-tight">
@@ -103,6 +107,53 @@ function NodeCard({
           {t('research.unlocksTech')}: {tech.text[tid]?.name ?? tid}
         </Link>
       ))}
+    </div>
+  )
+}
+
+/** Mobile research hierarchy. It preserves prerequisite order without making
+ * the user pan across a desktop-width tree. */
+function MobileTreeNode({
+  node,
+  research,
+  items,
+  tech,
+  pals,
+  techsByResearch,
+}: {
+  node: ResearchTreeNode
+  research: ResearchBundle
+  items: ItemsBundle
+  tech: TechBundle
+  pals: PalsBundle
+  techsByResearch: Map<string, string[]>
+}) {
+  return (
+    <div className="min-w-0">
+      <NodeCard
+        p={node.project}
+        research={research}
+        items={items}
+        tech={tech}
+        pals={pals}
+        techIds={techsByResearch.get(node.project.id) ?? []}
+        mobile
+      />
+      {node.children.length ? (
+        <div className="ml-3 mt-2 space-y-2 border-l border-primary/30 pl-3">
+          {node.children.map((child) => (
+            <MobileTreeNode
+              key={child.project.id}
+              node={child}
+              research={research}
+              items={items}
+              tech={tech}
+              pals={pals}
+              techsByResearch={techsByResearch}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -187,6 +238,7 @@ function countNodes(node: ResearchTreeNode): number {
 export default function ResearchPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const isMobile = useIsMobile()
 
   const [research, setResearch] = useState<ResearchBundle | null>(null)
   const [items, setItems] = useState<ItemsBundle | null>(null)
@@ -250,7 +302,10 @@ export default function ResearchPage() {
       ) : (
         <CatalogDataProvider items={items} tech={tech} pals={pals}>
           <p className="mb-4 text-sm text-muted-foreground">{t('research.caption')}</p>
-          <div className="mb-6 flex flex-wrap gap-1.5" role="tablist">
+          <div
+            className="-mx-4 mb-5 flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 touch-pan-x md:mx-0 md:mb-6 md:flex-wrap md:px-0"
+            role="tablist"
+          >
             {trees.map(({ category, roots }) => {
               const active = category === current?.category
               const count = roots.reduce((sum, r) => sum + countNodes(r), 0)
@@ -262,10 +317,10 @@ export default function ResearchPage() {
                   aria-selected={active}
                   onClick={() => setActiveCat(category)}
                   className={
-                    'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition ' +
+                    'inline-flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition ' +
                     (active
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-accent')
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10')
                   }
                 >
                   <IconImg src={workIconUrl(category as WorkType)} alt="" size={16} />
@@ -283,23 +338,39 @@ export default function ResearchPage() {
             })}
           </div>
           {current ? (
-            <div className="overflow-x-auto pb-4">
-              <div className="flex min-w-full justify-center">
-                <div className="w-max space-y-8">
-                  {current.roots.map((root) => (
-                    <TreeNode
-                      key={root.project.id}
-                      node={root}
-                      research={research}
-                      items={items}
-                      tech={tech}
-                      pals={pals}
-                      techsByResearch={techsByResearch}
-                    />
-                  ))}
+            isMobile ? (
+              <div className="space-y-4" data-testid="mobile-research-tree">
+                {current.roots.map((root) => (
+                  <MobileTreeNode
+                    key={root.project.id}
+                    node={root}
+                    research={research}
+                    items={items}
+                    tech={tech}
+                    pals={pals}
+                    techsByResearch={techsByResearch}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto pb-4">
+                <div className="flex min-w-full justify-center">
+                  <div className="w-max space-y-8">
+                    {current.roots.map((root) => (
+                      <TreeNode
+                        key={root.project.id}
+                        node={root}
+                        research={research}
+                        items={items}
+                        tech={tech}
+                        pals={pals}
+                        techsByResearch={techsByResearch}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )
           ) : null}
         </CatalogDataProvider>
       )}

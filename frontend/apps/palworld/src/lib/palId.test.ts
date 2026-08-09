@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { formatPalId, palIdText } from './palId'
+import { compareZukan, formatPalId, palIdText } from './palId'
 
 describe('formatPalId', () => {
   it('formats catalogued Paldeck ids into structured parts', () => {
@@ -23,5 +23,35 @@ describe('palIdText', () => {
     expect(palIdText(formatPalId(37, 'B'))).toBe('No.037B')
     expect(palIdText(formatPalId(1))).toBe('No.001')
     expect(palIdText(undefined)).toBeUndefined()
+  })
+})
+
+describe('compareZukan', () => {
+  const pals = [
+    { id: 'Pal32B', zukanIndex: 32, zukanIndexSuffix: 'B' },
+    { id: 'Uncatalogued', zukanIndex: 0 },
+    { id: 'Pal185', zukanIndex: 185 },
+    { id: 'Pal1', zukanIndex: 1 },
+    { id: 'Pal32', zukanIndex: 32 },
+  ]
+
+  it('orders numbered pals ascending and keeps uncatalogued pals last', () => {
+    expect([...pals].sort((a, b) => compareZukan(a, b, 'ascending')).map((pal) => pal.id)).toEqual([
+      'Pal1',
+      'Pal32',
+      'Pal32B',
+      'Pal185',
+      'Uncatalogued',
+    ])
+  })
+
+  it('orders numbered pals descending and still keeps uncatalogued pals last', () => {
+    expect([...pals].sort((a, b) => compareZukan(a, b, 'descending')).map((pal) => pal.id)).toEqual([
+      'Pal185',
+      'Pal32B',
+      'Pal32',
+      'Pal1',
+      'Uncatalogued',
+    ])
   })
 })

@@ -6,7 +6,6 @@ import { ContentPage } from '../../components/ContentPage'
 import {
   loadPals,
   buildActiveSkills,
-  humanizeWazaId,
   type Element,
   type PalsBundle,
 } from '../../lib/pals'
@@ -79,7 +78,7 @@ export default function ActiveSkillDetailPage() {
             />
           ) : null}
           <div className="min-w-0">
-            <h1 className="text-3xl font-bold break-words">{skill.name || humanizeWazaId(skill.wazaId)}</h1>
+            <h1 className="text-3xl font-bold break-words">{skill.name}</h1>
             <div className="mt-0.5 font-mono text-xs text-muted-foreground">{skill.wazaId}</div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <ElementBadge element={skill.element as Element} label={bundle.enums.elements[skill.element] ?? skill.element} />
@@ -102,8 +101,8 @@ export default function ActiveSkillDetailPage() {
           <InfoRows>
             <StatRow label={t('pal.type')} value={t(skill.melee ? 'pal.melee' : 'pal.ranged')} />
             <StatRow label={t('pal.power')} value={skill.power || '—'} />
-            <StatRow label={t('pal.cooldown')} value={`${skill.coolTime}s`} />
-            <StatRow label={t('pal.range')} value={formatSkillRange(skill.minRange, skill.maxRange)} />
+            <StatRow label={t('pal.cooldown')} value={lng.startsWith('zh') ? `${skill.coolTime} 秒` : `${skill.coolTime}s`} />
+            <StatRow label={t('pal.range')} value={formatSkillRange(skill.minRange, skill.maxRange, lng)} />
             <StatRow label={t('activeSkill.fruit')} value={skill.isFruit ? t('activeSkill.has') : t('activeSkill.hasNot')} />
           </InfoRows>
         </PalSection>

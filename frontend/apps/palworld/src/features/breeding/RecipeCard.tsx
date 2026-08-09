@@ -1,10 +1,12 @@
 import type { MouseEvent } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { CircleHelp, ListTree, Plus, Sparkles, Star, X, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
+import { OverflowMarquee } from '@gamemap/map-shell'
 import type { BreedingPal, Combo, Gender, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
-import { formatPalId } from '../../lib/palId'
+import { formatPalId, palIdText } from '../../lib/palId'
 import { PalHover } from '../catalog/components'
 
 // Per-Pal display metadata used by a recipe card (icon, Paldeck id, breeding
@@ -38,8 +40,9 @@ export function buildRecipeMeta(pals: BreedingPal[]): RecipeMeta {
  * - `row` — the desktop line: `A + B = C` as inline chips (icon + name + meta).
  * - `tile` — phones: three squares in one line, in the same visual language as
  *   the building / technology tiles (metadata strip, icon, name).
+ * - `compact` — phone result cards matching the multi-generation route cards.
  */
-export type BreedingVariant = 'row' | 'tile'
+export type BreedingVariant = 'row' | 'tile' | 'compact'
 
 // Gold ring + glow marking a legendary Pal's icon (self-bred only).
 export const LEGENDARY_ICON = 'ring-2 ring-amber-400 shadow-[0_0_6px_1px_rgba(251,191,36,0.55)]'
@@ -48,6 +51,10 @@ export const LEGENDARY_ICON = 'ring-2 ring-amber-400 shadow-[0_0_6px_1px_rgba(25
 // row card's top edge, inline in the tile card's bottom bar).
 const UNIQUE_PILL =
   'inline-flex items-center gap-1 rounded-full border border-amber-400/70 bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+
+function localizedPalId(value: string | undefined, locale: string): string | undefined {
+  return locale.startsWith('zh') ? value?.replace(/^No\./, '编号 ') : value
+}
 
 export function GenderMark({ g }: { g?: Gender }) {
   if (!g) return null
@@ -74,10 +81,12 @@ export function PalChip({
   gender?: Gender
   emphasis?: boolean
 }) {
+  const { i18n } = useTranslation()
+  const locale = i18n.resolvedLanguage ?? 'en-US'
   const m = meta.get(id)
   const pid = m ? formatPalId(m.zukanIndex, m.zukanIndexSuffix) : undefined
   return (
-    <PalHover id={id}>
+    <PalHover id={id} side="top" align="center">
     <Link
       to="/pals/$id"
       params={{ id }}
@@ -107,7 +116,7 @@ export function PalChip({
         <span className="flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
           {pid ? (
             <span>
-              {pid.text}
+              {localizedPalId(pid.text, locale)}
               {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
             </span>
           ) : null}
@@ -120,6 +129,77 @@ export function PalChip({
         </span>
       </span>
     </Link>
+    </PalHover>
+  )
+}
+
+export function CompactPalNode({
+  id,
+  names,
+  meta,
+  gender,
+  emphasis,
+  unique,
+}: {
+  id: string
+  names: NameMap
+  meta: RecipeMeta
+  gender?: Gender
+  emphasis?: boolean
+  unique?: boolean
+}) {
+  const { i18n } = useTranslation()
+  const locale = i18n.resolvedLanguage ?? 'en-US'
+  const m = meta.get(id)
+  const name = names[id] ?? id
+  const idText = m ? localizedPalId(palIdText(formatPalId(m.zukanIndex, m.zukanIndexSuffix)), locale) : undefined
+  const metaText = m ? [idText, String(m.rank)].filter(Boolean).join(' ') : ''
+  return (
+    <PalHover id={id} side="top" align="center">
+      <Link
+        to="/pals/$id"
+        params={{ id }}
+        title={name}
+        className={cn(
+          'flex min-w-0 flex-col overflow-hidden rounded-md border bg-background transition-colors hover:border-primary/60 hover:bg-accent',
+          unique ? 'border-amber-400/70 bg-amber-400/10' : 'border-primary/25',
+          emphasis && 'border-primary/40 bg-primary/5',
+        )}
+      >
+        <span className="flex min-w-0 items-center gap-0.5 px-1 py-1">
+          {m?.icon ? (
+            <img
+              src={palIconUrl(m.icon)}
+              alt=""
+              loading="lazy"
+              className={cn(
+                'size-6 shrink-0 rounded-full bg-black/5 object-contain dark:bg-white/10',
+                m.legendary && LEGENDARY_ICON,
+              )}
+            />
+          ) : null}
+          <span className={cn('flex min-w-0 flex-1 items-center text-xs leading-tight', emphasis && 'font-semibold')}>
+            <OverflowMarquee text={name} auto className="min-w-0 flex-1" />
+            <GenderMark g={gender} />
+          </span>
+        </span>
+        {m ? (
+          <span className="flex min-w-0 border-t border-primary/15 bg-primary/5 px-1 py-0.5 text-xs leading-tight tabular-nums text-foreground dark:text-white">
+            <OverflowMarquee
+              text={metaText}
+              auto
+              className="min-w-0 flex-1"
+              contentClassName="inline-flex min-w-full items-center justify-center gap-1 text-center"
+            >
+              {idText ? <span>{idText}</span> : null}
+              <span className="inline-flex items-center gap-0.5">
+                <Zap className="size-3 shrink-0" />
+                {m.rank}
+              </span>
+            </OverflowMarquee>
+          </span>
+        ) : null}
+      </Link>
     </PalHover>
   )
 }
@@ -142,9 +222,9 @@ export const TILE_FRAME =
  * `gap-0.5`: at 320px a tile header has ~66px to fit a label and a 13px glyph.
  */
 export const TILE_HEADER =
-  'flex shrink-0 items-center gap-0.5 bg-muted px-1 py-0.5 text-xs tabular-nums text-muted-foreground'
+  'flex shrink-0 items-center gap-0.5 bg-muted px-1 py-0.5 text-xs tabular-nums text-foreground dark:text-white'
 export const TILE_FOOTER = 'shrink-0 px-1 pb-1'
-export const TILE_NAME = 'block truncate text-center text-xs font-medium leading-tight'
+export const TILE_NAME = 'flex min-w-0 items-center justify-center text-center text-xs font-medium leading-tight'
 /**
  * Second footer line (breeding power). Dropped below 360px, where a third text
  * row would leave the icon barely 16px tall — the number is still one tap away
@@ -156,7 +236,7 @@ export const TILE_NAME = 'block truncate text-center text-xs font-medium leading
  * 390px phone — one of them would always be truncated.
  */
 export const TILE_META =
-  'hidden items-center justify-center gap-1 text-xs leading-tight tabular-nums text-muted-foreground min-[360px]:flex'
+  'hidden items-center justify-center gap-1 text-xs leading-tight tabular-nums text-foreground min-[360px]:flex dark:text-white'
 
 /**
  * The tile's icon: a circle that takes whatever height the header and footer
@@ -223,11 +303,13 @@ export function TileSep({ children }: { children: string }) {
  * the same icon size.
  */
 export function TilePalId({ meta }: { meta?: RecipeMetaEntry }) {
+  const { i18n } = useTranslation()
+  const locale = i18n.resolvedLanguage ?? 'en-US'
   const pid = meta ? formatPalId(meta.zukanIndex, meta.zukanIndexSuffix) : undefined
   if (!pid) return <span className="min-w-0 flex-1" />
   return (
     <span className="min-w-0 flex-1 truncate">
-      {pid.text}
+      {localizedPalId(pid.text, locale)}
       {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
     </span>
   )
@@ -264,7 +346,7 @@ export function PalTile({
   const m = meta.get(id)
   const name = names[id] ?? id
   return (
-    <PalHover id={id}>
+    <PalHover id={id} side="top" align="center">
       <Link
         to="/pals/$id"
         params={{ id }}
@@ -278,7 +360,7 @@ export function PalTile({
         <TileIcon icon={m?.icon} legendary={m?.legendary} />
         <span className={TILE_FOOTER}>
           <span className={cn(TILE_NAME, emphasis && 'font-semibold')}>
-            {name}
+            <OverflowMarquee text={name} auto className="min-w-0 flex-1" />
             <GenderMark g={gender} />
           </span>
           {m ? (
@@ -366,8 +448,8 @@ export interface RecipeCardProps {
    * result is redundant — and dropping it leaves room for the full parent chips
    * in that narrow column.
    *
-   * Ignored by `variant='tile'`, which always draws three squares so cards keep
-   * one size down a drill-down (two squares would each stretch to half the row).
+   * Ignored by the `tile` and `compact` phone variants, which always draw all
+   * three Pals so every result card keeps the same geometry.
    */
   hideResult?: boolean
   /**
@@ -439,6 +521,41 @@ export function RecipeCard({
         onSelect()
       }
     : undefined
+
+  if (variant === 'compact') {
+    return (
+      <div
+        data-testid="breeding-recipe"
+        title={f.unique ? uniqueLabel : undefined}
+        data-unique={f.unique ? '' : undefined}
+        className={cn(
+          'overflow-hidden rounded-xl border bg-card text-sm shadow-sm',
+          f.unique ? 'border-amber-400/70 ring-1 ring-amber-400/30' : 'border-primary/30',
+          onSelect && 'cursor-pointer transition-shadow hover:ring-2 hover:ring-primary/40',
+        )}
+        onClick={onCardClick}
+      >
+        {f.unique ? <span className="sr-only">{uniqueLabel}</span> : null}
+        {onSelect || onClose ? (
+          <div className="flex min-w-0 items-center justify-between gap-2 border-b border-primary/20 bg-primary/5 px-2.5 py-2">
+            <span className="min-w-0 truncate font-medium">
+              {names[f.a] ?? f.a}
+              <span className="px-1.5 text-muted-foreground">→</span>
+              {names[f.c] ?? f.c}
+            </span>
+            {actions ? <span className="flex shrink-0 items-center gap-0.5">{actions}</span> : null}
+          </div>
+        ) : null}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 px-2.5 py-2">
+          <CompactPalNode id={f.a} names={names} meta={meta} gender={f.ag} />
+          <span className="text-muted-foreground">+</span>
+          <CompactPalNode id={f.b} names={names} meta={meta} gender={f.bg} unique={f.unique} />
+          <span className="text-muted-foreground">=</span>
+          <CompactPalNode id={f.c} names={names} meta={meta} emphasis />
+        </div>
+      </div>
+    )
+  }
 
   if (variant === 'tile') {
     return (

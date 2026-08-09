@@ -1,17 +1,18 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
+import { ArrowRight } from 'lucide-react'
 import { Button, cn } from '@gamemap/ui'
 import { comboKey, favKey, palIconUrl, type Combo, type NameMap } from '../../lib/breeding'
 import { buildChainTree, type BreedChain, type ChainStep, type ChainTreeNode } from '../../lib/breedingChains'
 import { PalHover } from '../catalog/components'
+import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
+  CompactPalNode,
   GenderMark,
   LEGENDARY_ICON,
   PalChip,
-  PalTile,
   RecipeCard,
-  TileSep,
   type BreedingVariant,
   type RecipeMeta,
 } from './RecipeCard'
@@ -202,69 +203,111 @@ function StepRow({ step, final, ctx, depth = 0 }: { step: ChainStep; final: bool
   )
 }
 
+/** Compact Pal identity used inside the phone-only route timeline. */
+function MobilePalNode({
+  id,
+  ctx,
+  gender,
+  emphasis,
+  unique,
+}: {
+  id: string
+  ctx: ChainsCtx
+  gender?: Combo['bg']
+  emphasis?: boolean
+  unique?: boolean
+}) {
+  return (
+    <CompactPalNode
+      id={id}
+      names={ctx.names}
+      meta={ctx.meta}
+      gender={gender}
+      emphasis={emphasis}
+      unique={unique}
+    />
+  )
+}
+
 /**
- * One chain step as three squares, for phones — the same A + B = C shape the
- * Recipes tab uses, so the two tabs read as one feature.
- *
- * The middle square is the wrinkle: a step's partners are every Pal that pairs
- * with the fixed parent for this child, commonly five to ten of them, so there
- * is no single "B". It shows one representative square with a `+N` badge and
- * expands to a grid of the rest on tap. That keeps all three columns equal
- * width, which is what makes it read as squares rather than as a row.
+ * One phone-only chain step. The numbered rail makes generation order explicit,
+ * while the single-line equation keeps long routes scannable without dropping
+ * any Pal identity or partner-expansion behavior.
  */
-function StepTiles({ step, final, ctx }: { step: ChainStep; final: boolean; ctx: ChainsCtx }) {
+function MobileChainStep({
+  step,
+  stepNumber,
+  final,
+  connected,
+  ctx,
+}: {
+  step: ChainStep
+  stepNumber: number
+  final: boolean
+  connected: boolean
+  ctx: ChainsCtx
+}) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const [lead, ...rest] = step.partners
   if (!lead) return null
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
-        <PalTile id={step.fixed} names={ctx.names} meta={ctx.meta} />
-        <TileSep>+</TileSep>
-        <div className="relative min-w-0">
-          <PalTile id={lead.b} names={ctx.names} meta={ctx.meta} gender={lead.bg} />
-          {rest.length > 0 && (
-            <button
-              type="button"
-              data-testid="chain-partners-toggle"
-              aria-expanded={expanded}
-              onClick={() => setExpanded((v) => !v)}
-              title={
-                expanded
-                  ? t('breeding.collapse')
-                  : t('breeding.showAllPartners', { count: step.partners.length })
-              }
-              aria-label={
-                expanded
-                  ? t('breeding.collapse')
-                  : t('breeding.showAllPartners', { count: step.partners.length })
-              }
-              // Overlaid on the square's corner rather than placed beside it: a
-              // fourth column would break the equal thirds.
-              className="absolute -right-1 -top-1 z-10 min-w-6 rounded-full border border-border bg-background px-1 text-xs font-medium text-muted-foreground shadow-sm"
-            >
-              {expanded ? '−' : `+${rest.length}`}
-            </button>
-          )}
+    <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-2 pt-1.5">
+      <span className="flex min-h-full flex-col items-center" aria-hidden="true">
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-xs font-semibold text-primary">
+          {stepNumber}
+        </span>
+        {connected ? <span className="mt-1 w-px flex-1 bg-primary/30" /> : null}
+      </span>
+      <div className={cn('min-w-0', connected && 'pb-2')}>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
+          <MobilePalNode id={step.fixed} ctx={ctx} />
+          <span className="text-sm text-muted-foreground">+</span>
+          <div className="relative min-w-0">
+            <MobilePalNode id={lead.b} ctx={ctx} gender={lead.bg} unique={lead.unique} />
+            {rest.length > 0 ? (
+              <button
+                type="button"
+                data-testid="chain-partners-toggle"
+                aria-expanded={expanded}
+                onClick={() => setExpanded((v) => !v)}
+                title={
+                  expanded
+                    ? t('breeding.collapse')
+                    : t('breeding.showAllPartners', { count: step.partners.length })
+                }
+                aria-label={
+                  expanded
+                    ? t('breeding.collapse')
+                    : t('breeding.showAllPartners', { count: step.partners.length })
+                }
+                className="absolute -right-1 -top-1 z-10 flex size-6 items-center justify-center rounded-full border border-primary/30 bg-background text-xs font-semibold text-primary shadow-sm before:absolute before:-inset-2"
+              >
+                {expanded ? '−' : `+${rest.length}`}
+              </button>
+            ) : null}
+          </div>
+          <ArrowRight className="size-3.5 text-muted-foreground" />
+          <MobilePalNode id={step.child} ctx={ctx} emphasis={final} />
         </div>
-        <TileSep>=</TileSep>
-        <PalTile id={step.child} names={ctx.names} meta={ctx.meta} emphasis={final} />
+        {expanded ? (
+          <div className="mt-1.5 grid grid-cols-2 gap-1.5 rounded-md bg-muted/50 p-1.5">
+            {rest.map((f) => (
+              <MobilePalNode key={comboKey(f)} id={f.b} ctx={ctx} gender={f.bg} unique={f.unique} />
+            ))}
+          </div>
+        ) : null}
       </div>
-      {expanded && (
-        // Same tile width as the three above (a third of the row), so the
-        // alternatives read as more of the middle square, not a new control.
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(33.333%-0.25rem)))] gap-1">
-          {rest.map((f) => (
-            <PalTile key={comboKey(f)} id={f.b} names={ctx.names} meta={ctx.meta} gender={f.bg} />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
 
 /** One chain entry: a step row per generation. */
+function chainKey(chain: BreedChain): string {
+  const first = chain.steps[0]
+  return `chain:${[first.fixed, ...chain.steps.map((step) => step.child)].join('>')}`
+}
+
 function ChainCard({ chain, ctx }: { chain: BreedChain; ctx: ChainsCtx }) {
   return (
     <div
@@ -272,14 +315,18 @@ function ChainCard({ chain, ctx }: { chain: BreedChain; ctx: ChainsCtx }) {
       // One grid shared by every step row (rows are `contents` from sm up), so
       // the fixed / + / partners / = / child columns line up across steps
       // regardless of how wide each Pal chip is.
-      className="flex flex-col gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm sm:grid sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] sm:items-center"
+      className="flex flex-col rounded-xl border border-primary/30 bg-card px-2.5 py-2.5 text-sm shadow-sm sm:grid sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-1.5 sm:rounded-lg sm:border-border sm:px-3 sm:py-2 sm:shadow-none"
     >
       {chain.steps.map((s, i) => (
         <Fragment key={s.child}>
-          {/* Squares below sm, chip row from sm up: the tiles need a third of
-              the width each to stay legible, which only a phone column gives. */}
           <div className="sm:hidden">
-            <StepTiles step={s} final={i === chain.steps.length - 1} ctx={ctx} />
+            <MobileChainStep
+              step={s}
+              stepNumber={i + 1}
+              final={i === chain.steps.length - 1}
+              connected={i < chain.steps.length - 1}
+              ctx={ctx}
+            />
           </div>
           <div className="hidden sm:contents">
             <StepRow step={s} final={i === chain.steps.length - 1} ctx={ctx} />
@@ -299,19 +346,38 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
 }
 
 /** A capped, expandable list of chain cards under a group header. */
-function ChainGroup({ label, chains, ctx }: { label: string; chains: BreedChain[]; ctx: ChainsCtx }) {
+function ChainGroup({
+  generation,
+  label,
+  chains,
+  ctx,
+  hideHeader = false,
+}: {
+  generation: number
+  label: string
+  chains: BreedChain[]
+  ctx: ChainsCtx
+  hideHeader?: boolean
+}) {
   const { t } = useTranslation()
   const [cap, setCap] = useState(GROUP_CAP)
+  const mobilePaging = useMobilePagination(chains, { pageSize: 12, resetKey: String(generation) })
   if (chains.length === 0) return null
   return (
-    <section>
-      <GroupHeader label={label} count={chains.length} />
+    <section data-breeding-generation={generation}>
+      {hideHeader ? null : <GroupHeader label={label} count={chains.length} />}
       <div className="grid grid-cols-1 gap-2">
-        {chains.slice(0, cap).map((ch) => (
-          <ChainCard key={ch.steps.map((s) => s.child).join('>')} chain={ch} ctx={ctx} />
-        ))}
+        {(mobilePaging.isMobile ? mobilePaging.visibleItems : chains.slice(0, cap)).map((ch) => {
+          return <ChainCard key={chainKey(ch)} chain={ch} ctx={ctx} />
+        })}
       </div>
-      {chains.length > cap ? (
+      {mobilePaging.isMobile ? (
+        <MobilePagination
+          page={mobilePaging.page}
+          pageCount={mobilePaging.pageCount}
+          onPageChange={mobilePaging.goToPage}
+        />
+      ) : chains.length > cap ? (
         <Button
           variant="ghost"
           size="sm"
@@ -372,7 +438,18 @@ function RevealControls({
 function TreeNodeView({ node, depth, ctx }: { node: ChainTreeNode; depth: number; ctx: ChainsCtx }) {
   return (
     <div data-testid="breeding-tree-node" className="sm:contents">
-      <StepRow step={node.step} final={node.children.length === 0} ctx={ctx} depth={depth} />
+      <div className="sm:hidden">
+        <MobileChainStep
+          step={node.step}
+          stepNumber={depth + 1}
+          final={node.children.length === 0}
+          connected={node.children.length > 0}
+          ctx={ctx}
+        />
+      </div>
+      <div className="hidden sm:contents">
+        <StepRow step={node.step} final={node.children.length === 0} ctx={ctx} depth={depth} />
+      </div>
       {node.children.length > 0 ? <TreeLevel nodes={node.children} depth={depth + 1} ctx={ctx} /> : null}
     </div>
   )
@@ -383,9 +460,10 @@ function TreeLevel({ nodes, depth, ctx }: { nodes: ChainTreeNode[]; depth: numbe
   const [cap, setCap] = useState(TREE_CHILD_CAP)
   const shown = nodes.slice(0, cap)
   return (
-    // Mobile: nested, left-ruled block. sm+: dissolves into the card grid,
-    // where nesting shows as first-column indentation instead.
-    <div className="mt-1.5 flex flex-col gap-1.5 border-l-2 border-border pl-3 sm:contents">
+    // The numbered route rail already communicates depth on phones, so nested
+    // levels keep the full card width. sm+ still dissolves into the shared grid,
+    // where first-column indentation carries the hierarchy.
+    <div className="mt-1 flex flex-col gap-1 sm:contents">
       {shown.map((n) => (
         <TreeNodeView key={n.step.child} node={n} depth={depth} ctx={ctx} />
       ))}
@@ -410,17 +488,29 @@ const treeDepth = (n: ChainTreeNode): number =>
   n.children.length === 0 ? 1 : 1 + Math.max(...n.children.map(treeDepth))
 
 /** One generation section: header + first-step group cards, capped with reveal. */
-function TreeSection({ label, count, roots, ctx }: { label: string; count: number; roots: ChainTreeNode[]; ctx: ChainsCtx }) {
+function TreeSection({
+  generation,
+  label,
+  count,
+  roots,
+  ctx,
+}: {
+  generation: number
+  label: string
+  count: number
+  roots: ChainTreeNode[]
+  ctx: ChainsCtx
+}) {
   const [cap, setCap] = useState(TREE_ROOT_CAP)
   return (
-    <section>
+    <section data-breeding-generation={generation}>
       <GroupHeader label={label} count={count} />
       <div className="flex flex-col gap-2">
         {roots.slice(0, cap).map((n) => (
           <div
             key={n.step.child}
             data-testid="breeding-chain-group"
-            className="flex flex-col gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm sm:grid sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] sm:items-center"
+            className="flex flex-col rounded-xl border border-primary/30 bg-card px-2.5 py-2.5 text-sm shadow-sm sm:grid sm:grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-1.5 sm:rounded-lg sm:border-border sm:px-3 sm:py-2 sm:shadow-none"
           >
             <TreeNodeView node={n} depth={0} ctx={ctx} />
           </div>
@@ -469,6 +559,7 @@ export function BreedingChainsTreeView({ chains, ...ctx }: { chains: BreedChain[
         return (
           <TreeSection
             key={g}
+            generation={g}
             label={g === 1 ? t('breeding.chainDirect') : t('breeding.chainNGen', { count: g })}
             count={count}
             roots={sectionRoots}
@@ -482,15 +573,15 @@ export function BreedingChainsTreeView({ chains, ...ctx }: { chains: BreedChain[
 
 export interface BreedingChainsViewProps extends ChainsCtx {
   chains: BreedChain[]
+  hideMultiGroupHeader?: boolean
   /** Favourites wiring for the direct-recipe group (same store as classic mode). */
   favs: Set<string>
   onToggleFav: (key: string) => void
   favLabel: string
   /**
    * Card layout of the direct-recipe group (phones get the square tiles). The
-   * multi-generation chain rows keep their chips at every width: a step offers a
-   * variable number of partner options, which a fixed three-square row can't
-   * express.
+   * multi-generation groups use a numbered route timeline on phones and the
+   * shared chip grid from `sm` upward.
    */
   variant: BreedingVariant
 }
@@ -500,7 +591,15 @@ export interface BreedingChainsViewProps extends ChainsCtx {
  * (normal recipe cards, favouritable) first, then 2- and 3-generation chains.
  * Remount (via key) on a query change to reset the per-group caps.
  */
-export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, variant, ...ctx }: BreedingChainsViewProps) {
+export function BreedingChainsView({
+  chains,
+  favs,
+  onToggleFav,
+  favLabel,
+  variant,
+  hideMultiGroupHeader = false,
+  ...ctx
+}: BreedingChainsViewProps) {
   const { t } = useTranslation()
 
   // Group chains by step count so the view works for any maxGen (2–6).
@@ -512,6 +611,8 @@ export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, varian
     bySteps.set(n, list)
   }
   const direct = bySteps.get(1)
+  const directPartners = direct?.[0].steps[0].partners ?? []
+  const directPaging = useMobilePagination(directPartners, { pageSize: 18, resetKey: 'direct' })
   const multiLengths = [...bySteps.keys()].filter((n) => n > 1).sort((a, b) => a - b)
 
   return (
@@ -520,7 +621,7 @@ export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, varian
         <section>
           <GroupHeader label={t('breeding.chainDirect')} count={direct[0].steps[0].partners.length} />
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-            {direct[0].steps[0].partners.map((f) => {
+            {directPaging.visibleItems.map((f) => {
               const fk = favKey(f)
               return (
                 <RecipeCard
@@ -535,14 +636,21 @@ export function BreedingChainsView({ chains, favs, onToggleFav, favLabel, varian
               )
             })}
           </div>
+          <MobilePagination
+            page={directPaging.page}
+            pageCount={directPaging.pageCount}
+            onPageChange={directPaging.goToPage}
+          />
         </section>
       ) : null}
       {multiLengths.map((n) => (
         <ChainGroup
           key={n}
+          generation={n}
           label={t('breeding.chainNGen', { count: n })}
           chains={bySteps.get(n)!}
           ctx={ctx}
+          hideHeader={hideMultiGroupHeader}
         />
       ))}
     </div>
