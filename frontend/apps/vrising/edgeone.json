@@ -1,5 +1,12 @@
 {
   "rewrites": [
+    { "source": "/vblood", "destination": "/index.html" },
+    { "source": "/vblood*", "destination": "/index.html" },
+    { "source": "/vblood/*", "destination": "/index.html" },
+    { "source": "/database", "destination": "/index.html" },
+    { "source": "/database*", "destination": "/index.html" },
+    { "source": "/systems", "destination": "/index.html" },
+    { "source": "/systems*", "destination": "/index.html" },
     { "source": "/changelog", "destination": "/index.html" },
     { "source": "/changelog*", "destination": "/index.html" }
   ]

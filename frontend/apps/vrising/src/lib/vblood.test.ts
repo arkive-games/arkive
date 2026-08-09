@@ -1,5 +1,3 @@
-// @vitest-environment jsdom
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { loadVBloodBosses, readCompletedVBlood, rewardDisplayName } from './vblood'
 
@@ -19,9 +17,23 @@ const markerPayload = {
   l10n: { 'wolf-a': { name: 'Alpha Wolf' }, 'wolf-b': { name: 'Alpha Wolf' } },
 }
 
+// Back localStorage with a Map, matching palworld's completedMarkers.test.ts.
+// The jsdom docblock this file used to carry does not supply one: Node ships its
+// own `localStorage` global that is `undefined` without --localstorage-file, and
+// it shadows jsdom's, so the bare global was undefined either way.
+const store = new Map<string, string>()
+
 describe('V Blood catalog', () => {
   beforeEach(() => {
-    localStorage.clear()
+    store.clear()
+    globalThis.localStorage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+      clear: () => store.clear(),
+      key: (i: number) => [...store.keys()][i] ?? null,
+      get length() { return store.size },
+    } as Storage
     vi.restoreAllMocks()
   })
 
