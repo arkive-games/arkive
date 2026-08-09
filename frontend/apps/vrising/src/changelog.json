@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.7.0",
+      "date": "2026-08-09",
+      "commit": "1815972e982757fb60f88ed6d77bf9a582b02051",
+      "changes": [
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Added verified V Blood ability, recipe, building, and research rewards extracted from the current game files.",
+            "zh-CN": "新增从当前游戏文件中提取并核验的 V 型血能力、配方、建筑与研究奖励。",
+            "zh-TW": "新增從目前遊戲檔案中提取並核驗的 V 型血能力、配方、建築與研究獎勵。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "date": "2026-08-09",
       "commit": "e40ff2dc8ff875dca1db1ffa57f5d9b3b3c94ecd",
