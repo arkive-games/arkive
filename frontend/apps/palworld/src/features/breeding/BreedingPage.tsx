@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
+import { browserMemory, defineMemoryRecord, isStringArray, parseJson } from '@gamemap/state-memory'
 import { ArrowLeft } from 'lucide-react'
 import {
   Button,
@@ -56,6 +57,49 @@ interface BreedingSearchMemory {
   routeGen?: number
 }
 
+const chainGenerationRecord = defineMemoryRecord({
+  id: 'chain-generations',
+  namespace: 'palworld',
+  surface: 'breeding',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => 2 as GenChoice,
+  validate: (value: unknown): value is GenChoice => [2, 3, 4, 5, 6].includes(Number(value)),
+  legacyKeys: [LAST_CHAIN_GEN_STORAGE_KEY],
+  migrateLegacy: (raw: string) => Number(raw),
+})
+
+const searchMemoryRecord = defineMemoryRecord({
+  id: 'search',
+  namespace: 'palworld',
+  surface: 'breeding',
+  stateClass: 'session_context',
+  schemaVersion: '1.0.0',
+  defaultValue: () => ({} as BreedingSearchMemory),
+  validate: (value: unknown): value is BreedingSearchMemory => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+    const memory = value as BreedingSearchMemory
+    return [memory.a, memory.b, memory.c].every((item) => item === undefined || typeof item === 'string') &&
+      (memory.gen === undefined || [2, 3, 4, 5, 6].includes(Number(memory.gen))) &&
+      (memory.routeGen === undefined || Number.isFinite(memory.routeGen))
+  },
+  retentionMs: 24 * 60 * 60 * 1_000,
+  legacyKeys: [SEARCH_MEMORY_STORAGE_KEY],
+  migrateLegacy: parseJson,
+})
+
+const favoritesRecord = defineMemoryRecord({
+  id: 'favorites',
+  namespace: 'palworld',
+  surface: 'breeding',
+  stateClass: 'durable_progress',
+  schemaVersion: '1.0.0',
+  defaultValue: () => [] as string[],
+  validate: (value: unknown): value is string[] => isStringArray(value, 5_000),
+  legacyKeys: [FAV_STORAGE_KEY],
+  migrateLegacy: parseJson,
+})
+
 export default function BreedingPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -75,11 +119,7 @@ export default function BreedingPage() {
   const searchMemoryReady = useRef(false)
   const [lastChainGen, setLastChainGen] = useState<GenChoice>(() => {
     if (search.gen != null) return toGenChoice(search.gen)
-    try {
-      return toGenChoice(Number(localStorage.getItem(LAST_CHAIN_GEN_STORAGE_KEY)))
-    } catch {
-      return 2
-    }
+    return browserMemory.read(chainGenerationRecord)
   })
 
   useEffect(() => {
@@ -88,9 +128,7 @@ export default function BreedingPage() {
     if (aSel || bSel || cSel || gen != null) return
 
     try {
-      const raw = sessionStorage.getItem(SEARCH_MEMORY_STORAGE_KEY)
-      if (!raw) return
-      const saved = JSON.parse(raw) as BreedingSearchMemory
+      const saved = browserMemory.read(searchMemoryRecord)
       const savedGen = [2, 3, 4, 5, 6].includes(Number(saved.gen)) ? toGenChoice(Number(saved.gen)) : undefined
       if (!saved.a && !saved.b && !saved.c && savedGen == null) return
       setSelectedChainGeneration(typeof saved.routeGen === 'number' ? saved.routeGen : null)
@@ -118,7 +156,7 @@ export default function BreedingPage() {
         gen: gen ?? undefined,
         routeGen: selectedChainGeneration ?? undefined,
       }
-      sessionStorage.setItem(SEARCH_MEMORY_STORAGE_KEY, JSON.stringify(memory))
+      browserMemory.write(searchMemoryRecord, memory)
     } catch {
       // Session storage can be unavailable in private browsing.
     }
@@ -128,11 +166,7 @@ export default function BreedingPage() {
     if (gen == null) return
     const next = toGenChoice(gen)
     setLastChainGen(next)
-    try {
-      localStorage.setItem(LAST_CHAIN_GEN_STORAGE_KEY, String(next))
-    } catch {
-      // Storage can be unavailable in private browsing; in-memory recall still works.
-    }
+    browserMemory.write(chainGenerationRecord, next)
   }, [gen])
 
   const setParam = useCallback(
@@ -166,11 +200,7 @@ export default function BreedingPage() {
   )
 
   const clearSearch = useCallback(() => {
-    try {
-      sessionStorage.removeItem(SEARCH_MEMORY_STORAGE_KEY)
-    } catch {
-      // Clearing the visible state still works without session storage.
-    }
+    browserMemory.clear(searchMemoryRecord)
     setSelectedChainGeneration(null)
     navigate({ search: gen != null ? { gen } : {} })
   }, [gen, navigate])
@@ -181,18 +211,11 @@ export default function BreedingPage() {
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [favs, setFavs] = useState<Set<string>>(() => {
-    try {
-      const raw = localStorage.getItem(FAV_STORAGE_KEY)
-      return new Set(raw ? (JSON.parse(raw) as string[]) : [])
-    } catch {
-      return new Set()
-    }
+    return new Set(browserMemory.read(favoritesRecord))
   })
 
   useEffect(() => {
-    try {
-      localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify([...favs]))
-    } catch { /* no storage */ }
+    browserMemory.write(favoritesRecord, [...favs])
   }, [favs])
 
   const toggleFav = useCallback((key: string) => {

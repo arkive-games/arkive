@@ -4,6 +4,14 @@ import type { GameMapMeta, MarkerTypeSubtype } from "@gamemap/data-contract";
 import {useGameMap} from "@/context/GameMapContext";
 import {useMarkers} from "@/context/MarkersContext";
 import { VISIBLE_SUBTYPES_STORAGE_PREFIX, VISIBLE_REGIONS_STORAGE_PREFIX } from "@/lib/constants";
+import {
+  browserMemory,
+  defineMemoryRecord,
+  isBoolean,
+  isStringArray,
+  parseJson,
+  useMemoryState,
+} from "@gamemap/state-memory";
 
 type GameDataContextValue = {
   visibleSubtypes?: Set<string>;
@@ -49,37 +57,57 @@ type GameDataProviderProps = {
   children: React.ReactNode;
 };
 
+const visibleDataRecord = (kind: "subtypes" | "regions", legacyKey: string) => defineMemoryRecord({
+  id: `visible-${kind}`,
+  namespace: "aion2",
+  surface: "map",
+  stateClass: "device_preference",
+  schemaVersion: "1.0.0",
+  defaultValue: () => null as string[] | null,
+  validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
+  legacyKeys: [legacyKey],
+  migrateLegacy: parseJson,
+});
+
+const bordersRecord = defineMemoryRecord({
+  id: "show-borders",
+  namespace: "aion2",
+  surface: "map",
+  stateClass: "device_preference",
+  schemaVersion: "1.0.0",
+  defaultValue: () => false,
+  validate: isBoolean,
+});
+
+const lodRecord = defineMemoryRecord({
+  id: "level-of-detail",
+  namespace: "aion2",
+  surface: "map",
+  stateClass: "device_preference",
+  schemaVersion: "1.0.0",
+  // Phones open with LOD on, but a remembered user choice still wins.
+  defaultValue: () => typeof window !== "undefined"
+    && window.matchMedia("(max-width: 767px)").matches,
+  validate: isBoolean,
+});
+
 const saveVisibleData = (prefix: string, selectedMap: GameMapMeta | undefined, data: Set<string> | undefined) => {
   if (!selectedMap || !data) return;
   const storageKey = `${prefix}${selectedMap.name}`;
-  try {
-    const arr = Array.from(data);
-    const stored = JSON.stringify(arr);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(storageKey, stored);
-    }
-  } catch (e) {
-    console.warn("Failed to save to localStorage", storageKey, e);
-  }
+  const kind = prefix === VISIBLE_SUBTYPES_STORAGE_PREFIX ? "subtypes" : "regions";
+  browserMemory.write(visibleDataRecord(kind, storageKey), Array.from(data), {
+    partition: selectedMap.name,
+  });
 }
 
 const loadVisibleData = (prefix: string, selectedMap: GameMapMeta, validKeys: Set<string>) => {
   const storageKey = `${prefix}${selectedMap.name}`;
-  try {
-    const stored = typeof window !== "undefined"
-      ? window.localStorage.getItem(storageKey)
-      : null;
-    if (!stored) return null;
-    const parsed = JSON.parse(stored) as string[];
-    const set = new Set<string>();
-    parsed.forEach((key) => {
-      if (validKeys.has(key)) set.add(key);
-    });
-    return set;
-  } catch (e) {
-    console.warn("Failed to parse from localStorage", storageKey, e);
-    return null;
-  }
+  const kind = prefix === VISIBLE_SUBTYPES_STORAGE_PREFIX ? "subtypes" : "regions";
+  const parsed = browserMemory.read(visibleDataRecord(kind, storageKey), {
+    partition: selectedMap.name,
+  });
+  if (parsed === null) return null;
+  return new Set(parsed.filter((key) => validKeys.has(key)));
 }
 
 export const GameDataProvider: React.FC<GameDataProviderProps> = ({
@@ -88,14 +116,8 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
   const [visibleSubtypes, setVisibleSubtypes] = useState<Set<string> | undefined>(undefined);
   const [visibleRegions, setVisibleRegions] = useState<Set<string> | undefined>(undefined);
   const [allSubtypes, setAllSubtypes] = useState<Map<string, MarkerTypeSubtype>>(new Map());
-  const [showBorders, setShowBorders] = useState<boolean>(false);
-  // Phones open with LOD on -- the full marker set is unreadable at phone width.
-  // This is a *default*, not a forced value: forcing it left the sidebar's "Auto
-  // detail by zoom" switch reporting OFF while culling was on, and turning it off
-  // did nothing. 767 matches MOBILE_MAX_WIDTH and the CSS media query.
-  const [lodEnabled, setLodEnabled] = useState<boolean>(
-    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
-  );
+  const [showBorders, setShowBorders] = useMemoryState(bordersRecord);
+  const [lodEnabled, setLodEnabled] = useMemoryState(lodRecord);
 
   // const { regions } = useMarkers(selectedMap?.name);
 

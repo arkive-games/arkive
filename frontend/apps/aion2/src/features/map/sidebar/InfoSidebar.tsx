@@ -1,35 +1,27 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ShellSidebar } from "@gamemap/map-shell";
+import { defineMemoryRecord, isBoolean, useMemoryState } from "@gamemap/state-memory";
 import SiteInfo from "@/components/SiteInfo";
 
-const COLLAPSED_KEY = "aion2.map.siteInfoCollapsed";
+const collapsedRecord = defineMemoryRecord({
+  id: "info-collapsed",
+  namespace: "aion2",
+  surface: "map",
+  stateClass: "device_preference",
+  schemaVersion: "1.0.0",
+  defaultValue: () => true,
+  validate: isBoolean,
+  legacyKeys: ["aion2.map.siteInfoCollapsed"],
+  migrateLegacy: (raw: string) => raw === "1",
+});
 
 /**
  * The map remains the primary surface on first visit, while the compact edge
  * tab keeps site information one click away. A visitor's own choice then wins.
  */
-function readCollapsed(): boolean {
-  try {
-    const stored = localStorage.getItem(COLLAPSED_KEY);
-    if (stored !== null) return stored === "1";
-  } catch {
-    /* no storage; fall through to the collapsed default */
-  }
-  return true;
-}
-
-function writeCollapsed(collapsed: boolean): void {
-  try {
-    localStorage.setItem(COLLAPSED_KEY, collapsed ? "1" : "0");
-  } catch {
-    /* no storage */
-  }
-}
-
 export default function InfoSidebar() {
   const { t } = useTranslation(["common"]);
-  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [collapsed, setCollapsed] = useMemoryState(collapsedRecord);
   const label = t("common:siteInfo.tab", "About");
 
   return (
@@ -37,10 +29,7 @@ export default function InfoSidebar() {
       side="right"
       width={304}
       collapsed={collapsed}
-      onCollapsedChange={(next) => {
-        setCollapsed(next);
-        writeCollapsed(next);
-      }}
+      onCollapsedChange={setCollapsed}
       // The tab names what it opens rather than saying "Collapse"/"Expand",
       // which is all a visitor needs to decide whether to click it.
       collapseLabel={label}

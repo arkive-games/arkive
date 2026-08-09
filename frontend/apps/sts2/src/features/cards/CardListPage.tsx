@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@gamemap/ui'
+import { defineMemoryRecord, isString, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import { loadBundle, type Bundle } from '../../lib/data'
 import { CardFilters, CardTile, ClearFiltersButton, PageLoading, usePoolColors } from './components'
@@ -8,28 +9,41 @@ import { EMPTY_FILTER, isFilterActive, useFilteredCards, type CardFilter } from 
 
 const FILTER_KEY = 'sts2.cards.filter'
 
-/** Merged onto EMPTY_FILTER so a stored object from an older build stays valid. */
-function readStoredFilter(): CardFilter {
-  try {
-    const raw = localStorage.getItem(FILTER_KEY)
-    if (!raw) return EMPTY_FILTER
-    return { ...EMPTY_FILTER, ...(JSON.parse(raw) as Partial<CardFilter>) }
-  } catch {
-    return EMPTY_FILTER
-  }
+function isCardFilter(value: unknown): value is CardFilter {
+  if (!value || typeof value !== 'object') return false
+  const filter = value as Partial<CardFilter>
+  return typeof filter.query === 'string'
+    && [filter.pools, filter.types, filter.rarities].every((items) =>
+      Array.isArray(items) && items.every((item) => typeof item === 'string'))
+    && Array.isArray(filter.costs) && filter.costs.every((item) => typeof item === 'number' && Number.isFinite(item))
 }
 
+const filterRecord = defineMemoryRecord({
+  id: 'filters', namespace: 'sts2', surface: 'cards-catalog', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => ({ ...EMPTY_FILTER }), validate: isCardFilter,
+  legacyKeys: [FILTER_KEY],
+  migrateLegacy: (raw: string) => ({ ...EMPTY_FILTER, ...(parseJson(raw) as Partial<CardFilter>), query: '' }),
+})
+const queryRecord = defineMemoryRecord({
+  id: 'query', namespace: 'sts2', surface: 'cards-catalog', stateClass: 'session_context',
+  schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
+  retentionMs: 24 * 60 * 60 * 1_000,
+})
+
+/** Merged onto EMPTY_FILTER so a stored object from an older build stays valid. */
 export default function CardListPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<CardFilter>(readStoredFilter)
-
-  useEffect(() => {
-    try { localStorage.setItem(FILTER_KEY, JSON.stringify(filter)) } catch { /* no storage */ }
-  }, [filter])
+  const [durableFilter, setDurableFilter] = useMemoryState(filterRecord)
+  const [query, setQuery] = useMemoryState(queryRecord, { debounceMs: 200 })
+  const filter = { ...durableFilter, query }
+  const setFilter = (next: CardFilter) => {
+    setDurableFilter({ ...next, query: '' })
+    setQuery(next.query)
+  }
 
   useEffect(() => {
     let cancelled = false

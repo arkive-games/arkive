@@ -5,6 +5,13 @@ import {loadGameData} from "@/lib/data";
 import {useGameMap} from "@/context/GameMapContext";
 import {useTranslation} from "react-i18next";
 import { COMPLETED_MARKERS_V1_PREFIX, COMPLETED_MARKERS_V2_PREFIX } from "@/lib/constants";
+import {
+  browserMemory,
+  defineMemoryRecord,
+  isBoolean,
+  parseJson,
+  useMemoryState,
+} from "@gamemap/state-memory";
 
 type MarkersContextValue = {
   markers: MarkerWithTranslations[];
@@ -42,37 +49,66 @@ type MarkersProviderProps = {
 
 function loadV1(map: string): Set<string> {
   const key = `${COMPLETED_MARKERS_V1_PREFIX}.${map}`;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw);
-    return new Set(arr);
-  } catch {
-    return new Set();
-  }
+  const record = defineMemoryRecord({
+    id: "completed-markers-v1",
+    namespace: "aion2",
+    surface: "map",
+    stateClass: "durable_progress",
+    schemaVersion: "1.0.0",
+    defaultValue: () => [] as string[],
+    validate: (value: unknown): value is string[] =>
+      Array.isArray(value) && value.length <= 10_000 && value.every((item) => typeof item === "string"),
+    legacyKeys: [key],
+    migrateLegacy: parseJson,
+  });
+  return new Set(browserMemory.read(record, { partition: map }));
 }
 
 function clearV1(map: string): void {
-  const key = `${COMPLETED_MARKERS_V1_PREFIX}.${map}`;
-  localStorage.removeItem(key);
+  const record = defineMemoryRecord({
+    id: "completed-markers-v1",
+    namespace: "aion2",
+    surface: "map",
+    stateClass: "durable_progress",
+    schemaVersion: "1.0.0",
+    defaultValue: () => [] as string[],
+    validate: (value: unknown): value is string[] => Array.isArray(value) && value.every((item) => typeof item === "string"),
+  });
+  browserMemory.clear(record, { partition: map });
 }
+
+const completedSubtypeRecord = (legacyKey: string) => defineMemoryRecord({
+  id: "completed-markers",
+  namespace: "aion2",
+  surface: "map",
+  stateClass: "durable_progress",
+  schemaVersion: "1.0.0",
+  defaultValue: () => [] as number[],
+  validate: (value: unknown): value is number[] =>
+    Array.isArray(value) && value.length <= 10_000 && value.every((item) => typeof item === "number" && Number.isFinite(item)),
+  legacyKeys: [legacyKey],
+  migrateLegacy: parseJson,
+});
 
 function saveV2Subtype(map: string, subtype: string, set: Set<number>) {
   const key = `${COMPLETED_MARKERS_V2_PREFIX}.${map}.${subtype}`;
-  localStorage.setItem(key, JSON.stringify([...set]));
+  browserMemory.write(completedSubtypeRecord(key), [...set], { partition: `${map}:${subtype}` });
 }
 
 function loadV2Subtype(map: string, subtype: string): Set<number> {
   const key = `${COMPLETED_MARKERS_V2_PREFIX}.${map}.${subtype}`;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw).filter((v: unknown) => typeof v === "number");
-    return new Set(arr);
-  } catch {
-    return new Set();
-  }
+  return new Set(browserMemory.read(completedSubtypeRecord(key), { partition: `${map}:${subtype}` }));
 }
+
+const showLabelsRecord = defineMemoryRecord({
+  id: "show-labels",
+  namespace: "aion2",
+  surface: "map",
+  stateClass: "device_preference",
+  schemaVersion: "1.0.0",
+  defaultValue: () => true,
+  validate: isBoolean,
+});
 
 
 export const MarkersProvider = ({children}: MarkersProviderProps) => {
@@ -80,7 +116,7 @@ export const MarkersProvider = ({children}: MarkersProviderProps) => {
   const [regions, setRegions] = useState<RegionInstance[]>([]);
   const [markersMapId, setMarkersMapId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showLabels, setShowLabels] = useState<boolean>(true);
+  const [showLabels, setShowLabels] = useMemoryState(showLabelsRecord);
 
   const { selectedMap, types } = useGameMap();
   const markerNs = `markers/${selectedMap?.name}`;
@@ -293,15 +329,6 @@ export const MarkersProvider = ({children}: MarkersProviderProps) => {
     // Merge into empty-loaded
     setCompletedBySubtype(() => ({ ...loaded, ...migrated }));
   }, [selectedMap, baseMarkers]);
-
-  // --- Save completion state per map to localStorage ---
-
-  // const saveCompletedMarkers = (selectedMap: GameMapMeta, data: Set<string>) => {
-  //   const storageKey = `${COMPLETED_V2_PREFIX}${selectedMap.name}`;
-  //   const arr = Array.from(data);
-  //   localStorage.setItem(storageKey, JSON.stringify(arr));
-  //   console.log("Save", storageKey, arr)
-  // };
 
   // --- Toggle a marker's completed state ---
   const toggleMarkerCompleted = useCallback(

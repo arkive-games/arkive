@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
+import { defineMemoryRecord, useMemoryState } from '@gamemap/state-memory'
 import {
   Dialog,
   DialogClose,
@@ -782,14 +783,47 @@ function ForumComposerDialog({
   onPublish: (post: LocalForumPost) => void
 }) {
   const { t } = useTranslation()
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [channel, setChannel] = useState<'general' | 'games'>(initialChannel)
-  const [gameId, setGameId] = useState<string | null>(initialGameId)
-  const [topic, setTopic] = useState<(typeof COMPOSER_TOPICS)[number]>('discussion')
+  const { user } = useAuth()
+  const draftRecord = useMemo(() => defineMemoryRecord({
+    id: 'post', namespace: 'site', surface: 'forum-editor', stateClass: 'task_draft',
+    schemaVersion: '1.0.0',
+    defaultValue: () => ({
+      title: '', content: '', channel: initialChannel, gameId: initialGameId,
+      topic: 'discussion' as (typeof COMPOSER_TOPICS)[number], videoUrl: '',
+    }),
+    validate: (value: unknown): value is {
+      title: string
+      content: string
+      channel: 'general' | 'games'
+      gameId: string | null
+      topic: (typeof COMPOSER_TOPICS)[number]
+      videoUrl: string
+    } => {
+      if (!value || typeof value !== 'object') return false
+      const draft = value as Record<string, unknown>
+      return typeof draft.title === 'string' && draft.title.length <= 80
+        && typeof draft.content === 'string' && draft.content.length <= 5_000
+        && (draft.channel === 'general' || draft.channel === 'games')
+        && (draft.gameId === null || typeof draft.gameId === 'string')
+        && COMPOSER_TOPICS.includes(draft.topic as (typeof COMPOSER_TOPICS)[number])
+        && typeof draft.videoUrl === 'string' && draft.videoUrl.length <= 2_000
+    },
+    retentionMs: 30 * 24 * 60 * 60 * 1_000,
+    accountScoped: true,
+  }), [initialChannel, initialGameId])
+  const [draft, setDraft, clearDraft] = useMemoryState(draftRecord, {
+    accountId: user?.id,
+    partition: `${initialChannel}:${initialGameId ?? 'all'}`,
+    debounceMs: 300,
+  })
+  const [title, setTitle] = useState(draft.title)
+  const [content, setContent] = useState(draft.content)
+  const [channel, setChannel] = useState<'general' | 'games'>(draft.channel)
+  const [gameId, setGameId] = useState<string | null>(draft.gameId)
+  const [topic, setTopic] = useState<(typeof COMPOSER_TOPICS)[number]>(draft.topic)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [imageName, setImageName] = useState('')
-  const [videoUrl, setVideoUrl] = useState('')
+  const [videoUrl, setVideoUrl] = useState(draft.videoUrl)
   const [error, setError] = useState('')
   const titleRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -799,16 +833,21 @@ function ForumComposerDialog({
 
   useEffect(() => {
     if (!open) return
-    setTitle('')
-    setContent('')
-    setChannel(initialChannel)
-    setGameId(initialGameId)
-    setTopic('discussion')
+    setTitle(draft.title)
+    setContent(draft.content)
+    setChannel(draft.channel)
+    setGameId(draft.gameId)
+    setTopic(draft.topic)
     setImageSrc(null)
     setImageName('')
-    setVideoUrl('')
+    setVideoUrl(draft.videoUrl)
     setError('')
-  }, [initialChannel, initialGameId, open])
+  }, [draft, open])
+
+  useEffect(() => {
+    if (!open) return
+    setDraft({ title, content, channel, gameId, topic, videoUrl })
+  }, [channel, content, gameId, open, setDraft, title, topic, videoUrl])
 
   useEffect(() => {
     if (!open) return
@@ -873,6 +912,7 @@ function ForumComposerDialog({
       videoUrl: normalizedVideoUrl || null,
       createdAt: new Date().toISOString(),
     })
+    clearDraft()
   }
 
   return (

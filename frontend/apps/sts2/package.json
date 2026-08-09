@@ -13,6 +13,7 @@
   "dependencies": {
     "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
+    "@gamemap/state-memory": "workspace:*",
     "@gamemap/ui": "workspace:*",
     "@tanstack/react-router": "^1.170.21",
     "i18next": "^26.3.6",

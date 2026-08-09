@@ -1,31 +1,17 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ShellSidebar } from '@gamemap/map-shell'
+import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
 import { SiteInfo } from './SiteInfo'
 
-const COLLAPSED_KEY = 'vrising.map.siteInfoCollapsed'
-
-function readCollapsed(): boolean {
-  try {
-    const stored = localStorage.getItem(COLLAPSED_KEY)
-    if (stored !== null) return stored === '1'
-  } catch {
-    // Keep the map-first default when storage is unavailable.
-  }
-  return true
-}
-
-function writeCollapsed(collapsed: boolean): void {
-  try {
-    localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0')
-  } catch {
-    // The panel remains usable without persistence.
-  }
-}
+const collapsedRecord = defineMemoryRecord({
+  id: 'info-collapsed', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => true, validate: isBoolean,
+  legacyKeys: ['vrising.map.siteInfoCollapsed'], migrateLegacy: (raw: string) => raw === '1',
+})
 
 export function InfoSidebar() {
   const { t } = useTranslation()
-  const [collapsed, setCollapsed] = useState(readCollapsed)
+  const [collapsed, setCollapsed] = useMemoryState(collapsedRecord)
   const label = t('siteInfo.tab')
 
   return (
@@ -33,10 +19,7 @@ export function InfoSidebar() {
       side="right"
       width={304}
       collapsed={collapsed}
-      onCollapsedChange={(next) => {
-        setCollapsed(next)
-        writeCollapsed(next)
-      }}
+      onCollapsedChange={setCollapsed}
       collapseLabel={label}
       expandLabel={label}
       label={label}

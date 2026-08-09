@@ -166,6 +166,44 @@ footer a:focus-visible {
   transform: translateY(-0.08rem);
 }
 
+.hero-continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+  border-radius: 0.7rem;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.hero-continue:hover {
+  border-color: color-mix(in srgb, var(--primary) 52%, var(--border));
+  background: color-mix(in srgb, var(--primary) 7%, var(--card));
+}
+
+.hero-continue > span {
+  display: grid;
+  min-width: 0;
+  margin-right: 0.5rem;
+}
+
+.hero-continue small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.hero-continue strong {
+  overflow: hidden;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .featured-game,
 .featured-empty {
   position: relative;
@@ -845,6 +883,12 @@ footer a:focus-visible {
     padding-inline: 0.85rem;
     border-radius: 0.4rem;
     font-size: 0.75rem;
+  }
+
+  .hero-continue {
+    min-height: 2.75rem;
+    margin-top: 0.75rem;
+    border-radius: 0.5rem;
   }
 
   .featured-game,

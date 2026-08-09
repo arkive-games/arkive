@@ -1,4 +1,5 @@
 import type { EngravingSlot, GemSlot, Loadout, Role } from '@/calc/types'
+import { browserMemory, defineMemoryRecord, parseJson } from '@gamemap/state-memory'
 
 export const STORAGE_KEY = 'lostark.loadout.v1'
 export const SCHEMA_VERSION = 1
@@ -278,13 +279,24 @@ export function parseLoadout(input: unknown): { loadout: Loadout; rejected: stri
 }
 
 export function restoreLoadout(): Loadout {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return defaultLoadout()
-    return parseLoadout(JSON.parse(raw)).loadout
-  } catch {
-    return defaultLoadout()
-  }
+  return parseLoadout(browserMemory.read(loadoutRecord)).loadout
+}
+
+const loadoutRecord = defineMemoryRecord<unknown>({
+  id: 'loadout', namespace: 'lostark', surface: 'combat-power', stateClass: 'task_draft',
+  schemaVersion: '1.0.0', defaultValue: defaultLoadout,
+  validate: (value: unknown): value is unknown => Boolean(value) && typeof value === 'object',
+  retentionMs: 30 * 24 * 60 * 60 * 1_000,
+  legacyKeys: [STORAGE_KEY],
+  migrateLegacy: parseJson,
+})
+
+export function saveLoadout(loadout: Loadout): boolean {
+  return browserMemory.write(loadoutRecord, loadout)
+}
+
+export function clearLoadout(): void {
+  browserMemory.clear(loadoutRecord)
 }
 
 export function exportLoadout(loadout: Loadout): string {

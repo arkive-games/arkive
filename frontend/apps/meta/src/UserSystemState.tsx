@@ -4,10 +4,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
 import { useAuth } from '@gamemap/auth'
+import { MemoryClient, browserMemory, defineMemoryRecord, parseJson, type StorageLike } from '@gamemap/state-memory'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 
 export type NotificationPreferenceKey = 'replies' | 'mentions' | 'likes' | 'follows' | 'system' | 'browser'
@@ -109,6 +111,52 @@ function localForumPosts(value: unknown): LocalForumPost[] {
   })
 }
 
+function normalizeUserSystemState(value: unknown): UserSystemState {
+  const defaults = createDefaultUserSystemState()
+  const parsed = value && typeof value === 'object' ? value as Partial<UserSystemState> : {}
+  return {
+    profile: {
+      bio: typeof parsed.profile?.bio === 'string' ? parsed.profile.bio : defaults.profile.bio,
+      avatarSrc: typeof parsed.profile?.avatarSrc === 'string' && parsed.profile.avatarSrc
+        ? parsed.profile.avatarSrc
+        : defaults.profile.avatarSrc,
+    },
+    notificationSettings: booleanRecord(defaults.notificationSettings, parsed.notificationSettings),
+    readNotificationSections: stringArray(parsed.readNotificationSections)
+      .filter((section): section is NotificationInboxSection => ['replies', 'mentions', 'likes', 'system'].includes(section)),
+    privacySettings: booleanRecord(defaults.privacySettings, parsed.privacySettings),
+    followedUserIds: stringArray(parsed.followedUserIds),
+    bookmarkedPostIds: stringArray(parsed.bookmarkedPostIds),
+    likedPostIds: stringArray(parsed.likedPostIds),
+    likedCommentIds: stringArray(parsed.likedCommentIds),
+    favoriteGameIds: stringArray(parsed.favoriteGameIds),
+    publishedPosts: localForumPosts(parsed.publishedPosts),
+  }
+}
+
+function isUserSystemState(value: unknown): value is UserSystemState {
+  if (!value || typeof value !== 'object') return false
+  const state = value as Partial<UserSystemState>
+  return Boolean(state.profile)
+    && typeof state.profile?.bio === 'string'
+    && (state.profile.avatarSrc === null || typeof state.profile.avatarSrc === 'string')
+    && Boolean(state.notificationSettings)
+    && Boolean(state.privacySettings)
+    && [state.readNotificationSections, state.followedUserIds, state.bookmarkedPostIds,
+      state.likedPostIds, state.likedCommentIds, state.favoriteGameIds, state.publishedPosts]
+      .every(Array.isArray)
+}
+
+function userSystemRecord(userId: string) {
+  return defineMemoryRecord({
+    id: 'state', namespace: 'site', surface: 'user-system', stateClass: 'durable_progress',
+    schemaVersion: '1.0.0', defaultValue: createDefaultUserSystemState,
+    validate: isUserSystemState, accountScoped: true,
+    legacyKeys: [storageKey(userId)],
+    migrateLegacy: (raw: string) => normalizeUserSystemState(parseJson(raw)),
+  })
+}
+
 /** Boolean-only merge: stored settings are untrusted JSON, and a non-boolean
  *  reached `aria-checked` verbatim and made the toggle appear dead. */
 function booleanRecord<K extends string>(
@@ -123,43 +171,15 @@ function booleanRecord<K extends string>(
   return merged
 }
 
-/** `window.localStorage` throws SecurityError on property access when the origin
- *  has site data blocked, so even reading it must be guarded. */
-export function safeLocalStorage(): Storage | null {
-  try {
-    return typeof window === 'undefined' ? null : window.localStorage
-  } catch {
-    return null
-  }
-}
-
+/** Bridge helpers preserve the public storage-like API while routing validation,
+ *  account scoping, and restricted-storage handling through the memory client. */
 export function readUserSystemState(storage: Pick<Storage, 'getItem'>, userId: string): UserSystemState {
-  const defaults = createDefaultUserSystemState()
-  try {
-    const raw = storage.getItem(storageKey(userId))
-    if (!raw) return defaults
-    const parsed = JSON.parse(raw) as Partial<UserSystemState>
-    return {
-      profile: {
-        bio: typeof parsed.profile?.bio === 'string' ? parsed.profile.bio : defaults.profile.bio,
-        avatarSrc: typeof parsed.profile?.avatarSrc === 'string' && parsed.profile.avatarSrc
-          ? parsed.profile.avatarSrc
-          : defaults.profile.avatarSrc,
-      },
-      notificationSettings: booleanRecord(defaults.notificationSettings, parsed.notificationSettings),
-      readNotificationSections: stringArray(parsed.readNotificationSections)
-        .filter((section): section is NotificationInboxSection => ['replies', 'mentions', 'likes', 'system'].includes(section)),
-      privacySettings: booleanRecord(defaults.privacySettings, parsed.privacySettings),
-      followedUserIds: stringArray(parsed.followedUserIds),
-      bookmarkedPostIds: stringArray(parsed.bookmarkedPostIds),
-      likedPostIds: stringArray(parsed.likedPostIds),
-      likedCommentIds: stringArray(parsed.likedCommentIds),
-      favoriteGameIds: stringArray(parsed.favoriteGameIds),
-      publishedPosts: localForumPosts(parsed.publishedPosts),
-    }
-  } catch {
-    return defaults
+  const adapter: StorageLike = {
+    getItem: storage.getItem.bind(storage),
+    setItem: () => undefined,
+    removeItem: () => undefined,
   }
+  return new MemoryClient({ deviceStorage: adapter }).read(userSystemRecord(userId), { accountId: userId })
 }
 
 export function writeUserSystemState(
@@ -167,7 +187,12 @@ export function writeUserSystemState(
   userId: string,
   state: UserSystemState,
 ) {
-  storage.setItem(storageKey(userId), JSON.stringify(state))
+  const adapter: StorageLike = {
+    getItem: () => null,
+    setItem: storage.setItem.bind(storage),
+    removeItem: () => undefined,
+  }
+  new MemoryClient({ deviceStorage: adapter }).write(userSystemRecord(userId), state, { accountId: userId })
 }
 
 const UserSystemContext = createContext<UserSystemContextValue | null>(null)
@@ -175,17 +200,21 @@ const UserSystemContext = createContext<UserSystemContextValue | null>(null)
 export function UserSystemProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const userId = user?.id ?? null
+  const previousUserId = useRef<string | null>(null)
   const [entry, setEntry] = useState<{ userId: string | null; state: UserSystemState }>(() => ({
     userId: null,
     state: createDefaultUserSystemState(),
   }))
 
   useEffect(() => {
-    const storage = safeLocalStorage()
+    if (previousUserId.current && previousUserId.current !== userId) {
+      browserMemory.clearAccount(previousUserId.current)
+    }
+    previousUserId.current = userId
     setEntry({
       userId,
-      state: userId && storage
-        ? readUserSystemState(storage, userId)
+      state: userId
+        ? browserMemory.read(userSystemRecord(userId), { accountId: userId })
         : createDefaultUserSystemState(),
     })
   }, [userId])
@@ -193,18 +222,11 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
   const update = useCallback((mutate: (current: UserSystemState) => UserSystemState) => {
     if (!userId) return
     setEntry((currentEntry) => {
-      const storage = safeLocalStorage()
       const current = currentEntry.userId === userId
         ? currentEntry.state
-        : storage
-          ? readUserSystemState(storage, userId)
-          : createDefaultUserSystemState()
+        : browserMemory.read(userSystemRecord(userId), { accountId: userId })
       const next = mutate(current)
-      try {
-        if (storage) writeUserSystemState(storage, userId, next)
-      } catch {
-        // Keep the current session functional when storage is unavailable or full.
-      }
+      browserMemory.write(userSystemRecord(userId), next, { accountId: userId })
       return { userId, state: next }
     })
   }, [userId])

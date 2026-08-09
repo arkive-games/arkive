@@ -14,6 +14,7 @@ import {
   isMapEngineChoice,
   type MapEngineChoice,
 } from '@gamemap/map-shell'
+import { browserMemory, defineMemoryRecord, isString } from '@gamemap/state-memory'
 
 export {
   DEFAULT_MAP_ENGINE,
@@ -25,11 +26,16 @@ export {
 } from '@gamemap/map-shell'
 
 const MAP_ENGINE_KEY = 'vrising.map.engine'
+const engineRecord = defineMemoryRecord({
+  id: 'engine', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
+  legacyKeys: [MAP_ENGINE_KEY], migrateLegacy: (raw: string) => raw,
+})
 
 /** The one store for this app, created at module scope so every control shares it. */
 export const mapEngineStore = createMapEngineStore({
-  read: () => localStorage.getItem(MAP_ENGINE_KEY),
-  write: (value) => localStorage.setItem(MAP_ENGINE_KEY, value),
+  read: () => browserMemory.read(engineRecord) || null,
+  write: (value) => { browserMemory.write(engineRecord, value) },
 })
 
 /** Subscribe a component to the stored engine choice. */

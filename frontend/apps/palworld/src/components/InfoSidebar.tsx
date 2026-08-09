@@ -1,36 +1,28 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ShellSidebar } from '@gamemap/map-shell'
+import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
 import { SiteInfo } from './SiteInfo'
 
-const COLLAPSED_KEY = 'palworld.map.siteInfoCollapsed'
+const collapsedRecord = defineMemoryRecord({
+  id: 'info-collapsed',
+  namespace: 'palworld',
+  surface: 'map',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => true,
+  validate: isBoolean,
+  legacyKeys: ['palworld.map.siteInfoCollapsed'],
+  migrateLegacy: (raw: string) => raw === '1',
+})
 
 /**
  * Keep the map as the primary surface on a first visit. Once the visitor opens
  * the panel, their own choice wins forever. Storage lives here rather than in
  * the shell package, which must stay storage-free.
  */
-function readCollapsed(): boolean {
-  try {
-    const stored = localStorage.getItem(COLLAPSED_KEY)
-    if (stored !== null) return stored === '1'
-  } catch {
-    /* no storage; use the map-first default below */
-  }
-  return true
-}
-
-function writeCollapsed(collapsed: boolean): void {
-  try {
-    localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0')
-  } catch {
-    /* no storage */
-  }
-}
-
 export function InfoSidebar() {
   const { t } = useTranslation()
-  const [collapsed, setCollapsed] = useState(readCollapsed)
+  const [collapsed, setCollapsed] = useMemoryState(collapsedRecord)
   const label = t('siteInfo.tab')
 
   return (
@@ -38,10 +30,7 @@ export function InfoSidebar() {
       side="right"
       width={304}
       collapsed={collapsed}
-      onCollapsedChange={(next) => {
-        setCollapsed(next)
-        writeCollapsed(next)
-      }}
+      onCollapsedChange={setCollapsed}
       collapseLabel={label}
       expandLabel={label}
       label={label}

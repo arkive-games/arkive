@@ -24,6 +24,15 @@ import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
 import { cn, useIsMobile } from '@gamemap/ui'
+import {
+  browserMemory,
+  defineMemoryRecord,
+  isBoolean,
+  isString,
+  isStringArray,
+  parseJson,
+  useMemoryState,
+} from '@gamemap/state-memory'
 import { Check, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
 import { resolveMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
@@ -65,37 +74,63 @@ const PAL_COLLAPSED_CATEGORIES = ['pal']
 // global (subtypes are a shared taxonomy, not reset on map switch), so a single
 // key suffices.
 const MAP_VISIBLE_KEY = 'palworld.map.visibleSubtypes'
+const visibleSubtypesRecord = defineMemoryRecord({
+  id: 'visible-subtypes',
+  namespace: 'palworld',
+  surface: 'map',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => null as string[] | null,
+  validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
+  legacyKeys: [MAP_VISIBLE_KEY],
+  migrateLegacy: parseJson,
+})
 
 /** Read the persisted set of visible subtypes; null when nothing is saved yet. */
 function readStoredSubtypes(): Set<string> | null {
-  try {
-    const raw = localStorage.getItem(MAP_VISIBLE_KEY)
-    if (!raw) return null
-    const arr = JSON.parse(raw)
-    return Array.isArray(arr) ? new Set(arr as string[]) : null
-  } catch {
-    return null
-  }
+  const value = browserMemory.read(visibleSubtypesRecord)
+  return value === null ? null : new Set(value)
 }
 
 // Per-map view + selection persistence (center, zoom, selected marker), fed
 // into useMapViewMemory. The storage-free shell hook gets storage through this
 // adapter, same as the theme.
 const MAP_VIEW_KEY = 'palworld.map.view'
+const mapViewRecord = defineMemoryRecord({
+  id: 'view',
+  namespace: 'palworld',
+  surface: 'map',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => '',
+  validate: isString,
+  legacyKeys: [MAP_VIEW_KEY],
+  migrateLegacy: (raw: string) => raw,
+})
 const mapViewStore: MapViewStore = {
-  get: () => {
-    try {
-      return localStorage.getItem(MAP_VIEW_KEY)
-    } catch {
-      return null
-    }
-  },
-  set: (raw) => {
-    try {
-      localStorage.setItem(MAP_VIEW_KEY, raw)
-    } catch { /* no storage — feature degrades to non-persistent */ }
-  },
+  get: () => browserMemory.read(mapViewRecord) || null,
+  set: (raw) => { browserMemory.write(mapViewRecord, raw) },
 }
+
+const showLabelsRecord = defineMemoryRecord({
+  id: 'show-labels',
+  namespace: 'palworld',
+  surface: 'map',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => false,
+  validate: isBoolean,
+})
+
+const showRegionsRecord = defineMemoryRecord({
+  id: 'show-regions',
+  namespace: 'palworld',
+  surface: 'map',
+  stateClass: 'device_preference',
+  schemaVersion: '1.0.0',
+  defaultValue: () => false,
+  validate: isBoolean,
+})
 
 export default function App() {
   const { t, i18n } = useTranslation()
@@ -130,7 +165,7 @@ export default function App() {
     if (mapParam && mapParam !== mapId) setMapId(mapParam)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapParam])
-  // Per-map completed-marker ids (effigies/bosses), persisted in localStorage.
+  // Per-map completed-marker ids (effigies/bosses), restored as durable progress.
   const { completed, toggleCompleted } = useCompletedMarkers(mapId)
   // Per-map view (center/zoom) + selected marker, persisted across reloads.
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId)
@@ -175,9 +210,9 @@ export default function App() {
   const [loadError, setLoadError] = useState<string | null>(null)
   // When on, marker names show as permanent labels; when off, they appear on
   // hover (handled by the engine). Off by default to keep the map uncluttered.
-  const [showLabels, setShowLabels] = useState(false)
+  const [showLabels, setShowLabels] = useMemoryState(showLabelsRecord)
   // Named-region overlay (borders + hover highlight). Off by default.
-  const [showRegions, setShowRegions] = useState(false)
+  const [showRegions, setShowRegions] = useMemoryState(showRegionsRecord)
   const [regionData, setRegionData] = useState<{ mapId: string; regions: RegionInstance[]; l10n: RegionLocale } | null>(null)
 
   useEffect(() => {
@@ -208,9 +243,7 @@ export default function App() {
 
   // Persist the visible-subtype selection so it survives reloads.
   useEffect(() => {
-    try {
-      localStorage.setItem(MAP_VISIBLE_KEY, JSON.stringify([...visible]))
-    } catch { /* no storage */ }
+    browserMemory.write(visibleSubtypesRecord, [...visible])
   }, [visible])
 
   // Encyclopedia data (elements/best-work) for enriching pal marker popups.

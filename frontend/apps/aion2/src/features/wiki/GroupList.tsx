@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { defineMemoryRecord, useMemoryState } from "@gamemap/state-memory";
 
 import { loadTaxonomy, loadWikiIndex } from "@/lib/wiki";
 import type { WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
 
 const FACTIONS = ["all", "light", "dark"] as const;
 type Faction = (typeof FACTIONS)[number];
+const factionRecord = defineMemoryRecord({
+  id: "faction", namespace: "aion2", surface: "wiki-catalog", stateClass: "device_preference",
+  schemaVersion: "1.0.0", defaultValue: () => "all" as Faction,
+  validate: (value: unknown): value is Faction => FACTIONS.includes(value as Faction),
+});
 
 export default function GroupList({
   type,
@@ -20,7 +26,18 @@ export default function GroupList({
   const { t } = useTranslation(["wiki", "wiki/taxonomy", `wiki/${type}`]);
   const [tax, setTax] = useState<WikiTaxonomy | null>(null);
   const [docs, setDocs] = useState<WikiIndexDoc[]>([]);
-  const [faction, setFaction] = useState<Faction>(initialFaction ?? "all");
+  const [storedFaction, setStoredFaction] = useMemoryState(factionRecord, { partition: `${type}:${group}` });
+  const [explicitFaction, setExplicitFaction] = useState<Faction | null>(initialFaction ?? null);
+  const faction = explicitFaction ?? storedFaction;
+
+  useEffect(() => {
+    setExplicitFaction(initialFaction ?? null);
+  }, [initialFaction]);
+
+  const chooseFaction = (next: Faction) => {
+    setExplicitFaction(null);
+    setStoredFaction(next);
+  };
 
   useEffect(() => {
     loadTaxonomy().then(setTax).catch(console.error);
@@ -77,7 +94,7 @@ export default function GroupList({
             <button
               key={f}
               type="button"
-              onClick={() => setFaction(f)}
+              onClick={() => chooseFaction(f)}
               data-testid={`faction-${f}`}
               data-state={faction === f ? "on" : "off"}
               className={`rounded px-2 py-0.5 ${

@@ -3,10 +3,25 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Check, MapPin, Search, Swords } from 'lucide-react'
 import { Input } from '@gamemap/ui'
+import { defineMemoryRecord, isBoolean, isString, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import { loadVBloodBosses, useCompletedVBlood, type VBloodBoss } from '../../lib/vblood'
 
 const ACT_ORDER = ['ActI', 'ActII', 'ActIII', 'ActIV', 'Shards']
+const queryRecord = defineMemoryRecord({
+  id: 'query', namespace: 'vrising', surface: 'vblood-catalog', stateClass: 'session_context',
+  schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
+  retentionMs: 24 * 60 * 60 * 1_000,
+})
+const actRecord = defineMemoryRecord({
+  id: 'act-filter', namespace: 'vrising', surface: 'vblood-catalog', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => null as string | null,
+  validate: (value: unknown): value is string | null => value === null || ACT_ORDER.includes(String(value)),
+})
+const hideCompletedRecord = defineMemoryRecord({
+  id: 'hide-completed', namespace: 'vrising', surface: 'vblood-catalog', stateClass: 'device_preference',
+  schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
+})
 
 function actLabel(act: string | null, shardsLabel: string): string {
   if (!act) return '—'
@@ -84,9 +99,9 @@ export default function VBloodListPage() {
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const [bosses, setBosses] = useState<VBloodBoss[] | null>(null)
   const [loadError, setLoadError] = useState(false)
-  const [query, setQuery] = useState('')
-  const [activeAct, setActiveAct] = useState<string | null>(null)
-  const [hideCompleted, setHideCompleted] = useState(false)
+  const [query, setQuery] = useMemoryState(queryRecord, { debounceMs: 200 })
+  const [activeAct, setActiveAct] = useMemoryState(actRecord)
+  const [hideCompleted, setHideCompleted] = useMemoryState(hideCompletedRecord)
   const { completed, toggleCompleted } = useCompletedVBlood()
 
   useEffect(() => {

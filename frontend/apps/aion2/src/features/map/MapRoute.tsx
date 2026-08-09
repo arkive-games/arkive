@@ -20,6 +20,7 @@ import {
 } from "@gamemap/map-shell";
 import { useIsMobile } from "@gamemap/ui";
 import { ArkiveAccountControl } from "@gamemap/auth";
+import { browserMemory, defineMemoryRecord, isString } from "@gamemap/state-memory";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { defaultVisibleSubtypeKeys, useGameData } from "@/context/GameDataContext";
@@ -46,19 +47,20 @@ const GlGameMapView = lazy(() => import("@/features/map/GlMapView"));
 // into useMapViewMemory. The storage-free shell hook gets storage through this
 // adapter, same as the theme.
 const MAP_VIEW_KEY = "aion2.map.view";
+const mapViewRecord = defineMemoryRecord({
+  id: "view",
+  namespace: "aion2",
+  surface: "map",
+  stateClass: "device_preference",
+  schemaVersion: "1.0.0",
+  defaultValue: () => "",
+  validate: isString,
+  legacyKeys: [MAP_VIEW_KEY],
+  migrateLegacy: (raw: string) => raw,
+});
 const mapViewStore: MapViewStore = {
-  get: () => {
-    try {
-      return localStorage.getItem(MAP_VIEW_KEY);
-    } catch {
-      return null;
-    }
-  },
-  set: (raw) => {
-    try {
-      localStorage.setItem(MAP_VIEW_KEY, raw);
-    } catch { /* no storage — feature degrades to non-persistent */ }
-  },
+  get: () => browserMemory.read(mapViewRecord) || null,
+  set: (raw) => { browserMemory.write(mapViewRecord, raw); },
 };
 
 export default function MapRoute() {
