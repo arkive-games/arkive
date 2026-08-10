@@ -82,7 +82,8 @@ subtypes:
     category: boss
     canComplete: true
     color: "#f59e0b"
-    icon: T_icon_compass_boss  # fallback for the one criminal (BOSS_Police_Old) with no portrait row
+    # The game's purple bounty marker, shared by every wanted fugitive.
+    icon: T_icon_compass_Bounty
     names: { en-US: Wanted Fugitive, ja-JP: 指名手配, de-DE: Kopfgeld, es-ES: Buscados, es-MX: Buscados, fr-FR: Cibles recherchées, id-ID: Buronan, it-IT: Taglie, ko-KR: 지명수배, pl-PL: Poszukiwany zbieg, pt-BR: Procurados, ru-RU: Разыскиваемые, th-TH: ผู้ออกหมายจับ, tr-TR: Aranan Kaçak, vi-VN: Kẻ Bị Truy Nã, zh-CN: 悬赏头目, zh-TW: 懸賞頭目 }
   - id: predator
     category: boss
