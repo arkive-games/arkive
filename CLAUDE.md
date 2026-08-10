@@ -96,6 +96,45 @@ polygon, and human review of `calibration/accepted_overlay.png`.
   a notice pointing back at Vite 8. Don't reintroduce the alias.
 - **New features:** open a git worktree for the work (isolate from the current workspace).
 - **Merging back:** integrate with rebase (not merge commits).
+- **Landing a PR — rebase locally, then fast-forward `master`. Never use GitHub's
+  "Rebase and merge" button.** That button breaks two of this repo's invariants at once:
+  - It **always rewrites the commits**, even when the branch is already a pure
+    fast-forward with nothing to replay ("rebase and merge on GitHub will always update
+    the committer information and create new commit SHAs"). Every `changelog.json` entry
+    pins a 40-char SHA, so the rewrite orphans them: the JSON still validates, `pnpm test`
+    still passes, and the compare links point at commits that live only in
+    `refs/pull/N/head`.
+  - It merges **"without commit signature verification"** — GitHub rebuilds each commit and
+    cannot sign as you — so signed commits land unsigned, against the all-commits-signed
+    rule. GitHub's own docs recommend rebasing and merging locally instead.
+
+  The method that keeps SHAs and signatures (`master` is unprotected, so this works):
+
+  ```bash
+  git fetch origin master <branch>
+  git checkout -B pr<N> origin/<branch>
+  git rebase -S origin/master              # add --force-rebase to re-sign an already-based branch
+  # resolve, verify, re-stamp changelog SHAs (see the Version history section)
+  git push --force-with-lease=<branch>:<their-last-sha> origin pr<N>:<branch>
+  git push origin pr<N>:master             # fast-forward; GitHub marks the PR merged
+  ```
+
+  Notes that matter in practice:
+  - **`--force-rebase` is needed when the branch is already on top of `master`.** A plain
+    rebase reports "up to date" and does nothing, so contributor commits keep whatever
+    signature they arrived with. Commits from outside contributors are often SSH-signed with
+    a key GitHub reports as `unknown_key` (Unverified); re-signing through a forced rebase
+    is what makes them `verified: valid` on `master`. Check with
+    `gh api repos/arkive-games/arkive/commits/<sha> --jq .commit.verification`.
+  - **Always `--force-with-lease`, never a bare `--force`.** Contributors push mid-review;
+    the lease is what stops you deleting a commit that arrived while you were working. When
+    it rejects, re-fetch and rebase onto their new head rather than overriding.
+  - **Re-check `git merge-base --is-ancestor origin/master HEAD` immediately before the
+    second push.** If someone landed on `master` in the meantime the fast-forward is gone
+    and you must rebase again — and note local `master` being ahead of `origin/master`
+    (your own unpushed work) does not block this, since the push is branch→branch.
+  - After merging, confirm every changelog SHA survived:
+    `git merge-base --is-ancestor <sha> origin/master` for each pinned commit.
 - **Live testing:** when work needs live testing, merge it back first (with rebase), then test.
 - **Git on Windows:** bash or PowerShell both work. All repo origins are SSH
   (`git@github.com:...`); SSH works via `HOME` set in `~/.claude/settings.json` env plus
