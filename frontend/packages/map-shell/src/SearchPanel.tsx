@@ -255,8 +255,12 @@ export function SearchPanel({
     onResultsChange(ids)
   }, [results, onResultsChange])
 
+  // Floating only. The inline variant is mounted INSIDE palworld's mobile search
+  // sheet, so an unconditional listener cleared the query when the user tapped the
+  // sheet's own chrome -- and on any map pan, which also dropped the forced-visible
+  // result markers.
   useEffect(() => {
-    if (!query.trim()) return
+    if (variant !== "floating" || !query.trim()) return
     const dismissOnOutsidePointer = (event: PointerEvent) => {
       if (rootRef.current?.contains(event.target as Node)) return
       setQuery("")
@@ -264,7 +268,7 @@ export function SearchPanel({
     }
     document.addEventListener("pointerdown", dismissOnOutsidePointer, true)
     return () => document.removeEventListener("pointerdown", dismissOnOutsidePointer, true)
-  }, [query])
+  }, [query, variant])
 
   const handleSelect = (id: string) => {
     const item = itemsById.get(id)

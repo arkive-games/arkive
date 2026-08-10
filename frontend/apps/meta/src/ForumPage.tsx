@@ -466,9 +466,21 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     if (window.location.hash !== '#forum/new') window.location.hash = 'forum/new'
   }
 
+  // `replaceState` fires no `hashchange`, and App derives `activeRoute` only from
+  // that event -- so without dispatching one the app stays in composer route state
+  // after the composer closes. That kept the mobile bottom nav unmounted until the
+  // user navigated to a different root route (clicking #forum did nothing, the hash
+  // already matched). `replaceState` rather than assignment is deliberate: closing
+  // the composer should not add a history entry.
+  const returnToForum = () => {
+    if (window.location.hash === '#forum') return
+    window.history.replaceState(null, '', '#forum')
+    window.dispatchEvent(new Event('hashchange'))
+  }
+
   const closeComposer = () => {
     setComposerOpen(false)
-    if (window.location.hash !== '#forum') window.history.replaceState(null, '', '#forum')
+    returnToForum()
   }
 
   const publish = (post: LocalForumPost) => {
@@ -480,7 +492,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     setFeedTab('recommended')
     setCurrentPage(1)
     setSelectedPostId(post.id)
-    if (window.location.hash !== '#forum') window.history.replaceState(null, '', '#forum')
+    returnToForum()
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
@@ -904,7 +916,10 @@ function ForumComposerPage({
     partition: { account: true },
     signInAdoption: 'keep_anonymous',
   }), [initialGameId])
-  const [draft, setDraft, clearDraft] = useMemoryState(draftRecord, {
+  // The 4th element is the real write status. Discarding it meant the green check
+  // showed before anything was typed AND when the write had been refused (blocked
+  // storage, or over the record's byte cap).
+  const [draft, setDraft, clearDraft, draftStatus] = useMemoryState(draftRecord, {
     accountId: user?.id,
     partition: initialGameId ?? 'all',
     debounceMs: 300,
@@ -1178,7 +1193,13 @@ function ForumComposerPage({
         <div className="forum-publish-author">
           <img src={avatarSrc} alt="" />
           <strong>{authorName}</strong>
-          <span><IconCheck className="size-4" stroke={2} aria-hidden="true" />{t('forum.composer.draftSaved')}</span>
+          <span role="status" aria-live="polite">
+            {draftStatus === 'failed'
+              ? t('userSystem.account.errors.saveFailed')
+              : draftStatus === 'saved'
+                ? <><IconCheck className="size-4" stroke={2} aria-hidden="true" />{t('forum.composer.draftSaved')}</>
+                : null}
+          </span>
         </div>
       </header>
 
@@ -1372,7 +1393,13 @@ function ForumComposerPage({
         <footer className="forum-publish-footer">
           <div>
             <span>{content.length} / 5000</span>
-            <span><IconCheck className="size-4" stroke={2} aria-hidden="true" />{t('forum.composer.draftSaved')}</span>
+            <span role="status" aria-live="polite">
+            {draftStatus === 'failed'
+              ? t('userSystem.account.errors.saveFailed')
+              : draftStatus === 'saved'
+                ? <><IconCheck className="size-4" stroke={2} aria-hidden="true" />{t('forum.composer.draftSaved')}</>
+                : null}
+          </span>
             <strong role="alert">{error}</strong>
           </div>
           <button type="button" className="forum-publish-cancel" onClick={onCancel}>{t('forum.composer.cancel')}</button>
@@ -1419,7 +1446,7 @@ function ForumComposerPage({
           <DialogFooter className="forum-media-dialog-footer">
             <span>{t('forum.composer.selectedImages', { count: pendingImages.length, max: FORUM_IMAGE_MAX_COUNT })}</span>
             <DialogClose asChild><button type="button" className="forum-publish-cancel">{t('forum.composer.cancel')}</button></DialogClose>
-            <button type="button" className="forum-publish-submit" disabled={pendingImages.length === 0} onClick={() => { setImages(pendingImages); setImageDialogOpen(false) }}>
+            <button type="button" className="forum-publish-submit" disabled={pendingImages.length === 0 && images.length === 0} onClick={() => { setImages(pendingImages); setImageDialogOpen(false) }}>
               {t('forum.composer.insertImages', { count: pendingImages.length })}
             </button>
           </DialogFooter>

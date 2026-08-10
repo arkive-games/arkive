@@ -60,6 +60,8 @@ export function palSearchValue(
   return tokens.join(' ')
 }
 
+const MACHINE_TOKENS = /\s*(?:breeding-power|paldeck-index):\d+/g
+
 /** cmdk score: numeric queries pin exact Paldeck ids before nearby breeding powers. */
 export function palCommandFilter(value: string, search: string): number {
   const target = parsePalNumericQuery(search)
@@ -70,5 +72,9 @@ export function palCommandFilter(value: string, search: string): number {
     if (!match) return 0
     return 1 / (1 + Math.abs(Number(match[1]) - target))
   }
-  return value.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0
+  // Match the visible text only. The machine tokens appended by `palSearchValue`
+  // are part of the same cmdk value, so scoring the whole string made "power",
+  // "breeding", "paldeck", "index" and "-" match every pal.
+  const visible = value.replace(MACHINE_TOKENS, '')
+  return visible.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0
 }
