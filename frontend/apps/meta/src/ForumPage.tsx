@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react'
 import { scrollToResults } from './scrollToResults'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -16,25 +25,37 @@ import {
 } from '@gamemap/ui'
 import {
   IconAdjustmentsHorizontal,
+  IconArrowDown,
   IconArrowLeft,
+  IconArrowUp,
   IconBookmark,
+  IconBold,
   IconCheck,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
+  IconCode,
   IconDeviceGamepad2,
   IconFlame,
+  IconH1,
   IconHash,
+  IconItalic,
+  IconLink,
+  IconList,
+  IconListNumbers,
   IconMessageCircle,
   IconMessages,
   IconPhoto,
   IconPinFilled,
   IconPencil,
+  IconQuote,
   IconRefresh,
   IconSearch,
   IconSpeakerphone,
   IconThumbUp,
   IconTrash,
+  IconUnderline,
+  IconUpload,
   IconVideo,
   IconX,
 } from '@tabler/icons-react'
@@ -64,6 +85,7 @@ interface ForumPost {
   id: string
   channel: Exclude<ForumChannel, 'hot'>
   gameId?: string
+  gameIds?: string[]
   authorKey?: string
   author?: string
   timeKey?: string
@@ -82,6 +104,7 @@ interface ForumPost {
   likeCount: number
   bookmarkCount: number
   imageSrc?: string
+  imageSrcs?: string[]
   videoUrl?: string
   own?: boolean
   featured?: boolean
@@ -112,6 +135,17 @@ function postTags(post: ForumPost, t: TFunction) {
 const COMPOSER_TOPICS = ['guide', 'question', 'testing', 'discussion'] as const
 const FORUM_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const FORUM_IMAGE_MAX_BYTES = 2 * 1024 * 1024
+const FORUM_IMAGE_TOTAL_MAX_BYTES = 4 * 1024 * 1024
+const FORUM_IMAGE_MAX_COUNT = 9
+const FORUM_GAME_MAX_COUNT = 5
+const FORUM_TAG_MAX_COUNT = 10
+
+interface ComposerImage {
+  id: string
+  src: string
+  name: string
+  size: number
+}
 
 function readForumImage(file: Blob) {
   return new Promise<string>((resolve, reject) => {
@@ -139,13 +173,16 @@ function localPostSuffix() {
   return Math.trunc(Math.random() * 1e9).toString(36)
 }
 
-function isSafeVideoUrl(value: string) {
-  if (!value) return true
+function forumVideoPlatform(value: string): 'bilibili' | 'douyin' | null {
   try {
     const url = new URL(value)
-    return url.protocol === 'https:' || url.protocol === 'http:'
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
+    const host = url.hostname.toLocaleLowerCase()
+    if (host === 'b23.tv' || host === 'bilibili.com' || host.endsWith('.bilibili.com')) return 'bilibili'
+    if (host === 'douyin.com' || host.endsWith('.douyin.com')) return 'douyin'
+    return null
   } catch {
-    return false
+    return null
   }
 }
 
@@ -281,7 +318,9 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [followingOnly, setFollowingOnly] = useState(false)
-  const [composerOpen, setComposerOpen] = useState(false)
+  const [composerOpen, setComposerOpen] = useState(
+    () => window.location.hash.replace(/^#/, '') === 'forum/new',
+  )
   const [composerFocus, setComposerFocus] = useState<ComposerFocus>('body')
   const [publishNotice, setPublishNotice] = useState(false)
   const signedIn = status === 'authenticated'
@@ -296,13 +335,15 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     id: post.id,
     channel: post.channel,
     gameId: post.gameId ?? undefined,
+    gameIds: post.gameIds,
     author: user?.name ?? '',
     timeKey: 'forum.time.today',
     title: post.title,
     copy: post.content,
     tags: [
-      ...(post.gameId ? [t(`forum.games.${post.gameId}`)] : []),
-      t(`forum.composer.topics.${post.topic}`),
+      ...post.gameIds.map((gameId) => t(`forum.games.${gameId}`)),
+      ...post.topics.map((topic) => t(`forum.composer.topics.${topic}`, { defaultValue: topic })),
+      ...post.tags,
     ],
     avatarSeed: user?.id ?? 'arkive-anonymous',
     avatarSrc: currentAvatar,
@@ -312,6 +353,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     likeCount: 0,
     bookmarkCount: 0,
     imageSrc: post.imageSrc ?? undefined,
+    imageSrcs: post.imageSrcs,
     videoUrl: post.videoUrl ?? undefined,
     own: true,
   })), [currentAvatar, t, user?.id, user?.name, userSystemState.publishedPosts])
@@ -331,7 +373,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     const normalizedQuery = submittedQuery.trim().toLocaleLowerCase()
     const filtered = allPosts.filter((post) => {
       if (channel !== 'hot' && post.channel !== channel) return false
-      if (gameFilter && post.gameId !== gameFilter) return false
+      if (gameFilter && !(post.gameIds ?? (post.gameId ? [post.gameId] : [])).includes(gameFilter)) return false
       if (feedTab === 'featured' && !post.featured) return false
       if (followingOnly && !userSystemState.followedUserIds.includes(post.authorNumber)) return false
       if (!normalizedQuery) return true
@@ -371,6 +413,21 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     const timeout = window.setTimeout(() => setPublishNotice(false), 2600)
     return () => window.clearTimeout(timeout)
   }, [publishNotice])
+
+  useEffect(() => {
+    const syncComposerRoute = () => {
+      setComposerOpen(window.location.hash.replace(/^#/, '') === 'forum/new')
+    }
+    window.addEventListener('hashchange', syncComposerRoute)
+    return () => window.removeEventListener('hashchange', syncComposerRoute)
+  }, [])
+
+  useEffect(() => {
+    if (!composerOpen || status !== 'anonymous') return
+    setComposerOpen(false)
+    window.history.replaceState(null, '', '#forum')
+    onAuthRequired()
+  }, [composerOpen, onAuthRequired, status])
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -418,6 +475,12 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     }
     setComposerFocus(focus)
     setComposerOpen(true)
+    if (window.location.hash !== '#forum/new') window.location.hash = 'forum/new'
+  }
+
+  const closeComposer = () => {
+    setComposerOpen(false)
+    if (window.location.hash !== '#forum') window.history.replaceState(null, '', '#forum')
   }
 
   const publish = (post: LocalForumPost) => {
@@ -425,10 +488,11 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     setComposerOpen(false)
     setPublishNotice(true)
     setChannel(post.channel)
-    setGameFilter(post.gameId)
+    setGameFilter(post.gameIds[0] ?? post.gameId)
     setFeedTab('recommended')
     setCurrentPage(1)
     setSelectedPostId(post.id)
+    if (window.location.hash !== '#forum') window.history.replaceState(null, '', '#forum')
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
@@ -445,6 +509,30 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
       <button type="submit">{t('forum.search.action')}</button>
     </form>
   )
+
+  if (composerOpen && signedIn) {
+    return (
+      <>
+        <main className="forum-main forum-publish-main">
+          <ForumComposerPage
+            focus={composerFocus}
+            sites={sites}
+            initialGameId={gameFilter}
+            avatarSrc={currentAvatar}
+            authorName={user?.name ?? ''}
+            onCancel={closeComposer}
+            onPublish={publish}
+          />
+        </main>
+        {publishNotice && (
+          <div className="forum-publish-toast" role="status">
+            <IconCheck className="size-5" stroke={2} aria-hidden="true" />
+            {t('forum.composer.published')}
+          </div>
+        )}
+      </>
+    )
+  }
 
   return (
     <>
@@ -508,9 +596,11 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
           {selectedPost ? (
             <ForumPostDetail
               post={selectedPost}
-              image={selectedPost.imageSrc ?? (!selectedPost.own && selectedPost.gameId
-                ? siteById.get(selectedPost.gameId)?.bg
-                : undefined)}
+              images={selectedPost.imageSrcs?.length
+                ? selectedPost.imageSrcs
+                : [selectedPost.imageSrc ?? (!selectedPost.own && selectedPost.gameId
+                    ? siteById.get(selectedPost.gameId)?.bg
+                    : undefined)].filter((image): image is string => Boolean(image))}
               onBack={closePost}
               onComingSoon={onComingSoon}
               onAuthRequired={onAuthRequired}
@@ -599,7 +689,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
                       <ForumPostCard
                         key={post.id}
                         post={post}
-                        image={post.imageSrc ?? (!post.own && post.gameId
+                        image={post.imageSrcs?.[0] ?? post.imageSrc ?? (!post.own && post.gameId
                           ? siteById.get(post.gameId)?.bg
                           : undefined)}
                         followed={userSystemState.followedUserIds.includes(post.authorNumber)}
@@ -749,17 +839,6 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
         </aside>
       </div>
       </main>
-      <ForumComposerDialog
-        open={composerOpen}
-        focus={composerFocus}
-        sites={sites}
-        initialChannel={channel === 'games' || gameFilter ? 'games' : 'general'}
-        initialGameId={gameFilter}
-        avatarSrc={currentAvatar}
-        authorName={user?.name ?? ''}
-        onOpenChange={setComposerOpen}
-        onPublish={publish}
-      />
       {publishNotice && (
         <div className="forum-publish-toast" role="status">
           <IconCheck className="size-5" stroke={2} aria-hidden="true" />
@@ -770,148 +849,281 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
   )
 }
 
-function ForumComposerDialog({
-  open,
+interface ForumComposerDraft {
+  title: string
+  content: string
+  gameIds: string[]
+  topics: Array<(typeof COMPOSER_TOPICS)[number]>
+  customTags: string[]
+  videoUrl: string
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  return `${(bytes / 1024).toFixed(bytes < 1024 * 100 ? 1 : 0)} KB`
+}
+
+function ForumComposerPage({
   focus,
   sites,
-  initialChannel,
   initialGameId,
   avatarSrc,
   authorName,
-  onOpenChange,
+  onCancel,
   onPublish,
 }: {
-  open: boolean
   focus: ComposerFocus
   sites: readonly SiteCard[]
-  initialChannel: 'general' | 'games'
   initialGameId: string | null
   avatarSrc: string
   authorName: string
-  onOpenChange: (open: boolean) => void
+  onCancel: () => void
   onPublish: (post: LocalForumPost) => void
 }) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const draftRecord = useMemo(() => defineMemoryRecord({
-    id: 'post', namespace: 'site', surface: 'forum-editor',
+    id: 'post-v2', namespace: 'site', surface: 'forum-editor',
     ...memoryPolicy.taskDraft('discard-forum-draft'),
-    schemaVersion: '1.0.0',
-    defaultValue: () => ({
-      title: '', content: '', channel: initialChannel, gameId: initialGameId,
-      topic: 'discussion' as (typeof COMPOSER_TOPICS)[number], videoUrl: '',
+    schemaVersion: '2.0.0',
+    defaultValue: (): ForumComposerDraft => ({
+      title: '',
+      content: '',
+      gameIds: initialGameId ? [initialGameId] : [],
+      topics: ['discussion'],
+      customTags: [],
+      videoUrl: '',
     }),
-    validate: (value: unknown): value is {
-      title: string
-      content: string
-      channel: 'general' | 'games'
-      gameId: string | null
-      topic: (typeof COMPOSER_TOPICS)[number]
-      videoUrl: string
-    } => {
+    validate: (value: unknown): value is ForumComposerDraft => {
       if (!value || typeof value !== 'object') return false
-      const draft = value as Record<string, unknown>
+      const draft = value as Partial<ForumComposerDraft>
       return typeof draft.title === 'string' && draft.title.length <= 80
         && typeof draft.content === 'string' && draft.content.length <= 5_000
-        && (draft.channel === 'general' || draft.channel === 'games')
-        && (draft.gameId === null || typeof draft.gameId === 'string')
-        && COMPOSER_TOPICS.includes(draft.topic as (typeof COMPOSER_TOPICS)[number])
+        && Array.isArray(draft.gameIds) && draft.gameIds.length <= FORUM_GAME_MAX_COUNT
+        && draft.gameIds.every((item) => typeof item === 'string')
+        && Array.isArray(draft.topics) && draft.topics.length <= FORUM_TAG_MAX_COUNT
+        && draft.topics.every((item) => COMPOSER_TOPICS.includes(item))
+        && Array.isArray(draft.customTags) && draft.customTags.length <= FORUM_TAG_MAX_COUNT
+        && draft.customTags.every((item) => typeof item === 'string' && item.length <= 24)
         && typeof draft.videoUrl === 'string' && draft.videoUrl.length <= 2_000
     },
     partition: { account: true },
     signInAdoption: 'keep_anonymous',
-  }), [initialChannel, initialGameId])
+  }), [initialGameId])
   const [draft, setDraft, clearDraft] = useMemoryState(draftRecord, {
     accountId: user?.id,
-    partition: `${initialChannel}:${initialGameId ?? 'all'}`,
+    partition: initialGameId ?? 'all',
     debounceMs: 300,
   })
   const [title, setTitle] = useState(draft.title)
   const [content, setContent] = useState(draft.content)
-  const [channel, setChannel] = useState<'general' | 'games'>(draft.channel)
-  const [gameId, setGameId] = useState<string | null>(draft.gameId)
-  const [topic, setTopic] = useState<(typeof COMPOSER_TOPICS)[number]>(draft.topic)
-  const [imageSrc, setImageSrc] = useState<string | null>(null)
-  const [imageName, setImageName] = useState('')
+  const [gameIds, setGameIds] = useState(draft.gameIds)
+  const [topics, setTopics] = useState(draft.topics)
+  const [customTags, setCustomTags] = useState(draft.customTags)
+  const [gameQuery, setGameQuery] = useState('')
+  const [tagQuery, setTagQuery] = useState('')
+  const [gameInputActive, setGameInputActive] = useState(false)
+  const [tagInputActive, setTagInputActive] = useState(false)
+  const [images, setImages] = useState<ComposerImage[]>([])
+  const [pendingImages, setPendingImages] = useState<ComposerImage[]>([])
+  const [imageDialogOpen, setImageDialogOpen] = useState(false)
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false)
   const [videoUrl, setVideoUrl] = useState(draft.videoUrl)
+  const [videoInput, setVideoInput] = useState(draft.videoUrl)
+  const [parsedVideoUrl, setParsedVideoUrl] = useState(draft.videoUrl)
+  const [videoError, setVideoError] = useState('')
   const [error, setError] = useState('')
   const titleRef = useRef<HTMLInputElement>(null)
+  const contentRef = useRef<HTMLTextAreaElement>(null)
+  const tagInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
-  const imageButtonRef = useRef<HTMLButtonElement>(null)
-  const videoRef = useRef<HTMLInputElement>(null)
-  const topicRef = useRef<HTMLButtonElement>(null)
+  const draggedImageIndex = useRef<number | null>(null)
 
-  // Hydrate from the saved draft once per opening, NOT on every draft change.
-  // The effect below writes `draft` on each keystroke, so depending on `draft`
-  // here fed back into this effect and re-ran it -- which wiped the attached image
-  // and any validation error the moment the user typed another character.
-  // `draft` is read through a ref so it is deliberately not a dependency.
-  // Mirrored in an effect rather than assigned during render (React forbids
-  // touching a ref while rendering). The initial value is already the persisted
-  // draft, and this effect is declared before the hydrate effect below, so on the
-  // commit where `open` flips the ref is current.
-  const draftRef = useRef(draft)
-  useEffect(() => {
-    draftRef.current = draft
-  }, [draft])
-  const hydratedFor = useRef(false)
-  useEffect(() => {
-    if (!open) {
-      hydratedFor.current = false
-      return
-    }
-    if (hydratedFor.current) return
-    hydratedFor.current = true
-    const saved = draftRef.current
-    setTitle(saved.title)
-    setContent(saved.content)
-    setChannel(saved.channel)
-    setGameId(saved.gameId)
-    setTopic(saved.topic)
-    setImageSrc(null)
-    setImageName('')
-    setVideoUrl(saved.videoUrl)
-    setError('')
-  }, [open])
+  const siteName = (site: SiteCard) => t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })
+  const selectedSites = sites.filter((site) => gameIds.includes(site.id))
+  const normalizedGameQuery = gameQuery.trim().toLocaleLowerCase()
+  const gameSuggestions = normalizedGameQuery
+    ? sites.filter((site) => !gameIds.includes(site.id)
+      && `${siteName(site)} ${site.id}`.toLocaleLowerCase().includes(normalizedGameQuery))
+    : []
+  const normalizedTagQuery = tagQuery.trim().toLocaleLowerCase()
+  const tagSuggestions = normalizedTagQuery
+    ? COMPOSER_TOPICS.filter((topic) => !topics.includes(topic)
+      && t(`forum.composer.topics.${topic}`).toLocaleLowerCase().includes(normalizedTagQuery))
+    : []
+  const selectedTagCount = topics.length + customTags.length
+  const canCreateCustomTag = Boolean(tagQuery.trim())
+    && selectedTagCount < FORUM_TAG_MAX_COUNT
+    && !customTags.some((tag) => tag.toLocaleLowerCase() === normalizedTagQuery)
+    && !COMPOSER_TOPICS.some((topic) => t(`forum.composer.topics.${topic}`).toLocaleLowerCase() === normalizedTagQuery)
 
   useEffect(() => {
-    if (!open) return
-    setDraft({ title, content, channel, gameId, topic, videoUrl })
-  }, [channel, content, gameId, open, setDraft, title, topic, videoUrl])
+    setDraft({ title, content, gameIds, topics, customTags, videoUrl })
+  }, [content, customTags, gameIds, setDraft, title, topics, videoUrl])
 
   useEffect(() => {
-    if (!open) return
     const timeout = window.setTimeout(() => {
-      if (focus === 'image') imageButtonRef.current?.focus()
-      else if (focus === 'video') videoRef.current?.focus()
-      else if (focus === 'topic') topicRef.current?.focus()
-      else titleRef.current?.focus()
+      if (focus === 'image') {
+        setImageDialogOpen(true)
+      } else if (focus === 'video') {
+        setVideoDialogOpen(true)
+      } else if (focus === 'topic') {
+        tagInputRef.current?.focus()
+      } else {
+        titleRef.current?.focus()
+      }
     })
     return () => window.clearTimeout(timeout)
-  }, [focus, open])
+  }, [focus])
 
-  const selectImage = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0]
-    event.currentTarget.value = ''
-    if (!file) return
-    if (!FORUM_IMAGE_TYPES.has(file.type) || file.size > FORUM_IMAGE_MAX_BYTES) {
+  const addGame = (gameId: string) => {
+    if (gameIds.length >= FORUM_GAME_MAX_COUNT || gameIds.includes(gameId)) return
+    setGameIds((current) => [...current, gameId])
+    setGameQuery('')
+    setError('')
+  }
+
+  const handleGameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && gameSuggestions[0]) {
+      event.preventDefault()
+      addGame(gameSuggestions[0].id)
+    } else if (event.key === 'Backspace' && !gameQuery && gameIds.length > 0) {
+      setGameIds((current) => current.slice(0, -1))
+    } else if (event.key === 'Escape') {
+      setGameInputActive(false)
+    }
+  }
+
+  const addTopic = (topic: (typeof COMPOSER_TOPICS)[number]) => {
+    if (selectedTagCount >= FORUM_TAG_MAX_COUNT || topics.includes(topic)) return
+    setTopics((current) => [...current, topic])
+    setTagQuery('')
+    setError('')
+  }
+
+  const addCustomTag = () => {
+    const nextTag = tagQuery.trim()
+    if (!canCreateCustomTag) return
+    setCustomTags((current) => [...current, nextTag])
+    setTagQuery('')
+    setError('')
+  }
+
+  const handleTagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      if (tagSuggestions[0]) addTopic(tagSuggestions[0])
+      else addCustomTag()
+    } else if (event.key === 'Backspace' && !tagQuery) {
+      if (customTags.length > 0) setCustomTags((current) => current.slice(0, -1))
+      else if (topics.length > 0) setTopics((current) => current.slice(0, -1))
+    } else if (event.key === 'Escape') {
+      setTagInputActive(false)
+    }
+  }
+
+  const insertFormatting = (before: string, after: string, fallback: string) => {
+    const textarea = contentRef.current
+    if (!textarea) return
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selected = content.slice(start, end) || fallback
+    const nextContent = `${content.slice(0, start)}${before}${selected}${after}${content.slice(end)}`
+    if (nextContent.length > 5_000) return
+    setContent(nextContent)
+    setError('')
+    window.setTimeout(() => {
+      textarea.focus()
+      textarea.setSelectionRange(start + before.length, start + before.length + selected.length)
+    })
+  }
+
+  const selectImages = async (files: File[]) => {
+    const available = FORUM_IMAGE_MAX_COUNT - pendingImages.length
+    const candidates = files.slice(0, available)
+    const existingBytes = pendingImages.reduce((total, image) => total + image.size, 0)
+    const valid = candidates.every((file) => FORUM_IMAGE_TYPES.has(file.type) && file.size <= FORUM_IMAGE_MAX_BYTES)
+      && existingBytes + candidates.reduce((total, file) => total + file.size, 0) <= FORUM_IMAGE_TOTAL_MAX_BYTES
+    if (!valid || candidates.length === 0) {
       setError(t('forum.composer.errors.image'))
       return
     }
     try {
-      setImageSrc(await readForumImage(file))
-      setImageName(file.name)
+      const nextImages = await Promise.all(candidates.map(async (file) => ({
+        id: `${Date.now()}-${localPostSuffix()}-${file.name}`,
+        src: await readForumImage(file),
+        name: file.name,
+        size: file.size,
+      })))
+      setPendingImages((current) => [...current, ...nextImages])
       setError('')
     } catch {
       setError(t('forum.composer.errors.image'))
     }
   }
 
+  const handleImageInput = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.currentTarget.files ?? [])
+    event.currentTarget.value = ''
+    void selectImages(files)
+  }
+
+  const handleImageDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    void selectImages(Array.from(event.dataTransfer.files))
+  }
+
+  const movePendingImage = (index: number, offset: number) => {
+    const target = index + offset
+    if (target < 0 || target >= pendingImages.length) return
+    setPendingImages((current) => {
+      const next = [...current]
+      const [item] = next.splice(index, 1)
+      next.splice(target, 0, item)
+      return next
+    })
+  }
+
+  const dropPendingImage = (targetIndex: number) => {
+    const sourceIndex = draggedImageIndex.current
+    draggedImageIndex.current = null
+    if (sourceIndex === null || sourceIndex === targetIndex) return
+    setPendingImages((current) => {
+      const next = [...current]
+      const [item] = next.splice(sourceIndex, 1)
+      next.splice(targetIndex, 0, item)
+      return next
+    })
+  }
+
+  const openImageDialog = () => {
+    setPendingImages(images)
+    setImageDialogOpen(true)
+    setError('')
+  }
+
+  const openVideoDialog = () => {
+    setVideoInput(videoUrl)
+    setParsedVideoUrl(videoUrl)
+    setVideoError('')
+    setVideoDialogOpen(true)
+  }
+
+  const parseVideo = () => {
+    const normalized = videoInput.trim()
+    if (!forumVideoPlatform(normalized)) {
+      setParsedVideoUrl('')
+      setVideoError(t('forum.composer.errors.video'))
+      return
+    }
+    setParsedVideoUrl(normalized)
+    setVideoError('')
+  }
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const normalizedTitle = title.trim()
     const normalizedContent = content.trim()
-    const normalizedVideoUrl = videoUrl.trim()
     if (normalizedTitle.length < 2) {
       setError(t('forum.composer.errors.title'))
       titleRef.current?.focus()
@@ -919,217 +1131,343 @@ function ForumComposerDialog({
     }
     if (normalizedContent.length < 10) {
       setError(t('forum.composer.errors.content'))
+      contentRef.current?.focus()
       return
     }
-    if (channel === 'games' && !gameId) {
-      setError(t('forum.composer.errors.game'))
-      return
-    }
-    if (!isSafeVideoUrl(normalizedVideoUrl)) {
+    if (videoUrl && !forumVideoPlatform(videoUrl)) {
       setError(t('forum.composer.errors.video'))
-      videoRef.current?.focus()
       return
     }
 
+    const imageSrcs = images.map((image) => image.src)
     onPublish({
       id: `local-${Date.now()}-${localPostSuffix()}`,
       title: normalizedTitle,
       content: normalizedContent,
-      channel,
-      gameId: channel === 'games' ? gameId : null,
-      topic,
-      imageSrc,
-      videoUrl: normalizedVideoUrl || null,
+      channel: gameIds.length > 0 ? 'games' : 'general',
+      gameId: gameIds[0] ?? null,
+      gameIds,
+      topic: topics[0] ?? 'discussion',
+      topics,
+      tags: customTags,
+      imageSrc: imageSrcs[0] ?? null,
+      imageSrcs,
+      videoUrl: videoUrl || null,
       createdAt: new Date().toISOString(),
     })
     clearDraft()
   }
 
+  const toolbarButtons = [
+    { key: 'bold', icon: IconBold, before: '**', after: '**', fallbackKey: 'text' },
+    { key: 'italic', icon: IconItalic, before: '*', after: '*', fallbackKey: 'text' },
+    { key: 'underline', icon: IconUnderline, before: '<u>', after: '</u>', fallbackKey: 'text' },
+    { key: 'heading', icon: IconH1, before: '## ', after: '', fallbackKey: 'headingText' },
+    { key: 'list', icon: IconList, before: '- ', after: '', fallbackKey: 'listItem' },
+    { key: 'orderedList', icon: IconListNumbers, before: '1. ', after: '', fallbackKey: 'listItem' },
+    { key: 'quote', icon: IconQuote, before: '> ', after: '', fallbackKey: 'quoteText' },
+    { key: 'code', icon: IconCode, before: '`', after: '`', fallbackKey: 'codeText' },
+    { key: 'link', icon: IconLink, before: '[', after: '](https://)', fallbackKey: 'linkText' },
+  ]
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="forum-publish-dialog z-[var(--arkive-layer-sheet)]"
-        overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
-        showCloseButton={false}
-      >
-        <form className="forum-publish-form" onSubmit={submit}>
-          <DialogHeader className="forum-publish-header">
-            <img src={avatarSrc} alt="" />
-            <div>
-              <DialogTitle>{t('forum.composer.dialogTitle')}</DialogTitle>
-              <DialogDescription className="sr-only">{t('forum.composer.dialogDescription')}</DialogDescription>
-              <span>{authorName}</span>
-            </div>
-            <DialogClose asChild>
-              <button type="button" className={POPUP_CLOSE_CONTROL_CLASS} aria-label={t('forum.composer.close')}>
-                <IconX className="size-5" stroke={1.8} aria-hidden="true" />
-              </button>
-            </DialogClose>
-          </DialogHeader>
+    <section className="forum-publish-page" aria-labelledby="forum-publish-title">
+      <button type="button" className="forum-publish-back" onClick={onCancel}>
+        <IconArrowLeft className="size-4" stroke={1.8} aria-hidden="true" />
+        {t('forum.composer.back')}
+      </button>
+      <header className="forum-publish-page-header">
+        <h1 id="forum-publish-title">{t('forum.composer.dialogTitle')}</h1>
+        <div className="forum-publish-author">
+          <img src={avatarSrc} alt="" />
+          <strong>{authorName}</strong>
+          <span><IconCheck className="size-4" stroke={2} aria-hidden="true" />{t('forum.composer.draftSaved')}</span>
+        </div>
+      </header>
 
-          <div className="forum-publish-layout">
-            <div className="forum-publish-editor">
-              <label htmlFor="forum-post-title">
-                <span>{t('forum.composer.postTitle')}</span>
-                <small>{title.length}/80</small>
-              </label>
-              <input
-                ref={titleRef}
-                id="forum-post-title"
-                value={title}
-                maxLength={80}
-                onChange={(event) => {
-                  setTitle(event.target.value)
-                  setError('')
-                }}
-                placeholder={t('forum.composer.postTitlePlaceholder')}
-              />
-
-              <label htmlFor="forum-post-content">
-                <span>{t('forum.composer.content')}</span>
-                <small>{content.length}/5000</small>
-              </label>
-              <textarea
-                id="forum-post-content"
-                value={content}
-                maxLength={5000}
-                onChange={(event) => {
-                  setContent(event.target.value)
-                  setError('')
-                }}
-                placeholder={t('forum.composer.contentPlaceholder')}
-              />
-
-              {imageSrc && (
-                <figure className="forum-publish-image-preview">
-                  <img src={imageSrc} alt={imageName} />
-                  <figcaption>{imageName}</figcaption>
-                  <button
-                    type="button"
-                    aria-label={t('forum.composer.removeImage')}
-                    onClick={() => {
-                      setImageSrc(null)
-                      setImageName('')
-                    }}
-                  >
-                    <IconTrash className="size-4" stroke={1.8} aria-hidden="true" />
-                  </button>
-                </figure>
-              )}
-            </div>
-
-            <aside className="forum-publish-settings">
-              <fieldset>
-                <legend>{t('forum.composer.destination')}</legend>
-                <div className="forum-publish-channel-options">
-                  {(['general', 'games'] as const).map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-pressed={channel === value}
-                      onClick={() => {
-                        setChannel(value)
-                        setError('')
-                      }}
-                    >
-                      {value === 'general'
-                        ? <IconMessages className="size-5" stroke={1.8} aria-hidden="true" />
-                        : <IconDeviceGamepad2 className="size-5" stroke={1.8} aria-hidden="true" />}
-                      {t(`forum.composer.channels.${value}`)}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-
-              {channel === 'games' && (
-                <fieldset>
-                  <legend>{t('forum.composer.selectGame')}</legend>
-                  <div className="forum-publish-game-options">
-                    {sites.map((site) => (
-                      <button
-                        key={site.id}
-                        type="button"
-                        aria-pressed={gameId === site.id}
-                        onClick={() => {
-                          setGameId(site.id)
-                          setError('')
-                        }}
-                      >
-                        <img src={GAME_LOGOS[site.id]} alt="" />
-                        <span>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</span>
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-              )}
-
-              <fieldset>
-                <legend>{t('forum.composer.topicLabel')}</legend>
-                <div className="forum-publish-topic-options">
-                  {COMPOSER_TOPICS.map((value, index) => (
-                    <button
-                      ref={index === 0 ? topicRef : undefined}
-                      key={value}
-                      type="button"
-                      aria-pressed={topic === value}
-                      onClick={() => setTopic(value)}
-                    >
-                      <IconHash className="size-4" stroke={1.8} aria-hidden="true" />
-                      {t(`forum.composer.topics.${value}`)}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-
-              <fieldset>
-                <legend>{t('forum.composer.media')}</legend>
-                <input
-                  ref={imageInputRef}
-                  className="sr-only"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(event) => void selectImage(event)}
-                />
-                <button
-                  ref={imageButtonRef}
-                  type="button"
-                  className="forum-publish-media-button"
-                  onClick={() => imageInputRef.current?.click()}
-                >
-                  <IconPhoto className="size-5" stroke={1.8} aria-hidden="true" />
-                  {t(imageSrc ? 'forum.composer.replaceImage' : 'forum.composer.image')}
+      <form className="forum-publish-form" onSubmit={submit}>
+        <div
+          className="forum-token-field"
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setGameInputActive(false)
+          }}
+        >
+          <label htmlFor="forum-game-query">{t('forum.composer.relatedGames')}</label>
+          <div className="forum-token-input" data-active={gameInputActive || undefined}>
+            {selectedSites.map((site) => (
+              <span className="forum-token forum-game-token" key={site.id}>
+                <img src={GAME_LOGOS[site.id]} alt="" />
+                {siteName(site)}
+                <button type="button" aria-label={t('forum.composer.removeGame', { game: siteName(site) })} onClick={() => setGameIds((current) => current.filter((id) => id !== site.id))}>
+                  <IconX className="size-3.5" stroke={2} aria-hidden="true" />
                 </button>
-                <label className="forum-publish-video-field" htmlFor="forum-post-video">
-                  <span><IconVideo className="size-5" stroke={1.8} aria-hidden="true" />{t('forum.composer.video')}</span>
-                  <input
-                    ref={videoRef}
-                    id="forum-post-video"
-                    type="url"
-                    value={videoUrl}
-                    onChange={(event) => {
-                      setVideoUrl(event.target.value)
-                      setError('')
-                    }}
-                    placeholder={t('forum.composer.videoPlaceholder')}
-                  />
-                </label>
-              </fieldset>
-            </aside>
+              </span>
+            ))}
+            <input
+              id="forum-game-query"
+              value={gameQuery}
+              disabled={gameIds.length >= FORUM_GAME_MAX_COUNT}
+              onFocus={() => setGameInputActive(true)}
+              onChange={(event) => setGameQuery(event.target.value)}
+              onKeyDown={handleGameKeyDown}
+              role="combobox"
+              aria-expanded={gameInputActive && Boolean(gameQuery.trim())}
+              aria-controls="forum-game-suggestions"
+              aria-autocomplete="list"
+              placeholder={t('forum.composer.gameInputPlaceholder')}
+            />
+            <small>{gameIds.length} / {FORUM_GAME_MAX_COUNT}</small>
           </div>
+          {gameInputActive && gameQuery.trim() && (
+            <div id="forum-game-suggestions" className="forum-autocomplete" role="listbox">
+              <strong>{t('forum.composer.matchingGames')}</strong>
+              {gameSuggestions.length > 0 ? gameSuggestions.map((site, index) => (
+                <button
+                  key={site.id}
+                  type="button"
+                  role="option"
+                  aria-selected={index === 0}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => addGame(site.id)}
+                >
+                  <img src={GAME_LOGOS[site.id]} alt="" />
+                  <span><b>{siteName(site)}</b><small>{site.id.toLocaleUpperCase()}</small></span>
+                  {index === 0 && <kbd>{t('forum.composer.pressEnter')}</kbd>}
+                </button>
+              )) : <p>{t('forum.composer.noMatchingGames')}</p>}
+            </div>
+          )}
+        </div>
 
-          <DialogFooter className="forum-publish-footer">
-            <span className="forum-publish-error" role="alert">{error}</span>
-            <DialogClose asChild>
-              <button type="button" className="forum-publish-cancel">{t('forum.composer.cancel')}</button>
-            </DialogClose>
-            <button type="submit" className="forum-publish-submit">
-              <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
-              {t('forum.composer.publish')}
+        <div
+          className="forum-token-field"
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setTagInputActive(false)
+          }}
+        >
+          <label htmlFor="forum-tag-query">{t('forum.composer.addTags')}</label>
+          <div className="forum-token-input" data-active={tagInputActive || undefined}>
+            {topics.map((topic) => (
+              <span className="forum-token" key={topic}>
+                {t(`forum.composer.topics.${topic}`)}
+                <button type="button" aria-label={t('forum.composer.removeTag', { tag: t(`forum.composer.topics.${topic}`) })} onClick={() => setTopics((current) => current.filter((item) => item !== topic))}>
+                  <IconX className="size-3.5" stroke={2} aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+            {customTags.map((tag) => (
+              <span className="forum-token" key={tag}>
+                {tag}
+                <button type="button" aria-label={t('forum.composer.removeTag', { tag })} onClick={() => setCustomTags((current) => current.filter((item) => item !== tag))}>
+                  <IconX className="size-3.5" stroke={2} aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+            <input
+              ref={tagInputRef}
+              id="forum-tag-query"
+              value={tagQuery}
+              disabled={selectedTagCount >= FORUM_TAG_MAX_COUNT}
+              onFocus={() => setTagInputActive(true)}
+              onChange={(event) => setTagQuery(event.target.value.slice(0, 24))}
+              onKeyDown={handleTagKeyDown}
+              role="combobox"
+              aria-expanded={tagInputActive && Boolean(tagQuery.trim())}
+              aria-controls="forum-tag-suggestions"
+              aria-autocomplete="list"
+              placeholder={t('forum.composer.tagInputPlaceholder')}
+            />
+            <small>{selectedTagCount} / {FORUM_TAG_MAX_COUNT}</small>
+          </div>
+          {tagInputActive && tagQuery.trim() && (
+            <div id="forum-tag-suggestions" className="forum-autocomplete" role="listbox">
+              <strong>{t('forum.composer.matchingTags')}</strong>
+              {tagSuggestions.map((topic, index) => (
+                <button
+                  key={topic}
+                  type="button"
+                  role="option"
+                  aria-selected={index === 0}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => addTopic(topic)}
+                >
+                  <IconHash className="size-4" stroke={1.8} aria-hidden="true" />
+                  <span><b>{t(`forum.composer.topics.${topic}`)}</b></span>
+                  {index === 0 && <kbd>{t('forum.composer.pressEnter')}</kbd>}
+                </button>
+              ))}
+              {canCreateCustomTag && (
+                <button type="button" role="option" aria-selected={tagSuggestions.length === 0} onMouseDown={(event) => event.preventDefault()} onClick={addCustomTag}>
+                  <IconHash className="size-4" stroke={1.8} aria-hidden="true" />
+                  <span><b>{t('forum.composer.createTag', { tag: tagQuery.trim() })}</b></span>
+                  {tagSuggestions.length === 0 && <kbd>{t('forum.composer.pressEnter')}</kbd>}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="forum-publish-editor-field">
+          <label htmlFor="forum-post-title">{t('forum.composer.postTitle')}</label>
+          <input
+            ref={titleRef}
+            id="forum-post-title"
+            value={title}
+            maxLength={80}
+            onChange={(event) => { setTitle(event.target.value); setError('') }}
+            placeholder={t('forum.composer.postTitlePlaceholder')}
+          />
+        </div>
+
+        <div className="forum-publish-editor-field">
+          <label htmlFor="forum-post-content">{t('forum.composer.content')}</label>
+          <div className="forum-rich-editor">
+            <div className="forum-rich-toolbar" role="toolbar" aria-label={t('forum.composer.toolbar.label')}>
+              {toolbarButtons.map(({ key, icon: Icon, before, after, fallbackKey }) => {
+                const label = t(`forum.composer.toolbar.${key}`)
+                return (
+                  <button key={key} type="button" aria-label={label} title={label} onClick={() => insertFormatting(before, after, t(`forum.composer.toolbar.${fallbackKey}`))}>
+                    <Icon className="size-4" stroke={1.8} aria-hidden="true" />
+                  </button>
+                )
+              })}
+              <span aria-hidden="true" />
+              <button type="button" aria-label={t('forum.composer.image')} title={t('forum.composer.image')} onClick={openImageDialog}>
+                <IconPhoto className="size-4" stroke={1.8} aria-hidden="true" />
+              </button>
+              <button type="button" aria-label={t('forum.composer.video')} title={t('forum.composer.video')} onClick={openVideoDialog}>
+                <IconVideo className="size-4" stroke={1.8} aria-hidden="true" />
+              </button>
+            </div>
+            <textarea
+              ref={contentRef}
+              id="forum-post-content"
+              value={content}
+              maxLength={5_000}
+              onChange={(event) => { setContent(event.target.value); setError('') }}
+              placeholder={t('forum.composer.contentPlaceholder')}
+            />
+            {images.length > 0 && (
+              <div className="forum-editor-media-grid">
+                {images.map((image) => (
+                  <figure key={image.id}>
+                    <img src={image.src} alt={image.name} />
+                    <figcaption>{image.name}</figcaption>
+                    <button type="button" aria-label={t('forum.composer.removeImage')} onClick={() => setImages((current) => current.filter((item) => item.id !== image.id))}>
+                      <IconX className="size-4" stroke={2} aria-hidden="true" />
+                    </button>
+                  </figure>
+                ))}
+              </div>
+            )}
+            {videoUrl && (
+              <div className="forum-editor-video">
+                <IconVideo className="size-5" stroke={1.8} aria-hidden="true" />
+                <span><strong>{t(`forum.composer.videoPlatforms.${forumVideoPlatform(videoUrl)}`)}</strong><small>{videoUrl}</small></span>
+                <button type="button" aria-label={t('forum.composer.removeVideo')} onClick={() => setVideoUrl('')}>
+                  <IconX className="size-4" stroke={2} aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <footer className="forum-publish-footer">
+          <div>
+            <span>{content.length} / 5000</span>
+            <span><IconCheck className="size-4" stroke={2} aria-hidden="true" />{t('forum.composer.draftSaved')}</span>
+            <strong role="alert">{error}</strong>
+          </div>
+          <button type="button" className="forum-publish-cancel" onClick={onCancel}>{t('forum.composer.cancel')}</button>
+          <button type="submit" className="forum-publish-submit">
+            <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
+            {t('forum.composer.publish')}
+          </button>
+        </footer>
+      </form>
+
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="forum-media-dialog forum-image-dialog z-[var(--arkive-layer-sheet)]" overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]" showCloseButton={false}>
+          <DialogHeader className="forum-media-dialog-header">
+            <DialogTitle>{t('forum.composer.imageDialogTitle')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('forum.composer.imageDialogDescription')}</DialogDescription>
+            <DialogClose asChild><button type="button" className={POPUP_CLOSE_CONTROL_CLASS} aria-label={t('forum.composer.closeMediaDialog')}><IconX className="size-5" stroke={1.8} /></button></DialogClose>
+          </DialogHeader>
+          <input ref={imageInputRef} className="sr-only" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageInput} />
+          <div className="forum-image-dropzone" onDragOver={(event) => event.preventDefault()} onDrop={handleImageDrop}>
+            <IconUpload className="size-7" stroke={1.5} aria-hidden="true" />
+            <strong>{t('forum.composer.imageDropTitle')}</strong>
+            <button type="button" onClick={() => imageInputRef.current?.click()}>{t('forum.composer.chooseImages')}</button>
+            <small>{t('forum.composer.imageRules')}</small>
+          </div>
+          <div className="forum-image-queue">
+            <h3>{t('forum.composer.pendingImages', { count: pendingImages.length })}</h3>
+            {pendingImages.length > 0 ? (
+              <div>
+                {pendingImages.map((image, index) => (
+                  <article key={image.id} draggable onDragStart={() => { draggedImageIndex.current = index }} onDragOver={(event) => event.preventDefault()} onDrop={() => dropPendingImage(index)}>
+                    <img src={image.src} alt="" />
+                    <span><strong>{image.name}</strong><small>{formatFileSize(image.size)}</small></span>
+                    <IconCheck className="size-4" stroke={2} aria-label={t('forum.composer.uploadComplete')} />
+                    <div>
+                      <button type="button" disabled={index === 0} aria-label={t('forum.composer.moveImageUp')} onClick={() => movePendingImage(index, -1)}><IconArrowUp className="size-4" stroke={1.8} /></button>
+                      <button type="button" disabled={index === pendingImages.length - 1} aria-label={t('forum.composer.moveImageDown')} onClick={() => movePendingImage(index, 1)}><IconArrowDown className="size-4" stroke={1.8} /></button>
+                      <button type="button" aria-label={t('forum.composer.removeImage')} onClick={() => setPendingImages((current) => current.filter((item) => item.id !== image.id))}><IconTrash className="size-4" stroke={1.8} /></button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : <p>{t('forum.composer.noPendingImages')}</p>}
+          </div>
+          <DialogFooter className="forum-media-dialog-footer">
+            <span>{t('forum.composer.selectedImages', { count: pendingImages.length, max: FORUM_IMAGE_MAX_COUNT })}</span>
+            <DialogClose asChild><button type="button" className="forum-publish-cancel">{t('forum.composer.cancel')}</button></DialogClose>
+            <button type="button" className="forum-publish-submit" disabled={pendingImages.length === 0} onClick={() => { setImages(pendingImages); setImageDialogOpen(false) }}>
+              {t('forum.composer.insertImages', { count: pendingImages.length })}
             </button>
           </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
+        <DialogContent className="forum-media-dialog forum-video-dialog z-[var(--arkive-layer-sheet)]" overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]" showCloseButton={false}>
+          <DialogHeader className="forum-media-dialog-header">
+            <DialogTitle>{t('forum.composer.videoDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('forum.composer.videoDialogDescription')}</DialogDescription>
+            <DialogClose asChild><button type="button" className={POPUP_CLOSE_CONTROL_CLASS} aria-label={t('forum.composer.closeMediaDialog')}><IconX className="size-5" stroke={1.8} /></button></DialogClose>
+          </DialogHeader>
+          <div className="forum-video-platforms" aria-label={t('forum.composer.supportedVideoPlatforms')}>
+            <span>{t('forum.composer.videoPlatforms.bilibili')}</span>
+            <span>{t('forum.composer.videoPlatforms.douyin')}</span>
+          </div>
+          <label className="forum-video-link-field" htmlFor="forum-video-link">
+            <span>{t('forum.composer.videoLink')}</span>
+            <div>
+              <input id="forum-video-link" type="url" value={videoInput} onChange={(event) => { setVideoInput(event.target.value); setParsedVideoUrl(''); setVideoError('') }} placeholder={t('forum.composer.videoPlaceholder')} />
+              <button type="button" onClick={parseVideo}>{t('forum.composer.parseVideo')}</button>
+            </div>
+          </label>
+          {videoError && <p className="forum-video-error" role="alert">{videoError}</p>}
+          {parsedVideoUrl && forumVideoPlatform(parsedVideoUrl) && (
+            <div className="forum-video-preview">
+              <span className="forum-video-preview-art"><IconVideo className="size-8" stroke={1.5} aria-hidden="true" /></span>
+              <div>
+                <small>{t(`forum.composer.videoPlatforms.${forumVideoPlatform(parsedVideoUrl)}`)}</small>
+                <strong>{t('forum.composer.videoPreviewTitle')}</strong>
+                <span><IconCheck className="size-4" stroke={2} aria-hidden="true" />{t('forum.composer.validVideoLink')}</span>
+              </div>
+              <button type="button" aria-label={t('forum.composer.removeVideo')} onClick={() => { setParsedVideoUrl(''); setVideoInput('') }}><IconX className="size-4" stroke={2} /></button>
+            </div>
+          )}
+          <DialogFooter className="forum-media-dialog-footer">
+            <DialogClose asChild><button type="button" className="forum-publish-cancel">{t('forum.composer.cancel')}</button></DialogClose>
+            <button type="button" className="forum-publish-submit" disabled={!parsedVideoUrl} onClick={() => { setVideoUrl(parsedVideoUrl); setVideoDialogOpen(false); setError('') }}>
+              {t('forum.composer.insertVideo')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
   )
 }
 
@@ -1209,14 +1547,14 @@ function ForumPostCard({
 
 function ForumPostDetail({
   post,
-  image,
+  images,
   onBack,
   onComingSoon,
   onAuthRequired,
   currentAvatar,
 }: {
   post: ForumPost
-  image?: string
+  images: string[]
   onBack: () => void
   onComingSoon: () => void
   onAuthRequired: () => void
@@ -1269,7 +1607,13 @@ function ForumPostDetail({
 
         <div className="forum-detail-body">
           <p className="forum-detail-lead">{postCopy(post, t)}</p>
-          {image && <img src={image} alt={postTitle(post, t)} loading="eager" />}
+          {images.length > 0 && (
+            <div className="forum-detail-media-grid">
+              {images.map((image, index) => (
+                <img key={`${image.slice(0, 48)}-${index}`} src={image} alt={postTitle(post, t)} loading={index === 0 ? 'eager' : 'lazy'} />
+              ))}
+            </div>
+          )}
           {post.videoUrl && (
             <a className="forum-detail-video" href={post.videoUrl} target="_blank" rel="noreferrer">
               <IconVideo className="size-5" stroke={1.8} aria-hidden="true" />

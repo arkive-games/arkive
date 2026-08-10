@@ -1096,8 +1096,10 @@ function AuthoredPostContent() {
   return (
     <div className="profile-post-list">
       {state.publishedPosts.map((post) => {
-        const site = post.gameId ? SITES.find((item) => item.id === post.gameId) : undefined
-        const image = post.imageSrc ?? site?.bg
+        const sites = post.gameIds
+          .map((gameId) => SITES.find((item) => item.id === gameId))
+          .filter((site): site is (typeof SITES)[number] => Boolean(site))
+        const image = post.imageSrcs[0] ?? sites[0]?.bg
         return (
           <article key={post.id} className="user-panel profile-post-card authored-post-card">
             <div className="profile-post-copy">
@@ -1105,8 +1107,9 @@ function AuthoredPostContent() {
               <h2><a href="#forum">{post.title}</a></h2>
               <p>{post.content}</p>
               <footer>
-                {site && <span>{t(site.nameKey)}</span>}
-                <span>{t(`forum.composer.topics.${post.topic}`)}</span>
+                {sites.map((site) => <span key={site.id}>{t(site.nameKey)}</span>)}
+                {post.topics.map((topic) => <span key={topic}>{t(`forum.composer.topics.${topic}`, { defaultValue: topic })}</span>)}
+                {post.tags.map((tag) => <span key={tag}>{tag}</span>)}
                 {post.videoUrl && (
                   <a href={post.videoUrl} target="_blank" rel="noreferrer">
                     <IconVideo className="size-4" stroke={1.8} aria-hidden="true" />

@@ -70,7 +70,42 @@ describe('user system state persistence', () => {
       ],
     }))
 
-    expect(readUserSystemState(storage, 'user-a').publishedPosts).toHaveLength(1)
-    expect(readUserSystemState(storage, 'user-a').publishedPosts[0]?.id).toBe('local-1')
+    const posts = readUserSystemState(storage, 'user-a').publishedPosts
+    expect(posts).toHaveLength(1)
+    expect(posts[0]).toMatchObject({
+      id: 'local-1',
+      gameIds: ['vrising'],
+      topics: ['guide'],
+      tags: [],
+      imageSrcs: [],
+    })
+  })
+
+  it('restores authored posts with multiple games, tags, and images', () => {
+    const storage = memoryStorage()
+    storage.setItem('arkive.meta.user-system.v1:user-a', JSON.stringify({
+      publishedPosts: [{
+        id: 'local-2',
+        title: 'Cross-game route notes',
+        content: 'Useful route details for two games.',
+        channel: 'games',
+        gameId: 'aion2',
+        gameIds: ['aion2', 'palworld'],
+        topic: 'guide',
+        topics: ['guide', 'testing'],
+        tags: ['route'],
+        imageSrc: 'data:image/png;base64,first',
+        imageSrcs: ['data:image/png;base64,first', 'data:image/png;base64,second'],
+        videoUrl: 'https://www.bilibili.com/video/BV1xxxxxx',
+        createdAt: '2026-08-10T00:00:00.000Z',
+      }],
+    }))
+
+    expect(readUserSystemState(storage, 'user-a').publishedPosts[0]).toMatchObject({
+      gameIds: ['aion2', 'palworld'],
+      topics: ['guide', 'testing'],
+      tags: ['route'],
+      imageSrcs: ['data:image/png;base64,first', 'data:image/png;base64,second'],
+    })
   })
 })

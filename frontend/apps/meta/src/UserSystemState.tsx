@@ -29,8 +29,12 @@ export interface LocalForumPost {
   content: string
   channel: 'general' | 'games'
   gameId: string | null
+  gameIds: string[]
   topic: string
+  topics: string[]
+  tags: string[]
   imageSrc: string | null
+  imageSrcs: string[]
   videoUrl: string | null
   createdAt: string
 }
@@ -99,10 +103,10 @@ function stringArray(value: unknown) {
 
 function localForumPosts(value: unknown): LocalForumPost[] {
   if (!Array.isArray(value)) return []
-  return value.filter((item): item is LocalForumPost => {
-    if (!item || typeof item !== 'object') return false
+  return value.flatMap((item): LocalForumPost[] => {
+    if (!item || typeof item !== 'object') return []
     const post = item as Partial<LocalForumPost>
-    return typeof post.id === 'string'
+    const valid = typeof post.id === 'string'
       && typeof post.title === 'string'
       && typeof post.content === 'string'
       && (post.channel === 'general' || post.channel === 'games')
@@ -115,6 +119,30 @@ function localForumPosts(value: unknown): LocalForumPost[] {
       // error boundary above it, a stored "yesterday" blanked the whole page.
       && typeof post.createdAt === 'string'
       && !Number.isNaN(Date.parse(post.createdAt))
+    if (!valid) return []
+
+    const gameIds = stringArray(post.gameIds)
+    if (gameIds.length === 0 && post.gameId) gameIds.push(post.gameId)
+    const topics = stringArray(post.topics)
+    if (topics.length === 0 && post.topic) topics.push(post.topic)
+    const imageSrcs = stringArray(post.imageSrcs)
+    if (imageSrcs.length === 0 && post.imageSrc) imageSrcs.push(post.imageSrc)
+
+    return [{
+      id: post.id!,
+      title: post.title!,
+      content: post.content!,
+      channel: post.channel!,
+      gameId: gameIds[0] ?? null,
+      gameIds,
+      topic: topics[0] ?? 'discussion',
+      topics,
+      tags: stringArray(post.tags),
+      imageSrc: imageSrcs[0] ?? null,
+      imageSrcs,
+      videoUrl: post.videoUrl ?? null,
+      createdAt: post.createdAt!,
+    }]
   })
 }
 
