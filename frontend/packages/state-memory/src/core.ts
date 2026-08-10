@@ -1,4 +1,4 @@
-import { SHARED_MAXIMUM_BYTES, browserCookieStorage } from "./cookieStorage"
+import { SHARED_MAXIMUM_RAW_BYTES, browserCookieStorage } from "./cookieStorage"
 
 export type MemoryStateClass =
   | "shareable_route"
@@ -144,7 +144,7 @@ export const memoryPolicy = Object.freeze({
   sharedPreference: (clearAction: string) => ({
     ...policy("user_preference", "device", INDEFINITE_RETENTION, clearAction),
     canonicalScope: "site" as const,
-    maximumBytes: SHARED_MAXIMUM_BYTES,
+    maximumBytes: SHARED_MAXIMUM_RAW_BYTES,
   }),
 })
 
@@ -187,9 +187,12 @@ export function defineMemoryRecord<T>(record: MemoryRecord<T>): MemoryRecord<T> 
   if (record.maximumBytes !== undefined && record.maximumBytes <= 0) {
     throw new Error("maximumBytes must be positive")
   }
-  if (record.canonicalScope === "site" && (record.maximumBytes ?? Infinity) > SHARED_MAXIMUM_BYTES) {
+  if (record.canonicalScope === "site" && (record.maximumBytes ?? Infinity) > SHARED_MAXIMUM_RAW_BYTES) {
+    // The raw budget, not the cookie budget: percent-encoding inflates by up to
+    // 3x (one UTF-8 byte becomes %XX), so a value that fits 3 KB raw can exceed
+    // the cookie limit once encoded and be dropped by the browser.
     throw new Error(
-      `site-scoped records travel in a cookie and must cap maximumBytes at ${SHARED_MAXIMUM_BYTES}`,
+      `site-scoped records travel in a cookie and must cap maximumBytes at ${SHARED_MAXIMUM_RAW_BYTES}`,
     )
   }
   const frozen = Object.freeze({ ...record })
@@ -320,19 +323,26 @@ function maximumBytesFor<T>(record: MemoryRecord<T>): number {
 }
 
 /**
- * Whether `segment` appears in `key` as a whole segment rather than a prefix of
- * a longer one. Scope segments are appended in order (`.account.x`, then
- * `.viewport.y`, then `.partition.z`), so a real match ends at a `.` or at the
- * end of the key. A plain `includes` let `.account.1` match `.account.10`.
+ * Whether `segment` appears in `key` as a whole scope segment.
+ *
+ * Scope segments are appended in a fixed order (`.account.x`, then `.viewport.y`,
+ * then `.partition.z`), so a genuine match is followed by the end of the key or by
+ * one of those markers -- NOT merely by a dot. Accepting any dot was wrong for the
+ * legacy `encodeURIComponent` encoding, which leaves `.` unescaped: clearing
+ * account `a` would then also match `.account.a.b` and delete account `a.b`'s
+ * records. Dotted ids are realistic (email-like, or an external provider's).
  */
+const SCOPE_MARKERS = [".viewport.", ".partition."] as const
+
 function keyHasSegment(key: string, segment: string): boolean {
-  for (let from = 0; ; from = from + 1) {
+  for (let from = 0; from <= key.length; from += 1) {
     const at = key.indexOf(segment, from)
     if (at < 0) return false
-    const after = at + segment.length
-    if (after === key.length || key[after] === ".") return true
+    const rest = key.slice(at + segment.length)
+    if (rest === "" || SCOPE_MARKERS.some((marker) => rest.startsWith(marker))) return true
     from = at
   }
+  return false
 }
 
 /**
@@ -425,6 +435,19 @@ export class MemoryClient {
     try {
       storage.removeItem(key)
       this.emit(key)
+      // The legacy keys go too. Removing only the canonical key meant the next
+      // read re-ran the legacy migration and restored what the user had just
+      // asked to clear -- so "clear my progress" appeared to do nothing.
+      const current = this.currentEnvironment()
+      for (const source of [storage, current.deviceStorage, current.sessionStorage, current.sharedStorage]) {
+        if (!source) continue
+        try {
+          source.removeItem(getVersionedMemoryKey(record, scope))
+          for (const legacyKey of record.legacyKeys ?? []) source.removeItem(legacyKey)
+        } catch {
+          // One unavailable source must not abandon the rest.
+        }
+      }
     } catch {
       // Restricted storage degrades to in-memory component state.
     }

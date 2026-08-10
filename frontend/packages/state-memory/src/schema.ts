@@ -37,6 +37,13 @@ export function isStandardSchema(value: unknown): value is StandardSchemaLike<un
  * is nowhere to await. An async validator is treated as a failed validation
  * rather than silently accepted -- returning a promise where a verdict was
  * expected would otherwise read as truthy and let anything through.
+ *
+ * IMPORTANT -- the schema is used as a VALIDATOR ONLY. A Standard Schema may also
+ * transform (`z.coerce.number()`, `.default()`, `.transform()`, object stripping),
+ * and that output is discarded: the stored value is returned exactly as it was
+ * read. A coercing schema would therefore typecheck as `number` while handing back
+ * the stored `"42"`. Declare records with non-transforming schemas, and do any
+ * normalisation in `migrateLegacy` or `migrate`, where it is explicit.
  */
 export function standardValidator<T>(schema: StandardSchemaLike<T>) {
   const validate = schema["~standard"].validate
@@ -47,7 +54,11 @@ export function standardValidator<T>(schema: StandardSchemaLike<T>) {
     } catch {
       return false
     }
-    if (result instanceof Promise) return false
+    // Duck-typed, not `instanceof Promise`: a promise from another realm (an
+    // iframe) is not an instance of this realm's Promise, and a spec-compliant
+    // custom thenable is not one either. Either would fall through with no
+    // `issues` property and be read as a pass.
+    if (result && typeof (result as { then?: unknown }).then === "function") return false
     const verdict = result as { issues?: readonly unknown[] }
     return !verdict?.issues
   }

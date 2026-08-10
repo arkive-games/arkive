@@ -257,6 +257,51 @@ describe("MemoryClient", () => {
     expect(storage.getItem(getMemoryKey(progress, { accountId: "user-42" }))).not.toBeNull()
   })
 
+  it("clearing a record also drops its legacy keys, so it cannot resurrect", () => {
+    // Removing only the canonical key left the legacy one, and the next read
+    // migrated it straight back -- so "clear my progress" appeared to do nothing
+    // after one page load.
+    const storage = new TestStorage()
+    storage.setItem("legacy-progress", JSON.stringify(["a", "b"]))
+    const record = defineMemoryRecord({
+      id: "resurrect", namespace: "test-game", surface: "map",
+      ...memoryPolicy.durableProgress("clear-map-progress"),
+      schemaVersion: "1.0.0",
+      defaultValue: () => [] as string[],
+      validate: (value: unknown): value is string[] => Array.isArray(value),
+      legacyKeys: ["legacy-progress"],
+      migrateLegacy: (raw: string) => JSON.parse(raw) as string[],
+    })
+    const client = new MemoryClient({ deviceStorage: storage })
+    expect(client.read(record)).toEqual(["a", "b"])
+
+    client.clear(record)
+
+    expect(client.read(record)).toEqual([])
+    expect(storage.getItem("legacy-progress")).toBeNull()
+  })
+
+  it("does not clear an account whose id merely starts with the cleared one", () => {
+    // `encodeURIComponent` leaves `.` unescaped, so a legacy key for account "a.b"
+    // ends in `.account.a.b`. Treating any dot as a segment boundary made clearing
+    // account "a" delete it too. Dotted ids are realistic -- email-like, or from an
+    // external provider.
+    const storage = new TestStorage()
+    const client = new MemoryClient({ deviceStorage: storage })
+    const legacy = (accountId: string) =>
+      `arkive.memory.site.user-system.settings.account.${accountId}`
+    const envelope = JSON.stringify({
+      schemaVersion: "1.0.0", stateClass: "user_preference", writtenAt: 1, value: "keep",
+    })
+    storage.setItem(legacy("a"), envelope)
+    storage.setItem(legacy("a.b"), envelope)
+
+    client.clearAccount("a")
+
+    expect(storage.getItem(legacy("a"))).toBeNull()
+    expect(storage.getItem(legacy("a.b"))).not.toBeNull()
+  })
+
   it("clears only the named account, not one whose id it prefixes", () => {
     const storage = new TestStorage()
     const accountRecord = defineMemoryRecord({

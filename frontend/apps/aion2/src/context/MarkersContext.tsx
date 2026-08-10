@@ -48,34 +48,36 @@ type MarkersProviderProps = {
   children: React.ReactNode;
 };
 
+/**
+ * ONE definition, used by both the read and the clear.
+ *
+ * There were two, and they disagreed: the read declared `legacyKeys` and capped the
+ * array at 10,000 entries, the clear declared neither. So clearing removed the new
+ * key while leaving the legacy one, and the next read migrated it straight back --
+ * "clear completed markers" undone by the following page load. The differing cap
+ * also meant the same stored value was valid to one and invalid to the other.
+ *
+ * `pnpm memory:keys` now fails on a key defined twice, which is how this surfaced.
+ */
+const completedV1Record = (map: string) => defineMemoryRecord({
+  id: "completed-markers-v1",
+  namespace: "aion2",
+  surface: "map",
+  ...memoryPolicy.durableProgress("clear-map-progress"),
+  schemaVersion: "1.0.0",
+  defaultValue: () => [] as string[],
+  validate: (value: unknown): value is string[] =>
+    Array.isArray(value) && value.length <= 10_000 && value.every((item) => typeof item === "string"),
+  legacyKeys: [`${COMPLETED_MARKERS_V1_PREFIX}.${map}`],
+  migrateLegacy: parseJson,
+});
+
 function loadV1(map: string): Set<string> {
-  const key = `${COMPLETED_MARKERS_V1_PREFIX}.${map}`;
-  const record = defineMemoryRecord({
-    id: "completed-markers-v1",
-    namespace: "aion2",
-    surface: "map",
-    ...memoryPolicy.durableProgress("clear-map-progress"),
-    schemaVersion: "1.0.0",
-    defaultValue: () => [] as string[],
-    validate: (value: unknown): value is string[] =>
-      Array.isArray(value) && value.length <= 10_000 && value.every((item) => typeof item === "string"),
-    legacyKeys: [key],
-    migrateLegacy: parseJson,
-  });
-  return new Set(browserMemory.read(record, { partition: map }));
+  return new Set(browserMemory.read(completedV1Record(map), { partition: map }));
 }
 
 function clearV1(map: string): void {
-  const record = defineMemoryRecord({
-    id: "completed-markers-v1",
-    namespace: "aion2",
-    surface: "map",
-    ...memoryPolicy.durableProgress("clear-map-progress"),
-    schemaVersion: "1.0.0",
-    defaultValue: () => [] as string[],
-    validate: (value: unknown): value is string[] => Array.isArray(value) && value.every((item) => typeof item === "string"),
-  });
-  browserMemory.clear(record, { partition: map });
+  browserMemory.clear(completedV1Record(map), { partition: map });
 }
 
 const completedSubtypeRecord = (legacyKey: string) => defineMemoryRecord({

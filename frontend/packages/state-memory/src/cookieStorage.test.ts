@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   SHARED_MAXIMUM_BYTES,
+  SHARED_MAXIMUM_RAW_BYTES,
   createCookieStorage,
   resolveSharedCookieDomain,
   type CookieEnvironment,
@@ -61,9 +62,39 @@ describe("createCookieStorage", () => {
   it("scopes the cookie to the parent domain so other Arkive origins see it", () => {
     const { environment, written } = jar("palworld.tc-imba.com")
     createCookieStorage(environment).setItem("k", "v")
-    expect(written[0]).toContain("Domain=.tc-imba.com")
-    expect(written[0]).toContain("Secure")
-    expect(written[0]).toContain("SameSite=Lax")
+    const stored = written.find((line) => line.startsWith("ark~k=v"))!
+    expect(stored).toContain("Domain=.tc-imba.com")
+    expect(stored).toContain("Secure")
+    expect(stored).toContain("SameSite=Lax")
+  })
+
+  it("expires a host-only twin, which would otherwise shadow or resurrect", () => {
+    // Two cookies can share a name at different scopes, and the parse takes
+    // whichever the browser lists last -- an order this code cannot control.
+    const { environment, written } = jar("palworld.tc-imba.com")
+    createCookieStorage(environment).setItem("k", "v")
+    const hostOnly = written.filter((line) => !line.includes("Domain=") && /Max-Age=0/.test(line))
+    expect(hostOnly).toHaveLength(1)
+  })
+
+  it("slides the expiry forward on read, so an unchanged preference does not lapse", () => {
+    // A shared preference declares indefinite retention, but a cookie cannot:
+    // browsers cap it at 400 days. Reading has to renew it.
+    const { environment, written } = jar()
+    const storage = createCookieStorage(environment)
+    storage.setItem("k", "v")
+    const before = written.length
+    expect(storage.getItem("k")).toBe("v")
+    expect(written.length).toBeGreaterThan(before)
+    expect(written.at(-1)).toContain("Max-Age=34560000")
+  })
+
+  it("throws when the browser silently refuses to keep the cookie", () => {
+    // Blocked cookies, or a full domain jar, otherwise report success and the
+    // value simply is not there after a reload.
+    const { environment } = jar()
+    const storage = createCookieStorage({ ...environment, writeCookie: () => {} })
+    expect(() => storage.setItem("k", "v")).toThrow(/did not retain/)
   })
 
   it("stays host-only where there is no shared parent, instead of guessing", () => {
@@ -95,7 +126,17 @@ describe("createCookieStorage", () => {
     const { environment } = jar()
     const storage = createCookieStorage(environment)
     expect(() => storage.setItem("k", "x".repeat(SHARED_MAXIMUM_BYTES + 1)))
-      .toThrow(/exceeds 3000/)
+      .toThrow(new RegExp(`exceeds ${SHARED_MAXIMUM_BYTES}`))
+  })
+
+  it("holds records to a third of the cookie budget, for encoding inflation", () => {
+    // Percent-encoding turns one UTF-8 byte into %XX, so a value that fits the
+    // cookie limit raw can be three times too large once encoded.
+    expect(SHARED_MAXIMUM_RAW_BYTES * 3).toBeLessThanOrEqual(SHARED_MAXIMUM_BYTES)
+    const { environment } = jar()
+    const storage = createCookieStorage(environment)
+    // 900 CJK characters: ~2.7 KB raw, but ~8.1 KB percent-encoded.
+    expect(() => storage.setItem("k", "汉".repeat(900))).toThrow(/exceeds/)
   })
 
   it("ignores cookies it does not own", () => {

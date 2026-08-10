@@ -150,6 +150,6 @@ describe("sharedMemory", () => {
     const { memory } = client()
     expect(() => sharedMemory("interface/too-big", {
       schema: z.string(), default: "", maximumBytes: 10_000,
-    }, memory)).toThrow(/cap maximumBytes at 3000/)
+    }, memory)).toThrow(/cap maximumBytes at 1000/)
   })
 })
