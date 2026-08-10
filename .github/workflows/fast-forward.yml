@@ -1,0 +1,281 @@
+# Lands a pull request by fast-forwarding master onto its head, on request.
+#
+# Why fast-forward rather than one of GitHub's merge buttons: every changelog.json
+# entry pins a full 40-char commit SHA, so any method that REWRITES a commit
+# orphans those SHAs -- the JSON still validates, `pnpm test` still passes, and the
+# compare links point at commits that live only in refs/pull/N/head. "Rebase and
+# merge" rewrites every commit (and lands them unsigned, since GitHub has neither
+# our key nor authorship); "Squash and merge" replaces them with one new commit.
+# Both are disabled in repository settings. A merge commit is SHA-safe and stays
+# enabled as the fallback, but it adds a bubble to a history we keep linear.
+#
+# A fast-forward rewrites nothing, so SHAs and signatures both survive untouched.
+#
+# This workflow deliberately CANNOT rebase. When the branch is behind master it
+# refuses and asks for a rebase, because rebasing here would rewrite the very
+# commits this exists to preserve, and the runner has no signing key to re-sign
+# them with. "Already rebased" is the precondition, not something we fix for you.
+#
+# Note also why the ruleset on master does NOT require linear history: GitHub
+# requires squash or rebase merging to be enabled whenever that rule is on, which
+# would put a SHA-rewriting button back on the pull request page. The ruleset
+# blocks force pushes and deletions only.
+#
+# Secrets:
+#   FAST_FORWARD_TOKEN  fine-grained PAT, Contents:Write on arkive-games/arkive.
+#                       The default GITHUB_TOKEN cannot be used: pushes made with
+#                       it do not trigger other workflows, so the EdgeOne deploy
+#                       would never run for a landed pull request.
+
+name: Fast-forward a pull request
+
+on:
+  issue_comment:
+    types: [created]
+  # Escape hatch for when the comment trigger is not usable (a run that needs
+  # re-driving). `edited` is deliberately not a trigger: an old comment must not
+  # be editable into a merge command.
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "Pull request number to fast-forward"
+        required: true
+
+# `pull-requests`/`issues: write` are for this workflow's own reply comments; a
+# comment on a pull request goes through the issues API, so both are needed. The
+# push to master does NOT use this token -- see FAST_FORWARD_TOKEN above.
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  fast-forward:
+    # The comment must BEGIN with the command, so quoting it in prose ("comment
+    # /fast-forward when ready") cannot land a pull request.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request != null &&
+       startsWith(github.event.comment.body, '/fast-forward'))
+
+    runs-on: ubuntu-latest
+
+    # master must never be advanced by two runs at once. Queue rather than cancel:
+    # a queued run has pushed nothing, so waiting is always safe.
+    concurrency:
+      group: fast-forward-master
+      cancel-in-progress: false
+
+    # Quoted: an unquoted `#` after a space would start a YAML comment.
+    name: "PR #${{ github.event.issue.number || inputs.pr }}"
+
+    env:
+      PR: ${{ github.event.issue.number || inputs.pr }}
+      REPO: ${{ github.repository }}
+
+    steps:
+      # Checked first, before anything reads the pull request: with no token the
+      # run would do all the work and then die on a git auth error that says
+      # nothing about which secret is missing.
+      - name: Check the push token is configured
+        env:
+          FAST_FORWARD_TOKEN: ${{ secrets.FAST_FORWARD_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FAST_FORWARD_TOKEN:-}" ]; then
+            echo "::error::FAST_FORWARD_TOKEN is not set. Add a fine-grained PAT with Contents:Write on arkive-games/arkive. The default GITHUB_TOKEN cannot be used: pushes made with it do not trigger the EdgeOne deploy."
+            exit 1
+          fi
+
+      # Not `author_association`: that reports MEMBER/CONTRIBUTOR from org and
+      # commit history, neither of which is push access. Ask about permission.
+      - name: Check the requester may push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUESTER: ${{ github.event.comment.user.login || github.actor }}
+        run: |
+          set -euo pipefail
+          level=$(gh api "repos/$REPO/collaborators/$REQUESTER/permission" --jq .permission)
+          echo "$REQUESTER has $level permission"
+          case "$level" in
+            admin | write | maintain) ;;
+            *)
+              echo "::error::$REQUESTER has '$level' permission on $REPO and may not land pull requests."
+              exit 1
+              ;;
+          esac
+
+      # Every refusal below writes its reason to $RUNNER_TEMP/refusal.md and the
+      # last step posts it. Not the workspace: actions/checkout cleans that, which
+      # would delete a reason written before it. Not a job-level `env` either --
+      # the `runner` context is unavailable there.
+      - name: Resolve the pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh pr view "$PR" --repo "$REPO" \
+            --json state,baseRefName,headRefName,headRefOid,isCrossRepository \
+            > "$RUNNER_TEMP/pr.json"
+          state=$(jq -r .state "$RUNNER_TEMP/pr.json")
+          base=$(jq -r .baseRefName "$RUNNER_TEMP/pr.json")
+          if [ "$state" != "OPEN" ]; then
+            echo "This pull request is $state, so there is nothing to fast-forward." > "$RUNNER_TEMP/refusal.md"
+            echo "::error::PR #$PR is $state."
+            exit 1
+          fi
+          if [ "$base" != "master" ]; then
+            echo "This pull request targets \`$base\`, not \`master\`. Only master is landed this way." > "$RUNNER_TEMP/refusal.md"
+            echo "::error::PR #$PR targets $base."
+            exit 1
+          fi
+          {
+            echo "head=$(jq -r .headRefOid "$RUNNER_TEMP/pr.json")"
+            echo "head_ref=$(jq -r .headRefName "$RUNNER_TEMP/pr.json")"
+            echo "fork=$(jq -r .isCrossRepository "$RUNNER_TEMP/pr.json")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout the pull request head
+        uses: actions/checkout@v4
+        with:
+          # refs/pull/N/head resolves for fork pull requests too, whose commits
+          # are on no branch of this repository.
+          ref: refs/pull/${{ env.PR }}/head
+          # The ancestry, merge-commit and changelog checks below all walk real
+          # history; a shallow clone would fail them for the wrong reason.
+          fetch-depth: 0
+
+      - name: Setup Node
+        # changelog-verify.mjs imports only node builtins, so it needs a Node but
+        # no `pnpm install`. Pinned to 22 to match the other workflows.
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # THE precondition. If master is not already an ancestor of the head then a
+      # fast-forward is impossible, and the fix belongs to whoever owns the branch.
+      - name: Check the branch is already rebased on master
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.head }}
+        run: |
+          set -euo pipefail
+          # FETCH_HEAD, not origin/master: `git fetch origin master` updates no
+          # remote-tracking ref, and checkout fetched only refs/pull/N/head.
+          git fetch --quiet origin master
+          base=$(git rev-parse FETCH_HEAD)
+          echo "master is $base, head is $HEAD_SHA"
+          if ! git merge-base --is-ancestor "$base" "$HEAD_SHA"; then
+            behind=$(git rev-list --count "$HEAD_SHA..$base")
+            {
+              echo "Refusing: this branch is not rebased on \`master\` (it is missing $behind commit(s) from it), so it cannot be fast-forwarded."
+              echo
+              echo "Rebase it, re-stamp any \`changelog.json\` entry whose commit the rebase rewrote (\`pnpm changelog:verify\` finds them), force-push with \`--force-with-lease\`, then comment \`/fast-forward\` again."
+            } > "$RUNNER_TEMP/refusal.md"
+            echo "::error::PR #$PR is $behind commit(s) behind master. Rebase and re-request."
+            exit 1
+          fi
+          # Fast-forwarding a branch that contains a merge would put a bubble in
+          # master, which is the thing the merge button does and we do not want.
+          if [ -n "$(git rev-list --merges "$base..$HEAD_SHA")" ]; then
+            {
+              echo "Refusing: this branch contains merge commit(s), so landing it would put a bubble in \`master\`."
+              echo
+              echo "Rebase onto \`master\` instead of merging it in, then comment \`/fast-forward\` again."
+            } > "$RUNNER_TEMP/refusal.md"
+            echo "::error::PR #$PR contains merge commits."
+            exit 1
+          fi
+
+      # We used to re-sign contributor commits by rebasing them locally with -S. A
+      # fast-forward cannot: it rewrites nothing. That is the better outcome -- a
+      # signature should say "I wrote this", not "I merged this" -- so the rule is
+      # now that commits arrive already verified.
+      - name: Check every commit is verified
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          unverified=$(gh api --paginate "repos/$REPO/pulls/$PR/commits" \
+            --jq '.[] | select(.commit.verification.verified | not)
+                      | "\(.sha[0:12]) \(.commit.verification.reason)"')
+          if [ -n "$unverified" ]; then
+            {
+              echo "Refusing: every commit must be signed and verified by GitHub before it can land."
+              echo
+              echo '```'
+              echo "$unverified"
+              echo '```'
+              echo
+              echo "Sign these commits with a key registered on your GitHub account, then force-push with \`--force-with-lease\`."
+            } > "$RUNNER_TEMP/refusal.md"
+            echo "::error::PR #$PR has unverified commit(s)."
+            exit 1
+          fi
+          echo "All commits verified."
+
+      # The gate that protects the reason this workflow exists. HEAD is the pull
+      # request head here, so this asserts every pinned SHA survives what we are
+      # about to land -- catching an entry stamped before a rebase rewrote it.
+      - name: Check the changelog pins nothing this would orphan
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          if ! node scripts/changelog-verify.mjs > "$RUNNER_TEMP/verify.log" 2>&1; then
+            {
+              echo "Refusing: a \`changelog.json\` entry pins a commit this branch does not contain, so its compare link would 404 once landed."
+              echo
+              echo '```'
+              cat "$RUNNER_TEMP/verify.log"
+              echo '```'
+            } > "$RUNNER_TEMP/refusal.md"
+            cat "$RUNNER_TEMP/verify.log"
+            echo "::error::changelog-verify failed for PR #$PR."
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/verify.log"
+
+      - name: Fast-forward master
+        id: push
+        env:
+          FAST_FORWARD_TOKEN: ${{ secrets.FAST_FORWARD_TOKEN }}
+          HEAD_SHA: ${{ steps.pr.outputs.head }}
+        run: |
+          set -euo pipefail
+          # Pushing the SHA rather than the branch name: the ref just verified is
+          # exactly the ref that lands, even if the branch moved during the run.
+          git push "https://x-access-token:$FAST_FORWARD_TOKEN@github.com/$REPO.git" \
+            "$HEAD_SHA:refs/heads/master"
+          echo "master is now $HEAD_SHA"
+
+      # Same-repo branches only: a fork's branch is not ours to delete. Worth
+      # doing because GitHub's delete-on-merge never fires for a pushed
+      # fast-forward, so worktree branches would otherwise accumulate.
+      - name: Delete the merged branch
+        if: steps.push.outcome == 'success' && steps.pr.outputs.fork == 'false'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.FAST_FORWARD_TOKEN }}
+          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
+        run: gh api -X DELETE "repos/$REPO/git/refs/heads/$HEAD_REF"
+
+      - name: Report the result
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.pr.outputs.head }}
+          PUSHED: ${{ steps.push.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          body="$RUNNER_TEMP/body.md"
+          if [ "$PUSHED" = "success" ]; then
+            printf '%s\n' "Fast-forwarded \`master\` to \`$HEAD_SHA\`. Nothing was rewritten, so every commit keeps its SHA and its signature." > "$body"
+          elif [ -s "$RUNNER_TEMP/refusal.md" ]; then
+            cp "$RUNNER_TEMP/refusal.md" "$body"
+          else
+            # A step failed before writing a reason: infrastructure, not a refusal.
+            printf '%s\n' "The fast-forward run failed before it could check this pull request. See [the run log]($RUN_URL)." > "$body"
+          fi
+          printf '\n%s\n' "<sub>[fast-forward run]($RUN_URL)</sub>" >> "$body"
+          gh pr comment "$PR" --repo "$REPO" --body-file "$body"
