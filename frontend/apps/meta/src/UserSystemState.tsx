@@ -200,13 +200,27 @@ const settingsRecord = defineMemoryRecord({
   signInAdoption: 'keep_anonymous',
 })
 
+/** The progress slice of a full state, without the fields the other records own.
+ *  A destructure-to-discard reads well but trips no-unused-vars on the three
+ *  discarded bindings, so pick the kept keys explicitly instead. */
+function progressOf(state: UserSystemState): UserProgressState {
+  return {
+    readNotificationSections: state.readNotificationSections,
+    followedUserIds: state.followedUserIds,
+    bookmarkedPostIds: state.bookmarkedPostIds,
+    likedPostIds: state.likedPostIds,
+    likedCommentIds: state.likedCommentIds,
+    favoriteGameIds: state.favoriteGameIds,
+    publishedPosts: state.publishedPosts,
+  }
+}
+
 const progressRecord = defineMemoryRecord({
   id: 'progress', namespace: 'site', surface: 'user-system',
   ...memoryPolicy.durableProgress('clear-account-progress'),
   schemaVersion: '1.0.0',
   defaultValue: (): UserProgressState => {
-    const { profile: _profile, notificationSettings: _notifications, privacySettings: _privacy, ...progress } = createDefaultUserSystemState()
-    return progress
+    return progressOf(createDefaultUserSystemState())
   },
   validate: (value: unknown): value is UserProgressState => {
     if (!value || typeof value !== 'object') return false
@@ -226,8 +240,7 @@ function writeUserSystemStateWithClient(client: MemoryClient, userId: string, st
     notificationSettings: state.notificationSettings,
     privacySettings: state.privacySettings,
   }, scope)
-  const { profile: _profile, notificationSettings: _notifications, privacySettings: _privacy, ...progress } = state
-  client.write(progressRecord, progress, scope)
+  client.write(progressRecord, progressOf(state), scope)
 }
 
 function readUserSystemStateWithClient(client: MemoryClient, userId: string): UserSystemState {

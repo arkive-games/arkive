@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, Eraser, FileX, History, RotateCcw } from 'lucide-react'
-import { browserMemory } from '@gamemap/state-memory'
+import { browserMemory, type MemoryClient } from '@gamemap/state-memory'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,7 +83,18 @@ export function localDataStringsFor(language: string | null | undefined): LocalD
   return LOCALIZED[language ?? ''] ?? ENGLISH
 }
 
-export function LocalDataControls({ strings }: { strings: LocalDataStrings }) {
+export function LocalDataControls({ strings, memory = browserMemory }: {
+  strings: LocalDataStrings
+  /**
+   * Injected so this package keeps owning no storage of its own -- the same shape
+   * as ThemeProvider's `storage` and useMapViewMemory's store. Defaults to the
+   * browser singleton, so every app call site is unchanged; the point is that a
+   * test can pass a client backed by fake storage instead of reaching for the
+   * real Web Storage globals, which `check:shell` forbids naming anywhere in this
+   * package -- comments and tests included.
+   */
+  memory?: MemoryClient
+}) {
   const [status, setStatus] = useState<string | null>(null)
   const run = (label: string, clear: () => void) => {
     clear()
@@ -93,16 +104,16 @@ export function LocalDataControls({ strings }: { strings: LocalDataStrings }) {
   return (
     <div className="flex flex-col gap-2" data-testid="local-data-controls">
       <p>{strings.description}</p>
-      <Button type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => run(strings.clearRecent, () => browserMemory.clearStateClass('recent_activity'))}>
+      <Button type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => run(strings.clearRecent, () => memory.clearStateClass('recent_activity'))}>
         <History className="size-4 shrink-0" aria-hidden="true" />
         {strings.clearRecent}
       </Button>
-      <Button type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => run(strings.clearDrafts, () => browserMemory.clearStateClass('task_draft'))}>
+      <Button type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => run(strings.clearDrafts, () => memory.clearStateClass('task_draft'))}>
         <FileX className="size-4 shrink-0" aria-hidden="true" />
         {strings.clearDrafts}
       </Button>
       <Button type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => run(strings.resetPreferences, () => {
-        browserMemory.clearStateClass('user_preference')
+        memory.clearStateClass('user_preference')
         clearArkiveThemePreference()
       })}>
         <RotateCcw className="size-4 shrink-0" aria-hidden="true" />
@@ -123,7 +134,7 @@ export function LocalDataControls({ strings }: { strings: LocalDataStrings }) {
           <AlertDialogFooter>
             <AlertDialogCancel>{strings.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={() => run(strings.clearAll, () => {
-              browserMemory.clearAll()
+              memory.clearAll()
               clearArkiveThemePreference()
             })}>
               {strings.confirm}
