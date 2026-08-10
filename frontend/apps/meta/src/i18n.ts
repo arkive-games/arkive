@@ -380,7 +380,7 @@ const resources = {
       },
       site: {
         aion2: {
-          name: 'AION2',
+          name: '永恒之塔 2',
           desc: '互动地图与游戏资料库',
           feature: '从地图出发，找到每一个重要坐标。',
         },
@@ -540,7 +540,7 @@ const resources = {
         description: '從互動地圖到資料圖鑑，每個遊戲都有屬於自己的資料入口。',
       },
       site: {
-        aion2: { name: 'AION2', desc: '互動地圖與遊戲資料庫', feature: '從地圖出發，找到每一個重要座標。' },
+        aion2: { name: '永恆之塔 2', desc: '互動地圖與遊戲資料庫', feature: '從地圖出發，找到每一個重要座標。' },
         palworld: { name: '幻獸帕魯', desc: '地圖、帕魯圖鑑與配種路線', feature: '從探索到配種，認識每一隻帕魯。' },
         vrising: { name: '夜族崛起', desc: '瓦爾多蘭互動地圖與區域資料', feature: '追蹤區域、資源與瓦爾多蘭的探索路線。' },
         sts2: { name: '殺戮尖塔2', desc: '卡牌圖鑑、角色資料與構築知識', feature: '查看卡牌與角色，整理下一次登塔思路。' },
@@ -775,7 +775,7 @@ const resources = {
       action: { openGame: '{{game}}へ', favorite: '{{game}}を保存', browseAll: 'すべてのゲームを見る' },
       explore: { title: 'みんなが探索している世界', description: 'インタラクティブマップから資料図鑑まで、ゲームごとの入口を用意しています。' },
       site: {
-        aion2: { name: 'AION2', desc: 'インタラクティブマップとゲームデータベース', feature: 'マップから始めて、大切な座標を見つけましょう。' },
+        aion2: { name: 'アイオン2', desc: 'インタラクティブマップとゲームデータベース', feature: 'マップから始めて、大切な座標を見つけましょう。' },
         palworld: { name: 'Palworld', desc: 'マップ、パル図鑑、配合ルート', feature: '探索と配合を通して、すべてのパルを知りましょう。' },
         vrising: { name: 'V Rising', desc: 'ヴァルドランのインタラクティブマップと地域情報', feature: '地域、資源、探索ルートを確認できます。' },
         sts2: { name: 'Slay the Spire 2', desc: 'カード図鑑、キャラクター、デッキ構築情報', feature: '次の登頂に向けてカードとキャラクターを確認できます。' },
@@ -876,7 +876,7 @@ const resources = {
       action: { openGame: '{{game}} 열기', favorite: '{{game}} 저장', browseAll: '전체 게임 보기' },
       explore: { title: '모두가 탐험 중인 세계', description: '인터랙티브 지도부터 게임 데이터베이스까지, 게임마다 전용 입구가 있습니다.' },
       site: {
-        aion2: { name: 'AION2', desc: '인터랙티브 지도와 게임 데이터베이스', feature: '지도에서 시작해 중요한 좌표를 모두 찾아보세요.' },
+        aion2: { name: '아이온2', desc: '인터랙티브 지도와 게임 데이터베이스', feature: '지도에서 시작해 중요한 좌표를 모두 찾아보세요.' },
         palworld: { name: 'Palworld', desc: '지도, 팰 도감, 교배 경로', feature: '탐험과 교배를 통해 모든 팰을 알아보세요.' },
         vrising: { name: 'V Rising', desc: '바르도란 인터랙티브 지도와 지역 정보', feature: '바르도란의 지역과 자원, 탐험 경로를 확인하세요.' },
         sts2: { name: 'Slay the Spire 2', desc: '카드 도감, 캐릭터, 덱 구성 정보', feature: '다음 등반을 위해 카드와 캐릭터를 살펴보세요.' },
