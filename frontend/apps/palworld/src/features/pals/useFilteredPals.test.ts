@@ -57,6 +57,20 @@ describe('filterPals - breeding-power search', () => {
     expect(out.map((p) => p.id)).toEqual(['Exact', 'NearHigh', 'NearLow', 'Far'])
   })
 
+  it('pins an exact Paldeck number before breeding-power proximity results', () => {
+    const roster = [
+      pal({ id: 'ExactPower', zukanIndex: 7 }),
+      pal({ id: 'ExactPaldeck', zukanIndex: 123 }),
+      pal({ id: 'NearPower', zukanIndex: 8 }),
+    ]
+    const out = filterPals(
+      bundleOf(roster, { ExactPower: 123, ExactPaldeck: 500, NearPower: 124 }),
+      { ...EMPTY_FILTER, query: '123' },
+    )
+
+    expect(out.map((p) => p.id)).toEqual(['ExactPaldeck', 'ExactPower', 'NearPower'])
+  })
+
   it('applies facets before breeding-power ordering', () => {
     const roster = [
       pal({ id: 'FireExact', zukanIndex: 1, elements: ['Fire'] }),

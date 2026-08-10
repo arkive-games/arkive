@@ -21,7 +21,13 @@ import {
 import { ContentPage } from '../../components/ContentPage'
 import { loadPals, type PalEntry, type PalsBundle } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
-import { palCommandFilter, palSearchValue, parseBreedingPowerQuery } from '../../lib/breedingSearch'
+import {
+  comparePalNumericSearch,
+  isExactPaldeckNumber,
+  palCommandFilter,
+  palSearchValue,
+  parsePalNumericQuery,
+} from '../../lib/breedingSearch'
 import { compareZukan, formatPalId, palIdText, type ZukanSortDirection } from '../../lib/palId'
 import {
   applyPassive,
@@ -302,23 +308,31 @@ function SimPalPicker({
         palSearchValue(
           `${pals.text[p.id]?.name ?? p.id} ${p.id} ${palIdText(id) ?? ''}`,
           pals.breedingPower.get(p.id),
+          p.zukanIndex,
         ),
       )
     }
     return m
   }, [roster, pals])
 
+  const numericTarget = parsePalNumericQuery(query)
   const displayedRoster = useMemo(() => {
-    const target = parseBreedingPowerQuery(query)
+    const target = parsePalNumericQuery(query)
     if (target === null) return roster
-    return [...roster].sort((a, b) => {
-      const aPower = pals.breedingPower.get(a.id)
-      const bPower = pals.breedingPower.get(b.id)
-      if (aPower === undefined) return bPower === undefined ? compareZukan(a, b, 'ascending') : 1
-      if (bPower === undefined) return -1
-      return Math.abs(aPower - target) - Math.abs(bPower - target) || compareZukan(a, b, 'ascending')
-    })
+    return [...roster].sort((a, b) => comparePalNumericSearch(
+      a,
+      b,
+      target,
+      (pal) => pals.breedingPower.get(pal.id),
+      (left, right) => compareZukan(left, right, 'ascending'),
+    ))
   }, [pals, query, roster])
+  const exactPals = numericTarget === null
+    ? []
+    : displayedRoster.filter((pal) => isExactPaldeckNumber(pal, numericTarget))
+  const nearbyPals = numericTarget === null
+    ? []
+    : displayedRoster.filter((pal) => !isExactPaldeckNumber(pal, numericTarget))
 
   const row = (p: PalEntry) => {
     const id = palIdText(formatPalId(p.zukanIndex, p.zukanIndexSuffix))
@@ -339,6 +353,22 @@ function SimPalPicker({
       </>
     )
   }
+
+  const renderPalItem = (p: PalEntry) => (
+    <CommandItem
+      key={p.id}
+      value={searchText.get(p.id)}
+      onSelect={() => {
+        onChange(p.id)
+        setOpen(false)
+        setQuery('')
+      }}
+      className="gap-2"
+    >
+      {row(p)}
+      <Check className={cn('ml-1 size-4 shrink-0', p.id === value ? 'opacity-100' : 'opacity-0')} />
+    </CommandItem>
+  )
 
   return (
     <Command
@@ -407,23 +437,22 @@ function SimPalPicker({
         >
           <CommandList>
             <CommandEmpty>{t('breeding.noPalFound')}</CommandEmpty>
-            <CommandGroup>
-              {displayedRoster.map((p) => (
-                <CommandItem
-                  key={p.id}
-                  value={searchText.get(p.id)}
-                  onSelect={() => {
-                    onChange(p.id)
-                    setOpen(false)
-                    setQuery('')
-                  }}
-                  className="gap-2"
-                >
-                  {row(p)}
-                  <Check className={cn('ml-1 size-4 shrink-0', p.id === value ? 'opacity-100' : 'opacity-0')} />
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {numericTarget === null ? (
+              <CommandGroup>{displayedRoster.map(renderPalItem)}</CommandGroup>
+            ) : (
+              <>
+                {exactPals.length > 0 ? (
+                  <CommandGroup heading={palIdText(formatPalId(numericTarget, ''))}>
+                    {exactPals.map(renderPalItem)}
+                  </CommandGroup>
+                ) : null}
+                {nearbyPals.length > 0 ? (
+                  <CommandGroup heading={`${t('breeding.breedingPower')} ≈ ${numericTarget}`}>
+                    {nearbyPals.map(renderPalItem)}
+                  </CommandGroup>
+                ) : null}
+              </>
+            )}
           </CommandList>
         </PopoverContent>
       </Popover>

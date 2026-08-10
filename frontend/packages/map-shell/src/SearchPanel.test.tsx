@@ -14,10 +14,11 @@ const labels = {
   resultsCount: (n: number) => `${n} results`,
   unnamed: "Unnamed",
   noDescription: "No description",
+  exactNumericMatches: (value: number) => `No.${value}`,
+  nearbyNumericMatches: (value: number) => `Breeding Power ≈ ${value}`,
 }
 
-// Palworld reserves bare numbers for breeding power and keeps Paldeck lookup
-// explicit through a `No.123` query.
+// Palworld keeps explicit Paldeck lookup available through a `No.123` query.
 const palworldPaldeckLookup = (q: string): SearchOptions | undefined =>
   /^no\.?\s*\d+[a-z]?$/i.test(q)
     ? { fields: ["idLabel"], prefix: false, fuzzy: false }
@@ -167,6 +168,53 @@ describe("SearchPanel", () => {
     expect(screen.queryByText("Exact Pal duplicate")).toBeNull()
     expect(screen.queryByText("Quest 1230")).toBeNull()
     expect(screen.getByText("Breeding Power: 1230")).toBeTruthy()
+    expect(screen.getByText("Breeding Power ≈ 1230")).toBeTruthy()
+  })
+
+  it("pins an exact numeric id in its own group before proximity results", () => {
+    renderSearchPanel([
+      item({
+        id: "catalog-spawn-1",
+        name: "Catalog Pal",
+        idLabel: "No.123",
+        numericId: 123,
+        proximityValue: 500,
+        proximityKey: "catalog",
+        proximityOrder: 123,
+      }),
+      item({
+        id: "catalog-spawn-2",
+        name: "Catalog Pal duplicate",
+        idLabel: "No.123",
+        numericId: 123,
+        proximityValue: 500,
+        proximityKey: "catalog",
+        proximityOrder: 123,
+      }),
+      item({
+        id: "power",
+        name: "Exact Power Pal",
+        idLabel: "No.007",
+        numericId: 7,
+        proximityValue: 123,
+        proximityOrder: 7,
+      }),
+      item({ id: "near", name: "Near Power Pal", proximityValue: 124 }),
+    ])
+
+    searchFor("123")
+
+    const resultText = Array.from(
+      screen.getByTestId("search-results").querySelectorAll("button"),
+      (button) => button.textContent,
+    )
+    expect(resultText).toHaveLength(3)
+    expect(resultText[0]).toContain("Catalog Pal")
+    expect(resultText[1]).toContain("Exact Power Pal")
+    expect(resultText[2]).toContain("Near Power Pal")
+    expect(screen.queryByText("Catalog Pal duplicate")).toBeNull()
+    expect(screen.getAllByTestId("search-result-group").map((group) => group.textContent))
+      .toEqual(["No.123", "Breeding Power ≈ 123"])
   })
 
   it("with the Palworld resolver, an explicit No. query is an exact id lookup", () => {

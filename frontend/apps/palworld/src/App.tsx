@@ -65,8 +65,8 @@ function pointInPolygon(x: number, y: number, poly: number[][]): boolean {
   return inside
 }
 
-// Bare numbers are reserved for breeding-power proximity. Keep Paldeck lookup
-// available through an explicit "No.123" query and make that lookup exact.
+// Explicit "No.123" queries remain exact. Bare numbers are handled separately
+// as a combined exact-Paldeck and breeding-power proximity search.
 const explicitPalIdLookup = (q: string) =>
   /^no\.?\s*\d+[a-z]?$/i.test(q)
     ? { fields: ['idLabel'], prefix: false, fuzzy: false }
@@ -450,6 +450,7 @@ export default function App() {
         proximityLabel: breedingPower === undefined
           ? undefined
           : `${t('breeding.breedingPower')}: ${breedingPower}`,
+        numericId: pal && pal.zukanIndex > 0 ? pal.zukanIndex : undefined,
       }
     })
   }, [engineMarkers, staticData, map, palsBundle, t])
@@ -460,6 +461,10 @@ export default function App() {
     resultsCount: (n: number) => t('resultsCount', { count: n }),
     unnamed: t('unnamed'),
     noDescription: t('noDescription'),
+    exactNumericMatches: (value: number) =>
+      palIdText(formatPalId(value, '')) ?? `No.${value}`,
+    nearbyNumericMatches: (value: number) =>
+      `${t('breeding.breedingPower')} ≈ ${value}`,
   }), [t])
 
   const onToggle = useCallback((id: string) => {

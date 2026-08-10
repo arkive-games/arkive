@@ -1,7 +1,8 @@
 const BREEDING_POWER_TOKEN = /(?:^|\s)breeding-power:(\d+)(?:\s|$)/
+const PALDECK_INDEX_TOKEN = /(?:^|\s)paldeck-index:(\d+)(?:\s|$)/
 
-/** A bare non-negative integer is interpreted as a breeding-power query. */
-export function parseBreedingPowerQuery(query: string): number | null {
+/** A bare non-negative integer searches both Paldeck number and breeding power. */
+export function parsePalNumericQuery(query: string): number | null {
   const value = query.trim()
   if (!/^\d+$/.test(value)) return null
   const parsed = Number(value)
@@ -17,19 +18,57 @@ export function parseExplicitPaldeckQuery(
   return { index: Number(match[1]), suffix: match[2].toUpperCase() }
 }
 
-/** Include a machine-only token in a cmdk value without changing visible text. */
-export function palSearchValue(text: string, breedingPower: number | undefined): string {
-  return breedingPower === undefined ? text : `${text} breeding-power:${breedingPower}`
+export type PaldeckNumberCandidate = {
+  zukanIndex: number
 }
 
-/** cmdk score: numeric queries rank every Pal by breeding-power distance. */
+export function isExactPaldeckNumber(
+  pal: PaldeckNumberCandidate,
+  target: number,
+): boolean {
+  return target > 0 && pal.zukanIndex === target
+}
+
+/** Exact Paldeck matches lead, followed by breeding-power distance. */
+export function comparePalNumericSearch<T extends PaldeckNumberCandidate>(
+  a: T,
+  b: T,
+  target: number,
+  breedingPower: (pal: T) => number | undefined,
+  tieBreak: (a: T, b: T) => number,
+): number {
+  const aExact = isExactPaldeckNumber(a, target)
+  const bExact = isExactPaldeckNumber(b, target)
+  if (aExact !== bExact) return aExact ? -1 : 1
+
+  const aPower = breedingPower(a)
+  const bPower = breedingPower(b)
+  if (aPower === undefined) return bPower === undefined ? tieBreak(a, b) : 1
+  if (bPower === undefined) return -1
+  return Math.abs(aPower - target) - Math.abs(bPower - target) || tieBreak(a, b)
+}
+
+/** Include machine-only tokens in a cmdk value without changing visible text. */
+export function palSearchValue(
+  text: string,
+  breedingPower: number | undefined,
+  zukanIndex?: number,
+): string {
+  const tokens = [text]
+  if (breedingPower !== undefined) tokens.push(`breeding-power:${breedingPower}`)
+  if (zukanIndex !== undefined && zukanIndex > 0) tokens.push(`paldeck-index:${zukanIndex}`)
+  return tokens.join(' ')
+}
+
+/** cmdk score: numeric queries pin exact Paldeck ids before nearby breeding powers. */
 export function palCommandFilter(value: string, search: string): number {
-  const target = parseBreedingPowerQuery(search)
+  const target = parsePalNumericQuery(search)
   if (target !== null) {
+    const paldeckMatch = PALDECK_INDEX_TOKEN.exec(value)
+    if (paldeckMatch && target > 0 && Number(paldeckMatch[1]) === target) return 2
     const match = BREEDING_POWER_TOKEN.exec(value)
     if (!match) return 0
     return 1 / (1 + Math.abs(Number(match[1]) - target))
   }
   return value.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0
 }
-

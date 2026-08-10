@@ -1,6 +1,11 @@
 import { useMemo } from 'react'
 import type { Element, PalEntry, PalsBundle, WorkType } from '../../lib/pals'
-import { parseBreedingPowerQuery, parseExplicitPaldeckQuery } from '../../lib/breedingSearch'
+import {
+  comparePalNumericSearch,
+  isExactPaldeckNumber,
+  parseExplicitPaldeckQuery,
+  parsePalNumericQuery,
+} from '../../lib/breedingSearch'
 import { zukanOrder } from '../../lib/palId'
 
 /** Pals-list filter state. Elements & work are AND (a pal must match every
@@ -45,10 +50,10 @@ export function filterPals(
   f: PalFilter,
 ): PalEntry[] {
   const q = f.query.trim().toLowerCase()
-  const breedingTarget = parseBreedingPowerQuery(q)
+  const numericTarget = parsePalNumericQuery(q)
   const paldeckQuery = parseExplicitPaldeckQuery(q)
   const out = bundle.pals.filter((p) => {
-    if (q && breedingTarget === null) {
+    if (q && numericTarget === null) {
       const name = (bundle.text[p.id]?.name ?? p.id).toLowerCase()
       const idMatch = paldeckQuery !== null &&
         p.zukanIndex === paldeckQuery.index &&
@@ -66,12 +71,16 @@ export function filterPals(
   const byIndex = (a: PalEntry, b: PalEntry) =>
     zukanOrder(a.zukanIndex) - zukanOrder(b.zukanIndex) ||
     a.zukanIndexSuffix.localeCompare(b.zukanIndexSuffix)
-  if (breedingTarget !== null) {
+  if (numericTarget !== null) {
     return [...out]
-      .filter((p) => bundle.breedingPower.has(p.id))
-      .sort((a, b) =>
-        Math.abs(bundle.breedingPower.get(a.id)! - breedingTarget) -
-          Math.abs(bundle.breedingPower.get(b.id)! - breedingTarget) || byIndex(a, b),
+      .filter((p) => isExactPaldeckNumber(p, numericTarget) || bundle.breedingPower.has(p.id))
+      .sort((a, b) => comparePalNumericSearch(
+        a,
+        b,
+        numericTarget,
+        (pal) => bundle.breedingPower.get(pal.id),
+        byIndex,
+      ),
       )
   }
   if (f.works.length) {

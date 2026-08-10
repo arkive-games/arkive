@@ -370,6 +370,7 @@ export default function BreedingPage() {
     anyPal: t('breeding.anyPal'),
     searchPal: t('breeding.searchPal'),
     noPalFound: t('breeding.noPalFound'),
+    breedingPower: t('breeding.breedingPower'),
   }
 
   // Phone pickers keep the three-slot formula, while result cards use the

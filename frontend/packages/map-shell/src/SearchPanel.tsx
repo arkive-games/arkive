@@ -25,6 +25,8 @@ export type SearchItem = {
   proximityOrder?: number
   /** User-visible value label shown on the result card. */
   proximityLabel?: string
+  /** Numeric catalog id that should be pinned for an equal bare-number query. */
+  numericId?: number
 }
 
 /** A `SearchItem` text field that can be indexed for searching. */
@@ -36,6 +38,8 @@ export type SearchPanelLabels = {
   resultsCount: (n: number) => string
   unnamed: string
   noDescription: string
+  exactNumericMatches?: (value: number) => string
+  nearbyNumericMatches?: (value: number) => string
 }
 
 export type SearchPanelProps = {
@@ -178,26 +182,41 @@ export function SearchPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, searchFields.join(",")])
 
-  const results: SearchItem[] = useMemo(() => {
+  const resultState = useMemo(() => {
     const q = debounced.trim()
-    if (!q) return []
+    if (!q) return { results: [] as SearchItem[], numericTarget: null, exactCount: 0 }
     if (/^\d+$/.test(q)) {
       const target = Number(q)
-      const proximityItems = items.filter((item) => Number.isFinite(item.proximityValue))
+      const proximityItems = items.filter((item) =>
+        Number.isFinite(item.proximityValue) || item.numericId === target,
+      )
       if (proximityItems.length > 0) {
         const deduped = new Map<string, SearchItem>()
         for (const item of proximityItems) {
           const key = item.proximityKey ?? item.id
           if (!deduped.has(key)) deduped.set(key, item)
         }
-        return [...deduped.values()]
-          .sort((a, b) =>
-            Math.abs(a.proximityValue! - target) - Math.abs(b.proximityValue! - target) ||
-            (a.proximityOrder ?? Number.MAX_SAFE_INTEGER) -
+        const results = [...deduped.values()]
+          .sort((a, b) => {
+            const exactOrder = Number(b.numericId === target) - Number(a.numericId === target)
+            if (exactOrder !== 0) return exactOrder
+            const aDistance = Number.isFinite(a.proximityValue)
+              ? Math.abs(a.proximityValue! - target)
+              : Number.POSITIVE_INFINITY
+            const bDistance = Number.isFinite(b.proximityValue)
+              ? Math.abs(b.proximityValue! - target)
+              : Number.POSITIVE_INFINITY
+            if (aDistance !== bDistance) return aDistance - bDistance
+            return (a.proximityOrder ?? Number.MAX_SAFE_INTEGER) -
               (b.proximityOrder ?? Number.MAX_SAFE_INTEGER) ||
-            a.id.localeCompare(b.id, undefined, { numeric: true }),
-          )
+              a.id.localeCompare(b.id, undefined, { numeric: true })
+          })
           .slice(0, 50)
+        return {
+          results,
+          numericTarget: target,
+          exactCount: results.filter((item) => item.numericId === target).length,
+        }
       }
     }
     // Layer the options: app-wide base (`searchOptions`) < configured fields <
@@ -209,15 +228,17 @@ export function SearchPanel({
       fields: searchFields,
       ...resolveSearchOptions?.(q),
     }
-    return miniSearch.search(q, opts)
+    const results = miniSearch.search(q, opts)
       .map((result) => itemsById.get(result.id as string))
       .filter((item): item is SearchItem => item !== undefined)
       .slice(0, 50)
+    return { results, numericTarget: null, exactCount: 0 }
     // searchFields is joined (not referenced) so a fresh array literal with the
     // same contents doesn't churn `results` every render — which, via the
     // onResultsChange effect below, would loop setState→render→setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced, items, itemsById, miniSearch, searchFields.join(","), resolveSearchOptions, searchOptions])
+  const { results, numericTarget, exactCount } = resultState
 
   // Report the shown result ids so the host can force those markers onto the
   // map even when their subtype filter is off (see SearchPanelProps). Guarded
@@ -301,12 +322,27 @@ export function SearchPanel({
             data-testid="search-results"
             className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2"
           >
-            {results.map((item) => {
+            {results.map((item, index) => {
               const metaLabel = [item.subtypeLabel, item.categoryLabel]
                 .filter(Boolean)
                 .join(" / ")
+              const groupLabel = numericTarget === null
+                ? undefined
+                : index === 0 && exactCount > 0
+                  ? labels.exactNumericMatches?.(numericTarget)
+                  : index === exactCount
+                    ? labels.nearbyNumericMatches?.(numericTarget)
+                    : undefined
               return (
                 <li key={item.id}>
+                  {groupLabel ? (
+                    <div
+                      data-testid="search-result-group"
+                      className="px-1 pb-1 pt-1.5 text-xs font-medium text-muted-foreground"
+                    >
+                      {groupLabel}
+                    </div>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => handleSelect(item.id)}

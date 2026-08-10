@@ -16,7 +16,13 @@ import {
 import { OverflowLabel } from '@gamemap/map-shell'
 import type { BreedingPal, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
-import { palCommandFilter, palSearchValue, parseBreedingPowerQuery } from '../../lib/breedingSearch'
+import {
+  comparePalNumericSearch,
+  isExactPaldeckNumber,
+  palCommandFilter,
+  palSearchValue,
+  parsePalNumericQuery,
+} from '../../lib/breedingSearch'
 import { compareZukan, formatPalId, palIdText } from '../../lib/palId'
 import {
   LEGENDARY_ICON,
@@ -63,7 +69,7 @@ export interface PalPickerProps {
   names: NameMap
   value: string | null
   onChange: (id: string | null) => void
-  labels: { anyPal: string; searchPal: string; noPalFound: string }
+  labels: { anyPal: string; searchPal: string; noPalFound: string; breedingPower: string }
   /**
    * `tile` renders the trigger as a square (icon + name + metadata) instead of
    * the wide desktop combobox, so the three pickers fit one phone line as
@@ -89,19 +95,51 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
       const id = formatPalId(p.zukanIndex, p.zukanIndexSuffix)
       m.set(
         p.id,
-        palSearchValue(`${names[p.id] ?? p.id} ${p.id} ${palIdText(id) ?? ''}`, p.rank),
+        palSearchValue(
+          `${names[p.id] ?? p.id} ${p.id} ${palIdText(id) ?? ''}`,
+          p.rank,
+          p.zukanIndex,
+        ),
       )
     }
     return m
   }, [pals, names])
 
+  const numericTarget = parsePalNumericQuery(query)
   const orderedPals = useMemo(() => {
-    const target = parseBreedingPowerQuery(query)
+    const target = parsePalNumericQuery(query)
     if (target === null) return pals
-    return [...pals].sort(
-      (a, b) => Math.abs(a.rank - target) - Math.abs(b.rank - target) || compareZukan(a, b, 'ascending'),
-    )
+    return [...pals].sort((a, b) => comparePalNumericSearch(
+      a,
+      b,
+      target,
+      (pal) => pal.rank,
+      (left, right) => compareZukan(left, right, 'ascending'),
+    ))
   }, [pals, query])
+  const exactPals = numericTarget === null
+    ? []
+    : orderedPals.filter((pal) => isExactPaldeckNumber(pal, numericTarget))
+  const nearbyPals = numericTarget === null
+    ? []
+    : orderedPals.filter((pal) => !isExactPaldeckNumber(pal, numericTarget))
+
+  const renderPalItem = (p: BreedingPal) => (
+    <CommandItem
+      key={p.id}
+      value={searchText.get(p.id)}
+      onSelect={() => {
+        onChange(p.id === value ? null : p.id)
+        setOpen(false)
+      }}
+      className="gap-2"
+    >
+      <PalIcon pal={p} />
+      <span className="truncate">{names[p.id] ?? p.id}</span>
+      <PalMeta pal={p} />
+      <Check className={cn('ml-1 size-4 shrink-0', p.id === value ? 'opacity-100' : 'opacity-0')} />
+    </CommandItem>
+  )
 
   // Clearing back to "any Pal". On tiles the × in the header strip is small, so
   // the popover also opens with an explicit "Any Pal" row (a full-width target).
@@ -257,8 +295,8 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
             <CommandInput value={query} onValueChange={setQuery} placeholder={labels.searchPal} />
             <CommandList>
               <CommandEmpty>{labels.noPalFound}</CommandEmpty>
-              <CommandGroup>
-                {tile ? (
+              {tile ? (
+                <CommandGroup>
                   <CommandItem
                     value={labels.anyPal}
                     onSelect={() => {
@@ -273,24 +311,24 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
                     <span className="truncate text-muted-foreground">{labels.anyPal}</span>
                     <Check className={cn('ml-auto size-4 shrink-0', value ? 'opacity-0' : 'opacity-100')} />
                   </CommandItem>
-                ) : null}
-                {orderedPals.map((p) => (
-                  <CommandItem
-                    key={p.id}
-                    value={searchText.get(p.id)}
-                    onSelect={() => {
-                      onChange(p.id === value ? null : p.id)
-                      setOpen(false)
-                    }}
-                    className="gap-2"
-                  >
-                    <PalIcon pal={p} />
-                    <span className="truncate">{names[p.id] ?? p.id}</span>
-                    <PalMeta pal={p} />
-                    <Check className={cn('ml-1 size-4 shrink-0', p.id === value ? 'opacity-100' : 'opacity-0')} />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                </CommandGroup>
+              ) : null}
+              {numericTarget === null ? (
+                <CommandGroup>{orderedPals.map(renderPalItem)}</CommandGroup>
+              ) : (
+                <>
+                  {exactPals.length > 0 ? (
+                    <CommandGroup heading={palIdText(formatPalId(numericTarget, ''))}>
+                      {exactPals.map(renderPalItem)}
+                    </CommandGroup>
+                  ) : null}
+                  {nearbyPals.length > 0 ? (
+                    <CommandGroup heading={`${labels.breedingPower} ≈ ${numericTarget}`}>
+                      {nearbyPals.map(renderPalItem)}
+                    </CommandGroup>
+                  ) : null}
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>

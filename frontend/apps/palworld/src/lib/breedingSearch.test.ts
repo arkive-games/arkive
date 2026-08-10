@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest'
 import {
   palCommandFilter,
   palSearchValue,
-  parseBreedingPowerQuery,
   parseExplicitPaldeckQuery,
+  parsePalNumericQuery,
 } from './breedingSearch'
 
 describe('breeding-power search', () => {
-  it('treats only a bare integer as a breeding-power query', () => {
-    expect(parseBreedingPowerQuery(' 1230 ')).toBe(1230)
-    expect(parseBreedingPowerQuery('No.123')).toBeNull()
-    expect(parseBreedingPowerQuery('Lamball')).toBeNull()
+  it('treats only a bare integer as a dual numeric query', () => {
+    expect(parsePalNumericQuery(' 1230 ')).toBe(1230)
+    expect(parsePalNumericQuery('No.123')).toBeNull()
+    expect(parsePalNumericQuery('Lamball')).toBeNull()
   })
 
   it('parses an explicit Paldeck query separately', () => {
@@ -26,10 +26,18 @@ describe('breeding-power search', () => {
     expect(palCommandFilter(near, '1230')).toBeGreaterThan(palCommandFilter(far, '1230'))
   })
 
+  it('scores an exact Paldeck number above an exact breeding power', () => {
+    const exactPaldeck = palSearchValue('No.123 Catalog Pal', 500, 123)
+    const exactPower = palSearchValue('No.007 Power Pal', 123, 7)
+
+    expect(palCommandFilter(exactPaldeck, '123')).toBeGreaterThan(
+      palCommandFilter(exactPower, '123'),
+    )
+  })
+
   it('preserves ordinary case-insensitive name matching', () => {
     const value = palSearchValue('Lamball SheepBall', 1470)
     expect(palCommandFilter(value, 'lamb')).toBe(1)
     expect(palCommandFilter(value, 'cattiva')).toBe(0)
   })
 })
-
