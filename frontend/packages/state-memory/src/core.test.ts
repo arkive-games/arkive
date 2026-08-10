@@ -58,9 +58,44 @@ describe("MemoryClient", () => {
     storage.setItem(expiringKey, JSON.stringify({ schemaVersion: "1.0.0", writtenAt: 0, value: "list" }))
     expect(new MemoryClient({ sessionStorage: storage }).read(expiring)).toBe("grid")
     expect(storage.getItem(expiringKey)).toBeNull()
-    storage.setItem(key, "x".repeat(100_001))
+    // Oversized reads fall back to the default but must NOT delete: a read that
+    // destroys data means lowering a cap in a later deploy erases every stored
+    // value that no longer fits, rather than leaving it for a fixed build.
+    const oversized = "x".repeat(100_001)
+    storage.setItem(key, oversized)
     expect(client.read(preference)).toBe("grid")
-    expect(storage.getItem(key)).toBeNull()
+    expect(storage.getItem(key)).toBe(oversized)
+  })
+
+  it("keeps an unreadable value instead of deleting it", () => {
+    const storage = new TestStorage()
+    const client = new MemoryClient({ deviceStorage: storage, now: () => 1_000 })
+    const key = getMemoryKey(preference)
+
+    // Not an envelope: could be a hand-written value, a format from a build we
+    // have not shipped yet, or corruption. None of those justify erasing it.
+    storage.setItem(key, JSON.stringify({ nope: true }))
+    expect(client.read(preference)).toBe("grid")
+    expect(storage.getItem(key)).not.toBeNull()
+  })
+
+  it("gives durable progress a far larger budget than a preference", () => {
+    const storage = new TestStorage()
+    const client = new MemoryClient({ deviceStorage: storage })
+    const progress = defineMemoryRecord({
+      id: "completed", namespace: "test-game", surface: "map",
+      ...memoryPolicy.durableProgress("clear-map-progress"),
+      schemaVersion: "1.0.0",
+      defaultValue: () => [] as string[],
+      validate: (value: unknown): value is string[] => Array.isArray(value),
+    })
+
+    // Palworld's MainWorld completion list is ~199,694 bytes at 100%, which the
+    // shared 100 KB preference ceiling refused -- silently, at about half the map.
+    const ids = Array.from({ length: 8_404 }, (_, index) => `marker-${index}-aaaaaaaaaaaaaaaa`)
+    expect(JSON.stringify(ids).length).toBeGreaterThan(100_000)
+    expect(client.write(progress, ids)).toBe(true)
+    expect(client.read(progress)).toHaveLength(8_404)
   })
 
   it("migrates a compatible legacy record once", () => {
@@ -196,6 +231,66 @@ describe("MemoryClient", () => {
     expect(client.read(accountRecord, { accountId: "user-a" })).toBe("grid")
     expect(client.read(accountRecord, { accountId: "user-b" })).toBe("list")
     expect(client.read(accountSessionRecord, { accountId: "user-a" })).toBe("grid")
+  })
+
+  it("keeps durable progress when an account is cleared", () => {
+    // The sign-out path calls clearAccount on every change of signed-in id. It
+    // used to delete every key carrying the account segment regardless of class,
+    // and because a successful migration also removes the legacy key, signing out
+    // destroyed the only copy of the user's bookmarks, follows and posts.
+    const storage = new TestStorage()
+    const progress = defineMemoryRecord({
+      id: "progress", namespace: "site", surface: "user-system",
+      ...memoryPolicy.durableProgress("clear-account-progress"),
+      schemaVersion: "1.0.0",
+      defaultValue: () => [] as string[],
+      validate: (value: unknown): value is string[] => Array.isArray(value),
+      partition: { account: true },
+      signInAdoption: "keep_anonymous",
+    })
+    const client = new MemoryClient({ deviceStorage: storage })
+    client.write(progress, ["post-1", "post-2"], { accountId: "user-42" })
+
+    client.clearAccount("user-42")
+
+    expect(client.read(progress, { accountId: "user-42" })).toEqual(["post-1", "post-2"])
+    expect(storage.getItem(getMemoryKey(progress, { accountId: "user-42" }))).not.toBeNull()
+  })
+
+  it("clears only the named account, not one whose id it prefixes", () => {
+    const storage = new TestStorage()
+    const accountRecord = defineMemoryRecord({
+      ...preference, partition: { account: true }, signInAdoption: "keep_anonymous",
+    })
+    const client = new MemoryClient({ deviceStorage: storage })
+    client.write(accountRecord, "list", { accountId: "1" })
+    client.write(accountRecord, "list", { accountId: "10" })
+
+    client.clearAccount("1")
+
+    expect(client.read(accountRecord, { accountId: "1" })).toBe("grid")
+    expect(client.read(accountRecord, { accountId: "10" })).toBe("list")
+  })
+
+  it("migrates a legacy value that exceeds the record's byte cap", () => {
+    // Skipping an oversized legacy value abandoned the user's existing progress
+    // unread and orphaned the old key -- aion2's World_L_A list is 126,454 bytes
+    // in the pre-migration format.
+    const storage = new TestStorage()
+    const ids = Array.from({ length: 4_000 }, (_, index) => `marker-${index}-aaaaaaaaaaaaaaaa`)
+    storage.setItem("legacy-progress", JSON.stringify(ids))
+    expect(JSON.stringify(ids).length).toBeGreaterThan(100_000)
+    const progress = defineMemoryRecord({
+      id: "legacy-sized", namespace: "test-game", surface: "map",
+      ...memoryPolicy.durableProgress("clear-map-progress"),
+      schemaVersion: "1.0.0",
+      defaultValue: () => [] as string[],
+      validate: (value: unknown): value is string[] => Array.isArray(value),
+      legacyKeys: ["legacy-progress"],
+      migrateLegacy: (raw: string) => JSON.parse(raw) as string[],
+    })
+
+    expect(new MemoryClient({ deviceStorage: storage }).read(progress)).toHaveLength(4_000)
   })
 
   it("enforces the namespace budget without evicting an earlier record", () => {

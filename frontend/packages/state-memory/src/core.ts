@@ -86,6 +86,15 @@ interface MemoryEnvelope {
 const KEY_PART = /^[a-z0-9][a-z0-9-]*$/
 const MEMORY_PREFIX = "arkive.memory."
 const DEFAULT_MAXIMUM_BYTES = 100_000
+/**
+ * Progress gets a far larger per-record budget than preferences do, because it
+ * grows with how much of a game the player has finished and losing it is the
+ * worst thing this package can do. Palworld's MainWorld completion list is
+ * 199,694 bytes at 100%, so the old shared 100 KB ceiling stopped saving at
+ * roughly half the map -- silently, since `write` only returns `false`. The
+ * namespace budget below still bounds the total.
+ */
+const DURABLE_PROGRESS_MAXIMUM_BYTES = 1_000_000
 const DEFAULT_NAMESPACE_BYTES = 3_000_000
 const registry = new Map<string, MemoryRecord<unknown>>()
 
@@ -263,6 +272,58 @@ function byteLength(value: string): number {
   return new TextEncoder().encode(value).byteLength
 }
 
+/**
+ * A refused write is the failure mode that loses data while looking fine: React
+ * state has already updated, so the UI shows the change and only a reload reveals
+ * it never persisted. Callers routinely ignore the boolean, so say so out loud.
+ */
+function reportWriteRefused<T>(record: MemoryRecord<T>, reason: string): void {
+  console.warn(
+    `[state-memory] refused to persist ${recordIdentity(record)} (${record.stateClass}): ${reason}`,
+  )
+}
+
+function maximumBytesFor<T>(record: MemoryRecord<T>): number {
+  if (record.maximumBytes !== undefined) return record.maximumBytes
+  return record.stateClass === "durable_progress"
+    ? DURABLE_PROGRESS_MAXIMUM_BYTES
+    : DEFAULT_MAXIMUM_BYTES
+}
+
+/**
+ * Whether `segment` appears in `key` as a whole segment rather than a prefix of
+ * a longer one. Scope segments are appended in order (`.account.x`, then
+ * `.viewport.y`, then `.partition.z`), so a real match ends at a `.` or at the
+ * end of the key. A plain `includes` let `.account.1` match `.account.10`.
+ */
+function keyHasSegment(key: string, segment: string): boolean {
+  for (let from = 0; ; from = from + 1) {
+    const at = key.indexOf(segment, from)
+    if (at < 0) return false
+    const after = at + segment.length
+    if (after === key.length || key[after] === ".") return true
+    from = at
+  }
+}
+
+/**
+ * The state class a stored key belongs to: the envelope's own value when it has
+ * one, else the class of whichever registered record owns the key. Returns
+ * undefined when neither can say, in which case callers must assume the data is
+ * precious rather than disposable.
+ */
+function storedStateClass(key: string, raw: string | null): MemoryStateClass | undefined {
+  if (raw !== null) {
+    try {
+      const envelope: unknown = JSON.parse(raw)
+      if (isEnvelope(envelope) && envelope.stateClass) return envelope.stateClass
+    } catch {
+      // Fall through to the typed registry for older or unparseable envelopes.
+    }
+  }
+  return getMemoryRegistry().find((record) => keyBelongsToRecord(key, record))?.stateClass
+}
+
 function storageKeys(storage: StorageLike): string[] {
   if (!storage.key || typeof storage.length !== "number") return []
   return Array.from({ length: storage.length }, (_, index) => storage.key?.(index) ?? null)
@@ -307,13 +368,23 @@ export class MemoryClient {
     }
     try {
       const raw = JSON.stringify(envelope)
-      if (byteLength(raw) > (record.maximumBytes ?? DEFAULT_MAXIMUM_BYTES)) return false
+      if (byteLength(raw) > maximumBytesFor(record)) {
+        // Loud, because the return value is easy to drop and the symptom otherwise
+        // is a UI that shows saved state which disappears on the next reload.
+        reportWriteRefused(record, `${byteLength(raw)} bytes exceeds ${maximumBytesFor(record)}`)
+        return false
+      }
       const key = getMemoryKey(record, scope)
-      if (!this.withinNamespaceBudget(storage, record.namespace, key, raw)) return false
+      if (!this.withinNamespaceBudget(storage, record.namespace, key, raw)) {
+        reportWriteRefused(record, `namespace "${record.namespace}" is over its byte budget`)
+        return false
+      }
       storage.setItem(key, raw)
       this.emit(key)
       return true
-    } catch {
+    } catch (error) {
+      // Quota exceeded, or storage revoked mid-session.
+      reportWriteRefused(record, error instanceof Error ? error.message : "storage threw")
       return false
     }
   }
@@ -330,14 +401,33 @@ export class MemoryClient {
     }
   }
 
+  /**
+   * Forget an account's *disposable* state -- session context, preferences,
+   * drafts. It deliberately keeps `durable_progress`.
+   *
+   * The call site is a sign-out (or any change of signed-in id), and the previous
+   * behaviour deleted every key carrying the account segment regardless of class.
+   * Because a successful migration also removes the legacy key, that made signing
+   * out destroy the only copy of the user's bookmarks, likes, follows, favourite
+   * games and published posts. Progress is not "account cleanup"; a deliberate
+   * wipe has `clearStateClass("durable_progress")`.
+   */
   clearAccount(accountId: string): void {
     const current = this.currentEnvironment()
     const segments = [
       `.account.${encodeMemorySegment(accountId)}`,
       `.account.${encodeURIComponent(accountId)}`,
     ]
-    this.clearStorageKeys(current.deviceStorage, (key) => segments.some((segment) => key.includes(segment)))
-    this.clearStorageKeys(current.sessionStorage, (key) => segments.some((segment) => key.includes(segment)))
+    const predicate = (key: string, raw: string | null) => {
+      if (!segments.some((segment) => keyHasSegment(key, segment))) return false
+      const stateClass = storedStateClass(key, raw)
+      // An unknown class is treated as precious and kept: deleting data we cannot
+      // classify is exactly how the sign-out bug destroyed progress.
+      if (stateClass === undefined) return false
+      return stateClass !== "durable_progress"
+    }
+    this.clearStorageKeys(current.deviceStorage, predicate)
+    this.clearStorageKeys(current.sessionStorage, predicate)
   }
 
   clearStateClass(stateClass: MemoryStateClass, namespace?: string): void {
@@ -409,13 +499,15 @@ export class MemoryClient {
     key: string,
     raw: string,
   ): T {
-    if (byteLength(raw) > (record.maximumBytes ?? DEFAULT_MAXIMUM_BYTES)) {
-      storage.removeItem(key)
+    // Neither of these deletes. A read has no business destroying data: lowering
+    // a cap, or tightening a validator, in some later deploy would then erase
+    // every already-stored value that no longer fits instead of just ignoring it.
+    // The bytes stay put so a fixed build (or a rollback) can still read them.
+    if (byteLength(raw) > maximumBytesFor(record)) {
       return record.defaultValue()
     }
     const envelope: unknown = JSON.parse(raw)
     if (!isEnvelope(envelope)) {
-      storage.removeItem(key)
       return record.defaultValue()
     }
     const now = this.currentEnvironment().now?.() ?? Date.now()
@@ -499,7 +591,12 @@ export class MemoryClient {
       for (const legacyKey of record.legacyKeys) {
         try {
           const raw = source.getItem(legacyKey)
-          if (raw === null || byteLength(raw) > (record.maximumBytes ?? DEFAULT_MAXIMUM_BYTES)) continue
+          // Size is NOT a reason to skip a legacy value. Skipping it abandoned the
+          // user's existing progress unread -- aion2's World_L_A list is 126,454
+          // bytes in the old format -- and left the legacy key orphaned. Migrate
+          // it regardless; the migrated form is often smaller, and if the write
+          // still fails the value is at least returned for this session.
+          if (raw === null) continue
           const migrated = record.migrateLegacy(raw, legacyKey)
           if (!record.validate(migrated)) continue
           if (this.write(record, migrated, scope)) source.removeItem(legacyKey)
