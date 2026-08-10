@@ -22,11 +22,24 @@ export {
   type StorageLike,
 } from "./core"
 export {
+  useMemory,
   useMemoryState,
   type MemoryWriteStatus,
   type UseMemoryStateOptions,
 } from "./react"
 export { isBoolean, isFiniteNumber, isString, isStringArray, parseJson } from "./validators"
+export { isStandardSchema, standardValidator, type StandardSchemaLike } from "./schema"
+export {
+  memoryFor,
+  sharedMemory,
+  type BoundMemory,
+  type DefineOptions,
+  type DimensionSpec,
+  type Dimensions,
+  type MemoryHandle,
+  type MemoryNamespace,
+  type UnkeyedMemoryHandle,
+} from "./define"
 export {
   SHARED_MAXIMUM_BYTES,
   browserCookieStorage,

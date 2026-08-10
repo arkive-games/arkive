@@ -566,17 +566,16 @@ export class MemoryClient {
         return record.defaultValue()
       }
       const migrated = record.migrate(envelope.value, envelope.schemaVersion)
-      if (!record.validate(migrated)) {
-        storage.removeItem(key)
-        return record.defaultValue()
-      }
+      // A migration that cannot produce a valid value leaves the stored bytes
+      // alone: the next deploy may know how to read them.
+      if (!record.validate(migrated)) return record.defaultValue()
       if (this.write(record, migrated, scope)) return migrated
       return record.defaultValue()
     }
-    if (!record.validate(envelope.value)) {
-      storage.removeItem(key)
-      return record.defaultValue()
-    }
+    // Likewise here. A value failing validation is far more often a validator
+    // that got stricter than data that is genuinely junk, and erasing it turns a
+    // recoverable mismatch into permanent loss.
+    if (!record.validate(envelope.value)) return record.defaultValue()
     return envelope.value
   }
 

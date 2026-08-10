@@ -96,3 +96,21 @@ export function useMemoryState<T>(
 
   return [value, update, clear, writeStatus] as const
 }
+
+/**
+ * React binding for a typed handle: `useMemory(completed.at({ map: mapId }))`.
+ *
+ * Prefer this over `useMemoryState(record, { partition })`. The scope travels
+ * with the handle, so a caller cannot pass a scope that does not match the record
+ * -- which is how four V Blood reward lists ended up sharing one key.
+ */
+export function useMemory<T>(
+  bound: { record: MemoryRecord<T>; scope: MemoryScope },
+  options: { client?: MemoryClient; debounceMs?: number } = {},
+): readonly [T, (action: SetStateAction<T>) => void, () => void, MemoryWriteStatus] {
+  return useMemoryState(bound.record, {
+    ...bound.scope,
+    client: options.client,
+    debounceMs: options.debounceMs,
+  })
+}
