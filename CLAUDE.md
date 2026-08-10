@@ -247,7 +247,11 @@ polygon, and human review of `calibration/accepted_overlay.png`.
     **plus query** (`3a6d89c0`) — `/x?tab=1` misses a bare `/x` rule. Nested paths add
     `"/x/*"`, which also covers deeper children (`/dungeons/*` serves
     `/dungeons/:id/layouts/:variant`).
-  - `meta` has no file and needs none: it has no router, only hash-toggled views.
+  - `meta` needs no **rewrite** — it has no router, only hash-toggled views — but it
+    does own an `edgeone.json`, for **headers**: `/fonts/*` needs
+    `Access-Control-Allow-Origin: *` (every game loads the self-hosted font
+    stylesheet cross-origin from here) plus a long `immutable` cache. So the file is
+    not always about routing, and an app having no routes is not a reason to skip it.
   - The file sits in the app directory, **not** `public/`. `.github/workflows/deploy.yml`
     copies it into `dist/` at deploy time (EdgeOne reads it from the upload root), while
     `public/` would also copy it into the Toy bundle — which `scripts/toy-build.mjs`
