@@ -142,7 +142,14 @@ export function LocalDataControls({ strings, memory = browserMemory }: {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <span className="sr-only" role="status" aria-live="polite">
+      {/* Visible, not sr-only: this is the only feedback that a destructive action
+          happened, so a sighted user otherwise clicks "Clear drafts" and sees
+          nothing change anywhere in the dialog. */}
+      <span
+        className="min-h-5 text-xs text-muted-foreground"
+        role="status"
+        aria-live="polite"
+      >
         {status ? <><Check aria-hidden="true" />{status}</> : null}
       </span>
     </div>
@@ -159,7 +166,10 @@ export function LocalDataDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button type="button" variant="link" className="h-auto p-0 text-current">
+        {/* py-2 rather than p-0: this opens the irreversible "clear everything"
+            dialog, and at h-auto it was a ~21px target, under the 24px WCAG 2.2
+            (2.5.8, AA) minimum. */}
+        <Button type="button" variant="link" className="h-auto min-h-6 px-0 py-2 text-current">
           {triggerLabel}
         </Button>
       </DialogTrigger>

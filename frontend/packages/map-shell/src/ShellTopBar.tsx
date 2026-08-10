@@ -20,7 +20,7 @@ import {
 } from "@gamemap/ui"
 
 export const TOP_BAR_MENU_CLASS =
-  `top-full z-[var(--arkive-layer-popover)] min-w-44 ${MENU_CONTENT_CLASS}`
+  `top-full z-[var(--arkive-layer-popover)] ${MENU_CONTENT_CLASS}`
 
 export const TOP_BAR_MENU_ITEM_CLASS =
   `${MENU_ITEM_CLASS} [&>[data-slot=nav-item-label]]:min-w-0 [&>[data-slot=nav-item-label]]:flex-1`
@@ -100,7 +100,7 @@ export function ShellTopBar({
   const [openUtilityMenu, setOpenUtilityMenu] = useState<"language" | "theme" | null>(null)
 
   return (
-    <header className={cn("flex h-12 shrink-0 items-center gap-6 px-4", classNames?.root)}>
+    <header className={cn("flex h-14 shrink-0 items-center gap-6 px-4", classNames?.root)}>
       {(leftSlot || nav) && (
         <div className={cn("flex min-w-0 items-center gap-6", classNames?.left)}>
           {leftSlot}

@@ -197,13 +197,28 @@ shape:
 control_geometry:
   desktop_compact_height: "2.25rem"
   touch_target_standard: "2.75rem"
-  touch_target_accessibility_floor: "44px"
+  touch_target_accessibility_floor: "24px"
+  touch_target_enhanced: "44px"
   isolated_map_target: "3rem"
   shared_header_height: "3.5rem before safe-area inset"
   bottom_navigation_height: "4rem plus bottom safe-area inset"
   rules:
     - "Shared mobile controls use touch_target_standard, which resolves to 46.75 CSS pixels at the 17px root size."
-    - "The 44px accessibility floor is an exception boundary, not the routine component size; no touch target may render below it."
+    - >-
+      24px is the hard floor: WCAG 2.2 SC 2.5.8 (Target Size (Minimum), Level AA).
+      It carries a spacing exception -- an undersized target conforms when a 24px
+      circle centred on it does not touch another target's circle -- and an inline
+      exception for targets inside a block of text.
+    - >-
+      44px (touch_target_enhanced, SC 2.5.5, Level AAA) is the standard for ISOLATED
+      or primary controls, and is what the map action stack, pagination and the mobile
+      account button use. It is not required of dense same-purpose groups: the marker
+      filter chips are 30px, which conforms at AA and is deliberate.
+    - >-
+      The earlier wording made 44px a floor "no touch target may render below",
+      which several shared controls have never met. Stating an AAA target as a
+      requirement made the whole document unreliable rather than making anything
+      bigger.
     - "A smaller visible glyph stays inside the full target area."
     - "Compact desktop controls may use desktop_compact_height when pointer input is primary."
     - "Stable dimensions prevent labels, icons, loading state, and counts from shifting layout."

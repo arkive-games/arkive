@@ -17,7 +17,7 @@ type SectionRaceCounts = Record<WikiIndexDoc["race"], number>;
 
 const BUCKETS: FactionBucket[] = ["light", "dark", "both"];
 const SECTION_LINK_CLASS =
-  "group flex min-h-10 items-center justify-between gap-3 border-b border-border/70 px-1 py-2 text-sm transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-[color:var(--arkive-nav-active)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] md:min-h-0 md:py-1.5";
+  "group flex min-h-10 items-center justify-between gap-3 border-b border-border/70 px-1 py-2 text-sm transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-[color:var(--arkive-nav-active)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-0 md:py-1.5";
 const queryRecord = defineMemoryRecord({
   id: "query", namespace: "aion2", surface: "wiki-catalog",
   ...memoryPolicy.sessionContext("clear-wiki-search"),
@@ -216,7 +216,7 @@ export default function TypeHub({ type }: { type: string }) {
             onChange={(event) => setQ(event.target.value)}
             placeholder={t("wiki:hub.searchHint")}
             aria-label={t("wiki:list.search")}
-            className="h-12 rounded-lg border-border bg-background pl-11 pr-4 text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
+            className="h-12 rounded-lg border-border bg-background pl-11 pr-4 text-sm shadow-none focus-visible:ring-ring"
             data-testid="wiki-search"
           />
           {q.trim() && (
@@ -232,7 +232,7 @@ export default function TypeHub({ type }: { type: string }) {
                         to="/wiki/$type/$slug"
                         params={{ type, slug: String(hit.id) }}
                         onClick={() => setQ("")}
-                        className="flex min-h-10 items-center justify-between gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
+                        className="flex min-h-10 items-center justify-between gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <span className="min-w-0 truncate font-medium">{hit.name}</span>
                         <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -267,7 +267,7 @@ export default function TypeHub({ type }: { type: string }) {
                   <li key={group.slug}>
                     <a
                       href={`#group-${group.slug}`}
-                      className="group relative flex items-center justify-between gap-3 py-2 pl-6 text-sm text-muted-foreground hover:text-[color:var(--arkive-nav-active)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
+                      className="group relative flex items-center justify-between gap-3 py-2 pl-6 text-sm text-muted-foreground hover:text-[color:var(--arkive-nav-active)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       data-testid={`wiki-hub-toc-${group.slug}`}
                     >
                       <span className="absolute left-0 top-1/2 size-3 -translate-y-1/2 rounded-full border-2 border-[color:var(--arkive-nav-accent)] bg-background transition-colors group-hover:bg-[color:var(--arkive-nav-accent)]" />
@@ -316,7 +316,7 @@ export default function TypeHub({ type }: { type: string }) {
                     <Link
                       to="/wiki/$type/$slug"
                       params={{ type, slug: group.slug }}
-                      className="group inline-flex min-w-0 items-center gap-2 rounded-sm text-lg font-semibold text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
+                      className="group inline-flex min-w-0 items-center gap-2 rounded-sm text-lg font-semibold text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <span className="truncate">
                         {t(`wiki/taxonomy:groups.${type}.${group.slug}.name`)}

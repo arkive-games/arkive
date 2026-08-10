@@ -294,7 +294,14 @@ verification:
 migration_from_1_3:
   - "Read global typography, spacing, shape, control size, responsive, and motion values from the UI-foundations specification."
   - "Replace seven-control narrow pagination with the width-safe responsive contract."
-  - "Replace automatic mobile marquee with wrapping, manual scrolling, or disclosure."
+  - >-
+    NOT DONE. Replace automatic mobile marquee with wrapping, manual scrolling, or
+    disclosure. OverflowMarquee still animates with iterations: Infinity, and
+    PalPicker still passes `auto`, so the breeding selector auto-scrolls on phones.
+    Left open deliberately: dropping `auto` without a replacement makes a clipped
+    label unreachable on touch, where there is no hover to reveal it. Neither
+    perpetual animation nor silent truncation is acceptable, so this needs a design
+    decision (wrap, or tap-to-expand) rather than a prop change.
   - "Replace hard-coded dark map overlays with the color-system map_overlay token."
   - "Remove duplicated global accessibility and state-memory rules."
 

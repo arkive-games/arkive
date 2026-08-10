@@ -76,7 +76,11 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
     [category, entries, query],
   )
   const totalPages = Math.max(1, Math.ceil(filteredEntries.length / PAGE_SIZE))
-  const visibleEntries = paginateCatalogEntries(filteredEntries, page, PAGE_SIZE)
+  // Clamp the RESTORED page against the current filter. A persisted page survives a
+  // filter change, and the pager is hidden when totalPages is 1 -- so a stale page 3
+  // rendered the empty state with no control to get back.
+  const safePage = Math.min(page, totalPages)
+  const visibleEntries = paginateCatalogEntries(filteredEntries, safePage, PAGE_SIZE)
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -180,7 +184,7 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
           <nav className="catalog-pagination" aria-label={t('catalog.paginationLabel')}>
             <button
               type="button"
-              disabled={page === 1}
+              disabled={safePage === 1}
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               aria-label={t('catalog.previousPage')}
             >
@@ -189,7 +193,7 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
             <span>{t('catalog.pageStatus', { page, total: totalPages })}</span>
             <button
               type="button"
-              disabled={page === totalPages}
+              disabled={safePage === totalPages}
               onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
               aria-label={t('catalog.nextPage')}
             >

@@ -364,6 +364,10 @@ textarea {
 
 @media (max-width: 767px) {
   :root {
+    /* Was pinned at 17px, deliberately: a pixel value keeps the physical gap
+       identical across apps regardless of each app's root font size. 1rem is
+       equivalent only while the shared root stays 17px -- if that ever changes,
+       this needs to go back to a pixel value rather than silently rescaling. */
     --arkive-content-page-top-space: 1rem;
   }
 

@@ -250,7 +250,12 @@ verification:
   themes:
     - "light"
     - "dark"
-  application_scope: "Discover and verify every registered map application; do not maintain a handwritten game list here."
+  application_scope: >-
+    Verify against every app that mounts ShellLayout: aion2, palworld, vrising. There
+    is no registry to discover them from -- the previous wording deferred to one that
+    does not exist, which made the scope unverifiable. `git grep -l ShellLayout` is
+    the check; update this list when an app gains or loses a map. (The list this
+    replaced also named sts2, which has no map.)
   interaction_checks:
     - "Arkive home remains reachable on narrow desktop."
     - "Active navigation returns after hover or focus leaves."

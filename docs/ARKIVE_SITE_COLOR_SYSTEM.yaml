@@ -18,7 +18,13 @@ purpose:
   outcomes:
     - "Shared chrome remains recognizably Arkive in every game."
     - "A component consumes a semantic role instead of choosing a palette value."
-    - "Every text, focus, boundary, and control pair meets its required contrast."
+    - >-
+      Text, focus indicators, and the boundaries required to IDENTIFY a control meet
+      their required contrast. Decorative separators do not: --border is a divider,
+      not a control boundary, and measures 1.38:1 light and 1.66:1 dark against the
+      surfaces beside it. WCAG 1.4.11 does not ask for 3:1 there, and the earlier
+      blanket claim was simply false -- which is worse than silence, because it stops
+      anyone re-checking.
 
 scope:
   applies_to:
@@ -124,7 +130,11 @@ contrast_contract:
   thresholds:
     normal_text: "4.5:1"
     large_text: "3:1"
-    icons_controls_and_focus: "3:1 against adjacent colors"
+    icons_controls_and_focus: >-
+      3:1 against adjacent colors, for meaningful icons, focus indicators, and any
+      boundary a user needs in order to identify a control. Not required of
+      decorative dividers, or between two adjacent surfaces (--input is a field
+      FILL, not a border; its ratio against the page is not a conformance figure).
   verified_pairs:
     light_primary_text: "#202020 on #0090FF, 4.99:1"
     dark_primary_text: "#061018 on #0090FF, 5.87:1"
@@ -188,7 +198,11 @@ verification:
   - "Confirm changed UI contains no new app-local shared-chrome color literals."
 
 migration_from_2_0:
-  - "Replace amber focus rings with the shared blue focus_ring; amber remains reserved for orientation and warning roles."
+  - >-
+    DONE. Amber focus rings replaced by the shared blue focus_ring; amber remains
+    reserved for orientation and warning roles. The five that remained in the aion2
+    wiki (TypeHub) were converted after the token flipped, which is what the item
+    had been recording as complete while they were still there.
   - "Remove duplicate inner outlines from composite search fields."
 
 maintenance:
