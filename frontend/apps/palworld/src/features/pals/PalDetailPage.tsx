@@ -85,7 +85,7 @@ const detailSectionsRecord = defineMemoryRecord({
   id: 'mobile-sections',
   namespace: 'palworld',
   surface: 'pal-detail',
-  ...memoryPolicy.sessionContext('reset-detail-disclosure'),
+  ...memoryPolicy.userPreference('reset-detail-disclosure'),
   schemaVersion: '1.0.0',
   defaultValue: () => ({} as Record<string, boolean>),
   validate: (value: unknown): value is Record<string, boolean> => {

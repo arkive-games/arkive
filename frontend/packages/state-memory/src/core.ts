@@ -654,7 +654,14 @@ export class MemoryClient {
           if (raw === null) continue
           const migrated = record.migrateLegacy(raw, legacyKey)
           if (!record.validate(migrated)) continue
-          if (this.write(record, migrated, scope)) source.removeItem(legacyKey)
+          // Only consume the legacy key when it lives in the SAME storage this
+          // record writes to. If it was found somewhere more durable -- a
+          // localStorage value being migrated into a sessionStorage record --
+          // deleting it converts durable data into data that dies with the tab.
+          // Leaving it costs one stale key and keeps the value recoverable.
+          if (this.write(record, migrated, scope) && source === storage) {
+            source.removeItem(legacyKey)
+          }
           return migrated
         } catch {
           // Try the next compatible legacy key or storage.

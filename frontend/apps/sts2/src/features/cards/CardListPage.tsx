@@ -20,7 +20,7 @@ function isCardFilter(value: unknown): value is CardFilter {
 
 const filterRecord = defineMemoryRecord({
   id: 'filters', namespace: 'sts2', surface: 'cards-catalog',
-  ...memoryPolicy.sessionContext('clear-card-filters'),
+  ...memoryPolicy.userPreference('clear-card-filters'),
   schemaVersion: '1.0.0', defaultValue: () => ({ ...EMPTY_FILTER }), validate: isCardFilter,
   legacyKeys: [FILTER_KEY],
   migrateLegacy: (raw: string) => ({ ...EMPTY_FILTER, ...(parseJson(raw) as Partial<CardFilter>), query: '' }),

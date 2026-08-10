@@ -113,7 +113,18 @@ describe("MemoryClient", () => {
     expect(storage.getItem(getMemoryKey(record))).not.toBeNull()
   })
 
-  it("moves a reclassified session record out of device storage", () => {
+  it("copies a reclassified session record without destroying the durable original", () => {
+    // This deliberately REVERSES an earlier expectation ("moves ... out of device
+    // storage"). Deleting the device copy is only a "move" if the destination is
+    // equally durable, and sessionStorage is not: the value dies with the tab, so
+    // the durable original was the only copy the user still had.
+    //
+    // That is not hypothetical -- it is what shipped. aion2's per-map visible
+    // subtypes and regions, palworld's visibleSubtypes / pals filter / pal-detail
+    // sections, sts2's card filter and V Rising's visibleSubtypes were all
+    // localStorage-backed and were reclassified to sessionContext, so one visit
+    // migrated them into sessionStorage and erased the durable copy. Those records
+    // are now durable again; this keeps the storage layer from being able to do it.
     const device = new TestStorage()
     const session = new TestStorage()
     device.setItem("old-filter", JSON.stringify(["bosses"]))
@@ -128,8 +139,28 @@ describe("MemoryClient", () => {
     const client = new MemoryClient({ deviceStorage: device, sessionStorage: session })
 
     expect(client.read(record)).toEqual(["bosses"])
-    expect(device.getItem("old-filter")).toBeNull()
     expect(session.getItem(getMemoryKey(record))).not.toBeNull()
+    // Kept, so closing the tab does not lose it.
+    expect(device.getItem("old-filter")).not.toBeNull()
+    // And it is still there for a fresh session.
+    const afterTabClose = new MemoryClient({ deviceStorage: device, sessionStorage: new TestStorage() })
+    expect(afterTabClose.read(record)).toEqual(["bosses"])
+  })
+
+  it("still consumes a legacy key that lives in the record's own storage", () => {
+    // The guard is about crossing tiers, not about never cleaning up.
+    const storage = new TestStorage()
+    storage.setItem("old-view-mode", "list")
+    const record = defineMemoryRecord({
+      ...preference,
+      id: "same-tier-cleanup",
+      legacyKeys: ["old-view-mode"],
+      migrateLegacy: (raw: string) => raw,
+    })
+    const client = new MemoryClient({ deviceStorage: storage })
+
+    expect(client.read(record)).toBe("list")
+    expect(storage.getItem("old-view-mode")).toBeNull()
   })
 
   it("migrates the previous versioned canonical key in place", () => {

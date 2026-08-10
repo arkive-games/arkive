@@ -29,7 +29,7 @@ const filterRecord = defineMemoryRecord({
   id: 'filters',
   namespace: 'palworld',
   surface: 'pals-catalog',
-  ...memoryPolicy.sessionContext('clear-pal-filters'),
+  ...memoryPolicy.userPreference('clear-pal-filters'),
   schemaVersion: '1.0.0',
   defaultValue: () => ({ ...EMPTY_FILTER }),
   validate: isPalFilter,

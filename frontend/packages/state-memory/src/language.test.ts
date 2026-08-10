@@ -46,6 +46,12 @@ describe('language memory', () => {
       navigatorLanguages: () => [],
       documentLanguage: () => null,
     })).toBe('en-US')
-    expect(deviceStorage.getItem('i18nextLng')).toBeNull()
+    // Kept on purpose: the record now lives in the cookie transport, which browsers
+    // cap at 400 days, while this localStorage value has no expiry. Deleting the
+    // more durable copy to complete a migration into a less durable one is the
+    // mistake that lost map filters elsewhere, so the tier guard applies here too.
+    expect(deviceStorage.getItem('i18nextLng')).not.toBeNull()
+    // The migrated value is what gets read, though -- normalized to a full tag.
+    expect(memory.read(languagePreferenceRecord)).toBe('en-US')
   })
 })

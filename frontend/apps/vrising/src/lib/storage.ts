@@ -12,7 +12,9 @@ const mapViewRecord = defineMemoryRecord({
 })
 const visibleRecord = defineMemoryRecord({
   id: 'visible-subtypes', namespace: 'vrising', surface: 'map',
-  ...memoryPolicy.sessionContext('clear-map-filters'),
+  // userPreference, not sessionContext: this was localStorage-backed before, so a
+  // tab-scoped class would discard a curated subtype selection when the tab closes.
+  ...memoryPolicy.userPreference('clear-map-filters'),
   schemaVersion: '1.0.0', defaultValue: () => null as string[] | null,
   validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
   legacyKeys: [VISIBLE_KEY], migrateLegacy: parseJson,

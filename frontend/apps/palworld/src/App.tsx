@@ -79,7 +79,7 @@ const visibleSubtypesRecord = defineMemoryRecord({
   id: 'visible-subtypes',
   namespace: 'palworld',
   surface: 'map',
-  ...memoryPolicy.sessionContext('clear-map-filters'),
+  ...memoryPolicy.userPreference('clear-map-filters'),
   schemaVersion: '1.0.0',
   defaultValue: () => null as string[] | null,
   validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
