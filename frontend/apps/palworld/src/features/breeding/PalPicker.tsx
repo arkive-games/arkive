@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, ChevronsUpDown, Plus, X, Zap } from 'lucide-react'
 import {
   Button,
@@ -83,6 +83,7 @@ export interface PalPickerProps {
 export function PalPicker({ label, pals, names, value, onChange, labels, variant = 'row', slot }: PalPickerProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const listRef = useRef<HTMLDivElement>(null)
   const selected = value ? pals.find((p) => p.id === value) ?? null : null
   const selectedPalId = selected ? formatPalId(selected.zukanIndex, selected.zukanIndexSuffix) : undefined
   const selectedPalIdText = palIdText(selectedPalId)
@@ -123,6 +124,13 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
   const nearbyPals = numericTarget === null
     ? []
     : orderedPals.filter((pal) => !isExactPaldeckNumber(pal, numericTarget))
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (listRef.current) listRef.current.scrollTop = 0
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [query])
 
   const renderPalItem = (p: BreedingPal) => (
     <CommandItem
@@ -292,7 +300,10 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
         >
           <Command filter={palCommandFilter}>
             <CommandInput value={query} onValueChange={setQuery} placeholder={labels.searchPal} />
-            <CommandList className="sm:[&_[cmdk-group-items]]:grid sm:[&_[cmdk-group-items]]:grid-cols-2 sm:[&_[cmdk-group-items]]:gap-1">
+            <CommandList
+              ref={listRef}
+              className="sm:[&_[cmdk-group-items]]:grid sm:[&_[cmdk-group-items]]:grid-cols-2 sm:[&_[cmdk-group-items]]:gap-1"
+            >
               <CommandEmpty>{labels.noPalFound}</CommandEmpty>
               {tile ? (
                 <CommandGroup>

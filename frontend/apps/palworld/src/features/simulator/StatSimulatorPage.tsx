@@ -287,6 +287,7 @@ function SimPalPicker({
   const [sortDirection, setSortDirection] = useState<ZukanSortDirection>('ascending')
   const pickerControlRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const searchListRef = useRef<HTMLDivElement>(null)
   const roster = useMemo(
     () => [...pals.pals].sort((a, b) => compareZukan(a, b, sortDirection)),
     [pals, sortDirection],
@@ -298,6 +299,13 @@ function SimPalPicker({
     const frame = requestAnimationFrame(() => searchInputRef.current?.focus())
     return () => cancelAnimationFrame(frame)
   }, [open, sortDirection])
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (searchListRef.current) searchListRef.current.scrollTop = 0
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [query])
 
   const searchText = useMemo(() => {
     const m = new Map<string, string>()
@@ -435,7 +443,10 @@ function SimPalPicker({
             if (pickerControlRef.current?.contains(event.target as Node)) event.preventDefault()
           }}
         >
-          <CommandList className="sm:[&_[cmdk-group-items]]:grid sm:[&_[cmdk-group-items]]:grid-cols-2 sm:[&_[cmdk-group-items]]:gap-1">
+          <CommandList
+            ref={searchListRef}
+            className="sm:[&_[cmdk-group-items]]:grid sm:[&_[cmdk-group-items]]:grid-cols-2 sm:[&_[cmdk-group-items]]:gap-1"
+          >
             <CommandEmpty>{t('breeding.noPalFound')}</CommandEmpty>
             {numericTarget === null ? (
               <CommandGroup>{displayedRoster.map(renderPalItem)}</CommandGroup>
