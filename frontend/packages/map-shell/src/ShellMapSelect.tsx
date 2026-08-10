@@ -1,6 +1,6 @@
 import { useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { cn, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@gamemap/ui"
-import { OverflowMarquee } from "./OverflowMarquee"
+import { OverflowLabel } from "./OverflowLabel"
 
 export interface ShellMapOption {
   id: string
@@ -103,7 +103,7 @@ export function ShellMapSelect({
             {active ? (
               <>
                 {active.icon ? <MapGlyph>{active.icon}</MapGlyph> : null}
-                <OverflowMarquee text={active.label} className="flex-1" />
+                <OverflowLabel text={active.label} className="flex-1" singleLine />
               </>
             ) : undefined}
           </SelectValue>
@@ -137,7 +137,7 @@ export function ShellMapSelect({
               {/* Column inside the item's text slot (a flex row from the
                   primitive), so label and hint stack without disturbing it. */}
               <span className="flex min-w-0 flex-col text-left">
-                <OverflowMarquee text={m.label} className="text-sm leading-tight" />
+                <OverflowLabel text={m.label} className="text-sm leading-tight" />
                 {m.hint ? (
                   <span className="truncate text-xs leading-tight font-normal text-muted-foreground">
                     {m.hint}

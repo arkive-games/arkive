@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { CircleHelp, ListTree, Plus, Sparkles, Star, X, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
-import { OverflowMarquee } from '@gamemap/map-shell'
+import { OverflowLabel } from '@gamemap/map-shell'
 import type { BreedingPal, Combo, Gender, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
 import { formatPalId, palIdText } from '../../lib/palId'
@@ -179,23 +179,24 @@ export function CompactPalNode({
             />
           ) : null}
           <span className={cn('flex min-w-0 flex-1 items-center text-xs leading-tight', emphasis && 'font-semibold')}>
-            <OverflowMarquee text={name} className="min-w-0 flex-1" />
+            <OverflowLabel text={name} className="min-w-0 flex-1" />
             <GenderMark g={gender} />
           </span>
         </span>
         {m ? (
           <span className="flex min-w-0 border-t border-primary/15 bg-primary/5 px-1 py-0.5 text-xs leading-tight tabular-nums text-foreground dark:text-white">
-            <OverflowMarquee
+            <OverflowLabel
               text={metaText}
               className="min-w-0 flex-1"
               contentClassName="inline-flex min-w-full items-center justify-center gap-1 text-center"
+              singleLine
             >
               {idText ? <span>{idText}</span> : null}
               <span className="inline-flex items-center gap-0.5">
                 <Zap className="size-3 shrink-0" />
                 {m.rank}
               </span>
-            </OverflowMarquee>
+            </OverflowLabel>
           </span>
         ) : null}
       </Link>

@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
   cn,
 } from '@gamemap/ui'
-import { OverflowMarquee } from '@gamemap/map-shell'
+import { OverflowLabel } from '@gamemap/map-shell'
 import type { BreedingPal, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
 import { formatPalId, palIdText } from '../../lib/palId'
@@ -157,25 +157,28 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
                         className="absolute inset-0 size-full rounded-full object-contain"
                       />
                     </span>
-                    <OverflowMarquee
+                    {/* singleLine: the tile is h-20 and cannot grow. The full name
+                        is in the list this pal was picked from. This is also where
+                        `auto` used to animate forever. */}
+                    <OverflowLabel
                       text={names[selected.id] ?? selected.id}
-                      auto
                       className="text-sm font-semibold leading-tight"
+                      singleLine
                     />
                   </span>
                   <span className="flex shrink-0 items-center border-t border-primary/15 px-1 py-0.5 text-xs leading-tight tabular-nums text-foreground dark:text-white">
-                    <OverflowMarquee
+                    <OverflowLabel
                       text={[selectedPalIdText, String(selected.rank)].filter(Boolean).join(' ')}
-                      auto
                       className="min-w-0 flex-1"
                       contentClassName="inline-flex min-w-full items-center justify-center gap-1 text-center"
+                      singleLine
                     >
                       {selectedPalIdText ? <span>{selectedPalIdText}</span> : null}
                       <span className="inline-flex items-center gap-0.5">
                         <Zap className="size-3 shrink-0" />
                         {selected.rank}
                       </span>
-                    </OverflowMarquee>
+                    </OverflowLabel>
                   </span>
                 </span>
               ) : (

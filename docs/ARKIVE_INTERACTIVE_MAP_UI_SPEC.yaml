@@ -158,7 +158,14 @@ game_sidebar:
     label_role: "metadata"
     inactive: "Medium weight, muted foreground, reduced emphasis, transparent border"
     active: "Semibold, full opacity, selected surface, border, and amber inset indicator"
-    overflow: "Reveal clipped text on focus or pointer hover without moving the surrounding layout."
+    overflow: >-
+      Wrap onto as many lines as the label needs. minimum_height is a minimum and a
+      chip may exceed it; chips in one grid row stay equal height. This replaced
+      "reveal on focus or pointer hover without moving the surrounding layout", which
+      required a pointer the phone does not have -- so on touch the clipped remainder
+      was unreachable, and the animated variant of it failed WCAG 2.2.2. Holding the
+      layout still was the constraint that made the control inaccessible, so it is the
+      one that gave way.
 
 map_search:
   component: "SearchPanel"

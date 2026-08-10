@@ -303,13 +303,18 @@ migration_from_1_3:
   - "Read global typography, spacing, shape, control size, responsive, and motion values from the UI-foundations specification."
   - "Replace seven-control narrow pagination with the width-safe responsive contract."
   - >-
-    NOT DONE. Replace automatic mobile marquee with wrapping, manual scrolling, or
-    disclosure. OverflowMarquee still animates with iterations: Infinity, and
-    PalPicker still passes `auto`, so the breeding selector auto-scrolls on phones.
-    Left open deliberately: dropping `auto` without a replacement makes a clipped
-    label unreachable on touch, where there is no hover to reveal it. Neither
-    perpetual animation nor silent truncation is acceptable, so this needs a design
-    decision (wrap, or tap-to-expand) rather than a prop change.
+    DONE, by wrapping. OverflowMarquee is gone; OverflowLabel shows the whole label on
+    as many lines as it needs, so no motion and no pointer are involved and the
+    WCAG 2.2.2 failure in the breeding picker (iterations: Infinity, no pause) is
+    removed rather than relocated. Two options were measured and rejected: manual
+    horizontal scroll puts a scroller inside a tap target, where drag competes with
+    tap; and a two-line clamp still clipped every long label in the 20rem sidebar,
+    keeping the problem while paying most of the cost. The accepted cost is row
+    height -- a long marker label needs three lines, taking a filter chip from 38px to
+    62px. Chips in one grid row stay equal, so the grid steps rather than looking
+    ragged. Two height-fixed pickers keep single-line clipping (the map selector
+    trigger and the h-20 breeding tile); both are pickers, so the full label is one
+    tap away in the list the value came from.
   - "Replace hard-coded dark map overlays with the color-system map_overlay token."
   - "Remove duplicated global accessibility and state-memory rules."
 

@@ -13,7 +13,7 @@ import {
 } from "@gamemap/ui"
 import { deriveEyeState, syncExpanded } from "./filter-logic"
 import { IdLabel, type IdLabelValue } from "./IdLabel"
-import { OverflowMarquee } from "./OverflowMarquee"
+import { OverflowLabel } from "./OverflowLabel"
 
 export interface FilterSubtype {
   id: string
@@ -69,13 +69,13 @@ export interface FilterPanelProps {
   defaultCollapsedCategoryIds?: string[]
 }
 
-// h-9 is desktop_compact_height (2.25rem), which the map UI spec sets as the minimum
-// for both the bulk controls and the subtype chips. A fixed height rather than a
-// minimum, so a wrapped or badged label cannot change a row's size. This was 30px,
-// which cleared the 24px AA floor but was below the spec's own figure; `leading-none`
-// replaces a hard-coded 14px that the row height no longer depends on.
+// min-h-9 is desktop_compact_height (2.25rem), which the map UI spec sets as the
+// MINIMUM for both the bulk controls and the subtype chips -- a minimum, not a fixed
+// height, which is what lets a long label wrap and grow the row instead of being
+// clipped where touch users cannot reach it. Was 30px, under the spec's own figure.
+// leading-tight rather than leading-none because wrapped lines otherwise collide.
 const BUTTON_BASE =
-  "flex h-9 w-full items-center gap-2 rounded-sm px-2 text-sm font-normal leading-none transition-colors"
+  "flex min-h-9 w-full items-center gap-2 rounded-sm px-2 py-1 text-sm font-normal leading-tight transition-colors"
 const BUTTON_ACTIVE_DEFAULT = "bg-primary text-primary-foreground"
 const BUTTON_INACTIVE_DEFAULT = "bg-muted text-foreground"
 
@@ -222,7 +222,7 @@ export function FilterPanel({
                       <div className="flex w-full items-center justify-between gap-2">
                         <span className="flex min-w-0 flex-1 items-center gap-1">
                           {sub.icon}
-                          <OverflowMarquee text={sub.label} className="flex-1" />
+                          <OverflowLabel text={sub.label} className="flex-1" />
                         </span>
                         {(sub.idLabel !== undefined || sub.badge !== undefined || sub.count !== undefined) && (
                           <span className="flex shrink-0 items-center gap-1.5 text-xs">
