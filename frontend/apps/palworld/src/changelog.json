@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.27.2",
+      "date": "2026-08-10",
+      "commit": "9dd7a515582f133981359d2527e60f2ce2186e63",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Wanted fugitives now use one consistent map icon instead of individual character portraits.",
+            "zh-CN": "悬赏头目现在统一使用同一种地图图标，不再显示各自的角色头像。",
+            "zh-TW": "懸賞頭目現在統一使用同一種地圖圖示，不再顯示各自的角色頭像。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.27.1",
       "date": "2026-08-10",
       "commit": "a9ce4ee32fa5fc0de4b489736074a1f9c782832e",
