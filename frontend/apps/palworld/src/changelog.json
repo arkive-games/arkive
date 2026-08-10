@@ -12,6 +12,14 @@
             "zh-CN": "搜索结果现已采用紧凑的桌面双列排版，同屏可查看更多匹配项。",
             "zh-TW": "搜尋結果現已採用緊湊的桌面雙欄排版，同屏可查看更多符合項目。"
           }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Numeric Pal searches in pickers now return to the top so exact and nearest matches are immediately visible.",
+            "zh-CN": "选择器输入数字后会自动回到结果顶部，编号精确匹配和最接近的配种值可立即看到。",
+            "zh-TW": "選擇器輸入數字後會自動回到結果頂部，編號精確符合和最接近的配種值可立即看到。"
+          }
         }
       ]
     },
