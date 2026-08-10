@@ -55,6 +55,27 @@ services:
       # is not on the list, without ever being granted credentials.
       CORS_PUBLIC_FALLBACK: ${CORS_PUBLIC_FALLBACK:-true}
 
+      # Object storage for avatars: Tencent COS here, MinIO in the development
+      # stack. Startup refuses to continue without these outside DEBUG, on the
+      # same reasoning as the secrets above — a deploy that silently cannot store
+      # an avatar would fail only when a user tried to set one.
+      S3_ENDPOINT: ${S3_ENDPOINT:?set S3_ENDPOINT, e.g. https://cos.ap-guangzhou.myqcloud.com}
+      S3_REGION: ${S3_REGION:?set S3_REGION, e.g. ap-guangzhou}
+      S3_BUCKET: ${S3_BUCKET:?set S3_BUCKET, e.g. arkive-1250000000}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID (COS SecretId)}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY (COS SecretKey)}
+      # COS addresses buckets as <bucket>.cos.<region>.myqcloud.com, so the
+      # bucket must NOT travel in the path. MinIO is the opposite; getting this
+      # wrong surfaces as a DNS or signature failure rather than a clear error.
+      S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
+      # Where browsers fetch avatars, which need not be the endpoint writes go
+      # to. Avatars are user-supplied images, so prefer a host outside
+      # tc-imba.com: the session cookie above is scoped to the parent domain,
+      # and content served from any subdomain of it sits inside that scope.
+      S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-}
+
+      AVATAR_UPLOADS_PER_MINUTE: ${AVATAR_UPLOADS_PER_MINUTE:-5}
+
     networks:
       - shared
 

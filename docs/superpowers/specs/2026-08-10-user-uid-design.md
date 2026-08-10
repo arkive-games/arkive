@@ -248,9 +248,15 @@ rate-limiting that route is the mitigation if abuse appears.
 ## 9. Generated artifacts
 
 `go tool sqlc generate` (the migration above is confirmed to parse) and
-`go run ./cmd/arkive openapi` to refresh the committed `openapi/core.json`, which CI checks
-for drift. Section 5 of `2026-08-08-go-backend-architecture-design.md` carries a sketch of
-`core.users` and gains the two columns.
+`go run ./cmd/arkive openapi` to refresh the committed `openapi/core.json`. Section 5 of
+`2026-08-08-go-backend-architecture-design.md` carries a sketch of `core.users` and gains the
+two columns.
+
+Note that the drift gate the architecture document describes for `openapi/core.json` **does
+not exist yet**: `.github/workflows/` contains only the frontend deploy and the toy publish,
+so nothing regenerates the spec or runs `go test` on a push. Regenerating is therefore a
+manual step, and forgetting it is silent. Adding a Go workflow is the obvious fix and is
+tracked as outstanding work rather than assumed.
 
 No app changelog entry: this is platform infrastructure with no user-visible surface yet, and
 per the workspace rules a game's version history records only that game's visible changes.
