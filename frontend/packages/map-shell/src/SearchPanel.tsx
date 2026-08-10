@@ -138,6 +138,7 @@ export function SearchPanel({
   variant = "floating",
   floatingPlacement = "right",
 }: SearchPanelProps) {
+  const rootRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState(initialQuery ?? "")
   const [debounced, setDebounced] = useState(initialQuery ?? "")
 
@@ -254,6 +255,17 @@ export function SearchPanel({
     onResultsChange(ids)
   }, [results, onResultsChange])
 
+  useEffect(() => {
+    if (!query.trim()) return
+    const dismissOnOutsidePointer = (event: PointerEvent) => {
+      if (rootRef.current?.contains(event.target as Node)) return
+      setQuery("")
+      setDebounced("")
+    }
+    document.addEventListener("pointerdown", dismissOnOutsidePointer, true)
+    return () => document.removeEventListener("pointerdown", dismissOnOutsidePointer, true)
+  }, [query])
+
   const handleSelect = (id: string) => {
     const item = itemsById.get(id)
     if (!item) return
@@ -270,6 +282,7 @@ export function SearchPanel({
 
   return (
     <div
+      ref={rootRef}
       className={cn(
         // The floating column spans the map's full height but only *renders*
         // a search bar (and a results panel once there is a query), so

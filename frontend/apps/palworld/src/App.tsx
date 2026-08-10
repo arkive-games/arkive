@@ -23,6 +23,7 @@ import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
+import { ChestLootSummary } from './components/ChestLootSummary'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -415,6 +416,7 @@ export default function App() {
         drops: m.drops,
         warpTo: m.warpTo,
         dungeonArea: m.dungeonArea,
+        lootArea: m.lootArea,
       }
     })
   }, [staticData, markerData, subtypeMetaMap, completed, countBySubtype, defaultActiveSubtypes])
@@ -741,6 +743,7 @@ export default function App() {
             {t('dungeon.viewLoot')}
           </Link>
         ) : null}
+        {marker.subtype === 'chest' ? <ChestLootSummary lootArea={marker.lootArea} /> : null}
         {marker.subtypeMeta?.canComplete ? (
           <div className="mt-4 flex items-center justify-end">
             <button

@@ -97,6 +97,8 @@ export const POPUP_OFFSET_Y = 14;
 
 /** Free space auto-pan keeps around the popup, CSS px (Leaflet `autoPanPadding`). */
 export const POPUP_AUTOPAN_PAD = 5;
+/** Extra top clearance for the floating map search control. */
+export const POPUP_AUTOPAN_TOP_PAD = 72;
 
 /**
  * A real DOM element does NOT structurally satisfy `core/gestures.ts`'
@@ -170,6 +172,8 @@ export class MapEngine {
   private hoveredMarkerId: string | null = null;
   /** Re-entrancy guard for the overlay pass (auto-pan moves the camera). */
   private overlayRunning = false;
+  /** A camera change during an overlay pass needs one follow-up projection. */
+  private overlayQueued = false;
   private lastLabelTier: number;
   private lastReported: { x: number; y: number; zoom: number } | null = null;
   private menuOpen = false;
@@ -455,7 +459,7 @@ export class MapEngine {
     if (left + shiftX < POPUP_AUTOPAN_PAD) shiftX = POPUP_AUTOPAN_PAD - left;
     let shiftY = 0;
     if (bottom > viewH - POPUP_AUTOPAN_PAD) shiftY = viewH - POPUP_AUTOPAN_PAD - bottom;
-    if (top + shiftY < POPUP_AUTOPAN_PAD) shiftY = POPUP_AUTOPAN_PAD - top;
+    if (top + shiftY < POPUP_AUTOPAN_TOP_PAD) shiftY = POPUP_AUTOPAN_TOP_PAD - top;
     if (shiftX === 0 && shiftY === 0) return;
 
     this.camera.panBy(-shiftX, -shiftY);
@@ -472,6 +476,11 @@ export class MapEngine {
    */
   flyToData(x: number, y: number, zoom?: number, seconds?: number): void {
     if (this.disposed) return;
+    // React mounts and positions a newly selected marker's popup in a layout
+    // effect, then starts the selection fly in a passive effect. Re-arm here so
+    // the fly cannot undo that first auto-pan, especially when overlapping
+    // markers fan the popup away from the raw coordinate being centred.
+    if (this.popupAnchorId) this.popupNeedsAutoPan = true;
     const target = dataToPoint(this.map, x, y);
     this.camera.flyTo(
       target,
@@ -577,16 +586,25 @@ export class MapEngine {
    * hundred cheap style writes, and no layout is read.
    *
    * The re-entrancy guard is load-bearing: the popup's auto-pan moves the camera,
-   * which emits `change`, which lands back here.
+   * which emits `change`, which lands back here. That nested request is queued
+   * rather than dropped so the popup, labels and tooltip are projected against
+   * the post-pan camera before control returns to the browser.
    */
   private scheduleOverlay(): void {
-    if (this.disposed || this.overlayRunning) return;
-    this.overlayRunning = true;
-    try {
-      this.runOverlayPass();
-    } finally {
-      this.overlayRunning = false;
+    if (this.disposed) return;
+    if (this.overlayRunning) {
+      this.overlayQueued = true;
+      return;
     }
+    do {
+      this.overlayQueued = false;
+      this.overlayRunning = true;
+      try {
+        this.runOverlayPass();
+      } finally {
+        this.overlayRunning = false;
+      }
+    } while (this.overlayQueued && !this.disposed);
   }
 
   private runOverlayPass(): void {

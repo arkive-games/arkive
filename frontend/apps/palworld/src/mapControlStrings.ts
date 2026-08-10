@@ -9,6 +9,46 @@ export interface MapControlStrings {
   confirm: string
 }
 
+export const CHEST_LOOT_POOL_LABELS: Record<Language, string> = {
+  'en-US': 'Regional chest loot',
+  'de-DE': 'Regionale Truhenbeute',
+  'es-ES': 'Botín de cofres de la región',
+  'es-MX': 'Botín de cofres de la región',
+  'fr-FR': 'Butin des coffres de la région',
+  'id-ID': 'Jarahan peti wilayah',
+  'it-IT': 'Bottino dei forzieri regionali',
+  'ja-JP': '地域の宝箱ドロップ',
+  'ko-KR': '지역 보물 상자 전리품',
+  'pl-PL': 'Łupy ze skrzyń w regionie',
+  'pt-BR': 'Saques de baús da região',
+  'ru-RU': 'Добыча из сундуков региона',
+  'th-TH': 'ของรางวัลจากหีบในภูมิภาค',
+  'tr-TR': 'Bölgesel sandık ganimeti',
+  'vi-VN': 'Vật phẩm từ rương trong khu vực',
+  'zh-CN': '区域宝箱掉落',
+  'zh-TW': '區域寶箱掉落',
+}
+
+export const CHEST_LOOT_UNAVAILABLE_LABELS: Record<Language, string> = {
+  'en-US': 'Loot details cannot be resolved for this special chest.',
+  'de-DE': 'Die Beutedaten dieser besonderen Truhe können nicht aufgelöst werden.',
+  'es-ES': 'No se pueden determinar los datos de botín de este cofre especial.',
+  'es-MX': 'No se pueden determinar los datos de botín de este cofre especial.',
+  'fr-FR': 'Les données de butin de ce coffre spécial ne peuvent pas être déterminées.',
+  'id-ID': 'Detail jarahan peti khusus ini tidak dapat ditentukan.',
+  'it-IT': 'I dati del bottino di questo forziere speciale non possono essere determinati.',
+  'ja-JP': 'この特殊な宝箱のドロップ情報は解析できません。',
+  'ko-KR': '이 특수 보물 상자의 전리품 정보는 확인할 수 없습니다.',
+  'pl-PL': 'Nie można ustalić danych łupów dla tej specjalnej skrzyni.',
+  'pt-BR': 'Não foi possível determinar os dados de saque deste baú especial.',
+  'ru-RU': 'Данные о добыче из этого особого сундука определить невозможно.',
+  'th-TH': 'ไม่สามารถระบุข้อมูลของรางวัลจากหีบพิเศษนี้ได้',
+  'tr-TR': 'Bu özel sandığın ganimet bilgileri çözümlenemiyor.',
+  'vi-VN': 'Không thể xác định dữ liệu vật phẩm của rương đặc biệt này.',
+  'zh-CN': '该特殊宝箱的掉落池暂时无法解析。',
+  'zh-TW': '該特殊寶箱的掉落池暫時無法解析。',
+}
+
 export const MAP_CONTROL_STRINGS: Record<Language, MapControlStrings> = {
   'en-US': {
     showMarkerNames: 'Show marker names',

@@ -95,6 +95,21 @@ describe("SearchPanel", () => {
     expect(screen.queryByTestId("search-scope-toggle")).toBeNull()
   })
 
+  it("dismisses a populated search when the user clicks outside the shared panel", () => {
+    renderSearchPanel([item({ id: "alpha", name: "Alpha marker" })])
+    searchFor("Alpha")
+
+    const input = screen.getByTestId("marker-search") as HTMLInputElement
+    expect(screen.getByTestId("search-results")).toBeTruthy()
+
+    fireEvent.pointerDown(input)
+    expect(input.value).toBe("Alpha")
+
+    fireEvent.pointerDown(document.body)
+    expect(input.value).toBe("")
+    expect(screen.queryByTestId("search-results")).toBeNull()
+  })
+
   it("matches idLabel values in search queries", () => {
     renderSearchPanel([
       item({ id: "pal-037", name: "Catalog Pal", description: "Forest runner", idLabel: "No.037" }),

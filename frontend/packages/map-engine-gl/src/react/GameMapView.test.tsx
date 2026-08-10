@@ -23,8 +23,8 @@ import { setRenderBackendFactory } from "./renderBackend.ts";
  * for real).
  *
  * jsdom has no layout, so `clientWidth`/`clientHeight` are stubbed to give the
- * camera a viewport. `offsetWidth`/`offsetHeight` stay 0, which is why the popup
- * AUTO-PAN is not covered here — it needs a measured card.
+ * camera a viewport. `offsetWidth`/`offsetHeight` stay 0 by default; the popup
+ * auto-pan regression test temporarily supplies measured dimensions.
  */
 
 const VIEWPORT = { width: 800, height: 600 };
@@ -439,6 +439,66 @@ describe("selected popup", () => {
     // button, no close-on-click).
     rerender(<GameMapView {...props} selectedMarkerId={null} />);
     expect(container.querySelector(".gmgl-popup")).toBeNull();
+  });
+
+  it("auto-pans again after a programmatic fly recentres an open popup", () => {
+    const widthDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "offsetWidth",
+    );
+    const heightDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "offsetHeight",
+    );
+    Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+      configurable: true,
+      get: () => 320,
+    });
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+      configurable: true,
+      get: () => 450,
+    });
+
+    try {
+      const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
+      render(
+        <GameMapView
+          {...baseProps({
+            markers: [marker],
+            selectedMarkerId: "m1",
+            suppressInitialFlyForId: "m1",
+            initialView: { x: 512, y: 512, zoom: 0 },
+            exposeTestHandle: true,
+          })}
+        />,
+      );
+
+      const autoPannedCenter = handle().getCenter();
+      expect(autoPannedCenter.y).toBeLessThan(512);
+      const popup = document.querySelector<HTMLElement>(".gmgl-popup");
+      const initialAnchor = handle().project(512, 512);
+      expect(popup?.style.transform).toBe(
+        `translate3d(${initialAnchor.sx}px, ${initialAnchor.sy - POPUP_OFFSET_Y}px, 0) translate(-50%, -100%)`,
+      );
+
+      act(() => handle().flyTo(512, 512, undefined, 0));
+      expect(handle().getCenter()).toEqual(autoPannedCenter);
+      const finalAnchor = handle().project(512, 512);
+      expect(popup?.style.transform).toBe(
+        `translate3d(${finalAnchor.sx}px, ${finalAnchor.sy - POPUP_OFFSET_Y}px, 0) translate(-50%, -100%)`,
+      );
+    } finally {
+      if (widthDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, "offsetWidth", widthDescriptor);
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, "offsetWidth");
+      }
+      if (heightDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, "offsetHeight", heightDescriptor);
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, "offsetHeight");
+      }
+    }
   });
 });
 
