@@ -1,0 +1,15 @@
+name: arkive
+version: 1.0.0
+description: APM project for arkive
+author: tc-imba
+# Which agent platforms to deploy to.
+# Resolution order: --target flag > this field > auto-detect from filesystem.
+# Accepted values: agent-skills, antigravity, claude, codex, copilot, cursor, gemini, kiro, opencode, windsurf
+targets:
+- claude
+- codex
+dependencies:
+  apm: []
+  mcp: []
+includes: auto
+scripts: {}

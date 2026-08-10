@@ -34,9 +34,10 @@ const worldMap: GameMapMeta = {
   orientation: { pxAxis: "Y", flipX: false, flipY: true },
 };
 
-// aion2's shipping orientation (`pxAxis: "X"`, no flips — see workspace
-// CLAUDE.md). The grid and the world bounds are deliberately non-square and
-// asymmetric so that transposing the two axes cannot pass: W/H = 8192/4096 and
+// aion2's shipping orientation (`pxAxis: "X"`, no flips — see the coordinate
+// transform in `tools/CLAUDE.md`). The grid and the world bounds are
+// deliberately non-square and asymmetric so that transposing the two axes
+// cannot pass: W/H = 8192/4096 and
 // the X/Y world ranges differ (4000 vs 8000).
 const aion2Map: GameMapMeta = {
   id: "World_L_A",

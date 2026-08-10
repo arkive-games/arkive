@@ -1,0 +1,57 @@
+---
+description: Data-pipeline conventions — the world-to-map-pixel coordinate transforms for AION2 and V Rising, and where each game's extractor notes live
+applyTo: "tools/**"
+---
+
+**Source: `.apm/instructions/tools.instructions.md` — edit there, then `apm compile`.**
+The workspace-wide conventions in the repository-root `CLAUDE.md`/`AGENTS.md` apply here too.
+
+## Coordinate transform (world → map pixels)
+The game uses 3D world coords (`MapData.json` X,Y); the map PNG/tiles are an N×N pixel grid
+(`tilesCount × tileSize`, e.g. World_L_A = 8192×8192). The transform is a **pure linear map**
+from the map's `WorldBoundBox` to pixels, read from `Data/WorldMap/<Map>.json`
+(`Min`/`Max` and `SectorSize × SectorPlaneSize` = pixel size):
+
+```
+px = (worldX - Min.X) / (Max.X - Min.X) * pixelWidth      # X → pixel-x, no flip
+py = (worldY - Min.Y) / (Max.Y - Min.Y) * pixelHeight     # Y → pixel-y, no flip
+```
+
+**Orientation (verified against `World_L_A.png` 2026-06-27): `px_from=X, flip_x=False,
+flip_y=False`** — i.e. the formula above as-is. Ground truth used: Eternal Isle = lower-left,
+Dawn Legion Base = upper-left. This matches the raw **map image** (image Y increases downward).
+
+**Caveat — two Y conventions, one flip apart:**
+- **Map image / PNG / tiles** (this transform): `flip_y=False` (Y down). Use for drawing on the
+  map PNG and for the canonical dataset emitted by `tools`.
+- **Current frontend `regions.yaml` (Leaflet `CRS.Simple`, Y up):** `flip_y=True`
+  (`py' = pixelHeight - py`). The 1A calibration matched this space. The Phase 2 frontend
+  should standardize on the image-space (no-flip) convention to remove the discrepancy.
+
+The orientation is expected to hold for all maps (same engine), but **re-verify per map** via
+landmarks/overlay. Implementation: `tools/apps/aion2/tools/maps/` (`WorldMapTransform`).
+
+## Coordinate transform — V Rising
+V Rising ships **no** `WorldBoundBox` equivalent, so the transform was **derived**, not read:
+the mask rasters are 0.5 world units per pixel (verified 372/372), which fixes the 6080×6080
+map image at a 3040×3040 world span and leaves only an offset plus one of 8 orientations. The
+offset comes from FFT cross-correlation of the composited region silhouettes against the map's
+land mask (argmax correlation == argmax IoU under pure translation). The accepted result lives
+in `tools/apps/vrising/maps/calibration.py` along with its IoU, margin and
+`CALIBRATION_METHOD` (`fitted` or `by-eye`). Re-derive with
+`python -m vrising.maps calibrate`; that stage never writes the accepted values, so a re-run
+cannot silently move every marker. **Region names do not exist yet** — localization is keyed by
+bare GUID and the real names sit in `.entityheader` subscene names (166 unique, recovered by
+`unex coverage` as a tail-plaintext heuristic), so regions ship labelled by `AccessID` and
+nothing is invented.
+
+Note the current calibration is `by-eye`: the automated IoU gate was unreachable by
+construction (the 372 silhouettes cover only ~41% of the landmass, capping IoU at 0.409), so
+acceptance rests on containment 0.9165, 369/372 markers landing inside their own region
+polygon, and human review of `calibration/accepted_overlay.png`.
+
+## Per-game extractor notes
+Lost Ark is the one game whose extractor we do **not** own, and its table-decoding findings are
+long-form reference rather than a working convention. Read
+`tools/apps/lostark/NOTES.md` before touching that pipeline; the fan-site disagreements it
+summarises are recorded in full in `docs/lostark-fansite-divergences.md`.
