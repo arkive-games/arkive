@@ -391,7 +391,9 @@ export default function App() {
           countBySubtype.get(m.subtype) ?? 0,
           defaultActiveSubtypes.has(m.subtype),
         ),
-        icon: m.icon,
+        // Wanted fugitives share one map symbol. Existing data artifacts still
+        // carry individual portraits, so ignore those until they are regenerated.
+        icon: m.subtype === 'wanted' ? undefined : m.icon,
         image: m.image,
         indexInSubtype: m.indexInSubtype,
         images: [] as string[],

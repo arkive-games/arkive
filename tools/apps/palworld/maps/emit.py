@@ -410,8 +410,6 @@ def build_dataset(parsed: dict) -> dict:
         if w.get("nameByLng"):
             name_by_lng = {lng: (f"{n} Lv.{w['level']}" if w.get("level") else n) for lng, n in w["nameByLng"].items()}
         c = {"subtype": "wanted", **to_world(w["location"]), "sortKey": w["spawnerId"]}
-        if w.get("icon"):
-            c["icon"] = w["icon"]
         if name_by_lng:
             c["nameByLng"] = name_by_lng
         # Kill drops (bounty tokens, gold, keys) for the popup's drop badges.
