@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.28.0",
+      "date": "2026-08-10",
+      "commit": "db9bee0924584ce589fb01a49ae1cdb094bffba1",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Pal searches now accept a breeding power and rank nearby Pals by difference across the map, Paldeck, breeding calculator, and stat simulator.",
+            "zh-CN": "地图、帕鲁图鉴、配种计算器和属性模拟器的帕鲁搜索现支持输入配种值，并按差值从小到大显示相近帕鲁。",
+            "zh-TW": "地圖、帕魯圖鑑、配種計算器和屬性模擬器的帕魯搜尋現支援輸入配種值，並按差值從小到大顯示相近帕魯。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.27.4",
       "date": "2026-08-10",
       "commit": "e66f8282a80eb76805df4eaf60a6ffa7546168f2",
