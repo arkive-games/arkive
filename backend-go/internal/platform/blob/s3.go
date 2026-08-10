@@ -111,7 +111,7 @@ func NewS3(cfg S3Config) (*S3Store, error) {
 }
 
 // Put writes an object.
-func (s *S3Store) Put(ctx context.Context, key string, body io.Reader, size int64, contentType string) error {
+func (s *S3Store) Put(ctx context.Context, key string, body io.Reader, size int64, opts PutOptions) error {
 	// ContentLength is set explicitly because the SDK would otherwise buffer the
 	// whole body to discover it, or fall back to chunked encoding that some
 	// S3-compatible servers reject.
@@ -120,10 +120,8 @@ func (s *S3Store) Put(ctx context.Context, key string, body io.Reader, size int6
 		Key:           aws.String(key),
 		Body:          body,
 		ContentLength: aws.Int64(size),
-		ContentType:   aws.String(contentType),
-		// Objects are content-addressed and therefore immutable, so they can be
-		// cached for as long as any cache is willing to keep them.
-		CacheControl: aws.String("public, max-age=31536000, immutable"),
+		ContentType:   aws.String(opts.ContentType),
+		CacheControl:  aws.String(cacheControlFor(opts)),
 	})
 	if err != nil {
 		return fmt.Errorf("put object %q: %w", key, err)
@@ -142,9 +140,54 @@ func (s *S3Store) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
+// List returns every key under a prefix, following continuation tokens.
+//
+// The loop matters even for small prefixes: S3 caps a response at 1000 keys and
+// silently truncates, so a version without it would appear to work and then
+// quietly stop reclaiming once an account had uploaded a thousand avatars.
+func (s *S3Store) List(ctx context.Context, prefix string) ([]string, error) {
+	var (
+		keys  []string
+		token *string
+	)
+	for {
+		page, err := s.client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+			Bucket:            aws.String(s.bucket),
+			Prefix:            aws.String(prefix),
+			ContinuationToken: token,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("list objects under %q: %w", prefix, err)
+		}
+		for _, obj := range page.Contents {
+			if obj.Key != nil {
+				keys = append(keys, *obj.Key)
+			}
+		}
+		if page.IsTruncated == nil || !*page.IsTruncated {
+			return keys, nil
+		}
+		token = page.NextContinuationToken
+	}
+}
+
 // PublicURL renders the address a browser fetches the object from.
 func (s *S3Store) PublicURL(key string) string {
 	return s.publicBaseURL + "/" + key
+}
+
+// cacheControlFor chooses how long a cache may keep the object.
+//
+// A digest-named object can never change, so it is cached for a year and marked
+// immutable — which is what makes an avatar URL free to serve repeatedly through
+// a CDN. A fixed key gets a day instead: replacing the artwork behind it must
+// become visible in reasonable time, and "immutable" on a mutable key is a
+// year-long bug that no deploy can clear.
+func cacheControlFor(opts PutOptions) string {
+	if opts.Mutable {
+		return "public, max-age=86400"
+	}
+	return "public, max-age=31536000, immutable"
 }
 
 // insertBucketHost turns https://cos.ap-guangzhou.myqcloud.com into

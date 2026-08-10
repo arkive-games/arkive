@@ -19,9 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/jpeg"
-	"image/png"
 	"io"
+	"strconv"
 
 	"golang.org/x/image/draw"
 
@@ -31,17 +30,10 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	// WebP is accepted but never written. x/image/webp is decode-only and the
-	// build sets CGO_ENABLED=0, so neither the standard library nor a libwebp
-	// binding can encode it.
-	//
-	// Pure-Go WebP encoders do exist, so this is a judgement rather than a
-	// limitation. Measured at this 256px rendition: lossless WebP is 147 KB for a
-	// photograph against 13.8 KB for JPEG q85, and 1.97 KB against PNG's 2.50 KB
-	// for a flat image with alpha. Beating JPEG needs a lossy pure-Go encoder,
-	// which is a young reimplementation of a complex bitstream to put in the path
-	// of untrusted uploads for a few kilobytes on an immutably cached object. See
-	// the avatar design for the numbers and when to revisit.
+	// x/image/webp is decode-only, and it is deliberately the *only* decoder of
+	// uploaded bytes. WebP is written back by a third-party encoder in encode.go,
+	// which never sees a file — only pixels this package has already decoded and
+	// validated. See the avatar design for why that asymmetry is the point.
 	_ "golang.org/x/image/webp"
 
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
@@ -67,26 +59,52 @@ const (
 	MinDimension = 32
 
 	// JPEGQuality is a deliberate compromise: at 256 px the difference from 95
-	// is not visible, and the file is roughly half the size.
+	// is not visible, and the file is roughly half the size. It also serves as
+	// the quality for lossy WebP.
 	JPEGQuality = 85
 
-	avatarPrefix = "avatars/"
+	// UploadPrefix is where an account's own uploads live. Every object under
+	// UploadPrefix + uid belongs to exactly one account, which is what makes
+	// reclaiming superseded avatars a scoped delete rather than a bucket-wide
+	// garbage collection with a grace period.
+	UploadPrefix = "avatars/u/"
+
+	// PresetPrefix is where the shared preset avatars live. They are written once
+	// by the seed command and referenced by many accounts.
+	PresetPrefix = "avatars/presets/"
 )
+
+// UserUploadPrefix is the prefix owned by one account.
+func UserUploadPrefix(uid int64) string {
+	return UploadPrefix + strconv.FormatInt(uid, 10) + "/"
+}
 
 // Avatar describes a stored avatar object.
 type Avatar struct {
 	Key         string
 	ContentType string
 	Size        int64
+	Format      string
 }
 
-// StoreAvatar normalises an uploaded image and writes it.
+// StoreAvatar normalises an uploaded image and writes it under the account's own
+// prefix.
 //
-// The returned key is derived from the encoded bytes, so the same picture
-// uploaded by two accounts yields one object and one key. That makes the object
-// immutable, which is what lets the URL be cached indefinitely — and it is why
-// nothing here deletes: another account may be relying on the same key.
-func StoreAvatar(ctx context.Context, store blob.Store, r io.Reader) (Avatar, error) {
+// The key is UserUploadPrefix(uid) + digest + extension. Two properties follow
+// from that shape and both matter:
+//
+//   - The digest makes the object immutable, so its URL can be cached for a year
+//     behind a CDN. A key of avatars/u/<uid> alone would be a stable URL with
+//     mutable content, which cannot be cached for long without serving a stale
+//     picture.
+//   - The prefix belongs to exactly one account, so the previous avatar can be
+//     removed by deleting everything else under it. There is no sharing between
+//     accounts to reference-count, and therefore no bucket-wide sweep and no
+//     grace period. Orphans cannot accumulate.
+//
+// The stale objects are removed after the row is updated, by the caller, because
+// only the caller knows the write was committed.
+func StoreAvatar(ctx context.Context, store blob.Store, uid int64, r io.Reader) (Avatar, error) {
 	if store == nil {
 		return Avatar{}, apierr.New(apierr.StorageUnavailable,
 			"avatar storage is not configured on this server")
@@ -105,13 +123,15 @@ func StoreAvatar(ctx context.Context, store blob.Store, r io.Reader) (Avatar, er
 		return Avatar{}, apierr.New(apierr.UploadInvalidImage, "no image was supplied")
 	}
 
-	encoded, contentType, err := renderAvatar(raw)
+	encoded, format, err := renderAvatar(raw)
 	if err != nil {
 		return Avatar{}, err
 	}
 
-	key := avatarPrefix + digest(encoded) + ".256" + extensionFor(contentType)
-	if err := store.Put(ctx, key, bytes.NewReader(encoded), int64(len(encoded)), contentType); err != nil {
+	key := UserUploadPrefix(uid) + digest(encoded) + format.Extension
+	// Not mutable: the key carries the digest of these very bytes.
+	putOpts := blob.PutOptions{ContentType: format.ContentType}
+	if err := store.Put(ctx, key, bytes.NewReader(encoded), int64(len(encoded)), putOpts); err != nil {
 		if errors.Is(err, blob.ErrNotConfigured) {
 			return Avatar{}, apierr.New(apierr.StorageUnavailable,
 				"avatar storage is not configured on this server")
@@ -119,58 +139,100 @@ func StoreAvatar(ctx context.Context, store blob.Store, r io.Reader) (Avatar, er
 		return Avatar{}, fmt.Errorf("store avatar: %w", err)
 	}
 
-	return Avatar{Key: key, ContentType: contentType, Size: int64(len(encoded))}, nil
+	return Avatar{
+		Key:         key,
+		ContentType: format.ContentType,
+		Size:        int64(len(encoded)),
+		Format:      format.Name,
+	}, nil
 }
 
-// renderAvatar decodes, validates and re-encodes, returning the bytes to store.
+// RemoveSupersededUploads deletes every object under the account's prefix except
+// keep.
+//
+// This is what makes orphaned avatars structurally impossible rather than a job
+// to be scheduled. It runs after the row is committed, so a failure here leaves
+// an unreferenced object that the next upload will clean up — the operation is
+// idempotent and self-healing, which is why its error is logged rather than
+// failing the request.
+func RemoveSupersededUploads(ctx context.Context, store blob.Store, uid int64, keep string) error {
+	if store == nil {
+		return nil
+	}
+	keys, err := store.List(ctx, UserUploadPrefix(uid))
+	if err != nil {
+		return fmt.Errorf("list previous avatars: %w", err)
+	}
+	for _, key := range keys {
+		if key == keep {
+			continue
+		}
+		if err := store.Delete(ctx, key); err != nil {
+			return fmt.Errorf("delete superseded avatar %q: %w", key, err)
+		}
+	}
+	return nil
+}
+
+// RemoveAllUploads deletes everything an account has ever uploaded, for use when
+// the account itself goes away.
+func RemoveAllUploads(ctx context.Context, store blob.Store, uid int64) error {
+	return RemoveSupersededUploads(ctx, store, uid, "")
+}
+
+// renderAvatar decodes, validates and re-encodes, returning the bytes to store
+// and the format they are in.
 //
 // Split from StoreAvatar so that every validation and format decision is
 // testable without a store at all.
-func renderAvatar(raw []byte) (encoded []byte, contentType string, err error) {
+func renderAvatar(raw []byte) (encoded []byte, format Format, err error) {
 	// The header is read first, separately, because this is the only check that
 	// happens before memory proportional to the image is committed.
-	cfg, _, err := image.DecodeConfig(bytes.NewReader(raw))
+	cfg, decodedFormat, err := image.DecodeConfig(bytes.NewReader(raw))
 	if err != nil {
-		return nil, "", apierr.New(apierr.UploadInvalidImage,
+		return nil, Format{}, apierr.New(apierr.UploadInvalidImage,
 			"that file is not an image in a supported format (JPEG, PNG, GIF or WebP)")
 	}
 	if cfg.Width <= 0 || cfg.Height <= 0 {
-		return nil, "", apierr.New(apierr.UploadInvalidImage, "that image has no area")
+		return nil, Format{}, apierr.New(apierr.UploadInvalidImage, "that image has no area")
 	}
 	if int64(cfg.Width)*int64(cfg.Height) > MaxPixels {
-		return nil, "", apierr.New(apierr.UploadInvalidImage,
+		return nil, Format{}, apierr.New(apierr.UploadInvalidImage,
 			fmt.Sprintf("that image is %dx%d, larger than the %d megapixel limit",
 				cfg.Width, cfg.Height, MaxPixels/1_000_000))
 	}
 	if cfg.Width < MinDimension || cfg.Height < MinDimension {
-		return nil, "", apierr.New(apierr.UploadInvalidImage,
+		return nil, Format{}, apierr.New(apierr.UploadInvalidImage,
 			fmt.Sprintf("an avatar must be at least %dx%d pixels", MinDimension, MinDimension))
+	}
+
+	// The format is taken from the decoder, so it describes the bytes rather than
+	// the filename or the client's Content-Type header. Neither of those is
+	// evidence, and both are trivially forged.
+	format, err = formatFor(decodedFormat)
+	if err != nil {
+		return nil, Format{}, err
 	}
 
 	src, _, err := image.Decode(bytes.NewReader(raw))
 	if err != nil {
 		// The header parsed but the body did not: a truncated or corrupt file.
-		return nil, "", apierr.New(apierr.UploadInvalidImage, "that image could not be read")
+		return nil, Format{}, apierr.New(apierr.UploadInvalidImage, "that image could not be read")
 	}
 
-	// Transparency decides the output format, and it must be read from the
-	// source: scaling into an RGBA canvas would make every image look as though
-	// it had an alpha channel.
+	// Transparency no longer decides the *format* — the source does — but it still
+	// selects the lossy or lossless variant of WebP. It has to be measured on the
+	// source: scaling into an RGBA canvas would make every image look as though it
+	// had an alpha channel.
 	transparent := hasTransparency(src)
 
 	square := scaleToSquare(src, AvatarSize)
 
-	buf := new(bytes.Buffer)
-	if transparent {
-		if err := png.Encode(buf, square); err != nil {
-			return nil, "", fmt.Errorf("encode png: %w", err)
-		}
-		return buf.Bytes(), "image/png", nil
+	encoded, err = encode(square, format, transparent)
+	if err != nil {
+		return nil, Format{}, err
 	}
-	if err := jpeg.Encode(buf, square, &jpeg.Options{Quality: JPEGQuality}); err != nil {
-		return nil, "", fmt.Errorf("encode jpeg: %w", err)
-	}
-	return buf.Bytes(), "image/jpeg", nil
+	return encoded, format, nil
 }
 
 // scaleToSquare centre-crops to a square and resizes to size.

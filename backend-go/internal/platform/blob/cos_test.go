@@ -68,7 +68,7 @@ func TestLiveCOSUnderstandsThisClient(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	err = store.Put(ctx, "avatars/probe.256.jpg", strings.NewReader("probe"), 5, "image/jpeg")
+	err = store.Put(ctx, "avatars/probe.256.jpg", strings.NewReader("probe"), 5, PutOptions{ContentType: "image/jpeg"})
 	if err == nil {
 		t.Fatal("writing to an unowned bucket with a fake key succeeded, which cannot be right")
 	}

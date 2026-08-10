@@ -192,32 +192,83 @@ func (s *Service) ByAnyUID(ctx context.Context, uid int64) (UserPublic, error) {
 
 // SetAvatar normalises an uploaded image, stores it and points the account at it.
 //
-// The account row is updated only after the object is durably written, so a
-// storage failure leaves the previous avatar in place rather than a row
-// referencing a key that does not exist. The reverse order would turn a
-// transient upload error into a permanently broken image.
+// The order of the three steps is the whole design:
+//
+//  1. Write the object. Its key contains the digest of its own bytes, so it is
+//     immutable and its URL can be cached for a year.
+//  2. Update the row. Only now is the new avatar the account's. Doing this first
+//     would turn a transient upload failure into a permanently broken image.
+//  3. Delete the rest of the account's prefix. Every object under it belongs to
+//     this account alone, so there is nothing to reference-count and no
+//     bucket-wide sweep to schedule — orphans cannot accumulate.
+//
+// Step 3 failing is not an error the caller needs: the avatar is already set, and
+// the next upload will clean up whatever was left. It is logged instead.
 func (s *Service) SetAvatar(ctx context.Context, id uuid.UUID, image io.Reader) (UserRead, error) {
-	avatar, err := uploads.StoreAvatar(ctx, s.blobs, image)
+	current, err := s.q.GetUserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
+		}
+		return UserRead{}, fmt.Errorf("load user: %w", err)
+	}
+
+	avatar, err := uploads.StoreAvatar(ctx, s.blobs, current.UID, image)
 	if err != nil {
 		return UserRead{}, err
 	}
 
 	u, err := s.q.SetUserAvatar(ctx, coredb.SetUserAvatarParams{ID: id, AvatarKey: &avatar.Key})
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
-		}
 		return UserRead{}, mapConstraintError(err)
+	}
+
+	if err := uploads.RemoveSupersededUploads(ctx, s.blobs, current.UID, avatar.Key); err != nil {
+		s.logger.WarnContext(ctx, "could not remove superseded avatars",
+			slog.String("user_id", id.String()), slog.Any("error", err))
 	}
 	return toUserRead(u, s.avatarResolver()), nil
 }
 
-// ClearAvatar removes an account's picture.
+// SetAvatarPreset points the account at one of the shared preset avatars.
 //
-// The stored object is deliberately left in place. Keys are content-addressed,
-// so the same object may be another account's avatar; deleting it here would
-// blank a stranger's picture. Reclaiming objects no row references is a separate
-// job that can afford to check.
+// A preset is an ordinary key in the same column, so this is the upload path
+// without the upload. The account's own uploads are then removed, because having
+// chosen a preset it no longer references them.
+func (s *Service) SetAvatarPreset(ctx context.Context, id uuid.UUID, presetID string) (UserRead, error) {
+	if err := uploads.ValidatePreset(presetID); err != nil {
+		return UserRead{}, err
+	}
+
+	current, err := s.q.GetUserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
+		}
+		return UserRead{}, fmt.Errorf("load user: %w", err)
+	}
+
+	key := uploads.PresetKey(presetID)
+	u, err := s.q.SetUserAvatar(ctx, coredb.SetUserAvatarParams{ID: id, AvatarKey: &key})
+	if err != nil {
+		return UserRead{}, mapConstraintError(err)
+	}
+
+	if err := uploads.RemoveAllUploads(ctx, s.blobs, current.UID); err != nil {
+		s.logger.WarnContext(ctx, "could not remove superseded avatars",
+			slog.String("user_id", id.String()), slog.Any("error", err))
+	}
+	return toUserRead(u, s.avatarResolver()), nil
+}
+
+// ClearAvatar returns an account to its default preset.
+//
+// The uploaded objects are removed as well. Unlike the content-addressed scheme
+// this replaced, an account's uploads are stored under a prefix only it uses, so
+// deleting them cannot blank anybody else's picture.
+//
+// The resulting avatarUrl is not empty: it becomes the preset derived from the
+// account's uid.
 func (s *Service) ClearAvatar(ctx context.Context, id uuid.UUID) (UserRead, error) {
 	u, err := s.q.SetUserAvatar(ctx, coredb.SetUserAvatarParams{ID: id, AvatarKey: nil})
 	if err != nil {
@@ -225,6 +276,11 @@ func (s *Service) ClearAvatar(ctx context.Context, id uuid.UUID) (UserRead, erro
 			return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
 		}
 		return UserRead{}, fmt.Errorf("clear avatar: %w", err)
+	}
+
+	if err := uploads.RemoveAllUploads(ctx, s.blobs, u.UID); err != nil {
+		s.logger.WarnContext(ctx, "could not remove superseded avatars",
+			slog.String("user_id", id.String()), slog.Any("error", err))
 	}
 	return toUserRead(u, s.avatarResolver()), nil
 }
@@ -323,14 +379,32 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, in UpdateInput, priv
 	return toUserRead(u, s.avatarResolver()), nil
 }
 
-// Delete removes an account.
+// Delete removes an account, and with it whatever it uploaded.
+//
+// The uid is read before the row goes away, because it is what names the storage
+// prefix. Objects are removed after the row, so a storage failure cannot leave an
+// account that exists with its pictures gone; the reverse could.
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
+	var uid int64
+	if current, err := s.q.GetUserByID(ctx, id); err == nil {
+		uid = current.UID
+	} else if !errors.Is(err, pgx.ErrNoRows) {
+		return fmt.Errorf("load user: %w", err)
+	}
+
 	rows, err := s.q.DeleteUser(ctx, id)
 	if err != nil {
 		return fmt.Errorf("delete user: %w", err)
 	}
 	if rows == 0 {
 		return apierr.New(apierr.UserNotFound, "no such user")
+	}
+
+	if uid != 0 {
+		if err := uploads.RemoveAllUploads(ctx, s.blobs, uid); err != nil {
+			s.logger.WarnContext(ctx, "could not remove a deleted account's avatars",
+				slog.String("user_id", id.String()), slog.Any("error", err))
+		}
 	}
 	return nil
 }
@@ -551,4 +625,23 @@ func mapConstraintError(err error) error {
 	default:
 		return fmt.Errorf("write user: %w", err)
 	}
+}
+
+// AvatarPresets lists the selectable preset avatars with their URLs.
+//
+// The URLs are composed here rather than in each frontend so that the bucket
+// layout, and any CDN in front of it, stay a server-side concern. The artwork
+// previously lived in one app's static assets, which meant a picker could not be
+// rendered from the game sites at all.
+func (s *Service) AvatarPresets() AvatarPresetList {
+	resolve := s.avatarResolver()
+	out := AvatarPresetList{Presets: make([]AvatarPreset, 0, len(uploads.Presets))}
+	for _, id := range uploads.Presets {
+		url := ""
+		if resolve != nil {
+			url = resolve(uploads.PresetKey(id))
+		}
+		out.Presets = append(out.Presets, AvatarPreset{ID: id, URL: url})
+	}
+	return out
 }

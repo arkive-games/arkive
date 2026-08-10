@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sort"
+	"strings"
 	"sync"
 )
 
@@ -27,6 +29,7 @@ type Memory struct {
 type Object struct {
 	Body        []byte
 	ContentType string
+	Mutable     bool
 }
 
 // NewMemory builds an empty store.
@@ -35,7 +38,7 @@ func NewMemory() *Memory {
 }
 
 // Put records an object.
-func (m *Memory) Put(_ context.Context, key string, body io.Reader, size int64, contentType string) error {
+func (m *Memory) Put(_ context.Context, key string, body io.Reader, size int64, opts PutOptions) error {
 	if m.FailPut != nil {
 		return m.FailPut
 	}
@@ -52,7 +55,7 @@ func (m *Memory) Put(_ context.Context, key string, body io.Reader, size int64, 
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.objects[key] = Object{Body: raw, ContentType: contentType}
+	m.objects[key] = Object{Body: raw, ContentType: opts.ContentType, Mutable: opts.Mutable}
 	return nil
 }
 
@@ -62,6 +65,20 @@ func (m *Memory) Delete(_ context.Context, key string) error {
 	defer m.mu.Unlock()
 	delete(m.objects, key)
 	return nil
+}
+
+// List returns the stored keys under a prefix, sorted so tests are deterministic.
+func (m *Memory) List(_ context.Context, prefix string) ([]string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var out []string
+	for k := range m.objects {
+		if strings.HasPrefix(k, prefix) {
+			out = append(out, k)
+		}
+	}
+	sort.Strings(out)
+	return out, nil
 }
 
 // PublicURL renders a stable fake URL.

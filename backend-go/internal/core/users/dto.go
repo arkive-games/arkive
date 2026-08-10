@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/uploads"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
@@ -26,28 +27,40 @@ type UserRead struct {
 	IsActive    bool      `json:"isActive" doc:"False for disabled accounts"`
 	IsSuperuser bool      `json:"isSuperuser" doc:"True for administrators"`
 	IsVerified  bool      `json:"isVerified" doc:"True once the email address has been confirmed"`
-	AvatarURL   *string   `json:"avatarUrl" doc:"Absolute URL of the account picture, or null" example:"https://cdn.arkive.test/avatars/abc.256.jpg"`
+	AvatarURL   string    `json:"avatarUrl" doc:"Absolute URL of the account picture. Never empty: an account that has chosen nothing gets a preset derived from its uid" example:"https://cdn.arkive.test/avatars/u/10042/abc.webp"`
 	CreatedAt   time.Time `json:"createdAt" doc:"When the account was created"`
 	UpdatedAt   time.Time `json:"updatedAt" doc:"When the account was last modified"`
 }
 
-// avatarURL renders a stored key as the address a browser fetches.
+// avatarURL renders the address a browser fetches an account's picture from.
 //
-// It takes the resolver rather than reading configuration so that the DTO layer
-// stays ignorant of buckets and CDNs, and so a test can assert the URL without
-// object storage. A nil resolver, which is what an unconfigured development
-// server has, renders as no avatar rather than a broken link.
-func avatarURL(resolve func(string) string, key *string) *string {
-	if key == nil || *key == "" || resolve == nil {
-		return nil
+// It never returns empty for a configured server: an account that has neither
+// uploaded nor chosen anything falls back to a preset derived from its uid. That
+// is deliberate, and it is what lets the frontend render an avatar from one field
+// with no null check, no knowledge of the bucket layout, no guessing at file
+// extensions and no 404 to recover from.
+//
+// It takes the resolver rather than reading configuration so the DTO layer stays
+// ignorant of buckets and CDNs, and so a test can assert the URL without object
+// storage. A nil resolver — an unconfigured development server — yields an empty
+// string rather than a broken link.
+func avatarURL(resolve func(string) string, key *string, uid int64) string {
+	if resolve == nil {
+		return ""
 	}
-	url := resolve(*key)
-	return &url
+	if key != nil && *key != "" {
+		return resolve(*key)
+	}
+	fallback := uploads.DefaultPresetKey(uid)
+	if fallback == "" {
+		return ""
+	}
+	return resolve(fallback)
 }
 
 func toUserRead(u coredb.CoreUser, resolve func(string) string) UserRead {
 	return UserRead{
-		AvatarURL:   avatarURL(resolve, u.AvatarKey),
+		AvatarURL:   avatarURL(resolve, u.AvatarKey, u.UID),
 		ID:          u.ID,
 		UID:         u.UID,
 		SpecialUID:  u.SpecialUID,
@@ -74,13 +87,13 @@ type UserPublic struct {
 	UID        int64     `json:"uid" doc:"Permanent account number; use this in links" example:"10042"`
 	SpecialUID *int32    `json:"specialUid" doc:"Vanity number below 10000, or null. Display only: it can change, so never link by it" example:"42"`
 	Name       string    `json:"name" doc:"Display name"`
-	AvatarURL  *string   `json:"avatarUrl" doc:"Absolute URL of the account picture, or null" example:"https://cdn.arkive.test/avatars/abc.256.jpg"`
+	AvatarURL  string    `json:"avatarUrl" doc:"Absolute URL of the account picture. Never empty: an account that has chosen nothing gets a preset derived from its uid" example:"https://cdn.arkive.test/avatars/u/10042/abc.webp"`
 	CreatedAt  time.Time `json:"createdAt" doc:"When the account was created"`
 }
 
 func toUserPublic(u coredb.CoreUser, resolve func(string) string) UserPublic {
 	return UserPublic{
-		AvatarURL:  avatarURL(resolve, u.AvatarKey),
+		AvatarURL:  avatarURL(resolve, u.AvatarKey, u.UID),
 		UID:        u.UID,
 		SpecialUID: u.SpecialUID,
 		Name:       u.Name,
@@ -198,4 +211,15 @@ func validatePassword(password, email, name string) error {
 			"password must not be your display name")
 	}
 	return nil
+}
+
+// AvatarPreset is one of the avatars an account may choose.
+type AvatarPreset struct {
+	ID  string `json:"id" doc:"Identifier to send to /users/me/avatar/preset" example:"male-tide-navigator"`
+	URL string `json:"url" doc:"Absolute URL of the preset image"`
+}
+
+// AvatarPresetList is the payload of the preset listing.
+type AvatarPresetList struct {
+	Presets []AvatarPreset `json:"presets" doc:"Every selectable preset, in display order"`
 }

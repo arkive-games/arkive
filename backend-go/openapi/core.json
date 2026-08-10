@@ -1,6 +1,46 @@
 {
   "components": {
     "schemas": {
+      "AvatarPreset": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "Identifier to send to /users/me/avatar/preset",
+            "examples": [
+              "male-tide-navigator"
+            ],
+            "type": "string"
+          },
+          "url": {
+            "description": "Absolute URL of the preset image",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url"
+        ],
+        "type": "object"
+      },
+      "AvatarPresetList": {
+        "additionalProperties": false,
+        "properties": {
+          "presets": {
+            "description": "Every selectable preset, in display order",
+            "items": {
+              "$ref": "#/components/schemas/AvatarPreset"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "presets"
+        ],
+        "type": "object"
+      },
       "Challenge": {
         "additionalProperties": false,
         "properties": {
@@ -73,6 +113,38 @@
       },
       "Empty": {
         "additionalProperties": false,
+        "type": "object"
+      },
+      "EnvelopeAvatarPresetList": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AvatarPresetList",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
         "type": "object"
       },
       "EnvelopeChallenge": {
@@ -341,6 +413,21 @@
         ],
         "type": "object"
       },
+      "SetPresetBody": {
+        "additionalProperties": false,
+        "properties": {
+          "presetId": {
+            "description": "An id from /users/avatar-presets",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "presetId"
+        ],
+        "type": "object"
+      },
       "TokenBody": {
         "additionalProperties": false,
         "properties": {
@@ -432,14 +519,11 @@
         "additionalProperties": false,
         "properties": {
           "avatarUrl": {
-            "description": "Absolute URL of the account picture, or null",
+            "description": "Absolute URL of the account picture. Never empty: an account that has chosen nothing gets a preset derived from its uid",
             "examples": [
-              "https://cdn.arkive.test/avatars/abc.256.jpg"
+              "https://cdn.arkive.test/avatars/u/10042/abc.webp"
             ],
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "createdAt": {
             "description": "When the account was created",
@@ -483,14 +567,11 @@
         "additionalProperties": false,
         "properties": {
           "avatarUrl": {
-            "description": "Absolute URL of the account picture, or null",
+            "description": "Absolute URL of the account picture. Never empty: an account that has chosen nothing gets a preset derived from its uid",
             "examples": [
-              "https://cdn.arkive.test/avatars/abc.256.jpg"
+              "https://cdn.arkive.test/avatars/u/10042/abc.webp"
             ],
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": "string"
           },
           "createdAt": {
             "description": "When the account was created",
@@ -1122,6 +1203,38 @@
         ]
       }
     },
+    "/users/avatar-presets": {
+      "get": {
+        "description": "Public. Returns the preset ids and their URLs, so a picker can be rendered from any site without bundling the artwork per app.",
+        "operationId": "listAvatarPresets",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeAvatarPresetList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List the avatars an account may choose",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/users/become-superuser": {
       "post": {
         "description": "Promotes the signed-in account, but only while no administrator exists. It is the bootstrap for a fresh deployment and fails once anyone holds the role.",
@@ -1286,7 +1399,7 @@
     },
     "/users/me/avatar": {
       "delete": {
-        "description": "Clears the account's picture. The stored object is retained, because content-addressed objects may be shared with another account.",
+        "description": "Returns the account to the default preset derived from its uid, and deletes what it had uploaded. avatarUrl is never empty, so there is nothing for a client to fall back to.",
         "operationId": "deleteCurrentUserAvatar",
         "responses": {
           "200": {
@@ -1326,7 +1439,7 @@
         ]
       },
       "put": {
-        "description": "Accepts JPEG, PNG, GIF or WebP and stores a 256x256 square. The image is always re-encoded, so metadata including EXIF location is discarded. Rate limited per account.",
+        "description": "Accepts JPEG, PNG, GIF or WebP and stores a 256x256 square in the same format it arrived in, so a PNG stays lossless and a WebP stays a WebP. The image is always re-encoded, so metadata including EXIF location is discarded, and an animated GIF keeps only its first frame. Rate limited per account.",
         "operationId": "setCurrentUserAvatar",
         "requestBody": {
           "content": {
@@ -1427,6 +1540,68 @@
           }
         },
         "summary": "Replace the signed-in account's picture",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/me/avatar/preset": {
+      "put": {
+        "description": "Points the account at one of the shared preset avatars and discards anything it had uploaded.",
+        "operationId": "setCurrentUserAvatarPreset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPresetBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeUserRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Choose a preset avatar",
         "tags": [
           "users"
         ]

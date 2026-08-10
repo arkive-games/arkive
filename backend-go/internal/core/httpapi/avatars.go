@@ -38,6 +38,15 @@ type uploadAvatarInput struct {
 	RawBody huma.MultipartFormFiles[avatarForm]
 }
 
+// setPresetBody chooses a preset by id.
+type setPresetBody struct {
+	PresetID string `json:"presetId" minLength:"1" maxLength:"64" doc:"An id from /users/avatar-presets"`
+}
+
+type setPresetInput struct {
+	Body setPresetBody
+}
+
 // registerAvatarRoutes mounts the avatar surface.
 func (h *Handlers) registerAvatarRoutes(a huma.API) {
 	huma.Register(a, huma.Operation{
@@ -45,9 +54,11 @@ func (h *Handlers) registerAvatarRoutes(a huma.API) {
 		Method:      http.MethodPut,
 		Path:        "/users/me/avatar",
 		Summary:     "Replace the signed-in account's picture",
-		Description: "Accepts JPEG, PNG, GIF or WebP and stores a 256x256 square. " +
-			"The image is always re-encoded, so metadata including EXIF location is discarded. " +
-			"Rate limited per account.",
+		Description: "Accepts JPEG, PNG, GIF or WebP and stores a 256x256 square in the " +
+			"same format it arrived in, so a PNG stays lossless and a WebP stays a WebP. " +
+			"The image is always re-encoded, so metadata including EXIF location is " +
+			"discarded, and an animated GIF keeps only its first frame. Rate limited per " +
+			"account.",
 		Tags: []string{"users"},
 		// The transfer limit. It bounds the request, but not the decoded image —
 		// a small file can describe an enormous canvas, so the pipeline checks
@@ -83,12 +94,46 @@ func (h *Handlers) registerAvatarRoutes(a huma.API) {
 	})
 
 	huma.Register(a, huma.Operation{
+		OperationID: "listAvatarPresets",
+		Method:      http.MethodGet,
+		Path:        "/users/avatar-presets",
+		Summary:     "List the avatars an account may choose",
+		Description: "Public. Returns the preset ids and their URLs, so a picker can be " +
+			"rendered from any site without bundling the artwork per app.",
+		Tags: []string{"users"},
+	}, func(ctx context.Context, _ *struct{}) (*api.Response[users.AvatarPresetList], error) {
+		return api.OK(h.users.AvatarPresets()), nil
+	})
+
+	huma.Register(a, huma.Operation{
+		OperationID: "setCurrentUserAvatarPreset",
+		Method:      http.MethodPut,
+		Path:        "/users/me/avatar/preset",
+		Summary:     "Choose a preset avatar",
+		Description: "Points the account at one of the shared preset avatars and discards " +
+			"anything it had uploaded.",
+		Tags:   []string{"users"},
+		Errors: []int{http.StatusUnauthorized, http.StatusUnprocessableEntity},
+	}, func(ctx context.Context, in *setPresetInput) (*api.Response[users.UserRead], error) {
+		principal, err := auth.RequireUser(ctx)
+		if err != nil {
+			return nil, err
+		}
+		user, err := h.users.SetAvatarPreset(ctx, principal.ID, in.Body.PresetID)
+		if err != nil {
+			return nil, err
+		}
+		return api.OK(user), nil
+	})
+
+	huma.Register(a, huma.Operation{
 		OperationID: "deleteCurrentUserAvatar",
 		Method:      http.MethodDelete,
 		Path:        "/users/me/avatar",
 		Summary:     "Remove the signed-in account's picture",
-		Description: "Clears the account's picture. The stored object is retained, " +
-			"because content-addressed objects may be shared with another account.",
+		Description: "Returns the account to the default preset derived from its uid, and " +
+			"deletes what it had uploaded. avatarUrl is never empty, so there is nothing " +
+			"for a client to fall back to.",
 		Tags:   []string{"users"},
 		Errors: []int{http.StatusUnauthorized},
 	}, func(ctx context.Context, _ *struct{}) (*api.Response[users.UserRead], error) {

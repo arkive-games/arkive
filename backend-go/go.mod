@@ -33,6 +33,7 @@ require (
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/cubicdaiya/gonp v1.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/deepteams/webp v1.2.7 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/go-sql-driver/mysql v1.10.0 // indirect
 	github.com/google/cel-go v0.28.0 // indirect

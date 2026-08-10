@@ -111,7 +111,7 @@ func TestPathStylePutsTheBucketInThePath(t *testing.T) {
 	}, "minio.internal.test")
 
 	if err := store.Put(context.Background(), "avatars/abc.256.jpg",
-		strings.NewReader("bytes"), 5, "image/jpeg"); err != nil {
+		strings.NewReader("bytes"), 5, PutOptions{ContentType: "image/jpeg"}); err != nil {
 		t.Fatalf("Put: %v", err)
 	}
 
@@ -136,7 +136,7 @@ func TestVirtualHostedPutsTheBucketInTheHost(t *testing.T) {
 	}, "cos.ap-guangzhou.myqcloud.test")
 
 	if err := store.Put(context.Background(), "avatars/abc.256.jpg",
-		strings.NewReader("bytes"), 5, "image/jpeg"); err != nil {
+		strings.NewReader("bytes"), 5, PutOptions{ContentType: "image/jpeg"}); err != nil {
 		t.Fatalf("Put: %v", err)
 	}
 
@@ -159,7 +159,7 @@ func TestPutSendsImmutableCachingAndAnExplicitLength(t *testing.T) {
 
 	body := "some jpeg bytes"
 	if err := store.Put(context.Background(), "avatars/x.256.jpg",
-		strings.NewReader(body), int64(len(body)), "image/jpeg"); err != nil {
+		strings.NewReader(body), int64(len(body)), PutOptions{ContentType: "image/jpeg"}); err != nil {
 		t.Fatalf("Put: %v", err)
 	}
 
@@ -192,7 +192,7 @@ func TestRegionDefaultsSoSigningWorksWithoutOne(t *testing.T) {
 	store, rec := newRecorder(t, S3Config{
 		Bucket: "arkive", AccessKeyID: "k", SecretAccessKey: "s", UsePathStyle: true,
 	}, "")
-	if err := store.Put(context.Background(), "k", strings.NewReader("x"), 1, "image/jpeg"); err != nil {
+	if err := store.Put(context.Background(), "k", strings.NewReader("x"), 1, PutOptions{ContentType: "image/jpeg"}); err != nil {
 		t.Fatalf("Put: %v", err)
 	}
 	if authz := rec.snapshot().authz; !strings.Contains(authz, "/us-east-1/s3/aws4_request") {
@@ -252,6 +252,42 @@ func TestNewS3RefusesIncompleteConfiguration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if _, err := NewS3(tc.cfg); err == nil {
 				t.Fatal("expected an error, got nil")
+			}
+		})
+	}
+}
+
+// Caching correctness is a property of the key, not of the bucket. A digest-named
+// object can be cached for a year; a fixed key such as a preset cannot, or
+// replacing the artwork behind it would be invisible for a year with no deploy
+// able to clear it.
+func TestCacheControlFollowsWhetherTheKeyCanChange(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		mutable     bool
+		wantContain string
+		wantAbsent  string
+	}{
+		{"digest-named object is immutable for a year", false, "max-age=31536000", "max-age=86400"},
+		{"fixed key gets a day and must not claim immutability", true, "max-age=86400", "immutable"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store, rec := newRecorder(t, S3Config{
+				Bucket: "arkive", AccessKeyID: "k", SecretAccessKey: "s", UsePathStyle: true,
+			}, "")
+
+			opts := PutOptions{ContentType: "image/png", Mutable: tc.mutable}
+			if err := store.Put(context.Background(), "avatars/x.png",
+				strings.NewReader("bytes"), 5, opts); err != nil {
+				t.Fatalf("Put: %v", err)
+			}
+
+			got := rec.snapshot().cacheHdr
+			if !strings.Contains(got, tc.wantContain) {
+				t.Errorf("Cache-Control = %q, want it to contain %q", got, tc.wantContain)
+			}
+			if strings.Contains(got, tc.wantAbsent) {
+				t.Errorf("Cache-Control = %q, must not contain %q", got, tc.wantAbsent)
 			}
 		})
 	}

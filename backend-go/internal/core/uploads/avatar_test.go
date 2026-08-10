@@ -117,9 +117,13 @@ func decode(t *testing.T, raw []byte) image.Image {
 	return img
 }
 
+// testUID stands in for an account number. It appears in every key, so a test
+// asserting the key shape is also asserting the account scoping.
+const testUID int64 = 10042
+
 func mustStore(t *testing.T, store blob.Store, raw []byte) Avatar {
 	t.Helper()
-	a, err := StoreAvatar(context.Background(), store, bytes.NewReader(raw))
+	a, err := StoreAvatar(context.Background(), store, testUID, bytes.NewReader(raw))
 	if err != nil {
 		t.Fatalf("StoreAvatar: %v", err)
 	}
@@ -160,18 +164,22 @@ func TestStoredAvatarIsAlwaysA256Square(t *testing.T) {
 	}
 }
 
-// The format rule exists because WebP cannot be written at all, and because
-// flattening alpha would look wrong on a dark background.
-func TestTransparencyDecidesTheFormat(t *testing.T) {
+// The stored avatar keeps the format it was uploaded in. Normalising everything
+// to one format either discards alpha or costs an order of magnitude in bytes,
+// and it surprises whoever chose the file.
+func TestUploadedFormatIsPreserved(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
 		raw      []byte
 		wantType string
 		wantExt  string
 	}{
-		{"transparent source keeps its alpha as PNG", transparentPNG(t, 400, 400), "image/png", ".png"},
-		{"opaque PNG becomes the much smaller JPEG", opaquePNG(t, 400, 400), "image/jpeg", ".jpg"},
-		{"JPEG source stays JPEG", opaqueJPEG(t, 400, 400), "image/jpeg", ".jpg"},
+		{"transparent PNG stays PNG", transparentPNG(t, 400, 400), "image/png", ".png"},
+		{"opaque PNG stays PNG rather than becoming JPEG", opaquePNG(t, 400, 400), "image/png", ".png"},
+		{"JPEG stays JPEG", opaqueJPEG(t, 400, 400), "image/jpeg", ".jpg"},
+		{"GIF stays GIF", animatedGIF(t, 200, 200, 3), "image/gif", ".gif"},
+		{"opaque WebP stays WebP", webpFixture(t, 300, 300, false), "image/webp", ".webp"},
+		{"transparent WebP stays WebP", webpFixture(t, 300, 300, true), "image/webp", ".webp"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := blob.NewMemory()
@@ -195,6 +203,9 @@ func TestTransparencyDecidesTheFormat(t *testing.T) {
 			wantFormat := strings.TrimPrefix(tc.wantType, "image/")
 			if format != wantFormat {
 				t.Errorf("stored bytes are %s, want %s", format, wantFormat)
+			}
+			if a.Format != wantFormat {
+				t.Errorf("reported format %q, want %q", a.Format, wantFormat)
 			}
 		})
 	}
@@ -227,10 +238,17 @@ func TestAnimatedGIFStoresItsFirstFrame(t *testing.T) {
 	if b.Dx() != AvatarSize || b.Dy() != AvatarSize {
 		t.Errorf("stored %dx%d, want a %d square", b.Dx(), b.Dy(), AvatarSize)
 	}
-	// A GIF frame is paletted and opaque here, so the result is a JPEG. What
-	// matters is that a multi-frame source produced one still image.
-	if _, format, _ := image.DecodeConfig(bytes.NewReader(obj.Body)); format == "gif" {
-		t.Error("an animated GIF was stored as a GIF; it must be re-encoded to a still frame")
+	// The format is preserved, so it is still a GIF. What matters is that a
+	// multi-frame source became a single frame rather than staying animated.
+	if _, format, _ := image.DecodeConfig(bytes.NewReader(obj.Body)); format != "gif" {
+		t.Errorf("an uploaded GIF was stored as %s; the format must be preserved", format)
+	}
+	frames, err := gif.DecodeAll(bytes.NewReader(obj.Body))
+	if err != nil {
+		t.Fatalf("stored GIF does not decode: %v", err)
+	}
+	if len(frames.Image) != 1 {
+		t.Errorf("stored GIF has %d frames, want 1: animation must be flattened", len(frames.Image))
 	}
 }
 
@@ -238,7 +256,7 @@ func TestAnimatedGIFStoresItsFirstFrame(t *testing.T) {
 // Content addressing
 // ---------------------------------------------------------------------------
 
-func TestIdenticalUploadsProduceOneObject(t *testing.T) {
+func TestIdenticalUploadsByOneAccountProduceOneObject(t *testing.T) {
 	store := blob.NewMemory()
 	raw := opaquePNG(t, 400, 400)
 
@@ -266,15 +284,18 @@ func TestDifferentImagesProduceDifferentKeys(t *testing.T) {
 	}
 }
 
-func TestKeyIsPrefixedSizedAndURLSafe(t *testing.T) {
+func TestKeyIsScopedToTheAccountAndURLSafe(t *testing.T) {
 	store := blob.NewMemory()
 	a := mustStore(t, store, opaquePNG(t, 400, 400))
 
-	if !strings.HasPrefix(a.Key, "avatars/") {
-		t.Errorf("key %q is not under the avatars prefix", a.Key)
+	want := UserUploadPrefix(testUID)
+	if !strings.HasPrefix(a.Key, want) {
+		t.Errorf("key %q is not under the account's own prefix %q", a.Key, want)
 	}
-	if !strings.Contains(a.Key, ".256.") {
-		t.Errorf("key %q does not record the rendition size", a.Key)
+	// A prefix belonging to exactly one account is what makes reclaiming a
+	// superseded avatar a scoped delete instead of a bucket-wide sweep.
+	if strings.Count(a.Key, "/") != 3 {
+		t.Errorf("key %q does not have the shape avatars/u/<uid>/<digest><ext>", a.Key)
 	}
 	// The key travels in a URL path, so it must need no escaping.
 	for _, bad := range []string{"+", "=", " ", "?", "#", "%"} {
@@ -298,7 +319,7 @@ func TestDecompressionBombIsRejected(t *testing.T) {
 	}
 
 	store := blob.NewMemory()
-	_, err := StoreAvatar(context.Background(), store, bytes.NewReader(raw))
+	_, err := StoreAvatar(context.Background(), store, testUID, bytes.NewReader(raw))
 	if err == nil {
 		t.Fatal("a 400-megapixel image was accepted")
 	}
@@ -348,7 +369,7 @@ func TestRejections(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := blob.NewMemory()
-			_, err := StoreAvatar(context.Background(), store, bytes.NewReader(tc.raw))
+			_, err := StoreAvatar(context.Background(), store, testUID, bytes.NewReader(tc.raw))
 			if err == nil {
 				t.Fatal("expected a rejection, got none")
 			}
@@ -364,7 +385,7 @@ func TestOversizeIsRejectedWithoutBufferingItAll(t *testing.T) {
 	// An endless reader stands in for a client that keeps sending. If the
 	// pipeline read without a limit this would not terminate.
 	endless := endlessReader{}
-	_, err := StoreAvatar(context.Background(), blob.NewMemory(), endless)
+	_, err := StoreAvatar(context.Background(), blob.NewMemory(), testUID, endless)
 	if err == nil {
 		t.Fatal("an unbounded upload was accepted")
 	}
@@ -405,7 +426,7 @@ func TestMetadataIsStripped(t *testing.T) {
 	}
 
 	store := blob.NewMemory()
-	a, err := StoreAvatar(context.Background(), store, bytes.NewReader(withEXIF))
+	a, err := StoreAvatar(context.Background(), store, testUID, bytes.NewReader(withEXIF))
 	if err != nil {
 		t.Fatalf("StoreAvatar on a JPEG with EXIF: %v", err)
 	}
@@ -419,7 +440,7 @@ func TestStorageFailureIsReportedNotSwallowed(t *testing.T) {
 	store := blob.NewMemory()
 	store.FailPut = errors.New("bucket is on fire")
 
-	_, err := StoreAvatar(context.Background(), store, bytes.NewReader(opaquePNG(t, 400, 400)))
+	_, err := StoreAvatar(context.Background(), store, testUID, bytes.NewReader(opaquePNG(t, 400, 400)))
 	if err == nil {
 		t.Fatal("a failed Put was reported as success")
 	}
@@ -429,7 +450,7 @@ func TestStorageFailureIsReportedNotSwallowed(t *testing.T) {
 }
 
 func TestUnconfiguredStorageIsAClearServiceError(t *testing.T) {
-	_, err := StoreAvatar(context.Background(), nil, bytes.NewReader(opaquePNG(t, 400, 400)))
+	_, err := StoreAvatar(context.Background(), nil, testUID, bytes.NewReader(opaquePNG(t, 400, 400)))
 	if err == nil {
 		t.Fatal("expected an error with no store configured")
 	}

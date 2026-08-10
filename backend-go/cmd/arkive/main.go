@@ -48,12 +48,14 @@ func run(args []string) error {
 	switch args[0] {
 	case "openapi":
 		return writeOpenAPI(args[1:])
+	case "seed-avatars":
+		return seedAvatarPresets(args[1:])
 	case "migrate":
 		return migrate()
 	case "serve":
 		return serve()
 	default:
-		return fmt.Errorf("unknown command %q; use one of: serve, migrate, openapi", args[0])
+		return fmt.Errorf("unknown command %q; use one of: serve, migrate, openapi, seed-avatars", args[0])
 	}
 }
 

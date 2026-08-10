@@ -11,40 +11,48 @@ introduces `internal/platform/blob` alongside the feature.
 
 Neither was a preference; both were established before writing code.
 
-**Avatars are not WebP, though they could be.** An earlier draft of this section claimed WebP
-was impossible. That was wrong and is corrected here, because the real reason is a
-cost/benefit judgement and someone revisiting it deserves the actual numbers.
+**The uploaded format is preserved, not normalised.** A PNG stays a lossless PNG, a JPEG stays
+a JPEG, a GIF stays a GIF, and a WebP stays a WebP. Normalising to one format either discards
+alpha or costs an order of magnitude in bytes for a photograph, and it surprises whoever chose
+the file.
 
-What is genuinely unavailable: `golang.org/x/image/webp` exports only `Decode` and
-`DecodeConfig`, and `x/image` can encode nothing but BMP and TIFF, so **the standard library
-and `x/image` cannot write WebP at all**. The Dockerfile's `CGO_ENABLED=0` additionally rules
-out libwebp bindings such as `chai2010/webp` and libvips.
+Two earlier drafts of this section were wrong and are corrected here. The first claimed WebP
+output was impossible; the second kept the claim but as a cost argument based on a
+lossless-only encoder. What is actually true:
 
-What *is* available: several third-party **pure-Go** WebP encoders now exist —
-`HugoSmits86/nativewebp` (lossless VP8L only), and newer lossy-capable ones such as
-`KarpelesLab/gowebp` and `skrashevich/go-webp`. So "no cgo" does not mean "no WebP".
+`golang.org/x/image/webp` exports only `Decode` and `DecodeConfig`, and `x/image` can encode
+nothing but BMP and TIFF, so **the standard library cannot write WebP**. `CGO_ENABLED=0` rules
+out libwebp bindings. But several third-party **pure-Go** encoders exist, and three were
+measured at this rendition, each round-tripped through `x/image/webp`:
 
-Measured at the 256x256 rendition this feature stores, with `nativewebp` v1.3.0:
+| Encoder | Photo, lossy | Flat + alpha, lossless |
+|---|---|---|
+| `image/jpeg` q85 (baseline) | **13,838 B** | 11,165 B, alpha lost |
+| `image/png` (baseline) | 132,690 B | **2,256 B** |
+| `KarpelesLab/gowebp` v0.1.1 | 15,428 B | 1,620 B — **unreadable by `x/image/webp`** |
+| `deepteams/webp` v1.2.7 | 14,972 B | **1,050 B** |
+| `skrashevich/go-webp` v0.1.0 | 26,178 B | 28,806 B |
 
-| Source | JPEG q85 | PNG best | WebP lossless |
-|---|---|---|---|
-| Photographic, opaque | **13,838 B** | 132,690 B | 147,086 B (10.6x JPEG) |
-| Flat illustration with alpha | 11,256 B, alpha lost | 2,504 B | **1,970 B (0.79x PNG)** |
+Three findings drove the decision. `gowebp` writes lossless output our own decoder rejects
+with `webp: invalid format`, which disqualifies it: the service would be storing objects it
+cannot validate. Lossy pure-Go WebP does **not** beat JPEG — `deepteams` is about 8% larger,
+not the ~25% smaller that libwebp achieves — so there is no free win. And lossless WebP for a
+transparent image is genuinely better than PNG, at 1,050 B against 2,256.
 
-That is the whole argument. Lossless WebP is an order of magnitude worse than JPEG for a
-photograph, so replacing the JPEG path needs a *lossy* pure-Go encoder — a young
-reimplementation of a complex bitstream, adopted into the path of untrusted user input, to
-save perhaps 4 KB on an object that is cached immutably forever. Against PNG it wins, but by
-about 530 bytes per transparent avatar.
+**Decision: `deepteams/webp` v1.2.7, used for encoding only.** `x/image/webp` remains the sole
+decoder of uploaded bytes, so a hostile file never reaches the third-party codec; it is handed
+only pixels this service has already decoded and validated. A `recover` around the encode call
+turns a crash in a young codec into a rejected upload rather than a dropped connection, and a
+test asserts that everything written is readable back by `x/image/webp` so a codec regression
+fails the build instead of filling the bucket.
 
-Decision: **accept** JPEG, PNG, GIF and WebP, all decodable with the standard library plus
-`x/image/webp`. **Emit** PNG when the source carries any transparency and JPEG quality 85
-when it does not. Always-JPEG would composite alpha onto a background, visibly wrong on
-Arkive's dark theme; always-PNG costs roughly ten times the bytes for a photograph.
+Within WebP, transparency selects the variant: lossless when the source has alpha, lossy when
+it does not. Keeping a photographic WebP as WebP costs roughly 1.1 KB against JPEG, which is
+accepted so that the rule is one sentence with no exceptions.
 
-Revisit if avatar bandwidth ever shows up in costs, or if a lossy pure-Go encoder becomes as
-boring a dependency as `x/image` — at which point the change is confined to the encode step
-of `renderAvatar` and the extension map beside it, because nothing else knows the format.
+**Animation is not preserved.** An animated GIF keeps only its first frame, which is what
+GitHub does with one. Preserving it would mean resizing every frame and serving a
+multi-megabyte object on each page that renders the account.
 
 **huma parses multipart natively** (`huma.MultipartFormFiles[T]`, per-operation
 `MaxBodyBytes`), so no request parsing is hand-written.
@@ -70,8 +78,9 @@ the outcome is identical for an absent, generic, honest, wrong or nonsensical de
 ```
 internal/platform/blob    Store interface, S3 implementation, in-memory fake. No domain knowledge.
 internal/core/uploads     the image pipeline: decode -> validate -> crop -> resize -> encode -> digest
-internal/core/users       avatar_key column, SetAvatar/ClearAvatar, avatarUrl on the DTOs
-internal/core/httpapi     PUT/DELETE /users/me/avatar, DELETE /users/{id}/avatar
+internal/core/users       avatar_key column, SetAvatar/SetAvatarPreset/ClearAvatar, avatarUrl
+internal/core/httpapi     the /users/**/avatar surface and the preset listing
+cmd/arkive seed-avatars   uploads the preset artwork into the bucket, once
 ```
 
 `blob` belongs in `platform` because it knows about buckets and nothing about avatars, which
@@ -84,27 +93,55 @@ implementation and the HTTP flow needs no container.
 
 ## 3. Storage and keys
 
-`avatar_key text` nullable on `core.users`, holding the **complete** object key:
+`avatar_key text` nullable on `core.users`, holding a complete object key of one of two
+shapes:
 
 ```
-avatars/<sha256-base64url of the encoded bytes>.256.jpg
+avatars/u/<uid>/<sha256-base64url of the encoded bytes><ext>   an upload
+avatars/presets/<id>.png                                       a chosen preset
 ```
 
-Content-addressed, so the URL is immutable and can be cached indefinitely behind a CDN, and
-two accounts uploading the same file share one object without a dedup table.
+One column covers both, so choosing a preset and uploading a picture are the same code path
+with the same URL scheme.
 
-The API returns `avatarUrl`, built from a configured public base, and never the raw key.
-Moving buckets or putting a CDN in front is then a configuration change rather than a
-frontend deploy.
+### 3.1 Why the key has both a uid and a digest
 
-One rendition, 256x256, centre-cropped to a square. A second size would be a schema change;
-that is preferable to inventing a key convention for a variant nothing renders yet.
+Each half does one job, and dropping either breaks something specific.
 
-**Objects are never deleted.** Content addressing means two accounts can share one object, so
-deleting on change could blank a different user's avatar. `DELETE` clears the column only.
-Orphaned objects therefore accumulate; reclaiming them is a job that diffs the bucket against
-the column, and it is out of scope here. This is a deliberate trade, not an oversight: the
-alternative is reference counting, which is a table this feature does not otherwise need.
+**The digest makes the object immutable**, so its URL carries
+`Cache-Control: public, max-age=31536000, immutable` and a CDN never has to revalidate. A
+bare `avatars/u/<uid>` would be a stable URL with mutable content: it could not be cached for
+long without serving a stale picture, and cache-busting it would need a version token, which
+would have to come from the API response anyway.
+
+**The per-account prefix makes orphans impossible.** Everything under `avatars/u/<uid>/`
+belongs to exactly one account, so a superseded avatar is removed by deleting the rest of
+that prefix, immediately, in the same request. There is nothing shared to reference-count, no
+bucket-wide sweep, no grace period and no scheduled job. Deleting an account deletes its
+prefix.
+
+The cost is that two accounts uploading the same picture now store it twice. That was the
+price of removing the reclaim problem entirely: cross-account sharing is precisely what would
+have forced reference counting before anything could be deleted safely.
+
+### 3.2 Caching depends on the key, not the bucket
+
+`blob.PutOptions.Mutable` exists for this. Digest-named objects are immutable and cached for
+a year; a preset key is fixed, so it is stored with `max-age=86400` instead. Marking a
+mutable key `immutable` would be a year-long bug that no deploy could clear.
+
+### 3.3 avatarUrl is never empty
+
+The API returns a URL for every account. If it has neither uploaded nor chosen anything, the
+URL is a preset derived from `uid % 10` — stable per account, needing no column, no migration
+and no stored object.
+
+Returning a URL was reconsidered, since a derivable one would let the field be dropped
+entirely. It does not survive contact with the other decisions: the extension varies because
+the format follows the upload, existence has to be known to avoid a broken image, and a
+mutable key would need a cache-busting token. Each of those wants a per-account datum, and
+one composed URL is the smallest thing that satisfies all three. It also keeps bucket layout,
+extension rules, default selection and cache-busting out of every frontend.
 
 ## 4. The pipeline, and what each step defends against
 
@@ -178,12 +215,20 @@ the bucket nor serves anonymous reads without an explicit policy.
 | Route | Auth | Result |
 |---|---|---|
 | `PUT /users/me/avatar` | user | multipart `file`; returns the updated `UserRead` |
-| `DELETE /users/me/avatar` | user | clears the column |
+| `PUT /users/me/avatar/preset` | user | `{presetId}`; choose one of the shared presets |
+| `DELETE /users/me/avatar` | user | returns to the uid-derived default preset |
 | `DELETE /users/{id}/avatar` | admin | moderation removal |
+| `GET /users/avatar-presets` | public | preset ids and URLs, so a picker renders anywhere |
 
-`avatarUrl` is added to both `UserRead` and `UserPublic`, nullable. `UserPublic` gaining it is
-the point of the feature: an avatar is public, and the uid lookup is what a profile page
-resolves.
+`avatarUrl` is added to both `UserRead` and `UserPublic`, and is **never empty** (§3.3).
+`UserPublic` gaining it is the point of the feature: an avatar is public, and the uid lookup is
+what a profile page resolves.
+
+The presets are the ten images the frontend already had, but they lived in the meta app's
+`public/` folder and so could not render from aion2, palworld or vrising. `arkive seed-avatars
+<dir>` uploads them into the bucket once, which makes them app-independent and puts them on the
+same URL scheme as uploads. A preset id from a client is matched against a known list before it
+is ever interpolated into a key.
 
 ## 8. Tests
 
@@ -241,9 +286,18 @@ COS-specific is untested beyond the credentials themselves.
 
 ## 9. Out of scope
 
-Reclaiming orphaned objects; multiple renditions; EXIF orientation; client-side cropping UI;
-comment and feedback images (the `blob` and `uploads` packages are shaped for them, but no
-route is added); presigned uploads.
+Multiple renditions; EXIF orientation; client-side cropping UI; comment and feedback images
+(the `blob` and `uploads` packages are shaped for them, but no route is added); presigned
+uploads; animated avatars.
+
+Reclaiming orphaned objects is no longer out of scope — it is no longer a problem. The
+per-account prefix means a superseded avatar is deleted in the same request that replaces it,
+so there is nothing to schedule (§3.1).
+
+One known wart: the preset artwork is 200x200 PNG at roughly 60 KB each, heavier than the
+~19 KB the pipeline produces, because a photographic illustration is a poor fit for PNG. They
+are served to every account that has chosen nothing, so re-encoding them is worth doing — but
+it is a change to the seed step alone and needs no design.
 
 No app changelog entry: this is backend platform work with no user-visible surface until the
 frontend renders an avatar.

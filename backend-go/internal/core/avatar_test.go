@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/arkive-games/arkive/backend-go/internal/core/uploads"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/config"
 )
@@ -22,7 +23,7 @@ import (
 // ---------------------------------------------------------------------------
 
 // pngFixture builds a distinct opaque PNG. Varying the seed changes the bytes,
-// which changes the content-addressed key.
+// which changes the digest in the key.
 func pngFixture(t *testing.T, w, h, seed int) []byte {
 	t.Helper()
 	img := image.NewRGBA(image.Rect(0, 0, w, h))
@@ -43,13 +44,12 @@ func pngFixture(t *testing.T, w, h, seed int) []byte {
 	return buf.Bytes()
 }
 
-// uploadAvatar posts a multipart body to the avatar route.
+// uploadAvatarAs posts a multipart body to the avatar route.
 //
-// partType, when empty, means the part carries no explicit Content-Type — which
-// is what Go's multipart.CreateFormFile produces (application/octet-stream) and
-// what many HTTP clients send. That is the harder case and so the default here:
-// the route must accept it, because the declared type is not what decides the
-// format.
+// partType empty means the part carries no explicit Content-Type, which is what
+// Go's multipart.CreateFormFile produces and what many HTTP clients send. That is
+// the harder case and so the default here: the declared type is not what decides
+// the format.
 func (h *harness) uploadAvatarAs(path, filename, partType string, data []byte, opts ...requestOption) response {
 	h.t.Helper()
 
@@ -79,40 +79,117 @@ func (h *harness) uploadAvatarAs(path, filename, partType string, data []byte, o
 	return h.doRaw(http.MethodPut, path, body.Bytes(), w.FormDataContentType(), opts...)
 }
 
-// uploadAvatar uploads without a per-part content type.
 func (h *harness) uploadAvatar(path, filename, _ string, data []byte, opts ...requestOption) response {
 	h.t.Helper()
 	return h.uploadAvatarAs(path, filename, "", data, opts...)
 }
 
+// avatarURLOf reads the account's picture URL, which is never empty.
 func avatarURLOf(t *testing.T, res response) string {
 	t.Helper()
 	raw, ok := res.data(t)["avatarUrl"]
 	if !ok {
 		t.Fatalf("response carries no avatarUrl field: %s", res.body)
 	}
-	if raw == nil {
-		return ""
-	}
 	url, ok := raw.(string)
 	if !ok {
-		t.Fatalf("avatarUrl is %T, want a string: %s", raw, res.body)
+		t.Fatalf("avatarUrl is %T rather than a string, so a client would need a null check: %s",
+			raw, res.body)
 	}
 	return url
 }
 
+// ownsUpload reports whether the URL points at the account's own upload rather
+// than at a shared preset.
+func ownsUpload(url string) bool {
+	return strings.Contains(url, "/"+uploads.UploadPrefix)
+}
+
+func isPreset(url string) bool {
+	return strings.Contains(url, "/"+uploads.PresetPrefix)
+}
+
+func memoryStore(t *testing.T, h *harness) *blob.Memory {
+	t.Helper()
+	mem, ok := h.blobs.(*blob.Memory)
+	if !ok {
+		t.Fatalf("expected the in-memory store, got %T", h.blobs)
+	}
+	return mem
+}
+
 // ---------------------------------------------------------------------------
-// The happy path
+// Defaults
+// ---------------------------------------------------------------------------
+
+// Every account has a picture from the moment it exists, which is what lets the
+// frontend render one field with no null check, no extension guessing and no 404
+// to recover from.
+func TestANewAccountAlreadyHasAPresetAvatar(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("fresh", "fresh@example.com", "hunter2hunter2")
+
+	me := h.do(http.MethodGet, "/users/me", nil, withBearer(token))
+	url := avatarURLOf(t, me)
+	if url == "" {
+		t.Fatal("a new account has no avatarUrl; the field must never be empty")
+	}
+	if !isPreset(url) {
+		t.Errorf("avatarUrl %q is not a preset, but nothing has been uploaded", url)
+	}
+	// Nothing was written to storage to achieve that: the preset is derived from
+	// the uid, so it costs no object and no column.
+	if mem := memoryStore(t, h); mem.Len() != 0 {
+		t.Errorf("a fresh account caused %d objects to be written: %v", mem.Len(), mem.Keys())
+	}
+}
+
+func TestDefaultAvatarIsStableAcrossReads(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("stable", "stable@example.com", "hunter2hunter2")
+
+	first := avatarURLOf(t, h.do(http.MethodGet, "/users/me", nil, withBearer(token)))
+	second := avatarURLOf(t, h.do(http.MethodGet, "/users/me", nil, withBearer(token)))
+	if first != second {
+		t.Errorf("the default avatar changed between reads: %q then %q", first, second)
+	}
+}
+
+func TestPresetsAreListedWithURLs(t *testing.T) {
+	h := newHarness(t)
+
+	// Public, because a picker has to render before anybody signs in.
+	res := h.do(http.MethodGet, "/users/avatar-presets", nil)
+	if res.status != http.StatusOK {
+		t.Fatalf("list presets = %d: %s", res.status, res.body)
+	}
+	list, ok := res.data(t)["presets"].([]any)
+	if !ok {
+		t.Fatalf("presets is not a list: %s", res.body)
+	}
+	if len(list) != len(uploads.Presets) {
+		t.Errorf("listed %d presets, want %d", len(list), len(uploads.Presets))
+	}
+	for _, raw := range list {
+		entry, _ := raw.(map[string]any)
+		id, _ := entry["id"].(string)
+		url, _ := entry["url"].(string)
+		if id == "" || url == "" {
+			t.Errorf("preset entry is incomplete: %v", entry)
+		}
+		if !strings.Contains(url, uploads.PresetPrefix) {
+			t.Errorf("preset %q has URL %q, which is not under the preset prefix", id, url)
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Uploading
 // ---------------------------------------------------------------------------
 
 func TestUploadingAnAvatarStoresItAndPublishesTheURL(t *testing.T) {
 	h := newHarness(t)
 	token := h.registerAndLogin("owner", "owner@example.com", "hunter2hunter2")
-
-	before := h.do(http.MethodGet, "/users/me", nil, withBearer(token))
-	if url := avatarURLOf(t, before); url != "" {
-		t.Errorf("a new account already has an avatar: %q", url)
-	}
 
 	res := h.uploadAvatar("/users/me/avatar", "me.png", "image/png",
 		pngFixture(t, 500, 300, 1), withBearer(token))
@@ -121,18 +198,11 @@ func TestUploadingAnAvatarStoresItAndPublishesTheURL(t *testing.T) {
 	}
 
 	url := avatarURLOf(t, res)
-	if url == "" {
-		t.Fatal("upload succeeded but returned no avatarUrl")
-	}
-	if !strings.Contains(url, "avatars/") {
-		t.Errorf("avatarUrl %q does not point at an avatar object", url)
+	if !ownsUpload(url) {
+		t.Errorf("avatarUrl %q does not point at the account's own upload", url)
 	}
 
-	// The object really exists under the key the URL names.
-	mem, ok := h.blobs.(*blob.Memory)
-	if !ok {
-		t.Fatalf("expected the in-memory store, got %T", h.blobs)
-	}
+	mem := memoryStore(t, h)
 	if mem.Len() != 1 {
 		t.Errorf("stored %d objects, want 1: %v", mem.Len(), mem.Keys())
 	}
@@ -140,20 +210,23 @@ func TestUploadingAnAvatarStoresItAndPublishesTheURL(t *testing.T) {
 	if !strings.HasSuffix(url, key) {
 		t.Errorf("avatarUrl %q does not end with the stored key %q", url, key)
 	}
+
+	// The format follows the upload, so a PNG stays a PNG rather than becoming a
+	// JPEG and losing its lossless encoding.
 	obj, _ := mem.Get(key)
-	if obj.ContentType != "image/jpeg" {
-		t.Errorf("an opaque PNG was stored as %q, want image/jpeg", obj.ContentType)
+	if obj.ContentType != "image/png" {
+		t.Errorf("an uploaded PNG was stored as %q, want image/png", obj.ContentType)
+	}
+	if !strings.HasSuffix(key, ".png") {
+		t.Errorf("stored key %q does not end in .png", key)
 	}
 
-	// And it survives a fresh read of the account.
-	after := h.do(http.MethodGet, "/users/me", nil, withBearer(token))
-	if got := avatarURLOf(t, after); got != url {
+	if got := avatarURLOf(t, h.do(http.MethodGet, "/users/me", nil, withBearer(token))); got != url {
 		t.Errorf("/users/me reports %q, want %q", got, url)
 	}
 }
 
-// An avatar is public, and the uid lookup is what a profile page resolves, so
-// this is the payload that actually has to carry it.
+// An avatar is public, and the uid lookup is what a profile page resolves.
 func TestAvatarAppearsInThePublicUIDLookup(t *testing.T) {
 	h := newHarness(t)
 	token := h.registerAndLogin("public", "public@example.com", "hunter2hunter2")
@@ -168,7 +241,6 @@ func TestAvatarAppearsInThePublicUIDLookup(t *testing.T) {
 	}
 	want := avatarURLOf(t, upload)
 
-	// Deliberately no credentials: this is what a visitor sees.
 	pub := h.do(http.MethodGet, "/users/uid/"+strconv.FormatInt(int64(uid), 10), nil)
 	if pub.status != http.StatusOK {
 		t.Fatalf("public lookup = %d: %s", pub.status, pub.body)
@@ -176,18 +248,37 @@ func TestAvatarAppearsInThePublicUIDLookup(t *testing.T) {
 	if got := avatarURLOf(t, pub); got != want {
 		t.Errorf("public avatarUrl = %q, want %q", got, want)
 	}
-	// The public payload must still not leak anything else.
 	if strings.Contains(string(pub.body), "public@example.com") {
 		t.Errorf("the public payload leaks the email address: %s", pub.body)
 	}
 }
 
-func TestReplacingAnAvatarPointsAtTheNewObject(t *testing.T) {
+// An account that has uploaded nothing still resolves publicly, to its preset.
+func TestPublicLookupOfAnAccountWithoutAnUploadReturnsAPreset(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("bare", "bare@example.com", "hunter2hunter2")
+	uid, _ := h.do(http.MethodGet, "/users/me", nil, withBearer(token)).data(t)["uid"].(float64)
+
+	pub := h.do(http.MethodGet, "/users/uid/"+strconv.FormatInt(int64(uid), 10), nil)
+	if pub.status != http.StatusOK {
+		t.Fatalf("public lookup = %d: %s", pub.status, pub.body)
+	}
+	if url := avatarURLOf(t, pub); !isPreset(url) {
+		t.Errorf("public avatarUrl = %q, want a preset", url)
+	}
+}
+
+// Replacing an avatar must not leave the old object behind. This is the property
+// that makes a garbage collector unnecessary.
+func TestReplacingAnAvatarDeletesTheSupersededObject(t *testing.T) {
 	h := newHarness(t)
 	token := h.registerAndLogin("swapper", "swapper@example.com", "hunter2hunter2")
 
 	first := h.uploadAvatar("/users/me/avatar", "1.png", "image/png",
 		pngFixture(t, 400, 400, 3), withBearer(token))
+	if first.status != http.StatusOK {
+		t.Fatalf("first upload = %d: %s", first.status, first.body)
+	}
 	firstURL := avatarURLOf(t, first)
 
 	second := h.uploadAvatar("/users/me/avatar", "2.png", "image/png",
@@ -198,18 +289,21 @@ func TestReplacingAnAvatarPointsAtTheNewObject(t *testing.T) {
 	secondURL := avatarURLOf(t, second)
 
 	if firstURL == secondURL {
-		t.Error("a different picture produced the same URL")
+		t.Fatal("a different picture produced the same URL")
 	}
-	// The superseded object is intentionally retained: keys are shared by
-	// content, so removing it could blank another account's avatar.
-	mem := h.blobs.(*blob.Memory)
-	if mem.Len() != 2 {
-		t.Errorf("store holds %d objects, want both retained", mem.Len())
+	mem := memoryStore(t, h)
+	if mem.Len() != 1 {
+		t.Errorf("store holds %d objects after a replacement, want 1: %v", mem.Len(), mem.Keys())
+	}
+	if !strings.HasSuffix(secondURL, mem.Keys()[0]) {
+		t.Errorf("the retained object %q is not the current avatar %q", mem.Keys()[0], secondURL)
 	}
 }
 
-// Content addressing means two accounts with the same picture cost one object.
-func TestTwoAccountsUploadingTheSamePictureShareOneObject(t *testing.T) {
+// Each account keeps its own copy under its own prefix. Cross-account
+// deduplication is given up deliberately: sharing is exactly what would force
+// reference counting before anything could be deleted.
+func TestTwoAccountsUploadingTheSamePictureEachGetTheirOwnObject(t *testing.T) {
 	h := newHarness(t)
 	a := h.registerAndLogin("first", "first@example.com", "hunter2hunter2")
 	b := h.registerAndLogin("second", "second@example.com", "hunter2hunter2")
@@ -217,175 +311,18 @@ func TestTwoAccountsUploadingTheSamePictureShareOneObject(t *testing.T) {
 	same := pngFixture(t, 400, 400, 5)
 	resA := h.uploadAvatar("/users/me/avatar", "a.png", "image/png", same, withBearer(a))
 	resB := h.uploadAvatar("/users/me/avatar", "b.png", "image/png", same, withBearer(b))
-
 	if resA.status != http.StatusOK || resB.status != http.StatusOK {
 		t.Fatalf("uploads = %d and %d", resA.status, resB.status)
 	}
-	if urlA, urlB := avatarURLOf(t, resA), avatarURLOf(t, resB); urlA != urlB {
-		t.Errorf("identical pictures produced %q and %q", urlA, urlB)
-	}
-	if mem := h.blobs.(*blob.Memory); mem.Len() != 1 {
-		t.Errorf("store holds %d objects for one picture: %v", mem.Len(), mem.Keys())
-	}
-}
 
-// ---------------------------------------------------------------------------
-// Removal
-// ---------------------------------------------------------------------------
-
-func TestDeletingAnAvatarClearsTheAccountButKeepsTheObject(t *testing.T) {
-	h := newHarness(t)
-	token := h.registerAndLogin("remover", "remover@example.com", "hunter2hunter2")
-
-	up := h.uploadAvatar("/users/me/avatar", "a.png", "image/png",
-		pngFixture(t, 400, 400, 6), withBearer(token))
-	if up.status != http.StatusOK {
-		t.Fatalf("upload = %d: %s", up.status, up.body)
+	if urlA, urlB := avatarURLOf(t, resA), avatarURLOf(t, resB); urlA == urlB {
+		t.Error("two accounts share one object, so neither could delete it safely")
 	}
-
-	del := h.do(http.MethodDelete, "/users/me/avatar", nil, withBearer(token))
-	if del.status != http.StatusOK {
-		t.Fatalf("delete = %d: %s", del.status, del.body)
-	}
-	if url := avatarURLOf(t, del); url != "" {
-		t.Errorf("avatarUrl = %q after deletion, want null", url)
-	}
-	if url := avatarURLOf(t, h.do(http.MethodGet, "/users/me", nil, withBearer(token))); url != "" {
-		t.Errorf("/users/me still reports %q", url)
-	}
-	// Retained on purpose; see the design's note on shared objects.
-	if mem := h.blobs.(*blob.Memory); mem.Len() != 1 {
-		t.Errorf("store holds %d objects, want the object retained", mem.Len())
+	if mem := memoryStore(t, h); mem.Len() != 2 {
+		t.Errorf("store holds %d objects, want one per account: %v", mem.Len(), mem.Keys())
 	}
 }
 
-func TestDeletingAnAvatarWhenThereIsNoneSucceeds(t *testing.T) {
-	h := newHarness(t)
-	token := h.registerAndLogin("empty", "empty@example.com", "hunter2hunter2")
-
-	res := h.do(http.MethodDelete, "/users/me/avatar", nil, withBearer(token))
-	if res.status != http.StatusOK {
-		t.Fatalf("delete with no avatar = %d, want 200: %s", res.status, res.body)
-	}
-}
-
-func TestAdministratorCanTakeDownAnAvatarAndAUserCannotTouchAnother(t *testing.T) {
-	h := newHarness(t)
-	adminToken := promoteToAdmin(t, h, "admin", "admin@example.com")
-	victimToken := h.registerAndLogin("victim", "victim@example.com", "hunter2hunter2")
-	victimID := idOf(t, h, victimToken)
-
-	if up := h.uploadAvatar("/users/me/avatar", "v.png", "image/png",
-		pngFixture(t, 400, 400, 7), withBearer(victimToken)); up.status != http.StatusOK {
-		t.Fatalf("upload = %d: %s", up.status, up.body)
-	}
-
-	// An ordinary user must not be able to strip somebody else's picture.
-	if res := h.do(http.MethodDelete, "/users/"+victimID+"/avatar", nil, withBearer(victimToken)); res.status != http.StatusForbidden {
-		t.Errorf("non-administrator takedown = %d, want 403: %s", res.status, res.body)
-	}
-	if url := avatarURLOf(t, h.do(http.MethodGet, "/users/me", nil, withBearer(victimToken))); url == "" {
-		t.Fatal("the avatar was removed by a caller who should have been refused")
-	}
-
-	if res := h.do(http.MethodDelete, "/users/"+victimID+"/avatar", nil, withBearer(adminToken)); res.status != http.StatusOK {
-		t.Fatalf("administrator takedown = %d: %s", res.status, res.body)
-	}
-	if url := avatarURLOf(t, h.do(http.MethodGet, "/users/me", nil, withBearer(victimToken))); url != "" {
-		t.Errorf("avatar %q survived an administrative takedown", url)
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Refusals
-// ---------------------------------------------------------------------------
-
-func TestAvatarUploadRequiresAuthentication(t *testing.T) {
-	h := newHarness(t)
-	res := h.uploadAvatar("/users/me/avatar", "a.png", "image/png", pngFixture(t, 400, 400, 8))
-	if res.status != http.StatusUnauthorized {
-		t.Errorf("anonymous upload = %d, want 401: %s", res.status, res.body)
-	}
-}
-
-// The declared Content-Type is attacker-controlled, so a file that claims to be
-// a PNG and is not must still be refused. This is the check that stops arbitrary
-// bytes being served from the avatar bucket.
-func TestAFileThatMerelyClaimsToBeAnImageIsRejected(t *testing.T) {
-	h := newHarness(t)
-	token := h.registerAndLogin("liar", "liar@example.com", "hunter2hunter2")
-
-	res := h.uploadAvatar("/users/me/avatar", "payload.png", "image/png",
-		[]byte("<?php echo 'not an image'; ?>"), withBearer(token))
-	if res.status != http.StatusUnprocessableEntity {
-		t.Errorf("upload of non-image bytes = %d, want 422: %s", res.status, res.body)
-	}
-	if mem := h.blobs.(*blob.Memory); mem.Len() != 0 {
-		t.Errorf("rejected upload still stored %d objects: %v", mem.Len(), mem.Keys())
-	}
-}
-
-func TestAnUndersizedImageIsRejected(t *testing.T) {
-	h := newHarness(t)
-	token := h.registerAndLogin("tiny", "tiny@example.com", "hunter2hunter2")
-
-	res := h.uploadAvatar("/users/me/avatar", "tiny.png", "image/png",
-		pngFixture(t, 8, 8, 9), withBearer(token))
-	if res.status != http.StatusUnprocessableEntity {
-		t.Errorf("upload of an 8x8 image = %d, want 422: %s", res.status, res.body)
-	}
-}
-
-func TestAvatarUploadsAreRateLimitedPerAccount(t *testing.T) {
-	h := newHarnessWith(t, func(c *config.Config) {
-		c.S3.AvatarUploadsPerMinute = 1
-	}, nil)
-
-	token := h.registerAndLogin("eager", "eager@example.com", "hunter2hunter2")
-	other := h.registerAndLogin("calm", "calm@example.com", "hunter2hunter2")
-
-	if first := h.uploadAvatar("/users/me/avatar", "1.png", "image/png",
-		pngFixture(t, 400, 400, 10), withBearer(token)); first.status != http.StatusOK {
-		t.Fatalf("first upload = %d: %s", first.status, first.body)
-	}
-
-	second := h.uploadAvatar("/users/me/avatar", "2.png", "image/png",
-		pngFixture(t, 400, 400, 11), withBearer(token))
-	if second.status != http.StatusTooManyRequests {
-		t.Fatalf("second upload = %d, want 429: %s", second.status, second.body)
-	}
-
-	// The limit is per account, so a different user is unaffected. Keying on the
-	// address instead would have throttled this one too.
-	if res := h.uploadAvatar("/users/me/avatar", "3.png", "image/png",
-		pngFixture(t, 400, 400, 12), withBearer(other)); res.status != http.StatusOK {
-		t.Errorf("a second account's upload = %d, want 200: %s", res.status, res.body)
-	}
-}
-
-// Storage that cannot be used must fail the upload clearly rather than appear to
-// work, and must not take the rest of the account API down with it.
-func TestUploadWithUnusableStorageIsAServiceError(t *testing.T) {
-	broken := blob.NewMemory()
-	broken.FailPut = blob.ErrNotConfigured
-	h := newHarnessWith(t, nil, broken)
-	token := h.registerAndLogin("nostore", "nostore@example.com", "hunter2hunter2")
-
-	res := h.uploadAvatar("/users/me/avatar", "a.png", "image/png",
-		pngFixture(t, 400, 400, 13), withBearer(token))
-	if res.status != http.StatusServiceUnavailable {
-		t.Errorf("upload with unusable storage = %d, want 503: %s", res.status, res.body)
-	}
-	// Reads still work; only uploads are affected.
-	if me := h.do(http.MethodGet, "/users/me", nil, withBearer(token)); me.status != http.StatusOK {
-		t.Errorf("/users/me = %d with storage down, want 200", me.status)
-	}
-}
-
-// Clients disagree about whether to label a multipart part, and the route must
-// not care: the bytes decide the format. This pins that, because the natural
-// implementation — a contentType allow-list on the form field — silently refuses
-// the first two of these while looking like a security measure.
 func TestUploadAcceptsAnyDeclaredPartContentType(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
@@ -406,9 +343,237 @@ func TestUploadAcceptsAnyDeclaredPartContentType(t *testing.T) {
 			if res.status != http.StatusOK {
 				t.Fatalf("upload with part type %q = %d, want 200: %s", tc.partType, res.status, res.body)
 			}
-			if url := avatarURLOf(t, res); url == "" {
-				t.Error("upload succeeded but published no URL")
+			// The bytes decide: a PNG is stored as a PNG whatever the client
+			// claimed it was.
+			if url := avatarURLOf(t, res); !strings.HasSuffix(url, ".png") {
+				t.Errorf("stored URL %q is not a .png", url)
 			}
 		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Presets
+// ---------------------------------------------------------------------------
+
+func TestChoosingAPresetReplacesAnUploadAndDeletesIt(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("chooser", "chooser@example.com", "hunter2hunter2")
+
+	if up := h.uploadAvatar("/users/me/avatar", "a.png", "image/png",
+		pngFixture(t, 400, 400, 6), withBearer(token)); up.status != http.StatusOK {
+		t.Fatalf("upload = %d: %s", up.status, up.body)
+	}
+
+	preset := uploads.Presets[3]
+	res := h.do(http.MethodPut, "/users/me/avatar/preset",
+		map[string]any{"presetId": preset}, withBearer(token))
+	if res.status != http.StatusOK {
+		t.Fatalf("choose preset = %d: %s", res.status, res.body)
+	}
+
+	url := avatarURLOf(t, res)
+	if !isPreset(url) || !strings.Contains(url, preset) {
+		t.Errorf("avatarUrl = %q, want the chosen preset %q", url, preset)
+	}
+	// The upload it replaced is gone.
+	if mem := memoryStore(t, h); mem.Len() != 0 {
+		t.Errorf("store still holds %d uploaded objects: %v", mem.Len(), mem.Keys())
+	}
+}
+
+// A preset id is interpolated into an object key, so an unknown one must be
+// refused rather than reaching storage.
+func TestChoosingAnUnknownPresetIsRejected(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("sneaky", "sneaky@example.com", "hunter2hunter2")
+
+	for _, bad := range []string{"nope", "../../secret", "male-tide-navigator.png"} {
+		res := h.do(http.MethodPut, "/users/me/avatar/preset",
+			map[string]any{"presetId": bad}, withBearer(token))
+		if res.status != http.StatusUnprocessableEntity {
+			t.Errorf("preset %q = %d, want 422: %s", bad, res.status, res.body)
+		}
+	}
+}
+
+func TestChoosingAPresetRequiresAuthentication(t *testing.T) {
+	h := newHarness(t)
+	res := h.do(http.MethodPut, "/users/me/avatar/preset",
+		map[string]any{"presetId": uploads.Presets[0]})
+	if res.status != http.StatusUnauthorized {
+		t.Errorf("anonymous preset choice = %d, want 401: %s", res.status, res.body)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Removal
+// ---------------------------------------------------------------------------
+
+func TestDeletingAnAvatarReturnsToTheDefaultAndRemovesTheObject(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("remover", "remover@example.com", "hunter2hunter2")
+
+	if up := h.uploadAvatar("/users/me/avatar", "a.png", "image/png",
+		pngFixture(t, 400, 400, 7), withBearer(token)); up.status != http.StatusOK {
+		t.Fatalf("upload = %d: %s", up.status, up.body)
+	}
+
+	del := h.do(http.MethodDelete, "/users/me/avatar", nil, withBearer(token))
+	if del.status != http.StatusOK {
+		t.Fatalf("delete = %d: %s", del.status, del.body)
+	}
+	if url := avatarURLOf(t, del); !isPreset(url) {
+		t.Errorf("avatarUrl = %q after deletion, want the default preset", url)
+	}
+	if mem := memoryStore(t, h); mem.Len() != 0 {
+		t.Errorf("store still holds %d objects after deletion: %v", mem.Len(), mem.Keys())
+	}
+}
+
+func TestDeletingAnAvatarWhenThereIsNoneSucceeds(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("empty", "empty@example.com", "hunter2hunter2")
+
+	res := h.do(http.MethodDelete, "/users/me/avatar", nil, withBearer(token))
+	if res.status != http.StatusOK {
+		t.Fatalf("delete with no avatar = %d, want 200: %s", res.status, res.body)
+	}
+	if url := avatarURLOf(t, res); !isPreset(url) {
+		t.Errorf("avatarUrl = %q, want the default preset", url)
+	}
+}
+
+// Deleting an account must not leave its pictures in the bucket, which the
+// per-account prefix makes one scoped operation.
+func TestDeletingAnAccountRemovesItsAvatars(t *testing.T) {
+	h := newHarness(t)
+	adminToken := promoteToAdmin(t, h, "admin", "admin@example.com")
+	victimToken := h.registerAndLogin("victim", "victim@example.com", "hunter2hunter2")
+	victimID := idOf(t, h, victimToken)
+
+	if up := h.uploadAvatar("/users/me/avatar", "v.png", "image/png",
+		pngFixture(t, 400, 400, 8), withBearer(victimToken)); up.status != http.StatusOK {
+		t.Fatalf("upload = %d: %s", up.status, up.body)
+	}
+	if mem := memoryStore(t, h); mem.Len() != 1 {
+		t.Fatalf("expected one object before deletion, got %d", mem.Len())
+	}
+
+	if res := h.do(http.MethodDelete, "/users/"+victimID, nil, withBearer(adminToken)); res.status != http.StatusOK {
+		t.Fatalf("delete account = %d: %s", res.status, res.body)
+	}
+	if mem := memoryStore(t, h); mem.Len() != 0 {
+		t.Errorf("a deleted account left %d objects behind: %v", mem.Len(), mem.Keys())
+	}
+}
+
+func TestAdministratorCanTakeDownAnAvatarAndAUserCannotTouchAnother(t *testing.T) {
+	h := newHarness(t)
+	adminToken := promoteToAdmin(t, h, "admin", "admin@example.com")
+	victimToken := h.registerAndLogin("victim", "victim@example.com", "hunter2hunter2")
+	victimID := idOf(t, h, victimToken)
+
+	if up := h.uploadAvatar("/users/me/avatar", "v.png", "image/png",
+		pngFixture(t, 400, 400, 9), withBearer(victimToken)); up.status != http.StatusOK {
+		t.Fatalf("upload = %d: %s", up.status, up.body)
+	}
+
+	if res := h.do(http.MethodDelete, "/users/"+victimID+"/avatar", nil, withBearer(victimToken)); res.status != http.StatusForbidden {
+		t.Errorf("non-administrator takedown = %d, want 403: %s", res.status, res.body)
+	}
+	if url := avatarURLOf(t, h.do(http.MethodGet, "/users/me", nil, withBearer(victimToken))); !ownsUpload(url) {
+		t.Fatal("the avatar was removed by a caller who should have been refused")
+	}
+
+	if res := h.do(http.MethodDelete, "/users/"+victimID+"/avatar", nil, withBearer(adminToken)); res.status != http.StatusOK {
+		t.Fatalf("administrator takedown = %d: %s", res.status, res.body)
+	}
+	if url := avatarURLOf(t, h.do(http.MethodGet, "/users/me", nil, withBearer(victimToken))); ownsUpload(url) {
+		t.Errorf("avatar %q survived an administrative takedown", url)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Refusals
+// ---------------------------------------------------------------------------
+
+func TestAvatarUploadRequiresAuthentication(t *testing.T) {
+	h := newHarness(t)
+	res := h.uploadAvatar("/users/me/avatar", "a.png", "image/png", pngFixture(t, 400, 400, 10))
+	if res.status != http.StatusUnauthorized {
+		t.Errorf("anonymous upload = %d, want 401: %s", res.status, res.body)
+	}
+}
+
+// The declared Content-Type is attacker-controlled, so a file that claims to be a
+// PNG and is not must still be refused. This is what stops arbitrary bytes being
+// served from the avatar bucket.
+func TestAFileThatMerelyClaimsToBeAnImageIsRejected(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("liar", "liar@example.com", "hunter2hunter2")
+
+	res := h.uploadAvatar("/users/me/avatar", "payload.png", "image/png",
+		[]byte("<?php echo 'not an image'; ?>"), withBearer(token))
+	if res.status != http.StatusUnprocessableEntity {
+		t.Errorf("upload of non-image bytes = %d, want 422: %s", res.status, res.body)
+	}
+	if mem := memoryStore(t, h); mem.Len() != 0 {
+		t.Errorf("rejected upload still stored %d objects: %v", mem.Len(), mem.Keys())
+	}
+}
+
+func TestAnUndersizedImageIsRejected(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("tiny", "tiny@example.com", "hunter2hunter2")
+
+	res := h.uploadAvatar("/users/me/avatar", "tiny.png", "image/png",
+		pngFixture(t, 8, 8, 11), withBearer(token))
+	if res.status != http.StatusUnprocessableEntity {
+		t.Errorf("upload of an 8x8 image = %d, want 422: %s", res.status, res.body)
+	}
+}
+
+func TestAvatarUploadsAreRateLimitedPerAccount(t *testing.T) {
+	h := newHarnessWith(t, func(c *config.Config) {
+		c.S3.AvatarUploadsPerMinute = 1
+	}, nil)
+
+	token := h.registerAndLogin("eager", "eager@example.com", "hunter2hunter2")
+	other := h.registerAndLogin("calm", "calm@example.com", "hunter2hunter2")
+
+	if first := h.uploadAvatar("/users/me/avatar", "1.png", "image/png",
+		pngFixture(t, 400, 400, 12), withBearer(token)); first.status != http.StatusOK {
+		t.Fatalf("first upload = %d: %s", first.status, first.body)
+	}
+	second := h.uploadAvatar("/users/me/avatar", "2.png", "image/png",
+		pngFixture(t, 400, 400, 13), withBearer(token))
+	if second.status != http.StatusTooManyRequests {
+		t.Fatalf("second upload = %d, want 429: %s", second.status, second.body)
+	}
+
+	// Per account, not per address: keying on the address would have throttled
+	// this unrelated user as well.
+	if res := h.uploadAvatar("/users/me/avatar", "3.png", "image/png",
+		pngFixture(t, 400, 400, 14), withBearer(other)); res.status != http.StatusOK {
+		t.Errorf("a second account's upload = %d, want 200: %s", res.status, res.body)
+	}
+}
+
+// Storage that cannot be used must fail the upload clearly without taking the
+// rest of the account API down with it.
+func TestUploadWithUnusableStorageIsAServiceError(t *testing.T) {
+	broken := blob.NewMemory()
+	broken.FailPut = blob.ErrNotConfigured
+	h := newHarnessWith(t, nil, broken)
+
+	token := h.registerAndLogin("nostore", "nostore@example.com", "hunter2hunter2")
+	res := h.uploadAvatar("/users/me/avatar", "a.png", "image/png",
+		pngFixture(t, 400, 400, 15), withBearer(token))
+	if res.status != http.StatusServiceUnavailable {
+		t.Errorf("upload with unusable storage = %d, want 503: %s", res.status, res.body)
+	}
+	if me := h.do(http.MethodGet, "/users/me", nil, withBearer(token)); me.status != http.StatusOK {
+		t.Errorf("/users/me = %d with storage down, want 200", me.status)
 	}
 }

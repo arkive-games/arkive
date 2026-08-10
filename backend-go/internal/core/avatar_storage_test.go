@@ -134,12 +134,17 @@ func TestStorageRoundTripThroughRealObjectStorage(t *testing.T) {
 		t.Fatal("the fetched object is empty")
 	}
 
-	// The served bytes must be the normalised avatar, not the upload.
+	// The served bytes must be the normalised avatar, not the upload. This is what
+	// makes the bucket safe to serve from: every object in it was produced by this
+	// service, so a polyglot file cannot reach a browser.
 	if string(body) == string(source) {
 		t.Error("the original upload was served back; it should have been re-encoded")
 	}
-	if ct := get.Header.Get("Content-Type"); ct != "image/jpeg" {
-		t.Errorf("served Content-Type = %q, want image/jpeg", ct)
+	// The format follows the upload, so a PNG is served as a PNG. The header has to
+	// come from the object's stored metadata, since the key's extension is not
+	// what a browser trusts.
+	if ct := get.Header.Get("Content-Type"); ct != "image/png" {
+		t.Errorf("served Content-Type = %q, want image/png for an uploaded PNG", ct)
 	}
 	// Content-addressed objects are immutable, so the caching header has to say
 	// so or the CDN in front of the bucket buys nothing.
@@ -148,15 +153,55 @@ func TestStorageRoundTripThroughRealObjectStorage(t *testing.T) {
 	}
 }
 
-// Uploading the same picture twice must address one object on a real backend too,
-// not merely in the fake's map.
-func TestStorageDeduplicatesIdenticalPicturesOnTheServer(t *testing.T) {
+// The claim that no garbage collector is needed rests on a superseded object
+// really being gone from the server, not merely dropped from a map in a fake.
+// This is the test that establishes it against a real backend.
+func TestStorageRemovesSupersededObjectsForReal(t *testing.T) {
 	store := realStore(t)
 	h := newHarnessWith(t, nil, store)
 
-	a := h.registerAndLogin("dedup-a", "dedup-a@example.com", "hunter2hunter2")
-	b := h.registerAndLogin("dedup-b", "dedup-b@example.com", "hunter2hunter2")
-	same := pngFixture(t, 400, 400, 43)
+	token := h.registerAndLogin("sweeper", "sweeper@example.com", "hunter2hunter2")
+
+	first := h.uploadAvatar("/users/me/avatar", "1.png", "image/png",
+		pngFixture(t, 400, 400, 60), withBearer(token))
+	if first.status != http.StatusOK {
+		t.Fatalf("first upload = %d: %s", first.status, first.body)
+	}
+	firstURL := avatarURLOf(t, first)
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	if code := statusOf(t, client, firstURL); code != http.StatusOK {
+		t.Fatalf("the first avatar is not fetchable: %d", code)
+	}
+
+	second := h.uploadAvatar("/users/me/avatar", "2.png", "image/png",
+		pngFixture(t, 400, 400, 61), withBearer(token))
+	if second.status != http.StatusOK {
+		t.Fatalf("second upload = %d: %s", second.status, second.body)
+	}
+	secondURL := avatarURLOf(t, second)
+	if firstURL == secondURL {
+		t.Fatal("fixtures produced the same URL")
+	}
+
+	if code := statusOf(t, client, secondURL); code != http.StatusOK {
+		t.Errorf("the new avatar is not fetchable: %d", code)
+	}
+	if code := statusOf(t, client, firstURL); code == http.StatusOK {
+		t.Errorf("the superseded object %s is still served, so orphans would accumulate", firstURL)
+	}
+}
+
+// Each account owns its own prefix, so the same picture uploaded by two accounts
+// is two objects. That is the trade that removes the need for reference counting:
+// nothing is shared, so anything unreferenced can be deleted immediately.
+func TestStorageKeepsAccountsInSeparatePrefixes(t *testing.T) {
+	store := realStore(t)
+	h := newHarnessWith(t, nil, store)
+
+	a := h.registerAndLogin("prefix-a", "prefix-a@example.com", "hunter2hunter2")
+	b := h.registerAndLogin("prefix-b", "prefix-b@example.com", "hunter2hunter2")
+	same := pngFixture(t, 400, 400, 62)
 
 	first := h.uploadAvatar("/users/me/avatar", "a.png", "image/png", same, withBearer(a))
 	second := h.uploadAvatar("/users/me/avatar", "b.png", "image/png", same, withBearer(b))
@@ -165,21 +210,38 @@ func TestStorageDeduplicatesIdenticalPicturesOnTheServer(t *testing.T) {
 	}
 
 	firstURL, secondURL := avatarURLOf(t, first), avatarURLOf(t, second)
-	if firstURL != secondURL {
-		t.Errorf("identical pictures produced two URLs:\n  %s\n  %s", firstURL, secondURL)
+	if firstURL == secondURL {
+		t.Fatalf("both accounts point at one object: %s", firstURL)
 	}
 
-	// Writing an existing key again must succeed rather than conflict, which is
-	// what makes content addressing usable.
+	// Both remain fetchable: one account replacing its avatar must never remove
+	// the other's copy.
 	client := &http.Client{Timeout: 30 * time.Second}
-	get, err := client.Get(secondURL)
+	for _, url := range []string{firstURL, secondURL} {
+		if code := statusOf(t, client, url); code != http.StatusOK {
+			t.Errorf("GET %s = %d, want 200", url, code)
+		}
+	}
+
+	if replaced := h.uploadAvatar("/users/me/avatar", "a2.png", "image/png",
+		pngFixture(t, 400, 400, 63), withBearer(a)); replaced.status != http.StatusOK {
+		t.Fatalf("replacement upload = %d: %s", replaced.status, replaced.body)
+	}
+	if code := statusOf(t, client, secondURL); code != http.StatusOK {
+		t.Errorf("the other account's avatar was removed by an unrelated replacement: %d", code)
+	}
+}
+
+// statusOf fetches a URL anonymously and reports the status.
+func statusOf(t *testing.T, client *http.Client, url string) int {
+	t.Helper()
+	res, err := client.Get(url)
 	if err != nil {
-		t.Fatalf("GET %s: %v", secondURL, err)
+		t.Fatalf("GET %s: %v", url, err)
 	}
-	defer get.Body.Close()
-	if get.StatusCode != http.StatusOK {
-		t.Errorf("anonymous GET after the second write = %d, want 200", get.StatusCode)
-	}
+	defer res.Body.Close()
+	_, _ = io.Copy(io.Discard, res.Body)
+	return res.StatusCode
 }
 
 // Deleting is not part of the avatar flow, but the reclaim job will need it, so
