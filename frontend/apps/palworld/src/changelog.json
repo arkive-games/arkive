@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.28.1",
+      "date": "2026-08-10",
+      "commit": "34011f0f70eb65642defac51309a9f10af8ab28b",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Bare numeric Pal searches now pin exact Paldeck matches before nearby breeding-power results.",
+            "zh-CN": "纯数字搜索现会优先显示对应图鉴编号的帕鲁，再列出配种值相近的结果。",
+            "zh-TW": "純數字搜尋現在會優先顯示對應圖鑑編號的帕魯，再列出配種值相近的結果。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.28.0",
       "date": "2026-08-10",
       "commit": "db9bee0924584ce589fb01a49ae1cdb094bffba1",
