@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.27.1",
+      "date": "2026-08-10",
+      "commit": "a9ce4ee32fa5fc0de4b489736074a1f9c782832e",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Added a clear-completed control and aligned shared map sidebar labels.",
+            "zh-CN": "新增清除已完成标记，并统一共享地图侧栏文案。",
+            "zh-TW": "新增清除已完成標記，並統一共用地圖側欄文案。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.27.0",
       "date": "2026-08-10",
       "commit": "435e88ae26ce54b8a7029629bbe747064e0e9dc3",
