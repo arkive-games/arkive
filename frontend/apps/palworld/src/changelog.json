@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.28.2",
+      "date": "2026-08-10",
+      "commit": "14d5914400cc49d620c140de120f0bb5dc9c5edd",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Search results now use a compact two-column desktop layout so more matches remain visible at once.",
+            "zh-CN": "搜索结果现已采用紧凑的桌面双列排版，同屏可查看更多匹配项。",
+            "zh-TW": "搜尋結果現已採用緊湊的桌面雙欄排版，同屏可查看更多符合項目。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.28.1",
       "date": "2026-08-10",
       "commit": "34011f0f70eb65642defac51309a9f10af8ab28b",
