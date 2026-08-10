@@ -34,7 +34,6 @@ import {
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconCode,
   IconDeviceGamepad2,
   IconFlame,
   IconH1,
@@ -1165,7 +1164,6 @@ function ForumComposerPage({
     { key: 'list', icon: IconList, before: '- ', after: '', fallbackKey: 'listItem' },
     { key: 'orderedList', icon: IconListNumbers, before: '1. ', after: '', fallbackKey: 'listItem' },
     { key: 'quote', icon: IconQuote, before: '> ', after: '', fallbackKey: 'quoteText' },
-    { key: 'code', icon: IconCode, before: '`', after: '`', fallbackKey: 'codeText' },
     { key: 'link', icon: IconLink, before: '[', after: '](https://)', fallbackKey: 'linkText' },
   ]
 
