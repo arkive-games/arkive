@@ -28,3 +28,4 @@ sql:
           uid: UID
           special_uid: SpecialUID
           set_special_uid: SetSpecialUID
+          avatar_key: AvatarKey

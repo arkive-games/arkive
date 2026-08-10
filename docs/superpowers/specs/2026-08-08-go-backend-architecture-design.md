@@ -180,7 +180,8 @@ core.users (
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
   uid            bigint not null unique generated always as identity,  -- >= 10000, never reused
-  special_uid    integer unique                                        -- 0-9999, optional alias
+  special_uid    integer unique,                                       -- 0-9999, optional alias
+  avatar_key     text                                                  -- object key, or null
 )
 ```
 
@@ -192,6 +193,10 @@ the project's `name` column and `TimestampMixin`), with three deliberate changes
   `A@x.com` and `a@x.com` to coexist as separate accounts.
 - `varchar(320)`/`varchar(1024)` become `text`. Postgres stores them identically and the
   length caps only produce late, unhelpful errors.
+- `avatar_key` is new, added by `20260810000002_add_user_avatar.sql`. It holds a complete
+  object key in S3-compatible storage (MinIO in development, Tencent COS in production); the
+  public URL is assembled from configuration at read time. See
+  `2026-08-10-user-avatar-design.md`.
 - `uid` and `special_uid` are new, added by `20260810000001_add_user_uid.sql`. The uuid stays
   the primary key and the internal handle; `uid` is the permanent *public* number that
   permalinks use, and `special_uid` an optional vanity alias an administrator may move or
@@ -343,6 +348,9 @@ after cutover.
 
 ## 12. Out of scope for this iteration
 
-Comments, progress, feedback, uploads and the aion2 abyss-artifact module. Their tables and
-packages are named here to fix the boundaries, but only `users` and `auth` are implemented
-now.
+Comments, progress, feedback and the aion2 abyss-artifact module. Their tables and packages
+are named here to fix the boundaries, but only `users` and `auth` are implemented now.
+
+`uploads` now exists, together with `platform/blob`, but only far enough to serve avatars:
+one 256px rendition, no comment or feedback images, and no job to reclaim objects that no
+row references.

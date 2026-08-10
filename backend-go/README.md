@@ -7,7 +7,8 @@ the `tools` pipeline and shipped as the static `data/` artifacts.
 Design: `docs/superpowers/specs/2026-08-08-go-backend-architecture-design.md`.
 
 Status: the `core` module (accounts + authentication) is implemented. Comments, progress,
-feedback, uploads and the aion2 abyss-artifact module are not yet.
+feedback and the aion2 abyss-artifact module are not yet. Avatars are, on S3-compatible
+object storage: MinIO locally via docker-compose, Tencent COS in production.
 
 ## Layout
 

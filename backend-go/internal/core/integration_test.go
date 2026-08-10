@@ -25,6 +25,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core"
 	"github.com/arkive-games/arkive/backend-go/internal/module"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/config"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/db"
 )
@@ -83,9 +84,23 @@ type harness struct {
 	mailer *captureMailer
 	pool   *pgxpool.Pool
 	mod    *core.Module
+
+	// blobs is the object storage the module was mounted with. Avatar tests
+	// assert against it; every other test simply ignores it.
+	blobs blob.Store
 }
 
 func newHarness(t *testing.T) *harness {
+	t.Helper()
+	return newHarnessWith(t, nil, nil)
+}
+
+// newHarnessWith builds a harness with configuration or storage overridden.
+//
+// tweak runs after the defaults are assembled, so a test can lower a limit it
+// wants to reach; store replaces the in-memory object storage, which is how the
+// MinIO-backed test reuses this whole suite against a real server.
+func newHarnessWith(t *testing.T, tweak func(*config.Config), store blob.Store) *harness {
 	t.Helper()
 
 	dsn := os.Getenv(dsnEnv)
@@ -119,6 +134,15 @@ func newHarness(t *testing.T) *harness {
 			Argon2SaltLength:  16,
 			Argon2KeyLength:   32,
 		},
+		S3: config.S3{
+			Bucket: "arkive-test",
+			// High enough that the ordinary tests never trip it; the test that
+			// exercises throttling lowers it deliberately.
+			AvatarUploadsPerMinute: 1000,
+		},
+	}
+	if tweak != nil {
+		tweak(&cfg)
 	}
 
 	ctx := context.Background()
@@ -141,7 +165,10 @@ func newHarness(t *testing.T) *harness {
 	}
 
 	mailer := newCaptureMailer()
-	mod := core.New(core.WithMailer(mailer))
+	if store == nil {
+		store = blob.NewMemory()
+	}
+	mod := core.New(core.WithMailer(mailer), core.WithBlobStore(store))
 
 	if err := db.Migrate(ctx, pool, mod.Schema(), mod.Migrations()); err != nil {
 		t.Fatalf("migrate: %v", err)
@@ -161,7 +188,7 @@ func newHarness(t *testing.T) *harness {
 		t.Fatalf("mount core module: %v", mountErr)
 	}
 
-	return &harness{t: t, router: router, mailer: mailer, pool: pool, mod: mod}
+	return &harness{t: t, router: router, mailer: mailer, pool: pool, mod: mod, blobs: store}
 }
 
 // maxPreexistingAccounts is the largest core.users population these tests will
@@ -252,6 +279,22 @@ func (h *harness) do(method, path string, body any, opts ...requestOption) respo
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	for _, opt := range opts {
+		opt(req)
+	}
+
+	rec := httptest.NewRecorder()
+	h.router.ServeHTTP(rec, req)
+	return response{status: rec.Code, body: rec.Body.Bytes(), header: rec.Result().Header}
+}
+
+// doRaw sends a body verbatim under a caller-chosen content type, which is what
+// a multipart upload needs; do marshals JSON and cannot express one.
+func (h *harness) doRaw(method, path string, body []byte, contentType string, opts ...requestOption) response {
+	h.t.Helper()
+
+	req := httptest.NewRequest(method, apiPrefix+"/core"+path, bytes.NewReader(body))
+	req.Header.Set("Content-Type", contentType)
 	for _, opt := range opts {
 		opt(req)
 	}

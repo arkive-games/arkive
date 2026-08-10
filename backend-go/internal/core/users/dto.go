@@ -26,12 +26,28 @@ type UserRead struct {
 	IsActive    bool      `json:"isActive" doc:"False for disabled accounts"`
 	IsSuperuser bool      `json:"isSuperuser" doc:"True for administrators"`
 	IsVerified  bool      `json:"isVerified" doc:"True once the email address has been confirmed"`
+	AvatarURL   *string   `json:"avatarUrl" doc:"Absolute URL of the account picture, or null" example:"https://cdn.arkive.test/avatars/abc.256.jpg"`
 	CreatedAt   time.Time `json:"createdAt" doc:"When the account was created"`
 	UpdatedAt   time.Time `json:"updatedAt" doc:"When the account was last modified"`
 }
 
-func toUserRead(u coredb.CoreUser) UserRead {
+// avatarURL renders a stored key as the address a browser fetches.
+//
+// It takes the resolver rather than reading configuration so that the DTO layer
+// stays ignorant of buckets and CDNs, and so a test can assert the URL without
+// object storage. A nil resolver, which is what an unconfigured development
+// server has, renders as no avatar rather than a broken link.
+func avatarURL(resolve func(string) string, key *string) *string {
+	if key == nil || *key == "" || resolve == nil {
+		return nil
+	}
+	url := resolve(*key)
+	return &url
+}
+
+func toUserRead(u coredb.CoreUser, resolve func(string) string) UserRead {
 	return UserRead{
+		AvatarURL:   avatarURL(resolve, u.AvatarKey),
 		ID:          u.ID,
 		UID:         u.UID,
 		SpecialUID:  u.SpecialUID,
@@ -58,11 +74,13 @@ type UserPublic struct {
 	UID        int64     `json:"uid" doc:"Permanent account number; use this in links" example:"10042"`
 	SpecialUID *int32    `json:"specialUid" doc:"Vanity number below 10000, or null. Display only: it can change, so never link by it" example:"42"`
 	Name       string    `json:"name" doc:"Display name"`
+	AvatarURL  *string   `json:"avatarUrl" doc:"Absolute URL of the account picture, or null" example:"https://cdn.arkive.test/avatars/abc.256.jpg"`
 	CreatedAt  time.Time `json:"createdAt" doc:"When the account was created"`
 }
 
-func toUserPublic(u coredb.CoreUser) UserPublic {
+func toUserPublic(u coredb.CoreUser, resolve func(string) string) UserPublic {
 	return UserPublic{
+		AvatarURL:  avatarURL(resolve, u.AvatarKey),
 		UID:        u.UID,
 		SpecialUID: u.SpecialUID,
 		Name:       u.Name,

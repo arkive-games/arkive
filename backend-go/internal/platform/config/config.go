@@ -29,6 +29,7 @@ type Config struct {
 	Postgres Postgres
 	Auth     Auth
 	CORS     CORS
+	S3       S3
 }
 
 // Server holds HTTP listener settings.
@@ -111,6 +112,39 @@ type Auth struct {
 	Argon2KeyLength   uint32
 }
 
+// S3 holds object-storage settings, used for avatars today and for comment and
+// feedback images later.
+//
+// One struct serves both deployments. MinIO in development and Tencent COS in
+// production speak the same S3 API; UsePathStyle is the only behavioural
+// difference, and PublicBaseURL exists because reads normally leave through a
+// CDN rather than the endpoint writes go to.
+type S3 struct {
+	Endpoint        string
+	Region          string
+	Bucket          string
+	AccessKeyID     string
+	SecretAccessKey string
+	UsePathStyle    bool
+	PublicBaseURL   string
+
+	// AvatarUploadsPerMinute limits avatar uploads per account. The route is
+	// authenticated, so the limit is keyed on the account rather than the
+	// address: IP keying would throttle everyone behind one NAT while doing
+	// nothing about a single account uploading in a loop.
+	AvatarUploadsPerMinute int
+}
+
+// Configured reports whether object storage can be used at all.
+//
+// It is a method rather than a validation error because in debug the service
+// starts without storage and only the upload routes fail. Requiring MinIO to run
+// would tax every developer working on something else. Outside debug, validate
+// makes this true or refuses to start.
+func (s S3) Configured() bool {
+	return s.Endpoint != "" && s.Bucket != "" && s.AccessKeyID != "" && s.SecretAccessKey != ""
+}
+
 // CORS holds cross-origin settings.
 type CORS struct {
 	AllowedOrigins   []string
@@ -173,6 +207,20 @@ func Load() (Config, error) {
 			Argon2SaltLength:  uint32(envInt("ARGON2_SALT_LENGTH", 16)),
 			Argon2KeyLength:   uint32(envInt("ARGON2_KEY_LENGTH", 32)),
 		},
+		S3: S3{
+			Endpoint:        envString("S3_ENDPOINT", ""),
+			Region:          envString("S3_REGION", "us-east-1"),
+			Bucket:          envString("S3_BUCKET", ""),
+			AccessKeyID:     envString("S3_ACCESS_KEY_ID", ""),
+			SecretAccessKey: envString("S3_SECRET_ACCESS_KEY", ""),
+			// Path style is the safe default: it is what MinIO needs, and it is
+			// what the SDK falls back to anyway when the endpoint is an IP
+			// address. A COS deployment turns it off explicitly.
+			UsePathStyle:  envBool("S3_USE_PATH_STYLE", true),
+			PublicBaseURL: envString("S3_PUBLIC_BASE_URL", ""),
+
+			AvatarUploadsPerMinute: envInt("AVATAR_UPLOADS_PER_MINUTE", 5),
+		},
 		CORS: CORS{
 			AllowedOrigins:   envList("ALLOWED_ORIGINS", []string{"*"}),
 			AllowCredentials: envBool("ALLOW_CREDENTIALS", true),
@@ -222,6 +270,43 @@ func (c *Config) validate() error {
 	}
 	if c.Postgres.MaxConns < 1 {
 		problems = append(problems, "POSTGRES_MAX_CONNS must be at least 1")
+	}
+
+	// Object storage is required in production and optional in development.
+	//
+	// The asymmetry is deliberate. A production deploy that silently cannot
+	// store avatars would fail only when a user tried to set one, which is the
+	// class of late failure the secret validation above exists to prevent. A
+	// developer working on something unrelated should not be made to run MinIO,
+	// so in debug the compose defaults are filled in and an absent server
+	// surfaces as a clear error on the upload route alone.
+	if c.Debug {
+		if c.S3.Endpoint == "" {
+			c.S3.Endpoint = "http://localhost:9000"
+		}
+		if c.S3.Bucket == "" {
+			c.S3.Bucket = "arkive"
+		}
+		if c.S3.AccessKeyID == "" {
+			c.S3.AccessKeyID = "minioadmin"
+		}
+		if c.S3.SecretAccessKey == "" {
+			c.S3.SecretAccessKey = "minioadmin"
+		}
+	} else {
+		for name, v := range map[string]string{
+			"S3_ENDPOINT":          c.S3.Endpoint,
+			"S3_BUCKET":            c.S3.Bucket,
+			"S3_ACCESS_KEY_ID":     c.S3.AccessKeyID,
+			"S3_SECRET_ACCESS_KEY": c.S3.SecretAccessKey,
+		} {
+			if v == "" {
+				problems = append(problems, name+" is required")
+			}
+		}
+	}
+	if c.S3.AvatarUploadsPerMinute < 1 {
+		problems = append(problems, "AVATAR_UPLOADS_PER_MINUTE must be at least 1")
 	}
 
 	if len(problems) > 0 {

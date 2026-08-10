@@ -22,4 +22,5 @@ type CoreUser struct {
 	UpdatedAt      time.Time
 	UID            int64
 	SpecialUID     *int32
+	AvatarKey      *string
 }

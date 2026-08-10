@@ -25,12 +25,22 @@ type Handlers struct {
 	tokens  *auth.Tokens
 	altcha  *auth.Altcha
 	limiter *auth.RateLimiter
-	cfg     config.Auth
+
+	// avatarLimiter is separate from limiter because the two throttle different
+	// things by different keys: registrations per address, avatar uploads per
+	// account. Sharing one would let a burst of sign-ups block a user changing
+	// their picture.
+	avatarLimiter *auth.RateLimiter
+
+	cfg config.Auth
 }
 
 // NewHandlers builds the core module's HTTP handlers.
-func NewHandlers(svc *users.Service, tokens *auth.Tokens, altcha *auth.Altcha, limiter *auth.RateLimiter, cfg config.Auth) *Handlers {
-	return &Handlers{users: svc, tokens: tokens, altcha: altcha, limiter: limiter, cfg: cfg}
+func NewHandlers(svc *users.Service, tokens *auth.Tokens, altcha *auth.Altcha, limiter, avatarLimiter *auth.RateLimiter, cfg config.Auth) *Handlers {
+	return &Handlers{
+		users: svc, tokens: tokens, altcha: altcha,
+		limiter: limiter, avatarLimiter: avatarLimiter, cfg: cfg,
+	}
 }
 
 // ---------------------------------------------------------------------------

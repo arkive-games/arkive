@@ -431,6 +431,16 @@
       "UserPublic": {
         "additionalProperties": false,
         "properties": {
+          "avatarUrl": {
+            "description": "Absolute URL of the account picture, or null",
+            "examples": [
+              "https://cdn.arkive.test/avatars/abc.256.jpg"
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "createdAt": {
             "description": "When the account was created",
             "format": "date-time",
@@ -464,6 +474,7 @@
           "uid",
           "specialUid",
           "name",
+          "avatarUrl",
           "createdAt"
         ],
         "type": "object"
@@ -471,6 +482,16 @@
       "UserRead": {
         "additionalProperties": false,
         "properties": {
+          "avatarUrl": {
+            "description": "Absolute URL of the account picture, or null",
+            "examples": [
+              "https://cdn.arkive.test/avatars/abc.256.jpg"
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "createdAt": {
             "description": "When the account was created",
             "format": "date-time",
@@ -534,6 +555,7 @@
           "isActive",
           "isSuperuser",
           "isVerified",
+          "avatarUrl",
           "createdAt",
           "updatedAt"
         ],
@@ -1262,6 +1284,154 @@
         ]
       }
     },
+    "/users/me/avatar": {
+      "delete": {
+        "description": "Clears the account's picture. The stored object is retained, because content-addressed objects may be shared with another account.",
+        "operationId": "deleteCurrentUserAvatar",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeUserRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Remove the signed-in account's picture",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "description": "Accepts JPEG, PNG, GIF or WebP and stores a 256x256 square. The image is always re-encoded, so metadata including EXIF location is discarded. Rate limited per account.",
+        "operationId": "setCurrentUserAvatar",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "description": "The image to use: JPEG, PNG, GIF or WebP, at least 32x32. It is cropped to a square, resized to 256 and re-encoded, which also strips any metadata such as EXIF location. The declared content type is ignored; the bytes are decoded to determine the format.",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeUserRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Replace the signed-in account's picture",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/users/search": {
       "get": {
         "description": "Administrators only. With both filters set, an account matching either one is returned.",
@@ -1702,6 +1872,90 @@
           }
         },
         "summary": "Update an account by id",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}/avatar": {
+      "delete": {
+        "description": "Administrators only. Exists so an unacceptable picture can be taken down without disabling the account.",
+        "operationId": "deleteUserAvatar",
+        "parameters": [
+          {
+            "description": "Account identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Account identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeUserRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Remove an account's picture",
         "tags": [
           "users"
         ]

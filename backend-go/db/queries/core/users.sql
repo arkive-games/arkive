@@ -64,3 +64,11 @@ WHERE (
 
 -- name: SuperuserExists :one
 SELECT EXISTS (SELECT 1 FROM core.users WHERE is_superuser);
+
+-- Setting and clearing an avatar are the same statement: a key assigns one, NULL
+-- removes it. Unlike special_uid this needs no "leave unchanged" state, because
+-- nothing edits an avatar as a side effect of another change.
+-- name: SetUserAvatar :one
+UPDATE core.users SET avatar_key = sqlc.narg('avatar_key')
+WHERE id = sqlc.arg('id')
+RETURNING *;

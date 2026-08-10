@@ -24,6 +24,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/httpapi"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/module"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
 )
 
 //go:embed all:migrations
@@ -32,10 +33,22 @@ var migrationsFS embed.FS
 // Module is the core module.
 type Module struct {
 	mailer auth.Mailer
+	blobs  blob.Store
 }
 
 // Option customises the module at construction.
 type Option func(*Module)
+
+// WithBlobStore supplies object storage, overriding what configuration would
+// build.
+//
+// Tests use it to run the avatar flow against blob.NewMemory, so the HTTP path is
+// covered without a container. The storage client itself is exercised separately
+// against a real server, because a fake would otherwise only prove the fake
+// works.
+func WithBlobStore(s blob.Store) Option {
+	return func(mod *Module) { mod.blobs = s }
+}
 
 // WithMailer supplies the transport for password-reset and verification mail.
 // Without it the module logs tokens instead of sending them, which is what the
@@ -80,11 +93,34 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	queries := coredb.New(d.Pool)
 	tokens := auth.NewTokens(d.Config.Auth)
 
+	// Storage is optional in development and validated in production, so an
+	// absent client is a legitimate state here rather than a startup failure.
+	// Only the avatar routes notice, and they report it as a service error.
+	blobs := m.blobs
+	if blobs == nil && d.Config.S3.Configured() {
+		store, err := blob.NewS3(blob.S3Config{
+			Endpoint:        d.Config.S3.Endpoint,
+			Region:          d.Config.S3.Region,
+			Bucket:          d.Config.S3.Bucket,
+			AccessKeyID:     d.Config.S3.AccessKeyID,
+			SecretAccessKey: d.Config.S3.SecretAccessKey,
+			UsePathStyle:    d.Config.S3.UsePathStyle,
+			PublicBaseURL:   d.Config.S3.PublicBaseURL,
+		})
+		if err != nil {
+			return fmt.Errorf("build object storage client: %w", err)
+		}
+		blobs = store
+	}
+	if blobs == nil {
+		d.Logger.Warn("object storage is not configured; avatar uploads will be refused")
+	}
+
 	mailer := m.mailer
 	if mailer == nil {
 		mailer = auth.NewLogMailer(d.Logger)
 	}
-	service := users.NewService(queries, hasher, tokens, mailer, d.Logger)
+	service := users.NewService(queries, hasher, tokens, mailer, blobs, d.Logger)
 
 	// Identity resolution runs before huma so that every operation can read
 	// the caller from its context. It never rejects: authorization is decided
@@ -111,7 +147,8 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		d.Config.Auth.AltchaHMACKey,
 		d.Config.Auth.AltchaMaxNumber,
 		altchaChallengeTTL,
-	), auth.NewRateLimiter(d.Config.Auth.RegisterPerMinute), d.Config.Auth)
+	), auth.NewRateLimiter(d.Config.Auth.RegisterPerMinute),
+		auth.NewRateLimiter(d.Config.S3.AvatarUploadsPerMinute), d.Config.Auth)
 
 	handlers.RegisterAuthRoutes(a)
 	handlers.RegisterUserRoutes(a)

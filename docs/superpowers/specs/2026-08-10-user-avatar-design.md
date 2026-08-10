@@ -23,8 +23,23 @@ visibly wrong on Arkive's dark theme; always-PNG costs roughly ten times the byt
 photograph.
 
 **huma parses multipart natively** (`huma.MultipartFormFiles[T]`, per-operation
-`MaxBodyBytes`), so no request parsing is hand-written. Its MIME validator trusts the
-declared `Content-Type` before sniffing, so that check cannot be the real one — decoding is.
+`MaxBodyBytes`), so no request parsing is hand-written.
+
+**There is no `contentType` allow-list on the upload field**, although huma supports one and
+it looks like a security control. Building it that way first, and testing it, showed why it
+should not exist:
+
+- The part's `Content-Type` is chosen by the client, so it never described the bytes anyway.
+- It rejected correct uploads. Go's own `multipart.CreateFormFile` labels every part
+  `application/octet-stream`, as do many HTTP libraries, so an allow-list of image types
+  refuses them.
+- The refusal was opaque. huma's per-field detail is discarded by the shared error envelope,
+  so the caller received `{"errorCode":"ValidationError","errorMessage":"validation failed"}`
+  with no indication of which field or why, instead of the pipeline's message naming the
+  supported formats.
+
+The accepted formats are documented on the field and enforced by decoding. A test pins that
+the outcome is identical for an absent, generic, honest, wrong or nonsensical declared type.
 
 ## 2. Package boundaries
 
@@ -114,6 +129,14 @@ virtual-hosted addressing (`bucket.cos.region.myqcloud.com/key`). Getting it wro
 a DNS failure or a signature mismatch rather than a clear error, so §8 tests the addressing
 each configuration actually puts on the wire.
 
+One behaviour of the SDK is worth recording, because it was discovered by a test failing and
+it makes the setting less dangerous than it looks: **the SDK falls back to path-style
+addressing whenever the endpoint host is an IP address**, since no bucket label can be
+prefixed onto one. A MinIO deployment reached by IP is therefore path-style whether or not
+anyone configured it, and a virtual-hosted configuration can only be observed against a
+hostname — which is why the addressing tests use DNS-style endpoints rather than the
+`httptest` server's `127.0.0.1`.
+
 The client is a hand-built `aws.Config` with `BaseEndpoint` and static credentials,
 deliberately **not** `aws-sdk-go-v2/config`: the default loader pulls in IMDS, SSO and EC2
 endpoint resolution that a static-credential non-AWS deployment never uses.
@@ -162,11 +185,35 @@ that can only be wrong against a real server get tests that talk to one.
 - `ARKIVE_TEST_S3_*` runs the same end-to-end suite against MinIO in a container, exercising
   the aws-sdk wiring, the public URL shape and anonymous readability. Without it the SDK
   integration is never executed and a fake would only prove the fake works.
-- The same variables pointed at a real COS bucket run the identical suite there. Tencent
-  credentials are not available on the development machine, so this spec cannot claim COS has
-  been exercised with a live write; what is verified without credentials is the addressing
-  and URL construction above, plus a reachability probe confirming a COS-shaped endpoint
-  answers with a COS S3 error document rather than a DNS or TLS failure.
+- The same variables pointed at a real COS bucket run the identical suite there.
+
+### 8.1 What was actually verified, and what was not
+
+**MinIO — fully exercised.** The suite ran against MinIO in a container: an avatar uploaded
+through the API, the published URL fetched anonymously over HTTP returning 200 with
+`Content-Type: image/jpeg` and `Cache-Control: public, max-age=31536000, immutable`, the
+served bytes confirmed to differ from the upload (proving re-encoding), two accounts sharing
+one object for one picture, and `Delete` removing it. MinIO's own `mc` independently listed
+the objects with those headers.
+
+**Tencent COS — not exercised with a live write.** No Tencent credentials exist on the
+development machine, so this must not be claimed. What was verified against the real service,
+without credentials:
+
+- `cos.ap-guangzhou.myqcloud.com` answers over TLS, and the virtual-hosted host
+  `<bucket>.cos.ap-guangzhou.myqcloud.com` resolves and is served rather than failing DNS.
+- A `PutObject` built by this client against real COS, with deliberately fake credentials,
+  came back as a **structured S3 error the SDK parsed** — `NoSuchBucket: The specified bucket
+  does not exist.` That establishes the endpoint form, the addressing and that COS
+  understands the request this client sends. It does **not** establish that a valid key would
+  be accepted.
+- The request the client puts on the wire for a COS-shaped configuration was captured and
+  asserted: host `<bucket>.cos.<region>...`, path `/avatars/...`, SigV4 `AWS4-HMAC-SHA256`
+  with the region in the credential scope.
+
+Closing the remaining gap needs one run with real credentials, which the header comment of
+`internal/core/avatar_storage_test.go` gives verbatim. The code path is shared, so nothing
+COS-specific is untested beyond the credentials themselves.
 
 ## 9. Out of scope
 

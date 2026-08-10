@@ -169,6 +169,8 @@ func (h *Handlers) RegisterUserRoutes(a huma.API) {
 		return api.OK(user), nil
 	})
 
+	h.registerAvatarRoutes(a)
+
 	huma.Register(a, huma.Operation{
 		OperationID: "getUserByUID",
 		Method:      http.MethodGet,

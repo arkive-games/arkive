@@ -39,6 +39,47 @@ services:
       timeout: 5s
       retries: 20
 
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+    ports:
+      # 9000 is MinIO's own default and is left as-is here, because the S3
+      # endpoint is what a developer pastes into tooling; the console moves to
+      # 19001 to sit beside the API's 19000.
+      - "${S3_PORT:-9000}:9000"
+      - "${S3_CONSOLE_PORT:-19001}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # MinIO creates neither the bucket nor a public read policy on its own, and
+  # avatars are served straight from the bucket to browsers, so both are set up
+  # here. This container exits once done.
+  minio-init:
+    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      S3_BUCKET: ${S3_BUCKET:-arkive}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $$S3_ACCESS_KEY_ID $$S3_SECRET_ACCESS_KEY &&
+      mc mb --ignore-existing local/$$S3_BUCKET &&
+      mc anonymous set download local/$$S3_BUCKET &&
+      echo 'bucket ready with anonymous download'
+      "
+
   core:
     build:
       context: .
@@ -66,9 +107,25 @@ services:
       # The API is reached over plain HTTP locally, so a Secure cookie would
       # never be stored by the browser.
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      # MinIO is reached by service name inside the compose network, but the URL
+      # handed to a browser has to work from the host, which is why the write
+      # endpoint and the public base are configured separately.
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_BUCKET: ${S3_BUCKET:-arkive}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      # MinIO has no wildcard DNS beneath its host name, so the bucket must
+      # travel in the path. Tencent COS is the opposite; see the S3 section of
+      # the avatar design.
+      S3_USE_PATH_STYLE: "true"
+      S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-http://localhost:9000/arkive}
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
 volumes:
   postgres-data:
+  minio-data:

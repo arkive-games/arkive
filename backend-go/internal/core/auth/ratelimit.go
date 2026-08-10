@@ -50,8 +50,16 @@ func NewRateLimiter(perMinute int) *RateLimiter {
 // driven from huma's transport-agnostic context as easily as from net/http,
 // and so the address-resolution rule can be tested directly.
 func (l *RateLimiter) Allow(remoteAddr, forwardedFor string) bool {
-	key := ClientIP(remoteAddr, forwardedFor)
+	return l.AllowKey(ClientIP(remoteAddr, forwardedFor))
+}
 
+// AllowKey reports whether an action attributed to key may proceed.
+//
+// Splitting this out lets an authenticated route limit per account instead of
+// per address. For avatar uploads that is the better key: the caller is known,
+// so address keying would throttle everyone sharing one NAT while doing nothing
+// about a single account uploading in a loop.
+func (l *RateLimiter) AllowKey(key string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 

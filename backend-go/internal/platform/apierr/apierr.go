@@ -47,6 +47,12 @@ const (
 	UserSpecialUIDTaken    Code = "UserSpecialUidTakenError"
 )
 
+// Upload codes.
+const (
+	UploadInvalidImage Code = "UploadInvalidImageError"
+	StorageUnavailable Code = "StorageUnavailableError"
+)
+
 // ShowType tells the client how prominently to surface the error. The values
 // match the Python ErrorShowType enum.
 type ShowType int
@@ -131,8 +137,10 @@ func StatusFor(code Code) int {
 		return http.StatusMethodNotAllowed
 	case Integrity, UserAlreadyExists, UserEmailAlreadyExists, UserAlreadyVerified, UserSpecialUIDTaken:
 		return http.StatusConflict
-	case Validation, UserInvalidPassword, AltchaChallenge, UserNotUpdatable:
+	case Validation, UserInvalidPassword, AltchaChallenge, UserNotUpdatable, UploadInvalidImage:
 		return http.StatusUnprocessableEntity
+	case StorageUnavailable:
+		return http.StatusServiceUnavailable
 	case UserInactive:
 		return http.StatusBadRequest
 	case RateLimitExceeded:

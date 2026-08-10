@@ -35,7 +35,7 @@ func (q *Queries) CountUsers(ctx context.Context, arg CountUsersParams) (int64, 
 const createUser = `-- name: CreateUser :one
 INSERT INTO core.users (id, name, email, hashed_password, is_active, is_superuser, is_verified)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid
+RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key
 `
 
 type CreateUserParams struct {
@@ -71,6 +71,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CoreUse
 		&i.UpdatedAt,
 		&i.UID,
 		&i.SpecialUID,
+		&i.AvatarKey,
 	)
 	return i, err
 }
@@ -88,7 +89,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (int64, error) {
 }
 
 const getUserByAnyUID = `-- name: GetUserByAnyUID :one
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users WHERE uid = $1 OR special_uid = $1
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users WHERE uid = $1 OR special_uid = $1
 `
 
 // Resolves either kind of account number in one round trip.
@@ -112,12 +113,13 @@ func (q *Queries) GetUserByAnyUID(ctx context.Context, uid int64) (CoreUser, err
 		&i.UpdatedAt,
 		&i.UID,
 		&i.SpecialUID,
+		&i.AvatarKey,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users WHERE email = $1
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CoreUser, error) {
@@ -135,12 +137,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CoreUser, e
 		&i.UpdatedAt,
 		&i.UID,
 		&i.SpecialUID,
+		&i.AvatarKey,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users WHERE id = $1
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (CoreUser, error) {
@@ -158,12 +161,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (CoreUser, erro
 		&i.UpdatedAt,
 		&i.UID,
 		&i.SpecialUID,
+		&i.AvatarKey,
 	)
 	return i, err
 }
 
 const getUserByName = `-- name: GetUserByName :one
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users WHERE name = $1
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users WHERE name = $1
 `
 
 func (q *Queries) GetUserByName(ctx context.Context, name string) (CoreUser, error) {
@@ -181,12 +185,13 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (CoreUser, err
 		&i.UpdatedAt,
 		&i.UID,
 		&i.SpecialUID,
+		&i.AvatarKey,
 	)
 	return i, err
 }
 
 const searchUsers = `-- name: SearchUsers :many
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users
 WHERE (
         ($1::text IS NULL AND $2::text IS NULL)
      OR ($1::text  IS NOT NULL AND name  ILIKE '%' || $1::text  || '%')
@@ -231,6 +236,7 @@ func (q *Queries) SearchUsers(ctx context.Context, arg SearchUsersParams) ([]Cor
 			&i.UpdatedAt,
 			&i.UID,
 			&i.SpecialUID,
+			&i.AvatarKey,
 		); err != nil {
 			return nil, err
 		}
@@ -240,6 +246,40 @@ func (q *Queries) SearchUsers(ctx context.Context, arg SearchUsersParams) ([]Cor
 		return nil, err
 	}
 	return items, nil
+}
+
+const setUserAvatar = `-- name: SetUserAvatar :one
+UPDATE core.users SET avatar_key = $1
+WHERE id = $2
+RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key
+`
+
+type SetUserAvatarParams struct {
+	AvatarKey *string
+	ID        uuid.UUID
+}
+
+// Setting and clearing an avatar are the same statement: a key assigns one, NULL
+// removes it. Unlike special_uid this needs no "leave unchanged" state, because
+// nothing edits an avatar as a side effect of another change.
+func (q *Queries) SetUserAvatar(ctx context.Context, arg SetUserAvatarParams) (CoreUser, error) {
+	row := q.db.QueryRow(ctx, setUserAvatar, arg.AvatarKey, arg.ID)
+	var i CoreUser
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.HashedPassword,
+		&i.IsActive,
+		&i.IsSuperuser,
+		&i.IsVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UID,
+		&i.SpecialUID,
+		&i.AvatarKey,
+	)
+	return i, err
 }
 
 const superuserExists = `-- name: SuperuserExists :one
@@ -265,7 +305,7 @@ UPDATE core.users SET
                            THEN $8::integer
                            ELSE special_uid END
 WHERE id = $9
-RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid
+RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key
 `
 
 type UpdateUserParams struct {
@@ -309,6 +349,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (CoreUse
 		&i.UpdatedAt,
 		&i.UID,
 		&i.SpecialUID,
+		&i.AvatarKey,
 	)
 	return i, err
 }

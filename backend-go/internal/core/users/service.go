@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 
@@ -13,7 +14,9 @@ import (
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/uploads"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
 )
 
 // Service implements the account use cases.
@@ -23,11 +26,25 @@ type Service struct {
 	tokens *auth.Tokens
 	mailer auth.Mailer
 	logger *slog.Logger
+
+	// blobs is nil when object storage is unconfigured, which is allowed in
+	// development. Avatar routes then fail with a clear service error while
+	// everything else works; see config.S3.Configured.
+	blobs blob.Store
 }
 
 // NewService wires the account service.
-func NewService(q *coredb.Queries, hasher *auth.Hasher, tokens *auth.Tokens, mailer auth.Mailer, logger *slog.Logger) *Service {
-	return &Service{q: q, hasher: hasher, tokens: tokens, mailer: mailer, logger: logger}
+func NewService(q *coredb.Queries, hasher *auth.Hasher, tokens *auth.Tokens, mailer auth.Mailer, blobs blob.Store, logger *slog.Logger) *Service {
+	return &Service{q: q, hasher: hasher, tokens: tokens, mailer: mailer, blobs: blobs, logger: logger}
+}
+
+// avatarResolver renders stored keys as public URLs, or nil when there is no
+// storage to render them from.
+func (s *Service) avatarResolver() func(string) string {
+	if s.blobs == nil {
+		return nil
+	}
+	return s.blobs.PublicURL
 }
 
 // Principal implements auth.PrincipalStore so the identity middleware can
@@ -84,7 +101,7 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (UserRead, err
 	if err != nil {
 		return UserRead{}, mapConstraintError(err)
 	}
-	return toUserRead(u), nil
+	return toUserRead(u, s.avatarResolver()), nil
 }
 
 // Authenticate verifies credentials and returns the account.
@@ -131,7 +148,7 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (Use
 		}
 	}
 
-	return toUserRead(u), nil
+	return toUserRead(u, s.avatarResolver()), nil
 }
 
 // ByID loads one account.
@@ -143,7 +160,7 @@ func (s *Service) ByID(ctx context.Context, id uuid.UUID) (UserRead, error) {
 		}
 		return UserRead{}, fmt.Errorf("load user: %w", err)
 	}
-	return toUserRead(u), nil
+	return toUserRead(u, s.avatarResolver()), nil
 }
 
 // ByAnyUID resolves an account from either kind of public number, and returns
@@ -170,7 +187,46 @@ func (s *Service) ByAnyUID(ctx context.Context, uid int64) (UserPublic, error) {
 	if !u.IsActive {
 		return UserPublic{}, notFound
 	}
-	return toUserPublic(u), nil
+	return toUserPublic(u, s.avatarResolver()), nil
+}
+
+// SetAvatar normalises an uploaded image, stores it and points the account at it.
+//
+// The account row is updated only after the object is durably written, so a
+// storage failure leaves the previous avatar in place rather than a row
+// referencing a key that does not exist. The reverse order would turn a
+// transient upload error into a permanently broken image.
+func (s *Service) SetAvatar(ctx context.Context, id uuid.UUID, image io.Reader) (UserRead, error) {
+	avatar, err := uploads.StoreAvatar(ctx, s.blobs, image)
+	if err != nil {
+		return UserRead{}, err
+	}
+
+	u, err := s.q.SetUserAvatar(ctx, coredb.SetUserAvatarParams{ID: id, AvatarKey: &avatar.Key})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
+		}
+		return UserRead{}, mapConstraintError(err)
+	}
+	return toUserRead(u, s.avatarResolver()), nil
+}
+
+// ClearAvatar removes an account's picture.
+//
+// The stored object is deliberately left in place. Keys are content-addressed,
+// so the same object may be another account's avatar; deleting it here would
+// blank a stranger's picture. Reclaiming objects no row references is a separate
+// job that can afford to check.
+func (s *Service) ClearAvatar(ctx context.Context, id uuid.UUID) (UserRead, error) {
+	u, err := s.q.SetUserAvatar(ctx, coredb.SetUserAvatarParams{ID: id, AvatarKey: nil})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
+		}
+		return UserRead{}, fmt.Errorf("clear avatar: %w", err)
+	}
+	return toUserRead(u, s.avatarResolver()), nil
 }
 
 // Update applies a partial edit.
@@ -264,7 +320,7 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, in UpdateInput, priv
 	if err != nil {
 		return UserRead{}, mapConstraintError(err)
 	}
-	return toUserRead(u), nil
+	return toUserRead(u, s.avatarResolver()), nil
 }
 
 // Delete removes an account.
@@ -305,7 +361,7 @@ func (s *Service) Search(ctx context.Context, name, email *string, page, pageSiz
 
 	out := make([]UserRead, 0, len(rows))
 	for _, u := range rows {
-		out = append(out, toUserRead(u))
+		out = append(out, toUserRead(u, s.avatarResolver()))
 	}
 	return out, total, nil
 }
@@ -337,7 +393,7 @@ func (s *Service) BecomeSuperuser(ctx context.Context, id uuid.UUID) (UserRead, 
 	}
 	s.logger.WarnContext(ctx, "user promoted to administrator via bootstrap endpoint",
 		slog.String("user_id", u.ID.String()), slog.String("name", u.Name))
-	return toUserRead(u), nil
+	return toUserRead(u, s.avatarResolver()), nil
 }
 
 // ForgotPassword issues a reset token and hands it to the mailer.
@@ -454,7 +510,7 @@ func (s *Service) Verify(ctx context.Context, token string) (UserRead, error) {
 	if err != nil {
 		return UserRead{}, fmt.Errorf("mark verified: %w", err)
 	}
-	return toUserRead(updated), nil
+	return toUserRead(updated, s.avatarResolver()), nil
 }
 
 // mapConstraintError turns a database constraint violation into the API's
