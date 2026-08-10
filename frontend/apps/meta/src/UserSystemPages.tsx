@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthError, useAuth } from '@gamemap/auth'
-import { browserMemory, defineMemoryRecord } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, memoryPolicy } from '@gamemap/state-memory'
 import Cropper, { type Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
 import {
@@ -39,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  POPUP_CLOSE_CONTROL_CLASS,
 } from '@gamemap/ui'
 import { SITES, siteHref } from './sites'
 import { AVATAR_PRESETS, DEFAULT_AVATAR_SRC } from './avatarPresets'
@@ -250,25 +251,27 @@ export function AccountCenterPage({
   const { state, updateLocalProfile } = useUserSystem()
   const user = auth.user
   const profileDraftRecord = useMemo(() => defineMemoryRecord({
-    id: 'profile', namespace: 'site', surface: 'account-editor', stateClass: 'task_draft',
+    id: 'profile', namespace: 'site', surface: 'account-editor',
+    ...memoryPolicy.taskDraft('discard-profile-draft'),
     schemaVersion: '1.0.0',
     defaultValue: () => ({
       name: user?.name ?? '',
-      email: user?.email ?? '',
       bio: state.profile.bio,
     }),
-    validate: (value: unknown): value is { name: string; email: string; bio: string } => {
+    validate: (value: unknown): value is { name: string; bio: string } => {
       if (!value || typeof value !== 'object') return false
       const draft = value as Record<string, unknown>
       return typeof draft.name === 'string' && draft.name.length <= 64
-        && typeof draft.email === 'string' && draft.email.length <= 320
         && typeof draft.bio === 'string' && draft.bio.length <= 120
     },
-    retentionMs: 30 * 24 * 60 * 60 * 1_000,
-    accountScoped: true,
-  }), [state.profile.bio, user?.email, user?.name])
+    partition: { account: true },
+    signInAdoption: 'keep_anonymous',
+  }), [state.profile.bio, user?.name])
   const [profile, setProfile] = useState(() => user
-    ? browserMemory.read(profileDraftRecord, { accountId: user.id })
+    ? {
+        ...browserMemory.read(profileDraftRecord, { accountId: user.id }),
+        email: user.email,
+      }
     : ({
     name: '',
     email: '',
@@ -280,7 +283,10 @@ export function AccountCenterPage({
 
   useEffect(() => {
     if (!user) return
-    setProfile(browserMemory.read(profileDraftRecord, { accountId: user.id }))
+    setProfile({
+      ...browserMemory.read(profileDraftRecord, { accountId: user.id }),
+      email: user.email,
+    })
   }, [profileDraftRecord, user])
 
   useEffect(() => {
@@ -290,7 +296,10 @@ export function AccountCenterPage({
       return
     }
     const timeout = window.setTimeout(() => {
-      browserMemory.write(profileDraftRecord, profile, { accountId: user.id })
+      browserMemory.write(profileDraftRecord, {
+        name: profile.name,
+        bio: profile.bio,
+      }, { accountId: user.id })
     }, 300)
     return () => window.clearTimeout(timeout)
   }, [profile, profileDraftRecord, user])
@@ -607,28 +616,27 @@ function AvatarUploadDialog({
       </DialogTrigger>
       <DialogContent
         showCloseButton={false}
-        overlayClassName="z-[3000] bg-black/55 backdrop-blur-sm"
-        className="z-[3001] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto rounded-2xl border-border bg-card p-0 text-card-foreground shadow-2xl"
+        overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
+        className="z-[var(--arkive-layer-sheet)] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto p-0"
       >
-        <div className="relative overflow-hidden border-b border-border bg-muted/30 px-6 pb-5 pt-7">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-primary" aria-hidden="true" />
+        <div className="relative border-b border-border bg-background px-6 py-5">
           <DialogClose asChild>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-4 rounded-full text-muted-foreground hover:text-foreground"
+              className={`absolute right-3 top-3 ${POPUP_CLOSE_CONTROL_CLASS}`}
               aria-label={t('userSystem.account.avatarDialog.close')}
             >
-              <IconX className="size-5" stroke={1.8} />
+              <IconX className="size-4" stroke={1.8} />
             </Button>
           </DialogClose>
           <DialogHeader className="pr-9 text-left">
             <div className="flex items-center gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-                <IconPhoto className="size-6" stroke={1.7} aria-hidden="true" />
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <IconPhoto className="size-5" stroke={1.8} aria-hidden="true" />
               </span>
-              <DialogTitle className="text-xl font-bold tracking-tight">
+              <DialogTitle>
                 {t('userSystem.account.avatarDialog.title')}
               </DialogTitle>
             </div>
@@ -709,7 +717,7 @@ function AvatarUploadDialog({
                   </div>
                 </div>
 
-                <Button type="button" variant="outline" className="w-full rounded-xl" onClick={resetCrop}>
+                <Button type="button" variant="outline" className="w-full rounded-lg" onClick={resetCrop}>
                   <IconRefresh className="size-4" stroke={1.8} />
                   {t('userSystem.account.avatarDialog.reset')}
                 </Button>
@@ -717,7 +725,7 @@ function AvatarUploadDialog({
                 <div className="space-y-2">
                   <p className="truncate text-xs text-muted-foreground" title={fileName}>{fileName}</p>
                   <label
-                    className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-within:ring-2 focus-within:ring-ring"
+                    className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-within:ring-2 focus-within:ring-ring"
                   >
                     <IconUpload className="size-5 text-primary" stroke={1.8} aria-hidden="true" />
                     {t('userSystem.account.avatarDialog.replace')}
@@ -771,7 +779,7 @@ function AvatarUploadDialog({
                   </p>
                 </div>
                 <label
-                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-within:ring-2 focus-within:ring-ring"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 focus-within:ring-2 focus-within:ring-ring"
                 >
                   <IconUpload className="size-5 text-primary" stroke={1.8} aria-hidden="true" />
                   {t('userSystem.account.avatarDialog.choose')}
@@ -789,15 +797,15 @@ function AvatarUploadDialog({
           {error && <p className="mt-4 text-xs font-semibold text-destructive" role="alert">{error}</p>}
         </div>
 
-        <DialogFooter className="sticky bottom-0 z-10 border-t border-border bg-card/95 px-6 py-4 backdrop-blur-sm">
+        <DialogFooter className="sticky bottom-0 z-[var(--arkive-layer-local-control)] border-t border-border bg-card/95 px-6 py-4 backdrop-blur-sm">
           <DialogClose asChild>
-            <Button type="button" variant="outline" className="h-11 rounded-xl">
+            <Button type="button" variant="outline" className="h-11 rounded-lg">
               {t('userSystem.account.avatarDialog.cancel')}
             </Button>
           </DialogClose>
           <Button
             type="button"
-            className="h-11 rounded-xl bg-primary px-5 font-semibold text-white"
+            className="h-11 rounded-lg bg-primary px-5 font-semibold text-white"
             disabled={!selectedSrc || !croppedAreaPixels || Boolean(error) || processing}
             onClick={() => void applyAvatar()}
           >

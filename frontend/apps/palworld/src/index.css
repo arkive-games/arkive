@@ -2,6 +2,7 @@
 @import "@gamemap/map-shell/arkive-map-theme.css";
 @source "../../../packages/ui/src";
 @source "../../../packages/map-shell/src";
+@source "../../../packages/auth/src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -16,11 +17,6 @@
   --color-input: var(--input);
 }
 
-/* The shared Arkive theme owns the desktop rem base.
-   The app is rem-based (Tailwind), so this scales all text/spacing uniformly
-   like a gentle zoom. Tunable knob for overall UI size (16.5–18px). */
-/* Phones (< 768px, the `useIsMobile` breakpoint) sit closer to the eye but the
-   text is physically much smaller, so nudge the same knob up one step there. */
 @media (max-width: 767px) {
   .palworld-map-search > div:first-of-type,
   [data-content-scroll] input[type='search'] {

@@ -1,0 +1,341 @@
+schema_version: "1.0.0"
+spec_id: "arkive.ui-foundations"
+title: "Arkive UI Foundations Specification"
+status: "canonical"
+last_reviewed: "2026-08-10"
+
+references:
+  parent: "docs/ARKIVE_SITE_SPEC.yaml"
+  color_system: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
+  repository_contract: "CLAUDE.md"
+  implementation_owner: "frontend/packages/map-shell/src/arkive-map-theme.css"
+  reading_rule: >-
+    Read the parent site specification first. Read this file for framework,
+    typography, spacing, shape, responsive, motion, layer, or shared component
+    decisions. Read the color specification for color values and roles.
+
+purpose:
+  summary: >-
+    Provide one measurable UI foundation for the portal and every game so a
+    shared component looks and behaves like Arkive on desktop and mobile.
+  outcomes:
+    - "Every visual primitive has one owner and one token definition."
+    - "High information density comes from organization, not smaller text or inconsistent spacing."
+    - "New games reuse the same framework and primitives instead of creating another design system."
+
+design_profile:
+  audience: "Players repeatedly scanning maps, catalogs, databases, and tools"
+  direction: "A quiet game-world encyclopedia with a precise tool layer"
+  calibration:
+    design_variance: 5
+    motion_intensity: 2
+    visual_density: 8
+  priority_order:
+    - "Task completion"
+    - "Readable game information"
+    - "Comfortable pointer and touch interaction"
+    - "Cross-game consistency"
+    - "Decoration"
+  avoid:
+    - "Marketing-page scale inside tools or content panels"
+    - "Decorative cards around every group"
+    - "Automatic ambient motion"
+    - "Game-colored shared chrome"
+    - "Arbitrary one-off pixel, radius, shadow, or z-index values"
+
+implementation_foundation:
+  architecture_owner: "CLAUDE.md and package manifests own exact dependency versions."
+  application_runtime: "React applications built with Vite and TypeScript"
+  styling: "Tailwind CSS utilities backed by shared semantic CSS variables"
+  component_primitives: "Radix and shadcn-compatible primitives owned by frontend/packages/ui"
+  shared_shell: "frontend/packages/map-shell"
+  rules:
+    - "Do not duplicate shared primitives in an application."
+    - "Do not introduce a second design-system framework for one game."
+    - "Use semantic tokens and shared variants before adding app-local CSS."
+    - "Exact framework versions remain in package manifests and are never copied into design specifications."
+
+responsive_system:
+  breakpoints:
+    sm: "640px"
+    md: "768px"
+    lg: "1024px"
+    xl: "1280px"
+    2xl: "1536px"
+  contracts:
+    mobile: "Below md"
+    desktop: "md and above"
+  viewport_rules:
+    - "Use dvh for viewport-height layouts; do not use h-screen or fixed 100vh for application shells."
+    - "Document-level horizontal overflow is forbidden."
+    - "Use CSS Grid for multi-column page structure and stable tracks for repeated records."
+    - "Use content-driven collapse rules; do not assume a desktop grid can simply shrink."
+
+typography:
+  root_size: "17px"
+  family:
+    primary:
+      - "Noto Sans SC Variable"
+      - "Noto Sans TC Variable"
+      - "system-ui"
+      - "-apple-system"
+      - "BlinkMacSystemFont"
+      - "Segoe UI"
+      - "sans-serif"
+    monospace:
+      - "ui-monospace"
+      - "SFMono-Regular"
+      - "Menlo"
+      - "Consolas"
+      - "monospace"
+  delivery:
+    canonical_stylesheet: "https://tc-imba.com/fonts/noto-sans/v1/index.css"
+    asset_owner: "The Meta application owns and deploys the shared font files."
+    cache_policy: "Versioned font assets use public, max-age=31536000, immutable and Access-Control-Allow-Origin: *."
+    rules:
+      - "Self-host the required variable font and locale-relevant CJK subset once at the canonical shared address."
+      - "Use font-display swap and reserve compatible fallback metrics to limit layout shift."
+      - "All production web and mobile surfaces load the canonical stylesheet; do not emit a per-application copy."
+      - "A font revision creates a new versioned directory; never replace files inside an existing version."
+      - "Local development serves the canonical files through each app's dev server. Self-contained toy builds may embed the same files."
+  allowed_scale:
+    text-xs: "0.75rem"
+    text-sm: "0.875rem"
+    text-base: "1rem"
+    text-lg: "1.125rem"
+    text-xl: "1.25rem"
+    text-2xl: "1.5rem"
+    text-3xl: "1.875rem"
+  role_defaults:
+    page_title: "text-2xl, weight 700, tight line height"
+    section_title: "text-lg, weight 600"
+    subsection_title: "text-base, weight 600"
+    long_form_body: "text-base, regular weight, relaxed line height"
+    dense_body: "text-sm, regular weight"
+    control_label: "text-sm, weight 500 or 600 according to emphasis"
+    metadata: "text-xs, regular or medium weight"
+    coordinate_or_id: "text-xs or text-sm, monospace, tabular numbers"
+  line_height_tokens:
+    caption: "1.5"
+    body: "1.65"
+    title: "1.4"
+    page_title: "1.25"
+  rules:
+    - "Use the Tailwind scale names; never hard-code a font size in component code."
+    - "Body and interactive text never falls below text-xs."
+    - "Do not scale type with viewport width."
+    - "Use normal letter spacing. Uppercase tracking is reserved for game-authored source labels."
+    - "Use tabular numbers for counts, coordinates, ids, prices, and version values."
+    - "Long-form text uses a readable measure no wider than 72ch."
+    - "A compact panel title must not use page-title scale."
+    - "The desktop brand slogan may use 0.7rem so the two-line brand block fits the shared top bar; this is the only shared-chrome exception below text-xs."
+    - "The document language follows the active application locale so browsers and assistive technology select the correct glyph and pronunciation rules."
+
+shared_component_contracts:
+  desktop_brand_block:
+    medium_desktop:
+      mark_size: "2.125rem"
+      mark_to_copy_gap: "0.6rem"
+      trailing_padding: "0.75rem"
+    wide_desktop:
+      mark_size: "2.25rem"
+      mark_to_copy_gap: "0.7rem"
+      trailing_padding: "1rem"
+    name: "text-sm, weight 700, line height 1"
+    slogan: "0.7rem, weight 500, line height 1"
+    name_to_slogan_gap: "0.12rem"
+    navigation_gap: "1.75rem"
+    rules:
+      - "The block fits its content and does not reserve an independent grid column."
+      - "The localized name and slogan remain visible without truncation."
+  popup_surfaces:
+    surface: "Use the shared floating or modal surface class from frontend/packages/ui/src/popup-styles.ts."
+    menu_row: "At least touch_target_standard high, standard radius, text-sm, and weight 500."
+    close_control: "Touch target on mobile and desktop_compact_height on desktop, with the shared focus treatment."
+    modal_overlay: "One shared neutral overlay treatment; app-level dialogs do not invent another opacity or blur."
+
+spacing:
+  base: "0.25rem"
+  approved_steps:
+    space-1: "0.25rem"
+    space-2: "0.5rem"
+    space-3: "0.75rem"
+    space-4: "1rem"
+    space-6: "1.5rem"
+    space-8: "2rem"
+    space-12: "3rem"
+  page_gutters:
+    mobile: "space-4"
+    desktop: "space-6"
+    wide_desktop: "space-8"
+  content_page_top_space:
+    mobile: "space-4"
+    desktop: "space-6"
+    token: "--arkive-content-page-top-space"
+    utility: "arkive-content-page"
+  rhythm:
+    compact_control_gap: "space-2"
+    related_content_gap: "space-3 or space-4"
+    section_gap: "space-6 on mobile; space-8 on desktop"
+  rules:
+    - "Use an approved step before introducing a new spacing value."
+    - "Do not describe rem values with an incorrect 16px approximation; the root size is 17px."
+    - "Use rem for scalable layout spacing and px only for one-pixel borders or verified raster alignment."
+
+shape:
+  tokens:
+    compact_radius: "0.375rem"
+    standard_radius: "0.5rem"
+    pill_radius: "999rem"
+  rules:
+    - "Cards, inputs, popovers, dialogs, sheets, and tool surfaces use standard_radius."
+    - "Small badges, checkboxes, and compact internal controls may use compact_radius."
+    - "Use pill_radius only for tags, segmented indicators, avatars, and controls whose shape communicates a real role."
+    - "Nested surfaces do not increase radius with every level."
+    - "Arbitrary radii such as 0.55rem, 0.65rem, 0.8rem, or 1.35rem are not permitted."
+
+control_geometry:
+  desktop_compact_height: "2.25rem"
+  touch_target_standard: "2.75rem"
+  touch_target_accessibility_floor: "44px"
+  isolated_map_target: "3rem"
+  shared_header_height: "3.5rem before safe-area inset"
+  bottom_navigation_height: "4rem plus bottom safe-area inset"
+  rules:
+    - "Shared mobile controls use touch_target_standard, which resolves to 46.75 CSS pixels at the 17px root size."
+    - "The 44px accessibility floor is an exception boundary, not the routine component size; no touch target may render below it."
+    - "A smaller visible glyph stays inside the full target area."
+    - "Compact desktop controls may use desktop_compact_height when pointer input is primary."
+    - "Stable dimensions prevent labels, icons, loading state, and counts from shifting layout."
+
+layout:
+  content_widths:
+    reading: "72ch"
+    standard: "80rem"
+    wide_data: "96rem"
+    workspace: "Full available viewport"
+  card_policy:
+    allowed:
+      - "A discrete repeated record"
+      - "A dialog or sheet"
+      - "A genuinely framed tool workflow"
+    prohibited:
+      - "A decorative wrapper around a page section"
+      - "A card nested inside another card"
+      - "A separate card around every label-value group"
+  rules:
+    - "Choose a width role from content needs; do not invent a page-specific maximum width."
+    - "Use unframed bands and dividers for page structure."
+    - "Repeated records use stable grid tracks, media aspect ratios, and reserved text space."
+    - "Data-rich screens may be dense but must preserve readable type and target sizes."
+
+motion:
+  durations:
+    immediate: "120ms"
+    standard: "180ms"
+    panel: "240ms"
+  easing: "cubic-bezier(0.16, 1, 0.3, 1)"
+  rules:
+    - "Animate only to communicate feedback, hierarchy, or a state transition."
+    - "Prefer opacity and transform; do not animate layout dimensions when a transform can express the change."
+    - "Do not use automatic page-entry, parallax, magnetic, or perpetual animation in routine product surfaces."
+    - "Marquee runs only when essential text is clipped and no wrap or disclosure solution is viable."
+    - "Respect reduced motion and provide an instant or static alternative."
+
+elevation_and_layers:
+  elevation:
+    base: "No shadow"
+    raised_control: "Subtle shared shadow"
+    overlay: "Shared overlay shadow with a solid-color fallback when transparency is unavailable"
+  layer_tokens:
+    local_backdrop: { css_variable: "--arkive-layer-local-backdrop", value: -2, role: "Background media inside an isolated component stacking context" }
+    local_underlay: { css_variable: "--arkive-layer-local-underlay", value: -1, role: "Shade or decoration above local background media" }
+    local_content: { css_variable: "--arkive-layer-local-content", value: 0, role: "Normal content inside an isolated component stacking context" }
+    local_control: { css_variable: "--arkive-layer-local-control", value: 1, role: "Controls and labels above local content inside an isolated stacking context" }
+    base: { css_variable: "--arkive-layer-base", value: 0, role: "Normal document and map content" }
+    sticky_shell: { css_variable: "--arkive-layer-sticky", value: 1800, role: "Sticky headers and fixed mobile navigation" }
+    map_control: { css_variable: "--arkive-layer-map-control", value: 1900, role: "Map controls that must clear the sticky shell" }
+    popover: { css_variable: "--arkive-layer-popover", value: 2000, role: "Dropdowns, search overlays, and popovers" }
+    sheet_backdrop: { css_variable: "--arkive-layer-sheet-backdrop", value: 3000, role: "Sheet and dialog backdrops" }
+    sheet: { css_variable: "--arkive-layer-sheet", value: 3010, role: "Sheets and dialogs" }
+    nested_overlay: { css_variable: "--arkive-layer-nested-overlay", value: 3100, role: "A popover or selector intentionally opened from inside a sheet" }
+    toast: { css_variable: "--arkive-layer-toast", value: 4000, role: "Transient status messages" }
+    tooltip: { css_variable: "--arkive-layer-tooltip", value: 5000, role: "Tooltips and short-lived teaching hints" }
+  layer_order:
+    - "Base content"
+    - "Sticky shell"
+    - "Map controls"
+    - "Dropdowns and popovers"
+    - "Sheet and dialog backdrops"
+    - "Sheets and dialogs"
+    - "Nested overlays opened from a sheet"
+    - "Toasts"
+    - "Tooltips"
+  rules:
+    - "Use the named CSS variable for the role; do not copy its numeric value into component code."
+    - "Use local layer tokens only inside a component that establishes its own isolated stacking context."
+    - "Use nested_overlay only when an overlay is intentionally triggered from an open sheet or dialog."
+    - "Do not add arbitrary z-index values."
+    - "Elevation communicates interaction hierarchy, not decoration."
+    - "Do not combine a strong border, heavy shadow, blur, and glow on one surface."
+
+iconography:
+  primary_library: "@tabler/icons-react"
+  legacy_library: "lucide-react for existing app-owned content during migration"
+  standard_stroke: 1.8
+  rules:
+    - "New shared controls use Tabler icons."
+    - "Do not mix icon families inside one control or shared component."
+    - "Search approved libraries before drawing a custom icon."
+    - "Use the same icon for the same action in every game."
+    - "Every icon-only action has a localized accessible label."
+
+interaction_states:
+  required:
+    - "Default"
+    - "Hover when pointer input exists"
+    - "Focus-visible"
+    - "Pressed or selected"
+    - "Disabled when applicable"
+    - "Loading, empty, and error for asynchronous surfaces"
+  rules:
+    - "State never relies on color alone."
+    - "Focus remains visible in light and dark themes."
+    - "Loading placeholders reserve the final layout geometry."
+    - "Error messages are contextual and preserve the user's input."
+
+accessibility:
+  contrast:
+    normal_text: "At least 4.5:1"
+    large_text: "At least 3:1"
+    interactive_boundary_and_focus: "At least 3:1 against adjacent colors"
+  rules:
+    - "Use native buttons, links, inputs, headings, lists, and tables before custom roles."
+    - "Keyboard and touch users can reach every desktop destination and action."
+    - "Sheets and dialogs trap focus while open and restore focus when closed."
+    - "Zoom to 200 percent does not remove content or require document-level horizontal scrolling."
+    - "System light, dark, reduced-motion, and increased-text preferences remain usable."
+
+new_surface_checklist:
+  - "Select the content width, typography roles, spacing steps, and control sizes from this file."
+  - "Use semantic color tokens from the color specification."
+  - "Use shared components and declare any missing shared primitive before copying app-local UI."
+  - "Design loading, empty, error, focus, selected, disabled, and reduced-motion states."
+  - "Verify desktop, mobile, long localized text, and 200 percent zoom."
+
+verification:
+  static:
+    - "Validate this YAML file and every referenced canonical specification."
+    - "Reject hard-coded font sizes, arbitrary radii, h-screen, and new app-local color literals in changed UI."
+    - "Type-check and build every affected shared package and application."
+  browser:
+    - "Test the viewports required by the owning mobile or desktop specification."
+    - "Test light, dark, keyboard, touch, reduced motion, and 200 percent zoom."
+    - "Confirm there is no document-level horizontal overflow or content overlap."
+
+maintenance:
+  rules:
+    - "This file owns framework-facing design rules, typography, spacing, shape, responsive, motion, layers, and shared component principles."
+    - "The color specification owns all color roles and values."
+    - "Mobile and map specifications may compose these tokens but cannot redefine them."
+    - "Update this file before introducing a new global token or foundation rule."

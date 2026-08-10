@@ -9,6 +9,7 @@ import {
   defineMemoryRecord,
   isBoolean,
   isStringArray,
+  memoryPolicy,
   parseJson,
   useMemoryState,
 } from "@gamemap/state-memory";
@@ -61,7 +62,7 @@ const visibleDataRecord = (kind: "subtypes" | "regions", legacyKey: string) => d
   id: `visible-${kind}`,
   namespace: "aion2",
   surface: "map",
-  stateClass: "device_preference",
+  ...memoryPolicy.sessionContext("clear-map-filters"),
   schemaVersion: "1.0.0",
   defaultValue: () => null as string[] | null,
   validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
@@ -73,7 +74,7 @@ const bordersRecord = defineMemoryRecord({
   id: "show-borders",
   namespace: "aion2",
   surface: "map",
-  stateClass: "device_preference",
+  ...memoryPolicy.userPreference("reset-map-boundaries"),
   schemaVersion: "1.0.0",
   defaultValue: () => false,
   validate: isBoolean,
@@ -83,7 +84,7 @@ const lodRecord = defineMemoryRecord({
   id: "level-of-detail",
   namespace: "aion2",
   surface: "map",
-  stateClass: "device_preference",
+  ...memoryPolicy.userPreference("reset-map-display"),
   schemaVersion: "1.0.0",
   // Phones open with LOD on, but a remembered user choice still wins.
   defaultValue: () => typeof window !== "undefined"

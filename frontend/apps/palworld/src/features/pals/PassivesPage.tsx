@@ -180,7 +180,7 @@ export default function PassivesPage() {
           <Hint
             title={t('passive.innate')}
             content={t('passive.innateTip')}
-            contentClassName="z-[3100] max-w-xs"
+            contentClassName="z-[var(--arkive-layer-nested-overlay)] max-w-xs"
             mobileTrigger="icon"
             iconTestId="category-innate-hint"
           >
@@ -201,7 +201,7 @@ export default function PassivesPage() {
           <Hint
             title={t('passive.mutation')}
             content={t('passive.mutationTip')}
-            contentClassName="z-[3100] max-w-xs"
+            contentClassName="z-[var(--arkive-layer-nested-overlay)] max-w-xs"
             mobileTrigger="icon"
             iconTestId="category-mutation-hint"
           >

@@ -19,7 +19,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-lg border border-border bg-card p-4">
-      <h2 className="mb-2 text-lg font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+      <h2 className="mb-2 text-lg font-semibold uppercase text-muted-foreground">{title}</h2>
       {children}
     </section>
   )
@@ -61,7 +61,7 @@ export default function CardDetailPage() {
           <div className="flex items-center gap-3">
             <CostBadge cost={card.cost} className="size-9 text-base" />
             <h1
-              className="text-2xl font-bold"
+              className="text-3xl font-bold"
               style={card.pool && colors[card.pool] ? { color: colors[card.pool] } : undefined}
             >
               {name}
@@ -76,7 +76,7 @@ export default function CardDetailPage() {
                 <CardDescription card={card} bundle={bundle} />
                 {upgradable ? (
                   <div className="mt-3 rounded-md border border-accent/40 bg-accent/10 p-2">
-                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-accent">
+                    <div className="mb-1 text-xs font-semibold uppercase text-accent">
                       {t('card.upgraded')}
                     </div>
                     <p className="text-sm leading-relaxed">

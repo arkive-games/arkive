@@ -80,7 +80,7 @@ export function ShellSidebar({
     <aside
       aria-label={label}
       className={cn(
-        "relative flex h-full min-h-0 shrink-0 flex-col transition-all duration-300",
+        "relative flex h-full min-h-0 shrink-0 flex-col transition-[width,transform] duration-[var(--arkive-motion-panel)] ease-[var(--arkive-motion-easing)]",
         classNames?.root,
       )}
       style={{ width: collapsed ? 0 : width, maxWidth: width }}
@@ -127,12 +127,10 @@ export function ShellSidebar({
         aria-label={collapsed ? expandLabel : collapseLabel}
         aria-expanded={!collapsed}
         className={cn(
-          // z-700 is the floating-map-control tier: above the map surface and
-          // the search overlay (z-600), but BELOW Radix's portalled layers
-          // (popover z-2000, sheet z-3000). It used to be z-20000, which put
-          // this 32px tab on top of the top-bar popover — opaque, and winning
-          // the hit test, so clicking the popover's edge collapsed the sidebar.
-          "absolute top-[100px] z-[700] flex h-12 w-8 select-none flex-col items-center justify-center",
+          // The map-control layer clears the map surface while remaining below
+          // portalled popovers and sheets. The old ad hoc layer put this tab on
+          // top of the top-bar popover and won the overlapping hit target.
+          "absolute top-[100px] z-[var(--arkive-layer-map-control)] flex h-12 w-8 select-none flex-col items-center justify-center",
           side === "right"
             ? "left-0 -translate-x-full rounded-l-md rounded-r-none"
             : "right-0 translate-x-full rounded-r-md rounded-l-none",

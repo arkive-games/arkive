@@ -20,7 +20,7 @@ import {
 } from "@gamemap/map-shell";
 import { useIsMobile } from "@gamemap/ui";
 import { ArkiveAccountControl } from "@gamemap/auth";
-import { browserMemory, defineMemoryRecord, isString } from "@gamemap/state-memory";
+import { browserMemory, defineMemoryRecord, isString, memoryPolicy } from "@gamemap/state-memory";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { defaultVisibleSubtypeKeys, useGameData } from "@/context/GameDataContext";
@@ -51,7 +51,7 @@ const mapViewRecord = defineMemoryRecord({
   id: "view",
   namespace: "aion2",
   surface: "map",
-  stateClass: "device_preference",
+  ...memoryPolicy.recentActivity("clear-recent-map-view"),
   schemaVersion: "1.0.0",
   defaultValue: () => "",
   validate: isString,

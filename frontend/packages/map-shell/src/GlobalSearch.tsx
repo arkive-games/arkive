@@ -204,8 +204,8 @@ export function GlobalSearch({
         onOpenChange={handleOpenChange}
         title={labels.button}
         description={labels.placeholder}
-        className="top-[15%] z-[2100] translate-y-0 sm:max-w-xl"
-        overlayClassName="z-[2090]"
+        className="top-[15%] z-[var(--arkive-layer-sheet)] translate-y-0 sm:max-w-xl"
+        overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
         commandProps={{ shouldFilter: false }}
         showCloseButton={false}
       >

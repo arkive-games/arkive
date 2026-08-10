@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconEraser } from "@tabler/icons-react";
 import { FilterPanel, type FilterCategory, type FilterControl } from "@gamemap/map-shell";
 import {
   AlertDialog,
@@ -9,6 +10,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
 } from "@gamemap/ui";
 import { useGameMap } from "@/context/GameMapContext";
@@ -162,6 +164,9 @@ export default function MarkerTypes() {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <IconEraser stroke={1.8} />
+            </AlertDialogMedia>
             <AlertDialogTitle>
               {t("common:menu.clearMarkerCompleted", "Clear completed")}
             </AlertDialogTitle>
@@ -174,7 +179,7 @@ export default function MarkerTypes() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common:ui.cancel", "Cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => clearMarkerCompleted()}>
+            <AlertDialogAction variant="destructive" onClick={() => clearMarkerCompleted()}>
               {t("common:ui.confirm", "Confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>

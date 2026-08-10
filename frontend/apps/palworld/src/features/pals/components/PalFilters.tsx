@@ -211,10 +211,10 @@ export function PalFilters({
               )}
             </Button>
           </PopoverTrigger>
-          {/* Lifted above the mobile filter sheet (z-3000): on phones this whole
+          {/* Lifted above the mobile filter sheet: on phones this whole
               block is mounted inside that sheet, and the popover's default
               z-index would put the item list behind it. */}
-          <PopoverContent className="z-[3100] w-72 p-0" align="start">
+          <PopoverContent className="z-[var(--arkive-layer-nested-overlay)] w-72 p-0" align="start">
             <Command>
               <CommandInput placeholder={fs.lootPlaceholder} className="text-sm" />
               <CommandList>

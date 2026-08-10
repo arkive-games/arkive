@@ -13,6 +13,7 @@ export * from "./hint"
 export * from "./hover-card"
 export * from "./input"
 export * from "./popover"
+export * from "./popup-styles"
 export * from "./scroll-area"
 export * from "./select"
 export * from "./separator"
@@ -23,9 +24,10 @@ export * from "./tooltip"
 export * from "./use-is-mobile"
 export * from "./version-history"
 export { cn } from "./utils"
-// Only the factory is public. The cookie name, storage key and domain policy stay
-// private so an app cannot bypass the adapter and write `arkive.theme` itself.
+// Only lifecycle operations are public. Cookie names, storage keys, and domain
+// policy stay private so an app cannot bypass the adapter.
 export {
+  clearArkiveThemePreference,
   createArkiveThemeStorage,
   type ArkiveThemeStorageEnvironment,
   type CreateArkiveThemeStorageOptions,

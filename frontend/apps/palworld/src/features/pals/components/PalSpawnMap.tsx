@@ -337,7 +337,7 @@ export function PalSpawnMap({
           ))}
         </MapContainer>
         {(hasWild && hasBoss) || (hasNight && !allNight) ? (
-          <div className="absolute bottom-2 left-2 z-[500] flex items-center gap-3 rounded bg-background/80 px-2 py-1 text-xs">
+          <div className="absolute bottom-2 left-2 z-[var(--arkive-layer-local-control)] flex items-center gap-3 rounded bg-background/80 px-2 py-1 text-xs">
             <span className="flex items-center gap-1">
               <span className="inline-block size-2.5 rounded-full border border-[rgba(255,255,255,0.9)] bg-muted-foreground/40" />
               {t('pal.spawnWild')}
@@ -364,7 +364,7 @@ export function PalSpawnMap({
         ) : null}
         {allNight ? (
           <div
-            className="absolute bottom-2 left-2 z-[500] flex items-center gap-1.5 rounded bg-background/80 px-2 py-1 text-xs text-indigo-500 dark:text-indigo-400"
+            className="absolute bottom-2 left-2 z-[var(--arkive-layer-local-control)] flex items-center gap-1.5 rounded bg-background/80 px-2 py-1 text-xs text-indigo-500 dark:text-indigo-400"
             data-testid="pal-spawn-night-note"
           >
             <Moon className="h-3 w-3" aria-hidden />
@@ -374,7 +374,7 @@ export function PalSpawnMap({
         <Link
           to="/"
           search={{ map: map.id, q: palName }}
-          className="absolute top-2 right-2 z-[500] rounded bg-background/80 px-2 py-1 text-xs hover:bg-background"
+          className="absolute top-2 right-2 z-[var(--arkive-layer-local-control)] rounded bg-background/80 px-2 py-1 text-xs hover:bg-background"
           data-testid="pal-spawn-open-full"
         >
           {t('pal.viewOnMap')}

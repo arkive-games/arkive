@@ -6,6 +6,7 @@
 @plugin "@tailwindcss/typography";
 @source "../../../packages/ui/src";
 @source "../../../packages/map-shell/src";
+@source "../../../packages/auth/src";
 
 /* Dark mode variant so `.dark` on <html> or <body> works */
 @custom-variant dark (&:is(.dark *));
@@ -17,7 +18,6 @@
     --color-sidebar-collapse: #F0F0F0;
     --color-sidebar-collapse-fg: #202020;
     --color-sidebar-button: rgba(0, 144, 255, 0.10);
-    --color-input: rgba(0, 144, 255, 0.08);
     --color-input-2: #FCFCFC;
     --color-character-input: rgba(255, 255, 255, 0.10);
     --color-character-card: #F0F0F0;
@@ -46,29 +46,6 @@
     --color-grade-epic: #ee6c2a;
     --color-grade-mythic: #c60000;
     --color-grade-special: #09ce9f;
-}
-
-/* The legacy abyss class resolves to the canonical dark palette. */
-.abyss {
-    --background: #111111;
-    --foreground: #EEEEEE;
-    --card: #191919;
-    --card-foreground: #EEEEEE;
-    --popover: #222222;
-    --popover-foreground: #EEEEEE;
-    --primary: #0090FF;
-    --primary-foreground: #061018;
-    --secondary: #222222;
-    --secondary-foreground: #EEEEEE;
-    --muted: #222222;
-    --muted-foreground: #B4B4B4;
-    --accent: #2A2A2A;
-    --accent-foreground: #EEEEEE;
-    --destructive: #E5484D;
-    --destructive-foreground: #ffffff;
-    --border: #3A3A3A;
-    --input: #222222;
-    --ring: #FFC53D;
 }
 
 .dark {
@@ -167,7 +144,7 @@ body,
 }
 
 .leaflet-tooltip {
-    border-radius: 4px !important;
+    border-radius: var(--arkive-radius-compact) !important;
 }
 
 .leaflet-tooltip::before {
@@ -209,7 +186,7 @@ body,
 
 .sidebar-scroll::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.10);
-    border-radius: 9999px;
+    border-radius: 999rem;
 }
 
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
@@ -232,21 +209,6 @@ body,
    the map's own backdrop rather than letting the page background flash. */
 .gmgl-map-root {
     background: var(--color-background);
-}
-
-/* "Clear completed" opens an AlertDialog from inside the mobile filter sheet,
-   and both portal to <body> as siblings. @gamemap/ui ships the alert dialog at
-   z-50 while a Sheet sits at z-3000, so the confirm rendered *behind* the sheet
-   and the UI looked frozen. Lift alert dialogs above sheet level: a modal
-   confirm should always be the topmost layer. (Fixed here rather than in the
-   shared package, which this work must not modify. Desktop is unaffected —
-   nothing there sits between z-50 and z-3100.) */
-[data-slot="alert-dialog-overlay"] {
-    z-index: 3050;
-}
-
-[data-slot="alert-dialog-content"] {
-    z-index: 3100;
 }
 
 /* App-specific scrollbar treatment for Arkive reference surfaces. */

@@ -121,15 +121,15 @@ export default function TechnologyPage() {
     )
   } else {
     body = (
-      <div className="grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-8">
+      <div className="isolate grid grid-cols-1 gap-x-2 gap-y-3 md:grid-cols-8">
         {/* Header row: normal (spans 7) + ancient (1). The grid is flush-left
             (no dedicated level column) so the tech squares line up with the
             Items/Buildings grids; the per-row level number hangs in the left
             margin (see TileGrid). */}
-        <div className="sticky top-0 z-10 rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 md:col-span-7 dark:text-sky-200">
+        <div className="sticky top-0 z-[var(--arkive-layer-local-control)] rounded-md bg-sky-500/15 px-3 py-1.5 text-sm font-bold text-sky-800 md:col-span-7 dark:text-sky-200">
           {t('tech.normalTitle')}
         </div>
-        <div className="sticky top-0 z-10 rounded-md bg-purple-500/15 px-3 py-1.5 text-sm font-bold text-purple-800 dark:text-purple-200">
+        <div className="sticky top-0 z-[var(--arkive-layer-local-control)] rounded-md bg-purple-500/15 px-3 py-1.5 text-sm font-bold text-purple-800 dark:text-purple-200">
           {t('tech.ancientTitle')}
         </div>
 
@@ -188,10 +188,10 @@ function MobileTechLevels({
   const { t } = useTranslation()
 
   return (
-    <section className="space-y-4">
+    <section className="isolate space-y-4">
       {levels.map(({ level, normal, ancient }) => (
         <div key={level} className="space-y-1.5">
-          <div className="sticky top-0 z-10 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-xs font-bold tabular-nums text-primary backdrop-blur">
+          <div className="sticky top-0 z-[var(--arkive-layer-local-control)] rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-xs font-bold tabular-nums text-primary backdrop-blur">
             {t('tech.level', { level })}
           </div>
           <div className="grid grid-cols-3 gap-1.5">

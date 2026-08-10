@@ -1,6 +1,7 @@
 import i18n from 'i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
+import { detectLanguagePreference, saveLanguagePreference } from '@gamemap/state-memory'
+import { bindArkiveDocumentLocale } from '@gamemap/map-shell'
 
 export const LANGUAGES = ['en-US', 'zh-CN', 'zh-TW', 'ja-JP', 'ko-KR'] as const
 export type Language = (typeof LANGUAGES)[number]
@@ -407,7 +408,7 @@ const resources = {
       },
       cta: {
         title: '把这次发现收进你的舟舱',
-        description: '登录后收藏攻略、同步地图进度，并从任意设备继续上次的探索。',
+        description: '登录后可使用收藏、个人资料与社区功能。',
         action: '免费登录 / 注册',
       },
       footer: {
@@ -552,7 +553,7 @@ const resources = {
       },
       cta: {
         title: '把這次發現收進你的舟艙',
-        description: '登入後收藏攻略、同步地圖進度，並從任意裝置繼續上次的探索。',
+        description: '登入後可使用收藏、個人資料與社群功能。',
         action: '免費登入 / 註冊',
       },
       footer: {
@@ -677,7 +678,7 @@ const resources = {
       },
       cta: {
         title: 'Keep this discovery in your cabin',
-        description: 'Log in to save guides, sync map progress, and continue your journey on any device.',
+        description: 'Log in to use favorites, your profile, and community features.',
         action: 'Log in / Sign up',
       },
       footer: {
@@ -780,7 +781,7 @@ const resources = {
         sts2: { name: 'Slay the Spire 2', desc: 'カード図鑑、キャラクター、デッキ構築情報', feature: '次の登頂に向けてカードとキャラクターを確認できます。' },
       },
       comingSoon: { kicker: '次の寄港地を整理中', title: 'さらに多くのゲームを制作中', description: '新しいマップとデータベースを順次追加しています。次の航海をお楽しみに。', badge: '近日公開' },
-      cta: { title: 'この発見を舟の中へ', description: 'ログインすると攻略の保存、マップ進捗の同期、別の端末からの再開ができます。', action: 'ログイン / 登録' },
+      cta: { title: 'この発見を舟の中へ', description: 'ログインすると、お気に入り、プロフィール、コミュニティ機能を利用できます。', action: 'ログイン / 登録' },
       footer: {
         browse: '見る', about: '藏舟について', service: 'サービス', discoverGames: 'ゲームを探す', guides: '攻略館', maps: 'インタラクティブマップ', database: '資料図鑑',
         aboutArkive: '藏舟について', standards: 'コンテンツ基準', joinUs: '参加する', contact: 'お問い合わせ', terms: '利用規約', privacy: 'プライバシー', appeal: '権利侵害申立て', help: 'ヘルプ',
@@ -881,7 +882,7 @@ const resources = {
         sts2: { name: 'Slay the Spire 2', desc: '카드 도감, 캐릭터, 덱 구성 정보', feature: '다음 등반을 위해 카드와 캐릭터를 살펴보세요.' },
       },
       comingSoon: { kicker: '다음 기착지를 정리 중', title: '더 많은 게임을 제작하고 있어요', description: '새로운 지도와 데이터베이스가 차례로 들어옵니다. 다음 항해를 기대해 주세요.', badge: '출시 예정' },
-      cta: { title: '이번 발견을 배 안에 보관하세요', description: '로그인하면 공략을 저장하고 지도 진행 상황을 동기화해 어느 기기에서든 이어갈 수 있습니다.', action: '로그인 / 가입' },
+      cta: { title: '이번 발견을 배 안에 보관하세요', description: '로그인하면 즐겨찾기, 프로필, 커뮤니티 기능을 이용할 수 있습니다.', action: '로그인 / 가입' },
       footer: {
         browse: '둘러보기', about: '소개', service: '서비스', discoverGames: '게임 찾기', guides: '공략관', maps: '인터랙티브 지도', database: '자료 도감',
         aboutArkive: '장저우 소개', standards: '콘텐츠 기준', joinUs: '함께하기', contact: '문의하기', terms: '이용약관', privacy: '개인정보 처리방침', appeal: '권리 침해 신고', help: '도움말',
@@ -893,11 +894,19 @@ const resources = {
   },
 } as const
 
-i18n.use(LanguageDetector).use(initReactI18next).init({
+export function changeLanguagePreference(code: string) {
+  saveLanguagePreference(code, LANGUAGES)
+  return i18n.changeLanguage(code)
+}
+
+i18n.use(initReactI18next).init({
+  lng: detectLanguagePreference(LANGUAGES, 'zh-CN'),
   resources,
   supportedLngs: [...LANGUAGES],
   fallbackLng: 'zh-CN',
   interpolation: { escapeValue: false },
 })
+
+bindArkiveDocumentLocale(i18n)
 
 export default i18n

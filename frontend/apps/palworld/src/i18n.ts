@@ -1,6 +1,7 @@
 import i18n from 'i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
+import { detectLanguagePreference, saveLanguagePreference } from '@gamemap/state-memory'
+import { bindArkiveDocumentLocale } from '@gamemap/map-shell'
 import { BASECAMP_STRINGS } from './basecampStrings'
 import { BLUEPRINT_STRINGS } from './blueprintStrings'
 import { MERCHANT_STRINGS } from './merchantStrings'
@@ -984,13 +985,13 @@ const resources = {
   },
 }
 
-const LEGACY_TAGS: Record<string, string> = { en: 'en-US' }
-try {
-  const stored = localStorage.getItem('i18nextLng')
-  if (stored && LEGACY_TAGS[stored]) localStorage.setItem('i18nextLng', LEGACY_TAGS[stored])
-} catch { /* SSR/no storage */ }
+export function changeLanguagePreference(code: string) {
+  saveLanguagePreference(code, LANGUAGES)
+  return i18n.changeLanguage(code)
+}
 
-i18n.use(LanguageDetector).use(initReactI18next).init({
+i18n.use(initReactI18next).init({
+  lng: detectLanguagePreference(LANGUAGES, 'en-US'),
   resources,
   supportedLngs: [...LANGUAGES],
   fallbackLng: 'en-US',
@@ -1119,5 +1120,7 @@ for (const lng of LANGUAGES) {
     true,
   )
 }
+
+bindArkiveDocumentLocale(i18n)
 
 export default i18n

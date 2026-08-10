@@ -1,16 +1,18 @@
 import { createArkiveThemeStorage } from '@gamemap/ui'
 import { type MapViewStore } from '@gamemap/map-shell'
-import { browserMemory, defineMemoryRecord, isString, isStringArray, parseJson } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, isString, isStringArray, memoryPolicy, parseJson } from '@gamemap/state-memory'
 
 const VISIBLE_KEY = 'vrising.map.visibleSubtypes'
 const VIEW_KEY = 'vrising.map.view'
 const mapViewRecord = defineMemoryRecord({
-  id: 'view', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  id: 'view', namespace: 'vrising', surface: 'map',
+  ...memoryPolicy.recentActivity('clear-recent-map-view'),
   schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
   legacyKeys: [VIEW_KEY], migrateLegacy: (raw: string) => raw,
 })
 const visibleRecord = defineMemoryRecord({
-  id: 'visible-subtypes', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  id: 'visible-subtypes', namespace: 'vrising', surface: 'map',
+  ...memoryPolicy.sessionContext('clear-map-filters'),
   schemaVersion: '1.0.0', defaultValue: () => null as string[] | null,
   validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
   legacyKeys: [VISIBLE_KEY], migrateLegacy: parseJson,

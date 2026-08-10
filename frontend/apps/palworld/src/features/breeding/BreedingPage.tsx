@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { browserMemory, defineMemoryRecord, isStringArray, parseJson } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, isStringArray, memoryPolicy, parseJson } from '@gamemap/state-memory'
 import { ArrowLeft } from 'lucide-react'
 import {
   Button,
@@ -61,7 +61,7 @@ const chainGenerationRecord = defineMemoryRecord({
   id: 'chain-generations',
   namespace: 'palworld',
   surface: 'breeding',
-  stateClass: 'device_preference',
+  ...memoryPolicy.taskDraft('new-breeding-calculation'),
   schemaVersion: '1.0.0',
   defaultValue: () => 2 as GenChoice,
   validate: (value: unknown): value is GenChoice => [2, 3, 4, 5, 6].includes(Number(value)),
@@ -73,7 +73,7 @@ const searchMemoryRecord = defineMemoryRecord({
   id: 'search',
   namespace: 'palworld',
   surface: 'breeding',
-  stateClass: 'session_context',
+  ...memoryPolicy.taskDraft('new-breeding-calculation'),
   schemaVersion: '1.0.0',
   defaultValue: () => ({} as BreedingSearchMemory),
   validate: (value: unknown): value is BreedingSearchMemory => {
@@ -83,7 +83,6 @@ const searchMemoryRecord = defineMemoryRecord({
       (memory.gen === undefined || [2, 3, 4, 5, 6].includes(Number(memory.gen))) &&
       (memory.routeGen === undefined || Number.isFinite(memory.routeGen))
   },
-  retentionMs: 24 * 60 * 60 * 1_000,
   legacyKeys: [SEARCH_MEMORY_STORAGE_KEY],
   migrateLegacy: parseJson,
 })
@@ -92,7 +91,7 @@ const favoritesRecord = defineMemoryRecord({
   id: 'favorites',
   namespace: 'palworld',
   surface: 'breeding',
-  stateClass: 'durable_progress',
+  ...memoryPolicy.durableProgress('clear-breeding-favorites'),
   schemaVersion: '1.0.0',
   defaultValue: () => [] as string[],
   validate: (value: unknown): value is string[] => isStringArray(value, 5_000),

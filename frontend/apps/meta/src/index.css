@@ -2,6 +2,7 @@
 @import "@gamemap/map-shell/arkive-map-theme.css";
 @source "../../../packages/ui/src";
 @source "../../../packages/map-shell/src";
+@source "../../../packages/auth/src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -14,17 +15,13 @@
 
 html {
   scroll-behavior: smooth;
-  font-size: 17px;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100dvh;
-  background:
-    radial-gradient(circle at 13% 4%, color-mix(in srgb, var(--home-mist) 28%, transparent), transparent 31rem),
-    radial-gradient(circle at 90% 34%, color-mix(in srgb, var(--home-orange) 8%, transparent), transparent 27rem),
-    var(--background);
+  background: var(--background);
 }
 
 button,
@@ -73,7 +70,7 @@ footer a:focus-visible {
   color: var(--home-deep);
   font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
 }
 
 .hero-eyebrow > span {
@@ -86,10 +83,10 @@ footer a:focus-visible {
 .hero-title {
   margin: 0;
   color: var(--foreground);
-  font-size: clamp(2.8rem, 5.2vw, 5.35rem);
-  font-weight: 850;
-  letter-spacing: -0.055em;
-  line-height: 0.98;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: var(--arkive-leading-page-title);
 }
 
 .hero-title > span {
@@ -121,15 +118,15 @@ footer a:focus-visible {
   margin-top: 2rem;
   padding: 0.42rem 0.42rem 0.42rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: var(--arkive-radius-standard);
   color: color-mix(in srgb, var(--home-deep) 70%, var(--muted-foreground));
   background: color-mix(in srgb, var(--card) 94%, transparent);
   box-shadow: 0 0.65rem 2.5rem color-mix(in srgb, var(--home-deep) 10%, transparent);
 }
 
 .hero-search:focus-within {
-  border-color: color-mix(in srgb, var(--ring) 70%, var(--border));
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--ring) 15%, transparent);
+  border-color: var(--ring);
+  box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--ring) 20%, transparent);
 }
 
 .hero-search input {
@@ -147,18 +144,22 @@ footer a:focus-visible {
   opacity: 0.82;
 }
 
+.hero-search input:focus-visible {
+  outline: 0;
+}
+
 .hero-search button {
   min-height: 2.7rem;
   flex: none;
   padding-inline: 1.35rem;
   border: 0;
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--primary-foreground);
   background: var(--primary);
   font-size: 0.875rem;
   font-weight: 750;
   cursor: pointer;
-  transition: transform 180ms ease, filter 180ms ease;
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing), filter var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .hero-search button:hover {
@@ -173,10 +174,10 @@ footer a:focus-visible {
   margin-top: 1rem;
   padding: 0.55rem 0.75rem;
   border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
-  border-radius: 0.7rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--foreground);
   background: color-mix(in srgb, var(--card) 88%, transparent);
-  transition: border-color 160ms ease, background 160ms ease;
+  transition: border-color var(--arkive-motion-standard) var(--arkive-motion-easing), background var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .hero-continue:hover {
@@ -212,7 +213,7 @@ footer a:focus-visible {
   min-height: 31rem;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, white 18%, transparent);
-  border-radius: 2rem 2rem 2rem 4.5rem;
+  border-radius: var(--arkive-radius-standard);
   color: white;
   background: var(--card);
   box-shadow: 0 1.5rem 4.8rem color-mix(in srgb, var(--home-deep) 20%, transparent);
@@ -221,11 +222,11 @@ footer a:focus-visible {
 .featured-game > img {
   position: absolute;
   inset: 0;
-  z-index: -3;
+  z-index: var(--arkive-layer-local-backdrop);
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 700ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition: transform var(--arkive-motion-panel) var(--arkive-motion-easing);
 }
 
 .featured-game:hover > img {
@@ -235,7 +236,7 @@ footer a:focus-visible {
 .featured-shade {
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: var(--arkive-layer-local-underlay);
   background:
     linear-gradient(90deg, rgba(9, 11, 13, 0.92) 0%, rgba(9, 11, 13, 0.56) 52%, rgba(9, 11, 13, 0.14) 100%),
     linear-gradient(0deg, rgba(9, 11, 13, 0.58), transparent 58%);
@@ -270,15 +271,15 @@ footer a:focus-visible {
   color: #FFE7B3;
   font-size: 0.75rem;
   font-weight: 750;
-  letter-spacing: 0.07em;
+  letter-spacing: 0;
 }
 
 .featured-content > strong {
   max-width: 90%;
-  font-size: clamp(2.25rem, 4vw, 4rem);
-  font-weight: 850;
-  letter-spacing: -0.04em;
-  line-height: 1;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.3;
   text-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.2);
 }
 
@@ -307,7 +308,7 @@ footer a:focus-visible {
   border-radius: 50%;
   color: var(--arkive-action-on);
   background: var(--home-orange);
-  transition: transform 180ms ease;
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .featured-game:hover .featured-link i {
@@ -337,10 +338,10 @@ footer a:focus-visible {
 .section-heading h2,
 .join-section h2 {
   margin: 0;
-  font-size: clamp(2rem, 3.6vw, 3.1rem);
-  font-weight: 820;
-  letter-spacing: -0.04em;
-  line-height: 1.08;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.3;
 }
 
 .section-heading p,
@@ -372,7 +373,7 @@ footer a:focus-visible {
 }
 
 .text-action svg {
-  transition: transform 180ms ease;
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .game-shelf {
@@ -401,7 +402,7 @@ footer a:focus-visible {
   aspect-ratio: 4 / 5.55;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 1.35rem;
+  border-radius: var(--arkive-radius-standard);
   background: var(--muted);
   box-shadow: 0 0.65rem 2rem color-mix(in srgb, var(--home-deep) 12%, transparent);
 }
@@ -410,7 +411,7 @@ footer a:focus-visible {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 500ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition: transform var(--arkive-motion-panel) var(--arkive-motion-easing);
 }
 
 .game-card-link:hover .game-cover img {
@@ -436,7 +437,7 @@ footer a:focus-visible {
   background: rgba(255, 255, 255, 0.9);
   opacity: 0;
   transform: translateY(0.4rem);
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition: opacity var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .game-card-link:hover .game-open-icon {
@@ -448,18 +449,18 @@ footer a:focus-visible {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  z-index: 2;
+  z-index: var(--arkive-layer-local-control);
   display: grid;
   width: 2.45rem;
   height: 2.45rem;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.52);
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   color: #202020;
   background: rgba(255, 255, 255, 0.88);
   cursor: pointer;
   backdrop-filter: blur(0.5rem);
-  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+  transition: color var(--arkive-motion-standard) var(--arkive-motion-easing), background var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .bookmark-button:hover {
@@ -512,12 +513,12 @@ footer a:focus-visible {
   overflow: hidden;
   place-content: center;
   border: 1px solid color-mix(in srgb, var(--home-mist) 40%, var(--border));
-  border-radius: 1.35rem;
+  border-radius: var(--arkive-radius-standard);
   background:
     radial-gradient(circle at center, transparent 0 22%, color-mix(in srgb, var(--home-deep) 13%, transparent) 22.5% 23%, transparent 23.5% 39%, color-mix(in srgb, var(--home-deep) 10%, transparent) 39.5% 40%, transparent 40.5%),
     linear-gradient(145deg, color-mix(in srgb, var(--home-deep) 12%, var(--card)), var(--card));
   box-shadow: 0 0.65rem 2rem color-mix(in srgb, var(--home-deep) 9%, transparent);
-  transition: border-color 180ms ease, transform 180ms ease;
+  transition: border-color var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .future-visual > span {
@@ -548,7 +549,7 @@ footer a:focus-visible {
   color: var(--arkive-nav-accent);
   font-size: 0.75rem;
   font-weight: 750;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
 }
 
 .future-copy strong {
@@ -578,7 +579,7 @@ footer a:focus-visible {
   border-radius: 50%;
   color: var(--arkive-action-on);
   background: var(--home-orange);
-  transition: transform 180ms ease;
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .future-games:hover .future-copy i {
@@ -598,12 +599,12 @@ footer a:focus-visible {
   margin-bottom: clamp(5rem, 9vw, 8rem);
   padding: clamp(2rem, 4vw, 3rem);
   border: 1px solid color-mix(in srgb, var(--home-mist) 45%, var(--border));
-  border-radius: 1.5rem;
+  border-radius: var(--arkive-radius-standard);
   background: color-mix(in srgb, var(--home-mist) 18%, var(--card));
 }
 
 .join-section h2 {
-  font-size: clamp(1.75rem, 3vw, 2.6rem);
+  font-size: 1.5rem;
 }
 
 .join-section button {
@@ -611,13 +612,13 @@ footer a:focus-visible {
   flex: none;
   padding-inline: 1.45rem;
   border: 0;
-  border-radius: 0.85rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--arkive-action-on);
   background: var(--home-orange);
   font-size: 0.875rem;
   font-weight: 780;
   cursor: pointer;
-  transition: filter 180ms ease, transform 180ms ease;
+  transition: filter var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .join-section button:hover {
@@ -650,7 +651,7 @@ footer a:focus-visible {
   width: 2.8rem;
   height: 2.8rem;
   place-items: center;
-  border-radius: 0.8rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--home-deep);
   background: var(--home-mist);
 }
@@ -667,15 +668,15 @@ footer a:focus-visible {
 
 .footer-brand strong {
   font-size: 1rem;
-  font-weight: 820;
+  font-weight: 700;
 }
 
 .footer-brand small {
   margin-top: 0.25rem;
   color: var(--muted-foreground);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 750;
-  letter-spacing: 0.15em;
+  letter-spacing: 0;
 }
 
 .footer-brand p {
@@ -743,19 +744,19 @@ footer a:focus-visible {
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 100;
+  z-index: var(--arkive-layer-toast);
   display: flex;
   max-width: min(24rem, calc(100vw - 3rem));
   align-items: center;
   gap: 0.85rem;
   padding: 0.8rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--foreground);
   background: color-mix(in srgb, var(--card) 94%, transparent);
   box-shadow: 0 1rem 3rem color-mix(in srgb, var(--home-deep) 22%, transparent);
   backdrop-filter: blur(1rem);
-  animation: toast-in 260ms ease-out both;
+  animation: toast-in var(--arkive-motion-panel) var(--arkive-motion-easing) both;
 }
 
 .toast-icon {
@@ -764,7 +765,7 @@ footer a:focus-visible {
   height: 2.5rem;
   flex: none;
   place-items: center;
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--background);
   background: var(--arkive-nav-accent);
 }
@@ -836,39 +837,41 @@ footer a:focus-visible {
   }
 
   .hero-section {
-    gap: 1.5rem;
+    gap: 1rem;
     min-height: auto;
-    padding-block: 1.5rem 2.75rem;
+    padding-block: 1rem 1.5rem;
   }
 
   .hero-eyebrow {
-    margin-bottom: 0.75rem;
-    letter-spacing: 0;
-  }
-
-  .hero-eyebrow > span {
     display: none;
   }
 
   .hero-title {
-    font-size: 2.25rem;
+    font-size: 1.5rem;
     letter-spacing: 0;
-    line-height: 1.12;
+    line-height: 1.25;
+  }
+
+  .hero-title > span {
+    display: inline;
+  }
+
+  .hero-title > span + span {
+    margin: 0 0 0 0.25rem;
   }
 
   .hero-description {
-    margin-top: 0.9rem;
-    line-height: 1.65;
+    display: none;
   }
 
   .hero-search {
     min-height: 3rem;
     align-items: center;
     gap: 0.55rem;
-    margin-top: 1.25rem;
+    margin-top: 0.75rem;
     padding: 0.25rem 0.25rem 0.25rem 0.75rem;
     border-color: var(--primary);
-    border-radius: 0.5rem;
+    border-radius: var(--arkive-radius-standard);
     box-shadow: none;
   }
 
@@ -879,22 +882,22 @@ footer a:focus-visible {
 
   .hero-search button {
     width: auto;
-    min-height: 2.4rem;
+    min-height: var(--arkive-touch-target);
     padding-inline: 0.85rem;
-    border-radius: 0.4rem;
+    border-radius: var(--arkive-radius-compact);
     font-size: 0.75rem;
   }
 
   .hero-continue {
     min-height: 2.75rem;
     margin-top: 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: var(--arkive-radius-standard);
   }
 
   .featured-game,
   .featured-empty {
     min-height: 13rem;
-    border-radius: 0.5rem;
+    border-radius: var(--arkive-radius-standard);
     box-shadow: 0 0.75rem 2rem color-mix(in srgb, var(--home-deep) 12%, transparent);
   }
 
@@ -915,7 +918,7 @@ footer a:focus-visible {
   }
 
   .featured-content > strong {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     letter-spacing: 0;
     line-height: 1.15;
   }
@@ -948,7 +951,7 @@ footer a:focus-visible {
   .game-cover,
   .future-visual {
     aspect-ratio: 16 / 9;
-    border-radius: 0.5rem;
+    border-radius: var(--arkive-radius-standard);
   }
 
   .game-open-icon {
@@ -966,7 +969,7 @@ footer a:focus-visible {
 
   .section-heading h2,
   .join-section h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     letter-spacing: 0;
   }
 
@@ -992,7 +995,7 @@ footer a:focus-visible {
   }
 
   .coming-soon-toast {
-    z-index: 2600;
+    z-index: var(--arkive-layer-toast);
   }
 }
 
@@ -1015,7 +1018,7 @@ footer a:focus-visible {
   align-self: flex-start;
   margin-top: 0.35rem;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 999rem;
   padding: 0.1rem 0.55rem;
   background: var(--muted);
   color: var(--muted-foreground);
@@ -1041,7 +1044,7 @@ footer a:focus-visible {
 
 .nav-soon-badge {
   margin-left: 0.4rem;
-  border-radius: 999px;
+  border-radius: 999rem;
   padding: 0.05rem 0.45rem;
   background: var(--muted);
   color: var(--muted-foreground);

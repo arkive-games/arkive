@@ -1,7 +1,8 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import HttpBackend from "i18next-http-backend";
-import LanguageDetector from "i18next-browser-languagedetector";
+import { detectLanguagePreference, saveLanguagePreference } from "@gamemap/state-memory";
+import { bindArkiveDocumentLocale } from "@gamemap/map-shell";
 import { parse } from "yaml";
 import { getStaticBaseUrl, getDataBaseUrl } from "@/lib/url";
 
@@ -59,24 +60,20 @@ function localeLoadPath(lngs: string[], nss: string[]): string {
   return `${base}/locales/${lng}/${ns}.${APP_LOCALE_EXT}?${q}`;
 }
 
-const LEGACY_TAGS: Record<string, string> = { en: "en-US" };
-try {
-  const stored = localStorage.getItem("i18nextLng");
-  if (stored && LEGACY_TAGS[stored]) localStorage.setItem("i18nextLng", LEGACY_TAGS[stored]);
-} catch {
-  /* SSR/no storage */
+export function changeLanguagePreference(code: string) {
+  saveLanguagePreference(code, SUPPORTED_LANGUAGES);
+  return i18n.changeLanguage(code);
 }
 
 i18n
   .use(HttpBackend)
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
+    lng: detectLanguagePreference(SUPPORTED_LANGUAGES, "zh-CN"),
     fallbackLng: "zh-CN",
     supportedLngs: SUPPORTED_LANGUAGES,
     ns: ["common", "maps", "types"],
     defaultNS: "common",
-    detection: { order: ["querystring", "localStorage", "navigator", "htmlTag"], caches: ["localStorage"] },
     backend: {
       loadPath: localeLoadPath,
       // YAML is a superset of JSON, so `yaml.parse` safely handles both the
@@ -85,5 +82,7 @@ i18n
     },
     interpolation: { escapeValue: false },
   });
+
+bindArkiveDocumentLocale(i18n);
 
 export default i18n;

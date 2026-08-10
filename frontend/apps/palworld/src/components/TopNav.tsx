@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, useTheme, type ShellNavItem } from '@gamemap/map-shell'
-import { LANGUAGES, LANGUAGE_LABELS } from '../i18n'
+import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 
 export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing' | '/changelog'
@@ -65,7 +65,7 @@ export function TopNav({ active }: { active: NavKey }) {
       languageSwitcher={{
         languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
         current: lng,
-        onChange: (code) => void i18n.changeLanguage(code),
+        onChange: (code) => void changeLanguagePreference(code),
         menuLabel: t('settings.language'),
         shortLabel: t('settings.language'),
       }}

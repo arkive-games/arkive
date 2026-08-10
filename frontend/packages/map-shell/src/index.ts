@@ -43,6 +43,8 @@ export { SiteInfoPanel } from "./SiteInfoPanel"
 export type { SiteInfoPanelProps, SiteInfoSection, SiteInfoFeedbackGroup } from "./SiteInfoPanel"
 export { ArkiveSiteInfo } from "./ArkiveSiteInfo"
 export type { ArkiveSiteInfoProps, ArkiveSiteInfoStrings } from "./ArkiveSiteInfo"
+export { LocalDataControls, LocalDataDialog, localDataStringsFor } from './LocalDataControls'
+export type { LocalDataStrings } from './LocalDataControls'
 export {
   FilterPanel,
   type FilterPanelProps,
@@ -79,6 +81,12 @@ export {
   resolveArkiveHomeUrl,
   type ResolveArkiveHomeUrlOptions,
 } from "./arkiveHome"
+export {
+  applyArkiveDocumentLocale,
+  bindArkiveDocumentLocale,
+  normalizeArkiveLanguageTag,
+  type ArkiveLanguageSource,
+} from "./documentLocale"
 export {
   useMapViewMemory,
   readMapView,

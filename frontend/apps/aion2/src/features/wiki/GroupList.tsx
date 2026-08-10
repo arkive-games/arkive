@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { defineMemoryRecord, useMemoryState } from "@gamemap/state-memory";
+import { defineMemoryRecord, memoryPolicy, useMemoryState } from "@gamemap/state-memory";
 
 import { loadTaxonomy, loadWikiIndex } from "@/lib/wiki";
 import type { WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
@@ -9,7 +9,8 @@ import type { WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
 const FACTIONS = ["all", "light", "dark"] as const;
 type Faction = (typeof FACTIONS)[number];
 const factionRecord = defineMemoryRecord({
-  id: "faction", namespace: "aion2", surface: "wiki-catalog", stateClass: "device_preference",
+  id: "faction", namespace: "aion2", surface: "wiki-catalog",
+  ...memoryPolicy.sessionContext("clear-wiki-filters"),
   schemaVersion: "1.0.0", defaultValue: () => "all" as Faction,
   validate: (value: unknown): value is Faction => FACTIONS.includes(value as Faction),
 });

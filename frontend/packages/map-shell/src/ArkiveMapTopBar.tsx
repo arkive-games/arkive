@@ -9,6 +9,8 @@ import { IconLogout, IconUserCircle } from "@tabler/icons-react"
 import { Button, cn } from "@gamemap/ui"
 import {
   ShellTopBar,
+  TOP_BAR_MENU_CLASS,
+  TOP_BAR_MENU_ITEM_CLASS,
   type ShellTopBarNav,
   type ShellTopBarProps,
 } from "./ShellTopBar"
@@ -109,7 +111,8 @@ export function ArkiveMapTopBar({
     <ShellTopBar
       classNames={{
         root: `arkive-map-topbar hidden h-14 border-b border-border bg-card text-card-foreground md:flex ${className ?? ""}`,
-        left: "gap-2 lg:gap-4",
+        left: "gap-7",
+        nav: "gap-7",
         right: "gap-1 lg:gap-2",
         trigger:
           "h-9 gap-2 rounded-lg border border-border bg-card px-3 text-foreground shadow-none hover:bg-accent",
@@ -122,12 +125,15 @@ export function ArkiveMapTopBar({
           data-testid="brand-link"
           aria-label={homeLabel}
           title={homeLabel}
-          className="flex shrink-0 items-center gap-2.5 whitespace-nowrap border-r border-border pr-4 text-[color:var(--arkive-nav-active)]"
+          className="flex h-14 w-fit shrink-0 items-center gap-[0.6rem] whitespace-nowrap border-r border-border pr-3 text-foreground xl:gap-[0.7rem] xl:pr-4"
         >
-          <ArkiveMark />
-          <span className="flex flex-col leading-none">
-            <strong className="text-base font-bold tracking-tight">{brandName}</strong>
-            <small className="mt-1 text-xs font-semibold tracking-wide text-[color:var(--arkive-nav-accent)]">
+          <ArkiveMark className="size-[2.125rem] text-[color:var(--arkive-nav-active)] xl:size-9" />
+          <span className="grid min-w-0 gap-[0.12rem] leading-none">
+            <strong data-testid="brand-name" className="text-sm font-bold leading-none">{brandName}</strong>
+            <small
+              data-testid="brand-slogan"
+              className="text-[0.7rem] font-medium leading-none text-[color:var(--arkive-brand-slogan)]"
+            >
               {brandSlogan}
             </small>
           </span>
@@ -137,12 +143,11 @@ export function ArkiveMapTopBar({
         ...nav,
         classNames: {
           item:
-            "group relative inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-sm px-1 text-sm font-semibold text-foreground/70 hover:text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
+            "arkive-nav-item group relative inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-sm px-1 text-sm font-semibold text-foreground/70 hover:text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
           itemActive:
-            "group relative inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-sm px-1 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
-          label: "relative inline-flex h-full items-center whitespace-nowrap",
-          labelActive:
-            "after:pointer-events-none after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-4 after:-translate-x-1/2 after:rounded-full after:bg-[color:var(--arkive-nav-accent)] after:content-['']",
+            "arkive-nav-item arkive-nav-item--highlighted group relative inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-sm px-1 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
+          label: "arkive-nav-item-label relative inline-flex h-full items-center whitespace-nowrap",
+          labelActive: "text-[color:var(--arkive-nav-active)]",
         },
       }}
       languageSwitcher={languageSwitcher}
@@ -282,10 +287,10 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
           ref={menuRef}
           role="menu"
           aria-label={account.accountLabel}
-          className="absolute right-0 top-full z-[2000] min-w-40 overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+          className={cn("absolute right-0 min-w-40", TOP_BAR_MENU_CLASS)}
         >
           {account.userName && (
-            <p className="truncate px-2 py-1.5 text-xs text-muted-foreground">{account.userName}</p>
+            <p className="truncate px-3 py-1.5 text-xs text-muted-foreground">{account.userName}</p>
           )}
           {entries.map((entry) => (
             <button
@@ -293,7 +298,7 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
               type="button"
               role="menuitem"
               data-testid={`account-${entry.key}`}
-              className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+              className={TOP_BAR_MENU_ITEM_CLASS}
               onClick={() => {
                 setOpen(false)
                 entry.onSelect()
@@ -315,9 +320,9 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
   )
 }
 
-export function ArkiveMark() {
+export function ArkiveMark({ className }: { className?: string } = {}) {
   return (
-    <svg viewBox="0 0 320 285" className="size-9" aria-hidden="true">
+    <svg viewBox="0 0 320 285" className={cn("size-9 shrink-0", className)} aria-hidden="true">
       <path
         fill="currentColor"
         d="M160 24C95 24 47 70 47 136c0 30 10 54 31 71 55 16 109 16 164 0 21-18 31-41 31-71 0-66-48-112-113-112Z"

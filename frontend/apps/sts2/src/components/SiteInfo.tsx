@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from '@gamemap/map-shell'
+import { ArkiveSiteInfo, localDataStringsFor, type ArkiveSiteInfoStrings } from '@gamemap/map-shell'
 import {
   Button,
   Dialog,
@@ -53,6 +53,7 @@ export function SiteInfo({ className }: { className?: string }) {
         copyLabel: t('siteInfo.copy'),
         copiedLabel: t('siteInfo.copied'),
       }}
+      localDataStrings={localDataStringsFor(lng)}
     />
   )
 }

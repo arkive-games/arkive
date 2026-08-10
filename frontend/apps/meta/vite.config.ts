@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { execSync } from 'node:child_process'
 import path from 'node:path'
+import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
 
 export default defineConfig({
   server: {
@@ -11,7 +12,7 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
   },
-  plugins: [react(), tailwindcss()],
+  plugins: [arkiveFontAssets(), react(), tailwindcss()],
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   define: {
     __BUILD_TIME__: JSON.stringify(process.env.BUILD_TIME ?? Date.now().toString()),

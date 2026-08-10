@@ -1,6 +1,7 @@
 import i18n from 'i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
+import { detectLanguagePreference, saveLanguagePreference } from '@gamemap/state-memory'
+import { bindArkiveDocumentLocale } from '@gamemap/map-shell'
 
 /**
  * Languages offered in the switcher.
@@ -493,7 +494,13 @@ const zhTW: Strings = {
 
 const UI: Partial<Record<Language, Strings>> = { 'en-US': en, 'zh-CN': zhCN, 'zh-TW': zhTW }
 
-void i18n.use(LanguageDetector).use(initReactI18next).init({
+export function changeLanguagePreference(code: string) {
+  saveLanguagePreference(code, LANGUAGES)
+  return i18n.changeLanguage(code)
+}
+
+void i18n.use(initReactI18next).init({
+  lng: detectLanguagePreference(LANGUAGES, 'en-US'),
   resources: Object.fromEntries(
     LANGUAGES.map((lng) => [lng, { translation: UI[lng] ?? en }]),
   ),
@@ -501,5 +508,7 @@ void i18n.use(LanguageDetector).use(initReactI18next).init({
   fallbackLng: 'en-US',
   interpolation: { escapeValue: false },
 })
+
+bindArkiveDocumentLocale(i18n)
 
 export default i18n

@@ -67,7 +67,7 @@ export function MarkerPopupCard({
     <Card
       data-testid="marker-popup-card"
       className={cn(
-        "gm-popup-card max-h-[min(72dvh,32rem)] w-[min(20rem,calc(100vw-2rem))] gap-0 overflow-y-auto rounded-xl border-0 bg-card py-0 text-card-foreground shadow-[0_18px_50px_rgba(10,50,48,0.22)] overscroll-contain",
+        "gm-popup-card max-h-[min(72dvh,32rem)] w-[min(20rem,calc(100vw-2rem))] gap-0 overflow-y-auto rounded-lg border-0 bg-card py-0 text-card-foreground shadow-[0_18px_50px_rgba(10,50,48,0.22)] overscroll-contain",
         className,
       )}
     >
@@ -79,7 +79,7 @@ export function MarkerPopupCard({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2">
-              <h2 className="min-w-0 truncate text-base font-bold leading-snug text-foreground">
+              <h2 className="min-w-0 truncate text-base font-semibold leading-normal text-foreground">
                 {name}
               </h2>
               {idLabel && <IdLabel value={idLabel} className="shrink-0 px-1.5 py-0.5 text-xs" />}

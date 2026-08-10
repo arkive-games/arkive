@@ -39,7 +39,7 @@ export function BuildingTile({
           title={name}
           className="group flex aspect-square w-full flex-col overflow-hidden rounded-md border border-border bg-card shadow-sm transition hover:border-primary/60 hover:bg-accent"
         >
-          <span className="flex items-center gap-2 bg-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <span className="flex items-center gap-2 bg-muted px-2 py-0.5 text-xs font-medium uppercase text-muted-foreground">
             <span className="min-w-0 flex-1 truncate text-left">
               {buildingTypeLabel(building.typeA, typeLabels)}
             </span>

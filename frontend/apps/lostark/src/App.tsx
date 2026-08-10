@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
+import { LocalDataDialog, localDataStringsFor, ShellTopBar, ThemeToggle } from '@gamemap/map-shell'
 import { BuildInfo, SiteFooter } from '@gamemap/ui'
 import changelog from './changelog.json'
 import {
@@ -239,7 +239,7 @@ export default function App() {
   if (error) {
     return (
       <main className="arkive-content-page mx-auto max-w-2xl px-6 pb-6">
-        <h1 className="text-2xl font-semibold">战斗力计算器</h1>
+        <h1 className="text-3xl font-bold">战斗力计算器</h1>
         <p className="mt-4 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
           数据加载失败：{error}
           <br />
@@ -293,13 +293,13 @@ export default function App() {
     <div className="flex min-h-dvh flex-col text-foreground">
       <ShellTopBar
         classNames={{
-          root: 'sticky top-0 z-20 border-b border-border bg-card/70 text-card-foreground backdrop-blur-md',
+          root: 'sticky top-0 z-[var(--arkive-layer-sticky)] border-b border-border bg-card/70 text-card-foreground backdrop-blur-md',
         }}
         leftSlot={
           <span className="flex items-baseline gap-2">
             {/* An h1, not a span: it is the page's title, and the tests and
                 screen readers both look for it by heading role. */}
-            <h1 className="text-lg font-semibold tracking-tight">战斗力计算器</h1>
+            <h1 className="text-base font-semibold">战斗力计算器</h1>
             <span className="text-sm text-muted-foreground">v{version}</span>
           </span>
         }
@@ -729,6 +729,10 @@ export default function App() {
         。数据生成于 {new Date(data.version.generatedAt).toLocaleString('zh-CN')}。
       </p>
       </main>
+
+      <div className="flex justify-center border-t border-border px-4 py-3 text-xs text-muted-foreground">
+        <LocalDataDialog strings={localDataStringsFor('zh-CN')} />
+      </div>
 
       <SiteFooter
         homeUrl={import.meta.env.VITE_HOME_URL}

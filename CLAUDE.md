@@ -318,8 +318,12 @@ anywhere — only the 43 general ones are covered.
 ## Notes
 - **Canonical site specifications:** Start with `docs/ARKIVE_SITE_SPEC.yaml` for
   brand identity, cross-site experience rules, and the specification reading
-  router. Read `docs/ARKIVE_SITE_COLOR_SYSTEM.yaml` only for color or theme work,
-  and `docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml` only for desktop map UI work.
+  router. Read `docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml` for framework-facing design,
+  typography, spacing, shape, responsive, motion, layer, and shared component work.
+  Read `docs/ARKIVE_SITE_COLOR_SYSTEM.yaml` for color or theme work,
+  `docs/ARKIVE_MOBILE_EXPERIENCE_SPEC.yaml` for below-`md` composition,
+  `docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml` for desktop map UI, and
+  `docs/ARKIVE_STATE_MEMORY_SPEC.yaml` for persistence behavior.
   Files under `docs/superpowers/plans/` and `docs/superpowers/specs/` are historical
   decision records; they never override these canonical top-level specifications.
 - **Production deploys (EdgeOne, built here):** `.github/workflows/deploy.yml` builds

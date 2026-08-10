@@ -87,7 +87,7 @@ export function EngravingPicker({
               ) : (
                 <span
                   aria-hidden
-                  className="grid size-14 place-items-center rounded-md border border-dashed border-border text-2xl font-light leading-none text-muted-foreground"
+                  className="grid size-14 place-items-center rounded-md border border-dashed border-border text-2xl font-normal leading-none text-muted-foreground"
                 >
                   <Plus className="size-6" />
                 </span>

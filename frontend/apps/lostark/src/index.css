@@ -2,75 +2,11 @@
 @import '@gamemap/map-shell/arkive-map-theme.css';
 @source "../../../packages/ui/src";
 @source "../../../packages/map-shell/src";
+@source "../../../packages/auth/src";
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Two token sets on purpose.
- *
- * The shadcn names (--background, --card, --popover, --border …) are what the
- * shared @gamemap/ui and map-shell components style against, so they have to
- * exist for ShellTopBar, HoverCard, SiteFooter and friends to look right.
- *
- * The short names (--bg, --panel, --line, --ink, --muted-ink, --gold) are this
- * app's own vocabulary, defined *in terms of* the shadcn ones so a theme flip
- * moves both together. Before this they were hard-coded dark oklch values, which
- * is why the hover card needed its colours overridden by hand.
- *
- * Palette: warm gold on slate, distinct from aion2 (teal) and vrising (blood).
- */
-:root {
-  --radius: 0.625rem;
-
-  --background: #f5f6f8;
-  --foreground: #1a1f27;
-  --card: #ffffff;
-  --card-foreground: #1a1f27;
-  --popover: #ffffff;
-  --popover-foreground: #1a1f27;
-  --primary: #8a6a1f;
-  --primary-foreground: #ffffff;
-  --secondary: #e9ebef;
-  --secondary-foreground: #1a1f27;
-  --muted: #e9ebef;
-  --muted-foreground: #5c6675;
-  --accent: #b8891c;
-  --accent-foreground: #ffffff;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: rgba(26, 31, 39, 0.14);
-  --input: #e3e6ea;
-  --ring: #b8891c;
-
-  --panel: var(--card);
-  --line: var(--border);
-  --ink: var(--foreground);
-  --muted-ink: var(--muted-foreground);
-  --gold: var(--accent);
-}
-
-.dark {
-  --background: #12161d;
-  --foreground: #e8ecf2;
-  --card: #1a1f28;
-  --card-foreground: #e8ecf2;
-  --popover: #1a1f28;
-  --popover-foreground: #e8ecf2;
-  --primary: #e0b558;
-  --primary-foreground: #12161d;
-  --secondary: #242a35;
-  --secondary-foreground: #e8ecf2;
-  --muted: #242a35;
-  --muted-foreground: #98a2b1;
-  --accent: #e0b558;
-  --accent-foreground: #12161d;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: rgba(232, 236, 242, 0.14);
-  --input: #242a35;
-  --ring: #e0b558;
-}
-
+/* Shared chrome comes from arkive-map-theme; only game-data colors live here. */
 /*
  * Item-grade palette, sampled from EFUI_TOOLTIP's per-grade panel frames.
  * Grades 0-3 are 英雄 / 传说 / 遗物 / 古代.
@@ -102,58 +38,11 @@
   --grade-3-text: #f2f5e4;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-
-  /* This app's own aliases, so bg-panel / text-ink / border-line keep working. */
-  --color-bg: var(--background);
-  --color-panel: var(--panel);
-  --color-line: var(--line);
-  --color-ink: var(--ink);
-  --color-gold: var(--gold);
-
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-}
-
-html {
-  font-size: 17px;
-}
-
 body {
   margin: 0;
   min-height: 100dvh;
   color: var(--foreground);
   background-color: var(--background);
-}
-
-/* A faint warm wash behind the content in dark mode only; on the light theme it
-   muddies the panels rather than adding depth. */
-.dark body {
-  background-image:
-    radial-gradient(58% 50% at 50% 0%, rgba(224, 181, 88, 0.09), transparent 70%),
-    radial-gradient(40% 40% at 100% 100%, rgba(120, 140, 200, 0.08), transparent 72%);
-  background-attachment: fixed;
 }
 
 /* Number inputs: hide the spinner so the dense grids stay readable. */

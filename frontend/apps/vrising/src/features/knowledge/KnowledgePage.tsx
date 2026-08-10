@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Anvil, BookOpen, Boxes, ChevronDown, FlaskConical, Hammer, Search, Shield, Sparkles, Swords } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { defineMemoryRecord, isFiniteNumber, isString, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isFiniteNumber, isString, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import type { NavKey } from '../../components/TopNav'
 import {
@@ -34,21 +34,22 @@ const SYSTEMS: { key: SectionKey; icon: LucideIcon }[] = [
 ]
 
 const createSectionRecord = (defaultSection: SectionKey) => defineMemoryRecord({
-  id: 'section', namespace: 'vrising', surface: 'knowledge', stateClass: 'device_preference',
+  id: 'section', namespace: 'vrising', surface: 'knowledge',
+  ...memoryPolicy.sessionContext('clear-knowledge-section'),
   schemaVersion: '1.0.0', defaultValue: () => defaultSection,
   validate: (value: unknown): value is SectionKey =>
     ['items', 'weapons', 'armor', 'recipes', 'spells', 'passives', 'buildings', 'research'].includes(String(value)),
 })
 const queryRecord = defineMemoryRecord({
-  id: 'query', namespace: 'vrising', surface: 'knowledge', stateClass: 'session_context',
+  id: 'query', namespace: 'vrising', surface: 'knowledge',
+  ...memoryPolicy.sessionContext('clear-knowledge-search'),
   schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
-  retentionMs: 24 * 60 * 60 * 1_000,
 })
 const revealRecord = defineMemoryRecord({
-  id: 'reveal-depth', namespace: 'vrising', surface: 'knowledge', stateClass: 'session_context',
+  id: 'reveal-depth', namespace: 'vrising', surface: 'knowledge',
+  ...memoryPolicy.sessionContext('clear-knowledge-reveal'),
   schemaVersion: '1.0.0', defaultValue: () => 48,
   validate: (value: unknown): value is number => isFiniteNumber(value) && value >= 48,
-  retentionMs: 24 * 60 * 60 * 1_000,
 })
 
 function recordsFor(catalog: VBloodKnowledgeCatalog, key: SectionKey): CatalogRecord[] | null {
@@ -114,7 +115,7 @@ function RecordCard({ record }: { record: CatalogRecord }) {
           <ChevronDown className="mt-0.5 size-4 shrink-0 text-primary transition-transform group-open:rotate-180" />
         </summary>
         <div className="mt-3 border-t border-primary/10 pt-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">{t('knowledge.effectTitle')}</p>
+          <p className="text-xs font-semibold uppercase text-primary">{t('knowledge.effectTitle')}</p>
           <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/85">{description}</p>
           {record.statModifications.length ? (
             <div className="mt-3">
@@ -252,7 +253,7 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
         <section className="mt-5 rounded-2xl border border-primary/15 bg-secondary/25 p-4 md:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{t('knowledge.verifiedRecords')}</p>
+              <p className="text-xs font-semibold uppercase text-primary">{t('knowledge.verifiedRecords')}</p>
               <h2 className="mt-1 text-xl font-bold">{t(`knowledge.sections.${selected}.title`)}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t(selected === 'passives' ? 'knowledge.passiveSourceCaption' : 'knowledge.sourceCaption')}

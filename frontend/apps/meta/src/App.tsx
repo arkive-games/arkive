@@ -6,6 +6,8 @@ import {
   ArkiveMark,
   ArkiveMobileHeader,
   getArkiveBrandName,
+  LocalDataDialog,
+  localDataStringsFor,
   useTheme,
   type ShellNavItem,
 } from '@gamemap/map-shell'
@@ -20,7 +22,7 @@ import {
   IconSearch,
   IconSparkles,
 } from '@tabler/icons-react'
-import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
+import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import {
   IS_TOY,
   VISIBLE_SITES,
@@ -46,9 +48,14 @@ import { MetaMobileNav } from './MetaMobileNav'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl } from './userSystemData'
 import { useUserSystem } from './UserSystemState'
-import { defineMemoryRecord, useMemoryState } from '@gamemap/state-memory'
+import {
+  defineMemoryRecord,
+  memoryPolicy,
+  RECENT_ACTIVITY_RETENTION,
+  useMemoryState,
+} from '@gamemap/state-memory'
 
-const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum', 'favorites'] as const
+const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum'] as const
 type HomeRoute =
   | { view: 'discoverGames' }
   | { view: 'allGames' }
@@ -64,12 +71,12 @@ interface RecentDestination {
   id: string
   gameId: string
   route: string
-  title: string
   timestamp: number
 }
 
 const recentDestinationsRecord = defineMemoryRecord({
-  id: 'recent-destinations', namespace: 'site', surface: 'portal', stateClass: 'durable_progress',
+  id: 'recent-destinations', namespace: 'site', surface: 'portal',
+  ...memoryPolicy.recentActivity('clear-recent-activity'),
   schemaVersion: '1.0.0', defaultValue: () => [] as RecentDestination[],
   validate: (value: unknown): value is RecentDestination[] => Array.isArray(value)
     && value.length <= 10
@@ -77,17 +84,14 @@ const recentDestinationsRecord = defineMemoryRecord({
       && typeof (item as RecentDestination).id === 'string'
       && typeof (item as RecentDestination).gameId === 'string'
       && typeof (item as RecentDestination).route === 'string'
-      && typeof (item as RecentDestination).title === 'string'
       && typeof (item as RecentDestination).timestamp === 'number'),
-  retentionMs: 30 * 24 * 60 * 60 * 1_000,
 })
 
-function recentDestination(site: SiteCard, route: string, title: string): RecentDestination {
+function recentDestination(site: SiteCard, route: string): RecentDestination {
   return {
     id: `game:${site.id}`,
     gameId: site.id,
     route,
-    title,
     timestamp: Date.now(),
   }
 }
@@ -130,10 +134,6 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.documentElement.lang = lng
-  }, [lng])
-
-  useEffect(() => {
     const updateView = () => {
       setActiveRoute(routeFromHash())
       window.scrollTo({ top: 0 })
@@ -164,14 +164,14 @@ export default function App() {
   const rememberSite = (site: SiteCard) => {
     const route = siteHref(site)
     if (!route) return
-    const destination = recentDestination(site, route, t(site.nameKey))
+    const destination = recentDestination(site, route)
     setRecentDestinations((current) => [
       destination,
       ...current.filter((item) => item.id !== destination.id),
     ].slice(0, 10))
   }
   const continueDestination = recentDestinations.find((destination) =>
-    memoryNow - destination.timestamp < 30 * 24 * 60 * 60 * 1_000
+    memoryNow - destination.timestamp < RECENT_ACTIVITY_RETENTION.milliseconds
     && VISIBLE_SITES.some((site) => site.id === destination.gameId && siteHref(site)))
   const continueSite = continueDestination
     ? VISIBLE_SITES.find((site) => site.id === continueDestination.gameId)
@@ -186,7 +186,7 @@ export default function App() {
   const navItems: ShellNavItem[] = NAV_KEYS.map((key) => ({
     key,
     label: t(`nav.${key}`),
-    active: key === activeRoute.view || (key === 'favorites' && activeRoute.view === 'account' && activeRoute.section === 'favorites'),
+    active: key === activeRoute.view,
     children: key === 'allGames'
       ? VISIBLE_SITES.map((site) => ({
           key: `game:${site.id}`,
@@ -258,8 +258,6 @@ export default function App() {
               <a href="#explore" className={className}>{label}</a>
             ) : item.key === 'forum' ? (
               <a href="#forum" className={className}>{label}</a>
-            ) : item.key === 'favorites' && isSignedIn ? (
-              <a href="#account/favorites" className={className}>{label}</a>
             ) : (
               <button
                 type="button"
@@ -277,7 +275,7 @@ export default function App() {
         languageSwitcher={{
           languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
           current: lng,
-          onChange: (code) => void i18n.changeLanguage(code),
+          onChange: (code) => void changeLanguagePreference(code),
           menuLabel: t('language'),
           shortLabel: t('language'),
         }}
@@ -426,7 +424,7 @@ export default function App() {
         isSignedIn={isSignedIn}
         language={lng}
         theme={theme}
-        onLanguageChange={(code) => void i18n.changeLanguage(code)}
+        onLanguageChange={(code) => void changeLanguagePreference(code)}
         onThemeChange={setTheme}
         onComingSoon={showComingSoon}
       />
@@ -529,7 +527,7 @@ function ComingSoonCard({ onClick }: { onClick: () => void }) {
 }
 
 function HomeFooter({ onComingSoon }: { onComingSoon: () => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const columns = [
     { title: 'footer.browse', links: ['footer.discoverGames', 'footer.guides', 'footer.maps', 'footer.database'] },
     { title: 'footer.about', links: ['footer.aboutArkive', 'footer.standards', 'footer.joinUs', 'footer.contact'] },
@@ -559,6 +557,7 @@ function HomeFooter({ onComingSoon }: { onComingSoon: () => void }) {
       </div>
       <div className="home-shell footer-bottom">
         <span>{t('footer.copyright')}</span>
+        <LocalDataDialog strings={localDataStringsFor(i18n.resolvedLanguage ?? i18n.language)} />
         {!IS_TOY && (
           <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">{icp}</a>
         )}

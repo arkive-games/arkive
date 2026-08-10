@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import MiniSearch, { type SearchResult } from "minisearch";
 
 import { Input } from "@gamemap/ui";
-import { defineMemoryRecord, isString, useMemoryState } from "@gamemap/state-memory";
+import { defineMemoryRecord, isString, memoryPolicy, useMemoryState } from "@gamemap/state-memory";
 import { loadTaxonomy, loadWikiIndex } from "@/lib/wiki";
 import type { WikiGroup, WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
 
@@ -19,9 +19,9 @@ const BUCKETS: FactionBucket[] = ["light", "dark", "both"];
 const SECTION_LINK_CLASS =
   "group flex min-h-10 items-center justify-between gap-3 border-b border-border/70 px-1 py-2 text-sm transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-[color:var(--arkive-nav-active)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] md:min-h-0 md:py-1.5";
 const queryRecord = defineMemoryRecord({
-  id: "query", namespace: "aion2", surface: "wiki-catalog", stateClass: "session_context",
+  id: "query", namespace: "aion2", surface: "wiki-catalog",
+  ...memoryPolicy.sessionContext("clear-wiki-search"),
   schemaVersion: "1.0.0", defaultValue: () => "", validate: isString,
-  retentionMs: 24 * 60 * 60 * 1_000,
 });
 
 function emptyBuckets(): Record<FactionBucket, SectionLink[]> {
@@ -185,10 +185,10 @@ export default function TypeHub({ type }: { type: string }) {
       <header className="rounded-xl border border-border bg-card/70 p-5 shadow-[0_0.75rem_2rem_rgba(15,76,73,0.06)] md:p-7">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold tracking-wide text-[color:var(--arkive-nav-accent)]">
+            <p className="text-xs font-semibold text-[color:var(--arkive-nav-accent)]">
               {t("wiki:hub.archive")}
             </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-[color:var(--arkive-nav-active)]">
+            <h1 className="mt-2 text-3xl font-bold text-[color:var(--arkive-nav-active)]">
               {t(`wiki/taxonomy:types.${type}.name`)}
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -221,7 +221,7 @@ export default function TypeHub({ type }: { type: string }) {
           />
           {q.trim() && (
             <div
-              className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-80 overflow-y-auto rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-[0_1rem_2.5rem_rgba(15,76,73,0.16)]"
+              className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-[var(--arkive-layer-popover)] max-h-80 overflow-y-auto rounded-lg border border-border bg-popover p-2 text-popover-foreground shadow-[0_1rem_2.5rem_rgba(15,76,73,0.16)]"
               data-testid="wiki-search-results"
             >
               {hits.length > 0 ? (
@@ -255,7 +255,7 @@ export default function TypeHub({ type }: { type: string }) {
       <div className="grid gap-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
         <aside className="hidden lg:block">
           <div className="sticky top-6">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground">
+            <p className="text-xs font-semibold text-muted-foreground">
               {t("wiki:hub.categories")}
             </p>
             <nav

@@ -2,6 +2,13 @@
 // depends on this package, so importing back would close a cycle. These are
 // structurally identical to map-shell's `Theme`/`ThemeStorage`, which is all
 // `<ThemeProvider storage={...}>` needs -- TypeScript matches them by shape.
+import {
+  MemoryClient,
+  defineMemoryRecord,
+  memoryPolicy,
+  type StorageLike,
+} from "@gamemap/state-memory"
+
 type Theme = "auto" | "light" | "dark"
 
 type ThemeStorage = {
@@ -9,10 +16,9 @@ type ThemeStorage = {
   set: (theme: Theme) => void
 }
 
-export const ARKIVE_THEME_STORAGE_KEY = "arkive.theme"
+export const ARKIVE_THEME_STORAGE_KEY = "arkive.memory.site.interface.theme"
 export const ARKIVE_THEME_COOKIE_NAME = "arkive.theme"
-
-type StorageLike = Pick<Storage, "getItem" | "setItem">
+const LEGACY_THEME_STORAGE_KEY = "arkive.theme"
 
 export interface ArkiveThemeStorageEnvironment {
   hostname: string
@@ -80,22 +86,27 @@ function readCookieTheme(cookie: string): Theme | null {
   return null
 }
 
-function readStoredTheme(storage: StorageLike | undefined, key: string): Theme | null {
-  if (!storage) return null
-  try {
-    const value = storage.getItem(key)
-    return isTheme(value) ? value : null
-  } catch {
-    return null
-  }
+function themeRecord(legacyKeys: readonly string[]) {
+  return defineMemoryRecord({
+    id: "theme",
+    namespace: "site",
+    surface: "interface",
+    ...memoryPolicy.userPreference("reset-theme"),
+    schemaVersion: "1.0.0",
+    defaultValue: () => null as Theme | null,
+    validate: (value: unknown): value is Theme | null => value === null || isTheme(String(value)),
+    legacyKeys: [LEGACY_THEME_STORAGE_KEY, ...legacyKeys],
+    migrateLegacy: (raw: string) => raw,
+  })
 }
 
-function persistTheme(theme: Theme, environment: ArkiveThemeStorageEnvironment) {
-  try {
-    environment.localStorage?.setItem(ARKIVE_THEME_STORAGE_KEY, theme)
-  } catch {
-    // Cookies still preserve the cross-site preference when local storage is unavailable.
-  }
+function persistTheme(
+  theme: Theme,
+  environment: ArkiveThemeStorageEnvironment,
+  client: MemoryClient,
+  record: ReturnType<typeof themeRecord>,
+) {
+  client.write(record, theme)
 
   const cookie = [
     `${ARKIVE_THEME_COOKIE_NAME}=${encodeURIComponent(theme)}`,
@@ -114,6 +125,23 @@ function persistTheme(theme: Theme, environment: ArkiveThemeStorageEnvironment) 
   }
 }
 
+function expireThemeCookie(environment: ArkiveThemeStorageEnvironment) {
+  const attributes = [
+    `${ARKIVE_THEME_COOKIE_NAME}=`,
+    "Path=/",
+    "Max-Age=0",
+    "SameSite=Lax",
+  ]
+  if (environment.protocol === "https:") attributes.push("Secure")
+  try {
+    environment.writeCookie(attributes.join("; "))
+    const domain = resolveArkiveThemeCookieDomain(environment.hostname)
+    if (domain) environment.writeCookie([...attributes, `Domain=${domain}`].join("; "))
+  } catch {
+    // The shared memory record is still removed when cookies are unavailable.
+  }
+}
+
 /**
  * Persist one Arkive theme preference across the portal and every game.
  * The shared cookie crosses local dev ports and approved production subdomains;
@@ -124,26 +152,38 @@ export function createArkiveThemeStorage({
   environment,
 }: CreateArkiveThemeStorageOptions = {}): ThemeStorage {
   const getEnvironment = () => environment ?? defaultEnvironment()
+  const record = themeRecord(legacyKeys)
 
   return {
     get: () => {
       const current = getEnvironment()
       if (!current) return null
 
-      const theme =
-        readCookieTheme(current.readCookie()) ??
-        readStoredTheme(current.localStorage, ARKIVE_THEME_STORAGE_KEY) ??
-        legacyKeys.reduce<Theme | null>(
-          (found, key) => found ?? readStoredTheme(current.localStorage, key),
-          null,
-        )
+      const client = new MemoryClient({ deviceStorage: current.localStorage })
+      const theme = readCookieTheme(current.readCookie()) ?? client.read(record)
 
-      if (theme) persistTheme(theme, current)
+      if (theme) persistTheme(theme, current, client, record)
       return theme
     },
     set: (theme) => {
       const current = getEnvironment()
-      if (current) persistTheme(theme, current)
+      if (current) {
+        persistTheme(theme, current, new MemoryClient({ deviceStorage: current.localStorage }), record)
+      }
     },
   }
+}
+
+export function clearArkiveThemePreference({
+  legacyKeys = [],
+  environment,
+}: CreateArkiveThemeStorageOptions = {}): void {
+  const current = environment ?? defaultEnvironment()
+  if (!current) return
+  const client = new MemoryClient({ deviceStorage: current.localStorage })
+  client.clear(themeRecord(legacyKeys))
+  for (const key of [LEGACY_THEME_STORAGE_KEY, ...legacyKeys]) {
+    try { current.localStorage?.removeItem(key) } catch { /* restricted storage */ }
+  }
+  expireThemeCookie(current)
 }

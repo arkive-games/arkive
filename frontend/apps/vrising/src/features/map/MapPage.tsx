@@ -17,7 +17,7 @@ import {
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import { useIsMobile } from '@gamemap/ui'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import {
   loadStatic, loadMarkers, loadRegions,
   type MapMeta, type MarkerLocale, type MarkerRow, type MapsLocale,
@@ -38,16 +38,17 @@ import { renderMarkerPopup } from './popup'
 
 const MAP_ID = 'Vardoran'
 const labelsRecord = defineMemoryRecord({
-  id: 'show-labels', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  id: 'show-labels', namespace: 'vrising', surface: 'map',
+  ...memoryPolicy.userPreference('reset-map-labels'),
   schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
 })
-const desktopRegionsRecord = defineMemoryRecord({
-  id: 'show-regions', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
-  schemaVersion: '1.0.0', defaultValue: () => true, validate: isBoolean, viewportScoped: true,
-})
-const mobileRegionsRecord = defineMemoryRecord({
-  ...desktopRegionsRecord,
-  defaultValue: () => false,
+const regionsRecord = defineMemoryRecord({
+  id: 'show-regions', namespace: 'vrising', surface: 'map',
+  ...memoryPolicy.userPreference('reset-map-boundaries'),
+  schemaVersion: '1.0.0',
+  defaultValue: () => typeof window === 'undefined'
+    || !window.matchMedia('(max-width: 767px)').matches,
+  validate: isBoolean,
 })
 
 // The WebGL engine behind a lazy boundary — see features/map/GlMapView.
@@ -92,10 +93,8 @@ export default function MapPage() {
   const [restoredMarkerId, setRestoredMarkerId] = useState<string | null>(null)
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
   const [showLabels, setShowLabels] = useMemoryState(labelsRecord)
-  const [showRegions, setShowRegions] = useMemoryState(desktopRegionsRecord, { viewport: 'desktop' })
-  const [mobileShowRegions, setMobileShowRegions] = useMemoryState(mobileRegionsRecord, { viewport: 'mobile' })
+  const [showRegions, setShowRegions] = useMemoryState(regionsRecord)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const effectiveShowRegions = isMobile ? mobileShowRegions : showRegions
 
   // Camera + selection persistence. `useMapViewMemory` is storage-free; the
   // adapter comes from lib/storage.
@@ -411,10 +410,8 @@ export default function MapPage() {
         {
           id: 'show-regions',
           label: t('showRegions'),
-          onClick: () => isMobile
-            ? setMobileShowRegions((value) => !value)
-            : setShowRegions((value) => !value),
-          active: effectiveShowRegions,
+          onClick: () => setShowRegions((value) => !value),
+          active: showRegions,
         },
       ]}
       classNames={{
@@ -456,10 +453,10 @@ export default function MapPage() {
   const sharedMapProps: Omit<GameMapViewProps, 'mapRef'> = {
     map,
     markers: engineMarkers,
-    regions: effectiveShowRegions ? (regionData?.regions ?? []) : [],
+    regions: showRegions ? (regionData?.regions ?? []) : [],
     visibleSubtypes: visible,
     showLabels,
-    showBorders: effectiveShowRegions,
+    showBorders: showRegions,
     // Vardoran's 372 markers carry no `tier` yet, and LOD hides every tier-less
     // marker -- enabling it unconditionally rendered a completely empty phone
     // map. This turns itself on once the pipeline emits tiers.
@@ -525,7 +522,7 @@ export default function MapPage() {
             label: t('filter'),
             open: filterSheetOpen,
             onOpenChange: setFilterSheetOpen,
-            active: visible.size !== staticData.types.subtypes.length || mobileShowRegions,
+            active: visible.size !== staticData.types.subtypes.length || showRegions,
             header: mapSelect,
             content: filterPanel,
           }}

@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@gamemap/ui"
 import { SiteInfoPanel, type SiteInfoFeedbackGroup, type SiteInfoSection } from "./SiteInfoPanel"
+import { LocalDataControls, type LocalDataStrings } from './LocalDataControls'
 
 export interface ArkiveSiteInfoStrings {
   aboutTitle: string
@@ -44,6 +45,7 @@ export interface ArkiveSiteInfoProps {
    */
   historyStartVersion?: string
   feedbackGroup: SiteInfoFeedbackGroup
+  localDataStrings?: LocalDataStrings
   /** Optional game-owned channels rendered before the shared feedback group. */
   gameContact?: ReactNode
   className?: string
@@ -107,8 +109,8 @@ function RecentUpdatesDialog({
       <DialogTriggerButton label={label} />
       <DialogContent
         showCloseButton={false}
-        overlayClassName="z-[2999]"
-        className="z-[3000] max-h-[min(70dvh,40rem)] grid-rows-[auto_minmax(0,1fr)_auto]"
+        overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
+        className="z-[var(--arkive-layer-sheet)] max-h-[min(70dvh,40rem)] grid-rows-[auto_minmax(0,1fr)_auto]"
         data-testid="site-info-version-dialog"
       >
         <DialogHeader>
@@ -178,6 +180,7 @@ export function ArkiveSiteInfo({
   recentEntries,
   historyStartVersion,
   feedbackGroup,
+  localDataStrings,
   gameContact,
   className,
 }: ArkiveSiteInfoProps) {
@@ -221,6 +224,10 @@ export function ArkiveSiteInfo({
         </>
       ),
     },
+    ...(localDataStrings ? [{
+      title: localDataStrings.title,
+      body: <LocalDataControls strings={localDataStrings} />,
+    }] : []),
   ]
 
   return <SiteInfoPanel className={className} sections={sections} feedbackGroup={feedbackGroup} />

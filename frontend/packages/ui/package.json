@@ -13,6 +13,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@gamemap/state-memory": "workspace:*",
     "@radix-ui/react-slot": "^1.3.3",
     "@tabler/icons-react": "^3.46.0",
     "class-variance-authority": "^0.7.1",

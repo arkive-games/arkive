@@ -36,6 +36,7 @@
     "test": "vitest run",
     "changelog:add": "node scripts/changelog-add.mjs",
     "changelog:verify": "node scripts/changelog-verify.mjs",
+    "fonts:sync": "node scripts/sync-font-assets.mjs",
     "toy:build": "node scripts/toy-build.mjs",
     "toy:publish": "node scripts/toy-publish.mjs",
     "toy:serve": "node scripts/toy-serve.mjs",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "jsdom": "^30.0.1",
+    "vite": "^8.2.1",
     "vitest": "^4.1.10"
   }
 }

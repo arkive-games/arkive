@@ -14,8 +14,16 @@ import {
 } from "@tabler/icons-react"
 import {
   Button,
+  MENU_CONTENT_CLASS,
+  MENU_ITEM_CLASS,
   cn,
 } from "@gamemap/ui"
+
+export const TOP_BAR_MENU_CLASS =
+  `top-full z-[var(--arkive-layer-popover)] min-w-44 ${MENU_CONTENT_CLASS}`
+
+export const TOP_BAR_MENU_ITEM_CLASS =
+  `${MENU_ITEM_CLASS} [&>[data-slot=nav-item-label]]:min-w-0 [&>[data-slot=nav-item-label]]:flex-1`
 
 export interface ShellNavItem {
   /** Stable key, e.g. the route path. */
@@ -70,6 +78,7 @@ export interface ShellTopBarProps {
   classNames?: {
     root?: string
     left?: string
+    nav?: string
     center?: string
     right?: string
     trigger?: string
@@ -95,34 +104,44 @@ export function ShellTopBar({
       {(leftSlot || nav) && (
         <div className={cn("flex min-w-0 items-center gap-6", classNames?.left)}>
           {leftSlot}
-          {nav?.items.map((item) => {
-            const groupActive = item.active || item.children?.some((child) => child.active)
-            const highlighted = hoveredNavKey === null ? groupActive : hoveredNavKey === item.key
-            return item.children && item.children.length > 0 ? (
-              <NavDropdown
-                key={item.key}
-                item={item}
-                nav={nav}
-                highlighted={highlighted}
-                onHighlight={setHoveredNavKey}
-              />
-            ) : (
-              <span
-                key={item.key}
-                className="inline-flex items-center"
-                onPointerEnter={() => setHoveredNavKey(item.key)}
-                onPointerLeave={() => setHoveredNavKey(null)}
-                onFocus={() => setHoveredNavKey(item.key)}
-                onBlur={() => setHoveredNavKey(null)}
-              >
-                {nav.renderItem(
-                  item,
-                  navItemClass(item.active, nav),
-                  navItemLabelClass(highlighted, nav),
-                )}
-              </span>
-            )
-          })}
+          {nav && (
+            <nav
+              className={cn("flex min-w-0 items-center gap-6", classNames?.nav)}
+              onPointerLeave={() => setHoveredNavKey(null)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
+                  setHoveredNavKey(null)
+                }
+              }}
+            >
+              {nav.items.map((item) => {
+                const groupActive = item.active || item.children?.some((child) => child.active)
+                const highlighted = hoveredNavKey === null ? groupActive : hoveredNavKey === item.key
+                return item.children && item.children.length > 0 ? (
+                  <NavDropdown
+                    key={item.key}
+                    item={item}
+                    nav={nav}
+                    highlighted={highlighted}
+                    onHighlight={setHoveredNavKey}
+                  />
+                ) : (
+                  <span
+                    key={item.key}
+                    className="inline-flex items-center"
+                    onPointerEnter={() => setHoveredNavKey(item.key)}
+                    onFocus={() => setHoveredNavKey(item.key)}
+                  >
+                    {nav.renderItem(
+                      item,
+                      navItemClass(highlighted, nav),
+                      navItemLabelClass(highlighted, nav),
+                    )}
+                  </span>
+                )
+              })}
+            </nav>
+          )}
         </div>
       )}
       {centerSlot && (
@@ -253,7 +272,8 @@ function UtilityDropdown({
           role="menu"
           aria-label={menuLabel}
           className={cn(
-            "absolute right-0 top-full z-[2000] min-w-32 overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md",
+            "absolute right-0 min-w-32",
+            TOP_BAR_MENU_CLASS,
             menuClassName,
           )}
         >
@@ -263,7 +283,7 @@ function UtilityDropdown({
               type="button"
               role="menuitem"
               data-testid={`${id === "language" ? "lang" : "theme"}-${value}`}
-              className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+              className={TOP_BAR_MENU_ITEM_CLASS}
               onClick={() => {
                 onChange(value)
                 onOpenChange(false)
@@ -310,12 +330,10 @@ function NavDropdown({
   onHighlight: (key: string | null) => void
 }) {
   const children = item.children ?? []
-  const groupActive = item.active || children.some((child) => child.active)
   const [open, setOpen] = useState(false)
   const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) {
       setOpen(false)
-      onHighlight(null)
     }
   }
 
@@ -328,7 +346,6 @@ function NavDropdown({
       }}
       onPointerLeave={() => {
         setOpen(false)
-        onHighlight(null)
       }}
       onFocus={() => {
         setOpen(true)
@@ -357,7 +374,7 @@ function NavDropdown({
             event.currentTarget.blur()
           }
         }}
-        className={cn(navItemClass(groupActive, nav), "inline-flex items-center")}
+        className={cn(navItemClass(highlighted, nav), "inline-flex items-center")}
       >
         <span
           data-slot="nav-item-label"
@@ -369,20 +386,23 @@ function NavDropdown({
       {open && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-[2000] min-w-44 overflow-hidden rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+          className={cn("absolute left-0", TOP_BAR_MENU_CLASS)}
         >
+          <div className="flex min-h-7 items-center px-3 text-xs font-semibold text-muted-foreground">
+            {item.label}
+          </div>
           {children.map((child) => {
             const rendered = nav.renderItem(
                 child,
                 cn(
-                  "w-full rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none",
-                  child.active ? "font-semibold text-primary" : "text-foreground",
+                  TOP_BAR_MENU_ITEM_CLASS,
+                  child.active ? "bg-accent font-semibold text-primary" : "text-foreground",
                 ),
               )
             const menuItem = isValidElement(rendered)
               ? cloneElement(rendered as ReactElement<{ role?: string }>, { role: "menuitem" })
               : rendered
-            return <div key={child.key} role="none" className="[&>a]:block">{menuItem}</div>
+            return <div key={child.key} role="none">{menuItem}</div>
           })}
         </div>
       )}

@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
 
 // Serve the sibling `data-sts2` / `resource-sts2` artifact repos in dev.
 // Walk ancestor directories until the sibling repo is found, so this keeps
@@ -48,6 +49,7 @@ function staticDirPlugin(name: string, urlPrefix: string, rootDir: string): Plug
 export default defineConfig({
   server: { host: '0.0.0.0', port: 15175, strictPort: true, allowedHosts: true },
   plugins: [
+    arkiveFontAssets(),
     react(),
     tailwindcss(),
     staticDirPlugin('sts2-data', '/data', DATA_DIR),

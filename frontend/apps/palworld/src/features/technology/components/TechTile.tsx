@@ -72,7 +72,7 @@ export function TechTile({ tech, resolvers, highlighted = false }: TechTileProps
         >
           <span
             className={cn(
-              'flex items-center py-0.5 text-xs font-medium uppercase tracking-wide',
+              'flex items-center py-0.5 text-xs font-medium uppercase',
               isMobile ? 'gap-0.5 px-1' : 'gap-2 px-2',
               ancient
                 ? 'bg-purple-500/15 text-purple-600 dark:text-purple-300'

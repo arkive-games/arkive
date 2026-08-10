@@ -89,7 +89,7 @@ type MorePane = "main" | "language"
  * phone width. Short labels still sit inline; long ones drop to their own line.
  */
 const ROW =
-  "arkive-setting-row flex min-h-12 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg border border-border px-3 py-2 text-sm"
+  "arkive-setting-row flex min-h-12 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-md px-3 py-2 text-sm outline-none transition-[color,background-color,box-shadow] hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
 
 /** A small on/off pill shared by the theme segments. */
 function pillClass(selected: boolean) {
@@ -149,7 +149,7 @@ export function ShellBottomNav({
       <nav
         data-testid="bottom-tab-bar"
         className={cn(
-          "arkive-bottom-nav fixed inset-x-0 bottom-0 z-[2500] flex min-h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-border bg-background/98 text-foreground md:hidden",
+          "arkive-bottom-nav fixed inset-x-0 bottom-0 z-[var(--arkive-layer-sticky)] flex min-h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-border bg-background/98 text-foreground md:hidden",
           classNames?.root,
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -187,11 +187,11 @@ export function ShellBottomNav({
           <SheetContent
             side="bottom"
             data-testid="more-sheet"
-            className="arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(90dvh,calc(100dvh-5rem-env(safe-area-inset-bottom)))] overflow-y-auto rounded-t-lg border"
+            className="arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(90dvh,calc(100dvh-5rem-env(safe-area-inset-bottom)))] gap-0 overflow-y-auto rounded-t-lg border p-0 pt-5"
             style={{ paddingBottom: "1rem" }}
           >
             {/* `pr-8` keeps the header clear of the sheet's absolute close button. */}
-            <SheetHeader className="pr-8">
+            <SheetHeader className="border-b border-border px-4 pb-3 pr-12 md:pr-10">
               {/* The title tracks the visible body so the sub-page is
                   announced, and SheetTitle stays mounted in both panes
                   (Radix requires it). */}
@@ -199,7 +199,7 @@ export function ShellBottomNav({
             </SheetHeader>
 
             {pane === "main" ? (
-              <>
+              <div className="px-4 pb-4 pt-4">
                 {grid && grid.items.length > 0 && (
                   <div className="grid grid-cols-4 gap-1.5">
                     {grid.items.map((item) => (
@@ -218,7 +218,7 @@ export function ShellBottomNav({
                   </div>
                 )}
 
-                <div className={cn("space-y-2 border-border", grid && "mt-3 border-t pt-3")}>
+                <div className={cn("space-y-1 border-border", grid && "mt-3 border-t pt-3")}>
                   {/* One row showing the current language, not every option. */}
                   <button
                     type="button"
@@ -268,14 +268,14 @@ export function ShellBottomNav({
                 </div>
 
                 {footer && <div className="mt-3 border-t border-border pt-3">{footer}</div>}
-              </>
+              </div>
             ) : (
-              <div>
+              <div className="px-4 pb-4 pt-4">
                 <button
                   type="button"
                   data-testid="more-lang-back"
                   onClick={() => setPane("main")}
-                  className="-ml-1 inline-flex items-center gap-1 rounded px-1 py-1 text-sm font-medium text-muted-foreground"
+                  className="-ml-1 inline-flex min-h-11 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-muted-foreground"
                 >
                   <IconChevronLeft className="size-4" stroke={1.8} />
                   {language.backLabel}
@@ -294,7 +294,7 @@ export function ShellBottomNav({
                         setPane("main")
                       }}
                       className={cn(
-                        "flex items-center justify-between gap-2 border-b border-border px-1 py-2.5 text-left text-sm last:border-b-0",
+                        "flex min-h-11 items-center justify-between gap-2 border-b border-border px-1 py-2.5 text-left text-sm last:border-b-0",
                         language.current === code
                           ? "font-semibold text-primary"
                           : "text-card-foreground",

@@ -197,7 +197,7 @@ export function ContentPage({
             aria-label={t('backToTop')}
             title={t('backToTop')}
             onClick={scrollToTop}
-            className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] right-4 z-[2400] flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
+            className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] right-4 z-[var(--arkive-layer-map-control)] flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
           >
             <ArrowUp className="size-5" />
           </button>

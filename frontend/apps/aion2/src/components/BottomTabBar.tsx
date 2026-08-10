@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { ShellBottomNav } from "@gamemap/map-shell";
 import { useTheme, type Theme } from "@/context/ThemeContext";
-import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
+import i18n, { changeLanguagePreference, SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import SiteInfo from "@/components/SiteInfo";
 
 const THEME_OPTIONS: Theme[] = ["auto", "light", "dark"];
@@ -120,7 +120,7 @@ export default function BottomTabBar() {
       language={{
         languages: SUPPORTED_LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code] })),
         current: currentLng,
-        onChange: (code) => void i18n.changeLanguage(code),
+        onChange: (code) => void changeLanguagePreference(code),
         rowLabel: t("common:menu.switchLanguage", "Switch language"),
         backLabel: t("common:settings.back", "Back"),
       }}

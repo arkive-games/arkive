@@ -51,7 +51,7 @@ export function EngineToggle<T extends string>({
           <Cpu className="size-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="z-[2000]">
+      <DropdownMenuContent align="end" className="z-[var(--arkive-layer-popover)]">
         {choices.map((choice) => (
           <DropdownMenuItem
             key={choice}

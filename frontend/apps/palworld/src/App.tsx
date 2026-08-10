@@ -30,6 +30,7 @@ import {
   isBoolean,
   isString,
   isStringArray,
+  memoryPolicy,
   parseJson,
   useMemoryState,
 } from '@gamemap/state-memory'
@@ -78,7 +79,7 @@ const visibleSubtypesRecord = defineMemoryRecord({
   id: 'visible-subtypes',
   namespace: 'palworld',
   surface: 'map',
-  stateClass: 'device_preference',
+  ...memoryPolicy.sessionContext('clear-map-filters'),
   schemaVersion: '1.0.0',
   defaultValue: () => null as string[] | null,
   validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
@@ -100,7 +101,7 @@ const mapViewRecord = defineMemoryRecord({
   id: 'view',
   namespace: 'palworld',
   surface: 'map',
-  stateClass: 'device_preference',
+  ...memoryPolicy.recentActivity('clear-recent-map-view'),
   schemaVersion: '1.0.0',
   defaultValue: () => '',
   validate: isString,
@@ -116,7 +117,7 @@ const showLabelsRecord = defineMemoryRecord({
   id: 'show-labels',
   namespace: 'palworld',
   surface: 'map',
-  stateClass: 'device_preference',
+  ...memoryPolicy.userPreference('reset-map-labels'),
   schemaVersion: '1.0.0',
   defaultValue: () => false,
   validate: isBoolean,
@@ -126,7 +127,7 @@ const showRegionsRecord = defineMemoryRecord({
   id: 'show-regions',
   namespace: 'palworld',
   surface: 'map',
-  stateClass: 'device_preference',
+  ...memoryPolicy.userPreference('reset-map-boundaries'),
   schemaVersion: '1.0.0',
   defaultValue: () => false,
   validate: isBoolean,
@@ -733,13 +734,13 @@ export default function App() {
 
   if (loadError) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background text-destructive">
+      <div className="flex min-h-dvh items-center justify-center bg-background text-destructive">
         {loadError}
       </div>
     )
   }
 
-  if (!staticData) return <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">Loading…</div>
+  if (!staticData) return <div className="flex min-h-dvh items-center justify-center bg-background text-muted-foreground">Loading…</div>
 
   const mapSelect = (
     <div className="px-3 py-3 max-md:pr-8">

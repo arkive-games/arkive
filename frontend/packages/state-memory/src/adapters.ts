@@ -9,9 +9,50 @@ export interface HistoryMemoryEnvironment {
 }
 
 export interface AccountMemoryAdapter {
-  read: (key: string) => Promise<unknown | null>
-  write: (key: string, value: unknown) => Promise<void>
-  clear: (key: string) => Promise<void>
+  read: (key: string) => Promise<AccountMemorySnapshot | null>
+  write: (key: string, value: unknown, expectedRevision: string | null) => Promise<AccountMemorySnapshot>
+  clear: (key: string, expectedRevision: string | null) => Promise<void>
+}
+
+export interface AccountMemorySnapshot {
+  value: unknown
+  /** Opaque revision issued by the account service. Device clocks are never authoritative. */
+  revision: string
+}
+
+export interface HistoryMemoryOptions<T> {
+  schemaVersion: string
+  stateClass: 'session_context' | 'shareable_route'
+  retentionMs: number
+  now?: () => number
+  dataVersion?: string
+  migrate?: 'discard' | ((value: unknown, fromVersion: string) => T | unknown)
+}
+
+interface HistoryMemoryEnvelope {
+  schemaVersion: string
+  stateClass: 'session_context' | 'shareable_route'
+  writtenAt: number
+  expiresAt: number
+  dataVersion?: string
+  value: unknown
+}
+
+function removeHistoryMemory(environment: HistoryMemoryEnvironment, key: string): void {
+  try {
+    const current = environment.getState()
+    if (!current || typeof current !== 'object') return
+    const state = current as Record<string, unknown>
+    if (!state.arkiveMemory || typeof state.arkiveMemory !== 'object') return
+    const memory = { ...(state.arkiveMemory as Record<string, unknown>) }
+    delete memory[key]
+    const next = { ...state }
+    if (Object.keys(memory).length > 0) next.arkiveMemory = memory
+    else delete next.arkiveMemory
+    environment.replaceState(next)
+  } catch {
+    // Invalid history state is ignored when the browser rejects replacement.
+  }
 }
 
 export interface MemoryValueSource<T> {
@@ -71,6 +112,7 @@ export function readHistoryMemory<T>(
   environment: HistoryMemoryEnvironment | null,
   key: string,
   validate: (value: unknown) => value is T,
+  options: HistoryMemoryOptions<T>,
 ): T | null {
   if (!environment) return null
   try {
@@ -78,8 +120,38 @@ export function readHistoryMemory<T>(
     if (!state || typeof state !== 'object') return null
     const memory = (state as { arkiveMemory?: unknown }).arkiveMemory
     if (!memory || typeof memory !== 'object') return null
-    const value = (memory as Record<string, unknown>)[key]
-    return validate(value) ? value : null
+    const candidate = (memory as Record<string, unknown>)[key]
+    if (!candidate || typeof candidate !== 'object') {
+      removeHistoryMemory(environment, key)
+      return null
+    }
+    const envelope = candidate as Partial<HistoryMemoryEnvelope>
+    const now = options.now?.() ?? Date.now()
+    if (typeof envelope.schemaVersion !== 'string'
+      || typeof envelope.writtenAt !== 'number'
+      || typeof envelope.expiresAt !== 'number'
+      || envelope.expiresAt <= now
+      || envelope.stateClass !== options.stateClass
+      || (options.dataVersion && envelope.dataVersion !== options.dataVersion)) {
+      removeHistoryMemory(environment, key)
+      return null
+    }
+    if (envelope.schemaVersion === options.schemaVersion) {
+      if (validate(envelope.value)) return envelope.value
+      removeHistoryMemory(environment, key)
+      return null
+    }
+    if (!options.migrate || options.migrate === 'discard') {
+      removeHistoryMemory(environment, key)
+      return null
+    }
+    const migrated = options.migrate(envelope.value, envelope.schemaVersion)
+    if (!validate(migrated)) {
+      removeHistoryMemory(environment, key)
+      return null
+    }
+    writeHistoryMemory(environment, key, migrated, options)
+    return migrated
   } catch {
     return null
   }
@@ -89,17 +161,30 @@ export function writeHistoryMemory(
   environment: HistoryMemoryEnvironment | null,
   key: string,
   value: unknown,
+  options: HistoryMemoryOptions<unknown>,
 ): void {
   if (!environment) return
   try {
+    if (!Number.isFinite(options.retentionMs) || options.retentionMs <= 0) return
     const current = environment.getState()
     const state = current && typeof current === 'object' ? current as Record<string, unknown> : {}
     const currentMemory = state.arkiveMemory && typeof state.arkiveMemory === 'object'
       ? state.arkiveMemory as Record<string, unknown>
       : {}
+    const writtenAt = options.now?.() ?? Date.now()
     environment.replaceState({
       ...state,
-      arkiveMemory: { ...currentMemory, [key]: value },
+      arkiveMemory: {
+        ...currentMemory,
+        [key]: {
+          schemaVersion: options.schemaVersion,
+          stateClass: options.stateClass,
+          writtenAt,
+          expiresAt: writtenAt + options.retentionMs,
+          ...(options.dataVersion ? { dataVersion: options.dataVersion } : {}),
+          value,
+        } satisfies HistoryMemoryEnvelope,
+      },
     })
   } catch {
     // History memory is optional and never blocks navigation.
@@ -108,7 +193,7 @@ export function writeHistoryMemory(
 
 export const noOpAccountMemoryAdapter: AccountMemoryAdapter = {
   read: async () => null,
-  write: async () => undefined,
+  write: async () => { throw new Error('Account memory is unavailable') },
   clear: async () => undefined,
 }
 

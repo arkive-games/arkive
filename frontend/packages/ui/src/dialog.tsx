@@ -6,6 +6,11 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "./utils"
 import { Button } from "./button"
+import {
+  MODAL_OVERLAY_CLASS,
+  MODAL_SURFACE_CLASS,
+  POPUP_CLOSE_CONTROL_CLASS,
+} from "./popup-styles"
 
 function Dialog({
   ...props
@@ -39,7 +44,8 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-[var(--arkive-layer-sheet-backdrop)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        MODAL_OVERLAY_CLASS,
         className
       )}
       {...props}
@@ -51,10 +57,14 @@ function DialogContent({
   className,
   overlayClassName,
   children,
+  size = "default",
   showCloseButton = true,
+  showTideLine = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  size?: "default" | "sm"
   showCloseButton?: boolean
+  showTideLine?: boolean
   overlayClassName?: string
 }) {
   return (
@@ -62,17 +72,23 @@ function DialogContent({
       <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        data-size={size}
         className={cn(
-          "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
+          "fixed top-[50%] left-[50%] z-[var(--arkive-layer-sheet)] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-5 duration-[var(--arkive-motion-standard)] data-[size=default]:sm:max-w-lg data-[size=sm]:sm:max-w-md data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          MODAL_SURFACE_CLASS,
           className
         )}
         {...props}
       >
+        {showTideLine && <DialogTideLine />}
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className={cn(
+              "absolute top-2 right-2 z-[var(--arkive-layer-local-control)] md:top-3 md:right-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+              POPUP_CLOSE_CONTROL_CLASS,
+            )}
           >
             <XIcon />
             <span className="sr-only">Close</span>
@@ -80,6 +96,33 @@ function DialogContent({
         )}
       </DialogPrimitive.Content>
     </DialogPortal>
+  )
+}
+
+function DialogTideLine() {
+  return (
+    <div
+      data-slot="dialog-tide-line"
+      className="pointer-events-none absolute inset-x-0 top-0 z-[var(--arkive-layer-local-control)] h-2 overflow-hidden text-primary"
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 520 14" preserveAspectRatio="none" className="h-full w-full">
+        <path
+          d="M0 8C58 1 95 13 151 7s95-4 151 0 100 5 218-3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
+        />
+        <circle
+          cx="430"
+          cy="6"
+          r="4"
+          className="fill-[color:var(--arkive-nav-accent,var(--ring))] stroke-background"
+          strokeWidth="2"
+        />
+      </svg>
+    </div>
   )
 }
 
@@ -127,7 +170,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cn("text-lg leading-tight font-semibold", className)}
       {...props}
     />
   )
@@ -140,7 +183,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-sm leading-relaxed text-muted-foreground", className)}
       {...props}
     />
   )

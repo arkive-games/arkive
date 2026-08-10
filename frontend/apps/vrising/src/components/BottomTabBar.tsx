@@ -6,7 +6,7 @@ import {
   useTheme,
   type Theme,
 } from '@gamemap/map-shell'
-import { LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
+import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { SiteInfo } from './SiteInfo'
 import type { NavKey } from './TopNav'
 
@@ -64,7 +64,7 @@ export function BottomTabBar() {
       language={{
         languages: LANGUAGES.map((code) => ({ code, label: LANGUAGE_LABELS[code as Language] })),
         current: lng,
-        onChange: (code) => void i18n.changeLanguage(code),
+        onChange: (code) => void changeLanguagePreference(code),
         rowLabel: t('languageMenu'),
         backLabel: t('back'),
       }}

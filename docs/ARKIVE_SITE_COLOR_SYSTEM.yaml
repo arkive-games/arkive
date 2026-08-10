@@ -1,176 +1,61 @@
-schema_version: "1.1.0"
+schema_version: "2.1.0"
 spec_id: "arkive.site-color-system"
 title: "Arkive Site-wide Color System"
 status: "canonical"
-last_reviewed: "2026-08-08"
+last_reviewed: "2026-08-10"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
+  ui_foundations: "docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml"
+  radix_colors: "https://www.radix-ui.com/colors"
   implementation: "frontend/packages/map-shell/src/arkive-map-theme.css"
   reading_rule: "Read this file only when colors, themes, contrast, or data-visualization color roles are in scope."
 
+purpose:
+  summary: >-
+    Define one semantic color language for the portal and every game while
+    keeping game artwork and game-data colors intact.
+  outcomes:
+    - "Shared chrome remains recognizably Arkive in every game."
+    - "A component consumes a semantic role instead of choosing a palette value."
+    - "Every text, focus, boundary, and control pair meets its required contrast."
+
 scope:
   applies_to:
-    - "Arkive home page"
-    - "Every game map and encyclopedia"
-    - "Shared navigation, sidebars, search, dialogs, cards, and status feedback"
-    - "Future Arkive web applications"
-  implementation_status: >-
-    Implemented across the shared theme, home page, current game applications,
-    and both map engines. Game-authored artwork, map void colors, marker art,
-    equipment quality colors, and other game-data semantics remain game-owned.
+    - "Portal and game-product chrome"
+    - "Navigation, controls, forms, cards, popovers, sheets, dialogs, and feedback"
+    - "Map controls and shared overlays"
+  game_owned:
+    - "Game artwork and logos"
+    - "Map void colors and marker artwork"
+    - "Equipment quality, rarity, faction, and other established game-data semantics"
 
 source:
   system: "Radix Colors"
-  documentation: "https://www.radix-ui.com/colors"
-  rationale:
-    - "Radix provides coordinated 12-step scales for light and dark interfaces."
-    - "Its dark neutral scale remains truly neutral instead of tinting every surface blue."
-    - "Blue, amber, and orange provide clear Arkive navigation, beacon, and action roles."
+  families:
+    neutral: "Gray"
+    interactive: "Blue"
+    orientation: "Amber"
+    high_value_action: "Orange"
+    destructive: "Red"
+  rule: >-
+    This specification stores only approved semantic values. Do not duplicate
+    all Radix scale steps here or in application code. When a new role is
+    required, select and verify its value here before implementation.
 
 brand_direction:
-  summary: "Neutral black surfaces with blue navigation, amber beacons, and restrained orange action accents."
-  core_families:
-    neutral: "Radix Gray"
-    navigation: "Radix Blue"
-    beacon: "Radix Amber"
-    action: "Radix Orange"
-  signature:
-    - "Black sea"
-    - "Blue navigation light"
-    - "Amber beacon"
-    - "Orange action warmth"
-
-approved_scales:
-  dark:
-    gray:
-      1: "#111111"
-      2: "#191919"
-      3: "#222222"
-      4: "#2A2A2A"
-      5: "#313131"
-      6: "#3A3A3A"
-      7: "#484848"
-      8: "#606060"
-      9: "#6E6E6E"
-      10: "#7B7B7B"
-      11: "#B4B4B4"
-      12: "#EEEEEE"
-    blue:
-      1: "#0D1520"
-      2: "#111927"
-      3: "#0D2847"
-      4: "#003362"
-      5: "#004074"
-      6: "#104D87"
-      7: "#205D9E"
-      8: "#2870BD"
-      9: "#0090FF"
-      10: "#3B9EFF"
-      11: "#70B8FF"
-      12: "#C2E6FF"
-    amber:
-      1: "#16120C"
-      2: "#1D180F"
-      3: "#302008"
-      4: "#3F2700"
-      5: "#4D3000"
-      6: "#5C3D05"
-      7: "#714F19"
-      8: "#8F6424"
-      9: "#FFC53D"
-      10: "#FFD60A"
-      11: "#FFCA16"
-      12: "#FFE7B3"
-    orange:
-      1: "#17120E"
-      2: "#1E160F"
-      3: "#331E0B"
-      4: "#462100"
-      5: "#562800"
-      6: "#66350C"
-      7: "#7E451D"
-      8: "#A35829"
-      9: "#F76B15"
-      10: "#FF801F"
-      11: "#FFA057"
-      12: "#FFE1C3"
-  light:
-    gray:
-      1: "#FCFCFC"
-      2: "#F9F9F9"
-      3: "#F0F0F0"
-      4: "#E8E8E8"
-      5: "#E0E0E0"
-      6: "#D9D9D9"
-      7: "#CECECE"
-      8: "#BBBBBB"
-      9: "#8D8D8D"
-      10: "#838383"
-      11: "#646464"
-      12: "#202020"
-    blue:
-      1: "#FBFDFF"
-      2: "#F4FAFF"
-      3: "#E6F4FE"
-      4: "#D5EFFF"
-      5: "#C2E5FF"
-      6: "#ACD8FC"
-      7: "#8EC8F6"
-      8: "#5EB1EF"
-      9: "#0090FF"
-      10: "#0588F0"
-      11: "#0D74CE"
-      12: "#113264"
-    amber:
-      1: "#FEFDFB"
-      2: "#FEFBE9"
-      3: "#FFF7C2"
-      4: "#FFEE9C"
-      5: "#FBE577"
-      6: "#F3D673"
-      7: "#E9C162"
-      8: "#E2A336"
-      9: "#FFC53D"
-      10: "#FFBA18"
-      11: "#AB6400"
-      12: "#4F3422"
-    orange:
-      1: "#FEFCFB"
-      2: "#FFF7ED"
-      3: "#FFEFD6"
-      4: "#FFDFB5"
-      5: "#FFD19A"
-      6: "#FFC182"
-      7: "#F5AE73"
-      8: "#EC9455"
-      9: "#F76B15"
-      10: "#EF5F00"
-      11: "#CC4E00"
-      12: "#582D1D"
+  summary: "Neutral surfaces, blue interaction and focus, amber orientation, and restrained orange emphasis"
+  roles:
+    neutral: "Owns all large surfaces and most component backgrounds"
+    blue: "Owns links, navigation, selection, routine primary actions, and focus"
+    amber: "Owns orientation, warnings, and beacon-like indicators"
+    orange: "Owns at most one exceptional high-value action in a compact surface"
+  rules:
+    - "Game colors never replace shared chrome roles."
+    - "Blue, amber, and orange are semantic roles, not three decorative accents."
+    - "A compact control does not use amber and orange as competing emphasis."
 
 semantic_tokens:
-  dark:
-    background: "#111111"
-    foreground: "#EEEEEE"
-    card: "#191919"
-    card_foreground: "#EEEEEE"
-    popover: "#222222"
-    popover_foreground: "#EEEEEE"
-    primary: "#0090FF"
-    primary_foreground: "#061018"
-    secondary: "#222222"
-    secondary_foreground: "#EEEEEE"
-    muted: "#222222"
-    muted_foreground: "#B4B4B4"
-    hover: "#2A2A2A"
-    border: "#3A3A3A"
-    focus_ring: "#FFC53D"
-    selected_surface: "#0D2847"
-    navigation: "#0090FF"
-    beacon: "#FFC53D"
-    action: "#F76B15"
-    action_foreground: "#202020"
   light:
     background: "#FCFCFC"
     foreground: "#202020"
@@ -180,40 +65,134 @@ semantic_tokens:
     popover_foreground: "#202020"
     primary: "#0090FF"
     primary_foreground: "#202020"
+    link: "#0D74CE"
     secondary: "#F0F0F0"
     secondary_foreground: "#202020"
     muted: "#F0F0F0"
     muted_foreground: "#646464"
     hover: "#E8E8E8"
     border: "#D9D9D9"
-    focus_ring: "#FFC53D"
+    input: "#F0F0F0"
+    focus_ring: "#0D74CE"
     selected_surface: "#E6F4FE"
     navigation: "#0D74CE"
+    navigation_foreground: "#FFFFFF"
     beacon: "#AB6400"
+    brand_slogan: "#AB6400"
     action: "#CC4E00"
     action_foreground: "#FFFFFF"
+    destructive: "#CE2C31"
+    destructive_foreground: "#FFFFFF"
+    warning: "#AB6400"
+    warning_foreground: "#FFFFFF"
+  dark:
+    background: "#111111"
+    foreground: "#EEEEEE"
+    card: "#191919"
+    card_foreground: "#EEEEEE"
+    popover: "#222222"
+    popover_foreground: "#EEEEEE"
+    primary: "#0090FF"
+    primary_foreground: "#061018"
+    link: "#70B8FF"
+    secondary: "#222222"
+    secondary_foreground: "#EEEEEE"
+    muted: "#222222"
+    muted_foreground: "#B4B4B4"
+    hover: "#2A2A2A"
+    border: "#3A3A3A"
+    input: "#222222"
+    focus_ring: "#70B8FF"
+    selected_surface: "#0D2847"
+    navigation: "#0090FF"
+    navigation_foreground: "#061018"
+    beacon: "#FFC53D"
+    brand_slogan: "#FFC53D"
+    action: "#F76B15"
+    action_foreground: "#202020"
+    destructive: "#E5484D"
+    destructive_foreground: "#111111"
+    warning: "#FFC53D"
+    warning_foreground: "#111111"
+  map_overlay:
+    surface: "rgba(25, 25, 25, 0.88)"
+    foreground: "#EEEEEE"
+    border: "rgba(255, 255, 255, 0.18)"
+    rule: "Use this theme-independent overlay only when text must remain legible over unpredictable map imagery."
 
-extended_semantic_families:
-  policy: >-
-    Additional Radix families are available only for established semantic
-    feedback. They are not Arkive brand colors and must not decorate shared
-    navigation or general surfaces.
-  permitted:
-    red: "Errors, destructive actions, and failure states only"
-    green: "Success and confirmed-completion states only"
-    cyan: "Specialized data visualization only when blue is already occupied"
+contrast_contract:
+  thresholds:
+    normal_text: "4.5:1"
+    large_text: "3:1"
+    icons_controls_and_focus: "3:1 against adjacent colors"
+  verified_pairs:
+    light_primary_text: "#202020 on #0090FF, 4.99:1"
+    dark_primary_text: "#061018 on #0090FF, 5.87:1"
+    light_action_text: "#FFFFFF on #CC4E00, 4.51:1"
+    dark_action_text: "#202020 on #F76B15, 5.48:1"
+    light_destructive_text: "#FFFFFF on #CE2C31, 5.21:1"
+    dark_destructive_text: "#111111 on #E5484D, 4.82:1"
+    light_focus_against_background: "#0D74CE against #FCFCFC, 4.65:1"
+    dark_focus_against_background: "#70B8FF against #111111, 8.98:1"
+  rules:
+    - "Do not infer contrast from a palette step; verify the actual foreground and background pair."
+    - "Muted text still meets normal-text contrast."
+    - "Beacon and warning colors are not used as small body text without a verified foreground pair."
+    - "State differences never rely on color alone."
+
+feedback_and_data_color:
+  permitted_families:
+    red: "Errors, destructive actions, and failure states"
+    green: "Success and confirmed-completion states"
+    cyan: "Data visualization when blue is already occupied"
     purple: "Specialized data visualization only"
-  prohibited:
-    - "Using a game key-art color as shared chrome"
-    - "Adding another brand accent without updating this specification"
-    - "Using semantic red or green as a decorative surface"
+  rules:
+    - "Feedback and data colors are not Arkive brand accents."
+    - "Add semantic surface, foreground, border, and icon values together when a new feedback role becomes shared."
+    - "Do not use red, green, cyan, or purple as decorative shared surfaces."
+    - "A data visualization remains distinguishable without color through labels, patterns, symbols, or direct values."
 
-usage_rules:
-  - "Use semantic tokens in components; never paste scale values into app-local JSX."
-  - "Neutral gray owns large surfaces. Blue, amber, and orange remain accents."
-  - "Blue identifies navigation, links, selected controls, and primary actions."
-  - "Amber identifies orientation, focus, warnings, and beacon-like selection indicators."
-  - "Orange is reserved for high-value calls to action and restrained brand warmth."
-  - "Do not use both amber and orange as competing accents in the same compact control."
-  - "Game artwork and marker artwork may retain source colors."
-  - "State differences must never rely on color alone."
+theme_contract:
+  modes:
+    - "follow-system"
+    - "light"
+    - "dark"
+  rules:
+    - "Set theme at the application root; sections do not independently flip theme."
+    - "Both modes preserve hierarchy and game-art legibility."
+    - "Transparency and blur always have an opaque semantic fallback."
+    - "Theme preference behavior is shared across the portal and games."
+
+component_usage:
+  routine_primary_action: "primary and primary_foreground"
+  navigation_and_link: "navigation or link according to whether the role is a surface or text"
+  selected_control: "selected_surface plus foreground, border, and a non-color state indicator"
+  keyboard_focus: "focus_ring"
+  field_focus: "focus_ring for the border plus a 20% focus_ring outer halo"
+  brand_slogan: "brand_slogan"
+  high_value_action: "action and action_foreground"
+  destructive_action: "destructive and destructive_foreground"
+  map_status_overlay: "map_overlay"
+  rules:
+    - "Components consume tokens; application JSX and app-local CSS do not paste these values."
+    - "Use one dominant interaction emphasis per compact surface."
+    - "Do not use action orange for routine submit, search, pagination, or filter controls."
+    - "A composite field draws focus on its outer container and suppresses a duplicate inner-input outline."
+    - "The localized brand slogan is the only shared copy that uses the amber brand_slogan role."
+
+verification:
+  - "Validate this YAML file."
+  - "Calculate contrast from the shipped CSS values in light and dark mode."
+  - "Inspect focus, hover, selected, disabled, warning, destructive, and map-overlay states."
+  - "Verify representative game artwork does not reduce shared-control legibility."
+  - "Confirm changed UI contains no new app-local shared-chrome color literals."
+
+migration_from_2_0:
+  - "Replace amber focus rings with the shared blue focus_ring; amber remains reserved for orientation and warning roles."
+  - "Remove duplicate inner outlines from composite search fields."
+
+maintenance:
+  rules:
+    - "This file is the only canonical owner of shared color roles and values."
+    - "Update the semantic token and its contrast evidence together."
+    - "Update last_reviewed whenever the palette contract is intentionally reviewed."

@@ -14,7 +14,7 @@ import {
   isMapEngineChoice,
   type MapEngineChoice,
 } from '@gamemap/map-shell'
-import { browserMemory, defineMemoryRecord, isString } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, isString, memoryPolicy } from '@gamemap/state-memory'
 
 export {
   DEFAULT_MAP_ENGINE,
@@ -27,7 +27,8 @@ export {
 
 const MAP_ENGINE_KEY = 'vrising.map.engine'
 const engineRecord = defineMemoryRecord({
-  id: 'engine', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  id: 'engine', namespace: 'vrising', surface: 'map',
+  ...memoryPolicy.userPreference('reset-map-renderer'),
   schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
   legacyKeys: [MAP_ENGINE_KEY], migrateLegacy: (raw: string) => raw,
 })

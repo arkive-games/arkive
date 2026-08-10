@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   ARKIVE_THEME_STORAGE_KEY,
+  clearArkiveThemePreference,
   createArkiveThemeStorage,
   resolveArkiveThemeCookieDomain,
   type ArkiveThemeStorageEnvironment,
@@ -25,6 +26,7 @@ function createEnvironment({
     localStorage: {
       getItem: (key) => values.get(key) ?? null,
       setItem: (key, value) => values.set(key, value),
+      removeItem: (key) => values.delete(key),
     },
     readCookie: () => cookie,
     writeCookie: (value) => writes.push(value),
@@ -50,7 +52,11 @@ describe("createArkiveThemeStorage", () => {
     })
 
     expect(createArkiveThemeStorage({ legacyKeys: ["aion2.theme"], environment }).get()).toBe("light")
-    expect(values.get(ARKIVE_THEME_STORAGE_KEY)).toBe("light")
+    expect(JSON.parse(values.get(ARKIVE_THEME_STORAGE_KEY) ?? "null")).toMatchObject({
+      schemaVersion: "1.0.0",
+      stateClass: "user_preference",
+      value: "light",
+    })
     expect(writes.at(-1)).toContain("Domain=.tc-imba.com")
     expect(writes.at(-1)).toContain("Secure")
   })
@@ -62,6 +68,30 @@ describe("createArkiveThemeStorage", () => {
 
     expect(writes.at(-1)).toContain("arkive.theme=dark")
     expect(writes.at(-1)).not.toContain("Domain=")
+  })
+
+  it("clears shared and legacy storage plus host and parent-domain cookies", () => {
+    const { environment, values, writes } = createEnvironment({
+      hostname: "aion2.tc-imba.com",
+      protocol: "https:",
+      stored: {
+        [ARKIVE_THEME_STORAGE_KEY]: JSON.stringify({
+          schemaVersion: "1.0.0",
+          stateClass: "user_preference",
+          writtenAt: 1,
+          value: "dark",
+        }),
+        "aion2.theme": "dark",
+      },
+    })
+
+    clearArkiveThemePreference({ legacyKeys: ["aion2.theme"], environment })
+
+    expect(values.has(ARKIVE_THEME_STORAGE_KEY)).toBe(false)
+    expect(values.has("aion2.theme")).toBe(false)
+    expect(writes).toHaveLength(2)
+    expect(writes.every((value) => value.includes("Max-Age=0"))).toBe(true)
+    expect(writes.some((value) => value.includes("Domain=.tc-imba.com"))).toBe(true)
   })
 })
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Input } from '@gamemap/ui'
-import { defineMemoryRecord, isString, parseJson, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isString, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadPals, type PalsBundle } from '../../lib/pals'
@@ -29,7 +29,7 @@ const filterRecord = defineMemoryRecord({
   id: 'filters',
   namespace: 'palworld',
   surface: 'pals-catalog',
-  stateClass: 'device_preference',
+  ...memoryPolicy.sessionContext('clear-pal-filters'),
   schemaVersion: '1.0.0',
   defaultValue: () => ({ ...EMPTY_FILTER }),
   validate: isPalFilter,
@@ -41,18 +41,17 @@ const queryRecord = defineMemoryRecord({
   id: 'query',
   namespace: 'palworld',
   surface: 'pals-catalog',
-  stateClass: 'session_context',
+  ...memoryPolicy.sessionContext('clear-pal-search'),
   schemaVersion: '1.0.0',
   defaultValue: () => '',
   validate: isString,
-  retentionMs: 24 * 60 * 60 * 1_000,
 })
 
 const viewRecord = defineMemoryRecord({
   id: 'view-mode',
   namespace: 'palworld',
   surface: 'catalog',
-  stateClass: 'device_preference',
+  ...memoryPolicy.userPreference('reset-catalog-view'),
   schemaVersion: '1.0.0',
   defaultValue: () => 'grid' as 'grid' | 'list',
   validate: (value: unknown): value is 'grid' | 'list' => value === 'grid' || value === 'list',

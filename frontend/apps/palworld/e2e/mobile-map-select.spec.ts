@@ -3,14 +3,14 @@ import { test, expect } from '@playwright/test'
 // Regression: on phones the map picker lives inside the filter bottom-sheet
 // (App.tsx `if (isMobile)` -> <SheetHeader>{mapSelect}</SheetHeader>), and both
 // the sheet and the Radix Select listbox portal to <body> as siblings.
-// @gamemap/ui ships Select content at z-50 while a Sheet sits at z-3000, and
-// Radix copies the content's computed z-index onto its fixed positioning
-// wrapper — so the listbox opened *behind* the sheet. Radix's dialog overlay
+// The old Select content layer sat below the Sheet layer, and Radix copies the
+// content's computed z-index onto its fixed positioning wrapper, so the
+// listbox opened *behind* the sheet. Radix's dialog overlay
 // additionally carries an inline `pointer-events: auto` (it has to, because the
-// modal sets `pointer-events: none` on <body>), so at z-3000 it swallowed every
+// modal sets `pointer-events: none` on <body>), so it swallowed every
 // tap aimed at an option too: the picker was invisible AND unclickable, i.e.
-// "map selection can not be used" on mobile. ShellMapSelect now ships the
-// listbox at z-[3100].
+// "map selection can not be used" on mobile. ShellMapSelect now uses the named
+// nested-overlay layer.
 //
 // `?engine=leaflet` is pinned so the tile-URL assertions below have DOM tiles to
 // look at — the WebGL engine (the default) draws into one canvas. Same reason as

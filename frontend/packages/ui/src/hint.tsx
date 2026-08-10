@@ -82,7 +82,7 @@ type TriggerProps = {
  *
  * Requires a `TooltipProvider` ancestor, exactly like the primitives it wraps.
  *
- * The sheet panel sits at `z-[3050]`, one rung above the `z-[3000]` Sheet, so a
+ * The hint uses the nested-overlay token, one rung above the shared Sheet, so a
  * hint opened from *inside* another sheet (filter chips move into one on phones)
  * paints above it. Its own overlay stays at 3000 but is portalled later, so it
  * still covers the sheet underneath — and because both layers are modal Radix
@@ -222,7 +222,7 @@ export function Hint({
         <SheetContent
           side="bottom"
           data-testid={sheetTestId}
-          className={cn("z-[3050] max-h-[85dvh] overflow-y-auto", sheetClassName)}
+          className={cn("z-[var(--arkive-layer-nested-overlay)] max-h-[85dvh] overflow-y-auto", sheetClassName)}
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
         >
           {/* `pr-8` keeps the heading clear of the sheet's absolute close button. */}

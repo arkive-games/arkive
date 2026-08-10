@@ -179,7 +179,7 @@ export function CompactPalNode({
             />
           ) : null}
           <span className={cn('flex min-w-0 flex-1 items-center text-xs leading-tight', emphasis && 'font-semibold')}>
-            <OverflowMarquee text={name} auto className="min-w-0 flex-1" />
+            <OverflowMarquee text={name} className="min-w-0 flex-1" />
             <GenderMark g={gender} />
           </span>
         </span>
@@ -187,7 +187,6 @@ export function CompactPalNode({
           <span className="flex min-w-0 border-t border-primary/15 bg-primary/5 px-1 py-0.5 text-xs leading-tight tabular-nums text-foreground dark:text-white">
             <OverflowMarquee
               text={metaText}
-              auto
               className="min-w-0 flex-1"
               contentClassName="inline-flex min-w-full items-center justify-center gap-1 text-center"
             >
@@ -360,7 +359,7 @@ export function PalTile({
         <TileIcon icon={m?.icon} legendary={m?.legendary} />
         <span className={TILE_FOOTER}>
           <span className={cn(TILE_NAME, emphasis && 'font-semibold')}>
-            <OverflowMarquee text={name} auto className="min-w-0 flex-1" />
+            <span className="line-clamp-2 min-w-0 flex-1">{name}</span>
             <GenderMark g={gender} />
           </span>
           {m ? (

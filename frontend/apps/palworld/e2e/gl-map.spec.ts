@@ -85,7 +85,16 @@ async function pickFastTravelTarget(page: Page) {
   ])
   // The popup shows the name for the language i18next resolved, not necessarily
   // en-US — read it back rather than assume.
-  const lng = await page.evaluate(() => localStorage.getItem('i18nextLng') ?? 'en-US')
+  const lng = await page.evaluate(() => {
+    const raw = localStorage.getItem('arkive.memory.site.interface.language')
+    if (!raw) return 'en-US'
+    try {
+      const value = (JSON.parse(raw) as { value?: unknown }).value
+      return typeof value === 'string' ? value : 'en-US'
+    } catch {
+      return 'en-US'
+    }
+  })
   const l10n = await getJson<Record<string, { name?: string }>>(
     page,
     `/data/locales/${lng}/markers/MainWorld.json`,

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { BookOpen, Check, ChevronLeft, FlaskConical, Hammer, MapPinned, Sparkles } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
@@ -16,7 +16,8 @@ import {
 } from '../../lib/vblood'
 
 const rewardDisclosureRecord = defineMemoryRecord({
-  id: 'reward-lists-expanded', namespace: 'vrising', surface: 'vblood-detail', stateClass: 'device_preference',
+  id: 'reward-lists-expanded', namespace: 'vrising', surface: 'vblood-detail',
+  ...memoryPolicy.sessionContext('reset-detail-disclosure'),
   schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
 })
 
@@ -132,8 +133,8 @@ export default function VBloodDetailPage() {
             {boss.portrait ? <img src={boss.portrait} alt="" className="absolute inset-0 size-full object-cover object-top" /> : null}
             <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/25 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-5 text-white md:p-7">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/70">{t('vblood.eyebrow')}</p>
-              <h1 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">{boss.name}</h1>
+              <p className="text-sm font-semibold uppercase text-white/70">{t('vblood.eyebrow')}</p>
+              <h1 className="mt-1 text-3xl font-bold leading-tight">{boss.name}</h1>
               <p className="mt-2 max-w-xl text-sm text-white/80">{boss.id}</p>
             </div>
           </div>

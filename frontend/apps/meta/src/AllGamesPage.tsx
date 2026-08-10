@@ -1,7 +1,7 @@
 import { useMemo, type FormEvent, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
-import { defineMemoryRecord, isFiniteNumber, isString, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isFiniteNumber, isString, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -23,20 +23,21 @@ import './all-games.css'
 
 const PAGE_SIZE = 20
 const queryRecord = defineMemoryRecord({
-  id: 'query', namespace: 'site', surface: 'games-catalog', stateClass: 'session_context',
+  id: 'query', namespace: 'site', surface: 'games-catalog',
+  ...memoryPolicy.sessionContext('clear-game-search'),
   schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
-  retentionMs: 24 * 60 * 60 * 1_000,
 })
 const categoryRecord = defineMemoryRecord({
-  id: 'category', namespace: 'site', surface: 'games-catalog', stateClass: 'device_preference',
+  id: 'category', namespace: 'site', surface: 'games-catalog',
+  ...memoryPolicy.sessionContext('clear-game-filters'),
   schemaVersion: '1.0.0', defaultValue: () => 'all' as GameCategory,
   validate: (value: unknown): value is GameCategory => GAME_CATEGORIES.includes(value as GameCategory),
 })
 const pageRecord = defineMemoryRecord({
-  id: 'page', namespace: 'site', surface: 'games-catalog', stateClass: 'session_context',
+  id: 'page', namespace: 'site', surface: 'games-catalog',
+  ...memoryPolicy.sessionContext('clear-game-page'),
   schemaVersion: '1.0.0', defaultValue: () => 1,
   validate: (value: unknown): value is number => isFiniteNumber(value) && value >= 1,
-  retentionMs: 24 * 60 * 60 * 1_000,
 })
 
 interface AllGamesPageProps {

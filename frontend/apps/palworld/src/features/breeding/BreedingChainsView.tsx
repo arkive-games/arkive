@@ -263,7 +263,7 @@ function MobileChainStep({
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
           <MobilePalNode id={step.fixed} ctx={ctx} />
           <span className="text-sm text-muted-foreground">+</span>
-          <div className="relative min-w-0">
+          <div className="relative isolate min-w-0">
             <MobilePalNode id={lead.b} ctx={ctx} gender={lead.bg} unique={lead.unique} />
             {rest.length > 0 ? (
               <button
@@ -281,7 +281,7 @@ function MobileChainStep({
                     ? t('breeding.collapse')
                     : t('breeding.showAllPartners', { count: step.partners.length })
                 }
-                className="absolute -right-1 -top-1 z-10 flex size-6 items-center justify-center rounded-full border border-primary/30 bg-background text-xs font-semibold text-primary shadow-sm before:absolute before:-inset-2"
+                className="absolute -right-1 -top-1 z-[var(--arkive-layer-local-control)] flex size-6 items-center justify-center rounded-full border border-primary/30 bg-background text-xs font-semibold text-primary shadow-sm before:absolute before:-inset-2"
               >
                 {expanded ? '−' : `+${rest.length}`}
               </button>

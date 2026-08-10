@@ -73,7 +73,7 @@ export function CardTile({ card, name, poolColor }: { card: Card; name: string; 
     >
       <div className="flex items-start justify-between gap-2">
         <CostBadge cost={card.cost} />
-        <span className="text-right text-[0.7rem] leading-tight text-muted-foreground">{card.rarity}</span>
+        <span className="text-right text-xs leading-normal text-muted-foreground">{card.rarity}</span>
       </div>
       <CardArt card={card} className="h-24 w-full" />
       <span className="line-clamp-2 text-center text-xs font-medium leading-tight">{name}</span>

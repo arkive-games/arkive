@@ -42,7 +42,7 @@ export function ArkiveMobileHeader({
     <header
       data-testid="arkive-mobile-header"
       className={cn(
-        "arkive-mobile-header sticky top-0 z-[1800] flex min-h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-3 border-b border-border bg-background/98 px-4 pt-[env(safe-area-inset-top)] text-foreground md:hidden",
+        "arkive-mobile-header sticky top-0 z-[var(--arkive-layer-sticky)] flex min-h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-3 border-b border-border bg-background/98 px-4 pt-[env(safe-area-inset-top)] text-foreground md:hidden",
         className,
       )}
     >
@@ -55,11 +55,11 @@ export function ArkiveMobileHeader({
         className="flex min-w-0 shrink items-center gap-2 text-[color:var(--arkive-nav-active)]"
       >
         <span className="shrink-0 [&>svg]:size-7"><ArkiveMark /></span>
-        <strong className="max-w-24 truncate text-sm font-bold">{brandName}</strong>
+        <strong className="min-w-0 truncate text-base font-semibold">{brandName}</strong>
       </a>
 
       {pageTitle ? (
-        <div className="min-w-0 flex-1 border-l border-border pl-3 text-sm font-bold">
+        <div className="min-w-0 flex-1 border-l border-border pl-3 text-sm font-semibold">
           <span className="block truncate">{pageTitle}</span>
         </div>
       ) : <span className="flex-1" />}

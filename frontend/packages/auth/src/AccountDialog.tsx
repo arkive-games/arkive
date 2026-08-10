@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
+  POPUP_CLOSE_CONTROL_CLASS,
 } from "@gamemap/ui"
 import { ArkiveMark } from "@gamemap/map-shell"
 
@@ -179,54 +180,33 @@ export function AccountDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* The width cap stays `sm:`-prefixed: a bare `max-w-md` lands in the same
-          tailwind-merge group as DialogContent's `max-w-[calc(100%-2rem)]` and
-          silently removes it, taking the phone's side gutter with it. */}
       <DialogContent
+        size="sm"
         showCloseButton={false}
-        overlayClassName="z-[3000] bg-black/55 backdrop-blur-sm"
-        className="z-[3001] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto rounded-2xl border-border bg-card p-0 text-card-foreground shadow-2xl sm:max-w-md"
+        overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
+        className="z-[var(--arkive-layer-sheet)] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto p-0"
         data-testid="account-dialog"
       >
-        <div className="relative border-b border-border bg-muted/30 px-6 pb-5 pt-7">
-          <div className="absolute inset-x-0 top-0 h-3 overflow-hidden text-primary" aria-hidden="true">
-            <svg viewBox="0 0 480 12" preserveAspectRatio="none" className="h-full w-full">
-              <path
-                d="M0 5C40 1 80 9 120 5S200 1 240 5s80 4 120 0 80-4 120 0"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-              />
-              <path
-                d="M0 9c48-3 72 2 120 0s72-3 120 0 72 2 120 0 72-3 120 0"
-                fill="none"
-                stroke="currentColor"
-                strokeOpacity="0.28"
-                strokeWidth="1.5"
-              />
-            </svg>
-            <span className="absolute right-10 top-1 size-2 rounded-full bg-[color:var(--arkive-nav-accent)] ring-4 ring-card" />
-          </div>
-
+        <div className="relative border-b border-border bg-background px-6 py-5">
           <DialogClose asChild>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-4 rounded-full text-muted-foreground hover:text-foreground"
+              className={`absolute right-3 top-3 ${POPUP_CLOSE_CONTROL_CLASS}`}
               aria-label={strings.close}
               title={strings.close}
             >
-              <IconX className="size-5" stroke={1.8} />
+              <IconX className="size-4" stroke={1.8} />
             </Button>
           </DialogClose>
 
-          <DialogHeader className="items-center pr-8 text-center sm:items-start sm:text-left">
+          <DialogHeader className="items-start pr-10 text-left">
             <div className="flex items-center gap-3">
-              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary [--arkive-mark-cutout:var(--muted)]">
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary [--arkive-mark-cutout:var(--background)]">
                 <ArkiveMark />
               </span>
-              <DialogTitle className="text-2xl font-bold">{title}</DialogTitle>
+              <DialogTitle>{title}</DialogTitle>
             </div>
             {mode === "forgot" && (
               <DialogDescription className="max-w-sm leading-relaxed">
@@ -250,7 +230,7 @@ export function AccountDialog({
                 required
                 value={name}
                 placeholder={strings.namePlaceholder}
-                className="h-11 rounded-xl bg-background pl-10 focus-visible:border-primary focus-visible:ring-primary/20"
+                className="h-11 rounded-lg bg-background pl-10"
                 onChange={(event) => setName(event.target.value)}
               />
             </Field>
@@ -270,7 +250,7 @@ export function AccountDialog({
                 required
                 value={email}
                 placeholder={strings.emailPlaceholder}
-                className="h-11 rounded-xl bg-background pl-10 focus-visible:border-primary focus-visible:ring-primary/20"
+                className="h-11 rounded-lg bg-background pl-10"
                 onChange={(event) => setEmail(event.target.value)}
               />
             </Field>
@@ -287,7 +267,7 @@ export function AccountDialog({
                 name="token"
                 required
                 value={token}
-                className="h-11 rounded-xl bg-background pl-10 focus-visible:border-primary focus-visible:ring-primary/20"
+                className="h-11 rounded-lg bg-background pl-10"
                 onChange={(event) => setToken(event.target.value)}
               />
             </Field>
@@ -310,7 +290,7 @@ export function AccountDialog({
                 minLength={mode === "login" ? undefined : 8}
                 value={password}
                 placeholder={strings.passwordPlaceholder}
-                className="h-11 rounded-xl bg-background pl-10 pr-11 focus-visible:border-primary focus-visible:ring-primary/20"
+                className="h-11 rounded-lg bg-background pl-10 pr-11"
                 onChange={(event) => setPassword(event.target.value)}
               />
               <Button
@@ -363,7 +343,7 @@ export function AccountDialog({
           <Button
             type="submit"
             disabled={busy}
-            className="h-11 w-full rounded-xl bg-[color:var(--arkive-nav-active)] font-semibold text-white hover:brightness-95"
+            className="h-11 w-full rounded-lg bg-[color:var(--arkive-nav-active)] font-semibold text-white hover:brightness-95"
           >
             {busy ? strings.working : submitLabel}
           </Button>
@@ -373,7 +353,7 @@ export function AccountDialog({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 w-full rounded-xl bg-background font-semibold"
+                className="h-11 w-full rounded-lg bg-background font-semibold"
                 onClick={() => switchMode("register")}
               >
                 {strings.switchToRegister}
@@ -386,7 +366,7 @@ export function AccountDialog({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 w-full rounded-xl bg-background font-semibold"
+                className="h-11 w-full rounded-lg bg-background font-semibold"
                 onClick={() => switchMode("login")}
               >
                 {strings.switchToLogin}
@@ -417,9 +397,9 @@ function Field({
       <label htmlFor={htmlFor} className="block text-sm font-semibold text-foreground">
         {label}
       </label>
-      <div className="relative">
+      <div className="relative isolate">
         <span
-          className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted-foreground"
+          className="pointer-events-none absolute left-3 top-1/2 z-[var(--arkive-layer-local-control)] -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"
         >
           {icon}

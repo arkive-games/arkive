@@ -38,7 +38,7 @@ function installMatchMedia() {
       removeListener: (cb: () => void) => void mediaListeners.delete(cb),
       dispatchEvent: () => false,
     }
-  }) as typeof window.matchMedia
+  }) as unknown as typeof window.matchMedia
 }
 
 function setViewportWidth(width: number) {
@@ -94,9 +94,9 @@ describe("Hint on mobile", () => {
     fireEvent.click(badge)
     const sheet = screen.getByTestId("hint-sheet")
     expect(sheet).toBeTruthy()
-    // One rung above the z-[3000] Sheet, so a hint opened from inside the mobile
+    // One named layer above the Sheet, so a hint opened from inside the mobile
     // filter sheet is not buried by it.
-    expect(sheet.className).toContain("z-[3050]")
+    expect(sheet.className).toContain("z-[var(--arkive-layer-nested-overlay)]")
     expect(screen.getByText("Mutation only appears from breeding.")).toBeTruthy()
     // The heading is visible (not sr-only) and repeats the subject, so the sheet
     // says what it is explaining. Scoped to the sheet: the badge says "Mutation"

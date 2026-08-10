@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
-import { defineMemoryRecord, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import {
   Dialog,
   DialogClose,
@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  POPUP_CLOSE_CONTROL_CLASS,
 } from '@gamemap/ui'
 import {
   IconAdjustmentsHorizontal,
@@ -785,7 +786,8 @@ function ForumComposerDialog({
   const { t } = useTranslation()
   const { user } = useAuth()
   const draftRecord = useMemo(() => defineMemoryRecord({
-    id: 'post', namespace: 'site', surface: 'forum-editor', stateClass: 'task_draft',
+    id: 'post', namespace: 'site', surface: 'forum-editor',
+    ...memoryPolicy.taskDraft('discard-forum-draft'),
     schemaVersion: '1.0.0',
     defaultValue: () => ({
       title: '', content: '', channel: initialChannel, gameId: initialGameId,
@@ -808,8 +810,8 @@ function ForumComposerDialog({
         && COMPOSER_TOPICS.includes(draft.topic as (typeof COMPOSER_TOPICS)[number])
         && typeof draft.videoUrl === 'string' && draft.videoUrl.length <= 2_000
     },
-    retentionMs: 30 * 24 * 60 * 60 * 1_000,
-    accountScoped: true,
+    partition: { account: true },
+    signInAdoption: 'keep_anonymous',
   }), [initialChannel, initialGameId])
   const [draft, setDraft, clearDraft] = useMemoryState(draftRecord, {
     accountId: user?.id,
@@ -918,8 +920,8 @@ function ForumComposerDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="forum-publish-dialog z-[3001]"
-        overlayClassName="z-[3000] bg-black/55 backdrop-blur-sm"
+        className="forum-publish-dialog z-[var(--arkive-layer-sheet)]"
+        overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
         showCloseButton={false}
       >
         <form className="forum-publish-form" onSubmit={submit}>
@@ -931,7 +933,7 @@ function ForumComposerDialog({
               <span>{authorName}</span>
             </div>
             <DialogClose asChild>
-              <button type="button" className="forum-publish-close" aria-label={t('forum.composer.close')}>
+              <button type="button" className={POPUP_CLOSE_CONTROL_CLASS} aria-label={t('forum.composer.close')}>
                 <IconX className="size-5" stroke={1.8} aria-hidden="true" />
               </button>
             </DialogClose>

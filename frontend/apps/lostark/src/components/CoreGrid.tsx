@@ -248,7 +248,7 @@ function CoreCard({
               ) : (
                 <span
                   aria-hidden
-                  className="relative text-4xl font-light leading-none text-muted-foreground"
+                  className="relative text-3xl font-normal leading-none text-muted-foreground"
                 >
                   +
                 </span>

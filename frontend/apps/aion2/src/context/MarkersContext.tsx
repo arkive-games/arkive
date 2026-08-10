@@ -9,6 +9,7 @@ import {
   browserMemory,
   defineMemoryRecord,
   isBoolean,
+  memoryPolicy,
   parseJson,
   useMemoryState,
 } from "@gamemap/state-memory";
@@ -53,7 +54,7 @@ function loadV1(map: string): Set<string> {
     id: "completed-markers-v1",
     namespace: "aion2",
     surface: "map",
-    stateClass: "durable_progress",
+    ...memoryPolicy.durableProgress("clear-map-progress"),
     schemaVersion: "1.0.0",
     defaultValue: () => [] as string[],
     validate: (value: unknown): value is string[] =>
@@ -69,7 +70,7 @@ function clearV1(map: string): void {
     id: "completed-markers-v1",
     namespace: "aion2",
     surface: "map",
-    stateClass: "durable_progress",
+    ...memoryPolicy.durableProgress("clear-map-progress"),
     schemaVersion: "1.0.0",
     defaultValue: () => [] as string[],
     validate: (value: unknown): value is string[] => Array.isArray(value) && value.every((item) => typeof item === "string"),
@@ -81,7 +82,7 @@ const completedSubtypeRecord = (legacyKey: string) => defineMemoryRecord({
   id: "completed-markers",
   namespace: "aion2",
   surface: "map",
-  stateClass: "durable_progress",
+  ...memoryPolicy.durableProgress("clear-map-progress"),
   schemaVersion: "1.0.0",
   defaultValue: () => [] as number[],
   validate: (value: unknown): value is number[] =>
@@ -104,7 +105,7 @@ const showLabelsRecord = defineMemoryRecord({
   id: "show-labels",
   namespace: "aion2",
   surface: "map",
-  stateClass: "device_preference",
+  ...memoryPolicy.userPreference("reset-map-labels"),
   schemaVersion: "1.0.0",
   defaultValue: () => true,
   validate: isBoolean,

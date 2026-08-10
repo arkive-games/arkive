@@ -31,10 +31,10 @@
   max-width: 52rem;
   margin: 0;
   color: var(--foreground);
-  font-size: clamp(2.55rem, 4vw, 3.9rem);
-  font-weight: 850;
-  letter-spacing: -0.055em;
-  line-height: 1;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: var(--arkive-leading-page-title);
 }
 
 .catalog-intro {
@@ -42,7 +42,7 @@
   margin: 0.9rem 0 0;
   color: var(--muted-foreground);
   font-size: 0.875rem;
-  line-height: 1.65;
+  line-height: var(--arkive-leading-body);
 }
 
 .catalog-controls {
@@ -57,15 +57,15 @@
   margin-top: 0;
   padding: 0.42rem 0.42rem 0.42rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--home-deep);
   background: color-mix(in srgb, var(--card) 96%, transparent);
   box-shadow: 0 0.8rem 2.8rem color-mix(in srgb, var(--home-deep) 9%, transparent);
 }
 
 .catalog-search:focus-within {
-  border-color: color-mix(in srgb, var(--ring) 70%, var(--border));
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--ring) 15%, transparent);
+  border-color: var(--ring);
+  box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--ring) 20%, transparent);
 }
 
 .catalog-search input {
@@ -83,18 +83,22 @@
   opacity: 0.82;
 }
 
+.catalog-search input:focus-visible {
+  outline: 0;
+}
+
 .catalog-search button {
   min-height: 2.7rem;
   flex: none;
   padding-inline: 1.5rem;
   border: 0;
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--primary-foreground);
   background: var(--primary);
   font-size: 0.875rem;
   font-weight: 750;
   cursor: pointer;
-  transition: filter 180ms ease, transform 180ms ease;
+  transition: filter var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .catalog-search button:hover {
@@ -129,13 +133,13 @@
   gap: 0.45rem;
   padding-inline: 0.9rem;
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--foreground);
   background: color-mix(in srgb, var(--card) 94%, transparent);
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 180ms ease, color 180ms ease, background 180ms ease, transform 180ms ease;
+  transition: border-color var(--arkive-motion-standard) var(--arkive-motion-easing), color var(--arkive-motion-standard) var(--arkive-motion-easing), background var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .catalog-categories button:hover {
@@ -175,8 +179,8 @@
 .catalog-results-heading h2 {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 820;
-  letter-spacing: -0.035em;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .catalog-results-heading p {
@@ -211,7 +215,7 @@
   aspect-ratio: 4 / 4.8;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 1.1rem;
+  border-radius: var(--arkive-radius-standard);
   background: var(--muted);
   box-shadow: 0 0.85rem 2.6rem color-mix(in srgb, var(--home-deep) 13%, transparent);
 }
@@ -220,7 +224,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 500ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition: transform var(--arkive-motion-panel) var(--arkive-motion-easing);
 }
 
 .catalog-game-link:hover .catalog-game-cover img {
@@ -247,7 +251,7 @@
   background: color-mix(in srgb, var(--card) 92%, transparent);
   opacity: 0;
   transform: translateY(0.35rem);
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition: opacity var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .catalog-game-link:hover .catalog-game-open,
@@ -260,18 +264,18 @@
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  z-index: 2;
+  z-index: var(--arkive-layer-local-control);
   display: grid;
   width: 2.45rem;
   height: 2.45rem;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--card) 55%, transparent);
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--foreground);
   background: color-mix(in srgb, var(--card) 88%, transparent);
   cursor: pointer;
   backdrop-filter: blur(0.5rem);
-  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+  transition: color var(--arkive-motion-standard) var(--arkive-motion-easing), background var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .catalog-bookmark:hover {
@@ -331,7 +335,7 @@
   flex-direction: column;
   padding: 3rem 1.5rem;
   border: 1px dashed var(--border);
-  border-radius: 1.35rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--muted-foreground);
   background: color-mix(in srgb, var(--card) 82%, transparent);
   text-align: center;
@@ -354,7 +358,7 @@
   margin-top: 1.25rem;
   padding: 0.7rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--foreground);
   background: var(--card);
   font-size: 0.75rem;
@@ -376,7 +380,7 @@
   height: 2.5rem;
   place-items: center;
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   color: var(--foreground);
   background: var(--card);
   cursor: pointer;
@@ -401,7 +405,7 @@
   }
 
   .catalog-hero h1 {
-    font-size: clamp(2.45rem, 10vw, 3.5rem);
+    font-size: 1.875rem;
   }
 
   .catalog-results-heading {

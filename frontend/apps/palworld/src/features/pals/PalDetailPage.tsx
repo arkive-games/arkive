@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
-import { defineMemoryRecord, parseJson, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ChevronLeft, ChevronRight, FoldVertical, Moon, UnfoldVertical, Zap } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
@@ -85,7 +85,7 @@ const detailSectionsRecord = defineMemoryRecord({
   id: 'mobile-sections',
   namespace: 'palworld',
   surface: 'pal-detail',
-  stateClass: 'device_preference',
+  ...memoryPolicy.sessionContext('reset-detail-disclosure'),
   schemaVersion: '1.0.0',
   defaultValue: () => ({} as Record<string, boolean>),
   validate: (value: unknown): value is Record<string, boolean> => {
@@ -94,7 +94,7 @@ const detailSectionsRecord = defineMemoryRecord({
     return entries.length <= DETAIL_SECTION_IDS.length && entries.every(([key, expanded]) =>
       DETAIL_SECTION_IDS.includes(key as DetailSectionId) && typeof expanded === 'boolean')
   },
-  viewportScoped: true,
+  partition: { viewport: true },
   legacyKeys: [DETAIL_SECTION_STORAGE],
   migrateLegacy: parseJson,
 })
@@ -486,7 +486,7 @@ export default function PalDetailPage() {
                 {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
               </div>
             ) : null}
-            <h1 className="text-2xl font-bold sm:text-3xl">{text?.name ?? pal.id}</h1>
+            <h1 className="text-3xl font-bold">{text?.name ?? pal.id}</h1>
             {!lng.startsWith('zh') ? (
               <div className="mt-0.5 font-mono text-xs text-muted-foreground">{pal.id}</div>
             ) : null}

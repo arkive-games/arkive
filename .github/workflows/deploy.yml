@@ -144,8 +144,8 @@ jobs:
         # excludes this filename as host config rather than content
         # (frontend/scripts/toy-build.mjs).
         #
-        # meta has no client-side router and so needs no rewrites; a file that goes
-        # missing for any other app surfaces as a failing deep-link check below.
+        # Meta owns the cross-site font headers; game apps own their router
+        # rewrites. A missing game config surfaces as a failed deep-link check.
         working-directory: frontend
         run: |
           src="apps/${{ matrix.app }}/edgeone.json"

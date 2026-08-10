@@ -15,7 +15,7 @@ export function ScoreRail({ result }: { result: Result }) {
     <aside className="sticky top-4 space-y-3 max-lg:static">
       <div className="rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-card-foreground">
         <div className="text-sm text-muted-foreground">{multi ? '辅助战斗力' : result.components[0].label}</div>
-        <div className="text-4xl font-semibold tabular-nums tracking-tight">
+        <div className="text-3xl font-bold tabular-nums">
           {fmt(result.total)}
         </div>
         {multi && (

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { ArrowDown01, ArrowUp10, Check, RotateCcw, Sparkles, Star } from 'lucide-react'
 import {
   Button,
@@ -51,21 +51,20 @@ const numberRecord = (id: string, defaultValue: number, min: number, max: number
   id,
   namespace: 'palworld',
   surface: 'stat-simulator',
-  stateClass: 'task_draft' as const,
+  ...memoryPolicy.taskDraft('new-stat-calculation'),
   schemaVersion: '1.0.0',
   defaultValue: () => defaultValue,
   validate: (value: unknown): value is number =>
     typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max,
-  retentionMs: 30 * 24 * 60 * 60 * 1_000,
 })
 
 const levelRecord = numberRecord('level', 60, 1, MAX_LEVEL)
 const starsRecord = numberRecord('stars', 0, 0, MAX_STARS)
 const bondRecord = numberRecord('bond', 0, 0, MAX_BOND)
 const awakeRecord = defineMemoryRecord({
-  id: 'awake', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  id: 'awake', namespace: 'palworld', surface: 'stat-simulator',
+  ...memoryPolicy.taskDraft('new-stat-calculation'),
   schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
-  retentionMs: 30 * 24 * 60 * 60 * 1_000,
 })
 
 type FourStats = Record<RowKey, number>
@@ -76,17 +75,20 @@ const isFourStats = (value: unknown): value is FourStats => {
     typeof stats[key as RowKey] === 'number' && Number.isFinite(stats[key as RowKey]))
 }
 const soulsRecord = defineMemoryRecord({
-  id: 'souls', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  id: 'souls', namespace: 'palworld', surface: 'stat-simulator',
+  ...memoryPolicy.taskDraft('new-stat-calculation'),
   schemaVersion: '1.0.0', defaultValue: () => ({ hp: 0, attack: 0, defense: 0, craft: 0 }),
-  validate: isFourStats, retentionMs: 30 * 24 * 60 * 60 * 1_000,
+  validate: isFourStats,
 })
 const passivesRecord = defineMemoryRecord({
-  id: 'passives', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  id: 'passives', namespace: 'palworld', surface: 'stat-simulator',
+  ...memoryPolicy.taskDraft('new-stat-calculation'),
   schemaVersion: '1.0.0', defaultValue: () => ({ hp: 0, attack: 0, defense: 0, craft: 0 }),
-  validate: isFourStats, retentionMs: 30 * 24 * 60 * 60 * 1_000,
+  validate: isFourStats,
 })
 const ivRecord = defineMemoryRecord({
-  id: 'iv', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  id: 'iv', namespace: 'palworld', surface: 'stat-simulator',
+  ...memoryPolicy.taskDraft('new-stat-calculation'),
   schemaVersion: '1.0.0', defaultValue: () => ({ hp: 100, attack: 100, defense: 100 }),
   validate: (value: unknown): value is Record<CombatKey, number> => {
     if (!value || typeof value !== 'object') return false
@@ -96,17 +98,16 @@ const ivRecord = defineMemoryRecord({
       return typeof current === 'number' && Number.isFinite(current) && current >= 0 && current <= MAX_IV
     })
   },
-  retentionMs: 30 * 24 * 60 * 60 * 1_000,
 })
 const enteredRecord = defineMemoryRecord({
-  id: 'entered-values', namespace: 'palworld', surface: 'stat-simulator', stateClass: 'task_draft',
+  id: 'entered-values', namespace: 'palworld', surface: 'stat-simulator',
+  ...memoryPolicy.taskDraft('new-stat-calculation'),
   schemaVersion: '1.0.0', defaultValue: () => ({} as Partial<Record<RowKey, string>>),
   validate: (value: unknown): value is Partial<Record<RowKey, string>> => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return false
     return Object.entries(value).every(([key, entry]) =>
       ['hp', 'attack', 'defense', 'craft'].includes(key) && typeof entry === 'string' && entry.length <= 32)
   },
-  retentionMs: 30 * 24 * 60 * 60 * 1_000,
 })
 
 const CALC: Record<CombatKey, typeof calcHp> = { hp: calcHp, attack: calcAttack, defense: calcDefense }
@@ -322,7 +323,7 @@ function SimPalPicker({
       filter={(v, s) => (v.toLowerCase().includes(s.toLowerCase().trim()) ? 1 : 0)}
     >
       <Popover open={open} onOpenChange={setOpen}>
-        <div ref={pickerControlRef} className="relative flex h-11 w-full overflow-hidden rounded-md border border-border bg-background shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 [&_[data-slot=command-input-wrapper]]:absolute [&_[data-slot=command-input-wrapper]]:inset-y-0 [&_[data-slot=command-input-wrapper]]:right-11 [&_[data-slot=command-input-wrapper]]:left-0 [&_[data-slot=command-input-wrapper]]:h-full [&_[data-slot=command-input-wrapper]]:border-0 [&_[data-slot=command-input-wrapper]]:px-2.5">
+        <div ref={pickerControlRef} className="relative flex h-11 w-full overflow-hidden rounded-md border border-border bg-background shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20 [&_[data-slot=command-input-wrapper]]:absolute [&_[data-slot=command-input-wrapper]]:inset-y-0 [&_[data-slot=command-input-wrapper]]:right-11 [&_[data-slot=command-input-wrapper]]:left-0 [&_[data-slot=command-input-wrapper]]:h-full [&_[data-slot=command-input-wrapper]]:border-0 [&_[data-slot=command-input-wrapper]]:px-2.5">
             <PopoverTrigger asChild>
               <button
                 type="button"
@@ -973,7 +974,7 @@ export default function StatSimulatorPage() {
                 </button>
 
                 <div className="border-t border-border/60 pt-3">
-                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:tracking-wide sm:text-muted-foreground">
+                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:text-muted-foreground">
                     {t('sim.souls')}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -985,7 +986,7 @@ export default function StatSimulatorPage() {
                 </div>
 
                 <div className="border-t border-border/60 pt-3">
-                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:tracking-wide sm:text-muted-foreground">
+                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:text-muted-foreground">
                     {t('sim.passives')}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -997,7 +998,7 @@ export default function StatSimulatorPage() {
                 </div>
 
                 <div className="border-t border-border/60 pt-3">
-                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:tracking-wide sm:text-muted-foreground">
+                  <div className="mb-2 text-sm font-semibold text-foreground sm:mb-1.5 sm:text-xs sm:uppercase sm:text-muted-foreground">
                     {t('sim.ivs')}
                   </div>
                   <div className="space-y-2">

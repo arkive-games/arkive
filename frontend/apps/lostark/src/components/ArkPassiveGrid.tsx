@@ -162,7 +162,7 @@ function TreeCard({
               ) : (
                 <span
                   aria-hidden
-                  className="relative grid size-full place-items-center rounded-full border border-dashed border-border text-4xl font-light leading-none text-muted-foreground"
+                  className="relative grid size-full place-items-center rounded-full border border-dashed border-border text-3xl font-normal leading-none text-muted-foreground"
                 >
                   +
                 </span>

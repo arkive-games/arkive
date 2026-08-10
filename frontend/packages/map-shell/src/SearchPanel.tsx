@@ -229,7 +229,7 @@ export function SearchPanel({
         // popups that opened underneath it.
         variant === "floating"
           ? cn(
-              "pointer-events-none absolute top-3 bottom-3 z-[600] flex flex-col gap-2",
+              "pointer-events-none absolute top-3 bottom-3 z-[var(--arkive-layer-map-control)] flex flex-col gap-2",
               floatingPlacement === "center"
                 ? "left-1/2 right-auto w-[calc(100%-2rem)] min-w-72 max-w-[34rem] -translate-x-1/2"
                 : "right-3 w-[290px]",
@@ -240,7 +240,7 @@ export function SearchPanel({
       data-testid="search-panel"
     >
       {/* Search bar */}
-      <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur">
+      <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20">
         <IconSearch className="size-4 shrink-0 text-muted-foreground" stroke={1.8} aria-hidden />
         <input
           data-testid="marker-search"

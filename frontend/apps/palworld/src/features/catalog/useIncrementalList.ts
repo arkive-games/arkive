@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { browserMemory, defineMemoryRecord, isFiniteNumber } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, isFiniteNumber, memoryPolicy } from '@gamemap/state-memory'
 
 // Reveal chunk sizes. All catalog data is already in memory (static JSON
 // bundles), so this is purely a DOM-size control: the items grid would
@@ -18,11 +18,10 @@ const revealRecord = (storageKey: string) => defineMemoryRecord({
   id: 'reveal-depth',
   namespace: 'palworld',
   surface: 'catalog',
-  stateClass: 'session_context',
+  ...memoryPolicy.sessionContext('clear-reveal-depth'),
   schemaVersion: '1.0.0',
   defaultValue: () => INITIAL_COUNT,
   validate: (value: unknown): value is number => isFiniteNumber(value) && value >= INITIAL_COUNT,
-  retentionMs: 24 * 60 * 60 * 1_000,
   legacyKeys: [STORAGE_PREFIX + storageKey],
   migrateLegacy: (raw: string) => Number(raw),
 })

@@ -1,5 +1,5 @@
 import type { EngravingSlot, GemSlot, Loadout, Role } from '@/calc/types'
-import { browserMemory, defineMemoryRecord, parseJson } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, memoryPolicy, parseJson } from '@gamemap/state-memory'
 
 export const STORAGE_KEY = 'lostark.loadout.v1'
 export const SCHEMA_VERSION = 1
@@ -283,10 +283,10 @@ export function restoreLoadout(): Loadout {
 }
 
 const loadoutRecord = defineMemoryRecord<unknown>({
-  id: 'loadout', namespace: 'lostark', surface: 'combat-power', stateClass: 'task_draft',
+  id: 'loadout', namespace: 'lostark', surface: 'combat-power',
+  ...memoryPolicy.taskDraft('new-combat-power-calculation'),
   schemaVersion: '1.0.0', defaultValue: defaultLoadout,
   validate: (value: unknown): value is unknown => Boolean(value) && typeof value === 'object',
-  retentionMs: 30 * 24 * 60 * 60 * 1_000,
   legacyKeys: [STORAGE_KEY],
   migrateLegacy: parseJson,
 })

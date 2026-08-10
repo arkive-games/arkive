@@ -1,312 +1,277 @@
-schema_version: "2.0.0"
+schema_version: "3.0.0"
 spec_id: "arkive.interactive-map.desktop-ui"
 title: "Arkive Interactive Map Desktop UI Specification"
 status: "canonical"
-last_reviewed: "2026-08-08"
+last_reviewed: "2026-08-10"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
+  ui_foundations: "docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml"
   color_system: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
+  state_memory: "docs/ARKIVE_STATE_MEMORY_SPEC.yaml"
   repository_contract: "CLAUDE.md"
   reading_rule: >-
-    Read the parent site specification first. Read this file only for desktop
-    interactive-map work, and read the color specification only when colors or
-    themes are in scope.
+    Read the parent and UI-foundations specifications first. Read this file
+    only for interactive-map composition and behavior at md and above.
 
 purpose:
   summary: >-
-    Define one reusable desktop layout and interaction contract for every
-    Arkive game map. Games supply content, data, routes, languages, and artwork;
-    they do not create another shell.
+    Define one reusable desktop map workspace. Games supply content, routes,
+    data, localization, and artwork; they do not create another shell.
   outcomes:
-    - "A new game can reuse the same navigation, sidebar, search, map controls, and marker details."
-    - "A shared change is implemented once and reaches every map application."
-    - "Humans and automated agents can locate the owning component without searching every game."
+    - "A new map reuses navigation, sidebars, search, controls, and marker details."
+    - "A shared change is implemented once for every map and rendering engine."
+    - "Each map surface has one discoverable owner."
 
 scope:
   included:
-    - "Desktop interactive maps at the md breakpoint and above"
-    - "Map shell, game sidebar, map selector, filters, search, controls, marker details, and site-info rail"
-    - "Map-specific localization, accessibility, and verification"
+    - "Interactive maps at md and above"
+    - "Map shell, game sidebar, map selector, filters, search, controls, marker details, and optional information rail"
+    - "Map-specific localization, accessibility, state memory, and verification"
   excluded:
-    - "Phone and tablet redesign below the md breakpoint"
-    - "Home-page composition and encyclopedia content layouts"
-    - "Color values, global typography, and global icon policy owned by the parent specifications"
+    - "Below-md composition owned by the mobile specification"
+    - "Portal and encyclopedia page layouts"
+    - "Global framework, typography, spacing, shape, color, and motion foundations"
     - "Game data, tile generation, coordinate calibration, and backend behavior"
 
 governance:
-  shared_first_rule: >-
-    A cross-game change belongs in map-shell or a shared primitive. If a shared
-    owner does not exist, create it before adding a third implementation.
-  per_game_override_rule: >-
-    A game may override only the fields listed under game_owned. It may not
-    change shared geometry, typography hierarchy, colors, icons, or interaction
-    semantics.
-  review_rule: >-
-    Shared chrome must render consistently in every current map app unless an
-    explicit exception is added to this file.
+  shared_first: "A cross-game change belongs in map-shell or a shared primitive."
+  promotion: "Create a shared owner before a third implementation of the same map pattern."
+  override: "A game may override only values listed under game_owned."
+  consistency: "All registered map applications use the same geometry and interaction semantics unless this file records an exception."
 
 component_registry:
   root: "frontend/packages/map-shell/src"
   components:
-    - name: "ShellLayout"
+    ShellLayout:
       file: "frontend/packages/map-shell/src/ShellLayout.tsx"
       owns: "Viewport layout and left, center, and optional right columns"
-    - name: "ArkiveMapTopBar"
+    ArkiveMapTopBar:
       file: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
-      owns: "Shared brand block, top-nav composition, theme options, and login control"
-      host_supplies: "Game routes, localized route labels, supported languages, and theme state adapter"
-    - name: "ShellTopBar"
+      owns: "Brand, top navigation, language, theme, and account composition"
+      host_supplies: "Routes, localized labels, supported languages, and adapters"
+    ShellTopBar:
       file: "frontend/packages/map-shell/src/ShellTopBar.tsx"
-      owns: "Navigation geometry, hover or focus dropdowns, and active-indicator routing"
-    - name: "ShellSidebar"
+      owns: "Navigation geometry, dropdown behavior, and active indicator"
+    ShellSidebar:
       file: "frontend/packages/map-shell/src/ShellSidebar.tsx"
-      owns: "Sidebar width, scrolling, collapse behavior, and collapse control"
-    - name: "ShellGameHeader"
+      owns: "Sidebar geometry, scroll, collapse, and collapse control"
+    ShellGameHeader:
       file: "frontend/packages/map-shell/src/ShellGameHeader.tsx"
-      owns: "Game-art header geometry and logo or title composition"
-    - name: "ShellMapSelect"
+      owns: "Game artwork and logo composition"
+    ShellMapSelect:
       file: "frontend/packages/map-shell/src/ShellMapSelect.tsx"
-      owns: "Map-picker geometry, selection, and clipped-label marquee"
-    - name: "FilterPanel"
+      owns: "Map selection and clipped-label handling"
+    FilterPanel:
       file: "frontend/packages/map-shell/src/FilterPanel.tsx"
-      owns: "Bulk controls, categories, visibility semantics, subtype states, and density"
-    - name: "SearchPanel"
+      owns: "Bulk controls, categories, subtype visibility, and density"
+    SearchPanel:
       file: "frontend/packages/map-shell/src/SearchPanel.tsx"
-      owns: "Floating search geometry, full-field search, results, and selection callbacks"
-    - name: "MarkerPopupCard"
+      owns: "Search input, results, geometry, and selection callbacks"
+    MarkerPopupCard:
       file: "frontend/packages/map-shell/src/MarkerPopupCard.tsx"
-      owns: "Marker-detail hierarchy, coordinates, copy feedback, descriptions, images, and extension slot"
-    - name: "SiteInfoPanel"
+      owns: "Marker identity, coordinates, copy feedback, description, images, and extension slot"
+    SiteInfoPanel:
       file: "frontend/packages/map-shell/src/SiteInfoPanel.tsx"
       owns: "Optional site information and feedback rail"
-  shared_style_owner: "frontend/packages/map-shell/src/arkive-map-theme.css"
-  shared_primitives: "frontend/packages/ui/src"
+  style_owner: "frontend/packages/map-shell/src/arkive-map-theme.css"
+  primitives: "frontend/packages/ui/src"
 
 game_owned:
   allowed:
-    - "Game name and localized copy"
-    - "Game logo and header artwork"
-    - "Artwork focal position and legibility shade"
-    - "Navigation labels, routes, dropdown information architecture, and language inventory"
-    - "Maps, tiles, regions, coordinate transforms, and map void color"
-    - "Marker taxonomy, icons, counts, descriptions, images, and detail extensions"
+    - "Localized game name and copy"
+    - "Game logo, header artwork, focal position, and legibility shade"
+    - "Navigation labels, routes, dropdown information architecture, and supported languages"
+    - "Maps, tiles, regions, transforms, and map void color"
+    - "Marker taxonomy, artwork, counts, descriptions, images, and detail extensions"
   forbidden:
-    - "Alternative top-bar, sidebar, header, search, or popup geometry"
-    - "Alternative shared font hierarchy or icon style"
-    - "Replacement of Arkive semantic colors with a game palette"
+    - "Alternative shared top bar, sidebar, search, filter, or popup geometry"
+    - "Alternative shared typography, radius, icon, motion, or color system"
     - "Different active, inactive, hover, copy, collapse, or visibility semantics"
 
-layout:
+desktop_workspace:
   viewport:
-    model: "Full viewport without document-level scrolling"
-    root_classes: "flex h-dvh w-screen flex-col overflow-hidden"
-    desktop_breakpoint: "md"
+    model: "Full available viewport with no document-level scrolling"
+    height: "Use dvh from the UI-foundations specification."
   top_bar:
-    contract: "Use the global shell contract in docs/ARKIVE_SITE_SPEC.yaml."
-    height: "3.5rem"
-    horizontal_padding: "1rem"
+    contract: "Use the parent global-shell contract and shared header height."
+    padding: "Use desktop page gutter from the UI-foundations specification."
   content_row:
     columns:
       - "Left game and filter sidebar"
       - "Flexible map canvas"
-      - "Optional right site-info sidebar"
-    overflow: "hidden"
+      - "Optional right information rail"
     map_min_width: "0"
+    overflow: "hidden"
   left_sidebar:
     expanded_width: "20rem"
     collapsed_width: "0"
-    transition_duration: "300ms"
+    transition: "Use panel motion from the UI-foundations specification."
     collapse_control:
       width: "2rem"
       height: "3rem"
-      label_size: "text-xs"
-      expanded_key: "collapse"
-      collapsed_key: "expand"
-  right_sidebar:
+      label_role: "metadata"
+      labels: "Localized collapse and expand"
+  right_rail:
     role: "Optional site information and feedback"
     behavior: "Independently collapsible and visually subordinate to the map"
+    narrow_rule: "Hide or collapse before reducing the map below its usable width."
 
 game_sidebar:
   game_header:
     minimum_height: "8rem"
     background_fit: "cover"
-    content_padding: "1rem"
+    content_padding: "Use space-4 from the UI-foundations specification."
     logo_box_height: "3rem"
-    game_line_margin_top: "0.5rem"
-    game_line_size: "text-sm"
+    game_line_gap: "Use space-2."
+    game_line_role: "dense_body"
     game_name_weight: 700
     subtitle_weight: 600
-    separator: "Middle dot rendered as its own span"
+    separator: "At most one middle dot rendered as its own span"
     rules:
-      - "Use real game artwork, never a flat color or unrelated decoration."
-      - "Keep the game logo readable and use identical header dimensions across games."
+      - "Use real game artwork, never a flat decorative replacement."
+      - "Keep logo and title readable in identical shared geometry across games."
   map_selector:
     width: "Full sidebar content width"
-    minimum_height: "2.75rem"
-    title_size: "text-sm"
-    value_size: "text-base"
-    overflow: "Start a marquee on pointer hover only when the value is clipped."
-    icon_rule: "Do not add a game-specific leading shape unless it conveys real meaning."
+    minimum_height: "Use touch_target_standard from the UI-foundations specification."
+    title_role: "dense_body"
+    value_role: "subsection_title"
+    overflow: "Wrap when possible; otherwise reveal the complete clipped value on focus or pointer hover."
   bulk_controls:
     columns: 2
-    gap: "0.5rem"
-    minimum_height: "2.25rem"
-    label_size: "text-xs"
-    weight: 600
+    gap: "Use space-2."
+    minimum_height: "Use desktop_compact_height."
+    label_role: "metadata"
   categories:
-    heading_size: "text-sm"
+    heading_role: "dense_body"
     heading_weight: 500
     minimum_height: "2.5rem"
-    spacing: "Reference-dense but never cramped"
-    disclosure: "Use the shared accordion chevron at the far right."
+    disclosure: "Use the shared chevron at the far edge."
     visibility:
-      all_or_partial_visible: "Eye"
+      some_or_all_visible: "Eye"
       none_visible: "Eye off"
-      rule: "The eye closes only when every subtype in the category is hidden."
-  subtype_buttons:
+      rule: "Eye off appears only when every subtype is hidden."
+  subtype_controls:
     columns: 2
-    minimum_height: "2.25rem"
-    gap_x: "0.5rem"
-    gap_y: "0.375rem"
-    label_size: "text-xs"
-    inactive: "Medium weight, muted foreground, 65 percent opacity, transparent border"
-    active: "Semibold, full opacity, selected surface, subtle border, and amber inset indicator"
-    overflow: "Start a marquee on pointer hover only when the label is clipped."
+    minimum_height: "Use desktop_compact_height."
+    gap: "Use space-2 horizontally and space-1 vertically."
+    label_role: "metadata"
+    inactive: "Medium weight, muted foreground, reduced emphasis, transparent border"
+    active: "Semibold, full opacity, selected surface, border, and amber inset indicator"
+    overflow: "Reveal clipped text on focus or pointer hover without moving the surrounding layout."
 
 map_search:
   component: "SearchPanel"
-  placement: "Top center of the map canvas, 0.75rem below the top edge"
+  placement: "Top center of the map canvas, space-3 below the edge"
   width:
-    preferred: "Available map width minus 2rem"
+    preferred: "Available map width minus space-8"
     minimum: "18rem"
     maximum: "34rem"
-    behavior: "Shrink with the map column before reaching the minimum."
+    behavior: "Shrink with the map column until the minimum, then preserve canvas usability by collapsing optional rails."
   input_row:
-    minimum_height: "3rem"
-    radius: "radius-lg"
-    surface: "Shared popover surface with backdrop blur"
-    input_size: "text-sm"
-    submit_size: "text-sm"
-    scope: "Search every field configured by the game; never render a scope selector."
-  placeholder_scope:
-    - "Tasks"
-    - "NPCs"
-    - "Items"
-    - "Map markers"
+    minimum_height: "Use isolated_map_target."
+    radius: "Use standard_radius."
+    surface: "Shared popover token with an opaque fallback"
+    input_role: "control_label"
+    submit_role: "control_label"
+    scope: "Search every game-configured field; do not render a scope selector."
   results:
-    count_size: "text-xs"
-    title_size: "text-sm"
+    count_role: "metadata"
+    title_role: "dense_body"
     title_weight: 600
-    metadata_size: "text-xs"
-    empty_description: "The localized no-description label is permitted in search results only."
+    metadata_role: "metadata"
+    empty_description: "The localized no-description label is allowed only in search results."
 
-marker_details:
+marker_detail:
   component: "MarkerPopupCard"
   width: "20rem"
-  radius: "radius-xl"
-  top_accent: "0.25rem using the shared navigation-accent token"
-  header:
+  radius: "Use standard_radius."
+  accent: "Use navigation plus shape, never color alone."
+  identity:
     icon_box: "2.5rem square"
-    title_size: "text-base"
+    title_role: "subsection_title"
     title_weight: 700
-    metadata_size: "text-xs"
+    metadata_role: "metadata"
   coordinates:
-    value_font: "Shared monospace stack"
-    value_weight: 600
+    role: "coordinate_or_id"
     display: "Use the exact localized value supplied by the game."
     copy:
-      enabled: true
       copied_value: "Exactly the visible coordinate string"
-      states:
-        idle: "Copy icon"
-        success: "Check icon and localized success label for 2000ms"
-        failure: "Alert-circle icon and localized failure label for 2000ms"
+      idle: "Copy icon"
+      success: "Check icon and localized success label for 2000ms"
+      failure: "Alert icon and localized failure label for 2000ms"
       transport: "navigator.clipboard.writeText on secure origins"
   description:
-    size: "text-sm"
-    line_height: "leading-relaxed"
-    empty_behavior: "Render neither a row nor placeholder text."
+    role: "dense_body"
+    line_height: "relaxed"
+    empty: "Render no placeholder row."
   images:
     columns: 2
     aspect_ratio: "4:3"
-    radius: "radius-lg"
+    radius: "Use standard_radius."
   extensions: >-
-    Rewards, completion controls, entity links, and other game content use the
-    shared children slot. They may not replace the shared header, coordinate,
+    Rewards, completion, entity links, and other game content use the shared
+    extension slot and do not replace the shared identity, coordinates,
     description, or image structure.
 
 interaction_contracts:
-  individual_filter: "Active combines strong text, full opacity, tint, border, and amber indicator; inactive is lighter and muted."
-  category_visibility: "Eye off appears only when every subtype is hidden."
-  sidebar_collapse: "Use localized collapse or expand labels and the shared chevron."
+  individual_filter: "Active combines text, opacity, surface, border, and indicator; inactive is visibly quieter."
+  category_visibility: "Eye off appears only when all child subtypes are hidden."
+  sidebar_collapse: "Use localized labels and the shared chevron."
   marker_selection: "Open MarkerPopupCard through the map-engine shared popup path."
-  engine_consistency: "Leaflet and WebGL render the same popup content and states."
-  arbitrary_coordinate_copy: "Desktop secondary click opens the shared copy-position menu."
-  nav_dropdown: "Pointer hover or keyboard focus opens; no visible dropdown chevron."
-  overflow_text: "Start a marquee only when clipping is detected."
+  engine_consistency: "Leaflet and WebGL expose the same content, controls, and states."
+  coordinate_copy: "Desktop secondary click opens the shared copy-position menu."
+  navigation_dropdown: "Pointer hover or keyboard focus opens; no decorative dropdown chevron."
+  overflow_text: "Reveal complete clipped content only when clipping is detected."
+  memory: "Use the map classifications and restore behavior from the state-memory specification."
 
 localization_and_accessibility:
   localization:
-    - "No shared user-visible string is hard-coded."
-    - "A shared action ships in every locale supported by its host game."
-    - "Copy success and failure states have localized visible and accessible labels."
-  accessibility:
-    - "Use native buttons and links."
-    - "Icon-only controls have accessible labels."
-    - "Toggles expose aria-pressed or aria-expanded."
+    - "No shared visible string is hard-coded."
+    - "Every shared action ships for every locale supported by the host game."
+    - "Copy success and failure have localized visible and accessible labels."
+  map_specific_accessibility:
+    - "Keyboard users can reach the map selector, filters, search, controls, markers, and popup actions."
+    - "Dropdowns open on focus and close with Escape."
     - "Copy feedback uses an aria-live polite status."
-    - "Dropdowns work with keyboard focus and Escape."
-    - "State differences never rely on color alone."
+    - "Both engines expose equivalent accessible names and selected states."
+    - "State does not rely on marker or control color alone."
 
-new_game_checklist:
-  required_composition:
-    - "ShellLayout"
-    - "ArkiveMapTopBar"
-    - "ShellSidebar"
-    - "ShellGameHeader"
-    - "ShellMapSelect"
-    - "FilterPanel"
-    - "SearchPanel"
-    - "MarkerPopupCard"
-    - "SiteInfoPanel when site information is available"
-  required_configuration:
-    - "Game id, localized name, logo, and header artwork"
-    - "Navigation routes and supported languages"
-    - "Map metadata, selector labels, filters, and marker icons"
-    - "Coordinate display transform and marker popup extensions"
-  forbidden_shortcuts:
-    - "Copying a shared component into a game app"
-    - "Adding another popup or icon implementation"
-    - "Changing shared colors or font sizes to match game artwork"
+new_map_contract:
+  - "Use every required owner in component_registry; optional SiteInfoPanel may be omitted."
+  - "Provide game-owned configuration without copying shared source."
+  - "Configure localized routes, languages, map data, filters, icons, coordinate display, and popup extensions."
+  - "Verify at least one Leaflet and one WebGL consumer for shared engine changes."
 
 verification:
   viewports:
-    standard_desktop: "1440x900"
-    narrow_desktop: "780x700"
+    standard: "1440x900"
+    narrow: "780x700"
   themes:
     - "light"
     - "dark"
-  current_map_apps:
-    - "aion2"
-    - "palworld"
-    - "sts2"
-    - "vrising"
-  rule: "Verify every affected map app; shared engine work must cover at least one Leaflet and one WebGL consumer."
+  application_scope: "Discover and verify every registered map application; do not maintain a handwritten game list here."
   interaction_checks:
-    - "The Arkive home link remains visible on narrow desktop."
-    - "The active nav indicator follows hover and returns to the active route."
+    - "Arkive home remains reachable on narrow desktop."
+    - "Active navigation returns after hover or focus leaves."
     - "Sidebar scrolling reaches the final category."
-    - "Search shrinks to 18rem, has no scope selector, and still returns results."
-    - "Filter, popup, copy, and no-description states match across games and engines."
-  automated_checks:
-    - "Run focused map-shell tests while editing."
-    - "Type-check and build every affected app."
-    - "Run the complete frontend test suite once before handoff."
+    - "Search preserves its minimum width and returns results without a scope selector."
+    - "Filter, popup, copy, empty-description, and memory states match across engines."
+    - "Optional rails collapse before the map becomes unusable."
+  automated:
+    - "Run focused map-shell and engine tests."
+    - "Type-check and build every affected registered map application."
+    - "Run the complete frontend suite once before handoff."
 
-ai_change_protocol:
-  - "Read the parent site specification, then classify the request as shared or game-owned."
-  - "Inspect the owning component in component_registry before editing an app."
-  - "Change shared code first and avoid mirrored app-local rules."
-  - "Do not introduce mobile work unless the user expands the scope."
-  - "Update this file only when the map contract or component ownership changes."
+migration_from_2_0:
+  - "Read typography, spacing, shape, header height, control size, and motion from the UI-foundations specification."
+  - "Replace radius-lg and radius-xl map surfaces with standard_radius."
+  - "Replace the handwritten current-game list with registered-app discovery."
+  - "Use the state-memory specification for map restoration instead of repeating persistence behavior."
+
+maintenance:
+  rules:
+    - "This file owns only desktop map composition and interaction."
+    - "Component registry paths are authoritative and update with ownership changes."
+    - "Do not copy global foundation or color values into this file."
+    - "Update last_reviewed when the desktop map contract is intentionally reviewed."

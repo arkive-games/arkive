@@ -5,6 +5,11 @@ import { XIcon } from "lucide-react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "./utils"
+import {
+  MODAL_OVERLAY_CLASS,
+  MODAL_SURFACE_CLASS,
+  POPUP_CLOSE_CONTROL_CLASS,
+} from "./popup-styles"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -27,7 +32,8 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Sheet
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-[3000] bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-[var(--arkive-layer-sheet-backdrop)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        MODAL_OVERLAY_CLASS,
         className,
       )}
       {...props}
@@ -38,12 +44,12 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Sheet
 type SheetSide = "top" | "bottom" | "left" | "right"
 
 const sideClasses: Record<SheetSide, string> = {
-  top: "inset-x-0 top-0 h-auto max-h-[85dvh] border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+  top: "inset-x-0 top-0 h-auto max-h-[85dvh] rounded-none rounded-b-lg border-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
   bottom:
-    "inset-x-0 bottom-0 h-auto max-h-[85dvh] rounded-t-xl border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-  left: "inset-y-0 left-0 h-full w-3/4 max-w-sm border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+    "inset-x-0 bottom-0 h-auto max-h-[85dvh] rounded-none rounded-t-lg border-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+  left: "inset-y-0 left-0 h-full w-3/4 max-w-sm rounded-none rounded-r-lg border-0 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
   right:
-    "inset-y-0 right-0 h-full w-3/4 max-w-sm border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+    "inset-y-0 right-0 h-full w-3/4 max-w-sm rounded-none rounded-l-lg border-0 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
 }
 
 function SheetContent({
@@ -61,20 +67,32 @@ function SheetContent({
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
+        data-side={side}
         className={cn(
-          "fixed z-[3000] flex flex-col gap-2 bg-background p-4 text-foreground shadow-lg outline-none duration-300 data-[state=closed]:animate-out data-[state=open]:animate-in",
+          "fixed isolate z-[var(--arkive-layer-sheet)] flex flex-col gap-4 p-5 duration-[var(--arkive-motion-panel)] data-[state=closed]:animate-out data-[state=open]:animate-in",
+          MODAL_SURFACE_CLASS,
           sideClasses[side],
           className,
         )}
         {...props}
       >
+        {side === "bottom" && (
+          <span
+            data-slot="sheet-handle"
+            className="pointer-events-none absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-border"
+            aria-hidden="true"
+          />
+        )}
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close
             data-slot="sheet-close"
-            className="absolute top-3 right-3 z-10 flex size-9 items-center justify-center rounded-full border border-border bg-background/95 text-foreground opacity-100 shadow-sm backdrop-blur transition-colors hover:bg-accent hover:text-accent-foreground focus:ring-2 focus:ring-ring focus:outline-hidden"
+            className={cn(
+              "absolute top-2 right-2 z-[var(--arkive-layer-local-control)] md:top-3 md:right-3",
+              POPUP_CLOSE_CONTROL_CLASS,
+            )}
           >
-            <XIcon className="size-5" />
+            <XIcon className="size-4" />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}
@@ -84,17 +102,20 @@ function SheetContent({
 }
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="sheet-header" className={cn("flex flex-col gap-1", className)} {...props} />
+  return (
+    <div
+      data-slot="sheet-header"
+      className={cn("flex min-h-10 flex-col justify-center gap-2", className)}
+      {...props}
+    />
+  )
 }
 
 function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Title>) {
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      // A step above body text, like DialogTitle/AlertDialogTitle (both text-lg)
-      // — it was the odd one out at text-base, giving a sheet's heading no size
-      // hierarchy over its own content.
-      className={cn("text-lg font-semibold", className)}
+      className={cn("text-lg font-semibold leading-snug", className)}
       {...props}
     />
   )
@@ -107,7 +128,7 @@ function SheetDescription({
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-sm leading-relaxed text-muted-foreground", className)}
       {...props}
     />
   )

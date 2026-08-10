@@ -14,7 +14,7 @@ import {
   isMapEngineChoice,
   type MapEngineChoice,
 } from "@gamemap/map-shell";
-import { browserMemory, defineMemoryRecord, isString } from "@gamemap/state-memory";
+import { browserMemory, defineMemoryRecord, isString, memoryPolicy } from "@gamemap/state-memory";
 
 export {
   DEFAULT_MAP_ENGINE,
@@ -30,7 +30,7 @@ const engineRecord = defineMemoryRecord({
   id: "engine",
   namespace: "aion2",
   surface: "map",
-  stateClass: "device_preference",
+  ...memoryPolicy.userPreference("reset-map-renderer"),
   schemaVersion: "1.0.0",
   defaultValue: () => "",
   validate: isString,

@@ -2,12 +2,13 @@ import { useCallback, useMemo } from 'react'
 import { loadMarkers, type MarkerRow } from './data'
 import { markerImageUrl } from './assets'
 import { dataUrl } from './urls'
-import { browserMemory, defineMemoryRecord, isStringArray, parseJson, useMemoryState } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, isStringArray, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
 
 const MAP_ID = 'Vardoran'
 const COMPLETED_KEY = 'vrising.vblood.completed'
 const completedRecord = defineMemoryRecord({
-  id: 'completed-bosses', namespace: 'vrising', surface: 'vblood', stateClass: 'durable_progress',
+  id: 'completed-bosses', namespace: 'vrising', surface: 'vblood',
+  ...memoryPolicy.durableProgress('clear-vblood-progress'),
   schemaVersion: '1.0.0', defaultValue: () => [] as string[],
   validate: (value: unknown): value is string[] => isStringArray(value, 1_000),
   legacyKeys: [COMPLETED_KEY], migrateLegacy: parseJson,

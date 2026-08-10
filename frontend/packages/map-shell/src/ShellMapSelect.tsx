@@ -108,22 +108,11 @@ export function ShellMapSelect({
             ) : undefined}
           </SelectValue>
         </SelectTrigger>
-        {/* z-[3100]: the map picker is also rendered inside the mobile filter
-            bottom-sheet, and both the sheet and this listbox portal to <body>
-            as siblings. @gamemap/ui ships Select content at z-50 while a Sheet
-            sits at z-3000, and Radix copies the content's computed z-index
-            onto the fixed positioning wrapper — so the list opened *behind*
-            the sheet. Worse, Radix's dialog overlay carries an inline
-            `pointer-events: auto` (to survive the body-level
-            `pointer-events: none`), so at z-3000 it also swallowed every tap
-            aimed at an option: the picker looked completely dead on phones.
-            Lift the listbox above sheet level; a popup must always be the
-            topmost layer. Matches aion2's alert-dialog override (3050/3100).
-            Desktop is unaffected — nothing there sits between z-50 and
-            z-3100. Still overridable via `classNames.content`, since
-            tailwind-merge lets a later z-* win. */}
+        {/* The listbox and mobile sheet both portal to body. The named nested
+            overlay layer keeps this selector above the sheet backdrop while
+            preserving one shared stacking contract across every game. */}
         <SelectContent
-          className={cn("z-[3100] rounded-lg p-1 shadow-lg", classNames?.content)}
+          className={cn("z-[var(--arkive-layer-nested-overlay)] rounded-lg p-1 shadow-lg", classNames?.content)}
           style={triggerWidth ? { minWidth: triggerWidth } : undefined}
         >
           {maps.map((m) => (

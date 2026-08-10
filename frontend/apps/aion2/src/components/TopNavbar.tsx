@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ArkiveAccountControl } from "@gamemap/auth";
 import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from "@gamemap/map-shell";
 import { useTheme } from "@/context/ThemeContext";
-import i18n, { LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/i18n";
+import i18n, { changeLanguagePreference, LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/i18n";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
 
 export default function TopNavbar() {
@@ -68,7 +68,7 @@ export default function TopNavbar() {
           label: LANGUAGE_LABELS[code],
         })),
         current: currentLng,
-        onChange: (code) => void i18n.changeLanguage(code),
+        onChange: (code) => void changeLanguagePreference(code),
         menuLabel: t("common:menu.switchLanguage"),
         shortLabel: t("common:language.short"),
       }}

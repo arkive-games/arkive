@@ -65,6 +65,13 @@ execSync(`pnpm --filter ${app} exec vite build --base ./ --outDir dist-toy --emp
   env,
 })
 
+// Production sites share one font host. Toys are explicitly self-contained, so
+// include the same canonical files and let the Vite plugin use a relative URL.
+const fontSource = path.join(FRONTEND, 'apps', 'meta', 'public', 'fonts')
+const fontOut = path.join(outDir, 'fonts')
+if (!fs.existsSync(fontSource)) fail('shared font assets are missing; run pnpm fonts:sync')
+if (!fs.existsSync(fontOut)) fs.cpSync(fontSource, fontOut, { recursive: true })
+
 // Bundle the artifact repos. Excluded: VCS dirs and edgeone.json (host config,
 // not content the app fetches). Skipped entirely for a site-only toy.
 if (withArtifacts) {

@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { ShellSidebar } from '@gamemap/map-shell'
-import { defineMemoryRecord, isBoolean, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { SiteInfo } from './SiteInfo'
 
 const collapsedRecord = defineMemoryRecord({
-  id: 'info-collapsed', namespace: 'vrising', surface: 'map', stateClass: 'device_preference',
+  id: 'info-collapsed', namespace: 'vrising', surface: 'map',
+  ...memoryPolicy.userPreference('reset-map-sidebar'),
   schemaVersion: '1.0.0', defaultValue: () => true, validate: isBoolean,
   legacyKeys: ['vrising.map.siteInfoCollapsed'], migrateLegacy: (raw: string) => raw === '1',
 })

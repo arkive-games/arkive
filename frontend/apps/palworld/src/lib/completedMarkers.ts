@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { browserMemory, defineMemoryRecord, parseJson } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, memoryPolicy, parseJson } from '@gamemap/state-memory'
 
 // Completed marker ids per map (marker ids are the tools' stable
 // "<map>-<subtype>-<index>" keys), persisted the same way as the
@@ -10,7 +10,7 @@ const completedRecord = (mapId: string) => defineMemoryRecord({
   id: 'completed-markers',
   namespace: 'palworld',
   surface: 'map',
-  stateClass: 'durable_progress',
+  ...memoryPolicy.durableProgress('clear-map-progress'),
   schemaVersion: '1.0.0',
   defaultValue: () => [] as string[],
   validate: (value: unknown): value is string[] =>

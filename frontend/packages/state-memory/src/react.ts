@@ -12,10 +12,12 @@ export interface UseMemoryStateOptions extends MemoryScope {
   debounceMs?: number
 }
 
+export type MemoryWriteStatus = "idle" | "saved" | "failed"
+
 export function useMemoryState<T>(
   record: MemoryRecord<T>,
   options: UseMemoryStateOptions = {},
-): readonly [T, (action: SetStateAction<T>) => void, () => void] {
+): readonly [T, (action: SetStateAction<T>) => void, () => void, MemoryWriteStatus] {
   const client = options.client ?? browserMemory
   const scope = useMemo<MemoryScope>(
     () => ({
@@ -28,6 +30,7 @@ export function useMemoryState<T>(
   const key = getMemoryKey(record, scope)
   const debounceMs = options.debounceMs ?? 0
   const [value, setValue] = useState<T>(() => client.read(record, scope))
+  const [writeStatus, setWriteStatus] = useState<MemoryWriteStatus>("idle")
   const valueRef = useRef(value)
   const writeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -42,10 +45,24 @@ export function useMemoryState<T>(
     })
   }, [client, key, record, scope])
 
-  useEffect(() => () => {
-    if (writeTimer.current) {
+  useEffect(() => {
+    const flush = (reportStatus = true) => {
+      if (!writeTimer.current) return
       clearTimeout(writeTimer.current)
-      client.write(record, valueRef.current, scope)
+      writeTimer.current = null
+      const saved = client.write(record, valueRef.current, scope)
+      if (reportStatus) setWriteStatus(saved ? "saved" : "failed")
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") flush()
+    }
+    const handlePageHide = () => flush()
+    document.addEventListener("visibilitychange", handleVisibility)
+    window.addEventListener("pagehide", handlePageHide)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility)
+      window.removeEventListener("pagehide", handlePageHide)
+      flush(false)
     }
   }, [client, record, scope])
 
@@ -57,12 +74,13 @@ export function useMemoryState<T>(
     setValue(next)
     if (writeTimer.current) clearTimeout(writeTimer.current)
     if (debounceMs > 0) {
+      setWriteStatus("idle")
       writeTimer.current = setTimeout(() => {
         writeTimer.current = null
-        client.write(record, valueRef.current, scope)
+        setWriteStatus(client.write(record, valueRef.current, scope) ? "saved" : "failed")
       }, debounceMs)
     } else {
-      client.write(record, next, scope)
+      setWriteStatus(client.write(record, next, scope) ? "saved" : "failed")
     }
   }, [client, debounceMs, record, scope])
 
@@ -70,10 +88,11 @@ export function useMemoryState<T>(
     if (writeTimer.current) clearTimeout(writeTimer.current)
     writeTimer.current = null
     client.clear(record, scope)
+    setWriteStatus("idle")
     const next = record.defaultValue()
     valueRef.current = next
     setValue(next)
   }, [client, record, scope])
 
-  return [value, update, clear] as const
+  return [value, update, clear, writeStatus] as const
 }

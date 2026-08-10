@@ -5,6 +5,7 @@ import {tanstackRouter} from '@tanstack/router-plugin/vite'
 import {execSync} from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
+import {arkiveFontAssets} from '../../vite/arkive-font-assets.ts'
 
 function getGitVersion() {
   return execSync("git rev-parse HEAD").toString().trim();
@@ -106,6 +107,7 @@ export default defineConfig({
     allowedHosts: true,
   },
   plugins: [
+    arkiveFontAssets(),
     resourceUiProxy(),
     dataRepoProxy(),
     tailwindcss(),

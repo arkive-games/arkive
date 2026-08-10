@@ -176,7 +176,7 @@ export default function ItemListPage() {
                         title={bundle.text[i.id]?.name ?? i.id}
                         className={`group flex aspect-square w-full flex-col overflow-hidden rounded-md border bg-card shadow-sm transition hover:border-primary/60 hover:bg-accent ${rarityBorderClass(i.rarity)}`}
                       >
-                        <span className="flex items-center gap-2 bg-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        <span className="flex items-center gap-2 bg-muted px-2 py-0.5 text-xs font-medium uppercase text-muted-foreground">
                           <span className="min-w-0 flex-1 truncate text-left">
                             {itemTypeLabel(i.typeA, bundle.typeLabels)}
                           </span>

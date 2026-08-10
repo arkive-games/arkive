@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@gamemap/ui'
-import { defineMemoryRecord, isString, parseJson, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isString, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import { loadBundle, type Bundle } from '../../lib/data'
 import { CardFilters, CardTile, ClearFiltersButton, PageLoading, usePoolColors } from './components'
@@ -19,15 +19,16 @@ function isCardFilter(value: unknown): value is CardFilter {
 }
 
 const filterRecord = defineMemoryRecord({
-  id: 'filters', namespace: 'sts2', surface: 'cards-catalog', stateClass: 'device_preference',
+  id: 'filters', namespace: 'sts2', surface: 'cards-catalog',
+  ...memoryPolicy.sessionContext('clear-card-filters'),
   schemaVersion: '1.0.0', defaultValue: () => ({ ...EMPTY_FILTER }), validate: isCardFilter,
   legacyKeys: [FILTER_KEY],
   migrateLegacy: (raw: string) => ({ ...EMPTY_FILTER, ...(parseJson(raw) as Partial<CardFilter>), query: '' }),
 })
 const queryRecord = defineMemoryRecord({
-  id: 'query', namespace: 'sts2', surface: 'cards-catalog', stateClass: 'session_context',
+  id: 'query', namespace: 'sts2', surface: 'cards-catalog',
+  ...memoryPolicy.sessionContext('clear-card-search'),
   schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
-  retentionMs: 24 * 60 * 60 * 1_000,
 })
 
 /** Merged onto EMPTY_FILTER so a stored object from an older build stays valid. */

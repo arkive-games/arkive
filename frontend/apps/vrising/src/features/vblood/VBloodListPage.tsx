@@ -3,23 +3,25 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Check, MapPin, Search, Swords } from 'lucide-react'
 import { Input } from '@gamemap/ui'
-import { defineMemoryRecord, isBoolean, isString, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isBoolean, isString, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import { loadVBloodBosses, useCompletedVBlood, type VBloodBoss } from '../../lib/vblood'
 
 const ACT_ORDER = ['ActI', 'ActII', 'ActIII', 'ActIV', 'Shards']
 const queryRecord = defineMemoryRecord({
-  id: 'query', namespace: 'vrising', surface: 'vblood-catalog', stateClass: 'session_context',
+  id: 'query', namespace: 'vrising', surface: 'vblood-catalog',
+  ...memoryPolicy.sessionContext('clear-vblood-search'),
   schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
-  retentionMs: 24 * 60 * 60 * 1_000,
 })
 const actRecord = defineMemoryRecord({
-  id: 'act-filter', namespace: 'vrising', surface: 'vblood-catalog', stateClass: 'device_preference',
+  id: 'act-filter', namespace: 'vrising', surface: 'vblood-catalog',
+  ...memoryPolicy.sessionContext('clear-vblood-filters'),
   schemaVersion: '1.0.0', defaultValue: () => null as string | null,
   validate: (value: unknown): value is string | null => value === null || ACT_ORDER.includes(String(value)),
 })
 const hideCompletedRecord = defineMemoryRecord({
-  id: 'hide-completed', namespace: 'vrising', surface: 'vblood-catalog', stateClass: 'device_preference',
+  id: 'hide-completed', namespace: 'vrising', surface: 'vblood-catalog',
+  ...memoryPolicy.sessionContext('clear-vblood-filters'),
   schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
 })
 
@@ -47,7 +49,7 @@ function BossCard({ boss, completed, onToggle }: {
               src={boss.portrait}
               alt=""
               loading="lazy"
-              className="size-full object-cover object-top transition duration-300 group-hover:scale-[1.03]"
+              className="size-full object-cover object-top transition-transform duration-[var(--arkive-motion-standard)] group-hover:scale-[1.03]"
             />
           ) : (
             <div className="flex size-full items-center justify-center text-muted-foreground">
@@ -57,7 +59,7 @@ function BossCard({ boss, completed, onToggle }: {
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 text-white">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">
+              <p className="text-xs font-semibold uppercase text-white/70">
                 {t('vblood.levelValue', { level: boss.level ?? '—' })}
               </p>
               <h2 className="mt-0.5 truncate text-base font-bold leading-tight">{boss.name}</h2>

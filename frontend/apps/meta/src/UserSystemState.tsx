@@ -9,7 +9,14 @@ import {
   type ReactNode,
 } from 'react'
 import { useAuth } from '@gamemap/auth'
-import { MemoryClient, browserMemory, defineMemoryRecord, parseJson, type StorageLike } from '@gamemap/state-memory'
+import {
+  MemoryClient,
+  browserMemory,
+  defineMemoryRecord,
+  memoryPolicy,
+  parseJson,
+  type StorageLike,
+} from '@gamemap/state-memory'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 
 export type NotificationPreferenceKey = 'replies' | 'mentions' | 'likes' | 'follows' | 'system' | 'browser'
@@ -147,14 +154,96 @@ function isUserSystemState(value: unknown): value is UserSystemState {
       .every(Array.isArray)
 }
 
-function userSystemRecord(userId: string) {
+type UserProfileState = UserSystemState['profile']
+type UserSettingsState = Pick<UserSystemState, 'notificationSettings' | 'privacySettings'>
+type UserProgressState = Omit<UserSystemState, 'profile' | 'notificationSettings' | 'privacySettings'>
+
+function legacyUserSystemRecord(userId: string) {
   return defineMemoryRecord({
-    id: 'state', namespace: 'site', surface: 'user-system', stateClass: 'durable_progress',
-    schemaVersion: '1.0.0', defaultValue: createDefaultUserSystemState,
-    validate: isUserSystemState, accountScoped: true,
+    id: 'legacy-snapshot', namespace: 'site', surface: 'user-system',
+    ...memoryPolicy.durableProgress('clear-account-snapshot'),
+    schemaVersion: '1.0.0', defaultValue: () => null as UserSystemState | null,
+    validate: (value: unknown): value is UserSystemState | null => value === null || isUserSystemState(value),
+    partition: { account: true },
+    signInAdoption: 'keep_anonymous',
     legacyKeys: [storageKey(userId)],
     migrateLegacy: (raw: string) => normalizeUserSystemState(parseJson(raw)),
   })
+}
+
+const profileRecord = defineMemoryRecord({
+  id: 'profile-content', namespace: 'site', surface: 'user-system',
+  ...memoryPolicy.durableProgress('clear-account-profile'),
+  schemaVersion: '1.0.0', defaultValue: () => createDefaultUserSystemState().profile,
+  validate: (value: unknown): value is UserProfileState => Boolean(value)
+    && typeof value === 'object'
+    && typeof (value as Partial<UserProfileState>).bio === 'string'
+    && ((value as Partial<UserProfileState>).avatarSrc === null
+      || typeof (value as Partial<UserProfileState>).avatarSrc === 'string'),
+  partition: { account: true },
+  signInAdoption: 'keep_anonymous',
+})
+
+const settingsRecord = defineMemoryRecord({
+  id: 'settings', namespace: 'site', surface: 'user-system',
+  ...memoryPolicy.userPreference('reset-account-preferences'),
+  schemaVersion: '1.0.0',
+  defaultValue: (): UserSettingsState => {
+    const defaults = createDefaultUserSystemState()
+    return { notificationSettings: defaults.notificationSettings, privacySettings: defaults.privacySettings }
+  },
+  validate: (value: unknown): value is UserSettingsState => Boolean(value)
+    && typeof value === 'object'
+    && Boolean((value as Partial<UserSettingsState>).notificationSettings)
+    && Boolean((value as Partial<UserSettingsState>).privacySettings),
+  partition: { account: true },
+  signInAdoption: 'keep_anonymous',
+})
+
+const progressRecord = defineMemoryRecord({
+  id: 'progress', namespace: 'site', surface: 'user-system',
+  ...memoryPolicy.durableProgress('clear-account-progress'),
+  schemaVersion: '1.0.0',
+  defaultValue: (): UserProgressState => {
+    const { profile: _profile, notificationSettings: _notifications, privacySettings: _privacy, ...progress } = createDefaultUserSystemState()
+    return progress
+  },
+  validate: (value: unknown): value is UserProgressState => {
+    if (!value || typeof value !== 'object') return false
+    const progress = value as Partial<UserProgressState>
+    return [progress.readNotificationSections, progress.followedUserIds, progress.bookmarkedPostIds,
+      progress.likedPostIds, progress.likedCommentIds, progress.favoriteGameIds, progress.publishedPosts]
+      .every(Array.isArray)
+  },
+  partition: { account: true },
+  signInAdoption: 'keep_anonymous',
+})
+
+function writeUserSystemStateWithClient(client: MemoryClient, userId: string, state: UserSystemState) {
+  const scope = { accountId: userId }
+  client.write(profileRecord, state.profile, scope)
+  client.write(settingsRecord, {
+    notificationSettings: state.notificationSettings,
+    privacySettings: state.privacySettings,
+  }, scope)
+  const { profile: _profile, notificationSettings: _notifications, privacySettings: _privacy, ...progress } = state
+  client.write(progressRecord, progress, scope)
+}
+
+function readUserSystemStateWithClient(client: MemoryClient, userId: string): UserSystemState {
+  const scope = { accountId: userId }
+  const legacyRecord = legacyUserSystemRecord(userId)
+  const legacy = client.read(legacyRecord, scope)
+  if (legacy) {
+    writeUserSystemStateWithClient(client, userId, legacy)
+    client.clear(legacyRecord, scope)
+    return legacy
+  }
+  const defaults = createDefaultUserSystemState()
+  const profile = client.read(profileRecord, scope)
+  const settings = client.read(settingsRecord, scope)
+  const progress = client.read(progressRecord, scope)
+  return normalizeUserSystemState({ ...defaults, ...progress, ...settings, profile })
 }
 
 /** Boolean-only merge: stored settings are untrusted JSON, and a non-boolean
@@ -179,7 +268,7 @@ export function readUserSystemState(storage: Pick<Storage, 'getItem'>, userId: s
     setItem: () => undefined,
     removeItem: () => undefined,
   }
-  return new MemoryClient({ deviceStorage: adapter }).read(userSystemRecord(userId), { accountId: userId })
+  return readUserSystemStateWithClient(new MemoryClient({ deviceStorage: adapter }), userId)
 }
 
 export function writeUserSystemState(
@@ -192,7 +281,7 @@ export function writeUserSystemState(
     setItem: storage.setItem.bind(storage),
     removeItem: () => undefined,
   }
-  new MemoryClient({ deviceStorage: adapter }).write(userSystemRecord(userId), state, { accountId: userId })
+  writeUserSystemStateWithClient(new MemoryClient({ deviceStorage: adapter }), userId, state)
 }
 
 const UserSystemContext = createContext<UserSystemContextValue | null>(null)
@@ -214,7 +303,7 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
     setEntry({
       userId,
       state: userId
-        ? browserMemory.read(userSystemRecord(userId), { accountId: userId })
+        ? readUserSystemStateWithClient(browserMemory, userId)
         : createDefaultUserSystemState(),
     })
   }, [userId])
@@ -224,9 +313,9 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
     setEntry((currentEntry) => {
       const current = currentEntry.userId === userId
         ? currentEntry.state
-        : browserMemory.read(userSystemRecord(userId), { accountId: userId })
+        : readUserSystemStateWithClient(browserMemory, userId)
       const next = mutate(current)
-      browserMemory.write(userSystemRecord(userId), next, { accountId: userId })
+      writeUserSystemStateWithClient(browserMemory, userId, next)
       return { userId, state: next }
     })
   }, [userId])

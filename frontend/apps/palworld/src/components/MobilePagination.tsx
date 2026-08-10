@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { cn, useIsMobile } from '@gamemap/ui'
-import { defineMemoryRecord, isFiniteNumber, useMemoryState } from '@gamemap/state-memory'
+import { defineMemoryRecord, isFiniteNumber, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 
-const MAX_VISIBLE_PAGES = 5
+const MAX_VISIBLE_PAGES = 3
 const pageRecord = defineMemoryRecord({
   id: 'page',
   namespace: 'palworld',
   surface: 'catalog',
-  stateClass: 'session_context',
+  ...memoryPolicy.sessionContext('clear-catalog-page'),
   schemaVersion: '1.0.0',
   defaultValue: () => 1,
   validate: (value: unknown): value is number => isFiniteNumber(value) && value >= 1,
-  retentionMs: 24 * 60 * 60 * 1_000,
 })
 
 interface MobilePaginationOptions {
@@ -87,10 +86,24 @@ export function MobilePagination({
   return (
     <nav
       aria-label={t('pagination.label')}
-      className={cn('mt-5 flex flex-col items-center gap-1.5 md:hidden', className)}
+      className={cn('mt-5 flex items-center justify-center gap-2 md:hidden', className)}
       data-testid="mobile-pagination"
     >
-      <div className="flex items-center justify-center gap-1">
+      <button
+        type="button"
+        disabled={page === 1}
+        aria-label={t('pagination.previous')}
+        onClick={() => onPageChange(page - 1)}
+        className="inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-primary/35 bg-card text-foreground disabled:pointer-events-none disabled:opacity-40"
+      >
+        <IconChevronLeft className="size-5" stroke={1.8} />
+      </button>
+
+      <span className="min-w-24 text-center text-sm font-semibold tabular-nums min-[390px]:hidden">
+        {page} / {pageCount}
+      </span>
+
+      <div className="hidden items-center justify-center gap-1.5 min-[390px]:flex">
         {pages.map((pageNumber) => (
           <button
             key={pageNumber}
@@ -99,7 +112,7 @@ export function MobilePagination({
             aria-label={t('pagination.page', { page: pageNumber })}
             onClick={() => onPageChange(pageNumber)}
             className={cn(
-              'flex size-8 items-center justify-center rounded-md border text-xs font-semibold tabular-nums',
+              'flex size-11 items-center justify-center rounded-md border text-xs font-semibold tabular-nums',
               pageNumber === page
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border bg-card text-foreground',
@@ -109,26 +122,16 @@ export function MobilePagination({
           </button>
         ))}
       </div>
-      <div className="grid w-full max-w-xs grid-cols-2 gap-2">
-        <button
-          type="button"
-          disabled={page === 1}
-          onClick={() => onPageChange(page - 1)}
-          className="inline-flex h-8 items-center justify-center gap-0.5 rounded-md border border-primary/35 bg-card px-2 text-xs font-medium text-foreground disabled:pointer-events-none disabled:opacity-40"
-        >
-          <ChevronLeft className="size-3.5" />
-          {t('pagination.previous')}
-        </button>
-        <button
-          type="button"
-          disabled={page === pageCount}
-          onClick={() => onPageChange(page + 1)}
-          className="inline-flex h-8 items-center justify-center gap-0.5 rounded-md border border-primary/35 bg-card px-2 text-xs font-medium text-foreground disabled:pointer-events-none disabled:opacity-40"
-        >
-          {t('pagination.next')}
-          <ChevronRight className="size-3.5" />
-        </button>
-      </div>
+
+      <button
+        type="button"
+        disabled={page === pageCount}
+        aria-label={t('pagination.next')}
+        onClick={() => onPageChange(page + 1)}
+        className="inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-primary/35 bg-card text-foreground disabled:pointer-events-none disabled:opacity-40"
+      >
+        <IconChevronRight className="size-5" stroke={1.8} />
+      </button>
     </nav>
   )
 }
