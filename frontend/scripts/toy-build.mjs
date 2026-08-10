@@ -45,6 +45,24 @@ if (withArtifacts) {
 const withArtifactUrls = fetchesArtifacts(cfg)
 
 const outDir = path.join(appDir, 'dist-toy')
+
+// The portal toy is the one that ships the fonts; every other toy points at it.
+// Its slug is read from its own config rather than hard-coded, since a slug is
+// permanent once published and duplicating it invites the two to drift.
+const PORTAL_APP = 'meta'
+const hostsFonts = app === PORTAL_APP
+const portalSlug = loadToyConfig(path.join(FRONTEND, 'apps', PORTAL_APP)).slug
+// Spelled out to the file: a bare directory URL 404s on the toy host.
+const FONT_TOY_URL = `/toy/${portalSlug}/fonts/noto-sans/v1/index.css`
+
+/** Files under a directory, recursively -- for the size/count reporting only. */
+function countFiles(dir) {
+  let total = 0
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    total += entry.isDirectory() ? countFiles(path.join(dir, entry.name)) : 1
+  }
+  return total
+}
 // Three shapes:
 //   bundled  — relative folder names, resolved inside the package
 //   fetched  — absolute https URLs on the same CDN the website uses
@@ -55,6 +73,9 @@ const env = {
   VITE_TOY: '1',
   ...(withArtifacts ? { VITE_DATA_BASE_URL: cfg.dataBase, VITE_RESOURCE_BASE_URL: cfg.resourceBase } : {}),
   ...(withArtifactUrls ? { VITE_DATA_BASE_URL: cfg.dataUrl, VITE_RESOURCE_BASE_URL: cfg.resourceUrl } : {}),
+  // The portal keeps the plugin's relative default (it ships the files); everyone
+  // else resolves to the portal toy's copy on the same origin.
+  ...(hostsFonts ? {} : { VITE_FONT_STYLESHEET_URL: FONT_TOY_URL }),
 }
 
 console.log(`toy-build: building ${app} (slug ${cfg.slug})`)
@@ -65,12 +86,29 @@ execSync(`pnpm --filter ${app} exec vite build --base ./ --outDir dist-toy --emp
   env,
 })
 
-// Production sites share one font host. Toys are explicitly self-contained, so
-// include the same canonical files and let the Vite plugin use a relative URL.
+// Fonts: shipped by the PORTAL toy only, and referenced by the others.
+//
+// Every toy lives on one origin, differing by path (/toy/<slug>/), so they share a
+// cache partition and need no CORS -- one copy serves all of them, and cross-toy
+// absolute paths are already how the toys link to each other. Copying the 206
+// subsets into each toy instead cost ~209 files and ~8.5 MB apiece, which matters:
+// this platform has a byte limit AND a separate limit on FILE COUNT that surfaces
+// as a 504.
+//
+// The trade-off is a real dependency: a toy referencing the portal degrades to
+// fallback CJK (font-display: swap) if the portal toy is republished without this
+// exact versioned path, or unpublished. Keep the version directory stable unless the
+// font content actually changes.
 const fontSource = path.join(FRONTEND, 'apps', 'meta', 'public', 'fonts')
-const fontOut = path.join(outDir, 'fonts')
 if (!fs.existsSync(fontSource)) fail('shared font assets are missing; run pnpm fonts:sync')
-if (!fs.existsSync(fontOut)) fs.cpSync(fontSource, fontOut, { recursive: true })
+if (hostsFonts) {
+  // Vite already copied public/fonts for the portal; only copy if it did not.
+  const fontOut = path.join(outDir, 'fonts')
+  if (!fs.existsSync(fontOut)) fs.cpSync(fontSource, fontOut, { recursive: true })
+  console.log(`toy-build: ships the shared fonts (${countFiles(fontSource)} files)`)
+} else {
+  console.log(`toy-build: fonts referenced from ${FONT_TOY_URL} (not bundled)`)
+}
 
 // Bundle the artifact repos. Excluded: VCS dirs and edgeone.json (host config,
 // not content the app fetches). Skipped entirely for a site-only toy.

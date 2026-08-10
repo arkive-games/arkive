@@ -35,7 +35,21 @@ function localFontMiddleware(): Plugin['configureServer'] {
   }
 }
 
-export function arkiveFontAssets(): Plugin {
+export interface ArkiveFontAssetsOptions {
+  /**
+   * True for the app that SHIPS the font files in its own output -- the portal.
+   *
+   * It exists because `context.server` is undefined for every build, not just a
+   * game's, so the portal's own production build was pointing at
+   * https://tc-imba.com/fonts/... -- fetching its own fonts cross-origin from
+   * itself. That also meant any non-production host of the portal (an EdgeOne
+   * preview, `vite preview`) pulled fonts from live production, so a font change
+   * could not be verified before deploying it.
+   */
+  hostsFonts?: boolean
+}
+
+export function arkiveFontAssets(options: ArkiveFontAssetsOptions = {}): Plugin {
   return {
     name: 'arkive-font-assets',
     configureServer: localFontMiddleware(),
@@ -46,18 +60,30 @@ export function arkiveFontAssets(): Plugin {
         const href = override
           || (process.env.VITE_TOY === '1'
             ? `.${ARKIVE_FONT_PATH}`
-            : context.server
+            : context.server || options.hostsFonts
               ? ARKIVE_FONT_PATH
               : ARKIVE_FONT_URL)
 
-        return [{
+        const tags = []
+        // Only the games load the stylesheet from another hostname. tc-imba.com and
+        // palworld.tc-imba.com are the same SITE (so they share one cache partition,
+        // which is the whole reason a single font host is worth having) but different
+        // ORIGINS, so without this the first paint waits on a fresh DNS + TLS
+        // handshake. crossorigin is required: a font request is CORS-mode, and a
+        // preconnect without it warms the wrong connection.
+        if (href === ARKIVE_FONT_URL) {
+          tags.push({
+            tag: 'link',
+            attrs: { rel: 'preconnect', href: 'https://tc-imba.com', crossorigin: '' },
+            injectTo: 'head-prepend' as const,
+          })
+        }
+        tags.push({
           tag: 'link',
-          attrs: {
-            rel: 'stylesheet',
-            href,
-          },
-          injectTo: 'head-prepend',
-        }]
+          attrs: { rel: 'stylesheet', href },
+          injectTo: 'head-prepend' as const,
+        })
+        return tags
       },
     },
   }

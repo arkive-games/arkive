@@ -12,7 +12,7 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
   },
-  plugins: [arkiveFontAssets(), react(), tailwindcss()],
+  plugins: [arkiveFontAssets({ hostsFonts: true }), react(), tailwindcss()],
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   define: {
     __BUILD_TIME__: JSON.stringify(process.env.BUILD_TIME ?? Date.now().toString()),

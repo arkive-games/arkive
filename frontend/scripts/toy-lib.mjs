@@ -184,8 +184,16 @@ export function checkPackage(dir) {
         const html = fs.readFileSync(full, 'utf8')
         // src="/x" or href="/x" — root-absolute, resolves outside /toy/<slug>/.
         // "//host/..." (protocol-relative) is external and allowed.
+        //
+        // `/toy/<slug>/...` is allowed too, and is the ONE legitimate root-absolute
+        // form: every toy shares one origin, so this is how a toy reaches a sibling
+        // (the portal ships the shared fonts and the others reference them, and the
+        // inter-toy nav links work the same way). It has to be root-absolute --
+        // relative would resolve inside the referring toy -- and it has to spell out
+        // the file, since a bare directory URL 404s on this host.
         const m = html.match(/(?:src|href)\s*=\s*["']\/(?!\/)[^"']*/g)
-        if (m) {
+          ?.filter((hit) => !/["']\/toy\/[\w-]+\/.+/.test(hit))
+        if (m?.length) {
           errors.push(`root-absolute reference(s) in ${path.relative(dir, full)}: ${m.slice(0, 5).join(', ')}`)
         }
       }
