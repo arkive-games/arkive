@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.27.3",
+      "date": "2026-08-10",
+      "commit": "40f985f85ffe27c8e45e9365897372dd8d05fcad",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Wanted fugitives now use the game's original purple bounty icon on the map.",
+            "zh-CN": "悬赏头目现在使用游戏原生的紫色悬赏地图图标。",
+            "zh-TW": "懸賞頭目現在使用遊戲原生的紫色懸賞地圖圖示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.27.2",
       "date": "2026-08-10",
       "commit": "9dd7a515582f133981359d2527e60f2ce2186e63",
