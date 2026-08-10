@@ -325,7 +325,9 @@ def test_wanted_carries_drops_and_lv_name(ds):
     # Wanted markers always use the subtype's shared map icon, not individual
     # character portraits supplied by the extractor.
     assert "icon" not in w[0]
-    assert _subtype_row(ds, "boss", "wanted")["icon"] == "T_icon_compass_Bounty"
+    wanted = _subtype_row(ds, "boss", "wanted")
+    assert wanted["icon"] == "T_icon_compass_Bounty"
+    assert wanted["pinVariant"] == "image"
     assert w[0]["drops"] == [
         {"item": "BountyProof_1", "rate": 100, "min": 5, "max": 5},
         {"item": "Money", "rate": 100, "min": 500, "max": 1000},

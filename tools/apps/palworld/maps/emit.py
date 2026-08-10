@@ -289,6 +289,8 @@ def build_dataset(parsed: dict) -> dict:
                 row["icon"] = s["icon"]
             if isinstance(s.get("iconScale"), (int, float)):
                 row["iconScale"] = s["iconScale"]
+            if s.get("pinVariant"):
+                row["pinVariant"] = s["pinVariant"]
             if s.get("color"):
                 row["color"] = s["color"]
             if isinstance(s.get("zukanIndex"), (int, float)) and s["zukanIndex"] > 0:
