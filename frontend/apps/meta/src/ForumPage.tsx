@@ -422,13 +422,6 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     return () => window.removeEventListener('hashchange', syncComposerRoute)
   }, [])
 
-  useEffect(() => {
-    if (!composerOpen || status !== 'anonymous') return
-    setComposerOpen(false)
-    window.history.replaceState(null, '', '#forum')
-    onAuthRequired()
-  }, [composerOpen, onAuthRequired, status])
-
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmittedQuery(query)
@@ -469,10 +462,6 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
   }
 
   const compose = (focus: ComposerFocus = 'body') => {
-    if (!signedIn) {
-      onAuthRequired()
-      return
-    }
     setComposerFocus(focus)
     setComposerOpen(true)
     if (window.location.hash !== '#forum/new') window.location.hash = 'forum/new'
@@ -510,7 +499,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     </form>
   )
 
-  if (composerOpen && signedIn) {
+  if (composerOpen) {
     return (
       <>
         <main className="forum-main forum-publish-main">
@@ -519,7 +508,9 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
             sites={sites}
             initialGameId={gameFilter}
             avatarSrc={currentAvatar}
-            authorName={user?.name ?? ''}
+            authorName={user?.name ?? t('forum.composer.guest')}
+            signedIn={signedIn}
+            onAuthRequired={onAuthRequired}
             onCancel={closeComposer}
             onPublish={publish}
           />
@@ -869,6 +860,8 @@ function ForumComposerPage({
   initialGameId,
   avatarSrc,
   authorName,
+  signedIn,
+  onAuthRequired,
   onCancel,
   onPublish,
 }: {
@@ -877,6 +870,8 @@ function ForumComposerPage({
   initialGameId: string | null
   avatarSrc: string
   authorName: string
+  signedIn: boolean
+  onAuthRequired: () => void
   onCancel: () => void
   onPublish: (post: LocalForumPost) => void
 }) {
@@ -1122,6 +1117,10 @@ function ForumComposerPage({
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!signedIn) {
+      onAuthRequired()
+      return
+    }
     const normalizedTitle = title.trim()
     const normalizedContent = content.trim()
     if (normalizedTitle.length < 2) {
