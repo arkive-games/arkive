@@ -1,7 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
+import { useMemory } from '@gamemap/state-memory'
+import { z } from 'zod'
+import { vrisingMemory } from '../../lib/memory'
 import { BookOpen, Check, ChevronLeft, FlaskConical, Hammer, MapPinned, Sparkles } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import {
@@ -15,10 +17,16 @@ import {
   type VBloodRewardRef,
 } from '../../lib/vblood'
 
-const rewardDisclosureRecord = defineMemoryRecord({
-  id: 'reward-lists-expanded', namespace: 'vrising', surface: 'vblood-detail',
-  ...memoryPolicy.sessionContext('reset-detail-disclosure'),
-  schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
+/**
+ * `keyedBy: { section: true }` is load-bearing: without a dimension all four
+ * reward lists on this page shared one key, so expanding Abilities expanded
+ * Recipes, Buildings and Research too. `.at({ section })` is now required to
+ * read it, so that cannot recur silently.
+ */
+const rewardDisclosure = vrisingMemory.session('vblood-detail/reward-lists-expanded', {
+  schema: z.boolean(),
+  default: false,
+  keyedBy: { section: true },
 })
 
 function RewardSection({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
@@ -50,7 +58,7 @@ function RewardList({ section, values }: {
   values: (VBloodRewardRef | VBloodAbilityReward)[]
 }) {
   const { t } = useTranslation()
-  const [expanded, setExpanded] = useMemoryState(rewardDisclosureRecord, { partition: section })
+  const [expanded, setExpanded] = useMemory(rewardDisclosure.at({ section }))
   if (!values.length) return <EmptyReward />
   const visible = expanded ? values : values.slice(0, 8)
   return (
