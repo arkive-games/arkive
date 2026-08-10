@@ -12,6 +12,19 @@ SELECT * FROM core.users WHERE email = $1;
 -- name: GetUserByName :one
 SELECT * FROM core.users WHERE name = $1;
 
+-- Resolves either kind of account number in one round trip.
+--
+-- No discriminator is needed because the two ranges cannot overlap: uid is
+-- checked >= 10000 and special_uid <= 9999, so a given number can only ever
+-- match one column. Both columns are uniquely indexed, and the planner answers
+-- this with a BitmapOr over the two indexes rather than a scan.
+-- name: GetUserByAnyUID :one
+SELECT * FROM core.users WHERE uid = $1 OR special_uid = $1;
+
+-- The COALESCE idiom cannot express clearing a column, because it reads NULL as
+-- "leave unchanged". special_uid is the one column that must be clearable, so it
+-- takes an explicit set_special_uid flag: false leaves the current value alone,
+-- true writes special_uid through verbatim -- including NULL, which revokes.
 -- name: UpdateUser :one
 UPDATE core.users SET
     name            = COALESCE(sqlc.narg('name'), name),
@@ -19,7 +32,10 @@ UPDATE core.users SET
     hashed_password = COALESCE(sqlc.narg('hashed_password'), hashed_password),
     is_active       = COALESCE(sqlc.narg('is_active'), is_active),
     is_superuser    = COALESCE(sqlc.narg('is_superuser'), is_superuser),
-    is_verified     = COALESCE(sqlc.narg('is_verified'), is_verified)
+    is_verified     = COALESCE(sqlc.narg('is_verified'), is_verified),
+    special_uid     = CASE WHEN sqlc.arg('set_special_uid')::boolean
+                           THEN sqlc.narg('special_uid')::integer
+                           ELSE special_uid END
 WHERE id = sqlc.arg('id')
 RETURNING *;
 

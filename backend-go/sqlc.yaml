@@ -22,3 +22,9 @@ sql:
             go_type: github.com/google/uuid.UUID
           - db_type: timestamptz
             go_type: time.Time
+        # sqlc would title-case these to Uid/SpecialUid. UID is an initialism,
+        # and Go spells initialisms in one case throughout an identifier.
+        rename:
+          uid: UID
+          special_uid: SpecialUID
+          set_special_uid: SetSpecialUID

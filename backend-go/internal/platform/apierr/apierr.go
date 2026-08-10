@@ -44,6 +44,7 @@ const (
 	UserEmailAlreadyExists Code = "UserEmailAlreadyExistsError"
 	UserAlreadyVerified    Code = "UserAlreadyVerifiedError"
 	UserInactive           Code = "UserInactiveError"
+	UserSpecialUIDTaken    Code = "UserSpecialUidTakenError"
 )
 
 // ShowType tells the client how prominently to surface the error. The values
@@ -128,7 +129,7 @@ func StatusFor(code Code) int {
 		return http.StatusNotFound
 	case MethodNotAllowed:
 		return http.StatusMethodNotAllowed
-	case Integrity, UserAlreadyExists, UserEmailAlreadyExists, UserAlreadyVerified:
+	case Integrity, UserAlreadyExists, UserEmailAlreadyExists, UserAlreadyVerified, UserSpecialUIDTaken:
 		return http.StatusConflict
 	case Validation, UserInvalidPassword, AltchaChallenge, UserNotUpdatable:
 		return http.StatusUnprocessableEntity

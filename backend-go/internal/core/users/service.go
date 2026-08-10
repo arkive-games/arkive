@@ -146,6 +146,33 @@ func (s *Service) ByID(ctx context.Context, id uuid.UUID) (UserRead, error) {
 	return toUserRead(u), nil
 }
 
+// ByAnyUID resolves an account from either kind of public number, and returns
+// only what an anonymous caller may see.
+//
+// One query covers both because the two ranges cannot overlap: a real uid is at
+// least 10000 and a special uid at most 9999, both enforced by check
+// constraints. So no argument here classifies the number, and no boundary
+// constant is duplicated in Go.
+//
+// A deactivated account reports the same not-found as a number nobody holds.
+// Distinguishing them would tell any caller which accounts had been disabled,
+// which is the kind of disclosure the login and reset flows already refuse.
+func (s *Service) ByAnyUID(ctx context.Context, uid int64) (UserPublic, error) {
+	notFound := apierr.New(apierr.UserNotFound, "no such user")
+
+	u, err := s.q.GetUserByAnyUID(ctx, uid)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return UserPublic{}, notFound
+		}
+		return UserPublic{}, fmt.Errorf("load user by uid: %w", err)
+	}
+	if !u.IsActive {
+		return UserPublic{}, notFound
+	}
+	return toUserPublic(u), nil
+}
+
 // Update applies a partial edit.
 //
 // privileged must be true only for an administrator. Without it the
@@ -214,6 +241,22 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, in UpdateInput, priv
 		}
 		if in.IsVerified != nil {
 			params.IsVerified = in.IsVerified
+		}
+		// The vanity number is an administrative grant, so it belongs here
+		// rather than beside the self-editable fields: a user PATCHing their own
+		// profile must not be able to award themselves one.
+		//
+		// SetSpecialUID is what tells the query to write the column at all. Left
+		// false, the existing value survives; set true, special_uid is written
+		// verbatim, and a nil value revokes.
+		if in.SpecialUID.Set {
+			params.SetSpecialUID = true
+			if value, ok := in.SpecialUID.Assigned(); ok {
+				if err := validateSpecialUID(value); err != nil {
+					return UserRead{}, err
+				}
+				params.SpecialUID = &value
+			}
 		}
 	}
 
@@ -417,6 +460,12 @@ func (s *Service) Verify(ctx context.Context, token string) (UserRead, error) {
 // mapConstraintError turns a database constraint violation into the API's
 // vocabulary, so a race between two registrations produces a clear conflict
 // rather than a 500.
+//
+// Only Code and ConstraintName are read, and that is deliberate: a Postgres
+// constraint violation carries the entire offending row in its Detail field,
+// hashed_password included. Copying Detail into a response — or into a log line
+// at anything short of debug — would publish password hashes on a duplicate-key
+// error. The messages here are written by hand for that reason.
 func mapConstraintError(err error) error {
 	var pgErr *pgconn.PgError
 	if !errors.As(err, &pgErr) {
@@ -430,10 +479,18 @@ func mapConstraintError(err error) error {
 			return apierr.New(apierr.UserAlreadyExists, "that name is already taken")
 		case "users_email_key":
 			return apierr.New(apierr.UserEmailAlreadyExists, "that email address is already registered")
+		case "users_special_uid_key":
+			// Losing this race is ordinary: the pool is 10000 numbers wide and
+			// two administrators can reach for the same one.
+			return apierr.New(apierr.UserSpecialUIDTaken, "that special uid is already assigned to another account")
 		default:
 			return apierr.New(apierr.Integrity, "that value is already in use")
 		}
 	case "23514": // check_violation
+		if pgErr.ConstraintName == "users_special_uid_range" {
+			return apierr.New(apierr.Validation,
+				fmt.Sprintf("a special uid must be between %d and %d", minSpecialUID, maxSpecialUID))
+		}
 		return apierr.New(apierr.Validation, "one of the supplied values is not acceptable")
 	default:
 		return fmt.Errorf("write user: %w", err)

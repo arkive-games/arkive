@@ -20,4 +20,6 @@ type CoreUser struct {
 	IsVerified     bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	UID            int64
+	SpecialUID     *int32
 }

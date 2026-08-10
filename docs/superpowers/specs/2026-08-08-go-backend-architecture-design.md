@@ -178,18 +178,25 @@ core.users (
   is_superuser   boolean not null default false,
   is_verified    boolean not null default false,
   created_at     timestamptz not null default now(),
-  updated_at     timestamptz not null default now()
+  updated_at     timestamptz not null default now(),
+  uid            bigint not null unique generated always as identity,  -- >= 10000, never reused
+  special_uid    integer unique                                        -- 0-9999, optional alias
 )
 ```
 
 This mirrors the current `users` table (`fastapi-users`' `SQLAlchemyBaseUserTableUUID` plus
-the project's `name` column and `TimestampMixin`), with two deliberate changes:
+the project's `name` column and `TimestampMixin`), with three deliberate changes:
 
 - `email` is **stored lowercased** with a unique constraint, instead of relying on a
   case-sensitive unique index plus `ilike` lookups. The current schema permits
   `A@x.com` and `a@x.com` to coexist as separate accounts.
 - `varchar(320)`/`varchar(1024)` become `text`. Postgres stores them identically and the
   length caps only produce late, unhelpful errors.
+- `uid` and `special_uid` are new, added by `20260810000001_add_user_uid.sql`. The uuid stays
+  the primary key and the internal handle; `uid` is the permanent *public* number that
+  permalinks use, and `special_uid` an optional vanity alias an administrator may move or
+  revoke. The two ranges are disjoint by check constraint, which is what lets one query
+  resolve either. See `2026-08-10-user-uid-design.md`.
 
 `games` is a **compile-time registry in Go**, not a table. Game keys are referenced by
 game-scoped tables as plain `text` with a check constraint; there is no FK, because games

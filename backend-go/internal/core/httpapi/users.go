@@ -28,6 +28,12 @@ type UpdateUserBody struct {
 	IsActive    *bool `json:"isActive,omitempty" doc:"Administrators only; ignored otherwise"`
 	IsSuperuser *bool `json:"isSuperuser,omitempty" doc:"Administrators only; ignored otherwise"`
 	IsVerified  *bool `json:"isVerified,omitempty" doc:"Administrators only; ignored otherwise"`
+
+	// Three states, not two: omit the field to leave any existing number alone,
+	// send null to revoke it, send a number to assign or move it. `omitzero`
+	// rather than `omitempty` because the field is a struct, and without it huma
+	// would treat it as required.
+	SpecialUID api.Optional[int32] `json:"specialUid,omitzero" minimum:"0" maximum:"9999" doc:"Administrators only; ignored otherwise. A number assigns or moves the vanity uid, null revokes it, omitting the field leaves it unchanged."`
 }
 
 func (b UpdateUserBody) toInput() users.UpdateInput {
@@ -38,6 +44,7 @@ func (b UpdateUserBody) toInput() users.UpdateInput {
 		IsActive:    b.IsActive,
 		IsSuperuser: b.IsSuperuser,
 		IsVerified:  b.IsVerified,
+		SpecialUID:  b.SpecialUID,
 	}
 }
 
@@ -47,6 +54,13 @@ type updateMeInput struct {
 
 type userIDInput struct {
 	ID uuid.UUID `path:"id" doc:"Account identifier"`
+}
+
+// userUIDInput takes either kind of public account number. There is no upper
+// bound tag because real uids grow without limit; the lower bound rejects
+// negatives, which no account can hold.
+type userUIDInput struct {
+	UID int64 `path:"uid" minimum:"0" doc:"A permanent account number (10000 or above) or a special uid (below 10000)"`
 }
 
 type updateUserInput struct {
@@ -149,6 +163,24 @@ func (h *Handlers) RegisterUserRoutes(a huma.API) {
 			return nil, err
 		}
 		user, err := h.users.BecomeSuperuser(ctx, principal.ID)
+		if err != nil {
+			return nil, err
+		}
+		return api.OK(user), nil
+	})
+
+	huma.Register(a, huma.Operation{
+		OperationID: "getUserByUID",
+		Method:      http.MethodGet,
+		Path:        "/users/uid/{uid}",
+		Summary:     "Get an account by its public number",
+		Description: "Public. Resolves either the permanent uid or a special uid, and returns " +
+			"only publicly visible fields. Permanent links should use the uid, since a " +
+			"special uid can be reassigned. Deactivated accounts are reported as not found.",
+		Tags:   []string{"users"},
+		Errors: []int{http.StatusNotFound},
+	}, func(ctx context.Context, in *userUIDInput) (*api.Response[users.UserPublic], error) {
+		user, err := h.users.ByAnyUID(ctx, in.UID)
 		if err != nil {
 			return nil, err
 		}

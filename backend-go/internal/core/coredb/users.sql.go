@@ -35,7 +35,7 @@ func (q *Queries) CountUsers(ctx context.Context, arg CountUsersParams) (int64, 
 const createUser = `-- name: CreateUser :one
 INSERT INTO core.users (id, name, email, hashed_password, is_active, is_superuser, is_verified)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at
+RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid
 `
 
 type CreateUserParams struct {
@@ -69,6 +69,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CoreUse
 		&i.IsVerified,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UID,
+		&i.SpecialUID,
 	)
 	return i, err
 }
@@ -85,8 +87,37 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (int64, error) {
 	return result.RowsAffected(), nil
 }
 
+const getUserByAnyUID = `-- name: GetUserByAnyUID :one
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users WHERE uid = $1 OR special_uid = $1
+`
+
+// Resolves either kind of account number in one round trip.
+//
+// No discriminator is needed because the two ranges cannot overlap: uid is
+// checked >= 10000 and special_uid <= 9999, so a given number can only ever
+// match one column. Both columns are uniquely indexed, and the planner answers
+// this with a BitmapOr over the two indexes rather than a scan.
+func (q *Queries) GetUserByAnyUID(ctx context.Context, uid int64) (CoreUser, error) {
+	row := q.db.QueryRow(ctx, getUserByAnyUID, uid)
+	var i CoreUser
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.HashedPassword,
+		&i.IsActive,
+		&i.IsSuperuser,
+		&i.IsVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UID,
+		&i.SpecialUID,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at FROM core.users WHERE email = $1
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CoreUser, error) {
@@ -102,12 +133,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CoreUser, e
 		&i.IsVerified,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UID,
+		&i.SpecialUID,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at FROM core.users WHERE id = $1
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (CoreUser, error) {
@@ -123,12 +156,14 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (CoreUser, erro
 		&i.IsVerified,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UID,
+		&i.SpecialUID,
 	)
 	return i, err
 }
 
 const getUserByName = `-- name: GetUserByName :one
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at FROM core.users WHERE name = $1
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users WHERE name = $1
 `
 
 func (q *Queries) GetUserByName(ctx context.Context, name string) (CoreUser, error) {
@@ -144,12 +179,14 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (CoreUser, err
 		&i.IsVerified,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UID,
+		&i.SpecialUID,
 	)
 	return i, err
 }
 
 const searchUsers = `-- name: SearchUsers :many
-SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at FROM core.users
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid FROM core.users
 WHERE (
         ($1::text IS NULL AND $2::text IS NULL)
      OR ($1::text  IS NOT NULL AND name  ILIKE '%' || $1::text  || '%')
@@ -192,6 +229,8 @@ func (q *Queries) SearchUsers(ctx context.Context, arg SearchUsersParams) ([]Cor
 			&i.IsVerified,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UID,
+			&i.SpecialUID,
 		); err != nil {
 			return nil, err
 		}
@@ -221,9 +260,12 @@ UPDATE core.users SET
     hashed_password = COALESCE($3, hashed_password),
     is_active       = COALESCE($4, is_active),
     is_superuser    = COALESCE($5, is_superuser),
-    is_verified     = COALESCE($6, is_verified)
-WHERE id = $7
-RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at
+    is_verified     = COALESCE($6, is_verified),
+    special_uid     = CASE WHEN $7::boolean
+                           THEN $8::integer
+                           ELSE special_uid END
+WHERE id = $9
+RETURNING id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid
 `
 
 type UpdateUserParams struct {
@@ -233,9 +275,15 @@ type UpdateUserParams struct {
 	IsActive       *bool
 	IsSuperuser    *bool
 	IsVerified     *bool
+	SetSpecialUID  bool
+	SpecialUID     *int32
 	ID             uuid.UUID
 }
 
+// The COALESCE idiom cannot express clearing a column, because it reads NULL as
+// "leave unchanged". special_uid is the one column that must be clearable, so it
+// takes an explicit set_special_uid flag: false leaves the current value alone,
+// true writes special_uid through verbatim -- including NULL, which revokes.
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (CoreUser, error) {
 	row := q.db.QueryRow(ctx, updateUser,
 		arg.Name,
@@ -244,6 +292,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (CoreUse
 		arg.IsActive,
 		arg.IsSuperuser,
 		arg.IsVerified,
+		arg.SetSpecialUID,
+		arg.SpecialUID,
 		arg.ID,
 	)
 	var i CoreUser
@@ -257,6 +307,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (CoreUse
 		&i.IsVerified,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UID,
+		&i.SpecialUID,
 	)
 	return i, err
 }

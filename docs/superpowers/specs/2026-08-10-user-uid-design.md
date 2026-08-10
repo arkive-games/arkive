@@ -190,9 +190,23 @@ to the request body. `uid` is writable by nobody through any route.
 ## 6. Errors
 
 `mapConstraintError` gains two cases: `users_special_uid_key` becomes a 409 naming the
-conflict, `users_special_uid_range` a 422. The range is *also* checked in Go beforehand, so
-the common mistake gets a message that states the actual bounds instead of the generic
-check-violation text.
+conflict, `users_special_uid_range` a 422.
+
+There are three layers of range enforcement, and it is worth being exact about which one a
+client actually meets, because an earlier draft of this section was wrong about it:
+
+1. **The `minimum`/`maximum` tags on the request body.** Huma validates these before the
+   handler runs, so this is what an HTTP caller hits. It answers 422 with the envelope's
+   generic `"validation failed"` — the per-field detail huma produces is discarded by the
+   shared error envelope, which is a pre-existing property of this codebase, not something
+   this feature introduces. The tags earn their place by documenting the range in the OpenAPI
+   document, so generated clients can enforce it before sending.
+2. **`validateSpecialUID` in the service.** Unreachable through HTTP because of layer 1, and
+   kept anyway: `Service.Update` is callable without huma, and the invariant should not
+   depend on a caller's struct tags. It is unit-tested directly, since nothing else exercises
+   it.
+3. **The `users_special_uid_range` check constraint.** The backstop that makes the range true
+   of the data rather than of the code paths that write it.
 
 A note recorded from the verification run: a Postgres constraint violation's `DETAIL` field
 echoes the **entire failing row, including `hashed_password`**. `mapConstraintError` reads

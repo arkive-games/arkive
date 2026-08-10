@@ -26,6 +26,17 @@
 #     own id ("user_<first 8 hex>"), which cannot collide and is traceable back
 #     to the row. This is the only row the import alters.
 #
+#   - Rows are inserted oldest first. Accounts arrive here after `arkive migrate`
+#     has already added the uid column, so the migration's own age-ordered
+#     backfill sees an empty table and the numbers are instead handed out as rows
+#     insert. The ORDER BY makes the oldest account the lowest uid, matching what
+#     the migration does when rows already exist. Verified on PostgreSQL 18 with
+#     500 rows stored in shuffled order: all 500 came out numbered strictly by
+#     age. The standard does not *promise* that identity values follow a sort
+#     order, so this is verified behaviour rather than a guarantee -- and nothing
+#     breaks if a future version stops honouring it, the numbering is just less
+#     tidy.
+#
 #   - Password hashes are copied unchanged. Every production hash is argon2id in
 #     PHC form, which this service verifies natively, so no password is reset
 #     and no user is locked out. (Bcrypt is also accepted and upgraded on login,
@@ -111,6 +122,7 @@ INSERT INTO core.users (
 SELECT id, name, email, hashed_password,
        is_active, is_superuser, is_verified, created_at, updated_at
 FROM legacy_users
+ORDER BY created_at, id
 ON CONFLICT (id) DO NOTHING;
 SQL
 
