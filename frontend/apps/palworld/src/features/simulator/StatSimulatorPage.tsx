@@ -467,6 +467,19 @@ export default function StatSimulatorPage() {
     setPalId(null)
   }
 
+  // `entered` (the stats read off one specific captured pal) and `passives` are
+  // properties of an individual, not of the species, so they must not survive a
+  // pal switch: solving Lamball's typed HP against Anubis's base stats reports a
+  // spurious "no IV can produce this" that the user never caused. The first
+  // render is skipped so a restored calculation still survives a reload.
+  const previousPalId = useRef<string | null>(palId)
+  useEffect(() => {
+    if (previousPalId.current === palId) return
+    previousPalId.current = palId
+    clearEntered()
+    clearPassives()
+  }, [palId, clearEntered, clearPassives])
+
   const inputs: EnhanceInputs = {
     level,
     stars,

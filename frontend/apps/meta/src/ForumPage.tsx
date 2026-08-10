@@ -833,18 +833,38 @@ function ForumComposerDialog({
   const videoRef = useRef<HTMLInputElement>(null)
   const topicRef = useRef<HTMLButtonElement>(null)
 
+  // Hydrate from the saved draft once per opening, NOT on every draft change.
+  // The effect below writes `draft` on each keystroke, so depending on `draft`
+  // here fed back into this effect and re-ran it -- which wiped the attached image
+  // and any validation error the moment the user typed another character.
+  // `draft` is read through a ref so it is deliberately not a dependency.
+  // Mirrored in an effect rather than assigned during render (React forbids
+  // touching a ref while rendering). The initial value is already the persisted
+  // draft, and this effect is declared before the hydrate effect below, so on the
+  // commit where `open` flips the ref is current.
+  const draftRef = useRef(draft)
   useEffect(() => {
-    if (!open) return
-    setTitle(draft.title)
-    setContent(draft.content)
-    setChannel(draft.channel)
-    setGameId(draft.gameId)
-    setTopic(draft.topic)
+    draftRef.current = draft
+  }, [draft])
+  const hydratedFor = useRef(false)
+  useEffect(() => {
+    if (!open) {
+      hydratedFor.current = false
+      return
+    }
+    if (hydratedFor.current) return
+    hydratedFor.current = true
+    const saved = draftRef.current
+    setTitle(saved.title)
+    setContent(saved.content)
+    setChannel(saved.channel)
+    setGameId(saved.gameId)
+    setTopic(saved.topic)
     setImageSrc(null)
     setImageName('')
-    setVideoUrl(draft.videoUrl)
+    setVideoUrl(saved.videoUrl)
     setError('')
-  }, [draft, open])
+  }, [open])
 
   useEffect(() => {
     if (!open) return

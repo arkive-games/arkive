@@ -42,9 +42,15 @@ function EmptyReward() {
   )
 }
 
-function RewardList({ values }: { values: (VBloodRewardRef | VBloodAbilityReward)[] }) {
+function RewardList({ section, values }: {
+  /** Partitions the disclosure state. Without it all four lists on this page
+   *  shared one record, so expanding Abilities expanded Recipes, Buildings and
+   *  Research too -- `write` notifies every subscriber of the same key. */
+  section: string
+  values: (VBloodRewardRef | VBloodAbilityReward)[]
+}) {
   const { t } = useTranslation()
-  const [expanded, setExpanded] = useMemoryState(rewardDisclosureRecord)
+  const [expanded, setExpanded] = useMemoryState(rewardDisclosureRecord, { partition: section })
   if (!values.length) return <EmptyReward />
   const visible = expanded ? values : values.slice(0, 8)
   return (
@@ -169,10 +175,10 @@ export default function VBloodDetailPage() {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <RewardSection icon={<Sparkles className="size-4" />} title={t('vblood.abilities')}><RewardList values={rewards?.abilities ?? []} /></RewardSection>
-        <RewardSection icon={<FlaskConical className="size-4" />} title={t('vblood.recipes')}><RewardList values={rewards?.recipes ?? []} /></RewardSection>
-        <RewardSection icon={<Hammer className="size-4" />} title={t('vblood.buildings')}><RewardList values={rewards?.blueprints ?? []} /></RewardSection>
-        <RewardSection icon={<BookOpen className="size-4" />} title={t('vblood.research')}><RewardList values={rewards?.tech ?? []} /></RewardSection>
+        <RewardSection icon={<Sparkles className="size-4" />} title={t('vblood.abilities')}><RewardList section="abilities" values={rewards?.abilities ?? []} /></RewardSection>
+        <RewardSection icon={<FlaskConical className="size-4" />} title={t('vblood.recipes')}><RewardList section="recipes" values={rewards?.recipes ?? []} /></RewardSection>
+        <RewardSection icon={<Hammer className="size-4" />} title={t('vblood.buildings')}><RewardList section="buildings" values={rewards?.blueprints ?? []} /></RewardSection>
+        <RewardSection icon={<BookOpen className="size-4" />} title={t('vblood.research')}><RewardList section="research" values={rewards?.tech ?? []} /></RewardSection>
       </div>
     </ContentPage>
   )
