@@ -59,7 +59,7 @@ const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum'] as const
 type HomeRoute =
   | { view: 'discoverGames' }
   | { view: 'allGames' }
-  | { view: 'forum' }
+  | { view: 'forum'; composer: boolean }
   | { view: 'notifications'; section: NotificationSection }
   | { view: 'account'; section: AccountSection }
   | { view: 'publicProfile'; userId: string; section: PublicProfileSection }
@@ -98,7 +98,7 @@ function recentDestination(site: SiteCard, route: string): RecentDestination {
 function routeFromHash(): HomeRoute {
   const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
   if (root === 'games') return { view: 'allGames' }
-  if (root === 'forum') return { view: 'forum' }
+  if (root === 'forum') return { view: 'forum', composer: value === 'new' }
   if (root === 'notifications') {
     const section = NOTIFICATION_SECTIONS.has(value as NotificationSection)
       ? value as NotificationSection
@@ -124,6 +124,7 @@ export default function App() {
   const [clickCounts, setClickCounts] = useState<SiteClickCounts>({})
   const [noticeId, setNoticeId] = useState(0)
   const [activeRoute, setActiveRoute] = useState<HomeRoute>(routeFromHash)
+  const isForumComposer = activeRoute.view === 'forum' && activeRoute.composer
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
   const brandName = getArkiveBrandName(lng, t('brand.name'))
 
@@ -201,7 +202,7 @@ export default function App() {
   }
 
   return (
-    <div id="top" className="min-h-dvh overflow-x-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] text-foreground md:pb-0">
+    <div id="top" className={`min-h-dvh overflow-x-hidden text-foreground ${isForumComposer ? 'pb-0' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0'}`}>
       <ArkiveMobileHeader
         homeUrl="#top"
         homeLabel={brandName}
@@ -418,16 +419,18 @@ export default function App() {
         </div>
       )}
 
-      <MetaMobileNav
-        activeView={activeRoute.view}
-        noticeId={noticeId}
-        isSignedIn={isSignedIn}
-        language={lng}
-        theme={theme}
-        onLanguageChange={(code) => void changeLanguagePreference(code)}
-        onThemeChange={setTheme}
-        onComingSoon={showComingSoon}
-      />
+      {!isForumComposer && (
+        <MetaMobileNav
+          activeView={activeRoute.view}
+          noticeId={noticeId}
+          isSignedIn={isSignedIn}
+          language={lng}
+          theme={theme}
+          onLanguageChange={(code) => void changeLanguagePreference(code)}
+          onThemeChange={setTheme}
+          onComingSoon={showComingSoon}
+        />
+      )}
     </div>
   )
 }
