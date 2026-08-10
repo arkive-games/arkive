@@ -3,13 +3,31 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Plugin } from 'vite'
 
-export const ARKIVE_FONT_PATH = '/fonts/noto-sans/v1/index.css'
-export const ARKIVE_FONT_URL = `https://tc-imba.com${ARKIVE_FONT_PATH}`
-
 const FONT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '../apps/meta/public/fonts',
 )
+
+/**
+ * The served font directory is a content hash written by `pnpm fonts:sync`, so it
+ * is read rather than hard-coded -- see the rationale in that script. Read from the
+ * manifest and not by listing directories: a listing would silently pick a stale
+ * leftover, whereas a missing manifest says exactly what to run.
+ */
+export const ARKIVE_FONT_VERSION: string = (() => {
+  const manifest = path.join(FONT_ROOT, 'noto-sans', 'manifest.json')
+  if (!fs.existsSync(manifest)) {
+    throw new Error(`Font manifest is missing (${manifest}). Run \`pnpm fonts:sync\`.`)
+  }
+  const { version } = JSON.parse(fs.readFileSync(manifest, 'utf8')) as { version?: unknown }
+  if (typeof version !== 'string' || !version) {
+    throw new Error(`Font manifest has no version (${manifest}). Run \`pnpm fonts:sync\`.`)
+  }
+  return version
+})()
+
+export const ARKIVE_FONT_PATH = `/fonts/noto-sans/${ARKIVE_FONT_VERSION}/index.css`
+export const ARKIVE_FONT_URL = `https://tc-imba.com${ARKIVE_FONT_PATH}`
 
 const MIME: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',

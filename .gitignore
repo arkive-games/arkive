@@ -46,3 +46,6 @@ _lostark_ref/
 
 # Local debug screenshots (repo root only)
 /*.png
+
+# A crashed `pnpm fonts:sync` can leave its staging directory behind.
+frontend/apps/meta/public/fonts/noto-sans/.staging-*

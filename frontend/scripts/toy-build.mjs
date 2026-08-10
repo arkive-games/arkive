@@ -52,8 +52,13 @@ const outDir = path.join(appDir, 'dist-toy')
 const PORTAL_APP = 'meta'
 const hostsFonts = app === PORTAL_APP
 const portalSlug = loadToyConfig(path.join(FRONTEND, 'apps', PORTAL_APP)).slug
+// The version directory is a content hash from `pnpm fonts:sync`; read it from the
+// manifest so this URL cannot drift from what the portal actually ships.
+const FONT_MANIFEST = path.join(FRONTEND, 'apps/meta/public/fonts/noto-sans/manifest.json')
+if (!fs.existsSync(FONT_MANIFEST)) fail('font manifest is missing; run pnpm fonts:sync')
+const fontVersion = JSON.parse(fs.readFileSync(FONT_MANIFEST, 'utf8')).version
 // Spelled out to the file: a bare directory URL 404s on the toy host.
-const FONT_TOY_URL = `/toy/${portalSlug}/fonts/noto-sans/v1/index.css`
+const FONT_TOY_URL = `/toy/${portalSlug}/fonts/noto-sans/${fontVersion}/index.css`
 
 /** Files under a directory, recursively -- for the size/count reporting only. */
 function countFiles(dir) {
