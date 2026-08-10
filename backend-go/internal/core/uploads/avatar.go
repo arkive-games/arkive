@@ -31,9 +31,17 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	// WebP decodes but cannot be encoded: x/image/webp is decode-only and the
-	// build sets CGO_ENABLED=0, so no cgo encoder is available either. Accepting
-	// WebP and emitting PNG or JPEG is the consequence.
+	// WebP is accepted but never written. x/image/webp is decode-only and the
+	// build sets CGO_ENABLED=0, so neither the standard library nor a libwebp
+	// binding can encode it.
+	//
+	// Pure-Go WebP encoders do exist, so this is a judgement rather than a
+	// limitation. Measured at this 256px rendition: lossless WebP is 147 KB for a
+	// photograph against 13.8 KB for JPEG q85, and 1.97 KB against PNG's 2.50 KB
+	// for a flat image with alpha. Beating JPEG needs a lossy pure-Go encoder,
+	// which is a young reimplementation of a complex bitstream to put in the path
+	// of untrusted uploads for a few kilobytes on an immutably cached object. See
+	// the avatar design for the numbers and when to revisit.
 	_ "golang.org/x/image/webp"
 
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"

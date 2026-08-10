@@ -11,16 +11,40 @@ introduces `internal/platform/blob` alongside the feature.
 
 Neither was a preference; both were established before writing code.
 
-**Avatars cannot be WebP.** The Dockerfile builds with `CGO_ENABLED=0`, which rules out
-every cgo encoder (libvips, `chai2010/webp`), and `golang.org/x/image/webp` is **decode
-only** — `x/image` can encode BMP and TIFF and nothing else useful. The Python service wrote
-WebP; this one cannot without changing the build.
+**Avatars are not WebP, though they could be.** An earlier draft of this section claimed WebP
+was impossible. That was wrong and is corrected here, because the real reason is a
+cost/benefit judgement and someone revisiting it deserves the actual numbers.
 
-Consequence: **accept** JPEG, PNG, GIF and WebP, all of which decode with the standard
-library plus `x/image/webp`. **Emit** PNG when the source carries any transparency and JPEG
-quality 85 when it does not. Always-JPEG would composite alpha onto a background, which is
-visibly wrong on Arkive's dark theme; always-PNG costs roughly ten times the bytes for a
-photograph.
+What is genuinely unavailable: `golang.org/x/image/webp` exports only `Decode` and
+`DecodeConfig`, and `x/image` can encode nothing but BMP and TIFF, so **the standard library
+and `x/image` cannot write WebP at all**. The Dockerfile's `CGO_ENABLED=0` additionally rules
+out libwebp bindings such as `chai2010/webp` and libvips.
+
+What *is* available: several third-party **pure-Go** WebP encoders now exist —
+`HugoSmits86/nativewebp` (lossless VP8L only), and newer lossy-capable ones such as
+`KarpelesLab/gowebp` and `skrashevich/go-webp`. So "no cgo" does not mean "no WebP".
+
+Measured at the 256x256 rendition this feature stores, with `nativewebp` v1.3.0:
+
+| Source | JPEG q85 | PNG best | WebP lossless |
+|---|---|---|---|
+| Photographic, opaque | **13,838 B** | 132,690 B | 147,086 B (10.6x JPEG) |
+| Flat illustration with alpha | 11,256 B, alpha lost | 2,504 B | **1,970 B (0.79x PNG)** |
+
+That is the whole argument. Lossless WebP is an order of magnitude worse than JPEG for a
+photograph, so replacing the JPEG path needs a *lossy* pure-Go encoder — a young
+reimplementation of a complex bitstream, adopted into the path of untrusted user input, to
+save perhaps 4 KB on an object that is cached immutably forever. Against PNG it wins, but by
+about 530 bytes per transparent avatar.
+
+Decision: **accept** JPEG, PNG, GIF and WebP, all decodable with the standard library plus
+`x/image/webp`. **Emit** PNG when the source carries any transparency and JPEG quality 85
+when it does not. Always-JPEG would composite alpha onto a background, visibly wrong on
+Arkive's dark theme; always-PNG costs roughly ten times the bytes for a photograph.
+
+Revisit if avatar bandwidth ever shows up in costs, or if a lossy pure-Go encoder becomes as
+boring a dependency as `x/image` — at which point the change is confined to the encode step
+of `renderAvatar` and the extension map beside it, because nothing else knows the format.
 
 **huma parses multipart natively** (`huma.MultipartFormFiles[T]`, per-operation
 `MaxBodyBytes`), so no request parsing is hand-written.
