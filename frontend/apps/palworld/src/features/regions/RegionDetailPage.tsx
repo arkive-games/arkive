@@ -291,7 +291,7 @@ export default function RegionDetailPage() {
   }
 
   return (
-    <ContentPage active="/items" title={t('item.title')} maxWidth="max-w-5xl">
+    <ContentPage active="/items" title={t('item.title')}>
       <CatalogDataProvider items={data?.items ?? undefined} pals={data?.pals ?? undefined}>
         {body}
       </CatalogDataProvider>

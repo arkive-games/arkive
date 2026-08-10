@@ -1,4 +1,5 @@
-import { useMemo, type FormEvent, type MouseEvent } from 'react'
+import { useMemo, useRef, type FormEvent, type MouseEvent } from 'react'
+import { scrollToResults } from './scrollToResults'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
 import { defineMemoryRecord, isFiniteNumber, isString, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
@@ -80,6 +81,11 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
   // filter change, and the pager is hidden when totalPages is 1 -- so a stale page 3
   // rendered the empty state with no control to get back.
   const safePage = Math.min(page, totalPages)
+  const resultsRef = useRef<HTMLElement>(null)
+  const goToPage = (next: number) => {
+    setPage(next)
+    scrollToResults(resultsRef.current)
+  }
   const visibleEntries = paginateCatalogEntries(filteredEntries, safePage, PAGE_SIZE)
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -138,7 +144,7 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
         </div>
       </section>
 
-      <section className="home-shell catalog-results" aria-labelledby="catalog-results-heading">
+      <section className="home-shell catalog-results" aria-labelledby="catalog-results-heading" ref={resultsRef}>
         <div className="catalog-results-heading">
           <h2 id="catalog-results-heading">{t('catalog.resultsTitle')}</h2>
           <p aria-live="polite">{t('catalog.resultCount', { count: filteredEntries.length })}</p>
@@ -185,16 +191,16 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
             <button
               type="button"
               disabled={safePage === 1}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              onClick={() => goToPage(Math.max(1, safePage - 1))}
               aria-label={t('catalog.previousPage')}
             >
               <IconArrowLeft className="size-4" stroke={1.8} />
             </button>
-            <span>{t('catalog.pageStatus', { page, total: totalPages })}</span>
+            <span>{t('catalog.pageStatus', { page: safePage, total: totalPages })}</span>
             <button
               type="button"
               disabled={safePage === totalPages}
-              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              onClick={() => goToPage(Math.min(totalPages, safePage + 1))}
               aria-label={t('catalog.nextPage')}
             >
               <IconArrowRight className="size-4" stroke={1.8} />

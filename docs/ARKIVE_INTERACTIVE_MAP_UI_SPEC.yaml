@@ -189,6 +189,11 @@ marker_detail:
   accent: "Use navigation plus shape, never color alone."
   identity:
     icon_box: "2.5rem square"
+    # The role supplies the SIZE (text-base); title_weight deliberately overrides the
+    # role's default weight of 600, because a popup title is the only heading in a
+    # surface that has no page context around it to establish hierarchy. Stated
+    # explicitly because the pair read as a contradiction otherwise, and the code
+    # followed the role rather than the override.
     title_role: "subsection_title"
     title_weight: 700
     metadata_role: "metadata"

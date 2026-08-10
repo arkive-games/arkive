@@ -20,11 +20,6 @@ export interface ContentPageProps {
   /** Page title shown in the mobile-only header. */
   title: ReactNode
   /**
-   * @deprecated Ignored — every non-map page shares one width (the Paldeck
-   * width, `max-w-6xl`). Kept only so existing call sites still type-check.
-   */
-  maxWidth?: string
-  /**
    * Render `title` as a full-width desktop heading line above the content.
    * List/catalog pages opt in; detail pages keep their own entity header.
    */
@@ -48,8 +43,9 @@ export interface ContentPageProps {
   children: ReactNode
 }
 
-// Single content width for all non-map pages (matches the Paldeck).
-const CONTENT_MAX_WIDTH = 'max-w-6xl'
+// Single content width for all non-map pages: the `standard` content-width role.
+// Was max-w-6xl (72rem), which matched the Paldeck rather than any spec role.
+const CONTENT_MAX_WIDTH = 'max-w-[var(--arkive-content-standard)]'
 
 /**
  * The filter node plus who owns it this breakpoint. `inSheet` is the single
@@ -163,7 +159,7 @@ export function ContentPage({
           <div className="flex min-h-full flex-col">
             <div
               className={cn(
-                'arkive-content-page mx-auto w-full flex-1 px-4 pb-6',
+                'arkive-content-page mx-auto w-full flex-1 pb-6',
                 hideMobileFooter && 'pb-[calc(env(safe-area-inset-bottom)+7rem)] md:pb-6',
                 CONTENT_MAX_WIDTH,
               )}

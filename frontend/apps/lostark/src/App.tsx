@@ -238,7 +238,7 @@ export default function App() {
 
   if (error) {
     return (
-      <main className="arkive-content-page mx-auto max-w-2xl px-6 pb-6">
+      <main className="arkive-content-page mx-auto max-w-[var(--arkive-content-reading)] pb-6">
         <h1 className="text-3xl font-bold">战斗力计算器</h1>
         <p className="mt-4 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
           数据加载失败：{error}
@@ -251,7 +251,7 @@ export default function App() {
 
   if (!data || !coeffs || !result) {
     return (
-      <main className="arkive-content-page px-6 pb-6 text-sm text-muted-foreground">
+      <main className="arkive-content-page pb-6 text-sm text-muted-foreground">
         加载中…
       </main>
     )
@@ -318,7 +318,7 @@ export default function App() {
         }
       />
 
-      <main className="arkive-content-page mx-auto w-full max-w-6xl flex-1 px-4 pb-16 sm:px-6">
+      <main className="arkive-content-page mx-auto w-full max-w-[var(--arkive-content-standard)] flex-1 pb-16">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <select

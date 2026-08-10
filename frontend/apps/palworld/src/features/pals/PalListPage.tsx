@@ -137,7 +137,7 @@ export default function PalListPage() {
               </Button>
             </div>
             {bundle ? (
-              <span data-testid="pal-count" className="order-3 col-span-2 text-sm text-muted-foreground md:order-2">
+              <span data-pagination-anchor data-testid="pal-count" className="order-3 col-span-2 text-sm text-muted-foreground md:order-2">
                 {t('pal.count', { count: roster.length })}
               </span>
             ) : null}

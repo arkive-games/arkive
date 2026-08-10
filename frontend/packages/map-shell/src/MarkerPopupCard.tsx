@@ -79,7 +79,9 @@ export function MarkerPopupCard({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2">
-              <h2 className="min-w-0 truncate text-base font-semibold leading-normal text-foreground">
+              {/* font-bold, not the subsection_title role's 600: the map UI spec
+                  overrides the weight for this one heading (title_weight: 700). */}
+              <h2 className="min-w-0 truncate text-base font-bold leading-normal text-foreground">
                 {name}
               </h2>
               {idLabel && <IdLabel value={idLabel} className="shrink-0 px-1.5 py-0.5 text-xs" />}

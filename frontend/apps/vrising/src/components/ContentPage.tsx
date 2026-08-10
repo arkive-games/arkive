@@ -36,7 +36,7 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
       />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex min-h-full flex-col">
-          <div className={cn('arkive-content-page mx-auto w-full flex-1 px-4 pb-6', wide ? 'max-w-7xl' : 'max-w-6xl')}>
+          <div className={cn('arkive-content-page mx-auto w-full flex-1 pb-6', wide ? 'max-w-[var(--arkive-content-wide-data)]' : 'max-w-[var(--arkive-content-standard)]')}>
             {heading ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null}
             {children}
           </div>

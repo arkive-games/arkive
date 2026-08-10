@@ -27,6 +27,18 @@
   --arkive-layer-toast: 4000;
   --arkive-layer-tooltip: 5000;
   --arkive-content-page-top-space: 1.5rem;
+  /* page_gutters: space-4 mobile / space-6 desktop / space-8 wide. Desktop is the
+     default here and the two ends are media-query overrides, matching how
+     --arkive-content-page-top-space is done. Every app previously hard-coded px-4 at
+     all widths, so desktop and wide were simply never implemented. */
+  --arkive-page-gutter: 1.5rem;
+  /* content_widths, as named roles rather than per-page numbers. Tailwind's max-w-*
+     steps do not line up with them (max-w-7xl happens to equal `standard`, nothing
+     equals the other two), and picking the nearest step per page is exactly how five
+     different widths -- 42, 64, 72, 78, 82rem -- ended up in production. */
+  --arkive-content-reading: 72ch;
+  --arkive-content-standard: 80rem;
+  --arkive-content-wide-data: 96rem;
   --arkive-leading-caption: 1.5;
   --arkive-leading-body: 1.65;
   --arkive-leading-title: 1.4;
@@ -161,6 +173,14 @@ textarea {
 
 .arkive-content-page {
   padding-top: var(--arkive-content-page-top-space);
+  padding-inline: var(--arkive-page-gutter);
+}
+
+/* wide_desktop is xl, the tier the shared top bar's brand block already switches at. */
+@media (min-width: 1280px) {
+  :root {
+    --arkive-page-gutter: 2rem;
+  }
 }
 
 .arkive-map-topbar {
@@ -369,6 +389,7 @@ textarea {
        equivalent only while the shared root stays 17px -- if that ever changes,
        this needs to go back to a pixel value rather than silently rescaling. */
     --arkive-content-page-top-space: 1rem;
+    --arkive-page-gutter: 1rem;
   }
 
   .arkive-mobile-header,
@@ -405,7 +426,12 @@ textarea {
     border-radius: 0.5rem;
   }
 
-  [data-content-scroll] :where(input[type="search"], input[type="text"], select) {
+  /* `.arkive-content-page` as well as `[data-content-scroll]`: only palworld sets the
+     data attribute, so every other app's search and select controls stayed at the
+     2.25rem desktop compact height on phones -- under touch_target_standard. The
+     rule above this one already scopes by the class, which every app applies. */
+  :where([data-content-scroll], .arkive-content-page)
+    :where(input[type="search"], input[type="text"], select) {
     min-height: var(--arkive-touch-target);
     border-radius: var(--arkive-radius-standard);
   }

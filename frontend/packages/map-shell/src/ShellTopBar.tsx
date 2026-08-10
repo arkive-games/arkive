@@ -100,7 +100,11 @@ export function ShellTopBar({
   const [openUtilityMenu, setOpenUtilityMenu] = useState<"language" | "theme" | null>(null)
 
   return (
-    <header className={cn("flex h-14 shrink-0 items-center gap-6 px-4", classNames?.root)}>
+    // The same page-gutter escalation as the content below it, so the bar's edge
+    // padding lines up with the page's instead of staying at 1rem forever. Utilities
+    // rather than the CSS token, because callers override `root` wholesale and a
+    // utility stays visible to them.
+    <header className={cn("flex h-14 shrink-0 items-center gap-6 px-4 md:px-6 xl:px-8", classNames?.root)}>
       {(leftSlot || nav) && (
         <div className={cn("flex min-w-0 items-center gap-6", classNames?.left)}>
           {leftSlot}

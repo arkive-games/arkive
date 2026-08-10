@@ -64,7 +64,7 @@ export default function MerchantListPage() {
           className="max-w-sm"
         />
         {merchants ? (
-          <span className="text-sm text-muted-foreground" data-testid="merchant-count">
+          <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="merchant-count">
             {t('merchant.count', { count: list.length })}
           </span>
         ) : null}

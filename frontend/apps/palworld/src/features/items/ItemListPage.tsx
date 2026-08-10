@@ -147,7 +147,7 @@ export default function ItemListPage() {
               className="max-w-sm"
             />
             {bundle ? (
-              <span className="text-sm text-muted-foreground" data-testid="item-count">
+              <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="item-count">
                 {t('item.count', { count: list.length })}
               </span>
             ) : null}

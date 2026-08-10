@@ -133,7 +133,7 @@ export default function QuestDetailPage() {
   }
 
   return (
-    <ContentPage active="/quests" title={t('quest.title')} maxWidth="max-w-3xl">
+    <ContentPage active="/quests" title={t('quest.title')}>
       <CatalogDataProvider items={b?.items}>{body}</CatalogDataProvider>
     </ContentPage>
   )

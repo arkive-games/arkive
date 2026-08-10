@@ -148,7 +148,6 @@ export default function FishingPage() {
       active="/fishing"
       title={t('fishing.title')}
       heading
-      maxWidth="max-w-5xl"
     >
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>

@@ -181,7 +181,15 @@ catalogs_and_lists:
     touch: "All controls use the shared minimum touch target."
     behavior:
       - "Reset to page one when query, filters, mode, or data scope changes."
-      - "Changing page returns the content scroller to the result heading."
+      - >-
+        Changing page returns the content scroller to the result heading, marked with
+        `data-pagination-anchor`. PARTIAL: only the four catalogs that render a result
+        count (pals, items, buildings, merchants) carry the anchor; the other eleven
+        paginated palworld views fall back to the top of the scroller, which is what
+        every page did before. The shared filters row cannot serve as the anchor --
+        it returns null once the filters move into the mobile sheet, which is exactly
+        when pagination is active -- so the remaining pages each need a decision about
+        what their result heading is rather than a mechanical edit.
     page_size: "Choose from record density; do not force one value across unlike catalogs."
 
 detail_pages:

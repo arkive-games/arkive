@@ -69,8 +69,13 @@ export interface FilterPanelProps {
   defaultCollapsedCategoryIds?: string[]
 }
 
+// h-9 is desktop_compact_height (2.25rem), which the map UI spec sets as the minimum
+// for both the bulk controls and the subtype chips. A fixed height rather than a
+// minimum, so a wrapped or badged label cannot change a row's size. This was 30px,
+// which cleared the 24px AA floor but was below the spec's own figure; `leading-none`
+// replaces a hard-coded 14px that the row height no longer depends on.
 const BUTTON_BASE =
-  "flex h-[30px] w-full items-center gap-2 rounded-sm px-2 text-sm font-normal leading-[14px] transition-colors"
+  "flex h-9 w-full items-center gap-2 rounded-sm px-2 text-sm font-normal leading-none transition-colors"
 const BUTTON_ACTIVE_DEFAULT = "bg-primary text-primary-foreground"
 const BUTTON_INACTIVE_DEFAULT = "bg-muted text-foreground"
 
@@ -102,7 +107,9 @@ export function FilterPanel({
   return (
     <div className={cn("flex w-full flex-col", classNames?.root)}>
       {controls && controls.length > 0 && (
-        <div className={cn("grid grid-cols-2 gap-x-2.5 gap-y-2", classNames?.controls)}>
+        // gap-2 = space-2 both ways, per bulk_controls.gap. Was gap-x-2.5 (0.625rem),
+        // which is not an approved spacing step.
+        <div className={cn("grid grid-cols-2 gap-2", classNames?.controls)}>
           {controls.map((control) => {
             const active = control.active === true
             return (
@@ -145,9 +152,12 @@ export function FilterPanel({
               value={category.id}
               className={cn("border-b-0", classNames?.category)}
             >
+              {/* min-h-10 states the spec's 2.5rem category minimum outright. The
+                  padding already exceeded it, so this changes nothing today and stops
+                  a later padding tweak from quietly dropping below it. */}
               <AccordionTrigger
                 className={cn(
-                  "cursor-default items-center gap-1 px-0 pt-3 pb-0 hover:no-underline [&>svg]:translate-y-0",
+                  "min-h-10 cursor-default items-center gap-1 px-0 pt-3 pb-0 hover:no-underline [&>svg]:translate-y-0",
                   classNames?.categoryHeader,
                 )}
               >
@@ -191,7 +201,10 @@ export function FilterPanel({
               </AccordionTrigger>
 
               <AccordionContent className="pt-0 pb-0">
-                <div className={cn("grid grid-cols-2 gap-x-2.5 gap-y-2", classNames?.subtypeGrid)}>
+                {/* space-2 horizontally, space-1 vertically, per subtype_controls.gap --
+                    tighter rows than the bulk grid, so a long category reads as one
+                    block rather than a list of separated items. */}
+                <div className={cn("grid grid-cols-2 gap-x-2 gap-y-1", classNames?.subtypeGrid)}>
                   {category.subtypes.map((sub) => (
                     <button
                       key={sub.id}

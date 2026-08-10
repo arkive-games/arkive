@@ -978,7 +978,7 @@ export default function PalDetailPage() {
   }
 
   return (
-    <ContentPage active="/pals" title={t('pal.title')} maxWidth="max-w-5xl">
+    <ContentPage active="/pals" title={t('pal.title')}>
       <CatalogDataProvider pals={bundle ?? undefined} items={items ?? undefined}>
         {body}
       </CatalogDataProvider>

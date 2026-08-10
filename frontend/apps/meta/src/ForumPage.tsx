@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { scrollToResults } from './scrollToResults'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
@@ -348,6 +349,13 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
   }, [allPosts, channel, feedTab, followingOnly, gameFilter, submittedQuery, t, userSystemState.followedUserIds])
 
   const totalPages = Math.max(1, Math.ceil(visiblePosts.length / POSTS_PER_PAGE))
+  const feedSectionRef = useRef<HTMLElement>(null)
+  // Page changes land on the feed section rather than leaving the reader wherever the
+  // pager happened to be, which on a long page is below the first rows of the new page.
+  const goToPage = (next: number) => {
+    setCurrentPage(next)
+    scrollToResults(feedSectionRef.current)
+  }
   const activePage = Math.min(currentPage, totalPages)
   const visiblePageNumbers = getVisiblePageNumbers(activePage, totalPages)
   const paginatedPosts = visiblePosts.slice(
@@ -550,7 +558,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
             </div>
               </section>
 
-              <section className="forum-feed-section">
+              <section className="forum-feed-section" ref={feedSectionRef}>
             <div className="forum-panel forum-feed-panel">
               <div className="forum-feed-toolbar">
                 <div role="tablist" aria-label={t('forum.feed.tabsLabel')}>
@@ -610,7 +618,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
                         type="button"
                         aria-label={t('forum.pagination.previous')}
                         disabled={activePage === 1}
-                        onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                        onClick={() => goToPage(Math.max(1, activePage - 1))}
                       >
                         <IconChevronLeft className="size-4" stroke={1.8} aria-hidden="true" />
                         <span className="forum-pagination-label">{t('forum.pagination.previous')}</span>
@@ -622,7 +630,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
                           className={activePage === page ? 'is-active' : undefined}
                           aria-current={activePage === page ? 'page' : undefined}
                           aria-label={t('forum.pagination.page', { page })}
-                          onClick={() => setCurrentPage(page)}
+                          onClick={() => goToPage(page)}
                         >
                           {page}
                         </button>
@@ -631,7 +639,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
                         type="button"
                         aria-label={t('forum.pagination.next')}
                         disabled={activePage === totalPages}
-                        onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                        onClick={() => goToPage(Math.min(totalPages, activePage + 1))}
                       >
                         <span className="forum-pagination-label">{t('forum.pagination.next')}</span>
                         <IconChevronRight className="size-4" stroke={1.8} aria-hidden="true" />

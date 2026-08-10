@@ -51,8 +51,22 @@ export function useMobilePagination<T>(
       setPage(Math.min(Math.max(nextPage, 1), pageCount))
       const scroller = document.querySelector<HTMLElement>('[data-content-scroll]')
       if (!scroller) return
+
+      // Land on the first `[data-pagination-anchor]` rather than the very top, so a
+      // page change shows results instead of the hero and title the reader has
+      // already passed. Pages without an anchor keep the old top-of-scroller
+      // behaviour; see the note in the mobile spec for which ones those are.
+      const anchor = scroller.querySelector<HTMLElement>('[data-pagination-anchor]')
+      const top = anchor
+        ? Math.max(
+          0,
+          anchor.getBoundingClientRect().top
+          - scroller.getBoundingClientRect().top
+          + scroller.scrollTop,
+        )
+        : 0
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      scroller.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
+      scroller.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' })
     },
     [pageCount, setPage],
   )

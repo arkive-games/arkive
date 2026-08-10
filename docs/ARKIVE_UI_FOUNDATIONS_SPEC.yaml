@@ -212,8 +212,9 @@ control_geometry:
     - >-
       44px (touch_target_enhanced, SC 2.5.5, Level AAA) is the standard for ISOLATED
       or primary controls, and is what the map action stack, pagination and the mobile
-      account button use. It is not required of dense same-purpose groups: the marker
-      filter chips are 30px, which conforms at AA and is deliberate.
+      account button use. It is not required of dense same-purpose groups, which take
+      desktop_compact_height instead -- the marker filter chips are the case that
+      matters, and the map UI specification sets their height.
     - >-
       The earlier wording made 44px a floor "no touch target may render below",
       which several shared controls have never met. Stating an AAA target as a

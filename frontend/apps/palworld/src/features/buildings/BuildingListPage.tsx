@@ -132,7 +132,7 @@ export default function BuildingListPage() {
               className="max-w-sm"
             />
             {bundle ? (
-              <span className="text-sm text-muted-foreground" data-testid="building-count">
+              <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="building-count">
                 {t('building.count', { count: list.length })}
               </span>
             ) : null}

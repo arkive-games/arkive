@@ -239,8 +239,11 @@ export function SearchPanel({
       )}
       data-testid="search-panel"
     >
-      {/* Search bar */}
-      <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20">
+      {/* Search bar. min-h-12 is isolated_map_target (3rem): this floats over the map
+          with nothing adjacent to share a target area with, so it takes the isolated
+          size rather than the compact one. Previously it had no height at all and
+          measured ~2.4rem from padding plus line box. */}
+      <div className="pointer-events-auto flex min-h-12 items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20">
         <IconSearch className="size-4 shrink-0 text-muted-foreground" stroke={1.8} aria-hidden />
         <input
           data-testid="marker-search"

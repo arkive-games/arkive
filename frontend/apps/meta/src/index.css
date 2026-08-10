@@ -7,7 +7,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --home-shell: 82rem;
+  /* the `standard` content-width role; was an invented 82rem */
+  --home-shell: var(--arkive-content-standard);
   --home-orange: var(--arkive-action);
   --home-deep: var(--arkive-nav-active);
   --home-mist: var(--arkive-filter-active);
@@ -45,7 +46,7 @@ footer a:focus-visible {
 }
 
 .home-shell {
-  width: min(calc(100% - 3rem), var(--home-shell));
+  width: min(calc(100% - 2 * var(--arkive-page-gutter)), var(--home-shell));
   margin-inline: auto;
 }
 
@@ -830,10 +831,6 @@ footer a:focus-visible {
 @media (max-width: 47.99rem) {
   body {
     background: var(--background);
-  }
-
-  .home-shell {
-    width: min(calc(100% - 2rem), var(--home-shell));
   }
 
   .hero-section {

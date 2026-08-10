@@ -63,7 +63,7 @@ export default function ContentLayout({
         <div className="flex min-h-full flex-col">
           <div
             className={cn(
-              "arkive-content-page mx-auto w-full max-w-5xl flex-1 px-4 pb-6",
+              "arkive-content-page mx-auto w-full max-w-[var(--arkive-content-standard)] flex-1 pb-6",
               contentClassName,
             )}
           >

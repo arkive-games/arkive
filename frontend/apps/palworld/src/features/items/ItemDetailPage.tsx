@@ -463,7 +463,7 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <ContentPage active="/items" title={t('item.title')} maxWidth="max-w-5xl">
+    <ContentPage active="/items" title={t('item.title')}>
       <CatalogDataProvider
         items={b?.items}
         buildings={b?.buildings}

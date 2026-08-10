@@ -7,7 +7,7 @@
 }
 
 .forum-shell {
-  width: min(calc(100% - 3rem), 78rem);
+  width: min(calc(100% - 2 * var(--arkive-page-gutter)), var(--arkive-content-standard));
   margin-inline: auto;
   display: grid;
   grid-template-columns: 11.25rem minmax(0, 1fr) 16.75rem;
@@ -1783,7 +1783,6 @@
   }
 
   .forum-shell {
-    width: min(calc(100% - 1.5rem), 78rem);
     grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
   }
