@@ -29,7 +29,7 @@ arkive.memory.palworld.stat-simulator.iv	-	apps/palworld/src/features/simulator/
 arkive.memory.palworld.stat-simulator.passives	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
 arkive.memory.palworld.stat-simulator.souls	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
 arkive.memory.site.account-editor.profile	-	apps/meta/src/UserSystemPages.tsx
-arkive.memory.site.forum-editor.post	-	apps/meta/src/ForumPage.tsx
+arkive.memory.site.forum-editor.post-v2	-	apps/meta/src/ForumPage.tsx
 arkive.memory.site.games-catalog.category	-	apps/meta/src/AllGamesPage.tsx
 arkive.memory.site.games-catalog.page	-	apps/meta/src/AllGamesPage.tsx
 arkive.memory.site.games-catalog.query	-	apps/meta/src/AllGamesPage.tsx
