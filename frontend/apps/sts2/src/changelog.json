@@ -3,14 +3,14 @@
     {
       "version": "0.5.0",
       "date": "2026-08-10",
-      "commit": "3bfd4e469451edd37ff8261071e45e968807ba7f",
+      "commit": "63b3acbf4ed16ed85b0bfc4c7b9b6f86b18cdf05",
       "changes": [
         {
-          "kind": "feature",
+          "kind": "improvement",
           "text": {
-            "en-US": "Remembers card search and filter context across visits.",
-            "zh-CN": "在再次访问时恢复卡牌搜索和筛选条件。",
-            "zh-TW": "再次造訪時恢復卡牌搜尋和篩選條件。"
+            "en-US": "Remembers your card filters between visits, and keeps the search box for the rest of the browsing session.",
+            "zh-CN": "记住你的卡牌筛选条件，下次访问仍然保留；搜索框内容在本次浏览期间保持。",
+            "zh-TW": "記住你的卡牌篩選條件，下次造訪仍然保留；搜尋框內容在本次瀏覽期間保持。"
           }
         }
       ]

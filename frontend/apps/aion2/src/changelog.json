@@ -3,14 +3,14 @@
     {
       "version": "1.15.0",
       "date": "2026-08-10",
-      "commit": "3bfd4e469451edd37ff8261071e45e968807ba7f",
+      "commit": "63b3acbf4ed16ed85b0bfc4c7b9b6f86b18cdf05",
       "changes": [
         {
-          "kind": "feature",
+          "kind": "improvement",
           "text": {
-            "en-US": "Remembers map display choices, completion progress, and wiki browsing context.",
-            "zh-CN": "记住地图显示选项、完成进度和维基浏览上下文。",
-            "zh-TW": "記住地圖顯示選項、完成進度和 Wiki 瀏覽內容。"
+            "en-US": "Remembers your map display choices and where you were browsing the wiki.",
+            "zh-CN": "记住你的地图显示选项，以及百科浏览位置。",
+            "zh-TW": "記住你的地圖顯示選項，以及百科瀏覽位置。"
           }
         }
       ]

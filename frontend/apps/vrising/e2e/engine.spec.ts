@@ -22,11 +22,16 @@ declare global {
   }
 }
 
-const STORAGE_KEY = 'vrising.map.engine'
+const STORAGE_KEY = 'arkive.memory.vrising.map.engine'
 const glCanvas = (page: Page) => page.getByTestId('gl-map-canvas')
 const leafletContainer = (page: Page) => page.locator('.leaflet-container')
 const storedEngine = (page: Page) =>
-  page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)
+  page.evaluate((key) => {
+    // Stored as a state-memory envelope now, not a bare string.
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    try { return (JSON.parse(raw) as { value?: unknown }).value ?? null } catch { return null }
+  }, STORAGE_KEY)
 
 test('defaults to the GL engine with no param and empty storage', async ({ page }) => {
   const tiles: string[] = []
@@ -64,7 +69,10 @@ test('does not expose a renderer picker in the sidebar', async ({ page }) => {
 
 test('honors an existing stored Leaflet preference without sidebar UI', async ({ page }) => {
   await page.goto('/')
-  await page.evaluate((key) => localStorage.setItem(key, 'leaflet'), STORAGE_KEY)
+  await page.evaluate((key) => localStorage.setItem(key, JSON.stringify({
+    schemaVersion: '1.0.0', stateClass: 'user_preference', writtenAt: Date.now(),
+    value: 'leaflet',
+  })), STORAGE_KEY)
   await page.reload()
   await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 })
   await expect(glCanvas(page)).toHaveCount(0)
@@ -73,7 +81,10 @@ test('honors an existing stored Leaflet preference without sidebar UI', async ({
 
 test('?engine= wins for the visit but never overwrites the stored choice', async ({ page }) => {
   await page.goto('/')
-  await page.evaluate((key) => localStorage.setItem(key, 'gl'), STORAGE_KEY)
+  await page.evaluate((key) => localStorage.setItem(key, JSON.stringify({
+    schemaVersion: '1.0.0', stateClass: 'user_preference', writtenAt: Date.now(),
+    value: 'gl',
+  })), STORAGE_KEY)
   expect(await storedEngine(page)).toBe('gl')
 
   await page.goto('/?engine=leaflet')

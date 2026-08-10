@@ -86,9 +86,16 @@ async function pickFastTravelTarget(page: Page) {
   // The popup shows the name for the language i18next resolved, not necessarily
   // en-US — read it back rather than assume.
   const lng = await page.evaluate(() => {
-    const raw = localStorage.getItem('arkive.memory.site.interface.language')
-    if (!raw) return 'en-US'
+    // The language is a `site`-scoped record, so it travels in a cookie on the
+    // parent domain -- Web Storage cannot cross the games' separate origins.
+    // Reading localStorage here silently returned 'en-US' for every visitor.
+    const name = 'ark~' + encodeURIComponent('arkive.memory.site.interface.language')
+    const hit = document.cookie.split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(name + '='))
+    if (!hit) return 'en-US'
     try {
+      const raw = decodeURIComponent(hit.slice(name.length + 1))
       const value = (JSON.parse(raw) as { value?: unknown }).value
       return typeof value === 'string' ? value : 'en-US'
     } catch {

@@ -259,11 +259,16 @@ test("the cursor readout follows the pointer over the canvas", async ({ page }) 
  * tests that keep the pinning honest.
  */
 test.describe("engine selection", () => {
-  const STORAGE_KEY = "aion2.map.engine";
+  const STORAGE_KEY = "arkive.memory.aion2.map.engine";
   const glCanvas = (page: Page) => page.getByTestId("gl-map-canvas");
   const leafletContainer = (page: Page) => page.locator(".leaflet-container");
   const storedEngine = (page: Page) =>
-    page.evaluate((k) => localStorage.getItem(k), STORAGE_KEY);
+    page.evaluate((k) => {
+    // Stored as a state-memory envelope now, not a bare string.
+    const raw = localStorage.getItem(k)
+    if (!raw) return null
+    try { return (JSON.parse(raw) as { value?: unknown }).value ?? null } catch { return null }
+  }, STORAGE_KEY);
 
   async function pickEngine(page: Page, choice: "gl" | "leaflet") {
     await page.getByTestId("engine-menu").click();

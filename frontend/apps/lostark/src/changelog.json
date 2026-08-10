@@ -3,14 +3,14 @@
     {
       "version": "0.9.0",
       "date": "2026-08-10",
-      "commit": "3bfd4e469451edd37ff8261071e45e968807ba7f",
+      "commit": "63b3acbf4ed16ed85b0bfc4c7b9b6f86b18cdf05",
       "changes": [
         {
-          "kind": "feature",
+          "kind": "fix",
           "text": {
-            "en-US": "Restores loadout drafts and clears saved drafts immediately on reset.",
-            "zh-CN": "恢复配装草稿，并在重置时立即清除已保存的草稿。",
-            "zh-TW": "恢復配裝草稿，並在重設時立即清除已儲存的草稿。"
+            "en-US": "Resetting a loadout now clears the saved draft too, instead of restoring it on the next visit.",
+            "zh-CN": "重置配装时会一并清除已保存的草稿，不会在下次访问时又恢复。",
+            "zh-TW": "重設配裝時會一併清除已儲存的草稿，不會在下次造訪時又恢復。"
           }
         }
       ]
