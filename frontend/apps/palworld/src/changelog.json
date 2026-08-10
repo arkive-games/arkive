@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.27.4",
+      "date": "2026-08-10",
+      "commit": "e66f8282a80eb76805df4eaf60a6ffa7546168f2",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Wanted fugitives now display the original bounty icon directly, without the boss portrait ring.",
+            "zh-CN": "悬赏头目现在直接显示原生悬赏图标，不再套用首领头像圆环。",
+            "zh-TW": "懸賞頭目現在直接顯示原生懸賞圖示，不再套用首領頭像圓環。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.27.3",
       "date": "2026-08-10",
       "commit": "40f985f85ffe27c8e45e9365897372dd8d05fcad",
