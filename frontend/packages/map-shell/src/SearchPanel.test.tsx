@@ -16,11 +16,12 @@ const labels = {
   noDescription: "No description",
 }
 
-// The rule Palworld injects: a purely-numeric query is an exact Paldeck-id
-// lookup. It lives in the app, not the shared panel — tests exercise it the
-// same way the app wires it.
-const palworldNumericLookup = (q: string): SearchOptions | undefined =>
-  /^\d+$/.test(q) ? { fields: ["idLabel"], prefix: false, fuzzy: false } : undefined
+// Palworld reserves bare numbers for breeding power and keeps Paldeck lookup
+// explicit through a `No.123` query.
+const palworldPaldeckLookup = (q: string): SearchOptions | undefined =>
+  /^no\.?\s*\d+[a-z]?$/i.test(q)
+    ? { fields: ["idLabel"], prefix: false, fuzzy: false }
+    : undefined
 
 type Overrides = {
   searchFields?: SearchField[]
@@ -60,8 +61,11 @@ const item = (over: Partial<SearchItem> & Pick<SearchItem, "id" | "name">): Sear
   ...over,
 })
 
-// Wire a Palworld-style panel (name + idLabel indexed, numeric = id lookup).
-const palworld = { searchFields: ["name", "idLabel"] as SearchField[], resolveSearchOptions: palworldNumericLookup }
+const palworld = {
+  searchFields: ["name", "idLabel"] as SearchField[],
+  resolveSearchOptions: palworldPaldeckLookup,
+  searchOptions: { combineWith: "AND" as const, fuzzy: false },
+}
 
 describe("SearchPanel", () => {
   it("keeps the legacy right placement as the floating default", () => {
@@ -128,7 +132,44 @@ describe("SearchPanel", () => {
     expect(screen.getByText("Prefix Pal")).toBeTruthy()
   })
 
-  it("with the Palworld resolver, a numeric query is an exact id lookup", () => {
+  it("orders numeric proximity results by distance and deduplicates species", () => {
+    renderSearchPanel([
+      item({
+        id: "exact-spawn-1",
+        name: "Exact Pal",
+        proximityValue: 1230,
+        proximityKey: "exact",
+        proximityOrder: 2,
+        proximityLabel: "Breeding Power: 1230",
+      }),
+      item({
+        id: "exact-spawn-2",
+        name: "Exact Pal duplicate",
+        proximityValue: 1230,
+        proximityKey: "exact",
+        proximityOrder: 2,
+      }),
+      item({ id: "high", name: "High Pal", proximityValue: 1240, proximityOrder: 3 }),
+      item({ id: "low", name: "Low Pal", proximityValue: 1220, proximityOrder: 1 }),
+      item({ id: "quest", name: "Quest 1230" }),
+    ])
+
+    searchFor("1230")
+
+    const resultText = Array.from(
+      screen.getByTestId("search-results").querySelectorAll("button"),
+      (button) => button.textContent,
+    )
+    expect(resultText).toHaveLength(3)
+    expect(resultText[0]).toContain("Exact Pal")
+    expect(resultText[1]).toContain("Low Pal")
+    expect(resultText[2]).toContain("High Pal")
+    expect(screen.queryByText("Exact Pal duplicate")).toBeNull()
+    expect(screen.queryByText("Quest 1230")).toBeNull()
+    expect(screen.getByText("Breeding Power: 1230")).toBeTruthy()
+  })
+
+  it("with the Palworld resolver, an explicit No. query is an exact id lookup", () => {
     renderSearchPanel(
       [
         item({ id: "pal-123", name: "Exact Pal", idLabel: "No.123" }),
@@ -139,7 +180,7 @@ describe("SearchPanel", () => {
       palworld,
     )
 
-    searchFor("123")
+    searchFor("No.123")
 
     expect(screen.getByText("Exact Pal")).toBeTruthy()
     expect(screen.queryByText("Reorder Pal")).toBeNull()
@@ -150,12 +191,12 @@ describe("SearchPanel", () => {
   it("matches a zero-padded id token with an unpadded query", () => {
     renderSearchPanel([item({ id: "pal-011", name: "Padded Pal", idLabel: "No.011" })], palworld)
 
-    searchFor("11")
+    searchFor("No.11")
 
     expect(screen.getByText("Padded Pal")).toBeTruthy()
   })
 
-  it("numeric id lookup ignores the prefix range and levels embedded in names", () => {
+  it("explicit id lookup ignores the prefix range and levels embedded in names", () => {
     renderSearchPanel(
       [
         item({ id: "pal-011", name: "Exact Pal", idLabel: "No.011" }),
@@ -165,7 +206,7 @@ describe("SearchPanel", () => {
       palworld,
     )
 
-    searchFor("11")
+    searchFor("No.11")
 
     expect(screen.getByText("Exact Pal")).toBeTruthy()
     expect(screen.queryByText("Prefix Pal")).toBeNull()
@@ -175,7 +216,7 @@ describe("SearchPanel", () => {
   it("finds a suffixed id by its number", () => {
     renderSearchPanel([item({ id: "pal-111b", name: "Variant Pal", idLabel: "No.111B" })], palworld)
 
-    searchFor("111")
+    searchFor("No.111")
 
     expect(screen.getByText("Variant Pal")).toBeTruthy()
   })
@@ -243,7 +284,7 @@ describe("SearchPanel", () => {
   })
 
   it("a per-query resolver still overrides the searchOptions base", () => {
-    // Base sets AND, but the numeric resolver takes over for a numeric query.
+    // Base sets AND, but the Paldeck resolver takes over for an explicit query.
     renderSearchPanel(
       [
         item({ id: "pal-123", name: "Exact Pal", idLabel: "No.123" }),
@@ -252,7 +293,7 @@ describe("SearchPanel", () => {
       { ...palworld, searchOptions: { combineWith: "AND", fuzzy: false } },
     )
 
-    searchFor("123")
+    searchFor("No.123")
 
     expect(screen.getByText("Exact Pal")).toBeTruthy()
     expect(screen.queryByText("Neighbour Pal")).toBeNull()

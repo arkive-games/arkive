@@ -156,7 +156,13 @@ export default function PalListPage() {
           ) : (
             <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
               {mobilePaging.visibleItems.map((p) => (
-                <PalCard key={p.id} pal={p} name={bundle.text[p.id]?.name ?? p.id} />
+                <PalCard
+                  key={p.id}
+                  pal={p}
+                  name={bundle.text[p.id]?.name ?? p.id}
+                  breedingPower={bundle.breedingPower.get(p.id)}
+                  breedingPowerLabel={t('breeding.breedingPower')}
+                />
               ))}
             </div>
           )}

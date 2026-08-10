@@ -26,7 +26,8 @@ function Glyph({ src, size = 18, title }: { src: string; size?: number; title?: 
 }
 
 function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
-  const fs = filterStrings(useTranslation().i18n.resolvedLanguage ?? 'en-US')
+  const { t, i18n } = useTranslation()
+  const fs = filterStrings(i18n.resolvedLanguage ?? 'en-US')
   const pid = formatPalId(pal.zukanIndex, pal.zukanIndexSuffix)
   const name = bundle.text[pal.id]?.name ?? pal.id
   const works = WORK_TYPES.filter((w) => pal.work[w] != null).sort(
@@ -36,6 +37,9 @@ function PalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
     <tr className="border-t border-border/60 align-middle hover:bg-accent/40">
       <td className="px-2 py-1.5 text-center tabular-nums text-xs text-muted-foreground">
         {pid ? `${pid.text}${pid.accent ?? ''}` : '—'}
+      </td>
+      <td className="px-2 py-1.5 text-center tabular-nums text-xs text-muted-foreground" title={t('breeding.breedingPower')}>
+        {bundle.breedingPower.get(pal.id) ?? '—'}
       </td>
       <td className="px-2 py-1.5">
         <PalHover id={pal.id}>
@@ -170,6 +174,10 @@ function MobilePalRow({ pal, bundle }: { pal: PalEntry; bundle: PalsBundle }) {
 
       <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
         <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">{t('breeding.breedingPower')}</dt>
+          <dd className="tabular-nums">{bundle.breedingPower.get(pal.id) ?? '—'}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
           <dt className="text-muted-foreground">{fs.col.nocturnal}</dt>
           <dd>{pal.nocturnal ? fs.yes : '—'}</dd>
         </div>
@@ -225,10 +233,11 @@ export function PalTable({ pals, bundle }: { pals: PalEntry[]; bundle: PalsBundl
   }
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
-      <table className="w-full min-w-[720px] border-collapse text-sm">
+      <table className="w-full min-w-[800px] border-collapse text-sm">
         <thead className="bg-secondary/50 text-left text-xs font-semibold text-muted-foreground">
           <tr>
             <th className="px-2 py-2 text-center">{fs.col.no}</th>
+            <th className="px-2 py-2 text-center">{t('breeding.breedingPower')}</th>
             <th className="px-2 py-2">{fs.col.name}</th>
             <th className="px-2 py-2">{fs.col.elements}</th>
             <th className="px-2 py-2">{fs.col.work}</th>

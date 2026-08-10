@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import MiniSearch, { type SearchOptions, type SearchResult } from "minisearch"
+import MiniSearch, { type SearchOptions } from "minisearch"
 import { IconSearch } from "@tabler/icons-react"
 import { cn } from "@gamemap/ui"
 import { formatCoords } from "./coordFormat"
@@ -17,6 +17,14 @@ export type SearchItem = {
   y: number
   /** World height (up axis). When present it's shown as a labeled `Z` value. */
   z?: number
+  /** Numeric value used for nearest-value searches when the query is a bare integer. */
+  proximityValue?: number
+  /** Results sharing this key collapse to one row during a nearest-value search. */
+  proximityKey?: string
+  /** Stable tie-break order for equal-distance nearest-value results. */
+  proximityOrder?: number
+  /** User-visible value label shown on the result card. */
+  proximityLabel?: string
 }
 
 /** A `SearchItem` text field that can be indexed for searching. */
@@ -67,9 +75,8 @@ export type SearchPanelProps = {
    * Optional per-query hook to override how a query is matched. Return a
    * MiniSearch `SearchOptions` to take over matching for that query, or
    * `undefined` to use the default (scope-aware prefix search). This is where
-   * an app injects game-specific rules without the panel hardcoding fields —
-   * e.g. Palworld treats a numeric query as an exact Paldeck-id lookup:
-   * `(q) => /^\d+$/.test(q) ? { fields: ["idLabel"], prefix: false, fuzzy: false } : undefined`.
+   * an app injects game-specific rules without the panel hardcoding fields,
+   * such as an explicit exact-id query.
    */
   resolveSearchOptions?: (query: string) => SearchOptions | undefined
   /**
@@ -171,24 +178,46 @@ export function SearchPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, searchFields.join(",")])
 
-  const results: SearchResult[] = useMemo(() => {
+  const results: SearchItem[] = useMemo(() => {
     const q = debounced.trim()
     if (!q) return []
+    if (/^\d+$/.test(q)) {
+      const target = Number(q)
+      const proximityItems = items.filter((item) => Number.isFinite(item.proximityValue))
+      if (proximityItems.length > 0) {
+        const deduped = new Map<string, SearchItem>()
+        for (const item of proximityItems) {
+          const key = item.proximityKey ?? item.id
+          if (!deduped.has(key)) deduped.set(key, item)
+        }
+        return [...deduped.values()]
+          .sort((a, b) =>
+            Math.abs(a.proximityValue! - target) - Math.abs(b.proximityValue! - target) ||
+            (a.proximityOrder ?? Number.MAX_SAFE_INTEGER) -
+              (b.proximityOrder ?? Number.MAX_SAFE_INTEGER) ||
+            a.id.localeCompare(b.id, undefined, { numeric: true }),
+          )
+          .slice(0, 50)
+      }
+    }
     // Layer the options: app-wide base (`searchOptions`) < configured fields <
-    // an app-supplied per-query override (`resolveSearchOptions`, e.g. Palworld's
-    // numeric-id lookup) which wins. `...undefined` spreads to nothing, so an
+    // an app-supplied per-query override (`resolveSearchOptions`) which wins.
+    // `...undefined` spreads to nothing, so an
     // absent base or resolver simply drops out.
     const opts: SearchOptions = {
       ...searchOptions,
       fields: searchFields,
       ...resolveSearchOptions?.(q),
     }
-    return miniSearch.search(q, opts).slice(0, 50)
+    return miniSearch.search(q, opts)
+      .map((result) => itemsById.get(result.id as string))
+      .filter((item): item is SearchItem => item !== undefined)
+      .slice(0, 50)
     // searchFields is joined (not referenced) so a fresh array literal with the
     // same contents doesn't churn `results` every render — which, via the
     // onResultsChange effect below, would loop setState→render→setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced, miniSearch, searchFields.join(","), resolveSearchOptions, searchOptions])
+  }, [debounced, items, itemsById, miniSearch, searchFields.join(","), resolveSearchOptions, searchOptions])
 
   // Report the shown result ids so the host can force those markers onto the
   // map even when their subtype filter is off (see SearchPanelProps). Guarded
@@ -197,7 +226,7 @@ export function SearchPanel({
   const lastReportedIds = useRef<string | null>(null)
   useEffect(() => {
     if (!onResultsChange) return
-    const ids = results.map((r) => r.id as string)
+    const ids = results.map((result) => result.id)
     const key = ids.join(" ")
     if (key === lastReportedIds.current) return
     lastReportedIds.current = key
@@ -272,17 +301,15 @@ export function SearchPanel({
             data-testid="search-results"
             className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2"
           >
-            {results.map((res) => {
-              const item = itemsById.get(res.id as string)
-              if (!item) return null
+            {results.map((item) => {
               const metaLabel = [item.subtypeLabel, item.categoryLabel]
                 .filter(Boolean)
                 .join(" / ")
               return (
-                <li key={res.id}>
+                <li key={item.id}>
                   <button
                     type="button"
-                    onClick={() => handleSelect(res.id as string)}
+                    onClick={() => handleSelect(item.id)}
                     className={cn(
                       "w-full rounded-md border border-transparent bg-card px-3 py-2 text-left text-card-foreground",
                       "transition-colors hover:border-border hover:bg-accent/20",
@@ -337,7 +364,7 @@ export function SearchPanel({
                         )
                       })()}
                       {(() => {
-                        const aside = resultAside?.(item)
+                        const aside = resultAside?.(item) ?? item.proximityLabel
                         return aside ? (
                           <span className="truncate text-right">{aside}</span>
                         ) : null

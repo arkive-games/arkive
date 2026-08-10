@@ -206,6 +206,8 @@ const j = async <T>(url: string): Promise<T> => {
 export interface PalsBundle {
   pals: PalEntry[]
   byId: Map<string, PalEntry>
+  /** palId -> CombiRank (breeding power). */
+  breedingPower: Map<string, number>
   /** Filter facets present in the roster (from the pipeline). */
   filters: PalFacets
   /** palId -> localized name/description/partner-skill. */
@@ -231,8 +233,9 @@ export interface PalsBundle {
 const cache = new Map<string, Promise<PalsBundle>>()
 
 async function fetchBundle(lng: string): Promise<PalsBundle> {
-  const [palsFile, passivesFile, itemsFile, text, passiveText, skills, itemsLoc, enums, partnerEffects, partnerTargets] = await Promise.all([
+  const [palsFile, breedingFile, passivesFile, itemsFile, text, passiveText, skills, itemsLoc, enums, partnerEffects, partnerTargets] = await Promise.all([
     j<{ pals: PalEntry[]; filters: PalFacets }>(dataUrl(`pals.json`)),
+    j<{ pals: { id: string; rank: number }[] }>(dataUrl(`breeding.json`)),
     j<{ passives: Passive[] }>(dataUrl(`passives.json`)),
     j<{ items: { id: string; icon?: string }[] }>(dataUrl(`items.json`)),
     j<Record<string, PalText>>(dataUrl(`locales/${lng}/pals.json`)),
@@ -257,6 +260,7 @@ async function fetchBundle(lng: string): Promise<PalsBundle> {
   return {
     pals: palsFile.pals,
     byId: new Map(palsFile.pals.map((p) => [p.id, p])),
+    breedingPower: new Map(breedingFile.pals.map((p) => [p.id, p.rank])),
     filters: palsFile.filters,
     text,
     passives: passivesFile.passives,

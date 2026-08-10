@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
-import { ArrowDown01, ArrowUp10, Check, RotateCcw, Sparkles, Star } from 'lucide-react'
+import { ArrowDown01, ArrowUp10, Check, RotateCcw, Sparkles, Star, Zap } from 'lucide-react'
 import {
   Button,
   Command,
@@ -21,6 +21,7 @@ import {
 import { ContentPage } from '../../components/ContentPage'
 import { loadPals, type PalEntry, type PalsBundle } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
+import { palCommandFilter, palSearchValue, parseBreedingPowerQuery } from '../../lib/breedingSearch'
 import { compareZukan, formatPalId, palIdText, type ZukanSortDirection } from '../../lib/palId'
 import {
   applyPassive,
@@ -296,22 +297,45 @@ function SimPalPicker({
     const m = new Map<string, string>()
     for (const p of roster) {
       const id = formatPalId(p.zukanIndex, p.zukanIndexSuffix)
-      m.set(p.id, `${pals.text[p.id]?.name ?? p.id} ${p.id} ${palIdText(id) ?? ''}`)
+      m.set(
+        p.id,
+        palSearchValue(
+          `${pals.text[p.id]?.name ?? p.id} ${p.id} ${palIdText(id) ?? ''}`,
+          pals.breedingPower.get(p.id),
+        ),
+      )
     }
     return m
   }, [roster, pals])
 
+  const displayedRoster = useMemo(() => {
+    const target = parseBreedingPowerQuery(query)
+    if (target === null) return roster
+    return [...roster].sort((a, b) => {
+      const aPower = pals.breedingPower.get(a.id)
+      const bPower = pals.breedingPower.get(b.id)
+      if (aPower === undefined) return bPower === undefined ? compareZukan(a, b, 'ascending') : 1
+      if (bPower === undefined) return -1
+      return Math.abs(aPower - target) - Math.abs(bPower - target) || compareZukan(a, b, 'ascending')
+    })
+  }, [pals, query, roster])
+
   const row = (p: PalEntry) => {
     const id = palIdText(formatPalId(p.zukanIndex, p.zukanIndexSuffix))
+    const breedingPower = pals.breedingPower.get(p.id)
     return (
       <>
         <img src={palIconUrl(p.icon)} alt="" loading="lazy" className="size-6 shrink-0 rounded-full bg-black/5 object-contain dark:bg-white/10" />
         <span className="truncate">{pals.text[p.id]?.name ?? p.id}</span>
-        {id ? (
-          <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">
-            {locale.startsWith('zh') ? `编号 ${id.replace(/^No\./, '')}` : id}
-          </span>
-        ) : null}
+        <span className="ml-auto flex shrink-0 items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
+          {id ? <span>{locale.startsWith('zh') ? `编号 ${id.replace(/^No\./, '')}` : id}</span> : null}
+          {breedingPower !== undefined ? (
+            <span className="inline-flex items-center gap-0.5" title={t('breeding.breedingPower')}>
+              <Zap className="size-3 shrink-0" />
+              {breedingPower}
+            </span>
+          ) : null}
+        </span>
       </>
     )
   }
@@ -320,7 +344,7 @@ function SimPalPicker({
     <Command
       key={sortDirection}
       className="w-full max-w-md overflow-visible rounded-md bg-transparent"
-      filter={(v, s) => (v.toLowerCase().includes(s.toLowerCase().trim()) ? 1 : 0)}
+      filter={palCommandFilter}
     >
       <Popover open={open} onOpenChange={setOpen}>
         <div ref={pickerControlRef} className="relative flex h-11 w-full overflow-hidden rounded-md border border-border bg-background shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20 [&_[data-slot=command-input-wrapper]]:absolute [&_[data-slot=command-input-wrapper]]:inset-y-0 [&_[data-slot=command-input-wrapper]]:right-11 [&_[data-slot=command-input-wrapper]]:left-0 [&_[data-slot=command-input-wrapper]]:h-full [&_[data-slot=command-input-wrapper]]:border-0 [&_[data-slot=command-input-wrapper]]:px-2.5">
@@ -384,7 +408,7 @@ function SimPalPicker({
           <CommandList>
             <CommandEmpty>{t('breeding.noPalFound')}</CommandEmpty>
             <CommandGroup>
-              {roster.map((p) => (
+              {displayedRoster.map((p) => (
                 <CommandItem
                   key={p.id}
                   value={searchText.get(p.id)}

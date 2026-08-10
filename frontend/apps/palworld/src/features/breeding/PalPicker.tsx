@@ -16,7 +16,8 @@ import {
 import { OverflowLabel } from '@gamemap/map-shell'
 import type { BreedingPal, NameMap } from '../../lib/breeding'
 import { palIconUrl } from '../../lib/breeding'
-import { formatPalId, palIdText } from '../../lib/palId'
+import { palCommandFilter, palSearchValue, parseBreedingPowerQuery } from '../../lib/breedingSearch'
+import { compareZukan, formatPalId, palIdText } from '../../lib/palId'
 import {
   LEGENDARY_ICON,
   TILE_FRAME,
@@ -75,6 +76,7 @@ export interface PalPickerProps {
 
 export function PalPicker({ label, pals, names, value, onChange, labels, variant = 'row', slot }: PalPickerProps) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
   const selected = value ? pals.find((p) => p.id === value) ?? null : null
   const selectedPalId = selected ? formatPalId(selected.zukanIndex, selected.zukanIndexSuffix) : undefined
   const selectedPalIdText = palIdText(selectedPalId)
@@ -85,10 +87,21 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
     const m = new Map<string, string>()
     for (const p of pals) {
       const id = formatPalId(p.zukanIndex, p.zukanIndexSuffix)
-      m.set(p.id, `${names[p.id] ?? p.id} ${p.id} ${palIdText(id) ?? ''}`)
+      m.set(
+        p.id,
+        palSearchValue(`${names[p.id] ?? p.id} ${p.id} ${palIdText(id) ?? ''}`, p.rank),
+      )
     }
     return m
   }, [pals, names])
+
+  const orderedPals = useMemo(() => {
+    const target = parseBreedingPowerQuery(query)
+    if (target === null) return pals
+    return [...pals].sort(
+      (a, b) => Math.abs(a.rank - target) - Math.abs(b.rank - target) || compareZukan(a, b, 'ascending'),
+    )
+  }, [pals, query])
 
   // Clearing back to "any Pal". On tiles the × in the header strip is small, so
   // the popover also opens with an explicit "Any Pal" row (a full-width target).
@@ -97,7 +110,13 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
   return (
     <div className={tile ? 'min-w-0' : 'flex flex-col gap-1.5'}>
       {tile ? null : <span className="text-xs font-medium text-muted-foreground">{label}</span>}
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next)
+          if (!next) setQuery('')
+        }}
+      >
         <PopoverTrigger asChild>
           {tile ? (
             <button
@@ -234,10 +253,8 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
           className={cn('p-0', tile ? 'w-[min(20rem,calc(100vw-1.5rem))]' : 'w-[var(--radix-popover-trigger-width)]')}
           align="start"
         >
-          <Command
-            filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase().trim()) ? 1 : 0)}
-          >
-            <CommandInput placeholder={labels.searchPal} />
+          <Command filter={palCommandFilter}>
+            <CommandInput value={query} onValueChange={setQuery} placeholder={labels.searchPal} />
             <CommandList>
               <CommandEmpty>{labels.noPalFound}</CommandEmpty>
               <CommandGroup>
@@ -257,7 +274,7 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
                     <Check className={cn('ml-auto size-4 shrink-0', value ? 'opacity-0' : 'opacity-100')} />
                   </CommandItem>
                 ) : null}
-                {pals.map((p) => (
+                {orderedPals.map((p) => (
                   <CommandItem
                     key={p.id}
                     value={searchText.get(p.id)}

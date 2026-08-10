@@ -1,11 +1,22 @@
 import { Link } from '@tanstack/react-router'
+import { Zap } from 'lucide-react'
 import { palIconUrl } from '../../../lib/assets'
 import { formatPalId } from '../../../lib/palId'
 import type { PalEntry } from '../../../lib/pals'
 import { PalHover } from '../../catalog/components'
 
 /** A roster tile for the `/pals` grid: icon, Paldeck id, name. Links to detail. */
-export function PalCard({ pal, name }: { pal: PalEntry; name: string }) {
+export function PalCard({
+  pal,
+  name,
+  breedingPower,
+  breedingPowerLabel,
+}: {
+  pal: PalEntry
+  name: string
+  breedingPower?: number
+  breedingPowerLabel: string
+}) {
   const pid = formatPalId(pal.zukanIndex, pal.zukanIndexSuffix)
   return (
     <PalHover id={pal.id}>
@@ -15,12 +26,18 @@ export function PalCard({ pal, name }: { pal: PalEntry; name: string }) {
         className="group flex aspect-square min-w-0 flex-col items-center overflow-hidden rounded-md border border-border bg-card text-center shadow-sm transition hover:border-primary/60 hover:bg-accent sm:p-3"
         data-testid="pal-card"
       >
-        {pid ? (
-          <span className="w-full truncate bg-muted px-1.5 py-0.5 text-left text-xs font-medium tabular-nums text-muted-foreground sm:bg-transparent sm:px-0 sm:text-center sm:font-normal">
-            {pid.text}
-            {pid.accent ? <span className="text-primary">{pid.accent}</span> : null}
+        <span className="flex w-full items-center justify-between gap-1 bg-muted px-1.5 py-0.5 text-xs font-medium tabular-nums text-muted-foreground sm:bg-transparent sm:px-0 sm:font-normal">
+          <span className="truncate">
+            {pid?.text}
+            {pid?.accent ? <span className="text-primary">{pid.accent}</span> : null}
           </span>
-        ) : null}
+          {breedingPower !== undefined ? (
+            <span className="inline-flex shrink-0 items-center gap-0.5" title={breedingPowerLabel}>
+              <Zap className="size-3" />
+              {breedingPower}
+            </span>
+          ) : null}
+        </span>
         <div className="flex min-h-0 flex-1 items-center justify-center p-1 sm:p-0">
           <img
             src={palIconUrl(pal.icon)}

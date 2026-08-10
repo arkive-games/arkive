@@ -36,7 +36,52 @@ function pal(over: Partial<PalEntry> & { id: string }): PalEntry {
   }
 }
 
-const bundleOf = (pals: PalEntry[]) => ({ pals, text: {} })
+const bundleOf = (pals: PalEntry[], powers: Record<string, number> = {}) => ({
+  pals,
+  text: {},
+  breedingPower: new Map(Object.entries(powers)),
+})
+
+describe('filterPals - breeding-power search', () => {
+  it('orders a bare numeric query by absolute breeding-power difference', () => {
+    const roster = [
+      pal({ id: 'Far', zukanIndex: 1 }),
+      pal({ id: 'Exact', zukanIndex: 2 }),
+      pal({ id: 'NearHigh', zukanIndex: 3 }),
+      pal({ id: 'NearLow', zukanIndex: 4 }),
+    ]
+    const out = filterPals(
+      bundleOf(roster, { Far: 1000, Exact: 1230, NearHigh: 1240, NearLow: 1220 }),
+      { ...EMPTY_FILTER, query: '1230' },
+    )
+    expect(out.map((p) => p.id)).toEqual(['Exact', 'NearHigh', 'NearLow', 'Far'])
+  })
+
+  it('applies facets before breeding-power ordering', () => {
+    const roster = [
+      pal({ id: 'FireExact', zukanIndex: 1, elements: ['Fire'] }),
+      pal({ id: 'WaterNear', zukanIndex: 2, elements: ['Water'] }),
+      pal({ id: 'FireFar', zukanIndex: 3, elements: ['Fire'] }),
+    ]
+    const out = filterPals(
+      bundleOf(roster, { FireExact: 1230, WaterNear: 1231, FireFar: 1300 }),
+      { ...EMPTY_FILTER, query: '1230', elements: ['Fire'] },
+    )
+    expect(out.map((p) => p.id)).toEqual(['FireExact', 'FireFar'])
+  })
+
+  it('keeps explicit No. queries as exact Paldeck lookups', () => {
+    const roster = [
+      pal({ id: 'Wanted', zukanIndex: 123 }),
+      pal({ id: 'Neighbour', zukanIndex: 124 }),
+    ]
+    const out = filterPals(
+      bundleOf(roster, { Wanted: 500, Neighbour: 123 }),
+      { ...EMPTY_FILTER, query: 'No.123' },
+    )
+    expect(out.map((p) => p.id)).toEqual(['Wanted'])
+  })
+})
 
 describe('filterPals — size filter', () => {
   it('keeps only pals whose size is selected (OR within the group)', () => {

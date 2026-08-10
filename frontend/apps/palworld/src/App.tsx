@@ -65,18 +65,17 @@ function pointInPolygon(x: number, y: number, poly: number[][]): boolean {
   return inside
 }
 
-// A purely-numeric query is an exact Paldeck-id lookup: search only the idLabel
-// field, no prefix/fuzzy, so "11"/"011" find only No.011 — not the 110-119
-// prefix range, nor the levels embedded in alpha-pal names ("… Lv.11"). This is
-// the game-specific rule the generic SearchPanel doesn't know about.
-const palIdLookup = (q: string) =>
-  /^\d+$/.test(q) ? { fields: ['idLabel'], prefix: false, fuzzy: false } : undefined
+// Bare numbers are reserved for breeding-power proximity. Keep Paldeck lookup
+// available through an explicit "No.123" query and make that lookup exact.
+const explicitPalIdLookup = (q: string) =>
+  /^no\.?\s*\d+[a-z]?$/i.test(q)
+    ? { fields: ['idLabel'], prefix: false, fuzzy: false }
+    : undefined
 
 // Pal names tokenize per CJK character, and MiniSearch's default OR-combine then
 // matches any pal sharing a SINGLE character — searching "云海鹿" surfaces every
 // 海/鹿 pal. Require ALL query tokens (AND) and drop fuzzy so the map search is
-// precise; prefix stays on so partial queries ("云海") still match, and numeric
-// queries still go through palIdLookup above.
+// precise; prefix stays on so partial name queries still match.
 const PAL_SEARCH_OPTIONS = { combineWith: 'AND', fuzzy: false } as const
 
 // Categories that start collapsed in the filter sidebar (stable identity so the
@@ -427,6 +426,11 @@ export default function App() {
     return engineMarkers.map((m) => {
       const catId = m.subtypeMeta?.category ?? m.category
       const iconName = m.icon || m.subtypeMeta?.icon || ''
+      const pal = catId === 'pal' ? palsBundle?.byId.get(m.subtype) : undefined
+      const breedingPower = pal ? palsBundle?.breedingPower.get(pal.id) : undefined
+      const suffixOrder = pal?.zukanIndexSuffix
+        ? pal.zukanIndexSuffix.toUpperCase().charCodeAt(0) - 64
+        : 0
       return {
         id: m.id,
         name: m.localizedName || '',
@@ -438,9 +442,17 @@ export default function App() {
         x: m.x,
         y: m.y,
         z: m.z,
+        proximityValue: breedingPower,
+        proximityKey: breedingPower === undefined ? undefined : m.subtype,
+        proximityOrder: pal && pal.zukanIndex > 0
+          ? pal.zukanIndex * 100 + suffixOrder
+          : undefined,
+        proximityLabel: breedingPower === undefined
+          ? undefined
+          : `${t('breeding.breedingPower')}: ${breedingPower}`,
       }
     })
-  }, [engineMarkers, staticData, map])
+  }, [engineMarkers, staticData, map, palsBundle, t])
 
   const searchLabels = useMemo(() => ({
     search: t('search'),
@@ -869,7 +881,7 @@ export default function App() {
       // real text — searching it makes a numeric query match every marker
       // of that level. Search name + Paldeck id only.
       searchFields={['name', 'idLabel']}
-      resolveSearchOptions={palIdLookup}
+      resolveSearchOptions={explicitPalIdLookup}
       searchOptions={PAL_SEARCH_OPTIONS}
       variant={variant}
       floatingPlacement="center"

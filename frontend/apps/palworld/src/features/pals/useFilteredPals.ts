@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { Element, PalEntry, PalsBundle, WorkType } from '../../lib/pals'
+import { parseBreedingPowerQuery, parseExplicitPaldeckQuery } from '../../lib/breedingSearch'
 import { zukanOrder } from '../../lib/palId'
 
 /** Pals-list filter state. Elements & work are AND (a pal must match every
@@ -39,13 +40,19 @@ export function toggle<T>(arr: T[], v: T): T[] {
 /** Filter + sort the roster (pure core of {@link useFilteredPals}). When a work
  *  filter is active, results are sorted by the max suitability level among the
  *  selected work types (desc); otherwise by Paldeck order. */
-export function filterPals(bundle: Pick<PalsBundle, 'pals' | 'text'>, f: PalFilter): PalEntry[] {
+export function filterPals(
+  bundle: Pick<PalsBundle, 'pals' | 'text' | 'breedingPower'>,
+  f: PalFilter,
+): PalEntry[] {
   const q = f.query.trim().toLowerCase()
-  const digits = q.replace(/^no\.?/, '').replace(/^0+/, '')
+  const breedingTarget = parseBreedingPowerQuery(q)
+  const paldeckQuery = parseExplicitPaldeckQuery(q)
   const out = bundle.pals.filter((p) => {
-    if (q) {
+    if (q && breedingTarget === null) {
       const name = (bundle.text[p.id]?.name ?? p.id).toLowerCase()
-      const idMatch = /^\d+$/.test(digits) && String(p.zukanIndex) === digits
+      const idMatch = paldeckQuery !== null &&
+        p.zukanIndex === paldeckQuery.index &&
+        (!paldeckQuery.suffix || p.zukanIndexSuffix.toUpperCase() === paldeckQuery.suffix)
       if (!name.includes(q) && !idMatch) return false
     }
     if (f.elements.length && !f.elements.every((e) => p.elements.includes(e))) return false
@@ -59,6 +66,14 @@ export function filterPals(bundle: Pick<PalsBundle, 'pals' | 'text'>, f: PalFilt
   const byIndex = (a: PalEntry, b: PalEntry) =>
     zukanOrder(a.zukanIndex) - zukanOrder(b.zukanIndex) ||
     a.zukanIndexSuffix.localeCompare(b.zukanIndexSuffix)
+  if (breedingTarget !== null) {
+    return [...out]
+      .filter((p) => bundle.breedingPower.has(p.id))
+      .sort((a, b) =>
+        Math.abs(bundle.breedingPower.get(a.id)! - breedingTarget) -
+          Math.abs(bundle.breedingPower.get(b.id)! - breedingTarget) || byIndex(a, b),
+      )
+  }
   if (f.works.length) {
     const maxLvl = (p: PalEntry) => Math.max(...f.works.map((w) => p.work[w] ?? 0))
     return [...out].sort((a, b) => maxLvl(b) - maxLvl(a) || byIndex(a, b))
