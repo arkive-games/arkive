@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.29.0",
+      "date": "2026-08-10",
+      "commit": "95c6029911fa43ec1be0ed1cb3926eecc00e64ad",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Chest markers now show their regional loot pools with chest tiers grouped above the matching items.",
+            "zh-CN": "宝箱标记现在会显示区域掉落池，并按宝箱等级分组展示对应物品。",
+            "zh-TW": "寶箱標記現在會顯示區域掉落池，並按寶箱等級分組展示對應物品。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.28.2",
       "date": "2026-08-10",
       "commit": "14d5914400cc49d620c140de120f0bb5dc9c5edd",
