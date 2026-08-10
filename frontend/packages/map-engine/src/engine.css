@@ -78,7 +78,7 @@
   position: absolute;
   right: 0.75rem;
   bottom: 0.75rem;
-  z-index: var(--arkive-layer-local-control, 1);
+  z-index: var(--arkive-layer-map-control, 1900);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -129,7 +129,7 @@
   pointer-events: none;
   position: absolute;
   inset: 0;
-  z-index: var(--arkive-layer-local-control, 1);
+  z-index: var(--arkive-layer-map-control, 1900);
   user-select: none;
 }
 

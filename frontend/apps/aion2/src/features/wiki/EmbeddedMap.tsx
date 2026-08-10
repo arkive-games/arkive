@@ -162,7 +162,7 @@ export default function EmbeddedMap({
       </MapContainer>
       <a
         href={href}
-        className="absolute top-2 right-2 z-[var(--arkive-layer-local-control)] rounded bg-background/80 px-2 py-1 text-xs hover:bg-background"
+        className="absolute top-2 right-2 z-[var(--arkive-layer-map-control)] rounded bg-background/80 px-2 py-1 text-xs hover:bg-background"
         data-testid="embed-open-full"
       >
         {t("wiki:common.open")}

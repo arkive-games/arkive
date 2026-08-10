@@ -11,6 +11,12 @@
   --arkive-layer-local-backdrop: -2;
   --arkive-layer-local-underlay: -1;
   --arkive-layer-local-content: 0;
+  /* For controls layered against their OWN content only -- a dialog close button,
+     an input icon. NOT for anything overlaying a map: Leaflet's panes run 200
+     (tiles) to 800 (controls) in the same stacking context, because
+     .leaflet-container is position:relative with z-index:auto and establishes
+     none, so a value of 1 paints and hit-tests underneath the tiles. Use
+     --arkive-layer-map-control for those. */
   --arkive-layer-local-control: 1;
   --arkive-layer-sticky: 1800;
   --arkive-layer-map-control: 1900;
