@@ -42,6 +42,15 @@ test('marking a field boss completed flips the pill, badge, and survives reload'
   await page.reload()
   await expect(page.locator('.leaflet-container')).toBeVisible()
   await expect(page.getByTestId('subtype-toggle-fieldBoss')).toContainText(/1\/\d+/, { timeout: 15_000 })
+
+  await page.getByTestId('map-clear-completed').click()
+  await expect(page.getByRole('alertdialog')).toBeVisible()
+  await page.getByTestId('confirm-clear-completed').click()
+  await expect(page.getByTestId('subtype-toggle-fieldBoss')).toContainText(/0\/\d+/)
+
+  await page.reload()
+  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await expect(page.getByTestId('subtype-toggle-fieldBoss')).toContainText(/0\/\d+/, { timeout: 15_000 })
 })
 
 test('non-completable subtypes keep a plain count (no slash)', async ({ page }) => {

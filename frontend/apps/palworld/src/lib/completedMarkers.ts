@@ -40,12 +40,22 @@ export function toggleCompletedId(mapId: string, ids: Set<string>, id: string): 
   return next
 }
 
-/** Per-map completed-marker set + toggle, reloading when the map switches. */
+/** Clear every completed marker for one map and persist the empty set. */
+export function clearCompletedIds(mapId: string): Set<string> {
+  const next = new Set<string>()
+  writeCompleted(mapId, next)
+  return next
+}
+
+/** Per-map completed-marker set + actions, reloading when the map switches. */
 export function useCompletedMarkers(mapId: string) {
   const [completed, setCompleted] = useState<Set<string>>(() => readCompleted(mapId))
   useEffect(() => { setCompleted(readCompleted(mapId)) }, [mapId])
   const toggleCompleted = useCallback((id: string) => {
     setCompleted((prev) => toggleCompletedId(mapId, prev, id))
   }, [mapId])
-  return { completed, toggleCompleted }
+  const clearCompleted = useCallback(() => {
+    setCompleted(clearCompletedIds(mapId))
+  }, [mapId])
+  return { completed, toggleCompleted, clearCompleted }
 }

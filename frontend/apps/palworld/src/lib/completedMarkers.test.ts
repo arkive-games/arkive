@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { readCompleted, toggleCompletedId } from './completedMarkers'
+import { clearCompletedIds, readCompleted, toggleCompletedId } from './completedMarkers'
 
 // vitest runs in a node environment (no DOM): back localStorage with a Map.
 const store = new Map<string, string>()
@@ -54,5 +54,16 @@ describe('toggleCompletedId', () => {
   it('keeps maps isolated', () => {
     toggleCompletedId('MainWorld', new Set(), 'a')
     expect(readCompleted('WorldTree').size).toBe(0)
+  })
+})
+
+describe('clearCompletedIds', () => {
+  it('clears only the selected map and persists the result', () => {
+    toggleCompletedId('MainWorld', new Set(), 'main-marker')
+    toggleCompletedId('WorldTree', new Set(), 'tree-marker')
+
+    expect(clearCompletedIds('MainWorld').size).toBe(0)
+    expect(readCompleted('MainWorld').size).toBe(0)
+    expect(readCompleted('WorldTree')).toEqual(new Set(['tree-marker']))
   })
 })

@@ -23,7 +23,19 @@ import { formatPalId, palIdText } from './lib/palId'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
-import { cn, useIsMobile } from '@gamemap/ui'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  cn,
+  useIsMobile,
+} from '@gamemap/ui'
 import {
   browserMemory,
   defineMemoryRecord,
@@ -34,7 +46,7 @@ import {
   parseJson,
   useMemoryState,
 } from '@gamemap/state-memory'
-import { Check, Moon } from 'lucide-react'
+import { Check, Eraser, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
 import { resolveMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
 import { mapMarkerLodTier } from './lib/mapMarkerLod'
@@ -143,6 +155,7 @@ export default function App() {
   const isMobile = useIsMobile()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [searchSheetOpen, setSearchSheetOpen] = useState(false)
+  const [clearCompletedOpen, setClearCompletedOpen] = useState(false)
   // Restore the persisted selection once at mount (null = nothing saved, so the
   // default selection below applies). Held in state so it seeds both the initial
   // `visible` set and the init guard without reading a ref during render.
@@ -167,7 +180,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapParam])
   // Per-map completed-marker ids (effigies/bosses), restored as durable progress.
-  const { completed, toggleCompleted } = useCompletedMarkers(mapId)
+  const { completed, toggleCompleted, clearCompleted } = useCompletedMarkers(mapId)
   // Per-map view (center/zoom) + selected marker, persisted across reloads.
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId)
 
@@ -761,6 +774,7 @@ export default function App() {
   )
 
   const filterPanel = (
+    <>
     <FilterPanel
       categories={filterCategories}
       onToggleSubtype={onToggle}
@@ -783,15 +797,21 @@ export default function App() {
           testId: 'map-hide-all',
         },
         {
-          id: 'show-tooltip',
-          label: t('showTooltip'),
+          id: 'show-names',
+          label: t('mapControls.showMarkerNames'),
           onClick: () => setShowLabels((v) => !v),
           active: showLabels,
           testId: 'map-show-labels',
         },
         {
-          id: 'show-regions',
-          label: t('showRegions'),
+          id: 'clear-completed',
+          label: t('mapControls.clearCompleted'),
+          onClick: () => setClearCompletedOpen(true),
+          testId: 'map-clear-completed',
+        },
+        {
+          id: 'show-borders',
+          label: t('mapControls.showBorders'),
           onClick: () => setShowRegions((v) => !v),
           active: showRegions,
           testId: 'map-show-regions',
@@ -810,6 +830,28 @@ export default function App() {
         subtypeButtonActive: 'border-primary/20 bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-[inset_0.18rem_0_0_var(--arkive-orange)]',
       }}
     />
+    <AlertDialog open={clearCompletedOpen} onOpenChange={setClearCompletedOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogMedia className="bg-destructive/10 text-destructive">
+            <Eraser aria-hidden="true" />
+          </AlertDialogMedia>
+          <AlertDialogTitle>{t('mapControls.clearCompleted')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('mapControls.clearCompletedBody')}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('mapControls.cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            data-testid="confirm-clear-completed"
+            onClick={clearCompleted}
+          >
+            {t('mapControls.confirm')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 
   const searchPanel = (variant: 'floating' | 'inline') => (

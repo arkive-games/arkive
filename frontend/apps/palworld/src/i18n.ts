@@ -33,6 +33,7 @@ import { RECYCLER_STRINGS } from './recyclerStrings'
 import { RESEARCH_STRINGS } from './researchStrings'
 import { SIM_STRINGS } from './simulatorStrings'
 import { SITE_INFO_STRINGS } from './siteInfoStrings'
+import { MAP_CONTROL_STRINGS } from './mapControlStrings'
 
 export const LANGUAGES = ['en-US', 'de-DE', 'es-ES', 'es-MX', 'fr-FR', 'id-ID', 'it-IT', 'ja-JP', 'ko-KR', 'pl-PL', 'pt-BR', 'ru-RU', 'th-TH', 'tr-TR', 'vi-VN', 'zh-CN', 'zh-TW'] as const
 export type Language = (typeof LANGUAGES)[number]
@@ -1082,6 +1083,7 @@ for (const lng of LANGUAGES) {
         completed: COMPLETED_LABELS[lng],
         connectsTo: CONNECTS_TO_LABELS[lng],
       },
+      mapControls: MAP_CONTROL_STRINGS[lng],
       globalSearch: {
         placeholder: GLOBAL_SEARCH_PLACEHOLDER_LABELS[lng],
         empty: GLOBAL_SEARCH_EMPTY_LABELS[lng],

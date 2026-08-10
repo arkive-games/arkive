@@ -1,0 +1,149 @@
+import type { Language } from './i18n'
+
+export interface MapControlStrings {
+  showMarkerNames: string
+  clearCompleted: string
+  clearCompletedBody: string
+  showBorders: string
+  cancel: string
+  confirm: string
+}
+
+export const MAP_CONTROL_STRINGS: Record<Language, MapControlStrings> = {
+  'en-US': {
+    showMarkerNames: 'Show marker names',
+    clearCompleted: 'Clear completed',
+    clearCompletedBody: 'Do you want to clear all completed markers on this map?',
+    showBorders: 'Show region borders',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+  },
+  'de-DE': {
+    showMarkerNames: 'Markernamen anzeigen',
+    clearCompleted: 'Erledigte Markierungen löschen',
+    clearCompletedBody: 'Möchtest du alle erledigten Markierungen auf dieser Karte löschen?',
+    showBorders: 'Regionsgrenzen anzeigen',
+    cancel: 'Abbrechen',
+    confirm: 'Bestätigen',
+  },
+  'es-ES': {
+    showMarkerNames: 'Mostrar nombres de marcadores',
+    clearCompleted: 'Borrar completados',
+    clearCompletedBody: '¿Quieres borrar todos los marcadores completados de este mapa?',
+    showBorders: 'Mostrar límites de regiones',
+    cancel: 'Cancelar',
+    confirm: 'Confirmar',
+  },
+  'es-MX': {
+    showMarkerNames: 'Mostrar nombres de marcadores',
+    clearCompleted: 'Borrar completados',
+    clearCompletedBody: '¿Quieres borrar todos los marcadores completados de este mapa?',
+    showBorders: 'Mostrar límites de regiones',
+    cancel: 'Cancelar',
+    confirm: 'Confirmar',
+  },
+  'fr-FR': {
+    showMarkerNames: 'Afficher les noms des marqueurs',
+    clearCompleted: 'Effacer les marqueurs terminés',
+    clearCompletedBody: 'Voulez-vous effacer tous les marqueurs terminés de cette carte ?',
+    showBorders: 'Afficher les limites des régions',
+    cancel: 'Annuler',
+    confirm: 'Confirmer',
+  },
+  'id-ID': {
+    showMarkerNames: 'Tampilkan nama penanda',
+    clearCompleted: 'Hapus yang selesai',
+    clearCompletedBody: 'Hapus semua penanda yang selesai di peta ini?',
+    showBorders: 'Tampilkan batas wilayah',
+    cancel: 'Batal',
+    confirm: 'Konfirmasi',
+  },
+  'it-IT': {
+    showMarkerNames: 'Mostra nomi dei marcatori',
+    clearCompleted: 'Cancella completati',
+    clearCompletedBody: 'Vuoi cancellare tutti i marcatori completati su questa mappa?',
+    showBorders: 'Mostra confini delle regioni',
+    cancel: 'Annulla',
+    confirm: 'Conferma',
+  },
+  'ja-JP': {
+    showMarkerNames: 'マーカー名を表示',
+    clearCompleted: '完了済みを消去',
+    clearCompletedBody: 'このマップの完了済みマーカーをすべて消去しますか？',
+    showBorders: '地域の境界を表示',
+    cancel: 'キャンセル',
+    confirm: '確認',
+  },
+  'ko-KR': {
+    showMarkerNames: '마커 이름 표시',
+    clearCompleted: '완료 기록 지우기',
+    clearCompletedBody: '이 지도의 완료된 마커를 모두 지우시겠습니까?',
+    showBorders: '지역 경계 표시',
+    cancel: '취소',
+    confirm: '확인',
+  },
+  'pl-PL': {
+    showMarkerNames: 'Pokaż nazwy znaczników',
+    clearCompleted: 'Wyczyść ukończone',
+    clearCompletedBody: 'Czy usunąć wszystkie ukończone znaczniki na tej mapie?',
+    showBorders: 'Pokaż granice regionów',
+    cancel: 'Anuluj',
+    confirm: 'Potwierdź',
+  },
+  'pt-BR': {
+    showMarkerNames: 'Mostrar nomes dos marcadores',
+    clearCompleted: 'Limpar concluídos',
+    clearCompletedBody: 'Deseja limpar todos os marcadores concluídos deste mapa?',
+    showBorders: 'Mostrar limites das regiões',
+    cancel: 'Cancelar',
+    confirm: 'Confirmar',
+  },
+  'ru-RU': {
+    showMarkerNames: 'Показывать названия меток',
+    clearCompleted: 'Очистить выполненные',
+    clearCompletedBody: 'Удалить все выполненные метки на этой карте?',
+    showBorders: 'Показывать границы регионов',
+    cancel: 'Отмена',
+    confirm: 'Подтвердить',
+  },
+  'th-TH': {
+    showMarkerNames: 'แสดงชื่อมาร์กเกอร์',
+    clearCompleted: 'ล้างรายการที่เสร็จแล้ว',
+    clearCompletedBody: 'ต้องการล้างมาร์กเกอร์ที่เสร็จแล้วทั้งหมดในแผนที่นี้หรือไม่?',
+    showBorders: 'แสดงขอบเขตพื้นที่',
+    cancel: 'ยกเลิก',
+    confirm: 'ยืนยัน',
+  },
+  'tr-TR': {
+    showMarkerNames: 'İşaretçi adlarını göster',
+    clearCompleted: 'Tamamlananları temizle',
+    clearCompletedBody: 'Bu haritadaki tüm tamamlanmış işaretçiler temizlensin mi?',
+    showBorders: 'Bölge sınırlarını göster',
+    cancel: 'İptal',
+    confirm: 'Onayla',
+  },
+  'vi-VN': {
+    showMarkerNames: 'Hiển thị tên điểm đánh dấu',
+    clearCompleted: 'Xóa mục đã hoàn thành',
+    clearCompletedBody: 'Bạn có muốn xóa tất cả điểm đánh dấu đã hoàn thành trên bản đồ này không?',
+    showBorders: 'Hiển thị ranh giới khu vực',
+    cancel: 'Hủy',
+    confirm: 'Xác nhận',
+  },
+  'zh-CN': {
+    showMarkerNames: '显示标记名字',
+    clearCompleted: '清除已完成标记',
+    clearCompletedBody: '你确定要清除这张地图所有的已完成标记吗？',
+    showBorders: '显示地区边界',
+    cancel: '取消',
+    confirm: '确认',
+  },
+  'zh-TW': {
+    showMarkerNames: '顯示標記名字',
+    clearCompleted: '清除已完成標記',
+    clearCompletedBody: '你確定要清除這張地圖所有的已完成標記嗎？',
+    showBorders: '顯示地區邊界',
+    cancel: '取消',
+    confirm: '確認',
+  },
+}
