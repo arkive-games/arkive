@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArkiveSiteInfo, localDataStringsFor, type ArkiveSiteInfoStrings } from "@gamemap/map-shell";
+import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from "@gamemap/map-shell";
 import { resolveChangelog } from "@gamemap/ui";
 import { FEEDBACK_QQ_GROUP } from "@/lib/constants";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
@@ -66,7 +66,6 @@ export default function SiteInfo({ className }: { className?: string }) {
         copyLabel: t("common:ui.copy", "Copy"),
         copiedLabel: t("common:ui.copied", "Copied"),
       }}
-      localDataStrings={localDataStringsFor(lng)}
     />
   );
 }

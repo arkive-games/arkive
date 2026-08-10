@@ -11,7 +11,6 @@ import {
   DialogTrigger,
 } from "@gamemap/ui"
 import { SiteInfoPanel, type SiteInfoFeedbackGroup, type SiteInfoSection } from "./SiteInfoPanel"
-import { LocalDataControls, type LocalDataStrings } from './LocalDataControls'
 
 export interface ArkiveSiteInfoStrings {
   aboutTitle: string
@@ -45,7 +44,6 @@ export interface ArkiveSiteInfoProps {
    */
   historyStartVersion?: string
   feedbackGroup: SiteInfoFeedbackGroup
-  localDataStrings?: LocalDataStrings
   /** Optional game-owned channels rendered before the shared feedback group. */
   gameContact?: ReactNode
   className?: string
@@ -180,7 +178,6 @@ export function ArkiveSiteInfo({
   recentEntries,
   historyStartVersion,
   feedbackGroup,
-  localDataStrings,
   gameContact,
   className,
 }: ArkiveSiteInfoProps) {
@@ -224,10 +221,6 @@ export function ArkiveSiteInfo({
         </>
       ),
     },
-    ...(localDataStrings ? [{
-      title: localDataStrings.title,
-      body: <LocalDataControls strings={localDataStrings} />,
-    }] : []),
   ]
 
   return <SiteInfoPanel className={className} sections={sections} feedbackGroup={feedbackGroup} />

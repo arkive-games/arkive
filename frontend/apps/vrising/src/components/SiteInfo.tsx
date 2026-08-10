@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArkiveSiteInfo, localDataStringsFor, type ArkiveSiteInfoStrings } from '@gamemap/map-shell'
+import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from '@gamemap/map-shell'
 import { resolveChangelog } from '@gamemap/ui'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
 import { changelog, SITE_VERSION } from '../lib/siteVersion'
@@ -43,7 +43,6 @@ export function SiteInfo({ className }: { className?: string }) {
         copyLabel: t('siteInfo.copy'),
         copiedLabel: t('siteInfo.copied'),
       }}
-      localDataStrings={localDataStringsFor(lng)}
     />
   )
 }
