@@ -363,7 +363,7 @@ function SimPalPicker({
         setOpen(false)
         setQuery('')
       }}
-      className="gap-2"
+      className="min-w-0 gap-2"
     >
       {row(p)}
       <Check className={cn('ml-1 size-4 shrink-0', p.id === value ? 'opacity-100' : 'opacity-0')} />
@@ -427,7 +427,7 @@ function SimPalPicker({
             </Button>
         </div>
         <PopoverContent
-          className="w-[calc(var(--radix-popover-trigger-width)+2.75rem)] p-0"
+          className="w-[min(34rem,calc(100vw-1.5rem))] p-0"
           align="start"
           onOpenAutoFocus={(event) => event.preventDefault()}
           onCloseAutoFocus={(event) => event.preventDefault()}
@@ -435,7 +435,7 @@ function SimPalPicker({
             if (pickerControlRef.current?.contains(event.target as Node)) event.preventDefault()
           }}
         >
-          <CommandList>
+          <CommandList className="sm:[&_[cmdk-group-items]]:grid sm:[&_[cmdk-group-items]]:grid-cols-2 sm:[&_[cmdk-group-items]]:gap-1">
             <CommandEmpty>{t('breeding.noPalFound')}</CommandEmpty>
             {numericTarget === null ? (
               <CommandGroup>{displayedRoster.map(renderPalItem)}</CommandGroup>

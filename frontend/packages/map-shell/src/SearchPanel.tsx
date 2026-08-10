@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import MiniSearch, { type SearchOptions } from "minisearch"
 import { IconSearch } from "@tabler/icons-react"
 import { cn } from "@gamemap/ui"
@@ -320,7 +320,12 @@ export function SearchPanel({
           </div>
           <ul
             data-testid="search-results"
-            className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2"
+            className={cn(
+              "min-h-0 flex-1 content-start gap-1.5 overflow-y-auto p-2",
+              variant === "floating" && floatingPlacement === "center"
+                ? "grid grid-cols-1 sm:grid-cols-2"
+                : "flex flex-col",
+            )}
           >
             {results.map((item, index) => {
               const metaLabel = [item.subtypeLabel, item.categoryLabel]
@@ -334,80 +339,81 @@ export function SearchPanel({
                     ? labels.nearbyNumericMatches?.(numericTarget)
                     : undefined
               return (
-                <li key={item.id}>
+                <Fragment key={item.id}>
                   {groupLabel ? (
-                    <div
-                      data-testid="search-result-group"
-                      className="px-1 pb-1 pt-1.5 text-xs font-medium text-muted-foreground"
-                    >
-                      {groupLabel}
-                    </div>
+                    <li className="col-span-full">
+                      <div
+                        data-testid="search-result-group"
+                        className="px-1 pb-0.5 pt-1 text-xs font-medium text-muted-foreground"
+                      >
+                        {groupLabel}
+                      </div>
+                    </li>
                   ) : null}
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(item.id)}
-                    className={cn(
-                      "w-full rounded-md border border-transparent bg-card px-3 py-2 text-left text-card-foreground",
-                      "transition-colors hover:border-border hover:bg-accent/20",
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      {item.iconUrl && (
-                        <img
-                          src={item.iconUrl}
-                          alt=""
-                          className="size-[18px] shrink-0 object-contain"
-                        />
-                      )}
-                      {item.idLabel && (
-                        <span className="shrink-0 rounded bg-muted px-1 text-xs font-mono tabular-nums text-muted-foreground">
-                          {item.idLabel}
-                        </span>
-                      )}
-                      <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-                        {item.name || labels.unnamed}
-                      </span>
-                    </div>
-                    {metaLabel && (
-                      <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                        {metaLabel}
-                      </span>
-                    )}
-                    <span
+                  <li className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(item.id)}
                       className={cn(
-                        "mt-0.5 block truncate text-xs",
-                        item.description
-                          ? "text-muted-foreground"
-                          : "text-muted-foreground/60 italic",
+                        "w-full rounded-md border border-transparent bg-card px-2.5 py-1.5 text-left text-card-foreground",
+                        "transition-colors hover:border-border hover:bg-accent/20",
                       )}
                     >
-                      {item.description || labels.noDescription}
-                    </span>
-                    <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground/70">
-                      {(() => {
-                        const c = displayCoords(item.x, item.y, item.z)
-                        // Compact `(X, Y, Z)` visible; the axis-labeled aria/title
-                        // spells out which number is which (esp. the Z height).
-                        const { text, aria } = formatCoords(c.x, c.y, c.z)
-                        return (
-                          <span
-                            className="shrink-0 tabular-nums"
-                            aria-label={aria}
-                            title={aria}
-                          >
-                            {text}
+                      <div className="flex items-center gap-1.5">
+                        {item.iconUrl && (
+                          <img
+                            src={item.iconUrl}
+                            alt=""
+                            className="size-[18px] shrink-0 object-contain"
+                          />
+                        )}
+                        {item.idLabel && (
+                          <span className="shrink-0 rounded bg-muted px-1 text-xs font-mono tabular-nums text-muted-foreground">
+                            {item.idLabel}
                           </span>
-                        )
-                      })()}
-                      {(() => {
-                        const aside = resultAside?.(item) ?? item.proximityLabel
-                        return aside ? (
-                          <span className="truncate text-right">{aside}</span>
-                        ) : null
-                      })()}
-                    </div>
-                  </button>
-                </li>
+                        )}
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                          {item.name || labels.unnamed}
+                        </span>
+                      </div>
+                      <div className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                        {metaLabel ? <span className="shrink-0">{metaLabel}</span> : null}
+                        {metaLabel ? <span aria-hidden>·</span> : null}
+                        <span
+                          className={cn(
+                            "min-w-0 truncate",
+                            item.description ? undefined : "text-muted-foreground/60 italic",
+                          )}
+                        >
+                          {item.description || labels.noDescription}
+                        </span>
+                      </div>
+                      <div className="mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground/70">
+                        {(() => {
+                          const c = displayCoords(item.x, item.y, item.z)
+                          // Compact `(X, Y, Z)` visible; the axis-labeled aria/title
+                          // spells out which number is which (esp. the Z height).
+                          const { text, aria } = formatCoords(c.x, c.y, c.z)
+                          return (
+                            <span
+                              className="shrink-0 tabular-nums"
+                              aria-label={aria}
+                              title={aria}
+                            >
+                              {text}
+                            </span>
+                          )
+                        })()}
+                        {(() => {
+                          const aside = resultAside?.(item) ?? item.proximityLabel
+                          return aside ? (
+                            <span className="truncate text-right">{aside}</span>
+                          ) : null
+                        })()}
+                      </div>
+                    </button>
+                  </li>
+                </Fragment>
               )
             })}
           </ul>

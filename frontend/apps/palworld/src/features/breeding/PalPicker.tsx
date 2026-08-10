@@ -132,7 +132,7 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
         onChange(p.id === value ? null : p.id)
         setOpen(false)
       }}
-      className="gap-2"
+      className="min-w-0 gap-2"
     >
       <PalIcon pal={p} />
       <span className="truncate">{names[p.id] ?? p.id}</span>
@@ -285,15 +285,14 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
           )}
         </PopoverTrigger>
         <PopoverContent
-          // A tile trigger is far narrower than the list needs, so the tile
-          // variant sizes to the viewport instead of the trigger (Radix shifts
-          // it back inside the screen for the edge tiles).
-          className={cn('p-0', tile ? 'w-[min(20rem,calc(100vw-1.5rem))]' : 'w-[var(--radix-popover-trigger-width)]')}
+          // The desktop list uses two compact columns; Radix shifts the panel
+          // inside the viewport for edge triggers, while phones keep one column.
+          className="w-[min(34rem,calc(100vw-1.5rem))] p-0"
           align="start"
         >
           <Command filter={palCommandFilter}>
             <CommandInput value={query} onValueChange={setQuery} placeholder={labels.searchPal} />
-            <CommandList>
+            <CommandList className="sm:[&_[cmdk-group-items]]:grid sm:[&_[cmdk-group-items]]:grid-cols-2 sm:[&_[cmdk-group-items]]:gap-1">
               <CommandEmpty>{labels.noPalFound}</CommandEmpty>
               {tile ? (
                 <CommandGroup>
@@ -303,7 +302,7 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
                       clear()
                       setOpen(false)
                     }}
-                    className="gap-2"
+                    className="col-span-full gap-2"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50 text-muted-foreground">
                       <Plus className="size-3.5" />
