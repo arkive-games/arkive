@@ -128,6 +128,79 @@ describe("ArkiveSiteInfo", () => {
     expect(queryByText("An older site release.")).toBeNull()
   })
 
+  it("treats a missing start release as a semantic version boundary", () => {
+    const { getByTestId, getByText, queryByText } = render(
+      <ArkiveSiteInfo
+        strings={strings}
+        arkiveName="Arkive"
+        arkiveHomeUrl="https://tc-imba.com"
+        gameName="Palworld"
+        developerName="Pocketpair, Inc."
+        version="1.2.4"
+        historyStartVersion="1.2.2"
+        recentEntries={[
+          {
+            version: "1.2.4",
+            date: "2026-08-09",
+            commit: "2345678901234567890123456789012345678901",
+            changes: [{ kind: "fix", text: "A newer update." }],
+          },
+          {
+            version: "1.2.3",
+            date: "2026-08-08",
+            commit: "1234567890123456789012345678901234567890",
+            changes: [{ kind: "improvement", text: "Another newer update." }],
+          },
+          {
+            version: "1.2.1",
+            date: "2026-08-01",
+            commit: "0123456789012345678901234567890123456789",
+            changes: [{ kind: "feature", text: "An older site release." }],
+          },
+        ]}
+        feedbackGroup={feedbackGroup}
+      />,
+    )
+
+    fireEvent.click(getByTestId("site-info-version-trigger"))
+    expect(getByText("A newer update.")).toBeTruthy()
+    expect(getByText("Another newer update.")).toBeTruthy()
+    expect(queryByText("An older site release.")).toBeNull()
+  })
+
+  it("shows the current release when the configured boundary is newer", () => {
+    const { getByTestId, getByText, queryByText } = render(
+      <ArkiveSiteInfo
+        strings={strings}
+        arkiveName="Arkive"
+        arkiveHomeUrl="https://tc-imba.com"
+        gameName="Palworld"
+        developerName="Pocketpair, Inc."
+        version="1.2.1"
+        historyStartVersion="1.2.2"
+        recentEntries={[
+          {
+            version: "1.2.1",
+            date: "2026-08-09",
+            commit: "1234567890123456789012345678901234567890",
+            changes: [{ kind: "fix", text: "The current release." }],
+          },
+          {
+            version: "1.2.0",
+            date: "2026-08-01",
+            commit: "0123456789012345678901234567890123456789",
+            changes: [{ kind: "feature", text: "An older site release." }],
+          },
+        ]}
+        feedbackGroup={feedbackGroup}
+      />,
+    )
+
+    fireEvent.click(getByTestId("site-info-version-trigger"))
+    expect(getByText("The current release.")).toBeTruthy()
+    expect(queryByText("An older site release.")).toBeNull()
+  })
+
   it("always renders the shared feedback group after game contact content", () => {
     const { getByText, getByTestId } = render(
       <ArkiveSiteInfo

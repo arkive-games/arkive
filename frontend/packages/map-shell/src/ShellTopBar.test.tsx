@@ -80,6 +80,22 @@ describe("ShellTopBar nav", () => {
     expect(queryByTestId("link-/items")).toBeNull()
   })
 
+  it("does not repeat the dropdown label inside its menu", () => {
+    const items: ShellNavItem[] = [
+      {
+        key: "all-games",
+        label: "All games",
+        children: [{ key: "/game", label: "Game" }],
+      },
+    ]
+    const { getAllByText, getByTestId } = render(
+      <ShellTopBar nav={{ items, renderItem }} />,
+    )
+
+    fireEvent.pointerEnter(getByTestId("nav-dropdown-all-games"))
+    expect(getAllByText("All games")).toHaveLength(1)
+  })
+
   it("anchors an active dropdown indicator to the text label", () => {
     const items: ShellNavItem[] = [
       {
@@ -106,5 +122,81 @@ describe("ShellTopBar nav", () => {
       '[data-slot="nav-item-label"]',
     )
     expect(label?.getAttribute("class")).toContain("after:left-1/2")
+  })
+
+  it("keeps one highlighted item while crossing the nav and restores the route on exit", () => {
+    const items: ShellNavItem[] = [
+      { key: "map", label: "Map", active: true },
+      { key: "database", label: "Database" },
+    ]
+    const { getByRole, getByTestId, getByText } = render(
+      <ShellTopBar
+        nav={{
+          items,
+          renderItem,
+          classNames: { label: "nav-label", labelActive: "is-highlighted" },
+        }}
+      />,
+    )
+
+    const mapLabel = getByText("Map")
+    const databaseLabel = getByText("Database")
+    const mapLink = getByTestId("link-map")
+    const databaseLink = getByTestId("link-database")
+    expect(mapLabel.className).toContain("is-highlighted")
+    expect(databaseLabel.className).not.toContain("is-highlighted")
+    expect(mapLink.className).toContain("text-primary")
+    expect(databaseLink.className).toContain("text-foreground/70")
+
+    fireEvent.pointerEnter(databaseLink.parentElement!)
+    expect(mapLabel.className).not.toContain("is-highlighted")
+    expect(databaseLabel.className).toContain("is-highlighted")
+    expect(mapLink.className).toContain("text-foreground/70")
+    expect(databaseLink.className).toContain("text-primary")
+
+    fireEvent.pointerLeave(getByRole("navigation"))
+    expect(mapLabel.className).toContain("is-highlighted")
+    expect(databaseLabel.className).not.toContain("is-highlighted")
+    expect(mapLink.className).toContain("text-primary")
+    expect(databaseLink.className).toContain("text-foreground/70")
+  })
+
+  it("uses one geometry and type treatment for nav and utility menu items", () => {
+    const items: ShellNavItem[] = [
+      {
+        key: "database",
+        label: "Database",
+        children: [{ key: "/items", label: "Items" }],
+      },
+    ]
+    const { getByTestId } = render(
+      <ShellTopBar
+        nav={{ items, renderItem }}
+        languageSwitcher={{
+          languages: [{ code: "en", label: "English" }],
+          current: "en",
+          onChange: () => undefined,
+          menuLabel: "Language",
+          shortLabel: "Language",
+        }}
+      />,
+    )
+
+    fireEvent.pointerEnter(getByTestId("nav-dropdown-database"))
+    const navItem = getByTestId("link-/items")
+    fireEvent.pointerEnter(getByTestId("lang-menu"))
+    const utilityItem = getByTestId("lang-en")
+
+    for (const item of [navItem, utilityItem]) {
+      expect(item.className).toContain("flex")
+      expect(item.className).toContain("min-h-11")
+      expect(item.className).toContain("px-3")
+      expect(item.className).toContain("rounded-md")
+      expect(item.className).toContain("text-sm")
+      expect(item.className).toContain("font-medium")
+    }
+
+    expect(navItem.className).toContain("[&>[data-slot=nav-item-label]]:flex-1")
+    expect(navItem.parentElement?.className).not.toContain("[&>a]:block")
   })
 })

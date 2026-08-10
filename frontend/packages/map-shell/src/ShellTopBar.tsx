@@ -388,9 +388,6 @@ function NavDropdown({
           role="menu"
           className={cn("absolute left-0", TOP_BAR_MENU_CLASS)}
         >
-          <div className="flex min-h-7 items-center px-3 text-xs font-semibold text-muted-foreground">
-            {item.label}
-          </div>
           {children.map((child) => {
             const rendered = nav.renderItem(
                 child,

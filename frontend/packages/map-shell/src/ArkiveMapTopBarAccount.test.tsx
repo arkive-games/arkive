@@ -120,6 +120,10 @@ describe("ArkiveMapTopBar account control", () => {
       "Profile",
       "Sign out",
     ])
+    expect(getByTestId("account-profile").className).toContain("min-h-11")
+    expect(getByTestId("account-profile").className).toContain("px-3")
+    expect(getByTestId("account-profile").className).toContain("text-sm")
+    expect(getByTestId("account-profile").className).toContain("font-medium")
 
     fireEvent.click(getByTestId("account-profile"))
     expect(onSelect).toHaveBeenCalledTimes(1)

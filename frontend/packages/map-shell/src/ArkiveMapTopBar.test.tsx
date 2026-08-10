@@ -46,14 +46,33 @@ function renderTopBar() {
 
 describe("ArkiveMapTopBar", () => {
   it("renders the shared brand link and the host-owned navigation slot", () => {
-    const { getByTestId } = renderTopBar()
+    const { getByRole, getByTestId, getByText } = renderTopBar()
     const brand = getByTestId("brand-link")
+    const label = getByText("Map")
 
     expect(brand.getAttribute("href")).toBe("https://arkive.example")
     expect(brand.getAttribute("target")).toBe("_blank")
     expect(brand.textContent).toContain("Arkive")
     expect(brand.textContent).toContain("Sail Games With Us.")
+    expect(brand.className).toContain("w-fit")
+    expect(brand.className).toContain("h-14")
+    expect(brand.className).toContain("text-foreground")
+    expect(brand.className).toContain("gap-[0.6rem]")
+    expect(brand.className).toContain("xl:gap-[0.7rem]")
+    expect(brand.className).toContain("pr-3")
+    expect(brand.className).toContain("xl:pr-4")
+    expect(brand.querySelector("svg")?.getAttribute("class")).toContain("size-[2.125rem]")
+    expect(brand.querySelector("svg")?.getAttribute("class")).toContain("xl:size-9")
+    expect(getByTestId("brand-name").className).toContain("text-sm")
+    expect(getByTestId("brand-name").className).toContain("leading-none")
+    expect(getByTestId("brand-slogan").className).toContain("text-[0.7rem]")
+    expect(getByTestId("brand-slogan").className).toContain("leading-none")
+    expect(getByTestId("brand-slogan").className).toContain("var(--arkive-brand-slogan)")
+    expect(brand.closest("header")?.className).toContain("h-14")
     expect(getByTestId("map-link").textContent).toBe("Map")
+    expect(label.classList.contains("arkive-nav-item-label")).toBe(true)
+    expect(getByTestId("map-link").classList.contains("arkive-nav-item--highlighted")).toBe(true)
+    expect(getByRole("navigation").className).toContain("gap-7")
   })
 
   it("renders language, theme, and login controls in the shared right cluster", () => {

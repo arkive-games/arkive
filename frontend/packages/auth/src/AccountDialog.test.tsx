@@ -24,6 +24,16 @@ describe("AccountDialog", () => {
   it("uses the Arkive dialog composition across the account flows", () => {
     const { getByLabelText, getByRole } = renderDialog()
 
+    const dialog = getByRole("dialog")
+    expect(dialog.getAttribute("data-size")).toBe("sm")
+    expect(dialog.className).toContain("rounded-lg")
+    expect(dialog.className).toContain("shadow-lg")
+    expect(dialog.className).not.toContain("rounded-2xl")
+    expect(dialog.querySelector('[data-slot="dialog-tide-line"]')).toBeTruthy()
+    expect(getByRole("button", { name: "Close" }).className).toContain("size-11")
+    expect(getByRole("button", { name: "Close" }).className).toContain("md:size-9")
+    expect(getByRole("button", { name: "Close" }).className).toContain("rounded-md")
+
     expect(getByRole("heading", { name: "Sign in to Arkive" })).toBeTruthy()
     expect(getByLabelText("Email").getAttribute("type")).toBe("email")
     expect(getByLabelText("Password").getAttribute("type")).toBe("password")

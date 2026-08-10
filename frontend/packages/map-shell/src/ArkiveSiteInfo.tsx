@@ -1,5 +1,5 @@
 import type { AnchorHTMLAttributes, ReactNode } from "react"
-import type { ResolvedEntry } from "@gamemap/ui"
+import { compareVersions, type ResolvedEntry } from "@gamemap/ui"
 import {
   Button,
   Dialog,
@@ -184,12 +184,12 @@ export function ArkiveSiteInfo({
   gameContact,
   className,
 }: ArkiveSiteInfoProps) {
-  const historyStartIndex = historyStartVersion
-    ? recentEntries.findIndex((entry) => entry.version === historyStartVersion)
-    : recentEntries.length - 1
-  const eligibleEntries = historyStartIndex >= 0
-    ? recentEntries.slice(0, historyStartIndex + 1)
-    : []
+  const entriesSinceStart = historyStartVersion
+    ? recentEntries.filter((entry) => compareVersions(entry.version, historyStartVersion) >= 0)
+    : recentEntries
+  const eligibleEntries = entriesSinceStart.length > 0
+    ? entriesSinceStart
+    : recentEntries.slice(0, 1)
   const templateProps = {
     arkiveName,
     arkiveHomeUrl,

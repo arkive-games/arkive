@@ -40,7 +40,7 @@ export function useSubzoneLookup(): (x: number, y: number) => string {
   const { regions } = useMarkers();
   const { selectedMap } = useGameMap();
   const regionNs = `regions/${selectedMap?.name}`;
-  const { t } = useTranslation([regionNs]);
+  const { t } = useTranslation(selectedMap ? [regionNs] : ["common"]);
 
   const byAreaAsc = useMemo(
     () =>
