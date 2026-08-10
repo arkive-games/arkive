@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, useTheme, type ShellNavItem } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
-import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
+import { ARKIVE_HOME_URL } from '../lib/brand'
 
 export type NavKey = '/' | '/vblood' | '/database' | '/systems' | '/changelog'
 
@@ -23,7 +23,6 @@ export function TopNav({ active }: { active: NavKey }) {
   return (
     <ArkiveMapTopBar
       homeUrl={ARKIVE_HOME_URL}
-      homeLinkProps={ARKIVE_HOME_LINK_PROPS}
       homeLabel={t('brandHome')}
       brandName={brandName}
       brandSlogan={t('brandSlogan')}

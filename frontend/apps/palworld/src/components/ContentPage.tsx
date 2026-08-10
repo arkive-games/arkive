@@ -129,7 +129,6 @@ export function ContentPage({
         <TopNav active={active} />
         <ArkiveMobileHeader
           homeUrl={ARKIVE_HOME_URL}
-          homeLinkProps={ARKIVE_HOME_LINK_PROPS}
           homeLabel={t('brandHome')}
           brandName={brandName}
           pageTitle={title}

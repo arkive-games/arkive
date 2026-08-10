@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, useTheme, type ShellNavItem } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from '../i18n'
-import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL } from '../lib/brand'
+import { ARKIVE_HOME_URL } from '../lib/brand'
 
 export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing' | '/changelog'
 
@@ -48,7 +48,6 @@ export function TopNav({ active }: { active: NavKey }) {
   return (
     <ArkiveMapTopBar
       homeUrl={ARKIVE_HOME_URL}
-      homeLinkProps={ARKIVE_HOME_LINK_PROPS}
       homeLabel={t('brandHome')}
       brandName={brandName}
       brandSlogan={t('brandSlogan')}
