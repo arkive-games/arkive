@@ -170,11 +170,13 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
                     <OverflowLabel
                       text={[selectedPalIdText, String(selected.rank)].filter(Boolean).join(' ')}
                       className="min-w-0 flex-1"
-                      contentClassName="inline-flex min-w-full items-center justify-center gap-1 text-center"
+                      contentClassName="flex w-full items-center justify-center gap-1 text-center"
                       singleLine
                     >
-                      {selectedPalIdText ? <span>{selectedPalIdText}</span> : null}
-                      <span className="inline-flex items-center gap-0.5">
+                      {/* The id truncates, the rank never does: a clipped rank reads
+                          as a different number, while a clipped id is obviously cut. */}
+                      {selectedPalIdText ? <span className="min-w-0 truncate">{selectedPalIdText}</span> : null}
+                      <span className="inline-flex shrink-0 items-center gap-0.5">
                         <Zap className="size-3 shrink-0" />
                         {selected.rank}
                       </span>

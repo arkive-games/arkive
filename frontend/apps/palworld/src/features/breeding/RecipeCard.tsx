@@ -188,11 +188,12 @@ export function CompactPalNode({
             <OverflowLabel
               text={metaText}
               className="min-w-0 flex-1"
-              contentClassName="inline-flex min-w-full items-center justify-center gap-1 text-center"
+              contentClassName="flex w-full items-center justify-center gap-1 text-center"
               singleLine
             >
-              {idText ? <span>{idText}</span> : null}
-              <span className="inline-flex items-center gap-0.5">
+              {/* Same split as PalPicker: the id gives way, the rank stays exact. */}
+              {idText ? <span className="min-w-0 truncate">{idText}</span> : null}
+              <span className="inline-flex shrink-0 items-center gap-0.5">
                 <Zap className="size-3 shrink-0" />
                 {m.rank}
               </span>
