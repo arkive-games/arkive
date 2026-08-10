@@ -28,6 +28,13 @@ export {
 } from "./react"
 export { isBoolean, isFiniteNumber, isString, isStringArray, parseJson } from "./validators"
 export {
+  SHARED_MAXIMUM_BYTES,
+  browserCookieStorage,
+  createCookieStorage,
+  resolveSharedCookieDomain,
+  type CookieEnvironment,
+} from "./cookieStorage"
+export {
   createBrowserHistoryMemoryEnvironment,
   createBrowserUrlMemoryEnvironment,
   noOpAccountMemoryAdapter,

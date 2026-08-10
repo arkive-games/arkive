@@ -1,3 +1,5 @@
+import { SHARED_MAXIMUM_BYTES, browserCookieStorage } from "./cookieStorage"
+
 export type MemoryStateClass =
   | "shareable_route"
   | "session_context"
@@ -7,8 +9,16 @@ export type MemoryStateClass =
   | "durable_progress"
   | "transient_ui"
 
-export type MemoryCanonicalScope = "url" | "history" | "tab" | "device" | "account"
-export type MemoryStorageKind = "device" | "session"
+/**
+ * `site` is the only scope that crosses ORIGINS. The Arkive games are separate
+ * origins (aion2.tc-imba.com, palworld.tc-imba.com, ...), and Web Storage is
+ * per-origin, so a record that must look the same on every site cannot live in
+ * `device` -- it needs the cookie transport. Before this existed, `namespace:
+ * "site"` named that intent without delivering it: the interface language was
+ * declared site-wide and silently did not follow the reader between games.
+ */
+export type MemoryCanonicalScope = "url" | "history" | "tab" | "device" | "account" | "site"
+export type MemoryStorageKind = "device" | "session" | "shared"
 export type MemoryViewport = "desktop" | "mobile"
 export type MemoryMigration<T> = "discard" | ((value: unknown, fromVersion: string) => T | unknown)
 
@@ -69,6 +79,8 @@ export interface MemoryScope {
 export interface MemoryEnvironment {
   deviceStorage?: StorageLike | null
   sessionStorage?: StorageLike | null
+  /** Cross-origin transport for `site`-scoped records; cookie-backed in a browser. */
+  sharedStorage?: StorageLike | null
   now?: () => number
   addStorageListener?: (listener: (key: string | null) => void) => () => void
 }
@@ -124,6 +136,16 @@ export const memoryPolicy = Object.freeze({
     policy("recent_activity", "device", RECENT_ACTIVITY_RETENTION, clearAction),
   durableProgress: (clearAction: string) =>
     policy("durable_progress", "device", INDEFINITE_RETENTION, clearAction),
+  /**
+   * A preference every Arkive site must agree on -- language, theme. Stored in a
+   * cookie on the parent domain, because Web Storage cannot cross the games'
+   * separate origins. Small by construction; the cap is the cookie limit.
+   */
+  sharedPreference: (clearAction: string) => ({
+    ...policy("user_preference", "device", INDEFINITE_RETENTION, clearAction),
+    canonicalScope: "site" as const,
+    maximumBytes: SHARED_MAXIMUM_BYTES,
+  }),
 })
 
 function assertKeyPart(label: string, value: string) {
@@ -164,6 +186,11 @@ export function defineMemoryRecord<T>(record: MemoryRecord<T>): MemoryRecord<T> 
   }
   if (record.maximumBytes !== undefined && record.maximumBytes <= 0) {
     throw new Error("maximumBytes must be positive")
+  }
+  if (record.canonicalScope === "site" && (record.maximumBytes ?? Infinity) > SHARED_MAXIMUM_BYTES) {
+    throw new Error(
+      `site-scoped records travel in a cookie and must cap maximumBytes at ${SHARED_MAXIMUM_BYTES}`,
+    )
   }
   const frozen = Object.freeze({ ...record })
   registry.set(recordIdentity(frozen as MemoryRecord<unknown>), frozen as MemoryRecord<unknown>)
@@ -237,6 +264,7 @@ function storageKind<T>(record: MemoryRecord<T>): MemoryStorageKind | null {
   const scope = record.canonicalScope === "account" ? record.fallbackScope : record.canonicalScope
   if (scope === "tab") return "session"
   if (scope === "device") return "device"
+  if (scope === "site") return "shared"
   return null
 }
 
@@ -251,6 +279,7 @@ function browserEnvironment(): MemoryEnvironment {
   return {
     deviceStorage,
     sessionStorage,
+    sharedStorage: browserCookieStorage(),
     addStorageListener(listener) {
       const handleStorage = (event: StorageEvent) => listener(event.key)
       window.addEventListener("storage", handleStorage)
@@ -428,6 +457,7 @@ export class MemoryClient {
     }
     this.clearStorageKeys(current.deviceStorage, predicate)
     this.clearStorageKeys(current.sessionStorage, predicate)
+    this.clearStorageKeys(current.sharedStorage, predicate)
   }
 
   clearStateClass(stateClass: MemoryStateClass, namespace?: string): void {
@@ -450,6 +480,7 @@ export class MemoryClient {
     const current = this.currentEnvironment()
     this.clearStorageKeys(current.deviceStorage, predicate)
     this.clearStorageKeys(current.sessionStorage, predicate)
+    this.clearStorageKeys(current.sharedStorage, predicate)
   }
 
   clearDevice(namespace?: string): void {
@@ -464,6 +495,7 @@ export class MemoryClient {
     const current = this.currentEnvironment()
     this.clearStorageKeys(current.deviceStorage, predicate)
     this.clearStorageKeys(current.sessionStorage, predicate)
+    this.clearStorageKeys(current.sharedStorage, predicate)
   }
 
   subscribe<T>(record: MemoryRecord<T>, scope: MemoryScope, listener: () => void): () => void {
@@ -485,6 +517,7 @@ export class MemoryClient {
     const kind = storageKind(record)
     if (kind === "session") return this.currentEnvironment().sessionStorage ?? null
     if (kind === "device") return this.currentEnvironment().deviceStorage ?? null
+    if (kind === "shared") return this.currentEnvironment().sharedStorage ?? null
     return null
   }
 
@@ -549,7 +582,7 @@ export class MemoryClient {
 
   private readLegacy<T>(record: MemoryRecord<T>, scope: MemoryScope, storage: StorageLike): T {
     const current = this.currentEnvironment()
-    const sources = [storage, current.deviceStorage, current.sessionStorage]
+    const sources = [storage, current.deviceStorage, current.sessionStorage, current.sharedStorage]
       .filter((candidate): candidate is StorageLike => Boolean(candidate))
       .filter((candidate, index, all) => all.indexOf(candidate) === index)
 

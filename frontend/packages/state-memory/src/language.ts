@@ -8,11 +8,22 @@ const LEGACY_LANGUAGE_TAGS: Readonly<Record<string, string>> = Object.freeze({
   ko: 'ko-KR',
 })
 
+/**
+ * `sharedPreference`, not `userPreference`: the reader's language has to be the
+ * same on the portal and on every game, and those are separate origins, so Web
+ * Storage cannot carry it. It was declared `namespace: 'site'` before, which
+ * named the intent but stored it per-origin -- choosing 简体中文 on Palworld left
+ * AION2 in English. The cookie transport is what actually delivers it.
+ *
+ * Existing readers are not disturbed: `readLegacy` also scans device storage for
+ * the canonical key, so a value written by the previous build migrates into the
+ * cookie on first read, and `i18nextLng` still migrates for anyone older than that.
+ */
 export const languagePreferenceRecord = defineMemoryRecord({
   id: 'language',
   namespace: 'site',
   surface: 'interface',
-  ...memoryPolicy.userPreference('reset-interface-preferences'),
+  ...memoryPolicy.sharedPreference('reset-interface-preferences'),
   schemaVersion: '1.0.0',
   defaultValue: () => '',
   validate: (value): value is string => typeof value === 'string' && value.length <= 35,
