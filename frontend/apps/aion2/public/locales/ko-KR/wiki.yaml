@@ -4,6 +4,15 @@ common:
   open: "열기"
   level: "Lv. {{n}}"
 nav: { wiki: "위키" }
+workspace:
+  title: "아이온2 백과"
+  overview: "개요"
+  recent: "최근 본 항목"
+  back: "뒤로"
+  backTo: "{{destination}}(으)로 돌아가기"
+  context: "현재 분류"
+  search: "이 분류 검색"
+  entries: "{{count}}개 자료"
 home:
   title: "AION2 위키"
   subtitle: "게임 데이터에서 자동 생성됨"

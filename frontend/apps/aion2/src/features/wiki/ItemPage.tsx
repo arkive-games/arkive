@@ -13,6 +13,8 @@ import {
   WikiLoading,
   WikiNotFound,
 } from "@/features/wiki/ui";
+import WikiEntityCatalog from "@/features/wiki/WikiEntityCatalog";
+import { useRememberWikiEntry } from "@/features/wiki/wikiRecent";
 import { loadItem, loadWikiIndex, lt } from "@/lib/wiki";
 import type { ItemEntity, WikiIndexDoc } from "@/types/wiki";
 
@@ -25,6 +27,7 @@ export default function ItemPage({ id }: { id: string }) {
     id: number;
     item: ItemEntity;
     indexDoc: WikiIndexDoc | null;
+    indexDocs: WikiIndexDoc[];
   } | null>(null);
   const [errorId, setErrorId] = useState<string | null>(null);
 
@@ -43,6 +46,7 @@ export default function ItemPage({ id }: { id: string }) {
             id: item.id,
             item,
             indexDoc: index.docs.find((d) => d.id === item.id) ?? null,
+            indexDocs: index.docs,
           });
         }
       })
@@ -56,7 +60,9 @@ export default function ItemPage({ id }: { id: string }) {
 
   const item = loaded?.id === Number(id) ? loaded.item : null;
   const indexDoc = loaded?.id === Number(id) ? loaded.indexDoc : null;
+  const indexDocs = loaded?.id === Number(id) ? loaded.indexDocs : [];
   const err = errorId === id;
+  useRememberWikiEntry("item", item?.id);
 
   useEffect(() => {
     if (item) document.title = `${lt(item.name, i18n.language)} - AION2 Wiki`;
@@ -107,13 +113,19 @@ export default function ItemPage({ id }: { id: string }) {
     item.sources.gather || item.sources.craft || item.sources.shop;
 
   return (
-    <article data-testid="wiki-item-page" className="space-y-6">
+    <WikiEntityCatalog
+      type="item"
+      currentId={item.id}
+      indexDoc={indexDoc}
+      docs={indexDocs}
+    >
+      <article data-testid="wiki-item-page" className="space-y-6">
       <header className="space-y-3">
         <Breadcrumb items={breadcrumbItems} />
         <div className="flex items-start gap-3">
           <ItemIcon icon={item.icon} alt={name} size={56} />
           <div className="min-w-0">
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-3xl font-bold text-[color:var(--arkive-nav-active)]">
               <GradeText grade={item.grade}>{name}</GradeText>
             </h1>
             {heroMeta.length > 0 && (
@@ -187,8 +199,8 @@ export default function ItemPage({ id }: { id: string }) {
 
         <div className="order-2 min-w-0 md:order-1">
           {hasSources && (
-            <section className="mb-6 rounded-md border border-border bg-card p-4 text-card-foreground">
-              <h2 className="mb-3 text-xl font-semibold">
+            <section className="mb-6 border-y border-border py-4">
+              <h2 className="mb-3 text-lg font-semibold text-[color:var(--arkive-nav-active)]">
                 {t("wiki:item.sources")}
               </h2>
               {hasSourcePills && (
@@ -222,8 +234,8 @@ export default function ItemPage({ id }: { id: string }) {
           )}
 
           {item.droppedBy.length > 0 && (
-            <section className="mb-6 rounded-md border border-border bg-card p-4 text-card-foreground">
-              <h2 className="mb-3 text-xl font-semibold">
+            <section className="mb-6 border-t border-border pt-4">
+              <h2 className="mb-3 text-lg font-semibold text-[color:var(--arkive-nav-active)]">
                 {t("wiki:item.droppedBy")}
               </h2>
               <ul className="divide-y divide-border/60 text-sm">
@@ -249,8 +261,8 @@ export default function ItemPage({ id }: { id: string }) {
           )}
 
           {item.rewardFrom.length > 0 && (
-            <section className="rounded-md border border-border bg-card p-4 text-card-foreground">
-              <h2 className="mb-3 text-xl font-semibold">
+            <section className="border-t border-border pt-4">
+              <h2 className="mb-3 text-lg font-semibold text-[color:var(--arkive-nav-active)]">
                 {t("wiki:item.rewardFrom")}
               </h2>
               <QuestLinkList ids={item.rewardFrom} />
@@ -258,7 +270,8 @@ export default function ItemPage({ id }: { id: string }) {
           )}
         </div>
       </div>
-    </article>
+      </article>
+    </WikiEntityCatalog>
   );
 }
 

@@ -113,7 +113,7 @@ export default function EmbeddedMap({
 
   return (
     <div
-      className={`relative isolate overflow-hidden rounded-lg border border-border ${className ?? "h-72"}`}
+      className={`relative isolate overflow-hidden rounded-md border border-border ${className ?? "h-72"}`}
       data-testid="embedded-map"
     >
       <MapContainer
@@ -130,7 +130,7 @@ export default function EmbeddedMap({
         smoothSensitivity={4}
         zoomControl={false}
         attributionControl={false}
-        className="h-full w-full"
+        className="relative z-0 h-full w-full"
       >
         <GameMapTiles selectedMap={map} assets={aionAssets} />
         {highlightRegions.map((region) =>
@@ -162,10 +162,10 @@ export default function EmbeddedMap({
       </MapContainer>
       <a
         href={href}
-        className="absolute top-2 right-2 z-[var(--arkive-layer-map-control)] rounded bg-background/80 px-2 py-1 text-xs hover:bg-background"
+        className="absolute right-2 top-2 z-[var(--arkive-layer-map-control)] rounded-md bg-[color:var(--arkive-action)] px-3 py-2 text-xs font-semibold text-[color:var(--arkive-action-on)] transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         data-testid="embed-open-full"
       >
-        {t("wiki:common.open")}
+        {t("wiki:quest.openInMap")}
       </a>
     </div>
   );

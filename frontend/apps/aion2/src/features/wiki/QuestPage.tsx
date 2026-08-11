@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import EmbeddedMap, { type EmbeddedPoi } from "@/features/wiki/EmbeddedMap";
+import WikiEntityCatalog from "@/features/wiki/WikiEntityCatalog";
+import { useRememberWikiEntry } from "@/features/wiki/wikiRecent";
 import {
   Breadcrumb,
   type BreadcrumbItem,
@@ -30,6 +32,7 @@ export default function QuestPage({ id }: { id: string }) {
     id: string;
     quest: QuestEntity;
     indexDoc: WikiIndexDoc | null;
+    indexDocs: WikiIndexDoc[];
   } | null>(null);
   const [errorId, setErrorId] = useState<string | null>(null);
 
@@ -48,6 +51,7 @@ export default function QuestPage({ id }: { id: string }) {
             id,
             quest,
             indexDoc: index.docs.find((d) => d.id === quest.id) ?? null,
+            indexDocs: index.docs,
           });
         }
       })
@@ -61,7 +65,9 @@ export default function QuestPage({ id }: { id: string }) {
 
   const q = loaded?.id === id ? loaded.quest : null;
   const indexDoc = loaded?.id === id ? loaded.indexDoc : null;
+  const indexDocs = loaded?.id === id ? loaded.indexDocs : [];
   const err = errorId === id;
+  useRememberWikiEntry("quest", q?.id);
   const allObjectives = useMemo<ObjectiveEntry[]>(() => {
     if (!q) return [];
     return q.steps.flatMap((step) =>
@@ -132,7 +138,7 @@ export default function QuestPage({ id }: { id: string }) {
           },
         ]
       : []),
-    ...(groupSlug && sectionSlug
+    ...(groupSlug && sectionSlug && sectionSlug !== "other"
       ? [
           {
             label: t(`wiki/taxonomy:sections.${sectionSlug}.name`),
@@ -147,10 +153,18 @@ export default function QuestPage({ id }: { id: string }) {
   const hasChain = q.chain.prev.length > 0 || q.chain.next !== null;
 
   return (
-    <article data-testid="wiki-quest-page" className="space-y-6">
+    <WikiEntityCatalog
+      type="quest"
+      currentId={q.id}
+      indexDoc={indexDoc}
+      docs={indexDocs}
+    >
+      <article data-testid="wiki-quest-page" className="space-y-6">
       <header className="space-y-3">
         <Breadcrumb items={breadcrumbItems} />
-        <h1 className="text-3xl font-bold">{lt(q.name, lang)}</h1>
+        <h1 className="text-3xl font-bold text-[color:var(--arkive-nav-active)]">
+          {lt(q.name, lang)}
+        </h1>
       </header>
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
@@ -254,8 +268,8 @@ export default function QuestPage({ id }: { id: string }) {
         </aside>
 
         <div className="order-2 min-w-0 md:order-1">
-          <section className="mb-6 rounded-md border border-border bg-card p-4 text-card-foreground">
-            <h2 className="text-xl font-semibold">
+          <section className="mb-6 border-y border-border py-4">
+            <h2 className="text-lg font-semibold text-[color:var(--arkive-nav-active)]">
               {t("wiki:quest.objectives")}
             </h2>
             <ol className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
@@ -264,7 +278,7 @@ export default function QuestPage({ id }: { id: string }) {
                   key={`${entry.stepOrder}-${entry.objectiveIndex}`}
                   className="flex items-start gap-2"
                 >
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-secondary-foreground">
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-secondary-foreground">
                     {i + 1}
                   </span>
                   <ObjectiveLabel objective={entry.objective} lang={lang} />
@@ -290,14 +304,14 @@ export default function QuestPage({ id }: { id: string }) {
           )}
 
           <section>
-            <h2 className="mb-2 text-xl font-semibold">
+            <h2 className="mb-2 text-lg font-semibold text-[color:var(--arkive-nav-active)]">
               {t("wiki:quest.steps")}
             </h2>
             <ol className="space-y-3">
               {q.steps.map((s) => (
                 <li
                   key={s.order}
-                  className="rounded-md border border-border bg-card p-3"
+                  className="border-b border-border/70 py-3 last:border-b-0"
                 >
                   <p className="mb-1 text-sm font-medium text-muted-foreground">
                     {t("wiki:quest.step", { n: s.order })}
@@ -322,7 +336,7 @@ export default function QuestPage({ id }: { id: string }) {
       </div>
 
       {hasChain && (
-        <nav className="flex flex-col gap-3 rounded-md border border-border bg-card p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <nav className="flex flex-col gap-3 border-t border-border pt-4 text-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-x-4 gap-y-2">
             {q.chain.prev.map((p) => (
               <QuestLink key={p} id={p} prefix={"\u2190 "} />
@@ -338,7 +352,8 @@ export default function QuestPage({ id }: { id: string }) {
           )}
         </nav>
       )}
-    </article>
+      </article>
+    </WikiEntityCatalog>
   );
 }
 

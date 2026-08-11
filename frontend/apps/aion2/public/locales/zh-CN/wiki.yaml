@@ -4,6 +4,15 @@ common:
   open: "打开"
   level: "{{n}} 级"
 nav: { wiki: "百科" }
+workspace:
+  title: "永恒之塔2百科"
+  overview: "总览"
+  recent: "最近浏览"
+  back: "返回"
+  backTo: "返回{{destination}}"
+  context: "当前分类"
+  search: "搜索此分类"
+  entries: "{{count}} 条资料"
 home:
   title: "AION2 百科"
   subtitle: "由游戏数据自动生成"

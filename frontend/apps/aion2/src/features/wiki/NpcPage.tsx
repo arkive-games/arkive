@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import EmbeddedMap from "@/features/wiki/EmbeddedMap";
+import WikiEntityCatalog from "@/features/wiki/WikiEntityCatalog";
+import { useRememberWikiEntry } from "@/features/wiki/wikiRecent";
 import {
   Breadcrumb,
   type BreadcrumbItem,
@@ -26,6 +28,7 @@ export default function NpcPage({ id }: { id: string }) {
     id: number;
     npc: NpcEntity;
     indexDoc: WikiIndexDoc | null;
+    indexDocs: WikiIndexDoc[];
   } | null>(null);
   const [errorId, setErrorId] = useState<string | null>(null);
 
@@ -44,6 +47,7 @@ export default function NpcPage({ id }: { id: string }) {
             id: npc.id,
             npc,
             indexDoc: index.docs.find((d) => d.id === npc.id) ?? null,
+            indexDocs: index.docs,
           });
         }
       })
@@ -57,7 +61,9 @@ export default function NpcPage({ id }: { id: string }) {
 
   const npc = loaded?.id === Number(id) ? loaded.npc : null;
   const indexDoc = loaded?.id === Number(id) ? loaded.indexDoc : null;
+  const indexDocs = loaded?.id === Number(id) ? loaded.indexDocs : [];
   const err = errorId === id;
+  useRememberWikiEntry("npc", npc?.id);
 
   useEffect(() => {
     if (npc) document.title = `${lt(npc.name, i18n.language)} - AION2 Wiki`;
@@ -103,11 +109,17 @@ export default function NpcPage({ id }: { id: string }) {
   ].filter((group) => group.quests.length > 0);
 
   return (
-    <article data-testid="wiki-npc-page" className="space-y-6">
+    <WikiEntityCatalog
+      type="npc"
+      currentId={npc.id}
+      indexDoc={indexDoc}
+      docs={indexDocs}
+    >
+      <article data-testid="wiki-npc-page" className="space-y-6">
       <header className="space-y-3">
         <Breadcrumb items={breadcrumbItems} />
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-3xl font-bold">{name}</h1>
+          <h1 className="text-3xl font-bold text-[color:var(--arkive-nav-active)]">{name}</h1>
           <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
             {levelText}
           </span>
@@ -170,8 +182,8 @@ export default function NpcPage({ id }: { id: string }) {
         </aside>
 
         <div className="order-2 min-w-0 md:order-1">
-          <section className="mb-6 rounded-md border border-border bg-card p-4 text-card-foreground">
-            <h2 className="mb-3 text-xl font-semibold">
+          <section className="mb-6 border-y border-border py-4">
+            <h2 className="mb-3 text-lg font-semibold text-[color:var(--arkive-nav-active)]">
               {t("wiki:npc.spawns")}
             </h2>
             {npc.spawns.length > 0 ? (
@@ -199,8 +211,8 @@ export default function NpcPage({ id }: { id: string }) {
           </section>
 
           {npc.drops.length > 0 && (
-            <section className="rounded-md border border-border bg-card p-4 text-card-foreground">
-              <h2 className="mb-3 text-xl font-semibold">
+            <section className="border-t border-border pt-4">
+              <h2 className="mb-3 text-lg font-semibold text-[color:var(--arkive-nav-active)]">
                 {t("wiki:npc.drops")}
               </h2>
               <ul className="divide-y divide-border/60 text-sm">
@@ -230,7 +242,8 @@ export default function NpcPage({ id }: { id: string }) {
           )}
         </div>
       </div>
-    </article>
+      </article>
+    </WikiEntityCatalog>
   );
 }
 

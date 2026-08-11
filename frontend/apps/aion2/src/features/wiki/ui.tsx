@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -22,6 +23,36 @@ export type BreadcrumbItem = {
   hash?: string;
 };
 
+export function WikiBackLink({
+  to,
+  params,
+  hash,
+  destination,
+  className = "",
+}: {
+  to: string;
+  params?: Record<string, string>;
+  hash?: string;
+  destination?: string;
+  className?: string;
+}) {
+  const { t } = useTranslation(["wiki"]);
+  return (
+    <Link
+      to={to}
+      params={params}
+      hash={hash}
+      className={`inline-flex min-h-11 items-center gap-2 rounded-md border border-[color:var(--arkive-nav-active)] bg-[color:var(--arkive-filter-active)] px-3 text-sm font-semibold text-[color:var(--arkive-nav-active)] shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:min-h-9 ${className}`}
+      data-testid="wiki-back"
+    >
+      <IconArrowLeft className="size-4" stroke={1.8} aria-hidden />
+      {destination
+        ? t("wiki:workspace.backTo", { destination })
+        : t("wiki:workspace.back")}
+    </Link>
+  );
+}
+
 export function WikiCard({
   title,
   children,
@@ -33,10 +64,12 @@ export function WikiCard({
 }) {
   return (
     <section
-      className="rounded-md border border-border bg-card p-4 text-card-foreground shadow-sm"
+      className="border-t border-border pt-4 text-foreground first:border-t-0 first:pt-0"
       data-testid={testId}
     >
-      <h2 className="mb-3 text-lg font-semibold">{title}</h2>
+      <h2 className="mb-3 text-base font-semibold text-[color:var(--arkive-nav-active)]">
+        {title}
+      </h2>
       {children}
     </section>
   );

@@ -4,6 +4,15 @@ common:
   open: "Open"
   level: "Lv. {{n}}"
 nav: { wiki: "Wiki" }
+workspace:
+  title: "AION2 Wiki"
+  overview: "Overview"
+  recent: "Recently viewed"
+  back: "Back"
+  backTo: "Back to {{destination}}"
+  context: "Current category"
+  search: "Search this category"
+  entries: "{{count}} entries"
 home:
   title: "AION2 Wiki"
   subtitle: "Auto-generated from game data"
