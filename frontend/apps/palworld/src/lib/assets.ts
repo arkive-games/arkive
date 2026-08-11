@@ -20,7 +20,7 @@ export const palIconUrl = (icon: string): string => `${RES_BASE}/icons/${icon}.w
  *  carry element "None", which has no icon file (gate with hasElementIcon). */
 export const elementIconUrl = (element: string): string => `${RES_BASE}/icons/element_${element}.webp`
 export const hasElementIcon = (element: string): boolean => element !== 'None'
-/** Work-suitability icon; OilExtraction has none (callers fall back to the label). */
+/** Work-suitability icon; the generated set covers every current work type. */
 export const workIconUrl = (work: string): string => `${RES_BASE}/icons/work_${work}.webp`
 /** Inventory item icon (e.g. `item_Wood`); present only for items whose icon
  *  texture was exported (callers gate on the icon field / handle 404). */

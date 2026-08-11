@@ -5,8 +5,8 @@ import { elementIconUrl, hasElementIcon, workIconUrl } from '../../../lib/assets
 import type { CondenseEntry } from '../../../lib/condenser'
 import type { ActiveSkill, Element, WorkType } from '../../../lib/pals'
 
-/** An <img> that removes itself if the asset is missing (e.g. OilExtraction
- *  has no work icon), letting an adjacent text label stand in. */
+/** An <img> that removes itself if an unexpected asset is unavailable, letting
+ *  an adjacent text label stand in. */
 export function IconImg({
   src,
   alt,
@@ -52,7 +52,7 @@ export function ElementBadge({
 }
 
 /** Work-suitability icon + localized name + level badge. Falls back to the
- *  label alone when the work type has no icon (OilExtraction). `highlight`
+ *  label alone if an unexpected icon is unavailable. `highlight`
  *  marks the species' BestWorkSuitability (gold + ★ — the condenser upgrades
  *  it first). `condense` adds the max-condensed level (`Lv6 →8`) with a
  *  per-star breakdown tooltip titled `condenseTitle`. */

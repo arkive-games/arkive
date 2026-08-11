@@ -80,6 +80,7 @@ class ReleaseReport:
     phase: str = "starting"
     error: str | None = None
     expected_data_version: str | None = None
+    release_order: str | None = None
     referenced_assets: int = 0
     resource: dict[str, Any] = field(default_factory=dict)
     data: dict[str, Any] = field(default_factory=dict)
@@ -190,8 +191,9 @@ def collect_asset_references(documents: Documents) -> dict[str, set[str]]:
                 if element != "None":
                     add("icons", element, f"{base}.elements", prefix="element_")
             for work in (pal.get("work") or {}):
-                add("icons", work, f"{base}.work", prefix="work_")
-            if pal.get("bestWork"):
+                if work != "None":
+                    add("icons", work, f"{base}.work", prefix="work_")
+            if pal.get("bestWork") and pal["bestWork"] != "None":
                 add("icons", pal["bestWork"], f"{base}.bestWork", prefix="work_")
             for skill in pal.get("activeSkills", []):
                 element = skill.get("element")
@@ -212,7 +214,14 @@ def collect_asset_references(documents: Documents) -> dict[str, set[str]]:
         for human_id, human in (docs["invaders.json"].get("humans") or {}).items():
             add("icons", human.get("icon"), f"invaders.json:humans.{human_id}.icon")
         for ri, project in enumerate(docs["research.json"]["projects"]):
-            add("icons", project.get("category"), f"research.json:projects[{ri}].category", prefix="work_")
+            category = project.get("category")
+            if category and category != "None":
+                add(
+                    "icons",
+                    category,
+                    f"research.json:projects[{ri}].category",
+                    prefix="work_",
+                )
     except (KeyError, TypeError, ValueError) as exc:
         raise PublishError(f"Invalid Palworld data schema while collecting assets: {exc}") from exc
 
@@ -231,8 +240,32 @@ def validate_local_assets(resource_root: Path, refs: dict[str, set[str]]) -> Non
     raise PublishError(f"Missing {len(missing)} referenced resource files:\n" + "\n".join(details))
 
 
+def choose_release_order(
+    *,
+    resource_pending: bool,
+    deleted_files: set[str],
+    online_references: Iterable[str],
+) -> str:
+    """Enforce resource-first releases without deleting a live dependency."""
+    if not resource_pending:
+        return "resource-first"
+
+    online_refs = set(online_references)
+    referenced_deletions = deleted_files & online_refs
+    if referenced_deletions:
+        details = ", ".join(sorted(referenced_deletions)[:10])
+        raise PublishError(
+            "resource-palworld deletes files still referenced by current online data: "
+            f"{details}. Retain these obsolete resources for this release, publish the data "
+            "change with this command, then remove the now-unreferenced resources in a later "
+            "run."
+        )
+    return "resource-first"
+
+
 def execute_release_steps(
     *,
+    order: str,
     resource_pending: bool,
     data_pending: bool,
     push_resource: Callable[[], None],
@@ -241,6 +274,8 @@ def execute_release_steps(
     verify_data: Callable[[], None],
 ) -> None:
     """Run the fail-closed ordering independently of Git and HTTP details."""
+    if order != "resource-first":
+        raise PublishError(f"Unknown release order: {order}")
     if resource_pending:
         push_resource()
     verify_resource()
@@ -263,6 +298,7 @@ class Publisher:
         self.references: dict[str, set[str]] = {}
         self.resource_state: RepoState | None = None
         self.data_state: RepoState | None = None
+        self.online_documents: Documents | None = None
         self._last_data_errors: list[str] = []
 
     def close(self) -> None:
@@ -365,32 +401,22 @@ class Publisher:
                 + "\n  ".join(bad_signatures)
             )
 
-        changed_files = set(
-            filter(
-                None,
-                self._git(
-                    path,
-                    "diff",
-                    "--no-renames",
-                    "--name-only",
-                    "--diff-filter=ACMRT",
-                    "origin/master..HEAD",
-                ).splitlines(),
+        def changed_paths(diff_filter: str) -> set[str]:
+            output = self._git(
+                path,
+                "-c",
+                "core.quotePath=false",
+                "diff",
+                "--no-renames",
+                "--name-only",
+                "-z",
+                f"--diff-filter={diff_filter}",
+                "origin/master..HEAD",
             )
-        )
-        deleted_files = set(
-            filter(
-                None,
-                self._git(
-                    path,
-                    "diff",
-                    "--no-renames",
-                    "--name-only",
-                    "--diff-filter=D",
-                    "origin/master..HEAD",
-                ).splitlines(),
-            )
-        )
+            return set(filter(None, output.split("\0")))
+
+        changed_files = changed_paths("ACMRT")
+        deleted_files = changed_paths("D")
         return RepoState(
             name=name,
             path=path,
@@ -411,6 +437,43 @@ class Publisher:
             "push": state.push_status,
             "online": state.online_status,
         }
+
+    def load_revision_documents(self, revision: str) -> Documents:
+        assert self.data_state is not None
+        root = self.data_state.path
+        marker_paths = self._git(
+            root,
+            "-c",
+            "core.quotePath=false",
+            "ls-tree",
+            "-r",
+            "--name-only",
+            revision,
+            "--",
+            "markers",
+        ).splitlines()
+        paths = tuple(REFERENCE_FILES) + tuple(
+            path for path in marker_paths if path.endswith(".json")
+        )
+        parsed: dict[str, Any] = {}
+        for rel in paths:
+            try:
+                parsed[rel] = json.loads(self._git(root, "show", f"{revision}:{rel}"))
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                raise PublishError(f"Invalid JSON at {revision}:{rel}: {exc}") from exc
+        return Documents(paths=paths, parsed=parsed)
+
+    def load_revision_version(self, revision: str) -> str:
+        assert self.data_state is not None
+        try:
+            value = json.loads(
+                self._git(self.data_state.path, "show", f"{revision}:version.json")
+            ).get("version")
+        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError) as exc:
+            raise PublishError(f"Invalid version.json at {revision}: {exc}") from exc
+        if not isinstance(value, str) or not value:
+            raise PublishError(f"Invalid version value at {revision}: {value!r}")
+        return value
 
     def push_repo(self, state: RepoState) -> None:
         self.log(f"Pushing {state.name} {state.head[:12]} to origin/master")
@@ -578,16 +641,20 @@ class Publisher:
             return None
         return value if isinstance(value, str) else None
 
-    def _fetch_remote_documents(self, expected: str, token: str) -> Documents | None:
-        assert self.documents is not None
+    def _fetch_remote_documents(
+        self,
+        expected: str,
+        token: str | None,
+        documents: Documents | None = None,
+    ) -> Documents | None:
+        documents = documents or self.documents
+        assert documents is not None
         parsed: dict[str, Any] = {}
         errors: list[str] = []
-        for rel in self.documents.paths:
-            separator = "&" if "?" in rel else "?"
-            url = (
-                f"{self.config.data_url.rstrip('/')}/{quote(rel, safe='/')}"
-                f"{separator}v={quote(expected)}&publish_probe={quote(token)}"
-            )
+        for rel in documents.paths:
+            url = f"{self.config.data_url.rstrip('/')}/{quote(rel, safe='/')}?v={quote(expected)}"
+            if token is not None:
+                url += f"&publish_probe={quote(token)}"
             try:
                 response = self.client.get(url, headers={"Cache-Control": "no-cache"})
             except httpx.HTTPError as exc:
@@ -598,28 +665,31 @@ class Publisher:
                 continue
             try:
                 value = response.json()
-            except json.JSONDecodeError as exc:
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                 errors.append(f"{rel}: invalid online JSON ({exc})")
                 continue
-            if value != self.documents.parsed[rel]:
+            if value != documents.parsed[rel]:
                 errors.append(f"{rel}: online JSON does not match local HEAD")
                 continue
             parsed[rel] = value
         self._last_data_errors = errors
         if errors:
             return None
-        return Documents(paths=self.documents.paths, parsed=parsed)
+        return Documents(paths=documents.paths, parsed=parsed)
 
-    def wait_for_data_deploy(self) -> Documents:
-        expected = self.report.expected_data_version
-        assert expected is not None
+    def wait_for_data_documents(
+        self,
+        expected: str,
+        documents: Documents,
+        label: str,
+    ) -> Documents:
         deadline = time.monotonic() + self.config.deployment_timeout
         attempt = 0
         while time.monotonic() < deadline:
             attempt += 1
-            token = f"data-{expected}-{attempt}-{uuid.uuid4().hex}"
+            token = f"data-{label}-{expected}-{attempt}-{uuid.uuid4().hex}"
             if self._remote_version(token) == expected:
-                remote = self._fetch_remote_documents(expected, token)
+                remote = self._fetch_remote_documents(expected, token, documents)
                 if remote is not None:
                     canonical_status = None
                     try:
@@ -629,19 +699,38 @@ class Publisher:
                         )
                         canonical_status = canonical.status_code
                         canonical_version = canonical.json().get("version")
-                    except (httpx.HTTPError, json.JSONDecodeError, AttributeError):
+                    except (
+                        httpx.HTTPError,
+                        json.JSONDecodeError,
+                        UnicodeDecodeError,
+                        AttributeError,
+                    ):
                         canonical_version = None
-                    if canonical_status == 200 and canonical_version == expected:
-                        return remote
+                    canonical_documents = self._fetch_remote_documents(
+                        expected, None, documents
+                    )
+                    if (
+                        canonical_status == 200
+                        and canonical_version == expected
+                        and canonical_documents is not None
+                    ):
+                        return canonical_documents
             time.sleep(self.config.poll_interval)
         raise PublishError(
-            f"Timed out waiting for data-palworld version {expected} and matching online data"
+            f"Timed out waiting for {label} data-palworld version {expected} "
+            "and matching online data"
             + (
                 ":\n  " + "\n  ".join(self._last_data_errors[:20])
                 if self._last_data_errors
                 else ""
             )
         )
+
+    def wait_for_data_deploy(self) -> Documents:
+        expected = self.report.expected_data_version
+        assert expected is not None
+        assert self.documents is not None
+        return self.wait_for_data_documents(expected, self.documents, "new")
 
     def verify_data_stage(self) -> None:
         assert self.data_state is not None
@@ -711,16 +800,33 @@ class Publisher:
             self.references = collect_asset_references(self.documents)
             validate_local_assets(self.config.resource_repo, self.references)
             self.report.referenced_assets = len(self.references)
+
+            self.phase("release planning")
+            origin_documents = self.load_revision_documents(self.data_state.origin_head)
+            origin_version = self.load_revision_version(self.data_state.origin_head)
+            self.online_documents = self.wait_for_data_documents(
+                origin_version,
+                origin_documents,
+                "current",
+            )
+            online_references = collect_asset_references(self.online_documents)
+            release_order = choose_release_order(
+                resource_pending=self.resource_state.pending,
+                deleted_files=self.resource_state.deleted_files,
+                online_references=online_references,
+            )
+            self.report.release_order = release_order
             self.log(
                 f"Ready: resource commits={len(self.resource_state.commits)}, "
                 f"data commits={len(self.data_state.commits)}, assets={len(self.references)}, "
-                f"data version={expected}"
+                f"data version={expected}, order={release_order}"
             )
 
             if self.config.dry_run:
                 self.verify_dry_run()
             else:
                 execute_release_steps(
+                    order=release_order,
                     resource_pending=self.resource_state.pending,
                     data_pending=self.data_state.pending,
                     push_resource=lambda: self._push_stage(self.resource_state, "push resource"),
@@ -761,6 +867,8 @@ def render_report(report: ReleaseReport, json_output: bool) -> None:
     print(f"Final phase: {report.phase}")
     if report.expected_data_version:
         print(f"Data version: {report.expected_data_version}")
+    if report.release_order:
+        print(f"Release order: {report.release_order}")
     print(f"Referenced assets: {report.referenced_assets}")
     for name, repo in (("resource-palworld", report.resource), ("data-palworld", report.data)):
         if not repo:
@@ -775,7 +883,7 @@ def render_report(report: ReleaseReport, json_output: bool) -> None:
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="python -m palworld.publish",
-        description="Publish resource-palworld before data-palworld and verify both online.",
+        description="Publish Palworld artifacts in a dependency-safe order and verify both online.",
     )
     parser.add_argument("--dry-run", action="store_true", help="Run release gates without pushing")
     parser.add_argument("--json", action="store_true", dest="json_output", help="Print JSON summary")

@@ -7,6 +7,7 @@ from palworld.publish import (
     PublishError,
     Publisher,
     RepoState,
+    choose_release_order,
     collect_asset_references,
     execute_release_steps,
     validate_local_assets,
@@ -85,6 +86,19 @@ def test_collect_asset_references_rejects_path_traversal():
         collect_asset_references(documents)
 
 
+def test_collect_asset_references_skips_none_but_requires_oil_extraction():
+    documents = _documents()
+    pal = documents.parsed["pals.json"]["pals"][0]
+    pal["work"] = {"OilExtraction": 1, "None": 0}
+    pal["bestWork"] = "None"
+    documents.parsed["research.json"]["projects"][0]["category"] = "None"
+
+    refs = collect_asset_references(documents)
+
+    assert "icons/work_OilExtraction.webp" in refs
+    assert "icons/work_None.webp" not in refs
+
+
 def test_validate_local_assets_reports_source(tmp_path):
     refs = {"icons/missing.webp": {"types.json:categories[0].subtypes[0].icon"}}
     with pytest.raises(PublishError, match="types.json"):
@@ -100,6 +114,7 @@ def test_release_steps_never_push_data_after_resource_verification_failure():
 
     with pytest.raises(PublishError, match="resource unavailable"):
         execute_release_steps(
+            order="resource-first",
             resource_pending=True,
             data_pending=True,
             push_resource=lambda: events.append("push-resource"),
@@ -113,6 +128,7 @@ def test_release_steps_never_push_data_after_resource_verification_failure():
 def test_release_steps_publish_in_required_order():
     events = []
     execute_release_steps(
+        order="resource-first",
         resource_pending=True,
         data_pending=True,
         push_resource=lambda: events.append("push-resource"),
@@ -126,6 +142,7 @@ def test_release_steps_publish_in_required_order():
 def test_release_steps_resume_without_republishing_resource():
     events = []
     execute_release_steps(
+        order="resource-first",
         resource_pending=False,
         data_pending=True,
         push_resource=lambda: events.append("push-resource"),
@@ -134,6 +151,23 @@ def test_release_steps_resume_without_republishing_resource():
         verify_data=lambda: events.append("verify-data"),
     )
     assert events == ["verify-resource", "push-data", "verify-data"]
+
+
+def test_choose_release_order_allows_unreferenced_resource_deletions():
+    assert choose_release_order(
+        resource_pending=True,
+        deleted_files={"icons/old.webp"},
+        online_references=set(),
+    ) == "resource-first"
+
+
+def test_choose_release_order_rejects_deletions_referenced_by_online_data():
+    with pytest.raises(PublishError, match="Retain these obsolete resources"):
+        choose_release_order(
+            resource_pending=True,
+            deleted_files={"icons/old.webp"},
+            online_references={"icons/old.webp"},
+        )
 
 
 def test_wait_for_resource_deploy_retries_until_content_matches(tmp_path):
@@ -237,4 +271,35 @@ def test_remote_document_check_ignores_json_line_endings(tmp_path):
     remote = publisher._fetch_remote_documents("abc123", "test")
     assert remote is not None
     assert remote.parsed == {"maps.json": value}
+    client.close()
+
+
+def test_data_wait_checks_cache_busted_and_canonical_document_urls(tmp_path):
+    value = {"maps": [{"id": "MainWorld"}]}
+    document_queries = []
+
+    def handler(request):
+        if request.url.path.endswith("/version.json"):
+            return httpx.Response(200, json={"version": "abc123"}, request=request)
+        document_queries.append(request.url.query)
+        return httpx.Response(200, json=value, request=request)
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    publisher = Publisher(
+        PublishConfig(
+            data_repo=tmp_path,
+            resource_repo=tmp_path,
+            deployment_timeout=1,
+            poll_interval=0,
+        ),
+        client=client,
+    )
+    documents = Documents(paths=("maps.json",), parsed={"maps.json": value})
+
+    remote = publisher.wait_for_data_documents("abc123", documents, "test")
+
+    assert remote.parsed == documents.parsed
+    assert len(document_queries) == 2
+    assert b"publish_probe=" in document_queries[0]
+    assert document_queries[1] == b"v=abc123"
     client.close()

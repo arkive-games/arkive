@@ -39,9 +39,12 @@ uv run python -m palworld.maps tiles      # map tiles → resource-palworld
 
 Never push `data-palworld` and `resource-palworld` separately. The publisher
 checks both clean `master` branches, verifies signed linear commits and every
-data-backed resource reference, publishes resources first, waits for the new
-files to return HTTP 200 with matching content, then publishes data and verifies
-the live version and all live references:
+data-backed resource reference, then checks current online references before
+publishing resources first. A resource deletion that is still referenced by
+online data stops before either push; retain that obsolete file for the data
+release, then remove it in a later run after the reference is no longer live.
+Every stage waits for matching online content before the next push, and the
+final stage verifies the live data version and all live references:
 
 ```bash
 uv run python -m palworld.publish
