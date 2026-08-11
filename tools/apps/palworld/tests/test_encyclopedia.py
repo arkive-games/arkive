@@ -3,10 +3,56 @@ import re
 
 import pytest
 
-from palworld.encyclopedia import ELEMENTS, WORK_TYPES, run_encyclopedia
+from palworld.encyclopedia import (
+    ELEMENTS,
+    WORK_TYPES,
+    _passive_sources,
+    run_encyclopedia,
+)
 from palworld.env import optional_dir
 
 RAW = optional_dir("PALWORLD_RAW")
+
+
+def test_passive_sources_cover_verified_acquisition_paths():
+    row = {
+        "AddPal": True,
+        "AddRarePal": False,
+        "AddWorldTreePal": True,
+        "AddMutationPal": False,
+    }
+    sources = _passive_sources(
+        "ExamplePassive",
+        row,
+        {"ExamplePassive": ["PalA", "PalB"]},
+        {
+            "ExamplePassive": {
+                "PassiveSkill": "ExamplePassive",
+                "Price": 50000,
+                "RequireItemId": "PalPassiveSkillChange_ExamplePassive",
+            }
+        },
+    )
+
+    assert sources == [
+        {"kind": "randomPal"},
+        {"kind": "worldTreePal"},
+        {"kind": "innatePals", "pals": ["PalA", "PalB"]},
+        {
+            "kind": "operatingTable",
+            "price": 50000,
+            "item": "PalPassiveSkillChange_ExamplePassive",
+        },
+    ]
+
+
+def test_passive_sources_omit_missing_operating_table_item():
+    assert _passive_sources(
+        "MoneyOnly",
+        {},
+        {},
+        {"MoneyOnly": {"PassiveSkill": "MoneyOnly", "Price": 10000, "RequireItemId": "None"}},
+    ) == [{"kind": "operatingTable", "price": 10000}]
 
 
 @pytest.mark.skipif(RAW is None or not RAW.exists(), reason="PALWORLD_RAW not set or raw Palworld export not available")
@@ -107,7 +153,33 @@ def test_encyclopedia_integration(tmp_path):
 
     # Global passive list: the 115 displayable, each with a rank and effects list.
     assert len(passives) == 115
-    assert all("rank" in p and isinstance(p["effects"], list) for p in passives)
+    assert all(
+        "rank" in p and isinstance(p["effects"], list) and isinstance(p["sources"], list)
+        for p in passives
+    )
+    source_counts = {
+        kind: sum(any(s["kind"] == kind for s in p["sources"]) for p in passives)
+        for kind in (
+            "randomPal", "rarePal", "worldTreePal", "mutationPal",
+            "innatePals", "operatingTable",
+        )
+    }
+    assert source_counts == {
+        "randomPal": 85,
+        "rarePal": 1,
+        "worldTreePal": 7,
+        "mutationPal": 5,
+        "innatePals": 23,
+        "operatingTable": 54,
+    }
+    operating_sources = [
+        source
+        for passive in passives
+        for source in passive["sources"]
+        if source["kind"] == "operatingTable"
+    ]
+    assert sum("item" not in source for source in operating_sources) == 19
+    assert sum("item" in source for source in operating_sources) == 35
 
     # Locale files: 17 languages, non-mojibake real text for a known Pal.
     en_pals = json.loads((data_out / "locales/en-US/pals.json").read_text(encoding="utf-8"))

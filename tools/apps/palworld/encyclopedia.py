@@ -65,6 +65,15 @@ _INVOKE_FLAGS = {
     "InvokeAlways": "always",
 }
 
+# Passive acquisition pools. Keep the output tokens independent of the raw
+# column names so consumers do not need Unreal-specific knowledge.
+_PASSIVE_POOL_FIELDS = (
+    ("AddPal", "randomPal"),
+    ("AddRarePal", "rarePal"),
+    ("AddWorldTreePal", "worldTreePal"),
+    ("AddMutationPal", "mutationPal"),
+)
+
 # The 9 element types (EPalElementType names, enum order).
 ELEMENTS = ["Normal", "Fire", "Water", "Leaf", "Electricity", "Ice", "Earth", "Dark", "Dragon"]
 # Element name -> element-icon index (Texture/UI/Main_Menu/T_Icon_element_NN.png).
@@ -777,6 +786,36 @@ def _passive_effects(r: dict) -> list:
     return out
 
 
+def _passive_sources(
+    passive_id: str,
+    row: dict,
+    innate_pals: dict[str, list[str]],
+    operating_rows: dict[str, dict],
+) -> list[dict]:
+    """Verified acquisition paths for one displayable Pal passive."""
+    sources = [
+        {"kind": kind}
+        for field, kind in _PASSIVE_POOL_FIELDS
+        if row.get(field) is True
+    ]
+
+    if pals := innate_pals.get(passive_id):
+        sources.append({"kind": "innatePals", "pals": pals})
+
+    operating = operating_rows.get(passive_id)
+    if operating:
+        source: dict = {
+            "kind": "operatingTable",
+            "price": operating.get("Price", 0) or 0,
+        }
+        item = operating.get("RequireItemId")
+        if item not in _NONE:
+            source["item"] = item
+        sources.append(source)
+
+    return sources
+
+
 _SUMMON_PREFIX = re.compile(r"^(RAID_|BOSS_)")
 
 
@@ -872,6 +911,9 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     partner_rows = read_rows(raw / "DataTable/PassiveSkill/DT_PartnerSkillParameter.json")
     partner_def = read_rows(raw / "DataTable/PartnerSkill/DT_PartnerSkill.json")
     passive_main = read_rows(raw / "DataTable/PassiveSkill/DT_PassiveSkill_Main.json")
+    operating_table = read_rows(
+        raw / "DataTable/MapObject/DT_OperatingTablePassiveSkillDataTable.json"
+    )
     drop_rows = read_rows(raw / "DataTable/Character/DT_PalDropItem.json")
     exp_rows = read_rows(raw / "DataTable/Exp/DT_PalExpTable.json")
     names_by_lang = _names_by_lang(raw)
@@ -968,11 +1010,22 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     }
 
     disp = _displayable_passives(passive_main)
+    innate_pals: dict[str, list[str]] = {}
+    for pal in pals:
+        for passive_id in pal["passives"]:
+            if passive_id in disp:
+                innate_pals.setdefault(passive_id, []).append(pal["id"])
+    operating_by_passive = {
+        row.get("PassiveSkill") or row_id: row
+        for row_id, row in operating_table.items()
+        if (row.get("PassiveSkill") or row_id) in disp
+    }
     passives = [
         {
             "id": pid,
             "rank": v.get("Rank", 0),
             "effects": _passive_effects(v),
+            "sources": _passive_sources(pid, v, innate_pals, operating_by_passive),
             # when the passive is active (worker/riding/on-team/always/base-camp).
             **({"invoke": inv} if (inv := [tok for f, tok in _INVOKE_FLAGS.items() if v.get(f) is True]) else {}),
             # random-roll weight: displayable passives are 100 (normal) or 5

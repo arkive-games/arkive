@@ -163,10 +163,16 @@ export interface PalEntry {
 }
 
 export interface PassiveEffect { type: string; value: number; target: string }
+export type PassiveSource =
+  | { kind: 'randomPal' | 'rarePal' | 'worldTreePal' | 'mutationPal' }
+  | { kind: 'innatePals'; pals: string[] }
+  | { kind: 'operatingTable'; price: number; item?: string }
 /** `mutation` marks a mutation-pool passive (game `AddMutationPal`): exclusive to
  *  mutated Pals or grafted via a disposable implant at the Operating Table. */
 export interface Passive {
   id: string; rank: number; effects: PassiveEffect[]; mutation?: boolean
+  /** Verified random pools, innate carriers, and Operating Table route. */
+  sources: PassiveSource[]
   /** When the passive is active (worker/riding/reserve/onTeam/active/baseCamp/always). */
   invoke?: string[]
   /** Random-roll weight; present only for the rare tier (5 vs the normal 100). */
