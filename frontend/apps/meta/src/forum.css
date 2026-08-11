@@ -1498,7 +1498,7 @@
   font-size: 0.75rem;
 }
 
-.forum-autocomplete > button {
+.forum-autocomplete-options > button {
   width: 100%;
   min-height: 3rem;
   padding: 0.4rem 0.5rem;
@@ -1515,25 +1515,25 @@
   cursor: pointer;
 }
 
-.forum-autocomplete > button[aria-selected='true'],
-.forum-autocomplete > button:hover {
+.forum-autocomplete-options > button[aria-selected='true'],
+.forum-autocomplete-options > button:hover {
   background: var(--arkive-filter-active);
 }
 
-.forum-autocomplete > button > img {
+.forum-autocomplete-options > button > img {
   width: 2rem;
   height: 2rem;
   border-radius: var(--arkive-radius-compact);
   object-fit: contain;
 }
 
-.forum-autocomplete > button > span {
+.forum-autocomplete-options > button > span {
   min-width: 0;
   display: grid;
   gap: 0.1rem;
 }
 
-.forum-autocomplete > button small,
+.forum-autocomplete-options > button small,
 .forum-autocomplete kbd {
   color: var(--muted-foreground);
   font-size: 0.75rem;

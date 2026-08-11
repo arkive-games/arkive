@@ -933,6 +933,8 @@ function ForumComposerPage({
   const [tagQuery, setTagQuery] = useState('')
   const [gameInputActive, setGameInputActive] = useState(false)
   const [tagInputActive, setTagInputActive] = useState(false)
+  const [gameActiveIndex, setGameActiveIndex] = useState(0)
+  const [tagActiveIndex, setTagActiveIndex] = useState(0)
   const [images, setImages] = useState<ComposerImage[]>([])
   const [pendingImages, setPendingImages] = useState<ComposerImage[]>([])
   const [imageDialogOpen, setImageDialogOpen] = useState(false)
@@ -965,10 +967,31 @@ function ForumComposerPage({
     && selectedTagCount < FORUM_TAG_MAX_COUNT
     && !customTags.some((tag) => tag.toLocaleLowerCase() === normalizedTagQuery)
     && !COMPOSER_TOPICS.some((topic) => t(`forum.composer.topics.${topic}`).toLocaleLowerCase() === normalizedTagQuery)
+  const gamePopupOpen = gameInputActive && Boolean(gameQuery.trim())
+  const tagPopupOpen = tagInputActive && Boolean(tagQuery.trim())
+  const tagOptionCount = tagSuggestions.length + Number(canCreateCustomTag)
+  const gameActiveOptionId = gameSuggestions[gameActiveIndex]
+    ? `forum-game-option-${gameActiveIndex}`
+    : undefined
+  const tagActiveOptionId = tagActiveIndex < tagOptionCount
+    ? `forum-tag-option-${tagActiveIndex}`
+    : undefined
 
   useEffect(() => {
     setDraft({ title, content, gameIds, topics, customTags, videoUrl })
   }, [content, customTags, gameIds, setDraft, title, topics, videoUrl])
+
+  useEffect(() => {
+    setGameActiveIndex((current) => gameSuggestions.length > 0
+      ? Math.min(current, gameSuggestions.length - 1)
+      : 0)
+  }, [gameSuggestions.length])
+
+  useEffect(() => {
+    setTagActiveIndex((current) => tagOptionCount > 0
+      ? Math.min(current, tagOptionCount - 1)
+      : 0)
+  }, [tagOptionCount])
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -989,13 +1012,21 @@ function ForumComposerPage({
     if (gameIds.length >= FORUM_GAME_MAX_COUNT || gameIds.includes(gameId)) return
     setGameIds((current) => [...current, gameId])
     setGameQuery('')
+    setGameActiveIndex(0)
     setError('')
   }
 
   const handleGameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && gameSuggestions[0]) {
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && gameSuggestions.length > 0) {
       event.preventDefault()
-      addGame(gameSuggestions[0].id)
+      setGameInputActive(true)
+      setGameActiveIndex((current) => {
+        const offset = event.key === 'ArrowDown' ? 1 : -1
+        return (current + offset + gameSuggestions.length) % gameSuggestions.length
+      })
+    } else if (event.key === 'Enter' && gamePopupOpen && gameSuggestions[gameActiveIndex]) {
+      event.preventDefault()
+      addGame(gameSuggestions[gameActiveIndex].id)
     } else if (event.key === 'Backspace' && !gameQuery && gameIds.length > 0) {
       setGameIds((current) => current.slice(0, -1))
     } else if (event.key === 'Escape') {
@@ -1007,6 +1038,7 @@ function ForumComposerPage({
     if (selectedTagCount >= FORUM_TAG_MAX_COUNT || topics.includes(topic)) return
     setTopics((current) => [...current, topic])
     setTagQuery('')
+    setTagActiveIndex(0)
     setError('')
   }
 
@@ -1015,14 +1047,22 @@ function ForumComposerPage({
     if (!canCreateCustomTag) return
     setCustomTags((current) => [...current, nextTag])
     setTagQuery('')
+    setTagActiveIndex(0)
     setError('')
   }
 
   const handleTagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && tagOptionCount > 0) {
       event.preventDefault()
-      if (tagSuggestions[0]) addTopic(tagSuggestions[0])
-      else addCustomTag()
+      setTagInputActive(true)
+      setTagActiveIndex((current) => {
+        const offset = event.key === 'ArrowDown' ? 1 : -1
+        return (current + offset + tagOptionCount) % tagOptionCount
+      })
+    } else if (event.key === 'Enter' && tagPopupOpen && tagOptionCount > 0) {
+      event.preventDefault()
+      if (tagSuggestions[tagActiveIndex]) addTopic(tagSuggestions[tagActiveIndex])
+      else if (tagActiveIndex === tagSuggestions.length) addCustomTag()
     } else if (event.key === 'Backspace' && !tagQuery) {
       if (customTags.length > 0) setCustomTags((current) => current.slice(0, -1))
       else if (topics.length > 0) setTopics((current) => current.slice(0, -1))
@@ -1225,34 +1265,54 @@ function ForumComposerPage({
               id="forum-game-query"
               value={gameQuery}
               disabled={gameIds.length >= FORUM_GAME_MAX_COUNT}
-              onFocus={() => setGameInputActive(true)}
-              onChange={(event) => setGameQuery(event.target.value)}
+              onFocus={() => {
+                setGameInputActive(true)
+                setGameActiveIndex(0)
+              }}
+              onClick={() => setGameInputActive(true)}
+              onChange={(event) => {
+                setGameInputActive(true)
+                setGameQuery(event.target.value)
+                setGameActiveIndex(0)
+              }}
               onKeyDown={handleGameKeyDown}
               role="combobox"
-              aria-expanded={gameInputActive && Boolean(gameQuery.trim())}
+              aria-expanded={gamePopupOpen}
               aria-controls="forum-game-suggestions"
+              aria-activedescendant={gamePopupOpen ? gameActiveOptionId : undefined}
               aria-autocomplete="list"
               placeholder={t('forum.composer.gameInputPlaceholder')}
             />
             <small>{gameIds.length} / {FORUM_GAME_MAX_COUNT}</small>
           </div>
-          {gameInputActive && gameQuery.trim() && (
-            <div id="forum-game-suggestions" className="forum-autocomplete" role="listbox">
-              <strong>{t('forum.composer.matchingGames')}</strong>
-              {gameSuggestions.length > 0 ? gameSuggestions.map((site, index) => (
-                <button
-                  key={site.id}
-                  type="button"
-                  role="option"
-                  aria-selected={index === 0}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => addGame(site.id)}
-                >
-                  <img src={GAME_LOGOS[site.id]} alt="" />
-                  <span><b>{siteName(site)}</b><small>{site.id.toLocaleUpperCase()}</small></span>
-                  {index === 0 && <kbd>{t('forum.composer.pressEnter')}</kbd>}
-                </button>
-              )) : <p>{t('forum.composer.noMatchingGames')}</p>}
+          {gamePopupOpen && (
+            <div className="forum-autocomplete">
+              <strong id="forum-game-suggestions-label">{t('forum.composer.matchingGames')}</strong>
+              <div
+                id="forum-game-suggestions"
+                className="forum-autocomplete-options"
+                role="listbox"
+                aria-labelledby="forum-game-suggestions-label"
+              >
+                {gameSuggestions.map((site, index) => (
+                  <button
+                    id={`forum-game-option-${index}`}
+                    key={site.id}
+                    type="button"
+                    role="option"
+                    tabIndex={-1}
+                    aria-selected={index === gameActiveIndex}
+                    onMouseEnter={() => setGameActiveIndex(index)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => addGame(site.id)}
+                  >
+                    <img src={GAME_LOGOS[site.id]} alt="" />
+                    <span><b>{siteName(site)}</b><small>{site.id.toLocaleUpperCase()}</small></span>
+                    {index === gameActiveIndex && <kbd>{t('forum.composer.pressEnter')}</kbd>}
+                  </button>
+                ))}
+              </div>
+              {gameSuggestions.length === 0 && <p role="status">{t('forum.composer.noMatchingGames')}</p>}
             </div>
           )}
         </div>
@@ -1286,41 +1346,69 @@ function ForumComposerPage({
               id="forum-tag-query"
               value={tagQuery}
               disabled={selectedTagCount >= FORUM_TAG_MAX_COUNT}
-              onFocus={() => setTagInputActive(true)}
-              onChange={(event) => setTagQuery(event.target.value.slice(0, 24))}
+              onFocus={() => {
+                setTagInputActive(true)
+                setTagActiveIndex(0)
+              }}
+              onClick={() => setTagInputActive(true)}
+              onChange={(event) => {
+                setTagInputActive(true)
+                setTagQuery(event.target.value.slice(0, 24))
+                setTagActiveIndex(0)
+              }}
               onKeyDown={handleTagKeyDown}
               role="combobox"
-              aria-expanded={tagInputActive && Boolean(tagQuery.trim())}
+              aria-expanded={tagPopupOpen}
               aria-controls="forum-tag-suggestions"
+              aria-activedescendant={tagPopupOpen ? tagActiveOptionId : undefined}
               aria-autocomplete="list"
               placeholder={t('forum.composer.tagInputPlaceholder')}
             />
             <small>{selectedTagCount} / {FORUM_TAG_MAX_COUNT}</small>
           </div>
-          {tagInputActive && tagQuery.trim() && (
-            <div id="forum-tag-suggestions" className="forum-autocomplete" role="listbox">
-              <strong>{t('forum.composer.matchingTags')}</strong>
-              {tagSuggestions.map((topic, index) => (
-                <button
-                  key={topic}
-                  type="button"
-                  role="option"
-                  aria-selected={index === 0}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => addTopic(topic)}
-                >
-                  <IconHash className="size-4" stroke={1.8} aria-hidden="true" />
-                  <span><b>{t(`forum.composer.topics.${topic}`)}</b></span>
-                  {index === 0 && <kbd>{t('forum.composer.pressEnter')}</kbd>}
-                </button>
-              ))}
-              {canCreateCustomTag && (
-                <button type="button" role="option" aria-selected={tagSuggestions.length === 0} onMouseDown={(event) => event.preventDefault()} onClick={addCustomTag}>
-                  <IconHash className="size-4" stroke={1.8} aria-hidden="true" />
-                  <span><b>{t('forum.composer.createTag', { tag: tagQuery.trim() })}</b></span>
-                  {tagSuggestions.length === 0 && <kbd>{t('forum.composer.pressEnter')}</kbd>}
-                </button>
-              )}
+          {tagPopupOpen && (
+            <div className="forum-autocomplete">
+              <strong id="forum-tag-suggestions-label">{t('forum.composer.matchingTags')}</strong>
+              <div
+                id="forum-tag-suggestions"
+                className="forum-autocomplete-options"
+                role="listbox"
+                aria-labelledby="forum-tag-suggestions-label"
+              >
+                {tagSuggestions.map((topic, index) => (
+                  <button
+                    id={`forum-tag-option-${index}`}
+                    key={topic}
+                    type="button"
+                    role="option"
+                    tabIndex={-1}
+                    aria-selected={index === tagActiveIndex}
+                    onMouseEnter={() => setTagActiveIndex(index)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => addTopic(topic)}
+                  >
+                    <IconHash className="size-4" stroke={1.8} aria-hidden="true" />
+                    <span><b>{t(`forum.composer.topics.${topic}`)}</b></span>
+                    {index === tagActiveIndex && <kbd>{t('forum.composer.pressEnter')}</kbd>}
+                  </button>
+                ))}
+                {canCreateCustomTag && (
+                  <button
+                    id={`forum-tag-option-${tagSuggestions.length}`}
+                    type="button"
+                    role="option"
+                    tabIndex={-1}
+                    aria-selected={tagActiveIndex === tagSuggestions.length}
+                    onMouseEnter={() => setTagActiveIndex(tagSuggestions.length)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={addCustomTag}
+                  >
+                    <IconHash className="size-4" stroke={1.8} aria-hidden="true" />
+                    <span><b>{t('forum.composer.createTag', { tag: tagQuery.trim() })}</b></span>
+                    {tagActiveIndex === tagSuggestions.length && <kbd>{t('forum.composer.pressEnter')}</kbd>}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
