@@ -443,22 +443,40 @@ class Publisher:
         return None
 
     def verify_asset_reachability(self, paths: Iterable[str], token: str) -> None:
-        path_list = sorted(set(paths))
-        failures: list[str] = []
-        with ThreadPoolExecutor(max_workers=self.config.workers) as executor:
-            futures = {
-                executor.submit(self._asset_error, path, token, False): path for path in path_list
-            }
-            for future in as_completed(futures):
-                error = future.result()
-                if error:
-                    failures.append(error)
-        if failures:
-            details = "\n  ".join(sorted(failures)[:50])
-            suffix = f"\n  ... and {len(failures) - 50} more" if len(failures) > 50 else ""
-            raise PublishError(
-                f"{len(failures)} referenced resources are not reachable:\n  {details}{suffix}"
-            )
+        pending = set(paths)
+        deadline = time.monotonic() + min(self.config.deployment_timeout, 60.0)
+        last_errors: dict[str, str] = {}
+        attempt = 0
+        while pending:
+            attempt += 1
+            attempt_token = f"{token}-{attempt}-{uuid.uuid4().hex}"
+            failed: set[str] = set()
+            with ThreadPoolExecutor(max_workers=self.config.workers) as executor:
+                futures = {
+                    executor.submit(self._asset_error, path, attempt_token, False): path
+                    for path in sorted(pending)
+                }
+                for future in as_completed(futures):
+                    path = futures[future]
+                    error = future.result()
+                    if error:
+                        failed.add(path)
+                        last_errors[path] = error
+                    else:
+                        last_errors.pop(path, None)
+            if not failed:
+                return
+            pending = failed
+            if time.monotonic() >= deadline:
+                break
+            time.sleep(self.config.poll_interval)
+
+        failures = [last_errors[path] for path in sorted(pending)]
+        details = "\n  ".join(failures[:50])
+        suffix = f"\n  ... and {len(failures) - 50} more" if len(failures) > 50 else ""
+        raise PublishError(
+            f"{len(failures)} referenced resources are not reachable:\n  {details}{suffix}"
+        )
 
     def wait_for_resource_deploy(self) -> None:
         assert self.resource_state is not None

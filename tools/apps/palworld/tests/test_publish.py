@@ -184,3 +184,30 @@ def test_wait_for_resource_deploy_retries_until_content_matches(tmp_path):
     publisher.wait_for_resource_deploy()
     assert calls == 2
     client.close()
+
+
+def test_reachability_retries_only_failed_resources(tmp_path):
+    calls = {"stable.webp": 0, "flaky.webp": 0}
+
+    def handler(request):
+        name = request.url.path.rsplit("/", 1)[-1]
+        calls[name] += 1
+        status = 502 if name == "flaky.webp" and calls[name] == 1 else 200
+        return httpx.Response(status, request=request)
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    publisher = Publisher(
+        PublishConfig(
+            data_repo=tmp_path,
+            resource_repo=tmp_path,
+            deployment_timeout=1,
+            poll_interval=0,
+            workers=2,
+        ),
+        client=client,
+    )
+    publisher.verify_asset_reachability(
+        {"icons/stable.webp", "icons/flaky.webp"}, "test"
+    )
+    assert calls == {"stable.webp": 1, "flaky.webp": 2}
+    client.close()
