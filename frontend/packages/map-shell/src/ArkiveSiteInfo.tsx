@@ -1,15 +1,4 @@
 import type { AnchorHTMLAttributes, ReactNode } from "react"
-import { compareVersions, type ResolvedEntry } from "@gamemap/ui"
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@gamemap/ui"
 import { SiteInfoPanel, type SiteInfoFeedbackGroup, type SiteInfoSection } from "./SiteInfoPanel"
 
 export interface ArkiveSiteInfoStrings {
@@ -21,11 +10,8 @@ export interface ArkiveSiteInfoStrings {
   versionTitle: string
   /** Supports the token `{version}`. */
   viewVersionTemplate: string
-  recentUpdatesTitle: string
-  noRecentUpdates: string
   feedbackTitle: string
   feedbackHint?: string
-  close: string
 }
 
 export interface ArkiveSiteInfoProps {
@@ -36,13 +22,8 @@ export interface ArkiveSiteInfoProps {
   gameName: string
   developerName: string
   version: string
-  /** Locale-resolved newest-first entries. Every eligible entry is shown. */
-  recentEntries: ResolvedEntry[]
-  /**
-   * First release eligible for this About dialog. Older site history is
-   * intentionally omitted; later releases remain visible as they are added.
-   */
-  historyStartVersion?: string
+  /** In-app destination for this game's complete version history. */
+  gameUpdatesUrl: string
   feedbackGroup: SiteInfoFeedbackGroup
   /** Optional game-owned channels rendered before the shared feedback group. */
   gameContact?: ReactNode
@@ -95,72 +76,8 @@ function RichTemplate({
   })
 }
 
-function RecentUpdatesDialog({
-  strings,
-  version,
-  entries,
-}: Pick<ArkiveSiteInfoProps, "strings" | "version"> & { entries: ResolvedEntry[] }) {
-  const label = strings.viewVersionTemplate.replace("{version}", version)
-
-  return (
-    <Dialog>
-      <DialogTriggerButton label={label} />
-      <DialogContent
-        showCloseButton={false}
-        overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
-        className="z-[var(--arkive-layer-sheet)] max-h-[min(70dvh,40rem)] grid-rows-[auto_minmax(0,1fr)_auto]"
-        data-testid="site-info-version-dialog"
-      >
-        <DialogHeader>
-          <DialogTitle>{strings.recentUpdatesTitle}</DialogTitle>
-        </DialogHeader>
-        <div className="min-h-0 overflow-y-auto pr-1">
-          {entries.length > 0 ? (
-            <ol className="space-y-4">
-              {entries.map((entry) => (
-                <li key={entry.version}>
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="font-mono text-sm font-semibold text-foreground">
-                      {entry.version}
-                    </span>
-                    <time dateTime={entry.date} className="text-xs text-muted-foreground">
-                      {entry.date}
-                    </time>
-                  </div>
-                  <ul className="mt-1 list-disc space-y-1 pl-5 text-sm leading-relaxed text-muted-foreground">
-                    {entry.changes.map((change, index) => (
-                      <li key={index}>{change.text}</li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="text-sm text-muted-foreground">{strings.noRecentUpdates}</p>
-          )}
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="outline">{strings.close}</Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function DialogTriggerButton({ label }: { label: string }) {
-  return (
-    <DialogTrigger asChild>
-      <button
-        type="button"
-        data-testid="site-info-version-trigger"
-        className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
-      >
-        {label}
-      </button>
-    </DialogTrigger>
-  )
+export function platformUpdatesUrl(homeUrl: string): string {
+  return `${homeUrl.split("#", 1)[0]}#updates`
 }
 
 /**
@@ -175,18 +92,11 @@ export function ArkiveSiteInfo({
   gameName,
   developerName,
   version,
-  recentEntries,
-  historyStartVersion,
+  gameUpdatesUrl,
   feedbackGroup,
   gameContact,
   className,
 }: ArkiveSiteInfoProps) {
-  const entriesSinceStart = historyStartVersion
-    ? recentEntries.filter((entry) => compareVersions(entry.version, historyStartVersion) >= 0)
-    : recentEntries
-  const eligibleEntries = entriesSinceStart.length > 0
-    ? entriesSinceStart
-    : recentEntries.slice(0, 1)
   const templateProps = {
     arkiveName,
     arkiveHomeUrl,
@@ -210,7 +120,21 @@ export function ArkiveSiteInfo({
     },
     {
       title: strings.versionTitle,
-      body: <RecentUpdatesDialog strings={strings} version={version} entries={eligibleEntries} />,
+      body: (
+        <div className="flex flex-col items-start gap-1.5">
+          <a data-testid="site-info-game-updates-link" href={gameUpdatesUrl} className="font-medium">
+            {strings.viewVersionTemplate.replace("{version}", version)}
+          </a>
+          <a
+            data-testid="site-info-platform-updates-link"
+            href={platformUpdatesUrl(arkiveHomeUrl)}
+            {...arkiveHomeLinkProps}
+            className="font-medium"
+          >
+            {arkiveName} · {strings.versionTitle}
+          </a>
+        </div>
+      ),
     },
     {
       title: strings.feedbackTitle,

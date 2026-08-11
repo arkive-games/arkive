@@ -374,6 +374,10 @@ const resources = {
           accountId: '编号', followers: '粉丝数', authorBio: '长期整理 {{topic}} 相关攻略、路线与玩家经验。',
         },
       },
+      platformUpdates: {
+        title: '藏舟平台更新记录', back: '返回藏舟首页', affected: '受影响的游戏', viewCommit: '查看提交',
+        kinds: { feature: '新功能', improvement: '优化', fix: '修复', data: '数据' },
+      },
       action: {
         openGame: '进入 {{game}}',
         favorite: '收藏 {{game}}',
@@ -540,6 +544,10 @@ const resources = {
           accountId: '編號', followers: '粉絲數', authorBio: '長期整理 {{topic}} 相關攻略、路線與玩家經驗。',
         },
       },
+      platformUpdates: {
+        title: '藏舟平台更新記錄', back: '返回藏舟首頁', affected: '受影響的遊戲', viewCommit: '查看提交',
+        kinds: { feature: '新功能', improvement: '最佳化', fix: '修正', data: '資料' },
+      },
       action: {
         openGame: '進入 {{game}}',
         favorite: '收藏 {{game}}',
@@ -674,6 +682,10 @@ const resources = {
           accountId: 'Account ID', followers: 'Followers', authorBio: 'Long-time contributor of {{topic}} guides, routes, and player discoveries.',
         },
       },
+      platformUpdates: {
+        title: 'Arkive platform updates', back: 'Back to Arkive', affected: 'Affected games', viewCommit: 'View commit',
+        kinds: { feature: 'Feature', improvement: 'Improvement', fix: 'Fix', data: 'Data' },
+      },
       action: { openGame: 'Enter {{game}}', favorite: 'Save {{game}}', browseAll: 'Browse all games' },
       explore: {
         title: 'What everyone is exploring',
@@ -792,6 +804,10 @@ const resources = {
           accountId: '番号', followers: 'フォロワー', authorBio: '{{topic}}の攻略、ルート、プレイヤー情報を長期的に整理しています。',
         },
       },
+      platformUpdates: {
+        title: 'Arkiveプラットフォーム更新履歴', back: 'Arkiveに戻る', affected: '対象ゲーム', viewCommit: 'コミットを見る',
+        kinds: { feature: '新機能', improvement: '改善', fix: '修正', data: 'データ' },
+      },
       action: { openGame: '{{game}}へ', favorite: '{{game}}を保存', browseAll: 'すべてのゲームを見る' },
       explore: { title: 'みんなが探索している世界', description: 'インタラクティブマップから資料図鑑まで、ゲームごとの入口を用意しています。' },
       site: {
@@ -897,6 +913,10 @@ const resources = {
           commentLikeLabel: '이 댓글 좋아요', reply: '답글', authorBadge: '작성자', replyingTo: '{{name}}님에게 답글', sampleReplyTime: '1시간 전', sampleReply: '보충해 주셔서 고마워요. 추가 실험 결과도 본문에 계속 업데이트하겠습니다.',
           accountId: '번호', followers: '팔로워', authorBio: '{{topic}} 공략, 경로, 플레이어 경험을 꾸준히 정리합니다.',
         },
+      },
+      platformUpdates: {
+        title: 'Arkive 플랫폼 업데이트', back: 'Arkive로 돌아가기', affected: '적용 게임', viewCommit: '커밋 보기',
+        kinds: { feature: '새 기능', improvement: '개선', fix: '수정', data: '데이터' },
       },
       action: { openGame: '{{game}} 열기', favorite: '{{game}} 저장', browseAll: '전체 게임 보기' },
       explore: { title: '모두가 탐험 중인 세계', description: '인터랙티브 지도부터 게임 데이터베이스까지, 게임마다 전용 입구가 있습니다.' },

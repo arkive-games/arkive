@@ -1,15 +1,12 @@
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from "@gamemap/map-shell";
-import { resolveChangelog } from "@gamemap/ui";
 import { FEEDBACK_QQ_GROUP } from "@/lib/constants";
-import { ARKIVE_HOME_URL } from "@/lib/brand";
-import { changelog, SITE_VERSION } from "@/lib/siteVersion";
+import { ARKIVE_HOME_URL, IS_TOY } from "@/lib/brand";
+import { SITE_VERSION } from "@/lib/siteVersion";
 
 const LOCALE_ONLY = { defaultValue: "", fallbackLng: false } as const;
-const ABOUT_HISTORY_START_VERSION = "1.13.1";
 
 /** Renders game-owned community links as GitHub-flavoured markdown. */
 function ContactBody({ children }: { children: string }) {
@@ -30,9 +27,7 @@ function ContactBody({ children }: { children: string }) {
 }
 
 export default function SiteInfo({ className }: { className?: string }) {
-  const { t, i18n } = useTranslation(["common"]);
-  const lng = i18n.resolvedLanguage ?? i18n.language ?? "en-US";
-  const recentEntries = useMemo(() => resolveChangelog(changelog, lng), [lng]);
+  const { t } = useTranslation(["common"]);
   const contactContent = t("common:siteInfo.contact.content", LOCALE_ONLY);
   const strings: ArkiveSiteInfoStrings = {
     aboutTitle: t("common:siteInfo.aboutTitle"),
@@ -40,11 +35,8 @@ export default function SiteInfo({ className }: { className?: string }) {
     disclaimerTemplate: t("common:siteInfo.disclaimerTemplate"),
     versionTitle: t("common:siteInfo.versionTitle"),
     viewVersionTemplate: t("common:siteInfo.viewVersionTemplate"),
-    recentUpdatesTitle: t("common:siteInfo.recentUpdatesTitle"),
-    noRecentUpdates: t("common:siteInfo.noRecentUpdates"),
     feedbackTitle: t("common:siteInfo.feedback.title"),
     feedbackHint: t("common:siteInfo.feedback.hint"),
-    close: t("common:ui.close", "Close"),
   };
 
   return (
@@ -57,8 +49,7 @@ export default function SiteInfo({ className }: { className?: string }) {
       gameName={t("common:siteInfo.gameName")}
       developerName="NCSOFT"
       version={SITE_VERSION}
-      recentEntries={recentEntries}
-      historyStartVersion={ABOUT_HISTORY_START_VERSION}
+      gameUpdatesUrl={IS_TOY ? "#/changelog" : "/changelog"}
       gameContact={contactContent ? <ContactBody>{contactContent}</ContactBody> : undefined}
       feedbackGroup={{
         label: t("common:siteInfo.feedback.label"),

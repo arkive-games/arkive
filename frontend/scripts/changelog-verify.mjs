@@ -20,28 +20,37 @@ import process from 'node:process'
 
 const APPS = ['palworld', 'aion2', 'lostark', 'sts2', 'vrising']
 const root = path.resolve(import.meta.dirname, '..')
+const histories = [
+  ...APPS.map((app) => ({
+    name: app,
+    file: path.join(root, 'apps', app, 'src', 'changelog.json'),
+  })),
+  {
+    name: 'platform',
+    file: path.join(root, 'apps', 'meta', 'src', 'platform-changelog.json'),
+  },
+]
 
 let failed = 0
-for (const app of APPS) {
-  const file = path.join(root, 'apps', app, 'src', 'changelog.json')
+for (const { name, file } of histories) {
   const { entries } = JSON.parse(readFileSync(file, 'utf8'))
   const bad = []
-  for (const { version, commit } of entries) {
+  for (const { version, date, commit } of entries) {
     try {
       execFileSync('git', ['merge-base', '--is-ancestor', commit, 'HEAD'], {
         cwd: root,
         stdio: 'ignore',
       })
     } catch {
-      bad.push(`${version} -> ${commit.slice(0, 12)}`)
+      bad.push(`${version ?? date} -> ${commit.slice(0, 12)}`)
     }
   }
   if (bad.length > 0) {
     failed += bad.length
-    console.error(`changelog-verify: ${app} has ${bad.length} unreachable commit(s):`)
+    console.error(`changelog-verify: ${name} has ${bad.length} unreachable commit(s):`)
     for (const b of bad) console.error(`  ${b}`)
   } else {
-    console.log(`changelog-verify: ${app} ok (${entries.length} versions)`)
+    console.log(`changelog-verify: ${name} ok (${entries.length} entries)`)
   }
 }
 

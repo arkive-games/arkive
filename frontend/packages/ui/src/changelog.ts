@@ -45,6 +45,31 @@ export interface ResolvedEntry {
   changes: ResolvedChange[]
 }
 
+export const PLATFORM_TARGETS = ["aion2", "palworld", "sts2", "vrising"] as const
+export type PlatformTarget = (typeof PLATFORM_TARGETS)[number]
+
+export interface PlatformChangelogEntry {
+  /** YYYY-MM-DD */
+  date: string
+  /** Full 40-character SHA of the shared change. */
+  commit: string
+  /** Game products whose visitors receive this platform change. */
+  targets: PlatformTarget[]
+  changes: Change[]
+}
+
+export interface PlatformChangelogFile {
+  /** Newest entry first. Platform history has no game-style version number. */
+  entries: PlatformChangelogEntry[]
+}
+
+export interface ResolvedPlatformEntry {
+  date: string
+  commit: string
+  targets: PlatformTarget[]
+  changes: ResolvedChange[]
+}
+
 /** Locales written by hand for every entry; the validator enforces all three. */
 export const REQUIRED_LOCALES = ["en-US", "zh-CN", "zh-TW"] as const
 
@@ -109,6 +134,79 @@ export function resolveChangelog(file: ChangelogFile, locale: string): ResolvedE
       text: resolveText(change.text, locale),
     })),
   }))
+}
+
+export function resolvePlatformChangelog(
+  file: PlatformChangelogFile,
+  locale: string,
+): ResolvedPlatformEntry[] {
+  return file.entries.map((entry) => ({
+    date: entry.date,
+    commit: entry.commit,
+    targets: entry.targets,
+    changes: entry.changes.map((change) => ({
+      kind: change.kind,
+      text: resolveText(change.text, locale),
+    })),
+  }))
+}
+
+export function validatePlatformChangelog(raw: unknown): string[] {
+  const problems: string[] = []
+  if (
+    typeof raw !== "object"
+    || raw === null
+    || !Array.isArray((raw as PlatformChangelogFile).entries)
+  ) {
+    return ["file: expected an object with an `entries` array"]
+  }
+  const entries = (raw as PlatformChangelogFile).entries
+  if (entries.length === 0) return ["entries: must not be empty"]
+
+  entries.forEach((entry, i) => {
+    const at = `entries[${i}]`
+    if (typeof entry?.date !== "string" || !ISO_DATE.test(entry.date)) {
+      problems.push(`${at}: date ${JSON.stringify(entry?.date)} is not YYYY-MM-DD`)
+    }
+    if (typeof entry?.commit !== "string" || !FULL_SHA.test(entry.commit)) {
+      problems.push(`${at}: commit ${JSON.stringify(entry?.commit)} is not a 40-character SHA`)
+    }
+    if (i > 0 && ISO_DATE.test(entries[i - 1]?.date ?? "") && ISO_DATE.test(entry?.date ?? "")) {
+      if (entry.date > entries[i - 1].date) {
+        problems.push(`${at}: date ${entry.date} is newer than entries[${i - 1}] (${entries[i - 1].date})`)
+      }
+    }
+    if (!Array.isArray(entry?.targets) || entry.targets.length === 0) {
+      problems.push(`${at}: targets must not be empty`)
+    } else {
+      const unknown = entry.targets.filter((target) => !PLATFORM_TARGETS.includes(target))
+      if (unknown.length > 0) problems.push(`${at}: unknown targets ${unknown.join(", ")}`)
+      if (new Set(entry.targets).size !== entry.targets.length) {
+        problems.push(`${at}: targets must not contain duplicates`)
+      }
+    }
+    if (!Array.isArray(entry?.changes) || entry.changes.length === 0) {
+      problems.push(`${at}: changes must not be empty`)
+      return
+    }
+    entry.changes.forEach((change, j) => {
+      const cat = `${at}.changes[${j}]`
+      if (!CHANGE_KINDS.includes(change?.kind)) {
+        problems.push(
+          `${cat}: kind ${JSON.stringify(change?.kind)} is not one of ${CHANGE_KINDS.join(", ")}`,
+        )
+      }
+      const text = change?.text
+      if (typeof text !== "object" || text === null) {
+        problems.push(`${cat}: text must be an object of locale -> string`)
+        return
+      }
+      const missing = REQUIRED_LOCALES.filter((locale) => !text[locale])
+      if (missing.length > 0) problems.push(`${cat}: text is missing ${missing.join(", ")}`)
+    })
+  })
+
+  return problems
 }
 
 /**

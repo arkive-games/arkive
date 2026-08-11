@@ -45,6 +45,7 @@ import {
   type PublicProfileSection,
 } from './UserSystemPages'
 import { MetaMobileNav } from './MetaMobileNav'
+import { PlatformUpdatesPage } from './PlatformUpdatesPage'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl } from './userSystemData'
 import { useUserSystem } from './UserSystemState'
@@ -59,6 +60,7 @@ const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum'] as const
 type HomeRoute =
   | { view: 'discoverGames' }
   | { view: 'allGames' }
+  | { view: 'platformUpdates' }
   | { view: 'forum'; composer: boolean }
   | { view: 'notifications'; section: NotificationSection }
   | { view: 'account'; section: AccountSection }
@@ -98,6 +100,7 @@ function recentDestination(site: SiteCard, route: string): RecentDestination {
 function routeFromHash(): HomeRoute {
   const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
   if (root === 'games') return { view: 'allGames' }
+  if (root === 'updates') return { view: 'platformUpdates' }
   if (root === 'forum') return { view: 'forum', composer: value === 'new' }
   if (root === 'notifications') {
     const section = NOTIFICATION_SECTIONS.has(value as NotificationSection)
@@ -299,7 +302,9 @@ export default function App() {
 
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} strings={authStrings} />
 
-      {activeRoute.view === 'allGames' ? (
+      {activeRoute.view === 'platformUpdates' ? (
+        <PlatformUpdatesPage />
+      ) : activeRoute.view === 'allGames' ? (
         <AllGamesPage
           sites={VISIBLE_SITES}
           onAuthRequired={() => setAccountOpen(true)}

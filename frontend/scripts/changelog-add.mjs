@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Append a change to an app's version history.
+ * Append a change to a game or platform version history.
  *
  *   node scripts/changelog-add.mjs --app palworld --bump minor \
  *     --kind feature \
@@ -11,7 +11,10 @@
  * which is the feature commit you just made.
  *
  * Flags:
- *   --app     palworld | aion2                       (required)
+ *   --app     palworld | aion2 | lostark | sts2 | vrising
+ *                                                    (required without --platform)
+ *   --platform write the shared platform history instead of a game history
+ *   --targets comma-separated affected games         (required with --platform)
  *   --bump    major | minor | patch                  (required unless --append)
  *   --append  add this change to the newest existing entry instead of creating
  *             a new version — use for the second and later bullets of one release
@@ -29,6 +32,7 @@ import path from 'node:path'
 import process from 'node:process'
 
 const APPS = ['palworld', 'aion2', 'lostark', 'sts2', 'vrising']
+const PLATFORM_TARGETS = ['aion2', 'palworld', 'sts2', 'vrising']
 const KINDS = ['feature', 'improvement', 'fix', 'data']
 const BUMPS = ['major', 'minor', 'patch']
 
@@ -38,8 +42,8 @@ function parseArgs(argv) {
     const arg = argv[i]
     if (!arg.startsWith('--')) continue
     const key = arg.slice(2)
-    if (key === 'append') {
-      out.append = true
+    if (key === 'append' || key === 'platform') {
+      out[key] = true
       continue
     }
     const value = argv[i + 1]
@@ -72,11 +76,13 @@ function bumpVersion(current, bump) {
 
 const args = parseArgs(process.argv.slice(2))
 
-if (!APPS.includes(args.app)) fail(`--app must be one of ${APPS.join(', ')}`)
+if (args.platform && args.app) fail('pass either --platform or --app, not both')
+if (!args.platform && !APPS.includes(args.app)) fail(`--app must be one of ${APPS.join(', ')}`)
 if (!KINDS.includes(args.kind)) fail(`--kind must be one of ${KINDS.join(', ')}`)
-if (!args.append && !BUMPS.includes(args.bump)) {
+if (!args.platform && !args.append && !BUMPS.includes(args.bump)) {
   fail(`--bump must be one of ${BUMPS.join(', ')} (or pass --append)`)
 }
+if (args.platform && args.bump) fail('--bump is not used by the date-based platform history')
 for (const flag of ['en', 'zh-cn', 'zh-tw']) {
   if (!args[flag]?.trim()) fail(`--${flag} is required and must not be empty`)
 }
@@ -98,15 +104,19 @@ try {
 }
 if (!/^[0-9a-f]{40}$/.test(commit)) fail(`resolved commit "${commit}" is not a 40-character SHA`)
 
-// scripts/ sits directly under frontend/, so the app root is one level up.
-const file = path.resolve(
-  import.meta.dirname,
-  '..',
-  'apps',
-  args.app,
-  'src',
-  'changelog.json',
-)
+const platformTargets = args.platform && !args.append
+  ? [...new Set((args.targets ?? '').split(',').map((target) => target.trim()).filter(Boolean))]
+  : []
+if (args.platform && !args.append) {
+  if (platformTargets.length === 0) fail('--targets is required with --platform')
+  const unknown = platformTargets.filter((target) => !PLATFORM_TARGETS.includes(target))
+  if (unknown.length > 0) fail(`--targets contains unknown games: ${unknown.join(', ')}`)
+}
+
+// scripts/ sits directly under frontend/, so every history is one level up.
+const file = args.platform
+  ? path.resolve(import.meta.dirname, '..', 'apps', 'meta', 'src', 'platform-changelog.json')
+  : path.resolve(import.meta.dirname, '..', 'apps', args.app, 'src', 'changelog.json')
 
 const data = JSON.parse(readFileSync(file, 'utf8'))
 if (!Array.isArray(data.entries) || data.entries.length === 0) {
@@ -118,16 +128,25 @@ const change = {
   text: { 'en-US': args.en, 'zh-CN': args['zh-cn'], 'zh-TW': args['zh-tw'] },
 }
 
-let version
-if (args.append) {
+let label
+if (args.platform && args.append) {
+  if (data.entries[0].commit !== commit) {
+    fail(`--append commit ${commit.slice(0, 7)} does not match the newest platform entry`)
+  }
   data.entries[0].changes.push(change)
-  version = data.entries[0].version
+  label = data.entries[0].date
+} else if (args.platform) {
+  data.entries.unshift({ date, commit, targets: platformTargets, changes: [change] })
+  label = date
+} else if (args.append) {
+  data.entries[0].changes.push(change)
+  label = data.entries[0].version
 } else {
-  version = bumpVersion(data.entries[0].version, args.bump)
-  data.entries.unshift({ version, date, commit, changes: [change] })
+  label = bumpVersion(data.entries[0].version, args.bump)
+  data.entries.unshift({ version: label, date, commit, changes: [change] })
 }
 
 writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`, 'utf8')
 console.log(
-  `changelog-add: ${args.app} ${version} (${args.kind}) @ ${commit.slice(0, 7)} -> ${file}`,
+  `changelog-add: ${args.platform ? 'platform' : args.app} ${label} (${args.kind}) @ ${commit.slice(0, 7)} -> ${file}`,
 )

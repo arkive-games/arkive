@@ -1,0 +1,50 @@
+{
+  "entries": [
+    {
+      "date": "2026-08-10",
+      "commit": "35a881167bd0fe47f1dc0c9ef040eb8c33cbea40",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Map search results now close when you click outside the search panel.",
+            "zh-CN": "点击地图搜索区域外部时，搜索结果现在会自动关闭。",
+            "zh-TW": "點擊地圖搜尋區域外部時，搜尋結果現在會自動關閉。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Marker details now stay clear of the floating search after selecting a result.",
+            "zh-CN": "选择搜索结果后，点位详情现在会避开悬浮搜索栏。",
+            "zh-TW": "選擇搜尋結果後，標記詳情現在會避開浮動搜尋列。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-10",
+      "commit": "0546953c6bb1b42b99767720550ac189844ab1bb",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Interactive-map search results now use compact rows and a two-column desktop layout.",
+            "zh-CN": "互动地图搜索结果现已采用紧凑行距和桌面双列排版。",
+            "zh-TW": "互動地圖搜尋結果現已採用緊湊行距和桌面雙欄排版。"
+          }
+        }
+      ]
+    }
+  ]
+}

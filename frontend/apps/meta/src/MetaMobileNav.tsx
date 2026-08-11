@@ -13,7 +13,7 @@ import { ShellBottomNav, type ArkiveMapTheme } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 
 interface MetaMobileNavProps {
-  activeView: 'discoverGames' | 'allGames' | 'forum' | 'notifications' | 'account' | 'publicProfile'
+  activeView: 'discoverGames' | 'allGames' | 'platformUpdates' | 'forum' | 'notifications' | 'account' | 'publicProfile'
   noticeId: number
   isSignedIn: boolean
   language: string

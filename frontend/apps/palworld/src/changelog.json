@@ -61,9 +61,9 @@
         {
           "kind": "improvement",
           "text": {
-            "en-US": "Search results now use a compact two-column desktop layout so more matches remain visible at once.",
-            "zh-CN": "搜索结果现已采用紧凑的桌面双列排版，同屏可查看更多匹配项。",
-            "zh-TW": "搜尋結果現已採用緊湊的桌面雙欄排版，同屏可查看更多符合項目。"
+            "en-US": "Pal selectors in the breeding tools and stat simulator now use a compact two-column desktop layout.",
+            "zh-CN": "配种工具和属性模拟器中的帕鲁选择器现已采用紧凑的桌面双列排版。",
+            "zh-TW": "配種工具和屬性模擬器中的帕魯選擇器現已採用緊湊的桌面雙欄排版。"
           }
         },
         {

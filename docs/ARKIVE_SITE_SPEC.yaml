@@ -113,12 +113,23 @@ product_model:
   game_about:
     scope: "Every current and future game has an About panel with its own version history."
     shared_surface: "Use the shared Arkive About structure and presentation across games."
+    history_links:
+      - "Link to the open game's complete game-owned version history."
+      - "Link to the one platform history owned by the Arkive home application."
     version_history:
       isolation: "Display only updates owned by the game whose About panel is open."
       exclusions:
         - "Updates owned by another game"
         - "Site-wide shared UI changes"
         - "Home page, account, forum, or platform-infrastructure changes"
+  platform_history:
+    owner: "frontend/apps/meta/src/platform-changelog.json"
+    route: "#updates"
+    scope: >-
+      Record a shared change once when it is owned by the Arkive platform and
+      automatically affects multiple game products. List the affected games;
+      do not copy the entry into their game histories.
+    versioning: "Use release dates and commit SHAs; platform entries never change a game's version number."
 
 global_shell:
   desktop_shared_owner: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
