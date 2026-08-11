@@ -1,0 +1,165 @@
+# Builds and checks every commit that lands on master and every pull request.
+#
+# Until now this repo had NO pull-request CI at all: the two other workflows are a
+# post-merge deploy and a manual toy publish, so `pnpm test`, `eslint` and
+# `tsc -b` only ever ran on someone's machine. A pull request could be landed
+# green-looking without any of them having been run.
+#
+# Deploying stays separate and stays narrow. This workflow runs for every commit;
+# deploy.yml keeps its `paths: [frontend/**]` filter, so a tools/, docs/ or
+# backend commit is built and checked here without redeploying four production
+# sites. Building is cheap and public-repo runner minutes are unmetered; a deploy
+# is neither.
+#
+# What is deliberately NOT here:
+#
+#   e2e (`pnpm e2e:<app>`) -- the Playwright suites fetch the derived `data/` and
+#   `resource/` artifacts over HTTP and drive a dev server against them. Those two
+#   repos are private and are not checked out here (only toy-publish.yml pulls
+#   them), so the suites would fail on missing fixtures rather than on real
+#   regressions. Several also have known failures unrelated to CI.
+#
+#   `pnpm validate-data` -- same reason: it validates the artifact repos, which
+#   are not present.
+#
+#   the tools/ pytest suite -- it aborts during collection today
+#   (apps/palworld/tests/test_encyclopedia.py and apps/sts2/tests/... share a
+#   basename, so pytest refuses to import the second and stops), which means zero
+#   tools tests run. Fixing that changes test-collection semantics for the whole
+#   package and belongs in its own change, not in the commit that adds CI.
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  # No branch filter: a branch push with an open PR arrives here as
+  # `synchronize`, so this covers feature branches without double-running them.
+  pull_request:
+
+# Nothing here needs a token beyond reading the repository.
+permissions:
+  contents: read
+
+# Opposite choice to deploy.yml and toy-publish.yml, on purpose: those queue
+# because a half-finished upload is worse than a late one. A build of a commit
+# that has already been superseded tells nobody anything, so cancel it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    name: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # changelog:verify walks history to prove every pinned release SHA is
+          # still reachable; a shallow clone fails it for the wrong reason.
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # Read the version from "packageManager" rather than pinning it here, so
+          # CI cannot drift from local installs.
+          package_json_file: frontend/package.json
+
+      - name: Setup Node
+        # Must follow the pnpm setup: `cache: pnpm` shells out to pnpm for the store.
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Run the unit suite
+        working-directory: frontend
+        run: pnpm test
+
+      # The repo's own invariants, each a one-line script in package.json. They
+      # are greps and a history walk, so they cost seconds and catch the classes
+      # of mistake review keeps missing: an app-only import creeping into a shared
+      # package, an unregistered persistence key, a release entry whose commit a
+      # rebase rewrote.
+      - name: Check the repo invariants
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          failed=""
+          for s in check:engine check:engine-gl check:shell memory:keys:check changelog:verify; do
+            echo "--- $s"
+            pnpm --silent "$s" || failed="$failed $s"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::Failed invariant check(s):$failed"
+            exit 1
+          fi
+
+      # Every app, not only the four that deploy: sts2 and lostark are built and
+      # linted here because they exist in the workspace, and a break in a shared
+      # package shows up in whichever app imports it first.
+      - name: Lint every app
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          failed=""
+          for app in meta aion2 palworld sts2 vrising lostark; do
+            echo "--- lint $app"
+            pnpm "lint:$app" || failed="$failed $app"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::eslint failed for:$failed"
+            exit 1
+          fi
+
+      # `build` is `tsc -b && vite build`, so this is the typecheck as well. It is
+      # also what catches a stale apps/aion2/src/routeTree.gen.ts: the generated
+      # route tree is committed, and adding a route without re-running
+      # `pnpm --filter aion2 exec tsr generate` fails the build here.
+      - name: Build every app
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          for app in meta aion2 palworld sts2 vrising lostark; do
+            echo "--- build $app"
+            pnpm "build:$app"
+          done
+
+  go:
+    runs-on: ubuntu-latest
+    name: backend-go
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          # From go.mod, so the toolchain cannot drift from the module.
+          go-version-file: backend-go/go.mod
+          cache-dependency-path: backend-go/go.sum
+
+      - name: Build
+        working-directory: backend-go
+        run: go build ./...
+
+      - name: Vet
+        working-directory: backend-go
+        run: go vet ./...
+
+      # No Postgres or MinIO service is started: the database-backed and
+      # object-storage tests read their DSN/endpoint from the environment and
+      # t.Skipf when it is absent, so this run covers the pure-Go tests and
+      # reports the rest as skipped rather than failing.
+      - name: Test
+        working-directory: backend-go
+        run: go test ./...
