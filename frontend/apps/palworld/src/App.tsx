@@ -53,7 +53,6 @@ import { Check, Eraser, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
 import { resolveMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
 import { mapMarkerLodTier } from './lib/mapMarkerLod'
-import { ICP_BEIAN } from './lib/brand'
 
 // Ray-casting point-in-polygon (point + ring both in map-pixel space).
 function pointInPolygon(x: number, y: number, poly: number[][]): boolean {
@@ -614,7 +613,6 @@ export default function App() {
     noMapSelected: t('noMapSelected'),
     zoomIn: t('zoomIn'),
     zoomOut: t('zoomOut'),
-    footerText: ICP_BEIAN ?? undefined,
   }), [t])
 
   const renderPopupContent = useCallback((marker: EngineMarker) => {

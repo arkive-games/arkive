@@ -163,7 +163,7 @@ export function ShellTopBar({
       >
         {search}
         {languageSwitcher && (
-          <UtilityDropdown
+          <ShellUtilityDropdown
             id="language"
             open={openUtilityMenu === "language"}
             onOpenChange={(open) => setOpenUtilityMenu((current) =>
@@ -180,7 +180,7 @@ export function ShellTopBar({
           />
         )}
         {themeSwitcher && (
-          <UtilityDropdown
+          <ShellUtilityDropdown
             id="theme"
             open={openUtilityMenu === "theme"}
             onOpenChange={(open) => setOpenUtilityMenu((current) =>
@@ -202,7 +202,23 @@ export function ShellTopBar({
   )
 }
 
-function UtilityDropdown({
+export interface ShellUtilityDropdownProps {
+  id: "language" | "theme"
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  options: { value: string; label: string }[]
+  current: string
+  onChange: (value: string) => void
+  menuLabel: string
+  shortLabel?: string
+  icon?: ReactNode
+  menuAlign?: "start" | "end"
+  menuSide?: "top" | "bottom"
+  triggerClassName?: string
+  menuClassName?: string
+}
+
+export function ShellUtilityDropdown({
   id,
   open,
   onOpenChange,
@@ -212,21 +228,11 @@ function UtilityDropdown({
   menuLabel,
   shortLabel,
   icon,
+  menuAlign = "end",
+  menuSide = "bottom",
   triggerClassName,
   menuClassName,
-}: {
-  id: "language" | "theme"
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  options: { value: string; label: string }[]
-  current: string
-  onChange: (value: string) => void
-  menuLabel: string
-  shortLabel?: string
-  icon: ReactNode
-  triggerClassName?: string
-  menuClassName?: string
-}) {
+}: ShellUtilityDropdownProps) {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
@@ -276,8 +282,10 @@ function UtilityDropdown({
           role="menu"
           aria-label={menuLabel}
           className={cn(
-            "absolute right-0 min-w-32",
+            "absolute min-w-32",
+            menuAlign === "start" ? "left-0" : "right-0",
             TOP_BAR_MENU_CLASS,
+            menuSide === "top" && "top-auto bottom-full mb-2",
             menuClassName,
           )}
         >

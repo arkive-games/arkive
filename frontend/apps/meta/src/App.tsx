@@ -3,15 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { AccountDialog, ArkiveAccountControl, authStringsFor, useAuth } from '@gamemap/auth'
 import {
   ArkiveMapTopBar,
-  ArkiveMark,
   ArkiveMobileHeader,
   getArkiveBrandName,
   ArkiveSettingsDialog,
-  settingsStringsFor,
   useArkiveSettingsProps,
   useTheme,
   type ShellNavItem,
 } from '@gamemap/map-shell'
+import { SiteFooter } from '@gamemap/ui'
 import {
   IconArrowRight,
   IconArrowUpRight,
@@ -48,6 +47,8 @@ import {
 import { MetaMobileNav } from './MetaMobileNav'
 import { PlatformUpdatesPage } from './PlatformUpdatesPage'
 import { useSettingsConfig } from './lib/settings'
+import { HomeFooter } from './HomeFooter'
+import { resolveMetaFooterKind } from './footerPolicy'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl } from './userSystemData'
 import { useUserSystem } from './UserSystemState'
@@ -166,6 +167,7 @@ export default function App() {
   const [accountOpen, setAccountOpen] = useState(false)
   const authStrings = authStringsFor(i18n.language)
   const isSignedIn = auth.status === 'authenticated'
+  const footerKind = resolveMetaFooterKind(activeRoute.view, isSignedIn)
   const { state: userSystemState, toggleFavoriteGame } = useUserSystem()
   const [recentDestinations, setRecentDestinations] = useMemoryState(recentDestinationsRecord)
   const [memoryNow] = useState(Date.now)
@@ -413,17 +415,32 @@ export default function App() {
           </div>
           </section>
 
-          <section className="home-shell join-section" aria-labelledby="join-heading">
-          <div>
-            <h2 id="join-heading">{t('cta.title')}</h2>
-            <p>{t('cta.description')}</p>
+          <section className="join-section" aria-labelledby="join-heading">
+          <div className="home-shell join-inner">
+            <div>
+              <h2 id="join-heading">{t('cta.title')}</h2>
+              <p>{t('cta.description')}</p>
+            </div>
+            <button type="button" onClick={() => setAccountOpen(true)}>{t('cta.action')}</button>
           </div>
-          <button type="button" onClick={showComingSoon}>{t('cta.action')}</button>
           </section>
         </main>
       )}
 
-      <HomeFooter onComingSoon={showComingSoon} onOpenSettings={() => setSettingsOpen(true)} />
+      {footerKind === 'home' ? (
+        <HomeFooter
+          brandName={brandName}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
+      ) : (
+        <SiteFooter
+          homeUrl="#top"
+          homeLinkProps={{ target: undefined, rel: undefined }}
+          githubUrl={IS_TOY ? null : (import.meta.env.VITE_GITHUB_URL ?? 'https://github.com/arkive-games')}
+          icpBeian={IS_TOY ? null : (import.meta.env.VITE_ICP_BEIAN ?? t('footer.icp'))}
+          data-testid="compact-site-footer"
+        />
+      )}
 
       {noticeId > 0 && (
         <div key={noticeId} className="coming-soon-toast" role="status" aria-live="polite">
@@ -542,47 +559,5 @@ function ComingSoonCard({ onClick }: { onClick: () => void }) {
         <i><IconArrowRight className="size-5" stroke={1.8} /></i>
       </span>
     </button>
-  )
-}
-
-function HomeFooter({ onComingSoon, onOpenSettings }: { onComingSoon: () => void; onOpenSettings: () => void }) {
-  const { t, i18n } = useTranslation()
-  const columns = [
-    { title: 'footer.browse', links: ['footer.discoverGames', 'footer.guides', 'footer.maps', 'footer.database'] },
-    { title: 'footer.about', links: ['footer.aboutArkive', 'footer.standards', 'footer.joinUs', 'footer.contact'] },
-    { title: 'footer.service', links: ['footer.terms', 'footer.privacy', 'footer.appeal', 'footer.help'] },
-  ]
-  const icp = import.meta.env.VITE_ICP_BEIAN ?? t('footer.icp')
-
-  return (
-    <footer className="home-footer">
-      <div className="home-shell footer-grid">
-        <div className="footer-brand">
-          <div className="footer-mark"><ArkiveMark /></div>
-          <div>
-            <strong>{t('brand.name')}</strong>
-            <small>ARKIVE.GAMES</small>
-          </div>
-          <p><span>{t('brand.slogan')}</span><span>{t('brand.blurb')}</span></p>
-        </div>
-        {columns.map((column) => (
-          <div key={column.title} className="footer-column">
-            <h3>{t(column.title)}</h3>
-            {column.links.map((link) => (
-              <button type="button" key={link} onClick={onComingSoon}>{t(link)}</button>
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="home-shell footer-bottom">
-        <span>{t('footer.copyright')}</span>
-        <button type="button" className="footer-settings" onClick={onOpenSettings}>
-          {settingsStringsFor(i18n.resolvedLanguage ?? i18n.language).title}
-        </button>
-        {!IS_TOY && (
-          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">{icp}</a>
-        )}
-      </div>
-    </footer>
   )
 }

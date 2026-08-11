@@ -155,8 +155,8 @@ footer a:focus-visible {
   padding-inline: 1.35rem;
   border: 0;
   border-radius: var(--arkive-radius-standard);
-  color: var(--primary-foreground);
-  background: var(--primary);
+  color: var(--arkive-nav-on-active);
+  background: var(--arkive-nav-active);
   font-size: 0.875rem;
   font-weight: 750;
   cursor: pointer;
@@ -593,36 +593,37 @@ footer a:focus-visible {
 }
 
 .join-section {
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+
+.join-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 3rem;
-  margin-bottom: clamp(5rem, 9vw, 8rem);
-  padding: clamp(2rem, 4vw, 3rem);
-  border: 1px solid color-mix(in srgb, var(--home-mist) 45%, var(--border));
-  border-radius: var(--arkive-radius-standard);
-  background: color-mix(in srgb, var(--home-mist) 18%, var(--card));
+  padding-block: 2rem;
 }
 
-.join-section h2 {
+.join-inner h2 {
   font-size: 1.5rem;
 }
 
-.join-section button {
+.join-inner button {
   min-height: 3rem;
   flex: none;
   padding-inline: 1.45rem;
   border: 0;
   border-radius: var(--arkive-radius-standard);
-  color: var(--arkive-action-on);
-  background: var(--home-orange);
+  color: var(--primary-foreground);
+  background: var(--primary);
   font-size: 0.875rem;
   font-weight: 780;
   cursor: pointer;
   transition: filter var(--arkive-motion-standard) var(--arkive-motion-easing), transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
-.join-section button:hover {
+.join-inner button:hover {
   filter: brightness(1.04);
   transform: translateY(-0.1rem);
 }
@@ -635,14 +636,17 @@ footer a:focus-visible {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: minmax(20rem, 1.5fr) repeat(3, minmax(7rem, 0.55fr));
-  gap: clamp(2.5rem, 6vw, 5rem);
-  padding-block: 4.5rem 3.5rem;
+  grid-template-columns: minmax(20rem, 1.7fr) repeat(3, minmax(8rem, 0.7fr));
+  gap: clamp(2rem, 5vw, 4rem);
+  padding-block: 3rem 2rem;
 }
 
 .footer-brand {
-  display: grid;
-  grid-template-columns: auto 1fr;
+  min-width: 0;
+}
+
+.footer-brand-heading {
+  display: flex;
   align-items: center;
   gap: 0.8rem;
 }
@@ -662,35 +666,46 @@ footer a:focus-visible {
   height: 2rem;
 }
 
-.footer-brand > div:nth-child(2) {
+.footer-brand-copy {
   display: flex;
+  min-width: 0;
   flex-direction: column;
 }
 
-.footer-brand strong {
+.footer-brand-copy strong {
   font-size: 1rem;
   font-weight: 700;
+  line-height: var(--arkive-leading-title);
 }
 
-.footer-brand small {
+.footer-brand-copy small {
   margin-top: 0.25rem;
-  color: var(--muted-foreground);
+  color: var(--arkive-brand-slogan);
   font-size: 0.75rem;
   font-weight: 750;
+  line-height: var(--arkive-leading-caption);
   letter-spacing: 0;
 }
 
-.footer-brand p {
-  grid-column: 1 / -1;
-  max-width: 31rem;
-  margin: 0.8rem 0 0;
+.footer-metadata {
+  display: grid;
+  gap: 0.25rem;
+  margin: 1.25rem 0 0;
   color: var(--muted-foreground);
-  font-size: 0.875rem;
-  line-height: 1.8;
+  font-size: 0.75rem;
+  line-height: var(--arkive-leading-caption);
 }
 
-.footer-brand p span {
-  display: block;
+.footer-metadata a {
+  width: fit-content;
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-metadata a:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
 }
 
 .footer-column {
@@ -700,45 +715,36 @@ footer a:focus-visible {
   gap: 0.75rem;
 }
 
-.footer-column h3 {
+.footer-column h2 {
   margin: 0 0 0.45rem;
   font-size: 0.875rem;
   font-weight: 780;
 }
 
-.footer-column button {
-  padding: 0;
-  border: 0;
+.footer-column > a {
+  min-height: 1.5rem;
   color: var(--muted-foreground);
-  background: transparent;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.footer-column button:hover {
-  color: var(--home-deep);
-}
-
-.footer-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding-block: 1.35rem;
-  border-top: 1px solid var(--border);
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-}
-
-.footer-bottom a {
-  color: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
   text-decoration: none;
 }
 
-.footer-bottom a:hover {
-  color: var(--foreground);
-  text-decoration: underline;
-  text-underline-offset: 0.25rem;
+.footer-column > a:hover,
+.footer-help-actions > button:hover,
+.footer-help-actions > div > button:hover {
+  color: var(--home-deep);
+}
+
+.footer-help-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.footer-help-actions > button,
+.footer-help-actions > div > button {
+  text-decoration: none;
 }
 
 /* Matches the sibling links, but stays a button: it opens a dialog rather than
@@ -953,8 +959,7 @@ footer a:focus-visible {
   }
 
   .section-heading,
-  .join-section,
-  .footer-bottom {
+  .join-inner {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -984,30 +989,42 @@ footer a:focus-visible {
   }
 
   .section-heading h2,
-  .join-section h2 {
+  .join-inner h2 {
     font-size: 1.5rem;
     letter-spacing: 0;
   }
 
   .join-section {
-    gap: 1.7rem;
-    margin-bottom: 3rem;
-    padding: 1.5rem 0;
-    border-width: 1px 0 0;
-    border-radius: 0;
-    background: transparent;
+    border-top-color: var(--border);
   }
 
-  .join-section button {
+  .join-inner {
+    gap: 1.25rem;
+    padding-block: 1.5rem;
+  }
+
+  .join-inner button {
     width: 100%;
   }
 
   .footer-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 2rem 2.5rem;
+    padding-block: 2rem 2.5rem;
   }
 
   .footer-brand {
     grid-column: 1 / -1;
+  }
+
+  .footer-help {
+    grid-column: 1 / -1;
+  }
+
+  .footer-help-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 1.5rem;
   }
 
   .coming-soon-toast {

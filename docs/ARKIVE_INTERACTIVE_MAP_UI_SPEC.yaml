@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.interactive-map.desktop-ui"
 title: "Arkive Interactive Map Desktop UI Specification"
 status: "canonical"
-last_reviewed: "2026-08-10"
+last_reviewed: "2026-08-12"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -93,6 +93,9 @@ desktop_workspace:
   viewport:
     model: "Full available viewport with no document-level scrolling"
     height: "Use dvh from the UI-foundations specification."
+  footer:
+    page_footer: "Omit it from the full-screen map workspace."
+    status_overlay: "Show coordinates and essential map status only; do not show filing records or legal text."
   top_bar:
     contract: "Use the parent global-shell contract and shared header height."
     padding: "Use desktop page gutter from the UI-foundations specification."

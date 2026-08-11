@@ -1,9 +1,11 @@
 export { ShellLayout, type ShellLayoutProps } from "./ShellLayout"
 export {
   ShellTopBar,
+  ShellUtilityDropdown,
   type ShellTopBarProps,
   type ShellTopBarNav,
   type ShellNavItem,
+  type ShellUtilityDropdownProps,
 } from "./ShellTopBar"
 export {
   ArkiveMapTopBar,

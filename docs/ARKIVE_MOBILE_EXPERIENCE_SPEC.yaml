@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.mobile-experience"
 title: "Arkive Mobile Web Experience Specification"
 status: "canonical"
-last_reviewed: "2026-08-10"
+last_reviewed: "2026-08-12"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -266,9 +266,16 @@ text_and_localization:
     - "Omit a record whose localized name is missing rather than exposing its English key as the name."
 
 footer:
+  surface_selection: "Use the parent site's portal-home, standard-page, and full-screen-map classification without redefining it."
+  portal_home:
+    brand: "Place the brand block across the full available width."
+    navigation: "Place Browse and About in two equal columns below the brand."
+    help: "Place Help across the full width; actions run horizontally and wrap together only when the viewport requires it."
+    spacing: "Use compact approved spacing steps and keep the footer one continuous surface without a lower bar."
   version_information: "Do not show site or game version identifiers in the mobile page footer."
   dense_pages: "A route may hide the mobile footer when bottom navigation already provides navigation."
   clearance: "Any remaining footer content clears bottom navigation and safe area."
+  fullscreen_map: "Render no footer, filing record, or legal text over the map workspace."
 
 accessibility:
   mobile_specific:

@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.site"
 title: "Arkive Site Specification"
 status: "canonical"
-last_reviewed: "2026-08-10"
+last_reviewed: "2026-08-12"
 
 purpose:
   summary: >-
@@ -106,6 +106,34 @@ product_model:
       - key: "forum"
         label_zh-CN: "论坛"
     unfinished_destination: "Show the localized coming-soon notice; do not navigate to a dead route."
+    footer:
+      owner: "frontend/apps/meta/src"
+      surface: "One continuous neutral surface; do not add a separate lower bar."
+      desktop_layout: "Four tracks with a wider brand track, then Browse, About, and Help, aligned to one top baseline."
+      brand:
+        - "Arkive mark"
+        - "Exactly one localized official site name from brand_identity"
+        - "Localized slogan from brand_identity"
+        - "Copyright and filing record on two intentional lines"
+      navigation:
+        browse:
+          - "All games"
+          - "Arkive community"
+          - "Tools and mods"
+        about:
+          - "About Arkive"
+          - "Contact us"
+          - "Update history"
+        rule: "Every entry is a link to a real destination; an unfinished route is not a valid footer destination."
+      help:
+        - "Language selector"
+        - "Theme selector"
+        - "Clear local data through the shared confirmation flow"
+      exclusions:
+        - "Legal company name"
+        - "Fixed ARKIVE.GAMES subtitle"
+        - "Decorative cards or heading marks"
+        - "Social icons, version identifiers, GitHub icon links, or Made with love copy"
   game_products:
     rule: >-
       A game may provide maps, encyclopedias, tools, routes, languages, data,
@@ -167,6 +195,14 @@ global_shell:
       - "Renderer selection"
       - "App-local search"
       - "Unapproved utility controls"
+  footer_surfaces:
+    portal_home: "Use product_model.home_page.footer only on the true portal discovery home view."
+    standard_page: "Use the shared compact SiteFooter on scrollable portal and game content pages."
+    fullscreen_map: "Render no page footer and no filing or legal text inside the full-screen map workspace."
+    legal_record:
+      portal_home: "Show the filing record in the home footer when the current host owns that filing; omit it from third-party toy hosts."
+      standard_page: "The compact footer may show the host filing record under the same ownership rule."
+      fullscreen_map: "Never place the filing record in the map status overlay or another map control."
 
 shared_foundations:
   ui:

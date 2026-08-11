@@ -2,7 +2,7 @@ schema_version: "1.0.0"
 spec_id: "arkive.ui-foundations"
 title: "Arkive UI Foundations Specification"
 status: "canonical"
-last_reviewed: "2026-08-10"
+last_reviewed: "2026-08-12"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -153,6 +153,14 @@ shared_component_contracts:
     menu_row: "At least touch_target_standard high, standard radius, text-sm, and weight 500."
     close_control: "Touch target on mobile and desktop_compact_height on desktop, with the shared focus treatment."
     modal_overlay: "One shared neutral overlay treatment; app-level dialogs do not invent another opacity or blur."
+  compact_site_footer:
+    owner: "frontend/packages/ui/src/site-footer.tsx"
+    use: "Scrollable portal and game pages that are not the true portal home view."
+    geometry: "One compact, wrapping metadata row separated from page content by a single top border."
+    exclusions:
+      - "Full-screen map workspaces"
+      - "Portal-home brand and navigation composition"
+      - "Mobile version identifiers"
 
 spacing:
   base: "0.25rem"

@@ -38,7 +38,7 @@ import {
   resolveMapEngine,
   useStoredMapEngine,
 } from "@/lib/mapEngineChoice";
-import { ICP_RECORD, MAP_FLY_TO_DURATION } from "@/lib/constants";
+import { MAP_FLY_TO_DURATION } from "@/lib/constants";
 
 // three.js + earcut are ~1.5 MB that only this route needs — see GlMapView.
 const GlGameMapView = lazy(() => import("@/features/map/GlMapView"));
@@ -115,7 +115,6 @@ export default function MapRoute() {
       noMapSelected: t("map.noMapSelected"),
       zoomIn: t("map.zoomIn"),
       zoomOut: t("map.zoomOut"),
-      footerText: ICP_RECORD,
     }),
     [t],
   );
