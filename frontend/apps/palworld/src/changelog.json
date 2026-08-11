@@ -3,7 +3,7 @@
     {
       "version": "1.30.0",
       "date": "2026-08-12",
-      "commit": "295355dbc8ccae4107ca1df4abe92433e1e0eb16",
+      "commit": "512474dda8b390023a42f546007744edbc41de5d",
       "changes": [
         {
           "kind": "feature",
@@ -11,6 +11,14 @@
             "en-US": "Map popups now show the correct loot pools for fishing spots, supply drops, faction camps, and oil rigs.",
             "zh-CN": "地图弹窗现可显示垂钓场、补给物资、据点和油田要塞各自的掉落池。",
             "zh-TW": "地圖彈窗現在可顯示垂釣場、補給物資、據點與油田要塞各自的掉落池。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Active skill details now show the corresponding Skill Fruit and its world, dungeon, merchant, raid, and recycler acquisition sources.",
+            "zh-CN": "主动技能详情现在会显示对应的技能果实，以及其地图、地下城、商人、突袭和回收机获取来源。",
+            "zh-TW": "主動技能詳情現在會顯示對應的技能果實，以及其地圖、地下城、商人、突襲和回收機取得來源。"
           }
         }
       ]
