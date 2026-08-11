@@ -28,14 +28,31 @@ test.describe("site info — desktop", () => {
     await expect(page.getByText("discord.gg/cqn9sKbWPU").first()).toBeVisible();
   });
 
-  test("the version action opens recent text updates with release dates", async ({ page }) => {
+  // The version section is two links now, not a dialog: this game's own history
+  // stays in-app, while the shared platform history lives on the Arkive home
+  // page. Scope to the <aside> landmark so the top-bar popover's copy of the
+  // panel cannot satisfy the assertions instead.
+  test("the version section links this game's history and the shared platform one", async ({
+    page,
+  }) => {
     await page.goto("/?lng=en-US");
     await openInfoSidebar(page);
-    await page.getByTestId("site-info-version-trigger").click();
-    const dialog = page.getByTestId("site-info-version-dialog");
-    await expect(dialog).toBeVisible();
-    await expect(dialog.locator("time").first()).toHaveText(/^\d{4}-\d{2}-\d{2}$/);
-    await expect(dialog).not.toContainText(/^[0-9a-f]{7}$/);
+    const about = page.getByRole("complementary", { name: "About" });
+
+    const gameUpdates = about.getByTestId("site-info-game-updates-link");
+    await expect(gameUpdates).toBeVisible();
+    await expect(gameUpdates).toHaveAttribute("href", "/changelog");
+    // Shape, not a pinned literal — the version changes on every release.
+    await expect(gameUpdates).toHaveText(/^View version \d+\.\d+\.\d+$/);
+
+    // The platform link is the Arkive home URL with the updates hash, so derive
+    // it from the attribution link rather than restating the deploy target.
+    const arkiveHome = await about.getByTestId("site-info-arkive-link").getAttribute("href");
+    expect(arkiveHome).toBeTruthy();
+    const platformUpdates = about.getByTestId("site-info-platform-updates-link");
+    await expect(platformUpdates).toBeVisible();
+    await expect(platformUpdates).toHaveAttribute("href", `${arkiveHome}#updates`);
+    await expect(platformUpdates).toHaveAttribute("target", "_blank");
   });
 
   test("the left sidebar toggle is still unique", async ({ page }) => {

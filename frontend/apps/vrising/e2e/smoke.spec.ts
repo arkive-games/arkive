@@ -108,14 +108,26 @@ test('About panel shows the linked Arkive attribution and Stunlock disclaimer', 
   await expect(about.getByText('藏舟游戏攻略网')).toHaveCount(0)
 })
 
-test('About panel opens recent text updates with release dates', async ({ page }) => {
+// The version section is two links now, not a dialog: this game's own history
+// stays in-app at /changelog, and the shared platform history lives under the
+// updates hash on the Arkive home page.
+test('About panel links this game history and the shared platform history', async ({ page }) => {
   await page.goto('/')
   await page.getByTestId('sidebar-toggle-right').click()
-  await page.getByTestId('site-info-version-trigger').click()
-  const dialog = page.getByTestId('site-info-version-dialog')
-  await expect(dialog).toBeVisible()
-  await expect(dialog.locator('time').first()).toHaveText(/^\d{4}-\d{2}-\d{2}$/)
-  await expect(dialog.locator('a')).toHaveCount(0)
+  const about = page.getByRole('complementary', { name: 'About' })
+
+  const gameUpdates = about.getByTestId('site-info-game-updates-link')
+  await expect(gameUpdates).toBeVisible()
+  await expect(gameUpdates).toHaveAttribute('href', '/changelog')
+  await expect(gameUpdates).toContainText(SITE_VERSION)
+
+  // Derive the platform link from the attribution link rather than restating
+  // the deploy target, which differs between dev, production and toy builds.
+  const arkiveHome = await about.getByTestId('site-info-arkive-link').getAttribute('href')
+  expect(arkiveHome).toBeTruthy()
+  const platformUpdates = about.getByTestId('site-info-platform-updates-link')
+  await expect(platformUpdates).toHaveAttribute('href', `${arkiveHome}#updates`)
+  await expect(platformUpdates).toHaveAttribute('target', '_blank')
 })
 
 test('hovering a roaming boss draws its patrol route in red', async ({ page }) => {

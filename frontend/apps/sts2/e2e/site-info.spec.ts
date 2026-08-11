@@ -12,15 +12,27 @@ test('every page exposes the shared About dialog', async ({ page }) => {
   await expect(page.getByTestId('site-info-group-number')).toHaveText(QQ_GROUP)
 })
 
-test('version updates show release dates and text without repository links', async ({ page }) => {
+// The version section is two links now, not a dialog: this game's own history
+// stays in-app at /changelog, and the shared platform history lives under the
+// updates hash on the Arkive home page.
+test('version updates link this game history and the shared platform history', async ({ page }) => {
   await page.goto('/')
   await page.getByTestId('site-info-open').click()
-  await page.getByTestId('site-info-version-trigger').click()
-  const dialog = page.getByTestId('site-info-version-dialog')
-  await expect(dialog).toBeVisible()
-  await expect(dialog.locator('time').first()).toHaveText(/^\d{4}-\d{2}-\d{2}$/)
-  await expect(dialog.locator('li').first()).not.toBeEmpty()
-  await expect(dialog.locator('a')).toHaveCount(0)
+  const panel = page.getByTestId('site-info-panel')
+  await expect(panel).toBeVisible()
+
+  const gameUpdates = panel.getByTestId('site-info-game-updates-link')
+  await expect(gameUpdates).toHaveAttribute('href', '/changelog')
+  // Shape, not a pinned literal — the version changes on every release.
+  await expect(gameUpdates).toHaveText(/^View version \d+\.\d+\.\d+$/)
+
+  // Derive the platform link from the attribution link rather than restating
+  // the deploy target, which differs between dev, production and toy builds.
+  const arkiveHome = await panel.getByTestId('site-info-arkive-link').getAttribute('href')
+  expect(arkiveHome).toBeTruthy()
+  const platformUpdates = panel.getByTestId('site-info-platform-updates-link')
+  await expect(platformUpdates).toHaveAttribute('href', `${arkiveHome}#updates`)
+  await expect(platformUpdates).toHaveAttribute('target', '_blank')
 })
 
 test('Chinese About copy uses the unified heading and linked Arkive name', async ({ page }) => {

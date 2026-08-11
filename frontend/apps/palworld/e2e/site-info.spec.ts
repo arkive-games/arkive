@@ -77,14 +77,29 @@ test.describe('site info — desktop', () => {
     await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
-  test('the version action opens recent text updates with release dates', async ({ page }) => {
+  // The version section is two links now, not a dialog: this game's own history
+  // stays in-app at /changelog, and the shared platform history lives under the
+  // updates hash on the Arkive home page.
+  test('the version section links this game history and the shared platform history', async ({
+    page,
+  }) => {
     await page.goto('/')
     await page.getByTestId('sidebar-toggle-right').click()
-    await page.getByTestId('site-info-version-trigger').click()
-    const dialog = page.getByTestId('site-info-version-dialog')
-    await expect(dialog).toBeVisible()
-    await expect(dialog.locator('time').first()).toHaveText(/^\d{4}-\d{2}-\d{2}$/)
-    await expect(dialog.locator('a')).toHaveCount(0)
+    const panel = page.getByTestId('site-info-panel').first()
+    await expect(panel).toBeVisible()
+
+    const gameUpdates = panel.getByTestId('site-info-game-updates-link')
+    await expect(gameUpdates).toHaveAttribute('href', '/changelog')
+    // Shape, not a pinned literal — the version changes on every release.
+    await expect(gameUpdates).toHaveText(/^View version \d+\.\d+\.\d+$/)
+
+    // Not pinned to a literal URL for the same reason as the portal link above:
+    // the home target is build-time config, so derive it from that link.
+    const arkiveHome = await panel.getByTestId('site-info-arkive-link').getAttribute('href')
+    expect(arkiveHome).toBeTruthy()
+    const platformUpdates = panel.getByTestId('site-info-platform-updates-link')
+    await expect(platformUpdates).toHaveAttribute('href', `${arkiveHome}#updates`)
+    await expect(platformUpdates).toHaveAttribute('target', '_blank')
   })
 
   test('the right sidebar is a named landmark reporting its collapsed state', async ({ page }) => {
