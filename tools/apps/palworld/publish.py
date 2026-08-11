@@ -53,7 +53,7 @@ class PublishError(RuntimeError):
 
 @dataclass
 class Documents:
-    raw: dict[str, bytes]
+    paths: tuple[str, ...]
     parsed: dict[str, Any]
 
 
@@ -110,7 +110,6 @@ def load_local_documents(root: Path) -> Documents:
         p.relative_to(root).as_posix()
         for p in sorted(marker_dir.glob("*.json"), key=lambda p: p.name)
     )
-    raw: dict[str, bytes] = {}
     parsed: dict[str, Any] = {}
     for rel in paths:
         path = root / rel
@@ -121,9 +120,8 @@ def load_local_documents(root: Path) -> Documents:
             value = json.loads(body)
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise PublishError(f"Invalid JSON in {path}: {exc}") from exc
-        raw[rel] = body
         parsed[rel] = value
-    return Documents(raw=raw, parsed=parsed)
+    return Documents(paths=tuple(paths), parsed=parsed)
 
 
 def _asset_segment(value: Any, source: str) -> str:
@@ -237,15 +235,12 @@ def execute_release_steps(
     *,
     resource_pending: bool,
     data_pending: bool,
-    dry_run: bool,
     push_resource: Callable[[], None],
     verify_resource: Callable[[], None],
     push_data: Callable[[], None],
     verify_data: Callable[[], None],
 ) -> None:
     """Run the fail-closed ordering independently of Git and HTTP details."""
-    if dry_run:
-        return
     if resource_pending:
         push_resource()
     verify_resource()
@@ -291,6 +286,10 @@ class Publisher:
                     f"http.proxy={self.config.proxy}",
                     "-c",
                     f"https.proxy={self.config.proxy}",
+                    "-c",
+                    "url.https://github.com/.insteadOf=git@github.com:",
+                    "-c",
+                    "url.https://github.com/.insteadOf=ssh://git@github.com/",
                 ]
             )
         command.extend(args)
@@ -372,6 +371,7 @@ class Publisher:
                 self._git(
                     path,
                     "diff",
+                    "--no-renames",
                     "--name-only",
                     "--diff-filter=ACMRT",
                     "origin/master..HEAD",
@@ -384,6 +384,7 @@ class Publisher:
                 self._git(
                     path,
                     "diff",
+                    "--no-renames",
                     "--name-only",
                     "--diff-filter=D",
                     "origin/master..HEAD",
@@ -445,6 +446,8 @@ class Publisher:
 
     def verify_asset_reachability(self, paths: Iterable[str], token: str) -> None:
         pending = set(paths)
+        if not pending:
+            return
         deadline = time.monotonic() + min(self.config.deployment_timeout, 60.0)
         last_errors: dict[str, str] = {}
         attempt = 0
@@ -479,6 +482,24 @@ class Publisher:
             f"{len(failures)} referenced resources are not reachable:\n  {details}{suffix}"
         )
 
+    def _canonical_asset_error(self, path: str, expected_status: int = 200) -> str | None:
+        url = f"{self.config.resource_url.rstrip('/')}/{quote(path, safe='/')}"
+        try:
+            response = self.client.get(url, headers={"Cache-Control": "no-cache"})
+        except httpx.HTTPError as exc:
+            return f"{path}: canonical URL failed ({exc})"
+        if response.status_code != expected_status:
+            return (
+                f"{path}: canonical URL returned HTTP {response.status_code}, "
+                f"expected {expected_status}"
+            )
+        if expected_status == 200:
+            local_hash = hashlib.sha256((self.config.resource_repo / path).read_bytes()).digest()
+            remote_hash = hashlib.sha256(response.content).digest()
+            if local_hash != remote_hash:
+                return f"{path}: canonical URL content hash does not match local HEAD"
+        return None
+
     def wait_for_resource_deploy(self) -> None:
         assert self.resource_state is not None
         changed = {
@@ -512,6 +533,17 @@ class Publisher:
                 else:
                     if status != 404:
                         errors.append(f"{path}: expected HTTP 404 after deletion, got {status}")
+            if not errors:
+                errors.extend(
+                    error
+                    for path in sorted(changed)
+                    if (error := self._canonical_asset_error(path))
+                )
+                errors.extend(
+                    error
+                    for path in sorted(deleted)
+                    if (error := self._canonical_asset_error(path, expected_status=404))
+                )
             if not errors:
                 return
             last_errors = errors
@@ -548,10 +580,9 @@ class Publisher:
 
     def _fetch_remote_documents(self, expected: str, token: str) -> Documents | None:
         assert self.documents is not None
-        raw: dict[str, bytes] = {}
         parsed: dict[str, Any] = {}
         errors: list[str] = []
-        for rel in self.documents.raw:
+        for rel in self.documents.paths:
             separator = "&" if "?" in rel else "?"
             url = (
                 f"{self.config.data_url.rstrip('/')}/{quote(rel, safe='/')}"
@@ -574,11 +605,10 @@ class Publisher:
                 errors.append(f"{rel}: online JSON does not match local HEAD")
                 continue
             parsed[rel] = value
-            raw[rel] = response.content
         self._last_data_errors = errors
         if errors:
             return None
-        return Documents(raw=raw, parsed=parsed)
+        return Documents(paths=self.documents.paths, parsed=parsed)
 
     def wait_for_data_deploy(self) -> Documents:
         expected = self.report.expected_data_version
@@ -635,6 +665,7 @@ class Publisher:
 
     def verify_dry_run(self) -> None:
         assert self.resource_state is not None
+        assert self.data_state is not None
         changed = self.resource_state.changed_files | self.resource_state.deleted_files
         stable_refs = set(self.references) - changed
         self.phase("dry-run online checks")
@@ -647,9 +678,7 @@ class Publisher:
             f"{len(set(self.references) & changed)} pending assets deferred"
         )
         self.data_state.online_status = (
-            "pending local data not requested"
-            if self.data_state and self.data_state.pending
-            else "not changed"
+            "pending local data not requested" if self.data_state.pending else "not changed"
         )
 
     def run(self) -> ReleaseReport:
@@ -694,7 +723,6 @@ class Publisher:
                 execute_release_steps(
                     resource_pending=self.resource_state.pending,
                     data_pending=self.data_state.pending,
-                    dry_run=False,
                     push_resource=lambda: self._push_stage(self.resource_state, "push resource"),
                     verify_resource=self.verify_resource_stage,
                     push_data=lambda: self._push_stage(self.data_state, "push data"),

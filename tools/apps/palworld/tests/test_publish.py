@@ -1,5 +1,3 @@
-import json
-
 import httpx
 import pytest
 
@@ -53,11 +51,7 @@ def _documents():
             "layouts": [{"dungeon": "Cave", "variant": "A", "footprint": True}]
         },
     }
-    raw = {
-        path: json.dumps(value, separators=(",", ":")).encode()
-        for path, value in parsed.items()
-    }
-    return Documents(raw=raw, parsed=parsed)
+    return Documents(paths=tuple(parsed), parsed=parsed)
 
 
 def test_collect_asset_references_covers_every_data_backed_asset_family():
@@ -108,7 +102,6 @@ def test_release_steps_never_push_data_after_resource_verification_failure():
         execute_release_steps(
             resource_pending=True,
             data_pending=True,
-            dry_run=False,
             push_resource=lambda: events.append("push-resource"),
             verify_resource=verify_resource,
             push_data=lambda: events.append("push-data"),
@@ -122,7 +115,6 @@ def test_release_steps_publish_in_required_order():
     execute_release_steps(
         resource_pending=True,
         data_pending=True,
-        dry_run=False,
         push_resource=lambda: events.append("push-resource"),
         verify_resource=lambda: events.append("verify-resource"),
         push_data=lambda: events.append("push-data"),
@@ -136,7 +128,6 @@ def test_release_steps_resume_without_republishing_resource():
     execute_release_steps(
         resource_pending=False,
         data_pending=True,
-        dry_run=False,
         push_resource=lambda: events.append("push-resource"),
         verify_resource=lambda: events.append("verify-resource"),
         push_data=lambda: events.append("push-data"),
@@ -153,10 +144,12 @@ def test_wait_for_resource_deploy_retries_until_content_matches(tmp_path):
     expected = b"new-image"
     (resource / "icons/new.webp").write_bytes(expected)
     calls = 0
+    queries = []
 
     def handler(request):
         nonlocal calls
         calls += 1
+        queries.append(request.url.query)
         if calls == 1:
             return httpx.Response(404, request=request)
         return httpx.Response(200, content=expected, request=request)
@@ -182,7 +175,8 @@ def test_wait_for_resource_deploy_retries_until_content_matches(tmp_path):
         deleted_files=set(),
     )
     publisher.wait_for_resource_deploy()
-    assert calls == 2
+    assert calls == 3
+    assert queries[-1] == b""
     client.close()
 
 
@@ -213,9 +207,21 @@ def test_reachability_retries_only_failed_resources(tmp_path):
     client.close()
 
 
+def test_reachability_accepts_an_empty_reference_set(tmp_path):
+    def handler(request):
+        pytest.fail(f"unexpected request: {request.url}")
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    publisher = Publisher(
+        PublishConfig(data_repo=tmp_path, resource_repo=tmp_path),
+        client=client,
+    )
+    publisher.verify_asset_reachability([], "test")
+    client.close()
+
+
 def test_remote_document_check_ignores_json_line_endings(tmp_path):
     value = {"maps": [{"id": "MainWorld"}]}
-    local = b'{\r\n "maps": [{\r\n  "id": "MainWorld"\r\n }]\r\n}'
 
     def handler(request):
         return httpx.Response(200, json=value, request=request)
@@ -226,7 +232,7 @@ def test_remote_document_check_ignores_json_line_endings(tmp_path):
         client=client,
     )
     publisher.documents = Documents(
-        raw={"maps.json": local}, parsed={"maps.json": value}
+        paths=("maps.json",), parsed={"maps.json": value}
     )
     remote = publisher._fetch_remote_documents("abc123", "test")
     assert remote is not None

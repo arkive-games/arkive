@@ -174,7 +174,7 @@ def slice_tiles(raw: Path, res_out: Path) -> None:
         print(f"tiles: {map_id} {total} tiles across {LEVELS + 1} levels")
 
 
-def convert_notes(raw: Path, data_out: Path, res_out: Path) -> None:
+def convert_notes(raw: Path, data_out: Path, res_out: Path) -> list[str]:
     """Convert note illustrations (large full-page drawings under Texture/Note)
     to resource-palworld ``notes/<stem>.webp`` (kept out of ``icons/`` — not pin
     icons). Source art is ~2560px; downscale the long edge to ``NOTE_MAX_EDGE``
@@ -199,6 +199,7 @@ def convert_notes(raw: Path, data_out: Path, res_out: Path) -> None:
     print(f"notes: {ok} converted")
     if missing:
         print(f"notes missing sources: {missing}")
+    return missing
 
 
 def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
@@ -220,4 +221,11 @@ def run_tiles(raw: Path, data_out: Path, res_out: Path) -> None:
     if missing:
         print(f"icons missing sources: {missing}")
 
-    convert_notes(raw, data_out, res_out)
+    note_missing = convert_notes(raw, data_out, res_out)
+    if missing or note_missing:
+        problems = []
+        if missing:
+            problems.append(f"icons: {', '.join(sorted(missing))}")
+        if note_missing:
+            problems.append(f"notes: {', '.join(sorted(note_missing))}")
+        raise RuntimeError("resource generation has missing sources; " + "; ".join(problems))

@@ -2,6 +2,7 @@
 from pathlib import Path
 
 from PIL import Image
+import pytest
 
 from palworld.maps import tiles
 
@@ -32,3 +33,17 @@ def test_slice_tiles_emits_all_pyramid_levels(tmp_path, monkeypatch):
 def test_grid_divides_cleanly_for_all_levels():
     # COUNT must halve LEVELS times without remainder (8 -> 4 -> 2 -> 1).
     assert tiles.COUNT % (1 << tiles.LEVELS) == 0
+
+
+def test_run_tiles_fails_when_a_referenced_source_is_missing(tmp_path, monkeypatch):
+    raw = tmp_path / "raw"
+    data = tmp_path / "data"
+    resource = tmp_path / "resource"
+    raw.mkdir()
+    data.mkdir()
+    monkeypatch.setattr(tiles, "slice_tiles", lambda *_args: None)
+    monkeypatch.setattr(tiles, "_collect_icon_names", lambda _data: {"missing_icon"})
+    monkeypatch.setattr(tiles, "_collect_note_images", lambda _data: set())
+
+    with pytest.raises(RuntimeError, match="icons: missing_icon"):
+        tiles.run_tiles(raw, data, resource)
