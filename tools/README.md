@@ -35,6 +35,24 @@ uv run python -m palworld.maps emit       # parsed.json → markers/regions/spaw
 uv run python -m palworld.maps tiles      # map tiles → resource-palworld
 ```
 
+### Publishing data and resources
+
+Never push `data-palworld` and `resource-palworld` separately. The publisher
+checks both clean `master` branches, verifies signed linear commits and every
+data-backed resource reference, publishes resources first, waits for the new
+files to return HTTP 200 with matching content, then publishes data and verifies
+the live version and all live references:
+
+```bash
+uv run python -m palworld.publish
+```
+
+Use `--dry-run` for a non-mutating readiness check and `--json` for a
+machine-readable summary. `PALWORLD_PUBLISH_PROXY` or `--proxy` routes both Git
+and HTTP traffic through a proxy. A stale `version.json`, dirty repository,
+missing asset, unsigned commit, failed push, deployment timeout, or inaccessible
+live reference stops the command before the next stage.
+
 | Stage (module) | Emits (`data-palworld/`) | Primary raw tables |
 |---|---|---|
 | `encyclopedia` | `pals.json`, `passives.json`, `exp.json` | `DT_PalMonsterParameter`, `DT_Waza*`, `DT_PartnerSkill*`, `DT_PassiveSkill_Main`, `DT_PalDropItem`, `DT_PalExpTable` |

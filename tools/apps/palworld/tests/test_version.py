@@ -1,6 +1,6 @@
 import json
 
-from palworld.version import stamp_version
+from palworld.version import content_version, stamp_version
 
 
 def _write(root, rel, text):
@@ -46,6 +46,13 @@ def test_restamp_is_stable(tmp_path):
     _write(tmp_path, "maps.json", '{"maps": []}')
     _write(tmp_path, "locales/en-US/maps.json", "{}")
     assert stamp_version(tmp_path) == stamp_version(tmp_path)
+
+
+def test_content_version_does_not_write_stamp(tmp_path):
+    _write(tmp_path, "maps.json", '{"maps": []}')
+    version = content_version(tmp_path)
+    assert len(version) == 12
+    assert not (tmp_path / "version.json").exists()
 
 
 def test_content_change_changes_version(tmp_path):

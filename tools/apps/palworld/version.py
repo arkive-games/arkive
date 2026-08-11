@@ -41,13 +41,8 @@ def read_game_version(raw: Path) -> str | None:
     return None
 
 
-def stamp_version(data_out: Path) -> str:
-    """Digest the artifact directory and (re)write ``version.json``.
-
-    Excludes ``version.json`` itself (so re-stamping is stable) and any
-    dot-path (``.git``, ``.gitignore`` — the artifact dirs are git repos).
-    Also records the game client version (``gameVersion``) read from the raw
-    export when ``PALWORLD_RAW`` is available."""
+def content_version(data_out: Path) -> str:
+    """Return the artifact content digest without changing the repository."""
     data_out = Path(data_out)
     h = hashlib.sha256()
     for p in sorted(data_out.rglob("*"), key=lambda p: p.relative_to(data_out).as_posix()):
@@ -59,7 +54,18 @@ def stamp_version(data_out: Path) -> str:
         h.update(rel.encode("utf-8"))
         h.update(b"\0")
         h.update(p.read_bytes())
-    version = h.hexdigest()[:12]
+    return h.hexdigest()[:12]
+
+
+def stamp_version(data_out: Path) -> str:
+    """Digest the artifact directory and (re)write ``version.json``.
+
+    Excludes ``version.json`` itself (so re-stamping is stable) and any
+    dot-path (``.git``, ``.gitignore`` — the artifact dirs are git repos).
+    Also records the game client version (``gameVersion``) read from the raw
+    export when ``PALWORLD_RAW`` is available."""
+    data_out = Path(data_out)
+    version = content_version(data_out)
     payload: dict[str, str] = {"version": version}
     raw = optional_dir("PALWORLD_RAW")
     game_version = read_game_version(raw) if raw else None
