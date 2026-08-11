@@ -145,6 +145,17 @@ jobs:
           # The ancestry, merge-commit and changelog checks below all walk real
           # history; a shallow clone would fail them for the wrong reason.
           fetch-depth: 0
+          # Load-bearing. Left at its default (true), checkout writes
+          #   http.https://github.com/.extraheader = AUTHORIZATION: basic <GITHUB_TOKEN>
+          # into the local config, and that header applies to EVERY github.com URL --
+          # overriding the userinfo in the push URL below. So the push authenticated as
+          # github-actions[bot] no matter what FAST_FORWARD_TOKEN held, and died with
+          # "Permission to arkive-games/arkive.git denied to github-actions[bot]" while
+          # the secret was correctly configured, which points the blame in exactly the
+          # wrong direction. Nothing here needs the persisted credential: the repo is
+          # public, so `git fetch origin master` works unauthenticated, and the push
+          # carries its own token.
+          persist-credentials: false
 
       - name: Setup Node
         # changelog-verify.mjs imports only node builtins, so it needs a Node but
