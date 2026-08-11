@@ -1,0 +1,67 @@
+name: Task
+description: Anything to do in this repository — a bug, a feature, a follow-up, a chore.
+title: "<one line: what needs to happen>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        `Layer` and `App` below populate the matching fields on the
+        [Arkive Roadmap](https://github.com/orgs/arkive-games/projects/1) board automatically.
+        They are read from this form by the `project-sync` workflow, so pick them accurately —
+        a wrong value here is a wrong value on the board.
+
+        For a pull request there is nothing to fill in: the same workflow derives both from the
+        diff.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What needs to happen
+      description: The outcome, and enough context for someone who has not been in the thread.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Layer
+      description: Every part of the tree this touches. Pick all that apply.
+      multiple: true
+      options:
+        - frontend
+        - backend
+        - tools
+        - workspace
+    validations:
+      required: true
+
+  - type: dropdown
+    id: app
+    attributes:
+      label: App
+      description: >-
+        Which games or surfaces this touches. Pick `shared` for work in `frontend/packages/**`
+        that affects every game. Leave this EMPTY when the work is not app-specific — CI,
+        repository meta, and backend-only changes genuinely have no app, and choosing one
+        anyway puts wrong data on the board.
+      multiple: true
+      options:
+        - aion2
+        - palworld
+        - sts2
+        - vrising
+        - lostark
+        - meta
+        - shared
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: >-
+        For a defect: the reproduction, and what you observed rather than what you assume.
+        For a decision: the options and what each costs. Paths as `file.ts:42`.
+    validations:
+      required: false

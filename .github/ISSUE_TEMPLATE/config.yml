@@ -1,0 +1,5 @@
+# Blank issues are off deliberately. The form in `task.yml` is what makes `Layer` (and, where it
+# applies, `App`) present on every issue, and `project-sync.yml` reads them straight out of the
+# rendered body. A blank issue would land on the board with both fields empty and nothing to
+# derive them from, which is the state this setup exists to prevent.
+blank_issues_enabled: false

@@ -1,0 +1,198 @@
+# Adds every new issue and pull request to the Arkive Roadmap board and fills in Layer and App.
+#
+# Why a workflow rather than a convention: for a pull request both values are DERIVABLE from the
+# changed paths, and a script gets that right every time while a human or an agent reading
+# instructions does not. Only issues need a person to say, and the issue form makes them say it.
+#
+# Dependabot is skipped on purpose. Its pull requests are noise on a roadmap board, and they are
+# closed in favour of one combined commit anyway.
+#
+# Secrets:
+#   PROJECT_TOKEN  fine-grained PAT with Organization permissions -> Projects: Read and write,
+#                  plus Repository permissions -> Pull requests: Read (to list changed files).
+#                  The default GITHUB_TOKEN CANNOT be used: it has no access to organization
+#                  projects at all, so every mutation below would 403.
+
+name: Sync the project board
+
+on:
+  issues:
+    # `edited` too: correcting a mistyped Layer on the issue should fix the board, not require
+    # someone to remember to also fix the field by hand.
+    types: [opened, reopened, edited]
+  # `pull_request_target`, not `pull_request`, so the run can see PROJECT_TOKEN even for a fork.
+  # Safe here only because this job never checks out or executes the pull request's code -- it
+  # reads the file list through the API. Do not add a checkout step.
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+  workflow_dispatch:
+    inputs:
+      number:
+        description: "Issue or pull request number to sync"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    # Bots that open dependency pull requests are excluded; a human or agent opening one is not.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !contains(fromJSON('["dependabot[bot]", "dependabot-preview[bot]"]'), github.actor)
+
+    runs-on: ubuntu-latest
+
+    # Field updates for one item must not race. Keyed per item so unrelated items still run
+    # concurrently; `synchronize` can fire repeatedly on a busy branch.
+    concurrency:
+      group: project-sync-${{ github.event.issue.number || github.event.pull_request.number || inputs.number }}
+      cancel-in-progress: true
+
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      REPO: ${{ github.repository }}
+      ORG: arkive-games
+      PROJECT: 1
+      NUMBER: ${{ github.event.issue.number || github.event.pull_request.number || inputs.number }}
+      IS_PR: ${{ github.event_name == 'pull_request_target' || github.event.issue.pull_request != null }}
+      ISSUE_BODY: ${{ github.event.issue.body }}
+
+    steps:
+      - name: Check the project token is configured
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::PROJECT_TOKEN is not set. Add a fine-grained PAT with Organization > Projects: Read and write. GITHUB_TOKEN cannot reach organization projects."
+            exit 1
+          fi
+
+      - name: Resolve the project, its fields and their options
+        id: meta
+        run: |
+          set -euo pipefail
+          # Resolved by NAME at run time rather than pinned as ids: option ids change whenever
+          # someone edits the field, and a stale id fails as a silent no-op rather than an error.
+          gh api graphql -f org="$ORG" -F number="$PROJECT" -f query='
+            query($org: String!, $number: Int!) {
+              organization(login: $org) {
+                projectV2(number: $number) {
+                  id
+                  fields(first: 50) {
+                    nodes {
+                      ... on ProjectV2MultiSelectField {
+                        id
+                        name
+                        multiSelectOptions { id name }
+                      }
+                    }
+                  }
+                }
+              }
+            }' > meta.json
+          jq -e '.data.organization.projectV2.id' meta.json > /dev/null
+          for f in Layer App; do
+            jq -e --arg f "$f" '.data.organization.projectV2.fields.nodes[]
+              | select(.name == $f)' meta.json > /dev/null || {
+                echo "::error::The project has no multi-select field named '$f'."
+                exit 1
+              }
+          done
+
+      - name: Add the item to the project
+        id: add
+        run: |
+          set -euo pipefail
+          kind=issues
+          [ "$IS_PR" = "true" ] && kind=pull
+          url="https://github.com/$REPO/$kind/$NUMBER"
+          # item-add is idempotent: re-adding an item returns the existing one, so `reopened`
+          # and `synchronize` do not create duplicates.
+          item=$(gh project item-add "$PROJECT" --owner "$ORG" --url "$url" --format json --jq .id)
+          echo "item=$item" >> "$GITHUB_OUTPUT"
+          echo "Item $item for $url"
+
+      - name: Work out Layer and App
+        id: classify
+        run: |
+          set -euo pipefail
+          if [ "$IS_PR" = "true" ]; then
+            # Paths, not prose. Anything unrecognised counts as `workspace`, so a new top-level
+            # directory shows up on the board instead of vanishing.
+            gh api "repos/$REPO/pulls/$NUMBER/files" --paginate --jq '.[].filename' > files.txt
+            awk -F/ '
+              $1 == "frontend" {
+                print "L:frontend"
+                if ($2 == "apps" && $3 != "") print "A:" $3
+                else if ($2 == "packages" && $3 != "") print "A:shared"
+                next
+              }
+              $1 == "backend" || $1 == "backend-go" { print "L:backend"; next }
+              $1 == "tools" {
+                print "L:tools"
+                if ($2 == "apps" && $3 != "") print "A:" $3
+                next
+              }
+              { print "L:workspace" }
+            ' files.txt | sort -u > tags.txt
+          else
+            # Read the rendered issue form. A multi-select dropdown renders its choices as one
+            # comma-separated line under the heading; an untouched optional field renders
+            # "_No response_", which must not become a value.
+            printf '%s\n' "$ISSUE_BODY" > body.md
+            section() {
+              awk -v want="### $1" '
+                $0 == want { grab = 1; next }
+                /^### / { grab = 0 }
+                grab && NF { print }
+              ' body.md | head -1
+            }
+            for pair in "Layer:L" "App:A"; do
+              name=${pair%%:*}; prefix=${pair##*:}
+              line=$(section "$name")
+              [ "$line" = "_No response_" ] && continue
+              # `printf '%s\n'`, with the newline: without it the final element has no line
+              # terminator, `read` returns non-zero on it, and the loop silently drops it --
+              # which loses the last value of every list and single-value fields entirely.
+              printf '%s\n' "$line" | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' \
+                | while read -r v; do [ -n "$v" ] && echo "$prefix:$v"; done
+            done | sort -u > tags.txt
+          fi
+          echo "Derived:"; sed 's/^/  /' tags.txt
+
+      - name: Set the fields
+        run: |
+          set -euo pipefail
+          project=$(jq -r '.data.organization.projectV2.id' meta.json)
+          for pair in "Layer:L" "App:A"; do
+            name=${pair%%:*}; prefix=${pair##*:}
+            field=$(jq -r --arg f "$name" '.data.organization.projectV2.fields.nodes[]
+              | select(.name == $f) | .id' meta.json)
+            ids=()
+            while read -r value; do
+              [ -z "$value" ] && continue
+              id=$(jq -r --arg f "$name" --arg v "$value" '.data.organization.projectV2.fields.nodes[]
+                | select(.name == $f) | .multiSelectOptions[] | select(.name == $v) | .id' meta.json)
+              if [ -z "$id" ] || [ "$id" = "null" ]; then
+                # A new app, or a renamed option. Warn and carry on: dropping one tag is better
+                # than failing the whole sync and leaving the item untagged.
+                echo "::warning::'$value' is not an option on the '$name' field. Add it to the project, then re-run this workflow."
+                continue
+              fi
+              ids+=("\"$id\"")
+            done < <(sed -n "s/^$prefix://p" tags.txt)
+
+            joined=$(IFS=,; echo "${ids[*]:-}")
+            # An empty list is a real value -- it clears the field. That matters for App, which
+            # is legitimately empty on CI, repository-meta and backend-only work.
+            gh api graphql -f query="
+              mutation {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: \"$project\"
+                  itemId: \"${{ steps.add.outputs.item }}\"
+                  fieldId: \"$field\"
+                  value: { multiSelectOptionIds: [$joined] }
+                }) { clientMutationId }
+              }" > /dev/null
+            echo "$name = [${joined//\"/}]"
+          done
