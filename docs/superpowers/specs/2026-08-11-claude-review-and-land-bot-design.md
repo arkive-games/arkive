@@ -104,6 +104,18 @@ mechanical and runs in bash (`GIT_SEQUENCE_EDITOR=true git rebase -i --autosquas
 `git rebase` still never enters the model's toolset. A `fixup!` that survives the autosquash
 means its target was not on the branch, and fails the run.
 
+**The autosquash must NOT pass `--force-rebase`,** which is a trap worth stating because the flag
+looks like the safe, thorough choice. Forcing it recreates every commit on the branch — including
+the one the changelog entry pins — so the fold would orphan the re-point it had just applied, and
+`changelog:verify` would refuse the branch one hop later. Without the flag, git fast-forwards the
+commits before the amended one, so pinned SHAs survive while everything from the amendment onward
+still picks up the bot as committer. Both behaviours were measured rather than assumed.
+
+That leaves one gap, closed separately: with no `fixup!` in the range git fast-forwards the whole
+todo list and rewrites nothing, so an agent commit needing no fold would keep `claude[bot]` as
+committer and stay unverifiable. A fallback rewrites from the **oldest** such commit only — never
+from the base, because anything older may be pinned.
+
 ## 4. The retry chain, and what bounds it
 
 `fast-forward.yml` refuses for a reason it writes to a comment. The chain exists so that

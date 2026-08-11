@@ -614,14 +614,36 @@ jobs:
           fi
           echo "Before:"
           git log --format='  %h author=%an committer=%cn sig=%G? %s' "origin/$BASE_REF..HEAD"
-          GIT_SEQUENCE_EDITOR=true git rebase --interactive --autosquash \
-            --force-rebase "origin/$BASE_REF"
-          echo "After:"
-          git log --format='  %h author=%an committer=%cn sig=%G? %s' "origin/$BASE_REF..HEAD"
+
+          # NO --force-rebase here, and that is the whole point. Forcing it
+          # recreates every commit on the branch -- including the one a
+          # changelog.json entry pins -- so the autosquash would orphan the very
+          # re-point it had just folded in, and changelog:verify would refuse the
+          # branch one hop later. Measured in a scratch repo: with --force-rebase
+          # the pinned commit's SHA changes, without it the SHA is preserved while
+          # the fixup still folds and every commit from the amended one onward
+          # still picks up the bot as committer.
+          GIT_SEQUENCE_EDITOR=true git rebase --interactive --autosquash "origin/$BASE_REF"
+
           if git log --format='%s' "origin/$BASE_REF..HEAD" | grep -q '^fixup!'; then
             echo "::error::A fixup! commit survived the autosquash -- its target is not on this branch."
             exit 1
           fi
+
+          # With no fixup in the range, git fast-forwards the whole todo list and
+          # rewrites nothing -- so an agent commit that needed no folding would
+          # keep claude[bot] as its committer and stay unverifiable. Rewrite from
+          # the OLDEST such commit only, never from the base: everything older
+          # than it may be pinned by a changelog entry.
+          oldest=$(git log --reverse --format='%H%x09%cn' "origin/$BASE_REF..HEAD" \
+                   | awk -F'\t' '$2 == "claude[bot]" { print $1; exit }')
+          if [ -n "$oldest" ]; then
+            echo "Normalising from $oldest (first commit still committed by claude[bot])."
+            git rebase --force-rebase "${oldest}^"
+          fi
+
+          echo "After:"
+          git log --format='  %h author=%an committer=%cn sig=%G? %s' "origin/$BASE_REF..HEAD"
 
       - name: Check what the agent changed
         if: steps.agent.outcome == 'success'
