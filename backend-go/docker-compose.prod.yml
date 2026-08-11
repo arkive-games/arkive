@@ -64,6 +64,15 @@ services:
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Arkive}
       RESET_URL_TEMPLATE: ${RESET_URL_TEMPLATE:-}
 
+      # Tencent SES API. Preferred over SMTP, which a personal-tier account
+      # cannot use at all. The body lives in an approved template at Tencent.
+      SES_SECRET_ID: ${SES_SECRET_ID:-}
+      SES_SECRET_KEY: ${SES_SECRET_KEY:-}
+      SES_REGION: ${SES_REGION:-ap-guangzhou}
+      SES_FROM: ${SES_FROM:-}
+      SES_FROM_NAME: ${SES_FROM_NAME:-}
+      SES_RESET_TEMPLATE_ID: ${SES_RESET_TEMPLATE_ID:-0}
+
       FORGOT_PER_HOUR_PER_IP: ${FORGOT_PER_HOUR_PER_IP:-5}
       FORGOT_PER_HOUR_PER_EMAIL: ${FORGOT_PER_HOUR_PER_EMAIL:-3}
 

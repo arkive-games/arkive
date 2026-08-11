@@ -53,14 +53,14 @@ func newCaptureMailer() *captureMailer {
 	return &captureMailer{resets: map[string]string{}, verifie: map[string]string{}}
 }
 
-func (m *captureMailer) SendPasswordReset(_ context.Context, email, token string) error {
+func (m *captureMailer) SendPasswordReset(_ context.Context, email, _, token string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.resets[email] = token
 	return nil
 }
 
-func (m *captureMailer) SendVerification(_ context.Context, email, token string) error {
+func (m *captureMailer) SendVerification(_ context.Context, email, _, token string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.verifie[email] = token
@@ -1024,10 +1024,10 @@ func TestForgotPasswordLimitIsPerAddressNotGlobal(t *testing.T) {
 // discover which addresses are registered.
 type failingMailer struct{}
 
-func (failingMailer) SendPasswordReset(context.Context, string, string) error {
+func (failingMailer) SendPasswordReset(context.Context, string, string, string) error {
 	return fmt.Errorf("smtp relay refused the message")
 }
-func (failingMailer) SendVerification(context.Context, string, string) error {
+func (failingMailer) SendVerification(context.Context, string, string, string) error {
 	return fmt.Errorf("smtp relay refused the message")
 }
 

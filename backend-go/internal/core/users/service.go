@@ -499,7 +499,7 @@ func (s *Service) ForgotPassword(ctx context.Context, email string) error {
 	// discloses exactly which addresses are registered — the thing this
 	// endpoint's constant response exists to hide. The caller is told the same
 	// thing either way, and the operator finds the failure in the log.
-	if err := s.mailer.SendPasswordReset(ctx, u.Email, token); err != nil {
+	if err := s.mailer.SendPasswordReset(ctx, u.Email, u.Name, token); err != nil {
 		s.logger.ErrorContext(ctx, "could not send password reset mail",
 			slog.String("user_id", u.ID.String()), slog.Any("error", err))
 	}
@@ -560,7 +560,7 @@ func (s *Service) RequestVerify(ctx context.Context, email string) error {
 	}
 	// Logged rather than returned, for the same reason as the reset flow: this
 	// endpoint also answers identically for known and unknown addresses.
-	if err := s.mailer.SendVerification(ctx, u.Email, token); err != nil {
+	if err := s.mailer.SendVerification(ctx, u.Email, u.Name, token); err != nil {
 		s.logger.ErrorContext(ctx, "could not send verification mail",
 			slog.String("user_id", u.ID.String()), slog.Any("error", err))
 	}

@@ -130,8 +130,21 @@ type Auth struct {
 	SMTPPassword string
 	SMTPFromName string
 
-	// ResetURLTemplate receives the token via %s.
+	// ResetURLTemplate receives the token via %s. Used only by the SMTP path;
+	// the SES template embeds the domain itself, because Tencent's review rules
+	// forbid a variable standing in for a whole URL.
 	ResetURLTemplate string
+
+	// Tencent Cloud SES, used instead of SMTP. Personal real-name accounts
+	// cannot use SMTP at all, and the API refuses freeform content on that
+	// tier, so the body lives in an approved template and only variables are
+	// sent. Preferred over SMTP whenever configured.
+	SESSecretID      string
+	SESSecretKey     string
+	SESRegion        string
+	SESFrom          string
+	SESFromName      string
+	SESResetTemplate int64
 
 	// Argon2 parameters. Defaults match what pwdlib writes, so hashes stay
 	// mutually readable during cutover.
@@ -246,6 +259,13 @@ func Load() (Config, error) {
 			SMTPFromName: envString("SMTP_FROM_NAME", "Arkive"),
 
 			ResetURLTemplate: envString("RESET_URL_TEMPLATE", "https://tc-imba.com/user?reset=%s"),
+
+			SESSecretID:      envString("SES_SECRET_ID", ""),
+			SESSecretKey:     envString("SES_SECRET_KEY", ""),
+			SESRegion:        envString("SES_REGION", "ap-guangzhou"),
+			SESFrom:          envString("SES_FROM", ""),
+			SESFromName:      envString("SES_FROM_NAME", "藏舟 Arkive"),
+			SESResetTemplate: int64(envInt("SES_RESET_TEMPLATE_ID", 0)),
 
 			Argon2Memory:      uint32(envInt("ARGON2_MEMORY_KIB", 65536)),
 			Argon2Iterations:  uint32(envInt("ARGON2_ITERATIONS", 3)),

@@ -149,14 +149,31 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 			FromName:         d.Config.Auth.SMTPFromName,
 			ResetURLTemplate: d.Config.Auth.ResetURLTemplate,
 		}
-		if smtpCfg.Configured() {
+		sesCfg := auth.SESConfig{
+			SecretID:        d.Config.Auth.SESSecretID,
+			SecretKey:       d.Config.Auth.SESSecretKey,
+			Region:          d.Config.Auth.SESRegion,
+			From:            d.Config.Auth.SESFrom,
+			FromName:        d.Config.Auth.SESFromName,
+			ResetTemplateID: d.Config.Auth.SESResetTemplate,
+		}
+
+		switch {
+		case sesCfg.Configured():
+			// Preferred: SMTP is unavailable on a personal-tier Tencent account,
+			// so the API is the only path that actually delivers.
+			mailer = auth.NewSESMailer(sesCfg, d.Logger)
+			d.Logger.Info("sending mail via tencent ses api",
+				slog.String("from", sesCfg.From),
+				slog.Int64("reset_template", sesCfg.ResetTemplateID))
+		case smtpCfg.Configured():
 			mailer = auth.NewSMTPMailer(smtpCfg, d.Logger)
 			d.Logger.Info("sending mail via smtp relay", slog.String("host", smtpCfg.Host))
-		} else {
+		default:
 			// Deliberate: an unconfigured deployment records tokens rather than
 			// failing every reset request outright.
 			mailer = auth.NewLogMailer(d.Logger)
-			d.Logger.Warn("no SMTP_HOST configured; reset tokens will be logged, not emailed")
+			d.Logger.Warn("no mail transport configured; reset tokens will be logged, not emailed")
 		}
 	}
 	service := users.NewService(queries, hasher, tokens, mailer, blobs, d.Logger)

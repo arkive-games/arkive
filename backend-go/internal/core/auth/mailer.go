@@ -13,8 +13,11 @@ import (
 // a reader to discover it, and gives an SMTP implementation somewhere to land
 // without touching any flow.
 type Mailer interface {
-	SendPasswordReset(ctx context.Context, email, token string) error
-	SendVerification(ctx context.Context, email, token string) error
+	// displayName is passed separately so a template can greet the recipient
+	// without the body containing their email address — a misdelivered message
+	// should disclose as little as possible about the account.
+	SendPasswordReset(ctx context.Context, email, displayName, token string) error
+	SendVerification(ctx context.Context, email, displayName, token string) error
 }
 
 // LogMailer writes tokens to the log instead of sending mail.
@@ -28,18 +31,20 @@ func NewLogMailer(logger *slog.Logger) *LogMailer {
 }
 
 // SendPasswordReset logs the reset token.
-func (m *LogMailer) SendPasswordReset(ctx context.Context, email, token string) error {
+func (m *LogMailer) SendPasswordReset(ctx context.Context, email, displayName, token string) error {
 	m.logger.WarnContext(ctx, "password reset requested but no mailer is configured; token logged instead",
 		slog.String("email", email),
+		slog.String("name", displayName),
 		slog.String("token", token),
 	)
 	return nil
 }
 
 // SendVerification logs the verification token.
-func (m *LogMailer) SendVerification(ctx context.Context, email, token string) error {
+func (m *LogMailer) SendVerification(ctx context.Context, email, displayName, token string) error {
 	m.logger.WarnContext(ctx, "email verification requested but no mailer is configured; token logged instead",
 		slog.String("email", email),
+		slog.String("name", displayName),
 		slog.String("token", token),
 	)
 	return nil

@@ -53,8 +53,8 @@ func NewSMTPMailer(cfg SMTPConfig, logger *slog.Logger) *SMTPMailer {
 }
 
 // SendPasswordReset renders and delivers the reset message.
-func (m *SMTPMailer) SendPasswordReset(ctx context.Context, email, token string) error {
-	return m.sendPasswordReset(ctx, email, "", LocaleEnUS, token)
+func (m *SMTPMailer) SendPasswordReset(ctx context.Context, email, displayName, token string) error {
+	return m.sendPasswordReset(ctx, email, displayName, LocaleZhCN, token)
 }
 
 // SendPasswordResetLocalised renders in the requested language and addresses the
@@ -87,7 +87,7 @@ func (m *SMTPMailer) sendPasswordReset(
 
 // SendVerification is not implemented yet; the flow exists but no verification
 // campaign is planned, and a half-written message is worse than an obvious gap.
-func (m *SMTPMailer) SendVerification(ctx context.Context, email, token string) error {
+func (m *SMTPMailer) SendVerification(ctx context.Context, email, displayName, token string) error {
 	m.logger.WarnContext(ctx, "verification mail is not implemented; token logged instead",
 		slog.String("email", email), slog.String("token", token))
 	return nil
