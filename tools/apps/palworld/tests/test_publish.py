@@ -211,3 +211,24 @@ def test_reachability_retries_only_failed_resources(tmp_path):
     )
     assert calls == {"stable.webp": 1, "flaky.webp": 2}
     client.close()
+
+
+def test_remote_document_check_ignores_json_line_endings(tmp_path):
+    value = {"maps": [{"id": "MainWorld"}]}
+    local = b'{\r\n "maps": [{\r\n  "id": "MainWorld"\r\n }]\r\n}'
+
+    def handler(request):
+        return httpx.Response(200, json=value, request=request)
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    publisher = Publisher(
+        PublishConfig(data_repo=tmp_path, resource_repo=tmp_path),
+        client=client,
+    )
+    publisher.documents = Documents(
+        raw={"maps.json": local}, parsed={"maps.json": value}
+    )
+    remote = publisher._fetch_remote_documents("abc123", "test")
+    assert remote is not None
+    assert remote.parsed == {"maps.json": value}
+    client.close()

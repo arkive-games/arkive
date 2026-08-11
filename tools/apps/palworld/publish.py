@@ -268,6 +268,7 @@ class Publisher:
         self.references: dict[str, set[str]] = {}
         self.resource_state: RepoState | None = None
         self.data_state: RepoState | None = None
+        self._last_data_errors: list[str] = []
 
     def close(self) -> None:
         if self._owns_client:
@@ -549,7 +550,8 @@ class Publisher:
         assert self.documents is not None
         raw: dict[str, bytes] = {}
         parsed: dict[str, Any] = {}
-        for rel, local_body in self.documents.raw.items():
+        errors: list[str] = []
+        for rel in self.documents.raw:
             separator = "&" if "?" in rel else "?"
             url = (
                 f"{self.config.data_url.rstrip('/')}/{quote(rel, safe='/')}"
@@ -557,15 +559,25 @@ class Publisher:
             )
             try:
                 response = self.client.get(url, headers={"Cache-Control": "no-cache"})
-            except httpx.HTTPError:
-                return None
-            if response.status_code != 200 or response.content != local_body:
-                return None
+            except httpx.HTTPError as exc:
+                errors.append(f"{rel}: {exc}")
+                continue
+            if response.status_code != 200:
+                errors.append(f"{rel}: HTTP {response.status_code}")
+                continue
             try:
-                parsed[rel] = response.json()
-            except json.JSONDecodeError:
-                return None
+                value = response.json()
+            except json.JSONDecodeError as exc:
+                errors.append(f"{rel}: invalid online JSON ({exc})")
+                continue
+            if value != self.documents.parsed[rel]:
+                errors.append(f"{rel}: online JSON does not match local HEAD")
+                continue
+            parsed[rel] = value
             raw[rel] = response.content
+        self._last_data_errors = errors
+        if errors:
+            return None
         return Documents(raw=raw, parsed=parsed)
 
     def wait_for_data_deploy(self) -> Documents:
@@ -594,6 +606,11 @@ class Publisher:
             time.sleep(self.config.poll_interval)
         raise PublishError(
             f"Timed out waiting for data-palworld version {expected} and matching online data"
+            + (
+                ":\n  " + "\n  ".join(self._last_data_errors[:20])
+                if self._last_data_errors
+                else ""
+            )
         )
 
     def verify_data_stage(self) -> None:
