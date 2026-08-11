@@ -103,17 +103,42 @@ workflows — GitHub's recursion guard, and the same reason `fast-forward.yml` a
 
 - `claude.yml` passes the App installation token as `github_token:`, and its `/fast-forward`
   comment therefore triggers the gatekeeper.
-- When `fast-forward.yml` refuses **a bot-initiated attempt**, it posts the refusal with that
-  same token, addressed `@claude`, carrying `<!-- claude-land attempt=N -->`.
-- `claude.yml` parses `N`, and refuses above **3**.
+- When `fast-forward.yml` refuses **a bot-initiated attempt**, it posts the refusal addressed
+  `@claude`, using `FAST_FORWARD_TOKEN` — a PAT, which also triggers workflows, and which that
+  workflow already holds. That avoids giving the gatekeeper the App's private key just to write
+  one comment; it needs `Pull-requests:Write` added for it.
+
+`<id>` is the comment id of the *human* `@claude` that began the chain, so a chain is scoped
+to one human request and a fresh request starts a fresh budget.
+
+**Two sentinels, not one.** `<!-- claude-land chain=<id> -->` is written by `claude.yml` on each
+`/fast-forward` request and is the thing counted; `<!-- claude-land-retry chain=<id> -->` is
+written by `fast-forward.yml` on a refusal and is what re-enters the agent. Sharing one sentinel
+would make every refusal spend a second attempt and halve the budget.
+
+**The bot is authorised by login, never by the marker.** `fast-forward.yml` recognises it
+against `vars.CLAUDE_BOT_LOGIN`, and only *then* reads the marker to learn which chain to reply
+on. Authorising on the marker's presence would let any stranger paste that text into a
+`/fast-forward` comment and walk straight past the permission gate. Leaving the variable unset
+disables bot recognition entirely, which is the safe default and leaves the gatekeeper behaving
+exactly as it did before this feature.
+
+**The budget is counted, not parsed.** `claude.yml` counts how many comments on the pull
+request already carry `chain=<id>` and refuses above **3**. Parsing an `attempt=N` written into
+the comment was the first design and is weaker than it looks: Claude holds a token with
+`issues: write`, so it could author a marker of its own, and a parsed counter can be reset by
+writing `attempt=1`. A count cannot be reset — a spurious marker only spends budget faster.
+That matters more than it might seem, because an unbounded loop here spends real money on the
+gateway rather than merely looping.
 
 Bot-authored triggers bypass §2's permission gate — otherwise the chain cannot close, since
-the App is not a collaborator with a permission level. They bypass nothing else. The depth
-marker is what makes that safe: it is written by the gatekeeper, not by the agent, so the
-agent cannot reset its own budget.
+the App is not a collaborator with a permission level. They bypass nothing else. A bot comment
+triggers only when it carries a marker, and Claude never begins a comment with `@claude`, so
+its own `/fast-forward` comments cannot re-enter the workflow.
 
-On exhaustion the bot posts what it tried and what still refuses, and stops. It does not
-escalate, retry with a different strategy, or ask for wider permissions.
+On exhaustion the bot posts what it tried and what still refuses, and stops.
+
+It does not escalate, retry with a different strategy, or ask for wider permissions.
 
 ## 5. Signing
 
@@ -130,6 +155,20 @@ identity.
 
 The gate in `fast-forward.yml` is unchanged. `CLAUDE.md`'s "all commits must be signed" stays
 literally true rather than becoming a stale claim.
+
+Two details that are easy to get wrong and both fail in confusing ways:
+
+- **An `allowed_signers` file is required, even though only GitHub's verification matters.**
+  Without `gpg.ssh.allowedSignersFile`, git cannot verify an SSH signature locally, so `%G?`
+  reports `E`/`N` for a perfectly good commit — and the run's own pre-push signature check would
+  reject the commits it had just signed. The workflow derives the public half with
+  `ssh-keygen -y` and writes the file itself.
+- **`commit.gpgsign` does not cover a rebase.** `rebase.gpgSign` is a separate setting, and
+  without it the rewritten commits come out unsigned — which is precisely the failure this
+  section exists to prevent, arriving three workflow hops later as a fast-forward refusal.
+
+The workflow proves both at setup time by making an empty signed commit and asserting `%G?` is
+`G` before it touches the branch, rather than discovering it at the push.
 
 ## 6. Changes to `fast-forward.yml`
 
@@ -161,9 +200,37 @@ repository, and `issue_comment` runs in base-repo context *with* secrets.
 - The action is pinned to a **full commit SHA**, not `@v1`. A prompt-injection flaw in
   `claude-code-action` was fixed in v1.0.94; a floating major tag is not a defence.
 - `allowed_non_write_users` is left empty, so only §2's write-permission holders trigger.
-- Tools are restricted with `claude_args: --allowedTools …` to what review and repair need.
-- The bot's write scope is the pull request branch and comments. Not `master`, not settings,
-  not releases.
+- **The model cannot push, comment, fetch or rebase.** `--allowedTools` grants reading, editing,
+  and `git add`/`git commit`; deterministic steps do everything else. Three absences are
+  deliberate and each has a reason:
+  - no `Bash(git push:*)` — the push is one step, to one branch ref, under
+    `--force-with-lease`.
+  - no `Bash(gh:*)` — every comment is composed and posted by a step, so what the bot says is
+    visible in the workflow rather than dependent on what the model chose to run.
+  - no `Bash(git rebase:*)` — `git rebase --exec <cmd>` runs arbitrary commands, which would
+    hand back everything the other two absences take away. **The rebase therefore happens in
+    bash, before the agent starts**, and a conflict is reported rather than resolved. This is a
+    change from the first draft of §3, where the agent rebased; the earlier version was a hole.
+- **The verb guard is deterministic, and keyed on authorship.** "Do not edit code" lives in a
+  prompt, and prompts are advisory, so a step verifies it. A rebase preserves the original
+  author while replacing the committer, so any commit *authored* by the bot is the agent's own
+  work — under the `review` verb, such a commit touching anything but `changelog.json` fails the
+  run before the push.
+
+**The App must be unable to push `master`, and today nothing stops it.** Repair needs
+`contents: write`, which on GitHub is repo-wide — it is not scopeable to one branch. So an
+agent holding the installation token *could* `git push origin HEAD:master` directly, which
+§1 exists to prevent. The ruleset on `master` currently blocks only force pushes and
+deletions, and a fast-forward push is neither.
+
+The enforcement is a **"require a pull request before merging" rule on `master`, with bypass
+granted to the repository-admin role only**. `fast-forward.yml` pushes with
+`FAST_FORWARD_TOKEN`, a fine-grained PAT acting as an admin, so it bypasses and keeps working;
+the App is not an admin and is refused at the ref. Prompt wording and `--allowedTools` are
+defence in depth behind that, not the defence itself.
+
+This needs verifying during setup rather than assuming: confirm `FAST_FORWARD_TOKEN` still
+lands a pull request *after* the rule is added, before relying on the bot.
 
 ## 9. Gateway configuration, and Step 0
 
@@ -184,17 +251,18 @@ parse error far from its cause. And `ANTHROPIC_BASE_URL` is read from the **`env
 (`action.yml:154`), so it must be set at job or workflow level; setting it on the `uses:` step
 does not populate that context.
 
-The model is `claude-opus-5[1m]`. The `[1m]` is Claude Code alias syntax for the 1M-context
-beta, which resolves to a beta header rather than a model id — so it is not established that
-it survives the proxy. `ANTHROPIC_CUSTOM_HEADERS` and `ANTHROPIC_DEFAULT_OPUS_MODEL` are the
-escape hatches if it does not.
+The model is **`claude-opus-5`**, passed as `claude_args: --model claude-opus-5`. The
+1M-context variant is deliberately not used: `[1m]` is Claude Code alias syntax that resolves
+to a beta header rather than a model id, and a proxy is one more place for a beta header to be
+dropped silently. If a review ever needs more context than the default window, the fix is a
+narrower prompt, not a longer one.
 
-**Step 0 gates everything else.** Before any of §1–§8 is built, a throwaway workflow runs the
+**Step 0 gates everything else.** Before the rest is trusted, a throwaway workflow runs the
 action against the gateway from a real runner with a trivial prompt, and must establish:
 
 1. The key authenticates from Azure (not merely from this LAN).
-2. `claude-opus-5[1m]` resolves, with the 1M context actually available.
-3. `count_tokens` answers rather than 404s under a real session.
+2. `claude-opus-5` resolves through the gateway under a real agent session.
+3. `count_tokens` answers rather than 404s.
 4. Cross-border latency and the gateway's Opus quota tolerate a full-diff review.
 
 Nothing above is worth building if the gateway does not hold up under an agent session. The

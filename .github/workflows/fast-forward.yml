@@ -21,11 +21,36 @@
 # would put a SHA-rewriting button back on the pull request page. The ruleset
 # blocks force pushes and deletions only.
 #
-# Secrets:
-#   FAST_FORWARD_TOKEN  fine-grained PAT, Contents:Write on arkive-games/arkive.
+# Preconditions, all of them refusals rather than fixes: the requester may push;
+# the pull request is open against master; CI passed on the head commit; master is
+# already an ancestor of the head; there are no merge commits; every commit is
+# verified; and changelog:verify passes.
+#
+# THE REVIEW BOT
+#
+# claude.yml may request a land on its own behalf, and its `/fast-forward` comment
+# carries `<!-- claude-land chain=<id> -->`. Two things follow.
+#
+#   The bot is authorised by LOGIN (vars.CLAUDE_BOT_LOGIN), never by the presence
+#   of that marker -- a marker is just text anyone can paste, and trusting it
+#   would be a way past the permission gate.
+#
+#   When a bot-initiated attempt is refused, the reason is addressed `@claude` and
+#   posted with FAST_FORWARD_TOKEN, so claude.yml re-enters and can repair the
+#   cause. A GITHUB_TOKEN comment triggers nothing, which is exactly why the reply
+#   needs the PAT.
+#
+# Secrets and variables:
+#   FAST_FORWARD_TOKEN  fine-grained PAT on arkive-games/arkive. Needs
+#                       Contents:Write for the push, and Pull-requests:Write so a
+#                       refusal can wake the review bot.
 #                       The default GITHUB_TOKEN cannot be used: pushes made with
 #                       it do not trigger other workflows, so the EdgeOne deploy
 #                       would never run for a landed pull request.
+#   vars.CLAUDE_BOT_LOGIN  login of the review bot App, e.g. `arkive-bot[bot]`.
+#                       Unset means no bot is recognised, which is the safe
+#                       default and leaves this workflow behaving exactly as it
+#                       did before the bot existed.
 
 name: Fast-forward a pull request
 
@@ -89,21 +114,42 @@ jobs:
 
       # Not `author_association`: that reports MEMBER/CONTRIBUTOR from org and
       # commit history, neither of which is push access. Ask about permission.
+      #
+      # The review bot is the one requester with no permission level to ask about:
+      # a GitHub App is not a collaborator. It is recognised by login instead,
+      # against `vars.CLAUDE_BOT_LOGIN` -- and by login ONLY. Recognising it by
+      # the chain marker in its comment would let any stranger paste that marker
+      # and walk straight past this gate.
       - name: Check the requester may push
+        id: requester
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REQUESTER: ${{ github.event.comment.user.login || github.actor }}
+          BOT_LOGIN: ${{ vars.CLAUDE_BOT_LOGIN }}
+          # Through env, never inline: the body is attacker-controlled and an
+          # inline expansion into a run: block is shell injection.
+          BODY: ${{ github.event.comment.body }}
         run: |
           set -euo pipefail
-          level=$(gh api "repos/$REPO/collaborators/$REQUESTER/permission" --jq .permission)
-          echo "$REQUESTER has $level permission"
-          case "$level" in
-            admin | write | maintain) ;;
-            *)
-              echo "::error::$REQUESTER has '$level' permission on $REPO and may not land pull requests."
-              exit 1
-              ;;
-          esac
+          chain=""
+          if [ -n "${BOT_LOGIN:-}" ] && [ "$REQUESTER" = "$BOT_LOGIN" ]; then
+            echo "$REQUESTER is the review bot."
+            # Only now is the marker read, and only to learn which chain to reply
+            # on. It is not what authorised this run.
+            chain=$(printf '%s' "$BODY" | sed -n 's/.*claude-land chain=\([0-9]\{1,\}\).*/\1/p' | head -1)
+            echo "chain=${chain:-<none>}"
+          else
+            level=$(gh api "repos/$REPO/collaborators/$REQUESTER/permission" --jq .permission)
+            echo "$REQUESTER has $level permission"
+            case "$level" in
+              admin | write | maintain) ;;
+              *)
+                echo "::error::$REQUESTER has '$level' permission on $REPO and may not land pull requests."
+                exit 1
+                ;;
+            esac
+          fi
+          echo "chain=$chain" >> "$GITHUB_OUTPUT"
 
       # Every refusal below writes its reason to $RUNNER_TEMP/refusal.md and the
       # last step posts it. Not the workspace: actions/checkout cleans that, which
@@ -135,6 +181,60 @@ jobs:
             echo "head_ref=$(jq -r .headRefName "$RUNNER_TEMP/pr.json")"
             echo "fork=$(jq -r .isCrossRepository "$RUNNER_TEMP/pr.json")"
           } >> "$GITHUB_OUTPUT"
+
+      # Until now nothing here asserted CI had passed. That was safe only because
+      # a person decided when to comment `/fast-forward`, and supplied the
+      # judgement implicitly by not commenting on a red pull request. The review
+      # bot removes the person, so the judgement has to become a check.
+      #
+      # It asks ci.yml directly rather than reading every check run on the SHA:
+      # this workflow's own job is itself a check run on that SHA and is
+      # `in_progress` while it looks, so a naive "all checks green" test can never
+      # pass. Asking the one workflow we mean is both precise and readable.
+      #
+      # Placed before the checkout because it is one API call, and a red pull
+      # request should be refused before cloning the repository.
+      - name: Check CI passed on the head commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.pr.outputs.head }}
+        run: |
+          set -euo pipefail
+          # Most recent run wins, so a re-run after a fix is what counts.
+          gh api --paginate "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$HEAD_SHA" \
+            --jq '.workflow_runs | sort_by(.created_at) | last
+                  | {status, conclusion, url: .html_url}' > "$RUNNER_TEMP/ci.json"
+          if [ ! -s "$RUNNER_TEMP/ci.json" ] || [ "$(cat "$RUNNER_TEMP/ci.json")" = "null" ]; then
+            {
+              echo "Refusing: CI has not run against \`$HEAD_SHA\`, so there is no evidence this branch builds."
+              echo
+              echo "Push the branch (or re-run CI) and request again."
+            } > "$RUNNER_TEMP/refusal.md"
+            echo "::error::No ci.yml run found for $HEAD_SHA."
+            exit 1
+          fi
+          status=$(jq -r .status "$RUNNER_TEMP/ci.json")
+          conclusion=$(jq -r .conclusion "$RUNNER_TEMP/ci.json")
+          run_url=$(jq -r .url "$RUNNER_TEMP/ci.json")
+          echo "ci.yml on $HEAD_SHA: status=$status conclusion=$conclusion"
+          if [ "$status" != "completed" ]; then
+            {
+              echo "Refusing: [CI]($run_url) is still \`$status\` for \`$HEAD_SHA\`."
+              echo
+              echo "Wait for it to finish, then request again."
+            } > "$RUNNER_TEMP/refusal.md"
+            echo "::error::CI is $status for $HEAD_SHA."
+            exit 1
+          fi
+          if [ "$conclusion" != "success" ]; then
+            {
+              echo "Refusing: [CI]($run_url) concluded \`$conclusion\` for \`$HEAD_SHA\`."
+              echo
+              echo "Fix what it reports, push, and request again."
+            } > "$RUNNER_TEMP/refusal.md"
+            echo "::error::CI concluded $conclusion for $HEAD_SHA."
+            exit 1
+          fi
 
       - name: Checkout the pull request head
         uses: actions/checkout@v4
@@ -273,20 +373,54 @@ jobs:
       - name: Report the result
         if: always()
         env:
+          # A refusal addressed to the bot must WAKE the bot, and a comment
+          # authored by GITHUB_TOKEN triggers no workflow. So a retry reply goes
+          # out as FAST_FORWARD_TOKEN, which is a PAT and does trigger. Everything
+          # else stays github-actions[bot], which is the better author for a
+          # comment nobody needs to act on.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RETRY_TOKEN: ${{ secrets.FAST_FORWARD_TOKEN }}
           HEAD_SHA: ${{ steps.pr.outputs.head }}
           PUSHED: ${{ steps.push.outcome }}
+          CHAIN: ${{ steps.requester.outputs.chain }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           body="$RUNNER_TEMP/body.md"
+          retry=false
+
           if [ "$PUSHED" = "success" ]; then
             printf '%s\n' "Fast-forwarded \`master\` to \`$HEAD_SHA\`. Nothing was rewritten, so every commit keeps its SHA and its signature." > "$body"
           elif [ -s "$RUNNER_TEMP/refusal.md" ]; then
-            cp "$RUNNER_TEMP/refusal.md" "$body"
+            if [ -n "${CHAIN:-}" ]; then
+              # The bot asked, and this is why it cannot have it. Addressed so
+              # claude.yml re-enters -- its trigger requires `@claude` to be the
+              # first thing in the body, so this line must come first.
+              retry=true
+              {
+                echo "@claude the fast-forward refused this attempt:"
+                echo
+                cat "$RUNNER_TEMP/refusal.md"
+              } > "$body"
+            else
+              cp "$RUNNER_TEMP/refusal.md" "$body"
+            fi
           else
             # A step failed before writing a reason: infrastructure, not a refusal.
             printf '%s\n' "The fast-forward run failed before it could check this pull request. See [the run log]($RUN_URL)." > "$body"
           fi
+
           printf '\n%s\n' "<sub>[fast-forward run]($RUN_URL)</sub>" >> "$body"
+
+          if [ "$retry" = true ]; then
+            # A DIFFERENT sentinel from the `claude-land chain=` marker the bot
+            # writes: that one is counted to bound the chain, and reusing it here
+            # would make every refusal spend a second attempt.
+            printf '\n%s\n' "<!-- claude-land-retry chain=$CHAIN -->" >> "$body"
+            if [ -n "${RETRY_TOKEN:-}" ]; then
+              GH_TOKEN="$RETRY_TOKEN" gh pr comment "$PR" --repo "$REPO" --body-file "$body"
+              exit 0
+            fi
+            echo "::warning::FAST_FORWARD_TOKEN is unset, so this refusal cannot wake the bot. Posting it as github-actions[bot]; the chain stops here."
+          fi
           gh pr comment "$PR" --repo "$REPO" --body-file "$body"
