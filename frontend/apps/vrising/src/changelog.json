@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.11.0",
+      "date": "2026-08-12",
+      "commit": "858c462a0f45d86807bd89ebeb37ad7649379b65",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added 10 official Cave Passage endpoints in five bidirectional pairs, with one-click travel between connected ends.",
+            "zh-CN": "新增 10 个官方洞穴通道端点，共 5 组双向配对，可一键前往相连的另一端。",
+            "zh-TW": "新增 10 個官方洞穴通道端點，共 5 組雙向配對，可一鍵前往相連的另一端。"
+          }
+        },
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Replaced approximate waygate markers with all 22 exact Vampire Waygates and updated map labels and descriptions to official in-game text.",
+            "zh-CN": "以全部 22 个精确的吸血鬼传送门替换近似点位，并将地图名称与描述更新为游戏官方文本。",
+            "zh-TW": "以全部 22 個精確的吸血鬼傳送門取代近似點位，並將地圖名稱與描述更新為遊戲官方文本。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.10.0",
       "date": "2026-08-10",
       "commit": "435e88ae26ce54b8a7029629bbe747064e0e9dc3",
