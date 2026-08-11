@@ -229,7 +229,12 @@ test.describe("desktop is unchanged", () => {
     const chips = page.locator('[data-testid^="section-chip-"]');
     await chips.first().waitFor({ state: "visible" });
     const box = await chips.first().boundingBox();
-    expect(box!.height).toBeLessThanOrEqual(36);
+    const compactHeight = await page.evaluate(
+      () =>
+        Number.parseFloat(getComputedStyle(document.documentElement).fontSize) *
+        2.25,
+    );
+    expect(box!.height).toBeLessThanOrEqual(compactHeight);
   });
 
   test("sidebar still renders the marker-types section", async ({ page }) => {

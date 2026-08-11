@@ -16,7 +16,7 @@ type SectionRaceCounts = Record<WikiIndexDoc["race"], number>;
 
 const BUCKETS: FactionBucket[] = ["light", "dark", "both"];
 const SECTION_LINK_CLASS =
-  "grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-r border-border px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-[color:var(--arkive-nav-active)] focus-visible:relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)]";
+  "grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-r border-border px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-[color:var(--arkive-nav-active)] focus-visible:relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)] md:min-h-9 md:py-1.5";
 
 function emptyBuckets(): Record<FactionBucket, SectionLink[]> {
   return { light: [], dark: [], both: [] };
@@ -182,10 +182,10 @@ export default function TypeHub({ type }: { type: string }) {
       />
 
       <nav
-        className="overflow-x-auto border-b border-border lg:hidden"
+        className="border-b border-border lg:hidden"
         aria-label={t("wiki:hub.categories")}
       >
-        <ul className="flex min-w-max">
+        <ul className="grid grid-cols-2 sm:grid-cols-3">
           {node.groups.map((group) => {
             const active = group.slug === activeGroup.slug;
             const opensEntries =
@@ -201,7 +201,7 @@ export default function TypeHub({ type }: { type: string }) {
                       : { type }
                   }
                   hash={opensEntries ? undefined : `group-${group.slug}`}
-                  className={`flex min-h-11 items-center gap-2 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)] ${
+                  className={`flex min-h-11 min-w-0 items-center justify-between gap-2 border-b-2 px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)] ${
                     active
                       ? "border-[color:var(--arkive-nav-accent)] text-[color:var(--arkive-nav-active)]"
                       : "border-transparent text-muted-foreground hover:text-foreground"
@@ -209,8 +209,10 @@ export default function TypeHub({ type }: { type: string }) {
                   aria-current={active ? "page" : undefined}
                   data-testid={`wiki-hub-toc-${group.slug}`}
                 >
-                  <span>{t(`wiki/taxonomy:groups.${type}.${group.slug}.name`)}</span>
-                  <span className="text-xs tabular-nums">{group.count}</span>
+                  <span className="min-w-0 truncate">
+                    {t(`wiki/taxonomy:groups.${type}.${group.slug}.name`)}
+                  </span>
+                  <span className="shrink-0 text-xs tabular-nums">{group.count}</span>
                 </Link>
               </li>
             );
