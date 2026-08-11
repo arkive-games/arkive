@@ -274,16 +274,34 @@ to a beta header rather than a model id, and a proxy is one more place for a bet
 dropped silently. If a review ever needs more context than the default window, the fix is a
 narrower prompt, not a longer one.
 
-**Step 0 gates everything else.** Before the rest is trusted, a throwaway workflow runs the
-action against the gateway from a real runner with a trivial prompt, and must establish:
+**Step 0 gated everything else, and passed.** A throwaway workflow ran the action against the
+gateway from a real Azure runner. Measured 2026-08-11, run `31510226377`:
 
-1. The key authenticates from Azure (not merely from this LAN).
-2. `claude-opus-5` resolves through the gateway under a real agent session.
-3. `count_tokens` answers rather than 404s.
-4. Cross-border latency and the gateway's Opus quota tolerate a full-diff review.
+| Question | Result |
+|---|---|
+| Does the key authenticate from Azure, not merely the LAN? | Yes — `HTTP 200` |
+| Does `claude-opus-5` resolve through the gateway? | Yes — echoed back in `.model`, real completion, `stop_reason: end_turn` |
+| Does `count_tokens` answer rather than 404? | Yes — `HTTP 200`, `{"input_tokens": 8}` |
+| Does a real agent session survive the proxy? | Yes — `GATEWAY_OK claude-opus-5`, `is_error: false`, 3 turns, 16 s |
+| Latency | 2.3–3.6 s per call; connect 0.22–0.48 s, TLS 0.44–0.71 s |
+| Cost of a trivial 3-turn session | **$0.357** |
 
-Nothing above is worth building if the gateway does not hold up under an agent session. The
-throwaway workflow is deleted once its result is recorded here.
+Two things worth carrying forward. Roughly half a second of each call is connect and TLS, re-paid
+per request in the probe because each was a fresh `curl`; a session reuses the connection, but
+cross-border round-trip still puts every turn at 2–3 s, so a long review carries a minute or so
+of pure overhead. And **$0.357 is a floor, not an estimate** — that session read one file and ran
+one command. A full-diff review against `CLAUDE.md` will cost multiples of it, which is the
+argument for review-on-request (§11) rather than on every push.
+
+The check was retired once these were recorded, rather than kept as a diagnostic: `claude.yml`
+exercises the same path on every run, so a later gateway failure surfaces in a real review with
+the same information, and a probe that duplicates it is scaffolding that would rot.
+
+One trap it exposed, which cost a run: **without an explicit `github_token`, the action mints one
+via OIDC**, needing both `id-token: write` and Anthropic's own GitHub App installed. Neither
+applies here, and it fails *before reaching the gateway*, so the error blames OIDC in a workflow
+whose whole subject is the model endpoint. `claude.yml` passes the bot App's installation token,
+so it is not affected.
 
 ## 10. Instruction change
 
