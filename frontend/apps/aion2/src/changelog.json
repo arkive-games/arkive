@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.16.0",
+      "date": "2026-08-12",
+      "commit": "147fb93cc70ad4afcd37ac513c520ceb4a1aaeb3",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse the AION2 wiki in a denser three-column workspace with direct category lists, persistent context, recently viewed entries, and clear category return buttons.",
+            "zh-CN": "AION2 百科现已采用高密度三栏工作区，支持分类直达、上下文常驻、最近浏览和明确的分类返回按钮。",
+            "zh-TW": "AION2 百科現已採用高密度三欄工作區，支援分類直達、情境常駐、最近瀏覽和明確的分類返回按鈕。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.15.0",
       "date": "2026-08-10",
       "commit": "435e88ae26ce54b8a7029629bbe747064e0e9dc3",
