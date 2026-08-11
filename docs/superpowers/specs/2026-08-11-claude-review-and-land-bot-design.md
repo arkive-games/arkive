@@ -170,6 +170,22 @@ Two details that are easy to get wrong and both fail in confusing ways:
 The workflow proves both at setup time by making an empty signed commit and asserting `%G?` is
 `G` before it touches the branch, rather than discovering it at the push.
 
+**And local verification sees only the bot's key, which is the trap the first live run fell
+into.** `allowed_signers` contains one entry, so `%G?` answers `E` — *cannot check* — for every
+commit signed by anybody else. The pre-push check originally tested every commit ahead of the
+base and therefore rejected three contributor commits that GitHub reported `verified=true`
+(run `31511218593`, PR #22).
+
+It only failed harmlessly because that run's rebase had conflicted, so there was nothing to push
+anyway. On the ordinary path it would have been worse: a branch already rebased needs no rebase,
+so its commits keep their authors' signatures — and *every* such branch would have failed the
+check and never reached `/fast-forward`. The commonest case was the broken one.
+
+The check now covers only commits whose **committer** is the bot, which are the only ones signed
+with the key the runner holds and the only ones this run is responsible for. Everyone else's
+signatures are GitHub's to verify, and `fast-forward.yml` already asks it about every commit
+through the API.
+
 ## 6. Changes to `fast-forward.yml`
 
 **New precondition — required checks green on the head SHA.** Today nothing asserts `ci.yml`
@@ -302,6 +318,26 @@ via OIDC**, needing both `id-token: write` and Anthropic's own GitHub App instal
 applies here, and it fails *before reaching the gateway*, so the error blames OIDC in a workflow
 whose whole subject is the model endpoint. `claude.yml` passes the bot App's installation token,
 so it is not affected.
+
+### What a real review actually costs
+
+First live run, PR #22 — 21 files, +503/−360, run `31511218593`:
+
+| | |
+|---|---|
+| Turns | 64 |
+| Wall clock | 612 s (~10 min) |
+| Cost | **$4.35** |
+| Verdict | `HOLD` — correctly, the rebase conflicted |
+
+So a substantive review is roughly **twelve times** the trivial-session floor, and takes ten
+minutes. Two consequences worth holding on to: reviewing on every push would be indefensible at
+this price, which is what §12 already assumes; and the ten minutes means the bot is not something
+to wait on synchronously — request the review, go and do something else.
+
+The run also confirmed the authorship discriminator behaves: PR #22 modifies `CLAUDE.md`,
+`AGENTS.md` and `.apm/instructions/`, all protected paths, and the guard correctly did **not**
+fire, because those commits were the contributor's rather than the bot's.
 
 ## 10. Instruction change
 

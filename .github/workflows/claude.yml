@@ -555,20 +555,40 @@ jobs:
           fi
           echo "Only changelog.json was changed. Verb policy satisfied."
 
-      - name: Check every commit is signed before pushing
+      - name: Check the bot's own commits are signed before pushing
         if: steps.agent.outcome == 'success' && env.IS_FORK == 'false'
+        env:
+          BOT_EMAIL: ${{ vars.BOT_GIT_EMAIL }}
         run: |
           set -euo pipefail
-          # Caught here rather than three workflow hops later as a fast-forward
-          # refusal. 'G' good, 'U' good-but-untrusted -- both are signatures
-          # GitHub can verify; anything else is not.
-          bad=$(git log --format='%H %G?' "origin/$BASE_REF..HEAD" | awk '$2 != "G" && $2 != "U" {print}')
+          # ONLY commits this run committed, selected by committer email.
+          #
+          # The first version checked every commit ahead of the base and was
+          # badly wrong: `%G?` can only verify signatures whose key is in the
+          # local allowed-signers file, and the runner writes exactly one key
+          # into it -- the bot's. So every contributor commit read as `E`
+          # (cannot check) even when GitHub reported verified=true, which it did
+          # for all three commits of the first real run. That blocked the push on
+          # a branch whose signatures were fine.
+          #
+          # It would also have broken the commonest path outright: a branch
+          # already rebased needs no rebase, so its commits keep their authors'
+          # own signatures and every one of them would have failed this check.
+          #
+          # Other people's signatures are GitHub's to verify, and fast-forward.yml
+          # already asks it about every commit through the API. The only thing
+          # worth checking here is that the bot's rebase and its changelog commit
+          # came out signed, because that is what THIS run is responsible for.
+          bad=$(git log --format='%H %G? %ce' "origin/$BASE_REF..HEAD" \
+                | awk -v e="$BOT_EMAIL" '$3 == e && $2 != "G" {print $1" "$2}')
           if [ -n "$bad" ]; then
-            echo "::error::These commits carry no usable signature, and fast-forward.yml would refuse them:"
+            echo "::error::Commits this run created are unsigned, and fast-forward.yml would refuse them:"
             echo "$bad"
+            echo "Check BOT_SSH_SIGNING_KEY and that rebase.gpgSign is set."
             exit 1
           fi
-          echo "Every commit ahead of origin/$BASE_REF is signed."
+          mine=$(git log --format='%ce' "origin/$BASE_REF..HEAD" | grep -c "^$BOT_EMAIL$" || true)
+          echo "$mine commit(s) committed by this run, all signed."
 
       - name: Push the repaired branch
         id: push
