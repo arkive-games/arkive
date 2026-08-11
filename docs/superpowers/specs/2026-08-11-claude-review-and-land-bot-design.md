@@ -293,7 +293,36 @@ review.
 This belongs in `.apm/instructions/*.instructions.md` followed by `apm compile` — `CLAUDE.md`
 and `AGENTS.md` are generated, and a hand edit to either is discarded on the next compile.
 
-## 11. Out of scope
+## 11. Publishing this beyond Arkive
+
+The App is registered **public**, so any account can install it, and the intent is eventually to
+make the bot reusable. That is a second piece of work and deliberately does not gate this one:
+generalising before a single run has happened would mean designing an abstraction around
+behaviour nobody has observed.
+
+Worth being clear about what is actually worth publishing. The *review* half is largely what
+`anthropics/claude-code-action` already provides in public. What is novel here is the **bounded
+repair-and-land chain** (§4) and the **pipeline-protection guard** (§8) — and the landing half is
+the most Arkive-specific thing in the design, because fast-forward-only landing exists to
+preserve the SHAs `changelog.json` pins. Most repositories want a squash-merge button and have no
+such constraint.
+
+So a distributable version is a reusable `workflow_call` with a pluggable land step, not this
+file with its strings swapped. What is hardcoded today, and would have to become inputs:
+
+| Hardcoded | Becomes |
+|---|---|
+| `ANTHROPIC_BASE_URL: https://api.tc-imba.com` | an input, defaulting to unset (`api.anthropic.com`) |
+| pnpm/Node setup and `pnpm install` in `frontend/` | opt-in; most repositories need no install at all |
+| `pnpm changelog:verify` in the prompt and tool list | an optional "post-rebase repair command" |
+| `ci.yml` by name in `fast-forward.yml` | an input naming the workflow that must be green |
+| The blocking/non-blocking examples in §3 | read from the consuming repository's own `CLAUDE.md` rather than written into the workflow |
+| Fast-forward landing | one strategy among several; a squash-merge repository needs a different final step |
+
+`vars.CLAUDE_BOT_LOGIN` being unset already disables bot recognition safely, so a consumer that
+wants review without landing gets that by simply not setting it.
+
+## 12. Out of scope
 
 - Reviewing on `pull_request` events. Review is on request only; every push triggering a
   review would spend the gateway's Opus budget on work in progress.
