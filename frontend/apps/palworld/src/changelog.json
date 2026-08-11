@@ -3,7 +3,7 @@
     {
       "version": "1.29.0",
       "date": "2026-08-10",
-      "commit": "0c41a63096fe6b8dbb8008e64587b1ae679c9f49",
+      "commit": "35a881167bd0fe47f1dc0c9ef040eb8c33cbea40",
       "changes": [
         {
           "kind": "feature",
@@ -18,7 +18,7 @@
     {
       "version": "1.28.2",
       "date": "2026-08-10",
-      "commit": "eee05e2ea7e60cb04d4c3acedd5eebcd814da4f9",
+      "commit": "0546953c6bb1b42b99767720550ac189844ab1bb",
       "changes": [
         {
           "kind": "improvement",
@@ -41,7 +41,7 @@
     {
       "version": "1.28.1",
       "date": "2026-08-10",
-      "commit": "9237d4116bd9ac8dabf4c797ad752fd04ced22a3",
+      "commit": "e203d2c41821e1923d885f93c3708e579b1edb34",
       "changes": [
         {
           "kind": "improvement",
@@ -56,7 +56,7 @@
     {
       "version": "1.28.0",
       "date": "2026-08-10",
-      "commit": "889a09810b86b57f739099f39ac691ed5b4b8678",
+      "commit": "e3bedcd0bc9968d8d2a491e16282e53166447bcb",
       "changes": [
         {
           "kind": "feature",
@@ -71,7 +71,7 @@
     {
       "version": "1.27.4",
       "date": "2026-08-10",
-      "commit": "436654c399f64e95a315d9ad2b4ae30a37cf37f9",
+      "commit": "3b5e6724f0d6f75f9f169d04010ea28cd83c3b12",
       "changes": [
         {
           "kind": "fix",
@@ -86,7 +86,7 @@
     {
       "version": "1.27.3",
       "date": "2026-08-10",
-      "commit": "355bfc6cd17b608ed84405204a83740f5b1e782b",
+      "commit": "b055efe95bba00a3808caf7543372d17d312e53b",
       "changes": [
         {
           "kind": "fix",
@@ -101,7 +101,7 @@
     {
       "version": "1.27.2",
       "date": "2026-08-10",
-      "commit": "eb324a217bde957ad0665231628a46e53e688dbd",
+      "commit": "88e3d6b30c143ce562942b509939c43cc8320d2f",
       "changes": [
         {
           "kind": "fix",
@@ -116,7 +116,7 @@
     {
       "version": "1.27.1",
       "date": "2026-08-10",
-      "commit": "4407f4bf2a15cde2eb0b5e569b3fc96d0f85292f",
+      "commit": "08a6fbfdd5ea15c2eb5237569b57ca5179230e8d",
       "changes": [
         {
           "kind": "fix",
