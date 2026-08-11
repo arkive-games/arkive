@@ -123,13 +123,19 @@ on. Authorising on the marker's presence would let any stranger paste that text 
 disables bot recognition entirely, which is the safe default and leaves the gatekeeper behaving
 exactly as it did before this feature.
 
-**The budget is counted, not parsed.** `claude.yml` counts how many comments on the pull
-request already carry `chain=<id>` and refuses above **3**. Parsing an `attempt=N` written into
-the comment was the first design and is weaker than it looks: Claude holds a token with
-`issues: write`, so it could author a marker of its own, and a parsed counter can be reset by
-writing `attempt=1`. A count cannot be reset — a spurious marker only spends budget faster.
-That matters more than it might seem, because an unbounded loop here spends real money on the
-gateway rather than merely looping.
+**The budget is counted *and* parsed, whichever is higher**, and refuses above **3**. Each
+source exists to cover the other's failure, and both failures were real:
+
+- **Counting alone undercounts.** The comments-list API lags its own writes. Measured on PR #22:
+  the marker comment was 12 seconds old and the endpoint still did not return it, so attempt 2
+  announced itself as attempt 1 and the chain would have run four times against a budget of
+  three. At roughly $4 a cycle that is a real overrun, not a cosmetic one.
+- **Parsing alone is resettable.** A number written into a comment can be written as `1` forever,
+  which is why the first design rejected it outright.
+
+Lag can only push the *count* down; a forged marker only spends the budget *faster*. Under-
+reporting therefore requires both to be wrong at once, in opposite directions. The parsed value
+comes from the triggering comment in the event payload, which cannot lag by construction.
 
 Bot-authored triggers bypass §2's permission gate — otherwise the chain cannot close, since
 the App is not a collaborator with a permission level. They bypass nothing else. A bot comment
@@ -197,10 +203,19 @@ file holding only the bot's key, and rejects them. That is the original bug wear
 
 ## 6. Changes to `fast-forward.yml`
 
-**New precondition — required checks green on the head SHA.** Today nothing asserts `ci.yml`
-passed; a human supplies that judgement implicitly by only commenting `/fast-forward` on a
-green pull request. Removing the human removes the check. This is a defect in the current
-workflow independent of this feature, and fixing it helps the human path too.
+**New precondition — CI green on the head SHA, and it WAITS rather than refuses.** Nothing
+asserted `ci.yml` passed; a human supplied that judgement implicitly by only commenting
+`/fast-forward` on a green pull request. Removing the human removes the check.
+
+Waiting is not politeness — it is what keeps the gate cheap. The bot rebases, force-pushes and
+asks to land inside one run, so CI on the new SHA has usually not *started* when the request
+arrives. Refusing then replied "CI is still queued", which re-entered the bot and spent a full
+**~$4 review of the entire diff to answer a timing problem** (PR #22, run `31517983083`). The
+step now polls until CI concludes, capped at ten minutes because it holds the
+`fast-forward-master` concurrency group while it waits and CI here takes about three.
+
+An absent run is a state to wait through, not a verdict: a just-pushed SHA has no run for a few
+seconds. Only the timeout distinguishes "CI never started" from "CI is slow".
 
 **Refusals learn to address `@claude`** when the attempt was bot-initiated, carrying the
 incremented depth marker (§4).

@@ -137,7 +137,14 @@ jobs:
             # Only now is the marker read, and only to learn which chain to reply
             # on. It is not what authorised this run.
             chain=$(printf '%s' "$BODY" | sed -n 's/.*claude-land chain=\([0-9]\{1,\}\).*/\1/p' | head -1)
-            echo "chain=${chain:-<none>}"
+            # The attempt number travels in the marker as well as being counted on
+            # the far side. Counting alone undercounted: on PR #22 the marker
+            # comment was 12 seconds old and the comments-list API still did not
+            # return it, so a retry that was attempt 2 announced itself as
+            # attempt 1 and the chain would have run four times, not three.
+            # This value comes from the event payload, which cannot lag.
+            attempt=$(printf '%s' "$BODY" | sed -n 's/.*claude-land chain=[0-9]\{1,\} attempt=\([0-9]\{1,\}\).*/\1/p' | head -1)
+            echo "chain=${chain:-<none>} attempt=${attempt:-<none>}"
           else
             level=$(gh api "repos/$REPO/collaborators/$REQUESTER/permission" --jq .permission)
             echo "$REQUESTER has $level permission"
@@ -149,7 +156,10 @@ jobs:
                 ;;
             esac
           fi
-          echo "chain=$chain" >> "$GITHUB_OUTPUT"
+          {
+            echo "chain=$chain"
+            echo "attempt=${attempt:-}"
+          } >> "$GITHUB_OUTPUT"
 
       # Every refusal below writes its reason to $RUNNER_TEMP/refusal.md and the
       # last step posts it. Not the workspace: actions/checkout cleans that, which
@@ -194,38 +204,69 @@ jobs:
       #
       # Placed before the checkout because it is one API call, and a red pull
       # request should be refused before cloning the repository.
-      - name: Check CI passed on the head commit
+      # WAITS rather than refuses while CI is still running, which is not a
+      # convenience -- it is the difference between a cheap gate and an expensive
+      # one. The review bot rebases, force-pushes and asks to land in the same
+      # run, so CI on the new SHA has usually not even STARTED when the request
+      # arrives. Refusing then sent back "CI is still queued", which re-entered
+      # the bot and spent a full ~$4 review of the whole diff to answer a timing
+      # problem. Measured on PR #22, run 31517983083.
+      #
+      # It helps the human path too: `/fast-forward` typed straight after a push
+      # used to refuse for the same reason.
+      #
+      # The cost is that this job holds the `fast-forward-master` concurrency
+      # group while it waits, so another landing queues behind it. That is why the
+      # cap is ten minutes and not longer -- CI here runs in about three.
+      - name: Wait for CI to pass on the head commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEAD_SHA: ${{ steps.pr.outputs.head }}
+          TIMEOUT_SECONDS: 600
+          POLL_SECONDS: 20
         run: |
           set -euo pipefail
-          # Most recent run wins, so a re-run after a fix is what counts.
-          gh api --paginate "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$HEAD_SHA" \
-            --jq '.workflow_runs | sort_by(.created_at) | last
-                  | {status, conclusion, url: .html_url}' > "$RUNNER_TEMP/ci.json"
-          if [ ! -s "$RUNNER_TEMP/ci.json" ] || [ "$(cat "$RUNNER_TEMP/ci.json")" = "null" ]; then
-            {
-              echo "Refusing: CI has not run against \`$HEAD_SHA\`, so there is no evidence this branch builds."
-              echo
-              echo "Push the branch (or re-run CI) and request again."
-            } > "$RUNNER_TEMP/refusal.md"
-            echo "::error::No ci.yml run found for $HEAD_SHA."
-            exit 1
-          fi
-          status=$(jq -r .status "$RUNNER_TEMP/ci.json")
-          conclusion=$(jq -r .conclusion "$RUNNER_TEMP/ci.json")
-          run_url=$(jq -r .url "$RUNNER_TEMP/ci.json")
-          echo "ci.yml on $HEAD_SHA: status=$status conclusion=$conclusion"
-          if [ "$status" != "completed" ]; then
-            {
-              echo "Refusing: [CI]($run_url) is still \`$status\` for \`$HEAD_SHA\`."
-              echo
-              echo "Wait for it to finish, then request again."
-            } > "$RUNNER_TEMP/refusal.md"
-            echo "::error::CI is $status for $HEAD_SHA."
-            exit 1
-          fi
+          deadline=$(( SECONDS + TIMEOUT_SECONDS ))
+          status=absent
+          conclusion=
+          run_url=
+
+          while :; do
+            # Most recent run wins, so a re-run after a fix is what counts.
+            gh api --paginate "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$HEAD_SHA" \
+              --jq '.workflow_runs | sort_by(.created_at) | last
+                    | {status, conclusion, url: .html_url}' > "$RUNNER_TEMP/ci.json" || true
+
+            if [ -s "$RUNNER_TEMP/ci.json" ] && [ "$(cat "$RUNNER_TEMP/ci.json")" != "null" ]; then
+              status=$(jq -r '.status // "absent"' "$RUNNER_TEMP/ci.json")
+              conclusion=$(jq -r '.conclusion // ""' "$RUNNER_TEMP/ci.json")
+              run_url=$(jq -r '.url // ""' "$RUNNER_TEMP/ci.json")
+            else
+              # A just-pushed SHA has no run for a few seconds. Absent is a state
+              # to wait through, not a verdict.
+              status=absent
+            fi
+            echo "ci.yml on $HEAD_SHA: status=$status conclusion=${conclusion:-<none>} ($(( deadline - SECONDS ))s left)"
+            [ "$status" = "completed" ] && break
+
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              {
+                if [ "$status" = "absent" ]; then
+                  echo "Refusing: no CI run appeared for \`$HEAD_SHA\` within $(( TIMEOUT_SECONDS / 60 )) minutes, so there is no evidence this branch builds."
+                  echo
+                  echo "Check that \`ci.yml\` is triggering for this branch, then request again."
+                else
+                  echo "Refusing: [CI]($run_url) was still \`$status\` for \`$HEAD_SHA\` after $(( TIMEOUT_SECONDS / 60 )) minutes."
+                  echo
+                  echo "Wait for it to finish, then request again."
+                fi
+              } > "$RUNNER_TEMP/refusal.md"
+              echo "::error::CI did not complete for $HEAD_SHA within ${TIMEOUT_SECONDS}s (last status: $status)."
+              exit 1
+            fi
+            sleep "$POLL_SECONDS"
+          done
+
           if [ "$conclusion" != "success" ]; then
             {
               echo "Refusing: [CI]($run_url) concluded \`$conclusion\` for \`$HEAD_SHA\`."
@@ -383,6 +424,7 @@ jobs:
           HEAD_SHA: ${{ steps.pr.outputs.head }}
           PUSHED: ${{ steps.push.outcome }}
           CHAIN: ${{ steps.requester.outputs.chain }}
+          ATTEMPT: ${{ steps.requester.outputs.attempt }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail

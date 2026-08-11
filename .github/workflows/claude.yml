@@ -38,11 +38,21 @@
 #   fast-forward.yml refuses such an attempt it replies addressed `@claude`, which
 #   re-enters this workflow so the refusal can be repaired rather than merely read.
 #
-#   The budget is COUNTED, not parsed: this workflow counts how many comments
-#   already carry `claude-land chain=<id>` and stops above MAX_ATTEMPTS. A parsed
-#   `attempt=N` would be resettable by writing `attempt=1`; a count is not, and a
-#   spurious marker only spends the budget faster. An unbounded loop here spends
-#   real money at the gateway, so the bound must not depend on the model.
+#   The budget is COUNTED AND PARSED, whichever is higher, and stops above
+#   MAX_ATTEMPTS. Each source fixes the other's failure:
+#
+#     counting markers cannot be reset by writing `attempt=1`, but it UNDERCOUNTS
+#     -- the comments-list API lags its own writes. Measured on PR #22: a marker
+#     12 seconds old was still absent from the list, so attempt 2 called itself
+#     attempt 1 and the chain would have run four times against a budget of three.
+#
+#     the number carried in the marker cannot lag, because it arrives in the event
+#     payload -- but on its own it is a counter a writer could pin at 1.
+#
+#   Lag pushes only the count down; a forged marker only spends budget faster. To
+#   under-report, both would have to be wrong at once, in opposite directions. An
+#   unbounded loop here spends real money at the gateway (~$4 a cycle), so the
+#   bound must not rest on one source.
 #
 # Secrets and variables:
 #   CLAUDE_APP_ID, CLAUDE_APP_PRIVATE_KEY  the bot App. Its installation token
@@ -145,6 +155,11 @@ jobs:
               echo "::warning::Retry marker present but no chain id could be parsed."
               deny "Ignoring."
             fi
+            # The attempt the gatekeeper just refused, read straight from the
+            # event payload. See the budget note below for why the count alone
+            # is not trustworthy.
+            prev_attempt=$(printf '%s' "$BODY" \
+              | sed -n 's/.*claude-land-retry chain=[0-9]\{1,\} attempt=\([0-9]\{1,\}\).*/\1/p' | head -1)
           else
             # Not author_association: it reports MEMBER/CONTRIBUTOR from org and
             # commit history, neither of which is push access.
@@ -173,11 +188,25 @@ jobs:
           esac
 
           # --- how much budget is left -----------------------------------------
-          # Counted, not parsed -- see the header.
-          used=$(gh api --paginate "repos/$REPO/issues/$PR/comments" --jq '.[].body' \
-                 | grep -c "claude-land chain=$chain" || true)
-          attempt=$((used + 1))
-          echo "chain=$chain verb=$verb attempt=$attempt of $MAX_ATTEMPTS"
+          # Counted AND parsed, whichever is higher.
+          #
+          # Counting alone undercounts, which was measured rather than theorised:
+          # on PR #22 the marker comment was 12 seconds old and the comments-list
+          # API still did not return it, so attempt 2 announced itself as attempt
+          # 1 and the chain would have run four times against a budget of three.
+          # The list endpoint lags its own writes.
+          #
+          # Parsing alone was rejected in the original design because a number
+          # written into a comment can be written as `1` forever. So take the max:
+          # lag can only push the COUNT down, and the marker value arrives in the
+          # event payload, which cannot lag. Under-reporting now needs BOTH to be
+          # wrong at once, and they fail in different directions.
+          counted=$(gh api --paginate "repos/$REPO/issues/$PR/comments" --jq '.[].body' \
+                    | grep -c "claude-land chain=$chain" || true)
+          from_count=$(( counted + 1 ))
+          from_marker=$(( ${prev_attempt:-0} + 1 ))
+          attempt=$(( from_count > from_marker ? from_count : from_marker ))
+          echo "chain=$chain verb=$verb attempt=$attempt of $MAX_ATTEMPTS (counted $counted, marker said ${prev_attempt:-none})"
 
           if [ "$attempt" -gt "$MAX_ATTEMPTS" ]; then
             echo "::error::Chain $chain has used $used attempts; the budget is $MAX_ATTEMPTS."
@@ -780,6 +809,8 @@ jobs:
             echo "Requested by the review above."
             echo
             # Counted by the next run to bound the chain: one marker per attempt.
-            echo "<!-- claude-land chain=$CHAIN -->"
+            # The number is carried too, because the count can lag -- see the
+            # budget note in the preflight gate.
+            echo "<!-- claude-land chain=$CHAIN attempt=$ATTEMPT -->"
           } > "$body"
           gh pr comment "$PR" --repo "$REPO" --body-file "$body"
