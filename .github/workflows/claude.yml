@@ -20,6 +20,12 @@
 #                              than resolved.
 #     no WebFetch/WebSearch -- nothing here needs the network.
 #
+#   And it may not edit the pipeline, under EITHER verb: .github/**, .claude/**,
+#   .apm/**, CLAUDE.md, AGENTS.md, apm.yml. `@claude fix` is consent to change the
+#   code under review, not the machinery reviewing it. .claude/** is the sharpest
+#   of those and the least obvious -- hooks there RUN COMMANDS, so a settings edit
+#   landing on master is remote code execution on every later checkout.
+#
 #   This matters because `contents: write` on GitHub cannot be scoped to a single
 #   branch: a token that can push a pull request branch can also push master. The
 #   ruleset on master (spec §8) is the enforcement; this list is what means the
@@ -440,6 +446,18 @@ jobs:
 
             ${{ needs.preflight.outputs.verb == 'fix' && 'Beyond that, you may edit code to implement your own findings, because a human asked you to with `@claude fix`. Commit each logical fix separately, message in this repository''s `type(scope):` style.' || 'Beyond that, change NOTHING. Do not edit code even to fix something you found — reporting it is the whole job, and a later step fails the run if you touch anything but `changelog.json`.' }}
 
+            **Never edit any of these, under any verb.** A later step fails the run
+            and pushes nothing if you do, so an edit here costs the whole review:
+
+            - `.github/**` — workflows, including the one running you
+            - `.claude/**` — hooks here execute commands
+            - `.apm/**`, `CLAUDE.md`, `AGENTS.md`, `apm.yml` — agent instructions
+
+            If a finding is *about* one of these, that is fine and useful: describe
+            the change in review.md and let a person make it. You are not allowed
+            to edit the machinery that reviews and lands code, because that
+            machinery is what makes your own output safe to trust.
+
             You cannot push, comment, or open a pull request, and you should not
             try: later steps do that. Leave your commits local.
 
@@ -455,7 +473,7 @@ jobs:
       # Deterministic, because the instruction above lives in a prompt and prompts
       # are advisory. Authorship is the discriminator: a rebase preserves the
       # original author, so anything authored by the bot is the agent's own work.
-      - name: Check the agent changed only what its verb allows
+      - name: Check what the agent changed
         if: steps.agent.outcome == 'success'
         env:
           BEFORE: ${{ steps.before.outputs.sha }}
@@ -469,17 +487,68 @@ jobs:
           echo "Commits the agent added:"
           git log --format='  %h %ae %s' "$BEFORE..HEAD"
 
-          if [ "$VERB" = "fix" ]; then
-            echo "Verb is 'fix'; code changes are authorised."
+          # Authorship is the discriminator. A rebase preserves the original
+          # author and replaces only the committer, so commits AUTHORED by the bot
+          # are exactly the agent's own work -- rebased contributor commits are not
+          # mistaken for it.
+          touched=$(git log --format='%H %ae' "$BEFORE..HEAD" \
+                    | awk -v e="$BOT_EMAIL" '$2 == e {print $1}' \
+                    | while read -r sha; do git show --pretty=format: --name-only "$sha"; done \
+                    | grep -v '^$' | sort -u || true)
+          if [ -z "$touched" ]; then
+            echo "The agent authored no file changes."
             exit 0
           fi
+          echo "Files the agent changed:"
+          printf '  %s\n' $touched
 
-          # Files touched by bot-authored commits since the baseline.
-          bad=$(git log --format='%H %ae' "$BEFORE..HEAD" \
-                | awk -v e="$BOT_EMAIL" '$2 == e {print $1}' \
-                | while read -r sha; do git show --pretty=format: --name-only "$sha"; done \
-                | grep -v -E '(^$|/changelog\.json$)' | sort -u || true)
+          # --- protected paths, both verbs ------------------------------------
+          #
+          # These files decide what CI runs, what an agent is instructed to do,
+          # and what hooks execute -- they are the machinery that reviews and
+          # lands code. The bot must not edit the rules it is judged by, and
+          # `@claude fix` is not consent to that: a human authorising "implement
+          # your findings" is authorising a change to the code under review, not
+          # to the pipeline reviewing it.
+          #
+          # .claude/ matters most and looks least important: hooks there RUN
+          # COMMANDS, so a settings edit landing on master is remote code
+          # execution on every future checkout.
+          #
+          # `(^|/)` and not `^`: these files nest. apm compile GENERATES
+          # tools/CLAUDE.md, and both .claude/ and .apm/ are honoured in
+          # subdirectories -- an anchored pattern protects the root copy and
+          # quietly waves the rest through, which is worse than no rule because it
+          # reads as covered.
+          protected=$(printf '%s\n' $touched \
+            | grep -E '(^|/)(\.github|\.claude|\.apm)/|(^|/)(CLAUDE|AGENTS)\.md$|(^|/)apm\.ya?ml$' || true)
+          if [ -n "$protected" ]; then
+            {
+              echo "**This run was blocked.** The agent changed files it is never allowed to change, so nothing was pushed:"
+              echo
+              printf '%s\n' $protected | sed 's/^/- `/; s/$/`/'
+              echo
+              echo "Workflows, agent instructions and \`.claude/\` configuration are the machinery that reviews and lands code, so the bot cannot edit them under any verb. Make this change yourself."
+            } > "$RUNNER_TEMP/guard-failure.md"
+            echo "::error::Agent touched protected paths:"
+            printf '  %s\n' $protected
+            exit 1
+          fi
+
+          # --- verb policy -----------------------------------------------------
+          if [ "$VERB" = "fix" ]; then
+            echo "Verb is 'fix'; changes outside the protected paths are authorised."
+            exit 0
+          fi
+          bad=$(printf '%s\n' $touched | grep -v -E '/changelog\.json$' || true)
           if [ -n "$bad" ]; then
+            {
+              echo "**This run was blocked.** \`@claude\` reviews but does not edit code, and the agent changed:"
+              echo
+              printf '%s\n' $bad | sed 's/^/- `/; s/$/`/'
+              echo
+              echo "Nothing was pushed. Reply \`@claude fix\` if you want these implemented."
+            } > "$RUNNER_TEMP/guard-failure.md"
             echo "::error::The 'review' verb may only change changelog.json, but the agent also changed:"
             printf '  %s\n' $bad
             exit 1
@@ -561,13 +630,19 @@ jobs:
               verdict=HOLD
               ;;
           esac
+          # A blocked run cannot read as approval whatever the model concluded.
+          if [ -s "$RUNNER_TEMP/guard-failure.md" ]; then verdict=HOLD; fi
           echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
 
           {
             echo
             echo "---"
             echo
-            if [ "$verdict" = "LAND" ]; then
+            if [ -s "$RUNNER_TEMP/guard-failure.md" ]; then
+              # Otherwise the author sees a red cross and a review that reads as
+              # if it had passed, with nothing saying why nothing happened.
+              cat "$RUNNER_TEMP/guard-failure.md"
+            elif [ "$verdict" = "LAND" ]; then
               echo "**Nothing blocking.** Requesting the fast-forward below."
             else
               echo "**Holding.** Something above needs a decision before this can land."

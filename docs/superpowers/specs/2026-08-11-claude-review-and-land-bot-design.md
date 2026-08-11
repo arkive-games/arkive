@@ -216,6 +216,23 @@ repository, and `issue_comment` runs in base-repo context *with* secrets.
   author while replacing the committer, so any commit *authored* by the bot is the agent's own
   work — under the `review` verb, such a commit touching anything but `changelog.json` fails the
   run before the push.
+- **The bot may not edit the pipeline, under either verb.** `.github/**`, `.claude/**`,
+  `.apm/**`, `CLAUDE.md`, `AGENTS.md` and `apm.yml` are rejected by the same step, before any
+  push, whatever the verb.
+
+  `@claude fix` is consent to change the code under review, not the machinery reviewing it —
+  and without this rule the two are the same permission, because a fix commit could rewrite
+  `claude.yml` and ride to `master` on the bot's own approval. That is the one edit that would
+  make every later check untrustworthy, so it is the one edit a human must always make.
+
+  `.claude/**` is the sharpest of these and looks the most harmless: hooks configured there
+  **execute commands**, so a settings change landing on `master` is remote code execution on
+  every subsequent checkout, including the runner's.
+
+  A finding *about* one of these files is still worth reporting; the bot describes it and a
+  person makes the change. When the guard fires, the run fails, nothing is pushed, and the
+  reason is appended to the review comment — otherwise the author would see a red cross beside
+  a review that reads as though it passed.
 
 **The App must be unable to push `master`, and today nothing stops it.** Repair needs
 `contents: write`, which on GitHub is repo-wide — it is not scopeable to one branch. So an
