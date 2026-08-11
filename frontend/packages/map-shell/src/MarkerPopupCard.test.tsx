@@ -24,6 +24,18 @@ const positionCopy = {
 }
 
 describe("MarkerPopupCard position copy", () => {
+  it("keeps the popup pointer outside the scrolling content", () => {
+    const { getByTestId } = render(<MarkerPopupCard name="Small Settlement" />)
+    const card = getByTestId("marker-popup-card")
+    const scroll = getByTestId("marker-popup-scroll")
+
+    expect(card.className).toContain("overflow-visible")
+    expect(card.className).not.toContain("overflow-y-auto")
+    expect(card.className).toContain("max-h-[min(72dvh,32rem)]")
+    expect(scroll.className).toContain("min-h-0")
+    expect(scroll.className).toContain("overflow-y-auto")
+  })
+
   it("renders description text only when the marker has one", () => {
     const { getByTestId, queryByTestId, rerender } = render(
       <MarkerPopupCard name="Small Settlement" />,

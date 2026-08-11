@@ -67,12 +67,15 @@ export function MarkerPopupCard({
     <Card
       data-testid="marker-popup-card"
       className={cn(
-        "gm-popup-card max-h-[min(72dvh,32rem)] w-[min(20rem,calc(100vw-2rem))] gap-0 overflow-y-auto rounded-lg border-0 bg-card py-0 text-card-foreground shadow-[0_18px_50px_rgba(10,50,48,0.22)] overscroll-contain",
+        "gm-popup-card max-h-[min(72dvh,32rem)] w-[min(20rem,calc(100vw-2rem))] gap-0 overflow-visible rounded-lg border-0 bg-card py-0 text-card-foreground shadow-[0_18px_50px_rgba(10,50,48,0.22)]",
         className,
       )}
     >
-      <div className="h-1 bg-[color:var(--arkive-nav-accent,var(--ring))]" aria-hidden="true" />
-      <CardContent className="flex flex-col px-4 py-4">
+      <div className="h-1 shrink-0 rounded-t-lg bg-[color:var(--arkive-nav-accent,var(--ring))]" aria-hidden="true" />
+      <CardContent
+        data-testid="marker-popup-scroll"
+        className="gm-popup-scroll min-h-0 flex flex-col overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4"
+      >
         <div className="flex items-start gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-border">
             {icon ?? <IconMapPin className="size-5" stroke={1.8} />}
