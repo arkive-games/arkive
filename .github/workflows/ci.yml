@@ -152,6 +152,24 @@ jobs:
     runs-on: ubuntu-latest
     name: backend-go
 
+    # Postgres is a service container; MinIO is started as a step instead.
+    #
+    # A service container takes no `command`, and the MinIO image needs `server
+    # /data` to do anything, so declaring it here would start a container that
+    # prints its own help and never becomes healthy.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -163,6 +181,18 @@ jobs:
           go-version-file: backend-go/go.mod
           cache-dependency-path: backend-go/go.sum
 
+      - name: Formatting
+        working-directory: backend-go
+        # Scoped to the two source trees rather than `.`, so a future vendored or
+        # generated directory cannot start failing this.
+        run: |
+          unformatted=$(gofmt -l ./cmd ./internal)
+          if [ -n "$unformatted" ]; then
+            echo "not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+
       - name: Build
         working-directory: backend-go
         run: go build ./...
@@ -171,10 +201,103 @@ jobs:
         working-directory: backend-go
         run: go vet ./...
 
-      # No Postgres or MinIO service is started: the database-backed and
-      # object-storage tests read their DSN/endpoint from the environment and
-      # t.Skipf when it is absent, so this run covers the pure-Go tests and
-      # reports the rest as skipped rather than failing.
+      # Avatars are served straight from the bucket to browsers, so the storage
+      # round-trip test fetches its published URL anonymously. MinIO grants that
+      # only with an explicit policy, and it creates no bucket on its own.
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null; then
+              echo "MinIO is live after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          docker run --rm --network host --entrypoint sh minio/mc:latest -c "
+            mc alias set ci http://127.0.0.1:9000 minioadmin minioadmin &&
+            mc mb --ignore-existing ci/arkive-test &&
+            mc anonymous set download ci/arkive-test
+          "
+
+      # The database-backed and object-storage tests read their DSN and endpoint
+      # from the environment and t.Skipf when it is absent. Supplying both is the
+      # point of the services above: a skipped test proves nothing, and every
+      # guarantee that matters most here -- that a uid is never reissued, that a
+      # superseded avatar is really deleted, that a stored object is anonymously
+      # fetchable -- lives in exactly those tests.
+      #
+      # Tencent COS is deliberately not exercised. It would need a live credential
+      # in repository secrets, and it shares this code path with MinIO; the one
+      # behavioural difference between them is request addressing, which has unit
+      # tests that need no credential.
       - name: Test
         working-directory: backend-go
-        run: go test ./...
+        env:
+          ARKIVE_TEST_POSTGRES_URL: postgres://postgres:pass@localhost:5432/postgres?sslmode=disable
+          ARKIVE_TEST_S3_ENDPOINT: http://127.0.0.1:9000
+          ARKIVE_TEST_S3_BUCKET: arkive-test
+          ARKIVE_TEST_S3_ACCESS_KEY_ID: minioadmin
+          ARKIVE_TEST_S3_SECRET_ACCESS_KEY: minioadmin
+          # The SDK forces path style for an IP endpoint regardless, but stating
+          # it keeps the intent on the page.
+          ARKIVE_TEST_S3_PATH_STYLE: "true"
+        run: go test ./... -count=1
+
+      # Everything above still passes if a rename or a container failure silently
+      # turns the gated tests back into skips, which is the failure mode this job
+      # exists to prevent. So assert they actually ran.
+      - name: No gated test was silently skipped
+        working-directory: backend-go
+        env:
+          ARKIVE_TEST_POSTGRES_URL: postgres://postgres:pass@localhost:5432/postgres?sslmode=disable
+          ARKIVE_TEST_S3_ENDPOINT: http://127.0.0.1:9000
+          ARKIVE_TEST_S3_BUCKET: arkive-test
+          ARKIVE_TEST_S3_ACCESS_KEY_ID: minioadmin
+          ARKIVE_TEST_S3_SECRET_ACCESS_KEY: minioadmin
+          ARKIVE_TEST_S3_PATH_STYLE: "true"
+        run: |
+          go test ./internal/core/ -v -count=1 > gated.log 2>&1 || { cat gated.log; exit 1; }
+          skipped=$(grep -c '^--- SKIP' gated.log || true)
+          passed=$(grep -c '^--- PASS' gated.log || true)
+          echo "internal/core: $passed passed, $skipped skipped"
+          if [ "$skipped" != "0" ]; then
+            echo "a test skipped, so Postgres or MinIO was not reachable:"
+            grep -B 2 '^--- SKIP' gated.log
+            exit 1
+          fi
+          # A floor rather than an exact count, so adding tests never fails this
+          # while a filter that stops matching everything still does.
+          if [ "$passed" -lt 30 ]; then
+            echo "only $passed tests ran in internal/core, which is far fewer than expected"
+            exit 1
+          fi
+
+      # openapi/core.json is generated by asking the real router for it, and the
+      # frontend's specDrift test reads that same committed file. A route added
+      # without regenerating would ship a document that lies about the API, and
+      # nothing else would notice.
+      - name: Committed OpenAPI document matches the code
+        working-directory: backend-go
+        run: |
+          go run ./cmd/arkive openapi
+          if ! git diff --quiet -- openapi/; then
+            echo "openapi/ is stale. Run: go run ./cmd/arkive openapi"
+            git diff -- openapi/
+            exit 1
+          fi
+
+      # sqlc models the schema from the migration files, so a migration or query
+      # edited without regenerating leaves Go code compiled against a schema that
+      # no longer exists.
+      - name: Committed sqlc output matches the queries
+        working-directory: backend-go
+        run: |
+          go tool sqlc generate
+          if ! git diff --quiet -- internal/core/coredb/; then
+            echo "internal/core/coredb/ is stale. Run: go tool sqlc generate"
+            git diff -- internal/core/coredb/
+            exit 1
+          fi
