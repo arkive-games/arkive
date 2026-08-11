@@ -186,6 +186,15 @@ with the key the runner holds and the only ones this run is responsible for. Eve
 signatures are GitHub's to verify, and `fast-forward.yml` already asks it about every commit
 through the API.
 
+**And "is the bot" means the committer NAME, not the email.** The first attempt at that scoping
+matched on `BOT_GIT_EMAIL` and was still broken, for a reason that only shows up once the bot
+runs on the owner's own pull request: the bot *commits under the owner's email*. It has to —
+GitHub marks a commit verified only when the committer address is one the signing key's account
+has verified. So the email identifies the human exactly as well as it identifies the bot, and
+matching on it selects every commit the owner ever made, checks them against an allowed-signers
+file holding only the bot's key, and rejects them. That is the original bug wearing a new hat.
+`BOT_GIT_NAME` is the one field unique to the bot, so it is the discriminator.
+
 ## 6. Changes to `fast-forward.yml`
 
 **New precondition — required checks green on the head SHA.** Today nothing asserts `ci.yml`
@@ -249,6 +258,14 @@ repository, and `issue_comment` runs in base-repo context *with* secrets.
   person makes the change. When the guard fires, the run fails, nothing is pushed, and the
   reason is appended to the review comment — otherwise the author would see a red cross beside
   a review that reads as though it passed.
+
+  **A consequence neither obvious nor avoidable: the bot cannot repair any pull request that
+  touches `.github/workflows/`.** Withholding the App's *Workflows* permission means GitHub
+  refuses a push containing workflow files, whoever wrote them — so a branch that is behind
+  `master` *and* touches a workflow cannot be rebased by the bot, and has to be landed by hand.
+  It can still review such a branch, and can still land one that needs no rebase, because then
+  there is no push. This is the protection working, not a defect, but it means every change to
+  the bot itself is a manual landing.
 
 **The App must be unable to push `master`, and today nothing stops it.** Repair needs
 `contents: write`, which on GitHub is repo-wide — it is not scopeable to one branch. So an

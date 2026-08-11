@@ -600,10 +600,10 @@ jobs:
       - name: Check the bot's own commits are signed before pushing
         if: steps.agent.outcome == 'success' && env.IS_FORK == 'false'
         env:
-          BOT_EMAIL: ${{ vars.BOT_GIT_EMAIL }}
+          BOT_NAME: ${{ vars.BOT_GIT_NAME }}
         run: |
           set -euo pipefail
-          # ONLY commits this run committed, selected by committer email.
+          # ONLY commits this run committed.
           #
           # The first version checked every commit ahead of the base and was
           # badly wrong: `%G?` can only verify signatures whose key is in the
@@ -621,15 +621,23 @@ jobs:
           # already asks it about every commit through the API. The only thing
           # worth checking here is that the bot's rebase and its changelog commit
           # came out signed, because that is what THIS run is responsible for.
-          bad=$(git log --format='%H %G? %ce' "origin/$BASE_REF..HEAD" \
-                | awk -v e="$BOT_EMAIL" '$3 == e && $2 != "G" {print $1" "$2}')
+          # Selected by committer NAME, not email. The bot commits under the
+          # OWNER'S email -- it has to, because GitHub only marks a commit verified
+          # when the committer address is one the signing key's account has
+          # verified. So the email identifies the human just as well as the bot,
+          # and matching on it re-creates the very bug this step was rewritten to
+          # fix: every commit the owner made would be selected, checked against an
+          # allowed-signers file that holds only the BOT's key, and rejected as
+          # unverifiable. The name is the one field that is unique to the bot.
+          bad=$(git log --format='%H%x09%G?%x09%cn' "origin/$BASE_REF..HEAD" \
+                | awk -F'\t' -v n="$BOT_NAME" '$3 == n && $2 != "G" {print $1" "$2}')
           if [ -n "$bad" ]; then
             echo "::error::Commits this run created are unsigned, and fast-forward.yml would refuse them:"
             echo "$bad"
             echo "Check BOT_SSH_SIGNING_KEY and that rebase.gpgSign is set."
             exit 1
           fi
-          mine=$(git log --format='%ce' "origin/$BASE_REF..HEAD" | grep -c "^$BOT_EMAIL$" || true)
+          mine=$(git log --format='%cn' "origin/$BASE_REF..HEAD" | grep -cxF "$BOT_NAME" || true)
           echo "$mine commit(s) committed by this run, all signed."
 
       - name: Push the repaired branch
