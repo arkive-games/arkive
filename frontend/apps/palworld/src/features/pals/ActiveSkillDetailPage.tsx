@@ -3,6 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { Link, useParams } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
+import { dungeonsByItem, loadDungeons, type DungeonsBundle } from '../../lib/dungeons'
+import { loadItems, type ItemsBundle } from '../../lib/catalog'
+import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
+import { loadRecycler, type RecyclerFile } from '../../lib/recycler'
 import {
   loadPals,
   buildActiveSkills,
@@ -10,7 +14,8 @@ import {
   type PalsBundle,
 } from '../../lib/pals'
 import { elementIconUrl, hasElementIcon, palIconUrl } from '../../lib/assets'
-import { CatalogDataProvider, PalHover } from '../catalog/components'
+import { CatalogDataProvider, ItemLink, PalHover, PalLink } from '../catalog/components'
+import { ItemSourceRows } from '../items/ItemSources'
 import { PalSection, InfoRows, StatRow, PalPageLoading, ElementBadge, formatSkillRange } from './components'
 
 export default function ActiveSkillDetailPage() {
@@ -20,6 +25,10 @@ export default function ActiveSkillDetailPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [items, setItems] = useState<ItemsBundle | null>(null)
+  const [dungeons, setDungeons] = useState<DungeonsBundle | null>(null)
+  const [merchants, setMerchants] = useState<MerchantsBundle | null>(null)
+  const [recycler, setRecycler] = useState<RecyclerFile | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -37,10 +46,42 @@ export default function ActiveSkillDetailPage() {
     }
   }, [lng, t])
 
+  useEffect(() => {
+    let cancelled = false
+    setItems(null)
+    setDungeons(null)
+    setMerchants(null)
+    setRecycler(null)
+    loadItems(lng)
+      .then((value) => { if (!cancelled) setItems(value) })
+      .catch((err) => console.error(err))
+    loadDungeons(lng)
+      .then((value) => { if (!cancelled) setDungeons(value) })
+      .catch((err) => console.error(err))
+    loadMerchants()
+      .then((value) => { if (!cancelled) setMerchants(value) })
+      .catch((err) => console.error(err))
+    loadRecycler()
+      .then((value) => { if (!cancelled) setRecycler(value) })
+      .catch((err) => console.error(err))
+    return () => {
+      cancelled = true
+    }
+  }, [lng])
+
   const skill = useMemo(
     () => (bundle ? buildActiveSkills(bundle).find((s) => s.wazaId === id) : undefined),
     [bundle, id],
   )
+  const skillFruit = useMemo(
+    () => items?.items.find((item) => item.grantsSkill === id),
+    [items, id],
+  )
+  const skillFruitDungeons = useMemo(() => {
+    if (!dungeons || !skillFruit) return []
+    const ids = dungeonsByItem(dungeons.file).get(skillFruit.id)
+    return ids ? dungeons.file.dungeons.filter((dungeon) => ids.has(dungeon.id)) : []
+  }, [dungeons, skillFruit])
 
   const backLink = (
     <Link
@@ -107,6 +148,61 @@ export default function ActiveSkillDetailPage() {
           </InfoRows>
         </PalSection>
 
+        {skillFruit && items ? (
+          <PalSection title={t('item.section.obtain')}>
+            <div className="space-y-3" data-testid="active-skill-sources">
+              <div>
+                <div className="mb-1.5 text-xs text-muted-foreground">{t('activeSkill.fruit')}</div>
+                <ItemLink
+                  id={skillFruit.id}
+                  name={items.text[skillFruit.id]?.name ?? skillFruit.id}
+                  icon={skillFruit.icon}
+                />
+              </div>
+              {skillFruit.droppedBy?.length ? (
+                <div>
+                  <div className="mb-1.5 text-xs text-muted-foreground">{t('item.droppedBy')}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {skillFruit.droppedBy.map((drop) => (
+                      <PalLink
+                        key={drop.id}
+                        id={drop.id}
+                        name={bundle.text[drop.id]?.name ?? drop.id}
+                        icon={bundle.byId.get(drop.id)?.icon}
+                        badge={drop.isBoss ? t('item.bossDrop') : undefined}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              <ItemSourceRows
+                item={skillFruit}
+                items={items}
+                pals={bundle}
+                merchants={merchants}
+                recycler={recycler}
+              />
+              {skillFruitDungeons.length ? (
+                <div data-testid="active-skill-dungeon-sources">
+                  <div className="mb-1.5 text-xs text-muted-foreground">{t('dungeon.foundIn')}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {skillFruitDungeons.map((dungeon) => (
+                      <Link
+                        key={dungeon.id}
+                        to="/dungeons/$id"
+                        params={{ id: dungeon.id }}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-sm transition hover:border-primary/60 hover:bg-accent"
+                      >
+                        {dungeons?.text[dungeon.id]?.name ?? dungeon.id}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </PalSection>
+        ) : null}
+
         <PalSection title={`${t('nav.pals')} (${skill.pals.length})`}>
           {skill.pals.length ? (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -144,7 +240,7 @@ export default function ActiveSkillDetailPage() {
 
   return (
     <ContentPage active="/active-skills" title={t('pal.section.activeSkills')}>
-      <CatalogDataProvider pals={bundle ?? undefined}>{body}</CatalogDataProvider>
+      <CatalogDataProvider items={items ?? undefined} pals={bundle ?? undefined}>{body}</CatalogDataProvider>
     </ContentPage>
   )
 }
