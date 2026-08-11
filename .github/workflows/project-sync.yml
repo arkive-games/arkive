@@ -66,7 +66,10 @@ jobs:
       ORG: arkive-games
       PROJECT: 1
       NUMBER: ${{ github.event.issue.number || github.event.pull_request.number || inputs.number }}
-      IS_PR: ${{ github.event_name == 'pull_request_target' || github.event.issue.pull_request != null }}
+      # Empty on workflow_dispatch, whose payload carries neither an issue nor a pull request:
+      # the step below asks the API. Deriving it from `github.event.issue.pull_request` alone
+      # resolved to false on a dispatch, sending a pull request down the issue path.
+      IS_PR: ${{ github.event_name == 'pull_request_target' && 'true' || (github.event.issue.pull_request != null && 'true' || (github.event_name == 'issues' && 'false' || '')) }}
       ISSUE_BODY: ${{ github.event.issue.body }}
 
     steps:
@@ -87,6 +90,22 @@ jobs:
           else
             echo "PROJECT_TOKEN is unset; using FAST_FORWARD_TOKEN. It needs Organization > Projects: Read and write in addition to Contents: Write."
           fi
+
+      - name: Work out whether this is a pull request
+        run: |
+          set -euo pipefail
+          if [ -n "${IS_PR:-}" ]; then
+            echo "IS_PR=$IS_PR (from the event payload)"
+          else
+            # `.pull_request` is present on the issues endpoint only for pull requests.
+            if [ "$(gh api "repos/$REPO/issues/$NUMBER" --jq '.pull_request != null')" = "true" ]; then
+              IS_PR=true
+            else
+              IS_PR=false
+            fi
+            echo "IS_PR=$IS_PR (resolved from the API)"
+          fi
+          echo "IS_PR=$IS_PR" >> "$GITHUB_ENV"
 
       - name: Resolve the project, its fields and their options
         id: meta
@@ -161,6 +180,14 @@ jobs:
             # comma-separated line under the heading; an untouched optional field renders
             # "_No response_", which must not become a value.
             printf '%s\n' "$ISSUE_BODY" > body.md
+            # No `### Layer` heading means this issue did not come from the form: it predates
+            # the template, or was opened through the API. Parsing yields nothing, and writing
+            # that nothing would clear values somebody set by hand. Absent form != empty field.
+            if ! grep -q '^### Layer$' body.md; then
+              echo "::notice::Not filed through the form (no Layer section); leaving Layer and App untouched."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
             section() {
               awk -v want="### $1" '
                 $0 == want { grab = 1; next }
@@ -182,6 +209,7 @@ jobs:
           echo "Derived:"; sed 's/^/  /' tags.txt
 
       - name: Set the fields
+        if: steps.classify.outputs.skip != 'true'
         run: |
           set -euo pipefail
           project=$(jq -r '.data.organization.projectV2.id' meta.json)
