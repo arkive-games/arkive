@@ -6,6 +6,7 @@ import {
   type PlatformChangelogFile,
   type PlatformTarget,
 } from '@gamemap/ui'
+import { IS_TOY } from './sites'
 import raw from './platform-changelog.json'
 
 const REPO_URL = 'https://github.com/arkive-games/arkive'
@@ -60,16 +61,25 @@ export function PlatformUpdatesPage() {
               <time dateTime={entry.date} className="font-mono text-sm font-semibold text-foreground">
                 {entry.date}
               </time>
-              <a
-                href={`${REPO_URL}/commit/${entry.commit}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${t('platformUpdates.viewCommit')} ${entry.commit.slice(0, 7)}`}
-                className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                {entry.commit.slice(0, 7)}
-                <IconExternalLink className="size-3" stroke={1.8} aria-hidden="true" />
-              </a>
+              {/* A toy is a sealed directory on bilibili.com: off-platform links
+                  are omitted there, the same way brand.ts nulls the repository
+                  and ICP links. The SHA itself still identifies the release. */}
+              {IS_TOY ? (
+                <span className="font-mono text-xs text-muted-foreground">
+                  {entry.commit.slice(0, 7)}
+                </span>
+              ) : (
+                <a
+                  href={`${REPO_URL}/commit/${entry.commit}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${t('platformUpdates.viewCommit')} ${entry.commit.slice(0, 7)}`}
+                  className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  {entry.commit.slice(0, 7)}
+                  <IconExternalLink className="size-3" stroke={1.8} aria-hidden="true" />
+                </a>
+              )}
             </div>
 
             <ul className="mt-3 space-y-2">
