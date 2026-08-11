@@ -141,6 +141,12 @@ jobs:
         uses: anthropics/claude-code-action@5ef2e550a465a721f4f45e4a7d3c340c873e1dcc # v1.0.190
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Without this the action tries to mint a token via OIDC -- which needs
+          # `id-token: write` AND Anthropic's own GitHub App installed, neither of
+          # which applies here. It fails before reaching the gateway at all, so
+          # the error blames OIDC for what looks like a gateway problem.
+          # claude.yml passes the bot App's installation token for the same reason.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # Multi-turn and tool-using on purpose. A single-turn reply would not
           # exercise the paths a review actually takes.
           prompt: |
