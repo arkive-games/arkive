@@ -484,7 +484,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
   }
 
   const publish = (post: LocalForumPost) => {
-    publishForumPost(post)
+    if (!publishForumPost(post)) return false
     setComposerOpen(false)
     setPublishNotice(true)
     setChannel(post.channel)
@@ -494,6 +494,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
     setSelectedPostId(post.id)
     returnToForum()
     window.scrollTo({ top: 0, behavior: 'auto' })
+    return true
   }
 
   const renderSearch = (placementClass: string) => (
@@ -522,6 +523,7 @@ export function ForumPage({ sites, onComingSoon, onAuthRequired }: ForumPageProp
             authorName={user?.name ?? t('forum.composer.guest')}
             signedIn={signedIn}
             onAuthRequired={onAuthRequired}
+            onImageUnavailable={onComingSoon}
             onCancel={closeComposer}
             onPublish={publish}
           />
@@ -873,6 +875,7 @@ function ForumComposerPage({
   authorName,
   signedIn,
   onAuthRequired,
+  onImageUnavailable,
   onCancel,
   onPublish,
 }: {
@@ -883,8 +886,9 @@ function ForumComposerPage({
   authorName: string
   signedIn: boolean
   onAuthRequired: () => void
+  onImageUnavailable: () => void
   onCancel: () => void
-  onPublish: (post: LocalForumPost) => void
+  onPublish: (post: LocalForumPost) => boolean
 }) {
   const { t } = useTranslation()
   const { user } = useAuth()
@@ -944,6 +948,7 @@ function ForumComposerPage({
   const [parsedVideoUrl, setParsedVideoUrl] = useState(draft.videoUrl)
   const [videoError, setVideoError] = useState('')
   const [error, setError] = useState('')
+  const imageUnavailableError = t('forum.composer.errors.imageUnavailable')
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
   const tagInputRef = useRef<HTMLInputElement>(null)
@@ -996,7 +1001,7 @@ function ForumComposerPage({
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       if (focus === 'image') {
-        setImageDialogOpen(true)
+        setError(imageUnavailableError)
       } else if (focus === 'video') {
         setVideoDialogOpen(true)
       } else if (focus === 'topic') {
@@ -1006,7 +1011,7 @@ function ForumComposerPage({
       }
     })
     return () => window.clearTimeout(timeout)
-  }, [focus])
+  }, [focus, imageUnavailableError])
 
   const addGame = (gameId: string) => {
     if (gameIds.length >= FORUM_GAME_MAX_COUNT || gameIds.includes(gameId)) return
@@ -1146,9 +1151,8 @@ function ForumComposerPage({
   }
 
   const openImageDialog = () => {
-    setPendingImages(images)
-    setImageDialogOpen(true)
-    setError('')
+    onImageUnavailable()
+    setError(imageUnavailableError)
   }
 
   const openVideoDialog = () => {
@@ -1191,9 +1195,13 @@ function ForumComposerPage({
       setError(t('forum.composer.errors.video'))
       return
     }
+    if (images.length > 0) {
+      setError(imageUnavailableError)
+      return
+    }
 
     const imageSrcs = images.map((image) => image.src)
-    onPublish({
+    const saved = onPublish({
       id: `local-${Date.now()}-${localPostSuffix()}`,
       title: normalizedTitle,
       content: normalizedContent,
@@ -1208,6 +1216,10 @@ function ForumComposerPage({
       videoUrl: videoUrl || null,
       createdAt: new Date().toISOString(),
     })
+    if (!saved) {
+      setError(t('forum.composer.errors.publish'))
+      return
+    }
     clearDraft()
   }
 
@@ -1445,6 +1457,9 @@ function ForumComposerPage({
                 <IconVideo className="size-4" stroke={1.8} aria-hidden="true" />
               </button>
             </div>
+            {error === imageUnavailableError && (
+              <p className="forum-editor-media-error" role="alert">{error}</p>
+            )}
             <textarea
               ref={contentRef}
               id="forum-post-content"
@@ -1488,7 +1503,7 @@ function ForumComposerPage({
                 ? <><IconCheck className="size-4" stroke={2} aria-hidden="true" />{t('forum.composer.draftSaved')}</>
                 : null}
           </span>
-            <strong role="alert">{error}</strong>
+            <strong role="alert">{error === imageUnavailableError ? null : error}</strong>
           </div>
           <button type="button" className="forum-publish-cancel" onClick={onCancel}>{t('forum.composer.cancel')}</button>
           <button type="submit" className="forum-publish-submit">

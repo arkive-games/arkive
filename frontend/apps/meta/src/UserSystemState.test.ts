@@ -6,11 +6,14 @@ import {
 } from './UserSystemState'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 
-function memoryStorage() {
+function memoryStorage(refuseWrite?: (key: string) => boolean) {
   const values = new Map<string, string>()
   return {
     getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => values.set(key, value),
+    setItem: (key: string, value: string) => {
+      if (refuseWrite?.(key)) throw new DOMException('Quota exceeded', 'QuotaExceededError')
+      values.set(key, value)
+    },
   }
 }
 
@@ -81,7 +84,7 @@ describe('user system state persistence', () => {
     })
   })
 
-  it('restores authored posts with multiple games, tags, and images', () => {
+  it('restores authored posts without carrying legacy image bytes forward', () => {
     const storage = memoryStorage()
     storage.setItem('arkive.meta.user-system.v1:user-a', JSON.stringify({
       publishedPosts: [{
@@ -105,7 +108,64 @@ describe('user system state persistence', () => {
       gameIds: ['aion2', 'palworld'],
       topics: ['guide', 'testing'],
       tags: ['route'],
-      imageSrcs: ['data:image/png;base64,first', 'data:image/png;base64,second'],
+      imageSrc: null,
+      imageSrcs: [],
+    })
+  })
+
+  it('stores post metadata separately and removes local image bytes', () => {
+    const storage = memoryStorage()
+    const state = createDefaultUserSystemState()
+    state.likedPostIds = ['guide-1']
+    state.publishedPosts = [{
+      id: 'local-large-image',
+      title: 'Screenshot route',
+      content: 'A route with a local screenshot attached.',
+      channel: 'games',
+      gameId: 'palworld',
+      gameIds: ['palworld'],
+      topic: 'guide',
+      topics: ['guide'],
+      tags: [],
+      imageSrc: `data:image/png;base64,${'a'.repeat(1_400_000)}`,
+      imageSrcs: [`data:image/png;base64,${'a'.repeat(1_400_000)}`],
+      videoUrl: null,
+      createdAt: '2026-08-11T00:00:00.000Z',
+    }]
+
+    expect(writeUserSystemState(storage, 'user-a', state)).toBe(true)
+    expect(readUserSystemState(storage, 'user-a')).toMatchObject({
+      likedPostIds: ['guide-1'],
+      publishedPosts: [{ imageSrc: null, imageSrcs: [] }],
+    })
+  })
+
+  it('keeps progress durable when the authored-post record refuses a write', () => {
+    const storage = memoryStorage((key) => key.includes('.user-system.authored-posts.'))
+    const state = createDefaultUserSystemState()
+    state.bookmarkedPostIds = ['post-1']
+    state.favoriteGameIds = ['vrising']
+    state.publishedPosts = [{
+      id: 'local-1',
+      title: 'A route note',
+      content: 'Useful route details.',
+      channel: 'games',
+      gameId: 'vrising',
+      gameIds: ['vrising'],
+      topic: 'guide',
+      topics: ['guide'],
+      tags: [],
+      imageSrc: null,
+      imageSrcs: [],
+      videoUrl: null,
+      createdAt: '2026-08-11T00:00:00.000Z',
+    }]
+
+    expect(writeUserSystemState(storage, 'user-a', state)).toBe(false)
+    expect(readUserSystemState(storage, 'user-a')).toMatchObject({
+      bookmarkedPostIds: ['post-1'],
+      favoriteGameIds: ['vrising'],
+      publishedPosts: [],
     })
   })
 })

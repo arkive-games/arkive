@@ -66,7 +66,7 @@ interface UserSystemContextValue {
   toggleLikedPost: (postId: string) => void
   toggleLikedComment: (commentId: string) => void
   toggleFavoriteGame: (gameId: string) => void
-  publishForumPost: (post: LocalForumPost) => void
+  publishForumPost: (post: LocalForumPost) => boolean
 }
 
 const STORAGE_PREFIX = 'arkive.meta.user-system.v1'
@@ -146,6 +146,47 @@ function localForumPosts(value: unknown): LocalForumPost[] {
   })
 }
 
+function persistentImageSource(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
+function persistableForumPost(post: LocalForumPost): LocalForumPost {
+  const imageSrcs = post.imageSrcs.filter(persistentImageSource)
+  if (imageSrcs.length === 0 && post.imageSrc && persistentImageSource(post.imageSrc)) {
+    imageSrcs.push(post.imageSrc)
+  }
+  return { ...post, imageSrc: imageSrcs[0] ?? null, imageSrcs }
+}
+
+function persistableForumPosts(posts: LocalForumPost[]) {
+  return posts.map(persistableForumPost)
+}
+
+function isPersistableForumPost(value: unknown): value is LocalForumPost {
+  if (!value || typeof value !== 'object') return false
+  const post = value as Partial<LocalForumPost>
+  return typeof post.id === 'string'
+    && typeof post.title === 'string'
+    && typeof post.content === 'string'
+    && (post.channel === 'general' || post.channel === 'games')
+    && (post.gameId === null || typeof post.gameId === 'string')
+    && Array.isArray(post.gameIds) && post.gameIds.every((item) => typeof item === 'string')
+    && typeof post.topic === 'string'
+    && Array.isArray(post.topics) && post.topics.every((item) => typeof item === 'string')
+    && Array.isArray(post.tags) && post.tags.every((item) => typeof item === 'string')
+    && (post.imageSrc === null || (typeof post.imageSrc === 'string' && persistentImageSource(post.imageSrc)))
+    && Array.isArray(post.imageSrcs)
+    && post.imageSrcs.every((item) => typeof item === 'string' && persistentImageSource(item))
+    && (post.videoUrl === null || typeof post.videoUrl === 'string')
+    && typeof post.createdAt === 'string'
+    && !Number.isNaN(Date.parse(post.createdAt))
+}
+
 function normalizeUserSystemState(value: unknown): UserSystemState {
   const defaults = createDefaultUserSystemState()
   const parsed = value && typeof value === 'object' ? value as Partial<UserSystemState> : {}
@@ -184,7 +225,10 @@ function isUserSystemState(value: unknown): value is UserSystemState {
 
 type UserProfileState = UserSystemState['profile']
 type UserSettingsState = Pick<UserSystemState, 'notificationSettings' | 'privacySettings'>
-type UserProgressState = Omit<UserSystemState, 'profile' | 'notificationSettings' | 'privacySettings'>
+type UserProgressState = Pick<UserSystemState,
+  'readNotificationSections' | 'followedUserIds' | 'bookmarkedPostIds'
+  | 'likedPostIds' | 'likedCommentIds' | 'favoriteGameIds'>
+type LegacyUserProgressState = UserProgressState & { publishedPosts?: LocalForumPost[] }
 
 function legacyUserSystemRecord(userId: string) {
   return defineMemoryRecord({
@@ -239,7 +283,6 @@ function progressOf(state: UserSystemState): UserProgressState {
     likedPostIds: state.likedPostIds,
     likedCommentIds: state.likedCommentIds,
     favoriteGameIds: state.favoriteGameIds,
-    publishedPosts: state.publishedPosts,
   }
 }
 
@@ -247,28 +290,57 @@ const progressRecord = defineMemoryRecord({
   id: 'progress', namespace: 'site', surface: 'user-system',
   ...memoryPolicy.durableProgress('clear-account-progress'),
   schemaVersion: '1.0.0',
-  defaultValue: (): UserProgressState => {
+  defaultValue: (): LegacyUserProgressState => {
     return progressOf(createDefaultUserSystemState())
   },
-  validate: (value: unknown): value is UserProgressState => {
+  validate: (value: unknown): value is LegacyUserProgressState => {
     if (!value || typeof value !== 'object') return false
-    const progress = value as Partial<UserProgressState>
-    return [progress.readNotificationSections, progress.followedUserIds, progress.bookmarkedPostIds,
-      progress.likedPostIds, progress.likedCommentIds, progress.favoriteGameIds, progress.publishedPosts]
-      .every(Array.isArray)
+    const progress = value as Partial<LegacyUserProgressState>
+    const progressArrays = [progress.readNotificationSections, progress.followedUserIds,
+      progress.bookmarkedPostIds, progress.likedPostIds, progress.likedCommentIds, progress.favoriteGameIds]
+    return progressArrays.every(Array.isArray)
+      && (progress.publishedPosts === undefined || Array.isArray(progress.publishedPosts))
   },
   partition: { account: true },
   signInAdoption: 'keep_anonymous',
 })
 
-function writeUserSystemStateWithClient(client: MemoryClient, userId: string, state: UserSystemState) {
-  const scope = { accountId: userId }
-  client.write(profileRecord, state.profile, scope)
-  client.write(settingsRecord, {
+const publishedPostsRecord = defineMemoryRecord({
+  id: 'authored-posts', namespace: 'site', surface: 'user-system',
+  ...memoryPolicy.durableProgress('clear-account-posts'),
+  schemaVersion: '1.0.0',
+  defaultValue: () => [] as LocalForumPost[],
+  validate: (value: unknown): value is LocalForumPost[] => Array.isArray(value)
+    && value.every(isPersistableForumPost),
+  partition: { account: true },
+  signInAdoption: 'keep_anonymous',
+})
+
+function writeProfileState(client: MemoryClient, userId: string, state: UserSystemState) {
+  return client.write(profileRecord, state.profile, { accountId: userId })
+}
+
+function writeSettingsState(client: MemoryClient, userId: string, state: UserSystemState) {
+  return client.write(settingsRecord, {
     notificationSettings: state.notificationSettings,
     privacySettings: state.privacySettings,
-  }, scope)
-  client.write(progressRecord, progressOf(state), scope)
+  }, { accountId: userId })
+}
+
+function writeProgressState(client: MemoryClient, userId: string, state: UserSystemState) {
+  return client.write(progressRecord, progressOf(state), { accountId: userId })
+}
+
+function writePublishedPostsState(client: MemoryClient, userId: string, state: UserSystemState) {
+  return client.write(publishedPostsRecord, persistableForumPosts(state.publishedPosts), { accountId: userId })
+}
+
+function writeUserSystemStateWithClient(client: MemoryClient, userId: string, state: UserSystemState) {
+  const profileSaved = writeProfileState(client, userId, state)
+  const settingsSaved = writeSettingsState(client, userId, state)
+  const progressSaved = writeProgressState(client, userId, state)
+  const postsSaved = writePublishedPostsState(client, userId, state)
+  return profileSaved && settingsSaved && progressSaved && postsSaved
 }
 
 function readUserSystemStateWithClient(client: MemoryClient, userId: string): UserSystemState {
@@ -276,15 +348,29 @@ function readUserSystemStateWithClient(client: MemoryClient, userId: string): Us
   const legacyRecord = legacyUserSystemRecord(userId)
   const legacy = client.read(legacyRecord, scope)
   if (legacy) {
-    writeUserSystemStateWithClient(client, userId, legacy)
-    client.clear(legacyRecord, scope)
-    return legacy
+    const migrated = { ...legacy, publishedPosts: persistableForumPosts(legacy.publishedPosts) }
+    if (writeUserSystemStateWithClient(client, userId, migrated)) client.clear(legacyRecord, scope)
+    return migrated
   }
   const defaults = createDefaultUserSystemState()
   const profile = client.read(profileRecord, scope)
   const settings = client.read(settingsRecord, scope)
   const progress = client.read(progressRecord, scope)
-  return normalizeUserSystemState({ ...defaults, ...progress, ...settings, profile })
+  let publishedPosts = client.read(publishedPostsRecord, scope)
+  const legacyPosts = persistableForumPosts(localForumPosts(progress.publishedPosts))
+  if (progress.publishedPosts !== undefined) {
+    let postsMigrated = publishedPosts.length > 0 || legacyPosts.length === 0
+    if (publishedPosts.length === 0 && legacyPosts.length > 0) {
+      if (client.write(publishedPostsRecord, legacyPosts, scope)) {
+        publishedPosts = legacyPosts
+        postsMigrated = true
+      }
+    }
+    if (postsMigrated) {
+      client.write(progressRecord, progressOf(normalizeUserSystemState({ ...defaults, ...progress })), scope)
+    }
+  }
+  return normalizeUserSystemState({ ...defaults, ...progress, ...settings, profile, publishedPosts })
 }
 
 /** Boolean-only merge: stored settings are untrusted JSON, and a non-boolean
@@ -322,7 +408,7 @@ export function writeUserSystemState(
     setItem: storage.setItem.bind(storage),
     removeItem: () => undefined,
   }
-  writeUserSystemStateWithClient(new MemoryClient({ deviceStorage: adapter }), userId, state)
+  return writeUserSystemStateWithClient(new MemoryClient({ deviceStorage: adapter }), userId, state)
 }
 
 const UserSystemContext = createContext<UserSystemContextValue | null>(null)
@@ -335,43 +421,51 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
     userId: null,
     state: createDefaultUserSystemState(),
   }))
+  const entryRef = useRef(entry)
 
   useEffect(() => {
     if (previousUserId.current && previousUserId.current !== userId) {
       browserMemory.clearAccount(previousUserId.current)
     }
     previousUserId.current = userId
-    setEntry({
+    const nextEntry = {
       userId,
       state: userId
         ? readUserSystemStateWithClient(browserMemory, userId)
         : createDefaultUserSystemState(),
-    })
+    }
+    entryRef.current = nextEntry
+    setEntry(nextEntry)
   }, [userId])
 
-  const update = useCallback((mutate: (current: UserSystemState) => UserSystemState) => {
-    if (!userId) return
-    setEntry((currentEntry) => {
-      const current = currentEntry.userId === userId
-        ? currentEntry.state
-        : readUserSystemStateWithClient(browserMemory, userId)
-      const next = mutate(current)
-      writeUserSystemStateWithClient(browserMemory, userId, next)
-      return { userId, state: next }
-    })
+  const update = useCallback((
+    mutate: (current: UserSystemState) => UserSystemState,
+    write: (client: MemoryClient, accountId: string, state: UserSystemState) => boolean,
+  ) => {
+    if (!userId) return false
+    const currentEntry = entryRef.current
+    const current = currentEntry.userId === userId
+      ? currentEntry.state
+      : readUserSystemStateWithClient(browserMemory, userId)
+    const next = mutate(current)
+    if (!write(browserMemory, userId, next)) return false
+    const nextEntry = { userId, state: next }
+    entryRef.current = nextEntry
+    setEntry(nextEntry)
+    return true
   }, [userId])
 
   const toggleListValue = useCallback((key: keyof Pick<
     UserSystemState,
     'followedUserIds' | 'bookmarkedPostIds' | 'likedPostIds' | 'likedCommentIds' | 'favoriteGameIds'
   >, value: string) => {
-    update((current) => {
+    return update((current) => {
       const values = current[key]
       const nextValues = values.includes(value)
         ? values.filter((item) => item !== value)
         : [...values, value]
       return { ...current, [key]: nextValues }
-    })
+    }, writeProgressState)
   }, [update])
 
   const value = useMemo<UserSystemContextValue>(() => ({
@@ -379,24 +473,24 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
     updateLocalProfile: (profile) => update((current) => ({
       ...current,
       profile: { ...current.profile, ...profile },
-    })),
+    }), writeProfileState),
     toggleNotificationSetting: (key) => update((current) => ({
       ...current,
       notificationSettings: {
         ...current.notificationSettings,
         [key]: !current.notificationSettings[key],
       },
-    })),
+    }), writeSettingsState),
     markNotificationSectionRead: (section) => update((current) => ({
       ...current,
       readNotificationSections: current.readNotificationSections.includes(section)
         ? current.readNotificationSections
         : [...current.readNotificationSections, section],
-    })),
+    }), writeProgressState),
     setPrivacySetting: (key, enabled) => update((current) => ({
       ...current,
       privacySettings: { ...current.privacySettings, [key]: enabled },
-    })),
+    }), writeSettingsState),
     toggleFollowedUser: (id) => toggleListValue('followedUserIds', id),
     toggleBookmarkedPost: (id) => toggleListValue('bookmarkedPostIds', id),
     toggleLikedPost: (id) => toggleListValue('likedPostIds', id),
@@ -404,8 +498,8 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
     toggleFavoriteGame: (id) => toggleListValue('favoriteGameIds', id),
     publishForumPost: (post) => update((current) => ({
       ...current,
-      publishedPosts: [post, ...current.publishedPosts],
-    })),
+      publishedPosts: [persistableForumPost(post), ...current.publishedPosts],
+    }), writePublishedPostsState),
   }), [entry, toggleListValue, update, userId])
 
   return <UserSystemContext.Provider value={value}>{children}</UserSystemContext.Provider>

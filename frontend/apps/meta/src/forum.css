@@ -1622,6 +1622,15 @@
   background: var(--forum-border);
 }
 
+.forum-editor-media-error {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--forum-border);
+  color: var(--destructive);
+  background: var(--muted);
+  font-size: 0.75rem;
+}
+
 .forum-rich-editor > textarea {
   width: 100%;
   min-height: 20rem;

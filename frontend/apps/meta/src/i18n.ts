@@ -335,7 +335,7 @@ const resources = {
           toolbar: { label: '正文格式', bold: '加粗', italic: '斜体', underline: '下划线', heading: '二级标题', list: '项目列表', orderedList: '编号列表', quote: '引用', link: '插入链接', text: '文字', headingText: '标题', listItem: '列表项目', quoteText: '引用内容', linkText: '链接文字' },
           imageDialogTitle: '插入图片', imageDialogDescription: '选择并排列要插入正文的图片。', closeMediaDialog: '关闭素材窗口', imageDropTitle: '拖拽图片到这里，或点击选择', chooseImages: '选择图片', imageRules: '支持 JPG、PNG、WebP，单张不超过 2 MB，总计不超过 4 MB，最多 9 张', pendingImages: '待插入 {{count}}', uploadComplete: '读取完成', moveImageUp: '向前移动图片', moveImageDown: '向后移动图片', noPendingImages: '还没有选择图片', selectedImages: '已选择 {{count}} / {{max}}', insertImages: '插入 {{count}} 张图片',
           videoDialogTitle: '插入视频', videoDialogDescription: '支持哔哩哔哩和抖音视频链接', supportedVideoPlatforms: '支持的视频平台', videoPlatforms: { bilibili: '哔哩哔哩', douyin: '抖音' }, videoLink: '视频链接', parseVideo: '解析', videoPreviewTitle: '外部视频', validVideoLink: '链接有效', insertVideo: '插入视频',
-          errors: { title: '标题至少需要 2 个字。', content: '正文至少需要 10 个字。', game: '请选择帖子所属的游戏。', image: '请选择 JPG、PNG 或 WebP 图片；单张不超过 2 MB、总计不超过 4 MB，最多 9 张。', video: '请输入有效的哔哩哔哩或抖音视频链接。' },
+          errors: { title: '标题至少需要 2 个字。', content: '正文至少需要 10 个字。', game: '请选择帖子所属的游戏。', image: '请选择 JPG、PNG 或 WebP 图片；单张不超过 2 MB、总计不超过 4 MB，最多 9 张。', imageUnavailable: '图片发布正在接入服务器，请先发布文字内容。', video: '请输入有效的哔哩哔哩或抖音视频链接。', publish: '帖子未能保存。内容仍保留在编辑器中，请重试。' },
         },
         pinned: {
           title: '置顶',
@@ -505,7 +505,7 @@ const resources = {
           toolbar: { label: '正文格式', bold: '粗體', italic: '斜體', underline: '底線', heading: '二級標題', list: '項目清單', orderedList: '編號清單', quote: '引用', link: '插入連結', text: '文字', headingText: '標題', listItem: '清單項目', quoteText: '引用內容', linkText: '連結文字' },
           imageDialogTitle: '插入圖片', imageDialogDescription: '選擇並排列要插入正文的圖片。', closeMediaDialog: '關閉素材視窗', imageDropTitle: '拖曳圖片到這裡，或點擊選擇', chooseImages: '選擇圖片', imageRules: '支援 JPG、PNG、WebP，單張不超過 2 MB，總計不超過 4 MB，最多 9 張', pendingImages: '待插入 {{count}}', uploadComplete: '讀取完成', moveImageUp: '向前移動圖片', moveImageDown: '向後移動圖片', noPendingImages: '尚未選擇圖片', selectedImages: '已選擇 {{count}} / {{max}}', insertImages: '插入 {{count}} 張圖片',
           videoDialogTitle: '插入影片', videoDialogDescription: '支援嗶哩嗶哩和抖音影片連結', supportedVideoPlatforms: '支援的影片平台', videoPlatforms: { bilibili: '嗶哩嗶哩', douyin: '抖音' }, videoLink: '影片連結', parseVideo: '解析', videoPreviewTitle: '外部影片', validVideoLink: '連結有效', insertVideo: '插入影片',
-          errors: { title: '標題至少需要 2 個字。', content: '正文至少需要 10 個字。', game: '請選擇文章所屬的遊戲。', image: '請選擇 JPG、PNG 或 WebP 圖片；單張不超過 2 MB、總計不超過 4 MB，最多 9 張。', video: '請輸入有效的 Bilibili 或 Douyin 影片連結。' },
+          errors: { title: '標題至少需要 2 個字。', content: '正文至少需要 10 個字。', game: '請選擇文章所屬的遊戲。', image: '請選擇 JPG、PNG 或 WebP 圖片；單張不超過 2 MB、總計不超過 4 MB，最多 9 張。', imageUnavailable: '圖片發佈正在接入伺服器，請先發佈文字內容。', video: '請輸入有效的 Bilibili 或 Douyin 影片連結。', publish: '文章未能儲存。內容仍保留在編輯器中，請再試一次。' },
         },
         pinned: {
           title: '置頂',
@@ -643,7 +643,7 @@ const resources = {
           toolbar: { label: 'Post formatting', bold: 'Bold', italic: 'Italic', underline: 'Underline', heading: 'Heading 2', list: 'Bulleted list', orderedList: 'Numbered list', quote: 'Quote', link: 'Insert link', text: 'text', headingText: 'Heading', listItem: 'List item', quoteText: 'Quote', linkText: 'link text' },
           imageDialogTitle: 'Insert images', imageDialogDescription: 'Choose and arrange images to insert into the post.', closeMediaDialog: 'Close media window', imageDropTitle: 'Drop images here, or choose files', chooseImages: 'Choose images', imageRules: 'JPG, PNG, or WebP. 2 MB each, 4 MB total, up to 9 images', pendingImages: '{{count}} to insert', uploadComplete: 'Ready', moveImageUp: 'Move image earlier', moveImageDown: 'Move image later', noPendingImages: 'No images selected', selectedImages: '{{count}} / {{max}} selected', insertImages: 'Insert {{count}} images',
           videoDialogTitle: 'Insert video', videoDialogDescription: 'Supports Bilibili and Douyin video links', supportedVideoPlatforms: 'Supported video platforms', videoPlatforms: { bilibili: 'Bilibili', douyin: 'Douyin' }, videoLink: 'Video link', parseVideo: 'Parse', videoPreviewTitle: 'External video', validVideoLink: 'Valid link', insertVideo: 'Insert video',
-          errors: { title: 'Enter a title with at least 2 characters.', content: 'Enter at least 10 characters in the post.', game: 'Choose the game this post belongs to.', image: 'Choose JPG, PNG, or WebP images up to 2 MB each, 4 MB total, and 9 images.', video: 'Enter a valid Bilibili or Douyin video link.' },
+          errors: { title: 'Enter a title with at least 2 characters.', content: 'Enter at least 10 characters in the post.', game: 'Choose the game this post belongs to.', image: 'Choose JPG, PNG, or WebP images up to 2 MB each, 4 MB total, and 9 images.', imageUnavailable: 'Image publishing is being connected to the server. Publish the text first.', video: 'Enter a valid Bilibili or Douyin video link.', publish: 'The post could not be saved. Your content is still in the editor; try again.' },
         },
         pinned: {
           title: 'Pinned',
@@ -765,7 +765,7 @@ const resources = {
           toolbar: { label: '本文の書式', bold: '太字', italic: '斜体', underline: '下線', heading: '見出し2', list: '箇条書き', orderedList: '番号付きリスト', quote: '引用', link: 'リンクを挿入', text: 'テキスト', headingText: '見出し', listItem: 'リスト項目', quoteText: '引用文', linkText: 'リンク文字' },
           imageDialogTitle: '画像を挿入', imageDialogDescription: '本文に挿入する画像を選択して並べ替えます。', closeMediaDialog: 'メディア画面を閉じる', imageDropTitle: '画像をここにドロップするか、ファイルを選択', chooseImages: '画像を選択', imageRules: 'JPG、PNG、WebP、1枚2 MB、合計4 MB、最大9枚', pendingImages: '挿入待ち {{count}}', uploadComplete: '準備完了', moveImageUp: '画像を前へ移動', moveImageDown: '画像を後ろへ移動', noPendingImages: '画像が選択されていません', selectedImages: '{{count}} / {{max}}枚を選択', insertImages: '{{count}}枚を挿入',
           videoDialogTitle: '動画を挿入', videoDialogDescription: 'BilibiliとDouyinの動画リンクに対応', supportedVideoPlatforms: '対応動画サービス', videoPlatforms: { bilibili: 'Bilibili', douyin: 'Douyin' }, videoLink: '動画リンク', parseVideo: '解析', videoPreviewTitle: '外部動画', validVideoLink: '有効なリンク', insertVideo: '動画を挿入',
-          errors: { title: 'タイトルは2文字以上で入力してください。', content: '本文は10文字以上で入力してください。', game: '投稿先のゲームを選択してください。', image: 'JPG、PNG、WebP画像を選択してください。1枚2 MB、合計4 MB、最大9枚までです。', video: '有効なBilibiliまたはDouyinの動画リンクを入力してください。' },
+          errors: { title: 'タイトルは2文字以上で入力してください。', content: '本文は10文字以上で入力してください。', game: '投稿先のゲームを選択してください。', image: 'JPG、PNG、WebP画像を選択してください。1枚2 MB、合計4 MB、最大9枚までです。', imageUnavailable: '画像投稿はサーバー接続の準備中です。先にテキストを投稿してください。', video: '有効なBilibiliまたはDouyinの動画リンクを入力してください。', publish: '投稿を保存できませんでした。内容はエディターに残っています。もう一度お試しください。' },
         },
         pinned: {
           title: '固定',
@@ -875,7 +875,7 @@ const resources = {
           toolbar: { label: '본문 서식', bold: '굵게', italic: '기울임', underline: '밑줄', heading: '제목 2', list: '글머리 기호', orderedList: '번호 목록', quote: '인용', link: '링크 삽입', text: '텍스트', headingText: '제목', listItem: '목록 항목', quoteText: '인용문', linkText: '링크 텍스트' },
           imageDialogTitle: '이미지 삽입', imageDialogDescription: '본문에 삽입할 이미지를 선택하고 정렬합니다.', closeMediaDialog: '미디어 창 닫기', imageDropTitle: '이미지를 여기에 놓거나 파일 선택', chooseImages: '이미지 선택', imageRules: 'JPG, PNG, WebP, 파일당 2 MB, 총 4 MB, 최대 9장', pendingImages: '삽입 대기 {{count}}', uploadComplete: '준비 완료', moveImageUp: '이미지 앞으로 이동', moveImageDown: '이미지 뒤로 이동', noPendingImages: '선택한 이미지 없음', selectedImages: '{{count}} / {{max}} 선택', insertImages: '이미지 {{count}}장 삽입',
           videoDialogTitle: '동영상 삽입', videoDialogDescription: 'Bilibili 및 Douyin 동영상 링크 지원', supportedVideoPlatforms: '지원 동영상 플랫폼', videoPlatforms: { bilibili: 'Bilibili', douyin: 'Douyin' }, videoLink: '동영상 링크', parseVideo: '분석', videoPreviewTitle: '외부 동영상', validVideoLink: '유효한 링크', insertVideo: '동영상 삽입',
-          errors: { title: '제목을 2자 이상 입력하세요.', content: '본문을 10자 이상 입력하세요.', game: '게시글이 속한 게임을 선택하세요.', image: 'JPG, PNG 또는 WebP 이미지를 선택하세요. 파일당 2 MB, 총 4 MB, 최대 9장까지 지원합니다.', video: '올바른 Bilibili 또는 Douyin 동영상 링크를 입력하세요.' },
+          errors: { title: '제목을 2자 이상 입력하세요.', content: '본문을 10자 이상 입력하세요.', game: '게시글이 속한 게임을 선택하세요.', image: 'JPG, PNG 또는 WebP 이미지를 선택하세요. 파일당 2 MB, 총 4 MB, 최대 9장까지 지원합니다.', imageUnavailable: '이미지 게시 기능을 서버에 연결하는 중입니다. 먼저 텍스트를 게시하세요.', video: '올바른 Bilibili 또는 Douyin 동영상 링크를 입력하세요.', publish: '게시글을 저장하지 못했습니다. 내용은 편집기에 남아 있습니다. 다시 시도하세요.' },
         },
         pinned: {
           title: '고정',
