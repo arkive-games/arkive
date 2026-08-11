@@ -24,6 +24,7 @@ import {
   type RegionLocale, type Taxonomy, type TypesLocale,
 } from '../../lib/data'
 import { markerImageUrl, vrisingAssets } from '../../lib/assets'
+import { cleanGameText } from '../../lib/gameText'
 import { mapViewStore, readVisibleSubtypes, writeVisibleSubtypes } from '../../lib/storage'
 import {
   resolveMapEngine,
@@ -188,17 +189,6 @@ export default function MapPage() {
       const loc = markerData.l10n[m.id]
       const subtypeL10n = staticData.typesL10n.subtypes[m.subtype]
       const subLabel = subtypeL10n?.name ?? m.subtype
-      const genericResourceName = m.category === 'resources' && (
-        m.resourceDetail === m.resourceKind
-        || m.resourceDetail === 'mixed'
-        || m.resourceDetail?.startsWith('random_')
-      )
-      const detailNameKey = {
-        rift_crystal: 'marker.riftCrystal',
-        emery_container: 'marker.emeryContainer',
-        iron_mine_cart: 'marker.ironMineCart',
-        silver_mine_cart: 'marker.silverMineCart',
-      }[m.resourceDetail ?? '']
       return {
         id: m.id,
         subtype: m.subtype,
@@ -213,6 +203,9 @@ export default function MapPage() {
         route: m.route,
         routePrecision: m.routePrecision,
         positionPrecision: m.positionPrecision,
+        pairedMarkerId: m.pairedMarkerId,
+        connection: m.connection,
+        connectionGroup: m.connectionGroup,
         bossPrefab: m.bossPrefab,
         bossLevel: m.bossLevel,
         bossAct: m.bossAct,
@@ -221,15 +214,13 @@ export default function MapPage() {
         indexInSubtype: m.indexInSubtype,
         images: (m.images ?? []).map(markerImageUrl),
         contributors: [] as string[],
-        localizedName: detailNameKey
-          ? t(detailNameKey)
-          : genericResourceName ? subLabel : (loc?.name ?? subLabel),
-        localizedDescription: loc?.description ?? subtypeL10n?.description,
+        localizedName: loc?.name ?? subLabel,
+        localizedDescription: loc?.description ? cleanGameText(loc.description, '') : undefined,
         subtypeLabel: subLabel,
         subtypeMeta: subtypeMetaMap.get(m.subtype),
       }
     })
-  }, [staticData, markerData, subtypeMetaMap, t])
+  }, [staticData, markerData, subtypeMetaMap])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
 
@@ -246,7 +237,9 @@ export default function MapPage() {
       return {
         id: m.id,
         name: m.localizedName || '',
-        description: m.localizedDescription,
+        description: m.connectionGroup
+          ? `${t('marker.connectionGroup', { group: m.connectionGroup })} · ${t('marker.bidirectional')}`
+          : m.localizedDescription,
         subtypeLabel: m.subtypeLabel ?? m.subtype,
         categoryLabel: catId ? (staticData.typesL10n.categories[catId]?.name ?? catId) : '',
         iconUrl: iconName ? vrisingAssets.markerIconUrl(iconName, map) : undefined,
@@ -254,7 +247,7 @@ export default function MapPage() {
         y: m.y,
       }
     })
-  }, [engineMarkers, staticData, map])
+  }, [engineMarkers, staticData, map, t])
 
   const countBySubtype = useMemo(() => {
     const counts = new Map<string, number>()
@@ -309,6 +302,13 @@ export default function MapPage() {
   const onHoverMarker = useCallback((id: string | null) => {
     setHoveredMarkerId(id)
   }, [])
+  const onSelectSearchMarker = useCallback((id: string) => {
+    setSelectedMarkerId(id)
+    if (isMobile) {
+      setSearchSheetOpen(false)
+      setSearchResultIds([])
+    }
+  }, [isMobile])
 
   const regionName = useCallback(
     (id?: string) => (id && regionData?.l10n[id]?.name) || '',
@@ -330,7 +330,7 @@ export default function MapPage() {
       if (!map || sortedRegions.length === 0) return ''
       const p = worldToPixel(map, x, y)
       const hit = regionAt(sortedRegions, p.x, p.y)
-      return hit ? (regionName(hit.id) || hit.name) : ''
+      return hit ? regionName(hit.id) : ''
     },
     [map, sortedRegions, regionName],
   )
@@ -350,7 +350,12 @@ export default function MapPage() {
   }), [t])
 
   const renderPopupContent = useCallback(
-    (marker: EngineMarker) => renderMarkerPopup(marker, { t, regionName, categoryName }),
+    (marker: EngineMarker) => renderMarkerPopup(marker, {
+      t,
+      regionName,
+      categoryName,
+      onSelectMarker: setSelectedMarkerId,
+    }),
     [t, regionName, categoryName],
   )
 
@@ -432,14 +437,11 @@ export default function MapPage() {
   const searchPanel = (variant: 'floating' | 'inline') => (
     <SearchPanel
       items={searchItems}
-      onSelect={setSelectedMarkerId}
+      onSelect={onSelectSearchMarker}
       onFlyTo={setSelectedPosition}
       onResultsChange={setSearchResultIds}
       initialQuery={initialQuery}
       labels={searchLabels}
-      // Every marker of a subtype shares one description sentence, so indexing
-      // `description` would make any word in it match all 226 POIs at once.
-      // Only the generated region label is searchable.
       searchFields={['name']}
       variant={variant}
       floatingPlacement="center"

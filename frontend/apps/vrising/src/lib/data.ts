@@ -32,7 +32,10 @@ export interface MarkerRow {
   movement?: 'fixed' | 'roaming'
   route?: { x: number; y: number; z?: number }[]
   routePrecision?: 'chunk-corridor'
-  positionPrecision?: 'terrain-chunk-center'
+  positionPrecision?: 'terrain-chunk-center' | 'authored-transform'
+  pairedMarkerId?: string
+  connection?: 'bidirectional'
+  connectionGroup?: number
   bossPrefab?: string
   bossLevel?: number | null
   bossAct?: string | null

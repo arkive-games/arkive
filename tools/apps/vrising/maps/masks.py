@@ -119,14 +119,12 @@ def build_regions(raw: Path, parsed: dict) -> list[dict]:
             continue
         borders = rings_to_pixels(rings, e, WORLD_BOUNDS, o, MAP_PX, MAP_PX, MASK_ROWS_DOWN)
         total_points += sum(len(r) for r in borders)
-        a = e["accessId"]
         regions.append({
             "id": e["id"],
-            # No region names exist in any reachable game file (localization is
-            # keyed by bare GUID; the 229 real names live in .entityheader
-            # subscene names, a later unex phase). Label by AccessID rather than
-            # invent anything.
-            "name": f"{'POI' if e['kind'] == 'poi' else 'Territory'} {a[0]}-{a[1]}-{a[2]}",
+            # The map engine uses this field as a stable polygon key. Real region
+            # names are not yet resolved, so keep the technical id and expose no
+            # user-facing locale entry for it.
+            "name": e["id"],
             "type": e["kind"],
             "borders": borders,
         })

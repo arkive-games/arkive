@@ -22,6 +22,7 @@ const deps = {
   t: (key: string) => key,
   regionName: () => '',
   categoryName: () => '',
+  onSelectMarker: () => undefined,
 }
 
 describe('renderMarkerPopup', () => {
@@ -40,5 +41,20 @@ describe('renderMarkerPopup', () => {
     )
     expect(html).toContain('<img')
     expect(html).toContain('/resource.webp')
+  })
+
+  it('shows the official two-way connection action for paired Cave Passages', () => {
+    const html = renderToStaticMarkup(
+      <>{renderMarkerPopup(marker({
+        subtype: 'navigation-cave-passage',
+        pairedMarkerId: 'other-end',
+        connection: 'bidirectional',
+        connectionGroup: 1,
+      }), deps)}</>,
+    )
+
+    expect(html).toContain('marker.bidirectional')
+    expect(html).toContain('marker.connectionGroup')
+    expect(html).toContain('marker.goToOtherEnd')
   })
 })

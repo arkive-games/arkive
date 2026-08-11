@@ -74,7 +74,10 @@ export const markerInstanceSchema = z.object({
     .array(z.object({ x: z.number(), y: z.number(), z: z.number().optional() }))
     .optional(),
   routePrecision: z.literal("chunk-corridor").optional(),
-  positionPrecision: z.literal("terrain-chunk-center").optional(),
+  positionPrecision: z.enum(["terrain-chunk-center", "authored-transform"]).optional(),
+  pairedMarkerId: z.string().optional(),
+  connection: z.literal("bidirectional").optional(),
+  connectionGroup: z.number().int().positive().optional(),
   movement: z.enum(["fixed", "roaming"]).optional(),
   images: z.array(z.string()),
   contributors: z.array(z.string()),

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ArrowRightLeft } from 'lucide-react'
 import type { EngineMarker } from '@gamemap/map-engine'
 import { MarkerPopupCard, formatCoords } from '@gamemap/map-shell'
 
@@ -9,7 +10,10 @@ type VrisingMarker = EngineMarker & {
   bossLevel?: number | null
   bossAct?: string | null
   bossRegion?: string | null
-  positionPrecision?: 'terrain-chunk-center'
+  positionPrecision?: 'terrain-chunk-center' | 'authored-transform'
+  pairedMarkerId?: string
+  connection?: 'bidirectional'
+  connectionGroup?: number
 }
 
 export interface PopupDeps {
@@ -18,6 +22,7 @@ export interface PopupDeps {
   regionName: (id?: string) => string
   /** Localized category label for a category id. */
   categoryName: (id?: string) => string
+  onSelectMarker: (id: string) => void
 }
 
 /**
@@ -56,11 +61,6 @@ export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactN
       description={marker.localizedDescription}
       images={vrising.movement ? undefined : marker.images}
     >
-      {vrising.positionPrecision === 'terrain-chunk-center' ? (
-        <div className="mt-3 border-t border-border pt-3 text-sm text-muted-foreground">
-          {t('marker.terrainChunkPrecision')}
-        </div>
-      ) : null}
       {vrising.movement ? (
         <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
           <div className="flex justify-between gap-3">
@@ -85,6 +85,26 @@ export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactN
               <span>{vrising.bossRegion}</span>
             </div>
           ) : null}
+        </div>
+      ) : null}
+      {vrising.pairedMarkerId && vrising.connection === 'bidirectional' && vrising.connectionGroup ? (
+        <div className="mt-3 border-t border-border pt-3">
+          <div className="mb-2 flex justify-between gap-3 text-sm">
+            <span className="text-muted-foreground">{t('marker.connection')}</span>
+            <span>
+              {t('marker.connectionGroup', { group: vrising.connectionGroup })}
+              {' · '}
+              {t('marker.bidirectional')}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground hover:border-primary/40 hover:bg-muted"
+            onClick={() => deps.onSelectMarker(vrising.pairedMarkerId!)}
+          >
+            <ArrowRightLeft className="size-4" aria-hidden="true" />
+            {t('marker.goToOtherEnd')}
+          </button>
         </div>
       ) : null}
     </MarkerPopupCard>

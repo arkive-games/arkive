@@ -147,7 +147,13 @@ export interface MarkerInstance {
   routePrecision?: "chunk-corridor";
   /** Precision of a point derived from authored terrain metadata rather than
    * an object-level transform. */
-  positionPrecision?: "terrain-chunk-center";
+  positionPrecision?: "terrain-chunk-center" | "authored-transform";
+  /** Marker at the other end of an authored same-map connection. */
+  pairedMarkerId?: string;
+  /** Direction supported by an authored marker connection. */
+  connection?: "bidirectional";
+  /** Stable, app-owned display group shared by connected endpoints. */
+  connectionGroup?: number;
   /** Whether the source entity has a fixed spawn or follows an authored route. */
   movement?: "fixed" | "roaming";
   images: string[];

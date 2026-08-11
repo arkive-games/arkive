@@ -9,38 +9,6 @@ map:
     zh-TW: 瓦爾多蘭
 
 categories:
-  - id: regions
-    pinVariant: image
-    names:
-      en-US: Regions
-      zh-CN: 区域
-      zh-TW: 區域
-    subtypes:
-      - id: poi
-        icon: MapIcon_CavePassage
-        iconScale: 0.8
-        defaultActive: true
-        names:
-          en-US: Point of interest
-          zh-CN: 兴趣点
-          zh-TW: 興趣點
-        descriptions:
-          en-US: A named area outline the game draws on the world map. Names are not yet recoverable from the game files, so each is labelled by its internal access id.
-          zh-CN: 游戏在世界地图上绘制的区域轮廓。区域名称目前无法从游戏文件中还原，因此以内部访问 ID 标注。
-          zh-TW: 遊戲在世界地圖上繪製的區域輪廓。區域名稱目前無法從遊戲檔案中還原，因此以內部存取 ID 標註。
-      - id: territory
-        icon: MapIcon_PlayerCastle
-        iconScale: 0.8
-        defaultActive: true
-        names:
-          en-US: Territory
-          zh-CN: 领地
-          zh-TW: 領地
-        descriptions:
-          en-US: A territory outline the game draws on the world map. Names are not yet recoverable from the game files, so each is labelled by its internal access id.
-          zh-CN: 游戏在世界地图上绘制的领地轮廓。名称目前无法从游戏文件中还原，因此以内部访问 ID 标注。
-          zh-TW: 遊戲在世界地圖上繪製的領地輪廓。名稱目前無法從遊戲檔案中還原，因此以內部存取 ID 標註。
-
   - id: bosses
     pinVariant: circular
     names:
@@ -55,10 +23,6 @@ categories:
           en-US: Fixed bosses
           zh-CN: 固定首领
           zh-TW: 固定首領
-        descriptions:
-          en-US: A V Blood boss with one or more fixed spawn positions found in the game scenes.
-          zh-CN: 从游戏场景中提取的、拥有一个或多个固定出生位置的 V 型血首领。
-          zh-TW: 從遊戲場景中擷取的、擁有一個或多個固定出生位置的 V 型血首領。
       - id: boss-roaming
         color: "#d74747"
         defaultActive: true
@@ -66,10 +30,6 @@ categories:
           en-US: Roaming bosses
           zh-CN: 巡逻首领
           zh-TW: 巡邏首領
-        descriptions:
-          en-US: A V Blood boss following an ordered patrol corridor recovered from the game. The line connects 160-unit terrain chunks and does not claim within-chunk road precision.
-          zh-CN: 从游戏内恢复的、沿有序巡逻走廊移动的 V 型血首领。路线连接 160 单位地形区块，不代表区块内部道路的精确位置。
-          zh-TW: 從遊戲內復原的、沿有序巡邏走廊移動的 V 型血首領。路線連接 160 單位地形區塊，不代表區塊內部道路的精確位置。
   - id: resources
     pinVariant: circular
     names:
@@ -79,31 +39,31 @@ categories:
     subtypes:
       - id: resource-copper
         color: "#c87542"
-        names: { en-US: Copper, zh-CN: 铜矿, zh-TW: 銅礦 }
+        localizationGuid: 37f33a05-a18e-4445-947c-a9ccb192e984
       - id: resource-crystal
         color: "#d65bc2"
-        names: { en-US: Rift crystals, zh-CN: 裂隙水晶（冥河碎片）, zh-TW: 裂隙水晶（冥河碎片） }
+        localizationGuid: 9baee9b1-0e14-4b39-8b91-5f88f7436d2b
       - id: resource-emery
         color: "#8f7b66"
-        names: { en-US: Emery nodes and containers, zh-CN: 金刚砂矿与容器, zh-TW: 金剛砂礦與容器 }
+        localizationGuid: 826ebdba-e5f7-4303-b172-5b6a85a042c4
       - id: resource-gem
         color: "#9f62d6"
-        names: { en-US: Gem veins, zh-CN: 宝石矿脉, zh-TW: 寶石礦脈 }
+        localizationGuid: 1ef6d67a-f40d-4de0-95ed-a5960c0d9812
       - id: resource-iron
         color: "#778594"
-        names: { en-US: Iron, zh-CN: 铁矿, zh-TW: 鐵礦 }
+        localizationGuid: bb6fb6cd-5125-4225-81bf-10dd69b6f16e
       - id: resource-mechanical
         color: "#80a6ad"
-        names: { en-US: Tech Scrap deposits, zh-CN: 科技废料资源点, zh-TW: 科技廢料資源點 }
+        localizationGuid: b3e66c75-1f29-4835-829b-cab41bec8fd8
       - id: resource-quartz
         color: "#e6d7c9"
-        names: { en-US: Quartz, zh-CN: 石英, zh-TW: 石英 }
+        localizationGuid: 32e3bcee-8c19-4ffd-9998-5441c1faf888
       - id: resource-silver
         color: "#b9c6d2"
-        names: { en-US: Silver, zh-CN: 银矿, zh-TW: 銀礦 }
+        localizationGuid: 3df4d93f-282b-409f-901b-2622a8f513e3
       - id: resource-sulfur
         color: "#d7ca3c"
-        names: { en-US: Sulfur, zh-CN: 硫磺, zh-TW: 硫磺 }
+        localizationGuid: 13dda5db-1dd2-4020-b1bd-c1a53a0bdac9
   - id: navigation
     pinVariant: circular
     names:
@@ -116,11 +76,10 @@ categories:
         iconScale: 0.86
         color: "#3b82c4"
         defaultActive: true
-        names:
-          en-US: Vampire Waygates
-          zh-CN: 吸血鬼传送门
-          zh-TW: 吸血鬼傳送門
-        descriptions:
-          en-US: A waygate terrain chunk identified in the authored game scene. The marker is placed at the 160-unit chunk centre and may be offset from the exact entrance.
-          zh-CN: 从游戏场景中确认的传送门地形区块。标记位于 160 单位区块的中心，可能与实际入口存在偏移。
-          zh-TW: 從遊戲場景中確認的傳送門地形區塊。標記位於 160 單位區塊的中心，可能與實際入口存在偏移。
+        localizationGuid: 0896f140-8c61-451a-9531-a2cd2905a4c5
+      - id: navigation-cave-passage
+        icon: MapIcon_CavePassage
+        iconScale: 0.86
+        color: "#8f7358"
+        defaultActive: true
+        localizationGuid: 5336ed66-0eb9-419f-9979-74c40df9f1a3

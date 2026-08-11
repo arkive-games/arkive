@@ -2,7 +2,38 @@ from __future__ import annotations
 
 import pytest
 
-from vrising.maps.emit import build_dataset
+from vrising.maps.emit import build_dataset as _build_dataset
+from vrising.markers.official_text import (
+    CAVE_PASSAGE_TEXT_REF,
+    RESOURCE_TEXT_REFS,
+    TYPE_NAME_GUIDS,
+    WAYGATE_TEXT_REF,
+)
+
+
+def _official_texts() -> dict[str, dict[str, str]]:
+    guids = TYPE_NAME_GUIDS | {
+        ref.name_guid
+        for ref in [
+            *RESOURCE_TEXT_REFS.values(),
+            WAYGATE_TEXT_REF,
+            CAVE_PASSAGE_TEXT_REF,
+        ]
+    }
+    return {
+        guid: {locale: f"Official {guid}" for locale in ("en-US", "zh-CN", "zh-TW")}
+        for guid in guids
+    }
+
+
+def build_dataset(parsed, regions, marker_payload=None):
+    payload = {
+        "markers": [],
+        "labels": {},
+        **(marker_payload or {}),
+        "officialTexts": _official_texts(),
+    }
+    return _build_dataset(parsed, regions, payload)
 
 
 def _parsed():
@@ -23,9 +54,9 @@ def _parsed():
 
 def _regions():
     return [
-        {"id": "poi_000", "name": "POI 1-2-3", "type": "poi",
+        {"id": "poi_000", "name": "poi_000", "type": "poi",
          "borders": [[[10.0, 10.0], [20.0, 10.0], [20.0, 20.0], [10.0, 10.0]]]},
-        {"id": "terr_000", "name": "Territory 4-5-6", "type": "territory",
+        {"id": "terr_000", "name": "terr_000", "type": "territory",
          "borders": [[[30.0, 30.0], [40.0, 30.0], [40.0, 40.0], [30.0, 30.0]]]},
     ]
 
@@ -42,26 +73,17 @@ def test_maps_json_carries_the_tile_grid_and_the_calibration():
     assert m["isVisible"] is True
 
 
-def test_markers_are_raw_world_coordinates_not_pixels():
+def test_unlocalized_region_geometry_does_not_create_markers():
     ds = build_dataset(_parsed(), _regions())
-    markers = ds["markers"]["Vardoran"]
-    poi = next(m for m in markers if m["id"] == "poi_000")
-    # The entry's CenterPosWS, untransformed — the engine projects it.
-    assert (poi["x"], poi["y"]) == (-500.0, -300.0)
+    assert ds["markers"]["Vardoran"] == []
 
 
 def test_every_marker_has_the_contract_required_fields():
     ds = build_dataset(_parsed(), _regions())
-    for m in ds["markers"]["Vardoran"]:
-        assert isinstance(m["id"], str) and m["id"]
-        assert m["subtype"] in {"poi", "territory"}
-        assert m["images"] == []
-        assert m["contributors"] == []
-        assert isinstance(m["indexInSubtype"], int)
-        assert m["region"] == m["id"]
+    assert ds["markers"]["Vardoran"] == []
 
 
-def test_index_in_subtype_counts_per_subtype_from_one():
+def test_additional_unlocalized_regions_still_do_not_create_markers():
     parsed = _parsed()
     parsed["entries"].append({
         "id": "poi_001", "kind": "poi", "index": 1, "accessId": [7, 8, 9],
@@ -69,21 +91,13 @@ def test_index_in_subtype_counts_per_subtype_from_one():
         "aspect": [20.0, 20.0], "mask": "Texture2D/POIPolygon_1.png", "maskSize": [40, 40],
     })
     ds = build_dataset(parsed, _regions())
-    by_id = {m["id"]: m for m in ds["markers"]["Vardoran"]}
-    assert by_id["poi_000"]["indexInSubtype"] == 1
-    assert by_id["poi_001"]["indexInSubtype"] == 2
-    assert by_id["terr_000"]["indexInSubtype"] == 1
+    assert ds["markers"]["Vardoran"] == []
 
 
-def test_taxonomy_carries_both_subtypes_with_icons():
+def test_taxonomy_omits_unlocalized_region_marker_types():
     ds = build_dataset(_parsed(), _regions())
     categories = {cat["id"]: cat for cat in ds["types"]["categories"]}
-    cat = categories["regions"]
-    assert cat["id"] == "regions"
-    ids = {s["id"]: s for s in cat["subtypes"]}
-    assert set(ids) == {"poi", "territory"}
-    assert ids["poi"]["icon"] == "MapIcon_CavePassage"
-    assert ids["territory"]["defaultActive"] is True
+    assert "regions" not in categories
     assert categories["bosses"]["pinVariant"] == "circular"
     assert categories["resources"]["pinVariant"] == "circular"
     assert {s["id"] for s in categories["resources"]["subtypes"]} >= {
@@ -101,15 +115,13 @@ def test_locales_cover_every_language_and_namespace():
     for lng, loc in ds["locales"].items():
         assert loc["maps"]["Vardoran"]["name"], lng
         assert set(loc["types"]["subtypes"]) >= {
-            "poi",
-            "territory",
             "boss-fixed",
             "resource-quartz",
             "resource-iron",
             "resource-mechanical",
         }
-        assert set(loc["markers"]["Vardoran"]) == {"poi_000", "terr_000"}
-        assert set(loc["regions"]["Vardoran"]) == {"poi_000", "terr_000"}
+        assert loc["markers"]["Vardoran"] == {}
+        assert loc["regions"]["Vardoran"] == {}
 
 
 def test_marker_payload_is_merged_without_changing_world_coordinates():
@@ -127,7 +139,16 @@ def test_marker_payload_is_merged_without_changing_world_coordinates():
                 "indexInSubtype": 1,
             }
         ],
-        "labels": {"boss-test": {"name": "Test Boss", "description": "Level 1"}},
+        "labels": {
+            "boss-test": {
+                "name": "Test Boss",
+                "localizedNames": {
+                    "en-US": "Test Boss",
+                    "zh-CN": "Test Boss",
+                    "zh-TW": "Test Boss",
+                },
+            }
+        },
         "resourcePools": [],
     }
     ds = build_dataset(_parsed(), _regions(), payload)
@@ -177,13 +198,9 @@ def test_marker_payload_uses_game_localized_boss_names():
     )
 
 
-def test_region_labels_are_identical_across_locales():
-    """Region labels are access ids, not names — translating them would be
-    inventing text the game never shipped."""
+def test_unresolved_regions_have_no_user_facing_locale_labels():
     ds = build_dataset(_parsed(), _regions())
-    names = {lng: loc["regions"]["Vardoran"]["poi_000"]["name"] for lng, loc in ds["locales"].items()}
-    assert len(set(names.values())) == 1
-    assert "1-2-3" in names["en-US"]
+    assert all(not loc["regions"]["Vardoran"] for loc in ds["locales"].values())
 
 
 def test_an_unreviewed_calibration_is_refused():

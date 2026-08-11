@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { defineMemoryRecord, isFiniteNumber, isString, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import type { NavKey } from '../../components/TopNav'
+import { cleanGameText } from '../../lib/gameText'
 import {
   loadVBloodRewards,
   rewardDisplayName,
@@ -74,13 +75,7 @@ export function localizedText(value: VBloodLocalizedText, language: string): str
   return value['en-US']
 }
 
-export function cleanGameText(value: string, runtimeValue: string): string {
-  return value
-    .replace(/\\n/g, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/\{[^}]+\}/g, runtimeValue)
-    .trim()
-}
+export { cleanGameText } from '../../lib/gameText'
 
 export function recordMatchesQuery(record: CatalogRecord, query: string): boolean {
   const normalized = query.trim().toLocaleLowerCase()

@@ -8,9 +8,10 @@ import os
 from pathlib import Path
 
 from ..env import require_dir
-from .bosses import extract_boss_markers
+from .bosses import SERVER_ENTITY_SCENES_RELATIVE, extract_boss_markers
 from .emit import load_marker_payload
 from .extract import ENTITY_SCENES_RELATIVE, extract_marker_audit
+from .localization import LOCALIZATION_RELATIVE
 from .navigation import extract_navigation_points
 
 
@@ -43,9 +44,11 @@ def main(argv: list[str] | None = None) -> int:
         )
         bosses = extract_boss_markers(game_root, prefabs, vblood, PARSED_DIR)
         navigation = extract_navigation_points(
-            game_root / ENTITY_SCENES_RELATIVE, PARSED_DIR
+            game_root / ENTITY_SCENES_RELATIVE,
+            game_root / SERVER_ENTITY_SCENES_RELATIVE,
+            PARSED_DIR,
         )
-        payload = load_marker_payload(PARSED_DIR)
+        payload = load_marker_payload(PARSED_DIR, game_root / LOCALIZATION_RELATIVE)
         print(
             json.dumps(
                 {
@@ -59,7 +62,15 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
     else:
-        print(json.dumps(load_marker_payload(PARSED_DIR)["summary"], indent=2))
+        game_root = require_dir("VRISING_GAME_ROOT")
+        print(
+            json.dumps(
+                load_marker_payload(
+                    PARSED_DIR, game_root / LOCALIZATION_RELATIVE
+                )["summary"],
+                indent=2,
+            )
+        )
     return 0
 
 

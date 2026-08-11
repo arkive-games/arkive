@@ -10,6 +10,8 @@ import re
 
 from .portraits import boss_portrait_icon, boss_portrait_path
 from .resource_icons import resource_icon
+from .official_text import load_official_marker_texts, validate_localized_text
+from .navigation import CAVE_MARKER_ICON
 
 
 RESOURCE_KINDS = (
@@ -86,6 +88,7 @@ def build_marker_payload(
     fixed_bosses: list[dict],
     roaming_bosses: list[dict] | None = None,
     navigation: list[dict] | None = None,
+    official_texts: dict | None = None,
 ) -> dict:
     """Build compact contract markers and labels for the curated public map."""
     markers: list[dict] = []
@@ -96,9 +99,8 @@ def build_marker_payload(
 
     def append_marker(
         marker: dict,
-        name: str,
-        description: str = "",
-        localized_names: dict[str, str] | None = None,
+        localized_names: dict[str, str],
+        localized_descriptions: dict[str, str] | None = None,
     ) -> None:
         marker_id = marker["id"]
         if marker_id in marker_ids:
@@ -107,11 +109,26 @@ def build_marker_payload(
         counters[marker["subtype"]] += 1
         marker["indexInSubtype"] = counters[marker["subtype"]]
         markers.append(marker)
+        validate_localized_text(localized_names)
+        if localized_descriptions:
+            validate_localized_text(localized_descriptions)
         labels[marker_id] = {
-            "name": name,
-            **({"localizedNames": localized_names} if localized_names else {}),
-            **({"description": description} if description else {}),
+            "name": localized_names["en-US"],
+            "localizedNames": localized_names,
+            **(
+                {"localizedDescriptions": localized_descriptions}
+                if localized_descriptions
+                else {}
+            ),
         }
+
+    def official_resource_text(detail: str) -> dict:
+        if official_texts is None:
+            raise ValueError("official marker text is required for resource markers")
+        text = official_texts["resources"].get(detail)
+        if text is None:
+            raise ValueError(f"resource detail {detail!r} has no official marker text")
+        return text
 
     omitted: Counter[str] = Counter()
     non_public: Counter[str] = Counter()
@@ -159,6 +176,7 @@ def build_marker_payload(
         icon = resource_icon(kind)
         if icon is None:
             raise ValueError(f"public resource kind {kind} has no reviewed icon")
+        official_text = official_resource_text(detail)
         append_marker(
             {
                 "id": marker_id,
@@ -173,7 +191,8 @@ def build_marker_payload(
                 **({"count": count} if count > 1 else {}),
                 **({"resourcePool": pool_id} if pool_id else {}),
             },
-            detail.replace("_", " ").title(),
+            official_text["localizedNames"],
+            official_text.get("localizedDescriptions"),
         )
 
     for record in fixed_bosses:
@@ -186,6 +205,8 @@ def build_marker_payload(
             f"boss-{_slug(boss['prefabName'])}-"
             f"{_digest(boss['prefabName'], position)}"
         )
+        if not localized_names:
+            raise ValueError(f"boss {boss['prefabName']} has no official localized name")
         append_marker(
             {
                 "id": marker_id,
@@ -201,8 +222,7 @@ def build_marker_payload(
                 "bossAct": boss.get("act"),
                 "bossRegion": boss.get("region"),
             },
-            (localized_names or {}).get("en-US", boss["displayName"]),
-            localized_names=localized_names,
+            localized_names,
         )
 
     roaming_bosses = roaming_bosses or []
@@ -217,6 +237,8 @@ def build_marker_payload(
             raise ValueError(f"roaming boss {boss['prefabName']} has no reviewed portrait")
         localized_names = boss.get("localizedNames")
         marker_id = f"boss-{_slug(boss['prefabName'])}-roaming"
+        if not localized_names:
+            raise ValueError(f"boss {boss['prefabName']} has no official localized name")
         append_marker(
             {
                 "id": marker_id,
@@ -234,40 +256,66 @@ def build_marker_payload(
                 "route": route,
                 "routePrecision": record["routePrecision"],
             },
-            (localized_names or {}).get("en-US", boss["displayName"]),
-            localized_names=localized_names,
+            localized_names,
         )
 
     navigation = navigation or []
+    if navigation and official_texts is None:
+        raise ValueError("official marker text is required for navigation markers")
     for record in navigation:
-        if record.get("kind") != "waygate":
-            raise ValueError(f"unsupported navigation kind {record.get('kind')}")
-        if record.get("positionPrecision") != "terrain-chunk-center":
-            raise ValueError("waygate marker must declare terrain-chunk-center precision")
+        kind = record.get("kind")
         position = record["worldPosition"]
-        marker_id = f"navigation-waygate-{_slug(record['chunkName'])}"
+        if kind == "waygate":
+            if record.get("positionPrecision") != "authored-transform":
+                raise ValueError(
+                    "waygate marker must declare authored-transform precision"
+                )
+            marker_id = record["waygateId"]
+            subtype = "navigation-waygate"
+            icon = "MapIcon_RespawnGateway"
+            official_text = official_texts["waygate"]
+            connection_fields = {}
+        elif kind == "cave-passage":
+            if record.get("positionPrecision") != "authored-transform":
+                raise ValueError(
+                    "Cave Passage marker must declare authored-transform precision"
+                )
+            if record.get("connection") != "bidirectional":
+                raise ValueError("Cave Passage marker must be bidirectional")
+            connection_group = record.get("connectionGroup")
+            if not isinstance(connection_group, int) or connection_group <= 0:
+                raise ValueError("Cave Passage marker must have a connection group")
+            marker_id = record["endpointId"]
+            subtype = "navigation-cave-passage"
+            icon = CAVE_MARKER_ICON
+            official_text = official_texts["cavePassage"]
+            connection_fields = {
+                "pairedMarkerId": record["pairedEndpointId"],
+                "connection": record["connection"],
+                "connectionGroup": connection_group,
+            }
+        else:
+            raise ValueError(f"unsupported navigation kind {kind}")
         append_marker(
             {
                 "id": marker_id,
                 "category": "navigation",
-                "subtype": "navigation-waygate",
+                "subtype": subtype,
                 **_marker_position(position),
                 "images": [],
                 "contributors": [],
-                "icon": "MapIcon_RespawnGateway",
+                "icon": icon,
                 "positionPrecision": record["positionPrecision"],
+                **connection_fields,
             },
-            # No localized_names: every other marker here takes its translations
-            # from the game (load_boss_localized_names), and hand-writing them in
-            # Python would both invent data and duplicate the navigation-waygate
-            # subtype block in data_src/types.yaml, which already carries the
-            # translated term and is the authored catalog for it.
-            "Vampire Waygate",
+            official_text["localizedNames"],
+            official_text.get("localizedDescriptions"),
         )
 
     return {
         "markers": markers,
         "labels": labels,
+        "officialTexts": (official_texts or {}).get("byGuid", {}),
         "resourcePools": sorted(pools.values(), key=lambda item: item["id"]),
         "summary": {
             "inputResourcePoints": len(resources),
@@ -284,13 +332,22 @@ def build_marker_payload(
             "roamingBossMarkers": len(roaming_bosses),
             "roamingRouteStops": sum(len(item["route"]) for item in roaming_bosses),
             "navigationMarkers": len(navigation),
+            "waygateMarkers": counters["navigation-waygate"],
+            "cavePassageMarkers": counters["navigation-cave-passage"],
+            "cavePassagePairs": len(
+                {
+                    tuple(sorted((item["id"], item["pairedMarkerId"])))
+                    for item in markers
+                    if item["subtype"] == "navigation-cave-passage"
+                }
+            ),
             "resourcePools": len(pools),
             "markersBySubtype": dict(sorted(counters.items())),
         },
     }
 
 
-def load_marker_payload(output_dir: Path) -> dict:
+def load_marker_payload(output_dir: Path, localization_dir: Path) -> dict:
     output_dir = Path(output_dir)
 
     def read(name: str) -> list[dict]:
@@ -307,6 +364,7 @@ def load_marker_payload(output_dir: Path) -> dict:
         read("bosses.fixed.json"),
         read("bosses.roaming.json"),
         read("navigation.json"),
+        load_official_marker_texts(localization_dir),
     )
 
 

@@ -130,44 +130,16 @@ def build_dataset(
         } for c in src["categories"]],
     }
 
-    # One marker per region, at the region's CenterPosWS. `region` points back at
-    # the region polygon so the popup and the cursor readout can name it.
-    counters: dict[str, int] = {}
-    markers: list[dict] = []
-    marker_labels: dict[str, str] = {}
-    for e in parsed["entries"]:
-        subtype = e["kind"]
-        counters[subtype] = counters.get(subtype, 0) + 1
-        a = e["accessId"]
-        label = f"{'POI' if subtype == 'poi' else 'Territory'} {a[0]}-{a[1]}-{a[2]}"
-        marker_labels[e["id"]] = label
-        markers.append({
-            "id": e["id"],
-            "category": "regions",
-            "subtype": subtype,
-            "region": e["id"],
-            # RAW WORLD coordinates — the engine projects these.
-            "x": e["center"][0],
-            "y": e["center"][1],
-            "images": [],
-            "contributors": [],
-            "indexInSubtype": counters[subtype],
-        })
-
     marker_payload = marker_payload or {
         "markers": [],
         "labels": {},
+        "officialTexts": {},
     }
-    for marker in marker_payload["markers"]:
-        marker_id = marker["id"]
-        if marker_id in marker_labels:
-            raise RuntimeError(f"marker id {marker_id} collides with a region marker")
-        marker_labels[marker_id] = marker_payload["labels"][marker_id]["name"]
-        markers.append(marker)
+    markers = list(marker_payload["markers"])
+    marker_labels = marker_payload["labels"]
+    official_texts = marker_payload.get("officialTexts", {})
 
     _stamp_lod_tiers(markers, src)
-
-    region_labels = {r["id"]: r["name"] for r in regions}
 
     locales: dict[str, dict] = {}
     for lng in languages:
@@ -181,25 +153,26 @@ def build_dataset(
                 "categories": {c["id"]: {"name": c["names"][lng]} for c in src["categories"]},
                 "subtypes": {
                     s["id"]: {
-                        "name": s["names"][lng],
-                        "description": (s.get("descriptions") or {}).get(lng, ""),
+                        "name": (
+                            official_texts[s["localizationGuid"]][lng]
+                            if "localizationGuid" in s
+                            else s["names"][lng]
+                        ),
                     }
                     for c in src["categories"] for s in c["subtypes"]
                 },
             },
-            # Access-id labels are identical in every locale on purpose: they are
-            # ids, not names, and the game ships no names to translate.
             "markers": {MAP_ID: {}},
-            "regions": {MAP_ID: {rid: {"name": label} for rid, label in region_labels.items()}},
+            "regions": {MAP_ID: {}},
         }
-        for mid, label in marker_labels.items():
-            source = marker_payload["labels"].get(mid, {"name": label})
-            localized_names = source.get("localizedNames", {})
+        for mid, source in marker_labels.items():
+            localized_names = source["localizedNames"]
+            localized_descriptions = source.get("localizedDescriptions", {})
             locales[lng]["markers"][MAP_ID][mid] = {
-                "name": localized_names.get(lng, source["name"]),
+                "name": localized_names[lng],
                 **(
-                    {"description": source["description"]}
-                    if source.get("description")
+                    {"description": localized_descriptions[lng]}
+                    if localized_descriptions.get(lng)
                     else {}
                 ),
             }
@@ -213,7 +186,7 @@ def build_dataset(
     }
 
 
-def run_emit(parsed_dir: Path, data_out: Path) -> None:
+def run_emit(parsed_dir: Path, data_out: Path, localization_dir: Path) -> None:
     parsed_dir, data_out = Path(parsed_dir), Path(data_out)
     parsed = read_parsed(parsed_dir)
     regions_path = parsed_dir / "regions.json"
@@ -224,7 +197,7 @@ def run_emit(parsed_dir: Path, data_out: Path) -> None:
     import json
     regions = json.loads(regions_path.read_text(encoding="utf-8"))["regions"]
 
-    marker_payload = load_marker_payload(parsed_dir / "markers")
+    marker_payload = load_marker_payload(parsed_dir / "markers", localization_dir)
     reward_payload = load_vblood_reward_payload(
         parsed_dir / "knowledge" / "vblood-rewards.json"
     )

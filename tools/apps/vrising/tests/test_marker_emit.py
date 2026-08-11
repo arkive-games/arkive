@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from vrising.markers.emit import build_marker_payload
+from vrising.markers.emit import build_marker_payload as _build_marker_payload
+from vrising.markers.official_text import RESOURCE_TEXT_REFS
 from vrising.markers.resource_icons import RESOURCE_ICONS, RESOURCE_ICON_SOURCES
 
 
@@ -11,7 +12,37 @@ def _boss(name: str, display: str) -> dict:
         "level": 48,
         "act": "ActII",
         "region": "Dunley",
+        "localizedNames": {
+            "en-US": display,
+            "zh-CN": display,
+            "zh-TW": display,
+        },
     }
+
+
+def _localized(value: str) -> dict[str, str]:
+    return {locale: value for locale in ("en-US", "zh-CN", "zh-TW")}
+
+
+def _official_texts() -> dict:
+    return {
+        "byGuid": {},
+        "resources": {
+            detail: {"localizedNames": _localized(f"Official {detail}")}
+            for detail in RESOURCE_TEXT_REFS
+        },
+        "waygate": {
+            "localizedNames": _localized("Official Vampire Waygate"),
+            "localizedDescriptions": _localized("Official waygate description"),
+        },
+        "cavePassage": {
+            "localizedNames": _localized("Official Cave Passage"),
+        },
+    }
+
+
+def build_marker_payload(*args):
+    return _build_marker_payload(*args, official_texts=_official_texts())
 
 
 def test_marker_payload_uses_unity_xz_for_the_map_and_keeps_height():
@@ -213,9 +244,10 @@ def test_waygate_marker_keeps_its_reviewed_position_precision():
         [
             {
                 "kind": "waygate",
+                "waygateId": "navigation-waygate-9-10",
                 "chunkName": "Farbane_Mid18_Waypoint_Territory",
-                "worldPosition": [-1680.0, 0.0, -1520.0],
-                "positionPrecision": "terrain-chunk-center",
+                "worldPosition": [-1722.5, 10.0, -1462.5],
+                "positionPrecision": "authored-transform",
             }
         ],
     )
@@ -223,6 +255,52 @@ def test_waygate_marker_keeps_its_reviewed_position_precision():
     (marker,) = payload["markers"]
     assert marker["category"] == "navigation"
     assert marker["subtype"] == "navigation-waygate"
-    assert marker["positionPrecision"] == "terrain-chunk-center"
+    assert marker["positionPrecision"] == "authored-transform"
+    assert marker["id"] == "navigation-waygate-9-10"
     assert marker["icon"] == "MapIcon_RespawnGateway"
     assert payload["summary"]["navigationMarkers"] == 1
+    label = next(iter(payload["labels"].values()))
+    assert label["localizedNames"]["zh-CN"] == "Official Vampire Waygate"
+    assert label["localizedDescriptions"]["zh-CN"] == "Official waygate description"
+
+
+def test_cave_passage_marker_keeps_official_pair_and_authored_position():
+    payload = build_marker_payload(
+        [],
+        [],
+        [],
+        [
+            {
+                "kind": "cave-passage",
+                "endpointId": "navigation-cave-passage-6-10-0",
+                "pairedEndpointId": "navigation-cave-passage-15-20-0",
+                "worldPosition": [-2097.25, 5.0, -1573.0],
+                "positionPrecision": "authored-transform",
+                "connection": "bidirectional",
+                "connectionGroup": 1,
+            },
+            {
+                "kind": "cave-passage",
+                "endpointId": "navigation-cave-passage-15-20-0",
+                "pairedEndpointId": "navigation-cave-passage-6-10-0",
+                "worldPosition": [-683.25, 0.0, 8.25],
+                "positionPrecision": "authored-transform",
+                "connection": "bidirectional",
+                "connectionGroup": 1,
+            },
+        ],
+    )
+
+    first, second = payload["markers"]
+    assert first["subtype"] == "navigation-cave-passage"
+    assert first["icon"] == "MapIcon_CavePassage"
+    assert first["positionPrecision"] == "authored-transform"
+    assert first["pairedMarkerId"] == second["id"]
+    assert second["pairedMarkerId"] == first["id"]
+    assert first["connection"] == "bidirectional"
+    assert first["connectionGroup"] == second["connectionGroup"] == 1
+    assert payload["summary"]["cavePassageMarkers"] == 2
+    assert payload["summary"]["cavePassagePairs"] == 1
+    assert payload["labels"][first["id"]]["localizedNames"]["en-US"] == (
+        "Official Cave Passage"
+    )

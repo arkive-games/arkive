@@ -48,8 +48,13 @@ def main() -> None:
         run_regions(require_dir("VRISING_RAW"), PARSED_DIR)
     elif args.stage == "emit":
         from ..version import stamp_version
+        from ..markers.localization import LOCALIZATION_RELATIVE
         from .emit import run_emit
-        run_emit(PARSED_DIR, require_dir("VRISING_DATA_OUT"))
+        run_emit(
+            PARSED_DIR,
+            require_dir("VRISING_DATA_OUT"),
+            require_dir("VRISING_GAME_ROOT") / LOCALIZATION_RELATIVE,
+        )
         stamp_version(require_dir("VRISING_DATA_OUT"))
     elif args.stage == "tiles":
         from ..version import stamp_version
