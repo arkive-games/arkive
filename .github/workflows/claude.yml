@@ -447,8 +447,16 @@ jobs:
         id: before
         run: |
           set -euo pipefail
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "pre-agent HEAD is $(git rev-parse HEAD)"
+          # The TREE, not just the commit. The autosquash rebase below rewrites the
+          # whole branch, after which $BEFORE is not even an ancestor of HEAD and
+          # any `$BEFORE..HEAD` range silently means something else. A tree id is
+          # content, so it survives every rewrite and answers the only question the
+          # guard actually asks: which files did the agent change?
+          {
+            echo "sha=$(git rev-parse HEAD)"
+            echo "tree=$(git rev-parse 'HEAD^{tree}')"
+          } >> "$GITHUB_OUTPUT"
+          echo "pre-agent HEAD is $(git rev-parse HEAD) (tree $(git rev-parse 'HEAD^{tree}'))"
 
       - name: Review, and re-point what the rebase orphaned
         id: agent
@@ -513,7 +521,23 @@ jobs:
             valid and the tests keep passing while the compare link 404s. Re-point
             every entry it reports at the rewritten commit, by editing the file:
             match each entry to its commit by the change it describes, using
-            `git log` to find the new SHA. Then commit only those files.
+            `git log` to find the new SHA.
+
+            **Commit that as a fixup, not as a new commit:**
+
+            ```
+            git add <the changelog files>
+            git commit --fixup=<sha of the commit that OWNS the entry>
+            ```
+
+            The owning commit is the one whose change the entry describes — usually
+            the commit whose SHA you just re-pointed it at. A later step folds the
+            fixup into it automatically.
+
+            Do not write a separate "re-point after the rebase" commit. One is
+            created per bot run, so they accumulate: this pull request collected
+            two before the fixup rule existed. The entry belongs *in* the commit it
+            describes.
 
             ${{ needs.preflight.outputs.verb == 'fix' && 'Beyond that, you may edit code to implement your own findings, because a human asked you to with `@claude fix`. Commit each logical fix separately, message in this repository''s `type(scope):` style.' || 'Beyond that, change NOTHING. Do not edit code even to fix something you found — reporting it is the whole job, and a later step fails the run if you touch anything but `changelog.json`.' }}
 
@@ -544,31 +568,101 @@ jobs:
       # Deterministic, because the instruction above lives in a prompt and prompts
       # are advisory. Authorship is the discriminator: a rebase preserves the
       # original author, so anything authored by the bot is the agent's own work.
+      # claude-code-action commits under ITS OWN identity --
+      # `claude[bot] <41898282+claude[bot]@users.noreply.github.com>` -- overriding
+      # the git config set above. Two things broke because of that, and both were
+      # silent:
+      #
+      #   GitHub looks for the signing key on the COMMITTER's account. Our key is
+      #   on the owner's, so agent commits came out `verified=false`
+      #   (reason=unknown_key) and fast-forward.yml would refuse the branch. They
+      #   were signed; they were just signed by somebody GitHub could not tie to
+      #   the committer.
+      #
+      #   Worse, the guard below identified the agent's work by author, so it
+      #   matched NOTHING and passed every run while reporting "no file changes" --
+      #   the protected-path rule was inert from the day it was written. Measured
+      #   on PR #22, run 31523363499.
+      #
+      # --force-rebase recreates every commit in the range, which resets the
+      # committer to this runner's config and re-signs with the bot key
+      # (rebase.gpgSign). The AUTHOR is deliberately left as claude[bot]: the agent
+      # did write it, and GitHub verifies against the committer -- proven by
+      # 087e3175 on that same branch, authored by claude[bot], committed by the
+      # bot identity, verified=true.
+      # This step also folds in `fixup!` commits, which is how a re-pointed
+      # changelog SHA gets back into the commit that OWNS the entry instead of
+      # trailing behind it. A separate "re-point after the rebase" commit is not
+      # just untidy -- it accumulates one per bot run, and PR #22 collected two
+      # before this was noticed. The agent decides WHICH commit to amend, because
+      # that is judgement; the rewrite is mechanical and happens here, so
+      # `git rebase` still never enters the model's toolset.
+      #
+      # --autosquash only takes effect under -i, and GIT_SEQUENCE_EDITOR=true
+      # accepts the generated todo list unedited, which is how it runs headless.
+      # Rebasing from the BASE rather than from $BEFORE is required: a fixup
+      # targets one of the branch's own commits, which is older than $BEFORE.
+      - name: Normalise the agent's commits and fold in fixups
+        if: steps.agent.outcome == 'success'
+        env:
+          BEFORE: ${{ steps.before.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$(git rev-parse HEAD)" = "$BEFORE" ]; then
+            echo "The agent committed nothing; nothing to normalise."
+            exit 0
+          fi
+          echo "Before:"
+          git log --format='  %h author=%an committer=%cn sig=%G? %s' "origin/$BASE_REF..HEAD"
+          GIT_SEQUENCE_EDITOR=true git rebase --interactive --autosquash \
+            --force-rebase "origin/$BASE_REF"
+          echo "After:"
+          git log --format='  %h author=%an committer=%cn sig=%G? %s' "origin/$BASE_REF..HEAD"
+          if git log --format='%s' "origin/$BASE_REF..HEAD" | grep -q '^fixup!'; then
+            echo "::error::A fixup! commit survived the autosquash -- its target is not on this branch."
+            exit 1
+          fi
+
       - name: Check what the agent changed
         if: steps.agent.outcome == 'success'
         env:
           BEFORE: ${{ steps.before.outputs.sha }}
-          BOT_EMAIL: ${{ vars.BOT_GIT_EMAIL }}
+          BEFORE_TREE: ${{ steps.before.outputs.tree }}
+          BOT_NAME: ${{ vars.BOT_GIT_NAME }}
         run: |
           set -euo pipefail
           if [ "$(git rev-parse HEAD)" = "$BEFORE" ]; then
             echo "The agent committed nothing."
             exit 0
           fi
-          echo "Commits the agent added:"
-          git log --format='  %h %ae %s' "$BEFORE..HEAD"
+          echo "Branch now:"
+          git log --format='  %h author=%an committer=%cn %s' "origin/$BASE_REF..HEAD"
 
-          # Authorship is the discriminator. A rebase preserves the original
-          # author and replaces only the committer, so commits AUTHORED by the bot
-          # are exactly the agent's own work -- rebased contributor commits are not
-          # mistaken for it.
-          touched=$(git log --format='%H %ae' "$BEFORE..HEAD" \
-                    | awk -v e="$BOT_EMAIL" '$2 == e {print $1}' \
-                    | while read -r sha; do git show --pretty=format: --name-only "$sha"; done \
-                    | grep -v '^$' | sort -u || true)
+          # Content, not commits. Comparing the pre-agent TREE against HEAD gives
+          # exactly the files the agent changed, and keeps working after the
+          # autosquash rewrote every commit on the branch.
+          #
+          # The previous version walked `$BEFORE..HEAD` and filtered it by author.
+          # That looked like belt-and-braces and was in fact the whole bug: the
+          # agent's author is claude[bot], never our identity, so the filter
+          # matched nothing, the guard reported "no file changes", and the
+          # protected-path rule was INERT from the day it was written (PR #22, run
+          # 31523363499). Do not reintroduce a filter here.
+          touched=$(git diff --name-only "$BEFORE_TREE" HEAD || true)
           if [ -z "$touched" ]; then
-            echo "The agent authored no file changes."
+            echo "The agent's commits changed no files."
             exit 0
+          fi
+
+          # Nothing may escape normalisation, or it would escape the signature
+          # check below too. Once the agent has committed, the autosquash has
+          # rewritten the whole branch, so every commit ahead of the base must
+          # carry the bot as committer.
+          strays=$(git log --format='%H %cn' "origin/$BASE_REF..HEAD" | grep -v " $BOT_NAME$" || true)
+          if [ -n "$strays" ]; then
+            echo "::error::These commits were not normalised to '$BOT_NAME':"
+            echo "$strays"
+            exit 1
           fi
           echo "Files the agent changed:"
           printf '  %s\n' $touched

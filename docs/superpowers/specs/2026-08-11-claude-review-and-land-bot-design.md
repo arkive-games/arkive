@@ -88,9 +88,21 @@ Landing-blocker repair, in order:
 
 1. `git rebase origin/master` (signed — §5). Conflicts that do not resolve cleanly are
    reported, not guessed at.
-2. `pnpm changelog:verify`; re-point any entry whose commit the rebase rewrote.
+2. `pnpm changelog:verify`; re-point any entry whose commit the rebase rewrote — **as a
+   `git commit --fixup=<owning commit>`**, folded in by an autosquash step afterwards.
 3. `git push --force-with-lease`.
 4. Comment `/fast-forward`.
+
+**A re-point amends the commit that owns the entry; it never trails behind it.** A separate
+"re-point after the rebase" commit is not merely untidy — one is produced per bot run, so they
+accumulate, and PR #22 collected two before this rule existed. The entry belongs *in* the commit
+whose change it describes.
+
+The split of labour is the same one §8 applies everywhere else: the agent chooses **which**
+commit to amend, because that is judgement, and writes a `fixup!`. The rewrite itself is
+mechanical and runs in bash (`GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash`), so
+`git rebase` still never enters the model's toolset. A `fixup!` that survives the autosquash
+means its target was not on the branch, and fails the run.
 
 ## 4. The retry chain, and what bounds it
 
@@ -192,6 +204,21 @@ with the key the runner holds and the only ones this run is responsible for. Eve
 signatures are GitHub's to verify, and `fast-forward.yml` already asks it about every commit
 through the API.
 
+**The agent's commits have to be normalised before any of this means anything.**
+`claude-code-action` commits as `claude[bot]`, overriding the configured identity, and GitHub
+looks for the signing key on the **committer's** account. Our key is on the owner's, so agent
+commits arrive `verified=false` with `reason=unknown_key` — signed, but signed by somebody
+GitHub cannot tie to the committer — and `fast-forward.yml` refuses the branch. Worse, the
+committer-name scoping below then *skips* them, so they sail through this check and fail three
+hops later.
+
+So a step after the agent recreates them (`git rebase -i --autosquash --force-rebase`), which
+resets the committer to the bot and re-signs with the bot key. The **author** is deliberately
+left as `claude[bot]`: the agent did write it, and GitHub verifies against the committer —
+demonstrated by `087e3175` on PR #22, authored by `claude[bot]`, committed by the bot identity,
+`verified=true`. A stray non-bot committer ahead of the base fails the run rather than being
+skipped.
+
 **And "is the bot" means the committer NAME, not the email.** The first attempt at that scoping
 matched on `BOT_GIT_EMAIL` and was still broken, for a reason that only shows up once the bot
 runs on the owner's own pull request: the bot *commits under the owner's email*. It has to —
@@ -251,11 +278,20 @@ repository, and `issue_comment` runs in base-repo context *with* secrets.
     hand back everything the other two absences take away. **The rebase therefore happens in
     bash, before the agent starts**, and a conflict is reported rather than resolved. This is a
     change from the first draft of §3, where the agent rebased; the earlier version was a hole.
-- **The verb guard is deterministic, and keyed on authorship.** "Do not edit code" lives in a
-  prompt, and prompts are advisory, so a step verifies it. A rebase preserves the original
-  author while replacing the committer, so any commit *authored* by the bot is the agent's own
-  work — under the `review` verb, such a commit touching anything but `changelog.json` fails the
-  run before the push.
+- **The verb guard is deterministic, and keyed on the TREE.** "Do not edit code" lives in a
+  prompt, and prompts are advisory, so a step verifies it: the tree recorded immediately before
+  the agent runs is diffed against `HEAD`, which names exactly the files the agent changed.
+
+  **It was keyed on authorship first, and that version was inert.** `claude-code-action` commits
+  under its own identity — `claude[bot] <41898282+claude[bot]@users.noreply.github.com>` —
+  overriding the git config the workflow sets. The guard filtered the agent's commit range by
+  *our* author email, matched nothing, printed "the agent authored no file changes" and passed,
+  **every run, from the day it was written** (PR #22, run `31523363499`, where it listed the two
+  commits and then declared no changes). For that whole period the only thing actually stopping
+  the bot editing `.github/workflows/` was the withheld Workflows permission.
+
+  A tree comparison fixes it twice over: it cannot be fooled by identity, and it survives the
+  autosquash rewrite that makes any `$BEFORE..HEAD` range meaningless.
 - **The bot may not edit the pipeline, under either verb.** `.github/**`, `.claude/**`,
   `.apm/**`, `CLAUDE.md`, `AGENTS.md` and `apm.yml` are rejected by the same step, before any
   push, whatever the verb.
