@@ -7,11 +7,22 @@
 # Dependabot is skipped on purpose. Its pull requests are noise on a roadmap board, and they are
 # closed in favour of one combined commit anyway.
 #
-# Secrets:
-#   PROJECT_TOKEN  fine-grained PAT with Organization permissions -> Projects: Read and write,
-#                  plus Repository permissions -> Pull requests: Read (to list changed files).
-#                  The default GITHUB_TOKEN CANNOT be used: it has no access to organization
-#                  projects at all, so every mutation below would 403.
+# Secrets: PROJECT_TOKEN, or FAST_FORWARD_TOKEN as a fallback.
+#
+#   Either must be a fine-grained PAT with Organization -> Projects: Read and write, plus
+#   Repository -> Pull requests: Read (needed to list a pull request's changed files;
+#   Contents: Write does not imply it).
+#
+#   Accepting FAST_FORWARD_TOKEN too so one PAT can serve both workflows: it already holds
+#   Contents: Write on master, which is strictly more dangerous than editing a board, so
+#   separating the two buys little. The cost is a shared expiry -- when it lapses both
+#   workflows break at once, and this one fails second and is easier to misdiagnose, which is
+#   why the check below names which secret it resolved.
+#
+#   The default GITHUB_TOKEN CANNOT be used for either. It has no access to organization
+#   projects at all, and no `permissions:` entry grants it: the `repository-projects` scope
+#   covers only the old repository-level projects, not Projects v2. Expanding it is not an
+#   option, which is why a PAT exists here at all.
 
 name: Sync the project board
 
@@ -50,7 +61,7 @@ jobs:
       cancel-in-progress: true
 
     env:
-      GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.FAST_FORWARD_TOKEN }}
       REPO: ${{ github.repository }}
       ORG: arkive-games
       PROJECT: 1
@@ -60,11 +71,21 @@ jobs:
 
     steps:
       - name: Check the project token is configured
+        env:
+          HAS_PROJECT: ${{ secrets.PROJECT_TOKEN != '' }}
         run: |
           set -euo pipefail
           if [ -z "${GH_TOKEN:-}" ]; then
-            echo "::error::PROJECT_TOKEN is not set. Add a fine-grained PAT with Organization > Projects: Read and write. GITHUB_TOKEN cannot reach organization projects."
+            echo "::error::Neither PROJECT_TOKEN nor FAST_FORWARD_TOKEN is set. Add a fine-grained PAT with Organization > Projects: Read and write and Pull requests: Read. GITHUB_TOKEN cannot reach organization projects and cannot be granted access."
             exit 1
+          fi
+          # Named so that "the board stopped updating" is diagnosable: if a shared PAT is
+          # missing Projects write, or an org-approval request for it is still pending, the
+          # mutations 403 while everything else about the run looks healthy.
+          if [ "$HAS_PROJECT" = "true" ]; then
+            echo "Using PROJECT_TOKEN."
+          else
+            echo "PROJECT_TOKEN is unset; using FAST_FORWARD_TOKEN. It needs Organization > Projects: Read and write in addition to Contents: Write."
           fi
 
       - name: Resolve the project, its fields and their options
