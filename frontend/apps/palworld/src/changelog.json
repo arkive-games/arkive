@@ -3,7 +3,7 @@
     {
       "version": "1.30.0",
       "date": "2026-08-12",
-      "commit": "512474dda8b390023a42f546007744edbc41de5d",
+      "commit": "8491d15c79c5da22789f9ea3d03c886b060d5b29",
       "changes": [
         {
           "kind": "feature",
