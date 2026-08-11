@@ -96,6 +96,22 @@ describe("ShellTopBar nav", () => {
     expect(getAllByText("All games")).toHaveLength(1)
   })
 
+  it("keeps localized dropdown labels at a readable menu width", () => {
+    const items: ShellNavItem[] = [
+      {
+        key: "database",
+        label: "Database",
+        children: [{ key: "/simulator", label: "Stat simulator" }],
+      },
+    ]
+    const { getByRole, getByTestId } = render(
+      <ShellTopBar nav={{ items, renderItem }} />,
+    )
+
+    fireEvent.pointerEnter(getByTestId("nav-dropdown-database"))
+    expect(getByRole("menu").className).toContain("min-w-44")
+  })
+
   it("anchors an active dropdown indicator to the text label", () => {
     const items: ShellNavItem[] = [
       {

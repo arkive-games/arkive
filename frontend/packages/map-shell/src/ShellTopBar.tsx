@@ -390,7 +390,7 @@ function NavDropdown({
       {open && (
         <div
           role="menu"
-          className={cn("absolute left-0", TOP_BAR_MENU_CLASS)}
+          className={cn("absolute left-0 min-w-44", TOP_BAR_MENU_CLASS)}
         >
           {children.map((child) => {
             const rendered = nav.renderItem(
