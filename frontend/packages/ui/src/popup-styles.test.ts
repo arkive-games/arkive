@@ -25,6 +25,8 @@ describe("popup style contracts", () => {
       expect(MENU_ITEM_CLASS).toContain(token)
     }
     expect(MENU_ITEM_CLASS).toContain("focus-visible:ring-ring")
+    expect(MENU_ITEM_CLASS).toContain("aria-disabled:pointer-events-none")
+    expect(MENU_ITEM_CLASS).not.toContain("data-[disabled]:pointer-events-none")
   })
 
   it("uses responsive geometry and shared focus for icon close controls", () => {
