@@ -28,6 +28,14 @@
 name: Check the model gateway (temporary)
 
 on:
+  # GitHub offers a workflow_dispatch entry only for the DEFAULT branch, so on its
+  # own this check could not run until it had landed -- the wrong order for the
+  # check that is supposed to gate landing. The pull_request trigger is how it
+  # runs first, scoped to this one file so it fires on no other pull request.
+  # Secrets are available because the branch is in this repository, not a fork.
+  pull_request:
+    paths:
+      - .github/workflows/claude-gateway-check.yml
   workflow_dispatch:
 
 permissions:
