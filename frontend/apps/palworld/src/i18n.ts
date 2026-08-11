@@ -34,8 +34,8 @@ import { RESEARCH_STRINGS } from './researchStrings'
 import { SIM_STRINGS } from './simulatorStrings'
 import { SITE_INFO_STRINGS } from './siteInfoStrings'
 import {
-  CHEST_LOOT_POOL_LABELS,
-  CHEST_LOOT_UNAVAILABLE_LABELS,
+  LOOT_TIER_LABELS,
+  LOOT_UNAVAILABLE_LABELS,
   MAP_CONTROL_STRINGS,
 } from './mapControlStrings'
 
@@ -1089,8 +1089,8 @@ for (const lng of LANGUAGES) {
       },
       mapControls: {
         ...MAP_CONTROL_STRINGS[lng],
-        chestLootPool: CHEST_LOOT_POOL_LABELS[lng],
-        chestLootUnavailable: CHEST_LOOT_UNAVAILABLE_LABELS[lng],
+        lootTier: LOOT_TIER_LABELS[lng],
+        lootUnavailable: LOOT_UNAVAILABLE_LABELS[lng],
       },
       globalSearch: {
         placeholder: GLOBAL_SEARCH_PLACEHOLDER_LABELS[lng],

@@ -24,7 +24,8 @@ import { MAX_BREEDING_POWER_DISTANCE } from './lib/breedingSearch'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
-import { ChestLootSummary } from './components/ChestLootSummary'
+import { MarkerLootSummary } from './components/MarkerLootSummary'
+import { markerLootKind } from './lib/markerLoot'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -646,6 +647,7 @@ export default function App() {
     // resolve drops from it — they show the relic item via EffigyItemBadge.
     const dropsPal = pal ?? (!isEffigy && marker.pal && palsBundle ? palsBundle.byId.get(marker.pal) : undefined)
     const drops = dropsPal?.drops ?? marker.drops
+    const lootKind = markerLootKind(marker.subtype)
     const iconName = marker.icon || marker.subtypeMeta?.icon || ''
     const iconUrl = iconName && map ? palworldAssets.markerIconUrl(iconName, map) : undefined
     return (
@@ -744,7 +746,7 @@ export default function App() {
             {t('dungeon.viewLoot')}
           </Link>
         ) : null}
-        {marker.subtype === 'chest' ? <ChestLootSummary lootArea={marker.lootArea} /> : null}
+        {lootKind ? <MarkerLootSummary lootArea={marker.lootArea} kind={lootKind} /> : null}
         {marker.subtypeMeta?.canComplete ? (
           <div className="mt-4 flex items-center justify-end">
             <button

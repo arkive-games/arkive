@@ -8,6 +8,7 @@ import type { ItemSource, ItemEntry, ItemsBundle } from '../../lib/catalog'
 import type { PalsBundle } from '../../lib/pals'
 import type { MerchantsBundle } from '../../lib/merchants'
 import type { RecyclerFile } from '../../lib/recycler'
+import { markerLootKind } from '../../lib/markerLoot'
 import {
   CatalogSection,
   CHIP,
@@ -73,16 +74,6 @@ export function useAreas(): Record<string, AreaInfo> | null {
   return areas
 }
 
-/** Marker subtype (areas.json / markers.json) -> acquisition-channel kind
- *  (bp.kind.* label) for the loot subtypes the region features cover. */
-export const LOOT_SUBTYPE_KIND: Record<string, string> = {
-  chest: 'chest',
-  fishing: 'fishing',
-  supply: 'supply',
-  camp: 'camp',
-  oilrigTreasure: 'oilrig',
-}
-
 /** Hovercard body for a region chip: localized region name + how many loot
  *  spots of each kind the map data holds there. */
 function RegionSummary({ area, info, label }: { area: string; info: AreaInfo; label: string }) {
@@ -100,7 +91,9 @@ function RegionSummary({ area, info, label }: { area: string; info: AreaInfo; la
       <div className="flex flex-col gap-1">
         {[...counts].map(([sub, n]) => (
           <div key={sub} className="flex items-baseline justify-between gap-3 text-xs">
-            <span className="text-muted-foreground">{t(`bp.kind.${LOOT_SUBTYPE_KIND[sub] ?? sub}`)}</span>
+            <span className="text-muted-foreground">
+              {t(`bp.kind.${markerLootKind(sub) ?? sub}`)}
+            </span>
             <span className="tabular-nums">×{n}</span>
           </div>
         ))}

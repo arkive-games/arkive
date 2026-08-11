@@ -4,28 +4,33 @@ import { useTranslation } from 'react-i18next'
 import { ChevronRight, CircleHelp, PackageOpen } from 'lucide-react'
 import { loadItems, type ItemEntry, type ItemSource, type ItemsBundle } from '../lib/catalog'
 import { itemIconUrl } from '../lib/assets'
-import { ChanceBadge, TierBadge } from '../features/items/ItemSources'
+import type { MarkerLootKind } from '../lib/markerLoot'
+import { ChanceBadge } from '../features/items/ItemSources'
 
 const VISIBLE_LOOT_COUNT = 4
 
-export interface ChestLootEntry {
+export interface MarkerLootEntry {
   item: ItemEntry
   source: ItemSource
 }
 
-export interface ChestLootGroup {
+export interface MarkerLootGroup {
   grade: number
-  entries: ChestLootEntry[]
+  entries: MarkerLootEntry[]
 }
 
 /**
- * Reverse the item-source index for one regional chest family. Rare items lead,
+ * Reverse the item-source index for one marker loot pool. Rare items lead,
  * with the best per-roll chance breaking ties so the compact popup stays useful.
  */
-export function chestLootForArea(items: ItemsBundle, area: string): ChestLootEntry[] {
-  const entries: ChestLootEntry[] = []
+export function markerLootForArea(
+  items: ItemsBundle,
+  area: string,
+  kind: MarkerLootKind,
+): MarkerLootEntry[] {
+  const entries: MarkerLootEntry[] = []
   for (const item of items.items) {
-    const source = item.sources?.find((s) => s.kind === 'chest' && s.area === area)
+    const source = item.sources?.find((s) => s.kind === kind && s.area === area)
     if (source) entries.push({ item, source })
   }
   return entries.sort((a, b) =>
@@ -36,8 +41,8 @@ export function chestLootForArea(items: ItemsBundle, area: string): ChestLootEnt
   )
 }
 
-export function groupChestLootByGrade(entries: ChestLootEntry[]): ChestLootGroup[] {
-  const groups = new Map<number, ChestLootEntry[]>()
+export function groupMarkerLootByGrade(entries: MarkerLootEntry[]): MarkerLootGroup[] {
+  const groups = new Map<number, MarkerLootEntry[]>()
   for (const entry of entries) {
     const grade = entry.source.grade ?? 0
     const group = groups.get(grade)
@@ -53,16 +58,16 @@ function UnavailableLoot() {
   const { t } = useTranslation()
   return (
     <div
-      data-testid="chest-loot-unavailable"
+      data-testid="marker-loot-unavailable"
       className="mt-3 flex items-start gap-2 border-t border-border/80 pt-3 text-xs leading-relaxed text-muted-foreground"
     >
       <CircleHelp className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-      <span>{t('mapControls.chestLootUnavailable')}</span>
+      <span>{t('mapControls.lootUnavailable')}</span>
     </div>
   )
 }
 
-export function ChestLootSummary({ lootArea }: { lootArea?: string }) {
+export function MarkerLootSummary({ lootArea, kind }: { lootArea?: string; kind: MarkerLootKind }) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const [items, setItems] = useState<ItemsBundle | null>(null)
@@ -87,11 +92,11 @@ export function ChestLootSummary({ lootArea }: { lootArea?: string }) {
   }, [lng, lootArea])
 
   const loot = useMemo(
-    () => (items && lootArea ? chestLootForArea(items, lootArea) : []),
-    [items, lootArea],
+    () => (items && lootArea ? markerLootForArea(items, lootArea, kind) : []),
+    [items, lootArea, kind],
   )
   const visibleLootGroups = useMemo(
-    () => groupChestLootByGrade(loot.slice(0, VISIBLE_LOOT_COUNT)),
+    () => groupMarkerLootByGrade(loot.slice(0, VISIBLE_LOOT_COUNT)),
     [loot],
   )
 
@@ -103,15 +108,16 @@ export function ChestLootSummary({ lootArea }: { lootArea?: string }) {
   const itemText = items?.text ?? {}
 
   return (
-    <section data-testid="chest-loot-summary" className="mt-3 border-t border-border/80 pt-3">
+    <section data-testid="marker-loot-summary" className="mt-3 border-t border-border/80 pt-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
             <PackageOpen className="size-4 shrink-0 text-primary" aria-hidden />
-            {t('mapControls.chestLootPool')}
+            {t('pal.section.drops')}
           </div>
-          <div className="mt-0.5 truncate text-xs text-muted-foreground" data-testid="chest-loot-area">
-            {areaLabel}
+          <div className="mt-0.5 truncate text-xs text-muted-foreground" data-testid="marker-loot-area">
+            <span data-testid="marker-loot-kind">{t(`bp.kind.${kind}`)}</span>
+            {' / '}{areaLabel}
             <span className="ml-1 font-mono opacity-70">{lootArea}</span>
           </div>
         </div>
@@ -131,14 +137,16 @@ export function ChestLootSummary({ lootArea }: { lootArea?: string }) {
         </div>
       ) : failed || !loot.length ? (
         <p className="mt-2 text-xs text-muted-foreground">
-          {failed ? t('loadError') : t('mapControls.chestLootUnavailable')}
+          {failed ? t('loadError') : t('mapControls.lootUnavailable')}
         </p>
       ) : (
-        <div className="mt-2 space-y-1.5" data-testid="chest-loot-items">
+        <div className="mt-2 space-y-1.5" data-testid="marker-loot-items">
           {visibleLootGroups.map((group) => (
-            <div key={group.grade} data-testid="chest-loot-grade-group">
+            <div key={group.grade} data-testid="marker-loot-grade-group">
               <div className="flex min-h-6 items-center bg-secondary/45 px-2">
-                <TierBadge grade={group.grade} />
+                <span className="text-xs text-muted-foreground">
+                  {t('mapControls.lootTier', { n: group.grade })}
+                </span>
               </div>
               <div className="divide-y divide-border/70">
                 {group.entries.map(({ item, source }) => (
@@ -146,7 +154,7 @@ export function ChestLootSummary({ lootArea }: { lootArea?: string }) {
                     key={item.id}
                     to="/items/$id"
                     params={{ id: item.id }}
-                    data-testid="chest-loot-item"
+                    data-testid="marker-loot-item"
                     className="flex min-h-9 items-center gap-2 py-1.5 text-xs transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="flex size-7 shrink-0 items-center justify-center rounded bg-secondary/70">
@@ -171,7 +179,7 @@ export function ChestLootSummary({ lootArea }: { lootArea?: string }) {
       <Link
         to="/regions/$id"
         params={{ id: lootArea }}
-        data-testid="chest-loot-region-link"
+        data-testid="marker-loot-region-link"
         className="mt-2 inline-flex min-h-7 items-center gap-0.5 text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {t('bp.viewRegion')}

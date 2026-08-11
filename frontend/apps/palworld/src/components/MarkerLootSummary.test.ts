@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { chestLootForArea, groupChestLootByGrade } from './ChestLootSummary'
-import type { ItemEntry, ItemsBundle } from '../lib/catalog'
+import { groupMarkerLootByGrade, markerLootForArea } from './MarkerLootSummary'
+import type { ItemEntry, ItemSource, ItemsBundle } from '../lib/catalog'
 
 const item = (
   id: string,
   rarity: number,
   chance: number,
   area = 'Grass',
-  kind: 'chest' | 'fishing' = 'chest',
+  kind: ItemSource['kind'] = 'chest',
 ): ItemEntry => ({
   id,
   typeA: 'Material',
@@ -30,23 +30,23 @@ const bundle = (items: ItemEntry[]): ItemsBundle => ({
   areaLabels: {},
 })
 
-describe('chestLootForArea', () => {
-  it('keeps only chest sources from the requested area', () => {
-    const result = chestLootForArea(bundle([
-      item('wanted', 1, 10),
-      item('other-area', 4, 100, 'Forest'),
-      item('other-kind', 4, 100, 'Grass', 'fishing'),
-    ]), 'Grass')
+describe('markerLootForArea', () => {
+  it('keeps only the requested marker source kind and area', () => {
+    const result = markerLootForArea(bundle([
+      item('wanted', 1, 10, 'Grass', 'fishing'),
+      item('other-area', 4, 100, 'Forest', 'fishing'),
+      item('other-kind', 4, 100, 'Grass', 'chest'),
+    ]), 'Grass', 'fishing')
 
     expect(result.map((entry) => entry.item.id)).toEqual(['wanted'])
   })
 
   it('orders rare items first and uses chance as the tie-break', () => {
-    const result = chestLootForArea(bundle([
+    const result = markerLootForArea(bundle([
       item('common', 1, 100),
       item('rare-low', 4, 1),
       item('rare-high', 4, 20),
-    ]), 'Grass')
+    ]), 'Grass', 'chest')
 
     expect(result.map((entry) => entry.item.id)).toEqual([
       'rare-high',
@@ -55,15 +55,15 @@ describe('chestLootForArea', () => {
     ])
   })
 
-  it('groups the visible loot by chest grade without repeating the grade per item', () => {
-    const entries = chestLootForArea(bundle([
+  it('groups the visible loot by grade without repeating the grade per item', () => {
+    const entries = markerLootForArea(bundle([
       item('grade-three-a', 4, 20),
       item('grade-five', 3, 10),
       item('grade-three-b', 2, 5),
-    ]), 'Grass')
+    ]), 'Grass', 'chest')
     entries[1].source.grade = 5
 
-    const groups = groupChestLootByGrade(entries)
+    const groups = groupMarkerLootByGrade(entries)
 
     expect(groups.map((group) => group.grade)).toEqual([5, 1])
     expect(groups.map((group) => group.entries.length)).toEqual([1, 2])
