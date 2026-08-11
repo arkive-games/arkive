@@ -253,6 +253,48 @@ jobs:
           app-id: ${{ secrets.CLAUDE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_APP_PRIVATE_KEY }}
 
+      # First thing after the token, deliberately BEFORE the checkout, the pnpm
+      # install and the rebase -- those are a minute or two on their own, and a
+      # full review is ~10 minutes. Until something is posted the pull request
+      # looks untouched, so the author cannot tell a run that is working from one
+      # that never triggered, and re-comments `@claude` -- which spends a second
+      # attempt out of three and queues a second run on the same branch.
+      #
+      # This comment is EDITED by "Post the review" below rather than joined by a
+      # second one; the id it captures is what makes that possible. Posted with
+      # the App token like every other comment here: a GITHUB_TOKEN comment
+      # cannot later be edited by the App, and consistency of author matters more
+      # than which token happens to be in scope.
+      - name: Say the review has started
+        id: progress
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          body="$RUNNER_TEMP/progress.md"
+          {
+            printf 'Reviewing this pull request now — verb `%s`, attempt %s of %s.\n' \
+              "$VERB" "$ATTEMPT" "$MAX_ATTEMPTS"
+            printf '\nA review takes several minutes. The findings replace this comment when the run finishes, so there is nothing to wait on here and nothing is pushed before then.\n'
+            printf '\n<sub>[review run](%s) · in progress</sub>\n' "$RUN_URL"
+          } > "$body"
+
+          # `-F body=@file` and not `-f`: only the typed field (`--field`) expands
+          # a leading `@` into a file read, and only a file avoids passing a
+          # multi-line body through argv. `gh pr comment` is not used because it
+          # prints a URL and returns no id, and the id is the point of this step.
+          #
+          # Never fatal. This is a courtesy notice; failing the run over it would
+          # cost the review it was announcing.
+          id=$(gh api --method POST "repos/$REPO/issues/$PR/comments" \
+                 -F body=@"$body" --jq .id) || {
+            echo "::warning::Could not post the progress comment. The review will post a fresh comment instead."
+            id=""
+          }
+          echo "comment_id=$id" >> "$GITHUB_OUTPUT"
+          echo "progress comment id: ${id:-<none>}"
+
       - name: Checkout the pull request head
         uses: actions/checkout@v4
         with:
@@ -623,15 +665,37 @@ jobs:
           AGENT: ${{ steps.agent.outcome }}
           PUSHED: ${{ steps.push.outputs.pushed }}
           CONFLICT: ${{ steps.rebase.outputs.conflict }}
+          PROGRESS_ID: ${{ steps.progress.outputs.comment_id }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           body="$RUNNER_TEMP/comment.md"
 
+          # Every path out of this step goes through here, so the run leaves ONE
+          # comment: the "review has started" notice above, rewritten in place
+          # with the findings. Two comments per attempt would be six on an
+          # exhausted chain, and the notice would outlive its own answer.
+          #
+          # Create is the fallback, never the failure. If the notice was never
+          # posted, or was deleted, or the PATCH is refused, the review text is
+          # still the payload -- losing it to save a comment would be the wrong
+          # trade in every direction.
+          publish() {
+            if [ -n "${PROGRESS_ID:-}" ] \
+               && gh api --method PATCH "repos/$REPO/issues/comments/$PROGRESS_ID" \
+                    -F body=@"$1" --jq .html_url; then
+              return 0
+            fi
+            if [ -n "${PROGRESS_ID:-}" ]; then
+              echo "::warning::Could not edit comment $PROGRESS_ID; posting the review as a new comment."
+            fi
+            gh pr comment "$PR" --repo "$REPO" --body-file "$1"
+          }
+
           if [ "$AGENT" != "success" ]; then
             echo "verdict=HOLD" >> "$GITHUB_OUTPUT"
             printf '%s\n' "The review run failed before it produced a verdict. See [the run log]($RUN_URL)." > "$body"
-            gh pr comment "$PR" --repo "$REPO" --body-file "$body"
+            publish "$body"
             exit 0
           fi
 
@@ -683,10 +747,11 @@ jobs:
             printf '\n%s\n' "<sub>[review run]($RUN_URL) · attempt $ATTEMPT of $MAX_ATTEMPTS</sub>"
           } >> "$body"
 
-          gh pr comment "$PR" --repo "$REPO" --body-file "$body"
+          publish "$body"
 
-      # A separate comment, because fast-forward.yml requires its command to be at
-      # the START of the body and the review has to come first.
+      # A separate comment, and it must stay one: fast-forward.yml requires
+      # `/fast-forward` at the very START of a body, so it cannot be folded into
+      # the edited review comment above -- and the review has to come first.
       - name: Request the fast-forward
         # `steps.push.outcome == 'success'` is load-bearing, not belt-and-braces.
         # The review step runs under always(), so without it a run whose verb

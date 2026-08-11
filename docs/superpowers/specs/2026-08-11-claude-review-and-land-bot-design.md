@@ -309,6 +309,19 @@ of pure overhead. And **$0.357 is a floor, not an estimate** — that session re
 one command. A full-diff review against `CLAUDE.md` will cost multiples of it, which is the
 argument for review-on-request (§11) rather than on every push.
 
+**Because a real review takes about ten minutes, the run says so up front.** The first thing the
+`run` job does after minting its token — before the checkout, the pnpm install and the rebase,
+which are a minute or two by themselves — is post a comment naming the verb, the attempt number
+and the run URL. Without it the pull request looks untouched for minutes, and an author who
+cannot tell a working run from one that never triggered re-comments `@claude`, spending a second
+attempt out of three and queueing a second run on the same branch.
+
+It stays **one** comment: the review step `PATCH`es that same comment id rather than posting a
+second one, so the thread does not grow two entries per attempt. Creating a new comment is the
+fallback for an empty or unusable id, never a failure path — the findings are the payload, and no
+comment cosmetics are worth losing them. The `/fast-forward` request remains separate, because
+that command has to be the first characters of a body (§4).
+
 The check was retired once these were recorded, rather than kept as a diagnostic: `claude.yml`
 exercises the same path on every run, so a later gateway failure surfaces in a real review with
 the same information, and a probe that duplicates it is scaffolding that would rot.
