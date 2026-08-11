@@ -20,6 +20,7 @@ import { ElementBadge } from './features/pals/components'
 import { toGameCoords } from './lib/coords'
 import { palworldTheme } from './theme'
 import { formatPalId, palIdText } from './lib/palId'
+import { MAX_BREEDING_POWER_DISTANCE } from './lib/breedingSearch'
 import { TopNav } from './components/TopNav'
 import { InfoSidebar } from './components/InfoSidebar'
 import { PalDropBadges, RewardBadges, EffigyItemBadge } from './components/RewardBadges'
@@ -891,6 +892,7 @@ export default function App() {
       searchFields={['name', 'idLabel']}
       resolveSearchOptions={explicitPalIdLookup}
       searchOptions={PAL_SEARCH_OPTIONS}
+      maxProximityDistance={MAX_BREEDING_POWER_DISTANCE}
       variant={variant}
       floatingPlacement="center"
       classNames={variant === 'inline' ? { root: 'palworld-map-search max-h-[calc(70dvh-5.5rem)]' } : undefined}

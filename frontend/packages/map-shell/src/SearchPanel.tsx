@@ -94,6 +94,8 @@ export type SearchPanelProps = {
    * re-runs the search every render.
    */
   searchOptions?: SearchOptions
+  /** Maximum distance from a bare-number target for proximity results. */
+  maxProximityDistance?: number
   /**
    * Optional secondary line rendered right-aligned in the coords row, computed
    * lazily per shown result (so an app can do a point lookup for only the ≤50
@@ -132,6 +134,7 @@ export function SearchPanel({
   searchFields,
   resolveSearchOptions,
   searchOptions,
+  maxProximityDistance = Number.POSITIVE_INFINITY,
   resultAside,
   initialQuery,
   onResultsChange,
@@ -188,10 +191,13 @@ export function SearchPanel({
     if (!q) return { results: [] as SearchItem[], numericTarget: null, exactCount: 0 }
     if (/^\d+$/.test(q)) {
       const target = Number(q)
+      const hasProximityItems = items.some((item) => Number.isFinite(item.proximityValue))
       const proximityItems = items.filter((item) =>
-        Number.isFinite(item.proximityValue) || item.numericId === target,
+        item.numericId === target ||
+        (Number.isFinite(item.proximityValue) &&
+          Math.abs(item.proximityValue! - target) <= maxProximityDistance),
       )
-      if (proximityItems.length > 0) {
+      if (hasProximityItems) {
         const deduped = new Map<string, SearchItem>()
         for (const item of proximityItems) {
           const key = item.proximityKey ?? item.id
@@ -238,7 +244,7 @@ export function SearchPanel({
     // same contents doesn't churn `results` every render — which, via the
     // onResultsChange effect below, would loop setState→render→setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced, items, itemsById, miniSearch, searchFields.join(","), resolveSearchOptions, searchOptions])
+  }, [debounced, items, itemsById, maxProximityDistance, miniSearch, searchFields.join(","), resolveSearchOptions, searchOptions])
   const { results, numericTarget, exactCount } = resultState
 
   // Report the shown result ids so the host can force those markers onto the

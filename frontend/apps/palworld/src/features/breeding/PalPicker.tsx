@@ -19,6 +19,7 @@ import { palIconUrl } from '../../lib/breeding'
 import {
   comparePalNumericSearch,
   isExactPaldeckNumber,
+  matchesPalNumericSearch,
   palCommandFilter,
   palSearchValue,
   parsePalNumericQuery,
@@ -110,13 +111,15 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
   const orderedPals = useMemo(() => {
     const target = parsePalNumericQuery(query)
     if (target === null) return pals
-    return [...pals].sort((a, b) => comparePalNumericSearch(
-      a,
-      b,
-      target,
-      (pal) => pal.rank,
-      (left, right) => compareZukan(left, right, 'ascending'),
-    ))
+    return pals
+      .filter((pal) => matchesPalNumericSearch(pal, target, pal.rank))
+      .sort((a, b) => comparePalNumericSearch(
+        a,
+        b,
+        target,
+        (pal) => pal.rank,
+        (left, right) => compareZukan(left, right, 'ascending'),
+      ))
   }, [pals, query])
   const exactPals = numericTarget === null
     ? []

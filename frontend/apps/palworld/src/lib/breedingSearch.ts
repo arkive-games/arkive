@@ -1,6 +1,9 @@
 const BREEDING_POWER_TOKEN = /(?:^|\s)breeding-power:(\d+)(?:\s|$)/
 const PALDECK_INDEX_TOKEN = /(?:^|\s)paldeck-index:(\d+)(?:\s|$)/
 
+/** Breeding-power window used by every bare-number Pal search. */
+export const MAX_BREEDING_POWER_DISTANCE = 100
+
 /** A bare non-negative integer searches both Paldeck number and breeding power. */
 export function parsePalNumericQuery(query: string): number | null {
   const value = query.trim()
@@ -27,6 +30,22 @@ export function isExactPaldeckNumber(
   target: number,
 ): boolean {
   return target > 0 && pal.zukanIndex === target
+}
+
+export function isNearbyBreedingPower(
+  breedingPower: number | undefined,
+  target: number,
+): boolean {
+  return breedingPower !== undefined &&
+    Math.abs(breedingPower - target) <= MAX_BREEDING_POWER_DISTANCE
+}
+
+export function matchesPalNumericSearch(
+  pal: PaldeckNumberCandidate,
+  target: number,
+  breedingPower: number | undefined,
+): boolean {
+  return isExactPaldeckNumber(pal, target) || isNearbyBreedingPower(breedingPower, target)
 }
 
 /** Exact Paldeck matches lead, followed by breeding-power distance. */
@@ -70,7 +89,9 @@ export function palCommandFilter(value: string, search: string): number {
     if (paldeckMatch && target > 0 && Number(paldeckMatch[1]) === target) return 2
     const match = BREEDING_POWER_TOKEN.exec(value)
     if (!match) return 0
-    return 1 / (1 + Math.abs(Number(match[1]) - target))
+    const breedingPower = Number(match[1])
+    if (!isNearbyBreedingPower(breedingPower, target)) return 0
+    return 1 / (1 + Math.abs(breedingPower - target))
   }
   // Match the visible text only. The machine tokens appended by `palSearchValue`
   // are part of the same cmdk value, so scoring the whole string made "power",

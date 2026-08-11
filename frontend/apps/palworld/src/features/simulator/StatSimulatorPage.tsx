@@ -24,6 +24,7 @@ import { palIconUrl } from '../../lib/assets'
 import {
   comparePalNumericSearch,
   isExactPaldeckNumber,
+  matchesPalNumericSearch,
   palCommandFilter,
   palSearchValue,
   parsePalNumericQuery,
@@ -327,13 +328,19 @@ function SimPalPicker({
   const displayedRoster = useMemo(() => {
     const target = parsePalNumericQuery(query)
     if (target === null) return roster
-    return [...roster].sort((a, b) => comparePalNumericSearch(
-      a,
-      b,
-      target,
-      (pal) => pals.breedingPower.get(pal.id),
-      (left, right) => compareZukan(left, right, 'ascending'),
-    ))
+    return roster
+      .filter((pal) => matchesPalNumericSearch(
+        pal,
+        target,
+        pals.breedingPower.get(pal.id),
+      ))
+      .sort((a, b) => comparePalNumericSearch(
+        a,
+        b,
+        target,
+        (pal) => pals.breedingPower.get(pal.id),
+        (left, right) => compareZukan(left, right, 'ascending'),
+      ))
   }, [pals, query, roster])
   const exactPals = numericTarget === null
     ? []

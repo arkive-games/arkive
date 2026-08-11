@@ -43,7 +43,7 @@ const bundleOf = (pals: PalEntry[], powers: Record<string, number> = {}) => ({
 })
 
 describe('filterPals - breeding-power search', () => {
-  it('orders a bare numeric query by absolute breeding-power difference', () => {
+  it('orders nearby breeding powers and excludes values outside the distance window', () => {
     const roster = [
       pal({ id: 'Far', zukanIndex: 1 }),
       pal({ id: 'Exact', zukanIndex: 2 }),
@@ -54,7 +54,20 @@ describe('filterPals - breeding-power search', () => {
       bundleOf(roster, { Far: 1000, Exact: 1230, NearHigh: 1240, NearLow: 1220 }),
       { ...EMPTY_FILTER, query: '1230' },
     )
-    expect(out.map((p) => p.id)).toEqual(['Exact', 'NearHigh', 'NearLow', 'Far'])
+    expect(out.map((p) => p.id)).toEqual(['Exact', 'NearHigh', 'NearLow'])
+  })
+
+  it('returns an empty roster when a numeric target is outside every breeding-power window', () => {
+    const roster = [
+      pal({ id: 'Low', zukanIndex: 1 }),
+      pal({ id: 'High', zukanIndex: 2 }),
+    ]
+    const out = filterPals(
+      bundleOf(roster, { Low: 10, High: 3100 }),
+      { ...EMPTY_FILTER, query: '9999' },
+    )
+
+    expect(out).toEqual([])
   })
 
   it('pins an exact Paldeck number before breeding-power proximity results', () => {

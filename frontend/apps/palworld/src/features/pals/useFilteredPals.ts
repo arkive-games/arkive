@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { Element, PalEntry, PalsBundle, WorkType } from '../../lib/pals'
 import {
   comparePalNumericSearch,
-  isExactPaldeckNumber,
+  matchesPalNumericSearch,
   parseExplicitPaldeckQuery,
   parsePalNumericQuery,
 } from '../../lib/breedingSearch'
@@ -73,7 +73,7 @@ export function filterPals(
     a.zukanIndexSuffix.localeCompare(b.zukanIndexSuffix)
   if (numericTarget !== null) {
     return [...out]
-      .filter((p) => isExactPaldeckNumber(p, numericTarget) || bundle.breedingPower.has(p.id))
+      .filter((p) => matchesPalNumericSearch(p, numericTarget, bundle.breedingPower.get(p.id)))
       .sort((a, b) => comparePalNumericSearch(
         a,
         b,

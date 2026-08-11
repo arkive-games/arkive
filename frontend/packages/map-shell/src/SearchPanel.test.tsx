@@ -28,6 +28,7 @@ type Overrides = {
   searchFields?: SearchField[]
   resolveSearchOptions?: (query: string) => SearchOptions | undefined
   searchOptions?: SearchOptions
+  maxProximityDistance?: number
   resultAside?: (item: SearchItem) => string | undefined
   floatingPlacement?: "right" | "center"
 }
@@ -42,6 +43,7 @@ function renderSearchPanel(items: SearchItem[], over: Overrides = {}) {
       searchFields={over.searchFields ?? ["name", "description", "idLabel"]}
       resolveSearchOptions={over.resolveSearchOptions}
       searchOptions={over.searchOptions}
+      maxProximityDistance={over.maxProximityDistance}
       resultAside={over.resultAside}
       floatingPlacement={over.floatingPlacement}
     />,
@@ -149,26 +151,30 @@ describe("SearchPanel", () => {
   })
 
   it("orders numeric proximity results by distance and deduplicates species", () => {
-    renderSearchPanel([
-      item({
-        id: "exact-spawn-1",
-        name: "Exact Pal",
-        proximityValue: 1230,
-        proximityKey: "exact",
-        proximityOrder: 2,
-        proximityLabel: "Breeding Power: 1230",
-      }),
-      item({
-        id: "exact-spawn-2",
-        name: "Exact Pal duplicate",
-        proximityValue: 1230,
-        proximityKey: "exact",
-        proximityOrder: 2,
-      }),
-      item({ id: "high", name: "High Pal", proximityValue: 1240, proximityOrder: 3 }),
-      item({ id: "low", name: "Low Pal", proximityValue: 1220, proximityOrder: 1 }),
-      item({ id: "quest", name: "Quest 1230" }),
-    ])
+    renderSearchPanel(
+      [
+        item({
+          id: "exact-spawn-1",
+          name: "Exact Pal",
+          proximityValue: 1230,
+          proximityKey: "exact",
+          proximityOrder: 2,
+          proximityLabel: "Breeding Power: 1230",
+        }),
+        item({
+          id: "exact-spawn-2",
+          name: "Exact Pal duplicate",
+          proximityValue: 1230,
+          proximityKey: "exact",
+          proximityOrder: 2,
+        }),
+        item({ id: "high", name: "High Pal", proximityValue: 1240, proximityOrder: 3 }),
+        item({ id: "low", name: "Low Pal", proximityValue: 1220, proximityOrder: 1 }),
+        item({ id: "far", name: "Far Pal", proximityValue: 1331 }),
+        item({ id: "quest", name: "Quest 1230" }),
+      ],
+      { maxProximityDistance: 100 },
+    )
 
     searchFor("1230")
 
@@ -181,9 +187,22 @@ describe("SearchPanel", () => {
     expect(resultText[1]).toContain("Low Pal")
     expect(resultText[2]).toContain("High Pal")
     expect(screen.queryByText("Exact Pal duplicate")).toBeNull()
+    expect(screen.queryByText("Far Pal")).toBeNull()
     expect(screen.queryByText("Quest 1230")).toBeNull()
     expect(screen.getByText("Breeding Power: 1230")).toBeTruthy()
     expect(screen.getByText("Breeding Power ≈ 1230")).toBeTruthy()
+  })
+
+  it("shows an empty result set when a numeric target has no nearby values", () => {
+    renderSearchPanel(
+      [item({ id: "pal", name: "Pal 99999", proximityValue: 3100 })],
+      { maxProximityDistance: 100 },
+    )
+
+    searchFor("99999")
+
+    expect(screen.getByText("0 results")).toBeTruthy()
+    expect(screen.queryByText("Pal 99999")).toBeNull()
   })
 
   it("pins an exact numeric id in its own group before proximity results", () => {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  isNearbyBreedingPower,
+  matchesPalNumericSearch,
   palCommandFilter,
   palSearchValue,
   parseExplicitPaldeckQuery,
@@ -26,6 +28,17 @@ describe('breeding-power search', () => {
     expect(palCommandFilter(near, '1230')).toBeGreaterThan(palCommandFilter(far, '1230'))
   })
 
+  it('limits nearby breeding powers to the shared distance window', () => {
+    expect(isNearbyBreedingPower(1330, 1230)).toBe(true)
+    expect(isNearbyBreedingPower(1331, 1230)).toBe(false)
+    expect(isNearbyBreedingPower(undefined, 1230)).toBe(false)
+  })
+
+  it('keeps exact Paldeck matches even when breeding power is outside the window', () => {
+    expect(matchesPalNumericSearch({ zukanIndex: 123 }, 123, 3100)).toBe(true)
+    expect(matchesPalNumericSearch({ zukanIndex: 7 }, 123, 224)).toBe(false)
+  })
+
   it('scores an exact Paldeck number above an exact breeding power', () => {
     const exactPaldeck = palSearchValue('No.123 Catalog Pal', 500, 123)
     const exactPower = palSearchValue('No.007 Power Pal', 123, 7)
@@ -33,6 +46,10 @@ describe('breeding-power search', () => {
     expect(palCommandFilter(exactPaldeck, '123')).toBeGreaterThan(
       palCommandFilter(exactPower, '123'),
     )
+  })
+
+  it('gives an out-of-range numeric query no command match', () => {
+    expect(palCommandFilter(palSearchValue('Highest Pal', 3100), '99999')).toBe(0)
   })
 
   it('preserves ordinary case-insensitive name matching', () => {
