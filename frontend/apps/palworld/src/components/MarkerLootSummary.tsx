@@ -19,6 +19,10 @@ export interface MarkerLootGroup {
   entries: MarkerLootEntry[]
 }
 
+export function hasMarkerLootTier(grade: number): boolean {
+  return grade > 0
+}
+
 /**
  * Reverse the item-source index for one marker loot pool. Rare items lead,
  * with the best per-roll chance breaking ties so the compact popup stays useful.
@@ -143,11 +147,16 @@ export function MarkerLootSummary({ lootArea, kind }: { lootArea?: string; kind:
         <div className="mt-2 space-y-1.5" data-testid="marker-loot-items">
           {visibleLootGroups.map((group) => (
             <div key={group.grade} data-testid="marker-loot-grade-group">
-              <div className="flex min-h-6 items-center bg-secondary/45 px-2">
-                <span className="text-xs text-muted-foreground">
-                  {t('mapControls.lootTier', { n: group.grade })}
-                </span>
-              </div>
+              {hasMarkerLootTier(group.grade) ? (
+                <div
+                  className="flex min-h-6 items-center bg-secondary/45 px-2"
+                  data-testid="marker-loot-tier"
+                >
+                  <span className="text-xs text-muted-foreground">
+                    {t('mapControls.lootTier', { n: group.grade })}
+                  </span>
+                </div>
+              ) : null}
               <div className="divide-y divide-border/70">
                 {group.entries.map(({ item, source }) => (
                   <Link

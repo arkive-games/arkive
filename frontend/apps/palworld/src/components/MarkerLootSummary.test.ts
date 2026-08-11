@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupMarkerLootByGrade, markerLootForArea } from './MarkerLootSummary'
+import { groupMarkerLootByGrade, hasMarkerLootTier, markerLootForArea } from './MarkerLootSummary'
 import type { ItemEntry, ItemSource, ItemsBundle } from '../lib/catalog'
 
 const item = (
@@ -67,5 +67,10 @@ describe('markerLootForArea', () => {
 
     expect(groups.map((group) => group.grade)).toEqual([5, 1])
     expect(groups.map((group) => group.entries.length)).toEqual([1, 2])
+  })
+
+  it('does not present an absent grade as loot tier zero', () => {
+    expect(hasMarkerLootTier(0)).toBe(false)
+    expect(hasMarkerLootTier(3)).toBe(true)
   })
 })
