@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.29.1",
+      "date": "2026-08-11",
+      "commit": "3155d2f39eed3ed0ded138b9b364e60090431b9d",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Limited bare-number breeding-power searches to nearby matches so out-of-range values now show an empty state.",
+            "zh-CN": "限制纯数字配种能力搜索只显示附近结果，超出范围的数值现在会显示空状态。",
+            "zh-TW": "限制純數字配種能力搜尋只顯示附近結果，超出範圍的數值現在會顯示空狀態。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.29.0",
       "date": "2026-08-10",
       "commit": "35a881167bd0fe47f1dc0c9ef040eb8c33cbea40",
