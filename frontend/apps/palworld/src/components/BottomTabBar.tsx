@@ -28,6 +28,7 @@ import {
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import type { NavKey } from './TopNav'
 import { SiteInfo } from './SiteInfo'
+import { useSettingsConfig } from '../lib/settings'
 
 type Tab = { key: NavKey; label: string; icon: typeof Map }
 
@@ -97,6 +98,7 @@ export function BottomTabBar() {
   ]
   const moreActive = more.some((m) => m.key === active)
 
+  const settings = useSettingsConfig()
   const themeTabs: { value: Theme; label: string }[] = [
     { value: 'auto', label: t('themeAuto') },
     { value: 'light', label: t('themeLight') },
@@ -150,6 +152,10 @@ export function BottomTabBar() {
         current: theme,
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('settings.theme'),
+      }}
+      settings={{
+        backLabel: t('settings.back'),
+        config: settings,
       }}
       footer={<SiteInfo />}
     />

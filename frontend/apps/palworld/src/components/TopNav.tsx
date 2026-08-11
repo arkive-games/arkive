@@ -4,6 +4,7 @@ import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, useTheme, type ShellNavItem } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
+import { useSettingsConfig } from '../lib/settings'
 
 export type NavKey = '/' | '/pals' | '/breeding' | '/passives' | '/active-skills' | '/partner-skills' | '/stat-simulator' | '/items' | '/buildings' | '/merchants' | '/technology' | '/dungeons' | '/quests' | '/basecamp' | '/research' | '/raids' | '/fishing' | '/changelog'
 
@@ -12,6 +13,7 @@ export function TopNav({ active }: { active: NavKey }) {
   const { theme, setTheme } = useTheme()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
+  const settings = useSettingsConfig()
 
   const items: ShellNavItem[] = [
     { key: '/', label: t('breeding.navMap'), active: active === '/' },
@@ -80,7 +82,7 @@ export function TopNav({ active }: { active: NavKey }) {
         shortLabel: t('settings.theme'),
       }}
       loginLabel={t('auth.login')}
-      accountSlot={<ArkiveAccountControl language={lng} />}
+      accountSlot={<ArkiveAccountControl language={lng} settings={settings} />}
     />
   )
 }

@@ -939,8 +939,19 @@ const resources = {
   },
 } as const
 
+/**
+ * The portal's switcher writes the SHARED language, with no override layer.
+ *
+ * meta is not a game -- there is no "this site only" to mean here, and it is
+ * where a reader goes to set the value the games inherit.
+ */
 export function changeLanguagePreference(code: string) {
   saveLanguagePreference(code, LANGUAGES)
+  return i18n.changeLanguage(code)
+}
+
+/** Switches the displayed language without writing a preference. */
+export function applyLanguage(code: string) {
   return i18n.changeLanguage(code)
 }
 

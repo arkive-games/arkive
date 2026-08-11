@@ -4,6 +4,7 @@ import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, useTheme } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
+import { useSettingsConfig } from '../lib/settings'
 
 export type NavKey = '/' | '/cards' | '/characters' | '/changelog'
 
@@ -18,6 +19,7 @@ export function TopNav({ active }: { active: NavKey }) {
   const { theme, setTheme } = useTheme()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
+  const settings = useSettingsConfig()
 
   return (
     <ArkiveMapTopBar
@@ -56,7 +58,7 @@ export function TopNav({ active }: { active: NavKey }) {
         shortLabel: t('themeMenu'),
       }}
       loginLabel={t('login')}
-      accountSlot={<ArkiveAccountControl language={i18n.language} />}
+      accountSlot={<ArkiveAccountControl language={i18n.language} settings={settings} />}
     />
   )
 }

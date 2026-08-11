@@ -46,6 +46,7 @@ import {
 } from './UserSystemPages'
 import { MetaMobileNav } from './MetaMobileNav'
 import { PlatformUpdatesPage } from './PlatformUpdatesPage'
+import { useSettingsConfig } from './lib/settings'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl } from './userSystemData'
 import { useUserSystem } from './UserSystemState'
@@ -129,6 +130,7 @@ export default function App() {
   const [activeRoute, setActiveRoute] = useState<HomeRoute>(routeFromHash)
   const isForumComposer = activeRoute.view === 'forum' && activeRoute.composer
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
+  const settings = useSettingsConfig()
   const brandName = getArkiveBrandName(lng, t('brand.name'))
 
   useEffect(() => {
@@ -297,7 +299,7 @@ export default function App() {
         loginLabel={t('auth.login')}
         accountSlot={isSignedIn
           ? <AuthenticatedControls />
-          : <ArkiveAccountControl language={i18n.language} />}
+          : <ArkiveAccountControl language={i18n.language} settings={settings} />}
       />
 
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} strings={authStrings} />

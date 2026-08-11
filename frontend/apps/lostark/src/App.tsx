@@ -307,7 +307,18 @@ export default function App() {
           <>
             {/* This app has no i18n and renders Chinese throughout, so the
                 locale is a literal rather than a lookup. */}
-            <ArkiveAccountControl language="zh-CN" />
+            <ArkiveAccountControl
+              language="zh-CN"
+              settings={{
+                locale: 'zh-CN',
+                site: { name: 'Lost Ark' },
+                themeOptions: [
+                  { value: 'auto', label: '自动' },
+                  { value: 'light', label: '浅色' },
+                  { value: 'dark', label: '深色' },
+                ],
+              }}
+            />
             <ThemeToggle labels={{ auto: '自动', light: '浅色', dark: '深色' }} />
             <BuildInfo
               commit={__BUILD_GIT_COMMIT__}

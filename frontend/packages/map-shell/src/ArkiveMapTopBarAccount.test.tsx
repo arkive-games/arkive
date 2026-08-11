@@ -103,6 +103,51 @@ describe("ArkiveMapTopBar account control", () => {
     expect(onSignOut).toHaveBeenCalledTimes(1)
   })
 
+  it("reaches settings while signed out, without costing the sign-in click", () => {
+    const onSignIn = vi.fn()
+    const onSelect = vi.fn()
+    const { getByTestId, queryByTestId } = renderTopBar(
+      account({ onSignIn, settings: { label: "Settings", onSelect } }),
+    )
+
+    const trigger = getByTestId("account-sign-in")
+    // Closed until hovered, and the button still signs in on click -- the
+    // local-data controls behind Settings matter most to a visitor with no
+    // account, so gating them behind one would defeat the panel's purpose.
+    expect(queryByTestId("account-settings")).toBeNull()
+    fireEvent.click(trigger)
+    expect(onSignIn).toHaveBeenCalledTimes(1)
+
+    fireEvent.pointerEnter(trigger.parentElement as HTMLElement)
+    fireEvent.click(getByTestId("account-settings"))
+    expect(onSelect).toHaveBeenCalledTimes(1)
+  })
+
+  it("leaves the signed-out button bare when no settings entry is configured", () => {
+    const { getByTestId } = renderTopBar(account())
+
+    // No wrapper, so hosts that have not adopted the panel see no behaviour change.
+    expect(getByTestId("account-sign-in").getAttribute("aria-haspopup")).toBeNull()
+  })
+
+  it("puts settings above host entries and sign out when signed in", () => {
+    const { getByTestId, getAllByRole } = renderTopBar(
+      account({
+        status: "authenticated",
+        userName: "alice",
+        items: [{ key: "profile", label: "Profile", onSelect: vi.fn() }],
+        settings: { label: "Settings", onSelect: vi.fn() },
+      }),
+    )
+
+    fireEvent.pointerEnter(getByTestId("account-menu").parentElement as HTMLElement)
+    expect(getAllByRole("menuitem").map((node) => node.textContent)).toEqual([
+      "Settings",
+      "Profile",
+      "Sign out",
+    ])
+  })
+
   it("renders host-supplied entries above sign out", () => {
     const onSelect = vi.fn()
     const { getByTestId, getAllByRole } = renderTopBar(

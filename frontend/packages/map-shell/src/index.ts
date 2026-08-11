@@ -46,6 +46,20 @@ export type { ArkiveSiteInfoProps, ArkiveSiteInfoStrings } from "./ArkiveSiteInf
 export { LocalDataControls, LocalDataDialog, localDataStringsFor } from './LocalDataControls'
 export type { LocalDataStrings } from './LocalDataControls'
 export {
+  ArkiveSettingsPanel,
+  ArkiveSettingsDialog,
+  useArkiveLanguageSettings,
+  useArkiveSettingsProps,
+} from './ArkiveSettingsPanel'
+export type {
+  ArkiveSettingsConfig,
+  ArkiveSettingsLanguageConfig,
+  ArkiveSettingsPanelProps,
+  ArkiveSettingsStrings,
+  ArkiveSettingsThemeConfig,
+} from './ArkiveSettingsPanel'
+export { settingsStringsFor } from './settingsStrings'
+export {
   FilterPanel,
   type FilterPanelProps,
   type FilterPanelClassNames,
@@ -106,7 +120,13 @@ export {
   type MapEngineStore,
 } from "./mapEngineChoice"
 export { canUseLodTiers } from "./markerLod"
-export { ThemeProvider, useTheme, type Theme, type ThemeStorage } from "./theme/ThemeProvider"
+export {
+  ThemeProvider,
+  useOptionalTheme,
+  useTheme,
+  type Theme,
+  type ThemeStorage,
+} from "./theme/ThemeProvider"
 export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./theme/ThemeToggle"
 // The concrete browser adapter lives in @gamemap/ui: this package is storage-free
 // (see `check:shell`), so it may define the ThemeStorage port but never implement it.

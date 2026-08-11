@@ -4,8 +4,10 @@
 // `<ThemeProvider storage={...}>` needs -- TypeScript matches them by shape.
 import {
   MemoryClient,
+  createLayeredPreference,
   defineMemoryRecord,
   memoryPolicy,
+  type LayeredPreference,
   type StorageLike,
 } from "@gamemap/state-memory"
 
@@ -14,6 +16,10 @@ type Theme = "auto" | "light" | "dark"
 type ThemeStorage = {
   get: () => Theme | null
   set: (theme: Theme) => void
+  readLayers?: () => { global: Theme | null; override: Theme | null }
+  setGlobal?: (theme: Theme) => void
+  setOverride?: (theme: Theme) => void
+  clearOverride?: () => void
 }
 
 export const ARKIVE_THEME_STORAGE_KEY = "arkive.memory.site.interface.theme"
@@ -28,9 +34,19 @@ export interface ArkiveThemeStorageEnvironment {
   writeCookie: (value: string) => void
 }
 
+/**
+ * Which layer a bare `set()` writes -- i.e. what the top-bar moon dropdown does.
+ *
+ * `"site"` for a game: it writes that game's override, seeding the shared value
+ * while nothing has chosen one. `"global"` for meta, which is the portal and
+ * has no override layer of its own.
+ */
+export type ArkiveThemeWriteLayer = "site" | "global"
+
 export interface CreateArkiveThemeStorageOptions {
   legacyKeys?: readonly string[]
   environment?: ArkiveThemeStorageEnvironment
+  layer?: ArkiveThemeWriteLayer
 }
 
 function isTheme(value: string | null): value is Theme {
@@ -100,6 +116,24 @@ function themeRecord(legacyKeys: readonly string[]) {
   })
 }
 
+/**
+ * This site's theme, overriding the shared cookie above.
+ *
+ * Device-scoped, therefore per-origin, which is the entire mechanism: each game
+ * is its own origin, so no game identifier is needed to keep the overrides
+ * apart. It is deliberately NOT cookie-backed -- a cookie would leak the
+ * override to every other game, which is the opposite of the point.
+ */
+const themeOverrideRecord = defineMemoryRecord({
+  id: "theme-override",
+  namespace: "site",
+  surface: "interface",
+  ...memoryPolicy.userPreference("reset-theme"),
+  schemaVersion: "1.0.0",
+  defaultValue: () => null as Theme | null,
+  validate: (value: unknown): value is Theme | null => value === null || isTheme(String(value)),
+})
+
 function persistTheme(
   theme: Theme,
   environment: ArkiveThemeStorageEnvironment,
@@ -143,34 +177,84 @@ function expireThemeCookie(environment: ArkiveThemeStorageEnvironment) {
 }
 
 /**
- * Persist one Arkive theme preference across the portal and every game.
- * The shared cookie crosses local dev ports and approved production subdomains;
- * the shared local-storage key is a fallback for cookie-restricted contexts.
+ * Both theme layers for one site.
+ *
+ * The shared layer is the cookie, which crosses local dev ports and approved
+ * production subdomains, with a local-storage key as the fallback for
+ * cookie-restricted contexts. The override layer is plain device storage.
  */
-export function createArkiveThemeStorage({
+export function createArkiveThemePreference({
   legacyKeys = [],
   environment,
-}: CreateArkiveThemeStorageOptions = {}): ThemeStorage {
+}: CreateArkiveThemeStorageOptions = {}): LayeredPreference<Theme> {
   const getEnvironment = () => environment ?? defaultEnvironment()
   const record = themeRecord(legacyKeys)
+  const clientFor = (current: ArkiveThemeStorageEnvironment) =>
+    new MemoryClient({ deviceStorage: current.localStorage })
+
+  return createLayeredPreference<Theme>(
+    {
+      readGlobal: () => {
+        const current = getEnvironment()
+        if (!current) return null
+        const client = clientFor(current)
+        const theme = readCookieTheme(current.readCookie()) ?? client.read(record)
+        // Re-persisting on read is what migrates a value written before the
+        // cookie existed, and refreshes Max-Age for an active reader.
+        if (theme) persistTheme(theme, current, client, record)
+        return theme
+      },
+      writeGlobal: (theme) => {
+        const current = getEnvironment()
+        if (current) persistTheme(theme, current, clientFor(current), record)
+      },
+      readOverride: () => {
+        const current = getEnvironment()
+        return current ? clientFor(current).read(themeOverrideRecord) : null
+      },
+      writeOverride: (theme) => {
+        const current = getEnvironment()
+        if (current) clientFor(current).write(themeOverrideRecord, theme)
+      },
+      clearOverride: () => {
+        const current = getEnvironment()
+        if (current) clientFor(current).clear(themeOverrideRecord)
+      },
+    },
+    // Never reached through `ThemeStorage.get`, which reports "nothing stored"
+    // as null so ThemeProvider can apply its own defaultTheme.
+    () => "auto",
+  )
+}
+
+/**
+ * The `ThemeProvider` adapter: effective value in, one write out, plus the
+ * layered operations the settings panel needs.
+ *
+ * `set` writes whichever layer `layer` names, so a game's moon dropdown creates
+ * that game's override while meta's writes the shared value.
+ */
+export function createArkiveThemeStorage(
+  options: CreateArkiveThemeStorageOptions = {},
+): ThemeStorage {
+  const preference = createArkiveThemePreference(options)
+  const writeFromControl = options.layer === "global"
+    ? preference.setGlobal
+    : preference.setFromSiteControl
 
   return {
     get: () => {
-      const current = getEnvironment()
-      if (!current) return null
-
-      const client = new MemoryClient({ deviceStorage: current.localStorage })
-      const theme = readCookieTheme(current.readCookie()) ?? client.read(record)
-
-      if (theme) persistTheme(theme, current, client, record)
-      return theme
+      const { global, override } = preference.read()
+      return override ?? global
     },
-    set: (theme) => {
-      const current = getEnvironment()
-      if (current) {
-        persistTheme(theme, current, new MemoryClient({ deviceStorage: current.localStorage }), record)
-      }
+    set: writeFromControl,
+    readLayers: () => {
+      const { global, override } = preference.read()
+      return { global, override }
     },
+    setGlobal: preference.setGlobal,
+    setOverride: preference.setOverride,
+    clearOverride: preference.clearOverride,
   }
 }
 
@@ -182,6 +266,9 @@ export function clearArkiveThemePreference({
   if (!current) return
   const client = new MemoryClient({ deviceStorage: current.localStorage })
   client.clear(themeRecord(legacyKeys))
+  // The override too, or "reset interface preferences" would restore the shared
+  // theme and leave this site still overriding it.
+  client.clear(themeOverrideRecord)
   for (const key of [LEGACY_THEME_STORAGE_KEY, ...legacyKeys]) {
     try { current.localStorage?.removeItem(key) } catch { /* restricted storage */ }
   }

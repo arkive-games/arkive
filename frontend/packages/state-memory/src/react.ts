@@ -6,6 +6,11 @@ import {
   type MemoryRecord,
   type MemoryScope,
 } from "./core"
+import {
+  createLanguagePreference,
+  languageOverrideRecord,
+  languagePreferenceRecord,
+} from "./language"
 
 export interface UseMemoryStateOptions extends MemoryScope {
   client?: MemoryClient
@@ -113,4 +118,68 @@ export function useMemory<T>(
     client: options.client,
     debounceMs: options.debounceMs,
   })
+}
+
+/**
+ * Both language layers as reactive state, plus the writes the settings panel
+ * needs.
+ *
+ * Subscribed to the records rather than held in local state alone, so the top
+ * bar and the phone sheet -- two components reading the same two records --
+ * cannot drift apart after a write in either one.
+ *
+ * `apply` is the host's `i18n.changeLanguage`. It is called with the resolved
+ * effective value rather than the value written, which is the distinction that
+ * matters: setting General while this site overrides it must change what the
+ * panel shows and NOT what language the page is in.
+ */
+export interface LanguagePreferenceControls<T extends string> {
+  /** What General resolves to: the shared value, else detection without the override. */
+  generalValue: T
+  /** `null` when this site follows General. */
+  override: T | null
+  setGeneral: (code: T) => void
+  setOverride: (code: T) => void
+  followGeneral: () => void
+}
+
+export function useLanguagePreference<T extends string>(
+  supported: readonly T[],
+  fallback: T,
+  apply: (code: T) => void,
+  client: MemoryClient = browserMemory,
+): LanguagePreferenceControls<T> {
+  const preference = useMemo(
+    () => createLanguagePreference(supported, fallback, { memory: client }),
+    [client, fallback, supported],
+  )
+  const [layers, setLayers] = useState(() => preference.read())
+
+  useEffect(() => {
+    const refresh = () => setLayers(preference.read())
+    refresh()
+    const unsubscribes = [
+      client.subscribe(languagePreferenceRecord, {}, refresh),
+      client.subscribe(languageOverrideRecord, {}, refresh),
+    ]
+    return () => unsubscribes.forEach((off) => off())
+  }, [client, preference])
+
+  const commit = useCallback(
+    (write: () => void) => {
+      write()
+      const next = preference.read()
+      setLayers(next)
+      apply(next.effective)
+    },
+    [apply, preference],
+  )
+
+  return {
+    generalValue: layers.global ?? layers.effective,
+    override: layers.override,
+    setGeneral: (code) => commit(() => preference.setGlobal(code)),
+    setOverride: (code) => commit(() => preference.setOverride(code)),
+    followGeneral: () => commit(() => preference.clearOverride()),
+  }
 }

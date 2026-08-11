@@ -14,6 +14,7 @@ import {
 } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { SiteInfo } from './SiteInfo'
+import { useSettingsConfig } from '../lib/settings'
 import type { NavKey } from './TopNav'
 
 function activeKey(pathname: string): NavKey {
@@ -27,6 +28,7 @@ export function BottomTabBar() {
   const { t, i18n } = useTranslation()
   const { pathname } = useLocation()
   const { theme, setTheme } = useTheme()
+  const settings = useSettingsConfig()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const active = activeKey(pathname)
 
@@ -80,6 +82,10 @@ export function BottomTabBar() {
         current: theme,
         onChange: (value) => setTheme(value as Theme),
         rowLabel: t('themeMenu'),
+      }}
+      settings={{
+        backLabel: t('back'),
+        config: settings,
       }}
       footer={<SiteInfo />}
     />

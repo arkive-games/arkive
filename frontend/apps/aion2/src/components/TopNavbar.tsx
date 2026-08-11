@@ -5,6 +5,7 @@ import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from "@gamemap
 import { useTheme } from "@/context/ThemeContext";
 import i18n, { changeLanguagePreference, LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/i18n";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
+import { useSettingsConfig } from "@/lib/settings";
 
 export default function TopNavbar() {
   const { t } = useTranslation(["common", "wiki"]);
@@ -12,6 +13,7 @@ export default function TopNavbar() {
   const { theme, setTheme } = useTheme();
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
   const brandName = getArkiveBrandName(currentLng, t("common:brand.name"));
+  const settings = useSettingsConfig();
 
   const navItems: ShellNavItem[] = [
     {
@@ -84,7 +86,7 @@ export default function TopNavbar() {
         shortLabel: t("common:theme.label"),
       }}
       loginLabel={t("common:auth.login")}
-      accountSlot={<ArkiveAccountControl language={currentLng} />}
+      accountSlot={<ArkiveAccountControl language={currentLng} settings={settings} />}
     />
   );
 }

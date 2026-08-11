@@ -9,7 +9,9 @@ import App from './App'
 import { AUTH_CONFIG } from './lib/auth'
 import { UserSystemProvider } from './UserSystemState'
 
-const themeStorage = createArkiveThemeStorage({ legacyKeys: ['meta.theme'] })
+// `layer: 'global'` -- the portal's theme control writes the shared value that
+// every game inherits, rather than an override for meta itself.
+const themeStorage = createArkiveThemeStorage({ legacyKeys: ['meta.theme'], layer: 'global' })
 
 // Single-page, no router: the entry pageview hm.js reports is the whole visit.
 initBaiduAnalytics({

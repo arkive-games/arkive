@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import HttpBackend from "i18next-http-backend";
-import { detectLanguagePreference, saveLanguagePreference } from "@gamemap/state-memory";
+import { createLanguagePreference, detectLanguagePreference } from "@gamemap/state-memory";
 import { bindArkiveDocumentLocale } from "@gamemap/map-shell";
 import { parse } from "yaml";
 import { getStaticBaseUrl, getDataBaseUrl } from "@/lib/url";
@@ -60,8 +60,23 @@ function localeLoadPath(lngs: string[], nss: string[]): string {
   return `${base}/locales/${lng}/${ns}.${APP_LOCALE_EXT}?${q}`;
 }
 
+const languagePreference = createLanguagePreference(SUPPORTED_LANGUAGES, "zh-CN");
+
+/**
+ * The top-bar and sheet language switchers.
+ *
+ * Writes this site's override and, while nothing has ever chosen a shared
+ * language, seeds that too -- so a first-time visitor picking a language here
+ * still sees it on the other Arkive sites, while a later change stays local.
+ * The settings panel writes the layers explicitly instead.
+ */
 export function changeLanguagePreference(code: string) {
-  saveLanguagePreference(code, SUPPORTED_LANGUAGES);
+  languagePreference.setFromSiteControl(code as LanguageCode);
+  return i18n.changeLanguage(code);
+}
+
+/** Switches the displayed language without writing a preference. */
+export function applyLanguage(code: string) {
   return i18n.changeLanguage(code);
 }
 

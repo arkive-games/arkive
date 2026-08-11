@@ -103,3 +103,70 @@ describe("resolveArkiveThemeCookieDomain", () => {
     expect(resolveArkiveThemeCookieDomain("localhost")).toBeNull()
   })
 })
+
+describe("theme layers", () => {
+  it("writes an override and seeds the shared cookie on a game's first pick", () => {
+    const { environment, writes } = createEnvironment()
+    const storage = createArkiveThemeStorage({ environment })
+
+    storage.set("dark")
+
+    expect(storage.readLayers?.()).toEqual({ global: "dark", override: "dark" })
+    // The cookie is the only transport that crosses origins, so seeding it is
+    // what carries the choice to the other games.
+    expect(writes.some((cookie) => cookie.startsWith("arkive.theme=dark"))).toBe(true)
+  })
+
+  it("keeps a later game pick local once a shared value exists", () => {
+    const { environment } = createEnvironment({ cookie: "arkive.theme=dark" })
+    const storage = createArkiveThemeStorage({ environment })
+
+    storage.set("light")
+
+    expect(storage.readLayers?.()).toEqual({ global: "dark", override: "light" })
+    expect(storage.get()).toBe("light")
+  })
+
+  it("writes only the shared value on the portal", () => {
+    const { environment } = createEnvironment()
+    const storage = createArkiveThemeStorage({ environment, layer: "global" })
+
+    storage.set("dark")
+
+    // meta is not a game: there is no "this site only" for it to mean.
+    expect(storage.readLayers?.()).toEqual({ global: "dark", override: null })
+  })
+
+  it("leaves an overriding site alone when the shared value changes", () => {
+    const { environment } = createEnvironment()
+    const storage = createArkiveThemeStorage({ environment })
+    storage.setOverride?.("light")
+
+    storage.setGlobal?.("dark")
+
+    expect(storage.get()).toBe("light")
+    expect(storage.readLayers?.()).toEqual({ global: "dark", override: "light" })
+  })
+
+  it("falls back to the shared value once the override is cleared", () => {
+    const { environment } = createEnvironment({ cookie: "arkive.theme=dark" })
+    const storage = createArkiveThemeStorage({ environment })
+    storage.setOverride?.("light")
+
+    storage.clearOverride?.()
+
+    expect(storage.get()).toBe("dark")
+  })
+
+  it("drops the override when preferences are reset", () => {
+    const { environment } = createEnvironment()
+    const storage = createArkiveThemeStorage({ environment })
+    storage.setOverride?.("light")
+
+    clearArkiveThemePreference({ environment })
+
+    // Otherwise a reset restores the shared theme and leaves this site still
+    // overriding it, which reads as the reset having done nothing.
+    expect(storage.readLayers?.()).toEqual({ global: null, override: null })
+  })
+})

@@ -11,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { ShellBottomNav, type ArkiveMapTheme } from '@gamemap/map-shell'
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
+import { useSettingsConfig } from './lib/settings'
 
 interface MetaMobileNavProps {
   activeView: 'discoverGames' | 'allGames' | 'platformUpdates' | 'forum' | 'notifications' | 'account' | 'publicProfile'
@@ -34,6 +35,7 @@ export function MetaMobileNav({
   onComingSoon,
 }: MetaMobileNavProps) {
   const { t } = useTranslation()
+  const settings = useSettingsConfig()
   const tabs = [
     {
       key: 'discoverGames',
@@ -141,6 +143,10 @@ export function MetaMobileNav({
         current: theme,
         onChange: (value) => onThemeChange(value as ArkiveMapTheme),
         rowLabel: t('theme.menu'),
+      }}
+      settings={{
+        backLabel: t('nav.back'),
+        config: settings,
       }}
     />
   )

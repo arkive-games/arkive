@@ -5,7 +5,7 @@ import {
   type FocusEvent,
   type ReactNode,
 } from "react"
-import { IconLogout, IconUserCircle } from "@tabler/icons-react"
+import { IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react"
 import { Button, cn } from "@gamemap/ui"
 import {
   ShellTopBar,
@@ -81,6 +81,13 @@ export interface ArkiveMapTopBarAccount {
   onSignIn: () => void
   onSignOut: () => void
   items?: ArkiveMapTopBarAccountItem[]
+  /**
+   * Opens the settings panel. Offered in every state, signed out included --
+   * the local-data controls it holds matter most to a visitor whose data exists
+   * only in this browser, and requiring an account to reach them would be the
+   * bug this panel was built to close.
+   */
+  settings?: { label: string; onSelect: () => void }
 }
 
 export type ArkiveMapTheme = "auto" | "light" | "dark"
@@ -203,6 +210,56 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  const settingsEntry: ArkiveMapTopBarAccountItem[] = account.settings
+    ? [
+        {
+          key: "settings",
+          label: account.settings.label,
+          onSelect: account.settings.onSelect,
+        },
+      ]
+    : []
+
+  const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false)
+  }
+
+  const menu = (entries: ArkiveMapTopBarAccountItem[], header?: string) => (
+    <div
+      ref={menuRef}
+      role="menu"
+      aria-label={account.accountLabel}
+      className={cn("absolute right-0 min-w-40", TOP_BAR_MENU_CLASS)}
+    >
+      {header && (
+        <p className="truncate px-3 py-1.5 text-xs text-muted-foreground">{header}</p>
+      )}
+      {entries.map((entry) => (
+        <button
+          key={entry.key}
+          type="button"
+          role="menuitem"
+          data-testid={`account-${entry.key}`}
+          className={TOP_BAR_MENU_ITEM_CLASS}
+          onClick={() => {
+            setOpen(false)
+            entry.onSelect()
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setOpen(false)
+              triggerRef.current?.focus()
+            }
+          }}
+        >
+          {entry.key === "settings" && <IconSettings className="size-4" stroke={1.8} />}
+          {entry.key === "sign-out" && <IconLogout className="size-4" stroke={1.8} />}
+          <span className="flex-1">{entry.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+
   if (account.status === "loading") {
     return (
       <Button
@@ -219,11 +276,14 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
   }
 
   if (account.status === "anonymous") {
-    return (
+    const signInButton = (
       <Button
+        ref={triggerRef}
         type="button"
         className={ACCOUNT_TRIGGER_CLASS}
         aria-label={account.signInLabel}
+        aria-haspopup={settingsEntry.length > 0 ? "menu" : undefined}
+        aria-expanded={settingsEntry.length > 0 ? open : undefined}
         data-testid="account-sign-in"
         onClick={account.onSignIn}
       >
@@ -231,13 +291,28 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
         <span className="text-sm font-semibold">{account.signInLabel}</span>
       </Button>
     )
-  }
 
-  const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false)
+    if (settingsEntry.length === 0) return signInButton
+
+    // The menu is revealed by hover and focus, and the button keeps its own
+    // click action, so signing in stays one click while settings become
+    // reachable without an account. A split trigger would cost that click.
+    return (
+      <div
+        className="relative inline-flex items-center"
+        onPointerEnter={() => setOpen(true)}
+        onPointerLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={closeWhenFocusLeaves}
+      >
+        {signInButton}
+        {open && menu(settingsEntry)}
+      </div>
+    )
   }
 
   const entries: ArkiveMapTopBarAccountItem[] = [
+    ...settingsEntry,
     ...(account.items ?? []),
     { key: "sign-out", label: account.signOutLabel, onSelect: account.onSignOut },
   ]
@@ -282,40 +357,7 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
           {account.userName ?? account.accountLabel}
         </span>
       </Button>
-      {open && (
-        <div
-          ref={menuRef}
-          role="menu"
-          aria-label={account.accountLabel}
-          className={cn("absolute right-0 min-w-40", TOP_BAR_MENU_CLASS)}
-        >
-          {account.userName && (
-            <p className="truncate px-3 py-1.5 text-xs text-muted-foreground">{account.userName}</p>
-          )}
-          {entries.map((entry) => (
-            <button
-              key={entry.key}
-              type="button"
-              role="menuitem"
-              data-testid={`account-${entry.key}`}
-              className={TOP_BAR_MENU_ITEM_CLASS}
-              onClick={() => {
-                setOpen(false)
-                entry.onSelect()
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  setOpen(false)
-                  triggerRef.current?.focus()
-                }
-              }}
-            >
-              {entry.key === "sign-out" && <IconLogout className="size-4" stroke={1.8} />}
-              <span className="flex-1">{entry.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      {open && menu(entries, account.userName)}
     </div>
   )
 }

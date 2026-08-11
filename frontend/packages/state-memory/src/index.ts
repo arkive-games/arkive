@@ -22,8 +22,10 @@ export {
   type StorageLike,
 } from "./core"
 export {
+  useLanguagePreference,
   useMemory,
   useMemoryState,
+  type LanguagePreferenceControls,
   type MemoryWriteStatus,
   type UseMemoryStateOptions,
 } from "./react"
@@ -64,8 +66,18 @@ export {
   type UrlMemoryEnvironment,
 } from "./adapters"
 export {
+  createLanguagePreference,
   detectLanguagePreference,
+  languageOverrideRecord,
   languagePreferenceRecord,
   saveLanguagePreference,
   type LanguageMemoryEnvironment,
+  type LanguagePreferenceLayers,
 } from "./language"
+export {
+  createLayeredPreference,
+  resolvePreferenceLayers,
+  type LayeredPreference,
+  type PreferenceLayers,
+  type PreferenceLayerStore,
+} from "./preferences"

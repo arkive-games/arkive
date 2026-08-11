@@ -5,6 +5,7 @@ import {
   IconChevronRight,
   IconLanguage,
   IconMoonStars,
+  IconSettings,
 } from "@tabler/icons-react"
 import {
   cn,
@@ -15,6 +16,12 @@ import {
   SheetTrigger,
   useIsMobile,
 } from "@gamemap/ui"
+
+import {
+  ArkiveSettingsPanel,
+  useArkiveSettingsProps,
+  type ArkiveSettingsConfig,
+} from "./ArkiveSettingsPanel"
 
 export interface ShellBottomTab {
   /** Stable key, e.g. the route path. */
@@ -66,6 +73,20 @@ export interface ShellBottomNavProps {
     onChange: (value: string) => void
     rowLabel: ReactNode
   }
+  /**
+   * The full settings panel, as a second drill-down sub-page.
+   *
+   * A sub-page and not a dialog: a portalled overlay opened from inside a Sheet
+   * has its pointer events swallowed by the sheet's own overlay and goes dead
+   * rather than merely looking wrong. The language pane above exists for the
+   * same reason.
+   */
+  settings?: {
+    /** Defaults to this package's own localized "Settings", as the panel title does. */
+    rowLabel?: ReactNode
+    backLabel: ReactNode
+    config: ArkiveSettingsConfig
+  }
   /** Rendered last, e.g. the site-info panel. */
   footer?: ReactNode
   /**
@@ -77,7 +98,7 @@ export interface ShellBottomNavProps {
 }
 
 /** Which body the sheet is showing. */
-type MorePane = "main" | "language"
+type MorePane = "main" | "language" | "settings"
 
 /**
  * One settings row: icon + label on the left, control or value on the right.
@@ -114,6 +135,7 @@ export function ShellBottomNav({
   grid,
   language,
   theme,
+  settings,
   footer,
   pathname,
   classNames,
@@ -121,6 +143,10 @@ export function ShellBottomNav({
   const [open, setOpen] = useState(false)
   const [pane, setPane] = useState<MorePane>("main")
   const isMobile = useIsMobile()
+  // Unconditional: hooks cannot be skipped, and an empty config is never
+  // rendered because the pane only opens when `settings` is present.
+  const settingsProps = useArkiveSettingsProps(settings?.config ?? {})
+  const settingsLabel = settings?.rowLabel ?? settingsProps.strings.title
 
   // A tap that navigates must not leave the sheet over the destination.
   useEffect(() => {
@@ -195,7 +221,13 @@ export function ShellBottomNav({
               {/* The title tracks the visible body so the sub-page is
                   announced, and SheetTitle stays mounted in both panes
                   (Radix requires it). */}
-              <SheetTitle>{pane === "language" ? language.rowLabel : more.title}</SheetTitle>
+              <SheetTitle>
+                {pane === "language"
+                  ? language.rowLabel
+                  : pane === "settings"
+                    ? settingsLabel
+                    : more.title}
+              </SheetTitle>
             </SheetHeader>
 
             {pane === "main" ? (
@@ -265,9 +297,39 @@ export function ShellBottomNav({
                       ))}
                     </div>
                   </div>
+
+                  {settings && (
+                    <button
+                      type="button"
+                      data-testid="more-settings-open"
+                      onClick={() => setPane("settings")}
+                      className={ROW}
+                    >
+                      <span className="flex min-w-0 items-center gap-2">
+                        <IconSettings className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
+                        {settingsLabel}
+                      </span>
+                      <IconChevronRight className="size-4 shrink-0 text-muted-foreground" stroke={1.8} />
+                    </button>
+                  )}
                 </div>
 
                 {footer && <div className="mt-3 border-t border-border pt-3">{footer}</div>}
+              </div>
+            ) : pane === "settings" && settings ? (
+              <div className="px-4 pb-4 pt-4">
+                <button
+                  type="button"
+                  data-testid="more-settings-back"
+                  onClick={() => setPane("main")}
+                  className="-ml-1 inline-flex min-h-11 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-muted-foreground"
+                >
+                  <IconChevronLeft className="size-4" stroke={1.8} />
+                  {settings.backLabel}
+                </button>
+                <div className="mt-2">
+                  <ArkiveSettingsPanel {...settingsProps} />
+                </div>
               </div>
             ) : (
               <div className="px-4 pb-4 pt-4">
