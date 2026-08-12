@@ -32,11 +32,20 @@ export interface SiteFooterProps extends React.ComponentProps<"footer"> {
   versionLink?: React.ReactNode
 }
 
+/**
+ * The filing record, defined once.
+ *
+ * Both the page footer and the About panel show it -- the map workspace has no
+ * page footer, so on a map route the panel is the only surface that can carry
+ * it. A second copy of the string is a second thing to update when it changes.
+ */
+export const ARKIVE_ICP_RECORD = "沪ICP备2025152827号-1"
+
 function SiteFooter({
   homeUrl = "https://tc-imba.com",
   homeLinkProps,
   githubUrl = "https://github.com/arkive-games",
-  icpBeian = "沪ICP备2025152827号-1",
+  icpBeian = ARKIVE_ICP_RECORD,
   versionLink,
   className,
   ...props

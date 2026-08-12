@@ -27,6 +27,15 @@ export interface ArkiveSiteInfoProps {
   feedbackGroup: SiteInfoFeedbackGroup
   /** Optional game-owned channels rendered before the shared feedback group. */
   gameContact?: ReactNode
+  /**
+   * ICP filing record, shown as the panel's last line.
+   *
+   * The map workspace has no page footer, so on a map route this panel is the
+   * only surface that can carry the record -- and for palworld the map IS the
+   * root route. `null` omits it, which is what a Bilibili Toy build needs: a toy
+   * is served from bilibili.com, where our filing record does not belong.
+   */
+  icpRecord?: string | null
   className?: string
 }
 
@@ -95,6 +104,7 @@ export function ArkiveSiteInfo({
   gameUpdatesUrl,
   feedbackGroup,
   gameContact,
+  icpRecord,
   className,
 }: ArkiveSiteInfoProps) {
   const templateProps = {
@@ -147,5 +157,26 @@ export function ArkiveSiteInfo({
     },
   ]
 
-  return <SiteInfoPanel className={className} sections={sections} feedbackGroup={feedbackGroup} />
+  return (
+    <SiteInfoPanel
+      className={className}
+      sections={sections}
+      feedbackGroup={feedbackGroup}
+      // Untitled on purpose: a filing record is a legal identifier, the same in
+      // every language, so giving it a heading would mean a new translated
+      // string in four games and every locale to caption a number.
+      footNote={
+        icpRecord ? (
+          <a
+            data-testid="site-info-icp"
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {icpRecord}
+          </a>
+        ) : undefined
+      }
+    />
+  )
 }

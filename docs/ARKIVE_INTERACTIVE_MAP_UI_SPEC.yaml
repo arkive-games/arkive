@@ -96,6 +96,11 @@ desktop_workspace:
   footer:
     page_footer: "Omit it from the full-screen map workspace."
     status_overlay: "Show coordinates and essential map status only; do not show filing records or legal text."
+    filing_record: >-
+      The record moves to the About panel, which every map route already has.
+      It must never be absent from a site: a map workspace has no page footer,
+      and for palworld the map is the root route, so removing it from the status
+      overlay without that replacement would leave the landing page with none.
   top_bar:
     contract: "Use the parent global-shell contract and shared header height."
     padding: "Use desktop page gutter from the UI-foundations specification."

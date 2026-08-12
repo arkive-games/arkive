@@ -1,37 +1,25 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  ArkiveMark,
-  LocalDataDialog,
-  ShellUtilityDropdown,
-  localDataStringsFor,
-  type ArkiveMapTheme,
-} from '@gamemap/map-shell'
+import { ArkiveMark, settingsStringsFor } from '@gamemap/map-shell'
 import { IS_TOY } from './sites'
-import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 
 const ARKIVE_ORG_URL = 'https://github.com/arkive-games'
 const ARKIVE_REPO_URL = `${ARKIVE_ORG_URL}/arkive`
 
 interface HomeFooterProps {
   brandName: string
-  language: string
-  theme: ArkiveMapTheme
-  onLanguageChange: (code: string) => void
-  onThemeChange: (theme: ArkiveMapTheme) => void
+  /**
+   * Opens the shared settings panel.
+   *
+   * Theme, language and clear-data live there rather than inline here: the panel
+   * is the one surface every game also has, and two homes for the same control
+   * is how they drift apart.
+   */
+  onOpenSettings: () => void
 }
 
-export function HomeFooter({
-  brandName,
-  language,
-  theme,
-  onLanguageChange,
-  onThemeChange,
-}: HomeFooterProps) {
+export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
   const { t, i18n } = useTranslation()
-  const [openMenu, setOpenMenu] = useState<'language' | 'theme' | null>(null)
   const icp = import.meta.env.VITE_ICP_BEIAN ?? t('footer.icp')
-  const actionClassName = 'h-auto min-h-6 justify-start px-0 py-2 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-primary'
   const columns = [
     {
       key: 'browse',
@@ -90,40 +78,9 @@ export function HomeFooter({
         <nav className="footer-column footer-help" aria-label={t('footer.help')}>
           <h2>{t('footer.help')}</h2>
           <div className="footer-help-actions">
-            <ShellUtilityDropdown
-              id="language"
-              open={openMenu === 'language'}
-              onOpenChange={(open) => setOpenMenu(open ? 'language' : null)}
-              options={LANGUAGES.map((code) => ({ value: code, label: LANGUAGE_LABELS[code] }))}
-              current={language}
-              onChange={onLanguageChange}
-              menuLabel={t('language')}
-              shortLabel={t('footer.language')}
-              menuAlign="start"
-              menuSide="top"
-              triggerClassName={actionClassName}
-            />
-            <ShellUtilityDropdown
-              id="theme"
-              open={openMenu === 'theme'}
-              onOpenChange={(open) => setOpenMenu(open ? 'theme' : null)}
-              options={[
-                { value: 'auto', label: t('theme.auto') },
-                { value: 'light', label: t('theme.light') },
-                { value: 'dark', label: t('theme.dark') },
-              ]}
-              current={theme}
-              onChange={(value) => onThemeChange(value as ArkiveMapTheme)}
-              menuLabel={t('theme.menu')}
-              shortLabel={t('footer.theme')}
-              menuAlign="start"
-              menuSide="top"
-              triggerClassName={actionClassName}
-            />
-            <LocalDataDialog
-              strings={localDataStringsFor(i18n.resolvedLanguage ?? i18n.language)}
-              triggerLabel={t('footer.clearCache')}
-            />
+            <button type="button" className="footer-settings-action" onClick={onOpenSettings}>
+              {settingsStringsFor(i18n.resolvedLanguage ?? i18n.language).title}
+            </button>
           </div>
         </nav>
       </div>

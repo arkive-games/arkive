@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { ARKIVE_ICP_RECORD } from '@gamemap/ui'
 import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from '@gamemap/map-shell'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL, IS_TOY } from '../lib/brand'
 import { SITE_VERSION } from '../lib/siteVersion'
@@ -18,6 +19,7 @@ export function SiteInfo({ className }: { className?: string }) {
 
   return (
     <ArkiveSiteInfo
+      icpRecord={import.meta.env.VITE_ICP_BEIAN ?? ARKIVE_ICP_RECORD}
       className={className}
       strings={strings}
       arkiveName={t('siteInfo.arkiveName')}

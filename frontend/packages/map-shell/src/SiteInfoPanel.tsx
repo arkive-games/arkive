@@ -22,6 +22,12 @@ export interface SiteInfoPanelProps {
   sections: SiteInfoSection[]
   /** Omit to hide the card entirely — locales with no contact channel. */
   feedbackGroup?: SiteInfoFeedbackGroup
+  /**
+   * Untitled trailing line, for content that needs no heading — the ICP filing
+   * record. The map workspace has no page footer, so on a map route this panel
+   * is the only place it can appear.
+   */
+  footNote?: ReactNode
   className?: string
 }
 
@@ -36,7 +42,7 @@ const COPIED_LABEL_MS = 2000
  * Headings are plain divs, matching the surrounding apps' chrome, so adding
  * this panel cannot disturb heading-role assertions in existing tests.
  */
-export function SiteInfoPanel({ sections, feedbackGroup, className }: SiteInfoPanelProps) {
+export function SiteInfoPanel({ sections, feedbackGroup, footNote, className }: SiteInfoPanelProps) {
   // No SSR in these Vite SPAs, so feature-detect once up front instead of in
   // an effect — deferring it would just cost a pop-in on second paint. The
   // number itself stays visible and readable regardless of this check; only
@@ -122,6 +128,11 @@ export function SiteInfoPanel({ sections, feedbackGroup, className }: SiteInfoPa
             {copied ? feedbackGroup.copiedLabel : ""}
           </span>
         </div>
+      )}
+      {footNote && (
+        <p data-testid="site-info-foot-note" className="text-xs text-muted-foreground">
+          {footNote}
+        </p>
       )}
     </div>
   )

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ARKIVE_ICP_RECORD } from "@gamemap/ui"
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from "@gamemap/map-shell";
@@ -41,6 +42,7 @@ export default function SiteInfo({ className }: { className?: string }) {
 
   return (
     <ArkiveSiteInfo
+      icpRecord={import.meta.env.VITE_ICP_BEIAN ?? ARKIVE_ICP_RECORD}
       className={className}
       strings={strings}
       arkiveName={t("common:siteInfo.arkiveName")}

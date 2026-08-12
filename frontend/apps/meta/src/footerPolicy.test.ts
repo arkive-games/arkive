@@ -8,7 +8,9 @@ describe('resolveMetaFooterKind', () => {
     expect(resolveMetaFooterKind('account', false)).toBe('home')
   })
 
-  it.each<MetaFooterRoute>(['allGames', 'forum', 'notifications', 'account', 'publicProfile'])(
+  it.each<MetaFooterRoute>([
+    'allGames', 'forum', 'notifications', 'account', 'publicProfile', 'platformUpdates',
+  ])(
     'uses the compact footer for the %s page',
     (view) => {
       expect(resolveMetaFooterKind(view, true)).toBe('compact')

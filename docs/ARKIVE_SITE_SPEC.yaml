@@ -126,9 +126,10 @@ product_model:
           - "Update history"
         rule: "Every entry is a link to a real destination; an unfinished route is not a valid footer destination."
       help:
-        - "Language selector"
-        - "Theme selector"
-        - "Clear local data through the shared confirmation flow"
+        # The settings panel owns theme, language and clear-data on every site,
+        # so the footer links to it rather than repeating the controls. Two homes
+        # for one control is how the portal and the games drift apart.
+        - "Settings, opening the shared settings panel"
       exclusions:
         - "Legal company name"
         - "Fixed ARKIVE.GAMES subtitle"
