@@ -101,7 +101,7 @@ state_classes:
   task_draft:
     meaning: "Unfinished authored or calculation work that is costly to recreate."
     examples:
-      - "Forum posts, replies, feedback, and profile edits not yet submitted"
+      - "Replies, feedback, profile edits, and other explicitly supported drafts not yet submitted"
       - "Loadouts, builds, breeding chains, route plans, comparisons, and calculator inputs"
     retention: "Local drafts use validation_migration_and_limits.defaults.local_draft_expiry_days; account drafts follow the owning product policy"
     normal_scope: "device for anonymous users; account when authenticated and supported"
@@ -268,11 +268,15 @@ surface_contracts:
     result_rule: "Recompute derived results from validated inputs and current data. Cache an expensive result separately only when it declares a data-version dependency and invalidation rule."
   forms_and_editors:
     task_draft:
-      - "Forum post title and body, replies, feedback, profile edits, and other multi-field authored content"
+      - "Replies, feedback, profile edits, and other multi-field authored content when the owning product explicitly supports drafts"
     rules:
       - "Clear only after confirmed submission or explicit discard."
       - "Never persist passwords, one-time codes, access tokens, payment data, or file bytes."
       - "Persist only fields explicitly allowlisted by the record; never serialize an entire form object."
+    forum_composer_exception:
+      persistence: "Forum post composer content is session-only and is never written to local or account storage."
+      exit: "When the composer contains unpublished changes, every route exit requires explicit confirmation before discarding them."
+      submission: "A refused submission keeps the composer mounted and unchanged; a confirmed submission clears the exit guard before closing it."
   account_and_progress:
     durable_progress:
       - "Favorites, follows, completion, collections, and saved builds"

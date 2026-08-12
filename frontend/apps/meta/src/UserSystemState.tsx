@@ -43,6 +43,7 @@ export interface UserSystemState {
   profile: {
     bio: string
     avatarSrc: string | null
+    gender: 'female' | 'male' | null
   }
   notificationSettings: Record<NotificationPreferenceKey, boolean>
   readNotificationSections: NotificationInboxSection[]
@@ -73,7 +74,7 @@ const STORAGE_PREFIX = 'arkive.meta.user-system.v1'
 
 export function createDefaultUserSystemState(): UserSystemState {
   return {
-    profile: { bio: '', avatarSrc: DEFAULT_AVATAR_SRC },
+    profile: { bio: '', avatarSrc: DEFAULT_AVATAR_SRC, gender: 'female' },
     notificationSettings: {
       replies: true,
       mentions: true,
@@ -196,6 +197,9 @@ function normalizeUserSystemState(value: unknown): UserSystemState {
       avatarSrc: typeof parsed.profile?.avatarSrc === 'string' && parsed.profile.avatarSrc
         ? parsed.profile.avatarSrc
         : defaults.profile.avatarSrc,
+      gender: parsed.profile?.gender === 'female' || parsed.profile?.gender === 'male'
+        ? parsed.profile.gender
+        : defaults.profile.gender,
     },
     notificationSettings: booleanRecord(defaults.notificationSettings, parsed.notificationSettings),
     readNotificationSections: stringArray(parsed.readNotificationSections)
@@ -216,6 +220,7 @@ function isUserSystemState(value: unknown): value is UserSystemState {
   return Boolean(state.profile)
     && typeof state.profile?.bio === 'string'
     && (state.profile.avatarSrc === null || typeof state.profile.avatarSrc === 'string')
+    && (state.profile.gender === null || state.profile.gender === 'female' || state.profile.gender === 'male')
     && Boolean(state.notificationSettings)
     && Boolean(state.privacySettings)
     && [state.readNotificationSections, state.followedUserIds, state.bookmarkedPostIds,
@@ -251,7 +256,11 @@ const profileRecord = defineMemoryRecord({
     && typeof value === 'object'
     && typeof (value as Partial<UserProfileState>).bio === 'string'
     && ((value as Partial<UserProfileState>).avatarSrc === null
-      || typeof (value as Partial<UserProfileState>).avatarSrc === 'string'),
+      || typeof (value as Partial<UserProfileState>).avatarSrc === 'string')
+    && ((value as Partial<UserProfileState>).gender === undefined
+      || (value as Partial<UserProfileState>).gender === null
+      || (value as Partial<UserProfileState>).gender === 'female'
+      || (value as Partial<UserProfileState>).gender === 'male'),
   partition: { account: true },
   signInAdoption: 'keep_anonymous',
 })

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AccountDialog, ArkiveAccountControl, authStringsFor, useAuth } from '@gamemap/auth'
 import {
@@ -52,6 +52,16 @@ import { resolveMetaFooterKind } from './footerPolicy'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl } from './userSystemData'
 import { useUserSystem } from './UserSystemState'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@gamemap/ui'
 import {
   defineMemoryRecord,
   memoryPolicy,
@@ -130,6 +140,9 @@ export default function App() {
   const [clickCounts, setClickCounts] = useState<SiteClickCounts>({})
   const [noticeId, setNoticeId] = useState(0)
   const [activeRoute, setActiveRoute] = useState<HomeRoute>(routeFromHash)
+  const [forumComposerDirty, setForumComposerDirty] = useState(false)
+  const [pendingForumHash, setPendingForumHash] = useState<string | null>(null)
+  const forumComposerDirtyRef = useRef(false)
   const isForumComposer = activeRoute.view === 'forum' && activeRoute.composer
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
   const settingsProps = useArkiveSettingsProps(useSettingsConfig())
@@ -144,12 +157,28 @@ export default function App() {
 
   useEffect(() => {
     const updateView = () => {
+      const requestedHash = window.location.hash || '#top'
+      if (forumComposerDirtyRef.current && requestedHash !== '#forum/new') {
+        window.history.replaceState(null, '', '#forum/new')
+        setPendingForumHash(requestedHash)
+        return
+      }
       setActiveRoute(routeFromHash())
       window.scrollTo({ top: 0 })
     }
     window.addEventListener('hashchange', updateView)
     return () => window.removeEventListener('hashchange', updateView)
   }, [])
+
+  useEffect(() => {
+    if (!forumComposerDirty) return
+    const confirmUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', confirmUnload)
+    return () => window.removeEventListener('beforeunload', confirmUnload)
+  }, [forumComposerDirty])
 
   useEffect(() => {
     if (!noticeId) return
@@ -208,6 +237,21 @@ export default function App() {
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     showComingSoon()
+  }
+
+  const updateForumComposerDirty = useCallback((dirty: boolean) => {
+    forumComposerDirtyRef.current = dirty
+    setForumComposerDirty(dirty)
+  }, [])
+
+  const discardForumComposer = () => {
+    const destination = pendingForumHash ?? '#forum'
+    forumComposerDirtyRef.current = false
+    setForumComposerDirty(false)
+    setPendingForumHash(null)
+    window.history.replaceState(null, '', destination)
+    setActiveRoute(routeFromHash())
+    window.scrollTo({ top: 0 })
   }
 
   return (
@@ -326,8 +370,10 @@ export default function App() {
       ) : activeRoute.view === 'forum' ? (
         <ForumPage
           sites={VISIBLE_SITES}
+          composerOpen={activeRoute.composer}
           onComingSoon={showComingSoon}
           onAuthRequired={() => setAccountOpen(true)}
+          onComposerDirtyChange={updateForumComposerDirty}
         />
       ) : activeRoute.view === 'notifications' && isSignedIn ? (
         <NotificationCenterPage section={activeRoute.section} />
@@ -427,7 +473,7 @@ export default function App() {
         </main>
       )}
 
-      {footerKind === 'home' ? (
+      {activeRoute.view !== 'forum' && (footerKind === 'home' ? (
         <HomeFooter
           brandName={brandName}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -440,7 +486,7 @@ export default function App() {
           icpBeian={IS_TOY ? null : (import.meta.env.VITE_ICP_BEIAN ?? t('footer.icp'))}
           data-testid="compact-site-footer"
         />
-      )}
+      ))}
 
       {noticeId > 0 && (
         <div key={noticeId} className="coming-soon-toast" role="status" aria-live="polite">
@@ -452,7 +498,7 @@ export default function App() {
         </div>
       )}
 
-      {!isForumComposer && (
+      {!isForumComposer && activeRoute.view !== 'forum' && (
         <MetaMobileNav
           activeView={activeRoute.view}
           noticeId={noticeId}
@@ -464,6 +510,26 @@ export default function App() {
           onComingSoon={showComingSoon}
         />
       )}
+
+      <AlertDialog
+        open={pendingForumHash !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingForumHash(null)
+        }}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('forum.composer.discard.title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('forum.composer.discard.description')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('forum.composer.discard.stay')}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={discardForumComposer}>
+              {t('forum.composer.discard.leave')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
