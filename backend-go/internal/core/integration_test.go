@@ -67,10 +67,22 @@ func (m *captureMailer) SendVerification(_ context.Context, email, _, token stri
 	return nil
 }
 
+// reset waits briefly for the mail, because the service dispatches the send off
+// the request: the 202 is deliberately returned before the mailer is called, so
+// that a registered address and an unknown one take the same time. Reading the
+// map immediately after the response therefore raced the goroutine and failed
+// about one run in three.
 func (m *captureMailer) reset(email string) string {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return m.resets[email]
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		m.mu.Lock()
+		token := m.resets[email]
+		m.mu.Unlock()
+		if token != "" || time.Now().After(deadline) {
+			return token
+		}
+		time.Sleep(2 * time.Millisecond)
+	}
 }
 
 func (m *captureMailer) verification(email string) string {

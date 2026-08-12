@@ -72,14 +72,18 @@ func NewTokens(cfg config.Auth) *Tokens {
 // after the victim changed their password, which is the one action a victim
 // takes in order to stop exactly that. The fingerprint is not the hash and
 // cannot be reversed into one; see fingerprint.
-func (t *Tokens) IssueAccess(userID uuid.UUID, currentHash string) (string, time.Time, error) {
+// The parameter is the fingerprint itself, NOT the hash: Authenticate derives it
+// (it has to, because it may rehash mid-call), and deriving again here produced
+// fingerprint(fingerprint(hash)) in the token against fingerprint(hash) on the
+// Principal -- every session rejected as anonymous immediately after login.
+func (t *Tokens) IssueAccess(userID uuid.UUID, sessionFingerprint string) (string, time.Time, error) {
 	expires := t.now().Add(t.accessTTL)
 	token, err := t.sign(jwt.MapClaims{
 		"sub":  userID.String(),
 		"aud":  []string{t.accessAudience},
 		"exp":  expires.Unix(),
 		"iat":  t.now().Unix(),
-		"fgpt": fingerprint(currentHash),
+		"fgpt": sessionFingerprint,
 	})
 	return token, expires, err
 }

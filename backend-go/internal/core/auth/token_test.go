@@ -30,7 +30,8 @@ func TestAccessTokenRoundTrip(t *testing.T) {
 	tk := testTokens(t, now)
 	id := uuid.New()
 
-	raw, expires, err := tk.IssueAccess(id, "hash-v1")
+	fgptV1 := tk.SessionFingerprint("hash-v1")
+	raw, expires, err := tk.IssueAccess(id, fgptV1)
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
@@ -48,6 +49,9 @@ func TestAccessTokenRoundTrip(t *testing.T) {
 	if !tk.MatchesFingerprint(fgpt, "hash-v1") {
 		t.Error("fingerprint does not match the hash the token was issued against")
 	}
+	if fgpt != fgptV1 {
+		t.Error("IssueAccess must carry the fingerprint it is given, not re-derive it")
+	}
 }
 
 // A session must stop resolving once the password changes, which is the whole
@@ -55,7 +59,7 @@ func TestAccessTokenRoundTrip(t *testing.T) {
 // valid for the full fourteen-day lifetime after the victim reset it.
 func TestAccessTokenStopsMatchingAfterAPasswordChange(t *testing.T) {
 	tk := testTokens(t, time.Unix(1_700_000_000, 0))
-	raw, _, err := tk.IssueAccess(uuid.New(), "hash-v1")
+	raw, _, err := tk.IssueAccess(uuid.New(), tk.SessionFingerprint("hash-v1"))
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
@@ -73,7 +77,7 @@ func TestAccessTokenExpires(t *testing.T) {
 	now := time.Unix(1_700_000_000, 0)
 	tk := testTokens(t, now)
 
-	raw, _, err := tk.IssueAccess(uuid.New(), "hash")
+	raw, _, err := tk.IssueAccess(uuid.New(), tk.SessionFingerprint("hash"))
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
@@ -91,7 +95,7 @@ func TestTokensAreNotInterchangeableAcrossPurposes(t *testing.T) {
 	tk := testTokens(t, now)
 	id := uuid.New()
 
-	access, _, err := tk.IssueAccess(id, "hash")
+	access, _, err := tk.IssueAccess(id, tk.SessionFingerprint("hash"))
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
@@ -186,7 +190,7 @@ func TestParseRejectsForgedAndUnsignedTokens(t *testing.T) {
 	// Signed with a different secret.
 	other := testTokens(t, now)
 	other.secret = []byte("another-secret")
-	forged, _, err := other.IssueAccess(id, "hash")
+	forged, _, err := other.IssueAccess(id, tk.SessionFingerprint("hash"))
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
