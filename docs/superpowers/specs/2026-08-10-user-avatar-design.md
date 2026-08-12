@@ -145,11 +145,12 @@ extension rules, default selection and cache-busting out of every frontend.
 
 ## 4. The pipeline, and what each step defends against
 
-1. `MaxBodyBytes` of 8 MiB on the operation bounds the transfer.
+1. `MaxBodyBytes` of 1 MB on the operation bounds the transfer.
 2. `image.DecodeConfig` reads the dimensions **before** any pixel buffer is allocated, and
-   the pipeline rejects anything above 50 million pixels. This is the step that matters: a
+   the pipeline rejects anything over 3000 on either side. This is the step that matters: a
    10 KB PNG can decode to a gigabyte, so a body-size limit alone is not a defence against a
-   decompression bomb.
+   decompression bomb. The test fixture for this is 439 KB encoded and describes 20000x20000
+   pixels, so it is comfortably inside the byte limit and genuinely reaches this check.
 3. Decode, reject images smaller than 32 px on either side.
 4. Centre-crop to a square, resize to 256 with `x/image/draw` CatmullRom.
 5. Encode by the alpha rule in §1, hash the encoded bytes, `Put`.
@@ -210,21 +211,30 @@ something else is not forced to run MinIO.
 `docker-compose.yml` gains MinIO and an `mc` init container, because MinIO neither creates
 the bucket nor serves anonymous reads without an explicit policy.
 
-### 6.1 The reverse proxy has to allow the upload size
+### 6.1 The upload limits, and why the reverse proxy no longer matters
 
-`MaxBodyBytes` of 8 MiB is only the *service's* limit. In production nginx terminates TLS in
-front of it, and its `client_max_body_size` applies first — measured at roughly **2 MB** on
-`api-arkive.tc-imba.com` (1.91 MB passes through to the application, 3 MiB is refused).
+The accepted envelope matches GitHub's, deliberately: **at most 1 MB, at most 3000x3000
+pixels, with around 500x500 recommended** for the best result after cropping and resizing.
 
-Left as it is, that makes the documented 8 MiB a lie: an ordinary phone photograph of 3–8 MB
-is refused by the proxy with its own HTML error page, before any of this code runs, so the
-user never sees "an avatar must be at most 8 MiB" and the API's own limit never applies.
+An earlier draft allowed 8 MiB, and that turned out to be unshippable. nginx terminates TLS
+in front of the service in production, and its `client_max_body_size` applies first —
+measured at roughly **2 MB** on `api-arkive.tc-imba.com` (1.91 MB reaches the application,
+3 MiB is refused). An 8 MiB limit was therefore a documented lie: an ordinary phone
+photograph would be refused by the proxy with its own HTML error page, before any of this
+code ran, so the user would never see the message this service produces.
 
-**`client_max_body_size 9m;` on the API server block**, which leaves headroom for the
-multipart boundaries and headers wrapping an 8 MiB file, so the service's limit is the one
-that speaks. The alternative — lowering `MaxUploadBytes` to match the proxy — is worse: it
-puts the number in two places that must be kept in step, and one of them is not in this
-repository.
+Adopting GitHub's 1 MB removes that entirely. It sits well under the proxy's limit, so the
+service's own check is the one that fires and the message names the real bound. **No nginx
+change is needed**, and the limit is no longer a number that has to be kept in step with
+something outside this repository.
+
+The dimension cap replaces the earlier 50-megapixel one rather than joining it. 3000x3000
+bounds a decoded frame at 9 megapixels, about 36 MB of RGBA, which is what actually bounds
+the allocation — so one limit does the work of two and there is nothing to keep consistent.
+
+Both limits are inclusive: exactly 1 MB and exactly 3000x3000 are accepted, and the messages
+say "at most" rather than "smaller than" so the wording cannot drift from the comparison.
+Boundary tests pin one under, exactly at, and one over.
 
 ## 7. HTTP surface
 

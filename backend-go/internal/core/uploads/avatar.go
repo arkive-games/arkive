@@ -46,13 +46,27 @@ const (
 
 	// MaxUploadBytes bounds the encoded upload. The route sets the same limit,
 	// so this is the backstop for a caller that forgets to.
-	MaxUploadBytes = 8 << 20
+	//
+	// One mebibyte, matching what GitHub accepts for an avatar. Beyond being a
+	// well-trodden number, it has a property the previous 8 MiB did not: it fits
+	// under the reverse proxy's own body limit, so the message a user sees for an
+	// oversized file is this service's rather than nginx's error page.
+	MaxUploadBytes = 1 << 20
 
-	// MaxPixels bounds the *decoded* image, which is the limit that matters: a
-	// 10 KB PNG can describe a 30000x30000 canvas and decode to roughly a
-	// gigabyte. A byte limit alone does not protect against that, so the
-	// dimensions are read from the header before any pixel buffer is allocated.
-	MaxPixels = 50_000_000
+	// MaxDimension bounds each side of the *decoded* image, which is the limit
+	// that matters: a 10 KB PNG can describe a 30000x30000 canvas and decode to
+	// roughly a gigabyte, so a byte limit alone is no protection. The dimensions
+	// are read from the header before any pixel buffer is allocated.
+	//
+	// 3000 matches GitHub. It also caps a decoded frame at 9 megapixels, or about
+	// 36 MB of RGBA, which is what actually bounds the allocation — so there is no
+	// separate pixel-count limit to keep in step with this one.
+	MaxDimension = 3000
+
+	// RecommendedDimension is advice, not a rule: an image around this size gives
+	// the best result once cropped and resized, and it is what GitHub suggests.
+	// Anything from MinDimension to MaxDimension is accepted.
+	RecommendedDimension = 500
 
 	// MinDimension rejects images too small to be worth storing, which are
 	// almost always a mistake or a probe.
@@ -117,7 +131,7 @@ func StoreAvatar(ctx context.Context, store blob.Store, uid int64, r io.Reader) 
 	}
 	if len(raw) > MaxUploadBytes {
 		return Avatar{}, apierr.New(apierr.RequestEntityTooBig,
-			fmt.Sprintf("an avatar must be at most %d MiB", MaxUploadBytes>>20))
+			fmt.Sprintf("an avatar must be at most %d MB", MaxUploadBytes>>20))
 	}
 	if len(raw) == 0 {
 		return Avatar{}, apierr.New(apierr.UploadInvalidImage, "no image was supplied")
@@ -196,10 +210,12 @@ func renderAvatar(raw []byte) (encoded []byte, format Format, err error) {
 	if cfg.Width <= 0 || cfg.Height <= 0 {
 		return nil, Format{}, apierr.New(apierr.UploadInvalidImage, "that image has no area")
 	}
-	if int64(cfg.Width)*int64(cfg.Height) > MaxPixels {
+	if cfg.Width > MaxDimension || cfg.Height > MaxDimension {
 		return nil, Format{}, apierr.New(apierr.UploadInvalidImage,
-			fmt.Sprintf("that image is %dx%d, larger than the %d megapixel limit",
-				cfg.Width, cfg.Height, MaxPixels/1_000_000))
+			fmt.Sprintf("that image is %dx%d; an avatar must be at most %dx%d pixels, "+
+				"and around %dx%d gives the best result",
+				cfg.Width, cfg.Height, MaxDimension, MaxDimension,
+				RecommendedDimension, RecommendedDimension))
 	}
 	if cfg.Width < MinDimension || cfg.Height < MinDimension {
 		return nil, Format{}, apierr.New(apierr.UploadInvalidImage,

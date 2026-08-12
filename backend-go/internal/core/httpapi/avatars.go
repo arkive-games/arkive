@@ -31,7 +31,7 @@ import (
 //
 // The accepted formats are therefore documented here rather than enforced here.
 type avatarForm struct {
-	File huma.FormFile `form:"file" required:"true" doc:"The image to use: JPEG, PNG, GIF or WebP, at least 32x32. It is cropped to a square, resized to 256 and re-encoded, which also strips any metadata such as EXIF location. The declared content type is ignored; the bytes are decoded to determine the format."`
+	File huma.FormFile `form:"file" required:"true" doc:"The image to use: JPEG, PNG, GIF or WebP, at most 1 MB and at most 3000x3000 pixels; around 500x500 gives the best result. It is cropped to a square, resized to 256 and re-encoded, which also strips any metadata such as EXIF location. The declared content type is ignored; the bytes are decoded to determine the format."`
 }
 
 type uploadAvatarInput struct {
@@ -54,15 +54,20 @@ func (h *Handlers) registerAvatarRoutes(a huma.API) {
 		Method:      http.MethodPut,
 		Path:        "/users/me/avatar",
 		Summary:     "Replace the signed-in account's picture",
-		Description: "Accepts JPEG, PNG, GIF or WebP and stores a 256x256 square in the " +
-			"same format it arrived in, so a PNG stays lossless and a WebP stays a WebP. " +
+		Description: "Accepts JPEG, PNG, GIF or WebP at most 1 MB and at most 3000x3000 " +
+			"pixels, and stores a 256x256 square in the same format it arrived in, so a PNG " +
+			"stays lossless and a WebP stays a WebP. Around 500x500 gives the best result. " +
 			"The image is always re-encoded, so metadata including EXIF location is " +
 			"discarded, and an animated GIF keeps only its first frame. Rate limited per " +
 			"account.",
 		Tags: []string{"users"},
-		// The transfer limit. It bounds the request, but not the decoded image —
-		// a small file can describe an enormous canvas, so the pipeline checks
-		// dimensions separately before allocating.
+		// The transfer limit, matching GitHub's. It bounds the request but not the
+		// decoded image — a small file can describe an enormous canvas, so the
+		// pipeline checks dimensions separately before allocating.
+		//
+		// Keeping it at 1 MB also keeps it below the reverse proxy's own body
+		// limit, so an oversized upload is refused here, with a message naming the
+		// limit, rather than by nginx with its error page.
 		MaxBodyBytes: uploads.MaxUploadBytes,
 		Errors: []int{
 			http.StatusUnauthorized, http.StatusRequestEntityTooLarge,

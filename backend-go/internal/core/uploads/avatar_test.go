@@ -99,7 +99,10 @@ func animatedGIF(t *testing.T, w, h, frames int) []byte {
 // limit alone does not stop.
 func decompressionBomb(t *testing.T) []byte {
 	t.Helper()
-	const edge = 20000 // 400 million pixels, eight times the limit
+	// Far past MaxDimension, and a single colour compresses to well under the
+	// byte limit, so this reaches the dimension check rather than being stopped
+	// as an oversized file.
+	const edge = 20000
 	img := image.NewGray(image.Rect(0, 0, edge, edge))
 	buf := new(bytes.Buffer)
 	if err := png.Encode(buf, img); err != nil {
@@ -315,13 +318,14 @@ func TestDecompressionBombIsRejected(t *testing.T) {
 	raw := decompressionBomb(t)
 	if len(raw) > MaxUploadBytes {
 		t.Fatalf("fixture is %d bytes, which the size limit would catch first; "+
-			"this test must exercise the pixel limit", len(raw))
+			"this test must exercise the dimension limit", len(raw))
 	}
+	t.Logf("bomb fixture is %d bytes encoded, describing %dx%d pixels", len(raw), 20000, 20000)
 
 	store := blob.NewMemory()
 	_, err := StoreAvatar(context.Background(), store, testUID, bytes.NewReader(raw))
 	if err == nil {
-		t.Fatal("a 400-megapixel image was accepted")
+		t.Fatalf("a %dx%d image was accepted", 20000, 20000)
 	}
 	assertStatus(t, err, http.StatusUnprocessableEntity)
 	if store.Len() != 0 {

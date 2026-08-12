@@ -1439,7 +1439,7 @@
         ]
       },
       "put": {
-        "description": "Accepts JPEG, PNG, GIF or WebP and stores a 256x256 square in the same format it arrived in, so a PNG stays lossless and a WebP stays a WebP. The image is always re-encoded, so metadata including EXIF location is discarded, and an animated GIF keeps only its first frame. Rate limited per account.",
+        "description": "Accepts JPEG, PNG, GIF or WebP at most 1 MB and at most 3000x3000 pixels, and stores a 256x256 square in the same format it arrived in, so a PNG stays lossless and a WebP stays a WebP. Around 500x500 gives the best result. The image is always re-encoded, so metadata including EXIF location is discarded, and an animated GIF keeps only its first frame. Rate limited per account.",
         "operationId": "setCurrentUserAvatar",
         "requestBody": {
           "content": {
@@ -1454,7 +1454,7 @@
                   "file": {
                     "contentEncoding": "binary",
                     "contentMediaType": "application/octet-stream",
-                    "description": "The image to use: JPEG, PNG, GIF or WebP, at least 32x32. It is cropped to a square, resized to 256 and re-encoded, which also strips any metadata such as EXIF location. The declared content type is ignored; the bytes are decoded to determine the format.",
+                    "description": "The image to use: JPEG, PNG, GIF or WebP, at most 1 MB and at most 3000x3000 pixels; around 500x500 gives the best result. It is cropped to a square, resized to 256 and re-encoded, which also strips any metadata such as EXIF location. The declared content type is ignored; the bytes are decoded to determine the format.",
                     "format": "binary",
                     "type": "string"
                   }
