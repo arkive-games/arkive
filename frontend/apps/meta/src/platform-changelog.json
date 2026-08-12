@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-08-12",
+      "commit": "473480abe4f63d74e18cb2e7fb48b0d18ac0616f",
+      "targets": [
+        "aion2",
+        "palworld",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The site filing record now appears in every game's About panel, so it is reachable from the map as well as from content pages.",
+            "zh-CN": "网站备案号现已显示在各游戏的「关于」面板中，在地图页与内容页均可查看。",
+            "zh-TW": "網站備案號現已顯示在各遊戲的「關於」面板中，在地圖頁與內容頁均可查看。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-12",
       "commit": "5ca1feb741c5041e7b9a6d8fe1f48742705fff1b",
       "targets": [
         "aion2",
