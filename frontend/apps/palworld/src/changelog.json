@@ -3,7 +3,7 @@
     {
       "version": "1.31.0",
       "date": "2026-08-12",
-      "commit": "f70ae0b4b4c8cd998bb4dea6f8c3aba27b2eeb6f",
+      "commit": "0c4b4d44dbb40588daf2d2c0714155392ac7f122",
       "changes": [
         {
           "kind": "feature",
@@ -11,6 +11,14 @@
             "en-US": "Show passive acquisition paths as compact linked routes for random pools, innate Pals, and Operating Table implants.",
             "zh-CN": "以紧凑的关联路线展示被动技能获取方式，包括随机池、天生携带帕鲁和手术台植入体。",
             "zh-TW": "以緊湊的關聯路線顯示被動技能取得方式，包括隨機池、天生攜帶帕魯和手術台植入體。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Link every Operating Table passive, including Insomnia and Corporate Slave, to its matching implant.",
+            "zh-CN": "为不眠、社畜等所有手术台被动词条补齐对应植入体链接。",
+            "zh-TW": "為不眠、社畜等所有手術台被動詞條補齊對應植入體連結。"
           }
         }
       ]
