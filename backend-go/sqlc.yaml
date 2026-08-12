@@ -22,6 +22,14 @@ sql:
             go_type: github.com/google/uuid.UUID
           - db_type: timestamptz
             go_type: time.Time
+          # Without this a nullable uuid becomes pgtype.UUID, which would leak a
+          # driver type into the service layer for every optional foreign key.
+          - db_type: uuid
+            nullable: true
+            go_type:
+              import: github.com/google/uuid
+              type: UUID
+              pointer: true
         # sqlc would title-case these to Uid/SpecialUid. UID is an initialism,
         # and Go spells initialisms in one case throughout an identifier.
         rename:
@@ -29,3 +37,10 @@ sql:
           special_uid: SpecialUID
           set_special_uid: SetSpecialUID
           avatar_key: AvatarKey
+          post_no: PostNo
+          comment_no: CommentNo
+          next_comment_no: NextCommentNo
+          game_ids: GameIDs
+          post_id: PostID
+          parent_id: ParentID
+          author_id: AuthorID

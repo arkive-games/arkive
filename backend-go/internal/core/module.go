@@ -22,6 +22,7 @@ import (
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/httpapi"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/module"
@@ -177,6 +178,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		}
 	}
 	service := users.NewService(queries, d.Pool, hasher, tokens, mailer, blobs, d.Logger)
+	forumService := forum.NewService(queries, service, d.Logger)
 
 	// Identity resolution runs before huma so that every operation can read
 	// the caller from its context. It never rejects: authorization is decided
@@ -201,6 +203,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 
 	handlers := httpapi.NewHandlers(
 		service,
+		forumService,
 		tokens,
 		auth.NewAltcha(
 			d.Config.Auth.AltchaHMACKey,
@@ -210,12 +213,15 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		),
 		auth.NewRateLimiter(d.Config.Auth.RegisterPerMinute),
 		auth.NewRateLimiter(d.Config.S3.AvatarUploadsPerMinute),
+		auth.NewRateLimiter(d.Config.Auth.ForumPostsPerMinute),
+		auth.NewRateLimiter(d.Config.Auth.ForumCommentsPerMinute),
 		limits,
 		d.Config.Auth,
 	)
 
 	handlers.RegisterAuthRoutes(a)
 	handlers.RegisterUserRoutes(a)
+	handlers.RegisterForumRoutes(a)
 	return nil
 }
 

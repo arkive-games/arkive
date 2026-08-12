@@ -8,7 +8,38 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type CoreForumComment struct {
+	ID          uuid.UUID
+	PostID      uuid.UUID
+	ParentID    *uuid.UUID
+	AuthorID    uuid.UUID
+	Body        string
+	CommentNo   *int64
+	Depth       int16
+	ParentDepth *int16
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	EditedAt    pgtype.Timestamptz
+}
+
+type CoreForumPost struct {
+	ID            uuid.UUID
+	PostNo        int64
+	AuthorID      uuid.UUID
+	Channel       string
+	Title         string
+	Body          string
+	Topic         *string
+	GameIDs       []string
+	Tags          []string
+	NextCommentNo int64
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	EditedAt      pgtype.Timestamptz
+}
 
 type CoreUser struct {
 	ID             uuid.UUID

@@ -88,3 +88,8 @@ WHERE is_superuser AND is_active AND id <> sqlc.arg('excluding');
 -- each observe the other as the remaining administrator and both succeed.
 -- name: LockAdminMembership :exec
 SELECT pg_advisory_xact_lock(hashtext('core.users.admin_membership'));
+
+-- Batch lookup for rendering authors on a page of forum posts, so a feed costs
+-- one query for its authors instead of one per row.
+-- name: GetUsersByIDs :many
+SELECT * FROM core.users WHERE id = ANY(sqlc.arg('ids')::uuid[]);

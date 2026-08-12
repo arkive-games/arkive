@@ -78,6 +78,144 @@
         ],
         "type": "object"
       },
+      "CommentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/UserPublic",
+            "description": "Who wrote it"
+          },
+          "body": {
+            "description": "Raw markdown, exactly as written. Render it with raw HTML disabled.",
+            "type": "string"
+          },
+          "commentNo": {
+            "description": "Floor number within the thread, or null on a reply",
+            "examples": [
+              21
+            ],
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "description": "When it was written",
+            "format": "date-time",
+            "type": "string"
+          },
+          "editedAt": {
+            "description": "When it was last edited, or null if never",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Identifier, used to edit or delete this comment",
+            "type": "string"
+          },
+          "parentId": {
+            "description": "The comment this replies to, or null for a top-level comment",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "commentNo",
+          "parentId",
+          "author",
+          "body",
+          "createdAt",
+          "editedAt"
+        ],
+        "type": "object"
+      },
+      "CreateCommentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "Raw markdown. Render it with raw HTML disabled.",
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "parentId": {
+            "description": "The comment being replied to. Omit for a top-level comment; a reply to a reply is refused.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "type": "object"
+      },
+      "CreatePostBody": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "Raw markdown. Render it with raw HTML disabled.",
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "channel": {
+            "description": "Where the post is filed. The official channel is administrators only.",
+            "enum": [
+              "general",
+              "official",
+              "games"
+            ],
+            "type": "string"
+          },
+          "gameIds": {
+            "description": "Games this post is about",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 5,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "tags": {
+            "description": "Free-form tags",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "title": {
+            "description": "Post title",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "topic": {
+            "description": "Optional kind of post",
+            "enum": [
+              "guide",
+              "question",
+              "testing",
+              "discussion"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "title",
+          "body"
+        ],
+        "type": "object"
+      },
       "CredentialsBody": {
         "additionalProperties": false,
         "properties": {
@@ -179,6 +317,38 @@
         ],
         "type": "object"
       },
+      "EnvelopeCommentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CommentRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeEmpty": {
         "additionalProperties": false,
         "properties": {
@@ -211,11 +381,107 @@
         ],
         "type": "object"
       },
+      "EnvelopeListCommentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListCommentRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeListPostRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListPostRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeListUserRead": {
         "additionalProperties": false,
         "properties": {
           "data": {
             "$ref": "#/components/schemas/ListUserRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopePostRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PostRead",
             "description": "The payload"
           },
           "errorCode": {
@@ -338,6 +604,56 @@
         ],
         "type": "object"
       },
+      "ListCommentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/CommentRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
+      "ListPostRead": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/PostRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
       "ListUserRead": {
         "additionalProperties": false,
         "properties": {
@@ -360,6 +676,97 @@
         "required": [
           "count",
           "results"
+        ],
+        "type": "object"
+      },
+      "PostRead": {
+        "additionalProperties": false,
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/UserPublic",
+            "description": "Who wrote it"
+          },
+          "body": {
+            "description": "Raw markdown, exactly as written. Render it with raw HTML disabled.",
+            "type": "string"
+          },
+          "channel": {
+            "description": "general, official or games",
+            "examples": [
+              "general"
+            ],
+            "type": "string"
+          },
+          "commentCount": {
+            "description": "Number of comments, replies included",
+            "format": "int64",
+            "type": "integer"
+          },
+          "createdAt": {
+            "description": "When it was posted",
+            "format": "date-time",
+            "type": "string"
+          },
+          "editedAt": {
+            "description": "When it was last edited, or null if never",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "gameIds": {
+            "description": "Games this post is about, at most 5",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "postNo": {
+            "description": "Permanent post number; use this in links",
+            "examples": [
+              1042
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "tags": {
+            "description": "Free-form tags, at most 10",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "title": {
+            "description": "Post title",
+            "type": "string"
+          },
+          "topic": {
+            "description": "guide, question, testing or discussion, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "postNo",
+          "author",
+          "channel",
+          "title",
+          "body",
+          "topic",
+          "gameIds",
+          "tags",
+          "commentCount",
+          "createdAt",
+          "editedAt"
         ],
         "type": "object"
       },
@@ -467,6 +874,68 @@
           "tokenType",
           "expiresAt"
         ],
+        "type": "object"
+      },
+      "UpdateCommentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "New raw markdown body",
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "type": "object"
+      },
+      "UpdatePostBody": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "New raw markdown body",
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "gameIds": {
+            "description": "Replaces the whole list",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 5,
+            "type": "array"
+          },
+          "tags": {
+            "description": "Replaces the whole list",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "type": "array"
+          },
+          "title": {
+            "description": "New title",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "topic": {
+            "description": "A value sets the topic, null clears it, omitting it leaves it unchanged",
+            "enum": [
+              "guide",
+              "question",
+              "testing",
+              "discussion"
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "UpdateUserBody": {
@@ -1213,6 +1682,772 @@
         "summary": "Confirm an email address",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/forum/comments/{id}": {
+      "delete": {
+        "description": "The author, or an administrator. Deleting a top-level comment deletes its replies, and its floor number stays retired.",
+        "operationId": "deleteForumComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeEmpty"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Delete a comment",
+        "tags": [
+          "forum"
+        ]
+      },
+      "patch": {
+        "description": "The author, or an administrator. Comments are addressed by id rather than by floor number, because a reply has no floor number.",
+        "operationId": "updateForumComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Edit a comment",
+        "tags": [
+          "forum"
+        ]
+      }
+    },
+    "/forum/posts": {
+      "get": {
+        "description": "Public. Newest first, with optional channel, game and tag filters. Paginated by page number; a client should de-duplicate by postNo, because a post arriving while someone reads can shift rows between pages.",
+        "operationId": "listForumPosts",
+        "parameters": [
+          {
+            "description": "Only posts in this channel",
+            "explode": false,
+            "in": "query",
+            "name": "channel",
+            "schema": {
+              "description": "Only posts in this channel",
+              "enum": [
+                "general",
+                "official",
+                "games"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only posts tagged with this game",
+            "explode": false,
+            "in": "query",
+            "name": "gameId",
+            "schema": {
+              "description": "Only posts tagged with this game",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only posts carrying this tag",
+            "explode": false,
+            "in": "query",
+            "name": "tag",
+            "schema": {
+              "description": "Only posts carrying this tag",
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Posts per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Posts per page",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListPostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List forum posts",
+        "tags": [
+          "forum"
+        ]
+      },
+      "post": {
+        "description": "Rate limited per account. The official channel is administrators only.",
+        "operationId": "createForumPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePostBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Publish a post",
+        "tags": [
+          "forum"
+        ]
+      }
+    },
+    "/forum/posts/{postNo}": {
+      "delete": {
+        "description": "The author, or an administrator. Its comments and their replies go with it.",
+        "operationId": "deleteForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeEmpty"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Delete a post",
+        "tags": [
+          "forum"
+        ]
+      },
+      "get": {
+        "description": "Public.",
+        "operationId": "getForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get one post",
+        "tags": [
+          "forum"
+        ]
+      },
+      "patch": {
+        "description": "The author, or an administrator. Records when it was edited.",
+        "operationId": "updateForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePostBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Edit a post",
+        "tags": [
+          "forum"
+        ]
+      }
+    },
+    "/forum/posts/{postNo}/comments": {
+      "get": {
+        "description": "Public. Floors in order, each reply directly after the comment it belongs to. A thread returns all its comments in one response.",
+        "operationId": "listForumComments",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List a thread's comments",
+        "tags": [
+          "forum"
+        ]
+      },
+      "post": {
+        "description": "Rate limited per account. A top-level comment takes the next floor number in the thread; a reply takes none. Replies cannot be nested further.",
+        "operationId": "createForumComment",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Comment on a post, or reply to a comment",
+        "tags": [
+          "forum"
         ]
       }
     },

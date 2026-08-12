@@ -192,6 +192,45 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (CoreUser, err
 	return i, err
 }
 
+const getUsersByIDs = `-- name: GetUsersByIDs :many
+SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users WHERE id = ANY($1::uuid[])
+`
+
+// Batch lookup for rendering authors on a page of forum posts, so a feed costs
+// one query for its authors instead of one per row.
+func (q *Queries) GetUsersByIDs(ctx context.Context, ids []uuid.UUID) ([]CoreUser, error) {
+	rows, err := q.db.Query(ctx, getUsersByIDs, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CoreUser{}
+	for rows.Next() {
+		var i CoreUser
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.HashedPassword,
+			&i.IsActive,
+			&i.IsSuperuser,
+			&i.IsVerified,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UID,
+			&i.SpecialUID,
+			&i.AvatarKey,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const lockAdminMembership = `-- name: LockAdminMembership :exec
 SELECT pg_advisory_xact_lock(hashtext('core.users.admin_membership'))
 `

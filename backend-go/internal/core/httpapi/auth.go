@@ -14,6 +14,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
+	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
@@ -35,10 +36,17 @@ type Handlers struct {
 	avatarLimiter *auth.RateLimiter
 
 	// limits is the shared, Redis-backed limiter used for password resets. It
-	// coexists with the two in-process RateLimiters above rather than replacing
-	// them: those predate it and key differently, and folding them together is a
-	// change worth making on its own rather than inside a mail feature.
+	// coexists with the in-process RateLimiters above rather than replacing them:
+	// those predate it and key differently, and folding them together is a change
+	// worth making on its own rather than inside a mail feature.
 	limits ratelimit.Limiter
+
+	forum *forum.Service
+	// Posting and commenting are limited separately, and at different rates: a
+	// thread is read by many and written by few, so a rate that suits replies
+	// would be far too generous for new threads.
+	postLimiter    *auth.RateLimiter
+	commentLimiter *auth.RateLimiter
 
 	cfg config.Auth
 }
@@ -46,9 +54,10 @@ type Handlers struct {
 // NewHandlers builds the core module's HTTP handlers.
 func NewHandlers(
 	svc *users.Service,
+	forumSvc *forum.Service,
 	tokens *auth.Tokens,
 	altcha *auth.Altcha,
-	limiter, avatarLimiter *auth.RateLimiter,
+	limiter, avatarLimiter, postLimiter, commentLimiter *auth.RateLimiter,
 	limits ratelimit.Limiter,
 	cfg config.Auth,
 ) *Handlers {
@@ -56,13 +65,16 @@ func NewHandlers(
 		limits = ratelimit.NewMemory()
 	}
 	return &Handlers{
-		users:         svc,
-		tokens:        tokens,
-		altcha:        altcha,
-		limiter:       limiter,
-		avatarLimiter: avatarLimiter,
-		limits:        limits,
-		cfg:           cfg,
+		users:          svc,
+		forum:          forumSvc,
+		tokens:         tokens,
+		altcha:         altcha,
+		limiter:        limiter,
+		avatarLimiter:  avatarLimiter,
+		postLimiter:    postLimiter,
+		commentLimiter: commentLimiter,
+		limits:         limits,
+		cfg:            cfg,
 	}
 }
 

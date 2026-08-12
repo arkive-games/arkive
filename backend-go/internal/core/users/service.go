@@ -811,3 +811,38 @@ func (s *Service) AvatarPresets() AvatarPresetList {
 	}
 	return out
 }
+
+// PublicByIDs resolves several accounts at once, as the public view.
+//
+// It exists so a page of forum posts costs one query for its authors rather than
+// one per row. Ids are de-duplicated first, since a thread is frequently one
+// person answering themselves.
+//
+// An id with no row is simply absent from the result rather than an error: an
+// author can be deleted between the post being read and this call, and a missing
+// author should render as an empty name, not fail the whole page.
+func (s *Service) PublicByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]UserPublic, error) {
+	out := make(map[uuid.UUID]UserPublic, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+
+	unique := make([]uuid.UUID, 0, len(ids))
+	seen := make(map[uuid.UUID]struct{}, len(ids))
+	for _, id := range ids {
+		if _, dup := seen[id]; dup {
+			continue
+		}
+		seen[id] = struct{}{}
+		unique = append(unique, id)
+	}
+
+	rows, err := s.q.GetUsersByIDs(ctx, unique)
+	if err != nil {
+		return nil, fmt.Errorf("load users: %w", err)
+	}
+	for _, u := range rows {
+		out[u.ID] = toUserPublic(u, s.avatarResolver())
+	}
+	return out, nil
+}

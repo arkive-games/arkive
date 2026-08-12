@@ -145,6 +145,12 @@ type Auth struct {
 	SESFrom          string
 	SESFromName      string
 	SESResetTemplate int64
+	// Forum write limits, per account rather than per address: the caller is
+	// signed in, so throttling by address would penalise everyone behind one NAT
+	// while doing nothing about a single account in a loop. Posting is tighter
+	// than commenting because a new thread costs every reader attention.
+	ForumPostsPerMinute    int
+	ForumCommentsPerMinute int
 
 	// Argon2 parameters. Defaults match what pwdlib writes, so hashes stay
 	// mutually readable during cutover.
@@ -260,12 +266,14 @@ func Load() (Config, error) {
 
 			ResetURLTemplate: envString("RESET_URL_TEMPLATE", "https://tc-imba.com/user?reset=%s"),
 
-			SESSecretID:      envString("SES_SECRET_ID", ""),
-			SESSecretKey:     envString("SES_SECRET_KEY", ""),
-			SESRegion:        envString("SES_REGION", "ap-guangzhou"),
-			SESFrom:          envString("SES_FROM", ""),
-			SESFromName:      envString("SES_FROM_NAME", "藏舟 Arkive"),
-			SESResetTemplate: int64(envInt("SES_RESET_TEMPLATE_ID", 0)),
+			SESSecretID:            envString("SES_SECRET_ID", ""),
+			SESSecretKey:           envString("SES_SECRET_KEY", ""),
+			SESRegion:              envString("SES_REGION", "ap-guangzhou"),
+			SESFrom:                envString("SES_FROM", ""),
+			SESFromName:            envString("SES_FROM_NAME", "藏舟 Arkive"),
+			SESResetTemplate:       int64(envInt("SES_RESET_TEMPLATE_ID", 0)),
+			ForumPostsPerMinute:    envInt("FORUM_POSTS_PER_MINUTE", 2),
+			ForumCommentsPerMinute: envInt("FORUM_COMMENTS_PER_MINUTE", 10),
 
 			Argon2Memory:      uint32(envInt("ARGON2_MEMORY_KIB", 65536)),
 			Argon2Iterations:  uint32(envInt("ARGON2_ITERATIONS", 3)),

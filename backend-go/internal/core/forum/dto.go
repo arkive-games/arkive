@@ -1,0 +1,277 @@
+// Package forum implements the site-wide discussion board.
+//
+// It is the global forum that lives on the meta site, and it is deliberately not
+// the game-scoped core/comments package the architecture document reserves for
+// comments attached to a map marker. Games appear here as tags on a post.
+//
+// This package covers posts and comments. Reactions, images, follows, feeds,
+// notifications and moderation are separate slices; see the design.
+package forum
+
+import (
+	"fmt"
+	"strings"
+	"time"
+	"unicode/utf8"
+
+	"github.com/google/uuid"
+
+	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/users"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
+)
+
+// Channel is where a post lives.
+type Channel string
+
+// The channels a post can be filed under. "hot" is a derived feed rather than a
+// stored channel, so it is deliberately absent.
+const (
+	ChannelGeneral  Channel = "general"
+	ChannelOfficial Channel = "official"
+	ChannelGames    Channel = "games"
+)
+
+// Topic is the optional kind of a post, matching the composer's fixed set.
+const (
+	TopicGuide      = "guide"
+	TopicQuestion   = "question"
+	TopicTesting    = "testing"
+	TopicDiscussion = "discussion"
+)
+
+var (
+	channels = []Channel{ChannelGeneral, ChannelOfficial, ChannelGames}
+	topics   = []string{TopicGuide, TopicQuestion, TopicTesting, TopicDiscussion}
+)
+
+// Limits on what a post may contain. The database enforces the same bounds; these
+// exist so a rejection names the limit instead of surfacing a check violation.
+const (
+	MaxTitleLength = 200
+	MaxBodyLength  = 20000
+	MaxGameIDs     = 5
+	MaxTags        = 10
+	MaxTagLength   = 32
+
+	// DefaultPageSize and MaxPageSize bound a feed request. The composer's pager
+	// shows five pages of five posts, so the default matches what it asks for.
+	DefaultPageSize = 20
+	MaxPageSize     = 100
+)
+
+// PostRead is a post as the API returns it.
+//
+// The identity a client sees is PostNo, not the uuid: it is short, quotable and
+// never reused, exactly as an account's uid is. The uuid stays internal.
+type PostRead struct {
+	PostNo    int64            `json:"postNo" doc:"Permanent post number; use this in links" example:"1042"`
+	Author    users.UserPublic `json:"author" doc:"Who wrote it"`
+	Channel   Channel          `json:"channel" doc:"general, official or games" example:"general"`
+	Title     string           `json:"title" doc:"Post title"`
+	Body      string           `json:"body" doc:"Raw markdown, exactly as written. Render it with raw HTML disabled."`
+	Topic     *string          `json:"topic" doc:"guide, question, testing or discussion, or null"`
+	GameIDs   []string         `json:"gameIds" doc:"Games this post is about, at most 5"`
+	Tags      []string         `json:"tags" doc:"Free-form tags, at most 10"`
+	Comments  int64            `json:"commentCount" doc:"Number of comments, replies included"`
+	CreatedAt time.Time        `json:"createdAt" doc:"When it was posted"`
+	EditedAt  *time.Time       `json:"editedAt" doc:"When it was last edited, or null if never"`
+}
+
+// CommentRead is one comment or reply.
+//
+// CommentNo is the floor number, and it is null on a reply: only top-level
+// comments are numbered. Replies carry an ID instead, which is what the edit and
+// delete routes address them by.
+type CommentRead struct {
+	ID        uuid.UUID        `json:"id" doc:"Identifier, used to edit or delete this comment"`
+	CommentNo *int64           `json:"commentNo" doc:"Floor number within the thread, or null on a reply" example:"21"`
+	ParentID  *uuid.UUID       `json:"parentId" doc:"The comment this replies to, or null for a top-level comment"`
+	Author    users.UserPublic `json:"author" doc:"Who wrote it"`
+	Body      string           `json:"body" doc:"Raw markdown, exactly as written. Render it with raw HTML disabled."`
+	CreatedAt time.Time        `json:"createdAt" doc:"When it was written"`
+	EditedAt  *time.Time       `json:"editedAt" doc:"When it was last edited, or null if never"`
+}
+
+// CreatePostInput is a new post.
+type CreatePostInput struct {
+	Channel Channel
+	Title   string
+	Body    string
+	Topic   *string
+	GameIDs []string
+	Tags    []string
+}
+
+// UpdatePostInput is a partial edit; a nil field means "leave unchanged".
+//
+// Topic is the exception and uses a tri-state, because clearing a topic and
+// leaving it alone are different intents that a plain pointer cannot separate.
+type UpdatePostInput struct {
+	Title   *string
+	Body    *string
+	Topic   Optional
+	GameIDs *[]string
+	Tags    *[]string
+}
+
+// Optional carries the three states a nullable field needs: absent, explicitly
+// cleared, or set. It mirrors api.Optional, kept here as a plain struct because
+// the service layer should not depend on the transport's JSON decoding.
+type Optional struct {
+	Set   bool
+	Value *string
+}
+
+// ListFilter narrows a feed request. Every field is optional.
+type ListFilter struct {
+	Channel  *string
+	GameID   *string
+	Tag      *string
+	AuthorID *uuid.UUID
+	Page     int
+	PageSize int
+}
+
+// normalise clamps the paging arguments so a caller cannot ask for an unbounded
+// page or a negative offset.
+func (f *ListFilter) normalise() {
+	if f.Page < 1 {
+		f.Page = 1
+	}
+	if f.PageSize < 1 || f.PageSize > MaxPageSize {
+		f.PageSize = DefaultPageSize
+	}
+}
+
+func toPostRead(p coredb.CoreForumPost, author users.UserPublic, comments int64) PostRead {
+	return PostRead{
+		PostNo:    p.PostNo,
+		Author:    author,
+		Channel:   Channel(p.Channel),
+		Title:     p.Title,
+		Body:      p.Body,
+		Topic:     p.Topic,
+		GameIDs:   emptyIfNil(p.GameIDs),
+		Tags:      emptyIfNil(p.Tags),
+		Comments:  comments,
+		CreatedAt: p.CreatedAt,
+		EditedAt:  timeOrNil(p.EditedAt.Time, p.EditedAt.Valid),
+	}
+}
+
+func toCommentRead(c coredb.CoreForumComment, author users.UserPublic) CommentRead {
+	return CommentRead{
+		ID:        c.ID,
+		CommentNo: c.CommentNo,
+		ParentID:  c.ParentID,
+		Author:    author,
+		Body:      c.Body,
+		CreatedAt: c.CreatedAt,
+		EditedAt:  timeOrNil(c.EditedAt.Time, c.EditedAt.Valid),
+	}
+}
+
+// emptyIfNil keeps a JSON array from serialising as null, which would make every
+// client check for it before iterating.
+func emptyIfNil(v []string) []string {
+	if v == nil {
+		return []string{}
+	}
+	return v
+}
+
+func timeOrNil(t time.Time, valid bool) *time.Time {
+	if !valid {
+		return nil
+	}
+	return &t
+}
+
+// ---------------------------------------------------------------------------
+// Validation
+// ---------------------------------------------------------------------------
+
+func validateChannel(c Channel) error {
+	for _, known := range channels {
+		if known == c {
+			return nil
+		}
+	}
+	return apierr.New(apierr.Validation,
+		fmt.Sprintf("channel must be one of %s", strings.Join(channelNames(), ", ")))
+}
+
+func channelNames() []string {
+	out := make([]string, 0, len(channels))
+	for _, c := range channels {
+		out = append(out, string(c))
+	}
+	return out
+}
+
+func validateTopic(topic *string) error {
+	if topic == nil || *topic == "" {
+		return nil
+	}
+	for _, known := range topics {
+		if known == *topic {
+			return nil
+		}
+	}
+	return apierr.New(apierr.Validation,
+		fmt.Sprintf("topic must be one of %s", strings.Join(topics, ", ")))
+}
+
+// validateTitle and validateBody count runes rather than bytes, so a limit means
+// the same thing to a Chinese post as to an English one.
+func validateTitle(title string) error {
+	trimmed := strings.TrimSpace(title)
+	if trimmed == "" {
+		return apierr.New(apierr.Validation, "a post needs a title")
+	}
+	if utf8.RuneCountInString(trimmed) > MaxTitleLength {
+		return apierr.New(apierr.Validation,
+			fmt.Sprintf("a title may be at most %d characters", MaxTitleLength))
+	}
+	return nil
+}
+
+func validateBody(body string, what string) error {
+	trimmed := strings.TrimSpace(body)
+	if trimmed == "" {
+		return apierr.New(apierr.Validation, fmt.Sprintf("a %s needs a body", what))
+	}
+	if utf8.RuneCountInString(trimmed) > MaxBodyLength {
+		return apierr.New(apierr.Validation,
+			fmt.Sprintf("a %s may be at most %d characters", what, MaxBodyLength))
+	}
+	return nil
+}
+
+// normaliseList trims, drops blanks and removes duplicates, so that ["a","a",""]
+// stores as ["a"] rather than as three entries the caller did not mean.
+func normaliseList(in []string, max int, maxLen int, what string) ([]string, error) {
+	out := make([]string, 0, len(in))
+	seen := make(map[string]struct{}, len(in))
+	for _, raw := range in {
+		v := strings.TrimSpace(raw)
+		if v == "" {
+			continue
+		}
+		if utf8.RuneCountInString(v) > maxLen {
+			return nil, apierr.New(apierr.Validation,
+				fmt.Sprintf("each %s may be at most %d characters", what, maxLen))
+		}
+		if _, dup := seen[v]; dup {
+			continue
+		}
+		seen[v] = struct{}{}
+		out = append(out, v)
+	}
+	if len(out) > max {
+		return nil, apierr.New(apierr.Validation,
+			fmt.Sprintf("a post may have at most %d %ss", max, what))
+	}
+	return out, nil
+}

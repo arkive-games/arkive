@@ -148,6 +148,10 @@ func newHarnessWith(t *testing.T, tweak func(*config.Config), store blob.Store, 
 			// Kept small so the tests can brute-force a solution quickly.
 			AltchaMaxNumber:   200,
 			RegisterPerMinute: 1000,
+			// High enough that the ordinary forum tests never trip these; the
+			// test that exercises throttling lowers them deliberately.
+			ForumPostsPerMinute:    1000,
+			ForumCommentsPerMinute: 1000,
 			// Deliberately weak: these tests hash many passwords, and the
 			// parameters are exercised properly by the unit tests.
 			Argon2Memory:      8192,
