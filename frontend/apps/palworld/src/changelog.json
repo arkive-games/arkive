@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.31.0",
+      "date": "2026-08-12",
+      "commit": "f70ae0b4b4c8cd998bb4dea6f8c3aba27b2eeb6f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Show passive acquisition paths as compact linked routes for random pools, innate Pals, and Operating Table implants.",
+            "zh-CN": "以紧凑的关联路线展示被动技能获取方式，包括随机池、天生携带帕鲁和手术台植入体。",
+            "zh-TW": "以緊湊的關聯路線顯示被動技能取得方式，包括隨機池、天生攜帶帕魯和手術台植入體。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.30.0",
       "date": "2026-08-12",
       "commit": "8491d15c79c5da22789f9ea3d03c886b060d5b29",
