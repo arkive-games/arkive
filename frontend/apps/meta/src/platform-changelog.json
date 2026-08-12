@@ -1,6 +1,26 @@
 {
   "entries": [
     {
+      "date": "2026-08-12",
+      "commit": "9933e03a2f4265fd24cb53c8085f143746555c27",
+      "targets": [
+        "aion2",
+        "palworld",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "A new Settings panel collects theme, language, and the controls for data this site keeps in your browser. Each game can now follow the shared theme and language or override them for itself.",
+            "zh-CN": "新增「设置」面板，集中管理主题、语言，以及本站保存在浏览器中的数据。每个游戏既可跟随全站的主题与语言，也可单独设置。",
+            "zh-TW": "新增「設定」面板，集中管理主題、語言，以及本站儲存在瀏覽器中的資料。每個遊戲既可跟隨全站的主題與語言，也可單獨設定。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-08-11",
       "commit": "7baa046490eb5db367ef349960777b7617e80665",
       "targets": [
