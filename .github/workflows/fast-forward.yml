@@ -26,10 +26,20 @@
 # already an ancestor of the head; there are no merge commits; every commit is
 # verified; and changelog:verify passes.
 #
+# WHERE THE LOGIC LIVES
+#
+# In .github/scripts/ff-*.sh, not in this file. Anything inside a `run:` block is
+# untestable by construction -- four of the five defects the sibling review bot
+# shipped with were shell bugs of exactly that kind, each found by running it in
+# production and reading the logs. Every rule above is therefore a script that
+# .github/scripts/tests/run.sh calls with arguments and asserts on, and this file
+# is plumbing: check out, set env, call the script, post the comment. The
+# explanatory comments moved with the code they explain.
+#
 # THE REVIEW BOT
 #
 # claude.yml may request a land on its own behalf, and its `/fast-forward` comment
-# carries `<!-- claude-land chain=<id> -->`. Two things follow.
+# carries `<!-- claude-land chain=<id> attempt=<n> -->`. Two things follow.
 #
 #   The bot is authorised by LOGIN (vars.CLAUDE_BOT_LOGIN), never by the presence
 #   of that marker -- a marker is just text anyone can paste, and trusting it
@@ -99,9 +109,39 @@ jobs:
       REPO: ${{ github.repository }}
 
     steps:
-      # Checked first, before anything reads the pull request: with no token the
-      # run would do all the work and then die on a git auth error that says
-      # nothing about which secret is missing.
+      # First, because every other step calls one of these scripts -- including
+      # the last one, which reports the result even when the run failed.
+      #
+      # Sparse: the gate is a handful of shell files, and the point of asking the
+      # CI API before cloning is that a red pull request should be refused without
+      # paying for a full checkout. This costs a shallow fetch of one directory.
+      #
+      # `ref` is left at the default, which for issue_comment and
+      # workflow_dispatch is the default branch. That matters: the checkout of the
+      # pull request head further down brings the CONTRIBUTOR's files, and the
+      # gate must never be judged by the branch it is judging.
+      #
+      # `path` keeps this in its own git directory, so the sparse cone set here
+      # cannot still be in effect for the full checkout below -- which needs
+      # frontend/ to exist.
+      - name: Check out the gate scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+          path: .gate-checkout
+          persist-credentials: false
+
+      # Out of the workspace, because actions/checkout cleans it -- the pull
+      # request checkout below would otherwise delete the scripts mid-run.
+      - name: Stage the gate scripts outside the workspace
+        run: |
+          set -euo pipefail
+          cp -R .gate-checkout/.github/scripts "$RUNNER_TEMP/ff-scripts"
+          chmod +x "$RUNNER_TEMP"/ff-scripts/*.sh
+
+      # Checked before anything reads the pull request: with no token the run
+      # would do all the work and then die on a git auth error that says nothing
+      # about which secret is missing.
       - name: Check the push token is configured
         env:
           FAST_FORWARD_TOKEN: ${{ secrets.FAST_FORWARD_TOKEN }}
@@ -112,14 +152,6 @@ jobs:
             exit 1
           fi
 
-      # Not `author_association`: that reports MEMBER/CONTRIBUTOR from org and
-      # commit history, neither of which is push access. Ask about permission.
-      #
-      # The review bot is the one requester with no permission level to ask about:
-      # a GitHub App is not a collaborator. It is recognised by login instead,
-      # against `vars.CLAUDE_BOT_LOGIN` -- and by login ONLY. Recognising it by
-      # the chain marker in its comment would let any stranger paste that marker
-      # and walk straight past this gate.
       - name: Check the requester may push
         id: requester
         env:
@@ -131,93 +163,23 @@ jobs:
           BODY: ${{ github.event.comment.body }}
         run: |
           set -euo pipefail
-          chain=""
-          if [ -n "${BOT_LOGIN:-}" ] && [ "$REQUESTER" = "$BOT_LOGIN" ]; then
-            echo "$REQUESTER is the review bot."
-            # Only now is the marker read, and only to learn which chain to reply
-            # on. It is not what authorised this run.
-            chain=$(printf '%s' "$BODY" | sed -n 's/.*claude-land chain=\([0-9]\{1,\}\).*/\1/p' | head -1)
-            # The attempt number travels in the marker as well as being counted on
-            # the far side. Counting alone undercounted: on PR #22 the marker
-            # comment was 12 seconds old and the comments-list API still did not
-            # return it, so a retry that was attempt 2 announced itself as
-            # attempt 1 and the chain would have run four times, not three.
-            # This value comes from the event payload, which cannot lag.
-            attempt=$(printf '%s' "$BODY" | sed -n 's/.*claude-land chain=[0-9]\{1,\} attempt=\([0-9]\{1,\}\).*/\1/p' | head -1)
-            echo "chain=${chain:-<none>} attempt=${attempt:-<none>}"
-          else
-            level=$(gh api "repos/$REPO/collaborators/$REQUESTER/permission" --jq .permission)
-            echo "$REQUESTER has $level permission"
-            case "$level" in
-              admin | write | maintain) ;;
-              *)
-                echo "::error::$REQUESTER has '$level' permission on $REPO and may not land pull requests."
-                exit 1
-                ;;
-            esac
-          fi
-          {
-            echo "chain=$chain"
-            echo "attempt=${attempt:-}"
-          } >> "$GITHUB_OUTPUT"
+          "$RUNNER_TEMP/ff-scripts/ff-requester.sh"
 
-      # Every refusal below writes its reason to $RUNNER_TEMP/refusal.md and the
-      # last step posts it. Not the workspace: actions/checkout cleans that, which
-      # would delete a reason written before it. Not a job-level `env` either --
-      # the `runner` context is unavailable there.
+      # Every refusal from here on writes its reason to $RUNNER_TEMP/refusal.md
+      # (the default in ff-common.sh) and the last step posts it. Not the
+      # workspace: actions/checkout cleans that, which would delete a reason
+      # written before it. Not a job-level `env` either -- the `runner` context is
+      # unavailable there, which is why the scripts default the path themselves.
       - name: Resolve the pull request
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh pr view "$PR" --repo "$REPO" \
-            --json state,baseRefName,headRefName,headRefOid,isCrossRepository \
-            > "$RUNNER_TEMP/pr.json"
-          state=$(jq -r .state "$RUNNER_TEMP/pr.json")
-          base=$(jq -r .baseRefName "$RUNNER_TEMP/pr.json")
-          if [ "$state" != "OPEN" ]; then
-            echo "This pull request is $state, so there is nothing to fast-forward." > "$RUNNER_TEMP/refusal.md"
-            echo "::error::PR #$PR is $state."
-            exit 1
-          fi
-          if [ "$base" != "master" ]; then
-            echo "This pull request targets \`$base\`, not \`master\`. Only master is landed this way." > "$RUNNER_TEMP/refusal.md"
-            echo "::error::PR #$PR targets $base."
-            exit 1
-          fi
-          {
-            echo "head=$(jq -r .headRefOid "$RUNNER_TEMP/pr.json")"
-            echo "head_ref=$(jq -r .headRefName "$RUNNER_TEMP/pr.json")"
-            echo "fork=$(jq -r .isCrossRepository "$RUNNER_TEMP/pr.json")"
-          } >> "$GITHUB_OUTPUT"
+          "$RUNNER_TEMP/ff-scripts/ff-resolve-pr.sh"
 
-      # Until now nothing here asserted CI had passed. That was safe only because
-      # a person decided when to comment `/fast-forward`, and supplied the
-      # judgement implicitly by not commenting on a red pull request. The review
-      # bot removes the person, so the judgement has to become a check.
-      #
-      # It asks ci.yml directly rather than reading every check run on the SHA:
-      # this workflow's own job is itself a check run on that SHA and is
-      # `in_progress` while it looks, so a naive "all checks green" test can never
-      # pass. Asking the one workflow we mean is both precise and readable.
-      #
       # Placed before the checkout because it is one API call, and a red pull
       # request should be refused before cloning the repository.
-      # WAITS rather than refuses while CI is still running, which is not a
-      # convenience -- it is the difference between a cheap gate and an expensive
-      # one. The review bot rebases, force-pushes and asks to land in the same
-      # run, so CI on the new SHA has usually not even STARTED when the request
-      # arrives. Refusing then sent back "CI is still queued", which re-entered
-      # the bot and spent a full ~$4 review of the whole diff to answer a timing
-      # problem. Measured on PR #22, run 31517983083.
-      #
-      # It helps the human path too: `/fast-forward` typed straight after a push
-      # used to refuse for the same reason.
-      #
-      # The cost is that this job holds the `fast-forward-master` concurrency
-      # group while it waits, so another landing queues behind it. That is why the
-      # cap is ten minutes and not longer -- CI here runs in about three.
       - name: Wait for CI to pass on the head commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -226,56 +188,7 @@ jobs:
           POLL_SECONDS: 20
         run: |
           set -euo pipefail
-          deadline=$(( SECONDS + TIMEOUT_SECONDS ))
-          status=absent
-          conclusion=
-          run_url=
-
-          while :; do
-            # Most recent run wins, so a re-run after a fix is what counts.
-            gh api --paginate "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$HEAD_SHA" \
-              --jq '.workflow_runs | sort_by(.created_at) | last
-                    | {status, conclusion, url: .html_url}' > "$RUNNER_TEMP/ci.json" || true
-
-            if [ -s "$RUNNER_TEMP/ci.json" ] && [ "$(cat "$RUNNER_TEMP/ci.json")" != "null" ]; then
-              status=$(jq -r '.status // "absent"' "$RUNNER_TEMP/ci.json")
-              conclusion=$(jq -r '.conclusion // ""' "$RUNNER_TEMP/ci.json")
-              run_url=$(jq -r '.url // ""' "$RUNNER_TEMP/ci.json")
-            else
-              # A just-pushed SHA has no run for a few seconds. Absent is a state
-              # to wait through, not a verdict.
-              status=absent
-            fi
-            echo "ci.yml on $HEAD_SHA: status=$status conclusion=${conclusion:-<none>} ($(( deadline - SECONDS ))s left)"
-            [ "$status" = "completed" ] && break
-
-            if [ "$SECONDS" -ge "$deadline" ]; then
-              {
-                if [ "$status" = "absent" ]; then
-                  echo "Refusing: no CI run appeared for \`$HEAD_SHA\` within $(( TIMEOUT_SECONDS / 60 )) minutes, so there is no evidence this branch builds."
-                  echo
-                  echo "Check that \`ci.yml\` is triggering for this branch, then request again."
-                else
-                  echo "Refusing: [CI]($run_url) was still \`$status\` for \`$HEAD_SHA\` after $(( TIMEOUT_SECONDS / 60 )) minutes."
-                  echo
-                  echo "Wait for it to finish, then request again."
-                fi
-              } > "$RUNNER_TEMP/refusal.md"
-              echo "::error::CI did not complete for $HEAD_SHA within ${TIMEOUT_SECONDS}s (last status: $status)."
-              exit 1
-            fi
-            sleep "$POLL_SECONDS"
-          done
-
-          if [ "$conclusion" != "success" ]; then
-            {
-              echo "Refusing: [CI]($run_url) concluded \`$conclusion\` for \`$HEAD_SHA\`."
-              echo
-              echo "Fix what it reports, push, and request again."
-            } > "$RUNNER_TEMP/refusal.md"
-            echo "::error::CI concluded $conclusion for $HEAD_SHA."
-            exit 1
-          fi
+          "$RUNNER_TEMP/ff-scripts/ff-ci-wait.sh"
 
       - name: Checkout the pull request head
         uses: actions/checkout@v4
@@ -305,8 +218,6 @@ jobs:
         with:
           node-version: 22
 
-      # THE precondition. If master is not already an ancestor of the head then a
-      # fast-forward is impossible, and the fix belongs to whoever owns the branch.
       - name: Check the branch is already rebased on master
         env:
           HEAD_SHA: ${{ steps.pr.outputs.head }}
@@ -315,77 +226,19 @@ jobs:
           # FETCH_HEAD, not origin/master: `git fetch origin master` updates no
           # remote-tracking ref, and checkout fetched only refs/pull/N/head.
           git fetch --quiet origin master
-          base=$(git rev-parse FETCH_HEAD)
-          echo "master is $base, head is $HEAD_SHA"
-          if ! git merge-base --is-ancestor "$base" "$HEAD_SHA"; then
-            behind=$(git rev-list --count "$HEAD_SHA..$base")
-            {
-              echo "Refusing: this branch is not rebased on \`master\` (it is missing $behind commit(s) from it), so it cannot be fast-forwarded."
-              echo
-              echo "Rebase it, re-stamp any \`changelog.json\` entry whose commit the rebase rewrote (\`pnpm changelog:verify\` finds them), force-push with \`--force-with-lease\`, then comment \`/fast-forward\` again."
-            } > "$RUNNER_TEMP/refusal.md"
-            echo "::error::PR #$PR is $behind commit(s) behind master. Rebase and re-request."
-            exit 1
-          fi
-          # Fast-forwarding a branch that contains a merge would put a bubble in
-          # master, which is the thing the merge button does and we do not want.
-          if [ -n "$(git rev-list --merges "$base..$HEAD_SHA")" ]; then
-            {
-              echo "Refusing: this branch contains merge commit(s), so landing it would put a bubble in \`master\`."
-              echo
-              echo "Rebase onto \`master\` instead of merging it in, then comment \`/fast-forward\` again."
-            } > "$RUNNER_TEMP/refusal.md"
-            echo "::error::PR #$PR contains merge commits."
-            exit 1
-          fi
+          "$RUNNER_TEMP/ff-scripts/ff-branch-state.sh" . FETCH_HEAD "$HEAD_SHA"
 
-      # We used to re-sign contributor commits by rebasing them locally with -S. A
-      # fast-forward cannot: it rewrites nothing. That is the better outcome -- a
-      # signature should say "I wrote this", not "I merged this" -- so the rule is
-      # now that commits arrive already verified.
       - name: Check every commit is verified
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          unverified=$(gh api --paginate "repos/$REPO/pulls/$PR/commits" \
-            --jq '.[] | select(.commit.verification.verified | not)
-                      | "\(.sha[0:12]) \(.commit.verification.reason)"')
-          if [ -n "$unverified" ]; then
-            {
-              echo "Refusing: every commit must be signed and verified by GitHub before it can land."
-              echo
-              echo '```'
-              echo "$unverified"
-              echo '```'
-              echo
-              echo "Sign these commits with a key registered on your GitHub account, then force-push with \`--force-with-lease\`."
-            } > "$RUNNER_TEMP/refusal.md"
-            echo "::error::PR #$PR has unverified commit(s)."
-            exit 1
-          fi
-          echo "All commits verified."
+          "$RUNNER_TEMP/ff-scripts/ff-verified-commits.sh"
 
-      # The gate that protects the reason this workflow exists. HEAD is the pull
-      # request head here, so this asserts every pinned SHA survives what we are
-      # about to land -- catching an entry stamped before a rebase rewrote it.
       - name: Check the changelog pins nothing this would orphan
-        working-directory: frontend
         run: |
           set -euo pipefail
-          if ! node scripts/changelog-verify.mjs > "$RUNNER_TEMP/verify.log" 2>&1; then
-            {
-              echo "Refusing: a \`changelog.json\` entry pins a commit this branch does not contain, so its compare link would 404 once landed."
-              echo
-              echo '```'
-              cat "$RUNNER_TEMP/verify.log"
-              echo '```'
-            } > "$RUNNER_TEMP/refusal.md"
-            cat "$RUNNER_TEMP/verify.log"
-            echo "::error::changelog-verify failed for PR #$PR."
-            exit 1
-          fi
-          cat "$RUNNER_TEMP/verify.log"
+          "$RUNNER_TEMP/ff-scripts/ff-changelog-verify.sh" frontend
 
       - name: Fast-forward master
         id: push
@@ -429,36 +282,9 @@ jobs:
         run: |
           set -euo pipefail
           body="$RUNNER_TEMP/body.md"
-          retry=false
-
-          if [ "$PUSHED" = "success" ]; then
-            printf '%s\n' "Fast-forwarded \`master\` to \`$HEAD_SHA\`. Nothing was rewritten, so every commit keeps its SHA and its signature." > "$body"
-          elif [ -s "$RUNNER_TEMP/refusal.md" ]; then
-            if [ -n "${CHAIN:-}" ]; then
-              # The bot asked, and this is why it cannot have it. Addressed so
-              # claude.yml re-enters -- its trigger requires `@claude` to be the
-              # first thing in the body, so this line must come first.
-              retry=true
-              {
-                echo "@claude the fast-forward refused this attempt:"
-                echo
-                cat "$RUNNER_TEMP/refusal.md"
-              } > "$body"
-            else
-              cp "$RUNNER_TEMP/refusal.md" "$body"
-            fi
-          else
-            # A step failed before writing a reason: infrastructure, not a refusal.
-            printf '%s\n' "The fast-forward run failed before it could check this pull request. See [the run log]($RUN_URL)." > "$body"
-          fi
-
-          printf '\n%s\n' "<sub>[fast-forward run]($RUN_URL)</sub>" >> "$body"
+          retry=$("$RUNNER_TEMP/ff-scripts/ff-comment-body.sh" "$body")
 
           if [ "$retry" = true ]; then
-            # A DIFFERENT sentinel from the `claude-land chain=` marker the bot
-            # writes: that one is counted to bound the chain, and reusing it here
-            # would make every refusal spend a second attempt.
-            printf '\n%s\n' "<!-- claude-land-retry chain=$CHAIN -->" >> "$body"
             if [ -n "${RETRY_TOKEN:-}" ]; then
               GH_TOKEN="$RETRY_TOKEN" gh pr comment "$PR" --repo "$REPO" --body-file "$body"
               exit 0
