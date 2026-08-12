@@ -18,11 +18,24 @@ class OfficialTextRef:
 # scene objects (mine carts and containers) have no localized display name, so
 # their markers use the official name of the resource they yield.
 RESOURCE_TEXT_REFS = {
+    "blood_crystal": OfficialTextRef("550eacac-2abc-42c5-aa42-cb8cd3fbb0c1"),
     "copper": OfficialTextRef("37f33a05-a18e-4445-947c-a9ccb192e984"),
+    # The shipped localization has "Regular Gem Veins" and "Flawless Gem Veins"
+    # but no crude equivalent, so all three tiers use the gemstone item name
+    # instead. Naming two tiers after the vein and one after the stone would
+    # read as a data bug in the marker list, and every other entry here already
+    # names the resource the node yields.
+    "crude_gem_vein": OfficialTextRef("9244c448-4238-4704-b763-b297fb3d51ad"),
+    "emery": OfficialTextRef(
+        "826ebdba-e5f7-4303-b172-5b6a85a042c4",
+        "cde14b8b-b6a8-42d6-9931-b031d600f90e",
+    ),
     "emery_container": OfficialTextRef(
         "826ebdba-e5f7-4303-b172-5b6a85a042c4",
         "cde14b8b-b6a8-42d6-9931-b031d600f90e",
     ),
+    "flawless_gem_vein": OfficialTextRef("9707b792-9f4b-4b3d-8e55-569d26d6b49c"),
+    "ghost_crystal": OfficialTextRef("3170100c-ffb7-4b90-9890-9fd59aeb060f"),
     "iron": OfficialTextRef("bb6fb6cd-5125-4225-81bf-10dd69b6f16e"),
     "iron_mine_cart": OfficialTextRef("bb6fb6cd-5125-4225-81bf-10dd69b6f16e"),
     "mechanical_resource": OfficialTextRef(
@@ -37,6 +50,7 @@ RESOURCE_TEXT_REFS = {
         "b3e66c75-1f29-4835-829b-cab41bec8fd8",
         "5e17b367-910f-4fae-8eef-6d6fdb4030fd",
     ),
+    "regular_gem_vein": OfficialTextRef("1937df4e-c37f-4982-9159-03bd43b0386d"),
     "rift_crystal": OfficialTextRef(
         "9baee9b1-0e14-4b39-8b91-5f88f7436d2b",
         "90f482a4-3f5d-4de2-a6fe-eca073e49414",
