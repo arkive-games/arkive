@@ -112,9 +112,15 @@ the schema rather than by application code, with no trigger:
 - `parent_depth` is `0` whenever there is a parent, and the composite foreign key requires
   `(parent_id, 0)` to exist — so a reply's parent must itself be top-level.
 
-Verified against PostgreSQL 18 from four angles: a top-level comment inserts, a reply to it
-inserts at depth 1, **a reply to that reply is refused** by the foreign key, and supplying
-`depth` at all is refused with `cannot insert a non-DEFAULT value`.
+The key also carries `post_id`, so a reply must sit on the same post as its parent. That was
+added after review: with `(parent_id, parent_depth)` alone, a reply could be filed under a
+different thread than the comment it answered, and deleting that comment would then cascade
+into a post it never belonged to. The service checked for it, but the *schema* invariant this
+section claims was not actually true until the column was added.
+
+Verified against PostgreSQL 18: a top-level comment inserts, a reply to it inserts at depth 1,
+**a reply to that reply is refused**, **a reply naming a parent on another post is refused**,
+and supplying `depth` at all is refused with `cannot insert a non-DEFAULT value`.
 
 An earlier draft made `depth` an ordinary column with a `CHECK (depth IN (0,1))`. That had a
 hole: a row could claim `depth 0` while holding a parent, which made it a legitimate parent for
@@ -123,6 +129,12 @@ it, and this is recorded because the hole was invisible until it was tested for.
 
 `UNIQUE (post_id, comment_no)` treats NULLs as distinct in PostgreSQL, so every reply can carry
 `NULL` while floor numbers stay unique per thread.
+
+One limit of that constraint, found in review and accepted: it enforces uniqueness *now*, not
+immutability. `UPDATE forum_comments SET comment_no = 1 WHERE comment_no = 2` would reuse a
+retired floor. No route or generated query can do this — the only writes are the two inserts
+above and a body-only update — so it is a property of the schema rather than a reachable
+defect, and closing it would need a trigger for something no code path attempts.
 
 ### 2.3 Floor numbers, and why not `max + 1`
 
@@ -175,7 +187,7 @@ deleting a comment removes replies other people wrote, which is the cost of a fo
 | `POST /forum/posts` | user | rate limited per account |
 | `PATCH /forum/posts/{postNo}` | author or admin | sets `edited_at` |
 | `DELETE /forum/posts/{postNo}` | author or admin | |
-| `GET /forum/posts/{postNo}/comments` | public | floors with their replies nested |
+| `GET /forum/posts/{postNo}/comments` | public | floors with their replies nested, paged |
 | `POST /forum/posts/{postNo}/comments` | user | optional `parentId` makes it a reply |
 | `PATCH`/`DELETE /forum/comments/{id}` | author or admin | |
 
@@ -184,6 +196,17 @@ are addressed by uuid in the mutation routes, because a reply has no floor numbe
 routes are operation targets rather than links anyone shares. If notifications later need to
 deep-link one reply, the counter mechanism of §2.3 applies unchanged to a `next_reply_no` on the
 comment row.
+
+Every listing is paged, including comments. An earlier version returned a thread whole, which
+made a public unauthenticated route into an amplifier: ten thousand comments near the 20,000
+character limit is a response of hundreds of megabytes that anyone could ask for. The comment
+page defaults to 100, generous enough that an ordinary conversation still arrives in one
+response.
+
+The page number is clamped so that `(page-1) * pageSize` cannot overflow the `int32` the driver
+sends. Without that, `?page=107374184&pageSize=20` computed 2147483660, which wrapped to
+-2147483636 and made PostgreSQL reject the query — a 500 from a query string anyone could type.
+Measured, then fixed, and now covered by a test.
 
 Pagination is offset and limit, as the composer's five-page pager already expects. The
 consequence is recorded rather than hidden: on an append-heavy feed, offsets **duplicate** rows
@@ -258,8 +281,13 @@ flow, pagination, and that an anonymous caller can read but not write.
 ## 8. Out of scope
 
 Reactions, images, follows, feeds, notifications, moderation and privacy — each its own slice
-per §1. Also: editing windows (an author may edit indefinitely, with `edited_at` recorded),
-comment pagination (a thread returns its comments in one response), and full-text search.
+per §1. Also: editing windows (an author may edit indefinitely, with `edited_at` recorded) and
+full-text search.
+
+Two review findings are knowingly left: floor numbers are immutable by construction rather than
+by constraint (§2.2), and a comment written while its author is being deleted is dropped from
+the response rather than rendered — the post is on its way out by cascade anyway, and a
+`UserPublic` with uid 0 and no name is a shape no client should have to handle.
 
 No app changelog entry: this is backend work with no user-visible surface until the frontend
 calls it.

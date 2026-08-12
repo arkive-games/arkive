@@ -118,11 +118,15 @@ CREATE TABLE core.forum_comments (
     -- NULL while floor numbers stay unique within the thread.
     CONSTRAINT forum_comments_floor_key UNIQUE (post_id, comment_no),
 
-    -- The referenced side of the composite foreign key below.
-    CONSTRAINT forum_comments_id_depth_key UNIQUE (id, depth),
-    CONSTRAINT forum_comments_parent_is_top_level
-        FOREIGN KEY (parent_id, parent_depth)
-        REFERENCES core.forum_comments (id, depth) ON DELETE CASCADE
+    -- The referenced side of the composite foreign key below. post_id is part of
+    -- it so that the key can require a reply to sit on the same post as its
+    -- parent: without it, (parent_id, parent_depth) alone would happily accept a
+    -- reply filed under a different thread, and deleting the parent would then
+    -- cascade into a post it never belonged to.
+    CONSTRAINT forum_comments_id_post_depth_key UNIQUE (id, post_id, depth),
+    CONSTRAINT forum_comments_parent_is_top_level_same_post
+        FOREIGN KEY (parent_id, post_id, parent_depth)
+        REFERENCES core.forum_comments (id, post_id, depth) ON DELETE CASCADE
 );
 -- +goose StatementEnd
 

@@ -68,6 +68,12 @@ type postNoInput struct {
 	PostNo int64 `path:"postNo" minimum:"1" doc:"Permanent post number"`
 }
 
+type listCommentsInput struct {
+	PostNo   int64 `path:"postNo" minimum:"1" doc:"Permanent post number"`
+	Page     int   `query:"page" default:"1" minimum:"1" doc:"1-based page number"`
+	PageSize int   `query:"pageSize" default:"100" minimum:"1" maximum:"200" doc:"Comments per page"`
+}
+
 type createPostInput struct {
 	Body CreatePostBody
 }
@@ -226,15 +232,16 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 		Path:        "/forum/posts/{postNo}/comments",
 		Summary:     "List a thread's comments",
 		Description: "Public. Floors in order, each reply directly after the comment it " +
-			"belongs to. A thread returns all its comments in one response.",
+			"belongs to. Paged, with a generous default so an ordinary thread still " +
+			"arrives in one response; count is the total in the thread.",
 		Tags:   []string{"forum"},
 		Errors: []int{http.StatusNotFound},
-	}, func(ctx context.Context, in *postNoInput) (*api.Response[api.List[forum.CommentRead]], error) {
-		comments, err := h.forum.ListComments(ctx, in.PostNo)
+	}, func(ctx context.Context, in *listCommentsInput) (*api.Response[api.List[forum.CommentRead]], error) {
+		comments, total, err := h.forum.ListComments(ctx, in.PostNo, in.Page, in.PageSize)
 		if err != nil {
 			return nil, err
 		}
-		return api.OKList(comments, int64(len(comments))), nil
+		return api.OKList(comments, total), nil
 	})
 
 	huma.Register(a, huma.Operation{

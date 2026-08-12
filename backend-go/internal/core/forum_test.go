@@ -559,3 +559,98 @@ func TestForumWritesAreRateLimitedPerAccount(t *testing.T) {
 		t.Errorf("second comment = %d, want 429: %s", second.status, second.body)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Regressions from review
+// ---------------------------------------------------------------------------
+
+// A public, unauthenticated endpoint must not return an unbounded response. A
+// thread with thousands of long comments would otherwise let anyone ask the
+// server to assemble hundreds of megabytes.
+func TestCommentListingIsBounded(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+	no := h.mustCreatePost(token, simplePost())
+
+	for i := range 12 {
+		h.mustComment(token, no, fmt.Sprintf("comment %d", i), nil)
+	}
+
+	path := "/forum/posts/" + strconv.FormatInt(no, 10) + "/comments"
+	res := h.do(http.MethodGet, path+"?pageSize=5", nil)
+	if res.status != http.StatusOK {
+		t.Fatalf("list = %d: %s", res.status, res.body)
+	}
+	data := res.data(t)
+	results, _ := data["results"].([]any)
+	if len(results) != 5 {
+		t.Errorf("page returned %d comments, want the requested 5", len(results))
+	}
+	// count is the whole thread, not the page.
+	if count, _ := data["count"].(float64); int(count) != 12 {
+		t.Errorf("count = %v, want 12", data["count"])
+	}
+
+	second := h.do(http.MethodGet, path+"?pageSize=5&page=2", nil)
+	if got, _ := second.data(t)["results"].([]any); len(got) != 5 {
+		t.Errorf("page 2 returned %d, want 5", len(got))
+	}
+	third := h.do(http.MethodGet, path+"?pageSize=5&page=3", nil)
+	if got, _ := third.data(t)["results"].([]any); len(got) != 2 {
+		t.Errorf("page 3 returned %d, want 2", len(got))
+	}
+}
+
+// A page number large enough to overflow int32 once multiplied by the page size
+// used to produce a negative SQL offset, which PostgreSQL rejects -- a 500 from a
+// query string anyone can type.
+func TestAbsurdPageNumberIsAnEmptyPageNotAnError(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+	no := h.mustCreatePost(token, simplePost())
+	h.mustComment(token, no, "a comment", nil)
+
+	for _, query := range []string{
+		"?page=107374184&pageSize=20", // (page-1)*20 overflows int32
+		"?page=2147483647&pageSize=100",
+		"?page=999999999",
+	} {
+		res := h.do(http.MethodGet, "/forum/posts"+query, nil)
+		if res.status != http.StatusOK {
+			t.Errorf("GET /forum/posts%s = %d, want 200: %s", query, res.status, res.body)
+			continue
+		}
+		if results, _ := res.data(t)["results"].([]any); len(results) != 0 {
+			t.Errorf("GET /forum/posts%s returned %d rows, want an empty page", query, len(results))
+		}
+	}
+
+	// The same arithmetic runs for comments.
+	res := h.do(http.MethodGet,
+		"/forum/posts/"+strconv.FormatInt(no, 10)+"/comments?page=107374184&pageSize=20", nil)
+	if res.status != http.StatusOK {
+		t.Errorf("absurd comment page = %d, want 200: %s", res.status, res.body)
+	}
+}
+
+// An edit that supplies nothing changes nothing, so it must not tell every reader
+// the post was rewritten.
+func TestAnEmptyEditDoesNotMarkThePostEdited(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+	no := h.mustCreatePost(token, simplePost())
+	path := "/forum/posts/" + strconv.FormatInt(no, 10)
+
+	res := h.do(http.MethodPatch, path, map[string]any{}, withBearer(token))
+	if res.status != http.StatusOK {
+		t.Fatalf("empty patch = %d: %s", res.status, res.body)
+	}
+	if edited := res.data(t)["editedAt"]; edited != nil {
+		t.Errorf("editedAt = %v after an edit that changed nothing, want null", edited)
+	}
+	// And a real edit still stamps it.
+	real := h.do(http.MethodPatch, path, map[string]any{"title": "Changed"}, withBearer(token))
+	if real.data(t)["editedAt"] == nil {
+		t.Error("editedAt is null after a genuine edit")
+	}
+}

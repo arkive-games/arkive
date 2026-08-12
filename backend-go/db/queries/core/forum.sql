@@ -95,12 +95,17 @@ RETURNING *;
 -- name: DeleteForumComment :execrows
 DELETE FROM core.forum_comments WHERE id = $1;
 
--- A thread's comments in one response: floors in order, each reply directly after
--- the floor it belongs to. Ordering by the floor number of the comment or of its
+-- A page of a thread's comments: floors in order, each reply directly after the
+-- floor it belongs to. Ordering by the floor number of the comment or of its
 -- parent keeps a reply adjacent to its parent without a second query.
+--
+-- Bounded, unlike an earlier version. This endpoint is public and unauthenticated,
+-- so a thread with ten thousand long comments would otherwise let anyone ask the
+-- server to build a response of hundreds of megabytes.
 -- name: ListForumComments :many
 SELECT c.*
 FROM core.forum_comments c
 LEFT JOIN core.forum_comments parent ON parent.id = c.parent_id
 WHERE c.post_id = $1
-ORDER BY COALESCE(c.comment_no, parent.comment_no), c.depth, c.created_at, c.id;
+ORDER BY COALESCE(c.comment_no, parent.comment_no), c.depth, c.created_at, c.id
+LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');

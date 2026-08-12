@@ -153,7 +153,7 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		Tag:          filter.Tag,
 		AuthorID:     filter.AuthorID,
 		ResultLimit:  int32(filter.PageSize),
-		ResultOffset: int32((filter.Page - 1) * filter.PageSize),
+		ResultOffset: filter.Offset(),
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("list posts: %w", err)
@@ -172,13 +172,21 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 
 	out := make([]PostRead, 0, len(rows))
 	for _, r := range rows {
+		// An author can be deleted between the rows being read and this lookup.
+		// Their posts go with them by cascade, so the row is already on its way
+		// out; rendering it would publish a UserPublic with uid 0, no name and a
+		// year-one timestamp, which is a shape no client should have to handle.
+		author, ok := authors[r.AuthorID]
+		if !ok {
+			continue
+		}
 		post := coredb.CoreForumPost{
 			ID: r.ID, PostNo: r.PostNo, AuthorID: r.AuthorID, Channel: r.Channel,
 			Title: r.Title, Body: r.Body, Topic: r.Topic, GameIDs: r.GameIDs, Tags: r.Tags,
 			NextCommentNo: r.NextCommentNo, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 			EditedAt: r.EditedAt,
 		}
-		out = append(out, toPostRead(post, authors[r.AuthorID], r.CommentCount))
+		out = append(out, toPostRead(post, author, r.CommentCount))
 	}
 	return out, total, nil
 }
@@ -188,6 +196,20 @@ func (s *Service) UpdatePost(ctx context.Context, principal auth.Principal, post
 	post, err := s.ownedPost(ctx, principal, postNo)
 	if err != nil {
 		return PostRead{}, err
+	}
+
+	// An edit that supplies nothing is a no-op, and stamping edited_at for it
+	// would tell every reader the post had been rewritten when it had not.
+	if in.Title == nil && in.Body == nil && !in.Topic.Set && in.GameIDs == nil && in.Tags == nil {
+		comments, err := s.q.CountForumPostComments(ctx, post.ID)
+		if err != nil {
+			return PostRead{}, fmt.Errorf("count comments: %w", err)
+		}
+		author, err := s.author(ctx, post.AuthorID)
+		if err != nil {
+			return PostRead{}, err
+		}
+		return toPostRead(post, author, comments), nil
 	}
 
 	params := coredb.UpdateForumPostParams{ID: post.ID}
@@ -324,20 +346,43 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 	return toCommentRead(comment, author), nil
 }
 
-// ListComments returns a thread's comments, each reply directly after the floor
-// it belongs to.
-func (s *Service) ListComments(ctx context.Context, postNo int64) ([]CommentRead, error) {
+// ListComments returns a page of a thread's comments, each reply directly after
+// the floor it belongs to, and the total number in the thread.
+//
+// Paged rather than whole: this route is public and unauthenticated, so an
+// unbounded response would let anyone ask the server to assemble every comment on
+// the busiest thread. The default page is generous enough that an ordinary
+// conversation still arrives in one response.
+func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize int) ([]CommentRead, int64, error) {
 	post, err := s.q.GetForumPostByNo(ctx, postNo)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, apierr.New(apierr.NotFound, "no such post")
+			return nil, 0, apierr.New(apierr.NotFound, "no such post")
 		}
-		return nil, fmt.Errorf("load post: %w", err)
+		return nil, 0, fmt.Errorf("load post: %w", err)
 	}
 
-	rows, err := s.q.ListForumComments(ctx, post.ID)
+	paging := ListFilter{Page: page, PageSize: pageSize}
+	if paging.PageSize < 1 || paging.PageSize > MaxCommentPageSize {
+		paging.PageSize = DefaultCommentPageSize
+	}
+	if paging.Page < 1 {
+		paging.Page = 1
+	}
+	paging.clampOffset(MaxCommentPageSize)
+
+	total, err := s.q.CountForumPostComments(ctx, post.ID)
 	if err != nil {
-		return nil, fmt.Errorf("list comments: %w", err)
+		return nil, 0, fmt.Errorf("count comments: %w", err)
+	}
+
+	rows, err := s.q.ListForumComments(ctx, coredb.ListForumCommentsParams{
+		PostID:       post.ID,
+		ResultLimit:  int32(paging.PageSize),
+		ResultOffset: paging.Offset(),
+	})
+	if err != nil {
+		return nil, 0, fmt.Errorf("list comments: %w", err)
 	}
 
 	ids := make([]uuid.UUID, 0, len(rows))
@@ -346,14 +391,18 @@ func (s *Service) ListComments(ctx context.Context, postNo int64) ([]CommentRead
 	}
 	authors, err := s.authors.PublicByIDs(ctx, ids)
 	if err != nil {
-		return nil, fmt.Errorf("load authors: %w", err)
+		return nil, 0, fmt.Errorf("load authors: %w", err)
 	}
 
 	out := make([]CommentRead, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, toCommentRead(r, authors[r.AuthorID]))
+		author, ok := authors[r.AuthorID]
+		if !ok {
+			continue
+		}
+		out = append(out, toCommentRead(r, author))
 	}
-	return out, nil
+	return out, total, nil
 }
 
 // UpdateComment edits a comment the caller owns.

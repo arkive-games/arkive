@@ -2293,7 +2293,7 @@
     },
     "/forum/posts/{postNo}/comments": {
       "get": {
-        "description": "Public. Floors in order, each reply directly after the comment it belongs to. A thread returns all its comments in one response.",
+        "description": "Public. Floors in order, each reply directly after the comment it belongs to. Paged, with a generous default so an ordinary thread still arrives in one response; count is the total in the thread.",
         "operationId": "listForumComments",
         "parameters": [
           {
@@ -2304,6 +2304,33 @@
             "schema": {
               "description": "Permanent post number",
               "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Comments per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 100,
+              "description": "Comments per page",
+              "format": "int64",
+              "maximum": 200,
               "minimum": 1,
               "type": "integer"
             }

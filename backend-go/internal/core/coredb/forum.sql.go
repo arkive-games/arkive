@@ -297,13 +297,24 @@ FROM core.forum_comments c
 LEFT JOIN core.forum_comments parent ON parent.id = c.parent_id
 WHERE c.post_id = $1
 ORDER BY COALESCE(c.comment_no, parent.comment_no), c.depth, c.created_at, c.id
+LIMIT $3 OFFSET $2
 `
 
-// A thread's comments in one response: floors in order, each reply directly after
-// the floor it belongs to. Ordering by the floor number of the comment or of its
+type ListForumCommentsParams struct {
+	PostID       uuid.UUID
+	ResultOffset int32
+	ResultLimit  int32
+}
+
+// A page of a thread's comments: floors in order, each reply directly after the
+// floor it belongs to. Ordering by the floor number of the comment or of its
 // parent keeps a reply adjacent to its parent without a second query.
-func (q *Queries) ListForumComments(ctx context.Context, postID uuid.UUID) ([]CoreForumComment, error) {
-	rows, err := q.db.Query(ctx, listForumComments, postID)
+//
+// Bounded, unlike an earlier version. This endpoint is public and unauthenticated,
+// so a thread with ten thousand long comments would otherwise let anyone ask the
+// server to build a response of hundreds of megabytes.
+func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsParams) ([]CoreForumComment, error) {
+	rows, err := q.db.Query(ctx, listForumComments, arg.PostID, arg.ResultOffset, arg.ResultLimit)
 	if err != nil {
 		return nil, err
 	}

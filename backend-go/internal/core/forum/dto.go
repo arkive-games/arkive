@@ -58,6 +58,20 @@ const (
 	// shows five pages of five posts, so the default matches what it asks for.
 	DefaultPageSize = 20
 	MaxPageSize     = 100
+
+	// DefaultCommentPageSize is generous because a thread is normally read whole;
+	// the limit exists to stop an unbounded response, not to force paging on a
+	// conversation of twenty comments.
+	DefaultCommentPageSize = 100
+	MaxCommentPageSize     = 200
+
+	// MaxOffset bounds page * pageSize.
+	//
+	// The offset is sent to PostgreSQL as an int32. Without this, page=107374184
+	// with pageSize=20 computes 2147483660, which wraps to -2147483636 on
+	// conversion and makes PostgreSQL reject the query -- a 500 from a query
+	// string. Measured, not theorised.
+	MaxOffset = 1 << 30
 )
 
 // PostRead is a post as the API returns it.
@@ -134,7 +148,7 @@ type ListFilter struct {
 }
 
 // normalise clamps the paging arguments so a caller cannot ask for an unbounded
-// page or a negative offset.
+// page, a negative offset, or an offset that overflows the int32 the driver sends.
 func (f *ListFilter) normalise() {
 	if f.Page < 1 {
 		f.Page = 1
@@ -142,6 +156,25 @@ func (f *ListFilter) normalise() {
 	if f.PageSize < 1 || f.PageSize > MaxPageSize {
 		f.PageSize = DefaultPageSize
 	}
+	f.clampOffset(MaxPageSize)
+}
+
+// clampOffset caps the page so that (page-1)*pageSize stays inside MaxOffset.
+//
+// Asking beyond the end of a feed is answered with an empty page rather than an
+// error, which is what a client walking to the end expects anyway.
+func (f *ListFilter) clampOffset(maxPageSize int) {
+	if f.PageSize > maxPageSize {
+		f.PageSize = maxPageSize
+	}
+	if maxPage := MaxOffset/f.PageSize + 1; f.Page > maxPage {
+		f.Page = maxPage
+	}
+}
+
+// Offset renders the SQL offset, which is now guaranteed to fit an int32.
+func (f ListFilter) Offset() int32 {
+	return int32((f.Page - 1) * f.PageSize)
 }
 
 func toPostRead(p coredb.CoreForumPost, author users.UserPublic, comments int64) PostRead {
