@@ -440,7 +440,58 @@ review.
 This belongs in `.apm/instructions/*.instructions.md` followed by `apm compile` — `CLAUDE.md`
 and `AGENTS.md` are generated, and a hand edit to either is discarded on the next compile.
 
-## 11. Publishing this beyond Arkive
+## 11. What running it taught, and what changed as a result
+
+The reviews were good from the first run — it found three dead e2e specs, a toy build
+leaking `github.com` links, and the reasoning behind both. **Every failure was in the harness.**
+That is where the hardening went.
+
+### It could not see CI, so it re-derived what CI proves
+
+It blocked a pull request over a missing `resolveJsonModule`, arguing from four sibling apps that
+set the flag. They set it redundantly — `moduleResolution: "bundler"` already implies it — and CI
+had gone green on that very commit. The reasoning was specific, cited and coherent, on a premise
+it had no way to test. It even said it could not run the build.
+
+The prompt now carries CI's conclusion and one rule: **if a finding would be caught by
+`pnpm test`, `lint:*` or `build:*`, and CI is green on this head, it cannot block.** Findings CI
+*cannot* see — logic that type-checks and is still wrong, an invariant no script encodes, tests CI
+does not run — block normally. That is the whole class of confident-but-wrong findings gone.
+
+### It re-reviewed things it had already judged
+
+A review costs about **$4 and ten minutes**. The retry chain spent both re-reviewing an identical
+diff because the gate had refused for "CI is still queued" — a timing problem answered at full
+price. And three passes over PR #22 each rediscovered the same seven non-blocking notes.
+
+Two fixes. The run now computes a **delta id** — `git diff <base>...HEAD` hashed, which is stable
+across a rebase that changes nothing of substance, unlike a tree id — and skips the agent entirely
+when the last review already judged that delta, reusing its verdict and saying so plainly. And the
+prompt is handed the previous review, with instructions to mark findings **still open** rather
+than re-deriving them, and to treat a human's dismissal as final.
+
+### Its logic was untestable, so four bugs shipped
+
+`.github/scripts/*.sh` now holds the rules, `.github/scripts/tests/` asserts them, and `ci.yml`
+runs that as the `workflow-scripts` job. Writing the tests found **two more defects before they
+shipped**: a verdict matched as `[A-Z]{4}` so `MAYBE` parsed as `MAYB` and authorised skipping a
+review, and a normalisation check that demanded every commit be bot-committed, which is false for
+any branch that needed no rebase.
+
+The tests also pin the four that reached production, so they cannot return: the guard that matched
+nothing and passed every run, the signature check that rejected commits GitHub called valid, the
+same check re-scoped by an email the bot shares with the owner, and `--force-rebase` orphaning the
+changelog SHA it had just re-pointed.
+
+Every guard test asserts a non-zero exit **and** the offending path. A guard that exits 0 quietly
+is indistinguishable from one that works — which is exactly how the first one survived.
+
+### Smaller things
+Findings can be posted as inline comments anchored to their lines, rather than a wall of prose.
+The comment footer carries the run's cost and turn count, because a reviewer that bills real money
+should say so where the bill is incurred.
+
+## 12. Publishing this beyond Arkive
 
 The App is registered **public**, so any account can install it, and the intent is eventually to
 make the bot reusable. That is a second piece of work and deliberately does not gate this one:
@@ -469,7 +520,7 @@ file with its strings swapped. What is hardcoded today, and would have to become
 `vars.CLAUDE_BOT_LOGIN` being unset already disables bot recognition safely, so a consumer that
 wants review without landing gets that by simply not setting it.
 
-## 12. Out of scope
+## 13. Out of scope
 
 - Reviewing on `pull_request` events. Review is on request only; every push triggering a
   review would spend the gateway's Opus budget on work in progress.
