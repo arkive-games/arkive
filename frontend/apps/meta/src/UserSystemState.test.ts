@@ -75,7 +75,7 @@ describe('user system state persistence', () => {
     }))
 
     const state = readUserSystemState(storage, 'user-a')
-    expect(state.profile).toEqual({ bio: 'Saved bio', avatarSrc: DEFAULT_AVATAR_SRC, gender: 'female' })
+    expect(state.profile).toEqual({ bio: 'Saved bio', avatarSrc: DEFAULT_AVATAR_SRC, gender: null })
     expect(state.notificationSettings.replies).toBe(true)
     expect(state.notificationSettings.browser).toBe(true)
     expect(state.followedUserIds).toEqual(['known-user'])

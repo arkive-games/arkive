@@ -1643,7 +1643,12 @@ function ForumComposerPage({
           <label className="forum-video-link-field" htmlFor="forum-video-link">
             <span>{t('forum.composer.videoLink')}</span>
             <div>
-              <input id="forum-video-link" type="url" value={videoInput} onChange={(event) => { setVideoInput(event.target.value); setParsedVideoUrl(''); setVideoError('') }} placeholder={t('forum.composer.videoPlaceholder')} />
+              {/* Bounded: a valid bilibili host with a few hundred KB of query
+                  string is still a valid URL, and it is persisted with the post.
+                  Without a cap the write is refused and the composer can only
+                  offer the generic "try again". 300 clears every real share
+                  link with room to spare. */}
+              <input id="forum-video-link" type="url" maxLength={300} value={videoInput} onChange={(event) => { setVideoInput(event.target.value); setParsedVideoUrl(''); setVideoError('') }} placeholder={t('forum.composer.videoPlaceholder')} />
               <button type="button" onClick={parseVideo}>{t('forum.composer.parseVideo')}</button>
             </div>
           </label>

@@ -74,7 +74,11 @@ const STORAGE_PREFIX = 'arkive.meta.user-system.v1'
 
 export function createDefaultUserSystemState(): UserSystemState {
   return {
-    profile: { bio: '', avatarSrc: DEFAULT_AVATAR_SRC, gender: 'female' },
+    // null, not a guess: meta has no gender editor, so every account would have
+    // shown the female icon and an sr-only "Female" as though it were a stated
+    // fact -- and it was written into the profile record as one. Both readers
+    // compare for equality, so null simply renders no icon.
+    profile: { bio: '', avatarSrc: DEFAULT_AVATAR_SRC, gender: null },
     notificationSettings: {
       replies: true,
       mentions: true,
