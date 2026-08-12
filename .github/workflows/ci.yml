@@ -49,6 +49,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The review bot's logic lives in .github/scripts/*.sh rather than inside
+  # workflow `run:` blocks, precisely so it can be tested. Four of the five
+  # defects it shipped with were shell bugs that YAML parsing, eslint and every
+  # other check here were structurally incapable of catching -- they were found by
+  # running the bot in production and reading the logs. This job is the answer to
+  # that. It needs no toolchain, so it costs seconds.
+  scripts:
+    runs-on: ubuntu-latest
+    name: workflow-scripts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Test the workflow scripts
+        run: .github/scripts/tests/run.sh
+
   frontend:
     runs-on: ubuntu-latest
     name: frontend
