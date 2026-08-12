@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.32.0",
+      "date": "2026-08-13",
+      "commit": "78177b11b9cd623e5c44ef5f8b9d8a7048755160",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Improved mobile map filters, catalog navigation, base-camp progression, and merchant discovery with portraits and map locations.",
+            "zh-CN": "优化移动端地图筛选、目录导航与据点进度，并为商人补充头像、类别筛选和地图位置。",
+            "zh-TW": "優化行動版地圖篩選、目錄導覽與據點進度，並為商人補充頭像、類別篩選和地圖位置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.31.0",
       "date": "2026-08-12",
       "commit": "0c4b4d44dbb40588daf2d2c0714155392ac7f122",
