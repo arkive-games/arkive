@@ -32,6 +32,7 @@ def test_passive_sources_cover_verified_acquisition_paths():
                 "RequireItemId": "PalPassiveSkillChange_ExamplePassive",
             }
         },
+        {"PalPassiveSkillChange_ExamplePassive"},
     )
 
     assert sources == [
@@ -46,12 +47,47 @@ def test_passive_sources_cover_verified_acquisition_paths():
     ]
 
 
-def test_passive_sources_omit_missing_operating_table_item():
+@pytest.mark.parametrize("passive_id", ["Nocturnal", "PAL_CorporateSlave"])
+def test_passive_sources_infer_verified_operating_table_item(passive_id):
+    item_id = f"PalPassiveSkillChange_{passive_id}"
+    assert _passive_sources(
+        passive_id,
+        {},
+        {},
+        {
+            passive_id: {
+                "PassiveSkill": passive_id,
+                "Price": 10000,
+                "RequireItemId": "None",
+            }
+        },
+        {item_id},
+    ) == [{"kind": "operatingTable", "price": 10000, "item": item_id}]
+
+
+def test_passive_sources_resolve_implant_id_override():
+    assert _passive_sources(
+        "Test_PalEgg_HatchingSpeed_Up",
+        {},
+        {},
+        {
+            "Test_PalEgg_HatchingSpeed_Up": {
+                "PassiveSkill": "Test_PalEgg_HatchingSpeed_Up",
+                "Price": 50000,
+                "RequireItemId": "None",
+            }
+        },
+        {"PalPassiveSkillChange_HatchingSpeed_Up"},
+    )[0]["item"] == "PalPassiveSkillChange_HatchingSpeed_Up"
+
+
+def test_passive_sources_do_not_invent_missing_implant_item():
     assert _passive_sources(
         "MoneyOnly",
         {},
         {},
-        {"MoneyOnly": {"PassiveSkill": "MoneyOnly", "Price": 10000, "RequireItemId": "None"}},
+        {"MoneyOnly": {"PassiveSkill": "MoneyOnly", "Price": 10000}},
+        set(),
     ) == [{"kind": "operatingTable", "price": 10000}]
 
 
@@ -178,8 +214,16 @@ def test_encyclopedia_integration(tmp_path):
         for source in passive["sources"]
         if source["kind"] == "operatingTable"
     ]
-    assert sum("item" not in source for source in operating_sources) == 19
-    assert sum("item" in source for source in operating_sources) == 35
+    assert all("item" in source for source in operating_sources)
+    by_passive = {passive["id"]: passive for passive in passives}
+    assert next(
+        source for source in by_passive["Nocturnal"]["sources"]
+        if source["kind"] == "operatingTable"
+    )["item"] == "PalPassiveSkillChange_Nocturnal"
+    assert next(
+        source for source in by_passive["PAL_CorporateSlave"]["sources"]
+        if source["kind"] == "operatingTable"
+    )["item"] == "PalPassiveSkillChange_PAL_CorporateSlave"
 
     # Locale files: 17 languages, non-mojibake real text for a known Pal.
     en_pals = json.loads((data_out / "locales/en-US/pals.json").read_text(encoding="utf-8"))

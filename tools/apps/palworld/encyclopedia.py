@@ -74,6 +74,12 @@ _PASSIVE_POOL_FIELDS = (
     ("AddMutationPal", "mutationPal"),
 )
 
+# The passive id is normally the suffix of its implant item id. One authored
+# test-era passive kept a different internal id after shipping.
+_PASSIVE_IMPLANT_OVERRIDES = {
+    "Test_PalEgg_HatchingSpeed_Up": "PalPassiveSkillChange_HatchingSpeed_Up",
+}
+
 # The 9 element types (EPalElementType names, enum order).
 ELEMENTS = ["Normal", "Fire", "Water", "Leaf", "Electricity", "Ice", "Earth", "Dark", "Dragon"]
 # Element name -> element-icon index (Texture/UI/Main_Menu/T_Icon_element_NN.png).
@@ -791,6 +797,7 @@ def _passive_sources(
     row: dict,
     innate_pals: dict[str, list[str]],
     operating_rows: dict[str, dict],
+    item_ids: set[str],
 ) -> list[dict]:
     """Verified acquisition paths for one displayable Pal passive."""
     sources = [
@@ -809,7 +816,12 @@ def _passive_sources(
             "price": operating.get("Price", 0) or 0,
         }
         item = operating.get("RequireItemId")
-        if item not in _NONE:
+        if item in _NONE:
+            candidate = _PASSIVE_IMPLANT_OVERRIDES.get(
+                passive_id, f"PalPassiveSkillChange_{passive_id}"
+            )
+            item = candidate if candidate in item_ids else None
+        if item not in _NONE and item in item_ids:
             source["item"] = item
         sources.append(source)
 
@@ -911,6 +923,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     partner_rows = read_rows(raw / "DataTable/PassiveSkill/DT_PartnerSkillParameter.json")
     partner_def = read_rows(raw / "DataTable/PartnerSkill/DT_PartnerSkill.json")
     passive_main = read_rows(raw / "DataTable/PassiveSkill/DT_PassiveSkill_Main.json")
+    item_rows = read_rows(raw / "DataTable/Item/DT_ItemDataTable_Common.json")
     operating_table = read_rows(
         raw / "DataTable/MapObject/DT_OperatingTablePassiveSkillDataTable.json"
     )
@@ -1020,12 +1033,15 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
         for row_id, row in operating_table.items()
         if (row.get("PassiveSkill") or row_id) in disp
     }
+    item_id_set = set(item_rows)
     passives = [
         {
             "id": pid,
             "rank": v.get("Rank", 0),
             "effects": _passive_effects(v),
-            "sources": _passive_sources(pid, v, innate_pals, operating_by_passive),
+            "sources": _passive_sources(
+                pid, v, innate_pals, operating_by_passive, item_id_set
+            ),
             # when the passive is active (worker/riding/on-team/always/base-camp).
             **({"invoke": inv} if (inv := [tok for f, tok in _INVOKE_FLAGS.items() if v.get(f) is True]) else {}),
             # random-roll weight: displayable passives are 100 (normal) or 5
@@ -1084,7 +1100,7 @@ def run_encyclopedia(raw: Path, data_out: Path, res_out: Path) -> dict:
     # item pages; the passives LIST/page stays the 115 displayable (names only).
     item_passive_ids = sorted({
         p
-        for r in read_rows(raw / "DataTable/Item/DT_ItemDataTable_Common.json").values()
+        for r in item_rows.values()
         for i in range(1, 5)
         if (p := r.get(f"PassiveSkillName{i}")) and p not in _NONE
     })
