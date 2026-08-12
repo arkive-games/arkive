@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-08-12",
+      "commit": "1244da33bb810b439b86df832f5d1ec9123eeef4",
+      "targets": [
+        "aion2",
+        "palworld",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The forum has been rebuilt with game cabins, personal activity views, clearer post details, safer publishing, and responsive navigation.",
+            "zh-CN": "论坛已完成重构，新增游戏舱、个人动态视图、更清晰的帖子详情、安全的发布流程与响应式导航。",
+            "zh-TW": "論壇已完成重構，新增遊戲艙、個人動態檢視、更清晰的文章詳情、安全的發佈流程與響應式導覽。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-12",
       "commit": "473480abe4f63d74e18cb2e7fb48b0d18ac0616f",
       "targets": [
         "aion2",
