@@ -99,8 +99,7 @@ function keysIn(file, text, exported) {
   }
 
   // Original API: an object literal carrying id / namespace / surface.
-  for (const m of text.matchAll(/defineMemoryRecord[^{]*\{([\s\S]{0,600}?)\}\)/g)) {
-    const body = m[1]
+  for (const body of defineMemoryRecordBodies(text)) {
     const id = /\bid:\s*['"]([\w-]+)['"]/.exec(body)?.[1]
     const namespace = /\bnamespace:\s*['"]([\w-]+)['"]/.exec(body)?.[1]
     const surface = /\bsurface:\s*['"]([\w-]+)['"]/.exec(body)?.[1]
@@ -112,6 +111,46 @@ function keysIn(file, text, exported) {
     found.push({ key: `arkive.memory.${namespace}.${surface}.${id}`, file: relative, dims })
   }
   return found
+}
+
+/**
+ * The object literal of every `defineMemoryRecord({ ... })` call in a file.
+ *
+ * Brace-matched rather than length-capped. The previous version read at most 600
+ * characters and then required a literal `})`, so a record whose body ran longer
+ * -- `aion2.wiki.recent-entries`, whose `validate` is an eight-line predicate --
+ * matched nothing at all and was silently absent from the inventory. A snapshot
+ * that omits records is worse than no snapshot: `memory:keys:check` passed while
+ * the registry it is supposed to enumerate was incomplete.
+ *
+ * String bodies are skipped so a brace inside a literal cannot unbalance the
+ * scan.
+ */
+function defineMemoryRecordBodies(text) {
+  const bodies = []
+  const call = /defineMemoryRecord\s*(?:<[^>]*>)?\s*\(\s*\{/g
+  for (const match of text.matchAll(call)) {
+    let i = match.index + match[0].length
+    const start = i
+    let depth = 1
+    let quote = ''
+    while (i < text.length && depth > 0) {
+      const c = text[i]
+      if (quote) {
+        if (c === '\\') i += 1
+        else if (c === quote) quote = ''
+      } else if (c === "'" || c === '"' || c === '`') {
+        quote = c
+      } else if (c === '{') {
+        depth += 1
+      } else if (c === '}') {
+        depth -= 1
+      }
+      i += 1
+    }
+    if (depth === 0) bodies.push(text.slice(start, i - 1))
+  }
+  return bodies
 }
 
 const files = SEARCH

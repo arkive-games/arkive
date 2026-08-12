@@ -8,9 +8,11 @@ arkive.memory.aion2.map.show-labels	-	apps/aion2/src/context/MarkersContext.tsx
 arkive.memory.aion2.map.view	-	apps/aion2/src/features/map/MapRoute.tsx
 arkive.memory.aion2.wiki-catalog.faction	-	apps/aion2/src/features/wiki/GroupList.tsx
 arkive.memory.aion2.wiki-catalog.query	-	apps/aion2/src/features/wiki/WikiCatalogToolbar.tsx
+arkive.memory.aion2.wiki.recent-entries	-	apps/aion2/src/features/wiki/wikiRecent.ts
 arkive.memory.lostark.combat-power.loadout	-	apps/lostark/src/lib/loadout.ts
 arkive.memory.palworld.breeding.chain-generations	-	apps/palworld/src/features/breeding/BreedingPage.tsx
 arkive.memory.palworld.breeding.favorites	-	apps/palworld/src/features/breeding/BreedingPage.tsx
+arkive.memory.palworld.breeding.search	-	apps/palworld/src/features/breeding/BreedingPage.tsx
 arkive.memory.palworld.catalog.page	-	apps/palworld/src/components/MobilePagination.tsx
 arkive.memory.palworld.catalog.reveal-depth	-	apps/palworld/src/features/catalog/useIncrementalList.ts
 arkive.memory.palworld.catalog.view-mode	-	apps/palworld/src/features/pals/PalListPage.tsx
@@ -21,6 +23,7 @@ arkive.memory.palworld.map.show-labels	-	apps/palworld/src/App.tsx
 arkive.memory.palworld.map.show-regions	-	apps/palworld/src/App.tsx
 arkive.memory.palworld.map.view	-	apps/palworld/src/App.tsx
 arkive.memory.palworld.map.visible-subtypes	-	apps/palworld/src/App.tsx
+arkive.memory.palworld.pal-detail.mobile-sections	viewport	apps/palworld/src/features/pals/PalDetailPage.tsx
 arkive.memory.palworld.pals-catalog.filters	-	apps/palworld/src/features/pals/PalListPage.tsx
 arkive.memory.palworld.pals-catalog.query	-	apps/palworld/src/features/pals/PalListPage.tsx
 arkive.memory.palworld.stat-simulator.awake	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
@@ -28,8 +31,8 @@ arkive.memory.palworld.stat-simulator.entered-values	-	apps/palworld/src/feature
 arkive.memory.palworld.stat-simulator.iv	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
 arkive.memory.palworld.stat-simulator.passives	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
 arkive.memory.palworld.stat-simulator.souls	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
-arkive.memory.site.account-editor.profile	-	apps/meta/src/UserSystemPages.tsx
-arkive.memory.site.forum-editor.post-v2	-	apps/meta/src/ForumPage.tsx
+arkive.memory.site.account-editor.profile	account	apps/meta/src/UserSystemPages.tsx
+arkive.memory.site.forum-editor.post-v2	account	apps/meta/src/ForumPage.tsx
 arkive.memory.site.games-catalog.category	-	apps/meta/src/AllGamesPage.tsx
 arkive.memory.site.games-catalog.page	-	apps/meta/src/AllGamesPage.tsx
 arkive.memory.site.games-catalog.query	-	apps/meta/src/AllGamesPage.tsx
@@ -37,9 +40,12 @@ arkive.memory.site.interface.language	-	packages/state-memory/src/language.ts
 arkive.memory.site.interface.language-override	-	packages/state-memory/src/language.ts
 arkive.memory.site.interface.theme	-	packages/ui/src/arkive-theme-storage.ts
 arkive.memory.site.interface.theme-override	-	packages/ui/src/arkive-theme-storage.ts
+arkive.memory.site.portal.recent-destinations	-	apps/meta/src/App.tsx
 arkive.memory.site.user-system.authored-posts	account	apps/meta/src/UserSystemState.tsx
 arkive.memory.site.user-system.legacy-snapshot	account	apps/meta/src/UserSystemState.tsx
 arkive.memory.site.user-system.profile-content	account	apps/meta/src/UserSystemState.tsx
+arkive.memory.site.user-system.progress	account	apps/meta/src/UserSystemState.tsx
+arkive.memory.site.user-system.settings	account	apps/meta/src/UserSystemState.tsx
 arkive.memory.sts2.cards-catalog.filters	-	apps/sts2/src/features/cards/CardListPage.tsx
 arkive.memory.sts2.cards-catalog.query	-	apps/sts2/src/features/cards/CardListPage.tsx
 arkive.memory.vrising.knowledge.query	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx

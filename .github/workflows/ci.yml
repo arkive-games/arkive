@@ -104,7 +104,15 @@ jobs:
       # of mistake review keeps missing: an app-only import creeping into a shared
       # package, an unregistered persistence key, a release entry whose commit a
       # rebase rewrote.
+      #
+      # `continue-on-error` on this and the two steps after it, with one gate at
+      # the end: these three are independent, and failing here used to abort the
+      # job before lint and build ever ran. A stale memory-keys.txt would hide
+      # every type error on a branch, so a contributor fixed one line, pushed, and
+      # only then discovered the real breakage. One run now reports all three.
       - name: Check the repo invariants
+        id: invariants
+        continue-on-error: true
         working-directory: frontend
         run: |
           set -euo pipefail
@@ -122,6 +130,8 @@ jobs:
       # linted here because they exist in the workspace, and a break in a shared
       # package shows up in whichever app imports it first.
       - name: Lint every app
+        id: lint
+        continue-on-error: true
         working-directory: frontend
         run: |
           set -euo pipefail
@@ -140,6 +150,8 @@ jobs:
       # route tree is committed, and adding a route without re-running
       # `pnpm --filter aion2 exec tsr generate` fails the build here.
       - name: Build every app
+        id: build
+        continue-on-error: true
         working-directory: frontend
         run: |
           set -euo pipefail
@@ -147,6 +159,26 @@ jobs:
             echo "--- build $app"
             pnpm "build:$app"
           done
+
+      # The gate. Every step above reports, then this fails the job once, naming
+      # everything that broke -- so a red run is a complete list rather than the
+      # first thing that happened to run.
+      - name: Frontend checks passed
+        if: always()
+        run: |
+          set -euo pipefail
+          failed=""
+          # if/then rather than `[ ... ] && var=`: under `set -e` a false test in
+          # an AND-list is the kind of thing that differs between shells, and this
+          # step is the one that decides whether the job is red.
+          if [ "${{ steps.invariants.outcome }}" = "failure" ]; then failed="$failed repo-invariants"; fi
+          if [ "${{ steps.lint.outcome }}" = "failure" ]; then failed="$failed lint"; fi
+          if [ "${{ steps.build.outcome }}" = "failure" ]; then failed="$failed build"; fi
+          if [ -n "$failed" ]; then
+            echo "::error::Frontend job failed:$failed"
+            exit 1
+          fi
+          echo "invariants, lint and build all passed"
 
   go:
     runs-on: ubuntu-latest
