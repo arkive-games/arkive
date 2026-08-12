@@ -122,94 +122,59 @@ jobs:
           app-id: ${{ secrets.CLAUDE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_APP_PRIVATE_KEY }}
 
-      # Everything below reads the comment body through `env`, never through
-      # inline ${{ }}. The body is attacker-controlled on a public repository, and
-      # an inline expansion of it into a run: block is shell injection.
-      - name: Decide whether to run
-        id: gate
+      # Checkout first: the gate is a script now, not an embedded block, which is
+      # how its authorisation and budget rules became assertable. See
+      # .github/scripts/tests/test-claude-gate.sh -- 24 assertions including the
+      # one that matters most, that a stranger pasting a chain marker into a
+      # comment is still refused.
+      - name: Checkout the scripts
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # The gate needs every comment on the pull request, both to count chain
+      # markers and (below) to find the previous review. Fetched once, here.
+      - name: Fetch the comment thread
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BODY: ${{ github.event.comment.body }}
-          COMMENTER: ${{ github.event.comment.user.login }}
-          COMMENT_ID: ${{ github.event.comment.id }}
-          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
           PR: ${{ github.event.issue.number }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          # Written exactly once on every path. Writing `go=false` up front and
-          # `go=true` later would put the same key in $GITHUB_OUTPUT twice, and
-          # which one wins is not something an authorisation gate should rest on.
-          deny() { echo "go=false" >> "$GITHUB_OUTPUT"; echo "$1"; exit 0; }
+          jq_fmt='.[] | "<<<comment \(.user.login) \(.created_at)>>>", .body'
+          gh api --paginate "repos/$REPO/issues/$PR/comments" --jq "$jq_fmt" \
+            > "$RUNNER_TEMP/comments.txt"
+          echo "thread is $(wc -l < "$RUNNER_TEMP/comments.txt") lines"
 
-          # --- who asked -------------------------------------------------------
-          if [ "$COMMENTER" = "${APP_SLUG}[bot]" ]; then
-            # A bot-initiated retry. Authorised only because it carries a marker
-            # that only fast-forward.yml writes; the App is not a collaborator and
-            # has no permission level to check.
-            if ! printf '%s' "$BODY" | grep -q 'claude-land-retry chain='; then
-              deny "Bot comment with no retry marker. Ignoring."
-            fi
-            chain=$(printf '%s' "$BODY" | sed -n 's/.*claude-land-retry chain=\([0-9]\{1,\}\).*/\1/p' | head -1)
-            if [ -z "$chain" ]; then
-              echo "::warning::Retry marker present but no chain id could be parsed."
-              deny "Ignoring."
-            fi
-            # The attempt the gatekeeper just refused, read straight from the
-            # event payload. See the budget note below for why the count alone
-            # is not trustworthy.
-            prev_attempt=$(printf '%s' "$BODY" \
-              | sed -n 's/.*claude-land-retry chain=[0-9]\{1,\} attempt=\([0-9]\{1,\}\).*/\1/p' | head -1)
-          else
-            # Not author_association: it reports MEMBER/CONTRIBUTOR from org and
-            # commit history, neither of which is push access.
-            level=$(gh api "repos/$REPO/collaborators/$COMMENTER/permission" --jq .permission 2>/dev/null || echo none)
-            echo "$COMMENTER has '$level' permission"
-            case "$level" in
-              admin | write | maintain) ;;
-              *)
-                # Silent on purpose. This repository is public; replying to a
-                # drive-by commenter invites more comments, and every trigger
-                # spends gateway tokens.
-                deny "Not authorised. Ignoring silently."
-                ;;
-            esac
-            # A human request begins a new chain, identified by its own comment id.
-            chain="$COMMENT_ID"
-          fi
+      - name: Decide whether to run
+        id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Through env, never inline: the body is attacker-controlled on a public
+          # repository and an inline ${{ }} expansion into a run: block is shell
+          # injection.
+          BODY: ${{ github.event.comment.body }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          BOT_LOGIN: ${{ steps.app-token.outputs.app-slug && format('{0}[bot]', steps.app-token.outputs.app-slug) }}
+          PR: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Resolved here rather than in the script, so the script stays pure and
+          # every branch of it is testable without a network. Not
+          # author_association: that reports MEMBER/CONTRIBUTOR from org and commit
+          # history, neither of which is push access.
+          PERMISSION=$(gh api "repos/$REPO/collaborators/$COMMENTER/permission" --jq .permission 2>/dev/null || echo none)
+          export PERMISSION COMMENTS_FILE="$RUNNER_TEMP/comments.txt"
+          echo "$COMMENTER has '$PERMISSION' permission"
 
-          # --- which verb ------------------------------------------------------
-          # First line only: a body whose later prose contains "fix" must not
-          # silently upgrade a review request into permission to edit code.
-          first=$(printf '%s' "$BODY" | head -1 | tr '[:upper:]' '[:lower:]')
-          case "$first" in
-            '@claude fix'*) verb=fix ;;
-            *)              verb=review ;;
-          esac
+          .github/scripts/claude-gate.sh | tee "$RUNNER_TEMP/gate.txt"
+          grep -E '^(go|verb|chain|attempt)=' "$RUNNER_TEMP/gate.txt" >> "$GITHUB_OUTPUT"
 
-          # --- how much budget is left -----------------------------------------
-          # Counted AND parsed, whichever is higher.
-          #
-          # Counting alone undercounts, which was measured rather than theorised:
-          # on PR #22 the marker comment was 12 seconds old and the comments-list
-          # API still did not return it, so attempt 2 announced itself as attempt
-          # 1 and the chain would have run four times against a budget of three.
-          # The list endpoint lags its own writes.
-          #
-          # Parsing alone was rejected in the original design because a number
-          # written into a comment can be written as `1` forever. So take the max:
-          # lag can only push the COUNT down, and the marker value arrives in the
-          # event payload, which cannot lag. Under-reporting now needs BOTH to be
-          # wrong at once, and they fail in different directions.
-          counted=$(gh api --paginate "repos/$REPO/issues/$PR/comments" --jq '.[].body' \
-                    | grep -c "claude-land chain=$chain" || true)
-          from_count=$(( counted + 1 ))
-          from_marker=$(( ${prev_attempt:-0} + 1 ))
-          attempt=$(( from_count > from_marker ? from_count : from_marker ))
-          echo "chain=$chain verb=$verb attempt=$attempt of $MAX_ATTEMPTS (counted $counted, marker said ${prev_attempt:-none})"
-
-          if [ "$attempt" -gt "$MAX_ATTEMPTS" ]; then
-            echo "::error::Chain $chain has used $used attempts; the budget is $MAX_ATTEMPTS."
+          # The budget notice is the one refusal worth saying out loud: silence
+          # would read as the bot ignoring a request it actually declined.
+          if grep -q '^exhausted=true' "$RUNNER_TEMP/gate.txt"; then
             body="$RUNNER_TEMP/exhausted.md"
             {
               echo "Stopping: this request has used its $MAX_ATTEMPTS repair attempts and \`master\` still will not take the branch."
@@ -217,15 +182,7 @@ jobs:
               echo "The refusals above say why. Landing it needs a person now."
             } > "$body"
             gh pr comment "$PR" --repo "$REPO" --body-file "$body"
-            deny "Budget exhausted."
           fi
-
-          {
-            echo "go=true"
-            echo "verb=$verb"
-            echo "chain=$chain"
-            echo "attempt=$attempt"
-          } >> "$GITHUB_OUTPUT"
 
       - name: Resolve the pull request
         id: pr
@@ -455,11 +412,59 @@ jobs:
           {
             echo "sha=$(git rev-parse HEAD)"
             echo "tree=$(git rev-parse 'HEAD^{tree}')"
+            # The identity of what this branch CONTRIBUTES, which is not the same
+            # as its tree: a rebase moves the tree every time master moves, so a
+            # tree comparison would almost never match. The three-dot diff is
+            # against the merge base, so it is stable across a rebase that changes
+            # nothing of substance -- exactly the case worth not paying to review.
+            echo "delta=$(git diff "origin/$BASE_REF...HEAD" | git hash-object --stdin)"
           } >> "$GITHUB_OUTPUT"
-          echo "pre-agent HEAD is $(git rev-parse HEAD) (tree $(git rev-parse 'HEAD^{tree}'))"
+          echo "pre-agent HEAD is $(git rev-parse HEAD)"
 
+      # Everything the agent is told about the world outside its checkout is
+      # gathered here, because it cannot look: it has no gh and no network.
+      - name: Gather CI status and the previous review
+        id: context
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          HEAD_SHA: ${{ needs.preflight.outputs.head }}
+          DELTA: ${{ steps.before.outputs.delta }}
+        run: |
+          set -euo pipefail
+          jq_fmt='.[] | "<<<comment \(.user.login) \(.created_at)>>>", .body'
+          gh api --paginate "repos/$REPO/issues/$PR/comments" --jq "$jq_fmt" \
+            > "$RUNNER_TEMP/comments.txt"
+
+          # T1: what CI already proved. The bot cannot see CI, so it re-derives
+          # build/type/test breakage from source and gets it confidently wrong --
+          # it blocked PR #22 on a missing `resolveJsonModule` that CI had just
+          # proven unnecessary, citing four sibling apps that set the flag
+          # redundantly. Telling it the verdict removes the whole class.
+          ci=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$HEAD_SHA" \
+                 --jq '.workflow_runs | sort_by(.created_at) | last | "\(.status)/\(.conclusion // "pending")"' \
+               2>/dev/null || echo "unknown/unknown")
+          echo "ci=$ci" >> "$GITHUB_OUTPUT"
+          echo "CI on $HEAD_SHA: $ci"
+
+          # T1: the previous review, so a fresh pass does not rediscover the same
+          # findings from scratch. Three passes over PR #22 each re-derived the
+          # same seven non-blocking notes.
+          awk '/^<<<comment .*\[bot\] /{keep=1} /^<<<comment /{if (!match($0, /\[bot\] /)) keep=0} keep' \
+            "$RUNNER_TEMP/comments.txt" > "$RUNNER_TEMP/previous-reviews.md" || true
+          echo "previous review material: $(wc -l < "$RUNNER_TEMP/previous-reviews.md") lines"
+
+          # T1: has anything about the change actually moved since it was judged?
+          DELTA="$DELTA" COMMENTS_FILE="$RUNNER_TEMP/comments.txt" \
+            .github/scripts/claude-should-review.sh | tee "$RUNNER_TEMP/should.txt"
+          grep -E '^(skip|previous_verdict)=' "$RUNNER_TEMP/should.txt" >> "$GITHUB_OUTPUT"
+
+      # Skipped entirely when the branch's contribution has not moved since it was
+      # last judged. A review is ~$4 and ten minutes, and the retry chain used to
+      # spend both re-reviewing an identical diff because the gate had refused for
+      # "CI is still queued" -- a timing problem answered at full price.
       - name: Review, and re-point what the rebase orphaned
         id: agent
+        if: steps.context.outputs.skip != 'true'
         uses: anthropics/claude-code-action@5ef2e550a465a721f4f45e4a7d3c340c873e1dcc # v1.0.190
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -467,9 +472,14 @@ jobs:
           track_progress: false
           # See the header for what is deliberately absent. `git add`/`git commit`
           # are safe (no --exec equivalent); `git rebase` and `git push` are not.
+          #
+          # The inline-comment tool IS granted: a wall of seven prose findings is
+          # hard to act on, and anchoring each to its line is the difference
+          # between a review someone works through and one they skim. It posts
+          # only review comments on this pull request -- it is not general gh.
           claude_args: >-
             --model claude-opus-5
-            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git show:*),Bash(git rev-parse:*),Bash(git merge-base:*),Bash(git add:*),Bash(git commit:*),Bash(pnpm changelog:verify)"
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git show:*),Bash(git rev-parse:*),Bash(git merge-base:*),Bash(git add:*),Bash(git commit:*),Bash(pnpm changelog:verify),mcp__github_inline_comment__create_inline_comment"
           prompt: |
             Review pull request #${{ github.event.issue.number }} of ${{ github.repository }}.
 
@@ -481,6 +491,46 @@ jobs:
             - rebase hit a conflict and was aborted: ${{ steps.rebase.outputs.conflict }}
 
             Read CLAUDE.md first. It is the standard you are reviewing against.
+
+            ## What CI already proved: `${{ steps.context.outputs.ci }}`
+
+            `ci.yml` runs, on this exact head commit: `pnpm test` (the whole unit
+            suite), `eslint` for every app, `tsc -b && vite build` for every app,
+            and the repository invariant checks (`check:engine`, `check:shell`,
+            `memory:keys:check`, `changelog:verify`).
+
+            **If CI concluded `success`, nothing those commands would have caught
+            can be a blocking finding.** Not a type error, not a failing test, not
+            a lint violation, not a build break, not an unreachable changelog SHA.
+            You cannot run them here, and a confident argument from reading the
+            source does not outrank a green run of the actual command.
+
+            This is not hypothetical: a previous pass blocked this bot's own work
+            over a missing `resolveJsonModule`, reasoning from four sibling apps
+            that set the flag — they set it redundantly, `moduleResolution:
+            "bundler"` already implies it, and CI had gone green on that very
+            commit. If you believe CI is wrong, say so as a non-blocking note and
+            explain how to reproduce; do not hold the pull request on it.
+
+            Findings CI cannot see — logic that is wrong but type-checks, a
+            security or data-loss risk, a broken invariant no script encodes, a
+            spec violation, dead e2e tests CI does not run — are exactly what you
+            are here for, and they block normally.
+
+            ## What was already said
+
+            `${{ runner.temp }}/previous-reviews.md` holds this bot's earlier
+            comments on this pull request, if any. Read it before you start.
+
+            - Do not re-derive findings that are already there. If one is still
+              open, say so in one line under a **Still open** heading and move on.
+            - If a human replied dismissing a finding, it is dismissed. Do not
+              raise it again.
+            - Put genuinely new findings under **New since the last review**.
+
+            A reviewer who rediscovers the same seven notes every pass is noise,
+            and the author stops reading. Three earlier passes over this pull
+            request did exactly that.
 
             ## Produce exactly two files
 
@@ -602,192 +652,56 @@ jobs:
       # accepts the generated todo list unedited, which is how it runs headless.
       # Rebasing from the BASE rather than from $BEFORE is required: a fixup
       # targets one of the branch's own commits, which is older than $BEFORE.
+      # All three of these were embedded shell and are now scripts with tests --
+      # .github/scripts/tests/test-claude-{normalise,guard,signature}.sh, 84
+      # assertions between them. Each replaced a rule that had already shipped
+      # broken: an autosquash that orphaned the changelog SHA it had just
+      # re-pointed, a guard that matched nothing and passed every run, and a
+      # signature check that rejected commits GitHub called valid.
       - name: Normalise the agent's commits and fold in fixups
         if: steps.agent.outcome == 'success'
         env:
-          BEFORE: ${{ steps.before.outputs.sha }}
-        run: |
-          set -euo pipefail
-          if [ "$(git rev-parse HEAD)" = "$BEFORE" ]; then
-            echo "The agent committed nothing; nothing to normalise."
-            exit 0
-          fi
-          echo "Before:"
-          git log --format='  %h author=%an committer=%cn sig=%G? %s' "origin/$BASE_REF..HEAD"
-
-          # NO --force-rebase here, and that is the whole point. Forcing it
-          # recreates every commit on the branch -- including the one a
-          # changelog.json entry pins -- so the autosquash would orphan the very
-          # re-point it had just folded in, and changelog:verify would refuse the
-          # branch one hop later. Measured in a scratch repo: with --force-rebase
-          # the pinned commit's SHA changes, without it the SHA is preserved while
-          # the fixup still folds and every commit from the amended one onward
-          # still picks up the bot as committer.
-          GIT_SEQUENCE_EDITOR=true git rebase --interactive --autosquash "origin/$BASE_REF"
-
-          if git log --format='%s' "origin/$BASE_REF..HEAD" | grep -q '^fixup!'; then
-            echo "::error::A fixup! commit survived the autosquash -- its target is not on this branch."
-            exit 1
-          fi
-
-          # With no fixup in the range, git fast-forwards the whole todo list and
-          # rewrites nothing -- so an agent commit that needed no folding would
-          # keep claude[bot] as its committer and stay unverifiable. Rewrite from
-          # the OLDEST such commit only, never from the base: everything older
-          # than it may be pinned by a changelog entry.
-          oldest=$(git log --reverse --format='%H%x09%cn' "origin/$BASE_REF..HEAD" \
-                   | awk -F'\t' '$2 == "claude[bot]" { print $1; exit }')
-          if [ -n "$oldest" ]; then
-            echo "Normalising from $oldest (first commit still committed by claude[bot])."
-            git rebase --force-rebase "${oldest}^"
-          fi
-
-          echo "After:"
-          git log --format='  %h author=%an committer=%cn sig=%G? %s' "origin/$BASE_REF..HEAD"
+          BOT_NAME: ${{ vars.BOT_GIT_NAME }}
+        run: .github/scripts/claude-normalise.sh "origin/$BASE_REF" "${{ steps.before.outputs.sha }}"
 
       - name: Check what the agent changed
         if: steps.agent.outcome == 'success'
         env:
-          BEFORE: ${{ steps.before.outputs.sha }}
           BEFORE_TREE: ${{ steps.before.outputs.tree }}
-          BOT_NAME: ${{ vars.BOT_GIT_NAME }}
         run: |
           set -euo pipefail
-          if [ "$(git rev-parse HEAD)" = "$BEFORE" ]; then
-            echo "The agent committed nothing."
-            exit 0
-          fi
-          echo "Branch now:"
-          git log --format='  %h author=%an committer=%cn %s' "origin/$BASE_REF..HEAD"
-
-          # Content, not commits. Comparing the pre-agent TREE against HEAD gives
-          # exactly the files the agent changed, and keeps working after the
-          # autosquash rewrote every commit on the branch.
-          #
-          # The previous version walked `$BEFORE..HEAD` and filtered it by author.
-          # That looked like belt-and-braces and was in fact the whole bug: the
-          # agent's author is claude[bot], never our identity, so the filter
-          # matched nothing, the guard reported "no file changes", and the
-          # protected-path rule was INERT from the day it was written (PR #22, run
-          # 31523363499). Do not reintroduce a filter here.
-          touched=$(git diff --name-only "$BEFORE_TREE" HEAD || true)
-          if [ -z "$touched" ]; then
-            echo "The agent's commits changed no files."
-            exit 0
-          fi
-
-          # Nothing may escape normalisation, or it would escape the signature
-          # check below too. Once the agent has committed, the autosquash has
-          # rewritten the whole branch, so every commit ahead of the base must
-          # carry the bot as committer.
-          strays=$(git log --format='%H %cn' "origin/$BASE_REF..HEAD" | grep -v " $BOT_NAME$" || true)
-          if [ -n "$strays" ]; then
-            echo "::error::These commits were not normalised to '$BOT_NAME':"
-            echo "$strays"
-            exit 1
-          fi
-          echo "Files the agent changed:"
-          printf '  %s\n' $touched
-
-          # --- protected paths, both verbs ------------------------------------
-          #
-          # These files decide what CI runs, what an agent is instructed to do,
-          # and what hooks execute -- they are the machinery that reviews and
-          # lands code. The bot must not edit the rules it is judged by, and
-          # `@claude fix` is not consent to that: a human authorising "implement
-          # your findings" is authorising a change to the code under review, not
-          # to the pipeline reviewing it.
-          #
-          # .claude/ matters most and looks least important: hooks there RUN
-          # COMMANDS, so a settings edit landing on master is remote code
-          # execution on every future checkout.
-          #
-          # `(^|/)` and not `^`: these files nest. apm compile GENERATES
-          # tools/CLAUDE.md, and both .claude/ and .apm/ are honoured in
-          # subdirectories -- an anchored pattern protects the root copy and
-          # quietly waves the rest through, which is worse than no rule because it
-          # reads as covered.
-          protected=$(printf '%s\n' $touched \
-            | grep -E '(^|/)(\.github|\.claude|\.apm)/|(^|/)(CLAUDE|AGENTS)\.md$|(^|/)apm\.ya?ml$' || true)
-          if [ -n "$protected" ]; then
-            {
-              echo "**This run was blocked.** The agent changed files it is never allowed to change, so nothing was pushed:"
-              echo
-              printf '%s\n' $protected | sed 's/^/- `/; s/$/`/'
-              echo
-              echo "Workflows, agent instructions and \`.claude/\` configuration are the machinery that reviews and lands code, so the bot cannot edit them under any verb. Make this change yourself."
-            } > "$RUNNER_TEMP/guard-failure.md"
-            echo "::error::Agent touched protected paths:"
-            printf '  %s\n' $protected
+          # Content, not commits, and not authorship. Diffing the pre-agent TREE
+          # against HEAD names exactly the files the agent changed: no identity
+          # can fool it, and it survives the rebase that rewrites every commit.
+          # The version that filtered a commit range by author is why this rule
+          # was inert in production -- the agent commits as claude[bot], never the
+          # configured identity, so the filter matched nothing.
+          if git diff --name-only "$BEFORE_TREE" HEAD              | .github/scripts/claude-guard.sh "$VERB" > "$RUNNER_TEMP/guard.txt" 2>&1; then
+            cat "$RUNNER_TEMP/guard.txt"
+          else
+            cp "$RUNNER_TEMP/guard.txt" "$RUNNER_TEMP/guard-failure.md"
+            cat "$RUNNER_TEMP/guard-failure.md"
             exit 1
           fi
 
-          # --- verb policy -----------------------------------------------------
-          if [ "$VERB" = "fix" ]; then
-            echo "Verb is 'fix'; changes outside the protected paths are authorised."
-            exit 0
-          fi
-          bad=$(printf '%s\n' $touched | grep -v -E '/changelog\.json$' || true)
-          if [ -n "$bad" ]; then
-            {
-              echo "**This run was blocked.** \`@claude\` reviews but does not edit code, and the agent changed:"
-              echo
-              printf '%s\n' $bad | sed 's/^/- `/; s/$/`/'
-              echo
-              echo "Nothing was pushed. Reply \`@claude fix\` if you want these implemented."
-            } > "$RUNNER_TEMP/guard-failure.md"
-            echo "::error::The 'review' verb may only change changelog.json, but the agent also changed:"
-            printf '  %s\n' $bad
-            exit 1
-          fi
-          echo "Only changelog.json was changed. Verb policy satisfied."
-
+      # Also on the skip path: the rebase above runs before the agent, so a run
+      # that bought no review can still have rewritten -- and re-signed -- every
+      # commit on the branch.
       - name: Check the bot's own commits are signed before pushing
-        if: steps.agent.outcome == 'success' && env.IS_FORK == 'false'
-        env:
-          BOT_NAME: ${{ vars.BOT_GIT_NAME }}
+        if: >-
+          (steps.agent.outcome == 'success' || steps.context.outputs.skip == 'true')
+          && env.IS_FORK == 'false'
         run: |
           set -euo pipefail
-          # ONLY commits this run committed.
-          #
-          # The first version checked every commit ahead of the base and was
-          # badly wrong: `%G?` can only verify signatures whose key is in the
-          # local allowed-signers file, and the runner writes exactly one key
-          # into it -- the bot's. So every contributor commit read as `E`
-          # (cannot check) even when GitHub reported verified=true, which it did
-          # for all three commits of the first real run. That blocked the push on
-          # a branch whose signatures were fine.
-          #
-          # It would also have broken the commonest path outright: a branch
-          # already rebased needs no rebase, so its commits keep their authors'
-          # own signatures and every one of them would have failed this check.
-          #
-          # Other people's signatures are GitHub's to verify, and fast-forward.yml
-          # already asks it about every commit through the API. The only thing
-          # worth checking here is that the bot's rebase and its changelog commit
-          # came out signed, because that is what THIS run is responsible for.
-          # Selected by committer NAME, not email. The bot commits under the
-          # OWNER'S email -- it has to, because GitHub only marks a commit verified
-          # when the committer address is one the signing key's account has
-          # verified. So the email identifies the human just as well as the bot,
-          # and matching on it re-creates the very bug this step was rewritten to
-          # fix: every commit the owner made would be selected, checked against an
-          # allowed-signers file that holds only the BOT's key, and rejected as
-          # unverifiable. The name is the one field that is unique to the bot.
-          bad=$(git log --format='%H%x09%G?%x09%cn' "origin/$BASE_REF..HEAD" \
-                | awk -F'\t' -v n="$BOT_NAME" '$3 == n && $2 != "G" {print $1" "$2}')
-          if [ -n "$bad" ]; then
-            echo "::error::Commits this run created are unsigned, and fast-forward.yml would refuse them:"
-            echo "$bad"
-            echo "Check BOT_SSH_SIGNING_KEY and that rebase.gpgSign is set."
-            exit 1
-          fi
-          mine=$(git log --format='%cn' "origin/$BASE_REF..HEAD" | grep -cxF "$BOT_NAME" || true)
-          echo "$mine commit(s) committed by this run, all signed."
+          git log --format='%H%x09%G?%x09%cn' "origin/$BASE_REF..HEAD"             | .github/scripts/claude-signature.sh "${{ vars.BOT_GIT_NAME }}"
 
+      # Same reason as the signature check: a skipped review does not mean an
+      # unchanged branch. The step itself no-ops when HEAD has not moved.
       - name: Push the repaired branch
         id: push
-        if: steps.agent.outcome == 'success' && env.IS_FORK == 'false'
+        if: >-
+          (steps.agent.outcome == 'success' || steps.context.outputs.skip == 'true')
+          && env.IS_FORK == 'false'
         env:
           TOKEN: ${{ steps.app-token.outputs.token }}
           STARTED_AT: ${{ needs.preflight.outputs.head }}
@@ -819,6 +733,10 @@ jobs:
           PUSHED: ${{ steps.push.outputs.pushed }}
           CONFLICT: ${{ steps.rebase.outputs.conflict }}
           PROGRESS_ID: ${{ steps.progress.outputs.comment_id }}
+          SKIPPED: ${{ steps.context.outputs.skip }}
+          PREV_VERDICT: ${{ steps.context.outputs.previous_verdict }}
+          DELTA: ${{ steps.before.outputs.delta }}
+          EXECUTION_FILE: ${{ steps.agent.outputs.execution_file }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -844,6 +762,28 @@ jobs:
             fi
             gh pr comment "$PR" --repo "$REPO" --body-file "$1"
           }
+
+          # The change has not moved since it was judged, so no review was bought.
+          # Carry the previous verdict forward and say plainly that nothing was
+          # re-examined -- reporting a stale verdict as if it were fresh would be
+          # the dishonest way to save $4.
+          if [ "$SKIPPED" = "true" ]; then
+            verdict="${PREV_VERDICT:-HOLD}"
+            echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+            {
+              echo "Nothing about this change has moved since the last review, so it was not reviewed again."
+              echo
+              if [ "$verdict" = "LAND" ]; then
+                echo "That review found nothing blocking, so the fast-forward is requested again below."
+              else
+                echo "That review is still holding — see it above. Push a change, or land it yourself with \`/fast-forward\`."
+              fi
+              printf '\n%s\n' "<sub>[run]($RUN_URL) · reused the previous verdict · no gateway cost</sub>"
+              printf '%s\n' "<!-- claude-reviewed delta=$DELTA verdict=$verdict -->"
+            } > "$body"
+            publish "$body"
+            exit 0
+          fi
 
           if [ "$AGENT" != "success" ]; then
             echo "verdict=HOLD" >> "$GITHUB_OUTPUT"
