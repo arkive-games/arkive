@@ -210,6 +210,22 @@ something else is not forced to run MinIO.
 `docker-compose.yml` gains MinIO and an `mc` init container, because MinIO neither creates
 the bucket nor serves anonymous reads without an explicit policy.
 
+### 6.1 The reverse proxy has to allow the upload size
+
+`MaxBodyBytes` of 8 MiB is only the *service's* limit. In production nginx terminates TLS in
+front of it, and its `client_max_body_size` applies first — measured at roughly **2 MB** on
+`api-arkive.tc-imba.com` (1.91 MB passes through to the application, 3 MiB is refused).
+
+Left as it is, that makes the documented 8 MiB a lie: an ordinary phone photograph of 3–8 MB
+is refused by the proxy with its own HTML error page, before any of this code runs, so the
+user never sees "an avatar must be at most 8 MiB" and the API's own limit never applies.
+
+**`client_max_body_size 9m;` on the API server block**, which leaves headroom for the
+multipart boundaries and headers wrapping an 8 MiB file, so the service's limit is the one
+that speaks. The alternative — lowering `MaxUploadBytes` to match the proxy — is worse: it
+puts the number in two places that must be kept in step, and one of them is not in this
+repository.
+
 ## 7. HTTP surface
 
 | Route | Auth | Result |
