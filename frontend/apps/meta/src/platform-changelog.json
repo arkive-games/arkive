@@ -62,6 +62,26 @@
     },
     {
       "date": "2026-08-12",
+      "commit": "86db192afc89c2dd409cfece690857504ac8fb40",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "sts2"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Forgot your password now sends a reset email, and the link opens the reset form for you.",
+            "zh-CN": "忘记密码现在会发送重置邮件，点击邮件中的链接即可直接设置新密码。",
+            "zh-TW": "忘記密碼現在會寄送重設郵件，點選郵件中的連結即可直接設定新密碼。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-12",
       "commit": "5ca1feb741c5041e7b9a6d8fe1f48742705fff1b",
       "targets": [
         "aion2",
