@@ -275,6 +275,25 @@ export const PASSIVE_RARE_ROLL_TIP_LABELS: Record<Language, string> = {
   'zh-CN': '随机权重很低，出现频率远低于其他词条',
   'zh-TW': '隨機權重很低，出現頻率遠低於其他詞條',
 }
+export const PASSIVE_SOURCE_LABELS: Record<Language, Record<string, string>> = {
+  'en-US': { title: 'How to obtain', randomPal: 'Random Pal', rarePal: 'Lucky Pal', worldTreePal: 'World Tree Pal', mutationPal: 'Mutated Pal', innatePals: 'Innate', operatingTable: 'Operating Table' },
+  'de-DE': { title: 'Erhalt', randomPal: 'Zufälliger Pal', rarePal: 'Glücks-Pal', worldTreePal: 'Weltenbaum-Pal', mutationPal: 'Mutierter Pal', innatePals: 'Angeboren', operatingTable: 'Operationstisch' },
+  'es-ES': { title: 'Cómo obtener', randomPal: 'Pal aleatorio', rarePal: 'Pal afortunado', worldTreePal: 'Pal del Árbol del Mundo', mutationPal: 'Pal mutado', innatePals: 'Innata', operatingTable: 'Mesa de operaciones' },
+  'es-MX': { title: 'Cómo obtener', randomPal: 'Pal aleatorio', rarePal: 'Pal afortunado', worldTreePal: 'Pal del Árbol del Mundo', mutationPal: 'Pal mutado', innatePals: 'Innata', operatingTable: 'Mesa de operaciones' },
+  'fr-FR': { title: 'Obtention', randomPal: 'Pal aléatoire', rarePal: 'Pal chanceux', worldTreePal: 'Pal de l’Arbre-Monde', mutationPal: 'Pal mutant', innatePals: 'Innée', operatingTable: 'Table d’opération' },
+  'id-ID': { title: 'Cara memperoleh', randomPal: 'Pal acak', rarePal: 'Pal beruntung', worldTreePal: 'Pal Pohon Dunia', mutationPal: 'Pal mutan', innatePals: 'Bawaan', operatingTable: 'Meja Operasi' },
+  'it-IT': { title: 'Come ottenere', randomPal: 'Pal casuale', rarePal: 'Pal fortunato', worldTreePal: 'Pal dell’Albero del Mondo', mutationPal: 'Pal mutato', innatePals: 'Innata', operatingTable: 'Tavolo operatorio' },
+  'ja-JP': { title: '入手方法', randomPal: 'ランダムなパル', rarePal: 'ラッキーパル', worldTreePal: '世界樹のパル', mutationPal: '突然変異パル', innatePals: '固有', operatingTable: '手術台' },
+  'ko-KR': { title: '획득 방법', randomPal: '무작위 팰', rarePal: '희귀 팰', worldTreePal: '세계수 팰', mutationPal: '돌연변이 팰', innatePals: '고유', operatingTable: '수술대' },
+  'pl-PL': { title: 'Jak zdobyć', randomPal: 'Losowy Pal', rarePal: 'Szczęśliwy Pal', worldTreePal: 'Pal Drzewa Świata', mutationPal: 'Zmutowany Pal', innatePals: 'Wrodzona', operatingTable: 'Stół operacyjny' },
+  'pt-BR': { title: 'Como obter', randomPal: 'Pal aleatório', rarePal: 'Pal sortudo', worldTreePal: 'Pal da Árvore do Mundo', mutationPal: 'Pal mutante', innatePals: 'Inata', operatingTable: 'Mesa de Operações' },
+  'ru-RU': { title: 'Как получить', randomPal: 'Случайный пал', rarePal: 'Счастливый пал', worldTreePal: 'Пал Мирового древа', mutationPal: 'Мутировавший пал', innatePals: 'Врождённая', operatingTable: 'Операционный стол' },
+  'th-TH': { title: 'วิธีรับ', randomPal: 'พาลแบบสุ่ม', rarePal: 'พาลนำโชค', worldTreePal: 'พาลต้นไม้โลก', mutationPal: 'พาลกลายพันธุ์', innatePals: 'ติดตัว', operatingTable: 'โต๊ะผ่าตัด' },
+  'tr-TR': { title: 'Nasıl elde edilir', randomPal: 'Rastgele Pal', rarePal: 'Şanslı Pal', worldTreePal: 'Dünya Ağacı Palı', mutationPal: 'Mutasyona uğramış Pal', innatePals: 'Doğuştan', operatingTable: 'Ameliyat Masası' },
+  'vi-VN': { title: 'Cách nhận', randomPal: 'Pal ngẫu nhiên', rarePal: 'Pal may mắn', worldTreePal: 'Pal Cây Thế Giới', mutationPal: 'Pal đột biến', innatePals: 'Bẩm sinh', operatingTable: 'Bàn Phẫu thuật' },
+  'zh-CN': { title: '获取方式', randomPal: '普通帕鲁随机', rarePal: '稀有帕鲁', worldTreePal: '世界树帕鲁', mutationPal: '突变帕鲁', innatePals: '天生携带', operatingTable: '手术台' },
+  'zh-TW': { title: '取得方式', randomPal: '普通帕魯隨機', rarePal: '稀有帕魯', worldTreePal: '世界樹帕魯', mutationPal: '突變帕魯', innatePals: '天生攜帶', operatingTable: '手術台' },
+}
 // Active Skills page: element filter-group label.
 export const ACTIVE_SKILL_ELEMENT_LABELS: Record<Language, string> = {
   'en-US': 'Element', 'de-DE': 'Element', 'es-ES': 'Elemento', 'es-MX': 'Elemento', 'fr-FR': 'Élément',
@@ -1124,6 +1143,7 @@ for (const lng of LANGUAGES) {
         invokeTip: PASSIVE_INVOKE_TIP_LABELS[lng],
         rareRoll: PASSIVE_RARE_ROLL_LABELS[lng],
         rareRollTip: PASSIVE_RARE_ROLL_TIP_LABELS[lng],
+        source: PASSIVE_SOURCE_LABELS[lng],
       },
       activeSkill: {
         element: ACTIVE_SKILL_ELEMENT_LABELS[lng],

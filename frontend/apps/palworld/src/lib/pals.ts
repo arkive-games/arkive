@@ -171,8 +171,9 @@ export type PassiveSource =
  *  mutated Pals or grafted via a disposable implant at the Operating Table. */
 export interface Passive {
   id: string; rank: number; effects: PassiveEffect[]; mutation?: boolean
-  /** Verified random pools, innate carriers, and Operating Table route. */
-  sources: PassiveSource[]
+  /** Verified random pools, innate carriers, and Operating Table route. Optional
+   *  while an older data-palworld release is still online. */
+  sources?: PassiveSource[]
   /** When the passive is active (worker/riding/reserve/onTeam/active/baseCamp/always). */
   invoke?: string[]
   /** Random-roll weight; present only for the rare tier (5 vs the normal 100). */

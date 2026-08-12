@@ -156,6 +156,15 @@ test('Passive cards link the pals that carry the passive', async ({ page }) => {
   await expect(palLink).toHaveAttribute('href', /\/pals\//)
 })
 
+test('Passive cards show acquisition sources', async ({ page }) => {
+  await page.goto('/passives')
+  await page.getByTestId('passive-search').fill('Artisan')
+  const sources = page.getByTestId('passive-sources').first()
+  await expect(sources).toBeVisible()
+  await expect(sources).toContainText('How to obtain')
+  await expect(sources).toContainText('Random Pal')
+})
+
 test('Passive title bar uses the faceted rarity figure or flat bar', async ({ page }) => {
   await page.goto('/passives')
   await expect(page.locator('[data-testid="passive-row"] > div:first-child').first()).toBeVisible()

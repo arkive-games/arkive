@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Hint, Input, TooltipProvider } from '@gamemap/ui'
+import { Coins, Dna, Dices, Sparkles, Stethoscope, TreePine } from 'lucide-react'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
@@ -13,13 +14,107 @@ import {
   PASSIVE_CATEGORIES,
   type PalsBundle,
   type PassiveCategory,
+  type PassiveSource,
 } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
-import { CatalogDataProvider, PalHover } from '../catalog/components'
+import { CatalogDataProvider, ItemLink, PalHover } from '../catalog/components'
 import { PalPageLoading, PassiveRarity, PassiveText, PassiveTitleBar } from './components'
 
 /** Pals that innately carry a given passive, keyed by passive id. */
 type PalRef = { id: string; name: string; icon: string }
+
+const SOURCE_CHIP =
+  'inline-flex min-h-7 items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-xs text-foreground'
+
+function PoolSourceChip({ kind }: { kind: Exclude<PassiveSource['kind'], 'innatePals' | 'operatingTable'> }) {
+  const { t } = useTranslation()
+  const Icon =
+    kind === 'worldTreePal' ? TreePine
+      : kind === 'mutationPal' ? Dna
+        : kind === 'rarePal' ? Sparkles
+          : Dices
+  return (
+    <span className={SOURCE_CHIP} data-testid={`passive-source-${kind}`}>
+      <Icon className="size-3.5 text-primary" aria-hidden="true" />
+      {t(`passive.source.${kind}`)}
+    </span>
+  )
+}
+
+function PassiveSources({
+  sources,
+  pals,
+  bundle,
+}: {
+  sources: PassiveSource[]
+  pals: PalRef[]
+  bundle: PalsBundle
+}) {
+  const { t, i18n } = useTranslation()
+  const pools = sources.filter(
+    (source): source is Extract<PassiveSource, { kind: 'randomPal' | 'rarePal' | 'worldTreePal' | 'mutationPal' }> =>
+      !['innatePals', 'operatingTable'].includes(source.kind),
+  )
+  const operating = sources.find(
+    (source): source is Extract<PassiveSource, { kind: 'operatingTable' }> => source.kind === 'operatingTable',
+  )
+  if (!pools.length && !pals.length && !operating) return null
+
+  return (
+    <div className="space-y-1.5" data-testid="passive-sources">
+      <div className="text-xs font-medium text-muted-foreground">{t('passive.source.title')}</div>
+      <div className="flex flex-wrap items-center gap-1">
+        {pools.map((source) => <PoolSourceChip key={source.kind} kind={source.kind} />)}
+        {pals.length ? (
+          <span className="inline-flex min-h-7 items-center gap-1 rounded-md border border-border bg-secondary/40 px-1.5 py-0.5">
+            <span className="px-0.5 text-xs text-muted-foreground">{t('passive.source.innatePals')}</span>
+            {pals.map((pal) => (
+              <PalHover key={pal.id} id={pal.id}>
+                <Link
+                  to="/pals/$id"
+                  params={{ id: pal.id }}
+                  title={pal.name}
+                  data-testid="passive-pal"
+                  className="shrink-0 rounded-full border border-border bg-card transition hover:border-primary/60"
+                >
+                  <img
+                    src={palIconUrl(pal.icon)}
+                    alt={pal.name}
+                    width={24}
+                    height={24}
+                    loading="lazy"
+                    className="size-6 rounded-full object-contain"
+                  />
+                </Link>
+              </PalHover>
+            ))}
+          </span>
+        ) : null}
+        {operating ? (
+          <span className="inline-flex flex-wrap items-center gap-1">
+            <span className={SOURCE_CHIP}>
+              <Stethoscope className="size-3.5 text-primary" aria-hidden="true" />
+              {t('passive.source.operatingTable')}
+              {!operating.item && operating.price > 0 ? (
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <Coins className="size-3.5" aria-hidden="true" />
+                  {new Intl.NumberFormat(i18n.resolvedLanguage ?? 'en-US').format(operating.price)}
+                </span>
+              ) : null}
+            </span>
+            {operating.item ? (
+              <ItemLink
+                id={operating.item}
+                name={bundle.items[operating.item] ?? operating.item}
+                icon={bundle.itemIcon[operating.item]}
+              />
+            ) : null}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  )
+}
 
 /** A passive's rarity bucket key — its signed rank, e.g. "+4" / "+1" / "-3".
  *  Arrows show abs(rank) chevrons, so each rank is its own bucket and the
@@ -93,6 +188,9 @@ export default function PassivesPage() {
         mutation: passive.mutation ?? false,
         invoke: passive.invoke ?? [],
         rareRoll: (passive.lotteryWeight ?? 100) < 100,
+        sources: passive.sources ?? (
+          passive.mutation ? [{ kind: 'mutationPal' as const }] : []
+        ),
         categories: passiveCategories(id, bundle),
         pals: palsByPassive.get(id) ?? [],
       }
@@ -270,32 +368,9 @@ export default function PassivesPage() {
                   <PassiveText text={r.description} />
                 </p>
               ) : null}
-              {r.pals.length || r.categories.length || r.mutation || r.invoke.length || r.rareRoll ? (
+              {r.sources.length || r.pals.length || r.categories.length || r.mutation || r.invoke.length || r.rareRoll ? (
                 <div className="mt-auto space-y-2 pt-2">
-                  {r.pals.length ? (
-                    <div className="flex flex-wrap items-center gap-1">
-                      {r.pals.map((p) => (
-                        <PalHover key={p.id} id={p.id}>
-                          <Link
-                            to="/pals/$id"
-                            params={{ id: p.id }}
-                            title={p.name}
-                            data-testid="passive-pal"
-                            className="shrink-0 rounded-full border border-border bg-secondary/40 transition hover:border-primary/60"
-                          >
-                            <img
-                              src={palIconUrl(p.icon)}
-                              alt={p.name}
-                              width={24}
-                              height={24}
-                              loading="lazy"
-                              className="size-6 rounded-full object-contain"
-                            />
-                          </Link>
-                        </PalHover>
-                      ))}
-                    </div>
-                  ) : null}
+                  <PassiveSources sources={r.sources} pals={r.pals} bundle={bundle} />
                   {/* `r.invoke.length` belongs in this guard: the branch below
                       renders the same invoke badges WITHOUT their hint, so a
                       passive whose only badge is an invoke scope lost the
