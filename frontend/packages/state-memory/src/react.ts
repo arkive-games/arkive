@@ -176,7 +176,9 @@ export function useLanguagePreference<T extends string>(
   )
 
   return {
-    generalValue: layers.global ?? layers.effective,
+    // `inherited`, not `effective`: with an override and nothing shared yet,
+    // `effective` is the override, and General must describe the OTHER sites.
+    generalValue: layers.global ?? layers.inherited,
     override: layers.override,
     setGeneral: (code) => commit(() => preference.setGlobal(code)),
     setOverride: (code) => commit(() => preference.setOverride(code)),

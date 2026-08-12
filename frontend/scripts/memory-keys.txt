@@ -34,7 +34,9 @@ arkive.memory.site.games-catalog.category	-	apps/meta/src/AllGamesPage.tsx
 arkive.memory.site.games-catalog.page	-	apps/meta/src/AllGamesPage.tsx
 arkive.memory.site.games-catalog.query	-	apps/meta/src/AllGamesPage.tsx
 arkive.memory.site.interface.language	-	packages/state-memory/src/language.ts
+arkive.memory.site.interface.language-override	-	packages/state-memory/src/language.ts
 arkive.memory.site.interface.theme	-	packages/ui/src/arkive-theme-storage.ts
+arkive.memory.site.interface.theme-override	-	packages/ui/src/arkive-theme-storage.ts
 arkive.memory.site.user-system.legacy-snapshot	account	apps/meta/src/UserSystemState.tsx
 arkive.memory.site.user-system.profile-content	account	apps/meta/src/UserSystemState.tsx
 arkive.memory.sts2.cards-catalog.filters	-	apps/sts2/src/features/cards/CardListPage.tsx

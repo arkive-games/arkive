@@ -75,7 +75,7 @@ describe('site language override', () => {
     preference.setFromSiteControl('zh-CN')
     expect(env.memory.read(languagePreferenceRecord)).toBe('zh-CN')
 
-    // A later change on the same game is local: the other games keep 简体中文.
+    // A later change on the same game is local: the other games keep zh-CN.
     preference.setFromSiteControl('ja-JP')
     expect(env.memory.read(languagePreferenceRecord)).toBe('zh-CN')
     expect(env.detect()).toBe('ja-JP')
@@ -101,6 +101,9 @@ describe('site language override', () => {
       global: 'ko-KR',
       override: null,
       effective: 'ko-KR',
+      // Detection consults the shared record too, so what this site inherits
+      // without an override is that same value.
+      inherited: 'ko-KR',
     })
   })
 })

@@ -16,7 +16,7 @@ design gives those controls a home that is right, and takes the two preferences 
 scattered across the top bar with them.
 
 A second, older problem is folded in. Theme and language are global by construction: both travel in
-a cookie scoped to `.arkive.games` / `.tc-imba.com` so that choosing 简体中文 on Palworld does not
+a cookie scoped to `.arkive.games` / `.tc-imba.com` so that choosing zh-CN on Palworld does not
 leave AION2 in English (`state-memory/src/language.ts:11-21`). That is right as a default and wrong
 as an absolute — a reader may want one game in the source language and the rest in their own. There
 is currently no way to express that.
@@ -41,7 +41,7 @@ cookie, which is the only transport that crosses origins.
 | meta top bar, meta panel | global only — meta has no override layer |
 
 Seeding global on first write is what keeps today's behaviour intact. A first-time visitor who picks
-简体中文 on Palworld writes both layers, so AION2 follows. A later change on Palworld finds global
+zh-CN on Palworld writes both layers, so AION2 follows. A later change on Palworld finds global
 already set and moves only Palworld.
 
 ### Limitation, recorded deliberately
@@ -59,8 +59,13 @@ the record definitions and the cookie transport, so the second layer belongs bes
 
 - `themeOverrideRecord`, `languageOverrideRecord` — `memoryPolicy.userPreference`, device scope,
   therefore per origin.
-- `resolvePreference({ override, global, fallback })` — precedence, one place.
-- `writeFromSiteControl(...)` — the seed-on-first-write rule, one place.
+- `resolvePreferenceLayers(...)` — precedence, one place.
+- `createLayeredPreference(...).setFromSiteControl` — the seed-on-first-write rule, one place.
+
+`PreferenceLayers` carries `inherited` (what this site would use without its override) alongside
+`effective`. The two differ exactly when a site overrides before anything shared has been chosen,
+and a panel that showed `effective` as General would then present the override as the value the
+other sites inherit — and switch to something else the moment "follow general" cleared it.
 
 ### `@gamemap/ui` — `arkive-theme-storage.ts`
 
@@ -84,11 +89,11 @@ communicate without being clicked.
 ┌ Settings ─────────────────────────────────┐
 │ GENERAL — EVERY ARKIVE SITE               │
 │   Theme      [ Auto | Light | Dark ]      │
-│   Language   [ 简体中文            ▾ ]     │
+│   Language   [ zh-CN               ▾ ]     │
 │                                           │
 │ PALWORLD ONLY                             │
 │   Theme      [ Follow | Light | Dark ]    │
-│   Language • [ 日本語              ▾ ]     │
+│   Language • [ ja-JP               ▾ ]     │
 │              Overriding general           │
 │                                           │
 │ DATA ON THIS DEVICE                       │
@@ -107,8 +112,14 @@ clicking still opens the sign-in dialog in one click while hovering reveals Sett
 extra click on the primary call to action. The top-bar globe and moon stay exactly where they are.
 
 **Auth disabled.** `resolveAuthConfig` falls back to `ARKIVE_PRODUCTION_API_URL`, so this is local
-development only, never production. The existing `fallback` prop on `ArkiveAccountControl` carries a
-settings-only trigger for that case.
+development only, never production. `ArkiveAccountControl` then renders a standalone settings
+trigger: there is no account UI for a menu row to hide in, and without it a build with no API has no
+route to the local-data controls at all.
+
+**meta.** The portal is the exception. Its signed-in cluster is a notification bell and an avatar
+with no dropdown, so an account-menu row would exist only while signed out — and these controls are
+needed in both states. meta therefore owns one dialog at the app level, opened from the footer entry
+that replaces the narrower local-data dialog, plus the phone sheet's pane.
 
 **Mobile.** A Settings row in the `ShellBottomNav` More sheet, opening as a drill-down pane —
 the mechanism the language row already uses — and **not** as a Dialog inside the Sheet. A portalled

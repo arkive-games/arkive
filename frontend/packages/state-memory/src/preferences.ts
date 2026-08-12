@@ -22,6 +22,17 @@ export interface PreferenceLayers<T> {
   override: T | null
   /** What this site actually uses: override, else global, else the fallback. */
   effective: T
+  /**
+   * What this site would use if it did NOT override -- an app default, or a
+   * detection chain that may itself consult `global`.
+   *
+   * Carried separately because `global ?? inherited` is what a settings panel
+   * shows as General, and `effective` cannot stand in for it: with an override
+   * and no shared value yet, `effective` IS the override, so a panel reading it
+   * would present the override as the value the other sites inherit, then
+   * switch to something else the moment "follow general" cleared it.
+   */
+  inherited: T
 }
 
 /** Persistence for one preference, split by layer. Injected so this stays testable. */
@@ -50,7 +61,7 @@ export function resolvePreferenceLayers<T>(
   override: T | null,
   fallback: T,
 ): PreferenceLayers<T> {
-  return { global, override, effective: override ?? global ?? fallback }
+  return { global, override, effective: override ?? global ?? fallback, inherited: fallback }
 }
 
 export function createLayeredPreference<T>(

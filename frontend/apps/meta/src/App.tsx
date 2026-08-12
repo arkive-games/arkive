@@ -6,8 +6,9 @@ import {
   ArkiveMark,
   ArkiveMobileHeader,
   getArkiveBrandName,
-  LocalDataDialog,
-  localDataStringsFor,
+  ArkiveSettingsDialog,
+  settingsStringsFor,
+  useArkiveSettingsProps,
   useTheme,
   type ShellNavItem,
 } from '@gamemap/map-shell'
@@ -130,7 +131,8 @@ export default function App() {
   const [activeRoute, setActiveRoute] = useState<HomeRoute>(routeFromHash)
   const isForumComposer = activeRoute.view === 'forum' && activeRoute.composer
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
-  const settings = useSettingsConfig()
+  const settingsProps = useArkiveSettingsProps(useSettingsConfig())
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const brandName = getArkiveBrandName(lng, t('brand.name'))
 
   useEffect(() => {
@@ -299,10 +301,17 @@ export default function App() {
         loginLabel={t('auth.login')}
         accountSlot={isSignedIn
           ? <AuthenticatedControls />
-          : <ArkiveAccountControl language={i18n.language} settings={settings} />}
+          : <ArkiveAccountControl language={i18n.language} />}
       />
 
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} strings={authStrings} />
+
+      {/* One instance, opened from the footer rather than from the account
+          menu. Unlike a game, meta's signed-in cluster is a notification bell
+          and an avatar with no dropdown to host a row, so an account-menu entry
+          would exist only while signed out -- and the local-data controls this
+          holds are needed in both states. */}
+      <ArkiveSettingsDialog {...settingsProps} open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {activeRoute.view === 'platformUpdates' ? (
         <PlatformUpdatesPage />
@@ -414,7 +423,7 @@ export default function App() {
         </main>
       )}
 
-      <HomeFooter onComingSoon={showComingSoon} />
+      <HomeFooter onComingSoon={showComingSoon} onOpenSettings={() => setSettingsOpen(true)} />
 
       {noticeId > 0 && (
         <div key={noticeId} className="coming-soon-toast" role="status" aria-live="polite">
@@ -536,7 +545,7 @@ function ComingSoonCard({ onClick }: { onClick: () => void }) {
   )
 }
 
-function HomeFooter({ onComingSoon }: { onComingSoon: () => void }) {
+function HomeFooter({ onComingSoon, onOpenSettings }: { onComingSoon: () => void; onOpenSettings: () => void }) {
   const { t, i18n } = useTranslation()
   const columns = [
     { title: 'footer.browse', links: ['footer.discoverGames', 'footer.guides', 'footer.maps', 'footer.database'] },
@@ -567,7 +576,9 @@ function HomeFooter({ onComingSoon }: { onComingSoon: () => void }) {
       </div>
       <div className="home-shell footer-bottom">
         <span>{t('footer.copyright')}</span>
-        <LocalDataDialog strings={localDataStringsFor(i18n.resolvedLanguage ?? i18n.language)} />
+        <button type="button" className="footer-settings" onClick={onOpenSettings}>
+          {settingsStringsFor(i18n.resolvedLanguage ?? i18n.language).title}
+        </button>
         {!IS_TOY && (
           <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">{icp}</a>
         )}

@@ -741,6 +741,25 @@ footer a:focus-visible {
   text-underline-offset: 0.25rem;
 }
 
+/* Matches the sibling links, but stays a button: it opens a dialog rather than
+   navigating. `min-height` keeps it above the 24px WCAG 2.2 (2.5.8) target
+   minimum at this font size, as the local-data trigger it replaces had to. */
+.footer-settings {
+  min-height: 1.5rem;
+  padding: 0;
+  color: inherit;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.footer-settings:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
 .coming-soon-toast {
   position: fixed;
   top: 50%;

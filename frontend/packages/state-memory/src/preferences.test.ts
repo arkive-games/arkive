@@ -71,7 +71,12 @@ describe('createLayeredPreference', () => {
     const preference = createLayeredPreference(api, () => 'en-US')
     preference.clearOverride()
 
-    expect(preference.read()).toEqual({ global: 'zh-CN', override: null, effective: 'zh-CN' })
+    expect(preference.read()).toEqual({
+      global: 'zh-CN',
+      override: null,
+      effective: 'zh-CN',
+      inherited: 'en-US',
+    })
   })
 
   it('reports the fallback as effective while both layers are empty', () => {
@@ -80,6 +85,7 @@ describe('createLayeredPreference', () => {
       global: null,
       override: null,
       effective: 'en-US',
+      inherited: 'en-US',
     })
   })
 })

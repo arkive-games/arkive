@@ -4,20 +4,16 @@ import { Button } from "@gamemap/ui"
 import {
   ArkiveMobileAccountButton,
   ArkiveSettingsDialog,
-  localDataStringsFor,
-  settingsStringsFor,
   ShellAccountMenu,
-  useOptionalTheme,
+  useArkiveSettingsProps,
   type ArkiveMapTopBarAccountItem,
   type ArkiveSettingsConfig,
-  type ArkiveSettingsThemeConfig,
 } from "@gamemap/map-shell"
 
 import { AccountDialog } from "./AccountDialog"
 import { useAuth } from "./AuthProvider"
 import { authStringsFor } from "./locales"
 import type { AuthStrings } from "./strings"
-
 
 export interface ArkiveAccountControlProps {
   /**
@@ -67,37 +63,20 @@ export function ArkiveAccountControl({
   settings,
 }: ArkiveAccountControlProps) {
   const auth = useAuth()
-  const theme = useOptionalTheme()
   const [open, setOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  // The config may carry its own locale (it is shared with the phone sheet,
-  // which has no `language` prop); fall back to this control's.
-  const settingsLocale = settings?.locale ?? language
-  const settingsStrings = settingsStringsFor(settingsLocale)
-  const themeConfig: ArkiveSettingsThemeConfig | undefined =
-    settings && theme?.supportsThemeLayers && settings.themeOptions
-      ? {
-          options: settings.themeOptions,
-          generalValue: theme.globalTheme ?? theme.defaultTheme,
-          override: theme.overrideTheme,
-          onSetGeneral: theme.setGlobalTheme,
-          onSetOverride: theme.setThemeOverride,
-          onFollowGeneral: theme.clearThemeOverride,
-        }
-      : undefined
+  // The same assembly the phone sheet uses, rather than a second copy of it:
+  // two surfaces building the panel independently is precisely how they would
+  // drift into offering different rows. The config may carry its own locale
+  // (the sheet has no `language` prop), so this control's is only the fallback.
+  const settingsProps = useArkiveSettingsProps({
+    ...(settings ?? {}),
+    locale: settings?.locale ?? language,
+  })
 
   const settingsPanel = settings ? (
-    <ArkiveSettingsDialog
-      open={settingsOpen}
-      onOpenChange={setSettingsOpen}
-      strings={settingsStrings}
-      localData={localDataStringsFor(settingsLocale)}
-      site={settings.site}
-      theme={themeConfig}
-      language={settings.language}
-      siteExtras={settings.siteExtras}
-    />
+    <ArkiveSettingsDialog {...settingsProps} open={settingsOpen} onOpenChange={setSettingsOpen} />
   ) : null
 
   // Hidden entirely when no API is configured. A sign-in button that cannot
@@ -117,8 +96,8 @@ export function ArkiveAccountControl({
             variant="ghost"
             size="icon"
             data-testid="settings-trigger"
-            aria-label={settingsStrings.title}
-            title={settingsStrings.title}
+            aria-label={settingsProps.strings.title}
+            title={settingsProps.strings.title}
             onClick={() => setSettingsOpen(true)}
           >
             <IconSettings className="size-5" stroke={1.8} />
@@ -148,7 +127,7 @@ export function ArkiveAccountControl({
     },
     items,
     settings: settings
-      ? { label: settingsStrings.title, onSelect: () => setSettingsOpen(true) }
+      ? { label: settingsProps.strings.title, onSelect: () => setSettingsOpen(true) }
       : undefined,
   }
 

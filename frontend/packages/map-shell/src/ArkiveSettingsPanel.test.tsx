@@ -67,7 +67,7 @@ describe('ArkiveSettingsPanel', () => {
 
     expect(screen.getByText('General')).toBeTruthy()
     expect(screen.getByText('Palworld only')).toBeTruthy()
-    // General still reads 简体中文 while this site reads 日本語.
+    // General still reads zh-CN while this site reads ja-JP.
     expect(selectValue('settings-general-language')).toBe('zh-CN')
     expect(selectValue('settings-site-language')).toBe('ja-JP')
     expect(screen.getByText('Overriding general')).toBeTruthy()
