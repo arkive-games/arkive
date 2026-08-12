@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Hint, Input, TooltipProvider } from '@gamemap/ui'
-import { Coins, Dna, Dices, Sparkles, Stethoscope, TreePine } from 'lucide-react'
+import { ArrowRight, Coins, Dna, Dices, PawPrint, Sparkles, Stethoscope, TreePine } from 'lucide-react'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
@@ -17,16 +17,16 @@ import {
   type PassiveSource,
 } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
-import { CatalogDataProvider, ItemLink, PalHover } from '../catalog/components'
+import { CatalogDataProvider, ItemGlyph, ItemHover, PalHover } from '../catalog/components'
 import { PalPageLoading, PassiveRarity, PassiveText, PassiveTitleBar } from './components'
 
 /** Pals that innately carry a given passive, keyed by passive id. */
 type PalRef = { id: string; name: string; icon: string }
 
-const SOURCE_CHIP =
-  'inline-flex min-h-7 items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-xs text-foreground'
+const SOURCE_ICON =
+  'relative z-10 inline-flex size-6 shrink-0 items-center justify-center rounded-md border border-primary/25 bg-card text-primary'
 
-function PoolSourceChip({ kind }: { kind: Exclude<PassiveSource['kind'], 'innatePals' | 'operatingTable'> }) {
+function PoolSourceRoute({ kind }: { kind: Exclude<PassiveSource['kind'], 'innatePals' | 'operatingTable'> }) {
   const { t } = useTranslation()
   const Icon =
     kind === 'worldTreePal' ? TreePine
@@ -34,10 +34,12 @@ function PoolSourceChip({ kind }: { kind: Exclude<PassiveSource['kind'], 'innate
         : kind === 'rarePal' ? Sparkles
           : Dices
   return (
-    <span className={SOURCE_CHIP} data-testid={`passive-source-${kind}`}>
-      <Icon className="size-3.5 text-primary" aria-hidden="true" />
-      {t(`passive.source.${kind}`)}
-    </span>
+    <div className="flex min-w-0 items-center gap-2" data-testid={`passive-source-${kind}`}>
+      <span className={SOURCE_ICON}>
+        <Icon className="size-3.5" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 text-xs font-medium text-foreground">{t(`passive.source.${kind}`)}</span>
+    </div>
   )
 }
 
@@ -61,55 +63,76 @@ function PassiveSources({
   if (!pools.length && !pals.length && !operating) return null
 
   return (
-    <div className="space-y-1.5" data-testid="passive-sources">
-      <div className="text-xs font-medium text-muted-foreground">{t('passive.source.title')}</div>
-      <div className="flex flex-wrap items-center gap-1">
-        {pools.map((source) => <PoolSourceChip key={source.kind} kind={source.kind} />)}
+    <div className="space-y-2" data-testid="passive-sources">
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+        <span>{t('passive.source.title')}</span>
+        <span className="h-px flex-1 bg-border" aria-hidden="true" />
+      </div>
+      <div className="relative space-y-1.5 before:absolute before:bottom-3 before:left-3 before:top-3 before:w-px before:bg-border">
+        {pools.map((source) => <PoolSourceRoute key={source.kind} kind={source.kind} />)}
         {pals.length ? (
-          <span className="inline-flex min-h-7 items-center gap-1 rounded-md border border-border bg-secondary/40 px-1.5 py-0.5">
-            <span className="px-0.5 text-xs text-muted-foreground">{t('passive.source.innatePals')}</span>
-            {pals.map((pal) => (
-              <PalHover key={pal.id} id={pal.id}>
-                <Link
-                  to="/pals/$id"
-                  params={{ id: pal.id }}
-                  title={pal.name}
-                  data-testid="passive-pal"
-                  className="shrink-0 rounded-full border border-border bg-card transition hover:border-primary/60"
-                >
-                  <img
-                    src={palIconUrl(pal.icon)}
-                    alt={pal.name}
-                    width={24}
-                    height={24}
-                    loading="lazy"
-                    className="size-6 rounded-full object-contain"
-                  />
-                </Link>
-              </PalHover>
-            ))}
-          </span>
+          <div className="flex min-w-0 items-start gap-2" data-testid="passive-source-innatePals">
+            <span className={SOURCE_ICON}>
+              <PawPrint className="size-3.5" aria-hidden="true" />
+            </span>
+            <div className="flex min-w-0 flex-wrap items-center gap-1 pt-0.5">
+              <span className="mr-1 text-xs font-medium text-foreground">{t('passive.source.innatePals')}</span>
+              {pals.map((pal) => (
+                <PalHover key={pal.id} id={pal.id}>
+                  <Link
+                    to="/pals/$id"
+                    params={{ id: pal.id }}
+                    title={pal.name}
+                    data-testid="passive-pal"
+                    className="shrink-0 rounded-full border border-border bg-secondary/40 transition hover:border-primary/60 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <img
+                      src={palIconUrl(pal.icon)}
+                      alt={pal.name}
+                      width={24}
+                      height={24}
+                      loading="lazy"
+                      className="size-6 rounded-full object-contain"
+                    />
+                  </Link>
+                </PalHover>
+              ))}
+            </div>
+          </div>
         ) : null}
         {operating ? (
-          <span className="inline-flex flex-wrap items-center gap-1">
-            <span className={SOURCE_CHIP}>
-              <Stethoscope className="size-3.5 text-primary" aria-hidden="true" />
-              {t('passive.source.operatingTable')}
-              {!operating.item && operating.price > 0 ? (
-                <span className="inline-flex items-center gap-1 text-muted-foreground">
+          <div className="flex min-w-0 items-start gap-2" data-testid="passive-source-operatingTable">
+            <span className={SOURCE_ICON}>
+              <Stethoscope className="size-3.5" aria-hidden="true" />
+            </span>
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 pt-0.5 text-xs">
+              <span className="font-medium text-foreground">{t('passive.source.operatingTable')}</span>
+              {operating.item ? (
+                <>
+                  <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <ItemHover id={operating.item}>
+                    <Link
+                      to="/items/$id"
+                      params={{ id: operating.item }}
+                      title={bundle.items[operating.item] ?? operating.item}
+                      data-testid="passive-source-item"
+                      className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-md bg-secondary/60 px-1.5 py-0.5 font-medium text-foreground transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {bundle.itemIcon[operating.item] ? (
+                        <ItemGlyph icon={bundle.itemIcon[operating.item]} size={16} />
+                      ) : null}
+                      <span className="truncate">{bundle.items[operating.item] ?? operating.item}</span>
+                    </Link>
+                  </ItemHover>
+                </>
+              ) : operating.price > 0 ? (
+                <span className="inline-flex items-center gap-1 font-medium tabular-nums text-muted-foreground">
                   <Coins className="size-3.5" aria-hidden="true" />
                   {new Intl.NumberFormat(i18n.resolvedLanguage ?? 'en-US').format(operating.price)}
                 </span>
               ) : null}
-            </span>
-            {operating.item ? (
-              <ItemLink
-                id={operating.item}
-                name={bundle.items[operating.item] ?? operating.item}
-                icon={bundle.itemIcon[operating.item]}
-              />
-            ) : null}
-          </span>
+            </div>
+          </div>
         ) : null}
       </div>
     </div>
