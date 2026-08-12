@@ -2,6 +2,25 @@
   "entries": [
     {
       "date": "2026-08-12",
+      "commit": "f9cb3814faf5e81e880588108f884d3eadb8772e",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Map marker popups no longer show a scrollbar when there is nothing to scroll, and the pointer under the popup is visible again.",
+            "zh-CN": "地图标记弹窗不再出现多余的滚动条，弹窗下方的指示箭头也恢复显示。",
+            "zh-TW": "地圖標記彈窗不再出現多餘的捲軸，彈窗下方的指示箭頭也恢復顯示。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-12",
       "commit": "9933e03a2f4265fd24cb53c8085f143746555c27",
       "targets": [
         "aion2",
