@@ -229,7 +229,10 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
       ref={menuRef}
       role="menu"
       aria-label={account.accountLabel}
-      className={cn("absolute right-0 min-w-40", TOP_BAR_MENU_CLASS)}
+      className={cn(
+        "absolute right-0 w-max min-w-40 max-w-80 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain",
+        TOP_BAR_MENU_CLASS,
+      )}
     >
       {header && (
         <p className="truncate px-3 py-1.5 text-xs text-muted-foreground">{header}</p>

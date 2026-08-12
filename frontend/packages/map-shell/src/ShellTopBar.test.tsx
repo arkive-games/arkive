@@ -113,7 +113,7 @@ describe("ShellTopBar nav", () => {
     // two classes the behaviour depends on. `w-max` is what stops the label
     // wrapping -- the floor alone does not.
     expect(getByRole("menu").className).toContain("w-max")
-    expect(getByRole("menu").className).toContain("min-w-44")
+    expect(getByRole("menu").className).toContain("min-w-40")
   })
 
   it("anchors an active dropdown indicator to the text label", () => {
@@ -209,7 +209,9 @@ describe("ShellTopBar nav", () => {
 
     for (const item of [navItem, utilityItem]) {
       expect(item.className).toContain("flex")
-      expect(item.className).toContain("min-h-11")
+      expect(item.className).toContain("!min-h-9")
+      expect(item.className).toContain("!py-1.5")
+      expect(item.className).toContain("whitespace-nowrap")
       expect(item.className).toContain("px-3")
       expect(item.className).toContain("rounded-md")
       expect(item.className).toContain("text-sm")
@@ -218,5 +220,53 @@ describe("ShellTopBar nav", () => {
 
     expect(navItem.className).toContain("[&>[data-slot=nav-item-label]]:flex-1")
     expect(navItem.parentElement?.className).not.toContain("[&>a]:block")
+  })
+
+  it("uses two columns for long language lists and keeps them within the viewport", () => {
+    const languages = Array.from({ length: 17 }, (_, index) => ({
+      code: `language-${index}`,
+      label: `Language ${index}`,
+    }))
+    const { getByRole, getByTestId } = render(
+      <ShellTopBar
+        languageSwitcher={{
+          languages,
+          current: languages[0].code,
+          onChange: () => undefined,
+          menuLabel: "Language",
+          shortLabel: "Language",
+        }}
+      />,
+    )
+
+    fireEvent.pointerEnter(getByTestId("lang-menu"))
+    const menu = getByRole("menu", { name: "Language" })
+    expect(menu.className).toContain("grid-cols-2")
+    expect(menu.className).toContain("w-[22rem]")
+    expect(menu.className).toContain("max-h-[calc(100dvh-4rem)]")
+    expect(menu.className).toContain("overflow-y-auto")
+  })
+
+  it("keeps short utility menus in one content-sized column", () => {
+    const { getByRole, getByTestId } = render(
+      <ShellTopBar
+        themeSwitcher={{
+          options: [
+            { value: "auto", label: "Follow system" },
+            { value: "light", label: "Light" },
+            { value: "dark", label: "Dark" },
+          ],
+          current: "auto",
+          onChange: () => undefined,
+          menuLabel: "Theme",
+        }}
+      />,
+    )
+
+    fireEvent.pointerEnter(getByTestId("theme-menu"))
+    const menu = getByRole("menu", { name: "Theme" })
+    expect(menu.className).toContain("w-max")
+    expect(menu.className).toContain("min-w-40")
+    expect(menu.className).not.toContain("grid-cols-2")
   })
 })

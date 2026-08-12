@@ -150,7 +150,12 @@ shared_component_contracts:
       - "The localized name and slogan remain visible without truncation."
   popup_surfaces:
     surface: "Use the shared floating or modal surface class from frontend/packages/ui/src/popup-styles.ts."
-    menu_row: "At least touch_target_standard high, standard radius, text-sm, and weight 500."
+    menu_row: "At least touch_target_standard high, standard radius, text-sm, and weight 500. Desktop top-bar hover menus are the sole compact exception: 2.25rem rows with no extra inter-row gap."
+    desktop_top_bar_menus:
+      width: "Content-sized from 10rem through 20rem for navigation, theme, and account menus."
+      language_layout: "Use one content-sized column for up to 8 languages. Use two equal columns in a 22rem surface for 9 or more languages."
+      overflow: "Keep the menu within the viewport; only unusually short desktop viewports may scroll the menu internally."
+      labels: "Keep menu labels on one line. Localized text determines width within the declared bounds."
     close_control: "Touch target on mobile and desktop_compact_height on desktop, with the shared focus treatment."
     modal_overlay: "One shared neutral overlay treatment; app-level dialogs do not invent another opacity or blur."
   compact_site_footer:

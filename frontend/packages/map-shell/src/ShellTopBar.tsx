@@ -23,7 +23,14 @@ export const TOP_BAR_MENU_CLASS =
   `top-full z-[var(--arkive-layer-popover)] ${MENU_CONTENT_CLASS}`
 
 export const TOP_BAR_MENU_ITEM_CLASS =
-  `${MENU_ITEM_CLASS} [&>[data-slot=nav-item-label]]:min-w-0 [&>[data-slot=nav-item-label]]:flex-1`
+  `${MENU_ITEM_CLASS} !min-h-9 !py-1.5 whitespace-nowrap [&>[data-slot=nav-item-label]]:min-w-0 [&>[data-slot=nav-item-label]]:flex-1`
+
+const TOP_BAR_MENU_VIEWPORT_CLASS =
+  "max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain"
+
+const TOP_BAR_MENU_WIDTH_CLASS = "w-max min-w-40 max-w-80"
+
+const TOP_BAR_LANGUAGE_GRID_THRESHOLD = 8
 
 export interface ShellNavItem {
   /** Stable key, e.g. the route path. */
@@ -235,6 +242,7 @@ export function ShellUtilityDropdown({
 }: ShellUtilityDropdownProps) {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const usesLanguageGrid = id === "language" && options.length > TOP_BAR_LANGUAGE_GRID_THRESHOLD
   const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) onOpenChange(false)
   }
@@ -282,9 +290,13 @@ export function ShellUtilityDropdown({
           role="menu"
           aria-label={menuLabel}
           className={cn(
-            "absolute min-w-32",
+            "absolute",
             menuAlign === "start" ? "left-0" : "right-0",
             TOP_BAR_MENU_CLASS,
+            TOP_BAR_MENU_VIEWPORT_CLASS,
+            usesLanguageGrid
+              ? "grid w-[22rem] max-w-[calc(100vw-2rem)] grid-cols-2"
+              : TOP_BAR_MENU_WIDTH_CLASS,
             menuSide === "top" && "top-auto bottom-full mb-2",
             menuClassName,
           )}
@@ -404,7 +416,12 @@ function NavDropdown({
           // the longest WORD and wrapping every label. A floor alone still
           // wraps the long ones -- fr-FR "Simulateur de statistiques" needs
           // ~214px against an 11rem floor. `max-w-80` keeps it bounded.
-          className={cn("absolute left-0 w-max min-w-44 max-w-80", TOP_BAR_MENU_CLASS)}
+          className={cn(
+            "absolute left-0",
+            TOP_BAR_MENU_CLASS,
+            TOP_BAR_MENU_VIEWPORT_CLASS,
+            TOP_BAR_MENU_WIDTH_CLASS,
+          )}
         >
           {children.map((child) => {
             const rendered = nav.renderItem(

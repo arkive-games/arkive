@@ -150,7 +150,7 @@ describe("ArkiveMapTopBar account control", () => {
 
   it("renders host-supplied entries above sign out", () => {
     const onSelect = vi.fn()
-    const { getByTestId, getAllByRole } = renderTopBar(
+    const { getByTestId, getAllByRole, getByRole } = renderTopBar(
       account({
         status: "authenticated",
         userName: "alice",
@@ -165,10 +165,15 @@ describe("ArkiveMapTopBar account control", () => {
       "Profile",
       "Sign out",
     ])
-    expect(getByTestId("account-profile").className).toContain("min-h-11")
+    expect(getByTestId("account-profile").className).toContain("!min-h-9")
+    expect(getByTestId("account-profile").className).toContain("!py-1.5")
+    expect(getByTestId("account-profile").className).toContain("whitespace-nowrap")
     expect(getByTestId("account-profile").className).toContain("px-3")
     expect(getByTestId("account-profile").className).toContain("text-sm")
     expect(getByTestId("account-profile").className).toContain("font-medium")
+    const menu = getByRole("menu", { name: "Account" })
+    expect(menu.className).toContain("w-max")
+    expect(menu.className).toContain("max-h-[calc(100dvh-4rem)]")
 
     fireEvent.click(getByTestId("account-profile"))
     expect(onSelect).toHaveBeenCalledTimes(1)
