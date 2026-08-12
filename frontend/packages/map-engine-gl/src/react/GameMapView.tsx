@@ -354,6 +354,8 @@ const GameMapView: React.FC<GameMapViewProps> = ({
     return <div className="gmgl-map-empty">{labels.noMapSelected}</div>;
   }
 
+  const popupContent = selectedMarker ? renderPopupContent(selectedMarker) : null;
+
   return (
     <div
       // `isolation: isolate` (engine-gl.css) gives the map its own stacking
@@ -377,7 +379,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
           re-rendering up to 300 React nodes. */}
       <div ref={overlayRef} className="gmgl-overlay" aria-hidden="true" />
 
-      {selectedMarker && (
+      {selectedMarker && popupContent != null && (
         <div
           ref={popupRef}
           className="gmgl-popup"
@@ -386,7 +388,7 @@ const GameMapView: React.FC<GameMapViewProps> = ({
               there is no close button and no close-on-click, so the popup and
               `selectedMarkerId` can never disagree (the Leaflet engine needs
               `closeOnClick`/`autoClose` disabled for the same reason). */}
-          {renderPopupContent(selectedMarker)}
+          {popupContent}
         </div>
       )}
 

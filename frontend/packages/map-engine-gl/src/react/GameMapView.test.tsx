@@ -413,6 +413,15 @@ describe("map switch", () => {
 });
 
 describe("selected popup", () => {
+  it("does not create a popup wrapper when the app uses a separate detail surface", () => {
+    const props = baseProps({
+      selectedMarkerId: "m1",
+      renderPopupContent: () => null,
+    });
+    const { container } = render(<GameMapView {...props} />);
+    expect(container.querySelector(".gmgl-popup")).toBeNull();
+  });
+
   it("mounts the app card and anchors it above the marker", () => {
     // The marker fixture is alone on its coordinate, so its fanned position is
     // its projected position.

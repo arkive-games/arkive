@@ -68,9 +68,12 @@ component_registry:
     SearchPanel:
       file: "frontend/packages/map-shell/src/SearchPanel.tsx"
       owns: "Search input, results, geometry, and selection callbacks"
+    MarkerDetailDrawer:
+      file: "frontend/packages/map-shell/src/MarkerDetailDrawer.tsx"
+      owns: "Responsive marker-detail geometry, identity, tabs, scrolling, disclosures, gallery, comments, and contextual footer"
     MarkerPopupCard:
       file: "frontend/packages/map-shell/src/MarkerPopupCard.tsx"
-      owns: "Marker identity, coordinates, copy feedback, description, images, and extension slot"
+      owns: "Legacy compact marker popup during per-game migration to MarkerDetailDrawer"
     SiteInfoPanel:
       file: "frontend/packages/map-shell/src/SiteInfoPanel.tsx"
       owns: "Optional site information and feedback rail"
@@ -85,7 +88,7 @@ game_owned:
     - "Maps, tiles, regions, transforms, and map void color"
     - "Marker taxonomy, artwork, counts, descriptions, images, and detail extensions"
   forbidden:
-    - "Alternative shared top bar, sidebar, search, filter, or popup geometry"
+    - "Alternative shared top bar, sidebar, search, filter, or marker-detail geometry"
     - "Alternative shared typography, radius, icon, motion, or color system"
     - "Different active, inactive, hover, copy, collapse, or visibility semantics"
 
@@ -198,8 +201,23 @@ map_search:
     empty_description: "The localized no-description label is allowed only in search results."
 
 marker_detail:
-  component: "MarkerPopupCard"
-  width: "20rem"
+  component: "MarkerDetailDrawer"
+  surface:
+    desktop: "A right-side drawer, 29rem maximum width, inset by space-4 from the map's top and right edges."
+    mobile: "A full-width bottom sheet approximately 78dvh high, capped at 46rem, leaving selected-marker map context visible."
+    radius: "Use standard_radius; mobile rounds only the top corners."
+    overflow: "The outer surface clips overflow and never scrolls."
+    elevation: "Use the shared elevated-surface shadow without obscuring the remaining map."
+  regions:
+    - "Fixed identity header with close action and coordinate copy"
+    - "Fixed Details and Comments tab list"
+    - "One focusable, independently scrollable middle viewport"
+    - "Fixed contextual footer"
+  scrolling:
+    owner: "Only the middle content viewport."
+    input: "Preserve wheel, touch, trackpad, and keyboard scrolling."
+    scrollbar: "Visually hide both the track and thumb without disabling scrolling."
+    overscroll: "Contain within the detail surface."
   radius: "Use standard_radius."
   accent: "Use navigation plus shape, never color alone."
   identity:
@@ -224,21 +242,35 @@ marker_detail:
   description:
     role: "dense_body"
     line_height: "relaxed"
-    empty: "Render no placeholder row."
-  images:
-    columns: 2
-    aspect_ratio: "4:3"
-    radius: "Use standard_radius."
+    disclosure: "Use the shared upper-right chevron disclosure, expanded by default."
+    empty: "Omit the entire section, including heading and separators."
+  data_driven_sections:
+    rule: "Omit every section whose backing data is absent; never render empty headings, placeholder copy, or orphan separators."
+    disclosures: "Description, game-owned drops, and player images use the same upper-right Tabler chevron control and accessibility semantics."
+  gallery:
+    ownership: "Each image belongs to a marker and carries an explicit moderation status."
+    moderation_states: ["uploading", "processing", "awaiting-review", "published", "rejected", "failed"]
+    columns: "Two by default; one at 350px and below."
+    upload: "A marker-gallery upload is distinct from comment attachments and is capped at three selected files."
+  comments:
+    capabilities: ["optional images", "likes", "replies", "popular sorting", "latest sorting"]
+    attachments: "Each attachment belongs only to its comment and carries a comment id, never marker-gallery ownership."
+    composer: "Lives in the comments footer and accepts up to three image attachments."
+  footer:
+    details: "Show only the persistent Mark as completed action when the marker supports completion."
+    comments: "Show the comment composer only when the host supplies a submission adapter."
+  narrow_behavior:
+    at_350px: "Hide drop probability before item name or quantity, use a one-column gallery, and keep footer commands on one row."
   extensions: >-
-    Rewards, completion, entity links, and other game content use the shared
-    extension slot and do not replace the shared identity, coordinates,
-    description, or image structure.
+    Games supply structured sections such as Palworld drops, rewards, and links
+    without replacing shared identity, coordinate, disclosure, gallery,
+    comment, scrolling, or footer behavior.
 
 interaction_contracts:
   individual_filter: "Active combines text, opacity, surface, border, and indicator; inactive is visibly quieter."
   category_visibility: "Eye off appears only when all child subtypes are hidden."
   sidebar_collapse: "Use localized labels and the shared chevron."
-  marker_selection: "Open MarkerPopupCard through the map-engine shared popup path."
+  marker_selection: "Keep map-engine selection and highlighting as the source of truth, then open MarkerDetailDrawer above the map canvas."
   engine_consistency: "Leaflet and WebGL expose the same content, controls, and states."
   coordinate_copy: "Desktop secondary click opens the shared copy-position menu."
   navigation_dropdown: "Pointer hover or keyboard focus opens; no decorative dropdown chevron."
@@ -251,7 +283,7 @@ localization_and_accessibility:
     - "Every shared action ships for every locale supported by the host game."
     - "Copy success and failure have localized visible and accessible labels."
   map_specific_accessibility:
-    - "Keyboard users can reach the map selector, filters, search, controls, markers, and popup actions."
+    - "Keyboard users can reach the map selector, filters, search, controls, markers, detail tabs, scroll viewport, disclosures, and actions."
     - "Dropdowns open on focus and close with Escape."
     - "Copy feedback uses an aria-live polite status."
     - "Both engines expose equivalent accessible names and selected states."

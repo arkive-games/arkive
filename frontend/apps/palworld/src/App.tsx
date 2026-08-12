@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearch } from '@tanstack/react-router'
 import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, type MapRef } from '@gamemap/map-engine'
@@ -8,7 +8,7 @@ import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, ty
 // costs nothing.
 import type { GlMapRef } from '@gamemap/map-engine-gl'
 const GlGameMapView = lazy(() => import('./features/map/GlMapView'))
-import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type SearchItem } from '@gamemap/map-shell'
+import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -36,7 +36,6 @@ import {
   AlertDialogHeader,
   AlertDialogMedia,
   AlertDialogTitle,
-  cn,
   useIsMobile,
 } from '@gamemap/ui'
 import {
@@ -49,7 +48,7 @@ import {
   parseJson,
   useMemoryState,
 } from '@gamemap/state-memory'
-import { Check, Eraser, Moon } from 'lucide-react'
+import { Eraser, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
 import { resolveMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
 import { mapMarkerLodTier } from './lib/mapMarkerLod'
@@ -79,6 +78,10 @@ const explicitPalIdLookup = (q: string) =>
 // 海/鹿 pal. Require ALL query tokens (AND) and drop fuzzy so the map search is
 // precise; prefix stays on so partial name queries still match.
 const PAL_SEARCH_OPTIONS = { combineWith: 'AND', fuzzy: false } as const
+
+function MarkerDetailBridge({ marker, render }: { marker: EngineMarker; render: (marker: EngineMarker) => ReactNode }) {
+  return render(marker)
+}
 
 // Categories that start collapsed in the filter sidebar (stable identity so the
 // FilterPanel sync effect doesn't re-run each render).
@@ -167,6 +170,7 @@ export default function App() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [searchSheetOpen, setSearchSheetOpen] = useState(false)
   const [clearCompletedOpen, setClearCompletedOpen] = useState(false)
+  const [markerCommentSort, setMarkerCommentSort] = useState<'popular' | 'latest'>('popular')
   // Restore the persisted selection once at mount (null = nothing saved, so the
   // default selection below applies). Held in state so it seeds both the initial
   // `visible` set and the init guard without reading a ref during render.
@@ -448,6 +452,10 @@ export default function App() {
   }, [staticData, markerData, subtypeMetaMap, completed, countBySubtype, defaultActiveSubtypes])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
+  const selectedMarker = useMemo(
+    () => engineMarkers.find((marker) => marker.id === selectedMarkerId),
+    [engineMarkers, selectedMarkerId],
+  )
 
   const searchItems: SearchItem[] = useMemo(() => {
     if (!staticData) return []
@@ -640,7 +648,7 @@ export default function App() {
     zoomOut: t('zoomOut'),
   }), [t])
 
-  const renderPopupContent = useCallback((marker: EngineMarker) => {
+  const renderMarkerDetail = useCallback((marker: EngineMarker) => {
     const idLabel = formatPalId(marker.zukanIndex ?? marker.subtypeMeta?.zukanIndex, marker.zukanIndexSuffix ?? marker.subtypeMeta?.zukanIndexSuffix)
     const catId = marker.subtypeMeta?.category ?? marker.category
     const catLabel = catId ? (staticData?.typesL10n.categories[catId]?.name ?? catId) : ''
@@ -673,51 +681,45 @@ export default function App() {
     const lootKind = markerLootKind(marker.subtype)
     const iconName = marker.icon || marker.subtypeMeta?.icon || ''
     const iconUrl = iconName && map ? palworldAssets.markerIconUrl(iconName, map) : undefined
+    const detailLabels: MarkerDetailLabels = {
+      close: t('markerDetail.close'), position: t('position'), copyPosition: t('copyPosition'), copied: t('copied'), copyFailed: t('copyFailed'),
+      details: t('markerDetail.details'), comments: t('markerDetail.comments'), scrollArea: t('markerDetail.scrollArea'),
+      collapseSection: (title) => t('markerDetail.collapseSection', { title }), expandSection: (title) => t('markerDetail.expandSection', { title }),
+      description: t('markerDetail.description'), gallery: t('markerDetail.gallery'), galleryDescription: t('markerDetail.galleryDescription'),
+      uploadImage: t('markerDetail.uploadImage'), galleryReviewNote: t('markerDetail.galleryReviewNote'), commentCount: (value) => t('markerDetail.commentCount', { count: value }),
+      popular: t('markerDetail.popular'), latest: t('markerDetail.latest'), like: t('markerDetail.like'), reply: t('markerDetail.reply'),
+      viewReplies: (value) => t('markerDetail.viewReplies', { count: value }), commentPlaceholder: t('markerDetail.commentPlaceholder'),
+      attachImages: t('markerDetail.attachImages'), attachmentLimit: t('markerDetail.attachmentLimit'), publish: t('markerDetail.publish'),
+    }
+    const facts = pal || (count && count > 1) || marker.nightOnly ? (
+      <div className="flex flex-wrap items-center gap-1.5">
+        {pal?.elements.map((e) => <ElementBadge key={e} element={e} label={palsBundle!.enums.elements[e] ?? e} size={16} />)}
+        {pal?.bestWork ? <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-xs text-secondary-foreground"><img src={workIconUrl(pal.bestWork)} alt="" width={16} height={16} className="object-contain" />{palsBundle!.enums.work[pal.bestWork] ?? pal.bestWork}</span> : null}
+        {count && count > 1 ? <span className="rounded-full bg-secondary px-2 py-1 text-xs text-secondary-foreground">{t('spawnCount', { count })}</span> : null}
+        {marker.nightOnly ? <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-1 text-xs text-indigo-600 dark:text-indigo-400" data-testid="marker-night-only"><Moon className="size-3.5" aria-hidden />{t('pal.nightOnlyNote')}</span> : null}
+      </div>
+    ) : undefined
+    const hasGameExtensions = isEffigy || marker.reward || marker.warpTo || marker.dungeonArea || lootKind
     return (
-      <MarkerPopupCard
+      <MarkerDetailDrawer
         idLabel={idLabel}
         name={marker.localizedName || t('unnamed')}
         icon={iconUrl ? <img src={iconUrl} alt="" className="size-7 object-contain" /> : undefined}
-        metaLine={metaLine}
-        positionLabel={t('position')}
+        eyebrow={metaLine}
         positionValue={<span aria-label={coordAria} title={coordAria}>{coordText}</span>}
-        positionCopy={{
-          value: coordText,
-          copyLabel: t('copyPosition'),
-          copiedLabel: t('copied'),
-          failedLabel: t('copyFailed'),
-        }}
+        positionCopyValue={coordText}
         description={marker.localizedDescription}
-        images={marker.image ? [noteImageUrl(marker.image)] : undefined}
+        facts={facts}
+        gallery={marker.image ? { markerId: marker.id, images: [{ id: `${marker.id}-image`, markerId: marker.id, url: noteImageUrl(marker.image), alt: marker.localizedName || t('unnamed'), moderationStatus: 'published' }] } : undefined}
+        comments={{ markerId: marker.id, items: [], sort: markerCommentSort, onSortChange: setMarkerCommentSort }}
+        completeAction={marker.subtypeMeta?.canComplete ? { completed: Boolean(marker.completed), label: t('markerActions.markCompleted'), completedLabel: t('markerActions.completed'), onToggle: () => toggleCompleted(marker.id) } : undefined}
+        labels={detailLabels}
+        onClose={() => setSelectedMarkerId(null)}
       >
-        {pal ? (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {pal.elements.map((e) => (
-              <ElementBadge key={e} element={e} label={palsBundle!.enums.elements[e] ?? e} size={16} />
-            ))}
-            {pal.bestWork ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
-                <img src={workIconUrl(pal.bestWork)} alt="" width={16} height={16} className="object-contain" />
-                {palsBundle!.enums.work[pal.bestWork] ?? pal.bestWork}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-        {count && count > 1 ? (
-          <div className="mt-2 text-sm text-muted-foreground">
-            {t('spawnCount', { count })}
-          </div>
-        ) : null}
-        {marker.nightOnly ? (
-          <div className="mt-2 flex items-center gap-1.5 text-sm text-indigo-500 dark:text-indigo-400" data-testid="marker-night-only">
-            <Moon className="h-3.5 w-3.5" aria-hidden />
-            {t('pal.nightOnlyNote')}
-          </div>
-        ) : null}
         {drops && drops.length > 0 && palsBundle ? (
-          <PalDropBadges drops={drops} bundle={palsBundle} />
+          <MarkerDetailCollapsibleSection labels={detailLabels} section={{ id: 'drops', title: t('markerDetail.drops'), accessibleTitle: t('markerDetail.drops'), content: <PalDropBadges drops={drops} bundle={palsBundle} variant="detail" /> }} />
         ) : null}
-        {isEffigy ? (
+        {hasGameExtensions ? <div className="border-b border-border bg-card px-4 py-3">{isEffigy ? (
           <EffigyItemBadge icon={marker.subtypeMeta?.icon} name={marker.subtypeLabel ?? marker.subtype} />
         ) : null}
         {marker.reward ? (
@@ -750,15 +752,6 @@ export default function App() {
             </button>
           )
         })() : null}
-        {isPal ? (
-          <Link
-            to="/pals/$id"
-            params={{ id: marker.subtype }}
-            className="mt-2 inline-block text-sm text-primary hover:underline"
-          >
-            {t('pal.viewInEncyclopedia')}
-          </Link>
-        ) : null}
         {marker.dungeonArea ? (
           <Link
             to="/dungeons/$id"
@@ -770,28 +763,10 @@ export default function App() {
           </Link>
         ) : null}
         {lootKind ? <MarkerLootSummary lootArea={marker.lootArea} kind={lootKind} /> : null}
-        {marker.subtypeMeta?.canComplete ? (
-          <div className="mt-4 flex items-center justify-end">
-            <button
-              type="button"
-              data-testid="marker-complete-toggle"
-              onClick={() => toggleCompleted(marker.id)}
-              aria-pressed={!!marker.completed}
-              className={cn(
-                'inline-flex min-h-8 items-center gap-1.5 rounded-md px-3 text-sm font-semibold transition-colors',
-                marker.completed
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-[color:var(--arkive-filter-active)] text-primary hover:bg-[color:var(--arkive-filter-hover)]',
-              )}
-            >
-              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-              {marker.completed ? t('markerActions.completed') : t('markerActions.markCompleted')}
-            </button>
-          </div>
-        ) : null}
-      </MarkerPopupCard>
+        </div> : null}
+      </MarkerDetailDrawer>
     )
-  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName])
+  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName, markerCommentSort])
 
   if (loadError) {
     return (
@@ -961,7 +936,7 @@ export default function App() {
     assets: palworldAssets,
     theme: palworldTheme,
     exposeTestHandle: import.meta.env.DEV,
-    renderPopupContent,
+    renderPopupContent: () => null,
     labels,
   }
 
@@ -988,6 +963,7 @@ export default function App() {
     ) : (
       <GameMapView {...sharedMapProps} mapRef={mapRef} />
     )
+  const markerDetail = selectedMarker ? <MarkerDetailBridge marker={selectedMarker} render={renderMarkerDetail} /> : null
 
   if (isMobile) {
     const defaultVisible = staticData.types.subtypes.filter((subtype) => subtype.defaultActive)
@@ -1002,7 +978,7 @@ export default function App() {
         <h1 className="sr-only">{t('title')}</h1>
         {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
             gets a definite height and Leaflet sizes correctly on mount. */}
-        <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}</main>
+        <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}{markerDetail}</main>
 
         <ArkiveMobileMapControls
           search={{
@@ -1073,6 +1049,7 @@ export default function App() {
       <main className="relative flex min-w-0 flex-1 overflow-hidden">
         {mapView}
         {searchPanel('floating')}
+        {markerDetail}
       </main>
     </ShellLayout>
     </>

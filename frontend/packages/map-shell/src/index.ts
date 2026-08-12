@@ -74,6 +74,20 @@ export { ShellMapSelect, type ShellMapOption, type ShellMapSelectProps } from ".
 export { IdLabel, type IdLabelValue, type IdLabelProps } from "./IdLabel"
 export { OverflowLabel, type OverflowLabelProps } from "./OverflowLabel"
 export { MarkerPopupCard, type MarkerPopupCardProps } from "./MarkerPopupCard"
+export { MarkerDetailCollapsibleSection, MarkerDetailDrawer } from "./MarkerDetailDrawer"
+export type {
+  MarkerComment,
+  MarkerCommentAttachment,
+  MarkerCommentSort,
+  MarkerCommentsConfig,
+  MarkerDetailCompleteAction,
+  MarkerDetailDrawerProps,
+  MarkerDetailLabels,
+  MarkerDetailSection,
+  MarkerGalleryConfig,
+  MarkerGalleryImage,
+  MarkerGalleryModerationStatus,
+} from "./MarkerDetailDrawer"
 export { SearchPanel, type SearchPanelProps, type SearchItem, type SearchPanelLabels } from "./SearchPanel"
 export { searchTokenize } from "./searchTokenizer"
 export {

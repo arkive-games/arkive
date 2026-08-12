@@ -33,6 +33,7 @@ import { RECYCLER_STRINGS } from './recyclerStrings'
 import { RESEARCH_STRINGS } from './researchStrings'
 import { SIM_STRINGS } from './simulatorStrings'
 import { SITE_INFO_STRINGS } from './siteInfoStrings'
+import { MARKER_DETAIL_STRINGS } from './markerDetailStrings'
 import {
   LOOT_TIER_LABELS,
   LOOT_UNAVAILABLE_LABELS,
@@ -1121,6 +1122,7 @@ for (const lng of LANGUAGES) {
         completed: COMPLETED_LABELS[lng],
         connectsTo: CONNECTS_TO_LABELS[lng],
       },
+      markerDetail: MARKER_DETAIL_STRINGS[lng],
       mapControls: {
         ...MAP_CONTROL_STRINGS[lng],
         lootTier: LOOT_TIER_LABELS[lng],

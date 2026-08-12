@@ -167,7 +167,7 @@ export interface GameMapViewProps {
   assets: MapAssets;
   /** Color tokens for engine-rendered chrome; defaults to Arkive's Radix palette. */
   theme?: MapTheme;
-  /** Renders the selected marker's popup body (app-side content: links, actions...). */
+  /** Renders the selected marker's popup body. Return null when the app owns a separate detail surface. */
   renderPopupContent: (marker: EngineMarker) => ReactNode;
   /** Dev/test only: publish the Leaflet map on `window.__leafletMap` for e2e. */
   exposeTestHandle?: boolean;

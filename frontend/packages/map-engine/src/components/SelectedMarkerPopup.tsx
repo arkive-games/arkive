@@ -54,8 +54,9 @@ const SelectedMarkerPopup: React.FC<Props> = ({
         : null,
     [map, markerX, markerY],
   );
+  const content = marker ? renderPopupContent(marker) : null;
 
-  if (!position || !marker) return null;
+  if (!position || !marker || content == null) return null;
 
   return (
     <Popup
@@ -88,7 +89,7 @@ const SelectedMarkerPopup: React.FC<Props> = ({
           content coupling; the position memo above is the anti-blink mechanism
           and is untouched, so children may re-render freely without tearing the
           popup down. */}
-      {renderPopupContent(marker)}
+      {content}
     </Popup>
   );
 };
