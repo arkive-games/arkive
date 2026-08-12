@@ -109,6 +109,10 @@ describe("ShellTopBar nav", () => {
     )
 
     fireEvent.pointerEnter(getByTestId("nav-dropdown-database"))
+    // jsdom does no layout, so width itself is untestable here; these pin the
+    // two classes the behaviour depends on. `w-max` is what stops the label
+    // wrapping -- the floor alone does not.
+    expect(getByRole("menu").className).toContain("w-max")
     expect(getByRole("menu").className).toContain("min-w-44")
   })
 
