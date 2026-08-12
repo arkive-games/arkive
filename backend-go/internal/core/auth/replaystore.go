@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -77,7 +78,7 @@ func (r *redisReplayStore) Claim(ctx context.Context, signature string, expires 
 		Mode: "NX",
 		TTL:  ttl,
 	}).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		// Key already existed: NX declined to set it.
 		return false, nil
 	}

@@ -10,6 +10,7 @@ import {
 } from "react"
 
 import { CoreClient } from "./client"
+import { consumeResetToken } from "./resetLink"
 import { createLocalTokenStorage } from "./storage"
 import { AuthError, type AuthTransport, type TokenStorage, type User } from "./types"
 
@@ -28,6 +29,21 @@ export interface AuthContextValue {
   /** Last failure, for surfaces that render errors outside the dialog. */
   error: AuthError | null
   client: CoreClient
+
+  /**
+   * Token from an emailed reset link, or null.
+   *
+   * Read here rather than in the account control for three reasons the control
+   * cannot satisfy: the provider is always mounted, so the token is stripped
+   * from the URL even for a visitor who is already signed in and therefore
+   * renders no control at all; several controls can mount at once (meta renders
+   * a mobile and a desktop one, hidden from each other by CSS, so both effects
+   * run), and whichever happened to run first would otherwise consume the token
+   * from under the others; and claiming becomes explicit rather than a race.
+   */
+  pendingResetToken: string | null
+  /** Clears the pending token, e.g. once the reset dialog has been dismissed. */
+  clearPendingResetToken(): void
   /**
    * False when no API is configured. Exposed so the account control can hide
    * itself rather than every host repeating the check at the call site.
@@ -90,6 +106,12 @@ export function AuthProvider({
   const [status, setStatus] = useState<AuthStatus>(enabled ? "loading" : "anonymous")
   const [user, setUser] = useState<User | null>(null)
   const [error, setError] = useState<AuthError | null>(null)
+
+  // Read once, on the first render of the provider, so the credential leaves the
+  // address bar immediately whatever the page goes on to render.
+  const [pendingResetToken, setPendingResetToken] = useState<string | null>(() =>
+    enabled ? consumeResetToken() : null,
+  )
 
   // Guards against a resolved probe writing state after unmount, and against
   // an older probe overwriting a newer one when baseUrl changes.
@@ -191,9 +213,11 @@ export function AuthProvider({
       register,
       logout,
       refresh: probe,
+      pendingResetToken,
+      clearPendingResetToken: () => setPendingResetToken(null),
       clearError: () => setError(null),
     }),
-    [status, user, error, client, enabled, login, register, logout, probe],
+    [status, user, error, client, enabled, pendingResetToken, login, register, logout, probe],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

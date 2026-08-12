@@ -168,6 +168,14 @@ func (a *Altcha) Verify(ctx context.Context, payload string) error {
 	if err != nil {
 		// A store that cannot answer must not admit the solution: replay
 		// protection failing open is the same as having none.
+		//
+		// This is deliberately the opposite call to the rate limiter, which
+		// degrades to in-process counters when Redis is unreachable. The
+		// asymmetry is the point: a limiter failing open costs some extra
+		// requests, while replay protection failing open lets one solved
+		// challenge mint unlimited accounts. Once REDIS_ADDR is set, Redis is a
+		// hard dependency of registration and password reset — an outage stops
+		// both rather than weakening them.
 		return fmt.Errorf("%w: could not check replay protection: %v", ErrAltcha, err)
 	}
 	if !fresh {

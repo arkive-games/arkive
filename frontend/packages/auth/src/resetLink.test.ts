@@ -1,6 +1,8 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it } from "vitest"
 
-import { readResetLink } from "./resetLink"
+import { consumeResetToken, readResetLink } from "./resetLink"
 
 describe("readResetLink", () => {
   it("finds the token on the reset landing path", () => {
@@ -54,5 +56,35 @@ describe("readResetLink", () => {
     // Reset tokens are JWTs: dots, dashes and underscores are expected.
     const jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhIn0.sig-with_chars"
     expect(readResetLink(`https://tc-imba.com/user?reset=${jwt}`).token).toBe(jwt)
+  })
+})
+
+describe("consumeResetToken path gating", () => {
+  // Regression: the helper used to ignore onResetPath, so a stray ?reset= on any
+  // page of any app opened the reset form.
+  it("ignores a token on a page that is not the reset landing", () => {
+    const original = window.location.href
+    try {
+      window.history.replaceState({}, "", "/pals?reset=stray")
+      expect(consumeResetToken()).toBeNull()
+      // and leaves the URL alone, since it consumed nothing
+      expect(window.location.search).toContain("reset=stray")
+    } finally {
+      window.history.replaceState({}, "", original)
+    }
+  })
+
+  it("reads and strips a token on the reset landing", () => {
+    const original = window.location.href
+    try {
+      window.history.replaceState({}, "", "/user?reset=abc123")
+      expect(consumeResetToken()).toBe("abc123")
+      // The token is a credential: it must not survive in history or Referer.
+      expect(window.location.search).not.toContain("abc123")
+      // and a second read finds nothing left
+      expect(consumeResetToken()).toBeNull()
+    } finally {
+      window.history.replaceState({}, "", original)
+    }
   })
 })

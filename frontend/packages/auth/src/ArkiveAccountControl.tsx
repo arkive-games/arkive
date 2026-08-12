@@ -13,7 +13,6 @@ import {
 import { AccountDialog } from "./AccountDialog"
 import { useAuth } from "./AuthProvider"
 import { authStringsFor } from "./locales"
-import { consumeResetToken } from "./resetLink"
 import type { AuthStrings } from "./strings"
 
 export interface ArkiveAccountControlProps {
@@ -65,19 +64,12 @@ export function ArkiveAccountControl({
 }: ArkiveAccountControlProps) {
   const auth = useAuth()
   const [open, setOpen] = useState(false)
-  const [resetToken, setResetToken] = useState<string | null>(null)
-
-  // A visitor arriving from an emailed link lands on /user?reset=<token>. The
-  // token is read once and stripped from the address bar immediately: it is a
-  // credential, and leaving it in the URL puts it in browser history and in the
-  // Referer of every later third-party request.
+  // The provider owns the token; this only reacts to it. Opening on a token the
+  // provider already stripped is what makes the emailed link land on the form.
+  const resetToken = auth.pendingResetToken
   useEffect(() => {
-    const token = consumeResetToken()
-    if (token) {
-      setResetToken(token)
-      setOpen(true)
-    }
-  }, [])
+    if (resetToken) setOpen(true)
+  }, [resetToken])
 
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -155,7 +147,13 @@ export function ArkiveAccountControl({
       {anonymousTrigger}
       <AccountDialog
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(next) => {
+          setOpen(next)
+          // Otherwise the dialog stays in reset mode for the rest of the
+          // session: reopening it from the account menu would land back on the
+          // reset form, prefilled with a token that has already been spent.
+          if (!next) auth.clearPendingResetToken()
+        }}
         strings={strings}
         initialMode={resetToken ? "reset" : "login"}
         resetToken={resetToken ?? undefined}

@@ -1,3 +1,19 @@
+// This file renders password-reset mail for the SMTP transport.
+//
+// It does NOT run in the deployed configuration. module.go prefers SESMailer
+// whenever SES is configured, and SESMailer never calls RenderPasswordReset:
+// Tencent refuses freeform content on this account tier, so the body lives in an
+// approved template on their side and only {name, token} is sent. Everything
+// here reaches a recipient only through the SMTP fallback, which the same
+// account tier cannot use.
+//
+// It is kept for two reasons: it is the record of the copy the Tencent template
+// was built from, so editing the wording here and re-submitting the template is
+// the intended workflow; and it works unchanged if the account is ever upgraded
+// to enterprise verification, where SMTP becomes available.
+//
+// Editing the strings below will not change the email anyone receives. The
+// template at Tencent has to be updated too, and it re-enters review.
 package auth
 
 import (

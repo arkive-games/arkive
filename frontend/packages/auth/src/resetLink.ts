@@ -57,8 +57,11 @@ export function readResetLink(href: string): ResetLink {
 export function consumeResetToken(): string | null {
   if (typeof window === "undefined" || !window.location) return null
 
-  const { token } = readResetLink(window.location.href)
-  if (!token) return null
+  // Both conditions matter. Without onResetPath, any URL anywhere carrying a
+  // stray ?reset= would open the reset form — including deep links on a game
+  // site that have nothing to do with an emailed link.
+  const { token, onResetPath } = readResetLink(window.location.href)
+  if (!token || !onResetPath) return null
 
   try {
     const url = new URL(window.location.href)

@@ -41,10 +41,11 @@ func (c SESConfig) Configured() bool {
 // "Invalid login or password[not exist in redis]" no matter how often the
 // password is set. The API is the documented alternative.
 //
-// The API in turn refuses freeform content on this tier ("未开通自定义发送权限,
-// 请使用模板发送"), so the message body lives in an approved template at Tencent
-// and this client only supplies the variables. That is why no HTML is rendered
-// here — see mail_templates.go for the copy the template was built from.
+// The API in turn refuses freeform content on this tier, answering
+// FailedOperation.WithOutPermission — "custom sending is not enabled on this
+// account; use a template". So the message body lives in an approved template at
+// Tencent and this client only supplies the variables, which is why no HTML is
+// rendered here; see mail_templates.go for the copy the template was built from.
 type SESMailer struct {
 	cfg    SESConfig
 	logger *slog.Logger
@@ -80,6 +81,10 @@ func (m *SESMailer) SendPasswordReset(ctx context.Context, email, displayName, t
 		return fmt.Errorf("encode template data: %w", err)
 	}
 
+	// One approved template exists, and it is Chinese, so the subject matches it
+	// rather than the recipient's browsing language. Sending in another language
+	// means getting another template reviewed first; until then the locale map in
+	// mail_templates.go describes copy this path cannot select.
 	payload := map[string]any{
 		"FromEmailAddress": m.fromHeader(),
 		"Destination":      []string{email},
@@ -103,11 +108,15 @@ func (m *SESMailer) SendPasswordReset(ctx context.Context, email, displayName, t
 }
 
 // SendVerification is not implemented: it needs its own approved template, and
-// no verification campaign is planned. Logging the token keeps the gap obvious
-// rather than pretending the flow works.
+// no verification campaign is planned.
+//
+// The token is deliberately NOT logged. /auth/request-verify-token is a live
+// endpoint any visitor can trigger, so logging it would write a working
+// credential into the production log on demand. LogMailer may print one because
+// it only runs where no mail is configured at all; this path is production.
 func (m *SESMailer) SendVerification(ctx context.Context, email, displayName, token string) error {
-	m.logger.WarnContext(ctx, "verification mail has no approved template; token logged instead",
-		slog.String("email", email), slog.String("token", token))
+	m.logger.WarnContext(ctx, "verification mail requested but no approved template exists; nothing sent",
+		slog.String("email", email))
 	return nil
 }
 
