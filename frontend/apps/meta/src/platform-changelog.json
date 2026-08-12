@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-08-13",
+      "commit": "b650fd73fc178e2a0008a7612ec3cf68b3864cdb",
+      "targets": [
+        "aion2",
+        "palworld",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Top-bar menus now use tighter rows and content-aware widths, while long language lists open in two columns so every option fits on screen.",
+            "zh-CN": "顶部导航菜单现在采用更紧凑的行距和自适应宽度；语言较多时自动分为两列，让所有选项都能在一屏内清晰显示。",
+            "zh-TW": "頂部導覽選單現在採用更緊湊的行距和自適應寬度；語言較多時自動分為兩欄，讓所有選項都能在一個畫面內清楚顯示。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-13",
       "commit": "e789401760be6a3cd13a3e788b72544de628ab36",
       "targets": [
         "aion2",
