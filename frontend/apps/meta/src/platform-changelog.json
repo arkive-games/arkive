@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-08-12",
+      "commit": "5ca1feb741c5041e7b9a6d8fe1f48742705fff1b",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "sts2"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Navigation dropdown menus now size to their labels, so longer translations no longer wrap onto two or three lines.",
+            "zh-CN": "导航下拉菜单现在会根据文字长度自动调整宽度，较长的翻译不再折行显示。",
+            "zh-TW": "導覽下拉選單現在會根據文字長度自動調整寬度，較長的翻譯不再折行顯示。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-12",
       "commit": "f9cb3814faf5e81e880588108f884d3eadb8772e",
       "targets": [
         "aion2",
