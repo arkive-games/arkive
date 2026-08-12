@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, CircleHelp, PackageOpen } from 'lucide-react'
+import { ChevronRight, PackageOpen } from 'lucide-react'
 import { loadItems, type ItemEntry, type ItemSource, type ItemsBundle } from '../lib/catalog'
 import { itemIconUrl } from '../lib/assets'
 import type { MarkerLootKind } from '../lib/markerLoot'
@@ -58,19 +58,6 @@ export function groupMarkerLootByGrade(entries: MarkerLootEntry[]): MarkerLootGr
     .map(([grade, groupedEntries]) => ({ grade, entries: groupedEntries }))
 }
 
-function UnavailableLoot() {
-  const { t } = useTranslation()
-  return (
-    <div
-      data-testid="marker-loot-unavailable"
-      className="mt-3 flex items-start gap-2 border-t border-border/80 pt-3 text-xs leading-relaxed text-muted-foreground"
-    >
-      <CircleHelp className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-      <span>{t('mapControls.lootUnavailable')}</span>
-    </div>
-  )
-}
-
 export function MarkerLootSummary({ lootArea, kind }: { lootArea?: string; kind: MarkerLootKind }) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
@@ -104,7 +91,7 @@ export function MarkerLootSummary({ lootArea, kind }: { lootArea?: string; kind:
     [loot],
   )
 
-  if (!lootArea) return <UnavailableLoot />
+  if (!lootArea || (items && !loot.length)) return null
 
   const areaLabel = items
     ? items.areaLabels[lootArea] ?? t(`bp.area.${lootArea}`, lootArea)
@@ -112,7 +99,7 @@ export function MarkerLootSummary({ lootArea, kind }: { lootArea?: string; kind:
   const itemText = items?.text ?? {}
 
   return (
-    <section data-testid="marker-loot-summary" className="mt-3 border-t border-border/80 pt-3">
+    <section data-testid="marker-loot-summary" className="border-b border-border bg-card px-3 py-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">

@@ -22,7 +22,7 @@ const MapZoomControl: React.FC<Props> = ({
   onZoomIn,
   onZoomOut,
 }) => (
-  <div className="gmgl-zoom">
+  <div className="gmgl-zoom" data-map-avoid="">
     <div className="gmgl-zoom-pill">
       <button
         type="button"

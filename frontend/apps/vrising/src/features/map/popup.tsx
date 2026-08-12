@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { ArrowRightLeft } from 'lucide-react'
 import type { EngineMarker } from '@gamemap/map-engine'
-import { MarkerPopupCard, formatCoords } from '@gamemap/map-shell'
+import { MarkerDetailDrawer, formatCoords, markerDetailLabelsFor } from '@gamemap/map-shell'
 
 type VrisingMarker = EngineMarker & {
   resourceKind?: string
@@ -18,95 +18,90 @@ type VrisingMarker = EngineMarker & {
 
 export interface PopupDeps {
   t: (key: string, opts?: Record<string, unknown>) => string
-  /** Localized region label for a region id (regions/<map>.json l10n). */
+  language: string
   regionName: (id?: string) => string
-  /** Localized category label for a category id. */
   categoryName: (id?: string) => string
+  iconUrl?: string
+  onClose: () => void
   onSelectMarker: (id: string) => void
 }
 
-/**
- * Popup body for a selected marker. The engine renders the frame and calls this
- * for the content, so all i18n and all app links stay on the app side.
- */
-export function renderMarkerPopup(marker: EngineMarker, deps: PopupDeps): ReactNode {
-  const { t, regionName, categoryName } = deps
+export function VrisingMarkerDetail({ marker, deps, anchored = false }: { marker: EngineMarker; deps: PopupDeps; anchored?: boolean }) {
+  const { t, language, regionName, categoryName, iconUrl, onClose, onSelectMarker } = deps
+  const [commentSort, setCommentSort] = useState<'popular' | 'latest'>('popular')
+  const labels = useMemo(() => markerDetailLabelsFor(language), [language])
   const vrising = marker as VrisingMarker
   const catId = marker.subtypeMeta?.category ?? marker.category
   const catLabel = categoryName(catId)
   const subLabel = marker.subtypeLabel ?? marker.subtype
   const { text: coordText, aria: coordAria } = formatCoords(marker.x, marker.y)
-  const catText = [catLabel, subLabel].filter(Boolean).join(' / ')
   const regionLabel = regionName(marker.region)
-  const metaLine = (
-    <>
-      {catText}
-      {catText && regionLabel ? <span aria-hidden="true"> / </span> : null}
-      {regionLabel ? <span data-testid="marker-region">{regionLabel}</span> : null}
-    </>
-  )
+  const metaLine = [catLabel, subLabel, regionLabel].filter(Boolean).join(' / ')
+  const name = marker.localizedName || t('unnamed')
+  const facts = [
+    vrising.positionPrecision === 'terrain-chunk-center'
+      ? { label: '', value: t('marker.terrainChunkPrecision') }
+      : null,
+    vrising.movement ? { label: t('marker.movement'), value: t(`marker.${vrising.movement}`) } : null,
+    vrising.bossLevel != null ? { label: t('marker.level'), value: String(vrising.bossLevel) } : null,
+    vrising.bossAct ? { label: t('marker.act'), value: vrising.bossAct } : null,
+    vrising.bossRegion ? { label: t('marker.gameRegion'), value: vrising.bossRegion } : null,
+  ].filter((fact): fact is { label: string; value: string } => fact != null)
 
   return (
-    <MarkerPopupCard
-      name={marker.localizedName || t('unnamed')}
-      metaLine={metaLine}
-      positionLabel={t('coordinates')}
+    <MarkerDetailDrawer
+      name={name}
+      icon={iconUrl ? <img src={iconUrl} alt="" className="size-7 object-contain" /> : undefined}
+      eyebrow={metaLine}
       positionValue={<span aria-label={coordAria} title={coordAria}>{coordText}</span>}
-      positionCopy={{
-        value: coordText,
-        copyLabel: t('copyPosition'),
-        copiedLabel: t('copied'),
-        failedLabel: t('copyFailed'),
-      }}
+      positionCopyValue={coordText}
       description={marker.localizedDescription}
-      images={vrising.movement ? undefined : marker.images}
+      facts={facts.length ? (
+        <dl className="divide-y divide-border border-y border-border text-sm">
+          {facts.map((fact, index) => (
+            <div key={`${fact.label}-${index}`} className="flex min-h-9 items-center justify-between gap-3 py-1.5">
+              {fact.label ? <dt className="text-muted-foreground">{fact.label}</dt> : null}
+              <dd className={fact.label ? 'text-right font-medium' : 'text-muted-foreground'}>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : undefined}
+      gallery={{
+        markerId: marker.id,
+        images: vrising.movement ? [] : (marker.images ?? []).map((url, index) => ({
+          id: `${marker.id}-image-${index}`,
+          markerId: marker.id,
+          url,
+          alt: name,
+          moderationStatus: 'published' as const,
+        })),
+      }}
+      comments={{ markerId: marker.id, items: [], sort: commentSort, onSortChange: setCommentSort }}
+      labels={labels}
+      onClose={onClose}
+      anchored={anchored}
     >
-      {vrising.movement ? (
-        <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
-          <div className="flex justify-between gap-3">
-            <span className="text-muted-foreground">{t('marker.movement')}</span>
-            <span>{t(`marker.${vrising.movement}`)}</span>
-          </div>
-          {vrising.bossLevel != null ? (
-            <div className="flex justify-between gap-3">
-              <span className="text-muted-foreground">{t('marker.level')}</span>
-              <span>{vrising.bossLevel}</span>
-            </div>
-          ) : null}
-          {vrising.bossAct ? (
-            <div className="flex justify-between gap-3">
-              <span className="text-muted-foreground">{t('marker.act')}</span>
-              <span>{vrising.bossAct}</span>
-            </div>
-          ) : null}
-          {vrising.bossRegion ? (
-            <div className="flex justify-between gap-3">
-              <span className="text-muted-foreground">{t('marker.gameRegion')}</span>
-              <span>{vrising.bossRegion}</span>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
       {vrising.pairedMarkerId && vrising.connection === 'bidirectional' && vrising.connectionGroup ? (
-        <div className="mt-3 border-t border-border pt-3">
+        <section className="border-b border-border bg-card px-3 py-2.5">
           <div className="mb-2 flex justify-between gap-3 text-sm">
             <span className="text-muted-foreground">{t('marker.connection')}</span>
-            <span>
+            <span className="text-right">
               {t('marker.connectionGroup', { group: vrising.connectionGroup })}
-              {' · '}
+              {' / '}
               {t('marker.bidirectional')}
             </span>
           </div>
           <button
             type="button"
+            data-testid="marker-connection-other-end"
             className="flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground hover:border-primary/40 hover:bg-muted"
-            onClick={() => deps.onSelectMarker(vrising.pairedMarkerId!)}
+            onClick={() => onSelectMarker(vrising.pairedMarkerId!)}
           >
             <ArrowRightLeft className="size-4" aria-hidden="true" />
             {t('marker.goToOtherEnd')}
           </button>
-        </div>
+        </section>
       ) : null}
-    </MarkerPopupCard>
+    </MarkerDetailDrawer>
   )
 }

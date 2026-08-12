@@ -119,12 +119,6 @@ export default function MapRoute() {
     [t],
   );
 
-  // Stable render prop: popup content stays app code (router links, contexts).
-  const renderPopupContent = useCallback(
-    (m: EngineMarker) => <MarkerPopupContent marker={m} />,
-    [],
-  );
-
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [selectedPosition, setSelectedPosition] = useState<{
     x: number;
@@ -198,6 +192,16 @@ export default function MapRoute() {
         };
       }),
     [markers, allSubtypes, completedBySubtype, t],
+  );
+  const selectedMarker = useMemo(
+    () => engineMarkers.find((marker) => marker.id === selectedMarkerId),
+    [engineMarkers, selectedMarkerId],
+  );
+  const renderPopupContent = useCallback(
+    (marker: EngineMarker) => isMobile || searchResultIds.length > 0
+      ? null
+      : <MarkerPopupContent marker={marker} anchored onClose={() => setSelectedMarkerId(null)} />,
+    [isMobile, searchResultIds.length],
   );
 
   // subtype name → { category id, game icon } for each result's icon + label.
@@ -404,6 +408,9 @@ export default function MapRoute() {
             definite height or Leaflet sizes to zero on mount. */}
         <main className="relative flex min-w-0 flex-1 overflow-hidden">
           {mapView}
+          {isMobile && searchResultIds.length === 0 && selectedMarker
+            ? <MarkerPopupContent marker={selectedMarker} onClose={() => setSelectedMarkerId(null)} />
+            : null}
         </main>
 
         <ArkiveMobileMapControls

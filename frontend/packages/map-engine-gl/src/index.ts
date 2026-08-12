@@ -36,7 +36,6 @@ export * from "./react/cursorStore.ts";
 export {
   MAX_ZOOM,
   MIN_ZOOM,
-  POPUP_OFFSET_Y,
   ZOOM_STEP,
 } from "./react/mapEngine.ts";
 export {

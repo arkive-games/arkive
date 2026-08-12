@@ -24,7 +24,7 @@ const MapZoomControl: React.FC<Props> = ({
   const map = useMap();
 
   return (
-    <div className="gm-zoom">
+    <div className="gm-zoom" data-map-avoid="">
       {/* + / − zoom pill */}
       <div className="gm-zoom-pill">
         <button

@@ -8,7 +8,7 @@ import type { MapAssets } from "../core/assets.ts";
 import type { RenderBackend } from "../core/renderer.ts";
 import GameMapView from "./GameMapView.tsx";
 import type { EngineMarker, GameMapViewProps, GlMapRef } from "./engineTypes.ts";
-import { MIN_ZOOM, POPUP_OFFSET_Y } from "./mapEngine.ts";
+import { MIN_ZOOM } from "./mapEngine.ts";
 import { setRenderBackendFactory } from "./renderBackend.ts";
 
 /**
@@ -23,8 +23,7 @@ import { setRenderBackendFactory } from "./renderBackend.ts";
  * for real).
  *
  * jsdom has no layout, so `clientWidth`/`clientHeight` are stubbed to give the
- * camera a viewport. `offsetWidth`/`offsetHeight` stay 0 by default; the popup
- * auto-pan regression test temporarily supplies measured dimensions.
+ * camera a viewport.
  */
 
 const VIEWPORT = { width: 800, height: 600 };
@@ -419,10 +418,10 @@ describe("selected popup", () => {
       renderPopupContent: () => null,
     });
     const { container } = render(<GameMapView {...props} />);
-    expect(container.querySelector(".gmgl-popup")).toBeNull();
+    expect(container.querySelector("[data-marker-detail-anchor]")).toBeNull();
   });
 
-  it("mounts the app card and anchors it above the marker", () => {
+  it("mounts the app card at the selected marker anchor", () => {
     // The marker fixture is alone on its coordinate, so its fanned position is
     // its projected position.
     const marker = makeMarker({ id: "m1", x: 200, y: 300, localizedName: "Alpha" });
@@ -434,80 +433,69 @@ describe("selected popup", () => {
       exposeTestHandle: true,
     });
     const { container, rerender } = render(<GameMapView {...props} />);
-    expect(container.querySelector(".gmgl-popup")).toBeNull();
+    expect(container.querySelector("[data-marker-detail-anchor]")).toBeNull();
 
     rerender(<GameMapView {...props} selectedMarkerId="m1" />);
-    const popup = container.querySelector<HTMLElement>(".gmgl-popup");
+    const popup = container.querySelector<HTMLElement>("[data-marker-detail-anchor]");
     expect(popup?.querySelector(".gm-popup-card")?.textContent).toBe("Alpha");
     const at = handle().project(200, 300);
     expect(popup?.style.transform).toBe(
-      `translate3d(${at.sx}px, ${at.sy - POPUP_OFFSET_Y}px, 0) translate(-50%, -100%)`,
+      `translate3d(${at.sx}px, ${at.sy}px, 0)`,
     );
 
     // Deselecting removes it — selection is the only source of truth (no close
     // button, no close-on-click).
     rerender(<GameMapView {...props} selectedMarkerId={null} />);
-    expect(container.querySelector(".gmgl-popup")).toBeNull();
+    expect(container.querySelector("[data-marker-detail-anchor]")).toBeNull();
   });
 
-  it("auto-pans again after a programmatic fly recentres an open popup", () => {
-    const widthDescriptor = Object.getOwnPropertyDescriptor(
-      HTMLElement.prototype,
-      "offsetWidth",
+  it("does not pan the map merely to fit the app-owned detail surface", () => {
+    const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
+    render(
+      <GameMapView
+        {...baseProps({
+          markers: [marker],
+          selectedMarkerId: "m1",
+          suppressInitialFlyForId: "m1",
+          initialView: { x: 512, y: 512, zoom: 0 },
+          exposeTestHandle: true,
+        })}
+      />,
     );
-    const heightDescriptor = Object.getOwnPropertyDescriptor(
-      HTMLElement.prototype,
-      "offsetHeight",
+
+    expect(handle().getCenter()).toEqual({ x: 512, y: 512 });
+    const anchor = document.querySelector<HTMLElement>("[data-marker-detail-anchor]");
+    const projected = handle().project(512, 512);
+    expect(anchor?.style.transform).toBe(
+      `translate3d(${projected.sx}px, ${projected.sy}px, 0)`,
     );
-    Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
-      configurable: true,
-      get: () => 320,
+  });
+
+  it("applies a detail pan requested during a fly after the animation finishes", async () => {
+    const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
+    const { container } = render(
+      <GameMapView
+        {...baseProps({
+          markers: [marker],
+          selectedMarkerId: "m1",
+          suppressInitialFlyForId: "m1",
+          initialView: { x: 512, y: 512, zoom: 0 },
+          exposeTestHandle: true,
+        })}
+      />,
+    );
+    const anchor = container.querySelector<HTMLElement>("[data-marker-detail-anchor]");
+
+    act(() => {
+      handle().flyTo(600, 512, 0, 0.1);
+      anchor?.dispatchEvent(
+        new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 120 } }),
+      );
     });
-    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
-      configurable: true,
-      get: () => 450,
-    });
+    expect(handle().getCenter().x).toBe(512);
 
-    try {
-      const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
-      render(
-        <GameMapView
-          {...baseProps({
-            markers: [marker],
-            selectedMarkerId: "m1",
-            suppressInitialFlyForId: "m1",
-            initialView: { x: 512, y: 512, zoom: 0 },
-            exposeTestHandle: true,
-          })}
-        />,
-      );
-
-      const autoPannedCenter = handle().getCenter();
-      expect(autoPannedCenter.y).toBeLessThan(512);
-      const popup = document.querySelector<HTMLElement>(".gmgl-popup");
-      const initialAnchor = handle().project(512, 512);
-      expect(popup?.style.transform).toBe(
-        `translate3d(${initialAnchor.sx}px, ${initialAnchor.sy - POPUP_OFFSET_Y}px, 0) translate(-50%, -100%)`,
-      );
-
-      act(() => handle().flyTo(512, 512, undefined, 0));
-      expect(handle().getCenter()).toEqual(autoPannedCenter);
-      const finalAnchor = handle().project(512, 512);
-      expect(popup?.style.transform).toBe(
-        `translate3d(${finalAnchor.sx}px, ${finalAnchor.sy - POPUP_OFFSET_Y}px, 0) translate(-50%, -100%)`,
-      );
-    } finally {
-      if (widthDescriptor) {
-        Object.defineProperty(HTMLElement.prototype, "offsetWidth", widthDescriptor);
-      } else {
-        Reflect.deleteProperty(HTMLElement.prototype, "offsetWidth");
-      }
-      if (heightDescriptor) {
-        Object.defineProperty(HTMLElement.prototype, "offsetHeight", heightDescriptor);
-      } else {
-        Reflect.deleteProperty(HTMLElement.prototype, "offsetHeight");
-      }
-    }
+    await flushFrames(300);
+    expect(handle().getCenter()).toEqual({ x: 720, y: 512 });
   });
 });
 

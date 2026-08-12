@@ -565,7 +565,6 @@ const GameMapView: React.FC<GameMapViewProps> = ({
         <SelectedMarkerPopup
           map={selectedMap}
           marker={selectedMarker}
-          onSelectMarker={onToggleMarker}
           renderPopupContent={renderPopupContent}
         />
       </MapContainer>

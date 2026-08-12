@@ -35,6 +35,11 @@ const labels: MarkerDetailLabels = {
   attachImages: "Attach images",
   attachmentLimit: "Up to 3 images",
   publish: "Publish",
+  emptyDetails: "No additional details yet.",
+  emptyComments: "No comments yet.",
+  guestAuthor: "Guest",
+  justNow: "Just now",
+  awaitingReview: "Awaiting review",
 }
 
 const baseProps = {
@@ -46,7 +51,10 @@ const baseProps = {
 describe("MarkerDetailDrawer", () => {
   it("keeps the shell fixed and makes only the middle viewport scrollable", () => {
     const { getByTestId } = render(<MarkerDetailDrawer {...baseProps} description="Grassland boss." />)
-    expect(getByTestId("marker-detail-drawer").className).toContain("overflow-hidden")
+    const drawer = getByTestId("marker-detail-drawer")
+    expect(drawer.className).toContain("overflow-hidden")
+    expect(drawer.className).toContain("bottom-[calc(env(safe-area-inset-bottom)+4rem)]")
+    expect(getByTestId("marker-detail-drag-handle").nextElementSibling?.tagName).toBe("HEADER")
     expect(getByTestId("marker-detail-scroll").className).toContain("overflow-y-auto")
     expect(getByTestId("marker-detail-scroll").className).toContain("[scrollbar-width:none]")
     expect(getByTestId("marker-detail-scroll").getAttribute("tabindex")).toBe("0")
@@ -67,9 +75,63 @@ describe("MarkerDetailDrawer", () => {
     )
     const button = getByTestId("marker-detail-collapse-drops")
     expect(button.getAttribute("aria-expanded")).toBe("true")
+    expect(button.querySelector("svg")?.getAttribute("class")).toContain("rotate-180")
     fireEvent.click(button)
     expect(button.getAttribute("aria-expanded")).toBe("false")
     expect(button.getAttribute("aria-label")).toBe("Expand Drops")
+    expect(button.querySelector("svg")?.getAttribute("class")).not.toContain("rotate-180")
+  })
+
+  it("closes the mobile sheet when its handle is dragged down past the threshold", () => {
+    const onClose = vi.fn()
+    const { getByTestId } = render(<MarkerDetailDrawer {...baseProps} onClose={onClose} description="Grassland boss." />)
+    const drawer = getByTestId("marker-detail-drawer")
+    const handle = getByTestId("marker-detail-drag-handle")
+    vi.spyOn(drawer, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      right: 390,
+      bottom: 400,
+      left: 0,
+      width: 390,
+      height: 400,
+      toJSON: () => ({}),
+    })
+
+    fireEvent.pointerDown(handle, { pointerId: 1, clientY: 100 })
+    fireEvent.pointerMove(handle, { pointerId: 1, clientY: 220 })
+    expect(drawer.style.getPropertyValue("--marker-detail-drag-y")).toBe("120px")
+    fireEvent.pointerUp(handle, { pointerId: 1, clientY: 220 })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it("returns the mobile sheet to rest after a short handle drag", () => {
+    const onClose = vi.fn()
+    const { getByTestId } = render(<MarkerDetailDrawer {...baseProps} onClose={onClose} description="Grassland boss." />)
+    const drawer = getByTestId("marker-detail-drawer")
+    const handle = getByTestId("marker-detail-drag-handle")
+
+    fireEvent.pointerDown(handle, { pointerId: 2, clientY: 100 })
+    fireEvent.pointerMove(handle, { pointerId: 2, clientY: 120 })
+    expect(drawer.style.getPropertyValue("--marker-detail-drag-y")).toBe("20px")
+    fireEvent.pointerUp(handle, { pointerId: 2, clientY: 120 })
+    expect(onClose).not.toHaveBeenCalled()
+    expect(drawer.style.getPropertyValue("--marker-detail-drag-y")).toBe("0px")
+  })
+
+  it("can keep a compact preview visible until a section is expanded", () => {
+    const { getByTestId, getByText, queryByText } = render(
+      <MarkerDetailDrawer
+        {...baseProps}
+        sections={[{ id: "drops", title: "Drops", accessibleTitle: "Drops", defaultExpanded: false, collapsedContent: <div>Two drops</div>, content: <div>All drops</div> }]}
+      />,
+    )
+    expect(getByText("Two drops")).not.toBeNull()
+    expect(queryByText("All drops")).toBeNull()
+    fireEvent.click(getByTestId("marker-detail-collapse-drops"))
+    expect(getByText("All drops")).not.toBeNull()
+    expect(queryByText("Two drops")).toBeNull()
   })
 
   it("keeps marker gallery uploads separate from comment attachments", () => {
@@ -126,13 +188,75 @@ describe("MarkerDetailDrawer", () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith("marker-1", "Hello", files.slice(0, 3)))
   })
 
-  it("renders only the completion action in the details footer", () => {
+  it("renders compact gallery and completion actions in the details footer", () => {
     const { getByTestId, queryByText } = render(
-      <MarkerDetailDrawer {...baseProps} completeAction={{ completed: false, label: "Mark as completed", completedLabel: "Completed", onToggle: vi.fn() }} />,
+      <MarkerDetailDrawer {...baseProps} gallery={{ markerId: "marker-1", images: [] }} completeAction={{ completed: false, label: "Mark as completed", completedLabel: "Completed", onToggle: vi.fn() }} />,
     )
     expect(getByTestId("marker-complete-toggle").textContent).toContain("Mark as completed")
+    expect(getByTestId("marker-gallery-upload")).not.toBeNull()
     expect(queryByText("Official data")).toBeNull()
     expect(queryByText("View encyclopedia")).toBeNull()
     expect(queryByText("Exploration tip")).toBeNull()
+  })
+
+  it("uses current-session fallbacks for gallery uploads and comments", async () => {
+    let objectUrlIndex = 0
+    const createObjectURL = vi.spyOn(URL, "createObjectURL").mockImplementation((file) => `blob:${++objectUrlIndex}-${(file as File).name}`)
+    const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined)
+    const { getByAltText, getByTestId, getByRole, getByText, rerender, unmount } = render(
+      <MarkerDetailDrawer
+        {...baseProps}
+        positionCopyValue="10, 20"
+        gallery={{ markerId: "marker-1", images: [] }}
+        comments={{ markerId: "marker-1", items: [], sort: "latest", onSortChange: vi.fn() }}
+      />,
+    )
+
+    const galleryFile = new File(["gallery"], "gallery.png", { type: "image/png" })
+    fireEvent.change(getByTestId("marker-gallery-upload"), { target: { files: [galleryFile] } })
+    expect(getByText("Awaiting review")).not.toBeNull()
+    expect(createObjectURL).toHaveBeenCalledWith(galleryFile)
+    expect(revokeObjectURL).not.toHaveBeenCalled()
+    const galleryUrl = getByAltText("gallery.png").getAttribute("src")
+
+    fireEvent.click(getByRole("tab", { name: /Comments/ }))
+    const commentFile = new File(["comment"], "comment.png", { type: "image/png" })
+    fireEvent.change(getByTestId("marker-comment-attachment"), { target: { files: [commentFile] } })
+    fireEvent.change(getByTestId("marker-comment-body"), { target: { value: "Useful route" } })
+    fireEvent.click(getByRole("button", { name: "Publish" }))
+    await waitFor(() => expect(getByText("Useful route")).not.toBeNull())
+    const commentImage = getByAltText("comment.png")
+    const commentUrl = commentImage.getAttribute("src")
+    expect(commentImage.closest("article")).not.toBeNull()
+    expect(getByAltText("gallery.png").closest("figure")).not.toBeNull()
+    expect(revokeObjectURL).not.toHaveBeenCalledWith(galleryUrl)
+    expect(revokeObjectURL).not.toHaveBeenCalledWith(commentUrl)
+
+    rerender(
+      <MarkerDetailDrawer
+        {...baseProps}
+        name="Lamball"
+        positionCopyValue="30, 40"
+        gallery={{ markerId: "marker-2", images: [] }}
+        comments={{ markerId: "marker-2", items: [], sort: "latest", onSortChange: vi.fn() }}
+      />,
+    )
+    await waitFor(() => {
+      expect(revokeObjectURL).toHaveBeenCalledWith(galleryUrl)
+      expect(revokeObjectURL).toHaveBeenCalledWith(commentUrl)
+    })
+    unmount()
+  })
+
+  it("shows a compact empty state while keeping contribution actions usable", () => {
+    const { getByTestId } = render(
+      <MarkerDetailDrawer
+        {...baseProps}
+        gallery={{ markerId: "marker-1", images: [] }}
+        comments={{ markerId: "marker-1", items: [], sort: "latest", onSortChange: vi.fn() }}
+      />,
+    )
+    expect(getByTestId("marker-details-empty").textContent).toContain("No additional details yet.")
+    expect(getByTestId("marker-gallery-upload")).not.toBeNull()
   })
 })

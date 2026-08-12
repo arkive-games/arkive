@@ -690,6 +690,8 @@ export default function App() {
       popular: t('markerDetail.popular'), latest: t('markerDetail.latest'), like: t('markerDetail.like'), reply: t('markerDetail.reply'),
       viewReplies: (value) => t('markerDetail.viewReplies', { count: value }), commentPlaceholder: t('markerDetail.commentPlaceholder'),
       attachImages: t('markerDetail.attachImages'), attachmentLimit: t('markerDetail.attachmentLimit'), publish: t('markerDetail.publish'),
+      emptyDetails: t('markerDetail.emptyDetails'), emptyComments: t('markerDetail.emptyComments'), guestAuthor: t('markerDetail.guestAuthor'),
+      justNow: t('markerDetail.justNow'), awaitingReview: t('markerDetail.awaitingReview'),
     }
     const facts = pal || (count && count > 1) || marker.nightOnly ? (
       <div className="flex flex-wrap items-center gap-1.5">
@@ -699,7 +701,7 @@ export default function App() {
         {marker.nightOnly ? <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-1 text-xs text-indigo-600 dark:text-indigo-400" data-testid="marker-night-only"><Moon className="size-3.5" aria-hidden />{t('pal.nightOnlyNote')}</span> : null}
       </div>
     ) : undefined
-    const hasGameExtensions = isEffigy || marker.reward || marker.warpTo || marker.dungeonArea || lootKind
+    const hasGameExtensions = isEffigy || marker.reward || marker.warpTo || marker.dungeonArea
     return (
       <MarkerDetailDrawer
         idLabel={idLabel}
@@ -710,14 +712,15 @@ export default function App() {
         positionCopyValue={coordText}
         description={marker.localizedDescription}
         facts={facts}
-        gallery={marker.image ? { markerId: marker.id, images: [{ id: `${marker.id}-image`, markerId: marker.id, url: noteImageUrl(marker.image), alt: marker.localizedName || t('unnamed'), moderationStatus: 'published' }] } : undefined}
+        gallery={{ markerId: marker.id, images: marker.image ? [{ id: `${marker.id}-image`, markerId: marker.id, url: noteImageUrl(marker.image), alt: marker.localizedName || t('unnamed'), moderationStatus: 'published' }] : [] }}
         comments={{ markerId: marker.id, items: [], sort: markerCommentSort, onSortChange: setMarkerCommentSort }}
         completeAction={marker.subtypeMeta?.canComplete ? { completed: Boolean(marker.completed), label: t('markerActions.markCompleted'), completedLabel: t('markerActions.completed'), onToggle: () => toggleCompleted(marker.id) } : undefined}
         labels={detailLabels}
         onClose={() => setSelectedMarkerId(null)}
+        anchored={!isMobile}
       >
         {drops && drops.length > 0 && palsBundle ? (
-          <MarkerDetailCollapsibleSection labels={detailLabels} section={{ id: 'drops', title: t('markerDetail.drops'), accessibleTitle: t('markerDetail.drops'), content: <PalDropBadges drops={drops} bundle={palsBundle} variant="detail" /> }} />
+          <MarkerDetailCollapsibleSection key={marker.id} labels={detailLabels} section={{ id: 'drops', title: t('markerDetail.drops'), accessibleTitle: t('markerDetail.drops'), defaultExpanded: drops.length <= 2, collapsedContent: drops.length > 2 ? <PalDropBadges drops={drops.slice(0, 2)} bundle={palsBundle} variant="detail" /> : undefined, content: <PalDropBadges drops={drops} bundle={palsBundle} variant="detail" /> }} />
         ) : null}
         {hasGameExtensions ? <div className="border-b border-border bg-card px-4 py-3">{isEffigy ? (
           <EffigyItemBadge icon={marker.subtypeMeta?.icon} name={marker.subtypeLabel ?? marker.subtype} />
@@ -762,11 +765,11 @@ export default function App() {
             {t('dungeon.viewLoot')}
           </Link>
         ) : null}
-        {lootKind ? <MarkerLootSummary lootArea={marker.lootArea} kind={lootKind} /> : null}
         </div> : null}
+        {lootKind && marker.lootArea ? <MarkerLootSummary lootArea={marker.lootArea} kind={lootKind} /> : null}
       </MarkerDetailDrawer>
     )
-  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName, markerCommentSort])
+  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName, markerCommentSort, isMobile])
 
   if (loadError) {
     return (
@@ -936,7 +939,7 @@ export default function App() {
     assets: palworldAssets,
     theme: palworldTheme,
     exposeTestHandle: import.meta.env.DEV,
-    renderPopupContent: () => null,
+    renderPopupContent: isMobile || searchResultIds.length > 0 ? () => null : renderMarkerDetail,
     labels,
   }
 
@@ -963,7 +966,9 @@ export default function App() {
     ) : (
       <GameMapView {...sharedMapProps} mapRef={mapRef} />
     )
-  const markerDetail = selectedMarker ? <MarkerDetailBridge marker={selectedMarker} render={renderMarkerDetail} /> : null
+  const markerDetail = isMobile && searchResultIds.length === 0 && selectedMarker
+    ? <MarkerDetailBridge marker={selectedMarker} render={renderMarkerDetail} />
+    : null
 
   if (isMobile) {
     const defaultVisible = staticData.types.subtypes.filter((subtype) => subtype.defaultActive)
@@ -1049,7 +1054,6 @@ export default function App() {
       <main className="relative flex min-w-0 flex-1 overflow-hidden">
         {mapView}
         {searchPanel('floating')}
-        {markerDetail}
       </main>
     </ShellLayout>
     </>

@@ -35,7 +35,7 @@ import { TopNav } from '../../components/TopNav'
 import { InfoSidebar } from '../../components/InfoSidebar'
 import { buildPatrolRouteLines } from './patrolRoutes'
 import { regionAt, sortRegionsByArea } from './subzone'
-import { renderMarkerPopup } from './popup'
+import { VrisingMarkerDetail } from './popup'
 
 const MAP_ID = 'Vardoran'
 const labelsRecord = defineMemoryRecord({
@@ -223,6 +223,10 @@ export default function MapPage() {
   }, [staticData, markerData, subtypeMetaMap])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
+  const selectedMarker = useMemo(
+    () => engineMarkers.find((marker) => marker.id === selectedMarkerId),
+    [engineMarkers, selectedMarkerId],
+  )
 
   const patrolRouteLines = useMemo(
     () => buildPatrolRouteLines(engineMarkers, visible, hoveredMarkerId),
@@ -349,15 +353,28 @@ export default function MapPage() {
     noDescription: t('noDescription'),
   }), [t])
 
+  const markerDetailFor = useCallback((marker: EngineMarker, anchored: boolean) => map ? (
+    <VrisingMarkerDetail
+      marker={marker}
+      anchored={anchored}
+      deps={{
+        t,
+        language: i18n.resolvedLanguage ?? i18n.language,
+        regionName,
+        categoryName,
+        iconUrl: vrisingAssets.markerIconUrl(marker.icon || marker.subtypeMeta?.icon, map),
+        onClose: () => setSelectedMarkerId(null),
+        onSelectMarker: setSelectedMarkerId,
+      }}
+    />
+  ) : null, [map, t, i18n.resolvedLanguage, i18n.language, regionName, categoryName])
   const renderPopupContent = useCallback(
-    (marker: EngineMarker) => renderMarkerPopup(marker, {
-      t,
-      regionName,
-      categoryName,
-      onSelectMarker: setSelectedMarkerId,
-    }),
-    [t, regionName, categoryName],
+    (marker: EngineMarker) => isMobile || searchResultIds.length > 0 ? null : markerDetailFor(marker, true),
+    [isMobile, markerDetailFor, searchResultIds.length],
   )
+  const markerDetail = isMobile && searchResultIds.length === 0 && selectedMarker
+    ? markerDetailFor(selectedMarker, false)
+    : null
 
   if (loadError) {
     return (
@@ -505,7 +522,7 @@ export default function MapPage() {
         <h1 className="sr-only">{t('title')}</h1>
         {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
             gets a definite height and Leaflet sizes correctly on mount. */}
-        <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}</main>
+        <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}{markerDetail}</main>
 
         <ArkiveMobileMapControls
           // The map route renders no header, so this is the only account surface

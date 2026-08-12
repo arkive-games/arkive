@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.interactive-map.desktop-ui"
 title: "Arkive Interactive Map Desktop UI Specification"
 status: "canonical"
-last_reviewed: "2026-08-12"
+last_reviewed: "2026-08-13"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -71,6 +71,9 @@ component_registry:
     MarkerDetailDrawer:
       file: "frontend/packages/map-shell/src/MarkerDetailDrawer.tsx"
       owns: "Responsive marker-detail geometry, identity, tabs, scrolling, disclosures, gallery, comments, and contextual footer"
+    MarkerDetailItemList:
+      file: "frontend/packages/map-shell/src/MarkerDetailItemList.tsx"
+      owns: "Compact structured rows for game-owned drops, rewards, and equivalent marker data"
     MarkerPopupCard:
       file: "frontend/packages/map-shell/src/MarkerPopupCard.tsx"
       owns: "Legacy compact marker popup during per-game migration to MarkerDetailDrawer"
@@ -203,11 +206,14 @@ map_search:
 marker_detail:
   component: "MarkerDetailDrawer"
   surface:
-    desktop: "A right-side drawer, 29rem maximum width, inset by space-4 from the map's top and right edges."
-    mobile: "A full-width bottom sheet approximately 78dvh high, capped at 46rem, leaving selected-marker map context visible."
+    desktop: "A compact marker-anchored surface, 22rem maximum width and 34rem maximum height, always placed to the selected marker's right."
+    mobile: "A content-sized full-width bottom sheet capped at 60dvh and 34rem, positioned above the fixed bottom navigation so every route remains reachable and selected-marker map context stays visible."
     radius: "Use standard_radius; mobile rounds only the top corners."
     overflow: "The outer surface clips overflow and never scrolls."
     elevation: "Use the shared elevated-surface shadow without obscuring the remaining map."
+    placement: "Never switch above, below, or left. If the right side is too narrow, pan the map horizontally until the surface fits; clamp only its vertical position to the map and registered controls."
+    pointer: "Desktop shows a surface-colored pointer on the left edge. Its vertical position follows the selected marker when the surface is clamped. Mobile has no pointer."
+    drag_affordance: "Mobile shows a drag handle above the identity header. Dragging the handle downward moves the sheet with the pointer; crossing one quarter of the sheet height, 120px at most, or making a deliberate fast downward swipe closes it. Short or cancelled drags animate back into place. The explicit close action remains available."
   regions:
     - "Fixed identity header with close action and coordinate copy"
     - "Fixed Details and Comments tab list"
@@ -246,25 +252,31 @@ marker_detail:
     empty: "Omit the entire section, including heading and separators."
   data_driven_sections:
     rule: "Omit every section whose backing data is absent; never render empty headings, placeholder copy, or orphan separators."
-    disclosures: "Description, game-owned drops, and player images use the same upper-right Tabler chevron control and accessibility semantics."
+    disclosures: "Description, game-owned drops, and player images use the same upper-right Tabler chevron control and accessibility semantics. The chevron points up while the section is open (collapse action) and down while it is closed (expand action), matching shared filters."
+    drop_preview: "Game-owned drop sections show at most two rows by default; their disclosure reveals the complete list."
+    compact_rows: "Drops, rewards, and equivalent repeated marker data use MarkerDetailItemList: continuous divided rows without individual card borders or card spacing."
   gallery:
     ownership: "Each image belongs to a marker and carries an explicit moderation status."
     moderation_states: ["uploading", "processing", "awaiting-review", "published", "rejected", "failed"]
     columns: "Two by default; one at 350px and below."
-    upload: "A marker-gallery upload is distinct from comment attachments and is capped at three selected files."
+    upload: "A marker-gallery upload is distinct from comment attachments and is capped at three selected files. Until the backend adapter is connected, keep the control usable with a current-session preview marked Awaiting review."
   comments:
     capabilities: ["optional images", "likes", "replies", "popular sorting", "latest sorting"]
     attachments: "Each attachment belongs only to its comment and carries a comment id, never marker-gallery ownership."
-    composer: "Lives in the comments footer and accepts up to three image attachments."
+    composer: "Lives in the comments footer and accepts up to three image attachments. Until the backend adapter is connected, publishing creates a current-session comment whose attachments remain comment-owned."
   footer:
-    details: "Show only the persistent Mark as completed action when the marker supports completion."
-    comments: "Show the comment composer only when the host supplies a submission adapter."
+    details: "Use one compact row: marker-gallery image action on the left and Mark as completed on the right when supported."
+    comments: "Keep the comment composer visible whenever the comments surface exists."
   narrow_behavior:
     at_350px: "Hide drop probability before item name or quantity, use a one-column gallery, and keep footer commands on one row."
   extensions: >-
     Games supply structured sections such as Palworld drops, rewards, and links
     without replacing shared identity, coordinate, disclosure, gallery,
     comment, scrolling, or footer behavior.
+  search_interaction: >-
+    While a search result list is visible, keep marker selection state but
+    temporarily suppress its detail surface. Selecting a result clears the
+    list and restores detail for that selected marker.
 
 interaction_contracts:
   individual_filter: "Active combines text, opacity, surface, border, and indicator; inactive is visibly quieter."

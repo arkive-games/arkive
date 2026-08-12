@@ -125,43 +125,14 @@
 
 /* ---- Selected-marker popup ------------------------------------------- */
 
-/* Anchored above the marker's fanned position; `transform` is written by the
- * engine, so `left`/`top` stay at the root's origin. 320px matches the app's card
- * so the pointer triangle lands on the card's true centre. */
-.gmgl-popup {
+/* Zero-size marker anchor. The shared detail surface chooses its direction. */
+.gmgl-marker-detail-anchor {
   position: absolute;
   left: 0;
   top: 0;
-  z-index: var(--arkive-layer-map-control, 1900);
-  width: 320px;
-}
-
-/* Borderless card (a 1px border otherwise leaves a seam line across the top of
- * the triangle) and the offset parent for the ::after pointer below. The app's
- * renderPopupContent root element must carry the `gm-popup-card` class — the same
- * contract as the Leaflet engine. */
-.gmgl-popup .gm-popup-card {
-  position: relative;
-  border-color: transparent !important;
-}
-
-/* Downward triangle pointer, in the card surface colour (theme-aware), centred
- * under the card with a soft drop shadow. */
-.gmgl-popup .gm-popup-card::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  /* Overlap the card by 1px so its flat top fuses with the card bottom (the card
-   * height is fractional, so a flush top: 100% leaves a 1px hairline). */
-  margin-top: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 9px solid var(--card, #F9F9F9);
-  /* Shadow offset (3) ≥ blur (2), so it casts only downward — no halo line above
-   * the triangle where it joins the card. */
-  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.12));
+  z-index: var(--arkive-layer-sheet, 2000);
+  width: 0;
+  height: 0;
 }
 
 /* ---- Context menu ---------------------------------------------------- */

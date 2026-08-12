@@ -23,15 +23,22 @@ export type MarkerDetailStrings = {
   attachImages: string
   attachmentLimit: string
   publish: string
+  emptyDetails: string
+  emptyComments: string
+  guestAuthor: string
+  justNow: string
+  awaitingReview: string
 }
 
 const en: MarkerDetailStrings = {
   close: 'Close marker details', details: 'Details', comments: 'Comments', scrollArea: 'Marker content, scrollable',
-  collapseSection: 'Collapse {{title}}', expandSection: 'Expand {{title}}', description: 'Marker description', drops: 'Defeat drops',
-  gallery: 'Player images', galleryDescription: 'Help other players identify the terrain and entrance', uploadImage: 'Upload image',
+  collapseSection: 'Collapse {{title}}', expandSection: 'Show all {{title}}', description: 'Marker description', drops: 'Drops',
+  gallery: 'Player images', galleryDescription: 'Help other players identify the terrain and entrance', uploadImage: 'Add image',
   galleryReviewNote: 'Images become public after community review. Up to 3 images.', commentCount: '{{count}} comments', popular: 'Popular', latest: 'Latest',
   like: 'Like', reply: 'Reply', viewReplies: 'View {{count}} replies', commentPlaceholder: 'Share useful information about this marker',
   attachImages: 'Attach images', attachmentLimit: 'Up to 3 images', publish: 'Publish',
+  emptyDetails: 'No additional details yet. Add an image or leave a useful comment.', emptyComments: 'No comments yet. Start the conversation.',
+  guestAuthor: 'Guest', justNow: 'Just now', awaitingReview: 'Awaiting review',
 }
 
 export const MARKER_DETAIL_STRINGS: Record<Language, MarkerDetailStrings> = {
@@ -50,6 +57,6 @@ export const MARKER_DETAIL_STRINGS: Record<Language, MarkerDetailStrings> = {
   'th-TH': { ...en, close: 'ปิดรายละเอียดหมุด', details: 'รายละเอียด', comments: 'ความคิดเห็น', description: 'คำอธิบายหมุด', drops: 'ไอเทมที่ดรอป', gallery: 'ภาพจากผู้เล่น', uploadImage: 'อัปโหลดภาพ', popular: 'ยอดนิยม', latest: 'ล่าสุด', like: 'ถูกใจ', reply: 'ตอบกลับ', publish: 'เผยแพร่' },
   'tr-TR': { ...en, close: 'İşaret ayrıntılarını kapat', details: 'Ayrıntılar', comments: 'Yorumlar', description: 'İşaret açıklaması', drops: 'Düşen eşyalar', gallery: 'Oyuncu görselleri', uploadImage: 'Görsel yükle', popular: 'Popüler', latest: 'En yeni', like: 'Beğen', reply: 'Yanıtla', publish: 'Yayınla' },
   'vi-VN': { ...en, close: 'Đóng chi tiết điểm', details: 'Chi tiết', comments: 'Bình luận', description: 'Mô tả điểm', drops: 'Vật phẩm rơi', gallery: 'Ảnh người chơi', uploadImage: 'Tải ảnh lên', popular: 'Phổ biến', latest: 'Mới nhất', like: 'Thích', reply: 'Trả lời', publish: 'Đăng' },
-  'zh-CN': { ...en, close: '关闭点位详情', details: '详情', comments: '留言', scrollArea: '点位内容，可滚动', collapseSection: '收起{{title}}', expandSection: '展开{{title}}', description: '点位说明', drops: '击败掉落', gallery: '玩家图片', galleryDescription: '帮助其他玩家确认地形与入口', uploadImage: '上传图片', galleryReviewNote: '图片经社区审核后公开，最多上传 3 张。', commentCount: '{{count}} 条留言', popular: '热门', latest: '最新', like: '点赞', reply: '回复', viewReplies: '查看 {{count}} 条回复', commentPlaceholder: '分享这个点位的实用信息', attachImages: '添加图片', attachmentLimit: '最多 3 张', publish: '发布' },
-  'zh-TW': { ...en, close: '關閉點位詳情', details: '詳情', comments: '留言', scrollArea: '點位內容，可捲動', collapseSection: '收起{{title}}', expandSection: '展開{{title}}', description: '點位說明', drops: '擊敗掉落', gallery: '玩家圖片', galleryDescription: '幫助其他玩家確認地形與入口', uploadImage: '上傳圖片', galleryReviewNote: '圖片經社群審核後公開，最多上傳 3 張。', commentCount: '{{count}} 則留言', popular: '熱門', latest: '最新', like: '讚', reply: '回覆', viewReplies: '查看 {{count}} 則回覆', commentPlaceholder: '分享這個點位的實用資訊', attachImages: '加入圖片', attachmentLimit: '最多 3 張', publish: '發佈' },
+  'zh-CN': { ...en, close: '关闭点位详情', details: '详情', comments: '留言', scrollArea: '点位内容，可滚动', collapseSection: '收起{{title}}', expandSection: '展示全部{{title}}', description: '点位说明', drops: '掉落物', gallery: '玩家图片', galleryDescription: '帮助其他玩家确认地形与入口', uploadImage: '添加图片', galleryReviewNote: '图片经社区审核后公开，最多上传 3 张。', commentCount: '{{count}} 条留言', popular: '热门', latest: '最新', like: '点赞', reply: '回复', viewReplies: '查看 {{count}} 条回复', commentPlaceholder: '分享这个点位的实用信息', attachImages: '添加图片', attachmentLimit: '最多 3 张', publish: '发布', emptyDetails: '暂时没有更多详情。你可以添加图片或留下实用信息。', emptyComments: '暂时没有留言，来发布第一条吧。', guestAuthor: '访客', justNow: '刚刚', awaitingReview: '等待审核' },
+  'zh-TW': { ...en, close: '關閉點位詳情', details: '詳情', comments: '留言', scrollArea: '點位內容，可捲動', collapseSection: '收起{{title}}', expandSection: '顯示全部{{title}}', description: '點位說明', drops: '掉落物', gallery: '玩家圖片', galleryDescription: '幫助其他玩家確認地形與入口', uploadImage: '加入圖片', galleryReviewNote: '圖片經社群審核後公開，最多上傳 3 張。', commentCount: '{{count}} 則留言', popular: '熱門', latest: '最新', like: '讚', reply: '回覆', viewReplies: '查看 {{count}} 則回覆', commentPlaceholder: '分享這個點位的實用資訊', attachImages: '加入圖片', attachmentLimit: '最多 3 張', publish: '發佈', emptyDetails: '暫時沒有更多詳情。你可以加入圖片或留下實用資訊。', emptyComments: '暫時沒有留言，來發佈第一則吧。', guestAuthor: '訪客', justNow: '剛剛', awaitingReview: '等待審核' },
 }

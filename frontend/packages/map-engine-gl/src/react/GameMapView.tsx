@@ -306,6 +306,18 @@ const GameMapView: React.FC<GameMapViewProps> = ({
     engine.setPopupAnchor(selectedMarker ? selectedMarker.id : null);
   }, [selectedMarker, mapId, themeKey]);
 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const handleDetailPan = (event: Event) => {
+      const x = (event as CustomEvent<{ x?: number }>).detail?.x;
+      if (!(x && x > 0)) return;
+      engineRef.current?.panForMarkerDetail(x);
+    };
+    root.addEventListener("marker-detail-pan", handleDetailPan);
+    return () => root.removeEventListener("marker-detail-pan", handleDetailPan);
+  }, [mapId, themeKey]);
+
   // --------------------------------------------------------------- handles ---
 
   useEffect(() => {
@@ -382,7 +394,8 @@ const GameMapView: React.FC<GameMapViewProps> = ({
       {selectedMarker && popupContent != null && (
         <div
           ref={popupRef}
-          className="gmgl-popup"
+          data-marker-detail-anchor=""
+          className="gmgl-marker-detail-anchor"
         >
           {/* Selection is the ONLY source of truth for whether this is open:
               there is no close button and no close-on-click, so the popup and

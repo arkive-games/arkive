@@ -2,6 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@gamemap/ui'
+import {
+  MarkerDetailItemIcon,
+  MarkerDetailItemList,
+  MarkerDetailItemMeta,
+  MarkerDetailItemName,
+  MarkerDetailItemRow,
+  MarkerDetailItemValue,
+} from '@gamemap/map-shell'
 import { loadItems, type ItemsBundle } from '../lib/catalog'
 import { itemIconUrl } from '../lib/assets'
 import type { MarkerRow } from '../lib/data'
@@ -112,28 +120,24 @@ export function EffigyItemBadge({ icon, name }: { icon: string | undefined; name
 export function PalDropBadges({ drops, bundle, variant = 'badges' }: { drops: Drop[]; bundle: PalsBundle; variant?: 'badges' | 'detail' }) {
   if (variant === 'detail') {
     return (
-      <div className="grid gap-2" data-testid="marker-drop-list">
+      <MarkerDetailItemList testId="marker-drop-list">
         {drops.map((d, i) => {
           const icon = bundle.itemIcon[d.item]
           const qty = d.min === d.max ? `${d.min}` : `${d.min}-${d.max}`
           return (
-            <Link
-              key={`${d.item}-${i}`}
-              to="/items/$id"
-              params={{ id: d.item }}
-              data-testid="marker-drop-item"
-              className="grid min-h-14 grid-cols-[2.5rem_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/5 max-[350px]:grid-cols-[2.25rem_minmax(0,1fr)_auto]"
-            >
-              <span className="flex size-10 items-center justify-center rounded-md bg-muted max-[350px]:size-9">
-                {icon ? <img src={itemIconUrl(icon)} alt="" className="size-8 object-contain" /> : null}
-              </span>
-              <strong className="min-w-0 truncate text-sm">{bundle.items[d.item] ?? d.item}</strong>
-              <span className="text-xs font-semibold text-muted-foreground">x {qty}</span>
-              <span className="min-w-11 rounded-md bg-emerald-500/10 px-1.5 py-1 text-center text-xs font-semibold text-emerald-700 dark:text-emerald-400 max-[350px]:hidden">{d.rate}%</span>
-            </Link>
+            <MarkerDetailItemRow key={`${d.item}-${i}`}>
+              <Link to="/items/$id" params={{ id: d.item }} data-testid="marker-drop-item">
+                <MarkerDetailItemIcon>
+                  {icon ? <img src={itemIconUrl(icon)} alt="" className="size-6 object-contain" /> : null}
+                </MarkerDetailItemIcon>
+                <MarkerDetailItemName>{bundle.items[d.item] ?? d.item}</MarkerDetailItemName>
+                <MarkerDetailItemMeta>x {qty}</MarkerDetailItemMeta>
+                <MarkerDetailItemValue>{d.rate}%</MarkerDetailItemValue>
+              </Link>
+            </MarkerDetailItemRow>
           )
         })}
-      </div>
+      </MarkerDetailItemList>
     )
   }
 

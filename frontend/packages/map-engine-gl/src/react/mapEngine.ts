@@ -87,20 +87,6 @@ export const ZOOM_STEP = 0.25;
 export const ZOOM_STEP_SECONDS = 0.25;
 
 /**
- * Distance from the marker anchor to the popup card's BOTTOM edge, CSS px.
- *
- * Leaflet reaches the same place in two hops: the icon's `popupAnchor` ([0, -10],
- * i.e. 10 px above the pin's centre) and the popup's own `offset` ([0, -4]).
- * Their sum is this constant.
- */
-export const POPUP_OFFSET_Y = 14;
-
-/** Free space auto-pan keeps around the popup, CSS px (Leaflet `autoPanPadding`). */
-export const POPUP_AUTOPAN_PAD = 5;
-/** Extra top clearance for the floating map search control. */
-export const POPUP_AUTOPAN_TOP_PAD = 72;
-
-/**
  * A real DOM element does NOT structurally satisfy `core/gestures.ts`'
  * {@link GestureTarget}: that interface declares its listener as
  * `(ev: never) => void`, and under `strictFunctionTypes` no `EventTarget`'s
@@ -164,13 +150,12 @@ export class MapEngine {
   /** Element rendered by React for the selected marker's popup, if any. */
   private popupEl: HTMLElement | null = null;
   private popupAnchorId: string | null = null;
-  /** Set when a popup opened and its auto-pan has not been applied yet. */
-  private popupNeedsAutoPan = false;
-
+  private popupPanAppliedFor: string | null = null;
+  private pendingPopupPan: { markerId: string; screenPixels: number } | null = null;
   private lastPointer: Point | null = null;
   private reportedHoverMarkerId: string | null = null;
   private hoveredMarkerId: string | null = null;
-  /** Re-entrancy guard for the overlay pass (auto-pan moves the camera). */
+  /** Re-entrancy guard for nested overlay updates. */
   private overlayRunning = false;
   /** A camera change during an overlay pass needs one follow-up projection. */
   private overlayQueued = false;
@@ -390,22 +375,33 @@ export class MapEngine {
     if (el) this.positionPopup();
   }
 
-  /**
-   * Anchor the popup to a marker. Passing a NEW anchor arms the auto-pan; the
-   * same anchor again (a re-render of the popup's content, e.g. after a
-   * completion toggle) does not, so marking a marker complete cannot make the
-   * map jump.
-   */
+  /** Anchor the detail surface to a marker. */
   setPopupAnchor(markerId: string | null): void {
     if (this.disposed) return;
-    const changed = markerId !== this.popupAnchorId;
     this.popupAnchorId = markerId;
-    if (markerId === null) {
-      this.popupNeedsAutoPan = false;
+    if (markerId !== this.popupPanAppliedFor) {
+      this.popupPanAppliedFor = null;
+      this.pendingPopupPan = null;
+    }
+    this.positionPopup();
+  }
+
+  panForMarkerDetail(screenPixels: number): void {
+    const id = this.popupAnchorId;
+    if (!id || this.popupPanAppliedFor === id) return;
+    if (this.camera.isAnimating()) {
+      this.pendingPopupPan = { markerId: id, screenPixels };
       return;
     }
-    if (changed) this.popupNeedsAutoPan = true;
-    this.positionPopup();
+    this.applyMarkerDetailPan(id, screenPixels);
+  }
+
+  private applyMarkerDetailPan(markerId: string, screenPixels: number): void {
+    if (this.popupAnchorId !== markerId || this.popupPanAppliedFor === markerId) return;
+    this.pendingPopupPan = null;
+    this.popupPanAppliedFor = markerId;
+    this.camera.panBy(screenPixels, 0);
+    this.renderer.invalidate();
   }
 
   /**
@@ -423,47 +419,7 @@ export class MapEngine {
     const anchor = this.markerLayer.positionOf(id);
     if (!anchor) return;
     const screen = this.camera.pixelToScreen(anchor.x, anchor.y);
-    el.style.transform = popupTransform(screen);
-    if (this.popupNeedsAutoPan) this.autoPanPopup(screen, el);
-  }
-
-  /**
-   * Pan the camera the minimum amount that brings the whole popup on screen —
-   * Leaflet's `autoPan`, which is what stops a popup opened near an edge from
-   * hanging half outside the viewport.
-   *
-   * Deferred while a fly is running: selection normally flies the marker to the
-   * centre, where the popup fits anyway, and panning mid-flight would fight the
-   * animation. The `flyend` handler retries.
-   */
-  private autoPanPopup(screen: Point, el: HTMLElement): void {
-    if (this.camera.isAnimating()) return;
-    this.popupNeedsAutoPan = false;
-    const width = el.offsetWidth;
-    const height = el.offsetHeight;
-    if (!(width > 0) || !(height > 0)) return;
-    const viewW = this.camera.viewportWidth;
-    const viewH = this.camera.viewportHeight;
-    if (!(viewW > 0) || !(viewH > 0)) return;
-
-    const left = screen.x - width / 2;
-    const right = left + width;
-    const bottom = screen.y - POPUP_OFFSET_Y;
-    const top = bottom - height;
-
-    // How far the CONTENT must move on screen; the centre then moves the other
-    // way (see `Camera.panBy`). The min-edge case wins when the popup is larger
-    // than the viewport, which keeps its top-left corner visible.
-    let shiftX = 0;
-    if (right > viewW - POPUP_AUTOPAN_PAD) shiftX = viewW - POPUP_AUTOPAN_PAD - right;
-    if (left + shiftX < POPUP_AUTOPAN_PAD) shiftX = POPUP_AUTOPAN_PAD - left;
-    let shiftY = 0;
-    if (bottom > viewH - POPUP_AUTOPAN_PAD) shiftY = viewH - POPUP_AUTOPAN_PAD - bottom;
-    if (top + shiftY < POPUP_AUTOPAN_TOP_PAD) shiftY = POPUP_AUTOPAN_TOP_PAD - top;
-    if (shiftX === 0 && shiftY === 0) return;
-
-    this.camera.panBy(-shiftX, -shiftY);
-    this.renderer.invalidate();
+    el.style.transform = `translate3d(${Math.round(screen.x)}px, ${Math.round(screen.y)}px, 0)`;
   }
 
   // -------------------------------------------------------------- animation ---
@@ -476,17 +432,13 @@ export class MapEngine {
    */
   flyToData(x: number, y: number, zoom?: number, seconds?: number): void {
     if (this.disposed) return;
-    // React mounts and positions a newly selected marker's popup in a layout
-    // effect, then starts the selection fly in a passive effect. Re-arm here so
-    // the fly cannot undo that first auto-pan, especially when overlapping
-    // markers fan the popup away from the raw coordinate being centred.
-    if (this.popupAnchorId) this.popupNeedsAutoPan = true;
     const target = dataToPoint(this.map, x, y);
     this.camera.flyTo(
       target,
       zoom ?? this.camera.zoom,
       seconds ?? this.opts.flyToDuration(),
     );
+    this.popupPanAppliedFor = null;
     this.renderer.invalidate();
   }
 
@@ -563,9 +515,9 @@ export class MapEngine {
   };
 
   private readonly onFlyEnd = (): void => {
+    const pending = this.pendingPopupPan;
+    if (pending) this.applyMarkerDetailPan(pending.markerId, pending.screenPixels);
     this.report();
-    // A popup that opened while the fly was in flight gets its auto-pan now.
-    if (this.popupNeedsAutoPan) this.positionPopup();
   };
 
   /**
@@ -585,10 +537,8 @@ export class MapEngine {
    * (pan + zoom in one move) emits twice and therefore projects twice — a few
    * hundred cheap style writes, and no layout is read.
    *
-   * The re-entrancy guard is load-bearing: the popup's auto-pan moves the camera,
-   * which emits `change`, which lands back here. That nested request is queued
-   * rather than dropped so the popup, labels and tooltip are projected against
-   * the post-pan camera before control returns to the browser.
+   * The re-entrancy guard keeps nested camera updates queued rather than dropped,
+   * so the detail anchor, labels and tooltip use the latest camera projection.
    */
   private scheduleOverlay(): void {
     if (this.disposed) return;
@@ -754,18 +704,7 @@ export class MapEngine {
     this.markerById.clear();
     this.popupEl = null;
     this.popupAnchorId = null;
+    this.pendingPopupPan = null;
     this.lastPointer = null;
   }
-}
-
-/**
- * Transform that puts the popup card's bottom-centre {@link POPUP_OFFSET_Y}
- * above a screen point. Composes additively with the percentage translate
- * because neither rotation nor scale is involved, so the card needs no
- * measurement to be positioned (measurement happens only for auto-pan).
- */
-export function popupTransform(screen: Point): string {
-  const x = Math.round(screen.x);
-  const y = Math.round(screen.y - POPUP_OFFSET_Y);
-  return `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
 }

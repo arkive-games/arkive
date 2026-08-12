@@ -1,96 +1,70 @@
-import React, { type ReactNode, useMemo } from "react";
-import { Popup } from "react-leaflet";
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useMap, useMapEvents } from "react-leaflet";
 
 import type { GameMapMeta } from "@gamemap/data-contract";
 import type { EngineMarker } from "../engineTypes.ts";
-import { dataToLatLngTuple } from "../coords.ts";
+import { dataToLatLng } from "../coords.ts";
 
 type Props = {
   map: GameMapMeta;
-  /** The selected marker (resolved by GameMapView), or null when none. */
   marker: EngineMarker | null;
-  onSelectMarker: (id: string | null) => void;
-  /** App-supplied popup card. The returned root element should carry the
-   * `gm-popup-card` class so engine.css can draw the downward pointer
-   * triangle and suppress the card border seam (see engine.css). */
   renderPopupContent: (marker: EngineMarker) => ReactNode;
 };
 
-// Popup vertical offset, tuned so the popup card bottom lines up with the marker
-// name tooltip's box bottom (~25px above the marker point). NOTE the two do NOT
-// share the same offset→bottom relationship: Leaflet's popup wrapper reserves a
-// large fixed gap below the point (measured: offset -18 lands the card bottom
-// ~39px above the point), whereas a `direction=top` tooltip lands its box bottom
-// only ~6.5px higher than -offset.y (offset -18 → ~24.5px above). So to co-locate
-// the two bottoms the popup needs a much smaller magnitude (-4 → ~25px above)
-// than the tooltip (-18). The card's downward ::after triangle then hangs ~8px
-// below that toward the icon. Module-level so the reference stays stable across
-// re-renders (see the `position` memo note below).
-const POPUP_OFFSET: [number, number] = [0, -4];
-
-const SelectedMarkerPopup: React.FC<Props> = ({
-  map,
-  marker,
-  onSelectMarker,
-  renderPopupContent,
-}) => {
-  // DATA (image-space) → Leaflet [lat, lng] with the single vertical flip.
-  // Memoize so the tuple keeps a STABLE reference across pan/zoom re-renders
-  // (coords don't change). react-leaflet's popup lifecycle effect lists
-  // `position` in its deps; a fresh array each render would tear the popup
-  // layer down and re-open it (replaying the fade-in) — a visible blink after
-  // every drag/zoom `moveend`.
-  // Keyed on the marker's COORDS (not the marker object): the `EngineMarker`
-  // objects are rebuilt whenever app-side state folded into them changes (e.g.
-  // marking the marker completed), and a fresh tuple then would tear the popup
-  // down — its `remove` handler fires `onSelectMarker(null)`, closing the popup
-  // the moment the user clicks "Mark as completed".
+const SelectedMarkerPopup: React.FC<Props> = ({ map, marker, renderPopupContent }) => {
+  const leafletMap = useMap();
   const markerX = marker?.x;
   const markerY = marker?.y;
-  const position = useMemo<[number, number] | null>(
-    () =>
-      markerX != null && markerY != null
-        ? dataToLatLngTuple(map, markerX, markerY)
-        : null,
+  const [screen, setScreen] = useState<{ x: number; y: number } | null>(null);
+  const position = useMemo(
+    () => markerX != null && markerY != null ? dataToLatLng(map, markerX, markerY) : null,
     [map, markerX, markerY],
   );
+
+  const update = useCallback(() => {
+    if (!position) {
+      setScreen(null);
+      return;
+    }
+    const point = leafletMap.latLngToContainerPoint(position);
+    setScreen((current) => current?.x === point.x && current.y === point.y
+      ? current
+      : { x: point.x, y: point.y });
+  }, [leafletMap, position]);
+
+  useEffect(update, [leafletMap, position]);
+  useMapEvents({ move: update, zoom: update, resize: update });
+  const pannedMarkerRef = React.useRef<string | null>(null);
+
+  useEffect(() => {
+    const container = leafletMap.getContainer();
+    const handleDetailPan = (event: Event) => {
+      const x = (event as CustomEvent<{ x?: number }>).detail?.x;
+      if (!(x && x > 0) || !marker || pannedMarkerRef.current === marker.id) return;
+      pannedMarkerRef.current = marker.id;
+      leafletMap.panBy([x, 0], { animate: false });
+    };
+    container.addEventListener("marker-detail-pan", handleDetailPan);
+    return () => container.removeEventListener("marker-detail-pan", handleDetailPan);
+  }, [leafletMap, marker]);
+
+  useEffect(() => {
+    if (!marker) pannedMarkerRef.current = null;
+  }, [marker]);
+
   const content = marker ? renderPopupContent(marker) : null;
+  if (!marker || !screen || content == null) return null;
 
-  if (!position || !marker || content == null) return null;
-
-  return (
-    <Popup
-      position={position}
-      offset={POPUP_OFFSET}
-      className="gm-marker-popup"
-      // Match the 320px card. Leaflet's default maxWidth (300px) would clamp the
-      // wrapper narrower than the card, so the centered tip lands left of the
-      // card's true centre. Sizing the wrapper to the card re-centres the tip.
-      maxWidth={320}
-      minWidth={320}
-      autoPan
-      closeButton={false}
-      // React (`selectedMarkerId`) is the single source of truth for whether the
-      // popup is open. Leaflet's default `closePopupOnClick`/`autoClose` would
-      // close the popup out-of-band on `preclick` — which fires for EVERY click,
-      // including on a marker. On a double-click, click 2's `preclick` schedules
-      // `onSelectMarker(null)` while the marker's own `click` schedules
-      // `onSelectMarker(id)` in the same React batch; `id` wins, so React keeps
-      // the marker "selected" (tooltip hidden) while Leaflet has actually closed
-      // the popup — and since the props never changed, it never reopens (the
-      // marker gets stuck: no tooltip, no popup). Disabling both leaves closing
-      // entirely to React: a map-background click deselects (GameMapView), and
-      // the `remove` handler below covers the unmount path.
-      closeOnClick={false}
-      autoClose={false}
-      eventHandlers={{ remove: () => onSelectMarker(null) }}
+  return createPortal(
+    <div
+      data-marker-detail-anchor=""
+      className="gm-marker-detail-anchor"
+      style={{ transform: `translate3d(${Math.round(screen.x)}px, ${Math.round(screen.y)}px, 0)` }}
     >
-      {/* Popup content is a render prop so the engine popup carries no app
-          content coupling; the position memo above is the anti-blink mechanism
-          and is untouched, so children may re-render freely without tearing the
-          popup down. */}
       {content}
-    </Popup>
+    </div>,
+    leafletMap.getContainer(),
   );
 };
 

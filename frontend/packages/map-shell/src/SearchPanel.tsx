@@ -316,7 +316,7 @@ export function SearchPanel({
           with nothing adjacent to share a target area with, so it takes the isolated
           size rather than the compact one. Previously it had no height at all and
           measured ~2.4rem from padding plus line box. */}
-      <div className="pointer-events-auto flex min-h-12 items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20">
+      <div data-map-avoid="" className="pointer-events-auto flex min-h-12 items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 text-popover-foreground shadow-sm backdrop-blur transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20">
         <IconSearch className="size-4 shrink-0 text-muted-foreground" stroke={1.8} aria-hidden />
         <input
           data-testid="marker-search"
@@ -337,7 +337,7 @@ export function SearchPanel({
 
       {/* Results panel */}
       {hasQuery && (
-        <div className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-popover/95 shadow-sm backdrop-blur">
+        <div data-map-avoid="" className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-popover/95 shadow-sm backdrop-blur">
           <div className="border-b border-border px-3 py-2 text-center text-xs text-muted-foreground">
             {labels.resultsCount(results.length)}
           </div>

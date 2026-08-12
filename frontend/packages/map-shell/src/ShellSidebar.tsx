@@ -123,6 +123,7 @@ export function ShellSidebar({
       <button
         type="button"
         data-testid={side === "right" ? "sidebar-toggle-right" : "sidebar-toggle"}
+        data-map-avoid=""
         onClick={toggle}
         aria-label={collapsed ? expandLabel : collapseLabel}
         aria-expanded={!collapsed}

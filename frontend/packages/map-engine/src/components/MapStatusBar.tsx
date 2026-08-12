@@ -34,7 +34,7 @@ const MapStatusBar: React.FC<Props> = ({
           {footerText}
         </span>
       )}
-      <div className="gm-statusbar-stack">
+      <div className="gm-statusbar-stack" data-map-avoid="">
         <div
           data-testid="map-coords"
           className="gm-statusbar-pill"
