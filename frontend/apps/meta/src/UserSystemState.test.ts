@@ -29,6 +29,43 @@ describe('user system state persistence', () => {
     expect(readUserSystemState(storage, 'user-b')).toEqual(createDefaultUserSystemState())
   })
 
+  it('migrates a legacy post that predates imageSrcs without throwing', () => {
+    const storage = memoryStorage()
+    // The shape older builds wrote: `imageSrc` and no `imageSrcs`. The legacy
+    // record's validator only checks Array.isArray(publishedPosts), so this
+    // reaches the migration, where mapping straight into persistableForumPost
+    // read `.imageSrcs.filter` off undefined -- thrown inside the provider
+    // effect, so the page went white AND the legacy record was never cleared,
+    // repeating on every load.
+    storage.setItem('arkive.meta.user-system.v1:user-a', JSON.stringify({
+      publishedPosts: [{
+        id: 'p1',
+        title: 'Old post',
+        content: 'body',
+        channel: 'general',
+        gameId: null,
+        topic: 'guides',
+        imageSrc: 'https://example.test/a.png',
+        videoUrl: null,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }],
+    }))
+
+    const state = readUserSystemState(storage, 'user-a')
+    expect(state.publishedPosts).toHaveLength(1)
+    expect(state.publishedPosts[0].imageSrcs).toEqual(['https://example.test/a.png'])
+    expect(state.publishedPosts[0].imageSrc).toBe('https://example.test/a.png')
+  })
+
+  it('drops a non-object entry in a legacy post list instead of throwing', () => {
+    const storage = memoryStorage()
+    storage.setItem('arkive.meta.user-system.v1:user-a', JSON.stringify({
+      publishedPosts: [null, 'not-a-post', 7],
+    }))
+
+    expect(readUserSystemState(storage, 'user-a').publishedPosts).toEqual([])
+  })
+
   it('repairs malformed and partial saved state with current defaults', () => {
     const storage = memoryStorage()
     storage.setItem('arkive.meta.user-system.v1:user-a', JSON.stringify({

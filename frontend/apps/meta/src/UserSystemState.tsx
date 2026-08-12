@@ -348,7 +348,16 @@ function readUserSystemStateWithClient(client: MemoryClient, userId: string): Us
   const legacyRecord = legacyUserSystemRecord(userId)
   const legacy = client.read(legacyRecord, scope)
   if (legacy) {
-    const migrated = { ...legacy, publishedPosts: persistableForumPosts(legacy.publishedPosts) }
+    // Normalize before filtering, matching the sibling call below. `isUserSystemState`
+    // only checks that publishedPosts is an array, so an entry without `imageSrcs`
+    // -- the shape older builds wrote -- would reach `.imageSrcs.filter` and throw
+    // inside the provider effect. Unreachable today, because this record has no
+    // writer and its only source is `migrateLegacy`, which normalizes; the guard
+    // is here so that stays true if anything ever writes it.
+    const migrated = {
+      ...legacy,
+      publishedPosts: persistableForumPosts(localForumPosts(legacy.publishedPosts)),
+    }
     if (writeUserSystemStateWithClient(client, userId, migrated)) client.clear(legacyRecord, scope)
     return migrated
   }

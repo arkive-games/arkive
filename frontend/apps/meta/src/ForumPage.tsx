@@ -3,8 +3,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ChangeEvent,
-  type DragEvent,
   type FormEvent,
   type KeyboardEvent,
 } from 'react'
@@ -25,9 +23,7 @@ import {
 } from '@gamemap/ui'
 import {
   IconAdjustmentsHorizontal,
-  IconArrowDown,
   IconArrowLeft,
-  IconArrowUp,
   IconBookmark,
   IconBold,
   IconCheck,
@@ -52,9 +48,7 @@ import {
   IconSearch,
   IconSpeakerphone,
   IconThumbUp,
-  IconTrash,
   IconUnderline,
-  IconUpload,
   IconVideo,
   IconX,
 } from '@tabler/icons-react'
@@ -132,10 +126,6 @@ function postTags(post: ForumPost, t: TFunction) {
 }
 
 const COMPOSER_TOPICS = ['guide', 'question', 'testing', 'discussion'] as const
-const FORUM_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
-const FORUM_IMAGE_MAX_BYTES = 2 * 1024 * 1024
-const FORUM_IMAGE_TOTAL_MAX_BYTES = 4 * 1024 * 1024
-const FORUM_IMAGE_MAX_COUNT = 9
 const FORUM_GAME_MAX_COUNT = 5
 const FORUM_TAG_MAX_COUNT = 10
 
@@ -144,15 +134,6 @@ interface ComposerImage {
   src: string
   name: string
   size: number
-}
-
-function readForumImage(file: Blob) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.addEventListener('load', () => resolve(String(reader.result ?? '')))
-    reader.addEventListener('error', () => reject(reader.error))
-    reader.readAsDataURL(file)
-  })
 }
 
 /**
@@ -862,11 +843,6 @@ interface ForumComposerDraft {
   videoUrl: string
 }
 
-function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  return `${(bytes / 1024).toFixed(bytes < 1024 * 100 ? 1 : 0)} KB`
-}
-
 function ForumComposerPage({
   focus,
   sites,
@@ -940,8 +916,6 @@ function ForumComposerPage({
   const [gameActiveIndex, setGameActiveIndex] = useState(0)
   const [tagActiveIndex, setTagActiveIndex] = useState(0)
   const [images, setImages] = useState<ComposerImage[]>([])
-  const [pendingImages, setPendingImages] = useState<ComposerImage[]>([])
-  const [imageDialogOpen, setImageDialogOpen] = useState(false)
   const [videoDialogOpen, setVideoDialogOpen] = useState(false)
   const [videoUrl, setVideoUrl] = useState(draft.videoUrl)
   const [videoInput, setVideoInput] = useState(draft.videoUrl)
@@ -952,8 +926,6 @@ function ForumComposerPage({
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
   const tagInputRef = useRef<HTMLInputElement>(null)
-  const imageInputRef = useRef<HTMLInputElement>(null)
-  const draggedImageIndex = useRef<number | null>(null)
 
   const siteName = (site: SiteCard) => t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })
   const selectedSites = sites.filter((site) => gameIds.includes(site.id))
@@ -1089,64 +1061,6 @@ function ForumComposerPage({
     window.setTimeout(() => {
       textarea.focus()
       textarea.setSelectionRange(start + before.length, start + before.length + selected.length)
-    })
-  }
-
-  const selectImages = async (files: File[]) => {
-    const available = FORUM_IMAGE_MAX_COUNT - pendingImages.length
-    const candidates = files.slice(0, available)
-    const existingBytes = pendingImages.reduce((total, image) => total + image.size, 0)
-    const valid = candidates.every((file) => FORUM_IMAGE_TYPES.has(file.type) && file.size <= FORUM_IMAGE_MAX_BYTES)
-      && existingBytes + candidates.reduce((total, file) => total + file.size, 0) <= FORUM_IMAGE_TOTAL_MAX_BYTES
-    if (!valid || candidates.length === 0) {
-      setError(t('forum.composer.errors.image'))
-      return
-    }
-    try {
-      const nextImages = await Promise.all(candidates.map(async (file) => ({
-        id: `${Date.now()}-${localPostSuffix()}-${file.name}`,
-        src: await readForumImage(file),
-        name: file.name,
-        size: file.size,
-      })))
-      setPendingImages((current) => [...current, ...nextImages])
-      setError('')
-    } catch {
-      setError(t('forum.composer.errors.image'))
-    }
-  }
-
-  const handleImageInput = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.currentTarget.files ?? [])
-    event.currentTarget.value = ''
-    void selectImages(files)
-  }
-
-  const handleImageDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    void selectImages(Array.from(event.dataTransfer.files))
-  }
-
-  const movePendingImage = (index: number, offset: number) => {
-    const target = index + offset
-    if (target < 0 || target >= pendingImages.length) return
-    setPendingImages((current) => {
-      const next = [...current]
-      const [item] = next.splice(index, 1)
-      next.splice(target, 0, item)
-      return next
-    })
-  }
-
-  const dropPendingImage = (targetIndex: number) => {
-    const sourceIndex = draggedImageIndex.current
-    draggedImageIndex.current = null
-    if (sourceIndex === null || sourceIndex === targetIndex) return
-    setPendingImages((current) => {
-      const next = [...current]
-      const [item] = next.splice(sourceIndex, 1)
-      next.splice(targetIndex, 0, item)
-      return next
     })
   }
 
@@ -1512,49 +1426,6 @@ function ForumComposerPage({
           </button>
         </footer>
       </form>
-
-      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-        <DialogContent className="forum-media-dialog forum-image-dialog z-[var(--arkive-layer-sheet)]" overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]" showCloseButton={false}>
-          <DialogHeader className="forum-media-dialog-header">
-            <DialogTitle>{t('forum.composer.imageDialogTitle')}</DialogTitle>
-            <DialogDescription className="sr-only">{t('forum.composer.imageDialogDescription')}</DialogDescription>
-            <DialogClose asChild><button type="button" className={POPUP_CLOSE_CONTROL_CLASS} aria-label={t('forum.composer.closeMediaDialog')}><IconX className="size-5" stroke={1.8} /></button></DialogClose>
-          </DialogHeader>
-          <input ref={imageInputRef} className="sr-only" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageInput} />
-          <div className="forum-image-dropzone" onDragOver={(event) => event.preventDefault()} onDrop={handleImageDrop}>
-            <IconUpload className="size-7" stroke={1.5} aria-hidden="true" />
-            <strong>{t('forum.composer.imageDropTitle')}</strong>
-            <button type="button" onClick={() => imageInputRef.current?.click()}>{t('forum.composer.chooseImages')}</button>
-            <small>{t('forum.composer.imageRules')}</small>
-          </div>
-          <div className="forum-image-queue">
-            <h3>{t('forum.composer.pendingImages', { count: pendingImages.length })}</h3>
-            {pendingImages.length > 0 ? (
-              <div>
-                {pendingImages.map((image, index) => (
-                  <article key={image.id} draggable onDragStart={() => { draggedImageIndex.current = index }} onDragOver={(event) => event.preventDefault()} onDrop={() => dropPendingImage(index)}>
-                    <img src={image.src} alt="" />
-                    <span><strong>{image.name}</strong><small>{formatFileSize(image.size)}</small></span>
-                    <IconCheck className="size-4" stroke={2} aria-label={t('forum.composer.uploadComplete')} />
-                    <div>
-                      <button type="button" disabled={index === 0} aria-label={t('forum.composer.moveImageUp')} onClick={() => movePendingImage(index, -1)}><IconArrowUp className="size-4" stroke={1.8} /></button>
-                      <button type="button" disabled={index === pendingImages.length - 1} aria-label={t('forum.composer.moveImageDown')} onClick={() => movePendingImage(index, 1)}><IconArrowDown className="size-4" stroke={1.8} /></button>
-                      <button type="button" aria-label={t('forum.composer.removeImage')} onClick={() => setPendingImages((current) => current.filter((item) => item.id !== image.id))}><IconTrash className="size-4" stroke={1.8} /></button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : <p>{t('forum.composer.noPendingImages')}</p>}
-          </div>
-          <DialogFooter className="forum-media-dialog-footer">
-            <span>{t('forum.composer.selectedImages', { count: pendingImages.length, max: FORUM_IMAGE_MAX_COUNT })}</span>
-            <DialogClose asChild><button type="button" className="forum-publish-cancel">{t('forum.composer.cancel')}</button></DialogClose>
-            <button type="button" className="forum-publish-submit" disabled={pendingImages.length === 0 && images.length === 0} onClick={() => { setImages(pendingImages); setImageDialogOpen(false) }}>
-              {t('forum.composer.insertImages', { count: pendingImages.length })}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
         <DialogContent className="forum-media-dialog forum-video-dialog z-[var(--arkive-layer-sheet)]" overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]" showCloseButton={false}>
