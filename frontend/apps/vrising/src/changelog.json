@@ -3,7 +3,7 @@
     {
       "version": "0.11.0",
       "date": "2026-08-12",
-      "commit": "858c462a0f45d86807bd89ebeb37ad7649379b65",
+      "commit": "e4f0c700a9b32af8a84103cd80c98b36cd60a9e9",
       "changes": [
         {
           "kind": "feature",
@@ -19,6 +19,14 @@
             "en-US": "Replaced approximate waygate markers with all 22 exact Vampire Waygates and updated map labels and descriptions to official in-game text.",
             "zh-CN": "以全部 22 个精确的吸血鬼传送门替换近似点位，并将地图名称与描述更新为游戏官方文本。",
             "zh-TW": "以全部 22 個精確的吸血鬼傳送門取代近似點位，並將地圖名稱與描述更新為遊戲官方文本。"
+          }
+        },
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Removed the placeholder point-of-interest and territory markers, which were labelled by internal access id rather than a real name.",
+            "zh-CN": "移除了以内部标识命名的占位兴趣点与领地标记。",
+            "zh-TW": "移除了以內部識別碼命名的佔位興趣點與領地標記。"
           }
         }
       ]
