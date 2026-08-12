@@ -26,9 +26,18 @@ export interface MerchantEntry {
   nameKey: string
   /** Currency item id (`Money` = gold, or `DogCoin` / `BountyProof_1` / …). */
   currency: string
-  /** Vendor NPC BP class stem, for a future map-location join (unused in UI). */
+  /** Vendor NPC BP class stem used to join portraits and placed locations. */
   vendor?: string
+  icon?: string
+  locations?: MerchantLocation[]
   products: MerchantProduct[]
+}
+
+export interface MerchantLocation {
+  map: string
+  x: number
+  y: number
+  z?: number
 }
 
 export interface MerchantsBundle {

@@ -32,11 +32,14 @@ MerchantEntry: ``{id, nameKey, currency, vendor?, products: [{item, price, num?}
 
 from __future__ import annotations
 
+import json
 import re
 from collections import defaultdict
 from pathlib import Path
 
 from .maps.common import read_rows
+from .maps.bounds import assign_map
+from .maps.extract import _LEVEL_REL, _extract_npcs, _npc_name_icon
 
 _NONE = {None, "None", ""}
 
@@ -200,6 +203,47 @@ def _load_groups(raw: Path, item_rows: dict, item_id_set: set) -> dict[str, dict
     return groups
 
 
+def _merchant_metadata(raw: Path, vendors: set[str]) -> dict[str, dict]:
+    """Return portrait and placed world locations keyed by vendor BP stem."""
+    ui_rows = read_rows(raw / "DataTable/WorldMapUIData/DT_WorldMapUIData.json")
+    bounds = {
+        "MainWorld": {"min": ui_rows["MainMap"]["landScapeRealPositionMin"],
+                      "max": ui_rows["MainMap"]["landScapeRealPositionMax"]},
+        "WorldTree": {"min": ui_rows["Tree"]["landScapeRealPositionMin"],
+                      "max": ui_rows["Tree"]["landScapeRealPositionMax"]},
+    }
+    assign_order = [
+        {"mapId": "WorldTree", **bounds["WorldTree"]},
+        {"mapId": "MainWorld", **bounds["MainWorld"]},
+    ]
+    level = json.loads((raw / _LEVEL_REL).read_text(encoding="utf-8"))
+    npcs = _extract_npcs(raw, level)
+    resolve = _npc_name_icon(raw)
+    out: dict[str, dict] = {}
+    for vendor in vendors:
+        matched = [npc for npc in npcs if npc["npcId"].casefold() == vendor.casefold()]
+        _, fallback_icon = resolve(vendor)
+        icon = next((npc.get("icon") for npc in matched if npc.get("icon")), fallback_icon)
+        locations = []
+        for npc in matched:
+            loc = npc["location"]
+            map_id = assign_map(loc, assign_order)
+            if map_id:
+                locations.append({
+                    "map": map_id,
+                    "x": loc["X"],
+                    "y": loc["Y"],
+                    "z": loc.get("Z", 0),
+                })
+        meta: dict = {}
+        if icon:
+            meta["icon"] = icon
+        if locations:
+            meta["locations"] = locations
+        out[vendor] = meta
+    return out
+
+
 def collect_merchants(
     raw: Path, item_rows: dict, item_id_set: set
 ) -> tuple[list[dict], dict[str, list]]:
@@ -211,12 +255,16 @@ def collect_merchants(
     caravan groups collapsed onto ``Caravan`` (lowest price kept)."""
     groups = _load_groups(raw, item_rows, item_id_set)
     roll_shares = _roll_shares(raw)
+    metadata = _merchant_metadata(
+        raw, {info["vendor"] for info in groups.values() if info.get("vendor")}
+    )
 
     merchants: list[dict] = []
     for g, info in groups.items():
         entry = {"id": g, "nameKey": _name_key(g, info.get("vendor")), "currency": info["currency"]}
         if info.get("vendor"):
             entry["vendor"] = info["vendor"]
+            entry.update(metadata.get(info["vendor"], {}))
         if g in roll_shares:
             entry["rollPct"] = roll_shares[g]
         entry["products"] = info["products"]
@@ -231,14 +279,20 @@ def collect_merchants(
                     cur = best.get(p["item"])
                     if cur is None or p["price"] < cur["price"]:
                         best[p["item"]] = p
-            merchants.append(
-                {
-                    "id": CARAVAN_ID,
-                    "nameKey": "caravan",
-                    "currency": "Money",
-                    "products": list(best.values()),
-                }
-            )
+            caravan_meta = [metadata.get(groups[g].get("vendor", ""), {}) for g in caravan_groups]
+            caravan_locations = [loc for meta in caravan_meta for loc in meta.get("locations", [])]
+            aggregate = {
+                "id": CARAVAN_ID,
+                "nameKey": "caravan",
+                "currency": "Money",
+                "products": list(best.values()),
+            }
+            aggregate_icon = next((meta.get("icon") for meta in caravan_meta if meta.get("icon")), None)
+            if aggregate_icon:
+                aggregate["icon"] = aggregate_icon
+            if caravan_locations:
+                aggregate["locations"] = caravan_locations
+            merchants.append(aggregate)
 
     rank = {k: i for i, k in enumerate(_KEY_ORDER)}
     merchants.sort(key=lambda m: (rank.get(m["nameKey"], len(rank)), m["id"] != CARAVAN_ID, m["id"]))

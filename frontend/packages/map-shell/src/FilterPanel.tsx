@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react"
-import { IconEye, IconEyeOff } from "@tabler/icons-react"
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react"
+import { IconChevronDown, IconChevronUp, IconEye, IconEyeOff } from "@tabler/icons-react"
 import {
   Accordion,
   AccordionContent,
@@ -67,6 +67,8 @@ export interface FilterPanelProps {
   /** Category ids that start collapsed instead of auto-expanding (e.g. a large
    *  "pal" list). Users can still open them; the choice is then preserved. */
   defaultCollapsedCategoryIds?: string[]
+  expandedCategoryIds?: string[]
+  onExpandedCategoryIdsChange?: (ids: string[]) => void
 }
 
 // min-h-9 is desktop_compact_height (2.25rem), which the map UI spec sets as the
@@ -87,11 +89,19 @@ export function FilterPanel({
   controls,
   classNames,
   defaultCollapsedCategoryIds,
+  expandedCategoryIds,
+  onExpandedCategoryIdsChange,
 }: FilterPanelProps) {
   // Categories auto-expand as data loads async, except those in
   // `defaultCollapsedCategoryIds` which start closed; keep the expanded set in
   // sync as categories appear while preserving user collapses (aion2 donor).
-  const [expanded, setExpanded] = useState<string[]>([])
+  const [internalExpanded, setInternalExpanded] = useState<string[]>([])
+  const expanded = expandedCategoryIds ?? internalExpanded
+  const seenCategoryIds = useRef(new Set<string>())
+  const setExpanded = (next: string[]) => {
+    if (expandedCategoryIds === undefined) setInternalExpanded(next)
+    onExpandedCategoryIdsChange?.(next)
+  }
   const idsKey = categories.map((c) => c.id).join("|")
   const collapsedKey = (defaultCollapsedCategoryIds ?? []).join("|")
   const collapsedByDefault = useMemo(
@@ -100,9 +110,13 @@ export function FilterPanel({
     [collapsedKey],
   )
   useEffect(() => {
-    setExpanded((prev) => syncExpanded(prev, categories.map((c) => c.id), collapsedByDefault))
+    if (expandedCategoryIds !== undefined) return
+    const categoryIds = categories.map((c) => c.id)
+    const next = syncExpanded(expanded, categoryIds, seenCategoryIds.current, collapsedByDefault)
+    for (const id of categoryIds) seenCategoryIds.current.add(id)
+    if (next !== expanded) setExpanded(next)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idsKey, collapsedByDefault])
+  }, [idsKey, collapsedByDefault, expandedCategoryIds])
 
   return (
     <div className={cn("flex w-full flex-col", classNames?.root)}>
@@ -156,8 +170,9 @@ export function FilterPanel({
                   padding already exceeded it, so this changes nothing today and stops
                   a later padding tweak from quietly dropping below it. */}
               <AccordionTrigger
+                hideChevron
                 className={cn(
-                  "min-h-10 cursor-default items-center gap-1 px-0 pt-3 pb-0 hover:no-underline [&>svg]:translate-y-0",
+                  "min-h-10 cursor-default items-center gap-1 px-0 pt-3 pb-0 hover:no-underline",
                   classNames?.categoryHeader,
                 )}
               >
@@ -198,6 +213,11 @@ export function FilterPanel({
                     </TooltipProvider>
                   )}
                 </div>
+                {expanded.includes(category.id) ? (
+                  <IconChevronDown aria-hidden className="size-4 shrink-0 text-muted-foreground" stroke={1.8} />
+                ) : (
+                  <IconChevronUp aria-hidden className="size-4 shrink-0 text-muted-foreground" stroke={1.8} />
+                )}
               </AccordionTrigger>
 
               <AccordionContent className="pt-0 pb-0">

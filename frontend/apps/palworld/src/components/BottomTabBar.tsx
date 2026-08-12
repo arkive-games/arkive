@@ -74,8 +74,8 @@ export function BottomTabBar() {
   const primary: Tab[] = [
     { key: '/', label: t('breeding.navMap'), icon: Map },
     { key: '/breeding', label: t('breeding.navBreeding'), icon: Heart },
-    { key: '/technology', label: t('tech.title'), icon: FlaskConical },
-    { key: '/items', label: t('item.title'), icon: Package },
+    { key: '/passives', label: t('pal.section.passives'), icon: Sparkles },
+    { key: '/partner-skills', label: t('partner.title'), icon: HandHeart },
   ]
   // Everything the desktop nav offers that is not a primary tab. Labels reuse the
   // desktop keys verbatim (see TopNav) so the two navs can never drift apart, and
@@ -83,13 +83,13 @@ export function BottomTabBar() {
   // these pages.
   const more: Tab[] = [
     { key: '/pals', label: t('pal.title'), icon: PawPrint },
+    { key: '/technology', label: t('tech.title'), icon: FlaskConical },
+    { key: '/items', label: t('item.title'), icon: Package },
     { key: '/buildings', label: t('building.title'), icon: Hammer },
     { key: '/merchants', label: t('merchant.title'), icon: Store },
     { key: '/dungeons', label: t('dungeon.title'), icon: Castle },
     { key: '/quests', label: t('quest.title'), icon: ScrollText },
-    { key: '/passives', label: t('pal.section.passives'), icon: Sparkles },
     { key: '/active-skills', label: t('pal.section.activeSkills'), icon: Swords },
-    { key: '/partner-skills', label: t('partner.title'), icon: HandHeart },
     { key: '/stat-simulator', label: t('sim.title'), icon: Calculator },
     { key: '/research', label: t('research.title', { defaultValue: 'Research' }), icon: Microscope },
     { key: '/basecamp', label: t('basecamp.title', { defaultValue: 'Base Camp' }), icon: Tent },

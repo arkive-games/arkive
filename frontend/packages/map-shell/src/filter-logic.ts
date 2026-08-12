@@ -19,12 +19,13 @@ const NO_COLLAPSED: ReadonlySet<string> = new Set()
 export function syncExpanded(
   prev: string[],
   categoryIds: string[],
+  previouslySeenIds: ReadonlySet<string> = NO_COLLAPSED,
   collapsedByDefault: ReadonlySet<string> = NO_COLLAPSED,
 ): string[] {
   const known = new Set(prev)
   const next = [...prev]
   for (const id of categoryIds) {
-    if (!known.has(id) && !collapsedByDefault.has(id)) next.push(id)
+    if (!known.has(id) && !previouslySeenIds.has(id) && !collapsedByDefault.has(id)) next.push(id)
   }
   return next.length === prev.length ? prev : next
 }

@@ -13,11 +13,17 @@ describe('mapMarkerLodTier', () => {
     expect(mapMarkerLodTier(251)).toBe(3)
   })
 
-  it('floors a default-active subtype at tier 1 whatever its density', () => {
+  it('floors an overview-priority subtype at tier 1 whatever its density', () => {
     // MainWorld's fastTravel is 137 markers, which by density alone landed in
     // tier 2 and hid the whole fast-travel network at the opening zoom.
     expect(mapMarkerLodTier(137, true)).toBe(1)
     expect(mapMarkerLodTier(137, false)).toBe(2)
     expect(mapMarkerLodTier(9999, true)).toBe(1)
+  })
+
+  it('keeps every boss subtype visible at the overview zoom', () => {
+    expect(mapMarkerLodTier(87, true)).toBe(1)
+    expect(mapMarkerLodTier(33, true)).toBe(1)
+    expect(mapMarkerLodTier(29, true)).toBe(1)
   })
 })

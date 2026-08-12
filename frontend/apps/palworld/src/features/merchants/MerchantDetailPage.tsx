@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
+import { MapPin } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
+import { palIconUrl } from '../../lib/assets'
+import { toGameCoords } from '../../lib/coords'
 import {
   CatalogDataProvider,
   CatalogNotFound,
@@ -73,13 +76,46 @@ export default function MerchantDetailPage() {
     const curName = items.text[merchant.currency]?.name ?? merchant.currency
     body = (
       <div className="space-y-6">
-        <div className="min-w-0">
-          <h1 className="text-3xl font-bold">{name}</h1>
-          <div className="mt-0.5 font-mono text-xs text-muted-foreground">{merchant.id}</div>
+        <div className="flex min-w-0 items-center gap-4">
+          {merchant.icon ? (
+            <img
+              src={palIconUrl(merchant.icon)}
+              alt=""
+              width={80}
+              height={80}
+              className="size-20 shrink-0 rounded-md bg-secondary object-contain"
+            />
+          ) : null}
+          <h1 className="min-w-0 text-3xl font-bold">{name}</h1>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-6 md:order-1">
+            {merchant.locations?.length ? (
+              <CatalogSection title={t('quest.location')} testId="merchant-locations">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {merchant.locations.map((location, index) => {
+                    const coords = toGameCoords(location.map, location.x, location.y)
+                    return (
+                      <Link
+                        key={`${location.map}-${location.x}-${location.y}`}
+                        to="/"
+                        search={{ map: location.map, x: location.x, y: location.y }}
+                        className="flex items-center gap-2 rounded-md border border-border bg-secondary/40 px-3 py-2 text-sm transition hover:border-primary/60 hover:bg-accent"
+                      >
+                        <MapPin className="size-4 shrink-0 text-primary" />
+                        <span className="min-w-0 flex-1">
+                          {t('quest.location')} {index + 1}
+                        </span>
+                        <span className="shrink-0 tabular-nums text-muted-foreground">
+                          ({Math.round(coords.x)}, {Math.round(coords.y)})
+                        </span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </CatalogSection>
+            ) : null}
             <CatalogSection title={t('merchant.forSale')} testId="merchant-products">
               <div className="flex flex-col gap-1.5">
                 {products.map((p) => (

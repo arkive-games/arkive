@@ -100,6 +100,16 @@ const visibleSubtypesRecord = defineMemoryRecord({
   migrateLegacy: parseJson,
 })
 
+const collapsedFilterCategoriesRecord = defineMemoryRecord({
+  id: 'collapsed-filter-categories',
+  namespace: 'palworld',
+  surface: 'map',
+  ...memoryPolicy.userPreference('clear-map-filters'),
+  schemaVersion: '1.0.0',
+  defaultValue: () => PAL_COLLAPSED_CATEGORIES,
+  validate: isStringArray,
+})
+
 /** Read the persisted set of visible subtypes; null when nothing is saved yet. */
 function readStoredSubtypes(): Set<string> | null {
   const value = browserMemory.read(visibleSubtypesRecord)
@@ -167,7 +177,7 @@ export default function App() {
 
   // Deep-link params (?map=… & ?q=…): open a given map with the search box
   // prefilled — used by the Paldeck "view on full map" link.
-  const { q: initialQuery, map: mapParam, engine: engineParam } = useSearch({ from: '/' })
+  const { q: initialQuery, map: mapParam, x: positionX, y: positionY, engine: engineParam } = useSearch({ from: '/' })
 
   const [staticData, setStaticData] = useState<{
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
@@ -228,7 +238,17 @@ export default function App() {
   const [showLabels, setShowLabels] = useMemoryState(showLabelsRecord)
   // Named-region overlay (borders + hover highlight). Off by default.
   const [showRegions, setShowRegions] = useMemoryState(showRegionsRecord)
+  const [collapsedFilterCategories, setCollapsedFilterCategories] = useMemoryState(collapsedFilterCategoriesRecord)
   const [regionData, setRegionData] = useState<{ mapId: string; regions: RegionInstance[]; l10n: RegionLocale } | null>(null)
+
+  useEffect(() => {
+    if (positionX !== undefined && positionY !== undefined) {
+      setSelectedMarkerId(null)
+      setSelectedPosition({ x: positionX, y: positionY })
+    } else {
+      setSelectedPosition(null)
+    }
+  }, [mapId, positionX, positionY])
 
   useEffect(() => {
     let cancelled = false
@@ -284,7 +304,6 @@ export default function App() {
   useEffect(() => {
     setMarkerData(null)
     setSelectedMarkerId(null)
-    setSelectedPosition(null)
     setRestoredMarkerId(null)
     let cancelled = false
     loadMarkers(mapId, lng)
@@ -390,7 +409,7 @@ export default function App() {
         region: m.region,
         tier: mapMarkerLodTier(
           countBySubtype.get(m.subtype) ?? 0,
-          defaultActiveSubtypes.has(m.subtype),
+          defaultActiveSubtypes.has(m.subtype) || m.category === 'boss',
         ),
         // Wanted fugitives share one map symbol. Existing data artifacts still
         // carry individual portraits, so ignore those until they are regenerated.
@@ -805,6 +824,17 @@ export default function App() {
       // The pal list is huge; keep it collapsed by default so the smaller
       // location/other categories stay readable. Users can still open it.
       defaultCollapsedCategoryIds={PAL_COLLAPSED_CATEGORIES}
+      expandedCategoryIds={filterCategories
+        .map((category) => category.id)
+        .filter((id) => !collapsedFilterCategories.includes(id))}
+      onExpandedCategoryIdsChange={(expandedIds) => {
+        const expanded = new Set(expandedIds)
+        const currentIds = new Set(filterCategories.map((category) => category.id))
+        setCollapsedFilterCategories((previous) => [
+          ...previous.filter((id) => !currentIds.has(id)),
+          ...filterCategories.map((category) => category.id).filter((id) => !expanded.has(id)),
+        ])
+      }}
       categoryToggleLabels={{ show: t('showAll'), hide: t('hideAll') }}
       controls={[
         {

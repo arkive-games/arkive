@@ -19,24 +19,22 @@ describe("deriveEyeState", () => {
 describe("syncExpanded", () => {
   it("appends category ids not yet known", () => {
     expect(syncExpanded([], ["a", "b"])).toEqual(["a", "b"])
-    expect(syncExpanded(["a"], ["a", "b", "c"])).toEqual(["a", "b", "c"])
+    expect(syncExpanded(["a"], ["a", "b", "c"], new Set(["a"]))).toEqual(["a", "b", "c"])
   })
   it("returns the same array reference when nothing changed", () => {
     const prev = ["a", "b"]
     expect(syncExpanded(prev, ["a", "b"])).toBe(prev)
     expect(syncExpanded(prev, ["a"])).toBe(prev)
   })
-  it("re-adds a user-collapsed id when it reappears as new (donor bug-compatible)", () => {
-    // Donor behavior: collapsing "a" removes it from prev; if the renderable
-    // set still contains "a", the sync effect re-appends it. Replicate exactly.
-    expect(syncExpanded(["b"], ["a", "b"])).toEqual(["b", "a"])
+  it("preserves a user-collapsed category after it has been seen", () => {
+    expect(syncExpanded(["b"], ["a", "b"], new Set(["a", "b"]))).toEqual(["b"])
   })
   it("does not auto-expand categories listed as collapsed-by-default", () => {
     const collapsed = new Set(["pal"])
-    expect(syncExpanded([], ["location", "pal"], collapsed)).toEqual(["location"])
+    expect(syncExpanded([], ["location", "pal"], new Set(), collapsed)).toEqual(["location"])
     // A user-expanded collapsed-by-default category is preserved once known.
-    expect(syncExpanded(["pal"], ["location", "pal"], collapsed)).toEqual(["pal", "location"])
+    expect(syncExpanded(["pal"], ["location", "pal"], new Set(["pal"]), collapsed)).toEqual(["pal", "location"])
     // Nothing to add → same reference (no needless re-render).
-    expect(syncExpanded(["location"], ["location", "pal"], collapsed)).toEqual(["location"])
+    expect(syncExpanded(["location"], ["location", "pal"], new Set(["location", "pal"]), collapsed)).toEqual(["location"])
   })
 })

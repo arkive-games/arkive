@@ -39,6 +39,10 @@ def test_merchant_entries(result):
     assert by_id["Volcano_Shop_2"]["nameKey"] == "weapon"
     assert by_id["Volcano_Shop_1"]["nameKey"] == "volcano"
     assert by_id["Medal_Shop_1"]["nameKey"] == "medal"
+    assert by_id["Medal_Shop_1"]["icon"]
+    assert by_id["Medal_Shop_1"]["locations"]
+    assert all(location["map"] and "x" in location and "y" in location
+               for location in by_id["Medal_Shop_1"]["locations"])
 
 
 def test_caravan_aggregate(result):
@@ -51,6 +55,7 @@ def test_caravan_aggregate(result):
     # the aggregate's item set is the union of the individual caravan shops.
     union = {p["item"] for m in caravan_groups for p in m["products"]}
     assert {p["item"] for p in agg["products"]} == union
+    assert agg.get("icon")
 
 
 def test_item_merchant_sources(result):

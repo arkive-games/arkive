@@ -11,10 +11,10 @@ test('bottom tab bar is visible and desktop nav is hidden on mobile', async ({ p
 
 test('bottom tabs navigate between sections', async ({ page }) => {
   await page.goto('/')
-  await page.getByTestId('tab-/items').click()
-  await expect(page).toHaveURL(/\/items$/)
-  await page.getByTestId('tab-/technology').click()
-  await expect(page).toHaveURL(/\/technology$/)
+  await page.getByTestId('tab-/passives').click()
+  await expect(page).toHaveURL(/\/passives$/)
+  await page.getByTestId('tab-/partner-skills').click()
+  await expect(page).toHaveURL(/\/partner-skills$/)
 })
 
 test('More sheet opens and navigates to a secondary route', async ({ page }) => {
@@ -32,13 +32,13 @@ test('More sheet exposes every secondary page', async ({ page }) => {
   await page.getByTestId('tab-more').click()
   for (const key of [
     '/pals',
+    '/technology',
+    '/items',
     '/buildings',
     '/merchants',
     '/dungeons',
     '/quests',
-    '/passives',
     '/active-skills',
-    '/partner-skills',
     '/stat-simulator',
     '/research',
     '/basecamp',
@@ -53,7 +53,7 @@ test('the More tab highlights while a secondary page is open', async ({ page }) 
   await page.goto('/fishing')
   // `text-primary` is what `itemCls` gives the active slot.
   await expect(page.getByTestId('tab-more')).toHaveClass(/text-primary/)
-  await expect(page.getByTestId('tab-/items')).not.toHaveClass(/text-primary/)
+  await expect(page.getByTestId('tab-/passives')).not.toHaveClass(/text-primary/)
 })
 
 test('the language picker is a sub-page of the same sheet', async ({ page }) => {

@@ -114,4 +114,29 @@ describe("FilterPanel", () => {
     expect(inactive).toContain("bg-skin")
     expect(inactive).not.toContain("bg-muted")
   })
+
+  it("supports persisted controlled category expansion", () => {
+    const onChange = vi.fn()
+    const { getByText } = render(
+      <FilterPanel
+        categories={categories}
+        onToggleSubtype={() => {}}
+        expandedCategoryIds={[]}
+        onExpandedCategoryIdsChange={onChange}
+      />,
+    )
+    fireEvent.click(getByText("Category 1"))
+    expect(onChange).toHaveBeenCalledWith(["cat1"])
+  })
+
+  it("points the category arrow down when open and up when closed", () => {
+    const { container, getByText } = render(
+      <FilterPanel categories={categories} onToggleSubtype={() => {}} />,
+    )
+    expect(container.querySelector(".tabler-icon-chevron-down")).toBeTruthy()
+    expect(container.querySelector(".tabler-icon-chevron-up")).toBeNull()
+    fireEvent.click(getByText("Category 1"))
+    expect(container.querySelector(".tabler-icon-chevron-up")).toBeTruthy()
+    expect(container.querySelector(".tabler-icon-chevron-down")).toBeNull()
+  })
 })

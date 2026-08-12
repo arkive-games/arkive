@@ -102,7 +102,7 @@ export default function BaseCampPage() {
 
           {mobilePaging.isMobile ? (
             <>
-              <div className="space-y-2" data-testid="mobile-basecamp-list">
+              <div className="grid grid-cols-2 gap-2" data-testid="mobile-basecamp-list">
                 {mobilePaging.visibleItems.map((level) => (
                   <article
                     key={level.level}
@@ -110,21 +110,21 @@ export default function BaseCampPage() {
                     data-testid="basecamp-row"
                   >
                     <div className="grid grid-cols-[auto_1fr_1fr] items-stretch border-b border-primary/15 bg-primary/5">
-                      <div className="flex min-w-16 flex-col items-center justify-center border-r border-primary/15 px-3 py-2">
+                      <div className="flex min-w-12 flex-col items-center justify-center border-r border-primary/15 px-2 py-1.5">
                         <span className="text-xs text-muted-foreground">{t('basecamp.level')}</span>
-                        <strong className="text-xl tabular-nums text-primary">{level.level}</strong>
+                        <strong className="text-lg tabular-nums text-primary">{level.level}</strong>
                       </div>
-                      <div className="flex flex-col items-center justify-center px-2 py-2">
+                      <div className="flex flex-col items-center justify-center px-1 py-1.5">
                         <span className="text-xs text-muted-foreground">{t('basecamp.workers')}</span>
                         <strong className="text-base tabular-nums">{level.workers}</strong>
                       </div>
-                      <div className="flex flex-col items-center justify-center border-l border-primary/15 px-2 py-2">
+                      <div className="flex flex-col items-center justify-center border-l border-primary/15 px-1 py-1.5">
                         <span className="text-xs text-muted-foreground">{t('basecamp.bases')}</span>
                         <strong className="text-base tabular-nums">{level.bases}</strong>
                       </div>
                     </div>
-                    <div className="p-3">
-                      <div className="mb-2 text-xs font-semibold text-muted-foreground">
+                    <div className="p-2">
+                      <div className="mb-1 text-xs font-semibold text-muted-foreground">
                         {t('basecamp.tasks')}
                       </div>
                       <TaskList tasks={level.tasks} buildings={buildings} mobile />

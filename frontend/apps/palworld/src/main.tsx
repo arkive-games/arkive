@@ -66,6 +66,8 @@ export interface MapSearch {
   q?: string
   /** Open a specific map instead of the default MainWorld. */
   map?: string
+  x?: number
+  y?: number
   /**
    * Render-engine override for this visit: `gl` mounts the WebGL (three.js) map
    * engine, `leaflet` the original one. When present it beats the persisted
@@ -79,6 +81,8 @@ const mapRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): MapSearch => ({
     q: typeof s.q === 'string' ? s.q : undefined,
     map: typeof s.map === 'string' ? s.map : undefined,
+    x: (typeof s.x === 'string' || typeof s.x === 'number') && Number.isFinite(Number(s.x)) ? Number(s.x) : undefined,
+    y: (typeof s.y === 'string' || typeof s.y === 'number') && Number.isFinite(Number(s.y)) ? Number(s.y) : undefined,
     engine: isMapEngineChoice(s.engine) ? s.engine : undefined,
   }),
   component: App,
