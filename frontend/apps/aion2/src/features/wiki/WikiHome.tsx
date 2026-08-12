@@ -38,6 +38,8 @@ export default function WikiHome() {
     item: [],
   });
 
+  const [wantsSearch, setWantsSearch] = useState(false);
+
   useEffect(() => {
     let live = true;
     const load = async () => {
@@ -45,12 +47,6 @@ export default function WikiHome() {
         const nextTaxonomy = await loadTaxonomy();
         if (!live) return;
         setTax(nextTaxonomy);
-
-        const [quest, npc, item] = await Promise.all(
-          WIKI_TYPES.map((type) => loadWikiIndex(type)),
-        );
-        if (!live) return;
-        setIndexes({ quest: quest.docs, npc: npc.docs, item: item.docs });
       } catch (error) {
         console.error(error);
       }
@@ -61,6 +57,32 @@ export default function WikiHome() {
       live = false;
     };
   }, []);
+
+  /*
+   * The three search indexes are fetched only once the visitor intends to
+   * search: together they are ~2 MB (item 1,382,860 B, npc 523,464 B, quest
+   * 129,983 B) against the 6 KB taxonomy this page actually renders from, and
+   * every visit paid for them.
+   */
+  useEffect(() => {
+    if (!wantsSearch) return;
+    let live = true;
+    const load = async () => {
+      try {
+        const [quest, npc, item] = await Promise.all(
+          WIKI_TYPES.map((type) => loadWikiIndex(type)),
+        );
+        if (!live) return;
+        setIndexes({ quest: quest.docs, npc: npc.docs, item: item.docs });
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    void load();
+    return () => {
+      live = false;
+    };
+  }, [wantsSearch]);
 
   useEffect(() => {
     document.title = t("wiki:home.title");
@@ -83,12 +105,17 @@ export default function WikiHome() {
 
   return (
     <div data-testid="wiki-home">
+      {/* Visually suppressed, not absent. The redesign drops the big title, but
+          a page whose first heading is the rail's "Recently viewed" h2 has no
+          document outline, and screen-reader users navigate by heading. */}
+      <h1 className="sr-only">{t("wiki:home.title")}</h1>
       <WikiCatalogToolbar
         title={t("wiki:home.title")}
         count={totalCount}
         sources={searchSources}
         scope="all"
         showHeading={false}
+        onSearchIntent={() => setWantsSearch(true)}
       />
 
       <div className="divide-y divide-border">

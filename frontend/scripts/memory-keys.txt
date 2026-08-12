@@ -7,7 +7,7 @@ arkive.memory.aion2.map.show-borders	-	apps/aion2/src/context/GameDataContext.ts
 arkive.memory.aion2.map.show-labels	-	apps/aion2/src/context/MarkersContext.tsx
 arkive.memory.aion2.map.view	-	apps/aion2/src/features/map/MapRoute.tsx
 arkive.memory.aion2.wiki-catalog.faction	-	apps/aion2/src/features/wiki/GroupList.tsx
-arkive.memory.aion2.wiki-catalog.query	-	apps/aion2/src/features/wiki/TypeHub.tsx
+arkive.memory.aion2.wiki-catalog.query	-	apps/aion2/src/features/wiki/WikiCatalogToolbar.tsx
 arkive.memory.lostark.combat-power.loadout	-	apps/lostark/src/lib/loadout.ts
 arkive.memory.palworld.breeding.chain-generations	-	apps/palworld/src/features/breeding/BreedingPage.tsx
 arkive.memory.palworld.breeding.favorites	-	apps/palworld/src/features/breeding/BreedingPage.tsx

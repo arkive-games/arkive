@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { IconSearch } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -42,15 +42,38 @@ export default function WikiCatalogToolbar({
   title,
   count,
   sources,
+  onSearchIntent,
   scope,
   showHeading = true,
 }: {
   title: string;
   count: number;
   sources: WikiCatalogSource[];
+  /**
+   * Fired the first time the visitor shows intent to search, so a host can
+   * defer fetching the index payloads until then.
+   */
+  onSearchIntent?: () => void;
   scope: string;
   showHeading?: boolean;
 }) {
+  const [armed, setArmed] = useState(false);
+  const arm = () => {
+    setArmed(true);
+    onSearchIntent?.();
+  };
+
+  /*
+   * Declared up front, deliberately, even though only the search results need
+   * the per-type catalogues (en-US alone is 71 + 215 + 643 KB, and every
+   * supported locale loads in parallel).
+   *
+   * react-i18next memoizes on this array and requires it to keep a constant
+   * size between renders -- growing it when search is armed makes React warn
+   * "the final argument passed to useMemo changed size" and the new namespaces
+   * never load, so search silently returns nothing. Deferring these needs
+   * `i18n.loadNamespaces` plus fully-qualified keys, not a bigger array.
+   */
   const namespaces = useMemo(
     () => ["wiki", "wiki/taxonomy", ...sources.map(({ type }) => `wiki/${type}`)],
     [sources],
@@ -61,7 +84,7 @@ export default function WikiCatalogToolbar({
     debounceMs: 200,
   });
 
-  const search = useMemo(() => {
+  const buildSearch = useCallback(() => {
     const index = new MiniSearch<SearchDoc>({
       fields: ["name"],
       storeFields: ["entityId", "type", "name", "level"],
@@ -82,9 +105,18 @@ export default function WikiCatalogToolbar({
     return index;
   }, [sources, t]);
 
-  const hits = query.trim()
-    ? (search.search(query).slice(0, 20) as SearchHit[])
-    : [];
+  /*
+   * Built once the visitor reaches for search, not on mount.
+   *
+   * On /wiki this index spans 18,850 docs and was rebuilt every time `t` changed
+   * as namespaces resolved, all for a control most visits never touch. Armed
+   * from the same handlers that report intent, so `useMemo` keeps its normal
+   * invalidation -- `sources` or `t` moving still discards it.
+   */
+  const search = useMemo(() => (armed ? buildSearch() : null), [armed, buildSearch]);
+  const trimmed = query.trim();
+  const hits: SearchHit[] =
+    search && trimmed ? (search.search(trimmed).slice(0, 20) as SearchHit[]) : [];
 
   return (
     <header className="border-b border-border pb-4">
@@ -114,7 +146,11 @@ export default function WikiCatalogToolbar({
           />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onFocus={arm}
+            onChange={(event) => {
+              arm();
+              setQuery(event.target.value);
+            }}
             onKeyDown={(event) => {
               if (event.key === "Escape") setQuery("");
             }}

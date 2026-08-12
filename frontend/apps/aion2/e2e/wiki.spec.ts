@@ -10,9 +10,15 @@ test.describe("wiki", () => {
       timeout: 10_000,
     });
     await expect(page.getByTestId("wiki-search")).toBeVisible();
+    // The heading exists for the document outline but must not be visible --
+    // asserting absence instead would forbid the sr-only h1 that keeps this
+    // page navigable by heading.
     await expect(
       page.getByTestId("wiki-home").getByRole("heading", { name: "AION2 Wiki" }),
-    ).toHaveCount(0);
+    ).toHaveCount(1);
+    await expect(
+      page.getByTestId("wiki-home").getByRole("heading", { name: "AION2 Wiki" }),
+    ).not.toBeVisible();
   });
 
   test("group list renders sections and navigates to quest page", async ({

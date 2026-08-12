@@ -71,13 +71,24 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
       return { ...entry, label: lt(entity.name, i18n.language) };
     };
 
-    Promise.all(recentEntries.map(loadEntry))
-      .then((entries) => {
-        if (!cancelled) setRecentLabels(entries);
-      })
-      .catch((error) => {
-        console.error(error);
-        if (!cancelled) setRecentLabels([]);
+    // allSettled, not all: a data update that removes one entity would otherwise
+    // reject the whole batch and empty the entire list, then re-fire all five
+    // fetches on every wiki navigation. The state-memory spec wants the one
+    // unavailable destination dropped, not the history.
+    Promise.allSettled(recentEntries.map(loadEntry))
+      .then((results) => {
+        if (cancelled) return;
+        for (const result of results) {
+          if (result.status === "rejected") console.error(result.reason);
+        }
+        setRecentLabels(
+          results
+            .filter(
+              (result): result is PromiseFulfilledResult<RecentLabel> =>
+                result.status === "fulfilled",
+            )
+            .map((result) => result.value),
+        );
       });
     return () => {
       cancelled = true;

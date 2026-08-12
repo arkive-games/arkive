@@ -8,6 +8,32 @@ import type { WikiIndexDoc } from "@/types/wiki";
 import type { WikiType } from "@/features/wiki/wikiRecent";
 import { WikiBackLink } from "@/features/wiki/ui";
 
+/** Tailwind `2xl`. The sibling rail is `hidden 2xl:block`, so below this it is
+ *  invisible -- and, before this hook, still mounted. */
+const WIDE_QUERY = "(min-width: 96rem)";
+
+/**
+ * Whether the sibling rail is actually on screen.
+ *
+ * The rail renders one router Link per sibling, and the largest groups are
+ * 2,697 / 1,133 / 783 docs, so `display: none` still cost a phone thousands of
+ * mounted Links plus a full re-render on every keystroke in a search box it
+ * could not see.
+ */
+function useWideViewport(): boolean {
+  const [wide, setWide] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(WIDE_QUERY).matches,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(WIDE_QUERY);
+    const update = () => setWide(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+  return wide;
+}
+
 export default function WikiEntityCatalog({
   type,
   currentId,
@@ -37,6 +63,7 @@ export default function WikiEntityCatalog({
     if (sameSection.length > 1) return sameSection;
     return docs.filter((doc) => doc.group === indexDoc.group);
   }, [docs, indexDoc]);
+  const wide = useWideViewport();
   const entries = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
     return groupDocs
@@ -61,10 +88,14 @@ export default function WikiEntityCatalog({
       ref={rootRef}
       className="min-w-0 2xl:grid 2xl:grid-cols-[19rem_minmax(0,1fr)] 2xl:gap-8"
     >
+      {/* The element stays mounted and only its body is gated: it is the first
+          child, and dropping it entirely would make React diff the content
+          sibling against an <aside> and remount the whole entity page. */}
       <aside
         className="hidden border-r border-border pr-6 2xl:block"
         data-testid="wiki-entity-catalog"
       >
+        {wide && (
         <div className="sticky top-0">
           <div className="border-b border-border pb-4">
             <p className="text-xs font-medium text-muted-foreground">
@@ -136,6 +167,7 @@ export default function WikiEntityCatalog({
             )}
           </div>
         </div>
+        )}
       </aside>
 
       <div className="min-w-0">
