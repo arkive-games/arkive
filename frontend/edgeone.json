@@ -183,18 +183,6 @@
     {
       "source": "/wiki/:type/:slug",
       "destination": "/index.html"
-    },
-    {
-      "source": "/user",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/user*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/user/*",
-      "destination": "/index.html"
     }
   ]
 }
