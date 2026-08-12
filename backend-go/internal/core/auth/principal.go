@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/subtle"
 	"net/http"
 	"strings"
 
@@ -19,6 +20,13 @@ type Principal struct {
 	IsActive    bool
 	IsSuperuser bool
 	IsVerified  bool
+
+	// SessionFingerprint is a one-way digest of the password hash, not the hash.
+	// It is here because session resolution has to compare it, and it cannot be
+	// reversed into a credential -- so it does not reopen what the comment above
+	// closes. Middleware treats a token whose fingerprint no longer matches as
+	// anonymous, which is what logs a stolen session out on a password change.
+	SessionFingerprint string
 }
 
 // PrincipalStore resolves a user id to a Principal. It is an interface so the
@@ -57,7 +65,7 @@ func (r *Resolver) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		id, err := r.tokens.ParseAccess(raw)
+		id, fgpt, err := r.tokens.ParseAccess(raw)
 		if err != nil {
 			next.ServeHTTP(w, req)
 			return
@@ -66,6 +74,14 @@ func (r *Resolver) Middleware(next http.Handler) http.Handler {
 		principal, err := r.store.Principal(req.Context(), id)
 		if err != nil {
 			// A token whose user has since been deleted is simply anonymous.
+			next.ServeHTTP(w, req)
+			return
+		}
+
+		// A token minted against a previous password is anonymous too. The store
+		// lookup above already happened, so this costs no extra query -- the
+		// session becomes revocable for free.
+		if subtle.ConstantTimeCompare([]byte(fgpt), []byte(principal.SessionFingerprint)) != 1 {
 			next.ServeHTTP(w, req)
 			return
 		}

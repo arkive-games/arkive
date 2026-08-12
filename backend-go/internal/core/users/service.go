@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -31,11 +32,23 @@ type Service struct {
 	// development. Avatar routes then fail with a clear service error while
 	// everything else works; see config.S3.Configured.
 	blobs blob.Store
+
+	// dispatch runs work that must outlive the request. Injectable so a test can
+	// substitute a synchronous runner and still assert on the mail that was sent;
+	// the default is a goroutine.
+	dispatch func(func())
 }
+
+// resetMailTimeout bounds the detached send. Longer than the provider's own
+// client timeout would leave goroutines parked on a hung connection.
+const resetMailTimeout = 30 * time.Second
 
 // NewService wires the account service.
 func NewService(q *coredb.Queries, hasher *auth.Hasher, tokens *auth.Tokens, mailer auth.Mailer, blobs blob.Store, logger *slog.Logger) *Service {
-	return &Service{q: q, hasher: hasher, tokens: tokens, mailer: mailer, blobs: blobs, logger: logger}
+	return &Service{
+		q: q, hasher: hasher, tokens: tokens, mailer: mailer, blobs: blobs, logger: logger,
+		dispatch: func(f func()) { go f() },
+	}
 }
 
 // avatarResolver renders stored keys as public URLs, or nil when there is no
@@ -58,11 +71,12 @@ func (s *Service) Principal(ctx context.Context, id uuid.UUID) (auth.Principal, 
 		return auth.Principal{}, fmt.Errorf("load user: %w", err)
 	}
 	return auth.Principal{
-		ID:          u.ID,
-		Name:        u.Name,
-		IsActive:    u.IsActive,
-		IsSuperuser: u.IsSuperuser,
-		IsVerified:  u.IsVerified,
+		ID:                 u.ID,
+		Name:               u.Name,
+		IsActive:           u.IsActive,
+		IsSuperuser:        u.IsSuperuser,
+		IsVerified:         u.IsVerified,
+		SessionFingerprint: s.tokens.SessionFingerprint(u.HashedPassword),
 	}, nil
 }
 
@@ -109,7 +123,15 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (UserRead, err
 // Every failure — unknown address, wrong password, disabled account — returns
 // the same error, because distinguishing them turns the login form into an
 // account-enumeration oracle.
-func (s *Service) Authenticate(ctx context.Context, email, password string) (UserRead, error) {
+// Authenticate verifies credentials and returns the account together with the
+// session fingerprint a token for it must be bound to.
+//
+// The fingerprint is returned rather than derived by the caller because of the
+// rehash below: an opportunistic upgrade changes the stored hash during this
+// very call, and a token bound to the pre-upgrade hash would be rejected by the
+// identity middleware on the user's next request -- a login that logs you
+// straight back out.
+func (s *Service) Authenticate(ctx context.Context, email, password string) (UserRead, string, error) {
 	badCredentials := apierr.New(apierr.UserBadCredentials, "incorrect email or password")
 
 	u, err := s.q.GetUserByEmail(ctx, normalizeEmail(email))
@@ -118,20 +140,21 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (Use
 			// Burn comparable time so response latency does not disclose
 			// whether the address is registered.
 			s.hasher.VerifyDummy(password)
-			return UserRead{}, badCredentials
+			return UserRead{}, "", badCredentials
 		}
-		return UserRead{}, fmt.Errorf("load user: %w", err)
+		return UserRead{}, "", fmt.Errorf("load user: %w", err)
 	}
 
+	effectiveHash := u.HashedPassword
 	ok, needsRehash, err := s.hasher.Verify(u.HashedPassword, password)
 	if err != nil {
 		// A hash we cannot parse is corrupted data, not a wrong password.
 		s.logger.ErrorContext(ctx, "stored password hash is unreadable",
 			slog.String("user_id", u.ID.String()), slog.Any("error", err))
-		return UserRead{}, apierr.New(apierr.InternalServer, "").Wrap(err)
+		return UserRead{}, "", apierr.New(apierr.InternalServer, "").Wrap(err)
 	}
 	if !ok || !u.IsActive {
-		return UserRead{}, badCredentials
+		return UserRead{}, "", badCredentials
 	}
 
 	if needsRehash {
@@ -144,11 +167,13 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (Use
 			}); updErr != nil {
 				s.logger.WarnContext(ctx, "could not upgrade password hash",
 					slog.String("user_id", u.ID.String()), slog.Any("error", updErr))
+			} else {
+				effectiveHash = upgraded
 			}
 		}
 	}
 
-	return toUserRead(u, s.avatarResolver()), nil
+	return toUserRead(u, s.avatarResolver()), s.tokens.SessionFingerprint(effectiveHash), nil
 }
 
 // ByID loads one account.
@@ -491,18 +516,31 @@ func (s *Service) ForgotPassword(ctx context.Context, email string) error {
 		return fmt.Errorf("issue reset token: %w", err)
 	}
 
-	// A delivery failure is logged, not returned.
+	// Sent off the request, and a delivery failure is logged rather than returned.
 	//
 	// Returning it produced an account-enumeration oracle: an unknown address
 	// took the early return above and answered 202, while a real address
 	// reached the mailer and answered 500 when it failed. That difference
 	// discloses exactly which addresses are registered — the thing this
-	// endpoint's constant response exists to hide. The caller is told the same
-	// thing either way, and the operator finds the failure in the log.
-	if err := s.mailer.SendPasswordReset(ctx, u.Email, u.Name, token); err != nil {
-		s.logger.ErrorContext(ctx, "could not send password reset mail",
-			slog.String("user_id", u.ID.String()), slog.Any("error", err))
-	}
+	// endpoint's constant response exists to hide.
+	//
+	// Making the response constant was not enough on its own, because the
+	// LATENCY was not: a registered address paid a full provider round trip
+	// (a 20s client timeout) while an unknown one returned immediately. Timing
+	// the 202 answered the same question the status code no longer does. The
+	// send is therefore detached, so both answers cost the same.
+	//
+	// The context is detached too, not just the goroutine. The request context
+	// is cancelled once the response is written, so a client that disconnects
+	// after POSTing would otherwise cancel its own reset mail.
+	mailCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), resetMailTimeout)
+	s.dispatch(func() {
+		defer cancel()
+		if err := s.mailer.SendPasswordReset(mailCtx, u.Email, u.Name, token); err != nil {
+			s.logger.ErrorContext(mailCtx, "could not send password reset mail",
+				slog.String("user_id", u.ID.String()), slog.Any("error", err))
+		}
+	})
 	return nil
 }
 

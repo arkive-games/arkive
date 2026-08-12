@@ -30,7 +30,7 @@ func TestAccessTokenRoundTrip(t *testing.T) {
 	tk := testTokens(t, now)
 	id := uuid.New()
 
-	raw, expires, err := tk.IssueAccess(id)
+	raw, expires, err := tk.IssueAccess(id, "hash-v1")
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
@@ -38,12 +38,34 @@ func TestAccessTokenRoundTrip(t *testing.T) {
 		t.Errorf("expiry = %v, want %v", expires, want)
 	}
 
-	got, err := tk.ParseAccess(raw)
+	got, fgpt, err := tk.ParseAccess(raw)
 	if err != nil {
 		t.Fatalf("ParseAccess: %v", err)
 	}
 	if got != id {
 		t.Errorf("subject = %v, want %v", got, id)
+	}
+	if !tk.MatchesFingerprint(fgpt, "hash-v1") {
+		t.Error("fingerprint does not match the hash the token was issued against")
+	}
+}
+
+// A session must stop resolving once the password changes, which is the whole
+// point of binding the token to the hash: a stolen cookie otherwise stayed
+// valid for the full fourteen-day lifetime after the victim reset it.
+func TestAccessTokenStopsMatchingAfterAPasswordChange(t *testing.T) {
+	tk := testTokens(t, time.Unix(1_700_000_000, 0))
+	raw, _, err := tk.IssueAccess(uuid.New(), "hash-v1")
+	if err != nil {
+		t.Fatalf("IssueAccess: %v", err)
+	}
+
+	_, fgpt, err := tk.ParseAccess(raw)
+	if err != nil {
+		t.Fatalf("ParseAccess: %v", err)
+	}
+	if tk.MatchesFingerprint(fgpt, "hash-v2") {
+		t.Error("a token issued against the old hash still matches the new one")
 	}
 }
 
@@ -51,13 +73,13 @@ func TestAccessTokenExpires(t *testing.T) {
 	now := time.Unix(1_700_000_000, 0)
 	tk := testTokens(t, now)
 
-	raw, _, err := tk.IssueAccess(uuid.New())
+	raw, _, err := tk.IssueAccess(uuid.New(), "hash")
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
 
 	tk.now = func() time.Time { return now.Add(15 * 24 * time.Hour) }
-	if _, err := tk.ParseAccess(raw); !errors.Is(err, ErrInvalidToken) {
+	if _, _, err := tk.ParseAccess(raw); !errors.Is(err, ErrInvalidToken) {
 		t.Fatalf("an expired token must be rejected, got %v", err)
 	}
 }
@@ -69,7 +91,7 @@ func TestTokensAreNotInterchangeableAcrossPurposes(t *testing.T) {
 	tk := testTokens(t, now)
 	id := uuid.New()
 
-	access, _, err := tk.IssueAccess(id)
+	access, _, err := tk.IssueAccess(id, "hash")
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
@@ -82,10 +104,10 @@ func TestTokensAreNotInterchangeableAcrossPurposes(t *testing.T) {
 		t.Fatalf("IssueVerify: %v", err)
 	}
 
-	if _, err := tk.ParseAccess(reset); !errors.Is(err, ErrInvalidToken) {
+	if _, _, err := tk.ParseAccess(reset); !errors.Is(err, ErrInvalidToken) {
 		t.Error("a reset token must not authenticate a session")
 	}
-	if _, err := tk.ParseAccess(verify); !errors.Is(err, ErrInvalidToken) {
+	if _, _, err := tk.ParseAccess(verify); !errors.Is(err, ErrInvalidToken) {
 		t.Error("a verification token must not authenticate a session")
 	}
 	if _, _, err := tk.ParseReset(access); !errors.Is(err, ErrInvalidToken) {
@@ -164,11 +186,11 @@ func TestParseRejectsForgedAndUnsignedTokens(t *testing.T) {
 	// Signed with a different secret.
 	other := testTokens(t, now)
 	other.secret = []byte("another-secret")
-	forged, _, err := other.IssueAccess(id)
+	forged, _, err := other.IssueAccess(id, "hash")
 	if err != nil {
 		t.Fatalf("IssueAccess: %v", err)
 	}
-	if _, err := tk.ParseAccess(forged); !errors.Is(err, ErrInvalidToken) {
+	if _, _, err := tk.ParseAccess(forged); !errors.Is(err, ErrInvalidToken) {
 		t.Error("a token signed with another secret must be rejected")
 	}
 
@@ -182,7 +204,7 @@ func TestParseRejectsForgedAndUnsignedTokens(t *testing.T) {
 	if err != nil {
 		t.Fatalf("build unsigned token: %v", err)
 	}
-	if _, err := tk.ParseAccess(unsigned); !errors.Is(err, ErrInvalidToken) {
+	if _, _, err := tk.ParseAccess(unsigned); !errors.Is(err, ErrInvalidToken) {
 		t.Error(`a token with "alg":"none" must be rejected`)
 	}
 
@@ -192,7 +214,7 @@ func TestParseRejectsForgedAndUnsignedTokens(t *testing.T) {
 		"truncated": strings.SplitN(forged, ".", 2)[0],
 	} {
 		t.Run(name, func(t *testing.T) {
-			if _, err := tk.ParseAccess(raw); !errors.Is(err, ErrInvalidToken) {
+			if _, _, err := tk.ParseAccess(raw); !errors.Is(err, ErrInvalidToken) {
 				t.Fatalf("want ErrInvalidToken, got %v", err)
 			}
 		})
@@ -211,7 +233,7 @@ func TestParseRejectsTokenWithoutExpiry(t *testing.T) {
 	if err != nil {
 		t.Fatalf("build token: %v", err)
 	}
-	if _, err := tk.ParseAccess(raw); !errors.Is(err, ErrInvalidToken) {
+	if _, _, err := tk.ParseAccess(raw); !errors.Is(err, ErrInvalidToken) {
 		t.Fatalf("a token without an expiry must be rejected, got %v", err)
 	}
 }
@@ -228,7 +250,7 @@ func TestParseRejectsNonUUIDSubject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("build token: %v", err)
 	}
-	if _, err := tk.ParseAccess(raw); !errors.Is(err, ErrInvalidToken) {
+	if _, _, err := tk.ParseAccess(raw); !errors.Is(err, ErrInvalidToken) {
 		t.Fatalf("want ErrInvalidToken, got %v", err)
 	}
 }

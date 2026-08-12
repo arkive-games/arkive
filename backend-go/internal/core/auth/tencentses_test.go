@@ -47,15 +47,15 @@ func TestSignatureIsStable(t *testing.T) {
 	m := testSESMailer(t, nil)
 	got := m.sign("SendEmail", []byte(`{"a":1}`), m.now())
 
-	for _, want := range []string{
-		"TC3-HMAC-SHA256 ",
-		"Credential=AKIDEXAMPLE/2026-08-06/ses/tc3_request",
-		"SignedHeaders=content-type;host;x-tc-action",
-		"Signature=",
-	} {
-		if !strings.Contains(got, want) {
-			t.Errorf("authorization header missing %q\ngot: %s", want, got)
-		}
+	// The whole header, including the signature itself. Asserting that
+	// "Signature=" appears says nothing about the value after it, so a change to
+	// the canonical request — the one thing this test exists to catch — passed.
+	const want = "TC3-HMAC-SHA256 " +
+		"Credential=AKIDEXAMPLE/2026-08-06/ses/tc3_request, " +
+		"SignedHeaders=content-type;host;x-tc-action, " +
+		"Signature=54f0dcba20d7c30c331df9e77aa334f01f10dd0a2dcdf5b53dff61c2e949adba"
+	if got != want {
+		t.Errorf("authorization header changed\n got: %s\nwant: %s", got, want)
 	}
 
 	// Same inputs must give the same signature; different bodies must not.

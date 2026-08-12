@@ -216,11 +216,11 @@ func (h *Handlers) RegisterAuthRoutes(a huma.API) {
 		Tags:        []string{"auth"},
 		Errors:      []int{http.StatusUnauthorized},
 	}, func(ctx context.Context, in *loginInput) (*tokenOutput, error) {
-		user, err := h.users.Authenticate(ctx, in.Body.Email, in.Body.Password)
+		user, fgpt, err := h.users.Authenticate(ctx, in.Body.Email, in.Body.Password)
 		if err != nil {
 			return nil, err
 		}
-		token, expires, err := h.tokens.IssueAccess(user.ID)
+		token, expires, err := h.tokens.IssueAccess(user.ID, fgpt)
 		if err != nil {
 			return nil, apierr.New(apierr.InternalServer, "").Wrap(err)
 		}
@@ -255,11 +255,11 @@ func (h *Handlers) RegisterAuthRoutes(a huma.API) {
 		Tags:        []string{"auth"},
 		Errors:      []int{http.StatusUnauthorized},
 	}, func(ctx context.Context, in *loginInput) (*cookieOutput[users.UserRead], error) {
-		user, err := h.users.Authenticate(ctx, in.Body.Email, in.Body.Password)
+		user, fgpt, err := h.users.Authenticate(ctx, in.Body.Email, in.Body.Password)
 		if err != nil {
 			return nil, err
 		}
-		token, _, err := h.tokens.IssueAccess(user.ID)
+		token, _, err := h.tokens.IssueAccess(user.ID, fgpt)
 		if err != nil {
 			return nil, apierr.New(apierr.InternalServer, "").Wrap(err)
 		}
@@ -388,11 +388,19 @@ const (
 	defaultForgotPerHourPerEmail = 3
 )
 
+// orDefault treats an unset (zero) value as "use the fallback", and a negative
+// value as "disabled" rather than as unset -- the comments at the call sites
+// describe a limit that can be turned off deliberately, and folding negatives
+// into the fallback made that impossible.
 func orDefault(configured, fallback int) int {
-	if configured <= 0 {
+	switch {
+	case configured == 0:
 		return fallback
+	case configured < 0:
+		return 0
+	default:
+		return configured
 	}
-	return configured
 }
 
 // rateLimitForgotPassword throttles reset requests per client IP.

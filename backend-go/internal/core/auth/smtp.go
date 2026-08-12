@@ -88,8 +88,14 @@ func (m *SMTPMailer) sendPasswordReset(
 // SendVerification is not implemented yet; the flow exists but no verification
 // campaign is planned, and a half-written message is worse than an obvious gap.
 func (m *SMTPMailer) SendVerification(ctx context.Context, email, displayName, token string) error {
-	m.logger.WarnContext(ctx, "verification mail is not implemented; token logged instead",
-		slog.String("email", email), slog.String("token", token))
+	// The token is deliberately NOT logged. /auth/request-verify-token is
+	// unauthenticated, so logging it let any visitor write a working credential
+	// into the operator's log on demand, where it outlives its own expiry. The
+	// same line was removed from the Tencent path in 86db192a and missed here;
+	// module.go selects this mailer whenever SMTP is configured, so it was the
+	// live path for those deployments.
+	m.logger.WarnContext(ctx, "verification mail is not implemented; no message was sent",
+		slog.String("email", email))
 	return nil
 }
 

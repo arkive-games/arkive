@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -63,25 +64,40 @@ func NewTokens(cfg config.Auth) *Tokens {
 	}
 }
 
-// IssueAccess mints a session token and reports when it expires.
-func (t *Tokens) IssueAccess(userID uuid.UUID) (string, time.Time, error) {
+// IssueAccess mints a session token bound to the user's current password hash,
+// and reports when it expires.
+//
+// The binding is what makes a session revocable. Without it, a stolen cookie
+// stayed valid for the full TokenLifetime -- fourteen days by default -- even
+// after the victim changed their password, which is the one action a victim
+// takes in order to stop exactly that. The fingerprint is not the hash and
+// cannot be reversed into one; see fingerprint.
+func (t *Tokens) IssueAccess(userID uuid.UUID, currentHash string) (string, time.Time, error) {
 	expires := t.now().Add(t.accessTTL)
 	token, err := t.sign(jwt.MapClaims{
-		"sub": userID.String(),
-		"aud": []string{t.accessAudience},
-		"exp": expires.Unix(),
-		"iat": t.now().Unix(),
+		"sub":  userID.String(),
+		"aud":  []string{t.accessAudience},
+		"exp":  expires.Unix(),
+		"iat":  t.now().Unix(),
+		"fgpt": fingerprint(currentHash),
 	})
 	return token, expires, err
 }
 
-// ParseAccess validates a session token and returns its subject.
-func (t *Tokens) ParseAccess(raw string) (uuid.UUID, error) {
+// ParseAccess validates a session token and returns its subject together with
+// the password fingerprint it was minted against. The caller must compare that
+// against the user's current hash -- see Resolver.Middleware.
+func (t *Tokens) ParseAccess(raw string) (uuid.UUID, string, error) {
 	claims, err := t.parse(raw, t.accessAudience)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, "", err
 	}
-	return subject(claims)
+	id, err := subject(claims)
+	if err != nil {
+		return uuid.Nil, "", err
+	}
+	fgpt, _ := claims["fgpt"].(string)
+	return id, fgpt, nil
 }
 
 // IssueReset mints a password-reset token bound to the user's current
@@ -145,10 +161,21 @@ func (t *Tokens) ParseVerify(raw string) (uuid.UUID, string, error) {
 	return id, email, nil
 }
 
-// MatchesFingerprint reports whether a reset token's fingerprint still matches
-// the user's stored hash.
+// MatchesFingerprint reports whether a token's fingerprint still matches the
+// user's stored hash. Used by both the reset flow and session resolution.
+//
+// Constant-time: reaching this with a chosen fingerprint requires the signing
+// key, so a timing leak here is not currently exploitable, but a comparison of
+// two secrets costs nothing to do properly.
 func (t *Tokens) MatchesFingerprint(fgpt, currentHash string) bool {
-	return fgpt == fingerprint(currentHash)
+	want := fingerprint(currentHash)
+	return subtle.ConstantTimeCompare([]byte(fgpt), []byte(want)) == 1
+}
+
+// SessionFingerprint exposes the digest a session token is bound to, so the
+// users package can put it on a Principal without duplicating the derivation.
+func (t *Tokens) SessionFingerprint(currentHash string) string {
+	return fingerprint(currentHash)
 }
 
 // AccessTTL exposes the session lifetime, so the cookie max-age cannot drift
