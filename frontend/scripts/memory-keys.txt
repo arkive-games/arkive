@@ -16,6 +16,7 @@ arkive.memory.palworld.breeding.search	-	apps/palworld/src/features/breeding/Bre
 arkive.memory.palworld.catalog.page	-	apps/palworld/src/components/MobilePagination.tsx
 arkive.memory.palworld.catalog.reveal-depth	-	apps/palworld/src/features/catalog/useIncrementalList.ts
 arkive.memory.palworld.catalog.view-mode	-	apps/palworld/src/features/pals/PalListPage.tsx
+arkive.memory.palworld.map.collapsed-filter-categories	-	apps/palworld/src/App.tsx
 arkive.memory.palworld.map.completed-markers	-	apps/palworld/src/lib/completedMarkers.ts
 arkive.memory.palworld.map.engine	-	apps/palworld/src/lib/mapEngineChoice.ts
 arkive.memory.palworld.map.info-collapsed	-	apps/palworld/src/components/InfoSidebar.tsx
