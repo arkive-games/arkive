@@ -2,6 +2,25 @@
   "entries": [
     {
       "date": "2026-08-13",
+      "commit": "efc47ea62574205fec9f4d414b628b56c3248e1a",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Marker details now open in one responsive panel on every map: a Details and Comments split, collapsible sections for drops and rewards, and a position you can copy in one click. On phones it opens as a draggable bottom sheet.",
+            "zh-CN": "点位详情改为统一的自适应面板：详情与留言分栏、掉落与奖励可折叠、坐标可一键复制；手机端以可拖动的底部面板打开。",
+            "zh-TW": "點位詳情改為統一的自適應面板：詳情與留言分欄、掉落與獎勵可折疊、坐標可一鍵複製；手機端以可拖動的底部面板開啟。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-13",
       "commit": "f34edf76a5cfebb03ec15853723be58cf5b94db2",
       "targets": [
         "aion2",
