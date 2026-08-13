@@ -27,6 +27,8 @@ test('show-regions toggle draws region borders', async ({ page }) => {
   // No region border polylines until the toggle is on.
   const borders = page.locator('.leaflet-overlay-pane path')
   await expect(borders.first()).toBeHidden()
-  await page.getByRole('button', { name: 'Show regions' }).first().click()
+  // By test id, not by label: this was `name: 'Show regions'` until 08a6fbfd
+  // renamed the control to "Show region borders", and the spec went quietly red.
+  await page.getByTestId('map-show-regions').first().click()
   await expect(borders.first()).toBeVisible({ timeout: 10_000 })
 })

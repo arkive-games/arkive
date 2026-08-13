@@ -13,6 +13,10 @@ test('wanted criminal popup shows its kill-drop badges', async ({ page }) => {
   const popup = page.getByTestId('marker-detail-drawer')
   await expect(popup).toBeVisible()
 
+  // Three drops, so the section starts collapsed and previews only the first
+  // two — expand it to see the Gold Key.
+  await popup.getByTestId('marker-detail-collapse-drops').click()
+
   // The Dark Trader bounty drops bounty tokens, gold, and a Gold Key.
   const drops = popup.getByTestId('marker-drop-item')
   await expect(drops.filter({ hasText: 'Successful Bounty Token' })).toHaveAttribute('href', /\/items\/BountyProof_1$/)
