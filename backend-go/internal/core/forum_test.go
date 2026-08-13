@@ -654,3 +654,38 @@ func TestAnEmptyEditDoesNotMarkThePostEdited(t *testing.T) {
 		t.Error("editedAt is null after a genuine edit")
 	}
 }
+
+// Markdown that renders to script is refused at the API, not merely discouraged.
+// The unit tests in the forum package cover the vectors exhaustively; this pins
+// that the check is actually reachable through the routes, for both a post and a
+// comment, and that ordinary markdown still gets through.
+func TestDangerousMarkdownIsRefusedByTheAPI(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+
+	for _, body := range []string{
+		`<script>alert(1)</script>`,
+		`<img src=x onerror=alert(1)>`,
+		`[click](javascript:alert(1))`,
+		`[click](java&#115;cript:alert(1))`,
+		`![x](data:text/html;base64,PHN2Zz4=)`,
+	} {
+		post := simplePost()
+		post["body"] = body
+		if res := h.createPost(token, post); res.status != http.StatusUnprocessableEntity {
+			t.Errorf("post with body %q = %d, want 422: %s", body, res.status, res.body)
+		}
+	}
+
+	// Ordinary markdown, including a code block containing "<", still posts.
+	ok := simplePost()
+	ok["body"] = "Here is **bold**, a [link](https://arkive.test), and code:\n\n```go\nif a < b {}\n```"
+	no := h.mustCreatePost(token, ok)
+
+	// And the same check guards comments.
+	res := h.do(http.MethodPost, "/forum/posts/"+strconv.FormatInt(no, 10)+"/comments",
+		map[string]any{"body": `<iframe src="https://evil.test"></iframe>`}, withBearer(token))
+	if res.status != http.StatusUnprocessableEntity {
+		t.Errorf("comment with an iframe = %d, want 422: %s", res.status, res.body)
+	}
+}

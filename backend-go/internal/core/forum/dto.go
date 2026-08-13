@@ -279,7 +279,11 @@ func validateBody(body string, what string) error {
 		return apierr.New(apierr.Validation,
 			fmt.Sprintf("a %s may be at most %d characters", what, MaxBodyLength))
 	}
-	return nil
+	// Bodies are stored raw and rendered by the client, so this is the last point
+	// at which the server can refuse markdown that renders to script. It does not
+	// replace the renderer's obligation to disable raw HTML; it means a hostile
+	// body never reaches storage in the first place. See markdown.go.
+	return validateMarkdownSafety(trimmed, what)
 }
 
 // normaliseList trims, drops blanks and removes duplicates, so that ["a","a",""]

@@ -251,8 +251,28 @@ that whole registrable domain for cross-subdomain sign-in. A markdown renderer t
 HTML would therefore turn any post into stored XSS with access to that cookie — session theft
 across every Arkive site, from text anybody can submit.
 
-The backend cannot prevent that; it can only avoid contributing to it. So the requirement is
-recorded here as a condition of this design:
+### 6.1 What the server can check, and what it cannot
+
+The server cannot see what a client eventually does with the text, so it cannot make the
+renderer safe. It can refuse a body that has no legitimate reason to exist, and it does:
+
+- **no raw HTML at all**, beyond markdown's own `<https://...>` autolink form;
+- **link and image destinations limited to http, https, mailto or relative.**
+
+Both refuse whole *classes* of construct rather than matching known-bad strings, because a
+blocklist cannot work here. Of the seventeen vectors the check is tested against, most contain
+no `<script` anywhere: an `onerror` attribute on an image, a `javascript:` URL in ordinary
+markdown, the same scheme spelled `java&#115;cript:`, a `data:` URL, an uppercase `<SVG
+ONLOAD=>`, a newline inside the tag. Enumerating them is a losing game.
+
+Destinations are normalised before comparison, and in **two** readings: where a compliant
+parser ends the destination, and the whole string with whitespace and control characters
+stripped. That second reading exists because of a bug found while testing this — truncating at
+whitespace first reduced `java<tab>script:` to the harmless-looking `java` and let it through.
+Browsers ignore whitespace inside a scheme, so both readings have to be checked.
+
+This is defence in depth, not the defence. A hostile body never reaches storage, which is worth
+having, but it does not remove the renderer's obligation:
 
 - the renderer must have raw HTML disabled;
 - post and comment bodies must never reach `dangerouslySetInnerHTML`;
