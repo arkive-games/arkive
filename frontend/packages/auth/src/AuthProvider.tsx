@@ -1,3 +1,5 @@
+import type { AxiosInstance } from "axios"
+
 import {
   createContext,
   useCallback,
@@ -80,7 +82,8 @@ export interface AuthProviderProps {
    * without conditionally mounting the provider and breaking hook order.
    */
   enabled?: boolean
-  fetchImpl?: typeof fetch
+  /** Injectable for tests; replaces the axios instance the client would build. */
+  axiosInstance?: AxiosInstance
   children: ReactNode
 }
 
@@ -89,7 +92,7 @@ export function AuthProvider({
   transport = "cookie",
   storage,
   enabled = true,
-  fetchImpl,
+  axiosInstance,
   children,
 }: AuthProviderProps) {
   const client = useMemo(
@@ -98,9 +101,9 @@ export function AuthProvider({
         baseUrl,
         transport,
         storage: transport === "bearer" ? (storage ?? createLocalTokenStorage()) : storage,
-        fetchImpl,
+        axiosInstance,
       }),
-    [baseUrl, transport, storage, fetchImpl],
+    [baseUrl, transport, storage, axiosInstance],
   )
 
   const [status, setStatus] = useState<AuthStatus>(enabled ? "loading" : "anonymous")

@@ -1,29 +1,32 @@
 import {
+  ApiError,
+  createApiClient,
+  forgotPassword,
+  getAltchaChallenge,
+  getCurrentUser,
+  loginCookie,
+  loginJwt,
+  logoutCookie,
+  logoutJwt,
+  register,
+  requestVerifyToken,
+  resetPassword,
+  result,
+  updateCurrentUser,
+  verifyUser,
+  type ApiClient,
+  type Payload,
+} from "@gamemap/api-core"
+import type { AxiosInstance, AxiosResponse } from "axios"
+
+import {
   AuthError,
   type AltchaChallenge,
   type AuthErrorCode,
   type AuthTransport,
-  type Envelope,
-  type TokenResponse,
   type TokenStorage,
   type User,
 } from "./types"
-
-/** Every operation this client calls, checked against the OpenAPI document. */
-export const CORE_OPERATIONS = {
-  getAltchaChallenge: { method: "GET", path: "/auth/altcha" },
-  register: { method: "POST", path: "/auth/register" },
-  loginJWT: { method: "POST", path: "/auth/jwt/login" },
-  loginCookie: { method: "POST", path: "/auth/cookie/login" },
-  logoutCookie: { method: "POST", path: "/auth/cookie/logout" },
-  logoutJWT: { method: "POST", path: "/auth/jwt/logout" },
-  forgotPassword: { method: "POST", path: "/auth/forgot-password" },
-  resetPassword: { method: "POST", path: "/auth/reset-password" },
-  requestVerifyToken: { method: "POST", path: "/auth/request-verify-token" },
-  verifyUser: { method: "POST", path: "/auth/verify" },
-  getCurrentUser: { method: "GET", path: "/users/me" },
-  updateCurrentUser: { method: "PATCH", path: "/users/me" },
-} as const
 
 export interface CoreClientOptions {
   /** Origin plus module prefix, e.g. `https://api.tc-imba.com/api/v1/core`. */
@@ -32,41 +35,54 @@ export interface CoreClientOptions {
   /** Required when transport is `bearer`; ignored otherwise. */
   storage?: TokenStorage
   /** Injectable for tests. */
-  fetchImpl?: typeof fetch
+  axiosInstance?: AxiosInstance
 }
 
 /**
- * Typed client for the accounts and authentication surface.
+ * The accounts and authentication surface, as the UI wants to call it.
+ *
+ * A thin facade over the generated client rather than a replacement for it. The
+ * generated functions take an options object and return a response; the screens
+ * want `login(email, password)` and a `User`. Three things live here that the
+ * generator cannot know:
+ *
+ *   - which of the two login endpoints the current transport should use;
+ *   - that a failure should arrive as an `AuthError` whose code is drawn from the
+ *     narrow vocabulary the UI branches on, not the backend's full set;
+ *   - that being signed out is a normal state rather than an error.
  *
  * Two transports, because one is not enough for where this ships. On the game
- * subdomains the session is an httpOnly cookie: script cannot read it, so an
- * XSS cannot exfiltrate it, and every app shares one login. Inside a Bilibili
- * Toy the page is a third-party iframe, where that cookie is blocked outright
- * by Safari and Firefox and is being removed in Chrome — so there the session
- * is a bearer token in storage, which is weaker against XSS but is the only
- * thing that works at all.
+ * subdomains the session is an httpOnly cookie: script cannot read it, so an XSS
+ * cannot exfiltrate it, and every app shares one login. Inside a Bilibili Toy the
+ * page is a third-party iframe, where that cookie is blocked outright by Safari
+ * and Firefox and is being removed in Chrome — so there the session is a bearer
+ * token in storage, weaker against XSS but the only thing that works at all.
  */
 export class CoreClient {
-  private readonly baseUrl: string
+  private readonly api: ApiClient
   private readonly transport: AuthTransport
   private readonly storage?: TokenStorage
-  private readonly fetchImpl: typeof fetch
 
   constructor(options: CoreClientOptions) {
-    this.baseUrl = options.baseUrl.replace(/\/+$/, "")
     this.transport = options.transport
     this.storage = options.storage
-    this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis)
 
     if (this.transport === "bearer" && !this.storage) {
       throw new Error("CoreClient: transport 'bearer' requires a TokenStorage")
     }
+
+    this.api = createApiClient({
+      baseUrl: options.baseUrl.replace(/\/+$/, ""),
+      transport: options.transport,
+      storage: options.storage,
+      axiosInstance: options.axiosInstance,
+    })
   }
 
   // -- session ------------------------------------------------------------
 
   async getAltchaChallenge(): Promise<AltchaChallenge> {
-    return this.enveloped<AltchaChallenge>(CORE_OPERATIONS.getAltchaChallenge.path)
+    return this.call((o) => getAltchaChallenge(o))
   }
 
   async register(input: {
@@ -75,50 +91,42 @@ export class CoreClient {
     password: string
     altcha: string
   }): Promise<User> {
-    const path = `${CORE_OPERATIONS.register.path}?altcha=${encodeURIComponent(input.altcha)}`
-    return this.enveloped<User>(path, {
-      method: "POST",
-      body: JSON.stringify({
-        name: input.name,
-        email: input.email,
-        password: input.password,
+    // The solution travels as a query parameter, and the generated client escapes
+    // it: base64 contains +, / and =, all of which change meaning in a query
+    // string.
+    return this.call((o) =>
+      register({
+        ...o,
+        query: { altcha: input.altcha },
+        body: { name: input.name, email: input.email, password: input.password },
       }),
-    })
+    )
   }
 
   async login(email: string, password: string): Promise<User> {
-    const body = JSON.stringify({ email, password })
-
     if (this.transport === "cookie") {
-      return this.enveloped<User>(CORE_OPERATIONS.loginCookie.path, { method: "POST", body })
+      return this.call((o) => loginCookie({ ...o, body: { email, password } }))
     }
 
     // The bearer endpoint returns the token at the top level rather than in the
     // envelope, so that conventional OAuth2 tooling can find it.
-    const token = await this.raw<TokenResponse>(CORE_OPERATIONS.loginJWT.path, {
-      method: "POST",
-      body,
-    })
+    const token = await this.call((o) => loginJwt({ ...o, body: { email, password } }))
     this.storage!.write(token.accessToken)
     return this.getCurrentUser()
   }
 
   async logout(): Promise<void> {
-    const path =
-      this.transport === "cookie"
-        ? CORE_OPERATIONS.logoutCookie.path
-        : CORE_OPERATIONS.logoutJWT.path
     try {
-      await this.enveloped<unknown>(path, { method: "POST" })
+      await this.call((o) => (this.transport === "cookie" ? logoutCookie(o) : logoutJwt(o)))
     } finally {
-      // The local session is discarded even if the call failed. Leaving a
-      // token behind after the user asked to sign out is the worse outcome.
+      // The local session is discarded even if the call failed. Leaving a token
+      // behind after the user asked to sign out is the worse outcome.
       this.storage?.clear()
     }
   }
 
   async getCurrentUser(): Promise<User> {
-    return this.enveloped<User>(CORE_OPERATIONS.getCurrentUser.path)
+    return this.call((o) => getCurrentUser(o))
   }
 
   /**
@@ -147,10 +155,7 @@ export class CoreClient {
     email?: string
     password?: string
   }): Promise<User> {
-    return this.enveloped<User>(CORE_OPERATIONS.updateCurrentUser.path, {
-      method: "PATCH",
-      body: JSON.stringify(input),
-    })
+    return this.call((o) => updateCurrentUser({ ...o, body: input }))
   }
 
   // -- password and address -----------------------------------------------
@@ -161,110 +166,63 @@ export class CoreClient {
    * chosen address, and every message spends the sending quota.
    */
   async forgotPassword(email: string, altcha: string): Promise<void> {
-    const path = `${CORE_OPERATIONS.forgotPassword.path}?altcha=${encodeURIComponent(altcha)}`
-    await this.enveloped<unknown>(path, {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    })
+    await this.call((o) => forgotPassword({ ...o, query: { altcha }, body: { email } }))
   }
 
   async resetPassword(token: string, password: string): Promise<void> {
-    await this.enveloped<unknown>(CORE_OPERATIONS.resetPassword.path, {
-      method: "POST",
-      body: JSON.stringify({ token, password }),
-    })
+    await this.call((o) => resetPassword({ ...o, body: { token, password } }))
   }
 
   async requestVerification(email: string): Promise<void> {
-    await this.enveloped<unknown>(CORE_OPERATIONS.requestVerifyToken.path, {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    })
+    await this.call((o) => requestVerifyToken({ ...o, body: { email } }))
   }
 
   async verify(token: string): Promise<User> {
-    return this.enveloped<User>(CORE_OPERATIONS.verifyUser.path, {
-      method: "POST",
-      body: JSON.stringify({ token }),
-    })
+    return this.call((o) => verifyUser({ ...o, body: { token } }))
   }
 
   // -- plumbing -----------------------------------------------------------
 
-  private headers(hasBody: boolean): HeadersInit {
-    const headers: Record<string, string> = { Accept: "application/json" }
-    if (hasBody) headers["Content-Type"] = "application/json"
-
-    if (this.transport === "bearer") {
-      const token = this.storage!.read()
-      if (token) headers["Authorization"] = `Bearer ${token}`
-    }
-    return headers
-  }
-
-  private async send(path: string, init: RequestInit = {}): Promise<Response> {
+  /**
+   * Runs one generated operation and translates its failures.
+   *
+   * `throwOnError: true` is required by `result`, and required in fact: without
+   * it the generated client returns rejections instead of raising them, and a
+   * caller reading the payload would see undefined instead of an error.
+   */
+  private async call<T>(
+    operation: (options: {
+      client: ApiClient["client"]
+      throwOnError: true
+    }) => Promise<AxiosResponse<T>>,
+  ): Promise<Payload<T>> {
     try {
-      return await this.fetchImpl(`${this.baseUrl}${path}`, {
-        ...init,
-        headers: { ...this.headers(init.body != null), ...init.headers },
-        // Only the cookie transport needs credentials. Omitting them for
-        // bearer means the API may answer with a wildcard CORS origin, which
-        // is what lets the Toy build talk to it at all.
-        credentials: this.transport === "cookie" ? "include" : "omit",
-      })
-    } catch {
-      // A rejected fetch is DNS, TLS, offline or a CORS preflight refusal —
-      // never an application error. Reported distinctly so the UI can say
-      // "cannot reach the server" instead of "wrong password".
-      throw new AuthError("NetworkError", "Could not reach the server", 0)
+      return await result(operation({ client: this.api.client, throwOnError: true }))
+    } catch (error) {
+      throw asAuthError(error)
     }
   }
+}
 
-  /** Unwraps the standard envelope, turning a failure into an AuthError. */
-  private async enveloped<T>(path: string, init?: RequestInit): Promise<T> {
-    const response = await this.send(path, init)
-    const payload = await this.parse<Envelope<T>>(response)
+/**
+ * Translates a transport-level failure into the vocabulary the UI branches on.
+ *
+ * Kept separate from the client so the mapping can be read and tested on its
+ * own, and so the three distinct failure kinds stay visibly distinct: an
+ * application error carrying a code, a server that answered with something other
+ * than the API, and a server that did not answer.
+ */
+export function asAuthError(error: unknown): AuthError {
+  if (error instanceof AuthError) return error
 
-    if (!response.ok) {
-      throw new AuthError(
-        normaliseCode(payload?.errorCode, response.status),
-        payload?.errorMessage || response.statusText,
-        response.status,
-      )
-    }
-    return payload.data as T
+  if (error instanceof ApiError) {
+    return new AuthError(normaliseCode(error.code, error.status), error.message, error.status)
   }
 
-  /** For the one endpoint that answers outside the envelope. */
-  private async raw<T>(path: string, init?: RequestInit): Promise<T> {
-    const response = await this.send(path, init)
-    const payload = await this.parse<T & Partial<Envelope<never>>>(response)
-
-    if (!response.ok) {
-      throw new AuthError(
-        normaliseCode(payload?.errorCode, response.status),
-        payload?.errorMessage || response.statusText,
-        response.status,
-      )
-    }
-    return payload
-  }
-
-  private async parse<T>(response: Response): Promise<T> {
-    const text = await response.text()
-    if (!text) return {} as T
-    try {
-      return JSON.parse(text) as T
-    } catch {
-      // A proxy or edge error page rather than the API. Reporting it as a
-      // parse failure would send the user hunting in the wrong place.
-      throw new AuthError(
-        response.ok ? "UnknownError" : normaliseCode(undefined, response.status),
-        "The server returned an unexpected response",
-        response.status,
-      )
-    }
-  }
+  // Never reached the application: offline, DNS, TLS, an aborted request or a
+  // CORS preflight refusal. Reported distinctly so the UI can say "cannot reach
+  // the server" rather than "wrong password".
+  return new AuthError("NetworkError", "Could not reach the server", 0)
 }
 
 /** Maps a server code, or a bare status, onto the codes the UI branches on. */

@@ -1,0 +1,26 @@
+{
+  "name": "@gamemap/api-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "generate": "openapi-ts"
+  },
+  "dependencies": {
+    "@hey-api/client-axios": "^0.9.1",
+    "axios": "^1.19.0"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
+    "@types/node": "^22.15.3",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

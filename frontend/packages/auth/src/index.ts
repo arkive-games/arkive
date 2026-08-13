@@ -18,7 +18,7 @@ export {
   type AuthProviderProps,
   type AuthStatus,
 } from "./AuthProvider"
-export { CoreClient, CORE_OPERATIONS, normaliseCode, type CoreClientOptions } from "./client"
+export { CoreClient, asAuthError, normaliseCode, type CoreClientOptions } from "./client"
 export {
   ARKIVE_PRODUCTION_API_URL,
   CORE_API_PREFIX,
@@ -41,7 +41,6 @@ export {
   type AltchaChallenge,
   type AuthErrorCode,
   type AuthTransport,
-  type Envelope,
   type TokenResponse,
   type TokenStorage,
   type User,

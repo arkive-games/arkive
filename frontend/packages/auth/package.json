@@ -13,9 +13,11 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@gamemap/api-core": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
     "@gamemap/ui": "workspace:*",
-    "@tabler/icons-react": "^3.46.0"
+    "@tabler/icons-react": "^3.46.0",
+    "axios": "^1.19.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",

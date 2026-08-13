@@ -1,49 +1,33 @@
 /**
- * Wire types for the backend's `core` module.
+ * Types for the backend's `core` module, as this package presents them.
  *
- * These mirror `backend-go/openapi/core.json`. They are hand-written rather
- * than generated, and `specDrift.test.ts` asserts that the operations this
- * client calls still exist in that document with the same paths and methods —
- * so a backend change that would break the client fails a test rather than a
- * user's login. Replacing this file with `@hey-api/openapi-ts` output later is
- * a drop-in change; the drift test is what makes deferring it safe.
+ * The wire types are no longer written by hand: they are aliases onto
+ * `@gamemap/api-core`, which generates them from `backend-go/openapi/core.json`.
+ * A backend field that changes shape is now a compile error here rather than a
+ * silent mismatch, which is what the old `specDrift.test.ts` could only
+ * approximate — it checked that paths and methods still existed, never that the
+ * bodies still matched.
+ *
+ * What stays hand-written is the part the spec does not describe: the error
+ * vocabulary the UI branches on.
  */
 
-/** A user account, as the API exposes it. Never carries password material. */
-export interface User {
-  id: string
-  name: string
-  email: string
-  isActive: boolean
-  isSuperuser: boolean
-  isVerified: boolean
-  createdAt: string
-  updatedAt: string
-}
+import type {
+  Challenge,
+  TokenResponse as CoreTokenResponse,
+  TokenStorage as CoreTokenStorage,
+  Transport,
+  UserRead,
+} from "@gamemap/api-core"
 
-/** The envelope every endpoint returns except the token endpoint. */
-export interface Envelope<T> {
-  errorCode: string
-  errorMessage: string
-  showType: number
-  data: T | null
-}
+/** A user account, as the API exposes it. Never carries password material. */
+export type User = UserRead
 
 /** The bearer-token payload from `POST /auth/jwt/login`. */
-export interface TokenResponse {
-  accessToken: string
-  tokenType: string
-  expiresAt: string
-}
+export type TokenResponse = CoreTokenResponse
 
 /** A proof-of-work challenge gating registration. */
-export interface AltchaChallenge {
-  algorithm: string
-  challenge: string
-  maxNumber: number
-  salt: string
-  signature: string
-}
+export type AltchaChallenge = Challenge
 
 /**
  * Error codes the UI branches on. The backend's vocabulary is larger; only the
@@ -80,11 +64,7 @@ export class AuthError extends Error {
 }
 
 /** How the session travels. */
-export type AuthTransport = "cookie" | "bearer"
+export type AuthTransport = Transport
 
 /** Stores the bearer token when cookies cannot be used. */
-export interface TokenStorage {
-  read(): string | null
-  write(token: string): void
-  clear(): void
-}
+export type TokenStorage = CoreTokenStorage
