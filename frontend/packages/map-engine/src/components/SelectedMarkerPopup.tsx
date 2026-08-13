@@ -1,5 +1,6 @@
 import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { DomEvent } from "leaflet";
 import { useMap, useMapEvents } from "react-leaflet";
 
 import type { GameMapMeta } from "@gamemap/data-contract";
@@ -11,6 +12,27 @@ type Props = {
   marker: EngineMarker | null;
   renderPopupContent: (marker: EngineMarker) => ReactNode;
 };
+
+/**
+ * Stop the map claiming gestures that belong to the detail surface.
+ *
+ * This anchor is portalled *into* the Leaflet container, and Leaflet binds
+ * natively on that container -- click and drag on `_container`, wheel through the
+ * smooth-zoom handler. React's own `stopPropagation` cannot help: React delegates
+ * from the app root, which is an ANCESTOR of the map container, so its listener
+ * runs after Leaflet's, not before. The `<Popup>` this replaced only behaved
+ * because Leaflet calls exactly these two functions on it.
+ *
+ * Without this, on the Leaflet engine: clicking a tab inside the panel reaches
+ * the map's deselect handler and closes the panel, the wheel zooms the map
+ * instead of scrolling the panel, and dragging inside it pans the map. The WebGL
+ * engine is unaffected because its gestures bind to the canvas.
+ */
+function detachFromMapGestures(element: HTMLDivElement | null) {
+  if (!element) return;
+  DomEvent.disableClickPropagation(element);
+  DomEvent.disableScrollPropagation(element);
+}
 
 const SelectedMarkerPopup: React.FC<Props> = ({ map, marker, renderPopupContent }) => {
   const leafletMap = useMap();
@@ -58,6 +80,7 @@ const SelectedMarkerPopup: React.FC<Props> = ({ map, marker, renderPopupContent 
 
   return createPortal(
     <div
+      ref={detachFromMapGestures}
       data-marker-detail-anchor=""
       className="gm-marker-detail-anchor"
       style={{ transform: `translate3d(${Math.round(screen.x)}px, ${Math.round(screen.y)}px, 0)` }}

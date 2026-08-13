@@ -3,10 +3,11 @@ import { test, expect } from "@playwright/test";
 // The three map-rendering tests below pin `?engine=leaflet`: each of them
 // asserts on DOM that only the Leaflet engine produces — one `img` per tile
 // (`.leaflet-tile-loaded`), one node per marker (`.leaflet-marker-icon`), and
-// `.leaflet-popup`. The WebGL engine has been the DEFAULT since 9e1495d and
-// draws all three into a single canvas, so there is nothing to count or click
-// there; its equivalents (canvas + handle + no console errors, marker click →
-// popup, subtype filter → what the canvas draws) live in gl-map.spec.ts.
+// the detail anchor portalled into `.leaflet-container`. The WebGL engine has
+// been the DEFAULT since 9e1495d and draws all three into a single canvas, so
+// there is nothing to count or click there; its equivalents (canvas + handle +
+// no console errors, marker click → detail, subtype filter → what the canvas
+// draws) live in gl-map.spec.ts.
 //
 // The rest of this file is engine-agnostic app chrome and stays on the default
 // engine, which is exactly what it should be smoking.
@@ -77,8 +78,10 @@ test("clicking a marker opens a local popup", async ({ page }) => {
     }
   }
   expect(clicked, "no clickable in-viewport marker found").toBe(true);
-  await expect(page.locator(".leaflet-popup")).toBeVisible();
-  await expect(page.getByTestId("marker-popup-card")).toBeVisible();
+  // The anchor is a zero-size positioning wrapper, so it can only be counted,
+  // never seen; the drawer it carries is the visible surface.
+  await expect(page.locator(".leaflet-container [data-marker-detail-anchor]")).toHaveCount(1);
+  await expect(page.getByTestId("marker-detail-drawer")).toBeVisible();
 });
 
 test("theme switch applies the theme class", async ({ page }) => {

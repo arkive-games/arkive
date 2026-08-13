@@ -123,7 +123,7 @@ export function PalDropBadges({ drops, bundle, variant = 'badges' }: { drops: Dr
       <MarkerDetailItemList testId="marker-drop-list">
         {drops.map((d, i) => {
           const icon = bundle.itemIcon[d.item]
-          const qty = d.min === d.max ? `${d.min}` : `${d.min}-${d.max}`
+          const qty = d.min === d.max ? `${d.min}` : `${d.min}–${d.max}`
           return (
             <MarkerDetailItemRow key={`${d.item}-${i}`}>
               <Link to="/items/$id" params={{ id: d.item }} data-testid="marker-drop-item">
@@ -131,7 +131,7 @@ export function PalDropBadges({ drops, bundle, variant = 'badges' }: { drops: Dr
                   {icon ? <img src={itemIconUrl(icon)} alt="" className="size-6 object-contain" /> : null}
                 </MarkerDetailItemIcon>
                 <MarkerDetailItemName>{bundle.items[d.item] ?? d.item}</MarkerDetailItemName>
-                <MarkerDetailItemMeta>x {qty}</MarkerDetailItemMeta>
+                <MarkerDetailItemMeta>×{qty}</MarkerDetailItemMeta>
                 <MarkerDetailItemValue>{d.rate}%</MarkerDetailItemValue>
               </Link>
             </MarkerDetailItemRow>

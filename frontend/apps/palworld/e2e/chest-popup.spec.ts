@@ -13,7 +13,7 @@ test('loot marker popups show the matching source pool', async ({ page }) => {
     await page.goto(`/?map=MainWorld&q=${encodeURIComponent(query)}`)
     await page.getByTestId('search-results').getByText(query, { exact: true }).first().click()
 
-    const summary = page.getByTestId('marker-popup-card').getByTestId('marker-loot-summary')
+    const summary = page.getByTestId('marker-detail-drawer').getByTestId('marker-loot-summary')
     await expect(summary).toBeVisible()
     await expect(summary.getByTestId('marker-loot-kind')).toHaveText(kind)
     await expect(summary.getByTestId('marker-loot-item')).toHaveCount(4)

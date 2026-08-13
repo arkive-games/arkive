@@ -701,7 +701,7 @@ export default function App() {
         {marker.nightOnly ? <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-1 text-xs text-indigo-600 dark:text-indigo-400" data-testid="marker-night-only"><Moon className="size-3.5" aria-hidden />{t('pal.nightOnlyNote')}</span> : null}
       </div>
     ) : undefined
-    const hasGameExtensions = isEffigy || marker.reward || marker.warpTo || marker.dungeonArea
+    const hasGameExtensions = isPal || isEffigy || marker.reward || marker.warpTo || marker.dungeonArea
     return (
       <MarkerDetailDrawer
         idLabel={idLabel}
@@ -755,6 +755,16 @@ export default function App() {
             </button>
           )
         })() : null}
+        {isPal ? (
+          <Link
+            to="/pals/$id"
+            params={{ id: marker.subtype }}
+            data-testid="marker-paldeck-link"
+            className="mt-2 inline-block text-sm text-primary hover:underline"
+          >
+            {t('pal.viewInEncyclopedia')}
+          </Link>
+        ) : null}
         {marker.dungeonArea ? (
           <Link
             to="/dungeons/$id"

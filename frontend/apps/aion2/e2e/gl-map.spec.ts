@@ -6,7 +6,7 @@ import { mapRoot, openMap, DEFAULT_MAP_PARAMS } from "./engines";
  *
  * It draws every tile, marker and region into ONE `<canvas>`, so the DOM
  * assertions the Leaflet specs are built on (`.leaflet-marker-icon`,
- * `img.leaflet-tile`, `.leaflet-popup`) have no counterpart here. What this
+ * `img.leaflet-tile`) have no counterpart here. What this
  * spec drives instead is `window.__glMap`, the handle the view publishes when
  * `exposeTestHandle` is on (the app sets it in dev): project a DATA-space
  * coordinate to canvas pixels, then click that page point.
@@ -173,7 +173,7 @@ test("clicking a marker opens its popup; clicking empty canvas closes it", async
   const target = await pickIsolatedMarker(page);
   await clickMarker(page, target);
 
-  const popup = page.getByTestId("marker-popup-card");
+  const popup = page.getByTestId("marker-detail-drawer");
   await expect(popup).toBeVisible({ timeout: 10_000 });
   await expect(popup).toContainText(target.name);
 
@@ -200,21 +200,21 @@ test("a subtype toggle governs what the canvas draws", async ({ page }) => {
 
   // On by default: the click lands on a marker.
   await clickMarker(page, target);
-  await expect(page.getByTestId("marker-popup-card")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId("marker-detail-drawer")).toBeVisible({ timeout: 10_000 });
 
   // Hide its subtype. The marker is >100px from every other visible marker, so
   // if the filter really reaches the canvas the same point now hits nothing.
   // (Deselect first: the engine keeps the SELECTED marker visible on purpose.)
   const spot = (await mapRoot(page, "gl").boundingBox())!;
   await page.mouse.click(spot.x + spot.width * 0.12, spot.y + spot.height * 0.85);
-  await expect(page.getByTestId("marker-popup-card")).toHaveCount(0);
+  await expect(page.getByTestId("marker-detail-drawer")).toHaveCount(0);
 
   const toggle = page.getByTestId(`subtype-toggle-${target.subtype}`);
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await clickMarker(page, target);
-  await expect(page.getByTestId("marker-popup-card")).toHaveCount(0);
+  await expect(page.getByTestId("marker-detail-drawer")).toHaveCount(0);
 
   // …and turning it back on restores it.
   await toggle.click();
@@ -226,14 +226,14 @@ test("a subtype toggle governs what the canvas draws", async ({ page }) => {
   await expect
     .poll(
       async () => {
-        if (await page.getByTestId("marker-popup-card").count()) return true;
+        if (await page.getByTestId("marker-detail-drawer").count()) return true;
         await clickMarker(page, target);
-        return (await page.getByTestId("marker-popup-card").count()) > 0;
+        return (await page.getByTestId("marker-detail-drawer").count()) > 0;
       },
       { timeout: 10_000, message: "re-enabled marker is clickable again" },
     )
     .toBe(true);
-  await expect(page.getByTestId("marker-popup-card")).toContainText(target.name);
+  await expect(page.getByTestId("marker-detail-drawer")).toContainText(target.name);
 });
 
 test("the cursor readout follows the pointer over the canvas", async ({ page }) => {

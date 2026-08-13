@@ -62,7 +62,7 @@ ownership:
     bottom_navigation: "frontend/packages/map-shell/src/ShellBottomNav.tsx"
   shared_interactions:
     search: "frontend/packages/map-shell/src/SearchPanel.tsx"
-    marker_detail: "frontend/packages/map-shell/src/MarkerPopupCard.tsx"
+    marker_detail: "frontend/packages/map-shell/src/MarkerDetailDrawer.tsx"
     ui_primitives: "frontend/packages/ui/src"
   host_owned:
     - "Primary and secondary route inventory"

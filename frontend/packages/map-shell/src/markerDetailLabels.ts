@@ -135,6 +135,11 @@ const texts: Record<string, MarkerDetailLabelText> = {
     attachImages: "이미지 첨부",
     attachmentLimit: "최대 3장",
     publish: "게시",
+    emptyDetails: "아직 추가 정보가 없습니다. 이미지를 추가하거나 유용한 댓글을 남겨 주세요.",
+    emptyComments: "아직 댓글이 없습니다. 첫 댓글을 남겨 보세요.",
+    guestAuthor: "손님",
+    justNow: "방금",
+    awaitingReview: "검토 대기 중",
   },
 }
 

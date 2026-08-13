@@ -77,6 +77,23 @@ describe("SelectedMarkerPopup", () => {
     expect(anchor?.textContent).toBe("Details")
   })
 
+  it("keeps the map from claiming gestures made inside the detail surface", () => {
+    renderPopup(() => <div>Details</div>)
+    const anchor = mapContainer.querySelector<HTMLElement>("[data-marker-detail-anchor]")!
+    // Leaflet binds natively on the container, and React delegates from an
+    // ancestor of it, so `stopPropagation` in a handler cannot get there first.
+    // These are the two calls Leaflet makes on a real `<Popup>`; without them a
+    // tab click deselects the marker and the wheel zooms the map.
+    const reachedMap = vi.fn()
+    mapContainer.addEventListener("mousedown", reachedMap)
+    mapContainer.addEventListener("wheel", reachedMap)
+    anchor.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }))
+    anchor.dispatchEvent(new WheelEvent("wheel", { bubbles: true }))
+    expect(reachedMap).not.toHaveBeenCalled()
+    mapContainer.removeEventListener("mousedown", reachedMap)
+    mapContainer.removeEventListener("wheel", reachedMap)
+  })
+
   it("pans once per selected marker when right-side detail space is insufficient", () => {
     renderPopup(() => <div>Details</div>)
     const anchor = mapContainer.querySelector<HTMLElement>("[data-marker-detail-anchor]")

@@ -39,14 +39,17 @@ async function clickInViewportMarker(page: Page) {
 // childList while dragging. A blink = the popup node removed then re-added
 // (>= 2 child mutations). With a stable `position` it should be zero.
 //
-// LEAFLET-ONLY, pinned with `?engine=leaflet`. Both the failure mode and the
-// measurement are react-leaflet's: a popup LAYER torn down and re-opened by the
-// `position` dep of react-leaflet's lifecycle effect, counted as childList
-// mutations of `.leaflet-popup-pane`. The WebGL engine (the default) has no
-// popup layer — its popup is a plain `.gmgl-popup` div mounted from
-// `selectedMarkerId` alone and repositioned imperatively, so there is no
-// equivalent to observe. gl-map.spec.ts covers that the GL popup opens on a
-// marker click and closes on a background click.
+// LEAFLET-ONLY, pinned with `?engine=leaflet`. The original failure mode was
+// react-leaflet's: a popup LAYER torn down and re-opened by the `position` dep
+// of its lifecycle effect. That layer is gone — the detail surface is now a
+// plain div portalled into `.leaflet-container` and repositioned by transform —
+// but the same blink is still reachable, because the anchor unmounts whenever
+// its container point resolves to null. So the measurement moves with it:
+// childList mutations on the container, which is quiet during a drag except for
+// the anchor (tile churn happens deeper, inside the panes). The WebGL engine
+// mounts its own anchor from `selectedMarkerId` alone, so there is nothing
+// engine-shared to observe here; gl-map.spec.ts covers that one opening on a
+// marker click and closing on a background click.
 test("dragging the map does not blink the open marker popup", async ({
   page,
 }) => {
@@ -59,19 +62,23 @@ test("dragging the map does not blink the open marker popup", async ({
   // Open the marker popup by clicking a marker, then let the focus flyTo and
   // the popup autoPan fully settle so they don't pollute the observation.
   await clickInViewportMarker(page);
-  await page.locator(".leaflet-popup").waitFor({ timeout: 10_000 });
+  await page.locator("[data-marker-detail-anchor]").waitFor({ state: "attached", timeout: 10_000 });
   await page.waitForTimeout(1500);
 
-  // Count add/remove of popup nodes within the popup pane.
+  // Count add/remove of the detail anchor among the container's direct children.
   await page.evaluate(() => {
-    const pane = document.querySelector(".leaflet-popup-pane");
+    const container = document.querySelector(".leaflet-container");
     const w = window as Window & typeof globalThis & { __pp?: number };
     w.__pp = 0;
-    if (pane) {
+    const isAnchor = (node: Node) =>
+      node instanceof HTMLElement && node.hasAttribute("data-marker-detail-anchor");
+    if (container) {
       new MutationObserver((muts) => {
-        for (const m of muts)
-          w.__pp! += m.addedNodes.length + m.removedNodes.length;
-      }).observe(pane, { childList: true, subtree: true });
+        for (const m of muts) {
+          w.__pp! += [...m.addedNodes].filter(isAnchor).length;
+          w.__pp! += [...m.removedNodes].filter(isAnchor).length;
+        }
+      }).observe(container, { childList: true });
     }
   });
 
@@ -89,14 +96,14 @@ test("dragging the map does not blink the open marker popup", async ({
   await page.mouse.up();
   await page.waitForTimeout(700); // let moveend + any re-render settle
 
-  // The popup must still be open after the drag.
-  await expect(page.locator(".leaflet-popup")).toBeVisible();
+  // The detail surface must still be open after the drag.
+  await expect(page.getByTestId("marker-detail-drawer")).toBeVisible();
 
   const popupMutations = await page.evaluate(
     () => (window as Window & typeof globalThis & { __pp?: number }).__pp ?? 0,
   );
-  console.log(`popupPaneMutationsDuringDrag=${popupMutations}`);
-  // Before fix: popup removed (1) + re-added (1) = >= 2 per drag (the blink).
-  // After fix (stable position): 0.
+  console.log(`detailAnchorMutationsDuringDrag=${popupMutations}`);
+  // Blinking: anchor removed (1) + re-added (1) = >= 2 per drag.
+  // Stable: 0.
   expect(popupMutations).toBeLessThan(2);
 });

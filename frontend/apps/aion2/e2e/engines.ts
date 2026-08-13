@@ -5,7 +5,7 @@
 // (`@gamemap/map-engine`). They put completely different things in the DOM:
 //
 //   Leaflet  →  `.leaflet-container`, one node per tile and per marker,
-//               an SVG `.leaflet-overlay-pane` for regions, `.leaflet-popup`.
+//               an SVG `.leaflet-overlay-pane` for regions.
 //   WebGL    →  a single `<canvas data-testid="gl-map-canvas">`. Tiles,
 //               markers and regions are drawn INSIDE it, so there is no
 //               per-marker DOM to query or click. The chrome that does stay

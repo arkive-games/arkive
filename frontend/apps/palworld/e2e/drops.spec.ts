@@ -10,7 +10,7 @@ test('wanted criminal popup shows its kill-drop badges', async ({ page }) => {
   const results = page.getByTestId('search-results')
   await results.getByText('Ram Lv.59', { exact: true }).first().click()
 
-  const popup = page.getByTestId('marker-popup-card')
+  const popup = page.getByTestId('marker-detail-drawer')
   await expect(popup).toBeVisible()
 
   // The Dark Trader bounty drops bounty tokens, gold, and a Gold Key.
@@ -25,7 +25,7 @@ test('field boss popup shows the pal drop badges', async ({ page }) => {
   const results = page.getByTestId('search-results')
   await results.getByText('Melpaca Lv.7', { exact: true }).first().click()
 
-  const popup = page.getByTestId('marker-popup-card')
+  const popup = page.getByTestId('marker-detail-drawer')
   await expect(popup).toBeVisible()
 
   // Melpaca (Alpaca) drops Leather + Wool.
@@ -39,7 +39,7 @@ test('wild pal spawn popup shows the pal drop badges', async ({ page }) => {
   const results = page.getByTestId('search-results')
   await results.getByText('Lamball', { exact: true }).first().click()
 
-  const popup = page.getByTestId('marker-popup-card')
+  const popup = page.getByTestId('marker-detail-drawer')
   await expect(popup).toBeVisible()
 
   // Lamball drops Lamball Mutton ×1 and Wool ×1–3.

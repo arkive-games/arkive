@@ -206,7 +206,7 @@ test('clicking a fast-travel marker opens its popup; background click closes it'
   const { target, onMap } = await pickFastTravelTarget(page)
   await clickMarker(page, target)
 
-  const popup = page.getByTestId('marker-popup-card')
+  const popup = page.getByTestId('marker-detail-drawer')
   await expect(popup).toBeVisible({ timeout: 10_000 })
   await expect(popup).toContainText(target.name)
 

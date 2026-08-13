@@ -10,7 +10,7 @@ test('ancient shrine popup shows item, schematic, and dog coin badges', async ({
   const results = page.getByTestId('search-results')
   await results.getByText('Sword Schematic 3', { exact: true }).first().click()
 
-  const popup = page.getByTestId('marker-popup-card')
+  const popup = page.getByTestId('marker-detail-drawer')
   await expect(popup).toBeVisible()
 
   // Item badge: the gear the schematic unlocks, linking to its item page.

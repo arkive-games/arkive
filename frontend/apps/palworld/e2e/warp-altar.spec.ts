@@ -31,7 +31,7 @@ test('selected altar shows connects-to link and a dashed line to its partner', a
   await altars.first().dispatchEvent('click')
 
   // Altars have no per-marker names — the popup titles them by number.
-  await expect(page.getByTestId('marker-popup-card')).toContainText('Altar #1')
+  await expect(page.getByTestId('marker-detail-drawer')).toContainText('Altar #1')
 
   const link = page.getByTestId('marker-warp-link')
   await expect(link).toBeVisible()
@@ -44,11 +44,11 @@ test('selected altar shows connects-to link and a dashed line to its partner', a
 
   // Following the link selects the partner altar: the popup moves there (its
   // meta coords change) and the line + link remain for the reverse direction.
-  const before = await page.getByTestId('marker-popup-card').innerText()
+  const before = await page.getByTestId('marker-detail-drawer').innerText()
   await link.click()
   await expect(page.getByTestId('marker-warp-link')).toBeVisible()
   await expect(page.locator(DASHED_LINE)).toHaveCount(1)
-  const after = await page.getByTestId('marker-popup-card').innerText()
+  const after = await page.getByTestId('marker-detail-drawer').innerText()
   expect(after).not.toBe(before)
 
   // Deselecting removes the line.

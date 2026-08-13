@@ -63,7 +63,7 @@ test('selecting a marker opens a popup naming its region', async ({ page }) => {
   // click lands on a stacked sibling — dispatch the click on the element
   // itself, as palworld's completion spec does for its boss pins.
   await page.locator('.leaflet-marker-pane .leaflet-marker-icon').first().dispatchEvent('click')
-  await expect(page.locator('.leaflet-popup')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('marker-detail-drawer')).toBeVisible({ timeout: 10_000 })
   await expect(page.getByTestId('marker-region')).toBeVisible()
 })
 
