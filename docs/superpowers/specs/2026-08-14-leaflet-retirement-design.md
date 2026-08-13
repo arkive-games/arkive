@@ -136,6 +136,44 @@ provable rather than argued.
 Tooltip chrome renders as `.gmgl-tooltip` rather than `.leaflet-tooltip`. Both are already
 styled side by side in `arkive-map-theme.css`, so the visual difference is negligible.
 
+The boss/wild pin-size divergence this design first accepted was NOT accepted in the end: it was
+cheaper to add the `pinScale` override than to lose the distinction.
+
+## What implementation added to this plan
+
+Three things this design did not anticipate, each recorded in the commit that introduced it:
+
+**Two subpath exports, because the barrel is `sideEffects`-marked.** `worldToPixel` and
+`DEFAULT_MAP_THEME` are runtime VALUES the apps read outside the lazily-loaded map route.
+Importing them from the barrel drags the whole engine into an app's entry chunk, so they moved to
+`@gamemap/map-engine-gl/coords` and `/theme`. The latter required splitting the pin colours out of
+`pinAtlas.ts` — which needs three.js for its canvas textures — into an import-free `pinTheme.ts`.
+
+**The embeds need their own lazy boundaries.** Porting them onto the GL embed put three.js back
+into the entry chunk of any app that imports its pages statically. Measured on palworld: 1.8 MB
+entry plus a 604 KB engine chunk became a 2.1 MB entry with an 8 KB chunk. Both palworld and aion2
+now route the embed through a one-line lazy shim beside the existing `GlMapView` one, which lands
+palworld's entry at 1.5 MB — 300 KB below where it started, since Leaflet is gone from it.
+
+**The embed's fit counts highlighted regions.** aion2's wiki embed marks the region a quest
+belongs to and frequently has no POI inside it, so fitting the pins alone opened on the whole
+world.
+
+## Verification
+
+`pnpm test` 1179 passing across 101 files; all six invariant checks and all six app lints green;
+`meta`, `aion2`, `palworld` and `vrising` all build, with `WebGLRenderer` absent from every app's
+entry chunk.
+
+E2e was baselined per app before any edit and diffed by test NAME afterwards, because renaming and
+de-looping specs moves line numbers. No failure in the final run is a regression from this branch:
+aion2's `map resize` failure is the de-looped rename of two that already failed, and
+`desktop is unchanged › top bar shows` plus `wiki pages get a compact header` were both shown to
+fail on `origin/master` too (the latter flakes 1-in-6 there and roughly half the time here, on a
+global-search interaction this branch does not touch). Two baseline failures went green:
+palworld's marker-density test, and vrising's subtype toggle, which had been clicking a
+`subtype-toggle-poi` id that has never existed in the shipped taxonomy.
+
 ## Version history
 
 The engine picker disappearing is user-visible, and it is one shared change affecting three
