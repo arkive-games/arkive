@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AccountDialog, ArkiveAccountControl, authStringsFor, useAuth } from '@gamemap/auth'
+import {
+  AccountDialog,
+  ArkiveAccountControl,
+  authStringsFor,
+  createLocalTokenStorage,
+  useAuth,
+} from '@gamemap/auth'
 import { createApiClient, listForumPosts, result, type PostRead } from '@gamemap/api-core'
 import {
   ArkiveMapTopBar,
@@ -24,7 +30,7 @@ import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import {
   IS_TOY,
   VISIBLE_SITES,
-  firstPlayableSite,
+  curatedFeaturedSite,
   loadSiteClickCounts,
   rankSitesByClicks,
   siteHref,
@@ -218,9 +224,7 @@ export default function App() {
   const continueSite = continueDestination
     ? VISIBLE_SITES.find((site) => site.id === continueDestination.gameId)
     : undefined
-  const featuredSite = continueSite
-    ?? rankedSites.find((site) => site.id === 'palworld')
-    ?? firstPlayableSite(rankedSites)
+  const featuredSite = continueSite ?? curatedFeaturedSite(rankedSites)
   const displayedSites = featuredSite
     ? [featuredSite, ...rankedSites.filter((site) => site.id !== featuredSite.id)]
     : rankedSites
@@ -229,7 +233,16 @@ export default function App() {
   useEffect(() => {
     if (!AUTH_CONFIG.enabled || IS_TOY) return
 
-    const api = createApiClient({ baseUrl: AUTH_CONFIG.baseUrl })
+    // The configured transport, not the "cookie" default: a bearer build sends
+    // this cross-origin, and asking for credentials there makes the browser
+    // refuse the request outright. createApiClient requires a TokenStorage for
+    // bearer, and this is the one AuthProvider builds when main.tsx passes
+    // none, so both read the same token.
+    const api = createApiClient({
+      baseUrl: AUTH_CONFIG.baseUrl,
+      transport: AUTH_CONFIG.transport,
+      storage: AUTH_CONFIG.transport === 'bearer' ? createLocalTokenStorage() : undefined,
+    })
     let active = true
     void result(listForumPosts({
       client: api.client,
@@ -595,7 +608,7 @@ function GameCard({ site, featured, onOpen }: {
   )
 
   return (
-    <article className={`${site.comingSoon ? 'game-card is-soon' : 'game-card'}${featured ? ' is-featured' : ''}`}>
+    <article className={site.comingSoon ? 'game-card is-soon' : 'game-card'}>
       {href ? (
         <a href={href} className="game-card-link group" onClick={onOpen}>{body}</a>
       ) : (
@@ -640,7 +653,12 @@ function HomeCommunity({ posts }: { posts: HomeCommunityPost[] }) {
                 <small>{site ? t(site.nameKey) : t('community.general')}</small>
                 <strong>{post.title}</strong>
                 <span>{post.author.name} · {formatPostTime(post.createdAt)}</span>
-                <i><IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />{post.commentCount}</i>
+                {/* Labelled as one node: the icon is decorative and the bare
+                    number on its own would be read out without its unit. */}
+                <i role="img" aria-label={t('community.comments', { n: post.commentCount })}>
+                  <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
+                  {post.commentCount}
+                </i>
               </span>
             </a>
           ))}

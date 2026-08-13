@@ -20,6 +20,12 @@ export interface SiteCard {
   featureKey: string
   /** Listed and searchable, but not linked and never featured. */
   comingSoon?: boolean
+  /**
+   * The curated hero pick, used when the visitor has no recent game of their
+   * own. Editorial policy, so it lives with the site list rather than as a game
+   * id spelled out in the page.
+   */
+  featured?: boolean
 }
 
 export type SiteClickCounts = Record<string, number>
@@ -50,6 +56,7 @@ export const SITES: SiteCard[] = [
       'https://palworld.tc-imba.com',
     ),
     toySlug: 'arkive-palworld',
+    featured: true,
     bg: palworldBg,
     nameKey: 'site.palworld.name',
     descKey: 'site.palworld.desc',
@@ -88,6 +95,11 @@ export function siteHref(site: SiteCard): string | undefined {
 /** The hero slot must never advertise a game nobody can open yet. */
 export function firstPlayableSite(sites: readonly SiteCard[]): SiteCard | undefined {
   return sites.find((site) => !site.comingSoon)
+}
+
+/** The curated pick, falling back to whichever playable game ranks first. */
+export function curatedFeaturedSite(sites: readonly SiteCard[]): SiteCard | undefined {
+  return sites.find((site) => site.featured && !site.comingSoon) ?? firstPlayableSite(sites)
 }
 
 /**

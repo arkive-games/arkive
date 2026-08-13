@@ -448,9 +448,8 @@ const resources = {
       explore: {
         eyebrow: '你的游戏舱',
         title: '熟悉的世界，新的进度',
-        description: '从互动地图到资料图鉴，每个游戏都有属于自己的资料入口。',
       },
-      community: { eyebrow: '玩家刚刚带回', title: '这些发现值得上船', action: '去论坛看看', general: '藏舟社区' },
+      community: { eyebrow: '玩家刚刚带回', title: '这些发现值得上船', action: '去论坛看看', general: '藏舟社区', comments: '{{n}} 条评论' },
       site: {
         aion2: {
           name: '永恒之塔 2',
@@ -474,15 +473,8 @@ const resources = {
         },
       },
       comingSoon: {
-        kicker: '下一站正在整理',
         title: '更多游戏正在制作中',
-        description: '新的地图与资料库正在陆续入馆。先把这片空位留给下一次启航。',
         badge: '即将上线',
-      },
-      cta: {
-        title: '把这次发现收进你的舟舱',
-        description: '登录后可使用收藏、个人资料与社区功能。',
-        action: '免费登录 / 注册',
       },
       footer: {
         browse: '浏览',
@@ -618,9 +610,8 @@ const resources = {
       explore: {
         eyebrow: '你的遊戲艙',
         title: '熟悉的世界，新的進度',
-        description: '從互動地圖到資料圖鑑，每個遊戲都有屬於自己的資料入口。',
       },
-      community: { eyebrow: '玩家剛剛帶回', title: '這些發現值得上船', action: '去論壇看看', general: '藏舟社群' },
+      community: { eyebrow: '玩家剛剛帶回', title: '這些發現值得上船', action: '去論壇看看', general: '藏舟社群', comments: '{{n}} 則留言' },
       site: {
         aion2: { name: '永恆之塔 2', desc: '互動地圖與遊戲資料庫', feature: '從地圖出發，找到每一個重要座標。' },
         palworld: { name: '幻獸帕魯', desc: '地圖、帕魯圖鑑與配種路線', feature: '從探索到配種，認識每一隻帕魯。' },
@@ -628,15 +619,8 @@ const resources = {
         sts2: { name: '殺戮尖塔2', desc: '卡牌圖鑑、角色資料與構築知識', feature: '查看卡牌與角色，整理下一次登塔思路。' },
       },
       comingSoon: {
-        kicker: '下一站正在整理',
         title: '更多遊戲正在製作中',
-        description: '新的地圖與資料庫正在陸續入館。先把這片空位留給下一次啟航。',
         badge: '即將上線',
-      },
-      cta: {
-        title: '把這次發現收進你的舟艙',
-        description: '登入後可使用收藏、個人資料與社群功能。',
-        action: '免費登入 / 註冊',
       },
       footer: {
         browse: '瀏覽', about: '關於', help: '幫助', allGames: '全部遊戲', community: '藏舟社群', toolsAndMods: '工具與模組',
@@ -663,7 +647,10 @@ const resources = {
         eyebrow: 'Welcome to Arkive',
         lead: 'Today, which',
         highlight: 'game world',
-        tail: 'will you sail into?',
+        // The heading renders `highlight` and `tail` as adjacent nodes, so the
+        // separator between them belongs to the language. CJK and Korean join
+        // without one; English needs the leading space.
+        tail: ' will you sail into?',
         description: 'Find quests, maps, and every discovery worth keeping. Explore the worlds you love at your own pace.',
         recommendation: 'Recommended',
         continue: 'Continue exploring',
@@ -755,9 +742,8 @@ const resources = {
       explore: {
         eyebrow: 'Your game cabin',
         title: 'Familiar worlds, new progress',
-        description: 'From interactive maps to connected databases, each game has its own place in the archive.',
       },
-      community: { eyebrow: 'Just brought back by players', title: 'Discoveries worth keeping', action: 'Visit the forum', general: 'Arkive community' },
+      community: { eyebrow: 'Just brought back by players', title: 'Discoveries worth keeping', action: 'Visit the forum', general: 'Arkive community', comments: '{{n}} comments' },
       site: {
         aion2: { name: 'AION2', desc: 'Interactive map and game database', feature: 'Start with the map and find every important coordinate.' },
         palworld: { name: 'Palworld', desc: 'Map, Paldeck, and breeding routes', feature: 'Explore, breed, and get to know every Pal.' },
@@ -765,15 +751,8 @@ const resources = {
         sts2: { name: 'Slay the Spire 2', desc: 'Card library, characters, and deckbuilding knowledge', feature: 'Study cards and characters before your next climb.' },
       },
       comingSoon: {
-        kicker: 'The next stop is being catalogued',
         title: 'More games are on the way',
-        description: 'New maps and databases are joining the archive. This space is saved for your next voyage.',
         badge: 'Coming soon',
-      },
-      cta: {
-        title: 'Keep this discovery in your cabin',
-        description: 'Log in to use favorites, your profile, and community features.',
-        action: 'Log in / Sign up',
       },
       footer: {
         browse: 'Browse', about: 'About', help: 'Help', allGames: 'All games', community: 'Arkive community', toolsAndMods: 'Tools and mods',
@@ -877,16 +856,15 @@ const resources = {
         kinds: { feature: '新機能', improvement: '改善', fix: '修正', data: 'データ' },
       },
       action: { openGame: '{{game}}へ', favorite: '{{game}}を保存', browseAll: 'すべてのゲームを見る' },
-      explore: { eyebrow: 'あなたのゲームキャビン', title: 'おなじみの世界、新しい進捗', description: 'インタラクティブマップから資料図鑑まで、ゲームごとの入口を用意しています。' },
-      community: { eyebrow: 'プレイヤーから届いた発見', title: '残しておきたい発見', action: 'フォーラムを見る', general: 'Arkiveコミュニティ' },
+      explore: { eyebrow: 'あなたのゲームキャビン', title: 'おなじみの世界、新しい進捗' },
+      community: { eyebrow: 'プレイヤーから届いた発見', title: '残しておきたい発見', action: 'フォーラムを見る', general: 'Arkiveコミュニティ', comments: 'コメント {{n}} 件' },
       site: {
         aion2: { name: 'アイオン2', desc: 'インタラクティブマップとゲームデータベース', feature: 'マップから始めて、大切な座標を見つけましょう。' },
         palworld: { name: 'Palworld', desc: 'マップ、パル図鑑、配合ルート', feature: '探索と配合を通して、すべてのパルを知りましょう。' },
         vrising: { name: 'V Rising', desc: 'ヴァルドランのインタラクティブマップと地域情報', feature: '地域、資源、探索ルートを確認できます。' },
         sts2: { name: 'Slay the Spire 2', desc: 'カード図鑑、キャラクター、デッキ構築情報', feature: '次の登頂に向けてカードとキャラクターを確認できます。' },
       },
-      comingSoon: { kicker: '次の寄港地を整理中', title: 'さらに多くのゲームを制作中', description: '新しいマップとデータベースを順次追加しています。次の航海をお楽しみに。', badge: '近日公開' },
-      cta: { title: 'この発見を舟の中へ', description: 'ログインすると、お気に入り、プロフィール、コミュニティ機能を利用できます。', action: 'ログイン / 登録' },
+      comingSoon: { title: 'さらに多くのゲームを制作中', badge: '近日公開' },
       footer: {
         browse: '見る', about: '藏舟について', help: 'ヘルプ', allGames: 'すべてのゲーム', community: '藏舟コミュニティ', toolsAndMods: 'ツールとMOD',
         aboutArkive: '藏舟について', contact: 'お問い合わせ', updateHistory: '更新履歴', language: '言語切替', theme: 'テーマ切替', clearCache: 'キャッシュを消去',
@@ -989,16 +967,15 @@ const resources = {
         kinds: { feature: '새 기능', improvement: '개선', fix: '수정', data: '데이터' },
       },
       action: { openGame: '{{game}} 열기', favorite: '{{game}} 저장', browseAll: '전체 게임 보기' },
-      explore: { eyebrow: '나의 게임 선실', title: '익숙한 세계, 새로운 진척', description: '인터랙티브 지도부터 게임 데이터베이스까지, 게임마다 전용 입구가 있습니다.' },
-      community: { eyebrow: '플레이어가 방금 가져온 발견', title: '간직할 만한 발견', action: '포럼 둘러보기', general: 'Arkive 커뮤니티' },
+      explore: { eyebrow: '나의 게임 선실', title: '익숙한 세계, 새로운 진척' },
+      community: { eyebrow: '플레이어가 방금 가져온 발견', title: '간직할 만한 발견', action: '포럼 둘러보기', general: 'Arkive 커뮤니티', comments: '댓글 {{n}}개' },
       site: {
         aion2: { name: '아이온2', desc: '인터랙티브 지도와 게임 데이터베이스', feature: '지도에서 시작해 중요한 좌표를 모두 찾아보세요.' },
         palworld: { name: 'Palworld', desc: '지도, 팰 도감, 교배 경로', feature: '탐험과 교배를 통해 모든 팰을 알아보세요.' },
         vrising: { name: 'V Rising', desc: '바르도란 인터랙티브 지도와 지역 정보', feature: '바르도란의 지역과 자원, 탐험 경로를 확인하세요.' },
         sts2: { name: 'Slay the Spire 2', desc: '카드 도감, 캐릭터, 덱 구성 정보', feature: '다음 등반을 위해 카드와 캐릭터를 살펴보세요.' },
       },
-      comingSoon: { kicker: '다음 기착지를 정리 중', title: '더 많은 게임을 제작하고 있어요', description: '새로운 지도와 데이터베이스가 차례로 들어옵니다. 다음 항해를 기대해 주세요.', badge: '출시 예정' },
-      cta: { title: '이번 발견을 배 안에 보관하세요', description: '로그인하면 즐겨찾기, 프로필, 커뮤니티 기능을 이용할 수 있습니다.', action: '로그인 / 가입' },
+      comingSoon: { title: '더 많은 게임을 제작하고 있어요', badge: '출시 예정' },
       footer: {
         browse: '둘러보기', about: '소개', help: '도움말', allGames: '전체 게임', community: 'Arkive 커뮤니티', toolsAndMods: '도구와 모드',
         aboutArkive: 'Arkive 소개', contact: '문의하기', updateHistory: '업데이트 기록', language: '언어 전환', theme: '테마 전환', clearCache: '캐시 지우기',

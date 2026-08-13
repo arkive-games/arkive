@@ -134,7 +134,7 @@ body:has(.arkive-home-view) {
   min-height: 24rem;
   overflow: hidden;
   border: 0;
-  border-radius: 1rem;
+  border-radius: var(--arkive-radius-standard);
   color: white;
   background: var(--card);
   box-shadow: none;
@@ -230,6 +230,7 @@ body:has(.arkive-home-view) {
   border-radius: 0;
   color: inherit;
   background: transparent;
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .featured-game:hover .featured-link i {
@@ -292,9 +293,15 @@ body:has(.arkive-home-view) {
   transform: translateX(0.2rem);
 }
 
+/* One wide leading track, then one equal track per remaining card. Counting the
+   cards with `grid-auto-columns` rather than a fixed `repeat(3, ...)` keeps a
+   Toy build honest: there `VISIBLE_SITES` is only the two sites with a slug,
+   and a fixed four-track shelf would render two cards beside two empty tracks. */
 .game-shelf {
   display: grid;
-  grid-template-columns: 1.35fr repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1.35fr;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 0.75rem;
 }
 
@@ -365,7 +372,9 @@ body:has(.arkive-home-view) {
   bottom: 1rem;
   left: 1rem;
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
+  gap: 0.35rem;
   padding: 0;
 }
 
@@ -387,7 +396,11 @@ body:has(.arkive-home-view) {
   line-height: var(--arkive-leading-title);
 }
 
+/* `align-self` against the parent's `flex-start`: left to size itself, a nowrap
+   line grows past the cover and is clipped mid-word instead of ellipsised,
+   because `text-overflow` needs a box narrower than its content to act on. */
 .game-card-copy > span {
+  align-self: stretch;
   margin-top: 0.15rem;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.76);
@@ -498,6 +511,7 @@ body:has(.arkive-home-view) {
   }
 
   .game-shelf {
+    grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -569,7 +583,6 @@ body:has(.arkive-home-view) {
   .featured-game,
   .featured-empty {
     min-height: 13.5rem;
-    border-radius: 1rem;
   }
 
   .featured-label {
