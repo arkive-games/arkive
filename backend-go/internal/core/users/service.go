@@ -404,34 +404,46 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, in UpdateInput, priv
 	return toUserRead(u, s.avatarResolver()), nil
 }
 
-// Delete removes an account, and with it whatever it uploaded.
+// Deactivate stops an account being usable without destroying it.
 //
-// The uid is read before the row goes away, because it is what names the storage
-// prefix. Objects are removed after the row, so a storage failure cannot leave an
-// account that exists with its pictures gone; the reverse could.
-func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
-	var uid int64
-	if current, err := s.q.GetUserByID(ctx, id); err == nil {
-		uid = current.UID
-	} else if !errors.Is(err, pgx.ErrNoRows) {
-		return fmt.Errorf("load user: %w", err)
-	}
+// There is deliberately no delete: an account is the author of its comments,
+// contributions and marker credit, and removing the row would either cascade
+// that work away or orphan it. Deactivation keeps the attribution intact and is
+// reversible, which deletion never is. It also preserves the unique name and
+// email, so a deactivated identity cannot be silently re-registered by someone
+// else.
+//
+// Uploaded avatars are kept for the same reason. Nothing is destroyed here.
+func (s *Service) Deactivate(ctx context.Context, id uuid.UUID) (UserRead, error) {
+	return s.setActive(ctx, id, false)
+}
 
-	rows, err := s.q.DeleteUser(ctx, id)
-	if err != nil {
-		return fmt.Errorf("delete user: %w", err)
-	}
-	if rows == 0 {
-		return apierr.New(apierr.UserNotFound, "no such user")
-	}
+// Reactivate restores a deactivated account. It can do so precisely because
+// deactivation destroyed nothing.
+func (s *Service) Reactivate(ctx context.Context, id uuid.UUID) (UserRead, error) {
+	return s.setActive(ctx, id, true)
+}
 
-	if uid != 0 {
-		if err := uploads.RemoveAllUploads(ctx, s.blobs, uid); err != nil {
-			s.logger.WarnContext(ctx, "could not remove a deleted account's avatars",
-				slog.String("user_id", id.String()), slog.Any("error", err))
+func (s *Service) setActive(ctx context.Context, id uuid.UUID, active bool) (UserRead, error) {
+	if _, err := s.q.GetUserByID(ctx, id); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
 		}
+		return UserRead{}, fmt.Errorf("load user: %w", err)
 	}
-	return nil
+
+	u, err := s.q.UpdateUser(ctx, coredb.UpdateUserParams{ID: id, IsActive: &active})
+	if err != nil {
+		return UserRead{}, fmt.Errorf("set account active=%t: %w", active, err)
+	}
+
+	// Sessions are bound to the password hash, which deactivation does not
+	// change, so an already-signed-in user keeps a valid token. Authenticate
+	// refuses an inactive account, and RequireUser rejects one on every
+	// request, so the session stops being useful at the next call either way.
+	s.logger.InfoContext(ctx, "account activation changed",
+		slog.String("user_id", id.String()), slog.Bool("is_active", active))
+	return toUserRead(u, s.avatarResolver()), nil
 }
 
 // Search lists accounts matching an optional name or email fragment.

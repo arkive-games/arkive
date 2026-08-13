@@ -39,8 +39,11 @@ UPDATE core.users SET
 WHERE id = sqlc.arg('id')
 RETURNING *;
 
--- name: DeleteUser :execrows
-DELETE FROM core.users WHERE id = $1;
+-- Accounts are never deleted, only deactivated: the row is the author of its
+-- comments and contributions, so removing it would cascade that work away or
+-- orphan it. Deactivation goes through UpdateUser's is_active flag. No delete
+-- query exists here on purpose — the capability is absent rather than merely
+-- unused.
 
 -- Search preserves the Python endpoint's OR semantics: with both filters set a
 -- user matching either one is returned, and with neither set every user is.

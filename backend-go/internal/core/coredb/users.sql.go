@@ -76,18 +76,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CoreUse
 	return i, err
 }
 
-const deleteUser = `-- name: DeleteUser :execrows
-DELETE FROM core.users WHERE id = $1
-`
-
-func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) (int64, error) {
-	result, err := q.db.Exec(ctx, deleteUser, id)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
-}
-
 const getUserByAnyUID = `-- name: GetUserByAnyUID :one
 SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users WHERE uid = $1 OR special_uid = $1
 `
@@ -191,6 +179,7 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (CoreUser, err
 }
 
 const searchUsers = `-- name: SearchUsers :many
+
 SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users
 WHERE (
         ($1::text IS NULL AND $2::text IS NULL)
@@ -208,6 +197,11 @@ type SearchUsersParams struct {
 	ResultLimit  int32
 }
 
+// Accounts are never deleted, only deactivated: the row is the author of its
+// comments and contributions, so removing it would cascade that work away or
+// orphan it. Deactivation goes through UpdateUser's is_active flag. No delete
+// query exists here on purpose — the capability is absent rather than merely
+// unused.
 // Search preserves the Python endpoint's OR semantics: with both filters set a
 // user matching either one is returned, and with neither set every user is.
 func (q *Queries) SearchUsers(ctx context.Context, arg SearchUsersParams) ([]CoreUser, error) {

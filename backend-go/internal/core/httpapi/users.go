@@ -12,6 +12,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
 
 // UpdateUserBody is a partial account edit.
@@ -231,21 +232,51 @@ func (h *Handlers) RegisterUserRoutes(a huma.API) {
 	})
 
 	huma.Register(a, huma.Operation{
-		OperationID: "deleteUser",
-		Method:      http.MethodDelete,
-		Path:        "/users/{id}",
-		Summary:     "Delete an account",
-		Description: "Administrators only.",
-		Tags:        []string{"users"},
-		Errors:      []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
-	}, func(ctx context.Context, in *userIDInput) (*api.Response[api.Empty], error) {
+		OperationID: "deactivateUser",
+		Method:      http.MethodPost,
+		Path:        "/users/{id}/deactivate",
+		Summary:     "Deactivate an account",
+		Description: "Administrators only. The account stops being able to sign in, but the " +
+			"row is kept so that everything attributed to it — comments, contributions, " +
+			"marker credit — keeps its author. There is deliberately no endpoint that " +
+			"deletes an account.",
+		Tags:   []string{"users"},
+		Errors: []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
+	}, func(ctx context.Context, in *userIDInput) (*api.Response[users.UserRead], error) {
+		admin, err := auth.RequireSuperuser(ctx)
+		if err != nil {
+			return nil, err
+		}
+		// An administrator deactivating themselves would lock the role out of the
+		// site if they were the only one, with no way back through the API.
+		if admin.ID == in.ID {
+			return nil, apierr.New(apierr.Forbidden, "you cannot deactivate your own account")
+		}
+		user, err := h.users.Deactivate(ctx, in.ID)
+		if err != nil {
+			return nil, err
+		}
+		return api.OK(user), nil
+	})
+
+	huma.Register(a, huma.Operation{
+		OperationID: "reactivateUser",
+		Method:      http.MethodPost,
+		Path:        "/users/{id}/reactivate",
+		Summary:     "Restore a deactivated account",
+		Description: "Administrators only. Deactivation is reversible precisely because " +
+			"nothing was destroyed.",
+		Tags:   []string{"users"},
+		Errors: []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
+	}, func(ctx context.Context, in *userIDInput) (*api.Response[users.UserRead], error) {
 		if _, err := auth.RequireSuperuser(ctx); err != nil {
 			return nil, err
 		}
-		if err := h.users.Delete(ctx, in.ID); err != nil {
+		user, err := h.users.Reactivate(ctx, in.ID)
+		if err != nil {
 			return nil, err
 		}
-		return api.OKEmpty(), nil
+		return api.OK(user), nil
 	})
 }
 

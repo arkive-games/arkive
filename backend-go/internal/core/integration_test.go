@@ -785,12 +785,84 @@ func TestAdministratorCanSearchGetUpdateAndDelete(t *testing.T) {
 		t.Error("an administrator should be able to set isVerified")
 	}
 
-	del := h.do(http.MethodDelete, "/users/"+victimID, nil, withBearer(adminToken))
-	if del.status != http.StatusOK {
-		t.Fatalf("delete = %d: %s", del.status, del.body)
+	// Deactivation, not deletion: the row survives so its comments and
+	// contributions keep an author.
+	off := h.do(http.MethodPost, "/users/"+victimID+"/deactivate", nil, withBearer(adminToken))
+	if off.status != http.StatusOK {
+		t.Fatalf("deactivate = %d: %s", off.status, off.body)
 	}
-	if again := h.do(http.MethodGet, "/users/"+victimID, nil, withBearer(adminToken)); again.status != http.StatusNotFound {
-		t.Errorf("get after delete = %d, want 404", again.status)
+	if off.data(t)["isActive"] != false {
+		t.Error("the account should be inactive after deactivation")
+	}
+
+	still := h.do(http.MethodGet, "/users/"+victimID, nil, withBearer(adminToken))
+	if still.status != http.StatusOK {
+		t.Fatalf("a deactivated account must still exist, got %d", still.status)
+	}
+
+	on := h.do(http.MethodPost, "/users/"+victimID+"/reactivate", nil, withBearer(adminToken))
+	if on.status != http.StatusOK {
+		t.Fatalf("reactivate = %d: %s", on.status, on.body)
+	}
+	if on.data(t)["isActive"] != true {
+		t.Error("reactivation should restore the account")
+	}
+}
+
+// Accounts are never destroyed, so the endpoint that would do it must not exist.
+// Asserted rather than assumed: a future refactor could reintroduce it without
+// anyone noticing.
+func TestThereIsNoDeleteAccountEndpoint(t *testing.T) {
+	h := newHarness(t)
+	adminToken := h.registerAndLogin("admin", "admin@example.com", "hunter2hunter2")
+	if res := h.do(http.MethodPost, "/users/become-superuser", nil, withBearer(adminToken)); res.status != http.StatusOK {
+		t.Fatalf("promote = %d: %s", res.status, res.body)
+	}
+	victimToken := h.registerAndLogin("victim", "victim@example.com", "hunter2hunter2")
+	victimID, _ := h.do(http.MethodGet, "/users/me", nil, withBearer(victimToken)).data(t)["id"].(string)
+
+	res := h.do(http.MethodDelete, "/users/"+victimID, nil, withBearer(adminToken))
+	if res.status != http.StatusMethodNotAllowed && res.status != http.StatusNotFound {
+		t.Fatalf("DELETE /users/{id} should not be routed, got %d: %s", res.status, res.body)
+	}
+}
+
+// A deactivated account must not be able to sign in, or deactivation would be
+// cosmetic.
+func TestDeactivatedAccountCannotSignIn(t *testing.T) {
+	h := newHarness(t)
+	adminToken := h.registerAndLogin("admin", "admin@example.com", "hunter2hunter2")
+	if res := h.do(http.MethodPost, "/users/become-superuser", nil, withBearer(adminToken)); res.status != http.StatusOK {
+		t.Fatalf("promote = %d: %s", res.status, res.body)
+	}
+	victimToken := h.registerAndLogin("victim", "victim@example.com", "hunter2hunter2")
+	victimID, _ := h.do(http.MethodGet, "/users/me", nil, withBearer(victimToken)).data(t)["id"].(string)
+
+	if res := h.do(http.MethodPost, "/users/"+victimID+"/deactivate", nil, withBearer(adminToken)); res.status != http.StatusOK {
+		t.Fatalf("deactivate = %d: %s", res.status, res.body)
+	}
+
+	login := h.do(http.MethodPost, "/auth/jwt/login", map[string]string{
+		"email": "victim@example.com", "password": "hunter2hunter2",
+	})
+	if login.status != http.StatusUnauthorized {
+		t.Fatalf("a deactivated account signed in (%d): %s", login.status, login.body)
+	}
+}
+
+// An administrator deactivating themselves could lock the role out of the site
+// entirely, with no way back through the API.
+func TestAdministratorCannotDeactivateThemselves(t *testing.T) {
+	h := newHarness(t)
+	adminToken := h.registerAndLogin("admin", "admin@example.com", "hunter2hunter2")
+	if res := h.do(http.MethodPost, "/users/become-superuser", nil, withBearer(adminToken)); res.status != http.StatusOK {
+		t.Fatalf("promote = %d: %s", res.status, res.body)
+	}
+	adminID, _ := h.do(http.MethodGet, "/users/me", nil, withBearer(adminToken)).data(t)["id"].(string)
+
+	res := h.do(http.MethodPost, "/users/"+adminID+"/deactivate", nil, withBearer(adminToken))
+	if res.status != http.StatusForbidden {
+		t.Fatalf("self-deactivation should be refused, got %d: %s", res.status, res.body)
 	}
 }
 
