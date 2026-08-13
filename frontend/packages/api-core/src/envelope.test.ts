@@ -67,6 +67,18 @@ describe("unwrapping", () => {
     expect(() => unwrap(body, 200, "OK")).toThrow(ApiError)
   })
 
+  // axios represents an absent body as the empty string. Reported as undefined,
+  // which the generated client then turns into `{}` -- the shape a caller of an
+  // empty operation expects.
+  it("reads an absent body as absent rather than as text", () => {
+    expect(unwrap("", 204, "No Content")).toBeUndefined()
+    expect(unwrap("", 200, "OK")).toBeUndefined()
+  })
+
+  it("throws for text on a successful status, which is a proxy page", () => {
+    expect(() => unwrap("<html>hello</html>", 200, "OK")).toThrow(/unexpected response/)
+  })
+
   it("throws for an unwrapped error body, which carries no code", () => {
     try {
       unwrap("<html>502 Bad Gateway</html>", 502, "Bad Gateway")

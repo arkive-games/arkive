@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance, type AxiosResponse } from "axios"
+import axios, { type AxiosAdapter, type AxiosInstance, type AxiosResponse } from "axios"
 
 import { type Client, createClient } from "./generated/client"
 import { ApiError, normaliseCode, unwrap } from "./envelope"
@@ -24,8 +24,20 @@ export interface ApiClientOptions {
   baseUrl: string
   transport?: Transport
   storage?: TokenStorage
-  /** Overrides the axios instance. Tests supply one with a stub adapter. */
-  axiosInstance?: AxiosInstance
+  /**
+   * Answers requests instead of the network. Tests supply one; production does
+   * not.
+   *
+   * An adapter rather than a whole axios instance, deliberately. Interceptors
+   * belong to an instance, not to the client that installed them, and they are
+   * never scoped or ejected — so two clients sharing one instance would run each
+   * other's interceptors. Since request interceptors run in reverse registration
+   * order, a cookie client built after a bearer client would find its
+   * `withCredentials` overwritten by the bearer client's, and would stop sending
+   * the session cookie. Owning the instance makes that unrepresentable rather
+   * than merely documented.
+   */
+  adapter?: AxiosAdapter
 }
 
 /**
@@ -61,24 +73,24 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     throw new Error("createApiClient: the bearer transport requires a TokenStorage")
   }
 
-  const instance = options.axiosInstance ?? axios.create({ baseURL: options.baseUrl })
+  const instance = axios.create({ baseURL: options.baseUrl, adapter: options.adapter })
 
   instance.interceptors.request.use((config) => {
-    // Set here rather than at construction so it holds for an injected instance
-    // too. Putting it in `axios.create` meant a caller who supplied their own
-    // instance got no credentials at all, and the symptom of that is not an
-    // error: cookie auth simply behaves as though nobody is signed in.
-    //
-    // True for the cookie transport only. Asking for credentials on a
-    // cross-origin Toy request makes the browser refuse it outright, turning a
-    // working bearer call into a CORS failure.
+    // Decided per request rather than at construction, so it cannot be left
+    // behind by a config path that skipped it. True for the cookie transport
+    // only: asking for credentials on a cross-origin Toy request makes the
+    // browser refuse it outright, turning a working bearer call into a CORS
+    // failure.
     config.withCredentials = transport === "cookie"
 
-    if (transport === "bearer") {
-      const token = options.storage?.read()
-      if (token) {
-        config.headers.set("Authorization", `Bearer ${token}`)
-      }
+    // Set or removed, never merely left. A retried request carries the config it
+    // already had, so a bearer request retried after sign-out would otherwise
+    // resend the token that has just been discarded.
+    const token = transport === "bearer" ? options.storage?.read() : null
+    if (token) {
+      config.headers.set("Authorization", `Bearer ${token}`)
+    } else {
+      config.headers.delete("Authorization")
     }
     return config
   })
@@ -88,6 +100,12 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       // Replacing response.data with the payload is what lets a caller receive a
       // User rather than a wrapper around one. unwrap also throws for a 200 whose
       // envelope reports a failure.
+      //
+      // Note the ordering if a `responseValidator` or `responseTransformer` is
+      // ever configured on the generated client: axios runs this interceptor
+      // first, so those hooks would see the unwrapped payload while the generated
+      // schema they were built for describes the envelope. Unwrap inside the hook
+      // instead of here if that day comes.
       response.data = unwrap(response.data, response.status, response.statusText)
       return response
     },
@@ -103,6 +121,11 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           normaliseCode(body?.errorCode, error.response.status),
           body?.errorMessage || error.message,
           error.response.status,
+          // Carried so that a caller who omitted `throwOnError: true` still gets
+          // the backend's body: in that mode the generated client returns the
+          // rejection after setting `error = e.response?.data ?? {}`, which
+          // without this would always be an empty object.
+          error.response,
         )
       }
       // No response at all: offline, DNS, TLS, an aborted request, or a refused

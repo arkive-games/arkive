@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios"
+import { AxiosError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from "axios"
 import { describe, expect, it } from "vitest"
 
 import { CoreClient, normaliseCode } from "./client"
@@ -28,61 +28,61 @@ interface Call {
 }
 
 /**
- * Records requests and replays canned responses.
+ * Records requests and replays canned responses, one per call in order.
  *
  * An axios adapter rather than a `fetch` stub: the client now reaches the network
  * through the generated client's axios instance, so this is the seam that exists.
  */
-function fakeTransport(responses: Array<{ status?: number; body: unknown; text?: boolean }>) {
+function fakeTransport(responses: Array<{ status?: number; body: unknown }>) {
   const calls: Call[] = []
   const queue = [...responses]
 
-  const instance = axios.create({
-    adapter: async (config: InternalAxiosRequestConfig) => {
-      calls.push({
-        url: config.url ?? "",
-        method: config.method,
-        headers: { ...config.headers },
-        withCredentials: config.withCredentials,
-        body: config.data,
-      })
+  const adapter: AxiosAdapter = async (config: InternalAxiosRequestConfig) => {
+    calls.push({
+      url: config.url ?? "",
+      method: config.method,
+      headers: { ...config.headers },
+      withCredentials: config.withCredentials,
+      body: config.data,
+    })
 
-      const next = queue.shift() ?? { status: 500, body: {} }
-      const status = next.status ?? 200
-      const response: AxiosResponse = {
-        data: next.body,
-        status,
-        statusText: status === 200 ? "OK" : "Error",
-        headers: {},
+    const next = queue.shift() ?? { status: 500, body: {} }
+    const status = next.status ?? 200
+    const response: AxiosResponse = {
+      data: next.body,
+      status,
+      statusText: status === 200 ? "OK" : "Error",
+      headers: {},
+      config,
+    }
+    if (status >= 400) {
+      throw new AxiosError(
+        `Request failed with status code ${status}`,
+        "ERR_BAD_REQUEST",
         config,
-      }
-      if (status >= 400) {
-        throw new AxiosError(
-          `Request failed with status code ${status}`,
-          "ERR_BAD_REQUEST",
-          config,
-          {},
-          response,
-        )
-      }
-      return response
-    },
-  })
+        {},
+        response,
+      )
+    }
+    return response
+  }
 
-  return { instance, calls }
+  return { adapter, calls }
 }
 
 function ok<T>(data: T) {
   return { body: { errorCode: "Success", errorMessage: "", showType: 0, data } }
 }
 
+const TOKEN = { accessToken: "tok-123", tokenType: "bearer", expiresAt: "2026-09-01T00:00:00Z" }
+
 describe("transport", () => {
   it("sends credentials and no Authorization header on the cookie transport", async () => {
-    const { instance, calls } = fakeTransport([ok(USER)])
+    const { adapter, calls } = fakeTransport([ok(USER)])
     const client = new CoreClient({
       baseUrl: "https://api.example.com/api/v1/core",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter,
     })
 
     await client.login("alice@example.com", "hunter2hunter2")
@@ -96,15 +96,12 @@ describe("transport", () => {
 
   it("sends Authorization and omits credentials on the bearer transport", async () => {
     const storage = createMemoryTokenStorage()
-    const { instance, calls } = fakeTransport([
-      { body: { accessToken: "tok-123", tokenType: "bearer", expiresAt: "2026-09-01T00:00:00Z" } },
-      ok(USER),
-    ])
+    const { adapter, calls } = fakeTransport([{ body: TOKEN }, ok(USER)])
     const client = new CoreClient({
       baseUrl: "https://api.example.com/api/v1/core",
       transport: "bearer",
       storage,
-      axiosInstance: instance,
+      adapter,
     })
 
     const user = await client.login("alice@example.com", "hunter2hunter2")
@@ -128,35 +125,58 @@ describe("transport", () => {
   it("discards the stored token even when logout fails on the server", async () => {
     const storage = createMemoryTokenStorage()
     storage.write("tok-123")
-    const { instance } = fakeTransport([
-      { status: 500, body: { errorCode: "InternalServerError", errorMessage: "", showType: 2, data: null } },
+    const { adapter } = fakeTransport([
+      {
+        status: 500,
+        body: { errorCode: "InternalServerError", errorMessage: "", showType: 2, data: null },
+      },
     ])
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "bearer",
       storage,
-      axiosInstance: instance,
+      adapter,
     })
 
     await expect(client.logout()).rejects.toBeInstanceOf(AuthError)
     // Keeping a token after the user asked to sign out is the worse failure.
     expect(storage.read()).toBeNull()
   })
+
+  it("stores no token when the account cannot be read after signing in", async () => {
+    const storage = createMemoryTokenStorage()
+    // The token endpoint succeeds; the /users/me call behind it does not.
+    const { adapter } = fakeTransport([{ body: TOKEN }, { status: 503, body: {} }])
+    const client = new CoreClient({
+      baseUrl: "https://api.example.com",
+      transport: "bearer",
+      storage,
+      adapter,
+    })
+
+    await expect(client.login("alice@example.com", "hunter2hunter2")).rejects.toBeInstanceOf(
+      AuthError,
+    )
+    // Otherwise login() reports failure while the stored token quietly
+    // authenticates every request after it: signed in, having just been told
+    // they are not.
+    expect(storage.read()).toBeNull()
+  })
 })
 
 describe("envelope handling", () => {
   it("unwraps the data field", async () => {
-    const { instance } = fakeTransport([ok(USER)])
+    const { adapter } = fakeTransport([ok(USER)])
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter,
     })
     await expect(client.getCurrentUser()).resolves.toMatchObject({ name: "alice" })
   })
 
   it("turns an error envelope into an AuthError carrying the server's code", async () => {
-    const { instance } = fakeTransport([
+    const { adapter } = fakeTransport([
       {
         status: 401,
         body: {
@@ -170,7 +190,7 @@ describe("envelope handling", () => {
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter,
     })
 
     await expect(client.login("a@b.com", "wrong")).rejects.toMatchObject({
@@ -181,7 +201,7 @@ describe("envelope handling", () => {
   })
 
   it("reports an anonymous visitor as null rather than an error", async () => {
-    const { instance } = fakeTransport([
+    const { adapter } = fakeTransport([
       {
         status: 401,
         body: { errorCode: "UnauthorizedError", errorMessage: "", showType: 2, data: null },
@@ -190,7 +210,7 @@ describe("envelope handling", () => {
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter,
     })
     // Session restore runs through this on every page load; being signed out is
     // the expected case, not a failure to surface.
@@ -198,22 +218,22 @@ describe("envelope handling", () => {
   })
 
   it("does not mistake a proxy error page for an API response", async () => {
-    const { instance } = fakeTransport([{ status: 502, body: "<html>502 Bad Gateway</html>" }])
+    const { adapter } = fakeTransport([{ status: 502, body: "<html>502 Bad Gateway</html>" }])
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter,
     })
 
     await expect(client.getCurrentUser()).rejects.toMatchObject({ status: 502 })
   })
 
   it("does not mistake a proxy page that answered 200 for a user", async () => {
-    const { instance } = fakeTransport([{ status: 200, body: "<html>hello</html>" }])
+    const { adapter } = fakeTransport([{ status: 200, body: "<html>hello</html>" }])
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter,
     })
 
     // An edge cache can serve a 200 that never reached the API. Passing it
@@ -222,26 +242,23 @@ describe("envelope handling", () => {
   })
 
   it("distinguishes an unreachable server from a rejected request", async () => {
-    const instance = axios.create({
-      adapter: async () => {
-        throw new AxiosError("Network Error", "ERR_NETWORK")
-      },
-    })
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter: async () => {
+        throw new AxiosError("Network Error", "ERR_NETWORK")
+      },
     })
 
     await expect(client.getCurrentUser()).rejects.toMatchObject({ code: "NetworkError" })
   })
 
   it("passes the altcha solution as a query parameter, escaped", async () => {
-    const { instance, calls } = fakeTransport([ok(USER)])
+    const { adapter, calls } = fakeTransport([ok(USER)])
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter,
     })
 
     await client.register({
@@ -256,11 +273,11 @@ describe("envelope handling", () => {
   })
 
   it("sends the registration fields as a JSON body", async () => {
-    const { instance, calls } = fakeTransport([ok(USER)])
+    const { adapter, calls } = fakeTransport([ok(USER)])
     const client = new CoreClient({
       baseUrl: "https://api.example.com",
       transport: "cookie",
-      axiosInstance: instance,
+      adapter,
     })
 
     await client.register({

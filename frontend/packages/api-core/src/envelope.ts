@@ -30,12 +30,23 @@ export const SUCCESS_CODE = "Success"
 export class ApiError extends Error {
   readonly code: string
   readonly status: number
+  /**
+   * The response this came from, when there was one.
+   *
+   * Deliberately typed as loosely as it is used rather than as an
+   * `AxiosResponse`, so this module stays free of a transport dependency. It
+   * exists because the generated client reads `error.response?.data` when a call
+   * was made without `throwOnError: true`; without it, that mode reports an empty
+   * object instead of the backend's error body.
+   */
+  readonly response?: { data?: unknown }
 
-  constructor(code: string, message: string, status: number) {
+  constructor(code: string, message: string, status: number, response?: { data?: unknown }) {
     super(message)
     this.name = "ApiError"
     this.code = code
     this.status = status
+    this.response = response
   }
 }
 
@@ -101,11 +112,19 @@ export function unwrap<T>(body: unknown, status: number, statusText: string): T 
     if (status >= 400) {
       throw new ApiError(normaliseCode(undefined, status), statusText, status)
     }
-    // A successful status carrying text rather than JSON did not come from the
-    // API: it is an edge or proxy page that happened to answer 200. No operation
-    // in the spec returns a bare string, so passing it through would hand a
-    // caller an HTML document typed as a User.
     if (typeof body === "string") {
+      // An absent body, which is how axios represents a 204 or any response with
+      // no content. Reported as undefined rather than as the empty string,
+      // because that is what it means -- and because the generated client turns
+      // undefined into `{}`, which is the shape a caller of an empty operation
+      // expects. No operation in the spec returns one today, but rejecting it
+      // would break the first one that did.
+      if (body.length === 0) return undefined as T
+
+      // Text on a successful status did not come from the API: it is an edge or
+      // proxy page that happened to answer 200. No operation returns a bare
+      // string, so passing it through would hand a caller an HTML document typed
+      // as a User.
       throw new ApiError("UnknownError", "The server returned an unexpected response", status)
     }
     return body as T

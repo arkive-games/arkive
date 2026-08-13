@@ -17,7 +17,7 @@ import {
   type ApiClient,
   type Payload,
 } from "@gamemap/api-core"
-import type { AxiosInstance, AxiosResponse } from "axios"
+import type { AxiosAdapter, AxiosResponse } from "axios"
 
 import {
   AuthError,
@@ -34,8 +34,8 @@ export interface CoreClientOptions {
   transport: AuthTransport
   /** Required when transport is `bearer`; ignored otherwise. */
   storage?: TokenStorage
-  /** Injectable for tests. */
-  axiosInstance?: AxiosInstance
+  /** Answers requests instead of the network. Injectable for tests. */
+  adapter?: AxiosAdapter
 }
 
 /**
@@ -75,7 +75,7 @@ export class CoreClient {
       baseUrl: options.baseUrl.replace(/\/+$/, ""),
       transport: options.transport,
       storage: options.storage,
-      axiosInstance: options.axiosInstance,
+      adapter: options.adapter,
     })
   }
 
@@ -112,7 +112,16 @@ export class CoreClient {
     // envelope, so that conventional OAuth2 tooling can find it.
     const token = await this.call((o) => loginJwt({ ...o, body: { email, password } }))
     this.storage!.write(token.accessToken)
-    return this.getCurrentUser()
+    try {
+      return await this.getCurrentUser()
+    } catch (error) {
+      // The token has to go back out if the account it belongs to could not be
+      // read. Otherwise a network blip between these two calls leaves `login()`
+      // reporting failure to the user while the stored token quietly authenticates
+      // every request after it — signed in, having just been told they are not.
+      this.storage!.clear()
+      throw error
+    }
   }
 
   async logout(): Promise<void> {

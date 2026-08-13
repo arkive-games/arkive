@@ -1,4 +1,4 @@
-import type { AxiosInstance } from "axios"
+import type { AxiosAdapter } from "axios"
 
 import {
   createContext,
@@ -82,8 +82,8 @@ export interface AuthProviderProps {
    * without conditionally mounting the provider and breaking hook order.
    */
   enabled?: boolean
-  /** Injectable for tests; replaces the axios instance the client would build. */
-  axiosInstance?: AxiosInstance
+  /** Answers requests instead of the network. Injectable for tests. */
+  adapter?: AxiosAdapter
   children: ReactNode
 }
 
@@ -92,7 +92,7 @@ export function AuthProvider({
   transport = "cookie",
   storage,
   enabled = true,
-  axiosInstance,
+  adapter,
   children,
 }: AuthProviderProps) {
   const client = useMemo(
@@ -101,9 +101,9 @@ export function AuthProvider({
         baseUrl,
         transport,
         storage: transport === "bearer" ? (storage ?? createLocalTokenStorage()) : storage,
-        axiosInstance,
+        adapter,
       }),
-    [baseUrl, transport, storage, axiosInstance],
+    [baseUrl, transport, storage, adapter],
   )
 
   const [status, setStatus] = useState<AuthStatus>(enabled ? "loading" : "anonymous")
