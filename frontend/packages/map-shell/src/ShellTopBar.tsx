@@ -410,12 +410,12 @@ function NavDropdown({
       {open && (
         <div
           role="menu"
-          // `w-max` is the load-bearing part, not `min-w-44`. This menu is
-          // absolutely positioned inside a wrapper sized to its ~40px trigger,
-          // so shrink-to-fit resolves its width against that, collapsing it to
-          // the longest WORD and wrapping every label. A floor alone still
-          // wraps the long ones -- fr-FR "Simulateur de statistiques" needs
-          // ~214px against an 11rem floor. `max-w-80` keeps it bounded.
+          // `w-max` in TOP_BAR_MENU_WIDTH_CLASS is the load-bearing part, not the
+          // floor. This menu is absolutely positioned inside a wrapper sized to
+          // its ~40px trigger, so shrink-to-fit resolves its width against that,
+          // collapsing it to the longest WORD and wrapping every label. A floor
+          // alone still wraps the long ones -- fr-FR "Simulateur de statistiques"
+          // needs ~214px against the 10rem floor. `max-w-80` keeps it bounded.
           className={cn(
             "absolute left-0",
             TOP_BAR_MENU_CLASS,
