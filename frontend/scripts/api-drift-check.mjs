@@ -25,6 +25,8 @@ const COMMITTED = path.join(PACKAGE, 'src', 'generated')
 const SPEC = path.resolve(ROOT, '..', 'backend-go', 'openapi', 'core.json')
 const CLI = path.join(PACKAGE, 'node_modules', '@hey-api', 'openapi-ts', 'bin', 'run.js')
 const REGENERATE = 'pnpm --filter @gamemap/api-core generate'
+// Read by openapi-ts.config.ts to redirect the output. Set only by this script.
+const OUT_VAR = 'ARKIVE_API_CORE_OUT'
 
 /** Every generated file, as a path-keyed map, so a missing file is a difference too. */
 function snapshot(dir, base = dir, out = new Map()) {
@@ -56,6 +58,15 @@ if (!fs.existsSync(CLI)) {
   fail(`cannot find the generator at ${path.relative(ROOT, CLI)}. Run: pnpm install`)
 }
 
+if (process.env[OUT_VAR]) {
+  // Already exported in this shell, which would send BOTH the committed
+  // regeneration and this check's scratch run into that directory -- and the
+  // generator's `clean` default empties its output first. Refusing is the only
+  // safe reading: the variable exists for this script to set, so finding it set
+  // means something else is driving the output.
+  fail(`${OUT_VAR} is already set (${process.env[OUT_VAR]}). Unset it: it is this script's to set.`)
+}
+
 const before = snapshot(COMMITTED)
 if (before.size === 0) fail(`${path.relative(ROOT, COMMITTED)} is empty or missing. Run: ${REGENERATE}`)
 
@@ -75,8 +86,21 @@ try {
   execFileSync(process.execPath, [CLI], {
     cwd: PACKAGE,
     stdio: 'pipe',
-    env: { ...process.env, ARKIVE_API_CORE_OUT: scratch },
+    env: { ...process.env, [OUT_VAR]: scratch },
   })
+
+  // The committed tree must be exactly as it was found. This script's header
+  // promises it compares rather than rewrites -- a check that "fixes" drift
+  // reports nothing and leaves a dirty working copy -- and if the config ever
+  // stopped reading OUT_VAR, the regeneration above would land here instead, with
+  // `clean` emptying it first. Cheaper to prove than to trust.
+  const afterCommitted = snapshot(COMMITTED)
+  const touched = [...new Set([...before.keys(), ...afterCommitted.keys()])]
+    .filter((name) => before.get(name) !== afterCommitted.get(name))
+    .sort()
+  if (touched.length > 0) {
+    fail(`the committed tree was modified by this check, which it must never do: ${touched.join(', ')}. Restore it with git, then check that openapi-ts.config.ts still reads ${OUT_VAR}.`)
+  }
 
   const after = snapshot(scratch)
   if (after.size === 0) fail(`regeneration produced nothing. Check openapi-ts.config.ts, then run: ${REGENERATE}`)

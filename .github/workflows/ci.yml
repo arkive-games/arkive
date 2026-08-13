@@ -126,6 +126,18 @@ jobs:
             exit 1
           fi
 
+      # `tsc --noEmit` per package, which nothing else in this job reaches. The
+      # per-app `build` typechecks an app's own program, and a package's source
+      # enters it only by being imported -- so a package's *test* files are
+      # typechecked by nobody, because nothing imports a test, and vitest
+      # transpiles without checking types. A type error in any
+      # `packages/**/*.test.ts` used to land green.
+      - name: Typecheck every package
+        id: packages
+        continue-on-error: true
+        working-directory: frontend
+        run: pnpm -r check
+
       # Every app, not only the four that deploy: sts2 and lostark are built and
       # linted here because they exist in the workspace, and a break in a shared
       # package shows up in whichever app imports it first.
@@ -172,13 +184,14 @@ jobs:
           # an AND-list is the kind of thing that differs between shells, and this
           # step is the one that decides whether the job is red.
           if [ "${{ steps.invariants.outcome }}" = "failure" ]; then failed="$failed repo-invariants"; fi
+          if [ "${{ steps.packages.outcome }}" = "failure" ]; then failed="$failed package-typecheck"; fi
           if [ "${{ steps.lint.outcome }}" = "failure" ]; then failed="$failed lint"; fi
           if [ "${{ steps.build.outcome }}" = "failure" ]; then failed="$failed build"; fi
           if [ -n "$failed" ]; then
             echo "::error::Frontend job failed:$failed"
             exit 1
           fi
-          echo "invariants, lint and build all passed"
+          echo "invariants, package typecheck, lint and build all passed"
 
   go:
     runs-on: ubuntu-latest
