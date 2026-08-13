@@ -280,6 +280,9 @@ importers:
 
   apps/meta:
     dependencies:
+      '@gamemap/api-core':
+        specifier: workspace:*
+        version: link:../../packages/api-core
       '@gamemap/auth':
         specifier: workspace:*
         version: link:../../packages/auth

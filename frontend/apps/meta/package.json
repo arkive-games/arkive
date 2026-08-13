@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gamemap/api-core": "workspace:*",
     "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
     "@gamemap/state-memory": "workspace:*",

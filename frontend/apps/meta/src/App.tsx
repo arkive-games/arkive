@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AccountDialog, ArkiveAccountControl, authStringsFor, useAuth } from '@gamemap/auth'
+import { createApiClient, listForumPosts, result, type PostRead } from '@gamemap/api-core'
 import {
   ArkiveMapTopBar,
   ArkiveMobileHeader,
@@ -14,13 +15,10 @@ import { SiteFooter } from '@gamemap/ui'
 import {
   IconArrowRight,
   IconArrowUpRight,
-  IconBookmark,
   IconCompass,
   IconHammer,
-  IconMap2,
-  IconSailboat,
+  IconMessageCircle,
   IconSearch,
-  IconSparkles,
 } from '@tabler/icons-react'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import {
@@ -47,6 +45,7 @@ import {
 import { MetaMobileNav } from './MetaMobileNav'
 import { PlatformUpdatesPage } from './PlatformUpdatesPage'
 import { useSettingsConfig } from './lib/settings'
+import { AUTH_CONFIG } from './lib/auth'
 import { HomeFooter } from './HomeFooter'
 import { resolveMetaFooterKind } from './footerPolicy'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
@@ -87,6 +86,11 @@ interface RecentDestination {
   gameId: string
   route: string
   timestamp: number
+}
+
+interface HomeCommunityPost {
+  post: PostRead
+  site?: SiteCard
 }
 
 const recentDestinationsRecord = defineMemoryRecord({
@@ -190,14 +194,13 @@ export default function App() {
     () => rankSitesByClicks(VISIBLE_SITES, clickCounts),
     [clickCounts],
   )
-  const featuredSite = firstPlayableSite(rankedSites)
   const showComingSoon = () => setNoticeId((value) => value + 1)
   const auth = useAuth()
   const [accountOpen, setAccountOpen] = useState(false)
   const authStrings = authStringsFor(i18n.language)
   const isSignedIn = auth.status === 'authenticated'
   const footerKind = resolveMetaFooterKind(activeRoute.view, isSignedIn)
-  const { state: userSystemState, toggleFavoriteGame } = useUserSystem()
+  const { state: userSystemState } = useUserSystem()
   const [recentDestinations, setRecentDestinations] = useMemoryState(recentDestinationsRecord)
   const [memoryNow] = useState(Date.now)
   const rememberSite = (site: SiteCard) => {
@@ -215,6 +218,37 @@ export default function App() {
   const continueSite = continueDestination
     ? VISIBLE_SITES.find((site) => site.id === continueDestination.gameId)
     : undefined
+  const featuredSite = continueSite
+    ?? rankedSites.find((site) => site.id === 'palworld')
+    ?? firstPlayableSite(rankedSites)
+  const displayedSites = featuredSite
+    ? [featuredSite, ...rankedSites.filter((site) => site.id !== featuredSite.id)]
+    : rankedSites
+  const [communityPosts, setCommunityPosts] = useState<HomeCommunityPost[]>([])
+
+  useEffect(() => {
+    if (!AUTH_CONFIG.enabled || IS_TOY) return
+
+    const api = createApiClient({ baseUrl: AUTH_CONFIG.baseUrl })
+    let active = true
+    void result(listForumPosts({
+      client: api.client,
+      throwOnError: true,
+      query: { page: 1, pageSize: 3 },
+    })).then((page) => {
+      if (!active) return
+      setCommunityPosts((page.results ?? []).map((post) => ({
+        post,
+        site: post.gameIds?.length
+          ? VISIBLE_SITES.find((site) => site.id === post.gameIds?.[0])
+          : undefined,
+      })))
+    }).catch(() => {
+      if (active) setCommunityPosts([])
+    })
+
+    return () => { active = false }
+  }, [])
   const currentAvatar = auth.user
     ? userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
     : avatarUrl('arkive-anonymous', 96)
@@ -386,11 +420,10 @@ export default function App() {
           onAuthRequired={() => setAccountOpen(true)}
         />
       ) : (
-        <main>
+        <main className="arkive-home-view">
           <section className="home-shell hero-section" aria-labelledby="home-heading">
           <div className="hero-copy">
             <p className="hero-eyebrow">
-              <span aria-hidden="true" />
               {t('hero.eyebrow')}
             </p>
             <h1 id="home-heading" className="hero-title">
@@ -403,24 +436,14 @@ export default function App() {
               <input type="search" aria-label={t('search.placeholder')} placeholder={t('search.placeholder')} />
               <button type="submit">{t('search.action')}</button>
             </form>
-            {continueDestination && continueSite ? (
-              <a
-                className="hero-continue"
-                href={siteHref(continueSite) ?? continueDestination.route}
-                onClick={() => rememberSite(continueSite)}
-              >
-                <IconCompass className="size-5" stroke={1.7} aria-hidden="true" />
-                <span>
-                  <small>{t('hero.continue')}</small>
-                  <strong>{t(continueSite.nameKey)}</strong>
-                </span>
-                <IconArrowRight className="size-4" stroke={1.8} aria-hidden="true" />
-              </a>
-            ) : null}
           </div>
 
           {featuredSite ? (
-            <FeaturedGame site={featuredSite} onOpen={() => rememberSite(featuredSite)} />
+            <FeaturedGame
+              site={featuredSite}
+              continuing={featuredSite.id === continueSite?.id}
+              onOpen={() => rememberSite(featuredSite)}
+            />
           ) : (
             <div className="featured-empty" aria-live="polite">
               <IconCompass className="size-10" stroke={1.5} />
@@ -432,8 +455,8 @@ export default function App() {
           <section id="explore" className="home-shell explore-section" aria-labelledby="explore-heading">
           <div className="section-heading">
             <div>
+              <span>{t('explore.eyebrow')}</span>
               <h2 id="explore-heading">{t('explore.title')}</h2>
-              <p>{t('explore.description')}</p>
             </div>
             <a href="#games" className="text-action">
               {t('action.browseAll')}
@@ -442,34 +465,20 @@ export default function App() {
           </div>
 
           <div className="game-shelf">
-            {rankedSites.map((site) => (
+            {displayedSites.map((site, index) => (
               <GameCard
                 key={site.id}
                 site={site}
-                favorite={userSystemState.favoriteGameIds.includes(site.id)}
-                onFavorite={() => {
-                  if (!isSignedIn) {
-                    setAccountOpen(true)
-                    return
-                  }
-                  toggleFavoriteGame(site.id)
-                }}
+                featured={index === 0}
                 onOpen={() => rememberSite(site)}
               />
             ))}
-            <ComingSoonCard onClick={showComingSoon} />
           </div>
           </section>
 
-          <section className="join-section" aria-labelledby="join-heading">
-          <div className="home-shell join-inner">
-            <div>
-              <h2 id="join-heading">{t('cta.title')}</h2>
-              <p>{t('cta.description')}</p>
-            </div>
-            <button type="button" onClick={() => setAccountOpen(true)}>{t('cta.action')}</button>
-          </div>
-          </section>
+          {communityPosts.length > 0 && (
+            <HomeCommunity posts={communityPosts} />
+          )}
         </main>
       )}
 
@@ -534,7 +543,11 @@ export default function App() {
   )
 }
 
-function FeaturedGame({ site, onOpen }: { site: SiteCard; onOpen: () => void }) {
+function FeaturedGame({ site, continuing, onOpen }: {
+  site: SiteCard
+  continuing: boolean
+  onOpen: () => void
+}) {
   const { t } = useTranslation()
   const name = t(site.nameKey)
 
@@ -542,11 +555,8 @@ function FeaturedGame({ site, onOpen }: { site: SiteCard; onOpen: () => void }) 
     <a className="featured-game group" href={siteHref(site)} onClick={onOpen}>
       <img src={site.bg} alt={name} />
       <span className="featured-shade" aria-hidden="true" />
-      <span className="featured-route" aria-hidden="true">
-        <IconCompass className="size-7" stroke={1.35} />
-      </span>
+      <span className="featured-label">{t(continuing ? 'hero.continue' : 'hero.recommendation')}</span>
       <span className="featured-content">
-        <span className="featured-label">{t('hero.recommendation')}</span>
         <strong>{name}</strong>
         <span className="featured-copy">{t(site.featureKey)}</span>
         <span className="featured-link">
@@ -558,20 +568,14 @@ function FeaturedGame({ site, onOpen }: { site: SiteCard; onOpen: () => void }) 
   )
 }
 
-function GameCard({ site, favorite, onFavorite, onOpen }: {
+function GameCard({ site, featured, onOpen }: {
   site: SiteCard
-  favorite: boolean
-  onFavorite: () => void
+  featured: boolean
   onOpen: () => void
 }) {
   const { t } = useTranslation()
   const name = t(site.nameKey)
   const href = siteHref(site)
-  const favoriteGame = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-    onFavorite()
-  }
-
   const body = (
     <>
       <span className="game-cover">
@@ -580,50 +584,68 @@ function GameCard({ site, favorite, onFavorite, onOpen }: {
         {href && (
           <span className="game-open-icon"><IconArrowUpRight className="size-5" stroke={1.8} /></span>
         )}
-      </span>
-      <span className="game-card-copy">
-        <strong>{name}</strong>
-        {site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
-        <small>{t(site.descKey)}</small>
+        <span className="game-card-copy">
+          {site.comingSoon && <small>{t('comingSoon.badge')}</small>}
+          {featured && !site.comingSoon && <small>{t('hero.recommendation')}</small>}
+          <strong>{name}</strong>
+          <span>{t(site.descKey)}</span>
+        </span>
       </span>
     </>
   )
 
   return (
-    <article className={site.comingSoon ? 'game-card is-soon' : 'game-card'}>
+    <article className={`${site.comingSoon ? 'game-card is-soon' : 'game-card'}${featured ? ' is-featured' : ''}`}>
       {href ? (
         <a href={href} className="game-card-link group" onClick={onOpen}>{body}</a>
       ) : (
         <span className="game-card-link is-inert">{body}</span>
       )}
-      <button
-        type="button"
-        className={favorite ? 'bookmark-button is-active' : 'bookmark-button'}
-        onClick={favoriteGame}
-        aria-pressed={favorite}
-        aria-label={t('action.favorite', { game: name })}
-      >
-        <IconBookmark className="size-5" stroke={1.8} />
-      </button>
     </article>
   )
 }
 
-function ComingSoonCard({ onClick }: { onClick: () => void }) {
-  const { t } = useTranslation()
+function HomeCommunity({ posts }: { posts: HomeCommunityPost[] }) {
+  const { t, i18n } = useTranslation()
+  const [renderedAt] = useState(Date.now)
+  const relativeTime = new Intl.RelativeTimeFormat(i18n.resolvedLanguage ?? i18n.language, { numeric: 'auto' })
+  const formatPostTime = (value: string) => {
+    const elapsedMinutes = Math.round((new Date(value).getTime() - renderedAt) / 60_000)
+    if (Math.abs(elapsedMinutes) < 60) return relativeTime.format(elapsedMinutes, 'minute')
+    const elapsedHours = Math.round(elapsedMinutes / 60)
+    if (Math.abs(elapsedHours) < 24) return relativeTime.format(elapsedHours, 'hour')
+    return relativeTime.format(Math.round(elapsedHours / 24), 'day')
+  }
+
   return (
-    <button type="button" className="future-games" onClick={onClick}>
-      <span className="future-visual" aria-hidden="true">
-        <span><IconMap2 className="size-7" stroke={1.5} /></span>
-        <span><IconSailboat className="size-8" stroke={1.5} /></span>
-        <span><IconSparkles className="size-7" stroke={1.5} /></span>
-      </span>
-      <span className="future-copy">
-        <small>{t('comingSoon.kicker')}</small>
-        <strong>{t('comingSoon.title')}</strong>
-        <span>{t('comingSoon.description')}</span>
-        <i><IconArrowRight className="size-5" stroke={1.8} /></i>
-      </span>
-    </button>
+    <section className="community-section" aria-labelledby="community-heading">
+      <div className="home-shell">
+        <div className="section-heading community-heading">
+          <div>
+            <span>{t('community.eyebrow')}</span>
+            <h2 id="community-heading">{t('community.title')}</h2>
+          </div>
+          <a href="#forum" className="text-action">
+            {t('community.action')}
+            <IconArrowRight className="size-4" stroke={1.8} aria-hidden="true" />
+          </a>
+        </div>
+        <div className="community-grid">
+          {posts.map(({ post, site }) => (
+            <a key={post.postNo} href="#forum" className="community-card">
+              <span className="community-visual">
+                <img src={site?.bg ?? post.author.avatarUrl} alt="" />
+              </span>
+              <span className="community-copy">
+                <small>{site ? t(site.nameKey) : t('community.general')}</small>
+                <strong>{post.title}</strong>
+                <span>{post.author.name} · {formatPostTime(post.createdAt)}</span>
+                <i><IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />{post.commentCount}</i>
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }

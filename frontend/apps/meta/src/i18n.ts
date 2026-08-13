@@ -354,7 +354,7 @@ const resources = {
         highlight: '游戏世界',
         tail: '启航？',
         description: '查任务、找地图、收好每一次发现。这里不催你通关，只陪你把喜欢的世界看得更完整。',
-        recommendation: '人气游戏优先推荐',
+        recommendation: '推荐探索',
         continue: '继续探索',
       },
       search: { placeholder: '搜索游戏、任务、角色或地点', action: '开始查找' },
@@ -446,9 +446,11 @@ const resources = {
         browseAll: '浏览全部游戏',
       },
       explore: {
-        title: '最近大家都在探索',
+        eyebrow: '你的游戏舱',
+        title: '熟悉的世界，新的进度',
         description: '从互动地图到资料图鉴，每个游戏都有属于自己的资料入口。',
       },
+      community: { eyebrow: '玩家刚刚带回', title: '这些发现值得上船', action: '去论坛看看', general: '藏舟社区' },
       site: {
         aion2: {
           name: '永恒之塔 2',
@@ -522,7 +524,7 @@ const resources = {
         highlight: '遊戲世界',
         tail: '啟航？',
         description: '查任務、找地圖、收好每一次發現。這裡不催你通關，只陪你把喜歡的世界看得更完整。',
-        recommendation: '人氣遊戲優先推薦',
+        recommendation: '推薦探索',
         continue: '繼續探索',
       },
       search: { placeholder: '搜尋遊戲、任務、角色或地點', action: '開始查找' },
@@ -614,9 +616,11 @@ const resources = {
         browseAll: '瀏覽全部遊戲',
       },
       explore: {
-        title: '最近大家都在探索',
+        eyebrow: '你的遊戲艙',
+        title: '熟悉的世界，新的進度',
         description: '從互動地圖到資料圖鑑，每個遊戲都有屬於自己的資料入口。',
       },
+      community: { eyebrow: '玩家剛剛帶回', title: '這些發現值得上船', action: '去論壇看看', general: '藏舟社群' },
       site: {
         aion2: { name: '永恆之塔 2', desc: '互動地圖與遊戲資料庫', feature: '從地圖出發，找到每一個重要座標。' },
         palworld: { name: '幻獸帕魯', desc: '地圖、帕魯圖鑑與配種路線', feature: '從探索到配種，認識每一隻帕魯。' },
@@ -661,7 +665,7 @@ const resources = {
         highlight: 'game world',
         tail: 'will you sail into?',
         description: 'Find quests, maps, and every discovery worth keeping. Explore the worlds you love at your own pace.',
-        recommendation: 'Popular game recommendation',
+        recommendation: 'Recommended',
         continue: 'Continue exploring',
       },
       search: { placeholder: 'Search games, quests, characters, or places', action: 'Search' },
@@ -749,9 +753,11 @@ const resources = {
       },
       action: { openGame: 'Enter {{game}}', favorite: 'Save {{game}}', browseAll: 'Browse all games' },
       explore: {
-        title: 'What everyone is exploring',
+        eyebrow: 'Your game cabin',
+        title: 'Familiar worlds, new progress',
         description: 'From interactive maps to connected databases, each game has its own place in the archive.',
       },
+      community: { eyebrow: 'Just brought back by players', title: 'Discoveries worth keeping', action: 'Visit the forum', general: 'Arkive community' },
       site: {
         aion2: { name: 'AION2', desc: 'Interactive map and game database', feature: 'Start with the map and find every important coordinate.' },
         palworld: { name: 'Palworld', desc: 'Map, Paldeck, and breeding routes', feature: 'Explore, breed, and get to know every Pal.' },
@@ -786,7 +792,7 @@ const resources = {
       theme: { auto: 'システムに従う', light: 'ライトモード', dark: 'ダークモード', menu: 'テーマを切り替える', short: 'テーマ' },
       auth: { login: 'ログイン' },
       userSystem: userSystemCopy('ja-JP'),
-      hero: { eyebrow: '藏舟へようこそ', lead: '今日は、どの', highlight: 'ゲーム世界', tail: 'へ出航しますか？', description: 'クエストやマップを調べ、発見を大切に保存。好きな世界を自分のペースで楽しめます。', recommendation: '人気ゲームを優先表示', continue: '探索を続ける' },
+      hero: { eyebrow: '藏舟へようこそ', lead: '今日は、どの', highlight: 'ゲーム世界', tail: 'へ出航しますか？', description: 'クエストやマップを調べ、発見を大切に保存。好きな世界を自分のペースで楽しめます。', recommendation: 'おすすめ', continue: '探索を続ける' },
       search: { placeholder: 'ゲーム、クエスト、キャラクター、場所を検索', action: '検索する' },
       catalog: {
         eyebrow: 'ゲーム資料館',
@@ -871,7 +877,8 @@ const resources = {
         kinds: { feature: '新機能', improvement: '改善', fix: '修正', data: 'データ' },
       },
       action: { openGame: '{{game}}へ', favorite: '{{game}}を保存', browseAll: 'すべてのゲームを見る' },
-      explore: { title: 'みんなが探索している世界', description: 'インタラクティブマップから資料図鑑まで、ゲームごとの入口を用意しています。' },
+      explore: { eyebrow: 'あなたのゲームキャビン', title: 'おなじみの世界、新しい進捗', description: 'インタラクティブマップから資料図鑑まで、ゲームごとの入口を用意しています。' },
+      community: { eyebrow: 'プレイヤーから届いた発見', title: '残しておきたい発見', action: 'フォーラムを見る', general: 'Arkiveコミュニティ' },
       site: {
         aion2: { name: 'アイオン2', desc: 'インタラクティブマップとゲームデータベース', feature: 'マップから始めて、大切な座標を見つけましょう。' },
         palworld: { name: 'Palworld', desc: 'マップ、パル図鑑、配合ルート', feature: '探索と配合を通して、すべてのパルを知りましょう。' },
@@ -897,7 +904,7 @@ const resources = {
       theme: { auto: '시스템 설정 따르기', light: '라이트 모드', dark: '다크 모드', menu: '테마 전환', short: '테마' },
       auth: { login: '로그인' },
       userSystem: userSystemCopy('ko-KR'),
-      hero: { eyebrow: '장저우에 오신 것을 환영합니다', lead: '오늘은 어느', highlight: '게임 세계', tail: '로 떠날까요?', description: '퀘스트와 지도를 찾고 모든 발견을 간직하세요. 좋아하는 세계를 자신의 속도로 탐험할 수 있습니다.', recommendation: '인기 게임 우선 추천', continue: '계속 탐색하기' },
+      hero: { eyebrow: '장저우에 오신 것을 환영합니다', lead: '오늘은 어느', highlight: '게임 세계', tail: '로 떠날까요?', description: '퀘스트와 지도를 찾고 모든 발견을 간직하세요. 좋아하는 세계를 자신의 속도로 탐험할 수 있습니다.', recommendation: '추천 탐험', continue: '계속 탐색하기' },
       search: { placeholder: '게임, 퀘스트, 캐릭터 또는 장소 검색', action: '검색' },
       catalog: {
         eyebrow: '게임 자료관',
@@ -982,7 +989,8 @@ const resources = {
         kinds: { feature: '새 기능', improvement: '개선', fix: '수정', data: '데이터' },
       },
       action: { openGame: '{{game}} 열기', favorite: '{{game}} 저장', browseAll: '전체 게임 보기' },
-      explore: { title: '모두가 탐험 중인 세계', description: '인터랙티브 지도부터 게임 데이터베이스까지, 게임마다 전용 입구가 있습니다.' },
+      explore: { eyebrow: '나의 게임 선실', title: '익숙한 세계, 새로운 진척', description: '인터랙티브 지도부터 게임 데이터베이스까지, 게임마다 전용 입구가 있습니다.' },
+      community: { eyebrow: '플레이어가 방금 가져온 발견', title: '간직할 만한 발견', action: '포럼 둘러보기', general: 'Arkive 커뮤니티' },
       site: {
         aion2: { name: '아이온2', desc: '인터랙티브 지도와 게임 데이터베이스', feature: '지도에서 시작해 중요한 좌표를 모두 찾아보세요.' },
         palworld: { name: 'Palworld', desc: '지도, 팰 도감, 교배 경로', feature: '탐험과 교배를 통해 모든 팰을 알아보세요.' },
