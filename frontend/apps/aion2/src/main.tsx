@@ -5,10 +5,6 @@ import { AuthProvider } from "@gamemap/auth";
 import { initBaiduAnalytics, trackPageview } from "@gamemap/map-shell";
 import { AUTH_CONFIG } from "@/lib/auth";
 import "./index.css";
-import "leaflet/dist/leaflet.css";
-// Static styles for the engine-rendered map chrome (zoom control, status bar,
-// context menu) — the engine itself is Tailwind-free.
-import "@gamemap/map-engine/engine.css";
 import "./i18n";
 import { routeTree } from "./routeTree.gen";
 

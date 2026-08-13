@@ -1,13 +1,11 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearch } from "@tanstack/react-router";
-import {
-  GameMapView,
-  type EngineMarker,
-  type GameMapViewLabels,
-  type MapRef,
-} from "@gamemap/map-engine";
-import type { GlMapRef } from "@gamemap/map-engine-gl";
+
+import type {
+  EngineMarker,
+  GameMapViewLabels,
+  GlMapRef,
+} from "@gamemap/map-engine-gl";
 import {
   ArkiveMobileMapControls,
   ShellLayout,
@@ -34,14 +32,10 @@ import SelectMap from "@/features/map/sidebar/SelectMap";
 import MarkerTypesSection from "@/features/map/sidebar/MarkerTypesSection";
 import TopNavbar from "@/components/TopNavbar";
 import { getQueryParam, parseIconUrl } from "@/lib/url";
-import {
-  resolveMapEngine,
-  useStoredMapEngine,
-} from "@/lib/mapEngineChoice";
 import { MAP_FLY_TO_DURATION } from "@/lib/constants";
 
 // three.js + earcut are ~1.5 MB that only this route needs — see GlMapView.
-const GlGameMapView = lazy(() => import("@/features/map/GlMapView"));
+const GameMapView = lazy(() => import("@/features/map/GlMapView"));
 
 // Per-map view + selection persistence (center, zoom, selected marker), fed
 // into useMapViewMemory. The storage-free shell hook gets storage through this
@@ -64,15 +58,8 @@ const mapViewStore: MapViewStore = {
 };
 
 export default function MapRoute() {
-  const mapRef = useRef<MapRef>(null);
-  // The one prop the two engines do not share: Leaflet hands back an L.Map,
-  // the GL engine a small {getCenter,getZoom,flyTo,project,dispose} handle.
+  // A small {getCenter,getZoom,flyTo,project,dispose} handle, not a DOM map.
   const glMapRef = useRef<GlMapRef | null>(null);
-  // A valid `?engine=` wins for this visit; otherwise the stored choice, which
-  // itself defaults to GL. Precedence lives in the shell, not here.
-  const engineParam = useSearch({ from: "/", select: (s) => s.engine });
-  const storedEngine = useStoredMapEngine();
-  const engine = resolveMapEngine(engineParam, storedEngine);
   const appliedDeepLink = useRef(false);
   // Whether the deep link actually navigated somewhere (marker or position) —
   // in that case the stored selection must NOT be restored on top of it.
@@ -129,16 +116,14 @@ export default function MapRoute() {
   const mapId = selectedMap?.id ?? "";
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId);
   // The engine consumes `initialView` at mount only, and the hook memoizes it
-  // per map id — so on the remount caused by a breakpoint switch (or by
-  // swapping the renderer, which unmounts one engine and mounts the other) it
-  // would replay the view from page load (or the whole-map default, if nothing
-  // was stored yet) and throw away wherever the user had panned to. Re-read the
-  // persisted value whenever either flips, so the remount lands where the user
-  // actually was.
+  // per map id — so on the remount caused by a breakpoint switch it would replay
+  // the view from page load (or the whole-map default, if nothing was stored yet)
+  // and throw away wherever the user had panned to. Re-read the persisted value
+  // whenever either flips, so the remount lands where the user actually was.
   const initialViewForMount = useMemo(
     () => readMapView(mapViewStore, mapId).view ?? initialView,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mapId, isMobile, engine],
+    [mapId, isMobile],
   );
   // Marker id restored from storage — passed to the engine so the restore does
   // NOT fly (the restored center wins); a later manual selection flies again.
@@ -148,7 +133,7 @@ export default function MapRoute() {
   // when its subtype filter is off (the engine bypasses the filter for these).
   const [searchResultIds, setSearchResultIds] = useState<string[]>([]);
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds]);
-  // Crossing the breakpoint swaps the two trees below, which remounts Leaflet
+  // Crossing the breakpoint swaps the two trees below, which remounts the map
   // (a phone rotated to landscape is 844px wide, so this is a real path). Any
   // sheet that was open belongs to the tree being torn down, so reset it —
   // otherwise rotating back pops it open again unbidden.
@@ -342,9 +327,7 @@ export default function MapRoute() {
     saveMarker(selectedMarkerId);
   }, [selectedMarkerId, selectedMap, markersMapId, saveMarker]);
 
-  // Every prop except `mapRef`, so the two engines cannot drift apart. The
-  // engines' prop types are field-for-field identical bar that one ref.
-  const sharedMapProps = {
+  const mapProps = {
     map: selectedMap,
     markers: engineMarkers,
     regions,
@@ -373,16 +356,14 @@ export default function MapRoute() {
 
   // Defined once and rendered by both branches, so the phone and desktop paths
   // can never drift in what they pass to the engine or the search index.
-  const mapView =
-    engine === "gl" ? (
-      // No fallback content: the chunk is small and `.gmgl-map-root`'s
-      // background already fills the box, so a spinner would only flash.
-      <Suspense fallback={null}>
-        <GlGameMapView mapRef={glMapRef} {...sharedMapProps} />
-      </Suspense>
-    ) : (
-      <GameMapView mapRef={mapRef} {...sharedMapProps} />
-    );
+  //
+  // No Suspense fallback content: the chunk is small and `.gmgl-map-root`'s
+  // background already fills the box, so a spinner would only flash.
+  const mapView = (
+    <Suspense fallback={null}>
+      <GameMapView mapRef={glMapRef} {...mapProps} />
+    </Suspense>
+  );
 
   const searchPanel = (variant: "floating" | "inline") => (
     <SearchPanel
@@ -405,7 +386,7 @@ export default function MapRoute() {
     return (
       <div className="arkive-mobile-map aion2-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
         {/* Same flex chain as the desktop ShellLayout: the map root needs a
-            definite height or Leaflet sizes to zero on mount. */}
+            definite height or the engine sizes to zero on mount. */}
         <main className="relative flex min-w-0 flex-1 overflow-hidden">
           {mapView}
           {isMobile && searchResultIds.length === 0 && selectedMarker

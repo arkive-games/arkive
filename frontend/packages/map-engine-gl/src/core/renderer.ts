@@ -536,8 +536,8 @@ export class MapRenderer {
 
 /**
  * Browser default backend. `alpha: true` lets the app's background show through
- * the canvas (the Leaflet engine styles `.leaflet-container`'s background the
- * same way); `antialias: true` smooths region borders and fat lines.
+ * the canvas — which is how each game paints its own map void, by styling
+ * `.gmgl-map-root`; `antialias: true` smooths region borders and fat lines.
  */
 function createWebGLBackend(canvas: RendererCanvas | undefined): RenderBackend {
   if (!canvas) {

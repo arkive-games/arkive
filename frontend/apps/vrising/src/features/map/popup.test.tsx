@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import type { EngineMarker } from '@gamemap/map-engine'
+import type { EngineMarker } from '@gamemap/map-engine-gl'
 import { VrisingMarkerDetail } from './popup'
 
 function marker(overrides: Partial<EngineMarker>): EngineMarker {

@@ -1,13 +1,11 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
-import {
-  GameMapView, worldToPixel,
-  type EngineMarker, type GameMapViewProps, type MapRef,
-} from '@gamemap/map-engine'
-// Type-only: erases at build time, so the WebGL engine stays out of the entry
-// chunk (it arrives through the `lazy()` boundary below).
-import type { GlMapRef } from '@gamemap/map-engine-gl'
+// Types erase at build time, and `/coords` is a three-free module, so the engine
+// itself stays out of the entry chunk (it arrives through the `lazy()` boundary
+// below). Importing `worldToPixel` from the barrel instead would undo that.
+import type { EngineMarker, GameMapViewProps, GlMapRef } from '@gamemap/map-engine-gl'
+import { worldToPixel } from '@gamemap/map-engine-gl/coords'
 import {
   ArkiveMobileMapControls, FilterPanel, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar,
   readMapView, useMapViewMemory,
@@ -26,10 +24,6 @@ import {
 import { markerImageUrl, vrisingAssets } from '../../lib/assets'
 import { cleanGameText } from '../../lib/gameText'
 import { mapViewStore, readVisibleSubtypes, writeVisibleSubtypes } from '../../lib/storage'
-import {
-  resolveMapEngine,
-  useStoredMapEngine,
-} from '../../lib/mapEngineChoice'
 import { vrisingTheme } from '../../theme'
 import { TopNav } from '../../components/TopNav'
 import { InfoSidebar } from '../../components/InfoSidebar'
@@ -52,15 +46,13 @@ const regionsRecord = defineMemoryRecord({
   validate: isBoolean,
 })
 
-// The WebGL engine behind a lazy boundary — see features/map/GlMapView.
-const GlGameMapView = lazy(() => import('./GlMapView'))
+// The map engine behind a lazy boundary — see features/map/GlMapView.
+const GameMapView = lazy(() => import('./GlMapView'))
 
 export default function MapPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
-  const mapRef = useRef<MapRef>(null)
-  // The GL engine publishes its own handle type; the two engines expose the same
-  // methods but through different refs, so each branch keeps its own.
+  // A small {getCenter,getZoom,flyTo,project,dispose} handle, not a DOM map.
   const glMapRef = useRef<GlMapRef | null>(null)
   const isMobile = useIsMobile()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
@@ -71,13 +63,7 @@ export default function MapPage() {
   const [restoredVisible] = useState<Set<string> | null>(readVisibleSubtypes)
   const visibleInitialized = useRef(restoredVisible != null)
 
-  const { q: initialQuery, engine: engineParam } = useSearch({ from: '/' })
-
-  // Which engine renders the map: the `?engine=` param for this visit, else the
-  // stored choice (see `lib/mapEngineChoice`). Derived, not state, so a saved
-  // preference and direct renderer links continue to work without sidebar UI.
-  const storedEngine = useStoredMapEngine()
-  const engine = resolveMapEngine(engineParam, storedEngine)
+  const { q: initialQuery } = useSearch({ from: '/' })
 
   const [staticData, setStaticData] = useState<{
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
@@ -100,18 +86,11 @@ export default function MapPage() {
   // Camera + selection persistence. `useMapViewMemory` is storage-free; the
   // adapter comes from lib/storage.
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, MAP_ID)
-  // The view handed to the engine currently mounted. `initialView` is frozen at
-  // page mount, but `onViewChange` streams the live camera into storage — so a
-  // swapped-in engine gets a FRESH read, otherwise it would restore the camera
-  // the page loaded with and the swap would jump. Adjusted during render (React's
-  // "adjust state when a prop changes" escape hatch) because the incoming engine
-  // reads `initialView` while mounting: an effect fires one commit too late.
-  const [mountView, setMountView] = useState<MapViewState | null>(initialView)
-  const [mountedEngine, setMountedEngine] = useState(engine)
-  if (mountedEngine !== engine) {
-    setMountedEngine(engine)
-    setMountView(readMapView(mapViewStore, MAP_ID).view)
-  }
+  // `initialView` is frozen at page mount while `onViewChange` streams the live
+  // camera into storage, so a remount would otherwise restore the camera the page
+  // loaded with and jump. vrising has a single map, so nothing re-reads it during a
+  // session — the state exists to keep the frozen value out of the render path.
+  const [mountView] = useState<MapViewState | null>(initialView)
 
   useEffect(() => {
     let cancelled = false
@@ -465,11 +444,7 @@ export default function MapPage() {
     />
   )
 
-  // Every prop except the engine handle, built ONCE and shared by both engines:
-  // the GL engine's props are field-for-field identical to the Leaflet engine's
-  // apart from `mapRef`, so constructing them twice would let the two paths
-  // silently drift.
-  const sharedMapProps: Omit<GameMapViewProps, 'mapRef'> = {
+  const mapProps: Omit<GameMapViewProps, 'mapRef'> = {
     map,
     markers: engineMarkers,
     regions: showRegions ? (regionData?.regions ?? []) : [],
@@ -498,30 +473,26 @@ export default function MapPage() {
     labels,
   }
 
-  // The WebGL engine (the default) or Leaflet. Only the ref differs. The GL
-  // branch is additionally behind a lazy boundary (see features/map/GlMapView),
-  // so it needs a Suspense fallback for the one chunk fetch. The fallback just
-  // holds the map area open, borrowing the `.gmgl-map-root` void colour from
-  // index.css (`flex-1` stands in for the sizing engine-gl.css normally
-  // supplies, since that stylesheet arrives with the chunk) so there is no flash
-  // of a differently-coloured panel.
-  const mapView =
-    engine === 'gl' ? (
-      <Suspense
-        fallback={<div className="gmgl-map-root flex-1" role="status" aria-label={t('loading')} />}
-      >
-        <GlGameMapView {...sharedMapProps} mapRef={glMapRef} />
-      </Suspense>
-    ) : (
-      <GameMapView {...sharedMapProps} mapRef={mapRef} />
-    )
+  // The engine sits behind a lazy boundary (see features/map/GlMapView), so it
+  // needs a Suspense fallback for the one chunk fetch. The fallback just holds the
+  // map area open, borrowing the `.gmgl-map-root` void colour from index.css
+  // (`flex-1` stands in for the sizing engine-gl.css normally supplies, since that
+  // stylesheet arrives with the chunk) so there is no flash of a
+  // differently-coloured panel.
+  const mapView = (
+    <Suspense
+      fallback={<div className="gmgl-map-root flex-1" role="status" aria-label={t('loading')} />}
+    >
+      <GameMapView {...mapProps} mapRef={glMapRef} />
+    </Suspense>
+  )
 
   if (isMobile) {
     return (
       <div className="arkive-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
         <h1 className="sr-only">{t('title')}</h1>
         {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
-            gets a definite height and Leaflet sizes correctly on mount. */}
+            gets a definite height and the engine sizes correctly on mount. */}
         <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}{markerDetail}</main>
 
         <ArkiveMobileMapControls

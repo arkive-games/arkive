@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ArrowRightLeft } from 'lucide-react'
-import type { EngineMarker } from '@gamemap/map-engine'
+import type { EngineMarker } from '@gamemap/map-engine-gl'
 import { MarkerDetailDrawer, formatCoords, markerDetailLabelsFor } from '@gamemap/map-shell'
 
 type VrisingMarker = EngineMarker & {

@@ -1,13 +1,14 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearch } from '@tanstack/react-router'
-import { GameMapView, worldToPixel, type EngineMarker, type GameMapViewProps, type MapRef } from '@gamemap/map-engine'
-// The WebGL engine is code-split: three.js is ~1.5 MB that only the GL path
-// needs, so it must not sit in the entry chunk with the Leaflet one — non-map
-// routes never fetch it. The `GlMapRef` type import erases at build time and
-// costs nothing.
-import type { GlMapRef } from '@gamemap/map-engine-gl'
-const GlGameMapView = lazy(() => import('./features/map/GlMapView'))
+// The map engine is code-split: three.js is ~1.5 MB that only the map route
+// needs, so it must not sit in the entry chunk — the Paldeck and catalog routes
+// never fetch it. Type imports erase at build time and cost nothing, but
+// `worldToPixel` is a VALUE, so it comes from the three-free `/coords` subpath
+// rather than the barrel (which would pull the engine in here).
+import type { EngineMarker, GameMapViewProps, GlMapRef } from '@gamemap/map-engine-gl'
+import { worldToPixel } from '@gamemap/map-engine-gl/coords'
+const GameMapView = lazy(() => import('./features/map/GlMapView'))
 import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
@@ -50,7 +51,6 @@ import {
 } from '@gamemap/state-memory'
 import { Eraser, Moon } from 'lucide-react'
 import { useCompletedMarkers } from './lib/completedMarkers'
-import { resolveMapEngine, useStoredMapEngine } from './lib/mapEngineChoice'
 import { mapMarkerLodTier } from './lib/mapMarkerLod'
 
 // Ray-casting point-in-polygon (point + ring both in map-pixel space).
@@ -162,9 +162,6 @@ const showRegionsRecord = defineMemoryRecord({
 export default function App() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
-  const mapRef = useRef<MapRef>(null)
-  // Separate handle for the WebGL engine: its ref is a small engine-agnostic
-  // handle, NOT an `L.Map`, so it must never be threaded into Leaflet-typed code.
   const glMapRef = useRef<GlMapRef | null>(null)
   const isMobile = useIsMobile()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
@@ -181,7 +178,7 @@ export default function App() {
 
   // Deep-link params (?map=… & ?q=…): open a given map with the search box
   // prefilled — used by the Paldeck "view on full map" link.
-  const { q: initialQuery, map: mapParam, x: positionX, y: positionY, engine: engineParam } = useSearch({ from: '/' })
+  const { q: initialQuery, map: mapParam, x: positionX, y: positionY } = useSearch({ from: '/' })
 
   const [staticData, setStaticData] = useState<{
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
@@ -199,25 +196,18 @@ export default function App() {
   // Per-map view (center/zoom) + selected marker, persisted across reloads.
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId)
 
-  // Which engine renders the map: the `?engine=` param for this visit, else the
-  // stored choice (see `lib/mapEngineChoice`). The public renderer switcher was
-  // removed from the map chrome; the parameter remains useful for shared links,
-  // regression tests, and troubleshooting.
-  const storedEngine = useStoredMapEngine()
-  const engine = resolveMapEngine(engineParam, storedEngine)
-
   // The view handed to the engine currently mounted. `initialView` is frozen at
-  // page mount, but `onViewChange` streams the live camera into storage — so a
-  // swapped-in engine gets a FRESH read, otherwise it would restore the camera
-  // the page loaded with and the swap would jump. Adjusted during render (React's
-  // "adjust state when a prop changes" escape hatch) because the incoming engine
+  // page mount, but `onViewChange` streams the live camera into storage — so the
+  // engine gets a FRESH read on a map switch, otherwise it would restore the
+  // camera the page loaded with and the switch would jump. Adjusted during render
+  // (React's "adjust state when a prop changes" escape hatch) because the engine
   // reads `initialView` while mounting: an effect fires one commit too late.
   const [mountView, setMountView] = useState<MapViewState | null>(initialView)
-  const [mountedFor, setMountedFor] = useState({ engine, mapId })
-  if (mountedFor.engine !== engine || mountedFor.mapId !== mapId) {
-    setMountedFor({ engine, mapId })
-    // Covers a map switch too: for a new map this reads that map's own remembered
-    // view, which is exactly what `initialView` just re-read.
+  const [mountedForMapId, setMountedForMapId] = useState(mapId)
+  if (mountedForMapId !== mapId) {
+    setMountedForMapId(mapId)
+    // Reads the new map's own remembered view, which is exactly what
+    // `initialView` just re-read.
     setMountView(readMapView(mapViewStore, mapId).view)
   }
   // Marker id restored from storage for the current markers load — passed to
@@ -923,11 +913,7 @@ export default function App() {
     />
   )
 
-  // Every prop except the engine handle, built ONCE and shared by both engines:
-  // the GL engine's props are field-for-field identical to the Leaflet engine's
-  // apart from `mapRef`, so constructing them twice would let the two paths
-  // silently drift.
-  const sharedMapProps: Omit<GameMapViewProps, 'mapRef'> = {
+  const mapProps: Omit<GameMapViewProps, 'mapRef'> = {
     map,
     markers: engineMarkers,
     regions: showRegions && regionData?.mapId === mapId ? regionData.regions : [],
@@ -953,29 +939,21 @@ export default function App() {
     labels,
   }
 
-  // The WebGL engine (the default) or Leaflet. Only the ref differs — see
-  // `glMapRef` above. The GL branch is additionally behind a lazy boundary (see
-  // features/map/GlMapView), so it needs a Suspense fallback for the one chunk
-  // fetch. The fallback just holds the map area open, borrowing the
-  // `.gmgl-map-root` void colour from index.css (`flex-1` stands in for the
-  // sizing engine-gl.css normally supplies, since that stylesheet arrives with
-  // the chunk) so there is no flash of a differently-coloured panel.
-  const mapView =
-    engine === 'gl' ? (
-      <Suspense
-        fallback={
-          <div
-            className="gmgl-map-root flex-1"
-            role="status"
-            aria-label={t('catalogLoading')}
-          />
-        }
-      >
-        <GlGameMapView {...sharedMapProps} mapRef={glMapRef} />
-      </Suspense>
-    ) : (
-      <GameMapView {...sharedMapProps} mapRef={mapRef} />
-    )
+  // The engine sits behind a lazy boundary (see features/map/GlMapView), so it
+  // needs a Suspense fallback for the one chunk fetch. The fallback just holds the
+  // map area open, borrowing the `.gmgl-map-root` void colour from index.css
+  // (`flex-1` stands in for the sizing engine-gl.css normally supplies, since that
+  // stylesheet arrives with the chunk) so there is no flash of a
+  // differently-coloured panel.
+  const mapView = (
+    <Suspense
+      fallback={
+        <div className="gmgl-map-root flex-1" role="status" aria-label={t('catalogLoading')} />
+      }
+    >
+      <GameMapView {...mapProps} mapRef={glMapRef} />
+    </Suspense>
+  )
   const markerDetail = isMobile && searchResultIds.length === 0 && selectedMarker
     ? <MarkerDetailBridge marker={selectedMarker} render={renderMarkerDetail} />
     : null
@@ -992,7 +970,7 @@ export default function App() {
       <div className="arkive-map-page arkive-mobile-map relative flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
         <h1 className="sr-only">{t('title')}</h1>
         {/* Same flex chain as the desktop ShellLayout so the map root (flex:1)
-            gets a definite height and Leaflet sizes correctly on mount. */}
+            gets a definite height and the engine sizes correctly on mount. */}
         <main className="relative flex min-w-0 flex-1 overflow-hidden">{mapView}{markerDetail}</main>
 
         <ArkiveMobileMapControls

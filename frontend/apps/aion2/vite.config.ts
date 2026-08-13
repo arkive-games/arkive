@@ -144,13 +144,7 @@ export default defineConfig({
               test: /node_modules\/(@fortawesome|embla-carousel|react-markdown|remark|rehype|yaml)(\/|$)/,
             },
 
-            // --- 3. Map engine bundle ---
-            {
-              name: "vendor-map",
-              test: /node_modules\/(leaflet|react-leaflet)(\/|$)/,
-            },
-
-            // --- 4. i18n bundle ---
+            // --- 3. i18n bundle ---
             {
               name: "vendor-i18n",
               test: /node_modules\/(i18next|i18next-http-backend|i18next-browser-languagedetector)(\/|$)/,

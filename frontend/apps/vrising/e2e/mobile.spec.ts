@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { openMap } from './glMap'
 
 const PHONE = { width: 390, height: 844 }
 
@@ -6,11 +7,10 @@ test.describe('mobile experience', () => {
   test.use({ viewport: PHONE })
 
   test('map controls form one clear stack above navigation', async ({ page }) => {
-    await page.goto('/?engine=leaflet')
-    await expect(page.locator('.leaflet-container')).toBeVisible()
+    await openMap(page)
 
     const barTop = (await page.getByTestId('bottom-tab-bar').boundingBox())!.y
-    const zoom = (await page.locator('.gm-zoom-pill').boundingBox())!
+    const zoom = (await page.locator('.gmgl-zoom-pill').boundingBox())!
     const search = (await page.getByTestId('map-fab-search').boundingBox())!
     const filter = (await page.getByTestId('map-fab-filter').boundingBox())!
 
@@ -20,7 +20,7 @@ test.describe('mobile experience', () => {
   })
 
   test('search and filters use sheets that clear the bottom navigation', async ({ page }) => {
-    await page.goto('/?engine=leaflet')
+    await openMap(page)
 
     await page.getByTestId('map-fab-search').click()
     const searchSheet = page.getByTestId('search-sheet')
@@ -49,7 +49,7 @@ test.describe('mobile experience', () => {
   })
 
   test('mobile sheets do not survive the landscape breakpoint', async ({ page }) => {
-    await page.goto('/?engine=leaflet')
+    await openMap(page)
     await page.getByTestId('map-fab-filter').click()
     await expect(page.getByTestId('filter-sheet')).toBeVisible()
     await page.setViewportSize({ width: 844, height: 390 })

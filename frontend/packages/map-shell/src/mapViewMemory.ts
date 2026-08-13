@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react"
 
-/** DATA-space map center + Leaflet zoom, as saved/restored across reloads. */
+/** DATA-space map center + engine zoom (`scale = 2^zoom`), saved across reloads. */
 export type MapViewState = { x: number; y: number; zoom: number }
 
 /**

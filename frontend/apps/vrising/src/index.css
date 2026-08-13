@@ -20,7 +20,6 @@
 
 /* The map void is game-owned because it must blend with Vardoran's parchment
    artwork. All interface chrome continues to use the shared Arkive tokens. */
-.leaflet-container,
 .gmgl-map-root {
   background: var(--vrising-map-void);
 }

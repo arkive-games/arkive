@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { EngineMarker } from '@gamemap/map-engine'
+import type { EngineMarker } from '@gamemap/map-engine-gl'
 import { buildPatrolRouteLines } from './patrolRoutes'
 
 function marker(id: string, subtype: string, route: EngineMarker['route']): EngineMarker {

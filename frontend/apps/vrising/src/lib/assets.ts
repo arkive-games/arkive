@@ -1,4 +1,4 @@
-import type { MapAssets } from '@gamemap/map-engine'
+import type { MapAssets } from '@gamemap/map-engine-gl'
 import { RES_BASE } from './urls'
 
 const pad2 = (n: number) => String(n).padStart(2, '0')

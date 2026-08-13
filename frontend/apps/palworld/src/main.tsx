@@ -12,11 +12,9 @@ import { AuthProvider } from '@gamemap/auth'
 import { createArkiveThemeStorage } from '@gamemap/ui'
 import { initBaiduAnalytics, ThemeProvider, trackPageview } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
-import 'leaflet/dist/leaflet.css'
-import '@gamemap/map-engine/engine.css'
-// The WebGL engine's own stylesheet is NOT imported here: it rides along with the
-// engine's lazy chunk (see features/map/GlMapView) so only the map route pays for
-// it — the catalog/detail pages never fetch it.
+// The map engine's stylesheet is NOT imported here: it rides along with the
+// engine's lazy chunk (see features/map/GlMapView) so only the routes that draw a
+// map pay for it.
 import './index.css'
 import './i18n'
 import App from './App'
@@ -49,7 +47,6 @@ import PartnerSkillsPage from './features/pals/PartnerSkillsPage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import { BottomTabBar } from './components/BottomTabBar'
 import { initDataVersion } from './lib/urls'
-import { isMapEngineChoice, type MapEngineChoice } from './lib/mapEngineChoice'
 
 const themeStorage = createArkiveThemeStorage({ legacyKeys: ['palworld.theme'] })
 
@@ -68,12 +65,6 @@ export interface MapSearch {
   map?: string
   x?: number
   y?: number
-  /**
-   * Render-engine override for this visit: `gl` mounts the WebGL (three.js) map
-   * engine, `leaflet` the original one. When present it beats the persisted
-   * choice without overwriting it — see `lib/mapEngineChoice`.
-   */
-  engine?: MapEngineChoice
 }
 const mapRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -83,7 +74,6 @@ const mapRoute = createRoute({
     map: typeof s.map === 'string' ? s.map : undefined,
     x: (typeof s.x === 'string' || typeof s.x === 'number') && Number.isFinite(Number(s.x)) ? Number(s.x) : undefined,
     y: (typeof s.y === 'string' || typeof s.y === 'number') && Number.isFinite(Number(s.y)) ? Number(s.y) : undefined,
-    engine: isMapEngineChoice(s.engine) ? s.engine : undefined,
   }),
   component: App,
 })

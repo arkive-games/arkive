@@ -39,14 +39,25 @@ test.describe("wiki", () => {
     );
   });
 
-  test("quest page embedded map shows only POI pins", async ({ page }) => {
+  // The embed draws its POI pins INTO a canvas, so there is no per-pin DOM to
+  // count any more. What stays observable is that the embed mounted one live
+  // canvas with a real drawing buffer — a zero-sized buffer renders nothing while
+  // still reporting as visible, which is the failure this guards.
+  test("quest page embedded map mounts a sized canvas", async ({ page }) => {
     await page.goto("/wiki/quest/main?lng=en-US");
     await page.locator('[data-testid^="wiki-entry-"]').first().click();
     const embed = page.getByTestId("embedded-map");
     if (await embed.isVisible()) {
-      const pins = embed.locator(".leaflet-marker-icon");
-      expect(await pins.count()).toBeGreaterThan(0);
-      expect(await pins.count()).toBeLessThan(60);
+      const canvas = embed.getByTestId("gl-embed-canvas");
+      await expect(canvas).toHaveCount(1);
+      const size = await canvas.evaluate((c: HTMLCanvasElement) => ({
+        w: c.width,
+        h: c.height,
+        cw: c.clientWidth,
+      }));
+      expect(size.cw).toBeGreaterThan(100);
+      expect(size.w).toBeGreaterThan(0);
+      expect(size.h).toBeGreaterThan(0);
     }
   });
 

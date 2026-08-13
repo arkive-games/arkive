@@ -1,48 +1,44 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
-// Markers render as Leaflet divIcons: a .leaflet-marker-icon div whose
-// innerHTML contains an <img> with the icon URL. Tiles are served from
-// /palres/tiles/<MapId>/<MapId>_XX_YY.webp by the Vite dev middleware.
-//
-// The WebGL engine is now the DEFAULT map engine (see lib/mapEngineChoice), and
-// it draws everything into one canvas with no per-marker DOM — so every test
-// here pins `?engine=leaflet` to keep asserting the Leaflet engine it was
-// written for. The GL engine has its own spec (gl-map.spec.ts).
+// The engine draws tiles and markers into ONE canvas, so neither is in the DOM:
+// tiles are uploaded as GPU textures and marker icons are composed into a bitmap
+// atlas. What stays observable is the NETWORK — the app still fetches
+// /palres/tiles/<MapId>/<MapId>_XX_YY.webp and the marker icon images — so the
+// "is the right map drawn" assertions here watch requests instead of elements.
+// Clicking a marker and reading what it opens lives in map.spec.ts, which drives
+// the canvas through the engine's window handle.
+
+/** Open the map and wait until the canvas is up. */
+async function openMap(page: Page) {
+  await page.goto('/')
+  await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
+}
+
+/** Collect every request whose URL contains `needle`, from now on. */
+function watchRequests(page: Page, needle: string): string[] {
+  const seen: string[] = []
+  page.on('request', (r) => {
+    if (r.url().includes(needle)) seen.push(r.url())
+  })
+  return seen
+}
 
 test('renders MainWorld tiles', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  await expect(
-    page.locator('img.leaflet-tile[src*="/palres/tiles/MainWorld/"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
+  const tiles = watchRequests(page, '/palres/tiles/MainWorld/')
+  await openMap(page)
+  await expect.poll(() => tiles.length, { timeout: 15_000 }).toBeGreaterThan(0)
 })
 
 test('fast-travel markers are present', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  // divIcon markers: .leaflet-marker-icon wrapping an <img src="...T_icon_compass_FTtower.webp">
-  await expect(
-    page
-      .locator('.leaflet-marker-pane .leaflet-marker-icon img[src*="T_icon_compass_FTtower"]')
-      .first(),
-  ).toBeVisible({ timeout: 15_000 })
-})
-
-test('toggling a subtype hides its markers', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  const ftMarkers = page.locator(
-    '.leaflet-marker-pane .leaflet-marker-icon img[src*="T_icon_compass_FTtower"]',
-  )
-  await expect(ftMarkers.first()).toBeVisible({ timeout: 15_000 })
-  // The testid is on an aria-pressed toggle button — click to hide.
-  await page.getByTestId('subtype-toggle-fastTravel').click()
-  await expect(ftMarkers).toHaveCount(0, { timeout: 10_000 })
+  // The fast-travel subtype is `defaultActive`, so its icon must be fetched for
+  // the pin atlas as soon as the map draws.
+  const icons = watchRequests(page, 'T_icon_compass_FTtower')
+  await openMap(page)
+  await expect.poll(() => icons.length, { timeout: 15_000 }).toBeGreaterThan(0)
 })
 
 test('switching language to ko-KR localizes UI and data labels', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await openMap(page)
   await page.getByTestId('lang-menu').click()
   await page.getByTestId('lang-ko-KR').click()
   // App UI string (i18n resources) + data-locale taxonomy label (types.json).
@@ -60,23 +56,23 @@ test('data fetches carry the artifact-version cache-buster', async ({ page }) =>
       dataRequests.push(url.pathname + url.search)
     }
   })
-  await page.goto('/?engine=leaflet')
-  await expect(
-    page.locator('.leaflet-marker-pane .leaflet-marker-icon img[src*="T_icon_compass_FTtower"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
+  const icons = watchRequests(page, 'T_icon_compass_FTtower')
+  await openMap(page)
+  // Wait until the map has really drawn markers, so the marker/taxonomy fetches
+  // are certain to have happened.
+  await expect.poll(() => icons.length, { timeout: 15_000 }).toBeGreaterThan(0)
   expect(dataRequests.length).toBeGreaterThan(0)
   for (const u of dataRequests) expect(u).toMatch(/\?v=[0-9a-f]{12}$/)
 })
 
 test('map switch swaps tile URLs', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  await expect(
-    page.locator('img.leaflet-tile[src*="/palres/tiles/MainWorld/"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
+  const mainWorld = watchRequests(page, '/palres/tiles/MainWorld/')
+  const worldTree = watchRequests(page, '/palres/tiles/WorldTree/')
+  await openMap(page)
+  await expect.poll(() => mainWorld.length, { timeout: 15_000 }).toBeGreaterThan(0)
+  expect(worldTree).toHaveLength(0)
+
   await page.getByTestId('map-select').click()
   await page.getByTestId('map-option-WorldTree').click()
-  await expect(
-    page.locator('img.leaflet-tile[src*="/palres/tiles/WorldTree/"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
+  await expect.poll(() => worldTree.length, { timeout: 15_000 }).toBeGreaterThan(0)
 })

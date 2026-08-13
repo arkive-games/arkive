@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 // Regression: on phones the map picker lives inside the filter bottom-sheet
 // (App.tsx `if (isMobile)` -> <SheetHeader>{mapSelect}</SheetHeader>), and both
@@ -12,21 +12,29 @@ import { test, expect } from '@playwright/test'
 // "map selection can not be used" on mobile. ShellMapSelect now uses the named
 // nested-overlay layer.
 //
-// `?engine=leaflet` is pinned so the tile-URL assertions below have DOM tiles to
-// look at — the WebGL engine (the default) draws into one canvas. Same reason as
-// smoke.spec.ts / mobile.spec.ts.
+// Tiles are GPU textures, not DOM, so "the map really swapped" is asserted on the
+// NETWORK — the tile fetch for the new map — as in smoke.spec.ts.
 
 test.use({ viewport: { width: 390, height: 844 } })
+
+/** Collect every request whose URL contains `needle`, from now on. */
+function watchRequests(page: Page, needle: string): string[] {
+  const seen: string[] = []
+  page.on('request', (r) => {
+    if (r.url().includes(needle)) seen.push(r.url())
+  })
+  return seen
+}
 
 const OVERLAY = '[data-slot="sheet-overlay"]'
 const LISTBOX = '[data-slot="select-content"]'
 
 test('mobile map picker switches the map from inside the filter sheet', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  await expect(
-    page.locator('img.leaflet-tile[src*="/palres/tiles/MainWorld/"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
+  const mainWorld = watchRequests(page, '/palres/tiles/MainWorld/')
+  const worldTree = watchRequests(page, '/palres/tiles/WorldTree/')
+  await page.goto('/')
+  await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
+  await expect.poll(() => mainWorld.length, { timeout: 15_000 }).toBeGreaterThan(0)
 
   await page.getByTestId('map-fab-filter').click()
   await expect(page.getByTestId('filter-sheet')).toBeVisible()
@@ -60,14 +68,12 @@ test('mobile map picker switches the map from inside the filter sheet', async ({
   // the tile URL is locale-independent, unlike the trigger's label.
   await page.keyboard.press('Escape')
   await expect(page.getByTestId('filter-sheet')).toHaveCount(0)
-  await expect(
-    page.locator('img.leaflet-tile[src*="/palres/tiles/WorldTree/"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
+  await expect.poll(() => worldTree.length, { timeout: 15_000 }).toBeGreaterThan(0)
 })
 
 test('the map listbox stacks above the filter sheet', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await page.goto('/')
+  await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
   await page.getByTestId('map-fab-filter').click()
   await expect(page.getByTestId('filter-sheet')).toBeVisible()
   await page.getByTestId('map-select').click()

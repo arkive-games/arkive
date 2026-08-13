@@ -1,18 +1,14 @@
 import { test } from "@playwright/test";
 import { mapUrl } from "./engines";
 
-// Review screenshots of the map. They exist to be LOOKED AT, so they are taken
-// on the engine visitors actually get — the WebGL one (default since 9e1495d) —
-// pinned explicitly so a shot can never silently change renderer because of a
-// default flip or a stale stored preference.
+// Review screenshots of the map. They exist to be LOOKED AT, so readiness has to
+// be real rather than a fixed sleep.
 //
-// The old readiness gate (`.leaflet-container` + `.leaflet-tile-loaded`) has no
-// counterpart here: GL tiles are uploaded as textures, not DOM, so there is no
-// per-tile element to wait for. The gate is the canvas, the engine handle and
-// then NETWORK IDLE — verified necessary: at 1920x1080 the whole 8x8 tile set is
-// requested at once and the old flat 2.5s settle caught the map with a third of
-// it still missing (white blocks in the shot), while Leaflet's progressive
-// <img> decode looked complete by then.
+// Tiles are uploaded as GPU textures, not DOM, so there is no per-tile element to
+// wait for: the gate is the canvas, the engine handle and then NETWORK IDLE.
+// Verified necessary — at 1920x1080 the whole 8x8 tile set is requested at once,
+// and a flat 2.5s settle caught the map with a third of it still missing (white
+// blocks in the shot).
 const MAPS = ["World_L_A", "Abyss_Reshanta_A"];
 const THEMES = ["light", "dark"] as const;
 const LANGS = ["en-US", "zh-CN"] as const;
@@ -23,7 +19,7 @@ for (const map of MAPS) {
       test(`shot ${map} ${theme} ${lng}`, async ({ page }) => {
         await page.addInitScript((t) => localStorage.setItem("aion2.theme", t), theme);
         await page.setViewportSize({ width: 1920, height: 1080 });
-        await page.goto(mapUrl("gl", `map=${map}&lng=${lng}`));
+        await page.goto(mapUrl(`map=${map}&lng=${lng}`));
         await page
           .getByTestId("gl-map-canvas")
           .waitFor({ state: "visible", timeout: 20_000 });

@@ -496,7 +496,7 @@ jobs:
 
             `ci.yml` runs, on this exact head commit: `pnpm test` (the whole unit
             suite), `eslint` for every app, `tsc -b && vite build` for every app,
-            and the repository invariant checks (`check:engine`, `check:shell`,
+            and the repository invariant checks (`check:engine-gl`, `check:shell`,
             `memory:keys:check`, `changelog:verify`).
 
             **If CI concluded `success`, nothing those commands would have caught

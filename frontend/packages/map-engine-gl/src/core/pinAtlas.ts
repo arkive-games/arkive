@@ -6,6 +6,7 @@ import {
   type Texture,
 } from "three";
 import type { MarkerTypeSubtype } from "@gamemap/data-contract";
+import { DEFAULT_PIN_THEME, type PinTheme } from "./pinTheme.ts";
 
 /**
  * Marker pin bitmaps: the GL replacement for `@gamemap/map-engine`'s
@@ -41,33 +42,14 @@ import type { MarkerTypeSubtype } from "@gamemap/data-contract";
 // ------------------------------------------------------------------- theme ---
 
 /**
- * Colours used by the pin bitmaps. Copied from `@gamemap/map-engine`'s
- * `theme.ts` so the core needs no React-layer import.
- *
- * `src/react/theme.ts` RE-EXPORTS these two names (and adds `MapTheme` for the
- * chrome on top) rather than redeclaring them, so `src/index.ts` exports exactly
- * one `PinTheme` — keep it that way.
+ * The pin colours live in the import-free `core/pinTheme.ts` and are re-exported
+ * here, so this module stays their single public home while an app can read them
+ * without pulling three.js in. `src/react/theme.ts` re-exports the same two names
+ * (and adds `MapTheme` for the chrome on top) rather than redeclaring them, so
+ * `src/index.ts` exports exactly one `PinTheme` — keep it that way.
  */
-export interface PinTheme {
-  /** Fallback "pin" variant: dark translucent outer disc background. */
-  pinDiscBg: string;
-  /** Fallback "pin" variant: hairline border around the disc. */
-  pinBorder: string;
-  /** Fallback "pin" variant: default inner-dot colour (subtype colour wins). */
-  pinDot: string;
-  /** "circular" variant: default ring colour when the subtype declares none. */
-  circularBorder: string;
-  /** Completed tick + fragment air/water chevron colour. */
-  completedAccent: string;
-}
-
-export const DEFAULT_PIN_THEME: PinTheme = {
-  pinDiscBg: "rgba(0,0,0,0.6)",
-  pinBorder: "rgba(255,255,255,1)",
-  pinDot: "#0090FF",
-  circularBorder: "rgba(255,255,255,0.9)",
-  completedAccent: "#30A46C",
-};
+export { DEFAULT_PIN_THEME };
+export type { PinTheme };
 
 // --------------------------------------------------- injected 2D surfaces ---
 

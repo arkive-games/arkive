@@ -1,4 +1,4 @@
-import type { EngineMarker, GameMapViewProps } from '@gamemap/map-engine'
+import type { EngineMarker, GameMapViewProps } from '@gamemap/map-engine-gl'
 
 type OverlayLines = NonNullable<GameMapViewProps['overlayLines']>
 const PATROL_ROUTE_COLOR = '#E5484D'

@@ -12,11 +12,11 @@
   --arkive-layer-local-underlay: -1;
   --arkive-layer-local-content: 0;
   /* For controls layered against their OWN content only -- a dialog close button,
-     an input icon. NOT for anything overlaying a map: Leaflet's panes run 200
-     (tiles) to 800 (controls) in the same stacking context, because
-     .leaflet-container is position:relative with z-index:auto and establishes
-     none, so a value of 1 paints and hit-tests underneath the tiles. Use
-     --arkive-layer-map-control for those. */
+     an input icon. NOT for anything overlaying a map: the map root establishes
+     its own stacking context (.gmgl-map-root is position:relative with
+     isolation:isolate) and its canvas plus DOM overlay fill it, so a value of 1
+     paints and hit-tests underneath the map. Use --arkive-layer-map-control for
+     those. */
   --arkive-layer-local-control: 1;
   --arkive-layer-sticky: 1800;
   --arkive-layer-map-control: 1900;
@@ -291,13 +291,11 @@ textarea {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
 }
 
-.arkive-map-page .gm-zoom,
 .arkive-map-page .gmgl-zoom {
   right: 0.85rem;
   bottom: 0.85rem;
 }
 
-.arkive-map-page .gm-zoom-pill,
 .arkive-map-page .gmgl-zoom-pill {
   border: 1px solid var(--border);
   border-radius: var(--arkive-radius-standard);
@@ -306,25 +304,21 @@ textarea {
   backdrop-filter: blur(0.75rem);
 }
 
-.arkive-map-page .gm-zoom-btn,
 .arkive-map-page .gmgl-zoom-btn {
   width: 2.5rem;
   height: 2.5rem;
   color: var(--foreground) !important;
 }
 
-.arkive-map-page .gm-zoom-btn:hover,
 .arkive-map-page .gmgl-zoom-btn:hover {
   background: var(--accent);
   color: var(--primary) !important;
 }
 
-.arkive-map-page .gm-zoom-divider,
 .arkive-map-page .gmgl-zoom-divider {
   background: var(--border);
 }
 
-.arkive-map-page .gm-statusbar-stack,
 .arkive-map-page .gmgl-statusbar-stack {
   bottom: 0.85rem;
   left: 0.85rem;
@@ -334,9 +328,7 @@ textarea {
   color: var(--foreground);
 }
 
-.arkive-map-page .gm-statusbar-footer,
 .arkive-map-page .gmgl-statusbar-footer,
-.arkive-map-page .gm-statusbar-pill,
 .arkive-map-page .gmgl-statusbar-pill {
   border: 1px solid var(--border);
   border-radius: var(--arkive-radius-standard);
@@ -346,20 +338,17 @@ textarea {
   backdrop-filter: blur(0.65rem);
 }
 
-.arkive-map-page .gm-statusbar-footer,
 .arkive-map-page .gmgl-statusbar-footer {
   padding: 0.45rem 0.65rem;
   line-height: 1;
   color: var(--muted-foreground);
 }
 
-.arkive-map-page .gm-statusbar-pill,
 .arkive-map-page .gmgl-statusbar-pill {
   min-height: 1.85rem;
   padding-inline: 0.65rem;
 }
 
-.arkive-map-page .leaflet-tooltip.gm-marker-tooltip,
 .arkive-map-page .gmgl-label,
 .arkive-map-page .gmgl-tooltip {
   border-radius: var(--arkive-radius-compact);
@@ -368,16 +357,11 @@ textarea {
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
 }
 
-.arkive-map-page .leaflet-tooltip.gm-marker-tooltip::before {
-  border-top-color: var(--card) !important;
-}
-
 .arkive-map-page .gmgl-label::after,
 .arkive-map-page .gmgl-tooltip::after {
   border-top-color: var(--card);
 }
 
-.arkive-map-page .gm-marker-popup .gm-popup-card::after,
 .arkive-map-page .gmgl-popup .gm-popup-card::after {
   border-top-color: var(--card);
 }
@@ -467,31 +451,25 @@ textarea {
     bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
   }
 
-  .arkive-mobile-map .gm-zoom,
   .arkive-mobile-map .gmgl-zoom {
     right: 0.75rem;
     bottom: calc(env(safe-area-inset-bottom) + 11.5rem);
   }
 
-  .arkive-mobile-map .gm-zoom-pill,
   .arkive-mobile-map .gmgl-zoom-pill {
     border-radius: var(--arkive-radius-standard);
   }
 
-  .arkive-mobile-map .gm-zoom-btn,
   .arkive-mobile-map .gmgl-zoom-btn {
     width: var(--arkive-touch-target);
     height: var(--arkive-touch-target);
   }
 
-  .arkive-mobile-map .gm-statusbar-stack,
   .arkive-mobile-map .gmgl-statusbar-stack {
     bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
   }
 
-  .arkive-mobile-map .gm-statusbar-footer,
   .arkive-mobile-map .gmgl-statusbar-footer,
-  .arkive-mobile-map .gm-statusbar-pill,
   .arkive-mobile-map .gmgl-statusbar-pill {
     border-color: var(--arkive-map-overlay-border);
     border-radius: var(--arkive-radius-compact);
@@ -511,7 +489,6 @@ textarea {
     width: min(20rem, calc(100vw - 2rem));
   }
 
-  .arkive-map-page .gm-marker-popup .gm-popup-card,
   .arkive-map-page .gmgl-popup .gm-popup-card {
     max-height: min(72dvh, 32rem);
     overscroll-behavior: contain;

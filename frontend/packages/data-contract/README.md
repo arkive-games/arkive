@@ -5,7 +5,7 @@ pipeline emits into a `data/` repo and the frontend consumes over HTTP.
 It contains the TypeScript types, matching zod schemas, and a Node CLI that
 validates a real `data/` checkout against the contract.
 
-Dependency rule: this package depends on **zod only** — no React, no Leaflet,
+Dependency rule: this package depends on **zod only** — no React, no renderer,
 no app imports.
 
 ## Exports

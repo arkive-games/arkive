@@ -2,7 +2,7 @@
 //
 // These types describe the JSON files emitted by a game's `tools` pipeline
 // into a `data/` repo (maps, marker types, marker instances, regions).
-// They must stay free of app concerns: no React, no Leaflet, no backend types.
+// They must stay free of app concerns: no React, no renderer, no backend types.
 
 /** Bump when the emitted data format changes; document in README changelog. */
 export const CONTRACT_VERSION = 1;

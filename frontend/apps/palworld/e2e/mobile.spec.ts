@@ -121,13 +121,12 @@ test('stat simulator keeps the in-game column pinned inside the viewport', async
   expect(box.x + box.width).toBeLessThanOrEqual(390)
 })
 
-// This one test pins `?engine=leaflet`: the WebGL engine is the default now (see
-// lib/mapEngineChoice) and renders no `.leaflet-container`. The GL engine's own
-// mobile chrome is covered by gl-map.spec.ts; the other tests here never touch
-// the map surface, so they stay on the default engine.
+// The map surface itself is covered by map.spec.ts, which drives the canvas; the
+// tests here are about the mobile chrome laid over it, so they only need the map
+// to be up.
 test('map page shows FABs that open filter and search sheets', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await page.goto('/')
+  await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
   await page.getByTestId('map-fab-filter').click()
   await expect(page.getByTestId('filter-sheet')).toBeVisible()
   // Close (Escape) then open search.
@@ -138,11 +137,11 @@ test('map page shows FABs that open filter and search sheets', async ({ page }) 
 })
 
 test('map controls form one ordered stack above navigation', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await page.goto('/')
+  await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
 
   const barTop = (await page.getByTestId('bottom-tab-bar').boundingBox())!.y
-  const zoom = (await page.locator('.gm-zoom-pill').boundingBox())!
+  const zoom = (await page.locator('.gmgl-zoom-pill').boundingBox())!
   const search = (await page.getByTestId('map-fab-search').boundingBox())!
   const filter = (await page.getByTestId('map-fab-filter').boundingBox())!
 
@@ -152,7 +151,7 @@ test('map controls form one ordered stack above navigation', async ({ page }) =>
 })
 
 test('map sheets clear navigation and the filter action exposes changed state', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
+  await page.goto('/')
   const barTop = (await page.getByTestId('bottom-tab-bar').boundingBox())!.y
   const filterAction = page.getByTestId('map-fab-filter')
 
@@ -176,15 +175,18 @@ test('map sheets clear navigation and the filter action exposes changed state', 
   await expect(page.getByTestId('map-filter-active-indicator')).toBeVisible()
 })
 
+// Markers are drawn into the canvas, so density is asserted through the engine's
+// own count of what it drew rather than by counting DOM nodes. `lodEnabled` is on
+// for phones, so the overview must stay well below the full marker set.
 test('mobile overview uses adaptive marker density', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  const markers = page.locator('.leaflet-marker-icon')
-  await expect.poll(() => markers.count(), { timeout: 15_000 }).toBeGreaterThan(0)
-  expect(await markers.count()).toBeLessThan(100)
+  await page.goto('/')
+  await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
+  const labels = page.locator('.gmgl-label:visible')
+  await expect.poll(() => labels.count(), { timeout: 15_000 }).toBeLessThan(100)
 })
 
 test('an open map sheet does not survive the landscape breakpoint', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
+  await page.goto('/')
   await page.getByTestId('map-fab-filter').click()
   await expect(page.getByTestId('filter-sheet')).toBeVisible()
   await page.setViewportSize({ width: 844, height: 390 })

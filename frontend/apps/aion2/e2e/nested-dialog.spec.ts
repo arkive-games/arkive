@@ -7,16 +7,14 @@ import { openMap } from "./engines";
  * is below the sheet's, the confirm buttons render behind the sheet and the UI
  * looks frozen.
  *
- * Runs on the WebGL engine — the DEFAULT one, and the one whose map root opens
- * its own stacking context (`isolation: isolate` on `.gmgl-map-root`), so it is
- * also the interesting case for a portalled dialog. Nothing here is
- * Leaflet-specific: the map is only a backdrop, so the old `.leaflet-container`
- * wait is just replaced by the GL canvas.
+ * The map root opens its own stacking context (`isolation: isolate` on
+ * `.gmgl-map-root`), which is what makes a portalled dialog above it worth a
+ * test. The map itself is only a backdrop here.
  */
 test.use({ viewport: { width: 390, height: 844 } });
 
 test("Clear completed confirm is above the filter sheet", async ({ page }) => {
-  await openMap(page, "gl");
+  await openMap(page);
   await page.getByTestId("map-fab-filter").click();
   const sheet = page.getByTestId("filter-sheet");
   await sheet.waitFor({ state: "visible" });

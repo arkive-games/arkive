@@ -1,6 +1,5 @@
 arkive.memory.aion2.map.completed-markers	-	apps/aion2/src/context/MarkersContext.tsx
 arkive.memory.aion2.map.completed-markers-v1	-	apps/aion2/src/context/MarkersContext.tsx
-arkive.memory.aion2.map.engine	-	apps/aion2/src/lib/mapEngineChoice.ts
 arkive.memory.aion2.map.info-collapsed	-	apps/aion2/src/features/map/sidebar/InfoSidebar.tsx
 arkive.memory.aion2.map.level-of-detail	-	apps/aion2/src/context/GameDataContext.tsx
 arkive.memory.aion2.map.show-borders	-	apps/aion2/src/context/GameDataContext.tsx
@@ -18,7 +17,6 @@ arkive.memory.palworld.catalog.reveal-depth	-	apps/palworld/src/features/catalog
 arkive.memory.palworld.catalog.view-mode	-	apps/palworld/src/features/pals/PalListPage.tsx
 arkive.memory.palworld.map.collapsed-filter-categories	-	apps/palworld/src/App.tsx
 arkive.memory.palworld.map.completed-markers	-	apps/palworld/src/lib/completedMarkers.ts
-arkive.memory.palworld.map.engine	-	apps/palworld/src/lib/mapEngineChoice.ts
 arkive.memory.palworld.map.info-collapsed	-	apps/palworld/src/components/InfoSidebar.tsx
 arkive.memory.palworld.map.show-labels	-	apps/palworld/src/App.tsx
 arkive.memory.palworld.map.show-regions	-	apps/palworld/src/App.tsx
@@ -51,7 +49,6 @@ arkive.memory.sts2.cards-catalog.query	-	apps/sts2/src/features/cards/CardListPa
 arkive.memory.vrising.knowledge.query	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx
 arkive.memory.vrising.knowledge.reveal-depth	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx
 arkive.memory.vrising.knowledge.section	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx
-arkive.memory.vrising.map.engine	-	apps/vrising/src/lib/mapEngineChoice.ts
 arkive.memory.vrising.map.info-collapsed	-	apps/vrising/src/components/InfoSidebar.tsx
 arkive.memory.vrising.map.show-labels	-	apps/vrising/src/features/map/MapPage.tsx
 arkive.memory.vrising.map.show-regions	-	apps/vrising/src/features/map/MapPage.tsx

@@ -1,13 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { openMap } from './glMap'
 
 // Named regions come from the game's region trigger volumes (regions/<map>.json).
 // Each marker is stamped with the region containing it; the popup shows the
 // localized region name, and a "Show regions" toggle draws the region borders.
 //
-// The border test pins `?engine=leaflet`: the WebGL engine is the default now
-// (see lib/mapEngineChoice) and draws borders into its canvas, so there is no
-// `.leaflet-overlay-pane path` to count. The popup test is engine-agnostic (the
-// popup is app chrome) and deliberately runs on the default engine.
+// Borders are drawn INTO the canvas, so there are no border elements to count;
+// the toggle test compares the rendered pixels instead.
 
 test('marker popup shows the containing region name', async ({ page }) => {
   // "Sword Schematic 3" is an Ancient Shrine inside the Crescent Moon Shore
@@ -22,13 +21,25 @@ test('marker popup shows the containing region name', async ({ page }) => {
 })
 
 test('show-regions toggle draws region borders', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  // No region border polylines until the toggle is on.
-  const borders = page.locator('.leaflet-overlay-pane path')
-  await expect(borders.first()).toBeHidden()
+  const canvas = await openMap(page)
+  const toggle = page.getByTestId('map-show-regions').first()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+
+  // Borders live INSIDE the canvas, so there is no element to count. What can be
+  // observed is the rendered output: Playwright screenshots the composited canvas
+  // (no `preserveDrawingBuffer` needed), so drawing borders must change the
+  // pixels. Comparing the two shots is the only assertion here that would fail if
+  // the toggle stopped reaching the renderer.
+  const before = await canvas.screenshot()
+
   // By test id, not by label: this was `name: 'Show regions'` until 08a6fbfd
   // renamed the control to "Show region borders", and the spec went quietly red.
-  await page.getByTestId('map-show-regions').first().click()
-  await expect(borders.first()).toBeVisible({ timeout: 10_000 })
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+
+  await expect
+    .poll(async () => Buffer.compare(await canvas.screenshot(), before) !== 0, {
+      timeout: 10_000,
+    })
+    .toBe(true)
 })

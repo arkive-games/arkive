@@ -1,12 +1,16 @@
 // Theme tokens for engine-rendered chrome. Defaults follow Arkive's canonical
-// Radix palette and match `@gamemap/map-engine`.
+// Radix palette.
 //
-// `PinTheme` / `DEFAULT_PIN_THEME` are RE-EXPORTED from the framework-free core
-// (`core/pinAtlas.ts` owns them, because composing pin bitmaps is core work).
+// `PinTheme` / `DEFAULT_PIN_THEME` are RE-EXPORTED from the framework-free core.
 // They are deliberately NOT redeclared here: `src/index.ts` re-exports both this
 // module and the core, and two structurally identical declarations of the same
 // name would be an ambiguous export.
-import { DEFAULT_PIN_THEME, type PinTheme } from "../core/pinAtlas.ts";
+//
+// Reachable as `@gamemap/map-engine-gl/theme`. The import below deliberately
+// points at `core/pinTheme.ts` rather than `core/pinAtlas.ts`: an app builds its
+// game theme outside the lazily-loaded map chunk, and pinAtlas would drag three.js
+// along. Keep this module's imports free of the engine.
+import { DEFAULT_PIN_THEME, type PinTheme } from "../core/pinTheme.ts";
 
 export { DEFAULT_PIN_THEME };
 export type { PinTheme };

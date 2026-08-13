@@ -20,10 +20,13 @@ test('dungeon detail renders header, sections, and the entrance map', async ({ p
   await expect(page.getByTestId('dungeon-encounters')).toBeVisible()
   await expect(page.getByTestId('dungeon-chest-loot')).toBeVisible()
   await expect(page.getByTestId('dungeon-boss-rewards')).toBeVisible()
-  // Entrance mini-map: Grass001 has 4 portals on MainWorld.
+  // Entrance mini-map. Grass001 has 4 portals on MainWorld, but the embed draws
+  // its pins into a canvas, so the count is no longer observable — the section
+  // heading carries it instead ("Entrances (4)" in en-US).
   const widget = page.getByTestId('dungeon-entrance-map')
   await expect(widget).toBeVisible()
-  await expect(widget.locator('.leaflet-marker-icon')).toHaveCount(4)
+  await expect(widget).toContainText('4')
+  await expect(widget.getByTestId('gl-embed-canvas')).toHaveCount(1)
   // Prev/next: the easiest dungeon has no prev; next exists.
   await expect(page.getByTestId('dungeon-prev')).toHaveCount(0)
   await page.getByTestId('dungeon-next').click()

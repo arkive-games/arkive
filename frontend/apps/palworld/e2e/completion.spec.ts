@@ -1,34 +1,26 @@
 import { test, expect } from '@playwright/test'
+import { clickMarker, openMap, pickClickableMarker } from './glMap'
 
 // Effigy & boss subtypes are completable: the popup pill toggles a per-map
 // completed set persisted in localStorage, and the subtype filter button
 // shows an X/N progress badge instead of a plain count.
 //
-// `?engine=leaflet` is pinned because the WebGL engine is the default now (see
-// lib/mapEngineChoice): reaching a boss popup here means clicking its
-// `.leaflet-marker-icon`, which only the Leaflet engine renders.
+// Reaching a boss popup means clicking a boss marker, and markers are drawn into
+// the canvas rather than the DOM — so the target is picked from the served data
+// and clicked at its projected screen point (see glMap.ts).
 
 test('marking a field boss completed flips the pill, badge, and survives reload', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await openMap(page)
 
   // Completable subtypes render a progress badge (starts at 0/N).
   const toggle = page.getByTestId('subtype-toggle-fieldBoss')
   await expect(toggle).toContainText(/0\/\d+/)
 
-  // fieldBoss is not defaultActive — enable it. Boss markers are circular pal
-  // portraits (…_icon_normal); pal spawns are hidden by default, so the first
-  // portrait marker is a boss.
+  // fieldBoss is not defaultActive — enable it, and tell the picker it is drawn
+  // so clearance is measured against the boss markers too.
   await toggle.click()
-  const boss = page
-    .locator('.leaflet-marker-pane .leaflet-marker-icon', {
-      has: page.locator('img[src*="_icon_normal"]'),
-    })
-    .first()
-  await expect(boss).toBeVisible({ timeout: 15_000 })
-  // Boss markers overlap at the default zoom, so a hit-tested click can be
-  // intercepted by a stacked sibling — dispatch the click on the element.
-  await boss.dispatchEvent('click')
+  const { target } = await pickClickableMarker(page, 'fieldBoss', ['fieldBoss'])
+  await clickMarker(page, target)
 
   const pill = page.getByTestId('marker-complete-toggle')
   await expect(pill).toBeVisible()
@@ -40,7 +32,7 @@ test('marking a field boss completed flips the pill, badge, and survives reload'
   // Persistence: the badge is computed from localStorage + marker data, so it
   // shows 1/N again after a reload even before re-enabling the subtype.
   await page.reload()
-  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
   await expect(page.getByTestId('subtype-toggle-fieldBoss')).toContainText(/1\/\d+/, { timeout: 15_000 })
 
   await page.getByTestId('map-clear-completed').click()
@@ -49,12 +41,12 @@ test('marking a field boss completed flips the pill, badge, and survives reload'
   await expect(page.getByTestId('subtype-toggle-fieldBoss')).toContainText(/0\/\d+/)
 
   await page.reload()
-  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
   await expect(page.getByTestId('subtype-toggle-fieldBoss')).toContainText(/0\/\d+/, { timeout: 15_000 })
 })
 
 test('non-completable subtypes keep a plain count (no slash)', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
+  await page.goto('/')
   const ft = page.getByTestId('subtype-toggle-fastTravel')
   await expect(ft).toBeVisible()
   await expect(ft).not.toContainText('/')

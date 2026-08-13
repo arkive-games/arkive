@@ -4,6 +4,13 @@ import type { Point } from "./types.ts";
 /**
  * Coordinate conversion between DATA space and the GL scene's pixel space.
  *
+ * Reachable as `@gamemap/map-engine-gl/coords` as well as through the barrel.
+ * That subpath exists because this module pulls in NOTHING — no three.js, no
+ * React — while the barrel is marked `sideEffects` and drags the whole engine
+ * (~1.5 MB) into whatever chunk imports it. An app that needs to project a
+ * coordinate outside the lazily-loaded map route must import the subpath, or the
+ * engine lands in the entry chunk and every non-map page pays for it.
+ *
  * DATA `(x, y)` on a marker/region is EITHER raw world coordinates (when the
  * map carries `worldBounds`+`orientation`) or already image-pixel coordinates
  * (legacy, no bounds). {@link worldToPixel} resolves that to a pixel position

@@ -117,7 +117,7 @@ jobs:
         run: |
           set -euo pipefail
           failed=""
-          for s in check:engine check:engine-gl check:shell check:api-drift memory:keys:check changelog:verify; do
+          for s in check:engine-gl check:shell check:api-drift memory:keys:check changelog:verify; do
             echo "--- $s"
             pnpm --silent "$s" || failed="$failed $s"
           done

@@ -1,68 +1,49 @@
 import { readFileSync } from 'node:fs'
 import { test, expect } from '@playwright/test'
+import {
+  clickMarker,
+  expectPixelsChanged,
+  hoverMarker,
+  isolatedMarkerByIcon,
+  openMap,
+} from './glMap'
 
 const SITE_VERSION = (JSON.parse(
   readFileSync(new URL('../src/changelog.json', import.meta.url), 'utf8'),
 ) as { entries: { version: string }[] }).entries[0].version
 
-// Markers render as Leaflet divIcons: a .leaflet-marker-icon div whose innerHTML
-// contains an <img> with the icon URL. Tiles come from
-// /vrisingres/tiles/Vardoran/Vardoran_XX_YY.webp via the Vite dev middleware.
+// Markers, tiles, region polygons and patrol routes are all drawn INTO one
+// canvas, so none of them is in the DOM. Two techniques replace the element
+// assertions: watching the NETWORK for the images the engine uploads as textures,
+// and comparing the RENDERED PIXELS before and after an interaction. Markers are
+// clicked and hovered at their projected screen point - see glMap.ts.
 //
-// Every map test here pins `?engine=leaflet`: the WebGL engine is the default
-// now (see lib/mapEngineChoice) and draws everything into one canvas, so there
-// are no `.leaflet-*` elements to assert on. Engine selection and persistence
-// have their own spec (engine.spec.ts).
+// Tile-grid coverage lives in engine.spec.ts, which asserts the 5x5 bounds.
 
-test('renders Vardoran tiles', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  await expect(
-    page.locator('img.leaflet-tile[src*="/vrisingres/tiles/Vardoran/"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
-})
-
-test('tile URLs use the 5x5 grid and never index past it', async ({ page }) => {
-  const tiles: string[] = []
+test('marker icons are fetched for the pin atlas', async ({ page }) => {
+  const icons: string[] = []
   page.on('request', (r) => {
-    if (r.url().includes('/vrisingres/tiles/Vardoran/')) tiles.push(r.url())
+    if (r.url().includes('MapIcon_')) icons.push(r.url())
   })
-  await page.goto('/?engine=leaflet')
-  await expect(
-    page.locator('img.leaflet-tile[src*="/vrisingres/tiles/Vardoran/"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
-  expect(tiles.length).toBeGreaterThan(0)
-  for (const url of tiles) {
-    const m = /Vardoran_(\d{2})_(\d{2})\.webp/.exec(url)
-    expect(m, url).not.toBeNull()
-    expect(Number(m![1])).toBeLessThan(5)
-    expect(Number(m![2])).toBeLessThan(5)
-  }
+  await openMap(page)
+  await expect.poll(() => icons.length, { timeout: 15_000 }).toBeGreaterThan(0)
 })
 
-test('region markers render with their game icons', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  await expect(
-    page.locator('.leaflet-marker-pane .leaflet-marker-icon img[src*="MapIcon_"]').first(),
-  ).toBeVisible({ timeout: 15_000 })
-})
-
-test('toggling a subtype hides its markers', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  const pins = page.locator('.leaflet-marker-pane .leaflet-marker-icon img[src*="MapIcon_CavePassage"]')
-  await expect(pins.first()).toBeVisible({ timeout: 15_000 })
+test('toggling a subtype changes what the map draws', async ({ page }) => {
+  const canvas = await openMap(page)
+  // Give the first full paint time to land before sampling it.
+  await page.waitForTimeout(1500)
+  const before = await canvas.screenshot()
   await page.getByTestId('subtype-toggle-poi').click()
-  await expect(pins).toHaveCount(0, { timeout: 10_000 })
+  await expectPixelsChanged(canvas, before)
 })
 
 test('selecting a marker opens a popup naming its region', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
-  // 372 region markers overlap heavily at the whole-map zoom, so a hit-tested
-  // click lands on a stacked sibling — dispatch the click on the element
-  // itself, as palworld's completion spec does for its boss pins.
-  await page.locator('.leaflet-marker-pane .leaflet-marker-icon').first().dispatchEvent('click')
+  await openMap(page)
+  // 372 region markers overlap at the whole-map zoom, so pick the one with the
+  // most clearance and click it zoomed in, where nothing else is under it.
+  const marker = await isolatedMarkerByIcon(page, 'MapIcon_')
+  await clickMarker(page, marker)
   await expect(page.getByTestId('marker-detail-drawer')).toBeVisible({ timeout: 10_000 })
   await expect(page.getByTestId('marker-region')).toBeVisible()
 })
@@ -77,17 +58,13 @@ test('data fetches carry the artifact-version cache-buster', async ({ page }) =>
       dataRequests.push(url.pathname + url.search)
     }
   })
-  await page.goto('/?engine=leaflet')
-  await expect(
-    page.locator('.leaflet-marker-pane .leaflet-marker-icon').first(),
-  ).toBeVisible({ timeout: 15_000 })
-  expect(dataRequests.length).toBeGreaterThan(0)
+  await openMap(page)
+  await expect.poll(() => dataRequests.length, { timeout: 15_000 }).toBeGreaterThan(0)
   for (const u of dataRequests) expect(u).toMatch(/\?v=[0-9a-f]{12}$/)
 })
 
 test('switching language localizes both UI chrome and data labels', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  await expect(page.locator('.leaflet-container')).toBeVisible()
+  await openMap(page)
   await page.getByTestId('lang-menu').click()
   await page.getByTestId('lang-zh-CN').click()
   // App UI string (i18n resources) and a data-locale taxonomy label (types.json).
@@ -130,17 +107,24 @@ test('About panel links this game history and the shared platform history', asyn
   await expect(platformUpdates).toHaveAttribute('target', '_blank')
 })
 
-test('hovering a roaming boss draws its patrol route in red', async ({ page }) => {
-  await page.goto('/?engine=leaflet')
-  const roamingBoss = page.locator(
-    '.leaflet-marker-icon:has(img[src*="BossPortrait_CHAR_Bandit_Chaosarrow_VBlood"])',
-  ).first()
-  await expect(roamingBoss).toBeVisible({ timeout: 15_000 })
-  await roamingBoss.dispatchEvent('mouseover')
+// The route is a set of overlay lines drawn into the canvas, so its colour is no
+// longer inspectable - what is observable is that hovering the boss changes the
+// rendered output, which it can only do by drawing the route.
+test('hovering a roaming boss draws its patrol route', async ({ page }) => {
+  const canvas = await openMap(page)
+  const boss = await isolatedMarkerByIcon(
+    page,
+    'BossPortrait_CHAR_Bandit_Chaosarrow_VBlood',
+  )
+  // Park the camera on the boss first, so the baseline shot already contains its
+  // pin and the only later difference is the route.
+  await hoverMarker(page, boss)
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(1000)
+  const before = await canvas.screenshot()
 
-  await expect.poll(async () => page.locator('path.leaflet-interactive').evaluateAll(
-    (paths) => paths.filter((path) => path.getAttribute('stroke')?.toLowerCase() === '#e5484d').length,
-  )).toBeGreaterThan(0)
+  await hoverMarker(page, boss)
+  await expectPixelsChanged(canvas, before)
 })
 
 test('the changelog page renders the current version', async ({ page }) => {

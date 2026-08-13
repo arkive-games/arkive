@@ -4,8 +4,6 @@ import { createRootRoute, createRoute, createRouter, Outlet, RouterProvider } fr
 import { AuthProvider } from '@gamemap/auth'
 import { initBaiduAnalytics, trackPageview, ThemeProvider } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
-import 'leaflet/dist/leaflet.css'
-import '@gamemap/map-engine/engine.css'
 import './index.css'
 import './i18n'
 import MapPage from './features/map/MapPage'
@@ -15,7 +13,6 @@ import VBloodDetailPage from './features/vblood/VBloodDetailPage'
 import KnowledgePage from './features/knowledge/KnowledgePage'
 import { themeStorage } from './lib/storage'
 import { initDataVersion } from './lib/urls'
-import { isMapEngineChoice, type MapEngineChoice } from './lib/mapEngineChoice'
 import { BottomTabBar } from './components/BottomTabBar'
 
 const rootRoute = createRootRoute({
@@ -30,19 +27,12 @@ const rootRoute = createRootRoute({
 export interface MapSearch {
   /** Prefill the marker search box. */
   q?: string
-  /**
-   * Render-engine override for this visit: `gl` mounts the WebGL (three.js) map
-   * engine, `leaflet` the original one. When present it beats the persisted
-   * choice without overwriting it — see `lib/mapEngineChoice`.
-   */
-  engine?: MapEngineChoice
 }
 const mapRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   validateSearch: (s: Record<string, unknown>): MapSearch => ({
     q: typeof s.q === 'string' ? s.q : undefined,
-    engine: isMapEngineChoice(s.engine) ? s.engine : undefined,
   }),
   component: MapPage,
 })

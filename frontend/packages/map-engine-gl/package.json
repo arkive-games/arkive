@@ -12,6 +12,8 @@
   ],
   "exports": {
     ".": "./src/index.ts",
+    "./coords": "./src/core/coords.ts",
+    "./theme": "./src/react/theme.ts",
     "./engine-gl.css": "./src/engine-gl.css"
   },
   "scripts": {

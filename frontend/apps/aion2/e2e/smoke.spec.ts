@@ -1,37 +1,10 @@
 import { test, expect } from "@playwright/test";
 
-// The three map-rendering tests below pin `?engine=leaflet`: each of them
-// asserts on DOM that only the Leaflet engine produces — one `img` per tile
-// (`.leaflet-tile-loaded`), one node per marker (`.leaflet-marker-icon`), and
-// the detail anchor portalled into `.leaflet-container`. The WebGL engine has
-// been the DEFAULT since 9e1495d and draws all three into a single canvas, so
-// there is nothing to count or click there; its equivalents (canvas + handle +
-// no console errors, marker click → detail, subtype filter → what the canvas
-// draws) live in gl-map.spec.ts.
-//
-// The rest of this file is engine-agnostic app chrome and stays on the default
-// engine, which is exactly what it should be smoking.
-
-test("map renders tiles and markers from local data, no console errors", async ({ page }) => {
-  const errors: string[] = [];
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-  await page.goto("/?engine=leaflet&map=World_L_A");
-  await expect(page.locator(".leaflet-container")).toBeVisible();
-  await expect(page.locator(".leaflet-tile-loaded").first()).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible({ timeout: 15_000 });
-  expect(errors, errors.join("\n")).toHaveLength(0);
-});
-
-test("type filter toggles marker visibility", async ({ page }) => {
-  await page.goto("/?engine=leaflet&map=World_L_A&lng=en-US");
-  await page.locator(".leaflet-marker-icon").first().waitFor({ timeout: 15_000 });
-  // LOD is off by default, so the subtype toggle alone governs visibility.
-  const before = await page.locator(".leaflet-marker-icon").count();
-  await page.getByTestId("subtype-toggle-fragments").click();
-  await expect
-    .poll(() => page.locator(".leaflet-marker-icon").count(), { timeout: 10_000 })
-    .not.toBe(before);
-});
+// App chrome only. Everything about the MAP itself — that it renders, that
+// markers are on it and clickable, that the subtype filter governs what is drawn
+// — lives in map.spec.ts, because the engine draws all of it into one canvas and
+// those assertions have to go through the view's window handle rather than the
+// DOM.
 
 test("search returns hits", async ({ page }) => {
   await page.goto("/?map=World_L_A&lng=en-US");
@@ -39,49 +12,6 @@ test("search returns hits", async ({ page }) => {
   await expect(
     page.getByTestId("search-results").locator("li, button").first(),
   ).toBeVisible({ timeout: 10_000 });
-});
-
-test("clicking a marker opens a local popup", async ({ page }) => {
-  await page.goto("/?engine=leaflet&map=World_L_A&lng=en-US");
-  await page.locator(".leaflet-marker-icon").first().waitFor({ timeout: 15_000 });
-  // LOD is off by default, so higher-tier markers also render at the default zoom,
-  // giving the in-viewport / clear-of-sidebar search plenty of clickable candidates.
-  // Markers are scattered across the map; many sit outside the initial
-  // viewport or behind the sidebar. Click the first icon that is fully
-  // within the map container and clear of the (overlaying) sidebar.
-  const icons = page.locator(".leaflet-marker-icon");
-  const count = await icons.count();
-  const viewport = page.viewportSize();
-  const sidebarBox = await page.locator("aside").first().boundingBox();
-  const minX = sidebarBox ? sidebarBox.x + sidebarBox.width : 0;
-  let clicked = false;
-  for (let i = 0; i < count; i++) {
-    const box = await icons.nth(i).boundingBox();
-    if (
-      box &&
-      viewport &&
-      box.x >= minX &&
-      box.y >= 0 &&
-      box.x + box.width <= viewport.width &&
-      box.y + box.height <= viewport.height
-    ) {
-      // With dense data, marker icons can overlap and intercept pointer
-      // events, so a given icon may not be the topmost element at its centre.
-      // Try this one; if its click is intercepted, move on to the next.
-      try {
-        await icons.nth(i).click({ timeout: 3_000 });
-        clicked = true;
-        break;
-      } catch {
-        continue;
-      }
-    }
-  }
-  expect(clicked, "no clickable in-viewport marker found").toBe(true);
-  // The anchor is a zero-size positioning wrapper, so it can only be counted,
-  // never seen; the drawer it carries is the visible surface.
-  await expect(page.locator(".leaflet-container [data-marker-detail-anchor]")).toHaveCount(1);
-  await expect(page.getByTestId("marker-detail-drawer")).toBeVisible();
 });
 
 test("theme switch applies the theme class", async ({ page }) => {

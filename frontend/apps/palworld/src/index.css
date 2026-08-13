@@ -24,24 +24,13 @@
   }
 }
 
-/* Region outside the map image (Leaflet void). The tiles are generated with the
+/* Region outside the map image (the map void). The tiles are generated with the
    out-of-border void cleared to transparent (tools: palworld.maps.slice_tiles),
-   so this background shows through both beyond the image bounds AND inside the
-   map extent past the coastline — letting the void colour follow the UI theme.
+   and the engine clears its canvas to transparent, so this background shows
+   through both beyond the image bounds AND inside the map extent past the
+   coastline — letting the void colour follow the UI theme.
    Light: a pale ocean blue. Dark: the map art's dark blue-black ocean edge
    (MainWorld #0c161e, WorldTree #0d151c) so it still blends into the coastline. */
-.leaflet-container {
-  background: #cfe4ef;
-}
-
-.dark .leaflet-container {
-  background: #0c161e;
-}
-
-/* Same void colour for the WebGL engine (`?engine=gl`): its canvas is cleared to
-   transparent, so the map root's background shows through exactly where the
-   Leaflet container's does. Kept next to the rule above so the two engines'
-   backgrounds can't drift apart. */
 .gmgl-map-root {
   background: #cfe4ef;
 }

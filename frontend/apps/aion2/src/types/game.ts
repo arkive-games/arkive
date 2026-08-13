@@ -23,5 +23,5 @@ export interface CommentInstance {
   createdAt: string;
 }
 
-// `MapRef` (Leaflet map-instance ref) moved into `@gamemap/map-engine`
-// together with the engine components.
+// The map handle type lives with the engine, as `GlMapRef` in
+// `@gamemap/map-engine-gl`.

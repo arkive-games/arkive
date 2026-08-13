@@ -1,19 +1,18 @@
 import { test, expect, type Page } from "@playwright/test";
-import { mapRoot, openMap, DEFAULT_MAP_PARAMS } from "./engines";
+import { mapRoot, openMap } from "./engines";
 
 /**
- * The WebGL (three.js) engine — aion2's DEFAULT renderer since 9e1495d.
+ * The map itself.
  *
- * It draws every tile, marker and region into ONE `<canvas>`, so the DOM
- * assertions the Leaflet specs are built on (`.leaflet-marker-icon`,
- * `img.leaflet-tile`) have no counterpart here. What this
- * spec drives instead is `window.__glMap`, the handle the view publishes when
- * `exposeTestHandle` is on (the app sets it in dev): project a DATA-space
- * coordinate to canvas pixels, then click that page point.
+ * The engine draws every tile, marker and region into ONE `<canvas>`, so there
+ * is no per-marker DOM to query or click. What this spec drives instead is
+ * `window.__glMap`, the handle the view publishes when `exposeTestHandle` is on
+ * (the app sets it in dev): project a DATA-space coordinate to canvas pixels,
+ * then click that page point.
  *
- * This file is where the GL half of the coverage that smoke.spec.ts keeps for
- * Leaflet lives: the map renders, markers are really on it and clickable, and
- * the subtype filter governs what the canvas draws.
+ * This is therefore where the core map coverage lives — the map renders, markers
+ * are really on it and clickable, and the subtype filter governs what the canvas
+ * draws — while smoke.spec.ts keeps to app chrome.
  *
  * The engine renders on demand — there is no continuous frame loop — so nothing
  * here sleeps for an animation; it polls the handle instead.
@@ -140,9 +139,7 @@ test("renders the GL canvas, publishes the handle, and logs no console errors", 
 }) => {
   const errors: string[] = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-  await openMap(page, "gl");
-  // Leaflet must not be mounted at all on this path.
-  await expect(page.locator(".leaflet-container")).toHaveCount(0);
+  await openMap(page);
 
   const view = await page.evaluate(() => ({
     zoom: window.__glMap!.getZoom(),
@@ -169,7 +166,7 @@ test("renders the GL canvas, publishes the handle, and logs no console errors", 
 test("clicking a marker opens its popup; clicking empty canvas closes it", async ({
   page,
 }) => {
-  await openMap(page, "gl");
+  await openMap(page);
   const target = await pickIsolatedMarker(page);
   await clickMarker(page, target);
 
@@ -195,7 +192,7 @@ test("clicking a marker opens its popup; clicking empty canvas closes it", async
 });
 
 test("a subtype toggle governs what the canvas draws", async ({ page }) => {
-  await openMap(page, "gl");
+  await openMap(page);
   const target = await pickIsolatedMarker(page);
 
   // On by default: the click lands on a marker.
@@ -205,7 +202,7 @@ test("a subtype toggle governs what the canvas draws", async ({ page }) => {
   // Hide its subtype. The marker is >100px from every other visible marker, so
   // if the filter really reaches the canvas the same point now hits nothing.
   // (Deselect first: the engine keeps the SELECTED marker visible on purpose.)
-  const spot = (await mapRoot(page, "gl").boundingBox())!;
+  const spot = (await mapRoot(page).boundingBox())!;
   await page.mouse.click(spot.x + spot.width * 0.12, spot.y + spot.height * 0.85);
   await expect(page.getByTestId("marker-detail-drawer")).toHaveCount(0);
 
@@ -237,7 +234,7 @@ test("a subtype toggle governs what the canvas draws", async ({ page }) => {
 });
 
 test("the cursor readout follows the pointer over the canvas", async ({ page }) => {
-  const canvas = await openMap(page, "gl");
+  const canvas = await openMap(page);
   const box = (await canvas.boundingBox())!;
   const coords = page.getByTestId("map-coords");
   await expect(coords).toHaveText(/x:--,y:--/);
@@ -248,76 +245,4 @@ test("the cursor readout follows the pointer over the canvas", async ({ page }) 
 
   await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.6);
   await expect(coords).not.toHaveText(first!);
-});
-
-/**
- * Engine selection itself: GL is the default, the top-bar switcher swaps
- * engines and persists the pick, and `?engine=` wins for one visit without
- * touching what was stored (src/lib/mapEngineChoice.ts).
- *
- * Every other map spec pins an engine through that param, so these are the
- * tests that keep the pinning honest.
- */
-test.describe("engine selection", () => {
-  const STORAGE_KEY = "arkive.memory.aion2.map.engine";
-  const glCanvas = (page: Page) => page.getByTestId("gl-map-canvas");
-  const leafletContainer = (page: Page) => page.locator(".leaflet-container");
-  const storedEngine = (page: Page) =>
-    page.evaluate((k) => {
-    // Stored as a state-memory envelope now, not a bare string.
-    const raw = localStorage.getItem(k)
-    if (!raw) return null
-    try { return (JSON.parse(raw) as { value?: unknown }).value ?? null } catch { return null }
-  }, STORAGE_KEY);
-
-  async function pickEngine(page: Page, choice: "gl" | "leaflet") {
-    await page.getByTestId("engine-menu").click();
-    await page.getByTestId(`engine-${choice}`).click();
-  }
-
-  test("defaults to the GL engine with no param and empty storage", async ({ page }) => {
-    await page.goto(`/?${DEFAULT_MAP_PARAMS}`);
-    expect(await storedEngine(page)).toBeNull();
-    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 });
-    await page.waitForFunction(() => !!window.__glMap, null, { timeout: 20_000 });
-    await expect(leafletContainer(page)).toHaveCount(0);
-  });
-
-  test("the switcher swaps engines both ways and persists the pick", async ({ page }) => {
-    await page.goto(`/?${DEFAULT_MAP_PARAMS}`);
-    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 });
-
-    await pickEngine(page, "leaflet");
-    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 });
-    await expect(glCanvas(page)).toHaveCount(0);
-    expect(await storedEngine(page)).toBe("leaflet");
-
-    // Persisted: a param-free reload keeps Leaflet.
-    await page.goto(`/?${DEFAULT_MAP_PARAMS}`);
-    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 });
-
-    await pickEngine(page, "gl");
-    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 });
-    await expect(leafletContainer(page)).toHaveCount(0);
-    expect(await storedEngine(page)).toBe("gl");
-  });
-
-  test("?engine= wins for the visit but never overwrites the stored choice", async ({
-    page,
-  }) => {
-    await page.goto(`/?${DEFAULT_MAP_PARAMS}`);
-    await pickEngine(page, "leaflet");
-    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 });
-    expect(await storedEngine(page)).toBe("leaflet");
-
-    await page.goto(`/?engine=gl&${DEFAULT_MAP_PARAMS}`);
-    await expect(glCanvas(page)).toBeVisible({ timeout: 20_000 });
-    await expect(leafletContainer(page)).toHaveCount(0);
-    expect(await storedEngine(page)).toBe("leaflet");
-
-    // Dropping the param restores the stored choice.
-    await page.goto(`/?${DEFAULT_MAP_PARAMS}`);
-    await expect(leafletContainer(page)).toBeVisible({ timeout: 20_000 });
-    await expect(glCanvas(page)).toHaveCount(0);
-  });
 });

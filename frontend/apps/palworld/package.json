@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@gamemap/data-contract": "workspace:*",
-    "@gamemap/map-engine": "workspace:*",
     "@gamemap/map-engine-gl": "workspace:*",
     "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
@@ -21,18 +20,15 @@
     "@tabler/icons-react": "^3.46.0",
     "@tanstack/react-router": "^1.170.21",
     "i18next": "^26.3.6",
-    "leaflet": "^1.9.4",
     "lucide-react": "^1.29.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-i18next": "^17.0.11",
-    "react-leaflet": "^5.0.0"
+    "react-i18next": "^17.0.11"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/leaflet": "^1.9.22",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

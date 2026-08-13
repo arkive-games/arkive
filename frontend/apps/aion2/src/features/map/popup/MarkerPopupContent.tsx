@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { IconBook2 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import type { EngineMarker } from "@gamemap/map-engine";
+import type { EngineMarker } from "@gamemap/map-engine-gl";
 import { MarkerDetailDrawer, markerDetailLabelsFor } from "@gamemap/map-shell";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";

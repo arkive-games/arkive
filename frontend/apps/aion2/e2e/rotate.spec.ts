@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ENGINES, mapRoot, openMap, panTo, readCentre, waitForHandle } from "./engines";
+import { mapRoot, openMap, panTo, readCentre, waitForHandle } from "./engines";
 
 /**
  * Regression for the mobile/desktop layout switch on the map route.
@@ -12,38 +12,31 @@ import { ENGINES, mapRoot, openMap, panTo, readCentre, waitForHandle } from "./e
  * presentations must therefore keep the map at the SAME position in the element
  * tree so the instance survives.
  *
- * Run against BOTH engines: the trap is app-side (one element tree, plus
- * `initialViewForMount` re-reading the persisted view — which now also has to
- * survive an engine swap), so it must hold for whichever renderer is mounted.
- * The only engine difference is HOW the view is read and written, and
- * `engines.ts` normalizes that to DATA space.
+ * The trap is app-side — one element tree, plus `initialViewForMount` re-reading
+ * the persisted view — so this is about the app's structure, not the renderer.
  */
-for (const engine of ENGINES) {
-  test(`map keeps its position across the 768px breakpoint (phone rotation) [${engine}]`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await openMap(page, engine);
+test("map keeps its position across the 768px breakpoint (phone rotation)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openMap(page);
 
-    // Pan somewhere distinctive, and let the view-persistence write settle.
-    // (6000, 6192) in DATA space is the Leaflet [lat 2000, lng 6000] the
-    // original test used.
-    await panTo(page, engine, 6000, 6192);
-    await page.waitForTimeout(900);
-    const before = await readCentre(page, engine);
-    expect(before).not.toBeNull();
+  // Pan somewhere distinctive, and let the view-persistence write settle.
+  await panTo(page, 6000, 6192);
+  await page.waitForTimeout(900);
+  const before = await readCentre(page);
+  expect(before).not.toBeNull();
 
-    // Rotate to landscape — crosses the breakpoint.
-    await page.setViewportSize({ width: 844, height: 390 });
-    await mapRoot(page, engine).waitFor({ state: "visible", timeout: 20_000 });
-    await waitForHandle(page, engine);
-    await page.waitForTimeout(1200);
-    const after = await readCentre(page, engine);
-    expect(after).not.toBeNull();
+  // Rotate to landscape — crosses the breakpoint.
+  await page.setViewportSize({ width: 844, height: 390 });
+  await mapRoot(page).waitFor({ state: "visible", timeout: 20_000 });
+  await waitForHandle(page);
+  await page.waitForTimeout(1200);
+  const after = await readCentre(page);
+  expect(after).not.toBeNull();
 
-    // The desktop sidebar appearing shifts the centre a little; a remount would
-    // instead snap it to the map default (4096, 4096) — thousands of units away.
-    expect(Math.abs(after!.x - before!.x)).toBeLessThan(600);
-    expect(Math.abs(after!.y - before!.y)).toBeLessThan(600);
-  });
-}
+  // The desktop sidebar appearing shifts the centre a little; a remount would
+  // instead snap it to the map default (4096, 4096) — thousands of units away.
+  expect(Math.abs(after!.x - before!.x)).toBeLessThan(600);
+  expect(Math.abs(after!.y - before!.y)).toBeLessThan(600);
+});
