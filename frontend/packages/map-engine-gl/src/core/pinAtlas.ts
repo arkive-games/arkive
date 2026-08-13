@@ -264,6 +264,21 @@ export interface PinMarkerInput {
   fragmentType?: "ground" | "air" | "water";
   count?: number;
   subtypeMeta?: MarkerTypeSubtype;
+  /**
+   * Per-marker scale override, winning over every taxonomy-derived scale below.
+   *
+   * Main-map markers never set it: their size is a property of the SUBTYPE, and
+   * the Leaflet engine's own call sites hard-code the per-variant scales this
+   * function reproduces (`GameMarker.tsx` passes a literal `0.9` for
+   * `circular`). The embed has no taxonomy — {@link GameMapEmbed} synthesises one
+   * subtype per pin — so it needs to size a single pin directly, which is what
+   * `createPinIcon`'s positional `iconScale` argument gave it. Keeping that as a
+   * separate field rather than folding it into `subtypeMeta.iconScale` is
+   * deliberate: `iconScale` is IGNORED for `circular` by design, and overloading
+   * it would silently resize main-map creature pins the day a taxonomy declared
+   * one.
+   */
+  pinScale?: number;
 }
 
 export interface ResolvePinOptions {
@@ -286,7 +301,8 @@ export interface ResolvePinOptions {
  * - a non-black subtype `color` tints the circular ring / the pin dot.
  * - scales: circular is always 0.9; `pin` uses `iconScale || 1.25`; `image`
  *   uses 1.1 for `fragments`, 0.9 for the `gathering` category and the compact
- *   subtypes, else `iconScale || 1.25`.
+ *   subtypes, else `iconScale || 1.25`. An explicit {@link
+ *   PinMarkerInput.pinScale} overrides all three.
  * - only the `image` variant carries the air/water chevron (as in Leaflet,
  *   where the other two branches don't pass `fragmentType`).
  */
@@ -311,7 +327,7 @@ export function resolvePinSpec(
     return {
       variant: "circular",
       iconUrl,
-      iconScale: CIRCULAR_ICON_SCALE,
+      iconScale: marker.pinScale ?? CIRCULAR_ICON_SCALE,
       completed,
       dot: theme.pinDot,
       ring: subColor ?? theme.circularBorder,
@@ -324,7 +340,7 @@ export function resolvePinSpec(
     return {
       variant: "pin",
       iconUrl,
-      iconScale,
+      iconScale: marker.pinScale ?? iconScale,
       completed,
       dot: subColor ?? theme.pinDot,
       ring: theme.circularBorder,
@@ -340,7 +356,7 @@ export function resolvePinSpec(
   return {
     variant: "image",
     iconUrl,
-    iconScale: imageScale,
+    iconScale: marker.pinScale ?? imageScale,
     completed,
     dot: theme.pinDot,
     ring: theme.circularBorder,

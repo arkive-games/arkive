@@ -56,6 +56,8 @@ export const LayerOrder = {
   tiles: 0,
   watermark: 10,
   vectors: 20,
+  /** Point clouds sit under the pins: they are context, not targets. */
+  points: 25,
   markers: 30,
 } as const;
 

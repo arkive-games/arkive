@@ -155,6 +155,20 @@ export const HIGHLIGHT_LINE_DASH = 10;
 export const HIGHLIGHT_LINE_GAP = 5;
 export const HIGHLIGHT_LINE_OPACITY = 0.92;
 
+/**
+ * Permanently-highlighted regions ({@link VectorLayer.setHighlighted}) — the
+ * "this is the area we are talking about" outline an embedded mini-map draws
+ * around a quest's or an NPC's region. Ported from aion2's wiki `EmbeddedMap`,
+ * whose `<Polygon>` used `weight: 1.5`, `dashArray: "4 4"`, `fillOpacity: 0.15`
+ * and the `--primary` colour, hence the values below and the reuse of
+ * `colors.region`.
+ */
+export const REGION_HIGHLIGHT_WIDTH = 1.5;
+export const REGION_HIGHLIGHT_DASH = 4;
+export const REGION_HIGHLIGHT_GAP = 4;
+export const REGION_HIGHLIGHT_FILL_OPACITY = 0.15;
+export const REGION_HIGHLIGHT_BORDER_OPACITY = 1;
+
 // -------------------------------------------------------------------- types ---
 
 /** An app-supplied line overlay (a teleporter link), endpoints in DATA space. */
@@ -164,6 +178,17 @@ export interface OverlayLine {
   to: Point;
   color?: string;
   variant?: "ambient" | "highlight";
+}
+
+/**
+ * Order-sensitive equality for the highlight request. Order-sensitive on purpose:
+ * comparing as sets would need an allocation per call, and a host that reorders
+ * the same ids pays only one rebuild of a handful of rings.
+ */
+function sameStrings(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
 }
 
 /** One de-duplicated border edge and the regions that claim it. */
@@ -426,12 +451,14 @@ interface RegionRecord {
 
 /** Draw order inside the layer's group, mirroring Leaflet's stacking. */
 const CHILD_ORDER = {
-  hoverFill: 0,
-  dashedBorders: 1,
-  solidBorders: 2,
-  ambientLines: 3,
-  overlayLines: 4,
-  highlightLines: 5,
+  highlightFill: 0,
+  hoverFill: 1,
+  dashedBorders: 2,
+  highlightBorders: 3,
+  solidBorders: 4,
+  ambientLines: 5,
+  overlayLines: 6,
+  highlightLines: 7,
 } as const;
 
 export class VectorLayer implements RenderLayer {
@@ -451,9 +478,15 @@ export class VectorLayer implements RenderLayer {
   private visibleRegions: ReadonlySet<string> | undefined;
   private showBorders = false;
   private hoveredId: string | null = null;
+  /** What the host asked for, verbatim — see {@link setHighlighted}. */
+  private requestedHighlightIds: readonly string[] = [];
+  /** The subset of the request that resolved to geometry. */
+  private highlightedIds: ReadonlySet<string> = new Set();
   private lines: OverlayLine[] = [];
 
   private hoverFill: Mesh<BufferGeometry, MeshBasicMaterial> | null = null;
+  private highlightFill: Mesh<BufferGeometry, MeshBasicMaterial> | null = null;
+  private highlightBorders: LineSegments2 | null = null;
   private dashedBorders: LineSegments2 | null = null;
   private solidBorders: LineSegments2 | null = null;
   private overlayObject: LineSegments2 | null = null;
@@ -467,6 +500,10 @@ export class VectorLayer implements RenderLayer {
    */
   private hoverFillMaterial: MeshBasicMaterial | null = null;
   private hoverBorderMaterial: LineMaterial | null = null;
+
+  /** Highlight materials; same hoisting rationale as the hover pair above. */
+  private highlightFillMaterial: MeshBasicMaterial | null = null;
+  private highlightBorderMaterial: LineMaterial | null = null;
 
   /** Camera-derived uniforms, applied to every material as it is created. */
   private viewScale = 1;
@@ -518,6 +555,10 @@ export class VectorLayer implements RenderLayer {
     }
     this.rebuildBorders();
     this.rebuildHover();
+    // Re-resolves the highlight REQUEST against the new records, so ids that
+    // arrived before their geometry light up now (and ids whose region is gone
+    // stop drawing).
+    this.rebuildHighlight();
     this.invalidate();
   }
 
@@ -570,6 +611,37 @@ export class VectorLayer implements RenderLayer {
     return this.hoveredId;
   }
 
+  /**
+   * Regions outlined PERMANENTLY, independent of the cursor — an embedded
+   * mini-map marking the area a wiki page is about.
+   *
+   * Unlike {@link setHovered} this ignores `setVisibleRegions` and
+   * {@link VectorLayerOptions.regionFilter}: those two model "what the user can
+   * interact with on the main map", whereas a highlight is an explicit request
+   * by id from the host, and silently dropping it because a filter happens to be
+   * narrow would be a bug with no visible cause. Ids the layer has never heard of
+   * ARE dropped, since there is no geometry to draw.
+   *
+   * The REQUEST is remembered rather than the resolved set, so the order the host
+   * calls this and {@link setRegions} in does not matter: highlighting an id
+   * before its region document arrives lights up as soon as it does. That is not
+   * a hypothetical — the embed fetches its regions asynchronously and receives its
+   * highlight ids from the page's route, which is already there.
+   */
+  setHighlighted(regionIds: readonly string[] | null | undefined): void {
+    if (this.disposed) return;
+    const next = regionIds ? [...regionIds] : [];
+    if (sameStrings(next, this.requestedHighlightIds)) return;
+    this.requestedHighlightIds = next;
+    this.rebuildHighlight();
+    this.invalidate();
+  }
+
+  /** Ids drawn right now — the request minus the ids with no geometry. */
+  get highlighted(): readonly string[] {
+    return [...this.highlightedIds];
+  }
+
   /** Re-project overlay lines onto another map (regions are pixel-space). */
   setMap(map: GameMapMeta): void {
     if (this.disposed || map === this.map) return;
@@ -592,8 +664,10 @@ export class VectorLayer implements RenderLayer {
     }
     this.colors = next;
     this.disposeHoverMaterials();
+    this.disposeHighlightMaterials();
     this.rebuildBorders();
     this.rebuildHover();
+    this.rebuildHighlight();
     this.rebuildOverlayLines();
     this.invalidate();
   }
@@ -698,6 +772,103 @@ export class VectorLayer implements RenderLayer {
     this.object3D.add(this.solidBorders);
   }
 
+  /**
+   * Permanent highlight fill + dashed outline for {@link setHighlighted}.
+   *
+   * Every highlighted region's rings go into ONE mesh and ONE segment soup: the
+   * set is host-chosen and small (a quest names one or two regions), and one
+   * object per region would multiply draw calls for no benefit.
+   *
+   * The outline is built from each ring's own consecutive points rather than from
+   * the de-duplicated `edges` used by the borders: Leaflet drew these as
+   * standalone `<Polygon>`s, so a highlighted region shows its COMPLETE outline
+   * even where it shares an edge with a neighbour that the dedup pass would have
+   * folded away.
+   */
+  private rebuildHighlight(): void {
+    this.detachHighlightObjects();
+
+    const resolved = new Set<string>();
+    const rings: number[][][] = [];
+    for (const id of this.requestedHighlightIds) {
+      const record = this.byId.get(id);
+      // A repeated id must not contribute its rings twice: the fill is
+      // transparent, so a doubled mesh reads as a darker patch.
+      if (!record || resolved.has(id)) continue;
+      resolved.add(id);
+      rings.push(...record.region.borders);
+    }
+    this.highlightedIds = resolved;
+    if (rings.length === 0) return;
+
+    if (REGION_HIGHLIGHT_FILL_OPACITY > 0) {
+      const { positions, index } = triangulateRings(rings);
+      if (index.length > 0) {
+        const geometry = new BufferGeometry();
+        geometry.setAttribute("position", new BufferAttribute(positions, 3));
+        geometry.setIndex(new BufferAttribute(index, 1));
+        this.highlightFill = new Mesh(geometry, this.getHighlightFillMaterial());
+        this.highlightFill.name = "region-highlight-fill";
+        this.highlightFill.renderOrder = CHILD_ORDER.highlightFill;
+        this.object3D.add(this.highlightFill);
+      }
+    }
+
+    const segments: { a: readonly number[]; b: readonly number[] }[] = [];
+    for (const ring of rings) {
+      for (let i = 0; i < ring.length - 1; i++) segments.push({ a: ring[i], b: ring[i + 1] });
+    }
+    if (segments.length === 0) return;
+    this.highlightBorders = this.makeSegments(
+      segments,
+      this.getHighlightBorderMaterial(),
+      CHILD_ORDER.highlightBorders,
+    );
+    this.highlightBorders.name = "region-highlight-borders";
+    this.object3D.add(this.highlightBorders);
+  }
+
+  /** Detach the highlight objects and free their geometry; materials are kept. */
+  private detachHighlightObjects(): void {
+    if (this.highlightFill) {
+      this.object3D.remove(this.highlightFill);
+      this.highlightFill.geometry.dispose();
+      this.highlightFill = null;
+    }
+    if (this.highlightBorders) {
+      this.object3D.remove(this.highlightBorders);
+      this.highlightBorders.geometry.dispose();
+      this.highlightBorders = null;
+    }
+  }
+
+  private getHighlightFillMaterial(): MeshBasicMaterial {
+    if (!this.highlightFillMaterial) {
+      this.highlightFillMaterial = new MeshBasicMaterial({
+        color: new Color(this.colors.region),
+        transparent: true,
+        opacity: REGION_HIGHLIGHT_FILL_OPACITY,
+        depthTest: false,
+        depthWrite: false,
+        side: DoubleSide,
+      });
+    }
+    return this.highlightFillMaterial;
+  }
+
+  private getHighlightBorderMaterial(): LineMaterial {
+    if (!this.highlightBorderMaterial) {
+      this.highlightBorderMaterial = this.makeLineMaterial({
+        color: this.colors.region,
+        linewidth: REGION_HIGHLIGHT_WIDTH,
+        opacity: REGION_HIGHLIGHT_BORDER_OPACITY,
+        dash: REGION_HIGHLIGHT_DASH,
+        gap: REGION_HIGHLIGHT_GAP,
+      });
+    }
+    return this.highlightBorderMaterial;
+  }
+
   /** Detach the hover objects and free their geometry; materials are kept. */
   private detachHoverObjects(): void {
     if (this.hoverFill) {
@@ -748,6 +919,14 @@ export class VectorLayer implements RenderLayer {
     this.hoverFillMaterial = null;
     this.hoverBorderMaterial?.dispose();
     this.hoverBorderMaterial = null;
+  }
+
+  /** Same, for the highlight pair. */
+  private disposeHighlightMaterials(): void {
+    this.highlightFillMaterial?.dispose();
+    this.highlightFillMaterial = null;
+    this.highlightBorderMaterial?.dispose();
+    this.highlightBorderMaterial = null;
   }
 
   private rebuildOverlayLines(): void {
@@ -897,6 +1076,7 @@ export class VectorLayer implements RenderLayer {
   private eachLineMaterial(fn: (material: LineMaterial) => void): void {
     if (this.dashedBorders) fn(this.dashedBorders.material);
     if (this.hoverBorderMaterial) fn(this.hoverBorderMaterial);
+    if (this.highlightBorderMaterial) fn(this.highlightBorderMaterial);
     if (this.ambientOverlayObject) fn(this.ambientOverlayObject.material);
     if (this.overlayObject) fn(this.overlayObject.material);
     if (this.highlightOverlayObject) fn(this.highlightOverlayObject.material);
@@ -962,10 +1142,14 @@ export class VectorLayer implements RenderLayer {
     // the materials once, here.
     this.detachHoverObjects();
     this.disposeHoverMaterials();
+    this.detachHighlightObjects();
+    this.disposeHighlightMaterials();
     this.records = [];
     this.byId.clear();
     this.edges = [];
     this.lines = [];
+    this.requestedHighlightIds = [];
+    this.highlightedIds = new Set();
     this.object3D.clear();
   }
 
@@ -974,6 +1158,16 @@ export class VectorLayer implements RenderLayer {
   }
 
   // --------------------------------------------------- tests / diagnostics ---
+
+  /** The highlighted regions' fill mesh, or `null` when nothing is highlighted. */
+  get highlightFillObject(): Mesh<BufferGeometry, MeshBasicMaterial> | null {
+    return this.highlightFill;
+  }
+
+  /** The highlighted regions' dashed outline, or `null`. */
+  get highlightBordersObject(): LineSegments2 | null {
+    return this.highlightBorders;
+  }
 
   /** The hovered region's fill mesh, or `null` when nothing is hovered. */
   get hoverFillObject(): Mesh<BufferGeometry, MeshBasicMaterial> | null {

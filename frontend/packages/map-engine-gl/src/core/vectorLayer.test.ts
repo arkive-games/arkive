@@ -7,6 +7,10 @@ import {
   BORDER_DASH,
   BORDER_GAP,
   DEFAULT_VECTOR_COLORS,
+  REGION_HIGHLIGHT_DASH,
+  REGION_HIGHLIGHT_FILL_OPACITY,
+  REGION_HIGHLIGHT_GAP,
+  REGION_HIGHLIGHT_WIDTH,
   VectorLayer,
   dedupeRegionEdges,
   edgeKey,
@@ -939,6 +943,136 @@ describe("VectorLayer.update", () => {
     expect(material.dashScale).toBe(2);
     expect([material.resolution.x, material.resolution.y]).toEqual([640, 480]);
     layer.dispose();
+  });
+});
+
+// ------------------------------------------------------- permanent highlight ---
+
+describe("VectorLayer.setHighlighted", () => {
+  it("draws a fill and a dashed outline for the named regions", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)]), region("b", [square(20, 0, 10)])]);
+    expect(layer.highlightFillObject).toBeNull();
+    layer.setHighlighted(["a"]);
+    expect(layer.highlighted).toEqual(["a"]);
+    // 10x10 square -> 2 triangles -> 6 indices.
+    expect(layer.highlightFillObject!.geometry.getIndex()!.count).toBe(6);
+    const material = layer.highlightBordersObject!.material;
+    expect(material.dashSize).toBe(REGION_HIGHLIGHT_DASH);
+    expect(material.gapSize).toBe(REGION_HIGHLIGHT_GAP);
+    expect(material.linewidth).toBe(REGION_HIGHLIGHT_WIDTH);
+    expect(layer.highlightFillObject!.material.opacity).toBe(REGION_HIGHLIGHT_FILL_OPACITY);
+    layer.dispose();
+  });
+
+  it("outlines every ring in full, unlike the de-duplicated borders", () => {
+    const { layer } = makeLayer();
+    // Two squares sharing the edge x=10: dedup would fold that edge away.
+    layer.setRegions([region("a", [square(0, 0, 10)]), region("b", [square(10, 0, 10)])]);
+    layer.setHighlighted(["a"]);
+    const positions = layer.highlightBordersObject!.geometry.getAttribute("instanceStart");
+    // A closed 4-point square yields 4 segments, shared edge included.
+    expect(positions.count).toBe(4);
+    layer.dispose();
+  });
+
+  it("ignores ids with no region but keeps them in the request", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)])]);
+    layer.setHighlighted(["a", "ghost"]);
+    expect(layer.highlighted).toEqual(["a"]);
+    expect(layer.highlightFillObject).not.toBeNull();
+    // The request is remembered, so the ghost lights up once its region lands.
+    layer.setRegions([region("a", [square(0, 0, 10)]), region("ghost", [square(40, 0, 10)])]);
+    expect(layer.highlighted).toEqual(["a", "ghost"]);
+    expect(layer.highlightFillObject!.geometry.getIndex()!.count).toBe(12);
+    layer.dispose();
+  });
+
+  it("lights up a region highlighted BEFORE its regions arrived", () => {
+    const { layer } = makeLayer();
+    layer.setHighlighted(["a"]);
+    expect(layer.highlightFillObject).toBeNull();
+    layer.setRegions([region("a", [square(0, 0, 10)])]);
+    expect(layer.highlighted).toEqual(["a"]);
+    expect(layer.highlightFillObject).not.toBeNull();
+    layer.dispose();
+  });
+
+  it("does not draw a repeated id twice (a doubled transparent fill is darker)", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)])]);
+    layer.setHighlighted(["a", "a"]);
+    expect(layer.highlighted).toEqual(["a"]);
+    expect(layer.highlightFillObject!.geometry.getIndex()!.count).toBe(6);
+    layer.dispose();
+  });
+
+  it("ignores the hover visibility filter — a highlight is an explicit request", () => {
+    const { layer } = makeLayer({ regionFilter: (r) => r.type === "region" });
+    layer.setRegions([region("cave", [square(0, 0, 10)], { type: "cave" })]);
+    // The filter blocks hover for it...
+    layer.setHovered("cave");
+    expect(layer.hoverFillObject).toBeNull();
+    // ...but the highlight still draws.
+    layer.setHighlighted(["cave"]);
+    expect(layer.highlightFillObject).not.toBeNull();
+    layer.dispose();
+  });
+
+  it("clears when set to null and is idempotent for the same request", () => {
+    const { layer, invalidate } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)])]);
+    layer.setHighlighted(["a"]);
+    const calls = invalidate.mock.calls.length;
+    layer.setHighlighted(["a"]);
+    expect(invalidate.mock.calls.length).toBe(calls);
+    layer.setHighlighted(null);
+    expect(layer.highlighted).toEqual([]);
+    expect(layer.highlightFillObject).toBeNull();
+    expect(layer.highlightBordersObject).toBeNull();
+    layer.dispose();
+  });
+
+  it("stacks the highlight fill under its outline, and both around the hover pair", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)]), region("b", [square(20, 0, 10)])]);
+    layer.setShowBorders(true);
+    layer.setHovered("b");
+    layer.setHighlighted(["a"]);
+    const order = (o: { renderOrder: number } | null) => o!.renderOrder;
+    expect(order(layer.highlightFillObject)).toBeLessThan(order(layer.hoverFillObject));
+    expect(order(layer.dashedBordersObject)).toBeLessThan(order(layer.highlightBordersObject));
+    expect(order(layer.highlightBordersObject)).toBeLessThan(order(layer.solidBordersObject));
+    layer.dispose();
+  });
+
+  it("re-colours on setColors and keeps the outline in the per-frame view sync", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)])]);
+    layer.setHighlighted(["a"]);
+    layer.setColors({ region: "#ff0000" });
+    expect(layer.highlightFillObject!.material.color.getHexString()).toBe("ff0000");
+    layer.update(makeCamera(1, [640, 480]));
+    const material = layer.highlightBordersObject!.material;
+    expect([material.resolution.x, material.resolution.y]).toEqual([640, 480]);
+    layer.dispose();
+  });
+
+  it("frees the highlight geometry and materials on dispose", () => {
+    const { layer } = makeLayer();
+    layer.setRegions([region("a", [square(0, 0, 10)])]);
+    layer.setHighlighted(["a"]);
+    const spies = [
+      vi.spyOn(layer.highlightFillObject!.geometry, "dispose"),
+      vi.spyOn(layer.highlightFillObject!.material, "dispose"),
+      vi.spyOn(layer.highlightBordersObject!.geometry, "dispose"),
+      vi.spyOn(layer.highlightBordersObject!.material, "dispose"),
+    ];
+    layer.dispose();
+    for (const spy of spies) expect(spy).toHaveBeenCalledTimes(1);
+    layer.setHighlighted(["a"]);
+    expect(layer.highlightFillObject).toBeNull();
   });
 });
 

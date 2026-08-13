@@ -250,6 +250,45 @@ describe("resolvePinSpec — variants", () => {
     expect(black.ring).toBe(DEFAULT_PIN_THEME.circularBorder);
   });
 
+  it("lets an explicit pinScale override every variant's taxonomy scale", () => {
+    // `circular` is the one that matters: its scale is otherwise FIXED, which is
+    // what stopped palworld's boss pins from reading larger than its wild ones.
+    const circular = resolvePinSpec(
+      { pinScale: 1, subtypeMeta: subtype({ icon: "pal", pinVariant: "circular" }) },
+      { resolveIconUrl: iconUrlOf },
+    );
+    expect(circular.iconScale).toBe(1);
+    expect(circular.iconScale).not.toBe(CIRCULAR_ICON_SCALE);
+
+    expect(
+      resolvePinSpec(
+        { pinScale: 0.5, subtypeMeta: subtype({ pinVariant: "pin", icon: "x", iconScale: 2 }) },
+        { resolveIconUrl: iconUrlOf },
+      ).iconScale,
+    ).toBe(0.5);
+    expect(
+      resolvePinSpec(
+        { pinScale: 0.5, subtypeMeta: subtype({ icon: "x", iconScale: 2 }) },
+        { resolveIconUrl: iconUrlOf },
+      ).iconScale,
+    ).toBe(0.5);
+  });
+
+  it("keeps the taxonomy scales when no pinScale is given (main-map parity)", () => {
+    expect(
+      resolvePinSpec(
+        { subtypeMeta: subtype({ icon: "pal", pinVariant: "circular", iconScale: 2 }) },
+        { resolveIconUrl: iconUrlOf },
+      ).iconScale,
+      // A taxonomy `iconScale` must NOT resize a circular pin: the Leaflet engine
+      // passed a literal 0.9 at the call site and ignored it entirely.
+    ).toBe(CIRCULAR_ICON_SCALE);
+    expect(
+      resolvePinSpec({ subtypeMeta: subtype({ icon: "x" }) }, { resolveIconUrl: iconUrlOf })
+        .iconScale,
+    ).toBe(DEFAULT_ICON_SCALE);
+  });
+
   it("tints the pin dot with a non-black subtype colour", () => {
     expect(
       resolvePinSpec(

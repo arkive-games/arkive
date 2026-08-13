@@ -85,6 +85,8 @@ export function visibleTierForZoom(zoom: number): number {
 export interface LayerMarker extends MarkerInstance {
   subtypeMeta?: MarkerTypeSubtype;
   completed?: boolean;
+  /** Per-marker pin size override; see `PinMarkerInput.pinScale` in `pinAtlas.ts`. */
+  pinScale?: number;
 }
 
 export interface MarkerVisibility {

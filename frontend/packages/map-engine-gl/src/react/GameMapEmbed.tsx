@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import type { GameMapMeta, MarkerTypeSubtype } from "@gamemap/data-contract";
+import type { GameMapMeta, MarkerTypeSubtype, RegionInstance } from "@gamemap/data-contract";
 
 import type { MapAssets } from "../core/assets.ts";
 import { Camera } from "../core/camera.ts";
@@ -7,27 +7,36 @@ import { dataToPoint, mapHeightOf, mapWidthOf } from "../core/coords.ts";
 import { attachGestures } from "../core/gestures.ts";
 import { MarkerLayer, type LayerMarker } from "../core/markerLayer.ts";
 import type { PinVariant } from "../core/pinAtlas.ts";
+import { PointCloudLayer, type PointCloud } from "../core/pointCloudLayer.ts";
 import { MapRenderer } from "../core/renderer.ts";
 import { createTileLayers } from "../core/tileLayer.ts";
+import { VectorLayer } from "../core/vectorLayer.ts";
 import { measureElement, observeDevicePixelRatio, observeElementSize } from "./domEnv.ts";
 import { asGestureTarget, MAX_ZOOM } from "./mapEngine.ts";
+import { MarkerOverlay } from "./markerOverlay.ts";
 import { createRenderBackend } from "./renderBackend.ts";
 import { DEFAULT_MAP_THEME, type PinTheme } from "./theme.ts";
 
 /**
- * The lightweight embed: tiles, pins, pan/zoom and a click callback — nothing
- * else. The GL counterpart of the apps' bare
+ * The lightweight embed: tiles, pins, pan/zoom, a hover tooltip, optional region
+ * highlights and optional point clouds. The GL counterpart of the apps' bare
  * `MapContainer` + `GameMapTiles` + `createPinIcon` composition, which is what
- * every in-page mini-map (a pal's spawn map, a region's loot map, a dungeon
- * entrance) is built from today.
+ * every in-page mini-map was built from before Leaflet was retired — a pal's
+ * spawn map, a region's loot map, a dungeon entrance, a wiki quest's POIs.
  *
- * No chrome, no popup, no tooltip, no status bar, no context menu, no region
- * layer: an embed that needs any of those wants {@link GameMapView} instead.
+ * Still deliberately absent, and what {@link GameMapView} is for: permanent name
+ * labels, popups, the status bar, the context menu, zoom controls, the marker
+ * filter model and region hover.
  *
- * Not wired into an app yet — it exists so the embeds can be ported without
- * inventing this layer under time pressure. `minZoom` defaults to −4 because the
- * embeds are small and need to fit a whole region, which is one step further out
- * than the main map allows.
+ * `minZoom` defaults to −4 because the embeds are small and need to fit a whole
+ * region, which is one step further out than the main map allows.
+ *
+ * ## Rebuild keys
+ * The GL stack is built once per `map` / `minZoom` / `theme` VALUE. Everything
+ * else is pushed into the live layers by its own effect, and every such effect
+ * repeats those keys in its dependency list — a rebuild starts empty layers, and
+ * content that kept its identity across the switch would otherwise never be
+ * pushed again, leaving an embed with tiles and nothing on them.
  */
 
 /** Embed default: one step further out than the main map's −3. */
@@ -37,7 +46,7 @@ const FIT_PADDING_PX = 64;
 
 /**
  * A pin to draw. `x`/`y` are DATA space; everything else is the visual spec that
- * `createPinIcon` takes in the Leaflet embeds.
+ * `createPinIcon` took in the Leaflet embeds.
  */
 export interface EmbedPin {
   id: string;
@@ -47,7 +56,12 @@ export interface EmbedPin {
   icon?: string;
   /** Defaults to `image` when an icon is given, `pin` otherwise. */
   variant?: PinVariant;
-  /** Multiplier on the 40 px base box. */
+  /**
+   * Multiplier on the 40 px base box, honoured for EVERY variant — including
+   * `circular`, whose size is otherwise fixed at 0.9 (see
+   * `PinMarkerInput.pinScale`). palworld's spawn map needs that: its boss pins
+   * are circular and deliberately larger than its wild ones.
+   */
   iconScale?: number;
   /** Tints the circular ring / the pin dot (ignored when `#000000`). */
   color?: string;
@@ -55,6 +69,8 @@ export interface EmbedPin {
   completed?: boolean;
   /** Cluster count badge; drawn when > 1. */
   count?: number;
+  /** Hover tooltip. Absent or empty ⇒ this pin has none. */
+  tooltip?: string;
 }
 
 export interface GameMapEmbedProps {
@@ -68,6 +84,22 @@ export interface GameMapEmbedProps {
   assets: MapAssets;
   pins: EmbedPin[];
   onPinClick?: (id: string) => void;
+  /**
+   * Regions available to {@link GameMapEmbedProps.highlightRegionIds}. Nothing is
+   * drawn for a region that is not highlighted: the embed has no region hover, so
+   * the rest would be invisible geometry.
+   */
+  regions?: readonly RegionInstance[];
+  /** Ids outlined permanently. Ids with no matching region are ignored. */
+  highlightRegionIds?: readonly string[];
+  /** Decorative discs under the pins (palworld's habitat clouds). */
+  dots?: readonly PointCloud[];
+  /**
+   * Reports the camera's zoom once the initial fit is applied, and on every
+   * change after that. palworld's embeds pick a clustering tier from it; the
+   * clustering itself stays in the app, where the product decisions live.
+   */
+  onZoom?: (zoom: number) => void;
   /** Zoom floor. Defaults to {@link EMBED_MIN_ZOOM}. Changing it rebuilds. */
   minZoom?: number;
   /**
@@ -90,7 +122,8 @@ export interface GameMapEmbedProps {
  * pin's appearance through `resolvePinSpec`, which reads the marker-type
  * taxonomy — so the embed's flat visual spec is expressed as a synthetic
  * `subtypeMeta`, and the same code path (and the same atlas) draws embed pins and
- * main-map pins.
+ * main-map pins. The size travels as `pinScale` rather than the synthetic
+ * subtype's `iconScale`, because `circular` ignores the latter by design.
  */
 function toLayerMarkers(pins: readonly EmbedPin[]): LayerMarker[] {
   return pins.map((pin, index) => {
@@ -98,7 +131,6 @@ function toLayerMarkers(pins: readonly EmbedPin[]): LayerMarker[] {
       id: `embed-${pin.id}`,
       name: `embed-${pin.id}`,
       icon: pin.icon,
-      iconScale: pin.iconScale,
       pinVariant: pin.variant ?? (pin.icon ? "image" : "pin"),
       color: pin.color,
     };
@@ -113,6 +145,7 @@ function toLayerMarkers(pins: readonly EmbedPin[]): LayerMarker[] {
       icon: pin.icon,
       count: pin.count,
       completed: pin.completed,
+      pinScale: pin.iconScale,
       subtypeMeta,
     };
   });
@@ -158,6 +191,10 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
   assets,
   pins,
   onPinClick,
+  regions,
+  highlightRegionIds,
+  dots,
+  onZoom,
   minZoom = EMBED_MIN_ZOOM,
   initialFit = "pins",
   theme = DEFAULT_MAP_THEME,
@@ -165,12 +202,27 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
 }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const overlayHostRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<MarkerLayer | null>(null);
+  const vectorsRef = useRef<VectorLayer | null>(null);
+  const cloudsRef = useRef<PointCloudLayer | null>(null);
 
-  const liveRef = useRef({ assets, theme, pins, onPinClick, initialFit });
-  liveRef.current = { assets, theme, pins, onPinClick, initialFit };
+  const liveRef = useRef({ assets, theme, pins, onPinClick, initialFit, onZoom });
+  liveRef.current = { assets, theme, pins, onPinClick, initialFit, onZoom };
 
   const layerMarkers = useMemo(() => toLayerMarkers(pins), [pins]);
+  /**
+   * Tooltip text by pin id — only the pins that have one. Read through a ref by
+   * the overlay pass so a changed tooltip needs no listener rebind, and so the
+   * pass allocates nothing.
+   */
+  const tooltips = useMemo(() => {
+    const out = new Map<string, string>();
+    for (const pin of pins) if (pin.tooltip) out.set(pin.id, pin.tooltip);
+    return out;
+  }, [pins]);
+  const tooltipsRef = useRef(tooltips);
+  tooltipsRef.current = tooltips;
   // The pin bitmaps bake the theme's colours in and `MarkerLayer` takes its theme
   // at construction, so a new palette has to rebuild the stack. Keyed on the
   // VALUE, not the object, so a caller who rebuilds the object every render (but
@@ -180,7 +232,8 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
   useLayoutEffect(() => {
     const root = rootRef.current;
     const canvas = canvasRef.current;
-    if (!root || !canvas) return;
+    const overlayHost = overlayHostRef.current;
+    if (!root || !canvas || !overlayHost) return;
     const { width, height } = measureElement(root);
 
     const camera = new Camera({
@@ -213,6 +266,8 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
     const invalidate = (): void => renderer.invalidate();
 
     const { tiles, watermark } = createTileLayers({ map, assets: liveRef.current.assets, invalidate });
+    const vectors = new VectorLayer({ map, invalidate });
+    const clouds = new PointCloudLayer({ map, invalidate });
     const markerLayer = new MarkerLayer({
       camera,
       map,
@@ -226,8 +281,65 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
     });
     renderer.addLayer(tiles);
     if (watermark) renderer.addLayer(watermark);
+    renderer.addLayer(vectors);
+    renderer.addLayer(clouds);
     renderer.addLayer(markerLayer);
     layerRef.current = markerLayer;
+    vectorsRef.current = vectors;
+    cloudsRef.current = clouds;
+
+    // Labels stay off (the default): an embed reveals a name on hover, never
+    // permanently.
+    const overlay = new MarkerOverlay(overlayHost);
+
+    let pointer: { x: number; y: number } | null = null;
+    let hoveredId: string | null = null;
+
+    /**
+     * Hit-test and reposition in ONE pass, run SYNCHRONOUSLY from the camera's
+     * `change` and from pointermove rather than deferred to a frame: the GL scene
+     * is painted from the frame that emitted `change`, so a tooltip updated on the
+     * NEXT frame trails its pin by a frame's worth of movement. Same reasoning as
+     * `mapEngine.ts`'s overlay pass, which this is the small sibling of.
+     *
+     * Hit-testing is skipped mid-gesture — testing every pin on every frame of a
+     * drag is wasted work, and a tooltip flickering under a moving finger is not
+     * something anyone wants to read.
+     */
+    const runOverlayPass = (): void => {
+      if (pointer && !gestures.isGesturing()) {
+        const hit = markerLayer.hitTest(pointer);
+        if (hit !== hoveredId) {
+          hoveredId = hit;
+          const text = hit ? tooltipsRef.current.get(hit) : undefined;
+          overlay.setTooltip(text ?? null, hit ? markerLayer.positionOf(hit) : null);
+        }
+      }
+      overlay.reposition(camera);
+    };
+
+    const onCameraChange = (): void => {
+      runOverlayPass();
+      liveRef.current.onZoom?.(camera.zoom);
+    };
+    camera.on("change", onCameraChange);
+
+    const localPoint = (e: { clientX: number; clientY: number }): { x: number; y: number } => {
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+    const onPointerMove = (e: PointerEvent): void => {
+      pointer = localPoint(e);
+      runOverlayPass();
+    };
+    const onPointerLeave = (): void => {
+      pointer = null;
+      hoveredId = null;
+      overlay.setTooltip(null, null);
+    };
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerleave", onPointerLeave);
+    canvas.addEventListener("pointercancel", onPointerLeave);
 
     const gestures = attachGestures(asGestureTarget(canvas), camera, {
       invalidate,
@@ -245,10 +357,20 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
         })
       : () => {};
 
+    // Report the zoom the fit landed on. The host needs it before any
+    // interaction: a clustering tier has to be right on the very first paint.
+    liveRef.current.onZoom?.(camera.zoom);
+
     return () => {
       layerRef.current = null;
+      vectorsRef.current = null;
+      cloudsRef.current = null;
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerleave", onPointerLeave);
+      canvas.removeEventListener("pointercancel", onPointerLeave);
       unobserveDpr();
       gestures.detach();
+      overlay.dispose();
       camera.removeAllListeners();
       renderer.dispose();
     };
@@ -257,14 +379,30 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
   // The rebuild keys belong in HERE too, not just above: a rebuild starts a fresh
   // (empty) `MarkerLayer`, and `pins` that kept its identity across the switch —
   // a module constant, or a memo keyed on something else — would never be pushed
-  // again, leaving an embed with tiles and no pins at all.
+  // again, leaving an embed with tiles and no pins at all. Same for the three
+  // effects below it.
   useEffect(() => {
     layerRef.current?.setMarkers(layerMarkers);
   }, [layerMarkers, map, minZoom, themeKey]);
 
+  useEffect(() => {
+    vectorsRef.current?.setRegions(regions ?? []);
+  }, [regions, map, minZoom, themeKey]);
+
+  useEffect(() => {
+    vectorsRef.current?.setHighlighted(highlightRegionIds);
+  }, [highlightRegionIds, map, minZoom, themeKey]);
+
+  useEffect(() => {
+    cloudsRef.current?.setClouds(dots ?? []);
+  }, [dots, map, minZoom, themeKey]);
+
   return (
     <div ref={rootRef} className={className ? `gmgl-embed ${className}` : "gmgl-embed"}>
       <canvas ref={canvasRef} className="gmgl-map-canvas" data-testid="gl-embed-canvas" />
+      {/* Hover tooltip. React renders this EMPTY — `MarkerOverlay` owns the nodes
+          inside it imperatively, so a pan never goes through React state. */}
+      <div ref={overlayHostRef} className="gmgl-overlay" aria-hidden="true" />
     </div>
   );
 };

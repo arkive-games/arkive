@@ -18,6 +18,7 @@ export * from "./core/tileLayer.ts";
 export * from "./core/pinAtlas.ts";
 export * from "./core/markerLayer.ts";
 export * from "./core/vectorLayer.ts";
+export * from "./core/pointCloudLayer.ts";
 
 // ---- React layer -----------------------------------------------------------
 // The same names `@gamemap/map-engine` exports, so an app can switch engines by
