@@ -242,13 +242,19 @@ export default function App() {
   const [regionData, setRegionData] = useState<{ mapId: string; regions: RegionInstance[]; l10n: RegionLocale } | null>(null)
 
   useEffect(() => {
-    if (positionX !== undefined && positionY !== undefined) {
+    // The deep-linked position belongs to the map it was linked with. `mapId` is
+    // local state while x/y stay in the URL, so keying on mapId alone re-applied
+    // the coordinates after a map switch -- following a merchant link on
+    // MainWorld and then picking WorldTree flew it to a MainWorld world position
+    // that is outside WorldTree's bounds.
+    const linkedMap = mapParam ?? 'MainWorld'
+    if (positionX !== undefined && positionY !== undefined && mapId === linkedMap) {
       setSelectedMarkerId(null)
       setSelectedPosition({ x: positionX, y: positionY })
     } else {
       setSelectedPosition(null)
     }
-  }, [mapId, positionX, positionY])
+  }, [mapId, mapParam, positionX, positionY])
 
   useEffect(() => {
     let cancelled = false
