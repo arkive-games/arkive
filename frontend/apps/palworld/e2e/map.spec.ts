@@ -71,29 +71,39 @@ test('clicking a fast-travel marker opens its popup; background click closes it'
 })
 
 /**
- * The subtype filter has to reach the CANVAS, not just the button's aria state.
- * With no per-marker DOM to count, the proof is that the very same click stops
- * selecting anything once the subtype is off.
+ * The subtype filter has to reach the CANVAS, not just flip the button's aria
+ * state. With no per-marker DOM to count, the proof is that the SAME click that
+ * selects a marker selects nothing while its subtype is hidden.
+ *
+ * The order matters: hide first and assert the miss, then re-enable and assert the
+ * hit. Doing it the other way round would need the popup closed in between, and a
+ * negative assertion on its own could pass simply because the click point was
+ * never on a marker.
  */
 test('toggling a subtype stops its markers being drawn', async ({ page }) => {
   await openMap(page)
   const { target } = await pickClickableMarker(page, 'fastTravel')
+  const drawer = page.getByTestId('marker-detail-drawer')
+  const toggle = page.getByTestId('subtype-toggle-fastTravel')
 
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false')
   await clickMarker(page, target)
-  const popup = page.getByTestId('marker-detail-drawer')
-  await expect(popup).toBeVisible({ timeout: 10_000 })
+  await expect(drawer).toHaveCount(0)
 
-  // Close the popup, then hide the subtype and click the exact same point.
-  await page.keyboard.press('Escape')
-  await expect(popup).toHaveCount(0, { timeout: 10_000 })
-  await page.getByTestId('subtype-toggle-fastTravel').click()
-  await expect(page.getByTestId('subtype-toggle-fastTravel')).toHaveAttribute(
-    'aria-pressed',
-    'false',
-  )
-
-  await clickMarker(page, target)
-  await expect(popup).toHaveCount(0)
+  // Re-enabling pushes a new marker set into the layer and recomposes the pin
+  // atlas, so the hit test is only live a frame or two later. Poll by RE-CLICKING
+  // rather than sleeping a magic number: clicking an already-selected marker is
+  // idempotent, so the retry costs nothing.
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await expect
+    .poll(async () => {
+      await clickMarker(page, target)
+      return drawer.count()
+    }, { timeout: 15_000 })
+    .toBeGreaterThan(0)
+  await expect(drawer).toBeVisible()
 })
 
 test('the cursor readout follows the pointer over the canvas', async ({ page }) => {

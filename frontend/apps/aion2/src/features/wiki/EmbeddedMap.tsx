@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGameMap } from "@/context/GameMapContext";
 import { aionAssets } from "@/features/map/aionAssets";
-import { GameMapEmbed, type EmbedPin } from "@gamemap/map-engine-gl";
+// Type-only, so it erases; the component arrives through the lazy boundary (see
+// GlEmbeddedMap) so wiki pages without a map never fetch the engine.
+import type { EmbedPin } from "@gamemap/map-engine-gl";
+const GameMapEmbed = lazy(() => import("@/features/wiki/GlEmbeddedMap"));
 import { loadGameData } from "@/lib/data";
 import type { WikiPoi } from "@/types/wiki";
 
@@ -114,15 +117,17 @@ export default function EmbeddedMap({
       {/* Keyed on the content: the regions are fetched AFTER mount, and the fit is
           applied when the GL stack is built, so the key is what re-frames the
           camera onto them once they arrive. */}
-      <GameMapEmbed
-        key={`${map.id}:${pois.length}:${highlightRegionKey}:${highlightRegionRenderKey}`}
-        map={map}
-        assets={aionAssets}
-        pins={pins}
-        regions={highlightRegions}
-        highlightRegionIds={highlightIds}
-        minZoom={MIN_ZOOM}
-      />
+      <Suspense fallback={<div className="h-full w-full animate-pulse bg-secondary" />}>
+        <GameMapEmbed
+          key={`${map.id}:${pois.length}:${highlightRegionKey}:${highlightRegionRenderKey}`}
+          map={map}
+          assets={aionAssets}
+          pins={pins}
+          regions={highlightRegions}
+          highlightRegionIds={highlightIds}
+          minZoom={MIN_ZOOM}
+        />
+      </Suspense>
       <a
         href={href}
         className="absolute right-2 top-2 z-[var(--arkive-layer-map-control)] rounded-md bg-[color:var(--arkive-action)] px-3 py-2 text-xs font-semibold text-[color:var(--arkive-action-on)] transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

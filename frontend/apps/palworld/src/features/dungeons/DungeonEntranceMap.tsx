@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { GameMapEmbed, type EmbedPin } from '@gamemap/map-engine-gl'
+// Type-only, so it erases; the component itself arrives through the lazy
+// boundary below (see features/map/GlMapEmbed).
+import type { EmbedPin } from '@gamemap/map-engine-gl'
+const GameMapEmbed = lazy(() => import('../map/GlMapEmbed'))
 import { palworldAssets } from '../../lib/assets'
 import { loadStatic, loadMarkers, type MapMeta } from '../../lib/data'
 import { CatalogSection } from '../catalog/components'
@@ -97,13 +100,15 @@ export function DungeonEntranceMap({
       <div className="relative isolate h-72 overflow-hidden rounded-lg border border-border">
         {/* Keyed on the dungeon so switching pages opens on the whole map again
             rather than inheriting wherever the previous one was panned to. */}
-        <GameMapEmbed
-          key={dungeonId}
-          map={data.map}
-          assets={palworldAssets}
-          pins={pins}
-          initialFit="map"
-        />
+        <Suspense fallback={<div className="h-full w-full animate-pulse bg-secondary" />}>
+          <GameMapEmbed
+            key={dungeonId}
+            map={data.map}
+            assets={palworldAssets}
+            pins={pins}
+            initialFit="map"
+          />
+        </Suspense>
         <Link
           to="/"
           search={{ map: PORTAL_MAP_ID, q: dungeonName }}

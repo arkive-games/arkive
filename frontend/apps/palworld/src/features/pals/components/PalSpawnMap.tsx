@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Moon } from 'lucide-react'
-import {
-  GameMapEmbed,
-  dataToPoint,
-  pointToData,
-  type EmbedPin,
-  type PointCloud,
-} from '@gamemap/map-engine-gl'
+// The coord helpers come from the three-free `/coords` subpath and the types
+// erase, so only the lazy boundary below pulls the engine in.
+import type { EmbedPin, PointCloud } from '@gamemap/map-engine-gl'
+import { dataToPoint, pointToData } from '@gamemap/map-engine-gl/coords'
+const GameMapEmbed = lazy(() => import('../../map/GlMapEmbed'))
 import { cn } from '@gamemap/ui'
 import { palworldAssets } from '../../../lib/assets'
 import { loadPalSpawns, type PalSpawns, type SpawnKind, type SpawnPoint } from '../../../lib/pals'
@@ -328,17 +326,19 @@ export function PalSpawnMap({
       >
         {/* Keyed on the map so switching a multi-map pal's tab opens on the whole
             map again rather than inheriting the previous camera. */}
-        <GameMapEmbed
-          key={`${map.id}:${current.points.length}`}
-          map={map}
-          assets={palworldAssets}
-          pins={pins}
-          dots={clouds}
-          onZoom={onZoom}
-          // The whole map, not this pal's spawn cluster: where a pal does NOT
-          // live is as much of the answer as where it does.
-          initialFit="map"
-        />
+        <Suspense fallback={<div className="h-full w-full animate-pulse bg-secondary" />}>
+          <GameMapEmbed
+            key={`${map.id}:${current.points.length}`}
+            map={map}
+            assets={palworldAssets}
+            pins={pins}
+            dots={clouds}
+            onZoom={onZoom}
+            // The whole map, not this pal's spawn cluster: where a pal does NOT
+            // live is as much of the answer as where it does.
+            initialFit="map"
+          />
+        </Suspense>
         {(hasWild && hasBoss) || (hasNight && !allNight) ? (
           <div className="absolute bottom-2 left-2 z-[var(--arkive-layer-map-control)] flex items-center gap-3 rounded bg-background/80 px-2 py-1 text-xs">
             <span className="flex items-center gap-1">

@@ -29,12 +29,15 @@ test('marker icons are fetched for the pin atlas', async ({ page }) => {
   await expect.poll(() => icons.length, { timeout: 15_000 }).toBeGreaterThan(0)
 })
 
+// The subtype id is a real one from types.json: the old spec clicked
+// `subtype-toggle-poi`, which has never existed in the shipped taxonomy, so it
+// timed out on a locator that could not resolve.
 test('toggling a subtype changes what the map draws', async ({ page }) => {
   const canvas = await openMap(page)
   // Give the first full paint time to land before sampling it.
   await page.waitForTimeout(1500)
   const before = await canvas.screenshot()
-  await page.getByTestId('subtype-toggle-poi').click()
+  await page.getByTestId('subtype-toggle-navigation-cave-passage').click()
   await expectPixelsChanged(canvas, before)
 })
 

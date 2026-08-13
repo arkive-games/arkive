@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { GameMapEmbed, dataToPoint, pointToData, type EmbedPin } from '@gamemap/map-engine-gl'
+// The coord helpers come from the three-free `/coords` subpath and the type
+// erases, so only the lazy boundary below pulls the engine in.
+import type { EmbedPin } from '@gamemap/map-engine-gl'
+import { dataToPoint, pointToData } from '@gamemap/map-engine-gl/coords'
+const GameMapEmbed = lazy(() => import('../map/GlMapEmbed'))
 import { ContentPage } from '../../components/ContentPage'
 import { palworldAssets } from '../../lib/assets'
 import { loadAreas, type AreaInfo } from '../../lib/areas'
@@ -151,13 +155,15 @@ function RegionLootMap({ area, data, taxonomy }: { area: string; data: MapData; 
     <div className="relative isolate h-96 overflow-hidden rounded-lg border border-border">
       {/* Keyed on area + map so switching either re-fits onto the new spots
           instead of keeping the previous camera. */}
-      <GameMapEmbed
-        key={`${area}-${data.map.id}`}
-        map={data.map}
-        assets={palworldAssets}
-        pins={pins}
-        onZoom={onZoom}
-      />
+      <Suspense fallback={<div className="h-full w-full animate-pulse bg-secondary" />}>
+        <GameMapEmbed
+          key={`${area}-${data.map.id}`}
+          map={data.map}
+          assets={palworldAssets}
+          pins={pins}
+          onZoom={onZoom}
+        />
+      </Suspense>
     </div>
   )
 }
