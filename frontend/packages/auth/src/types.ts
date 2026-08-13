@@ -4,9 +4,13 @@
  * The wire types are no longer written by hand: they are aliases onto
  * `@gamemap/api-core`, which generates them from `backend-go/openapi/core.json`.
  * A backend field that changes shape is now a compile error here rather than a
- * silent mismatch, which is what the old `specDrift.test.ts` could only
- * approximate — it checked that paths and methods still existed, never that the
- * bodies still matched.
+ * silent mismatch — something the old `specDrift.test.ts` could not catch at all,
+ * since it compared paths and methods and never bodies.
+ *
+ * It did check one thing generation does not, though: that this package still
+ * covers the whole `/auth/*` surface. Matching the document says nothing about
+ * whether anything calls what was generated, so that assertion lives on in
+ * `authCoverage.test.ts` rather than having been retired with the rest.
  *
  * What stays hand-written is the part the spec does not describe: the error
  * vocabulary the UI branches on.

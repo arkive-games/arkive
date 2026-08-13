@@ -14,7 +14,16 @@ import { defineConfig } from "@hey-api/openapi-ts"
 export default defineConfig({
   input: "../../../backend-go/openapi/core.json",
   output: {
-    path: "src/generated",
+    // The drift gate regenerates into a scratch directory and compares, and it
+    // redirects the output through this variable rather than the CLI's
+    // `--output` flag. That flag REPLACES the whole `output` object rather than
+    // merging into it (`if (cli.output) config.output = cli.output` in the CLI's
+    // config adapter), so every sibling option below would silently revert to its
+    // default for the gate's run only. Today the one option set here happens to
+    // equal its default, so the two runs agree by coincidence; add a real one and
+    // the gate would report permanent drift in files nobody had touched, telling
+    // the author to run the very command that produced them.
+    path: process.env.ARKIVE_API_CORE_OUT ?? "src/generated",
     // Generated output is neither formatted nor linted by this project's rules:
     // it is machine-written and excluded from eslint, and reformatting it would
     // make the drift gate fail on cosmetics.

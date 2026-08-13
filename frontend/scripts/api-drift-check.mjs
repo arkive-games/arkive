@@ -65,7 +65,18 @@ try {
   // Two Windows problems disappear: Node refuses to spawnSync a `.cmd` without a
   // shell, and spawning through a shell concatenates rather than escapes the
   // arguments -- one of which is a temp path.
-  execFileSync(process.execPath, [CLI, '--output', scratch], { cwd: PACKAGE, stdio: 'pipe' })
+  //
+  // Redirected with an environment variable that openapi-ts.config.ts reads, NOT
+  // with the CLI's `--output` flag. That flag replaces the entire `output` object
+  // instead of merging into it, so the scratch run would take the default for
+  // every other output option while the committed copy was generated with the
+  // configured ones -- and this check would then report drift forever, in files
+  // nobody had touched. One config object, one set of options, both runs.
+  execFileSync(process.execPath, [CLI], {
+    cwd: PACKAGE,
+    stdio: 'pipe',
+    env: { ...process.env, ARKIVE_API_CORE_OUT: scratch },
+  })
 
   const after = snapshot(scratch)
   if (after.size === 0) fail(`regeneration produced nothing. Check openapi-ts.config.ts, then run: ${REGENERATE}`)

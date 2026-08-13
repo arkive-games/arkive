@@ -1,4 +1,9 @@
-import { AxiosError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from "axios"
+import {
+  AxiosError,
+  type AxiosAdapter,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from "axios"
 import { describe, expect, it } from "vitest"
 
 import { CoreClient, normaliseCode } from "./client"
