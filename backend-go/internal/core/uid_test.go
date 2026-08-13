@@ -74,33 +74,35 @@ func TestFirstAccountIsNumberedTenThousand(t *testing.T) {
 	}
 }
 
-// A uid is a permanent public identifier, so removing its holder must not put it
-// back in circulation for somebody else.
-func TestUIDIsNotReusedAfterTheAccountIsDeleted(t *testing.T) {
+// A uid is a permanent public identifier. Accounts are never deleted, so a uid
+// can never come back into circulation — and deactivation must not free it
+// either, or the guarantee would hold only until an administrator used the one
+// endpoint that retires an account.
+func TestUIDIsNotReusedAfterTheAccountIsDeactivated(t *testing.T) {
 	h := newHarness(t)
 	adminToken := promoteToAdmin(t, h, "admin", "admin@example.com")
 
-	doomedToken := h.registerAndLogin("doomed", "doomed@example.com", "hunter2hunter2")
-	doomedUID, _ := uidOf(t, h, doomedToken)
-	doomedID := idOf(t, h, doomedToken)
+	retiredToken := h.registerAndLogin("retired", "retired@example.com", "hunter2hunter2")
+	retiredUID, _ := uidOf(t, h, retiredToken)
+	retiredID := idOf(t, h, retiredToken)
 
-	if res := h.do(http.MethodDelete, "/users/"+doomedID, nil, withBearer(adminToken)); res.status != http.StatusOK {
-		t.Fatalf("delete = %d: %s", res.status, res.body)
+	if res := h.do(http.MethodPost, "/users/"+retiredID+"/deactivate", nil, withBearer(adminToken)); res.status != http.StatusOK {
+		t.Fatalf("deactivate = %d: %s", res.status, res.body)
 	}
 
 	nextToken := h.registerAndLogin("next", "next@example.com", "hunter2hunter2")
 	nextUID, _ := uidOf(t, h, nextToken)
 
-	if nextUID == doomedUID {
-		t.Fatalf("uid %d was reissued to a new account after its holder was deleted", doomedUID)
+	if nextUID == retiredUID {
+		t.Fatalf("uid %d was reissued after its holder was deactivated", retiredUID)
 	}
-	if nextUID < doomedUID {
-		t.Errorf("uid went backwards: %d was issued after %d", nextUID, doomedUID)
+	if nextUID < retiredUID {
+		t.Errorf("uid went backwards: %d was issued after %d", nextUID, retiredUID)
 	}
 
-	// The deleted number must not resolve either.
-	if res := h.do(http.MethodGet, "/users/uid/"+strconv.FormatInt(doomedUID, 10), nil); res.status != http.StatusNotFound {
-		t.Errorf("public lookup of a deleted account = %d, want 404", res.status)
+	// The row still exists, but a deactivated account is not public.
+	if res := h.do(http.MethodGet, "/users/uid/"+strconv.FormatInt(retiredUID, 10), nil); res.status != http.StatusNotFound {
+		t.Errorf("public lookup of a deactivated account = %d, want 404", res.status)
 	}
 }
 

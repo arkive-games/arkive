@@ -444,9 +444,10 @@ func TestDeletingAnAvatarWhenThereIsNoneSucceeds(t *testing.T) {
 	}
 }
 
-// Deleting an account must not leave its pictures in the bucket, which the
-// per-account prefix makes one scoped operation.
-func TestDeletingAnAccountRemovesItsAvatars(t *testing.T) {
+// Deactivating an account keeps its pictures. Accounts are never deleted, so
+// there is no moment at which a bucket prefix becomes garbage — and a
+// reactivated account should look exactly as it did, avatar included.
+func TestDeactivatingAnAccountKeepsItsAvatars(t *testing.T) {
 	h := newHarness(t)
 	adminToken := promoteToAdmin(t, h, "admin", "admin@example.com")
 	victimToken := h.registerAndLogin("victim", "victim@example.com", "hunter2hunter2")
@@ -457,14 +458,17 @@ func TestDeletingAnAccountRemovesItsAvatars(t *testing.T) {
 		t.Fatalf("upload = %d: %s", up.status, up.body)
 	}
 	if mem := memoryStore(t, h); mem.Len() != 1 {
-		t.Fatalf("expected one object before deletion, got %d", mem.Len())
+		t.Fatalf("expected one object before deactivation, got %d", mem.Len())
 	}
 
-	if res := h.do(http.MethodDelete, "/users/"+victimID, nil, withBearer(adminToken)); res.status != http.StatusOK {
-		t.Fatalf("delete account = %d: %s", res.status, res.body)
+	if res := h.do(http.MethodPost, "/users/"+victimID+"/deactivate", nil, withBearer(adminToken)); res.status != http.StatusOK {
+		t.Fatalf("deactivate = %d: %s", res.status, res.body)
 	}
-	if mem := memoryStore(t, h); mem.Len() != 0 {
-		t.Errorf("a deleted account left %d objects behind: %v", mem.Len(), mem.Keys())
+
+	// Nothing is destroyed, which is what makes reactivation a real restore
+	// rather than a resurrection of an empty shell.
+	if mem := memoryStore(t, h); mem.Len() != 1 {
+		t.Errorf("deactivation removed avatars: %d objects remain (%v)", mem.Len(), mem.Keys())
 	}
 }
 
