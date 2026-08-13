@@ -1,6 +1,25 @@
 {
   "entries": [
     {
+      "date": "2026-08-14",
+      "commit": "c09e2516c8345228b42d01b8a7009c113c6efbd6",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Maps now use a single renderer everywhere, so they start faster and every game's embedded mini-maps (pal spawns, dungeon entrances, region loot, quest locations) draw with the same engine as the full map. The renderer switcher has been retired.",
+            "zh-CN": "地图统一为单一渲染器，加载更快；各游戏的内嵌小地图（帕鲁刷新点、地牢入口、区域掉落、任务地点）与完整地图使用同一渲染引擎。渲染器切换选项已移除。",
+            "zh-TW": "地圖統一為單一渲染器，載入更快；各遊戲的內嵌小地圖（帕魯刷新點、地牢入口、區域掉落、任務地點）與完整地圖使用同一渲染引擎。渲染器切換選項已移除。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-08-13",
       "commit": "efc47ea62574205fec9f4d414b628b56c3248e1a",
       "targets": [
