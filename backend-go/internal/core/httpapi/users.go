@@ -12,7 +12,6 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
-	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
 
 // UpdateUserBody is a partial account edit.
@@ -243,15 +242,12 @@ func (h *Handlers) RegisterUserRoutes(a huma.API) {
 		Tags:   []string{"users"},
 		Errors: []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
 	}, func(ctx context.Context, in *userIDInput) (*api.Response[users.UserRead], error) {
-		admin, err := auth.RequireSuperuser(ctx)
-		if err != nil {
+		if _, err := auth.RequireSuperuser(ctx); err != nil {
 			return nil, err
 		}
-		// An administrator deactivating themselves would lock the role out of the
-		// site if they were the only one, with no way back through the API.
-		if admin.ID == in.ID {
-			return nil, apierr.New(apierr.Forbidden, "you cannot deactivate your own account")
-		}
+		// The "last administrator" rule lives in the service, not here: PATCH
+		// /users/{id} reaches the same fields, so a check in this handler alone
+		// was simply walked around.
 		user, err := h.users.Deactivate(ctx, in.ID)
 		if err != nil {
 			return nil, err

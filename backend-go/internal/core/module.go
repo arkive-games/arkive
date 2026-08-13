@@ -176,7 +176,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 			d.Logger.Warn("no mail transport configured; reset tokens will be logged, not emailed")
 		}
 	}
-	service := users.NewService(queries, hasher, tokens, mailer, blobs, d.Logger)
+	service := users.NewService(queries, d.Pool, hasher, tokens, mailer, blobs, d.Logger)
 
 	// Identity resolution runs before huma so that every operation can read
 	// the caller from its context. It never rejects: authorization is decided

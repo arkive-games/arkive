@@ -850,9 +850,11 @@ func TestDeactivatedAccountCannotSignIn(t *testing.T) {
 	}
 }
 
-// An administrator deactivating themselves could lock the role out of the site
-// entirely, with no way back through the API.
-func TestAdministratorCannotDeactivateThemselves(t *testing.T) {
+// The site must always keep an administrator who can sign in. Stated as an
+// invariant rather than "you may not act on yourself", because the self-check
+// was both too strict (a second admin makes stepping down fine) and too weak
+// (it was reachable around via PATCH).
+func TestTheLastAdministratorCannotBeLockedOut(t *testing.T) {
 	h := newHarness(t)
 	adminToken := h.registerAndLogin("admin", "admin@example.com", "hunter2hunter2")
 	if res := h.do(http.MethodPost, "/users/become-superuser", nil, withBearer(adminToken)); res.status != http.StatusOK {
@@ -860,9 +862,42 @@ func TestAdministratorCannotDeactivateThemselves(t *testing.T) {
 	}
 	adminID, _ := h.do(http.MethodGet, "/users/me", nil, withBearer(adminToken)).data(t)["id"].(string)
 
-	res := h.do(http.MethodPost, "/users/"+adminID+"/deactivate", nil, withBearer(adminToken))
-	if res.status != http.StatusForbidden {
-		t.Fatalf("self-deactivation should be refused, got %d: %s", res.status, res.body)
+	// Every route that reaches is_active or is_superuser must refuse.
+	for name, res := range map[string]response{
+		"deactivate endpoint": h.do(http.MethodPost, "/users/"+adminID+"/deactivate", nil, withBearer(adminToken)),
+		"patch isActive":      h.do(http.MethodPatch, "/users/"+adminID, map[string]any{"isActive": false}, withBearer(adminToken)),
+		"patch isSuperuser":   h.do(http.MethodPatch, "/users/"+adminID, map[string]any{"isSuperuser": false}, withBearer(adminToken)),
+	} {
+		if res.status != http.StatusForbidden {
+			t.Errorf("%s: locked out the only administrator (%d): %s", name, res.status, res.body)
+		}
+	}
+
+	// Still an administrator afterwards.
+	me := h.do(http.MethodGet, "/users/me", nil, withBearer(adminToken))
+	if me.status != http.StatusOK || me.data(t)["isSuperuser"] != true {
+		t.Fatalf("the administrator should be intact, got %d: %s", me.status, me.body)
+	}
+}
+
+// The invariant is about the system, not the person: once a second
+// administrator exists, the first may step down or be retired.
+func TestAnAdministratorMayStepDownOnceAnotherExists(t *testing.T) {
+	h := newHarness(t)
+	firstToken := h.registerAndLogin("first", "first@example.com", "hunter2hunter2")
+	if res := h.do(http.MethodPost, "/users/become-superuser", nil, withBearer(firstToken)); res.status != http.StatusOK {
+		t.Fatalf("promote = %d: %s", res.status, res.body)
+	}
+	firstID, _ := h.do(http.MethodGet, "/users/me", nil, withBearer(firstToken)).data(t)["id"].(string)
+
+	secondToken := h.registerAndLogin("second", "second@example.com", "hunter2hunter2")
+	secondID, _ := h.do(http.MethodGet, "/users/me", nil, withBearer(secondToken)).data(t)["id"].(string)
+	if res := h.do(http.MethodPatch, "/users/"+secondID, map[string]any{"isSuperuser": true}, withBearer(firstToken)); res.status != http.StatusOK {
+		t.Fatalf("promoting a second administrator = %d: %s", res.status, res.body)
+	}
+
+	if res := h.do(http.MethodPost, "/users/"+firstID+"/deactivate", nil, withBearer(secondToken)); res.status != http.StatusOK {
+		t.Fatalf("with two administrators, retiring one should be allowed, got %d: %s", res.status, res.body)
 	}
 }
 

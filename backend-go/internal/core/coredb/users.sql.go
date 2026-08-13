@@ -11,6 +11,20 @@ import (
 	"github.com/google/uuid"
 )
 
+const countOtherActiveSuperusers = `-- name: CountOtherActiveSuperusers :one
+SELECT count(*) FROM core.users
+WHERE is_superuser AND is_active AND id <> $1
+`
+
+// Counts administrators who could still sign in if the given account stopped
+// being one. Used to refuse the change that would leave the site with none.
+func (q *Queries) CountOtherActiveSuperusers(ctx context.Context, excluding uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countOtherActiveSuperusers, excluding)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countUsers = `-- name: CountUsers :one
 SELECT count(*) FROM core.users
 WHERE (
@@ -176,6 +190,19 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (CoreUser, err
 		&i.AvatarKey,
 	)
 	return i, err
+}
+
+const lockAdminMembership = `-- name: LockAdminMembership :exec
+SELECT pg_advisory_xact_lock(hashtext('core.users.admin_membership'))
+`
+
+// Serialises every change to the set of usable administrators. Held for the
+// duration of the transaction, so a check and the update it authorises cannot
+// interleave with another such pair. Without it two concurrent deactivations
+// each observe the other as the remaining administrator and both succeed.
+func (q *Queries) LockAdminMembership(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, lockAdminMembership)
+	return err
 }
 
 const searchUsers = `-- name: SearchUsers :many

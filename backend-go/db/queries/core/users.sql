@@ -75,3 +75,16 @@ SELECT EXISTS (SELECT 1 FROM core.users WHERE is_superuser);
 UPDATE core.users SET avatar_key = sqlc.narg('avatar_key')
 WHERE id = sqlc.arg('id')
 RETURNING *;
+
+-- Counts administrators who could still sign in if the given account stopped
+-- being one. Used to refuse the change that would leave the site with none.
+-- name: CountOtherActiveSuperusers :one
+SELECT count(*) FROM core.users
+WHERE is_superuser AND is_active AND id <> sqlc.arg('excluding');
+
+-- Serialises every change to the set of usable administrators. Held for the
+-- duration of the transaction, so a check and the update it authorises cannot
+-- interleave with another such pair. Without it two concurrent deactivations
+-- each observe the other as the remaining administrator and both succeed.
+-- name: LockAdminMembership :exec
+SELECT pg_advisory_xact_lock(hashtext('core.users.admin_membership'));

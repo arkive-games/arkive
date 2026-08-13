@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
@@ -22,7 +23,13 @@ import (
 
 // Service implements the account use cases.
 type Service struct {
-	q      *coredb.Queries
+	q *coredb.Queries
+
+	// pool opens the transaction that guards changes to the administrator set.
+	// A check followed by an update on separate connections is not atomic: two
+	// concurrent deactivations each see the other as the remaining
+	// administrator and both commit, leaving none.
+	pool   *pgxpool.Pool
 	hasher *auth.Hasher
 	tokens *auth.Tokens
 	mailer auth.Mailer
@@ -44,9 +51,9 @@ type Service struct {
 const resetMailTimeout = 30 * time.Second
 
 // NewService wires the account service.
-func NewService(q *coredb.Queries, hasher *auth.Hasher, tokens *auth.Tokens, mailer auth.Mailer, blobs blob.Store, logger *slog.Logger) *Service {
+func NewService(q *coredb.Queries, pool *pgxpool.Pool, hasher *auth.Hasher, tokens *auth.Tokens, mailer auth.Mailer, blobs blob.Store, logger *slog.Logger) *Service {
 	return &Service{
-		q: q, hasher: hasher, tokens: tokens, mailer: mailer, blobs: blobs, logger: logger,
+		q: q, pool: pool, hasher: hasher, tokens: tokens, mailer: mailer, blobs: blobs, logger: logger,
 		dispatch: func(f func()) { go f() },
 	}
 }
@@ -369,6 +376,12 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, in UpdateInput, priv
 		params.HashedPassword = &hash
 	}
 
+	// This endpoint reaches the same two fields as Deactivate, so it needs the
+	// same invariant — a check here alone was simply walked around — and the
+	// same serialisation, since two concurrent demotions would otherwise each
+	// observe the other administrator as remaining.
+	losesAdmin := privileged &&
+		((in.IsActive != nil && !*in.IsActive) || (in.IsSuperuser != nil && !*in.IsSuperuser))
 	if privileged {
 		if in.IsActive != nil {
 			params.IsActive = in.IsActive
@@ -395,6 +408,32 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, in UpdateInput, priv
 				params.SpecialUID = &value
 			}
 		}
+	}
+
+	// A change that could cost the site its last administrator is checked and
+	// written under one lock. Checking first and writing afterwards leaves the
+	// same window this guard exists to close: the check would pass, the lock
+	// would be released, and a concurrent request could pass its own check
+	// before either write landed.
+	if losesAdmin {
+		var u coredb.CoreUser
+		if err := s.inAdminGuard(ctx, func(q *coredb.Queries) error {
+			fresh, err := q.GetUserByID(ctx, id)
+			if err != nil {
+				return fmt.Errorf("re-read user under the administrator lock: %w", err)
+			}
+			if err := s.ensureAnotherAdminRemains(ctx, q, fresh); err != nil {
+				return err
+			}
+			u, err = q.UpdateUser(ctx, params)
+			if err != nil {
+				return mapConstraintError(err)
+			}
+			return nil
+		}); err != nil {
+			return UserRead{}, err
+		}
+		return toUserRead(u, s.avatarResolver()), nil
 	}
 
 	u, err := s.q.UpdateUser(ctx, params)
@@ -424,26 +463,90 @@ func (s *Service) Reactivate(ctx context.Context, id uuid.UUID) (UserRead, error
 	return s.setActive(ctx, id, true)
 }
 
-func (s *Service) setActive(ctx context.Context, id uuid.UUID, active bool) (UserRead, error) {
-	if _, err := s.q.GetUserByID(ctx, id); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
-		}
-		return UserRead{}, fmt.Errorf("load user: %w", err)
+// ensureAnotherAdminRemains refuses a change that would leave the site with no
+// administrator who can sign in.
+//
+// The rule is stated as an invariant about the system rather than as "you may
+// not do this to yourself", because the self-check is both too strict and too
+// weak. Too strict: an administrator may legitimately step down while others
+// remain. Too weak: it is trivially sidestepped by two administrators demoting
+// each other, or — as this originally was — by reaching the same field through
+// a different endpoint.
+func (s *Service) ensureAnotherAdminRemains(ctx context.Context, q *coredb.Queries, target coredb.CoreUser) error {
+	if !target.IsSuperuser || !target.IsActive {
+		return nil // not currently a usable administrator; nothing to lose
 	}
-
-	u, err := s.q.UpdateUser(ctx, coredb.UpdateUserParams{ID: id, IsActive: &active})
+	others, err := q.CountOtherActiveSuperusers(ctx, target.ID)
 	if err != nil {
-		return UserRead{}, fmt.Errorf("set account active=%t: %w", active, err)
+		return fmt.Errorf("count remaining administrators: %w", err)
+	}
+	if others == 0 {
+		return apierr.New(apierr.Forbidden,
+			"this is the only active administrator; promote another account first")
+	}
+	return nil
+}
+
+func (s *Service) setActive(ctx context.Context, id uuid.UUID, active bool) (UserRead, error) {
+	var updated coredb.CoreUser
+
+	err := s.inAdminGuard(ctx, func(q *coredb.Queries) error {
+		current, err := q.GetUserByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return apierr.New(apierr.UserNotFound, "no such user")
+			}
+			return fmt.Errorf("load user: %w", err)
+		}
+		if !active {
+			if err := s.ensureAnotherAdminRemains(ctx, q, current); err != nil {
+				return err
+			}
+		}
+		updated, err = q.UpdateUser(ctx, coredb.UpdateUserParams{ID: id, IsActive: &active})
+		if err != nil {
+			return fmt.Errorf("set account active=%t: %w", active, err)
+		}
+		return nil
+	})
+	if err != nil {
+		return UserRead{}, err
 	}
 
 	// Sessions are bound to the password hash, which deactivation does not
-	// change, so an already-signed-in user keeps a valid token. Authenticate
-	// refuses an inactive account, and RequireUser rejects one on every
-	// request, so the session stops being useful at the next call either way.
+	// change, so an already-signed-in user keeps a syntactically valid token.
+	// It stops being useful because every request rejects an inactive
+	// principal; the corollary is that reactivation restores those tokens
+	// rather than forcing a fresh sign-in, which is the intended behaviour.
 	s.logger.InfoContext(ctx, "account activation changed",
 		slog.String("user_id", id.String()), slog.Bool("is_active", active))
-	return toUserRead(u, s.avatarResolver()), nil
+	return toUserRead(updated, s.avatarResolver()), nil
+}
+
+// inAdminGuard runs fn inside a transaction holding the administrator-set lock,
+// so a check and the write it authorises cannot interleave with another pair.
+//
+// The lock is taken even for reads inside fn, because the point is mutual
+// exclusion between check/update sequences, not row protection: locking only the
+// target row would not help when two requests target different administrators.
+func (s *Service) inAdminGuard(ctx context.Context, fn func(*coredb.Queries) error) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin admin guard: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	q := s.q.WithTx(tx)
+	if err := q.LockAdminMembership(ctx); err != nil {
+		return fmt.Errorf("lock administrator set: %w", err)
+	}
+	if err := fn(q); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit admin guard: %w", err)
+	}
+	return nil
 }
 
 // Search lists accounts matching an optional name or email fragment.
