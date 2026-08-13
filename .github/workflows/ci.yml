@@ -136,7 +136,9 @@ jobs:
         id: packages
         continue-on-error: true
         working-directory: frontend
-        run: pnpm -r check
+        # Filtered to packages: the step is named for them, and an app defining a
+        # `check` later would otherwise duplicate what the build step already does.
+        run: pnpm --filter "./packages/*" check
 
       # Every app, not only the four that deploy: sts2 and lostark are built and
       # linted here because they exist in the workspace, and a break in a shared

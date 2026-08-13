@@ -42,8 +42,15 @@ const CLIENT_PATH = fileURLToPath(new URL("./client.ts", import.meta.url))
  * operations that are this package's business.
  */
 function isOwned(path: string): boolean {
-  return path.startsWith("/auth/") || path === "/users/me" || path.startsWith("/users/me/") ||
-    path === "/users/avatar-presets"
+  return (
+    path.startsWith("/auth/") ||
+    path === "/users/me" ||
+    path.startsWith("/users/me/") ||
+    // Prefix, not equality: a future /users/avatar-presets/{id} would otherwise
+    // fall outside this function and go unaccounted, which is the exact failure
+    // this file exists to prevent.
+    path.startsWith("/users/avatar-presets")
+  )
 }
 
 /**
@@ -83,15 +90,52 @@ const GENERATED_NAME: Record<string, string> = {
  * say whether that was intended.
  */
 const NOT_NEEDED: Record<string, string> = {
-  listAvatarPresets:
-    "no avatar UI yet; User.avatarUrl is read and rendered, but nothing lets an account change it",
-  setCurrentUserAvatar: "no avatar UI yet: uploading needs a file picker and a crop step",
-  setCurrentUserAvatarPreset: "no avatar UI yet: choosing a preset needs the preset gallery",
-  deleteCurrentUserAvatar: "no avatar UI yet: nothing can set one, so nothing needs to clear one",
+  // All four say the same thing, because one fact explains all four: the avatar
+  // editor is BUILT and is not connected to the backend.
+  //
+  // `apps/meta/src/UserSystemPages.tsx` ships `AvatarUploadDialog` with a file
+  // picker, type and size validation, zoom and crop, and its own `AVATAR_PRESETS`
+  // gallery; the same page already calls `updateCurrentUser` for name, email and
+  // password. What the chosen avatar reaches is `updateLocalProfile({ avatarSrc })`
+  // -- browser memory -- so it does not follow the account to another browser
+  // even though every endpoint it would need exists.
+  //
+  // Recorded this way deliberately. Saying "no avatar UI yet" would be the same
+  // mistake this file was widened to correct: an inaccurate note that leaves the
+  // next reader believing there is UI to build, when what is missing is one client
+  // call per operation. Wiring it is frontend work outside this package, so these
+  // stay declined until it happens -- but declined for the true reason.
+  listAvatarPresets: "the preset gallery is local (apps/meta AVATAR_PRESETS), not fetched from core",
+  setCurrentUserAvatar: "AvatarUploadDialog crops and then stores locally, never uploading",
+  setCurrentUserAvatarPreset: "a chosen preset is stored locally, not sent to core",
+  deleteCurrentUserAvatar: "nothing sends an avatar to core, so there is none there to clear",
 }
 
 interface OpenApiDocument {
   paths: Record<string, Record<string, { operationId?: string }>>
+}
+
+/**
+ * The value names `client.ts` imports from `@gamemap/api-core`.
+ *
+ * Reads the specifier list rather than the whole file, for the reason given at
+ * the assertion below. `type` specifiers are dropped: a type import is not a
+ * call, and `noUnusedLocals` does not fault an unused one the way it faults an
+ * unused value.
+ */
+function importedFromApiCore(): Set<string> {
+  const source = readFileSync(CLIENT_PATH, "utf8")
+  const block = /import\s*\{([^}]*)\}\s*from\s*["']@gamemap\/api-core["']/s.exec(source)
+  if (!block) throw new Error(`no @gamemap/api-core import found in ${CLIENT_PATH}`)
+
+  return new Set(
+    block[1]
+      .split(",")
+      .map((specifier) => specifier.trim())
+      .filter((specifier) => specifier.length > 0 && !specifier.startsWith("type "))
+      // `a as b` imports under a local name; the local name is what is called.
+      .map((specifier) => specifier.split(/\s+as\s+/).pop()!.trim()),
+  )
 }
 
 function ownedOperationIds(): string[] {
@@ -132,13 +176,23 @@ describe("this package's slice of the API is fully accounted for", () => {
   // The third direction. Without this, deleting the resetPassword call from
   // CoreClient leaves HANDLED still claiming it, every other check green, and
   // nothing naming the loss -- the same invisible gap, entered from the other end.
+  //
+  // Searched inside the `@gamemap/api-core` import list, NOT across the whole
+  // file, and that distinction is the whole test. Six of these ids are also the
+  // names of CoreClient's own methods -- getCurrentUser, register, resetPassword
+  // and three more -- so a match anywhere in the file is satisfied by the method
+  // declaration alone. Gut `resetPassword`'s body and drop its import and a
+  // whole-file search still finds `async resetPassword(`, passing while the call
+  // site it exists to protect is gone.
+  //
+  // The import list cannot be fooled that way, and it is stronger than a
+  // substring for a second reason: `noUnusedLocals` is on for this package and CI
+  // now runs `tsc` over it, so an imported name that nothing calls fails the
+  // build. Presence in that list is therefore compiler-checked evidence of a real
+  // use, not textual evidence of a mention.
   it("actually calls everything it claims to handle", () => {
-    const source = readFileSync(CLIENT_PATH, "utf8")
-    const uncalled = HANDLED.filter((id) => {
-      const name = GENERATED_NAME[id] ?? id
-      // Word-boundary matched, so `getUser` cannot be satisfied by `getUserByUID`.
-      return !new RegExp(`\\b${name}\\b`).test(source)
-    }).sort()
+    const imported = importedFromApiCore()
+    const uncalled = HANDLED.filter((id) => !imported.has(GENERATED_NAME[id] ?? id)).sort()
 
     expect(uncalled).toEqual([])
   })

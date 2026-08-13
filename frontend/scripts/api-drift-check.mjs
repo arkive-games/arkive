@@ -42,8 +42,14 @@ function snapshot(dir, base = dir, out = new Map()) {
   return out
 }
 
+// Set once the scratch directory exists, so fail() can remove it: fail() ends in
+// process.exit, which does not run a `finally`, so every failure after this point
+// would otherwise leave an arkive-api-drift-* directory behind.
+let scratch = null
+
 function fail(message) {
   console.error(`api-drift: ${message}`)
+  if (scratch) fs.rmSync(scratch, { recursive: true, force: true })
   process.exit(1)
 }
 
@@ -70,7 +76,7 @@ if (process.env[OUT_VAR]) {
 const before = snapshot(COMMITTED)
 if (before.size === 0) fail(`${path.relative(ROOT, COMMITTED)} is empty or missing. Run: ${REGENERATE}`)
 
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'arkive-api-drift-'))
+scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'arkive-api-drift-'))
 try {
   // The generator's own JS entry point under this Node, rather than `pnpm exec`.
   // Two Windows problems disappear: Node refuses to spawnSync a `.cmd` without a
@@ -109,12 +115,14 @@ try {
   const drifted = names.filter((name) => before.get(name) !== after.get(name))
 
   if (drifted.length > 0) {
-    console.error(`api-drift: the committed client is stale. Run: ${REGENERATE}`)
+    // Details first, then the single exit path. Calling process.exit() directly
+    // here leaked the scratch directory, because process.exit does not run a
+    // `finally` -- so every exit goes through fail(), which removes it.
     for (const name of drifted) {
       const state = !before.has(name) ? 'missing from the commit' : !after.has(name) ? 'no longer generated' : 'differs'
       console.error(`  ${name} -- ${state}`)
     }
-    process.exit(1)
+    fail(`the committed client is stale. Run: ${REGENERATE}`)
   }
 
   console.log(`api-drift: ${before.size} generated files match ${path.relative(ROOT, SPEC)}`)
