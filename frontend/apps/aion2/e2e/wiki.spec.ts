@@ -40,10 +40,15 @@ test.describe("wiki", () => {
   });
 
   // The embed draws its POI pins INTO a canvas, so there is no per-pin DOM to
-  // count any more. What stays observable is that the embed mounted one live
-  // canvas with a real drawing buffer — a zero-sized buffer renders nothing while
-  // still reporting as visible, which is the failure this guards.
-  test("quest page embedded map mounts a sized canvas", async ({ page }) => {
+  // count any more. Two things still pin it down: the canvas has a real drawing
+  // buffer (a zero-sized one renders nothing while still reporting as visible),
+  // and the embed actually FETCHED map tiles — without that this would pass on an
+  // empty box.
+  test("quest page embedded map draws a real map", async ({ page }) => {
+    const tiles: string[] = [];
+    page.on("request", (r) => {
+      if (/\/UI\/Map\/WorldMap\/.*\.webp/.test(r.url())) tiles.push(r.url());
+    });
     await page.goto("/wiki/quest/main?lng=en-US");
     await page.locator('[data-testid^="wiki-entry-"]').first().click();
     const embed = page.getByTestId("embedded-map");
@@ -58,6 +63,7 @@ test.describe("wiki", () => {
       expect(size.cw).toBeGreaterThan(100);
       expect(size.w).toBeGreaterThan(0);
       expect(size.h).toBeGreaterThan(0);
+      await expect.poll(() => tiles.length, { timeout: 15_000 }).toBeGreaterThan(0);
     }
   });
 

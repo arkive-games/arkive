@@ -28,8 +28,10 @@ messages rescoped to `type(scope):`). The derived-artifact repos `data/` and `re
 their per-game variants) remain **separate**, pulled over HTTP.
 
 ## Layout
-- `frontend/` — pnpm workspace: `apps/` (aion2, palworld, sts2, vrising) + `packages/` (ui, map-engine,
-  map-shell, data-contract). React 19 / Vite / Tailwind / shadcn / Leaflet.
+- `frontend/` — pnpm workspace: `apps/` (aion2, palworld, sts2, vrising) + `packages/` (ui,
+  map-engine-gl, map-shell, data-contract, auth, api-core, state-memory). React 19 / Vite /
+  Tailwind / shadcn, with maps drawn by `map-engine-gl` (three.js) — the only renderer since
+  Leaflet was retired.
 - `backend/`  — FastAPI + PostgreSQL + S3; dynamic/user data only. One **shared** service
   (auth, comments, uploads, artifact voting) — not per-game.
 - `backend-go/` — the Go replacement for `backend/` (huma + sqlc + goose). Serves every game,

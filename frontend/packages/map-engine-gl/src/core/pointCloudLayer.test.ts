@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { Mesh } from "three";
 import type { GameMapMeta } from "@gamemap/data-contract";
 import { Camera } from "./camera.ts";
 import { dataToPoint } from "./coords.ts";
@@ -194,8 +195,10 @@ describe("PointCloudLayer", () => {
     const { layer } = makeLayer();
     layer.setClouds([cloud()]);
     const material = layer.materialOf("day")!;
-    const geometry = (layer.object3D.children[0] as { geometry: { dispose: () => void } }).geometry;
-    const geometryDispose = vi.spyOn(geometry, "dispose");
+    // `children` is typed as `Object3D[]`, so narrow to the Mesh the layer adds
+    // rather than asserting a shape onto it.
+    const mesh = layer.object3D.children[0] as Mesh;
+    const geometryDispose = vi.spyOn(mesh.geometry, "dispose");
     const materialDispose = vi.spyOn(material, "dispose");
     layer.setClouds([cloud({ id: "night" })]);
     expect(geometryDispose).toHaveBeenCalledTimes(1);

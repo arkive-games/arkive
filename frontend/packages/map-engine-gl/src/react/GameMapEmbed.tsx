@@ -229,6 +229,8 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
   const layerRef = useRef<MarkerLayer | null>(null);
   const vectorsRef = useRef<VectorLayer | null>(null);
   const cloudsRef = useRef<PointCloudLayer | null>(null);
+  /** The live overlay pass, so a tooltip change can re-run it. See below. */
+  const overlayPassRef = useRef<(() => void) | null>(null);
 
   const liveRef = useRef({
     assets,
@@ -341,6 +343,13 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
 
     let pointer: { x: number; y: number } | null = null;
     let hoveredId: string | null = null;
+    /**
+     * The text currently on screen. Compared alongside the hovered id so a pin
+     * whose `tooltip` CHANGES while the pointer rests on it updates instead of
+     * latching — `RegionDetailPage` composes its tooltips from a live cluster
+     * count, which is exactly the shape that would go stale.
+     */
+    let shownText: string | null = null;
 
     /**
      * Hit-test and reposition in ONE pass, run SYNCHRONOUSLY from the camera's
@@ -356,14 +365,19 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
     const runOverlayPass = (): void => {
       if (pointer && !gestures.isGesturing()) {
         const hit = markerLayer.hitTest(pointer);
-        if (hit !== hoveredId) {
+        const text = (hit ? tooltipsRef.current.get(hit) : undefined) ?? null;
+        if (hit !== hoveredId || text !== shownText) {
           hoveredId = hit;
-          const text = hit ? tooltipsRef.current.get(hit) : undefined;
-          overlay.setTooltip(text ?? null, hit ? markerLayer.positionOf(hit) : null);
+          shownText = text;
+          overlay.setTooltip(text, hit ? markerLayer.positionOf(hit) : null);
         }
       }
       overlay.reposition(camera);
     };
+    // Published so the tooltip effect below can re-run the pass: a `tooltip` that
+    // changes while the pointer is stationary emits no pointermove and no camera
+    // change, so without this nothing would ask the overlay to look again.
+    overlayPassRef.current = runOverlayPass;
 
     const onCameraChange = (): void => {
       runOverlayPass();
@@ -412,6 +426,7 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
       layerRef.current = null;
       vectorsRef.current = null;
       cloudsRef.current = null;
+      overlayPassRef.current = null;
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       canvas.removeEventListener("pointercancel", onPointerLeave);
@@ -443,6 +458,13 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
   useEffect(() => {
     cloudsRef.current?.setClouds(dots ?? []);
   }, [dots, map, minZoom, themeKey]);
+
+  // A changed tooltip has no other trigger while the pointer sits still, so ask
+  // the overlay to re-read. Cheap: one hit-test against a set the layer already
+  // has, and `setTooltip` is idempotent when nothing actually differs.
+  useEffect(() => {
+    overlayPassRef.current?.();
+  }, [tooltips]);
 
   return (
     <div ref={rootRef} className={className ? `gmgl-embed ${className}` : "gmgl-embed"}>

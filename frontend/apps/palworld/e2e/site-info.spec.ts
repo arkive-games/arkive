@@ -3,10 +3,9 @@ import { test, expect } from '@playwright/test'
 const PHONE = { width: 390, height: 844 }
 const QQ_GROUP = '1091411026'
 
-// Deliberately engine-agnostic: the site-info panel is map-engine-independent,
-// so these run on whatever `lib/mapEngineChoice` defaults to (currently the
-// WebGL engine, which draws into one canvas). Readiness is gated on the
-// sidebar's own toggle rather than on anything the renderer puts in the DOM.
+// The site-info panel is independent of the map, and the engine draws into one
+// canvas, so readiness is gated on the sidebar's own toggle rather than on
+// anything the renderer puts in the DOM.
 test.describe('site info — desktop', () => {
   test('the right sidebar renders with the shared feedback group in English', async ({ page }) => {
     await page.goto('/')

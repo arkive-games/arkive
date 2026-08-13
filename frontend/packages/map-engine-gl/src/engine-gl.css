@@ -10,12 +10,12 @@
  * Lanhu light palette, so the engine renders sensibly on its own — and so the
  * host's dark mode flows through with no engine involvement.
  *
- * NAMING: every root-scoped class is `gmgl-` so this sheet can be loaded
- * alongside `@gamemap/map-engine/engine.css` (both engines coexist behind the
- * app's `?engine=gl` flag) without either restyling the other. The ONE exception
- * is `gm-popup-card`, which is the class the APP's popup card carries — the same
- * card component is rendered by both engines, so the pointer triangle below has
- * to key on the same name.
+ * NAMING: every root-scoped class is `gmgl-`, which namespaces this sheet
+ * against the host's own styles — it began as a way to coexist with the retired
+ * Leaflet engine's stylesheet and is kept because a shared prefix makes it obvious
+ * which rules the engine owns. The ONE exception is `gm-popup-card`, the class the
+ * APP's popup card carries (`map-shell`'s `MarkerPopupCard`), so the pointer
+ * triangle below has to key on that name instead.
  */
 
 /* ---- GameMapView shell ---------------------------------------------- */

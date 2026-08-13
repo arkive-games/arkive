@@ -29,8 +29,10 @@ import type { Point } from "./types.ts";
  * ## Screen-constant, like the pins
  * `CircleMarker`'s `radius` is a screen-pixel radius that does not grow with
  * zoom, and the vertex shader reproduces that the same way {@link MarkerLayer}
- * does: the unit quad is expanded by `radius / uScale`, where `uScale` is map
- * pixels per screen pixel for the current zoom.
+ * does: the unit quad is expanded by `radius / uScale`. `uScale` is
+ * `camera.scale()`, i.e. SCREEN pixels per MAP pixel — so dividing a screen-space
+ * radius by it yields the map-space size that renders at that screen radius. Get
+ * the direction backwards and the discs grow with zoom instead of staying put.
  *
  * ## Stroke and fill in one pass
  * Leaflet draws a `CircleMarker` as an SVG/canvas circle with a stroke and a

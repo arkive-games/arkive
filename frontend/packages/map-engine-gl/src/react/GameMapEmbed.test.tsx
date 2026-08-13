@@ -225,6 +225,31 @@ describe("GameMapEmbed tooltips", () => {
     expect(container.querySelectorAll(".gmgl-label")).toHaveLength(0);
   });
 
+  it("updates the text when a hovered pin's tooltip changes under the pointer", () => {
+    // The overlay pass only re-reads on a hover TRANSITION, so without an explicit
+    // nudge a tooltip composed from live data (a cluster count, say) would latch at
+    // whatever it said when the pointer arrived.
+    const { container, rerender } = render(
+      <GameMapEmbed
+        map={MAP}
+        assets={ASSETS}
+        pins={[{ id: "p1", x: 200, y: 300, tooltip: "x2" }]}
+      />,
+    );
+    movePointer(container, CENTRE.x, CENTRE.y);
+    expect(container.querySelector(".gmgl-tooltip")!.textContent).toBe("x2");
+
+    // No pointer movement and no camera change between these two renders.
+    rerender(
+      <GameMapEmbed
+        map={MAP}
+        assets={ASSETS}
+        pins={[{ id: "p1", x: 200, y: 300, tooltip: "x9" }]}
+      />,
+    );
+    expect(container.querySelector(".gmgl-tooltip")!.textContent).toBe("x9");
+  });
+
   it("picks up a changed tooltip without rebuilding the stack", () => {
     const { container, rerender } = render(
       <GameMapEmbed

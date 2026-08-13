@@ -66,7 +66,7 @@ export default function MapRoute() {
   const deepLinkNavigated = useRef(false);
 
   // App contexts → engine props. MapRoute is the ADAPTER: the engine
-  // components (@gamemap/map-engine) read no app context themselves;
+  // components (@gamemap/map-engine-gl) read no app context themselves;
   // everything they need is derived here and passed down.
   const { selectedMap, types } = useGameMap();
   const { markers, markersById, regions, showLabels, completedBySubtype, markersMapId } =
