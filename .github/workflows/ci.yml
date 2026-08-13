@@ -105,11 +105,11 @@ jobs:
       # package, an unregistered persistence key, a release entry whose commit a
       # rebase rewrote.
       #
-      # `continue-on-error` on this and the two steps after it, with one gate at
-      # the end: these three are independent, and failing here used to abort the
+      # `continue-on-error` on this and the three steps after it, with one gate at
+      # the end: these four are independent, and failing here used to abort the
       # job before lint and build ever ran. A stale memory-keys.txt would hide
       # every type error on a branch, so a contributor fixed one line, pushed, and
-      # only then discovered the real breakage. One run now reports all three.
+      # only then discovered the real breakage. One run now reports all four.
       - name: Check the repo invariants
         id: invariants
         continue-on-error: true

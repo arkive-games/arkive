@@ -34,12 +34,19 @@ const CLIENT_PATH = fileURLToPath(new URL("./client.ts", import.meta.url))
  *
  * `/auth/*` plus the parts of `/users/*` that belong to the signed-in account —
  * `CoreClient` already calls `/users/me`, and `core` is scoped as accounts,
- * authentication and avatars. What stays out is genuinely administrative:
- * `/users/{id}`, `/users/search`, `/users/become-superuser` act on *other*
- * accounts and belong to an admin surface that does not exist yet. Excluding
- * those on that basis is accurate; the blanket "`/users/*` is not this package's
- * responsibility" this file used to claim was not, and it hid four avatar
- * operations that are this package's business.
+ * authentication and avatars. Everything else under `/users/` stays out because it
+ * acts on another account or because no surface claims it yet: `/users/{id}` and
+ * its `avatar`, `deactivate` and `reactivate` children, `/users/search` and
+ * `/users/become-superuser` belong to an admin surface that does not exist, while
+ * `/users/uid/{uid}` is a public profile read that acts on nobody's account and
+ * that nothing calls today — a forum author link or a profile page would want it,
+ * so it is unclaimed rather than administrative.
+ *
+ * Both halves of that sentence are load-bearing. The blanket "`/users/*` is not
+ * this package's responsibility" this file used to claim was untrue of
+ * `/users/me`, and it hid four avatar operations that are this package's
+ * business; naming only the administrative paths would repeat the mistake one
+ * paragraph below where it is corrected.
  */
 function isOwned(path: string): boolean {
   return (
