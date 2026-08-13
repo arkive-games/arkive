@@ -1,16 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import L from 'leaflet'
-import { CircleMarker, MapContainer, Marker, Tooltip } from 'react-leaflet'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Moon } from 'lucide-react'
-// Importing the map-engine barrel also registers the smooth wheel-zoom handler.
-import { GameMapTiles, createPinIcon, dataToLatLng } from '@gamemap/map-engine'
+import {
+  GameMapEmbed,
+  dataToPoint,
+  pointToData,
+  type EmbedPin,
+  type PointCloud,
+} from '@gamemap/map-engine-gl'
 import { cn } from '@gamemap/ui'
-import { palworldAssets, palIconUrl } from '../../../lib/assets'
+import { palworldAssets } from '../../../lib/assets'
 import { loadPalSpawns, type PalSpawns, type SpawnKind, type SpawnPoint } from '../../../lib/pals'
 import { dataUrl } from '../../../lib/urls'
-import { CLUSTER_TIERS, ZoomTierWatcher } from '../../maps/embedCluster'
+import { CLUSTER_TIERS, cellKey, tierFor } from '../../maps/embedCluster'
 
 type MapsLocale = Record<string, { name: string; shortName?: string }>
 
@@ -37,7 +40,7 @@ function useMapLabels(lng: string): Record<string, string> {
 /**
  * Embedded mini-map of a single pal's exact spawn positions (unclustered, from
  * `spawns/<palId>.json`). Loads spawns across every map; when the pal spawns on
- * more than one map, a toggle switches between them. Bare Leaflet + tiles (no
+ * more than one map, a toggle switches between them. Bare tiles and pins (no
  * full engine chrome), mirroring aion2's wiki `EmbeddedMap`.
  */
 // Boss category color (data_src/types.yaml) — boss spawn points ring red.
@@ -45,21 +48,31 @@ const BOSS_RING = '#ef4444'
 // Night-restricted wild points ring indigo (boss identity wins over night).
 const NIGHT_RING = '#818cf8'
 
-// Dynamic clustering: tiers + zoom watcher shared by the embedded mini-maps
-// (see features/maps/embedCluster). Wild spawn points cluster into
-// count-badged pins when zoomed out and split apart as you zoom in (bosses
-// never cluster).
+// Match the main map's pal marker: circular portrait at scale 0.9. Boss points
+// sit slightly larger so they read as highlighted.
+const WILD_SCALE = 0.9
+const BOSS_SCALE = 1
+
+// Habitat cloud discs — the game's own Paldex point clouds, drawn under the pins.
+const CLOUD_RADIUS = 3
+const CLOUD_FILL_OPACITY = 0.45
+const CLOUD_COLORS = { day: '#f59e0b', night: '#6366f1' } as const
+
+// Dynamic clustering: tiers shared by the embedded mini-maps (see
+// features/maps/embedCluster). Wild spawn points cluster into count-badged pins
+// when zoomed out and split apart as you zoom in (bosses never cluster).
 // Above this many wild points, the deepest tier keeps clustering (with a cell
 // fine enough to only merge same-spawner stacks) instead of showing all — a
-// few common pals carry 1.5k–4.9k exact points (spawner grids sit ~50 m
-// apart) and mounting that many divIcon markers at once janks the page.
+// few common pals carry 1.5k–4.9k exact points (spawner grids sit ~50 m apart).
 const SHOW_ALL_MAX = 1500
 const DENSE_FINEST_CELL = 44
 
 /** One rendered pin: an exact spawn point (`count` 1) or a cluster of nearby
- *  wild points (`count` > 1, drawn with a count badge at the centroid). */
+ *  wild points (`count` > 1, drawn with a count badge at the centroid). `x`/`y`
+ *  are DATA space, which is what the embed takes. */
 interface RenderMarker {
-  pos: L.LatLng
+  x: number
+  y: number
   kind: SpawnKind
   night?: boolean
   level?: string
@@ -68,6 +81,10 @@ interface RenderMarker {
   count: number
 }
 
+/**
+ * Bucketing happens in map-image PIXELS — see `cellKey` — so a cluster's
+ * centroid is averaged there and converted back to DATA for the pin.
+ */
 function clusterPoints(
   map: PalSpawns['map'],
   points: SpawnPoint[],
@@ -77,41 +94,41 @@ function clusterPoints(
   // Bosses render last (= on top) so overlapping wild pins never hide them.
   const bosses: RenderMarker[] = []
   interface Bucket {
-    latSum: number
-    lngSum: number
+    xSum: number
+    ySum: number
     count: number
     allNight: boolean
     lvMin: number
     lvMax: number
-    first: { pos: L.LatLng; p: SpawnPoint }
+    first: SpawnPoint
   }
   const buckets = new Map<string, Bucket>()
   for (const p of points) {
-    const pos = dataToLatLng(map, p.x, p.y)
     if (p.kind === 'boss') {
-      bosses.push({ pos, kind: 'boss', night: p.night, level: p.level, count: 1 })
+      bosses.push({ x: p.x, y: p.y, kind: 'boss', night: p.night, level: p.level, count: 1 })
       continue
     }
     if (cell === 0) {
-      wild.push({ pos, kind: 'wild', night: p.night, level: p.level, pack: p.pack, count: 1 })
+      wild.push({ x: p.x, y: p.y, kind: 'wild', night: p.night, level: p.level, pack: p.pack, count: 1 })
       continue
     }
-    const key = `${Math.floor(pos.lng / cell)}:${Math.floor(pos.lat / cell)}`
+    const point = dataToPoint(map, p.x, p.y)
+    const key = cellKey(point.x, point.y, cell)
     let b = buckets.get(key)
     if (!b) {
       b = {
-        latSum: 0,
-        lngSum: 0,
+        xSum: 0,
+        ySum: 0,
         count: 0,
         allNight: true,
         lvMin: Infinity,
         lvMax: -Infinity,
-        first: { pos, p },
+        first: p,
       }
       buckets.set(key, b)
     }
-    b.latSum += pos.lat
-    b.lngSum += pos.lng
+    b.xSum += point.x
+    b.ySum += point.y
     b.count += 1
     if (!p.night) b.allNight = false
     // Levels arrive preformatted ("Lv.12" / "Lv.5–9"); merge cluster ranges by
@@ -124,12 +141,14 @@ function clusterPoints(
   }
   for (const b of buckets.values()) {
     if (b.count === 1) {
-      const { pos, p } = b.first
-      wild.push({ pos, kind: 'wild', night: p.night, level: p.level, pack: p.pack, count: 1 })
+      const p = b.first
+      wild.push({ x: p.x, y: p.y, kind: 'wild', night: p.night, level: p.level, pack: p.pack, count: 1 })
       continue
     }
+    const centroid = pointToData(map, b.xSum / b.count, b.ySum / b.count)
     wild.push({
-      pos: new L.LatLng(b.latSum / b.count, b.lngSum / b.count),
+      x: centroid.x,
+      y: centroid.y,
       kind: 'wild',
       night: b.allNight,
       level: Number.isFinite(b.lvMin)
@@ -141,6 +160,31 @@ function clusterPoints(
     })
   }
   return [...wild, ...bosses]
+}
+
+/**
+ * A rendered spawn point as an embed pin. Bosses ring red and sit slightly
+ * larger; night-restricted wild points and clusters ring indigo (a cluster counts
+ * as night only when every merged point is); other wild pins keep the default
+ * white ring. Clusters carry a count badge, and the level / pack size becomes the
+ * hover tooltip.
+ */
+function toPin(m: RenderMarker, index: number, palIcon: string): EmbedPin {
+  const ringColor = m.kind === 'boss' ? BOSS_RING : m.night ? NIGHT_RING : undefined
+  const tooltip = [m.level, m.pack ? `×${m.pack}` : undefined].filter(Boolean).join(' · ')
+  return {
+    // Clusters are recomputed per tier and have no identity of their own, so the
+    // index is the id — as it was the React key before.
+    id: `spawn-${index}`,
+    x: m.x,
+    y: m.y,
+    icon: palIcon,
+    variant: 'circular',
+    iconScale: m.kind === 'boss' ? BOSS_SCALE : WILD_SCALE,
+    color: ringColor,
+    count: m.count > 1 ? m.count : undefined,
+    tooltip: tooltip || undefined,
+  }
 }
 
 export function PalSpawnMap({
@@ -163,9 +207,10 @@ export function PalSpawnMap({
   const mapLabels = useMapLabels(lng)
   const [spawns, setSpawns] = useState<PalSpawns[] | null>(null)
   const [active, setActive] = useState(0)
-  // Coarsest tier by default — matches the initial fit-to-bounds zoom; the
-  // watcher corrects it on mount if a map opens more zoomed in.
+  // Coarsest tier by default; the embed's first `onZoom` corrects it on mount if
+  // a map opens more zoomed in.
   const [tier, setTier] = useState(0)
+  const onZoom = useCallback((zoom: number) => setTier(tierFor(zoom)), [])
   // Paldex habitat cloud overlay: off / day / night (game's own point clouds).
   const [cloud, setCloud] = useState<'off' | 'day' | 'night'>('off')
 
@@ -194,39 +239,29 @@ export function PalSpawnMap({
   // Every point night-restricted → one prominent note instead of a legend entry.
   const allNight = !!current && current.points.length > 0 && current.points.every((p) => p.night)
 
-  // Match the main map's pal marker: circular portrait at scale 0.9.
-  const iconUrl = useMemo(() => palIconUrl(palIcon), [palIcon])
-  // Boss points ring red and sit slightly larger so they read as highlighted;
-  // night-restricted wild points/clusters ring indigo (a cluster counts as
-  // night only when every merged point is); other wild pins keep the default
-  // white ring at scale 0.9. Clusters carry a count badge.
-  const iconFor = (m: RenderMarker) =>
-    createPinIcon(iconUrl, m.kind === 'boss' ? 1 : 0.9, false, {
-      variant: 'circular',
-      ...(m.count > 1 ? { count: m.count } : {}),
-      ...(m.kind === 'boss' ? { ringColor: BOSS_RING } : m.night ? { ringColor: NIGHT_RING } : {}),
-    })
-
   // Re-cluster only when the pal/map or the zoom tier changes — a full pass
   // over ≤ 5k points is a few ms, and the tier only flips at zoom boundaries.
-  const markers = useMemo(() => {
+  const pins = useMemo<EmbedPin[]>(() => {
     if (!map || !current) return []
     let cell = CLUSTER_TIERS[tier].cell
     if (cell === 0 && wildCount > SHOW_ALL_MAX) cell = DENSE_FINEST_CELL
-    return clusterPoints(map, current.points, cell)
-  }, [map, current, tier, wildCount])
+    return clusterPoints(map, current.points, cell).map((m, i) => toPin(m, i, palIcon))
+  }, [map, current, tier, wildCount, palIcon])
 
-  // Full map extent — the embedded map opens zoomed out to show the whole map
-  // (rather than fitting tightly to this pal's spawn cluster).
-  const bounds = useMemo(() => {
-    if (!map) return null
-    const width = map.tileWidth * map.tilesCountX
-    const height = map.tileHeight * map.tilesCountY
+  const clouds = useMemo<PointCloud[]>(() => {
+    if (cloud === 'off' || !current?.paldex) return []
+    const points = current.paldex[cloud] ?? []
+    if (!points.length) return []
     return [
-      [0, 0],
-      [height, width],
-    ] as L.LatLngBoundsExpression
-  }, [map])
+      {
+        id: cloud,
+        points,
+        radius: CLOUD_RADIUS,
+        color: CLOUD_COLORS[cloud],
+        fillOpacity: CLOUD_FILL_OPACITY,
+      },
+    ]
+  }, [cloud, current])
 
   if (spawns && spawns.length === 0) {
     return (
@@ -235,7 +270,7 @@ export function PalSpawnMap({
       </p>
     )
   }
-  if (!spawns || !map || !current || !bounds) {
+  if (!spawns || !map || !current) {
     return <div className={cn('animate-pulse rounded-lg bg-secondary', className ?? 'h-72')} />
   }
 
@@ -291,51 +326,19 @@ export function PalSpawnMap({
           className ?? 'h-72',
         )}
       >
-        <MapContainer
+        {/* Keyed on the map so switching a multi-map pal's tab opens on the whole
+            map again rather than inheriting the previous camera. */}
+        <GameMapEmbed
           key={`${map.id}:${current.points.length}`}
-          bounds={bounds}
-          maxBounds={bounds}
-          crs={L.CRS.Simple}
-          preferCanvas={true}
-          minZoom={-4}
-          maxZoom={2}
-          zoomSnap={0}
-          zoomDelta={0.25}
-          scrollWheelZoom={false}
-          smoothWheelZoom={true}
-          smoothSensitivity={4}
-          zoomControl={false}
-          attributionControl={false}
-          className="h-full w-full"
-        >
-          <GameMapTiles selectedMap={map} assets={palworldAssets} />
-          <ZoomTierWatcher onTier={setTier} />
-          {cloud !== 'off' && current.paldex
-            ? (current.paldex[cloud] ?? []).map(([x, y], i) => (
-                <CircleMarker
-                  key={`${cloud}-${i}`}
-                  center={dataToLatLng(map, x, y)}
-                  radius={3}
-                  pathOptions={{
-                    color: cloud === 'day' ? '#f59e0b' : '#6366f1',
-                    weight: 1,
-                    fillColor: cloud === 'day' ? '#f59e0b' : '#6366f1',
-                    fillOpacity: 0.45,
-                  }}
-                />
-              ))
-            : null}
-          {markers.map((m, i) => (
-            <Marker key={i} position={m.pos} icon={iconFor(m)}>
-              {m.level || m.pack ? (
-                <Tooltip direction="top">
-                  {m.level}
-                  {m.pack ? `${m.level ? ' · ' : ''}×${m.pack}` : ''}
-                </Tooltip>
-              ) : null}
-            </Marker>
-          ))}
-        </MapContainer>
+          map={map}
+          assets={palworldAssets}
+          pins={pins}
+          dots={clouds}
+          onZoom={onZoom}
+          // The whole map, not this pal's spawn cluster: where a pal does NOT
+          // live is as much of the answer as where it does.
+          initialFit="map"
+        />
         {(hasWild && hasBoss) || (hasNight && !allNight) ? (
           <div className="absolute bottom-2 left-2 z-[var(--arkive-layer-map-control)] flex items-center gap-3 rounded bg-background/80 px-2 py-1 text-xs">
             <span className="flex items-center gap-1">

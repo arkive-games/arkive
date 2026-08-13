@@ -103,8 +103,9 @@ export interface GameMapEmbedProps {
   /** Zoom floor. Defaults to {@link EMBED_MIN_ZOOM}. Changing it rebuilds. */
   minZoom?: number;
   /**
-   * `pins` fits the pin bounds (default), `map` opens on the whole map. Applied
-   * when the stack is built, so a later change only takes effect on a rebuild.
+   * `pins` (default) fits the content — every pin plus every highlighted region;
+   * `map` opens on the whole map. Applied when the stack is built, so a later
+   * change only takes effect on a rebuild.
    */
   initialFit?: "pins" | "map";
   /**
@@ -151,11 +152,22 @@ function toLayerMarkers(pins: readonly EmbedPin[]): LayerMarker[] {
   });
 }
 
-/** Zoom + centre that fit every pin, or the whole map when there are none. */
-function fitToPins(
+/**
+ * Zoom + centre that fit the embed's CONTENT — every pin plus every highlighted
+ * region — or the whole map when there is none.
+ *
+ * The highlighted regions count, not just the pins: aion2's wiki embed marks the
+ * region a quest belongs to and often has no POI inside it at all, so fitting the
+ * pins alone would open on the whole world and leave the outline as a speck.
+ * Un-highlighted regions do NOT count — they are not drawn (see the `regions`
+ * prop), so framing them would frame nothing.
+ */
+function fitToContent(
   camera: Camera,
   map: GameMapMeta,
   pins: readonly EmbedPin[],
+  regions: readonly RegionInstance[] | undefined,
+  highlightRegionIds: readonly string[] | undefined,
 ): { center: { x: number; y: number }; zoom: number } {
   const width = mapWidthOf(map);
   const height = mapHeightOf(map);
@@ -163,18 +175,29 @@ function fitToPins(
     center: { x: width / 2, y: height / 2 },
     zoom: camera.zoomToFit(width, height),
   };
-  if (pins.length === 0) return whole;
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+  const include = (x: number, y: number): void => {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  };
   for (const pin of pins) {
     const point = dataToPoint(map, pin.x, pin.y);
-    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) continue;
-    if (point.x < minX) minX = point.x;
-    if (point.x > maxX) maxX = point.x;
-    if (point.y < minY) minY = point.y;
-    if (point.y > maxY) maxY = point.y;
+    include(point.x, point.y);
+  }
+  if (regions && highlightRegionIds?.length) {
+    const wanted = new Set(highlightRegionIds);
+    for (const region of regions) {
+      if (!wanted.has(region.id)) continue;
+      // Region borders are map-pixel space already (the tools pipeline emits them
+      // that way), so they need no projection.
+      for (const ring of region.borders) for (const [x, y] of ring) include(x, y);
+    }
   }
   if (!Number.isFinite(minX) || !Number.isFinite(minY)) return whole;
   return {
@@ -207,8 +230,26 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
   const vectorsRef = useRef<VectorLayer | null>(null);
   const cloudsRef = useRef<PointCloudLayer | null>(null);
 
-  const liveRef = useRef({ assets, theme, pins, onPinClick, initialFit, onZoom });
-  liveRef.current = { assets, theme, pins, onPinClick, initialFit, onZoom };
+  const liveRef = useRef({
+    assets,
+    theme,
+    pins,
+    onPinClick,
+    initialFit,
+    onZoom,
+    regions,
+    highlightRegionIds,
+  });
+  liveRef.current = {
+    assets,
+    theme,
+    pins,
+    onPinClick,
+    initialFit,
+    onZoom,
+    regions,
+    highlightRegionIds,
+  };
 
   const layerMarkers = useMemo(() => toLayerMarkers(pins), [pins]);
   /**
@@ -252,7 +293,13 @@ const GameMapEmbed: React.FC<GameMapEmbedProps> = ({
             center: { x: mapWidthOf(map) / 2, y: mapHeightOf(map) / 2 },
             zoom: camera.zoomToFit(mapWidthOf(map), mapHeightOf(map)),
           }
-        : fitToPins(camera, map, liveRef.current.pins);
+        : fitToContent(
+            camera,
+            map,
+            liveRef.current.pins,
+            liveRef.current.regions,
+            liveRef.current.highlightRegionIds,
+          );
     camera.setView(fit.center, fit.zoom);
 
     const renderer = new MapRenderer({

@@ -1,17 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import L from "leaflet";
-import { MapContainer, Marker, Polygon, Tooltip } from "react-leaflet";
 import { useTranslation } from "react-i18next";
 
 import { useGameMap } from "@/context/GameMapContext";
 import { aionAssets } from "@/features/map/aionAssets";
-// Importing the map-engine barrel also registers the smooth wheel-zoom handler.
-import {
-  GameMapTiles,
-  createPinIcon,
-  dataToLatLng,
-  dataToLatLngTuple,
-} from "@gamemap/map-engine";
+import { GameMapEmbed, type EmbedPin } from "@gamemap/map-engine-gl";
 import { loadGameData } from "@/lib/data";
 import type { WikiPoi } from "@/types/wiki";
 
@@ -34,6 +26,9 @@ type Props = {
   highlightRegionIds?: string[];
   className?: string;
 };
+
+/** This embed opens one step further in than the engine's default. */
+const MIN_ZOOM = -3;
 
 export default function EmbeddedMap({
   mapName,
@@ -82,27 +77,27 @@ export default function EmbeddedMap({
     .map((region) => region.id)
     .join(",");
 
-  const { bounds, fit } = useMemo(() => {
-    if (!map) return { bounds: null, fit: null };
-    const width = map.tileWidth * map.tilesCountX;
-    const height = map.tileHeight * map.tilesCountY;
-    const full: L.LatLngBoundsExpression = [
-      [0, 0],
-      [height, width],
-    ];
-    const poiPoints = pois.map((p) => dataToLatLng(map, p.x, p.y));
-    const regionPoints = highlightRegions.flatMap((region) =>
-      region.borders.flatMap((polygon) =>
-        polygon.map(([x, y]) => dataToLatLng(map, x, y)),
-      ),
-    );
-    const points = [...poiPoints, ...regionPoints];
-    if (!points.length) return { bounds: full, fit: full };
+  // Only the fetched regions are handed over, so every one of them is
+  // highlighted — the embed draws nothing for a region that is not.
+  const highlightIds = useMemo(
+    () => highlightRegions.map((region) => region.id),
+    [highlightRegions],
+  );
 
-    return { bounds: full, fit: L.latLngBounds(points).pad(0.35) };
-  }, [map, pois, highlightRegions]);
+  const pins = useMemo<EmbedPin[]>(
+    () =>
+      pois.map((p, i) => ({
+        id: `poi-${i}`,
+        x: p.x,
+        y: p.y,
+        variant: "pin",
+        iconScale: 1,
+        tooltip: p.label,
+      })),
+    [pois],
+  );
 
-  if (!map || !bounds) return null;
+  if (!map) return null;
 
   const firstPoi = pois[0];
   const href = `/?map=${encodeURIComponent(map.name)}${
@@ -116,50 +111,18 @@ export default function EmbeddedMap({
       className={`relative isolate overflow-hidden rounded-md border border-border ${className ?? "h-72"}`}
       data-testid="embedded-map"
     >
-      <MapContainer
+      {/* Keyed on the content: the regions are fetched AFTER mount, and the fit is
+          applied when the GL stack is built, so the key is what re-frames the
+          camera onto them once they arrive. */}
+      <GameMapEmbed
         key={`${map.id}:${pois.length}:${highlightRegionKey}:${highlightRegionRenderKey}`}
-        bounds={fit ?? bounds}
-        maxBounds={bounds}
-        crs={L.CRS.Simple}
-        minZoom={-3}
-        maxZoom={2}
-        zoomSnap={0}
-        zoomDelta={0.25}
-        scrollWheelZoom={false}
-        smoothWheelZoom={true}
-        smoothSensitivity={4}
-        zoomControl={false}
-        attributionControl={false}
-        className="relative z-0 h-full w-full"
-      >
-        <GameMapTiles selectedMap={map} assets={aionAssets} />
-        {highlightRegions.map((region) =>
-          region.borders.map((polygon, idx) => (
-            <Polygon
-              key={`${region.id}-${idx}`}
-              positions={polygon.map(([x, y]) =>
-                dataToLatLngTuple(map, x, y),
-              )}
-              pathOptions={{
-                color: "var(--primary)",
-                weight: 1.5,
-                dashArray: "4 4",
-                fillOpacity: 0.15,
-              }}
-              interactive={false}
-            />
-          )),
-        )}
-        {pois.map((p, i) => (
-          <Marker
-            key={i}
-            position={dataToLatLng(map, p.x, p.y)}
-            icon={createPinIcon("", 1, false, { variant: "pin" })}
-          >
-            {p.label && <Tooltip direction="top">{p.label}</Tooltip>}
-          </Marker>
-        ))}
-      </MapContainer>
+        map={map}
+        assets={aionAssets}
+        pins={pins}
+        regions={highlightRegions}
+        highlightRegionIds={highlightIds}
+        minZoom={MIN_ZOOM}
+      />
       <a
         href={href}
         className="absolute right-2 top-2 z-[var(--arkive-layer-map-control)] rounded-md bg-[color:var(--arkive-action)] px-3 py-2 text-xs font-semibold text-[color:var(--arkive-action-on)] transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

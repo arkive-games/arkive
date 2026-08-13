@@ -304,6 +304,47 @@ describe("GameMapEmbed region highlights and dot clouds", () => {
     },
   ];
 
+  it("fits a highlighted region even with no pins to fit", () => {
+    // aion2's wiki embed marks the region a quest belongs to and often has no POI
+    // inside it, so the region has to count towards the fit or the outline opens
+    // as a speck on the whole world.
+    const onRegion = vi.fn();
+    const onWholeMap = vi.fn();
+    render(
+      <GameMapEmbed
+        map={MAP}
+        assets={ASSETS}
+        pins={[]}
+        regions={REGIONS}
+        highlightRegionIds={["r1"]}
+        onZoom={onRegion}
+      />,
+    );
+    cleanup();
+    render(<GameMapEmbed map={MAP} assets={ASSETS} pins={[]} onZoom={onWholeMap} />);
+    expect(onRegion.mock.calls[0][0]).toBeGreaterThan(onWholeMap.mock.calls[0][0]);
+  });
+
+  it("ignores an un-highlighted region in the fit — nothing is drawn for it", () => {
+    const withHighlight = vi.fn();
+    const withoutHighlight = vi.fn();
+    render(
+      <GameMapEmbed
+        map={MAP}
+        assets={ASSETS}
+        pins={[]}
+        regions={REGIONS}
+        highlightRegionIds={["r1"]}
+        onZoom={withHighlight}
+      />,
+    );
+    cleanup();
+    render(
+      <GameMapEmbed map={MAP} assets={ASSETS} pins={[]} regions={REGIONS} onZoom={withoutHighlight} />,
+    );
+    expect(withoutHighlight.mock.calls[0][0]).toBeLessThan(withHighlight.mock.calls[0][0]);
+  });
+
   it("renders without a region or dot prop at all", () => {
     const { container } = render(<GameMapEmbed map={MAP} assets={ASSETS} pins={PINS} />);
     expect(container.querySelector('[data-testid="gl-embed-canvas"]')).not.toBeNull();

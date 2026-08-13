@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import L from 'leaflet'
-import { MapContainer, Marker, Tooltip } from 'react-leaflet'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-// Importing the map-engine barrel also registers the smooth wheel-zoom handler.
-import { GameMapTiles, createPinIcon, dataToLatLng } from '@gamemap/map-engine'
+import { GameMapEmbed, type EmbedPin } from '@gamemap/map-engine-gl'
 import { palworldAssets } from '../../lib/assets'
 import { loadStatic, loadMarkers, type MapMeta } from '../../lib/data'
 import { CatalogSection } from '../catalog/components'
@@ -12,6 +9,9 @@ import { CatalogSection } from '../catalog/components'
 /** Every dungeon portal marker lives on MainWorld (157 portals in the dataset,
  *  none on WorldTree). */
 const PORTAL_MAP_ID = 'MainWorld'
+
+/** Portal pins sit a touch under full size so a dense cluster stays readable. */
+const PIN_SCALE = 0.95
 
 interface Entrance {
   id: string
@@ -28,8 +28,8 @@ interface Loaded {
 
 /**
  * Embedded mini-map of a dungeon's entrance portals, modeled on PalSpawnMap
- * (bare Leaflet + tiles, no engine chrome). Best-effort: hides itself when
- * the marker data fails to load or the dungeon has no portals.
+ * (bare tiles and pins, no engine chrome). Best-effort: hides itself when the
+ * marker data fails to load or the dungeon has no portals.
  */
 export function DungeonEntranceMap({
   dungeonId,
@@ -70,27 +70,23 @@ export function DungeonEntranceMap({
     }
   }, [lng, dungeonId])
 
-  // Full map extent — open zoomed out so the portal spread is visible at once.
-  const bounds = useMemo(() => {
-    if (!data || data === 'error') return null
-    const { map } = data
-    return [
-      [0, 0],
-      [map.tileHeight * map.tilesCountY, map.tileWidth * map.tilesCountX],
-    ] as L.LatLngBoundsExpression
+  const pins = useMemo<EmbedPin[]>(() => {
+    if (!data || data === 'error') return []
+    return data.entrances.map((p) => ({
+      id: p.id,
+      x: p.x,
+      y: p.y,
+      icon: data.icon,
+      iconScale: PIN_SCALE,
+      tooltip: p.name,
+    }))
   }, [data])
 
   if (data === 'error') return null
   if (data && data.entrances.length === 0) return null
-  if (!data || !bounds) {
+  if (!data) {
     return <div className="h-80 animate-pulse rounded-lg bg-secondary" />
   }
-
-  const pin = createPinIcon(
-    data.icon ? palworldAssets.markerIconUrl(data.icon, data.map) : '',
-    0.95,
-    false,
-  )
 
   return (
     <CatalogSection
@@ -99,29 +95,15 @@ export function DungeonEntranceMap({
       className="self-start"
     >
       <div className="relative isolate h-72 overflow-hidden rounded-lg border border-border">
-        <MapContainer
+        {/* Keyed on the dungeon so switching pages opens on the whole map again
+            rather than inheriting wherever the previous one was panned to. */}
+        <GameMapEmbed
           key={dungeonId}
-          bounds={bounds}
-          maxBounds={bounds}
-          crs={L.CRS.Simple}
-          minZoom={-4}
-          maxZoom={2}
-          zoomSnap={0}
-          zoomDelta={0.25}
-          scrollWheelZoom={false}
-          smoothWheelZoom={true}
-          smoothSensitivity={4}
-          zoomControl={false}
-          attributionControl={false}
-          className="h-full w-full"
-        >
-          <GameMapTiles selectedMap={data.map} assets={palworldAssets} />
-          {data.entrances.map((p) => (
-            <Marker key={p.id} position={dataToLatLng(data.map, p.x, p.y)} icon={pin}>
-              {p.name ? <Tooltip direction="top">{p.name}</Tooltip> : null}
-            </Marker>
-          ))}
-        </MapContainer>
+          map={data.map}
+          assets={palworldAssets}
+          pins={pins}
+          initialFit="map"
+        />
         <Link
           to="/"
           search={{ map: PORTAL_MAP_ID, q: dungeonName }}

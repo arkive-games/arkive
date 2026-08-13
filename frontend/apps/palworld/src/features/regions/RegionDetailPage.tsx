@@ -1,10 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import L from 'leaflet'
-import { MapContainer, Marker, Tooltip } from 'react-leaflet'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-// Importing the map-engine barrel also registers the smooth wheel-zoom handler.
-import { GameMapTiles, createPinIcon, dataToLatLng } from '@gamemap/map-engine'
+import { GameMapEmbed, dataToPoint, pointToData, type EmbedPin } from '@gamemap/map-engine-gl'
 import { ContentPage } from '../../components/ContentPage'
 import { palworldAssets } from '../../lib/assets'
 import { loadAreas, type AreaInfo } from '../../lib/areas'
@@ -27,7 +24,7 @@ import {
   ItemLink,
 } from '../catalog/components'
 import { ChanceBadge, TierBadge, useAreaLabel } from '../items/ItemSources'
-import { CLUSTER_TIERS, ZoomTierWatcher } from '../maps/embedCluster'
+import { CLUSTER_TIERS, cellKey, tierFor } from '../maps/embedCluster'
 
 /** Loot-spot pin scale on the embedded map (chest icons are dense; keep small). */
 const PIN_SCALE = 0.8
@@ -58,135 +55,109 @@ interface Loaded {
 }
 
 /** One rendered pin: an exact loot spot (`count` 1, keeps its named region for
- *  the tooltip) or a same-subtype cluster drawn with a count badge. */
+ *  the tooltip) or a same-subtype cluster drawn with a count badge. `x`/`y` are
+ *  DATA space, which is what the embed takes. */
 interface RenderSpot {
-  pos: L.LatLng
+  x: number
+  y: number
   subtype: string
   count: number
   region?: string
 }
 
 /** Grid-bucket the spots per subtype (chest clusters never swallow the
- *  fishing spot next door); `cell: 0` shows every exact spot. */
+ *  fishing spot next door); `cell: 0` shows every exact spot.
+ *
+ *  Bucketing happens in map-image PIXELS — see `cellKey` — so a cluster's
+ *  centroid is averaged there and converted back to DATA for the pin. */
 function clusterSpots(map: MapMeta, spots: LootSpot[], cell: number): RenderSpot[] {
   if (cell === 0) {
     return spots.map((p) => ({
-      pos: dataToLatLng(map, p.x, p.y),
+      x: p.x,
+      y: p.y,
       subtype: p.subtype,
       count: 1,
       region: p.region,
     }))
   }
   interface Bucket {
-    latSum: number
-    lngSum: number
+    xSum: number
+    ySum: number
     count: number
     subtype: string
     first: RenderSpot
   }
   const buckets = new Map<string, Bucket>()
   for (const p of spots) {
-    const pos = dataToLatLng(map, p.x, p.y)
-    const key = `${p.subtype}:${Math.floor(pos.lng / cell)}:${Math.floor(pos.lat / cell)}`
+    const point = dataToPoint(map, p.x, p.y)
+    const key = `${p.subtype}:${cellKey(point.x, point.y, cell)}`
     let b = buckets.get(key)
     if (!b) {
       b = {
-        latSum: 0,
-        lngSum: 0,
+        xSum: 0,
+        ySum: 0,
         count: 0,
         subtype: p.subtype,
-        first: { pos, subtype: p.subtype, count: 1, region: p.region },
+        first: { x: p.x, y: p.y, subtype: p.subtype, count: 1, region: p.region },
       }
       buckets.set(key, b)
     }
-    b.latSum += pos.lat
-    b.lngSum += pos.lng
+    b.xSum += point.x
+    b.ySum += point.y
     b.count += 1
   }
-  return [...buckets.values()].map((b) =>
-    b.count === 1
-      ? b.first
-      : {
-          pos: new L.LatLng(b.latSum / b.count, b.lngSum / b.count),
-          subtype: b.subtype,
-          count: b.count,
-        },
-  )
+  return [...buckets.values()].map((b) => {
+    if (b.count === 1) return b.first
+    const centroid = pointToData(map, b.xSum / b.count, b.ySum / b.count)
+    return { x: centroid.x, y: centroid.y, subtype: b.subtype, count: b.count }
+  })
 }
 
 /** Embedded mini-map of one map's loot spots for the area: pins per subtype,
  *  dynamically clustered by zoom (same tiers as the pal spawn map). */
 function RegionLootMap({ area, data, taxonomy }: { area: string; data: MapData; taxonomy: Taxonomy }) {
-  // Coarsest tier by default — matches the initial fit-to-bounds zoom; the
-  // watcher corrects it on mount if the map opens more zoomed in.
+  // Coarsest tier by default; the embed's first `onZoom` corrects it on mount if
+  // the area's footprint opens more zoomed in.
   const [tier, setTier] = useState(0)
-  const subtypeDef = (id: string) => taxonomy.subtypes.find((s) => s.id === id)
-
-  const maxBounds = useMemo(
-    () =>
-      [
-        [0, 0],
-        [data.map.tileHeight * data.map.tilesCountY, data.map.tileWidth * data.map.tilesCountX],
-      ] as L.LatLngBoundsExpression,
-    [data.map],
-  )
-  // Open on the spot spread (the area's footprint), not the whole map.
-  const bounds = useMemo(() => {
-    if (!data.spots.length) return maxBounds
-    const b = L.latLngBounds(data.spots.map((p) => dataToLatLng(data.map, p.x, p.y)))
-    return b.pad(0.12)
-  }, [data, maxBounds])
+  const onZoom = useCallback((zoom: number) => setTier(tierFor(zoom)), [])
 
   // Re-cluster only when the map data or the zoom tier changes.
-  const markers = useMemo(
-    () => clusterSpots(data.map, data.spots, CLUSTER_TIERS[tier].cell),
-    [data, tier],
-  )
-
-  // createPinIcon caches the underlying DivIcon by visual signature, so
-  // building per marker stays cheap.
-  const iconFor = (m: RenderSpot) => {
-    const def = subtypeDef(m.subtype)
-    const badge = m.count > 1 ? { count: m.count } : {}
-    return def?.icon
-      ? createPinIcon(palworldAssets.markerIconUrl(def.icon, data.map), PIN_SCALE, false, badge)
-      : createPinIcon('', PIN_SCALE, false, { variant: 'pin', innerColor: def?.color, ...badge })
-  }
+  const pins = useMemo<EmbedPin[]>(() => {
+    const subtypeDef = (id: string) => taxonomy.subtypes.find((s) => s.id === id)
+    return clusterSpots(data.map, data.spots, CLUSTER_TIERS[tier].cell).map((m, i) => {
+      const def = subtypeDef(m.subtype)
+      return {
+        // Clusters are recomputed per tier and have no stable identity of their
+        // own, so the index is the id — as it was the React key before.
+        id: `spot-${i}`,
+        x: m.x,
+        y: m.y,
+        icon: def?.icon,
+        // No icon ⇒ the engine falls back to the dot pin, tinted with this.
+        color: def?.color,
+        iconScale: PIN_SCALE,
+        count: m.count > 1 ? m.count : undefined,
+        tooltip: [
+          def?.name ?? m.subtype,
+          m.count > 1 ? `×${m.count}` : m.region ? data.regionNames[m.region]?.name : undefined,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      }
+    })
+  }, [data, tier, taxonomy])
 
   return (
     <div className="relative isolate h-96 overflow-hidden rounded-lg border border-border">
-      <MapContainer
+      {/* Keyed on area + map so switching either re-fits onto the new spots
+          instead of keeping the previous camera. */}
+      <GameMapEmbed
         key={`${area}-${data.map.id}`}
-        bounds={bounds}
-        maxBounds={maxBounds}
-        crs={L.CRS.Simple}
-        minZoom={-4}
-        maxZoom={2}
-        zoomSnap={0}
-        zoomDelta={0.25}
-        scrollWheelZoom={false}
-        smoothWheelZoom={true}
-        smoothSensitivity={4}
-        zoomControl={false}
-        attributionControl={false}
-        className="h-full w-full"
-      >
-        <GameMapTiles selectedMap={data.map} assets={palworldAssets} />
-        <ZoomTierWatcher onTier={setTier} />
-        {markers.map((m, i) => {
-          const label = [
-            subtypeDef(m.subtype)?.name ?? m.subtype,
-            m.count > 1 ? `×${m.count}` : m.region ? data.regionNames[m.region]?.name : undefined,
-          ]
-            .filter(Boolean)
-            .join(' · ')
-          return (
-            <Marker key={i} position={m.pos} icon={iconFor(m)}>
-              <Tooltip direction="top">{label}</Tooltip>
-            </Marker>
-          )
-        })}
-      </MapContainer>
+        map={data.map}
+        assets={palworldAssets}
+        pins={pins}
+        onZoom={onZoom}
+      />
     </div>
   )
 }
