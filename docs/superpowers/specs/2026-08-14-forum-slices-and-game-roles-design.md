@@ -1,7 +1,11 @@
 # Forum Slices 2–9 — Reactions, Images, Social Graph, Feeds, Notifications, Moderation, Privacy, and Game Roles
 
-Status: design. Supersedes nothing; extends `2026-08-13-forum-backend-design.md`, which built slice 1
+Status: **built**. Supersedes nothing; extends `2026-08-13-forum-backend-design.md`, which built slice 1
 (posts and comments) and named the other seven to fix their boundaries.
+
+All eight slices below are implemented, in the order given, each as its own migration and commit.
+§14 records where the implementation departed from this document and why — read that before
+treating any section here as a description of the code.
 
 This document covers the remaining seven slices, adds an eighth the frontend already draws but no
 design had claimed — **game roles and administration** — and settles two forward constraints the
@@ -660,3 +664,55 @@ link returns an empty feed rather than a 422.
 - **Editing windows, and moving site admin into `role_grants`** (§3.2).
 - **No app changelog entry** for any of these slices until the frontend calls them; this is backend work
   with no user-visible surface on its own.
+
+---
+
+## 14. As built: where the implementation departed from this document
+
+Recorded so that the next reader trusts the code over the plan, and knows which decisions were
+taken under contact rather than at the desk.
+
+**§2.3, the game registry, was rewritten mid-flight.** The domain was specified, then measured, then
+rejected — see that section, which now carries the probe output. This is the largest change and the
+reason the section reads as it does.
+
+**Route placement moved out of `/users/me` three times.** `listOwnRoles`, the privacy settings and
+the notification inbox were all specified or drafted under the account, and all three moved to
+`/roles/me`, `/privacy/me` and `/notifications`. The frontend's `auth` package owns the
+`/users/me/*` surface and has a test asserting it handles or explicitly declines every operation
+there; the first attempt failed that guard, correctly, because none of the three is an auth concern.
+Filing exemptions would have been the wrong way to quiet it.
+
+**Hidden content answers 404 to its author too.** The design said hidden content is withheld from
+readers and did not say what the author sees. It sees 404, like everyone else: a distinct "hidden"
+status tells a spammer which of their posts were caught, and letting the author read it would mean
+maintaining two visibility rules. Editing and deleting are refused for the same reason — a moderator
+restores it first.
+
+**Notification preferences are checked inside the INSERT**, not read first in Go. One round trip,
+and it cannot race a preference change. The design implied a service-layer check.
+
+**`Can` has no request-scoped cache.** §3.3 originally specified memoisation; it is not built,
+because `Can` is called once or twice on a write and never per feed row, so the cache would have
+been infrastructure with no measurement behind it. That paragraph was corrected rather than left to
+describe code that does not exist.
+
+**Reaction and follow writes return the updated object.** Not stated either way in the design. They
+do, so a client renders the new count without a second request.
+
+**Notifications fire only on the way up.** Unliking and unfollowing send nothing and withdraw
+nothing: the recipient was told something happened, and it did.
+
+**The moderation queue omits the reporter.** Not specified. A moderator judges the content, and
+knowing who complained invites deciding by who rather than by what.
+
+**Three small shapes were settled by a failing test rather than by design:** the hide body is a
+pointer so huma treats it as optional (omitting its only optional field was otherwise a 400);
+`revokeGameRole` takes the role as a query parameter, because a `DELETE` body is legal but not
+universally forwarded; and `gameIds: [" "]` is now a 422 where it used to be normalised away, with
+the blank-dropping coverage moved to tags, which stay free-form.
+
+**Still not built, and still blocked on the same thing.** Marker comments have their reserved shape
+in §2.4 and nothing more. They remain blocked on the stable-marker-key guarantee from architecture
+§1.1, which lives in `tools` — this document does not discharge it, and no partition of
+`core.marker_comments` exists yet.
