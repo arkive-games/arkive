@@ -22,6 +22,25 @@
     },
     {
       "date": "2026-08-15",
+      "commit": "9a54281eabf8dd4f8be4962ed0213622a4756e1c",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Marker details now open in compact panels above map markers, keep search selections centered, and provide tighter empty states and improved image attachments.",
+            "zh-CN": "点位详情现以紧凑弹窗显示在地图点位上方，搜索选点保持居中，并优化空状态与图片附件操作。",
+            "zh-TW": "點位詳情現以緊湊彈窗顯示在地圖點位上方，搜尋選點保持置中，並優化空狀態與圖片附件操作。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-15",
       "commit": "d0f1ebbbd09b9c94144d31a3633a18b2be20fc85",
       "targets": [
         "aion2",
