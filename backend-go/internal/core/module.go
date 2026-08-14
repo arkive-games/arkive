@@ -25,6 +25,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/httpapi"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
+	"github.com/arkive-games/arkive/backend-go/internal/core/social"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/module"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
@@ -180,6 +181,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	}
 	service := users.NewService(queries, d.Pool, hasher, tokens, mailer, blobs, d.Logger)
 	rolesService := roles.NewService(queries, service, d.Logger)
+	socialService := social.NewService(queries, service, d.Logger)
 	forumService := forum.NewService(queries, service, rolesService, d.Logger)
 
 	// Identity resolution runs before huma so that every operation can read
@@ -207,6 +209,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		service,
 		forumService,
 		rolesService,
+		socialService,
 		tokens,
 		auth.NewAltcha(
 			d.Config.Auth.AltchaHMACKey,
@@ -227,6 +230,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterForumRoutes(a)
 	handlers.RegisterReactionRoutes(a)
 	handlers.RegisterRoleRoutes(a)
+	handlers.RegisterSocialRoutes(a)
 	return nil
 }
 

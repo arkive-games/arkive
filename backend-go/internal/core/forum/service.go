@@ -199,11 +199,22 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		filter.AuthorID = &id
 	}
 
+	// "Following only" without a signed-in reader would silently mean "everything",
+	// which is the opposite of what was asked for. An empty feed is the honest answer.
+	if filter.FollowedOnly && filter.ViewerID == nil {
+		return []PostRead{}, 0, nil
+	}
+	var followedBy *uuid.UUID
+	if filter.FollowedOnly {
+		followedBy = filter.ViewerID
+	}
+
 	total, err := s.q.CountForumPosts(ctx, coredb.CountForumPostsParams{
-		Channel:  filter.Channel,
-		GameID:   filter.GameID,
-		Tag:      filter.Tag,
-		AuthorID: filter.AuthorID,
+		Channel:    filter.Channel,
+		GameID:     filter.GameID,
+		Tag:        filter.Tag,
+		AuthorID:   filter.AuthorID,
+		FollowedBy: followedBy,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("count posts: %w", err)
@@ -214,6 +225,7 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		GameID:       filter.GameID,
 		Tag:          filter.Tag,
 		AuthorID:     filter.AuthorID,
+		FollowedBy:   followedBy,
 		ViewerID:     filter.ViewerID,
 		ResultLimit:  int32(filter.PageSize),
 		ResultOffset: filter.Offset(),

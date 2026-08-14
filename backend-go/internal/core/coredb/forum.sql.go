@@ -30,13 +30,19 @@ WHERE ($1::text IS NULL OR p.channel = $1::text)
   AND ($2::text IS NULL OR p.game_ids @> ARRAY[$2::text])
   AND ($3::text     IS NULL OR p.tags     @> ARRAY[$3::text])
   AND ($4::uuid IS NULL OR p.author_id = $4::uuid)
+  -- The "following only" feed. IN rather than a join, so a post is not duplicated
+  -- and the predicate composes with every other filter.
+  AND ($5::uuid IS NULL OR p.author_id IN (
+      SELECT f.followee_id FROM core.user_follows f
+      WHERE f.follower_id = $5::uuid))
 `
 
 type CountForumPostsParams struct {
-	Channel  *string
-	GameID   *string
-	Tag      *string
-	AuthorID *uuid.UUID
+	Channel    *string
+	GameID     *string
+	Tag        *string
+	AuthorID   *uuid.UUID
+	FollowedBy *uuid.UUID
 }
 
 func (q *Queries) CountForumPosts(ctx context.Context, arg CountForumPostsParams) (int64, error) {
@@ -45,6 +51,7 @@ func (q *Queries) CountForumPosts(ctx context.Context, arg CountForumPostsParams
 		arg.GameID,
 		arg.Tag,
 		arg.AuthorID,
+		arg.FollowedBy,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -440,8 +447,13 @@ WHERE ($2::text IS NULL OR p.channel = $2::text)
   AND ($3::text IS NULL OR p.game_ids @> ARRAY[$3::text])
   AND ($4::text     IS NULL OR p.tags     @> ARRAY[$4::text])
   AND ($5::uuid IS NULL OR p.author_id = $5::uuid)
+  -- The "following only" feed. IN rather than a join, so a post is not duplicated
+  -- and the predicate composes with every other filter.
+  AND ($6::uuid IS NULL OR p.author_id IN (
+      SELECT f.followee_id FROM core.user_follows f
+      WHERE f.follower_id = $6::uuid))
 ORDER BY p.created_at DESC, p.id
-LIMIT $7 OFFSET $6
+LIMIT $8 OFFSET $7
 `
 
 type ListForumPostsParams struct {
@@ -450,6 +462,7 @@ type ListForumPostsParams struct {
 	GameID       *string
 	Tag          *string
 	AuthorID     *uuid.UUID
+	FollowedBy   *uuid.UUID
 	ResultOffset int32
 	ResultLimit  int32
 }
@@ -491,6 +504,7 @@ func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) 
 		arg.GameID,
 		arg.Tag,
 		arg.AuthorID,
+		arg.FollowedBy,
 		arg.ResultOffset,
 		arg.ResultLimit,
 	)

@@ -175,6 +175,12 @@ type ListFilter struct {
 	// query with both flags false.
 	ViewerID *uuid.UUID
 
+	// FollowedOnly narrows the feed to accounts the viewer follows. It is separate
+	// from ViewerID because the two answer different questions — whose flags to
+	// report, and whose posts to include — and a reader browsing the whole feed still
+	// wants their own `liked` state on every row.
+	FollowedOnly bool
+
 	Page     int
 	PageSize int
 }

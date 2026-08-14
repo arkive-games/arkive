@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
+import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, FollowUserData, FollowUserErrors, FollowUserResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetFollowCountsData, GetFollowCountsErrors, GetFollowCountsResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListFollowersData, ListFollowersErrors, ListFollowersResponses, ListFollowingData, ListFollowingErrors, ListFollowingResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnfollowUserData, UnfollowUserErrors, UnfollowUserResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -539,5 +539,60 @@ export const deactivateUser = <ThrowOnError extends boolean = false>(options: Op
 export const reactivateUser = <ThrowOnError extends boolean = false>(options: Options<ReactivateUserData, ThrowOnError>): RequestResult<ReactivateUserResponses, ReactivateUserErrors, ThrowOnError> => (options.client ?? client).post<ReactivateUserResponses, ReactivateUserErrors, ThrowOnError>({
     responseType: 'json',
     url: '/users/{id}/reactivate',
+    ...options
+});
+
+/**
+ * Unfollow an account
+ *
+ * Idempotent. Returns the target's follow tally as the caller now sees it. Following yourself is refused.
+ */
+export const unfollowUser = <ThrowOnError extends boolean = false>(options: Options<UnfollowUserData, ThrowOnError>): RequestResult<UnfollowUserResponses, UnfollowUserErrors, ThrowOnError> => (options.client ?? client).delete<UnfollowUserResponses, UnfollowUserErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/users/{uid}/follow',
+    ...options
+});
+
+/**
+ * Get an account's follow tally
+ *
+ * Public. `following` describes the signed-in caller and is false for an anonymous reader.
+ */
+export const getFollowCounts = <ThrowOnError extends boolean = false>(options: Options<GetFollowCountsData, ThrowOnError>): RequestResult<GetFollowCountsResponses, GetFollowCountsErrors, ThrowOnError> => (options.client ?? client).get<GetFollowCountsResponses, GetFollowCountsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/users/{uid}/follow',
+    ...options
+});
+
+/**
+ * Follow an account
+ *
+ * Idempotent. Returns the target's follow tally as the caller now sees it. Following yourself is refused.
+ */
+export const followUser = <ThrowOnError extends boolean = false>(options: Options<FollowUserData, ThrowOnError>): RequestResult<FollowUserResponses, FollowUserErrors, ThrowOnError> => (options.client ?? client).put<FollowUserResponses, FollowUserErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/users/{uid}/follow',
+    ...options
+});
+
+/**
+ * List an account's followers
+ *
+ * Public. Newest first.
+ */
+export const listFollowers = <ThrowOnError extends boolean = false>(options: Options<ListFollowersData, ThrowOnError>): RequestResult<ListFollowersResponses, ListFollowersErrors, ThrowOnError> => (options.client ?? client).get<ListFollowersResponses, ListFollowersErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/users/{uid}/followers',
+    ...options
+});
+
+/**
+ * List the accounts an account follows
+ *
+ * Public. Newest first.
+ */
+export const listFollowing = <ThrowOnError extends boolean = false>(options: Options<ListFollowingData, ThrowOnError>): RequestResult<ListFollowingResponses, ListFollowingErrors, ThrowOnError> => (options.client ?? client).get<ListFollowingResponses, ListFollowingErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/users/{uid}/following',
     ...options
 });

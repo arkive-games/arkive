@@ -84,6 +84,21 @@ export type CommentRead = {
     parentId: string;
 };
 
+export type Counts = {
+    /**
+     * How many accounts follow this one
+     */
+    followerCount: number;
+    /**
+     * Whether the current reader follows this account
+     */
+    following: boolean;
+    /**
+     * How many accounts this one follows
+     */
+    followingCount: number;
+};
+
 export type CreateCommentBody = {
     /**
      * Raw markdown. Render it with raw HTML disabled.
@@ -201,6 +216,25 @@ export type EnvelopeCommentRead = {
     showType: number;
 };
 
+export type EnvelopeCounts = {
+    /**
+     * The payload
+     */
+    data: Counts;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeEmpty = {
     /**
      * The payload
@@ -244,6 +278,25 @@ export type EnvelopeListCommentRead = {
      * The payload
      */
     data: ListCommentRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeListFollowRead = {
+    /**
+     * The payload
+     */
+    data: ListFollowRead;
     /**
      * Always "Success" on a 2xx response
      */
@@ -414,6 +467,17 @@ export type Error = {
     showType: number;
 };
 
+export type FollowRead = {
+    /**
+     * When the follow was made
+     */
+    createdAt: string;
+    /**
+     * The account on the other end of the follow
+     */
+    user: UserPublic;
+};
+
 export type GrantRead = {
     /**
      * When it was granted
@@ -442,6 +506,17 @@ export type ListCommentRead = {
      * The current page of records
      */
     results: Array<CommentRead> | null;
+};
+
+export type ListFollowRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<FollowRead> | null;
 };
 
 export type ListGrantRead = {
@@ -1245,6 +1320,10 @@ export type ListForumPostsData = {
          * Only posts by this account
          */
         authorUid?: number;
+        /**
+         * Only posts by accounts you follow
+         */
+        following?: boolean;
         /**
          * 1-based page number
          */
@@ -2444,3 +2523,219 @@ export type ReactivateUserResponses = {
 };
 
 export type ReactivateUserResponse = ReactivateUserResponses[keyof ReactivateUserResponses];
+
+export type UnfollowUserData = {
+    body?: never;
+    path: {
+        /**
+         * Public number of the account
+         */
+        uid: number;
+    };
+    query?: never;
+    url: '/users/{uid}/follow';
+};
+
+export type UnfollowUserErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type UnfollowUserError = UnfollowUserErrors[keyof UnfollowUserErrors];
+
+export type UnfollowUserResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeCounts;
+};
+
+export type UnfollowUserResponse = UnfollowUserResponses[keyof UnfollowUserResponses];
+
+export type GetFollowCountsData = {
+    body?: never;
+    path: {
+        /**
+         * Public number of the account
+         */
+        uid: number;
+    };
+    query?: never;
+    url: '/users/{uid}/follow';
+};
+
+export type GetFollowCountsErrors = {
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type GetFollowCountsError = GetFollowCountsErrors[keyof GetFollowCountsErrors];
+
+export type GetFollowCountsResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeCounts;
+};
+
+export type GetFollowCountsResponse = GetFollowCountsResponses[keyof GetFollowCountsResponses];
+
+export type FollowUserData = {
+    body?: never;
+    path: {
+        /**
+         * Public number of the account
+         */
+        uid: number;
+    };
+    query?: never;
+    url: '/users/{uid}/follow';
+};
+
+export type FollowUserErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type FollowUserError = FollowUserErrors[keyof FollowUserErrors];
+
+export type FollowUserResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeCounts;
+};
+
+export type FollowUserResponse = FollowUserResponses[keyof FollowUserResponses];
+
+export type ListFollowersData = {
+    body?: never;
+    path: {
+        /**
+         * Public number of the account
+         */
+        uid: number;
+    };
+    query?: {
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Accounts per page
+         */
+        pageSize?: number;
+    };
+    url: '/users/{uid}/followers';
+};
+
+export type ListFollowersErrors = {
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListFollowersError = ListFollowersErrors[keyof ListFollowersErrors];
+
+export type ListFollowersResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListFollowRead;
+};
+
+export type ListFollowersResponse = ListFollowersResponses[keyof ListFollowersResponses];
+
+export type ListFollowingData = {
+    body?: never;
+    path: {
+        /**
+         * Public number of the account
+         */
+        uid: number;
+    };
+    query?: {
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Accounts per page
+         */
+        pageSize?: number;
+    };
+    url: '/users/{uid}/following';
+};
+
+export type ListFollowingErrors = {
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListFollowingError = ListFollowingErrors[keyof ListFollowingErrors];
+
+export type ListFollowingResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListFollowRead;
+};
+
+export type ListFollowingResponse = ListFollowingResponses[keyof ListFollowingResponses];

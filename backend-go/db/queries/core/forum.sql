@@ -55,6 +55,11 @@ WHERE (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::t
   AND (sqlc.narg('game_id')::text IS NULL OR p.game_ids @> ARRAY[sqlc.narg('game_id')::text])
   AND (sqlc.narg('tag')::text     IS NULL OR p.tags     @> ARRAY[sqlc.narg('tag')::text])
   AND (sqlc.narg('author_id')::uuid IS NULL OR p.author_id = sqlc.narg('author_id')::uuid)
+  -- The "following only" feed. IN rather than a join, so a post is not duplicated
+  -- and the predicate composes with every other filter.
+  AND (sqlc.narg('followed_by')::uuid IS NULL OR p.author_id IN (
+      SELECT f.followee_id FROM core.user_follows f
+      WHERE f.follower_id = sqlc.narg('followed_by')::uuid))
 ORDER BY p.created_at DESC, p.id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 
@@ -63,7 +68,12 @@ SELECT count(*) FROM core.forum_posts p
 WHERE (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
   AND (sqlc.narg('game_id')::text IS NULL OR p.game_ids @> ARRAY[sqlc.narg('game_id')::text])
   AND (sqlc.narg('tag')::text     IS NULL OR p.tags     @> ARRAY[sqlc.narg('tag')::text])
-  AND (sqlc.narg('author_id')::uuid IS NULL OR p.author_id = sqlc.narg('author_id')::uuid);
+  AND (sqlc.narg('author_id')::uuid IS NULL OR p.author_id = sqlc.narg('author_id')::uuid)
+  -- The "following only" feed. IN rather than a join, so a post is not duplicated
+  -- and the predicate composes with every other filter.
+  AND (sqlc.narg('followed_by')::uuid IS NULL OR p.author_id IN (
+      SELECT f.followee_id FROM core.user_follows f
+      WHERE f.follower_id = sqlc.narg('followed_by')::uuid));
 
 -- name: CountForumPostComments :one
 SELECT count(*) FROM core.forum_comments WHERE post_id = $1;

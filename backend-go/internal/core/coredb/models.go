@@ -82,3 +82,9 @@ type CoreUser struct {
 	SpecialUID     *int32
 	AvatarKey      *string
 }
+
+type CoreUserFollow struct {
+	FollowerID uuid.UUID
+	FolloweeID uuid.UUID
+	CreatedAt  time.Time
+}

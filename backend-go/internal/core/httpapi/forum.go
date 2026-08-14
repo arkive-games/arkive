@@ -151,6 +151,10 @@ type listPostsInput struct {
 	// the same arrival and a real uid is at least 10000 anyway.
 	AuthorUID int64 `query:"authorUid" minimum:"1" doc:"Only posts by this account"`
 
+	// Requires a signed-in caller; without one it answers with an empty feed rather
+	// than silently widening to everything, which is the opposite of what was asked.
+	Following bool `query:"following" doc:"Only posts by accounts you follow"`
+
 	Page     int `query:"page" default:"1" minimum:"1" doc:"1-based page number"`
 	PageSize int `query:"pageSize" default:"20" minimum:"1" maximum:"100" doc:"Posts per page"`
 }
@@ -206,13 +210,14 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 		Errors: []int{http.StatusUnprocessableEntity},
 	}, func(ctx context.Context, in *listPostsInput) (*api.Response[api.List[forum.PostRead]], error) {
 		posts, total, err := h.forum.ListPosts(ctx, forum.ListFilter{
-			Channel:   optional(in.Channel),
-			GameID:    optional(in.GameID),
-			Tag:       optional(in.Tag),
-			AuthorUID: optionalUID(in.AuthorUID),
-			ViewerID:  viewerFrom(ctx),
-			Page:      in.Page,
-			PageSize:  in.PageSize,
+			Channel:      optional(in.Channel),
+			GameID:       optional(in.GameID),
+			Tag:          optional(in.Tag),
+			AuthorUID:    optionalUID(in.AuthorUID),
+			ViewerID:     viewerFrom(ctx),
+			FollowedOnly: in.Following,
+			Page:         in.Page,
+			PageSize:     in.PageSize,
 		})
 		if err != nil {
 			return nil, err
