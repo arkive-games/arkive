@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/google/uuid"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/privacy"
@@ -16,7 +17,7 @@ import (
 type PrivacyBody struct {
 	Profile  *privacy.Level `json:"profileVisibility,omitempty" enum:"public,followers,private" doc:"Who may see your profile"`
 	Posts    *privacy.Level `json:"postsVisibility,omitempty" enum:"public,followers,private" doc:"Who may see your posts listed on your profile"`
-	Activity *privacy.Level `json:"activityVisibility,omitempty" enum:"public,followers,private" doc:"Who may see your follows and reactions"`
+	Activity *privacy.Level `json:"activityVisibility,omitempty" enum:"public,followers,private" doc:"Who may see your follow lists and tallies"`
 }
 
 type readPrivacyInput struct{}
@@ -26,11 +27,11 @@ type setPrivacyInput struct {
 }
 
 // requireProfileVisible gates someone else's profile on their profile setting.
-func (h *Handlers) requireProfileVisible(ctx context.Context, uid int64) error {
-	ownerID, err := h.users.IDByUID(ctx, uid)
-	if err != nil {
-		return err
-	}
+//
+// Takes the resolved id rather than a uid, because the only caller has already loaded the
+// account. An earlier version took the uid and resolved it a second time — the same
+// GetUserByAnyUID for a row already in hand.
+func (h *Handlers) requireProfileVisible(ctx context.Context, ownerID uuid.UUID) error {
 	settings, err := h.privacy.For(ctx, ownerID)
 	if err != nil {
 		return err

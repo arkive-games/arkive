@@ -47,7 +47,7 @@ func ValidLevel(l Level) bool {
 type Settings struct {
 	Profile  Level `json:"profileVisibility" enum:"public,followers,private" doc:"Who may see the profile"`
 	Posts    Level `json:"postsVisibility" enum:"public,followers,private" doc:"Who may see posts listed on the profile"`
-	Activity Level `json:"activityVisibility" enum:"public,followers,private" doc:"Who may see follows and reactions"`
+	Activity Level `json:"activityVisibility" enum:"public,followers,private" doc:"Who may see the follow lists and tallies"`
 }
 
 // Update is a partial change; a nil field leaves that setting alone.

@@ -803,7 +803,7 @@ export const reactivateUser = <ThrowOnError extends boolean = false>(options: Op
 /**
  * Unfollow an account
  *
- * Idempotent. Returns the target's follow tally as the caller now sees it. Following yourself is refused.
+ * Idempotent. Returns the target's follow tally as the caller is entitled to see it — subject to the same activityVisibility as reading it, so the tallies come back null when withheld. Following yourself is refused.
  */
 export const unfollowUser = <ThrowOnError extends boolean = false>(options: Options<UnfollowUserData, ThrowOnError>): RequestResult<UnfollowUserResponses, UnfollowUserErrors, ThrowOnError> => (options.client ?? client).delete<UnfollowUserResponses, UnfollowUserErrors, ThrowOnError>({
     responseType: 'json',
@@ -825,7 +825,7 @@ export const getFollowCounts = <ThrowOnError extends boolean = false>(options: O
 /**
  * Follow an account
  *
- * Idempotent. Returns the target's follow tally as the caller now sees it. Following yourself is refused.
+ * Idempotent. Returns the target's follow tally as the caller is entitled to see it — subject to the same activityVisibility as reading it, so the tallies come back null when withheld. Following yourself is refused.
  */
 export const followUser = <ThrowOnError extends boolean = false>(options: Options<FollowUserData, ThrowOnError>): RequestResult<FollowUserResponses, FollowUserErrors, ThrowOnError> => (options.client ?? client).put<FollowUserResponses, FollowUserErrors, ThrowOnError>({
     responseType: 'json',

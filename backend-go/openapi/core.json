@@ -1726,7 +1726,7 @@
         "additionalProperties": false,
         "properties": {
           "activityVisibility": {
-            "description": "Who may see your follows and reactions",
+            "description": "Who may see your follow lists and tallies",
             "enum": [
               "public",
               "followers",
@@ -2028,7 +2028,7 @@
         "additionalProperties": false,
         "properties": {
           "activityVisibility": {
-            "description": "Who may see follows and reactions",
+            "description": "Who may see the follow lists and tallies",
             "enum": [
               "public",
               "followers",
@@ -7251,7 +7251,7 @@
     },
     "/users/{uid}/follow": {
       "delete": {
-        "description": "Idempotent. Returns the target's follow tally as the caller now sees it. Following yourself is refused.",
+        "description": "Idempotent. Returns the target's follow tally as the caller is entitled to see it — subject to the same activityVisibility as reading it, so the tallies come back null when withheld. Following yourself is refused.",
         "operationId": "unfollowUser",
         "parameters": [
           {
@@ -7389,7 +7389,7 @@
         ]
       },
       "put": {
-        "description": "Idempotent. Returns the target's follow tally as the caller now sees it. Following yourself is refused.",
+        "description": "Idempotent. Returns the target's follow tally as the caller is entitled to see it — subject to the same activityVisibility as reading it, so the tallies come back null when withheld. Following yourself is refused.",
         "operationId": "followUser",
         "parameters": [
           {

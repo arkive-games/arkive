@@ -969,7 +969,7 @@ export type Preferences = {
 
 export type PrivacyBody = {
     /**
-     * Who may see your follows and reactions
+     * Who may see your follow lists and tallies
      */
     activityVisibility?: 'public' | 'followers' | 'private';
     /**
@@ -1116,7 +1116,7 @@ export type SetPresetBody = {
 
 export type Settings = {
     /**
-     * Who may see follows and reactions
+     * Who may see the follow lists and tallies
      */
     activityVisibility: 'public' | 'followers' | 'private';
     /**

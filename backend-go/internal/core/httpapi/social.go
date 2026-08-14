@@ -36,8 +36,9 @@ func (h *Handlers) RegisterSocialRoutes(a huma.API) {
 			Method:      method,
 			Path:        "/users/{uid}/follow",
 			Summary:     summary,
-			Description: "Idempotent. Returns the target's follow tally as the caller now " +
-				"sees it. Following yourself is refused.",
+			Description: "Idempotent. Returns the target's follow tally as the caller is " +
+				"entitled to see it — subject to the same activityVisibility as reading it, " +
+				"so the tallies come back null when withheld. Following yourself is refused.",
 			Tags:   []string{"social"},
 			Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusUnprocessableEntity},
 		}, func(ctx context.Context, in *followInput) (*api.Response[social.Counts], error) {
@@ -48,6 +49,18 @@ func (h *Handlers) RegisterSocialRoutes(a huma.API) {
 			counts, err := h.social.SetFollow(ctx, principal.ID, in.UID, following)
 			if err != nil {
 				return nil, err
+			}
+			// The same gate the read carries, and it has to be here too: an unfollow of a
+			// follow that was never made changes nothing, notifies nobody and used to hand
+			// back the very tallies the setting withholds. Asked *after* the write, so at
+			// the `followers` level an unfollow is judged on the caller's standing once it
+			// has taken effect rather than before.
+			visible, err := h.activityVisible(ctx, in.UID)
+			if err != nil {
+				return nil, err
+			}
+			if !visible {
+				counts = counts.WithoutTallies()
 			}
 			return api.OK(counts), nil
 		})

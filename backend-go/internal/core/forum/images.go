@@ -160,6 +160,15 @@ func (s *Service) DetachImage(ctx context.Context, principal auth.Principal, pos
 // Best-effort after that: the rows are the source of truth and already say what they say,
 // so a failed delete leaves a reclaimable orphan rather than a broken image. An orphan is
 // cheap; a deleted object someone is rendering is not recoverable.
+//
+// The guarantee is best-effort under concurrency, not absolute. The count runs after the
+// row change commits, which closes the systematic case, but two requests can still cross:
+// one can count zero for a key in the window before another's attach of that same key
+// commits, and delete an object the second then points at. Closing that properly means
+// counting inside the same transaction as the row change, or dropping these deletes and
+// leaving reclamation to a sweep. Neither is free, and the race needs two requests
+// attaching identical bytes within milliseconds of each other, so it is recorded rather
+// than fixed here.
 func (s *Service) reclaimIfUnreferenced(ctx context.Context, key string) {
 	if key == "" || s.images == nil {
 		return

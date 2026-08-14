@@ -207,19 +207,32 @@ func (s *Service) ByID(ctx context.Context, id uuid.UUID) (UserRead, error) {
 // Distinguishing them would tell any caller which accounts had been disabled,
 // which is the kind of disclosure the login and reset flows already refuse.
 func (s *Service) ByAnyUID(ctx context.Context, uid int64) (UserPublic, error) {
+	public, _, err := s.ByAnyUIDWithID(ctx, uid)
+	return public, err
+}
+
+// ByAnyUIDWithID is ByAnyUID plus the internal handle.
+//
+// UserPublic deliberately omits the uuid — it is what an anonymous caller may see — but a
+// caller that must then make a *decision* about the account needs it. The profile route
+// checks visibility, which is keyed on the id, and without this it resolved the same row a
+// second time to get one.
+//
+// The id does not escape the handler: it decides, and returns the public view.
+func (s *Service) ByAnyUIDWithID(ctx context.Context, uid int64) (UserPublic, uuid.UUID, error) {
 	notFound := apierr.New(apierr.UserNotFound, "no such user")
 
 	u, err := s.q.GetUserByAnyUID(ctx, uid)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return UserPublic{}, notFound
+			return UserPublic{}, uuid.Nil, notFound
 		}
-		return UserPublic{}, fmt.Errorf("load user by uid: %w", err)
+		return UserPublic{}, uuid.Nil, fmt.Errorf("load user by uid: %w", err)
 	}
 	if !u.IsActive {
-		return UserPublic{}, notFound
+		return UserPublic{}, uuid.Nil, notFound
 	}
-	return toUserPublic(u, s.avatarResolver()), nil
+	return toUserPublic(u, s.avatarResolver()), u.ID, nil
 }
 
 // IDByUID resolves a public account number to the internal handle.

@@ -191,9 +191,10 @@ func (s *Service) PostByNo(ctx context.Context, postNo int64, viewer *uuid.UUID)
 //
 // Two, not three, and the difference matters. Three is what the trigram index wants — a
 // trigram is three characters, so anything shorter degrades to a sequential scan of every
-// title and body. But two Chinese characters are a whole word: 繁殖 is "breeding", and this
-// site's largest audience writes queries exactly that shape. Refusing them to protect an
-// index would break search in the primary language to make it fast in the secondary one.
+// title and body. But a great many Chinese words are exactly two characters, and this
+// site's largest audience writes queries of that shape constantly. Refusing them to protect
+// an index would break search in the primary language to make it fast in the secondary one.
+// The CJK case in the feed tests is what surfaced the trade.
 //
 // So two-character searches are accepted and scan. The board is small, the cost is bounded
 // by the page size, and a one-character search — which matches most of everything and is
