@@ -330,11 +330,49 @@ export type EnvelopeListGrantRead = {
     showType: number;
 };
 
+export type EnvelopeListHiddenRead = {
+    /**
+     * The payload
+     */
+    data: ListHiddenRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeListPostRead = {
     /**
      * The payload
      */
     data: ListPostRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeListReportRead = {
+    /**
+     * The payload
+     */
+    data: ListReportRead;
     /**
      * Always "Success" on a 2xx response
      */
@@ -373,6 +411,25 @@ export type EnvelopePostRead = {
      * The payload
      */
     data: PostRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeReportRead = {
+    /**
+     * The payload
+     */
+    data: ReportRead;
     /**
      * Always "Success" on a 2xx response
      */
@@ -497,6 +554,36 @@ export type GrantRead = {
     user: UserPublic;
 };
 
+export type HiddenRead = {
+    /**
+     * Games the post is about
+     */
+    gameIds: Array<string> | null;
+    /**
+     * When it was hidden
+     */
+    hiddenAt: string;
+    /**
+     * Permanent post number
+     */
+    postNo: number;
+    /**
+     * Why it was hidden, or null
+     */
+    reason: string | null;
+    /**
+     * Post title
+     */
+    title: string;
+};
+
+export type HideBody = {
+    /**
+     * Why it is being hidden
+     */
+    reason?: string;
+};
+
 export type ListCommentRead = {
     /**
      * Total number of matching records, ignoring pagination
@@ -530,6 +617,17 @@ export type ListGrantRead = {
     results: Array<GrantRead> | null;
 };
 
+export type ListHiddenRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<HiddenRead> | null;
+};
+
 export type ListPostRead = {
     /**
      * Total number of matching records, ignoring pagination
@@ -539,6 +637,17 @@ export type ListPostRead = {
      * The current page of records
      */
     results: Array<PostRead> | null;
+};
+
+export type ListReportRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<ReportRead> | null;
 };
 
 export type ListUserRead = {
@@ -634,6 +743,56 @@ export type RegisterBody = {
     password: string;
 };
 
+export type ReportBody = {
+    /**
+     * The comment being reported
+     */
+    commentId?: string;
+    /**
+     * Anything you want to add
+     */
+    detail?: string;
+    /**
+     * The post being reported
+     */
+    postNo?: number;
+    /**
+     * Why you are reporting it
+     */
+    reason: 'spam' | 'abuse' | 'offtopic' | 'illegal' | 'other';
+};
+
+export type ReportRead = {
+    /**
+     * The reported comment, or null when a post was reported
+     */
+    commentId: string;
+    /**
+     * When it was filed
+     */
+    createdAt: string;
+    /**
+     * What the reporter added, or null
+     */
+    detail: string | null;
+    /**
+     * Report identifier
+     */
+    id: string;
+    /**
+     * The reported post, or the post a reported comment belongs to
+     */
+    postNo: number | null;
+    /**
+     * Why it was reported
+     */
+    reason: 'spam' | 'abuse' | 'offtopic' | 'illegal' | 'other';
+    /**
+     * open until a moderator answers it
+     */
+    state: 'open' | 'upheld' | 'rejected';
+};
+
 export type ResetPasswordBody = {
     /**
      * The new password
@@ -643,6 +802,13 @@ export type ResetPasswordBody = {
      * Token from the emailed link
      */
     token: string;
+};
+
+export type ResolveReportBody = {
+    /**
+     * The decision
+     */
+    state: 'upheld' | 'rejected';
 };
 
 export type RoleBody = {
@@ -1220,6 +1386,98 @@ export type UpdateForumCommentResponses = {
 
 export type UpdateForumCommentResponse = UpdateForumCommentResponses[keyof UpdateForumCommentResponses];
 
+export type RestoreForumCommentData = {
+    body?: never;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/forum/comments/{id}/hidden';
+};
+
+export type RestoreForumCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type RestoreForumCommentError = RestoreForumCommentErrors[keyof RestoreForumCommentErrors];
+
+export type RestoreForumCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeStruct;
+};
+
+export type RestoreForumCommentResponse = RestoreForumCommentResponses[keyof RestoreForumCommentResponses];
+
+export type HideForumCommentData = {
+    body?: HideBody;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/forum/comments/{id}/hidden';
+};
+
+export type HideForumCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type HideForumCommentError = HideForumCommentErrors[keyof HideForumCommentErrors];
+
+export type HideForumCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeStruct;
+};
+
+export type HideForumCommentResponse = HideForumCommentResponses[keyof HideForumCommentResponses];
+
 export type UnlikeForumCommentData = {
     body?: never;
     path: {
@@ -1303,6 +1561,98 @@ export type LikeForumCommentResponses = {
 };
 
 export type LikeForumCommentResponse = LikeForumCommentResponses[keyof LikeForumCommentResponses];
+
+export type ListHiddenForumPostsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Rows per page
+         */
+        pageSize?: number;
+    };
+    url: '/forum/moderation/hidden';
+};
+
+export type ListHiddenForumPostsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListHiddenForumPostsError = ListHiddenForumPostsErrors[keyof ListHiddenForumPostsErrors];
+
+export type ListHiddenForumPostsResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListHiddenRead;
+};
+
+export type ListHiddenForumPostsResponse = ListHiddenForumPostsResponses[keyof ListHiddenForumPostsResponses];
+
+export type ListOpenForumReportsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Rows per page
+         */
+        pageSize?: number;
+    };
+    url: '/forum/moderation/reports';
+};
+
+export type ListOpenForumReportsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListOpenForumReportsError = ListOpenForumReportsErrors[keyof ListOpenForumReportsErrors];
+
+export type ListOpenForumReportsResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListReportRead;
+};
+
+export type ListOpenForumReportsResponse = ListOpenForumReportsResponses[keyof ListOpenForumReportsResponses];
 
 export type ListForumPostsData = {
     body?: never;
@@ -1814,6 +2164,98 @@ export type FeatureForumPostResponses = {
 
 export type FeatureForumPostResponse = FeatureForumPostResponses[keyof FeatureForumPostResponses];
 
+export type RestoreForumPostData = {
+    body?: never;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/hidden';
+};
+
+export type RestoreForumPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type RestoreForumPostError = RestoreForumPostErrors[keyof RestoreForumPostErrors];
+
+export type RestoreForumPostResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeStruct;
+};
+
+export type RestoreForumPostResponse = RestoreForumPostResponses[keyof RestoreForumPostResponses];
+
+export type HideForumPostData = {
+    body?: HideBody;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/hidden';
+};
+
+export type HideForumPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type HideForumPostError = HideForumPostErrors[keyof HideForumPostErrors];
+
+export type HideForumPostResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeStruct;
+};
+
+export type HideForumPostResponse = HideForumPostResponses[keyof HideForumPostResponses];
+
 export type UnlikeForumPostData = {
     body?: never;
     path: {
@@ -1897,6 +2339,89 @@ export type LikeForumPostResponses = {
 };
 
 export type LikeForumPostResponse = LikeForumPostResponses[keyof LikeForumPostResponses];
+
+export type ReportForumContentData = {
+    body: ReportBody;
+    path?: never;
+    query?: never;
+    url: '/forum/reports';
+};
+
+export type ReportForumContentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ReportForumContentError = ReportForumContentErrors[keyof ReportForumContentErrors];
+
+export type ReportForumContentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeReportRead;
+};
+
+export type ReportForumContentResponse = ReportForumContentResponses[keyof ReportForumContentResponses];
+
+export type ResolveForumReportData = {
+    body: ResolveReportBody;
+    path: {
+        /**
+         * Report identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/forum/reports/{id}/resolution';
+};
+
+export type ResolveForumReportErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ResolveForumReportError = ResolveForumReportErrors[keyof ResolveForumReportErrors];
+
+export type ResolveForumReportResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeReportRead;
+};
+
+export type ResolveForumReportResponse = ResolveForumReportResponses[keyof ResolveForumReportResponses];
 
 export type ListGameRolesData = {
     body?: never;

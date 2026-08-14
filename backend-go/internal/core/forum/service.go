@@ -140,6 +140,9 @@ func (s *Service) PostByNo(ctx context.Context, postNo int64, viewer *uuid.UUID)
 		}
 		return PostRead{}, fmt.Errorf("load post: %w", err)
 	}
+	if err := notFoundIfHidden(post.HiddenAt); err != nil {
+		return PostRead{}, err
+	}
 
 	reactions, err := s.reactions(ctx, post.ID, viewer)
 	if err != nil {
@@ -456,6 +459,9 @@ func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize
 		}
 		return nil, 0, fmt.Errorf("load post: %w", err)
 	}
+	if err := notFoundIfHidden(post.HiddenAt); err != nil {
+		return nil, 0, err
+	}
 
 	paging := ListFilter{Page: page, PageSize: pageSize}
 	if paging.PageSize < 1 || paging.PageSize > MaxCommentPageSize {
@@ -674,6 +680,9 @@ func (s *Service) postByNoForReaction(ctx context.Context, postNo int64) (coredb
 		}
 		return coredb.CoreForumPost{}, fmt.Errorf("load post: %w", err)
 	}
+	if err := notFoundIfHidden(post.HiddenAt); err != nil {
+		return coredb.CoreForumPost{}, err
+	}
 	return post, nil
 }
 
@@ -720,6 +729,14 @@ func (s *Service) ownedPost(ctx context.Context, principal auth.Principal, postN
 			return coredb.CoreForumPost{}, apierr.New(apierr.NotFound, "no such post")
 		}
 		return coredb.CoreForumPost{}, fmt.Errorf("load post: %w", err)
+	}
+	// Hidden before ownership, so an author editing a hidden post gets the same 404
+	// every other reader does rather than learning it exists but is withheld. A
+	// moderator restores it first; a site administrator sees it in the queue.
+	if !principal.IsSuperuser {
+		if err := notFoundIfHidden(post.HiddenAt); err != nil {
+			return coredb.CoreForumPost{}, err
+		}
 	}
 	if post.AuthorID != principal.ID && !principal.IsSuperuser {
 		return coredb.CoreForumPost{}, apierr.New(apierr.Forbidden, "that post is not yours")

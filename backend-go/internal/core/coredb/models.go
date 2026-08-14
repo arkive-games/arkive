@@ -12,17 +12,20 @@ import (
 )
 
 type CoreForumComment struct {
-	ID          uuid.UUID
-	PostID      uuid.UUID
-	ParentID    *uuid.UUID
-	AuthorID    uuid.UUID
-	Body        string
-	CommentNo   *int64
-	Depth       int16
-	ParentDepth *int16
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	EditedAt    pgtype.Timestamptz
+	ID           uuid.UUID
+	PostID       uuid.UUID
+	ParentID     *uuid.UUID
+	AuthorID     uuid.UUID
+	Body         string
+	CommentNo    *int64
+	Depth        int16
+	ParentDepth  *int16
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	EditedAt     pgtype.Timestamptz
+	HiddenAt     pgtype.Timestamptz
+	HiddenBy     *uuid.UUID
+	HiddenReason *string
 }
 
 type CoreForumCommentLike struct {
@@ -47,6 +50,9 @@ type CoreForumPost struct {
 	EditedAt      pgtype.Timestamptz
 	FeaturedAt    pgtype.Timestamptz
 	FeaturedBy    *uuid.UUID
+	HiddenAt      pgtype.Timestamptz
+	HiddenBy      *uuid.UUID
+	HiddenReason  *string
 }
 
 type CoreForumPostBookmark struct {
@@ -59,6 +65,19 @@ type CoreForumPostLike struct {
 	PostID    uuid.UUID
 	UserID    uuid.UUID
 	CreatedAt time.Time
+}
+
+type CoreForumReport struct {
+	ID         uuid.UUID
+	ReporterID uuid.UUID
+	PostID     *uuid.UUID
+	CommentID  *uuid.UUID
+	Reason     string
+	Detail     *string
+	State      string
+	HandledBy  *uuid.UUID
+	HandledAt  pgtype.Timestamptz
+	CreatedAt  time.Time
 }
 
 type CoreRoleGrant struct {

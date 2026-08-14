@@ -231,6 +231,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterReactionRoutes(a)
 	handlers.RegisterRoleRoutes(a)
 	handlers.RegisterSocialRoutes(a)
+	handlers.RegisterModerationRoutes(a)
 	return nil
 }
 

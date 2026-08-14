@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, FeatureForumPostData, FeatureForumPostErrors, FeatureForumPostResponses, FollowUserData, FollowUserErrors, FollowUserResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetFollowCountsData, GetFollowCountsErrors, GetFollowCountsResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListFollowersData, ListFollowersErrors, ListFollowersResponses, ListFollowingData, ListFollowingErrors, ListFollowingResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnfeatureForumPostData, UnfeatureForumPostErrors, UnfeatureForumPostResponses, UnfollowUserData, UnfollowUserErrors, UnfollowUserResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
+import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, FeatureForumPostData, FeatureForumPostErrors, FeatureForumPostResponses, FollowUserData, FollowUserErrors, FollowUserResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetFollowCountsData, GetFollowCountsErrors, GetFollowCountsResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, HideForumCommentData, HideForumCommentErrors, HideForumCommentResponses, HideForumPostData, HideForumPostErrors, HideForumPostResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListFollowersData, ListFollowersErrors, ListFollowersResponses, ListFollowingData, ListFollowingErrors, ListFollowingResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListHiddenForumPostsData, ListHiddenForumPostsErrors, ListHiddenForumPostsResponses, ListOpenForumReportsData, ListOpenForumReportsErrors, ListOpenForumReportsResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, ReportForumContentData, ReportForumContentErrors, ReportForumContentResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResolveForumReportData, ResolveForumReportErrors, ResolveForumReportResponses, RestoreForumCommentData, RestoreForumCommentErrors, RestoreForumCommentResponses, RestoreForumPostData, RestoreForumPostErrors, RestoreForumPostResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnfeatureForumPostData, UnfeatureForumPostErrors, UnfeatureForumPostResponses, UnfollowUserData, UnfollowUserErrors, UnfollowUserResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -173,6 +173,32 @@ export const updateForumComment = <ThrowOnError extends boolean = false>(options
 });
 
 /**
+ * Restore a hidden comment
+ *
+ * The same permissions as hiding.
+ */
+export const restoreForumComment = <ThrowOnError extends boolean = false>(options: Options<RestoreForumCommentData, ThrowOnError>): RequestResult<RestoreForumCommentResponses, RestoreForumCommentErrors, ThrowOnError> => (options.client ?? client).delete<RestoreForumCommentResponses, RestoreForumCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/comments/{id}/hidden',
+    ...options
+});
+
+/**
+ * Hide a comment
+ *
+ * Scoped by the games of the post the comment belongs to, since a comment carries no tags of its own.
+ */
+export const hideForumComment = <ThrowOnError extends boolean = false>(options: Options<HideForumCommentData, ThrowOnError>): RequestResult<HideForumCommentResponses, HideForumCommentErrors, ThrowOnError> => (options.client ?? client).put<HideForumCommentResponses, HideForumCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/comments/{id}/hidden',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Remove your like from a comment
  *
  * Idempotent. Returns the comment as the caller now sees it.
@@ -191,6 +217,28 @@ export const unlikeForumComment = <ThrowOnError extends boolean = false>(options
 export const likeForumComment = <ThrowOnError extends boolean = false>(options: Options<LikeForumCommentData, ThrowOnError>): RequestResult<LikeForumCommentResponses, LikeForumCommentErrors, ThrowOnError> => (options.client ?? client).put<LikeForumCommentResponses, LikeForumCommentErrors, ThrowOnError>({
     responseType: 'json',
     url: '/forum/comments/{id}/like',
+    ...options
+});
+
+/**
+ * Hidden posts
+ *
+ * What a moderator can see and a reader cannot, scoped to the games you moderate. This is the only way to find hidden content, which is why hiding is reversible.
+ */
+export const listHiddenForumPosts = <ThrowOnError extends boolean = false>(options?: Options<ListHiddenForumPostsData, ThrowOnError>): RequestResult<ListHiddenForumPostsResponses, ListHiddenForumPostsErrors, ThrowOnError> => (options?.client ?? client).get<ListHiddenForumPostsResponses, ListHiddenForumPostsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/moderation/hidden',
+    ...options
+});
+
+/**
+ * The moderation queue
+ *
+ * Open reports, oldest first, scoped to the games you moderate. A site administrator sees everything. The reporter is not included: a moderator judges the content, not who complained.
+ */
+export const listOpenForumReports = <ThrowOnError extends boolean = false>(options?: Options<ListOpenForumReportsData, ThrowOnError>): RequestResult<ListOpenForumReportsResponses, ListOpenForumReportsErrors, ThrowOnError> => (options?.client ?? client).get<ListOpenForumReportsResponses, ListOpenForumReportsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/moderation/reports',
     ...options
 });
 
@@ -328,6 +376,32 @@ export const featureForumPost = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
+ * Restore a hidden post
+ *
+ * The same permissions as hiding.
+ */
+export const restoreForumPost = <ThrowOnError extends boolean = false>(options: Options<RestoreForumPostData, ThrowOnError>): RequestResult<RestoreForumPostResponses, RestoreForumPostErrors, ThrowOnError> => (options.client ?? client).delete<RestoreForumPostResponses, RestoreForumPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/posts/{postNo}/hidden',
+    ...options
+});
+
+/**
+ * Hide a post
+ *
+ * Moderator action, reversible and attributed. Requires moderating a game the post is tagged with; a post tagged with no game is site administrators only. A hidden post answers 404 to every reader, its author included.
+ */
+export const hideForumPost = <ThrowOnError extends boolean = false>(options: Options<HideForumPostData, ThrowOnError>): RequestResult<HideForumPostResponses, HideForumPostErrors, ThrowOnError> => (options.client ?? client).put<HideForumPostResponses, HideForumPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/posts/{postNo}/hidden',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Remove your like from a post
  *
  * Idempotent. Returns the post as the caller now sees it.
@@ -347,6 +421,36 @@ export const likeForumPost = <ThrowOnError extends boolean = false>(options: Opt
     responseType: 'json',
     url: '/forum/posts/{postNo}/like',
     ...options
+});
+
+/**
+ * Report a post or a comment
+ *
+ * Any signed-in account may report. Reporting the same thing twice updates your report rather than filing a second, and reopens it if it had already been answered.
+ */
+export const reportForumContent = <ThrowOnError extends boolean = false>(options: Options<ReportForumContentData, ThrowOnError>): RequestResult<ReportForumContentResponses, ReportForumContentErrors, ThrowOnError> => (options.client ?? client).post<ReportForumContentResponses, ReportForumContentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/reports',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Answer a report
+ *
+ * Upholding a report does not hide anything by itself: hiding is a separate, separately recorded decision. Answering an already-answered report is refused.
+ */
+export const resolveForumReport = <ThrowOnError extends boolean = false>(options: Options<ResolveForumReportData, ThrowOnError>): RequestResult<ResolveForumReportResponses, ResolveForumReportErrors, ThrowOnError> => (options.client ?? client).post<ResolveForumReportResponses, ResolveForumReportErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/reports/{id}/resolution',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

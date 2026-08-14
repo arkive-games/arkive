@@ -584,11 +584,75 @@
         ],
         "type": "object"
       },
+      "EnvelopeListHiddenRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListHiddenRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeListPostRead": {
         "additionalProperties": false,
         "properties": {
           "data": {
             "$ref": "#/components/schemas/ListPostRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeListReportRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListReportRead",
             "description": "The payload"
           },
           "errorCode": {
@@ -653,6 +717,38 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/PostRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeReportRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ReportRead",
             "description": "The payload"
           },
           "errorCode": {
@@ -863,6 +959,61 @@
         ],
         "type": "object"
       },
+      "HiddenRead": {
+        "additionalProperties": false,
+        "properties": {
+          "gameIds": {
+            "description": "Games the post is about",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "hiddenAt": {
+            "description": "When it was hidden",
+            "format": "date-time",
+            "type": "string"
+          },
+          "postNo": {
+            "description": "Permanent post number",
+            "format": "int64",
+            "type": "integer"
+          },
+          "reason": {
+            "description": "Why it was hidden, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "description": "Post title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "postNo",
+          "title",
+          "gameIds",
+          "reason",
+          "hiddenAt"
+        ],
+        "type": "object"
+      },
+      "HideBody": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "description": "Why it is being hidden",
+            "maxLength": 500,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ListCommentRead": {
         "additionalProperties": false,
         "properties": {
@@ -938,6 +1089,31 @@
         ],
         "type": "object"
       },
+      "ListHiddenRead": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/HiddenRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
       "ListPostRead": {
         "additionalProperties": false,
         "properties": {
@@ -950,6 +1126,31 @@
             "description": "The current page of records",
             "items": {
               "$ref": "#/components/schemas/PostRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
+      "ListReportRead": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/ReportRead"
             },
             "type": [
               "array",
@@ -1144,6 +1345,104 @@
         ],
         "type": "object"
       },
+      "ReportBody": {
+        "additionalProperties": false,
+        "properties": {
+          "commentId": {
+            "description": "The comment being reported",
+            "type": "string"
+          },
+          "detail": {
+            "description": "Anything you want to add",
+            "maxLength": 2000,
+            "type": "string"
+          },
+          "postNo": {
+            "description": "The post being reported",
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "reason": {
+            "description": "Why you are reporting it",
+            "enum": [
+              "spam",
+              "abuse",
+              "offtopic",
+              "illegal",
+              "other"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
+      "ReportRead": {
+        "additionalProperties": false,
+        "properties": {
+          "commentId": {
+            "description": "The reported comment, or null when a post was reported",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "When it was filed",
+            "format": "date-time",
+            "type": "string"
+          },
+          "detail": {
+            "description": "What the reporter added, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Report identifier",
+            "type": "string"
+          },
+          "postNo": {
+            "description": "The reported post, or the post a reported comment belongs to",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reason": {
+            "description": "Why it was reported",
+            "enum": [
+              "spam",
+              "abuse",
+              "offtopic",
+              "illegal",
+              "other"
+            ],
+            "type": "string"
+          },
+          "state": {
+            "description": "open until a moderator answers it",
+            "enum": [
+              "open",
+              "upheld",
+              "rejected"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "postNo",
+          "commentId",
+          "reason",
+          "detail",
+          "state",
+          "createdAt"
+        ],
+        "type": "object"
+      },
       "ResetPasswordBody": {
         "additionalProperties": false,
         "properties": {
@@ -1162,6 +1461,23 @@
         "required": [
           "token",
           "password"
+        ],
+        "type": "object"
+      },
+      "ResolveReportBody": {
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "description": "The decision",
+            "enum": [
+              "upheld",
+              "rejected"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "state"
         ],
         "type": "object"
       },
@@ -2230,6 +2546,181 @@
         ]
       }
     },
+    "/forum/comments/{id}/hidden": {
+      "delete": {
+        "description": "The same permissions as hiding.",
+        "operationId": "restoreForumComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeStruct {}"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Restore a hidden comment",
+        "tags": [
+          "moderation"
+        ]
+      },
+      "put": {
+        "description": "Scoped by the games of the post the comment belongs to, since a comment carries no tags of its own.",
+        "operationId": "hideForumComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HideBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeStruct {}"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Hide a comment",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
     "/forum/comments/{id}/like": {
       "delete": {
         "description": "Idempotent. Returns the comment as the caller now sees it.",
@@ -2373,6 +2864,188 @@
         "summary": "Like a comment",
         "tags": [
           "forum"
+        ]
+      }
+    },
+    "/forum/moderation/hidden": {
+      "get": {
+        "description": "What a moderator can see and a reader cannot, scoped to the games you moderate. This is the only way to find hidden content, which is why hiding is reversible.",
+        "operationId": "listHiddenForumPosts",
+        "parameters": [
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Rows per page",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListHiddenRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Hidden posts",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
+    "/forum/moderation/reports": {
+      "get": {
+        "description": "Open reports, oldest first, scoped to the games you moderate. A site administrator sees everything. The reporter is not included: a moderator judges the content, not who complained.",
+        "operationId": "listOpenForumReports",
+        "parameters": [
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Rows per page",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListReportRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "The moderation queue",
+        "tags": [
+          "moderation"
         ]
       }
     },
@@ -3375,6 +4048,185 @@
         ]
       }
     },
+    "/forum/posts/{postNo}/hidden": {
+      "delete": {
+        "description": "The same permissions as hiding.",
+        "operationId": "restoreForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeStruct {}"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Restore a hidden post",
+        "tags": [
+          "moderation"
+        ]
+      },
+      "put": {
+        "description": "Moderator action, reversible and attributed. Requires moderating a game the post is tagged with; a post tagged with no game is site administrators only. A hidden post answers 404 to every reader, its author included.",
+        "operationId": "hideForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HideBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeStruct {}"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Hide a post",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
     "/forum/posts/{postNo}/like": {
       "delete": {
         "description": "Idempotent. Returns the post as the caller now sees it.",
@@ -3522,6 +4374,172 @@
         "summary": "Like a post",
         "tags": [
           "forum"
+        ]
+      }
+    },
+    "/forum/reports": {
+      "post": {
+        "description": "Any signed-in account may report. Reporting the same thing twice updates your report rather than filing a second, and reopens it if it had already been answered.",
+        "operationId": "reportForumContent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeReportRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Report a post or a comment",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
+    "/forum/reports/{id}/resolution": {
+      "post": {
+        "description": "Upholding a report does not hide anything by itself: hiding is a separate, separately recorded decision. Answering an already-answered report is refused.",
+        "operationId": "resolveForumReport",
+        "parameters": [
+          {
+            "description": "Report identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveReportBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeReportRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Answer a report",
+        "tags": [
+          "moderation"
         ]
       }
     },

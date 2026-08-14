@@ -39,7 +39,7 @@ DELETE FROM core.forum_posts WHERE id = $1;
 -- name: ListForumPosts :many
 SELECT
     p.*,
-    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) AS comment_count,
+    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL) AS comment_count,
     (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id) AS like_count,
     (SELECT count(*) FROM core.forum_post_bookmarks b WHERE b.post_id = p.id) AS bookmark_count,
     EXISTS (
@@ -51,7 +51,8 @@ SELECT
         WHERE b.post_id = p.id AND b.user_id = sqlc.narg('viewer_id')::uuid
     ) AS bookmarked
 FROM core.forum_posts p
-WHERE (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
+WHERE p.hidden_at IS NULL
+  AND (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
   AND (sqlc.narg('game_id')::text IS NULL OR p.game_ids @> ARRAY[sqlc.narg('game_id')::text])
   AND (sqlc.narg('tag')::text     IS NULL OR p.tags     @> ARRAY[sqlc.narg('tag')::text])
   AND (sqlc.narg('author_id')::uuid IS NULL OR p.author_id = sqlc.narg('author_id')::uuid)
@@ -80,7 +81,7 @@ ORDER BY
     -- because a ranking formula invites being mistaken for one.
     CASE WHEN sqlc.arg('sort')::text = 'hot' THEN
         ((SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
-         + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) + 1)
+         + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL) + 1)
         / power(extract(epoch FROM (now() - p.created_at)) / 3600.0 + 2, 1.5)
     END DESC NULLS LAST,
     p.created_at DESC, p.id
@@ -90,7 +91,8 @@ LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 -- feed will not return. Sorting is absent on purpose: it cannot change a count.
 -- name: CountForumPosts :one
 SELECT count(*) FROM core.forum_posts p
-WHERE (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
+WHERE p.hidden_at IS NULL
+  AND (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
   AND (sqlc.narg('game_id')::text IS NULL OR p.game_ids @> ARRAY[sqlc.narg('game_id')::text])
   AND (sqlc.narg('tag')::text     IS NULL OR p.tags     @> ARRAY[sqlc.narg('tag')::text])
   AND (sqlc.narg('author_id')::uuid IS NULL OR p.author_id = sqlc.narg('author_id')::uuid)
@@ -112,14 +114,14 @@ WHERE id = sqlc.arg('id')
 RETURNING *;
 
 -- name: CountForumPostComments :one
-SELECT count(*) FROM core.forum_comments WHERE post_id = $1;
+SELECT count(*) FROM core.forum_comments WHERE post_id = $1 AND hidden_at IS NULL;
 
 -- Everything a single post's DTO needs beyond its own row, in one round trip rather
 -- than one query per counter.
 -- name: ForumPostReactions :one
 SELECT
     (SELECT count(*) FROM core.forum_comments c
-        WHERE c.post_id = sqlc.arg('post_id')) AS comment_count,
+        WHERE c.post_id = sqlc.arg('post_id') AND c.hidden_at IS NULL) AS comment_count,
     (SELECT count(*) FROM core.forum_post_likes l
         WHERE l.post_id = sqlc.arg('post_id')) AS like_count,
     (SELECT count(*) FROM core.forum_post_bookmarks b
@@ -190,7 +192,10 @@ SELECT
         WHERE l.comment_id = c.id AND l.user_id = sqlc.narg('viewer_id')::uuid
     ) AS liked
 FROM core.forum_comments c
+-- The parent join is for ordering only and deliberately does not exclude a hidden
+-- parent: a reply is its own author's words, so hiding the comment above it must not
+-- take it down, and the parent's floor number is still what the reply sorts under.
 LEFT JOIN core.forum_comments parent ON parent.id = c.parent_id
-WHERE c.post_id = sqlc.arg('post_id')
+WHERE c.post_id = sqlc.arg('post_id') AND c.hidden_at IS NULL
 ORDER BY COALESCE(c.comment_no, parent.comment_no), c.depth, c.created_at, c.id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');

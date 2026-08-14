@@ -14,7 +14,7 @@ import (
 )
 
 const countForumPostComments = `-- name: CountForumPostComments :one
-SELECT count(*) FROM core.forum_comments WHERE post_id = $1
+SELECT count(*) FROM core.forum_comments WHERE post_id = $1 AND hidden_at IS NULL
 `
 
 func (q *Queries) CountForumPostComments(ctx context.Context, postID uuid.UUID) (int64, error) {
@@ -26,7 +26,8 @@ func (q *Queries) CountForumPostComments(ctx context.Context, postID uuid.UUID) 
 
 const countForumPosts = `-- name: CountForumPosts :one
 SELECT count(*) FROM core.forum_posts p
-WHERE ($1::text IS NULL OR p.channel = $1::text)
+WHERE p.hidden_at IS NULL
+  AND ($1::text IS NULL OR p.channel = $1::text)
   AND ($2::text IS NULL OR p.game_ids @> ARRAY[$2::text])
   AND ($3::text     IS NULL OR p.tags     @> ARRAY[$3::text])
   AND ($4::uuid IS NULL OR p.author_id = $4::uuid)
@@ -77,7 +78,7 @@ INSERT INTO core.forum_comments (id, post_id, parent_id, author_id, body, commen
 SELECT $1, $2, NULL, $3,
        $4, allocated.comment_no
 FROM allocated
-RETURNING id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at
+RETURNING id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason
 `
 
 type CreateForumCommentParams struct {
@@ -114,6 +115,9 @@ func (q *Queries) CreateForumComment(ctx context.Context, arg CreateForumComment
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.EditedAt,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
@@ -121,7 +125,7 @@ func (q *Queries) CreateForumComment(ctx context.Context, arg CreateForumComment
 const createForumPost = `-- name: CreateForumPost :one
 INSERT INTO core.forum_posts (id, author_id, channel, title, body, topic, game_ids, tags)
 VALUES ($1, $2, $3, $4, $5, $8, $6, $7)
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason
 `
 
 type CreateForumPostParams struct {
@@ -163,6 +167,9 @@ func (q *Queries) CreateForumPost(ctx context.Context, arg CreateForumPostParams
 		&i.EditedAt,
 		&i.FeaturedAt,
 		&i.FeaturedBy,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
@@ -170,7 +177,7 @@ func (q *Queries) CreateForumPost(ctx context.Context, arg CreateForumPostParams
 const createForumReply = `-- name: CreateForumReply :one
 INSERT INTO core.forum_comments (id, post_id, parent_id, author_id, body, comment_no)
 VALUES ($1, $2, $3, $4, $5, NULL)
-RETURNING id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at
+RETURNING id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason
 `
 
 type CreateForumReplyParams struct {
@@ -207,6 +214,9 @@ func (q *Queries) CreateForumReply(ctx context.Context, arg CreateForumReplyPara
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.EditedAt,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
@@ -238,7 +248,7 @@ func (q *Queries) DeleteForumPost(ctx context.Context, id uuid.UUID) (int64, err
 const forumPostReactions = `-- name: ForumPostReactions :one
 SELECT
     (SELECT count(*) FROM core.forum_comments c
-        WHERE c.post_id = $1) AS comment_count,
+        WHERE c.post_id = $1 AND c.hidden_at IS NULL) AS comment_count,
     (SELECT count(*) FROM core.forum_post_likes l
         WHERE l.post_id = $1) AS like_count,
     (SELECT count(*) FROM core.forum_post_bookmarks b
@@ -282,7 +292,7 @@ func (q *Queries) ForumPostReactions(ctx context.Context, arg ForumPostReactions
 }
 
 const getForumCommentByID = `-- name: GetForumCommentByID :one
-SELECT id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at FROM core.forum_comments WHERE id = $1
+SELECT id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason FROM core.forum_comments WHERE id = $1
 `
 
 func (q *Queries) GetForumCommentByID(ctx context.Context, id uuid.UUID) (CoreForumComment, error) {
@@ -300,12 +310,15 @@ func (q *Queries) GetForumCommentByID(ctx context.Context, id uuid.UUID) (CoreFo
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.EditedAt,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
 
 const getForumPostByID = `-- name: GetForumPostByID :one
-SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by FROM core.forum_posts WHERE id = $1
+SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason FROM core.forum_posts WHERE id = $1
 `
 
 func (q *Queries) GetForumPostByID(ctx context.Context, id uuid.UUID) (CoreForumPost, error) {
@@ -327,12 +340,15 @@ func (q *Queries) GetForumPostByID(ctx context.Context, id uuid.UUID) (CoreForum
 		&i.EditedAt,
 		&i.FeaturedAt,
 		&i.FeaturedBy,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
 
 const getForumPostByNo = `-- name: GetForumPostByNo :one
-SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by FROM core.forum_posts WHERE post_no = $1
+SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason FROM core.forum_posts WHERE post_no = $1
 `
 
 func (q *Queries) GetForumPostByNo(ctx context.Context, postNo int64) (CoreForumPost, error) {
@@ -354,13 +370,16 @@ func (q *Queries) GetForumPostByNo(ctx context.Context, postNo int64) (CoreForum
 		&i.EditedAt,
 		&i.FeaturedAt,
 		&i.FeaturedBy,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
 
 const listForumComments = `-- name: ListForumComments :many
 SELECT
-    c.id, c.post_id, c.parent_id, c.author_id, c.body, c.comment_no, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at,
+    c.id, c.post_id, c.parent_id, c.author_id, c.body, c.comment_no, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at, c.hidden_at, c.hidden_by, c.hidden_reason,
     (SELECT count(*) FROM core.forum_comment_likes l WHERE l.comment_id = c.id) AS like_count,
     EXISTS (
         SELECT 1 FROM core.forum_comment_likes l
@@ -368,7 +387,7 @@ SELECT
     ) AS liked
 FROM core.forum_comments c
 LEFT JOIN core.forum_comments parent ON parent.id = c.parent_id
-WHERE c.post_id = $2
+WHERE c.post_id = $2 AND c.hidden_at IS NULL
 ORDER BY COALESCE(c.comment_no, parent.comment_no), c.depth, c.created_at, c.id
 LIMIT $4 OFFSET $3
 `
@@ -381,19 +400,22 @@ type ListForumCommentsParams struct {
 }
 
 type ListForumCommentsRow struct {
-	ID          uuid.UUID
-	PostID      uuid.UUID
-	ParentID    *uuid.UUID
-	AuthorID    uuid.UUID
-	Body        string
-	CommentNo   *int64
-	Depth       int16
-	ParentDepth *int16
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	EditedAt    pgtype.Timestamptz
-	LikeCount   int64
-	Liked       bool
+	ID           uuid.UUID
+	PostID       uuid.UUID
+	ParentID     *uuid.UUID
+	AuthorID     uuid.UUID
+	Body         string
+	CommentNo    *int64
+	Depth        int16
+	ParentDepth  *int16
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	EditedAt     pgtype.Timestamptz
+	HiddenAt     pgtype.Timestamptz
+	HiddenBy     *uuid.UUID
+	HiddenReason *string
+	LikeCount    int64
+	Liked        bool
 }
 
 // A page of a thread's comments: floors in order, each reply directly after the
@@ -403,6 +425,9 @@ type ListForumCommentsRow struct {
 // Bounded, unlike an earlier version. This endpoint is public and unauthenticated,
 // so a thread with ten thousand long comments would otherwise let anyone ask the
 // server to build a response of hundreds of megabytes.
+// The parent join is for ordering only and deliberately does not exclude a hidden
+// parent: a reply is its own author's words, so hiding the comment above it must not
+// take it down, and the parent's floor number is still what the reply sorts under.
 func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsParams) ([]ListForumCommentsRow, error) {
 	rows, err := q.db.Query(ctx, listForumComments,
 		arg.ViewerID,
@@ -429,6 +454,9 @@ func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsPa
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.EditedAt,
+			&i.HiddenAt,
+			&i.HiddenBy,
+			&i.HiddenReason,
 			&i.LikeCount,
 			&i.Liked,
 		); err != nil {
@@ -444,8 +472,8 @@ func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsPa
 
 const listForumPosts = `-- name: ListForumPosts :many
 SELECT
-    p.id, p.post_no, p.author_id, p.channel, p.title, p.body, p.topic, p.game_ids, p.tags, p.next_comment_no, p.created_at, p.updated_at, p.edited_at, p.featured_at, p.featured_by,
-    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) AS comment_count,
+    p.id, p.post_no, p.author_id, p.channel, p.title, p.body, p.topic, p.game_ids, p.tags, p.next_comment_no, p.created_at, p.updated_at, p.edited_at, p.featured_at, p.featured_by, p.hidden_at, p.hidden_by, p.hidden_reason,
+    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL) AS comment_count,
     (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id) AS like_count,
     (SELECT count(*) FROM core.forum_post_bookmarks b WHERE b.post_id = p.id) AS bookmark_count,
     EXISTS (
@@ -457,7 +485,8 @@ SELECT
         WHERE b.post_id = p.id AND b.user_id = $1::uuid
     ) AS bookmarked
 FROM core.forum_posts p
-WHERE ($2::text IS NULL OR p.channel = $2::text)
+WHERE p.hidden_at IS NULL
+  AND ($2::text IS NULL OR p.channel = $2::text)
   AND ($3::text IS NULL OR p.game_ids @> ARRAY[$3::text])
   AND ($4::text     IS NULL OR p.tags     @> ARRAY[$4::text])
   AND ($5::uuid IS NULL OR p.author_id = $5::uuid)
@@ -486,7 +515,7 @@ ORDER BY
     -- because a ranking formula invites being mistaken for one.
     CASE WHEN $9::text = 'hot' THEN
         ((SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
-         + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) + 1)
+         + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL) + 1)
         / power(extract(epoch FROM (now() - p.created_at)) / 3600.0 + 2, 1.5)
     END DESC NULLS LAST,
     p.created_at DESC, p.id
@@ -523,6 +552,9 @@ type ListForumPostsRow struct {
 	EditedAt      pgtype.Timestamptz
 	FeaturedAt    pgtype.Timestamptz
 	FeaturedBy    *uuid.UUID
+	HiddenAt      pgtype.Timestamptz
+	HiddenBy      *uuid.UUID
+	HiddenReason  *string
 	CommentCount  int64
 	LikeCount     int64
 	BookmarkCount int64
@@ -576,6 +608,9 @@ func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) 
 			&i.EditedAt,
 			&i.FeaturedAt,
 			&i.FeaturedBy,
+			&i.HiddenAt,
+			&i.HiddenBy,
+			&i.HiddenReason,
 			&i.CommentCount,
 			&i.LikeCount,
 			&i.BookmarkCount,
@@ -597,7 +632,7 @@ UPDATE core.forum_posts SET
     featured_at = CASE WHEN $1::boolean THEN now() ELSE NULL END,
     featured_by = CASE WHEN $1::boolean THEN $2::uuid ELSE NULL END
 WHERE id = $3
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason
 `
 
 type SetForumPostFeaturedParams struct {
@@ -627,6 +662,9 @@ func (q *Queries) SetForumPostFeatured(ctx context.Context, arg SetForumPostFeat
 		&i.EditedAt,
 		&i.FeaturedAt,
 		&i.FeaturedBy,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
@@ -634,7 +672,7 @@ func (q *Queries) SetForumPostFeatured(ctx context.Context, arg SetForumPostFeat
 const updateForumComment = `-- name: UpdateForumComment :one
 UPDATE core.forum_comments SET body = $2, edited_at = now()
 WHERE id = $1
-RETURNING id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at
+RETURNING id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason
 `
 
 type UpdateForumCommentParams struct {
@@ -657,6 +695,9 @@ func (q *Queries) UpdateForumComment(ctx context.Context, arg UpdateForumComment
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.EditedAt,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
@@ -671,7 +712,7 @@ UPDATE core.forum_posts SET
     tags      = COALESCE($6::text[], tags),
     edited_at = now()
 WHERE id = $7
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason
 `
 
 type UpdateForumPostParams struct {
@@ -714,6 +755,9 @@ func (q *Queries) UpdateForumPost(ctx context.Context, arg UpdateForumPostParams
 		&i.EditedAt,
 		&i.FeaturedAt,
 		&i.FeaturedBy,
+		&i.HiddenAt,
+		&i.HiddenBy,
+		&i.HiddenReason,
 	)
 	return i, err
 }
