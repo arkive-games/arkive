@@ -210,11 +210,17 @@ export function NotificationCenterPage({ section }: { section: NotificationSecti
  * whether it landed on a post or a comment, which is the distinction the server
  * keeps and the reader does not care about.
  */
-const NOTIFICATION_KINDS: Record<Exclude<NotificationSection, 'settings'>, readonly string[]> = {
+type NotificationKind = 'reply' | 'mention' | 'post_like' | 'comment_like' | 'follow' | 'system'
+
+const NOTIFICATION_KINDS: Record<Exclude<NotificationSection, 'settings'>, readonly NotificationKind[]> = {
   replies: ['reply'],
   mentions: ['mention'],
   likes: ['post_like', 'comment_like'],
-  system: ['system'],
+  // `follow` sits here rather than in a tab of its own, matching where the
+  // notification settings already group it — under "follows and platform". It
+  // appeared in no list at all before, so a new-follower notification was fetched
+  // and then dropped on every tab: invisible, with nothing to say it existed.
+  system: ['system', 'follow'],
 }
 
 /** Which copy template a kind uses. The four templates already exist per locale. */
@@ -258,7 +264,14 @@ function NotificationInbox({
     let active = true
     setLoading(true)
     setFailed(false)
-    void result(listNotifications({ client, throwOnError: true, query: { page: 1, pageSize: 50 } }))
+    void result(listNotifications({
+      client,
+      throwOnError: true,
+      // The tab's kinds, so a page holds that tab. Filtering one page of fifty in
+      // the browser meant a reader with fifty recent likes saw an empty replies
+      // tab while replies existed.
+      query: { kind: [...NOTIFICATION_KINDS[section]], page: 1, pageSize: 50 },
+    }))
       .then((page) => {
         if (!active) return
         setRows(page.results ?? [])
@@ -271,12 +284,9 @@ function NotificationInbox({
         setLoading(false)
       })
     return () => { active = false }
-  }, [client])
+  }, [client, section])
 
-  // Filtered here rather than per tab on the server: one request covers all four
-  // tabs, and switching between them is then instant.
-  const kinds = NOTIFICATION_KINDS[section]
-  const items = rows.filter((row) => kinds.includes(row.kind))
+  const items = rows
 
   if (loading) {
     return <div className="user-panel notification-list"><p className="forum-feed-status" role="status">{t('forum.loading')}</p></div>
@@ -341,7 +351,7 @@ export function AccountCenterPage({
   const { state, updateLocalProfile } = useUserSystem()
   const user = auth.user
   /**
-   * The reader own follower and following totals.
+   * The reader's own follower and following totals.
    *
    * Previously 0 and the length of a localStorage array, which is what one
    * browser happened to remember rather than what the site records.
@@ -1233,7 +1243,7 @@ function ProfilePostList({
   /** Whose posts. Ignored when `bookmarked` is set. */
   uid: number | null
   client: ApiClient['client'] | null
-  /** The reader own saved posts instead of an author feed. */
+  /** The reader's own saved posts instead of an author feed. */
   bookmarked?: boolean
 }) {
   const { t } = useTranslation()

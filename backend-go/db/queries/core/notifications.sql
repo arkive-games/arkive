@@ -26,13 +26,23 @@ AND sqlc.narg('actor_id')::uuid IS DISTINCT FROM sqlc.arg('recipient_id');
 SELECT * FROM core.notifications
 WHERE recipient_id = sqlc.arg('recipient_id')
   AND (NOT sqlc.arg('unread_only')::boolean OR read_at IS NULL)
+  -- An inbox tab asks for the kinds it shows. Empty means every kind, so an
+  -- unfiltered request is unchanged. Without this the client fetched one page and
+  -- partitioned it in the browser, so fifty recent likes left the replies tab
+  -- empty while replies existed.
+  AND (cardinality(sqlc.arg('kinds')::text[]) = 0 OR kind = ANY (sqlc.arg('kinds')::text[]))
 ORDER BY created_at DESC, id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 
 -- name: CountNotifications :one
 SELECT count(*) FROM core.notifications
 WHERE recipient_id = sqlc.arg('recipient_id')
-  AND (NOT sqlc.arg('unread_only')::boolean OR read_at IS NULL);
+  AND (NOT sqlc.arg('unread_only')::boolean OR read_at IS NULL)
+  -- An inbox tab asks for the kinds it shows. Empty means every kind, so an
+  -- unfiltered request is unchanged. Without this the client fetched one page and
+  -- partitioned it in the browser, so fifty recent likes left the replies tab
+  -- empty while replies existed.
+  AND (cardinality(sqlc.arg('kinds')::text[]) = 0 OR kind = ANY (sqlc.arg('kinds')::text[]));
 
 -- name: CountUnreadNotifications :one
 -- Answered by notifications_unread_idx, so the badge does not scan the inbox.

@@ -342,3 +342,64 @@ func TestSystemNotificationsHaveANullActor(t *testing.T) {
 		t.Error("results missing from an empty inbox")
 	}
 }
+
+// An inbox tab asks the server for its kinds. Before this the client fetched one
+// page and partitioned it in the browser, so a reader with a page full of recent
+// likes saw an empty replies tab while replies existed — and a `follow`
+// notification appeared on no tab at all, because none of the four listed it.
+func TestNotificationsCanBeFilteredByKind(t *testing.T) {
+	h := newHarness(t)
+	author := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+	reader := h.registerAndLogin("reader", "reader@example.com", "hunter2hunter2")
+
+	no := h.mustCreatePost(author, map[string]any{
+		"channel": "general", "title": "Subject", "body": "Body text.",
+	})
+	// A like and a reply, so the two kinds can be told apart.
+	if res := h.do(http.MethodPut, fmt.Sprintf("/forum/posts/%d/like", no), nil, withBearer(reader)); res.status != http.StatusOK {
+		t.Fatalf("like = %d: %s", res.status, res.body)
+	}
+	h.mustComment(reader, no, "A reply to your post", nil)
+
+	kindsOf := func(query string, token string) []string {
+		t.Helper()
+		res := h.do(http.MethodGet, "/notifications"+query, nil, withBearer(token))
+		if res.status != http.StatusOK {
+			t.Fatalf("list%s = %d: %s", query, res.status, res.body)
+		}
+		rows, _ := res.data(t)["results"].([]any)
+		out := make([]string, 0, len(rows))
+		for _, row := range rows {
+			m, _ := row.(map[string]any)
+			kind, _ := m["kind"].(string)
+			out = append(out, kind)
+		}
+		return out
+	}
+
+	if got := kindsOf("", author); len(got) != 2 {
+		t.Fatalf("unfiltered inbox = %v, want two notifications", got)
+	}
+	if got := kindsOf("?kind=reply", author); len(got) != 1 || got[0] != "reply" {
+		t.Errorf("kind=reply = %v, want [reply]", got)
+	}
+	if got := kindsOf("?kind=post_like", author); len(got) != 1 || got[0] != "post_like" {
+		t.Errorf("kind=post_like = %v, want [post_like]", got)
+	}
+	// Several kinds at once, which is what the "likes" tab asks for.
+	if got := kindsOf("?kind=post_like&kind=comment_like", author); len(got) != 1 {
+		t.Errorf("kind=post_like&kind=comment_like = %v, want one row", got)
+	}
+	// A kind with no rows is empty rather than unfiltered — the same trap the
+	// reader-scoped feeds had.
+	if got := kindsOf("?kind=system", author); len(got) != 0 {
+		t.Errorf("kind=system = %v, want nothing", got)
+	}
+
+	// The count drives the pager and comes from a second query, so its predicates
+	// must match.
+	res := h.do(http.MethodGet, "/notifications?kind=reply", nil, withBearer(author))
+	if count, _ := res.data(t)["count"].(float64); count != 1 {
+		t.Errorf("count for kind=reply = %v, want 1", count)
+	}
+}

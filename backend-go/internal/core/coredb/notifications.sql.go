@@ -15,15 +15,21 @@ const countNotifications = `-- name: CountNotifications :one
 SELECT count(*) FROM core.notifications
 WHERE recipient_id = $1
   AND (NOT $2::boolean OR read_at IS NULL)
+  -- An inbox tab asks for the kinds it shows. Empty means every kind, so an
+  -- unfiltered request is unchanged. Without this the client fetched one page and
+  -- partitioned it in the browser, so fifty recent likes left the replies tab
+  -- empty while replies existed.
+  AND (cardinality($3::text[]) = 0 OR kind = ANY ($3::text[]))
 `
 
 type CountNotificationsParams struct {
 	RecipientID uuid.UUID
 	UnreadOnly  bool
+	Kinds       []string
 }
 
 func (q *Queries) CountNotifications(ctx context.Context, arg CountNotificationsParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countNotifications, arg.RecipientID, arg.UnreadOnly)
+	row := q.db.QueryRow(ctx, countNotifications, arg.RecipientID, arg.UnreadOnly, arg.Kinds)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -160,13 +166,19 @@ const listNotifications = `-- name: ListNotifications :many
 SELECT id, recipient_id, kind, actor_id, post_id, comment_id, body, read_at, created_at FROM core.notifications
 WHERE recipient_id = $1
   AND (NOT $2::boolean OR read_at IS NULL)
+  -- An inbox tab asks for the kinds it shows. Empty means every kind, so an
+  -- unfiltered request is unchanged. Without this the client fetched one page and
+  -- partitioned it in the browser, so fifty recent likes left the replies tab
+  -- empty while replies existed.
+  AND (cardinality($3::text[]) = 0 OR kind = ANY ($3::text[]))
 ORDER BY created_at DESC, id
-LIMIT $4 OFFSET $3
+LIMIT $5 OFFSET $4
 `
 
 type ListNotificationsParams struct {
 	RecipientID  uuid.UUID
 	UnreadOnly   bool
+	Kinds        []string
 	ResultOffset int32
 	ResultLimit  int32
 }
@@ -175,6 +187,7 @@ func (q *Queries) ListNotifications(ctx context.Context, arg ListNotificationsPa
 	rows, err := q.db.Query(ctx, listNotifications,
 		arg.RecipientID,
 		arg.UnreadOnly,
+		arg.Kinds,
 		arg.ResultOffset,
 		arg.ResultLimit,
 	)

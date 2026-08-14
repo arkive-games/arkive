@@ -2938,6 +2938,10 @@ export type ListNotificationsData = {
          */
         unread?: boolean;
         /**
+         * Only these kinds; omit for all
+         */
+        kind?: Array<'reply' | 'mention' | 'post_like' | 'comment_like' | 'follow' | 'system'> | null;
+        /**
          * 1-based page number
          */
         page?: number;

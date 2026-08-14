@@ -5539,6 +5539,30 @@
             }
           },
           {
+            "description": "Only these kinds; omit for all",
+            "explode": false,
+            "in": "query",
+            "name": "kind",
+            "schema": {
+              "description": "Only these kinds; omit for all",
+              "items": {
+                "enum": [
+                  "reply",
+                  "mention",
+                  "post_like",
+                  "comment_like",
+                  "follow",
+                  "system"
+                ],
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          {
             "description": "1-based page number",
             "explode": false,
             "in": "query",

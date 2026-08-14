@@ -88,7 +88,7 @@ describe('composeTags', () => {
 })
 
 describe('toForumPost', () => {
-  it('marks a post as the reader own only when the uids match', () => {
+  it('marks a post as a post as owned only when the uids match', () => {
     const mine = toForumPost(post({ author: user({ uid: 500 }) }), labels, 500)
     expect(mine.own).toBe(true)
 
@@ -120,7 +120,7 @@ describe('toForumPost', () => {
 })
 
 describe('calendarDate', () => {
-  it('formats in the reader own timezone rather than slicing the UTC string', () => {
+  it('formats in the local timezone rather than slicing the UTC string', () => {
     // 23:30 UTC is already the next day east of Greenwich. Slicing the ISO
     // string shows every Chinese reader yesterday's date for eight hours a day.
     const value = '2026-08-14T23:30:00Z'

@@ -251,12 +251,18 @@ func mentionCandidates(body string) []string {
 }
 
 // List returns a page of an account's inbox.
-func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, page, pageSize int) ([]Read, int64, error) {
+func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, kinds []string, page, pageSize int) ([]Read, int64, error) {
 	limit, offset := paging(page, pageSize)
+	// Never nil: the query tests cardinality, and a nil array is not an empty one
+	// to pgx.
+	if kinds == nil {
+		kinds = []string{}
+	}
 
 	total, err := s.q.CountNotifications(ctx, coredb.CountNotificationsParams{
 		RecipientID: userID,
 		UnreadOnly:  unreadOnly,
+		Kinds:       kinds,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("count notifications: %w", err)
@@ -264,6 +270,7 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, p
 	rows, err := s.q.ListNotifications(ctx, coredb.ListNotificationsParams{
 		RecipientID:  userID,
 		UnreadOnly:   unreadOnly,
+		Kinds:        kinds,
 		ResultLimit:  limit,
 		ResultOffset: offset,
 	})

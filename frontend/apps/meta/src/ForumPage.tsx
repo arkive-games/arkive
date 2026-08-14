@@ -290,6 +290,18 @@ export function ForumPage({
   const viewerUid = user?.uid ?? null
 
   /**
+   * The account number this reader is shown, as opposed to keyed by.
+   *
+   * The vanity number when there is one, which is what `displayNumber` resolves
+   * for a post's author and what the account settings and public profile both
+   * show. Emphatically not `user.id`: the personal band rendered that as
+   * "UID 30a0e86b-9c9f-…" while the other two surfaces showed 10010 for the same
+   * person — the third instance of the same confusion, missed twice because
+   * `user.id` reads like an id and is one, just not this one.
+   */
+  const accountNumber = user ? String(user.specialUid ?? user.uid) : ''
+
+  /**
    * A cabin has its own three tabs, and they select the same three orderings.
    *
    * Mapped rather than ignored: the cabin tablist previously changed only which
@@ -647,6 +659,10 @@ export function ForumPage({
     try {
       await addComment(client, selectedPostNo, body, parentId)
       thread.reload()
+      // Bumped only after the request succeeds, so there is nothing to revert.
+      // The like and bookmark toggles beside this one are optimistic and undo on
+      // failure; this one has no visible control to keep in step, so waiting is
+      // simpler than tracking a rollback.
       feed.patch(selectedPostNo, { commentCount: (selectedPost?.commentCount ?? 0) + 1 })
       return true
     } catch {
@@ -672,6 +688,11 @@ export function ForumPage({
       const updated = await editPost(client, post.postNo, { title, body }, tagLabels, viewerUid)
       thread.patchPost(updated)
       feed.patch(post.postNo, updated)
+      // The personal view is deliberately not patched here, and does not go
+      // stale: opening a post replaces it in the tree (see the `selectedPost ?`
+      // branch above), so returning to "My posts" mounts it again and refetches.
+      // Threading a third patcher through for a list that is not on screen would
+      // be machinery for a case that cannot happen.
       return true
     } catch {
       setActionError(t('forum.errors.action'))
@@ -821,7 +842,7 @@ export function ForumPage({
             <ForumPersonalView
               avatarSrc={currentAvatar}
               name={user?.name ?? t('userSystem.currentUser.name')}
-              accountId={user?.id ?? ''}
+              accountId={accountNumber}
               bio={userSystemState.profile.bio || t('userSystem.currentUser.bio')}
               gender={userSystemState.profile.gender}
               tab={personalTab}

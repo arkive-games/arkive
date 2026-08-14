@@ -34,8 +34,15 @@ type MarkedCount struct {
 
 type listNotificationsInput struct {
 	UnreadOnly bool `query:"unread" doc:"Only unread notifications"`
-	Page       int  `query:"page" default:"1" minimum:"1" doc:"1-based page number"`
-	PageSize   int  `query:"pageSize" default:"30" minimum:"1" maximum:"100" doc:"Notifications per page"`
+	// An inbox tab asks for the kinds it shows, so a page holds that tab rather
+	// than a slice of everything the client then partitions — which left the
+	// replies tab empty for a reader with a page full of recent likes.
+	//
+	// The enum applies to the items, not the list: huma reads it that way for a
+	// slice, which is what makes the generated TypeScript a union of kinds.
+	Kinds    []string `query:"kind" enum:"reply,mention,post_like,comment_like,follow,system" doc:"Only these kinds; omit for all"`
+	Page     int      `query:"page" default:"1" minimum:"1" doc:"1-based page number"`
+	PageSize int      `query:"pageSize" default:"30" minimum:"1" maximum:"100" doc:"Notifications per page"`
 }
 
 type unreadInput struct{}
@@ -72,7 +79,7 @@ func (h *Handlers) RegisterNotificationRoutes(a huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		list, total, err := h.notify.List(ctx, principal.ID, in.UnreadOnly, in.Page, in.PageSize)
+		list, total, err := h.notify.List(ctx, principal.ID, in.UnreadOnly, in.Kinds, in.Page, in.PageSize)
 		if err != nil {
 			return nil, err
 		}
