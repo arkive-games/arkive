@@ -54,7 +54,9 @@ const MaxReportDetail = 2000
 type ReportRead struct {
 	ID        uuid.UUID  `json:"id" doc:"Report identifier"`
 	PostNo    *int64     `json:"postNo" doc:"The reported post, or the post a reported comment belongs to"`
-	CommentID *uuid.UUID `json:"commentId" doc:"The reported comment, or null when a post was reported"`
+	// nullable:"true" because huma drops the pointer for uuid fields; see the note
+	// on CommentRead.ParentID.
+	CommentID *uuid.UUID `json:"commentId" nullable:"true" doc:"The reported comment, or null when a post was reported"`
 	Reason    string     `json:"reason" enum:"spam,abuse,offtopic,illegal,other" doc:"Why it was reported"`
 	Detail    *string    `json:"detail" doc:"What the reporter added, or null"`
 	State     string     `json:"state" enum:"open,upheld,rejected" doc:"open until a moderator answers it"`

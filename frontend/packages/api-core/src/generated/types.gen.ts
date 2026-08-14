@@ -81,7 +81,7 @@ export type CommentRead = {
     /**
      * The comment this replies to, or null for a top-level comment
      */
-    parentId: string;
+    parentId: string | null;
 };
 
 export type Counts = {
@@ -1002,7 +1002,7 @@ export type Read = {
     /**
      * The comment it is about, or null
      */
-    commentId: string;
+    commentId: string | null;
     /**
      * When it arrived
      */
@@ -1063,7 +1063,7 @@ export type ReportRead = {
     /**
      * The reported comment, or null when a post was reported
      */
-    commentId: string;
+    commentId: string | null;
     /**
      * When it was filed
      */

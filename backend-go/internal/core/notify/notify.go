@@ -63,7 +63,9 @@ type Read struct {
 	Kind      Kind       `json:"kind" enum:"reply,mention,post_like,comment_like,follow,system" doc:"Why it exists"`
 	ActorUID  *int64     `json:"actorUid" doc:"Who caused it, or null for a system message"`
 	PostNo    *int64     `json:"postNo" doc:"The post it is about, or null"`
-	CommentID *uuid.UUID `json:"commentId" doc:"The comment it is about, or null"`
+	// nullable:"true" because huma drops the pointer for uuid fields; see the note
+	// on forum.CommentRead.ParentID.
+	CommentID *uuid.UUID `json:"commentId" nullable:"true" doc:"The comment it is about, or null"`
 	Body      *string    `json:"body" doc:"The message text, for system notifications only"`
 	ReadAt    *time.Time `json:"readAt" doc:"When it was read, or null"`
 	CreatedAt time.Time  `json:"createdAt" doc:"When it arrived"`

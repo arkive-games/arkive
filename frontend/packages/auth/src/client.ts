@@ -79,6 +79,27 @@ export class CoreClient {
     })
   }
 
+  /**
+   * The configured client, for generated operations this facade does not wrap.
+   *
+   * This facade covers accounts and authentication; the forum, notifications and
+   * moderation call the generated operations directly rather than growing a
+   * hand-written method each. Those callers still need a client carrying the
+   * session, and building a second one is how the two silently disagree: the
+   * transport choice is not a free parameter but a consequence of where the build
+   * ships (cookie on the subdomains, bearer inside a Toy, where the cookie is
+   * blocked), and a caller that guesses "cookie" makes a Toy sign every request
+   * as an anonymous reader while the account control shows a signed-in user.
+   *
+   * Exposed as the client rather than the whole `ApiClient` because that is what
+   * a generated operation takes, so a call site reads
+   * `listForumPosts({ client: auth.client.requestClient, throwOnError: true })`
+   * with nothing to get wrong in between.
+   */
+  get requestClient(): ApiClient["client"] {
+    return this.api.client
+  }
+
   // -- session ------------------------------------------------------------
 
   async getAltchaChallenge(): Promise<AltchaChallenge> {

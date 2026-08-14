@@ -128,7 +128,10 @@
           },
           "parentId": {
             "description": "The comment this replies to, or null for a top-level comment",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -1788,7 +1791,10 @@
           },
           "commentId": {
             "description": "The comment it is about, or null",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "createdAt": {
             "description": "When it arrived",
@@ -1909,7 +1915,10 @@
         "properties": {
           "commentId": {
             "description": "The reported comment, or null when a post was reported",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "createdAt": {
             "description": "When it was filed",
