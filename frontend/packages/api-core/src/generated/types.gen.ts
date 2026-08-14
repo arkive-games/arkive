@@ -212,11 +212,49 @@ export type EnvelopeEmpty = {
     showType: number;
 };
 
+export type EnvelopeGrantRead = {
+    /**
+     * The payload
+     */
+    data: GrantRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeListCommentRead = {
     /**
      * The payload
      */
     data: ListCommentRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeListGrantRead = {
+    /**
+     * The payload
+     */
+    data: ListGrantRead;
     /**
      * Always "Success" on a 2xx response
      */
@@ -288,6 +326,29 @@ export type EnvelopePostRead = {
     showType: number;
 };
 
+export type EnvelopeStruct = {
+    /**
+     * The payload
+     */
+    data: EnvelopeStructDataStruct;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeStructDataStruct = {
+    [key: string]: never;
+};
+
 export type EnvelopeUserPublic = {
     /**
      * The payload
@@ -345,6 +406,25 @@ export type Error = {
     showType: number;
 };
 
+export type GrantRead = {
+    /**
+     * When it was granted
+     */
+    createdAt: string;
+    /**
+     * The game it applies to
+     */
+    game: string;
+    /**
+     * What they hold
+     */
+    role: 'game_admin' | 'game_moderator';
+    /**
+     * Who holds the role
+     */
+    user: UserPublic;
+};
+
 export type ListCommentRead = {
     /**
      * Total number of matching records, ignoring pagination
@@ -354,6 +434,17 @@ export type ListCommentRead = {
      * The current page of records
      */
     results: Array<CommentRead> | null;
+};
+
+export type ListGrantRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<GrantRead> | null;
 };
 
 export type ListPostRead = {
@@ -449,6 +540,13 @@ export type ResetPasswordBody = {
      * Token from the emailed link
      */
     token: string;
+};
+
+export type RoleBody = {
+    /**
+     * The role to grant
+     */
+    role: 'game_admin' | 'game_moderator';
 };
 
 export type SetPresetBody = {
@@ -1336,6 +1434,178 @@ export type CreateForumCommentResponses = {
 };
 
 export type CreateForumCommentResponse = CreateForumCommentResponses[keyof CreateForumCommentResponses];
+
+export type ListGameRolesData = {
+    body?: never;
+    path: {
+        /**
+         * The game whose staff to list
+         */
+        game: 'aion2' | 'palworld' | 'vrising' | 'sts2';
+    };
+    query?: never;
+    url: '/roles/games/{game}';
+};
+
+export type ListGameRolesErrors = {
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListGameRolesError = ListGameRolesErrors[keyof ListGameRolesErrors];
+
+export type ListGameRolesResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListGrantRead;
+};
+
+export type ListGameRolesResponse = ListGameRolesResponses[keyof ListGameRolesResponses];
+
+export type RevokeGameRoleData = {
+    body?: never;
+    path: {
+        /**
+         * The game the role applies to
+         */
+        game: 'aion2' | 'palworld' | 'vrising' | 'sts2';
+        /**
+         * Public number of the account to remove
+         */
+        uid: number;
+    };
+    query: {
+        /**
+         * The role to remove
+         */
+        role: 'game_admin' | 'game_moderator';
+    };
+    url: '/roles/games/{game}/{uid}';
+};
+
+export type RevokeGameRoleErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type RevokeGameRoleError = RevokeGameRoleErrors[keyof RevokeGameRoleErrors];
+
+export type RevokeGameRoleResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeStruct;
+};
+
+export type RevokeGameRoleResponse = RevokeGameRoleResponses[keyof RevokeGameRoleResponses];
+
+export type GrantGameRoleData = {
+    body: RoleBody;
+    path: {
+        /**
+         * The game the role applies to
+         */
+        game: 'aion2' | 'palworld' | 'vrising' | 'sts2';
+        /**
+         * Public number of the account to appoint
+         */
+        uid: number;
+    };
+    query?: never;
+    url: '/roles/games/{game}/{uid}';
+};
+
+export type GrantGameRoleErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type GrantGameRoleError = GrantGameRoleErrors[keyof GrantGameRoleErrors];
+
+export type GrantGameRoleResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeGrantRead;
+};
+
+export type GrantGameRoleResponse = GrantGameRoleResponses[keyof GrantGameRoleResponses];
+
+export type ListOwnRolesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/roles/me';
+};
+
+export type ListOwnRolesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListOwnRolesError = ListOwnRolesErrors[keyof ListOwnRolesErrors];
+
+export type ListOwnRolesResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListGrantRead;
+};
+
+export type ListOwnRolesResponse = ListOwnRolesResponses[keyof ListOwnRolesResponses];
 
 export type ListAvatarPresetsData = {
     body?: never;

@@ -297,19 +297,36 @@ site-admin territory only — otherwise a `game_admin` of one game could moderat
 **Roles are loaded lazily, not in the principal middleware.** The middleware runs on every request
 including anonymous ones and currently costs exactly one query; adding a roles read there would tax
 every public feed request to answer a question almost none of them ask. `Can` reads the grants for one
-user and memoises the result in the request context.
+account in one game, with a query narrow enough to do exactly that and no more.
 
 ### 3.4 Endpoints
 
 ```
 GET    /roles/games/{game}            listGameRoles      (public: cabin shows its staff)
 PUT    /roles/games/{game}/{uid}      grantGameRole      (site admin, or game_admin for moderator)
-DELETE /roles/games/{game}/{uid}      revokeGameRole     (same)
-GET    /users/me/roles                listOwnRoles       (signed in)
+DELETE /roles/games/{game}/{uid}      revokeGameRole     (same; role as a query parameter)
+GET    /roles/me                      listOwnRoles       (signed in)
 ```
 
 `listGameRoles` being public is what lets the cabin panel render real staff instead of two hardcoded
 avatars. It returns `UserPublic` plus the role, and nothing else.
+
+Two placements worth recording, both settled by something failing rather than by taste:
+
+- **`listOwnRoles` is `/roles/me`, not `/users/me/roles`.** The frontend's `auth` package owns the
+  `/users/me/*` surface and has a test asserting it handles or explicitly declines every operation
+  there. Nesting this under the account put a roles endpoint inside that slice, and the guard failed —
+  correctly, because roles are not an auth concern. Filing an exemption would have been the wrong way
+  to silence it.
+- **`revokeGameRole` takes the role as a query parameter, not a body.** A `DELETE` body is legal but
+  not universally forwarded, and losing it would turn "revoke moderator" into a request naming no role.
+
+The path parameter for a game *is* enumerated, unlike the feed's `gameId` filter: it addresses a game
+rather than filtering by one, so an unknown key is a wrong URL and should say so.
+
+**Roles are loaded per decision, not cached in the request context.** An earlier draft of this document
+specified memoisation. It is not built, because `Can` is called once or twice on a write and never per
+feed row, so the cache would have been infrastructure with no measured cost behind it.
 
 ---
 

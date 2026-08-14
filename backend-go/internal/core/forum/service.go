@@ -13,6 +13,7 @@ import (
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
@@ -21,7 +22,19 @@ import (
 type Service struct {
 	q       *coredb.Queries
 	authors AuthorSource
+	authz   Authorizer
 	logger  *slog.Logger
+}
+
+// Authorizer answers permission questions the forum does not decide for itself.
+//
+// An interface for the same reason AuthorSource is one: the forum needs a verdict,
+// not the role model behind it, and a test can supply a verdict without a database.
+// Ownership is deliberately absent — ownedPost and ownedComment answer that, because
+// an author is not a moderator and the two must not be conflated.
+type Authorizer interface {
+	Can(ctx context.Context, p auth.Principal, action roles.Action, game string) (bool, error)
+	CanAny(ctx context.Context, p auth.Principal, action roles.Action, gameKeys []string) (bool, error)
 }
 
 // AuthorSource resolves the public view of an account.
@@ -39,22 +52,22 @@ type AuthorSource interface {
 }
 
 // NewService wires the forum service.
-func NewService(q *coredb.Queries, authors AuthorSource, logger *slog.Logger) *Service {
-	return &Service{q: q, authors: authors, logger: logger}
+func NewService(q *coredb.Queries, authors AuthorSource, authz Authorizer, logger *slog.Logger) *Service {
+	return &Service{q: q, authors: authors, authz: authz, logger: logger}
 }
 
 // canPostToChannel decides who may post where.
 //
-// Today the rule is hardcoded: the official channel is administrators only,
-// everything else is open to any signed-in account. It lives in one named
-// function on purpose — it is a placeholder for a permission system that does not
-// exist yet, and keeping it here makes replacing it a change to one function
-// rather than a hunt through handlers.
-func canPostToChannel(principal auth.Principal, channel Channel) bool {
-	if channel == ChannelOfficial {
-		return principal.IsSuperuser
+// The official channel is administrators only; everything else is open to any
+// signed-in account. The rule used to read principal.IsSuperuser directly, as a
+// stated placeholder for a permission system that did not exist. It now asks the
+// roles service, which is that system — and which answers PostOfficial as site-wide
+// on purpose, since a game's administrator does not speak for the platform.
+func (s *Service) canPostToChannel(ctx context.Context, principal auth.Principal, channel Channel) (bool, error) {
+	if channel != ChannelOfficial {
+		return true, nil
 	}
-	return true
+	return s.authz.Can(ctx, principal, roles.PostOfficial, "")
 }
 
 // CreatePost publishes a post.
@@ -62,7 +75,11 @@ func (s *Service) CreatePost(ctx context.Context, principal auth.Principal, in C
 	if err := validateChannel(in.Channel); err != nil {
 		return PostRead{}, err
 	}
-	if !canPostToChannel(principal, in.Channel) {
+	allowed, err := s.canPostToChannel(ctx, principal, in.Channel)
+	if err != nil {
+		return PostRead{}, err
+	}
+	if !allowed {
 		return PostRead{}, apierr.New(apierr.Forbidden,
 			"only administrators may post in the official channel")
 	}

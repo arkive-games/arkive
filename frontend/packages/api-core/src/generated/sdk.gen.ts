@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
+import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -259,6 +259,54 @@ export const createForumComment = <ThrowOnError extends boolean = false>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * List a game's staff
+ *
+ * Public. Administrators before moderators, oldest grant first. This is what lets a game's page name the people who run it instead of showing placeholders.
+ */
+export const listGameRoles = <ThrowOnError extends boolean = false>(options: Options<ListGameRolesData, ThrowOnError>): RequestResult<ListGameRolesResponses, ListGameRolesErrors, ThrowOnError> => (options.client ?? client).get<ListGameRolesResponses, ListGameRolesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/roles/games/{game}',
+    ...options
+});
+
+/**
+ * Remove a game's staff
+ *
+ * The same permissions as granting. Revoking a role nobody holds succeeds: the caller asked for an end state, and that state already holds.
+ */
+export const revokeGameRole = <ThrowOnError extends boolean = false>(options: Options<RevokeGameRoleData, ThrowOnError>): RequestResult<RevokeGameRoleResponses, RevokeGameRoleErrors, ThrowOnError> => (options.client ?? client).delete<RevokeGameRoleResponses, RevokeGameRoleErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/roles/games/{game}/{uid}',
+    ...options
+});
+
+/**
+ * Appoint a game's staff
+ *
+ * Site administrators may appoint either role. A game administrator may appoint moderators for their own game only, and cannot appoint another administrator. Idempotent: granting a role already held succeeds.
+ */
+export const grantGameRole = <ThrowOnError extends boolean = false>(options: Options<GrantGameRoleData, ThrowOnError>): RequestResult<GrantGameRoleResponses, GrantGameRoleErrors, ThrowOnError> => (options.client ?? client).put<GrantGameRoleResponses, GrantGameRoleErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/roles/games/{game}/{uid}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List your own roles
+ *
+ * Every game-scoped role the signed-in account holds. Site-wide administration is not a grant and appears on the account itself, as isSuperuser.
+ */
+export const listOwnRoles = <ThrowOnError extends boolean = false>(options?: Options<ListOwnRolesData, ThrowOnError>): RequestResult<ListOwnRolesResponses, ListOwnRolesErrors, ThrowOnError> => (options?.client ?? client).get<ListOwnRolesResponses, ListOwnRolesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/roles/me',
+    ...options
 });
 
 /**

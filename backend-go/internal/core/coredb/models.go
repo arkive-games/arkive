@@ -41,6 +41,15 @@ type CoreForumPost struct {
 	EditedAt      pgtype.Timestamptz
 }
 
+type CoreRoleGrant struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Role      string
+	Game      string
+	GrantedBy *uuid.UUID
+	CreatedAt time.Time
+}
+
 type CoreUser struct {
 	ID             uuid.UUID
 	Name           string
