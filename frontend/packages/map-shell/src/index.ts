@@ -75,7 +75,7 @@ export { IdLabel, type IdLabelValue, type IdLabelProps } from "./IdLabel"
 export { OverflowLabel, type OverflowLabelProps } from "./OverflowLabel"
 export { MarkerPopupCard, type MarkerPopupCardProps } from "./MarkerPopupCard"
 export { MarkerDetailCollapsibleSection, MarkerDetailDrawer } from "./MarkerDetailDrawer"
-export { placeMarkerDetailRight, type MarkerDetailPlacementResult } from "./markerDetailPlacement"
+export { placeMarkerDetailAbove, type MarkerDetailPlacementResult } from "./markerDetailPlacement"
 export { markerDetailLabelsFor } from "./markerDetailLabels"
 export {
   MarkerDetailItemIcon,

@@ -679,7 +679,7 @@ export default function App() {
       uploadImage: t('markerDetail.uploadImage'), galleryReviewNote: t('markerDetail.galleryReviewNote'), commentCount: (value) => t('markerDetail.commentCount', { count: value }),
       popular: t('markerDetail.popular'), latest: t('markerDetail.latest'), like: t('markerDetail.like'), reply: t('markerDetail.reply'),
       viewReplies: (value) => t('markerDetail.viewReplies', { count: value }), commentPlaceholder: t('markerDetail.commentPlaceholder'),
-      attachImages: t('markerDetail.attachImages'), attachmentLimit: t('markerDetail.attachmentLimit'), publish: t('markerDetail.publish'),
+      attachImages: t('markerDetail.attachImages'), attachmentLimit: t('markerDetail.attachmentLimit'), removeImage: t('markerDetail.removeImage'), publish: t('markerDetail.publish'),
       emptyDetails: t('markerDetail.emptyDetails'), emptyComments: t('markerDetail.emptyComments'), guestAuthor: t('markerDetail.guestAuthor'),
       justNow: t('markerDetail.justNow'), awaitingReview: t('markerDetail.awaitingReview'),
     }

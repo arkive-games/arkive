@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createRef } from "react";
+import { createRef, useState } from "react";
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { GameMapMeta } from "@gamemap/data-contract";
@@ -385,6 +385,32 @@ describe("selection by tap", () => {
     tap(canvas, at.sx + 200, at.sy + 200);
     expect(onToggleMarker).toHaveBeenCalledWith(null);
   });
+
+  it("centres a marker that was selected directly on the map", () => {
+    function ControlledMap(): React.ReactElement {
+      const [selectedId, setSelectedId] = useState<string | null>(null);
+      return (
+        <GameMapView
+          {...baseProps({
+            markers: [marker],
+            selectedMarkerId: selectedId,
+            initialView: { x: 512, y: 512, zoom: 0 },
+            onToggleMarker: (id) => {
+              setSelectedId((current) => (current === id ? null : id));
+            },
+            exposeTestHandle: true,
+          })}
+        />
+      );
+    }
+
+    const { container } = render(<ControlledMap />);
+    const at = handle().project(marker.x, marker.y);
+    tap(canvasOf(container), at.sx, at.sy);
+
+    expect(container.querySelector("[data-marker-detail-anchor]")).not.toBeNull();
+    expect(handle().getCenter()).toEqual({ x: 200, y: 300 });
+  });
 });
 
 describe("map switch", () => {
@@ -449,6 +475,35 @@ describe("selected popup", () => {
     expect(container.querySelector("[data-marker-detail-anchor]")).toBeNull();
   });
 
+  it("positions a popup that mounts after the marker is already selected", () => {
+    const marker = makeMarker({ id: "m1", x: 200, y: 300, localizedName: "Alpha" });
+    const props = baseProps({
+      markers: [marker],
+      selectedMarkerId: "m1",
+      initialView: { x: 512, y: 512, zoom: 0 },
+      suppressInitialFlyForId: "m1",
+      exposeTestHandle: true,
+      renderPopupContent: () => null,
+    });
+    const { container, rerender } = render(<GameMapView {...props} />);
+    expect(container.querySelector("[data-marker-detail-anchor]")).toBeNull();
+
+    rerender(
+      <GameMapView
+        {...props}
+        renderPopupContent={(selected) => (
+          <div className="gm-popup-card">{selected.localizedName}</div>
+        )}
+      />,
+    );
+
+    const popup = container.querySelector<HTMLElement>("[data-marker-detail-anchor]");
+    const at = handle().project(200, 300);
+    expect(popup?.style.transform).toBe(
+      `translate3d(${at.sx}px, ${at.sy}px, 0)`,
+    );
+  });
+
   it("does not pan the map merely to fit the app-owned detail surface", () => {
     const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
     render(
@@ -471,7 +526,69 @@ describe("selected popup", () => {
     );
   });
 
-  it("applies a detail pan requested during a fly after the animation finishes", async () => {
+  it("folds a detail correction into an active marker fly", async () => {
+    const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
+    const onViewChange = vi.fn();
+    const { container } = render(
+      <GameMapView
+        {...baseProps({
+          markers: [marker],
+          selectedMarkerId: "m1",
+          suppressInitialFlyForId: "m1",
+          initialView: { x: 512, y: 512, zoom: 0 },
+          onViewChange,
+          exposeTestHandle: true,
+        })}
+      />,
+    );
+    const anchor = container.querySelector<HTMLElement>("[data-marker-detail-anchor]");
+
+    act(() => handle().flyTo(600, 512, 0, 0.1));
+    expect(container.querySelector(".gmgl-map-root")?.getAttribute("data-marker-detail-fly-target")).toBe("center");
+    act(() => {
+      anchor?.dispatchEvent(
+        new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 120, y: -80 } }),
+      );
+    });
+    expect(handle().getCenter().x).toBe(512);
+
+    await flushFrames(400);
+    expect(handle().getCenter()).toEqual({ x: 720, y: 432 });
+    expect(container.querySelector(".gmgl-map-root")?.hasAttribute("data-marker-detail-fly-target")).toBe(false);
+    expect(container.querySelector(".gmgl-map-root")?.getAttribute("data-marker-detail-center-lock")).toBe("true");
+    expect(onViewChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("cancels a queued detail pan when the popup fits before a zoom finishes", async () => {
+    const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
+    const { container, getByRole } = render(
+      <GameMapView
+        {...baseProps({
+          markers: [marker],
+          selectedMarkerId: "m1",
+          suppressInitialFlyForId: "m1",
+          initialView: { x: 512, y: 512, zoom: 0 },
+          exposeTestHandle: true,
+        })}
+      />,
+    );
+    const anchor = container.querySelector<HTMLElement>("[data-marker-detail-anchor]");
+
+    act(() => {
+      fireEvent.click(getByRole("button", { name: "Zoom in" }));
+      anchor?.dispatchEvent(
+        new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 120, y: -80 } }),
+      );
+      anchor?.dispatchEvent(
+        new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 0, y: 0 } }),
+      );
+    });
+
+    await flushFrames(300);
+    expect(handle().getCenter()).toEqual({ x: 512, y: 512 });
+  });
+
+  it("accepts a later detail correction after the previous correction finishes", async () => {
     const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
     const { container } = render(
       <GameMapView
@@ -487,15 +604,20 @@ describe("selected popup", () => {
     const anchor = container.querySelector<HTMLElement>("[data-marker-detail-anchor]");
 
     act(() => {
-      handle().flyTo(600, 512, 0, 0.1);
       anchor?.dispatchEvent(
-        new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 120 } }),
+        new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: -60, y: -40 } }),
       );
     });
-    expect(handle().getCenter().x).toBe(512);
+    await flushFrames(250);
+    expect(handle().getCenter()).toEqual({ x: 452, y: 472 });
 
-    await flushFrames(300);
-    expect(handle().getCenter()).toEqual({ x: 720, y: 512 });
+    act(() => {
+      anchor?.dispatchEvent(
+        new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 0, y: 70 } }),
+      );
+    });
+    await flushFrames(250);
+    expect(handle().getCenter()).toEqual({ x: 452, y: 542 });
   });
 });
 

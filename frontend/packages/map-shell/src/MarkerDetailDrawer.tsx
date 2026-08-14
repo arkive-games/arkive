@@ -27,7 +27,7 @@ import {
 } from "@tabler/icons-react"
 import { Button, cn } from "@gamemap/ui"
 import { IdLabel, type IdLabelValue } from "./IdLabel"
-import { placeMarkerDetailRight } from "./markerDetailPlacement"
+import { placeMarkerDetailAbove } from "./markerDetailPlacement"
 
 export type MarkerGalleryModerationStatus =
   | "uploading"
@@ -98,6 +98,7 @@ export type MarkerDetailLabels = {
   commentPlaceholder: string
   attachImages: string
   attachmentLimit: string
+  removeImage?: string
   publish: string
   emptyDetails: string
   emptyComments: string
@@ -113,6 +114,7 @@ export type MarkerDetailSection = {
   description?: ReactNode
   headerAction?: ReactNode
   content: ReactNode
+  /** Compact preview shown only until the section is expanded for the first time. */
   collapsedContent?: ReactNode
   defaultExpanded?: boolean
   className?: string
@@ -160,12 +162,12 @@ export type MarkerDetailDrawerProps = {
   completeAction?: MarkerDetailCompleteAction
   labels: MarkerDetailLabels
   onClose: () => void
-  /** Desktop only: position around the engine-owned selected-marker anchor. */
+  /** Desktop only: position above the engine-owned selected-marker anchor. */
   anchored?: boolean
   className?: string
 }
 
-function useAnchoredPlacement(enabled: boolean) {
+function useAnchoredPlacement(enabled: boolean, placementKey: string) {
   const detailRef = useRef<HTMLElement | null>(null)
 
   useLayoutEffect(() => {
@@ -174,17 +176,24 @@ function useAnchoredPlacement(enabled: boolean) {
     const anchor = detail.closest<HTMLElement>("[data-marker-detail-anchor]")
     const mapRoot = anchor?.closest<HTMLElement>(".gm-map-root, .gmgl-map-root")
     if (!anchor || !mapRoot) return
+    let lastPanRequest: { x: number; y: number } | null = null
 
     const update = () => {
       if (!window.matchMedia("(min-width: 768px)").matches) {
         detail.style.removeProperty("transform")
         detail.removeAttribute("data-placement")
+        lastPanRequest = null
         return
       }
       const mapRect = mapRoot.getBoundingClientRect()
       const anchorRect = anchor.getBoundingClientRect()
       const detailRect = detail.getBoundingClientRect()
       if (!(mapRect.width > 0) || !(mapRect.height > 0) || !(detailRect.width > 0) || !(detailRect.height > 0)) return
+      const targetsMapCenter = mapRoot.dataset.markerDetailFlyTarget === "center"
+      const locksHorizontalCenter = mapRoot.dataset.markerDetailCenterLock === "true"
+      const targetAnchor = targetsMapCenter
+        ? { x: mapRect.width / 2, y: mapRect.height / 2 }
+        : { x: anchorRect.left - mapRect.left, y: anchorRect.top - mapRect.top }
 
       const obstacles = Array.from(document.querySelectorAll<HTMLElement>("[data-map-avoid]"))
         .filter((element) => element !== detail && !detail.contains(element))
@@ -197,20 +206,27 @@ function useAnchoredPlacement(enabled: boolean) {
           bottom: rect.bottom - mapRect.top,
         }))
 
-      const result = placeMarkerDetailRight({
-        anchor: {
-          x: anchorRect.left - mapRect.left,
-          y: anchorRect.top - mapRect.top,
-        },
+      const result = placeMarkerDetailAbove({
+        anchor: targetAnchor,
         size: { width: detailRect.width, height: detailRect.height },
         boundary: { left: 0, top: 0, right: mapRect.width, bottom: mapRect.height },
         obstacles,
       })
-      detail.dataset.placement = "right"
-      detail.style.setProperty("--marker-detail-arrow-y", `${Math.round(result.arrowY)}px`)
+      detail.dataset.placement = "above"
+      detail.style.setProperty("--marker-detail-arrow-x", `${Math.round(result.arrowX)}px`)
       detail.style.transform = `translate3d(${Math.round(result.x)}px, ${Math.round(result.y)}px, 0)`
-      if (result.panX > 0) {
-        anchor.dispatchEvent(new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: result.panX } }))
+      const panRequest = {
+        x: targetsMapCenter || locksHorizontalCenter ? 0 : Math.round(result.panX),
+        y: Math.round(result.panY),
+      }
+      if (panRequest.x === 0 && panRequest.y === 0) {
+        if (lastPanRequest) {
+          anchor.dispatchEvent(new CustomEvent("marker-detail-pan", { bubbles: true, detail: panRequest }))
+        }
+        lastPanRequest = null
+      } else if (panRequest.x !== lastPanRequest?.x || panRequest.y !== lastPanRequest?.y) {
+        lastPanRequest = panRequest
+        anchor.dispatchEvent(new CustomEvent("marker-detail-pan", { bubbles: true, detail: panRequest }))
       }
     }
 
@@ -219,23 +235,44 @@ function useAnchoredPlacement(enabled: boolean) {
     resizeObserver?.observe(mapRoot)
     const anchorObserver = typeof MutationObserver === "undefined" ? null : new MutationObserver(update)
     anchorObserver?.observe(anchor, { attributes: true, attributeFilter: ["style"] })
+    const mapStateObserver = typeof MutationObserver === "undefined" ? null : new MutationObserver(update)
+    mapStateObserver?.observe(mapRoot, {
+      attributes: true,
+      attributeFilter: ["data-marker-detail-fly-target", "data-marker-detail-center-lock"],
+    })
     window.addEventListener("resize", update)
     document.addEventListener("scroll", update, true)
     update()
+    // The engine registers its native event listener after the child layout
+    // effect runs, so repeat the initial correction once effects have settled.
+    const initialFrame = window.requestAnimationFrame(() => {
+      lastPanRequest = null
+      update()
+    })
     return () => {
+      window.cancelAnimationFrame(initialFrame)
       resizeObserver?.disconnect()
       anchorObserver?.disconnect()
+      mapStateObserver?.disconnect()
       window.removeEventListener("resize", update)
       document.removeEventListener("scroll", update, true)
     }
-  }, [enabled])
+  }, [enabled, placementKey])
 
   return detailRef
 }
 
 export function MarkerDetailCollapsibleSection({ section, labels }: { section: MarkerDetailSection; labels: MarkerDetailLabels }) {
   const [expanded, setExpanded] = useState(section.defaultExpanded !== false)
+  const [showInitialPreview, setShowInitialPreview] = useState(
+    section.defaultExpanded === false && section.collapsedContent != null,
+  )
   const contentId = useId()
+
+  const toggleExpanded = () => {
+    setShowInitialPreview(false)
+    setExpanded((value) => !value)
+  }
 
   return (
     <section
@@ -256,16 +293,17 @@ export function MarkerDetailCollapsibleSection({ section, labels }: { section: M
           aria-expanded={expanded}
           aria-label={expanded ? labels.collapseSection(section.accessibleTitle) : labels.expandSection(section.accessibleTitle)}
           title={expanded ? labels.collapseSection(section.accessibleTitle) : labels.expandSection(section.accessibleTitle)}
-          onClick={() => setExpanded((value) => !value)}
+          onClick={toggleExpanded}
           className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <IconChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} stroke={1.8} />
         </button>
         </div>
       </div>
-      <div id={contentId} hidden={!expanded && section.collapsedContent == null} className="pt-1.5">
-        {expanded ? section.content : section.collapsedContent}
+      <div id={contentId} hidden={!expanded} className="pt-1.5">
+        {expanded ? section.content : null}
       </div>
+      {!expanded && showInitialPreview ? <div className="pt-1.5">{section.collapsedContent}</div> : null}
     </section>
   )
 }
@@ -332,7 +370,7 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
         </div>
       </div>
       {!config.items.length ? (
-        <div className="flex min-h-28 flex-col items-center justify-center gap-2 px-4 py-6 text-center text-muted-foreground" data-testid="marker-comments-empty">
+        <div className="flex min-h-12 items-center justify-center gap-2 px-4 py-3 text-center text-muted-foreground" data-testid="marker-comments-empty">
           <IconMessageCircle className="size-5" stroke={1.8} />
           <p className="text-sm">{labels.emptyComments}</p>
         </div>
@@ -386,7 +424,7 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
 
 function GalleryUploadControl({ config, labels }: { config: MarkerGalleryConfig; labels: MarkerDetailLabels }) {
   return (
-    <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-within:ring-2 focus-within:ring-ring">
+    <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md border border-primary bg-background px-3 text-sm font-medium text-primary shadow-xs transition-colors hover:bg-primary/10 focus-within:ring-2 focus-within:ring-ring">
       <IconPhotoPlus className="size-4" stroke={1.8} />
       {labels.uploadImage}
       <input
@@ -408,13 +446,36 @@ function GalleryUploadControl({ config, labels }: { config: MarkerGalleryConfig;
 function CommentComposer({ config, labels }: { config: MarkerCommentsConfig; labels: MarkerDetailLabels }) {
   const [body, setBody] = useState("")
   const [attachments, setAttachments] = useState<File[]>([])
+  const bodyRef = useRef<HTMLTextAreaElement | null>(null)
   const previews = useMemo(() => attachments.map((file) => ({ file, url: URL.createObjectURL(file) })), [attachments])
 
   useEffect(() => () => previews.forEach(({ url }) => URL.revokeObjectURL(url)), [previews])
 
+  useLayoutEffect(() => {
+    const textarea = bodyRef.current
+    if (!textarea) return
+    textarea.style.height = "auto"
+    const maxHeight = Number.parseFloat(window.getComputedStyle(textarea).maxHeight)
+    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`
+  }, [body])
+
   const chooseAttachments = (event: ChangeEvent<HTMLInputElement>) => {
-    setAttachments(Array.from(event.currentTarget.files ?? []).slice(0, 3))
+    const selected = Array.from(event.currentTarget.files ?? [])
+    setAttachments((current) => {
+      const files = [...current, ...selected]
+      return files
+        .filter((file, index) => files.findIndex((candidate) => (
+          candidate.name === file.name
+          && candidate.size === file.size
+          && candidate.lastModified === file.lastModified
+        )) === index)
+        .slice(0, 3)
+    })
     event.currentTarget.value = ""
+  }
+
+  const removeAttachment = (file: File) => {
+    setAttachments((current) => current.filter((candidate) => candidate !== file))
   }
 
   const submit = async () => {
@@ -427,8 +488,25 @@ function CommentComposer({ config, labels }: { config: MarkerCommentsConfig; lab
 
   return (
     <div data-testid="marker-comment-composer">
-      <textarea data-testid="marker-comment-body" value={body} onChange={(event) => setBody(event.currentTarget.value)} placeholder={labels.commentPlaceholder} className="block min-h-17 max-h-28 w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30" />
-      {previews.length ? <div className="mt-2 flex gap-2">{previews.map(({ file, url }) => <img key={`${file.name}-${file.lastModified}`} src={url} alt={file.name} className="size-14 rounded-md border border-border object-cover" />)}</div> : null}
+      <textarea ref={bodyRef} rows={1} data-testid="marker-comment-body" value={body} onChange={(event) => setBody(event.currentTarget.value)} placeholder={labels.commentPlaceholder} className="block min-h-10 max-h-28 w-full resize-none overflow-y-auto rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30" />
+      {previews.length ? (
+        <div className="mt-2 flex flex-wrap gap-2" data-testid="marker-comment-previews">
+          {previews.map(({ file, url }) => (
+            <figure key={`${file.name}-${file.size}-${file.lastModified}`} className="relative size-14">
+              <img src={url} alt={file.name} className="size-full rounded-md border border-border object-cover" />
+              <button
+                type="button"
+                aria-label={`${labels.removeImage ?? "Remove image"}: ${file.name}`}
+                title={labels.removeImage ?? "Remove image"}
+                onClick={() => removeAttachment(file)}
+                className="absolute -right-1.5 -top-1.5 inline-flex size-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <IconX className="size-3.5" stroke={2} />
+              </button>
+            </figure>
+          ))}
+        </div>
+      ) : null}
       <div className="mt-2 flex items-center gap-2">
         <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-muted-foreground hover:bg-accent focus-within:ring-2 focus-within:ring-ring">
           <IconPhoto className="size-4" stroke={1.8} />{labels.attachImages}
@@ -461,7 +539,8 @@ export function MarkerDetailDrawer({
   anchored = false,
   className,
 }: MarkerDetailDrawerProps) {
-  const detailRef = useAnchoredPlacement(anchored)
+  const sessionKey = gallery?.markerId ?? comments?.markerId ?? positionCopyValue ?? name
+  const detailRef = useAnchoredPlacement(anchored, sessionKey)
   const dragStartRef = useRef<{ y: number; at: number } | null>(null)
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
@@ -507,8 +586,6 @@ export function MarkerDetailDrawer({
     }
     setDragOffset(0)
   }, [detailRef, onClose])
-
-  const sessionKey = gallery?.markerId ?? comments?.markerId ?? positionCopyValue ?? name
 
   useEffect(() => {
     setActiveTab("details")
@@ -627,7 +704,7 @@ export function MarkerDetailDrawer({
         "absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+4rem)] z-[var(--arkive-layer-sheet)] flex max-h-[min(60dvh,34rem,calc(100dvh-5rem-env(safe-area-inset-bottom)))] translate-y-[var(--marker-detail-drag-y)] flex-col overflow-hidden rounded-t-lg border border-border bg-background text-foreground shadow-[0_-1.2rem_3rem_rgba(21,40,45,0.22)] md:bottom-auto md:translate-y-0 md:rounded-lg md:shadow-[0_18px_50px_rgba(10,50,48,0.22)]",
         isDragging ? "transition-none" : "transition-transform duration-200 ease-out motion-reduce:transition-none",
         anchored
-          ? "md:inset-auto md:left-0 md:top-0 md:w-[min(22rem,calc(100vw-1.5rem))] md:max-h-[min(34rem,calc(100dvh-1.5rem))] md:overflow-visible md:before:absolute md:before:-left-1.5 md:before:top-[var(--marker-detail-arrow-y,50%)] md:before:z-[-1] md:before:size-3 md:before:-translate-y-1/2 md:before:rotate-45 md:before:border md:before:border-border md:before:bg-background"
+          ? "md:inset-auto md:left-0 md:top-0 md:w-[min(22rem,calc(100vw-1.5rem))] md:max-h-[min(34rem,calc(100dvh-7rem))] md:overflow-visible md:before:absolute md:before:-bottom-1.5 md:before:left-[var(--marker-detail-arrow-x,50%)] md:before:z-[-1] md:before:size-3 md:before:-translate-x-1/2 md:before:rotate-45 md:before:border md:before:border-border md:before:bg-background"
           : "md:inset-y-auto md:top-4 md:right-4 md:left-auto md:max-h-[min(calc(100dvh-2rem),38rem)] md:w-[min(25rem,calc(100%-2rem))]",
         className,
       )}
@@ -670,7 +747,7 @@ export function MarkerDetailDrawer({
       <div data-testid="marker-detail-scroll" tabIndex={0} aria-label={labels.scrollArea} className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div id={detailsPanelId} role="tabpanel" aria-labelledby={detailsTabId} hidden={activeTab !== "details"}>
           {detailsEmpty ? (
-            <div className="flex min-h-24 flex-col items-center justify-center gap-2 px-5 py-6 text-center text-muted-foreground" data-testid="marker-details-empty">
+            <div className="flex min-h-12 items-center justify-center gap-2 px-4 py-3 text-center text-muted-foreground" data-testid="marker-details-empty">
               <IconMapPin className="size-5" stroke={1.8} />
               <p className="text-sm">{labels.emptyDetails}</p>
             </div>

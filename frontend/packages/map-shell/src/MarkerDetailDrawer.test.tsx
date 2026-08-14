@@ -34,6 +34,7 @@ const labels: MarkerDetailLabels = {
   commentPlaceholder: "Add a comment",
   attachImages: "Attach images",
   attachmentLimit: "Up to 3 images",
+  removeImage: "Remove image",
   publish: "Publish",
   emptyDetails: "No additional details yet.",
   emptyComments: "No comments yet.",
@@ -120,7 +121,7 @@ describe("MarkerDetailDrawer", () => {
     expect(drawer.style.getPropertyValue("--marker-detail-drag-y")).toBe("0px")
   })
 
-  it("can keep a compact preview visible until a section is expanded", () => {
+  it("shows an initial compact preview, then fully collapses after expansion", () => {
     const { getByTestId, getByText, queryByText } = render(
       <MarkerDetailDrawer
         {...baseProps}
@@ -132,6 +133,11 @@ describe("MarkerDetailDrawer", () => {
     fireEvent.click(getByTestId("marker-detail-collapse-drops"))
     expect(getByText("All drops")).not.toBeNull()
     expect(queryByText("Two drops")).toBeNull()
+
+    fireEvent.click(getByTestId("marker-detail-collapse-drops"))
+    expect(queryByText("All drops")).toBeNull()
+    expect(queryByText("Two drops")).toBeNull()
+    expect(getByTestId("marker-detail-collapse-drops").getAttribute("aria-expanded")).toBe("false")
   })
 
   it("keeps marker gallery uploads separate from comment attachments", () => {
@@ -186,6 +192,35 @@ describe("MarkerDetailDrawer", () => {
     fireEvent.change(getByRole("textbox"), { target: { value: "Hello" } })
     fireEvent.click(getByRole("button", { name: "Publish" }))
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith("marker-1", "Hello", files.slice(0, 3)))
+  })
+
+  it("appends separately selected comment images and removes individual drafts", async () => {
+    const onSubmit = vi.fn(() => Promise.resolve())
+    const { getByAltText, getByRole, getByTestId, queryByAltText } = render(
+      <MarkerDetailDrawer
+        {...baseProps}
+        comments={{ markerId: "marker-1", items: [], sort: "latest", onSortChange: vi.fn(), onSubmit }}
+      />,
+    )
+    fireEvent.click(getByRole("tab", { name: /Comments/ }))
+
+    const first = new File(["first"], "first.png", { type: "image/png", lastModified: 1 })
+    const second = new File(["second"], "second.png", { type: "image/png", lastModified: 2 })
+    const input = getByTestId("marker-comment-attachment")
+    fireEvent.change(input, { target: { files: [first] } })
+    fireEvent.change(input, { target: { files: [second] } })
+
+    expect(getByAltText("first.png")).not.toBeNull()
+    expect(getByAltText("second.png")).not.toBeNull()
+    fireEvent.click(getByRole("button", { name: "Remove image: first.png" }))
+    expect(queryByAltText("first.png")).toBeNull()
+
+    const textarea = getByTestId("marker-comment-body")
+    expect(textarea.getAttribute("rows")).toBe("1")
+    expect(textarea.className).toContain("max-h-28")
+    fireEvent.change(textarea, { target: { value: "Useful route" } })
+    fireEvent.click(getByRole("button", { name: "Publish" }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith("marker-1", "Useful route", [second]))
   })
 
   it("renders compact gallery and completion actions in the details footer", () => {
@@ -248,8 +283,8 @@ describe("MarkerDetailDrawer", () => {
     unmount()
   })
 
-  it("shows a compact empty state while keeping contribution actions usable", () => {
-    const { getByTestId } = render(
+  it("shows compact horizontal empty states while keeping contribution actions usable", () => {
+    const { getByRole, getByTestId } = render(
       <MarkerDetailDrawer
         {...baseProps}
         gallery={{ markerId: "marker-1", images: [] }}
@@ -257,6 +292,12 @@ describe("MarkerDetailDrawer", () => {
       />,
     )
     expect(getByTestId("marker-details-empty").textContent).toContain("No additional details yet.")
+    expect(getByTestId("marker-details-empty").className).toContain("min-h-12")
+    expect(getByTestId("marker-details-empty").className).not.toContain("flex-col")
     expect(getByTestId("marker-gallery-upload")).not.toBeNull()
+    expect(getByTestId("marker-gallery-upload").parentElement?.className).toContain("border-primary")
+    fireEvent.click(getByRole("tab", { name: /Comments/ }))
+    expect(getByTestId("marker-comments-empty").className).toContain("min-h-12")
+    expect(getByTestId("marker-comments-empty").className).not.toContain("flex-col")
   })
 })

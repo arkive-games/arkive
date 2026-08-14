@@ -206,13 +206,13 @@ map_search:
 marker_detail:
   component: "MarkerDetailDrawer"
   surface:
-    desktop: "A compact marker-anchored surface, 22rem maximum width and 34rem maximum height, always placed to the selected marker's right."
+    desktop: "A compact marker-anchored surface, 22rem maximum width and 34rem maximum height, always centered above the selected marker."
     mobile: "A content-sized full-width bottom sheet capped at 60dvh and 34rem, positioned above the fixed bottom navigation so every route remains reachable and selected-marker map context stays visible."
     radius: "Use standard_radius; mobile rounds only the top corners."
     overflow: "The outer surface clips overflow and never scrolls."
     elevation: "Use the shared elevated-surface shadow without obscuring the remaining map."
-    placement: "Never switch above, below, or left. If the right side is too narrow, pan the map horizontally until the surface fits; clamp only its vertical position to the map and registered controls."
-    pointer: "Desktop shows a surface-colored pointer on the left edge. Its vertical position follows the selected marker when the surface is clamped. Mobile has no pointer."
+    placement: "Never switch to the marker's left, right, or below on desktop. If the surface would cross the map boundary or overlap a registered control, smoothly pan the map horizontally and/or vertically until the centered-above placement fits. Repeat the correction when visible content changes the surface height."
+    pointer: "Desktop shows a surface-colored pointer at the bottom center, aligned to the selected marker. Mobile has no pointer."
     drag_affordance: "Mobile shows a drag handle above the identity header. Dragging the handle downward moves the sheet with the pointer; crossing one quarter of the sheet height, 120px at most, or making a deliberate fast downward swipe closes it. Short or cancelled drags animate back into place. The explicit close action remains available."
   regions:
     - "Fixed identity header with close action and coordinate copy"
@@ -259,11 +259,13 @@ marker_detail:
     ownership: "Each image belongs to a marker and carries an explicit moderation status."
     moderation_states: ["uploading", "processing", "awaiting-review", "published", "rejected", "failed"]
     columns: "Two by default; one at 350px and below."
-    upload: "A marker-gallery upload is distinct from comment attachments and is capped at three selected files. Until the backend adapter is connected, keep the control usable with a current-session preview marked Awaiting review."
+    upload: "A marker-gallery upload is distinct from comment attachments and is capped at three selected files. Keep the footer action visually distinct with the primary border. Until the backend adapter is connected, keep the control usable with a current-session preview marked Awaiting review."
   comments:
     capabilities: ["optional images", "likes", "replies", "popular sorting", "latest sorting"]
     attachments: "Each attachment belongs only to its comment and carries a comment id, never marker-gallery ownership."
-    composer: "Lives in the comments footer and accepts up to three image attachments. Until the backend adapter is connected, publishing creates a current-session comment whose attachments remain comment-owned."
+    composer: "Lives in the comments footer. The text area starts at one line, grows with its content to a fixed maximum height, then scrolls internally. Image selections append up to three unique attachments and each draft image has a remove action. Until the backend adapter is connected, publishing creates a current-session comment whose attachments remain comment-owned."
+  empty_states:
+    rule: "Use one compact horizontal row with an icon and a short localized status. Do not repeat contribution guidance already represented by the visible footer actions."
   footer:
     details: "Use one compact row: marker-gallery image action on the left and Mark as completed on the right when supported."
     comments: "Keep the comment composer visible whenever the comments surface exists."

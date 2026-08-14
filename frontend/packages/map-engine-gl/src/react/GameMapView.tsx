@@ -239,6 +239,8 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   const selectedMarker = selectedMarkerId
     ? (markerById.get(selectedMarkerId) ?? null)
     : null;
+  const popupContent = selectedMarker ? renderPopupContent(selectedMarker) : null;
+  const popupMounted = selectedMarker != null && popupContent != null;
 
   /**
    * Whether the one-shot fly suppression has been consumed. A restored selection
@@ -302,17 +304,18 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   useLayoutEffect(() => {
     const engine = engineRef.current;
     if (!engine) return;
-    engine.setPopupElement(popupRef.current);
-    engine.setPopupAnchor(selectedMarker ? selectedMarker.id : null);
-  }, [selectedMarker, mapId, themeKey]);
+    engine.setPopupElement(popupMounted ? popupRef.current : null);
+    engine.setPopupAnchor(popupMounted ? selectedMarker.id : null);
+  }, [selectedMarker, popupMounted, mapId, themeKey]);
 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     const handleDetailPan = (event: Event) => {
-      const x = (event as CustomEvent<{ x?: number }>).detail?.x;
-      if (!(x && x > 0)) return;
-      engineRef.current?.panForMarkerDetail(x);
+      const detail = (event as CustomEvent<{ x?: number; y?: number }>).detail;
+      const x = Number.isFinite(detail?.x) ? detail?.x ?? 0 : 0;
+      const y = Number.isFinite(detail?.y) ? detail?.y ?? 0 : 0;
+      engineRef.current?.panForMarkerDetail(x, y);
     };
     root.addEventListener("marker-detail-pan", handleDetailPan);
     return () => root.removeEventListener("marker-detail-pan", handleDetailPan);
@@ -365,8 +368,6 @@ const GameMapView: React.FC<GameMapViewProps> = ({
   if (!selectedMap) {
     return <div className="gmgl-map-empty">{labels.noMapSelected}</div>;
   }
-
-  const popupContent = selectedMarker ? renderPopupContent(selectedMarker) : null;
 
   return (
     <div

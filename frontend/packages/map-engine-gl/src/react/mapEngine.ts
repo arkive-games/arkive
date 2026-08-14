@@ -85,6 +85,7 @@ export const MAX_ZOOM = 2;
 /** Zoom step of the +/− buttons (Leaflet `zoomDelta`), and its animation. */
 export const ZOOM_STEP = 0.25;
 export const ZOOM_STEP_SECONDS = 0.25;
+const MARKER_DETAIL_PAN_SECONDS = 0.18;
 
 /**
  * A real DOM element does NOT structurally satisfy `core/gestures.ts`'
@@ -150,8 +151,10 @@ export class MapEngine {
   /** Element rendered by React for the selected marker's popup, if any. */
   private popupEl: HTMLElement | null = null;
   private popupAnchorId: string | null = null;
-  private popupPanAppliedFor: string | null = null;
-  private pendingPopupPan: { markerId: string; screenPixels: number } | null = null;
+  private pendingPopupPan: { markerId: string; x: number; y: number } | null = null;
+  private markerDetailPanAnimating = false;
+  private markerFlyAnimating = false;
+  private markerFlyTarget: { center: Point; zoom: number } | null = null;
   private lastPointer: Point | null = null;
   private reportedHoverMarkerId: string | null = null;
   private hoveredMarkerId: string | null = null;
@@ -249,7 +252,7 @@ export class MapEngine {
     });
 
     this.camera.on("change", this.onCameraChange);
-    this.camera.on("gestureend", this.report);
+    this.camera.on("gestureend", this.onGestureEnd);
     this.camera.on("flyend", this.onFlyEnd);
 
     opts.canvas.addEventListener("pointermove", this.onPointerMove);
@@ -308,6 +311,7 @@ export class MapEngine {
   setSelected(markerId: string | null): void {
     if (this.disposed || markerId === this.selectedId) return;
     this.selectedId = markerId;
+    if (markerId === null) this.setMarkerCenterLock(false);
     this.markerLayer.setSelected(markerId);
     // The selected marker shows a popup instead of a label, and its own tooltip
     // must go away the moment it is selected.
@@ -378,30 +382,76 @@ export class MapEngine {
   /** Anchor the detail surface to a marker. */
   setPopupAnchor(markerId: string | null): void {
     if (this.disposed) return;
+    const markerChanged = markerId !== this.popupAnchorId;
     this.popupAnchorId = markerId;
-    if (markerId !== this.popupPanAppliedFor) {
-      this.popupPanAppliedFor = null;
+    if (markerChanged) {
       this.pendingPopupPan = null;
+      this.markerDetailPanAnimating = false;
     }
     this.positionPopup();
   }
 
-  panForMarkerDetail(screenPixels: number): void {
+  panForMarkerDetail(x: number, y: number): void {
     const id = this.popupAnchorId;
-    if (!id || this.popupPanAppliedFor === id) return;
-    if (this.camera.isAnimating()) {
-      this.pendingPopupPan = { markerId: id, screenPixels };
+    if (!id) return;
+    if (!x && !y) {
+      this.pendingPopupPan = null;
       return;
     }
-    this.applyMarkerDetailPan(id, screenPixels);
+    if (this.markerDetailPanAnimating) return;
+    if (this.camera.isAnimating()) {
+      const flyTarget = this.markerFlyTarget;
+      if (this.markerFlyAnimating && flyTarget) {
+        this.markerFlyAnimating = false;
+        this.setMarkerFlyTarget(null);
+        this.applyMarkerDetailPan(
+          id,
+          x,
+          y,
+          Math.max(MARKER_DETAIL_PAN_SECONDS, this.opts.flyToDuration()),
+          flyTarget,
+        );
+        return;
+      }
+      this.pendingPopupPan = { markerId: id, x, y };
+      return;
+    }
+    this.applyMarkerDetailPan(id, x, y);
   }
 
-  private applyMarkerDetailPan(markerId: string, screenPixels: number): void {
-    if (this.popupAnchorId !== markerId || this.popupPanAppliedFor === markerId) return;
+  private applyMarkerDetailPan(
+    markerId: string,
+    x: number,
+    y: number,
+    seconds = MARKER_DETAIL_PAN_SECONDS,
+    baseView?: { center: Point; zoom: number },
+  ): void {
+    if (this.popupAnchorId !== markerId || (!x && !y)) return;
     this.pendingPopupPan = null;
-    this.popupPanAppliedFor = markerId;
-    this.camera.panBy(screenPixels, 0);
+    const center = baseView?.center ?? this.camera.center;
+    const zoom = baseView?.zoom ?? this.camera.zoom;
+    const scale = Math.pow(2, zoom);
+    const target = { x: center.x + x / scale, y: center.y + y / scale };
+    this.markerDetailPanAnimating = true;
+    this.camera.flyTo(target, zoom, seconds);
     this.renderer.invalidate();
+  }
+
+  private setMarkerFlyTarget(target: { center: Point; zoom: number } | null): void {
+    this.markerFlyTarget = target;
+    if (target) {
+      this.opts.root.dataset.markerDetailFlyTarget = "center";
+    } else {
+      delete this.opts.root.dataset.markerDetailFlyTarget;
+    }
+  }
+
+  private setMarkerCenterLock(locked: boolean): void {
+    if (locked) {
+      this.opts.root.dataset.markerDetailCenterLock = "true";
+    } else {
+      delete this.opts.root.dataset.markerDetailCenterLock;
+    }
   }
 
   /**
@@ -433,18 +483,28 @@ export class MapEngine {
   flyToData(x: number, y: number, zoom?: number, seconds?: number): void {
     if (this.disposed) return;
     const target = dataToPoint(this.map, x, y);
+    const requestedZoom = zoom ?? this.camera.zoom;
+    const targetZoom = Number.isFinite(requestedZoom)
+      ? Math.min(this.camera.maxZoom, Math.max(this.camera.minZoom, requestedZoom))
+      : this.camera.zoom;
+    this.markerFlyAnimating = true;
+    if (this.selectedId) this.setMarkerCenterLock(true);
+    this.setMarkerFlyTarget({ center: target, zoom: targetZoom });
     this.camera.flyTo(
       target,
-      zoom ?? this.camera.zoom,
+      targetZoom,
       seconds ?? this.opts.flyToDuration(),
     );
-    this.popupPanAppliedFor = null;
+    this.markerDetailPanAnimating = false;
     this.renderer.invalidate();
   }
 
   /** One +/− button step, animated. */
   zoomBy(dz: number): void {
     if (this.disposed) return;
+    this.markerFlyAnimating = false;
+    this.setMarkerCenterLock(false);
+    this.setMarkerFlyTarget(null);
     this.camera.flyTo(this.camera.center, this.camera.zoom + dz, ZOOM_STEP_SECONDS);
     this.renderer.invalidate();
   }
@@ -515,8 +575,25 @@ export class MapEngine {
   };
 
   private readonly onFlyEnd = (): void => {
+    if (this.markerDetailPanAnimating) {
+      this.markerDetailPanAnimating = false;
+      this.markerFlyAnimating = false;
+      this.setMarkerFlyTarget(null);
+      this.report();
+      return;
+    }
+    this.markerFlyAnimating = false;
+    this.setMarkerFlyTarget(null);
     const pending = this.pendingPopupPan;
-    if (pending) this.applyMarkerDetailPan(pending.markerId, pending.screenPixels);
+    if (pending) {
+      this.applyMarkerDetailPan(pending.markerId, pending.x, pending.y);
+      return;
+    }
+    this.report();
+  };
+
+  private readonly onGestureEnd = (): void => {
+    this.setMarkerCenterLock(false);
     this.report();
   };
 
@@ -693,7 +770,7 @@ export class MapEngine {
     this.unobserveTheme();
     this.gestures.detach();
     this.camera.off("change", this.onCameraChange);
-    this.camera.off("gestureend", this.report);
+    this.camera.off("gestureend", this.onGestureEnd);
     this.camera.off("flyend", this.onFlyEnd);
     this.camera.removeAllListeners();
     this.overlay.dispose();
@@ -705,6 +782,10 @@ export class MapEngine {
     this.popupEl = null;
     this.popupAnchorId = null;
     this.pendingPopupPan = null;
+    this.markerDetailPanAnimating = false;
+    this.markerFlyAnimating = false;
+    this.setMarkerFlyTarget(null);
+    this.setMarkerCenterLock(false);
     this.lastPointer = null;
   }
 }
