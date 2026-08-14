@@ -102,16 +102,9 @@ func (s *Service) AttachImage(ctx context.Context, principal auth.Principal, pos
 		return ImageRead{}, mapConstraintError(err)
 	}
 
-	// Best-effort, and only once the row points somewhere else: the new key is committed,
-	// so the displaced object is unreferenced and a failure to remove it leaves a
-	// reclaimable orphan rather than a broken image. Skipped when the two are the same
-	// key, which happens when the identical bytes are re-uploaded — the key is a digest.
-	if displaced != "" && displaced != key {
-		if err := s.images.Delete(ctx, displaced); err != nil {
-			s.logger.WarnContext(ctx, "could not delete a replaced post image",
-				slog.String("key", displaced), slog.Any("error", err))
-		}
-	}
+	// Run after the new row is committed, so the displaced key's remaining references are
+	// counted against the state that now exists.
+	s.reclaimIfUnreferenced(ctx, displaced)
 
 	s.logger.InfoContext(ctx, "post image attached",
 		slog.Int64("postNo", postNo), slog.Int("position", position))
@@ -147,16 +140,57 @@ func (s *Service) DetachImage(ctx context.Context, principal auth.Principal, pos
 		return fmt.Errorf("detach image: %w", err)
 	}
 
-	// Best-effort, as everywhere else object storage is touched: the row is the source of
-	// truth and is already gone, so a failed delete leaves a reclaimable orphan rather
-	// than an image that is still referenced.
-	if key != "" && s.images != nil {
-		if err := s.images.Delete(ctx, key); err != nil {
-			s.logger.WarnContext(ctx, "could not delete a detached post image",
-				slog.String("key", key), slog.Any("error", err))
-		}
-	}
+	s.reclaimIfUnreferenced(ctx, key)
 	return nil
+}
+
+// reclaimIfUnreferenced deletes an object only once no row points at it.
+//
+// The counting is the whole function. Object keys are content-addressed and scoped to the
+// uploader, so one account attaching the same image to two posts — or to two slots of one
+// post, an easy double-pick in a nine-slot grid — produces one object with two rows
+// referencing it. Deleting a displaced key without checking takes an object another post is
+// still rendering: no error is raised, the warning below never fires because the delete
+// succeeded, and the image is gone for good.
+//
+// The avatar path is safe from this because an account has exactly one avatar row, so a
+// displaced key is provably unreferenced. Post images broke that invariant, and the delete
+// was copied across before the invariant was rechecked.
+//
+// Best-effort after that: the rows are the source of truth and already say what they say,
+// so a failed delete leaves a reclaimable orphan rather than a broken image. An orphan is
+// cheap; a deleted object someone is rendering is not recoverable.
+func (s *Service) reclaimIfUnreferenced(ctx context.Context, key string) {
+	if key == "" || s.images == nil {
+		return
+	}
+
+	remaining, err := s.q.CountForumPostImagesByKey(ctx, key)
+	if err != nil {
+		s.logger.WarnContext(ctx, "could not count references to a post image; leaving it in place",
+			slog.String("key", key), slog.Any("error", err))
+		return
+	}
+	if remaining > 0 {
+		return
+	}
+
+	if err := s.images.Delete(ctx, key); err != nil {
+		s.logger.WarnContext(ctx, "could not delete an unreferenced post image",
+			slog.String("key", key), slog.Any("error", err))
+	}
+}
+
+// imageKeys lists the objects a post references, for reclamation after it is deleted.
+func (s *Service) imageKeys(ctx context.Context, postID uuid.UUID) ([]string, error) {
+	if s.images == nil {
+		return nil, nil
+	}
+	keys, err := s.q.ListForumPostImageKeys(ctx, postID)
+	if err != nil {
+		return nil, fmt.Errorf("list image keys: %w", err)
+	}
+	return keys, nil
 }
 
 // imagesFor loads one post's images.

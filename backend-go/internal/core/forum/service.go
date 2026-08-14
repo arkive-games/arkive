@@ -458,12 +458,25 @@ func (s *Service) DeletePost(ctx context.Context, principal auth.Principal, post
 	if err != nil {
 		return err
 	}
+	// Read before the delete, because the image rows cascade with the post and the keys
+	// go with them — after which nothing knows those objects exist.
+	keys, err := s.imageKeys(ctx, post.ID)
+	if err != nil {
+		return err
+	}
+
 	rows, err := s.q.DeleteForumPost(ctx, post.ID)
 	if err != nil {
 		return fmt.Errorf("delete post: %w", err)
 	}
 	if rows == 0 {
 		return apierr.New(apierr.NotFound, "no such post")
+	}
+
+	// Counted rather than deleted outright: another post may hold the same
+	// content-addressed key. See reclaimIfUnreferenced.
+	for _, key := range keys {
+		s.reclaimIfUnreferenced(ctx, key)
 	}
 	return nil
 }
@@ -492,6 +505,10 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 		return CommentRead{}, err
 	}
 
+	// Captured from the parent load below so the notification does not read the same row
+	// a second time.
+	var parentAuthor *uuid.UUID
+
 	var comment coredb.CoreForumComment
 	if parentID == nil {
 		comment, err = s.q.CreateForumComment(ctx, coredb.CreateForumCommentParams{
@@ -519,6 +536,8 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 				"replies cannot be nested further; reply to the comment instead")
 		}
 
+		parentAuthor = &parent.AuthorID
+
 		comment, err = s.q.CreateForumReply(ctx, coredb.CreateForumReplyParams{
 			ID:       uuid.New(),
 			PostID:   post.ID,
@@ -538,13 +557,11 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 	// Who hears about it: the parent comment's author on a reply, the post's author on a
 	// top-level comment. Either may be the commenter themselves, which the schema's
 	// self-notification constraint drops.
+	// The parent was already loaded above to validate the reply; reusing its author here
+	// avoids a second read of the same row.
 	recipient := post.AuthorID
-	if parentID != nil {
-		parent, err := s.q.GetForumCommentByID(ctx, *parentID)
-		if err != nil {
-			return CommentRead{}, fmt.Errorf("load the parent comment: %w", err)
-		}
-		recipient = parent.AuthorID
+	if parentAuthor != nil {
+		recipient = *parentAuthor
 	}
 	if err := s.notifier.Notify(ctx, notify.Event{
 		Recipient: recipient,

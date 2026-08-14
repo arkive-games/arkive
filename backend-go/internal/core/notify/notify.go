@@ -190,7 +190,12 @@ func (s *Service) NotifyMentions(ctx context.Context, body string, e Event) erro
 //
 // The candidate cap is separate from MaxMentionsPerBody and larger than it: the send cap
 // decides how many people hear about a post, this one decides how much work parsing it may
-// cost. Deduplication is exact rather than case-folded, because names are unique
+// cost. It can therefore drop a real mention: a body whose first fifty distinct names match
+// nothing and whose fifty-first is a person notifies nobody. That is accepted — the
+// alternative is letting one body decide how much work the server does — but it is a policy
+// and not only an optimisation.
+//
+// Deduplication is exact rather than case-folded, because names are unique
 // case-sensitively and folding here could merge two real accounts into one lookup.
 func mentionCandidates(body string) []string {
 	const maxCandidates = 50

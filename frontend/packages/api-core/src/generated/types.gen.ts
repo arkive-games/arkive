@@ -86,17 +86,17 @@ export type CommentRead = {
 
 export type Counts = {
     /**
-     * How many accounts follow this one
+     * How many accounts follow this one, or null if withheld
      */
-    followerCount: number;
+    followerCount: number | null;
     /**
      * Whether the current reader follows this account
      */
     following: boolean;
     /**
-     * How many accounts this one follows
+     * How many accounts this one follows, or null if withheld
      */
-    followingCount: number;
+    followingCount: number | null;
 };
 
 export type CreateCommentBody = {

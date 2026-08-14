@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"image/png"
 	"net/http"
+	"strings"
 
 	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
 	"testing"
@@ -187,4 +188,76 @@ func TestDetachingAndReplacingPostImages(t *testing.T) {
 	if images, _ := single.data(t)["images"].([]any); len(images) != 0 {
 		t.Errorf("after detaching, images = %v, want none", images)
 	}
+}
+
+// Object keys are content-addressed and scoped to the uploader, so one account attaching
+// the same image twice produces one object with two rows pointing at it. Reclaiming a
+// displaced key without counting references took that object out from under the other row:
+// no error, no warning, and a permanently dead image on a post nobody touched.
+//
+// The earlier tests covered attach, replace and detach and were all green through it,
+// because none of them ever put two rows on one key.
+func TestReplacingASharedImageLeavesTheOtherPostIntact(t *testing.T) {
+	mem := blob.NewMemory()
+	h := newHarnessWith(t, nil, mem)
+	token := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+
+	shared := pngOf(t, 500, 400)
+	postA := h.mustCreatePost(token, simplePost())
+	postB := h.mustCreatePost(token, simplePost())
+
+	if res := attachImage(t, h, token, postA, 0, shared); res.status != http.StatusOK {
+		t.Fatalf("attach to A = %d: %s", res.status, res.body)
+	}
+	resB := attachImage(t, h, token, postB, 0, shared)
+	if resB.status != http.StatusOK {
+		t.Fatalf("attach to B = %d: %s", resB.status, resB.body)
+	}
+
+	urlOf := func(postNo int64) string {
+		res := h.do(http.MethodGet, fmt.Sprintf("/forum/posts/%d", postNo), nil)
+		images, _ := res.data(t)["images"].([]any)
+		if len(images) != 1 {
+			t.Fatalf("post %d images = %v, want one", postNo, images)
+		}
+		first, _ := images[0].(map[string]any)
+		url, _ := first["url"].(string)
+		return url
+	}
+
+	sharedURL := urlOf(postA)
+	if sharedURL != urlOf(postB) {
+		t.Fatalf("the same image produced different keys; this test proves nothing as written")
+	}
+
+	// Replacing B's slot displaces the shared key — which A is still rendering.
+	if res := attachImage(t, h, token, postB, 0, pngOf(t, 300, 300)); res.status != http.StatusOK {
+		t.Fatalf("replace B = %d: %s", res.status, res.body)
+	}
+
+	// A still points at it, and the object must still be there.
+	if got := urlOf(postA); got != sharedURL {
+		t.Errorf("post A's url changed to %q, want %q", got, sharedURL)
+	}
+	if !storeHasObjectFor(mem, sharedURL) {
+		t.Errorf("the shared object was deleted while post A still references it: %v", mem.Keys())
+	}
+
+	// And once the last reference goes, it is reclaimed.
+	if res := h.do(http.MethodDelete, fmt.Sprintf("/forum/posts/%d/images/0", postA), nil, withBearer(token)); res.status != http.StatusOK {
+		t.Fatalf("detach from A = %d: %s", res.status, res.body)
+	}
+	if storeHasObjectFor(mem, sharedURL) {
+		t.Errorf("the object survived its last reference being removed: %v", mem.Keys())
+	}
+}
+
+// storeHasObjectFor reports whether the object behind a public URL is still stored.
+func storeHasObjectFor(mem *blob.Memory, url string) bool {
+	for _, key := range mem.Keys() {
+		if strings.HasSuffix(url, key) {
+			return true
+		}
+	}
+	return false
 }

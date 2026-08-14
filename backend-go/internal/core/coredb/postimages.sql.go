@@ -62,6 +62,24 @@ func (q *Queries) CountForumPostImages(ctx context.Context, postID uuid.UUID) (i
 	return count, err
 }
 
+const countForumPostImagesByKey = `-- name: CountForumPostImagesByKey :one
+SELECT count(*) FROM core.forum_post_images WHERE object_key = $1
+`
+
+// How many rows still reference one object.
+//
+// Object keys are content-addressed and scoped to the uploader, so the same account
+// uploading the same image twice produces the same key — and nothing makes object_key
+// unique, so several rows legitimately share one object. Deleting on the assumption that a
+// displaced key is unreferenced would take an object another post is still rendering, with
+// no error anywhere and no way back.
+func (q *Queries) CountForumPostImagesByKey(ctx context.Context, objectKey string) (int64, error) {
+	row := q.db.QueryRow(ctx, countForumPostImagesByKey, objectKey)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const detachForumPostImage = `-- name: DetachForumPostImage :execrows
 DELETE FROM core.forum_post_images WHERE post_id = $1 AND position = $2
 `
@@ -77,6 +95,32 @@ func (q *Queries) DetachForumPostImage(ctx context.Context, arg DetachForumPostI
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const listForumPostImageKeys = `-- name: ListForumPostImageKeys :many
+SELECT object_key FROM core.forum_post_images WHERE post_id = $1
+`
+
+// The keys a post holds, read before the rows cascade away with it so they can be
+// reference-counted afterwards.
+func (q *Queries) ListForumPostImageKeys(ctx context.Context, postID uuid.UUID) ([]string, error) {
+	rows, err := q.db.Query(ctx, listForumPostImageKeys, postID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var object_key string
+		if err := rows.Scan(&object_key); err != nil {
+			return nil, err
+		}
+		items = append(items, object_key)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listForumPostImages = `-- name: ListForumPostImages :many

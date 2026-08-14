@@ -61,19 +61,28 @@ func (h *Handlers) RegisterSocialRoutes(a huma.API) {
 		Method:      http.MethodGet,
 		Path:        "/users/{uid}/follow",
 		Summary:     "Get an account's follow tally",
-		Description: "Subject to the account's activityVisibility, like the lists it " +
-			"summarises — a tally that stayed public would disclose exactly what a private " +
-			"follower list withholds. `following` describes the signed-in caller and is " +
-			"false for an anonymous reader.",
+		Description: "The tallies are subject to the account's activityVisibility and come " +
+			"back null when withheld — a tally that stayed public would disclose exactly " +
+			"what a private follower list hides. `following` is always answered, because it " +
+			"describes the signed-in caller rather than the account being read; it is false " +
+			"for an anonymous reader.",
 		Tags:   []string{"social"},
 		Errors: []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *followInput) (*api.Response[social.Counts], error) {
-		if err := h.requireActivityVisible(ctx, in.UID); err != nil {
-			return nil, err
-		}
 		counts, err := h.social.CountsForUID(ctx, in.UID, viewerFrom(ctx))
 		if err != nil {
 			return nil, err
+		}
+		// Withhold the tallies rather than the whole response. "Do I follow this
+		// account" is the caller's own fact, and a profile that cannot learn it cannot
+		// draw its follow button correctly — a worse outcome than the disclosure the
+		// gate prevents, and one nothing else recovers from.
+		visible, err := h.activityVisible(ctx, in.UID)
+		if err != nil {
+			return nil, err
+		}
+		if !visible {
+			counts = counts.WithoutTallies()
 		}
 		return api.OK(counts), nil
 	})
@@ -134,4 +143,18 @@ func (h *Handlers) requireActivityVisible(ctx context.Context, uid int64) error 
 		return err
 	}
 	return h.privacy.Require(ctx, ownerID, viewerFrom(ctx), settings.Activity, "account")
+}
+
+// activityVisible is requireActivityVisible as a question rather than a guard, for the
+// tally route, which withholds part of a response instead of refusing all of it.
+func (h *Handlers) activityVisible(ctx context.Context, uid int64) (bool, error) {
+	ownerID, err := h.users.IDByUID(ctx, uid)
+	if err != nil {
+		return false, err
+	}
+	settings, err := h.privacy.For(ctx, ownerID)
+	if err != nil {
+		return false, err
+	}
+	return h.privacy.Allows(ctx, ownerID, viewerFrom(ctx), settings.Activity)
 }

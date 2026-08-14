@@ -148,18 +148,24 @@
         "additionalProperties": false,
         "properties": {
           "followerCount": {
-            "description": "How many accounts follow this one",
+            "description": "How many accounts follow this one, or null if withheld",
             "format": "int64",
-            "type": "integer"
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "following": {
             "description": "Whether the current reader follows this account",
             "type": "boolean"
           },
           "followingCount": {
-            "description": "How many accounts this one follows",
+            "description": "How many accounts this one follows, or null if withheld",
             "format": "int64",
-            "type": "integer"
+            "type": [
+              "integer",
+              "null"
+            ]
           }
         },
         "required": [
@@ -7319,7 +7325,7 @@
         ]
       },
       "get": {
-        "description": "Subject to the account's activityVisibility, like the lists it summarises — a tally that stayed public would disclose exactly what a private follower list withholds. `following` describes the signed-in caller and is false for an anonymous reader.",
+        "description": "The tallies are subject to the account's activityVisibility and come back null when withheld — a tally that stayed public would disclose exactly what a private follower list hides. `following` is always answered, because it describes the signed-in caller rather than the account being read; it is false for an anonymous reader.",
         "operationId": "getFollowCounts",
         "parameters": [
           {

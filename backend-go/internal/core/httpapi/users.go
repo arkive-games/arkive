@@ -191,7 +191,7 @@ func (h *Handlers) RegisterUserRoutes(a huma.API) {
 		// serves someone else's profile. Without it the setting would be accepted,
 		// persisted and confirmed to the user while changing nothing — worse than not
 		// offering it, because the UI would report a protection that does not exist.
-		if err := h.requireProfileVisible(ctx, in.UID); err != nil {
+		if err := h.requireProfileVisible(ctx, user.UID); err != nil {
 			return nil, err
 		}
 		return api.OK(user), nil

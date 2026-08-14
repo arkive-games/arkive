@@ -103,6 +103,11 @@ func (s *Service) Report(ctx context.Context, principal auth.Principal, postNo *
 
 	// Reporting something that does not exist is a 404, not a stored row pointing
 	// nowhere — the foreign keys would refuse it anyway, as a 500.
+	//
+	// Deliberately no hidden-content guard here, unlike every other post load. A report
+	// filed a moment before a moderator hid the content should still land, and refusing
+	// one for content already hidden would tell the reporter it had been actioned — which
+	// is the disclosure the 404 elsewhere exists to prevent.
 	var reportedPost *coredb.CoreForumPost
 	if postNo != nil {
 		post, err := s.q.GetForumPostByNo(ctx, *postNo)

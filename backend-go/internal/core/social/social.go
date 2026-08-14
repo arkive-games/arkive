@@ -38,12 +38,25 @@ type FollowRead struct {
 // Counts is the follow tally a profile shows, plus whether the reader follows this
 // account.
 type Counts struct {
-	FollowerCount  int64 `json:"followerCount" doc:"How many accounts follow this one"`
-	FollowingCount int64 `json:"followingCount" doc:"How many accounts this one follows"`
+	// Null when the account's activityVisibility withholds them from this reader.
+	//
+	// Nullable rather than gating the whole response, because the two halves belong to
+	// different people: the tallies are the owner's business, but `following` is the
+	// *caller's* own fact — "do I follow this account". Withholding that would leave a
+	// profile unable to render its own follow button correctly, which is a worse outcome
+	// than the disclosure the gate exists to prevent, and one nothing else fixes.
+	FollowerCount  *int64 `json:"followerCount" doc:"How many accounts follow this one, or null if withheld"`
+	FollowingCount *int64 `json:"followingCount" doc:"How many accounts this one follows, or null if withheld"`
 
-	// Per-reader, and false for an anonymous reader rather than absent, matching how
-	// the forum reports `liked`. A response carrying it must not be cached publicly.
+	// Always answered. Per-reader, and false for an anonymous reader rather than absent,
+	// matching how the forum reports `liked`. A response carrying it must not be cached
+	// publicly.
 	Following bool `json:"following" doc:"Whether the current reader follows this account"`
+}
+
+// WithoutTallies withholds the counts while keeping the caller's own relationship.
+func (c Counts) WithoutTallies() Counts {
+	return Counts{Following: c.Following}
 }
 
 // AccountSource resolves accounts. The same narrow interface the forum and roles
@@ -131,7 +144,7 @@ func (s *Service) CountsFor(ctx context.Context, userID uuid.UUID, viewer *uuid.
 	if err != nil {
 		return Counts{}, fmt.Errorf("check follow: %w", err)
 	}
-	return Counts{FollowerCount: followers, FollowingCount: following, Following: isFollowing}, nil
+	return Counts{FollowerCount: &followers, FollowingCount: &following, Following: isFollowing}, nil
 }
 
 // IsFollowing reports whether follower follows followee.

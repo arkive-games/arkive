@@ -814,7 +814,7 @@ export const unfollowUser = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Get an account's follow tally
  *
- * Subject to the account's activityVisibility, like the lists it summarises — a tally that stayed public would disclose exactly what a private follower list withholds. `following` describes the signed-in caller and is false for an anonymous reader.
+ * The tallies are subject to the account's activityVisibility and come back null when withheld — a tally that stayed public would disclose exactly what a private follower list hides. `following` is always answered, because it describes the signed-in caller rather than the account being read; it is false for an anonymous reader.
  */
 export const getFollowCounts = <ThrowOnError extends boolean = false>(options: Options<GetFollowCountsData, ThrowOnError>): RequestResult<GetFollowCountsResponses, GetFollowCountsErrors, ThrowOnError> => (options.client ?? client).get<GetFollowCountsResponses, GetFollowCountsErrors, ThrowOnError>({
     responseType: 'json',
