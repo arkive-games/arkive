@@ -1,6 +1,26 @@
 {
   "entries": [
     {
+      "date": "2026-08-15",
+      "commit": "4cdaff5d5b6f805159cea4904e0cfa3ea51b4dab",
+      "targets": [
+        "aion2",
+        "palworld",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The forum now runs on real data: posts, comments and replies you write are saved and visible to everyone, and likes, bookmarks and follows are shared rather than kept in your browser. You can edit or delete your own posts, attach a Bilibili or Douyin video, and see your followers and the accounts you follow. The notification inbox shows real activity.",
+            "zh-CN": "论坛已接入真实数据：你发布的帖子、评论和回复会被保存并对所有人可见，点赞、收藏和关注也不再只存在你的浏览器里。你可以编辑或删除自己的帖子、附上一个 B 站或抖音视频链接，并查看粉丝与关注列表。通知中心显示的是真实动态。",
+            "zh-TW": "論壇已接入真實資料：你發布的帖子、留言和回覆會被儲存並對所有人可見，讚、收藏和關注也不再只存在你的瀏覽器裡。你可以編輯或刪除自己的帖子、附上一個 B 站或抖音影片連結，並查看粉絲與關注列表。通知中心顯示的是真實動態。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-08-14",
       "commit": "c09e2516c8345228b42d01b8a7009c113c6efbd6",
       "targets": [
