@@ -347,8 +347,10 @@ export function AccountCenterPage({
    * browser happened to remember rather than what the site records.
    */
   const ownClient = auth.enabled ? auth.client.requestClient : null
-  const ownUidParsed = Number(user?.id)
-  const ownUidValue = Number.isFinite(ownUidParsed) && ownUidParsed > 0 ? ownUidParsed : null
+  // `uid`, not `id`. `user.id` is the account UUID, so parsing it yielded NaN and
+  // this effect never ran — the account centre's follower and following numbers
+  // sat at zero for everyone.
+  const ownUidValue = user?.uid ?? null
   const [ownFollowCounts, setOwnFollowCounts] = useState({ followers: 0, following: 0 })
   useEffect(() => {
     if (!ownClient || ownUidValue === null) return
@@ -458,7 +460,7 @@ export function AccountCenterPage({
     <main className="user-system-main account-center-main">
       <div className="home-shell">
         <ProfileSummary
-          userId={user.id}
+          userId={String(user.uid)}
           name={profile.name}
           bio={profile.bio || t('userSystem.account.emptyBio')}
           avatarSeed={user.id}
@@ -495,7 +497,8 @@ export function AccountCenterPage({
             <AccountContent
               section={section}
               profile={profile}
-              userId={user.id}
+              userId={String(user.uid)}
+              uid={user.uid}
               verified={user.isVerified}
               avatarSrc={avatarSrc}
               saveStatus={saveStatus}
@@ -523,6 +526,7 @@ function AccountContent({
   section,
   profile,
   userId,
+  uid,
   verified,
   avatarSrc,
   saveStatus,
@@ -534,7 +538,14 @@ function AccountContent({
 }: {
   section: AccountSection
   profile: { name: string; email: string; bio: string }
+  /**
+   * The account number as a string, for display. Not the UUID: a reader
+   * identifies by the short number, and the edit form field labelled
+   * "account ID" was showing them a uuid nobody can quote.
+   */
   userId: string
+  /** The permanent account number, which every list here keys by. */
+  uid: number | null
   verified: boolean
   avatarSrc: string
   saveStatus: 'idle' | 'saving' | 'saved' | 'error'
@@ -547,10 +558,11 @@ function AccountContent({
   const { t } = useTranslation()
   const accountAuth = useAuth()
   const accountClient = accountAuth.enabled ? accountAuth.client.requestClient : null
-  // The account pages carry the reader's number as a string; the API keys by the
-  // numeric uid.
-  const parsedUid = Number(userId)
-  const ownUid = Number.isFinite(parsedUid) && parsedUid > 0 ? parsedUid : null
+  // Passed in rather than derived from `userId`, which is the account UUID: every
+  // list on these pages keys by the numeric uid, and parsing the UUID gave NaN —
+  // so `#account/posts` showed "no posts yet" to an account that had posts, and
+  // the follower and following lists were empty for everyone.
+  const ownUid = uid
 
   if (section === 'edit') {
     return (
@@ -1268,7 +1280,11 @@ function ProfilePostList({
           <article key={post.postNo} className="user-panel profile-post-card">
             <div className="profile-post-copy">
               <time dateTime={post.createdAt}>{calendarDate(post.createdAt)}</time>
-              <h2><a href={`#forum`}>{post.title}</a></h2>
+              {/* Not a link: the forum opens a post through component state, so
+                  there is no URL for one yet. An anchor to #forum would land the
+                  reader on the feed while looking like it points at the post. A
+                  shareable per-post route is the gap to close. */}
+              <h2>{post.title}</h2>
               <p>{post.body}</p>
               <footer>
                 <span><IconMessageCircle className="size-4" stroke={1.8} />{t('userSystem.content.commentsCount', { count: post.commentCount })}</span>

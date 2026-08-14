@@ -181,3 +181,28 @@ describe('nestComments', () => {
     expect(roots[0].own).toBe(true)
   })
 })
+
+describe('nestComments and the truncation notice', () => {
+  it('returns roots only, so its length is not the number of comments loaded', () => {
+    // The defect this pins: the detail view compared the server's total (which
+    // counts replies) against the length of this tree (which does not), so a
+    // thread of two comments and one reply rendered all three and then said one
+    // more was hidden. Every thread with a reply announced a phantom comment.
+    const rows = [
+      comment({ id: 'a', commentNo: 1 }),
+      comment({ id: 'b', commentNo: 2 }),
+      comment({ id: 'r', commentNo: null, parentId: 'a' }),
+    ]
+    const roots = nestComments(rows, null)
+
+    expect(roots).toHaveLength(2)
+    expect(rows).toHaveLength(3)
+    // What the notice must compare against is the flat count, which equals the
+    // total here — so nothing is hidden and no notice should appear.
+    const loaded = rows.length
+    const total = 3
+    expect(total > loaded).toBe(false)
+    // Whereas the old comparison would have claimed one more comment existed.
+    expect(total > roots.length).toBe(true)
+  })
+})

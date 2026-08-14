@@ -105,6 +105,8 @@ export interface ThreadState extends AsyncState {
   comments: ForumComment[]
   /** Total comments on the thread, which can exceed what one page returned. */
   commentTotal: number
+  /** How many rows this page actually returned, replies included. */
+  commentsLoaded: number
   reload(): void
   patchPost(changes: Partial<ForumPost>): void
   patchComment(id: string, changes: Partial<ForumComment>): void
@@ -128,6 +130,7 @@ export function useForumThread(
   const [post, setPost] = useState<ForumPost | null>(null)
   const [comments, setComments] = useState<ForumComment[]>([])
   const [commentTotal, setCommentTotal] = useState(0)
+  const [commentsLoaded, setCommentsLoaded] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [nonce, setNonce] = useState(0)
@@ -138,6 +141,7 @@ export function useForumThread(
       setPost(null)
       setComments([])
       setCommentTotal(0)
+      setCommentsLoaded(0)
       setLoading(false)
       setError(null)
       return
@@ -155,6 +159,7 @@ export function useForumThread(
         setPost(loadedPost)
         setComments(thread.comments)
         setCommentTotal(thread.total)
+        setCommentsLoaded(thread.loaded)
         setLoading(false)
       })
       .catch(() => {
@@ -162,6 +167,7 @@ export function useForumThread(
         setPost(null)
         setComments([])
         setCommentTotal(0)
+        setCommentsLoaded(0)
         setError(errorMessage)
         setLoading(false)
       })
@@ -189,5 +195,5 @@ export function useForumThread(
     )
   }, [])
 
-  return { post, comments, commentTotal, loading, error, reload, patchPost, patchComment }
+  return { post, comments, commentTotal, commentsLoaded, loading, error, reload, patchPost, patchComment }
 }

@@ -280,13 +280,14 @@ export function ForumPage({
   /**
    * The reader's own account number, which decides `own` on every post.
    *
-   * `user.id` is a string on the auth user; the API keys everything by the
-   * numeric uid, so it is parsed once here rather than at each comparison.
+   * `user.uid`, and emphatically not `user.id`: the latter is the account UUID,
+   * so `Number(user.id)` was NaN and this was null for every signed-in reader.
+   * Every fallback then read that as "signed out" — no edit or delete control on
+   * your own post, an empty personal feed, follower counts stuck at zero. Silent,
+   * total, and invisible to the signed-out browser check I had been running,
+   * because null is the correct answer there.
    */
-  const viewerUid = useMemo(() => {
-    const parsed = Number(user?.id)
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null
-  }, [user?.id])
+  const viewerUid = user?.uid ?? null
 
   /**
    * A cabin has its own three tabs, and they select the same three orderings.
@@ -790,6 +791,7 @@ export function ForumPage({
               post={selectedPost}
               comments={thread.comments}
               commentTotal={thread.commentTotal}
+              commentsLoaded={thread.commentsLoaded}
               loading={thread.loading}
               error={thread.error}
               followed={followedUids.has(selectedPost.authorUid)}
@@ -2128,6 +2130,7 @@ function ForumPostDetail({
   post,
   comments,
   commentTotal,
+  commentsLoaded,
   loading,
   error,
   followed,
@@ -2148,6 +2151,8 @@ function ForumPostDetail({
   post: ForumPost
   comments: ForumComment[]
   commentTotal: number
+  /** Rows this page returned, replies included — the figure total compares to. */
+  commentsLoaded: number
   loading: boolean
   error: string | null
   followed: boolean
@@ -2483,11 +2488,11 @@ function ForumPostDetail({
                 </div>
               </article>
             ))}
-            {commentTotal > comments.length && (
+            {commentTotal > commentsLoaded && (
               // One request fetches the server's ceiling of 200. Saying so beats
               // showing 200 of 400 as though it were the whole thread.
               <p className="forum-comment-truncated" role="status">
-                {t('forum.detailExtra.moreComments', { count: commentTotal - comments.length })}
+                {t('forum.detailExtra.moreComments', { count: commentTotal - commentsLoaded })}
               </p>
             )}
           </div>

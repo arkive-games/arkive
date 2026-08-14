@@ -157,7 +157,7 @@ export async function fetchComments(
   client: Client,
   postNo: number,
   viewerUid: number | null,
-): Promise<{ comments: ForumComment[]; total: number }> {
+): Promise<{ comments: ForumComment[]; total: number; loaded: number }> {
   const page = await result(
     listForumComments({
       client,
@@ -166,7 +166,15 @@ export async function fetchComments(
       query: { page: 1, pageSize: 200 },
     }),
   )
-  return { comments: nestComments(page.results ?? [], viewerUid), total: page.count }
+  const rows = page.results ?? []
+  // `loaded` is the flat row count, and it is what `total` must be compared
+  // against. The nested tree holds roots only — replies live inside them — so
+  // comparing `total` with the tree's length counted two different things: a
+  // thread of two comments and one reply rendered all three and then announced
+  // that one more was hidden. Every thread with a reply lied, which is worse than
+  // the truncation this figure exists to disclose, because a reader cannot tell
+  // the two cases apart.
+  return { comments: nestComments(rows, viewerUid), total: page.count, loaded: rows.length }
 }
 
 /**
