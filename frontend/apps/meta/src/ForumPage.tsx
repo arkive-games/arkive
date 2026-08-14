@@ -427,10 +427,22 @@ export function ForumPage({
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
+  /**
+   * "Me" needs a "me", so it asks for sign-in first.
+   *
+   * Without the gate a signed-out visitor reached a page whose Posts tab dropped
+   * its `authorUid` filter — an absent value is omitted from the query string
+   * rather than sent as null — and so rendered the whole site's latest twenty
+   * posts under a placeholder name, as though they were the reader's own. The
+   * profile band above them said 0, because that count was gated and the feed
+   * was not, which made the page contradict itself as well as mislead.
+   */
   const showPersonal = () => {
-    setForumMode('personal')
-    setSelectedPostNo(null)
-    window.scrollTo({ top: 0, behavior: 'auto' })
+    runAuthenticated(() => {
+      setForumMode('personal')
+      setSelectedPostNo(null)
+      window.scrollTo({ top: 0, behavior: 'auto' })
+    })
   }
 
   const showCabin = (gameId: string) => {
@@ -1123,9 +1135,12 @@ function ForumPersonalView({
   }), [tab, viewerUid])
 
   const personalFeed = useForumFeed(
-    // The replies tab has nothing to ask for, so it asks for nothing rather than
-    // issuing a query that would return the whole feed.
-    tab === 'replies' ? null : client,
+    // Two reasons to ask for nothing. The replies tab has no query to make, and a
+    // reader with no uid has no "own" anything — the Posts tab's author filter
+    // would simply be omitted, turning "your posts" into everyone's. Belt and
+    // braces with the sign-in gate on the navigation: this view is reachable by
+    // hash, so it cannot rely on the button being the only way in.
+    tab === 'replies' || viewerUid === null ? null : client,
     personalQuery,
     labels,
     viewerUid,
@@ -2040,7 +2055,7 @@ function ForumPostCard({
       <img className="forum-post-avatar" src={post.avatarSrc} alt="" loading="lazy" />
       <div className="forum-post-content">
         <div className="forum-post-author">
-          <strong><a href={post.own ? '#account/posts' : publicProfileHref(post.authorNumber)}>{postAuthor(post)}</a></strong>
+          <strong><a href={post.own ? '#account/posts' : publicProfileHref(post.authorUid)}>{postAuthor(post)}</a></strong>
           {post.featured && <span>{t('forum.feed.qualityAuthor')}</span>}
           <small>{postTime(post)}</small>
           {!post.own && (
@@ -2084,7 +2099,7 @@ function ForumPostCard({
       <div className="forum-post-actions">
         <button type="button" aria-label={t('forum.actions.like')} aria-pressed={liked} onClick={onToggleLike}>
           <IconHeart className="size-4" stroke={1.8} aria-hidden="true" />
-          <span>{t('forum.detail.like')}</span><strong>{post.likeCount + (liked ? 1 : 0)}</strong>
+          <span>{t('forum.detail.like')}</span><strong>{post.likeCount}</strong>
         </button>
         <button type="button" onClick={onOpen}>
           <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
@@ -2092,7 +2107,7 @@ function ForumPostCard({
         </button>
         <button type="button" aria-label={t('forum.actions.bookmark')} aria-pressed={bookmarked} onClick={onToggleBookmark}>
           <IconBookmark className="size-4" stroke={1.8} aria-hidden="true" />
-          <span>{t('forum.detail.bookmark')}</span><strong>{post.bookmarkCount + (bookmarked ? 1 : 0)}</strong>
+          <span>{t('forum.detail.bookmark')}</span><strong>{post.bookmarkCount}</strong>
         </button>
         <button type="button" onClick={onShare}>
           <IconShare3 className="size-4" stroke={1.8} aria-hidden="true" />

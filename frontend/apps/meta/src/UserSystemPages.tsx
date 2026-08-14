@@ -5,12 +5,17 @@ import {
   followUser,
   listFollowers,
   listFollowing,
+  getFollowCounts,
+  getUserByUid,
+  listForumPosts,
   listNotifications,
   result,
   unfollowUser,
   type ApiClient,
   type FollowRead,
+  type PostRead,
   type Read as NotificationRead,
+  type UserPublic,
 } from '@gamemap/api-core'
 import { calendarDate } from './forumModel'
 import { browserMemory, defineMemoryRecord, memoryPolicy } from '@gamemap/state-memory'
@@ -38,7 +43,6 @@ import {
   IconUpload,
   IconUserPlus,
   IconUsers,
-  IconVideo,
   IconX,
 } from '@tabler/icons-react'
 import {
@@ -55,11 +59,7 @@ import {
 } from '@gamemap/ui'
 import { SITES, siteHref } from './sites'
 import { AVATAR_PRESETS, DEFAULT_AVATAR_SRC } from './avatarPresets'
-import {
-  avatarUrl,
-  findPublicProfile,
-  publicProfileHref,
-} from './userSystemData'
+import { avatarUrl, publicProfileHref } from './userSystemData'
 import {
   useUserSystem,
   type NotificationPreferenceKey,
@@ -117,13 +117,6 @@ const SETTING_GROUPS = [
   },
 ] as const
 
-const POST_FIXTURES = [
-  { key: 'vrising', postId: 'vrising-routes', siteId: 'vrising' },
-  { key: 'aion2', postId: 'aion2-build', siteId: 'aion2' },
-  { key: 'palworld', postId: 'palworld-work', siteId: 'palworld' },
-  { key: 'general', postId: 'collection-progress', siteId: 'sts2' },
-  { key: 'official', postId: 'community-guide', siteId: 'aion2' },
-] as const
 
 
 export function NotificationCenterPage({ section }: { section: NotificationSection }) {
@@ -347,6 +340,27 @@ export function AccountCenterPage({
   const auth = useAuth()
   const { state, updateLocalProfile } = useUserSystem()
   const user = auth.user
+  /**
+   * The reader own follower and following totals.
+   *
+   * Previously 0 and the length of a localStorage array, which is what one
+   * browser happened to remember rather than what the site records.
+   */
+  const ownClient = auth.enabled ? auth.client.requestClient : null
+  const ownUidParsed = Number(user?.id)
+  const ownUidValue = Number.isFinite(ownUidParsed) && ownUidParsed > 0 ? ownUidParsed : null
+  const [ownFollowCounts, setOwnFollowCounts] = useState({ followers: 0, following: 0 })
+  useEffect(() => {
+    if (!ownClient || ownUidValue === null) return
+    let active = true
+    void result(getFollowCounts({ client: ownClient, throwOnError: true, path: { uid: ownUidValue } }))
+      .then((counts) => {
+        if (!active) return
+        setOwnFollowCounts({ followers: counts.followerCount ?? 0, following: counts.followingCount ?? 0 })
+      })
+      .catch(() => {})
+    return () => { active = false }
+  }, [ownClient, ownUidValue])
   const profileDraftRecord = useMemo(() => defineMemoryRecord({
     id: 'profile', namespace: 'site', surface: 'account-editor',
     ...memoryPolicy.taskDraft('discard-profile-draft'),
@@ -449,9 +463,8 @@ export function AccountCenterPage({
           bio={profile.bio || t('userSystem.account.emptyBio')}
           avatarSeed={user.id}
           avatarSrc={avatarSrc}
-          followerCount={0}
-          followingCount={state.followedUserIds.length}
-          likeCount={0}
+          followerCount={ownFollowCounts.followers}
+          followingCount={ownFollowCounts.following}
           ownProfile
         />
         <div className="user-system-layout account-layout">
@@ -605,9 +618,9 @@ function AccountContent({
     )
   }
 
-  if (section === 'favorites') return <FavoriteContent />
+  if (section === 'favorites') return <FavoriteContent client={accountClient} />
   if (section === 'comments') return <EmptyAccountContent kind="comments" />
-  if (section === 'posts') return <AuthoredPostContent />
+  if (section === 'posts') return <ProfilePostList uid={ownUid} client={accountClient} />
   if (section === 'fans') return <PeopleList mode="fans" uid={ownUid} client={accountClient} ownProfile />
   if (section === 'following') return <PeopleList mode="following" uid={ownUid} client={accountClient} ownProfile />
   if (section === 'privacy') return <PrivacySettings />
@@ -985,13 +998,78 @@ export function PublicUserProfilePage({
   const profileClient = profileAuth.enabled ? profileAuth.client.requestClient : null
   const parsedProfileUid = Number(userId)
   const profileUid = Number.isFinite(parsedProfileUid) && parsedProfileUid > 0 ? parsedProfileUid : null
-  const profile = findPublicProfile(userId)
-  const { state, toggleFollowedUser } = useUserSystem()
-  const followed = state.followedUserIds.includes(userId)
+  /**
+   * The profile, fetched by uid.
+   *
+   * This used to be a lookup in a table of three fixture ids, which was fine
+   * while every author was a fixture and became a dead end the moment posts
+   * carried real uids: the early return fired for every author, so clicking any
+   * name in the forum landed on "no posts yet" — and it ran before the follower
+   * lists, making the real ones in this change unreachable.
+   *
+   * Nothing about the account is invented here. The bio and the likes total were
+   * fixture fields with no column behind them, so the summary shows the name,
+   * avatar and follow counts the API actually returns.
+   */
+  const [profile, setProfile] = useState<UserPublic | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 })
+  const [followed, setFollowed] = useState(false)
 
-  // An unknown id has no profile to show. Rendering the first fixture instead --
-  // which is what the previous fallback did -- attributed one person's name, bio
-  // and follower counts to whatever id happened to be in the hash.
+  useEffect(() => {
+    if (!profileClient || profileUid === null) {
+      setProfile(null)
+      setProfileLoading(false)
+      return
+    }
+    let active = true
+    setProfileLoading(true)
+    void Promise.all([
+      result(getUserByUid({ client: profileClient, throwOnError: true, path: { uid: profileUid } })),
+      result(getFollowCounts({ client: profileClient, throwOnError: true, path: { uid: profileUid } })),
+    ])
+      .then(([user, counts]) => {
+        if (!active) return
+        setProfile(user)
+        setFollowCounts({
+          followers: counts.followerCount ?? 0,
+          following: counts.followingCount ?? 0,
+        })
+        // `following` here is the reader's own relationship to this account, not
+        // a tally — the two live on the same response.
+        setFollowed(counts.following)
+        setProfileLoading(false)
+      })
+      .catch(() => {
+        if (!active) return
+        setProfile(null)
+        setProfileLoading(false)
+      })
+    return () => { active = false }
+  }, [profileClient, profileUid])
+
+  const toggleFollow = () => {
+    if (status !== 'authenticated') {
+      onAuthRequired()
+      return
+    }
+    if (!profileClient || profileUid === null) return
+    const next = !followed
+    setFollowed(next)
+    const op = next ? followUser : unfollowUser
+    void result(op({ client: profileClient, throwOnError: true, path: { uid: profileUid } }))
+      .catch(() => setFollowed(!next))
+  }
+
+  if (profileLoading) {
+    return (
+      <main className="user-system-main public-profile-main">
+        <div className="home-shell"><p className="forum-feed-status" role="status">{t('forum.loading')}</p></div>
+      </main>
+    )
+  }
+
+  // A uid that names no account, rather than one missing from a fixture list.
   if (!profile) {
     return (
       <main className="user-system-main public-profile-main">
@@ -1006,19 +1084,17 @@ export function PublicUserProfilePage({
     <main className="user-system-main public-profile-main">
       <div className="home-shell">
         <ProfileSummary
-          userId={userId}
-          name={t(profile.nameKey)}
-          bio={t(profile.bioKey)}
-          avatarSeed={profile.avatarSeed}
-          followerCount={profile.followerCount}
-          followingCount={profile.followingCount}
-          likeCount={profile.likeCount}
+          userId={String(profile.specialUid ?? profile.uid)}
+          name={profile.name}
+          avatarSrc={profile.avatarUrl}
+          followerCount={followCounts.followers}
+          followingCount={followCounts.following}
           action={(
             <button
               type="button"
               className={followed ? 'profile-follow-action is-followed' : 'profile-follow-action'}
               aria-pressed={followed}
-              onClick={() => status === 'authenticated' ? toggleFollowedUser(userId) : onAuthRequired()}
+              onClick={toggleFollow}
             >
               {t(followed ? 'forum.users.following' : 'forum.users.follow')}
             </button>
@@ -1045,13 +1121,18 @@ export function PublicUserProfilePage({
               description={t(`userSystem.publicProfile.descriptions.${section}`)}
             />
             {section === 'posts' ? (
-              <ProfilePostList mode="posts" postKeys={profile.featuredPostKeys} />
+              <ProfilePostList uid={profileUid} client={profileClient} />
             ) : section === 'comments' ? (
-              <CommentHistory publicProfile />
+              // Listing a person comments is the one endpoint this needs and the
+              // backend does not have — the same gap as the forum replies tab. Two
+              // invented comments stood here, attributed to a fixture author.
+              <EmptyAccountContent kind="comments" />
             ) : section === 'fans' || section === 'following' ? (
               <PeopleList mode={section} uid={profileUid} client={profileClient} />
             ) : (
-              <ProfilePostList mode="favorites" postKeys={['official']} />
+              // Someone else's saved posts are not public, and the API has no way to
+              // ask for them — deliberately, since a bookmark is a private note.
+              <EmptyAccountContent kind="favorites" />
             )}
           </section>
         </div>
@@ -1060,26 +1141,36 @@ export function PublicUserProfilePage({
   )
 }
 
+/**
+ * The band at the top of a profile.
+ *
+ * The count defaults were `12`, `27` and `136` — shown to any caller that passed
+ * none, so two different profiles could display the same three figures as fact.
+ * They are required now, which makes a caller state where its numbers come from.
+ *
+ * `bio` is optional because an account has no bio field on the API; only the
+ * reader's own locally-stored one exists. And `likeCount` is gone for the reason
+ * given on the forum's own profile band: it needs a server aggregate, and a page
+ * total dressed as a lifetime one is worse than no figure.
+ */
 function ProfileSummary({
   userId,
   name,
   bio,
   avatarSeed,
   avatarSrc,
-  followerCount = 12,
-  followingCount = 27,
-  likeCount = 136,
+  followerCount,
+  followingCount,
   ownProfile = false,
   action,
 }: {
   userId: string
   name: string
-  bio: string
-  avatarSeed: string
+  bio?: string
+  avatarSeed?: string
   avatarSrc?: string
-  followerCount?: number
-  followingCount?: number
-  likeCount?: number
+  followerCount: number
+  followingCount: number
   ownProfile?: boolean
   action?: ReactNode
 }) {
@@ -1092,18 +1183,17 @@ function ProfileSummary({
   return (
     <section className="profile-summary user-panel">
       <div className="profile-summary-accent" aria-hidden="true" />
-      <img className="profile-summary-avatar" src={avatarSrc ?? avatarUrl(avatarSeed, 192)} alt="" />
+      <img className="profile-summary-avatar" src={avatarSrc ?? (avatarSeed ? avatarUrl(avatarSeed, 192) : DEFAULT_AVATAR_SRC)} alt="" />
       <div className="profile-summary-copy">
         <div className="profile-summary-name-row">
           <h1>{name}</h1>
           {ownProfile && <span>{t('userSystem.currentUser.badge')}</span>}
         </div>
         <p className="profile-account-id">{t('userSystem.publicProfile.accountId', { id: userId })}</p>
-        <p className="profile-bio">{bio}</p>
+        {bio && <p className="profile-bio">{bio}</p>}
         <dl>
           <div><dd>{formatter.format(followerCount)}</dd><dt>{t('userSystem.publicProfile.fans')}</dt></div>
           <div><dd>{formatter.format(followingCount)}</dd><dt>{t('userSystem.publicProfile.following')}</dt></div>
-          <div><dd>{formatter.format(likeCount)}</dd><dt>{t('userSystem.publicProfile.likesReceived')}</dt></div>
         </dl>
       </div>
       {action && <div className="profile-summary-action">{action}</div>}
@@ -1111,35 +1201,83 @@ function ProfileSummary({
   )
 }
 
+/**
+ * A profile's posts, from the feed.
+ *
+ * Two fixture posts before this, with a hard-coded "1 comment, 23 likes" and a
+ * relative time that read "this week" forever. `authorUid` is what makes it that
+ * person's: the same filter the forum's own profile view uses.
+ *
+ * The favourites mode is deliberately absent rather than ported. A bookmark is
+ * private — the API scopes "posts I saved" to the caller and offers no way to ask
+ * for anyone else's, which is the right shape — so a public profile cannot show
+ * them, and the fixtures that did were showing something the site should not.
+ */
 function ProfilePostList({
-  mode,
-  postKeys,
+  uid,
+  client,
+  bookmarked = false,
 }: {
-  mode: 'favorites' | 'posts'
-  postKeys?: readonly string[]
+  /** Whose posts. Ignored when `bookmarked` is set. */
+  uid: number | null
+  client: ApiClient['client'] | null
+  /** The reader own saved posts instead of an author feed. */
+  bookmarked?: boolean
 }) {
   const { t } = useTranslation()
-  const keys = postKeys ?? (mode === 'favorites' ? ['vrising', 'aion2'] : ['general', 'palworld'])
+  const [posts, setPosts] = useState<PostRead[]>([])
+  const [loading, setLoading] = useState(true)
 
-  if (keys.length === 0) return <EmptyAccountContent kind={mode} />
+  useEffect(() => {
+    if (!client || (!bookmarked && uid === null)) {
+      setPosts([])
+      setLoading(false)
+      return
+    }
+    let active = true
+    setLoading(true)
+    void result(listForumPosts({
+      client,
+      throwOnError: true,
+      query: bookmarked
+        ? { bookmarked: true, sort: 'new', page: 1, pageSize: 20 }
+        : { authorUid: uid ?? undefined, sort: 'new', page: 1, pageSize: 20 },
+    }))
+      .then((page) => {
+        if (!active) return
+        setPosts(page.results ?? [])
+        setLoading(false)
+      })
+      .catch(() => {
+        if (!active) return
+        setPosts([])
+        setLoading(false)
+      })
+    return () => { active = false }
+  }, [bookmarked, client, uid])
+
+  if (loading) return <p className="forum-feed-status" role="status">{t('forum.loading')}</p>
+  if (posts.length === 0) return <EmptyAccountContent kind={bookmarked ? "favorites" : "posts"} />
 
   return (
     <div className="profile-post-list">
-      {keys.map((key) => {
-        const fixture = POST_FIXTURES.find((item) => item.key === key) ?? POST_FIXTURES[0]
-        const site = SITES.find((item) => item.id === fixture.siteId) ?? SITES[0]
+      {posts.map((post) => {
+        const gameIds = post.gameIds ?? []
+        const site = gameIds.length ? SITES.find((item) => item.id === gameIds[0]) : undefined
         return (
-          <article key={key} className="user-panel profile-post-card">
+          <article key={post.postNo} className="user-panel profile-post-card">
             <div className="profile-post-copy">
-              <time>{t('forum.time.thisWeek')}</time>
-              <h2>{t(`forum.posts.${fixture.key}.title`)}</h2>
-              <p>{t(`forum.posts.${fixture.key}.copy`)}</p>
+              <time dateTime={post.createdAt}>{calendarDate(post.createdAt)}</time>
+              <h2><a href={`#forum`}>{post.title}</a></h2>
+              <p>{post.body}</p>
               <footer>
-                <span><IconMessageCircle className="size-4" stroke={1.8} />{t('userSystem.content.commentsCount', { count: 1 })}</span>
-                <span><IconThumbUp className="size-4" stroke={1.8} />{t('userSystem.content.likesCount', { count: 23 })}</span>
+                <span><IconMessageCircle className="size-4" stroke={1.8} />{t('userSystem.content.commentsCount', { count: post.commentCount })}</span>
+                <span><IconThumbUp className="size-4" stroke={1.8} />{t('userSystem.content.likesCount', { count: post.likeCount })}</span>
               </footer>
             </div>
-            <img src={site.bg} alt={t(`forum.posts.${fixture.key}.title`)} />
+            {(post.images?.[0]?.url ?? site?.bg) && (
+              <img src={post.images?.[0]?.url ?? site?.bg} alt={post.title} />
+            )}
           </article>
         )
       })}
@@ -1147,17 +1285,21 @@ function ProfilePostList({
   )
 }
 
-function FavoriteContent() {
+/**
+ * The reader's saved games and saved posts.
+ *
+ * The posts half matched stored bookmark ids against a table of five fixture
+ * posts, so it could only ever show those five — and after the fixtures' copy was
+ * removed it would have rendered locale keys for anyone whose browser still held
+ * one of those ids. It asks the server for the posts you bookmarked now.
+ *
+ * Followed games stay local: a game favourite is a browser preference with no
+ * table behind it, unlike a post bookmark.
+ */
+function FavoriteContent({ client }: { client: ApiClient['client'] | null }) {
   const { t } = useTranslation()
   const { state } = useUserSystem()
-  const bookmarkedKeys = POST_FIXTURES
-    .filter((fixture) => state.bookmarkedPostIds.includes(fixture.postId))
-    .map((fixture) => fixture.key)
   const favoriteGames = SITES.filter((site) => state.favoriteGameIds.includes(site.id))
-
-  if (bookmarkedKeys.length === 0 && favoriteGames.length === 0) {
-    return <EmptyAccountContent kind="favorites" />
-  }
 
   return (
     <div className="favorite-content-stack">
@@ -1180,58 +1322,14 @@ function FavoriteContent() {
           </div>
         </section>
       )}
-      {bookmarkedKeys.length > 0 && (
-        <section aria-labelledby="favorite-posts-heading">
-          <h2 id="favorite-posts-heading">{t('userSystem.content.favoritePosts')}</h2>
-          <ProfilePostList mode="favorites" postKeys={bookmarkedKeys} />
-        </section>
-      )}
+      <section aria-labelledby="favorite-posts-heading">
+        <h2 id="favorite-posts-heading">{t('userSystem.content.favoritePosts')}</h2>
+        <ProfilePostList uid={null} client={client} bookmarked />
+      </section>
     </div>
   )
 }
 
-function AuthoredPostContent() {
-  const { t, i18n } = useTranslation()
-  const { state } = useUserSystem()
-  const formatter = useMemo(
-    () => new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, { dateStyle: 'medium' }),
-    [i18n.language, i18n.resolvedLanguage],
-  )
-
-  if (state.publishedPosts.length === 0) return <EmptyAccountContent kind="posts" />
-
-  return (
-    <div className="profile-post-list">
-      {state.publishedPosts.map((post) => {
-        const sites = post.gameIds
-          .map((gameId) => SITES.find((item) => item.id === gameId))
-          .filter((site): site is (typeof SITES)[number] => Boolean(site))
-        const image = post.imageSrcs[0] ?? sites[0]?.bg
-        return (
-          <article key={post.id} className="user-panel profile-post-card authored-post-card">
-            <div className="profile-post-copy">
-              <time dateTime={post.createdAt}>{formatter.format(new Date(post.createdAt))}</time>
-              <h2><a href="#forum">{post.title}</a></h2>
-              <p>{post.content}</p>
-              <footer>
-                {sites.map((site) => <span key={site.id}>{t(site.nameKey)}</span>)}
-                {post.topics.map((topic) => <span key={topic}>{t(`forum.composer.topics.${topic}`, { defaultValue: topic })}</span>)}
-                {post.tags.map((tag) => <span key={tag}>{tag}</span>)}
-                {post.videoUrl && (
-                  <a href={post.videoUrl} target="_blank" rel="noreferrer">
-                    <IconVideo className="size-4" stroke={1.8} aria-hidden="true" />
-                    {t('forum.composer.openVideo')}
-                  </a>
-                )}
-              </footer>
-            </div>
-            {image && <img src={image} alt="" />}
-          </article>
-        )
-      })}
-    </div>
-  )
-}
 
 function EmptyAccountContent({ kind }: { kind: 'favorites' | 'posts' | 'comments' | 'fans' | 'following' }) {
   const { t } = useTranslation()
@@ -1251,29 +1349,6 @@ function EmptyAccountContent({ kind }: { kind: 'favorites' | 'posts' | 'comments
   )
 }
 
-function CommentHistory({ publicProfile = false }: { publicProfile?: boolean }) {
-  const { t } = useTranslation()
-  const { user } = useAuth()
-  const { state } = useUserSystem()
-  const currentAvatar = state.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
-  return (
-    <div className="user-panel comment-history">
-      {[0, 1].map((index) => (
-        <article key={index}>
-          <img src={publicProfile ? avatarUrl('arkive-dusk-raven') : currentAvatar} alt="" />
-          <div>
-            <header>
-              <strong>{publicProfile ? t('forum.posts.vrising.author') : user?.name}</strong>
-              <time>{t(index === 0 ? 'forum.time.today' : 'forum.time.yesterday')}</time>
-            </header>
-            <p>{t(`userSystem.content.comment${index + 1}`)}</p>
-            <a href="#forum">{t('userSystem.content.viewDiscussion')}</a>
-          </div>
-        </article>
-      ))}
-    </div>
-  )
-}
 
 /**
  * The followers and following lists.
