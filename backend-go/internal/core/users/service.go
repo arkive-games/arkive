@@ -222,6 +222,32 @@ func (s *Service) ByAnyUID(ctx context.Context, uid int64) (UserPublic, error) {
 	return toUserPublic(u, s.avatarResolver()), nil
 }
 
+// IDByUID resolves a public account number to the internal handle.
+//
+// It reports the same not-found as ByAnyUID for a number nobody holds and for a
+// deactivated account, for the same reason: the caller must not be able to learn
+// which accounts exist but are disabled. A feed filtered on a deactivated author
+// therefore comes back empty rather than partially populated.
+//
+// This returns the uuid, which ByAnyUID deliberately does not — UserPublic is what
+// an anonymous caller may see, and the uuid is not part of that. The one caller is
+// the forum's author filter, which needs the internal handle to query on.
+func (s *Service) IDByUID(ctx context.Context, uid int64) (uuid.UUID, error) {
+	notFound := apierr.New(apierr.UserNotFound, "no such user")
+
+	u, err := s.q.GetUserByAnyUID(ctx, uid)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return uuid.Nil, notFound
+		}
+		return uuid.Nil, fmt.Errorf("load user by uid: %w", err)
+	}
+	if !u.IsActive {
+		return uuid.Nil, notFound
+	}
+	return u.ID, nil
+}
+
 // SetAvatar normalises an uploaded image, stores it and points the account at it.
 //
 // The order of the three steps is the whole design:

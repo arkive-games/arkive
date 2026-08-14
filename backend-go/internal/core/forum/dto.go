@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/games"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
@@ -81,10 +82,18 @@ const (
 type PostRead struct {
 	PostNo    int64            `json:"postNo" doc:"Permanent post number; use this in links" example:"1042"`
 	Author    users.UserPublic `json:"author" doc:"Who wrote it"`
-	Channel   Channel          `json:"channel" doc:"general, official or games" example:"general"`
+	// The enum tag is what makes the generated TypeScript a union rather than a
+	// bare string. CreatePostBody.Channel already carried one; this side did not,
+	// so a client reading a response got no help from the type.
+	Channel   Channel          `json:"channel" enum:"general,official,games" doc:"general, official or games" example:"general"`
 	Title     string           `json:"title" doc:"Post title"`
 	Body      string           `json:"body" doc:"Raw markdown, exactly as written. Render it with raw HTML disabled."`
 	Topic     *string          `json:"topic" doc:"guide, question, testing or discussion, or null"`
+	// No enum here, deliberately, unlike the request bodies. Generating one would
+	// mean either importing huma into this package or repeating the registry in a
+	// struct tag, and a response needs no validation — the union that guards the
+	// client is the one on what it sends. A reader comparing these against its own
+	// game list is unaffected.
 	GameIDs   []string         `json:"gameIds" doc:"Games this post is about, at most 5"`
 	Tags      []string         `json:"tags" doc:"Free-form tags, at most 10"`
 	Comments  int64            `json:"commentCount" doc:"Number of comments, replies included"`
@@ -139,10 +148,17 @@ type Optional struct {
 
 // ListFilter narrows a feed request. Every field is optional.
 type ListFilter struct {
-	Channel  *string
-	GameID   *string
-	Tag      *string
-	AuthorID *uuid.UUID
+	Channel *string
+	GameID  *string
+	Tag     *string
+
+	// Exactly one of these addresses an author. AuthorID is the internal handle,
+	// used by callers that already hold it; AuthorUID is the public number a client
+	// sends, which the service resolves. Setting both is a programming error and
+	// AuthorID wins.
+	AuthorID  *uuid.UUID
+	AuthorUID *int64
+
 	Page     int
 	PageSize int
 }
@@ -284,6 +300,24 @@ func validateBody(body string, what string) error {
 	// replace the renderer's obligation to disable raw HTML; it means a hostile
 	// body never reaches storage in the first place. See markdown.go.
 	return validateMarkdownSafety(trimmed, what)
+}
+
+// validateGameIDs rejects a key that names no game the platform serves.
+//
+// The wire layer already refuses these through an OpenAPI enum generated from the
+// same registry, and the database refuses them again through
+// forum_posts_game_ids_known. This is the middle of those three, and it is the one
+// that covers a caller who is not an HTTP request — a test, or a future internal
+// producer of posts. Without it, such a caller reaches the check constraint and
+// turns a validation mistake into a 500.
+func validateGameIDs(keys []string) error {
+	for _, key := range keys {
+		if !games.Valid(key) {
+			return apierr.New(apierr.Validation,
+				fmt.Sprintf("%q is not a game this platform serves", key))
+		}
+	}
+	return nil
 }
 
 // normaliseList trims, drops blanks and removes duplicates, so that ["a","a",""]

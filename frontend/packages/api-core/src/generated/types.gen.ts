@@ -99,7 +99,7 @@ export type CreatePostBody = {
     /**
      * Games this post is about
      */
-    gameIds?: Array<string> | null;
+    gameIds?: Array<'aion2' | 'palworld' | 'vrising' | 'sts2'> | null;
     /**
      * Free-form tags
      */
@@ -390,7 +390,7 @@ export type PostRead = {
     /**
      * general, official or games
      */
-    channel: string;
+    channel: 'general' | 'official' | 'games';
     /**
      * Number of comments, replies included
      */
@@ -495,7 +495,7 @@ export type UpdatePostBody = {
     /**
      * Replaces the whole list
      */
-    gameIds?: Array<string>;
+    gameIds?: Array<'aion2' | 'palworld' | 'vrising' | 'sts2'>;
     /**
      * Replaces the whole list
      */
@@ -1035,6 +1035,10 @@ export type ListForumPostsData = {
          * Only posts carrying this tag
          */
         tag?: string;
+        /**
+         * Only posts by this account
+         */
+        authorUid?: number;
         /**
          * 1-based page number
          */

@@ -175,7 +175,7 @@ export const updateForumComment = <ThrowOnError extends boolean = false>(options
 /**
  * List forum posts
  *
- * Public. Newest first, with optional channel, game and tag filters. Paginated by page number; a client should de-duplicate by postNo, because a post arriving while someone reads can shift rows between pages.
+ * Public. Newest first, with optional channel, game, tag and author filters. Paginated by page number; a client should de-duplicate by postNo, because a post arriving while someone reads can shift rows between pages.
  */
 export const listForumPosts = <ThrowOnError extends boolean = false>(options?: Options<ListForumPostsData, ThrowOnError>): RequestResult<ListForumPostsResponses, ListForumPostsErrors, ThrowOnError> => (options?.client ?? client).get<ListForumPostsResponses, ListForumPostsErrors, ThrowOnError>({
     responseType: 'json',

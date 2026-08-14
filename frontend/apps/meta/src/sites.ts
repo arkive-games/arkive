@@ -1,3 +1,5 @@
+import type { CreatePostBody } from '@gamemap/api-core'
+
 import aion2Bg from './assets/aion2-bg.jpg'
 import palworldBg from './assets/palworld-bg.webp'
 
@@ -6,8 +8,20 @@ const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/stea
 
 export const IS_TOY = Boolean(import.meta.env.VITE_TOY)
 
+/**
+ * The games the backend knows, taken from the generated client rather than
+ * restated here.
+ *
+ * A game id is a permanent key shared by this list, the backend's registry, a
+ * data pipeline, two artifact repositories and a DNS name. Deriving the type from
+ * the API contract means adding a game to the portal without adding it to the
+ * server — or misspelling one — fails `tsc` instead of failing at request time,
+ * which is how the two lists were previously free to disagree.
+ */
+export type GameId = NonNullable<CreatePostBody['gameIds']>[number]
+
 export interface SiteCard {
-  id: string
+  id: GameId
   /**
    * Absent while `comingSoon` is set: an announced game has nothing to link to
    * yet, so the hub cannot accidentally render a href for it.

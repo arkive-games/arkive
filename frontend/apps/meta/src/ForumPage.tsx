@@ -314,8 +314,13 @@ export function ForumPage({
   const signedIn = status === 'authenticated'
   const currentAvatar = userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
 
+  // Keyed by plain string, not by SiteCard['id']. The ids are a closed union now,
+  // but the things looked up here are not: a persisted draft or a hash fragment can
+  // carry a game this build no longer serves, and `get` already answers that with
+  // undefined. Narrowing the key would only force every caller to prove a fact the
+  // lookup exists to establish.
   const siteById = useMemo(
-    () => new Map(sites.map((site) => [site.id, site])),
+    () => new Map<string, SiteCard>(sites.map((site) => [site.id, site])),
     [sites],
   )
 

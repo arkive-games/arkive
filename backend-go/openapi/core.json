@@ -173,6 +173,13 @@
           "gameIds": {
             "description": "Games this post is about",
             "items": {
+              "description": "A game the platform serves",
+              "enum": [
+                "aion2",
+                "palworld",
+                "vrising",
+                "sts2"
+              ],
               "type": "string"
             },
             "maxItems": 5,
@@ -692,6 +699,11 @@
           },
           "channel": {
             "description": "general, official or games",
+            "enum": [
+              "general",
+              "official",
+              "games"
+            ],
             "examples": [
               "general"
             ],
@@ -903,6 +915,13 @@
           "gameIds": {
             "description": "Replaces the whole list",
             "items": {
+              "description": "A game the platform serves",
+              "enum": [
+                "aion2",
+                "palworld",
+                "vrising",
+                "sts2"
+              ],
               "type": "string"
             },
             "maxItems": 5,
@@ -1863,7 +1882,7 @@
     },
     "/forum/posts": {
       "get": {
-        "description": "Public. Newest first, with optional channel, game and tag filters. Paginated by page number; a client should de-duplicate by postNo, because a post arriving while someone reads can shift rows between pages.",
+        "description": "Public. Newest first, with optional channel, game, tag and author filters. Paginated by page number; a client should de-duplicate by postNo, because a post arriving while someone reads can shift rows between pages.",
         "operationId": "listForumPosts",
         "parameters": [
           {
@@ -1899,6 +1918,18 @@
             "schema": {
               "description": "Only posts carrying this tag",
               "type": "string"
+            }
+          },
+          {
+            "description": "Only posts by this account",
+            "explode": false,
+            "in": "query",
+            "name": "authorUid",
+            "schema": {
+              "description": "Only posts by this account",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
             }
           },
           {

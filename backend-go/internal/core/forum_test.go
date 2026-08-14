@@ -85,8 +85,12 @@ func TestPostingAndReadingBackAPost(t *testing.T) {
 		"title":   "  Where is the Chillet spawn?  ",
 		"body":    "I have looked **everywhere**.",
 		"topic":   "question",
-		"gameIds": []string{"palworld", "palworld", " "},
-		"tags":    []string{"spawn", "help", "spawn"},
+		// A blank game key is no longer representable: gameIds carries an enum
+		// generated from the game registry, so the wire layer refuses one before the
+		// service sees it. Blank-dropping is still exercised, on tags, which stay
+		// free-form.
+		"gameIds": []string{"palworld", "palworld"},
+		"tags":    []string{"spawn", "help", "spawn", " "},
 	})
 	if res.status != http.StatusOK {
 		t.Fatalf("create = %d: %s", res.status, res.body)
@@ -97,8 +101,8 @@ func TestPostingAndReadingBackAPost(t *testing.T) {
 	if no, _ := data["postNo"].(float64); no < 1 {
 		t.Errorf("postNo = %v, want a positive number", data["postNo"])
 	}
-	// Whitespace is trimmed, and the duplicate game and tag collapse: a caller
-	// sending ["a","a",""] means one entry, not three.
+	// Whitespace is trimmed, and duplicates and blanks collapse: a caller sending
+	// ["a","a",""] means one entry, not three.
 	if title, _ := data["title"].(string); title != "Where is the Chillet spawn?" {
 		t.Errorf("title = %q, want it trimmed", title)
 	}
@@ -127,6 +131,50 @@ func TestPostingAndReadingBackAPost(t *testing.T) {
 	}
 	if author["avatarUrl"] == nil || author["uid"] == nil {
 		t.Errorf("author lacks uid or avatarUrl: %v", author)
+	}
+}
+
+// The forum shipped with game_ids as an unconstrained text[], so any string was
+// stored — while the table's own comment claimed a registry that did not exist.
+// Three layers refuse an unknown key now: the OpenAPI enum, the service, and a
+// check constraint. This asserts the outcome rather than which layer answered.
+func TestUnknownGameKeysAreRefused(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("tagger", "tagger@example.com", "hunter2hunter2")
+
+	for _, keys := range [][]string{
+		{"not-a-game"},
+		{"palworld", "not-a-game"}, // one good key does not license a bad one
+		{"Palworld"},               // case matters; this would be a second cabin
+		{" "},
+		{"palworld "}, // a trailing space is a different key, not a typo to forgive
+	} {
+		res := h.createPost(token, map[string]any{
+			"channel": "games",
+			"title":   "Refused",
+			"body":    "This should not be stored.",
+			"gameIds": keys,
+		})
+		if res.status != http.StatusUnprocessableEntity {
+			t.Errorf("create with gameIds=%v = %d, want 422: %s", keys, res.status, res.body)
+		}
+	}
+
+	// An edit cannot smuggle one in either: UpdatePostBody replaces the whole list.
+	postNo := h.mustCreatePost(token, map[string]any{
+		"channel": "games", "title": "Editable", "body": "Body.", "gameIds": []string{"palworld"},
+	})
+	path := fmt.Sprintf("/forum/posts/%d", postNo)
+
+	res := h.do(http.MethodPatch, path, map[string]any{"gameIds": []string{"not-a-game"}}, withBearer(token))
+	if res.status != http.StatusUnprocessableEntity {
+		t.Errorf("patch with an unknown game = %d, want 422: %s", res.status, res.body)
+	}
+
+	// And the empty list stays legal: a post need not be about any game.
+	res = h.do(http.MethodPatch, path, map[string]any{"gameIds": []string{}}, withBearer(token))
+	if res.status != http.StatusOK {
+		t.Errorf("patch clearing the games = %d, want 200: %s", res.status, res.body)
 	}
 }
 

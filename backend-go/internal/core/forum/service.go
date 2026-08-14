@@ -31,6 +31,11 @@ type Service struct {
 // account use case, and so tests can supply authors without a user service.
 type AuthorSource interface {
 	PublicByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]users.UserPublic, error)
+
+	// IDByUID turns a public account number into the internal handle a feed filter
+	// needs. It exists here rather than in the handler because the uuid is internal:
+	// a client addresses an author by uid, and only the service crosses that line.
+	IDByUID(ctx context.Context, uid int64) (uuid.UUID, error)
 }
 
 // NewService wires the forum service.
@@ -73,6 +78,9 @@ func (s *Service) CreatePost(ctx context.Context, principal auth.Principal, in C
 
 	gameIDs, err := normaliseList(in.GameIDs, MaxGameIDs, MaxTagLength, "game")
 	if err != nil {
+		return PostRead{}, err
+	}
+	if err := validateGameIDs(gameIDs); err != nil {
 		return PostRead{}, err
 	}
 	tags, err := normaliseList(in.Tags, MaxTags, MaxTagLength, "tag")
@@ -135,6 +143,20 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		if err := validateChannel(Channel(*filter.Channel)); err != nil {
 			return nil, 0, err
 		}
+	}
+
+	// An author filter naming nobody is an empty feed, not an error. A profile link
+	// for a deleted account is a stale link, and answering it with 404 would make
+	// the feed endpoint fail for a reason that has nothing to do with the feed.
+	if filter.AuthorID == nil && filter.AuthorUID != nil {
+		id, err := s.authors.IDByUID(ctx, *filter.AuthorUID)
+		if err != nil {
+			if e, ok := apierr.As(err); ok && e.ErrorCode == apierr.UserNotFound {
+				return []PostRead{}, 0, nil
+			}
+			return nil, 0, fmt.Errorf("resolve author: %w", err)
+		}
+		filter.AuthorID = &id
 	}
 
 	total, err := s.q.CountForumPosts(ctx, coredb.CountForumPostsParams{
@@ -236,11 +258,14 @@ func (s *Service) UpdatePost(ctx context.Context, principal auth.Principal, post
 		params.Topic = normaliseTopic(in.Topic.Value)
 	}
 	if in.GameIDs != nil {
-		games, err := normaliseList(*in.GameIDs, MaxGameIDs, MaxTagLength, "game")
+		keys, err := normaliseList(*in.GameIDs, MaxGameIDs, MaxTagLength, "game")
 		if err != nil {
 			return PostRead{}, err
 		}
-		params.GameIDs = games
+		if err := validateGameIDs(keys); err != nil {
+			return PostRead{}, err
+		}
+		params.GameIDs = keys
 	}
 	if in.Tags != nil {
 		tags, err := normaliseList(*in.Tags, MaxTags, MaxTagLength, "tag")
