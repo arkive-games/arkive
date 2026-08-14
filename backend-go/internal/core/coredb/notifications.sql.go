@@ -90,12 +90,13 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 }
 
 const getForumPostNosByIDs = `-- name: GetForumPostNosByIDs :many
-SELECT id, post_no FROM core.forum_posts WHERE id = ANY ($1::uuid[])
+SELECT id, post_no, title FROM core.forum_posts WHERE id = ANY ($1::uuid[])
 `
 
 type GetForumPostNosByIDsRow struct {
 	ID     uuid.UUID
 	PostNo int64
+	Title  string
 }
 
 // Post numbers for a page of notifications, in one query rather than one per row.
@@ -108,7 +109,7 @@ func (q *Queries) GetForumPostNosByIDs(ctx context.Context, ids []uuid.UUID) ([]
 	items := []GetForumPostNosByIDsRow{}
 	for rows.Next() {
 		var i GetForumPostNosByIDsRow
-		if err := rows.Scan(&i.ID, &i.PostNo); err != nil {
+		if err := rows.Scan(&i.ID, &i.PostNo, &i.Title); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

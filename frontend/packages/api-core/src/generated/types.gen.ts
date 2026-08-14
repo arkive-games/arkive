@@ -992,6 +992,14 @@ export type PrivacyBody = {
 
 export type Read = {
     /**
+     * Avatar of who caused it, or null
+     */
+    actorAvatarUrl: string | null;
+    /**
+     * Display name of who caused it, or null
+     */
+    actorName: string | null;
+    /**
      * Who caused it, or null for a system message
      */
     actorUid: number | null;
@@ -1019,6 +1027,10 @@ export type Read = {
      * The post it is about, or null
      */
     postNo: number | null;
+    /**
+     * Title of the post it is about, or null
+     */
+    postTitle: string | null;
     /**
      * When it was read, or null
      */

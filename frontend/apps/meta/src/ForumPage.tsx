@@ -288,8 +288,19 @@ export function ForumPage({
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null
   }, [user?.id])
 
+  /**
+   * A cabin has its own three tabs, and they select the same three orderings.
+   *
+   * Mapped rather than ignored: the cabin tablist previously changed only which
+   * button was highlighted, because the query read `feedTab` while the buttons set
+   * `cabinTab` — so Hot and Latest rendered byte-identical lists. `guides` is the
+   * featured shelf for that game, which is what the tab has always meant.
+   */
+  const cabinFeedTab: FeedTab =
+    cabinTab === 'latest' ? 'latest' : cabinTab === 'guides' ? 'featured' : 'recommended'
+
   const feedQuery = useMemo<FeedQuery>(() => ({
-    tab: feedTab,
+    tab: forumMode === 'cabin' ? cabinFeedTab : feedTab,
     // 'hot' is a view of everything rather than a stored channel, so it sends no
     // channel filter at all.
     channel: channel === 'hot' ? undefined : channel,
@@ -300,7 +311,7 @@ export function ForumPage({
     // the ordinary feed rather than an error.
     followingOnly: signedIn && followingOnly,
     page: currentPage,
-  }), [channel, currentPage, feedTab, followingOnly, gameFilter, signedIn, submittedQuery])
+  }), [cabinFeedTab, channel, currentPage, feedTab, followingOnly, forumMode, gameFilter, signedIn, submittedQuery])
 
   const feed = useForumFeed(client, feedQuery, tagLabels, viewerUid, t('forum.errors.feed'))
 
@@ -560,36 +571,45 @@ export function ForumPage({
    * addition. The server now owns the whole count, so the optimistic step adjusts
    * it directly and the revert undoes exactly that.
    */
-  const togglePostLike = (post: ForumPost) => {
+  /**
+   * `patch` names the list the card being clicked actually belongs to.
+   *
+   * The personal view renders its own feed, so patching the page-level one left
+   * the heart on screen untouched — the request succeeded and the button looked
+   * dead until a reload. Taking the patcher as an argument makes the caller say
+   * which list it is showing, rather than this function assuming there is only
+   * one. It defaults to the main feed because that is the common case.
+   */
+  const togglePostLike = (post: ForumPost, patch: (postNo: number, changes: Partial<ForumPost>) => void = feed.patch) => {
     runAuthenticated(() => {
       const liked = !post.liked
       const delta = liked ? 1 : -1
       const changes = { liked, likeCount: post.likeCount + delta }
       const undo = { liked: post.liked, likeCount: post.likeCount }
-      feed.patch(post.postNo, changes)
+      patch(post.postNo, changes)
       if (selectedPost?.postNo === post.postNo) thread.patchPost(changes)
       void runMutation(
         () => setPostLiked(client!, post.postNo, liked),
         () => {
-          feed.patch(post.postNo, undo)
+          patch(post.postNo, undo)
           if (selectedPost?.postNo === post.postNo) thread.patchPost(undo)
         },
       )
     })
   }
 
-  const togglePostBookmark = (post: ForumPost) => {
+  const togglePostBookmark = (post: ForumPost, patch: (postNo: number, changes: Partial<ForumPost>) => void = feed.patch) => {
     runAuthenticated(() => {
       const bookmarked = !post.bookmarked
       const delta = bookmarked ? 1 : -1
       const changes = { bookmarked, bookmarkCount: post.bookmarkCount + delta }
       const undo = { bookmarked: post.bookmarked, bookmarkCount: post.bookmarkCount }
-      feed.patch(post.postNo, changes)
+      patch(post.postNo, changes)
       if (selectedPost?.postNo === post.postNo) thread.patchPost(changes)
       void runMutation(
         () => setPostBookmarked(client!, post.postNo, bookmarked),
         () => {
-          feed.patch(post.postNo, undo)
+          patch(post.postNo, undo)
           if (selectedPost?.postNo === post.postNo) thread.patchPost(undo)
         },
       )
@@ -1076,8 +1096,8 @@ function ForumPersonalView({
   onTabChange: (tab: PersonalTab) => void
   onOpenPost: (postNo: number) => void
   onComingSoon: () => void
-  onToggleBookmark: (post: ForumPost) => void
-  onToggleLike: (post: ForumPost) => void
+  onToggleBookmark: (post: ForumPost, patch: (postNo: number, changes: Partial<ForumPost>) => void) => void
+  onToggleLike: (post: ForumPost, patch: (postNo: number, changes: Partial<ForumPost>) => void) => void
 }) {
   const { t, i18n } = useTranslation()
 
@@ -1112,7 +1132,28 @@ function ForumPersonalView({
     t('forum.errors.feed'),
   )
   const visiblePosts = personalFeed.posts
-  const receivedLikes = visiblePosts.reduce((sum, post) => sum + post.likeCount, 0)
+
+  /**
+   * The reader's own post count, independent of which tab is open.
+   *
+   * A second small request rather than reading `personalFeed.total`, which is the
+   * total for the *current* tab: taking it from there made the "Posts" stat read
+   * 0 the moment you clicked Likes, so an author with forty posts saw that they
+   * had none. `pageSize: 1` because only the count is wanted.
+   */
+  const ownPostsQuery = useMemo<FeedQuery>(() => ({
+    tab: 'latest',
+    authorUid: viewerUid ?? undefined,
+    page: 1,
+    pageSize: 1,
+  }), [viewerUid])
+  const ownPosts = useForumFeed(
+    viewerUid === null ? null : client,
+    ownPostsQuery,
+    labels,
+    viewerUid,
+    t('forum.errors.feed'),
+  )
 
   /**
    * The reader's follower and following counts.
@@ -1161,12 +1202,16 @@ function ForumPersonalView({
           <p>{bio}</p>
         </div>
         <dl>
-          {/* `total` rather than the loaded page: the tab shows twenty at a time,
-              and "3 posts" under a profile with forty of them is worse than no
-              number. The follow counts come from the server too — they were
-              literal 46 and 112 before, the same for every account. */}
-          <div><dt>{t('forum.redesign.posts')}</dt><dd>{formatCount(tab === 'posts' ? personalFeed.total : 0)}</dd></div>
-          <div><dt>{t('forum.redesign.likesReceived')}</dt><dd>{formatCount(receivedLikes)}</dd></div>
+          {/* Every figure here is a server total, and none of them move when you
+              change tabs. "Likes received" is gone: it summed whatever the current
+              tab had loaded, so on the Likes and Bookmarks tabs it added up the
+              likes on *other people's* posts — save one post with 400 likes and
+              your own profile claimed you had received 400. Summing only your own
+              loaded posts would still be a page rather than a total, so this needs
+              a server-side aggregate the backend does not expose yet. A number
+              that changes as you click looks computed, which makes a wrong one
+              worse than the literal it replaced. */}
+          <div><dt>{t('forum.redesign.posts')}</dt><dd>{formatCount(ownPosts.total)}</dd></div>
           <div><dt>{t('forum.redesign.following')}</dt><dd>{formatCount(followCounts.following)}</dd></div>
           <div><dt>{t('forum.redesign.followers')}</dt><dd>{formatCount(followCounts.followers)}</dd></div>
         </dl>
@@ -1199,8 +1244,8 @@ function ForumPersonalView({
             bookmarked={post.bookmarked}
             liked={post.liked}
             onToggleFollow={onComingSoon}
-            onToggleBookmark={() => onToggleBookmark(post)}
-            onToggleLike={() => onToggleLike(post)}
+            onToggleBookmark={() => onToggleBookmark(post, personalFeed.patch)}
+            onToggleLike={() => onToggleLike(post, personalFeed.patch)}
             onOpen={() => onOpenPost(post.postNo)}
             onShare={onComingSoon}
           />
@@ -1243,17 +1288,25 @@ function ForumCabinView({
 }) {
   const { t } = useTranslation()
   /**
-   * The guides tab is the only one that still narrows locally.
+   * All three cabin tabs are the query now, so nothing narrows here.
    *
-   * `latest` used to be `[...posts].reverse()`, which reversed *the page* rather
-   * than the ordering — on page two that showed the same five posts backwards,
-   * not the five before them. Ordering belongs to the query, so the tab is
-   * rendered from what the server returned and the cabin's own sort comes with
-   * it. Featured is a filter the feed already applies for the Featured tab; here
-   * it is applied to the page for now, which is honest for a cabin with one page
-   * and something to move server-side when a cabin has more.
+   * Two things were wrong before. `latest` was `[...posts].reverse()`, which
+   * reversed *the page* rather than the ordering — on page two that showed the
+   * same five posts backwards instead of the five before them. And the tablist set
+   * `cabinTab` while the query read `feedTab`, so Hot and Latest fetched the same
+   * rows and only the highlight moved. `cabinFeedTab` maps the three tabs onto the
+   * three orderings, which leaves this as the page the server returned; filtering
+   * for `featured` here as well would apply it twice, and on the guides tab that
+   * is already all the server sent.
    */
-  const visiblePosts = tab === 'guides' ? posts.filter((post) => post.featured) : posts
+  const visiblePosts = posts
+  /**
+   * The cabin's pinned post.
+   *
+   * Read from the page, which is correct on the guides tab and best-effort on the
+   * other two — a featured post outside the first page will not appear until the
+   * shelf gets a request of its own, the way the home page's did.
+   */
   const pinned = posts.find((post) => post.featured) ?? null
 
   return (

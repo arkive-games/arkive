@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthError, useAuth } from '@gamemap/auth'
+import {
+  followUser,
+  listFollowers,
+  listFollowing,
+  listNotifications,
+  result,
+  unfollowUser,
+  type ApiClient,
+  type FollowRead,
+  type Read as NotificationRead,
+} from '@gamemap/api-core'
+import { calendarDate } from './forumModel'
 import { browserMemory, defineMemoryRecord, memoryPolicy } from '@gamemap/state-memory'
 import Cropper, { type Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
@@ -47,7 +59,6 @@ import {
   avatarUrl,
   findPublicProfile,
   publicProfileHref,
-  RECOMMENDED_USERS,
 } from './userSystemData'
 import {
   useUserSystem,
@@ -86,22 +97,6 @@ const PUBLIC_NAV = [
   { key: 'following', icon: IconUserPlus },
 ] as const
 
-const NOTIFICATION_ITEMS = {
-  replies: [
-    { actorKey: 'forum.users.whiteDeer.name', avatarSeed: 'arkive-white-deer', copyKey: 'reply', postKey: 'forum.posts.vrising.title', timeKey: 'forum.time.today' },
-    { actorKey: 'forum.posts.aion2.author', avatarSeed: 'arkive-wind-string', copyKey: 'reply', postKey: 'forum.posts.general.title', timeKey: 'forum.time.yesterday' },
-  ],
-  mentions: [
-    { actorKey: 'forum.posts.palworld.author', avatarSeed: 'arkive-island-builder', copyKey: 'mention', postKey: 'forum.posts.palworld.title', timeKey: 'forum.time.today' },
-  ],
-  likes: [
-    { actorKey: 'forum.users.castleWatch.name', avatarSeed: 'arkive-castle-watch', copyKey: 'like', postKey: 'forum.posts.aion2.title', timeKey: 'forum.time.today' },
-    { actorKey: 'forum.users.spireLetter.name', avatarSeed: 'arkive-spire-letter', copyKey: 'like', postKey: 'forum.posts.vrising.title', timeKey: 'forum.time.thisWeek' },
-  ],
-  system: [
-    { actorKey: 'userSystem.notifications.systemSender', copyKey: 'system', postKey: 'userSystem.notifications.systemPost', timeKey: 'forum.time.thisWeek' },
-  ],
-} as const
 
 const SETTING_GROUPS = [
   {
@@ -133,6 +128,10 @@ const POST_FIXTURES = [
 
 export function NotificationCenterPage({ section }: { section: NotificationSection }) {
   const { t } = useTranslation()
+  const auth = useAuth()
+  // The client the session already uses, so the inbox cannot disagree with the
+  // account control about the transport. Null when no API is configured.
+  const client = auth.enabled ? auth.client.requestClient : null
   const {
     state,
     markNotificationSectionRead,
@@ -203,7 +202,7 @@ export function NotificationCenterPage({ section }: { section: NotificationSecti
               ))}
             </div>
           ) : (
-            <NotificationInbox section={section} readAll={readAll} />
+            <NotificationInbox section={section} readAll={readAll} client={client} />
           )}
         </section>
       </div>
@@ -211,30 +210,128 @@ export function NotificationCenterPage({ section }: { section: NotificationSecti
   )
 }
 
-function NotificationInbox({ section, readAll }: { section: Exclude<NotificationSection, 'settings'>; readAll: boolean }) {
+/**
+ * Which notification kinds each inbox tab shows.
+ *
+ * The tabs predate the API and group its six kinds into four: a like is a like
+ * whether it landed on a post or a comment, which is the distinction the server
+ * keeps and the reader does not care about.
+ */
+const NOTIFICATION_KINDS: Record<Exclude<NotificationSection, 'settings'>, readonly string[]> = {
+  replies: ['reply'],
+  mentions: ['mention'],
+  likes: ['post_like', 'comment_like'],
+  system: ['system'],
+}
+
+/** Which copy template a kind uses. The four templates already exist per locale. */
+const NOTIFICATION_COPY: Record<string, 'reply' | 'mention' | 'like' | 'system'> = {
+  reply: 'reply',
+  mention: 'mention',
+  post_like: 'like',
+  comment_like: 'like',
+  follow: 'reply',
+  system: 'system',
+}
+
+/**
+ * The notifications inbox.
+ *
+ * Five invented rows before this — "White Deer Field replied to your …" with a
+ * pravatar portrait and a relative time that was a locale string reading "2 hours
+ * ago" forever. The rows are real now. Each carries its actor's name and avatar
+ * and the title of the post it is about, so the list renders from one request
+ * rather than a profile lookup per row.
+ */
+function NotificationInbox({
+  section,
+  readAll,
+  client,
+}: {
+  section: Exclude<NotificationSection, 'settings'>
+  readAll: boolean
+  client: ApiClient['client'] | null
+}) {
   const { t } = useTranslation()
-  const items = NOTIFICATION_ITEMS[section]
+  const [rows, setRows] = useState<NotificationRead[]>([])
+  const [loading, setLoading] = useState(false)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    if (!client) {
+      setRows([])
+      return
+    }
+    let active = true
+    setLoading(true)
+    setFailed(false)
+    void result(listNotifications({ client, throwOnError: true, query: { page: 1, pageSize: 50 } }))
+      .then((page) => {
+        if (!active) return
+        setRows(page.results ?? [])
+        setLoading(false)
+      })
+      .catch(() => {
+        if (!active) return
+        setRows([])
+        setFailed(true)
+        setLoading(false)
+      })
+    return () => { active = false }
+  }, [client])
+
+  // Filtered here rather than per tab on the server: one request covers all four
+  // tabs, and switching between them is then instant.
+  const kinds = NOTIFICATION_KINDS[section]
+  const items = rows.filter((row) => kinds.includes(row.kind))
+
+  if (loading) {
+    return <div className="user-panel notification-list"><p className="forum-feed-status" role="status">{t('forum.loading')}</p></div>
+  }
+  if (failed) {
+    return <div className="user-panel notification-list"><p className="forum-feed-status is-error" role="alert">{t('forum.errors.feed')}</p></div>
+  }
+  if (items.length === 0) {
+    return (
+      <div className="user-panel notification-list">
+        <p className="forum-comment-empty">{t('userSystem.notifications.empty')}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="user-panel notification-list">
-      {items.map((item, index) => (
-        <article key={`${item.copyKey}-${index}`} className={readAll ? 'is-read' : undefined}>
-          {'avatarSeed' in item ? (
-            <img src={avatarUrl(item.avatarSeed)} alt="" />
-          ) : (
-            <span className="notification-system-icon"><SpeakerIcon /></span>
-          )}
-          <div>
-            <p>
-              <strong>{t(item.actorKey)}</strong>
-              {' '}
-              {t(`userSystem.notifications.items.${item.copyKey}`, { post: t(item.postKey) })}
-            </p>
-            <time><IconClock className="size-4" stroke={1.8} />{t(item.timeKey)}</time>
-          </div>
-          {!readAll && <span className="unread-label">{t('userSystem.notifications.unread')}</span>}
-        </article>
-      ))}
+      {items.map((item) => {
+        // `readAll` is the "mark all read" button's local state; a row also knows
+        // whether it was already read when it arrived.
+        const read = readAll || item.readAt !== null
+        return (
+          <article key={item.id} className={read ? 'is-read' : undefined}>
+            {item.actorAvatarUrl ? (
+              <img src={item.actorAvatarUrl} alt="" />
+            ) : (
+              <span className="notification-system-icon"><SpeakerIcon /></span>
+            )}
+            <div>
+              <p>
+                <strong>{item.actorName ?? t('userSystem.notifications.systemSender')}</strong>
+                {' '}
+                {t(`userSystem.notifications.items.${NOTIFICATION_COPY[item.kind] ?? 'reply'}`, {
+                  // The body carries the text of a system message; everything else
+                  // is about a post. A post deleted since leaves the title null,
+                  // and the row still says what happened.
+                  post: item.postTitle ?? item.body ?? t('userSystem.notifications.deletedPost'),
+                })}
+              </p>
+              <time dateTime={item.createdAt}>
+                <IconClock className="size-4" stroke={1.8} />
+                {calendarDate(item.createdAt)}
+              </time>
+            </div>
+            {!read && <span className="unread-label">{t('userSystem.notifications.unread')}</span>}
+          </article>
+        )
+      })}
     </div>
   )
 }
@@ -435,6 +532,12 @@ function AccountContent({
   onAvatarChange: (src: string) => void
 }) {
   const { t } = useTranslation()
+  const accountAuth = useAuth()
+  const accountClient = accountAuth.enabled ? accountAuth.client.requestClient : null
+  // The account pages carry the reader's number as a string; the API keys by the
+  // numeric uid.
+  const parsedUid = Number(userId)
+  const ownUid = Number.isFinite(parsedUid) && parsedUid > 0 ? parsedUid : null
 
   if (section === 'edit') {
     return (
@@ -505,8 +608,8 @@ function AccountContent({
   if (section === 'favorites') return <FavoriteContent />
   if (section === 'comments') return <EmptyAccountContent kind="comments" />
   if (section === 'posts') return <AuthoredPostContent />
-  if (section === 'fans') return <EmptyAccountContent kind="fans" />
-  if (section === 'following') return <PeopleList mode="following" ownProfile />
+  if (section === 'fans') return <PeopleList mode="fans" uid={ownUid} client={accountClient} ownProfile />
+  if (section === 'following') return <PeopleList mode="following" uid={ownUid} client={accountClient} ownProfile />
   if (section === 'privacy') return <PrivacySettings />
   return null
 }
@@ -877,7 +980,11 @@ export function PublicUserProfilePage({
   onAuthRequired: () => void
 }) {
   const { t } = useTranslation()
-  const { status } = useAuth()
+  const profileAuth = useAuth()
+  const { status } = profileAuth
+  const profileClient = profileAuth.enabled ? profileAuth.client.requestClient : null
+  const parsedProfileUid = Number(userId)
+  const profileUid = Number.isFinite(parsedProfileUid) && parsedProfileUid > 0 ? parsedProfileUid : null
   const profile = findPublicProfile(userId)
   const { state, toggleFollowedUser } = useUserSystem()
   const followed = state.followedUserIds.includes(userId)
@@ -942,7 +1049,7 @@ export function PublicUserProfilePage({
             ) : section === 'comments' ? (
               <CommentHistory publicProfile />
             ) : section === 'fans' || section === 'following' ? (
-              <PeopleList mode={section} />
+              <PeopleList mode={section} uid={profileUid} client={profileClient} />
             ) : (
               <ProfilePostList mode="favorites" postKeys={['official']} />
             )}
@@ -1168,47 +1275,108 @@ function CommentHistory({ publicProfile = false }: { publicProfile?: boolean }) 
   )
 }
 
-function PeopleList({ mode, ownProfile = false }: { mode: 'fans' | 'following'; ownProfile?: boolean }) {
+/**
+ * The followers and following lists.
+ *
+ * These showed the same four invented people to everyone, with a preview toggle
+ * that pretended to follow them locally. They are the real relationships now:
+ * `/users/{uid}/followers` and `/users/{uid}/following`, which the backend
+ * already serves. There is no description under a name any more — the fixtures
+ * had a one-line bio each, and an account has no such field.
+ *
+ * `uid` is whose lists these are: the reader's own on the account pages, and the
+ * profile's owner on a public one.
+ */
+function PeopleList({
+  mode,
+  uid,
+  client,
+  ownProfile = false,
+}: {
+  mode: 'fans' | 'following'
+  uid: number | null
+  client: ApiClient['client'] | null
+  ownProfile?: boolean
+}) {
   const { t } = useTranslation()
-  const { state, toggleFollowedUser } = useUserSystem()
-  const [previewFollowed, setPreviewFollowed] = useState<Set<string>>(
-    () => new Set(mode === 'following' ? RECOMMENDED_USERS.map((person) => person.id) : []),
-  )
-  const visiblePeople = ownProfile
-    ? RECOMMENDED_USERS.filter((person) => state.followedUserIds.includes(person.id))
-    : RECOMMENDED_USERS
+  const [people, setPeople] = useState<FollowRead[]>([])
+  const [loading, setLoading] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const [following, setFollowing] = useState<ReadonlySet<number>>(new Set())
 
-  const toggle = (id: string) => {
-    if (ownProfile) {
-      toggleFollowedUser(id)
+  useEffect(() => {
+    if (!client || uid === null) {
+      setPeople([])
       return
     }
-    setPreviewFollowed((current) => {
-      const next = new Set(current)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
+    let active = true
+    setLoading(true)
+    setFailed(false)
+    const load = mode === 'fans' ? listFollowers : listFollowing
+    void result(load({ client, throwOnError: true, path: { uid }, query: { page: 1, pageSize: 100 } }))
+      .then((page) => {
+        if (!active) return
+        const rows = page.results ?? []
+        setPeople(rows)
+        // On your own "following" list every row is by definition followed, which
+        // is what the button state starts from. On a followers list it is unknown
+        // without a request per row, so those start unfollowed.
+        if (mode === 'following') setFollowing(new Set(rows.map((row) => row.user.uid)))
+        setLoading(false)
+      })
+      .catch(() => {
+        if (!active) return
+        setPeople([])
+        setFailed(true)
+        setLoading(false)
+      })
+    return () => { active = false }
+  }, [client, mode, uid])
+
+  const toggle = (targetUid: number) => {
+    if (!client) return
+    const next = !following.has(targetUid)
+    setFollowing((current) => {
+      const updated = new Set(current)
+      if (next) updated.add(targetUid)
+      else updated.delete(targetUid)
+      return updated
+    })
+    const op = next ? followUser : unfollowUser
+    void result(op({ client, throwOnError: true, path: { uid: targetUid } })).catch(() => {
+      // Put the button back rather than leaving it claiming a relationship the
+      // server does not have.
+      setFollowing((current) => {
+        const reverted = new Set(current)
+        if (next) reverted.delete(targetUid)
+        else reverted.add(targetUid)
+        return reverted
+      })
     })
   }
 
-  if (visiblePeople.length === 0) return <EmptyAccountContent kind={mode} />
+  if (loading) return <div className="user-panel people-list"><p className="forum-feed-status" role="status">{t('forum.loading')}</p></div>
+  if (failed) return <div className="user-panel people-list"><p className="forum-feed-status is-error" role="alert">{t('forum.errors.feed')}</p></div>
+  if (people.length === 0) return <EmptyAccountContent kind={mode} />
 
   return (
     <div className="user-panel people-list">
-      {visiblePeople.map((person) => {
-        const isFollowed = ownProfile
-          ? state.followedUserIds.includes(person.id)
-          : previewFollowed.has(person.id)
+      {people.map(({ user }) => {
+        const isFollowed = following.has(user.uid)
+        const href = publicProfileHref(String(user.uid))
         return (
-          <article key={person.id}>
-            <a href={publicProfileHref(person.id)}><img src={avatarUrl(person.avatarSeed)} alt="" /></a>
+          <article key={user.uid}>
+            <a href={href}><img src={user.avatarUrl} alt="" /></a>
             <span>
-              <a href={publicProfileHref(person.id)}>{t(person.nameKey)}</a>
-              <small>{t(person.descriptionKey)}</small>
+              <a href={href}>{user.name}</a>
+              <small>{t('userSystem.content.accountNumber', { id: user.specialUid ?? user.uid })}</small>
             </span>
-            <button type="button" className={isFollowed ? 'is-followed' : undefined} onClick={() => toggle(person.id)}>
-              {t(isFollowed ? 'forum.users.following' : 'forum.users.follow')}
-            </button>
+            {/* No Follow button against your own row on your own list. */}
+            {!(ownProfile && uid === user.uid) && (
+              <button type="button" className={isFollowed ? 'is-followed' : undefined} onClick={() => toggle(user.uid)}>
+                {t(isFollowed ? 'forum.users.following' : 'forum.users.follow')}
+              </button>
+            )}
           </article>
         )
       })}

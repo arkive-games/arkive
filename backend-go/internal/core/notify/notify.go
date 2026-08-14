@@ -21,6 +21,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 )
 
@@ -59,10 +60,30 @@ var mentionPattern = regexp.MustCompile(`(^|[^\w@])@([\w-]{1,64})`)
 
 // Read is a notification as the API returns it.
 type Read struct {
-	ID        uuid.UUID  `json:"id" doc:"Notification identifier"`
-	Kind      Kind       `json:"kind" enum:"reply,mention,post_like,comment_like,follow,system" doc:"Why it exists"`
-	ActorUID  *int64     `json:"actorUid" doc:"Who caused it, or null for a system message"`
-	PostNo    *int64     `json:"postNo" doc:"The post it is about, or null"`
+	ID       uuid.UUID `json:"id" doc:"Notification identifier"`
+	Kind     Kind      `json:"kind" enum:"reply,mention,post_like,comment_like,follow,system" doc:"Why it exists"`
+	ActorUID *int64    `json:"actorUid" doc:"Who caused it, or null for a system message"`
+	// The actor's name and avatar, flattened rather than a nested UserPublic.
+	//
+	// Two fields instead of an object because a nullable object reference cannot be
+	// expressed here: huma renders a struct pointer as a `$ref`, which carries no
+	// `type` to add "null" to, and refuses a `nullable` tag on one outright. The
+	// generated TypeScript would then have typed the actor as always present on a
+	// row that has none — which is the same defect as the parentId one this branch
+	// fixes, so shipping it would have been careless. A row needs exactly these two
+	// values; ActorUID above is what it links by.
+	//
+	// Both null for a system message, and both null for an actor whose account has
+	// since gone: the row is kept rather than dropped, because "someone liked your
+	// post" is still true.
+	ActorName      *string `json:"actorName" doc:"Display name of who caused it, or null"`
+	ActorAvatarURL *string `json:"actorAvatarUrl" doc:"Avatar of who caused it, or null"`
+
+	PostNo *int64 `json:"postNo" doc:"The post it is about, or null"`
+	// PostTitle saves the client a request per row just to name the thing the
+	// notification is about. Null when the notification is not about a post, or
+	// when that post has been deleted.
+	PostTitle *string `json:"postTitle" doc:"Title of the post it is about, or null"`
 	// nullable:"true" because huma drops the pointer for uuid fields; see the note
 	// on forum.CommentRead.ParentID.
 	CommentID *uuid.UUID `json:"commentId" nullable:"true" doc:"The comment it is about, or null"`
@@ -112,6 +133,15 @@ type AccountSource interface {
 	IDsByNames(ctx context.Context, names []string) (map[string]uuid.UUID, error)
 	// UIDsByIDs resolves a batch, so rendering an inbox costs one query and not one per row.
 	UIDsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]int64, error)
+
+	// PublicByIDs resolves the actors' names and avatars, so a row can read
+	// "Alice replied to …" rather than "10042 replied to …".
+	//
+	// Without it a client has the uid and nothing else, so rendering an inbox of
+	// twenty rows meant twenty profile lookups — the N+1 this batch already exists
+	// to avoid for the uid itself. The same interface the forum uses to resolve a
+	// feed's authors.
+	PublicByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]users.UserPublic, error)
 }
 
 // Service writes and reads notifications.
@@ -258,7 +288,11 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, p
 	if err != nil {
 		return nil, 0, fmt.Errorf("load notification actors: %w", err)
 	}
-	postNos, err := s.postNos(ctx, postIDs)
+	actors, err := s.accounts.PublicByIDs(ctx, actorIDs)
+	if err != nil {
+		return nil, 0, fmt.Errorf("load notification actor profiles: %w", err)
+	}
+	posts, err := s.postRefs(ctx, postIDs)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -287,10 +321,19 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, p
 			if uid, ok := actorUIDs[*row.ActorID]; ok {
 				read.ActorUID = &uid
 			}
+			if actor, ok := actors[*row.ActorID]; ok {
+				name := actor.Name
+				avatar := actor.AvatarURL
+				read.ActorName = &name
+				read.ActorAvatarURL = &avatar
+			}
 		}
 		if row.PostID != nil {
-			if no, ok := postNos[*row.PostID]; ok {
+			if ref, ok := posts[*row.PostID]; ok {
+				no := ref.no
+				title := ref.title
 				read.PostNo = &no
+				read.PostTitle = &title
 			}
 		}
 		out = append(out, read)
@@ -375,8 +418,15 @@ func (s *Service) SetPreferences(ctx context.Context, userID uuid.UUID, in Prefe
 // postNos resolves a batch of post ids to their public numbers. A post being deleted as
 // this reads is simply absent from the result, which the caller treats as a missing
 // reference rather than an error.
-func (s *Service) postNos(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]int64, error) {
-	out := make(map[uuid.UUID]int64, len(ids))
+// postRef is what a notification needs to name the post it is about: the number
+// to link by and the title to show.
+type postRef struct {
+	no    int64
+	title string
+}
+
+func (s *Service) postRefs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]postRef, error) {
+	out := make(map[uuid.UUID]postRef, len(ids))
 	if len(ids) == 0 {
 		return out, nil
 	}
@@ -385,7 +435,7 @@ func (s *Service) postNos(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]i
 		return nil, fmt.Errorf("load notification posts: %w", err)
 	}
 	for _, row := range rows {
-		out[row.ID] = row.PostNo
+		out[row.ID] = postRef{no: row.PostNo, title: row.Title}
 	}
 	return out, nil
 }

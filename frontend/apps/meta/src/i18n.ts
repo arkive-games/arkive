@@ -72,7 +72,7 @@ const USER_SYSTEM_COPY = {
       inboxDescription: '集中查看与你相关的社区互动消息。',
       settingsDescription: '选择希望接收的消息，设置会立即保存。',
       markAllRead: '全部标为已读', allRead: '已全部读完', unread: '未读',
-      systemSender: '藏舟社区助手', systemPost: '社区使用规范更新',
+      systemSender: '藏舟社区助手', deletedPost: '已删除的帖子', accountNumber: 'UID {{id}}', systemPost: '社区使用规范更新',
       items: {
         reply: '回复了你在《{{post}}》中的留言', mention: '在《{{post}}》中提到了你',
         like: '赞了你的帖子《{{post}}》', system: '发布了《{{post}}》',
@@ -133,7 +133,7 @@ const USER_SYSTEM_COPY = {
       label: '通知', open: '開啟通知中心', menuLabel: '通知分類', center: '通知中心',
       replies: '回覆我的', mentions: '主動@我', likes: '收到的讚', system: '系統通知', settings: '通知設定',
       inboxDescription: '集中查看與你相關的社群互動訊息。', settingsDescription: '選擇希望接收的訊息，設定會立即儲存。',
-      markAllRead: '全部標為已讀', allRead: '已全部讀完', unread: '未讀', systemSender: '藏舟社群助手', systemPost: '社群使用規範更新',
+      markAllRead: '全部標為已讀', allRead: '已全部讀完', unread: '未讀', systemSender: '藏舟社群助手', deletedPost: '已刪除的帖子', accountNumber: 'UID {{id}}', systemPost: '社群使用規範更新',
       items: { reply: '回覆了你在《{{post}}》中的留言', mention: '在《{{post}}》中提到了你', like: '讚了你的文章《{{post}}》', system: '發布了《{{post}}》' },
       settingGroups: { interaction: '互動訊息', platform: '關注與平台訊息' },
       settingsRows: {
@@ -159,7 +159,7 @@ const USER_SYSTEM_COPY = {
   'en-US': {
     notifications: {
       label: 'Notifications', open: 'Open notifications', menuLabel: 'Notification categories', center: 'Notifications', replies: 'Replies', mentions: 'Mentions', likes: 'Likes received', system: 'System notices', settings: 'Notification settings',
-      inboxDescription: 'Review community activity related to your account.', settingsDescription: 'Choose which messages you want to receive. Changes save immediately.', markAllRead: 'Mark all as read', allRead: 'All caught up', unread: 'Unread', systemSender: 'Arkive Community', systemPost: 'Community guidelines update',
+      inboxDescription: 'Review community activity related to your account.', settingsDescription: 'Choose which messages you want to receive. Changes save immediately.', markAllRead: 'Mark all as read', allRead: 'All caught up', unread: 'Unread', systemSender: 'Arkive Community', deletedPost: 'a deleted post', accountNumber: 'UID {{id}}', systemPost: 'Community guidelines update',
       items: { reply: 'replied to your comment on “{{post}}”', mention: 'mentioned you in “{{post}}”', like: 'liked your post “{{post}}”', system: 'published “{{post}}”' },
       settingGroups: { interaction: 'Community activity', platform: 'Follows and platform messages' },
       settingsRows: {
@@ -182,7 +182,7 @@ const USER_SYSTEM_COPY = {
   },
   'ja-JP': {
     notifications: {
-      label: '通知', open: '通知センターを開く', menuLabel: '通知カテゴリー', center: '通知センター', replies: '返信', mentions: 'メンション', likes: '受け取ったいいね', system: 'システム通知', settings: '通知設定', inboxDescription: '自分に関連するコミュニティの反応を確認できます。', settingsDescription: '受け取る通知を選択します。変更はすぐに保存されます。', markAllRead: 'すべて既読にする', allRead: 'すべて確認済み', unread: '未読', systemSender: '蔵舟コミュニティ', systemPost: 'コミュニティガイドライン更新',
+      label: '通知', open: '通知センターを開く', menuLabel: '通知カテゴリー', center: '通知センター', replies: '返信', mentions: 'メンション', likes: '受け取ったいいね', system: 'システム通知', settings: '通知設定', inboxDescription: '自分に関連するコミュニティの反応を確認できます。', settingsDescription: '受け取る通知を選択します。変更はすぐに保存されます。', markAllRead: 'すべて既読にする', allRead: 'すべて確認済み', unread: '未読', systemSender: '蔵舟コミュニティ', deletedPost: '削除された投稿', accountNumber: 'UID {{id}}', systemPost: 'コミュニティガイドライン更新',
       items: { reply: '「{{post}}」のコメントに返信しました', mention: '「{{post}}」であなたをメンションしました', like: '投稿「{{post}}」にいいねしました', system: '「{{post}}」を公開しました' }, settingGroups: { interaction: 'コミュニティ通知', platform: 'フォローとシステム通知' },
       settingsRows: { replies: { title: '返信通知', description: '投稿やコメントに返信があったとき通知します。' }, mentions: { title: 'メンション通知', description: '投稿やコメントでメンションされたとき通知します。' }, likes: { title: 'いいね通知', description: '投稿やコメントにいいねが付いたとき通知します。' }, follows: { title: 'フォロー通知', description: '新しいフォロワーが増えたとき通知します。' }, system: { title: 'システム通知', description: 'アカウント、安全、コミュニティ規約の情報を受け取ります。' }, browser: { title: 'ブラウザ通知', description: 'ブラウザでデスクトップ通知を受け取ります。' } },
     },
@@ -194,7 +194,7 @@ const USER_SYSTEM_COPY = {
   },
   'ko-KR': {
     notifications: {
-      label: '알림', open: '알림 센터 열기', menuLabel: '알림 분류', center: '알림 센터', replies: '내 답글', mentions: '내 멘션', likes: '받은 좋아요', system: '시스템 알림', settings: '알림 설정', inboxDescription: '내 계정과 관련된 커뮤니티 활동을 확인합니다.', settingsDescription: '받고 싶은 알림을 선택하세요. 변경 사항은 즉시 저장됩니다.', markAllRead: '모두 읽음', allRead: '모두 확인함', unread: '읽지 않음', systemSender: '장주 커뮤니티', systemPost: '커뮤니티 이용 규칙 업데이트',
+      label: '알림', open: '알림 센터 열기', menuLabel: '알림 분류', center: '알림 센터', replies: '내 답글', mentions: '내 멘션', likes: '받은 좋아요', system: '시스템 알림', settings: '알림 설정', inboxDescription: '내 계정과 관련된 커뮤니티 활동을 확인합니다.', settingsDescription: '받고 싶은 알림을 선택하세요. 변경 사항은 즉시 저장됩니다.', markAllRead: '모두 읽음', allRead: '모두 확인함', unread: '읽지 않음', systemSender: '장주 커뮤니티', deletedPost: '삭제된 게시글', accountNumber: 'UID {{id}}', systemPost: '커뮤니티 이용 규칙 업데이트',
       items: { reply: '“{{post}}”의 댓글에 답글을 남겼습니다', mention: '“{{post}}”에서 회원님을 언급했습니다', like: '게시글 “{{post}}”을 좋아합니다', system: '“{{post}}”을 게시했습니다' }, settingGroups: { interaction: '커뮤니티 활동', platform: '팔로우 및 플랫폼 알림' },
       settingsRows: { replies: { title: '답글 알림', description: '게시글이나 댓글에 답글이 달리면 알려드립니다.' }, mentions: { title: '멘션 알림', description: '게시글이나 댓글에서 언급되면 알려드립니다.' }, likes: { title: '좋아요 알림', description: '게시글이나 댓글에 좋아요가 달리면 알려드립니다.' }, follows: { title: '팔로우 알림', description: '새 사용자가 팔로우하면 알려드립니다.' }, system: { title: '시스템 알림', description: '계정, 보안, 커뮤니티 규칙 관련 메시지를 받습니다.' }, browser: { title: '브라우저 알림', description: '브라우저에서 데스크톱 알림을 받습니다.' } },
     },

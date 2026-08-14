@@ -1774,6 +1774,20 @@
       "Read": {
         "additionalProperties": false,
         "properties": {
+          "actorAvatarUrl": {
+            "description": "Avatar of who caused it, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "actorName": {
+            "description": "Display name of who caused it, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "actorUid": {
             "description": "Who caused it, or null for a system message",
             "format": "int64",
@@ -1825,6 +1839,13 @@
               "null"
             ]
           },
+          "postTitle": {
+            "description": "Title of the post it is about, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "readAt": {
             "description": "When it was read, or null",
             "format": "date-time",
@@ -1838,7 +1859,10 @@
           "id",
           "kind",
           "actorUid",
+          "actorName",
+          "actorAvatarUrl",
           "postNo",
+          "postTitle",
           "commentId",
           "body",
           "readAt",

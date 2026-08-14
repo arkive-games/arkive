@@ -82,4 +82,4 @@ RETURNING reply, mention, post_like, comment_like, follow, system;
 
 -- name: GetForumPostNosByIDs :many
 -- Post numbers for a page of notifications, in one query rather than one per row.
-SELECT id, post_no FROM core.forum_posts WHERE id = ANY (sqlc.arg('ids')::uuid[]);
+SELECT id, post_no, title FROM core.forum_posts WHERE id = ANY (sqlc.arg('ids')::uuid[]);

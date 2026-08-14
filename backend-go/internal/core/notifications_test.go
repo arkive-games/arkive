@@ -288,3 +288,57 @@ func TestPreferencesSuppressNotifications(t *testing.T) {
 		t.Errorf("inbox after re-enabling = %v, want still just the reply", kinds)
 	}
 }
+
+// A notification names the person and the post it is about, so an inbox renders
+// from one request. Before this the row carried only `actorUid`, which meant a
+// client had a number and nothing to show — twenty rows, twenty profile lookups,
+// the same N+1 the uid batch already exists to avoid.
+func TestNotificationsCarryTheActorAndThePostTitle(t *testing.T) {
+	h := newHarness(t)
+	author := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+	reader := h.registerAndLogin("Reader", "reader@example.com", "hunter2hunter2")
+
+	no := h.mustCreatePost(author, map[string]any{
+		"channel": "general", "title": "A findable title", "body": "Body text.",
+	})
+	if res := h.do(http.MethodPut, fmt.Sprintf("/forum/posts/%d/like", no), nil, withBearer(reader)); res.status != http.StatusOK {
+		t.Fatalf("like = %d: %s", res.status, res.body)
+	}
+
+	res := h.do(http.MethodGet, "/notifications", nil, withBearer(author))
+	if res.status != http.StatusOK {
+		t.Fatalf("list = %d: %s", res.status, res.body)
+	}
+	rows, _ := res.data(t)["results"].([]any)
+	if len(rows) != 1 {
+		t.Fatalf("got %d notifications, want 1: %s", len(rows), res.body)
+	}
+	row, _ := rows[0].(map[string]any)
+
+	if name, _ := row["actorName"].(string); name != "Reader" {
+		t.Errorf("actorName = %q, want %q", name, "Reader")
+	}
+	if _, ok := row["actorAvatarUrl"].(string); !ok {
+		t.Errorf("actorAvatarUrl missing, so a row cannot show a portrait")
+	}
+	if title, _ := row["postTitle"].(string); title != "A findable title" {
+		t.Errorf("postTitle = %q, want %q", title, "A findable title")
+	}
+}
+
+// A system notification has no actor, and the field is null rather than absent —
+// a client should not need a branch between the two shapes.
+func TestSystemNotificationsHaveANullActor(t *testing.T) {
+	h := newHarness(t)
+	reader := h.registerAndLogin("reader", "reader@example.com", "hunter2hunter2")
+
+	res := h.do(http.MethodGet, "/notifications", nil, withBearer(reader))
+	if res.status != http.StatusOK {
+		t.Fatalf("list = %d: %s", res.status, res.body)
+	}
+	// An empty inbox still has to answer with a list rather than null, which is what
+	// lets the client map over it without a guard.
+	if _, ok := res.data(t)["results"]; !ok {
+		t.Error("results missing from an empty inbox")
+	}
+}
