@@ -123,9 +123,9 @@ func (q *Queries) CreateForumComment(ctx context.Context, arg CreateForumComment
 }
 
 const createForumPost = `-- name: CreateForumPost :one
-INSERT INTO core.forum_posts (id, author_id, channel, title, body, topic, game_ids, tags)
-VALUES ($1, $2, $3, $4, $5, $8, $6, $7)
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason
+INSERT INTO core.forum_posts (id, author_id, channel, title, body, topic, game_ids, tags, video_url)
+VALUES ($1, $2, $3, $4, $5, $8, $6, $7, $9)
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason, video_url
 `
 
 type CreateForumPostParams struct {
@@ -137,6 +137,7 @@ type CreateForumPostParams struct {
 	GameIDs  []string
 	Tags     []string
 	Topic    *string
+	VideoUrl *string
 }
 
 func (q *Queries) CreateForumPost(ctx context.Context, arg CreateForumPostParams) (CoreForumPost, error) {
@@ -149,6 +150,7 @@ func (q *Queries) CreateForumPost(ctx context.Context, arg CreateForumPostParams
 		arg.GameIDs,
 		arg.Tags,
 		arg.Topic,
+		arg.VideoUrl,
 	)
 	var i CoreForumPost
 	err := row.Scan(
@@ -170,6 +172,7 @@ func (q *Queries) CreateForumPost(ctx context.Context, arg CreateForumPostParams
 		&i.HiddenAt,
 		&i.HiddenBy,
 		&i.HiddenReason,
+		&i.VideoUrl,
 	)
 	return i, err
 }
@@ -318,7 +321,7 @@ func (q *Queries) GetForumCommentByID(ctx context.Context, id uuid.UUID) (CoreFo
 }
 
 const getForumPostByID = `-- name: GetForumPostByID :one
-SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason FROM core.forum_posts WHERE id = $1
+SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason, video_url FROM core.forum_posts WHERE id = $1
 `
 
 func (q *Queries) GetForumPostByID(ctx context.Context, id uuid.UUID) (CoreForumPost, error) {
@@ -343,12 +346,13 @@ func (q *Queries) GetForumPostByID(ctx context.Context, id uuid.UUID) (CoreForum
 		&i.HiddenAt,
 		&i.HiddenBy,
 		&i.HiddenReason,
+		&i.VideoUrl,
 	)
 	return i, err
 }
 
 const getForumPostByNo = `-- name: GetForumPostByNo :one
-SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason FROM core.forum_posts WHERE post_no = $1
+SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason, video_url FROM core.forum_posts WHERE post_no = $1
 `
 
 func (q *Queries) GetForumPostByNo(ctx context.Context, postNo int64) (CoreForumPost, error) {
@@ -373,6 +377,7 @@ func (q *Queries) GetForumPostByNo(ctx context.Context, postNo int64) (CoreForum
 		&i.HiddenAt,
 		&i.HiddenBy,
 		&i.HiddenReason,
+		&i.VideoUrl,
 	)
 	return i, err
 }
@@ -472,7 +477,7 @@ func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsPa
 
 const listForumPosts = `-- name: ListForumPosts :many
 SELECT
-    p.id, p.post_no, p.author_id, p.channel, p.title, p.body, p.topic, p.game_ids, p.tags, p.next_comment_no, p.created_at, p.updated_at, p.edited_at, p.featured_at, p.featured_by, p.hidden_at, p.hidden_by, p.hidden_reason,
+    p.id, p.post_no, p.author_id, p.channel, p.title, p.body, p.topic, p.game_ids, p.tags, p.next_comment_no, p.created_at, p.updated_at, p.edited_at, p.featured_at, p.featured_by, p.hidden_at, p.hidden_by, p.hidden_reason, p.video_url,
     (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL) AS comment_count,
     (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id) AS like_count,
     (SELECT count(*) FROM core.forum_post_bookmarks b WHERE b.post_id = p.id) AS bookmark_count,
@@ -555,6 +560,7 @@ type ListForumPostsRow struct {
 	HiddenAt      pgtype.Timestamptz
 	HiddenBy      *uuid.UUID
 	HiddenReason  *string
+	VideoUrl      *string
 	CommentCount  int64
 	LikeCount     int64
 	BookmarkCount int64
@@ -611,6 +617,7 @@ func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) 
 			&i.HiddenAt,
 			&i.HiddenBy,
 			&i.HiddenReason,
+			&i.VideoUrl,
 			&i.CommentCount,
 			&i.LikeCount,
 			&i.BookmarkCount,
@@ -632,7 +639,7 @@ UPDATE core.forum_posts SET
     featured_at = CASE WHEN $1::boolean THEN now() ELSE NULL END,
     featured_by = CASE WHEN $1::boolean THEN $2::uuid ELSE NULL END
 WHERE id = $3
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason, video_url
 `
 
 type SetForumPostFeaturedParams struct {
@@ -665,6 +672,7 @@ func (q *Queries) SetForumPostFeatured(ctx context.Context, arg SetForumPostFeat
 		&i.HiddenAt,
 		&i.HiddenBy,
 		&i.HiddenReason,
+		&i.VideoUrl,
 	)
 	return i, err
 }
@@ -710,19 +718,26 @@ UPDATE core.forum_posts SET
                      THEN $4::text ELSE topic END,
     game_ids  = COALESCE($5::text[], game_ids),
     tags      = COALESCE($6::text[], tags),
+    -- Same tri-state as topic, and for the same reason: removing the video and
+    -- leaving it alone are different intents, and COALESCE cannot tell them
+    -- apart because both arrive as NULL.
+    video_url = CASE WHEN $7::boolean
+                     THEN $8::text ELSE video_url END,
     edited_at = now()
-WHERE id = $7
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason
+WHERE id = $9
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason, video_url
 `
 
 type UpdateForumPostParams struct {
-	Title    *string
-	Body     *string
-	SetTopic bool
-	Topic    *string
-	GameIDs  []string
-	Tags     []string
-	ID       uuid.UUID
+	Title       *string
+	Body        *string
+	SetTopic    bool
+	Topic       *string
+	GameIDs     []string
+	Tags        []string
+	SetVideoUrl bool
+	VideoUrl    *string
+	ID          uuid.UUID
 }
 
 // Partial edit, following the convention of UpdateUser: a NULL argument means
@@ -736,6 +751,8 @@ func (q *Queries) UpdateForumPost(ctx context.Context, arg UpdateForumPostParams
 		arg.Topic,
 		arg.GameIDs,
 		arg.Tags,
+		arg.SetVideoUrl,
+		arg.VideoUrl,
 		arg.ID,
 	)
 	var i CoreForumPost
@@ -758,6 +775,7 @@ func (q *Queries) UpdateForumPost(ctx context.Context, arg UpdateForumPostParams
 		&i.HiddenAt,
 		&i.HiddenBy,
 		&i.HiddenReason,
+		&i.VideoUrl,
 	)
 	return i, err
 }

@@ -121,6 +121,10 @@ func (s *Service) CreatePost(ctx context.Context, principal auth.Principal, in C
 	if err != nil {
 		return PostRead{}, err
 	}
+	videoURL, err := normaliseVideoURL(in.VideoURL)
+	if err != nil {
+		return PostRead{}, err
+	}
 
 	post, err := s.q.CreateForumPost(ctx, coredb.CreateForumPostParams{
 		ID:       uuid.New(),
@@ -131,6 +135,7 @@ func (s *Service) CreatePost(ctx context.Context, principal auth.Principal, in C
 		Topic:    normaliseTopic(in.Topic),
 		GameIDs:  gameIDs,
 		Tags:     tags,
+		VideoUrl: videoURL,
 	})
 	if err != nil {
 		return PostRead{}, mapConstraintError(err)
@@ -386,7 +391,8 @@ func (s *Service) UpdatePost(ctx context.Context, principal auth.Principal, post
 
 	// An edit that supplies nothing is a no-op, and stamping edited_at for it
 	// would tell every reader the post had been rewritten when it had not.
-	if in.Title == nil && in.Body == nil && !in.Topic.Set && in.GameIDs == nil && in.Tags == nil {
+	if in.Title == nil && in.Body == nil && !in.Topic.Set && in.GameIDs == nil && in.Tags == nil &&
+		!in.VideoURL.Set {
 		reactions, err := s.reactions(ctx, post.ID, &principal.ID)
 		if err != nil {
 			return PostRead{}, err
@@ -420,6 +426,14 @@ func (s *Service) UpdatePost(ctx context.Context, principal auth.Principal, post
 		}
 		params.SetTopic = true
 		params.Topic = normaliseTopic(in.Topic.Value)
+	}
+	if in.VideoURL.Set {
+		videoURL, err := normaliseVideoURL(in.VideoURL.Value)
+		if err != nil {
+			return PostRead{}, err
+		}
+		params.SetVideoUrl = true
+		params.VideoUrl = videoURL
 	}
 	if in.GameIDs != nil {
 		keys, err := normaliseList(*in.GameIDs, MaxGameIDs, MaxTagLength, "game")
@@ -972,6 +986,23 @@ func normaliseTopic(topic *string) *string {
 		return nil
 	}
 	return &t
+}
+
+// normaliseVideoURL validates an optional video link and collapses "" to nil, so
+// a client clearing the field with an empty string stores NULL rather than a
+// zero-length URL the column would reject.
+func normaliseVideoURL(raw *string) (*string, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	cleaned, err := validateVideoURL(*raw)
+	if err != nil {
+		return nil, err
+	}
+	if cleaned == "" {
+		return nil, nil
+	}
+	return &cleaned, nil
 }
 
 // mapConstraintError turns a database constraint violation into the API's

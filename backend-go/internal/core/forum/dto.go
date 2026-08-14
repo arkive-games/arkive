@@ -10,6 +10,7 @@ package forum
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -55,6 +56,10 @@ const (
 	MaxGameIDs     = 5
 	MaxTags        = 10
 	MaxTagLength   = 32
+
+	// MaxVideoURLLength matches both the composer's input cap and the column's
+	// CHECK, so the three agree on what "too long" means.
+	MaxVideoURLLength = 300
 
 	// DefaultPageSize and MaxPageSize bound a feed request. The composer's pager
 	// shows five pages of five posts, so the default matches what it asks for.
@@ -103,6 +108,10 @@ type PostRead struct {
 	// guard, and empty on a server with no object storage configured.
 	Images []ImageRead `json:"images" doc:"Attached images, in order"`
 
+	// A link, not an embed. The value is host-checked on the way in, but a client
+	// rendering it still owes the usual care: it is a URL an untrusted author chose.
+	VideoURL *string `json:"videoUrl" doc:"Linked Bilibili or Douyin video, or null"`
+
 	// Null unless a game administrator has put it on the editorial shelf. The actor is
 	// recorded in the database but not exposed: readers need to know a post is featured,
 	// not who decided so.
@@ -131,12 +140,13 @@ type CommentRead struct {
 
 // CreatePostInput is a new post.
 type CreatePostInput struct {
-	Channel Channel
-	Title   string
-	Body    string
-	Topic   *string
-	GameIDs []string
-	Tags    []string
+	Channel  Channel
+	Title    string
+	Body     string
+	Topic    *string
+	GameIDs  []string
+	Tags     []string
+	VideoURL *string
 }
 
 // UpdatePostInput is a partial edit; a nil field means "leave unchanged".
@@ -149,6 +159,9 @@ type UpdatePostInput struct {
 	Topic   Optional
 	GameIDs *[]string
 	Tags    *[]string
+	// Tri-state for the same reason as Topic: removing a video and leaving it
+	// alone both arrive as a nil pointer, and they are different edits.
+	VideoURL Optional
 }
 
 // Optional carries the three states a nullable field needs: absent, explicitly
@@ -273,6 +286,7 @@ func toPostRead(p coredb.CoreForumPost, author users.UserPublic, r Reactions) Po
 		GameIDs:    emptyIfNil(p.GameIDs),
 		Tags:       emptyIfNil(p.Tags),
 		Images:     []ImageRead{},
+		VideoURL:   p.VideoUrl,
 		FeaturedAt: timeOrNil(p.FeaturedAt.Time, p.FeaturedAt.Valid),
 		Comments:   r.Comments,
 		Likes:      r.Likes,
@@ -395,6 +409,65 @@ func validateGameIDs(keys []string) error {
 		}
 	}
 	return nil
+}
+
+// videoHosts is the set of platforms a post may link a video on.
+//
+// An allowlist rather than a pattern, and kept in the service rather than in a
+// CHECK constraint, because it is policy: adding a platform should be a code
+// change with a test, not a migration against a table whose existing rows the
+// new rule might reject.
+var videoHosts = []string{"b23.tv", "bilibili.com", "douyin.com"}
+
+// validateVideoURL accepts an absolute http(s) URL on one of the video hosts.
+//
+// The client checks the same thing before enabling the button, which is a
+// convenience and not a control: anything reaching this function may have been
+// typed straight at the API. Two properties matter beyond the host list.
+//
+// The scheme allowlist is what keeps `javascript:` and `data:` out of storage.
+// The stored value is rendered as an `<a href>`, so a scheme check here is the
+// difference between a link and script execution in every reader's browser.
+//
+// Credentials are refused outright. `https://bilibili.com@evil.com/x` has host
+// `evil.com` — url.Parse reads it correctly and the host check below rejects it,
+// so this is not what stops the attack. It is refused because the *displayed*
+// string still begins with a name the reader trusts, and a link that reads as
+// one destination while going to another is a phishing primitive whether or not
+// the host allowlist happens to catch this particular spelling.
+func validateVideoURL(raw string) (string, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return "", nil
+	}
+	if utf8.RuneCountInString(trimmed) > MaxVideoURLLength {
+		return "", apierr.New(apierr.Validation,
+			fmt.Sprintf("a video link may be at most %d characters", MaxVideoURLLength))
+	}
+
+	parsed, err := url.Parse(trimmed)
+	if err != nil {
+		return "", apierr.New(apierr.Validation, "that video link is not a valid URL")
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return "", apierr.New(apierr.Validation, "a video link must be an http or https URL")
+	}
+	if parsed.User != nil {
+		return "", apierr.New(apierr.Validation, "a video link may not carry credentials")
+	}
+
+	host := strings.ToLower(parsed.Hostname())
+	for _, allowed := range videoHosts {
+		// Exact host or a subdomain of it. The "."+allowed suffix is what keeps
+		// `notbilibili.com` and `bilibili.com.evil.net` out: a bare
+		// strings.HasSuffix(host, allowed) accepts the first, and a check without
+		// the anchor at the end accepts the second.
+		if host == allowed || strings.HasSuffix(host, "."+allowed) {
+			return trimmed, nil
+		}
+	}
+	return "", apierr.New(apierr.Validation,
+		fmt.Sprintf("a video link must point at one of: %s", strings.Join(videoHosts, ", ")))
 }
 
 // normaliseList trims, drops blanks and removes duplicates, so that ["a","a",""]

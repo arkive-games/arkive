@@ -794,3 +794,92 @@ func TestLargeCommentPagesDoNotOverlap(t *testing.T) {
 		t.Errorf("the two pages cover %d comments, want all %d", len(seen), total)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Video links
+// ---------------------------------------------------------------------------
+
+// The composer collects a video URL, so the server decides what may be stored.
+// The client checks the same hosts before enabling its button, which is a
+// convenience: everything here arrives at the API directly.
+func TestVideoLinkHostAllowlist(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+
+	for _, tc := range []struct {
+		name  string
+		url   string
+		allow bool
+	}{
+		{"bilibili", "https://www.bilibili.com/video/BV1xx411c7mD", true},
+		{"bilibili apex domain", "https://bilibili.com/video/BV1xx411c7mD", true},
+		{"bilibili short link", "https://b23.tv/abc123", true},
+		{"douyin", "https://www.douyin.com/video/7100000000000000000", true},
+		{"plain http", "http://b23.tv/abc123", true},
+
+		// The two spellings a naive suffix check gets wrong, in both directions.
+		{"suffix without a dot", "https://notbilibili.com/video/x", false},
+		{"allowlisted name as a prefix", "https://bilibili.com.evil.net/video/x", false},
+
+		// Credentials put a trusted name in front of an untrusted host.
+		{"userinfo before the real host", "https://bilibili.com@evil.net/video/x", false},
+
+		// The reason a scheme allowlist exists at all: this is stored, then
+		// rendered into an href.
+		{"javascript scheme", "javascript:alert(1)", false},
+		{"data scheme", "data:text/html,<script>alert(1)</script>", false},
+
+		{"unrelated host", "https://youtube.com/watch?v=x", false},
+		{"not a url", "not a url at all", false},
+		{"too long", "https://b23.tv/" + strings.Repeat("x", 300), false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body := simplePost()
+			body["videoUrl"] = tc.url
+			res := h.createPost(token, body)
+			if tc.allow {
+				if res.status != http.StatusOK {
+					t.Fatalf("= %d, want 200: %s", res.status, res.body)
+				}
+				if got, _ := res.data(t)["videoUrl"].(string); got != tc.url {
+					t.Errorf("videoUrl = %q, want %q", got, tc.url)
+				}
+				return
+			}
+			if res.status == http.StatusOK {
+				t.Errorf("= 200, want a rejection: %s", res.body)
+			}
+		})
+	}
+}
+
+// Clearing a video and leaving it alone are different edits, and both send no
+// URL — the tri-state is what separates them.
+func TestEditingAVideoLinkSeparatesClearingFromLeavingAlone(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+
+	body := simplePost()
+	body["videoUrl"] = "https://b23.tv/keepme"
+	no := h.mustCreatePost(token, body)
+
+	// An edit that does not mention the video leaves it in place.
+	res := h.do(http.MethodPatch, fmt.Sprintf("/forum/posts/%d", no),
+		map[string]any{"title": "a new title"}, withBearer(token))
+	if res.status != http.StatusOK {
+		t.Fatalf("edit title = %d: %s", res.status, res.body)
+	}
+	if got, _ := res.data(t)["videoUrl"].(string); got != "https://b23.tv/keepme" {
+		t.Errorf("after editing the title, videoUrl = %q, want it untouched", got)
+	}
+
+	// An explicit null removes it.
+	res = h.do(http.MethodPatch, fmt.Sprintf("/forum/posts/%d", no),
+		map[string]any{"videoUrl": nil}, withBearer(token))
+	if res.status != http.StatusOK {
+		t.Fatalf("clear video = %d: %s", res.status, res.body)
+	}
+	if got := res.data(t)["videoUrl"]; got != nil {
+		t.Errorf("after clearing, videoUrl = %v, want null", got)
+	}
+}

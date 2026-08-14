@@ -256,6 +256,11 @@
               "discussion"
             ],
             "type": "string"
+          },
+          "videoUrl": {
+            "description": "Link to a Bilibili or Douyin video",
+            "maxLength": 300,
+            "type": "string"
           }
         },
         "required": [
@@ -1661,6 +1666,13 @@
               "string",
               "null"
             ]
+          },
+          "videoUrl": {
+            "description": "Linked Bilibili or Douyin video, or null",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -1678,6 +1690,7 @@
           "liked",
           "bookmarked",
           "images",
+          "videoUrl",
           "featuredAt",
           "createdAt",
           "editedAt"
@@ -2178,6 +2191,14 @@
               "testing",
               "discussion"
             ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "videoUrl": {
+            "description": "A value sets the video link, null removes it, omitting it leaves it unchanged",
+            "maxLength": 300,
             "type": [
               "string",
               "null"

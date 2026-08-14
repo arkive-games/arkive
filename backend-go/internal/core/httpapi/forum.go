@@ -127,6 +127,10 @@ type CreatePostBody struct {
 	Topic   *string   `json:"topic,omitempty" enum:"guide,question,testing,discussion" doc:"Optional kind of post"`
 	GameIDs []GameKey `json:"gameIds,omitempty" maxItems:"5" doc:"Games this post is about"`
 	Tags    []string  `json:"tags,omitempty" maxItems:"10" doc:"Free-form tags"`
+	// No format or pattern tag: the host allowlist is a service-layer rule, and
+	// expressing half of it here would let a schema and a validator disagree about
+	// what is acceptable.
+	VideoURL *string `json:"videoUrl,omitempty" maxLength:"300" doc:"Link to a Bilibili or Douyin video"`
 }
 
 // UpdatePostBody is a partial edit; an absent field is left unchanged.
@@ -139,6 +143,10 @@ type UpdatePostBody struct {
 	// Three states rather than two: absent leaves the topic alone, null clears
 	// it, a value sets it. A plain pointer cannot separate the first two.
 	Topic api.Optional[string] `json:"topic,omitzero" enum:"guide,question,testing,discussion" doc:"A value sets the topic, null clears it, omitting it leaves it unchanged"`
+
+	// Likewise tri-state: an author removing a video and an author editing a title
+	// without touching the video both send no URL.
+	VideoURL api.Optional[string] `json:"videoUrl,omitzero" maxLength:"300" doc:"A value sets the video link, null removes it, omitting it leaves it unchanged"`
 }
 
 // CreateCommentBody is a comment, or a reply when parentId is set.
@@ -308,12 +316,13 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 		}
 
 		post, err := h.forum.CreatePost(ctx, principal, forum.CreatePostInput{
-			Channel: forum.Channel(in.Body.Channel),
-			Title:   in.Body.Title,
-			Body:    in.Body.Body,
-			Topic:   in.Body.Topic,
-			GameIDs: gameKeyStrings(in.Body.GameIDs),
-			Tags:    in.Body.Tags,
+			Channel:  forum.Channel(in.Body.Channel),
+			Title:    in.Body.Title,
+			Body:     in.Body.Body,
+			Topic:    in.Body.Topic,
+			GameIDs:  gameKeyStrings(in.Body.GameIDs),
+			Tags:     in.Body.Tags,
+			VideoURL: in.Body.VideoURL,
 		})
 		if err != nil {
 			return nil, err
@@ -338,11 +347,12 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 			return nil, err
 		}
 		post, err := h.forum.UpdatePost(ctx, principal, in.PostNo, forum.UpdatePostInput{
-			Title:   in.Body.Title,
-			Body:    in.Body.Body,
-			Topic:   forum.Optional{Set: in.Body.Topic.Set, Value: in.Body.Topic.Value},
-			GameIDs: gameKeyStringsPtr(in.Body.GameIDs),
-			Tags:    in.Body.Tags,
+			Title:    in.Body.Title,
+			Body:     in.Body.Body,
+			Topic:    forum.Optional{Set: in.Body.Topic.Set, Value: in.Body.Topic.Value},
+			GameIDs:  gameKeyStringsPtr(in.Body.GameIDs),
+			Tags:     in.Body.Tags,
+			VideoURL: forum.Optional{Set: in.Body.VideoURL.Set, Value: in.Body.VideoURL.Value},
 		})
 		if err != nil {
 			return nil, err

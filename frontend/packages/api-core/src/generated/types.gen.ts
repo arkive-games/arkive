@@ -135,6 +135,10 @@ export type CreatePostBody = {
      * Optional kind of post
      */
     topic?: 'guide' | 'question' | 'testing' | 'discussion';
+    /**
+     * Link to a Bilibili or Douyin video
+     */
+    videoUrl?: string;
 };
 
 export type CredentialsBody = {
@@ -938,6 +942,10 @@ export type PostRead = {
      * guide, question, testing or discussion, or null
      */
     topic: string | null;
+    /**
+     * Linked Bilibili or Douyin video, or null
+     */
+    videoUrl: string | null;
 };
 
 export type Preferences = {
@@ -1186,6 +1194,10 @@ export type UpdatePostBody = {
      * A value sets the topic, null clears it, omitting it leaves it unchanged
      */
     topic?: 'guide' | 'question' | 'testing' | 'discussion';
+    /**
+     * A value sets the video link, null removes it, omitting it leaves it unchanged
+     */
+    videoUrl?: string | null;
 };
 
 export type UpdateUserBody = {

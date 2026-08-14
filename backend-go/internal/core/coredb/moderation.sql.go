@@ -202,7 +202,7 @@ func (q *Queries) ListHiddenForumComments(ctx context.Context, arg ListHiddenFor
 }
 
 const listHiddenForumPosts = `-- name: ListHiddenForumPosts :many
-SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason FROM core.forum_posts
+SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason, video_url FROM core.forum_posts
 WHERE hidden_at IS NOT NULL
   AND ($1::text[] IS NULL OR game_ids && $1::text[])
 ORDER BY hidden_at DESC, id
@@ -244,6 +244,7 @@ func (q *Queries) ListHiddenForumPosts(ctx context.Context, arg ListHiddenForumP
 			&i.HiddenAt,
 			&i.HiddenBy,
 			&i.HiddenReason,
+			&i.VideoUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -392,7 +393,7 @@ UPDATE core.forum_posts SET
     hidden_by     = CASE WHEN $1::boolean THEN $2::uuid ELSE NULL END,
     hidden_reason = CASE WHEN $1::boolean THEN $3::text ELSE NULL END
 WHERE id = $4
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by, hidden_at, hidden_by, hidden_reason, video_url
 `
 
 type SetForumPostHiddenParams struct {
@@ -431,6 +432,7 @@ func (q *Queries) SetForumPostHidden(ctx context.Context, arg SetForumPostHidden
 		&i.HiddenAt,
 		&i.HiddenBy,
 		&i.HiddenReason,
+		&i.VideoUrl,
 	)
 	return i, err
 }

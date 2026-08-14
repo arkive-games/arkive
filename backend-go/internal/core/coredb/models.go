@@ -53,6 +53,7 @@ type CoreForumPost struct {
 	HiddenAt      pgtype.Timestamptz
 	HiddenBy      *uuid.UUID
 	HiddenReason  *string
+	VideoUrl      *string
 }
 
 type CoreForumPostBookmark struct {

@@ -1,6 +1,6 @@
 -- name: CreateForumPost :one
-INSERT INTO core.forum_posts (id, author_id, channel, title, body, topic, game_ids, tags)
-VALUES ($1, $2, $3, $4, $5, sqlc.narg('topic'), $6, $7)
+INSERT INTO core.forum_posts (id, author_id, channel, title, body, topic, game_ids, tags, video_url)
+VALUES ($1, $2, $3, $4, $5, sqlc.narg('topic'), $6, $7, sqlc.narg('video_url'))
 RETURNING *;
 
 -- name: GetForumPostByNo :one
@@ -20,6 +20,11 @@ UPDATE core.forum_posts SET
                      THEN sqlc.narg('topic')::text ELSE topic END,
     game_ids  = COALESCE(sqlc.narg('game_ids')::text[], game_ids),
     tags      = COALESCE(sqlc.narg('tags')::text[], tags),
+    -- Same tri-state as topic, and for the same reason: removing the video and
+    -- leaving it alone are different intents, and COALESCE cannot tell them
+    -- apart because both arrive as NULL.
+    video_url = CASE WHEN sqlc.arg('set_video_url')::boolean
+                     THEN sqlc.narg('video_url')::text ELSE video_url END,
     edited_at = now()
 WHERE id = sqlc.arg('id')
 RETURNING *;
