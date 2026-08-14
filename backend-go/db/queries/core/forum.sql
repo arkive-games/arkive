@@ -60,20 +60,56 @@ WHERE (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::t
   AND (sqlc.narg('followed_by')::uuid IS NULL OR p.author_id IN (
       SELECT f.followee_id FROM core.user_follows f
       WHERE f.follower_id = sqlc.narg('followed_by')::uuid))
-ORDER BY p.created_at DESC, p.id
+  AND (sqlc.narg('featured')::boolean IS NULL
+       OR (p.featured_at IS NOT NULL) = sqlc.narg('featured')::boolean)
+  -- The expression matches forum_posts_search_idx exactly, which is what lets a
+  -- substring query use the trigram index instead of scanning every body.
+  AND (sqlc.narg('query')::text IS NULL
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%')
+ORDER BY
+    -- One statement rather than three, so every filter above is written once. A CASE
+    -- per sort collapses to NULL for the orders not chosen, and NULLS LAST keeps those
+    -- from dominating; `created_at DESC, id` is both the default order and the
+    -- tie-break that makes paging deterministic under the other two.
+    CASE WHEN sqlc.arg('sort')::text = 'top' THEN
+        (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
+    END DESC NULLS LAST,
+    -- Engagement decayed by age. Comments weigh double: writing one costs more than
+    -- tapping a heart, so it is the stronger signal that a thread is alive. The +2 and
+    -- the 1.5 exponent are a starting shape, not a tuned result -- recorded as such
+    -- because a ranking formula invites being mistaken for one.
+    CASE WHEN sqlc.arg('sort')::text = 'hot' THEN
+        ((SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
+         + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) + 1)
+        / power(extract(epoch FROM (now() - p.created_at)) / 3600.0 + 2, 1.5)
+    END DESC NULLS LAST,
+    p.created_at DESC, p.id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 
+-- The predicates must stay identical to ListForumPosts, or the pager offers pages the
+-- feed will not return. Sorting is absent on purpose: it cannot change a count.
 -- name: CountForumPosts :one
 SELECT count(*) FROM core.forum_posts p
 WHERE (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
   AND (sqlc.narg('game_id')::text IS NULL OR p.game_ids @> ARRAY[sqlc.narg('game_id')::text])
   AND (sqlc.narg('tag')::text     IS NULL OR p.tags     @> ARRAY[sqlc.narg('tag')::text])
   AND (sqlc.narg('author_id')::uuid IS NULL OR p.author_id = sqlc.narg('author_id')::uuid)
-  -- The "following only" feed. IN rather than a join, so a post is not duplicated
-  -- and the predicate composes with every other filter.
   AND (sqlc.narg('followed_by')::uuid IS NULL OR p.author_id IN (
       SELECT f.followee_id FROM core.user_follows f
-      WHERE f.follower_id = sqlc.narg('followed_by')::uuid));
+      WHERE f.follower_id = sqlc.narg('followed_by')::uuid))
+  AND (sqlc.narg('featured')::boolean IS NULL
+       OR (p.featured_at IS NOT NULL) = sqlc.narg('featured')::boolean)
+  AND (sqlc.narg('query')::text IS NULL
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%');
+
+-- name: SetForumPostFeatured :one
+-- Both columns move together, which the forum_posts_featured_together constraint
+-- requires: a featured post always records who featured it.
+UPDATE core.forum_posts SET
+    featured_at = CASE WHEN sqlc.arg('featured')::boolean THEN now() ELSE NULL END,
+    featured_by = CASE WHEN sqlc.arg('featured')::boolean THEN sqlc.narg('actor_id')::uuid ELSE NULL END
+WHERE id = sqlc.arg('id')
+RETURNING *;
 
 -- name: CountForumPostComments :one
 SELECT count(*) FROM core.forum_comments WHERE post_id = $1;

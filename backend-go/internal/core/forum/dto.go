@@ -80,31 +80,36 @@ const (
 // The identity a client sees is PostNo, not the uuid: it is short, quotable and
 // never reused, exactly as an account's uid is. The uuid stays internal.
 type PostRead struct {
-	PostNo    int64            `json:"postNo" doc:"Permanent post number; use this in links" example:"1042"`
-	Author    users.UserPublic `json:"author" doc:"Who wrote it"`
+	PostNo int64            `json:"postNo" doc:"Permanent post number; use this in links" example:"1042"`
+	Author users.UserPublic `json:"author" doc:"Who wrote it"`
 	// The enum tag is what makes the generated TypeScript a union rather than a
 	// bare string. CreatePostBody.Channel already carried one; this side did not,
 	// so a client reading a response got no help from the type.
-	Channel   Channel          `json:"channel" enum:"general,official,games" doc:"general, official or games" example:"general"`
-	Title     string           `json:"title" doc:"Post title"`
-	Body      string           `json:"body" doc:"Raw markdown, exactly as written. Render it with raw HTML disabled."`
-	Topic     *string          `json:"topic" doc:"guide, question, testing or discussion, or null"`
+	Channel Channel `json:"channel" enum:"general,official,games" doc:"general, official or games" example:"general"`
+	Title   string  `json:"title" doc:"Post title"`
+	Body    string  `json:"body" doc:"Raw markdown, exactly as written. Render it with raw HTML disabled."`
+	Topic   *string `json:"topic" doc:"guide, question, testing or discussion, or null"`
 	// No enum here, deliberately, unlike the request bodies. Generating one would
 	// mean either importing huma into this package or repeating the registry in a
 	// struct tag, and a response needs no validation — the union that guards the
 	// client is the one on what it sends. A reader comparing these against its own
 	// game list is unaffected.
-	GameIDs   []string         `json:"gameIds" doc:"Games this post is about, at most 5"`
-	Tags      []string         `json:"tags" doc:"Free-form tags, at most 10"`
-	Comments  int64            `json:"commentCount" doc:"Number of comments, replies included"`
-	Likes     int64            `json:"likeCount" doc:"How many accounts have liked it"`
-	Bookmarks int64            `json:"bookmarkCount" doc:"How many accounts have bookmarked it"`
+	GameIDs   []string `json:"gameIds" doc:"Games this post is about, at most 5"`
+	Tags      []string `json:"tags" doc:"Free-form tags, at most 10"`
+	Comments  int64    `json:"commentCount" doc:"Number of comments, replies included"`
+	Likes     int64    `json:"likeCount" doc:"How many accounts have liked it"`
+	Bookmarks int64    `json:"bookmarkCount" doc:"How many accounts have bookmarked it"`
 
 	// The reader's own state. False for an anonymous reader rather than absent, so a
 	// client needs no branch between signed-in and signed-out responses. A response
 	// carrying these is per-viewer and must not be cached publicly.
 	Liked      bool `json:"liked" doc:"Whether the current reader has liked it"`
 	Bookmarked bool `json:"bookmarked" doc:"Whether the current reader has bookmarked it"`
+
+	// Null unless a game administrator has put it on the editorial shelf. The actor is
+	// recorded in the database but not exposed: readers need to know a post is featured,
+	// not who decided so.
+	FeaturedAt *time.Time `json:"featuredAt" doc:"When it was featured, or null"`
 
 	CreatedAt time.Time  `json:"createdAt" doc:"When it was posted"`
 	EditedAt  *time.Time `json:"editedAt" doc:"When it was last edited, or null if never"`
@@ -181,8 +186,46 @@ type ListFilter struct {
 	// wants their own `liked` state on every row.
 	FollowedOnly bool
 
+	// Featured narrows to the editorial shelf, or to everything off it.
+	Featured *bool
+
+	// Query is a substring search over title and body. Trimmed by normalise; empty
+	// means no search rather than "match everything with an empty string".
+	Query *string
+
+	// Sort is one of SortNew, SortHot or SortTop. Empty means SortNew.
+	Sort Sort
+
 	Page     int
 	PageSize int
+}
+
+// Sort names a feed order.
+type Sort string
+
+const (
+	// SortNew is newest first — the only order before this slice, and still the
+	// default, because a forum's front page is a record of what just happened.
+	SortNew Sort = "new"
+	// SortHot ranks engagement decayed by age.
+	SortHot Sort = "hot"
+	// SortTop ranks by likes alone, ignoring age.
+	SortTop Sort = "top"
+)
+
+var sorts = []Sort{SortNew, SortHot, SortTop}
+
+// ValidSort reports whether s names an order. Empty is valid and means SortNew.
+func ValidSort(s Sort) bool {
+	if s == "" {
+		return true
+	}
+	for _, known := range sorts {
+		if s == known {
+			return true
+		}
+	}
+	return false
 }
 
 // normalise clamps the paging arguments so a caller cannot ask for an unbounded
@@ -239,6 +282,7 @@ func toPostRead(p coredb.CoreForumPost, author users.UserPublic, r Reactions) Po
 		Topic:      p.Topic,
 		GameIDs:    emptyIfNil(p.GameIDs),
 		Tags:       emptyIfNil(p.Tags),
+		FeaturedAt: timeOrNil(p.FeaturedAt.Time, p.FeaturedAt.Valid),
 		Comments:   r.Comments,
 		Likes:      r.Likes,
 		Bookmarks:  r.Bookmarks,

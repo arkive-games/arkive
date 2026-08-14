@@ -184,6 +184,10 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 			return nil, 0, err
 		}
 	}
+	if !ValidSort(filter.Sort) {
+		return nil, 0, apierr.New(apierr.Validation,
+			fmt.Sprintf("%q is not a feed order", filter.Sort))
+	}
 
 	// An author filter naming nobody is an empty feed, not an error. A profile link
 	// for a deleted account is a stale link, and answering it with 404 would make
@@ -215,6 +219,8 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		Tag:        filter.Tag,
 		AuthorID:   filter.AuthorID,
 		FollowedBy: followedBy,
+		Featured:   filter.Featured,
+		Query:      filter.Query,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("count posts: %w", err)
@@ -226,6 +232,9 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		Tag:          filter.Tag,
 		AuthorID:     filter.AuthorID,
 		FollowedBy:   followedBy,
+		Featured:     filter.Featured,
+		Query:        filter.Query,
+		Sort:         string(filter.Sort),
 		ViewerID:     filter.ViewerID,
 		ResultLimit:  int32(filter.PageSize),
 		ResultOffset: filter.Offset(),
@@ -526,6 +535,46 @@ func (s *Service) UpdateComment(ctx context.Context, principal auth.Principal, i
 		return CommentRead{}, fmt.Errorf("load comment reactions: %w", err)
 	}
 	return toCommentRead(updated, author, likes.LikeCount, likes.Liked), nil
+}
+
+// SetFeatured puts a post on the editorial shelf, or takes it off.
+//
+// Authorized through CanAny against the post's own game tags, which is the rule roles
+// exists for: a Palworld administrator may feature a Palworld post and nothing else. A
+// post tagged with no game reaches site administrators only, because the general
+// channel belongs to nobody in particular.
+//
+// Not an ownership action: an author cannot feature their own post, which is the whole
+// point of an editorial shelf.
+func (s *Service) SetFeatured(ctx context.Context, principal auth.Principal, postNo int64, featured bool) (PostRead, error) {
+	post, err := s.postByNoForReaction(ctx, postNo)
+	if err != nil {
+		return PostRead{}, err
+	}
+
+	allowed, err := s.authz.CanAny(ctx, principal, roles.FeaturePost, post.GameIDs)
+	if err != nil {
+		return PostRead{}, err
+	}
+	if !allowed {
+		return PostRead{}, apierr.New(apierr.Forbidden,
+			"you do not administer a game this post is about")
+	}
+
+	updated, err := s.q.SetForumPostFeatured(ctx, coredb.SetForumPostFeaturedParams{
+		ID:       post.ID,
+		Featured: featured,
+		ActorID:  &principal.ID,
+	})
+	if err != nil {
+		return PostRead{}, fmt.Errorf("set featured: %w", err)
+	}
+
+	s.logger.InfoContext(ctx, "post featured state changed",
+		slog.Int64("postNo", post.PostNo), slog.Bool("featured", featured),
+		slog.String("actor", principal.ID.String()))
+
+	return s.postWithReactions(ctx, updated, &principal.ID)
 }
 
 // ---------------------------------------------------------------------------

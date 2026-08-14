@@ -30,11 +30,13 @@ WHERE ($1::text IS NULL OR p.channel = $1::text)
   AND ($2::text IS NULL OR p.game_ids @> ARRAY[$2::text])
   AND ($3::text     IS NULL OR p.tags     @> ARRAY[$3::text])
   AND ($4::uuid IS NULL OR p.author_id = $4::uuid)
-  -- The "following only" feed. IN rather than a join, so a post is not duplicated
-  -- and the predicate composes with every other filter.
   AND ($5::uuid IS NULL OR p.author_id IN (
       SELECT f.followee_id FROM core.user_follows f
       WHERE f.follower_id = $5::uuid))
+  AND ($6::boolean IS NULL
+       OR (p.featured_at IS NOT NULL) = $6::boolean)
+  AND ($7::text IS NULL
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower($7::text) || '%')
 `
 
 type CountForumPostsParams struct {
@@ -43,8 +45,12 @@ type CountForumPostsParams struct {
 	Tag        *string
 	AuthorID   *uuid.UUID
 	FollowedBy *uuid.UUID
+	Featured   *bool
+	Query      *string
 }
 
+// The predicates must stay identical to ListForumPosts, or the pager offers pages the
+// feed will not return. Sorting is absent on purpose: it cannot change a count.
 func (q *Queries) CountForumPosts(ctx context.Context, arg CountForumPostsParams) (int64, error) {
 	row := q.db.QueryRow(ctx, countForumPosts,
 		arg.Channel,
@@ -52,6 +58,8 @@ func (q *Queries) CountForumPosts(ctx context.Context, arg CountForumPostsParams
 		arg.Tag,
 		arg.AuthorID,
 		arg.FollowedBy,
+		arg.Featured,
+		arg.Query,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -113,7 +121,7 @@ func (q *Queries) CreateForumComment(ctx context.Context, arg CreateForumComment
 const createForumPost = `-- name: CreateForumPost :one
 INSERT INTO core.forum_posts (id, author_id, channel, title, body, topic, game_ids, tags)
 VALUES ($1, $2, $3, $4, $5, $8, $6, $7)
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by
 `
 
 type CreateForumPostParams struct {
@@ -153,6 +161,8 @@ func (q *Queries) CreateForumPost(ctx context.Context, arg CreateForumPostParams
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.EditedAt,
+		&i.FeaturedAt,
+		&i.FeaturedBy,
 	)
 	return i, err
 }
@@ -295,7 +305,7 @@ func (q *Queries) GetForumCommentByID(ctx context.Context, id uuid.UUID) (CoreFo
 }
 
 const getForumPostByID = `-- name: GetForumPostByID :one
-SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at FROM core.forum_posts WHERE id = $1
+SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by FROM core.forum_posts WHERE id = $1
 `
 
 func (q *Queries) GetForumPostByID(ctx context.Context, id uuid.UUID) (CoreForumPost, error) {
@@ -315,12 +325,14 @@ func (q *Queries) GetForumPostByID(ctx context.Context, id uuid.UUID) (CoreForum
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.EditedAt,
+		&i.FeaturedAt,
+		&i.FeaturedBy,
 	)
 	return i, err
 }
 
 const getForumPostByNo = `-- name: GetForumPostByNo :one
-SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at FROM core.forum_posts WHERE post_no = $1
+SELECT id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by FROM core.forum_posts WHERE post_no = $1
 `
 
 func (q *Queries) GetForumPostByNo(ctx context.Context, postNo int64) (CoreForumPost, error) {
@@ -340,6 +352,8 @@ func (q *Queries) GetForumPostByNo(ctx context.Context, postNo int64) (CoreForum
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.EditedAt,
+		&i.FeaturedAt,
+		&i.FeaturedBy,
 	)
 	return i, err
 }
@@ -430,7 +444,7 @@ func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsPa
 
 const listForumPosts = `-- name: ListForumPosts :many
 SELECT
-    p.id, p.post_no, p.author_id, p.channel, p.title, p.body, p.topic, p.game_ids, p.tags, p.next_comment_no, p.created_at, p.updated_at, p.edited_at,
+    p.id, p.post_no, p.author_id, p.channel, p.title, p.body, p.topic, p.game_ids, p.tags, p.next_comment_no, p.created_at, p.updated_at, p.edited_at, p.featured_at, p.featured_by,
     (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) AS comment_count,
     (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id) AS like_count,
     (SELECT count(*) FROM core.forum_post_bookmarks b WHERE b.post_id = p.id) AS bookmark_count,
@@ -452,8 +466,31 @@ WHERE ($2::text IS NULL OR p.channel = $2::text)
   AND ($6::uuid IS NULL OR p.author_id IN (
       SELECT f.followee_id FROM core.user_follows f
       WHERE f.follower_id = $6::uuid))
-ORDER BY p.created_at DESC, p.id
-LIMIT $8 OFFSET $7
+  AND ($7::boolean IS NULL
+       OR (p.featured_at IS NOT NULL) = $7::boolean)
+  -- The expression matches forum_posts_search_idx exactly, which is what lets a
+  -- substring query use the trigram index instead of scanning every body.
+  AND ($8::text IS NULL
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower($8::text) || '%')
+ORDER BY
+    -- One statement rather than three, so every filter above is written once. A CASE
+    -- per sort collapses to NULL for the orders not chosen, and NULLS LAST keeps those
+    -- from dominating; ` + "`" + `created_at DESC, id` + "`" + ` is both the default order and the
+    -- tie-break that makes paging deterministic under the other two.
+    CASE WHEN $9::text = 'top' THEN
+        (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
+    END DESC NULLS LAST,
+    -- Engagement decayed by age. Comments weigh double: writing one costs more than
+    -- tapping a heart, so it is the stronger signal that a thread is alive. The +2 and
+    -- the 1.5 exponent are a starting shape, not a tuned result -- recorded as such
+    -- because a ranking formula invites being mistaken for one.
+    CASE WHEN $9::text = 'hot' THEN
+        ((SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
+         + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) + 1)
+        / power(extract(epoch FROM (now() - p.created_at)) / 3600.0 + 2, 1.5)
+    END DESC NULLS LAST,
+    p.created_at DESC, p.id
+LIMIT $11 OFFSET $10
 `
 
 type ListForumPostsParams struct {
@@ -463,6 +500,9 @@ type ListForumPostsParams struct {
 	Tag          *string
 	AuthorID     *uuid.UUID
 	FollowedBy   *uuid.UUID
+	Featured     *bool
+	Query        *string
+	Sort         string
 	ResultOffset int32
 	ResultLimit  int32
 }
@@ -481,6 +521,8 @@ type ListForumPostsRow struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	EditedAt      pgtype.Timestamptz
+	FeaturedAt    pgtype.Timestamptz
+	FeaturedBy    *uuid.UUID
 	CommentCount  int64
 	LikeCount     int64
 	BookmarkCount int64
@@ -505,6 +547,9 @@ func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) 
 		arg.Tag,
 		arg.AuthorID,
 		arg.FollowedBy,
+		arg.Featured,
+		arg.Query,
+		arg.Sort,
 		arg.ResultOffset,
 		arg.ResultLimit,
 	)
@@ -529,6 +574,8 @@ func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) 
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.EditedAt,
+			&i.FeaturedAt,
+			&i.FeaturedBy,
 			&i.CommentCount,
 			&i.LikeCount,
 			&i.BookmarkCount,
@@ -543,6 +590,45 @@ func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const setForumPostFeatured = `-- name: SetForumPostFeatured :one
+UPDATE core.forum_posts SET
+    featured_at = CASE WHEN $1::boolean THEN now() ELSE NULL END,
+    featured_by = CASE WHEN $1::boolean THEN $2::uuid ELSE NULL END
+WHERE id = $3
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by
+`
+
+type SetForumPostFeaturedParams struct {
+	Featured bool
+	ActorID  *uuid.UUID
+	ID       uuid.UUID
+}
+
+// Both columns move together, which the forum_posts_featured_together constraint
+// requires: a featured post always records who featured it.
+func (q *Queries) SetForumPostFeatured(ctx context.Context, arg SetForumPostFeaturedParams) (CoreForumPost, error) {
+	row := q.db.QueryRow(ctx, setForumPostFeatured, arg.Featured, arg.ActorID, arg.ID)
+	var i CoreForumPost
+	err := row.Scan(
+		&i.ID,
+		&i.PostNo,
+		&i.AuthorID,
+		&i.Channel,
+		&i.Title,
+		&i.Body,
+		&i.Topic,
+		&i.GameIDs,
+		&i.Tags,
+		&i.NextCommentNo,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.EditedAt,
+		&i.FeaturedAt,
+		&i.FeaturedBy,
+	)
+	return i, err
 }
 
 const updateForumComment = `-- name: UpdateForumComment :one
@@ -585,7 +671,7 @@ UPDATE core.forum_posts SET
     tags      = COALESCE($6::text[], tags),
     edited_at = now()
 WHERE id = $7
-RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at
+RETURNING id, post_no, author_id, channel, title, body, topic, game_ids, tags, next_comment_no, created_at, updated_at, edited_at, featured_at, featured_by
 `
 
 type UpdateForumPostParams struct {
@@ -626,6 +712,8 @@ func (q *Queries) UpdateForumPost(ctx context.Context, arg UpdateForumPostParams
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.EditedAt,
+		&i.FeaturedAt,
+		&i.FeaturedBy,
 	)
 	return i, err
 }

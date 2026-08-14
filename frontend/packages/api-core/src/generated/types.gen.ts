@@ -586,6 +586,10 @@ export type PostRead = {
      */
     editedAt: string | null;
     /**
+     * When it was featured, or null
+     */
+    featuredAt: string | null;
+    /**
      * Games this post is about, at most 5
      */
     gameIds: Array<string> | null;
@@ -1325,6 +1329,18 @@ export type ListForumPostsData = {
          */
         following?: boolean;
         /**
+         * Feed order; defaults to newest first
+         */
+        sort?: 'new' | 'hot' | 'top';
+        /**
+         * Search titles and bodies
+         */
+        q?: string;
+        /**
+         * Only featured posts, or only unfeatured
+         */
+        featured?: 'true' | 'false';
+        /**
          * 1-based page number
          */
         page?: number;
@@ -1705,6 +1721,98 @@ export type CreateForumCommentResponses = {
 };
 
 export type CreateForumCommentResponse = CreateForumCommentResponses[keyof CreateForumCommentResponses];
+
+export type UnfeatureForumPostData = {
+    body?: never;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/featured';
+};
+
+export type UnfeatureForumPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type UnfeatureForumPostError = UnfeatureForumPostErrors[keyof UnfeatureForumPostErrors];
+
+export type UnfeatureForumPostResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopePostRead;
+};
+
+export type UnfeatureForumPostResponse = UnfeatureForumPostResponses[keyof UnfeatureForumPostResponses];
+
+export type FeatureForumPostData = {
+    body?: never;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/featured';
+};
+
+export type FeatureForumPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type FeatureForumPostError = FeatureForumPostErrors[keyof FeatureForumPostErrors];
+
+export type FeatureForumPostResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopePostRead;
+};
+
+export type FeatureForumPostResponse = FeatureForumPostResponses[keyof FeatureForumPostResponses];
 
 export type UnlikeForumPostData = {
     body?: never;

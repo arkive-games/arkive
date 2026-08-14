@@ -1038,6 +1038,14 @@
               "null"
             ]
           },
+          "featuredAt": {
+            "description": "When it was featured, or null",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "gameIds": {
             "description": "Games this post is about, at most 5",
             "items": {
@@ -1101,6 +1109,7 @@
           "bookmarkCount",
           "liked",
           "bookmarked",
+          "featuredAt",
           "createdAt",
           "editedAt"
         ],
@@ -2430,6 +2439,46 @@
             }
           },
           {
+            "description": "Feed order; defaults to newest first",
+            "explode": false,
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "description": "Feed order; defaults to newest first",
+              "enum": [
+                "new",
+                "hot",
+                "top"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search titles and bodies",
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Search titles and bodies",
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only featured posts, or only unfeatured",
+            "explode": false,
+            "in": "query",
+            "name": "featured",
+            "schema": {
+              "description": "Only featured posts, or only unfeatured",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          },
+          {
             "description": "1-based page number",
             "explode": false,
             "in": "query",
@@ -3151,6 +3200,176 @@
           }
         },
         "summary": "Comment on a post, or reply to a comment",
+        "tags": [
+          "forum"
+        ]
+      }
+    },
+    "/forum/posts/{postNo}/featured": {
+      "delete": {
+        "description": "Requires administering a game the post is tagged with; a post tagged with no game is site administrators only. Not an ownership action — an author cannot feature their own post.",
+        "operationId": "unfeatureForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Take a post off the editorial shelf",
+        "tags": [
+          "forum"
+        ]
+      },
+      "put": {
+        "description": "Requires administering a game the post is tagged with; a post tagged with no game is site administrators only. Not an ownership action — an author cannot feature their own post.",
+        "operationId": "featureForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Put a post on the editorial shelf",
         "tags": [
           "forum"
         ]

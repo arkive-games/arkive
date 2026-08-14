@@ -45,6 +45,8 @@ type CoreForumPost struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	EditedAt      pgtype.Timestamptz
+	FeaturedAt    pgtype.Timestamptz
+	FeaturedBy    *uuid.UUID
 }
 
 type CoreForumPostBookmark struct {

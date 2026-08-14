@@ -86,6 +86,25 @@ func viewerFrom(ctx context.Context) *uuid.UUID {
 	return &principal.ID
 }
 
+// optionalBool reads a three-state query parameter: absent, "true" or "false".
+//
+// huma does not accept pointer query parameters, and a plain bool cannot express
+// "unset" — which is a real third case here, because the featured filter must be able
+// to mean "both" as well as "only featured" and "only unfeatured". The enum on the
+// field is what stops anything else arriving.
+func optionalBool(v string) *bool {
+	switch v {
+	case "true":
+		t := true
+		return &t
+	case "false":
+		f := false
+		return &f
+	default:
+		return nil
+	}
+}
+
 // optionalUID turns an absent numeric query parameter into no filter. huma does not
 // accept pointer query parameters, so an omitted authorUid arrives as zero — which
 // is not a possible account number, since uid starts at 10000 and special_uid at 1.
@@ -155,6 +174,18 @@ type listPostsInput struct {
 	// than silently widening to everything, which is the opposite of what was asked.
 	Following bool `query:"following" doc:"Only posts by accounts you follow"`
 
+	// Validated by the enum, so an unknown order is refused rather than silently
+	// falling back to newest — a client asking for "hot" and quietly receiving "new"
+	// would be impossible to diagnose from the outside.
+	Sort string `query:"sort" enum:"new,hot,top" doc:"Feed order; defaults to newest first"`
+
+	// Substring search over title and body, answered by a trigram index so it behaves
+	// for Chinese as well as English.
+	Q string `query:"q" maxLength:"200" doc:"Search titles and bodies"`
+
+	// Absent means both. This is a real three-state, which is why it is a string.
+	Featured string `query:"featured" enum:"true,false" doc:"Only featured posts, or only unfeatured"`
+
 	Page     int `query:"page" default:"1" minimum:"1" doc:"1-based page number"`
 	PageSize int `query:"pageSize" default:"20" minimum:"1" maximum:"100" doc:"Posts per page"`
 }
@@ -216,6 +247,9 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 			AuthorUID:    optionalUID(in.AuthorUID),
 			ViewerID:     viewerFrom(ctx),
 			FollowedOnly: in.Following,
+			Sort:         forum.Sort(in.Sort),
+			Query:        optional(in.Q),
+			Featured:     optionalBool(in.Featured),
 			Page:         in.Page,
 			PageSize:     in.PageSize,
 		})
@@ -497,4 +531,31 @@ func (h *Handlers) RegisterReactionRoutes(a huma.API) {
 
 	comment("likeForumComment", http.MethodPut, "Like a comment", true)
 	comment("unlikeForumComment", http.MethodDelete, "Remove your like from a comment", false)
+
+	feature := func(op string, method string, summary string, featured bool) {
+		huma.Register(a, huma.Operation{
+			OperationID: op,
+			Method:      method,
+			Path:        "/forum/posts/{postNo}/featured",
+			Summary:     summary,
+			Description: "Requires administering a game the post is tagged with; a post " +
+				"tagged with no game is site administrators only. Not an ownership " +
+				"action — an author cannot feature their own post.",
+			Tags:   []string{"forum"},
+			Errors: []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
+		}, func(ctx context.Context, in *postReaction) (*api.Response[forum.PostRead], error) {
+			principal, err := auth.RequireUser(ctx)
+			if err != nil {
+				return nil, err
+			}
+			out, err := h.forum.SetFeatured(ctx, principal, in.PostNo, featured)
+			if err != nil {
+				return nil, err
+			}
+			return api.OK(out), nil
+		})
+	}
+
+	feature("featureForumPost", http.MethodPut, "Put a post on the editorial shelf", true)
+	feature("unfeatureForumPost", http.MethodDelete, "Take a post off the editorial shelf", false)
 }
