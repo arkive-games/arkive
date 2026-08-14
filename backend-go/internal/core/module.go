@@ -225,6 +225,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterAuthRoutes(a)
 	handlers.RegisterUserRoutes(a)
 	handlers.RegisterForumRoutes(a)
+	handlers.RegisterReactionRoutes(a)
 	handlers.RegisterRoleRoutes(a)
 	return nil
 }

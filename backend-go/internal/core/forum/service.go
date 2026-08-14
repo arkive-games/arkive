@@ -123,11 +123,16 @@ func (s *Service) CreatePost(ctx context.Context, principal auth.Principal, in C
 	if err != nil {
 		return PostRead{}, err
 	}
-	return toPostRead(post, author, 0), nil
+	// A brand-new post has no reactions and cannot have been liked by its author, so
+	// the zero value is correct rather than a placeholder.
+	return toPostRead(post, author, Reactions{}), nil
 }
 
 // PostByNo loads one post by its public number.
-func (s *Service) PostByNo(ctx context.Context, postNo int64) (PostRead, error) {
+//
+// viewer may be nil, for an anonymous reader; it decides only whose `liked` and
+// `bookmarked` flags come back.
+func (s *Service) PostByNo(ctx context.Context, postNo int64, viewer *uuid.UUID) (PostRead, error) {
 	post, err := s.q.GetForumPostByNo(ctx, postNo)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -136,15 +141,33 @@ func (s *Service) PostByNo(ctx context.Context, postNo int64) (PostRead, error) 
 		return PostRead{}, fmt.Errorf("load post: %w", err)
 	}
 
-	comments, err := s.q.CountForumPostComments(ctx, post.ID)
+	reactions, err := s.reactions(ctx, post.ID, viewer)
 	if err != nil {
-		return PostRead{}, fmt.Errorf("count comments: %w", err)
+		return PostRead{}, err
 	}
 	author, err := s.author(ctx, post.AuthorID)
 	if err != nil {
 		return PostRead{}, err
 	}
-	return toPostRead(post, author, comments), nil
+	return toPostRead(post, author, reactions), nil
+}
+
+// reactions loads the counters and the viewer's own state for one post.
+func (s *Service) reactions(ctx context.Context, postID uuid.UUID, viewer *uuid.UUID) (Reactions, error) {
+	row, err := s.q.ForumPostReactions(ctx, coredb.ForumPostReactionsParams{
+		PostID:   postID,
+		ViewerID: viewer,
+	})
+	if err != nil {
+		return Reactions{}, fmt.Errorf("load reactions: %w", err)
+	}
+	return Reactions{
+		Comments:   row.CommentCount,
+		Likes:      row.LikeCount,
+		Bookmarks:  row.BookmarkCount,
+		Liked:      row.Liked,
+		Bookmarked: row.Bookmarked,
+	}, nil
 }
 
 // ListPosts returns a page of the feed and the total matching count.
@@ -191,6 +214,7 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		GameID:       filter.GameID,
 		Tag:          filter.Tag,
 		AuthorID:     filter.AuthorID,
+		ViewerID:     filter.ViewerID,
 		ResultLimit:  int32(filter.PageSize),
 		ResultOffset: filter.Offset(),
 	})
@@ -225,7 +249,13 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 			NextCommentNo: r.NextCommentNo, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 			EditedAt: r.EditedAt,
 		}
-		out = append(out, toPostRead(post, author, r.CommentCount))
+		out = append(out, toPostRead(post, author, Reactions{
+			Comments:   r.CommentCount,
+			Likes:      r.LikeCount,
+			Bookmarks:  r.BookmarkCount,
+			Liked:      r.Liked,
+			Bookmarked: r.Bookmarked,
+		}))
 	}
 	return out, total, nil
 }
@@ -240,15 +270,15 @@ func (s *Service) UpdatePost(ctx context.Context, principal auth.Principal, post
 	// An edit that supplies nothing is a no-op, and stamping edited_at for it
 	// would tell every reader the post had been rewritten when it had not.
 	if in.Title == nil && in.Body == nil && !in.Topic.Set && in.GameIDs == nil && in.Tags == nil {
-		comments, err := s.q.CountForumPostComments(ctx, post.ID)
+		reactions, err := s.reactions(ctx, post.ID, &principal.ID)
 		if err != nil {
-			return PostRead{}, fmt.Errorf("count comments: %w", err)
+			return PostRead{}, err
 		}
 		author, err := s.author(ctx, post.AuthorID)
 		if err != nil {
 			return PostRead{}, err
 		}
-		return toPostRead(post, author, comments), nil
+		return toPostRead(post, author, reactions), nil
 	}
 
 	params := coredb.UpdateForumPostParams{ID: post.ID}
@@ -297,15 +327,15 @@ func (s *Service) UpdatePost(ctx context.Context, principal auth.Principal, post
 		return PostRead{}, mapConstraintError(err)
 	}
 
-	comments, err := s.q.CountForumPostComments(ctx, updated.ID)
+	reactions, err := s.reactions(ctx, updated.ID, &principal.ID)
 	if err != nil {
-		return PostRead{}, fmt.Errorf("count comments: %w", err)
+		return PostRead{}, err
 	}
 	author, err := s.author(ctx, updated.AuthorID)
 	if err != nil {
 		return PostRead{}, err
 	}
-	return toPostRead(updated, author, comments), nil
+	return toPostRead(updated, author, reactions), nil
 }
 
 // DeletePost removes a post and, by cascade, its comments and their replies.
@@ -385,7 +415,9 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 	if err != nil {
 		return CommentRead{}, err
 	}
-	return toCommentRead(comment, author), nil
+	// A comment that has just been written has no likes, so the zero value is the
+	// truth rather than a stand-in.
+	return toCommentRead(comment, author, 0, false), nil
 }
 
 // ListComments returns a page of a thread's comments, each reply directly after
@@ -395,7 +427,7 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 // unbounded response would let anyone ask the server to assemble every comment on
 // the busiest thread. The default page is generous enough that an ordinary
 // conversation still arrives in one response.
-func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize int) ([]CommentRead, int64, error) {
+func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize int, viewer *uuid.UUID) ([]CommentRead, int64, error) {
 	post, err := s.q.GetForumPostByNo(ctx, postNo)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -420,6 +452,7 @@ func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize
 
 	rows, err := s.q.ListForumComments(ctx, coredb.ListForumCommentsParams{
 		PostID:       post.ID,
+		ViewerID:     viewer,
 		ResultLimit:  int32(paging.PageSize),
 		ResultOffset: paging.Offset(),
 	})
@@ -442,7 +475,13 @@ func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize
 		if !ok {
 			continue
 		}
-		out = append(out, toCommentRead(r, author))
+		comment := coredb.CoreForumComment{
+			ID: r.ID, PostID: r.PostID, ParentID: r.ParentID, AuthorID: r.AuthorID,
+			Body: r.Body, CommentNo: r.CommentNo, Depth: r.Depth,
+			ParentDepth: r.ParentDepth, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
+			EditedAt: r.EditedAt,
+		}
+		out = append(out, toCommentRead(comment, author, r.LikeCount, r.Liked))
 	}
 	return out, total, nil
 }
@@ -467,7 +506,126 @@ func (s *Service) UpdateComment(ctx context.Context, principal auth.Principal, i
 	if err != nil {
 		return CommentRead{}, err
 	}
-	return toCommentRead(updated, author), nil
+	likes, err := s.q.ForumCommentReactions(ctx, coredb.ForumCommentReactionsParams{
+		CommentID: updated.ID,
+		ViewerID:  &principal.ID,
+	})
+	if err != nil {
+		return CommentRead{}, fmt.Errorf("load comment reactions: %w", err)
+	}
+	return toCommentRead(updated, author, likes.LikeCount, likes.Liked), nil
+}
+
+// ---------------------------------------------------------------------------
+// Reactions
+// ---------------------------------------------------------------------------
+
+// SetPostLike likes or unlikes a post, and returns the post as the actor now sees
+// it.
+//
+// One method for both directions rather than two, because the two differ by a single
+// statement and returning the updated post is what lets a client render the new
+// count without a second request. Both directions are idempotent: the caller is
+// stating an end state, so a double tap or a retry is not an error.
+//
+// Liking your own post is allowed. Nothing is gained by refusing it — the count is
+// public either way — and the notifications slice suppresses the self-notification in
+// the schema rather than here.
+func (s *Service) SetPostLike(ctx context.Context, principal auth.Principal, postNo int64, liked bool) (PostRead, error) {
+	post, err := s.postByNoForReaction(ctx, postNo)
+	if err != nil {
+		return PostRead{}, err
+	}
+
+	if liked {
+		err = s.q.LikeForumPost(ctx, coredb.LikeForumPostParams{PostID: post.ID, UserID: principal.ID})
+	} else {
+		err = s.q.UnlikeForumPost(ctx, coredb.UnlikeForumPostParams{PostID: post.ID, UserID: principal.ID})
+	}
+	if err != nil {
+		return PostRead{}, fmt.Errorf("set post like: %w", err)
+	}
+	return s.postWithReactions(ctx, post, &principal.ID)
+}
+
+// SetPostBookmark bookmarks or unbookmarks a post.
+//
+// A bookmark is private to the account that made it, but its *count* is not: the
+// number is public, and only the `bookmarked` flag is per-reader.
+func (s *Service) SetPostBookmark(ctx context.Context, principal auth.Principal, postNo int64, bookmarked bool) (PostRead, error) {
+	post, err := s.postByNoForReaction(ctx, postNo)
+	if err != nil {
+		return PostRead{}, err
+	}
+
+	if bookmarked {
+		err = s.q.BookmarkForumPost(ctx, coredb.BookmarkForumPostParams{PostID: post.ID, UserID: principal.ID})
+	} else {
+		err = s.q.UnbookmarkForumPost(ctx, coredb.UnbookmarkForumPostParams{PostID: post.ID, UserID: principal.ID})
+	}
+	if err != nil {
+		return PostRead{}, fmt.Errorf("set post bookmark: %w", err)
+	}
+	return s.postWithReactions(ctx, post, &principal.ID)
+}
+
+// SetCommentLike likes or unlikes one comment.
+func (s *Service) SetCommentLike(ctx context.Context, principal auth.Principal, id uuid.UUID, liked bool) (CommentRead, error) {
+	comment, err := s.q.GetForumCommentByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return CommentRead{}, apierr.New(apierr.NotFound, "no such comment")
+		}
+		return CommentRead{}, fmt.Errorf("load comment: %w", err)
+	}
+
+	if liked {
+		err = s.q.LikeForumComment(ctx, coredb.LikeForumCommentParams{CommentID: comment.ID, UserID: principal.ID})
+	} else {
+		err = s.q.UnlikeForumComment(ctx, coredb.UnlikeForumCommentParams{CommentID: comment.ID, UserID: principal.ID})
+	}
+	if err != nil {
+		return CommentRead{}, fmt.Errorf("set comment like: %w", err)
+	}
+
+	author, err := s.author(ctx, comment.AuthorID)
+	if err != nil {
+		return CommentRead{}, err
+	}
+	reactions, err := s.q.ForumCommentReactions(ctx, coredb.ForumCommentReactionsParams{
+		CommentID: comment.ID,
+		ViewerID:  &principal.ID,
+	})
+	if err != nil {
+		return CommentRead{}, fmt.Errorf("load comment reactions: %w", err)
+	}
+	return toCommentRead(comment, author, reactions.LikeCount, reactions.Liked), nil
+}
+
+// postByNoForReaction loads a post to react to. Unlike ownedPost it applies no
+// ownership rule: anyone signed in may like a post they did not write, which is the
+// entire point.
+func (s *Service) postByNoForReaction(ctx context.Context, postNo int64) (coredb.CoreForumPost, error) {
+	post, err := s.q.GetForumPostByNo(ctx, postNo)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return coredb.CoreForumPost{}, apierr.New(apierr.NotFound, "no such post")
+		}
+		return coredb.CoreForumPost{}, fmt.Errorf("load post: %w", err)
+	}
+	return post, nil
+}
+
+func (s *Service) postWithReactions(ctx context.Context, post coredb.CoreForumPost, viewer *uuid.UUID) (PostRead, error) {
+	reactions, err := s.reactions(ctx, post.ID, viewer)
+	if err != nil {
+		return PostRead{}, err
+	}
+	author, err := s.author(ctx, post.AuthorID)
+	if err != nil {
+		return PostRead{}, err
+	}
+	return toPostRead(post, author, reactions), nil
 }
 
 // DeleteComment removes a comment the caller owns, and by cascade its replies.

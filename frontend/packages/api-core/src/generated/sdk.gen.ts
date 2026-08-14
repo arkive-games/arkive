@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
+import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -173,6 +173,28 @@ export const updateForumComment = <ThrowOnError extends boolean = false>(options
 });
 
 /**
+ * Remove your like from a comment
+ *
+ * Idempotent. Returns the comment as the caller now sees it.
+ */
+export const unlikeForumComment = <ThrowOnError extends boolean = false>(options: Options<UnlikeForumCommentData, ThrowOnError>): RequestResult<UnlikeForumCommentResponses, UnlikeForumCommentErrors, ThrowOnError> => (options.client ?? client).delete<UnlikeForumCommentResponses, UnlikeForumCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/comments/{id}/like',
+    ...options
+});
+
+/**
+ * Like a comment
+ *
+ * Idempotent. Returns the comment as the caller now sees it.
+ */
+export const likeForumComment = <ThrowOnError extends boolean = false>(options: Options<LikeForumCommentData, ThrowOnError>): RequestResult<LikeForumCommentResponses, LikeForumCommentErrors, ThrowOnError> => (options.client ?? client).put<LikeForumCommentResponses, LikeForumCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/comments/{id}/like',
+    ...options
+});
+
+/**
  * List forum posts
  *
  * Public. Newest first, with optional channel, game, tag and author filters. Paginated by page number; a client should de-duplicate by postNo, because a post arriving while someone reads can shift rows between pages.
@@ -212,7 +234,7 @@ export const deleteForumPost = <ThrowOnError extends boolean = false>(options: O
 /**
  * Get one post
  *
- * Public.
+ * Public. When the caller is signed in, `liked` and `bookmarked` describe that account; for an anonymous reader both are false.
  */
 export const getForumPost = <ThrowOnError extends boolean = false>(options: Options<GetForumPostData, ThrowOnError>): RequestResult<GetForumPostResponses, GetForumPostErrors, ThrowOnError> => (options.client ?? client).get<GetForumPostResponses, GetForumPostErrors, ThrowOnError>({
     responseType: 'json',
@@ -233,6 +255,28 @@ export const updateForumPost = <ThrowOnError extends boolean = false>(options: O
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Remove a bookmark
+ *
+ * Idempotent. Returns the post as the caller now sees it.
+ */
+export const unbookmarkForumPost = <ThrowOnError extends boolean = false>(options: Options<UnbookmarkForumPostData, ThrowOnError>): RequestResult<UnbookmarkForumPostResponses, UnbookmarkForumPostErrors, ThrowOnError> => (options.client ?? client).delete<UnbookmarkForumPostResponses, UnbookmarkForumPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/posts/{postNo}/bookmark',
+    ...options
+});
+
+/**
+ * Bookmark a post
+ *
+ * Idempotent. Returns the post as the caller now sees it.
+ */
+export const bookmarkForumPost = <ThrowOnError extends boolean = false>(options: Options<BookmarkForumPostData, ThrowOnError>): RequestResult<BookmarkForumPostResponses, BookmarkForumPostErrors, ThrowOnError> => (options.client ?? client).put<BookmarkForumPostResponses, BookmarkForumPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/posts/{postNo}/bookmark',
+    ...options
 });
 
 /**
@@ -259,6 +303,28 @@ export const createForumComment = <ThrowOnError extends boolean = false>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Remove your like from a post
+ *
+ * Idempotent. Returns the post as the caller now sees it.
+ */
+export const unlikeForumPost = <ThrowOnError extends boolean = false>(options: Options<UnlikeForumPostData, ThrowOnError>): RequestResult<UnlikeForumPostResponses, UnlikeForumPostErrors, ThrowOnError> => (options.client ?? client).delete<UnlikeForumPostResponses, UnlikeForumPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/posts/{postNo}/like',
+    ...options
+});
+
+/**
+ * Like a post
+ *
+ * Idempotent. Returns the post as the caller now sees it.
+ */
+export const likeForumPost = <ThrowOnError extends boolean = false>(options: Options<LikeForumPostData, ThrowOnError>): RequestResult<LikeForumPostResponses, LikeForumPostErrors, ThrowOnError> => (options.client ?? client).put<LikeForumPostResponses, LikeForumPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/forum/posts/{postNo}/like',
+    ...options
 });
 
 /**

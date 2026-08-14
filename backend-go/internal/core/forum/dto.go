@@ -97,8 +97,17 @@ type PostRead struct {
 	GameIDs   []string         `json:"gameIds" doc:"Games this post is about, at most 5"`
 	Tags      []string         `json:"tags" doc:"Free-form tags, at most 10"`
 	Comments  int64            `json:"commentCount" doc:"Number of comments, replies included"`
-	CreatedAt time.Time        `json:"createdAt" doc:"When it was posted"`
-	EditedAt  *time.Time       `json:"editedAt" doc:"When it was last edited, or null if never"`
+	Likes     int64            `json:"likeCount" doc:"How many accounts have liked it"`
+	Bookmarks int64            `json:"bookmarkCount" doc:"How many accounts have bookmarked it"`
+
+	// The reader's own state. False for an anonymous reader rather than absent, so a
+	// client needs no branch between signed-in and signed-out responses. A response
+	// carrying these is per-viewer and must not be cached publicly.
+	Liked      bool `json:"liked" doc:"Whether the current reader has liked it"`
+	Bookmarked bool `json:"bookmarked" doc:"Whether the current reader has bookmarked it"`
+
+	CreatedAt time.Time  `json:"createdAt" doc:"When it was posted"`
+	EditedAt  *time.Time `json:"editedAt" doc:"When it was last edited, or null if never"`
 }
 
 // CommentRead is one comment or reply.
@@ -112,6 +121,8 @@ type CommentRead struct {
 	ParentID  *uuid.UUID       `json:"parentId" doc:"The comment this replies to, or null for a top-level comment"`
 	Author    users.UserPublic `json:"author" doc:"Who wrote it"`
 	Body      string           `json:"body" doc:"Raw markdown, exactly as written. Render it with raw HTML disabled."`
+	Likes     int64            `json:"likeCount" doc:"How many accounts have liked it"`
+	Liked     bool             `json:"liked" doc:"Whether the current reader has liked it"`
 	CreatedAt time.Time        `json:"createdAt" doc:"When it was written"`
 	EditedAt  *time.Time       `json:"editedAt" doc:"When it was last edited, or null if never"`
 }
@@ -159,6 +170,11 @@ type ListFilter struct {
 	AuthorID  *uuid.UUID
 	AuthorUID *int64
 
+	// Who is reading, when anyone is. It selects nothing — it only decides whose
+	// `liked` and `bookmarked` flags the rows carry, so an anonymous feed is the same
+	// query with both flags false.
+	ViewerID *uuid.UUID
+
 	Page     int
 	PageSize int
 }
@@ -193,29 +209,49 @@ func (f ListFilter) Offset() int32 {
 	return int32((f.Page - 1) * f.PageSize)
 }
 
-func toPostRead(p coredb.CoreForumPost, author users.UserPublic, comments int64) PostRead {
+// Reactions is the engagement a post carries, plus how the current reader has
+// reacted to it.
+//
+// Grouped into a struct rather than passed as four more positional arguments: the
+// call sites already take an author and a row, and `toPostRead(p, a, 3, 7, 2, true,
+// false)` is a bug waiting for someone to transpose two numbers.
+type Reactions struct {
+	Comments   int64
+	Likes      int64
+	Bookmarks  int64
+	Liked      bool
+	Bookmarked bool
+}
+
+func toPostRead(p coredb.CoreForumPost, author users.UserPublic, r Reactions) PostRead {
 	return PostRead{
-		PostNo:    p.PostNo,
-		Author:    author,
-		Channel:   Channel(p.Channel),
-		Title:     p.Title,
-		Body:      p.Body,
-		Topic:     p.Topic,
-		GameIDs:   emptyIfNil(p.GameIDs),
-		Tags:      emptyIfNil(p.Tags),
-		Comments:  comments,
-		CreatedAt: p.CreatedAt,
-		EditedAt:  timeOrNil(p.EditedAt.Time, p.EditedAt.Valid),
+		PostNo:     p.PostNo,
+		Author:     author,
+		Channel:    Channel(p.Channel),
+		Title:      p.Title,
+		Body:       p.Body,
+		Topic:      p.Topic,
+		GameIDs:    emptyIfNil(p.GameIDs),
+		Tags:       emptyIfNil(p.Tags),
+		Comments:   r.Comments,
+		Likes:      r.Likes,
+		Bookmarks:  r.Bookmarks,
+		Liked:      r.Liked,
+		Bookmarked: r.Bookmarked,
+		CreatedAt:  p.CreatedAt,
+		EditedAt:   timeOrNil(p.EditedAt.Time, p.EditedAt.Valid),
 	}
 }
 
-func toCommentRead(c coredb.CoreForumComment, author users.UserPublic) CommentRead {
+func toCommentRead(c coredb.CoreForumComment, author users.UserPublic, likes int64, liked bool) CommentRead {
 	return CommentRead{
 		ID:        c.ID,
 		CommentNo: c.CommentNo,
 		ParentID:  c.ParentID,
 		Author:    author,
 		Body:      c.Body,
+		Likes:     likes,
+		Liked:     liked,
 		CreatedAt: c.CreatedAt,
 		EditedAt:  timeOrNil(c.EditedAt.Time, c.EditedAt.Valid),
 	}

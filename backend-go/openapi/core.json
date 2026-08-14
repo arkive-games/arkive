@@ -117,6 +117,15 @@
             "description": "Identifier, used to edit or delete this comment",
             "type": "string"
           },
+          "likeCount": {
+            "description": "How many accounts have liked it",
+            "format": "int64",
+            "type": "integer"
+          },
+          "liked": {
+            "description": "Whether the current reader has liked it",
+            "type": "boolean"
+          },
           "parentId": {
             "description": "The comment this replies to, or null for a top-level comment",
             "type": "string"
@@ -128,6 +137,8 @@
           "parentId",
           "author",
           "body",
+          "likeCount",
+          "liked",
           "createdAt",
           "editedAt"
         ],
@@ -855,6 +866,15 @@
             "description": "Raw markdown, exactly as written. Render it with raw HTML disabled.",
             "type": "string"
           },
+          "bookmarkCount": {
+            "description": "How many accounts have bookmarked it",
+            "format": "int64",
+            "type": "integer"
+          },
+          "bookmarked": {
+            "description": "Whether the current reader has bookmarked it",
+            "type": "boolean"
+          },
           "channel": {
             "description": "general, official or games",
             "enum": [
@@ -894,6 +914,15 @@
               "array",
               "null"
             ]
+          },
+          "likeCount": {
+            "description": "How many accounts have liked it",
+            "format": "int64",
+            "type": "integer"
+          },
+          "liked": {
+            "description": "Whether the current reader has liked it",
+            "type": "boolean"
           },
           "postNo": {
             "description": "Permanent post number; use this in links",
@@ -935,6 +964,10 @@
           "gameIds",
           "tags",
           "commentCount",
+          "likeCount",
+          "bookmarkCount",
+          "liked",
+          "bookmarked",
           "createdAt",
           "editedAt"
         ],
@@ -2055,6 +2088,152 @@
         ]
       }
     },
+    "/forum/comments/{id}/like": {
+      "delete": {
+        "description": "Idempotent. Returns the comment as the caller now sees it.",
+        "operationId": "unlikeForumComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Remove your like from a comment",
+        "tags": [
+          "forum"
+        ]
+      },
+      "put": {
+        "description": "Idempotent. Returns the comment as the caller now sees it.",
+        "operationId": "likeForumComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Like a comment",
+        "tags": [
+          "forum"
+        ]
+      }
+    },
     "/forum/posts": {
       "get": {
         "description": "Public. Newest first, with optional channel, game, tag and author filters. Paginated by page number; a client should de-duplicate by postNo, because a post arriving while someone reads can shift rows between pages.",
@@ -2339,7 +2518,7 @@
         ]
       },
       "get": {
-        "description": "Public.",
+        "description": "Public. When the caller is signed in, `liked` and `bookmarked` describe that account; for an anonymous reader both are false.",
         "operationId": "getForumPost",
         "parameters": [
           {
@@ -2492,6 +2671,156 @@
           }
         },
         "summary": "Edit a post",
+        "tags": [
+          "forum"
+        ]
+      }
+    },
+    "/forum/posts/{postNo}/bookmark": {
+      "delete": {
+        "description": "Idempotent. Returns the post as the caller now sees it.",
+        "operationId": "unbookmarkForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Remove a bookmark",
+        "tags": [
+          "forum"
+        ]
+      },
+      "put": {
+        "description": "Idempotent. Returns the post as the caller now sees it.",
+        "operationId": "bookmarkForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Bookmark a post",
         "tags": [
           "forum"
         ]
@@ -2679,6 +3008,156 @@
           }
         },
         "summary": "Comment on a post, or reply to a comment",
+        "tags": [
+          "forum"
+        ]
+      }
+    },
+    "/forum/posts/{postNo}/like": {
+      "delete": {
+        "description": "Idempotent. Returns the post as the caller now sees it.",
+        "operationId": "unlikeForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Remove your like from a post",
+        "tags": [
+          "forum"
+        ]
+      },
+      "put": {
+        "description": "Idempotent. Returns the post as the caller now sees it.",
+        "operationId": "likeForumPost",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePostRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Like a post",
         "tags": [
           "forum"
         ]

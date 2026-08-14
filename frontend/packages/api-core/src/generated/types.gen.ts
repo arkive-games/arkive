@@ -71,6 +71,14 @@ export type CommentRead = {
      */
     id: string;
     /**
+     * How many accounts have liked it
+     */
+    likeCount: number;
+    /**
+     * Whether the current reader has liked it
+     */
+    liked: boolean;
+    /**
      * The comment this replies to, or null for a top-level comment
      */
     parentId: string;
@@ -479,6 +487,14 @@ export type PostRead = {
      */
     body: string;
     /**
+     * How many accounts have bookmarked it
+     */
+    bookmarkCount: number;
+    /**
+     * Whether the current reader has bookmarked it
+     */
+    bookmarked: boolean;
+    /**
      * general, official or games
      */
     channel: 'general' | 'official' | 'games';
@@ -498,6 +514,14 @@ export type PostRead = {
      * Games this post is about, at most 5
      */
     gameIds: Array<string> | null;
+    /**
+     * How many accounts have liked it
+     */
+    likeCount: number;
+    /**
+     * Whether the current reader has liked it
+     */
+    liked: boolean;
     /**
      * Permanent post number; use this in links
      */
@@ -1117,6 +1141,90 @@ export type UpdateForumCommentResponses = {
 
 export type UpdateForumCommentResponse = UpdateForumCommentResponses[keyof UpdateForumCommentResponses];
 
+export type UnlikeForumCommentData = {
+    body?: never;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/forum/comments/{id}/like';
+};
+
+export type UnlikeForumCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type UnlikeForumCommentError = UnlikeForumCommentErrors[keyof UnlikeForumCommentErrors];
+
+export type UnlikeForumCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeCommentRead;
+};
+
+export type UnlikeForumCommentResponse = UnlikeForumCommentResponses[keyof UnlikeForumCommentResponses];
+
+export type LikeForumCommentData = {
+    body?: never;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/forum/comments/{id}/like';
+};
+
+export type LikeForumCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type LikeForumCommentError = LikeForumCommentErrors[keyof LikeForumCommentErrors];
+
+export type LikeForumCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeCommentRead;
+};
+
+export type LikeForumCommentResponse = LikeForumCommentResponses[keyof LikeForumCommentResponses];
+
 export type ListForumPostsData = {
     body?: never;
     path?: never;
@@ -1342,6 +1450,90 @@ export type UpdateForumPostResponses = {
 
 export type UpdateForumPostResponse = UpdateForumPostResponses[keyof UpdateForumPostResponses];
 
+export type UnbookmarkForumPostData = {
+    body?: never;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/bookmark';
+};
+
+export type UnbookmarkForumPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type UnbookmarkForumPostError = UnbookmarkForumPostErrors[keyof UnbookmarkForumPostErrors];
+
+export type UnbookmarkForumPostResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopePostRead;
+};
+
+export type UnbookmarkForumPostResponse = UnbookmarkForumPostResponses[keyof UnbookmarkForumPostResponses];
+
+export type BookmarkForumPostData = {
+    body?: never;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/bookmark';
+};
+
+export type BookmarkForumPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type BookmarkForumPostError = BookmarkForumPostErrors[keyof BookmarkForumPostErrors];
+
+export type BookmarkForumPostResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopePostRead;
+};
+
+export type BookmarkForumPostResponse = BookmarkForumPostResponses[keyof BookmarkForumPostResponses];
+
 export type ListForumCommentsData = {
     body?: never;
     path: {
@@ -1434,6 +1626,90 @@ export type CreateForumCommentResponses = {
 };
 
 export type CreateForumCommentResponse = CreateForumCommentResponses[keyof CreateForumCommentResponses];
+
+export type UnlikeForumPostData = {
+    body?: never;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/like';
+};
+
+export type UnlikeForumPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type UnlikeForumPostError = UnlikeForumPostErrors[keyof UnlikeForumPostErrors];
+
+export type UnlikeForumPostResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopePostRead;
+};
+
+export type UnlikeForumPostResponse = UnlikeForumPostResponses[keyof UnlikeForumPostResponses];
+
+export type LikeForumPostData = {
+    body?: never;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/like';
+};
+
+export type LikeForumPostErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type LikeForumPostError = LikeForumPostErrors[keyof LikeForumPostErrors];
+
+export type LikeForumPostResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopePostRead;
+};
+
+export type LikeForumPostResponse = LikeForumPostResponses[keyof LikeForumPostResponses];
 
 export type ListGameRolesData = {
     body?: never;

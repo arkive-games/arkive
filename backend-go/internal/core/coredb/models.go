@@ -25,6 +25,12 @@ type CoreForumComment struct {
 	EditedAt    pgtype.Timestamptz
 }
 
+type CoreForumCommentLike struct {
+	CommentID uuid.UUID
+	UserID    uuid.UUID
+	CreatedAt time.Time
+}
+
 type CoreForumPost struct {
 	ID            uuid.UUID
 	PostNo        int64
@@ -39,6 +45,18 @@ type CoreForumPost struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	EditedAt      pgtype.Timestamptz
+}
+
+type CoreForumPostBookmark struct {
+	PostID    uuid.UUID
+	UserID    uuid.UUID
+	CreatedAt time.Time
+}
+
+type CoreForumPostLike struct {
+	PostID    uuid.UUID
+	UserID    uuid.UUID
+	CreatedAt time.Time
 }
 
 type CoreRoleGrant struct {

@@ -64,6 +64,28 @@ func gameKeyStringsPtr(in *[]GameKey) *[]string {
 	return &out
 }
 
+// viewerFrom reads the caller from a *public* endpoint, where being signed in is
+// optional.
+//
+// This is the first non-test use of PrincipalFrom. The identity middleware runs on
+// the whole module router before huma and deliberately never rejects — anonymous,
+// expired, forged and stale-fingerprint callers all arrive identically as "no
+// principal" — so a public route can ask who is reading without becoming a
+// protected one. RequireUser is the wrong tool here: it would turn the feed into a
+// sign-in wall.
+//
+// An inactive account reads as anonymous. Its reactions are still stored, so
+// reactivating restores them, but nothing about a disabled account should surface.
+//
+// Every response shaped by this is per-viewer and must not be cached publicly.
+func viewerFrom(ctx context.Context) *uuid.UUID {
+	principal, ok := auth.PrincipalFrom(ctx)
+	if !ok || !principal.IsActive {
+		return nil
+	}
+	return &principal.ID
+}
+
 // optionalUID turns an absent numeric query parameter into no filter. huma does not
 // accept pointer query parameters, so an omitted authorUid arrives as zero — which
 // is not a possible account number, since uid starts at 10000 and special_uid at 1.
@@ -188,6 +210,7 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 			GameID:    optional(in.GameID),
 			Tag:       optional(in.Tag),
 			AuthorUID: optionalUID(in.AuthorUID),
+			ViewerID:  viewerFrom(ctx),
 			Page:      in.Page,
 			PageSize:  in.PageSize,
 		})
@@ -202,11 +225,12 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 		Method:      http.MethodGet,
 		Path:        "/forum/posts/{postNo}",
 		Summary:     "Get one post",
-		Description: "Public.",
-		Tags:        []string{"forum"},
-		Errors:      []int{http.StatusNotFound},
+		Description: "Public. When the caller is signed in, `liked` and `bookmarked` " +
+			"describe that account; for an anonymous reader both are false.",
+		Tags:   []string{"forum"},
+		Errors: []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *postNoInput) (*api.Response[forum.PostRead], error) {
-		post, err := h.forum.PostByNo(ctx, in.PostNo)
+		post, err := h.forum.PostByNo(ctx, in.PostNo, viewerFrom(ctx))
 		if err != nil {
 			return nil, err
 		}
@@ -307,7 +331,7 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 		Tags:   []string{"forum"},
 		Errors: []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *listCommentsInput) (*api.Response[api.List[forum.CommentRead]], error) {
-		comments, total, err := h.forum.ListComments(ctx, in.PostNo, in.Page, in.PageSize)
+		comments, total, err := h.forum.ListComments(ctx, in.PostNo, in.Page, in.PageSize, viewerFrom(ctx))
 		if err != nil {
 			return nil, err
 		}
@@ -386,4 +410,86 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 		}
 		return api.OKEmpty(), nil
 	})
+}
+
+// RegisterReactionRoutes mounts the like and bookmark surface.
+//
+// Registered separately from RegisterForumRoutes only to keep two long functions
+// readable; both mount under /forum.
+//
+// PUT and DELETE rather than POST, because these are idempotent statements of an end
+// state: liking twice must mean the same as liking once, which is what makes a
+// double tap or a retried request harmless. Each returns the updated post or comment
+// so a client can render the new count without a second round trip.
+func (h *Handlers) RegisterReactionRoutes(a huma.API) {
+	type postReaction struct {
+		PostNo int64 `path:"postNo" minimum:"1" doc:"Permanent post number"`
+	}
+	type commentReaction struct {
+		ID uuid.UUID `path:"id" doc:"Comment identifier"`
+	}
+
+	post := func(op string, method string, path string, summary string, set func(context.Context, auth.Principal, int64) (forum.PostRead, error)) {
+		huma.Register(a, huma.Operation{
+			OperationID: op,
+			Method:      method,
+			Path:        path,
+			Summary:     summary,
+			Description: "Idempotent. Returns the post as the caller now sees it.",
+			Tags:        []string{"forum"},
+			Errors:      []int{http.StatusUnauthorized, http.StatusNotFound},
+		}, func(ctx context.Context, in *postReaction) (*api.Response[forum.PostRead], error) {
+			principal, err := auth.RequireUser(ctx)
+			if err != nil {
+				return nil, err
+			}
+			out, err := set(ctx, principal, in.PostNo)
+			if err != nil {
+				return nil, err
+			}
+			return api.OK(out), nil
+		})
+	}
+
+	post("likeForumPost", http.MethodPut, "/forum/posts/{postNo}/like", "Like a post",
+		func(ctx context.Context, p auth.Principal, no int64) (forum.PostRead, error) {
+			return h.forum.SetPostLike(ctx, p, no, true)
+		})
+	post("unlikeForumPost", http.MethodDelete, "/forum/posts/{postNo}/like", "Remove your like from a post",
+		func(ctx context.Context, p auth.Principal, no int64) (forum.PostRead, error) {
+			return h.forum.SetPostLike(ctx, p, no, false)
+		})
+	post("bookmarkForumPost", http.MethodPut, "/forum/posts/{postNo}/bookmark", "Bookmark a post",
+		func(ctx context.Context, p auth.Principal, no int64) (forum.PostRead, error) {
+			return h.forum.SetPostBookmark(ctx, p, no, true)
+		})
+	post("unbookmarkForumPost", http.MethodDelete, "/forum/posts/{postNo}/bookmark", "Remove a bookmark",
+		func(ctx context.Context, p auth.Principal, no int64) (forum.PostRead, error) {
+			return h.forum.SetPostBookmark(ctx, p, no, false)
+		})
+
+	comment := func(op string, method string, summary string, liked bool) {
+		huma.Register(a, huma.Operation{
+			OperationID: op,
+			Method:      method,
+			Path:        "/forum/comments/{id}/like",
+			Summary:     summary,
+			Description: "Idempotent. Returns the comment as the caller now sees it.",
+			Tags:        []string{"forum"},
+			Errors:      []int{http.StatusUnauthorized, http.StatusNotFound},
+		}, func(ctx context.Context, in *commentReaction) (*api.Response[forum.CommentRead], error) {
+			principal, err := auth.RequireUser(ctx)
+			if err != nil {
+				return nil, err
+			}
+			out, err := h.forum.SetCommentLike(ctx, principal, in.ID, liked)
+			if err != nil {
+				return nil, err
+			}
+			return api.OK(out), nil
+		})
+	}
+
+	comment("likeForumComment", http.MethodPut, "Like a comment", true)
+	comment("unlikeForumComment", http.MethodDelete, "Remove your like from a comment", false)
 }

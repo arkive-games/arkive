@@ -32,10 +32,24 @@ DELETE FROM core.forum_posts WHERE id = $1;
 -- The comment count is a lateral subquery rather than a stored counter: it is
 -- correct by construction, and a counter column can replace it behind the DTO if
 -- the feed ever gets slow.
+-- The viewer's own state (`liked`, `bookmarked`) needs no NULL guard: when no viewer
+-- is supplied, `user_id = NULL` is never true, so EXISTS is false and an anonymous
+-- reader sees the same shape with both flags off. That keeps clients from needing a
+-- branch for signed-out reads.
 -- name: ListForumPosts :many
 SELECT
     p.*,
-    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) AS comment_count
+    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) AS comment_count,
+    (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id) AS like_count,
+    (SELECT count(*) FROM core.forum_post_bookmarks b WHERE b.post_id = p.id) AS bookmark_count,
+    EXISTS (
+        SELECT 1 FROM core.forum_post_likes l
+        WHERE l.post_id = p.id AND l.user_id = sqlc.narg('viewer_id')::uuid
+    ) AS liked,
+    EXISTS (
+        SELECT 1 FROM core.forum_post_bookmarks b
+        WHERE b.post_id = p.id AND b.user_id = sqlc.narg('viewer_id')::uuid
+    ) AS bookmarked
 FROM core.forum_posts p
 WHERE (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
   AND (sqlc.narg('game_id')::text IS NULL OR p.game_ids @> ARRAY[sqlc.narg('game_id')::text])
@@ -53,6 +67,25 @@ WHERE (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::t
 
 -- name: CountForumPostComments :one
 SELECT count(*) FROM core.forum_comments WHERE post_id = $1;
+
+-- Everything a single post's DTO needs beyond its own row, in one round trip rather
+-- than one query per counter.
+-- name: ForumPostReactions :one
+SELECT
+    (SELECT count(*) FROM core.forum_comments c
+        WHERE c.post_id = sqlc.arg('post_id')) AS comment_count,
+    (SELECT count(*) FROM core.forum_post_likes l
+        WHERE l.post_id = sqlc.arg('post_id')) AS like_count,
+    (SELECT count(*) FROM core.forum_post_bookmarks b
+        WHERE b.post_id = sqlc.arg('post_id')) AS bookmark_count,
+    EXISTS (
+        SELECT 1 FROM core.forum_post_likes l
+        WHERE l.post_id = sqlc.arg('post_id') AND l.user_id = sqlc.narg('viewer_id')::uuid
+    ) AS liked,
+    EXISTS (
+        SELECT 1 FROM core.forum_post_bookmarks b
+        WHERE b.post_id = sqlc.arg('post_id') AND b.user_id = sqlc.narg('viewer_id')::uuid
+    ) AS bookmarked;
 
 -- Creates a top-level comment and allocates its floor number in one statement.
 --
@@ -103,9 +136,15 @@ DELETE FROM core.forum_comments WHERE id = $1;
 -- so a thread with ten thousand long comments would otherwise let anyone ask the
 -- server to build a response of hundreds of megabytes.
 -- name: ListForumComments :many
-SELECT c.*
+SELECT
+    c.*,
+    (SELECT count(*) FROM core.forum_comment_likes l WHERE l.comment_id = c.id) AS like_count,
+    EXISTS (
+        SELECT 1 FROM core.forum_comment_likes l
+        WHERE l.comment_id = c.id AND l.user_id = sqlc.narg('viewer_id')::uuid
+    ) AS liked
 FROM core.forum_comments c
 LEFT JOIN core.forum_comments parent ON parent.id = c.parent_id
-WHERE c.post_id = $1
+WHERE c.post_id = sqlc.arg('post_id')
 ORDER BY COALESCE(c.comment_no, parent.comment_no), c.depth, c.created_at, c.id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');

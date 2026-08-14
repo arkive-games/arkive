@@ -218,6 +218,52 @@ func (q *Queries) DeleteForumPost(ctx context.Context, id uuid.UUID) (int64, err
 	return result.RowsAffected(), nil
 }
 
+const forumPostReactions = `-- name: ForumPostReactions :one
+SELECT
+    (SELECT count(*) FROM core.forum_comments c
+        WHERE c.post_id = $1) AS comment_count,
+    (SELECT count(*) FROM core.forum_post_likes l
+        WHERE l.post_id = $1) AS like_count,
+    (SELECT count(*) FROM core.forum_post_bookmarks b
+        WHERE b.post_id = $1) AS bookmark_count,
+    EXISTS (
+        SELECT 1 FROM core.forum_post_likes l
+        WHERE l.post_id = $1 AND l.user_id = $2::uuid
+    ) AS liked,
+    EXISTS (
+        SELECT 1 FROM core.forum_post_bookmarks b
+        WHERE b.post_id = $1 AND b.user_id = $2::uuid
+    ) AS bookmarked
+`
+
+type ForumPostReactionsParams struct {
+	PostID   uuid.UUID
+	ViewerID *uuid.UUID
+}
+
+type ForumPostReactionsRow struct {
+	CommentCount  int64
+	LikeCount     int64
+	BookmarkCount int64
+	Liked         bool
+	Bookmarked    bool
+}
+
+// Everything a single post's DTO needs beyond its own row, in one round trip rather
+// than one query per counter.
+func (q *Queries) ForumPostReactions(ctx context.Context, arg ForumPostReactionsParams) (ForumPostReactionsRow, error) {
+	row := q.db.QueryRow(ctx, forumPostReactions, arg.PostID, arg.ViewerID)
+	var i ForumPostReactionsRow
+	err := row.Scan(
+		&i.CommentCount,
+		&i.LikeCount,
+		&i.BookmarkCount,
+		&i.Liked,
+		&i.Bookmarked,
+	)
+	return i, err
+}
+
 const getForumCommentByID = `-- name: GetForumCommentByID :one
 SELECT id, post_id, parent_id, author_id, body, comment_no, depth, parent_depth, created_at, updated_at, edited_at FROM core.forum_comments WHERE id = $1
 `
@@ -292,18 +338,41 @@ func (q *Queries) GetForumPostByNo(ctx context.Context, postNo int64) (CoreForum
 }
 
 const listForumComments = `-- name: ListForumComments :many
-SELECT c.id, c.post_id, c.parent_id, c.author_id, c.body, c.comment_no, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at
+SELECT
+    c.id, c.post_id, c.parent_id, c.author_id, c.body, c.comment_no, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at,
+    (SELECT count(*) FROM core.forum_comment_likes l WHERE l.comment_id = c.id) AS like_count,
+    EXISTS (
+        SELECT 1 FROM core.forum_comment_likes l
+        WHERE l.comment_id = c.id AND l.user_id = $1::uuid
+    ) AS liked
 FROM core.forum_comments c
 LEFT JOIN core.forum_comments parent ON parent.id = c.parent_id
-WHERE c.post_id = $1
+WHERE c.post_id = $2
 ORDER BY COALESCE(c.comment_no, parent.comment_no), c.depth, c.created_at, c.id
-LIMIT $3 OFFSET $2
+LIMIT $4 OFFSET $3
 `
 
 type ListForumCommentsParams struct {
+	ViewerID     *uuid.UUID
 	PostID       uuid.UUID
 	ResultOffset int32
 	ResultLimit  int32
+}
+
+type ListForumCommentsRow struct {
+	ID          uuid.UUID
+	PostID      uuid.UUID
+	ParentID    *uuid.UUID
+	AuthorID    uuid.UUID
+	Body        string
+	CommentNo   *int64
+	Depth       int16
+	ParentDepth *int16
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	EditedAt    pgtype.Timestamptz
+	LikeCount   int64
+	Liked       bool
 }
 
 // A page of a thread's comments: floors in order, each reply directly after the
@@ -313,15 +382,20 @@ type ListForumCommentsParams struct {
 // Bounded, unlike an earlier version. This endpoint is public and unauthenticated,
 // so a thread with ten thousand long comments would otherwise let anyone ask the
 // server to build a response of hundreds of megabytes.
-func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsParams) ([]CoreForumComment, error) {
-	rows, err := q.db.Query(ctx, listForumComments, arg.PostID, arg.ResultOffset, arg.ResultLimit)
+func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsParams) ([]ListForumCommentsRow, error) {
+	rows, err := q.db.Query(ctx, listForumComments,
+		arg.ViewerID,
+		arg.PostID,
+		arg.ResultOffset,
+		arg.ResultLimit,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []CoreForumComment{}
+	items := []ListForumCommentsRow{}
 	for rows.Next() {
-		var i CoreForumComment
+		var i ListForumCommentsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.PostID,
@@ -334,6 +408,8 @@ func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsPa
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.EditedAt,
+			&i.LikeCount,
+			&i.Liked,
 		); err != nil {
 			return nil, err
 		}
@@ -348,17 +424,28 @@ func (q *Queries) ListForumComments(ctx context.Context, arg ListForumCommentsPa
 const listForumPosts = `-- name: ListForumPosts :many
 SELECT
     p.id, p.post_no, p.author_id, p.channel, p.title, p.body, p.topic, p.game_ids, p.tags, p.next_comment_no, p.created_at, p.updated_at, p.edited_at,
-    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) AS comment_count
+    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id) AS comment_count,
+    (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id) AS like_count,
+    (SELECT count(*) FROM core.forum_post_bookmarks b WHERE b.post_id = p.id) AS bookmark_count,
+    EXISTS (
+        SELECT 1 FROM core.forum_post_likes l
+        WHERE l.post_id = p.id AND l.user_id = $1::uuid
+    ) AS liked,
+    EXISTS (
+        SELECT 1 FROM core.forum_post_bookmarks b
+        WHERE b.post_id = p.id AND b.user_id = $1::uuid
+    ) AS bookmarked
 FROM core.forum_posts p
-WHERE ($1::text IS NULL OR p.channel = $1::text)
-  AND ($2::text IS NULL OR p.game_ids @> ARRAY[$2::text])
-  AND ($3::text     IS NULL OR p.tags     @> ARRAY[$3::text])
-  AND ($4::uuid IS NULL OR p.author_id = $4::uuid)
+WHERE ($2::text IS NULL OR p.channel = $2::text)
+  AND ($3::text IS NULL OR p.game_ids @> ARRAY[$3::text])
+  AND ($4::text     IS NULL OR p.tags     @> ARRAY[$4::text])
+  AND ($5::uuid IS NULL OR p.author_id = $5::uuid)
 ORDER BY p.created_at DESC, p.id
-LIMIT $6 OFFSET $5
+LIMIT $7 OFFSET $6
 `
 
 type ListForumPostsParams struct {
+	ViewerID     *uuid.UUID
 	Channel      *string
 	GameID       *string
 	Tag          *string
@@ -382,6 +469,10 @@ type ListForumPostsRow struct {
 	UpdatedAt     time.Time
 	EditedAt      pgtype.Timestamptz
 	CommentCount  int64
+	LikeCount     int64
+	BookmarkCount int64
+	Liked         bool
+	Bookmarked    bool
 }
 
 // Feed listing, with every filter optional.
@@ -389,8 +480,13 @@ type ListForumPostsRow struct {
 // The comment count is a lateral subquery rather than a stored counter: it is
 // correct by construction, and a counter column can replace it behind the DTO if
 // the feed ever gets slow.
+// The viewer's own state (`liked`, `bookmarked`) needs no NULL guard: when no viewer
+// is supplied, `user_id = NULL` is never true, so EXISTS is false and an anonymous
+// reader sees the same shape with both flags off. That keeps clients from needing a
+// branch for signed-out reads.
 func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) ([]ListForumPostsRow, error) {
 	rows, err := q.db.Query(ctx, listForumPosts,
+		arg.ViewerID,
 		arg.Channel,
 		arg.GameID,
 		arg.Tag,
@@ -420,6 +516,10 @@ func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) 
 			&i.UpdatedAt,
 			&i.EditedAt,
 			&i.CommentCount,
+			&i.LikeCount,
+			&i.BookmarkCount,
+			&i.Liked,
+			&i.Bookmarked,
 		); err != nil {
 			return nil, err
 		}
