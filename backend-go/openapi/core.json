@@ -776,6 +776,38 @@
         ],
         "type": "object"
       },
+      "EnvelopeSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Settings",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeStruct {}": {
         "additionalProperties": false,
         "properties": {
@@ -1316,6 +1348,39 @@
         ],
         "type": "object"
       },
+      "PrivacyBody": {
+        "additionalProperties": false,
+        "properties": {
+          "activityVisibility": {
+            "description": "Who may see your follows and reactions",
+            "enum": [
+              "public",
+              "followers",
+              "private"
+            ],
+            "type": "string"
+          },
+          "postsVisibility": {
+            "description": "Who may see your posts listed on your profile",
+            "enum": [
+              "public",
+              "followers",
+              "private"
+            ],
+            "type": "string"
+          },
+          "profileVisibility": {
+            "description": "Who may see your profile",
+            "enum": [
+              "public",
+              "followers",
+              "private"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "RegisterBody": {
         "additionalProperties": false,
         "properties": {
@@ -1510,6 +1575,44 @@
         },
         "required": [
           "presetId"
+        ],
+        "type": "object"
+      },
+      "Settings": {
+        "additionalProperties": false,
+        "properties": {
+          "activityVisibility": {
+            "description": "Who may see follows and reactions",
+            "enum": [
+              "public",
+              "followers",
+              "private"
+            ],
+            "type": "string"
+          },
+          "postsVisibility": {
+            "description": "Who may see posts listed on the profile",
+            "enum": [
+              "public",
+              "followers",
+              "private"
+            ],
+            "type": "string"
+          },
+          "profileVisibility": {
+            "description": "Who may see the profile",
+            "enum": [
+              "public",
+              "followers",
+              "private"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "profileVisibility",
+          "postsVisibility",
+          "activityVisibility"
         ],
         "type": "object"
       },
@@ -4540,6 +4643,108 @@
         "summary": "Answer a report",
         "tags": [
           "moderation"
+        ]
+      }
+    },
+    "/privacy/me": {
+      "get": {
+        "description": "An account that has never changed these has no stored row and reads as public throughout.",
+        "operationId": "getOwnPrivacy",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeSettings"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Read your visibility settings",
+        "tags": [
+          "privacy"
+        ]
+      },
+      "patch": {
+        "description": "Partial: an absent field is left alone. Note that postsVisibility governs the listing on your profile, not whether your posts are published — they stay in the global feed and at their permalinks either way.",
+        "operationId": "setOwnPrivacy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivacyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeSettings"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Change your visibility settings",
+        "tags": [
+          "privacy"
         ]
       }
     },

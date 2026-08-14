@@ -115,6 +115,22 @@ func (s *Service) CountsFor(ctx context.Context, userID uuid.UUID, viewer *uuid.
 	return Counts{FollowerCount: followers, FollowingCount: following, Following: isFollowing}, nil
 }
 
+// IsFollowing reports whether follower follows followee.
+//
+// Exported so the privacy package can answer "followers only" without importing this
+// one's whole surface — and so that the dependency runs privacy → social rather than the
+// other way, which is what keeps the two from becoming mutually dependent.
+func (s *Service) IsFollowing(ctx context.Context, follower uuid.UUID, followee uuid.UUID) (bool, error) {
+	found, err := s.q.IsFollowing(ctx, coredb.IsFollowingParams{
+		FollowerID: &follower,
+		FolloweeID: followee,
+	})
+	if err != nil {
+		return false, fmt.Errorf("check follow: %w", err)
+	}
+	return found, nil
+}
+
 // CountsForUID is CountsFor addressed by public number.
 func (s *Service) CountsForUID(ctx context.Context, uid int64, viewer *uuid.UUID) (Counts, error) {
 	userID, err := s.accounts.IDByUID(ctx, uid)

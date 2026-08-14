@@ -109,3 +109,11 @@ type CoreUserFollow struct {
 	FolloweeID uuid.UUID
 	CreatedAt  time.Time
 }
+
+type CoreUserPrivacy struct {
+	UserID             uuid.UUID
+	ProfileVisibility  string
+	PostsVisibility    string
+	ActivityVisibility string
+	UpdatedAt          time.Time
+}

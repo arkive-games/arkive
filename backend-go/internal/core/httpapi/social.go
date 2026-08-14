@@ -82,6 +82,9 @@ func (h *Handlers) RegisterSocialRoutes(a huma.API) {
 		Tags:        []string{"social"},
 		Errors:      []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *followListInput) (*api.Response[api.List[social.FollowRead]], error) {
+		if err := h.requireActivityVisible(ctx, in.UID); err != nil {
+			return nil, err
+		}
 		list, total, err := h.social.Followers(ctx, in.UID, in.Page, in.PageSize)
 		if err != nil {
 			return nil, err
@@ -98,10 +101,30 @@ func (h *Handlers) RegisterSocialRoutes(a huma.API) {
 		Tags:        []string{"social"},
 		Errors:      []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *followListInput) (*api.Response[api.List[social.FollowRead]], error) {
+		if err := h.requireActivityVisible(ctx, in.UID); err != nil {
+			return nil, err
+		}
 		list, total, err := h.social.Following(ctx, in.UID, in.Page, in.PageSize)
 		if err != nil {
 			return nil, err
 		}
 		return api.OKList(list, total), nil
 	})
+}
+
+// requireActivityVisible gates the follow lists on the owner's activity setting.
+//
+// The check lives here rather than inside `social` because answering it needs both the
+// settings and the follow graph, and putting it in either package would make the two
+// mutually dependent. See the privacy package's doc comment.
+func (h *Handlers) requireActivityVisible(ctx context.Context, uid int64) error {
+	ownerID, err := h.users.IDByUID(ctx, uid)
+	if err != nil {
+		return err
+	}
+	settings, err := h.privacy.For(ctx, ownerID)
+	if err != nil {
+		return err
+	}
+	return h.privacy.Require(ctx, ownerID, viewerFrom(ctx), settings.Activity, "account")
 }

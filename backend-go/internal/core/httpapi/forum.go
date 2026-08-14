@@ -240,6 +240,16 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 		Tags:   []string{"forum"},
 		Errors: []int{http.StatusUnprocessableEntity},
 	}, func(ctx context.Context, in *listPostsInput) (*api.Response[api.List[forum.PostRead]], error) {
+		// A feed narrowed to one author is that author's profile listing, which their
+		// postsVisibility governs. The unfiltered feed is not: withdrawing a post from
+		// the board is deletion or moderation, never a privacy setting, so a "private"
+		// account's posts still appear in the global feed and at their permalinks.
+		if in.AuthorUID > 0 {
+			if err := h.requirePostsVisible(ctx, in.AuthorUID); err != nil {
+				return nil, err
+			}
+		}
+
 		posts, total, err := h.forum.ListPosts(ctx, forum.ListFilter{
 			Channel:      optional(in.Channel),
 			GameID:       optional(in.GameID),

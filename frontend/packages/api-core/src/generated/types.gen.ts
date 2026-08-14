@@ -444,6 +444,25 @@ export type EnvelopeReportRead = {
     showType: number;
 };
 
+export type EnvelopeSettings = {
+    /**
+     * The payload
+     */
+    data: Settings;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeStruct = {
     /**
      * The payload
@@ -728,6 +747,21 @@ export type PostRead = {
     topic: string | null;
 };
 
+export type PrivacyBody = {
+    /**
+     * Who may see your follows and reactions
+     */
+    activityVisibility?: 'public' | 'followers' | 'private';
+    /**
+     * Who may see your posts listed on your profile
+     */
+    postsVisibility?: 'public' | 'followers' | 'private';
+    /**
+     * Who may see your profile
+     */
+    profileVisibility?: 'public' | 'followers' | 'private';
+};
+
 export type RegisterBody = {
     /**
      * Email address
@@ -823,6 +857,21 @@ export type SetPresetBody = {
      * An id from /users/avatar-presets
      */
     presetId: string;
+};
+
+export type Settings = {
+    /**
+     * Who may see follows and reactions
+     */
+    activityVisibility: 'public' | 'followers' | 'private';
+    /**
+     * Who may see posts listed on the profile
+     */
+    postsVisibility: 'public' | 'followers' | 'private';
+    /**
+     * Who may see the profile
+     */
+    profileVisibility: 'public' | 'followers' | 'private';
 };
 
 export type TokenBody = {
@@ -2422,6 +2471,68 @@ export type ResolveForumReportResponses = {
 };
 
 export type ResolveForumReportResponse = ResolveForumReportResponses[keyof ResolveForumReportResponses];
+
+export type GetOwnPrivacyData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/privacy/me';
+};
+
+export type GetOwnPrivacyErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type GetOwnPrivacyError = GetOwnPrivacyErrors[keyof GetOwnPrivacyErrors];
+
+export type GetOwnPrivacyResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeSettings;
+};
+
+export type GetOwnPrivacyResponse = GetOwnPrivacyResponses[keyof GetOwnPrivacyResponses];
+
+export type SetOwnPrivacyData = {
+    body: PrivacyBody;
+    path?: never;
+    query?: never;
+    url: '/privacy/me';
+};
+
+export type SetOwnPrivacyErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type SetOwnPrivacyError = SetOwnPrivacyErrors[keyof SetOwnPrivacyErrors];
+
+export type SetOwnPrivacyResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeSettings;
+};
+
+export type SetOwnPrivacyResponse = SetOwnPrivacyResponses[keyof SetOwnPrivacyResponses];
 
 export type ListGameRolesData = {
     body?: never;

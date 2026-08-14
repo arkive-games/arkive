@@ -24,6 +24,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/httpapi"
+	"github.com/arkive-games/arkive/backend-go/internal/core/privacy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/social"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
@@ -182,6 +183,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	service := users.NewService(queries, d.Pool, hasher, tokens, mailer, blobs, d.Logger)
 	rolesService := roles.NewService(queries, service, d.Logger)
 	socialService := social.NewService(queries, service, d.Logger)
+	privacyService := privacy.NewService(queries, socialService, d.Logger)
 	forumService := forum.NewService(queries, service, rolesService, d.Logger)
 
 	// Identity resolution runs before huma so that every operation can read
@@ -210,6 +212,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		forumService,
 		rolesService,
 		socialService,
+		privacyService,
 		tokens,
 		auth.NewAltcha(
 			d.Config.Auth.AltchaHMACKey,
@@ -232,6 +235,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterRoleRoutes(a)
 	handlers.RegisterSocialRoutes(a)
 	handlers.RegisterModerationRoutes(a)
+	handlers.RegisterPrivacyRoutes(a)
 	return nil
 }
 
