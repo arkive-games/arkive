@@ -28,8 +28,7 @@ const FORUM_REDESIGN_COPY = {
     cabinContent: '游戏舱内容', cabinTabs: { hot: '热门', latest: '最新', guides: '攻略' }, cabinStats: '{{followers}} 万关注 · {{posts}} 篇内容',
     cabinFollowers: '{{count}} 万关注', openWorld: '开放世界', crossServer: '跨服战场', cabinDescription: '面向{{game}}玩家的攻略交流舱。分享职业配装、地图发现、任务路线与副本经验。',
     gameHotPosts: '{{game}}热帖', more: '更多', cabinManagement: '{{game}}舱管理', apply: '申请加入', owner: '舱主', administrator: '管理员',
-    share: '转发', reply: '回复', authorOnly: '只看作者', replySort: { popular: '热门', ascending: '正序', descending: '倒序' },
-  },
+    share: '转发', reply: '回复', },
   'zh-TW': {
     navigation: '論壇主要功能', home: '首頁', compose: '發帖', mine: '我的', followedCabins: '我關注的遊戲艙',
     newActivity: '{{count}} 則新動態', updatedRecently: '最近有更新', unreadActivity: '有未讀動態', arkiveInfo: '藏舟資訊',
@@ -41,8 +40,7 @@ const FORUM_REDESIGN_COPY = {
     cabinContent: '遊戲艙內容', cabinTabs: { hot: '熱門', latest: '最新', guides: '攻略' }, cabinStats: '{{followers}} 萬關注 · {{posts}} 篇內容',
     cabinFollowers: '{{count}} 萬關注', openWorld: '開放世界', crossServer: '跨服戰場', cabinDescription: '面向{{game}}玩家的攻略交流艙。分享職業配裝、地圖發現、任務路線與副本經驗。',
     gameHotPosts: '{{game}}熱帖', more: '更多', cabinManagement: '{{game}}艙管理', apply: '申請加入', owner: '艙主', administrator: '管理員',
-    share: '轉發', reply: '回覆', authorOnly: '只看作者', replySort: { popular: '熱門', ascending: '正序', descending: '倒序' },
-  },
+    share: '轉發', reply: '回覆', },
   'en-US': {
     navigation: 'Forum navigation', home: 'Home', compose: 'Post', mine: 'My content', followedCabins: 'Followed game cabins',
     newActivity: '{{count}} new updates', updatedRecently: 'Recently updated', unreadActivity: 'Unread activity', arkiveInfo: 'Arkive information',
@@ -54,8 +52,7 @@ const FORUM_REDESIGN_COPY = {
     cabinContent: 'Game cabin content', cabinTabs: { hot: 'Hot', latest: 'Latest', guides: 'Guides' }, cabinStats: '{{followers}}0K followers · {{posts}} posts',
     cabinFollowers: '{{count}}0K followers', openWorld: 'Open world', crossServer: 'Cross-server', cabinDescription: 'A guide community for {{game}} players, covering builds, map discoveries, quest routes, and dungeons.',
     gameHotPosts: '{{game}} hot posts', more: 'More', cabinManagement: '{{game}} management', apply: 'Apply', owner: 'Owner', administrator: 'Administrator',
-    share: 'Repost', reply: 'Reply', authorOnly: 'Author only', replySort: { popular: 'Popular', ascending: 'Oldest', descending: 'Newest' },
-  },
+    share: 'Repost', reply: 'Reply', },
   'ja-JP': {
     navigation: 'フォーラムナビゲーション', home: 'ホーム', compose: '投稿', mine: '自分', followedCabins: 'フォロー中のゲームキャビン',
     newActivity: '新着{{count}}件', updatedRecently: '最近更新', unreadActivity: '未読あり', arkiveInfo: '蔵舟情報', changelog: '更新履歴', feedback: 'フィードバック', guidelines: 'コミュニティ規約', communityDiscovery: 'コミュニティを探す',
@@ -64,8 +61,7 @@ const FORUM_REDESIGN_COPY = {
     personalTabs: { posts: '投稿', replies: '返信', likes: 'いいね', bookmarks: '保存' }, personalEmpty: { posts: '投稿はまだありません', replies: '返信はまだありません', likes: 'いいねした投稿はありません', bookmarks: '保存した投稿はありません', description: '該当するコミュニティ履歴がここに表示されます。' },
     cabinContent: 'ゲームキャビン', cabinTabs: { hot: '人気', latest: '新着', guides: '攻略' }, cabinStats: '{{followers}}万フォロー · {{posts}}件', cabinFollowers: '{{count}}万フォロー', openWorld: 'オープンワールド', crossServer: 'クロスサーバー',
     cabinDescription: '{{game}}プレイヤー向けの攻略コミュニティです。装備、マップ、クエスト、ダンジョン情報を共有します。', gameHotPosts: '{{game}}の人気投稿', more: 'もっと見る', cabinManagement: '{{game}}管理', apply: '参加申請', owner: 'オーナー', administrator: '管理者',
-    share: '再投稿', reply: '返信', authorOnly: '投稿者のみ', replySort: { popular: '人気', ascending: '古い順', descending: '新しい順' },
-  },
+    share: '再投稿', reply: '返信', },
   'ko-KR': {
     navigation: '포럼 탐색', home: '홈', compose: '글쓰기', mine: '내 활동', followedCabins: '팔로우한 게임 선실', newActivity: '새 소식 {{count}}개', updatedRecently: '최근 업데이트', unreadActivity: '읽지 않은 소식', arkiveInfo: 'Arkive 정보',
     changelog: '업데이트 기록', feedback: '의견 보내기', guidelines: '커뮤니티 규칙', communityDiscovery: '커뮤니티 둘러보기', popularGames: '인기 게임', allGames: '전체 게임', discussing: '{{count}}명 토론 중', hotPosts: '인기 게시글', viewAll: '전체 보기', female: '여성', male: '남성', uid: 'UID {{id}}',
@@ -73,8 +69,7 @@ const FORUM_REDESIGN_COPY = {
     personalEmpty: { posts: '작성한 게시글이 없습니다', replies: '작성한 답글이 없습니다', likes: '좋아요한 게시글이 없습니다', bookmarks: '저장한 게시글이 없습니다', description: '해당 커뮤니티 활동이 여기에 표시됩니다.' },
     cabinContent: '게임 선실 콘텐츠', cabinTabs: { hot: '인기', latest: '최신', guides: '공략' }, cabinStats: '팔로워 {{followers}}만 · 게시글 {{posts}}개', cabinFollowers: '팔로워 {{count}}만', openWorld: '오픈 월드', crossServer: '크로스 서버',
     cabinDescription: '{{game}} 플레이어를 위한 공략 커뮤니티입니다. 장비, 지도, 퀘스트, 던전 경험을 공유합니다.', gameHotPosts: '{{game}} 인기 게시글', more: '더보기', cabinManagement: '{{game}} 관리', apply: '가입 신청', owner: '선실장', administrator: '관리자',
-    share: '리포스트', reply: '답글', authorOnly: '작성자만', replySort: { popular: '인기', ascending: '오래된 순', descending: '최신 순' },
-  },
+    share: '리포스트', reply: '답글', },
 } as const
 
 const USER_SYSTEM_COPY = {
@@ -408,6 +403,9 @@ const resources = {
         },
         feed: { title: '帖子', tabsLabel: '帖子排序', recommended: '推荐', latest: '最新', featured: '精华', followingOnly: '只看关注', qualityAuthor: '优质作者' },
         empty: { title: '没有找到对应的帖子', description: '试试其他关键词，或清除当前频道和游戏筛选。', action: '查看全部帖子' },
+        loading: '正在加载帖子…',
+        detailExtra: { edit: '编辑', cancelEdit: '取消编辑', saveEdit: '保存修改', edited: '已编辑', delete: '删除', deleteTitle: '删除这篇帖子？', deleteDescription: '删除后无法恢复，帖子下的评论也会一并移除。', deleteCancel: '取消', send: '发送', sending: '发送中…', cancelReply: '取消回复', floor: '{{no}} 楼', moreComments: '还有 {{count}} 条评论未显示' },
+        errors: { feed: '帖子加载失败，请稍后重试。', post: '这篇帖子加载失败。', action: '操作没有成功，请重试。', publish: '发布失败，你的内容还在。', comment: '评论发送失败，请重试。' },
         sidebar: { label: '论坛辅助内容' },
         users: {
           title: '推荐用户', refresh: '换一批', follow: '关注', following: '已关注',
@@ -429,11 +427,8 @@ const resources = {
         actions: { bookmark: '收藏帖子', like: '点赞帖子' },
         detail: {
           openPost: '打开帖子：{{title}}', back: '返回帖子列表', byline: '发布于 {{time}}',
-          continuation: '这里会持续整理与主题相关的实测细节、更新补充与玩家经验。如果你有不同结论，欢迎在讨论区留下你的记录。',
           bookmark: '收藏', like: '点赞', comments: '留言', discussion: '讨论', discussionCount: '{{count}} 条留言', noComments: '还没有留言。', replyPlaceholder: '写下你的看法或补充...',
-          sampleCommentAuthor: '雾岸拾光', sampleCommentTime: '2小时前', sampleComment: '整理得很清楚，关键步骤和容易遗漏的地方都能快速找到。我按这个思路试了一遍，体验确实顺畅不少。',
-          commentLikeLabel: '点赞这条留言', reply: '回复', authorBadge: '作者', replyingTo: '回复 {{name}}', sampleReplyTime: '1小时前', sampleReply: '感谢补充，我会把后续实测结果继续更新在正文里。',
-          accountId: '编号', followers: '粉丝数', authorBio: '长期整理 {{topic}} 相关攻略、路线与玩家经验。',
+          commentLikeLabel: '点赞这条留言', reply: '回复', authorBadge: '作者', replyingTo: '回复 {{name}}', accountId: '编号', followers: '粉丝数', authorBio: '长期整理 {{topic}} 相关攻略、路线与玩家经验。',
         },
       },
       platformUpdates: {
@@ -570,6 +565,9 @@ const resources = {
         },
         feed: { title: '帖子', tabsLabel: '帖子排序', recommended: '推薦', latest: '最新', featured: '精華', followingOnly: '只看關注', qualityAuthor: '優質作者' },
         empty: { title: '沒有找到對應的帖子', description: '試試其他關鍵字，或清除目前的頻道和遊戲篩選。', action: '查看全部帖子' },
+        loading: '正在載入帖子…',
+        detailExtra: { edit: '編輯', cancelEdit: '取消編輯', saveEdit: '儲存修改', edited: '已編輯', delete: '刪除', deleteTitle: '刪除這篇帖子？', deleteDescription: '刪除後無法復原，帖子下的留言也會一併移除。', deleteCancel: '取消', send: '送出', sending: '傳送中…', cancelReply: '取消回覆', floor: '{{no}} 樓', moreComments: '還有 {{count}} 則留言未顯示' },
+        errors: { feed: '帖子載入失敗，請稍後重試。', post: '這篇帖子載入失敗。', action: '操作沒有成功，請重試。', publish: '發布失敗，你的內容還在。', comment: '留言送出失敗，請重試。' },
         sidebar: { label: '論壇輔助內容' },
         users: {
           title: '推薦使用者', refresh: '換一批', follow: '關注', following: '已關注',
@@ -591,11 +589,8 @@ const resources = {
         actions: { bookmark: '收藏帖子', like: '按讚帖子' },
         detail: {
           openPost: '開啟帖子：{{title}}', back: '返回帖子列表', byline: '發佈於 {{time}}',
-          continuation: '這裡會持續整理與主題相關的實測細節、更新補充與玩家經驗。如果你有不同結論，歡迎在討論區留下你的記錄。',
           bookmark: '收藏', like: '按讚', comments: '留言', discussion: '討論', discussionCount: '{{count}} 則留言', noComments: '還沒有留言。', replyPlaceholder: '寫下你的看法或補充...',
-          sampleCommentAuthor: '霧岸拾光', sampleCommentTime: '2小時前', sampleComment: '整理得很清楚，關鍵步驟和容易遺漏的地方都能快速找到。我照這個思路試了一遍，體驗確實順暢不少。',
-          commentLikeLabel: '按讚這則留言', reply: '回覆', authorBadge: '作者', replyingTo: '回覆 {{name}}', sampleReplyTime: '1小時前', sampleReply: '感謝補充，我會把後續實測結果繼續更新在正文裡。',
-          accountId: '編號', followers: '粉絲數', authorBio: '長期整理 {{topic}} 相關攻略、路線與玩家經驗。',
+          commentLikeLabel: '按讚這則留言', reply: '回覆', authorBadge: '作者', replyingTo: '回覆 {{name}}', accountId: '編號', followers: '粉絲數', authorBio: '長期整理 {{topic}} 相關攻略、路線與玩家經驗。',
         },
       },
       platformUpdates: {
@@ -706,6 +701,9 @@ const resources = {
         },
         feed: { title: 'Posts', tabsLabel: 'Post order', recommended: 'Recommended', latest: 'Latest', featured: 'Featured', followingOnly: 'Following only', qualityAuthor: 'Featured author' },
         empty: { title: 'No matching posts', description: 'Try another search or clear the current channel and game filters.', action: 'View all posts' },
+        loading: 'Loading posts…',
+        detailExtra: { edit: 'Edit', cancelEdit: 'Cancel edit', saveEdit: 'Save changes', edited: 'edited', delete: 'Delete', deleteTitle: 'Delete this post?', deleteDescription: 'This cannot be undone. The comments on it are removed as well.', deleteCancel: 'Keep it', send: 'Send', sending: 'Sending…', cancelReply: 'Cancel reply', floor: 'Floor {{no}}', moreComments: '{{count}} more comments not shown' },
+        errors: { feed: 'Posts could not be loaded. Please try again.', post: 'This post could not be loaded.', action: 'That did not go through. Please try again.', publish: 'Your post could not be published. Nothing you wrote was lost.', comment: 'Your comment could not be sent. Please try again.' },
         sidebar: { label: 'Forum tools' },
         users: {
           title: 'Recommended users', refresh: 'Refresh', follow: 'Follow', following: 'Following',
@@ -727,11 +725,8 @@ const resources = {
         actions: { bookmark: 'Bookmark post', like: 'Like post' },
         detail: {
           openPost: 'Open post: {{title}}', back: 'Back to posts', byline: 'Posted {{time}}',
-          continuation: 'This post will keep collecting tested details, updates, and player experience related to the topic. If your results differ, add your notes to the discussion below.',
           bookmark: 'Bookmark', like: 'Like', comments: 'Comments', discussion: 'Discussion', discussionCount: 'Comments {{count}}', noComments: 'No comments yet.', replyPlaceholder: 'Share your thoughts or add a detail...',
-          sampleCommentAuthor: 'Mistshore Notes', sampleCommentTime: '2 hours ago', sampleComment: 'This is clearly organized, and the key steps and easy-to-miss details are quick to find. I tried the same approach and the whole run felt much smoother.',
-          commentLikeLabel: 'Like this comment', reply: 'Reply', authorBadge: 'Author', replyingTo: 'Replying to {{name}}', sampleReplyTime: '1 hour ago', sampleReply: 'Thanks for adding this. I will keep the post updated as more test results come in.',
-          accountId: 'Account ID', followers: 'Followers', authorBio: 'Long-time contributor of {{topic}} guides, routes, and player discoveries.',
+          commentLikeLabel: 'Like this comment', reply: 'Reply', authorBadge: 'Author', replyingTo: 'Replying to {{name}}', accountId: 'Account ID', followers: 'Followers', authorBio: 'Long-time contributor of {{topic}} guides, routes, and player discoveries.',
         },
       },
       platformUpdates: {
@@ -823,6 +818,9 @@ const resources = {
         },
         feed: { title: '投稿', tabsLabel: '投稿の並び順', recommended: 'おすすめ', latest: '最新', featured: '注目', followingOnly: 'フォロー中のみ', qualityAuthor: '注目の投稿者' },
         empty: { title: '該当する投稿がありません', description: '別のキーワードを試すか、チャンネルとゲームの絞り込みを解除してください。', action: 'すべての投稿を見る' },
+        loading: '投稿を読み込んでいます…',
+        detailExtra: { edit: '編集', cancelEdit: '編集をやめる', saveEdit: '変更を保存', edited: '編集済み', delete: '削除', deleteTitle: 'この投稿を削除しますか？', deleteDescription: '元に戻せません。投稿へのコメントも削除されます。', deleteCancel: '削除しない', send: '送信', sending: '送信中…', cancelReply: '返信をやめる', floor: '{{no}} 階', moreComments: 'ほかに {{count}} 件のコメントがあります' },
+        errors: { feed: '投稿を読み込めませんでした。もう一度お試しください。', post: 'この投稿を読み込めませんでした。', action: '処理できませんでした。もう一度お試しください。', publish: '投稿できませんでした。入力内容は残っています。', comment: 'コメントを送信できませんでした。もう一度お試しください。' },
         sidebar: { label: 'フォーラム補助メニュー' },
         users: {
           title: 'おすすめユーザー', refresh: '更新', follow: 'フォロー', following: 'フォロー中',
@@ -844,11 +842,8 @@ const resources = {
         actions: { bookmark: '投稿を保存', like: '投稿にいいね' },
         detail: {
           openPost: '投稿を開く：{{title}}', back: '投稿一覧に戻る', byline: '{{time}}に投稿',
-          continuation: 'この投稿では、テーマに関する検証結果、更新情報、プレイヤーの経験を引き続きまとめます。別の結果があれば討論で教えてください。',
           bookmark: '保存', like: 'いいね', comments: 'コメント', discussion: '討論', discussionCount: 'コメント {{count}}件', noComments: 'コメントはまだありません。', replyPlaceholder: '感想や補足を書く...',
-          sampleCommentAuthor: '霧岸の記録', sampleCommentTime: '2時間前', sampleComment: 'とてもわかりやすく整理されていて、重要な手順や見落としやすい点をすぐに確認できました。同じやり方を試すと、かなり進めやすかったです。',
-          commentLikeLabel: 'このコメントにいいね', reply: '返信', authorBadge: '作者', replyingTo: '{{name}}さんへ返信', sampleReplyTime: '1時間前', sampleReply: '補足ありがとうございます。今後の検証結果も本文に更新していきます。',
-          accountId: '番号', followers: 'フォロワー', authorBio: '{{topic}}の攻略、ルート、プレイヤー情報を長期的に整理しています。',
+          commentLikeLabel: 'このコメントにいいね', reply: '返信', authorBadge: '作者', replyingTo: '{{name}}さんへ返信', accountId: '番号', followers: 'フォロワー', authorBio: '{{topic}}の攻略、ルート、プレイヤー情報を長期的に整理しています。',
         },
       },
       platformUpdates: {
@@ -934,6 +929,9 @@ const resources = {
         },
         feed: { title: '게시글', tabsLabel: '게시글 정렬', recommended: '추천', latest: '최신', featured: '인기글', followingOnly: '팔로우만', qualityAuthor: '추천 작성자' },
         empty: { title: '일치하는 게시글이 없습니다', description: '다른 검색어를 입력하거나 현재 채널과 게임 필터를 초기화해 보세요.', action: '전체 게시글 보기' },
+        loading: '게시글을 불러오는 중…',
+        detailExtra: { edit: '수정', cancelEdit: '수정 취소', saveEdit: '변경 사항 저장', edited: '수정됨', delete: '삭제', deleteTitle: '이 게시글을 삭제할까요?', deleteDescription: '되돌릴 수 없습니다. 게시글의 댓글도 함께 삭제됩니다.', deleteCancel: '삭제하지 않기', send: '보내기', sending: '보내는 중…', cancelReply: '답글 취소', floor: '{{no}}층', moreComments: '표시되지 않은 댓글 {{count}}개' },
+        errors: { feed: '게시글을 불러오지 못했습니다. 다시 시도해 주세요.', post: '이 게시글을 불러오지 못했습니다.', action: '처리하지 못했습니다. 다시 시도해 주세요.', publish: '게시하지 못했습니다. 작성한 내용은 남아 있습니다.', comment: '댓글을 보내지 못했습니다. 다시 시도해 주세요.' },
         sidebar: { label: '포럼 보조 메뉴' },
         users: {
           title: '추천 사용자', refresh: '새로고침', follow: '팔로우', following: '팔로잉',
@@ -955,11 +953,8 @@ const resources = {
         actions: { bookmark: '게시글 저장', like: '게시글 좋아요' },
         detail: {
           openPost: '게시글 열기: {{title}}', back: '게시글 목록으로', byline: '{{time}} 게시',
-          continuation: '이 글에서는 주제와 관련된 실험 세부 사항, 업데이트, 플레이어 경험을 계속 정리합니다. 다른 결과가 있다면 토론에 기록을 남겨 주세요.',
           bookmark: '저장', like: '좋아요', comments: '댓글', discussion: '토론', discussionCount: '댓글 {{count}}개', noComments: '아직 댓글이 없습니다.', replyPlaceholder: '생각이나 보충 내용을 적어 주세요...',
-          sampleCommentAuthor: '안개 해안 기록', sampleCommentTime: '2시간 전', sampleComment: '핵심 단계와 놓치기 쉬운 부분을 빠르게 찾을 수 있게 잘 정리되었어요. 같은 방법으로 직접 해 보니 훨씬 부드럽게 진행했습니다.',
-          commentLikeLabel: '이 댓글 좋아요', reply: '답글', authorBadge: '작성자', replyingTo: '{{name}}님에게 답글', sampleReplyTime: '1시간 전', sampleReply: '보충해 주셔서 고마워요. 추가 실험 결과도 본문에 계속 업데이트하겠습니다.',
-          accountId: '번호', followers: '팔로워', authorBio: '{{topic}} 공략, 경로, 플레이어 경험을 꾸준히 정리합니다.',
+          commentLikeLabel: '이 댓글 좋아요', reply: '답글', authorBadge: '작성자', replyingTo: '{{name}}님에게 답글', accountId: '번호', followers: '팔로워', authorBio: '{{topic}} 공략, 경로, 플레이어 경험을 꾸준히 정리합니다.',
         },
       },
       platformUpdates: {

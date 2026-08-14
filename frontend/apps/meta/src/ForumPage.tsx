@@ -7,7 +7,6 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { scrollToResults } from './scrollToResults'
-import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
 import {
@@ -64,17 +63,32 @@ import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl, publicProfileHref, RECOMMENDED_USERS } from './userSystemData'
-import { useUserSystem, type LocalForumPost, type UserSystemState } from './UserSystemState'
+import { useUserSystem, type UserSystemState } from './UserSystemState'
+import { getFollowCounts, listFollowing, result, type ApiClient } from '@gamemap/api-core'
 import { isForumComposerDirty } from './forumComposerState'
+import {
+  addComment,
+  editPost,
+  POSTS_PER_PAGE,
+  publishPost,
+  removePost,
+  setCommentLiked,
+  setFollowing,
+  setPostBookmarked,
+  setPostLiked,
+  type FeedQuery,
+  type FeedTab,
+  type ForumTopic,
+} from './forumApi'
+import type { ForumComment, ForumPost, TagLabellers } from './forumModel'
+import { useForumFeed, useForumThread } from './useForum'
 import './forum.css'
 
 type ForumChannel = 'hot' | 'general' | 'official' | 'games'
-type FeedTab = 'recommended' | 'latest' | 'featured'
 type ForumMode = 'home' | 'personal' | 'cabin'
 type PersonalTab = 'posts' | 'replies' | 'likes' | 'bookmarks'
 type CabinTab = 'hot' | 'latest' | 'guides'
 
-const POSTS_PER_PAGE = 5
 const MAX_VISIBLE_PAGES = 5
 
 interface ForumPageProps {
@@ -85,62 +99,52 @@ interface ForumPageProps {
   onComposerDirtyChange: (dirty: boolean) => void
 }
 
-interface ForumPost {
-  id: string
-  channel: Exclude<ForumChannel, 'hot'>
-  gameId?: string
-  gameIds?: string[]
-  authorKey?: string
-  author?: string
-  time?: string
-  titleKey?: string
-  title?: string
-  copyKey?: string
-  copy?: string
-  tagKeys?: string[]
-  tags?: string[]
-  avatarSeed: string
-  avatarSrc?: string
-  authorNumber: string
-  followerCount: number
-  commentCount: number
-  likeCount: number
-  bookmarkCount: number
-  imageSrc?: string
-  imageSrcs?: string[]
-  videoUrl?: string
-  own?: boolean
-  featured?: boolean
-}
-
 type ComposerFocus = 'body' | 'image' | 'video' | 'topic'
 
-function postAuthor(post: ForumPost, t: TFunction) {
-  return post.author ?? (post.authorKey ? t(post.authorKey) : '')
+/**
+ * What the composer hands back on publish.
+ *
+ * Replaces `LocalForumPost`, which carried an id and a timestamp the client
+ * invented because it was writing the row itself. Both now come from the server,
+ * so the draft is only what the author actually typed.
+ */
+interface ComposerDraft {
+  channel: 'general' | 'games'
+  title: string
+  body: string
+  topic?: ForumTopic
+  gameIds: string[]
+  tags: string[]
+  videoUrl?: string
 }
 
-function calendarDate(value: string) {
-  const date = new Date(value)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+/**
+ * Reads a post's fields.
+ *
+ * These were five functions that each accepted either a literal string or a
+ * locale key, because the fixtures stored `titleKey` and real posts would store
+ * `title`. With the fixtures gone there is one shape, so what is left is the
+ * plain field access — kept as named helpers only where the call sites read
+ * better for it.
+ */
+function postAuthor(post: ForumPost) {
+  return post.author
 }
 
 function postTime(post: ForumPost) {
-  return post.time ?? ''
+  return post.time
 }
 
-function postTitle(post: ForumPost, t: TFunction) {
-  return post.title ?? (post.titleKey ? t(post.titleKey) : '')
+function postTitle(post: ForumPost) {
+  return post.title
 }
 
-function postCopy(post: ForumPost, t: TFunction) {
-  return post.copy ?? (post.copyKey ? t(post.copyKey) : '')
+function postCopy(post: ForumPost) {
+  return post.body
 }
 
-function postTags(post: ForumPost, t: TFunction) {
-  return post.tags ?? (post.tagKeys ?? []).map((key) => t(key))
+function postTags(post: ForumPost) {
+  return post.tags
 }
 
 const COMPOSER_TOPICS = ['guide', 'question', 'testing', 'discussion'] as const
@@ -148,22 +152,13 @@ const FORUM_GAME_MAX_COUNT = 5
 const FORUM_TAG_MAX_COUNT = 10
 
 /**
- * `crypto.randomUUID` is `[SecureContext]`-only, so it is undefined over plain
- * http -- which is exactly how the LAN/phone QA origin is served. Calling it
- * there threw mid-publish and the dialog just sat there with nothing saved and
- * no error shown. The `Date.now()` prefix already carries the uniqueness this
- * needs; the suffix only has to break ties within the same millisecond.
+ * Which platform a video URL belongs to, or null.
+ *
+ * Kept in step with the server's allowlist in `forum/dto.go`, which is the one
+ * that decides — this only stops the composer offering to attach something that
+ * would be refused. The two lists have to agree; the server's is authoritative
+ * because anything here can be bypassed by posting straight at the API.
  */
-function localPostSuffix() {
-  // `typeof`, not a truthiness check: the DOM lib types randomUUID as always
-  // present, so TS narrows a plain `if` away (TS2774) even though the runtime
-  // value really is undefined outside a secure context.
-  if (typeof globalThis.crypto?.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID()
-  }
-  return Math.trunc(Math.random() * 1e9).toString(36)
-}
-
 function forumVideoPlatform(value: string): 'bilibili' | 'douyin' | null {
   try {
     const url = new URL(value)
@@ -176,90 +171,6 @@ function forumVideoPlatform(value: string): 'bilibili' | 'douyin' | null {
     return null
   }
 }
-
-const POSTS: ForumPost[] = [
-  {
-    id: 'vrising-routes',
-    channel: 'games',
-    gameId: 'vrising',
-    authorKey: 'forum.posts.vrising.author',
-    time: '2026-08-12',
-    titleKey: 'forum.posts.vrising.title',
-    copyKey: 'forum.posts.vrising.copy',
-    tagKeys: ['forum.tags.vrising', 'forum.tags.guide'],
-    avatarSeed: 'arkive-dusk-raven',
-    authorNumber: '10274831',
-    followerCount: 1284,
-    commentCount: 1,
-    likeCount: 86,
-    bookmarkCount: 31,
-    featured: true,
-  },
-  {
-    id: 'aion2-build',
-    channel: 'games',
-    gameId: 'aion2',
-    authorKey: 'forum.posts.aion2.author',
-    time: '2026-08-12',
-    titleKey: 'forum.posts.aion2.title',
-    copyKey: 'forum.posts.aion2.copy',
-    tagKeys: ['forum.tags.aion2', 'forum.tags.build'],
-    avatarSeed: 'arkive-wind-string',
-    authorNumber: '10039267',
-    followerCount: 946,
-    commentCount: 1,
-    likeCount: 64,
-    bookmarkCount: 22,
-    featured: true,
-  },
-  {
-    id: 'palworld-work',
-    channel: 'games',
-    gameId: 'palworld',
-    authorKey: 'forum.posts.palworld.author',
-    time: '2026-08-11',
-    titleKey: 'forum.posts.palworld.title',
-    copyKey: 'forum.posts.palworld.copy',
-    tagKeys: ['forum.tags.palworld', 'forum.tags.testing'],
-    avatarSeed: 'arkive-island-builder',
-    authorNumber: '10357142',
-    followerCount: 731,
-    commentCount: 1,
-    likeCount: 47,
-    bookmarkCount: 18,
-  },
-  {
-    id: 'collection-progress',
-    channel: 'general',
-    authorKey: 'forum.posts.general.author',
-    time: '2026-08-11',
-    titleKey: 'forum.posts.general.title',
-    copyKey: 'forum.posts.general.copy',
-    tagKeys: ['forum.tags.general'],
-    avatarSeed: 'arkive-paper-route',
-    authorNumber: '10824695',
-    followerCount: 418,
-    commentCount: 1,
-    likeCount: 23,
-    bookmarkCount: 9,
-  },
-  {
-    id: 'community-guide',
-    channel: 'official',
-    authorKey: 'forum.posts.official.author',
-    time: '2026-08-09',
-    titleKey: 'forum.posts.official.title',
-    copyKey: 'forum.posts.official.copy',
-    tagKeys: ['forum.tags.official'],
-    avatarSeed: 'arkive-community-team',
-    authorNumber: '10000012',
-    followerCount: 3276,
-    commentCount: 1,
-    likeCount: 112,
-    bookmarkCount: 40,
-    featured: true,
-  },
-]
 
 
 const GAME_LOGOS: Record<string, string> = {
@@ -288,15 +199,17 @@ export function ForumPage({
   onComposerDirtyChange,
 }: ForumPageProps) {
   const { t } = useTranslation()
-  const { status, user } = useAuth()
-  const {
-    state: userSystemState,
-    toggleBookmarkedPost,
-    toggleFavoriteGame,
-    toggleFollowedUser,
-    toggleLikedPost,
-    publishForumPost,
-  } = useUserSystem()
+  const auth = useAuth()
+  const { status, user, enabled: apiEnabled } = auth
+  /**
+   * What is left of the local user system on this page.
+   *
+   * Likes, bookmarks, follows and published posts all used to live in
+   * localStorage, which meant they were per-browser and invisible to everyone
+   * else — a "like" nobody but you could see. Those now go to the server, so only
+   * the profile avatar and the followed-games list are read here.
+   */
+  const { state: userSystemState, toggleFavoriteGame } = useUserSystem()
   const [channel, setChannel] = useState<ForumChannel>('hot')
   const [feedTab, setFeedTab] = useState<FeedTab>('recommended')
   const [forumMode, setForumMode] = useState<ForumMode>('home')
@@ -307,10 +220,23 @@ export function ForumPage({
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
+  // The permanent post number, not a fixture id: it is what the API addresses a
+  // post by and what a shared link carries.
+  const [selectedPostNo, setSelectedPostNo] = useState<number | null>(null)
   const [followingOnly, setFollowingOnly] = useState(false)
   const [composerFocus, setComposerFocus] = useState<ComposerFocus>('body')
   const [publishNotice, setPublishNotice] = useState(false)
+  /** A failed mutation, shown to the reader instead of the button doing nothing. */
+  const [actionError, setActionError] = useState<string | null>(null)
+  /**
+   * Which authors the reader follows, by uid.
+   *
+   * Kept here because the feed rows do not carry it: a post says who wrote it,
+   * not whether you follow them, and asking per row would be one request per
+   * post. The set is seeded from the follow list once and then maintained by the
+   * toggles, so the button state is right without a refetch.
+   */
+  const [followedUids, setFollowedUids] = useState<ReadonlySet<string>>(new Set())
   const signedIn = status === 'authenticated'
   const currentAvatar = userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
 
@@ -324,66 +250,62 @@ export function ForumPage({
     [sites],
   )
 
-  const localPosts = useMemo<ForumPost[]>(() => userSystemState.publishedPosts.map((post) => ({
-    id: post.id,
-    channel: post.channel,
-    gameId: post.gameId ?? undefined,
-    gameIds: post.gameIds,
-    author: user?.name ?? '',
-    time: calendarDate(post.createdAt),
-    title: post.title,
-    copy: post.content,
-    tags: [
-      ...post.gameIds.map((gameId) => t(`forum.games.${gameId}`)),
-      ...post.topics.map((topic) => t(`forum.composer.topics.${topic}`, { defaultValue: topic })),
-      ...post.tags,
-    ],
-    avatarSeed: user?.id ?? 'arkive-anonymous',
-    avatarSrc: currentAvatar,
-    authorNumber: user?.id ?? '',
-    followerCount: 0,
-    commentCount: 0,
-    likeCount: 0,
-    bookmarkCount: 0,
-    imageSrc: post.imageSrc ?? undefined,
-    imageSrcs: post.imageSrcs,
-    videoUrl: post.videoUrl ?? undefined,
-    own: true,
-  })), [currentAvatar, t, user?.id, user?.name, userSystemState.publishedPosts])
+  /**
+   * How a game id and a topic become words.
+   *
+   * Passed to the mapper rather than looked up inside it, so the model layer
+   * stays free of i18n and can be tested without a catalog. `forum.games.<id>`
+   * falls back to the site's own name key, which is the same expression the rest
+   * of this page uses for a game label.
+   */
+  const tagLabels = useMemo(() => ({
+    gameName: (id: string) => {
+      const site = siteById.get(id)
+      return t(`forum.games.${id}`, { defaultValue: site ? t(site.nameKey) : id })
+    },
+    topicName: (topic: string) => t(`forum.composer.topics.${topic}`, { defaultValue: topic }),
+  }), [siteById, t])
 
-  // `localPosts` is already newest-first (publishForumPost prepends), while the
-  // static POSTS fixtures are authored oldest-first. "Latest" therefore flips
-  // only the fixtures: reversing the combined list instead would sink the post
-  // the user just published to the very bottom of the feed.
-  const allPosts = useMemo(
-    () => (feedTab === 'latest'
-      ? [...localPosts, ...[...POSTS].reverse()]
-      : [...localPosts, ...[...POSTS].sort((left, right) => Number(right.gameId === 'aion2') - Number(left.gameId === 'aion2'))]),
-    [feedTab, localPosts],
-  )
+  /**
+   * The client every forum request goes through.
+   *
+   * `auth.client.requestClient` rather than a second `createApiClient`, so the
+   * feed and the account control cannot end up disagreeing about the transport —
+   * which inside a Bilibili Toy would mean every request signed as an anonymous
+   * reader while the header showed a signed-in user. Null when no API is
+   * configured, which is how a development build with no backend renders an
+   * explanatory empty state instead of failing every request.
+   */
+  const client = apiEnabled ? auth.client.requestClient : null
 
-  const visiblePosts = useMemo(() => {
-    const normalizedQuery = submittedQuery.trim().toLocaleLowerCase()
-    const filtered = allPosts.filter((post) => {
-      if (channel !== 'hot' && post.channel !== channel) return false
-      if (gameFilter && !(post.gameIds ?? (post.gameId ? [post.gameId] : [])).includes(gameFilter)) return false
-      if (feedTab === 'featured' && !post.featured) return false
-      if (followingOnly && !userSystemState.followedUserIds.includes(post.authorNumber)) return false
-      if (!normalizedQuery) return true
+  /**
+   * The reader's own account number, which decides `own` on every post.
+   *
+   * `user.id` is a string on the auth user; the API keys everything by the
+   * numeric uid, so it is parsed once here rather than at each comparison.
+   */
+  const viewerUid = useMemo(() => {
+    const parsed = Number(user?.id)
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+  }, [user?.id])
 
-      const searchable = [
-        postAuthor(post, t),
-        postTitle(post, t),
-        postCopy(post, t),
-        ...postTags(post, t),
-      ].join(' ').toLocaleLowerCase()
-      return searchable.includes(normalizedQuery)
-    })
+  const feedQuery = useMemo<FeedQuery>(() => ({
+    tab: feedTab,
+    // 'hot' is a view of everything rather than a stored channel, so it sends no
+    // channel filter at all.
+    channel: channel === 'hot' ? undefined : channel,
+    gameId: gameFilter ?? undefined,
+    query: submittedQuery,
+    // Only meaningful for a signed-in reader; the server would reject it
+    // otherwise, and an anonymous visitor who somehow set the toggle should see
+    // the ordinary feed rather than an error.
+    followingOnly: signedIn && followingOnly,
+    page: currentPage,
+  }), [channel, currentPage, feedTab, followingOnly, gameFilter, signedIn, submittedQuery])
 
-    return filtered
-  }, [allPosts, channel, feedTab, followingOnly, gameFilter, submittedQuery, t, userSystemState.followedUserIds])
+  const feed = useForumFeed(client, feedQuery, tagLabels, viewerUid, t('forum.errors.feed'))
 
-  const totalPages = Math.max(1, Math.ceil(visiblePosts.length / POSTS_PER_PAGE))
+  const totalPages = Math.max(1, Math.ceil(feed.total / POSTS_PER_PAGE))
   const feedSectionRef = useRef<HTMLElement>(null)
   // Page changes land on the feed section rather than leaving the reader wherever the
   // pager happened to be, which on a long page is below the first rows of the new page.
@@ -393,13 +315,21 @@ export function ForumPage({
   }
   const activePage = Math.min(currentPage, totalPages)
   const visiblePageNumbers = getVisiblePageNumbers(activePage, totalPages)
-  const paginatedPosts = visiblePosts.slice(
-    (activePage - 1) * POSTS_PER_PAGE,
-    activePage * POSTS_PER_PAGE,
-  )
-  const selectedPost = selectedPostId
-    ? allPosts.find((post) => post.id === selectedPostId) ?? null
-    : null
+  // The server paginates now, so this page *is* the response. Slicing it again
+  // would show five of the five posts it already returned, and drop the rest.
+  const paginatedPosts = feed.posts
+
+  const thread = useForumThread(client, selectedPostNo, tagLabels, viewerUid, t('forum.errors.post'))
+  const selectedPost = thread.post
+
+  /**
+   * Which game the right rail is about.
+   *
+   * The open post's first game when reading one, otherwise the active cabin
+   * filter. Computed once because it was previously spelled out four times in
+   * the same expression, and one of those copies is how a mismatch starts.
+   */
+  const sidebarGameId = selectedPost?.gameIds[0] ?? gameFilter ?? ''
 
   useEffect(() => {
     if (!publishNotice) return
@@ -407,20 +337,58 @@ export function ForumPage({
     return () => window.clearTimeout(timeout)
   }, [publishNotice])
 
+  useEffect(() => {
+    if (!actionError) return
+    const timeout = window.setTimeout(() => setActionError(null), 4200)
+    return () => window.clearTimeout(timeout)
+  }, [actionError])
+
+  /**
+   * Seeds the follow set once per signed-in reader.
+   *
+   * One request for the whole list rather than a flag on every post: the feed
+   * returns five posts but the reader may follow hundreds of accounts, and the
+   * page needs the answer for whichever authors happen to appear. A failure
+   * leaves the set empty, which renders every Follow button in its unfollowed
+   * state — wrong, but recoverable by clicking, where a thrown error would take
+   * the feed down with it.
+   */
+  useEffect(() => {
+    if (!client || viewerUid === null) {
+      setFollowedUids(new Set())
+      return
+    }
+    let active = true
+    void result(listFollowing({
+      client,
+      throwOnError: true,
+      path: { uid: viewerUid },
+      query: { page: 1, pageSize: 200 },
+    }))
+      .then((page) => {
+        if (!active) return
+        setFollowedUids(new Set((page.results ?? []).map((entry) => String(entry.user.uid))))
+      })
+      .catch(() => {
+        if (active) setFollowedUids(new Set())
+      })
+    return () => { active = false }
+  }, [client, viewerUid])
+
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmittedQuery(query)
     setCurrentPage(1)
   }
 
-  const openPost = (postId: string) => {
+  const openPost = (postNo: number) => {
     setPostReturnMode(forumMode)
-    setSelectedPostId(postId)
+    setSelectedPostNo(postNo)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
   const closePost = () => {
-    setSelectedPostId(null)
+    setSelectedPostNo(null)
     setForumMode(postReturnMode)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
@@ -429,14 +397,14 @@ export function ForumPage({
     setForumMode('home')
     setChannel('hot')
     setGameFilter(null)
-    setSelectedPostId(null)
+    setSelectedPostNo(null)
     setCurrentPage(1)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
   const showPersonal = () => {
     setForumMode('personal')
-    setSelectedPostId(null)
+    setSelectedPostNo(null)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
@@ -444,17 +412,54 @@ export function ForumPage({
     setForumMode('cabin')
     setChannel('games')
     setGameFilter(gameId)
-    setSelectedPostId(null)
+    setSelectedPostNo(null)
     setCurrentPage(1)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
-  const toggleFollow = (id: string) => {
+  /**
+   * Runs a request that changes something, reporting a failure rather than
+   * swallowing it.
+   *
+   * Every mutation on this page used to be a synchronous localStorage write that
+   * could not fail. Against a server they can — a session that expired, a post
+   * someone else deleted, a network that dropped — and a button that silently
+   * does nothing is the worst of the available behaviours. `revert` puts the
+   * optimistic change back, so the control ends up agreeing with the server.
+   */
+  const runMutation = async (action: () => Promise<void>, revert?: () => void) => {
+    if (!client) return
+    try {
+      await action()
+    } catch {
+      revert?.()
+      setActionError(t('forum.errors.action'))
+    }
+  }
+
+  /**
+   * Follows or unfollows, by the author's permanent uid.
+   *
+   * The uid arrives as a string because it comes off a rendered post; the API
+   * takes a number. A value that does not parse is dropped rather than sent,
+   * which is what happens for a post whose author has since been removed.
+   */
+  const toggleFollow = (authorUid: string, following: boolean) => {
     if (!signedIn) {
       onAuthRequired()
       return
     }
-    toggleFollowedUser(id)
+    const uid = Number(authorUid)
+    if (!Number.isFinite(uid) || uid <= 0) return
+    void runMutation(async () => {
+      await setFollowing(client!, uid, following)
+      setFollowedUids((current) => {
+        const next = new Set(current)
+        if (following) next.add(authorUid)
+        else next.delete(authorUid)
+        return next
+      })
+    })
   }
 
   const runAuthenticated = (action: () => void) => {
@@ -486,18 +491,145 @@ export function ForumPage({
     returnToForum()
   }
 
-  const publish = (post: LocalForumPost) => {
-    if (!publishForumPost(post)) return false
-    onComposerDirtyChange(false)
-    setPublishNotice(true)
-    setChannel(post.channel)
-    setGameFilter(post.gameIds[0] ?? post.gameId)
-    setFeedTab('recommended')
-    setCurrentPage(1)
-    setSelectedPostId(post.id)
-    returnToForum()
-    window.scrollTo({ top: 0, behavior: 'auto' })
-    return true
+  /**
+   * Publishes a post and opens it.
+   *
+   * Asynchronous now, so the composer has to know whether it succeeded before it
+   * closes. It returns the outcome rather than closing optimistically: a draft
+   * discarded on a failed request is a reader's writing lost, which is the one
+   * failure here worth designing around.
+   *
+   * The feed is reloaded rather than patched with the new post. The reader is
+   * sent to the post itself, so the list behind them only has to be right the
+   * next time they look at it — and a refetch gets that right for every tab and
+   * filter, where inserting locally would guess at the ordering the server uses.
+   */
+  const publish = async (draft: ComposerDraft): Promise<boolean> => {
+    if (!client) return false
+    try {
+      const created = await publishPost(
+        client,
+        {
+          channel: draft.channel,
+          title: draft.title,
+          body: draft.body,
+          topic: draft.topic,
+          gameIds: draft.gameIds,
+          tags: draft.tags,
+          videoUrl: draft.videoUrl,
+        },
+        tagLabels,
+        viewerUid,
+      )
+      onComposerDirtyChange(false)
+      setPublishNotice(true)
+      setChannel(created.channel)
+      setGameFilter(created.gameIds[0] ?? null)
+      setFeedTab('recommended')
+      setCurrentPage(1)
+      setSelectedPostNo(created.postNo)
+      feed.reload()
+      returnToForum()
+      window.scrollTo({ top: 0, behavior: 'auto' })
+      return true
+    } catch {
+      setActionError(t('forum.errors.publish'))
+      return false
+    }
+  }
+
+  /**
+   * Likes or unlikes, updating the count before the request completes.
+   *
+   * The old code displayed `storedCount + (youToggled ? 1 : 0)`, treating the
+   * fixture number as everyone else's and the reader's own click as a local
+   * addition. The server now owns the whole count, so the optimistic step adjusts
+   * it directly and the revert undoes exactly that.
+   */
+  const togglePostLike = (post: ForumPost) => {
+    runAuthenticated(() => {
+      const liked = !post.liked
+      const delta = liked ? 1 : -1
+      const changes = { liked, likeCount: post.likeCount + delta }
+      const undo = { liked: post.liked, likeCount: post.likeCount }
+      feed.patch(post.postNo, changes)
+      if (selectedPost?.postNo === post.postNo) thread.patchPost(changes)
+      void runMutation(
+        () => setPostLiked(client!, post.postNo, liked),
+        () => {
+          feed.patch(post.postNo, undo)
+          if (selectedPost?.postNo === post.postNo) thread.patchPost(undo)
+        },
+      )
+    })
+  }
+
+  const togglePostBookmark = (post: ForumPost) => {
+    runAuthenticated(() => {
+      const bookmarked = !post.bookmarked
+      const delta = bookmarked ? 1 : -1
+      const changes = { bookmarked, bookmarkCount: post.bookmarkCount + delta }
+      const undo = { bookmarked: post.bookmarked, bookmarkCount: post.bookmarkCount }
+      feed.patch(post.postNo, changes)
+      if (selectedPost?.postNo === post.postNo) thread.patchPost(changes)
+      void runMutation(
+        () => setPostBookmarked(client!, post.postNo, bookmarked),
+        () => {
+          feed.patch(post.postNo, undo)
+          if (selectedPost?.postNo === post.postNo) thread.patchPost(undo)
+        },
+      )
+    })
+  }
+
+  const toggleCommentLike = (comment: ForumComment) => {
+    runAuthenticated(() => {
+      const liked = !comment.liked
+      const changes = { liked, likeCount: comment.likeCount + (liked ? 1 : -1) }
+      thread.patchComment(comment.id, changes)
+      void runMutation(
+        () => setCommentLiked(client!, comment.id, liked),
+        () => thread.patchComment(comment.id, { liked: comment.liked, likeCount: comment.likeCount }),
+      )
+    })
+  }
+
+  /** Adds a comment or a reply, then refetches so floor numbers stay the server's. */
+  const submitComment = async (body: string, parentId?: string): Promise<boolean> => {
+    if (!client || selectedPostNo === null) return false
+    try {
+      await addComment(client, selectedPostNo, body, parentId)
+      thread.reload()
+      feed.patch(selectedPostNo, { commentCount: (selectedPost?.commentCount ?? 0) + 1 })
+      return true
+    } catch {
+      setActionError(t('forum.errors.comment'))
+      return false
+    }
+  }
+
+  const deleteOwnPost = (post: ForumPost) => {
+    runAuthenticated(() => {
+      void runMutation(async () => {
+        await removePost(client!, post.postNo)
+        setSelectedPostNo(null)
+        setForumMode(postReturnMode)
+        feed.reload()
+      })
+    })
+  }
+
+  const saveOwnPost = async (post: ForumPost, title: string, body: string): Promise<boolean> => {
+    if (!client) return false
+    try {
+      const updated = await editPost(client, post.postNo, { title, body }, tagLabels, viewerUid)
+      thread.patchPost(updated)
+      feed.patch(post.postNo, updated)
+      return true
+    } catch {
+      setActionError(t('forum.errors.action'))
+      return false
+    }
   }
 
   const renderSearch = (placementClass: string) => (
@@ -611,46 +743,63 @@ export function ForumPage({
           {selectedPost ? (
             <ForumPostDetail
               post={selectedPost}
-              images={selectedPost.imageSrcs?.length
+              comments={thread.comments}
+              commentTotal={thread.commentTotal}
+              loading={thread.loading}
+              error={thread.error}
+              followed={followedUids.has(selectedPost.authorUid)}
+              // The game's cover art stands in when a post has no image of its
+              // own, but never on the reader's own post: seeing a stock picture
+              // attached to something you wrote reads as an image you did not
+              // choose rather than as decoration.
+              images={selectedPost.imageSrcs.length
                 ? selectedPost.imageSrcs
-                : [selectedPost.imageSrc ?? (!selectedPost.own && selectedPost.gameId
-                    ? siteById.get(selectedPost.gameId)?.bg
-                    : undefined)].filter((image): image is string => Boolean(image))}
+                : [!selectedPost.own && selectedPost.gameIds[0]
+                    ? siteById.get(selectedPost.gameIds[0])?.bg
+                    : undefined].filter((image): image is string => Boolean(image))}
               onBack={closePost}
               onComingSoon={onComingSoon}
               onAuthRequired={onAuthRequired}
               currentAvatar={currentAvatar}
+              onToggleLike={() => togglePostLike(selectedPost)}
+              onToggleBookmark={() => togglePostBookmark(selectedPost)}
+              onToggleFollow={() => toggleFollow(selectedPost.authorUid, !followedUids.has(selectedPost.authorUid))}
+              onToggleCommentLike={toggleCommentLike}
+              onSubmitComment={submitComment}
+              onDeletePost={() => deleteOwnPost(selectedPost)}
+              onSavePost={(title, body) => saveOwnPost(selectedPost, title, body)}
+              signedIn={signedIn}
             />
           ) : forumMode === 'personal' ? (
             <ForumPersonalView
               avatarSrc={currentAvatar}
               name={user?.name ?? t('userSystem.currentUser.name')}
-              accountId={user?.id ?? '10824695'}
+              accountId={user?.id ?? ''}
               bio={userSystemState.profile.bio || t('userSystem.currentUser.bio')}
               gender={userSystemState.profile.gender}
               tab={personalTab}
-              posts={localPosts}
-              allPosts={allPosts}
-              likedPostIds={userSystemState.likedPostIds}
-              bookmarkedPostIds={userSystemState.bookmarkedPostIds}
+              viewerUid={viewerUid}
+              client={client}
+              labels={tagLabels}
               siteById={siteById}
               onTabChange={setPersonalTab}
               onOpenPost={openPost}
               onComingSoon={onComingSoon}
-              onToggleBookmark={(postId) => runAuthenticated(() => toggleBookmarkedPost(postId))}
-              onToggleLike={(postId) => runAuthenticated(() => toggleLikedPost(postId))}
+              onToggleBookmark={togglePostBookmark}
+              onToggleLike={togglePostLike}
             />
           ) : forumMode === 'cabin' && gameFilter && siteById.get(gameFilter) ? (
             <ForumCabinView
               site={siteById.get(gameFilter)!}
               tab={cabinTab}
-              posts={allPosts.filter((post) => (post.gameIds ?? (post.gameId ? [post.gameId] : [])).includes(gameFilter))}
-              state={userSystemState}
+              posts={feed.posts}
+              loading={feed.loading}
+              followedUids={followedUids}
               onTabChange={setCabinTab}
               onOpenPost={openPost}
               onToggleFollow={toggleFollow}
-              onToggleBookmark={(postId) => runAuthenticated(() => toggleBookmarkedPost(postId))}
-              onToggleLike={(postId) => runAuthenticated(() => toggleLikedPost(postId))}
+              onToggleBookmark={togglePostBookmark}
+              onToggleLike={togglePostLike}
               onComingSoon={onComingSoon}
             />
           ) : (
@@ -722,23 +871,30 @@ export function ForumPage({
                 </button>
               </div>
 
-              {visiblePosts.length > 0 ? (
+              {feed.loading ? (
+                <p className="forum-feed-status" role="status">{t('forum.loading')}</p>
+              ) : feed.error ? (
+                // A failure and an empty forum are different things, and an
+                // empty array cannot tell them apart. Saying "no posts" when the
+                // request failed is a lie the UI would tell by omission.
+                <p className="forum-feed-status is-error" role="alert">{feed.error}</p>
+              ) : feed.posts.length > 0 ? (
                 <>
                   <div className="forum-post-list">
                     {paginatedPosts.map((post) => (
                       <ForumPostCard
-                        key={post.id}
+                        key={post.postNo}
                         post={post}
-                        image={post.imageSrcs?.[0] ?? post.imageSrc ?? (!post.own && post.gameId
-                          ? siteById.get(post.gameId)?.bg
+                        image={post.imageSrcs[0] ?? (!post.own && post.gameIds[0]
+                          ? siteById.get(post.gameIds[0])?.bg
                           : undefined)}
-                        followed={userSystemState.followedUserIds.includes(post.authorNumber)}
-                        bookmarked={userSystemState.bookmarkedPostIds.includes(post.id)}
-                        liked={userSystemState.likedPostIds.includes(post.id)}
-                        onToggleFollow={() => toggleFollow(post.authorNumber)}
-                        onToggleBookmark={() => runAuthenticated(() => toggleBookmarkedPost(post.id))}
-                        onToggleLike={() => runAuthenticated(() => toggleLikedPost(post.id))}
-                        onOpen={() => openPost(post.id)}
+                        followed={followedUids.has(post.authorUid)}
+                        bookmarked={post.bookmarked}
+                        liked={post.liked}
+                        onToggleFollow={() => toggleFollow(post.authorUid, !followedUids.has(post.authorUid))}
+                        onToggleBookmark={() => togglePostBookmark(post)}
+                        onToggleLike={() => togglePostLike(post)}
+                        onOpen={() => openPost(post.postNo)}
                         onShare={onComingSoon}
                       />
                     ))}
@@ -803,22 +959,22 @@ export function ForumPage({
             </>
           )}
           {!selectedPost && forumMode !== 'cabin' && (
-            <ForumMobileDiscovery sites={sites} posts={allPosts} onOpenPost={openPost} onOpenCabin={showCabin} onComingSoon={onComingSoon} />
+            <ForumMobileDiscovery sites={sites} posts={feed.posts} onOpenPost={openPost} onOpenCabin={showCabin} onComingSoon={onComingSoon} />
           )}
         </section>
 
         <aside className="forum-right-rail" aria-label={t('forum.sidebar.label')}>
           {renderSearch('forum-right-search')}
-          {(forumMode === 'cabin' || selectedPost?.gameId) && siteById.get(selectedPost?.gameId ?? gameFilter ?? '') ? (
+          {(forumMode === 'cabin' || sidebarGameId) && siteById.get(sidebarGameId) ? (
             <ForumCabinSidebar
-              site={siteById.get(selectedPost?.gameId ?? gameFilter ?? '')!}
-              followed={userSystemState.favoriteGameIds.includes(selectedPost?.gameId ?? gameFilter ?? '')}
-              onToggleFollow={() => runAuthenticated(() => toggleFavoriteGame(selectedPost?.gameId ?? gameFilter ?? ''))}
+              site={siteById.get(sidebarGameId)!}
+              followed={userSystemState.favoriteGameIds.includes(sidebarGameId)}
+              onToggleFollow={() => runAuthenticated(() => toggleFavoriteGame(sidebarGameId))}
               onComingSoon={onComingSoon}
             />
           ) : (
             <>
-              <ForumHotPosts posts={allPosts} onOpenPost={openPost} onComingSoon={onComingSoon} />
+              <ForumHotPosts posts={feed.posts} onOpenPost={openPost} onComingSoon={onComingSoon} />
               <section className="forum-panel forum-popular-games">
                 <header><h2>{t('forum.redesign.popularGames')}</h2><button type="button" onClick={onComingSoon}>{t('forum.redesign.allGames')}</button></header>
                 {sites.slice(0, 3).map((site, index) => (
@@ -842,7 +998,7 @@ export function ForumPage({
                       <article key={recommendedUser.id}>
                         <img src={avatarUrl(recommendedUser.avatarSeed)} alt="" loading="lazy" />
                         <span><strong>{t(recommendedUser.nameKey)}</strong><small>{t(recommendedUser.descriptionKey)}</small></span>
-                        <button type="button" className={followed ? 'is-followed' : undefined} aria-pressed={followed} onClick={() => toggleFollow(recommendedUser.id)}>
+                        <button type="button" className={followed ? 'is-followed' : undefined} aria-pressed={followed} onClick={() => toggleFollow(recommendedUser.id, !followed)}>
                           {t(followed ? 'forum.users.following' : 'forum.users.follow')}
                         </button>
                       </article>
@@ -879,10 +1035,9 @@ function ForumPersonalView({
   bio,
   gender,
   tab,
-  posts,
-  allPosts,
-  likedPostIds,
-  bookmarkedPostIds,
+  viewerUid,
+  client,
+  labels,
   siteById,
   onTabChange,
   onOpenPost,
@@ -896,26 +1051,82 @@ function ForumPersonalView({
   bio: string
   gender: UserSystemState['profile']['gender']
   tab: PersonalTab
-  posts: ForumPost[]
-  allPosts: ForumPost[]
-  likedPostIds: string[]
-  bookmarkedPostIds: string[]
+  viewerUid: number | null
+  client: ApiClient['client'] | null
+  labels: TagLabellers
   siteById: ReadonlyMap<string, SiteCard>
   onTabChange: (tab: PersonalTab) => void
-  onOpenPost: (postId: string) => void
+  onOpenPost: (postNo: number) => void
   onComingSoon: () => void
-  onToggleBookmark: (postId: string) => void
-  onToggleLike: (postId: string) => void
+  onToggleBookmark: (post: ForumPost) => void
+  onToggleLike: (post: ForumPost) => void
 }) {
   const { t, i18n } = useTranslation()
-  const visiblePosts = tab === 'posts'
-    ? posts
-    : tab === 'likes'
-      ? allPosts.filter((post) => likedPostIds.includes(post.id))
-      : tab === 'bookmarks'
-        ? allPosts.filter((post) => bookmarkedPostIds.includes(post.id))
-        : []
-  const receivedLikes = posts.reduce((sum, post) => sum + post.likeCount, 0)
+
+  /**
+   * Each tab is its own server query rather than a filter over one loaded list.
+   *
+   * "Posts you liked" cannot be computed from the posts on screen — the ones you
+   * liked are mostly written by other people and are not in your own feed at all.
+   * The old code filtered a combined array, which is why the tab only ever found
+   * likes on the handful of posts that happened to be loaded.
+   *
+   * The replies tab has no query yet: listing a person's comments is an endpoint
+   * the backend does not have. It rendered an empty list before this change too,
+   * so nothing regressed — it is simply still to build.
+   */
+  const personalQuery = useMemo<FeedQuery>(() => ({
+    tab: 'latest',
+    authorUid: tab === 'posts' && viewerUid !== null ? viewerUid : undefined,
+    likedOnly: tab === 'likes',
+    bookmarkedOnly: tab === 'bookmarks',
+    page: 1,
+    pageSize: 20,
+  }), [tab, viewerUid])
+
+  const personalFeed = useForumFeed(
+    // The replies tab has nothing to ask for, so it asks for nothing rather than
+    // issuing a query that would return the whole feed.
+    tab === 'replies' ? null : client,
+    personalQuery,
+    labels,
+    viewerUid,
+    t('forum.errors.feed'),
+  )
+  const visiblePosts = personalFeed.posts
+  const receivedLikes = visiblePosts.reduce((sum, post) => sum + post.likeCount, 0)
+
+  /**
+   * The reader's follower and following counts.
+   *
+   * Both were literals — 46 and 112 — identical for every account, which is the
+   * kind of number that reads as real until you notice two profiles share it.
+   * Zero is the honest starting value while the request is in flight or after it
+   * fails; the alternative is showing a made-up figure that never corrects.
+   */
+  const [followCounts, setFollowCounts] = useState({ followers: 0, following: 0 })
+  useEffect(() => {
+    if (!client || viewerUid === null) {
+      setFollowCounts({ followers: 0, following: 0 })
+      return
+    }
+    let active = true
+    void result(getFollowCounts({ client, throwOnError: true, path: { uid: viewerUid } }))
+      .then((counts) => {
+        if (!active) return
+        // Both tallies are nullable: a privacy setting can withhold them, and
+        // `following` on this response is the reader's own follow *state*, not a
+        // count. Reading it as one would print "1" or "0" under "Following".
+        setFollowCounts({
+          followers: counts.followerCount ?? 0,
+          following: counts.followingCount ?? 0,
+        })
+      })
+      .catch(() => {
+        if (active) setFollowCounts({ followers: 0, following: 0 })
+      })
+    return () => { active = false }
+  }, [client, viewerUid])
   const formatCount = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language).format
 
   return (
@@ -932,37 +1143,47 @@ function ForumPersonalView({
           <p>{bio}</p>
         </div>
         <dl>
-          <div><dt>{t('forum.redesign.posts')}</dt><dd>{formatCount(posts.length)}</dd></div>
+          {/* `total` rather than the loaded page: the tab shows twenty at a time,
+              and "3 posts" under a profile with forty of them is worse than no
+              number. The follow counts come from the server too — they were
+              literal 46 and 112 before, the same for every account. */}
+          <div><dt>{t('forum.redesign.posts')}</dt><dd>{formatCount(tab === 'posts' ? personalFeed.total : 0)}</dd></div>
           <div><dt>{t('forum.redesign.likesReceived')}</dt><dd>{formatCount(receivedLikes)}</dd></div>
-          <div><dt>{t('forum.redesign.following')}</dt><dd>{formatCount(46)}</dd></div>
-          <div><dt>{t('forum.redesign.followers')}</dt><dd>{formatCount(112)}</dd></div>
+          <div><dt>{t('forum.redesign.following')}</dt><dd>{formatCount(followCounts.following)}</dd></div>
+          <div><dt>{t('forum.redesign.followers')}</dt><dd>{formatCount(followCounts.followers)}</dd></div>
         </dl>
         <a href="#account/edit">{t('forum.redesign.editProfile')}</a>
       </section>
 
       <section className="forum-panel forum-personal-feed">
         <div className="forum-personal-tabs" role="tablist" aria-label={t('forum.redesign.personalContent')}>
-          {(['posts', 'replies', 'likes', 'bookmarks'] as const).map((item) => {
-            const counts = { posts: posts.length, replies: 0, likes: likedPostIds.length, bookmarks: bookmarkedPostIds.length }
-            return (
-              <button key={item} type="button" role="tab" aria-selected={tab === item} className={tab === item ? 'is-active' : undefined} onClick={() => onTabChange(item)}>
-                {t(`forum.redesign.personalTabs.${item}`)} <span>{formatCount(counts[item])}</span>
-              </button>
-            )
-          })}
+          {/* Only the open tab has a count. Showing one on each would mean three
+              more requests on every visit to answer a number nobody has asked
+              for yet; the old code showed the length of a locally filtered array,
+              which was not the real total either. */}
+          {(['posts', 'replies', 'likes', 'bookmarks'] as const).map((item) => (
+            <button key={item} type="button" role="tab" aria-selected={tab === item} className={tab === item ? 'is-active' : undefined} onClick={() => onTabChange(item)}>
+              {t(`forum.redesign.personalTabs.${item}`)}
+              {tab === item && <span>{formatCount(personalFeed.total)}</span>}
+            </button>
+          ))}
         </div>
-        {visiblePosts.length > 0 ? visiblePosts.map((post) => (
+        {personalFeed.loading ? (
+          <p className="forum-feed-status" role="status">{t('forum.loading')}</p>
+        ) : personalFeed.error ? (
+          <p className="forum-feed-status is-error" role="alert">{personalFeed.error}</p>
+        ) : visiblePosts.length > 0 ? visiblePosts.map((post) => (
           <ForumPostCard
-            key={post.id}
+            key={post.postNo}
             post={post}
-            image={post.imageSrcs?.[0] ?? post.imageSrc ?? (post.gameId ? siteById.get(post.gameId)?.bg : undefined)}
+            image={post.imageSrcs[0] ?? (post.gameIds[0] ? siteById.get(post.gameIds[0])?.bg : undefined)}
             followed={false}
-            bookmarked={bookmarkedPostIds.includes(post.id)}
-            liked={likedPostIds.includes(post.id)}
+            bookmarked={post.bookmarked}
+            liked={post.liked}
             onToggleFollow={onComingSoon}
-            onToggleBookmark={() => onToggleBookmark(post.id)}
-            onToggleLike={() => onToggleLike(post.id)}
-            onOpen={() => onOpenPost(post.id)}
+            onToggleBookmark={() => onToggleBookmark(post)}
+            onToggleLike={() => onToggleLike(post)}
+            onOpen={() => onOpenPost(post.postNo)}
             onShare={onComingSoon}
           />
         )) : (
@@ -981,7 +1202,8 @@ function ForumCabinView({
   site,
   tab,
   posts,
-  state,
+  loading,
+  followedUids,
   onTabChange,
   onOpenPost,
   onToggleFollow,
@@ -992,20 +1214,28 @@ function ForumCabinView({
   site: SiteCard
   tab: CabinTab
   posts: ForumPost[]
-  state: UserSystemState
+  loading: boolean
+  followedUids: ReadonlySet<string>
   onTabChange: (tab: CabinTab) => void
-  onOpenPost: (postId: string) => void
-  onToggleFollow: (userId: string) => void
-  onToggleBookmark: (postId: string) => void
-  onToggleLike: (postId: string) => void
+  onOpenPost: (postNo: number) => void
+  onToggleFollow: (authorUid: string, following: boolean) => void
+  onToggleBookmark: (post: ForumPost) => void
+  onToggleLike: (post: ForumPost) => void
   onComingSoon: () => void
 }) {
   const { t } = useTranslation()
-  const visiblePosts = tab === 'guides'
-    ? posts.filter((post) => post.featured)
-    : tab === 'latest'
-      ? [...posts].reverse()
-      : posts
+  /**
+   * The guides tab is the only one that still narrows locally.
+   *
+   * `latest` used to be `[...posts].reverse()`, which reversed *the page* rather
+   * than the ordering — on page two that showed the same five posts backwards,
+   * not the five before them. Ordering belongs to the query, so the tab is
+   * rendered from what the server returned and the cabin's own sort comes with
+   * it. Featured is a filter the feed already applies for the Featured tab; here
+   * it is applied to the page for now, which is honest for a cabin with one page
+   * and something to move server-side when a cabin has more.
+   */
+  const visiblePosts = tab === 'guides' ? posts.filter((post) => post.featured) : posts
 
   return (
     <div className="forum-cabin-view">
@@ -1025,21 +1255,23 @@ function ForumCabinView({
       <section className="forum-cabin-pinned">
         <span>{t('forum.pinned.title')}</span>
         <div><strong>{t('forum.pinned.aion2.title')}</strong><p>{t('forum.pinned.aion2.meta')}</p></div>
-        <button type="button" onClick={() => posts[0] ? onOpenPost(posts[0].id) : onComingSoon()}>{t('forum.pinned.viewAll')}<IconChevronRight className="size-4" stroke={1.8} /></button>
+        <button type="button" onClick={() => posts[0] ? onOpenPost(posts[0].postNo) : onComingSoon()}>{t('forum.pinned.viewAll')}<IconChevronRight className="size-4" stroke={1.8} /></button>
       </section>
       <section className="forum-panel forum-cabin-feed">
-        {visiblePosts.length > 0 ? visiblePosts.map((post) => (
+        {loading ? (
+          <p className="forum-feed-status" role="status">{t('forum.loading')}</p>
+        ) : visiblePosts.length > 0 ? visiblePosts.map((post) => (
           <ForumPostCard
-            key={post.id}
+            key={post.postNo}
             post={post}
-            image={post.imageSrcs?.[0] ?? post.imageSrc ?? site.bg}
-            followed={state.followedUserIds.includes(post.authorNumber)}
-            bookmarked={state.bookmarkedPostIds.includes(post.id)}
-            liked={state.likedPostIds.includes(post.id)}
-            onToggleFollow={() => onToggleFollow(post.authorNumber)}
-            onToggleBookmark={() => onToggleBookmark(post.id)}
-            onToggleLike={() => onToggleLike(post.id)}
-            onOpen={() => onOpenPost(post.id)}
+            image={post.imageSrcs[0] ?? site.bg}
+            followed={followedUids.has(post.authorUid)}
+            bookmarked={post.bookmarked}
+            liked={post.liked}
+            onToggleFollow={() => onToggleFollow(post.authorUid, !followedUids.has(post.authorUid))}
+            onToggleBookmark={() => onToggleBookmark(post)}
+            onToggleLike={() => onToggleLike(post)}
+            onOpen={() => onOpenPost(post.postNo)}
             onShare={onComingSoon}
           />
         )) : <div className="forum-empty"><strong>{t('forum.empty.title')}</strong><p>{t('forum.empty.description')}</p></div>}
@@ -1048,12 +1280,12 @@ function ForumCabinView({
   )
 }
 
-function ForumHotPosts({ posts, onOpenPost, onComingSoon }: { posts: ForumPost[]; onOpenPost: (postId: string) => void; onComingSoon: () => void }) {
+function ForumHotPosts({ posts, onOpenPost, onComingSoon }: { posts: ForumPost[]; onOpenPost: (postNo: number) => void; onComingSoon: () => void }) {
   const { t } = useTranslation()
   return (
     <section className="forum-panel forum-hot-posts">
       <header><h2>{t('forum.redesign.hotPosts')}</h2><button type="button" onClick={onComingSoon}>{t('forum.redesign.viewAll')}</button></header>
-      <ol>{posts.slice(0, 5).map((post, index) => <li key={post.id}><button type="button" onClick={() => onOpenPost(post.id)}><b>{index + 1}</b><span>{postTitle(post, t)}</span><small>{post.likeCount}</small></button></li>)}</ol>
+      <ol>{posts.slice(0, 5).map((post, index) => <li key={post.postNo}><button type="button" onClick={() => onOpenPost(post.postNo)}><b>{index + 1}</b><span>{postTitle(post)}</span><small>{post.likeCount}</small></button></li>)}</ol>
     </section>
   )
 }
@@ -1067,7 +1299,7 @@ function ForumMobileDiscovery({
 }: {
   sites: readonly SiteCard[]
   posts: ForumPost[]
-  onOpenPost: (postId: string) => void
+  onOpenPost: (postNo: number) => void
   onOpenCabin: (gameId: string) => void
   onComingSoon: () => void
 }) {
@@ -1075,7 +1307,7 @@ function ForumMobileDiscovery({
   return (
     <details className="forum-mobile-discovery">
       <summary>{t('forum.redesign.communityDiscovery')}<IconChevronRight className="size-4" stroke={1.8} /></summary>
-      <section><h2>{t('forum.redesign.hotPosts')}</h2>{posts.slice(0, 3).map((post, index) => <button key={post.id} type="button" onClick={() => onOpenPost(post.id)}><b>{index + 1}</b><span>{postTitle(post, t)}</span></button>)}</section>
+      <section><h2>{t('forum.redesign.hotPosts')}</h2>{posts.slice(0, 3).map((post, index) => <button key={post.postNo} type="button" onClick={() => onOpenPost(post.postNo)}><b>{index + 1}</b><span>{postTitle(post)}</span></button>)}</section>
       <section><h2>{t('forum.redesign.popularGames')}</h2>{sites.slice(0, 3).map((site) => <button key={site.id} type="button" onClick={() => onOpenCabin(site.id)}><span>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</span><small>{t('forum.redesign.discussing', { count: 2108 })}</small></button>)}</section>
       <section><h2>{t('forum.users.title')}</h2>{RECOMMENDED_USERS.slice(0, 3).map((recommendedUser) => <button key={recommendedUser.id} type="button" onClick={onComingSoon}><span>{t(recommendedUser.nameKey)}</span><small>{t(recommendedUser.descriptionKey)}</small></button>)}</section>
     </details>
@@ -1131,7 +1363,7 @@ function ForumComposerPage({
   onImageUnavailable: () => void
   onDirtyChange: (dirty: boolean) => void
   onCancel: () => void
-  onPublish: (post: LocalForumPost) => boolean
+  onPublish: (draft: ComposerDraft) => Promise<boolean>
 }) {
   const { t } = useTranslation()
   const [title, setTitle] = useState('')
@@ -1151,6 +1383,14 @@ function ForumComposerPage({
   const [parsedVideoUrl, setParsedVideoUrl] = useState('')
   const [videoError, setVideoError] = useState('')
   const [error, setError] = useState('')
+  /**
+   * True while the post is in flight.
+   *
+   * Publishing used to be a synchronous localStorage write, so a second click
+   * was harmless. Against a server it is a second post, so the submit handler
+   * returns early and the button disables itself.
+   */
+  const [publishing, setPublishing] = useState(false)
   const imageUnavailableError = t('forum.composer.errors.imageUnavailable')
   const titleRef = useRef<HTMLInputElement>(null)
   const contentRef = useRef<HTMLTextAreaElement>(null)
@@ -1328,12 +1568,13 @@ function ForumComposerPage({
     setVideoError('')
   }
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!signedIn) {
       onAuthRequired()
       return
     }
+    if (publishing) return
     const normalizedTitle = title.trim()
     const normalizedContent = content.trim()
     if (normalizedTitle.length < 2) {
@@ -1350,21 +1591,27 @@ function ForumComposerPage({
       setError(t('forum.composer.errors.video'))
       return
     }
-    const saved = onPublish({
-      id: `local-${Date.now()}-${localPostSuffix()}`,
+
+    // The id and the timestamp are gone: both used to be invented here because
+    // the client was writing the row itself. The server assigns them now, and a
+    // post number the client guessed would be wrong the moment two people
+    // published at once.
+    setPublishing(true)
+    const saved = await onPublish({
       title: normalizedTitle,
-      content: normalizedContent,
+      body: normalizedContent,
+      // Derived rather than chosen, as before: the composer offers no channel
+      // picker, and `official` is administrators-only on the server.
       channel: gameIds.length > 0 ? 'games' : 'general',
-      gameId: gameIds[0] ?? null,
       gameIds,
+      // The API takes one topic; the composer collects a list of them. The rest
+      // travel as ordinary tags rather than being dropped, which is what the tag
+      // row displayed anyway.
       topic: topics[0] ?? 'discussion',
-      topics,
-      tags: customTags,
-      imageSrc: null,
-      imageSrcs: [],
-      videoUrl: videoUrl || null,
-      createdAt: new Date().toISOString(),
+      tags: [...topics.slice(1), ...customTags],
+      videoUrl: videoUrl || undefined,
     })
+    setPublishing(false)
     if (!saved) {
       setError(t('forum.composer.errors.publish'))
       return
@@ -1627,9 +1874,9 @@ function ForumComposerPage({
             <strong role="alert">{error === imageUnavailableError ? null : error}</strong>
           </div>
           <button type="button" className="forum-publish-cancel" onClick={onCancel}>{t('forum.composer.cancel')}</button>
-          <button type="submit" className="forum-publish-submit">
+          <button type="submit" className="forum-publish-submit" disabled={publishing}>
             <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
-            {t('forum.composer.publish')}
+            {t(publishing ? 'forum.detailExtra.sending' : 'forum.composer.publish')}
           </button>
         </footer>
       </form>
@@ -1708,10 +1955,10 @@ function ForumPostCard({
 
   return (
     <article className="forum-post">
-      <img className="forum-post-avatar" src={post.avatarSrc ?? avatarUrl(post.avatarSeed)} alt="" loading="lazy" />
+      <img className="forum-post-avatar" src={post.avatarSrc} alt="" loading="lazy" />
       <div className="forum-post-content">
         <div className="forum-post-author">
-          <strong><a href={post.own ? '#account/posts' : publicProfileHref(post.authorNumber)}>{postAuthor(post, t)}</a></strong>
+          <strong><a href={post.own ? '#account/posts' : publicProfileHref(post.authorNumber)}>{postAuthor(post)}</a></strong>
           {post.featured && <span>{t('forum.feed.qualityAuthor')}</span>}
           <small>{postTime(post)}</small>
           {!post.own && (
@@ -1730,7 +1977,7 @@ function ForumPostCard({
           className="forum-post-open-area"
           role="link"
           tabIndex={0}
-          aria-label={t('forum.detail.openPost', { title: postTitle(post, t) })}
+          aria-label={t('forum.detail.openPost', { title: postTitle(post) })}
           onClick={onOpen}
           onKeyDown={(event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return
@@ -1738,12 +1985,12 @@ function ForumPostCard({
             onOpen()
           }}
         >
-          <h3>{postTitle(post, t)}</h3>
-          <p>{postCopy(post, t)}</p>
+          <h3>{postTitle(post)}</h3>
+          <p>{postCopy(post)}</p>
           <div className="forum-post-tags">
-            {postTags(post, t).map((tag) => <span key={tag}>{tag}</span>)}
+            {postTags(post).map((tag) => <span key={tag}>{tag}</span>)}
           </div>
-          {image && <img className="forum-post-media" src={image} alt={postTitle(post, t)} loading="lazy" />}
+          {image && <img className="forum-post-media" src={image} alt={postTitle(post)} loading="lazy" />}
         </div>
         {post.videoUrl && (
           <a className="forum-post-video" href={post.videoUrl} target="_blank" rel="noreferrer">
@@ -1776,44 +2023,92 @@ function ForumPostCard({
 
 function ForumPostDetail({
   post,
+  comments,
+  commentTotal,
+  loading,
+  error,
+  followed,
   images,
   onBack,
   onComingSoon,
   onAuthRequired,
   currentAvatar,
+  onToggleLike,
+  onToggleBookmark,
+  onToggleFollow,
+  onToggleCommentLike,
+  onSubmitComment,
+  onDeletePost,
+  onSavePost,
+  signedIn,
 }: {
   post: ForumPost
+  comments: ForumComment[]
+  commentTotal: number
+  loading: boolean
+  error: string | null
+  followed: boolean
   images: string[]
   onBack: () => void
   onComingSoon: () => void
   onAuthRequired: () => void
   currentAvatar: string
+  onToggleLike: () => void
+  onToggleBookmark: () => void
+  onToggleFollow: () => void
+  onToggleCommentLike: (comment: ForumComment) => void
+  onSubmitComment: (body: string, parentId?: string) => Promise<boolean>
+  onDeletePost: () => void
+  onSavePost: (title: string, body: string) => Promise<boolean>
+  signedIn: boolean
 }) {
   const { t, i18n } = useTranslation()
-  const { status, user } = useAuth()
-  const {
-    state,
-    toggleBookmarkedPost,
-    toggleFollowedUser,
-    toggleLikedComment,
-    toggleLikedPost,
-  } = useUserSystem()
-  const liked = state.likedPostIds.includes(post.id)
-  const bookmarked = state.bookmarkedPostIds.includes(post.id)
-  const followed = state.followedUserIds.includes(post.authorNumber)
-  const [replySort, setReplySort] = useState<'popular' | 'ascending' | 'descending'>('popular')
-  const [authorOnly, setAuthorOnly] = useState(false)
-  const commentId = `${post.id}:sample-comment`
-  const commentLiked = state.likedCommentIds.includes(commentId)
+  const liked = post.liked
+  const bookmarked = post.bookmarked
+  /**
+   * The comment composer.
+   *
+   * `replyingTo` is null for a new top-level comment and otherwise the comment
+   * being answered. One piece of state rather than a composer per row: only one
+   * can be open at a time, and rendering an input beside every comment was how
+   * the draft in one of them got lost when another opened.
+   */
+  const [draft, setDraft] = useState('')
+  const [replyingTo, setReplyingTo] = useState<ForumComment | null>(null)
+  const [sending, setSending] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(post.title)
+  const [editBody, setEditBody] = useState(post.body)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const numberFormatter = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language)
   const formatCount = (count: number) => numberFormatter.format(count)
-  const discussionId = `forum-discussion-${post.id}`
+  const discussionId = `forum-discussion-${post.postNo}`
   const runAuthenticated = (action: () => void) => {
-    if (status !== 'authenticated') {
+    if (!signedIn) {
       onAuthRequired()
       return
     }
     action()
+  }
+
+  const sendComment = async () => {
+    const body = draft.trim()
+    if (!body || sending) return
+    setSending(true)
+    const ok = await onSubmitComment(body, replyingTo?.id)
+    setSending(false)
+    if (!ok) return
+    // Cleared only on success, so a failed send leaves the writing in the box
+    // rather than discarding it with an apology.
+    setDraft('')
+    setReplyingTo(null)
+  }
+
+  const saveEdit = async () => {
+    const title = editTitle.trim()
+    const body = editBody.trim()
+    if (!title || !body) return
+    if (await onSavePost(title, body)) setEditing(false)
   }
 
   return (
@@ -1829,29 +2124,78 @@ function ForumPostDetail({
           <IconArrowLeft className="size-4" stroke={1.8} aria-hidden="true" />
         </button>
         <div>
-          <h1>{postTitle(post, t)}</h1>
+          {editing ? (
+            <input
+              className="forum-detail-edit-title"
+              value={editTitle}
+              maxLength={200}
+              aria-label={t('forum.composer.titleLabel')}
+              onChange={(event) => setEditTitle(event.target.value)}
+            />
+          ) : (
+            <h1>{postTitle(post)}</h1>
+          )}
           <div className="forum-detail-tags">
-            {postTags(post, t).map((tag) => <span key={tag}>{tag}</span>)}
+            {postTags(post).map((tag) => <span key={tag}>{tag}</span>)}
           </div>
         </div>
       </header>
 
       <article className="forum-panel forum-detail-article">
         <header className="forum-detail-byline">
-          <img src={post.avatarSrc ?? avatarUrl(post.avatarSeed)} alt="" />
+          <img src={post.avatarSrc} alt="" />
           <div>
-            <strong><a href={post.own ? '#account/posts' : publicProfileHref(post.authorNumber)}>{postAuthor(post, t)}</a></strong>
-            <span>{t('forum.detail.byline', { time: postTime(post) })}</span>
+            <strong><a href={post.own ? '#account/posts' : publicProfileHref(post.authorUid)}>{postAuthor(post)}</a></strong>
+            <span>
+              {t('forum.detail.byline', { time: postTime(post) })}
+              {post.editedAt && ` · ${t('forum.detailExtra.edited')}`}
+            </span>
           </div>
-          {!post.own && <button type="button" aria-pressed={followed} onClick={() => runAuthenticated(() => toggleFollowedUser(post.authorNumber))}>{t(followed ? 'forum.users.following' : 'forum.users.follow')}</button>}
+          {post.own ? (
+            // The overflow button was a dead affordance: rendered, styled, and
+            // wired to nothing. These are the two things it was standing in for.
+            <div className="forum-detail-owner-actions">
+              <button type="button" onClick={() => { setEditTitle(post.title); setEditBody(post.body); setEditing(!editing) }}>
+                <IconPencil className="size-4" stroke={1.8} aria-hidden="true" />
+                {t(editing ? 'forum.detailExtra.cancelEdit' : 'forum.detailExtra.edit')}
+              </button>
+              <button type="button" onClick={() => setConfirmDelete(true)}>
+                <IconX className="size-4" stroke={1.8} aria-hidden="true" />
+                {t('forum.detailExtra.delete')}
+              </button>
+            </div>
+          ) : (
+            <button type="button" aria-pressed={followed} onClick={() => runAuthenticated(onToggleFollow)}>
+              {t(followed ? 'forum.users.following' : 'forum.users.follow')}
+            </button>
+          )}
         </header>
 
         <div className="forum-detail-body">
-          <p className="forum-detail-lead">{postCopy(post, t)}</p>
+          {editing ? (
+            <>
+              <textarea
+                className="forum-detail-edit-body"
+                value={editBody}
+                maxLength={20000}
+                rows={12}
+                aria-label={t('forum.composer.bodyLabel')}
+                onChange={(event) => setEditBody(event.target.value)}
+              />
+              <div className="forum-detail-edit-actions">
+                <button type="button" onClick={() => void saveEdit()} disabled={!editTitle.trim() || !editBody.trim()}>
+                  <IconCheck className="size-4" stroke={1.8} aria-hidden="true" />
+                  {t('forum.detailExtra.saveEdit')}
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="forum-detail-lead">{postCopy(post)}</p>
+          )}
           {images.length > 0 && (
             <div className="forum-detail-media-grid">
               {images.map((image, index) => (
-                <img key={`${image.slice(0, 48)}-${index}`} src={image} alt={postTitle(post, t)} loading={index === 0 ? 'eager' : 'lazy'} />
+                <img key={`${image.slice(0, 48)}-${index}`} src={image} alt={postTitle(post)} loading={index === 0 ? 'eager' : 'lazy'} />
               ))}
             </div>
           )}
@@ -1861,14 +2205,18 @@ function ForumPostDetail({
               {t('forum.composer.openVideo')}
             </a>
           )}
-          {!post.own && <p>{t('forum.detail.continuation')}</p>}
+          {/* `forum.detail.continuation` used to print here — filler prose that
+              read as part of whatever post you were looking at. With real bodies
+              there is nothing to pad. */}
         </div>
 
         <footer className="forum-detail-actions">
-          <button type="button" aria-pressed={liked} onClick={() => runAuthenticated(() => toggleLikedPost(post.id))}>
+          <button type="button" aria-pressed={liked} onClick={onToggleLike}>
             <IconHeart className="size-4" stroke={1.8} aria-hidden="true" />
             <span>{t('forum.detail.like')}</span>
-            <strong>{formatCount(post.likeCount + (liked ? 1 : 0))}</strong>
+            {/* The count is the server's now, so the reader's own like is already
+                in it. Adding `+ (liked ? 1 : 0)` on top would double-count it. */}
+            <strong>{formatCount(post.likeCount)}</strong>
           </button>
           <button
             type="button"
@@ -1878,75 +2226,168 @@ function ForumPostDetail({
             <span>{t('forum.redesign.reply')}</span>
             <strong>{formatCount(post.commentCount)}</strong>
           </button>
-          <button type="button" aria-pressed={bookmarked} onClick={() => runAuthenticated(() => toggleBookmarkedPost(post.id))}>
+          <button type="button" aria-pressed={bookmarked} onClick={onToggleBookmark}>
             <IconBookmark className="size-4" stroke={1.8} aria-hidden="true" />
             <span>{t('forum.detail.bookmark')}</span>
-            <strong>{formatCount(post.bookmarkCount + (bookmarked ? 1 : 0))}</strong>
+            <strong>{formatCount(post.bookmarkCount)}</strong>
           </button>
           <button type="button" onClick={onComingSoon}>
             <IconShare3 className="size-4" stroke={1.8} aria-hidden="true" />
-            <span>{t('forum.redesign.share')}</span><strong>0</strong>
+            <span>{t('forum.redesign.share')}</span>
           </button>
         </footer>
       </article>
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent className="forum-confirm-dialog">
+          <DialogHeader>
+            <DialogTitle>{t('forum.detailExtra.deleteTitle')}</DialogTitle>
+            <DialogDescription>{t('forum.detailExtra.deleteDescription')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose className={POPUP_CLOSE_CONTROL_CLASS}>{t('forum.detailExtra.deleteCancel')}</DialogClose>
+            <button type="button" onClick={() => { setConfirmDelete(false); onDeletePost() }}>
+              {t('forum.detailExtra.delete')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <section id={discussionId} className="forum-panel forum-detail-discussion">
         <header className="forum-reply-toolbar">
           <div className="forum-comment-heading">
             <h2>{t('forum.detail.discussion')}</h2>
-            <span>{formatCount(post.commentCount)}</span>
+            <span>{formatCount(commentTotal)}</span>
           </div>
-          <div className="forum-reply-sort" role="group" aria-label={t('forum.detail.discussion')}>
-            {(['popular', 'ascending', 'descending'] as const).map((sort) => <button key={sort} type="button" className={replySort === sort ? 'is-active' : undefined} aria-pressed={replySort === sort} onClick={() => setReplySort(sort)}>{t(`forum.redesign.replySort.${sort}`)}</button>)}
-          </div>
-          <button type="button" className={`forum-author-only${authorOnly ? ' is-active' : ''}`} aria-pressed={authorOnly} onClick={() => setAuthorOnly((current) => !current)}>{t('forum.redesign.authorOnly')}</button>
+          {/* The sort and author-only controls were `useState` with no reader —
+              they changed a variable and nothing else. Listing a thread by
+              popularity or by author is a server capability that does not exist
+              yet, so rather than keep three buttons that do nothing, they are
+              gone until it does. */}
         </header>
+
         <div className="forum-detail-composer">
-          <img src={currentAvatar} alt={user?.name ?? ''} />
-          <button type="button" onClick={() => runAuthenticated(onComingSoon)}>{t('forum.detail.replyPlaceholder')}</button>
+          <img src={currentAvatar} alt="" />
+          {signedIn ? (
+            <div className="forum-detail-composer-input">
+              {replyingTo && (
+                <div className="forum-detail-replying">
+                  <span>{t('forum.detail.replyingTo', { name: replyingTo.author })}</span>
+                  <button type="button" aria-label={t('forum.detailExtra.cancelReply')} onClick={() => setReplyingTo(null)}>
+                    <IconX className="size-4" stroke={1.8} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+              <textarea
+                value={draft}
+                rows={replyingTo ? 3 : 2}
+                maxLength={20000}
+                placeholder={t('forum.detail.replyPlaceholder')}
+                aria-label={t('forum.detail.replyPlaceholder')}
+                onChange={(event) => setDraft(event.target.value)}
+              />
+              <button
+                type="button"
+                className="forum-detail-send"
+                disabled={!draft.trim() || sending}
+                onClick={() => void sendComment()}
+              >
+                {t(sending ? 'forum.detailExtra.sending' : 'forum.detailExtra.send')}
+              </button>
+            </div>
+          ) : (
+            <button type="button" onClick={onAuthRequired}>{t('forum.detail.replyPlaceholder')}</button>
+          )}
         </div>
 
-        {post.commentCount > 0 ? (
-          <article className="forum-comment-thread">
-          <div className="forum-comment-main">
-            <img src={avatarUrl('arkive-mistshore-notes')} alt="" />
-            <div>
-              <header>
-                <strong>{t('forum.detail.sampleCommentAuthor')}</strong>
-                <time>{t('forum.detail.sampleCommentTime')}</time>
-              </header>
-              <p>{t('forum.detail.sampleComment')}</p>
-              <footer>
-                <button
-                  type="button"
-                  aria-label={t('forum.detail.commentLikeLabel')}
-                  aria-pressed={commentLiked}
-                  onClick={() => runAuthenticated(() => toggleLikedComment(commentId))}
-                >
-                  <IconThumbUp className="size-4" stroke={1.8} aria-hidden="true" />
-                  <span>{formatCount(12 + (commentLiked ? 1 : 0))}</span>
-                </button>
-                <button type="button" onClick={() => runAuthenticated(onComingSoon)}>
-                  <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
-                  {t('forum.detail.reply')}
-                </button>
-              </footer>
+        {loading ? (
+          <p className="forum-feed-status" role="status">{t('forum.loading')}</p>
+        ) : error ? (
+          <p className="forum-feed-status is-error" role="alert">{error}</p>
+        ) : comments.length > 0 ? (
+          <div className="forum-comment-list">
+            {comments.map((comment) => (
+              <article key={comment.id} className="forum-comment-thread">
+                <div className="forum-comment-main">
+                  <img src={comment.avatarSrc} alt="" />
+                  <div>
+                    <header>
+                      <strong>
+                        <a href={publicProfileHref(comment.authorUid)}>{comment.author}</a>
+                      </strong>
+                      {comment.authorUid === post.authorUid && (
+                        <span className="forum-comment-author-badge">{t('forum.detail.authorBadge')}</span>
+                      )}
+                      {comment.commentNo !== null && (
+                        <span className="forum-comment-floor">{t('forum.detailExtra.floor', { no: comment.commentNo })}</span>
+                      )}
+                      <time dateTime={comment.createdAt}>{comment.time}</time>
+                    </header>
+                    <p>{comment.body}</p>
+                    <footer>
+                      <button
+                        type="button"
+                        aria-label={t('forum.detail.commentLikeLabel')}
+                        aria-pressed={comment.liked}
+                        onClick={() => onToggleCommentLike(comment)}
+                      >
+                        <IconThumbUp className="size-4" stroke={1.8} aria-hidden="true" />
+                        <span>{formatCount(comment.likeCount)}</span>
+                      </button>
+                      <button type="button" onClick={() => runAuthenticated(() => setReplyingTo(comment))}>
+                        <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
+                        {t('forum.detail.reply')}
+                      </button>
+                    </footer>
 
-              <div className="forum-comment-reply">
-                <img src={post.avatarSrc ?? avatarUrl(post.avatarSeed)} alt="" />
-                <div>
-                  <header>
-                    <strong>{postAuthor(post, t)}</strong>
-                    <span className="forum-comment-author-badge">{t('forum.detail.authorBadge')}</span>
-                    <span>{t('forum.detail.replyingTo', { name: t('forum.detail.sampleCommentAuthor') })}</span>
-                    <time>{t('forum.detail.sampleReplyTime')}</time>
-                  </header>
-                  <p>{t('forum.detail.sampleReply')}</p>
+                    {comment.replies.map((reply) => (
+                      <div key={reply.id} className="forum-comment-reply">
+                        <img src={reply.avatarSrc} alt="" />
+                        <div>
+                          <header>
+                            <strong>
+                              <a href={publicProfileHref(reply.authorUid)}>{reply.author}</a>
+                            </strong>
+                            {reply.authorUid === post.authorUid && (
+                              <span className="forum-comment-author-badge">{t('forum.detail.authorBadge')}</span>
+                            )}
+                            <span>{t('forum.detail.replyingTo', { name: comment.author })}</span>
+                            <time dateTime={reply.createdAt}>{reply.time}</time>
+                          </header>
+                          <p>{reply.body}</p>
+                          <footer>
+                            <button
+                              type="button"
+                              aria-label={t('forum.detail.commentLikeLabel')}
+                              aria-pressed={reply.liked}
+                              onClick={() => onToggleCommentLike(reply)}
+                            >
+                              <IconThumbUp className="size-4" stroke={1.8} aria-hidden="true" />
+                              <span>{formatCount(reply.likeCount)}</span>
+                            </button>
+                            {/* Replying to a reply lands on the same top-level
+                                comment, matching how the server refuses a third
+                                level and how nestComments folds one back. */}
+                            <button type="button" onClick={() => runAuthenticated(() => setReplyingTo(comment))}>
+                              <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
+                              {t('forum.detail.reply')}
+                            </button>
+                          </footer>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </div>
+              </article>
+            ))}
+            {commentTotal > comments.length && (
+              // One request fetches the server's ceiling of 200. Saying so beats
+              // showing 200 of 400 as though it were the whole thread.
+              <p className="forum-comment-truncated" role="status">
+                {t('forum.detailExtra.moreComments', { count: commentTotal - comments.length })}
+              </p>
+            )}
           </div>
-          </article>
         ) : (
           <p className="forum-comment-empty">{t('forum.detail.noComments')}</p>
         )}

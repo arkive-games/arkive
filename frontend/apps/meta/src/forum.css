@@ -4019,3 +4019,153 @@
   }
 
 }
+
+/* ---------------------------------------------------------------------------
+ * Server-backed states
+ *
+ * The forum used to read from an in-memory array, so it had no way to be loading
+ * or to have failed. Both are ordinary now, and both need to look different from
+ * an empty forum — a visitor who cannot tell "nothing here yet" from "the
+ * request did not arrive" will read the first as the site being broken.
+ * ------------------------------------------------------------------------- */
+
+.forum-feed-status {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.forum-feed-status.is-error {
+  color: var(--destructive);
+}
+
+.forum-comment-truncated {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+/* The comment composer, which replaced a button that opened nothing. */
+.forum-detail-composer-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.forum-detail-composer-input textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--background);
+  padding: 0.625rem 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+.forum-detail-composer-input textarea:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.forum-detail-replying {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.forum-detail-send {
+  align-self: flex-end;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.375rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.forum-detail-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.forum-comment-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.forum-comment-floor {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+/* Editing a post in place, and the owner controls that replaced a dead
+ * overflow button. */
+.forum-detail-owner-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.forum-detail-owner-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.forum-detail-owner-actions button:hover {
+  color: var(--foreground);
+}
+
+.forum-detail-edit-title,
+.forum-detail-edit-body {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--background);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: inherit;
+}
+
+.forum-detail-edit-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.forum-detail-edit-body {
+  resize: vertical;
+  font-size: 0.9375rem;
+}
+
+.forum-detail-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+.forum-detail-edit-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.375rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.forum-publish-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
