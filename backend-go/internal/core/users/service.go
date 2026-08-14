@@ -248,6 +248,40 @@ func (s *Service) IDByUID(ctx context.Context, uid int64) (uuid.UUID, error) {
 	return u.ID, nil
 }
 
+// IDByName resolves a display name to the internal handle.
+//
+// For mentions, which name people the way readers do. Names are unique, so this is
+// unambiguous. A deactivated account reports not-found, as everywhere else, which means a
+// mention of one quietly lands nowhere rather than notifying a disabled inbox.
+func (s *Service) IDByName(ctx context.Context, name string) (uuid.UUID, error) {
+	notFound := apierr.New(apierr.UserNotFound, "no such user")
+
+	u, err := s.q.GetUserByName(ctx, name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return uuid.Nil, notFound
+		}
+		return uuid.Nil, fmt.Errorf("load user by name: %w", err)
+	}
+	if !u.IsActive {
+		return uuid.Nil, notFound
+	}
+	return u.ID, nil
+}
+
+// UIDByID is the reverse of IDByUID, for turning a stored actor into the public number a
+// client can link to.
+func (s *Service) UIDByID(ctx context.Context, id uuid.UUID) (int64, error) {
+	u, err := s.q.GetUserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, apierr.New(apierr.UserNotFound, "no such user")
+		}
+		return 0, fmt.Errorf("load user: %w", err)
+	}
+	return u.UID, nil
+}
+
 // SetAvatar normalises an uploaded image, stores it and points the account at it.
 //
 // The order of the three steps is the whole design:

@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
@@ -52,16 +53,23 @@ type AccountSource interface {
 	IDByUID(ctx context.Context, uid int64) (uuid.UUID, error)
 }
 
+// Notifier receives the events the graph causes. An interface for the same reason the
+// forum has one: social states what happened, not how anyone is told.
+type Notifier interface {
+	Notify(ctx context.Context, e notify.Event) error
+}
+
 // Service implements the follow graph.
 type Service struct {
 	q        *coredb.Queries
 	accounts AccountSource
+	notifier Notifier
 	logger   *slog.Logger
 }
 
 // NewService wires the social service.
-func NewService(q *coredb.Queries, accounts AccountSource, logger *slog.Logger) *Service {
-	return &Service{q: q, accounts: accounts, logger: logger}
+func NewService(q *coredb.Queries, accounts AccountSource, notifier Notifier, logger *slog.Logger) *Service {
+	return &Service{q: q, accounts: accounts, notifier: notifier, logger: logger}
 }
 
 // SetFollow follows or unfollows an account, and returns the resulting tally.
@@ -89,6 +97,17 @@ func (s *Service) SetFollow(ctx context.Context, followerID uuid.UUID, uid int64
 	}
 	if err != nil {
 		return Counts{}, fmt.Errorf("set follow: %w", err)
+	}
+
+	// Only on the way up: being unfollowed is not news anyone needs delivered.
+	if following {
+		if err := s.notifier.Notify(ctx, notify.Event{
+			Recipient: followeeID,
+			Kind:      notify.Follow,
+			Actor:     &followerID,
+		}); err != nil {
+			return Counts{}, err
+		}
 	}
 	return s.CountsFor(ctx, followeeID, &followerID)
 }

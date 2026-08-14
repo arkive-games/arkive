@@ -368,6 +368,25 @@ export type EnvelopeListPostRead = {
     showType: number;
 };
 
+export type EnvelopeListRead = {
+    /**
+     * The payload
+     */
+    data: ListRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeListReportRead = {
     /**
      * The payload
@@ -406,11 +425,49 @@ export type EnvelopeListUserRead = {
     showType: number;
 };
 
+export type EnvelopeMarkedCount = {
+    /**
+     * The payload
+     */
+    data: MarkedCount;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopePostRead = {
     /**
      * The payload
      */
     data: PostRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopePreferences = {
+    /**
+     * The payload
+     */
+    data: Preferences;
     /**
      * Always "Success" on a 2xx response
      */
@@ -484,6 +541,25 @@ export type EnvelopeStruct = {
 
 export type EnvelopeStructDataStruct = {
     [key: string]: never;
+};
+
+export type EnvelopeUnreadCount = {
+    /**
+     * The payload
+     */
+    data: UnreadCount;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
 };
 
 export type EnvelopeUserPublic = {
@@ -658,6 +734,17 @@ export type ListPostRead = {
     results: Array<PostRead> | null;
 };
 
+export type ListRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<Read> | null;
+};
+
 export type ListReportRead = {
     /**
      * Total number of matching records, ignoring pagination
@@ -678,6 +765,40 @@ export type ListUserRead = {
      * The current page of records
      */
     results: Array<UserRead> | null;
+};
+
+export type MarkedCount = {
+    /**
+     * How many were marked read
+     */
+    marked: number;
+};
+
+export type NotificationPreferencesBody = {
+    /**
+     * Likes on your comments
+     */
+    commentLike?: boolean;
+    /**
+     * New followers
+     */
+    follow?: boolean;
+    /**
+     * Mentions of your name
+     */
+    mention?: boolean;
+    /**
+     * Likes on your posts
+     */
+    postLike?: boolean;
+    /**
+     * Replies to your posts and comments
+     */
+    reply?: boolean;
+    /**
+     * Announcements from the site
+     */
+    system?: boolean;
 };
 
 export type PostRead = {
@@ -747,6 +868,33 @@ export type PostRead = {
     topic: string | null;
 };
 
+export type Preferences = {
+    /**
+     * Likes on your comments
+     */
+    commentLike: boolean;
+    /**
+     * New followers
+     */
+    follow: boolean;
+    /**
+     * Mentions of your name
+     */
+    mention: boolean;
+    /**
+     * Likes on your posts
+     */
+    postLike: boolean;
+    /**
+     * Replies to your posts and comments
+     */
+    reply: boolean;
+    /**
+     * Announcements from the site
+     */
+    system: boolean;
+};
+
 export type PrivacyBody = {
     /**
      * Who may see your follows and reactions
@@ -760,6 +908,41 @@ export type PrivacyBody = {
      * Who may see your profile
      */
     profileVisibility?: 'public' | 'followers' | 'private';
+};
+
+export type Read = {
+    /**
+     * Who caused it, or null for a system message
+     */
+    actorUid: number | null;
+    /**
+     * The message text, for system notifications only
+     */
+    body: string | null;
+    /**
+     * The comment it is about, or null
+     */
+    commentId: string;
+    /**
+     * When it arrived
+     */
+    createdAt: string;
+    /**
+     * Notification identifier
+     */
+    id: string;
+    /**
+     * Why it exists
+     */
+    kind: 'reply' | 'mention' | 'post_like' | 'comment_like' | 'follow' | 'system';
+    /**
+     * The post it is about, or null
+     */
+    postNo: number | null;
+    /**
+     * When it was read, or null
+     */
+    readAt: string | null;
 };
 
 export type RegisterBody = {
@@ -894,6 +1077,13 @@ export type TokenResponse = {
      * Always "bearer"
      */
     tokenType: string;
+};
+
+export type UnreadCount = {
+    /**
+     * How many notifications have not been read
+     */
+    unread: number;
 };
 
 export type UpdateCommentBody = {
@@ -2471,6 +2661,210 @@ export type ResolveForumReportResponses = {
 };
 
 export type ResolveForumReportResponse = ResolveForumReportResponses[keyof ResolveForumReportResponses];
+
+export type ListNotificationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only unread notifications
+         */
+        unread?: boolean;
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Notifications per page
+         */
+        pageSize?: number;
+    };
+    url: '/notifications';
+};
+
+export type ListNotificationsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListNotificationsError = ListNotificationsErrors[keyof ListNotificationsErrors];
+
+export type ListNotificationsResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListRead;
+};
+
+export type ListNotificationsResponse = ListNotificationsResponses[keyof ListNotificationsResponses];
+
+export type GetNotificationPreferencesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notifications/preferences';
+};
+
+export type GetNotificationPreferencesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type GetNotificationPreferencesError = GetNotificationPreferencesErrors[keyof GetNotificationPreferencesErrors];
+
+export type GetNotificationPreferencesResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopePreferences;
+};
+
+export type GetNotificationPreferencesResponse = GetNotificationPreferencesResponses[keyof GetNotificationPreferencesResponses];
+
+export type SetNotificationPreferencesData = {
+    body: NotificationPreferencesBody;
+    path?: never;
+    query?: never;
+    url: '/notifications/preferences';
+};
+
+export type SetNotificationPreferencesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type SetNotificationPreferencesError = SetNotificationPreferencesErrors[keyof SetNotificationPreferencesErrors];
+
+export type SetNotificationPreferencesResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopePreferences;
+};
+
+export type SetNotificationPreferencesResponse = SetNotificationPreferencesResponses[keyof SetNotificationPreferencesResponses];
+
+export type MarkAllNotificationsReadData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notifications/read';
+};
+
+export type MarkAllNotificationsReadErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type MarkAllNotificationsReadError = MarkAllNotificationsReadErrors[keyof MarkAllNotificationsReadErrors];
+
+export type MarkAllNotificationsReadResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeMarkedCount;
+};
+
+export type MarkAllNotificationsReadResponse = MarkAllNotificationsReadResponses[keyof MarkAllNotificationsReadResponses];
+
+export type GetUnreadNotificationCountData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notifications/unread';
+};
+
+export type GetUnreadNotificationCountErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type GetUnreadNotificationCountError = GetUnreadNotificationCountErrors[keyof GetUnreadNotificationCountErrors];
+
+export type GetUnreadNotificationCountResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeUnreadCount;
+};
+
+export type GetUnreadNotificationCountResponse = GetUnreadNotificationCountResponses[keyof GetUnreadNotificationCountResponses];
+
+export type MarkNotificationReadData = {
+    body?: never;
+    path: {
+        /**
+         * Notification identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/notifications/{id}/read';
+};
+
+export type MarkNotificationReadErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type MarkNotificationReadError = MarkNotificationReadErrors[keyof MarkNotificationReadErrors];
+
+export type MarkNotificationReadResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeStruct;
+};
+
+export type MarkNotificationReadResponse = MarkNotificationReadResponses[keyof MarkNotificationReadResponses];
 
 export type GetOwnPrivacyData = {
     body?: never;

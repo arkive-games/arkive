@@ -13,6 +13,7 @@ import (
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
@@ -20,10 +21,20 @@ import (
 
 // Service implements the forum use cases.
 type Service struct {
-	q       *coredb.Queries
-	authors AuthorSource
-	authz   Authorizer
-	logger  *slog.Logger
+	q        *coredb.Queries
+	authors  AuthorSource
+	authz    Authorizer
+	notifier Notifier
+	logger   *slog.Logger
+}
+
+// Notifier receives the events the forum causes.
+//
+// An interface so the forum states what happened without depending on how anyone is told,
+// and so a test can assert an event was raised without a notifications table.
+type Notifier interface {
+	Notify(ctx context.Context, e notify.Event) error
+	NotifyMentions(ctx context.Context, body string, e notify.Event) error
 }
 
 // Authorizer answers permission questions the forum does not decide for itself.
@@ -52,8 +63,8 @@ type AuthorSource interface {
 }
 
 // NewService wires the forum service.
-func NewService(q *coredb.Queries, authors AuthorSource, authz Authorizer, logger *slog.Logger) *Service {
-	return &Service{q: q, authors: authors, authz: authz, logger: logger}
+func NewService(q *coredb.Queries, authors AuthorSource, authz Authorizer, notifier Notifier, logger *slog.Logger) *Service {
+	return &Service{q: q, authors: authors, authz: authz, notifier: notifier, logger: logger}
 }
 
 // canPostToChannel decides who may post where.
@@ -123,6 +134,16 @@ func (s *Service) CreatePost(ctx context.Context, principal auth.Principal, in C
 	if err != nil {
 		return PostRead{}, err
 	}
+	// Mentions in the body reach the people named. Failing the post because a
+	// notification could not be written would be the wrong trade here — but writing
+	// nothing silently would be too, so the error is returned and the caller sees it.
+	if err := s.notifier.NotifyMentions(ctx, post.Body, notify.Event{
+		Actor:  &principal.ID,
+		PostID: &post.ID,
+	}); err != nil {
+		return PostRead{}, err
+	}
+
 	// A brand-new post has no reactions and cannot have been liked by its author, so
 	// the zero value is correct rather than a placeholder.
 	return toPostRead(post, author, Reactions{}), nil
@@ -439,6 +460,34 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 	if err != nil {
 		return CommentRead{}, err
 	}
+	// Who hears about it: the parent comment's author on a reply, the post's author on a
+	// top-level comment. Either may be the commenter themselves, which the schema's
+	// self-notification constraint drops.
+	recipient := post.AuthorID
+	if parentID != nil {
+		parent, err := s.q.GetForumCommentByID(ctx, *parentID)
+		if err != nil {
+			return CommentRead{}, fmt.Errorf("load the parent comment: %w", err)
+		}
+		recipient = parent.AuthorID
+	}
+	if err := s.notifier.Notify(ctx, notify.Event{
+		Recipient: recipient,
+		Kind:      notify.Reply,
+		Actor:     &principal.ID,
+		PostID:    &post.ID,
+		CommentID: &comment.ID,
+	}); err != nil {
+		return CommentRead{}, err
+	}
+	if err := s.notifier.NotifyMentions(ctx, comment.Body, notify.Event{
+		Actor:     &principal.ID,
+		PostID:    &post.ID,
+		CommentID: &comment.ID,
+	}); err != nil {
+		return CommentRead{}, err
+	}
+
 	// A comment that has just been written has no likes, so the zero value is the
 	// truth rather than a stand-in.
 	return toCommentRead(comment, author, 0, false), nil
@@ -612,6 +661,19 @@ func (s *Service) SetPostLike(ctx context.Context, principal auth.Principal, pos
 	if err != nil {
 		return PostRead{}, fmt.Errorf("set post like: %w", err)
 	}
+
+	// Only on the way up. Unliking does not send a notification, and does not withdraw
+	// the one the like sent: the author was told something happened, and it did.
+	if liked {
+		if err := s.notifier.Notify(ctx, notify.Event{
+			Recipient: post.AuthorID,
+			Kind:      notify.PostLike,
+			Actor:     &principal.ID,
+			PostID:    &post.ID,
+		}); err != nil {
+			return PostRead{}, err
+		}
+	}
 	return s.postWithReactions(ctx, post, &principal.ID)
 }
 
@@ -653,6 +715,18 @@ func (s *Service) SetCommentLike(ctx context.Context, principal auth.Principal, 
 	}
 	if err != nil {
 		return CommentRead{}, fmt.Errorf("set comment like: %w", err)
+	}
+
+	if liked {
+		if err := s.notifier.Notify(ctx, notify.Event{
+			Recipient: comment.AuthorID,
+			Kind:      notify.CommentLike,
+			Actor:     &principal.ID,
+			PostID:    &comment.PostID,
+			CommentID: &comment.ID,
+		}); err != nil {
+			return CommentRead{}, err
+		}
 	}
 
 	author, err := s.author(ctx, comment.AuthorID)

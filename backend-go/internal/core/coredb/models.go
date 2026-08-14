@@ -80,6 +80,29 @@ type CoreForumReport struct {
 	CreatedAt  time.Time
 }
 
+type CoreNotification struct {
+	ID          uuid.UUID
+	RecipientID uuid.UUID
+	Kind        string
+	ActorID     *uuid.UUID
+	PostID      *uuid.UUID
+	CommentID   *uuid.UUID
+	Body        *string
+	ReadAt      pgtype.Timestamptz
+	CreatedAt   time.Time
+}
+
+type CoreNotificationPreference struct {
+	UserID      uuid.UUID
+	Reply       bool
+	Mention     bool
+	PostLike    bool
+	CommentLike bool
+	Follow      bool
+	System      bool
+	UpdatedAt   time.Time
+}
+
 type CoreRoleGrant struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID

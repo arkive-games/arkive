@@ -24,6 +24,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/httpapi"
+	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
 	"github.com/arkive-games/arkive/backend-go/internal/core/privacy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/social"
@@ -181,10 +182,11 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		}
 	}
 	service := users.NewService(queries, d.Pool, hasher, tokens, mailer, blobs, d.Logger)
+	notifyService := notify.NewService(queries, service, d.Logger)
 	rolesService := roles.NewService(queries, service, d.Logger)
-	socialService := social.NewService(queries, service, d.Logger)
+	socialService := social.NewService(queries, service, notifyService, d.Logger)
 	privacyService := privacy.NewService(queries, socialService, d.Logger)
-	forumService := forum.NewService(queries, service, rolesService, d.Logger)
+	forumService := forum.NewService(queries, service, rolesService, notifyService, d.Logger)
 
 	// Identity resolution runs before huma so that every operation can read
 	// the caller from its context. It never rejects: authorization is decided
@@ -213,6 +215,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		rolesService,
 		socialService,
 		privacyService,
+		notifyService,
 		tokens,
 		auth.NewAltcha(
 			d.Config.Auth.AltchaHMACKey,
@@ -236,6 +239,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterSocialRoutes(a)
 	handlers.RegisterModerationRoutes(a)
 	handlers.RegisterPrivacyRoutes(a)
+	handlers.RegisterNotificationRoutes(a)
 	return nil
 }
 

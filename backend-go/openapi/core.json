@@ -648,6 +648,38 @@
         ],
         "type": "object"
       },
+      "EnvelopeListRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeListReportRead": {
         "additionalProperties": false,
         "properties": {
@@ -712,11 +744,75 @@
         ],
         "type": "object"
       },
+      "EnvelopeMarkedCount": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MarkedCount",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopePostRead": {
         "additionalProperties": false,
         "properties": {
           "data": {
             "$ref": "#/components/schemas/PostRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopePreferences": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Preferences",
             "description": "The payload"
           },
           "errorCode": {
@@ -842,6 +938,38 @@
       },
       "EnvelopeStruct {}DataStruct": {
         "additionalProperties": false,
+        "type": "object"
+      },
+      "EnvelopeUnreadCount": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UnreadCount",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
         "type": "object"
       },
       "EnvelopeUserPublic": {
@@ -1171,6 +1299,31 @@
         ],
         "type": "object"
       },
+      "ListRead": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/Read"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
       "ListReportRead": {
         "additionalProperties": false,
         "properties": {
@@ -1219,6 +1372,50 @@
           "count",
           "results"
         ],
+        "type": "object"
+      },
+      "MarkedCount": {
+        "additionalProperties": false,
+        "properties": {
+          "marked": {
+            "description": "How many were marked read",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "marked"
+        ],
+        "type": "object"
+      },
+      "NotificationPreferencesBody": {
+        "additionalProperties": false,
+        "properties": {
+          "commentLike": {
+            "description": "Likes on your comments",
+            "type": "boolean"
+          },
+          "follow": {
+            "description": "New followers",
+            "type": "boolean"
+          },
+          "mention": {
+            "description": "Mentions of your name",
+            "type": "boolean"
+          },
+          "postLike": {
+            "description": "Likes on your posts",
+            "type": "boolean"
+          },
+          "reply": {
+            "description": "Replies to your posts and comments",
+            "type": "boolean"
+          },
+          "system": {
+            "description": "Announcements from the site",
+            "type": "boolean"
+          }
+        },
         "type": "object"
       },
       "PostRead": {
@@ -1348,6 +1545,44 @@
         ],
         "type": "object"
       },
+      "Preferences": {
+        "additionalProperties": false,
+        "properties": {
+          "commentLike": {
+            "description": "Likes on your comments",
+            "type": "boolean"
+          },
+          "follow": {
+            "description": "New followers",
+            "type": "boolean"
+          },
+          "mention": {
+            "description": "Mentions of your name",
+            "type": "boolean"
+          },
+          "postLike": {
+            "description": "Likes on your posts",
+            "type": "boolean"
+          },
+          "reply": {
+            "description": "Replies to your posts and comments",
+            "type": "boolean"
+          },
+          "system": {
+            "description": "Announcements from the site",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reply",
+          "mention",
+          "postLike",
+          "commentLike",
+          "follow",
+          "system"
+        ],
+        "type": "object"
+      },
       "PrivacyBody": {
         "additionalProperties": false,
         "properties": {
@@ -1379,6 +1614,78 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "Read": {
+        "additionalProperties": false,
+        "properties": {
+          "actorUid": {
+            "description": "Who caused it, or null for a system message",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "body": {
+            "description": "The message text, for system notifications only",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "commentId": {
+            "description": "The comment it is about, or null",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "When it arrived",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "description": "Notification identifier",
+            "type": "string"
+          },
+          "kind": {
+            "description": "Why it exists",
+            "enum": [
+              "reply",
+              "mention",
+              "post_like",
+              "comment_like",
+              "follow",
+              "system"
+            ],
+            "type": "string"
+          },
+          "postNo": {
+            "description": "The post it is about, or null",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "readAt": {
+            "description": "When it was read, or null",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "actorUid",
+          "postNo",
+          "commentId",
+          "body",
+          "readAt",
+          "createdAt"
+        ],
         "type": "object"
       },
       "RegisterBody": {
@@ -1654,6 +1961,20 @@
           "accessToken",
           "tokenType",
           "expiresAt"
+        ],
+        "type": "object"
+      },
+      "UnreadCount": {
+        "additionalProperties": false,
+        "properties": {
+          "unread": {
+            "description": "How many notifications have not been read",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "unread"
         ],
         "type": "object"
       },
@@ -4643,6 +4964,346 @@
         "summary": "Answer a report",
         "tags": [
           "moderation"
+        ]
+      }
+    },
+    "/notifications": {
+      "get": {
+        "description": "Newest first. Nothing here is a rendered message: a notification carries its kind and its references, and the client turns that into words, so no display string is frozen into the database in one language.",
+        "operationId": "listNotifications",
+        "parameters": [
+          {
+            "description": "Only unread notifications",
+            "explode": false,
+            "in": "query",
+            "name": "unread",
+            "schema": {
+              "description": "Only unread notifications",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Notifications per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 30,
+              "description": "Notifications per page",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Read your inbox",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/notifications/preferences": {
+      "get": {
+        "description": "An account that has never changed these has no stored row and every kind is on.",
+        "operationId": "getNotificationPreferences",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePreferences"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Read your notification preferences",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "patch": {
+        "description": "Partial: an absent field is left alone. A kind you turn off produces no rows at all rather than rows you cannot see, so turning it back on does not reveal what you missed.",
+        "operationId": "setNotificationPreferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationPreferencesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopePreferences"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Change your notification preferences",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/notifications/read": {
+      "post": {
+        "operationId": "markAllNotificationsRead",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMarkedCount"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Mark everything read",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/notifications/unread": {
+      "get": {
+        "description": "Answered by a partial index, so it does not scan an inbox that only grows.",
+        "operationId": "getUnreadNotificationCount",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeUnreadCount"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "The unread badge",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/notifications/{id}/read": {
+      "post": {
+        "description": "Scoped to your own inbox. An id that is not yours does nothing and says nothing, rather than revealing whether it exists.",
+        "operationId": "markNotificationRead",
+        "parameters": [
+          {
+            "description": "Notification identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Notification identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeStruct {}"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Mark one notification read",
+        "tags": [
+          "notifications"
         ]
       }
     },

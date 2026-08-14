@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, FeatureForumPostData, FeatureForumPostErrors, FeatureForumPostResponses, FollowUserData, FollowUserErrors, FollowUserResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetFollowCountsData, GetFollowCountsErrors, GetFollowCountsResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetOwnPrivacyData, GetOwnPrivacyErrors, GetOwnPrivacyResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, HideForumCommentData, HideForumCommentErrors, HideForumCommentResponses, HideForumPostData, HideForumPostErrors, HideForumPostResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListFollowersData, ListFollowersErrors, ListFollowersResponses, ListFollowingData, ListFollowingErrors, ListFollowingResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListHiddenForumPostsData, ListHiddenForumPostsErrors, ListHiddenForumPostsResponses, ListOpenForumReportsData, ListOpenForumReportsErrors, ListOpenForumReportsResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, ReportForumContentData, ReportForumContentErrors, ReportForumContentResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResolveForumReportData, ResolveForumReportErrors, ResolveForumReportResponses, RestoreForumCommentData, RestoreForumCommentErrors, RestoreForumCommentResponses, RestoreForumPostData, RestoreForumPostErrors, RestoreForumPostResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, SetOwnPrivacyData, SetOwnPrivacyErrors, SetOwnPrivacyResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnfeatureForumPostData, UnfeatureForumPostErrors, UnfeatureForumPostResponses, UnfollowUserData, UnfollowUserErrors, UnfollowUserResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
+import type { BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, FeatureForumPostData, FeatureForumPostErrors, FeatureForumPostResponses, FollowUserData, FollowUserErrors, FollowUserResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetFollowCountsData, GetFollowCountsErrors, GetFollowCountsResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetNotificationPreferencesData, GetNotificationPreferencesErrors, GetNotificationPreferencesResponses, GetOwnPrivacyData, GetOwnPrivacyErrors, GetOwnPrivacyResponses, GetUnreadNotificationCountData, GetUnreadNotificationCountErrors, GetUnreadNotificationCountResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, HideForumCommentData, HideForumCommentErrors, HideForumCommentResponses, HideForumPostData, HideForumPostErrors, HideForumPostResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListFollowersData, ListFollowersErrors, ListFollowersResponses, ListFollowingData, ListFollowingErrors, ListFollowingResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListHiddenForumPostsData, ListHiddenForumPostsErrors, ListHiddenForumPostsResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListOpenForumReportsData, ListOpenForumReportsErrors, ListOpenForumReportsResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, MarkAllNotificationsReadData, MarkAllNotificationsReadErrors, MarkAllNotificationsReadResponses, MarkNotificationReadData, MarkNotificationReadErrors, MarkNotificationReadResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, ReportForumContentData, ReportForumContentErrors, ReportForumContentResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResolveForumReportData, ResolveForumReportErrors, ResolveForumReportResponses, RestoreForumCommentData, RestoreForumCommentErrors, RestoreForumCommentResponses, RestoreForumPostData, RestoreForumPostErrors, RestoreForumPostResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, SetNotificationPreferencesData, SetNotificationPreferencesErrors, SetNotificationPreferencesResponses, SetOwnPrivacyData, SetOwnPrivacyErrors, SetOwnPrivacyResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnfeatureForumPostData, UnfeatureForumPostErrors, UnfeatureForumPostResponses, UnfollowUserData, UnfollowUserErrors, UnfollowUserResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -451,6 +451,74 @@ export const resolveForumReport = <ThrowOnError extends boolean = false>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Read your inbox
+ *
+ * Newest first. Nothing here is a rendered message: a notification carries its kind and its references, and the client turns that into words, so no display string is frozen into the database in one language.
+ */
+export const listNotifications = <ThrowOnError extends boolean = false>(options?: Options<ListNotificationsData, ThrowOnError>): RequestResult<ListNotificationsResponses, ListNotificationsErrors, ThrowOnError> => (options?.client ?? client).get<ListNotificationsResponses, ListNotificationsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/notifications',
+    ...options
+});
+
+/**
+ * Read your notification preferences
+ *
+ * An account that has never changed these has no stored row and every kind is on.
+ */
+export const getNotificationPreferences = <ThrowOnError extends boolean = false>(options?: Options<GetNotificationPreferencesData, ThrowOnError>): RequestResult<GetNotificationPreferencesResponses, GetNotificationPreferencesErrors, ThrowOnError> => (options?.client ?? client).get<GetNotificationPreferencesResponses, GetNotificationPreferencesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/notifications/preferences',
+    ...options
+});
+
+/**
+ * Change your notification preferences
+ *
+ * Partial: an absent field is left alone. A kind you turn off produces no rows at all rather than rows you cannot see, so turning it back on does not reveal what you missed.
+ */
+export const setNotificationPreferences = <ThrowOnError extends boolean = false>(options: Options<SetNotificationPreferencesData, ThrowOnError>): RequestResult<SetNotificationPreferencesResponses, SetNotificationPreferencesErrors, ThrowOnError> => (options.client ?? client).patch<SetNotificationPreferencesResponses, SetNotificationPreferencesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/notifications/preferences',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Mark everything read
+ */
+export const markAllNotificationsRead = <ThrowOnError extends boolean = false>(options?: Options<MarkAllNotificationsReadData, ThrowOnError>): RequestResult<MarkAllNotificationsReadResponses, MarkAllNotificationsReadErrors, ThrowOnError> => (options?.client ?? client).post<MarkAllNotificationsReadResponses, MarkAllNotificationsReadErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/notifications/read',
+    ...options
+});
+
+/**
+ * The unread badge
+ *
+ * Answered by a partial index, so it does not scan an inbox that only grows.
+ */
+export const getUnreadNotificationCount = <ThrowOnError extends boolean = false>(options?: Options<GetUnreadNotificationCountData, ThrowOnError>): RequestResult<GetUnreadNotificationCountResponses, GetUnreadNotificationCountErrors, ThrowOnError> => (options?.client ?? client).get<GetUnreadNotificationCountResponses, GetUnreadNotificationCountErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/notifications/unread',
+    ...options
+});
+
+/**
+ * Mark one notification read
+ *
+ * Scoped to your own inbox. An id that is not yours does nothing and says nothing, rather than revealing whether it exists.
+ */
+export const markNotificationRead = <ThrowOnError extends boolean = false>(options: Options<MarkNotificationReadData, ThrowOnError>): RequestResult<MarkNotificationReadResponses, MarkNotificationReadErrors, ThrowOnError> => (options.client ?? client).post<MarkNotificationReadResponses, MarkNotificationReadErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/notifications/{id}/read',
+    ...options
 });
 
 /**
