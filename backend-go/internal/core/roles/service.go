@@ -201,6 +201,11 @@ func (s *Service) mayAppoint(ctx context.Context, actor auth.Principal, role Rol
 }
 
 // ForGame lists a game's staff. Public: the cabin shows who runs it.
+//
+// Deliberately not subject to profileVisibility, which gates every other public listing of
+// accounts. Holding office over other people's content is not a private fact: a moderator
+// who can hide your post and cannot be named is a moderator who cannot be appealed to. An
+// account that wants privacy can decline the role.
 func (s *Service) ForGame(ctx context.Context, game string) ([]GrantRead, error) {
 	if !games.Valid(game) {
 		return nil, apierr.New(apierr.NotFound, "no such game")

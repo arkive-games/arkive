@@ -493,3 +493,26 @@ func notFoundIfCommentHidden(hiddenAt pgtype.Timestamptz) error {
 func moderationPaging(page, pageSize int) (limit int32, offset int32) {
 	return api.ClampPaging(page, pageSize, DefaultPageSize, MaxPageSize)
 }
+
+// postVisibleForComment refuses an action on a comment whose post is hidden.
+//
+// Comment routes are addressed by comment id and never load the post, so without this a
+// hidden post keeps accepting likes and edits on its comments — reachable by anyone
+// holding ids from before the hide, and notifying the comment's author each time.
+// `CreateComment` already guards the post directly; this is the same rule for the two
+// paths that reach a comment without going through its thread.
+func (s *Service) postVisibleForComment(ctx context.Context, postID uuid.UUID) error {
+	post, err := s.q.GetForumPostByID(ctx, postID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apierr.New(apierr.NotFound, "no such comment")
+		}
+		return fmt.Errorf("load the comment's post: %w", err)
+	}
+	if post.HiddenAt.Valid {
+		// Reported as a missing comment, not a missing post: the caller asked about a
+		// comment and must not learn that the post exists but is withheld.
+		return apierr.New(apierr.NotFound, "no such comment")
+	}
+	return nil
+}

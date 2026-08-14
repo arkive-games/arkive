@@ -104,4 +104,9 @@ WHERE name = ANY (sqlc.arg('names')::text[]) AND is_active;
 
 -- name: GetUserUIDsByIDs :many
 -- Public numbers for a batch of internal handles, for rendering a page of notifications.
-SELECT id, uid FROM core.users WHERE id = ANY (sqlc.arg('ids')::uuid[]);
+--
+-- Deactivated accounts are omitted, matching GetUserIDsByNames and every other lookup here:
+-- the schema deactivates rather than deletes, so without this a disabled account keeps
+-- appearing by name in other people's inboxes. The caller renders a notification without an
+-- actor rather than failing, so omission is the right shape.
+SELECT id, uid FROM core.users WHERE id = ANY (sqlc.arg('ids')::uuid[]) AND is_active;

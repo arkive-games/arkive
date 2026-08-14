@@ -307,3 +307,50 @@ func TestHiddenCommentsAreInertEverywhere(t *testing.T) {
 		t.Errorf("replying to a restored comment = %d, want 200: %s", res.status, res.body)
 	}
 }
+
+// Hiding a *post* has to make its comments inert too. A comment is addressed by id and its
+// routes never load the post, so the previous guard — which checked only the comment's own
+// hidden_at — left liking and editing working under withheld content, notifying the
+// comment's author each time. The earlier test hid the comment, which is why this survived.
+func TestHidingAPostMakesItsCommentsInert(t *testing.T) {
+	h := newHarness(t)
+	cast := setUpModeration(t, h)
+
+	res := h.do(http.MethodPost, fmt.Sprintf("/forum/posts/%d/comments", cast.postNo),
+		map[string]any{"body": "Under the post."}, withBearer(cast.stranger))
+	if res.status != http.StatusOK {
+		t.Fatalf("comment = %d: %s", res.status, res.body)
+	}
+	commentID, _ := res.data(t)["id"].(string)
+
+	// The post is hidden; the comment itself never is.
+	if res := h.do(http.MethodPut, fmt.Sprintf("/forum/posts/%d/hidden", cast.postNo),
+		nil, withBearer(cast.moderator)); res.status != http.StatusOK {
+		t.Fatalf("hide post = %d: %s", res.status, res.body)
+	}
+
+	if res := h.react(cast.author, http.MethodPut, "/forum/comments/"+commentID+"/like"); res.status != http.StatusNotFound {
+		t.Errorf("liking a comment under a hidden post = %d, want 404: %s", res.status, res.body)
+	}
+	if res := h.do(http.MethodPatch, "/forum/comments/"+commentID,
+		map[string]any{"body": "Edited."}, withBearer(cast.stranger)); res.status != http.StatusNotFound {
+		t.Errorf("editing a comment under a hidden post = %d, want 404: %s", res.status, res.body)
+	}
+	if res := h.do(http.MethodDelete, "/forum/comments/"+commentID, nil, withBearer(cast.stranger)); res.status != http.StatusNotFound {
+		t.Errorf("deleting a comment under a hidden post = %d, want 404: %s", res.status, res.body)
+	}
+
+	// Which is what keeps the comment's author from being told about withheld content.
+	if rows := inbox(t, h, cast.stranger, ""); len(rows) != 0 {
+		t.Errorf("the author of a comment under a hidden post was notified: %v", kindsIn(rows))
+	}
+
+	// Restoring the post restores its thread.
+	if res := h.do(http.MethodDelete, fmt.Sprintf("/forum/posts/%d/hidden", cast.postNo),
+		nil, withBearer(cast.moderator)); res.status != http.StatusOK {
+		t.Fatalf("restore post = %d: %s", res.status, res.body)
+	}
+	if res := h.react(cast.author, http.MethodPut, "/forum/comments/"+commentID+"/like"); res.status != http.StatusOK {
+		t.Errorf("liking after the post is restored = %d, want 200: %s", res.status, res.body)
+	}
+}

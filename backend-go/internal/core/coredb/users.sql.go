@@ -227,7 +227,7 @@ func (q *Queries) GetUserIDsByNames(ctx context.Context, names []string) ([]GetU
 }
 
 const getUserUIDsByIDs = `-- name: GetUserUIDsByIDs :many
-SELECT id, uid FROM core.users WHERE id = ANY ($1::uuid[])
+SELECT id, uid FROM core.users WHERE id = ANY ($1::uuid[]) AND is_active
 `
 
 type GetUserUIDsByIDsRow struct {
@@ -236,6 +236,11 @@ type GetUserUIDsByIDsRow struct {
 }
 
 // Public numbers for a batch of internal handles, for rendering a page of notifications.
+//
+// Deactivated accounts are omitted, matching GetUserIDsByNames and every other lookup here:
+// the schema deactivates rather than deletes, so without this a disabled account keeps
+// appearing by name in other people's inboxes. The caller renders a notification without an
+// actor rather than failing, so omission is the right shape.
 func (q *Queries) GetUserUIDsByIDs(ctx context.Context, ids []uuid.UUID) ([]GetUserUIDsByIDsRow, error) {
 	rows, err := q.db.Query(ctx, getUserUIDsByIDs, ids)
 	if err != nil {

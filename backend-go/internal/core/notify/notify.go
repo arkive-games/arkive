@@ -274,8 +274,10 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, p
 			t := row.ReadAt.Time
 			read.ReadAt = &t
 		}
-		// A miss on either side means the referenced row is being deleted as this reads:
-		// both cascade the notification away, so the notification is on its way out too.
+		// A miss means the reference is gone or withheld: a post being deleted as this
+		// reads cascades the notification away with it, and a deactivated account is
+		// omitted deliberately, because the schema deactivates rather than deletes and a
+		// disabled account should not keep appearing by name in other people's inboxes.
 		// Rendering it without the reference beats failing the whole inbox for it — which
 		// the post lookup used to do, by returning an unmapped ErrNoRows as a 500 while
 		// the actor lookup beside it absorbed exactly the same race.

@@ -808,6 +808,13 @@ func (s *Service) SetCommentLike(ctx context.Context, principal auth.Principal, 
 	if err := notFoundIfCommentHidden(comment.HiddenAt); err != nil {
 		return CommentRead{}, err
 	}
+	// And the thread it lives in. A comment addressed by id is reachable without ever
+	// touching the post, so hiding the post has to be checked here as well — otherwise
+	// liking a comment under withheld content still notifies its author, which is the
+	// harm hiding exists to stop.
+	if err := s.postVisibleForComment(ctx, comment.PostID); err != nil {
+		return CommentRead{}, err
+	}
 
 	if liked {
 		err = s.q.LikeForumComment(ctx, coredb.LikeForumCommentParams{CommentID: comment.ID, UserID: principal.ID})
@@ -931,6 +938,11 @@ func (s *Service) ownedComment(ctx context.Context, principal auth.Principal, id
 	// every other reader does rather than learning it exists but is withheld.
 	if !principal.IsSuperuser {
 		if err := notFoundIfCommentHidden(comment.HiddenAt); err != nil {
+			return coredb.CoreForumComment{}, err
+		}
+		// Hiding a post takes its thread with it, so editing or deleting a comment under
+		// a hidden post is refused for the same reason reading the thread is.
+		if err := s.postVisibleForComment(ctx, comment.PostID); err != nil {
 			return coredb.CoreForumComment{}, err
 		}
 	}
