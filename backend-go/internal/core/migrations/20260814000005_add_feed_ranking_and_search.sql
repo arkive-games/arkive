@@ -12,6 +12,13 @@
 -- `core` rather than landing in `public` where another module's stream would see them.
 -- IF NOT EXISTS because an extension is database-scoped: a second module asking for
 -- the same one must not fail.
+--
+-- But IF NOT EXISTS makes the whole statement a no-op when the extension already exists,
+-- silently discarding `SCHEMA core` — so the very case it is written for is the one where
+-- `core.gin_trgm_ops` would not exist and the index below would fail with "operator class
+-- does not exist". The index therefore names the operator class unqualified and resolves it
+-- through the search path, which finds it in whichever schema actually holds it. There is
+-- one consumer today; this is what stops the second one from breaking the first.
 -- +goose StatementBegin
 CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA core;
 -- +goose StatementEnd
@@ -37,8 +44,11 @@ CREATE INDEX forum_posts_featured_idx ON core.forum_posts (featured_at DESC)
 -- The expression is matched exactly by the search predicate; a query that lowercases
 -- or concatenates differently would not use this index.
 -- +goose StatementBegin
+SET LOCAL search_path = core, public;
+-- +goose StatementEnd
+-- +goose StatementBegin
 CREATE INDEX forum_posts_search_idx ON core.forum_posts
-    USING GIN (lower(title || ' ' || body) core.gin_trgm_ops);
+    USING GIN (lower(title || ' ' || body) gin_trgm_ops);
 -- +goose StatementEnd
 
 -- +goose Down

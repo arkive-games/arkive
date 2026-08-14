@@ -3,6 +3,7 @@ package core_test
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -352,5 +353,32 @@ func TestHidingAPostMakesItsCommentsInert(t *testing.T) {
 	}
 	if res := h.react(cast.author, http.MethodPut, "/forum/comments/"+commentID+"/like"); res.status != http.StatusOK {
 		t.Errorf("liking after the post is restored = %d, want 200: %s", res.status, res.body)
+	}
+}
+
+// The length limits in this package count runes, not bytes, so a limit means the same thing
+// to a Chinese report as to an English one. The report detail was the one check using len(),
+// which refused a Chinese detail at about a third of the stated limit — and the wire schema's
+// maxLength counts characters, so the two layers disagreed about the contract.
+func TestReportDetailLimitCountsCharactersNotBytes(t *testing.T) {
+	h := newHarness(t)
+	cast := setUpModeration(t, h)
+
+	// 700 Han characters: 2100 bytes, 700 runes. Well inside the limit as a person counts.
+	detail := strings.Repeat("测", 700)
+
+	res := h.do(http.MethodPost, "/forum/reports",
+		map[string]any{"postNo": cast.postNo, "reason": "spam", "detail": detail},
+		withBearer(cast.stranger))
+	if res.status != http.StatusOK {
+		t.Fatalf("a 700-character Chinese detail = %d, want 200: %s", res.status, res.body)
+	}
+
+	// And the limit still bites where it should.
+	over := strings.Repeat("测", 2001)
+	if res := h.do(http.MethodPost, "/forum/reports",
+		map[string]any{"postNo": cast.postNo, "reason": "spam", "detail": over},
+		withBearer(cast.author)); res.status != http.StatusUnprocessableEntity {
+		t.Errorf("a 2001-character detail = %d, want 422: %s", res.status, res.body)
 	}
 }

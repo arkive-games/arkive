@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"slices"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -83,7 +84,11 @@ func (s *Service) Report(ctx context.Context, principal auth.Principal, postNo *
 	}
 	if detail != nil {
 		trimmedDetail := trimmed(*detail)
-		if len(trimmedDetail) > MaxReportDetail {
+		// Runes, not bytes, matching validateTitle, validateBody and normaliseList — and
+		// the wire schema's maxLength, which counts characters too. With len() a Chinese
+		// detail was refused at about 666 characters by a message that said 2000, on the
+		// one free-text field of the reporting flow.
+		if utf8.RuneCountInString(trimmedDetail) > MaxReportDetail {
 			return ReportRead{}, apierr.New(apierr.Validation,
 				fmt.Sprintf("detail may be at most %d characters", MaxReportDetail))
 		}
