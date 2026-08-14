@@ -44,13 +44,13 @@ func pngFixture(t *testing.T, w, h, seed int) []byte {
 	return buf.Bytes()
 }
 
-// uploadAvatarAs posts a multipart body to the avatar route.
+// uploadFileAs posts a multipart file body to any route that takes one.
 //
 // partType empty means the part carries no explicit Content-Type, which is what
 // Go's multipart.CreateFormFile produces and what many HTTP clients send. That is
 // the harder case and so the default here: the declared type is not what decides
 // the format.
-func (h *harness) uploadAvatarAs(path, filename, partType string, data []byte, opts ...requestOption) response {
+func (h *harness) uploadFileAs(path, filename, partType string, data []byte, opts ...requestOption) response {
 	h.t.Helper()
 
 	body := new(bytes.Buffer)
@@ -81,7 +81,7 @@ func (h *harness) uploadAvatarAs(path, filename, partType string, data []byte, o
 
 func (h *harness) uploadAvatar(path, filename, _ string, data []byte, opts ...requestOption) response {
 	h.t.Helper()
-	return h.uploadAvatarAs(path, filename, "", data, opts...)
+	return h.uploadFileAs(path, filename, "", data, opts...)
 }
 
 // avatarURLOf reads the account's picture URL, which is never empty.
@@ -338,7 +338,7 @@ func TestUploadAcceptsAnyDeclaredPartContentType(t *testing.T) {
 			h := newHarness(t)
 			token := h.registerAndLogin("u", "u@example.com", "hunter2hunter2")
 
-			res := h.uploadAvatarAs("/users/me/avatar", "a.png", tc.partType,
+			res := h.uploadFileAs("/users/me/avatar", "a.png", tc.partType,
 				pngFixture(t, 400, 400, 20), withBearer(token))
 			if res.status != http.StatusOK {
 				t.Fatalf("upload with part type %q = %d, want 200: %s", tc.partType, res.status, res.body)

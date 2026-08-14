@@ -488,6 +488,38 @@
         ],
         "type": "object"
       },
+      "EnvelopeImageRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ImageRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeListCommentRead": {
         "additionalProperties": false,
         "properties": {
@@ -1174,6 +1206,37 @@
         },
         "type": "object"
       },
+      "ImageRead": {
+        "additionalProperties": false,
+        "properties": {
+          "height": {
+            "description": "Stored height in pixels",
+            "format": "int64",
+            "type": "integer"
+          },
+          "position": {
+            "description": "Order within the post, from 0",
+            "format": "int64",
+            "type": "integer"
+          },
+          "url": {
+            "description": "Where to fetch it",
+            "type": "string"
+          },
+          "width": {
+            "description": "Stored width in pixels",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position",
+          "url",
+          "width",
+          "height"
+        ],
+        "type": "object"
+      },
       "ListCommentRead": {
         "additionalProperties": false,
         "properties": {
@@ -1486,6 +1549,16 @@
               "null"
             ]
           },
+          "images": {
+            "description": "Attached images, in order",
+            "items": {
+              "$ref": "#/components/schemas/ImageRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "likeCount": {
             "description": "How many accounts have liked it",
             "format": "int64",
@@ -1539,6 +1612,7 @@
           "bookmarkCount",
           "liked",
           "bookmarked",
+          "images",
           "featuredAt",
           "createdAt",
           "editedAt"
@@ -4648,6 +4722,258 @@
         "summary": "Hide a post",
         "tags": [
           "moderation"
+        ]
+      }
+    },
+    "/forum/posts/{postNo}/images/{position}": {
+      "delete": {
+        "description": "The author only. Idempotent: a slot that carries nothing is already in the state the caller asked for.",
+        "operationId": "detachForumPostImage",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Slot within the post",
+            "in": "path",
+            "name": "position",
+            "required": true,
+            "schema": {
+              "description": "Slot within the post",
+              "format": "int64",
+              "maximum": 8,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeStruct {}"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Remove an image from a post",
+        "tags": [
+          "forum"
+        ]
+      },
+      "put": {
+        "description": "The author only. Re-attaching at the same position replaces what is there, so correcting one slot needs no detach first. The image is always re-encoded, so metadata including EXIF location is discarded, and an animated GIF keeps only its first frame. Rate limited per account.",
+        "operationId": "attachForumPostImage",
+        "parameters": [
+          {
+            "description": "Permanent post number",
+            "in": "path",
+            "name": "postNo",
+            "required": true,
+            "schema": {
+              "description": "Permanent post number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Slot within the post, from 0",
+            "in": "path",
+            "name": "position",
+            "required": true,
+            "schema": {
+              "description": "Slot within the post, from 0",
+              "format": "int64",
+              "maximum": 8,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "description": "The image: JPEG, PNG, GIF or WebP, at most 4 MB and at most 3000x3000 pixels. It is resized to fit 2048 on its longest side with the aspect ratio preserved, and re-encoded — which also discards metadata such as EXIF location. The declared content type is ignored; the bytes are decoded to determine the format.",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeImageRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Attach an image to a post",
+        "tags": [
+          "forum"
         ]
       }
     },

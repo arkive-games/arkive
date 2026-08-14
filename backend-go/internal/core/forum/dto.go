@@ -109,6 +109,10 @@ type PostRead struct {
 	// Null unless a game administrator has put it on the editorial shelf. The actor is
 	// recorded in the database but not exposed: readers need to know a post is featured,
 	// not who decided so.
+	// Ordered by position. Empty rather than null, so a client can iterate without a
+	// guard, and empty on a server with no object storage configured.
+	Images []ImageRead `json:"images" doc:"Attached images, in order"`
+
 	FeaturedAt *time.Time `json:"featuredAt" doc:"When it was featured, or null"`
 
 	CreatedAt time.Time  `json:"createdAt" doc:"When it was posted"`
@@ -282,6 +286,7 @@ func toPostRead(p coredb.CoreForumPost, author users.UserPublic, r Reactions) Po
 		Topic:      p.Topic,
 		GameIDs:    emptyIfNil(p.GameIDs),
 		Tags:       emptyIfNil(p.Tags),
+		Images:     []ImageRead{},
 		FeaturedAt: timeOrNil(p.FeaturedAt.Time, p.FeaturedAt.Valid),
 		Comments:   r.Comments,
 		Likes:      r.Likes,

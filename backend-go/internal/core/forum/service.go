@@ -25,6 +25,7 @@ type Service struct {
 	authors  AuthorSource
 	authz    Authorizer
 	notifier Notifier
+	images   ImageStore
 	logger   *slog.Logger
 }
 
@@ -63,8 +64,11 @@ type AuthorSource interface {
 }
 
 // NewService wires the forum service.
-func NewService(q *coredb.Queries, authors AuthorSource, authz Authorizer, notifier Notifier, logger *slog.Logger) *Service {
-	return &Service{q: q, authors: authors, authz: authz, notifier: notifier, logger: logger}
+// images may be nil, which is the state a development server without object storage runs
+// in. Attaching then reports StorageUnavailable and reads carry no images, rather than the
+// whole forum refusing to start.
+func NewService(q *coredb.Queries, authors AuthorSource, authz Authorizer, notifier Notifier, images ImageStore, logger *slog.Logger) *Service {
+	return &Service{q: q, authors: authors, authz: authz, notifier: notifier, images: images, logger: logger}
 }
 
 // canPostToChannel decides who may post where.
@@ -173,7 +177,13 @@ func (s *Service) PostByNo(ctx context.Context, postNo int64, viewer *uuid.UUID)
 	if err != nil {
 		return PostRead{}, err
 	}
-	return toPostRead(post, author, reactions), nil
+	images, err := s.imagesFor(ctx, post.ID)
+	if err != nil {
+		return PostRead{}, err
+	}
+	read := toPostRead(post, author, reactions)
+	read.Images = images
+	return read, nil
 }
 
 // reactions loads the counters and the viewer's own state for one post.
@@ -278,6 +288,17 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		return nil, 0, fmt.Errorf("load authors: %w", err)
 	}
 
+	// One query for the whole page's images, rather than one per post — the same reason
+	// the authors are loaded in a batch.
+	postIDs := make([]uuid.UUID, 0, len(rows))
+	for _, r := range rows {
+		postIDs = append(postIDs, r.ID)
+	}
+	imagesByPost, err := s.imagesForPosts(ctx, postIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	out := make([]PostRead, 0, len(rows))
 	for _, r := range rows {
 		// An author can be deleted between the rows being read and this lookup.
@@ -294,13 +315,17 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 			NextCommentNo: r.NextCommentNo, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 			EditedAt: r.EditedAt,
 		}
-		out = append(out, toPostRead(post, author, Reactions{
+		read := toPostRead(post, author, Reactions{
 			Comments:   r.CommentCount,
 			Likes:      r.LikeCount,
 			Bookmarks:  r.BookmarkCount,
 			Liked:      r.Liked,
 			Bookmarked: r.Bookmarked,
-		}))
+		})
+		if images, ok := imagesByPost[r.ID]; ok {
+			read.Images = images
+		}
+		out = append(out, read)
 	}
 	return out, total, nil
 }

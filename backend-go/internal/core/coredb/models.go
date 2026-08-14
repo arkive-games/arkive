@@ -61,6 +61,15 @@ type CoreForumPostBookmark struct {
 	CreatedAt time.Time
 }
 
+type CoreForumPostImage struct {
+	PostID    uuid.UUID
+	Position  int16
+	ObjectKey string
+	Width     int32
+	Height    int32
+	CreatedAt time.Time
+}
+
 type CoreForumPostLike struct {
 	PostID    uuid.UUID
 	UserID    uuid.UUID

@@ -273,6 +273,25 @@ export type EnvelopeGrantRead = {
     showType: number;
 };
 
+export type EnvelopeImageRead = {
+    /**
+     * The payload
+     */
+    data: ImageRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeListCommentRead = {
     /**
      * The payload
@@ -679,6 +698,25 @@ export type HideBody = {
     reason?: string;
 };
 
+export type ImageRead = {
+    /**
+     * Stored height in pixels
+     */
+    height: number;
+    /**
+     * Order within the post, from 0
+     */
+    position: number;
+    /**
+     * Where to fetch it
+     */
+    url: string;
+    /**
+     * Stored width in pixels
+     */
+    width: number;
+};
+
 export type ListCommentRead = {
     /**
      * Total number of matching records, ignoring pagination
@@ -842,6 +880,10 @@ export type PostRead = {
      * Games this post is about, at most 5
      */
     gameIds: Array<string> | null;
+    /**
+     * Attached images, in order
+     */
+    images: Array<ImageRead> | null;
     /**
      * How many accounts have liked it
      */
@@ -2494,6 +2536,123 @@ export type HideForumPostResponses = {
 };
 
 export type HideForumPostResponse = HideForumPostResponses[keyof HideForumPostResponses];
+
+export type DetachForumPostImageData = {
+    body?: never;
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+        /**
+         * Slot within the post
+         */
+        position: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/images/{position}';
+};
+
+export type DetachForumPostImageErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type DetachForumPostImageError = DetachForumPostImageErrors[keyof DetachForumPostImageErrors];
+
+export type DetachForumPostImageResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeStruct;
+};
+
+export type DetachForumPostImageResponse = DetachForumPostImageResponses[keyof DetachForumPostImageResponses];
+
+export type AttachForumPostImageData = {
+    body?: {
+        /**
+         * The image: JPEG, PNG, GIF or WebP, at most 4 MB and at most 3000x3000 pixels. It is resized to fit 2048 on its longest side with the aspect ratio preserved, and re-encoded — which also discards metadata such as EXIF location. The declared content type is ignored; the bytes are decoded to determine the format.
+         */
+        file: Blob | File;
+    };
+    path: {
+        /**
+         * Permanent post number
+         */
+        postNo: number;
+        /**
+         * Slot within the post, from 0
+         */
+        position: number;
+    };
+    query?: never;
+    url: '/forum/posts/{postNo}/images/{position}';
+};
+
+export type AttachForumPostImageErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Request Entity Too Large
+     */
+    413: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Too Many Requests
+     */
+    429: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+    /**
+     * Service Unavailable
+     */
+    503: Error;
+};
+
+export type AttachForumPostImageError = AttachForumPostImageErrors[keyof AttachForumPostImageErrors];
+
+export type AttachForumPostImageResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeImageRead;
+};
+
+export type AttachForumPostImageResponse = AttachForumPostImageResponses[keyof AttachForumPostImageResponses];
 
 export type UnlikeForumPostData = {
     body?: never;

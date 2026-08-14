@@ -186,7 +186,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	rolesService := roles.NewService(queries, service, d.Logger)
 	socialService := social.NewService(queries, service, notifyService, d.Logger)
 	privacyService := privacy.NewService(queries, socialService, d.Logger)
-	forumService := forum.NewService(queries, service, rolesService, notifyService, d.Logger)
+	forumService := forum.NewService(queries, service, rolesService, notifyService, newPostImageStore(blobs), d.Logger)
 
 	// Identity resolution runs before huma so that every operation can read
 	// the caller from its context. It never rejects: authorization is decided
@@ -240,6 +240,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterModerationRoutes(a)
 	handlers.RegisterPrivacyRoutes(a)
 	handlers.RegisterNotificationRoutes(a)
+	handlers.RegisterPostImageRoutes(a)
 	return nil
 }
 
