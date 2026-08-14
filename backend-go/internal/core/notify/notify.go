@@ -108,7 +108,8 @@ type Event struct {
 type AccountSource interface {
 	// IDsByNames resolves a batch, so the cost of a mention-heavy body is one query.
 	IDsByNames(ctx context.Context, names []string) (map[string]uuid.UUID, error)
-	UIDByID(ctx context.Context, id uuid.UUID) (int64, error)
+	// UIDsByIDs resolves a batch, so rendering an inbox costs one query and not one per row.
+	UIDsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]int64, error)
 }
 
 // Service writes and reads notifications.
@@ -238,6 +239,28 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, p
 		return nil, 0, fmt.Errorf("list notifications: %w", err)
 	}
 
+	// Two batch lookups for the page rather than two per row. At the maximum page size
+	// this was up to two hundred sequential round trips to render one inbox.
+	actorIDs := make([]uuid.UUID, 0, len(rows))
+	postIDs := make([]uuid.UUID, 0, len(rows))
+	for _, row := range rows {
+		if row.ActorID != nil {
+			actorIDs = append(actorIDs, *row.ActorID)
+		}
+		if row.PostID != nil {
+			postIDs = append(postIDs, *row.PostID)
+		}
+	}
+
+	actorUIDs, err := s.accounts.UIDsByIDs(ctx, actorIDs)
+	if err != nil {
+		return nil, 0, fmt.Errorf("load notification actors: %w", err)
+	}
+	postNos, err := s.postNos(ctx, postIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	out := make([]Read, 0, len(rows))
 	for _, row := range rows {
 		read := Read{
@@ -251,21 +274,20 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, p
 			t := row.ReadAt.Time
 			read.ReadAt = &t
 		}
+		// A miss on either side means the referenced row is being deleted as this reads:
+		// both cascade the notification away, so the notification is on its way out too.
+		// Rendering it without the reference beats failing the whole inbox for it — which
+		// the post lookup used to do, by returning an unmapped ErrNoRows as a 500 while
+		// the actor lookup beside it absorbed exactly the same race.
 		if row.ActorID != nil {
-			uid, err := s.accounts.UIDByID(ctx, *row.ActorID)
-			if err == nil {
+			if uid, ok := actorUIDs[*row.ActorID]; ok {
 				read.ActorUID = &uid
 			}
-			// A deleted actor cascades this row away, so a miss here means the delete is
-			// in flight; reporting the notification without an actor beats failing the
-			// whole inbox for it.
 		}
 		if row.PostID != nil {
-			no, err := s.postNo(ctx, *row.PostID)
-			if err != nil {
-				return nil, 0, err
+			if no, ok := postNos[*row.PostID]; ok {
+				read.PostNo = &no
 			}
-			read.PostNo = &no
 		}
 		out = append(out, read)
 	}
@@ -348,12 +370,22 @@ func (s *Service) SetPreferences(ctx context.Context, userID uuid.UUID, in Prefe
 	}, nil
 }
 
-func (s *Service) postNo(ctx context.Context, postID uuid.UUID) (int64, error) {
-	post, err := s.q.GetForumPostByID(ctx, postID)
-	if err != nil {
-		return 0, fmt.Errorf("load the notification's post: %w", err)
+// postNos resolves a batch of post ids to their public numbers. A post being deleted as
+// this reads is simply absent from the result, which the caller treats as a missing
+// reference rather than an error.
+func (s *Service) postNos(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]int64, error) {
+	out := make(map[uuid.UUID]int64, len(ids))
+	if len(ids) == 0 {
+		return out, nil
 	}
-	return post.PostNo, nil
+	rows, err := s.q.GetForumPostNosByIDs(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("load notification posts: %w", err)
+	}
+	for _, row := range rows {
+		out[row.ID] = row.PostNo
+	}
+	return out, nil
 }
 
 func paging(page, pageSize int) (limit int32, offset int32) {

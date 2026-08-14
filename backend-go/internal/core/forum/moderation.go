@@ -474,6 +474,22 @@ func notFoundIfHidden(hiddenAt pgtype.Timestamptz) error {
 	return nil
 }
 
+// notFoundIfCommentHidden is the same guard for a comment.
+//
+// Separate only for the message. Hiding a comment shipped applying this to the thread
+// listing and the comment count and nowhere else, so a hidden comment could still be
+// liked, edited, deleted and replied to — the post side had all four covered and the
+// comment side had none, which is the asymmetry that let it through.
+//
+// Exempt, deliberately: Report (see its comment), SetCommentHidden and the moderation
+// queue, which are how hidden content is found and brought back.
+func notFoundIfCommentHidden(hiddenAt pgtype.Timestamptz) error {
+	if hiddenAt.Valid {
+		return apierr.New(apierr.NotFound, "no such comment")
+	}
+	return nil
+}
+
 func moderationPaging(page, pageSize int) (limit int32, offset int32) {
 	return api.ClampPaging(page, pageSize, DefaultPageSize, MaxPageSize)
 }

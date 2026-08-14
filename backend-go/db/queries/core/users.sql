@@ -101,3 +101,7 @@ SELECT * FROM core.users WHERE id = ANY(sqlc.arg('ids')::uuid[]);
 -- Inactive accounts are omitted, matching every other name and uid lookup.
 SELECT id, name FROM core.users
 WHERE name = ANY (sqlc.arg('names')::text[]) AND is_active;
+
+-- name: GetUserUIDsByIDs :many
+-- Public numbers for a batch of internal handles, for rendering a page of notifications.
+SELECT id, uid FROM core.users WHERE id = ANY (sqlc.arg('ids')::uuid[]);

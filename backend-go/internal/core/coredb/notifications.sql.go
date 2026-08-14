@@ -89,6 +89,36 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 	return err
 }
 
+const getForumPostNosByIDs = `-- name: GetForumPostNosByIDs :many
+SELECT id, post_no FROM core.forum_posts WHERE id = ANY ($1::uuid[])
+`
+
+type GetForumPostNosByIDsRow struct {
+	ID     uuid.UUID
+	PostNo int64
+}
+
+// Post numbers for a page of notifications, in one query rather than one per row.
+func (q *Queries) GetForumPostNosByIDs(ctx context.Context, ids []uuid.UUID) ([]GetForumPostNosByIDsRow, error) {
+	rows, err := q.db.Query(ctx, getForumPostNosByIDs, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetForumPostNosByIDsRow{}
+	for rows.Next() {
+		var i GetForumPostNosByIDsRow
+		if err := rows.Scan(&i.ID, &i.PostNo); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getNotificationPreferences = `-- name: GetNotificationPreferences :one
 SELECT
     COALESCE(p.reply,        true) AS reply,

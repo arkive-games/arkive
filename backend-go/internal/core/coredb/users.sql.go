@@ -226,6 +226,36 @@ func (q *Queries) GetUserIDsByNames(ctx context.Context, names []string) ([]GetU
 	return items, nil
 }
 
+const getUserUIDsByIDs = `-- name: GetUserUIDsByIDs :many
+SELECT id, uid FROM core.users WHERE id = ANY ($1::uuid[])
+`
+
+type GetUserUIDsByIDsRow struct {
+	ID  uuid.UUID
+	UID int64
+}
+
+// Public numbers for a batch of internal handles, for rendering a page of notifications.
+func (q *Queries) GetUserUIDsByIDs(ctx context.Context, ids []uuid.UUID) ([]GetUserUIDsByIDsRow, error) {
+	rows, err := q.db.Query(ctx, getUserUIDsByIDs, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserUIDsByIDsRow{}
+	for rows.Next() {
+		var i GetUserUIDsByIDsRow
+		if err := rows.Scan(&i.ID, &i.UID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUsersByIDs = `-- name: GetUsersByIDs :many
 SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users WHERE id = ANY($1::uuid[])
 `

@@ -526,6 +526,11 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 			}
 			return CommentRead{}, fmt.Errorf("load parent comment: %w", parentErr)
 		}
+		// A hidden parent is gone as far as a reader is concerned, so it cannot be
+		// replied to either — otherwise a thread grows under content nobody can see.
+		if err := notFoundIfCommentHidden(parent.HiddenAt); err != nil {
+			return CommentRead{}, err
+		}
 		// Checked here so the caller gets a reason rather than a foreign-key
 		// violation. The schema refuses both cases regardless.
 		if parent.PostID != post.ID {
@@ -800,6 +805,9 @@ func (s *Service) SetCommentLike(ctx context.Context, principal auth.Principal, 
 		}
 		return CommentRead{}, fmt.Errorf("load comment: %w", err)
 	}
+	if err := notFoundIfCommentHidden(comment.HiddenAt); err != nil {
+		return CommentRead{}, err
+	}
 
 	if liked {
 		err = s.q.LikeForumComment(ctx, coredb.LikeForumCommentParams{CommentID: comment.ID, UserID: principal.ID})
@@ -918,6 +926,13 @@ func (s *Service) ownedComment(ctx context.Context, principal auth.Principal, id
 			return coredb.CoreForumComment{}, apierr.New(apierr.NotFound, "no such comment")
 		}
 		return coredb.CoreForumComment{}, fmt.Errorf("load comment: %w", err)
+	}
+	// Hidden before ownership, so an author editing a hidden comment gets the same 404
+	// every other reader does rather than learning it exists but is withheld.
+	if !principal.IsSuperuser {
+		if err := notFoundIfCommentHidden(comment.HiddenAt); err != nil {
+			return coredb.CoreForumComment{}, err
+		}
 	}
 	if comment.AuthorID != principal.ID && !principal.IsSuperuser {
 		return coredb.CoreForumComment{}, apierr.New(apierr.Forbidden, "that comment is not yours")

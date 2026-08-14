@@ -17,6 +17,12 @@ export const IS_TOY = Boolean(import.meta.env.VITE_TOY)
  * the API contract means adding a game to the portal without adding it to the
  * server — or misspelling one — fails `tsc` instead of failing at request time,
  * which is how the two lists were previously free to disagree.
+ *
+ * The ordering consequence is worth knowing: this couples *every* card to the server
+ * registry, including a `comingSoon` one that links nowhere and has no server-side
+ * content by definition. Announcing a game here therefore needs its key added to
+ * `core.game_keys()` first — one migration, ahead of the card. That is a real cost and
+ * it buys the guarantee that a card and a forum tag can never mean different things.
  */
 export type GameId = NonNullable<CreatePostBody['gameIds']>[number]
 

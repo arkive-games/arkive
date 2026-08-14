@@ -923,3 +923,23 @@ func (s *Service) PublicByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UU
 	}
 	return out, nil
 }
+
+// UIDsByIDs resolves internal handles to public numbers, in one query.
+//
+// For rendering a page of notifications, where every row may name a different actor.
+// Missing ids are simply absent: an account being deleted as this reads cascades its
+// notifications away too, so the caller has nothing to render either way.
+func (s *Service) UIDsByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]int64, error) {
+	out := make(map[uuid.UUID]int64, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := s.q.GetUserUIDsByIDs(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("load user uids: %w", err)
+	}
+	for _, row := range rows {
+		out[row.ID] = row.UID
+	}
+	return out, nil
+}

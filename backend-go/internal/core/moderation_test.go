@@ -252,3 +252,58 @@ func TestHidingAComment(t *testing.T) {
 		t.Errorf("thread after restoring = %v, want the comment back", list)
 	}
 }
+
+// Hiding a comment shipped covering the thread listing and the comment count and nothing
+// else, so a hidden comment could still be liked, edited, deleted and replied to. The post
+// side had all of those; the comment side had none, and the tests mirrored the asymmetry.
+func TestHiddenCommentsAreInertEverywhere(t *testing.T) {
+	h := newHarness(t)
+	cast := setUpModeration(t, h)
+
+	comment := func(token, body string, parentID *string) response {
+		payload := map[string]any{"body": body}
+		if parentID != nil {
+			payload["parentId"] = *parentID
+		}
+		return h.do(http.MethodPost, fmt.Sprintf("/forum/posts/%d/comments", cast.postNo),
+			payload, withBearer(token))
+	}
+
+	res := comment(cast.stranger, "The original.", nil)
+	if res.status != http.StatusOK {
+		t.Fatalf("comment = %d: %s", res.status, res.body)
+	}
+	commentID, _ := res.data(t)["id"].(string)
+
+	if res := h.do(http.MethodPut, "/forum/comments/"+commentID+"/hidden", nil, withBearer(cast.moderator)); res.status != http.StatusOK {
+		t.Fatalf("hide comment = %d: %s", res.status, res.body)
+	}
+
+	// Liking it.
+	if res := h.react(cast.author, http.MethodPut, "/forum/comments/"+commentID+"/like"); res.status != http.StatusNotFound {
+		t.Errorf("liking a hidden comment = %d, want 404: %s", res.status, res.body)
+	}
+	// Editing and deleting it, by its own author.
+	if res := h.do(http.MethodPatch, "/forum/comments/"+commentID,
+		map[string]any{"body": "Sneaky edit."}, withBearer(cast.stranger)); res.status != http.StatusNotFound {
+		t.Errorf("editing a hidden comment = %d, want 404: %s", res.status, res.body)
+	}
+	if res := h.do(http.MethodDelete, "/forum/comments/"+commentID, nil, withBearer(cast.stranger)); res.status != http.StatusNotFound {
+		t.Errorf("deleting a hidden comment = %d, want 404: %s", res.status, res.body)
+	}
+	// And replying to it — otherwise a thread grows under content nobody can see.
+	if res := comment(cast.author, "Replying to something invisible.", &commentID); res.status != http.StatusNotFound {
+		t.Errorf("replying to a hidden comment = %d, want 404: %s", res.status, res.body)
+	}
+
+	// Restoring puts all of it back.
+	if res := h.do(http.MethodDelete, "/forum/comments/"+commentID+"/hidden", nil, withBearer(cast.moderator)); res.status != http.StatusOK {
+		t.Fatalf("restore = %d: %s", res.status, res.body)
+	}
+	if res := h.react(cast.author, http.MethodPut, "/forum/comments/"+commentID+"/like"); res.status != http.StatusOK {
+		t.Errorf("liking a restored comment = %d, want 200: %s", res.status, res.body)
+	}
+	if res := comment(cast.author, "Now visible.", &commentID); res.status != http.StatusOK {
+		t.Errorf("replying to a restored comment = %d, want 200: %s", res.status, res.body)
+	}
+}
