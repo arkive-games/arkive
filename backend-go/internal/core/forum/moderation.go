@@ -52,8 +52,8 @@ const MaxReportDetail = 2000
 // complained invites deciding by who rather than by what; the reporter is in the table
 // for abuse investigation, not for the queue.
 type ReportRead struct {
-	ID        uuid.UUID  `json:"id" doc:"Report identifier"`
-	PostNo    *int64     `json:"postNo" doc:"The reported post, or the post a reported comment belongs to"`
+	ID     uuid.UUID `json:"id" doc:"Report identifier"`
+	PostNo *int64    `json:"postNo" doc:"The reported post, or the post a reported comment belongs to"`
 	// nullable:"true" because huma drops the pointer for uuid fields; see the note
 	// on CommentRead.ParentID.
 	CommentID *uuid.UUID `json:"commentId" nullable:"true" doc:"The reported comment, or null when a post was reported"`

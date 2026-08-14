@@ -827,7 +827,9 @@ export function ForumPage({
               client={client}
               labels={tagLabels}
               siteById={siteById}
+              followedUids={followedUids}
               onTabChange={setPersonalTab}
+              onToggleFollow={toggleFollow}
               onOpenPost={openPost}
               onComingSoon={onComingSoon}
               onToggleBookmark={togglePostBookmark}
@@ -1089,11 +1091,13 @@ function ForumPersonalView({
   client,
   labels,
   siteById,
+  followedUids,
   onTabChange,
   onOpenPost,
   onComingSoon,
   onToggleBookmark,
   onToggleLike,
+  onToggleFollow,
 }: {
   avatarSrc: string
   name: string
@@ -1105,7 +1109,9 @@ function ForumPersonalView({
   client: ApiClient['client'] | null
   labels: TagLabellers
   siteById: ReadonlyMap<string, SiteCard>
+  followedUids: ReadonlySet<string>
   onTabChange: (tab: PersonalTab) => void
+  onToggleFollow: (authorUid: string, following: boolean) => void
   onOpenPost: (postNo: number) => void
   onComingSoon: () => void
   onToggleBookmark: (post: ForumPost, patch: (postNo: number, changes: Partial<ForumPost>) => void) => void
@@ -1255,10 +1261,10 @@ function ForumPersonalView({
             key={post.postNo}
             post={post}
             image={post.imageSrcs[0] ?? (post.gameIds[0] ? siteById.get(post.gameIds[0])?.bg : undefined)}
-            followed={false}
+            followed={followedUids.has(post.authorUid)}
             bookmarked={post.bookmarked}
             liked={post.liked}
-            onToggleFollow={onComingSoon}
+            onToggleFollow={() => onToggleFollow(post.authorUid, !followedUids.has(post.authorUid))}
             onToggleBookmark={() => onToggleBookmark(post, personalFeed.patch)}
             onToggleLike={() => onToggleLike(post, personalFeed.patch)}
             onOpen={() => onOpenPost(post.postNo)}

@@ -127,8 +127,8 @@ type PostRead struct {
 // comments are numbered. Replies carry an ID instead, which is what the edit and
 // delete routes address them by.
 type CommentRead struct {
-	ID        uuid.UUID        `json:"id" doc:"Identifier, used to edit or delete this comment"`
-	CommentNo *int64           `json:"commentNo" doc:"Floor number within the thread, or null on a reply" example:"21"`
+	ID        uuid.UUID `json:"id" doc:"Identifier, used to edit or delete this comment"`
+	CommentNo *int64    `json:"commentNo" doc:"Floor number within the thread, or null on a reply" example:"21"`
 	// nullable:"true" is required and is not decoration. huma infers nullability
 	// from the pointer for `*int64` and `*time.Time`, but a `*uuid.UUID` takes the
 	// encoding.TextUnmarshaler branch of its schema generation, which returns a
@@ -136,7 +136,7 @@ type CommentRead struct {
 	// `"type": "string"` while the field really does serialise as null, and the
 	// generated TypeScript types a top-level comment's parentId as a string. That
 	// is the one field a client uses to tell a comment from a reply.
-	ParentID *uuid.UUID `json:"parentId" nullable:"true" doc:"The comment this replies to, or null for a top-level comment"`
+	ParentID  *uuid.UUID       `json:"parentId" nullable:"true" doc:"The comment this replies to, or null for a top-level comment"`
 	Author    users.UserPublic `json:"author" doc:"Who wrote it"`
 	Body      string           `json:"body" doc:"Raw markdown, exactly as written. Render it with raw HTML disabled."`
 	Likes     int64            `json:"likeCount" doc:"How many accounts have liked it"`

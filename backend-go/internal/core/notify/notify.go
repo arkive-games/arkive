@@ -415,16 +415,16 @@ func (s *Service) SetPreferences(ctx context.Context, userID uuid.UUID, in Prefe
 	}, nil
 }
 
-// postNos resolves a batch of post ids to their public numbers. A post being deleted as
-// this reads is simply absent from the result, which the caller treats as a missing
-// reference rather than an error.
-// postRef is what a notification needs to name the post it is about: the number
-// to link by and the title to show.
+// postRef is what a notification needs in order to name the post it is about: the
+// number a client links by, and the title it shows.
 type postRef struct {
 	no    int64
 	title string
 }
 
+// postRefs resolves a batch of post ids. A post deleted while this reads is simply
+// absent from the result, which the caller treats as a missing reference rather
+// than an error — the notification row survives its subject.
 func (s *Service) postRefs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]postRef, error) {
 	out := make(map[uuid.UUID]postRef, len(ids))
 	if len(ids) == 0 {
