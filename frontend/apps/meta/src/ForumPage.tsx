@@ -47,7 +47,6 @@ import {
   IconPinFilled,
   IconPencil,
   IconQuote,
-  IconRefresh,
   IconSearch,
   IconShare3,
   IconThumbUp,
@@ -62,7 +61,7 @@ import palworldLogo from './assets/palworld-logo.png'
 import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
-import { avatarUrl, publicProfileHref, RECOMMENDED_USERS } from './userSystemData'
+import { publicProfileHref } from './userSystemData'
 import { useUserSystem, type UserSystemState } from './UserSystemState'
 import { getFollowCounts, listFollowing, result, type ApiClient } from '@gamemap/api-core'
 import { isForumComposerDirty } from './forumComposerState'
@@ -304,6 +303,21 @@ export function ForumPage({
   }), [channel, currentPage, feedTab, followingOnly, gameFilter, signedIn, submittedQuery])
 
   const feed = useForumFeed(client, feedQuery, tagLabels, viewerUid, t('forum.errors.feed'))
+
+  /**
+   * The editorial shelf above the feed.
+   *
+   * Its own request rather than a slice of the feed: the shelf is not the first
+   * three posts of whatever tab is open, and filtering the loaded page for
+   * `featured` would leave it empty whenever none of those five happened to be
+   * featured. Three because that is what the layout holds — one large card and
+   * two beside it.
+   */
+  const featuredQuery = useMemo<FeedQuery>(
+    () => ({ tab: 'featured', page: 1, pageSize: 3 }),
+    [],
+  )
+  const featured = useForumFeed(client, featuredQuery, tagLabels, viewerUid, t('forum.errors.feed'))
 
   const totalPages = Math.max(1, Math.ceil(feed.total / POSTS_PER_PAGE))
   const feedSectionRef = useRef<HTMLElement>(null)
@@ -700,7 +714,7 @@ export function ForumPage({
               <span>{sites.length}</span>
             </header>
             <div>
-              {sites.map((site, index) => (
+              {sites.map((site) => (
                 <button
                   key={site.id}
                   type="button"
@@ -710,9 +724,8 @@ export function ForumPage({
                   <span className="forum-game-logo" aria-hidden="true"><img src={GAME_LOGOS[site.id]} alt="" /></span>
                   <span>
                     <strong>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</strong>
-                    <small>{index === 0 ? t('forum.redesign.newActivity', { count: 18 }) : t('forum.redesign.updatedRecently')}</small>
+                    <small>{t('forum.redesign.updatedRecently')}</small>
                   </span>
-                  {index === 0 && <i aria-label={t('forum.redesign.unreadActivity')} />}
                 </button>
               ))}
             </div>
@@ -804,38 +817,57 @@ export function ForumPage({
             />
           ) : (
             <>
-              <section className="forum-pinned-section">
-            <div className="forum-pinned-grid">
-              <article className="forum-pinned-feature">
-                {siteById.get('aion2') && (
-                  <img src={siteById.get('aion2')?.bg} alt="" aria-hidden="true" />
-                )}
-                <span className="forum-pinned-shade" aria-hidden="true" />
-                <div>
-                  <span className="forum-pin-label">
-                    <IconPinFilled className="size-4" stroke={1.8} aria-hidden="true" />
-                    {t('forum.pinned.community.label')}
-                  </span>
-                  <h3>{t('forum.pinned.community.title')}</h3>
-                  <p>{t('forum.pinned.community.description')}</p>
-                  <small>{t('forum.pinned.community.meta')}</small>
-                </div>
-              </article>
+              {/* The editorial shelf, which is what `featured` means on a post.
+                  These three cards used to be locale strings — an invented title,
+                  author and date each, rendered in the layout real posts get, so a
+                  visitor had no way to tell them from the feed below. The section
+                  is absent entirely when nothing is featured, rather than falling
+                  back to something written to fill the space. */}
+              {featured.posts.length > 0 && (
+                <section className="forum-pinned-section">
+                  <div className="forum-pinned-grid">
+                    {featured.posts.slice(0, 1).map((post) => (
+                      <article key={post.postNo} className="forum-pinned-feature">
+                        <img
+                          src={post.imageSrcs[0] ?? (post.gameIds[0] ? siteById.get(post.gameIds[0])?.bg : undefined)}
+                          alt=""
+                          aria-hidden="true"
+                        />
+                        <span className="forum-pinned-shade" aria-hidden="true" />
+                        <div>
+                          <span className="forum-pin-label">
+                            <IconPinFilled className="size-4" stroke={1.8} aria-hidden="true" />
+                            {post.gameIds[0]
+                              ? t(`forum.games.${post.gameIds[0]}`, { defaultValue: post.gameIds[0] })
+                              : t('forum.feed.featured')}
+                          </span>
+                          <h3>
+                            <button type="button" onClick={() => openPost(post.postNo)}>{post.title}</button>
+                          </h3>
+                          <p>{post.body}</p>
+                          <small>{t('forum.detail.byline', { time: post.time })}</small>
+                        </div>
+                      </article>
+                    ))}
 
-              <div className="forum-pinned-list">
-                <article>
-                  <span>{t('forum.pinned.vrising.label')}</span>
-                  <h3>{t('forum.pinned.vrising.title')}</h3>
-                  <small>{t('forum.pinned.vrising.meta')}</small>
-                </article>
-                <article>
-                  <span>{t('forum.pinned.aion2.label')}</span>
-                  <h3>{t('forum.pinned.aion2.title')}</h3>
-                  <small>{t('forum.pinned.aion2.meta')}</small>
-                </article>
-              </div>
-            </div>
-              </section>
+                    <div className="forum-pinned-list">
+                      {featured.posts.slice(1, 3).map((post) => (
+                        <article key={post.postNo}>
+                          <span>
+                            {post.gameIds[0]
+                              ? t(`forum.games.${post.gameIds[0]}`, { defaultValue: post.gameIds[0] })
+                              : t('forum.feed.featured')}
+                          </span>
+                          <h3>
+                            <button type="button" onClick={() => openPost(post.postNo)}>{post.title}</button>
+                          </h3>
+                          <small>{t('forum.detail.byline', { time: post.time })}</small>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
 
               <section className="forum-feed-section" ref={feedSectionRef}>
             <div className="forum-panel forum-feed-panel">
@@ -959,7 +991,7 @@ export function ForumPage({
             </>
           )}
           {!selectedPost && forumMode !== 'cabin' && (
-            <ForumMobileDiscovery sites={sites} posts={feed.posts} onOpenPost={openPost} onOpenCabin={showCabin} onComingSoon={onComingSoon} />
+            <ForumMobileDiscovery sites={sites} posts={feed.posts} onOpenPost={openPost} onOpenCabin={showCabin} />
           )}
         </section>
 
@@ -970,42 +1002,28 @@ export function ForumPage({
               site={siteById.get(sidebarGameId)!}
               followed={userSystemState.favoriteGameIds.includes(sidebarGameId)}
               onToggleFollow={() => runAuthenticated(() => toggleFavoriteGame(sidebarGameId))}
-              onComingSoon={onComingSoon}
             />
           ) : (
             <>
               <ForumHotPosts posts={feed.posts} onOpenPost={openPost} onComingSoon={onComingSoon} />
               <section className="forum-panel forum-popular-games">
                 <header><h2>{t('forum.redesign.popularGames')}</h2><button type="button" onClick={onComingSoon}>{t('forum.redesign.allGames')}</button></header>
-                {sites.slice(0, 3).map((site, index) => (
+                {sites.slice(0, 3).map((site) => (
                   <button key={site.id} type="button" onClick={() => showCabin(site.id)}>
                     <span className="forum-game-logo" aria-hidden="true"><img src={GAME_LOGOS[site.id]} alt="" /></span>
-                    <span><strong>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</strong><small>{t('forum.redesign.discussing', { count: 3246 - index * 638 })}</small></span>
+                    <span><strong>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</strong></span>
                     <IconChevronRight className="size-4" stroke={1.8} aria-hidden="true" />
                   </button>
                 ))}
               </section>
 
-              <section className="forum-panel forum-recommended-users">
-                <header>
-                  <h2>{t('forum.users.title')}</h2>
-                  <button type="button" onClick={onComingSoon}><IconRefresh className="size-4" stroke={1.8} aria-hidden="true" />{t('forum.users.refresh')}</button>
-                </header>
-                <div>
-                  {RECOMMENDED_USERS.slice(0, 3).map((recommendedUser) => {
-                    const followed = userSystemState.followedUserIds.includes(recommendedUser.id)
-                    return (
-                      <article key={recommendedUser.id}>
-                        <img src={avatarUrl(recommendedUser.avatarSeed)} alt="" loading="lazy" />
-                        <span><strong>{t(recommendedUser.nameKey)}</strong><small>{t(recommendedUser.descriptionKey)}</small></span>
-                        <button type="button" className={followed ? 'is-followed' : undefined} aria-pressed={followed} onClick={() => toggleFollow(recommendedUser.id, !followed)}>
-                          {t(followed ? 'forum.users.following' : 'forum.users.follow')}
-                        </button>
-                      </article>
-                    )
-                  })}
-                </div>
-              </section>
+              {/* "Recommended users" is gone rather than ported. It listed four
+                  invented people — name, one-line bio and a pravatar.cc portrait
+                  each — and its Follow button would have posted a uid that does
+                  not exist, so against real data it was broken as well as untrue.
+                  Recommending accounts needs a signal the backend does not have
+                  yet (who posts, who you already follow, who they follow); when
+                  it does, this comes back reading from it. */}
             </>
           )}
         </aside>
@@ -1236,6 +1254,7 @@ function ForumCabinView({
    * and something to move server-side when a cabin has more.
    */
   const visiblePosts = tab === 'guides' ? posts.filter((post) => post.featured) : posts
+  const pinned = posts.find((post) => post.featured) ?? null
 
   return (
     <div className="forum-cabin-view">
@@ -1244,7 +1263,7 @@ function ForumCabinView({
         <span aria-hidden="true" />
         <div>
           <span className="forum-cabin-logo"><img src={GAME_LOGOS[site.id]} alt="" /></span>
-          <div><h1>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</h1><p>{t('forum.redesign.cabinStats', { followers: '12.6', posts: '4,382' })}</p></div>
+          <div><h1>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</h1></div>
         </div>
       </section>
       <div className="forum-cabin-tabs" role="tablist" aria-label={t('forum.redesign.cabinContent')}>
@@ -1252,11 +1271,17 @@ function ForumCabinView({
           <button key={item} type="button" role="tab" aria-selected={tab === item} className={tab === item ? 'is-active' : undefined} onClick={() => onTabChange(item)}>{t(`forum.redesign.cabinTabs.${item}`)}</button>
         ))}
       </div>
-      <section className="forum-cabin-pinned">
-        <span>{t('forum.pinned.title')}</span>
-        <div><strong>{t('forum.pinned.aion2.title')}</strong><p>{t('forum.pinned.aion2.meta')}</p></div>
-        <button type="button" onClick={() => posts[0] ? onOpenPost(posts[0].postNo) : onComingSoon()}>{t('forum.pinned.viewAll')}<IconChevronRight className="size-4" stroke={1.8} /></button>
-      </section>
+      {/* The cabin's own pinned strip, which named a fixture post regardless of
+          which game you were looking at. It shows this cabin's featured post
+          when there is one, and is absent otherwise rather than pinning
+          something arbitrary. */}
+      {pinned && (
+        <section className="forum-cabin-pinned">
+          <span>{t('forum.pinned.title')}</span>
+          <div><strong>{pinned.title}</strong><p>{t('forum.detail.byline', { time: pinned.time })}</p></div>
+          <button type="button" onClick={() => onOpenPost(pinned.postNo)}>{t('forum.pinned.viewAll')}<IconChevronRight className="size-4" stroke={1.8} /></button>
+        </section>
+      )}
       <section className="forum-panel forum-cabin-feed">
         {loading ? (
           <p className="forum-feed-status" role="status">{t('forum.loading')}</p>
@@ -1295,21 +1320,18 @@ function ForumMobileDiscovery({
   posts,
   onOpenPost,
   onOpenCabin,
-  onComingSoon,
 }: {
   sites: readonly SiteCard[]
   posts: ForumPost[]
   onOpenPost: (postNo: number) => void
   onOpenCabin: (gameId: string) => void
-  onComingSoon: () => void
 }) {
   const { t } = useTranslation()
   return (
     <details className="forum-mobile-discovery">
       <summary>{t('forum.redesign.communityDiscovery')}<IconChevronRight className="size-4" stroke={1.8} /></summary>
       <section><h2>{t('forum.redesign.hotPosts')}</h2>{posts.slice(0, 3).map((post, index) => <button key={post.postNo} type="button" onClick={() => onOpenPost(post.postNo)}><b>{index + 1}</b><span>{postTitle(post)}</span></button>)}</section>
-      <section><h2>{t('forum.redesign.popularGames')}</h2>{sites.slice(0, 3).map((site) => <button key={site.id} type="button" onClick={() => onOpenCabin(site.id)}><span>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</span><small>{t('forum.redesign.discussing', { count: 2108 })}</small></button>)}</section>
-      <section><h2>{t('forum.users.title')}</h2>{RECOMMENDED_USERS.slice(0, 3).map((recommendedUser) => <button key={recommendedUser.id} type="button" onClick={onComingSoon}><span>{t(recommendedUser.nameKey)}</span><small>{t(recommendedUser.descriptionKey)}</small></button>)}</section>
+      <section><h2>{t('forum.redesign.popularGames')}</h2>{sites.slice(0, 3).map((site) => <button key={site.id} type="button" onClick={() => onOpenCabin(site.id)}><span>{t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })}</span></button>)}</section>
     </details>
   )
 }
@@ -1318,24 +1340,31 @@ function ForumCabinSidebar({
   site,
   followed,
   onToggleFollow,
-  onComingSoon,
 }: {
   site: SiteCard
   followed: boolean
   onToggleFollow: () => void
-  onComingSoon: () => void
 }) {
   const { t } = useTranslation()
   const name = t(`forum.games.${site.id}`, { defaultValue: t(site.nameKey) })
   return (
     <>
       <section className="forum-panel forum-cabin-summary">
-        <header><span className="forum-game-logo"><img src={GAME_LOGOS[site.id]} alt="" /></span><span><strong>{name}</strong><small>{t('forum.redesign.cabinFollowers', { count: '12.6' })}</small></span><button type="button" className={followed ? 'is-followed' : undefined} aria-pressed={followed} onClick={onToggleFollow}>{t(followed ? 'forum.users.following' : 'forum.users.follow')}</button></header>
+        {/* The follower count here was the literal "12.6K" for every game. A
+            cabin follow is currently a local favourite rather than a stored
+            relationship, so there is no number to show yet. */}
+        <header><span className="forum-game-logo"><img src={GAME_LOGOS[site.id]} alt="" /></span><span><strong>{name}</strong></span><button type="button" className={followed ? 'is-followed' : undefined} aria-pressed={followed} onClick={onToggleFollow}>{t(followed ? 'forum.users.following' : 'forum.users.follow')}</button></header>
         <div><span>MMORPG</span><span>{t('forum.redesign.openWorld')}</span><span>{t('forum.redesign.crossServer')}</span></div>
         <p>{t('forum.redesign.cabinDescription', { game: name })}</p>
       </section>
-      <section className="forum-panel forum-hot-posts forum-cabin-hot-posts"><header><h2>{t('forum.redesign.gameHotPosts', { game: name })}</h2><button type="button" onClick={onComingSoon}>{t('forum.redesign.more')}</button></header><ol><li><button type="button" onClick={onComingSoon}><b>1</b><span>{t('forum.posts.aion2.title')}</span><small>9,824</small></button></li><li><button type="button" onClick={onComingSoon}><b>2</b><span>{t('forum.pinned.aion2.title')}</span><small>7,641</small></button></li></ol></section>
-      <section className="forum-panel forum-cabin-management"><header><h2>{t('forum.redesign.cabinManagement', { game: name })}</h2><button type="button" onClick={onComingSoon}>{t('forum.redesign.apply')}</button></header><article><img src={avatarUrl('arkive-dusk-raven')} alt="" /><span><strong>{t('forum.posts.vrising.author')}</strong><small>{t('forum.redesign.owner')}</small></span></article><article><img src={avatarUrl('arkive-wind-string')} alt="" /><span><strong>{t('forum.posts.aion2.author')}</strong><small>{t('forum.redesign.administrator')}</small></span></article></section>
+
+      {/* Two panels are gone from here. "Hot posts" listed two fixture titles
+          with view counts of 9,824 and 7,641, identical in every cabin; the
+          feed beside it is already the real thing. "Management" showed a fixed
+          owner and administrator with pravatar portraits — and unlike the rest
+          of this, that one asserted who holds authority over a game, which the
+          role grants now actually record. It comes back reading
+          /roles/games/{'{'}game{'}'} rather than inventing two names. */}
     </>
   )
 }
