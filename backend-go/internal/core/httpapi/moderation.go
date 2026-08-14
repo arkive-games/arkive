@@ -112,7 +112,7 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 			"included.",
 		Tags:   []string{"moderation"},
 		Errors: []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
-	}, func(ctx context.Context, in *hidePostInput) (*api.Response[struct{}], error) {
+	}, func(ctx context.Context, in *hidePostInput) (*api.Response[api.Empty], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {
 			return nil, err
@@ -120,7 +120,7 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 		if err := h.forum.SetPostHidden(ctx, principal, in.PostNo, true, hideReason(in.Body)); err != nil {
 			return nil, err
 		}
-		return api.OK(struct{}{}), nil
+		return api.OKEmpty(), nil
 	})
 
 	huma.Register(a, huma.Operation{
@@ -131,7 +131,7 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 		Description: "The same permissions as hiding.",
 		Tags:        []string{"moderation"},
 		Errors:      []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
-	}, func(ctx context.Context, in *unhidePostInput) (*api.Response[struct{}], error) {
+	}, func(ctx context.Context, in *unhidePostInput) (*api.Response[api.Empty], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {
 			return nil, err
@@ -139,7 +139,7 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 		if err := h.forum.SetPostHidden(ctx, principal, in.PostNo, false, nil); err != nil {
 			return nil, err
 		}
-		return api.OK(struct{}{}), nil
+		return api.OKEmpty(), nil
 	})
 
 	huma.Register(a, huma.Operation{
@@ -151,7 +151,7 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 			"comment carries no tags of its own.",
 		Tags:   []string{"moderation"},
 		Errors: []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
-	}, func(ctx context.Context, in *hideCommentInput) (*api.Response[struct{}], error) {
+	}, func(ctx context.Context, in *hideCommentInput) (*api.Response[api.Empty], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {
 			return nil, err
@@ -159,7 +159,7 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 		if err := h.forum.SetCommentHidden(ctx, principal, in.ID, true, hideReason(in.Body)); err != nil {
 			return nil, err
 		}
-		return api.OK(struct{}{}), nil
+		return api.OKEmpty(), nil
 	})
 
 	huma.Register(a, huma.Operation{
@@ -170,7 +170,7 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 		Description: "The same permissions as hiding.",
 		Tags:        []string{"moderation"},
 		Errors:      []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
-	}, func(ctx context.Context, in *unhideCommentInput) (*api.Response[struct{}], error) {
+	}, func(ctx context.Context, in *unhideCommentInput) (*api.Response[api.Empty], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {
 			return nil, err
@@ -178,7 +178,7 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 		if err := h.forum.SetCommentHidden(ctx, principal, in.ID, false, nil); err != nil {
 			return nil, err
 		}
-		return api.OK(struct{}{}), nil
+		return api.OKEmpty(), nil
 	})
 
 	huma.Register(a, huma.Operation{
@@ -219,6 +219,28 @@ func (h *Handlers) RegisterModerationRoutes(a huma.API) {
 			return nil, err
 		}
 		list, total, err := h.forum.OpenReports(ctx, principal, in.Page, in.PageSize)
+		if err != nil {
+			return nil, err
+		}
+		return api.OKList(list, total), nil
+	})
+
+	huma.Register(a, huma.Operation{
+		OperationID: "listHiddenForumComments",
+		Method:      http.MethodGet,
+		Path:        "/forum/moderation/hidden-comments",
+		Summary:     "Hidden comments",
+		Description: "The counterpart to the hidden-post list, scoped to the games you " +
+			"moderate. Without it a hidden comment could be restored only by someone who " +
+			"already knew its id, which nothing hands out once it is hidden.",
+		Tags:   []string{"moderation"},
+		Errors: []int{http.StatusUnauthorized, http.StatusForbidden},
+	}, func(ctx context.Context, in *moderationQueueInput) (*api.Response[api.List[forum.HiddenCommentRead]], error) {
+		principal, err := auth.RequireUser(ctx)
+		if err != nil {
+			return nil, err
+		}
+		list, total, err := h.forum.HiddenComments(ctx, principal, in.Page, in.PageSize)
 		if err != nil {
 			return nil, err
 		}

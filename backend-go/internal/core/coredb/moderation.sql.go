@@ -7,9 +7,25 @@ package coredb
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const countHiddenForumComments = `-- name: CountHiddenForumComments :one
+SELECT count(*) FROM core.forum_comments c
+JOIN core.forum_posts p ON p.id = c.post_id
+WHERE c.hidden_at IS NOT NULL
+  AND ($1::text[] IS NULL OR p.game_ids && $1::text[])
+`
+
+func (q *Queries) CountHiddenForumComments(ctx context.Context, games []string) (int64, error) {
+	row := q.db.QueryRow(ctx, countHiddenForumComments, games)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
 
 const countHiddenForumPosts = `-- name: CountHiddenForumPosts :one
 SELECT count(*) FROM core.forum_posts
@@ -111,6 +127,78 @@ func (q *Queries) GetForumReport(ctx context.Context, id uuid.UUID) (CoreForumRe
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const listHiddenForumComments = `-- name: ListHiddenForumComments :many
+SELECT c.id, c.post_id, c.parent_id, c.author_id, c.body, c.comment_no, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at, c.hidden_at, c.hidden_by, c.hidden_reason, p.post_no FROM core.forum_comments c
+JOIN core.forum_posts p ON p.id = c.post_id
+WHERE c.hidden_at IS NOT NULL
+  AND ($1::text[] IS NULL OR p.game_ids && $1::text[])
+ORDER BY c.hidden_at DESC, c.id
+LIMIT $3 OFFSET $2
+`
+
+type ListHiddenForumCommentsParams struct {
+	Games        []string
+	ResultOffset int32
+	ResultLimit  int32
+}
+
+type ListHiddenForumCommentsRow struct {
+	ID           uuid.UUID
+	PostID       uuid.UUID
+	ParentID     *uuid.UUID
+	AuthorID     uuid.UUID
+	Body         string
+	CommentNo    *int64
+	Depth        int16
+	ParentDepth  *int16
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	EditedAt     pgtype.Timestamptz
+	HiddenAt     pgtype.Timestamptz
+	HiddenBy     *uuid.UUID
+	HiddenReason *string
+	PostNo       int64
+}
+
+// The counterpart to ListHiddenForumPosts. Without it a hidden comment can be restored
+// only by someone who already knows its id, which makes hiding one effectively permanent.
+// Scoped by the games of the post the comment belongs to, since a comment carries none.
+func (q *Queries) ListHiddenForumComments(ctx context.Context, arg ListHiddenForumCommentsParams) ([]ListHiddenForumCommentsRow, error) {
+	rows, err := q.db.Query(ctx, listHiddenForumComments, arg.Games, arg.ResultOffset, arg.ResultLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListHiddenForumCommentsRow{}
+	for rows.Next() {
+		var i ListHiddenForumCommentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.PostID,
+			&i.ParentID,
+			&i.AuthorID,
+			&i.Body,
+			&i.CommentNo,
+			&i.Depth,
+			&i.ParentDepth,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.EditedAt,
+			&i.HiddenAt,
+			&i.HiddenBy,
+			&i.HiddenReason,
+			&i.PostNo,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listHiddenForumPosts = `-- name: ListHiddenForumPosts :many

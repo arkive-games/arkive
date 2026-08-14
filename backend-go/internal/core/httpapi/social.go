@@ -61,11 +61,16 @@ func (h *Handlers) RegisterSocialRoutes(a huma.API) {
 		Method:      http.MethodGet,
 		Path:        "/users/{uid}/follow",
 		Summary:     "Get an account's follow tally",
-		Description: "Public. `following` describes the signed-in caller and is false " +
-			"for an anonymous reader.",
+		Description: "Subject to the account's activityVisibility, like the lists it " +
+			"summarises — a tally that stayed public would disclose exactly what a private " +
+			"follower list withholds. `following` describes the signed-in caller and is " +
+			"false for an anonymous reader.",
 		Tags:   []string{"social"},
 		Errors: []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *followInput) (*api.Response[social.Counts], error) {
+		if err := h.requireActivityVisible(ctx, in.UID); err != nil {
+			return nil, err
+		}
 		counts, err := h.social.CountsForUID(ctx, in.UID, viewerFrom(ctx))
 		if err != nil {
 			return nil, err
@@ -78,9 +83,11 @@ func (h *Handlers) RegisterSocialRoutes(a huma.API) {
 		Method:      http.MethodGet,
 		Path:        "/users/{uid}/followers",
 		Summary:     "List an account's followers",
-		Description: "Public. Newest first.",
-		Tags:        []string{"social"},
-		Errors:      []int{http.StatusNotFound},
+		Description: "Newest first. Subject to the account's activityVisibility, so a " +
+			"withheld list answers 404 rather than 403 — a 403 would confirm the account " +
+			"exists and is withholding.",
+		Tags:   []string{"social"},
+		Errors: []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *followListInput) (*api.Response[api.List[social.FollowRead]], error) {
 		if err := h.requireActivityVisible(ctx, in.UID); err != nil {
 			return nil, err
@@ -97,7 +104,7 @@ func (h *Handlers) RegisterSocialRoutes(a huma.API) {
 		Method:      http.MethodGet,
 		Path:        "/users/{uid}/following",
 		Summary:     "List the accounts an account follows",
-		Description: "Public. Newest first.",
+		Description: "Newest first. Subject to the account's activityVisibility.",
 		Tags:        []string{"social"},
 		Errors:      []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *followListInput) (*api.Response[api.List[social.FollowRead]], error) {

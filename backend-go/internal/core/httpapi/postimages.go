@@ -97,7 +97,7 @@ func (h *Handlers) RegisterPostImageRoutes(a huma.API) {
 			"in the state the caller asked for.",
 		Tags:   []string{"forum"},
 		Errors: []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound},
-	}, func(ctx context.Context, in *detachImageInput) (*api.Response[struct{}], error) {
+	}, func(ctx context.Context, in *detachImageInput) (*api.Response[api.Empty], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {
 			return nil, err
@@ -105,6 +105,6 @@ func (h *Handlers) RegisterPostImageRoutes(a huma.API) {
 		if err := h.forum.DetachImage(ctx, principal, in.PostNo, in.Position); err != nil {
 			return nil, err
 		}
-		return api.OK(struct{}{}), nil
+		return api.OKEmpty(), nil
 	})
 }

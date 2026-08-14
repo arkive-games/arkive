@@ -16,6 +16,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/games"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
 
@@ -303,6 +304,52 @@ func (s *Service) HiddenPosts(ctx context.Context, principal auth.Principal, pag
 	return out, total, nil
 }
 
+// HiddenCommentRead is a hidden comment as the moderation queue returns it.
+type HiddenCommentRead struct {
+	ID       uuid.UUID `json:"id" doc:"Comment identifier, used to restore it"`
+	PostNo   int64     `json:"postNo" doc:"The post it belongs to"`
+	Body     string    `json:"body" doc:"What it said"`
+	Reason   *string   `json:"reason" doc:"Why it was hidden, or null"`
+	HiddenAt time.Time `json:"hiddenAt" doc:"When it was hidden"`
+}
+
+// HiddenComments lists hidden comments a moderator may act on.
+//
+// Without this, restoring a hidden comment requires already knowing its id — which nothing
+// hands out once it is hidden — so hiding one would be reversible only in principle.
+func (s *Service) HiddenComments(ctx context.Context, principal auth.Principal, page, pageSize int) ([]HiddenCommentRead, int64, error) {
+	scope, err := s.moderationScope(ctx, principal)
+	if err != nil {
+		return nil, 0, err
+	}
+	limit, offset := moderationPaging(page, pageSize)
+
+	total, err := s.q.CountHiddenForumComments(ctx, scope)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count hidden comments: %w", err)
+	}
+	rows, err := s.q.ListHiddenForumComments(ctx, coredb.ListHiddenForumCommentsParams{
+		Games:        scope,
+		ResultLimit:  limit,
+		ResultOffset: offset,
+	})
+	if err != nil {
+		return nil, 0, fmt.Errorf("list hidden comments: %w", err)
+	}
+
+	out := make([]HiddenCommentRead, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, HiddenCommentRead{
+			ID:       row.ID,
+			PostNo:   row.PostNo,
+			Body:     row.Body,
+			Reason:   row.HiddenReason,
+			HiddenAt: row.HiddenAt.Time,
+		})
+	}
+	return out, total, nil
+}
+
 // moderationScope returns the games the caller may moderate, or nil meaning "all".
 //
 // nil is how a site administrator is expressed, because the queries read a NULL array
@@ -423,15 +470,5 @@ func notFoundIfHidden(hiddenAt pgtype.Timestamptz) error {
 }
 
 func moderationPaging(page, pageSize int) (limit int32, offset int32) {
-	if pageSize < 1 || pageSize > MaxPageSize {
-		pageSize = DefaultPageSize
-	}
-	if page < 1 {
-		page = 1
-	}
-	off := (page - 1) * pageSize
-	if off > MaxOffset {
-		off = MaxOffset
-	}
-	return int32(pageSize), int32(off)
+	return api.ClampPaging(page, pageSize, DefaultPageSize, MaxPageSize)
 }

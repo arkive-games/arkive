@@ -19,6 +19,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/games"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
 
@@ -65,14 +66,6 @@ const (
 	// conversation of twenty comments.
 	DefaultCommentPageSize = 100
 	MaxCommentPageSize     = 200
-
-	// MaxOffset bounds page * pageSize.
-	//
-	// The offset is sent to PostgreSQL as an int32. Without this, page=107374184
-	// with pageSize=20 computes 2147483660, which wraps to -2147483636 on
-	// conversion and makes PostgreSQL reject the query -- a 500 from a query
-	// string. Measured, not theorised.
-	MaxOffset = 1 << 30
 )
 
 // PostRead is a post as the API returns it.
@@ -106,13 +99,13 @@ type PostRead struct {
 	Liked      bool `json:"liked" doc:"Whether the current reader has liked it"`
 	Bookmarked bool `json:"bookmarked" doc:"Whether the current reader has bookmarked it"`
 
-	// Null unless a game administrator has put it on the editorial shelf. The actor is
-	// recorded in the database but not exposed: readers need to know a post is featured,
-	// not who decided so.
 	// Ordered by position. Empty rather than null, so a client can iterate without a
 	// guard, and empty on a server with no object storage configured.
 	Images []ImageRead `json:"images" doc:"Attached images, in order"`
 
+	// Null unless a game administrator has put it on the editorial shelf. The actor is
+	// recorded in the database but not exposed: readers need to know a post is featured,
+	// not who decided so.
 	FeaturedAt *time.Time `json:"featuredAt" doc:"When it was featured, or null"`
 
 	CreatedAt time.Time  `json:"createdAt" doc:"When it was posted"`
@@ -246,20 +239,26 @@ func (f *ListFilter) normalise() {
 
 // clampOffset caps the page so that (page-1)*pageSize stays inside MaxOffset.
 //
+// Delegates to api.ClampPaging, which is now the single implementation of this. It used
+// to be written out here and was then written out again, differently and wrongly, in
+// three new packages — clamping the offset after multiplying instead of the page before,
+// which cannot catch the overflow it exists to catch.
+//
 // Asking beyond the end of a feed is answered with an empty page rather than an
 // error, which is what a client walking to the end expects anyway.
 func (f *ListFilter) clampOffset(maxPageSize int) {
 	if f.PageSize > maxPageSize {
 		f.PageSize = maxPageSize
 	}
-	if maxPage := MaxOffset/f.PageSize + 1; f.Page > maxPage {
+	if maxPage := api.MaxOffset/f.PageSize + 1; f.Page > maxPage {
 		f.Page = maxPage
 	}
 }
 
 // Offset renders the SQL offset, which is now guaranteed to fit an int32.
 func (f ListFilter) Offset() int32 {
-	return int32((f.Page - 1) * f.PageSize)
+	_, offset := api.ClampPaging(f.Page, f.PageSize, DefaultPageSize, MaxPageSize)
+	return offset
 }
 
 // Reactions is the engagement a post carries, plus how the current reader has

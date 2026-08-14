@@ -176,14 +176,22 @@ func (h *Handlers) RegisterUserRoutes(a huma.API) {
 		Method:      http.MethodGet,
 		Path:        "/users/uid/{uid}",
 		Summary:     "Get an account by its public number",
-		Description: "Public. Resolves either the permanent uid or a special uid, and returns " +
-			"only publicly visible fields. Permanent links should use the uid, since a " +
-			"special uid can be reassigned. Deactivated accounts are reported as not found.",
+		Description: "Resolves either the permanent uid or a special uid, and returns only " +
+			"publicly visible fields. Permanent links should use the uid, since a special " +
+			"uid can be reassigned. Deactivated accounts are reported as not found, and so " +
+			"are accounts whose profileVisibility withholds them from the caller.",
 		Tags:   []string{"users"},
 		Errors: []int{http.StatusNotFound},
 	}, func(ctx context.Context, in *userUIDInput) (*api.Response[users.UserPublic], error) {
 		user, err := h.users.ByAnyUID(ctx, in.UID)
 		if err != nil {
+			return nil, err
+		}
+		// profileVisibility is enforced here or nowhere: this is the only route that
+		// serves someone else's profile. Without it the setting would be accepted,
+		// persisted and confirmed to the user while changing nothing — worse than not
+		// offering it, because the UI would report a protection that does not exist.
+		if err := h.requireProfileVisible(ctx, in.UID); err != nil {
 			return nil, err
 		}
 		return api.OK(user), nil

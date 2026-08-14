@@ -66,7 +66,7 @@ WHERE p.hidden_at IS NULL
   -- The expression matches forum_posts_search_idx exactly, which is what lets a
   -- substring query use the trigram index instead of scanning every body.
   AND (sqlc.narg('query')::text IS NULL
-       OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%')
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%' ESCAPE '\')
 ORDER BY
     -- One statement rather than three, so every filter above is written once. A CASE
     -- per sort collapses to NULL for the orders not chosen, and NULLS LAST keeps those
@@ -102,7 +102,7 @@ WHERE p.hidden_at IS NULL
   AND (sqlc.narg('featured')::boolean IS NULL
        OR (p.featured_at IS NOT NULL) = sqlc.narg('featured')::boolean)
   AND (sqlc.narg('query')::text IS NULL
-       OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%');
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%' ESCAPE '\');
 
 -- name: SetForumPostFeatured :one
 -- Both columns move together, which the forum_posts_featured_together constraint

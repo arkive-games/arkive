@@ -93,3 +93,11 @@ SELECT pg_advisory_xact_lock(hashtext('core.users.admin_membership'));
 -- one query for its authors instead of one per row.
 -- name: GetUsersByIDs :many
 SELECT * FROM core.users WHERE id = ANY(sqlc.arg('ids')::uuid[]);
+
+-- name: GetUserIDsByNames :many
+-- Resolves a batch of display names at once, for mentions. One round trip rather than one
+-- per name: a body may legitimately name several people, and an abusive one names
+-- thousands, so the cost must not scale with what the author typed.
+-- Inactive accounts are omitted, matching every other name and uid lookup.
+SELECT id, name FROM core.users
+WHERE name = ANY (sqlc.arg('names')::text[]) AND is_active;

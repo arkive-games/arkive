@@ -80,3 +80,20 @@ LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 SELECT count(*) FROM core.forum_posts
 WHERE hidden_at IS NOT NULL
   AND (sqlc.narg('games')::text[] IS NULL OR game_ids && sqlc.narg('games')::text[]);
+
+-- name: ListHiddenForumComments :many
+-- The counterpart to ListHiddenForumPosts. Without it a hidden comment can be restored
+-- only by someone who already knows its id, which makes hiding one effectively permanent.
+-- Scoped by the games of the post the comment belongs to, since a comment carries none.
+SELECT c.*, p.post_no FROM core.forum_comments c
+JOIN core.forum_posts p ON p.id = c.post_id
+WHERE c.hidden_at IS NOT NULL
+  AND (sqlc.narg('games')::text[] IS NULL OR p.game_ids && sqlc.narg('games')::text[])
+ORDER BY c.hidden_at DESC, c.id
+LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
+
+-- name: CountHiddenForumComments :one
+SELECT count(*) FROM core.forum_comments c
+JOIN core.forum_posts p ON p.id = c.post_id
+WHERE c.hidden_at IS NOT NULL
+  AND (sqlc.narg('games')::text[] IS NULL OR p.game_ids && sqlc.narg('games')::text[]);

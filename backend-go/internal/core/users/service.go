@@ -248,25 +248,29 @@ func (s *Service) IDByUID(ctx context.Context, uid int64) (uuid.UUID, error) {
 	return u.ID, nil
 }
 
-// IDByName resolves a display name to the internal handle.
+// IDsByNames resolves display names to internal handles, in one query.
 //
 // For mentions, which name people the way readers do. Names are unique, so this is
-// unambiguous. A deactivated account reports not-found, as everywhere else, which means a
-// mention of one quietly lands nowhere rather than notifying a disabled inbox.
-func (s *Service) IDByName(ctx context.Context, name string) (uuid.UUID, error) {
-	notFound := apierr.New(apierr.UserNotFound, "no such user")
+// unambiguous. Deactivated accounts are absent from the result, as they are from every
+// other name and uid lookup, so a mention of one quietly lands nowhere rather than
+// notifying a disabled inbox.
+//
+// A batch rather than one call per name: a body may legitimately name several people and
+// an abusive one names thousands, so the cost must not scale with what the author typed.
+func (s *Service) IDsByNames(ctx context.Context, names []string) (map[string]uuid.UUID, error) {
+	out := make(map[string]uuid.UUID, len(names))
+	if len(names) == 0 {
+		return out, nil
+	}
 
-	u, err := s.q.GetUserByName(ctx, name)
+	rows, err := s.q.GetUserIDsByNames(ctx, names)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return uuid.Nil, notFound
-		}
-		return uuid.Nil, fmt.Errorf("load user by name: %w", err)
+		return nil, fmt.Errorf("load users by name: %w", err)
 	}
-	if !u.IsActive {
-		return uuid.Nil, notFound
+	for _, row := range rows {
+		out[row.Name] = row.ID
 	}
-	return u.ID, nil
+	return out, nil
 }
 
 // UIDByID is the reverse of IDByUID, for turning a stored actor into the public number a

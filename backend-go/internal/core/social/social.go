@@ -17,6 +17,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
 
@@ -26,7 +27,6 @@ import (
 const (
 	DefaultPageSize = 50
 	MaxPageSize     = 200
-	MaxOffset       = 1 << 30
 )
 
 // FollowRead is one edge of the graph as the API returns it.
@@ -249,15 +249,5 @@ func (s *Service) resolve(ctx context.Context, edges []edge) ([]FollowRead, erro
 }
 
 func paging(page, pageSize int) (limit int32, offset int32) {
-	if pageSize < 1 || pageSize > MaxPageSize {
-		pageSize = DefaultPageSize
-	}
-	if page < 1 {
-		page = 1
-	}
-	off := (page - 1) * pageSize
-	if off > MaxOffset {
-		off = MaxOffset
-	}
-	return int32(pageSize), int32(off)
+	return api.ClampPaging(page, pageSize, DefaultPageSize, MaxPageSize)
 }

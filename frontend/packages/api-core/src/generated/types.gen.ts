@@ -349,6 +349,25 @@ export type EnvelopeListGrantRead = {
     showType: number;
 };
 
+export type EnvelopeListHiddenCommentRead = {
+    /**
+     * The payload
+     */
+    data: ListHiddenCommentRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeListHiddenRead = {
     /**
      * The payload
@@ -539,29 +558,6 @@ export type EnvelopeSettings = {
     showType: number;
 };
 
-export type EnvelopeStruct = {
-    /**
-     * The payload
-     */
-    data: EnvelopeStructDataStruct;
-    /**
-     * Always "Success" on a 2xx response
-     */
-    errorCode: string;
-    /**
-     * Always empty on a 2xx response
-     */
-    errorMessage: string;
-    /**
-     * How the client should surface this result
-     */
-    showType: number;
-};
-
-export type EnvelopeStructDataStruct = {
-    [key: string]: never;
-};
-
 export type EnvelopeUnreadCount = {
     /**
      * The payload
@@ -668,6 +664,29 @@ export type GrantRead = {
     user: UserPublic;
 };
 
+export type HiddenCommentRead = {
+    /**
+     * What it said
+     */
+    body: string;
+    /**
+     * When it was hidden
+     */
+    hiddenAt: string;
+    /**
+     * Comment identifier, used to restore it
+     */
+    id: string;
+    /**
+     * The post it belongs to
+     */
+    postNo: number;
+    /**
+     * Why it was hidden, or null
+     */
+    reason: string | null;
+};
+
 export type HiddenRead = {
     /**
      * Games the post is about
@@ -748,6 +767,17 @@ export type ListGrantRead = {
      * The current page of records
      */
     results: Array<GrantRead> | null;
+};
+
+export type ListHiddenCommentRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<HiddenCommentRead> | null;
 };
 
 export type ListHiddenRead = {
@@ -1708,7 +1738,7 @@ export type RestoreForumCommentResponses = {
     /**
      * OK
      */
-    200: EnvelopeStruct;
+    200: EnvelopeEmpty;
 };
 
 export type RestoreForumCommentResponse = RestoreForumCommentResponses[keyof RestoreForumCommentResponses];
@@ -1754,7 +1784,7 @@ export type HideForumCommentResponses = {
     /**
      * OK
      */
-    200: EnvelopeStruct;
+    200: EnvelopeEmpty;
 };
 
 export type HideForumCommentResponse = HideForumCommentResponses[keyof HideForumCommentResponses];
@@ -1888,6 +1918,52 @@ export type ListHiddenForumPostsResponses = {
 };
 
 export type ListHiddenForumPostsResponse = ListHiddenForumPostsResponses[keyof ListHiddenForumPostsResponses];
+
+export type ListHiddenForumCommentsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Rows per page
+         */
+        pageSize?: number;
+    };
+    url: '/forum/moderation/hidden-comments';
+};
+
+export type ListHiddenForumCommentsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListHiddenForumCommentsError = ListHiddenForumCommentsErrors[keyof ListHiddenForumCommentsErrors];
+
+export type ListHiddenForumCommentsResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListHiddenCommentRead;
+};
+
+export type ListHiddenForumCommentsResponse = ListHiddenForumCommentsResponses[keyof ListHiddenForumCommentsResponses];
 
 export type ListOpenForumReportsData = {
     body?: never;
@@ -2486,7 +2562,7 @@ export type RestoreForumPostResponses = {
     /**
      * OK
      */
-    200: EnvelopeStruct;
+    200: EnvelopeEmpty;
 };
 
 export type RestoreForumPostResponse = RestoreForumPostResponses[keyof RestoreForumPostResponses];
@@ -2532,7 +2608,7 @@ export type HideForumPostResponses = {
     /**
      * OK
      */
-    200: EnvelopeStruct;
+    200: EnvelopeEmpty;
 };
 
 export type HideForumPostResponse = HideForumPostResponses[keyof HideForumPostResponses];
@@ -2582,7 +2658,7 @@ export type DetachForumPostImageResponses = {
     /**
      * OK
      */
-    200: EnvelopeStruct;
+    200: EnvelopeEmpty;
 };
 
 export type DetachForumPostImageResponse = DetachForumPostImageResponses[keyof DetachForumPostImageResponses];
@@ -3020,7 +3096,7 @@ export type MarkNotificationReadResponses = {
     /**
      * OK
      */
-    200: EnvelopeStruct;
+    200: EnvelopeEmpty;
 };
 
 export type MarkNotificationReadResponse = MarkNotificationReadResponses[keyof MarkNotificationReadResponses];
@@ -3175,7 +3251,7 @@ export type RevokeGameRoleResponses = {
     /**
      * OK
      */
-    200: EnvelopeStruct;
+    200: EnvelopeEmpty;
 };
 
 export type RevokeGameRoleResponse = RevokeGameRoleResponses[keyof RevokeGameRoleResponses];

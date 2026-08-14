@@ -25,6 +25,19 @@ type setPrivacyInput struct {
 	Body PrivacyBody
 }
 
+// requireProfileVisible gates someone else's profile on their profile setting.
+func (h *Handlers) requireProfileVisible(ctx context.Context, uid int64) error {
+	ownerID, err := h.users.IDByUID(ctx, uid)
+	if err != nil {
+		return err
+	}
+	settings, err := h.privacy.For(ctx, ownerID)
+	if err != nil {
+		return err
+	}
+	return h.privacy.Require(ctx, ownerID, viewerFrom(ctx), settings.Profile, "user")
+}
+
 // requirePostsVisible gates an author-filtered feed on that author's posts setting.
 //
 // An unknown author is left to the service, which answers an empty feed rather than an

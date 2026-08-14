@@ -66,9 +66,14 @@ func (s *Service) AttachImage(ctx context.Context, principal auth.Principal, pos
 		return ImageRead{}, fmt.Errorf("list images: %w", err)
 	}
 	replacing := false
+	var displaced string
 	for _, row := range existing {
 		if int(row.Position) == position {
 			replacing = true
+			// Kept so the object it is about to point away from can be reclaimed. Without
+			// this the row is overwritten and the old key becomes unreachable — nothing
+			// references it and nothing knows it exists.
+			displaced = row.ObjectKey
 			break
 		}
 	}
@@ -95,6 +100,17 @@ func (s *Service) AttachImage(ctx context.Context, principal auth.Principal, pos
 		// finds it, and a compensating delete that itself failed would be a second error
 		// to report on top of this one.
 		return ImageRead{}, mapConstraintError(err)
+	}
+
+	// Best-effort, and only once the row points somewhere else: the new key is committed,
+	// so the displaced object is unreferenced and a failure to remove it leaves a
+	// reclaimable orphan rather than a broken image. Skipped when the two are the same
+	// key, which happens when the identical bytes are re-uploaded — the key is a digest.
+	if displaced != "" && displaced != key {
+		if err := s.images.Delete(ctx, displaced); err != nil {
+			s.logger.WarnContext(ctx, "could not delete a replaced post image",
+				slog.String("key", displaced), slog.Any("error", err))
+		}
 	}
 
 	s.logger.InfoContext(ctx, "post image attached",

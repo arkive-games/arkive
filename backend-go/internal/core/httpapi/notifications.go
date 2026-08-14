@@ -108,7 +108,7 @@ func (h *Handlers) RegisterNotificationRoutes(a huma.API) {
 			"says nothing, rather than revealing whether it exists.",
 		Tags:   []string{"notifications"},
 		Errors: []int{http.StatusUnauthorized},
-	}, func(ctx context.Context, in *markReadInput) (*api.Response[struct{}], error) {
+	}, func(ctx context.Context, in *markReadInput) (*api.Response[api.Empty], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {
 			return nil, err
@@ -116,7 +116,7 @@ func (h *Handlers) RegisterNotificationRoutes(a huma.API) {
 		if err := h.notify.MarkRead(ctx, principal.ID, in.ID); err != nil {
 			return nil, err
 		}
-		return api.OK(struct{}{}), nil
+		return api.OKEmpty(), nil
 	})
 
 	huma.Register(a, huma.Operation{

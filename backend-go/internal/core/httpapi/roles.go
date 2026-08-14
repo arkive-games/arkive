@@ -104,7 +104,7 @@ func (h *Handlers) RegisterRoleRoutes(a huma.API) {
 			"succeeds: the caller asked for an end state, and that state already holds.",
 		Tags:   []string{"roles"},
 		Errors: []int{http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound, http.StatusUnprocessableEntity},
-	}, func(ctx context.Context, in *revokeRoleInput) (*api.Response[struct{}], error) {
+	}, func(ctx context.Context, in *revokeRoleInput) (*api.Response[api.Empty], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {
 			return nil, err
@@ -112,7 +112,7 @@ func (h *Handlers) RegisterRoleRoutes(a huma.API) {
 		if err := h.roles.Revoke(ctx, principal, in.UID, in.Role, string(in.Game)); err != nil {
 			return nil, err
 		}
-		return api.OK(struct{}{}), nil
+		return api.OKEmpty(), nil
 	})
 
 	huma.Register(a, huma.Operation{

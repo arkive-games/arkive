@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -186,6 +187,46 @@ func (s *Service) PostByNo(ctx context.Context, postNo int64, viewer *uuid.UUID)
 	return read, nil
 }
 
+// MinQueryLength is the shortest search accepted.
+//
+// Two, not three, and the difference matters. Three is what the trigram index wants — a
+// trigram is three characters, so anything shorter degrades to a sequential scan of every
+// title and body. But two Chinese characters are a whole word: 繁殖 is "breeding", and this
+// site's largest audience writes queries exactly that shape. Refusing them to protect an
+// index would break search in the primary language to make it fast in the secondary one.
+//
+// So two-character searches are accepted and scan. The board is small, the cost is bounded
+// by the page size, and a one-character search — which matches most of everything and is
+// the actually pathological case — is still refused.
+const MinQueryLength = 2
+
+// normaliseQuery trims, bounds and escapes a search term.
+//
+// The escaping is the part worth reading. The query reaches SQL as a parameter, so there is
+// no injection — but it is interpolated into a LIKE pattern, where `%` and `_` are
+// wildcards. Without this, a user typing `%` matches every post and a user searching for
+// `foo_bar` also matches `fooXbar`. The backslash is escaped first, because escaping it
+// afterwards would double the ones this function had just added.
+func normaliseQuery(filter *ListFilter) error {
+	if filter.Query == nil {
+		return nil
+	}
+
+	term := trimmed(*filter.Query)
+	if term == "" {
+		filter.Query = nil
+		return nil
+	}
+	if utf8.RuneCountInString(term) < MinQueryLength {
+		return apierr.New(apierr.Validation,
+			fmt.Sprintf("a search needs at least %d characters", MinQueryLength))
+	}
+
+	escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(term)
+	filter.Query = &escaped
+	return nil
+}
+
 // reactions loads the counters and the viewer's own state for one post.
 func (s *Service) reactions(ctx context.Context, postID uuid.UUID, viewer *uuid.UUID) (Reactions, error) {
 	row, err := s.q.ForumPostReactions(ctx, coredb.ForumPostReactionsParams{
@@ -221,6 +262,9 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 	if !ValidSort(filter.Sort) {
 		return nil, 0, apierr.New(apierr.Validation,
 			fmt.Sprintf("%q is not a feed order", filter.Sort))
+	}
+	if err := normaliseQuery(&filter); err != nil {
+		return nil, 0, err
 	}
 
 	// An author filter naming nobody is an empty feed, not an error. A profile link
@@ -440,6 +484,12 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 			return CommentRead{}, apierr.New(apierr.NotFound, "no such post")
 		}
 		return CommentRead{}, fmt.Errorf("load post: %w", err)
+	}
+	// Hidden content takes its thread with it. Without this a moderator's hide still
+	// accepts comments, and every one fires a reply notification — so the author of
+	// content nobody can see keeps being told about it.
+	if err := notFoundIfHidden(post.HiddenAt); err != nil {
+		return CommentRead{}, err
 	}
 
 	var comment coredb.CoreForumComment

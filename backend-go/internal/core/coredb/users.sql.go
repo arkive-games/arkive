@@ -192,6 +192,40 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (CoreUser, err
 	return i, err
 }
 
+const getUserIDsByNames = `-- name: GetUserIDsByNames :many
+SELECT id, name FROM core.users
+WHERE name = ANY ($1::text[]) AND is_active
+`
+
+type GetUserIDsByNamesRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+// Resolves a batch of display names at once, for mentions. One round trip rather than one
+// per name: a body may legitimately name several people, and an abusive one names
+// thousands, so the cost must not scale with what the author typed.
+// Inactive accounts are omitted, matching every other name and uid lookup.
+func (q *Queries) GetUserIDsByNames(ctx context.Context, names []string) ([]GetUserIDsByNamesRow, error) {
+	rows, err := q.db.Query(ctx, getUserIDsByNames, names)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserIDsByNamesRow{}
+	for rows.Next() {
+		var i GetUserIDsByNamesRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUsersByIDs = `-- name: GetUsersByIDs :many
 SELECT id, name, email, hashed_password, is_active, is_superuser, is_verified, created_at, updated_at, uid, special_uid, avatar_key FROM core.users WHERE id = ANY($1::uuid[])
 `

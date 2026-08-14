@@ -37,7 +37,7 @@ WHERE p.hidden_at IS NULL
   AND ($6::boolean IS NULL
        OR (p.featured_at IS NOT NULL) = $6::boolean)
   AND ($7::text IS NULL
-       OR lower(p.title || ' ' || p.body) LIKE '%' || lower($7::text) || '%')
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower($7::text) || '%' ESCAPE '\')
 `
 
 type CountForumPostsParams struct {
@@ -500,7 +500,7 @@ WHERE p.hidden_at IS NULL
   -- The expression matches forum_posts_search_idx exactly, which is what lets a
   -- substring query use the trigram index instead of scanning every body.
   AND ($8::text IS NULL
-       OR lower(p.title || ' ' || p.body) LIKE '%' || lower($8::text) || '%')
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower($8::text) || '%' ESCAPE '\')
 ORDER BY
     -- One statement rather than three, so every filter above is written once. A CASE
     -- per sort collapses to NULL for the orders not chosen, and NULLS LAST keeps those

@@ -16,13 +16,12 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
-	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 )
 
 // Kind is why a notification exists.
@@ -49,7 +48,6 @@ const MaxMentionsPerBody = 10
 const (
 	DefaultPageSize = 30
 	MaxPageSize     = 100
-	MaxOffset       = 1 << 30
 )
 
 // mentionPattern matches @name in a body.
@@ -108,7 +106,8 @@ type Event struct {
 // AccountSource resolves accounts, so a mention can find the person it names and a
 // notification can report an actor by public number.
 type AccountSource interface {
-	IDByName(ctx context.Context, name string) (uuid.UUID, error)
+	// IDsByNames resolves a batch, so the cost of a mention-heavy body is one query.
+	IDsByNames(ctx context.Context, names []string) (map[string]uuid.UUID, error)
 	UIDByID(ctx context.Context, id uuid.UUID) (int64, error)
 }
 
@@ -150,27 +149,30 @@ func (s *Service) Notify(ctx context.Context, e Event) error {
 // meant as a mention, and failing the post would be absurd. The author mentioning
 // themselves is dropped by the schema's self-notification constraint.
 func (s *Service) NotifyMentions(ctx context.Context, body string, e Event) error {
-	seen := make(map[string]struct{})
-	sent := 0
+	names := mentionCandidates(body)
+	if len(names) == 0 {
+		return nil
+	}
 
-	for _, match := range mentionPattern.FindAllStringSubmatch(body, -1) {
-		name := match[2]
-		key := strings.ToLower(name)
-		if _, dup := seen[key]; dup {
+	// One query for the whole set, not one per name. The earlier version looked each
+	// name up individually and only stopped once ten had been *sent*, so a body of ten
+	// thousand names that match no account cost ten thousand sequential round trips
+	// inside one request — the cap bounded the notifications and not the work.
+	found, err := s.accounts.IDsByNames(ctx, names)
+	if err != nil {
+		return fmt.Errorf("resolve mentions: %w", err)
+	}
+
+	sent := 0
+	for _, name := range names {
+		id, ok := found[name]
+		if !ok {
+			// A body may contain an @ that was never meant as a mention, so an unknown
+			// name is ignored rather than failing the post.
 			continue
 		}
-		seen[key] = struct{}{}
-
 		if sent >= MaxMentionsPerBody {
 			break
-		}
-
-		id, err := s.accounts.IDByName(ctx, name)
-		if err != nil {
-			if e, ok := apierr.As(err); ok && e.ErrorCode == apierr.UserNotFound {
-				continue
-			}
-			return fmt.Errorf("resolve mention: %w", err)
 		}
 
 		event := e
@@ -182,6 +184,32 @@ func (s *Service) NotifyMentions(ctx context.Context, body string, e Event) erro
 		sent++
 	}
 	return nil
+}
+
+// mentionCandidates extracts distinct @names, in the order they appear, bounded.
+//
+// The candidate cap is separate from MaxMentionsPerBody and larger than it: the send cap
+// decides how many people hear about a post, this one decides how much work parsing it may
+// cost. Deduplication is exact rather than case-folded, because names are unique
+// case-sensitively and folding here could merge two real accounts into one lookup.
+func mentionCandidates(body string) []string {
+	const maxCandidates = 50
+
+	seen := make(map[string]struct{})
+	out := make([]string, 0, MaxMentionsPerBody)
+
+	for _, match := range mentionPattern.FindAllStringSubmatch(body, -1) {
+		name := match[2]
+		if _, dup := seen[name]; dup {
+			continue
+		}
+		seen[name] = struct{}{}
+		out = append(out, name)
+		if len(out) >= maxCandidates {
+			break
+		}
+	}
+	return out
 }
 
 // List returns a page of an account's inbox.
@@ -324,15 +352,5 @@ func (s *Service) postNo(ctx context.Context, postID uuid.UUID) (int64, error) {
 }
 
 func paging(page, pageSize int) (limit int32, offset int32) {
-	if pageSize < 1 || pageSize > MaxPageSize {
-		pageSize = DefaultPageSize
-	}
-	if page < 1 {
-		page = 1
-	}
-	off := (page - 1) * pageSize
-	if off > MaxOffset {
-		off = MaxOffset
-	}
-	return int32(pageSize), int32(off)
+	return api.ClampPaging(page, pageSize, DefaultPageSize, MaxPageSize)
 }

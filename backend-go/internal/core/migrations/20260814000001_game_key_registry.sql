@@ -26,6 +26,20 @@ CREATE FUNCTION core.game_keys() RETURNS text[]
     AS $$ SELECT ARRAY['aion2', 'palworld', 'vrising', 'sts2'] $$;
 -- +goose StatementEnd
 
+-- Rows that predate the constraint are repaired first, because ADD CONSTRAINT validates
+-- existing rows and would otherwise fail the migration on any database that stored an
+-- unknown key while none was enforced — which the paragraph below says was possible.
+--
+-- Unknown keys are stripped from the array rather than the row being deleted: the post is
+-- someone's writing and the bad key is metadata, so removing the metadata is the repair
+-- and removing the post would be a data loss dressed as a migration. A post left with no
+-- games is a valid post.
+-- +goose StatementBegin
+UPDATE core.forum_posts SET game_ids = ARRAY(
+    SELECT key FROM unnest(game_ids) AS key WHERE key = ANY (core.game_keys()))
+WHERE NOT (game_ids <@ core.game_keys());
+-- +goose StatementEnd
+
 -- The forum has carried `game_ids text[]` with no membership constraint since it
 -- shipped, so `gameIds: ["not-a-game"]` was accepted and stored while the table's
 -- own comment claimed a registry that did not exist. `<@` is containment: every
