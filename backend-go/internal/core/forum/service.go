@@ -17,6 +17,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
 
@@ -305,6 +306,7 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		return nil, 0, fmt.Errorf("count posts: %w", err)
 	}
 
+	limit, offset := filter.Paging()
 	rows, err := s.q.ListForumPosts(ctx, coredb.ListForumPostsParams{
 		Channel:      filter.Channel,
 		GameID:       filter.GameID,
@@ -315,8 +317,8 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		Query:        filter.Query,
 		Sort:         string(filter.Sort),
 		ViewerID:     filter.ViewerID,
-		ResultLimit:  int32(filter.PageSize),
-		ResultOffset: filter.Offset(),
+		ResultLimit:  limit,
+		ResultOffset: offset,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("list posts: %w", err)
@@ -610,14 +612,10 @@ func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize
 		return nil, 0, err
 	}
 
-	paging := ListFilter{Page: page, PageSize: pageSize}
-	if paging.PageSize < 1 || paging.PageSize > MaxCommentPageSize {
-		paging.PageSize = DefaultCommentPageSize
-	}
-	if paging.Page < 1 {
-		paging.Page = 1
-	}
-	paging.clampOffset(MaxCommentPageSize)
+	// The comment bounds, which are not the feed's: a thread is normally read whole, so the
+	// default and the ceiling are both larger. Both values come from one call, so the limit
+	// and the offset cannot be computed from different page sizes.
+	limit, offset := api.ClampPaging(page, pageSize, DefaultCommentPageSize, MaxCommentPageSize)
 
 	total, err := s.q.CountForumPostComments(ctx, post.ID)
 	if err != nil {
@@ -627,8 +625,8 @@ func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize
 	rows, err := s.q.ListForumComments(ctx, coredb.ListForumCommentsParams{
 		PostID:       post.ID,
 		ViewerID:     viewer,
-		ResultLimit:  int32(paging.PageSize),
-		ResultOffset: paging.Offset(),
+		ResultLimit:  limit,
+		ResultOffset: offset,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("list comments: %w", err)

@@ -737,3 +737,60 @@ func TestDangerousMarkdownIsRefusedByTheAPI(t *testing.T) {
 		t.Errorf("comment with an iframe = %d, want 422: %s", res.status, res.body)
 	}
 }
+
+// The comments route carries a page size up to 200 while the feed's ceiling is 100, and for a
+// while the limit and the offset were computed from different bounds — so a comment page of
+// 150 issued LIMIT 150 OFFSET 20 and served rows already shown on page one. Both values come
+// from one call now; this pins the case the existing paging tests miss, because they use
+// sizes at or below the feed's ceiling.
+func TestLargeCommentPagesDoNotOverlap(t *testing.T) {
+	h := newHarness(t)
+	token := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+	postNo := h.mustCreatePost(token, simplePost())
+
+	// Enough to need a second page at pageSize=150.
+	const total = 220
+	for i := range total {
+		if res := h.do(http.MethodPost, fmt.Sprintf("/forum/posts/%d/comments", postNo),
+			map[string]any{"body": fmt.Sprintf("Comment %d.", i)}, withBearer(token)); res.status != http.StatusOK {
+			t.Fatalf("comment %d = %d: %s", i, res.status, res.body)
+		}
+	}
+
+	floorsOn := func(page, pageSize int) []float64 {
+		res := h.do(http.MethodGet,
+			fmt.Sprintf("/forum/posts/%d/comments?page=%d&pageSize=%d", postNo, page, pageSize), nil)
+		if res.status != http.StatusOK {
+			t.Fatalf("comments page %d = %d: %s", page, res.status, res.body)
+		}
+		list, _ := res.data(t)["results"].([]any)
+		out := make([]float64, 0, len(list))
+		for _, item := range list {
+			row, _ := item.(map[string]any)
+			no, _ := row["commentNo"].(float64)
+			out = append(out, no)
+		}
+		return out
+	}
+
+	first := floorsOn(1, 150)
+	second := floorsOn(2, 150)
+	if len(first) != 150 {
+		t.Fatalf("page 1 at pageSize=150 returned %d rows, want 150", len(first))
+	}
+	if len(second) != total-150 {
+		t.Fatalf("page 2 at pageSize=150 returned %d rows, want %d", len(second), total-150)
+	}
+
+	// The two pages must not share a floor number, and together must cover the thread.
+	seen := make(map[float64]bool, total)
+	for _, no := range append(append([]float64{}, first...), second...) {
+		if seen[no] {
+			t.Fatalf("comment %v appears on both pages at pageSize=150", no)
+		}
+		seen[no] = true
+	}
+	if len(seen) != total {
+		t.Errorf("the two pages cover %d comments, want all %d", len(seen), total)
+	}
+}

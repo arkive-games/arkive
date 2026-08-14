@@ -225,8 +225,8 @@ func ValidSort(s Sort) bool {
 	return false
 }
 
-// normalise clamps the paging arguments so a caller cannot ask for an unbounded
-// page, a negative offset, or an offset that overflows the int32 the driver sends.
+// normalise clamps the non-paging arguments. The limit and offset are derived together by
+// Paging, so that they cannot be computed from two different page sizes.
 func (f *ListFilter) normalise() {
 	if f.Page < 1 {
 		f.Page = 1
@@ -234,31 +234,18 @@ func (f *ListFilter) normalise() {
 	if f.PageSize < 1 || f.PageSize > MaxPageSize {
 		f.PageSize = DefaultPageSize
 	}
-	f.clampOffset(MaxPageSize)
 }
 
-// clampOffset caps the page so that (page-1)*pageSize stays inside MaxOffset.
+// Paging renders the SQL limit and offset for the post feed.
 //
-// Delegates to api.ClampPaging, which is now the single implementation of this. It used
-// to be written out here and was then written out again, differently and wrongly, in
-// three new packages — clamping the offset after multiplying instead of the page before,
-// which cannot catch the overflow it exists to catch.
-//
-// Asking beyond the end of a feed is answered with an empty page rather than an
-// error, which is what a client walking to the end expects anyway.
-func (f *ListFilter) clampOffset(maxPageSize int) {
-	if f.PageSize > maxPageSize {
-		f.PageSize = maxPageSize
-	}
-	if maxPage := api.MaxOffset/f.PageSize + 1; f.Page > maxPage {
-		f.Page = maxPage
-	}
-}
-
-// Offset renders the SQL offset, which is now guaranteed to fit an int32.
-func (f ListFilter) Offset() int32 {
-	_, offset := api.ClampPaging(f.Page, f.PageSize, DefaultPageSize, MaxPageSize)
-	return offset
+// One call returning both, rather than a Offset() beside an independently computed limit.
+// The separated form had exactly one caller reading the wrong bounds — the comments route,
+// whose page size legitimately reaches 200 while this method hard-coded the feed's 100 — so
+// a comment page of 150 asked for `LIMIT 150 OFFSET 20` and served a page overlapping the
+// one before it. Deriving both from a single call makes that shape unrepresentable rather
+// than merely fixed.
+func (f ListFilter) Paging() (limit int32, offset int32) {
+	return api.ClampPaging(f.Page, f.PageSize, DefaultPageSize, MaxPageSize)
 }
 
 // Reactions is the engagement a post carries, plus how the current reader has

@@ -306,19 +306,17 @@ func (s *Service) Unread(ctx context.Context, userID uuid.UUID) (int64, error) {
 }
 
 // MarkRead marks one notification read. Scoped by recipient, so guessing a uuid does not
-// let one account touch another's inbox; an id that is not theirs reads as not found.
+// let one account touch another's inbox.
+//
+// The row count is discarded rather than checked: zero means either the id is not theirs or
+// it was already read, both of which are "nothing to do", and reporting the difference would
+// tell a caller whether an id they guessed exists.
 func (s *Service) MarkRead(ctx context.Context, userID uuid.UUID, id uuid.UUID) error {
-	rows, err := s.q.MarkNotificationRead(ctx, coredb.MarkNotificationReadParams{
+	if _, err := s.q.MarkNotificationRead(ctx, coredb.MarkNotificationReadParams{
 		ID:          id,
 		RecipientID: userID,
-	})
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf("mark read: %w", err)
-	}
-	if rows == 0 {
-		// Either it is not theirs, or it was already read. Both are "nothing to do", and
-		// distinguishing them would leak whether the id exists.
-		return nil
 	}
 	return nil
 }
