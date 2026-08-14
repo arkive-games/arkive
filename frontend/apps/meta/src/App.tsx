@@ -425,7 +425,7 @@ export default function App() {
       ) : activeRoute.view === 'notifications' && isSignedIn ? (
         <NotificationCenterPage section={activeRoute.section} />
       ) : activeRoute.view === 'account' && isSignedIn ? (
-        <AccountCenterPage section={activeRoute.section} onLogout={logout} />
+        <AccountCenterPage section={activeRoute.section} onLogout={logout} onAuthRequired={() => setAccountOpen(true)} />
       ) : activeRoute.view === 'publicProfile' ? (
         <PublicUserProfilePage
           userId={activeRoute.userId}

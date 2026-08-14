@@ -27,7 +27,6 @@ import {
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
-  IconDots,
   IconFileText,
   IconGenderFemale,
   IconGenderMale,
@@ -2097,7 +2096,10 @@ function ForumPostCard({
               {t(followed ? 'forum.users.following' : 'forum.users.follow')}
             </button>
           )}
-          {post.own && <button type="button" className="forum-post-more" aria-label={t('forum.redesign.more')}><IconDots className="size-5" stroke={1.8} /></button>}
+          {/* The overflow dots are gone: they had no onClick and never had one.
+              Edit and delete live in the detail view, so a card button here was an
+              affordance that did nothing on click — which is the same defect the
+              reply-sort controls were deleted for. */}
         </div>
         <div
           className="forum-post-open-area"

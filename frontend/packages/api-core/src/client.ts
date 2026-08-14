@@ -1,6 +1,7 @@
 import axios, { type AxiosAdapter, type AxiosInstance, type AxiosResponse } from "axios"
 
 import { type Client, createClient } from "./generated/client"
+import { createQuerySerializer } from "./generated/client/utils.gen"
 import { ApiError, normaliseCode, unwrap } from "./envelope"
 
 /**
@@ -136,8 +137,39 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
   return {
     axios: instance,
-    client: createClient({ axios: instance, baseURL: options.baseUrl }),
+    client: createClient({
+      axios: instance,
+      baseURL: options.baseUrl,
+      querySerializer: commaJoinedArrays,
+    }),
   }
+}
+
+/**
+ * Serialises an array query parameter as one comma-joined value.
+ *
+ * The generated serialiser hardcodes `explode: true` for arrays — it reads
+ * neither the `explode: false` the document declares nor any option passed to it
+ * — so it emits `?kind=a&kind=b`. huma parses the comma form and, given repeated
+ * keys, keeps only the first. The two disagreed silently: asking for two kinds
+ * returned the rows for whichever happened to be written first, and asking for a
+ * kind with no rows returned nothing no matter what followed it.
+ *
+ * That is not a hypothetical. The notification inbox's system tab asks for
+ * `system` and `follow`; because `system` came first and had no rows, a new
+ * follower's notification was fetched by the server, discarded by the filter, and
+ * the tab said "Nothing here yet."
+ *
+ * Joining every array is correct for this whole API rather than a special case:
+ * huma emits `explode: false` for every array parameter it generates, so the
+ * document and this agree everywhere.
+ */
+function commaJoinedArrays(params: Record<string, unknown>): string {
+  const flattened: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(params)) {
+    flattened[key] = Array.isArray(value) ? value.join(",") : value
+  }
+  return createQuerySerializer()(flattened)
 }
 
 /**

@@ -223,13 +223,24 @@ const NOTIFICATION_KINDS: Record<Exclude<NotificationSection, 'settings'>, reado
   system: ['system', 'follow'],
 }
 
-/** Which copy template a kind uses. The four templates already exist per locale. */
-const NOTIFICATION_COPY: Record<string, 'reply' | 'mention' | 'like' | 'system'> = {
+/**
+ * Which copy template a kind uses.
+ *
+ * Keyed by `NotificationKind` rather than `string`, deliberately. As a
+ * `Record<string, …>` the index signature swallowed every key, so adding `follow`
+ * to a tab without giving it a sentence compiled cleanly — and it fell through to
+ * the reply template, announcing a new follower as *"Alice replied to your comment
+ * on 'a deleted post'"*. A follow carries neither a post nor a body (the schema
+ * says so: "a follow is about neither"), so both interpolation sources were null
+ * and the row invented a comment and a post that had never existed. Typed this
+ * way, the next kind added fails to compile until someone decides what it says.
+ */
+const NOTIFICATION_COPY: Record<NotificationKind, 'reply' | 'mention' | 'like' | 'system' | 'follow'> = {
   reply: 'reply',
   mention: 'mention',
   post_like: 'like',
   comment_like: 'like',
-  follow: 'reply',
+  follow: 'follow',
   system: 'system',
 }
 
@@ -319,12 +330,15 @@ function NotificationInbox({
               <p>
                 <strong>{item.actorName ?? t('userSystem.notifications.systemSender')}</strong>
                 {' '}
-                {t(`userSystem.notifications.items.${NOTIFICATION_COPY[item.kind] ?? 'reply'}`, {
-                  // The body carries the text of a system message; everything else
-                  // is about a post. A post deleted since leaves the title null,
-                  // and the row still says what happened.
-                  post: item.postTitle ?? item.body ?? t('userSystem.notifications.deletedPost'),
-                })}
+                {/* A follow has no subject at all, so its sentence takes no
+                    interpolation — passing one would have been how the "deleted
+                    post" fallback crept in. Every other kind is about a post,
+                    except a system message, whose text is its body. */}
+                {NOTIFICATION_COPY[item.kind] === 'follow'
+                  ? t('userSystem.notifications.items.follow')
+                  : t(`userSystem.notifications.items.${NOTIFICATION_COPY[item.kind]}`, {
+                      post: item.postTitle ?? item.body ?? t('userSystem.notifications.deletedPost'),
+                    })}
               </p>
               <time dateTime={item.createdAt}>
                 <IconClock className="size-4" stroke={1.8} />
@@ -342,9 +356,11 @@ function NotificationInbox({
 export function AccountCenterPage({
   section,
   onLogout,
+  onAuthRequired,
 }: {
   section: AccountSection
   onLogout: () => void
+  onAuthRequired: () => void
 }) {
   const { t } = useTranslation()
   const auth = useAuth()
@@ -505,6 +521,7 @@ export function AccountCenterPage({
               description={t(`userSystem.account.descriptions.${section}`)}
             />
             <AccountContent
+              onAuthRequired={onAuthRequired}
               section={section}
               profile={profile}
               userId={String(user.uid)}
@@ -545,6 +562,7 @@ function AccountContent({
   onEdit,
   onProfileChange,
   onAvatarChange,
+  onAuthRequired,
 }: {
   section: AccountSection
   profile: { name: string; email: string; bio: string }
@@ -564,6 +582,7 @@ function AccountContent({
   onEdit: () => void
   onProfileChange: (field: 'name' | 'email' | 'bio', value: string) => void
   onAvatarChange: (src: string) => void
+  onAuthRequired: () => void
 }) {
   const { t } = useTranslation()
   const accountAuth = useAuth()
@@ -643,8 +662,8 @@ function AccountContent({
   if (section === 'favorites') return <FavoriteContent client={accountClient} />
   if (section === 'comments') return <EmptyAccountContent kind="comments" />
   if (section === 'posts') return <ProfilePostList uid={ownUid} client={accountClient} />
-  if (section === 'fans') return <PeopleList mode="fans" uid={ownUid} client={accountClient} ownProfile />
-  if (section === 'following') return <PeopleList mode="following" uid={ownUid} client={accountClient} ownProfile />
+  if (section === 'fans') return <PeopleList mode="fans" uid={ownUid} client={accountClient} onAuthRequired={onAuthRequired} ownProfile />
+  if (section === 'following') return <PeopleList mode="following" uid={ownUid} client={accountClient} onAuthRequired={onAuthRequired} ownProfile />
   if (section === 'privacy') return <PrivacySettings />
   return null
 }
@@ -1150,7 +1169,7 @@ export function PublicUserProfilePage({
               // invented comments stood here, attributed to a fixture author.
               <EmptyAccountContent kind="comments" />
             ) : section === 'fans' || section === 'following' ? (
-              <PeopleList mode={section} uid={profileUid} client={profileClient} />
+              <PeopleList mode={section} uid={profileUid} client={profileClient} onAuthRequired={onAuthRequired} />
             ) : (
               // Someone else's saved posts are not public, and the API has no way to
               // ask for them — deliberately, since a bookmark is a private note.
@@ -1393,13 +1412,16 @@ function PeopleList({
   uid,
   client,
   ownProfile = false,
+  onAuthRequired,
 }: {
   mode: 'fans' | 'following'
   uid: number | null
   client: ApiClient['client'] | null
   ownProfile?: boolean
+  onAuthRequired: () => void
 }) {
   const { t } = useTranslation()
+  const { status } = useAuth()
   const [people, setPeople] = useState<FollowRead[]>([])
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -1435,6 +1457,13 @@ function PeopleList({
   }, [client, mode, uid])
 
   const toggle = (targetUid: number) => {
+    // The other two follow buttons ask for sign-in; this one fired the request and
+    // let the 401 revert it, so a signed-out visitor saw the button fill and
+    // silently empty again instead of being asked to sign in.
+    if (status !== 'authenticated') {
+      onAuthRequired()
+      return
+    }
     if (!client) return
     const next = !following.has(targetUid)
     setFollowing((current) => {

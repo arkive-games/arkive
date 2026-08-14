@@ -64,6 +64,10 @@ export function useForumFeed(
       setPosts([])
       setTotal(0)
       setLoading(false)
+      // Cleared too. A tab that makes no request has no failure to report, and the
+      // personal view nulls the client on purpose for the replies tab — so a feed
+      // error from a previous tab stayed on screen above an empty placeholder.
+      setError(null)
       return
     }
     const ticket = ++latest.current

@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest"
 
 import { type ApiClient, createApiClient, result, type TokenStorage } from "./client"
 import { ApiError } from "./envelope"
+import { listNotifications } from "./generated"
 import { getCurrentUser, loginJwt, searchUsers, updateCurrentUser } from "./generated"
 
 /** What the adapter was asked to send, so a test can assert on the request. */
@@ -331,5 +332,40 @@ describe("a failure with no response at all", () => {
     await expect(
       result(getCurrentUser({ client: api.client, throwOnError: true })),
     ).rejects.toMatchObject({ code: "ERR_NETWORK" })
+  })
+})
+
+describe("array query parameters", () => {
+  it("joins an array into one comma-separated value", async () => {
+    // The generated serialiser hardcodes `explode: true` and emits repeated keys,
+    // which huma reads by keeping only the first — so asking for two notification
+    // kinds silently returned the rows for one of them. The document says
+    // `explode: false`; this makes the client agree with it.
+    let requested = ""
+    const api = createApiClient({
+      baseUrl: "https://api.test/api/v1/core",
+      adapter: async (config) => {
+        requested = config.url ?? ""
+        return {
+          data: { errorCode: "Success", errorMessage: "", showType: 0, data: { count: 0, results: [] } },
+          status: 200,
+          statusText: "OK",
+          headers: {},
+          config,
+        } as never
+      },
+    })
+
+    await result(
+      listNotifications({
+        client: api.client,
+        throwOnError: true,
+        query: { kind: ["system", "follow"], page: 1, pageSize: 10 },
+      }),
+    )
+
+    expect(requested).toContain("kind=system%2Cfollow")
+    // The shape that was going out before, and that the server mis-parses.
+    expect(requested).not.toContain("kind=system&kind=follow")
   })
 })
