@@ -72,6 +72,15 @@ WHERE p.hidden_at IS NULL
   -- substring query use the trigram index instead of scanning every body.
   AND (sqlc.narg('query')::text IS NULL
        OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%' ESCAPE '\')
+  -- "Posts I liked" and "posts I saved", which is what a profile's own tabs show.
+  -- EXISTS rather than a join, for the same reason as the followed-by filter above:
+  -- a post appears once and the predicate composes with all the others.
+  AND (sqlc.narg('liked_by')::uuid IS NULL OR EXISTS (
+      SELECT 1 FROM core.forum_post_likes ml
+      WHERE ml.post_id = p.id AND ml.user_id = sqlc.narg('liked_by')::uuid))
+  AND (sqlc.narg('bookmarked_by')::uuid IS NULL OR EXISTS (
+      SELECT 1 FROM core.forum_post_bookmarks mb
+      WHERE mb.post_id = p.id AND mb.user_id = sqlc.narg('bookmarked_by')::uuid))
 ORDER BY
     -- One statement rather than three, so every filter above is written once. A CASE
     -- per sort collapses to NULL for the orders not chosen, and NULLS LAST keeps those
@@ -107,7 +116,13 @@ WHERE p.hidden_at IS NULL
   AND (sqlc.narg('featured')::boolean IS NULL
        OR (p.featured_at IS NOT NULL) = sqlc.narg('featured')::boolean)
   AND (sqlc.narg('query')::text IS NULL
-       OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%' ESCAPE '\');
+       OR lower(p.title || ' ' || p.body) LIKE '%' || lower(sqlc.narg('query')::text) || '%' ESCAPE '\')
+  AND (sqlc.narg('liked_by')::uuid IS NULL OR EXISTS (
+      SELECT 1 FROM core.forum_post_likes ml
+      WHERE ml.post_id = p.id AND ml.user_id = sqlc.narg('liked_by')::uuid))
+  AND (sqlc.narg('bookmarked_by')::uuid IS NULL OR EXISTS (
+      SELECT 1 FROM core.forum_post_bookmarks mb
+      WHERE mb.post_id = p.id AND mb.user_id = sqlc.narg('bookmarked_by')::uuid));
 
 -- name: SetForumPostFeatured :one
 -- Both columns move together, which the forum_posts_featured_together constraint

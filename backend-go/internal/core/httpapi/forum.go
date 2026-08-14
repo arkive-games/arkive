@@ -182,6 +182,13 @@ type listPostsInput struct {
 	// than silently widening to everything, which is the opposite of what was asked.
 	Following bool `query:"following" doc:"Only posts by accounts you follow"`
 
+	// Scoped to the caller and no one else. There is deliberately no way to ask
+	// for another account's saved posts: a bookmark is a private note about what
+	// you meant to come back to, not a public list, and the parameter shape is
+	// what enforces that rather than a check that could be forgotten.
+	Liked      bool `query:"liked" doc:"Only posts you have liked"`
+	Bookmarked bool `query:"bookmarked" doc:"Only posts you have bookmarked"`
+
 	// Validated by the enum, so an unknown order is refused rather than silently
 	// falling back to newest — a client asking for "hot" and quietly receiving "new"
 	// would be impossible to diagnose from the outside.
@@ -259,17 +266,19 @@ func (h *Handlers) RegisterForumRoutes(a huma.API) {
 		}
 
 		posts, total, err := h.forum.ListPosts(ctx, forum.ListFilter{
-			Channel:      optional(in.Channel),
-			GameID:       optional(in.GameID),
-			Tag:          optional(in.Tag),
-			AuthorUID:    optionalUID(in.AuthorUID),
-			ViewerID:     viewerFrom(ctx),
-			FollowedOnly: in.Following,
-			Sort:         forum.Sort(in.Sort),
-			Query:        optional(in.Q),
-			Featured:     optionalBool(in.Featured),
-			Page:         in.Page,
-			PageSize:     in.PageSize,
+			Channel:        optional(in.Channel),
+			GameID:         optional(in.GameID),
+			Tag:            optional(in.Tag),
+			AuthorUID:      optionalUID(in.AuthorUID),
+			ViewerID:       viewerFrom(ctx),
+			FollowedOnly:   in.Following,
+			LikedOnly:      in.Liked,
+			BookmarkedOnly: in.Bookmarked,
+			Sort:           forum.Sort(in.Sort),
+			Query:          optional(in.Q),
+			Featured:       optionalBool(in.Featured),
+			Page:           in.Page,
+			PageSize:       in.PageSize,
 		})
 		if err != nil {
 			return nil, err

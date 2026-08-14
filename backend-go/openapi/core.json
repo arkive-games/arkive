@@ -3796,6 +3796,26 @@
             }
           },
           {
+            "description": "Only posts you have liked",
+            "explode": false,
+            "in": "query",
+            "name": "liked",
+            "schema": {
+              "description": "Only posts you have liked",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Only posts you have bookmarked",
+            "explode": false,
+            "in": "query",
+            "name": "bookmarked",
+            "schema": {
+              "description": "Only posts you have bookmarked",
+              "type": "boolean"
+            }
+          },
+          {
             "description": "Feed order; defaults to newest first",
             "explode": false,
             "in": "query",

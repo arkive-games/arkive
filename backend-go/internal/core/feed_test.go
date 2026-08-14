@@ -174,3 +174,96 @@ func TestFeaturingIsEditorialAndGameScoped(t *testing.T) {
 		t.Errorf("anonymous featuring = %d, want 401: %s", res.status, res.body)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// "Posts I liked" and "posts I saved"
+// ---------------------------------------------------------------------------
+
+func TestReactionFeedsAreScopedToTheReader(t *testing.T) {
+	h := newHarness(t)
+	alice := h.registerAndLogin("alice", "alice@example.com", "hunter2hunter2")
+	bob := h.registerAndLogin("bob", "bob@example.com", "hunter2hunter2")
+
+	first := h.mustCreatePost(alice, map[string]any{"channel": "general", "title": "First", "body": "One."})
+	second := h.mustCreatePost(alice, map[string]any{"channel": "general", "title": "Second", "body": "Two."})
+
+	// Alice likes one and saves the other; Bob likes the one she saved, so a
+	// filter that ignored who was asking would return both to each of them.
+	react := func(token string, no int64, what string) {
+		t.Helper()
+		res := h.do(http.MethodPut, fmt.Sprintf("/forum/posts/%d/%s", no, what), nil, withBearer(token))
+		if res.status != http.StatusOK {
+			t.Fatalf("%s post %d = %d: %s", what, no, res.status, res.body)
+		}
+	}
+	react(alice, first, "like")
+	react(alice, second, "bookmark")
+	react(bob, second, "like")
+
+	for _, tc := range []struct {
+		name  string
+		token string
+		query string
+		want  []string
+	}{
+		{"alice likes", alice, "liked=true", []string{"First"}},
+		{"alice bookmarks", alice, "bookmarked=true", []string{"Second"}},
+		{"bob likes", bob, "liked=true", []string{"Second"}},
+		{"bob bookmarks", bob, "bookmarked=true", []string{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := h.do(http.MethodGet, "/forum/posts?"+tc.query, nil, withBearer(tc.token))
+			if res.status != http.StatusOK {
+				t.Fatalf("= %d: %s", res.status, res.body)
+			}
+			got := feedTitles(t, res)
+			if len(got) != len(tc.want) {
+				t.Fatalf("= %v, want %v", got, tc.want)
+			}
+			for i := range got {
+				if got[i] != tc.want[i] {
+					t.Fatalf("= %v, want %v", got, tc.want)
+				}
+			}
+			// The count drives the pager, and it comes from a second query whose
+			// predicates must match the first. A mismatch offers pages that are empty.
+			if count, _ := res.data(t)["count"].(float64); int(count) != len(tc.want) {
+				t.Errorf("count = %v, want %d", count, len(tc.want))
+			}
+		})
+	}
+}
+
+// The trap an id-shaped filter would have set: left nil by a signed-out caller it
+// reads as "no filter", so asking for the posts you liked while signed out would
+// have answered with the whole forum rather than with nothing.
+func TestReaderScopedFeedsAreEmptyWhenSignedOut(t *testing.T) {
+	h := newHarness(t)
+	author := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
+	no := h.mustCreatePost(author, map[string]any{"channel": "general", "title": "Visible", "body": "Body."})
+	if res := h.do(http.MethodPut, fmt.Sprintf("/forum/posts/%d/like", no), nil, withBearer(author)); res.status != http.StatusOK {
+		t.Fatalf("like = %d: %s", res.status, res.body)
+	}
+
+	// The post is visible anonymously, so an empty result below is the filter
+	// working rather than an empty forum — without this the test could pass for
+	// entirely the wrong reason.
+	if got := feedTitles(t, h.do(http.MethodGet, "/forum/posts", nil)); len(got) == 0 {
+		t.Fatal("the unfiltered anonymous feed is empty; this test would prove nothing")
+	}
+
+	for _, query := range []string{"liked=true", "bookmarked=true", "following=true"} {
+		t.Run(query, func(t *testing.T) {
+			res := h.do(http.MethodGet, "/forum/posts?"+query, nil)
+			if res.status != http.StatusOK {
+				t.Fatalf("= %d, want 200: %s", res.status, res.body)
+			}
+			if got := feedTitles(t, res); len(got) != 0 {
+				t.Errorf("anonymous %s returned %v, want nothing", query, got)
+			}
+			if count, _ := res.data(t)["count"].(float64); count != 0 {
+				t.Errorf("anonymous %s count = %v, want 0", query, count)
+			}
+		})
+	}
+}

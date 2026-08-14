@@ -38,16 +38,24 @@ WHERE p.hidden_at IS NULL
        OR (p.featured_at IS NOT NULL) = $6::boolean)
   AND ($7::text IS NULL
        OR lower(p.title || ' ' || p.body) LIKE '%' || lower($7::text) || '%' ESCAPE '\')
+  AND ($8::uuid IS NULL OR EXISTS (
+      SELECT 1 FROM core.forum_post_likes ml
+      WHERE ml.post_id = p.id AND ml.user_id = $8::uuid))
+  AND ($9::uuid IS NULL OR EXISTS (
+      SELECT 1 FROM core.forum_post_bookmarks mb
+      WHERE mb.post_id = p.id AND mb.user_id = $9::uuid))
 `
 
 type CountForumPostsParams struct {
-	Channel    *string
-	GameID     *string
-	Tag        *string
-	AuthorID   *uuid.UUID
-	FollowedBy *uuid.UUID
-	Featured   *bool
-	Query      *string
+	Channel      *string
+	GameID       *string
+	Tag          *string
+	AuthorID     *uuid.UUID
+	FollowedBy   *uuid.UUID
+	Featured     *bool
+	Query        *string
+	LikedBy      *uuid.UUID
+	BookmarkedBy *uuid.UUID
 }
 
 // The predicates must stay identical to ListForumPosts, or the pager offers pages the
@@ -61,6 +69,8 @@ func (q *Queries) CountForumPosts(ctx context.Context, arg CountForumPostsParams
 		arg.FollowedBy,
 		arg.Featured,
 		arg.Query,
+		arg.LikedBy,
+		arg.BookmarkedBy,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -506,25 +516,34 @@ WHERE p.hidden_at IS NULL
   -- substring query use the trigram index instead of scanning every body.
   AND ($8::text IS NULL
        OR lower(p.title || ' ' || p.body) LIKE '%' || lower($8::text) || '%' ESCAPE '\')
+  -- "Posts I liked" and "posts I saved", which is what a profile's own tabs show.
+  -- EXISTS rather than a join, for the same reason as the followed-by filter above:
+  -- a post appears once and the predicate composes with all the others.
+  AND ($9::uuid IS NULL OR EXISTS (
+      SELECT 1 FROM core.forum_post_likes ml
+      WHERE ml.post_id = p.id AND ml.user_id = $9::uuid))
+  AND ($10::uuid IS NULL OR EXISTS (
+      SELECT 1 FROM core.forum_post_bookmarks mb
+      WHERE mb.post_id = p.id AND mb.user_id = $10::uuid))
 ORDER BY
     -- One statement rather than three, so every filter above is written once. A CASE
     -- per sort collapses to NULL for the orders not chosen, and NULLS LAST keeps those
     -- from dominating; ` + "`" + `created_at DESC, id` + "`" + ` is both the default order and the
     -- tie-break that makes paging deterministic under the other two.
-    CASE WHEN $9::text = 'top' THEN
+    CASE WHEN $11::text = 'top' THEN
         (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
     END DESC NULLS LAST,
     -- Engagement decayed by age. Comments weigh double: writing one costs more than
     -- tapping a heart, so it is the stronger signal that a thread is alive. The +2 and
     -- the 1.5 exponent are a starting shape, not a tuned result -- recorded as such
     -- because a ranking formula invites being mistaken for one.
-    CASE WHEN $9::text = 'hot' THEN
+    CASE WHEN $11::text = 'hot' THEN
         ((SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
          + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL) + 1)
         / power(extract(epoch FROM (now() - p.created_at)) / 3600.0 + 2, 1.5)
     END DESC NULLS LAST,
     p.created_at DESC, p.id
-LIMIT $11 OFFSET $10
+LIMIT $13 OFFSET $12
 `
 
 type ListForumPostsParams struct {
@@ -536,6 +555,8 @@ type ListForumPostsParams struct {
 	FollowedBy   *uuid.UUID
 	Featured     *bool
 	Query        *string
+	LikedBy      *uuid.UUID
+	BookmarkedBy *uuid.UUID
 	Sort         string
 	ResultOffset int32
 	ResultLimit  int32
@@ -587,6 +608,8 @@ func (q *Queries) ListForumPosts(ctx context.Context, arg ListForumPostsParams) 
 		arg.FollowedBy,
 		arg.Featured,
 		arg.Query,
+		arg.LikedBy,
+		arg.BookmarkedBy,
 		arg.Sort,
 		arg.ResultOffset,
 		arg.ResultLimit,

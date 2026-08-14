@@ -2048,6 +2048,14 @@ export type ListForumPostsData = {
          */
         following?: boolean;
         /**
+         * Only posts you have liked
+         */
+        liked?: boolean;
+        /**
+         * Only posts you have bookmarked
+         */
+        bookmarked?: boolean;
+        /**
          * Feed order; defaults to newest first
          */
         sort?: 'new' | 'hot' | 'top';

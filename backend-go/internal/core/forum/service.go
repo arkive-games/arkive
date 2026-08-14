@@ -290,22 +290,34 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 
 	// "Following only" without a signed-in reader would silently mean "everything",
 	// which is the opposite of what was asked for. An empty feed is the honest answer.
-	if filter.FollowedOnly && filter.ViewerID == nil {
+	// Each of these three narrows to something about the reader, so none of them
+	// means anything without one. Returning an empty feed rather than dropping the
+	// filter is the whole point: a dropped filter answers "posts you saved" with
+	// every post on the site, which is the opposite of what was asked for.
+	if (filter.FollowedOnly || filter.LikedOnly || filter.BookmarkedOnly) && filter.ViewerID == nil {
 		return []PostRead{}, 0, nil
 	}
-	var followedBy *uuid.UUID
+	var followedBy, likedBy, bookmarkedBy *uuid.UUID
 	if filter.FollowedOnly {
 		followedBy = filter.ViewerID
 	}
+	if filter.LikedOnly {
+		likedBy = filter.ViewerID
+	}
+	if filter.BookmarkedOnly {
+		bookmarkedBy = filter.ViewerID
+	}
 
 	total, err := s.q.CountForumPosts(ctx, coredb.CountForumPostsParams{
-		Channel:    filter.Channel,
-		GameID:     filter.GameID,
-		Tag:        filter.Tag,
-		AuthorID:   filter.AuthorID,
-		FollowedBy: followedBy,
-		Featured:   filter.Featured,
-		Query:      filter.Query,
+		Channel:      filter.Channel,
+		GameID:       filter.GameID,
+		Tag:          filter.Tag,
+		AuthorID:     filter.AuthorID,
+		FollowedBy:   followedBy,
+		Featured:     filter.Featured,
+		Query:        filter.Query,
+		LikedBy:      likedBy,
+		BookmarkedBy: bookmarkedBy,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("count posts: %w", err)
@@ -320,6 +332,8 @@ func (s *Service) ListPosts(ctx context.Context, filter ListFilter) ([]PostRead,
 		FollowedBy:   followedBy,
 		Featured:     filter.Featured,
 		Query:        filter.Query,
+		LikedBy:      likedBy,
+		BookmarkedBy: bookmarkedBy,
 		Sort:         string(filter.Sort),
 		ViewerID:     filter.ViewerID,
 		ResultLimit:  limit,

@@ -206,6 +206,19 @@ type ListFilter struct {
 	// Featured narrows to the editorial shelf, or to everything off it.
 	Featured *bool
 
+	// LikedOnly and BookmarkedOnly narrow to what the viewer has reacted to, which
+	// is what a profile's own "likes" and "saved" tabs show.
+	//
+	// Booleans resolved against ViewerID rather than ids of their own, deliberately
+	// and for two reasons. It makes "another account's saved posts" unrepresentable
+	// — a bookmark is a private note about what you meant to come back to, not a
+	// public list. And it puts the anonymous case in one place: an id-shaped field
+	// left nil by a signed-out caller reads as "no filter", so asking for the posts
+	// you liked while signed out would have returned the entire feed. These get the
+	// same guard FollowedOnly has, which answers with an empty feed instead.
+	LikedOnly      bool
+	BookmarkedOnly bool
+
 	// Query is a substring search over title and body. Trimmed by normalise; empty
 	// means no search rather than "match everything with an empty string".
 	Query *string
