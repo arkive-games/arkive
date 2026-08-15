@@ -9,7 +9,7 @@ import {
   ShellSidebar,
   type FilterCategory,
 } from '@gamemap/map-shell'
-import { dataUrl } from '@/lib/data'
+import { initDataVersion, json } from '@/lib/data'
 import { lostarkMapAssets } from './assets'
 
 // three.js and the engine CSS stay out of the calculator's entry chunk.
@@ -36,25 +36,23 @@ interface TypesFile {
   categories: { id: string; pinVariant?: string; subtypes: SubtypeMeta[] }[]
 }
 
-/** Human labels for the deploy-actor classes the pipeline keeps. */
+/**
+ * Labels for the deploy-actor classes the pipeline keeps. Chinese, because the
+ * app renders Chinese throughout and hard-wires `language="zh-CN"`; an English
+ * map page inside it would just be bilingual.
+ */
 const SUBTYPE_LABELS: Record<string, string> = {
   npc: 'NPC',
-  prop: 'Prop',
-  spot: 'Spot',
-  questzone: 'Quest zone',
-  portal: 'Portal',
-  teleport: 'Teleport',
-  trap: 'Trap',
-  vehicle: 'Vehicle',
-  transport: 'Transport',
-  tower: 'Tower',
-  monster: 'Monster',
-}
-
-async function json<T>(path: string): Promise<T> {
-  const r = await fetch(dataUrl(path))
-  if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`)
-  return (await r.json()) as T
+  prop: '物件',
+  spot: '地点',
+  questzone: '任务区域',
+  portal: '传送门',
+  teleport: '传送点',
+  trap: '陷阱',
+  vehicle: '载具',
+  transport: '运输',
+  tower: '塔',
+  monster: '怪物',
 }
 
 export default function MapPage() {
@@ -70,6 +68,10 @@ export default function MapPage() {
     let cancelled = false
     void (async () => {
       try {
+        // Must precede the first dataUrl call, or this route's requests -
+        // including all 56 tiles - go out unstamped and survive a re-emit in
+        // cache with no URL change to invalidate them.
+        await initDataVersion()
         const [maps, types] = await Promise.all([
           json<{ maps: GameMapMeta[] }>('maps.json'),
           json<TypesFile>('types.json'),
@@ -121,7 +123,7 @@ export default function MapPage() {
     () => [
       {
         id: 'deploy',
-        label: 'Placed objects',
+        label: '布置点位',
         subtypes: subtypes.map((s) => ({
           id: s.id,
           label: SUBTYPE_LABELS[s.id] ?? s.id,
@@ -141,23 +143,27 @@ export default function MapPage() {
   )
 
   /**
-   * Open on the whole zone rather than the engine's default centre-at-1:1,
-   * which lands mid-map at a zoom where this 2048x1792 grid overflows the
-   * viewport. Frozen after the first computation so a later re-render cannot
-   * yank the camera back while the user is panning.
+   * Open on the whole zone rather than at the engine's minimum zoom, which
+   * shows this 2048x1792 grid as a thumbnail.
+   *
+   * Derived during render, NOT in an effect. The engine reads `initialView`
+   * exactly once, in a layout effect keyed on the map id, and child layout
+   * effects run before parent passive effects — so a value set from
+   * `useEffect` arrives after the engine has already been constructed with
+   * null and is never read. Whether the camera came out right then depended on
+   * whether the lazy engine chunk resolved before or after the data fetch.
+   * `useMemo` also gives the freezing that matters for free: `map` is set once,
+   * and the engine only reads the prop at construction.
    */
-  const [initialView, setInitialView] = useState<{ x: number; y: number; zoom: number } | null>(
-    null,
-  )
-  useEffect(() => {
+  const initialView = useMemo(() => {
     const bounds = map?.worldBounds
-    if (!bounds || initialView) return
-    setInitialView({
+    if (!bounds) return null
+    return {
       x: (bounds.min.x + bounds.max.x) / 2,
       y: (bounds.min.y + bounds.max.y) / 2,
       zoom: -1.25,
-    })
-  }, [map, initialView])
+    }
+  }, [map])
 
   const toggleSubtype = (id: string) =>
     setVisible((prev) => {
@@ -175,19 +181,19 @@ export default function MapPage() {
       className="arkive-map-page bg-background text-foreground"
       topBar={
         <header className="flex items-center gap-3 border-b border-border px-4 py-2">
-          <span className="text-sm font-medium">{map?.name ?? 'Loading map...'}</span>
-          <span className="text-xs text-muted-foreground">{markers.length} points</span>
+          <span className="text-sm font-medium">{map?.name ?? '地图加载中…'}</span>
+          <span className="text-xs text-muted-foreground">{markers.length} 个点位</span>
           <Link to="/" className="ml-auto text-xs underline underline-offset-2">
-            Combat power calculator
+            战斗力计算器
           </Link>
         </header>
       }
       sidebar={
         <ShellSidebar
           width={280}
-          label="Filters"
-          collapseLabel="Collapse filters"
-          expandLabel="Expand filters"
+          label="筛选"
+          collapseLabel="收起筛选"
+          expandLabel="展开筛选"
           classNames={{
             root: 'border-r border-border bg-[color:var(--arkive-sidebar)] text-sm',
             // The toggle overhangs into the map column by design; without the
@@ -200,7 +206,7 @@ export default function MapPage() {
             categories={categories}
             onToggleSubtype={toggleSubtype}
             onSetCategory={setCategory}
-            categoryToggleLabels={{ show: 'Show all', hide: 'Hide all' }}
+            categoryToggleLabels={{ show: '全部显示', hide: '全部隐藏' }}
             // Same token set the other games pass; without it the chips fall
             // back to the raw accent colour instead of the map theme.
             classNames={{
@@ -221,7 +227,7 @@ export default function MapPage() {
       <main className="relative flex min-w-0 flex-1 overflow-hidden">
         {error ? (
           <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-destructive">
-            Could not load the map data: {error}
+            地图数据加载失败：{error}
           </div>
         ) : (
           <Suspense fallback={<div className="gmgl-map-root flex-1" />}>

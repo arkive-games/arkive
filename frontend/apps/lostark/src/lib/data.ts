@@ -16,10 +16,39 @@ export function dataUrl(path: string): string {
   return dataVersion ? `${url}?v=${dataVersion}` : url
 }
 
-async function json<T>(path: string): Promise<T> {
+export async function json<T>(path: string): Promise<T> {
   const r = await fetch(dataUrl(path))
   if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`)
   return (await r.json()) as T
+}
+
+/**
+ * Resolve the artifact stamp that `dataUrl` appends, once per page load.
+ *
+ * Every route that fetches data must await this BEFORE its first `dataUrl`
+ * call, or that route's requests go out unversioned and a re-emitted artifact
+ * is served from cache with no URL change to invalidate it. It used to live
+ * inside `loadDataset`, which meant the map route — which does not call it —
+ * silently had no cache busting at all.
+ *
+ * Idempotent, and safe to call concurrently: repeat callers await the same
+ * in-flight request rather than issuing another.
+ */
+let versionRequest: Promise<void> | undefined
+
+export function initDataVersion(): Promise<void> {
+  versionRequest ??= (async () => {
+    try {
+      const r = await fetch(`${DATA_BASE}/version.json`, { cache: 'no-cache' })
+      if (r.ok) {
+        const body = (await r.json()) as { generatedAt?: unknown }
+        if (typeof body.generatedAt === 'string') dataVersion = body.generatedAt
+      }
+    } catch {
+      /* unversioned artifact or unreachable — fall back to bare URLs */
+    }
+  })()
+  return versionRequest
 }
 
 export interface DataVersion {
@@ -328,15 +357,7 @@ export interface Dataset {
  * just without long-term caching.
  */
 export async function loadDataset(locale = 'zh-CN'): Promise<Dataset> {
-  try {
-    const r = await fetch(`${DATA_BASE}/version.json`, { cache: 'no-cache' })
-    if (r.ok) {
-      const body = (await r.json()) as { generatedAt?: unknown }
-      if (typeof body.generatedAt === 'string') dataVersion = body.generatedAt
-    }
-  } catch {
-    /* unversioned artifact or unreachable — fall back to bare URLs */
-  }
+  await initDataVersion()
 
   const [
     version,

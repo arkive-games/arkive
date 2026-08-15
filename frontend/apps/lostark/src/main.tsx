@@ -8,7 +8,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { AuthProvider } from '@gamemap/auth'
-import { initBaiduAnalytics, ThemeProvider } from '@gamemap/map-shell'
+import { initBaiduAnalytics, ThemeProvider, trackPageview } from '@gamemap/map-shell'
 import { createArkiveThemeStorage } from '@gamemap/ui'
 import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
@@ -48,6 +48,10 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
+
+// The app used to be a single page, where the entry pageview hm.js reports was
+// the whole visit. Now that it routes, each resolved navigation is its own.
+router.subscribe('onResolved', () => trackPageview())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

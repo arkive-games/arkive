@@ -55,6 +55,10 @@ def _maps(map_ids: list[str]) -> int:
 
     rows: list[dict[str, object]] = []
     all_actors: list[maps.Actor] = []
+    # A rejected map skips its own write and the batch carries on, so maps.json
+    # ends up listing exactly what succeeded rather than being abandoned
+    # half-written with earlier maps' tiles already on disk.
+    rejected: list[str] = []
     for map_id in map_ids:
         folder = mapdata / map_id
         volume = maps.read_minimap(folder / "MinimapData.loa", map_id)
@@ -70,15 +74,31 @@ def _maps(map_ids: list[str]) -> int:
             f"{len(images)}/{len(volume.tiles)} on disk, {total} actors, "
             f"{100 * score:.1f}% on walkable"
         )
+
+        # "Nothing to verify" is not "verified and wrong", and conflating them
+        # points a first-time run at the transform when the real answer is that
+        # LOSTARK_MAP_ART has no decoded tiles for this map.
+        if not images:
+            print(
+                f"{map_id}: no decoded tiles found under {art} - run "
+                f"`laex textures` for its EFMINIMAP package first",
+                file=sys.stderr,
+            )
+            rejected.append(map_id)
+            continue
+        if not actors:
+            print(f"{map_id}: no actors of the mapped classes, skipped", file=sys.stderr)
+            continue
         # A wrong transform still renders a handsome map, so refuse to write one
         # rather than ship silently misplaced points.
         if score < maps.MIN_ALIGNMENT:
             print(
                 f"{map_id}: alignment {100 * score:.1f}% is below the "
-                f"{100 * maps.MIN_ALIGNMENT:.0f}% floor - refusing to write",
+                f"{100 * maps.MIN_ALIGNMENT:.0f}% floor - refusing to write it",
                 file=sys.stderr,
             )
-            return 1
+            rejected.append(map_id)
+            continue
 
         written, tile_px = maps.write_tiles(images, out, map_id)
         rows.append(maps.map_meta(volume, tile_px, volume.texture_stem))
@@ -93,6 +113,9 @@ def _maps(map_ids: list[str]) -> int:
     _write_json(out / "maps.json", {"maps": rows})
     _write_json(out / "types.json", maps.types(all_actors))
     print(f"wrote maps.json ({len(rows)} maps) and types.json to {out}")
+    if rejected:
+        print(f"rejected: {', '.join(rejected)}", file=sys.stderr)
+        return 1
     return 0
 
 
