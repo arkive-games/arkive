@@ -6,6 +6,15 @@ Set the variables in ``tools/.env`` (see ``tools/.env.example``) or export them:
                     holding the EFTable_*.db SQLite files
   LOSTARK_DATA_OUT  data-lostark repo (dataset the frontend fetches)
 
+For ``python -m lostark maps`` only:
+
+  LOSTARK_MAPDATA   the client's ``MapData`` directory, one folder per map id
+                    holding ``MinimapData.loa`` (tile grid + world bounds) and
+                    ``DeployData.loa`` (placed actors). Note this lives under
+                    ``leveldata1``, not beside the ``EFTable_*.db`` files.
+  LOSTARK_MAP_ART   decoded minimap tiles (``laex textures`` output, one
+                    directory per ``EFMINIMAP_*`` package).
+
 Optional:
 
   LOSTARK_ICON_ATLAS  decoded UI icon atlas pages (``laex textures`` output, one

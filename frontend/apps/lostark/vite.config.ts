@@ -9,8 +9,8 @@ import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
 // Serve the sibling `data-lostark` artifact repo in dev. Walk ancestor
 // directories until the sibling repo is found, so this keeps working from a git
 // worktree. Override with LOSTARK_DATA_DIR. In prod the frontend reads
-// VITE_DATA_BASE_URL instead. There is no resource repo: the calculator needs
-// no images.
+// VITE_DATA_BASE_URL instead. There is no separate resource repo for Lost Ark,
+// so the map's minimap tiles are served from data-lostark alongside the JSON.
 function siblingRepo(name: string): string {
   let dir = __dirname
   for (let i = 0; i < 8; i++) {
@@ -24,6 +24,9 @@ const DATA_DIR = process.env.LOSTARK_DATA_DIR ?? siblingRepo('data-lostark')
 
 const MIME: Record<string, string> = {
   '.json': 'application/json',
+  // Minimap tiles ride along in data-lostark; there is no resource repo.
+  '.webp': 'image/webp',
+  '.png': 'image/png',
 }
 
 function staticDirPlugin(name: string, urlPrefix: string, rootDir: string): Plugin {

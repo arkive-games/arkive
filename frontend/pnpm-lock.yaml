@@ -195,6 +195,12 @@ importers:
       '@gamemap/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@gamemap/data-contract':
+        specifier: workspace:*
+        version: link:../../packages/data-contract
+      '@gamemap/map-engine-gl':
+        specifier: workspace:*
+        version: link:../../packages/map-engine-gl
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
@@ -204,6 +210,9 @@ importers:
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@tanstack/react-router':
+        specifier: ^1.170.21
+        version: 1.170.21(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       i18next:
         specifier: ^26.3.6
         version: 26.3.6(typescript@5.9.3)
