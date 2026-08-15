@@ -116,7 +116,19 @@ func (h *Handlers) RegisterUserRoutes(a huma.API) {
 		Path:        "/users/me",
 		Summary:     "Update the signed-in account",
 		Tags:        []string{"users"},
-		Errors:      []int{http.StatusUnauthorized, http.StatusConflict, http.StatusUnprocessableEntity},
+		// 403 is for an attempt to move the account's own email address, which
+		// only an administrator may do. It has to be declared here and not merely
+		// returned: this list is what huma renders into the OpenAPI document and
+		// therefore into the generated client's error union, and the regeneration
+		// check in CI cannot notice the omission — it rebuilds the document from
+		// this same declaration, so the document and the code agree with each
+		// other while both disagree with the server.
+		Errors: []int{
+			http.StatusUnauthorized,
+			http.StatusForbidden,
+			http.StatusConflict,
+			http.StatusUnprocessableEntity,
+		},
 	}, func(ctx context.Context, in *updateMeInput) (*api.Response[users.UserRead], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {

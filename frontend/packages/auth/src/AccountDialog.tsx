@@ -115,10 +115,13 @@ export function AccountDialog({
 
     // Checked before anything else, so a mismatch costs neither a challenge nor
     // the proof-of-work that follows it.
-    if (needsConfirm && password !== passwordConfirm) {
-      setFailure(strings.passwordMismatch)
-      return
-    }
+    //
+    // Deliberately sets no failure: the confirm input is `required`, so any submit
+    // reaching here has a non-empty confirmation and the inline alert is already
+    // on screen. Setting one painted an identical red block beneath it — and
+    // `failure` is only cleared on the next submit, so correcting the typo left
+    // the duplicate still insisting the passwords did not match.
+    if (needsConfirm && password !== passwordConfirm) return
 
     setBusy(true)
     setFailure(null)
@@ -144,8 +147,10 @@ export function AccountDialog({
             signal: controller.signal,
             onProgress: setProgress,
           })
-          setProgress(null)
-
+          // Left at 1 rather than cleared: the request that follows is the slow
+          // part, and clearing here reverted the row to its idle wording for the
+          // whole of it — so the check appeared not to have run precisely while
+          // the reader was waiting on it.
           await register({ name, email, password, altcha: solution })
           onOpenChange(false)
           break
@@ -163,8 +168,6 @@ export function AccountDialog({
             signal: controller.signal,
             onProgress: setProgress,
           })
-          setProgress(null)
-
           await client.forgotPassword(email, solution)
           // Deliberately unconditional: the API does not disclose whether the
           // address exists, and neither does this message.
@@ -364,12 +367,16 @@ export function AccountDialog({
                 className="h-11 rounded-lg bg-background pl-10 pr-11"
                 onChange={(event) => setPasswordConfirm(event.target.value)}
                 aria-invalid={mismatch ? true : undefined}
+                // Without this the input announces itself invalid and gives no
+                // reason; the alert below is the reason.
+                aria-describedby={mismatch ? "arkive-auth-password-mismatch" : undefined}
               />
             </Field>
           )}
 
           {mismatch && (
             <div
+              id="arkive-auth-password-mismatch"
               className="flex items-start gap-2 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
               role="alert"
             >

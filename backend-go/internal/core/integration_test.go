@@ -753,6 +753,7 @@ func TestAnAdministratorChangingAnEmailWithdrawsVerification(t *testing.T) {
 		t.Fatal("changing the email address must clear the verified flag")
 	}
 }
+
 func TestSearchRequiresAnAdministrator(t *testing.T) {
 	h := newHarness(t)
 	token := h.registerAndLogin("alice", "alice@example.com", "hunter2hunter2")

@@ -3471,6 +3471,10 @@ export type UpdateCurrentUserErrors = {
      */
     401: Error;
     /**
+     * Forbidden
+     */
+    403: Error;
+    /**
      * Conflict
      */
     409: Error;
