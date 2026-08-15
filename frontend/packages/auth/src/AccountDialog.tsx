@@ -56,6 +56,7 @@ export function AccountDialog({
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
   const [token, setToken] = useState(resetToken ?? "")
   const [showPassword, setShowPassword] = useState(false)
 
@@ -63,6 +64,11 @@ export function AccountDialog({
   const [message, setMessage] = useState<string | null>(null)
   const [failure, setFailure] = useState<string | null>(null)
   const [progress, setProgress] = useState<number | null>(null)
+
+  // Shown only once the confirmation has something in it, so the error does not
+  // greet someone who has typed a password and not yet reached the next field.
+  const needsConfirm = mode === "register" || mode === "reset"
+  const mismatch = needsConfirm && passwordConfirm.length > 0 && password !== passwordConfirm
 
   const abort = useRef<AbortController | null>(null)
 
@@ -77,6 +83,7 @@ export function AccountDialog({
     setMode(initialMode)
     setToken(resetToken ?? "")
     setPassword("")
+    setPasswordConfirm("")
     setShowPassword(false)
     setBusy(false)
     setMessage(null)
@@ -95,6 +102,7 @@ export function AccountDialog({
 
   const switchMode = (next: AccountDialogMode) => {
     setMode(next)
+    setPasswordConfirm("")
     setShowPassword(false)
     setFailure(null)
     setMessage(null)
@@ -104,6 +112,13 @@ export function AccountDialog({
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     if (busy) return
+
+    // Checked before anything else, so a mismatch costs neither a challenge nor
+    // the proof-of-work that follows it.
+    if (needsConfirm && password !== passwordConfirm) {
+      setFailure(strings.passwordMismatch)
+      return
+    }
 
     setBusy(true)
     setFailure(null)
@@ -162,6 +177,7 @@ export function AccountDialog({
           setMessage(strings.resetDone)
           setMode("login")
           setPassword("")
+          setPasswordConfirm("")
           break
       }
     } catch (caught) {
@@ -325,10 +341,56 @@ export function AccountDialog({
             </Field>
           )}
 
-          {progress !== null && (
+          {/* Confirming the password on the two forms that set one.
+              A password field is masked, so a typo is invisible until the next
+              sign-in fails — and on registration that is a locked-out account
+              with an address the person cannot prove is theirs. Deliberately not
+              on the login form, where a typo costs one retry. */}
+          {(mode === "register" || mode === "reset") && (
+            <Field
+              label={strings.confirmPasswordLabel}
+              htmlFor="arkive-auth-password-confirm"
+              icon={<IconLock className="size-5" stroke={1.8} />}
+            >
+              <Input
+                id="arkive-auth-password-confirm"
+                name="passwordConfirm"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={passwordConfirm}
+                placeholder={strings.confirmPasswordPlaceholder}
+                className="h-11 rounded-lg bg-background pl-10 pr-11"
+                onChange={(event) => setPasswordConfirm(event.target.value)}
+                aria-invalid={mismatch ? true : undefined}
+              />
+            </Field>
+          )}
+
+          {mismatch && (
+            <div
+              className="flex items-start gap-2 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+              role="alert"
+            >
+              <IconAlertCircle className="mt-0.5 size-5 shrink-0" stroke={1.8} aria-hidden="true" />
+              <span>{strings.passwordMismatch}</span>
+            </div>
+          )}
+
+          {/* The human check, shown as a row rather than only while it runs.
+              The proof-of-work is invisible by design — there is no puzzle to
+              solve — but on a fast machine it finished in a few milliseconds, so
+              the only sign it existed flashed past and readers reasonably
+              concluded there was no check at all. The row is present for the
+              whole of both gated forms and reports which state it is in. */}
+          {(mode === "register" || mode === "forgot") && (
             <StatusMessage icon={<IconShieldCheck className="size-5" stroke={1.8} />}>
-              {progress >= 1 ? strings.challengeReady : strings.challengeSolving}
-              {progress < 1 && ` ${Math.round(progress * 100)}%`}
+              {progress === null
+                ? strings.challengeIdle
+                : progress >= 1
+                  ? strings.challengeReady
+                  : `${strings.challengeSolving} ${Math.round(progress * 100)}%`}
             </StatusMessage>
           )}
 

@@ -50,7 +50,12 @@ export interface AuthStrings {
 
   challengeLoading: string
   challengeSolving: string
+  /** The human check before it runs — the row is present for the whole form. */
+  challengeIdle: string
   challengeReady: string
+  confirmPasswordLabel: string
+  confirmPasswordPlaceholder: string
+  passwordMismatch: string
   challengeFailed: string
 
   working: string
@@ -107,7 +112,11 @@ export const DEFAULT_AUTH_STRINGS: AuthStrings = {
 
   challengeLoading: "Preparing verification…",
   challengeSolving: "Verifying you are human…",
+  challengeIdle: "Protected by a human check",
   challengeReady: "Verification complete",
+  confirmPasswordLabel: "Confirm password",
+  confirmPasswordPlaceholder: "Type it again",
+  passwordMismatch: "The two passwords do not match.",
   challengeFailed: "Verification failed. Please try again.",
 
   working: "Working…",

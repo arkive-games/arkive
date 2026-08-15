@@ -425,6 +425,24 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, in UpdateInput, priv
 			return UserRead{}, err
 		}
 		if email != current.Email {
+			// Administrators only. An account may not move its own address,
+			// because nothing here proves the new one belongs to the person
+			// asking: the change would take effect immediately, and the address
+			// is what a password reset is sent to — so a session borrowed for a
+			// minute could redirect recovery permanently. Withdrawing the
+			// verified flag below does not prevent that, it only records it.
+			//
+			// Refused rather than ignored. Silently keeping the old address
+			// would tell the caller their change had been applied, and they
+			// would find out only when a reset never arrived.
+			//
+			// The path back is a change-of-address flow that mails a token to
+			// the new account and applies it on confirmation. Until that exists,
+			// an administrator does it.
+			if !privileged {
+				return UserRead{}, apierr.New(apierr.Forbidden,
+					"an email address cannot be changed here; ask an administrator")
+			}
 			params.Email = &email
 			// The new address has not been proven, so verification must be
 			// withdrawn. Otherwise changing an address inherits the previous

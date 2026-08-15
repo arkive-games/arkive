@@ -679,14 +679,47 @@ func TestUserCannotPromoteThemselvesViaProfileUpdate(t *testing.T) {
 	}
 }
 
-func TestChangingEmailWithdrawsVerification(t *testing.T) {
+func TestAnAccountCannotChangeItsOwnEmail(t *testing.T) {
 	h := newHarness(t)
 	token := h.registerAndLogin("alice", "alice@example.com", "hunter2hunter2")
 
-	// Verify the original address through the real flow.
+	// Refused rather than ignored: silently keeping the old address would report
+	// success and the account would find out only when a reset never arrived.
+	res := h.do(http.MethodPatch, "/users/me", map[string]any{"email": "elsewhere@example.com"}, withBearer(token))
+	if res.status != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403: %s", res.status, res.body)
+	}
+
+	// And the address really is unchanged, not merely reported as refused.
+	me := h.do(http.MethodGet, "/users/me", nil, withBearer(token))
+	if got := me.data(t)["email"]; got != "alice@example.com" {
+		t.Errorf("email = %v, want it untouched", got)
+	}
+
+	// Sending the address it already has is not a change, so it must still pass —
+	// otherwise every profile save that echoes the current email would fail.
+	same := h.do(http.MethodPatch, "/users/me", map[string]any{"email": "alice@example.com", "name": "alice renamed"}, withBearer(token))
+	if same.status != http.StatusOK {
+		t.Fatalf("resending the same address = %d, want 200: %s", same.status, same.body)
+	}
+	if got := same.data(t)["name"]; got != "alice renamed" {
+		t.Errorf("name = %v, want the rename to have applied", got)
+	}
+}
+
+func TestAnAdministratorChangingAnEmailWithdrawsVerification(t *testing.T) {
+	h := newHarness(t)
+	// The administrator must be created first: become-superuser only works while
+	// no administrator exists.
+	adminToken := h.registerAndLogin("admin", "admin@example.com", "hunter2hunter2")
+	h.promoteToSiteAdmin(adminToken)
+
+	aliceToken := h.registerAndLogin("alice", "alice@example.com", "hunter2hunter2")
+
+	// Verify alice's original address through the real flow.
 	if res := h.do(http.MethodPost, "/auth/request-verify-token", map[string]string{
 		"email": "alice@example.com",
-	}, withBearer(token)); res.status != http.StatusAccepted {
+	}, withBearer(aliceToken)); res.status != http.StatusAccepted {
 		t.Fatalf("request-verify-token = %d: %s", res.status, res.body)
 	}
 	verifyToken := h.mailer.verification("alice@example.com")
@@ -697,9 +730,18 @@ func TestChangingEmailWithdrawsVerification(t *testing.T) {
 		t.Fatalf("verify = %d: %s", res.status, res.body)
 	}
 
-	// Changing the address must withdraw that verification, or an unproven
-	// address inherits the previous one's status.
-	res := h.do(http.MethodPatch, "/users/me", map[string]any{"email": "alice2@example.com"}, withBearer(token))
+	// Find alice by uuid, which is what the administrator route addresses.
+	me := h.do(http.MethodGet, "/users/me", nil, withBearer(aliceToken))
+	aliceID, _ := me.data(t)["id"].(string)
+	if aliceID == "" {
+		t.Fatal("could not read alice's id")
+	}
+
+	// The administrator may move the address, and doing so must withdraw the
+	// verification — an unproven address inheriting the previous one's status is
+	// exactly what makes a stolen address useful.
+	res := h.do(http.MethodPatch, "/users/"+aliceID,
+		map[string]any{"email": "alice2@example.com"}, withBearer(adminToken))
 	if res.status != http.StatusOK {
 		t.Fatalf("status = %d, want 200: %s", res.status, res.body)
 	}
@@ -711,7 +753,6 @@ func TestChangingEmailWithdrawsVerification(t *testing.T) {
 		t.Fatal("changing the email address must clear the verified flag")
 	}
 }
-
 func TestSearchRequiresAnAdministrator(t *testing.T) {
 	h := newHarness(t)
 	token := h.registerAndLogin("alice", "alice@example.com", "hunter2hunter2")
@@ -988,6 +1029,10 @@ func TestPasswordResetLinkWorksOnceAndInvalidatesTheOldPassword(t *testing.T) {
 
 func TestVerificationTokenCannotVerifyADifferentAddress(t *testing.T) {
 	h := newHarness(t)
+	// An administrator first: moving an address is now their privilege, and
+	// become-superuser only works while no administrator exists.
+	adminToken := h.registerAndLogin("admin", "admin@example.com", "hunter2hunter2")
+	h.promoteToSiteAdmin(adminToken)
 	token := h.registerAndLogin("alice", "alice@example.com", "hunter2hunter2")
 
 	if res := h.do(http.MethodPost, "/auth/request-verify-token", map[string]string{
@@ -1000,10 +1045,14 @@ func TestVerificationTokenCannotVerifyADifferentAddress(t *testing.T) {
 		t.Fatal("no verification token was issued")
 	}
 
-	// Move the address before redeeming the link.
-	if res := h.do(http.MethodPatch, "/users/me", map[string]any{
+	// Move the address before redeeming the link. Through the administrator,
+	// since an account can no longer move its own — the property under test is
+	// about the token, not about who moved it.
+	me := h.do(http.MethodGet, "/users/me", nil, withBearer(token))
+	aliceID, _ := me.data(t)["id"].(string)
+	if res := h.do(http.MethodPatch, "/users/"+aliceID, map[string]any{
 		"email": "moved@example.com",
-	}, withBearer(token)); res.status != http.StatusOK {
+	}, withBearer(adminToken)); res.status != http.StatusOK {
 		t.Fatalf("email change = %d: %s", res.status, res.body)
 	}
 

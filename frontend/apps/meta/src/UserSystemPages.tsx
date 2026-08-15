@@ -610,16 +610,16 @@ function AccountContent({
             autoComplete="nickname"
           />
         </FormField>
-        <FormField label={t('userSystem.account.fields.email')}>
-          <input
-            name="email"
-            type="email"
-            value={profile.email}
-            onChange={(event) => onProfileChange('email', event.target.value)}
-            maxLength={320}
-            required
-            autoComplete="email"
-          />
+        {/* Read-only, and refused server-side as well.
+
+            Nothing here proves a new address belongs to the person asking: the
+            change would take effect at once, and the address is where a password
+            reset is sent — so a session borrowed for a minute could redirect
+            account recovery permanently. The way back is a change-of-address flow
+            that mails a token to the new account; until that exists an
+            administrator does it. */}
+        <FormField label={t('userSystem.account.fields.email')} helper={t('userSystem.account.fields.emailHelper')}>
+          <input name="email" type="email" value={profile.email} readOnly autoComplete="email" />
         </FormField>
         <FormField label={t('userSystem.account.fields.accountId')} helper={t('userSystem.account.fields.accountIdHelper')}>
           <input value={userId} readOnly />

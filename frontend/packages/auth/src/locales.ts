@@ -55,6 +55,10 @@ const ZH_CN: AuthStrings = {
 
   challengeLoading: "正在准备验证…",
   challengeSolving: "正在验证…",
+  challengeIdle: "受人机验证保护",
+  confirmPasswordLabel: "确认密码",
+  confirmPasswordPlaceholder: "再输入一次",
+  passwordMismatch: "两次输入的密码不一致。",
   challengeReady: "验证完成",
   challengeFailed: "验证失败，请重试。",
 
@@ -122,6 +126,10 @@ const ZH_TW: AuthStrings = {
 
   challengeLoading: "正在準備驗證…",
   challengeSolving: "正在驗證…",
+  challengeIdle: "受人機驗證保護",
+  confirmPasswordLabel: "確認密碼",
+  confirmPasswordPlaceholder: "再輸入一次",
+  passwordMismatch: "兩次輸入的密碼不一致。",
   challengeReady: "驗證完成",
   challengeFailed: "驗證失敗，請重試。",
 
