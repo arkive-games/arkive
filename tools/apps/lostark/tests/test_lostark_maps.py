@@ -169,6 +169,52 @@ def test_bounds_union_and_containment():
     assert a.contains(5, 5) and not a.contains(-1, 5)
 
 
+def test_rejects_a_ragged_tile_size_instead_of_trusting_the_first(tmp_path):
+    """One odd-sized tile would otherwise set the lattice for the whole map."""
+    body = _string("CEFMinimapVolume") + _string("LV_R_PS_0") + _string("LV_R_PS_0_Full")
+    body += _tile_record("LV_R_PS_0_0x0", (0, 0, 0, 5120, 5120, 1), 0, 0)
+    body += _tile_record("LV_R_PS_0_1x0", (5120, 0, 0, 7680, 5120, 1), 1, 0)
+    path = tmp_path / "MinimapData.loa"
+    path.write_bytes(body)
+    volume = read_minimap(path, "1")
+    with pytest.raises(ValueError, match="not the volume"):
+        volume.placements()
+
+
+def test_rejects_two_tiles_claiming_one_slot(tmp_path):
+    body = _string("CEFMinimapVolume") + _string("LV_D_PS_0") + _string("LV_D_PS_0_Full")
+    body += _tile_record("LV_D_PS_0_0x0", (0, 0, 0, 5120, 5120, 1), 0, 0)
+    body += _tile_record("LV_D_PS_0_1x0", (0, 0, 0, 5120, 5120, 1), 1, 0)
+    path = tmp_path / "MinimapData.loa"
+    path.write_bytes(body)
+    volume = read_minimap(path, "1")
+    with pytest.raises(ValueError, match="both claim slot"):
+        volume.placements()
+
+
+def test_rejects_a_tile_off_the_lattice(tmp_path):
+    """Half a slot off would round into a neighbour, file order deciding which."""
+    body = _string("CEFMinimapVolume") + _string("LV_O_PS_0") + _string("LV_O_PS_0_Full")
+    body += _tile_record("LV_O_PS_0_0x0", (0, 0, 0, 5120, 5120, 1), 0, 0)
+    body += _tile_record("LV_O_PS_0_1x0", (7680, 0, 0, 12800, 5120, 1), 1, 0)
+    path = tmp_path / "MinimapData.loa"
+    path.write_bytes(body)
+    volume = read_minimap(path, "1")
+    with pytest.raises(ValueError, match="lattice|outside the declared"):
+        volume.placements()
+
+
+def test_ignores_strings_that_merely_end_in_digits_x_digits(tmp_path):
+    """Only the stem the `_Full` record declares counts as a tile."""
+    body = _string("CEFMinimapVolume") + _string("LV_G_PS_0") + _string("LV_G_PS_0_Full")
+    body += _tile_record("LV_G_PS_0_0x0", (0, 0, 0, 5120, 5120, 1), 0, 0)
+    body += _tile_record("Noise_3x4", (0, 0, 0, 0, 0, 0), 3, 4)
+    path = tmp_path / "MinimapData.loa"
+    path.write_bytes(body)
+    volume = read_minimap(path, "1")
+    assert [t.name for t in volume.tiles] == ["LV_G_PS_0_0x0"]
+
+
 def test_uniform_tile_span_is_read_from_a_tile():
     volume = MinimapVolume(
         map_id="1",

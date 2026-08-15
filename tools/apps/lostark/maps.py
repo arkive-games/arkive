@@ -118,9 +118,32 @@ class MinimapVolume:
 
     @property
     def tile_span(self) -> tuple[float, float]:
-        """One tile's world width and height (uniform across the volume)."""
-        first = self.tiles[0]
-        return first.bounds.width, first.bounds.height
+        """The tile world size, verified uniform across the volume.
+
+        Checked rather than read off ``tiles[0]``: a single ragged edge tile
+        would otherwise set the lattice for the whole map and renumber every
+        slot, which shows up as a scrambled map rather than an error. Uniform
+        across all 168 maps sampled, so a violation means the assumption has
+        broken and should stop the run.
+        """
+        span_x = self.tiles[0].bounds.width
+        span_y = self.tiles[0].bounds.height
+        if span_x <= 0 or span_y <= 0:
+            raise ValueError(f"{self.map_id}: degenerate tile size {span_x}x{span_y}")
+        # Compared with a relative tolerance, not for equality: the bounds are
+        # float32, so the same authored 5120 arrives as 5120.001 on some tiles
+        # and exact-matching rejected 13 real maps. A genuinely ragged tile is
+        # a fraction of a slot wide, so 1% still separates the two cases.
+        for tile in self.tiles[1:]:
+            if (
+                abs(tile.bounds.width - span_x) > 0.01 * span_x
+                or abs(tile.bounds.height - span_y) > 0.01 * span_y
+            ):
+                raise ValueError(
+                    f"{self.map_id}: {tile.name} is {tile.bounds.width}x"
+                    f"{tile.bounds.height}, not the volume's {span_x}x{span_y}"
+                )
+        return span_x, span_y
 
     @property
     def cols(self) -> int:
@@ -141,10 +164,30 @@ class MinimapVolume:
         """
         box = self.bounds
         span_x, span_y = self.tile_span
+        cols, rows = self.cols, self.rows
         out: dict[tuple[int, int], Tile] = {}
         for tile in self.tiles:
-            col = round((tile.bounds.min_x - box.min_x) / span_x)
-            row = round((box.max_y - tile.bounds.max_y) / span_y)
+            exact_col = (tile.bounds.min_x - box.min_x) / span_x
+            exact_row = (box.max_y - tile.bounds.max_y) / span_y
+            col, row = round(exact_col), round(exact_row)
+            # Reject rather than round: a tile half a slot off the lattice would
+            # otherwise silently collide with its neighbour, and which of the two
+            # survives would depend on file order.
+            if abs(exact_col - col) > 0.01 or abs(exact_row - row) > 0.01:
+                raise ValueError(
+                    f"{self.map_id}: {tile.name} sits off the tile lattice at "
+                    f"({exact_col:.3f}, {exact_row:.3f})"
+                )
+            if not (0 <= col < cols and 0 <= row < rows):
+                raise ValueError(
+                    f"{self.map_id}: {tile.name} lands at ({col}, {row}), "
+                    f"outside the declared {cols}x{rows} grid"
+                )
+            if (col, row) in out:
+                raise ValueError(
+                    f"{self.map_id}: {tile.name} and {out[(col, row)].name} "
+                    f"both claim slot ({col}, {row})"
+                )
             out[(col, row)] = tile
         return out
 
@@ -166,26 +209,36 @@ def read_minimap(path: Path, map_id: str) -> MinimapVolume | None:
     wins and they are ignored.
     """
     data = path.read_bytes()
+
+    # Anchor on the stem the `_Full` record declares, so only that volume's
+    # tiles are accepted. Matching any `<something>_<a>x<b>` string instead
+    # would let unrelated bytes that happen to end in digits-x-digits become a
+    # tile with whatever six floats followed them.
+    full = re.search(rb"([A-Za-z0-9_]+)_Full\x00", data)
+    if full is None:
+        return None
+    stem = full.group(1).decode("ascii")
+
     tiles: list[Tile] = []
-    stems: set[str] = set()
-    for match in re.finditer(rb"([A-Za-z0-9_]+_\d+x\d+)\x00", data):
-        name = match.group(1).decode("ascii")
-        suffix = _TILE_SUFFIX.search(name)
-        if not suffix:
+    seen: set[str] = set()
+    pattern = re.escape(stem).encode("ascii") + rb"_\d+x\d+\x00"
+    for match in re.finditer(pattern, data):
+        name = match.group(0)[:-1].decode("ascii")
+        if match.end() + 24 > len(data):
             continue
-        values = struct.unpack_from("<6f", data, match.end()) if match.end() + 24 <= len(data) else None
-        if values is None or not finite(*values):
+        values = struct.unpack_from("<6f", data, match.end())
+        if not finite(*values):
             continue
+        # The same name appearing twice means the parse has drifted or the file
+        # repeats a record; either way the second copy is not a new tile.
+        if name in seen:
+            continue
+        seen.add(name)
         tiles.append(Tile(name, Bounds(*values)))
-        stems.add(name[: suffix.start()])
 
     if not tiles:
         return None
-    # One volume per map in every file seen; if that ever stops holding, the
-    # ambiguity should be loud rather than silently resolved to the first.
-    if len(stems) != 1:
-        raise ValueError(f"{path}: expected one tile stem, found {sorted(stems)}")
-    return MinimapVolume(map_id=map_id, texture_stem=stems.pop(), tiles=tiles)
+    return MinimapVolume(map_id=map_id, texture_stem=stem, tiles=tiles)
 
 
 def read_actors(path: Path, bounds: Bounds) -> list[Actor]:
