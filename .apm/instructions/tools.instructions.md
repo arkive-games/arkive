@@ -53,7 +53,10 @@ acceptance rests on containment 0.9165, 369/372 markers landing inside their own
 polygon, and human review of `calibration/accepted_overlay.png`.
 
 ## Per-game extractor notes
-Lost Ark is the one game whose extractor we do **not** own, and its table-decoding findings are
-long-form reference rather than a working convention. Read
+Lost Ark's extractor is **split in two**, unlike the other games'. Its tables come from
+third-party `lostark-explorer` as 908 SQLite databases that `tools/apps/lostark` reads directly,
+while its art comes from [`laex`](https://github.com/arkive-games/laex) — ours, the fourth sibling
+of uex/unex/gdex, which parses the UE3 packages inside `.upk` and decodes their textures. Its
+table-decoding findings are long-form reference rather than a working convention: read
 `tools/apps/lostark/NOTES.md` before touching that pipeline; the fan-site disagreements it
 summarises are recorded in full in `docs/lostark-fansite-divergences.md`.

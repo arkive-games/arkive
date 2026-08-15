@@ -4,12 +4,32 @@ Reference notes for `tools/apps/lostark`, moved out of the workspace instruction
 2026-08-11 because they are long-form findings rather than working conventions. Related:
 `docs/lostark-fansite-divergences.md` records the fan-site disagreements in full.
 
-## No first-party extractor
-Lost Ark is the one game whose extractor we do **not** own. uex/unex/gdex exist because Unreal,
-Unity and Godot ship containers needing a decoder written; Lost Ark's `.lpk`/`.ipk`/`.upk` are
-already handled by **`lostark-explorer`** (`D:\lostark-explorer`, .NET). Its output is **908
-plain SQLite databases** at `D:\lostark-extracted\EFGame\...\ClientData\TableData`, so
-`tools/apps/lostark` reads them directly and no fourth extractor is warranted.
+## The extractor is split in two
+**Corrected 2026-08-15.** This section used to read "no first-party extractor … no fourth
+extractor is warranted." That held for the *tables* and is still true of them; it stopped being
+true of the *art*.
+
+**Tables — not ours, and no reason for them to be.** Lost Ark's `.lpk`/`.ipk` container crypto is
+already solved by **`lostark-explorer`** (`D:\lostark-explorer`, .NET). Its output is **908 plain
+SQLite databases** at `D:\lostark-extracted\EFGame\...\ClientData\TableData`, which
+`tools/apps/lostark` reads directly. Nothing here needs writing.
+
+**Art — ours, as [`laex`](https://github.com/arkive-games/laex)** (`E:\arkive-games\laex`, .NET,
+public 2026-08-15), the fourth sibling of uex/unex/gdex. It does **not** reimplement the container
+crypto — it project-references `lostark-explorer`'s `LostArk.Archive.Core` and adds the CLI
+surface the other three have (index, search, ls, extract, `--json`). What it owns is the layer no
+other tool covered: parsing the **Unreal Engine 3 packages inside `.upk`** and decoding their
+textures to PNG, which is how the UI atlases became readable at all.
+
+Three things about Lost Ark's UE3 that cost the most time, recorded so they are not re-derived:
+package compression is **LZ4**, not the zlib/LZO its `CompressionFlags` implies; `FCompressedChunk`
+is **20 bytes, not 16**; and the first 4096 bytes of every package-level block are **AES-256-ECB
+encrypted** (bulk mip blocks are not). Worse, 823 of the 1,147 atlas textures store their mip as a
+**Crunch (CRN)** stream in the *later* crnlib format, not the 1.04 one — both parse the same header
+and pass its CRCs, so decoding with the wrong one yields plausible DXT blocks that are spatially
+scrambled, i.e. art that looks like noise rather than an error. laex's README carries the full
+write-up; `laex props <upk>` dumps any export's class and tagged properties when a texture's own
+declarations (`SizeX`, format, `EachWidth`/`EachHeight`) are the question.
 
 ## Combat power (`EFTable_BattlePoint`)
 Combat power lives in `EFTable_BattlePoint` (16,707 rows): `PrimaryKey` 1 = damage dealer,
