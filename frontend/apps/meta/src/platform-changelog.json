@@ -1,6 +1,26 @@
 {
   "entries": [
     {
+      "date": "2026-08-16",
+      "commit": "f5e4ce9190065bc1f3b37d672a3a284354963d35",
+      "targets": [
+        "aion2",
+        "palworld",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Creating an account or resetting a password now asks you to type the password twice, so a typo cannot lock you out, and the sign-up form shows that a human check is protecting it. Your email address is now shown read-only on the account page: ask an administrator to change it.",
+            "zh-CN": "注册账号或重置密码时，现在需要输入两次密码，避免打错后无法登录；注册表单也会显示正在进行人机验证。账号页面的邮箱改为只读，如需更换请联系管理员。",
+            "zh-TW": "註冊帳號或重設密碼時，現在需要輸入兩次密碼，避免打錯後無法登入；註冊表單也會顯示正在進行人機驗證。帳號頁面的信箱改為唯讀，如需更換請聯絡管理員。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-08-15",
       "commit": "d0f1ebbbd09b9c94144d31a3633a18b2be20fc85",
       "targets": [
