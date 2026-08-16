@@ -14,7 +14,7 @@ kept in **separate artifact repos** and served over HTTP.
 | Path | What it is |
 |------|-----------|
 | `frontend/` | pnpm workspace — the web client. `apps/{aion2,palworld}` (React 19 · Vite · Tailwind · shadcn · Leaflet) built on shared `packages/{ui, map-engine, map-shell, data-contract}`. |
-| `backend/` | One **shared** FastAPI + PostgreSQL + S3 service for dynamic/user data (auth, comments, uploads, contributor & artifact voting) — not per-game. Python (uv). |
+| `backend/` | **Retired 2026-08-16 — read-only, not deployed.** The FastAPI service `backend-go` replaced. Kept only as the reference for the parts not yet ported: artifact voting, marker feedback and progress. See `backend/README.md`. |
 | `tools/` | Data pipeline. `apps/{aion2,palworld}` extractors on a shared `packages/` framework; turns the raw game export into the `data-*` / `resource-*` artifacts. Python (uv). |
 | `docs/` | Design specs and implementation plans. |
 
@@ -61,10 +61,9 @@ For production the client fetches from CDN/API base URLs (`VITE_RESOURCE_BASE_UR
 # backend — Go service, replaces the Python one. See backend-go/README.md.
 cd backend-go && docker compose up -d postgres && go run ./cmd/arkive   # API on :19000
 
-# backend (legacy FastAPI service, still serving production; being replaced)
-# Its compose files are renamed *.archived.yml so they are no longer picked up
-# automatically; drive them with `docker compose -f docker-compose.archived.yml`.
-cd backend && uv sync
+# backend — RETIRED, do not run or deploy it. Its container was removed from the
+# server on 2026-08-16 and its port closed; backend-go serves everything now.
+# The source stays as a reference; see backend/README.md before touching it.
 
 # tools (data pipeline)
 cd tools && uv sync && uv run pytest

@@ -103,8 +103,9 @@ frontend reads `VITE_RESOURCE_BASE_URL` / `VITE_DATA_BASE_URL` instead.
 ## 5. Run
 
 ```bash
-# backend  (defaults to port 9000)
-cd backend && uv run <your run command — see backend README>
+# backend-go  (API on :19000). The Python backend/ was retired on 2026-08-16 and
+# must not be run; see backend/README.md.
+cd backend-go && docker compose up -d postgres && go run ./cmd/arkive
 
 # frontend  (per game: dev:aion2 / dev:palworld)
 cd frontend && pnpm dev:aion2
