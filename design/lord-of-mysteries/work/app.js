@@ -43,12 +43,12 @@ function renderDifficulty() {
 function updateRouteCopy() {
   const route = DIFFICULTIES.find((item) => item.id === state.difficulty);
   if (!route) {
-    $("route-description").textContent = "先选择铁路大亨难度，再输入本局总站点配额。挑战路线是当前重点推演模式。";
+    $("route-description").textContent = "选择路线后填写 15 站配额。";
     return;
   }
   $("route-description").textContent = route.id === "challenge"
-    ? "先录入始发站提示，再逐轮确认当前站点与下一波提示。系统只展示已经获得信息的未来 3 站。"
-    : `${route.name}已切换。当前原型沿用 15 站配额模型，按信息链逐步推演。`;
+    ? "逐轮记录站点与提示，查看未来 3 站概率。"
+    : `${route.name} · 15 站配额推演。`;
 }
 
 function applyDifficulty(id) {
@@ -103,20 +103,25 @@ function renderStationStrip() {
 }
 
 function renderCurrentStation() {
+  const bar = $("current-station-bar");
   const station = $("current-station");
   const note = $("current-station-note");
+  bar.classList.remove("is-origin", "is-winery", "is-food", "is-trade");
   if (!state.sequences.length) {
+    bar.classList.add("is-origin");
     station.textContent = "尚未开始";
-    note.textContent = "选择路线并确认总站点配额后开始";
+    note.textContent = "确认配额后开始";
     return;
   }
   if (!state.originHint || !state.steps.length) {
+    bar.classList.add("is-origin");
     station.textContent = "始发站";
-    note.textContent = state.originHint ? "已获得第一波提示，等待确认第 1 站" : "等待选择第一波未来 3 站提示";
+    note.textContent = state.originHint ? "等待确认第 1 站" : "等待始发站提示";
     return;
   }
+  bar.classList.add(`is-${state.steps.at(-1).currentType}`);
   station.textContent = `第 ${state.steps.length} 站`;
-  note.textContent = "请确认当前站点，并选择下一波未来 3 站提示";
+  note.textContent = "选择下一站与提示";
 }
 
 function renderHistory() {
@@ -133,7 +138,7 @@ function renderHistory() {
   });
   $("history-count").textContent = `${entries.length} 条`;
   $("history-list").innerHTML = entries.length
-    ? entries.map((entry) => `<li><strong>${entry.range}</strong><span>${entry.hint}</span><small>${entry.detail}</small></li>`).join("")
+    ? entries.map((entry, index) => `<li class="history-entry"><span class="history-marker" aria-hidden="true">${index + 1}</span><div class="history-entry-body"><div class="history-entry-meta"><strong>${entry.range}</strong><span>${entry.hint}</span></div><small>${entry.detail}</small></div></li>`).join("")
     : `<li class="history-empty">暂无已确认提示</li>`;
 }
 
@@ -219,7 +224,7 @@ function hintMarkup(selected = "") {
 }
 
 function renderResolvedWindow(possible, start, detail) {
-  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div><p class="sequence-note">单站数字是边际概率，不代表三站彼此独立；下方联合组合展示同一条三站路线的整体概率。</p>${[0, 1, 2].map((offset) => `<div class="probability-section"><div class="probability-heading"><strong>第 ${start + offset + 1} 站</strong><span>边际概率</span></div>${probabilityMarkup(probabilityFor(possible, start + offset), possible, start, offset === 0)}</div>`).join("")}</div>`;
+  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div><p class="sequence-note">单站为边际概率，组合为整条路线概率。</p>${[0, 1, 2].map((offset) => `<div class="probability-section"><div class="probability-heading"><strong>第 ${start + offset + 1} 站</strong><span>边际概率</span></div>${probabilityMarkup(probabilityFor(possible, start + offset), possible, start, offset === 0)}</div>`).join("")}</div>`;
 }
 
 function renderForecast() {
@@ -234,7 +239,7 @@ function renderForecast() {
   intro.classList.add("is-hidden"); content.classList.remove("is-hidden");
 
   if (!state.originHint) {
-    content.innerHTML = `<div class="window-card origin-card"><div class="window-meta"><span class="window-title">始发站 · 第一波提示</span><span class="window-state">${state.sequences.length.toLocaleString()} 种序列待筛选</span></div><p class="sequence-note">选择游戏内显示的未来 3 站提示，确认后才会展示第 1 至 3 站概率。</p><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-origin" type="button" disabled>确认始发站提示并推演第 1-3 站</button></div>`;
+    content.innerHTML = `<div class="window-card origin-card"><div class="window-meta"><span class="window-title">始发站 · 第一波提示</span><span class="window-state">${state.sequences.length.toLocaleString()} 种序列</span></div><p class="sequence-note">选择游戏内的未来 3 站提示。</p><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-origin" type="button" disabled>确认并推演第 1-3 站</button></div>`;
     content.querySelectorAll("[data-hint]").forEach((button) => button.addEventListener("click", () => { state.pendingHint = button.dataset.hint; renderForecast(); }));
     const confirm = $("confirm-origin");
     confirm.disabled = !state.pendingHint;
@@ -249,7 +254,7 @@ function renderForecast() {
   const resolved = renderResolvedWindow(possible, latestStart, latestDetail);
   const complete = state.steps.length >= 12;
   if (complete) {
-    content.innerHTML = `${resolved}<p class="sequence-note"><strong>15 站信息链已完成。</strong>以上仅展示每次获得提示后对应的未来 3 站概率。</p>`;
+    content.innerHTML = `${resolved}<p class="sequence-note"><strong>15 站信息链已完成。</strong></p>`;
     return;
   }
 
@@ -257,7 +262,7 @@ function renderForecast() {
   const currentOptions = TYPES.map((type) => `<option value="${type}" ${state.pendingCurrent === type ? "selected" : ""}>${TYPE_LABELS[type]}</option>`).join("");
   const candidateCount = state.pendingCurrent && state.pendingHint ? prospectiveSequences().length : possible.length;
   const candidateMessage = state.pendingCurrent && state.pendingHint && candidateCount === 0 ? `<p class="sequence-note error-note">当前站点与提示组合没有可行路线，请更换其中一项。</p>` : "";
-  const nextPrompt = `<div class="window-card"><div class="window-meta"><span class="window-title">第 <span>${currentNumber}</span> 站 · 确认当前站点</span><span class="window-state">${candidateCount.toLocaleString()} 种序列可继续</span></div><div class="current-picker"><label for="current-select">当前站点类型</label><select id="current-select"><option value="">请选择</option>${currentOptions}</select></div><p class="sequence-note">确认当前站点后，选择刚解锁的下一波未来 3 站提示。</p><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-step" type="button" disabled>确认第 ${currentNumber} 站并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button>${candidateMessage}</div>`;
+  const nextPrompt = `<div class="window-card"><div class="window-meta"><span class="window-title">第 <span>${currentNumber}</span> 站 · 确认站点</span><span class="window-state">${candidateCount.toLocaleString()} 种序列</span></div><div class="current-picker"><label for="current-select">站点类型</label><select id="current-select"><option value="">请选择</option>${currentOptions}</select></div><p class="sequence-note">选择站点和下一波提示。</p><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-step" type="button" disabled>确认并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button>${candidateMessage}</div>`;
   content.innerHTML = `${nextPrompt}${resolved}`;
   const currentSelect = $("current-select");
   currentSelect.addEventListener("change", () => { state.pendingCurrent = currentSelect.value; renderForecast(); });
