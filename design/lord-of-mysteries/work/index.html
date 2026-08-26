@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>诡秘之主 · 铁路大亨推演台</title>
+    <meta name="description" content="挑战路线铁路大亨站点概率推演工具" />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark">LOM</div>
+          <div>
+            <p class="eyebrow">ARKIVE · GAME TOOL</p>
+            <h1>诡秘之主 <span>铁路大亨推演台</span></h1>
+          </div>
+        </div>
+        <div class="topbar-note"><span class="status-dot"></span>本地计算 · 不上传对局数据</div>
+      </header>
+
+      <nav class="difficulty-bar" aria-label="路线难度">
+        <div class="difficulty-heading">
+          <span class="section-kicker">ROUTE SELECTOR</span>
+          <strong>选择路线</strong>
+        </div>
+        <div class="difficulty-options" id="difficulty-options"></div>
+      </nav>
+
+      <section class="hero-panel">
+        <div>
+          <span class="route-badge" id="route-badge">挑战路线 · 15 站</span>
+          <h2>把未知的三站，拆成可计算的下一步。</h2>
+          <p id="route-description">输入本局总站点配额，再按游戏内出现的顺序录入提示。每提交一条提示，推演台才会解锁下一站。</p>
+        </div>
+        <div class="hero-seal" aria-hidden="true"><span>15</span><small>STOPS</small></div>
+      </section>
+
+      <section class="workspace-grid">
+        <aside class="control-column">
+          <section class="panel totals-panel">
+            <div class="panel-heading">
+              <div><span class="section-kicker">01 · TOTAL QUOTA</span><h3>总站点配额</h3></div>
+              <span class="help-mark" title="三类站点总数必须合计 15">?</span>
+            </div>
+            <p class="panel-copy">先填入整局会出现的站点总数。数字合计为 15 时，推演才会开始。</p>
+            <form id="totals-form" class="totals-form">
+              <label class="quota-field winery"><span>酒庄</span><small>WINERY</small><input id="winery-total" name="winery" type="number" min="0" max="15" value="5" /></label>
+              <label class="quota-field food"><span>食铺</span><small>FOOD SHOP</small><input id="food-total" name="food" type="number" min="0" max="15" value="5" /></label>
+              <label class="quota-field trade"><span>商行</span><small>TRADING HOUSE</small><input id="trade-total" name="trade" type="number" min="0" max="15" value="5" /></label>
+            </form>
+            <div class="quota-total"><span>已配置</span><strong id="quota-total-value">15</strong><span>/ 15 站</span></div>
+            <div class="quota-message" id="quota-message" role="status"></div>
+            <button class="primary-button" id="start-button" type="button">开始挑战路线 <span>→</span></button>
+          </section>
+
+          <section class="panel legend-panel">
+            <div class="panel-heading compact"><div><span class="section-kicker">HOW IT WORKS</span><h3>提示判定</h3></div></div>
+            <ul class="legend-list">
+              <li><i class="legend-swatch winery"></i><span><strong>某类最多</strong><small>未来 3 站中该类数量严格领先</small></span></li>
+              <li><i class="legend-swatch equal"></i><span><strong>各站点相同</strong><small>未来 3 站恰好各出现 1 站</small></span></li>
+            </ul>
+          </section>
+        </aside>
+
+        <section class="panel forecast-panel" aria-live="polite">
+          <div class="panel-heading forecast-heading">
+            <div><span class="section-kicker">02 · FORECAST WINDOW</span><h3>逐站录入提示</h3></div>
+            <div class="progress-readout"><strong id="progress-count">0</strong><span>/ 12 次站点推演</span></div>
+          </div>
+          <div class="forecast-intro" id="forecast-intro">
+            <div class="intro-glyph">⌁</div>
+            <div><strong>先配置总站点配额</strong><p>挑战路线从第 1 站开始，每次选择当前站点后，才推演后续 3 站。</p></div>
+          </div>
+          <div id="forecast-content" class="forecast-content is-hidden"></div>
+        </section>
+      </section>
+
+      <footer class="footer-note"><span>诡秘之主 · 铁路大亨</span><span>仅作路线决策辅助，最终结果以游戏内状态为准</span></footer>
+    </main>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
