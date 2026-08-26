@@ -8,9 +8,9 @@ const DIFFICULTIES = [
   { id: "challenge", name: "挑战路线", stops: 15 },
 ];
 const HINTS = [
-  { id: "winery-most", label: "酒庄最多", detail: "酒庄数量最高" },
-  { id: "food-most", label: "食铺最多", detail: "食铺数量最高" },
-  { id: "trade-most", label: "商行最多", detail: "商行数量最高" },
+  { id: "winery-most", label: "酒庄最多" },
+  { id: "food-most", label: "食铺最多" },
+  { id: "trade-most", label: "商行最多" },
   { id: "equal", label: "各站点相同", detail: "三类各出现 1 次" },
 ];
 
@@ -189,11 +189,11 @@ function probabilityMarkup(probability, sequenceSet, start, includeCombos = fals
 }
 
 function hintMarkup(selected = "") {
-  return HINTS.map((hint) => `<button class="hint-button ${selected === hint.id ? "is-selected" : ""}" data-hint="${hint.id}" type="button"><strong>${hint.label}</strong><small>${hint.detail}</small></button>`).join("");
+  return HINTS.map((hint) => `<button class="hint-button ${!hint.detail ? "is-compact" : ""} ${selected === hint.id ? "is-selected" : ""}" data-hint="${hint.id}" aria-label="${hint.label}" type="button"><strong>${hint.label}</strong>${hint.detail ? `<small>${hint.detail}</small>` : ""}</button>`).join("");
 }
 
 function renderResolvedWindow(possible, start, detail) {
-  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div><p class="sequence-note">单站为边际概率，组合为整条路线概率。</p>${[0, 1, 2].map((offset) => `<div class="probability-section"><div class="probability-heading"><strong>第 ${start + offset + 1} 站</strong><span>边际概率</span></div>${probabilityMarkup(probabilityFor(possible, start + offset), possible, start, offset === 0)}</div>`).join("")}</div>`;
+  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div>${[0, 1, 2].map((offset) => `<div class="probability-section"><div class="probability-heading"><strong>第 ${start + offset + 1} 站</strong><span>边际概率</span></div>${probabilityMarkup(probabilityFor(possible, start + offset), possible, start, offset === 0)}</div>`).join("")}</div>`;
 }
 
 function renderForecast() {
