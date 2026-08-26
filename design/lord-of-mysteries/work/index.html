@@ -17,26 +17,25 @@
             <h1>藏舟游戏攻略网 <span>万千攻略，藏于一舟</span></h1>
           </div>
         </div>
-        <nav class="site-nav" aria-label="主导航"><a href="#map">地图</a><a class="is-active" href="#planner">路线规划</a><a href="#wiki">资料库</a></nav>
         <div class="topbar-tools"><button type="button">语言</button><button type="button">主题</button><button class="icon-tool" type="button" title="设置">⚙</button></div>
       </header>
 
       <section class="station-strip" aria-label="站点确认状态"><div class="station-strip-label"><span>站点状态</span><strong>已百分百确认的站点</strong></div><div class="station-track" id="confirmed-stations"></div></section>
-      <section class="current-station-bar" aria-live="polite" aria-label="当前所在站"><span>当前所在站</span><strong id="current-station">尚未开始</strong><small id="current-station-note">选择路线并确认总站点配额后开始</small></section>
+      <section class="current-station-bar is-origin" id="current-station-bar" aria-live="polite" aria-label="当前所在站"><span class="current-station-signal" aria-hidden="true"></span><span class="current-station-label">当前所在</span><strong id="current-station">尚未开始</strong><small id="current-station-note">选择路线并确认配额</small></section>
 
       <section class="workspace-grid" id="planner">
         <aside class="control-column">
           <section class="panel route-panel">
             <div class="panel-heading compact"><div><span class="section-kicker">路线</span><h3>路线难度</h3></div></div>
             <label class="route-select-wrap" for="difficulty-select"><span>选择路线</span><select id="difficulty-select"><option value="">请选择路线</option></select></label>
-            <p id="route-description">先选择路线难度，再输入本局的站点配额。</p>
+            <p id="route-description">选择路线后填写 15 站配额。</p>
           </section>
           <section class="panel totals-panel">
             <div class="panel-heading">
               <div><span class="section-kicker">01 · 总站点配额</span><h3>总站点配额</h3></div>
               <span class="help-mark" title="三类站点总数必须合计 15">?</span>
             </div>
-            <p class="panel-copy">先填入整局会出现的站点总数。数字合计为 15 时，推演才会开始。</p>
+            <p class="panel-copy">三类站点合计 15 站。</p>
             <form id="totals-form" class="totals-form">
               <label class="quota-field winery"><span>酒庄</span><small>酒庄站点</small><input id="winery-total" name="winery" type="number" min="0" max="15" value="5" /></label>
               <label class="quota-field food"><span>食铺</span><small>食铺站点</small><input id="food-total" name="food" type="number" min="0" max="15" value="5" /></label>
@@ -50,12 +49,11 @@
 
         <section class="panel forecast-panel" aria-live="polite">
           <div class="panel-heading forecast-heading">
-            <div class="forecast-heading-main"><span class="section-kicker">路线规划 · 挑战路线</span><h3>铁路大亨推演</h3></div>
+            <div class="forecast-heading-main"><span class="section-kicker">挑战路线</span><h3>铁路大亨推演</h3></div>
             <div class="progress-readout"><strong id="progress-count">0</strong><span>/ 13 次信息解锁</span></div>
           </div>
           <div class="forecast-intro" id="forecast-intro">
-            <div class="intro-glyph">⌁</div>
-            <div><strong>先确认总站点配额</strong><p>完成配额并确认后，从始发站开始录入第一波未来 3 站提示。</p></div>
+            <div><strong>确认配额后开始</strong></div>
           </div>
           <div id="forecast-content" class="forecast-content is-hidden"></div>
         </section>
