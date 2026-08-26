@@ -40,22 +40,10 @@ function renderDifficulty() {
   select.value = state.difficulty;
 }
 
-function updateRouteCopy() {
-  const route = DIFFICULTIES.find((item) => item.id === state.difficulty);
-  if (!route) {
-    $("route-description").textContent = "选择路线后填写 15 站配额。";
-    return;
-  }
-  $("route-description").textContent = route.id === "challenge"
-    ? "逐轮记录站点与提示，查看未来 3 站概率。"
-    : `${route.name} · 15 站配额推演。`;
-}
-
 function applyDifficulty(id) {
   state.difficulty = id;
   state.sequences = [];
   resetRoute();
-  updateRouteCopy();
   renderDifficulty();
   renderQuotaStatus();
   renderForecast();
@@ -82,6 +70,8 @@ function renderQuotaStatus() {
 
 function renderStationStrip() {
   const confirmed = new Map(state.steps.map((step, index) => [index, TYPE_LABELS[step.currentType]]));
+  const currentIndex = state.steps.length ? state.steps.length - 1 : -1;
+  const currentType = state.steps.at(-1)?.currentType || "";
   if (state.sequences.length) {
     const possible = filteredSequences();
     const starts = state.originHint ? [0, ...state.steps.map((_, index) => index + 1)] : [];
@@ -92,36 +82,15 @@ function renderStationStrip() {
     });
   }
   const windowStart = state.originHint ? state.steps.length : -1;
-  const originStatus = !state.sequences.length ? "待开始" : state.steps.length ? "已出发" : "当前所在";
+  const originStatus = !state.sequences.length ? "待开始" : state.steps.length ? "已出发" : "";
   const originCell = `<div class="station-cell station-origin ${state.sequences.length && !state.steps.length ? "is-current" : ""}"><strong>始发站</strong><small>${originStatus}</small></div>`;
   $("confirmed-stations").innerHTML = originCell + Array.from({ length: 15 }, (_, index) => {
     const number = index + 1;
     const type = confirmed.get(index);
     const isWindow = !type && windowStart >= 0 && index >= windowStart && index < windowStart + 3;
-    return `<div class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""}"><strong>${number}</strong><small>${type ? `${type} · 100%` : isWindow ? "已推演" : "待确认"}</small></div>`;
+    const isCurrent = index === currentIndex;
+    return `<div class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""} ${isCurrent ? `is-current is-${currentType}` : ""}"><strong>${number}</strong><small>${type ? `${type} · 100%` : isWindow ? "已推演" : "待确认"}</small></div>`;
   }).join("");
-}
-
-function renderCurrentStation() {
-  const bar = $("current-station-bar");
-  const station = $("current-station");
-  const note = $("current-station-note");
-  bar.classList.remove("is-origin", "is-winery", "is-food", "is-trade");
-  if (!state.sequences.length) {
-    bar.classList.add("is-origin");
-    station.textContent = "尚未开始";
-    note.textContent = "确认配额后开始";
-    return;
-  }
-  if (!state.originHint || !state.steps.length) {
-    bar.classList.add("is-origin");
-    station.textContent = "始发站";
-    note.textContent = state.originHint ? "等待确认第 1 站" : "等待始发站提示";
-    return;
-  }
-  bar.classList.add(`is-${state.steps.at(-1).currentType}`);
-  station.textContent = `第 ${state.steps.length} 站`;
-  note.textContent = "选择下一站与提示";
 }
 
 function renderHistory() {
@@ -231,7 +200,6 @@ function renderForecast() {
   const intro = $("forecast-intro");
   const content = $("forecast-content");
   renderStationStrip();
-  renderCurrentStation();
   renderHistory();
   const disclosed = (state.originHint ? 1 : 0) + state.steps.length;
   $("progress-count").textContent = disclosed;
@@ -296,7 +264,5 @@ $("quota-confirm-button").addEventListener("click", () => {
   renderForecast();
 });
 renderDifficulty();
-updateRouteCopy();
 renderQuotaStatus();
 renderStationStrip();
-renderCurrentStation();
