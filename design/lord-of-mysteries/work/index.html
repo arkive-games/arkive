@@ -22,6 +22,7 @@
       </header>
 
       <section class="station-strip" aria-label="站点确认状态"><div class="station-strip-label"><span>站点状态</span><strong>已百分百确认的站点</strong></div><div class="station-track" id="confirmed-stations"></div></section>
+      <section class="current-station-bar" aria-live="polite" aria-label="当前所在站"><span>当前所在站</span><strong id="current-station">尚未开始</strong><small id="current-station-note">选择路线并确认总站点配额后开始</small></section>
 
       <section class="workspace-grid" id="planner">
         <aside class="control-column">
@@ -50,13 +51,7 @@
         <section class="panel forecast-panel" aria-live="polite">
           <div class="panel-heading forecast-heading">
             <div class="forecast-heading-main"><span class="section-kicker">路线规划 · 挑战路线</span><h3>铁路大亨推演</h3></div>
-            <div class="forecast-heading-side">
-              <div class="progress-readout"><strong id="progress-count">0</strong><span>/ 13 次信息解锁</span></div>
-              <aside class="history-panel" aria-label="过往未来三站提示">
-                <div class="history-heading"><strong>过往未来三站提示</strong><span id="history-count">0 条</span></div>
-                <ol class="history-list" id="history-list"><li class="history-empty">暂无已确认提示</li></ol>
-              </aside>
-            </div>
+            <div class="progress-readout"><strong id="progress-count">0</strong><span>/ 13 次信息解锁</span></div>
           </div>
           <div class="forecast-intro" id="forecast-intro">
             <div class="intro-glyph">⌁</div>
@@ -64,6 +59,12 @@
           </div>
           <div id="forecast-content" class="forecast-content is-hidden"></div>
         </section>
+        <aside class="history-column">
+          <section class="history-panel" aria-label="过往未来三站提示">
+            <div class="history-heading"><strong>过往未来三站提示</strong><span id="history-count">0 条</span></div>
+            <ol class="history-list" id="history-list"><li class="history-empty">暂无已确认提示</li></ol>
+          </section>
+        </aside>
       </section>
 
       <footer class="footer-note"><span>诡秘之主 · 铁路大亨</span><span>仅作路线决策辅助，最终结果以游戏内状态为准</span></footer>
