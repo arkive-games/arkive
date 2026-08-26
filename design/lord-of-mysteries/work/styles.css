@@ -140,7 +140,7 @@ button { cursor: pointer; }
 .forecast-panel { border: 1px solid var(--border); border-radius: .35rem; box-shadow: 0 .65rem 2rem rgb(0 0 0 / .05); }
 .history-column { align-self: start; padding: 0; }
 .history-column .history-panel { top: 1rem; }
-.forecast-panel > .station-strip { width: auto; margin: -1rem -1.25rem 1rem; padding: .65rem 1.25rem; border-bottom: 0; }
+.forecast-panel > .station-strip { width: auto; margin: -1rem -1.25rem 1rem; padding: .65rem 1.25rem; border: 0; box-shadow: none; }
 
 @media (max-width: 1100px) and (min-width: 801px) {
   .station-strip, .workspace-grid { width: min(calc(100% - 2rem), 90rem); }
@@ -178,8 +178,10 @@ button { cursor: pointer; }
 .progress-readout { display: inline-flex; align-items: baseline; justify-content: center; min-width: 4.5rem; gap: .2rem; justify-self: end; padding: .45rem .65rem; border: 1px solid var(--border); border-radius: .25rem; color: var(--muted); background: var(--surface-soft); font-size: .875rem; }
 .progress-readout strong { font-size: 1rem; }
 
+.next-probability { display: block; }
+
 .station-entry { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-top: .75rem; }
-.station-entry .current-picker, .station-entry .hint-picker { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .5rem; align-items: center; min-width: 0; width: auto; max-width: none; margin-top: 0; padding: .55rem .6rem; }
+.station-entry .current-picker, .station-entry .hint-picker { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .5rem; align-items: center; min-width: 0; width: auto; max-width: none; margin-top: 0; padding: .55rem .6rem; border: 1px solid var(--border); border-radius: .25rem; background: var(--surface-soft); }
 .station-entry .current-picker label, .station-entry .hint-picker label { white-space: nowrap; font-size: .75rem; }
 .station-entry .current-picker select, .station-entry .hint-select { width: 100%; min-height: 2.25rem; border: 1px solid var(--border); border-radius: .2rem; padding: .3rem .45rem; color: var(--text); background: var(--surface); outline-color: var(--blue); font-size: .875rem; }
 .station-entry .current-picker.is-origin select:disabled { cursor: not-allowed; color: #8b929b; border-color: #d7dce1; background: #eef0f2; }

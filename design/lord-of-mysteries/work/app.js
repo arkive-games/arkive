@@ -44,7 +44,7 @@ function resetRoute() {
 
 function renderDifficulty() {
   const select = $("difficulty-select");
-  select.innerHTML = `<option value="">请选择难度</option>${DIFFICULTIES.map((route) => `<option value="${route.id}">${route.name}</option>`).join("")}`;
+  select.innerHTML = `<option value="" hidden></option>${DIFFICULTIES.map((route) => `<option value="${route.id}">${route.name}</option>`).join("")}`;
   select.value = state.difficulty;
 }
 
@@ -212,7 +212,7 @@ function comboMarkup(sequenceSet, start) {
   const combos = windowDistribution(sequenceSet, start);
   if (!combos.length) return "";
   const comboTotal = sequenceSet.length || 1;
-  return `<div class="combo-block"><div class="combo-heading"><strong>未来三站组合</strong></div><div class="combo-grid">${combos.map(([key, count]) => `<div class="combo-item"><span>${key.split(",").map((type) => TYPE_LABELS[type]).join(" → ")}</span><b>${Math.round((count / comboTotal) * 100)}%</b></div>`).join("")}</div></div>`;
+  return `<div class="combo-block"><div class="combo-heading"><strong>第${start + 1}-${start + 3}站组合攻略</strong></div><div class="combo-grid">${combos.map(([key, count]) => `<div class="combo-item"><span>${key.split(",").map((type) => TYPE_LABELS[type]).join(" → ")}</span><b>${Math.round((count / comboTotal) * 100)}%</b></div>`).join("")}</div></div>`;
 }
 
 function probabilityMarkup(probability) {
@@ -229,11 +229,11 @@ function probabilityMarkup(probability) {
 }
 
 function hintMarkup(selected = "", id = "hint-select") {
-  return `<select class="hint-select" id="${id}" aria-label="未来三站提示"><option value="">请选择提示</option>${HINTS.map((hint) => `<option value="${hint.id}" ${selected === hint.id ? "selected" : ""}>${hint.label}</option>`).join("")}</select>`;
+  return `<select class="hint-select" id="${id}" aria-label="未来三站提示"><option value="" hidden></option>${HINTS.map((hint) => `<option value="${hint.id}" ${selected === hint.id ? "selected" : ""}>${hint.label}</option>`).join("")}</select>`;
 }
 
 function renderResolvedWindow(possible, start, detail) {
-  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div><div class="probability-section next-probability"><div class="probability-heading"><strong>下一站 · 第 ${start + 1} 站</strong></div>${probabilityMarkup(probabilityFor(possible, start))}</div>${comboMarkup(possible, start)}</div>`;
+  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">第${start + 1}站概率</span><span class="window-state">${detail}</span></div><div class="probability-section next-probability">${probabilityMarkup(probabilityFor(possible, start))}</div>${comboMarkup(possible, start)}</div>`;
 }
 
 function renderForecast() {
@@ -273,7 +273,7 @@ function renderForecast() {
   const currentOptions = TYPES.map((type) => `<option value="${type}" ${state.pendingCurrent === type ? "selected" : ""}>${TYPE_LABELS[type]}</option>`).join("");
   const candidateCount = state.pendingCurrent && state.pendingHint ? prospectiveSequences().length : possible.length;
   const candidateMessage = state.pendingCurrent && state.pendingHint && candidateCount === 0 ? `<p class="sequence-note error-note">当前站点与提示组合没有可行路线，请更换其中一项。</p>` : "";
-  const nextPrompt = `<div class="window-card"><div class="window-meta"><span class="window-title"><span class="step-number">3</span>第 ${currentNumber} 站 · 确认</span></div><div class="station-entry"><div class="current-picker"><label for="current-select">当前站点</label><select id="current-select"><option value="">请选择</option>${currentOptions}</select></div><div class="hint-picker"><label for="hint-select">未来三站</label>${hintMarkup(state.pendingHint)}</div></div><button class="confirm-step" id="confirm-step" type="button" disabled>确认并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button>${candidateMessage}</div>`;
+  const nextPrompt = `<div class="window-card"><div class="window-meta"><span class="window-title"><span class="step-number">3</span>第 ${currentNumber} 站 · 确认</span></div><div class="station-entry"><div class="current-picker"><label for="current-select">当前站点</label><select id="current-select"><option value="" hidden></option>${currentOptions}</select></div><div class="hint-picker"><label for="hint-select">未来三站</label>${hintMarkup(state.pendingHint)}</div></div><button class="confirm-step" id="confirm-step" type="button" disabled>确认并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button>${candidateMessage}</div>`;
   content.innerHTML = `${nextPrompt}${resolved}`;
   const currentSelect = $("current-select");
   currentSelect.addEventListener("change", () => { state.pendingCurrent = currentSelect.value; renderForecast(); });
