@@ -107,7 +107,7 @@ function renderHistory() {
   });
   $("history-count").textContent = `${entries.length} 条`;
   $("history-list").innerHTML = entries.length
-    ? entries.map((entry, index) => `<li class="history-entry"><span class="history-marker" aria-hidden="true">${index + 1}</span><div class="history-entry-body"><div class="history-entry-meta"><strong>${entry.range}</strong><span>${entry.hint}</span></div><small>${entry.detail}</small></div></li>`).join("")
+    ? entries.map((entry, index) => `<li class="history-entry"><span class="history-marker" aria-hidden="true">${index === 0 && state.originHint ? 0 : index}</span><div class="history-entry-body"><div class="history-entry-meta"><strong>${entry.range}</strong><span>${entry.hint}</span></div><small>${entry.detail}</small></div></li>`).join("")
     : `<li class="history-empty">暂无已确认提示</li>`;
 }
 
