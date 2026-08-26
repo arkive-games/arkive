@@ -17,15 +17,16 @@
             <h1>藏舟攻略 <span>诡秘之主 · 铁路大亨</span></h1>
           </div>
         </div>
+        <nav class="topbar-nav" aria-label="主导航"><a class="is-active" href="#planner" aria-current="page">工具库</a></nav>
       </header>
 
-      <section class="station-strip" aria-label="站点进度"><div class="station-track" id="confirmed-stations"></div></section>
+      <section class="station-strip" aria-label="站点进度"><button class="station-nav" id="station-prev" type="button" aria-label="预览前面站点">←</button><div class="station-track" id="confirmed-stations"></div><button class="station-nav" id="station-next" type="button" aria-label="预览后面站点">→</button></section>
 
       <section class="workspace-grid" id="planner">
         <aside class="control-column">
           <section class="panel route-panel">
-            <div class="panel-heading compact"><div><h3>路线</h3></div></div>
-            <label class="route-select-wrap" for="difficulty-select"><select id="difficulty-select" aria-label="路线"><option value="">请选择</option></select></label>
+            <div class="panel-heading compact"><div><h3>难度选择</h3></div></div>
+            <label class="route-select-wrap" for="difficulty-select"><select id="difficulty-select" aria-label="难度选择"><option value="">请选择</option></select></label>
           </section>
           <section class="panel totals-panel">
             <div class="panel-heading">
