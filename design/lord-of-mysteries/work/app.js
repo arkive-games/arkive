@@ -1,11 +1,11 @@
 const TYPES = ["winery", "food", "trade"];
 const TYPE_LABELS = { winery: "酒庄", food: "食铺", trade: "商行" };
 const DIFFICULTIES = [
-  { id: "beginner", name: "新手路线", en: "BEGINNER", stops: 15 },
-  { id: "normal", name: "普通路线", en: "NORMAL", stops: 15 },
-  { id: "advanced", name: "进阶路线", en: "ADVANCED", stops: 15 },
-  { id: "hard", name: "困难路线", en: "HARD", stops: 15 },
-  { id: "challenge", name: "挑战路线", en: "CHALLENGE", stops: 15 },
+  { id: "beginner", name: "新手路线", stops: 15 },
+  { id: "normal", name: "普通路线", stops: 15 },
+  { id: "advanced", name: "进阶路线", stops: 15 },
+  { id: "hard", name: "困难路线", stops: 15 },
+  { id: "challenge", name: "挑战路线", stops: 15 },
 ];
 const HINTS = [
   { id: "winery-most", label: "酒庄最多", detail: "酒庄 > 食铺、商行" },
@@ -36,7 +36,7 @@ function resetRoute() {
 
 function renderDifficulty() {
   const select = $("difficulty-select");
-  select.innerHTML = `<option value="">请选择路线</option>${DIFFICULTIES.map((route) => `<option value="${route.id}">${route.name} · ${route.en}</option>`).join("")}`;
+  select.innerHTML = `<option value="">请选择路线</option>${DIFFICULTIES.map((route) => `<option value="${route.id}">${route.name}</option>`).join("")}`;
   select.value = state.difficulty;
 }
 
@@ -77,7 +77,6 @@ function renderQuotaStatus() {
   const confirmButton = $("quota-confirm-button");
   confirmButton.disabled = !valid;
   confirmButton.textContent = state.quotaConfirmed ? "总站点配额已确认" : "确认总站点配额";
-  $("start-button").disabled = !valid || !state.quotaConfirmed;
   return valid;
 }
 
@@ -236,11 +235,6 @@ $("totals-form").addEventListener("input", () => {
 $("difficulty-select").addEventListener("change", (event) => applyDifficulty(event.target.value));
 $("quota-confirm-button").addEventListener("click", () => {
   if (!renderQuotaStatus()) return;
-  state.quotaConfirmed = true;
-  renderQuotaStatus();
-});
-$("start-button").addEventListener("click", () => {
-  if (!renderQuotaStatus() || !state.quotaConfirmed) return;
   const sequences = enumerateSequences(state.totals);
   resetRoute();
   state.quotaConfirmed = true;
