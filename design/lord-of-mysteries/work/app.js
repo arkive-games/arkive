@@ -78,7 +78,7 @@ function renderQuotaStatus() {
 
 function renderStationStrip() {
   const totalStops = stationCount();
-  const confirmed = new Map(state.steps.map((step, index) => [index, TYPE_LABELS[step.currentType]]));
+  const confirmed = confirmedStationTypes();
   const currentIndex = state.originHint ? state.steps.length : -1;
   const currentType = state.steps.at(-1)?.currentType || "";
   if (state.sequences.length) {
@@ -98,7 +98,8 @@ function renderStationStrip() {
   $("confirmed-stations").innerHTML = Array.from({ length: visibleCount }, (_, slot) => {
     const index = offset + slot;
     const number = index + 1;
-    const type = confirmed.get(index);
+    const typeKey = confirmed.get(index);
+    const type = typeKey ? TYPE_LABELS[typeKey] : "";
     const isWindow = !type && windowStart >= 0 && index >= windowStart && index < windowStart + 3;
     const isCurrent = index === currentIndex;
     return `<div class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""} ${isCurrent ? `is-current${currentType ? ` is-${currentType}` : ""}` : ""}"><strong>${number}</strong><small>${type || (isWindow ? "已推演" : "待确认")}</small></div>`;
@@ -106,6 +107,26 @@ function renderStationStrip() {
   $("station-prev").disabled = offset === 0;
   $("station-next").disabled = offset === maxOffset;
   $("confirmed-stations").setAttribute("aria-label", `第 ${offset + 1}-${offset + visibleCount} 站`);
+}
+
+function confirmedStationTypes() {
+  const confirmed = new Map(state.steps.map((step, index) => [index, step.currentType]));
+  if (!state.sequences.length || !state.originHint) return confirmed;
+  const possible = filteredSequences();
+  const starts = [0, ...state.steps.map((_, index) => index + 1)];
+  starts.flatMap((start) => [start, start + 1, start + 2]).forEach((position) => {
+    if (confirmed.has(position) || position >= stationCount() || !possible.length) return;
+    const type = TYPES.find((candidate) => possible.every((sequence) => sequence[position] === candidate));
+    if (type) confirmed.set(position, type);
+  });
+  return confirmed;
+}
+
+function renderRemainingStations() {
+  const confirmed = confirmedStationTypes();
+  const remaining = Object.fromEntries(TYPES.map((type) => [type, state.totals[type]]));
+  confirmed.forEach((type) => { remaining[type] = Math.max(0, remaining[type] - 1); });
+  TYPES.forEach((type) => { $(`remaining-${type}`).textContent = remaining[type]; });
 }
 
 function renderHistory() {
@@ -224,7 +245,7 @@ function renderForecast() {
   const currentStation = state.originHint ? Math.min(totalStops, state.steps.length + 1) : 0;
   $("current-station").textContent = currentStation;
   $("remaining-stations").textContent = Math.max(0, totalStops - currentStation);
-  $("remaining-count").textContent = Math.max(0, totalStops - currentStation);
+  renderRemainingStations();
   if (!state.sequences.length) { intro.classList.remove("is-hidden"); content.classList.add("is-hidden"); return; }
   intro.classList.add("is-hidden"); content.classList.remove("is-hidden");
 
