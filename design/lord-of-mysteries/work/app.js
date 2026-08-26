@@ -92,12 +92,31 @@ function renderStationStrip() {
     });
   }
   const windowStart = state.originHint ? state.steps.length : -1;
-  $("confirmed-stations").innerHTML = Array.from({ length: 15 }, (_, index) => {
+  const originStatus = !state.sequences.length ? "待开始" : state.steps.length ? "已出发" : "当前所在";
+  const originCell = `<div class="station-cell station-origin ${state.sequences.length && !state.steps.length ? "is-current" : ""}"><strong>始发站</strong><small>${originStatus}</small></div>`;
+  $("confirmed-stations").innerHTML = originCell + Array.from({ length: 15 }, (_, index) => {
     const number = index + 1;
     const type = confirmed.get(index);
     const isWindow = !type && windowStart >= 0 && index >= windowStart && index < windowStart + 3;
     return `<div class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""}"><strong>${number}</strong><small>${type ? `${type} · 100%` : isWindow ? "已推演" : "待确认"}</small></div>`;
   }).join("");
+}
+
+function renderCurrentStation() {
+  const station = $("current-station");
+  const note = $("current-station-note");
+  if (!state.sequences.length) {
+    station.textContent = "尚未开始";
+    note.textContent = "选择路线并确认总站点配额后开始";
+    return;
+  }
+  if (!state.originHint || !state.steps.length) {
+    station.textContent = "始发站";
+    note.textContent = state.originHint ? "已获得第一波提示，等待确认第 1 站" : "等待选择第一波未来 3 站提示";
+    return;
+  }
+  station.textContent = `第 ${state.steps.length} 站`;
+  note.textContent = "请确认当前站点，并选择下一波未来 3 站提示";
 }
 
 function renderHistory() {
@@ -207,6 +226,7 @@ function renderForecast() {
   const intro = $("forecast-intro");
   const content = $("forecast-content");
   renderStationStrip();
+  renderCurrentStation();
   renderHistory();
   const disclosed = (state.originHint ? 1 : 0) + state.steps.length;
   $("progress-count").textContent = disclosed;
@@ -274,3 +294,4 @@ renderDifficulty();
 updateRouteCopy();
 renderQuotaStatus();
 renderStationStrip();
+renderCurrentStation();
