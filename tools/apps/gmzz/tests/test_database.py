@@ -4,7 +4,7 @@ import sqlite3
 
 import pytest
 
-from lom.database import build_database
+from gmzz.database import build_database
 
 
 def _manifest(tmp_path: Path) -> Path:
@@ -76,7 +76,7 @@ def test_build_database_preserves_raw_rows_and_flattens_search(tmp_path):
         json.dumps({"rows": {"ITEM_1": {"Quality": "rare", "UnknownFutureField": 42}}}),
         encoding="utf-8",
     )
-    output = tmp_path / "lom.sqlite"
+    output = tmp_path / "gmzz.sqlite"
 
     summary = build_database(
         output,
@@ -115,7 +115,7 @@ def test_build_database_preserves_raw_rows_and_flattens_search(tmp_path):
 
 
 def test_build_refuses_to_overwrite_without_replace(tmp_path):
-    output = tmp_path / "lom.sqlite"
+    output = tmp_path / "gmzz.sqlite"
     build_database(output, _manifest(tmp_path))
 
     with pytest.raises(FileExistsError):
@@ -126,7 +126,7 @@ def test_build_refuses_to_overwrite_without_replace(tmp_path):
 
 
 def test_failed_rebuild_keeps_the_previous_database(tmp_path):
-    output = tmp_path / "lom.sqlite"
+    output = tmp_path / "gmzz.sqlite"
     build_database(output, _manifest(tmp_path))
     original = output.read_bytes()
 

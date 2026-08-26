@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from lom.sources import discover_sources, missing_required_tables, write_extraction_plan
+from gmzz.sources import discover_sources, missing_required_tables, write_extraction_plan
 
 
 def _manifest(tmp_path: Path) -> Path:
