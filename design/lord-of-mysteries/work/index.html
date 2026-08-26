@@ -21,6 +21,8 @@
         <div class="topbar-tools"><button type="button">语言</button><button type="button">主题</button><button class="icon-tool" type="button" title="设置">⚙</button></div>
       </header>
 
+      <section class="station-strip" aria-label="站点确认状态"><div class="station-strip-label"><span>STATION STATUS</span><strong>已百分百确认的站点</strong></div><div class="station-track" id="confirmed-stations"></div></section>
+
       <section class="workspace-grid" id="planner">
         <aside class="control-column">
           <section class="panel game-panel">
@@ -44,6 +46,7 @@
             </form>
             <div class="quota-total"><span>已配置</span><strong id="quota-total-value">15</strong><span>/ 15 站</span></div>
             <div class="quota-message" id="quota-message" role="status"></div>
+            <button class="secondary-button" id="quota-confirm-button" type="button" disabled>确认总站点配额</button>
             <button class="primary-button" id="start-button" type="button">开始挑战路线 <span>→</span></button>
           </section>
 
@@ -63,7 +66,7 @@
           </div>
           <div class="forecast-intro" id="forecast-intro">
             <div class="intro-glyph">⌁</div>
-            <div><strong>先配置总站点配额</strong><p>完成配额后，从始发站开始录入第一波未来 3 站提示。</p></div>
+            <div><strong>先确认总站点配额</strong><p>完成配额并确认后，从始发站开始录入第一波未来 3 站提示。</p></div>
           </div>
           <div id="forecast-content" class="forecast-content is-hidden"></div>
         </section>
