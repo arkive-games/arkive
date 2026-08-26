@@ -111,6 +111,17 @@ function filteredSequences() {
   });
 }
 
+function prospectiveSequences() {
+  const index = state.steps.length;
+  return state.sequences.filter((sequence) => {
+    if (state.originHint && !matchesHint(sequence, 0, state.originHint)) return false;
+    if (!state.steps.every((step, stepIndex) => sequence[stepIndex] === step.currentType && matchesHint(sequence, stepIndex + 1, step.hintId))) return false;
+    if (state.pendingCurrent && sequence[index] !== state.pendingCurrent) return false;
+    if (state.pendingHint && !matchesHint(sequence, index + 1, state.pendingHint)) return false;
+    return true;
+  });
+}
+
 function probabilityFor(sequenceSet, position) {
   const counts = Object.fromEntries(TYPES.map((type) => [type, 0]));
   sequenceSet.forEach((sequence) => { counts[sequence[position]] += 1; });
@@ -119,8 +130,14 @@ function probabilityFor(sequenceSet, position) {
 }
 
 function probabilityMarkup(probability) {
+  const raw = TYPES.map((type) => probability[type] * 100);
+  const values = raw.map(Math.floor);
+  let remainder = 100 - values.reduce((sum, value) => sum + value, 0);
+  raw.map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((a, b) => b.fraction - a.fraction)
+    .forEach(({ index }) => { if (remainder > 0) { values[index] += 1; remainder -= 1; } });
   return `<div class="probability-grid">${TYPES.map((type) => {
-    const value = Math.round(probability[type] * 100);
+    const value = values[TYPES.indexOf(type)];
     return `<article class="probability-cell ${type}"><header><b>${TYPE_LABELS[type]}</b><span>${value}%</span></header><strong class="probability-value">${value}%</strong><div class="probability-bar"><i style="width:${value}%"></i></div></article>`;
   }).join("")}</div>`;
 }
@@ -163,12 +180,15 @@ function renderForecast() {
 
   const currentNumber = state.steps.length + 1;
   const currentOptions = TYPES.map((type) => `<option value="${type}" ${state.pendingCurrent === type ? "selected" : ""}>${TYPE_LABELS[type]}</option>`).join("");
-  content.innerHTML = `${resolved}<div class="window-card"><div class="window-meta"><span class="window-title">第 <span>${currentNumber}</span> 站 · 确认当前站点</span><span class="window-state">${possible.length.toLocaleString()} 种序列仍符合</span></div><div class="current-picker"><label for="current-select">当前站点类型</label><select id="current-select"><option value="">请选择</option>${currentOptions}</select></div><p class="sequence-note">确认当前站点后，选择刚解锁的下一波未来 3 站提示。</p><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-step" type="button" disabled>确认第 ${currentNumber} 站并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button></div>${possible.length === 0 ? `<p class="sequence-note">当前信息与总站点配额冲突，请重新开始本局。</p>` : ""}`;
+  const candidateCount = state.pendingCurrent && state.pendingHint ? prospectiveSequences().length : possible.length;
+  const candidateMessage = state.pendingCurrent && state.pendingHint && candidateCount === 0 ? `<p class="sequence-note error-note">当前站点与提示组合没有可行路线，请更换其中一项。</p>` : "";
+  const nextPrompt = `<div class="window-card"><div class="window-meta"><span class="window-title">第 <span>${currentNumber}</span> 站 · 确认当前站点</span><span class="window-state">${candidateCount.toLocaleString()} 种序列可继续</span></div><div class="current-picker"><label for="current-select">当前站点类型</label><select id="current-select"><option value="">请选择</option>${currentOptions}</select></div><p class="sequence-note">确认当前站点后，选择刚解锁的下一波未来 3 站提示。</p><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-step" type="button" disabled>确认第 ${currentNumber} 站并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button>${candidateMessage}</div>`;
+  content.innerHTML = `${nextPrompt}${resolved}`;
   const currentSelect = $("current-select");
   currentSelect.addEventListener("change", () => { state.pendingCurrent = currentSelect.value; renderForecast(); });
   content.querySelectorAll("[data-hint]").forEach((button) => button.addEventListener("click", () => { state.pendingHint = button.dataset.hint; renderForecast(); }));
   const confirm = $("confirm-step");
-  confirm.disabled = !state.pendingCurrent || !state.pendingHint;
+  confirm.disabled = !state.pendingCurrent || !state.pendingHint || candidateCount === 0;
   confirm.addEventListener("click", () => {
     if (!state.pendingCurrent || !state.pendingHint) return;
     state.steps.push({ currentType: state.pendingCurrent, hintId: state.pendingHint });
