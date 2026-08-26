@@ -82,6 +82,15 @@ function renderQuotaStatus() {
 
 function renderStationStrip() {
   const confirmed = new Map(state.steps.map((step, index) => [index, TYPE_LABELS[step.currentType]]));
+  if (state.sequences.length) {
+    const possible = filteredSequences();
+    const starts = state.originHint ? [0, ...state.steps.map((_, index) => index + 1)] : [];
+    starts.flatMap((start) => [start, start + 1, start + 2]).forEach((position) => {
+      if (confirmed.has(position) || position >= 15 || !possible.length) return;
+      const type = TYPES.find((candidate) => possible.every((sequence) => sequence[position] === candidate));
+      if (type) confirmed.set(position, `${TYPE_LABELS[type]}`);
+    });
+  }
   const windowStart = state.originHint ? state.steps.length : -1;
   $("confirmed-stations").innerHTML = Array.from({ length: 15 }, (_, index) => {
     const number = index + 1;
@@ -89,6 +98,24 @@ function renderStationStrip() {
     const isWindow = !type && windowStart >= 0 && index >= windowStart && index < windowStart + 3;
     return `<div class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""}"><strong>${number}</strong><small>${type ? `${type} · 100%` : isWindow ? "已推演" : "待确认"}</small></div>`;
   }).join("");
+}
+
+function renderHistory() {
+  const entries = [];
+  if (state.originHint) {
+    entries.push({ range: "第 1-3 站", hint: HINTS.find((item) => item.id === state.originHint).label, detail: "始发站提示" });
+  }
+  state.steps.forEach((step, index) => {
+    entries.push({
+      range: `第 ${index + 2}-${index + 4} 站`,
+      hint: HINTS.find((item) => item.id === step.hintId).label,
+      detail: `第 ${index + 1} 站：${TYPE_LABELS[step.currentType]}`,
+    });
+  });
+  $("history-count").textContent = `${entries.length} 条`;
+  $("history-list").innerHTML = entries.length
+    ? entries.map((entry) => `<li><strong>${entry.range}</strong><span>${entry.hint}</span><small>${entry.detail}</small></li>`).join("")
+    : `<li class="history-empty">暂无已确认提示</li>`;
 }
 
 function enumerateSequences(totals) {
@@ -180,6 +207,7 @@ function renderForecast() {
   const intro = $("forecast-intro");
   const content = $("forecast-content");
   renderStationStrip();
+  renderHistory();
   const disclosed = (state.originHint ? 1 : 0) + state.steps.length;
   $("progress-count").textContent = disclosed;
   if (!state.sequences.length) { intro.classList.remove("is-hidden"); content.classList.add("is-hidden"); return; }
