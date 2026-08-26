@@ -35,7 +35,7 @@
               <label class="quota-field food"><span>食铺</span><input id="food-total" name="food" type="number" min="0" max="15" value="5" /></label>
               <label class="quota-field trade"><span>商行</span><input id="trade-total" name="trade" type="number" min="0" max="15" value="5" /></label>
             </form>
-            <div class="quota-total"><span>已配置</span><strong id="quota-total-value">15</strong><span>/ 15 站</span></div>
+            <div class="quota-total"><span>已配置</span><strong id="quota-total-value">15</strong><span>/ <span id="quota-target-value">15</span> 站</span></div>
             <div class="quota-message" id="quota-message" role="status"></div>
             <button class="secondary-button" id="quota-confirm-button" type="button" disabled>确认总站点配额</button>
           </section>
@@ -44,8 +44,8 @@
         <section class="panel forecast-panel" aria-live="polite">
           <section class="station-strip" aria-label="站点进度"><button class="station-nav" id="station-prev" type="button" aria-label="预览前面站点">←</button><div class="station-track" id="confirmed-stations"></div><button class="station-nav" id="station-next" type="button" aria-label="预览后面站点">→</button></section>
           <div class="panel-heading forecast-heading">
-            <div class="forecast-heading-main"><span class="section-kicker">挑战路线</span><h3>铁路大亨推演</h3></div>
-            <div class="progress-readout"><strong id="progress-count">0</strong><span>/ 13 次信息解锁</span></div>
+            <div class="forecast-heading-main"><span class="section-kicker" id="route-label">选择难度</span><h3>铁路大亨推演</h3></div>
+            <div class="progress-readout"><strong id="progress-count">0</strong><span>/ <span id="progress-target">13</span> 次信息解锁</span></div>
           </div>
           <div class="forecast-intro" id="forecast-intro">
             <div><strong>确认配额后开始</strong></div>

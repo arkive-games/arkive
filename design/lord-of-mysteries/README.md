@@ -15,7 +15,7 @@ The prototype supports:
 - Selecting the newly revealed hint for the following three stations
 - Showing probabilities only for the three stations covered by the selected hint
 - Showing joint three-station route combinations alongside per-station marginal probabilities
-- Filtering all valid 15-station sequences against the entered quota, current station, and hint constraints
+- Filtering all valid station sequences for the selected route length against the entered quota, current station, and hint constraints
 
 The forecast engine uses exhaustive sequence enumeration. The origin hint constrains stations 1 to 3. Each later step locks the current station and applies a hint to the next three stations. A `most` hint requires that type to appear strictly more often than the other two types in the three-station window. An `equal` hint requires one station of each type. The UI labels per-station figures as marginal probabilities and also lists the joint three-station combinations, so a route such as food, winery, winery remains visible as one valid outcome.
 
