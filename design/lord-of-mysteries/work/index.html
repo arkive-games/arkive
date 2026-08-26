@@ -9,38 +9,28 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="grain" aria-hidden="true"></div>
     <main class="app-shell">
       <header class="topbar">
         <div class="brand-lockup">
-          <div class="brand-mark">LOM</div>
+          <div class="brand-mark">舟</div>
           <div>
-            <p class="eyebrow">ARKIVE · GAME TOOL</p>
-            <h1>诡秘之主 <span>铁路大亨推演台</span></h1>
+            <h1>藏舟游戏攻略网 <span>万千攻略，藏于一舟</span></h1>
           </div>
         </div>
-        <div class="topbar-note"><span class="status-dot"></span>本地计算 · 不上传对局数据</div>
+        <nav class="site-nav" aria-label="主导航"><a href="#map">地图</a><a class="is-active" href="#planner">路线规划</a><a href="#wiki">资料库</a></nav>
+        <div class="topbar-tools"><button type="button">语言</button><button type="button">主题</button><button class="icon-tool" type="button" title="设置">⚙</button></div>
       </header>
 
-      <nav class="difficulty-bar" aria-label="路线难度">
-        <div class="difficulty-heading">
-          <span class="section-kicker">ROUTE SELECTOR</span>
-          <strong>选择路线</strong>
-        </div>
-        <div class="difficulty-options" id="difficulty-options"></div>
-      </nav>
-
-      <section class="hero-panel">
-        <div>
-          <span class="route-badge" id="route-badge">挑战路线 · 15 站</span>
-          <h2>把未知的三站，拆成可计算的下一步。</h2>
-          <p id="route-description">输入本局总站点配额，再按游戏内出现的顺序录入提示。每提交一条提示，推演台才会解锁下一站。</p>
-        </div>
-        <div class="hero-seal" aria-hidden="true"><span>15</span><small>STOPS</small></div>
-      </section>
-
-      <section class="workspace-grid">
+      <section class="workspace-grid" id="planner">
         <aside class="control-column">
+          <section class="panel game-panel">
+            <div class="game-banner"><div class="game-emblem">LOM</div><div><strong>诡秘之主</strong><span>铁路大亨 · 路线规划</span></div></div>
+            <span class="route-badge" id="route-badge">请先选择路线</span><p id="route-description">先选择路线难度，再输入本局的站点配额。</p>
+          </section>
+          <section class="panel route-panel">
+            <div class="panel-heading compact"><div><span class="section-kicker">ROUTE</span><h3>路线难度</h3></div></div>
+            <div class="difficulty-options" id="difficulty-options"></div>
+          </section>
           <section class="panel totals-panel">
             <div class="panel-heading">
               <div><span class="section-kicker">01 · TOTAL QUOTA</span><h3>总站点配额</h3></div>
@@ -68,7 +58,7 @@
 
         <section class="panel forecast-panel" aria-live="polite">
           <div class="panel-heading forecast-heading">
-            <div><span class="section-kicker">02 · FORECAST WINDOW</span><h3>信息链推演</h3></div>
+            <div><span class="section-kicker">ROUTE PLANNER · CHALLENGE</span><h3>铁路大亨推演</h3></div>
             <div class="progress-readout"><strong id="progress-count">0</strong><span>/ 13 次信息解锁</span></div>
           </div>
           <div class="forecast-intro" id="forecast-intro">
