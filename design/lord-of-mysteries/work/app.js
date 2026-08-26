@@ -129,17 +129,29 @@ function probabilityFor(sequenceSet, position) {
   return Object.fromEntries(TYPES.map((type) => [type, counts[type] / total]));
 }
 
-function probabilityMarkup(probability) {
+function windowDistribution(sequenceSet, start) {
+  const counts = new Map();
+  sequenceSet.forEach((sequence) => {
+    const key = sequence.slice(start, start + 3).join(",");
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+function probabilityMarkup(probability, sequenceSet, start, includeCombos = false) {
   const raw = TYPES.map((type) => probability[type] * 100);
   const values = raw.map(Math.floor);
   let remainder = 100 - values.reduce((sum, value) => sum + value, 0);
   raw.map((value, index) => ({ index, fraction: value - Math.floor(value) }))
     .sort((a, b) => b.fraction - a.fraction)
     .forEach(({ index }) => { if (remainder > 0) { values[index] += 1; remainder -= 1; } });
+  const combos = windowDistribution(sequenceSet, start);
+  const comboTotal = sequenceSet.length || 1;
+  const comboMarkup = includeCombos && combos.length ? `<div class="combo-block"><div class="combo-heading"><strong>未来 3 站联合组合</strong><span>${combos.length} 种可行排列 · 按配额等可能排列</span></div><div class="combo-grid">${combos.map(([key, count]) => `<div class="combo-item"><span>${key.split(",").map((type) => TYPE_LABELS[type]).join(" → ")}</span><b>${Math.round((count / comboTotal) * 100)}%</b></div>`).join("")}</div></div>` : "";
   return `<div class="probability-grid">${TYPES.map((type) => {
     const value = values[TYPES.indexOf(type)];
     return `<article class="probability-cell ${type}"><header><b>${TYPE_LABELS[type]}</b><span>${value}%</span></header><strong class="probability-value">${value}%</strong><div class="probability-bar"><i style="width:${value}%"></i></div></article>`;
-  }).join("")}</div>`;
+  }).join("")}</div>${comboMarkup}`;
 }
 
 function hintMarkup(selected = "") {
@@ -147,7 +159,7 @@ function hintMarkup(selected = "") {
 }
 
 function renderResolvedWindow(possible, start, detail) {
-  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div><p class="sequence-note">只展示本次提示覆盖的未来 3 站概率，未获得提示的站点不会提前推演。</p>${[0, 1, 2].map((offset) => `<div class="probability-section"><div class="probability-heading"><strong>第 ${start + offset + 1} 站</strong><span>条件概率</span></div>${probabilityMarkup(probabilityFor(possible, start + offset))}</div>`).join("")}</div>`;
+  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div><p class="sequence-note">单站数字是边际概率，不代表三站彼此独立；下方联合组合展示同一条三站路线的整体概率。</p>${[0, 1, 2].map((offset) => `<div class="probability-section"><div class="probability-heading"><strong>第 ${start + offset + 1} 站</strong><span>边际概率</span></div>${probabilityMarkup(probabilityFor(possible, start + offset), possible, start, offset === 0)}</div>`).join("")}</div>`;
 }
 
 function renderForecast() {
