@@ -11,7 +11,7 @@ const HINTS = [
   { id: "winery-most", label: "酒庄最多" },
   { id: "food-most", label: "食铺最多" },
   { id: "trade-most", label: "商行最多" },
-  { id: "equal", label: "各站点相同", detail: "三类各出现 1 次" },
+  { id: "equal", label: "各站点相同" },
 ];
 
 const state = {
@@ -211,11 +211,11 @@ function probabilityMarkup(probability) {
 }
 
 function hintMarkup(selected = "", id = "hint-select") {
-  return `<select class="hint-select" id="${id}" aria-label="未来三站提示"><option value="">请选择提示</option>${HINTS.map((hint) => `<option value="${hint.id}" ${selected === hint.id ? "selected" : ""}>${hint.label}${hint.detail ? `（${hint.detail}）` : ""}</option>`).join("")}</select>`;
+  return `<select class="hint-select" id="${id}" aria-label="未来三站提示"><option value="">请选择提示</option>${HINTS.map((hint) => `<option value="${hint.id}" ${selected === hint.id ? "selected" : ""}>${hint.label}</option>`).join("")}</select>`;
 }
 
 function renderResolvedWindow(possible, start, detail) {
-  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div>${comboMarkup(possible, start)}<div class="probability-section next-probability"><div class="probability-heading"><strong>下一站 · 第 ${start + 1} 站</strong></div>${probabilityMarkup(probabilityFor(possible, start))}</div></div>`;
+  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div><div class="probability-section next-probability"><div class="probability-heading"><strong>下一站 · 第 ${start + 1} 站</strong></div>${probabilityMarkup(probabilityFor(possible, start))}</div>${comboMarkup(possible, start)}</div>`;
 }
 
 function renderForecast() {

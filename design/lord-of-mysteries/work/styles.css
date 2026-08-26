@@ -173,6 +173,15 @@ button { cursor: pointer; }
 .station-entry .current-picker select, .station-entry .hint-select { width: 100%; min-height: 2.25rem; border: 1px solid var(--border); border-radius: .2rem; padding: .3rem .45rem; color: var(--text); background: var(--surface); outline-color: var(--blue); font-size: .875rem; }
 .station-entry .current-picker.is-origin select:disabled { cursor: not-allowed; color: #8b929b; border-color: #d7dce1; background: #eef0f2; }
 
+.control-column .panel-heading { justify-content: center; text-align: center; }
+.control-column .panel-heading > div { width: 100%; }
+.control-column .panel-heading h3 { display: flex; justify-content: center; align-items: center; }
+.quota-field { grid-template-columns: 1fr 1fr; text-align: center; }
+.quota-field > span,
+.quota-field input { justify-self: center; }
+.quota-field input { width: 4rem; text-align: center; }
+.window-title .step-number { color: #fff; }
+
 @media (max-width: 600px) {
   .station-entry { grid-template-columns: 1fr; }
   .forecast-heading-main h2 { font-size: 1.25rem; }
