@@ -8,9 +8,9 @@ const DIFFICULTIES = [
   { id: "challenge", name: "挑战路线", stops: 15 },
 ];
 const HINTS = [
-  { id: "winery-most", label: "酒庄最多", detail: "酒庄 > 食铺、商行" },
-  { id: "food-most", label: "食铺最多", detail: "食铺 > 酒庄、商行" },
-  { id: "trade-most", label: "商行最多", detail: "商行 > 酒庄、食铺" },
+  { id: "winery-most", label: "酒庄最多", detail: "酒庄数量最高" },
+  { id: "food-most", label: "食铺最多", detail: "食铺数量最高" },
+  { id: "trade-most", label: "商行最多", detail: "商行数量最高" },
   { id: "equal", label: "各站点相同", detail: "三类各出现 1 次" },
 ];
 
@@ -135,7 +135,7 @@ function matchesHint(sequence, start, hintId) {
   sequence.slice(start, start + 3).forEach((type) => { counts[type] += 1; });
   if (hintId === "equal") return TYPES.every((type) => counts[type] === 1);
   const winner = hintId.replace("-most", "");
-  return counts[winner] > Math.max(...TYPES.filter((type) => type !== winner).map((type) => counts[type]));
+  return counts[winner] >= Math.max(...TYPES.filter((type) => type !== winner).map((type) => counts[type]));
 }
 
 function filteredSequences() {
