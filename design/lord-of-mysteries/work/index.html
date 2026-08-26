@@ -25,13 +25,10 @@
 
       <section class="workspace-grid" id="planner">
         <aside class="control-column">
-          <section class="panel game-panel">
-            <div class="game-banner"><div class="game-emblem">LOM</div><div><strong>诡秘之主</strong><span>铁路大亨 · 路线规划</span></div></div>
-            <span class="route-badge" id="route-badge">请先选择路线</span><p id="route-description">先选择路线难度，再输入本局的站点配额。</p>
-          </section>
           <section class="panel route-panel">
             <div class="panel-heading compact"><div><span class="section-kicker">ROUTE</span><h3>路线难度</h3></div></div>
-            <div class="difficulty-options" id="difficulty-options"></div>
+            <label class="route-select-wrap" for="difficulty-select"><span>选择路线</span><select id="difficulty-select"><option value="">请选择路线</option></select></label>
+            <p id="route-description">先选择路线难度，再输入本局的站点配额。</p>
           </section>
           <section class="panel totals-panel">
             <div class="panel-heading">

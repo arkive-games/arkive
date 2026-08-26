@@ -35,32 +35,30 @@ function resetRoute() {
 }
 
 function renderDifficulty() {
-  $("difficulty-options").innerHTML = DIFFICULTIES.map((route) => `
-    <button class="difficulty-button ${route.id === state.difficulty ? "is-active" : ""}" data-difficulty="${route.id}" type="button">
-      <strong>${route.name}</strong><small>${route.en}</small>
-    </button>`).join("");
-  document.querySelectorAll("[data-difficulty]").forEach((button) => button.addEventListener("click", () => {
-    state.difficulty = button.dataset.difficulty;
-    state.sequences = [];
-    resetRoute();
-    updateRouteCopy();
-    renderDifficulty();
-    renderQuotaStatus();
-    renderForecast();
-  }));
+  const select = $("difficulty-select");
+  select.innerHTML = `<option value="">请选择路线</option>${DIFFICULTIES.map((route) => `<option value="${route.id}">${route.name} · ${route.en}</option>`).join("")}`;
+  select.value = state.difficulty;
 }
 
 function updateRouteCopy() {
   const route = DIFFICULTIES.find((item) => item.id === state.difficulty);
   if (!route) {
-    $("route-badge").textContent = "请先选择路线";
     $("route-description").textContent = "先选择铁路大亨难度，再输入本局总站点配额。挑战路线是当前重点推演模式。";
     return;
   }
-  $("route-badge").textContent = `${route.name} · ${route.stops} 站`;
   $("route-description").textContent = route.id === "challenge"
     ? "先录入始发站提示，再逐轮确认当前站点与下一波提示。系统只展示已经获得信息的未来 3 站。"
     : `${route.name}已切换。当前原型沿用 15 站配额模型，按信息链逐步推演。`;
+}
+
+function applyDifficulty(id) {
+  state.difficulty = id;
+  state.sequences = [];
+  resetRoute();
+  updateRouteCopy();
+  renderDifficulty();
+  renderQuotaStatus();
+  renderForecast();
 }
 
 function readTotals() {
@@ -235,6 +233,7 @@ $("totals-form").addEventListener("input", () => {
   renderQuotaStatus();
   renderForecast();
 });
+$("difficulty-select").addEventListener("change", (event) => applyDifficulty(event.target.value));
 $("quota-confirm-button").addEventListener("click", () => {
   if (!renderQuotaStatus()) return;
   state.quotaConfirmed = true;
