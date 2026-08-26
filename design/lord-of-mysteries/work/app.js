@@ -135,7 +135,7 @@ function matchesHint(sequence, start, hintId) {
   sequence.slice(start, start + 3).forEach((type) => { counts[type] += 1; });
   if (hintId === "equal") return TYPES.every((type) => counts[type] === 1);
   const winner = hintId.replace("-most", "");
-  return counts[winner] > Math.max(...TYPES.filter((type) => type !== winner).map((type) => counts[type]));
+  return counts[winner] >= Math.max(...TYPES.filter((type) => type !== winner).map((type) => counts[type]));
 }
 
 function filteredSequences() {
