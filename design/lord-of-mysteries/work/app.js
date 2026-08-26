@@ -4,7 +4,7 @@ const DIFFICULTIES = [
   { id: "beginner", name: "新手路线", stops: 15 },
   { id: "normal", name: "普通路线", stops: 15 },
   { id: "advanced", name: "进阶路线", stops: 15 },
-  { id: "hard", name: "困难路线", stops: 15 },
+  { id: "hard", name: "困难路线", stops: 14 },
   { id: "challenge", name: "挑战路线", stops: 15 },
 ];
 const HINTS = [
@@ -26,6 +26,12 @@ const state = {
   stationOffset: null,
 };
 const $ = (id) => document.getElementById(id);
+function activeDifficulty() {
+  return DIFFICULTIES.find((route) => route.id === state.difficulty) || null;
+}
+function stationCount() {
+  return activeDifficulty()?.stops || 15;
+}
 
 function resetRoute() {
   state.originHint = "";
@@ -40,6 +46,7 @@ function renderDifficulty() {
   const select = $("difficulty-select");
   select.innerHTML = `<option value="">请选择难度</option>${DIFFICULTIES.map((route) => `<option value="${route.id}">${route.name}</option>`).join("")}`;
   select.value = state.difficulty;
+  $("route-label").textContent = activeDifficulty()?.name || "选择难度";
 }
 
 function applyDifficulty(id) {
@@ -59,10 +66,12 @@ function renderQuotaStatus() {
   state.totals = readTotals();
   document.querySelectorAll("#totals-form input").forEach((input) => { input.disabled = !state.difficulty; });
   const total = TYPES.reduce((sum, type) => sum + state.totals[type], 0);
+  const target = stationCount();
   $("quota-total-value").textContent = total;
+  $("quota-target-value").textContent = target;
   const message = $("quota-message");
-  const valid = Boolean(state.difficulty) && total === 15;
-  message.textContent = !state.difficulty ? "选择路线后，才能填写配额。" : valid ? "配额有效，可以开始推演。" : `还需要配置 ${Math.abs(15 - total)} 站（当前合计 ${total}）。`;
+  const valid = Boolean(state.difficulty) && total === target;
+  message.textContent = !state.difficulty ? "选择难度后，才能填写配额。" : valid ? "配额有效，可以开始推演。" : `还需要配置 ${Math.abs(target - total)} 站（当前合计 ${total}）。`;
   message.classList.toggle("is-valid", valid);
   const confirmButton = $("quota-confirm-button");
   confirmButton.disabled = !valid;
@@ -71,6 +80,7 @@ function renderQuotaStatus() {
 }
 
 function renderStationStrip() {
+  const totalStops = stationCount();
   const confirmed = new Map(state.steps.map((step, index) => [index, TYPE_LABELS[step.currentType]]));
   const currentIndex = state.originHint ? state.steps.length : -1;
   const currentType = state.steps.at(-1)?.currentType || "";
@@ -78,16 +88,17 @@ function renderStationStrip() {
     const possible = filteredSequences();
     const starts = state.originHint ? [0, ...state.steps.map((_, index) => index + 1)] : [];
     starts.flatMap((start) => [start, start + 1, start + 2]).forEach((position) => {
-      if (confirmed.has(position) || position >= 15 || !possible.length) return;
+      if (confirmed.has(position) || position >= totalStops || !possible.length) return;
       const type = TYPES.find((candidate) => possible.every((sequence) => sequence[position] === candidate));
       if (type) confirmed.set(position, `${TYPE_LABELS[type]}`);
     });
   }
   const windowStart = state.originHint ? state.steps.length : -1;
-  const maxOffset = 15 - 6;
+  const visibleCount = Math.min(6, totalStops);
+  const maxOffset = Math.max(0, totalStops - visibleCount);
   const autoOffset = Math.max(0, Math.min(maxOffset, currentIndex > 0 ? currentIndex - 1 : 0));
   const offset = Math.max(0, Math.min(maxOffset, state.stationOffset ?? autoOffset));
-  $("confirmed-stations").innerHTML = Array.from({ length: 6 }, (_, slot) => {
+  $("confirmed-stations").innerHTML = Array.from({ length: visibleCount }, (_, slot) => {
     const index = offset + slot;
     const number = index + 1;
     const type = confirmed.get(index);
@@ -97,7 +108,7 @@ function renderStationStrip() {
   }).join("");
   $("station-prev").disabled = offset === 0;
   $("station-next").disabled = offset === maxOffset;
-  $("confirmed-stations").setAttribute("aria-label", `第 ${offset + 1}-${offset + 6} 站`);
+  $("confirmed-stations").setAttribute("aria-label", `第 ${offset + 1}-${offset + visibleCount} 站`);
 }
 
 function renderHistory() {
@@ -118,12 +129,12 @@ function renderHistory() {
     : `<li class="history-empty">暂无已确认提示</li>`;
 }
 
-function enumerateSequences(totals) {
+function enumerateSequences(totals, totalStops) {
   const result = [];
   const remaining = { ...totals };
   const current = [];
   function visit() {
-    if (current.length === 15) { result.push(current.slice()); return; }
+    if (current.length === totalStops) { result.push(current.slice()); return; }
     TYPES.forEach((type) => {
       if (!remaining[type]) return;
       remaining[type] -= 1;
@@ -214,6 +225,7 @@ function renderForecast() {
   renderHistory();
   const disclosed = (state.originHint ? 1 : 0) + state.steps.length;
   $("progress-count").textContent = disclosed;
+  $("progress-target").textContent = Math.max(1, stationCount() - 2);
   if (!state.sequences.length) { intro.classList.remove("is-hidden"); content.classList.add("is-hidden"); return; }
   intro.classList.add("is-hidden"); content.classList.remove("is-hidden");
 
@@ -231,9 +243,10 @@ function renderForecast() {
   const latestStep = state.steps.at(-1);
   const latestDetail = latestStep ? `当前站：${TYPE_LABELS[latestStep.currentType]} · ${HINTS.find((hint) => hint.id === latestStep.hintId).label}` : `始发站提示：${HINTS.find((hint) => hint.id === state.originHint).label}`;
   const resolved = renderResolvedWindow(possible, latestStart, latestDetail);
-  const complete = state.steps.length >= 12;
+  const totalStops = stationCount();
+  const complete = state.steps.length >= totalStops - 3;
   if (complete) {
-    content.innerHTML = `${resolved}<p class="sequence-note"><strong>15 站信息链已完成。</strong></p>`;
+    content.innerHTML = `${resolved}<p class="sequence-note"><strong>${totalStops} 站信息链已完成。</strong></p>`;
     return;
   }
 
@@ -267,21 +280,23 @@ $("totals-form").addEventListener("input", () => {
 $("difficulty-select").addEventListener("change", (event) => applyDifficulty(event.target.value));
 $("station-prev").addEventListener("click", () => {
   const currentIndex = state.originHint ? state.steps.length : 0;
-  const autoOffset = Math.max(0, Math.min(9, currentIndex > 0 ? currentIndex - 1 : 0));
+  const maxOffset = Math.max(0, stationCount() - 6);
+  const autoOffset = Math.max(0, Math.min(maxOffset, currentIndex > 0 ? currentIndex - 1 : 0));
   const currentOffset = state.stationOffset ?? autoOffset;
   state.stationOffset = Math.max(0, currentOffset - 1);
   renderStationStrip();
 });
 $("station-next").addEventListener("click", () => {
   const currentIndex = state.originHint ? state.steps.length : 0;
-  const autoOffset = Math.max(0, Math.min(9, currentIndex > 0 ? currentIndex - 1 : 0));
+  const maxOffset = Math.max(0, stationCount() - 6);
+  const autoOffset = Math.max(0, Math.min(maxOffset, currentIndex > 0 ? currentIndex - 1 : 0));
   const currentOffset = state.stationOffset ?? autoOffset;
-  state.stationOffset = Math.min(9, currentOffset + 1);
+  state.stationOffset = Math.min(maxOffset, currentOffset + 1);
   renderStationStrip();
 });
 $("quota-confirm-button").addEventListener("click", () => {
   if (!renderQuotaStatus()) return;
-  const sequences = enumerateSequences(state.totals);
+  const sequences = enumerateSequences(state.totals, stationCount());
   resetRoute();
   state.quotaConfirmed = true;
   state.sequences = sequences;
