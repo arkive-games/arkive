@@ -530,17 +530,21 @@ def build_database(
 
 
 def _env_path(name: str) -> Path | None:
-    value = os.getenv(name)
-    return Path(value) if value else None
+    # Via env.optional_dir, whose import loads tools/.env — reading os.environ
+    # directly meant the GMZZ_* values documented in .env.example only ever
+    # worked as a shell export.
+    from .env import optional_dir
+
+    return optional_dir(name)
 
 
 def _manifest_argument(value: str | None) -> Path:
     if value:
         return Path(value)
-    client_root = _env_path("LOM_CLIENT_ROOT")
+    client_root = _env_path("GMZZ_CLIENT_ROOT")
     if client_root:
         return client_root / "Game" / "Manifest_UFSFiles_Win64.txt"
-    raise SystemExit("Pass --manifest or set LOM_CLIENT_ROOT")
+    raise SystemExit("Pass --manifest or set GMZZ_CLIENT_ROOT")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -553,9 +557,9 @@ def main(argv: list[str] | None = None) -> int:
 
     build_parser = subparsers.add_parser("build", help="build the SQLite database")
     build_parser.add_argument("--manifest")
-    build_parser.add_argument("--tables", type=Path, default=_env_path("LOM_TABLE_EXPORT"))
+    build_parser.add_argument("--tables", type=Path, default=_env_path("GMZZ_TABLE_EXPORT"))
     build_parser.add_argument("--normalized", type=Path)
-    build_parser.add_argument("--output", type=Path, default=_env_path("LOM_DB_OUT"))
+    build_parser.add_argument("--output", type=Path, default=_env_path("GMZZ_DB_OUT"))
     build_parser.add_argument("--replace", action="store_true")
 
     inspect_parser = subparsers.add_parser("inspect", help="print database row counts")
@@ -566,7 +570,7 @@ def main(argv: list[str] | None = None) -> int:
         payload = write_extraction_plan(_manifest_argument(args.manifest), Path(args.output))
     elif args.command == "build":
         if args.output is None:
-            parser.error("Pass --output or set LOM_DB_OUT")
+            parser.error("Pass --output or set GMZZ_DB_OUT")
         payload = build_database(
             args.output,
             _manifest_argument(args.manifest),

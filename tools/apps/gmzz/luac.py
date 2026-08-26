@@ -96,20 +96,26 @@ def _write_uleb128(value: int) -> bytes:
             return bytes(out)
 
 
-def _bytecode_offset(body: bytes) -> tuple[int, int]:
+def _bytecode_offset(body: bytes, stripped: bool) -> tuple[int, int]:
     """``(offset, instruction_count)`` of a proto body's bytecode block.
 
     Only the fixed-size prologue is parsed. The constant and debug sections sit
     after the instructions and need no interpretation to rewrite opcodes.
+
+    ``stripped`` must match the dump's ``BCDUMP_F_STRIP`` flag: LuaJIT's
+    ``bcwrite`` emits the debug-section size only for an unstripped dump, so
+    reading it unconditionally would land ``pos`` inside the instruction stream
+    and corrupt operand bytes.
     """
     pos = 4  # flags, numparams, framesize, numuv
     _sizekgc, pos = _read_uleb128(body, pos)
     _sizekn, pos = _read_uleb128(body, pos)
     sizebc, pos = _read_uleb128(body, pos)
-    sizedbg, pos = _read_uleb128(body, pos)
-    if sizedbg:
-        _firstline, pos = _read_uleb128(body, pos)
-        _numline, pos = _read_uleb128(body, pos)
+    if not stripped:
+        sizedbg, pos = _read_uleb128(body, pos)
+        if sizedbg:
+            _firstline, pos = _read_uleb128(body, pos)
+            _numline, pos = _read_uleb128(body, pos)
     return pos, sizebc
 
 
@@ -136,7 +142,7 @@ def decrypt(data: bytes, path: Path | str = "<bytes>") -> bytes:
             b ^ XOR_KEY[i % len(XOR_KEY)] for i, b in enumerate(data[pos : pos + size])
         )
         pos += size
-        start, count = _bytecode_offset(body)
+        start, count = _bytecode_offset(body, bool(flags & _BCDUMP_F_STRIP))
         for i in range(count):
             at = start + i * 4
             stock = OPCODE_MAP.get(body[at])

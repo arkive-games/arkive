@@ -1,8 +1,12 @@
 """Shared helpers for the GMZZ pipeline.
 
-The JSON writers are deliberately byte-compatible with the other pipelines'
-output (``JSON.stringify(obj, null, 1)``): raw UTF-8, 1-space indent, and no
-``.0`` on integral numbers.
+The JSON writers match the other pipelines' formatting (``JSON.stringify(obj,
+null, 1)``): raw UTF-8, 1-space indent, and no ``.0`` on integral numbers.
+
+They differ in one way, deliberately: keys are sorted. The client stores rows in
+Lua hash tables, whose iteration order is arbitrary between runs, so unsorted
+output would churn the content digest — and every browser's cache with it — even
+when nothing changed.
 """
 
 from __future__ import annotations

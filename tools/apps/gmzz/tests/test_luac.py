@@ -38,9 +38,22 @@ def _proto_body(opcodes: list[int], trailer: bytes = b"") -> bytes:
     return bytes(body) + trailer
 
 
-def _client_dump(bodies: list[bytes], chunkname: bytes = b"@Test.lua") -> bytes:
-    out = bytearray(LUAJIT_MAGIC + b"\x82" + _uleb(0x08))
-    out += _uleb(len(chunkname)) + chunkname
+def _stripped_body(opcodes: list[int]) -> bytes:
+    """A stripped proto: no debug-section size, so the bytecode starts earlier."""
+    head = bytes([0x02, 0x00, 0x03, 0x00])
+    head += _uleb(0) + _uleb(0) + _uleb(len(opcodes))  # kgc, kn, bc — no dbg
+    body = bytearray(head)
+    for op in opcodes:
+        body += bytes([op, 0x01, 0x02, 0x00])
+    return bytes(body)
+
+
+def _client_dump(bodies: list[bytes], chunkname: bytes | None = b"@Test.lua") -> bytes:
+    """``chunkname=None`` marks the dump stripped (BCDUMP_F_STRIP)."""
+    flags = 0x08 if chunkname is not None else 0x08 | 0x02
+    out = bytearray(LUAJIT_MAGIC + b"\x82" + _uleb(flags))
+    if chunkname is not None:
+        out += _uleb(len(chunkname)) + chunkname
     for body in bodies:
         encrypted = bytes(b ^ XOR_KEY[i % len(XOR_KEY)] for i, b in enumerate(body))
         out += _uleb(len(body)) + encrypted
@@ -51,9 +64,11 @@ def _protos_of(dump: bytes) -> list[bytes]:
     pos = 4
     while dump[pos] & 0x80:
         pos += 1
-    pos += 1  # flags
-    length = dump[pos]
-    pos += 1 + length  # chunkname
+    flags = dump[pos]
+    pos += 1
+    if not flags & 0x02:
+        length = dump[pos]
+        pos += 1 + length  # chunkname
     out = []
     while dump[pos] != 0:
         size = dump[pos]
@@ -88,6 +103,17 @@ def test_keeps_constants_and_debug_bytes_untouched():
 def test_handles_several_protos():
     dump = decrypt(_client_dump([_proto_body([53]), _proto_body([68])]))
     assert len(_protos_of(dump)) == 2
+
+
+def test_finds_the_bytecode_in_a_stripped_dump():
+    # A stripped dump carries no debug-section size, so reading one anyway would
+    # put the rewrite cursor inside the instruction stream and mangle operands.
+    # The client's own tables are unstripped, so only a test covers this.
+    dump = decrypt(_client_dump([_stripped_body([53, 70, 68])], chunkname=None))
+    body = _protos_of(dump)[0]
+    bc = 4 + 3  # 4 header bytes + three single-byte ulebs (kgc, kn, bc)
+    assert [body[bc + i * 4] for i in range(3)] == [53, 66, 76]
+    assert body[bc + 1 : bc + 4] == bytes([0x01, 0x02, 0x00]), "operands untouched"
 
 
 def test_rejects_an_unmapped_opcode():

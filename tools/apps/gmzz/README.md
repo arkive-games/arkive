@@ -76,10 +76,14 @@ uv run python -m gmzz.database build \
   --manifest 'D:/GMZZLauncher/Game/Manifest_UFSFiles_Win64.txt' \
   --tables 'E:/Exports/lord-of-mysteries/tables' \
   --normalized 'E:/Exports/lord-of-mysteries/normalized.json' \
-  --output 'E:/arkive-games/data-gmzz/gmzz.sqlite'
+  --output 'E:/Exports/lord-of-mysteries/gmzz.sqlite'
 
-uv run python -m gmzz.database inspect 'E:/arkive-games/data-gmzz/gmzz.sqlite'
+uv run python -m gmzz.database inspect 'E:/Exports/lord-of-mysteries/gmzz.sqlite'
 ```
+
+Keep the database out of `GMZZ_DATA_OUT`: `version.py` digests every file under
+that directory, so one living there would be hashed into the dataset's
+`version.json` and bust every browser cache on an unrelated rebuild.
 
 `build` refuses to overwrite an existing database; pass `--replace` for an
 intentional, reproducible rebuild. Rebuilds are atomic — the old database

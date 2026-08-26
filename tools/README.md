@@ -1,11 +1,17 @@
 
-## Lord of Mysteries database
+## Lord of Mysteries pipelines
 
-The `lom` pipeline discovers the equipment, affix, sealed-item, effect, and
-Chinese localization tables recorded by the installed client's UFS manifest.
-It builds a traceable SQLite database from the manifest, optional raw JSON table
-exports, and an optional normalized interchange document. See
-`apps/lom/README.md` for the schema and commands.
+The `gmzz` pipelines read the installed client directly: its game tables are
+obfuscated LuaJIT dumps under `C7/Content/ScriptOPCode/Data/Excel`, which
+`apps/gmzz/luac.py` decrypts and `apps/gmzz/tables.py` executes to recover the
+localized fields. `python -m gmzz.traintrade` emits the train-trade (铁路大亨)
+dataset into `data-gmzz`. Paths come from `tools/.env`: `GMZZ_RAW` (a `uex`
+export root), `GMZZ_DATA_OUT`, `GMZZ_RES_OUT`, and optional `GMZZ_GAME`.
+
+`python -m gmzz.database` is the older equipment/affix/sealed-item pipeline; it
+builds a traceable SQLite database from the client's UFS manifest plus JSON
+table exports supplied separately. See `apps/gmzz/README.md` for both, including
+why the client's art is not extractable from an install.
 
 ## Palworld pipeline
 
