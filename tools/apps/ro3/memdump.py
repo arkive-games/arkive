@@ -53,6 +53,14 @@ PAGE_GUARD = 0x100
 UNITY_VERSION = b"2022.3.62f3\x00"
 CAB_MARKER = b"CAB-"
 
+# IL2CPP metadata sanity magic, little-endian on disk as af1bb1fa.
+IL2CPP_MAGIC = b"\xaf\x1b\xb1\xfa"
+# Shipped global-metadata.dat is encrypted end to end (entropy 8.00 across all 23 MB, only
+# the magic preserved), so Il2CppDumper cannot read it. In memory it must be plaintext, and
+# a decrypted header is recognisable because the version field becomes a real IL2CPP
+# version instead of garbage. Recovering it once turns every later step into offline work.
+IL2CPP_VERSIONS = (24, 27, 29, 31)
+
 k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 
 
@@ -157,6 +165,14 @@ def carve(blob: bytes) -> list[tuple[int, str]]:
     start = 0
     while (i := blob.find(CAB_MARKER, start)) != -1:
         hits.append((i, "cab"))
+        start = i + 1
+    start = 0
+    while (i := blob.find(IL2CPP_MAGIC, start)) != -1:
+        # only a DECRYPTED header counts: on disk the version field is garbage
+        if i + 8 <= len(blob):
+            version = int.from_bytes(blob[i + 4:i + 8], "little")
+            if version in IL2CPP_VERSIONS:
+                hits.append((i, "il2cpp-metadata"))
         start = i + 1
     return hits
 

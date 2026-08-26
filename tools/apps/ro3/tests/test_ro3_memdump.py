@@ -40,3 +40,14 @@ def test_module_declares_read_only_access_only():
         assert forbidden not in src, forbidden
     assert "PROCESS_VM_WRITE" not in src
     assert "PROCESS_VM_READ" in src
+
+
+def test_carve_accepts_only_decrypted_il2cpp_metadata():
+    # decrypted: real IL2CPP version follows the magic
+    good = md.IL2CPP_MAGIC + (29).to_bytes(4, "little") + b"\x00" * 32
+    assert ("il2cpp-metadata" in {k for _o, k in md.carve(good)})
+
+    # the shipped file keeps the magic but its version field is garbage - must NOT match,
+    # otherwise every scan would flag the encrypted copy mapped from disk
+    bad = md.IL2CPP_MAGIC + (1813808443).to_bytes(4, "little") + b"\x00" * 32
+    assert "il2cpp-metadata" not in {k for _o, k in md.carve(bad)}
