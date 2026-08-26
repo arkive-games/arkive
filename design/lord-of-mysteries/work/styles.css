@@ -26,3 +26,84 @@ button { cursor: pointer; }
 .footer-note { display: none; }
 @media (max-width: 800px) { body { overflow: auto; }.app-shell { display: block; }.topbar { min-height: 3.5rem; gap: .8rem; padding: 0 .75rem; }.brand-lockup { min-width: 0; }.topbar-tools { margin-left: auto; }.station-strip { min-height: 3.25rem; padding: .45rem .75rem; }.station-strip-label { width: 8.5rem; }.workspace-grid { display: block; padding-top: 0; }.control-column { max-height: none; overflow: visible; border-right: 0; padding: .75rem; }.forecast-panel { overflow: visible; padding: .75rem; }.history-column { padding: .75rem; }.history-column .history-panel { position: static; }.forecast-heading { grid-template-columns: 1fr; }.progress-readout { justify-self: start; }.hint-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.combo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 480px) { .brand-lockup h1 { font-size: .88rem; }.topbar-tools button:not(.icon-tool) { display: none; }.forecast-heading { align-items: center; }.window-meta { align-items: start; flex-direction: column; gap: .2rem; }.window-state { text-align: left; }.current-picker { grid-template-columns: 1fr; gap: .25rem; }.probability-section { grid-template-columns: 1fr; gap: .25rem; }.probability-heading { padding-top: 0; }.combo-block { grid-column: 1; }.probability-grid { grid-template-columns: 1fr; }.probability-cell { display: grid; grid-template-columns: 1fr auto; align-items: center; }.probability-value { grid-column: 2; grid-row: 1 / span 2; margin: 0; }.probability-bar { grid-column: 1; }.combo-grid { grid-template-columns: 1fr; } }
+
+/* Compact tool layout: the progress rail is the primary orientation cue. */
+.topbar { min-height: 3.25rem; padding-inline: 1rem; }
+.brand-lockup { min-width: 0; }
+.brand-lockup h1 { font-size: 1rem; }
+.brand-lockup h1 span { margin-top: .15rem; font-size: .75rem; }
+.topbar-tools { display: none; }
+.station-strip { min-width: 0; min-height: 4.1rem; padding: .55rem 1rem; overflow: hidden; }
+.station-strip-label { display: none; }
+.station-track { min-width: 0; grid-template-columns: repeat(16, minmax(4.2rem, 1fr)); gap: .4rem; padding-bottom: .15rem; }
+.station-cell { min-height: 3rem; border-radius: .25rem; font-size: .75rem; }
+.station-cell strong { font-size: .875rem; }
+.station-cell small { font-size: .75rem; }
+
+.workspace-grid { min-width: 0; grid-template-columns: minmax(16rem, 18rem) minmax(0, 1fr) minmax(16rem, 18rem); }
+.control-column { padding: 1rem; }
+.forecast-panel { padding: 1rem 1.25rem 2rem; }
+.history-column { padding: 1rem 1rem 1rem 0; }
+.history-column .history-panel { top: 1rem; }
+
+.panel-heading.compact { margin-bottom: .75rem; }
+.panel h3 { font-size: 1.125rem; }
+.section-kicker { font-size: .75rem; }
+.route-select-wrap select { min-height: 2.5rem; font-size: .875rem; }
+.quota-field { grid-template-columns: 1fr 4.5rem; grid-template-rows: auto; min-height: 3.25rem; }
+.quota-field > span { font-size: .875rem; }
+.quota-field input { font-size: 1.25rem; }
+.quota-total { font-size: .75rem; }
+.quota-total strong { font-size: 1.5rem; }
+.quota-message { font-size: .75rem; }
+.secondary-button, .confirm-step { min-height: 2.5rem; font-size: .875rem; }
+.progress-readout { font-size: .75rem; }
+.progress-readout strong { font-size: 1.5rem; }
+.history-panel { padding: .8rem; }
+.history-heading strong { font-size: .875rem; }
+.history-heading span { font-size: .75rem; }
+.history-marker { font-size: .75rem; }
+.history-entry-meta strong, .history-entry-meta span, .history-entry-body small { font-size: .75rem; }
+.history-list .history-empty { font-size: .75rem; }
+.forecast-intro strong { font-size: .875rem; }
+.forecast-intro p, .sequence-note { font-size: .75rem; }
+
+.window-card, .resolved-window { margin-top: 1rem; padding: 1rem; }
+.window-title { font-size: 1rem; }
+.window-state { font-size: .75rem; }
+.current-picker { display: flex; flex-wrap: wrap; width: fit-content; max-width: 100%; gap: .5rem; margin-top: .75rem; padding: .6rem .7rem; }
+.current-picker label { font-size: .75rem; }
+.current-picker select { flex: 0 0 8rem; width: 8rem; min-height: 2.25rem; font-size: .875rem; }
+.hint-grid { gap: .5rem; margin-top: .75rem; }
+.hint-button { min-height: 3.5rem; padding: .6rem; }
+.hint-button strong { font-size: .875rem; }
+.hint-button small { font-size: .75rem; }
+.confirm-step { margin-top: .75rem; }
+.probability-section { margin-top: 1rem; }
+.probability-heading { padding-top: .35rem; }
+.probability-heading strong { font-size: .875rem; }
+.probability-grid { gap: .5rem; }
+.probability-cell { padding: .65rem; }
+.probability-cell header { font-size: .75rem; }
+.probability-value { font-size: 1.25rem; }
+.combo-block { margin-top: .65rem; padding-top: .65rem; }
+.combo-heading, .combo-item { font-size: .75rem; }
+.combo-heading strong { font-size: .875rem; }
+
+@media (max-width: 1100px) and (min-width: 801px) {
+  .workspace-grid { grid-template-columns: 16rem minmax(0, 1fr) 16rem; }
+  .forecast-panel { padding-inline: 1rem; }
+}
+
+@media (max-width: 800px) {
+  .station-strip { padding-inline: .75rem; }
+  .workspace-grid { display: block; }
+  .control-column, .forecast-panel, .history-column { padding: .75rem; }
+  .history-column .history-panel { top: auto; }
+}
+
+@media (max-width: 480px) {
+  html, body { min-width: 0; width: 100%; }
+  .current-picker { width: 100%; }
+  .current-picker select { flex: 1 1 8rem; width: auto; }
+}

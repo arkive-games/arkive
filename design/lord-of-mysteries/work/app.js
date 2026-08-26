@@ -89,7 +89,7 @@ function renderStationStrip() {
     const type = confirmed.get(index);
     const isWindow = !type && windowStart >= 0 && index >= windowStart && index < windowStart + 3;
     const isCurrent = index === currentIndex;
-    return `<div class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""} ${isCurrent ? `is-current is-${currentType}` : ""}"><strong>${number}</strong><small>${type ? `${type} · 100%` : isWindow ? "已推演" : "待确认"}</small></div>`;
+    return `<div class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""} ${isCurrent ? `is-current is-${currentType}` : ""}"><strong>${number}</strong><small>${type || (isWindow ? "已推演" : "待确认")}</small></div>`;
   }).join("");
 }
 
@@ -197,7 +197,7 @@ function hintMarkup(selected = "") {
 }
 
 function renderResolvedWindow(possible, start, detail) {
-  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div>${comboMarkup(possible, start)}${[0, 1, 2].map((offset) => `<div class="probability-section"><div class="probability-heading"><strong>第 ${start + offset + 1} 站</strong><span>边际概率</span></div>${probabilityMarkup(probabilityFor(possible, start + offset))}</div>`).join("")}</div>`;
+  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">已解锁 · 第 <span>${start + 1}-${start + 3}</span> 站</span><span class="window-state">${detail}</span></div>${comboMarkup(possible, start)}<div class="probability-section next-probability"><div class="probability-heading"><strong>下一站 · 第 ${start + 1} 站</strong></div>${probabilityMarkup(probabilityFor(possible, start))}</div></div>`;
 }
 
 function renderForecast() {
@@ -211,7 +211,7 @@ function renderForecast() {
   intro.classList.add("is-hidden"); content.classList.remove("is-hidden");
 
   if (!state.originHint) {
-    content.innerHTML = `<div class="window-card origin-card"><div class="window-meta"><span class="window-title">始发站 · 第一波提示</span><span class="window-state">${state.sequences.length.toLocaleString()} 种序列</span></div><p class="sequence-note">选择游戏内的未来 3 站提示。</p><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-origin" type="button" disabled>确认并推演第 1-3 站</button></div>`;
+    content.innerHTML = `<div class="window-card origin-card"><div class="window-meta"><span class="window-title">始发站 · 未来三站</span><span class="window-state">${state.sequences.length.toLocaleString()} 种序列</span></div><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-origin" type="button" disabled>确认并推演第 1-3 站</button></div>`;
     content.querySelectorAll("[data-hint]").forEach((button) => button.addEventListener("click", () => { state.pendingHint = button.dataset.hint; renderForecast(); }));
     const confirm = $("confirm-origin");
     confirm.disabled = !state.pendingHint;
@@ -234,7 +234,7 @@ function renderForecast() {
   const currentOptions = TYPES.map((type) => `<option value="${type}" ${state.pendingCurrent === type ? "selected" : ""}>${TYPE_LABELS[type]}</option>`).join("");
   const candidateCount = state.pendingCurrent && state.pendingHint ? prospectiveSequences().length : possible.length;
   const candidateMessage = state.pendingCurrent && state.pendingHint && candidateCount === 0 ? `<p class="sequence-note error-note">当前站点与提示组合没有可行路线，请更换其中一项。</p>` : "";
-  const nextPrompt = `<div class="window-card"><div class="window-meta"><span class="window-title">第 <span>${currentNumber}</span> 站 · 确认站点</span><span class="window-state">${candidateCount.toLocaleString()} 种序列</span></div><div class="current-picker"><label for="current-select">站点类型</label><select id="current-select"><option value="">请选择</option>${currentOptions}</select></div><p class="sequence-note">选择站点和下一波提示。</p><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-step" type="button" disabled>确认并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button>${candidateMessage}</div>`;
+  const nextPrompt = `<div class="window-card"><div class="window-meta"><span class="window-title">第 <span>${currentNumber}</span> 站 · 确认</span><span class="window-state">${candidateCount.toLocaleString()} 种序列</span></div><div class="current-picker"><label for="current-select">当前站点</label><select id="current-select"><option value="">请选择</option>${currentOptions}</select></div><div class="hint-grid">${hintMarkup(state.pendingHint)}</div><button class="confirm-step" id="confirm-step" type="button" disabled>确认并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button>${candidateMessage}</div>`;
   content.innerHTML = `${nextPrompt}${resolved}`;
   const currentSelect = $("current-select");
   currentSelect.addEventListener("change", () => { state.pendingCurrent = currentSelect.value; renderForecast(); });
