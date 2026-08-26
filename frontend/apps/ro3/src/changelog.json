@@ -1,0 +1,19 @@
+{
+ "entries": [
+  {
+   "version": "0.1.0",
+   "date": "2026-08-26",
+   "commit": "4d1fe793275bc6b814151aa0a96b4eaca6299170",
+   "changes": [
+    {
+     "kind": "feature",
+     "text": {
+      "en-US": "New Ragnarok Online 3 site: the shell is live with theme, language and account controls. Game data is not available yet — the game encrypts its asset bundles, and pages will appear here as extraction lands.",
+      "zh-CN": "全新《仙境传说3》资料站上线：已提供主题、语言与账号功能。游戏数据尚未开放——游戏对资源包做了加密，页面会随着数据提取的推进陆续开放。",
+      "zh-TW": "全新《仙境傳說3》資料站上線：已提供主題、語言與帳號功能。遊戲資料尚未開放——遊戲對資源包做了加密，頁面會隨著資料擷取的推進陸續開放。"
+     }
+    }
+   ]
+  }
+ ]
+}

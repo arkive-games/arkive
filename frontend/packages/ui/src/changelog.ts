@@ -45,7 +45,7 @@ export interface ResolvedEntry {
   changes: ResolvedChange[]
 }
 
-export const PLATFORM_TARGETS = ["aion2", "palworld", "sts2", "vrising"] as const
+export const PLATFORM_TARGETS = ["aion2", "palworld", "ro3", "sts2", "vrising"] as const
 export type PlatformTarget = (typeof PLATFORM_TARGETS)[number]
 
 export interface PlatformChangelogEntry {
