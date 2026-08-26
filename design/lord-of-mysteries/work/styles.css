@@ -63,9 +63,14 @@ button { cursor: pointer; }
 .remaining-panel { margin-bottom: 1rem; padding: .8rem; border: 1px solid var(--border); border-radius: .25rem; background: var(--surface); }
 .remaining-heading { padding-bottom: .55rem; border-bottom: 1px solid var(--border); }
 .remaining-heading strong { font-size: .875rem; }
-.remaining-value { display: flex; align-items: baseline; gap: .25rem; margin-top: .55rem; }
-.remaining-value strong { color: var(--blue); font-size: 1.5rem; line-height: 1; }
-.remaining-value span { color: var(--muted); font-size: .75rem; }
+.remaining-list { display: grid; gap: .35rem; margin-top: .55rem; }
+.remaining-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: .3rem; padding: .35rem .4rem; border: 1px solid var(--border); border-radius: .2rem; background: var(--surface-soft); }
+.remaining-item span { font-size: .75rem; font-weight: 700; }
+.remaining-item strong { color: var(--blue); font-size: 1rem; line-height: 1; }
+.remaining-item small { color: var(--muted); font-size: .68rem; }
+.remaining-item.winery span { color: var(--wine); }
+.remaining-item.food span { color: var(--food); }
+.remaining-item.trade span { color: var(--trade); }
 .history-heading strong { font-size: .875rem; }
 .history-heading span { font-size: .75rem; }
 .history-marker { font-size: .75rem; }
@@ -184,11 +189,14 @@ button { cursor: pointer; }
 .control-column .panel-heading h3 { display: flex; justify-content: flex-start; align-items: center; margin: 0; font-size: 1.125rem; line-height: 1.4; font-weight: 600; }
 .control-column .route-select-wrap { margin-top: 0; }
 .quota-field { grid-template-columns: 1fr 1fr; text-align: center; }
+.quota-field { grid-template-rows: 1fr; }
+.quota-field > span { grid-column: 1; grid-row: 1; align-self: center; }
 .quota-field > span,
 .quota-field input { justify-self: center; }
-.quota-field input { width: 4rem; text-align: center; }
+.quota-field input { grid-row: 1; width: 4rem; text-align: center; }
 .window-title .step-number { color: #fff; }
 .quota-message:empty { display: none; }
+.quota-message:not(:empty) { margin: .5rem 0 .25rem; }
 
 @media (max-width: 600px) {
   .station-entry { grid-template-columns: 1fr; }
