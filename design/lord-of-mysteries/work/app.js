@@ -46,7 +46,6 @@ function renderDifficulty() {
   const select = $("difficulty-select");
   select.innerHTML = `<option value="">请选择难度</option>${DIFFICULTIES.map((route) => `<option value="${route.id}">${route.name}</option>`).join("")}`;
   select.value = state.difficulty;
-  $("route-label").textContent = activeDifficulty()?.name || "选择难度";
 }
 
 function applyDifficulty(id) {
@@ -67,11 +66,9 @@ function renderQuotaStatus() {
   document.querySelectorAll("#totals-form input").forEach((input) => { input.disabled = !state.difficulty; });
   const total = TYPES.reduce((sum, type) => sum + state.totals[type], 0);
   const target = stationCount();
-  $("quota-total-value").textContent = total;
-  $("quota-target-value").textContent = target;
   const message = $("quota-message");
   const valid = Boolean(state.difficulty) && total === target;
-  message.textContent = !state.difficulty ? "选择难度后，才能填写配额。" : valid ? "配额有效，可以开始推演。" : `还需要配置 ${Math.abs(target - total)} 站（当前合计 ${total}）。`;
+  message.textContent = !state.difficulty ? "" : valid ? "配额有效，可以开始推演。" : `还需要配置 ${Math.abs(target - total)} 站（当前合计 ${total}）。`;
   message.classList.toggle("is-valid", valid);
   const confirmButton = $("quota-confirm-button");
   confirmButton.disabled = !valid;
@@ -227,6 +224,7 @@ function renderForecast() {
   const currentStation = state.originHint ? Math.min(totalStops, state.steps.length + 1) : 0;
   $("current-station").textContent = currentStation;
   $("remaining-stations").textContent = Math.max(0, totalStops - currentStation);
+  $("remaining-count").textContent = Math.max(0, totalStops - currentStation);
   if (!state.sequences.length) { intro.classList.remove("is-hidden"); content.classList.add("is-hidden"); return; }
   intro.classList.add("is-hidden"); content.classList.remove("is-hidden");
 
