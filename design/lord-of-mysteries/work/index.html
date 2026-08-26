@@ -23,12 +23,12 @@
       <section class="workspace-grid" id="planner">
         <aside class="control-column">
           <section class="panel route-panel">
-            <div class="panel-heading compact"><div><h3>难度选择</h3></div></div>
+            <div class="panel-heading compact"><div><h3><span class="step-number">1</span>难度选择</h3></div></div>
             <label class="route-select-wrap" for="difficulty-select"><select id="difficulty-select" aria-label="难度选择"><option value="">请选择</option></select></label>
           </section>
           <section class="panel totals-panel">
             <div class="panel-heading">
-              <div><h3>总站点配额</h3></div>
+              <div><h3><span class="step-number">2</span>总站点配额</h3></div>
             </div>
             <form id="totals-form" class="totals-form">
               <label class="quota-field winery"><span>酒庄</span><input id="winery-total" name="winery" type="number" min="0" max="15" value="5" /></label>
@@ -42,11 +42,10 @@
         </aside>
 
         <section class="panel forecast-panel" aria-live="polite">
-          <section class="station-strip" aria-label="站点进度"><button class="station-nav" id="station-prev" type="button" aria-label="预览前面站点">←</button><div class="station-track" id="confirmed-stations"></div><button class="station-nav" id="station-next" type="button" aria-label="预览后面站点">→</button></section>
           <div class="panel-heading forecast-heading">
-            <div class="forecast-heading-main"><span class="section-kicker" id="route-label">选择难度</span><h3>铁路大亨推演</h3></div>
-            <div class="progress-readout"><strong id="progress-count">0</strong><span>/ <span id="progress-target">13</span> 次信息解锁</span></div>
+            <div class="forecast-heading-main"><h2>诡秘之主·铁路大亨推演工具</h2><div class="forecast-meta"><span class="section-kicker" id="route-label">选择难度</span><span class="progress-readout" aria-label="当前站与剩余站"><strong id="current-station">0</strong><span>/</span><span id="remaining-stations">15</span></span></div></div>
           </div>
+          <section class="station-strip" aria-label="站点进度"><button class="station-nav" id="station-prev" type="button" aria-label="预览前面站点">←</button><div class="station-track" id="confirmed-stations"></div><button class="station-nav" id="station-next" type="button" aria-label="预览后面站点">→</button></section>
           <div class="forecast-intro" id="forecast-intro">
             <div><strong>确认配额后开始</strong></div>
           </div>
