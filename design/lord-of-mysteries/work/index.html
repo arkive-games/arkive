@@ -21,21 +21,18 @@
       </header>
 
       <section class="station-strip" aria-label="站点确认状态"><div class="station-strip-label"><span>站点状态</span><strong>已百分百确认的站点</strong></div><div class="station-track" id="confirmed-stations"></div></section>
-      <section class="current-station-bar is-origin" id="current-station-bar" aria-live="polite" aria-label="当前所在站"><span class="current-station-signal" aria-hidden="true"></span><span class="current-station-label">当前所在</span><strong id="current-station">尚未开始</strong><small id="current-station-note">选择路线并确认配额</small></section>
 
       <section class="workspace-grid" id="planner">
         <aside class="control-column">
           <section class="panel route-panel">
-            <div class="panel-heading compact"><div><span class="section-kicker">路线</span><h3>路线难度</h3></div></div>
-            <label class="route-select-wrap" for="difficulty-select"><span>选择路线</span><select id="difficulty-select"><option value="">请选择路线</option></select></label>
-            <p id="route-description">选择路线后填写 15 站配额。</p>
+            <div class="panel-heading compact"><div><h3>路线</h3></div></div>
+            <label class="route-select-wrap" for="difficulty-select"><select id="difficulty-select" aria-label="路线"><option value="">请选择</option></select></label>
           </section>
           <section class="panel totals-panel">
             <div class="panel-heading">
-              <div><span class="section-kicker">01 · 总站点配额</span><h3>总站点配额</h3></div>
+              <div><h3>总站点配额</h3></div>
               <span class="help-mark" title="三类站点总数必须合计 15">?</span>
             </div>
-            <p class="panel-copy">三类站点合计 15 站。</p>
             <form id="totals-form" class="totals-form">
               <label class="quota-field winery"><span>酒庄</span><small>酒庄站点</small><input id="winery-total" name="winery" type="number" min="0" max="15" value="5" /></label>
               <label class="quota-field food"><span>食铺</span><small>食铺站点</small><input id="food-total" name="food" type="number" min="0" max="15" value="5" /></label>
