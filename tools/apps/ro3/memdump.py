@@ -84,6 +84,45 @@ class Region:
     size: int
 
 
+def enable_debug_privilege() -> bool:
+    """Enable SeDebugPrivilege.
+
+    Elevation alone is not sufficient to open a hardened process: the token also needs this
+    privilege, which is present-but-disabled for administrators by default. Enabling it is a
+    token operation on our OWN process and grants no write access to anything.
+    """
+    adv = ctypes.WinDLL("advapi32", use_last_error=True)
+    TOKEN_ADJUST_PRIVILEGES, TOKEN_QUERY = 0x0020, 0x0008
+    SE_PRIVILEGE_ENABLED = 0x0002
+
+    class LUID(ctypes.Structure):
+        _fields_ = [("LowPart", wt.DWORD), ("HighPart", ctypes.c_long)]
+
+    class LUID_AND_ATTRIBUTES(ctypes.Structure):
+        _fields_ = [("Luid", LUID), ("Attributes", wt.DWORD)]
+
+    class TOKEN_PRIVILEGES(ctypes.Structure):
+        _fields_ = [("PrivilegeCount", wt.DWORD), ("Privileges", LUID_AND_ATTRIBUTES * 1)]
+
+    token = wt.HANDLE()
+    if not adv.OpenProcessToken(
+        wt.HANDLE(k32.GetCurrentProcess()),
+        TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+        ctypes.byref(token),
+    ):
+        return False
+    try:
+        luid = LUID()
+        if not adv.LookupPrivilegeValueW(None, "SeDebugPrivilege", ctypes.byref(luid)):
+            return False
+        tp = TOKEN_PRIVILEGES(1, (LUID_AND_ATTRIBUTES * 1)((luid, SE_PRIVILEGE_ENABLED)))
+        if not adv.AdjustTokenPrivileges(token, False, ctypes.byref(tp), 0, None, None):
+            return False
+        return ctypes.get_last_error() == 0
+    finally:
+        k32.CloseHandle(token)
+
+
 def find_pid(name: str = "ro3.exe") -> int | None:
     """PID of the running client, via the toolhelp snapshot."""
     TH32CS_SNAPPROCESS = 0x00000002
@@ -194,13 +233,22 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{args.process} is not running - start the client first", file=sys.stderr)
         return 1
 
+    debug_priv = enable_debug_privilege()
     handle = k32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pid)
     if not handle:
-        print(
-            f"OpenProcess failed (error {ctypes.get_last_error()}). "
-            "Try an elevated shell; the anti-cheat may also be refusing the handle.",
-            file=sys.stderr,
-        )
+        err = ctypes.get_last_error()
+        print(f"OpenProcess({pid}) failed, error {err}", file=sys.stderr)
+        print(f"  SeDebugPrivilege enabled: {debug_priv}", file=sys.stderr)
+        if err == 5:
+            print(
+                "  error 5 is ACCESS_DENIED. In order of likelihood:\n"
+                "    1. this shell is not elevated -- rerun from an elevated one\n"
+                "    2. the game runs elevated, so an unelevated reader cannot touch it\n"
+                "    3. the anti-cheat (acored.dll = Anti-Cheat Expert) strips handle rights\n"
+                "       from a kernel callback, in which case elevation will NOT help and the\n"
+                "       process is unreadable from user mode",
+                file=sys.stderr,
+            )
         return 1
 
     args.out.mkdir(parents=True, exist_ok=True)
