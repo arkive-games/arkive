@@ -60,27 +60,33 @@ def goods_icon_ids(excel: Path, goods: list[dict]) -> dict[str, str]:
 def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> int:
     goods = read_json(Path(data_out) / "traintrade" / "goods.json")
     icons = goods_icon_ids(excel, goods)
-    write_json(Path(data_out) / "traintrade" / "icons.json", icons)
 
+    # Everything is validated before anything is written. Writing icons.json first
+    # and then failing on a missing PNG would leave the dataset claiming icons that
+    # the image repo does not have — the two repos are committed separately, so that
+    # inconsistency would ship.
     source = Path(raw) / ICON_SOURCE
+    export_hint = f"run: uex export --profile gmzz --only {ICON_SOURCE}"
     if not source.is_dir():
+        raise FileNotFoundError(f"{source} not found — {export_hint}")
+    # The HIGH_ tiers share art with their base tier, so distinct ids < goods rows.
+    wanted = sorted(set(icons.values()))
+    missing = [icon for icon in wanted if not (source / f"{icon}.png").is_file()]
+    if missing:
         raise FileNotFoundError(
-            f"{source} not found — run: uex export --profile gmzz --only {ICON_SOURCE}"
+            f"{len(missing)} icon(s) absent from the export, e.g. "
+            f"{missing[:5]} — a partial export? {export_hint}"
         )
+
     target = Path(res_out) / OUT_SUBDIR
     target.mkdir(parents=True, exist_ok=True)
-
-    # The HIGH_ tiers share art with their base tier, so distinct ids < goods rows.
-    written = 0
-    for icon in sorted(set(icons.values())):
-        png = source / f"{icon}.png"
-        if not png.is_file():
-            raise FileNotFoundError(f"icon {icon} missing from the export: {png}")
-        with Image.open(png) as img:
+    for icon in wanted:
+        with Image.open(source / f"{icon}.png") as img:
             img.save(target / f"{icon}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
-        written += 1
-    print(f"icons: {written} webp for {len(icons)} goods -> {target}")
-    return written
+    write_json(Path(data_out) / "traintrade" / "icons.json", icons)
+
+    print(f"icons: {len(wanted)} webp for {len(icons)} goods -> {target}")
+    return len(wanted)
 
 
 def main(argv: list[str] | None = None) -> None:

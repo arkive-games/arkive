@@ -46,14 +46,14 @@ their per-game variants) remain **separate**, pulled over HTTP.
   implemented; comments on map markers, progress, feedback and the aion2 abyss-artifact
   module are not yet. See its `README.md` and
   `docs/superpowers/specs/2026-08-08-go-backend-architecture-design.md`.
-- `tools/`    — Python (uv): `apps/` (aion2, lostark, palworld, sts2, vrising pipelines) + `packages/` (shared
+- `tools/`    — Python (uv): `apps/` (aion2, gmzz, lostark, palworld, sts2, vrising pipelines) + `packages/` (shared
   framework `tools`, generated `backend-client`). Transforms the raw game export into the
   `data/` + `resource/` artifacts.
 - `docs/`, `.apm/`, `apm.yml`, `.claude/`, `BOOTSTRAP.md` — workspace meta (also here).
 
 Separate artifact repos (NOT in this monorepo; served over HTTP):
-- `resource/` (+`resource-palworld/`, `resource-sts2/`, `resource-vrising/`) — derived WebP image set under a `UI/` root.
-- `data/` (+`data-palworld/`, `data-sts2/`, `data-vrising/`, `data-lostark/`) — derived parsed dataset (markers, regions, tables, locales).
+- `resource/` (+`resource-gmzz/`, `resource-palworld/`, `resource-sts2/`, `resource-vrising/`) — derived WebP image set under a `UI/` root.
+- `data/` (+`data-gmzz/`, `data-palworld/`, `data-sts2/`, `data-vrising/`, `data-lostark/`) — derived parsed dataset (markers, regions, tables, locales).
 
 ## Data-flow contract
 Raw game export (`E:\Exports\AION2\Content\`, Perforce later)

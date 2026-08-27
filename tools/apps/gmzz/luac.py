@@ -17,9 +17,11 @@ sounds: a table constructor whose values are not compile-time constants leaves
 reading the constants alone loses every localized field. We therefore *execute*
 the recovered chunk (see :mod:`gmzz.tables`) rather than decompiling it.
 
-Both layers were recovered by analysis, not from the client binary; see
-``docs/`` for the derivation. Neither is a DRM measure — the payload is already
-decrypted by the AES key the pak loader uses.
+Both layers were first recovered here by analysis of the shipped tables. CUE4Parse
+has since been confirmed to carry the same key — its ``LoMLua.cs`` cites an address
+in the client binary — and the same opcode permutation, which the table below now
+follows in full. Neither layer is a DRM measure: the payload is already decrypted
+by the AES key the pak loader uses.
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ from pathlib import Path
 #: parser — the correct key consumes each body with exactly zero bytes left over.
 #: It is plain ASCII and bookends the project name with the launcher name.
 XOR_KEY = b"c7fjs-432890fadnsyu9reqwj;lerwqio;jf;ldsanmdgmzz"
+
 
 def _build_opcode_map() -> dict[int, int]:
     """Client opcode -> stock LuaJIT 2.1 opcode, for the whole instruction set.
