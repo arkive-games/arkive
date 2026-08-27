@@ -131,6 +131,22 @@ def test_rejects_a_non_luajit_blob():
         decrypt(b"not a dump at all")
 
 
+def test_opcode_map_is_a_permutation():
+    # A shuffle must be a bijection; a duplicate target would silently alias two
+    # instructions onto one and corrupt whichever chunk used the loser.
+    assert sorted(OPCODE_MAP) == list(range(0x00, 0x61))
+    assert sorted(OPCODE_MAP.values()) == list(range(0x00, 0x61))
+
+
+def test_opcode_map_agrees_with_the_independently_derived_subset():
+    # These fourteen were recovered here by aligning the client's instruction
+    # stream against stock-compiled equivalents, before the full permutation was
+    # available. They must survive any rewrite of the table.
+    derived = {25: 18, 46: 39, 48: 41, 49: 42, 52: 52, 53: 53, 54: 54,
+               57: 57, 60: 60, 61: 61, 62: 62, 63: 63, 68: 76, 70: 66}
+    assert {op: OPCODE_MAP[op] for op in derived} == derived
+
+
 def test_key_is_the_recovered_forty_eight_byte_ascii_key():
     # Guards the constant itself: a silent edit here would decode to plausible
     # garbage rather than an obvious failure.

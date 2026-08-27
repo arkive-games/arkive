@@ -22,6 +22,11 @@ field — in `TrainTradeGoodsData` that is `GoodsDesc`, `GoodsNameTextID` and
 text is substituted afterwards from the `StringDB_CN_Data_*` shards, which are
 tables of the same kind.
 
+Both layers were originally recovered here by analysis, and CUE4Parse has since
+been confirmed to carry the same key (from the client binary) and the same
+opcode permutation — `luac.py` now uses the complete table rather than only the
+fourteen opcodes the data tables need, so the gameplay scripts decode too.
+
 Two details cost real time to find, so they are worth restating:
 
 - Text ids are ~16-digit numbers. Formatting one with Lua's `tostring` (which is
@@ -37,6 +42,15 @@ Getting the export in the first place needs `uex` with the
 uex export --profile gmzz --only C7/Content/ScriptOPCode/Data/Excel
 ```
 
+**The profile's `paksDir` must be the game root** (`.../Game/C7`), not
+`Content/Paks`. Only two of this client's `.utoc` are real files; the rest of the
+container set is described by `Content/package.manifest`, with chunk names
+supplied by `Content/Manifest_UFSFiles_Win64.txt`. CUE4Parse's
+`LoMDefaultFileProvider` needs to see both, and uex selects it automatically for
+this game. Point it at `Content/Paks` instead and you get 148k files with almost
+no cooked art rather than 591k — with **no error reported**, which is exactly how
+this was originally misdiagnosed as a client that streams its art from a CDN.
+
 ## Train trade (铁路大亨)
 
 ```bash
@@ -51,15 +65,24 @@ and orders rows, but renames nothing, because a wiki guessing at
 invented. It fails loudly on any unresolved text id rather than shipping blank
 labels.
 
-**No images yet.** The client is `Online_Shipping.Windows.Cdn`: it ships only
-two `.utoc` (`global`, `pakchunk0-Windows`) and streams the rest through UE5
-IoStore On-Demand, caching chunks under `Saved/kscache` named by `FIoChunkId`.
-So ~75 GB of `.ucas` has no local table of contents, `package.manifest` is a
-`KMF` CDN patch manifest keyed by 16-byte hashes with no asset paths in it, and
-every icon path the UI code references is absent from the mounted VFS: 148,312
-files mount, only 2,739 are `.uasset`, and none of them are item icons. Goods
-carry a numeric `icon` id (via `SystemItemID` → `ItemNewData`), so the join is
-ready the moment the art becomes reachable.
+## Goods icons
+
+```bash
+uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Item/Large
+uv run python -m gmzz.icons
+```
+
+Goods carry no icon path. The chain is `TrainTradeGoodsData.SystemItemID` →
+`ItemNewData.icon` → `C7/Content/Arts/UI_2/Resource/Item/Large/<icon>.uasset`
+(400×400 DXT5). `gmzz.icons` resolves it, writes the 32 distinct WebP images
+into `GMZZ_RES_OUT/icons/` and the mapping into
+`data-gmzz/traintrade/icons.json`. Thirty-two, not sixty-four: the `HIGH_` tiers
+share art with their base tier, as they share descriptions.
+
+The icon id stays out of `goods.json` deliberately — every field there is the
+client's own, and this one is a join we performed. The stage fails rather than
+skipping a goods row that won't resolve, since a missing icon is a hole in the
+wiki and a silent skip hides a broken join.
 
 ## Equipment and sealed items
 

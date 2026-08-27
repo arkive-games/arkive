@@ -5,13 +5,17 @@ The `gmzz` pipelines read the installed client directly: its game tables are
 obfuscated LuaJIT dumps under `C7/Content/ScriptOPCode/Data/Excel`, which
 `apps/gmzz/luac.py` decrypts and `apps/gmzz/tables.py` executes to recover the
 localized fields. `python -m gmzz.traintrade` emits the train-trade (铁路大亨)
-dataset into `data-gmzz`. Paths come from `tools/.env`: `GMZZ_RAW` (a `uex`
-export root), `GMZZ_DATA_OUT`, `GMZZ_RES_OUT`, and optional `GMZZ_GAME`.
+dataset into `data-gmzz` and `python -m gmzz.icons` the goods icons into
+`resource-gmzz`. Paths come from `tools/.env`: `GMZZ_RAW` (a `uex` export root),
+`GMZZ_DATA_OUT`, `GMZZ_RES_OUT`, and optional `GMZZ_GAME`.
 
 `python -m gmzz.database` is the older equipment/affix/sealed-item pipeline; it
 builds a traceable SQLite database from the client's UFS manifest plus JSON
-table exports supplied separately. See `apps/gmzz/README.md` for both, including
-why the client's art is not extractable from an install.
+table exports supplied separately.
+
+See `apps/gmzz/README.md` for all three, including why this game's `paksDir`
+must be the client root rather than `Content/Paks` — getting that wrong costs
+three quarters of the client's files and reports no error.
 
 ## Palworld pipeline
 

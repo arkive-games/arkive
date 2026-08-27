@@ -33,26 +33,80 @@ from pathlib import Path
 #: It is plain ASCII and bookends the project name with the launcher name.
 XOR_KEY = b"c7fjs-432890fadnsyu9reqwj;lerwqio;jf;ldsanmdgmzz"
 
-#: Client opcode -> stock LuaJIT 2.1 opcode, for the instructions the data tables
-#: use. Derived by aligning the client's instruction stream against equivalent
-#: source compiled by a stock LuaJIT. Note that several map to their own value —
-#: "opcode unchanged" is emphatically not evidence that a decode is correct.
-OPCODE_MAP = {
-    25: 18,  # MOV
-    46: 39,  # KSTR
-    48: 41,  # KSHORT
-    49: 42,  # KNUM
-    52: 52,  # TNEW
-    53: 53,  # TDUP
-    54: 54,  # GGET
-    57: 57,  # TGETS
-    60: 60,  # TSETV
-    61: 61,  # TSETS
-    62: 62,  # TSETB
-    63: 63,  # TSETM
-    68: 76,  # RET1
-    70: 66,  # CALL
-}
+def _build_opcode_map() -> dict[int, int]:
+    """Client opcode -> stock LuaJIT 2.1 opcode, for the whole instruction set.
+
+    The client's build shuffles the opcode table in contiguous runs. This is the
+    same permutation CUE4Parse applies in ``LoMLua.RemapOpcode``, which was taken
+    from the client binary; it agrees with the fourteen opcodes the data tables
+    use, which were recovered here independently by aligning the client's
+    instruction stream against stock-compiled equivalents.
+
+    Covering the whole set rather than only those fourteen is what lets the
+    gameplay scripts decode too, not just ``Data/Excel``.
+
+    Note how many entries map to their own value (``0x34..0x40``, ``0x59..0x60``):
+    "the opcode is unchanged" is emphatically not evidence that a decode is right.
+    """
+    out: dict[int, int] = {}
+    for op in range(0x00, 0x61):
+        if op <= 0x11:
+            stock = op
+        elif 0x12 <= op <= 0x18:  # UGET..FNEW
+            stock = op + 0x1B
+        elif 0x19 <= op <= 0x1F:  # MOV..MULVN
+            stock = op - 0x07
+        elif op == 0x20:  # MODVN
+            stock = 0x1A
+        elif op == 0x21:  # DIVVN
+            stock = 0x19
+        elif 0x22 <= op <= 0x24:  # ADDNV..MULNV
+            stock = op - 0x07
+        elif op == 0x25:  # MODNV
+            stock = 0x1F
+        elif op == 0x26:  # DIVNV
+            stock = 0x1E
+        elif 0x27 <= op <= 0x29:  # ADDVV..MULVV
+            stock = op - 0x07
+        elif op == 0x2A:  # MODVV
+            stock = 0x24
+        elif op == 0x2B:  # DIVVV
+            stock = 0x23
+        elif 0x2C <= op <= 0x33:  # POW..KNIL
+            stock = op - 0x07
+        elif 0x34 <= op <= 0x40:  # TNEW..TSETR
+            stock = op
+        elif 0x41 <= op <= 0x44:  # RETM..RET1
+            stock = op + 0x08
+        elif 0x45 <= op <= 0x4C:  # CALLM..ISNEXT
+            stock = op - 0x04
+        elif op == 0x4D:  # FORL
+            stock = 0x4F
+        elif op == 0x4E:  # IFORL
+            stock = 0x50
+        elif op == 0x4F:  # JFORL
+            stock = 0x51
+        elif op == 0x50:  # FORI
+            stock = 0x4D
+        elif op == 0x51:  # JFORI
+            stock = 0x4E
+        elif 0x52 <= op <= 0x54:  # ITERL, IITERL, JITERL
+            stock = op
+        elif op == 0x55:  # JMP
+            stock = 0x58
+        elif op == 0x56:  # LOOP
+            stock = 0x55
+        elif op == 0x57:  # ILOOP
+            stock = 0x56
+        elif op == 0x58:  # JLOOP
+            stock = 0x57
+        else:  # 0x59..0x60 — FUNCF..FUNCCW
+            stock = op
+        out[op] = stock
+    return out
+
+
+OPCODE_MAP = _build_opcode_map()
 
 LUAJIT_MAGIC = b"\x1bLJ"
 _BCDUMP_F_STRIP = 0x02
