@@ -208,6 +208,37 @@ export default function WikiHome() {
           </div>
         </Link>
       </section>
+      <section className="border-t border-border py-5">
+        <Link
+          to="/wiki/traintrade"
+          className="group grid gap-4 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-6"
+          data-testid="wiki-train-trade-entry"
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <IconPackage
+              className="mt-0.5 size-5 shrink-0 text-[color:var(--arkive-nav-accent)]"
+              stroke={1.8}
+              aria-hidden
+            />
+            <div className="min-w-0">
+              <span className="block truncate text-lg font-semibold text-[color:var(--arkive-nav-active)]">
+                {t("wiki:trainTrade.title")}
+              </span>
+              <span className="mt-2 block text-xs text-muted-foreground">
+                {t("wiki:trainTrade.homeSummary")}
+              </span>
+            </div>
+            <IconChevronRight
+              className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+              stroke={1.8}
+              aria-hidden
+            />
+          </div>
+          <div className="flex min-h-12 items-center border-l border-t border-border px-3 py-2 text-sm text-muted-foreground lg:border-t-0">
+            {t("wiki:trainTrade.homeDescription")}
+          </div>
+        </Link>
+      </section>
     </div>
   );
 }

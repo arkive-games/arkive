@@ -95,6 +95,53 @@ function dataRepoProxy(): Plugin {
   };
 }
 
+function gmzzDataRepoProxy(): Plugin {
+  const dataDir = process.env.GMZZ_DATA_DIR
+    ? path.resolve(__dirname, process.env.GMZZ_DATA_DIR)
+    : siblingRepo("data-gmzz");
+  return {
+    name: "gmzz-data-static",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url || !req.url.startsWith("/gmzz-data/")) return next();
+        const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/gmzz-data\//, "");
+        const filePath = path.join(dataDir, rel);
+        if (!filePath.startsWith(dataDir)) return next();
+        fs.stat(filePath, (err, stat) => {
+          if (err || !stat.isFile()) return next();
+          const ext = path.extname(filePath).toLowerCase();
+          res.setHeader("Content-Type", MIME[ext] ?? "application/octet-stream");
+          res.setHeader("Cache-Control", "no-cache");
+          fs.createReadStream(filePath).pipe(res);
+        });
+      });
+    },
+  };
+}
+
+function gmzzResourceProxy(): Plugin {
+  const resourceDir = process.env.GMZZ_RESOURCE_DIR
+    ? path.resolve(__dirname, process.env.GMZZ_RESOURCE_DIR)
+    : siblingRepo("resource-gmzz");
+  return {
+    name: "gmzz-resource-static",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url || !req.url.startsWith("/gmzz-icons/icons/")) return next();
+        const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/gmzz-icons\/icons\//, "");
+        const filePath = path.join(resourceDir, "icons", rel);
+        if (!filePath.startsWith(resourceDir)) return next();
+        fs.stat(filePath, (err, stat) => {
+          if (err || !stat.isFile()) return next();
+          res.setHeader("Content-Type", MIME[path.extname(filePath).toLowerCase()] ?? "application/octet-stream");
+          res.setHeader("Cache-Control", "no-cache");
+          fs.createReadStream(filePath).pipe(res);
+        });
+      });
+    },
+  };
+}
+
 const buildTime = process.env.BUILD_TIME ?? Date.now().toString();
 
 // https://vite.dev/config/
@@ -110,6 +157,8 @@ export default defineConfig({
     arkiveFontAssets(),
     resourceUiProxy(),
     dataRepoProxy(),
+    gmzzDataRepoProxy(),
+    gmzzResourceProxy(),
     tailwindcss(),
     tanstackRouter({
       target: 'react',

@@ -46,6 +46,8 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
     | WikiType
     | undefined;
   const activeUtopianTheater = pathname === "/wiki/utopian-theater";
+  const activeTrainTrade = pathname === "/wiki/traintrade";
+  const activeLordOfMysteries = activeUtopianTheater || activeTrainTrade;
   const activeNode = taxonomy?.types.find((entry) => entry.slug === activeType);
   const pathGroup = activeNode?.groups.find(
     (group) => group.slug === pathname.split("/")[3],
@@ -116,13 +118,13 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
         <div className="sticky top-0 flex max-h-[calc(100dvh-3.5rem)] flex-col overflow-y-auto">
           <div className="flex h-20 shrink-0 items-center gap-3 border-b border-border px-4">
             <img
-              src={getStaticUrl(activeUtopianTheater ? "images/gmzz-logo.png" : "images/Logo.webp")}
-              alt={activeUtopianTheater ? t("wiki:utopianTheater.siteTitle") : "AION2"}
+              src={getStaticUrl(activeLordOfMysteries ? "images/gmzz-logo.png" : "images/Logo.webp")}
+              alt={activeLordOfMysteries ? t("wiki:utopianTheater.siteTitle") : "AION2"}
               className="size-11 shrink-0 object-contain"
             />
             <div className="min-w-0">
               <strong className="block truncate text-sm font-semibold leading-tight text-[color:var(--arkive-nav-active)]">
-                {t(activeUtopianTheater ? "wiki:utopianTheater.siteTitle" : "wiki:workspace.title")}
+                {t(activeLordOfMysteries ? "wiki:utopianTheater.siteTitle" : "wiki:workspace.title")}
               </strong>
               <span className="mt-1 block text-xs text-muted-foreground">
                 {t("wiki:nav.wiki")}
@@ -144,7 +146,14 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
               active={activeUtopianTheater}
               icon={IconSparkles}
             />
-            {!activeUtopianTheater && types.map(({ type, count, groups }) => (
+            <RailLink
+              to="/wiki/traintrade"
+              label={t("wiki:trainTrade.title")}
+              count={64}
+              active={activeTrainTrade}
+              icon={IconPackage}
+            />
+            {!activeLordOfMysteries && types.map(({ type, count, groups }) => (
               <Fragment key={type}>
                 <RailLink
                   to="/wiki/$type"

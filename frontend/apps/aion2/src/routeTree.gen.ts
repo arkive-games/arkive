@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as WikiRouteRouteImport } from './routes/wiki/route'
 import { Route as WikiIndexRouteImport } from './routes/wiki/index'
+import { Route as WikiTraintradeRouteImport } from './routes/wiki/traintrade'
 import { Route as WikiUtopianTheaterRouteImport } from './routes/wiki/utopian-theater'
 import { Route as WikiTypeIndexRouteImport } from './routes/wiki/$type/index'
 import { Route as WikiTypeSlugRouteImport } from './routes/wiki/$type/$slug'
@@ -37,6 +38,11 @@ const WikiIndexRoute = WikiIndexRouteImport.update({
   path: '/',
   getParentRoute: () => WikiRouteRoute,
 } as any)
+const WikiTraintradeRoute = WikiTraintradeRouteImport.update({
+  id: '/traintrade',
+  path: '/traintrade',
+  getParentRoute: () => WikiRouteRoute,
+} as any)
 const WikiUtopianTheaterRoute = WikiUtopianTheaterRouteImport.update({
   id: '/utopian-theater',
   path: '/utopian-theater',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/wiki': typeof WikiRouteRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/wiki/traintrade': typeof WikiTraintradeRoute
   '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki/': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/changelog': typeof ChangelogRoute
+  '/wiki/traintrade': typeof WikiTraintradeRoute
   '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/wiki': typeof WikiRouteRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/wiki/traintrade': typeof WikiTraintradeRoute
   '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki/': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
     | '/'
     | '/wiki'
     | '/changelog'
+    | '/wiki/traintrade'
     | '/wiki/utopian-theater'
     | '/wiki/'
     | '/wiki/$type/$slug'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/changelog'
+    | '/wiki/traintrade'
     | '/wiki/utopian-theater'
     | '/wiki'
     | '/wiki/$type/$slug'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/wiki'
     | '/changelog'
+    | '/wiki/traintrade'
     | '/wiki/utopian-theater'
     | '/wiki/'
     | '/wiki/$type/$slug'
@@ -145,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WikiIndexRouteImport
       parentRoute: typeof WikiRouteRoute
     }
+    '/wiki/traintrade': {
+      id: '/wiki/traintrade'
+      path: '/traintrade'
+      fullPath: '/wiki/traintrade'
+      preLoaderRoute: typeof WikiTraintradeRouteImport
+      parentRoute: typeof WikiRouteRoute
+    }
     '/wiki/utopian-theater': {
       id: '/wiki/utopian-theater'
       path: '/utopian-theater'
@@ -170,6 +189,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface WikiRouteRouteChildren {
+  WikiTraintradeRoute: typeof WikiTraintradeRoute
   WikiUtopianTheaterRoute: typeof WikiUtopianTheaterRoute
   WikiIndexRoute: typeof WikiIndexRoute
   WikiTypeSlugRoute: typeof WikiTypeSlugRoute
@@ -177,6 +197,7 @@ interface WikiRouteRouteChildren {
 }
 
 const WikiRouteRouteChildren: WikiRouteRouteChildren = {
+  WikiTraintradeRoute: WikiTraintradeRoute,
   WikiUtopianTheaterRoute: WikiUtopianTheaterRoute,
   WikiIndexRoute: WikiIndexRoute,
   WikiTypeSlugRoute: WikiTypeSlugRoute,

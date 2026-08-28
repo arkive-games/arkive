@@ -23,6 +23,16 @@ export function getDataBaseUrl() {
   return (import.meta.env.VITE_DATA_BASE_URL ?? "").replace(/\/+$/, "");
 }
 
+/** Base URL for the Lord of Mysteries / Train Tycoon derived dataset. */
+export function getGmzzDataBaseUrl() {
+  return (import.meta.env.VITE_GMZZ_DATA_BASE_URL ?? (import.meta.env.DEV ? "/gmzz-data" : "https://data-gmzz.tc-imba.com")).replace(/\/+$/, "");
+}
+
+/** Base URL for Train Tycoon item icons. */
+export function getGmzzResourceBaseUrl() {
+  return (import.meta.env.VITE_GMZZ_RESOURCE_BASE_URL ?? (import.meta.env.DEV ? "/gmzz-icons/icons" : "https://resource-gmzz.tc-imba.com/icons")).replace(/\/+$/, "");
+}
+
 export function getStaticUrl(relPath: string) {
   const clean = relPath.replace(/^\/+/, "");
   // Game resource assets live in the `resource` repo under `UI/`.

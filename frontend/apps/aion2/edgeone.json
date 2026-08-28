@@ -7,6 +7,8 @@
     { "source": "/wiki/*", "destination": "/index.html" },
     { "source": "/wiki/utopian-theater", "destination": "/index.html" },
     { "source": "/wiki/utopian-theater*", "destination": "/index.html" },
+    { "source": "/wiki/traintrade", "destination": "/index.html" },
+    { "source": "/wiki/traintrade*", "destination": "/index.html" },
     { "source": "/wiki/:type/:slug", "destination": "/index.html" }
   ]
 }

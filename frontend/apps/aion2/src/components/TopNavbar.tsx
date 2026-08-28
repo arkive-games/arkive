@@ -30,6 +30,7 @@ export default function TopNavbar() {
         { key: "npc", label: t("common:mobileNav.npc") },
         { key: "item", label: t("common:mobileNav.item") },
         { key: "utopian-theater", label: t("wiki:utopianTheater.title") },
+        { key: "traintrade", label: t("wiki:trainTrade.title") },
       ],
     },
   ];
@@ -56,6 +57,10 @@ export default function TopNavbar() {
             </Link>
           ) : item.key === "utopian-theater" ? (
             <Link to="/wiki/utopian-theater" className={className}>
+              {label}
+            </Link>
+          ) : item.key === "traintrade" ? (
+            <Link to="/wiki/traintrade" className={className}>
               {label}
             </Link>
           ) : (
