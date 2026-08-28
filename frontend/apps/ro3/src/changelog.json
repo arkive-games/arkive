@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.3.0",
+      "date": "2026-08-29",
+      "commit": "86a033b04d719362af97db0fd753e40b4ac736bb",
+      "changes": [
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Added extracted client skill icons to profession Wiki records with evidence labels for unresolved ID mappings.",
+            "zh-CN": "为职业技能百科接入客户端提取图标，并为未确认编号映射的图标标注证据状态。",
+            "zh-TW": "為職業技能百科接入客戶端提取圖標，並為未確認編號映射的圖標標註證據狀態。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.3",
       "date": "2026-08-29",
       "commit": "3ef21aa4fed52e6ebeeaf60336b3df6f92cc84da",
