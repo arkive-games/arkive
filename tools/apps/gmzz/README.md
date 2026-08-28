@@ -84,6 +84,25 @@ client's own, and this one is a join we performed. The stage fails rather than
 skipping a goods row that won't resolve, since a missing icon is a hole in the
 wiki and a silent skip hides a broken join.
 
+## Utopian Theater (乌托邦剧场)
+
+```bash
+uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Skill
+uv run python -m gmzz.utopia
+```
+
+The mode is `Mythic` internally — the client's own `UtopiaTheate` spelling
+survives only in its audio paths — so the table is `MythicCardInfoData`. Writes
+281 cards to `data-gmzz/utopia/cards.json` and their 115 distinct icons to
+`resource-gmzz/utopia/`; `CardIcon` is a UE object path, so `/Game/` maps to the
+pak's `C7/Content/` and the export lands as `.png`.
+
+**No pathway field is emitted.** `Tag` separates the 81 universal cards from the
+200 pathway-locked ones, but which of the six Beyonder pathways each of those
+200 belongs to is in no table the export contains. A wiki asserting the wrong
+pathway is worse than one that stays silent, so the split is left out and the
+page groups by tag. If the mapping turns up, it is a small addition here.
+
 ## Equipment and sealed items
 
 An older pipeline, predating the table reader above: it turns
