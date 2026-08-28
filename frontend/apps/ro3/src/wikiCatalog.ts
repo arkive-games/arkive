@@ -149,7 +149,7 @@ export const WIKI_CLIENT_VERSION = '0.0.1.13'
  * keeps display names and numeric effects unavailable offline.
  */
 export const WIKI_PACKAGE_SOURCE = {
-  label: 'RO3 client package / Audio/wwisedefine.json',
+  label: '游戏客户端 / 音频事件清单',
   sha256: 'B6B6D36D96F6E2E6D422DCEFCF9304AF58ADE8FF6F3E5F765DB08143D8A40A13',
 } as const
 

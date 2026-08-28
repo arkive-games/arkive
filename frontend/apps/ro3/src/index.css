@@ -876,8 +876,8 @@ select {
 .wiki-masthead-inner {
   display: grid;
   grid-template-columns: minmax(20rem, 1fr) minmax(30rem, 1.25fr);
-  gap: 2.5rem;
-  padding-block: 1.75rem 2rem;
+  gap: 1.5rem;
+  padding-block: 1rem 1.125rem;
 }
 
 .wiki-back {
@@ -916,8 +916,8 @@ select {
 }
 
 .wiki-title-block h1 {
-  margin: 0.25rem 0 0.4rem;
-  font-size: 2rem;
+  margin: 0.15rem 0 0.25rem;
+  font-size: 1.625rem;
   line-height: 1.2;
   letter-spacing: 0;
 }
@@ -925,7 +925,7 @@ select {
 .wiki-title-block p {
   margin: 0;
   color: var(--muted-foreground);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .wiki-stats {
@@ -943,7 +943,7 @@ select {
   grid-template-columns: auto minmax(0, 1fr);
   align-content: center;
   column-gap: 0.5rem;
-  padding: 0.875rem;
+  padding: 0.625rem 0.75rem;
   border-right: 1px solid var(--border);
 }
 
@@ -979,7 +979,7 @@ select {
   grid-template-columns: 15rem minmax(0, 1fr);
   align-items: start;
   gap: 2rem;
-  padding-block: 2rem 4rem;
+  padding-block: 1.5rem 4rem;
 }
 
 .wiki-line-nav {
@@ -2071,7 +2071,7 @@ select {
 
   .wiki-masthead-inner {
     gap: 1.25rem;
-    padding-block: 1.25rem 1.5rem;
+    padding-block: 0.875rem 1rem;
   }
 
   .wiki-title-block h1 {

@@ -679,7 +679,7 @@ function WikiPage({ view }: { view: WikiView }) {
                       {skillId}
                       <small>{evidence.eventName}</small>
                     </strong>
-                    <span role="cell"><b>{stage.label}</b><small>{stage.sourceName}</small></span>
+                      <span role="cell"><b>{stage.label}</b></span>
                     <span role="cell">{content.wiki.tier.replace('{tier}', String(stage.tier))}</span>
                     <span role="cell"><i />{content.wiki.eventIndexed}</span>
                   </button>
@@ -1013,7 +1013,6 @@ function WikiStageCard({
     >
       <span>{content.wiki.tier.replace('{tier}', String(stage.tier))}</span>
       <strong>{stage.label}</strong>
-      <small>{stage.sourceName}</small>
       <b>{content.wiki.skillCount.replace('{count}', String(stage.skillIds.length))}</b>
     </button>
   )

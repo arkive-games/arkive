@@ -9,8 +9,8 @@
           "kind": "improvement",
           "text": {
             "en-US": "Separated the profession skills and card records into dedicated Wiki pages.",
-            "zh-CN": "将职业技能与卡片记录拆分为独立的 Wiki 页面。",
-            "zh-TW": "將職業技能與卡片記錄拆分為獨立的 Wiki 頁面。"
+            "zh-CN": "将职业技能与卡片记录拆分为独立的百科页面。",
+            "zh-TW": "將職業技能與卡片記錄拆分為獨立的百科頁面。"
           }
         }
       ]
@@ -24,8 +24,8 @@
           "kind": "improvement",
           "text": {
             "en-US": "Added a Wiki navigation menu with direct links to profession skills and card records.",
-            "zh-CN": "新增 Wiki 导航悬浮菜单，可直接进入职业技能和卡片图鉴。",
-            "zh-TW": "新增 Wiki 導航懸浮選單，可直接進入職業技能與卡片圖鑑。"
+            "zh-CN": "新增百科导航悬浮菜单，可直接进入职业技能和卡片图鉴。",
+            "zh-TW": "新增百科導航懸浮選單，可直接進入職業技能與卡片圖鑑。"
           }
         }
       ]
@@ -54,8 +54,8 @@
           "kind": "feature",
           "text": {
             "en-US": "Introduced the Ragnarok 3 guide hub with profession and skill references plus a 202-record card Wiki derived from the game client.",
-            "zh-CN": "新增仙境传说 3 综合攻略页、职业与技能资料，以及从游戏客户端提取的 202 条卡片 Wiki。",
-            "zh-TW": "新增仙境傳說 3 綜合攻略頁、職業與技能資料，以及從遊戲客戶端提取的 202 條卡片 Wiki。"
+            "zh-CN": "新增仙境传说 3 综合攻略页、职业与技能资料，以及从游戏客户端提取的 202 条卡片百科。",
+            "zh-TW": "新增仙境傳說 3 綜合攻略頁、職業與技能資料，以及從遊戲客戶端提取的 202 條卡片百科。"
           }
         }
       ]

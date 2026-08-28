@@ -12,7 +12,7 @@
     { "key": "dungeons", "label": "副本攻略" },
     { "key": "gameplay", "label": "玩法资料" },
     { "key": "tools", "label": "工具" },
-    { "key": "wiki", "label": "Wiki" }
+    { "key": "wiki", "label": "百科" }
   ],
   "language": "简体中文",
   "languageShort": "中文",
@@ -27,7 +27,7 @@
   "changelog": {
     "documentTitle": "仙境传说 3 更新日志 | 藏舟攻略",
     "back": "返回综合页",
-    "eyebrow": "VERSION HISTORY",
+    "eyebrow": "版本记录",
     "title": "更新日志",
     "description": "查看仙境传说 3 资料站的版本变化与对应代码提交。",
     "current": "当前版本",
@@ -40,7 +40,7 @@
     }
   },
   "hero": {
-    "eyebrow": "THE RAGNAROK ONLINE 3RD",
+    "eyebrow": "仙境传说 3",
     "title": "仙境传说 3",
     "description": "按职业与副本筛选玩家攻略，找到适合你的冒险路线。"
   },
@@ -55,7 +55,7 @@
     "dungeonGuides": "副本攻略",
     "gameplay": "玩法资料",
     "tools": "工具",
-    "wiki": "Wiki",
+    "wiki": "百科",
     "map": "互动地图"
   },
   "filters": {
@@ -118,15 +118,15 @@
     "description": "这个入口尚未接入可用页面。"
   },
   "wiki": {
-    "documentTitle": "仙境传说 3 Wiki | 藏舟攻略",
-    "eyebrow": "RO3 PLAYER REFERENCE",
-    "title": "RO3 游戏 Wiki",
+    "documentTitle": "仙境传说 3 百科 | 藏舟攻略",
+    "eyebrow": "玩家资料库",
+    "title": "仙境传说 3 游戏百科",
     "description": "基于客户端 0.0.1.13 整理的职业技能与卡片资料库。",
-    "skillsPageTitle": "职业技能 Wiki",
+    "skillsPageTitle": "职业技能百科",
     "skillsPageDescription": "按基础职业系、转职阶段和客户端技能编号检索职业资料。",
-    "cardsPageTitle": "卡片图鉴 Wiki",
+    "cardsPageTitle": "卡片图鉴百科",
     "cardsPageDescription": "按卡片类型、名称和典藏序列检索客户端卡片资料。",
-    "tabsLabel": "Wiki 内容",
+    "tabsLabel": "百科内容",
     "tabs": {
       "skills": "职业技能",
       "cards": "卡片图鉴"
@@ -150,7 +150,7 @@
     "skillsTitle": "技能条目",
     "skillsDescription": "内部编号可用于后续对照技能名称、图标和数值表。",
     "searchLabel": "搜索职业或技能编号",
-    "searchPlaceholder": "输入职业、英文名或技能编号",
+    "searchPlaceholder": "输入职业或技能编号",
     "allStages": "全部阶段",
     "resultCount": "共 {count} 条",
     "skillId": "技能编号",
