@@ -1,9 +1,24 @@
 {
   "entries": [
     {
+      "version": "1.18.0",
+      "date": "2026-08-29",
+      "commit": "11ce1284ca001f31a02ad3f7889de93a778be842",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Lord of Mysteries wiki and Train Tycoon station tools are now available with dense searchable catalogs.",
+            "zh-CN": "新增诡秘之主百科与铁路大亨站点推演工具，并提供紧凑可搜索的货物和记忆碎片目录。",
+            "zh-TW": "新增詭秘之主百科與鐵路大亨站點推演工具，並提供緊湊可搜尋的貨物與記憶碎片目錄。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.17.0",
       "date": "2026-08-28",
-      "commit": "e537196722b2c66c37b20a5610d4b04fc1b7878e",
+      "commit": "3199a794a3646f846c10eca96a089f9e550a38c4",
       "changes": [
         {
           "kind": "feature",

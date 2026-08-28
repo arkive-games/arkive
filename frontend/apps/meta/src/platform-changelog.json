@@ -1,6 +1,23 @@
 {
   "entries": [
     {
+      "date": "2026-08-29",
+      "commit": "11ce1284ca001f31a02ad3f7889de93a778be842",
+      "targets": [
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Lord of Mysteries is now available from the Arkive game portal with its wiki and tool library entry.",
+            "zh-CN": "藏舟游戏门户现已加入诡秘之主，并提供对应的百科与工具库入口。",
+            "zh-TW": "藏舟遊戲入口現已加入詭秘之主，並提供對應的百科與工具庫入口。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-08-16",
       "commit": "f5e4ce9190065bc1f3b37d672a3a284354963d35",
       "targets": [
