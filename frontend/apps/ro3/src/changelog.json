@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.1",
+      "date": "2026-08-29",
+      "commit": "8d86ec8d931887099694ef1d66f6d7db1a2f21d1",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Added a Wiki navigation menu with direct links to profession skills and card records.",
+            "zh-CN": "新增 Wiki 导航悬浮菜单，可直接进入职业技能和卡片图鉴。",
+            "zh-TW": "新增 Wiki 導航懸浮選單，可直接進入職業技能與卡片圖鑑。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-08-29",
       "commit": "6ae34ca35828e4901c2e38ed95d94c67c78058f6",
