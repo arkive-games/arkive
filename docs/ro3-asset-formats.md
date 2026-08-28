@@ -137,7 +137,47 @@ entries), `a - 0x50` is an exact function start for 165,886 of 199,842 methods (
 16.0% for `a` itself. Disassembling at the reported address lands mid-prologue and decodes
 garbage.
 
-## 5. Practical notes
+## 5. Addressing inside the bundles: names only, and icons only via atlases
+
+With block 0 decrypted, the bundles are ordinary — but they carry **no asset paths**. Every
+`AssetBundle` object's `m_Container` holds exactly one entry, whose key is the literal string
+`asset`, and its `m_AssetBundleName` is just the bundle's own VFS-relative file name
+(`eb/eb8688201f8e6b45.bundle`). There is no `Assets/...` anywhere: a scan for that prefix over
+the decompressed payloads returns nothing.
+
+So the only handle on an object is its `m_Name`, and those are descriptive enough to work with:
+`icon_skill_acolyte_blessing`, `Model_Boss_BloodyKnightHigh_LOD0`, `headicon_monster_baphomet`,
+`sm_sc_gvg_lingtuzhan_001_inst50_h`. Indexing all 188,361 bundles by name
+(`tools/apps/ro3/catalog.py`) yields **174,725 named objects**: 53,594 Texture2D, 51,733
+Material, 21,774 MonoBehaviour, 19,895 Sprite, 17,930 Mesh, 8,653 AnimationClip, 710 TextAsset,
+434 SpriteAtlas, 2 Font.
+
+**Every UI icon is packed into a sprite atlas, and cannot be read from its own Sprite.** A
+`Sprite`'s `m_RD.texture` is a null `PPtr`, because Unity resolves the pixels at runtime through
+the atlas; unex reports this honestly as `Sprite's m_RD.texture is null`. The join that does
+work is:
+
+```
+Sprite.m_RenderDataKey  ->  SpriteAtlas.m_RenderDataMap[key].texture + .textureRect
+```
+
+The atlas is usually in a **different bundle** from the sprite (the 967 skill icons are in
+`32/32e2c67eab5442bd.bundle`; their `Skill_Icon` atlas pages are in `b7/b73bec9b159e0cdf.bundle`),
+and the sprite names it only by tag, in `m_AtlasTags`. 168 distinct atlases ship, each in three
+bundles — the base plus `.hd` and `.ld` resolution variants of the same art.
+
+`textureRect` is in Unity texture space, whose origin is the **bottom** left; bit 3 of
+`settingsRaw` marks a sprite the packer rotated 90 degrees to make it fit.
+
+Two consequences for tooling. First, an index built from the object table alone (class id plus
+`m_Name`) covers the whole game in **2 minutes**, where building a full deserializing VFS over
+the same bundles was still running after 35 minutes and past 2 GB resident — so selection and
+decoding want to be separate steps. Second, **no config table exists in any bundle**: the 710
+`TextAsset`s are Spine `.atlas`/`.skel` and GPU-skinning data, and the 20,948 named
+`MonoBehaviour`s are scene, render and Spine settings. Together with §3 and §4 that closes the
+question of where the `Asset_*` rows are — they are not in the client.
+
+## 6. Practical notes
 
 - **Header endianness.** A Unity v22 SerializedFile header's extended fields are **big-endian**,
   like the legacy fields above them — the `m_Endianess` byte describes the asset data, not the
