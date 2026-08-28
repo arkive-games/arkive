@@ -27,7 +27,7 @@ export function useSettingsConfig(): ArkiveSettingsConfig {
     // "Arkive.games", which would head the override group "Arkive.games only"
     // on every site. No localized per-game string exists, and these are proper
     // nouns, so a literal is both correct and stable.
-    site: { name: 'Slay the Spire 2' },
+    site: { name: 'Lord of Mysteries' },
     themeOptions: [
       { value: 'auto', label: t('themeAuto') },
       { value: 'light', label: t('themeLight') },
