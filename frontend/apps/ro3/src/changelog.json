@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.4.0",
+      "date": "2026-08-29",
+      "commit": "9a091648bda012b98018c4ad40b8125fc479e45b",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rebuild the encyclopedia with native Ragnarok 3 UI for profession skills and cards.",
+            "zh-CN": "使用仙境传说 3 原生 UI 重构职业技能与卡片百科。",
+            "zh-TW": "使用仙境傳說 3 原生 UI 重構職業技能與卡片百科。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.3.1",
       "date": "2026-08-29",
       "commit": "92dadb77fcb57f0f20455f4f449c8e53a68c5e3e",
