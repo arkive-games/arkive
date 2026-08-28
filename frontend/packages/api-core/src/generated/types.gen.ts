@@ -122,7 +122,7 @@ export type CreatePostBody = {
     /**
      * Games this post is about
      */
-    gameIds?: Array<'aion2' | 'palworld' | 'vrising' | 'sts2'> | null;
+    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2'> | null;
     /**
      * Free-form tags
      */
@@ -1193,7 +1193,7 @@ export type UpdatePostBody = {
     /**
      * Replaces the whole list
      */
-    gameIds?: Array<'aion2' | 'palworld' | 'vrising' | 'sts2'>;
+    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2'>;
     /**
      * Replaces the whole list
      */
@@ -3205,7 +3205,7 @@ export type ListGameRolesData = {
         /**
          * The game whose staff to list
          */
-        game: 'aion2' | 'palworld' | 'vrising' | 'sts2';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2';
     };
     query?: never;
     url: '/roles/games/{game}';
@@ -3243,7 +3243,7 @@ export type RevokeGameRoleData = {
         /**
          * The game the role applies to
          */
-        game: 'aion2' | 'palworld' | 'vrising' | 'sts2';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2';
         /**
          * Public number of the account to remove
          */
@@ -3298,7 +3298,7 @@ export type GrantGameRoleData = {
         /**
          * The game the role applies to
          */
-        game: 'aion2' | 'palworld' | 'vrising' | 'sts2';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2';
         /**
          * Public number of the account to appoint
          */

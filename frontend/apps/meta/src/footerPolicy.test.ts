@@ -9,7 +9,7 @@ describe('resolveMetaFooterKind', () => {
   })
 
   it.each<MetaFooterRoute>([
-    'allGames', 'forum', 'notifications', 'account', 'publicProfile', 'platformUpdates',
+    'allGames', 'tools', 'forum', 'notifications', 'account', 'publicProfile', 'platformUpdates',
   ])(
     'uses the compact footer for the %s page',
     (view) => {

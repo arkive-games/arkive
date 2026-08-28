@@ -349,11 +349,15 @@ const resources = {
         nextPage: '下一页',
         pageStatus: '第 {{page}} / {{total}} 页',
       },
+      toolsLibrary: {
+        eyebrow: '实用工具', title: '工具库', description: '按游戏查找计算、规划与资料整理工具。', open: '打开工具',
+        trainTrade: { game: '诡秘之主 · 铁路大亨', title: '站点推演', description: '配置路线难度与站点配额，根据每次三站提示推演站点概率和组合。' },
+      },
       forum: {
         redesign: FORUM_REDESIGN_COPY['zh-CN'],
         title: '论坛',
         description: '攻略、发现与玩家经验，都在这里汇合。',
-        games: { aion2: '永恒之塔2', palworld: '幻兽帕鲁', vrising: '夜族崛起', sts2: '杀戮尖塔2' },
+        games: { aion2: '永恒之塔2', gmzz: '诡秘之主', palworld: '幻兽帕鲁', vrising: '夜族崛起', sts2: '杀戮尖塔2' },
         channels: { label: '论坛频道', hot: '论坛热度', general: '综合交流', official: '官方咨询', games: '游戏' },
         community: { title: '一起维护友好交流', description: '发布前请确认内容与所选频道相关，并尊重每一种玩法。' },
         search: { placeholder: '搜索帖子、话题或用户', action: '搜索' },
@@ -383,7 +387,7 @@ const resources = {
         detailExtra: { edit: '编辑', cancelEdit: '取消编辑', saveEdit: '保存修改', edited: '已编辑', delete: '删除', deleteTitle: '删除这篇帖子？', deleteDescription: '删除后无法恢复，帖子下的评论也会一并移除。', deleteCancel: '取消', send: '发送', sending: '发送中…', cancelReply: '取消回复', floor: '{{no}} 楼', moreComments: '还有 {{count}} 条评论未显示' },
         errors: { feed: '帖子加载失败，请稍后重试。', post: '这篇帖子加载失败。', action: '操作没有成功，请重试。', publish: '发布失败，你的内容还在。', comment: '评论发送失败，请重试。' },
         sidebar: { label: '论坛辅助内容' },
-        tags: { vrising: '夜族崛起', aion2: 'AION2', palworld: '幻兽帕鲁', guide: '攻略分享', build: '职业讨论', testing: '数据测试', general: '综合交流', official: '官方咨询' },
+        tags: { vrising: '夜族崛起', aion2: 'AION2', gmzz: '诡秘之主', palworld: '幻兽帕鲁', guide: '攻略分享', build: '职业讨论', testing: '数据测试', general: '综合交流', official: '官方咨询' },
         pagination: { label: '帖子列表分页', previous: '上一页', next: '下一页', page: '第 {{page}} 页' },
         actions: { bookmark: '收藏帖子', like: '点赞帖子' },
         detail: {
@@ -427,6 +431,11 @@ const resources = {
           name: '杀戮尖塔2',
           desc: '卡牌图鉴、角色资料与构筑知识',
           feature: '查看卡牌与角色，整理下一次登塔思路。',
+        },
+        gmzz: {
+          name: '诡秘之主',
+          desc: '乌托邦百科、互动地图与实用工具',
+          feature: '从乌托邦剧院开始，整理每一层的记忆碎片。',
         },
       },
       comingSoon: {
@@ -495,11 +504,15 @@ const resources = {
         nextPage: '下一頁',
         pageStatus: '第 {{page}} / {{total}} 頁',
       },
+      toolsLibrary: {
+        eyebrow: '實用工具', title: '工具庫', description: '按遊戲查找計算、規劃與資料整理工具。', open: '開啟工具',
+        trainTrade: { game: '詭秘之主 · 鐵路大亨', title: '站點推演', description: '設定路線難度與站點配額，根據每次三站提示推演站點機率和組合。' },
+      },
       forum: {
         redesign: FORUM_REDESIGN_COPY['zh-TW'],
         title: '論壇',
         description: '攻略、發現與玩家經驗，都在這裡匯合。',
-        games: { aion2: '永恆之塔2', palworld: '幻獸帕魯', vrising: '夜族崛起', sts2: '殺戮尖塔2' },
+        games: { aion2: '永恆之塔2', gmzz: '詭秘之主', palworld: '幻獸帕魯', vrising: '夜族崛起', sts2: '殺戮尖塔2' },
         channels: { label: '論壇頻道', hot: '論壇熱度', general: '綜合交流', official: '官方諮詢', games: '遊戲' },
         community: { title: '一起維護友好交流', description: '發佈前請確認內容與所選頻道相關，並尊重每一種玩法。' },
         search: { placeholder: '搜尋帖子、話題或使用者', action: '搜尋' },
@@ -529,7 +542,7 @@ const resources = {
         detailExtra: { edit: '編輯', cancelEdit: '取消編輯', saveEdit: '儲存修改', edited: '已編輯', delete: '刪除', deleteTitle: '刪除這篇帖子？', deleteDescription: '刪除後無法復原，帖子下的留言也會一併移除。', deleteCancel: '取消', send: '送出', sending: '傳送中…', cancelReply: '取消回覆', floor: '{{no}} 樓', moreComments: '還有 {{count}} 則留言未顯示' },
         errors: { feed: '帖子載入失敗，請稍後重試。', post: '這篇帖子載入失敗。', action: '操作沒有成功，請重試。', publish: '發布失敗，你的內容還在。', comment: '留言送出失敗，請重試。' },
         sidebar: { label: '論壇輔助內容' },
-        tags: { vrising: '夜族崛起', aion2: 'AION2', palworld: '幻獸帕魯', guide: '攻略分享', build: '職業討論', testing: '資料測試', general: '綜合交流', official: '官方諮詢' },
+        tags: { vrising: '夜族崛起', aion2: 'AION2', gmzz: '詭秘之主', palworld: '幻獸帕魯', guide: '攻略分享', build: '職業討論', testing: '資料測試', general: '綜合交流', official: '官方諮詢' },
         pagination: { label: '帖子列表分頁', previous: '上一頁', next: '下一頁', page: '第 {{page}} 頁' },
         actions: { bookmark: '收藏帖子', like: '按讚帖子' },
         detail: {
@@ -558,6 +571,7 @@ const resources = {
         vrising: { name: '夜族崛起', desc: '瓦爾多蘭互動地圖與區域資料', feature: '追蹤區域、資源與瓦爾多蘭的探索路線。' },
         ro3: { name: '仙境傳說3', desc: '仙境傳說3 技能、副本與職業資料', feature: '查詢技能、副本與職業資料。' },
         sts2: { name: '殺戮尖塔2', desc: '卡牌圖鑑、角色資料與構築知識', feature: '查看卡牌與角色，整理下一次登塔思路。' },
+        gmzz: { name: '詭秘之主', desc: '烏托邦百科、互動地圖與實用工具', feature: '從烏托邦劇院開始，整理每一層的記憶碎片。' },
       },
       comingSoon: {
         title: '更多遊戲正在製作中',
@@ -615,11 +629,15 @@ const resources = {
         nextPage: 'Next page',
         pageStatus: 'Page {{page}} of {{total}}',
       },
+      toolsLibrary: {
+        eyebrow: 'Practical tools', title: 'Tool library', description: 'Find calculators, planners, and reference tools by game.', open: 'Open tool',
+        trainTrade: { game: 'Lord of Mysteries · Train Tycoon', title: 'Station planner', description: 'Set the route difficulty and station quota, then use each three-stop hint to project probabilities and combinations.' },
+      },
       forum: {
         redesign: FORUM_REDESIGN_COPY['en-US'],
         title: 'Forum',
         description: 'Guides, discoveries, and player experience meet here.',
-        games: { aion2: 'AION2', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
+        games: { aion2: 'AION2', gmzz: 'Lord of Mysteries', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
         channels: { label: 'Forum channels', hot: 'Trending', general: 'General', official: 'Official help', games: 'Games' },
         community: { title: 'Keep the conversation welcoming', description: 'Choose the channel that fits your post and respect every way of playing.' },
         search: { placeholder: 'Search posts, topics, or users', action: 'Search' },
@@ -649,7 +667,7 @@ const resources = {
         detailExtra: { edit: 'Edit', cancelEdit: 'Cancel edit', saveEdit: 'Save changes', edited: 'edited', delete: 'Delete', deleteTitle: 'Delete this post?', deleteDescription: 'This cannot be undone. The comments on it are removed as well.', deleteCancel: 'Keep it', send: 'Send', sending: 'Sending…', cancelReply: 'Cancel reply', floor: 'Floor {{no}}', moreComments: '{{count}} more comments not shown' },
         errors: { feed: 'Posts could not be loaded. Please try again.', post: 'This post could not be loaded.', action: 'That did not go through. Please try again.', publish: 'Your post could not be published. Nothing you wrote was lost.', comment: 'Your comment could not be sent. Please try again.' },
         sidebar: { label: 'Forum tools' },
-        tags: { vrising: 'V Rising', aion2: 'AION2', palworld: 'Palworld', guide: 'Guide', build: 'Class discussion', testing: 'Data test', general: 'General', official: 'Official help' },
+        tags: { vrising: 'V Rising', aion2: 'AION2', gmzz: 'Lord of Mysteries', palworld: 'Palworld', guide: 'Guide', build: 'Class discussion', testing: 'Data test', general: 'General', official: 'Official help' },
         pagination: { label: 'Post list pages', previous: 'Previous', next: 'Next', page: 'Page {{page}}' },
         actions: { bookmark: 'Bookmark post', like: 'Like post' },
         detail: {
@@ -674,6 +692,7 @@ const resources = {
         vrising: { name: 'V Rising', desc: 'Vardoran interactive map and region guide', feature: 'Track regions, resources, and routes across Vardoran.' },
         ro3: { name: 'Ragnarok Online 3', desc: 'Skills, dungeons and jobs for Ragnarok Online 3', feature: 'Look up skills, dungeons and job data.' },
         sts2: { name: 'Slay the Spire 2', desc: 'Card library, characters, and deckbuilding knowledge', feature: 'Study cards and characters before your next climb.' },
+        gmzz: { name: 'Lord of Mysteries', desc: 'Utopia encyclopedia, interactive maps, and tools', feature: 'Start with Utopia Theater and collect every memory fragment.' },
       },
       comingSoon: {
         title: 'More games are on the way',
@@ -716,11 +735,15 @@ const resources = {
         nextPage: '次のページ',
         pageStatus: '{{page}} / {{total}}ページ',
       },
+      toolsLibrary: {
+        eyebrow: '実用ツール', title: 'ツールライブラリ', description: 'ゲーム別の計算、計画、資料整理ツールを探せます。', open: 'ツールを開く',
+        trainTrade: { game: 'ロード・オブ・ミステリーズ · 鉄道王', title: '駅ルート推演', description: 'ルート難易度と駅数を設定し、3駅ごとのヒントから各駅の確率と組み合わせを推演します。' },
+      },
       forum: {
         redesign: FORUM_REDESIGN_COPY['ja-JP'],
         title: 'フォーラム',
         description: '攻略、発見、プレイヤーの経験が集まる場所です。',
-        games: { aion2: 'AION2', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
+        games: { aion2: 'AION2', gmzz: 'Lord of Mysteries', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
         channels: { label: 'フォーラムチャンネル', hot: '注目', general: '総合交流', official: '公式案内', games: 'ゲーム' },
         community: { title: '気持ちよく交流しましょう', description: '投稿に合うチャンネルを選び、それぞれの遊び方を尊重してください。' },
         search: { placeholder: '投稿、トピック、ユーザーを検索', action: '検索' },
@@ -750,7 +773,7 @@ const resources = {
         detailExtra: { edit: '編集', cancelEdit: '編集をやめる', saveEdit: '変更を保存', edited: '編集済み', delete: '削除', deleteTitle: 'この投稿を削除しますか？', deleteDescription: '元に戻せません。投稿へのコメントも削除されます。', deleteCancel: '削除しない', send: '送信', sending: '送信中…', cancelReply: '返信をやめる', floor: '{{no}} 階', moreComments: 'ほかに {{count}} 件のコメントがあります' },
         errors: { feed: '投稿を読み込めませんでした。もう一度お試しください。', post: 'この投稿を読み込めませんでした。', action: '処理できませんでした。もう一度お試しください。', publish: '投稿できませんでした。入力内容は残っています。', comment: 'コメントを送信できませんでした。もう一度お試しください。' },
         sidebar: { label: 'フォーラム補助メニュー' },
-        tags: { vrising: 'V Rising', aion2: 'AION2', palworld: 'Palworld', guide: '攻略共有', build: 'クラス相談', testing: 'データ検証', general: '総合交流', official: '公式案内' },
+        tags: { vrising: 'V Rising', aion2: 'AION2', gmzz: 'Lord of Mysteries', palworld: 'Palworld', guide: '攻略共有', build: 'クラス相談', testing: 'データ検証', general: '総合交流', official: '公式案内' },
         pagination: { label: '投稿一覧のページ', previous: '前のページ', next: '次のページ', page: '{{page}}ページ' },
         actions: { bookmark: '投稿を保存', like: '投稿にいいね' },
         detail: {
@@ -772,6 +795,7 @@ const resources = {
         vrising: { name: 'V Rising', desc: 'ヴァルドランのインタラクティブマップと地域情報', feature: '地域、資源、探索ルートを確認できます。' },
         ro3: { name: 'ラグナロクオンライン3', desc: 'ラグナロクオンライン3 のスキル・ダンジョン・職業情報', feature: 'スキル、ダンジョン、職業データを確認できます。' },
         sts2: { name: 'Slay the Spire 2', desc: 'カード図鑑、キャラクター、デッキ構築情報', feature: '次の登頂に向けてカードとキャラクターを確認できます。' },
+        gmzz: { name: 'Lord of Mysteries', desc: 'ユートピア百科、インタラクティブマップ、ツール', feature: 'ユートピア劇場から始め、各階の記憶の欠片を整理します。' },
       },
       comingSoon: { title: 'さらに多くのゲームを制作中', badge: '近日公開' },
       footer: {
@@ -811,11 +835,15 @@ const resources = {
         nextPage: '다음 페이지',
         pageStatus: '{{page}} / {{total}}페이지',
       },
+      toolsLibrary: {
+        eyebrow: '실용 도구', title: '도구 모음', description: '게임별 계산기, 계획 도구와 참고 자료를 찾습니다.', open: '도구 열기',
+        trainTrade: { game: '신비의 제왕 · 철도 재벌', title: '역 경로 시뮬레이션', description: '경로 난이도와 역 할당량을 설정하고 세 역 힌트로 각 역의 확률과 조합을 추론합니다.' },
+      },
       forum: {
         redesign: FORUM_REDESIGN_COPY['ko-KR'],
         title: '포럼',
         description: '공략과 발견, 플레이어 경험이 이곳에 모입니다.',
-        games: { aion2: 'AION2', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
+        games: { aion2: 'AION2', gmzz: 'Lord of Mysteries', palworld: 'Palworld', vrising: 'V Rising', sts2: 'Slay the Spire 2' },
         channels: { label: '포럼 채널', hot: '인기', general: '자유 교류', official: '공식 안내', games: '게임' },
         community: { title: '즐거운 대화를 함께 만들어요', description: '글에 맞는 채널을 선택하고 서로 다른 플레이 방식을 존중해 주세요.' },
         search: { placeholder: '게시글, 주제 또는 사용자 검색', action: '검색' },
@@ -845,7 +873,7 @@ const resources = {
         detailExtra: { edit: '수정', cancelEdit: '수정 취소', saveEdit: '변경 사항 저장', edited: '수정됨', delete: '삭제', deleteTitle: '이 게시글을 삭제할까요?', deleteDescription: '되돌릴 수 없습니다. 게시글의 댓글도 함께 삭제됩니다.', deleteCancel: '삭제하지 않기', send: '보내기', sending: '보내는 중…', cancelReply: '답글 취소', floor: '{{no}}층', moreComments: '표시되지 않은 댓글 {{count}}개' },
         errors: { feed: '게시글을 불러오지 못했습니다. 다시 시도해 주세요.', post: '이 게시글을 불러오지 못했습니다.', action: '처리하지 못했습니다. 다시 시도해 주세요.', publish: '게시하지 못했습니다. 작성한 내용은 남아 있습니다.', comment: '댓글을 보내지 못했습니다. 다시 시도해 주세요.' },
         sidebar: { label: '포럼 보조 메뉴' },
-        tags: { vrising: 'V Rising', aion2: 'AION2', palworld: 'Palworld', guide: '공략 공유', build: '클래스 토론', testing: '데이터 실험', general: '자유 교류', official: '공식 안내' },
+        tags: { vrising: 'V Rising', aion2: 'AION2', gmzz: 'Lord of Mysteries', palworld: 'Palworld', guide: '공략 공유', build: '클래스 토론', testing: '데이터 실험', general: '자유 교류', official: '공식 안내' },
         pagination: { label: '게시글 목록 페이지', previous: '이전', next: '다음', page: '{{page}}페이지' },
         actions: { bookmark: '게시글 저장', like: '게시글 좋아요' },
         detail: {
@@ -867,6 +895,7 @@ const resources = {
         vrising: { name: 'V Rising', desc: '바르도란 인터랙티브 지도와 지역 정보', feature: '바르도란의 지역과 자원, 탐험 경로를 확인하세요.' },
         ro3: { name: '라그나로크 온라인 3', desc: '라그나로크 온라인 3 스킬, 던전, 직업 정보', feature: '스킬과 던전, 직업 데이터를 확인하세요.' },
         sts2: { name: 'Slay the Spire 2', desc: '카드 도감, 캐릭터, 덱 구성 정보', feature: '다음 등반을 위해 카드와 캐릭터를 살펴보세요.' },
+        gmzz: { name: 'Lord of Mysteries', desc: '유토피아 백과, 인터랙티브 지도와 도구', feature: '유토피아 극장에서 시작해 각 층의 기억 조각을 정리하세요.' },
       },
       comingSoon: { title: '더 많은 게임을 제작하고 있어요', badge: '출시 예정' },
       footer: {

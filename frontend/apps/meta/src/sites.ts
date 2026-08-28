@@ -2,11 +2,17 @@ import type { CreatePostBody } from '@gamemap/api-core'
 
 import aion2Bg from './assets/aion2-bg.jpg'
 import palworldBg from './assets/palworld-bg.webp'
+import gmzzBg from './assets/gmzz-bg.webp'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
 const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1604030/library_600x900_2x.jpg'
 
 export const IS_TOY = Boolean(import.meta.env.VITE_TOY)
+
+export const TRAIN_TRADE_STATION_TOOL_URL = import.meta.env.VITE_GMZZ_TRAIN_TRADE_TOOL_URL
+  ?? (import.meta.env.DEV
+    ? 'http://localhost:15179/tools/traintrade-station'
+    : 'https://gmzz.tc-imba.com/tools/traintrade-station')
 
 /**
  * The games the backend knows, taken from the generated client rather than
@@ -67,6 +73,18 @@ export const SITES: SiteCard[] = [
     nameKey: 'site.aion2.name',
     descKey: 'site.aion2.desc',
     featureKey: 'site.aion2.feature',
+  },
+  {
+    id: 'gmzz',
+    url: resolveSiteUrl(
+      import.meta.env.VITE_GMZZ_URL,
+      'http://localhost:15179',
+      'https://gmzz.tc-imba.com',
+    ),
+    bg: gmzzBg,
+    nameKey: 'site.gmzz.name',
+    descKey: 'site.gmzz.desc',
+    featureKey: 'site.gmzz.feature',
   },
   {
     id: 'palworld',

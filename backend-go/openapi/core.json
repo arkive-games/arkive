@@ -221,6 +221,7 @@
               "description": "A game the platform serves",
               "enum": [
                 "aion2",
+                "gmzz",
                 "palworld",
                 "vrising",
                 "sts2"
@@ -2193,6 +2194,7 @@
               "description": "A game the platform serves",
               "enum": [
                 "aion2",
+                "gmzz",
                 "palworld",
                 "vrising",
                 "sts2"
@@ -6003,6 +6005,7 @@
               "description": "The game whose staff to list",
               "enum": [
                 "aion2",
+                "gmzz",
                 "palworld",
                 "vrising",
                 "sts2"
@@ -6073,6 +6076,7 @@
               "description": "The game the role applies to",
               "enum": [
                 "aion2",
+                "gmzz",
                 "palworld",
                 "vrising",
                 "sts2"
@@ -6188,6 +6192,7 @@
               "description": "The game the role applies to",
               "enum": [
                 "aion2",
+                "gmzz",
                 "palworld",
                 "vrising",
                 "sts2"

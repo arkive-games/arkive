@@ -14,7 +14,7 @@ import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import { useSettingsConfig } from './lib/settings'
 
 interface MetaMobileNavProps {
-  activeView: 'discoverGames' | 'allGames' | 'platformUpdates' | 'forum' | 'notifications' | 'account' | 'publicProfile'
+  activeView: 'discoverGames' | 'allGames' | 'tools' | 'platformUpdates' | 'forum' | 'notifications' | 'account' | 'publicProfile'
   noticeId: number
   isSignedIn: boolean
   language: string
@@ -97,6 +97,7 @@ export function MetaMobileNav({
             key: 'tools',
             label: t('nav.tools'),
             icon: <IconTool className="size-5" stroke={1.8} />,
+            active: activeView === 'tools',
           },
           ...(isSignedIn ? [
             {
@@ -119,6 +120,10 @@ export function MetaMobileNav({
           </a>
         ) : item.key === 'account' ? (
           <a href="#account/edit" className={className}>
+            {item.icon}<span className="text-center leading-tight">{item.label}</span>
+          </a>
+        ) : item.key === 'tools' ? (
+          <a href="#tools" className={className}>
             {item.icon}<span className="text-center leading-tight">{item.label}</span>
           </a>
         ) : (

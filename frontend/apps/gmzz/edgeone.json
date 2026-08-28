@@ -1,0 +1,40 @@
+{
+  "rewrites": [
+    {
+      "source": "/traintrade",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/traintrade*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/utopia",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/utopia*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/tools/traintrade-station",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/tools/traintrade-station*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/tools/*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/changelog",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/changelog*",
+      "destination": "/index.html"
+    }
+  ]
+}

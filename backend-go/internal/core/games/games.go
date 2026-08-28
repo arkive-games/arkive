@@ -19,7 +19,7 @@ package games
 //
 // Adding a game means updating core.game_keys() in a migration to match. The test
 // alongside this file is what stops the two from drifting.
-var Keys = []string{"aion2", "palworld", "vrising", "sts2"}
+var Keys = []string{"aion2", "gmzz", "palworld", "vrising", "sts2"}
 
 // Valid reports whether key names a game the platform serves.
 //

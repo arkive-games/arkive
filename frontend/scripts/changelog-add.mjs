@@ -32,7 +32,7 @@ import path from 'node:path'
 import process from 'node:process'
 
 const APPS = ['palworld', 'aion2', 'lostark', 'ro3', 'sts2', 'vrising']
-const PLATFORM_TARGETS = ['aion2', 'palworld', 'ro3', 'sts2', 'vrising']
+const PLATFORM_TARGETS = ['aion2', 'gmzz', 'palworld', 'ro3', 'sts2', 'vrising']
 const KINDS = ['feature', 'improvement', 'fix', 'data']
 const BUMPS = ['major', 'minor', 'patch']
 
