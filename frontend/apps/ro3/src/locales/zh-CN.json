@@ -215,7 +215,9 @@
       "closeDetail": "关闭卡片详情",
       "sourceFile": "客户端来源",
       "sourceOffset": "来源偏移",
-      "assetEvidence": "已从安装包扫描到 {count} 条卡片展示资源引用；在完成资源解密与卡名映射前，不显示推测卡面。"
+      "assetEvidence": "已从安装包扫描到 {count} 条卡片展示资源引用；在完成资源解密与卡名映射前，不显示推测卡面。",
+      "training": "培养",
+      "remove": "取下"
     },
     "back": "返回百科"
   }

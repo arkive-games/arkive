@@ -2298,6 +2298,699 @@ select {
   }
 }
 
+/* Native RO3 workspaces: the two encyclopedia views intentionally use different
+   information architectures, matching the game's skill tree and card loadout. */
+.skill-native-workspace {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ro3-navy) 46%, var(--border));
+  background: var(--ro3-paper);
+  box-shadow: 0 0.9rem 2rem rgba(34, 39, 48, 0.1);
+}
+
+.skill-native-bar,
+.card-native-bar {
+  display: grid;
+  min-height: 3.6rem;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding-inline: 1rem;
+  color: rgba(255, 255, 255, 0.78);
+  background: var(--ro3-navy) url('./assets/native-ui/skill_bg_title_01.png') center / cover;
+  box-shadow: 0 0.4rem 0.8rem rgba(29, 35, 46, 0.24);
+}
+
+.skill-native-bar-title,
+.card-native-bar > strong {
+  color: #f5d590;
+  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+}
+
+.skill-native-bar-state,
+.card-native-bar > span:last-child {
+  justify-self: end;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.75rem;
+}
+
+.skill-native-tabs {
+  display: flex;
+  align-self: stretch;
+  gap: 0.1rem;
+}
+
+.skill-native-tabs button {
+  position: relative;
+  min-width: 6rem;
+  padding-inline: 1rem;
+  border: 0;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.skill-native-tabs button::after {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0;
+  left: 0.75rem;
+  height: 0.18rem;
+  background: transparent;
+  content: '';
+}
+
+.skill-native-tabs button:hover,
+.skill-native-tabs button.is-active {
+  color: #f5d590;
+}
+
+.skill-native-tabs button.is-active::after {
+  background: #e5ad45;
+  box-shadow: 0 0 0.8rem rgba(229, 173, 69, 0.7);
+}
+
+.skill-native-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 13rem;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 1.1rem 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(121, 100, 68, 0.45);
+  background: rgba(255, 250, 234, 0.64) url('./assets/native-ui/skill_bg_frame.png') center / 100% 100%;
+}
+
+.skill-native-profession {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.skill-native-profession-icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(102, 84, 55, 0.5);
+  border-radius: 50%;
+  background: #e3d4b5;
+}
+
+.skill-native-profession-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.skill-native-profession-icon svg {
+  width: 1.3rem;
+  color: #786443;
+}
+
+.skill-native-profession > div {
+  min-width: 0;
+}
+
+.skill-native-profession > div > span,
+.skill-native-points > span {
+  color: #786443;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.skill-native-profession h2 {
+  margin: 0.15rem 0 0;
+  color: #4f4434;
+  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
+  font-size: 1.4rem;
+}
+
+.skill-native-points {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  column-gap: 0.45rem;
+  color: #705a2f;
+}
+
+.skill-native-points strong {
+  color: #6b8d2c;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.skill-native-points small {
+  grid-column: 1 / -1;
+  color: #8a7961;
+  font-size: 0.6875rem;
+}
+
+.skill-native-school select {
+  border-color: rgba(121, 100, 68, 0.45);
+  color: #514735;
+  background-color: rgba(246, 237, 214, 0.9);
+}
+
+.skill-native-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.9rem 1.25rem 0;
+}
+
+.skill-native-toolbar .wiki-search {
+  width: min(22rem, 100%);
+  height: 2.35rem;
+  border-color: rgba(121, 100, 68, 0.36);
+  background: rgba(249, 242, 225, 0.72);
+}
+
+.skill-native-toolbar > span {
+  color: #8a7961;
+  font-size: 0.75rem;
+}
+
+.skill-native-tree {
+  display: grid;
+  min-height: 32rem;
+  grid-template-columns: 4.25rem minmax(0, 1fr);
+  margin: 0.9rem 1.25rem 0;
+  border: 1px solid rgba(121, 100, 68, 0.34);
+  background: rgba(247, 240, 222, 0.86);
+}
+
+.skill-native-rail {
+  position: relative;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  align-items: center;
+  border-right: 1px solid rgba(121, 100, 68, 0.35);
+  background: rgba(234, 220, 189, 0.58);
+}
+
+.skill-native-rail::after {
+  position: absolute;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  left: 50%;
+  width: 1px;
+  background: rgba(121, 100, 68, 0.48);
+  content: '';
+}
+
+.skill-native-rail span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin-inline: auto;
+  place-items: center;
+  color: #79664a;
+  background: #e9ddc2;
+  font-family: 'Arkive Display', sans-serif;
+  font-weight: 800;
+}
+
+.skill-native-rail span:first-child {
+  border: 1px solid #d6a544;
+  color: #5a4729;
+  box-shadow: 0 0 0.8rem rgba(214, 165, 68, 0.65);
+}
+
+.skill-native-canvas {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(7rem, 1fr));
+  align-items: start;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.skill-native-grid-lines {
+  position: absolute;
+  inset: 0;
+  opacity: 0.6;
+  background-image: linear-gradient(to right, rgba(121, 100, 68, 0.19) 1px, transparent 1px), linear-gradient(to bottom, rgba(121, 100, 68, 0.19) 1px, transparent 1px);
+  background-size: 25% 25%;
+  pointer-events: none;
+}
+
+.skill-native-node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 6.4rem;
+  min-height: 6.8rem;
+  grid-row: var(--skill-row);
+  grid-column: var(--skill-column);
+  align-content: start;
+  justify-items: center;
+  gap: 0.15rem;
+  padding: 0.3rem;
+  border: 0;
+  color: #5f513b;
+  background: transparent;
+  text-align: center;
+  cursor: pointer;
+}
+
+.skill-native-node::before {
+  position: absolute;
+  top: 2.1rem;
+  right: -1.2rem;
+  width: 1.2rem;
+  border-top: 1px solid rgba(121, 100, 68, 0.52);
+  content: '';
+}
+
+.skill-native-node:hover .skill-native-node-icon,
+.skill-native-node:focus-visible .skill-native-node-icon {
+  border-color: #d69f38;
+  box-shadow: 0 0 0 0.15rem rgba(214, 159, 56, 0.28), 0 0 1rem rgba(214, 159, 56, 0.42);
+}
+
+.skill-native-node:focus-visible {
+  outline: 2px solid #d69f38;
+  outline-offset: 0.2rem;
+}
+
+.skill-native-node-icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid rgba(121, 100, 68, 0.58);
+  background: #d6c9ae;
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.skill-native-node-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.skill-native-node-icon svg {
+  width: 1.3rem;
+  color: #75664e;
+}
+
+.skill-native-node strong {
+  color: #4c4030;
+  font-size: 0.8125rem;
+  text-shadow: 0 1px rgba(255, 255, 255, 0.75);
+}
+
+.skill-native-node > span:last-child {
+  max-width: 6.2rem;
+  overflow: hidden;
+  color: #786b56;
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-native-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem 1rem;
+}
+
+.skill-native-footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.3rem;
+  padding-inline: 0.85rem;
+  border: 1px solid rgba(121, 100, 68, 0.58);
+  color: #594a35;
+  background: rgba(248, 239, 216, 0.84);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.skill-native-footer button svg,
+.skill-native-footer > span svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.skill-native-footer > span {
+  display: inline-flex;
+  max-width: 65%;
+  align-items: center;
+  gap: 0.4rem;
+  color: #8a7961;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.wiki-card-workspace {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ro3-navy) 46%, var(--border));
+  background: var(--ro3-paper);
+  box-shadow: 0 0.9rem 2rem rgba(34, 39, 48, 0.1);
+}
+
+.card-native-bar > span:first-child {
+  color: rgba(255, 255, 255, 0.74);
+  font-weight: 750;
+}
+
+.card-native-layout {
+  display: grid;
+  min-height: 39rem;
+  grid-template-columns: 12.5rem minmax(0, 1fr) 17.5rem;
+}
+
+.card-native-sidebar {
+  border-right: 1px solid rgba(121, 100, 68, 0.34);
+  background: rgba(233, 222, 194, 0.46) url('./assets/native-ui/skill_bg_frame.png') center / cover;
+}
+
+.card-native-sidebar-title {
+  padding: 1.1rem 0.9rem 0.65rem;
+  color: #796347;
+  font-weight: 800;
+}
+
+.card-native-sidebar > button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2.3rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid rgba(121, 100, 68, 0.2);
+  color: #706049;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-native-sidebar > button:hover,
+.card-native-sidebar > button.is-active {
+  background: rgba(213, 167, 73, 0.18);
+  box-shadow: inset 0.2rem 0 #d3a243;
+}
+
+.card-slot-emblem {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid rgba(121, 100, 68, 0.4);
+  border-radius: 50%;
+  color: #927647;
+  background: rgba(247, 235, 201, 0.8);
+}
+
+.card-slot-emblem svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.card-native-sidebar > button strong,
+.card-native-sidebar > button small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-native-sidebar > button strong { font-size: 0.8125rem; }
+.card-native-sidebar > button small { margin-top: 0.2rem; color: #96866d; font-size: 0.6875rem; }
+
+.card-native-slots {
+  display: grid;
+  gap: 0.4rem;
+  margin: 1rem 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(121, 100, 68, 0.3);
+}
+
+.card-native-slots span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #8e7d61;
+  font-family: 'Arkive Display', sans-serif;
+}
+
+.card-native-slots i {
+  display: block;
+  width: 1.5rem;
+  height: 1.9rem;
+  border: 1px solid rgba(121, 100, 68, 0.36);
+  background: rgba(245, 237, 218, 0.54);
+}
+
+.card-native-center {
+  min-width: 0;
+  padding: 1.1rem 1.2rem 0.9rem;
+  background: rgba(249, 242, 222, 0.68) url('./assets/native-ui/skill_img_school.png') center / 80% auto no-repeat;
+}
+
+.card-native-center-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-native-center-head > div > span {
+  color: #8d7b5f;
+  font-size: 0.6875rem;
+}
+
+.card-native-center-head h2 {
+  margin: 0.15rem 0 0;
+  color: #514431;
+  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
+  font-size: 1.35rem;
+}
+
+.card-native-center-head .wiki-search {
+  width: min(16rem, 45%);
+  height: 2.25rem;
+  border-color: rgba(121, 100, 68, 0.36);
+  background: rgba(249, 242, 225, 0.72);
+}
+
+.card-composition {
+  position: relative;
+  display: grid;
+  min-height: 30rem;
+  grid-template-columns: repeat(2, minmax(7rem, 10rem));
+  grid-template-rows: repeat(2, minmax(10rem, 1fr));
+  align-content: center;
+  justify-content: center;
+  gap: 2.5rem 5rem;
+  margin-top: 1rem;
+}
+
+.card-composition::before,
+.card-composition::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12rem;
+  height: 7rem;
+  border-top: 2px solid rgba(215, 167, 55, 0.65);
+  border-radius: 50%;
+  content: '';
+  transform: translate(-50%, -50%) rotate(28deg);
+  pointer-events: none;
+}
+
+.card-composition::after { transform: translate(-50%, -50%) rotate(-28deg); border-color: rgba(104, 91, 68, 0.46); }
+
+.card-tile {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: 11rem;
+  align-content: end;
+  gap: 0.2rem;
+  padding: 0.4rem;
+  border: 2px solid rgba(105, 93, 72, 0.58);
+  color: #4c4130;
+  background: rgba(237, 225, 195, 0.86);
+  text-align: center;
+  cursor: pointer;
+  transform: rotate(var(--card-tilt, 0deg));
+}
+
+.card-tile-0 { --card-tilt: -2deg; }
+.card-tile-1 { --card-tilt: 1deg; }
+.card-tile-2 { --card-tilt: 1deg; }
+.card-tile-3 { --card-tilt: -2deg; }
+
+.card-tile.is-active,
+.card-tile:hover,
+.card-tile:focus-visible {
+  border-color: #d9a83f;
+  box-shadow: 0 0 0 0.15rem rgba(217, 168, 63, 0.25), 0 0 1rem rgba(217, 168, 63, 0.38);
+}
+
+.card-tile:focus-visible { outline: 2px solid #d9a83f; outline-offset: 0.2rem; }
+
+.card-tile-art {
+  display: grid;
+  min-height: 8rem;
+  place-items: center;
+  border: 1px solid rgba(105, 93, 72, 0.5);
+  background: #c6d0bd url('./assets/native-ui/skill_bg_title_03.png') center / 100% 100%;
+}
+
+.card-tile-art span { color: #665638; font-family: 'Arkive Display', sans-serif; font-size: 1.5rem; }
+.card-tile strong { overflow: hidden; font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
+.card-tile small { color: #8b795c; font-size: 0.6875rem; }
+
+.card-tile-lock { position: absolute; top: 0.25rem; left: 0.35rem; color: #5a5b57; font-size: 0.8rem; }
+
+.card-weapon-emblem {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 5.2rem;
+  height: 5.2rem;
+  place-items: center;
+  border: 0.3rem double #d9b34a;
+  border-radius: 50%;
+  color: #ead9a4;
+  background: #394052;
+  box-shadow: 0 0 1.3rem rgba(225, 183, 64, 0.65);
+  transform: translate(-50%, -50%);
+}
+
+.card-weapon-emblem svg { width: 2rem; height: 2rem; }
+
+.card-composition-note {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  color: #9b8b70;
+  font-size: 0.6875rem;
+  text-align: center;
+}
+
+.card-native-source {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(121, 100, 68, 0.24);
+  color: #97866a;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+}
+
+.card-native-source svg { width: 0.9rem; height: 0.9rem; flex: none; }
+
+.card-native-detail {
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  padding: 1.1rem 0.9rem 0.9rem;
+  color: #eee5d2;
+  background: #5b5147 url('./assets/native-ui/skill_bg_title_02.png') center / cover;
+}
+
+.card-detail-state {
+  padding: 0.55rem 0.65rem;
+  color: #82c541;
+  background: rgba(36, 35, 32, 0.42);
+  font-weight: 800;
+}
+
+.card-detail-heading { display: flex; align-items: center; gap: 0.6rem; }
+
+.card-detail-thumb {
+  display: grid;
+  width: 4.2rem;
+  height: 5.5rem;
+  flex: none;
+  place-items: center;
+  border: 2px solid #d5c796;
+  background: #d3d9c2 url('./assets/native-ui/skill_bg_title_03.png') center / cover;
+}
+
+.card-detail-thumb span { color: #6c593a; font-family: 'Arkive Display', sans-serif; font-size: 1.1rem; }
+.card-detail-heading h3 { margin: 0; color: #f2e7cf; font-size: 0.95rem; }
+.card-detail-heading span { color: rgba(242, 231, 207, 0.62); font-size: 0.6875rem; }
+
+.card-detail-effects { padding-top: 0.7rem; border-top: 1px solid rgba(239, 219, 171, 0.38); }
+.card-detail-effects h4 { margin: 0 0 0.55rem; color: #f2e7cf; font-size: 0.95rem; }
+.card-detail-effects p { margin: 0.4rem 0; color: rgba(242, 231, 207, 0.74); font-size: 0.75rem; line-height: 1.45; }
+
+.card-detail-meta { display: grid; gap: 0.5rem; margin: 0; }
+.card-detail-meta div { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr); gap: 0.45rem; }
+.card-detail-meta dt { color: rgba(242, 231, 207, 0.55); font-size: 0.6875rem; }
+.card-detail-meta dd { min-width: 0; margin: 0; color: rgba(242, 231, 207, 0.72); font-size: 0.6875rem; overflow-wrap: anywhere; }
+
+.card-detail-series { display: grid; gap: 0.3rem; padding-top: 0.6rem; border-top: 1px solid rgba(239, 219, 171, 0.3); }
+.card-detail-series strong { color: #f2e7cf; font-size: 0.75rem; }
+.card-detail-series span { color: rgba(242, 231, 207, 0.68); font-size: 0.6875rem; line-height: 1.4; }
+
+.card-detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: auto; }
+.card-detail-actions button { min-height: 2.3rem; border: 1px solid rgba(238, 213, 135, 0.48); color: #f1dfb5; background: rgba(82, 96, 142, 0.76); font-weight: 750; }
+.card-detail-actions button:last-child { color: #4b3b24; background: #dbb34b; }
+.card-detail-actions button:disabled { cursor: not-allowed; opacity: 0.56; }
+.card-detail-empty { display: grid; min-height: 12rem; place-items: center; color: rgba(242, 231, 207, 0.62); font-size: 0.8rem; }
+
+@media (max-width: 62rem) {
+  .card-native-layout { grid-template-columns: 10.5rem minmax(0, 1fr); }
+  .card-native-detail { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: start; }
+  .card-detail-state, .card-detail-effects, .card-detail-meta, .card-detail-series, .card-detail-actions { grid-column: 1 / -1; }
+}
+
+@media (max-width: 47.99rem) {
+  .skill-native-bar,
+  .card-native-bar { grid-template-columns: 1fr auto; min-height: 3.25rem; }
+  .skill-native-bar-state,
+  .card-native-bar > span:last-child { display: none; }
+  .skill-native-tabs button { min-width: 5rem; padding-inline: 0.5rem; }
+  .skill-native-header { grid-template-columns: 1fr auto; margin-inline: 0.75rem; }
+  .skill-native-school { grid-column: 1 / -1; }
+  .skill-native-toolbar { margin-inline: 0.75rem; }
+  .skill-native-toolbar .wiki-search { width: 100%; }
+  .skill-native-tree { grid-template-columns: 3rem minmax(32rem, 1fr); margin-inline: 0.75rem; overflow-x: auto; }
+  .skill-native-canvas { min-height: 28rem; }
+  .skill-native-footer { align-items: flex-start; flex-direction: column; padding-inline: 0.75rem; }
+  .skill-native-footer > span { max-width: 100%; text-align: left; }
+  .card-native-layout { display: block; min-height: 0; }
+  .card-native-sidebar { display: flex; overflow-x: auto; border-right: 0; border-bottom: 1px solid rgba(121, 100, 68, 0.34); }
+  .card-native-sidebar-title { display: none; }
+  .card-native-sidebar > button { min-width: 8rem; border-bottom: 0; }
+  .card-native-slots { display: none; }
+  .card-native-center { padding: 0.9rem 0.75rem; }
+  .card-native-center-head { align-items: stretch; flex-direction: column; }
+  .card-native-center-head .wiki-search { width: 100%; }
+  .card-composition { min-height: 27rem; grid-template-columns: repeat(2, minmax(7rem, 9rem)); gap: 2rem 3rem; }
+  .card-tile { min-height: 9rem; }
+  .card-tile-art { min-height: 6.3rem; }
+  .card-native-detail { display: grid; grid-template-columns: 1fr; }
+}
+
 @media (max-width: 24rem) {
   .wiki-stats {
     grid-template-columns: 1fr;
@@ -2585,14 +3278,29 @@ select {
 /* RO3 encyclopedia layer: native client frames carry the visual identity while
    the shared Arkive shell keeps navigation, type and interaction consistent. */
 .wiki-page {
-  background: var(--background);
+  --ro3-paper: #efe8d5;
+  --ro3-paper-deep: #ded2b8;
+  --ro3-ink: #2a2b2c;
+  --ro3-navy: #202a3a;
+  --ro3-navy-soft: #344154;
+  --ro3-gold: #c68d2f;
+  --ro3-orange: #e5774e;
+  min-height: calc(100dvh - 4rem);
+  color: var(--ro3-ink);
+  background: var(--ro3-paper);
+}
+
+/* The shared Arkive bar already carries the page identity; the native workspace
+   owns the compact in-game title bar below it. */
+.wiki-masthead {
+  display: none;
 }
 
 .wiki-masthead {
-  border-bottom-color: color-mix(in srgb, var(--arkive-nav-active) 46%, var(--border));
+  border-bottom: 0.25rem solid var(--ro3-navy);
   background:
-    url('./assets/native-ui/skill_bg_title_01.png') center bottom / 100% 3.25rem no-repeat,
-    var(--background);
+    url('./assets/native-ui/skill_bg_title_01.png') center top / 100% 3.25rem no-repeat,
+    var(--ro3-navy);
 }
 
 .wiki-masthead-inner {
@@ -2610,17 +3318,22 @@ select {
 }
 
 .wiki-title-block h1 {
-  color: var(--arkive-nav-active);
+  color: #f4d18a;
   font-size: 1.875rem;
+}
+
+.wiki-title-block p,
+.wiki-title-block > span {
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .wiki-view-tabs {
   display: flex;
   align-items: stretch;
   padding: 0.2rem;
-  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 42%, var(--border));
+  border: 1px solid rgba(242, 209, 143, 0.46);
   border-radius: var(--arkive-radius-compact);
-  background: var(--card);
+  background: var(--ro3-navy-soft);
 }
 
 .wiki-view-tabs button {
@@ -2631,7 +3344,7 @@ select {
   padding-inline: 0.8rem;
   border: 0;
   border-right: 1px solid color-mix(in srgb, var(--arkive-nav-active) 28%, transparent);
-  color: color-mix(in srgb, var(--foreground) 74%, transparent);
+  color: rgba(255, 255, 255, 0.72);
   background: transparent;
   font-size: 0.75rem;
   font-weight: 750;
@@ -2649,8 +3362,8 @@ select {
 
 .wiki-view-tabs button:hover,
 .wiki-view-tabs button.is-active {
-  color: var(--arkive-nav-active);
-  background: color-mix(in srgb, var(--card) 74%, var(--arkive-filter-active));
+  color: #f4d18a;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .wiki-view-tabs button.is-active {
@@ -2661,9 +3374,9 @@ select {
 }
 
 .wiki-stats {
-  border-color: color-mix(in srgb, var(--arkive-nav-active) 30%, var(--border));
+  border-color: rgba(242, 209, 143, 0.52);
   border-radius: var(--arkive-radius-compact);
-  background-color: var(--card);
+  background-color: var(--ro3-paper);
   background-image: url('./assets/native-ui/skill_bg_line.png');
   background-position: center bottom;
   background-repeat: no-repeat;
@@ -2673,6 +3386,7 @@ select {
 .wiki-content {
   gap: 1.5rem;
   padding-block: 1.75rem 4rem;
+  color: var(--ro3-ink);
 }
 
 .wiki-line-nav > div,
@@ -2680,7 +3394,7 @@ select {
 .wiki-skill-row,
 .wiki-card-row {
   border-color: color-mix(in srgb, var(--arkive-nav-active) 24%, var(--border));
-  background-color: var(--card);
+  background-color: var(--ro3-paper);
   background-image: url('./assets/native-ui/skill_bg_frame.png');
   background-position: center;
   background-repeat: no-repeat;
@@ -2703,7 +3417,7 @@ select {
 
 .wiki-line-nav button:hover,
 .wiki-line-nav button.is-active {
-  background-color: color-mix(in srgb, var(--arkive-filter-active) 78%, var(--card));
+  background-color: var(--ro3-paper-deep);
 }
 
 .wiki-line-nav button.is-active {
@@ -2756,7 +3470,7 @@ select {
 
 .wiki-profession-summary {
   border-radius: var(--arkive-radius-compact);
-  background-color: color-mix(in srgb, var(--card) 90%, var(--arkive-filter-active));
+  background-color: var(--ro3-paper);
 }
 
 .wiki-profession-summary-icon {
@@ -2782,7 +3496,7 @@ select {
   min-height: 7rem;
   border-color: color-mix(in srgb, var(--arkive-nav-active) 34%, var(--border));
   border-radius: var(--arkive-radius-compact);
-  background-color: var(--card);
+  background-color: var(--ro3-paper);
   background-image: url('./assets/native-ui/skill_bg_title_02.png');
   background-position: center top;
   background-repeat: no-repeat;
@@ -2792,7 +3506,7 @@ select {
 .wiki-stage-card:hover,
 .wiki-stage-card.is-active {
   border-color: var(--arkive-nav-active);
-  background-color: color-mix(in srgb, var(--arkive-filter-active) 65%, var(--card));
+  background-color: var(--ro3-paper-deep);
 }
 
 .wiki-skill-grid {
@@ -2819,7 +3533,7 @@ select {
 .wiki-skill-row:hover,
 .wiki-skill-row:focus-visible {
   border-color: var(--arkive-nav-active);
-  background-color: color-mix(in srgb, var(--arkive-filter-active) 72%, var(--card));
+  background-color: var(--ro3-paper-deep);
 }
 
 .wiki-skill-row-icon {
@@ -2910,7 +3624,7 @@ select {
 .wiki-card-row:hover,
 .wiki-card-row:focus-visible {
   border-color: var(--arkive-nav-active);
-  background-color: color-mix(in srgb, var(--arkive-filter-active) 72%, var(--card));
+  background-color: var(--ro3-paper-deep);
 }
 
 .wiki-card-art {
