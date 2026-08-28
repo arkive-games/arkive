@@ -29,6 +29,11 @@ dependencies = [
     "matplotlib (>=3.10.8,<4.0.0)",
     "datamodel-code-generator (>=0.64.0,<0.65.0)",
     "lupa (>=2.8,<3.0)",
+    # ro3: emulates FairGuardProtect.dll's block-0 key derivation offline, from the DLL
+    # file on disk. See apps/ro3/fairguard.py.
+    "unicorn (>=2.1.4,<3.0.0)",
+    # ro3: block-LZ4 at C speed, to index 188k decrypted bundles in minutes.
+    "lz4 (>=4.4.4,<5.0.0)",
 ]
 
 [dependency-groups]
