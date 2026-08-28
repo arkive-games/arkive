@@ -47,6 +47,7 @@ import {
   WIKI_STAGE_BY_ID,
   type WikiProfessionStage,
   type WikiSkillDetail,
+  getWikiSkillAsset,
   getWikiSkillDetail,
 } from './wikiCatalog'
 import heroImage from './assets/ro3-hero.webp'
@@ -661,28 +662,20 @@ function WikiPage({ view }: { view: WikiView }) {
             {skills.length > 0 ? (
               <div className="wiki-skill-table" role="table" aria-label={content.wiki.skillsTitle}>
                 <div className="wiki-skill-row is-header" role="row">
+                  <span role="columnheader">{content.wiki.icon}</span>
                   <span role="columnheader">{content.wiki.skillId}</span>
                   <span role="columnheader">{content.wiki.profession}</span>
                   <span role="columnheader">{content.wiki.stage}</span>
                   <span role="columnheader">{content.wiki.status}</span>
                 </div>
                 {skills.map(({ stage, skillId, evidence }) => (
-                  <button
-                    type="button"
-                    className="wiki-skill-row"
-                    role="row"
+                  <WikiSkillRow
                     key={skillId}
-                    onClick={() => setSelectedSkill(getWikiSkillDetail(stage, skillId))}
-                    aria-label={`${stage.label} ${skillId}`}
-                  >
-                    <strong role="cell">
-                      {skillId}
-                      <small>{evidence.eventName}</small>
-                    </strong>
-                      <span role="cell"><b>{stage.label}</b></span>
-                    <span role="cell">{content.wiki.tier.replace('{tier}', String(stage.tier))}</span>
-                    <span role="cell"><i />{content.wiki.eventIndexed}</span>
-                  </button>
+                    stage={stage}
+                    skillId={skillId}
+                    evidence={evidence}
+                    onSelect={() => setSelectedSkill(getWikiSkillDetail(stage, skillId))}
+                  />
                 ))}
               </div>
             ) : (
@@ -735,6 +728,41 @@ function ProfessionSummary({
   )
 }
 
+function WikiSkillRow({
+  stage,
+  skillId,
+  evidence,
+  onSelect,
+}: {
+  stage: WikiProfessionStage
+  skillId: string
+  evidence: { eventName: string }
+  onSelect: () => void
+}) {
+  const asset = getWikiSkillAsset(stage, skillId)
+
+  return (
+    <button
+      type="button"
+      className="wiki-skill-row"
+      role="row"
+      onClick={onSelect}
+      aria-label={`${stage.label} ${skillId}`}
+    >
+      <span role="cell" className="wiki-skill-row-icon">
+        {asset ? <img src={asset.path} alt="" loading="lazy" /> : <Zap aria-hidden="true" />}
+      </span>
+      <strong role="cell">
+        {skillId}
+        <small>{evidence.eventName}</small>
+      </strong>
+      <span role="cell"><b>{stage.label}</b></span>
+      <span role="cell">{content.wiki.tier.replace('{tier}', String(stage.tier))}</span>
+      <span role="cell"><i />{asset ? (asset.match === 'exact' ? content.wiki.iconExact : content.wiki.iconFamily) : content.wiki.iconUnavailable}</span>
+    </button>
+  )
+}
+
 function SkillDetail({ skill, onClose }: { skill: WikiSkillDetail; onClose: () => void }) {
   return (
     <div className="wiki-skill-dialog-backdrop" role="presentation" onMouseDown={(event) => {
@@ -745,7 +773,9 @@ function SkillDetail({ skill, onClose }: { skill: WikiSkillDetail; onClose: () =
           <X aria-hidden="true" />
         </button>
         <header className="wiki-skill-dialog-header">
-          <div className="wiki-skill-dialog-icon"><Zap aria-hidden="true" /></div>
+          <div className="wiki-skill-dialog-icon">
+            {skill.asset ? <img src={skill.asset.path} alt="" /> : <Zap aria-hidden="true" />}
+          </div>
           <div>
             <span>{content.wiki.skillDetail.eyebrow}</span>
             <h2 id="wiki-skill-dialog-title">{content.wiki.skillDetail.title.replace('{id}', skill.skillId)}</h2>
@@ -771,6 +801,16 @@ function SkillDetail({ skill, onClose }: { skill: WikiSkillDetail; onClose: () =
             <MissingSkillField icon={CircleHelp} label={content.wiki.skillDetail.description} />
             <MissingSkillField icon={ShieldCheck} label={content.wiki.skillDetail.values} />
           </div>
+          {skill.asset ? (
+            <div className="wiki-skill-asset-evidence">
+              <img src={skill.asset.path} alt="" />
+              <div>
+                <strong>{content.wiki.skillDetail.icon}</strong>
+                <span>{skill.asset.name}</span>
+                <small>{skill.asset.match === 'exact' ? content.wiki.skillDetail.iconExact : content.wiki.skillDetail.iconFamily}</small>
+              </div>
+            </div>
+          ) : null}
           <div className="wiki-skill-dialog-note">
             <Database aria-hidden="true" />
             <p>{content.wiki.skillDetail.note}</p>

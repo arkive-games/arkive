@@ -1,3 +1,8 @@
+const skillAssetModules = import.meta.glob('./assets/skills/*.webp', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>
+
 export interface WikiProfessionStage {
   id: string
   label: string
@@ -12,10 +17,18 @@ export interface WikiSkillEvidence {
   status: 'client-event-id'
 }
 
+export interface WikiSkillAsset {
+  name: string
+  family: string | null
+  path: string
+  match: 'exact' | 'family' | 'unmapped'
+}
+
 export interface WikiSkillDetail {
   stage: WikiProfessionStage
   skillId: string
   evidence: WikiSkillEvidence
+  asset: WikiSkillAsset | null
   fields: {
     name: 'unavailable'
     description: 'unavailable'
@@ -172,6 +185,34 @@ export const WIKI_PROFESSION_LINES: WikiProfessionLine[] = [
 
 export const WIKI_STAGE_BY_ID = new Map(stages.map((stage) => [stage.id, stage]))
 
+const SKILL_ICON_FAMILY_ALIASES: Record<string, string[]> = {
+  HighWizard: ['highwizard', 'archimage'],
+  ArchBishop: ['archbishop', 'arcbeeshop'],
+  Whitesmith: ['whitesmith', 'mastersmith'],
+  AssassinCross: ['assassincross', 'assasincross'],
+  GuillotineCross: ['guillotinecross', 'decapitator'],
+}
+
+export const WIKI_SKILL_ASSETS: WikiSkillAsset[] = Object.entries(skillAssetModules)
+  .map(([modulePath, path]) => {
+    const name = modulePath.split('/').pop()?.replace(/\.webp$/i, '') ?? modulePath
+    const ident = name.replace(/^icon_skill_/i, '')
+    const family = ident.includes('_') ? ident.split('_', 1)[0].toLowerCase() : null
+    return { name, family, path, match: 'unmapped' as const }
+  })
+  .sort((a, b) => a.name.localeCompare(b.name))
+
+export const WIKI_SKILL_ASSET_COUNT = WIKI_SKILL_ASSETS.length
+
+export function getWikiSkillAsset(stage: WikiProfessionStage, skillId: string): WikiSkillAsset | null {
+  const direct = WIKI_SKILL_ASSETS.find((asset) => asset.name.toLowerCase().endsWith(`_${skillId}`))
+  if (direct) return { ...direct, match: 'exact' }
+
+  const families = SKILL_ICON_FAMILY_ALIASES[stage.sourceName] ?? [stage.sourceName.toLowerCase()]
+  const familyAsset = WIKI_SKILL_ASSETS.find((asset) => asset.family && families.includes(asset.family))
+  return familyAsset ? { ...familyAsset, match: 'family' } : null
+}
+
 export const WIKI_SKILL_COUNT = stages.reduce((count, stage) => count + stage.skillIds.length, 0)
 
 export function getWikiSkillEvidence(stage: WikiProfessionStage, skillId: string): WikiSkillEvidence {
@@ -192,6 +233,7 @@ export function getWikiSkillDetail(stage: WikiProfessionStage, skillId: string):
     stage,
     skillId,
     evidence: getWikiSkillEvidence(stage, skillId),
+    asset: getWikiSkillAsset(stage, skillId),
     fields: {
       name: 'unavailable',
       description: 'unavailable',

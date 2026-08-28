@@ -5,6 +5,7 @@ import {
   WIKI_PROFESSION_LINES,
   WIKI_PROFESSION_STAGES,
   WIKI_PACKAGE_SOURCE,
+  WIKI_SKILL_ASSET_COUNT,
   WIKI_SKILL_COUNT,
   WIKI_STAGE_BY_ID,
 } from './wikiCatalog'
@@ -51,7 +52,8 @@ describe('RO3 Wiki catalog', () => {
 
   it('keeps unavailable skill fields explicit instead of inventing details', () => {
     const stage = WIKI_STAGE_BY_ID.get('rune-knight')!
-    expect(getWikiSkillDetail(stage, '11301')).toEqual({
+    const detail = getWikiSkillDetail(stage, '11301')
+    expect(detail).toMatchObject({
       stage,
       skillId: '11301',
       evidence: {
@@ -65,5 +67,11 @@ describe('RO3 Wiki catalog', () => {
         values: 'unavailable',
       },
     })
+    expect(detail.asset?.path).toMatch(/icon_skill_runeknight_/)
+    expect(detail.asset?.match).toBe('family')
+  })
+
+  it('bundles the extracted client skill icon inventory', () => {
+    expect(WIKI_SKILL_ASSET_COUNT).toBe(1106)
   })
 })

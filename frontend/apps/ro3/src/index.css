@@ -1409,7 +1409,7 @@ select {
 .wiki-skill-row {
   display: grid;
   min-height: 3.25rem;
-  grid-template-columns: minmax(7rem, 0.7fr) minmax(10rem, 1fr) minmax(7rem, 0.65fr) minmax(10rem, 1fr);
+  grid-template-columns: 3.75rem minmax(7rem, 0.7fr) minmax(10rem, 1fr) minmax(7rem, 0.65fr) minmax(10rem, 1fr);
   align-items: center;
   border-bottom: 1px solid var(--border);
   border-inline: 0;
@@ -1466,6 +1466,25 @@ select {
   font-size: 0.875rem;
 }
 
+.wiki-skill-row-icon {
+  display: grid;
+  place-items: center;
+}
+
+.wiki-skill-row-icon img,
+.wiki-skill-row-icon > svg {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--arkive-radius-compact);
+  object-fit: cover;
+}
+
+.wiki-skill-row-icon > svg {
+  padding: 0.35rem;
+  color: var(--muted-foreground);
+  background: var(--muted);
+}
+
 .wiki-skill-row > strong small {
   overflow: hidden;
   color: var(--muted-foreground);
@@ -1476,15 +1495,15 @@ select {
   white-space: nowrap;
 }
 
-.wiki-skill-row > span:nth-child(2) {
+.wiki-skill-row > span:nth-child(3) {
   display: grid;
 }
 
-.wiki-skill-row > span:nth-child(2) b {
+.wiki-skill-row > span:nth-child(3) b {
   font-size: 0.8125rem;
 }
 
-.wiki-skill-row > span:nth-child(2) small {
+.wiki-skill-row > span:nth-child(3) small {
   color: var(--muted-foreground);
   font-size: 0.75rem;
 }
@@ -1857,6 +1876,13 @@ select {
   height: 1.5rem;
 }
 
+.wiki-skill-dialog-icon img {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--arkive-radius-compact);
+  object-fit: cover;
+}
+
 .wiki-skill-dialog-header span {
   color: var(--arkive-nav-active);
   font-size: 0.75rem;
@@ -2007,6 +2033,41 @@ select {
   line-height: 1.6;
 }
 
+.wiki-skill-asset-evidence {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  background: color-mix(in srgb, var(--arkive-filter-active) 36%, var(--card));
+}
+
+.wiki-skill-asset-evidence img {
+  width: 3rem;
+  height: 3rem;
+  flex: none;
+  border-radius: var(--arkive-radius-compact);
+  object-fit: cover;
+}
+
+.wiki-skill-asset-evidence div {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.wiki-skill-asset-evidence strong {
+  font-size: 0.75rem;
+}
+
+.wiki-skill-asset-evidence span,
+.wiki-skill-asset-evidence small {
+  overflow-wrap: anywhere;
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+}
+
 @media (max-width: 74rem) {
   .wiki-masthead-inner {
     grid-template-columns: minmax(16rem, 0.8fr) minmax(26rem, 1.2fr);
@@ -2138,7 +2199,7 @@ select {
   }
 
   .wiki-skill-row {
-    grid-template-columns: minmax(6.5rem, 0.7fr) minmax(9rem, 1fr) minmax(6rem, 0.65fr);
+    grid-template-columns: 3.25rem minmax(6.5rem, 0.7fr) minmax(9rem, 1fr) minmax(6rem, 0.65fr);
   }
 
   .wiki-skill-row > *:last-child {
@@ -2253,10 +2314,10 @@ select {
   }
 
   .wiki-skill-row {
-    grid-template-columns: minmax(6rem, 0.75fr) minmax(8rem, 1fr);
+    grid-template-columns: 3rem minmax(6rem, 0.75fr) minmax(8rem, 1fr);
   }
 
-  .wiki-skill-row > *:nth-child(3) {
+  .wiki-skill-row > *:nth-child(4) {
     display: none;
   }
 

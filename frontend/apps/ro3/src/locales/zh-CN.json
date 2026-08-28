@@ -131,7 +131,7 @@
       "skills": "职业技能",
       "cards": "卡片图鉴"
     },
-    "sourceNote": "职业阶段来自客户端职业演示资源，技能条目来自玩家技能音频事件。加密配置表未确认前，不展示推测的技能名称、说明或数值。清单指纹：",
+    "sourceNote": "职业阶段和技能事件来自客户端提取；技能图标已随页面打包。图标只能按客户端职业命名族关联，编号映射、名称、说明和数值仍待配置表确认。清单指纹：",
     "stats": {
       "lines": "基础职业",
       "stages": "职业阶段",
@@ -148,11 +148,15 @@
     "skillCount": "{count} 个技能编号",
     "skillsEyebrow": "客户端索引",
     "skillsTitle": "技能条目",
-    "skillsDescription": "内部编号可用于后续对照技能名称、图标和数值表。",
+    "skillsDescription": "每条技能均展示客户端提取图标；编号映射未确认的图标会标记为职业族候选。",
     "searchLabel": "搜索职业或技能编号",
     "searchPlaceholder": "输入职业或技能编号",
     "allStages": "全部阶段",
     "resultCount": "共 {count} 条",
+    "icon": "图标",
+    "iconExact": "编号图标已确认",
+    "iconFamily": "职业族候选图标",
+    "iconUnavailable": "暂无图标",
     "skillId": "技能编号",
     "profession": "所属职业",
     "stage": "转职阶段",
@@ -177,11 +181,14 @@
       "profession": "所属职业",
       "eventName": "客户端事件",
       "source": "资料来源",
+      "icon": "技能图标",
+      "iconExact": "图标文件名包含对应技能编号。",
+      "iconFamily": "图标来自该职业的客户端命名族；安装包未提供技能编号映射。",
       "name": "技能名称",
       "description": "技能说明",
       "values": "等级与数值",
       "unavailable": "暂无数据",
-      "note": "客户端目前只暴露技能编号与事件名；技能名称、说明、等级和数值位于尚未提供明文行的加密配置表中，因此这里不显示推测内容。"
+      "note": "客户端目前只暴露技能编号与事件名。图标来自已解密的 Unity Sprite 资源，并按职业命名族提供候选图；技能名称、说明、等级和数值位于尚未提供明文行的加密配置表中，因此这里不显示推测内容。"
     },
     "cards": {
       "filterLabel": "卡片类型",
