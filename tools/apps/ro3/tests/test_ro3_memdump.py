@@ -51,3 +51,22 @@ def test_carve_accepts_only_decrypted_il2cpp_metadata():
     # otherwise every scan would flag the encrypted copy mapped from disk
     bad = md.IL2CPP_MAGIC + (1813808443).to_bytes(4, "little") + b"\x00" * 32
     assert "il2cpp-metadata" not in {k for _o, k in md.carve(bad)}
+
+
+def test_windows_only_surface_is_bound_lazily():
+    """The Win32 API must not be touched at import.
+
+    `ctypes.wintypes` and `ctypes.WinDLL` are Windows-only, so binding them at
+    module scope made this module — and therefore this test file — fail to import
+    anywhere else, which is also what made `main`'s platform guard unreachable.
+    """
+    assert hasattr(md, "_IS_WINDOWS")
+    for name in ("wt", "k32", "MEMORY_BASIC_INFORMATION64"):
+        assert hasattr(md, name) is md._IS_WINDOWS, name
+
+
+def test_main_refuses_off_windows(monkeypatch, tmp_path, capsys):
+    # Reachable now: previously the import died before main was ever entered.
+    monkeypatch.setattr(md, "_IS_WINDOWS", False)
+    assert md.main(["--out", str(tmp_path)]) == 2
+    assert "Windows-only" in capsys.readouterr().err

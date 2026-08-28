@@ -36,7 +36,10 @@ export function SiteInfo({ className }: { className?: string }) {
       arkiveHomeUrl={ARKIVE_HOME_URL}
       arkiveHomeLinkProps={{ target: '_blank', rel: 'noopener noreferrer' }}
       gameName={t('siteInfo.gameName')}
-      developerName="Mega Crit"
+      // The client's own rights holder: RagnarokOnline3.exe carries
+      // "Copyright(C)2025 上海幻电信息科技有限公司", and its Unity app.info names gravity as
+      // the developer. A game-sourced legal name, so it stays unlocalized.
+      developerName="上海幻电信息科技有限公司"
       version={SITE_VERSION}
       gameUpdatesUrl={IS_TOY ? '#/changelog' : '/changelog'}
       feedbackGroup={{

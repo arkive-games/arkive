@@ -38,10 +38,18 @@ from __future__ import annotations
 
 import argparse
 import ctypes
-import ctypes.wintypes as wt
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+#: The Win32 surface is bound behind this rather than at import, so `carve` — the
+#: only pure part, and the part the tests exercise — is importable anywhere. Both
+#: `ctypes.wintypes` and `ctypes.WinDLL` are Windows-only (`WinDLL` exists only
+#: under `os.name == "nt"`, and `wintypes` declares VARIANT_BOOL with a type code
+#: other builds reject), so importing them unconditionally made the docstring's
+#: "nothing here runs on import" false, made `main`'s platform guard unreachable
+#: behind an import traceback, and made the test module fail during collection.
+_IS_WINDOWS = sys.platform == "win32"
 
 PROCESS_QUERY_INFORMATION = 0x0400
 PROCESS_VM_READ = 0x0010
@@ -61,21 +69,23 @@ IL2CPP_MAGIC = b"\xaf\x1b\xb1\xfa"
 # version instead of garbage. Recovering it once turns every later step into offline work.
 IL2CPP_VERSIONS = (24, 27, 29, 31)
 
-k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+if _IS_WINDOWS:
+    import ctypes.wintypes as wt
 
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 
-class MEMORY_BASIC_INFORMATION64(ctypes.Structure):
-    _fields_ = [
-        ("BaseAddress", ctypes.c_ulonglong),
-        ("AllocationBase", ctypes.c_ulonglong),
-        ("AllocationProtect", wt.DWORD),
-        ("__alignment1", wt.DWORD),
-        ("RegionSize", ctypes.c_ulonglong),
-        ("State", wt.DWORD),
-        ("Protect", wt.DWORD),
-        ("Type", wt.DWORD),
-        ("__alignment2", wt.DWORD),
-    ]
+    class MEMORY_BASIC_INFORMATION64(ctypes.Structure):
+        _fields_ = [
+            ("BaseAddress", ctypes.c_ulonglong),
+            ("AllocationBase", ctypes.c_ulonglong),
+            ("AllocationProtect", wt.DWORD),
+            ("__alignment1", wt.DWORD),
+            ("RegionSize", ctypes.c_ulonglong),
+            ("State", wt.DWORD),
+            ("Protect", wt.DWORD),
+            ("Type", wt.DWORD),
+            ("__alignment2", wt.DWORD),
+        ]
 
 
 @dataclass(frozen=True, slots=True)
@@ -224,7 +234,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="skip regions larger than this (bytes)")
     args = ap.parse_args(argv)
 
-    if sys.platform != "win32":
+    if not _IS_WINDOWS:
         print("this tool is Windows-only", file=sys.stderr)
         return 2
 
