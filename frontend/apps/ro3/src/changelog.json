@@ -1,19 +1,19 @@
 {
- "entries": [
-  {
-   "version": "0.1.0",
-   "date": "2026-08-26",
-   "commit": "c282ea27f78ad2c213821270114a177de1ae8a01",
-   "changes": [
+  "entries": [
     {
-     "kind": "feature",
-     "text": {
-      "en-US": "New Ragnarok Online 3 site: the shell is live with theme, language and account controls. Game data is not available yet — the game encrypts its asset bundles, and pages will appear here as extraction lands.",
-      "zh-CN": "全新《仙境传说3》资料站上线：已提供主题、语言与账号功能。游戏数据尚未开放——游戏对资源包做了加密，页面会随着数据提取的推进陆续开放。",
-      "zh-TW": "全新《仙境傳說3》資料站上線：已提供主題、語言與帳號功能。遊戲資料尚未開放——遊戲對資源包做了加密，頁面會隨著資料擷取的推進陸續開放。"
-     }
+      "version": "0.1.0",
+      "date": "2026-08-28",
+      "commit": "5fdcde849ab10337a4523c7dcaf05ff9f3287500",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Introduced the Ragnarok 3 guide hub with profession and skill references plus a 202-record card Wiki derived from the game client.",
+            "zh-CN": "新增仙境传说 3 综合攻略页、职业与技能资料，以及从游戏客户端提取的 202 条卡片 Wiki。",
+            "zh-TW": "新增仙境傳說 3 綜合攻略頁、職業與技能資料，以及從遊戲客戶端提取的 202 條卡片 Wiki。"
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

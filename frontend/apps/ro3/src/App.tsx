@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react'
 import { ArkiveMapTopBar, ArkiveMobileHeader, useTheme, type ShellNavItem } from '@gamemap/map-shell'
+import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
 import { filterGuides, type GuideEntry, type GuideScope, type GuideSort } from './guideCatalog'
 import {
   CARD_CLIENT_VERSION,
@@ -45,6 +46,7 @@ import {
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
 import content from './locales/zh-CN.json'
+import changelogRaw from './changelog.json'
 
 const HOME_URL = import.meta.env.VITE_HOME_URL
   ?? (import.meta.env.DEV ? 'http://localhost:15172' : 'https://tc-imba.com')
@@ -56,15 +58,18 @@ const DESTINATIONS = {
 }
 
 const WIKI_URL = import.meta.env.VITE_RO3_WIKI_URL
+const CHANGELOG = changelogRaw as ChangelogFile
+const SITE_VERSION = CHANGELOG.entries[0].version
 
 const GUIDES: GuideEntry[] = []
 
 type DestinationKey = keyof typeof DESTINATIONS
 type IconComponent = ComponentType<{ 'aria-hidden'?: boolean | 'true' }>
-type Page = 'overview' | 'wiki'
+type Page = 'overview' | 'wiki' | 'changelog'
 type WikiView = 'skills' | 'cards'
 
 function getInitialPage(): Page {
+  if (window.location.pathname.replace(/\/$/, '').endsWith('/changelog')) return 'changelog'
   return new URLSearchParams(window.location.search).get('view') === 'wiki' ? 'wiki' : 'overview'
 }
 
@@ -85,7 +90,11 @@ function App() {
   })), [page])
 
   useEffect(() => {
-    document.title = page === 'wiki' ? content.wiki.documentTitle : content.documentTitle
+    document.title = page === 'wiki'
+      ? content.wiki.documentTitle
+      : page === 'changelog'
+        ? content.changelog.documentTitle
+        : content.documentTitle
   }, [page])
 
   useEffect(() => {
@@ -121,6 +130,7 @@ function App() {
 
   const navigateToPage = (nextPage: Page) => {
     const url = new URL(window.location.href)
+    url.pathname = nextPage === 'changelog' ? '/changelog' : '/'
     if (nextPage === 'wiki') url.searchParams.set('view', 'wiki')
     else url.searchParams.delete('view')
     window.history.pushState({}, '', url)
@@ -142,7 +152,7 @@ function App() {
       return
     }
     if (key === 'classes' || key === 'dungeons') {
-      if (page !== 'overview') setPage('overview')
+      if (page !== 'overview') navigateToPage('overview')
       setScope(key === 'classes' ? 'class' : 'dungeon')
       window.setTimeout(() => document.querySelector('#guide-browser')?.scrollIntoView({ behavior: 'smooth' }))
       return
@@ -221,6 +231,8 @@ function App() {
 
       {page === 'wiki' ? (
         <WikiPage onBack={() => navigateToPage('overview')} />
+      ) : page === 'changelog' ? (
+        <ChangelogPage onBack={() => navigateToPage('overview')} />
       ) : (
       <main>
         <section className="ro3-hero" aria-labelledby="ro3-title">
@@ -371,6 +383,24 @@ function App() {
       </main>
       )}
 
+      <SiteFooter
+        className="ro3-footer"
+        homeUrl={HOME_URL}
+        githubUrl={import.meta.env.VITE_GITHUB_URL}
+        icpBeian={import.meta.env.VITE_ICP_BEIAN}
+        versionLink={(
+          <a
+            href="/changelog"
+            onClick={(event) => {
+              event.preventDefault()
+              navigateToPage('changelog')
+            }}
+          >
+            v{SITE_VERSION}
+          </a>
+        )}
+      />
+
       {noticeId > 0 ? (
         <div key={noticeId} className="ro3-toast" role="status" aria-live="polite">
           <span><Sparkles aria-hidden="true" /></span>
@@ -381,6 +411,34 @@ function App() {
         </div>
       ) : null}
     </div>
+  )
+}
+
+function ChangelogPage({ onBack }: { onBack: () => void }) {
+  const entries = useMemo(() => resolveChangelog(CHANGELOG, 'zh-CN'), [])
+
+  return (
+    <main className="ro3-changelog">
+      <div className="ro3-shell">
+        <button type="button" className="wiki-back" onClick={onBack}>
+          <ArrowLeft aria-hidden="true" />
+          {content.changelog.back}
+        </button>
+        <header>
+          <span>{content.changelog.eyebrow}</span>
+          <h1>{content.changelog.title}</h1>
+          <p>{content.changelog.description}</p>
+        </header>
+        <VersionHistory
+          entries={entries}
+          labels={{
+            current: content.changelog.current,
+            empty: content.changelog.empty,
+            kinds: content.changelog.kinds,
+          }}
+        />
+      </div>
+    </main>
   )
 }
 

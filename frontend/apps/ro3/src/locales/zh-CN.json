@@ -24,6 +24,21 @@
   },
   "login": "登录",
   "unavailable": "暂无功能",
+  "changelog": {
+    "documentTitle": "仙境传说 3 更新日志 | 藏舟攻略",
+    "back": "返回综合页",
+    "eyebrow": "VERSION HISTORY",
+    "title": "更新日志",
+    "description": "查看仙境传说 3 资料站的版本变化与对应代码提交。",
+    "current": "当前版本",
+    "empty": "暂无更新记录",
+    "kinds": {
+      "feature": "新功能",
+      "improvement": "优化",
+      "fix": "修复",
+      "data": "数据"
+    }
+  },
   "hero": {
     "eyebrow": "THE RAGNAROK ONLINE 3RD",
     "title": "仙境传说 3",

@@ -44,6 +44,43 @@ select {
   background: var(--background);
 }
 
+.ro3-footer {
+  background: var(--card);
+}
+
+.ro3-changelog {
+  min-height: calc(100dvh - 7rem);
+  padding: 2rem 0 4rem;
+}
+
+.ro3-changelog > .ro3-shell {
+  max-width: 58rem;
+}
+
+.ro3-changelog header {
+  margin: 1.5rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+
+.ro3-changelog header > span {
+  color: var(--arkive-nav-active);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ro3-changelog header h1 {
+  margin-top: 0.35rem;
+  font-size: 1.875rem;
+  font-weight: 800;
+}
+
+.ro3-changelog header p {
+  margin-top: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
 .ro3-shell {
   width: min(88rem, calc(100% - 4rem));
   margin-inline: auto;
