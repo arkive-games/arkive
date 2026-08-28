@@ -3,8 +3,12 @@
 Set the variables in ``tools/.env`` (see ``tools/.env.example``) or export them:
 
   RO3_GAME      the installed game's Unity data directory (``ro3_Data``), read
-                directly by :mod:`.vfs` to walk ``StreamingAssets/VFS``
+                directly by :mod:`.vfs` to walk ``StreamingAssets/VFS``. Its parent is
+                also where :mod:`.fairguard` reads ``FairGuardProtect.dll`` from.
   RO3_RAW       unex export root (Texture2D/, MonoBehaviour/, guid-index.json)
+  RO3_STAGE     where :mod:`.unpack` writes deobfuscated, standard UnityFS bundles for
+                unex to read. Optional; defaults to ``RO3_RAW/decrypted``. Worth setting
+                explicitly because the full stage is the size of the game's VFS (23 GB).
   RO3_DATA_OUT  data-ro3 repo (dataset the frontend fetches)
   RO3_RES_OUT   resource-ro3 repo (WebP tiles + icons)
 """
