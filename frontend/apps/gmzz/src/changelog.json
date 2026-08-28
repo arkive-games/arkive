@@ -1,3 +1,19 @@
 {
- "entries": []
+ "entries": [
+  {
+   "version": "0.1.0",
+   "date": "2026-08-29",
+   "commit": "c4f3ce0a39c60f8cbe094bb3d9d0feab1eee0a64",
+   "changes": [
+    {
+     "kind": "feature",
+     "text": {
+      "en-US": "New Lord of Mysteries wiki: the Train Trade goods catalogue with base prices, buy and sell stations and item icons, a station planner, and the Utopian Theater memory-fragment cards.",
+      "zh-CN": "全新诡秘之主资料库：铁路大亨货物图鉴（含基础价格、买入与卖出站点、物品图标）、站点规划工具，以及乌托邦剧场记忆碎片卡牌。",
+      "zh-TW": "全新詭祕之主資料庫：鐵路大亨貨物圖鑑（含基礎價格、買入與賣出站點、物品圖示）、站點規劃工具，以及烏托邦劇場記憶碎片卡牌。"
+     }
+    }
+   ]
+  }
+ ]
 }
