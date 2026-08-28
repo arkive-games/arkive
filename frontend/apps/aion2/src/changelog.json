@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.17.0",
+      "date": "2026-08-28",
+      "commit": "e537196722b2c66c37b20a5610d4b04fc1b7878e",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Train Tycoon goods wiki with searchable cargo cards, quality filters, prices, stations, and item icons.",
+            "zh-CN": "新增铁路大亨货物百科，可按类别、品质与关键词查找货物，并查看价格、站点和图标。",
+            "zh-TW": "新增鐵路大亨貨物百科，可按類別、品質與關鍵字查找貨物，並查看價格、站點和圖示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.16.0",
       "date": "2026-08-12",
       "commit": "3ae952c2caea5d37cec69bae3f9028c9510d5c94",
