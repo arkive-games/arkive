@@ -30,7 +30,7 @@ const QUALITY_SURFACE_CLASS: Record<number, string> = {
 };
 
 export default function UtopianTheaterPage() {
-  const { t } = useTranslation("wiki");
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<UtopiaCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);

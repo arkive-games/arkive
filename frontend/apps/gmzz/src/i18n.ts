@@ -251,7 +251,7 @@ const en = {
     "eyebrow": "Lord of Mysteries · Utopian Theater",
     "siteTitle": "Lord of Mysteries Wiki",
     "title": "Utopian Theater",
-    "description": "Browse {{count}} memory-fragment combat entries from the game package, grouped by shared and pathway pools.",
+    "description": "Browse {{count}} memory-fragment combat entries from the game package, grouped by the tag the client assigns.",
     "dungeonNote": "Dungeon length: 4 floors on Normal, 6 on Hard and Nightmare; candidate order is generated at runtime.",
     "homeSummary": "Memory fragments",
     "homeDescription": "Filter Utopian Theater combat bonuses by pathway, quality, and keyword.",
@@ -273,9 +273,10 @@ const en = {
       "general": "Shared pool",
       "paths": "Pathways"
     },
-    "tagLabel": "Pool",
-    "tagHint": "Filter by shared or pathway pool",
-    "tags": "Memory-fragment pools",
+    "tagLabel": "Group",
+    "tagHint": "Filter by the group the client assigns",
+    "tags": "Memory-fragment groups",
+    "all": "All",
     "tagAll": "All"
   },
   catalogPagination: {
@@ -507,7 +508,7 @@ const zhCN: Strings = {
     "eyebrow": "诡秘之主 · 乌托邦剧院",
     "siteTitle": "诡秘之主百科",
     "title": "乌托邦剧院",
-    "description": "收录包体内 {{count}} 条记忆碎片战斗词条，按通用卡池与职业途径整理。",
+    "description": "共 {{count}} 条乌托邦剧场记忆碎片，按游戏内标记的分组归类。",
     "dungeonNote": "副本层数：普通 4 层，困难与噩梦各 6 层；具体候选顺序由运行时生成。",
     "homeSummary": "记忆碎片词条",
     "homeDescription": "按途径、品质和关键词快速筛选乌托邦剧院的战斗增益。",
@@ -529,9 +530,10 @@ const zhCN: Strings = {
       "general": "通用词条",
       "paths": "职业途径"
     },
-    "tagLabel": "卡池",
-    "tagHint": "按通用或职业途径筛选",
-    "tags": "记忆碎片卡池",
+    "tagLabel": "分组",
+    "tagHint": "按游戏内标记的分组筛选",
+    "tags": "记忆碎片分组",
+    "all": "全部",
     "tagAll": "全部"
   },
   catalogPagination: {
@@ -762,7 +764,7 @@ const zhTW: Strings = {
     "eyebrow": "詭秘之主 · 烏托邦劇院",
     "siteTitle": "詭秘之主百科",
     "title": "烏托邦劇院",
-    "description": "收錄包體內 {{count}} 條記憶碎片戰鬥詞條，按通用卡池與職業途徑整理。",
+    "description": "共 {{count}} 條烏托邦劇場記憶碎片，依遊戲內標記的分組歸類。",
     "dungeonNote": "副本層數：普通 4 層，困難與噩夢各 6 層；具體候選順序由執行時產生。",
     "homeSummary": "記憶碎片詞條",
     "homeDescription": "按途徑、品質和關鍵字快速篩選烏托邦劇院的戰鬥增益。",
@@ -784,9 +786,10 @@ const zhTW: Strings = {
       "general": "通用詞條",
       "paths": "職業途徑"
     },
-    "tagLabel": "卡池",
-    "tagHint": "按通用或職業途徑篩選",
-    "tags": "記憶碎片卡池",
+    "tagLabel": "分組",
+    "tagHint": "依遊戲內標記的分組篩選",
+    "tags": "記憶碎片分組",
+    "all": "全部",
     "tagAll": "全部"
   },
   catalogPagination: {

@@ -5,8 +5,8 @@ import { ContentPage } from '../../components/ContentPage'
 import { getGameVersion } from '../../lib/urls'
 
 const SECTIONS = [
-  { to: '/traintrade', titleKey: 'trainTrade.title', bodyKey: 'trainTrade.description' },
-  { to: '/utopia', titleKey: 'utopianTheater.title', bodyKey: 'utopianTheater.description' },
+  { to: '/traintrade', titleKey: 'trainTrade.title', bodyKey: 'trainTrade.homeDescription' },
+  { to: '/utopia', titleKey: 'utopianTheater.title', bodyKey: 'utopianTheater.homeDescription' },
 ] as const
 
 export default function HomePage() {

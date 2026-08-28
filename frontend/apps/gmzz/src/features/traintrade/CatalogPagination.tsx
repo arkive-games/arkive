@@ -10,7 +10,7 @@ export default function CatalogPagination({
   pageCount: number;
   onPageChange: (page: number) => void;
 }) {
-  const { t } = useTranslation("wiki");
+  const { t } = useTranslation();
 
   if (pageCount <= 1) return null;
 

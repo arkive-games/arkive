@@ -40,7 +40,7 @@ const STATION_TONE: Record<StationType, string> = {
 };
 
 export default function TrainTradeStationToolPage() {
-  const { t } = useTranslation("wiki");
+  const { t } = useTranslation();
   const [difficulty, setDifficulty] = useState<DifficultyId | "">("");
   const [totals, setTotals] = useState<StationTotals>(DEFAULT_TOTALS);
   const [quotaConfirmed, setQuotaConfirmed] = useState(false);
@@ -415,7 +415,7 @@ function OriginPrompt({
   onHintChange: (hint: HintId | "") => void;
   onConfirm: () => void;
 }) {
-  const { t } = useTranslation("wiki");
+  const { t } = useTranslation();
   const availableHints = getAvailableHints(sequences, 0);
 
   return (
@@ -467,7 +467,7 @@ function ForecastWorkspace({
   onHintChange: (hint: HintId | "") => void;
   onConfirm: (type: StationType, hint: HintId) => void;
 }) {
-  const { t } = useTranslation("wiki");
+  const { t } = useTranslation();
   const latestStart = steps.length;
   const latestStep = steps.at(-1);
   const complete = steps.length >= stationCount - 3;
@@ -560,7 +560,7 @@ function HintSelect({
   available: Set<HintId>;
   onChange: (hint: HintId | "") => void;
 }) {
-  const { t } = useTranslation("wiki");
+  const { t } = useTranslation();
   return (
     <label className="grid gap-1.5 text-xs font-semibold text-muted-foreground">
       {t("trainTrade.stationTool.planner.futureHint")}
@@ -582,7 +582,7 @@ function HintSelect({
 }
 
 function ResolvedWindow({ sequences, start, detail }: { sequences: Sequence[]; start: number; detail: string }) {
-  const { t } = useTranslation("wiki");
+  const { t } = useTranslation();
   const probabilities = roundedProbabilities(probabilityFor(sequences, start));
   const leading = Math.max(...STATION_TYPES.map((type) => probabilities[type]));
   const combinations = windowDistribution(sequences, start);

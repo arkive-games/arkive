@@ -45,7 +45,7 @@ const QUALITY_RAIL_CLASS: Record<number, string> = {
 };
 
 export default function TrainTradeGoodsPage() {
-  const { t } = useTranslation("wiki");
+  const { t } = useTranslation();
   const [goods, setGoods] = useState<TrainTradeGoods[]>([]);
   const [category, setCategory] = useState<Category>("all");
   const [quality, setQuality] = useState<Quality>("all");
