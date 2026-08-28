@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.0",
+      "date": "2026-08-29",
+      "commit": "1478bd9e10f485136ad221637ec2fe26eb747a4a",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Split the encyclopedia into native skill-tree and card-loadout workspaces.",
+            "zh-CN": "百科拆分为原生技能树与卡组工作区。",
+            "zh-TW": "百科拆分為原生技能樹與卡組工作區。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "date": "2026-08-29",
       "commit": "9a091648bda012b98018c4ad40b8125fc479e45b",
