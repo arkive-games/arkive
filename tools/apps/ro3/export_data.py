@@ -8,19 +8,16 @@ Two sources, because the game splits its content two ways:
   :mod:`.catalog` indexed all 188,361 of them. That is where the skill icons, boss models
   and monster portraits are (see :mod:`.assets_index`).
 
-What is still **not** in the client, and is therefore not emitted:
+Every row this module emits is keyed by an identifier the game itself uses -- an icon name,
+a class name, a scene name -- because that is all the asset side carries.
 
-* **skill text and skill numeric values.** The protobuf schema declares 83 ``Asset_*``
-  config-table types (``Asset_SkillGrowth``, ``Asset_MultiDungeon``, ...) but no rows ship
-  with them. Searching all 188,361 bundles finds no config table either: the 710
-  ``TextAsset`` objects are Spine ``.atlas``/``.skel`` and GPU-skinning data, and the
-  20,948 named ``MonoBehaviour`` objects are scene, render and Spine settings.
-* **display names in any language.** The client's own Lua (14,479 chunks) has its string
-  constants separately obfuscated, and ``global-metadata.dat`` is encrypted past its
-  4-byte magic — its version field reads as 1,813,808,443 and its string blob is noise.
-
-So every row here is keyed by the identifier the game itself uses. Nothing is translated,
-described or given a number it did not ship with.
+The **tables** -- skills, NPCs, the language tables and the rest -- come from the client's
+Lua instead, and :mod:`.export_config` and its sibling export stages emit them. They were
+unreadable while the four layers of Lua obfuscation stood, which is why this module's earlier
+notes said skill text and skill numbers were not in the client at all; :mod:`.lua` undid those
+layers, and that claim is retired. What remains true is that no *bundle* holds a config table
+and that ``global-metadata.dat`` is still encrypted -- neither turned out to be where the
+tables live.
 """
 
 from __future__ import annotations
@@ -215,14 +212,13 @@ def main() -> None:
 
     skill_rows = assets_index.skills(index) if index else []
     talent_rows = assets_index.talents(index) if index else []
-    write_json(out / "skills.json", {
+    write_json(out / "skill-icons.json", {
         "source": "icon_skill_* / icon_talent_* sprites in the decrypted Unity bundles",
         "note": (
-            "the skill icon inventory, not a skill table. Each row is an icon the client "
-            "ships and a family taken from the icon's own name. Skill text and numeric "
-            "values are NOT in the client: Asset_Skill* is declared in the protobuf schema "
-            "but ships no rows, no bundle holds a config table, and both the Lua string "
-            "constants and global-metadata.dat are separately encrypted."
+            "the skill icon inventory, not a skill table -- each row is an icon the client "
+            "ships and a family taken from the icon's own name. The skill table itself is "
+            "skills.json, which joins to these icons on its kIcon column; an icon here "
+            "with no skill row is art the tables do not reference."
         ),
         "counts": {
             "skills": len(skill_rows),
@@ -237,11 +233,11 @@ def main() -> None:
     write_json(out / "schema.json", {
         "source": "MG_Define.proto (package romsg)",
         "note": (
-            "config-table message types. Their rows are not in the client: no bundle among "
-            "188,361 holds one, the Lua chunks have obfuscated string constants, and "
-            "global-metadata.dat is encrypted past its 4-byte magic. Treat every Asset_* "
-            "below as a known-missing table rather than as something still to be found in "
-            "the files."
+            "the config-table message types the network schema declares. No bundle among "
+            "188,361 ships rows for them - the client's tables are Lua, under "
+            "Config/DataConfig, and the ones this dataset carries are named in each table "
+            "file's own source field. An Asset_* below with no corresponding table here is "
+            "a table nobody has looked for yet, not a table proven absent."
         ),
         "assetTables": data["assetTables"],
     })
@@ -254,7 +250,7 @@ def main() -> None:
     if index is None:
         print("catalogue    : not found - run `python -m ro3.unpack` then `python -m ro3.catalog`")
     else:
-        print(f"skills       : {len(skill_rows)} icons, {len(talent_rows)} talents")
+        print(f"skill icons  : {len(skill_rows)} icons, {len(talent_rows)} talents")
         print(f"boss models  : {len(boss_rows)}")
         print(f"monsters     : {len(monster_rows)} portraits")
     print(f"placements   : {data['placements']} (not emitted)")
