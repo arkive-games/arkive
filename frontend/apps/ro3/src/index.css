@@ -1107,6 +1107,79 @@ select {
   border-bottom: 1px solid var(--border);
 }
 
+.wiki-profession-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 28%, var(--border));
+  border-radius: var(--arkive-radius-standard);
+  background: color-mix(in srgb, var(--arkive-filter-active) 36%, var(--card));
+}
+
+.wiki-profession-summary-icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 45%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  color: var(--arkive-nav-active);
+  background: var(--card);
+}
+
+.wiki-profession-summary-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.wiki-profession-summary-copy > span {
+  color: var(--arkive-nav-active);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.wiki-profession-summary-copy h3 {
+  margin: 0.15rem 0 0;
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+.wiki-profession-summary-copy p {
+  margin: 0.25rem 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.wiki-profession-summary-stats {
+  display: flex;
+  margin: 0;
+  border-left: 1px solid var(--border);
+}
+
+.wiki-profession-summary-stats div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 4.5rem;
+  padding-inline: 0.85rem;
+}
+
+.wiki-profession-summary-stats dt {
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+}
+
+.wiki-profession-summary-stats dd {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .wiki-section-heading {
   display: flex;
   align-items: end;
@@ -1390,6 +1463,25 @@ select {
   grid-template-columns: minmax(7rem, 0.7fr) minmax(10rem, 1fr) minmax(7rem, 0.65fr) minmax(10rem, 1fr);
   align-items: center;
   border-bottom: 1px solid var(--border);
+  border-inline: 0;
+  border-top: 0;
+  color: inherit;
+  background: var(--card);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: background var(--arkive-motion-immediate) var(--arkive-motion-easing);
+}
+
+.wiki-skill-row:not(.is-header):hover {
+  background: color-mix(in srgb, var(--arkive-filter-active) 34%, var(--card));
+}
+
+.wiki-skill-row:not(.is-header):focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 0.15rem solid var(--arkive-nav-active);
+  outline-offset: -0.15rem;
 }
 
 .wiki-skill-row:last-child {
@@ -1768,6 +1860,204 @@ select {
   grid-column: 2;
 }
 
+.wiki-skill-dialog-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, #07111f 72%, transparent);
+}
+
+.wiki-skill-dialog {
+  position: relative;
+  display: grid;
+  width: min(100%, 48rem);
+  max-height: min(90dvh, 42rem);
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 34%, var(--border));
+  border-radius: var(--arkive-radius-standard);
+  background: var(--card);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, #07111f 46%, transparent);
+}
+
+.wiki-skill-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 4rem 1.35rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--arkive-filter-active) 38%, var(--card));
+}
+
+.wiki-skill-dialog-icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 45%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  color: var(--arkive-nav-active);
+  background: var(--card);
+}
+
+.wiki-skill-dialog-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.wiki-skill-dialog-header span {
+  color: var(--arkive-nav-active);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.wiki-skill-dialog-header h2 {
+  margin: 0.2rem 0 0;
+  font-family: "Arkive Display", "Arkive Sans", "Segoe UI", sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.wiki-skill-dialog-header p {
+  margin: 0.3rem 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.wiki-skill-dialog-body {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.wiki-skill-detail-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-left: 0.2rem solid #2f9b6b;
+  background: color-mix(in srgb, #2f9b6b 9%, var(--card));
+}
+
+.wiki-skill-detail-status > svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+  color: #2f9b6b;
+}
+
+.wiki-skill-detail-status div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.wiki-skill-detail-status strong {
+  font-size: 0.8125rem;
+}
+
+.wiki-skill-detail-status span {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.wiki-skill-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.wiki-skill-detail-grid div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+.wiki-skill-detail-grid dt {
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+}
+
+.wiki-skill-detail-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+}
+
+.wiki-skill-detail-grid code {
+  color: var(--arkive-nav-active);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.wiki-skill-missing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.wiki-skill-missing-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--arkive-radius-compact);
+}
+
+.wiki-skill-missing-field > svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: var(--muted-foreground);
+}
+
+.wiki-skill-missing-field div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.wiki-skill-missing-field span {
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+}
+
+.wiki-skill-missing-field strong {
+  font-size: 0.75rem;
+}
+
+.wiki-skill-dialog-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-left: 0.2rem solid var(--arkive-nav-active);
+  background: color-mix(in srgb, var(--arkive-filter-active) 45%, transparent);
+}
+
+.wiki-skill-dialog-note > svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: var(--arkive-nav-active);
+}
+
+.wiki-skill-dialog-note p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
 @media (max-width: 74rem) {
   .wiki-masthead-inner {
     grid-template-columns: minmax(16rem, 0.8fr) minmax(26rem, 1.2fr);
@@ -1948,6 +2238,53 @@ select {
 
   .wiki-skills-heading {
     align-items: start;
+  }
+
+  .wiki-profession-summary {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .wiki-profession-summary-stats {
+    grid-column: 1 / -1;
+    width: 100%;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+    padding-top: 0.75rem;
+  }
+
+  .wiki-profession-summary-stats div {
+    flex: 1;
+    padding-inline: 0.5rem;
+  }
+
+  .wiki-profession-summary-stats div:first-child {
+    padding-left: 0;
+  }
+
+  .wiki-skill-dialog-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .wiki-skill-dialog {
+    width: 100%;
+    max-height: calc(100dvh - 3.75rem);
+    border-inline: 0;
+    border-bottom: 0;
+    border-radius: var(--arkive-radius-standard) var(--arkive-radius-standard) 0 0;
+  }
+
+  .wiki-skill-dialog-header {
+    padding: 1.25rem 3.5rem 1.15rem 1.25rem;
+  }
+
+  .wiki-skill-dialog-body {
+    padding: 1.25rem;
+  }
+
+  .wiki-skill-missing-grid {
+    grid-template-columns: 1fr;
   }
 }
 

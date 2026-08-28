@@ -156,6 +156,29 @@
     "indexed": "已在客户端索引",
     "eventIndexed": "事件编号已确认",
     "empty": "没有匹配的技能条目。",
+    "professionSummary": {
+      "eyebrow": "职业系概览",
+      "description": "该职业系包含 {stages} 个已确认阶段与 {paths} 条转职路线。",
+      "stageCount": "阶段",
+      "pathCount": "路线",
+      "skillCount": "技能索引"
+    },
+    "skillDetail": {
+      "eyebrow": "客户端技能记录",
+      "title": "技能编号 {id}",
+      "close": "关闭技能详情",
+      "confirmedTitle": "客户端事件已确认",
+      "confirmedDescription": "该条目来自运行客户端的技能事件清单。",
+      "skillId": "技能编号",
+      "profession": "所属职业",
+      "eventName": "客户端事件",
+      "source": "资料来源",
+      "name": "技能名称",
+      "description": "技能说明",
+      "values": "等级与数值",
+      "unavailable": "暂无数据",
+      "note": "客户端目前只暴露技能编号与事件名；技能名称、说明、等级和数值位于尚未提供明文行的加密配置表中，因此这里不显示推测内容。"
+    },
     "cards": {
       "filterLabel": "卡片类型",
       "filters": {

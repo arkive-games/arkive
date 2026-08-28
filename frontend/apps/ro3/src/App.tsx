@@ -3,8 +3,10 @@ import {
   ArrowLeft,
   Bookmark,
   BookOpen,
+  CheckCircle2,
   ChevronRight,
   Compass,
+  CircleHelp,
   Database,
   ExternalLink,
   Gamepad2,
@@ -14,11 +16,13 @@ import {
   MapPinned,
   MessageCircle,
   Search,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Swords,
   Wrench,
   X,
+  Zap,
 } from 'lucide-react'
 import { ArkiveMapTopBar, ArkiveMobileHeader, useTheme, type ShellNavItem } from '@gamemap/map-shell'
 import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
@@ -42,6 +46,8 @@ import {
   WIKI_SKILL_COUNT,
   WIKI_STAGE_BY_ID,
   type WikiProfessionStage,
+  type WikiSkillDetail,
+  getWikiSkillDetail,
 } from './wikiCatalog'
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
@@ -450,6 +456,7 @@ function WikiPage({ onBack }: { onBack: () => void }) {
   const [cardQuery, setCardQuery] = useState('')
   const [cardKind, setCardKind] = useState<CardKind>('all')
   const [selectedCard, setSelectedCard] = useState<WikiCard | null>(null)
+  const [selectedSkill, setSelectedSkill] = useState<WikiSkillDetail | null>(null)
   const line = WIKI_PROFESSION_LINES.find((candidate) => candidate.id === lineId) ?? WIKI_PROFESSION_LINES[0]
   const lineStageIds = line ? [line.baseStageId, ...line.paths.flat()] : []
   const lineStages = lineStageIds.flatMap((id) => {
@@ -463,6 +470,20 @@ function WikiPage({ onBack }: { onBack: () => void }) {
     setLineId(nextLineId)
     setStageId('')
   }
+
+  useEffect(() => {
+    if (!selectedSkill) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedSkill(null)
+    }
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [selectedSkill])
 
   return (
     <main className="wiki-page">
@@ -557,6 +578,8 @@ function WikiPage({ onBack }: { onBack: () => void }) {
             </div>
 
             {line ? (
+              <>
+                <ProfessionSummary line={line} stages={lineStages} />
               <div className="wiki-progression-grid">
                 <WikiStageCard
                   stage={WIKI_STAGE_BY_ID.get(line.baseStageId)}
@@ -579,6 +602,7 @@ function WikiPage({ onBack }: { onBack: () => void }) {
                   ))}
                 </div>
               </div>
+              </>
             ) : null}
           </section>
 
@@ -631,7 +655,14 @@ function WikiPage({ onBack }: { onBack: () => void }) {
                   <span role="columnheader">{content.wiki.status}</span>
                 </div>
                 {skills.map(({ stage, skillId, evidence }) => (
-                  <div className="wiki-skill-row" role="row" key={skillId}>
+                  <button
+                    type="button"
+                    className="wiki-skill-row"
+                    role="row"
+                    key={skillId}
+                    onClick={() => setSelectedSkill(getWikiSkillDetail(stage, skillId))}
+                    aria-label={`${stage.label} ${skillId}`}
+                  >
                     <strong role="cell">
                       {skillId}
                       <small>{evidence.eventName}</small>
@@ -639,7 +670,7 @@ function WikiPage({ onBack }: { onBack: () => void }) {
                     <span role="cell"><b>{stage.label}</b><small>{stage.sourceName}</small></span>
                     <span role="cell">{content.wiki.tier.replace('{tier}', String(stage.tier))}</span>
                     <span role="cell"><i />{content.wiki.eventIndexed}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -659,7 +690,91 @@ function WikiPage({ onBack }: { onBack: () => void }) {
         />
       )}
       {selectedCard ? <CardDetail card={selectedCard} onClose={() => setSelectedCard(null)} /> : null}
+      {selectedSkill ? <SkillDetail skill={selectedSkill} onClose={() => setSelectedSkill(null)} /> : null}
     </main>
+  )
+}
+
+function ProfessionSummary({
+  line,
+  stages,
+}: {
+  line: { label: string; paths: string[][] }
+  stages: WikiProfessionStage[]
+}) {
+  const skillCount = stages.reduce((count, stage) => count + stage.skillIds.length, 0)
+
+  return (
+    <section className="wiki-profession-summary" aria-labelledby="wiki-profession-summary-title">
+      <div className="wiki-profession-summary-icon"><Swords aria-hidden="true" /></div>
+      <div className="wiki-profession-summary-copy">
+        <span>{content.wiki.professionSummary.eyebrow}</span>
+        <h3 id="wiki-profession-summary-title">{line.label}</h3>
+        <p>{content.wiki.professionSummary.description
+          .replace('{stages}', String(stages.length))
+          .replace('{paths}', String(line.paths.length))}</p>
+      </div>
+      <dl className="wiki-profession-summary-stats">
+        <div><dt>{content.wiki.professionSummary.stageCount}</dt><dd>{stages.length}</dd></div>
+        <div><dt>{content.wiki.professionSummary.pathCount}</dt><dd>{line.paths.length}</dd></div>
+        <div><dt>{content.wiki.professionSummary.skillCount}</dt><dd>{skillCount}</dd></div>
+      </dl>
+    </section>
+  )
+}
+
+function SkillDetail({ skill, onClose }: { skill: WikiSkillDetail; onClose: () => void }) {
+  return (
+    <div className="wiki-skill-dialog-backdrop" role="presentation" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onClose()
+    }}>
+      <section className="wiki-skill-dialog" role="dialog" aria-modal="true" aria-labelledby="wiki-skill-dialog-title">
+        <button type="button" className="wiki-dialog-close" aria-label={content.wiki.skillDetail.close} onClick={onClose}>
+          <X aria-hidden="true" />
+        </button>
+        <header className="wiki-skill-dialog-header">
+          <div className="wiki-skill-dialog-icon"><Zap aria-hidden="true" /></div>
+          <div>
+            <span>{content.wiki.skillDetail.eyebrow}</span>
+            <h2 id="wiki-skill-dialog-title">{content.wiki.skillDetail.title.replace('{id}', skill.skillId)}</h2>
+            <p>{skill.stage.label} · {content.wiki.tier.replace('{tier}', String(skill.stage.tier))}</p>
+          </div>
+        </header>
+        <div className="wiki-skill-dialog-body">
+          <div className="wiki-skill-detail-status">
+            <CheckCircle2 aria-hidden="true" />
+            <div>
+              <strong>{content.wiki.skillDetail.confirmedTitle}</strong>
+              <span>{content.wiki.skillDetail.confirmedDescription}</span>
+            </div>
+          </div>
+          <dl className="wiki-skill-detail-grid">
+            <div><dt>{content.wiki.skillDetail.skillId}</dt><dd><code>{skill.skillId}</code></dd></div>
+            <div><dt>{content.wiki.skillDetail.profession}</dt><dd>{skill.stage.label}</dd></div>
+            <div><dt>{content.wiki.skillDetail.eventName}</dt><dd><code>{skill.evidence.eventName}</code></dd></div>
+            <div><dt>{content.wiki.skillDetail.source}</dt><dd>{skill.evidence.source}</dd></div>
+          </dl>
+          <div className="wiki-skill-missing-grid">
+            <MissingSkillField icon={CircleHelp} label={content.wiki.skillDetail.name} />
+            <MissingSkillField icon={CircleHelp} label={content.wiki.skillDetail.description} />
+            <MissingSkillField icon={ShieldCheck} label={content.wiki.skillDetail.values} />
+          </div>
+          <div className="wiki-skill-dialog-note">
+            <Database aria-hidden="true" />
+            <p>{content.wiki.skillDetail.note}</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function MissingSkillField({ icon: Icon, label }: { icon: IconComponent; label: string }) {
+  return (
+    <div className="wiki-skill-missing-field">
+      <Icon aria-hidden="true" />
+      <div><span>{label}</span><strong>{content.wiki.skillDetail.unavailable}</strong></div>
+    </div>
   )
 }
 

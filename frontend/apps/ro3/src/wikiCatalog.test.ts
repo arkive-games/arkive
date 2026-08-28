@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   filterWikiSkillIds,
+  getWikiSkillDetail,
   WIKI_PROFESSION_LINES,
   WIKI_PROFESSION_STAGES,
   WIKI_PACKAGE_SOURCE,
@@ -46,5 +47,23 @@ describe('RO3 Wiki catalog', () => {
       status: 'client-event-id',
     })
     expect(WIKI_PACKAGE_SOURCE.sha256).toHaveLength(64)
+  })
+
+  it('keeps unavailable skill fields explicit instead of inventing details', () => {
+    const stage = WIKI_STAGE_BY_ID.get('rune-knight')!
+    expect(getWikiSkillDetail(stage, '11301')).toEqual({
+      stage,
+      skillId: '11301',
+      evidence: {
+        eventName: 'Player_RuneKnight_Skill_11301',
+        source: WIKI_PACKAGE_SOURCE.label,
+        status: 'client-event-id',
+      },
+      fields: {
+        name: 'unavailable',
+        description: 'unavailable',
+        values: 'unavailable',
+      },
+    })
   })
 })

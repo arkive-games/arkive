@@ -12,6 +12,17 @@ export interface WikiSkillEvidence {
   status: 'client-event-id'
 }
 
+export interface WikiSkillDetail {
+  stage: WikiProfessionStage
+  skillId: string
+  evidence: WikiSkillEvidence
+  fields: {
+    name: 'unavailable'
+    description: 'unavailable'
+    values: 'unavailable'
+  }
+}
+
 export interface WikiProfessionLine {
   id: string
   label: string
@@ -168,6 +179,24 @@ export function getWikiSkillEvidence(stage: WikiProfessionStage, skillId: string
     eventName: `Player_${stage.sourceName}_Skill_${skillId}`,
     source: WIKI_PACKAGE_SOURCE.label,
     status: 'client-event-id',
+  }
+}
+
+/**
+ * Return the complete set of facts the client currently exposes for one skill.
+ * The explicit unavailable fields keep the UI honest while the encrypted config
+ * tables remain absent from the shipped client.
+ */
+export function getWikiSkillDetail(stage: WikiProfessionStage, skillId: string): WikiSkillDetail {
+  return {
+    stage,
+    skillId,
+    evidence: getWikiSkillEvidence(stage, skillId),
+    fields: {
+      name: 'unavailable',
+      description: 'unavailable',
+      values: 'unavailable',
+    },
   }
 }
 
