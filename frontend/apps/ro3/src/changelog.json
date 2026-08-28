@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.2",
+      "date": "2026-08-29",
+      "commit": "6bf9a79da93f006c681976b9ff6f1fc8f1001421",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Reworked the card encyclopedia into a dense image catalogue grid.",
+            "zh-CN": "将卡片百科改为高密度卡片图片目录网格。",
+            "zh-TW": "將卡片百科改為高密度卡片圖片目錄網格。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.5.1",
       "date": "2026-08-29",
       "commit": "3ef059fd7b4ef6b19d3d9090481e3f771972d38d",
