@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.1",
+      "date": "2026-08-29",
+      "commit": "3ef059fd7b4ef6b19d3d9090481e3f771972d38d",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed card navigation from the skill workspace.",
+            "zh-CN": "移除技能工作区中的卡片导航按钮。",
+            "zh-TW": "移除技能工作區中的卡片導覽按鈕。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.5.0",
       "date": "2026-08-29",
       "commit": "1478bd9e10f485136ad221637ec2fe26eb747a4a",
