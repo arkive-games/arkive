@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.3",
+      "date": "2026-08-29",
+      "commit": "3ef21aa4fed52e6ebeeaf60336b3df6f92cc84da",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Tightened the encyclopedia header and localized the Chinese interface for cleaner scanning.",
+            "zh-CN": "压缩百科页头并统一中文界面，提升信息浏览效率。",
+            "zh-TW": "壓縮百科頁頭並統一中文介面，提升資訊瀏覽效率。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.2",
       "date": "2026-08-29",
       "commit": "b6c5646b90335ecac4dd79405c6c288e8030653e",
