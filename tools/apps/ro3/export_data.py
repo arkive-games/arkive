@@ -1,16 +1,26 @@
-"""Emit the ro3 dataset from the unencrypted data containers.
+"""Emit the ro3 dataset.
 
-What this can and cannot produce today is decided by RO3's obfuscation, not by taste:
+Two sources, because the game splits its content two ways:
 
-* the ``.bytes`` containers are in the clear, so the class/job table, the scene manifest and
-  the protobuf table catalogue come straight out (see :mod:`.containers`)
-* the skill / dungeon *tables* live in Lua chunks whose string constants are separately
-  obfuscated, so they are not emitted yet
-* icons and other art live in Unity bundles whose first block is encrypted, so
-  ``resource-ro3`` stays empty for now
+* the ``.bytes`` RO3V containers, which ship **unobfuscated** and hold the class/job table,
+  the scene manifest and the protobuf table catalogue (see :mod:`.containers`)
+* the Unity bundles, readable since :mod:`.keygen` undid their block-0 obfuscation and
+  :mod:`.catalog` indexed all 188,361 of them. That is where the skill icons, boss models
+  and monster portraits are (see :mod:`.assets_index`).
 
-Everything written here is derived, never hand-authored, and every field records where it
-came from so a later run can be diffed against this one.
+What is still **not** in the client, and is therefore not emitted:
+
+* **skill text and skill numeric values.** The protobuf schema declares 83 ``Asset_*``
+  config-table types (``Asset_SkillGrowth``, ``Asset_MultiDungeon``, ...) but no rows ship
+  with them. Searching all 188,361 bundles finds no config table either: the 710
+  ``TextAsset`` objects are Spine ``.atlas``/``.skel`` and GPU-skinning data, and the
+  20,948 named ``MonoBehaviour`` objects are scene, render and Spine settings.
+* **display names in any language.** The client's own Lua (14,479 chunks) has its string
+  constants separately obfuscated, and ``global-metadata.dat`` is encrypted past its
+  4-byte magic — its version field reads as 1,813,808,443 and its string blob is noise.
+
+So every row here is keyed by the identifier the game itself uses. Nothing is translated,
+described or given a number it did not ship with.
 """
 
 from __future__ import annotations
@@ -19,9 +29,12 @@ import json
 import re
 from pathlib import Path
 
+from . import assets_index
+from .catalog import CATALOG
 from .common import write_json
 from .containers import data_containers, iter_payloads
-from .env import require_dir
+from .env import optional_dir, require_dir
+from .unpack import stage_dir
 from .version import stamp_version
 
 IDENT = re.compile(rb"[A-Za-z_][A-Za-z0-9_]{2,}")
@@ -122,15 +135,38 @@ def collect(vfs_root: Path) -> dict[str, list]:
     }
 
 
+def find_catalog() -> Path | None:
+    """The bundle catalogue, if :mod:`.catalog` has been run. ``None`` skips the art rows."""
+    for candidate in (optional_dir("RO3_STAGE"), optional_dir("RO3_RAW")):
+        if candidate is None:
+            continue
+        for path in (candidate / CATALOG, candidate / "decrypted" / CATALOG):
+            if path.is_file():
+                return path
+    path = stage_dir() / CATALOG
+    return path if path.is_file() else None
+
+
 def main() -> None:
     vfs = require_dir("RO3_GAME") / "StreamingAssets" / "VFS"
     out = require_dir("RO3_DATA_OUT")
     data = collect(vfs)
+    catalog = find_catalog()
+    index = assets_index.read(catalog) if catalog else None
 
+    job_icons = assets_index.job_icons(index) if index else {}
     write_json(out / "classes.json", {
         "source": "StreamingAssets/VFS/*.bytes (unencrypted RO3V containers)",
-        "classes": data["classes"],
+        "iconSource": ("icon_job_* sprites in the decrypted Unity bundles"
+                       if index else "not indexed"),
+        "classes": [
+            {**c, "icons": job_icons.get(c["id"].lower(), [])} for c in data["classes"]
+        ],
         "variants": data["classVariants"],
+        "unmatchedJobIcons": sorted(
+            job for job in job_icons
+            if job not in {c["id"].lower() for c in data["classes"]}
+        ),
     })
     dungeons = [s for s in data["scenes"] if s["kind"] == "dungeon"]
     write_json(out / "scenes.json", {
@@ -148,24 +184,65 @@ def main() -> None:
     })
     write_json(out / "dungeons.json", {
         "source": "scenes.json filtered to kind == dungeon",
-        "dungeons": dungeons,
-    })
-    write_json(out / "bosses.json", {
-        "source": "animation clip names in the .bytes containers",
+        "artSource": ("dungeon-named sprites in the decrypted Unity bundles"
+                      if index else "not indexed"),
         "note": (
-            "entity ids and their animation states, harvested from clip names; display names "
-            "and stats live in the Lua tables, which are still obfuscated. No art yet - the "
-            "models sit in encrypted Unity bundles."
+            "the dungeon *table* - names, level ranges, rewards - is not in the client; "
+            "Asset_MultiDungeon is declared in the protobuf schema but ships no rows. What "
+            "is here is the scene manifest and the art that exists for it."
+        ),
+        "dungeons": dungeons,
+        "art": assets_index.dungeon_art(index) if index else [],
+    })
+
+    boss_rows = assets_index.bosses(index) if index else []
+    monster_rows = assets_index.monsters(index) if index else []
+    write_json(out / "bosses.json", {
+        "source": "animation clip names in the .bytes containers, plus the bundle catalogue",
+        "note": (
+            "entity ids and their animation states, harvested from clip names, alongside the "
+            "boss models and portraits that ship as Unity assets. Display names and stats are "
+            "not in the client at all - see schema.json."
         ),
         "counts": {
             k: sum(1 for c in data["creatures"] if c["kind"] == k)
             for k in sorted({c["kind"] for c in data["creatures"]})
         },
         "creatures": data["creatures"],
+        "models": boss_rows,
+        "monsters": monster_rows,
     })
+
+    skill_rows = assets_index.skills(index) if index else []
+    talent_rows = assets_index.talents(index) if index else []
+    write_json(out / "skills.json", {
+        "source": "icon_skill_* / icon_talent_* sprites in the decrypted Unity bundles",
+        "note": (
+            "the skill icon inventory, not a skill table. Each row is an icon the client "
+            "ships and a family taken from the icon's own name. Skill text and numeric "
+            "values are NOT in the client: Asset_Skill* is declared in the protobuf schema "
+            "but ships no rows, no bundle holds a config table, and both the Lua string "
+            "constants and global-metadata.dat are separately encrypted."
+        ),
+        "counts": {
+            "skills": len(skill_rows),
+            "talents": len(talent_rows),
+            "families": len({r["family"] for r in skill_rows if r["family"]}),
+        },
+        "families": sorted({r["family"] for r in skill_rows if r["family"]}),
+        "skills": skill_rows,
+        "talents": talent_rows,
+    })
+
     write_json(out / "schema.json", {
         "source": "MG_Define.proto (package romsg)",
-        "note": "config-table message types; their row data is not in the client yet",
+        "note": (
+            "config-table message types. Their rows are not in the client: no bundle among "
+            "188,361 holds one, the Lua chunks have obfuscated string constants, and "
+            "global-metadata.dat is encrypted past its 4-byte magic. Treat every Asset_* "
+            "below as a known-missing table rather than as something still to be found in "
+            "the files."
+        ),
         "assetTables": data["assetTables"],
     })
     stamp_version(out)
@@ -174,6 +251,12 @@ def main() -> None:
     print(f"scenes       : {len(data['scenes'])} ({len(dungeons)} dungeons)")
     print(f"creatures    : {len(data['creatures'])}")
     print(f"asset tables : {len(data['assetTables'])}")
+    if index is None:
+        print("catalogue    : not found - run `python -m ro3.unpack` then `python -m ro3.catalog`")
+    else:
+        print(f"skills       : {len(skill_rows)} icons, {len(talent_rows)} talents")
+        print(f"boss models  : {len(boss_rows)}")
+        print(f"monsters     : {len(monster_rows)} portraits")
     print(f"placements   : {data['placements']} (not emitted)")
 
 
