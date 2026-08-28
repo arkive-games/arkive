@@ -131,10 +131,6 @@ ICON_DIRS = ("equipment", "talents", "skills", "jobs", "monsters", "dungeons", "
 #: so the slug is cut out of the sprite name rather than invented here.
 SLOT_FROM_ICON = re.compile(r"^icon_equip_(?P<slot>[a-z]+)_01$")
 
-#: Item ids from ``ItemConfig.iEquipId`` that name no ``EquipConfig`` row would be a broken
-#: join; the export fails rather than dropping them silently.
-JOIN_MUST_BE_TOTAL = True
-
 
 def is_wanted(script: str) -> bool:
     m = DATA_CONFIG.search(script)
@@ -358,7 +354,7 @@ def patron_nodes(nodes: dict, icons: dict, text: Text) -> tuple[list[dict], dict
     return out, {"rows": len(out), "withName": named, "withIcon": joined}
 
 
-def season_nodes(nodes: dict, effects_by_group: dict, text: Text) -> tuple[list[dict], dict]:
+def season_nodes(nodes: dict, effects_by_group: dict) -> tuple[list[dict], dict]:
     """The tree's nodes, each carrying the effect-row ids that are its levels."""
     out = []
     with_levels = 0
@@ -481,8 +477,10 @@ def equipment_rows(
                 continue
             by_equip[str(target)] = key
 
+    # An item naming an EquipConfig row that does not exist would be a broken join, and
+    # dropping it silently would understate the table. Measured on this build: none.
     dangling = sorted(set(by_equip) - set(equip), key=sort_key)
-    if dangling and JOIN_MUST_BE_TOTAL:
+    if dangling:
         raise RuntimeError(
             f"{len(dangling)} items name an EquipConfig row that does not exist: "
             f"{dangling[:10]}"
@@ -586,6 +584,32 @@ def export_art(equipment_icons: set[str], talent_icons: set[str], res_out: Path)
 # --------------------------------------------------------------------------------------
 
 
+def _group_rows(groups: dict, text: Text) -> tuple[list[dict], dict]:
+    out = []
+    named = 0
+    for key in ordered(groups):
+        row = groups[key]
+        entry = clean(row)
+        name = text.render(row.get("_kName"))
+        if name:
+            entry["name"] = name
+            named += 1
+        out.append(entry)
+    return out, {"rows": len(out), "withName": named}
+
+
+def _effectiveness(rows: dict, text: Text) -> list[dict]:
+    out = []
+    for key in ordered(rows):
+        row = rows[key]
+        entry = clean(row)
+        name = text.render(row.get("_iName"))
+        if name:
+            entry["name"] = name
+        out.append(entry)
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--skip-art", action="store_true",
@@ -661,7 +685,7 @@ def main() -> None:
             effects_by_group.setdefault(group, []).append(row.get("_iId", int(key)))
 
     trees, tree_counts = tree_rows(tables["SeasonTalentTreeConfig"], text)
-    nodes, node_counts = season_nodes(tables["SeasonTalentConfig"], effects_by_group, text)
+    nodes, node_counts = season_nodes(tables["SeasonTalentConfig"], effects_by_group)
     levels, level_counts = season_levels(tables["SeasonTalentEffectConfig"], icons, text)
     patron, patron_counts = patron_nodes(tables["PatronTalentConfig"], icons, text)
     patron_attrs = plain_rows(tables["PatronTalentAttrConfig"])
@@ -972,32 +996,6 @@ def main() -> None:
         size = (out / path).stat().st_size
         flag = "  OVER BUDGET" if size > SHARD_BUDGET else ""
         print(f"{name:<13}: {size / 1000:.0f} kB{flag}")
-
-
-def _group_rows(groups: dict, text: Text) -> tuple[list[dict], dict]:
-    out = []
-    named = 0
-    for key in ordered(groups):
-        row = groups[key]
-        entry = clean(row)
-        name = text.render(row.get("_kName"))
-        if name:
-            entry["name"] = name
-            named += 1
-        out.append(entry)
-    return out, {"rows": len(out), "withName": named}
-
-
-def _effectiveness(rows: dict, text: Text) -> list[dict]:
-    out = []
-    for key in ordered(rows):
-        row = rows[key]
-        entry = clean(row)
-        name = text.render(row.get("_iName"))
-        if name:
-            entry["name"] = name
-        out.append(entry)
-    return out
 
 
 if __name__ == "__main__":

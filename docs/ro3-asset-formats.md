@@ -101,14 +101,42 @@ all**, and they hold the game's data rather than its scenes:
 - the class/job name table
 - the Lua set, including one 116 MB container with 13,515 compiled chunks
 
-Lua bytecode is stock **Lua 5.4** with a single byte changed: the signature is `\x1eLua` where
-Lua writes `\x1bLua`. Every following header field (version `0x54`, `LUAC_DATA`, the 4/8/8 sizes,
-`LUAC_INT` `0x5678`, `LUAC_NUM` 370.5) is unmodified, so restoring byte 0 produces a chunk a
-stock 5.4 loader accepts — `containers.normalise_lua` does that. Its **string constants** are
-separately obfuscated: the key mixes in the string length (the per-file ciphertext delta is a
-constant equal to `len_a ^ len_b`), and `C ^ len` recovers the leading `@` of a Lua chunk name.
-Ruled out for that layer: repeating XOR keys of any period ≤ 24, and `g(i) = a*i`, `a*i²`, `a^i`
-for all 256 values of `a` scored over 40 chunks at once.
+Lua bytecode is stock **Lua 5.4** put through **four length-preserving transforms**. All four
+are undone by `tools/apps/ro3/lua.py`, whose `full()` turns a shipped chunk into a chunk a stock
+5.4 `load(..., "b")` accepts. Measured on build 0.0.1.14: **14,479/14,479 chunks** decode, with
+zero structural defects (every jump in range, every constant index in bounds, every proto ending
+in a return, every string valid UTF-8) and every one accepted by a real loader.
+
+1. **The signature byte.** `\x1eLua` where Lua writes `\x1bLua`. Every following header field
+   (version `0x54`, `LUAC_DATA`, the 4/8/8 sizes, `LUAC_INT` `0x5678`, `LUAC_NUM` 370.5) is
+   unmodified, which is why the chunk can be scanned for structure while still obfuscated.
+2. **String constants — a CBC-style XOR chain keyed by the string's own length.**
+   `C[0] = P[0] ^ (len & 0xff)`, then `C[i] = P[i] ^ C[i-1]`. The length is what exposed it: the
+   per-file ciphertext delta between two dumps of the same plaintext is a constant equal to
+   `len_a ^ len_b`, and `C[0] ^ len` recovers the leading `@` of a chunk name. Ruled out
+   before that: repeating XOR keys of any period ≤ 24, and `g(i) = a*i`, `a*i²`, `a^i` for all
+   256 values of `a` scored over 40 chunks at once.
+3. **The instruction stream — XOR by the proto's own instruction count**, replicated into both
+   halves of the 32-bit word: `key = sizecode ^ (sizecode << 16)`. Above `0xffff` the halves
+   overlap and that closed form stops reproducing the key, so the *main* proto is keyed off its
+   known first instruction instead (`VARARGPREP 0`, opcode `0x51`, which every main proto
+   starts with). No nested proto in the corpus exceeds 2,029 instructions.
+4. **The OpCode enum is rotated.** `OP_MOVE` (0) and everything from `OP_CLOSE` (54) up keep
+   their stock number; the 53 opcodes in `[1..53]` are rotated by +20, so
+   `encoded = ((stock + 19) % 53) + 1`. That is a permutation of the range, so it inverts
+   exactly.
+
+Layer 2 is why the chunks are also *selectable* cheaply: a chunk's source name is the first
+string in the dump and is keyed only by its own length, so `lua.peek_source` reads it without
+touching the rest — which is how an export picks a few dozen chunks out of 14,479 without
+decoding them all.
+
+The chunks decode to the game's real config tables. Each `Config/DataConfig/<Name>.lua` returns
+`{m_kCount = N, m_kValues = {...}}`, with the rows sharing their column defaults through an
+`__index` template, so reading one means *running* it — `tools/apps/ro3/lua_tables.py` does that
+in a sandboxed Lua 5.4 state over `lupa`. **4,412 config tables execute**, including
+`SkillConfig` (8,348 rows across its three multiverse copies), `NPCConfig`, `ItemConfig`,
+`BuffConfig` and the seven `Localization_*` string tables (33,514 ids).
 
 ## 4. IL2CPP metadata
 
@@ -174,8 +202,12 @@ Two consequences for tooling. First, an index built from the object table alone 
 the same bundles was still running after 35 minutes and past 2 GB resident — so selection and
 decoding want to be separate steps. Second, **no config table exists in any bundle**: the 710
 `TextAsset`s are Spine `.atlas`/`.skel` and GPU-skinning data, and the 20,948 named
-`MonoBehaviour`s are scene, render and Spine settings. Together with §3 and §4 that closes the
-question of where the `Asset_*` rows are — they are not in the client.
+`MonoBehaviour`s are scene, render and Spine settings. That is a fact about the *bundles* only, and for a
+while it was read as a fact about the client: with §4's metadata encrypted too, "the `Asset_*`
+rows are not in the client" looked like the conclusion. It was wrong. The rows are in the Lua
+(§3), behind four layers rather than two, and the tables have been read since. What survives is
+the narrower statement: **no config table is a Unity object**, so no amount of bundle work would
+ever have found one.
 
 ## 6. Practical notes
 
