@@ -6,12 +6,6 @@
   "pageTitle": "仙境传说 3",
   "navigationLabel": "仙境传说 3 导航",
   "navigation": [
-    { "key": "overview", "label": "综合页" },
-    { "key": "map", "label": "互动地图" },
-    { "key": "classes", "label": "职业攻略" },
-    { "key": "dungeons", "label": "副本攻略" },
-    { "key": "gameplay", "label": "玩法资料" },
-    { "key": "tools", "label": "工具" },
     { "key": "wiki", "label": "百科" }
   ],
   "language": "简体中文",
@@ -26,7 +20,7 @@
   "unavailable": "暂无功能",
   "changelog": {
     "documentTitle": "仙境传说 3 更新日志 | 藏舟攻略",
-    "back": "返回综合页",
+    "back": "返回百科",
     "eyebrow": "版本记录",
     "title": "更新日志",
     "description": "查看仙境传说 3 资料站的版本变化与对应代码提交。",
@@ -223,6 +217,6 @@
       "sourceOffset": "来源偏移",
       "assetEvidence": "已从安装包扫描到 {count} 条卡片展示资源引用；在完成资源解密与卡名映射前，不显示推测卡面。"
     },
-    "back": "返回综合页"
+    "back": "返回百科"
   }
 }

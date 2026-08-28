@@ -2581,3 +2581,450 @@ select {
     animation: none;
   }
 }
+
+/* RO3 encyclopedia layer: native client frames carry the visual identity while
+   the shared Arkive shell keeps navigation, type and interaction consistent. */
+.wiki-page {
+  background: var(--background);
+}
+
+.wiki-masthead {
+  border-bottom-color: color-mix(in srgb, var(--arkive-nav-active) 46%, var(--border));
+  background:
+    url('./assets/native-ui/skill_bg_title_01.png') center bottom / 100% 3.25rem no-repeat,
+    var(--background);
+}
+
+.wiki-masthead-inner {
+  grid-template-columns: minmax(15rem, 1fr) auto minmax(22rem, 1.25fr);
+  align-items: center;
+  gap: 1.25rem;
+  padding-block: 1.25rem 1.5rem;
+}
+
+.wiki-title-block h1,
+.wiki-section-heading h2,
+.wiki-card-dialog-body h2,
+.wiki-skill-dialog-header h2 {
+  font-family: 'Arkive Display', 'Arkive Sans', 'Segoe UI', sans-serif;
+}
+
+.wiki-title-block h1 {
+  color: var(--arkive-nav-active);
+  font-size: 1.875rem;
+}
+
+.wiki-view-tabs {
+  display: flex;
+  align-items: stretch;
+  padding: 0.2rem;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 42%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  background: var(--card);
+}
+
+.wiki-view-tabs button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.45rem;
+  padding-inline: 0.8rem;
+  border: 0;
+  border-right: 1px solid color-mix(in srgb, var(--arkive-nav-active) 28%, transparent);
+  color: color-mix(in srgb, var(--foreground) 74%, transparent);
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.wiki-view-tabs button:last-child {
+  border-right: 0;
+}
+
+.wiki-view-tabs button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.wiki-view-tabs button:hover,
+.wiki-view-tabs button.is-active {
+  color: var(--arkive-nav-active);
+  background: color-mix(in srgb, var(--card) 74%, var(--arkive-filter-active));
+}
+
+.wiki-view-tabs button.is-active {
+  background-image: url('./assets/native-ui/skill_bg_title_02.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.wiki-stats {
+  border-color: color-mix(in srgb, var(--arkive-nav-active) 30%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  background-color: var(--card);
+  background-image: url('./assets/native-ui/skill_bg_line.png');
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 0.4rem;
+}
+
+.wiki-content {
+  gap: 1.5rem;
+  padding-block: 1.75rem 4rem;
+}
+
+.wiki-line-nav > div,
+.wiki-profession-summary,
+.wiki-skill-row,
+.wiki-card-row {
+  border-color: color-mix(in srgb, var(--arkive-nav-active) 24%, var(--border));
+  background-color: var(--card);
+  background-image: url('./assets/native-ui/skill_bg_frame.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-blend-mode: multiply;
+}
+
+.wiki-line-nav > span,
+.wiki-section-heading > div > span {
+  color: var(--arkive-nav-active);
+}
+
+.wiki-line-nav button {
+  min-height: 4.5rem;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.wiki-line-nav button:hover,
+.wiki-line-nav button.is-active {
+  background-color: color-mix(in srgb, var(--arkive-filter-active) 78%, var(--card));
+}
+
+.wiki-line-nav button.is-active {
+  box-shadow: inset 0.25rem 0 var(--arkive-nav-active);
+}
+
+.wiki-line-nav-art {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 42%, var(--border));
+  border-radius: 50%;
+  background: var(--background);
+}
+
+.wiki-line-nav-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wiki-line-nav-art svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--arkive-nav-active);
+}
+
+.wiki-line-nav-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.wiki-line-nav-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiki-line-nav-copy small {
+  grid-column: auto;
+}
+
+.wiki-line-nav button > svg {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.wiki-profession-summary {
+  border-radius: var(--arkive-radius-compact);
+  background-color: color-mix(in srgb, var(--card) 90%, var(--arkive-filter-active));
+}
+
+.wiki-profession-summary-icon {
+  width: 4.5rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--background);
+}
+
+.wiki-profession-summary-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wiki-progression {
+  padding-bottom: 1.5rem;
+  border-bottom-color: color-mix(in srgb, var(--arkive-nav-active) 28%, var(--border));
+}
+
+.wiki-stage-card {
+  min-height: 7rem;
+  border-color: color-mix(in srgb, var(--arkive-nav-active) 34%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  background-color: var(--card);
+  background-image: url('./assets/native-ui/skill_bg_title_02.png');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 100% 2.25rem;
+}
+
+.wiki-stage-card:hover,
+.wiki-stage-card.is-active {
+  border-color: var(--arkive-nav-active);
+  background-color: color-mix(in srgb, var(--arkive-filter-active) 65%, var(--card));
+}
+
+.wiki-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+}
+
+.wiki-skill-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 5.25rem;
+  padding: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 22%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+}
+
+.wiki-skill-row:hover,
+.wiki-skill-row:focus-visible {
+  border-color: var(--arkive-nav-active);
+  background-color: color-mix(in srgb, var(--arkive-filter-active) 72%, var(--card));
+}
+
+.wiki-skill-row-icon {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 40%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  background: var(--background);
+}
+
+.wiki-skill-row-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wiki-skill-row-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.wiki-skill-row-copy small,
+.wiki-skill-row-copy em,
+.wiki-card-copy small {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiki-skill-row-copy strong {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiki-skill-row-status {
+  display: inline-flex;
+  max-width: 5.5rem;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.wiki-skill-row-status i {
+  width: 0.4rem;
+  height: 0.4rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--arkive-nav-active);
+}
+
+.wiki-skill-row > svg {
+  display: none;
+}
+
+.wiki-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.75rem;
+}
+
+.wiki-card-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 7rem;
+  padding: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 22%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+}
+
+.wiki-card-row:hover,
+.wiki-card-row:focus-visible {
+  border-color: var(--arkive-nav-active);
+  background-color: color-mix(in srgb, var(--arkive-filter-active) 72%, var(--card));
+}
+
+.wiki-card-art {
+  display: grid;
+  min-height: 5.25rem;
+  align-content: space-between;
+  padding: 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 44%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  background: var(--card) url('./assets/native-ui/skill_bg_title_03.png') center / 100% 100% no-repeat;
+  text-align: center;
+}
+
+.wiki-card-art span {
+  color: var(--arkive-nav-active);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.wiki-card-art strong {
+  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
+  font-size: 1.4rem;
+}
+
+.wiki-card-copy {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 0.2rem;
+}
+
+.wiki-card-copy > strong {
+  overflow: hidden;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiki-card-related {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.wiki-card-related em {
+  max-width: 6rem;
+  overflow: hidden;
+  padding: 0.12rem 0.3rem;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiki-card-status {
+  display: grid;
+  max-width: 4.5rem;
+  justify-items: center;
+  gap: 0.25rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.wiki-card-status svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--arkive-nav-active);
+}
+
+@media (max-width: 74rem) {
+  .wiki-masthead-inner {
+    grid-template-columns: minmax(15rem, 1fr) auto;
+  }
+
+  .wiki-stats {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .wiki-masthead-inner {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    padding-block: 1rem 1.25rem;
+  }
+
+  .wiki-view-tabs {
+    width: 100%;
+  }
+
+  .wiki-view-tabs button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .wiki-stats {
+    grid-column: auto;
+  }
+
+  .wiki-skill-grid,
+  .wiki-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-card-row {
+    grid-template-columns: 4rem minmax(0, 1fr) auto;
+  }
+
+  .wiki-card-art {
+    min-height: 4.5rem;
+  }
+}

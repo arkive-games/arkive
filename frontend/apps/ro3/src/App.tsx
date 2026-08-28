@@ -45,6 +45,7 @@ import {
   WIKI_PACKAGE_SOURCE,
   WIKI_SKILL_COUNT,
   WIKI_STAGE_BY_ID,
+  type WikiProfessionLine,
   type WikiProfessionStage,
   type WikiSkillDetail,
   getWikiSkillAsset,
@@ -54,6 +55,20 @@ import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
+
+const roleAssetModules = import.meta.glob('./assets/roles/*.png', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>
+
+const roleAssets = Object.entries(roleAssetModules).map(([modulePath, path]) => ({
+  name: modulePath.split('/').pop()?.replace(/\.png$/, '') ?? '',
+  path,
+}))
+
+function getProfessionAsset(lineId: string) {
+  return roleAssets.find((asset) => asset.name.startsWith(`icon_role_${lineId}_`))?.path ?? null
+}
 
 const HOME_URL = import.meta.env.VITE_HOME_URL
   ?? (import.meta.env.DEV ? 'http://localhost:15172' : 'https://tc-imba.com')
@@ -77,7 +92,7 @@ type WikiView = 'skills' | 'cards'
 
 function getInitialPage(): Page {
   if (window.location.pathname.replace(/\/$/, '').endsWith('/changelog')) return 'changelog'
-  return new URLSearchParams(window.location.search).get('view') === 'wiki' ? 'wiki' : 'overview'
+  return 'wiki'
 }
 
 function getInitialWikiView(): WikiView {
@@ -278,9 +293,9 @@ function App() {
       </nav>
 
       {page === 'wiki' ? (
-        <WikiPage view={wikiView} />
+        <WikiPage view={wikiView} onViewChange={openWiki} />
       ) : page === 'changelog' ? (
-        <ChangelogPage onBack={() => navigateToPage('overview')} />
+        <ChangelogPage onBack={() => navigateToPage('wiki')} />
       ) : (
       <main>
         <section className="ro3-hero" aria-labelledby="ro3-title">
@@ -490,7 +505,7 @@ function ChangelogPage({ onBack }: { onBack: () => void }) {
   )
 }
 
-function WikiPage({ view }: { view: WikiView }) {
+function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view: WikiView) => void }) {
   const [lineId, setLineId] = useState(WIKI_PROFESSION_LINES[0]?.id ?? '')
   const [stageId, setStageId] = useState('')
   const [query, setQuery] = useState('')
@@ -535,6 +550,16 @@ function WikiPage({ view }: { view: WikiView }) {
             <h1>{view === 'skills' ? content.wiki.skillsPageTitle : content.wiki.cardsPageTitle}</h1>
             <p>{view === 'skills' ? content.wiki.skillsPageDescription : content.wiki.cardsPageDescription}</p>
           </div>
+          <div className="wiki-view-tabs" role="tablist" aria-label={content.wiki.tabsLabel}>
+            <button type="button" role="tab" aria-selected={view === 'skills'} className={view === 'skills' ? 'is-active' : undefined} onClick={() => onViewChange('skills')}>
+              <Swords aria-hidden="true" />
+              {content.wiki.tabs.skills}
+            </button>
+            <button type="button" role="tab" aria-selected={view === 'cards'} className={view === 'cards' ? 'is-active' : undefined} onClick={() => onViewChange('cards')}>
+              <BookOpen aria-hidden="true" />
+              {content.wiki.tabs.cards}
+            </button>
+          </div>
           <div className="wiki-stats" aria-label={view === 'skills' ? content.wiki.skillsPageTitle : content.wiki.cardsPageTitle}>
             {view === 'skills' ? (
               <>
@@ -571,8 +596,13 @@ function WikiPage({ view }: { view: WikiView }) {
                   aria-pressed={candidate.id === line?.id}
                   onClick={() => selectLine(candidate.id)}
                 >
-                  <strong>{candidate.label}</strong>
-                  <small>{content.wiki.skillCount.replace('{count}', String(skillCount))}</small>
+                  <span className="wiki-line-nav-art">
+                    {getProfessionAsset(candidate.id) ? <img src={getProfessionAsset(candidate.id) ?? undefined} alt="" loading="lazy" /> : <Swords aria-hidden="true" />}
+                  </span>
+                  <span className="wiki-line-nav-copy">
+                    <strong>{candidate.label}</strong>
+                    <small>{content.wiki.skillCount.replace('{count}', String(skillCount))}</small>
+                  </span>
                   <ChevronRight aria-hidden="true" />
                 </button>
               )
@@ -660,14 +690,7 @@ function WikiPage({ view }: { view: WikiView }) {
             </div>
 
             {skills.length > 0 ? (
-              <div className="wiki-skill-table" role="table" aria-label={content.wiki.skillsTitle}>
-                <div className="wiki-skill-row is-header" role="row">
-                  <span role="columnheader">{content.wiki.icon}</span>
-                  <span role="columnheader">{content.wiki.skillId}</span>
-                  <span role="columnheader">{content.wiki.profession}</span>
-                  <span role="columnheader">{content.wiki.stage}</span>
-                  <span role="columnheader">{content.wiki.status}</span>
-                </div>
+              <div className="wiki-skill-grid" aria-label={content.wiki.skillsTitle}>
                 {skills.map(({ stage, skillId, evidence }) => (
                   <WikiSkillRow
                     key={skillId}
@@ -704,14 +727,16 @@ function ProfessionSummary({
   line,
   stages,
 }: {
-  line: { label: string; paths: string[][] }
+  line: WikiProfessionLine
   stages: WikiProfessionStage[]
 }) {
   const skillCount = stages.reduce((count, stage) => count + stage.skillIds.length, 0)
 
   return (
     <section className="wiki-profession-summary" aria-labelledby="wiki-profession-summary-title">
-      <div className="wiki-profession-summary-icon"><Swords aria-hidden="true" /></div>
+      <div className="wiki-profession-summary-icon">
+        {getProfessionAsset(line.id) ? <img src={getProfessionAsset(line.id) ?? undefined} alt="" /> : <Swords aria-hidden="true" />}
+      </div>
       <div className="wiki-profession-summary-copy">
         <span>{content.wiki.professionSummary.eyebrow}</span>
         <h3 id="wiki-profession-summary-title">{line.label}</h3>
@@ -745,20 +770,19 @@ function WikiSkillRow({
     <button
       type="button"
       className="wiki-skill-row"
-      role="row"
       onClick={onSelect}
       aria-label={`${stage.label} ${skillId}`}
     >
-      <span role="cell" className="wiki-skill-row-icon">
+      <span className="wiki-skill-row-icon">
         {asset ? <img src={asset.path} alt="" loading="lazy" /> : <Zap aria-hidden="true" />}
       </span>
-      <strong role="cell">
-        {skillId}
-        <small>{evidence.eventName}</small>
-      </strong>
-      <span role="cell"><b>{stage.label}</b></span>
-      <span role="cell">{content.wiki.tier.replace('{tier}', String(stage.tier))}</span>
-      <span role="cell"><i />{asset ? (asset.match === 'exact' ? content.wiki.iconExact : content.wiki.iconFamily) : content.wiki.iconUnavailable}</span>
+      <span className="wiki-skill-row-copy">
+        <small>{stage.label} · {content.wiki.tier.replace('{tier}', String(stage.tier))}</small>
+        <strong>{content.wiki.skillId} {skillId}</strong>
+        <em>{evidence.eventName}</em>
+      </span>
+      <span className="wiki-skill-row-status"><i />{asset ? (asset.match === 'exact' ? content.wiki.iconExact : content.wiki.iconFamily) : content.wiki.iconUnavailable}</span>
+      <ChevronRight aria-hidden="true" />
     </button>
   )
 }
@@ -910,13 +934,7 @@ function CardWiki({
         </div>
 
         {cards.length > 0 ? (
-          <div className="wiki-card-table" role="table" aria-label={content.wiki.cards.title}>
-            <div className="wiki-card-row is-header" role="row">
-              <span role="columnheader">{content.wiki.cards.name}</span>
-              <span role="columnheader">{content.wiki.cards.type}</span>
-              <span role="columnheader">{content.wiki.cards.series}</span>
-              <span role="columnheader">{content.wiki.cards.status}</span>
-            </div>
+          <div className="wiki-card-grid" aria-label={content.wiki.cards.title}>
             {cards.map((card) => <CardRow key={card.id} card={card} onSelect={onSelect} />)}
           </div>
         ) : (
@@ -934,22 +952,24 @@ function CardRow({ card, onSelect }: { card: WikiCard; onSelect: (card: WikiCard
     : content.wiki.cards.baseDescription
 
   return (
-    <button type="button" className="wiki-card-row" role="row" onClick={() => onSelect(card)}>
-      <strong role="cell">
-        {card.name}
+    <button type="button" className="wiki-card-row" onClick={() => onSelect(card)}>
+      <span className="wiki-card-art" aria-hidden="true">
+        <span>{card.kind === 'collection' ? '典藏' : '基础'}</span>
+        <strong>{card.name.slice(0, 2)}</strong>
+      </span>
+      <span className="wiki-card-copy">
+        <strong>{card.name}</strong>
         <small>{description}</small>
-      </strong>
-      <span role="cell">
-        <b>{card.kind === 'collection' ? content.wiki.cards.collection : content.wiki.cards.base}</b>
+        <span className="wiki-card-related">
+          {relatedNames?.length
+            ? relatedNames.slice(0, 3).map((name) => <em key={name}>{name}</em>)
+            : <em>{content.wiki.cards.noAliases}</em>}
+        </span>
       </span>
-      <span role="cell" className="wiki-card-related">
-        {relatedNames?.length
-          ? relatedNames.map((name) => <small key={name}>{name}</small>)
-          : <small>{content.wiki.cards.noAliases}</small>}
-      </span>
-      <span role="cell" className="wiki-card-status">
+      <span className="wiki-card-status">
         <Database aria-hidden="true" />
         {card.kind === 'collection' ? content.wiki.cards.seriesConfirmed : content.wiki.cards.nameConfirmed}
+        <ChevronRight aria-hidden="true" />
       </span>
     </button>
   )
