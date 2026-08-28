@@ -928,57 +928,6 @@ select {
   font-size: 0.875rem;
 }
 
-.wiki-view-tabs {
-  display: inline-grid;
-  grid-template-columns: repeat(2, minmax(9rem, 1fr));
-  margin-top: 1.125rem;
-  border: 1px solid var(--border);
-  border-radius: var(--arkive-radius-compact);
-  overflow: hidden;
-  background: var(--background);
-}
-
-.wiki-view-tabs button {
-  display: grid;
-  min-height: 2.75rem;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.5rem;
-  padding-inline: 0.75rem;
-  border: 0;
-  border-right: 1px solid var(--border);
-  color: var(--muted-foreground);
-  background: transparent;
-  font-size: 0.8125rem;
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.wiki-view-tabs button:last-child {
-  border-right: 0;
-}
-
-.wiki-view-tabs button:hover,
-.wiki-view-tabs button.is-active {
-  color: var(--foreground);
-  background: var(--arkive-filter-active);
-}
-
-.wiki-view-tabs button.is-active {
-  box-shadow: inset 0 -0.15rem var(--arkive-nav-active);
-}
-
-.wiki-view-tabs svg {
-  width: 1rem;
-  height: 1rem;
-  color: var(--arkive-nav-active);
-}
-
-.wiki-view-tabs small {
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-}
-
 .wiki-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2309,11 +2258,6 @@ select {
 
   .wiki-skill-row > *:nth-child(3) {
     display: none;
-  }
-
-  .wiki-view-tabs {
-    width: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .wiki-card-row {

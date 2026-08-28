@@ -122,6 +122,10 @@
     "eyebrow": "RO3 PLAYER REFERENCE",
     "title": "RO3 游戏 Wiki",
     "description": "基于客户端 0.0.1.13 整理的职业技能与卡片资料库。",
+    "skillsPageTitle": "职业技能 Wiki",
+    "skillsPageDescription": "按基础职业系、转职阶段和客户端技能编号检索职业资料。",
+    "cardsPageTitle": "卡片图鉴 Wiki",
+    "cardsPageDescription": "按卡片类型、名称和典藏序列检索客户端卡片资料。",
     "tabsLabel": "Wiki 内容",
     "tabs": {
       "skills": "职业技能",

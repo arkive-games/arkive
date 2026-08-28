@@ -277,7 +277,7 @@ function App() {
       </nav>
 
       {page === 'wiki' ? (
-        <WikiPage view={wikiView} onViewChange={openWiki} />
+        <WikiPage view={wikiView} />
       ) : page === 'changelog' ? (
         <ChangelogPage onBack={() => navigateToPage('overview')} />
       ) : (
@@ -489,7 +489,7 @@ function ChangelogPage({ onBack }: { onBack: () => void }) {
   )
 }
 
-function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view: WikiView) => void }) {
+function WikiPage({ view }: { view: WikiView }) {
   const [lineId, setLineId] = useState(WIKI_PROFESSION_LINES[0]?.id ?? '')
   const [stageId, setStageId] = useState('')
   const [query, setQuery] = useState('')
@@ -531,34 +531,10 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
         <div className="ro3-shell wiki-masthead-inner">
           <div className="wiki-title-block">
             <span>{content.wiki.eyebrow}</span>
-            <h1>{content.wiki.title}</h1>
-            <p>{content.wiki.description}</p>
-            <div className="wiki-view-tabs" role="tablist" aria-label={content.wiki.tabsLabel}>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === 'skills'}
-                className={view === 'skills' ? 'is-active' : undefined}
-                onClick={() => onViewChange('skills')}
-              >
-                <Swords aria-hidden="true" />
-                {content.wiki.tabs.skills}
-                <small>{WIKI_SKILL_COUNT}</small>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === 'cards'}
-                className={view === 'cards' ? 'is-active' : undefined}
-                onClick={() => onViewChange('cards')}
-              >
-                <BookOpen aria-hidden="true" />
-                {content.wiki.tabs.cards}
-                <small>{CARD_COUNTS.wikiCards}</small>
-              </button>
-            </div>
+            <h1>{view === 'skills' ? content.wiki.skillsPageTitle : content.wiki.cardsPageTitle}</h1>
+            <p>{view === 'skills' ? content.wiki.skillsPageDescription : content.wiki.cardsPageDescription}</p>
           </div>
-          <div className="wiki-stats" aria-label={content.wiki.title}>
+          <div className="wiki-stats" aria-label={view === 'skills' ? content.wiki.skillsPageTitle : content.wiki.cardsPageTitle}>
             {view === 'skills' ? (
               <>
                 <WikiStat icon={GitBranch} value={WIKI_PROFESSION_LINES.length} label={content.wiki.stats.lines} />
