@@ -614,10 +614,6 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
           <section className="skill-native-workspace" aria-labelledby="wiki-skills-title">
             <div className="skill-native-bar">
               <span className="skill-native-bar-title">{content.wiki.tabs.skills}</span>
-              <div className="skill-native-tabs" role="tablist" aria-label={content.wiki.tabsLabel}>
-                <button type="button" className="is-active" role="tab" aria-selected="true">{content.wiki.tabs.skills}</button>
-                <button type="button" role="tab" aria-selected="false" onClick={() => onViewChange('cards')}>{content.wiki.tabs.cards}</button>
-              </div>
               <span className="skill-native-bar-state">{content.wiki.stats.version} {WIKI_CLIENT_VERSION}</span>
             </div>
 

@@ -2311,7 +2311,7 @@ select {
 .card-native-bar {
   display: grid;
   min-height: 3.6rem;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 1rem;
   padding-inline: 1rem;
