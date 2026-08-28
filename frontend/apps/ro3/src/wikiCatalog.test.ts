@@ -74,4 +74,14 @@ describe('RO3 Wiki catalog', () => {
   it('bundles the extracted client skill icon inventory', () => {
     expect(WIKI_SKILL_ASSET_COUNT).toBe(1106)
   })
+
+  it('varies family candidates across skills in one stage', () => {
+    const stage = WIKI_STAGE_BY_ID.get('wizard')!
+    const first = getWikiSkillDetail(stage, stage.skillIds[0]).asset
+    const second = getWikiSkillDetail(stage, stage.skillIds[1]).asset
+
+    expect(first?.match).toBe('family')
+    expect(second?.match).toBe('family')
+    expect(first?.name).not.toBe(second?.name)
+  })
 })

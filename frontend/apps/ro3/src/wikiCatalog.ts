@@ -209,8 +209,13 @@ export function getWikiSkillAsset(stage: WikiProfessionStage, skillId: string): 
   if (direct) return { ...direct, match: 'exact' }
 
   const families = SKILL_ICON_FAMILY_ALIASES[stage.sourceName] ?? [stage.sourceName.toLowerCase()]
-  const familyAsset = WIKI_SKILL_ASSETS.find((asset) => asset.family && families.includes(asset.family))
-  return familyAsset ? { ...familyAsset, match: 'family' } : null
+  const familyAssets = WIKI_SKILL_ASSETS.filter((asset) => asset.family && families.includes(asset.family))
+  if (familyAssets.length === 0) return null
+
+  // The package does not expose an id-to-icon table. Stable ordinal assignment keeps
+  // the inventory visually useful without claiming that a candidate is exact.
+  const ordinal = Math.max(0, stage.skillIds.indexOf(skillId))
+  return { ...familyAssets[ordinal % familyAssets.length], match: 'family' }
 }
 
 export const WIKI_SKILL_COUNT = stages.reduce((count, stage) => count + stage.skillIds.length, 0)
