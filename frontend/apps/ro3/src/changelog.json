@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.0",
+      "date": "2026-08-29",
+      "commit": "6ae34ca35828e4901c2e38ed95d94c67c78058f6",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added inspectable profession paths and client skill detail records to the Ragnarok 3 Wiki.",
+            "zh-CN": "新增可查看的仙境传说 3 职业进阶路线与客户端技能详情记录。",
+            "zh-TW": "新增可查看的仙境傳說 3 職業進階路線與客戶端技能詳情記錄。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.1.0",
       "date": "2026-08-28",
       "commit": "5fdcde849ab10337a4523c7dcaf05ff9f3287500",
