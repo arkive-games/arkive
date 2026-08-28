@@ -11,6 +11,7 @@ export type SpecificGameCategory = Exclude<GameCategory, 'all'>
 
 const GAME_CATEGORY_MAP: Record<string, readonly SpecificGameCategory[]> = {
   aion2: ['mmorpg'],
+  gmzz: ['mmorpg'],
   palworld: ['survivalAdventure'],
   vrising: ['singlePlayer', 'survivalAdventure'],
   sts2: ['singlePlayer', 'cardStrategy'],

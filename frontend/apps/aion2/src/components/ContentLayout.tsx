@@ -34,10 +34,13 @@ export default function ContentLayout({
   const { pathname } = useLocation();
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
   const brandName = getArkiveBrandName(currentLng, t("brand.name"));
+  const isUtopianTheater = pathname === "/wiki/utopian-theater";
   const wikiType = pathname.match(/^\/wiki\/(quest|npc|item)(?:\/|$)/)?.[1];
-  const mobileTitle = pageTitle ?? (wikiType
-    ? t(`mobileNav.${wikiType}`)
-    : t("mobileNav.wiki"));
+  const mobileTitle = pageTitle ?? (isUtopianTheater
+    ? t("mobileNav.utopianTheater")
+    : wikiType
+      ? t(`mobileNav.${wikiType}`)
+      : t("mobileNav.wiki"));
 
   return (
     <div

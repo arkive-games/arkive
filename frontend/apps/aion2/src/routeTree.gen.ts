@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as WikiRouteRouteImport } from './routes/wiki/route'
 import { Route as WikiIndexRouteImport } from './routes/wiki/index'
+import { Route as WikiUtopianTheaterRouteImport } from './routes/wiki/utopian-theater'
 import { Route as WikiTypeIndexRouteImport } from './routes/wiki/$type/index'
 import { Route as WikiTypeSlugRouteImport } from './routes/wiki/$type/$slug'
 
@@ -36,6 +37,11 @@ const WikiIndexRoute = WikiIndexRouteImport.update({
   path: '/',
   getParentRoute: () => WikiRouteRoute,
 } as any)
+const WikiUtopianTheaterRoute = WikiUtopianTheaterRouteImport.update({
+  id: '/utopian-theater',
+  path: '/utopian-theater',
+  getParentRoute: () => WikiRouteRoute,
+} as any)
 const WikiTypeIndexRoute = WikiTypeIndexRouteImport.update({
   id: '/$type/',
   path: '/$type/',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/wiki': typeof WikiRouteRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki/': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
   '/wiki/$type/': typeof WikiTypeIndexRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/changelog': typeof ChangelogRoute
+  '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
   '/wiki/$type': typeof WikiTypeIndexRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/wiki': typeof WikiRouteRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki/': typeof WikiIndexRoute
   '/wiki/$type/$slug': typeof WikiTypeSlugRoute
   '/wiki/$type/': typeof WikiTypeIndexRoute
@@ -77,16 +86,24 @@ export interface FileRouteTypes {
     | '/'
     | '/wiki'
     | '/changelog'
+    | '/wiki/utopian-theater'
     | '/wiki/'
     | '/wiki/$type/$slug'
     | '/wiki/$type/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/changelog' | '/wiki' | '/wiki/$type/$slug' | '/wiki/$type'
+  to:
+    | '/'
+    | '/changelog'
+    | '/wiki/utopian-theater'
+    | '/wiki'
+    | '/wiki/$type/$slug'
+    | '/wiki/$type'
   id:
     | '__root__'
     | '/'
     | '/wiki'
     | '/changelog'
+    | '/wiki/utopian-theater'
     | '/wiki/'
     | '/wiki/$type/$slug'
     | '/wiki/$type/'
@@ -128,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WikiIndexRouteImport
       parentRoute: typeof WikiRouteRoute
     }
+    '/wiki/utopian-theater': {
+      id: '/wiki/utopian-theater'
+      path: '/utopian-theater'
+      fullPath: '/wiki/utopian-theater'
+      preLoaderRoute: typeof WikiUtopianTheaterRouteImport
+      parentRoute: typeof WikiRouteRoute
+    }
     '/wiki/$type/': {
       id: '/wiki/$type/'
       path: '/$type'
@@ -146,12 +170,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface WikiRouteRouteChildren {
+  WikiUtopianTheaterRoute: typeof WikiUtopianTheaterRoute
   WikiIndexRoute: typeof WikiIndexRoute
   WikiTypeSlugRoute: typeof WikiTypeSlugRoute
   WikiTypeIndexRoute: typeof WikiTypeIndexRoute
 }
 
 const WikiRouteRouteChildren: WikiRouteRouteChildren = {
+  WikiUtopianTheaterRoute: WikiUtopianTheaterRoute,
   WikiIndexRoute: WikiIndexRoute,
   WikiTypeSlugRoute: WikiTypeSlugRoute,
   WikiTypeIndexRoute: WikiTypeIndexRoute,

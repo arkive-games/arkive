@@ -29,6 +29,7 @@ export default function TopNavbar() {
         { key: "quest", label: t("common:mobileNav.quest") },
         { key: "npc", label: t("common:mobileNav.npc") },
         { key: "item", label: t("common:mobileNav.item") },
+        { key: "utopian-theater", label: t("wiki:utopianTheater.title") },
       ],
     },
   ];
@@ -51,6 +52,10 @@ export default function TopNavbar() {
           );
           return item.key === "map" ? (
             <Link to="/" className={className}>
+              {label}
+            </Link>
+          ) : item.key === "utopian-theater" ? (
+            <Link to="/wiki/utopian-theater" className={className}>
               {label}
             </Link>
           ) : (

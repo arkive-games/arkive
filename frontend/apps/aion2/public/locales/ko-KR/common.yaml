@@ -237,6 +237,7 @@ mobileNav:
   item: "아이템"
   wiki: "위키"
   more: "더보기"
+  utopianTheater: "우토피아 극장"
 
 # Version-history page (/changelog). The entry text itself lives in
 # src/changelog.json with its own per-locale strings.

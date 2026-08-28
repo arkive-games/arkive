@@ -11,6 +11,7 @@ import {
   IconHistory,
   IconLayoutDashboard,
   IconPackage,
+  IconSparkles,
   IconUsers,
   type Icon,
 } from "@tabler/icons-react";
@@ -44,6 +45,7 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
   const activeType = pathname.match(/^\/wiki\/(quest|npc|item)(?:\/|$)/)?.[1] as
     | WikiType
     | undefined;
+  const activeUtopianTheater = pathname === "/wiki/utopian-theater";
   const activeNode = taxonomy?.types.find((entry) => entry.slug === activeType);
   const pathGroup = activeNode?.groups.find(
     (group) => group.slug === pathname.split("/")[3],
@@ -114,13 +116,13 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
         <div className="sticky top-0 flex max-h-[calc(100dvh-3.5rem)] flex-col overflow-y-auto">
           <div className="flex h-20 shrink-0 items-center gap-3 border-b border-border px-4">
             <img
-              src={getStaticUrl("images/Logo.webp")}
-              alt="AION2"
+              src={getStaticUrl(activeUtopianTheater ? "images/gmzz-logo.png" : "images/Logo.webp")}
+              alt={activeUtopianTheater ? t("wiki:utopianTheater.siteTitle") : "AION2"}
               className="size-11 shrink-0 object-contain"
             />
             <div className="min-w-0">
               <strong className="block truncate text-sm font-semibold leading-tight text-[color:var(--arkive-nav-active)]">
-                {t("wiki:workspace.title")}
+                {t(activeUtopianTheater ? "wiki:utopianTheater.siteTitle" : "wiki:workspace.title")}
               </strong>
               <span className="mt-1 block text-xs text-muted-foreground">
                 {t("wiki:nav.wiki")}
@@ -135,7 +137,14 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
               active={pathname === "/wiki" || pathname === "/wiki/"}
               icon={IconLayoutDashboard}
             />
-            {types.map(({ type, count, groups }) => (
+            <RailLink
+              to="/wiki/utopian-theater"
+              label={t("wiki:utopianTheater.title")}
+              count={281}
+              active={activeUtopianTheater}
+              icon={IconSparkles}
+            />
+            {!activeUtopianTheater && types.map(({ type, count, groups }) => (
               <Fragment key={type}>
                 <RailLink
                   to="/wiki/$type"

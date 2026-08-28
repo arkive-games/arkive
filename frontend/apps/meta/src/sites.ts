@@ -2,6 +2,7 @@ import type { CreatePostBody } from '@gamemap/api-core'
 
 import aion2Bg from './assets/aion2-bg.jpg'
 import palworldBg from './assets/palworld-bg.webp'
+import gmzzBg from './assets/gmzz-bg.webp'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
 const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1604030/library_600x900_2x.jpg'
@@ -67,6 +68,20 @@ export const SITES: SiteCard[] = [
     nameKey: 'site.aion2.name',
     descKey: 'site.aion2.desc',
     featureKey: 'site.aion2.feature',
+  },
+  {
+    id: 'gmzz',
+    url: resolveSiteUrl(
+      import.meta.env.VITE_GMZZ_URL,
+      'http://localhost:15173/wiki/utopian-theater',
+      // The first GMZZ dataset currently ships from the existing AION2 host;
+      // VITE_GMZZ_URL can switch this to the dedicated app when it deploys.
+      'https://aion2.tc-imba.com/wiki/utopian-theater',
+    ),
+    bg: gmzzBg,
+    nameKey: 'site.gmzz.name',
+    descKey: 'site.gmzz.desc',
+    featureKey: 'site.gmzz.feature',
   },
   {
     id: 'palworld',

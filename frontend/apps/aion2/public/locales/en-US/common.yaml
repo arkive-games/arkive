@@ -237,6 +237,7 @@ mobileNav:
   item: "Items"
   wiki: "Wiki"
   more: "More"
+  utopianTheater: "Utopian Theater"
 
 # Version-history page (/changelog). The entry text itself lives in
 # src/changelog.json with its own per-locale strings.

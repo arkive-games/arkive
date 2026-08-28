@@ -158,6 +158,7 @@ mobileNav:
   item: "物品"
   wiki: "百科"
   more: "更多"
+  utopianTheater: "烏托邦劇院"
 
 # Version-history page (/changelog). The entry text itself lives in
 # src/changelog.json with its own per-locale strings.
