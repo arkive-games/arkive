@@ -2991,6 +2991,90 @@ select {
   .card-native-detail { display: grid; grid-template-columns: 1fr; }
 }
 
+/* Card catalogue follows the Paldeck scanning pattern: a dense, responsive
+   image grid in the main column, with the selected record pinned in the detail
+   rail. The frames and palette remain RO3-native. */
+.card-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+  align-content: start;
+  gap: 0.65rem;
+  max-height: 33rem;
+  margin-top: 1rem;
+  padding: 0.2rem 0.2rem 0.75rem;
+  overflow-y: auto;
+  scrollbar-color: rgba(121, 100, 68, 0.55) transparent;
+}
+
+.card-catalog-grid .card-tile {
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 0.72;
+  grid-column: auto;
+  grid-row: auto;
+  align-content: end;
+  padding: 0.3rem;
+  border: 1px solid rgba(105, 93, 72, 0.5);
+  background: rgba(237, 225, 195, 0.9);
+  transform: none;
+}
+
+.card-catalog-grid .card-tile-art {
+  min-height: 0;
+  height: auto;
+  aspect-ratio: 0.75;
+  align-self: stretch;
+  background-color: #c6d0bd;
+}
+
+.card-catalog-grid .card-tile-art span {
+  font-size: clamp(1rem, 2vw, 1.45rem);
+}
+
+.card-catalog-grid .card-tile strong {
+  padding-inline: 0.1rem;
+  font-size: 0.6875rem;
+  line-height: 1.25;
+}
+
+.card-catalog-grid .card-tile small {
+  font-size: 0.625rem;
+}
+
+.card-catalog-grid .card-tile-lock {
+  top: 0.2rem;
+  left: 0.25rem;
+  z-index: 1;
+  color: #a1782d;
+  font-size: 0.7rem;
+}
+
+.card-catalog-grid .card-tile.is-active {
+  border-color: #d9a83f;
+  box-shadow: 0 0 0 0.14rem rgba(217, 168, 63, 0.25), 0 0 0.8rem rgba(217, 168, 63, 0.38);
+}
+
+.card-catalog-grid .card-tile:hover,
+.card-catalog-grid .card-tile:focus-visible {
+  border-color: #d9a83f;
+}
+
+@media (min-width: 75rem) {
+  .card-catalog-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+@media (min-width: 48rem) and (max-width: 74.99rem) {
+  .card-catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 47.99rem) {
+  .card-catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: none;
+    overflow: visible;
+  }
+}
+
 @media (max-width: 24rem) {
   .wiki-stats {
     grid-template-columns: 1fr;

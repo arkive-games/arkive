@@ -893,7 +893,6 @@ function CardWiki({
     .map((source) => source.sha256.slice(0, 12))
     .join(' / ')
   const activeCard = selectedCard ?? cards[0] ?? null
-  const compositionCards = cards.slice(0, 4)
 
   return (
     <div className="ro3-shell wiki-card-workspace" role="tabpanel">
@@ -926,10 +925,8 @@ function CardWiki({
               {query ? <button type="button" aria-label={content.search.clear} onClick={() => onQueryChange('')}><X aria-hidden="true" /></button> : null}
             </label>
           </div>
-          <div className="card-composition" aria-label={content.wiki.cards.title}>
-            {compositionCards.length > 0 ? compositionCards.map((card, index) => <CardTile key={card.id} card={card} active={activeCard?.id === card.id} position={index} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
-            <div className="card-weapon-emblem" aria-hidden="true"><Swords /></div>
-            <div className="card-composition-note">{content.wiki.cards.unmapped}</div>
+          <div className="card-catalog-grid" aria-label={content.wiki.cards.title}>
+            {cards.length > 0 ? cards.map((card) => <CardTile key={card.id} card={card} active={activeCard?.id === card.id} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
           </div>
           <div className="card-native-source"><Database aria-hidden="true" /><span>{content.wiki.cards.sourceNote} <code>{sourceFingerprint}</code></span></div>
         </section>
@@ -942,10 +939,10 @@ function CardWiki({
   )
 }
 
-function CardTile({ card, active, position, onSelect }: { card: WikiCard; active: boolean; position: number; onSelect: (card: WikiCard) => void }) {
+function CardTile({ card, active, onSelect }: { card: WikiCard; active: boolean; onSelect: (card: WikiCard) => void }) {
   return (
-    <button type="button" className={`card-tile card-tile-${position}${active ? ' is-active' : ''}`} onClick={() => onSelect(card)}>
-      <span className="card-tile-lock" aria-hidden="true">{position === 0 ? '◈' : ''}</span>
+    <button type="button" className={`card-tile${active ? ' is-active' : ''}`} onClick={() => onSelect(card)}>
+      <span className="card-tile-lock" aria-hidden="true">{card.kind === 'collection' ? '✦' : ''}</span>
       <span className="card-tile-art"><span>{card.name.slice(0, 2)}</span></span>
       <strong>{card.name}</strong>
       <small>{card.kind === 'collection' ? content.wiki.cards.collection : content.wiki.cards.base}</small>
