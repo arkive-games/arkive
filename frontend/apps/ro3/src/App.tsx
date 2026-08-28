@@ -79,9 +79,14 @@ function getInitialPage(): Page {
   return new URLSearchParams(window.location.search).get('view') === 'wiki' ? 'wiki' : 'overview'
 }
 
+function getInitialWikiView(): WikiView {
+  return new URLSearchParams(window.location.search).get('wiki') === 'cards' ? 'cards' : 'skills'
+}
+
 function App() {
   const { theme, setTheme } = useTheme()
   const [page, setPage] = useState<Page>(getInitialPage)
+  const [wikiView, setWikiView] = useState<WikiView>(getInitialWikiView)
   const [query, setQuery] = useState('')
   const [classId, setClassId] = useState('')
   const [dungeonId, setDungeonId] = useState('')
@@ -89,11 +94,28 @@ function App() {
   const [sort, setSort] = useState<GuideSort>('latest')
   const [noticeId, setNoticeId] = useState(0)
 
-  const navItems: ShellNavItem[] = useMemo(() => content.navigation.map((item) => ({
-    key: item.key,
-    label: item.label,
-    active: item.key === page,
-  })), [page])
+  const navItems: ShellNavItem[] = useMemo(() => content.navigation.map((item) => {
+    if (item.key !== 'wiki') {
+      return { key: item.key, label: item.label, active: item.key === page }
+    }
+    return {
+      key: item.key,
+      label: item.label,
+      active: page === 'wiki',
+      children: [
+        {
+          key: 'wiki-skills',
+          label: content.wiki.tabs.skills,
+          active: page === 'wiki' && wikiView === 'skills',
+        },
+        {
+          key: 'wiki-cards',
+          label: content.wiki.tabs.cards,
+          active: page === 'wiki' && wikiView === 'cards',
+        },
+      ],
+    }
+  }), [page, wikiView])
 
   useEffect(() => {
     document.title = page === 'wiki'
@@ -104,7 +126,10 @@ function App() {
   }, [page])
 
   useEffect(() => {
-    const handlePopState = () => setPage(getInitialPage())
+    const handlePopState = () => {
+      setPage(getInitialPage())
+      setWikiView(getInitialWikiView())
+    }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
@@ -134,22 +159,31 @@ function App() {
     showUnavailable()
   }
 
-  const navigateToPage = (nextPage: Page) => {
+  const navigateToPage = (nextPage: Page, nextWikiView: WikiView = wikiView) => {
     const url = new URL(window.location.href)
     url.pathname = nextPage === 'changelog' ? '/changelog' : '/'
-    if (nextPage === 'wiki') url.searchParams.set('view', 'wiki')
-    else url.searchParams.delete('view')
+    if (nextPage === 'wiki') {
+      url.searchParams.set('view', 'wiki')
+      url.searchParams.set('wiki', nextWikiView)
+    } else {
+      url.searchParams.delete('view')
+      url.searchParams.delete('wiki')
+    }
     window.history.pushState({}, '', url)
     setPage(nextPage)
+    setWikiView(nextWikiView)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const openWiki = () => {
+  const openWiki = (nextWikiView: WikiView = 'skills') => {
     if (WIKI_URL) {
-      window.location.assign(WIKI_URL)
+      const url = new URL(WIKI_URL, window.location.href)
+      url.searchParams.set('view', 'wiki')
+      url.searchParams.set('wiki', nextWikiView)
+      window.location.assign(url)
       return
     }
-    navigateToPage('wiki')
+    navigateToPage('wiki', nextWikiView)
   }
 
   const handleNavigation = (key: string) => {
@@ -163,8 +197,12 @@ function App() {
       window.setTimeout(() => document.querySelector('#guide-browser')?.scrollIntoView({ behavior: 'smooth' }))
       return
     }
-    if (key === 'wiki') {
-      openWiki()
+    if (key === 'wiki' || key === 'wiki-skills') {
+      openWiki('skills')
+      return
+    }
+    if (key === 'wiki-cards') {
+      openWiki('cards')
       return
     }
     if (key in DESTINATIONS) openDestination(key as DestinationKey)
@@ -198,6 +236,9 @@ function App() {
         brandSlogan={content.brandSlogan}
         nav={{
           items: navItems,
+          onDropdownTriggerClick: (item) => {
+            if (item.key === 'wiki') openWiki('skills')
+          },
           renderItem: (item, className, labelClassName) => (
             <button type="button" className={className} onClick={() => handleNavigation(item.key)}>
               <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
@@ -236,7 +277,7 @@ function App() {
       </nav>
 
       {page === 'wiki' ? (
-        <WikiPage onBack={() => navigateToPage('overview')} />
+        <WikiPage view={wikiView} onViewChange={openWiki} />
       ) : page === 'changelog' ? (
         <ChangelogPage onBack={() => navigateToPage('overview')} />
       ) : (
@@ -448,8 +489,7 @@ function ChangelogPage({ onBack }: { onBack: () => void }) {
   )
 }
 
-function WikiPage({ onBack }: { onBack: () => void }) {
-  const [view, setView] = useState<WikiView>('skills')
+function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view: WikiView) => void }) {
   const [lineId, setLineId] = useState(WIKI_PROFESSION_LINES[0]?.id ?? '')
   const [stageId, setStageId] = useState('')
   const [query, setQuery] = useState('')
@@ -489,10 +529,6 @@ function WikiPage({ onBack }: { onBack: () => void }) {
     <main className="wiki-page">
       <header className="wiki-masthead">
         <div className="ro3-shell wiki-masthead-inner">
-          <button type="button" className="wiki-back" onClick={onBack}>
-            <ArrowLeft aria-hidden="true" />
-            {content.wiki.back}
-          </button>
           <div className="wiki-title-block">
             <span>{content.wiki.eyebrow}</span>
             <h1>{content.wiki.title}</h1>
@@ -503,7 +539,7 @@ function WikiPage({ onBack }: { onBack: () => void }) {
                 role="tab"
                 aria-selected={view === 'skills'}
                 className={view === 'skills' ? 'is-active' : undefined}
-                onClick={() => setView('skills')}
+                onClick={() => onViewChange('skills')}
               >
                 <Swords aria-hidden="true" />
                 {content.wiki.tabs.skills}
@@ -514,7 +550,7 @@ function WikiPage({ onBack }: { onBack: () => void }) {
                 role="tab"
                 aria-selected={view === 'cards'}
                 className={view === 'cards' ? 'is-active' : undefined}
-                onClick={() => setView('cards')}
+                onClick={() => onViewChange('cards')}
               >
                 <BookOpen aria-hidden="true" />
                 {content.wiki.tabs.cards}
