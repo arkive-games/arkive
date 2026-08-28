@@ -38,6 +38,7 @@ import {
   type SiteClickCounts,
 } from './sites'
 import { AllGamesPage } from './AllGamesPage'
+import { ToolsPage } from './ToolsPage'
 import { AuthenticatedControls } from './AuthenticatedControls'
 import { ForumPage } from './ForumPage'
 import {
@@ -78,6 +79,7 @@ const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum'] as const
 type HomeRoute =
   | { view: 'discoverGames' }
   | { view: 'allGames' }
+  | { view: 'tools' }
   | { view: 'platformUpdates' }
   | { view: 'forum'; composer: boolean }
   | { view: 'notifications'; section: NotificationSection }
@@ -123,6 +125,7 @@ function recentDestination(site: SiteCard, route: string): RecentDestination {
 function routeFromHash(): HomeRoute {
   const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
   if (root === 'games') return { view: 'allGames' }
+  if (root === 'tools') return { view: 'tools' }
   if (root === 'updates') return { view: 'platformUpdates' }
   if (root === 'forum') return { view: 'forum', composer: value === 'new' }
   if (root === 'notifications') {
@@ -333,6 +336,7 @@ export default function App() {
           items: navItems,
           onDropdownTriggerClick: (item) => {
             if (item.key === 'allGames') window.location.hash = '#games'
+            if (item.key === 'tools') window.location.hash = '#tools'
           },
           renderItem: (item, className, labelClassName) => {
             const label = <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
@@ -359,6 +363,8 @@ export default function App() {
               <a href="#explore" className={className}>{label}</a>
             ) : item.key === 'forum' ? (
               <a href="#forum" className={className}>{label}</a>
+            ) : item.key === 'tools' ? (
+              <a href="#tools" className={className}>{label}</a>
             ) : (
               <button
                 type="button"
@@ -414,6 +420,8 @@ export default function App() {
           onAuthRequired={() => setAccountOpen(true)}
           onOpenSite={rememberSite}
         />
+      ) : activeRoute.view === 'tools' ? (
+        <ToolsPage gmzz={VISIBLE_SITES.find((site) => site.id === 'gmzz')} />
       ) : activeRoute.view === 'forum' ? (
         <ForumPage
           sites={VISIBLE_SITES}

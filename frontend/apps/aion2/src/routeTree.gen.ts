@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as WikiRouteRouteImport } from './routes/wiki/route'
+import { Route as ToolsTraintradeStationRouteImport } from './routes/tools/traintrade-station'
 import { Route as WikiIndexRouteImport } from './routes/wiki/index'
 import { Route as WikiTraintradeRouteImport } from './routes/wiki/traintrade'
 import { Route as WikiUtopianTheaterRouteImport } from './routes/wiki/utopian-theater'
@@ -31,6 +32,11 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const WikiRouteRoute = WikiRouteRouteImport.update({
   id: '/wiki',
   path: '/wiki',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsTraintradeStationRoute = ToolsTraintradeStationRouteImport.update({
+  id: '/tools/traintrade-station',
+  path: '/tools/traintrade-station',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WikiIndexRoute = WikiIndexRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/wiki': typeof WikiRouteRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/tools/traintrade-station': typeof ToolsTraintradeStationRoute
   '/wiki/traintrade': typeof WikiTraintradeRoute
   '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki/': typeof WikiIndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/changelog': typeof ChangelogRoute
+  '/tools/traintrade-station': typeof ToolsTraintradeStationRoute
   '/wiki/traintrade': typeof WikiTraintradeRoute
   '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki': typeof WikiIndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/wiki': typeof WikiRouteRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/tools/traintrade-station': typeof ToolsTraintradeStationRoute
   '/wiki/traintrade': typeof WikiTraintradeRoute
   '/wiki/utopian-theater': typeof WikiUtopianTheaterRoute
   '/wiki/': typeof WikiIndexRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/'
     | '/wiki'
     | '/changelog'
+    | '/tools/traintrade-station'
     | '/wiki/traintrade'
     | '/wiki/utopian-theater'
     | '/wiki/'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/changelog'
+    | '/tools/traintrade-station'
     | '/wiki/traintrade'
     | '/wiki/utopian-theater'
     | '/wiki'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/'
     | '/wiki'
     | '/changelog'
+    | '/tools/traintrade-station'
     | '/wiki/traintrade'
     | '/wiki/utopian-theater'
     | '/wiki/'
@@ -125,6 +137,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   WikiRouteRoute: typeof WikiRouteRouteWithChildren
   ChangelogRoute: typeof ChangelogRoute
+  ToolsTraintradeStationRoute: typeof ToolsTraintradeStationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/wiki'
       fullPath: '/wiki'
       preLoaderRoute: typeof WikiRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/traintrade-station': {
+      id: '/tools/traintrade-station'
+      path: '/tools/traintrade-station'
+      fullPath: '/tools/traintrade-station'
+      preLoaderRoute: typeof ToolsTraintradeStationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wiki/': {
@@ -212,6 +232,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   WikiRouteRoute: WikiRouteRouteWithChildren,
   ChangelogRoute: ChangelogRoute,
+  ToolsTraintradeStationRoute: ToolsTraintradeStationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

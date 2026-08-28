@@ -89,6 +89,7 @@ menu:
 
 routes:
   map: "Map"
+  tools: "Tool library"
   class: "Classes"
   crafting: "Crafting"
   enhancement: "Enhancement"
@@ -250,3 +251,7 @@ changelog:
     improvement: "Improved"
     fix: "Fixed"
     data: "Data"
+
+comingSoon:
+  title: "Map not available yet"
+  description: "The Lord of Mysteries interactive map is still being prepared and will open here when ready."

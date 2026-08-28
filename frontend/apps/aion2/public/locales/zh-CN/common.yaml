@@ -115,6 +115,7 @@ menu:
 
 routes:
   map: "地图"
+  tools: "工具库"
   class: "职业BD"
   crafting: "装备制作"
   enhancement: "装备强化"
@@ -348,3 +349,7 @@ changelog:
     improvement: "优化"
     fix: "修复"
     data: "数据"
+
+comingSoon:
+  title: "地图暂未开放"
+  description: "诡秘之主互动地图仍在整理，开放后会从这里进入。"

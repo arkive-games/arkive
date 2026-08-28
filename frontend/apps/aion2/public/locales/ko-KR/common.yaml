@@ -89,6 +89,7 @@ menu:
 
 routes:
   map: "지도"
+  tools: "도구 모음"
   class: "클래스"
   crafting: "제작"
   enhancement: "강화"
@@ -250,3 +251,7 @@ changelog:
     improvement: "개선"
     fix: "수정"
     data: "데이터"
+
+comingSoon:
+  title: "지도 준비 중"
+  description: "신비의 제왕 인터랙티브 지도를 준비하고 있습니다. 완성되면 이곳에서 열립니다."

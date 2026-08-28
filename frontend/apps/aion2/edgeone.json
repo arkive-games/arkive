@@ -9,6 +9,8 @@
     { "source": "/wiki/utopian-theater*", "destination": "/index.html" },
     { "source": "/wiki/traintrade", "destination": "/index.html" },
     { "source": "/wiki/traintrade*", "destination": "/index.html" },
+    { "source": "/tools/traintrade-station", "destination": "/index.html" },
+    { "source": "/tools/traintrade-station*", "destination": "/index.html" },
     { "source": "/wiki/:type/:slug", "destination": "/index.html" }
   ]
 }

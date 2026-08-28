@@ -9,6 +9,11 @@ const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/stea
 
 export const IS_TOY = Boolean(import.meta.env.VITE_TOY)
 
+export const TRAIN_TRADE_STATION_TOOL_URL = import.meta.env.VITE_GMZZ_TRAIN_TRADE_TOOL_URL
+  ?? (import.meta.env.DEV
+    ? 'http://localhost:15173/tools/traintrade-station'
+    : 'https://aion2.tc-imba.com/tools/traintrade-station')
+
 /**
  * The games the backend knows, taken from the generated client rather than
  * restated here.

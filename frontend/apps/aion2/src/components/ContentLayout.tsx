@@ -8,6 +8,7 @@ import { ArkiveMobileHeader, getArkiveBrandName } from "@gamemap/map-shell";
 import TopNavbar from "@/components/TopNavbar";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
+import { isLordOfMysteriesPath } from "@/lib/lordOfMysteries";
 import { SITE_VERSION } from "@/lib/siteVersion";
 
 /**
@@ -30,17 +31,19 @@ export default function ContentLayout({
   // elements share `data-testid="global-search-button"` — which breaks strict
   // locators in this app's existing e2e specs.
   const isMobile = useIsMobile();
-  const { t, i18n } = useTranslation("common");
+  const { t, i18n } = useTranslation(["common", "wiki"]);
   const { pathname } = useLocation();
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
   const brandName = getArkiveBrandName(currentLng, t("brand.name"));
-  const isUtopianTheater = pathname === "/wiki/utopian-theater";
+  const lordOfMysteriesPage = isLordOfMysteriesPath(pathname);
   const wikiType = pathname.match(/^\/wiki\/(quest|npc|item)(?:\/|$)/)?.[1];
-  const mobileTitle = pageTitle ?? (isUtopianTheater
-    ? t("mobileNav.utopianTheater")
+  const mobileTitle = pageTitle ?? (pathname === "/wiki/utopian-theater"
+    ? t("wiki:utopianTheater.title")
+    : pathname === "/wiki/traintrade"
+      ? t("wiki:trainTrade.title")
     : wikiType
-      ? t(`mobileNav.${wikiType}`)
-      : t("mobileNav.wiki"));
+      ? t(`common:mobileNav.${wikiType}`)
+      : t("common:mobileNav.wiki"));
 
   return (
     <div
@@ -52,12 +55,12 @@ export default function ContentLayout({
       {isMobile ? (
         <ArkiveMobileHeader
           homeUrl={ARKIVE_HOME_URL}
-          homeLabel={t("brand.name")}
+          homeLabel={t("common:brand.name")}
           brandName={brandName}
           pageTitle={mobileTitle}
-          loginLabel={t("auth.login")}
+          loginLabel={t("common:auth.login")}
           accountControl={<ArkiveAccountControl language={currentLng} variant="mobileHeader" />}
-          actions={<GlobalSearchWidget />}
+          actions={lordOfMysteriesPage ? undefined : <GlobalSearchWidget />}
         />
       ) : (
         <TopNavbar />

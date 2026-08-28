@@ -10,10 +10,14 @@ brand:
 nav:
   wiki: "百科"
   home: "首頁"
+  tools: "工具庫"
   classBd: "職業BD"
   crafting: "裝備製作"
   enhancement: "裝備強化"
   forum: "論壇"
+
+routes:
+  tools: "工具庫"
 
 # 語言顯示名不做翻譯：切換選單使用 src/i18n.ts 中 LANGUAGE_LABELS 的本族語名稱。
 language:
@@ -198,3 +202,7 @@ siteInfo:
     title: "交流與回饋"
     label: "回饋 QQ 群"
     hint: "上面的群組用於玩家交流；如有建議或問題，請加入下方的回饋群。"
+
+comingSoon:
+  title: "地圖暫未開放"
+  description: "詭秘之主互動地圖仍在整理，開放後會從這裡進入。"

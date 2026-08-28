@@ -1,6 +1,7 @@
 export type MetaFooterRoute =
   | 'discoverGames'
   | 'allGames'
+  | 'tools'
   | 'forum'
   | 'notifications'
   | 'account'
