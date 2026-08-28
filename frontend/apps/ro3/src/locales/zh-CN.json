@@ -1,0 +1,179 @@
+{
+  "documentTitle": "仙境传说 3 综合攻略 | 藏舟攻略",
+  "homeLabel": "返回藏舟攻略首页",
+  "brandName": "藏舟游戏攻略网",
+  "brandSlogan": "万千攻略，藏于一舟",
+  "pageTitle": "仙境传说 3",
+  "navigationLabel": "仙境传说 3 导航",
+  "navigation": [
+    { "key": "overview", "label": "综合页" },
+    { "key": "map", "label": "互动地图" },
+    { "key": "classes", "label": "职业攻略" },
+    { "key": "dungeons", "label": "副本攻略" },
+    { "key": "gameplay", "label": "玩法资料" },
+    { "key": "tools", "label": "工具" },
+    { "key": "wiki", "label": "Wiki" }
+  ],
+  "language": "简体中文",
+  "languageShort": "中文",
+  "themeMenu": "主题",
+  "theme": {
+    "auto": "跟随系统",
+    "light": "浅色",
+    "dark": "深色"
+  },
+  "login": "登录",
+  "unavailable": "暂无功能",
+  "hero": {
+    "eyebrow": "THE RAGNAROK ONLINE 3RD",
+    "title": "仙境传说 3",
+    "description": "按职业与副本筛选玩家攻略，找到适合你的冒险路线。"
+  },
+  "search": {
+    "label": "搜索攻略",
+    "placeholder": "搜索职业流派、副本机制或作者",
+    "clear": "清空搜索"
+  },
+  "entries": {
+    "title": "快速入口",
+    "classGuides": "职业攻略",
+    "dungeonGuides": "副本攻略",
+    "gameplay": "玩法资料",
+    "tools": "工具",
+    "wiki": "Wiki",
+    "map": "互动地图"
+  },
+  "filters": {
+    "eyebrow": "筛选攻略",
+    "title": "看看大家怎么玩",
+    "scopeLabel": "攻略范围",
+    "scopes": [
+      { "key": "all", "label": "全部攻略" },
+      { "key": "class", "label": "职业攻略" },
+      { "key": "dungeon", "label": "副本攻略" }
+    ],
+    "classLabel": "职业",
+    "classes": [
+      { "key": "", "label": "全部职业" },
+      { "key": "swordsman", "label": "剑士" },
+      { "key": "mage", "label": "魔法师" },
+      { "key": "archer", "label": "弓箭手" },
+      { "key": "acolyte", "label": "服事" },
+      { "key": "merchant", "label": "商人" },
+      { "key": "thief", "label": "盗贼" }
+    ],
+    "dungeonLabel": "副本",
+    "dungeons": [
+      { "key": "", "label": "全部副本" }
+    ]
+  },
+  "results": {
+    "title": "攻略文章",
+    "count": "共 {count} 篇",
+    "sortLabel": "攻略排序",
+    "sorts": [
+      { "key": "latest", "label": "最近更新" },
+      { "key": "saved", "label": "收藏最多" },
+      { "key": "replied", "label": "回复最多" }
+    ],
+    "emptyTitle": "暂无功能",
+    "emptyDescription": "当前暂无攻略内容。作者、更新时间、收藏数和回复数将在内容接入后显示。",
+    "emptyFilteredTitle": "没有符合条件的攻略",
+    "emptyFilteredDescription": "当前筛选下暂无内容，可以清除筛选查看全部攻略。",
+    "clearFilters": "清除筛选"
+  },
+  "sidebar": {
+    "title": "资料入口",
+    "open": "打开",
+    "resourcesTitle": "更多资料",
+    "map": {
+      "eyebrow": "互动地图",
+      "title": "米德加尔特探索地图",
+      "description": "地图保持独立更新，以当前地图实现为准。",
+      "action": "打开地图"
+    },
+    "contribution": {
+      "title": "分享你的攻略",
+      "description": "同一职业和副本可以由不同作者发布多篇攻略。",
+      "action": "发布攻略"
+    }
+  },
+  "notice": {
+    "title": "暂无功能",
+    "description": "这个入口尚未接入可用页面。"
+  },
+  "wiki": {
+    "documentTitle": "仙境传说 3 Wiki | 藏舟攻略",
+    "eyebrow": "RO3 PLAYER REFERENCE",
+    "title": "RO3 游戏 Wiki",
+    "description": "基于客户端 0.0.1.13 整理的职业技能与卡片资料库。",
+    "tabsLabel": "Wiki 内容",
+    "tabs": {
+      "skills": "职业技能",
+      "cards": "卡片图鉴"
+    },
+    "sourceNote": "职业阶段来自客户端职业演示资源，技能条目来自玩家技能音频事件。加密配置表未确认前，不展示推测的技能名称、说明或数值。清单指纹：",
+    "stats": {
+      "lines": "基础职业",
+      "stages": "职业阶段",
+      "skills": "技能索引",
+      "cards": "卡片记录",
+      "baseCards": "基础卡片",
+      "collections": "完整典藏",
+      "version": "客户端版本"
+    },
+    "lineLabel": "职业系",
+    "progressionEyebrow": "转职路线",
+    "progressionTitle": "职业进阶",
+    "tier": "{tier} 转",
+    "skillCount": "{count} 个技能编号",
+    "skillsEyebrow": "客户端索引",
+    "skillsTitle": "技能条目",
+    "skillsDescription": "内部编号可用于后续对照技能名称、图标和数值表。",
+    "searchLabel": "搜索职业或技能编号",
+    "searchPlaceholder": "输入职业、英文名或技能编号",
+    "allStages": "全部阶段",
+    "resultCount": "共 {count} 条",
+    "skillId": "技能编号",
+    "profession": "所属职业",
+    "stage": "转职阶段",
+    "status": "数据状态",
+    "indexed": "已在客户端索引",
+    "eventIndexed": "事件编号已确认",
+    "empty": "没有匹配的技能条目。",
+    "cards": {
+      "filterLabel": "卡片类型",
+      "filters": {
+        "all": "全部卡片",
+        "base": "基础卡片",
+        "collection": "典藏卡片"
+      },
+      "title": "卡片图鉴",
+      "description": "客户端共确认 202 条卡片记录，包括 184 张基础卡片与 18 条完整典藏序列。",
+      "searchLabel": "搜索卡片名称或典藏阶段",
+      "searchPlaceholder": "输入卡片名称、草绘、形绘或影绘名称",
+      "resultCount": "共 {count} 张",
+      "sourceNote": "卡名来自游戏运行后解密到内存的客户端数据。242 个源名称归并为 184 张基础卡片与 18 条完整典藏记录；部位、效果、品质和图标在字段映射确认前不做推测。内存清单指纹：",
+      "name": "卡片名称",
+      "type": "资料类型",
+      "series": "典藏阶段与别名",
+      "status": "数据状态",
+      "base": "基础卡片",
+      "collection": "典藏序列",
+      "baseDescription": "客户端基础卡名",
+      "collectionDescription": "基于 {name} 的完整典藏序列",
+      "noAliases": "无独立阶段名称",
+      "nameConfirmed": "客户端名称已确认",
+      "seriesConfirmed": "三个典藏阶段已确认",
+      "unmapped": "属性、部位、品质与图标待客户端字段映射",
+      "empty": "没有匹配的卡片。",
+      "artUnavailable": "卡面资源待解码",
+      "artUnavailableDescription": "客户端已发现卡片资源引用，但加密资源尚未完成解码映射。",
+      "closeDetail": "关闭卡片详情",
+      "sourceFile": "客户端来源",
+      "sourceOffset": "来源偏移",
+      "assetEvidence": "已从安装包扫描到 {count} 条卡片展示资源引用；在完成资源解密与卡名映射前，不显示推测卡面。"
+    },
+    "back": "返回综合页"
+  }
+}

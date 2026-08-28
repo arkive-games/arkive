@@ -2,17 +2,2203 @@
 @import "@gamemap/map-shell/arkive-map-theme.css";
 @source "../../../packages/ui/src";
 @source "../../../packages/map-shell/src";
-@source "../../../packages/auth/src";
-
-@custom-variant dark (&:is(.dark *));
 
 :root {
-  --sts2-keyword: #AB6400;
+  font-family: "Arkive Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  color-scheme: light;
 }
 
-.dark {
-  --sts2-keyword: #FFCA16;
+:root.dark {
+  color-scheme: dark;
 }
 
-/* Game-authored keyword text keeps a semantic amber treatment. */
-.card-keyword { color: var(--sts2-keyword); font-weight: 600; }
+html {
+  background: var(--background);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 20rem;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--background);
+}
+
+button,
+input,
+select {
+  font: inherit;
+  letter-spacing: 0;
+}
+
+button,
+a,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ro3-app {
+  min-height: 100dvh;
+  overflow-x: clip;
+  color: var(--foreground);
+  background: var(--background);
+}
+
+.ro3-shell {
+  width: min(88rem, calc(100% - 4rem));
+  margin-inline: auto;
+}
+
+.ro3-mobile-nav {
+  display: flex;
+  min-height: 3.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  scrollbar-width: none;
+}
+
+.ro3-mobile-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.ro3-mobile-nav button {
+  min-width: max-content;
+  padding-inline: 1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.ro3-mobile-nav button:hover,
+.ro3-mobile-nav button.is-active {
+  border-bottom-color: var(--arkive-nav-active);
+  color: var(--arkive-nav-active);
+}
+
+.ro3-hero {
+  position: relative;
+  min-height: 13.75rem;
+  overflow: hidden;
+  color: #fff;
+  background: #174a70;
+}
+
+.ro3-hero > img,
+.ro3-hero-shade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ro3-hero > img {
+  object-fit: cover;
+  object-position: center 53%;
+}
+
+.ro3-hero-shade {
+  background:
+    linear-gradient(90deg, rgba(8, 35, 53, 0.9) 0%, rgba(10, 46, 70, 0.64) 40%, rgba(18, 70, 104, 0.2) 72%),
+    linear-gradient(0deg, rgba(4, 28, 44, 0.32), transparent 70%);
+}
+
+.ro3-hero-inner {
+  position: relative;
+  display: grid;
+  min-height: 13.75rem;
+  grid-template-columns: minmax(18rem, 0.75fr) minmax(30rem, 1.25fr);
+  align-items: center;
+  gap: 4rem;
+}
+
+.ro3-identity > span {
+  display: block;
+  color: rgba(255, 255, 255, 0.74);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.ro3-identity h1 {
+  margin: 0.35rem 0 0.3rem;
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.ro3-identity p {
+  max-width: 32rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.ro3-search {
+  display: flex;
+  min-width: 0;
+  height: 3.25rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding-inline: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: var(--arkive-radius-standard);
+  color: #202020;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 1rem 2.5rem rgba(13, 57, 84, 0.18);
+}
+
+.ro3-search > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  color: var(--arkive-nav-active);
+}
+
+.ro3-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  color: #202020;
+  background: transparent;
+  font-size: 0.875rem;
+}
+
+.ro3-search input::placeholder {
+  color: #6f767b;
+  opacity: 1;
+}
+
+.ro3-search button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: var(--arkive-radius-compact);
+  color: #5f676c;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ro3-search button:hover {
+  background: #ededed;
+}
+
+.ro3-search button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.ro3-entry-band {
+  border-bottom: 1px solid color-mix(in srgb, var(--arkive-nav-active) 22%, var(--border));
+  background: color-mix(in srgb, var(--arkive-filter-active) 48%, var(--background));
+}
+
+.ro3-entry-grid {
+  display: grid;
+  min-height: 4.5rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.quick-entry {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem;
+  border: 0;
+  border-right: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  color: var(--foreground);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--arkive-motion-immediate) var(--arkive-motion-easing);
+}
+
+.quick-entry:first-child {
+  border-left: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.quick-entry:hover {
+  background: color-mix(in srgb, var(--arkive-filter-active) 78%, transparent);
+}
+
+.quick-entry:active,
+.destination-row:active,
+.scope-tabs button:active,
+.filter-group button:active {
+  transform: translateY(1px);
+}
+
+.quick-entry > span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: var(--arkive-radius-compact);
+  color: var(--arkive-nav-active);
+  background: color-mix(in srgb, var(--arkive-filter-active) 72%, var(--card));
+}
+
+.quick-entry > span svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.quick-entry strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-entry small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.quick-entry > svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--muted-foreground);
+}
+
+.ro3-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 19rem;
+  gap: 2rem;
+  padding-block: 2rem 4rem;
+}
+
+.ro3-main-column {
+  min-width: 0;
+}
+
+.guide-browser {
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 1rem;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.section-heading > div:first-child > span {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--arkive-nav-active);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.section-heading h2,
+.guide-toolbar h2,
+.sidebar-section h2,
+.destination-panel h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.section-heading h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.scope-tabs {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.scope-tabs button {
+  min-height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.scope-tabs button:hover,
+.scope-tabs button.is-active {
+  border-bottom-color: var(--arkive-nav-active);
+  color: var(--arkive-nav-active);
+}
+
+.filter-group {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+  padding-block: 0.4rem;
+}
+
+.filter-group > span {
+  padding-top: 0.55rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.filter-group > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.filter-group button {
+  min-height: 2.125rem;
+  padding-inline: 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--arkive-radius-compact);
+  color: var(--muted-foreground);
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-group button:hover {
+  color: var(--foreground);
+  background: var(--accent);
+}
+
+.filter-group button.is-active {
+  border-color: color-mix(in srgb, var(--arkive-nav-active) 34%, var(--border));
+  color: var(--arkive-nav-active);
+  background: var(--arkive-filter-active);
+}
+
+.guide-stream {
+  padding-top: 1.25rem;
+}
+
+.guide-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-toolbar > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+}
+
+.guide-toolbar h2 {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.guide-toolbar > div span {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.guide-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted-foreground);
+}
+
+.guide-toolbar label svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.guide-toolbar select {
+  min-height: 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  color: var(--foreground);
+  background: var(--card);
+  padding-inline: 0.625rem 1.75rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.guide-list {
+  display: grid;
+}
+
+.guide-row {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding-block: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-row > img {
+  width: 9.5rem;
+  height: 6rem;
+  border-radius: var(--arkive-radius-compact);
+  object-fit: cover;
+}
+
+.guide-scope {
+  color: var(--arkive-nav-active);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.guide-row h3 {
+  margin: 0.35rem 0;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.guide-row h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.guide-row h3 a:hover {
+  color: var(--arkive-nav-active);
+}
+
+.guide-row p {
+  margin: 0 0 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.guide-author,
+.guide-signals,
+.guide-signals span {
+  display: flex;
+  align-items: center;
+}
+
+.guide-author {
+  gap: 0.45rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.guide-author > img,
+.guide-author > span {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--muted);
+}
+
+.guide-author strong {
+  color: var(--foreground);
+}
+
+.guide-signals {
+  align-self: start;
+  gap: 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.guide-signals span {
+  gap: 0.25rem;
+}
+
+.guide-signals svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.guide-empty {
+  position: relative;
+  display: grid;
+  min-height: 19rem;
+  grid-template-columns: minmax(13rem, 0.68fr) minmax(18rem, 1fr);
+  align-items: center;
+  gap: 2rem;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 64%, var(--background));
+}
+
+.guide-empty > img {
+  width: 100%;
+  height: 19rem;
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
+}
+
+:root.dark .guide-empty > img {
+  opacity: 0.78;
+  mix-blend-mode: screen;
+}
+
+.guide-empty > div {
+  max-width: 26rem;
+  padding: 2rem 2rem 2rem 0;
+}
+
+.guide-empty > div > svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--arkive-nav-accent);
+}
+
+.guide-empty h3 {
+  margin: 0.6rem 0 0.4rem;
+  font-size: 1.125rem;
+}
+
+.guide-empty p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+.guide-empty button {
+  min-height: 2.5rem;
+  margin-top: 1rem;
+  padding-inline: 1rem;
+  border: 1px solid var(--arkive-nav-active);
+  border-radius: var(--arkive-radius-compact);
+  color: var(--arkive-nav-active);
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guide-empty button:hover {
+  background: var(--arkive-filter-active);
+}
+
+.ro3-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.destination-panel,
+.sidebar-section {
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-standard);
+  background: var(--card);
+}
+
+.destination-panel {
+  padding: 1.25rem;
+}
+
+.destination-panel.is-featured {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(135deg, rgba(8, 48, 70, 0.96), rgba(17, 93, 122, 0.88)),
+    var(--card);
+}
+
+.destination-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: color-mix(in srgb, currentColor 78%, transparent);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.destination-eyebrow svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.destination-panel h2 {
+  margin-top: 1.25rem;
+  font-size: 1.125rem;
+  line-height: 1.45;
+}
+
+.destination-panel p {
+  margin: 0.4rem 0 1.25rem;
+  color: color-mix(in srgb, currentColor 72%, transparent);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.destination-panel button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding-inline: 0.875rem;
+  border: 0;
+  border-radius: var(--arkive-radius-compact);
+  color: var(--arkive-action-on);
+  background: var(--arkive-action);
+  font-size: 0.75rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.destination-panel button:hover {
+  filter: brightness(0.95);
+}
+
+.destination-panel button svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.sidebar-section {
+  padding: 0 1rem;
+}
+
+.sidebar-heading {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-heading h2,
+.contribution-section h2 {
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.sidebar-heading span {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.destination-row {
+  display: grid;
+  width: 100%;
+  min-height: 3.75rem;
+  grid-template-columns: 2rem minmax(0, 1fr) auto 1rem;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.destination-row:last-child {
+  border-bottom: 0;
+}
+
+.destination-row > span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: var(--arkive-radius-compact);
+  color: var(--arkive-nav-active);
+  background: var(--arkive-filter-active);
+}
+
+.destination-row > span svg,
+.destination-row > svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.destination-row strong {
+  font-size: 0.8125rem;
+}
+
+.destination-row small,
+.destination-row > svg {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.contribution-section {
+  display: grid;
+  gap: 1rem;
+  padding-block: 1rem;
+}
+
+.contribution-section p {
+  margin: 0.4rem 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.contribution-section button {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  color: var(--muted-foreground);
+  background: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: not-allowed;
+}
+
+.contribution-section button span {
+  font-weight: 500;
+}
+
+.ro3-toast {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: var(--arkive-layer-toast);
+  display: flex;
+  width: min(22rem, calc(100vw - 2rem));
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-standard);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--card) 96%, transparent);
+  box-shadow: 0 1rem 3rem color-mix(in srgb, var(--foreground) 14%, transparent);
+  backdrop-filter: blur(0.75rem);
+  animation: ro3-toast-in var(--arkive-motion-panel) var(--arkive-motion-easing) both;
+}
+
+.ro3-toast > span {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  place-items: center;
+  border-radius: var(--arkive-radius-standard);
+  color: var(--arkive-action-on);
+  background: var(--arkive-action);
+}
+
+.ro3-toast > span svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.ro3-toast > div {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.ro3-toast strong {
+  font-size: 0.8125rem;
+}
+
+.ro3-toast small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-page {
+  min-height: calc(100dvh - 4rem);
+  background:
+    linear-gradient(color-mix(in srgb, var(--arkive-filter-active) 32%, transparent), transparent 24rem),
+    var(--background);
+}
+
+.wiki-masthead {
+  border-bottom: 1px solid color-mix(in srgb, var(--arkive-nav-active) 28%, var(--border));
+  background: color-mix(in srgb, var(--card) 92%, var(--arkive-filter-active));
+}
+
+.wiki-masthead-inner {
+  display: grid;
+  grid-template-columns: minmax(20rem, 1fr) minmax(30rem, 1.25fr);
+  gap: 2.5rem;
+  padding-block: 1.75rem 2rem;
+}
+
+.wiki-back {
+  display: inline-flex;
+  width: max-content;
+  min-height: 2.25rem;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: 0;
+  color: var(--muted-foreground);
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wiki-back:hover {
+  color: var(--arkive-nav-active);
+}
+
+.wiki-back svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.wiki-title-block > span,
+.wiki-section-heading > div > span {
+  display: block;
+  color: var(--arkive-nav-active);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.wiki-title-block h1 {
+  margin: 0.25rem 0 0.4rem;
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.wiki-title-block p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.wiki-view-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(9rem, 1fr));
+  margin-top: 1.125rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  overflow: hidden;
+  background: var(--background);
+}
+
+.wiki-view-tabs button {
+  display: grid;
+  min-height: 2.75rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.75rem;
+  border: 0;
+  border-right: 1px solid var(--border);
+  color: var(--muted-foreground);
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.wiki-view-tabs button:last-child {
+  border-right: 0;
+}
+
+.wiki-view-tabs button:hover,
+.wiki-view-tabs button.is-active {
+  color: var(--foreground);
+  background: var(--arkive-filter-active);
+}
+
+.wiki-view-tabs button.is-active {
+  box-shadow: inset 0 -0.15rem var(--arkive-nav-active);
+}
+
+.wiki-view-tabs svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--arkive-nav-active);
+}
+
+.wiki-view-tabs small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-standard);
+  overflow: hidden;
+  background: var(--background);
+}
+
+.wiki-stats > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  column-gap: 0.5rem;
+  padding: 0.875rem;
+  border-right: 1px solid var(--border);
+}
+
+.wiki-stats > div:last-child {
+  border-right: 0;
+}
+
+.wiki-stats svg {
+  width: 1rem;
+  height: 1rem;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--arkive-nav-active);
+}
+
+.wiki-stats strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 1rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiki-stats span {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.wiki-content {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  align-items: start;
+  gap: 2rem;
+  padding-block: 2rem 4rem;
+}
+
+.wiki-line-nav {
+  position: sticky;
+  top: 5.25rem;
+}
+
+.wiki-line-nav > span {
+  display: block;
+  margin-bottom: 0.625rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.wiki-line-nav > div {
+  border-block: 1px solid var(--border);
+}
+
+.wiki-line-nav button {
+  display: grid;
+  width: 100%;
+  min-height: 3.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  column-gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wiki-line-nav button:last-child {
+  border-bottom: 0;
+}
+
+.wiki-line-nav button:hover,
+.wiki-line-nav button.is-active {
+  background: var(--arkive-filter-active);
+}
+
+.wiki-line-nav button.is-active {
+  box-shadow: inset 0.2rem 0 var(--arkive-nav-active);
+}
+
+.wiki-line-nav button strong {
+  font-size: 0.875rem;
+}
+
+.wiki-line-nav button small {
+  grid-column: 1;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-line-nav button svg {
+  width: 1rem;
+  height: 1rem;
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: var(--muted-foreground);
+}
+
+.wiki-main {
+  min-width: 0;
+}
+
+.wiki-progression {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.wiki-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.wiki-section-heading h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.wiki-section-heading > small,
+.wiki-skills-heading > strong {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.wiki-progression-grid {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 3fr);
+  align-items: stretch;
+  gap: 1.5rem;
+}
+
+.wiki-progression-grid > .wiki-stage-card {
+  position: relative;
+}
+
+.wiki-progression-grid > .wiki-stage-card::after {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 1px);
+  width: 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--arkive-nav-active) 56%, var(--border));
+  content: "";
+}
+
+.wiki-paths {
+  display: grid;
+  min-width: 0;
+  gap: 0.75rem;
+}
+
+.wiki-path {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.wiki-path::before {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--arkive-nav-active) 56%, var(--border));
+  content: "";
+}
+
+.wiki-path .wiki-stage-card:not(:last-child)::after {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--arkive-nav-active) 56%, var(--border));
+  content: "";
+}
+
+.wiki-stage-card {
+  display: grid;
+  min-width: 0;
+  min-height: 6.75rem;
+  align-content: center;
+  justify-items: start;
+  padding: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-standard);
+  color: var(--foreground);
+  background: var(--card);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--arkive-motion-immediate) var(--arkive-motion-easing),
+    background var(--arkive-motion-immediate) var(--arkive-motion-easing);
+}
+
+.wiki-stage-card:hover,
+.wiki-stage-card.is-active {
+  border-color: color-mix(in srgb, var(--arkive-nav-active) 64%, var(--border));
+  background: color-mix(in srgb, var(--arkive-filter-active) 68%, var(--card));
+}
+
+.wiki-stage-card.is-active {
+  box-shadow: inset 0 0 0 1px var(--arkive-nav-active);
+}
+
+.wiki-stage-card > span {
+  color: var(--arkive-nav-active);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.wiki-stage-card > strong {
+  margin-top: 0.15rem;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.wiki-stage-card > small,
+.wiki-stage-card > b {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-stage-card > b {
+  margin-top: 0.5rem;
+  font-weight: 650;
+}
+
+.wiki-skills {
+  padding-top: 2rem;
+}
+
+.wiki-skills-heading {
+  align-items: start;
+}
+
+.wiki-skills-heading p {
+  max-width: 44rem;
+  margin: 0.45rem 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.wiki-skills-heading > strong {
+  padding-top: 1.5rem;
+  color: var(--foreground);
+}
+
+.wiki-skill-tools {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) 12rem;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.wiki-card-tools {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) minmax(15rem, auto);
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.wiki-card-tools > span {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.wiki-search {
+  display: flex;
+  height: 2.75rem;
+  align-items: center;
+  gap: 0.625rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  background: var(--card);
+}
+
+.wiki-search:focus-within {
+  border-color: var(--arkive-nav-active);
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--arkive-nav-active) 18%, transparent);
+}
+
+.wiki-search > svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: var(--muted-foreground);
+}
+
+.wiki-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  color: var(--foreground);
+  background: transparent;
+  font-size: 0.8125rem;
+}
+
+.wiki-search button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 0;
+  border-radius: var(--arkive-radius-compact);
+  color: var(--muted-foreground);
+  background: transparent;
+  cursor: pointer;
+}
+
+.wiki-search button:hover {
+  background: var(--arkive-filter-active);
+}
+
+.wiki-search button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.wiki-stage-filter select {
+  width: 100%;
+  height: 2.75rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  outline: 0;
+  color: var(--foreground);
+  background: var(--card);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.wiki-stage-filter select:focus-visible {
+  border-color: var(--arkive-nav-active);
+}
+
+.wiki-source-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-left: 0.2rem solid var(--arkive-nav-active);
+  background: color-mix(in srgb, var(--arkive-filter-active) 54%, transparent);
+}
+
+.wiki-source-note svg {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.15rem;
+  color: var(--arkive-nav-active);
+}
+
+.wiki-source-note p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.wiki-skill-table {
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-standard);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.wiki-card-table {
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-standard);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.wiki-skill-row {
+  display: grid;
+  min-height: 3.25rem;
+  grid-template-columns: minmax(7rem, 0.7fr) minmax(10rem, 1fr) minmax(7rem, 0.65fr) minmax(10rem, 1fr);
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.wiki-skill-row:last-child {
+  border-bottom: 0;
+}
+
+.wiki-skill-row > * {
+  min-width: 0;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.wiki-skill-row > * + * {
+  border-left: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.wiki-skill-row.is-header {
+  min-height: 2.5rem;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--arkive-filter-active) 38%, var(--background));
+  font-weight: 750;
+}
+
+.wiki-skill-row.is-header > * {
+  font-size: 0.75rem;
+}
+
+.wiki-skill-row > strong {
+  display: grid;
+  gap: 0.2rem;
+  color: var(--arkive-nav-active);
+  font-family: "Arkive Sans", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+}
+
+.wiki-skill-row > strong small {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-family: "Arkive Sans", "Segoe UI", sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiki-skill-row > span:nth-child(2) {
+  display: grid;
+}
+
+.wiki-skill-row > span:nth-child(2) b {
+  font-size: 0.8125rem;
+}
+
+.wiki-skill-row > span:nth-child(2) small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-skill-row > span:last-child {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-skill-row > span:last-child i {
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: none;
+  border-radius: 50%;
+  background: #2f9b6b;
+}
+
+.wiki-card-row {
+  display: grid;
+  min-height: 3.5rem;
+  grid-template-columns: minmax(11rem, 1fr) minmax(7rem, 0.5fr) minmax(14rem, 1.35fr) minmax(12rem, 0.9fr);
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+  padding: 0;
+  border-top: 0;
+  border-inline: 0;
+  color: inherit;
+  background: var(--card);
+  text-align: left;
+  cursor: pointer;
+}
+
+.wiki-card-row:not(.is-header):hover {
+  background: color-mix(in srgb, var(--arkive-filter-active) 34%, var(--card));
+}
+
+.wiki-card-row:not(.is-header):focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 0.15rem solid var(--arkive-nav-active);
+  outline-offset: -0.15rem;
+}
+
+.wiki-card-row:last-child {
+  border-bottom: 0;
+}
+
+.wiki-card-row > * {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.wiki-card-row > * + * {
+  border-left: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.wiki-card-row.is-header {
+  min-height: 2.5rem;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--arkive-filter-active) 38%, var(--background));
+  font-weight: 750;
+}
+
+.wiki-card-row.is-header > * {
+  font-size: 0.75rem;
+}
+
+.wiki-card-row > strong {
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+
+.wiki-card-row > strong small,
+.wiki-card-related small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.wiki-card-row > span:nth-child(2) b {
+  width: max-content;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 38%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  color: var(--arkive-nav-active);
+  background: color-mix(in srgb, var(--arkive-filter-active) 62%, transparent);
+  font-size: 0.75rem;
+}
+
+.wiki-card-related {
+  align-content: center;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+}
+
+.wiki-card-related small {
+  width: max-content;
+  padding-right: 0.625rem;
+}
+
+.wiki-card-status {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-card-status svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: var(--arkive-nav-active);
+}
+
+.wiki-empty {
+  display: grid;
+  min-height: 12rem;
+  place-items: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--arkive-radius-standard);
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.wiki-card-dialog-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, #07111f 72%, transparent);
+}
+
+.wiki-card-dialog {
+  position: relative;
+  display: grid;
+  width: min(100%, 52rem);
+  max-height: min(90vh, 42rem);
+  grid-template-columns: minmax(13rem, 0.78fr) minmax(0, 1.22fr);
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 34%, var(--border));
+  border-radius: var(--arkive-radius-standard);
+  background: var(--card);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, #07111f 46%, transparent);
+}
+
+.wiki-dialog-close {
+  position: absolute;
+  z-index: 1;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--card) 76%, transparent);
+  cursor: pointer;
+}
+
+.wiki-dialog-close:hover {
+  background: var(--arkive-filter-active);
+}
+
+.wiki-dialog-close svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.wiki-card-dialog-art {
+  display: grid;
+  min-height: 24rem;
+  align-content: center;
+  justify-items: center;
+  gap: 0.65rem;
+  padding: 2rem;
+  color: var(--muted-foreground);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--arkive-nav-active) 12%, transparent) 25%, transparent 25%) 0 0 / 1.2rem 1.2rem,
+    color-mix(in srgb, var(--arkive-filter-active) 55%, var(--background));
+  text-align: center;
+}
+
+.wiki-card-dialog-art svg {
+  width: 3rem;
+  height: 3rem;
+  color: var(--arkive-nav-active);
+}
+
+.wiki-card-dialog-art strong {
+  color: var(--foreground);
+  font-size: 1rem;
+}
+
+.wiki-card-dialog-art small {
+  max-width: 14rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.wiki-card-dialog-body {
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+  padding: 2.5rem 2rem 2rem;
+}
+
+.wiki-card-dialog-body > span {
+  width: max-content;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--arkive-nav-active) 38%, var(--border));
+  border-radius: var(--arkive-radius-compact);
+  color: var(--arkive-nav-active);
+  background: color-mix(in srgb, var(--arkive-filter-active) 62%, transparent);
+  font-size: 0.75rem;
+}
+
+.wiki-card-dialog-body h2 {
+  margin: 0;
+  color: var(--foreground);
+  font-family: "Arkive Display", "Arkive Sans", "Segoe UI", sans-serif;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+}
+
+.wiki-card-dialog-body > p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.wiki-card-detail-grid {
+  display: grid;
+  margin: 0.5rem 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.wiki-card-detail-grid div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+}
+
+.wiki-card-detail-grid dt {
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+}
+
+.wiki-card-detail-grid dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-card-detail-series {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.wiki-card-detail-series > div,
+.wiki-card-detail-evidence > div {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 0.35rem;
+}
+
+.wiki-card-detail-series span,
+.wiki-card-detail-evidence code {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  color: var(--foreground);
+  background: var(--background);
+  font-size: 0.6875rem;
+}
+
+.wiki-card-detail-evidence {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.7rem;
+  border-left: 0.2rem solid var(--arkive-nav-active);
+  background: color-mix(in srgb, var(--arkive-filter-active) 45%, transparent);
+}
+
+.wiki-card-detail-evidence svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--arkive-nav-active);
+}
+
+.wiki-card-detail-evidence p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  line-height: 1.55;
+}
+
+.wiki-card-detail-evidence > div {
+  grid-column: 2;
+}
+
+@media (max-width: 74rem) {
+  .wiki-masthead-inner {
+    grid-template-columns: minmax(16rem, 0.8fr) minmax(26rem, 1.2fr);
+    gap: 1.5rem;
+  }
+
+  .wiki-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wiki-stats > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .wiki-stats > div:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wiki-content {
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 56rem) {
+  .wiki-masthead-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-content {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-line-nav {
+    position: static;
+  }
+
+  .wiki-line-nav > div {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .wiki-line-nav button,
+  .wiki-line-nav button:last-child {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wiki-line-nav button:nth-child(3n) {
+    border-right: 0;
+  }
+
+  .wiki-line-nav button:nth-last-child(-n + 3) {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .wiki-page {
+    min-height: calc(100dvh - 6.5rem);
+  }
+
+  .wiki-masthead-inner {
+    gap: 1.25rem;
+    padding-block: 1.25rem 1.5rem;
+  }
+
+  .wiki-title-block h1 {
+    font-size: 1.625rem;
+  }
+
+  .wiki-content {
+    gap: 1.5rem;
+    padding-block: 1.5rem 3rem;
+  }
+
+  .wiki-line-nav > div {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .wiki-line-nav > div::-webkit-scrollbar {
+    display: none;
+  }
+
+  .wiki-line-nav button,
+  .wiki-line-nav button:last-child,
+  .wiki-line-nav button:nth-child(3n),
+  .wiki-line-nav button:nth-last-child(-n + 3) {
+    width: auto;
+    min-width: 9.5rem;
+    flex: none;
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+  }
+
+  .wiki-progression-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .wiki-progression-grid > .wiki-stage-card::after,
+  .wiki-path::before,
+  .wiki-path .wiki-stage-card:not(:last-child)::after {
+    display: none;
+  }
+
+  .wiki-stage-card {
+    min-height: 6rem;
+  }
+
+  .wiki-path {
+    grid-template-columns: repeat(3, minmax(8.5rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .wiki-skill-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-card-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-card-tools > span {
+    text-align: left;
+  }
+
+  .wiki-skill-row {
+    grid-template-columns: minmax(6.5rem, 0.7fr) minmax(9rem, 1fr) minmax(6rem, 0.65fr);
+  }
+
+  .wiki-skill-row > *:last-child {
+    display: none;
+  }
+
+  .wiki-card-row {
+    grid-template-columns: minmax(10rem, 1fr) minmax(6.5rem, 0.55fr) minmax(13rem, 1.2fr);
+  }
+
+  .wiki-card-row > *:last-child {
+    display: none;
+  }
+
+  .wiki-card-dialog-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .wiki-card-dialog {
+    width: 100%;
+    max-height: calc(100dvh - 3.75rem);
+    grid-template-columns: 1fr;
+    border-inline: 0;
+    border-bottom: 0;
+    border-radius: var(--arkive-radius-standard) var(--arkive-radius-standard) 0 0;
+  }
+
+  .wiki-card-dialog-art {
+    min-height: 10rem;
+    padding: 1.5rem 3.5rem 1.5rem 1.5rem;
+  }
+
+  .wiki-card-dialog-body {
+    gap: 0.6rem;
+    padding: 1.25rem;
+  }
+
+  .wiki-card-dialog-body h2 {
+    font-size: 1.5rem;
+  }
+
+  .wiki-card-detail-evidence {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .wiki-skills-heading {
+    align-items: start;
+  }
+}
+
+@media (max-width: 24rem) {
+  .wiki-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-stats > div,
+  .wiki-stats > div:nth-child(2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wiki-stats > div:last-child {
+    border-bottom: 0;
+  }
+
+  .wiki-skill-row {
+    grid-template-columns: minmax(6rem, 0.75fr) minmax(8rem, 1fr);
+  }
+
+  .wiki-skill-row > *:nth-child(3) {
+    display: none;
+  }
+
+  .wiki-view-tabs {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wiki-card-row {
+    grid-template-columns: minmax(9rem, 1fr) minmax(12rem, 1.2fr);
+  }
+
+  .wiki-card-row > *:nth-child(2) {
+    display: none;
+  }
+}
+
+@keyframes ro3-toast-in {
+  from { opacity: 0; transform: translateY(0.75rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (min-width: 48rem) {
+  .ro3-mobile-nav {
+    display: none;
+  }
+}
+
+@media (max-width: 74rem) {
+  .ro3-shell {
+    width: min(100% - 2rem, 88rem);
+  }
+
+  .ro3-hero-inner {
+    gap: 2rem;
+  }
+
+  .ro3-entry-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .quick-entry:nth-child(4) {
+    border-left: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  }
+
+  .ro3-layout {
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 56rem) {
+  .ro3-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding-block: 2rem;
+  }
+
+  .ro3-search {
+    width: 100%;
+  }
+
+  .ro3-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ro3-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contribution-section {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .ro3-shell {
+    width: calc(100% - 2rem);
+  }
+
+  .ro3-hero {
+    min-height: 18rem;
+  }
+
+  .ro3-hero > img {
+    object-position: 34% center;
+  }
+
+  .ro3-hero-shade {
+    background: linear-gradient(0deg, rgba(7, 35, 53, 0.94), rgba(10, 47, 70, 0.46));
+  }
+
+  .ro3-hero-inner {
+    min-height: 18rem;
+    align-content: end;
+  }
+
+  .ro3-identity h1 {
+    font-size: 2rem;
+  }
+
+  .ro3-identity p {
+    font-size: 0.8125rem;
+  }
+
+  .ro3-search {
+    height: 3rem;
+  }
+
+  .ro3-entry-band > .ro3-shell {
+    width: 100%;
+  }
+
+  .ro3-entry-grid {
+    display: flex;
+    min-height: 4rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .ro3-entry-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .quick-entry,
+  .quick-entry:first-child,
+  .quick-entry:nth-child(4) {
+    min-width: 9.5rem;
+    border-left: 0;
+  }
+
+  .quick-entry:last-child {
+    border-right: 0;
+  }
+
+  .ro3-layout {
+    gap: 1.5rem;
+    padding-block: 1.5rem 3rem;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .scope-tabs {
+    width: 100%;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--arkive-radius-compact);
+    overflow: hidden;
+  }
+
+  .scope-tabs button {
+    min-height: 2.5rem;
+    flex: 1;
+    padding-inline: 0.375rem;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+    font-size: 0.75rem;
+  }
+
+  .scope-tabs button:last-child {
+    border-right: 0;
+  }
+
+  .scope-tabs button.is-active {
+    background: var(--arkive-filter-active);
+  }
+
+  .filter-group {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .filter-group > span {
+    padding-top: 0.25rem;
+  }
+
+  .filter-group > div {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .filter-group button {
+    flex: none;
+  }
+
+  .guide-toolbar {
+    align-items: flex-start;
+  }
+
+  .guide-toolbar > div {
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .guide-empty {
+    min-height: 20rem;
+    grid-template-columns: minmax(7rem, 0.6fr) minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .guide-empty > img {
+    height: 20rem;
+    object-position: 38% bottom;
+  }
+
+  .guide-empty > div {
+    padding: 1.5rem 1rem 1.5rem 0;
+  }
+
+  .guide-row {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+
+  .guide-row > img {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
+  .guide-signals {
+    grid-column: 2;
+  }
+
+  .ro3-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .contribution-section {
+    grid-column: auto;
+  }
+
+  .ro3-toast {
+    right: 1rem;
+    bottom: 1rem;
+  }
+}
+
+@media (max-width: 24rem) {
+  .guide-empty {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-empty > img {
+    position: absolute;
+    inset: auto auto 0 -4rem;
+    width: 13rem;
+    opacity: 0.24;
+  }
+
+  .guide-empty > div {
+    position: relative;
+    padding: 2rem 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .ro3-toast {
+    animation: none;
+  }
+}

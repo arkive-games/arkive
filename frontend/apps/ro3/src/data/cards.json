@@ -1,0 +1,2348 @@
+{
+  "clientVersion": "0.0.1.13",
+  "source": {
+    "kind": "read-only-process-memory",
+    "files": [
+      {
+        "file": "000002cb5ab57000_135168.bin",
+        "size": 135168,
+        "sha256": "e0beaae79d8e7882ae84452a1743ce8df70dc4eda835e036010462c603cb2ab1"
+      },
+      {
+        "file": "000002cb5ab79000_176128.bin",
+        "size": 176128,
+        "sha256": "fcce3324d1f115f949c2335641191578834609b99a8e71f4d74b7a9e89e9ecff"
+      }
+    ],
+    "note": "Names are UTF-8 strings observed after the installed client loaded its encrypted card data. Equipment slots, effects, quality and icons are not inferred until their source fields can be mapped with the same confidence."
+  },
+  "counts": {
+    "sourceNames": 242,
+    "baseCards": 184,
+    "collectionCards": 18,
+    "aliases": 40,
+    "wikiCards": 202
+  },
+  "cards": [
+    {
+      "id": "base-2b77d350688e",
+      "kind": "base",
+      "name": "吸血蝙蝠卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 113016
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-0bd588f25692",
+      "kind": "base",
+      "name": "浮勒盗虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 113144
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-ec1b3380c3b5",
+      "kind": "base",
+      "name": "邪骸战士卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 113208
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-fdcd54832c01",
+      "kind": "base",
+      "name": "兽人战士卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115064
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-dd958257981e",
+      "kind": "base",
+      "name": "月夜猫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124744
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-dd958257981e",
+      "kind": "collection",
+      "name": "月夜猫草绘卡片",
+      "baseCardName": "月夜猫卡片",
+      "stages": [
+        "月夜猫草绘卡片",
+        "月夜猫形绘卡片",
+        "月夜猫影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115128
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-878f4b4c180f",
+      "kind": "base",
+      "name": "邪骸矿工卡片",
+      "aliases": [
+        "邪骸矿工影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115192
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-902230735dec",
+      "kind": "base",
+      "name": "艾吉欧蜈蚣卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115256
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-eb34dfe8b9d8",
+      "kind": "base",
+      "name": "弓箭哥布灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115320
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-85e1776befa3",
+      "kind": "base",
+      "name": "恶魔波利卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121144
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-85e1776befa3",
+      "kind": "collection",
+      "name": "恶魔波利草绘卡片",
+      "baseCardName": "恶魔波利卡片",
+      "stages": [
+        "恶魔波利草绘卡片",
+        "恶魔波利形绘卡片",
+        "恶魔波利影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115384
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-4b9582c4260e",
+      "kind": "base",
+      "name": "曼陀罗魔花卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115448
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-84235720966a",
+      "kind": "base",
+      "name": "玛勒盗虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115512
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-df5f888b3cfa",
+      "kind": "base",
+      "name": "邪骸食人鱼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115576
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-2640c4fd6ece",
+      "kind": "base",
+      "name": "兽人女战士卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115640
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-cd641eb3253c",
+      "kind": "base",
+      "name": "黄金虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124984
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-cd641eb3253c",
+      "kind": "collection",
+      "name": "黄金虫草绘卡片",
+      "baseCardName": "黄金虫卡片",
+      "stages": [
+        "黄金虫草绘卡片",
+        "黄金虫形绘卡片",
+        "黄金虫影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115704
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-dc7baa30d61c",
+      "kind": "base",
+      "name": "傀儡娃娃卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115768
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-941d95f54569",
+      "kind": "base",
+      "name": "魔鬼大乌贼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121016
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-941d95f54569",
+      "kind": "collection",
+      "name": "魔鬼大乌贼草绘卡片",
+      "baseCardName": "魔鬼大乌贼卡片",
+      "stages": [
+        "魔鬼大乌贼草绘卡片",
+        "魔鬼大乌贼形绘卡片",
+        "魔鬼大乌贼影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115832
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-6c5b65676d74",
+      "kind": "base",
+      "name": "人鱼士兵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115896
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-3e5d3783afc6",
+      "kind": "base",
+      "name": "喷射哥布灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 115960
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-3b06e276a4d1",
+      "kind": "base",
+      "name": "天使波利卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 120888
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-3b06e276a4d1",
+      "kind": "collection",
+      "name": "天使波利草绘卡片",
+      "baseCardName": "天使波利卡片",
+      "stages": [
+        "天使波利草绘卡片",
+        "天使波利形绘卡片",
+        "天使波利影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116024
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-8c0d3c32d209",
+      "kind": "base",
+      "name": "法老王卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123064
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-8c0d3c32d209",
+      "kind": "collection",
+      "name": "法老王草绘卡片",
+      "baseCardName": "法老王卡片",
+      "stages": [
+        "法老王草绘卡片",
+        "法老王形绘卡片",
+        "法老王影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116088
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-fd1d2850313b",
+      "kind": "base",
+      "name": "兽人英雄卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121336
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-fd1d2850313b",
+      "kind": "collection",
+      "name": "兽人英雄草绘卡片",
+      "baseCardName": "兽人英雄卡片",
+      "stages": [
+        "兽人英雄草绘卡片",
+        "兽人英雄形绘卡片",
+        "兽人英雄影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116152
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-185dd061319e",
+      "kind": "base",
+      "name": "长老树精卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116216
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-3f1e7eb411ec",
+      "kind": "base",
+      "name": "死灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124888
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-3f1e7eb411ec",
+      "kind": "collection",
+      "name": "死灵草绘卡片",
+      "baseCardName": "死灵卡片",
+      "stages": [
+        "死灵草绘卡片",
+        "死灵形绘卡片",
+        "死灵影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116280
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-109fc75db73d",
+      "kind": "base",
+      "name": "将军魔碑卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116408
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-0c9381edd8b6",
+      "kind": "base",
+      "name": "直升机哥布灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116472
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-5da82e7cda32",
+      "kind": "base",
+      "name": "犬妖弓箭手卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116536
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-056c5b0e639d",
+      "kind": "base",
+      "name": "贝壳魔灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116600
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-75b8f4c11052",
+      "kind": "base",
+      "name": "犬妖首领卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116664
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-f36fda163d07",
+      "kind": "base",
+      "name": "南瓜先生卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116728
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-de29a0158ae7",
+      "kind": "base",
+      "name": "摇滚蝗虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116792
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-ea451942e8a6",
+      "kind": "base",
+      "name": "沙漠幼狼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116856
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-50bd0a02d896",
+      "kind": "base",
+      "name": "虎王卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124696
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-50bd0a02d896",
+      "kind": "collection",
+      "name": "虎王草绘卡片",
+      "baseCardName": "虎王卡片",
+      "stages": [
+        "虎王草绘卡片",
+        "虎王形绘卡片",
+        "虎王影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116920
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-c6b65c271ff4",
+      "kind": "base",
+      "name": "绿变色龙卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 116984
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-d522dc0cb664",
+      "kind": "base",
+      "name": "俄赛里斯卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121272
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-d522dc0cb664",
+      "kind": "collection",
+      "name": "俄赛里斯草绘卡片",
+      "baseCardName": "俄赛里斯卡片",
+      "stages": [
+        "俄赛里斯草绘卡片",
+        "俄赛里斯形绘卡片",
+        "俄赛里斯影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117048
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-21acdc9574d5",
+      "kind": "base",
+      "name": "海盗之王卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 120632
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-21acdc9574d5",
+      "kind": "collection",
+      "name": "海盗之王草绘卡片",
+      "baseCardName": "海盗之王卡片",
+      "stages": [
+        "海盗之王草绘卡片",
+        "海盗之王形绘卡片",
+        "海盗之王影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117112
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-2396c143e423",
+      "kind": "base",
+      "name": "哥布灵首领卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 120696
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-2396c143e423",
+      "kind": "collection",
+      "name": "哥布灵首领草绘卡片",
+      "baseCardName": "哥布灵首领卡片",
+      "stages": [
+        "哥布灵首领草绘卡片",
+        "哥布灵首领形绘卡片",
+        "哥布灵首领影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117176
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-df2976eb6201",
+      "kind": "base",
+      "name": "德古拉伯爵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119160
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-df2976eb6201",
+      "kind": "collection",
+      "name": "德古拉伯爵草绘卡片",
+      "baseCardName": "德古拉伯爵卡片",
+      "stages": [
+        "德古拉伯爵草绘卡片",
+        "德古拉伯爵形绘卡片",
+        "德古拉伯爵影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117240
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-076e333fa555",
+      "kind": "base",
+      "name": "毕帝特地龙卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117304
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-896cb7b72517",
+      "kind": "base",
+      "name": "蛇女伊丝卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117368
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-5ba59e0710f9",
+      "kind": "base",
+      "name": "达拉蛙卡片",
+      "aliases": [
+        "达拉蛙影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123448
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-4c9266f01915",
+      "kind": "base",
+      "name": "狂暴野猫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117496
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-cf5a18af8dc1",
+      "kind": "base",
+      "name": "蚁后卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124504
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-cf5a18af8dc1",
+      "kind": "collection",
+      "name": "蚁后草绘卡片",
+      "baseCardName": "蚁后卡片",
+      "stages": [
+        "蚁后草绘卡片",
+        "蚁后形绘卡片",
+        "蚁后影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117560
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-b455331c4464",
+      "kind": "base",
+      "name": "狂暴木乃伊卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117624
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-4dab59d0dd26",
+      "kind": "base",
+      "name": "暗黑祭司卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117688
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-58eb49119a69",
+      "kind": "base",
+      "name": "巨象甲虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117752
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-598b977acc38",
+      "kind": "base",
+      "name": "沙漠之狼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117816
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-d8d9f92fe18b",
+      "kind": "base",
+      "name": "重金属蝗虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117880
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-285dd055f72f",
+      "kind": "base",
+      "name": "蜂后卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123016
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-285dd055f72f",
+      "kind": "collection",
+      "name": "蜂后草绘卡片",
+      "baseCardName": "蜂后卡片",
+      "stages": [
+        "蜂后草绘卡片",
+        "蜂后形绘卡片",
+        "蜂后影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 117944
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-05ac85fa765d",
+      "kind": "base",
+      "name": "爆钻伞蜥卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118008
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-2654a39360b0",
+      "kind": "base",
+      "name": "毕帝特飞龙卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118072
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-b589abe0826b",
+      "kind": "base",
+      "name": "海葵卡片",
+      "aliases": [
+        "海葵影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124648
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-c69fec523b5a",
+      "kind": "base",
+      "name": "小巴风特卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118200
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-c07e67e0660e",
+      "kind": "base",
+      "name": "风魔巫师卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118264
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-baddd1e314b5",
+      "kind": "base",
+      "name": "梅纳海葵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118328
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-a867daa65adc",
+      "kind": "base",
+      "name": "巴风特卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123736
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-a867daa65adc",
+      "kind": "collection",
+      "name": "巴风特草绘卡片",
+      "baseCardName": "巴风特卡片",
+      "stages": [
+        "巴风特草绘卡片",
+        "巴风特形绘卡片",
+        "巴风特影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118392
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-ee7d78cca2a7",
+      "kind": "base",
+      "name": "皮里恩卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124840
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-ee7d78cca2a7",
+      "kind": "collection",
+      "name": "皮里恩草绘卡片",
+      "baseCardName": "皮里恩卡片",
+      "stages": [
+        "皮里恩草绘卡片",
+        "皮里恩形绘卡片",
+        "皮里恩影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118456
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-33eb326ad548",
+      "kind": "base",
+      "name": "米洛斯卡片",
+      "aliases": [
+        "米洛斯影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122584
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-61744ce25040",
+      "kind": "base",
+      "name": "兽人酋长卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119224
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "collection-61744ce25040",
+      "kind": "collection",
+      "name": "兽人酋长草绘卡片",
+      "baseCardName": "兽人酋长卡片",
+      "stages": [
+        "兽人酋长草绘卡片",
+        "兽人酋长形绘卡片",
+        "兽人酋长影绘卡片"
+      ],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118584
+      },
+      "dataStatus": "client-series-confirmed"
+    },
+    {
+      "id": "base-5de8b82c879b",
+      "kind": "base",
+      "name": "邪骸士兵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118648
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-b0fca05bc190",
+      "kind": "base",
+      "name": "大嘴鸟蛋卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118712
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-79e6796ad7c9",
+      "kind": "base",
+      "name": "邪骸兽人卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118776
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-60b834c6220b",
+      "kind": "base",
+      "name": "卡那多斯卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118840
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-e64e88f7a42a",
+      "kind": "base",
+      "name": "邪骸弓箭手卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118904
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-d96801e56bcd",
+      "kind": "base",
+      "name": "兽人腐尸卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 118968
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-4680b37b67cc",
+      "kind": "base",
+      "name": "深海电鳗卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119032
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-95f218aa5a2e",
+      "kind": "base",
+      "name": "蛋壳小鸡卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119096
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-d563e6688e97",
+      "kind": "base",
+      "name": "兽人弓箭手卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119416
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-6b99efff34c1",
+      "kind": "base",
+      "name": "酱缸章鱼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119480
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-07de2b1a188f",
+      "kind": "base",
+      "name": "狂暴蚁后卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119544
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-47a192a4da40",
+      "kind": "base",
+      "name": "兽人婴儿卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119800
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-04f09a731d19",
+      "kind": "base",
+      "name": "幽灵波利卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 119928
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-25c5d370aa66",
+      "kind": "base",
+      "name": "木乃伊犬卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 120312
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-bce00cf79788",
+      "kind": "base",
+      "name": "狂暴克瑞米卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 120376
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-d9b215c9eaae",
+      "kind": "base",
+      "name": "马尔杜克卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 120440
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-6efbae29e515",
+      "kind": "base",
+      "name": "波利之王卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121080
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-fe2219dd97c8",
+      "kind": "base",
+      "name": "蝗虫之王卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121656
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-900026ee2f70",
+      "kind": "base",
+      "name": "狂暴大脚熊卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121784
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-2a43b2404be7",
+      "kind": "base",
+      "name": "艾斯蜘蛛卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121848
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-45e813005825",
+      "kind": "base",
+      "name": "狂暴月夜猫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 121912
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-080bdf7606d8",
+      "kind": "base",
+      "name": "狂暴螳螂卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 122296
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-af73e58b1b02",
+      "kind": "base",
+      "name": "邪骸海盗卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 122360
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-aa48af2820c0",
+      "kind": "base",
+      "name": "流浪之狼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 122424
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-841301ecff04",
+      "kind": "base",
+      "name": "大脚龙虾卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab57000_135168.bin",
+        "offset": 123128
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-dfb91e1dda06",
+      "kind": "base",
+      "name": "僵尸卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119176
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-95d728a0eae2",
+      "kind": "base",
+      "name": "安毕斯卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119224
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-ebf6d0a30533",
+      "kind": "base",
+      "name": "腐尸卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119320
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-84fb21cd445b",
+      "kind": "base",
+      "name": "白蚁卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119416
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-67ad83fca578",
+      "kind": "base",
+      "name": "罗达蛙卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119464
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-240a5b6a775b",
+      "kind": "base",
+      "name": "螃蟹卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119512
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-58278bd0d193",
+      "kind": "base",
+      "name": "蜂兵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119560
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-96948add426f",
+      "kind": "base",
+      "name": "噬人花卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119608
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-ba7e55ac06ba",
+      "kind": "base",
+      "name": "漂浮虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119656
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-33333f895767",
+      "kind": "base",
+      "name": "赤苍蝇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119704
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-f61b11e3aa43",
+      "kind": "base",
+      "name": "卡拉蟹卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119752
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-7e00a191543c",
+      "kind": "base",
+      "name": "小野猪卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119800
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-22114eaa235d",
+      "kind": "base",
+      "name": "苍蝇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119848
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-913aaf7840ed",
+      "kind": "base",
+      "name": "狄奥斯卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119896
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-0f9f589766e8",
+      "kind": "base",
+      "name": "海星卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119944
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-aa78ab1a48ca",
+      "kind": "base",
+      "name": "毒魔菇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 119992
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-943082472f2f",
+      "kind": "base",
+      "name": "绿棉虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120232
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-0b9338f0542f",
+      "kind": "base",
+      "name": "波利卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120280
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-17035d815f20",
+      "kind": "base",
+      "name": "木乃伊卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120328
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-0e1197c8e7f0",
+      "kind": "base",
+      "name": "兹诺克卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120376
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-5bbde12bd01e",
+      "kind": "base",
+      "name": "盗虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120424
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-b5205d190b63",
+      "kind": "base",
+      "name": "森灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120520
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-570019cbd227",
+      "kind": "base",
+      "name": "魔菇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120568
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-c37222953ed0",
+      "kind": "base",
+      "name": "白鼠卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120616
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-59dee9093d09",
+      "kind": "base",
+      "name": "树精卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120664
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-c4cfe105f566",
+      "kind": "base",
+      "name": "摩卡卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120712
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-9e8349664d5d",
+      "kind": "base",
+      "name": "虫蛹卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120760
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-d3d884ac33bb",
+      "kind": "base",
+      "name": "溜溜猴卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120808
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-500f41206c1c",
+      "kind": "base",
+      "name": "小鸡卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120856
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-cb2a80b66d3e",
+      "kind": "base",
+      "name": "水母卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 120904
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-0fcac233eedc",
+      "kind": "base",
+      "name": "秃鹰卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121000
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-57352a67b04b",
+      "kind": "base",
+      "name": "哥布灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121048
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-5e3333cca5a1",
+      "kind": "base",
+      "name": "蚁卵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121096
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-af38e924c7f8",
+      "kind": "base",
+      "name": "狼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121144
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-7b6e2d886612",
+      "kind": "base",
+      "name": "巨石怪卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121192
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-7765e56d325a",
+      "kind": "base",
+      "name": "转转蛋卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121384
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-7af2d6e5eb37",
+      "kind": "base",
+      "name": "诺可伊卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121432
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-ab4cf0940bc0",
+      "kind": "base",
+      "name": "魔锅蛋卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121480
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-5b35ed0743d1",
+      "kind": "base",
+      "name": "海神卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121528
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-7733eb4f98aa",
+      "kind": "base",
+      "name": "盗虫卵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121672
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-c3abc8d94cd2",
+      "kind": "base",
+      "name": "疯兔卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121720
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-598a4d3fe0c6",
+      "kind": "base",
+      "name": "刺猬虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121768
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-9301ddddc0ad",
+      "kind": "base",
+      "name": "大脚熊卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121816
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-2241ca525c65",
+      "kind": "base",
+      "name": "土波利卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 121912
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-cb42a41a7c3a",
+      "kind": "base",
+      "name": "波波利卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122008
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-176d4b2e2137",
+      "kind": "base",
+      "name": "蜗牛卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122056
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-ecf6e020aed3",
+      "kind": "base",
+      "name": "青蛇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122104
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-8c82a2444cf9",
+      "kind": "base",
+      "name": "蝎子卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122152
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-5e69107747c9",
+      "kind": "base",
+      "name": "红蝙蝠卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122200
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-105b5c10753e",
+      "kind": "base",
+      "name": "恶灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122248
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-4cb1f10dfba4",
+      "kind": "base",
+      "name": "绿腐尸卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122296
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-990173e5d1da",
+      "kind": "base",
+      "name": "黑蛇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122344
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-072a0e60fc0d",
+      "kind": "base",
+      "name": "马克卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122392
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-8648de768241",
+      "kind": "base",
+      "name": "鬼火卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122440
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-3434f8664504",
+      "kind": "base",
+      "name": "邪恶箱卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122488
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-f13b732526ef",
+      "kind": "base",
+      "name": "麦斯特卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122536
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-90a145bf090e",
+      "kind": "base",
+      "name": "雪熊卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122632
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-e3aff09b3af4",
+      "kind": "base",
+      "name": "库克雷卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122680
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-869c266144e7",
+      "kind": "base",
+      "name": "蓝鼠卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122728
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-399269d2a931",
+      "kind": "base",
+      "name": "蛙王卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122776
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-d121cbc5af42",
+      "kind": "base",
+      "name": "大嘴鸟卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122824
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-f0720737ccac",
+      "kind": "base",
+      "name": "龙蝇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122872
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-7a5fa599e305",
+      "kind": "base",
+      "name": "黑狐卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122920
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-1c926e9e5941",
+      "kind": "base",
+      "name": "剑鱼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 122968
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-dfb9520fb180",
+      "kind": "base",
+      "name": "气泡虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123112
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-0b239955fc13",
+      "kind": "base",
+      "name": "野猪卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123160
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-311795679b89",
+      "kind": "base",
+      "name": "白幽灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123208
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-21412ca7812a",
+      "kind": "base",
+      "name": "蚯蚓卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123256
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-79fca42c27ab",
+      "kind": "base",
+      "name": "赛杜拉卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123304
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-911e63e186ad",
+      "kind": "base",
+      "name": "瓢虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123352
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-b3da54519833",
+      "kind": "base",
+      "name": "泥人卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123400
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-89759321ebde",
+      "kind": "base",
+      "name": "帕莎纳卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123496
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-df6849f9a304",
+      "kind": "base",
+      "name": "人鱼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123544
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-61f16c4bb5d7",
+      "kind": "base",
+      "name": "犬妖卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123592
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-9960b7b721a5",
+      "kind": "base",
+      "name": "基尔瑟卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123640
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-5bd5992f595c",
+      "kind": "base",
+      "name": "妖道卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123688
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-0b4f91f0ef01",
+      "kind": "base",
+      "name": "螳螂卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123784
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-9d7683903dc9",
+      "kind": "base",
+      "name": "锹形虫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123832
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-11b73d7d4197",
+      "kind": "base",
+      "name": "狸猫卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123880
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-1f9945a31190",
+      "kind": "base",
+      "name": "猎蝇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123928
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-6377956e1cf6",
+      "kind": "base",
+      "name": "伞蜥卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 123976
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-8b95c51d02a3",
+      "kind": "base",
+      "name": "巧克猴卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124024
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-8aa2407073e3",
+      "kind": "base",
+      "name": "狮鹫兽卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124072
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-c4bb9a091c8e",
+      "kind": "base",
+      "name": "绿苍蝇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124120
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-f2e710db31e2",
+      "kind": "base",
+      "name": "土人卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124168
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-d1a80ed17abb",
+      "kind": "base",
+      "name": "乌贼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124216
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-4868a5c4c838",
+      "kind": "base",
+      "name": "九尾狐卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124264
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-30de0c0b3578",
+      "kind": "base",
+      "name": "梦魇卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124312
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-174052809fa2",
+      "kind": "base",
+      "name": "小恶魔卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124360
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-ce2433ca2c42",
+      "kind": "base",
+      "name": "松鼠卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124408
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-7bd02ac62a34",
+      "kind": "base",
+      "name": "异变鱼卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124456
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-188c7a1d9d7b",
+      "kind": "base",
+      "name": "灰森灵卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124552
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-8a68c57b7ff9",
+      "kind": "base",
+      "name": "冰波利卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124600
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-4328fd34b780",
+      "kind": "base",
+      "name": "蓝疯兔卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124792
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-04183ad7d6d8",
+      "kind": "base",
+      "name": "克瑞米卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 124936
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-df56b88b3da7",
+      "kind": "base",
+      "name": "鳄鱼人卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 125032
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-b11fc65fbac9",
+      "kind": "base",
+      "name": "黑蚁卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 125080
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-feb4cf8e4dc3",
+      "kind": "base",
+      "name": "奈吉鸟卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 125128
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-e737e05e2b90",
+      "kind": "base",
+      "name": "杰洛米卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 125176
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-cde5d19e2961",
+      "kind": "base",
+      "name": "鬼女卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 125224
+      },
+      "dataStatus": "client-name-confirmed"
+    },
+    {
+      "id": "base-8ca641ddb485",
+      "kind": "base",
+      "name": "土拨鼠卡片",
+      "aliases": [],
+      "source": {
+        "file": "000002cb5ab79000_176128.bin",
+        "offset": 125272
+      },
+      "dataStatus": "client-name-confirmed"
+    }
+  ]
+}

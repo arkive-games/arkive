@@ -1,0 +1,427 @@
+{
+  "source": "installed-client-package-scan",
+  "note": "Card effect and presentation asset references observed in the installed RO3 VFS. Bundles remain encrypted; references are not treated as card art until an asset payload is decoded.",
+  "referenceCount": 70,
+  "references": [
+    {
+      "name": "Fx_UI_Sys_Card_14401",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440100_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440100_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440101",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440101_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440103_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440103n",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440104_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440104_03",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440105_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440105_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440106",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440107_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440107_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440108",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440109",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440110",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440112",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440113",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440114",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_144011P",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440200_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440200_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440201_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440201_02J",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_14402x",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440301Z",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440302f",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440303",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440304Z",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440305",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440306",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440307",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440308",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_14403nx",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440400",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_14404012",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440402",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440402_",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440403_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440403_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440404_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440404_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440404_03",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440405",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440405_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440406",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440407",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440407_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440408_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440408_VC",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440500",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440500_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440501",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440502",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_144060",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440602_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440603",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440604",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440700Z",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440701_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440702",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440703n",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440704",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440704_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_14408",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440809_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440809_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440909_01",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    },
+    {
+      "name": "Fx_UI_Sys_Card_1440909_02",
+      "files": [
+        "VFS bundles (installed client)"
+      ]
+    }
+  ]
+}
