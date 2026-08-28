@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.3.1",
+      "date": "2026-08-29",
+      "commit": "92dadb77fcb57f0f20455f4f449c8e53a68c5e3e",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Varied profession skill icon candidates across entries instead of repeating the first family icon.",
+            "zh-CN": "调整职业技能候选图标分配，避免同一职业的每条记录重复显示首张图标。",
+            "zh-TW": "調整職業技能候選圖標分配，避免同一職業的每筆記錄重複顯示首張圖標。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.3.0",
       "date": "2026-08-29",
       "commit": "86a033b04d719362af97db0fd753e40b4ac736bb",
