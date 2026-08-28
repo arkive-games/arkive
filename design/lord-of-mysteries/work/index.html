@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>诡秘之主 · 铁路大亨推演台</title>
+    <meta name="description" content="诡秘之主铁路大亨站点概率推演工具" />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark">舟</div>
+          <div>
+            <h1>藏舟攻略 <span>诡秘之主 · 铁路大亨</span></h1>
+          </div>
+        </div>
+        <nav class="topbar-nav" aria-label="主导航"><a class="is-active" href="#planner" aria-current="page">路线推演</a><a href="#goods">货物清单</a></nav>
+      </header>
+
+      <section class="workspace-grid" id="planner">
+        <aside class="control-column">
+          <section class="panel route-panel">
+            <div class="panel-heading compact"><div><h3><span class="step-number">1</span>难度选择</h3></div></div>
+            <label class="route-select-wrap" for="difficulty-select"><select id="difficulty-select" aria-label="难度选择"><option value="" hidden></option></select></label>
+            <p class="difficulty-description" id="difficulty-description">选择路线后查看该难度的规则摘要。</p>
+          </section>
+          <section class="panel totals-panel">
+            <div class="panel-heading">
+              <div><h3><span class="step-number">2</span>总站点配额</h3></div>
+            </div>
+            <form id="totals-form" class="totals-form">
+              <label class="quota-field winery"><span>酒庄</span><input id="winery-total" name="winery" type="number" min="0" max="15" value="5" /></label>
+              <label class="quota-field food"><span>食铺</span><input id="food-total" name="food" type="number" min="0" max="15" value="5" /></label>
+              <label class="quota-field trade"><span>商行</span><input id="trade-total" name="trade" type="number" min="0" max="15" value="5" /></label>
+            </form>
+            <div class="quota-message" id="quota-message" role="status"></div>
+            <button class="secondary-button" id="quota-confirm-button" type="button" disabled>确认总站点配额</button>
+          </section>
+        </aside>
+
+        <section class="panel forecast-panel" aria-live="polite">
+          <div class="panel-heading forecast-heading">
+            <div class="forecast-heading-main"><h2>诡秘之主 · 铁路大亨推演工具</h2></div>
+            <button class="back-step-button" id="undo-step" type="button" aria-label="返回上一步" disabled>返回上一步</button>
+          </div>
+          <section class="station-strip" aria-label="站点进度"><button class="station-nav" id="station-prev" type="button" aria-label="预览前面站点">←</button><div class="station-track" id="confirmed-stations"></div><button class="station-nav" id="station-next" type="button" aria-label="预览后面站点">→</button></section>
+          <div class="forecast-intro" id="forecast-intro">
+            <div><strong>确认配额后开始</strong></div>
+          </div>
+          <div id="forecast-content" class="forecast-content is-hidden"></div>
+        </section>
+        <aside class="history-column">
+          <section class="remaining-panel" aria-label="剩余站点">
+            <div class="remaining-heading"><strong>剩余站点</strong></div>
+            <div class="remaining-list">
+              <div class="remaining-item winery"><span>酒庄</span><strong id="remaining-winery">5</strong><small>站</small></div>
+              <div class="remaining-item food"><span>食铺</span><strong id="remaining-food">5</strong><small>站</small></div>
+              <div class="remaining-item trade"><span>商行</span><strong id="remaining-trade">5</strong><small>站</small></div>
+            </div>
+          </section>
+          <section class="history-panel" aria-label="过往未来三站提示">
+            <div class="history-heading"><strong>过往未来三站提示</strong><span id="history-count">0 条</span></div>
+            <ol class="history-list" id="history-list"><li class="history-empty">暂无已确认提示</li></ol>
+          </section>
+        </aside>
+      </section>
+
+      <section class="wiki-view is-hidden" id="goods" aria-labelledby="goods-title">
+        <div class="wiki-heading">
+          <div>
+            <h2 id="goods-title">铁路大亨 · 货物清单</h2>
+            <p>查看货物图鉴、品质与站点交易信息。价格为基础值，实际交易会随站点修正。</p>
+          </div>
+          <label class="goods-search" for="goods-search"><span>搜索货物</span><input id="goods-search" type="search" placeholder="输入货物名称或类别" /></label>
+        </div>
+        <div class="goods-toolbar" role="toolbar" aria-label="货物筛选">
+          <section class="goods-filter-group" aria-labelledby="goods-type-filter-title">
+            <div class="goods-filter-heading"><h3 id="goods-type-filter-title">货物品类</h3><span>按商品所属类别筛选</span></div>
+            <div class="goods-filter-options"><button class="goods-filter is-active" type="button" data-goods-filter="all">全部货物 <span data-goods-count="all">32 件</span></button><button class="goods-filter" type="button" data-goods-filter="WINE">酒类 <span data-goods-count="WINE">8 件</span></button><button class="goods-filter" type="button" data-goods-filter="FOOD">食品 <span data-goods-count="FOOD">8 件</span></button><button class="goods-filter" type="button" data-goods-filter="CLOTH">服装 <span data-goods-count="CLOTH">8 件</span></button><button class="goods-filter" type="button" data-goods-filter="ART">艺术品 <span data-goods-count="ART">8 件</span></button></div>
+          </section>
+          <section class="goods-filter-group" aria-labelledby="goods-quality-filter-title">
+            <div class="goods-filter-heading"><h3 id="goods-quality-filter-title">货物品级</h3><span>按游戏内品质筛选</span></div>
+            <div class="goods-filter-options"><button class="goods-filter quality-filter is-active" type="button" data-goods-quality="all">全部品级 <span data-goods-count="quality-all">32 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="1">品质 1 <span data-goods-count="quality-1">1 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="2">品质 2 <span data-goods-count="quality-2">7 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="3">品质 3 <span data-goods-count="quality-3">8 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="4">品质 4 <span data-goods-count="quality-4">8 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="5">品质 5 <span data-goods-count="quality-5">8 件</span></button></div>
+          </section>
+        </div>
+        <div class="goods-grid" id="goods-grid"></div>
+        <p class="goods-empty is-hidden" id="goods-empty">没有匹配的货物。</p>
+      </section>
+
+      <footer class="footer-note"><span>诡秘之主 · 铁路大亨</span><span>仅作路线决策辅助，最终结果以游戏内状态为准</span></footer>
+    </main>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
