@@ -5,7 +5,8 @@ The `gmzz` pipelines read the installed client directly: its game tables are
 obfuscated LuaJIT dumps under `C7/Content/ScriptOPCode/Data/Excel`, which
 `apps/gmzz/luac.py` decrypts and `apps/gmzz/tables.py` executes to recover the
 localized fields. `python -m gmzz.traintrade` emits the train-trade (铁路大亨)
-dataset into `data-gmzz` and `python -m gmzz.icons` the goods icons into
+dataset into `data-gmzz`, `python -m gmzz.icons` the goods icons and
+`python -m gmzz.utopia` the Utopian Theater cards and their art into
 `resource-gmzz`. Paths come from `tools/.env`: `GMZZ_RAW` (a `uex` export root),
 `GMZZ_DATA_OUT`, `GMZZ_RES_OUT`, and optional `GMZZ_GAME`.
 
