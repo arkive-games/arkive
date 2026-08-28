@@ -422,7 +422,8 @@ const resources = {
           desc: '瓦尔多兰互动地图与区域资料',
           feature: '追踪区域、资源与瓦尔多兰的探索路线。',
         },
-        sts2: {
+
+        ro3: { name: '仙境传说3', desc: '仙境传说3 技能、副本与职业资料', feature: '查询技能、副本与职业资料。' },        sts2: {
           name: '杀戮尖塔2',
           desc: '卡牌图鉴、角色资料与构筑知识',
           feature: '查看卡牌与角色，整理下一次登塔思路。',
@@ -555,6 +556,7 @@ const resources = {
         aion2: { name: '永恆之塔 2', desc: '互動地圖與遊戲資料庫', feature: '從地圖出發，找到每一個重要座標。' },
         palworld: { name: '幻獸帕魯', desc: '地圖、帕魯圖鑑與配種路線', feature: '從探索到配種，認識每一隻帕魯。' },
         vrising: { name: '夜族崛起', desc: '瓦爾多蘭互動地圖與區域資料', feature: '追蹤區域、資源與瓦爾多蘭的探索路線。' },
+        ro3: { name: '仙境傳說3', desc: '仙境傳說3 技能、副本與職業資料', feature: '查詢技能、副本與職業資料。' },
         sts2: { name: '殺戮尖塔2', desc: '卡牌圖鑑、角色資料與構築知識', feature: '查看卡牌與角色，整理下一次登塔思路。' },
       },
       comingSoon: {
@@ -670,6 +672,7 @@ const resources = {
         aion2: { name: 'AION2', desc: 'Interactive map and game database', feature: 'Start with the map and find every important coordinate.' },
         palworld: { name: 'Palworld', desc: 'Map, Paldeck, and breeding routes', feature: 'Explore, breed, and get to know every Pal.' },
         vrising: { name: 'V Rising', desc: 'Vardoran interactive map and region guide', feature: 'Track regions, resources, and routes across Vardoran.' },
+        ro3: { name: 'Ragnarok Online 3', desc: 'Skills, dungeons and jobs for Ragnarok Online 3', feature: 'Look up skills, dungeons and job data.' },
         sts2: { name: 'Slay the Spire 2', desc: 'Card library, characters, and deckbuilding knowledge', feature: 'Study cards and characters before your next climb.' },
       },
       comingSoon: {
@@ -767,6 +770,7 @@ const resources = {
         aion2: { name: 'アイオン2', desc: 'インタラクティブマップとゲームデータベース', feature: 'マップから始めて、大切な座標を見つけましょう。' },
         palworld: { name: 'Palworld', desc: 'マップ、パル図鑑、配合ルート', feature: '探索と配合を通して、すべてのパルを知りましょう。' },
         vrising: { name: 'V Rising', desc: 'ヴァルドランのインタラクティブマップと地域情報', feature: '地域、資源、探索ルートを確認できます。' },
+        ro3: { name: 'ラグナロクオンライン3', desc: 'ラグナロクオンライン3 のスキル・ダンジョン・職業情報', feature: 'スキル、ダンジョン、職業データを確認できます。' },
         sts2: { name: 'Slay the Spire 2', desc: 'カード図鑑、キャラクター、デッキ構築情報', feature: '次の登頂に向けてカードとキャラクターを確認できます。' },
       },
       comingSoon: { title: 'さらに多くのゲームを制作中', badge: '近日公開' },
@@ -861,6 +865,7 @@ const resources = {
         aion2: { name: '아이온2', desc: '인터랙티브 지도와 게임 데이터베이스', feature: '지도에서 시작해 중요한 좌표를 모두 찾아보세요.' },
         palworld: { name: 'Palworld', desc: '지도, 팰 도감, 교배 경로', feature: '탐험과 교배를 통해 모든 팰을 알아보세요.' },
         vrising: { name: 'V Rising', desc: '바르도란 인터랙티브 지도와 지역 정보', feature: '바르도란의 지역과 자원, 탐험 경로를 확인하세요.' },
+        ro3: { name: '라그나로크 온라인 3', desc: '라그나로크 온라인 3 스킬, 던전, 직업 정보', feature: '스킬과 던전, 직업 데이터를 확인하세요.' },
         sts2: { name: 'Slay the Spire 2', desc: '카드 도감, 캐릭터, 덱 구성 정보', feature: '다음 등반을 위해 카드와 캐릭터를 살펴보세요.' },
       },
       comingSoon: { title: '더 많은 게임을 제작하고 있어요', badge: '출시 예정' },
