@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.2",
+      "date": "2026-08-29",
+      "commit": "b6c5646b90335ecac4dd79405c6c288e8030653e",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Separated the profession skills and card records into dedicated Wiki pages.",
+            "zh-CN": "将职业技能与卡片记录拆分为独立的 Wiki 页面。",
+            "zh-TW": "將職業技能與卡片記錄拆分為獨立的 Wiki 頁面。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.1",
       "date": "2026-08-29",
       "commit": "8d86ec8d931887099694ef1d66f6d7db1a2f21d1",
