@@ -3470,7 +3470,7 @@ select {
 .card-game-frame-nameplate-fill {
   position: absolute;
   z-index: 2;
-  right: 3.5%;
+  right: 10%;
   bottom: 2.5%;
   width: 80%;
   height: 11.5%;
@@ -3478,7 +3478,7 @@ select {
 }
 
 .card-game-frame-nameplate-fill {
-  right: 5.1%;
+  right: 11.65%;
   bottom: 3.45%;
   width: 76.7%;
   height: 9.6%;
