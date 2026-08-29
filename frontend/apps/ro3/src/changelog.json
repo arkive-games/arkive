@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.12",
+      "date": "2026-08-29",
+      "commit": "a8676b75a8a0d8fd989b678b024dfee71ee9feaf",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed card corner badges and centered labels across standard and collection cards.",
+            "zh-CN": "移除卡片角落徽章，并统一居中普通卡与典藏卡的名称和铭牌。",
+            "zh-TW": "移除卡片角落徽章，並統一置中普通卡與典藏卡的名稱和銘牌。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.11",
       "date": "2026-08-29",
       "commit": "f0409daabbcc323f93e086e5845d5b01cc449524",
