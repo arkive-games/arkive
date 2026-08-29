@@ -10,88 +10,87 @@
   </head>
   <body>
     <main class="app-shell">
-      <header class="topbar">
-        <div class="brand-lockup">
-          <div class="brand-mark">舟</div>
-          <div>
-            <h1>藏舟攻略 <span>诡秘之主 · 铁路大亨</span></h1>
-          </div>
-        </div>
-        <nav class="topbar-nav" aria-label="主导航"><a class="is-active" href="#planner" aria-current="page">路线推演</a><a href="#goods">货物清单</a></nav>
-      </header>
-
       <section class="workspace-grid" id="planner">
         <aside class="control-column">
+          <div class="sidebar-title"><span>诡秘之主</span><h1>铁路大亨推演工具</h1></div>
           <section class="panel route-panel">
-            <div class="panel-heading compact"><div><h3><span class="step-number">1</span>难度选择</h3></div></div>
+            <div class="panel-heading compact"><div><h3>难度选择</h3></div></div>
             <label class="route-select-wrap" for="difficulty-select"><select id="difficulty-select" aria-label="难度选择"><option value="" hidden></option></select></label>
             <p class="difficulty-description" id="difficulty-description">选择路线后查看该难度的规则摘要。</p>
           </section>
-          <section class="panel totals-panel">
-            <div class="panel-heading">
-              <div><h3><span class="step-number">2</span>总站点配额</h3></div>
+          <section class="station-summary-section">
+            <div class="right-heading"><h2>站点统计</h2></div>
+            <div class="station-table" role="table" aria-label="站点统计">
+              <div class="station-table-header" role="row"><span role="columnheader">站点名</span><span role="columnheader">总站点数</span><span role="columnheader">剩余站点</span></div>
+              <form id="totals-form">
+                <label class="station-table-row quota-field winery" role="row"><span class="station-name" role="cell"><strong>酒庄</strong></span><span class="station-total-input"><input id="winery-total" name="winery" type="number" min="0" max="15" value="5" aria-label="酒庄总站点数" /></span><strong class="station-remaining" role="cell"><span id="remaining-winery">5</span><small>站</small></strong></label>
+                <label class="station-table-row quota-field food" role="row"><span class="station-name" role="cell"><strong>食铺</strong></span><span class="station-total-input"><input id="food-total" name="food" type="number" min="0" max="15" value="5" aria-label="食铺总站点数" /></span><strong class="station-remaining" role="cell"><span id="remaining-food">5</span><small>站</small></strong></label>
+                <label class="station-table-row quota-field trade" role="row"><span class="station-name" role="cell"><strong>商行</strong></span><span class="station-total-input"><input id="trade-total" name="trade" type="number" min="0" max="15" value="5" aria-label="商行总站点数" /></span><strong class="station-remaining" role="cell"><span id="remaining-trade">4</span><small>站</small></strong></label>
+              </form>
+              <div class="station-table-footer" role="row"><strong role="cell">合计</strong><strong id="quota-total" role="cell">15</strong><strong id="quota-remaining" role="cell">15<small>站</small></strong></div>
             </div>
-            <form id="totals-form" class="totals-form">
-              <label class="quota-field winery"><span>酒庄</span><input id="winery-total" name="winery" type="number" min="0" max="15" value="5" /></label>
-              <label class="quota-field food"><span>食铺</span><input id="food-total" name="food" type="number" min="0" max="15" value="5" /></label>
-              <label class="quota-field trade"><span>商行</span><input id="trade-total" name="trade" type="number" min="0" max="15" value="5" /></label>
-            </form>
             <div class="quota-message" id="quota-message" role="status"></div>
             <button class="secondary-button" id="quota-confirm-button" type="button" disabled>确认总站点配额</button>
           </section>
+          <section class="history-panel" aria-label="过往提示">
+            <div class="history-heading"><strong>过往提示</strong><span id="history-count">0 条</span></div>
+            <ol class="history-list" id="history-list"><li class="history-empty">暂无已确认提示</li></ol>
+          </section>
         </aside>
 
-        <section class="panel forecast-panel" aria-live="polite">
-          <div class="panel-heading forecast-heading">
-            <div class="forecast-heading-main"><h2>诡秘之主 · 铁路大亨推演工具</h2></div>
-            <button class="back-step-button" id="undo-step" type="button" aria-label="返回上一步" disabled>返回上一步</button>
-          </div>
-          <section class="station-strip" aria-label="站点进度"><button class="station-nav" id="station-prev" type="button" aria-label="预览前面站点">←</button><div class="station-track" id="confirmed-stations"></div><button class="station-nav" id="station-next" type="button" aria-label="预览后面站点">→</button></section>
+        <section class="forecast-panel" aria-live="polite">
+          <section class="progress-section">
+            <div class="station-strip" aria-label="站点进度"><button class="station-nav" id="station-prev" type="button" aria-label="预览前面站点">←</button><div class="station-track" id="confirmed-stations"></div><button class="station-nav" id="station-next" type="button" aria-label="预览后面站点">→</button></div>
+          </section>
+          <div class="decision-toolbar" id="decision-toolbar"><div class="decision-block decision-back"><label for="undo-step">返回上一步</label><button class="back-step-button" id="undo-step" type="button" aria-label="返回上一步" disabled>←</button></div></div>
           <div class="forecast-intro" id="forecast-intro">
             <div><strong>确认配额后开始</strong></div>
           </div>
           <div id="forecast-content" class="forecast-content is-hidden"></div>
         </section>
-        <aside class="history-column">
-          <section class="remaining-panel" aria-label="剩余站点">
-            <div class="remaining-heading"><strong>剩余站点</strong></div>
-            <div class="remaining-list">
-              <div class="remaining-item winery"><span>酒庄</span><strong id="remaining-winery">5</strong><small>站</small></div>
-              <div class="remaining-item food"><span>食铺</span><strong id="remaining-food">5</strong><small>站</small></div>
-              <div class="remaining-item trade"><span>商行</span><strong id="remaining-trade">5</strong><small>站</small></div>
+        <aside class="utility-column" aria-label="推演辅助工具">
+          <section class="utility-panel multiplier-panel">
+            <div class="utility-heading"><h2>本周高倍</h2></div>
+            <div class="recommendation-copy">本周推荐物资（选择两种）</div>
+            <div class="recommendation-selects">
+              <label class="utility-select-wrap" for="recommend-category-1"><span>推荐物资 1</span><select id="recommend-category-1" aria-label="推荐物资 1"></select></label>
+              <label class="utility-select-wrap" for="recommend-category-2"><span>推荐物资 2</span><select id="recommend-category-2" aria-label="推荐物资 2"></select></label>
             </div>
           </section>
-          <section class="history-panel" aria-label="过往未来三站提示">
-            <div class="history-heading"><strong>过往未来三站提示</strong><span id="history-count">0 条</span></div>
-            <ol class="history-list" id="history-list"><li class="history-empty">暂无已确认提示</li></ol>
+          <section class="utility-panel supplies-panel">
+            <div class="utility-heading"><h2>初始物资</h2></div>
+            <div class="supply-list" id="supply-list">
+              <div class="supply-entry"><button class="supply-picker" type="button" data-supply-slot="0" aria-label="选择初始物资 1"><span class="supply-placeholder">＋</span><span>选择物资</span></button><span class="supply-quantity-label">数量</span><input type="number" min="0" max="999" value="0" data-supply-quantity aria-label="初始物资 1 数量" /></div>
+              <div class="supply-entry"><button class="supply-picker" type="button" data-supply-slot="1" aria-label="选择初始物资 2"><span class="supply-placeholder">＋</span><span>选择物资</span></button><span class="supply-quantity-label">数量</span><input type="number" min="0" max="999" value="0" data-supply-quantity aria-label="初始物资 2 数量" /></div>
+              <div class="supply-entry"><button class="supply-picker" type="button" data-supply-slot="2" aria-label="选择初始物资 3"><span class="supply-placeholder">＋</span><span>选择物资</span></button><span class="supply-quantity-label">数量</span><input type="number" min="0" max="999" value="0" data-supply-quantity aria-label="初始物资 3 数量" /></div>
+            </div>
+          </section>
+          <section class="utility-panel rules-panel" aria-label="包体规则">
+            <div class="utility-heading"><h2>包体规则</h2><span>客户端配置</span></div>
+            <div class="rule-stats">
+              <div class="rule-stat"><span>合同检查</span><strong id="rule-contract-interval">4 站 / 区域</strong></div>
+              <div class="rule-stat"><span>当前路线</span><strong id="rule-area-count">4 + 4 + 4 + 4（共 16 站）</strong></div>
+              <div class="rule-stat"><span>策略卡刷新</span><strong id="rule-refresh-base">3 槽位 · 基础 1 次</strong></div>
+              <div class="rule-stat"><span>价格范围</span><strong id="rule-price-range">买入 0.7–1.4 倍 · 卖出 0.6–1.5 倍</strong></div>
+            </div>
+            <div class="rule-subheading">驾驶舱升级</div>
+            <div class="rule-driver-list" id="rule-driver-list"></div>
+            <label class="utility-select-wrap rule-control" for="rule-pool-select"><span>站点池权重（包体）</span><select id="rule-pool-select" aria-label="站点池权重"></select></label>
+            <div class="rule-pool-summary" id="rule-pool-summary"></div>
+            <label class="utility-select-wrap rule-control" for="rule-goods-type"><span>站点候选货品</span><select id="rule-goods-type" aria-label="站点候选货品"><option value="winery">酒庄</option><option value="food">食铺</option><option value="trade">商行</option></select></label>
+            <div class="rule-goods-reference" id="rule-goods-reference"></div>
+            <div class="rule-subheading">价格倍率表</div>
+            <div class="rule-price-ranges" id="rule-price-ranges"></div>
           </section>
         </aside>
       </section>
 
-      <section class="wiki-view is-hidden" id="goods" aria-labelledby="goods-title">
-        <div class="wiki-heading">
-          <div>
-            <h2 id="goods-title">铁路大亨 · 货物清单</h2>
-            <p>查看货物图鉴、品质与站点交易信息。价格为基础值，实际交易会随站点修正。</p>
-          </div>
-          <label class="goods-search" for="goods-search"><span>搜索货物</span><input id="goods-search" type="search" placeholder="输入货物名称或类别" /></label>
-        </div>
-        <div class="goods-toolbar" role="toolbar" aria-label="货物筛选">
-          <section class="goods-filter-group" aria-labelledby="goods-type-filter-title">
-            <div class="goods-filter-heading"><h3 id="goods-type-filter-title">货物品类</h3><span>按商品所属类别筛选</span></div>
-            <div class="goods-filter-options"><button class="goods-filter is-active" type="button" data-goods-filter="all">全部货物 <span data-goods-count="all">32 件</span></button><button class="goods-filter" type="button" data-goods-filter="WINE">酒类 <span data-goods-count="WINE">8 件</span></button><button class="goods-filter" type="button" data-goods-filter="FOOD">食品 <span data-goods-count="FOOD">8 件</span></button><button class="goods-filter" type="button" data-goods-filter="CLOTH">服装 <span data-goods-count="CLOTH">8 件</span></button><button class="goods-filter" type="button" data-goods-filter="ART">艺术品 <span data-goods-count="ART">8 件</span></button></div>
-          </section>
-          <section class="goods-filter-group" aria-labelledby="goods-quality-filter-title">
-            <div class="goods-filter-heading"><h3 id="goods-quality-filter-title">货物品级</h3><span>按游戏内品质筛选</span></div>
-            <div class="goods-filter-options"><button class="goods-filter quality-filter is-active" type="button" data-goods-quality="all">全部品级 <span data-goods-count="quality-all">32 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="1">品质 1 <span data-goods-count="quality-1">1 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="2">品质 2 <span data-goods-count="quality-2">7 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="3">品质 3 <span data-goods-count="quality-3">8 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="4">品质 4 <span data-goods-count="quality-4">8 件</span></button><button class="goods-filter quality-filter" type="button" data-goods-quality="5">品质 5 <span data-goods-count="quality-5">8 件</span></button></div>
-          </section>
-        </div>
-        <div class="goods-grid" id="goods-grid"></div>
-        <p class="goods-empty is-hidden" id="goods-empty">没有匹配的货物。</p>
-      </section>
-
-      <footer class="footer-note"><span>诡秘之主 · 铁路大亨</span><span>仅作路线决策辅助，最终结果以游戏内状态为准</span></footer>
     </main>
+    <dialog class="goods-picker-dialog" id="goods-picker-dialog" aria-labelledby="goods-picker-title">
+      <div class="goods-picker-header"><h2 id="goods-picker-title">铁路大亨货物</h2><button type="button" id="goods-picker-close" aria-label="关闭物资选择">×</button></div>
+      <p class="goods-picker-note">从货物清单中选择初始物资，可全部留空。</p>
+      <div class="goods-picker-grid" id="goods-picker-grid"></div>
+    </dialog>
     <script src="./app.js" defer></script>
   </body>
 </html>

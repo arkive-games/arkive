@@ -1,12 +1,45 @@
 const TYPES = ["winery", "food", "trade"];
 const TYPE_LABELS = { winery: "酒庄", food: "食铺", trade: "商行" };
 const DIFFICULTIES = [
-  { id: "beginner", name: "新手路线", description: "从这里轻松启程，有限的选择能降低风险。", stops: 15, price: "买入 0.7–1.2 倍 · 卖出 1.0–1.4 倍", stock: "合同库存加成 10% / 50% / 100% / 150%" },
-  { id: "normal", name: "普通路线", description: "更多策略卡在此登场，每次判断带来全新结果。", stops: 15, price: "买入 0.7–1.2 倍 · 卖出 0.7–1.4 倍", stock: "合同库存加成 10% / 50% / 100% / 150%" },
-  { id: "advanced", name: "进阶路线", description: "需要更多许可证解锁的高级路线，权衡你的选择吧。", stops: 15, price: "买入 0.7–1.2 倍 · 卖出 0.7–1.4 倍", stock: "合同库存加成 10% / 50% / 100% / 150%" },
-  { id: "hard", name: "困难路线", description: "在收益与风险并行的路线上，你将如何下注？", stops: 14, price: "买入 0.7–1.4 倍 · 卖出 0.6–1.5 倍", stock: "合同库存加成 10% / 75% / 150% / 225%" },
-  { id: "challenge", name: "挑战路线", description: "在复杂地图中追逐最优解，铁路大亨的试炼场。", stops: 15, price: "买入 0.7–1.4 倍 · 卖出 0.6–1.5 倍", stock: "合同库存加成 10% / 75% / 150% / 225%" },
+  { id: "beginner", name: "新手线路", description: "低难度提供更明确的后续站点信息。", stops: 8, areas: "4 + 4", contractInterval: 4, priceGroup: 0, pool: "200101", price: "买入 0.7–1.2 倍 · 卖出 1.0–1.4 倍", stock: "合同库存加成 10% / 50% / 100% / 150%" },
+  { id: "normal", name: "普通线路", description: "低难度提供更明确的后续站点信息。", stops: 8, areas: "4 + 4", contractInterval: 4, priceGroup: 1, pool: "200201", price: "买入 0.7–1.2 倍 · 卖出 0.7–1.4 倍", stock: "合同库存加成 10% / 50% / 100% / 150%" },
+  { id: "advanced", name: "进阶线路", description: "区域数量增加，策略卡开始成为路线判断的核心。", stops: 12, areas: "4 + 4 + 4", contractInterval: 4, priceGroup: 2, pool: "200301", price: "买入 0.7–1.2 倍 · 卖出 0.7–1.4 倍", stock: "合同库存加成 10% / 50% / 100% / 150%" },
+  { id: "hard", name: "困难线路", description: "高难度区域没有连续站点保护，价格波动更大。", stops: 15, areas: "5 + 5 + 5", contractInterval: 5, priceGroup: 3, pool: "200401", price: "买入 0.7–1.4 倍 · 卖出 0.6–1.5 倍", stock: "合同库存加成 10% / 75% / 150% / 225%" },
+  { id: "challenge", name: "挑战线路", description: "只能看到未来三站最多类型，需要结合预测信息判断。", stops: 16, areas: "4 + 4 + 4 + 4", contractInterval: 4, priceGroup: 4, pool: "200501", price: "买入 0.7–1.4 倍 · 卖出 0.6–1.5 倍", stock: "合同库存加成 10% / 75% / 150% / 225%" },
 ];
+const STATION_POOLS = {
+  "200101": { label: "200101 · 起始区域", entries: [["start", 1], ["winery", 3], ["food", 2], ["trade", 2]] },
+  "200201": { label: "200201 · 区域池 A", entries: [["winery", 3], ["food", 2], ["trade", 3]] },
+  "200202": { label: "200202 · 区域池 B", entries: [["winery", 3], ["food", 3], ["trade", 2]] },
+  "200203": { label: "200203 · 区域池 C", entries: [["winery", 2], ["food", 3], ["trade", 3]] },
+  "200301": { label: "200301 · 区域池", entries: [["winery", 4], ["food", 4], ["trade", 4]] },
+  "200302": { label: "200302 · 区域池", entries: [["winery", 4], ["food", 4], ["trade", 4]] },
+  "200303": { label: "200303 · 区域池", entries: [["winery", 4], ["food", 4], ["trade", 4]] },
+  "200401": { label: "200401 · 区域池", entries: [["winery", 5], ["food", 5], ["trade", 5]] },
+  "200402": { label: "200402 · 区域池", entries: [["winery", 5], ["food", 5], ["trade", 5]] },
+  "200403": { label: "200403 · 区域池", entries: [["winery", 5], ["food", 5], ["trade", 5]] },
+  "200501": { label: "200501 · 艺术偏重", entries: [["winery", 5], ["food", 5], ["trade", 6]] },
+  "200502": { label: "200502 · 酒庄偏重", entries: [["winery", 6], ["food", 5], ["trade", 5]] },
+  "200503": { label: "200503 · 食铺偏重", entries: [["winery", 5], ["food", 6], ["trade", 5]] },
+};
+const STATION_GOODS = {
+  winery: { buy: [30307, 30504, 30505], sell: [30104, 30105, 30107] },
+  food: { buy: [30104, 30507, 30105], sell: [30304, 30305, 30307] },
+  trade: { buy: [30107, 30304, 30305], sell: [30504, 30505, 30507] },
+};
+const PRICE_RANGES = [
+  { label: "价格组 0", buy: "1.0–1.0（始发站） / 0.7–1.2", sell: "1.0–1.0（始发站） / 1.0–1.4" },
+  { label: "价格组 1", buy: "0.7–1.2", sell: "0.7–1.4" },
+  { label: "价格组 2", buy: "0.7–1.2", sell: "0.7–1.4" },
+  { label: "价格组 3", buy: "0.7–1.4", sell: "0.6–1.5" },
+  { label: "价格组 4", buy: "0.7–1.4", sell: "0.6–1.5" },
+];
+const DRIVER_UPGRADES = [
+  { level: 1, value: "1 → 2" },
+  { level: 2, value: "2 → 3" },
+  { level: 3, value: "达到 3" },
+];
+const GOODS_BY_ID = new Map();
 const HINTS = [
   { id: "winery-most", label: "酒庄最多" },
   { id: "food-most", label: "食铺最多" },
@@ -15,64 +48,115 @@ const HINTS = [
 ];
 
 const state = {
-  difficulty: "",
+  recommendedTypes: ["WINE", "FOOD"],
+  supplies: [null, null, null],
+  pickerSlot: 0,
+  difficulty: "challenge",
   totals: { winery: 5, food: 5, trade: 5 },
   originHint: "",
   steps: [],
   pendingCurrent: "",
   pendingHint: "",
-  quotaConfirmed: false,
+  quotaConfirmed: true,
   sequences: [],
   stationOffset: null,
+  designPreview: true,
 };
 const $ = (id) => document.getElementById(id);
-const GOODS_TYPE_LABELS = { WINE: "酒类", FOOD: "食品", CLOTH: "服装", ART: "艺术品" };
-const GOODS = { items: [], filter: "all", quality: "all", query: "" };
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>\"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[char]));
-function cleanGoodsText(value) { return String(value || "").replace(/<[^>]+>/g, "").replace(/\s+<\/?\s*>/g, "").trim(); }
-function updateGoodsFilterCounts() {
-  const counts = { all: GOODS.items.length };
-  GOODS.items.forEach((item) => {
-    counts[item.GoodsType] = (counts[item.GoodsType] || 0) + 1;
-    const key = `quality-${item.Quality}`;
-    counts[key] = (counts[key] || 0) + 1;
-  });
-  document.querySelectorAll("[data-goods-count]").forEach((count) => {
-    count.textContent = `${counts[count.dataset.goodsCount] || 0} 件`;
-  });
-  const qualityAll = document.querySelector('[data-goods-count="quality-all"]');
-  if (qualityAll) qualityAll.textContent = `${GOODS.items.filter((item) => Number(item.Quality) >= 1 && Number(item.Quality) <= 5).length} 件`;
+function renderSupplyOptions(items) {
+  items.forEach((item) => GOODS_BY_ID.set(Number(item.ID), item));
+  renderGoodsPicker();
+  renderSupplyButtons();
 }
-function goodsRouteMarkup(value) {
-  const lines = cleanGoodsText(value).split("\n").filter(Boolean);
-  const buy = lines.find((line) => line.startsWith("可买入站点："));
-  const sell = lines.find((line) => line.startsWith("可卖出站点："));
-  if (!buy && !sell) return "站点流向：暂无资料";
-  return `<span><small>可买入站点</small><b>${escapeHtml(buy ? buy.replace("可买入站点：", "") : "暂无资料")}</b></span><span><small>可卖出站点</small><b>${escapeHtml(sell ? sell.replace("可卖出站点：", "") : "暂无资料")}</b></span>`;
+function renderSupplyButtons() {
+  document.querySelectorAll("[data-supply-slot]").forEach((button) => {
+    const slot = Number(button.dataset.supplySlot);
+    const item = state.supplies[slot] ? GOODS_BY_ID.get(state.supplies[slot]) : null;
+    button.innerHTML = item ? `<img src="./assets/traintrade/${escapeHtml(item.SystemItemID)}.webp" alt="" /><span>${escapeHtml(item.GoodsNameTextID)}</span>` : `<span class="supply-placeholder">＋</span><span>选择物资</span>`;
+    button.classList.toggle("has-value", Boolean(item));
+    button.setAttribute("aria-label", item ? `初始物资 ${slot + 1}：${item.GoodsNameTextID}` : `选择初始物资 ${slot + 1}`);
+  });
 }
-function renderGoods() {
-  const grid = $("goods-grid");
+function renderGoodsPicker() {
+  const grid = $("goods-picker-grid");
   if (!grid) return;
-  const query = GOODS.query.trim().toLowerCase();
-  const items = GOODS.items.filter((item) => {
-    const category = GOODS_TYPE_LABELS[item.GoodsType] || item.GoodsType;
-    return (GOODS.filter === "all" || item.GoodsType === GOODS.filter) && (GOODS.quality === "all" || String(item.Quality) === GOODS.quality) && (!query || `${item.GoodsNameTextID} ${category} ${item.GoodsDesc}`.toLowerCase().includes(query));
+  const items = [...GOODS_BY_ID.values()].filter((item) => item.ID < 40000 && Number(item.Quality) >= 1 && Number(item.Quality) <= 5);
+  grid.innerHTML = items.length ? items.map((item) => `<button type="button" class="goods-picker-item" data-goods-id="${item.ID}"><img src="./assets/traintrade/${escapeHtml(item.SystemItemID)}.webp" alt="" /><span>${escapeHtml(item.GoodsNameTextID)}</span><small>${item.BaseBuyPrice} / ${item.BaseSellPrice}</small></button>`).join("") : `<p class="goods-picker-empty">正在读取铁路大亨货物清单……</p>`;
+}
+function renderRecommendedOptions() {
+  const labels = { WINE: "酒类", FOOD: "食物类", ART: "艺术类" };
+  [1, 2].forEach((slot) => {
+    const select = $(`recommend-category-${slot}`);
+    if (!select) return;
+    const selected = state.recommendedTypes[slot - 1];
+    select.innerHTML = Object.entries(labels).map(([value, label]) => `<option value="${value}" ${value === selected ? "selected" : ""}>${label}</option>`).join("");
   });
-  grid.innerHTML = items.map((item) => `<article class="goods-card goods-category-${item.GoodsType.toLowerCase()} quality-${item.Quality}"><div class="goods-art"><img src="./assets/traintrade/${item.SystemItemID}.webp" alt="${escapeHtml(item.GoodsNameTextID)}" loading="lazy" /></div><div class="goods-card-body"><div class="goods-card-top"><h3>${escapeHtml(item.GoodsNameTextID)}</h3><div class="goods-meta"><span class="goods-category">${escapeHtml(GOODS_TYPE_LABELS[item.GoodsType] || item.GoodsType)}</span><span class="goods-quality">品质 ${item.Quality}</span></div></div><p class="goods-desc">${escapeHtml(cleanGoodsText(item.GoodsDesc))}</p><div class="goods-prices"><span><small>基础买入</small><b>${item.BaseBuyPrice}</b></span><span><small>基础卖出</small><b>${item.BaseSellPrice}</b></span><span><small>余货回收</small><b>${item.LeftOverSellPrice}</b></span></div><div class="goods-route${item.GoodsDescStation ? "" : " goods-route-muted"}">${item.GoodsDescStation ? goodsRouteMarkup(item.GoodsDescStation) : "站点流向：暂无资料"}</div></div></article>`).join("");
-  $("goods-empty").classList.toggle("is-hidden", items.length > 0);
+  const second = $("recommend-category-2");
+  const first = state.recommendedTypes[0];
+  if (second) [...second.options].forEach((option) => { option.disabled = option.value === first; });
+}
+function renderRulePanel() {
+  const profile = activeDifficulty();
+  const interval = $("rule-contract-interval");
+  const areas = $("rule-area-count");
+  const refresh = $("rule-refresh-base");
+  const price = $("rule-price-range");
+  if (!profile || !interval) return;
+  interval.textContent = `${profile.contractInterval} 站 / 区域`;
+  areas.textContent = `${profile.areas}（共 ${profile.stops} 站）`;
+  refresh.textContent = "3 槽位 · 基础 1 次";
+  price.textContent = profile.price;
+  const poolSelect = $("rule-pool-select");
+  if (poolSelect && !poolSelect.options.length) {
+    poolSelect.innerHTML = Object.entries(STATION_POOLS).map(([id, pool]) => `<option value="${id}">${pool.label}</option>`).join("");
+  }
+  if (poolSelect) poolSelect.value = profile.pool;
+  renderPoolSummary(poolSelect?.value || profile.pool);
+  renderDriverUpgrades();
+  renderGoodsReference($("rule-goods-type")?.value || "winery");
+  renderPriceRanges();
+}
+function renderPoolSummary(poolId) {
+  const node = $("rule-pool-summary");
+  const pool = STATION_POOLS[poolId];
+  if (!node || !pool) return;
+  const total = pool.entries.reduce((sum, [, weight]) => sum + weight, 0);
+  node.innerHTML = pool.entries.map(([type, weight]) => `<div class="rule-bar-row"><span>${type === "start" ? "始发站" : TYPE_LABELS[type]}</span><b>${weight}/${total}</b><i><em style="width:${(weight / total) * 100}%"></em></i></div>`).join("");
+}
+function renderDriverUpgrades() {
+  const node = $("rule-driver-list");
+  if (!node) return;
+  node.innerHTML = DRIVER_UPGRADES.map((upgrade) => `<div class="rule-inline"><span>驾驶舱 ${upgrade.level} 级</span><strong>${upgrade.value}</strong><small>进入新区时回复</small></div>`).join("");
+}
+function renderGoodsReference(type) {
+  const node = $("rule-goods-reference");
+  if (!node) return;
+  const goods = STATION_GOODS[type] || STATION_GOODS.winery;
+  const names = (ids) => ids.map((id) => GOODS_BY_ID.get(id)?.GoodsNameTextID || `ID ${id}`).join("、");
+  node.innerHTML = `<div class="goods-reference-row"><span>可买入</span><strong>${names(goods.buy)}</strong></div><div class="goods-reference-row"><span>可卖出</span><strong>${names(goods.sell)}</strong></div><small class="rule-disclaimer">包体未提供单品出现概率；以上为固定候选集合。</small>`;
+}
+function renderPriceRanges() {
+  const node = $("rule-price-ranges");
+  if (!node) return;
+  node.innerHTML = PRICE_RANGES.map((range, index) => `<div class="price-row ${index === activeDifficulty()?.priceGroup ? "is-active" : ""}"><b>${range.label}</b><span>买 ${range.buy}</span><span>卖 ${range.sell}</span></div>`).join("") + `<small class="rule-disclaimer">价格区间内部的具体概率由包体未公开。</small>`;
 }
 function renderView() {
-  const goodsView = location.hash === "#goods";
-  $("planner").classList.toggle("is-hidden", goodsView);
-  $("goods").classList.toggle("is-hidden", !goodsView);
-  document.querySelectorAll(".topbar-nav a").forEach((link) => { const active = link.getAttribute("href") === (goodsView ? "#goods" : "#planner"); link.classList.toggle("is-active", active); if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current"); });
-  if (goodsView) renderGoods();
+  $("planner").classList.remove("is-hidden");
 }
 function activeDifficulty() {
   return DIFFICULTIES.find((route) => route.id === state.difficulty) || null;
 }
 function stationCount() {
   return activeDifficulty()?.stops || 15;
+}
+function balancedTotals(total) {
+  const base = Math.floor(total / TYPES.length);
+  const remainder = total % TYPES.length;
+  return Object.fromEntries(TYPES.map((type, index) => [type, base + (index < remainder ? 1 : 0)]));
+}
+function syncTotalsInputs() {
+  TYPES.forEach((type) => { const input = $(`${type}-total`); if (input) input.value = state.totals[type]; });
 }
 
 function resetRoute() {
@@ -91,10 +175,14 @@ function renderDifficulty() {
   const profile = activeDifficulty();
   const note = $("difficulty-description");
   if (note) note.innerHTML = profile ? `<strong>${profile.name}</strong><span>${profile.description}</span><small>${profile.price}<br />${profile.stock}</small>` : "选择路线后查看该难度的规则摘要。";
+  renderRulePanel();
 }
 
 function applyDifficulty(id) {
+  state.designPreview = false;
   state.difficulty = id;
+  state.totals = balancedTotals(stationCount());
+  syncTotalsInputs();
   state.sequences = [];
   resetRoute();
   renderDifficulty();
@@ -111,17 +199,32 @@ function renderQuotaStatus() {
   document.querySelectorAll("#totals-form input").forEach((input) => { input.disabled = !state.difficulty; });
   const total = TYPES.reduce((sum, type) => sum + state.totals[type], 0);
   const target = stationCount();
+  const totalNode = $("quota-total");
+  const remainingNode = $("quota-remaining");
+  if (totalNode) totalNode.textContent = total;
+  if (remainingNode) remainingNode.innerHTML = `${state.designPreview ? Math.max(0, total - 4) : Math.max(0, target - total)}<small>站</small>`;
   const message = $("quota-message");
   const valid = Boolean(state.difficulty) && total === target;
   message.textContent = !state.difficulty ? "" : valid ? "配额有效，可以开始推演。" : `还需要配置 ${Math.abs(target - total)} 站（当前合计 ${total}）。`;
   message.classList.toggle("is-valid", valid);
+  message.classList.toggle("is-hidden", state.quotaConfirmed);
   const confirmButton = $("quota-confirm-button");
   confirmButton.disabled = !valid;
   confirmButton.textContent = state.quotaConfirmed ? "总站点配额已确认" : "确认总站点配额";
+  confirmButton.classList.toggle("is-hidden", state.quotaConfirmed);
   return valid;
 }
 
 function renderStationStrip() {
+  if (state.designPreview) {
+    const progress = $("progress-readout");
+    if (progress) progress.textContent = "已确认 4 站 · 最多显示 6 站";
+    $("confirmed-stations").innerHTML = `<article class="station-cell is-confirmed"><small>第 1 站</small><strong>酒庄</strong><span>已确认</span></article><article class="station-cell is-confirmed"><small>第 2 站</small><strong>商行</strong><span>已确认</span></article><article class="station-cell is-confirmed"><small>第 3 站</small><strong>酒庄</strong><span>已确认</span></article><article class="station-cell is-confirmed"><small>第 4 站</small><strong>食铺</strong><span>已确认</span></article><article class="station-cell is-current"><small>第 5 站</small><strong>酒庄</strong><span>当前位置</span></article><article class="station-cell is-window"><small>第 6 站</small><strong>待确认</strong><span>下一站</span></article>`;
+    $("station-prev").disabled = true;
+    $("station-next").disabled = false;
+    $("confirmed-stations").setAttribute("aria-label", "第 1-6 站");
+    return;
+  }
   const totalStops = stationCount();
   const confirmed = confirmedStationTypes();
   const currentIndex = state.originHint ? state.steps.length : -1;
@@ -131,6 +234,8 @@ function renderStationStrip() {
   const maxOffset = Math.max(0, totalStops - visibleCount);
   const autoOffset = Math.max(0, Math.min(maxOffset, currentIndex > 0 ? currentIndex - 1 : 0));
   const offset = Math.max(0, Math.min(maxOffset, state.stationOffset ?? autoOffset));
+  const progress = $("progress-readout");
+  if (progress) progress.textContent = `已确认 ${state.steps.length + (state.originHint ? 1 : 0)} 站 · 最多显示 ${visibleCount} 站`;
   $("confirmed-stations").innerHTML = Array.from({ length: visibleCount }, (_, slot) => {
     const index = offset + slot;
     const number = index + 1;
@@ -138,7 +243,8 @@ function renderStationStrip() {
     const type = typeKey ? TYPE_LABELS[typeKey] : "";
     const isWindow = !type && windowStart >= 0 && index >= windowStart && index < windowStart + 3;
     const isCurrent = index === currentIndex;
-    return `<div class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""} ${isCurrent ? `is-current${currentType ? ` is-${currentType}` : ""}` : ""}"><strong>${number}</strong><small>${type || (isWindow ? "已推演" : "待确认")}</small></div>`;
+    const status = isCurrent ? "当前位置" : type ? "已确认" : isWindow ? "已推演" : index === offset + visibleCount - 1 ? "下一站" : "待确认";
+    return `<article class="station-cell ${type ? "is-confirmed" : isWindow ? "is-window" : ""} ${isCurrent ? `is-current${currentType ? ` is-${currentType}` : ""}` : ""}"><small>第 ${number} 站</small><strong>${type || (isWindow ? "待确认" : "待确认")}</strong><span>${status}</span></article>`;
   }).join("");
   $("station-prev").disabled = offset === 0;
   $("station-next").disabled = offset === maxOffset;
@@ -159,6 +265,12 @@ function confirmedStationTypes() {
 }
 
 function renderRemainingStations() {
+  if (state.designPreview) {
+    $("remaining-winery").textContent = "3";
+    $("remaining-food").textContent = "4";
+    $("remaining-trade").textContent = "4";
+    return;
+  }
   const confirmed = confirmedStationTypes();
   const remaining = Object.fromEntries(TYPES.map((type) => [type, state.totals[type]]));
   confirmed.forEach((type) => { remaining[type] = Math.max(0, remaining[type] - 1); });
@@ -168,9 +280,14 @@ function renderRemainingStations() {
 function renderHistory() {
   const entries = [];
   const historyPanel = document.querySelector(".history-panel");
-  historyPanel.classList.toggle("is-hidden", state.difficulty !== "challenge");
+  historyPanel.classList.remove("is-hidden");
+  if (state.designPreview) {
+    $("history-count").textContent = "4 条";
+    $("history-list").innerHTML = `<li class="history-entry"><div class="history-entry-body"><div class="history-entry-meta"><strong>第 1-3 站</strong><span>酒庄最多</span></div></div></li><li class="history-entry"><div class="history-entry-body"><div class="history-entry-meta"><strong>第 2-4 站</strong><span>各站相同</span></div></div></li><li class="history-entry"><div class="history-entry-body"><div class="history-entry-meta"><strong>第 3-5 站</strong><span>食铺最多</span></div></div></li><li class="history-entry latest"><div class="history-entry-body"><div class="history-entry-meta"><strong>第 4-6 站</strong><span>商行最多</span></div></div></li>`;
+    return;
+  }
   if (state.originHint) {
-    entries.push({ range: "第 1-3 站", hint: HINTS.find((item) => item.id === state.originHint).label, detail: "始发站提示" });
+    entries.push({ range: "第 1-3 站", hint: HINTS.find((item) => item.id === state.originHint).label, detail: "" });
   }
   state.steps.forEach((step, index) => {
     entries.push({
@@ -181,7 +298,7 @@ function renderHistory() {
   });
   $("history-count").textContent = `${entries.length} 条`;
   $("history-list").innerHTML = entries.length
-    ? entries.map((entry, index) => `<li class="history-entry"><span class="history-marker" aria-hidden="true">${index === 0 && state.originHint ? 0 : index}</span><div class="history-entry-body"><div class="history-entry-meta"><strong>${entry.range}</strong><span>${entry.hint}</span></div><small>${entry.detail}</small></div></li>`).join("")
+    ? entries.map((entry) => `<li class="history-entry"><div class="history-entry-body"><div class="history-entry-meta"><strong>${entry.range}</strong><span>${entry.hint}</span></div></div></li>`).join("")
     : `<li class="history-empty">暂无已确认提示</li>`;
 }
 
@@ -250,7 +367,7 @@ function comboMarkup(sequenceSet, start) {
   const combos = windowDistribution(sequenceSet, start);
   if (!combos.length) return "";
   const comboTotal = sequenceSet.length || 1;
-  return `<div class="combo-block"><div class="combo-heading"><strong>第${start + 1}-${start + 3}站组合情况罗列</strong></div><div class="combo-grid">${combos.map(([key, count]) => `<div class="combo-item"><span>${key.split(",").map((type) => TYPE_LABELS[type]).join(" → ")}</span><b>${Math.round((count / comboTotal) * 100)}%</b></div>`).join("")}</div></div>`;
+  return `<div class="combo-block"><div class="combo-heading"><strong>第 ${start + 1}–${start + 3} 站组合情况罗列</strong></div><div class="combo-grid">${combos.map(([key, count]) => `<div class="combo-item"><span>${key.split(",").map((type) => TYPE_LABELS[type]).join(" → ")}</span><b>${Math.round((count / comboTotal) * 100)}%</b></div>`).join("")}</div></div>`;
 }
 
 function probabilityMarkup(probability) {
@@ -264,7 +381,7 @@ function probabilityMarkup(probability) {
   return `<div class="probability-grid">${TYPES.map((type) => {
     const value = values[TYPES.indexOf(type)];
     const isLeading = value === leadingValue;
-    return `<article class="probability-cell ${type}${isLeading ? " is-leading" : ""}"><header><b>${TYPE_LABELS[type]}</b>${isLeading ? `<span class="probability-lead">最高</span>` : ""}</header><strong class="probability-value">${value}%</strong><div class="probability-bar"><i style="width:${value}%"></i></div></article>`;
+    return `<article class="probability-cell ${type}${isLeading ? " is-leading" : ""}${value === 0 ? " is-zero" : ""}${value === 100 ? " is-certain" : ""}"><header><b>${TYPE_LABELS[type]}</b>${isLeading ? `<span class="probability-lead">最高</span>` : ""}</header><strong class="probability-value">${value}%</strong><div class="probability-bar"><i style="width:${value}%"></i></div></article>`;
   }).join("")}</div>`;
 }
 
@@ -277,7 +394,31 @@ function hintMarkup(selected = "", id = "hint-select", sequenceSet = null, start
 }
 
 function renderResolvedWindow(possible, start, detail) {
-  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">第${start + 1}站概率</span><span class="window-state">${detail}</span></div><div class="probability-section next-probability">${probabilityMarkup(probabilityFor(possible, start))}</div>${comboMarkup(possible, start)}</div>`;
+  return `<div class="resolved-window"><div class="window-meta"><span class="window-title">第 ${start + 1} 站概率</span><span class="window-state">${detail}</span></div><div class="probability-section next-probability">${probabilityMarkup(probabilityFor(possible, start))}</div>${comboMarkup(possible, start)}</div>`;
+}
+
+function renderDecisionToolbar(markup = "") {
+  const toolbar = $("decision-toolbar");
+  if (!toolbar) return;
+  toolbar.innerHTML = markup || `<div class="decision-block decision-back"><label for="undo-step">返回上一步</label><button class="back-step-button" id="undo-step" type="button" aria-label="返回上一步" disabled>←</button></div>`;
+}
+
+function renderDesignPreview() {
+  renderDecisionToolbar(`<div class="decision-block decision-back"><label for="undo-step">返回上一步</label><button class="back-step-button" id="undo-step" type="button" aria-label="返回上一步" disabled>←</button></div><div class="decision-block decision-current"><label for="preview-current-select">当前站点确认</label><div class="current-picker"><select id="preview-current-select" aria-label="当前站点确认"><option selected>酒庄</option><option>食铺</option><option>商行</option></select></div></div><div class="decision-block decision-future"><label for="preview-hint-select">未来三站信息</label><div class="hint-picker"><select id="preview-hint-select" class="hint-select" aria-label="未来三站信息"><option selected>酒庄最多</option><option>食铺最多</option><option>商行最多</option><option>各站点相同</option></select></div></div><div class="decision-block decision-submit"><label for="preview-submit">推演下三站</label><button class="confirm-step" id="preview-submit" type="button" aria-label="推演下三站">→</button></div>`);
+  $("forecast-intro").classList.add("is-hidden");
+  $("forecast-content").classList.remove("is-hidden");
+  $("forecast-content").innerHTML = `<div class="resolved-window"><div class="window-meta"><span class="window-title">第 5 站概率</span><span class="window-state">未来三站信息：酒庄最多</span></div><div class="probability-section next-probability"><div class="probability-grid"><article class="probability-cell winery is-leading"><header><b>酒庄</b><span class="probability-lead">最高</span></header><strong class="probability-value">67%</strong></article><article class="probability-cell food"><header><b>食铺</b></header><strong class="probability-value">17%</strong></article><article class="probability-cell trade"><header><b>商行</b></header><strong class="probability-value">16%</strong></article></div></div><div class="combo-block"><div class="combo-heading"><strong>第 6–8 站组合情况罗列</strong></div><div class="combo-grid"><div class="combo-item"><span>酒庄 → 酒庄 → 食铺</span><b>28%</b></div><div class="combo-item"><span>酒庄 → 食铺 → 酒庄</span><b>22%</b></div><div class="combo-item"><span>酒庄 → 酒庄 → 商行</span><b>17%</b></div><div class="combo-item"><span>食铺 → 酒庄 → 酒庄</span><b>12%</b></div><div class="combo-item"><span>酒庄 → 商行 → 酒庄</span><b>9%</b></div><div class="combo-item"><span>商行 → 酒庄 → 酒庄</span><b>7%</b></div><div class="combo-item"><span>酒庄 → 酒庄 → 酒庄</span><b>5%</b></div></div></div></div>`;
+  [$("preview-current-select"), $("preview-hint-select"), $("preview-submit")].forEach((node) => node?.addEventListener(node.tagName === "BUTTON" ? "click" : "change", leaveDesignPreview));
+}
+
+function leaveDesignPreview() {
+  state.designPreview = false;
+  state.totals = balancedTotals(stationCount());
+  syncTotalsInputs();
+  state.sequences = [];
+  resetRoute();
+  renderQuotaStatus();
+  renderForecast();
 }
 
 function renderForecast() {
@@ -286,13 +427,22 @@ function renderForecast() {
   renderStationStrip();
   renderHistory();
   const totalStops = stationCount();
+  if (state.designPreview) {
+    renderStationStrip();
+    renderHistory();
+    renderRemainingStations();
+    renderDesignPreview();
+    return;
+  }
+  renderDecisionToolbar();
   $("undo-step").disabled = !state.originHint && state.steps.length === 0;
   renderRemainingStations();
   if (!state.sequences.length) { intro.classList.remove("is-hidden"); content.classList.add("is-hidden"); return; }
   intro.classList.add("is-hidden"); content.classList.remove("is-hidden");
 
   if (!state.originHint) {
-    content.innerHTML = `<div class="window-card origin-card"><div class="window-meta"><span class="window-title"><span class="step-number">3</span>站点信息</span></div><div class="station-entry"><div class="current-picker is-origin"><label for="origin-station-select">当前站点</label><select id="origin-station-select" disabled><option>始发站</option></select></div><div class="hint-picker"><label for="origin-hint-select">未来三站</label>${hintMarkup(state.pendingHint, "origin-hint-select", state.sequences, 0)}</div><button class="confirm-step" id="confirm-origin" type="button" disabled>确认并推演第 1-3 站</button></div></div>`;
+    renderDecisionToolbar(`<div class="decision-block decision-back"><label for="undo-step">返回上一步</label><button class="back-step-button" id="undo-step" type="button" aria-label="返回上一步" disabled>←</button></div><div class="decision-block decision-current"><label for="origin-station-select">当前站点确认</label><div class="current-picker is-origin"><select id="origin-station-select" disabled><option>始发站</option></select></div></div><div class="decision-block decision-future"><label for="origin-hint-select">未来三站信息</label><div class="hint-picker">${hintMarkup(state.pendingHint, "origin-hint-select", state.sequences, 0)}</div></div><div class="decision-block decision-submit"><label for="confirm-origin">推演下三站</label><button class="confirm-step" id="confirm-origin" type="button" disabled aria-label="确认并推演第 1-3 站">→</button></div>`);
+    content.innerHTML = "";
     const confirm = $("confirm-origin");
     $("origin-hint-select").addEventListener("change", (event) => { state.pendingHint = event.target.value; renderForecast(); });
     confirm.disabled = !state.pendingHint;
@@ -318,11 +468,11 @@ function renderForecast() {
   const hintCandidates = prospectiveSequences(effectiveCurrentType, "");
   const candidateCount = effectiveCurrentType && state.pendingHint ? prospectiveSequences(effectiveCurrentType).length : possible.length;
   const candidateMessage = effectiveCurrentType && state.pendingHint && candidateCount === 0 ? `<p class="sequence-note error-note">当前站点与提示组合没有可行路线，请更换其中一项。</p>` : "";
-  const currentControl = certainCurrentType
-    ? `<div class="current-picker is-locked" role="status" aria-label="当前站点已锁定为${TYPE_LABELS[certainCurrentType]}"><label>当前站点</label><strong class="locked-station-value">${TYPE_LABELS[certainCurrentType]}</strong><small class="certainty-note">100% 已锁定</small></div>`
-    : `<div class="current-picker"><label for="current-select">当前站点</label><select id="current-select"><option value="" hidden></option>${currentOptions}</select></div>`;
-  const nextPrompt = `<div class="window-card"><div class="window-meta"><span class="window-title"><span class="step-number">3</span>第 ${currentNumber} 站 · 确认</span></div><div class="station-entry">${currentControl}<div class="hint-picker"><label for="hint-select">未来三站</label>${hintMarkup(state.pendingHint, "hint-select", hintCandidates, currentNumber)}</div><button class="confirm-step" id="confirm-step" type="button" disabled>确认并推演第 ${currentNumber + 1}-${currentNumber + 3} 站</button></div>${candidateMessage}</div>`;
-  content.innerHTML = `${nextPrompt}${resolved}`;
+  const currentControlMarkup = certainCurrentType
+    ? `<div class="current-picker is-locked" role="status" aria-label="当前站点已锁定为${TYPE_LABELS[certainCurrentType]}"><strong class="locked-station-value">${TYPE_LABELS[certainCurrentType]}</strong><small class="certainty-note">100% 已锁定</small></div>`
+    : `<div class="current-picker"><select id="current-select" aria-label="当前站点"><option value="" hidden></option>${currentOptions}</select></div>`;
+  renderDecisionToolbar(`<div class="decision-block decision-back"><label for="undo-step">返回上一步</label><button class="back-step-button" id="undo-step" type="button" aria-label="返回上一步">←</button></div><div class="decision-block decision-current"><label for="current-select">当前站点确认</label>${currentControlMarkup}</div><div class="decision-block decision-future"><label for="hint-select">未来三站信息</label><div class="hint-picker">${hintMarkup(state.pendingHint, "hint-select", hintCandidates, currentNumber)}</div></div><div class="decision-block decision-submit"><label for="confirm-step">推演下三站</label><button class="confirm-step" id="confirm-step" type="button" disabled aria-label="确认并推演第 ${currentNumber + 1}-${currentNumber + 3} 站">→</button></div>`);
+  content.innerHTML = `${resolved}${candidateMessage}`;
   const currentSelect = $("current-select");
   if (!certainCurrentType) currentSelect.addEventListener("change", () => { state.pendingCurrent = currentSelect.value; renderForecast(); });
   $("hint-select").addEventListener("change", (event) => { state.pendingHint = event.target.value; renderForecast(); });
@@ -338,6 +488,7 @@ function renderForecast() {
 }
 
 $("totals-form").addEventListener("input", () => {
+  state.designPreview = false;
   state.quotaConfirmed = false;
   state.sequences = [];
   resetRoute();
@@ -361,7 +512,8 @@ $("station-next").addEventListener("click", () => {
   state.stationOffset = Math.min(maxOffset, currentOffset + 1);
   renderStationStrip();
 });
-$("undo-step").addEventListener("click", () => {
+$("decision-toolbar").addEventListener("click", (event) => {
+  if (!event.target.closest("#undo-step")) return;
   if (state.steps.length) {
     state.steps.pop();
   } else if (state.originHint) {
@@ -373,6 +525,7 @@ $("undo-step").addEventListener("click", () => {
   renderForecast();
 });
 $("quota-confirm-button").addEventListener("click", () => {
+  state.designPreview = false;
   if (!renderQuotaStatus()) return;
   const sequences = enumerateSequences(state.totals, stationCount());
   resetRoute();
@@ -381,22 +534,42 @@ $("quota-confirm-button").addEventListener("click", () => {
   renderQuotaStatus();
   renderForecast();
 });
-document.querySelectorAll("[data-goods-filter]").forEach((button) => button.addEventListener("click", () => {
-  GOODS.filter = button.dataset.goodsFilter;
-  document.querySelectorAll("[data-goods-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
-  renderGoods();
+document.querySelectorAll("[data-supply-slot]").forEach((button) => button.addEventListener("click", () => {
+  state.pickerSlot = Number(button.dataset.supplySlot);
+  renderGoodsPicker();
+  $("goods-picker-dialog")?.showModal();
 }));
-document.querySelectorAll("[data-goods-quality]").forEach((button) => button.addEventListener("click", () => {
-  GOODS.quality = button.dataset.goodsQuality;
-  document.querySelectorAll("[data-goods-quality]").forEach((item) => item.classList.toggle("is-active", item === button));
-  renderGoods();
-}));
-$("goods-search").addEventListener("input", (event) => { GOODS.query = event.target.value; renderGoods(); });
-window.addEventListener("hashchange", renderView);
+$("goods-picker-grid")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-goods-id]");
+  if (!button) return;
+  state.supplies[state.pickerSlot] = Number(button.dataset.goodsId);
+  renderSupplyButtons();
+  $("goods-picker-dialog")?.close();
+});
+$("goods-picker-close")?.addEventListener("click", () => $("goods-picker-dialog")?.close());
+$("goods-picker-dialog")?.addEventListener("click", (event) => { if (event.target === event.currentTarget) event.currentTarget.close(); });
+$("recommend-category-1")?.addEventListener("change", (event) => {
+  state.recommendedTypes[0] = event.target.value;
+  if (state.recommendedTypes[1] === state.recommendedTypes[0]) state.recommendedTypes[1] = ["WINE", "FOOD", "ART"].find((type) => type !== state.recommendedTypes[0]);
+  renderRecommendedOptions();
+});
+$("recommend-category-2")?.addEventListener("change", (event) => { state.recommendedTypes[1] = event.target.value; renderRecommendedOptions(); });
+$("rule-pool-select")?.addEventListener("change", (event) => renderPoolSummary(event.target.value));
+$("rule-goods-type")?.addEventListener("change", (event) => renderGoodsReference(event.target.value));
+renderRecommendedOptions();
 renderDifficulty();
 renderQuotaStatus();
 renderForecast();
 fetch("./assets/traintrade/goods.json")
   .then((response) => { if (!response.ok) throw new Error(`goods.json: ${response.status}`); return response.json(); })
-  .then((items) => { GOODS.items = items.filter((item) => item.ID < 40000 && Number(item.Quality) >= 1 && Number(item.Quality) <= 5); updateGoodsFilterCounts(); renderView(); })
-  .catch(() => { $("goods-empty").textContent = "货物资料暂时无法加载。"; renderView(); });
+  .then((items) => { renderSupplyOptions(items.filter((item) => item.ID < 40000 && Number(item.Quality) >= 1 && Number(item.Quality) <= 5)); renderGoodsReference($("rule-goods-type")?.value || "winery"); })
+  .catch(() => { /* Supply selectors remain usable with their empty state. */ });
+
+function notifyParentHeight() {
+  if (window.parent === window) return;
+  window.parent.postMessage({ type: "traintrade-height", height: document.documentElement.scrollHeight }, "*");
+}
+
+new ResizeObserver(notifyParentHeight).observe(document.documentElement);
+window.addEventListener("load", notifyParentHeight);
+notifyParentHeight();
