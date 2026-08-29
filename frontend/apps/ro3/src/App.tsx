@@ -1002,7 +1002,18 @@ function CardWiki({
       <div className="card-native-layout">
         <section className="card-native-center" aria-labelledby="wiki-cards-title">
           <div className="card-native-center-head">
-            <div><span>{content.wiki.cards.description}</span><h2 id="wiki-cards-title">{content.wiki.cards.title}</h2></div>
+            <h2 id="wiki-cards-title">{content.wiki.cards.title}</h2>
+          </div>
+          <div className="card-catalog-toolbar">
+            <div className="card-category-tabs" role="tablist" aria-label={content.wiki.cards.filterLabel}>
+              {categories.map((category) => (
+                <button type="button" role="tab" key={category.key} className={filters.category === category.key ? 'is-active' : undefined} aria-selected={filters.category === category.key} onClick={() => selectCategory(category.key)}>
+                  {category.key === 'collection' ? <Sparkles aria-hidden="true" /> : <BookOpen aria-hidden="true" />}
+                  <strong>{category.label}</strong>
+                  <small>{category.count}</small>
+                </button>
+              ))}
+            </div>
             <div className="card-native-toolbar">
               <button type="button" className={`card-filter-trigger${showFilters ? ' is-active' : ''}`} aria-expanded={showFilters} onClick={() => setShowFilters((visible) => !visible)}>
                 <SlidersHorizontal aria-hidden="true" />
@@ -1016,18 +1027,6 @@ function CardWiki({
                 {query ? <button type="button" aria-label={content.search.clear} onClick={() => onQueryChange('')}><X aria-hidden="true" /></button> : null}
               </label>
             </div>
-          </div>
-          <div className="card-catalog-strip">
-            <div className="card-category-tabs" role="tablist" aria-label={content.wiki.cards.filterLabel}>
-              {categories.map((category) => (
-                <button type="button" role="tab" key={category.key} className={filters.category === category.key ? 'is-active' : undefined} aria-selected={filters.category === category.key} onClick={() => selectCategory(category.key)}>
-                  {category.key === 'collection' ? <Sparkles aria-hidden="true" /> : <BookOpen aria-hidden="true" />}
-                  <strong>{category.label}</strong>
-                  <small>{category.count}</small>
-                </button>
-              ))}
-            </div>
-            <span>{content.wiki.cards.resultCount.replace('{count}', String(cards.length))}</span>
           </div>
           {showFilters ? (
             <section className="card-filter-panel" aria-label={content.wiki.cards.filters.panelTitle}>
@@ -1067,11 +1066,10 @@ function CardWiki({
           <div className="card-catalog-grid" aria-label={content.wiki.cards.title}>
             {dataError ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : cards.length > 0 ? cards.map((card) => <CardTile key={card.id} card={card} collection={filters.category === 'collection'} active={activeCard?.id === card.id} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
           </div>
-          <div className="card-native-source"><Database aria-hidden="true" /><span>{content.wiki.cards.sourceNote} <code>{data?.version.version ?? content.wiki.loading}</code></span></div>
         </section>
 
         <aside className="card-native-detail" aria-label={content.wiki.cards.title}>
-          {activeCard && data ? <CardWorkspaceDetail card={activeCard} data={data} collection={filters.category === 'collection'} /> : <div className="card-detail-empty">{dataError ? content.wiki.dataError : content.wiki.loading}</div>}
+          {activeCard && data ? <CardWorkspaceDetail card={activeCard} data={data} /> : <div className="card-detail-empty">{dataError ? content.wiki.dataError : content.wiki.loading}</div>}
         </aside>
       </div>
       {selectedCard && data ? (
@@ -1080,7 +1078,7 @@ function CardWiki({
         }}>
           <aside className="card-mobile-dialog" role="dialog" aria-modal="true" aria-label={localizedText(selectedCard.name)}>
             <button type="button" className="wiki-dialog-close" aria-label={content.wiki.cards.closeDetail} onClick={() => onSelect(null)}><X aria-hidden="true" /></button>
-            <CardWorkspaceDetail card={selectedCard} data={data} collection={filters.category === 'collection'} />
+            <CardWorkspaceDetail card={selectedCard} data={data} />
           </aside>
         </div>
       ) : null}
@@ -1150,23 +1148,16 @@ function CardTile({ card, collection, active, onSelect }: { card: WikiCard; coll
   )
 }
 
-function CardWorkspaceDetail({ card, data, collection }: { card: WikiCard; data: WikiData; collection: boolean }) {
+function CardWorkspaceDetail({ card, data }: { card: WikiCard; data: WikiData }) {
   const attributeById = new Map(data.cards.attributes.map((attribute) => [attribute.id, attribute]))
   const effectById = new Map(data.cards.specialEffects.map((effect) => [effect.id, effect]))
   const effectIds = [...new Set(card.tiers.flatMap((tier) => tier.specialEffects))]
   return (
     <>
-      <div className="card-detail-state"><CheckCircle2 aria-hidden="true" />{content.wiki.cards.configConfirmed}</div>
-      <div className="card-detail-heading">
-        <span className="card-detail-thumb"><CardFrame card={card} collection={collection} /></span>
-        <div><h3>{localizedText(card.name)}</h3><span>{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {cardPartLabel(card.part)}</span></div>
-      </div>
-      <section className="card-detail-effects"><h4>{content.wiki.cards.descriptionTitle}</h4><p>{stripGameMarkup(localizedText(card.description))}</p></section>
-      <dl className="card-detail-meta">
-        <div><dt>{content.wiki.cards.cardId}</dt><dd><code>{card.id}</code></dd></div>
-        <div><dt>{content.wiki.cards.stackLimit}</dt><dd>{card.stackLimit}</dd></div>
-        <div><dt>{content.wiki.cards.trade}</dt><dd>{card.tradable ? content.wiki.cards.yes : content.wiki.cards.no}</dd></div>
-      </dl>
+      <header className="card-detail-heading">
+        <h3>{localizedText(card.name)}</h3>
+        <span>{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {cardPartLabel(card.part)}</span>
+      </header>
       <h4 className="card-detail-section-title">{content.wiki.cards.attributesTitle}</h4>
       <div className="card-detail-tiers">
         {card.tiers.map((tier) => (
