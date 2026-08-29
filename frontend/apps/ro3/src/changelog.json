@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.14",
+      "date": "2026-08-30",
+      "commit": "1b640b4b5f0644b9af9151009e74f83756fbd3ea",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Refined card catalog filters, detail density, framing, and footer styling.",
+            "zh-CN": "优化卡片图鉴的品质筛选、详情密度、页面边界与页脚风格。",
+            "zh-TW": "優化卡片圖鑑的品質篩選、詳情密度、頁面邊界與頁尾風格。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.13",
       "date": "2026-08-30",
       "commit": "946aecb48d3db56cb4bd66d2ef11c1df5fd1744c",
