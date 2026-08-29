@@ -3395,6 +3395,7 @@ select {
   display: block;
   width: 100%;
   aspect-ratio: 162 / 224;
+  container-type: inline-size;
   isolation: isolate;
 }
 
@@ -3507,12 +3508,20 @@ select {
   z-index: 4;
   overflow: hidden;
   color: #f8edcf;
-  font-size: 0.6875rem;
+  font-size: clamp(0.6875rem, 9cqi, 0.75rem);
   line-height: 1.2;
   text-align: center;
   text-overflow: ellipsis;
   text-shadow: 0 0.08rem 0.1rem rgba(33, 22, 14, 0.92);
   white-space: nowrap;
+}
+
+.card-game-frame > strong.is-long-name {
+  font-size: clamp(0.625rem, 8.1cqi, 0.75rem);
+}
+
+.card-game-frame > strong.is-extra-long-name {
+  font-size: clamp(0.5625rem, 7.3cqi, 0.75rem);
 }
 
 .card-game-frame:not(.is-collection) > strong {
@@ -3577,7 +3586,7 @@ select {
   }
   .card-filter-group > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .card-catalog-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     max-height: none;
     overflow: visible;
   }

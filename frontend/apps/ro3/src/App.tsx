@@ -1128,6 +1128,9 @@ function CardFrame({ card, collection }: { card: WikiCard; collection: boolean }
   const variant = cardFrameVariant(card.quality, collection)
   const frameAsset = variant ? CARD_FRAME_ASSETS[variant] : null
   const collectionNameAsset = variant ? COLLECTION_CARD_NAME_ASSETS[variant] : null
+  const cardName = localizedText(card.name)
+  const cardNameLength = [...cardName].length
+  const cardNameClass = cardNameLength >= 9 ? 'is-extra-long-name' : cardNameLength >= 8 ? 'is-long-name' : undefined
 
   return (
     <span className={`card-game-frame${collection ? ' is-collection' : ''}`}>
@@ -1142,7 +1145,7 @@ function CardFrame({ card, collection }: { card: WikiCard; collection: boolean }
           <img className="card-game-frame-nameplate" src={collectionNameAsset} alt="" aria-hidden="true" />
         </>
       ) : null}
-      <strong>{localizedText(card.name)}</strong>
+      <strong className={cardNameClass}>{cardName}</strong>
     </span>
   )
 }
