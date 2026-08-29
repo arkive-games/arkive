@@ -1136,7 +1136,12 @@ function CardFrame({ card, collection }: { card: WikiCard; collection: boolean }
       <span className="card-game-frame-part" aria-label={cardPartLabel(card.part)} title={cardPartLabel(card.part)}>
         <span className="card-game-frame-part-icon"><CardPartIcon part={card.part} /></span>
       </span>
-      {collectionNameAsset ? <img className="card-game-frame-nameplate" src={collectionNameAsset} alt="" aria-hidden="true" /> : null}
+      {collectionNameAsset ? (
+        <>
+          <span className="card-game-frame-nameplate-fill" aria-hidden="true" />
+          <img className="card-game-frame-nameplate" src={collectionNameAsset} alt="" aria-hidden="true" />
+        </>
+      ) : null}
       <strong>{localizedText(card.name)}</strong>
     </span>
   )

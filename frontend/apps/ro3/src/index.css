@@ -3401,10 +3401,10 @@ select {
 .card-game-frame-art {
   position: absolute;
   z-index: 0;
-  top: 7.5%;
+  top: 2.8%;
   left: 7.4%;
   width: 85.2%;
-  height: 75%;
+  height: 79.7%;
   overflow: hidden;
   background: #cad3c2;
 }
@@ -3465,23 +3465,31 @@ select {
   object-fit: contain;
 }
 
-.card-game-frame-nameplate {
+.card-game-frame-nameplate,
+.card-game-frame-nameplate-fill {
   position: absolute;
   z-index: 2;
-  right: 9%;
-  bottom: 3.5%;
-  width: 71%;
-  height: 9.5%;
-  object-fit: fill;
+  right: 5%;
+  bottom: 2.5%;
+  width: 70%;
+  height: 11.5%;
   pointer-events: none;
+}
+
+.card-game-frame-nameplate-fill {
+  background: linear-gradient(180deg, rgba(61, 72, 91, 0.98), rgba(28, 39, 56, 0.98));
+  clip-path: polygon(7% 0, 93% 0, 100% 50%, 93% 100%, 7% 100%, 0 50%);
+  box-shadow: inset 0 0.08rem rgba(255, 244, 212, 0.34), inset 0 -0.08rem rgba(13, 20, 31, 0.58);
+}
+
+.card-game-frame-nameplate {
+  z-index: 3;
+  object-fit: fill;
 }
 
 .card-game-frame > strong {
   position: absolute;
-  z-index: 3;
-  right: 6%;
-  bottom: 5.3%;
-  left: 30%;
+  z-index: 4;
   overflow: hidden;
   color: #f8edcf;
   font-size: 0.6875rem;
@@ -3492,10 +3500,22 @@ select {
   white-space: nowrap;
 }
 
+.card-game-frame:not(.is-collection) > strong {
+  right: 6%;
+  bottom: 5%;
+  left: 27%;
+  display: grid;
+  height: 12%;
+  place-items: center;
+}
+
 .card-game-frame.is-collection > strong {
-  right: 12%;
-  bottom: 6.1%;
-  left: 29%;
+  right: 7%;
+  bottom: 2.5%;
+  left: 28%;
+  display: grid;
+  height: 11.5%;
+  place-items: center;
 }
 
 .card-catalog-grid .card-tile.is-active,
