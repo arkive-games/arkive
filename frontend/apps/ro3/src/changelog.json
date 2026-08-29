@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.13",
+      "date": "2026-08-30",
+      "commit": "946aecb48d3db56cb4bd66d2ef11c1df5fd1744c",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Consolidated card controls into a compact toolbar and reduced details to gameplay-relevant attributes.",
+            "zh-CN": "将卡片类型、筛选和搜索整合为紧凑工具栏，详情仅保留游戏属性信息。",
+            "zh-TW": "將卡片類型、篩選和搜尋整合為緊湊工具列，詳情僅保留遊戲屬性資訊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.12",
       "date": "2026-08-29",
       "commit": "a8676b75a8a0d8fd989b678b024dfee71ee9feaf",
