@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.5",
+      "date": "2026-08-29",
+      "commit": "10b88d17f669622112bf8475d5510e26099bf7d1",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned card artwork and titles, and restored the game-style framed nameplate for collection cards.",
+            "zh-CN": "修正卡面铺满与标题对齐，并为典藏卡恢复游戏风格的框式铭牌。",
+            "zh-TW": "修正卡面鋪滿與標題對齊，並為典藏卡恢復遊戲風格的框式銘牌。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.4",
       "date": "2026-08-29",
       "commit": "346194493290a901605bd70446f525ca21f75680",
