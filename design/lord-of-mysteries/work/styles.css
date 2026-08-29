@@ -579,8 +579,16 @@ body, .forecast-panel, .history-column { background: var(--bg); }
 .goods-picker-item:hover, .goods-picker-item:focus-visible { border-color: var(--blue); background: var(--selected); outline: 0; }
 .goods-picker-item img { grid-row: 1 / span 2; width: 2.5rem; height: 2.5rem; object-fit: contain; }
 .goods-picker-item span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .68rem; font-weight: 700; }
-.goods-picker-item small { color: var(--muted); font-size: .6rem; }
+.goods-picker-item small { display: flex; gap: .45rem; color: var(--muted); font-size: .6rem; }
+.goods-picker-item small b { font-weight: 600; }
 .goods-picker-empty { grid-column: 1 / -1; margin: 1rem 0; color: var(--muted); font-size: .75rem; text-align: center; }
+.goods-picker-skeleton { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; gap: .35rem .45rem; min-height: 3.5rem; padding: .45rem; border: 1px solid var(--border); border-radius: .3rem; background: var(--surface-soft); }
+.goods-picker-skeleton i { grid-row: 1 / span 2; width: 2.5rem; height: 2.5rem; background: var(--border); }
+.goods-picker-skeleton b, .goods-picker-skeleton small { display: block; height: .55rem; background: var(--border); }
+.goods-picker-skeleton small { width: 62%; }
+.goods-picker-error { grid-column: 1 / -1; display: grid; justify-items: center; gap: .35rem; padding: 1.25rem; color: var(--muted); text-align: center; font-size: .72rem; }
+.goods-picker-error strong { color: var(--text); font-size: .8rem; }
+.goods-picker-error button { margin-top: .3rem; min-height: 2rem; padding: .35rem .75rem; border: 1px solid var(--blue); border-radius: .3rem; color: var(--blue); background: var(--selected); font-weight: 700; }
 .rules-panel { margin-bottom: 1rem; }
 .rules-panel .utility-heading span { color: var(--muted); font-size: .62rem; }
 .rule-stats { display: grid; gap: .45rem; margin-top: .75rem; }

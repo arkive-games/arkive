@@ -40,6 +40,8 @@ const DRIVER_UPGRADES = [
   { level: 3, value: "达到 3" },
 ];
 const GOODS_BY_ID = new Map();
+let goodsLoadPromise = null;
+let goodsLoadState = "loading";
 const HINTS = [
   { id: "winery-most", label: "酒庄最多" },
   { id: "food-most", label: "食铺最多" },
@@ -82,7 +84,43 @@ function renderGoodsPicker() {
   const grid = $("goods-picker-grid");
   if (!grid) return;
   const items = [...GOODS_BY_ID.values()].filter((item) => item.ID < 40000 && Number(item.Quality) >= 1 && Number(item.Quality) <= 5);
-  grid.innerHTML = items.length ? items.map((item) => `<button type="button" class="goods-picker-item" data-goods-id="${item.ID}"><img src="./assets/traintrade/${escapeHtml(item.SystemItemID)}.webp" alt="" /><span>${escapeHtml(item.GoodsNameTextID)}</span><small>${item.BaseBuyPrice} / ${item.BaseSellPrice}</small></button>`).join("") : `<p class="goods-picker-empty">正在读取铁路大亨货物清单……</p>`;
+  if (items.length) {
+    grid.setAttribute("aria-busy", "false");
+    grid.innerHTML = items.map((item) => `<button type="button" class="goods-picker-item" data-goods-id="${item.ID}"><img src="./assets/traintrade/${escapeHtml(item.SystemItemID)}.webp" alt="" /><span>${escapeHtml(item.GoodsNameTextID)}</span><small><b>买 ${item.BaseBuyPrice}</b><b>卖 ${item.BaseSellPrice}</b></small></button>`).join("");
+    return;
+  }
+  if (goodsLoadState === "error") {
+    grid.setAttribute("aria-busy", "false");
+    grid.innerHTML = `<div class="goods-picker-error" role="alert"><strong>货物清单加载失败</strong><span>请重新加载货物数据后再选择。</span><button type="button" data-goods-retry>重新加载</button></div>`;
+    return;
+  }
+  grid.setAttribute("aria-busy", "true");
+  grid.innerHTML = Array.from({ length: 8 }, () => `<span class="goods-picker-skeleton" aria-hidden="true"><i></i><b></b><small></small></span>`).join("");
+}
+function loadRailwayGoods(force = false) {
+  if (GOODS_BY_ID.size && !force) return Promise.resolve([...GOODS_BY_ID.values()]);
+  if (goodsLoadPromise && !force) return goodsLoadPromise;
+  goodsLoadState = "loading";
+  renderGoodsPicker();
+  goodsLoadPromise = fetch("./assets/traintrade/goods.json", { cache: "no-store" })
+    .then((response) => {
+      if (!response.ok) throw new Error(`goods.json: ${response.status}`);
+      return response.json();
+    })
+    .then((items) => {
+      if (!Array.isArray(items)) throw new Error("goods.json: invalid catalogue");
+      goodsLoadState = "ready";
+      renderSupplyOptions(items.filter((item) => item.ID < 40000 && Number(item.Quality) >= 1 && Number(item.Quality) <= 5));
+      renderGoodsReference($("rule-goods-type")?.value || "winery");
+      return items;
+    })
+    .catch((error) => {
+      goodsLoadState = "error";
+      renderGoodsPicker();
+      throw error;
+    })
+    .finally(() => { goodsLoadPromise = null; });
+  return goodsLoadPromise;
 }
 function renderRecommendedOptions() {
   const labels = { WINE: "酒类", FOOD: "食物类", ART: "艺术类" };
@@ -538,8 +576,13 @@ document.querySelectorAll("[data-supply-slot]").forEach((button) => button.addEv
   state.pickerSlot = Number(button.dataset.supplySlot);
   renderGoodsPicker();
   $("goods-picker-dialog")?.showModal();
+  loadRailwayGoods().catch(() => {});
 }));
 $("goods-picker-grid")?.addEventListener("click", (event) => {
+  if (event.target.closest("[data-goods-retry]")) {
+    loadRailwayGoods(true).catch(() => {});
+    return;
+  }
   const button = event.target.closest("[data-goods-id]");
   if (!button) return;
   state.supplies[state.pickerSlot] = Number(button.dataset.goodsId);
@@ -560,10 +603,7 @@ renderRecommendedOptions();
 renderDifficulty();
 renderQuotaStatus();
 renderForecast();
-fetch("./assets/traintrade/goods.json")
-  .then((response) => { if (!response.ok) throw new Error(`goods.json: ${response.status}`); return response.json(); })
-  .then((items) => { renderSupplyOptions(items.filter((item) => item.ID < 40000 && Number(item.Quality) >= 1 && Number(item.Quality) <= 5)); renderGoodsReference($("rule-goods-type")?.value || "winery"); })
-  .catch(() => { /* Supply selectors remain usable with their empty state. */ });
+loadRailwayGoods().catch(() => {});
 
 function notifyParentHeight() {
   if (window.parent === window) return;
