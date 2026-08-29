@@ -501,7 +501,7 @@ function App() {
       )}
 
       <SiteFooter
-        className="ro3-footer"
+        className={page === 'wiki' && wikiView === 'cards' ? 'ro3-footer ro3-footer--cards' : 'ro3-footer'}
         homeUrl={HOME_URL}
         githubUrl={import.meta.env.VITE_GITHUB_URL}
         icpBeian={import.meta.env.VITE_ICP_BEIAN}
@@ -1045,7 +1045,7 @@ function CardWiki({
               />
               <CardFilterGroup
                 label={content.wiki.cards.filters.quality}
-                options={[2, 3, 4, 5, 6].map((quality) => ({ value: quality, label: content.wiki.cards.quality.replace('{quality}', String(quality)), count: countCardsByQuality(categoryCards, quality) }))}
+                options={[1, 2, 3, 4, 5, 6].map((quality) => ({ value: quality, label: content.wiki.cards.quality.replace('{quality}', String(quality)), count: countCardsByQuality(categoryCards, quality) }))}
                 selected={filters.qualities}
                 onToggle={(value) => toggleFilterValue('qualities', value)}
               />

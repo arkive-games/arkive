@@ -48,6 +48,19 @@ select {
   background: var(--card);
 }
 
+.ro3-footer--cards {
+  border-top: 0;
+  color: #74634b;
+  background-color: #eee2c4;
+  background-image: url('./assets/native-ui/card_bg_007.png');
+  background-size: 7rem auto;
+  background-blend-mode: multiply;
+}
+
+.ro3-footer--cards a:hover {
+  color: #50412d;
+}
+
 .ro3-changelog {
   min-height: calc(100dvh - 7rem);
   padding: 2rem 0 4rem;
@@ -2722,9 +2735,7 @@ select {
 
 .wiki-card-workspace {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--ro3-navy) 46%, var(--border));
   background: var(--ro3-paper);
-  box-shadow: 0 0.9rem 2rem rgba(34, 39, 48, 0.1);
 }
 
 .card-native-layout {
@@ -3141,8 +3152,8 @@ select {
   max-height: min(46rem, calc(100dvh - 6rem));
   overflow: hidden auto;
   align-content: start;
-  gap: 0.8rem;
-  padding: 1rem 1rem 1.2rem;
+  gap: 0.4rem;
+  padding: 0.75rem 0.9rem 0.85rem;
   border-left: 1px solid rgba(115, 94, 62, 0.34);
   color: #594a35;
   background: #eee2c4;
@@ -3178,7 +3189,7 @@ select {
 .card-detail-heading {
   display: grid;
   gap: 0.25rem;
-  padding: 0 0 0.75rem;
+  padding: 0 0 0.45rem;
   border-bottom: 1px solid rgba(112, 90, 58, 0.3);
   text-align: left;
 }
@@ -3187,27 +3198,25 @@ select {
 .card-detail-heading span { color: #87745a; font-size: 0.6875rem; }
 
 .card-detail-section-title {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.2rem;
   color: #55442d;
   font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
   font-size: 0.9rem;
 }
 
-.card-detail-section-title { margin: 0 0 -0.25rem; }
-
-.card-detail-series { display: grid; gap: 0.4rem; padding-top: 0.7rem; border-top: 1px solid rgba(112, 90, 58, 0.3); }
+.card-detail-series { display: grid; gap: 0.25rem; padding-top: 0.45rem; border-top: 1px solid rgba(112, 90, 58, 0.3); }
 .card-detail-series strong { color: #55442d; font-size: 0.8rem; }
 .card-detail-series span { color: #74634b; font-size: 0.6875rem; line-height: 1.5; }
 
 .card-detail-tiers {
   display: grid;
-  gap: 0.5rem;
+  gap: 0;
 }
 
 .card-detail-tiers section {
   display: grid;
-  gap: 0.35rem;
-  padding: 0.55rem 0.1rem 0.65rem;
+  gap: 0.2rem;
+  padding: 0.35rem 0.1rem 0.4rem;
   border-bottom: 1px solid rgba(112, 90, 58, 0.22);
 }
 
@@ -3225,11 +3234,11 @@ select {
 .card-detail-tiers section > div {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.2rem;
 }
 
 .card-detail-tiers section > div span {
-  padding: 0.15rem 0.35rem;
+  padding: 0.1rem 0.3rem;
   color: #5c4b32;
   background: rgba(186, 145, 63, 0.14);
   font-size: 0.6875rem;
