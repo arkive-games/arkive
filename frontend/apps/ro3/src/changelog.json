@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.4",
+      "date": "2026-08-29",
+      "commit": "346194493290a901605bd70446f525ca21f75680",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Refined the card encyclopedia with a dense catalogue grid and a game-inspired detail panel.",
+            "zh-CN": "优化卡片百科为高密度图鉴网格，并加入游戏风格的右侧详情面板。",
+            "zh-TW": "優化卡片百科為高密度圖鑑網格，並加入遊戲風格的右側詳情面板。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.3",
       "date": "2026-08-29",
       "commit": "d18d74eb5def6ff3a86d3a885f6522e02d7fcfd1",
