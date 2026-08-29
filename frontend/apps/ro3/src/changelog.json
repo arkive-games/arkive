@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.7",
+      "date": "2026-08-29",
+      "commit": "2c0015a7ba1c915998cbc53aef470330cd965d08",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Kept every card title complete and centered across desktop, tablet, and mobile layouts.",
+            "zh-CN": "确保所有卡片标题在桌面、平板和移动端完整显示并保持居中。",
+            "zh-TW": "確保所有卡片標題在桌面、平板和行動端完整顯示並保持置中。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.6",
       "date": "2026-08-29",
       "commit": "8a8f82a1e693a161b0c9dc076f2d936dd31d796e",
