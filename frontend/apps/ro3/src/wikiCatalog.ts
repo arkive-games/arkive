@@ -1,7 +1,4 @@
-const skillAssetModules = import.meta.glob('./assets/skills/*.webp', {
-  eager: true,
-  import: 'default',
-}) as Record<string, string>
+import type { SkillIndexEntry } from './wikiData'
 
 export interface WikiProfessionStage {
   id: string
@@ -15,25 +12,6 @@ export interface WikiSkillEvidence {
   eventName: string
   source: string
   status: 'client-event-id'
-}
-
-export interface WikiSkillAsset {
-  name: string
-  family: string | null
-  path: string
-  match: 'exact' | 'family' | 'unmapped'
-}
-
-export interface WikiSkillDetail {
-  stage: WikiProfessionStage
-  skillId: string
-  evidence: WikiSkillEvidence
-  asset: WikiSkillAsset | null
-  fields: {
-    name: 'unavailable'
-    description: 'unavailable'
-    values: 'unavailable'
-  }
 }
 
 export interface WikiProfessionLine {
@@ -154,16 +132,10 @@ const stages: WikiProfessionStage[] = [
   },
 ]
 
-export const WIKI_CLIENT_VERSION = '0.0.1.13'
+export const WIKI_CLIENT_VERSION = '0.0.1.14'
 
-/**
- * Package evidence captured from the installed client. The Wwise manifest gives us a
- * stable, reviewable event key for each skill id even while the encrypted config table
- * keeps display names and numeric effects unavailable offline.
- */
 export const WIKI_PACKAGE_SOURCE = {
-  label: '游戏客户端 / 音频事件清单',
-  sha256: 'B6B6D36D96F6E2E6D422DCEFCF9304AF58ADE8FF6F3E5F765DB08143D8A40A13',
+  label: '游戏客户端 / Lua 配置表',
 } as const
 
 export const WIKI_PROFESSION_STAGES = stages
@@ -185,39 +157,6 @@ export const WIKI_PROFESSION_LINES: WikiProfessionLine[] = [
 
 export const WIKI_STAGE_BY_ID = new Map(stages.map((stage) => [stage.id, stage]))
 
-const SKILL_ICON_FAMILY_ALIASES: Record<string, string[]> = {
-  HighWizard: ['highwizard', 'archimage'],
-  ArchBishop: ['archbishop', 'arcbeeshop'],
-  Whitesmith: ['whitesmith', 'mastersmith'],
-  AssassinCross: ['assassincross', 'assasincross'],
-  GuillotineCross: ['guillotinecross', 'decapitator'],
-}
-
-export const WIKI_SKILL_ASSETS: WikiSkillAsset[] = Object.entries(skillAssetModules)
-  .map(([modulePath, path]) => {
-    const name = modulePath.split('/').pop()?.replace(/\.webp$/i, '') ?? modulePath
-    const ident = name.replace(/^icon_skill_/i, '')
-    const family = ident.includes('_') ? ident.split('_', 1)[0].toLowerCase() : null
-    return { name, family, path, match: 'unmapped' as const }
-  })
-  .sort((a, b) => a.name.localeCompare(b.name))
-
-export const WIKI_SKILL_ASSET_COUNT = WIKI_SKILL_ASSETS.length
-
-export function getWikiSkillAsset(stage: WikiProfessionStage, skillId: string): WikiSkillAsset | null {
-  const direct = WIKI_SKILL_ASSETS.find((asset) => asset.name.toLowerCase().endsWith(`_${skillId}`))
-  if (direct) return { ...direct, match: 'exact' }
-
-  const families = SKILL_ICON_FAMILY_ALIASES[stage.sourceName] ?? [stage.sourceName.toLowerCase()]
-  const familyAssets = WIKI_SKILL_ASSETS.filter((asset) => asset.family && families.includes(asset.family))
-  if (familyAssets.length === 0) return null
-
-  // The package does not expose an id-to-icon table. Stable ordinal assignment keeps
-  // the inventory visually useful without claiming that a candidate is exact.
-  const ordinal = Math.max(0, stage.skillIds.indexOf(skillId))
-  return { ...familyAssets[ordinal % familyAssets.length], match: 'family' }
-}
-
 export const WIKI_SKILL_COUNT = stages.reduce((count, stage) => count + stage.skillIds.length, 0)
 
 export function getWikiSkillEvidence(stage: WikiProfessionStage, skillId: string): WikiSkillEvidence {
@@ -228,26 +167,12 @@ export function getWikiSkillEvidence(stage: WikiProfessionStage, skillId: string
   }
 }
 
-/**
- * Return the complete set of facts the client currently exposes for one skill.
- * The explicit unavailable fields keep the UI honest while the encrypted config
- * tables remain absent from the shipped client.
- */
-export function getWikiSkillDetail(stage: WikiProfessionStage, skillId: string): WikiSkillDetail {
-  return {
-    stage,
-    skillId,
-    evidence: getWikiSkillEvidence(stage, skillId),
-    asset: getWikiSkillAsset(stage, skillId),
-    fields: {
-      name: 'unavailable',
-      description: 'unavailable',
-      values: 'unavailable',
-    },
-  }
-}
-
-export function filterWikiSkillIds(lineId: string, stageId: string, query: string) {
+export function filterWikiSkillIds(
+  lineId: string,
+  stageId: string,
+  query: string,
+  skillIndex = new Map<number, SkillIndexEntry>(),
+) {
   const line = WIKI_PROFESSION_LINES.find((candidate) => candidate.id === lineId)
   if (!line) return []
 
@@ -259,10 +184,12 @@ export function filterWikiSkillIds(lineId: string, stageId: string, query: strin
     .flatMap((stage) => stage.skillIds.map((skillId) => ({
       stage,
       skillId,
+      skill: skillIndex.get(Number(skillId)),
       evidence: getWikiSkillEvidence(stage, skillId),
     })))
-    .filter(({ stage, skillId }) => !normalizedQuery
+    .filter(({ stage, skillId, skill }) => !normalizedQuery
       || skillId.includes(normalizedQuery)
+      || skill?.name?.['zh-CN']?.toLocaleLowerCase('zh-CN').includes(normalizedQuery)
       || stage.label.toLocaleLowerCase('zh-CN').includes(normalizedQuery)
       || stage.sourceName.toLowerCase().includes(normalizedQuery))
 }

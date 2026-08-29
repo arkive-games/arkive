@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Compass,
-  CircleHelp,
   Database,
   ExternalLink,
   Gamepad2,
@@ -16,7 +15,6 @@ import {
   MapPinned,
   MessageCircle,
   Search,
-  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Swords,
@@ -28,12 +26,10 @@ import { ArkiveMapTopBar, ArkiveMobileHeader, useTheme, type ShellNavItem } from
 import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
 import { filterGuides, type GuideEntry, type GuideScope, type GuideSort } from './guideCatalog'
 import {
-  CARD_CLIENT_VERSION,
-  CARD_ASSET_COUNT,
-  CARD_ASSET_REFERENCES,
-  CARD_COUNTS,
-  CARD_SOURCE,
+  countCardsByQuality,
   filterCards,
+  localizedText,
+  stripGameMarkup,
   type CardKind,
   type WikiCard,
 } from './cardCatalog'
@@ -47,10 +43,9 @@ import {
   WIKI_STAGE_BY_ID,
   type WikiProfessionLine,
   type WikiProfessionStage,
-  type WikiSkillDetail,
-  getWikiSkillAsset,
-  getWikiSkillDetail,
 } from './wikiCatalog'
+import { loadSkillLevels, loadWikiData, type SkillIndexEntry, type SkillLevelRow, type WikiData } from './wikiData'
+import { resourceUrl } from './lib/urls'
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
 import content from './locales/zh-CN.json'
@@ -89,6 +84,12 @@ type DestinationKey = keyof typeof DESTINATIONS
 type IconComponent = ComponentType<{ 'aria-hidden'?: boolean | 'true' }>
 type Page = 'overview' | 'wiki' | 'changelog'
 type WikiView = 'skills' | 'cards'
+
+interface SelectedSkill {
+  stage: WikiProfessionStage
+  skillId: string
+  skill?: SkillIndexEntry
+}
 
 function getInitialPage(): Page {
   if (window.location.pathname.replace(/\/$/, '').endsWith('/changelog')) return 'changelog'
@@ -511,16 +512,38 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
   const [query, setQuery] = useState('')
   const [cardQuery, setCardQuery] = useState('')
   const [cardKind, setCardKind] = useState<CardKind>('all')
+  const [wikiData, setWikiData] = useState<WikiData | null>(null)
+  const [dataError, setDataError] = useState(false)
   const [selectedCard, setSelectedCard] = useState<WikiCard | null>(null)
-  const [selectedSkill, setSelectedSkill] = useState<WikiSkillDetail | null>(null)
+  const [selectedSkill, setSelectedSkill] = useState<SelectedSkill | null>(null)
   const line = WIKI_PROFESSION_LINES.find((candidate) => candidate.id === lineId) ?? WIKI_PROFESSION_LINES[0]
   const lineStageIds = line ? [line.baseStageId, ...line.paths.flat()] : []
   const lineStages = lineStageIds.flatMap((id) => {
     const stage = WIKI_STAGE_BY_ID.get(id)
     return stage ? [stage] : []
   })
-  const skills = line ? filterWikiSkillIds(line.id, stageId, query) : []
-  const cards = useMemo(() => filterCards(cardQuery, cardKind), [cardKind, cardQuery])
+  const skillIndex = useMemo(() => new Map(
+    wikiData?.skills.skills.map((skill) => [skill.iSkillID, skill]) ?? [],
+  ), [wikiData])
+  const skills = line ? filterWikiSkillIds(line.id, stageId, query, skillIndex) : []
+  const cards = useMemo(
+    () => filterCards(wikiData?.cards.cards ?? [], cardQuery, cardKind),
+    [cardKind, cardQuery, wikiData],
+  )
+
+  useEffect(() => {
+    let active = true
+    loadWikiData()
+      .then((data) => {
+        if (!active) return
+        setWikiData(data)
+        setDataError(false)
+      })
+      .catch(() => {
+        if (active) setDataError(true)
+      })
+    return () => { active = false }
+  }, [])
 
   const selectLine = (nextLineId: string) => {
     setLineId(nextLineId)
@@ -540,6 +563,15 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [selectedSkill])
+
+  useEffect(() => {
+    if (!selectedCard) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedCard(null)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedCard])
 
   return (
     <main className="wiki-page">
@@ -565,15 +597,15 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
               <>
                 <WikiStat icon={GitBranch} value={WIKI_PROFESSION_LINES.length} label={content.wiki.stats.lines} />
                 <WikiStat icon={Layers3} value={WIKI_PROFESSION_STAGES.length} label={content.wiki.stats.stages} />
-                <WikiStat icon={Hash} value={WIKI_SKILL_COUNT} label={content.wiki.stats.skills} />
-                <WikiStat icon={Database} value={WIKI_CLIENT_VERSION} label={content.wiki.stats.version} />
+                <WikiStat icon={Hash} value={wikiData?.skills.counts.skills ?? WIKI_SKILL_COUNT} label={content.wiki.stats.skills} />
+                <WikiStat icon={Database} value={wikiData?.version.gameVersion ?? WIKI_CLIENT_VERSION} label={content.wiki.stats.version} />
               </>
             ) : (
               <>
-                <WikiStat icon={BookOpen} value={CARD_COUNTS.wikiCards} label={content.wiki.stats.cards} />
-                <WikiStat icon={Layers3} value={CARD_COUNTS.baseCards} label={content.wiki.stats.baseCards} />
-                <WikiStat icon={Sparkles} value={CARD_COUNTS.collectionCards} label={content.wiki.stats.collections} />
-                <WikiStat icon={Database} value={CARD_CLIENT_VERSION} label={content.wiki.stats.version} />
+                <WikiStat icon={BookOpen} value={wikiData?.cards.counts.cards ?? 0} label={content.wiki.stats.cards} />
+                <WikiStat icon={Layers3} value={wikiData?.cards.counts.tiers ?? 0} label={content.wiki.stats.baseCards} />
+                <WikiStat icon={Sparkles} value={wikiData?.cards.counts.cardsWithIcon ?? 0} label={content.wiki.stats.collections} />
+                <WikiStat icon={Database} value={wikiData?.version.gameVersion ?? WIKI_CLIENT_VERSION} label={content.wiki.stats.version} />
               </>
             )}
           </div>
@@ -614,7 +646,7 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
           <section className="skill-native-workspace" aria-labelledby="wiki-skills-title">
             <div className="skill-native-bar">
               <span className="skill-native-bar-title">{content.wiki.tabs.skills}</span>
-              <span className="skill-native-bar-state">{content.wiki.stats.version} {WIKI_CLIENT_VERSION}</span>
+              <span className="skill-native-bar-state">{content.wiki.stats.version} {wikiData?.version.gameVersion ?? WIKI_CLIENT_VERSION}</span>
             </div>
 
             <div className="skill-native-header">
@@ -628,9 +660,9 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
                 </div>
               </div>
               <div className="skill-native-points">
-                <span>{content.wiki.skillDetail.values}</span>
-                <strong>--</strong>
-                <small>{content.wiki.skillDetail.unavailable}</small>
+                <span>{content.wiki.loadedSkills}</span>
+                <strong>{skills.filter((entry) => entry.skill).length}</strong>
+                <small>{content.wiki.configReady}</small>
               </div>
               <label className="wiki-stage-filter skill-native-school">
                 <span className="sr-only">{content.wiki.stage}</span>
@@ -666,21 +698,22 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
               </div>
               <div className="skill-native-canvas">
                 <div className="skill-native-grid-lines" aria-hidden="true" />
-                {skills.length > 0 ? skills.map(({ stage, skillId, evidence }, index) => (
+                {dataError ? <div className="wiki-empty">{content.wiki.dataError}</div> : !wikiData ? <div className="wiki-empty">{content.wiki.loading}</div> : skills.length > 0 ? skills.map(({ stage, skillId, evidence, skill }, index) => (
                   <WikiSkillNode
                     key={skillId}
                     stage={stage}
                     skillId={skillId}
+                    skill={skill}
                     evidence={evidence}
                     index={index}
-                    onSelect={() => setSelectedSkill(getWikiSkillDetail(stage, skillId))}
+                    onSelect={() => setSelectedSkill({ stage, skillId, skill })}
                   />
                 )) : <div className="wiki-empty">{content.wiki.empty}</div>}
               </div>
             </div>
             <div className="skill-native-footer">
               <button type="button" onClick={() => setStageId('')}><Swords aria-hidden="true" />{content.wiki.progressionTitle}</button>
-              <span><Database aria-hidden="true" />{content.wiki.sourceNote} <code>{WIKI_PACKAGE_SOURCE.sha256.slice(0, 12)}</code></span>
+              <span><Database aria-hidden="true" />{content.wiki.sourceNote} <code>{wikiData?.version.version ?? content.wiki.loading}</code></span>
             </div>
           </section>
         </div>
@@ -690,13 +723,15 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
           query={cardQuery}
           kind={cardKind}
           cards={cards}
+          data={wikiData}
+          dataError={dataError}
           selectedCard={selectedCard}
           onQueryChange={setCardQuery}
           onKindChange={setCardKind}
           onSelect={setSelectedCard}
         />
       )}
-      {selectedSkill ? <SkillDetail skill={selectedSkill} onClose={() => setSelectedSkill(null)} /> : null}
+      {selectedSkill ? <SkillDetail key={selectedSkill.skillId} skill={selectedSkill} data={wikiData} onClose={() => setSelectedSkill(null)} /> : null}
     </main>
   )
 }
@@ -731,56 +766,24 @@ function ProfessionSummary({
   )
 }
 
-function WikiSkillRow({
-  stage,
-  skillId,
-  evidence,
-  onSelect,
-}: {
-  stage: WikiProfessionStage
-  skillId: string
-  evidence: { eventName: string }
-  onSelect: () => void
-}) {
-  const asset = getWikiSkillAsset(stage, skillId)
-
-  return (
-    <button
-      type="button"
-      className="wiki-skill-row"
-      onClick={onSelect}
-      aria-label={`${stage.label} ${skillId}`}
-    >
-      <span className="wiki-skill-row-icon">
-        {asset ? <img src={asset.path} alt="" loading="lazy" /> : <Zap aria-hidden="true" />}
-      </span>
-      <span className="wiki-skill-row-copy">
-        <small>{stage.label} · {content.wiki.tier.replace('{tier}', String(stage.tier))}</small>
-        <strong>{content.wiki.skillId} {skillId}</strong>
-        <em>{evidence.eventName}</em>
-      </span>
-      <span className="wiki-skill-row-status"><i />{asset ? (asset.match === 'exact' ? content.wiki.iconExact : content.wiki.iconFamily) : content.wiki.iconUnavailable}</span>
-      <ChevronRight aria-hidden="true" />
-    </button>
-  )
-}
-
 function WikiSkillNode({
   stage,
   skillId,
+  skill,
   evidence,
   index,
   onSelect,
 }: {
   stage: WikiProfessionStage
   skillId: string
+  skill?: SkillIndexEntry
   evidence: { eventName: string }
   index: number
   onSelect: () => void
 }) {
-  const asset = getWikiSkillAsset(stage, skillId)
   const column = index % 4
-  const row = Math.floor(index / 4) % 4
+  const row = Math.floor(index / 4)
+  const name = skill?.name?.['zh-CN']
 
   return (
     <button
@@ -788,19 +791,44 @@ function WikiSkillNode({
       className="skill-native-node"
       style={{ '--skill-column': column + 1, '--skill-row': row + 1 } as CSSProperties}
       onClick={onSelect}
-      aria-label={`${stage.label} ${skillId}`}
+      aria-label={`${stage.label} ${name ?? skillId}`}
       title={evidence.eventName}
     >
       <span className="skill-native-node-icon">
-        {asset ? <img src={asset.path} alt="" loading="lazy" /> : <Zap aria-hidden="true" />}
+        {skill?.icon ? <img src={resourceUrl(skill.icon)} alt="" loading="lazy" /> : <Zap aria-hidden="true" />}
       </span>
-      <strong>--/--</strong>
-      <span>{content.wiki.skillId} {skillId}</span>
+      <strong>0/{skill?.iMaxLevel ?? '--'}</strong>
+      <span>{name ?? `${content.wiki.skillId} ${skillId}`}</span>
     </button>
   )
 }
 
-function SkillDetail({ skill, onClose }: { skill: WikiSkillDetail; onClose: () => void }) {
+function SkillDetail({
+  skill,
+  data,
+  onClose,
+}: {
+  skill: SelectedSkill
+  data: WikiData | null
+  onClose: () => void
+}) {
+  const [levels, setLevels] = useState<SkillLevelRow[] | null>(null)
+  const [levelError, setLevelError] = useState(false)
+  const name = skill.skill?.name?.['zh-CN'] ?? content.wiki.skillDetail.title.replace('{id}', skill.skillId)
+
+  useEffect(() => {
+    let active = true
+    if (!skill.skill || !data) return
+    loadSkillLevels(skill.skill, data.skills.shards)
+      .then((rows) => {
+        if (active) setLevels(rows)
+      })
+      .catch(() => {
+        if (active) setLevelError(true)
+      })
+    return () => { active = false }
+  }, [data, skill])
+
   return (
     <div className="wiki-skill-dialog-backdrop" role="presentation" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose()
@@ -811,11 +839,11 @@ function SkillDetail({ skill, onClose }: { skill: WikiSkillDetail; onClose: () =
         </button>
         <header className="wiki-skill-dialog-header">
           <div className="wiki-skill-dialog-icon">
-            {skill.asset ? <img src={skill.asset.path} alt="" /> : <Zap aria-hidden="true" />}
+            {skill.skill?.icon ? <img src={resourceUrl(skill.skill.icon)} alt="" /> : <Zap aria-hidden="true" />}
           </div>
           <div>
             <span>{content.wiki.skillDetail.eyebrow}</span>
-            <h2 id="wiki-skill-dialog-title">{content.wiki.skillDetail.title.replace('{id}', skill.skillId)}</h2>
+            <h2 id="wiki-skill-dialog-title">{name}</h2>
             <p>{skill.stage.label} · {content.wiki.tier.replace('{tier}', String(skill.stage.tier))}</p>
           </div>
         </header>
@@ -830,47 +858,45 @@ function SkillDetail({ skill, onClose }: { skill: WikiSkillDetail; onClose: () =
           <dl className="wiki-skill-detail-grid">
             <div><dt>{content.wiki.skillDetail.skillId}</dt><dd><code>{skill.skillId}</code></dd></div>
             <div><dt>{content.wiki.skillDetail.profession}</dt><dd>{skill.stage.label}</dd></div>
-            <div><dt>{content.wiki.skillDetail.eventName}</dt><dd><code>{skill.evidence.eventName}</code></dd></div>
-            <div><dt>{content.wiki.skillDetail.source}</dt><dd>{skill.evidence.source}</dd></div>
+            <div><dt>{content.wiki.skillDetail.maxLevel}</dt><dd>{skill.skill?.iMaxLevel ?? content.wiki.skillDetail.unavailable}</dd></div>
+            <div><dt>{content.wiki.skillDetail.source}</dt><dd>{WIKI_PACKAGE_SOURCE.label}</dd></div>
           </dl>
-          <div className="wiki-skill-missing-grid">
-            <MissingSkillField icon={CircleHelp} label={content.wiki.skillDetail.name} />
-            <MissingSkillField icon={CircleHelp} label={content.wiki.skillDetail.description} />
-            <MissingSkillField icon={ShieldCheck} label={content.wiki.skillDetail.values} />
-          </div>
-          {skill.asset ? (
-            <div className="wiki-skill-asset-evidence">
-              <img src={skill.asset.path} alt="" />
-              <div>
-                <strong>{content.wiki.skillDetail.icon}</strong>
-                <span>{skill.asset.name}</span>
-                <small>{skill.asset.match === 'exact' ? content.wiki.skillDetail.iconExact : content.wiki.skillDetail.iconFamily}</small>
-              </div>
-            </div>
-          ) : null}
-          <div className="wiki-skill-dialog-note">
-            <Database aria-hidden="true" />
-            <p>{content.wiki.skillDetail.note}</p>
-          </div>
+          <section className="wiki-skill-levels" aria-label={content.wiki.skillDetail.values}>
+            <h3>{content.wiki.skillDetail.values}</h3>
+            {levelError ? <div className="wiki-empty">{content.wiki.dataError}</div> : levels === null ? (
+              <div className="wiki-empty">{content.wiki.loading}</div>
+            ) : levels.length === 0 ? (
+              <div className="wiki-empty">{content.wiki.skillDetail.unavailable}</div>
+            ) : levels.map((level) => (
+              <article key={level.iID} className="wiki-skill-level-row">
+                <strong>{content.wiki.skillDetail.level.replace('{level}', String(level.iLevel))}</strong>
+                <p>{stripGameMarkup(level.desc?.['zh-CN'] ?? content.wiki.skillDetail.unavailable)}</p>
+                <dl>
+                  {level.kDamageParam1?.length ? <div><dt>{content.wiki.skillDetail.damageParam}</dt><dd>{formatConfigValues(level.kDamageParam1)}</dd></div> : null}
+                  {level.kDamageParam2?.length ? <div><dt>{content.wiki.skillDetail.extraParam}</dt><dd>{formatConfigValues(level.kDamageParam2)}</dd></div> : null}
+                  {level.kCost?.length ? <div><dt>{content.wiki.skillDetail.cost}</dt><dd>{formatConfigValues(level.kCost)}</dd></div> : null}
+                  {level.iDistanceMax !== undefined ? <div><dt>{content.wiki.skillDetail.range}</dt><dd>{level.iDistanceMax}</dd></div> : null}
+                  {level.iTargetMax !== undefined ? <div><dt>{content.wiki.skillDetail.targets}</dt><dd>{level.iTargetMax}</dd></div> : null}
+                </dl>
+              </article>
+            ))}
+          </section>
         </div>
       </section>
     </div>
   )
 }
 
-function MissingSkillField({ icon: Icon, label }: { icon: IconComponent; label: string }) {
-  return (
-    <div className="wiki-skill-missing-field">
-      <Icon aria-hidden="true" />
-      <div><span>{label}</span><strong>{content.wiki.skillDetail.unavailable}</strong></div>
-    </div>
-  )
+function formatConfigValues(value: unknown[]): string {
+  return value.flat(3).map(String).join(' / ')
 }
 
 function CardWiki({
   query,
   kind,
   cards,
+  data,
+  dataError,
   selectedCard,
   onQueryChange,
   onKindChange,
@@ -879,19 +905,21 @@ function CardWiki({
   query: string
   kind: CardKind
   cards: WikiCard[]
+  data: WikiData | null
+  dataError: boolean
   selectedCard: WikiCard | null
   onQueryChange: (query: string) => void
   onKindChange: (kind: CardKind) => void
-  onSelect: (card: WikiCard) => void
+  onSelect: (card: WikiCard | null) => void
 }) {
   const filters: Array<{ key: CardKind; label: string; count: number }> = [
-    { key: 'all', label: content.wiki.cards.filters.all, count: CARD_COUNTS.wikiCards },
-    { key: 'base', label: content.wiki.cards.filters.base, count: CARD_COUNTS.baseCards },
-    { key: 'collection', label: content.wiki.cards.filters.collection, count: CARD_COUNTS.collectionCards },
+    { key: 'all', label: content.wiki.cards.filters.all, count: data?.cards.counts.cards ?? 0 },
+    { key: 'quality-2', label: content.wiki.cards.filters.quality2, count: countCardsByQuality(data?.cards.cards ?? [], 2) },
+    { key: 'quality-3', label: content.wiki.cards.filters.quality3, count: countCardsByQuality(data?.cards.cards ?? [], 3) },
+    { key: 'quality-4', label: content.wiki.cards.filters.quality4, count: countCardsByQuality(data?.cards.cards ?? [], 4) },
+    { key: 'quality-5', label: content.wiki.cards.filters.quality5, count: countCardsByQuality(data?.cards.cards ?? [], 5) },
+    { key: 'quality-6', label: content.wiki.cards.filters.quality6, count: countCardsByQuality(data?.cards.cards ?? [], 6) },
   ]
-  const sourceFingerprint = CARD_SOURCE.files
-    .map((source) => source.sha256.slice(0, 12))
-    .join(' / ')
   const activeCard = selectedCard ?? cards[0] ?? null
 
   return (
@@ -926,135 +954,72 @@ function CardWiki({
             </label>
           </div>
           <div className="card-catalog-grid" aria-label={content.wiki.cards.title}>
-            {cards.length > 0 ? cards.map((card) => <CardTile key={card.id} card={card} active={activeCard?.id === card.id} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
+            {dataError ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : cards.length > 0 ? cards.map((card) => <CardTile key={card.id} card={card} active={activeCard?.id === card.id} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
           </div>
-          <div className="card-native-source"><Database aria-hidden="true" /><span>{content.wiki.cards.sourceNote} <code>{sourceFingerprint}</code></span></div>
+          <div className="card-native-source"><Database aria-hidden="true" /><span>{content.wiki.cards.sourceNote} <code>{data?.version.version ?? content.wiki.loading}</code></span></div>
         </section>
 
         <aside className="card-native-detail" aria-label={content.wiki.cards.title}>
-          {activeCard ? <CardWorkspaceDetail card={activeCard} /> : <div className="card-detail-empty">{content.wiki.cards.empty}</div>}
+          {activeCard && data ? <CardWorkspaceDetail card={activeCard} data={data} /> : <div className="card-detail-empty">{dataError ? content.wiki.dataError : content.wiki.loading}</div>}
         </aside>
       </div>
+      {selectedCard && data ? (
+        <div className="card-mobile-dialog-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onSelect(null)
+        }}>
+          <aside className="card-mobile-dialog" role="dialog" aria-modal="true" aria-label={localizedText(selectedCard.name)}>
+            <button type="button" className="wiki-dialog-close" aria-label={content.wiki.cards.closeDetail} onClick={() => onSelect(null)}><X aria-hidden="true" /></button>
+            <CardWorkspaceDetail card={selectedCard} data={data} />
+          </aside>
+        </div>
+      ) : null}
     </div>
   )
 }
 
 function CardTile({ card, active, onSelect }: { card: WikiCard; active: boolean; onSelect: (card: WikiCard) => void }) {
+  const name = localizedText(card.name)
   return (
     <button type="button" className={`card-tile${active ? ' is-active' : ''}`} onClick={() => onSelect(card)}>
-      <span className="card-tile-lock" aria-hidden="true">{card.kind === 'collection' ? '✦' : ''}</span>
-      <span className="card-tile-art"><span>{card.name.slice(0, 2)}</span></span>
-      <strong>{card.name}</strong>
-      <small>{card.kind === 'collection' ? content.wiki.cards.collection : content.wiki.cards.base}</small>
+      <span className="card-tile-lock" aria-hidden="true">{content.wiki.cards.quality.replace('{quality}', String(card.quality))}</span>
+      <span className="card-tile-art"><img src={resourceUrl(card.icon)} alt="" loading="lazy" /></span>
+      <strong>{name}</strong>
+      <small>{content.wiki.cards.part.replace('{part}', String(card.part))}</small>
     </button>
   )
 }
 
-function CardWorkspaceDetail({ card }: { card: WikiCard }) {
-  const relatedNames = card.kind === 'collection' ? card.stages : card.aliases
+function CardWorkspaceDetail({ card, data }: { card: WikiCard; data: WikiData }) {
+  const attributeById = new Map(data.cards.attributes.map((attribute) => [attribute.id, attribute]))
+  const effectById = new Map(data.cards.specialEffects.map((effect) => [effect.id, effect]))
+  const effectIds = [...new Set(card.tiers.flatMap((tier) => tier.specialEffects))]
   return (
     <>
-      <div className="card-detail-state">{content.wiki.cards.nameConfirmed}</div>
+      <div className="card-detail-state">{content.wiki.cards.configConfirmed}</div>
       <div className="card-detail-heading">
-        <span className="card-detail-thumb"><span>{card.name.slice(0, 2)}</span></span>
-        <div><h3>{card.name}</h3><span>{card.kind === 'collection' ? content.wiki.cards.collection : content.wiki.cards.base}</span></div>
+        <span className="card-detail-thumb"><img src={resourceUrl(card.icon)} alt="" /></span>
+        <div><h3>{localizedText(card.name)}</h3><span>{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {content.wiki.cards.part.replace('{part}', String(card.part))}</span></div>
       </div>
-      <section className="card-detail-effects"><h4>{content.wiki.cards.type}</h4><p>{content.wiki.cards.artUnavailable}</p><p>{content.wiki.cards.unmapped}</p></section>
+      <section className="card-detail-effects"><h4>{content.wiki.cards.descriptionTitle}</h4><p>{stripGameMarkup(localizedText(card.description))}</p></section>
       <dl className="card-detail-meta">
-        <div><dt>{content.wiki.cards.sourceFile}</dt><dd><code>{card.source.file}</code></dd></div>
-        <div><dt>{content.wiki.cards.sourceOffset}</dt><dd><code>0x{card.source.offset.toString(16).toUpperCase()}</code></dd></div>
+        <div><dt>{content.wiki.cards.cardId}</dt><dd><code>{card.id}</code></dd></div>
+        <div><dt>{content.wiki.cards.stackLimit}</dt><dd>{card.stackLimit}</dd></div>
+        <div><dt>{content.wiki.cards.trade}</dt><dd>{card.tradable ? content.wiki.cards.yes : content.wiki.cards.no}</dd></div>
       </dl>
-      {relatedNames?.length ? <div className="card-detail-series"><strong>{content.wiki.cards.series}</strong><span>{relatedNames.join(' / ')}</span></div> : null}
-      <div className="card-detail-actions"><button type="button" disabled>{content.wiki.cards.training ?? content.unavailable}</button><button type="button" disabled>{content.wiki.cards.remove ?? content.unavailable}</button></div>
+      <div className="card-detail-tiers">
+        {card.tiers.map((tier) => (
+          <section key={tier.configId}>
+            <header><strong>{content.wiki.cards.tier.replace('{tier}', String(tier.tier + 1))}</strong><span>{content.wiki.cards.power.replace('{power}', String(tier.power))}</span></header>
+            <small>{content.wiki.cards.requiredLevel.replace('{level}', String(tier.level))}</small>
+            <div>{tier.attributes.map(([attributeId, value]) => {
+              const attribute = attributeById.get(attributeId)
+              return <span key={attributeId}>{localizedText(attribute?.name) || content.wiki.cards.attributeId.replace('{id}', String(attributeId))} +{value}</span>
+            })}</div>
+          </section>
+        ))}
+      </div>
+      {effectIds.length > 0 ? <div className="card-detail-series"><strong>{content.wiki.cards.specialEffects}</strong>{effectIds.map((effectId) => <span key={effectId}>{stripGameMarkup(localizedText(effectById.get(effectId)?.description) || content.wiki.cards.effectId.replace('{id}', String(effectId)))}</span>)}</div> : null}
     </>
-  )
-}
-
-function CardRow({ card, onSelect }: { card: WikiCard; onSelect: (card: WikiCard) => void }) {
-  const relatedNames = card.kind === 'collection' ? card.stages : card.aliases
-  const description = card.kind === 'collection'
-    ? content.wiki.cards.collectionDescription.replace('{name}', card.baseCardName ?? '')
-    : content.wiki.cards.baseDescription
-
-  return (
-    <button type="button" className="wiki-card-row" onClick={() => onSelect(card)}>
-      <span className="wiki-card-art" aria-hidden="true">
-        <span>{card.kind === 'collection' ? '典藏' : '基础'}</span>
-        <strong>{card.name.slice(0, 2)}</strong>
-      </span>
-      <span className="wiki-card-copy">
-        <strong>{card.name}</strong>
-        <small>{description}</small>
-        <span className="wiki-card-related">
-          {relatedNames?.length
-            ? relatedNames.slice(0, 3).map((name) => <em key={name}>{name}</em>)
-            : <em>{content.wiki.cards.noAliases}</em>}
-        </span>
-      </span>
-      <span className="wiki-card-status">
-        <Database aria-hidden="true" />
-        {card.kind === 'collection' ? content.wiki.cards.seriesConfirmed : content.wiki.cards.nameConfirmed}
-        <ChevronRight aria-hidden="true" />
-      </span>
-    </button>
-  )
-}
-
-function CardDetail({ card, onClose }: { card: WikiCard; onClose: () => void }) {
-  const relatedNames = card.kind === 'collection' ? card.stages : card.aliases
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [onClose])
-
-  return (
-    <div className="wiki-card-dialog-backdrop" role="presentation" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose()
-    }}>
-      <section className="wiki-card-dialog" role="dialog" aria-modal="true" aria-labelledby="wiki-card-dialog-title">
-        <button type="button" className="wiki-dialog-close" aria-label={content.wiki.cards.closeDetail} onClick={onClose}>
-          <X aria-hidden="true" />
-        </button>
-        <div className="wiki-card-dialog-art" aria-label={content.wiki.cards.artUnavailable}>
-          <BookOpen aria-hidden="true" />
-          <strong>{content.wiki.cards.artUnavailable}</strong>
-          <small>{content.wiki.cards.artUnavailableDescription}</small>
-        </div>
-        <div className="wiki-card-dialog-body">
-          <span>{card.kind === 'collection' ? content.wiki.cards.collection : content.wiki.cards.base}</span>
-          <h2 id="wiki-card-dialog-title">{card.name}</h2>
-          <p>{card.kind === 'collection'
-            ? content.wiki.cards.collectionDescription.replace('{name}', card.baseCardName ?? '')
-            : content.wiki.cards.baseDescription}</p>
-          <dl className="wiki-card-detail-grid">
-            <div><dt>{content.wiki.cards.type}</dt><dd>{card.kind === 'collection' ? content.wiki.cards.collection : content.wiki.cards.base}</dd></div>
-            <div><dt>{content.wiki.cards.status}</dt><dd>{card.kind === 'collection' ? content.wiki.cards.seriesConfirmed : content.wiki.cards.nameConfirmed}</dd></div>
-            <div><dt>{content.wiki.cards.sourceFile}</dt><dd><code>{card.source.file}</code></dd></div>
-            <div><dt>{content.wiki.cards.sourceOffset}</dt><dd><code>0x{card.source.offset.toString(16).toUpperCase()}</code></dd></div>
-          </dl>
-          {relatedNames?.length ? (
-            <div className="wiki-card-detail-series">
-              <strong>{content.wiki.cards.series}</strong>
-              <div>{relatedNames.map((name) => <span key={name}>{name}</span>)}</div>
-            </div>
-          ) : null}
-          <div className="wiki-card-detail-evidence">
-            <Database aria-hidden="true" />
-            <p>{content.wiki.cards.assetEvidence.replace('{count}', String(CARD_ASSET_COUNT))}</p>
-            <div>{CARD_ASSET_REFERENCES.slice(0, 5).map((reference) => <code key={reference.name}>{reference.name}</code>)}</div>
-          </div>
-        </div>
-      </section>
-    </div>
   )
 }
 
@@ -1232,9 +1197,6 @@ function DestinationRow({
 // Kept as small, data-oriented building blocks for the legacy detail routes.
 // The native workspaces above own the visible composition for this page.
 void ProfessionSummary
-void WikiSkillRow
-void CardRow
-void CardDetail
 void WikiStageCard
 
 export default App

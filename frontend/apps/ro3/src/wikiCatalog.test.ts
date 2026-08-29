@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   filterWikiSkillIds,
-  getWikiSkillDetail,
   WIKI_PROFESSION_LINES,
   WIKI_PROFESSION_STAGES,
-  WIKI_PACKAGE_SOURCE,
-  WIKI_SKILL_ASSET_COUNT,
   WIKI_SKILL_COUNT,
   WIKI_STAGE_BY_ID,
 } from './wikiCatalog'
+import type { SkillIndexEntry } from './wikiData'
 
 describe('RO3 Wiki catalog', () => {
   it('keeps every client-observed profession stage in a progression line', () => {
@@ -30,58 +28,30 @@ describe('RO3 Wiki catalog', () => {
     expect(new Set(skillIds).size).toBe(skillIds.length)
   })
 
-  it('filters skills by profession, stage, identifier, and source name', () => {
+  it('filters skills by profession, stage, identifier, and resolved name', () => {
+    const index = new Map<number, SkillIndexEntry>([[11001, {
+      iSkillID: 11001,
+      iMaxLevel: 10,
+      name: { 'zh-CN': 'Bash' },
+      levels: [1100101],
+    }]])
+
     expect(filterWikiSkillIds('swordman', 'rune-knight', '')).toHaveLength(14)
     expect(filterWikiSkillIds('swordman', '', '11641')).toMatchObject([
       { stage: { id: 'royal-guard' }, skillId: '11641' },
     ])
-    expect(filterWikiSkillIds('magician', '', 'HighWizard')).toHaveLength(5)
+    expect(filterWikiSkillIds('swordman', '', 'Bash', index)).toMatchObject([
+      { stage: { id: 'swordman' }, skillId: '11001', skill: { iMaxLevel: 10 } },
+    ])
     expect(filterWikiSkillIds('missing', '', '')).toEqual([])
   })
 
-  it('exposes package-derived Wwise event evidence for each indexed skill', () => {
+  it('exposes package-derived event evidence for each indexed skill', () => {
     const [entry] = filterWikiSkillIds('swordman', 'rune-knight', '11301')
 
-    expect(entry.evidence).toEqual({
+    expect(entry.evidence).toMatchObject({
       eventName: 'Player_RuneKnight_Skill_11301',
-      source: WIKI_PACKAGE_SOURCE.label,
       status: 'client-event-id',
     })
-    expect(WIKI_PACKAGE_SOURCE.sha256).toHaveLength(64)
-  })
-
-  it('keeps unavailable skill fields explicit instead of inventing details', () => {
-    const stage = WIKI_STAGE_BY_ID.get('rune-knight')!
-    const detail = getWikiSkillDetail(stage, '11301')
-    expect(detail).toMatchObject({
-      stage,
-      skillId: '11301',
-      evidence: {
-        eventName: 'Player_RuneKnight_Skill_11301',
-        source: WIKI_PACKAGE_SOURCE.label,
-        status: 'client-event-id',
-      },
-      fields: {
-        name: 'unavailable',
-        description: 'unavailable',
-        values: 'unavailable',
-      },
-    })
-    expect(detail.asset?.path).toMatch(/icon_skill_runeknight_/)
-    expect(detail.asset?.match).toBe('family')
-  })
-
-  it('bundles the extracted client skill icon inventory', () => {
-    expect(WIKI_SKILL_ASSET_COUNT).toBe(1106)
-  })
-
-  it('varies family candidates across skills in one stage', () => {
-    const stage = WIKI_STAGE_BY_ID.get('wizard')!
-    const first = getWikiSkillDetail(stage, stage.skillIds[0]).asset
-    const second = getWikiSkillDetail(stage, stage.skillIds[1]).asset
-
-    expect(first?.match).toBe('family')
-    expect(second?.match).toBe('family')
-    expect(first?.name).not.toBe(second?.name)
   })
 })

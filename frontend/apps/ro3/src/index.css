@@ -2033,6 +2033,60 @@ select {
   line-height: 1.6;
 }
 
+.wiki-skill-levels {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.wiki-skill-levels > h3 {
+  margin: 0;
+  font-family: "Arkive Display", "Arkive Sans", "Segoe UI", sans-serif;
+  font-size: 1rem;
+}
+
+.wiki-skill-level-row {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 0.5rem 0.9rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-compact);
+  background: color-mix(in srgb, var(--arkive-filter-active) 24%, var(--card));
+}
+
+.wiki-skill-level-row > strong {
+  color: var(--arkive-nav-active);
+  font-size: 0.8125rem;
+}
+
+.wiki-skill-level-row > p {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.wiki-skill-level-row > dl {
+  display: flex;
+  grid-column: 2;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  margin: 0;
+}
+
+.wiki-skill-level-row > dl div {
+  display: flex;
+  gap: 0.3rem;
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+}
+
+.wiki-skill-level-row > dl dd {
+  margin: 0;
+  color: var(--foreground);
+  font-family: ui-monospace, Consolas, monospace;
+}
+
 .wiki-skill-asset-evidence {
   display: flex;
   align-items: center;
@@ -2479,9 +2533,12 @@ select {
 
 .skill-native-tree {
   display: grid;
-  min-height: 32rem;
+  height: 38rem;
+  min-height: 0;
   grid-template-columns: 4.25rem minmax(0, 1fr);
   margin: 0.9rem 1.25rem 0;
+  max-height: 38rem;
+  overflow: hidden;
   border: 1px solid rgba(121, 100, 68, 0.34);
   background: rgba(247, 240, 222, 0.86);
 }
@@ -2489,6 +2546,7 @@ select {
 .skill-native-rail {
   position: relative;
   display: grid;
+  min-height: 0;
   grid-template-rows: repeat(4, 1fr);
   align-items: center;
   border-right: 1px solid rgba(121, 100, 68, 0.35);
@@ -2529,10 +2587,12 @@ select {
   position: relative;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(4, minmax(7rem, 1fr));
+  grid-auto-rows: minmax(7rem, auto);
   align-items: start;
+  min-height: 0;
+  max-height: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow-y: auto;
   padding: 1rem;
 }
 
@@ -2599,6 +2659,7 @@ select {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 
 .skill-native-node-icon svg {
@@ -2859,6 +2920,11 @@ select {
 }
 
 .card-tile-art span { color: #665638; font-family: 'Arkive Display', sans-serif; font-size: 1.5rem; }
+.card-tile-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .card-tile strong { overflow: hidden; font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
 .card-tile small { color: #8b795c; font-size: 0.6875rem; }
 
@@ -2935,6 +3001,7 @@ select {
 }
 
 .card-detail-thumb span { color: #6c593a; font-family: 'Arkive Display', sans-serif; font-size: 1.1rem; }
+.card-detail-thumb img { width: 100%; height: 100%; object-fit: contain; }
 .card-detail-heading h3 { margin: 0; color: #f2e7cf; font-size: 0.95rem; }
 .card-detail-heading span { color: rgba(242, 231, 207, 0.62); font-size: 0.6875rem; }
 
@@ -2951,11 +3018,50 @@ select {
 .card-detail-series strong { color: #f2e7cf; font-size: 0.75rem; }
 .card-detail-series span { color: rgba(242, 231, 207, 0.68); font-size: 0.6875rem; line-height: 1.4; }
 
+.card-detail-tiers {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.card-detail-tiers section {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem;
+  border: 1px solid rgba(239, 219, 171, 0.24);
+  background: rgba(36, 35, 32, 0.25);
+}
+
+.card-detail-tiers header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.card-detail-tiers header strong { color: #f2e7cf; font-size: 0.75rem; }
+.card-detail-tiers header span,
+.card-detail-tiers small { color: rgba(242, 231, 207, 0.6); font-size: 0.6875rem; }
+
+.card-detail-tiers section > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.card-detail-tiers section > div span {
+  padding: 0.15rem 0.35rem;
+  color: #f1dfb5;
+  background: rgba(218, 178, 75, 0.16);
+  font-size: 0.6875rem;
+}
+
 .card-detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: auto; }
 .card-detail-actions button { min-height: 2.3rem; border: 1px solid rgba(238, 213, 135, 0.48); color: #f1dfb5; background: rgba(82, 96, 142, 0.76); font-weight: 750; }
 .card-detail-actions button:last-child { color: #4b3b24; background: #dbb34b; }
 .card-detail-actions button:disabled { cursor: not-allowed; opacity: 0.56; }
 .card-detail-empty { display: grid; min-height: 12rem; place-items: center; color: rgba(242, 231, 207, 0.62); font-size: 0.8rem; }
+
+.card-mobile-dialog-backdrop { display: none; }
 
 @media (max-width: 62rem) {
   .card-native-layout { grid-template-columns: 10.5rem minmax(0, 1fr); }
@@ -2988,7 +3094,28 @@ select {
   .card-composition { min-height: 27rem; grid-template-columns: repeat(2, minmax(7rem, 9rem)); gap: 2rem 3rem; }
   .card-tile { min-height: 9rem; }
   .card-tile-art { min-height: 6.3rem; }
-  .card-native-detail { display: grid; grid-template-columns: 1fr; }
+  .card-native-detail { display: none; }
+  .card-mobile-dialog-backdrop {
+    position: fixed;
+    z-index: 60;
+    inset: 0;
+    display: grid;
+    align-items: end;
+    padding-top: 3rem;
+    background: rgba(7, 17, 31, 0.72);
+  }
+  .card-mobile-dialog {
+    position: relative;
+    display: grid;
+    max-height: calc(100dvh - 3rem);
+    overflow-y: auto;
+    gap: 0.9rem;
+    padding: 3rem 1rem 1rem;
+    color: #eee5d2;
+    background: #5b5147 url('./assets/native-ui/skill_bg_title_02.png') center / cover;
+    box-shadow: 0 -1rem 3rem rgba(7, 17, 31, 0.45);
+  }
+  .card-mobile-dialog .wiki-dialog-close { color: #f2e7cf; background: rgba(36, 35, 32, 0.7); }
 }
 
 /* Card catalogue follows the Paldeck scanning pattern: a dense, responsive
@@ -3025,6 +3152,13 @@ select {
   aspect-ratio: 0.75;
   align-self: stretch;
   background-color: #c6d0bd;
+}
+
+.card-catalog-grid .card-tile-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .card-catalog-grid .card-tile-art span {
