@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  cardRarityTone,
   countCardsByCategory,
   countCardsByQuality,
   filterCards,
@@ -71,6 +72,11 @@ describe('RO3 card catalog helpers', () => {
     expect(countCardsByQuality(cards, 2)).toBe(1)
     expect(countCardsByQuality(cards, 5)).toBe(0)
     expect(cards).toHaveLength(2)
+  })
+
+  it('maps every shipped card quality to its native rarity frame', () => {
+    expect([2, 3, 4, 5, 6].map(cardRarityTone)).toEqual(['green', 'blue', 'purple', 'yellow', 'red'])
+    expect(cardRarityTone(1)).toBeNull()
   })
 
   it('counts ordinary and collection cards from the confirmed series map', () => {

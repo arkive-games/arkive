@@ -1,4 +1,5 @@
 export type CardCategory = 'ordinary' | 'collection'
+export type CardRarityTone = 'green' | 'blue' | 'purple' | 'yellow' | 'red'
 
 export interface CardFilters {
   category: CardCategory
@@ -111,6 +112,16 @@ export function countCardsByCategory(
 
 export function countCardsByQuality(cards: WikiCard[], quality: number): number {
   return cards.filter((card) => card.quality === quality).length
+}
+
+export function cardRarityTone(quality: number): CardRarityTone | null {
+  return ({
+    2: 'green',
+    3: 'blue',
+    4: 'purple',
+    5: 'yellow',
+    6: 'red',
+  } as const)[quality as 2 | 3 | 4 | 5 | 6] ?? null
 }
 
 export function stripGameMarkup(value: string): string {

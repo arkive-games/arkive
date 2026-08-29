@@ -27,6 +27,7 @@ import { ArkiveMapTopBar, ArkiveMobileHeader, useTheme, type ShellNavItem } from
 import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
 import { filterGuides, type GuideEntry, type GuideScope, type GuideSort } from './guideCatalog'
 import {
+  cardRarityTone,
   countCardsByCategory,
   countCardsByQuality,
   filterCards,
@@ -34,6 +35,7 @@ import {
   stripGameMarkup,
   type CardCategory,
   type CardFilters,
+  type CardRarityTone,
   type WikiCard,
 } from './cardCatalog'
 import {
@@ -51,6 +53,14 @@ import { loadSkillLevels, loadWikiData, type SkillIndexEntry, type SkillLevelRow
 import { resourceUrl } from './lib/urls'
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
+import cardRarityBlue from './assets/native-ui/card_icon_rarity_blue.webp'
+import cardRarityCollectionPurple from './assets/native-ui/card_icon_rarity_collection_purple.webp'
+import cardRarityCollectionRed from './assets/native-ui/card_icon_rarity_collection_red.webp'
+import cardRarityCollectionYellow from './assets/native-ui/card_icon_rarity_collection_yellow.webp'
+import cardRarityGreen from './assets/native-ui/card_icon_rarity_green.webp'
+import cardRarityPurple from './assets/native-ui/card_icon_rarity_purple.webp'
+import cardRarityRed from './assets/native-ui/card_icon_rarity_red.webp'
+import cardRarityYellow from './assets/native-ui/card_icon_rarity_yellow.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
 
@@ -91,6 +101,34 @@ const CARD_PART_ASSETS: Record<number, string | null> = {
   7: 'icons/other/icon_equip_headwear_02.webp',
   8: null,
   9: null,
+}
+
+const CARD_RARITY_ASSETS: Record<CardRarityTone, string> = {
+  green: cardRarityGreen,
+  blue: cardRarityBlue,
+  purple: cardRarityPurple,
+  yellow: cardRarityYellow,
+  red: cardRarityRed,
+}
+
+const COLLECTION_CARD_RARITY_ASSETS: Partial<Record<CardRarityTone, string>> = {
+  purple: cardRarityCollectionPurple,
+  yellow: cardRarityCollectionYellow,
+  red: cardRarityCollectionRed,
+}
+
+const CARD_SLOT_ASSETS: Record<CardRarityTone, string> = {
+  green: 'icons/other/icon_bag_cardslot_green.webp',
+  blue: 'icons/other/icon_bag_cardslot_blue.webp',
+  purple: 'icons/other/icon_bag_cardslot_purple.webp',
+  yellow: 'icons/other/icon_bag_cardslot_yellow.webp',
+  red: 'icons/other/icon_bag_cardslot_red.webp',
+}
+
+const COLLECTION_CARD_SLOT_ASSETS: Partial<Record<CardRarityTone, string>> = {
+  purple: 'icons/other/icon_bag_flashcardslot_purple.webp',
+  yellow: 'icons/other/icon_bag_flashcardslot_yellow.webp',
+  red: 'icons/other/icon_bag_flashcardslot_red.webp',
 }
 
 const INITIAL_CARD_FILTERS: CardFilters = {
@@ -1039,13 +1077,13 @@ function CardWiki({
             </section>
           ) : null}
           <div className="card-catalog-grid" aria-label={content.wiki.cards.title}>
-            {dataError ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : cards.length > 0 ? cards.map((card) => <CardTile key={card.id} card={card} active={activeCard?.id === card.id} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
+            {dataError ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : cards.length > 0 ? cards.map((card) => <CardTile key={card.id} card={card} collection={filters.category === 'collection'} active={activeCard?.id === card.id} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
           </div>
           <div className="card-native-source"><Database aria-hidden="true" /><span>{content.wiki.cards.sourceNote} <code>{data?.version.version ?? content.wiki.loading}</code></span></div>
         </section>
 
         <aside className="card-native-detail" aria-label={content.wiki.cards.title}>
-          {activeCard && data ? <CardWorkspaceDetail card={activeCard} data={data} /> : <div className="card-detail-empty">{dataError ? content.wiki.dataError : content.wiki.loading}</div>}
+          {activeCard && data ? <CardWorkspaceDetail card={activeCard} data={data} collection={filters.category === 'collection'} /> : <div className="card-detail-empty">{dataError ? content.wiki.dataError : content.wiki.loading}</div>}
         </aside>
       </div>
       {selectedCard && data ? (
@@ -1054,7 +1092,7 @@ function CardWiki({
         }}>
           <aside className="card-mobile-dialog" role="dialog" aria-modal="true" aria-label={localizedText(selectedCard.name)}>
             <button type="button" className="wiki-dialog-close" aria-label={content.wiki.cards.closeDetail} onClick={() => onSelect(null)}><X aria-hidden="true" /></button>
-            <CardWorkspaceDetail card={selectedCard} data={data} />
+            <CardWorkspaceDetail card={selectedCard} data={data} collection={filters.category === 'collection'} />
           </aside>
         </div>
       ) : null}
@@ -1098,19 +1136,33 @@ function CardPartIcon({ part }: { part: number }) {
   return asset ? <img src={resourceUrl(asset)} alt="" /> : <Sparkles aria-hidden="true" />
 }
 
-function CardTile({ card, active, onSelect }: { card: WikiCard; active: boolean; onSelect: (card: WikiCard) => void }) {
-  const name = localizedText(card.name)
+function CardFrame({ card, collection }: { card: WikiCard; collection: boolean }) {
+  const tone = cardRarityTone(card.quality)
+  const rarityAsset = tone ? (collection ? COLLECTION_CARD_RARITY_ASSETS[tone] : undefined) ?? CARD_RARITY_ASSETS[tone] : null
+  const slotAsset = tone ? (collection ? COLLECTION_CARD_SLOT_ASSETS[tone] : undefined) ?? CARD_SLOT_ASSETS[tone] : null
+
   return (
-    <button type="button" className={`card-tile${active ? ' is-active' : ''}`} onClick={() => onSelect(card)}>
-      <span className="card-tile-lock" aria-hidden="true">{content.wiki.cards.quality.replace('{quality}', String(card.quality))}</span>
-      <span className="card-tile-art"><img src={resourceUrl(card.icon)} alt="" loading="lazy" /></span>
-      <span className="card-tile-part" aria-label={cardPartLabel(card.part)} title={cardPartLabel(card.part)}><CardPartIcon part={card.part} /><span>{cardPartLabel(card.part)}</span></span>
-      <strong>{name}</strong>
+    <span className={`card-game-frame${collection ? ' is-collection' : ''}`}>
+      <span className="card-game-frame-art"><img src={resourceUrl(card.icon)} alt="" loading="lazy" /></span>
+      {rarityAsset ? <img className="card-game-frame-rarity" src={rarityAsset} alt="" aria-hidden="true" /> : null}
+      <span className="card-game-frame-part" aria-label={cardPartLabel(card.part)} title={cardPartLabel(card.part)}>
+        {slotAsset ? <img className="card-game-frame-part-shell" src={resourceUrl(slotAsset)} alt="" aria-hidden="true" /> : null}
+        <span className="card-game-frame-part-icon"><CardPartIcon part={card.part} /></span>
+      </span>
+      <strong>{localizedText(card.name)}</strong>
+    </span>
+  )
+}
+
+function CardTile({ card, collection, active, onSelect }: { card: WikiCard; collection: boolean; active: boolean; onSelect: (card: WikiCard) => void }) {
+  return (
+    <button type="button" className={`card-tile${active ? ' is-active' : ''}`} aria-label={`${localizedText(card.name)}, ${content.wiki.cards.quality.replace('{quality}', String(card.quality))}, ${cardPartLabel(card.part)}`} onClick={() => onSelect(card)}>
+      <CardFrame card={card} collection={collection} />
     </button>
   )
 }
 
-function CardWorkspaceDetail({ card, data }: { card: WikiCard; data: WikiData }) {
+function CardWorkspaceDetail({ card, data, collection }: { card: WikiCard; data: WikiData; collection: boolean }) {
   const attributeById = new Map(data.cards.attributes.map((attribute) => [attribute.id, attribute]))
   const effectById = new Map(data.cards.specialEffects.map((effect) => [effect.id, effect]))
   const effectIds = [...new Set(card.tiers.flatMap((tier) => tier.specialEffects))]
@@ -1118,7 +1170,7 @@ function CardWorkspaceDetail({ card, data }: { card: WikiCard; data: WikiData })
     <>
       <div className="card-detail-state">{content.wiki.cards.configConfirmed}</div>
       <div className="card-detail-heading">
-        <span className="card-detail-thumb"><img src={resourceUrl(card.icon)} alt="" /></span>
+        <span className="card-detail-thumb"><CardFrame card={card} collection={collection} /></span>
         <div><h3>{localizedText(card.name)}</h3><span>{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {cardPartLabel(card.part)}</span></div>
       </div>
       <section className="card-detail-effects"><h4>{content.wiki.cards.descriptionTitle}</h4><p>{stripGameMarkup(localizedText(card.description))}</p></section>
