@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.11",
+      "date": "2026-08-29",
+      "commit": "f0409daabbcc323f93e086e5845d5b01cc449524",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Matched collection card nameplates, badge overlap, title weight, and frame color to the in-game layout.",
+            "zh-CN": "按照游戏内效果修正典藏卡铭牌位置、徽章叠放、标题字重和边框颜色。",
+            "zh-TW": "按照遊戲內效果修正典藏卡銘牌位置、徽章疊放、標題字重和邊框顏色。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.10",
       "date": "2026-08-29",
       "commit": "bf8c88827e892da476755bd3c6cdd7952eeb45e3",
