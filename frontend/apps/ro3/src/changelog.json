@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.1",
+      "date": "2026-08-29",
+      "commit": "21340f65f872a8258971feef0ad892c8fb3cd46c",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Reworked the card encyclopedia with ordinary and collectible-card views, native slot badges, and detailed multi-select filters.",
+            "zh-CN": "重构卡片图鉴，新增普通卡与典藏卡分类、游戏原生部位徽记，以及部位、品质、基础属性和一级属性多选筛选。",
+            "zh-TW": "重構卡片圖鑑，新增普通卡與典藏卡分類、遊戲原生部位徽記，以及部位、品質、基礎屬性和一級屬性多選篩選。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "date": "2026-08-29",
       "commit": "f310d6d6e453ee9040ff242ac03ae487529109d1",
