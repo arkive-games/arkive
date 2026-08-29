@@ -36,6 +36,23 @@ from __future__ import annotations
 
 import re
 
+#: Language table (``Localization_<code>``) -> the tag the dataset keys its text by.
+#:
+#: **One definition for the whole pipeline.** Every stage that emits a ``{tag: text}`` map or
+#: a ``locales/<tag>.json`` file reads it from here rather than declaring its own, because a
+#: dataset that shipped ``name.en`` in one file and ``name["en-US"]`` in the next would force
+#: a consumer to special-case its own halves. The tags are BCP 47 and match the rest of the
+#: platform (``en-US``/``zh-CN``/``zh-TW`` are what the frontend's changelog locales use).
+LOCALE_TAGS = {
+    "zh_CN": "zh-CN",
+    "zh_TW": "zh-TW",
+    "en": "en-US",
+    "ko": "ko-KR",
+    "th": "th-TH",
+    "id": "id-ID",
+    "vi": "vi-VN",
+}
+
 #: The three placeholder families. Nothing else in the corpus uses ``<sigil>{digits}``.
 PLACEHOLDER = re.compile(r"([$^@])\{(\d+)\}")
 

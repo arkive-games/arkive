@@ -65,20 +65,18 @@ from .env import require_dir
 from .lua_tables import Runner, iter_chunks
 from .unpack import stage_dir, vfs_root
 
+#: Shipped by the client, not emitted here.
+OTHER_LANGUAGES = ("th", "id", "vi")
+
 #: ``Localization_<code>`` chunk suffix -> the locale tag the dataset uses. The client also
 #: ships ``th``, ``id`` and ``vi``; those are left out because the site serves these four and
 #: carrying seven would roughly double the size of every text field. Nothing else
 #: distinguishes them — all seven are read the same way, and ``OTHER_LANGUAGES`` is named in
-#: the output so the omission is visible rather than implied.
+#: the output so the omission is visible rather than implied. The tags themselves come from
+#: the pipeline's single definition, so this stage cannot drift from the others.
 LANGUAGES = {
-    "zh_CN": "zh-CN",
-    "zh_TW": "zh-TW",
-    "en": "en-US",
-    "ko": "ko-KR",
+    code: tag for code, tag in loc.LOCALE_TAGS.items() if code not in OTHER_LANGUAGES
 }
-
-#: Shipped by the client, not emitted here.
-OTHER_LANGUAGES = ("th", "id", "vi")
 
 #: Config tables this module reads. Everything else in the game's Lua is left alone.
 TABLES = (
@@ -543,9 +541,13 @@ def build_cards(rows, text: Text, icons: dict[str, str]) -> tuple[dict, dict]:
     bindings = []
     binding_text_ids: set[int] = set()
     for row in rows.get("CardBindingConfig", []):
-        for key in ("_IBindName", "_iBindTypeName"):
+        # Resolved once and reused: the id is reported only when *no* language answered it,
+        # so the field's name stays true if one of them is ever translated.
+        bind_name = text(row.get("_IBindName"))
+        bind_type_name = text(row.get("_iBindTypeName"))
+        for key, resolved in (("_IBindName", bind_name), ("_iBindTypeName", bind_type_name)):
             field = row.get(key)
-            if isinstance(field, list) and field and field[0]:
+            if resolved is None and isinstance(field, list) and field and field[0]:
                 binding_text_ids.add(field[0])
         used_attributes |= {
             p[0]
@@ -557,8 +559,8 @@ def build_cards(rows, text: Text, icons: dict[str, str]) -> tuple[dict, dict]:
             "bindId": row.get("_iBindID"),
             "bindTier": row.get("_iBindTier"),
             "bindType": row.get("_iBindType"),
-            "name": text(row.get("_IBindName")),
-            "typeName": text(row.get("_iBindTypeName")),
+            "name": bind_name,
+            "typeName": bind_type_name,
             "quality": row.get("_iQuality"),
             "cards": ids(row.get("_kCards")),
             "usePower": row.get("_iUsePower"),
@@ -793,7 +795,7 @@ def build_pets(rows, text: Text, icons) -> tuple[dict, dict, dict, dict]:
 
     # PetStarConfig names each pet again, from a different string-id family (12860xxxxx
     # against the roster's 10450xxxxx) - and it is the one the client translates: the roster
-    # id is Chinese-only for all 56 pets while this one carries en and ko. It is constant
+    # id is Chinese-only for all 56 pets while this one carries en-US and ko-KR. It is constant
     # across a pet's star rows (verified: 0 of 56 pets disagree), so it belongs on the roster
     # row and is not repeated 1,176 times.
     star_names = {}

@@ -61,22 +61,15 @@ WANTED_TABLES = (
     "NPCConfig",
 )
 
-#: Language table -> the locale tag the dataset uses. The client's own codes, retagged to
-#: BCP 47 so they match the rest of the platform.
-LOCALE_TAGS = {
-    "zh_CN": "zh-CN",
-    "zh_TW": "zh-TW",
-    "en": "en",
-    "ko": "ko",
-    "th": "th",
-    "id": "id",
-    "vi": "vi",
-}
+#: Language table -> the locale tag the dataset uses. Defined once in :mod:`.localization`
+#: and re-exported here, because :mod:`.export_talents_equip` already imports it from this
+#: module; every stage keys its text by the same tags.
+LOCALE_TAGS = localization.LOCALE_TAGS
 
 #: Locales whose rendered name/description is inlined into each table row. The full string
 #: tables ship under ``locales/``, and every row keeps its own ``iName`` / ``iDescription``
 #: / ``kDescData`` arguments, so any other language can be rendered from those.
-INLINE_LOCALES = ("zh-CN", "en", "ko")
+INLINE_LOCALES = ("zh-CN", "en-US", "ko-KR")
 
 #: Where ``art.py`` puts each icon family in the resource repo.
 ICON_DIRS = ("skills", "talents", "monsters", "jobs", "dungeons", "other")
@@ -405,8 +398,9 @@ def main() -> None:
     write_json(out / "locales" / "index.json", {
         "source": "Localization_*.lua in the .bytes data containers",
         "note": (
-            "one file per language. This is a CN build, so zh-CN and zh-TW are complete "
-            "while en, ko, th and id ship ~19,300 untranslated slots each; those are "
+            "one file per language, named by the same BCP 47 tag every table's text is "
+            "keyed by. This is a CN build, so zh-CN and zh-TW are complete while en-US, "
+            "ko-KR, th-TH and id-ID ship ~19,300 untranslated slots each; those are "
             "counted here and omitted from the files."
         ),
         "locales": [

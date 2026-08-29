@@ -111,6 +111,50 @@ def test_a_placeholder_with_no_argument_behind_it_is_left_verbatim_and_counted()
     assert dict(text.leftover) == {"zh-CN": 1}
 
 
+# --- the card-bond string ids -----------------------------------------------------------
+
+
+def _bond_rows(name_id: int, type_name_id: int) -> dict:
+    return {
+        "CardBindingConfig": [{
+            "_iID": 1,
+            "_IBindName": [name_id],
+            "_iBindTypeName": [type_name_id],
+        }],
+    }
+
+
+def test_a_bond_string_id_is_reported_only_when_no_language_answers_it(tmp_path: Path):
+    # The field is named `bindingStringIdsMissingFromEveryLanguage`, so it has to hold what
+    # its name says even once one of the nine ids is translated - it is the only thing in
+    # the file explaining why `bindingsWithName` is 0.
+    text = cp.Text({"zh-CN": {"7001": "Bond of the Rabbit"}, "en-US": {}})
+    cards_doc, _ = cp.build_cards(_bond_rows(7001, 7002), text, cp.ArtIndex(tmp_path))
+
+    counts = cards_doc["counts"]
+    assert counts["bindingsWithName"] == 1
+    assert counts["bindingStringIdsMissingFromEveryLanguage"] == [7002]
+
+
+def test_every_bond_string_id_is_reported_when_none_of_them_resolves(tmp_path: Path):
+    # Build 0.0.1.14's actual state: the bond table is unreleased content and none of its
+    # name ids exists in any language table.
+    text = cp.Text({"zh-CN": {}, "en-US": {}})
+    cards_doc, _ = cp.build_cards(_bond_rows(7001, 7002), text, cp.ArtIndex(tmp_path))
+
+    counts = cards_doc["counts"]
+    assert counts["bindingsWithName"] == 0
+    assert counts["bindingStringIdsMissingFromEveryLanguage"] == [7001, 7002]
+
+
+def test_resolving_a_bond_name_is_not_counted_twice(tmp_path: Path):
+    # The gate reuses the resolved value rather than calling the renderer a second time,
+    # which would double every field this stage reports as localized.
+    text = cp.Text({"zh-CN": {"7001": "Bond of the Rabbit", "7002": "Rabbit"}})
+    cp.build_cards(_bond_rows(7001, 7002), text, cp.ArtIndex(tmp_path))
+    assert text.fields == 2 and text.localized == 2
+
+
 # --- art --------------------------------------------------------------------------------
 
 

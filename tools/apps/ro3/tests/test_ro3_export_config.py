@@ -214,13 +214,13 @@ def test_icons_join_a_config_sprite_name_to_the_exported_webp(tmp_path):
 def test_text_renders_only_the_inline_locales_and_counts_what_it_produced():
     text = ec.Text({
         "zh-CN": {"1": "a ${1}"},
-        "en": {"1": "b ${1}"},
-        "ko": {"1": "None"},
-        "th": {"1": "unused"},
+        "en-US": {"1": "b ${1}"},
+        "ko-KR": {"1": "None"},
+        "th-TH": {"1": "unused"},
     })
-    assert text.render([1], ["9"]) == {"zh-CN": "a 9", "en": "b 9"}
+    assert text.render([1], ["9"]) == {"zh-CN": "a 9", "en-US": "b 9"}
     assert text.rendered == 2
     assert text.with_placeholders == 0
-    assert text.render([1], []) == {"zh-CN": "a ${1}", "en": "b ${1}"}
+    assert text.render([1], []) == {"zh-CN": "a ${1}", "en-US": "b ${1}"}
     assert text.with_placeholders == 2
     assert text.render([2], []) == {}

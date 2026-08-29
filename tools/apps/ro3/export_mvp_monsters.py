@@ -36,7 +36,7 @@ Art
 ---
 The head icons and the boss colour maps were already exported by :mod:`.art`; those are
 joined, not re-cut. What was missing is the **ordinary monsters'** appearance —
-``art.CATEGORIES`` covers ``Model_Boss_*`` and stops there, while the 小怪 ship as
+``art.CATEGORIES`` covers ``Model_Boss_*`` and stops there, while the trash mobs ship as
 ``Model_MonsterJunior_*`` and ``Model_MonsterSenior_*`` — plus the MVP battle backdrops
 that ``MVPConfig`` names. :data:`ART_CATEGORIES` adds those, and is fed to
 :func:`.art.export` unchanged, so the atlas/crop machinery has one implementation.
@@ -90,9 +90,11 @@ TABLES = {
 
 #: Locales inlined into each row. The full string tables ship under ``locales/`` from
 #: ``export_config``, and every row keeps the source field, so any language can be redone.
-INLINE_LOCALES = ("zh-CN", "en", "ko")
+INLINE_LOCALES = ("zh-CN", "en-US", "ko-KR")
 
-LOCALE_TAGS = {"zh_CN": "zh-CN", "zh_TW": "zh-TW", "en": "en", "ko": "ko"}
+#: Language table -> locale tag, from the pipeline's single definition; every stage keys its
+#: text by the same tags, so a reader never meets two schemes in one dataset.
+LOCALE_TAGS = localization.LOCALE_TAGS
 
 #: ``_iNPCType`` 1 is a hostile creature; 2 is a town/quest NPC, and the rest are props.
 MONSTER_NPC_TYPE = 1
@@ -804,7 +806,7 @@ def main() -> int:
     text_tables: dict[str, dict[str, str]] = {}
     for code, language_chunks in sorted(languages.items()):
         tag = LOCALE_TAGS.get(code)
-        if tag is None:
+        if tag is None or tag not in INLINE_LOCALES:
             continue
         text_tables[tag] = localization.text_table(
             lua_tables.rows(runner.run(language_chunks[0].data))
@@ -914,8 +916,9 @@ def main() -> int:
         ),
         "localeNote": (
             "names are zh-CN only, and that is the build rather than a gap in the "
-            "export. This is a CN client: of the 2,111 monsters that have a name, the en "
-            "and ko tables answer the literal \"None\" for 2,099 and echo the id back for "
+            "export. This is a CN client: of the 2,111 monsters that have a name, the "
+            "en-US and ko-KR tables answer the literal \"None\" for 2,099 and echo the "
+            "id back for "
             "12, so there are no monster translations to ship. The remaining 179 rows "
             "have no language entry in any table."
         ),

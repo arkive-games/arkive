@@ -9,6 +9,8 @@ rule is checked against the shipped string without transcribing it here.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from ro3 import localization as loc
@@ -131,3 +133,55 @@ def test_the_shipped_zh_cn_template_renders_the_damage_coefficient():
     assert text is not None
     assert "<color=#cc762a>55%+60</color>" in text
     assert loc.unresolved(text) == []
+
+
+# --- one locale-tag scheme for the whole dataset ----------------------------------------
+
+
+def test_every_locale_tag_is_a_language_region_pair():
+    """No bare ``en`` or ``ko``.
+
+    The platform keys its own locales ``en-US``/``zh-CN``/``zh-TW``, so a two-letter tag
+    here would be the outlier, and a dataset carrying both forms could not be read by one
+    code path.
+    """
+    assert loc.LOCALE_TAGS == {
+        "zh_CN": "zh-CN",
+        "zh_TW": "zh-TW",
+        "en": "en-US",
+        "ko": "ko-KR",
+        "th": "th-TH",
+        "id": "id-ID",
+        "vi": "vi-VN",
+    }
+    for tag in loc.LOCALE_TAGS.values():
+        assert re.fullmatch(r"[a-z]{2}-[A-Z]{2}", tag), tag
+
+
+def test_every_exporter_keys_its_text_by_those_same_tags():
+    """Every stage that emits localized text resolves to the one mapping above.
+
+    ``skills.json`` and ``cards.json`` are halves of the same dataset; when the two stages
+    each declared their own table, one shipped ``name.en`` and the other ``name["en-US"]``.
+    Identity rather than equality, so a stage cannot fork the table and stay green.
+    """
+    from ro3 import (
+        export_cards_pets,
+        export_config,
+        export_mvp_monsters,
+        export_talents_equip,
+    )
+
+    assert export_config.LOCALE_TAGS is loc.LOCALE_TAGS
+    assert export_mvp_monsters.LOCALE_TAGS is loc.LOCALE_TAGS
+    assert export_talents_equip.LOCALE_TAGS is loc.LOCALE_TAGS
+
+    # The card/pet stage carries four of the seven languages -- a subset of the languages,
+    # never a second set of tags.
+    assert set(export_cards_pets.LANGUAGES.items()) < set(loc.LOCALE_TAGS.items())
+
+    # And the locales inlined into a table row are the same three wherever they are chosen.
+    assert export_config.INLINE_LOCALES == export_mvp_monsters.INLINE_LOCALES
+    assert export_talents_equip.INLINE_LOCALES == export_config.INLINE_LOCALES
+    assert set(export_config.INLINE_LOCALES) <= set(loc.LOCALE_TAGS.values())
+    assert set(export_cards_pets.LANGUAGES.values()) <= set(loc.LOCALE_TAGS.values())
