@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.8",
+      "date": "2026-08-29",
+      "commit": "7415bb1f80f0c426a081b420abd67b96c42af57b",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Centered card names consistently across standard and collection card frames.",
+            "zh-CN": "修正普通卡与典藏卡的卡名对齐，使标题始终沿卡面中轴居中。",
+            "zh-TW": "修正普通卡與典藏卡的卡名對齊，使標題始終沿卡面中軸置中。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.7",
       "date": "2026-08-29",
       "commit": "2c0015a7ba1c915998cbc53aef470330cd965d08",
