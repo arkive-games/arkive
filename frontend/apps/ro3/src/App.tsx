@@ -15,6 +15,8 @@ import {
   Layers3,
   MapPinned,
   MessageCircle,
+  Ghost,
+  PawPrint,
   Search,
   SlidersHorizontal,
   Sparkles,
@@ -50,6 +52,7 @@ import {
   type WikiProfessionStage,
 } from './wikiCatalog'
 import { loadSkillLevels, loadWikiData, type SkillIndexEntry, type SkillLevelRow, type WikiData } from './wikiData'
+import { MonsterWiki, PetWiki } from './CreatureWiki'
 import { resourceUrl } from './lib/urls'
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
@@ -136,7 +139,7 @@ const GUIDES: GuideEntry[] = []
 type DestinationKey = keyof typeof DESTINATIONS
 type IconComponent = ComponentType<{ 'aria-hidden'?: boolean | 'true' }>
 type Page = 'overview' | 'wiki' | 'changelog'
-type WikiView = 'skills' | 'cards'
+type WikiView = 'skills' | 'cards' | 'pets' | 'monsters'
 
 interface SelectedSkill {
   stage: WikiProfessionStage
@@ -150,7 +153,8 @@ function getInitialPage(): Page {
 }
 
 function getInitialWikiView(): WikiView {
-  return new URLSearchParams(window.location.search).get('wiki') === 'cards' ? 'cards' : 'skills'
+  const value = new URLSearchParams(window.location.search).get('wiki')
+  return value === 'cards' || value === 'pets' || value === 'monsters' ? value : 'skills'
 }
 
 function App() {
@@ -182,6 +186,16 @@ function App() {
           key: 'wiki-cards',
           label: content.wiki.tabs.cards,
           active: page === 'wiki' && wikiView === 'cards',
+        },
+        {
+          key: 'wiki-pets',
+          label: content.wiki.tabs.pets,
+          active: page === 'wiki' && wikiView === 'pets',
+        },
+        {
+          key: 'wiki-monsters',
+          label: content.wiki.tabs.monsters,
+          active: page === 'wiki' && wikiView === 'monsters',
         },
       ],
     }
@@ -275,6 +289,14 @@ function App() {
       openWiki('cards')
       return
     }
+    if (key === 'wiki-pets') {
+      openWiki('pets')
+      return
+    }
+    if (key === 'wiki-monsters') {
+      openWiki('monsters')
+      return
+    }
     if (key in DESTINATIONS) openDestination(key as DestinationKey)
   }
 
@@ -334,7 +356,7 @@ function App() {
       />
 
       <nav className="ro3-mobile-nav" aria-label={content.navigationLabel}>
-        {navItems.map((item) => (
+        {navItems.flatMap((item) => item.children ?? [item]).map((item) => (
           <button
             type="button"
             key={item.key}
@@ -501,7 +523,7 @@ function App() {
       )}
 
       <SiteFooter
-        className={page === 'wiki' && wikiView === 'cards' ? 'ro3-footer ro3-footer--cards' : 'ro3-footer'}
+        className={page === 'wiki' ? 'ro3-footer ro3-footer--wiki' : 'ro3-footer'}
         homeUrl={HOME_URL}
         githubUrl={import.meta.env.VITE_GITHUB_URL}
         icpBeian={import.meta.env.VITE_ICP_BEIAN}
@@ -587,8 +609,21 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
     () => filterCards(wikiData?.cards.cards ?? [], cardQuery, cardFilters, collectionCardIds),
     [cardFilters, cardQuery, collectionCardIds, wikiData],
   )
+  const pageTitle = {
+    skills: content.wiki.skillsPageTitle,
+    cards: content.wiki.cardsPageTitle,
+    pets: content.wiki.petsPageTitle,
+    monsters: content.wiki.monstersPageTitle,
+  }[view]
+  const pageDescription = {
+    skills: content.wiki.skillsPageDescription,
+    cards: content.wiki.cardsPageDescription,
+    pets: content.wiki.petsPageDescription,
+    monsters: content.wiki.monstersPageDescription,
+  }[view]
 
   useEffect(() => {
+    if ((view !== 'skills' && view !== 'cards') || wikiData) return
     let active = true
     loadWikiData()
       .then((data) => {
@@ -600,7 +635,7 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
         if (active) setDataError(true)
       })
     return () => { active = false }
-  }, [])
+  }, [view, wikiData])
 
   const selectLine = (nextLineId: string) => {
     setLineId(nextLineId)
@@ -636,8 +671,8 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
         <div className="ro3-shell wiki-masthead-inner">
           <div className="wiki-title-block">
             <span>{content.wiki.eyebrow}</span>
-            <h1>{view === 'skills' ? content.wiki.skillsPageTitle : content.wiki.cardsPageTitle}</h1>
-            <p>{view === 'skills' ? content.wiki.skillsPageDescription : content.wiki.cardsPageDescription}</p>
+            <h1>{pageTitle}</h1>
+            <p>{pageDescription}</p>
           </div>
           <div className="wiki-view-tabs" role="tablist" aria-label={content.wiki.tabsLabel}>
             <button type="button" role="tab" aria-selected={view === 'skills'} className={view === 'skills' ? 'is-active' : undefined} onClick={() => onViewChange('skills')}>
@@ -648,8 +683,16 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
               <BookOpen aria-hidden="true" />
               {content.wiki.tabs.cards}
             </button>
+            <button type="button" role="tab" aria-selected={view === 'pets'} className={view === 'pets' ? 'is-active' : undefined} onClick={() => onViewChange('pets')}>
+              <PawPrint aria-hidden="true" />
+              {content.wiki.tabs.pets}
+            </button>
+            <button type="button" role="tab" aria-selected={view === 'monsters'} className={view === 'monsters' ? 'is-active' : undefined} onClick={() => onViewChange('monsters')}>
+              <Ghost aria-hidden="true" />
+              {content.wiki.tabs.monsters}
+            </button>
           </div>
-          <div className="wiki-stats" aria-label={view === 'skills' ? content.wiki.skillsPageTitle : content.wiki.cardsPageTitle}>
+          <div className="wiki-stats" aria-label={pageTitle}>
             {view === 'skills' ? (
               <>
                 <WikiStat icon={GitBranch} value={WIKI_PROFESSION_LINES.length} label={content.wiki.stats.lines} />
@@ -657,14 +700,14 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
                 <WikiStat icon={Hash} value={wikiData?.skills.counts.skills ?? WIKI_SKILL_COUNT} label={content.wiki.stats.skills} />
                 <WikiStat icon={Database} value={wikiData?.version.gameVersion ?? WIKI_CLIENT_VERSION} label={content.wiki.stats.version} />
               </>
-            ) : (
+            ) : view === 'cards' ? (
               <>
                 <WikiStat icon={BookOpen} value={wikiData?.cards.counts.cards ?? 0} label={content.wiki.stats.cards} />
                 <WikiStat icon={Layers3} value={wikiData?.cards.counts.tiers ?? 0} label={content.wiki.stats.baseCards} />
                 <WikiStat icon={Sparkles} value={wikiData?.cards.counts.cardsWithIcon ?? 0} label={content.wiki.stats.collections} />
                 <WikiStat icon={Database} value={wikiData?.version.gameVersion ?? WIKI_CLIENT_VERSION} label={content.wiki.stats.version} />
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
@@ -775,7 +818,7 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
           </section>
         </div>
       </div>
-      ) : (
+      ) : view === 'cards' ? (
         <CardWiki
           query={cardQuery}
           filters={cardFilters}
@@ -787,7 +830,7 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
           onFiltersChange={setCardFilters}
           onSelect={setSelectedCard}
         />
-      )}
+      ) : view === 'pets' ? <PetWiki /> : <MonsterWiki />}
       {selectedSkill ? <SkillDetail key={selectedSkill.skillId} skill={selectedSkill} data={wikiData} onClose={() => setSelectedSkill(null)} /> : null}
     </main>
   )
