@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.0",
+      "date": "2026-08-29",
+      "commit": "f310d6d6e453ee9040ff242ac03ae487529109d1",
+      "changes": [
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Connected the profession skill and 242-card encyclopedias to extracted game data, including official art and level details.",
+            "zh-CN": "职业技能与 242 张卡片百科接入游戏包提取数据，新增真实图标、卡面和等级详情。",
+            "zh-TW": "職業技能與 242 張卡片百科接入遊戲包提取資料，新增真實圖示、卡面和等級詳情。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.5.2",
       "date": "2026-08-29",
       "commit": "6bf9a79da93f006c681976b9ff6f1fc8f1001421",
