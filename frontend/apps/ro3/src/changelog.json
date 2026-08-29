@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.6",
+      "date": "2026-08-29",
+      "commit": "8a8f82a1e693a161b0c9dc076f2d936dd31d796e",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Matched collection card nameplates, part emblems, and rarity-frame colors more closely to the in-game presentation.",
+            "zh-CN": "进一步复刻游戏内典藏卡铭牌、部位徽章与品质卡框的颜色和比例。",
+            "zh-TW": "進一步復刻遊戲內典藏卡銘牌、部位徽章與品質卡框的顏色和比例。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.5",
       "date": "2026-08-29",
       "commit": "10b88d17f669622112bf8475d5510e26099bf7d1",
