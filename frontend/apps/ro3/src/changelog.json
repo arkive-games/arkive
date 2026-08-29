@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.2",
+      "date": "2026-08-29",
+      "commit": "53320f7b67dde522212fb87d83cf7adaa15699d0",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Card encyclopedia entries now use the game's native quality-specific frames for ordinary and collection cards.",
+            "zh-CN": "卡片图鉴现已为普通卡与典藏卡使用游戏原生的品质专属外框。",
+            "zh-TW": "卡片圖鑑現已為普通卡與典藏卡使用遊戲原生的品質專屬外框。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.1",
       "date": "2026-08-29",
       "commit": "21340f65f872a8258971feef0ad892c8fb3cd46c",
