@@ -3525,9 +3525,9 @@ select {
 }
 
 .card-game-frame:not(.is-collection) > strong {
-  right: 6%;
+  right: 0;
   bottom: 5%;
-  left: 27%;
+  left: 0;
   display: grid;
   height: 12%;
   place-items: center;
@@ -3535,9 +3535,9 @@ select {
 
 .card-game-frame.is-collection > strong {
   z-index: 5;
-  right: 5.5%;
+  right: 0;
   bottom: 2.5%;
-  left: 27%;
+  left: 0;
   display: grid;
   height: 11.5%;
   place-items: center;
