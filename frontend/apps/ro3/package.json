@@ -7,17 +7,24 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "e2e": "playwright test"
   },
   "dependencies": {
+    "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
+    "@gamemap/state-memory": "workspace:*",
     "@gamemap/ui": "workspace:*",
+    "@tanstack/react-router": "^1.170.21",
+    "i18next": "^26.3.6",
     "lucide-react": "^1.29.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-i18next": "^17.0.11"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
