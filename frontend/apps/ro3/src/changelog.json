@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.3",
+      "date": "2026-08-29",
+      "commit": "d18d74eb5def6ff3a86d3a885f6522e02d7fcfd1",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Replaced inventory thumbnail slots with the game's full upright card frames, including separate collection-card frames and nameplates.",
+            "zh-CN": "将背包缩略卡槽替换为游戏内完整直立卡面，并为典藏卡使用独立华丽外框与名称牌。",
+            "zh-TW": "將背包縮圖卡槽替換為遊戲內完整直立卡面，並為典藏卡使用獨立華麗外框與名稱牌。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.2",
       "date": "2026-08-29",
       "commit": "53320f7b67dde522212fb87d83cf7adaa15699d0",
