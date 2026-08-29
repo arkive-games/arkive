@@ -1,4 +1,12 @@
-export type CardKind = 'all' | 'quality-2' | 'quality-3' | 'quality-4' | 'quality-5' | 'quality-6'
+export type CardCategory = 'ordinary' | 'collection'
+
+export interface CardFilters {
+  category: CardCategory
+  parts: number[]
+  qualities: number[]
+  baseAttributes: number[]
+  primaryAttributes: number[]
+}
 
 export interface LocalizedText {
   'zh-CN'?: string
@@ -59,23 +67,46 @@ export interface CardCatalogDocument {
   attributes: CardAttribute[]
   specialEffects: CardSpecialEffect[]
   cards: WikiCard[]
+  flashCardPools: Array<{ cards: number[] }>
 }
 
 export function localizedText(value: LocalizedText | null | undefined): string {
   return value?.['zh-CN'] ?? ''
 }
 
-export function filterCards(cards: WikiCard[], query: string, kind: CardKind) {
+export function filterCards(
+  cards: WikiCard[],
+  query: string,
+  filters: CardFilters,
+  collectionCardIds: ReadonlySet<number>,
+) {
   const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN')
-  const quality = kind === 'all' ? null : Number(kind.replace('quality-', ''))
 
   return cards.filter((card) => {
-    if (quality !== null && card.quality !== quality) return false
+    if (filters.category === 'collection' && !collectionCardIds.has(card.id)) return false
+    if (filters.parts.length > 0 && !filters.parts.includes(card.part)) return false
+    if (filters.qualities.length > 0 && !filters.qualities.includes(card.quality)) return false
+    if (!hasEveryAttribute(card, filters.baseAttributes)) return false
+    if (!hasEveryAttribute(card, filters.primaryAttributes)) return false
     if (!normalizedQuery) return true
 
     return [String(card.id), localizedText(card.name), localizedText(card.description)]
       .some((value) => value.toLocaleLowerCase('zh-CN').includes(normalizedQuery))
   })
+}
+
+function hasEveryAttribute(card: WikiCard, attributeIds: number[]): boolean {
+  if (attributeIds.length === 0) return true
+  const cardAttributeIds = new Set(card.tiers.flatMap((tier) => tier.attributes.map(([attributeId]) => attributeId)))
+  return attributeIds.every((attributeId) => cardAttributeIds.has(attributeId))
+}
+
+export function countCardsByCategory(
+  cards: WikiCard[],
+  category: CardCategory,
+  collectionCardIds: ReadonlySet<number>,
+): number {
+  return category === 'ordinary' ? cards.length : cards.filter((card) => collectionCardIds.has(card.id)).length
 }
 
 export function countCardsByQuality(cards: WikiCard[], quality: number): number {

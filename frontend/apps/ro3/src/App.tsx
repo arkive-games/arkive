@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType, type CSSProperties } from 'react'
 import {
+  Check,
   ArrowLeft,
   Bookmark,
   BookOpen,
@@ -26,11 +27,13 @@ import { ArkiveMapTopBar, ArkiveMobileHeader, useTheme, type ShellNavItem } from
 import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
 import { filterGuides, type GuideEntry, type GuideScope, type GuideSort } from './guideCatalog'
 import {
+  countCardsByCategory,
   countCardsByQuality,
   filterCards,
   localizedText,
   stripGameMarkup,
-  type CardKind,
+  type CardCategory,
+  type CardFilters,
   type WikiCard,
 } from './cardCatalog'
 import {
@@ -77,6 +80,26 @@ const DESTINATIONS = {
 const WIKI_URL = import.meta.env.VITE_RO3_WIKI_URL
 const CHANGELOG = changelogRaw as ChangelogFile
 const SITE_VERSION = CHANGELOG.entries[0].version
+
+const CARD_PART_ASSETS: Record<number, string | null> = {
+  1: 'icons/other/icon_equip_weapon_02.webp',
+  2: 'icons/other/icon_equip_offhand_02.webp',
+  3: 'icons/other/icon_equip_armor_02.webp',
+  4: 'icons/other/icon_equip_cloak_02.webp',
+  5: 'icons/other/icon_equip_shoes_02.webp',
+  6: 'icons/other/icon_equip_accessory_02.webp',
+  7: 'icons/other/icon_equip_headwear_02.webp',
+  8: null,
+  9: null,
+}
+
+const INITIAL_CARD_FILTERS: CardFilters = {
+  category: 'ordinary',
+  parts: [],
+  qualities: [],
+  baseAttributes: [],
+  primaryAttributes: [],
+}
 
 const GUIDES: GuideEntry[] = []
 
@@ -511,7 +534,7 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
   const [stageId, setStageId] = useState('')
   const [query, setQuery] = useState('')
   const [cardQuery, setCardQuery] = useState('')
-  const [cardKind, setCardKind] = useState<CardKind>('all')
+  const [cardFilters, setCardFilters] = useState<CardFilters>(INITIAL_CARD_FILTERS)
   const [wikiData, setWikiData] = useState<WikiData | null>(null)
   const [dataError, setDataError] = useState(false)
   const [selectedCard, setSelectedCard] = useState<WikiCard | null>(null)
@@ -525,10 +548,14 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
   const skillIndex = useMemo(() => new Map(
     wikiData?.skills.skills.map((skill) => [skill.iSkillID, skill]) ?? [],
   ), [wikiData])
+  const collectionCardIds = useMemo(
+    () => new Set(wikiData?.cards.flashCardPools.flatMap((pool) => pool.cards) ?? []),
+    [wikiData],
+  )
   const skills = line ? filterWikiSkillIds(line.id, stageId, query, skillIndex) : []
   const cards = useMemo(
-    () => filterCards(wikiData?.cards.cards ?? [], cardQuery, cardKind),
-    [cardKind, cardQuery, wikiData],
+    () => filterCards(wikiData?.cards.cards ?? [], cardQuery, cardFilters, collectionCardIds),
+    [cardFilters, cardQuery, collectionCardIds, wikiData],
   )
 
   useEffect(() => {
@@ -721,13 +748,13 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
       ) : (
         <CardWiki
           query={cardQuery}
-          kind={cardKind}
+          filters={cardFilters}
           cards={cards}
           data={wikiData}
           dataError={dataError}
           selectedCard={selectedCard}
           onQueryChange={setCardQuery}
-          onKindChange={setCardKind}
+          onFiltersChange={setCardFilters}
           onSelect={setSelectedCard}
         />
       )}
@@ -893,34 +920,52 @@ function formatConfigValues(value: unknown[]): string {
 
 function CardWiki({
   query,
-  kind,
+  filters,
   cards,
   data,
   dataError,
   selectedCard,
   onQueryChange,
-  onKindChange,
+  onFiltersChange,
   onSelect,
 }: {
   query: string
-  kind: CardKind
+  filters: CardFilters
   cards: WikiCard[]
   data: WikiData | null
   dataError: boolean
   selectedCard: WikiCard | null
   onQueryChange: (query: string) => void
-  onKindChange: (kind: CardKind) => void
+  onFiltersChange: (filters: CardFilters) => void
   onSelect: (card: WikiCard | null) => void
 }) {
-  const filters: Array<{ key: CardKind; label: string; count: number }> = [
-    { key: 'all', label: content.wiki.cards.filters.all, count: data?.cards.counts.cards ?? 0 },
-    { key: 'quality-2', label: content.wiki.cards.filters.quality2, count: countCardsByQuality(data?.cards.cards ?? [], 2) },
-    { key: 'quality-3', label: content.wiki.cards.filters.quality3, count: countCardsByQuality(data?.cards.cards ?? [], 3) },
-    { key: 'quality-4', label: content.wiki.cards.filters.quality4, count: countCardsByQuality(data?.cards.cards ?? [], 4) },
-    { key: 'quality-5', label: content.wiki.cards.filters.quality5, count: countCardsByQuality(data?.cards.cards ?? [], 5) },
-    { key: 'quality-6', label: content.wiki.cards.filters.quality6, count: countCardsByQuality(data?.cards.cards ?? [], 6) },
+  const [showFilters, setShowFilters] = useState(false)
+  const allCards = data?.cards.cards ?? []
+  const collectionCardIds = new Set(data?.cards.flashCardPools.flatMap((pool) => pool.cards) ?? [])
+  const categories: Array<{ key: CardCategory; label: string; count: number }> = [
+    { key: 'ordinary', label: content.wiki.cards.categories.ordinary, count: countCardsByCategory(allCards, 'ordinary', collectionCardIds) },
+    { key: 'collection', label: content.wiki.cards.categories.collection, count: countCardsByCategory(allCards, 'collection', collectionCardIds) },
   ]
-  const activeCard = selectedCard ?? cards[0] ?? null
+  const categoryCards = filters.category === 'ordinary' ? allCards : allCards.filter((card) => collectionCardIds.has(card.id))
+  const baseAttributes = data?.cards.attributes.filter((attribute) => attribute.type === 1) ?? []
+  const primaryAttributes = data?.cards.attributes.filter((attribute) => attribute.type === 2) ?? []
+  const activeFilterCount = filters.parts.length + filters.qualities.length + filters.baseAttributes.length + filters.primaryAttributes.length
+  const activeCard = selectedCard && cards.some((card) => card.id === selectedCard.id) ? selectedCard : cards[0] ?? null
+
+  const toggleFilterValue = (key: 'parts' | 'qualities' | 'baseAttributes' | 'primaryAttributes', value: number) => {
+    const current = filters[key]
+    onFiltersChange({
+      ...filters,
+      [key]: current.includes(value) ? current.filter((candidate) => candidate !== value) : [...current, value],
+    })
+  }
+
+  const selectCategory = (category: CardCategory) => {
+    onSelect(null)
+    onFiltersChange({ ...filters, category })
+  }
+
+  const clearFilters = () => onFiltersChange({ ...INITIAL_CARD_FILTERS, category: filters.category })
 
   return (
     <div className="ro3-shell wiki-card-workspace" role="tabpanel">
@@ -932,27 +977,67 @@ function CardWiki({
       <div className="card-native-layout">
         <aside className="card-native-sidebar" aria-label={content.wiki.cards.filterLabel}>
           <div className="card-native-sidebar-title">{content.wiki.cards.filterLabel}</div>
-          {filters.map((filter) => (
-            <button type="button" key={filter.key} className={kind === filter.key ? 'is-active' : undefined} aria-pressed={kind === filter.key} onClick={() => onKindChange(filter.key)}>
-              <span className="card-slot-emblem"><BookOpen aria-hidden="true" /></span>
-              <span><strong>{filter.label}</strong><small>{content.wiki.cards.resultCount.replace('{count}', String(filter.count))}</small></span>
+          {categories.map((category) => (
+            <button type="button" key={category.key} className={filters.category === category.key ? 'is-active' : undefined} aria-pressed={filters.category === category.key} onClick={() => selectCategory(category.key)}>
+              <span className="card-slot-emblem">{category.key === 'collection' ? <Sparkles aria-hidden="true" /> : <BookOpen aria-hidden="true" />}</span>
+              <span><strong>{category.label}</strong><small>{content.wiki.cards.resultCount.replace('{count}', String(category.count))}</small></span>
             </button>
           ))}
-          <div className="card-native-slots" aria-hidden="true">
-            {['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ'].map((slot) => <span key={slot}><i />{slot}</span>)}
-          </div>
+          <p className="card-native-sidebar-note">{content.wiki.cards.categoryNote}</p>
         </aside>
 
         <section className="card-native-center" aria-labelledby="wiki-cards-title">
           <div className="card-native-center-head">
             <div><span>{content.wiki.cards.description}</span><h2 id="wiki-cards-title">{content.wiki.cards.title}</h2></div>
-            <label className="wiki-search">
-              <Search aria-hidden="true" />
-              <span className="sr-only">{content.wiki.cards.searchLabel}</span>
-              <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={content.wiki.cards.searchPlaceholder} />
-              {query ? <button type="button" aria-label={content.search.clear} onClick={() => onQueryChange('')}><X aria-hidden="true" /></button> : null}
-            </label>
+            <div className="card-native-toolbar">
+              <button type="button" className={`card-filter-trigger${showFilters ? ' is-active' : ''}`} aria-expanded={showFilters} onClick={() => setShowFilters((visible) => !visible)}>
+                <SlidersHorizontal aria-hidden="true" />
+                <span>{content.wiki.cards.filters.action}</span>
+                {activeFilterCount > 0 ? <strong>{activeFilterCount}</strong> : null}
+              </button>
+              <label className="wiki-search">
+                <Search aria-hidden="true" />
+                <span className="sr-only">{content.wiki.cards.searchLabel}</span>
+                <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={content.wiki.cards.searchPlaceholder} />
+                {query ? <button type="button" aria-label={content.search.clear} onClick={() => onQueryChange('')}><X aria-hidden="true" /></button> : null}
+              </label>
+            </div>
           </div>
+          {showFilters ? (
+            <section className="card-filter-panel" aria-label={content.wiki.cards.filters.panelTitle}>
+              <header>
+                <strong>{content.wiki.cards.filters.panelTitle}</strong>
+                <div>
+                  <button type="button" onClick={clearFilters} disabled={activeFilterCount === 0}>{content.wiki.cards.filters.clear}</button>
+                  <button type="button" aria-label={content.wiki.cards.filters.close} onClick={() => setShowFilters(false)}><X aria-hidden="true" /></button>
+                </div>
+              </header>
+              <CardFilterGroup
+                label={content.wiki.cards.filters.part}
+                options={Object.keys(CARD_PART_ASSETS).map(Number).map((part) => ({ value: part, label: cardPartLabel(part), count: categoryCards.filter((card) => card.part === part).length }))}
+                selected={filters.parts}
+                onToggle={(value) => toggleFilterValue('parts', value)}
+              />
+              <CardFilterGroup
+                label={content.wiki.cards.filters.quality}
+                options={[2, 3, 4, 5, 6].map((quality) => ({ value: quality, label: content.wiki.cards.quality.replace('{quality}', String(quality)), count: countCardsByQuality(categoryCards, quality) }))}
+                selected={filters.qualities}
+                onToggle={(value) => toggleFilterValue('qualities', value)}
+              />
+              <CardFilterGroup
+                label={content.wiki.cards.filters.baseAttribute}
+                options={baseAttributes.map((attribute) => ({ value: attribute.id, label: localizedText(attribute.name) }))}
+                selected={filters.baseAttributes}
+                onToggle={(value) => toggleFilterValue('baseAttributes', value)}
+              />
+              <CardFilterGroup
+                label={content.wiki.cards.filters.primaryAttribute}
+                options={primaryAttributes.map((attribute) => ({ value: attribute.id, label: localizedText(attribute.name) }))}
+                selected={filters.primaryAttributes}
+                onToggle={(value) => toggleFilterValue('primaryAttributes', value)}
+              />
+            </section>
+          ) : null}
           <div className="card-catalog-grid" aria-label={content.wiki.cards.title}>
             {dataError ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : cards.length > 0 ? cards.map((card) => <CardTile key={card.id} card={card} active={activeCard?.id === card.id} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
           </div>
@@ -977,14 +1062,50 @@ function CardWiki({
   )
 }
 
+function CardFilterGroup({
+  label,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string
+  options: Array<{ value: number; label: string; count?: number }>
+  selected: number[]
+  onToggle: (value: number) => void
+}) {
+  return (
+    <div className="card-filter-group">
+      <strong>{label}</strong>
+      <div>
+        {options.map((option) => (
+          <button type="button" key={option.value} className={selected.includes(option.value) ? 'is-active' : undefined} aria-pressed={selected.includes(option.value)} disabled={option.count === 0} onClick={() => onToggle(option.value)}>
+            <span>{selected.includes(option.value) ? <Check aria-hidden="true" /> : null}</span>
+            {option.label}
+            {option.count !== undefined ? <small>{option.count}</small> : null}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function cardPartLabel(part: number): string {
+  return (content.wiki.cards.parts as Record<string, string>)[String(part)] ?? content.wiki.cards.part.replace('{part}', String(part))
+}
+
+function CardPartIcon({ part }: { part: number }) {
+  const asset = CARD_PART_ASSETS[part]
+  return asset ? <img src={resourceUrl(asset)} alt="" /> : <Sparkles aria-hidden="true" />
+}
+
 function CardTile({ card, active, onSelect }: { card: WikiCard; active: boolean; onSelect: (card: WikiCard) => void }) {
   const name = localizedText(card.name)
   return (
     <button type="button" className={`card-tile${active ? ' is-active' : ''}`} onClick={() => onSelect(card)}>
       <span className="card-tile-lock" aria-hidden="true">{content.wiki.cards.quality.replace('{quality}', String(card.quality))}</span>
       <span className="card-tile-art"><img src={resourceUrl(card.icon)} alt="" loading="lazy" /></span>
+      <span className="card-tile-part" aria-label={cardPartLabel(card.part)} title={cardPartLabel(card.part)}><CardPartIcon part={card.part} /><span>{cardPartLabel(card.part)}</span></span>
       <strong>{name}</strong>
-      <small>{content.wiki.cards.part.replace('{part}', String(card.part))}</small>
     </button>
   )
 }
@@ -998,7 +1119,7 @@ function CardWorkspaceDetail({ card, data }: { card: WikiCard; data: WikiData })
       <div className="card-detail-state">{content.wiki.cards.configConfirmed}</div>
       <div className="card-detail-heading">
         <span className="card-detail-thumb"><img src={resourceUrl(card.icon)} alt="" /></span>
-        <div><h3>{localizedText(card.name)}</h3><span>{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {content.wiki.cards.part.replace('{part}', String(card.part))}</span></div>
+        <div><h3>{localizedText(card.name)}</h3><span>{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {cardPartLabel(card.part)}</span></div>
       </div>
       <section className="card-detail-effects"><h4>{content.wiki.cards.descriptionTitle}</h4><p>{stripGameMarkup(localizedText(card.description))}</p></section>
       <dl className="card-detail-meta">

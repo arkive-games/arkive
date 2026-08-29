@@ -196,14 +196,32 @@
       "note": "技能详情由客户端配置表按等级读取，不展示未确认的推测字段。"
     },
     "cards": {
-      "filterLabel": "卡片品质",
+      "filterLabel": "卡片类型",
+      "categories": {
+        "ordinary": "普通卡",
+        "collection": "典藏卡"
+      },
+      "categoryNote": "典藏卡按客户端典藏产出池归类，是普通卡中的可典藏子集。",
       "filters": {
-        "all": "全部卡片",
-        "quality2": "品质二",
-        "quality3": "品质三",
-        "quality4": "品质四",
-        "quality5": "品质五",
-        "quality6": "品质六"
+        "action": "筛选",
+        "panelTitle": "筛选当前卡片列表",
+        "clear": "清空",
+        "close": "关闭筛选",
+        "part": "部位",
+        "quality": "品质",
+        "baseAttribute": "基础属性",
+        "primaryAttribute": "一级属性"
+      },
+      "parts": {
+        "1": "武器",
+        "2": "副手",
+        "3": "铠甲",
+        "4": "披风",
+        "5": "鞋子",
+        "6": "饰品",
+        "7": "头饰",
+        "8": "部位 8",
+        "9": "部位 9"
       },
       "title": "卡片图鉴",
       "description": "客户端配置表共确认 242 张卡片，每张均有关联卡面和四阶属性。",
