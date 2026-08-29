@@ -2727,107 +2727,11 @@ select {
   box-shadow: 0 0.9rem 2rem rgba(34, 39, 48, 0.1);
 }
 
-.card-native-bar > span:first-child {
-  color: rgba(255, 255, 255, 0.74);
-  font-weight: 750;
-}
-
 .card-native-layout {
   display: grid;
-  min-height: 39rem;
-  grid-template-columns: 12.5rem minmax(0, 1fr) 17.5rem;
-}
-
-.card-native-sidebar {
-  border-right: 1px solid rgba(121, 100, 68, 0.34);
-  background: rgba(233, 222, 194, 0.46) url('./assets/native-ui/skill_bg_frame.png') center / cover;
-}
-
-.card-native-sidebar-title {
-  padding: 1.1rem 0.9rem 0.65rem;
-  color: #796347;
-  font-weight: 800;
-}
-
-.card-native-sidebar > button {
-  display: grid;
-  width: 100%;
-  grid-template-columns: 2.3rem minmax(0, 1fr);
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.65rem 0.75rem;
-  border: 0;
-  border-bottom: 1px solid rgba(121, 100, 68, 0.2);
-  color: #706049;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
-.card-native-sidebar > button:hover,
-.card-native-sidebar > button.is-active {
-  background: rgba(213, 167, 73, 0.18);
-  box-shadow: inset 0.2rem 0 #d3a243;
-}
-
-.card-slot-emblem {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  place-items: center;
-  border: 1px solid rgba(121, 100, 68, 0.4);
-  border-radius: 50%;
-  color: #927647;
-  background: rgba(247, 235, 201, 0.8);
-}
-
-.card-slot-emblem svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.card-native-sidebar > button strong,
-.card-native-sidebar > button small {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-native-sidebar > button strong { font-size: 0.8125rem; }
-.card-native-sidebar > button small { margin-top: 0.2rem; color: #96866d; font-size: 0.6875rem; }
-
-.card-native-sidebar-note {
-  margin: 1rem 0.75rem 0;
-  padding-top: 0.8rem;
-  border-top: 1px solid rgba(121, 100, 68, 0.3);
-  color: #8e7d61;
-  font-size: 0.6875rem;
-  line-height: 1.55;
-}
-
-.card-native-slots {
-  display: grid;
-  gap: 0.4rem;
-  margin: 1rem 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(121, 100, 68, 0.3);
-}
-
-.card-native-slots span {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #8e7d61;
-  font-family: 'Arkive Display', sans-serif;
-}
-
-.card-native-slots i {
-  display: block;
-  width: 1.5rem;
-  height: 1.9rem;
-  border: 1px solid rgba(121, 100, 68, 0.36);
-  background: rgba(245, 237, 218, 0.54);
+  min-height: 42rem;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  align-items: start;
 }
 
 .card-native-center {
@@ -2854,6 +2758,78 @@ select {
   color: #514431;
   font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
   font-size: 1.35rem;
+}
+
+.card-catalog-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(121, 100, 68, 0.26);
+}
+
+.card-catalog-strip > span {
+  color: #8d7b5f;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.card-category-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(7.5rem, 1fr));
+  overflow: hidden;
+  border: 1px solid rgba(121, 100, 68, 0.42);
+  border-radius: var(--arkive-radius-compact);
+  background: rgba(244, 234, 209, 0.72);
+}
+
+.card-category-tabs button {
+  display: grid;
+  min-height: 2.3rem;
+  grid-template-columns: 1rem minmax(0, auto) auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-inline: 0.7rem;
+  border: 0;
+  color: #75644c;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.card-category-tabs button + button {
+  border-left: 1px solid rgba(121, 100, 68, 0.32);
+}
+
+.card-category-tabs button:hover {
+  color: #4f412f;
+  background: rgba(214, 181, 106, 0.16);
+}
+
+.card-category-tabs button.is-active {
+  color: #493a25;
+  background: #e6d09d;
+  box-shadow: inset 0 -0.16rem #b78a35;
+}
+
+.card-category-tabs svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.card-category-tabs strong {
+  overflow: hidden;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-category-tabs small {
+  color: #9b8766;
+  font-size: 0.6875rem;
 }
 
 .card-native-toolbar {
@@ -2915,7 +2891,7 @@ select {
 .card-filter-panel {
   position: absolute;
   z-index: 8;
-  top: 4.8rem;
+  top: 6.2rem;
   right: 1.2rem;
   width: min(38rem, calc(100% - 2.4rem));
   max-height: 31rem;
@@ -3185,50 +3161,112 @@ select {
 .card-native-source svg { width: 0.9rem; height: 0.9rem; flex: none; }
 
 .card-native-detail {
+  position: sticky;
+  z-index: 0;
+  top: 4.5rem;
   display: grid;
+  max-height: min(46rem, calc(100dvh - 6rem));
+  overflow: hidden auto;
   align-content: start;
-  gap: 0.9rem;
-  padding: 1.1rem 0.9rem 0.9rem;
-  color: #eee5d2;
-  background: #5b5147 url('./assets/native-ui/skill_bg_title_02.png') center / cover;
+  gap: 0.8rem;
+  padding: 1rem 1rem 1.2rem;
+  border-left: 1px solid rgba(115, 94, 62, 0.34);
+  color: #594a35;
+  background: #eee2c4;
+  scrollbar-color: rgba(121, 100, 68, 0.55) transparent;
+  isolation: isolate;
+}
+
+.card-native-detail::before,
+.card-native-detail::after {
+  position: absolute;
+  z-index: -1;
+  content: '';
+  pointer-events: none;
+}
+
+.card-native-detail::before {
+  inset: 0;
+  background: url('./assets/native-ui/card_bg_007.png') 0 0 / 7rem auto repeat;
+  mix-blend-mode: multiply;
+  opacity: 0.1;
+}
+
+.card-native-detail::after {
+  top: 1.5rem;
+  right: -3rem;
+  width: 21rem;
+  aspect-ratio: 1;
+  background: url('./assets/native-ui/card_img_center.png') center / contain no-repeat;
+  mix-blend-mode: multiply;
+  opacity: 0.06;
 }
 
 .card-detail-state {
-  padding: 0.55rem 0.65rem;
-  color: #82c541;
-  background: rgba(36, 35, 32, 0.42);
-  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-self: start;
+  color: #687342;
+  font-size: 0.6875rem;
+  font-weight: 750;
 }
 
-.card-detail-heading { display: flex; align-items: center; gap: 0.6rem; }
+.card-detail-state svg { width: 0.95rem; height: 0.95rem; }
+
+.card-detail-heading {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 0.15rem 0 0.8rem;
+  text-align: center;
+}
 
 .card-detail-thumb {
   display: grid;
-  width: 5.8rem;
+  width: min(10rem, 72%);
   height: auto;
-  flex: none;
   place-items: center;
   border: 0;
   background: transparent;
+  filter: drop-shadow(0 0.4rem 0.45rem rgba(85, 65, 39, 0.22));
 }
 
 .card-detail-thumb span { color: #6c593a; font-family: 'Arkive Display', sans-serif; font-size: 1.1rem; }
 .card-detail-thumb > .card-game-frame { width: 100%; }
-.card-detail-heading h3 { margin: 0; color: #f2e7cf; font-size: 0.95rem; }
-.card-detail-heading span { color: rgba(242, 231, 207, 0.62); font-size: 0.6875rem; }
+.card-detail-heading h3 { margin: 0; color: #50412d; font-size: 1rem; }
+.card-detail-heading span { color: #87745a; font-size: 0.6875rem; }
 
-.card-detail-effects { padding-top: 0.7rem; border-top: 1px solid rgba(239, 219, 171, 0.38); }
-.card-detail-effects h4 { margin: 0 0 0.55rem; color: #f2e7cf; font-size: 0.95rem; }
-.card-detail-effects p { margin: 0.4rem 0; color: rgba(242, 231, 207, 0.74); font-size: 0.75rem; line-height: 1.45; }
+.card-detail-effects { padding-block: 0.75rem; border-block: 1px solid rgba(112, 90, 58, 0.3); }
 
-.card-detail-meta { display: grid; gap: 0.5rem; margin: 0; }
-.card-detail-meta div { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr); gap: 0.45rem; }
-.card-detail-meta dt { color: rgba(242, 231, 207, 0.55); font-size: 0.6875rem; }
-.card-detail-meta dd { min-width: 0; margin: 0; color: rgba(242, 231, 207, 0.72); font-size: 0.6875rem; overflow-wrap: anywhere; }
+.card-detail-effects h4,
+.card-detail-section-title {
+  margin: 0 0 0.5rem;
+  color: #55442d;
+  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
+  font-size: 0.9rem;
+}
 
-.card-detail-series { display: grid; gap: 0.3rem; padding-top: 0.6rem; border-top: 1px solid rgba(239, 219, 171, 0.3); }
-.card-detail-series strong { color: #f2e7cf; font-size: 0.75rem; }
-.card-detail-series span { color: rgba(242, 231, 207, 0.68); font-size: 0.6875rem; line-height: 1.4; }
+.card-detail-effects p { margin: 0; color: #75644c; font-size: 0.75rem; line-height: 1.55; }
+
+.card-detail-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  border-bottom: 1px solid rgba(112, 90, 58, 0.24);
+}
+
+.card-detail-meta div { display: grid; gap: 0.15rem; padding: 0.15rem 0.45rem 0.7rem; }
+.card-detail-meta div + div { border-left: 1px solid rgba(112, 90, 58, 0.2); }
+.card-detail-meta dt { color: #958167; font-size: 0.6875rem; }
+.card-detail-meta dd { min-width: 0; margin: 0; color: #594a35; font-size: 0.75rem; font-weight: 700; overflow-wrap: anywhere; }
+
+.card-detail-section-title { margin: 0.15rem 0 -0.25rem; }
+
+.card-detail-series { display: grid; gap: 0.4rem; padding-top: 0.7rem; border-top: 1px solid rgba(112, 90, 58, 0.3); }
+.card-detail-series strong { color: #55442d; font-size: 0.8rem; }
+.card-detail-series span { color: #74634b; font-size: 0.6875rem; line-height: 1.5; }
 
 .card-detail-tiers {
   display: grid;
@@ -3238,9 +3276,8 @@ select {
 .card-detail-tiers section {
   display: grid;
   gap: 0.35rem;
-  padding: 0.55rem;
-  border: 1px solid rgba(239, 219, 171, 0.24);
-  background: rgba(36, 35, 32, 0.25);
+  padding: 0.55rem 0.1rem 0.65rem;
+  border-bottom: 1px solid rgba(112, 90, 58, 0.22);
 }
 
 .card-detail-tiers header {
@@ -3250,9 +3287,9 @@ select {
   gap: 0.5rem;
 }
 
-.card-detail-tiers header strong { color: #f2e7cf; font-size: 0.75rem; }
+.card-detail-tiers header strong { color: #594831; font-size: 0.75rem; }
 .card-detail-tiers header span,
-.card-detail-tiers small { color: rgba(242, 231, 207, 0.6); font-size: 0.6875rem; }
+.card-detail-tiers small { color: #927e62; font-size: 0.6875rem; }
 
 .card-detail-tiers section > div {
   display: flex;
@@ -3262,8 +3299,8 @@ select {
 
 .card-detail-tiers section > div span {
   padding: 0.15rem 0.35rem;
-  color: #f1dfb5;
-  background: rgba(218, 178, 75, 0.16);
+  color: #5c4b32;
+  background: rgba(186, 145, 63, 0.14);
   font-size: 0.6875rem;
 }
 
@@ -3271,21 +3308,17 @@ select {
 .card-detail-actions button { min-height: 2.3rem; border: 1px solid rgba(238, 213, 135, 0.48); color: #f1dfb5; background: rgba(82, 96, 142, 0.76); font-weight: 750; }
 .card-detail-actions button:last-child { color: #4b3b24; background: #dbb34b; }
 .card-detail-actions button:disabled { cursor: not-allowed; opacity: 0.56; }
-.card-detail-empty { display: grid; min-height: 12rem; place-items: center; color: rgba(242, 231, 207, 0.62); font-size: 0.8rem; }
+.card-detail-empty { display: grid; min-height: 12rem; place-items: center; color: #8b785e; font-size: 0.8rem; }
 
 .card-mobile-dialog-backdrop { display: none; }
 
 @media (max-width: 62rem) {
-  .card-native-layout { grid-template-columns: 10.5rem minmax(0, 1fr); }
-  .card-native-detail { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: start; }
-  .card-detail-state, .card-detail-effects, .card-detail-meta, .card-detail-series, .card-detail-actions { grid-column: 1 / -1; }
+  .card-native-layout { grid-template-columns: minmax(0, 1fr) 17.5rem; }
 }
 
 @media (max-width: 47.99rem) {
-  .skill-native-bar,
-  .card-native-bar { grid-template-columns: 1fr auto; min-height: 3.25rem; }
-  .skill-native-bar-state,
-  .card-native-bar > span:last-child { display: none; }
+  .skill-native-bar { grid-template-columns: 1fr auto; min-height: 3.25rem; }
+  .skill-native-bar-state { display: none; }
   .skill-native-tabs button { min-width: 5rem; padding-inline: 0.5rem; }
   .skill-native-header { grid-template-columns: 1fr auto; margin-inline: 0.75rem; }
   .skill-native-school { grid-column: 1 / -1; }
@@ -3296,13 +3329,12 @@ select {
   .skill-native-footer { align-items: flex-start; flex-direction: column; padding-inline: 0.75rem; }
   .skill-native-footer > span { max-width: 100%; text-align: left; }
   .card-native-layout { display: block; min-height: 0; }
-  .card-native-sidebar { display: flex; overflow-x: auto; border-right: 0; border-bottom: 1px solid rgba(121, 100, 68, 0.34); }
-  .card-native-sidebar-title { display: none; }
-  .card-native-sidebar > button { min-width: 8rem; border-bottom: 0; }
-  .card-native-slots { display: none; }
   .card-native-center { padding: 0.9rem 0.75rem; }
   .card-native-center-head { align-items: stretch; flex-direction: column; }
   .card-native-center-head .wiki-search { width: 100%; }
+  .card-catalog-strip { align-items: stretch; flex-direction: column; }
+  .card-category-tabs { width: 100%; }
+  .card-catalog-strip > span { align-self: flex-end; }
   .card-composition { min-height: 27rem; grid-template-columns: repeat(2, minmax(7rem, 9rem)); gap: 2rem 3rem; }
   .card-tile { min-height: 9rem; }
   .card-tile-art { min-height: 6.3rem; }
@@ -3323,11 +3355,11 @@ select {
     overflow-y: auto;
     gap: 0.9rem;
     padding: 3rem 1rem 1rem;
-    color: #eee5d2;
-    background: #5b5147 url('./assets/native-ui/skill_bg_title_02.png') center / cover;
+    color: #594a35;
+    background: #eee2c4 url('./assets/native-ui/card_bg_007.png') 0 0 / 7rem auto repeat;
     box-shadow: 0 -1rem 3rem rgba(7, 17, 31, 0.45);
   }
-  .card-mobile-dialog .wiki-dialog-close { color: #f2e7cf; background: rgba(36, 35, 32, 0.7); }
+  .card-mobile-dialog .wiki-dialog-close { color: #594a35; background: rgba(255, 249, 231, 0.78); }
 }
 
 /* Card catalogue follows the Paldeck scanning pattern: a dense, responsive
@@ -3335,11 +3367,11 @@ select {
    rail. The frames and palette remain RO3-native. */
 .card-catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(6.75rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
   align-content: start;
   gap: 0.65rem;
-  max-height: 33rem;
-  margin-top: 1rem;
+  max-height: min(46rem, calc(100dvh - 11rem));
+  margin-top: 0.75rem;
   padding: 0.2rem 0.2rem 0.75rem;
   overflow-y: auto;
   scrollbar-color: rgba(121, 100, 68, 0.55) transparent;
@@ -3492,16 +3524,7 @@ select {
   outline-offset: 0.1rem;
 }
 
-@media (min-width: 75rem) {
-  .card-catalog-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-}
-
-@media (min-width: 48rem) and (max-width: 74.99rem) {
-  .card-catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
 @media (max-width: 47.99rem) {
-  .card-native-sidebar-note { display: none; }
   .card-native-toolbar { width: 100%; }
   .card-native-toolbar .wiki-search { flex: 1; }
   .card-filter-panel {

@@ -233,6 +233,7 @@
       "part": "部位 {part}",
       "configConfirmed": "客户端配置已确认",
       "descriptionTitle": "卡片说明",
+      "attributesTitle": "卡片属性",
       "cardId": "卡片编号",
       "stackLimit": "堆叠上限",
       "trade": "可交易",

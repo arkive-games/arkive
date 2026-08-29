@@ -999,23 +999,7 @@ function CardWiki({
 
   return (
     <div className="ro3-shell wiki-card-workspace" role="tabpanel">
-      <div className="card-native-bar">
-        <span>{content.wiki.tabs.cards}</span>
-        <strong>{content.wiki.cards.title}</strong>
-        <span>{content.wiki.cards.resultCount.replace('{count}', String(cards.length))}</span>
-      </div>
       <div className="card-native-layout">
-        <aside className="card-native-sidebar" aria-label={content.wiki.cards.filterLabel}>
-          <div className="card-native-sidebar-title">{content.wiki.cards.filterLabel}</div>
-          {categories.map((category) => (
-            <button type="button" key={category.key} className={filters.category === category.key ? 'is-active' : undefined} aria-pressed={filters.category === category.key} onClick={() => selectCategory(category.key)}>
-              <span className="card-slot-emblem">{category.key === 'collection' ? <Sparkles aria-hidden="true" /> : <BookOpen aria-hidden="true" />}</span>
-              <span><strong>{category.label}</strong><small>{content.wiki.cards.resultCount.replace('{count}', String(category.count))}</small></span>
-            </button>
-          ))}
-          <p className="card-native-sidebar-note">{content.wiki.cards.categoryNote}</p>
-        </aside>
-
         <section className="card-native-center" aria-labelledby="wiki-cards-title">
           <div className="card-native-center-head">
             <div><span>{content.wiki.cards.description}</span><h2 id="wiki-cards-title">{content.wiki.cards.title}</h2></div>
@@ -1032,6 +1016,18 @@ function CardWiki({
                 {query ? <button type="button" aria-label={content.search.clear} onClick={() => onQueryChange('')}><X aria-hidden="true" /></button> : null}
               </label>
             </div>
+          </div>
+          <div className="card-catalog-strip">
+            <div className="card-category-tabs" role="tablist" aria-label={content.wiki.cards.filterLabel}>
+              {categories.map((category) => (
+                <button type="button" role="tab" key={category.key} className={filters.category === category.key ? 'is-active' : undefined} aria-selected={filters.category === category.key} onClick={() => selectCategory(category.key)}>
+                  {category.key === 'collection' ? <Sparkles aria-hidden="true" /> : <BookOpen aria-hidden="true" />}
+                  <strong>{category.label}</strong>
+                  <small>{category.count}</small>
+                </button>
+              ))}
+            </div>
+            <span>{content.wiki.cards.resultCount.replace('{count}', String(cards.length))}</span>
           </div>
           {showFilters ? (
             <section className="card-filter-panel" aria-label={content.wiki.cards.filters.panelTitle}>
@@ -1160,7 +1156,7 @@ function CardWorkspaceDetail({ card, data, collection }: { card: WikiCard; data:
   const effectIds = [...new Set(card.tiers.flatMap((tier) => tier.specialEffects))]
   return (
     <>
-      <div className="card-detail-state">{content.wiki.cards.configConfirmed}</div>
+      <div className="card-detail-state"><CheckCircle2 aria-hidden="true" />{content.wiki.cards.configConfirmed}</div>
       <div className="card-detail-heading">
         <span className="card-detail-thumb"><CardFrame card={card} collection={collection} /></span>
         <div><h3>{localizedText(card.name)}</h3><span>{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {cardPartLabel(card.part)}</span></div>
@@ -1171,6 +1167,7 @@ function CardWorkspaceDetail({ card, data, collection }: { card: WikiCard; data:
         <div><dt>{content.wiki.cards.stackLimit}</dt><dd>{card.stackLimit}</dd></div>
         <div><dt>{content.wiki.cards.trade}</dt><dd>{card.tradable ? content.wiki.cards.yes : content.wiki.cards.no}</dd></div>
       </dl>
+      <h4 className="card-detail-section-title">{content.wiki.cards.attributesTitle}</h4>
       <div className="card-detail-tiers">
         {card.tiers.map((tier) => (
           <section key={tier.configId}>
