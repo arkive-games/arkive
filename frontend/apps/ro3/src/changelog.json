@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.9",
+      "date": "2026-08-29",
+      "commit": "9f6aec86a6d41ec2aa9d744d56a69e24c9ce4e41",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Reduced and repositioned card slot badges to match the in-game frame proportions.",
+            "zh-CN": "缩小并调整卡片部位徽章位置，使其比例更贴近游戏内卡框。",
+            "zh-TW": "縮小並調整卡片部位徽章位置，使其比例更貼近遊戲內卡框。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.8",
       "date": "2026-08-29",
       "commit": "7415bb1f80f0c426a081b420abd67b96c42af57b",
