@@ -3470,7 +3470,7 @@ select {
 .card-game-frame-nameplate-fill {
   position: absolute;
   z-index: 2;
-  right: 10%;
+  right: 3.5%;
   bottom: 2.5%;
   width: 80%;
   height: 11.5%;
@@ -3478,7 +3478,7 @@ select {
 }
 
 .card-game-frame-nameplate-fill {
-  right: 11.65%;
+  right: 5.1%;
   bottom: 3.45%;
   width: 76.7%;
   height: 9.6%;
@@ -3492,13 +3492,9 @@ select {
   object-fit: fill;
 }
 
-.card-game-frame.is-collection .card-game-frame-rarity {
-  filter: saturate(1.8) contrast(1.28) brightness(0.94);
-}
-
 .card-game-frame.is-collection .card-game-frame-part {
   z-index: 4;
-  bottom: 0.5%;
+  bottom: 1.5%;
   left: 2%;
   width: 18%;
 }
@@ -3535,14 +3531,14 @@ select {
 
 .card-game-frame.is-collection > strong {
   z-index: 5;
-  right: 0;
+  right: 3.5%;
   bottom: 2.5%;
-  left: 0;
+  left: 16.5%;
   display: grid;
   height: 11.5%;
   place-items: center;
-  color: #eadce2;
-  font-weight: 800;
+  color: #e4d4d3;
+  font-weight: 700;
 }
 
 .card-catalog-grid .card-tile.is-active,
@@ -3554,10 +3550,6 @@ select {
 
 .card-catalog-grid .card-tile.is-active .card-game-frame-rarity {
   filter: drop-shadow(0 0 0.32rem rgba(255, 225, 137, 0.95)) drop-shadow(0 0 0.75rem rgba(217, 168, 63, 0.55));
-}
-
-.card-catalog-grid .card-tile.is-active .card-game-frame.is-collection .card-game-frame-rarity {
-  filter: saturate(1.8) contrast(1.28) brightness(0.94) drop-shadow(0 0 0.32rem rgba(255, 225, 137, 0.95)) drop-shadow(0 0 0.75rem rgba(217, 168, 63, 0.55));
 }
 
 .card-catalog-grid .card-tile:hover,
