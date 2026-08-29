@@ -3435,42 +3435,11 @@ select {
   pointer-events: none;
 }
 
-.card-game-frame-part {
-  position: absolute;
-  z-index: 3;
-  bottom: 1.5%;
-  left: 2%;
-  display: grid;
-  width: 18%;
-  aspect-ratio: 1;
-  place-items: center;
-  border: 0.08rem solid rgba(238, 218, 166, 0.92);
-  border-radius: 50%;
-  background: rgba(47, 53, 54, 0.9);
-  box-shadow: inset 0 0 0 0.1rem rgba(31, 34, 34, 0.74), 0 0.08rem 0.15rem rgba(22, 19, 14, 0.72);
-}
-
-.card-game-frame-part-icon {
-  display: grid;
-  width: 62%;
-  height: 62%;
-  place-items: center;
-  color: #f8e8bc;
-  filter: drop-shadow(0 0.06rem 0.08rem rgba(30, 22, 15, 0.85));
-}
-
-.card-game-frame-part-icon img,
-.card-game-frame-part-icon svg {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
 .card-game-frame-nameplate,
 .card-game-frame-nameplate-fill {
   position: absolute;
   z-index: 2;
-  right: 3.5%;
+  right: 10%;
   bottom: 2.5%;
   width: 80%;
   height: 11.5%;
@@ -3478,7 +3447,7 @@ select {
 }
 
 .card-game-frame-nameplate-fill {
-  right: 5.1%;
+  right: 11.65%;
   bottom: 3.45%;
   width: 76.7%;
   height: 9.6%;
@@ -3490,13 +3459,6 @@ select {
 .card-game-frame-nameplate {
   z-index: 3;
   object-fit: fill;
-}
-
-.card-game-frame.is-collection .card-game-frame-part {
-  z-index: 4;
-  bottom: 1.5%;
-  left: 2%;
-  width: 18%;
 }
 
 .card-game-frame > strong {
@@ -3531,9 +3493,9 @@ select {
 
 .card-game-frame.is-collection > strong {
   z-index: 5;
-  right: 3.5%;
+  right: 0;
   bottom: 2.5%;
-  left: 16.5%;
+  left: 0;
   display: grid;
   height: 11.5%;
   place-items: center;

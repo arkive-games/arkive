@@ -1119,11 +1119,6 @@ function cardPartLabel(part: number): string {
   return (content.wiki.cards.parts as Record<string, string>)[String(part)] ?? content.wiki.cards.part.replace('{part}', String(part))
 }
 
-function CardPartIcon({ part }: { part: number }) {
-  const asset = CARD_PART_ASSETS[part]
-  return asset ? <img src={resourceUrl(asset)} alt="" /> : <Sparkles aria-hidden="true" />
-}
-
 function CardFrame({ card, collection }: { card: WikiCard; collection: boolean }) {
   const variant = cardFrameVariant(card.quality, collection)
   const frameAsset = variant ? CARD_FRAME_ASSETS[variant] : null
@@ -1136,9 +1131,6 @@ function CardFrame({ card, collection }: { card: WikiCard; collection: boolean }
     <span className={`card-game-frame${collection ? ' is-collection' : ''}`}>
       <span className="card-game-frame-art"><img src={resourceUrl(card.icon)} alt="" loading="lazy" /></span>
       {frameAsset ? <img className="card-game-frame-rarity" src={frameAsset} alt="" aria-hidden="true" /> : null}
-      <span className="card-game-frame-part" aria-label={cardPartLabel(card.part)} title={cardPartLabel(card.part)}>
-        <span className="card-game-frame-part-icon"><CardPartIcon part={card.part} /></span>
-      </span>
       {collectionNameAsset ? (
         <>
           <span className="card-game-frame-nameplate-fill" aria-hidden="true" />
