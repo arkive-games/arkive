@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.7.0",
+      "date": "2026-08-30",
+      "commit": "bfc5ee39ef71686bd8c6b4b307dfb01a1f8c90c5",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added pet and monster encyclopedias with game data, filters, artwork, stats, and skills.",
+            "zh-CN": "新增宠物图鉴与魔物图鉴，接入游戏数据、筛选、图像、属性和技能信息。",
+            "zh-TW": "新增寵物圖鑑與魔物圖鑑，接入遊戲資料、篩選、圖像、屬性和技能資訊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.14",
       "date": "2026-08-30",
       "commit": "1b640b4b5f0644b9af9151009e74f83756fbd3ea",
