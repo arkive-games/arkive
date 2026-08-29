@@ -27,7 +27,7 @@ import { ArkiveMapTopBar, ArkiveMobileHeader, useTheme, type ShellNavItem } from
 import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
 import { filterGuides, type GuideEntry, type GuideScope, type GuideSort } from './guideCatalog'
 import {
-  cardRarityTone,
+  cardFrameVariant,
   countCardsByCategory,
   countCardsByQuality,
   filterCards,
@@ -35,7 +35,7 @@ import {
   stripGameMarkup,
   type CardCategory,
   type CardFilters,
-  type CardRarityTone,
+  type CardFrameVariant,
   type WikiCard,
 } from './cardCatalog'
 import {
@@ -53,14 +53,17 @@ import { loadSkillLevels, loadWikiData, type SkillIndexEntry, type SkillLevelRow
 import { resourceUrl } from './lib/urls'
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
-import cardRarityBlue from './assets/native-ui/card_icon_rarity_blue.webp'
-import cardRarityCollectionPurple from './assets/native-ui/card_icon_rarity_collection_purple.webp'
-import cardRarityCollectionRed from './assets/native-ui/card_icon_rarity_collection_red.webp'
-import cardRarityCollectionYellow from './assets/native-ui/card_icon_rarity_collection_yellow.webp'
-import cardRarityGreen from './assets/native-ui/card_icon_rarity_green.webp'
-import cardRarityPurple from './assets/native-ui/card_icon_rarity_purple.webp'
-import cardRarityRed from './assets/native-ui/card_icon_rarity_red.webp'
-import cardRarityYellow from './assets/native-ui/card_icon_rarity_yellow.webp'
+import cardFrame01 from './assets/native-ui/card_img_item_01_01.webp'
+import cardFrame02 from './assets/native-ui/card_img_item_02_01.webp'
+import cardFrame03 from './assets/native-ui/card_img_item_03_01.webp'
+import cardFrame04 from './assets/native-ui/card_img_item_04_01.webp'
+import cardFrame05 from './assets/native-ui/card_img_item_05_01.webp'
+import cardFrame06 from './assets/native-ui/card_img_item_06_01.webp'
+import cardFrame07 from './assets/native-ui/card_img_item_07_01.webp'
+import cardFrame08 from './assets/native-ui/card_img_item_08_01.webp'
+import collectionNamePurple from './assets/native-ui/card_img_item_name_01.webp'
+import collectionNameYellow from './assets/native-ui/card_img_item_name_02.webp'
+import collectionNameRed from './assets/native-ui/card_img_item_name_03.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
 
@@ -103,32 +106,21 @@ const CARD_PART_ASSETS: Record<number, string | null> = {
   9: null,
 }
 
-const CARD_RARITY_ASSETS: Record<CardRarityTone, string> = {
-  green: cardRarityGreen,
-  blue: cardRarityBlue,
-  purple: cardRarityPurple,
-  yellow: cardRarityYellow,
-  red: cardRarityRed,
+const CARD_FRAME_ASSETS: Record<CardFrameVariant, string> = {
+  '01': cardFrame01,
+  '02': cardFrame02,
+  '03': cardFrame03,
+  '04': cardFrame04,
+  '05': cardFrame05,
+  '06': cardFrame06,
+  '07': cardFrame07,
+  '08': cardFrame08,
 }
 
-const COLLECTION_CARD_RARITY_ASSETS: Partial<Record<CardRarityTone, string>> = {
-  purple: cardRarityCollectionPurple,
-  yellow: cardRarityCollectionYellow,
-  red: cardRarityCollectionRed,
-}
-
-const CARD_SLOT_ASSETS: Record<CardRarityTone, string> = {
-  green: 'icons/other/icon_bag_cardslot_green.webp',
-  blue: 'icons/other/icon_bag_cardslot_blue.webp',
-  purple: 'icons/other/icon_bag_cardslot_purple.webp',
-  yellow: 'icons/other/icon_bag_cardslot_yellow.webp',
-  red: 'icons/other/icon_bag_cardslot_red.webp',
-}
-
-const COLLECTION_CARD_SLOT_ASSETS: Partial<Record<CardRarityTone, string>> = {
-  purple: 'icons/other/icon_bag_flashcardslot_purple.webp',
-  yellow: 'icons/other/icon_bag_flashcardslot_yellow.webp',
-  red: 'icons/other/icon_bag_flashcardslot_red.webp',
+const COLLECTION_CARD_NAME_ASSETS: Partial<Record<CardFrameVariant, string>> = {
+  '06': collectionNamePurple,
+  '07': collectionNameYellow,
+  '08': collectionNameRed,
 }
 
 const INITIAL_CARD_FILTERS: CardFilters = {
@@ -1137,18 +1129,18 @@ function CardPartIcon({ part }: { part: number }) {
 }
 
 function CardFrame({ card, collection }: { card: WikiCard; collection: boolean }) {
-  const tone = cardRarityTone(card.quality)
-  const rarityAsset = tone ? (collection ? COLLECTION_CARD_RARITY_ASSETS[tone] : undefined) ?? CARD_RARITY_ASSETS[tone] : null
-  const slotAsset = tone ? (collection ? COLLECTION_CARD_SLOT_ASSETS[tone] : undefined) ?? CARD_SLOT_ASSETS[tone] : null
+  const variant = cardFrameVariant(card.quality, collection)
+  const frameAsset = variant ? CARD_FRAME_ASSETS[variant] : null
+  const collectionNameAsset = variant ? COLLECTION_CARD_NAME_ASSETS[variant] : null
 
   return (
     <span className={`card-game-frame${collection ? ' is-collection' : ''}`}>
       <span className="card-game-frame-art"><img src={resourceUrl(card.icon)} alt="" loading="lazy" /></span>
-      {rarityAsset ? <img className="card-game-frame-rarity" src={rarityAsset} alt="" aria-hidden="true" /> : null}
+      {frameAsset ? <img className="card-game-frame-rarity" src={frameAsset} alt="" aria-hidden="true" /> : null}
       <span className="card-game-frame-part" aria-label={cardPartLabel(card.part)} title={cardPartLabel(card.part)}>
-        {slotAsset ? <img className="card-game-frame-part-shell" src={resourceUrl(slotAsset)} alt="" aria-hidden="true" /> : null}
         <span className="card-game-frame-part-icon"><CardPartIcon part={card.part} /></span>
       </span>
+      {collectionNameAsset ? <img className="card-game-frame-nameplate" src={collectionNameAsset} alt="" aria-hidden="true" /> : null}
       <strong>{localizedText(card.name)}</strong>
     </span>
   )

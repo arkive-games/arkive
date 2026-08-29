@@ -1,5 +1,6 @@
 export type CardCategory = 'ordinary' | 'collection'
 export type CardRarityTone = 'green' | 'blue' | 'purple' | 'yellow' | 'red'
+export type CardFrameVariant = '01' | '02' | '03' | '04' | '05' | '06' | '07' | '08'
 
 export interface CardFilters {
   category: CardCategory
@@ -122,6 +123,24 @@ export function cardRarityTone(quality: number): CardRarityTone | null {
     5: 'yellow',
     6: 'red',
   } as const)[quality as 2 | 3 | 4 | 5 | 6] ?? null
+}
+
+export function cardFrameVariant(quality: number, collection: boolean): CardFrameVariant | null {
+  const ordinaryVariant = ({
+    2: '01',
+    3: '02',
+    4: '03',
+    5: '04',
+    6: '05',
+  } as const)[quality as 2 | 3 | 4 | 5 | 6]
+
+  if (!collection || quality < 4) return ordinaryVariant ?? null
+
+  return ({
+    4: '06',
+    5: '07',
+    6: '08',
+  } as const)[quality as 4 | 5 | 6] ?? ordinaryVariant ?? null
 }
 
 export function stripGameMarkup(value: string): string {

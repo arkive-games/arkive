@@ -3348,7 +3348,7 @@ select {
 .card-catalog-grid .card-tile {
   width: 100%;
   min-height: 0;
-  aspect-ratio: 103 / 112;
+  aspect-ratio: 162 / 224;
   grid-column: auto;
   grid-row: auto;
   display: block;
@@ -3362,20 +3362,27 @@ select {
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 103 / 112;
+  aspect-ratio: 162 / 224;
+  isolation: isolate;
 }
 
 .card-game-frame-art {
   position: absolute;
   z-index: 0;
-  top: 8.5%;
-  left: 18%;
-  width: 65%;
-  height: 66%;
+  top: 7.5%;
+  left: 7.4%;
+  width: 85.2%;
+  height: 75%;
   overflow: hidden;
   background: #cad3c2;
-  clip-path: polygon(6% 2%, 99% 0, 94% 96%, 0 100%);
-  transform: rotate(2.6deg);
+}
+
+.card-game-frame.is-collection .card-game-frame-art {
+  top: 5.8%;
+  left: 8%;
+  width: 84%;
+  height: 83.5%;
+  clip-path: polygon(9% 0, 91% 0, 100% 8%, 100% 88%, 50% 100%, 0 88%, 0 8%);
 }
 
 .card-game-frame-art img {
@@ -3398,28 +3405,22 @@ select {
 .card-game-frame-part {
   position: absolute;
   z-index: 3;
-  bottom: 0;
-  left: 3%;
-  display: block;
-  width: 28%;
-  aspect-ratio: 28 / 36;
-}
-
-.card-game-frame-part-shell {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
+  bottom: 4.5%;
+  left: 7%;
+  display: grid;
+  width: 20%;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 0.08rem solid rgba(238, 218, 166, 0.92);
+  border-radius: 50%;
+  background: rgba(47, 53, 54, 0.9);
+  box-shadow: inset 0 0 0 0.1rem rgba(31, 34, 34, 0.74), 0 0.08rem 0.15rem rgba(22, 19, 14, 0.72);
 }
 
 .card-game-frame-part-icon {
-  position: absolute;
   display: grid;
-  top: 24%;
-  left: 24%;
-  width: 52%;
-  height: 40%;
+  width: 62%;
+  height: 62%;
   place-items: center;
   color: #f8e8bc;
   filter: drop-shadow(0 0.06rem 0.08rem rgba(30, 22, 15, 0.85));
@@ -3432,12 +3433,23 @@ select {
   object-fit: contain;
 }
 
+.card-game-frame-nameplate {
+  position: absolute;
+  z-index: 2;
+  right: 9%;
+  bottom: 3.5%;
+  width: 71%;
+  height: 9.5%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
 .card-game-frame > strong {
   position: absolute;
   z-index: 3;
-  right: 13%;
-  bottom: 9%;
-  left: 29%;
+  right: 6%;
+  bottom: 5.3%;
+  left: 30%;
   overflow: hidden;
   color: #f8edcf;
   font-size: 0.6875rem;
@@ -3446,7 +3458,12 @@ select {
   text-overflow: ellipsis;
   text-shadow: 0 0.08rem 0.1rem rgba(33, 22, 14, 0.92);
   white-space: nowrap;
-  transform: rotate(-2.5deg);
+}
+
+.card-game-frame.is-collection > strong {
+  right: 12%;
+  bottom: 6.1%;
+  left: 29%;
 }
 
 .card-catalog-grid .card-tile.is-active,
