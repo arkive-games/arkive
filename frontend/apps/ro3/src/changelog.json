@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.10",
+      "date": "2026-08-29",
+      "commit": "bf8c88827e892da476755bd3c6cdd7952eeb45e3",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Centered collection card nameplates, fills, and titles on the card frame.",
+            "zh-CN": "修正典藏卡铭牌外框、底色与卡名的整体居中对齐。",
+            "zh-TW": "修正典藏卡銘牌外框、底色與卡名的整體置中對齊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.9",
       "date": "2026-08-29",
       "commit": "9f6aec86a6d41ec2aa9d744d56a69e24c9ce4e41",
