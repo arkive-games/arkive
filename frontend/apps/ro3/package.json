@@ -11,16 +11,11 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
-    "@gamemap/state-memory": "workspace:*",
     "@gamemap/ui": "workspace:*",
-    "@tanstack/react-router": "^1.170.21",
-    "i18next": "^26.3.6",
     "lucide-react": "^1.29.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "react-i18next": "^17.0.11"
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
