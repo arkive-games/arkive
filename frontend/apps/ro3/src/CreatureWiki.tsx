@@ -139,8 +139,14 @@ export function PetWiki() {
         ) : pets.length > 0 ? (
           <div className="pet-roster-grid" aria-label={content.wiki.pets.title}>
             {pets.map((pet) => (
-              <button type="button" key={pet.id} className={`pet-roster-card quality-${pet.quality}${activePet?.id === pet.id ? ' is-active' : ''}`} onClick={() => selectPet(pet)}>
-                <span className="pet-roster-art"><img src={resourceUrl(pet.art.fightField)} alt="" loading="lazy" /></span>
+              <button
+                type="button"
+                key={pet.id}
+                className={`pet-roster-card quality-${pet.quality}${activePet?.id === pet.id ? ' is-active' : ''}`}
+                aria-label={`${localizedText(pet.name)} ${content.wiki.pets.quality.replace('{quality}', String(pet.quality))}`}
+                onClick={() => selectPet(pet)}
+              >
+                <span className="pet-roster-art"><span aria-hidden="true" /><img src={resourceUrl(pet.art.fightField)} alt="" loading="lazy" /></span>
                 <span className="pet-roster-quality"><Star aria-hidden="true" />{pet.quality}</span>
                 {pet.king ? <span className="pet-roster-king" title={content.wiki.pets.king}><Crown aria-hidden="true" /></span> : null}
                 <strong>{localizedText(pet.name)}</strong>
@@ -173,7 +179,7 @@ function PetDetail({ pet, data, star, onStarChange }: {
   return (
     <div className="pet-detail-content">
       <div className={`pet-detail-hero quality-${pet.quality}`}>
-        <img src={resourceUrl(pet.art.encyclopedia)} alt="" />
+        <img src={resourceUrl(pet.art.fightField)} alt="" />
         <div>
           <span>{content.wiki.pets.quality.replace('{quality}', String(pet.quality))}{pet.king ? ` · ${content.wiki.pets.king}` : ''}</span>
           <h3>{localizedText(pet.name)}</h3>

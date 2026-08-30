@@ -8,6 +8,922 @@
   color-scheme: light;
 }
 
+/* RO3 encyclopedia navigation and data workspaces. */
+.wiki-section-nav {
+  position: sticky;
+  z-index: 20;
+  top: 4rem;
+  display: flex;
+  min-height: 3rem;
+  align-items: stretch;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(116, 91, 54, 0.32);
+  background: rgba(244, 235, 211, 0.96);
+  scrollbar-width: none;
+}
+
+.wiki-section-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.wiki-section-nav button {
+  display: inline-flex;
+  min-width: max-content;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-inline: 1rem;
+  border: 0;
+  border-right: 1px solid rgba(116, 91, 54, 0.2);
+  color: #75644c;
+  background: transparent;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.wiki-section-nav button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.wiki-section-nav button:hover,
+.wiki-section-nav button.is-active {
+  color: #4d3c27;
+  background: rgba(211, 168, 76, 0.18);
+}
+
+.wiki-section-nav button.is-active {
+  box-shadow: inset 0 -0.2rem #b77f28;
+}
+
+.profession-wiki,
+.talent-wiki {
+  padding: 0.9rem 0 3rem;
+  color: #514431;
+}
+
+.profession-toolbar,
+.talent-toolbar,
+.profession-route-panel,
+.profession-skill-panel,
+.profession-skill-detail,
+.talent-tree-panel,
+.talent-detail {
+  border: 1px solid rgba(116, 91, 54, 0.32);
+  background-color: #eee2c4;
+  background-image: url('./assets/native-ui/card_bg_007.png');
+  background-size: 7rem auto;
+  background-blend-mode: multiply;
+}
+
+.profession-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem;
+}
+
+.profession-line-tabs {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(6, minmax(6rem, 1fr));
+  overflow-x: auto;
+}
+
+.profession-line-tabs button {
+  display: grid;
+  min-height: 2.8rem;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.55rem;
+  border: 0;
+  border-right: 1px solid rgba(116, 91, 54, 0.22);
+  color: #76634a;
+  background: rgba(255, 249, 231, 0.3);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profession-line-tabs button:last-child {
+  border-right: 0;
+}
+
+.profession-line-tabs button:hover,
+.profession-line-tabs button.is-active {
+  color: #4c3a24;
+  background: rgba(207, 159, 59, 0.22);
+}
+
+.profession-line-tabs button.is-active {
+  box-shadow: inset 0 -0.18rem #b87d25;
+}
+
+.profession-line-tabs img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profession-search {
+  display: flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: 0.45rem;
+  padding-left: 0.65rem;
+  border: 1px solid rgba(116, 91, 54, 0.36);
+  background: rgba(255, 249, 231, 0.58);
+}
+
+.profession-search:focus-within {
+  border-color: #b77f28;
+  box-shadow: 0 0 0 0.15rem rgba(183, 127, 40, 0.16);
+}
+
+.profession-search > svg {
+  width: 1rem;
+  height: 1rem;
+  color: #8b785e;
+}
+
+.profession-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  color: #514431;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.profession-search button {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  border: 0;
+  color: #8b785e;
+  background: transparent;
+  cursor: pointer;
+}
+
+.profession-search button svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.profession-route-panel {
+  margin-top: 0.75rem;
+  padding: 0.8rem;
+}
+
+.profession-route-panel > header,
+.talent-tree-panel > header,
+.profession-skill-panel > header,
+.talent-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.profession-route-panel > header > div:first-child > span,
+.talent-tree-panel > header > div:first-child > span,
+.talent-toolbar > div:first-child > span,
+.profession-skill-panel > header > div > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #9a6820;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.profession-route-panel > header svg,
+.talent-toolbar > div:first-child svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.profession-route-panel h2,
+.talent-toolbar h2,
+.talent-tree-panel h3,
+.profession-skill-panel h3 {
+  margin: 0.15rem 0 0;
+  color: #4d3c27;
+  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
+  letter-spacing: 0;
+}
+
+.profession-route-panel h2,
+.talent-toolbar h2 {
+  font-size: 1.25rem;
+}
+
+.profession-route-tabs,
+.profession-scope-tabs,
+.talent-mode-tabs,
+.talent-tree-tabs {
+  display: flex;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid rgba(116, 91, 54, 0.34);
+  background: rgba(255, 249, 231, 0.44);
+}
+
+.profession-route-tabs button,
+.profession-scope-tabs button,
+.talent-mode-tabs button,
+.talent-tree-tabs button {
+  min-height: 2.2rem;
+  padding-inline: 0.65rem;
+  border: 0;
+  border-right: 1px solid rgba(116, 91, 54, 0.24);
+  color: #78664d;
+  background: transparent;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.profession-route-tabs button:last-child,
+.profession-scope-tabs button:last-child,
+.talent-mode-tabs button:last-child,
+.talent-tree-tabs button:last-child {
+  border-right: 0;
+}
+
+.profession-route-tabs button:hover,
+.profession-route-tabs button.is-active,
+.profession-scope-tabs button:hover,
+.profession-scope-tabs button.is-active,
+.talent-mode-tabs button:hover,
+.talent-mode-tabs button.is-active,
+.talent-tree-tabs button:hover,
+.talent-tree-tabs button.is-active {
+  color: #4d3b24;
+  background: rgba(200, 141, 48, 0.2);
+}
+
+.profession-route-tabs button.is-active,
+.profession-scope-tabs button.is-active,
+.talent-mode-tabs button.is-active,
+.talent-tree-tabs button.is-active {
+  box-shadow: inset 0 -0.16rem #b77f28;
+}
+
+.profession-route-track {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.6rem;
+  margin-top: 0.8rem;
+}
+
+.profession-route-step {
+  position: relative;
+  min-width: 0;
+}
+
+.profession-route-step > svg {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.35rem);
+  width: 0.9rem;
+  height: 0.9rem;
+  transform: translateY(-50%);
+  color: #a88651;
+}
+
+.profession-route-step > button {
+  display: grid;
+  width: 100%;
+  min-height: 5rem;
+  grid-template-columns: 3.3rem minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 0.65rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(116, 91, 54, 0.32);
+  color: #514431;
+  background: rgba(255, 249, 231, 0.42);
+  text-align: left;
+  cursor: pointer;
+}
+
+.profession-route-step > button:hover,
+.profession-route-step > button.is-active {
+  border-color: #ba7f27;
+  background: rgba(213, 172, 85, 0.2);
+}
+
+.profession-route-step > button.is-active {
+  box-shadow: inset 0.22rem 0 #b77f28;
+}
+
+.profession-route-step img {
+  width: 3.3rem;
+  height: 3.3rem;
+  grid-row: 1 / -1;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profession-route-step span,
+.profession-route-step small {
+  color: #8a7659;
+  font-size: 0.75rem;
+}
+
+.profession-route-step strong {
+  overflow: hidden;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profession-data-layout,
+.talent-system-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 19rem;
+  align-items: start;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.profession-skill-panel {
+  min-width: 0;
+  padding: 0.75rem;
+}
+
+.profession-skill-panel > header {
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(116, 91, 54, 0.28);
+}
+
+.profession-skill-panel h3,
+.talent-tree-panel h3 {
+  font-size: 1rem;
+}
+
+.profession-skill-panel > header > strong {
+  color: #8a7659;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.profession-skill-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.profession-skill-list > button {
+  display: grid;
+  min-width: 0;
+  min-height: 3.75rem;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  border: 1px solid rgba(116, 91, 54, 0.24);
+  color: #514431;
+  background: rgba(255, 249, 231, 0.36);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profession-skill-list > button:hover,
+.profession-skill-list > button.is-active {
+  border-color: #b77f28;
+  background: rgba(209, 165, 73, 0.18);
+}
+
+.profession-skill-list > button.is-active {
+  box-shadow: inset 0.2rem 0 #b77f28;
+}
+
+.profession-skill-icon,
+.profession-detail-icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(99, 77, 46, 0.48);
+  background: #d5c7a8;
+}
+
+.profession-skill-icon img,
+.profession-detail-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profession-skill-icon svg,
+.profession-detail-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #8b744f;
+}
+
+.profession-skill-list > button > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.profession-skill-list strong {
+  overflow: hidden;
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profession-skill-list small,
+.profession-skill-list em {
+  color: #8a7659;
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+.profession-skill-list em {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.profession-skill-detail,
+.talent-detail {
+  position: sticky;
+  top: 7.75rem;
+  min-height: 19rem;
+  padding: 0.75rem;
+}
+
+.profession-skill-detail > header,
+.talent-detail > header {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 0.18rem solid #b77f28;
+}
+
+.profession-skill-detail > header > div,
+.talent-detail > header > div {
+  min-width: 0;
+}
+
+.profession-skill-detail h3,
+.talent-detail h3 {
+  overflow: hidden;
+  margin: 0.1rem 0;
+  color: #4d3c27;
+  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profession-skill-detail header span,
+.profession-skill-detail header small,
+.talent-detail header small,
+.talent-detail header em {
+  color: #8a7659;
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+.profession-skill-detail > dl,
+.talent-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0.65rem 0 0;
+  border-block: 1px solid rgba(116, 91, 54, 0.22);
+}
+
+.profession-skill-detail > dl > div,
+.talent-facts > div {
+  padding: 0.45rem 0.35rem;
+  border-right: 1px solid rgba(116, 91, 54, 0.2);
+}
+
+.talent-facts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.profession-skill-detail dt,
+.talent-facts dt {
+  color: #8a7659;
+  font-size: 0.75rem;
+}
+
+.profession-skill-detail dd,
+.talent-facts dd {
+  margin: 0.15rem 0 0;
+  color: #4e3d27;
+  font-size: 0.8125rem;
+  font-weight: 750;
+}
+
+.profession-skill-detail > section,
+.talent-detail-section,
+.talent-level-strip {
+  margin-top: 0.75rem;
+}
+
+.profession-skill-detail h4,
+.talent-detail h4 {
+  margin: 0 0 0.35rem;
+  color: #5b492f;
+  font-size: 0.8125rem;
+}
+
+.profession-skill-detail p,
+.talent-detail-section p {
+  margin: 0;
+  color: #716047;
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.profession-level-preview,
+.talent-level-strip > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.profession-level-preview span,
+.profession-level-preview small,
+.talent-level-strip span,
+.talent-level-strip small {
+  display: grid;
+  min-width: 1.8rem;
+  min-height: 1.7rem;
+  place-items: center;
+  border: 1px solid rgba(116, 91, 54, 0.28);
+  color: #665239;
+  background: rgba(255, 249, 231, 0.48);
+  font-size: 0.75rem;
+}
+
+.profession-empty,
+.talent-empty {
+  display: grid;
+  min-height: 12rem;
+  place-items: center;
+  padding: 1rem;
+  color: #8a7659;
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.talent-toolbar {
+  padding: 0.75rem;
+}
+
+.talent-mode-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.talent-mode-tabs svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.talent-mode-tabs small {
+  color: #9a805d;
+  font-size: 0.75rem;
+}
+
+.talent-tree-panel {
+  min-width: 0;
+  padding: 0.75rem;
+}
+
+.talent-tree-panel > header {
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(116, 91, 54, 0.28);
+}
+
+.talent-tree-tabs {
+  max-width: min(44rem, 70vw);
+}
+
+.talent-tree-tabs button {
+  display: grid;
+  min-width: 5.75rem;
+  place-items: center;
+  gap: 0.1rem;
+}
+
+.talent-tree-tabs button small {
+  color: #927a59;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.talent-tree-tabs.is-groups button {
+  min-width: 7rem;
+}
+
+.season-talent-scroll {
+  min-width: 0;
+  margin-top: 0.65rem;
+  overflow: auto;
+  border: 1px solid rgba(116, 91, 54, 0.24);
+  background:
+    linear-gradient(rgba(120, 96, 60, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 96, 60, 0.09) 1px, transparent 1px),
+    rgba(255, 249, 231, 0.36);
+  background-size: 3rem 3rem;
+}
+
+.season-talent-canvas {
+  position: relative;
+  width: max(100%, 58rem);
+  height: 32rem;
+}
+
+.season-talent-links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.season-talent-links line {
+  stroke: rgba(129, 99, 54, 0.54);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.season-talent-canvas > button {
+  position: absolute;
+  left: var(--talent-x);
+  top: var(--talent-y);
+  display: grid;
+  width: 5.5rem;
+  justify-items: center;
+  gap: 0.12rem;
+  transform: translate(-50%, -50%);
+  border: 0;
+  color: #5a4930;
+  background: transparent;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.season-talent-canvas > button > span,
+.patron-talent-grid > button > span,
+.talent-detail > header > span {
+  display: grid;
+  width: 3.2rem;
+  height: 3.2rem;
+  place-items: center;
+  overflow: hidden;
+  border: 0.15rem solid #8a7659;
+  border-radius: 50%;
+  background: #d8c8a6;
+  box-shadow: 0 0.2rem 0.55rem rgba(71, 55, 34, 0.22);
+}
+
+.season-talent-canvas > button:hover > span,
+.season-talent-canvas > button.is-active > span,
+.patron-talent-grid > button:hover > span,
+.patron-talent-grid > button.is-active > span {
+  border-color: #c58b2e;
+  box-shadow: 0 0 0 0.18rem rgba(197, 139, 46, 0.22), 0 0.2rem 0.8rem rgba(112, 77, 27, 0.34);
+}
+
+.season-talent-canvas > button.is-start > span,
+.patron-talent-grid > button.is-start > span {
+  border-color: #6c8f58;
+}
+
+.season-talent-canvas > button.is-gate > span {
+  border-radius: 0.25rem;
+  border-color: #aa7d3e;
+}
+
+.season-talent-canvas img,
+.patron-talent-grid img,
+.talent-detail > header img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.season-talent-canvas svg,
+.patron-talent-grid svg,
+.talent-detail > header > span > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #786342;
+}
+
+.season-talent-canvas strong,
+.patron-talent-grid strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.season-talent-canvas small,
+.patron-talent-grid small {
+  color: #8b7658;
+  font-size: 0.75rem;
+}
+
+.patron-talent-grid {
+  position: relative;
+  display: grid;
+  min-height: 32rem;
+  grid-template-columns: repeat(4, minmax(5rem, 1fr));
+  grid-template-rows: repeat(4, minmax(6rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+  padding: 1rem;
+  border: 1px solid rgba(116, 91, 54, 0.24);
+  background:
+    linear-gradient(rgba(120, 96, 60, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 96, 60, 0.09) 1px, transparent 1px),
+    rgba(255, 249, 231, 0.36);
+  background-size: 25% 25%;
+}
+
+.patron-talent-grid > .patron-talent-links {
+  position: absolute;
+  z-index: 0;
+  inset: 1rem;
+  width: calc(100% - 2rem);
+  height: calc(100% - 2rem);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.patron-talent-links line {
+  stroke: rgba(129, 99, 54, 0.54);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.patron-talent-grid > button {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-self: center;
+  justify-items: center;
+  gap: 0.15rem;
+  border: 0;
+  color: #5a4930;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.talent-detail > header > span {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 0.2rem;
+}
+
+.talent-detail-section > div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.talent-detail-section > div > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.45rem;
+  background: rgba(255, 249, 231, 0.42);
+}
+
+.talent-detail-section small {
+  color: #78664d;
+  font-size: 0.75rem;
+}
+
+.talent-detail-section strong {
+  color: #9a6820;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 62rem) {
+  .profession-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profession-data-layout,
+  .talent-system-layout {
+    grid-template-columns: minmax(0, 1fr) 17rem;
+  }
+
+  .profession-skill-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .wiki-section-nav {
+    display: none;
+  }
+
+  .profession-wiki,
+  .talent-wiki {
+    padding-top: 0.55rem;
+  }
+
+  .profession-line-tabs {
+    grid-template-columns: repeat(6, minmax(6.6rem, 1fr));
+  }
+
+  .profession-route-panel > header,
+  .talent-tree-panel > header,
+  .profession-skill-panel > header,
+  .talent-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profession-route-tabs,
+  .profession-scope-tabs,
+  .talent-mode-tabs,
+  .talent-tree-tabs {
+    width: 100%;
+  }
+
+  .profession-route-track {
+    grid-template-columns: repeat(4, minmax(8rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+  }
+
+  .profession-data-layout,
+  .talent-system-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profession-skill-detail,
+  .talent-detail {
+    position: static;
+    grid-row: 1;
+  }
+
+  .profession-skill-panel {
+    grid-row: 2;
+  }
+
+  .talent-tree-panel {
+    grid-row: 2;
+  }
+
+  .talent-tree-tabs {
+    max-width: none;
+  }
+
+  .season-talent-canvas {
+    height: 28rem;
+  }
+
+  .patron-talent-grid {
+    min-width: 35rem;
+  }
+
+  .patron-tree-panel {
+    overflow-x: auto;
+  }
+
+  .pet-roster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 :root.dark {
   color-scheme: dark;
 }
@@ -5281,4 +6197,86 @@ select {
   .wiki-card-art {
     min-height: 4.5rem;
   }
+}
+
+/* Package-extracted pet cards are complete transparent compositions, not portraits. */
+.pet-roster-card {
+  aspect-ratio: 4 / 5;
+  border-color: #6f805f;
+  background: #dce3c8;
+  box-shadow: inset 0 0 0 0.18rem rgba(255, 250, 224, 0.52), 0 0.2rem 0.5rem rgba(53, 45, 33, 0.2);
+}
+
+.pet-roster-card.quality-4 {
+  border-color: #76619a;
+  background: #ddd4e8;
+}
+
+.pet-roster-card.quality-5 {
+  border-color: #bd8427;
+  background: #eadab3;
+}
+
+.pet-roster-card::before {
+  position: absolute;
+  z-index: 3;
+  inset: 0.24rem;
+  border: 1px solid rgba(255, 249, 222, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(73, 62, 43, 0.24);
+  content: '';
+  pointer-events: none;
+}
+
+.pet-roster-art {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.48), transparent 42%),
+    repeating-conic-gradient(from 0deg at 50% 66%, rgba(255, 249, 218, 0.3) 0deg 7deg, transparent 7deg 15deg),
+    #d7ddc3;
+}
+
+.quality-4 .pet-roster-art {
+  background-color: #d9d0e3;
+}
+
+.quality-5 .pet-roster-art {
+  background-color: #e5d2a6;
+}
+
+.pet-roster-art > span {
+  position: absolute;
+  width: 72%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 249, 222, 0.72);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.35rem rgba(115, 143, 91, 0.18), inset 0 0 1.2rem rgba(255, 250, 221, 0.58);
+}
+
+.quality-4 .pet-roster-art > span {
+  box-shadow: 0 0 0 0.35rem rgba(119, 93, 155, 0.16), inset 0 0 1.2rem rgba(255, 250, 221, 0.58);
+}
+
+.quality-5 .pet-roster-art > span {
+  box-shadow: 0 0 0 0.35rem rgba(188, 132, 39, 0.18), inset 0 0 1.2rem rgba(255, 250, 221, 0.58);
+}
+
+.pet-roster-art img {
+  position: relative;
+  z-index: 1;
+  width: 108%;
+  height: 108%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 0.3rem 0.25rem rgba(58, 46, 29, 0.24));
+}
+
+.pet-detail-hero {
+  background:
+    repeating-conic-gradient(from 0deg at 50% 72%, rgba(255, 249, 218, 0.24) 0deg 7deg, transparent 7deg 15deg),
+    #d7ddc3;
+}
+
+.pet-detail-hero > img {
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 0.35rem 0.3rem rgba(58, 46, 29, 0.28));
 }

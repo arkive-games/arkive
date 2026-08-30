@@ -1,18 +1,13 @@
-import { useEffect, useMemo, useState, type ComponentType, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type ComponentType } from 'react'
 import {
   Check,
   ArrowLeft,
   Bookmark,
   BookOpen,
-  CheckCircle2,
   ChevronRight,
   Compass,
-  Database,
   ExternalLink,
   Gamepad2,
-  GitBranch,
-  Hash,
-  Layers3,
   MapPinned,
   MessageCircle,
   Ghost,
@@ -23,7 +18,6 @@ import {
   Swords,
   Wrench,
   X,
-  Zap,
 } from 'lucide-react'
 import { ArkiveMapTopBar, ArkiveMobileHeader, useTheme, type ShellNavItem } from '@gamemap/map-shell'
 import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
@@ -40,19 +34,10 @@ import {
   type CardFrameVariant,
   type WikiCard,
 } from './cardCatalog'
-import {
-  filterWikiSkillIds,
-  WIKI_CLIENT_VERSION,
-  WIKI_PROFESSION_LINES,
-  WIKI_PROFESSION_STAGES,
-  WIKI_PACKAGE_SOURCE,
-  WIKI_SKILL_COUNT,
-  WIKI_STAGE_BY_ID,
-  type WikiProfessionLine,
-  type WikiProfessionStage,
-} from './wikiCatalog'
-import { loadSkillLevels, loadWikiData, type SkillIndexEntry, type SkillLevelRow, type WikiData } from './wikiData'
+import { loadWikiData, type WikiData } from './wikiData'
 import { MonsterWiki, PetWiki } from './CreatureWiki'
+import { ProfessionWiki } from './ProfessionWiki'
+import { TalentWiki } from './TalentWiki'
 import { resourceUrl } from './lib/urls'
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
@@ -69,20 +54,6 @@ import collectionNameYellow from './assets/native-ui/card_img_item_name_02.webp'
 import collectionNameRed from './assets/native-ui/card_img_item_name_03.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
-
-const roleAssetModules = import.meta.glob('./assets/roles/*.webp', {
-  eager: true,
-  import: 'default',
-}) as Record<string, string>
-
-const roleAssets = Object.entries(roleAssetModules).map(([modulePath, path]) => ({
-  name: modulePath.split('/').pop()?.replace(/\.webp$/, '') ?? '',
-  path,
-}))
-
-function getProfessionAsset(lineId: string) {
-  return roleAssets.find((asset) => asset.name.startsWith(`icon_role_${lineId}_`))?.path ?? null
-}
 
 const HOME_URL = import.meta.env.VITE_HOME_URL
   ?? (import.meta.env.DEV ? 'http://localhost:15172' : 'https://tc-imba.com')
@@ -139,13 +110,7 @@ const GUIDES: GuideEntry[] = []
 type DestinationKey = keyof typeof DESTINATIONS
 type IconComponent = ComponentType<{ 'aria-hidden'?: boolean | 'true' }>
 type Page = 'overview' | 'wiki' | 'changelog'
-type WikiView = 'skills' | 'cards' | 'pets' | 'monsters'
-
-interface SelectedSkill {
-  stage: WikiProfessionStage
-  skillId: string
-  skill?: SkillIndexEntry
-}
+type WikiView = 'skills' | 'talents' | 'cards' | 'pets' | 'monsters'
 
 // Bare `/` opens the encyclopedias rather than the guide hub: the hub has no
 // guides yet, so it would land every visitor on an empty state while the
@@ -158,7 +123,7 @@ function getInitialPage(): Page {
 
 function getInitialWikiView(): WikiView {
   const value = new URLSearchParams(window.location.search).get('wiki')
-  return value === 'cards' || value === 'pets' || value === 'monsters' ? value : 'skills'
+  return value === 'talents' || value === 'cards' || value === 'pets' || value === 'monsters' ? value : 'skills'
 }
 
 function App() {
@@ -185,6 +150,11 @@ function App() {
           key: 'wiki-skills',
           label: content.wiki.tabs.skills,
           active: page === 'wiki' && wikiView === 'skills',
+        },
+        {
+          key: 'wiki-talents',
+          label: content.wiki.tabs.talents,
+          active: page === 'wiki' && wikiView === 'talents',
         },
         {
           key: 'wiki-cards',
@@ -294,6 +264,10 @@ function App() {
     }
     if (key === 'wiki-cards') {
       openWiki('cards')
+      return
+    }
+    if (key === 'wiki-talents') {
+      openWiki('talents')
       return
     }
     if (key === 'wiki-pets') {
@@ -589,48 +563,22 @@ function ChangelogPage({ onBack }: { onBack: () => void }) {
 }
 
 function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view: WikiView) => void }) {
-  const [lineId, setLineId] = useState(WIKI_PROFESSION_LINES[0]?.id ?? '')
-  const [stageId, setStageId] = useState('')
-  const [query, setQuery] = useState('')
   const [cardQuery, setCardQuery] = useState('')
   const [cardFilters, setCardFilters] = useState<CardFilters>(INITIAL_CARD_FILTERS)
   const [wikiData, setWikiData] = useState<WikiData | null>(null)
   const [dataError, setDataError] = useState(false)
   const [selectedCard, setSelectedCard] = useState<WikiCard | null>(null)
-  const [selectedSkill, setSelectedSkill] = useState<SelectedSkill | null>(null)
-  const line = WIKI_PROFESSION_LINES.find((candidate) => candidate.id === lineId) ?? WIKI_PROFESSION_LINES[0]
-  const lineStageIds = line ? [line.baseStageId, ...line.paths.flat()] : []
-  const lineStages = lineStageIds.flatMap((id) => {
-    const stage = WIKI_STAGE_BY_ID.get(id)
-    return stage ? [stage] : []
-  })
-  const skillIndex = useMemo(() => new Map(
-    wikiData?.skills.skills.map((skill) => [skill.iSkillID, skill]) ?? [],
-  ), [wikiData])
   const collectionCardIds = useMemo(
     () => new Set(wikiData?.cards.flashCardPools.flatMap((pool) => pool.cards) ?? []),
     [wikiData],
   )
-  const skills = line ? filterWikiSkillIds(line.id, stageId, query, skillIndex) : []
   const cards = useMemo(
     () => filterCards(wikiData?.cards.cards ?? [], cardQuery, cardFilters, collectionCardIds),
     [cardFilters, cardQuery, collectionCardIds, wikiData],
   )
-  const pageTitle = {
-    skills: content.wiki.skillsPageTitle,
-    cards: content.wiki.cardsPageTitle,
-    pets: content.wiki.petsPageTitle,
-    monsters: content.wiki.monstersPageTitle,
-  }[view]
-  const pageDescription = {
-    skills: content.wiki.skillsPageDescription,
-    cards: content.wiki.cardsPageDescription,
-    pets: content.wiki.petsPageDescription,
-    monsters: content.wiki.monstersPageDescription,
-  }[view]
 
   useEffect(() => {
-    if ((view !== 'skills' && view !== 'cards') || wikiData) return
+    if (view !== 'cards' || wikiData) return
     let active = true
     loadWikiData()
       .then((data) => {
@@ -638,30 +586,9 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
         setWikiData(data)
         setDataError(false)
       })
-      .catch(() => {
-        if (active) setDataError(true)
-      })
+      .catch(() => { if (active) setDataError(true) })
     return () => { active = false }
   }, [view, wikiData])
-
-  const selectLine = (nextLineId: string) => {
-    setLineId(nextLineId)
-    setStageId('')
-  }
-
-  useEffect(() => {
-    if (!selectedSkill) return
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setSelectedSkill(null)
-    }
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [selectedSkill])
 
   useEffect(() => {
     if (!selectedCard) return
@@ -674,158 +601,14 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
 
   return (
     <main className="wiki-page">
-      <header className="wiki-masthead">
-        <div className="ro3-shell wiki-masthead-inner">
-          <div className="wiki-title-block">
-            <span>{content.wiki.eyebrow}</span>
-            <h1>{pageTitle}</h1>
-            <p>{pageDescription}</p>
-          </div>
-          <div className="wiki-view-tabs" role="tablist" aria-label={content.wiki.tabsLabel}>
-            <button type="button" role="tab" aria-selected={view === 'skills'} className={view === 'skills' ? 'is-active' : undefined} onClick={() => onViewChange('skills')}>
-              <Swords aria-hidden="true" />
-              {content.wiki.tabs.skills}
-            </button>
-            <button type="button" role="tab" aria-selected={view === 'cards'} className={view === 'cards' ? 'is-active' : undefined} onClick={() => onViewChange('cards')}>
-              <BookOpen aria-hidden="true" />
-              {content.wiki.tabs.cards}
-            </button>
-            <button type="button" role="tab" aria-selected={view === 'pets'} className={view === 'pets' ? 'is-active' : undefined} onClick={() => onViewChange('pets')}>
-              <PawPrint aria-hidden="true" />
-              {content.wiki.tabs.pets}
-            </button>
-            <button type="button" role="tab" aria-selected={view === 'monsters'} className={view === 'monsters' ? 'is-active' : undefined} onClick={() => onViewChange('monsters')}>
-              <Ghost aria-hidden="true" />
-              {content.wiki.tabs.monsters}
-            </button>
-          </div>
-          <div className="wiki-stats" aria-label={pageTitle}>
-            {view === 'skills' ? (
-              <>
-                <WikiStat icon={GitBranch} value={WIKI_PROFESSION_LINES.length} label={content.wiki.stats.lines} />
-                <WikiStat icon={Layers3} value={WIKI_PROFESSION_STAGES.length} label={content.wiki.stats.stages} />
-                <WikiStat icon={Hash} value={wikiData?.skills.counts.skills ?? WIKI_SKILL_COUNT} label={content.wiki.stats.skills} />
-                <WikiStat icon={Database} value={wikiData?.version.gameVersion ?? WIKI_CLIENT_VERSION} label={content.wiki.stats.version} />
-              </>
-            ) : view === 'cards' ? (
-              <>
-                <WikiStat icon={BookOpen} value={wikiData?.cards.counts.cards ?? 0} label={content.wiki.stats.cards} />
-                <WikiStat icon={Layers3} value={wikiData?.cards.counts.tiers ?? 0} label={content.wiki.stats.baseCards} />
-                <WikiStat icon={Sparkles} value={wikiData?.cards.counts.cardsWithIcon ?? 0} label={content.wiki.stats.collections} />
-                <WikiStat icon={Database} value={wikiData?.version.gameVersion ?? WIKI_CLIENT_VERSION} label={content.wiki.stats.version} />
-              </>
-            ) : null}
-          </div>
-        </div>
-      </header>
-
-      {view === 'skills' ? (
-      <div className="ro3-shell wiki-content" role="tabpanel">
-        <aside className="wiki-line-nav" aria-label={content.wiki.lineLabel}>
-          <span>{content.wiki.lineLabel}</span>
-          <div>
-            {WIKI_PROFESSION_LINES.map((candidate) => {
-              const stageIds = [candidate.baseStageId, ...candidate.paths.flat()]
-              const skillCount = stageIds.reduce((count, id) => count + (WIKI_STAGE_BY_ID.get(id)?.skillIds.length ?? 0), 0)
-              return (
-                <button
-                  type="button"
-                  key={candidate.id}
-                  className={candidate.id === line?.id ? 'is-active' : undefined}
-                  aria-pressed={candidate.id === line?.id}
-                  onClick={() => selectLine(candidate.id)}
-                >
-                  <span className="wiki-line-nav-art">
-                    {getProfessionAsset(candidate.id) ? <img src={getProfessionAsset(candidate.id) ?? undefined} alt="" loading="lazy" /> : <Swords aria-hidden="true" />}
-                  </span>
-                  <span className="wiki-line-nav-copy">
-                    <strong>{candidate.label}</strong>
-                    <small>{content.wiki.skillCount.replace('{count}', String(skillCount))}</small>
-                  </span>
-                  <ChevronRight aria-hidden="true" />
-                </button>
-              )
-            })}
-          </div>
-        </aside>
-
-        <div className="wiki-main">
-          <section className="skill-native-workspace" aria-labelledby="wiki-skills-title">
-            <div className="skill-native-bar">
-              <span className="skill-native-bar-title">{content.wiki.tabs.skills}</span>
-              <span className="skill-native-bar-state">{content.wiki.stats.version} {wikiData?.version.gameVersion ?? WIKI_CLIENT_VERSION}</span>
-            </div>
-
-            <div className="skill-native-header">
-              <div className="skill-native-profession">
-                <span className="skill-native-profession-icon">
-                  {line && getProfessionAsset(line.id) ? <img src={getProfessionAsset(line.id) ?? undefined} alt="" /> : <Swords aria-hidden="true" />}
-                </span>
-                <div>
-                  <span>{content.wiki.progressionEyebrow}</span>
-                  <h2 id="wiki-skills-title">{line?.label ?? content.wiki.skillsPageTitle}</h2>
-                </div>
-              </div>
-              <div className="skill-native-points">
-                <span>{content.wiki.loadedSkills}</span>
-                <strong>{skills.filter((entry) => entry.skill).length}</strong>
-                <small>{content.wiki.configReady}</small>
-              </div>
-              <label className="wiki-stage-filter skill-native-school">
-                <span className="sr-only">{content.wiki.stage}</span>
-                <select value={stageId} onChange={(event) => setStageId(event.target.value)}>
-                  <option value="">{content.wiki.allStages}</option>
-                  {lineStages.map((stage) => <option key={stage.id} value={stage.id}>{stage.label}</option>)}
-                </select>
-              </label>
-            </div>
-
-            <div className="skill-native-toolbar">
-              <label className="wiki-search">
-                <Search aria-hidden="true" />
-                <span className="sr-only">{content.wiki.searchLabel}</span>
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder={content.wiki.searchPlaceholder}
-                />
-                {query ? (
-                  <button type="button" aria-label={content.search.clear} onClick={() => setQuery('')}>
-                    <X aria-hidden="true" />
-                  </button>
-                ) : null}
-              </label>
-              <span>{content.wiki.resultCount.replace('{count}', String(skills.length))}</span>
-            </div>
-
-            <div className="skill-native-tree" aria-label={content.wiki.skillsTitle}>
-              <div className="skill-native-rail" aria-hidden="true">
-                {['I', 'II', 'II+', 'III'].map((tier) => <span key={tier}>{tier}</span>)}
-              </div>
-              <div className="skill-native-canvas">
-                <div className="skill-native-grid-lines" aria-hidden="true" />
-                {dataError ? <div className="wiki-empty">{content.wiki.dataError}</div> : !wikiData ? <div className="wiki-empty">{content.wiki.loading}</div> : skills.length > 0 ? skills.map(({ stage, skillId, evidence, skill }, index) => (
-                  <WikiSkillNode
-                    key={skillId}
-                    stage={stage}
-                    skillId={skillId}
-                    skill={skill}
-                    evidence={evidence}
-                    index={index}
-                    onSelect={() => setSelectedSkill({ stage, skillId, skill })}
-                  />
-                )) : <div className="wiki-empty">{content.wiki.empty}</div>}
-              </div>
-            </div>
-            <div className="skill-native-footer">
-              <button type="button" onClick={() => setStageId('')}><Swords aria-hidden="true" />{content.wiki.progressionTitle}</button>
-              <span><Database aria-hidden="true" />{content.wiki.sourceNote} <code>{wikiData?.version.version ?? content.wiki.loading}</code></span>
-            </div>
-          </section>
-        </div>
-      </div>
-      ) : view === 'cards' ? (
+      <nav className="ro3-shell wiki-section-nav" aria-label={content.wiki.tabsLabel}>
+        <button type="button" className={view === 'skills' ? 'is-active' : undefined} aria-current={view === 'skills' ? 'page' : undefined} onClick={() => onViewChange('skills')}><Swords aria-hidden="true" />{content.wiki.tabs.skills}</button>
+        <button type="button" className={view === 'talents' ? 'is-active' : undefined} aria-current={view === 'talents' ? 'page' : undefined} onClick={() => onViewChange('talents')}><Sparkles aria-hidden="true" />{content.wiki.tabs.talents}</button>
+        <button type="button" className={view === 'cards' ? 'is-active' : undefined} aria-current={view === 'cards' ? 'page' : undefined} onClick={() => onViewChange('cards')}><BookOpen aria-hidden="true" />{content.wiki.tabs.cards}</button>
+        <button type="button" className={view === 'pets' ? 'is-active' : undefined} aria-current={view === 'pets' ? 'page' : undefined} onClick={() => onViewChange('pets')}><PawPrint aria-hidden="true" />{content.wiki.tabs.pets}</button>
+        <button type="button" className={view === 'monsters' ? 'is-active' : undefined} aria-current={view === 'monsters' ? 'page' : undefined} onClick={() => onViewChange('monsters')}><Ghost aria-hidden="true" />{content.wiki.tabs.monsters}</button>
+      </nav>
+      {view === 'skills' ? <ProfessionWiki /> : view === 'talents' ? <TalentWiki /> : view === 'cards' ? (
         <CardWiki
           query={cardQuery}
           filters={cardFilters}
@@ -838,164 +621,8 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
           onSelect={setSelectedCard}
         />
       ) : view === 'pets' ? <PetWiki /> : <MonsterWiki />}
-      {selectedSkill ? <SkillDetail key={selectedSkill.skillId} skill={selectedSkill} data={wikiData} onClose={() => setSelectedSkill(null)} /> : null}
     </main>
   )
-}
-
-function ProfessionSummary({
-  line,
-  stages,
-}: {
-  line: WikiProfessionLine
-  stages: WikiProfessionStage[]
-}) {
-  const skillCount = stages.reduce((count, stage) => count + stage.skillIds.length, 0)
-
-  return (
-    <section className="wiki-profession-summary" aria-labelledby="wiki-profession-summary-title">
-      <div className="wiki-profession-summary-icon">
-        {getProfessionAsset(line.id) ? <img src={getProfessionAsset(line.id) ?? undefined} alt="" /> : <Swords aria-hidden="true" />}
-      </div>
-      <div className="wiki-profession-summary-copy">
-        <span>{content.wiki.professionSummary.eyebrow}</span>
-        <h3 id="wiki-profession-summary-title">{line.label}</h3>
-        <p>{content.wiki.professionSummary.description
-          .replace('{stages}', String(stages.length))
-          .replace('{paths}', String(line.paths.length))}</p>
-      </div>
-      <dl className="wiki-profession-summary-stats">
-        <div><dt>{content.wiki.professionSummary.stageCount}</dt><dd>{stages.length}</dd></div>
-        <div><dt>{content.wiki.professionSummary.pathCount}</dt><dd>{line.paths.length}</dd></div>
-        <div><dt>{content.wiki.professionSummary.skillCount}</dt><dd>{skillCount}</dd></div>
-      </dl>
-    </section>
-  )
-}
-
-function WikiSkillNode({
-  stage,
-  skillId,
-  skill,
-  evidence,
-  index,
-  onSelect,
-}: {
-  stage: WikiProfessionStage
-  skillId: string
-  skill?: SkillIndexEntry
-  evidence: { eventName: string }
-  index: number
-  onSelect: () => void
-}) {
-  const column = index % 4
-  const row = Math.floor(index / 4)
-  const name = skill?.name?.['zh-CN']
-
-  return (
-    <button
-      type="button"
-      className="skill-native-node"
-      style={{ '--skill-column': column + 1, '--skill-row': row + 1 } as CSSProperties}
-      onClick={onSelect}
-      aria-label={`${stage.label} ${name ?? skillId}`}
-      title={evidence.eventName}
-    >
-      <span className="skill-native-node-icon">
-        {skill?.icon ? <img src={resourceUrl(skill.icon)} alt="" loading="lazy" /> : <Zap aria-hidden="true" />}
-      </span>
-      <strong>0/{skill?.iMaxLevel ?? '--'}</strong>
-      <span>{name ?? `${content.wiki.skillId} ${skillId}`}</span>
-    </button>
-  )
-}
-
-function SkillDetail({
-  skill,
-  data,
-  onClose,
-}: {
-  skill: SelectedSkill
-  data: WikiData | null
-  onClose: () => void
-}) {
-  const [levels, setLevels] = useState<SkillLevelRow[] | null>(null)
-  const [levelError, setLevelError] = useState(false)
-  const name = skill.skill?.name?.['zh-CN'] ?? content.wiki.skillDetail.title.replace('{id}', skill.skillId)
-
-  useEffect(() => {
-    let active = true
-    if (!skill.skill || !data) return
-    loadSkillLevels(skill.skill, data.skills.shards)
-      .then((rows) => {
-        if (active) setLevels(rows)
-      })
-      .catch(() => {
-        if (active) setLevelError(true)
-      })
-    return () => { active = false }
-  }, [data, skill])
-
-  return (
-    <div className="wiki-skill-dialog-backdrop" role="presentation" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose()
-    }}>
-      <section className="wiki-skill-dialog" role="dialog" aria-modal="true" aria-labelledby="wiki-skill-dialog-title">
-        <button type="button" className="wiki-dialog-close" aria-label={content.wiki.skillDetail.close} onClick={onClose}>
-          <X aria-hidden="true" />
-        </button>
-        <header className="wiki-skill-dialog-header">
-          <div className="wiki-skill-dialog-icon">
-            {skill.skill?.icon ? <img src={resourceUrl(skill.skill.icon)} alt="" /> : <Zap aria-hidden="true" />}
-          </div>
-          <div>
-            <span>{content.wiki.skillDetail.eyebrow}</span>
-            <h2 id="wiki-skill-dialog-title">{name}</h2>
-            <p>{skill.stage.label} · {content.wiki.tier.replace('{tier}', String(skill.stage.tier))}</p>
-          </div>
-        </header>
-        <div className="wiki-skill-dialog-body">
-          <div className="wiki-skill-detail-status">
-            <CheckCircle2 aria-hidden="true" />
-            <div>
-              <strong>{content.wiki.skillDetail.confirmedTitle}</strong>
-              <span>{content.wiki.skillDetail.confirmedDescription}</span>
-            </div>
-          </div>
-          <dl className="wiki-skill-detail-grid">
-            <div><dt>{content.wiki.skillDetail.skillId}</dt><dd><code>{skill.skillId}</code></dd></div>
-            <div><dt>{content.wiki.skillDetail.profession}</dt><dd>{skill.stage.label}</dd></div>
-            <div><dt>{content.wiki.skillDetail.maxLevel}</dt><dd>{skill.skill?.iMaxLevel ?? content.wiki.skillDetail.unavailable}</dd></div>
-            <div><dt>{content.wiki.skillDetail.source}</dt><dd>{WIKI_PACKAGE_SOURCE.label}</dd></div>
-          </dl>
-          <section className="wiki-skill-levels" aria-label={content.wiki.skillDetail.values}>
-            <h3>{content.wiki.skillDetail.values}</h3>
-            {levelError ? <div className="wiki-empty">{content.wiki.dataError}</div> : levels === null ? (
-              <div className="wiki-empty">{content.wiki.loading}</div>
-            ) : levels.length === 0 ? (
-              <div className="wiki-empty">{content.wiki.skillDetail.unavailable}</div>
-            ) : levels.map((level) => (
-              <article key={level.iID} className="wiki-skill-level-row">
-                <strong>{content.wiki.skillDetail.level.replace('{level}', String(level.iLevel))}</strong>
-                <p>{stripGameMarkup(level.desc?.['zh-CN'] ?? content.wiki.skillDetail.unavailable)}</p>
-                <dl>
-                  {level.kDamageParam1?.length ? <div><dt>{content.wiki.skillDetail.damageParam}</dt><dd>{formatConfigValues(level.kDamageParam1)}</dd></div> : null}
-                  {level.kDamageParam2?.length ? <div><dt>{content.wiki.skillDetail.extraParam}</dt><dd>{formatConfigValues(level.kDamageParam2)}</dd></div> : null}
-                  {level.kCost?.length ? <div><dt>{content.wiki.skillDetail.cost}</dt><dd>{formatConfigValues(level.kCost)}</dd></div> : null}
-                  {level.iDistanceMax !== undefined ? <div><dt>{content.wiki.skillDetail.range}</dt><dd>{level.iDistanceMax}</dd></div> : null}
-                  {level.iTargetMax !== undefined ? <div><dt>{content.wiki.skillDetail.targets}</dt><dd>{level.iTargetMax}</dd></div> : null}
-                </dl>
-              </article>
-            ))}
-          </section>
-        </div>
-      </section>
-    </div>
-  )
-}
-
-function formatConfigValues(value: unknown[]): string {
-  return value.flat(3).map(String).join(' / ')
 }
 
 function CardWiki({
@@ -1226,51 +853,6 @@ function CardWorkspaceDetail({ card, data }: { card: WikiCard; data: WikiData })
   )
 }
 
-function WikiStat({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: IconComponent
-  value: number | string
-  label: string
-}) {
-  return (
-    <div>
-      <Icon aria-hidden="true" />
-      <strong>{value}</strong>
-      <span>{label}</span>
-    </div>
-  )
-}
-
-function WikiStageCard({
-  stage,
-  active,
-  onSelect,
-  compact = false,
-}: {
-  stage?: WikiProfessionStage
-  active: boolean
-  onSelect: (id: string) => void
-  compact?: boolean
-}) {
-  if (!stage) return null
-
-  return (
-    <button
-      type="button"
-      className={`wiki-stage-card${compact ? ' is-compact' : ''}${active ? ' is-active' : ''}`}
-      aria-pressed={active}
-      onClick={() => onSelect(active ? '' : stage.id)}
-    >
-      <span>{content.wiki.tier.replace('{tier}', String(stage.tier))}</span>
-      <strong>{stage.label}</strong>
-      <b>{content.wiki.skillCount.replace('{count}', String(stage.skillIds.length))}</b>
-    </button>
-  )
-}
-
 function QuickEntry({
   icon: Icon,
   label,
@@ -1398,8 +980,4 @@ function DestinationRow({
 }
 
 // Kept as small, data-oriented building blocks for the legacy detail routes.
-// The native workspaces above own the visible composition for this page.
-void ProfessionSummary
-void WikiStageCard
-
 export default App
