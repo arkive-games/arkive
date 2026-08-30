@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.7.1",
+      "date": "2026-08-31",
+      "commit": "ddbcebea77409c5a217db7b049950afeed9f4283",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Restored the Guides hub: it now has a navigation entry and its own address that survives reload and sharing.",
+            "zh-CN": "恢复攻略首页：新增导航入口，并拥有可刷新、可分享的独立地址。",
+            "zh-TW": "恢復攻略首頁：新增導覽入口，並擁有可重新整理、可分享的獨立網址。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The interface theme now follows your site-wide Arkive preference and is remembered across visits.",
+            "zh-CN": "界面主题现在会跟随藏舟攻略的全站偏好，并在下次访问时保留。",
+            "zh-TW": "介面主題現在會跟隨藏舟攻略的全站偏好，並在下次造訪時保留。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.7.0",
       "date": "2026-08-30",
       "commit": "160551d41ebbf74235e83fa9f5fbce9eb3ed1000",
