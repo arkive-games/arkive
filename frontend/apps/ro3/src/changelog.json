@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.8.0",
+      "date": "2026-08-31",
+      "commit": "14026a298e6f3fbcacc972def260f92e1a114004",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added profession advancement routes, stage-correct skill choices, talent trees, and game-native pet cards.",
+            "zh-CN": "新增职业转职路线、阶段技能选择、天赋树与游戏原生宠物卡面。",
+            "zh-TW": "新增職業轉職路線、階段技能選擇、天賦樹與遊戲原生寵物卡面。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.7.1",
       "date": "2026-08-31",
       "commit": "dcfb3b53f3c428c821dd3369d04605e57fb6aeab",
