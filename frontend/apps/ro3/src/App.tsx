@@ -70,13 +70,13 @@ import collectionNameRed from './assets/native-ui/card_img_item_name_03.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
 
-const roleAssetModules = import.meta.glob('./assets/roles/*.png', {
+const roleAssetModules = import.meta.glob('./assets/roles/*.webp', {
   eager: true,
   import: 'default',
 }) as Record<string, string>
 
 const roleAssets = Object.entries(roleAssetModules).map(([modulePath, path]) => ({
-  name: modulePath.split('/').pop()?.replace(/\.png$/, '') ?? '',
+  name: modulePath.split('/').pop()?.replace(/\.webp$/, '') ?? '',
   path,
 }))
 
