@@ -111,13 +111,32 @@ uex's profile) in `tools/.env`.
 uv run python -m gmzz.traintrade
 ```
 
-Writes `traintrade/{goods,goods_types,prices,contracts,quests,constants}.json`
-and `locales/zh-CN/traintrade.json` into `GMZZ_DATA_OUT`, then re-stamps
+Writes `traintrade/{goods,goods_types,prices,contracts,quests,constants,
+difficulties,map_generation,station_types,strategy_cards,upgrades}.json` and
+`locales/zh-CN/traintrade.json` into `GMZZ_DATA_OUT`, then re-stamps
 `version.json`. Field names are the client's own — the pipeline resolves text
 and orders rows, but renames nothing, because a wiki guessing at
 `LeftOverSellPrice` is better off guessing from the real name than from one we
 invented. It fails loudly on any unresolved text id rather than shipping blank
 labels.
+
+**The mode's tables use two prefixes, and only the economy half is named after
+the mode.** `TrainTrade*` carries the goods and their prices; `Train*` carries
+the structure of a run — `TrainDifficultyData` (the five routes, whose
+`AreaStationCounts` sum to 8/8/12/15/16 stations), `TrainMapGenerationData`
+(each route's exact station multiset, so the mix is determined rather than
+guessed), `TrainStationTypeData` (what each station buys and sells, per route
+tier), `TrainStrategyCardData` (107 cards with structured `Effects` and
+`TriggerConditions`) and `TrainUpgradeData` (the cargo cap ladder, 80→140).
+Matching on `TrainTrade` alone looks complete and silently drops every table
+that says how the mode is played — which is how the first pass here missed all
+six.
+
+Two `Train*` tables are deliberately **not** emitted. `TrainDummyMedicineData`
+belongs to the *training dummy*, not the railway. `TrainStrategyCardPoolData`
+ships as six bare ids with no membership, so emitting it would promise a
+card-to-pool mapping the export does not contain — the same reason the Utopian
+Theater dataset drops its `pool` field.
 
 ## Goods icons
 
