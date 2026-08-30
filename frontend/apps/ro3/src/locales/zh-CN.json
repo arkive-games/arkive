@@ -6,6 +6,7 @@
   "pageTitle": "仙境传说 3",
   "navigationLabel": "仙境传说 3 导航",
   "navigation": [
+    { "key": "overview", "label": "攻略" },
     { "key": "wiki", "label": "百科" }
   ],
   "language": "简体中文",

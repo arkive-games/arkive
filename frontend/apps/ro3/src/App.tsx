@@ -147,9 +147,13 @@ interface SelectedSkill {
   skill?: SkillIndexEntry
 }
 
+// Bare `/` opens the encyclopedias rather than the guide hub: the hub has no
+// guides yet, so it would land every visitor on an empty state while the
+// content that does exist sits one click away. The hub still needs a URL of
+// its own, or reload and deep links would silently bounce back to the wiki.
 function getInitialPage(): Page {
   if (window.location.pathname.replace(/\/$/, '').endsWith('/changelog')) return 'changelog'
-  return 'wiki'
+  return new URLSearchParams(window.location.search).get('view') === 'overview' ? 'overview' : 'wiki'
 }
 
 function getInitialWikiView(): WikiView {
@@ -249,6 +253,9 @@ function App() {
     if (nextPage === 'wiki') {
       url.searchParams.set('view', 'wiki')
       url.searchParams.set('wiki', nextWikiView)
+    } else if (nextPage === 'overview') {
+      url.searchParams.set('view', 'overview')
+      url.searchParams.delete('wiki')
     } else {
       url.searchParams.delete('view')
       url.searchParams.delete('wiki')
