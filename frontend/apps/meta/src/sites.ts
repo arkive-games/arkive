@@ -3,6 +3,7 @@ import type { CreatePostBody } from '@gamemap/api-core'
 import aion2Bg from './assets/aion2-bg.jpg'
 import palworldBg from './assets/palworld-bg.webp'
 import gmzzBg from './assets/gmzz-bg.webp'
+import ro3Bg from './assets/ro3-bg.webp'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
 const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1604030/library_600x900_2x.jpg'
@@ -119,6 +120,18 @@ export const SITES: SiteCard[] = [
     nameKey: 'site.sts2.name',
     descKey: 'site.sts2.desc',
     featureKey: 'site.sts2.feature',
+  },
+  // Announced rather than linked: the app is built and deployed, but
+  // ro3.tc-imba.com has no CNAME yet and its data host does not resolve, so a
+  // href here would send visitors to the wildcard A record. Swap `comingSoon`
+  // for a `url` once both are live.
+  {
+    id: 'ro3',
+    comingSoon: true,
+    bg: ro3Bg,
+    nameKey: 'site.ro3.name',
+    descKey: 'site.ro3.desc',
+    featureKey: 'site.ro3.feature',
   },
 ]
 
