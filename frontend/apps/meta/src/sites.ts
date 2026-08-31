@@ -125,13 +125,13 @@ export const SITES: SiteCard[] = [
     descKey: 'site.sts2.desc',
     featureKey: 'site.sts2.feature',
   },
-  // Announced rather than linked: the app is built and deployed, but
-  // ro3.tc-imba.com has no CNAME yet and its data host does not resolve, so a
-  // href here would send visitors to the wildcard A record. Swap `comingSoon`
-  // for a `url` once both are live.
   {
     id: 'ro3',
-    comingSoon: true,
+    url: resolveSiteUrl(
+      import.meta.env.VITE_RO3_URL,
+      'http://localhost:15178',
+      'https://ro3.tc-imba.com',
+    ),
     bg: ro3Bg,
     nameKey: 'site.ro3.name',
     descKey: 'site.ro3.desc',
