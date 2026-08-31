@@ -29,8 +29,10 @@ dist-toy
 # Test & tooling artifacts
 # `edgeone makers deploy` drops {Name, ProjectId} here to remember which project a
 # directory was last pushed to. Local state, and per-machine: the deploy workflow
-# passes -n explicitly rather than relying on it.
+# passes -n explicitly rather than relying on it. `.tef_dist/` is the same CLI's
+# build output; both come from the stanza it appends to this file unprompted.
 .edgeone/
+.tef_dist/
 .playwright-mcp/
 /.playwright-cli/
 /output/
