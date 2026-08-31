@@ -108,7 +108,7 @@ requests a deep link precisely to catch this.
   deliberately excludes it from as host config rather than content.
 
 ## Production deploys (EdgeOne, built here)
-`.github/workflows/deploy.yml` builds `meta`, `aion2`, `palworld` and `vrising` on a push
+`.github/workflows/deploy.yml` builds `meta`, `aion2`, `palworld`, `vrising` and `ro3` on a push
 touching `frontend/**`, then uploads each `dist/` with `edgeone makers deploy -n <project>`.
 EdgeOne itself runs **no build** for this repo — that is the point: its free tier caps builds at
 500/month, while this repo is public so standard-runner Actions minutes are unmetered. The

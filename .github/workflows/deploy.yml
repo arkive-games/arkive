@@ -37,7 +37,7 @@ jobs:
       # independent fates: one app's broken build must not hold back the others.
       fail-fast: false
       matrix:
-        app: [meta, aion2, palworld, vrising]
+        app: [meta, aion2, palworld, vrising, ro3]
         include:
           # `project` is the EdgeOne project name. It is spelled out here rather
           # than derived from `app` because `deploy -n` CREATES a project when the
@@ -72,6 +72,17 @@ jobs:
             smoke_path: /changelog
             data_base_url: https://data-vrising.tc-imba.com
             resource_base_url: https://resource-vrising.tc-imba.com
+          # `domain` is deliberately absent: ro3.tc-imba.com is not cut over yet,
+          # so the post-deploy check would verify the wildcard `*.tc-imba.com` A
+          # record instead of this project. Fill it in once the CNAME is live.
+          #
+          # /changelog is the app's only non-root route, which makes it the only
+          # path that can prove edgeone.json travelled with the upload.
+          - app: ro3
+            project: arkive-ro3
+            smoke_path: /changelog
+            data_base_url: https://data-ro3.tc-imba.com
+            resource_base_url: https://resource-ro3.tc-imba.com
 
     # Two pushes in quick succession must not race the same project. Queue rather
     # than cancel: an interrupted upload is a half-published site.

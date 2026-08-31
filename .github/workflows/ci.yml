@@ -140,7 +140,7 @@ jobs:
         # `check` later would otherwise duplicate what the build step already does.
         run: pnpm --filter "./packages/*" check
 
-      # Every app, not only the four that deploy: sts2 and lostark are built and
+      # Every app, not only the ones that deploy: sts2 and lostark are built and
       # linted here because they exist in the workspace, and a break in a shared
       # package shows up in whichever app imports it first.
       - name: Lint every app
@@ -150,7 +150,7 @@ jobs:
         run: |
           set -euo pipefail
           failed=""
-          for app in meta aion2 palworld sts2 vrising lostark; do
+          for app in meta aion2 palworld sts2 vrising lostark ro3; do
             echo "--- lint $app"
             pnpm "lint:$app" || failed="$failed $app"
           done
@@ -169,7 +169,7 @@ jobs:
         working-directory: frontend
         run: |
           set -euo pipefail
-          for app in meta aion2 palworld sts2 vrising lostark; do
+          for app in meta aion2 palworld sts2 vrising lostark ro3; do
             echo "--- build $app"
             pnpm "build:$app"
           done
