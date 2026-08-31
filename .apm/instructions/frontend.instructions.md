@@ -26,8 +26,11 @@ The workspace-wide conventions apply here too.
   a notice pointing back at Vite 8. Don't reintroduce the alias.
 
 ## Dev servers
-- **Dev server ports (fixed per app):** aion2 → `http://localhost:15173`, palworld →
-  `http://localhost:15174`, sts2 → `http://localhost:15175`, vrising → `http://localhost:15176`.
+- **Dev server ports (fixed per app):** meta → `http://localhost:15172`, aion2 →
+  `http://localhost:15173`, palworld → `http://localhost:15174`, sts2 →
+  `http://localhost:15175`, vrising → `http://localhost:15176`, lostark →
+  `http://localhost:15177`, ro3 → `http://localhost:15178`, gmzz →
+  `http://localhost:15179`.
   A dev server is often already running; before asking the user to
   start one, probe the app's port first
   (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:15174`). Only ask the user to

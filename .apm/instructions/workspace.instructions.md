@@ -52,8 +52,8 @@ their per-game variants) remain **separate**, pulled over HTTP.
 - `docs/`, `.apm/`, `apm.yml`, `.claude/`, `BOOTSTRAP.md` — workspace meta (also here).
 
 Separate artifact repos (NOT in this monorepo; served over HTTP):
-- `resource/` (+`resource-gmzz/`, `resource-palworld/`, `resource-sts2/`, `resource-vrising/`) — derived WebP image set under a `UI/` root.
-- `data/` (+`data-gmzz/`, `data-palworld/`, `data-sts2/`, `data-vrising/`, `data-lostark/`) — derived parsed dataset (markers, regions, tables, locales).
+- `resource/` (+`resource-gmzz/`, `resource-palworld/`, `resource-ro3/`, `resource-sts2/`, `resource-vrising/`) — derived WebP image set under a `UI/` root.
+- `data/` (+`data-gmzz/`, `data-lostark/`, `data-palworld/`, `data-ro3/`, `data-sts2/`, `data-vrising/`) — derived parsed dataset (markers, regions, tables, locales).
 
 ## Data-flow contract
 Raw game export (`E:\Exports\AION2\Content\`, Perforce later)

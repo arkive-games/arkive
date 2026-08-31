@@ -1,4 +1,4 @@
-# Builds the four EdgeOne-hosted apps here and uploads each dist with the EdgeOne
+# Builds the EdgeOne-hosted apps here and uploads each dist with the EdgeOne
 # CLI, replacing the platform's own Git-triggered build.
 #
 # Why not let EdgeOne build: its build settings live in a console nobody reviews,
@@ -18,7 +18,7 @@ on:
   push:
     branches: [master]
     # Nothing outside the frontend can change what gets uploaded, so a tools/ or
-    # docs/ commit must not redeploy four production sites.
+    # docs/ commit must not redeploy every production site.
     paths:
       - "frontend/**"
       - ".github/workflows/deploy.yml"
@@ -33,8 +33,8 @@ jobs:
   build-deploy:
     runs-on: ubuntu-latest
     strategy:
-      # Four independent sites on four independent domains deserve four
-      # independent fates: one app's broken build must not hold back the others.
+      # Separate sites on separate domains deserve separate fates: one app's
+      # broken build must not hold back the others.
       fail-fast: false
       matrix:
         app: [meta, aion2, palworld, vrising, ro3]
@@ -173,7 +173,7 @@ jobs:
           # The only secret this workflow needs.
           EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
         # Pinned: an unpinned `npx edgeone` is a floating dependency sitting in the
-        # deploy path of four production sites.
+        # deploy path of every production site.
         run: >
           npx --yes edgeone@1.6.21 makers deploy apps/${{ matrix.app }}/dist
           -n ${{ matrix.project }}
