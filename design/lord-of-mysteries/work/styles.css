@@ -127,6 +127,63 @@ button { cursor: pointer; }
   .current-picker select { flex: 1 1 8rem; width: auto; }
 }
 
+/* Flow cards keep the strategy, station, and trade steps dense. */
+.flow-card { margin-top: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: .3rem; background: var(--surface); }
+.flow-card-heading { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; padding-bottom: .55rem; border-bottom: 1px solid var(--border); }
+.flow-card-heading strong { font-size: .95rem; }
+.flow-card-heading span { color: var(--muted); font-size: .7rem; }
+.flow-copy { margin: .65rem 0; color: var(--muted); font-size: .75rem; line-height: 1.45; }
+.strategy-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.strategy-card { min-width: 0; min-height: 6rem; padding: .7rem; border: 1px solid var(--border); border-radius: .25rem; color: var(--text); background: var(--surface-soft); text-align: left; }
+.strategy-card:hover { border-color: var(--blue); background: var(--selected); }
+.strategy-card.is-selected { border-color: var(--blue); background: var(--selected); box-shadow: inset 0 -2px 0 var(--blue); }
+.strategy-card strong { display: block; font-size: .78rem; }
+.strategy-card p { display: block; margin: .4rem 0 0; color: var(--muted); font-size: .68rem; line-height: 1.4; }
+.strategy-card { position: relative; min-height: 7.5rem; }
+.strategy-card small { display: block; margin-top: .55rem; color: var(--blue); font-size: .65rem; font-weight: 700; }
+.strategy-card.is-recommended { border-width: .15rem; }
+.strategy-badge { position: absolute; top: .45rem; right: .45rem; display: inline-block; padding: .15rem .35rem; border-radius: .2rem; color: #fff; background: var(--blue); font-size: .58rem; font-weight: 700; }
+.strategy-picker-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin: .7rem 0; }
+.strategy-picker { min-height: 5.25rem; display: grid; place-items: center; gap: .25rem; padding: .6rem; border: 1px dashed var(--border); border-radius: .25rem; color: var(--muted); background: var(--surface-soft); text-align: center; }
+.strategy-picker:hover, .strategy-picker:focus-visible { border-color: var(--blue); color: var(--blue); background: var(--selected); outline: 0; }
+.strategy-picker strong { color: var(--text); font-size: .75rem; }
+.strategy-picker small { color: var(--muted); font-size: .62rem; line-height: 1.35; }
+.strategy-picker-item { min-height: 4.5rem; display: grid; gap: .25rem; padding: .6rem; border: 1px solid var(--border); border-radius: .25rem; color: var(--text); background: var(--surface-soft); text-align: left; }
+.strategy-picker-item:hover:not(:disabled), .strategy-picker-item:focus-visible { border-color: var(--blue); background: var(--selected); outline: 0; }
+.strategy-picker-item strong { font-size: .75rem; }
+.strategy-picker-item span { color: var(--muted); font-size: .65rem; line-height: 1.35; }
+.strategy-picker-item:disabled { cursor: not-allowed; opacity: .45; }
+.strategy-level-1 { --strategy-level-color: #3b82f6; }
+.strategy-level-2 { --strategy-level-color: #8b5cf6; }
+.strategy-level-3 { --strategy-level-color: #d29a1e; }
+.strategy-card.strategy-level-1, .strategy-card.strategy-level-2, .strategy-card.strategy-level-3,
+.strategy-picker.strategy-level-1, .strategy-picker.strategy-level-2, .strategy-picker.strategy-level-3,
+.strategy-picker-item.strategy-level-1, .strategy-picker-item.strategy-level-2, .strategy-picker-item.strategy-level-3 { border-color: var(--strategy-level-color); }
+.strategy-card.strategy-level-1 strong, .strategy-card.strategy-level-2 strong, .strategy-card.strategy-level-3 strong,
+.strategy-picker.strategy-level-1 strong, .strategy-picker.strategy-level-2 strong, .strategy-picker.strategy-level-3 strong,
+.strategy-picker-item.strategy-level-1 strong, .strategy-picker-item.strategy-level-2 strong, .strategy-picker-item.strategy-level-3 strong { color: var(--strategy-level-color); }
+.strategy-search { position: relative; display: block; margin: .75rem 0; color: var(--muted); font-size: .7rem; }
+.strategy-search input { min-height: 2.25rem; width: 100%; border: 1px solid var(--border); border-radius: .25rem; padding: .35rem 2.4rem .35rem .55rem; color: var(--text); background: var(--surface-soft); font: inherit; outline-color: var(--blue); }
+.strategy-search-icon { position: absolute; top: 50%; right: .65rem; width: 1rem; height: 1rem; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; pointer-events: none; }
+.strategy-filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .7rem 0 .2rem; color: var(--muted); font-size: .7rem; }
+.strategy-filter-options { display: flex; flex-wrap: wrap; gap: .35rem; }
+.strategy-filter { min-height: 2rem; padding: .25rem .55rem; border: 1px solid var(--border); border-radius: .25rem; color: var(--muted); background: var(--surface); font-size: .7rem; font-weight: 700; }
+.strategy-filter:hover, .strategy-filter.is-active { border-color: var(--blue); color: var(--blue); background: var(--selected); }
+.strategy-search-empty { grid-column: 1 / -1; margin: 0; padding: 1rem; color: var(--muted); background: var(--surface-soft); font-size: .75rem; text-align: center; }
+.forecast-input { padding-bottom: .7rem; }
+.forecast-input .hint-picker { max-width: 18rem; margin-top: .65rem; }
+.station-input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: .7rem; }
+.station-input-grid > div > label { display: block; color: var(--muted); font-size: .7rem; }
+.station-input-grid .current-picker { width: 100%; margin-top: .35rem; }
+.station-input-grid .hint-picker { margin-top: .35rem; }
+.station-input-grid .hint-select { width: 100%; min-height: 2.25rem; border: 1px solid var(--border); border-radius: .2rem; padding: .3rem .45rem; color: var(--text); background: var(--surface-soft); font-size: .75rem; }
+.station-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem; margin-top: .75rem; }
+.station-actions .secondary-button { margin-top: 0; }
+.current-picker.is-locked { border-color: var(--warning-border); background: var(--warning-surface); color: var(--amber); }
+.current-picker.is-locked strong { font-size: .85rem; }
+.current-picker.is-locked small { color: var(--amber); font-size: .68rem; font-weight: 700; }
+@media (max-width: 600px) { .strategy-grid, .station-input-grid, .strategy-picker-row { grid-template-columns: 1fr; }.station-actions { grid-template-columns: 1fr; } }
+
 /* Forum-style shell: centered columns with a deliberate gutter between rails. */
 .topbar { padding-inline: max(1rem, calc((100% - 90rem) / 2)); }
 .topbar-nav { align-self: stretch; display: flex; align-items: stretch; margin-left: 1.5rem; }
@@ -408,10 +465,12 @@ body, .forecast-panel, .history-column { background: var(--bg); }
 .history-entry-meta span { color: var(--text); }
 .history-entry.latest .history-marker { color: var(--amber); background: var(--warning-surface); }
 
-.station-cell { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; align-content: center; justify-items: start; min-height: 3rem; padding: .35rem .55rem; text-align: left; }
-.station-cell small { grid-column: 1; grid-row: 1; color: var(--muted); font-size: .62rem; }
-.station-cell strong { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--text); font-size: .78rem; }
-.station-cell span { grid-column: 1; grid-row: 2; margin-top: .15rem; color: var(--muted); font-size: .6rem; }
+.station-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; min-width: 0; min-height: 3rem; padding: .35rem .2rem; text-align: center; white-space: nowrap; }
+.station-cell small, .station-cell strong, .station-cell span { display: block; grid-column: auto; grid-row: auto; max-width: 100%; margin: 0; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+.station-cell small { color: var(--muted); font-size: .62rem; }
+.station-cell strong { color: var(--text); font-size: .78rem; }
+.station-cell span { color: var(--muted); font-size: .6rem; }
+.station-cell span:empty { display: none; }
 .station-cell.is-confirmed strong { color: var(--blue); }
 .station-cell.is-current strong, .station-cell.is-current span { color: var(--amber); }
 .forecast-panel > .progress-section .station-strip { min-height: 4.7rem; }
@@ -458,6 +517,9 @@ body, .forecast-panel, .history-column { background: var(--bg); }
 /* Final visual alignment for the reference-sized planner layout. */
 .route-panel { margin-top: 0; padding-top: 1.0625rem; padding-bottom: .5rem; border-bottom: 0; }
 .route-panel .panel-heading { margin-bottom: .75rem; }
+.route-panel .panel-heading { align-items: center; }
+.reset-button { min-height: 2rem; padding: .25rem .55rem; border: 1px solid var(--border); border-radius: .3rem; color: var(--muted); background: var(--surface); font-size: .68rem; font-weight: 700; }
+.reset-button:hover { border-color: var(--blue); color: var(--blue); background: var(--selected); }
 .route-select-wrap select { min-height: 2.75rem; }
 .station-summary-section { padding: 1.0625rem .25rem 1.25rem; }
 .station-summary-section .right-heading { height: 1.9375rem; min-height: 0; }
@@ -480,6 +542,7 @@ body, .forecast-panel, .history-column { background: var(--bg); }
 .station-navigation { height: 4.6875rem; grid-template-columns: 1.9375rem minmax(0, 1fr) 1.9375rem; gap: .5rem; }
 .station-nav { width: 1.9375rem; height: 1.9375rem; align-self: center; }
 .station-track { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .375rem; overflow: visible; }
+.station-track { grid-template-columns: repeat(var(--station-visible-count, 6), minmax(0, 1fr)); }
 .station-cell { min-width: 0; height: 3.8125rem; min-height: 0; padding: .5rem .625rem .4375rem; border: 0; border-bottom: .1875rem solid #dbe2e7; border-radius: 0; background: transparent; }
 .station-cell strong { font-size: .875rem; text-align: right; }
 .station-cell small { font-size: .625rem; }
@@ -573,22 +636,11 @@ body, .forecast-panel, .history-column { background: var(--bg); }
 .goods-picker-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-bottom: .7rem; border-bottom: 1px solid var(--border); }
 .goods-picker-header h2 { margin: 0; font-size: 1.05rem; }
 .goods-picker-header button { width: 2.25rem; height: 2.25rem; border: 1px solid var(--border); border-radius: .35rem; color: var(--muted); background: var(--surface-soft); font-size: 1.25rem; line-height: 1; }
-.goods-picker-note { margin: .65rem 0; color: var(--muted); font-size: .72rem; }
-.goods-picker-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; max-height: 31rem; overflow-y: auto; padding: .1rem; }
-.goods-picker-item { min-width: 0; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; gap: .15rem .45rem; padding: .45rem; border: 1px solid var(--border); border-radius: .3rem; color: var(--text); background: var(--surface-soft); text-align: left; }
+.goods-picker-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; max-height: 31rem; overflow-y: auto; padding: .65rem .1rem .1rem; }
+.goods-picker-item { min-width: 0; min-height: 3.5rem; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: center; gap: .45rem; padding: .45rem; border: 1px solid var(--border); border-radius: .3rem; color: var(--text); background: var(--surface-soft); text-align: left; }
 .goods-picker-item:hover, .goods-picker-item:focus-visible { border-color: var(--blue); background: var(--selected); outline: 0; }
-.goods-picker-item img { grid-row: 1 / span 2; width: 2.5rem; height: 2.5rem; object-fit: contain; }
-.goods-picker-item span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .68rem; font-weight: 700; }
-.goods-picker-item small { display: flex; gap: .45rem; color: var(--muted); font-size: .6rem; }
-.goods-picker-item small b { font-weight: 600; }
-.goods-picker-empty { grid-column: 1 / -1; margin: 1rem 0; color: var(--muted); font-size: .75rem; text-align: center; }
-.goods-picker-skeleton { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; gap: .35rem .45rem; min-height: 3.5rem; padding: .45rem; border: 1px solid var(--border); border-radius: .3rem; background: var(--surface-soft); }
-.goods-picker-skeleton i { grid-row: 1 / span 2; width: 2.5rem; height: 2.5rem; background: var(--border); }
-.goods-picker-skeleton b, .goods-picker-skeleton small { display: block; height: .55rem; background: var(--border); }
-.goods-picker-skeleton small { width: 62%; }
-.goods-picker-error { grid-column: 1 / -1; display: grid; justify-items: center; gap: .35rem; padding: 1.25rem; color: var(--muted); text-align: center; font-size: .72rem; }
-.goods-picker-error strong { color: var(--text); font-size: .8rem; }
-.goods-picker-error button { margin-top: .3rem; min-height: 2rem; padding: .35rem .75rem; border: 1px solid var(--blue); border-radius: .3rem; color: var(--blue); background: var(--selected); font-weight: 700; }
+.goods-picker-item img { width: 2.5rem; height: 2.5rem; object-fit: contain; }
+.goods-picker-item span { min-width: 0; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: .68rem; font-weight: 700; line-height: 1.35; }
 .rules-panel { margin-bottom: 1rem; }
 .rules-panel .utility-heading span { color: var(--muted); font-size: .62rem; }
 .rule-stats { display: grid; gap: .45rem; margin-top: .75rem; }
@@ -639,4 +691,783 @@ body, .forecast-panel, .history-column { background: var(--bg); }
   .utility-panel + .utility-panel { margin-top: 0; }
   .goods-picker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .supply-list { grid-template-columns: 1fr; }
+}
+
+/* Probability cards fill the reading column after the section heading was removed. */
+.resolved-window .probability-section { display: block; margin-top: .75rem; }
+.resolved-window .probability-grid { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Decision flow: compact three-column input row with one action rail below. */
+.decision-input-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin-top: .7rem; align-items: start; }
+.decision-field, .strategy-choice { min-width: 0; }
+.decision-field > label, .strategy-choice > label { display: block; color: var(--muted); font-size: .7rem; font-weight: 700; }
+.decision-field .current-picker, .decision-field .hint-picker { width: 100%; margin-top: .35rem; }
+.decision-field .current-picker { min-height: 2.5rem; }
+.decision-field .current-picker select, .decision-field .hint-select { width: 100%; min-height: 2.5rem; }
+.station-current-readout { display: flex; align-items: center; min-height: 2.5rem; margin-top: .35rem; padding: 0 .65rem; border: 1px solid var(--border); border-radius: .25rem; color: var(--text); background: var(--surface-soft); font-size: .75rem; font-weight: 700; }
+.strategy-choice > .strategy-picker-row { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: .35rem; margin: .35rem 0 0; width: 100%; }
+.strategy-picker { position: relative; min-width: 0; width: 100%; min-height: 2.5rem; display: flex; align-items: center; justify-content: center; }
+.strategy-picker strong { max-width: calc(100% - 2.5rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.strategy-picker.is-recommended { border-width: .2rem; box-shadow: inset 0 -.15rem 0 var(--blue); }
+.strategy-picker.is-recommended .strategy-badge { top: .3rem; right: .3rem; }
+.strategy-picker.is-recommended { border: 2px solid var(--blue); border-style: solid; background: var(--selected); box-shadow: inset 0 -.15rem 0 var(--blue); }
+.strategy-picker.is-recommended .strategy-badge { padding: .1rem .3rem; border-radius: .15rem; color: var(--inverse); background: var(--blue); font-size: .6rem; line-height: 1.2; }
+.strategy-slot { position: relative; min-width: 0; }
+.strategy-slot .strategy-picker { padding-right: 2.4rem; }
+.strategy-picker.is-selected { border-color: var(--amber); background: var(--warning-surface); box-shadow: inset 0 -.15rem 0 var(--amber); }
+.strategy-picker.is-selected.is-recommended { border-color: var(--blue); background: var(--selected); box-shadow: inset 0 -.15rem 0 var(--blue); }
+.strategy-picker .strategy-badge { right: 2rem; }
+.strategy-edit-button { position: absolute; top: .2rem; right: .2rem; display: grid; place-items: center; width: 1.45rem; height: 1.45rem; padding: 0; border: 1px solid var(--border); border-radius: .2rem; color: var(--muted); background: var(--surface); font-size: .8rem; line-height: 1; }
+.strategy-edit-button:hover, .strategy-edit-button:focus-visible { border-color: var(--blue); color: var(--blue); background: var(--selected); outline: 0; }
+.decision-toolbar { display: block; margin-top: 1rem; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.bottom-actions { display: grid; grid-template-columns: auto auto minmax(12rem, 1fr); gap: .5rem; align-items: stretch; width: 100%; margin-top: 0; padding: .55rem; border: 1px solid var(--border); border-radius: .35rem; background: var(--surface-soft); }
+.bottom-actions.is-setup { grid-template-columns: 1fr; }
+.action-button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-width: 0; min-height: 2.65rem; padding: .4rem .7rem; border: 1px solid var(--border); border-radius: .25rem; color: var(--muted); background: var(--surface); font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.action-button:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); background: var(--selected); }
+.action-button:disabled { cursor: not-allowed; color: var(--disabled-text); background: var(--disabled-surface); }
+.action-icon { color: currentColor; font-size: 1rem; line-height: 1; }
+.action-primary { border-color: var(--blue); color: var(--inverse); background: var(--blue); box-shadow: inset 0 -.15rem 0 #07528f; }
+.action-primary:hover:not(:disabled) { border-color: #075fae; color: var(--inverse); background: #075fae; }
+.action-primary:disabled { color: var(--disabled-text); border-color: var(--disabled-border); background: var(--disabled-surface); box-shadow: none; }
+.setup-empty { display: grid; justify-items: center; gap: .35rem; min-height: 18rem; padding: 2rem; text-align: center; }
+.setup-empty strong { color: var(--text); font-size: 1rem; }
+.setup-empty span { color: var(--muted); font-size: .75rem; }
+.setup-start-button { width: min(16rem, 100%); margin-top: .75rem !important; }
+@media (max-width: 700px) {
+  .decision-input-grid { grid-template-columns: 1fr; }
+  .bottom-actions { grid-template-columns: 1fr; }
+}
+
+/* Dense desktop pass: one compact scale for the complete working loop. */
+@media (min-width: 701px) {
+  .forecast-panel { padding: .75rem 1rem 1rem; }
+  .progress-section > .station-strip {
+    min-height: 3.75rem;
+    padding: .4rem .65rem;
+  }
+  .station-navigation { height: 3.75rem; }
+  .station-cell {
+    height: 3rem;
+    min-height: 3rem;
+    padding: .3rem .45rem;
+  }
+
+  .flow-card {
+    margin-top: .65rem;
+    padding: .75rem;
+  }
+  .flow-card-heading {
+    min-height: 1.8rem;
+    padding-bottom: .45rem;
+  }
+  .flow-card-heading strong { font-size: .95rem; }
+  .flow-card-heading span { font-size: .7rem; }
+  .decision-input-grid {
+    gap: .55rem;
+    margin-top: .55rem;
+  }
+  .decision-field,
+  .strategy-choice {
+    min-height: 0;
+    padding: .55rem;
+  }
+  .decision-field > label,
+  .strategy-choice > label {
+    min-height: 1rem;
+    font-size: .75rem;
+    line-height: 1.25;
+  }
+  .station-option-grid,
+  .hint-option-grid,
+  .strategy-choice > .strategy-picker-row {
+    gap: .3rem;
+    margin-top: .35rem;
+  }
+  .station-option,
+  .hint-option,
+  .strategy-choice .strategy-picker,
+  .strategy-edit-button {
+    height: 2.25rem;
+    min-height: 2.25rem;
+  }
+  .station-option,
+  .hint-option { font-size: .78rem; }
+  .strategy-picker-main strong { font-size: .8rem; }
+  .strategy-recommendation {
+    top: 50%;
+    right: .45rem;
+    transform: translateY(-50%);
+    font-size: .62rem;
+  }
+
+  .forecast-content .resolved-window {
+    margin-top: .65rem;
+    padding: .75rem;
+  }
+  .resolved-window .window-meta {
+    height: 1.65rem;
+    min-height: 1.65rem;
+  }
+  .resolved-window .window-title { font-size: .9rem; }
+  .resolved-window .probability-section { margin-top: .45rem; }
+  .station-probability-row { min-height: 2.75rem; }
+  .station-probability-row { grid-template-columns: 5.5rem minmax(0, 1fr); }
+  .station-probability-station { padding: .4rem .65rem; }
+  .station-probability-station strong { font-size: .85rem; }
+  .station-probability-value { padding: .4rem .7rem; }
+  .station-probability-value b,
+  .station-probability-value.is-leading b { font-size: .75rem; }
+  .station-probability-value strong { font-size: 1rem; }
+  .station-probability-value.is-leading strong { font-size: 1.1rem; }
+
+  .decision-toolbar { margin-top: .65rem; }
+  .bottom-actions {
+    margin-top: 0;
+    padding: .35rem;
+  }
+  .action-button { min-height: 2.25rem; }
+}
+
+/* The optional utility rail is intentionally removed from the planner view. */
+@media (min-width: 801px) {
+  .workspace-grid { grid-template-columns: 17rem minmax(0, 1fr); }
+}
+
+/* Station decisions use compact choice tiles so every valid state stays visible. */
+.station-option-grid, .hint-option-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; margin-top: .35rem; }
+.station-option, .hint-option { min-width: 0; min-height: 2.55rem; padding: .35rem .3rem; overflow: hidden; border: 1px solid var(--border); border-radius: .25rem; color: var(--text); background: var(--surface-soft); font-size: .72rem; font-weight: 700; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.station-option:hover:not(:disabled), .hint-option:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); background: var(--selected); }
+.station-option.is-selected, .hint-option.is-selected { border-color: var(--blue); color: var(--blue); background: var(--selected); box-shadow: inset 0 -.15rem 0 var(--blue); }
+.station-option-origin { color: var(--amber); background: var(--warning-surface); }
+.station-option-origin.is-selected { border-color: var(--amber); color: var(--amber); background: var(--warning-surface); box-shadow: inset 0 -.15rem 0 var(--amber); }
+.station-option:disabled, .hint-option:disabled { cursor: not-allowed; color: var(--disabled-text); border-color: var(--disabled-border); background: var(--disabled-surface); box-shadow: none; }
+.station-option-origin.is-origin-disabled { color: var(--disabled-text); border-color: var(--disabled-border); background: var(--disabled-surface); }
+.station-option-origin.is-origin-disabled.is-selected { color: var(--amber); border-color: var(--amber); background: var(--warning-surface); box-shadow: inset 0 -.15rem 0 var(--amber); }
+.station-option.is-selected:disabled:not(.station-option-origin) { color: var(--blue); border-color: var(--blue); background: var(--selected); box-shadow: inset 0 -.15rem 0 var(--blue); }
+.station-option-grid.is-locked .station-option:not(.is-selected) { color: var(--disabled-text); border-color: var(--disabled-border); background: var(--disabled-surface); }
+.hint-option-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Keep the three decision fields on one shared geometry. */
+.decision-input-grid { align-items: stretch; }
+.decision-field, .strategy-choice { display: flex; flex-direction: column; min-width: 0; min-height: 8.7rem; padding: .65rem; border: 1px solid var(--border); border-radius: .3rem; background: var(--surface-soft); }
+.decision-field > label, .strategy-choice > label { min-height: 1.05rem; }
+.station-option-grid { grid-template-columns: 1fr; }
+.hint-option-grid { grid-template-columns: 1fr; }
+.strategy-choice > .strategy-picker-row { grid-template-columns: 1fr !important; gap: .35rem; flex: 1; align-content: start; margin-top: .45rem; margin-bottom: 0; width: 100%; }
+.station-option, .hint-option, .strategy-choice .strategy-picker { height: 2.55rem; min-height: 2.55rem; }
+.strategy-choice > .strategy-picker-row { margin-bottom: 0; width: 100%; }
+.hint-option { padding-inline: .15rem; font-size: .58rem; white-space: nowrap; }
+.strategy-picker { white-space: nowrap; }
+.strategy-picker > span:last-child { display: block; max-width: calc(100% - 1.2rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .62rem; }
+
+@media (max-width: 700px) {
+  .station-option-grid, .hint-option-grid { grid-template-columns: 1fr; }
+  .decision-field, .strategy-choice { min-height: 0; }
+}
+
+/* Keep the desktop controls usable while the forecast column continues to scroll. */
+@media (min-width: 701px) {
+  .control-column {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
+
+/* Refine the choice hierarchy: station decisions lead, recommendations support. */
+.decision-field > label,
+.strategy-choice > label {
+  font-size: .8rem;
+  font-weight: 800;
+}
+.station-option,
+.hint-option,
+.strategy-choice .strategy-picker {
+  min-height: 2.75rem;
+  height: 2.75rem;
+  font-size: .88rem;
+  font-weight: 800;
+}
+.hint-option { font-size: .86rem; }
+.strategy-picker-main strong {
+  font-size: .9rem;
+  font-weight: 850;
+}
+.strategy-recommendation {
+  position: absolute;
+  top: .25rem;
+  right: .4rem;
+  display: block;
+  padding: 0;
+  color: var(--blue);
+  font-size: .65rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.strategy-picker.is-recommended {
+  border-width: 2px;
+  background: #f0f7fd;
+}
+
+/* Probability rows read as a compact ranked table with a clear station anchor. */
+.station-probability-station {
+  align-items: flex-start;
+  justify-content: center;
+  padding: .65rem .9rem;
+}
+.station-probability-station span { display: none; }
+.station-probability-station strong {
+  font-size: 1rem;
+  font-weight: 850;
+}
+.station-probability-value { padding: .65rem .9rem; }
+.station-probability-value b {
+  color: var(--text);
+  font-size: .8rem;
+  font-weight: 800;
+}
+.station-probability-value strong {
+  font-size: 1.1rem;
+  font-weight: 750;
+}
+.station-probability-value.is-leading b {
+  font-size: .85rem;
+  font-weight: 900;
+}
+.station-probability-value.is-leading strong {
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+@media (max-width: 600px) {
+  .station-probability-station { padding-inline: .55rem; }
+  .station-probability-station strong { font-size: .9rem; }
+  .station-probability-value { padding-inline: .5rem; }
+  .station-probability-value b { font-size: .72rem; }
+  .station-probability-value strong { font-size: 1rem; }
+}
+
+/* Station and hint choices share the standard selected treatment. */
+.station-option.is-selected,
+.hint-option.is-selected {
+  border: 1px solid var(--blue);
+  border-style: solid;
+  color: var(--blue);
+  background: var(--selected);
+  box-shadow: inset 0 -.15rem 0 var(--blue);
+}
+
+/* Strategy recommendation is text-only; selection is carried by the frame. */
+.strategy-picker:not(.is-selected) {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface-soft);
+  box-shadow: none;
+}
+.strategy-picker.is-selected {
+  border: 1px solid var(--blue);
+  color: var(--blue);
+  background: var(--selected);
+  box-shadow: inset 0 -.15rem 0 var(--blue);
+}
+.strategy-picker-main { display: flex; align-items: center; justify-content: space-between; gap: .4rem; min-width: 0; width: 100%; }
+.strategy-picker-main strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.strategy-recommendation { flex: 0 0 auto; color: var(--blue); font-size: .6rem; font-weight: 700; }
+
+/* The replacement action sits beside the card, so it cannot cover the title. */
+.strategy-slot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .3rem;
+  align-items: stretch;
+}
+.strategy-slot .strategy-picker {
+  padding-right: .6rem;
+}
+.strategy-picker strong {
+  max-width: 100%;
+}
+.strategy-picker .strategy-badge {
+  right: .35rem;
+}
+.strategy-edit-button {
+  position: static;
+  width: 2rem;
+  height: 100%;
+  min-height: 2.55rem;
+  border-color: var(--border);
+  color: var(--muted);
+  background: var(--surface);
+}
+.strategy-edit-button:hover,
+.strategy-edit-button:focus-visible {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--selected);
+  outline: 0;
+}
+
+/* Three consecutive stations are scanned vertically as one probability table. */
+.station-probability-list { display: grid; border: 1px solid var(--border); border-radius: .3rem; overflow: hidden; background: var(--surface); }
+.station-probability-row { display: grid; grid-template-columns: 6rem minmax(0, 1fr); align-items: stretch; min-height: 3.4rem; }
+.station-probability-row + .station-probability-row { border-top: 1px solid var(--border); }
+.station-probability-station { display: flex; flex-direction: column; justify-content: center; gap: .15rem; padding: .55rem .7rem; border-right: 1px solid var(--border); background: var(--surface-soft); }
+.station-probability-station span { color: var(--muted); font-size: .62rem; }
+.station-probability-station strong { color: var(--text); font-size: .78rem; }
+.station-probability-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.station-probability-value { display: flex; align-items: center; justify-content: space-between; gap: .35rem; min-width: 0; padding: .55rem .75rem; color: var(--muted); }
+.station-probability-value + .station-probability-value { border-left: 1px solid var(--border); }
+.station-probability-value b { overflow: hidden; color: var(--text); font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+.station-probability-value strong { color: var(--text); font-size: .95rem; }
+.station-probability-value.is-leading b, .station-probability-value.is-leading strong { color: var(--blue); }
+.station-probability-value.is-certain { background: var(--warning-surface); }
+.station-probability-value.is-certain b, .station-probability-value.is-certain strong { color: var(--amber); }
+
+/* The strip uses shape and color for state; redundant status captions are removed. */
+.station-cell { gap: .2rem; }
+.station-cell span { display: none; }
+
+@media (max-width: 600px) {
+  .station-probability-row { grid-template-columns: 4.75rem minmax(0, 1fr); }
+  .station-probability-value { flex-direction: column; align-items: flex-start; justify-content: center; padding-inline: .45rem; }
+}
+
+@media (max-width: 700px) {
+  .control-column {
+    position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* Visual system pass: quiet paper surfaces, one decisive blue, and restrained amber state. */
+:root {
+  --bg: #eef2f5;
+  --surface: #ffffff;
+  --surface-soft: #f5f8fa;
+  --text: #17232d;
+  --muted: #667583;
+  --border: #d5dfe7;
+  --hover: #edf5fb;
+  --selected: #e7f3fc;
+  --blue: #126db1;
+  --amber: #a7660d;
+  --disabled-text: #9aa7b2;
+  --disabled-border: #dce3e8;
+  --disabled-surface: #f1f4f6;
+  --warning-surface: #fff7e2;
+  --warning-border: #e4c16d;
+  --warning-soft: #f4e4b7;
+  --danger: #b42318;
+}
+
+html, body { line-height: 1.45; }
+body { color: var(--text); background: var(--bg); }
+.app-shell { background: var(--bg); }
+
+/* Left rail */
+.control-column {
+  padding: 1.25rem 1rem 2rem;
+  border-right-color: var(--border);
+  background: #f8fafc;
+}
+.sidebar-title { padding: .15rem .25rem 1.35rem .65rem; border-bottom-color: var(--border); border-left: .2rem solid var(--blue); }
+.sidebar-title span { color: var(--blue); font-size: .72rem; letter-spacing: .05em; }
+.sidebar-title h1 { margin-top: .3rem; color: var(--text); font-size: 1.3rem; letter-spacing: .01em; }
+.route-panel {
+  margin: 0;
+  padding: 1.15rem .25rem 1.25rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.panel-heading.compact { margin-bottom: .7rem; }
+.panel-heading.compact h3 { color: var(--text); font-size: .78rem; letter-spacing: .02em; }
+.route-select-wrap select {
+  min-height: 2.65rem;
+  border-color: var(--border);
+  border-radius: .35rem;
+  color: var(--text);
+  background: var(--surface-soft);
+  font-size: .8rem;
+}
+.route-select-wrap select:hover { border-color: #a9c9df; background: var(--hover); }
+.route-select-wrap select:focus-visible { border-color: var(--blue); outline: .15rem solid rgb(18 109 177 / .16); }
+.difficulty-description {
+  margin-top: .75rem;
+  padding: .65rem .7rem;
+  border-left: .2rem solid var(--blue);
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: .68rem;
+}
+.difficulty-description strong { color: var(--text); font-size: .78rem; }
+.station-summary-section { padding: 1.15rem .25rem 1.25rem; border-top: 0; border-bottom: 1px solid var(--border); }
+.station-summary-section .right-heading { height: auto; min-height: 2rem; }
+.station-summary-section .right-heading h2 { color: var(--text); font-size: .9rem; letter-spacing: .02em; }
+.station-table-header {
+  min-height: 2rem;
+  padding: .45rem .6rem;
+  border-radius: .3rem;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: .62rem;
+  font-weight: 700;
+}
+.station-summary-section .quota-field { min-height: 3.35rem; padding: .45rem .6rem; border-bottom-color: var(--border); }
+.station-summary-section .quota-field:last-child { border-bottom: 0; }
+.station-summary-section .quota-field > span { font-size: .75rem; }
+.station-summary-section .quota-field input {
+  min-height: 2.15rem;
+  border-bottom-color: #8bb9d8;
+  color: var(--text);
+  font-size: 1.15rem;
+}
+.station-summary-section .quota-field input:hover { border-bottom-color: var(--blue); }
+.station-summary-section .quota-field input:focus-visible { border-bottom-color: var(--blue); outline: 0; }
+.station-summary-section .station-remaining { color: var(--text); font-size: .9rem; }
+.station-summary-section .station-remaining small { color: var(--muted); font-size: .62rem; }
+.control-column > .history-panel { margin-top: 1.15rem; padding: 1.05rem .25rem 0; border-top-color: var(--border); }
+.control-column > .history-panel .history-heading { padding-bottom: .7rem; }
+.control-column > .history-panel .history-heading strong { color: var(--text); font-size: .9rem; }
+.control-column > .history-panel .history-heading span { color: var(--blue); font-size: .65rem; font-weight: 700; }
+.control-column > .history-panel .history-list { padding-top: .25rem; }
+.control-column > .history-panel .history-entry-body { padding: .7rem 0; border-bottom-color: var(--border); }
+.control-column > .history-panel .history-entry-meta { align-items: center; }
+.control-column > .history-panel .history-entry-meta strong { color: var(--text); font-size: .7rem; }
+.control-column > .history-panel .history-entry-meta span { color: var(--blue); font-size: .7rem; }
+.control-column > .history-panel .history-entry-body small { color: var(--muted); font-size: .65rem; line-height: 1.45; }
+.control-column > .history-panel .history-empty { padding: .7rem 0; color: var(--muted); background: transparent; font-size: .68rem; text-align: left; }
+
+/* Progress and decision surfaces */
+.forecast-panel { padding: 1.25rem 1.25rem 2.25rem; background: var(--bg); }
+.progress-section {
+  overflow: hidden;
+  border-color: var(--border);
+  border-top: .2rem solid var(--blue);
+  border-radius: .5rem;
+  background: var(--surface);
+  box-shadow: 0 .35rem 1rem rgb(28 52 70 / .06);
+}
+.progress-section > .station-strip { min-height: 4.5rem; margin: 0; padding: .65rem .8rem; }
+.station-nav {
+  border-color: var(--border);
+  border-radius: .35rem;
+  color: var(--blue);
+  background: var(--surface-soft);
+  transition: border-color .16s ease, background .16s ease, color .16s ease;
+}
+.station-nav:hover:not(:disabled), .station-nav:focus-visible { border-color: var(--blue); background: var(--hover); outline: 0; }
+.station-nav:disabled { color: var(--disabled-text); background: var(--disabled-surface); }
+.station-track { gap: .3rem; padding-bottom: .1rem; }
+.station-cell {
+  min-height: 3.35rem;
+  padding: .45rem .4rem;
+  border-color: transparent;
+  border-bottom: .18rem solid var(--border);
+  border-radius: .35rem .35rem 0 0;
+  background: var(--surface-soft);
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.station-cell small { color: var(--muted); font-size: .62rem; }
+.station-cell strong { color: var(--text); font-size: .78rem; }
+.station-cell.is-window { border-color: transparent; border-bottom-color: var(--border); background: #f7f9fb; }
+.station-cell.is-confirmed { border-color: transparent; border-bottom-color: #86b9d8; background: var(--selected); }
+.station-cell.is-confirmed strong { color: var(--blue); }
+.station-cell.station-origin { border-color: transparent; border-bottom-color: var(--warning-border); background: var(--warning-surface); }
+.station-cell.is-current { border-color: var(--amber); border-bottom-color: var(--amber); background: var(--warning-surface); box-shadow: none; }
+.station-cell.is-current strong { color: var(--amber); }
+.flow-card, .forecast-content .resolved-window {
+  border-color: var(--border);
+  border-radius: .5rem;
+  background: var(--surface);
+  box-shadow: 0 .35rem 1rem rgb(28 52 70 / .045);
+}
+.flow-card { margin-top: 1rem; padding: 1.05rem; }
+.flow-card-heading { padding-bottom: .7rem; border-bottom-color: var(--border); }
+.flow-card-heading strong { color: var(--text); font-size: .95rem; }
+.flow-card-heading span { color: var(--muted); font-size: .65rem; font-weight: 700; }
+.decision-field, .strategy-choice {
+  border-color: var(--border);
+  border-radius: .4rem;
+  background: var(--surface);
+}
+.decision-field > label, .strategy-choice > label { color: var(--muted); font-size: .68rem; letter-spacing: .02em; }
+.station-option, .hint-option, .strategy-picker {
+  border-color: var(--border);
+  border-radius: .3rem;
+  color: var(--text);
+  background: var(--surface-soft);
+  transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.station-option:hover:not(:disabled), .hint-option:hover:not(:disabled), .strategy-picker:hover:not(:disabled) { border-color: #8dbbda; background: var(--hover); }
+.station-option:focus-visible, .hint-option:focus-visible, .strategy-picker:focus-visible { outline: .15rem solid rgb(18 109 177 / .18); outline-offset: .08rem; }
+.station-option.is-selected, .hint-option.is-selected, .strategy-picker.is-selected { border-color: var(--blue); background: var(--selected); box-shadow: inset 0 -.2rem 0 var(--blue); }
+.station-option-origin.is-selected { border-color: var(--amber); background: var(--warning-surface); box-shadow: inset 0 -.2rem 0 var(--amber); }
+.station-option:disabled, .hint-option:disabled { color: var(--disabled-text); border-color: var(--disabled-border); background: var(--disabled-surface); }
+.strategy-picker:not(.is-selected) { border-color: var(--border); background: var(--surface-soft); }
+.strategy-picker-main { min-height: 1.35rem; }
+.strategy-recommendation { color: var(--blue); font-size: .62rem; letter-spacing: .02em; }
+.strategy-edit-button { border-color: var(--border); border-radius: .3rem; color: var(--muted); background: var(--surface-soft); transition: border-color .16s ease, color .16s ease, background .16s ease; }
+.strategy-edit-button:hover, .strategy-edit-button:focus-visible { border-color: var(--blue); color: var(--blue); background: var(--hover); outline: 0; }
+
+/* Probability table and actions */
+.forecast-content .resolved-window { margin-top: 1rem; padding: 1.05rem; border-top: .2rem solid var(--blue); }
+.resolved-window .window-meta { min-height: 2rem; }
+.resolved-window .window-title { color: var(--text); font-size: .95rem; letter-spacing: .02em; }
+.station-probability-list { border-color: var(--border); border-radius: .4rem; box-shadow: inset 0 1px 0 rgb(255 255 255 / .7); }
+.station-probability-row { min-height: 3.5rem; }
+.station-probability-row:nth-child(even) .station-probability-values { background: #fbfcfd; }
+.station-probability-station { padding: .55rem .75rem; border-right-color: var(--border); background: var(--surface-soft); }
+.station-probability-station span { color: var(--muted); font-size: .62rem; }
+.station-probability-station strong { color: var(--text); font-size: .78rem; }
+.station-probability-value { padding: .55rem .8rem; }
+.station-probability-value + .station-probability-value { border-left-color: var(--border); }
+.station-probability-value b { color: var(--muted); font-size: .66rem; }
+.station-probability-value strong { color: var(--text); font-size: 1rem; }
+.station-probability-value.is-leading b, .station-probability-value.is-leading strong { color: var(--blue); }
+.station-probability-value.is-certain { background: var(--warning-surface); }
+.station-probability-value.is-certain b, .station-probability-value.is-certain strong { color: var(--amber); }
+.bottom-actions {
+  margin-top: 1rem;
+  padding: .45rem;
+  border-color: var(--border);
+  border-radius: .45rem;
+  background: var(--surface);
+  box-shadow: 0 .35rem 1rem rgb(28 52 70 / .045);
+}
+.action-button { min-height: 2.6rem; border-color: var(--border); border-radius: .3rem; color: var(--muted); background: var(--surface-soft); transition: border-color .16s ease, background .16s ease, color .16s ease; }
+.action-button:hover:not(:disabled), .action-button:focus-visible { border-color: var(--blue); color: var(--blue); background: var(--hover); outline: 0; }
+.action-primary { border-color: var(--blue); color: var(--inverse); background: var(--blue); box-shadow: inset 0 -.18rem 0 #07548b; }
+.action-primary:hover:not(:disabled), .action-primary:focus-visible { border-color: #07548b; color: var(--inverse); background: #075f99; }
+.setup-empty { min-height: 18rem; color: var(--muted); }
+.setup-empty strong { color: var(--text); font-size: .95rem; }
+.setup-empty span { color: var(--muted); font-size: .7rem; }
+.setup-start-button { border-radius: .35rem; }
+
+/* Keep the visual system usable at narrow widths without changing the page flow. */
+@media (max-width: 700px) {
+  .control-column { padding: 1rem .8rem 1.5rem; }
+  .forecast-panel { padding: .8rem .75rem 1.5rem; }
+  .progress-section > .station-strip { min-height: 4.1rem; padding-inline: .55rem; }
+  .station-track { grid-template-columns: repeat(var(--station-visible-count, 6), minmax(4.2rem, 1fr)); overflow-x: auto; }
+  .station-cell { min-height: 3rem; }
+  .flow-card { padding: .8rem; }
+  .forecast-content .resolved-window { padding: .8rem; }
+}
+
+/* Empty state: keep the primary action compact instead of stretching the grid row. */
+.forecast-intro { min-height: 8rem; }
+.forecast-intro:has(.setup-empty--difficulty) { min-height: 6rem; }
+.forecast-intro:has(.setup-empty--data) { min-height: 6rem; }
+.setup-empty {
+  width: min(42rem, 100%);
+  min-height: 9rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  background: var(--surface);
+  box-shadow: 0 .35rem 1rem rgb(28 52 70 / .045);
+  align-content: center;
+}
+.setup-empty--difficulty { min-height: 5.5rem; }
+.setup-empty--difficulty strong { font-size: 1rem; }
+.setup-empty--difficulty span { font-size: .7rem; }
+.setup-empty--data { min-height: 9rem; }
+.setup-empty > * { align-self: center; }
+.setup-empty strong { line-height: 1.35; }
+.setup-start-button {
+  width: min(14rem, 100%);
+  min-height: 2.85rem;
+  margin-top: .45rem !important;
+  padding: .65rem 1rem;
+}
+.setup-empty--data {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 1.25rem;
+  min-height: 5.5rem;
+  padding: .85rem 1rem;
+  border-left: .2rem solid var(--blue);
+  text-align: left;
+}
+.setup-empty--data strong { grid-column: 1; grid-row: 1; }
+.setup-empty--data span { grid-column: 1; grid-row: 2; }
+.setup-empty--data .setup-start-button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 11rem;
+  min-height: 2.6rem;
+  margin-top: 0 !important;
+}
+.bottom-actions.is-setup {
+  display: flex;
+  width: min(42rem, 100%);
+  justify-content: flex-end;
+  margin-inline: auto;
+  padding: .3rem 0 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.bottom-actions.is-setup .action-button { width: auto; min-width: 8rem; }
+
+@media (max-width: 700px) {
+  .setup-empty--data {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    row-gap: .35rem;
+    min-height: 8rem;
+    text-align: center;
+  }
+  .setup-empty--data strong,
+  .setup-empty--data span,
+  .setup-empty--data .setup-start-button {
+    grid-column: 1;
+  }
+  .setup-empty--data strong { grid-row: 1; }
+  .setup-empty--data span { grid-row: 2; }
+  .setup-empty--data .setup-start-button {
+    grid-row: 3;
+    width: min(14rem, 100%);
+    min-height: 2.6rem;
+  }
+}
+
+/* Final type hierarchy for station choices, strategy recommendations, and probabilities. */
+.decision-field > label,
+.strategy-choice > label { font-size: .8rem; font-weight: 800; }
+.station-option,
+.hint-option,
+.strategy-choice .strategy-picker {
+  min-height: 2.75rem;
+  height: 2.75rem;
+  font-size: .88rem;
+  font-weight: 800;
+}
+.hint-option { font-size: .86rem; }
+.strategy-picker-main strong { font-size: .9rem; font-weight: 850; }
+.strategy-picker-main { position: relative; }
+.strategy-recommendation {
+  position: absolute;
+  top: .15rem;
+  right: .25rem;
+  display: block;
+  padding: 0;
+  color: var(--blue);
+  font-size: .65rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.strategy-picker.is-recommended { border-width: 2px; background: #f0f7fd; }
+.station-probability-station { align-items: flex-start; justify-content: center; padding: .65rem .9rem; }
+.station-probability-station span { display: none; }
+.station-probability-station strong { font-size: 1rem; font-weight: 850; }
+.station-probability-value { padding: .65rem .9rem; }
+.station-probability-value b { color: var(--text); font-size: .8rem; font-weight: 800; }
+.station-probability-value strong { font-size: 1.1rem; font-weight: 750; }
+.station-probability-value.is-leading b { font-size: .85rem; font-weight: 900; }
+.station-probability-value.is-leading strong { font-size: 1.25rem; font-weight: 900; }
+@media (max-width: 600px) {
+  .station-probability-station { padding-inline: .55rem; }
+  .station-probability-station strong { font-size: .9rem; }
+  .station-probability-value { padding-inline: .5rem; }
+  .station-probability-value b { font-size: .72rem; }
+  .station-probability-value strong { font-size: 1rem; }
+}
+
+/* Final planner rhythm: readable type with compact, repeatable control rows. */
+@media (min-width: 701px) {
+  .forecast-panel { padding: .875rem 1.125rem 1.25rem; }
+  .progress-section > .station-strip { min-height: 4rem; padding: .45rem .75rem; }
+  .station-navigation { height: 4rem; }
+  .station-cell { height: 3.15rem; min-height: 3.15rem; padding: .3rem .45rem; }
+  .station-cell small { font-size: .75rem; }
+  .station-cell strong { font-size: .875rem; }
+  .flow-card { margin-top: .75rem; padding: .75rem; }
+  .flow-card-heading { min-height: 1.875rem; padding-bottom: .5rem; }
+  .flow-card-heading strong { font-size: 1rem; }
+  .flow-card-heading span { font-size: .75rem; }
+  .decision-input-grid {
+    gap: 0;
+    margin-top: .5rem;
+    align-items: stretch;
+    border: 1px solid var(--border);
+    border-radius: .35rem;
+    background: var(--surface);
+  }
+  .decision-field,
+  .strategy-choice {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: .625rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .decision-field + .decision-field,
+  .decision-field + .strategy-choice { border-left: 1px solid var(--border); }
+  .decision-field > label,
+  .strategy-choice > label {
+    min-height: 1rem;
+    color: var(--text);
+    font-size: .875rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .station-option-grid,
+  .hint-option-grid,
+  .strategy-choice > .strategy-picker-row {
+    flex: 1;
+    gap: .3rem;
+    margin-top: .4rem;
+  }
+  .station-option-grid,
+  .hint-option-grid { grid-template-rows: repeat(4, minmax(2.5rem, 1fr)); }
+  .strategy-choice > .strategy-picker-row {
+    min-height: 0;
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    align-content: stretch;
+  }
+  .station-option,
+  .hint-option,
+  .strategy-choice .strategy-picker { height: auto; min-height: 2.5rem; }
+  .strategy-edit-button { width: 1.5rem; height: 1.5rem; min-height: 1.5rem; }
+  .station-option,
+  .hint-option { font-size: .875rem; }
+  .strategy-picker-main strong { font-size: .875rem; }
+  .strategy-recommendation {
+    top: 50%;
+    right: .55rem;
+    transform: translateY(-50%);
+    font-size: .75rem;
+  }
+  .forecast-content .resolved-window { margin-top: .75rem; padding: .75rem; }
+  .resolved-window .window-meta { height: 1.875rem; min-height: 1.875rem; }
+  .resolved-window .window-title { font-size: 1rem; }
+  .resolved-window .probability-section { margin-top: .45rem; }
+  .station-probability-row {
+    min-height: 3rem;
+    grid-template-columns: 6rem minmax(0, 1fr);
+  }
+  .station-probability-station { padding: .4rem .75rem; }
+  .station-probability-station strong { font-size: 1rem; }
+  .station-probability-value { padding: .4rem .75rem; }
+  .station-probability-value b,
+  .station-probability-value.is-leading b { font-size: .875rem; }
+  .station-probability-value strong { font-size: 1.125rem; }
+  .station-probability-value.is-leading strong { font-size: 1.25rem; }
+  .decision-toolbar { margin-top: .75rem; }
+  .bottom-actions { margin-top: 0; padding: .35rem; }
+  .action-button { min-height: 2.5rem; font-size: .875rem; }
 }
