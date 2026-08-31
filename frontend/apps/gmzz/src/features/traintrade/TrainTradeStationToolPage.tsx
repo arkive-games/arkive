@@ -12,12 +12,26 @@ type StationType = (typeof STATION_TYPES)[number];
 const HINT_IDS = ["winery-most", "food-most", "trade-most", "equal"] as const;
 type HintId = (typeof HINT_IDS)[number];
 
+/**
+ * The five routes, from the client's own `TrainDifficultyData` and
+ * `TrainMapGenerationData` (emitted to `traintrade/difficulties.json` and
+ * `traintrade/map_generation.json`).
+ *
+ * `stops` is how many stations this tool has to deduce; `totals` is the station
+ * mix the route generates. The client fixes both, so the mix is a starting
+ * point rather than something the reader has to work out.
+ *
+ * Two entries need a word. The beginner route's pool of eight contains one
+ * fixed `Start` station, so only seven of them are unknown. And routes 2 and 5
+ * each generate one of three mixes, so their `totals` is the first of the three
+ * and the inputs stay editable -- the run decides which one you got.
+ */
 const DIFFICULTIES = [
-  { id: "beginner", stops: 15 },
-  { id: "normal", stops: 15 },
-  { id: "advanced", stops: 15 },
-  { id: "hard", stops: 14 },
-  { id: "challenge", stops: 15 },
+  { id: "beginner", stops: 7, totals: { winery: 3, food: 2, trade: 2 } },
+  { id: "normal", stops: 8, totals: { winery: 3, food: 2, trade: 3 } },
+  { id: "advanced", stops: 12, totals: { winery: 4, food: 4, trade: 4 } },
+  { id: "hard", stops: 15, totals: { winery: 5, food: 5, trade: 5 } },
+  { id: "challenge", stops: 16, totals: { winery: 5, food: 5, trade: 6 } },
 ] as const;
 type DifficultyId = (typeof DIFFICULTIES)[number]["id"];
 
@@ -25,6 +39,7 @@ type StationTotals = Record<StationType, number>;
 type Sequence = StationType[];
 type ConfirmedStep = { currentType: StationType; hintId: HintId };
 
+/** Placeholder shown before a route is picked; each route then supplies its own. */
 const DEFAULT_TOTALS: StationTotals = { winery: 5, food: 5, trade: 5 };
 
 const STATION_KEY: Record<StationType, string> = {
@@ -103,6 +118,10 @@ export default function TrainTradeStationToolPage() {
 
   const changeDifficulty = (next: DifficultyId | "") => {
     setDifficulty(next);
+    // The route determines its own station mix, so seed the inputs from it
+    // rather than leaving the previous route's numbers behind.
+    const profile = DIFFICULTIES.find((item) => item.id === next);
+    if (profile) setTotals({ ...profile.totals });
     resetForecast();
   };
 
