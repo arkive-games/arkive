@@ -54,12 +54,7 @@ import {
   IconUser,
   IconX,
 } from '@tabler/icons-react'
-import type { SiteCard } from './sites'
-import aion2Logo from './assets/aion2-logo.webp'
-import palworldLogo from './assets/palworld-logo.png'
-import sts2Logo from './assets/sts2-logo.png'
-import vrisingLogo from './assets/vrising-logo.png'
-import gmzzBg from './assets/gmzz-bg.webp'
+import { GAME_LOGOS, type SiteCard } from './sites'
 import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { publicProfileHref } from './userSystemData'
 import { useUserSystem, type UserSystemState } from './UserSystemState'
@@ -171,14 +166,6 @@ function forumVideoPlatform(value: string): 'bilibili' | 'douyin' | null {
   }
 }
 
-
-const GAME_LOGOS: Record<string, string> = {
-  aion2: aion2Logo,
-  gmzz: gmzzBg,
-  palworld: palworldLogo,
-  vrising: vrisingLogo,
-  sts2: sts2Logo,
-}
 
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
   const windowSize = Math.min(MAX_VISIBLE_PAGES, totalPages)

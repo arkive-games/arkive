@@ -4,6 +4,10 @@ import aion2Bg from './assets/aion2-bg.jpg'
 import palworldBg from './assets/palworld-bg.webp'
 import gmzzBg from './assets/gmzz-bg.webp'
 import ro3Bg from './assets/ro3-bg.webp'
+import aion2Logo from './assets/aion2-logo.webp'
+import palworldLogo from './assets/palworld-logo.png'
+import sts2Logo from './assets/sts2-logo.png'
+import vrisingLogo from './assets/vrising-logo.png'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
 const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1604030/library_600x900_2x.jpg'
@@ -134,6 +138,28 @@ export const SITES: SiteCard[] = [
     featureKey: 'site.ro3.feature',
   },
 ]
+
+/**
+ * Square-ish art for the forum's cabin lists, keyed by game.
+ *
+ * Lives here rather than in ForumPage because it is per-game presentation data
+ * like `bg`, and because a component module is not importable from a test
+ * without dragging React in.
+ *
+ * `Record<string, string>` rather than `Record<GameId, string>`: a missing game
+ * is therefore not a type error but an `undefined` src on a live `<img>`. Every
+ * id in `VISIBLE_SITES` needs an entry, `comingSoon` ones included — ForumPage
+ * receives the list unfiltered. Games with no dedicated logo reuse their card
+ * art, as gmzz and ro3 do. gameCatalog.test.ts asserts the coverage.
+ */
+export const GAME_LOGOS: Record<string, string> = {
+  aion2: aion2Logo,
+  gmzz: gmzzBg,
+  palworld: palworldLogo,
+  vrising: vrisingLogo,
+  sts2: sts2Logo,
+  ro3: ro3Bg,
+}
 
 export const VISIBLE_SITES: SiteCard[] = IS_TOY ? SITES.filter((site) => site.toySlug) : SITES
 

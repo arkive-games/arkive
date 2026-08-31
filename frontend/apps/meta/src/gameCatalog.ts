@@ -15,6 +15,7 @@ const GAME_CATEGORY_MAP: Record<string, readonly SpecificGameCategory[]> = {
   palworld: ['survivalAdventure'],
   vrising: ['singlePlayer', 'survivalAdventure'],
   sts2: ['singlePlayer', 'cardStrategy'],
+  ro3: ['mmorpg'],
 }
 
 export interface CatalogEntry {
