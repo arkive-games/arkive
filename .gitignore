@@ -27,6 +27,10 @@ dist-toy
 .tanstack
 
 # Test & tooling artifacts
+# `edgeone makers deploy` drops {Name, ProjectId} here to remember which project a
+# directory was last pushed to. Local state, and per-machine: the deploy workflow
+# passes -n explicitly rather than relying on it.
+.edgeone/
 .playwright-mcp/
 /.playwright-cli/
 /output/
