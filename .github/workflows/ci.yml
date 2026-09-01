@@ -150,7 +150,7 @@ jobs:
         run: |
           set -euo pipefail
           failed=""
-          for app in meta aion2 palworld sts2 vrising lostark ro3; do
+          for app in meta aion2 palworld sts2 vrising lostark ro3 gmzz; do
             echo "--- lint $app"
             pnpm "lint:$app" || failed="$failed $app"
           done
@@ -169,7 +169,7 @@ jobs:
         working-directory: frontend
         run: |
           set -euo pipefail
-          for app in meta aion2 palworld sts2 vrising lostark ro3; do
+          for app in meta aion2 palworld sts2 vrising lostark ro3 gmzz; do
             echo "--- build $app"
             pnpm "build:$app"
           done

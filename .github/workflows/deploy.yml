@@ -37,7 +37,7 @@ jobs:
       # broken build must not hold back the others.
       fail-fast: false
       matrix:
-        app: [meta, aion2, palworld, vrising, ro3]
+        app: [meta, aion2, palworld, vrising, ro3, gmzz]
         include:
           # `project` is the EdgeOne project name. It is spelled out here rather
           # than derived from `app` because `deploy -n` CREATES a project when the
@@ -80,6 +80,25 @@ jobs:
             smoke_path: /changelog
             data_base_url: https://data-ro3.tc-imba.com
             resource_base_url: https://resource-ro3.tc-imba.com
+          # The project exists; the DOMAIN is not attached to it yet, which is why
+          # `domain` is absent. Measured rather than assumed: gmzz.tc-imba.com
+          # answers and serves the app, but presents the shared
+          # `CN=*.cdn.myqcloud.com` Tencent CDN certificate where
+          # palworld.tc-imba.com presents `CN=palworld.tc-imba.com`. So that host
+          # is not this project's, arming the check would verify a site this
+          # workflow does not publish, and a browser following the hub's link
+          # gets a certificate warning today. Fill `domain` in with the CNAME —
+          # until then the upload lands in the project while the live host keeps
+          # serving whatever it served before.
+          #
+          # Every gmzz route is a real page rather than a redirect, so any of
+          # them proves edgeone.json travelled; /changelog is used for the same
+          # reason as vrising's and ro3's, being the route least likely to move.
+          - app: gmzz
+            project: arkive-gmzz
+            smoke_path: /changelog
+            data_base_url: https://data-gmzz.tc-imba.com
+            resource_base_url: https://resource-gmzz.tc-imba.com
 
     # Two pushes in quick succession must not race the same project. Queue rather
     # than cancel: an interrupted upload is a half-published site.
