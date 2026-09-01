@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.3",
+      "date": "2026-09-02",
+      "commit": "d7307d05d1255f418e8a56ddbae397df51f1d30c",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Collapsed same-name equipment variants into one catalogue tile while retaining quality indicators.",
+            "zh-CN": "合并同名同外观的装备变体，保留品质标识，避免图鉴重复展示。",
+            "zh-TW": "合併同名同外觀的裝備變體，保留品質標示，避免圖鑑重複顯示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.2",
       "date": "2026-09-02",
       "commit": "693134506a03c01a340853210ca2e204975e5e0d",
