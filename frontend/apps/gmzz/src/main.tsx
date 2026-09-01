@@ -11,6 +11,7 @@ import HomePage from './features/home/HomePage'
 import TrainTradeGoodsPage from './features/traintrade/TrainTradeGoodsPage'
 import TrainTradeStationToolPage from './features/traintrade/TrainTradeStationToolPage'
 import UtopiaPage from './features/utopia/UtopiaPage'
+import ReforgePage from './features/reforge/ReforgePage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import { initDataVersion } from './lib/urls'
 import { BottomTabBar } from './components/BottomTabBar'
@@ -30,10 +31,11 @@ const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', comp
 const trainTradeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/traintrade', component: TrainTradeGoodsPage })
 const stationToolRoute = createRoute({ getParentRoute: () => rootRoute, path: '/tools/traintrade-station', component: TrainTradeStationToolPage })
 const utopiaRoute = createRoute({ getParentRoute: () => rootRoute, path: '/utopia', component: UtopiaPage })
+const reforgeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/reforge', component: ReforgePage })
 const changelogRoute = createRoute({ getParentRoute: () => rootRoute, path: '/changelog', component: ChangelogPage })
 
 const routeTree = rootRoute.addChildren([
-  homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, changelogRoute,
+  homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, changelogRoute,
 ])
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })

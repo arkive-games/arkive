@@ -7,6 +7,7 @@ import { getGameVersion } from '../../lib/urls'
 const SECTIONS = [
   { to: '/traintrade', titleKey: 'trainTrade.title', bodyKey: 'trainTrade.homeDescription' },
   { to: '/utopia', titleKey: 'utopianTheater.title', bodyKey: 'utopianTheater.homeDescription' },
+  { to: '/reforge', titleKey: 'reforge.title', bodyKey: 'reforge.homeDescription' },
 ] as const
 
 export default function HomePage() {

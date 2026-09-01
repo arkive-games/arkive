@@ -2,6 +2,7 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
   BookOpen,
+  Hammer,
   History,
   Home,
   Menu,
@@ -20,6 +21,7 @@ import type { NavKey } from './TopNav'
 function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/traintrade')) return '/traintrade'
   if (pathname.startsWith('/utopia')) return '/utopia'
+  if (pathname.startsWith('/reforge')) return '/reforge'
   if (pathname.startsWith('/changelog')) return '/changelog'
   return '/'
 }
@@ -36,6 +38,7 @@ export function BottomTabBar() {
     { key: '/', label: t('nav.home'), icon: <Home className="size-5" strokeWidth={1.8} /> },
     { key: '/traintrade', label: t('nav.traintrade'), icon: <BookOpen className="size-5" strokeWidth={1.8} /> },
     { key: '/utopia', label: t('nav.utopia'), icon: <Users className="size-5" strokeWidth={1.8} /> },
+    { key: '/reforge', label: t('nav.reforge'), icon: <Hammer className="size-5" strokeWidth={1.8} /> },
   ]
 
   return (

@@ -103,6 +103,78 @@ pak's `C7/Content/` and the export lands as `.png`.
 pathway is worse than one that stays silent, so the split is left out and the
 page groups by tag. If the mapping turns up, it is a small addition here.
 
+## Equipment reforge graces (装备重塑 / 恩赐)
+
+```bash
+uv run python -m gmzz.reforge
+```
+
+Writes 70 graces and the 8 slots that have them to
+`data-gmzz/reforge/{graces,slots}.json`, then re-stamps `version.json`.
+
+Reforging rerolls an equipment's random affixes (`词条`); two or more
+*extraordinary* (`非凡`) ones combine into a **named grace** (`恩赐`) —
+征服宣言, 血谋共舞的旗帜, 铁火铸就的盟约. Naming it is what the page is for, so the
+grace is the row, and its extraordinary-affix requirement the headline number.
+
+The table is `EquipmentSpiritualityConvergenceData`: the feature is `灵性汇聚` /
+"spirituality convergence" internally, so grepping the export for `Reforge`,
+`Affix` or `Grace` finds **nothing at all** — which is how this looked at first
+like a feature shipped after the export. Two facts make it findable again:
+
+- `EquipmentSlotData.ConvergenceDefaultIcon` names the reforge screen's own
+  placeholder art, which ties "convergence" to this UI.
+- The names are not in the table — it stores text ids — and searching the
+  *decrypted bytes* of every table for one of those ids finds only the string
+  shards. That is a false negative, not evidence: LuaJIT writes a number
+  differently as a table **key** (plain uleb128 pair) than as a **value**
+  (`uleb128_33`, the low word shifted left with a flag bit), and the shards hold
+  them as keys. Executing every table and searching the *results* found the row
+  immediately. Byte-scanning the dumps is only sound for strings.
+
+`GroupCondition1` and `GroupCondition2` carry the mechanic: each is
+`{affixCount: [affixGroupId, ...]}`, naming a stat family and how many
+extraordinary affixes of it the grace needs. Both must hold, so the requirement
+is the **sum**. Beware two shapes:
+
+- A count of `1` reaches the pipeline as a *list*, because LuaJIT tables keyed
+  `1..n` do. Read as a dict it would index from 0 and turn every one-affix
+  condition into a zero — silently, and for every slot at once.
+- A count of `0` is real, and distinguishes "3 attack, none of the other family"
+  from a row that only asks for 3 attack. It pairs with a different grace name.
+
+The sum is verified, not assumed: the client's editor labels survive in the
+string shards as `恩赐词条-<slot>-<n>-<i>`, and `恩赐词条-武器-4-3（2+2）` is
+exactly the row whose two conditions are 2 and 2. Every label has a row summing
+to its `n`.
+
+Three things are emitted as-is rather than tidied, because tidying them would
+assert more than the client does:
+
+- **`brief1` / `brief2` keep the client's numbering.** For most rows `Brief2` is
+  the same effect worded for a healing build (compare `EquipmentMythData`'s
+  `WordDesc` / `WordDesc2`), but on the 指环 two-affix rows it describes an
+  effect the row's own `Prop` values do not produce. Naming the column
+  `effectHealing` would launder that inconsistency.
+- **`残躯壁垒` is one name on 18 rows** across 指环, 护符, 帽子, 披风 and 鞋靴 —
+  one text id, shared. The two-affix graces on those slots are individually
+  themed (夜影/月泪/血吻, 秘典/真视/隐录), so this is the client's placeholder for
+  three-affix names it has not written yet. It ships duplicated because that is
+  what the game shows.
+- **`SEASON_DAY(101)>=999`** is the client's "not scheduled this season" marker
+  (护符 and 鞋靴 three-affix graces). It parses as day 999 like any other rather
+  than being special-cased into a flag we invented.
+
+An unrecognised `ShowCondition` raises. A wiki that renders "no requirement"
+because the pipeline failed to parse the requirement is worse than a build that
+stops.
+
+**No grace icons.** `Icon` names 46 assets under
+`Arts/UI_2/Resource/ConfigIcon/Equipment/BeyonderIcon/`; they are listed in the
+client's `Manifest_UFSFiles_Win64.txt` but absent from what uex indexes
+(`ConfigIcon` resolves to one file, against 18130 manifest entries), so the
+asset name is emitted for a later run to resolve and the page is typographic.
+
 ## Equipment and sealed items
 
 An older pipeline, predating the table reader above: it turns

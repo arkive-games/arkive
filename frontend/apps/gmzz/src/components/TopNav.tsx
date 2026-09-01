@@ -6,12 +6,13 @@ import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } f
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
 
-export type NavKey = '/' | '/traintrade' | '/utopia' | '/changelog'
+export type NavKey = '/' | '/traintrade' | '/utopia' | '/reforge' | '/changelog'
 
 const ITEMS: { key: NavKey; labelKey: string }[] = [
   { key: '/', labelKey: 'nav.home' },
   { key: '/traintrade', labelKey: 'nav.traintrade' },
   { key: '/utopia', labelKey: 'nav.utopia' },
+  { key: '/reforge', labelKey: 'nav.reforge' },
 ]
 
 export function TopNav({ active }: { active: NavKey }) {
@@ -33,9 +34,14 @@ export function TopNav({ active }: { active: NavKey }) {
           label: t(item.labelKey),
           active: active === item.key,
         })),
-        renderItem: (item, className) => (
+        // The label needs the shell's own class to sit above the active item's
+        // `::before` highlight pill; without it the active label is painted
+        // over and reads as a blank chip.
+        renderItem: (item, className, labelClassName) => (
           <Link to={item.key} className={className}>
-            {item.label}
+            {labelClassName ? (
+              <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
+            ) : item.label}
           </Link>
         ),
       }}

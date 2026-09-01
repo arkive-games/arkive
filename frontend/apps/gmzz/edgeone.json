@@ -17,6 +17,14 @@
       "destination": "/index.html"
     },
     {
+      "source": "/reforge",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/reforge*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/tools/traintrade-station",
       "destination": "/index.html"
     },
