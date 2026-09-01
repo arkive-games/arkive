@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.3.0",
+      "date": "2026-09-02",
+      "commit": "0b28175209e27f291e24268a1a79109ee0d35f7d",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New Beyonder Rating Calculator: enter your role and divinity level plus the 14 sub-scores from the in-game rating panel to see each item's completion, its band, and how far it is from the expected and max benchmarks.",
+            "zh-CN": "新增「非凡评分计算器」：填入扮演等级、神性等级与游戏内非凡评分面板的 14 项分数，即可查看每一项的完成度、评价档位，以及距离期望值与上限还差多少。",
+            "zh-TW": "新增「非凡評分計算器」：填入扮演等級、神性等級與遊戲內非凡評分面板的 14 項分數，即可查看每一項的完成度、評價檔位，以及距離期望值與上限還差多少。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-09-01",
       "commit": "28c10de389b3450b9dfcb05d19d658ddafb70be9",
