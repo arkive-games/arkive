@@ -981,6 +981,14 @@
 .equipment-tile-art svg, .soul-tile-art svg { width: 1.55rem; color: #937d5e; }
 .equipment-tile-name, .soul-tile-name { overflow: hidden; font-size: 0.76rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 .equipment-tile-meta, .soul-tile-meta { overflow: hidden; color: #8a765a; font-size: 0.66rem; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-quality-dots { display: inline-flex; align-items: center; gap: 0.16rem; vertical-align: middle; }
+.equipment-quality-dots i { display: inline-block; width: 0.42rem; height: 0.42rem; border-radius: 50%; background: #9a9a9a; }
+.equipment-quality-dots i.quality-1 { background: #9a9a9a; }
+.equipment-quality-dots i.quality-2 { background: #55a35f; }
+.equipment-quality-dots i.quality-3 { background: #4d88d4; }
+.equipment-quality-dots i.quality-4 { background: #9a62c5; }
+.equipment-quality-dots i.quality-5 { background: #d18b39; }
+.equipment-quality-dots i.quality-6 { background: #d05a47; }
 .equipment-tile.quality-1, .soul-tile.quality-1 { border-top: 0.18rem solid #9a9a9a; }
 .equipment-tile.quality-2, .soul-tile.quality-2 { border-top: 0.18rem solid #55a35f; }
 .equipment-tile.quality-3, .soul-tile.quality-3 { border-top: 0.18rem solid #4d88d4; }

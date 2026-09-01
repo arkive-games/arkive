@@ -13,6 +13,35 @@ function text(value: { 'zh-CN'?: string } | undefined, fallback: string) { retur
 function qualityClass(quality?: number) { return `quality-${quality ?? 1}` }
 function rangeValue(row: number[]) { return row.length > 2 && row[1] !== row[2] ? `${row[1]}–${row[2]}` : String(row[1] ?? '-') }
 
+interface EquipmentGroup {
+  key: string
+  records: EquipmentRecord[]
+}
+
+function groupEquipment(records: EquipmentRecord[]): EquipmentGroup[] {
+  const groups = new Map<string, EquipmentRecord[]>()
+  for (const record of records) {
+    const key = `${record.name?.['zh-CN'] ?? record.iID}|${record.slot ?? ''}|${record.icon ?? ''}`
+    const group = groups.get(key) ?? []
+    group.push(record)
+    groups.set(key, group)
+  }
+  const result: EquipmentGroup[] = []
+  for (const [key, group] of groups) {
+    const qualityCounts = new Map<number, number>()
+    for (const record of group) {
+      const quality = record.item?.iQuality ?? 0
+      qualityCounts.set(quality, (qualityCounts.get(quality) ?? 0) + 1)
+    }
+    if (Math.max(...qualityCounts.values()) <= 1) {
+      result.push({ key, records: [...group].sort((a, b) => (a.item?.iQuality ?? 0) - (b.item?.iQuality ?? 0)) })
+    } else {
+      for (const record of group) result.push({ key: `${key}|${record.iID}`, records: [record] })
+    }
+  }
+  return result
+}
+
 export function EquipmentWiki() {
   const [data, setData] = useState<EquipmentData | null>(null)
   const [error, setError] = useState(false)
@@ -39,6 +68,7 @@ export function EquipmentWiki() {
       return !normalized || `${record.iID} ${text(record.name, '')}`.toLowerCase().includes(normalized)
     })
   }, [data, level, quality, query, slot])
+  const groups = useMemo(() => groupEquipment(records), [records])
 
   const active = records.find((record) => record.iID === selectedId) ?? records[0] ?? null
 
@@ -56,7 +86,7 @@ export function EquipmentWiki() {
       </div>
       <div className="database-layout">
         <section className="database-grid" aria-label="装备列表">
-          {error ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : records.length ? records.map((record) => <EquipmentTile key={record.iID} record={record} active={active?.iID === record.iID} onSelect={setSelectedId} />) : <div className="wiki-empty">没有匹配的装备。</div>}
+          {error ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : groups.length ? groups.map((group) => <EquipmentTile key={group.key} records={group.records} active={group.records.some((record) => active?.iID === record.iID)} onSelect={setSelectedId} />) : <div className="wiki-empty">没有匹配的装备。</div>}
         </section>
         <EquipmentDetail record={active} data={data} />
       </div>
@@ -64,12 +94,13 @@ export function EquipmentWiki() {
   )
 }
 
-function EquipmentTile({ record, active, onSelect }: { record: EquipmentRecord; active: boolean; onSelect: (id: number) => void }) {
+function EquipmentTile({ records, active, onSelect }: { records: EquipmentRecord[]; active: boolean; onSelect: (id: number) => void }) {
+  const record = records[records.length - 1]
   const quality = record.item?.iQuality
   return <button type="button" className={`equipment-tile ${qualityClass(quality)}${active ? ' is-active' : ''}`} onClick={() => onSelect(record.iID)}>
     <span className="equipment-tile-art">{record.icon ? <img src={resourceUrl(record.icon)} alt="" loading="lazy" /> : <Shield aria-hidden="true" />}</span>
     <span className="equipment-tile-name">{text(record.name, `装备 ${record.iID}`)}</span>
-    <span className="equipment-tile-meta">{SLOT_LABELS[record.slot ?? ''] ?? record.slot ?? '未知部位'} · {QUALITY_LABELS[quality ?? 1] ?? `品质 ${quality}`}</span>
+    <span className="equipment-tile-meta">{SLOT_LABELS[record.slot ?? ''] ?? record.slot ?? '未知部位'} · {records.length > 1 ? <span className="equipment-quality-dots" aria-label={`包含 ${records.length} 种品质`}>{records.map((variant) => <i className={qualityClass(variant.item?.iQuality)} key={variant.iID} />)}</span> : QUALITY_LABELS[quality ?? 1] ?? `品质 ${quality}`}</span>
   </button>
 }
 
