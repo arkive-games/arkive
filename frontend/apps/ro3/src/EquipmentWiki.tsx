@@ -12,6 +12,9 @@ const SLOT_LABELS: Record<string, string> = { weapon: '武器', offhand: '副手
 function text(value: { 'zh-CN'?: string } | undefined, fallback: string) { return value?.['zh-CN'] || fallback }
 function qualityClass(quality?: number) { return `quality-${quality ?? 1}` }
 function rangeValue(row: number[]) { return row.length > 2 && row[1] !== row[2] ? `${row[1]}–${row[2]}` : String(row[1] ?? '-') }
+function isPlaceholderEquipment(record: EquipmentRecord) {
+  return record.icon === 'icons/equipment/item_null.webp' || record.item?.kIcon === 'item_null.png' || record.name?.['zh-CN'] === '待定'
+}
 
 interface EquipmentGroup {
   key: string
@@ -58,7 +61,7 @@ export function EquipmentWiki() {
   }, [])
 
   const records = useMemo(() => {
-    const source = data?.equipment.equipment.filter((record) => record.item && record.name) ?? []
+    const source = data?.equipment.equipment.filter((record) => record.item && record.name && !isPlaceholderEquipment(record)) ?? []
     const normalized = query.trim().toLowerCase()
     return source.filter((record) => {
       const item = record.item!
