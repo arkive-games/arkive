@@ -187,11 +187,15 @@ const en = {
         },
         "quotaHeading": "Total station quota",
         "quotaValid": "The quota is valid. You can start planning.",
+        "quotaVariantInvalid": "Use one of the station mixes supplied by the game package.",
         "quotaInvalid": "Configure {{remaining}} more stops ({{current}} currently assigned).",
         "quotaConfirm": "Confirm station quota",
         "quotaConfirmed": "Station quota confirmed",
         "generating": "Generating feasible routes...",
         "forecastStart": "Choose a route and confirm its station quota to begin.",
+        "stationMixHeading": "Station mix",
+        "stationMixPlaceholder": "Select the mix shown in your run",
+        "stationMixOption": "Winery {{winery}} · Food {{food}} · Trade {{trade}}",
         "undo": "Undo last step",
         "stationProgress": "Station progress",
         "previousStations": "Show previous stations",
@@ -229,7 +233,7 @@ const en = {
         "historyRange": "Stops {{start}}-{{end}}",
         "originDetail": "Starting station hint",
         "stepDetail": "Stop {{station}}: {{type}}",
-        "disclaimer": "Results enumerate feasible routes from the confirmed station quota and three-stop hints. Use them as planning guidance."
+        "disclaimer": "Results are calculated from the game package station data and confirmed three-stop hints. Use them as planning guidance."
       }
     }
   },
@@ -609,11 +613,15 @@ const zhCN: Strings = {
         },
         "quotaHeading": "总站点配额",
         "quotaValid": "配额有效，可以开始推演。",
+        "quotaVariantInvalid": "请使用游戏包体提供的站点构成。",
         "quotaInvalid": "还需要配置 {{remaining}} 站（当前合计 {{current}}）。",
         "quotaConfirm": "确认总站点配额",
         "quotaConfirmed": "总站点配额已确认",
         "generating": "正在生成可行路线...",
         "forecastStart": "选择路线并确认总站点配额后开始推演。",
+        "stationMixHeading": "站点构成",
+        "stationMixPlaceholder": "选择本局显示的构成",
+        "stationMixOption": "酒庄 {{winery}} · 食铺 {{food}} · 商行 {{trade}}",
         "undo": "撤销上一步",
         "stationProgress": "站点进度",
         "previousStations": "查看前一组站点",
@@ -651,7 +659,7 @@ const zhCN: Strings = {
         "historyRange": "第 {{start}}-{{end}} 站",
         "originDetail": "始发站提示",
         "stepDetail": "第 {{station}} 站：{{type}}",
-        "disclaimer": "推演结果根据已确认的站点总数与三站提示枚举可行路线，仅用于辅助路线判断。"
+        "disclaimer": "推演结果根据游戏包体站点数据与已确认的三站提示计算，仅用于辅助路线判断。"
       }
     }
   },
@@ -1030,11 +1038,15 @@ const zhTW: Strings = {
         },
         "quotaHeading": "總站點配額",
         "quotaValid": "配額有效，可以開始推演。",
+        "quotaVariantInvalid": "請使用遊戲包體提供的站點構成。",
         "quotaInvalid": "還需要配置 {{remaining}} 站（目前合計 {{current}}）。",
         "quotaConfirm": "確認總站點配額",
         "quotaConfirmed": "總站點配額已確認",
         "generating": "正在產生可行路線...",
         "forecastStart": "選擇路線並確認總站點配額後開始推演。",
+        "stationMixHeading": "站點構成",
+        "stationMixPlaceholder": "選擇本局顯示的構成",
+        "stationMixOption": "酒莊 {{winery}} · 食鋪 {{food}} · 商行 {{trade}}",
         "undo": "撤銷上一步",
         "stationProgress": "站點進度",
         "previousStations": "查看前一組站點",
@@ -1072,7 +1084,7 @@ const zhTW: Strings = {
         "historyRange": "第 {{start}}-{{end}} 站",
         "originDetail": "始發站提示",
         "stepDetail": "第 {{station}} 站：{{type}}",
-        "disclaimer": "推演結果根據已確認的站點總數與三站提示列舉可行路線，僅用於輔助路線判斷。"
+        "disclaimer": "推演結果根據遊戲包體站點資料與已確認的三站提示計算，僅用於輔助路線判斷。"
       }
     }
   },
