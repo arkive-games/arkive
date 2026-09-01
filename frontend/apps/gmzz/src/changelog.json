@@ -1,19 +1,34 @@
 {
- "entries": [
-  {
-   "version": "0.1.0",
-   "date": "2026-08-29",
-   "commit": "c4f3ce0a39c60f8cbe094bb3d9d0feab1eee0a64",
-   "changes": [
+  "entries": [
     {
-     "kind": "feature",
-     "text": {
-      "en-US": "New Lord of Mysteries wiki: the Train Trade goods catalogue with base prices, buy and sell stations and item icons, a station planner, and the Utopian Theater memory-fragment cards.",
-      "zh-CN": "全新诡秘之主资料库：铁路大亨货物图鉴（含基础价格、买入与卖出站点、物品图标）、站点规划工具，以及乌托邦剧场记忆碎片卡牌。",
-      "zh-TW": "全新詭祕之主資料庫：鐵路大亨貨物圖鑑（含基礎價格、買入與賣出站點、物品圖示）、站點規劃工具，以及烏托邦劇場記憶碎片卡牌。"
-     }
+      "version": "0.2.0",
+      "date": "2026-09-01",
+      "commit": "28c10de389b3450b9dfcb05d19d658ddafb70be9",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New Reforge Graces page: every named grace each equipment slot can reforge into, grouped by how many extraordinary affixes it needs, with its stat split, effect, score and unlock day.",
+            "zh-CN": "新增「重塑恩赐」页面：按部位列出可重塑出的全部具名恩赐，按所需非凡词条数量分组，并给出词条分配、效果、评分与解锁时间。",
+            "zh-TW": "新增「重塑恩賜」頁面：依部位列出可重塑出的全部具名恩賜，按所需非凡詞條數量分組，並給出詞條分配、效果、評分與解鎖時間。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.1.0",
+      "date": "2026-08-29",
+      "commit": "c4f3ce0a39c60f8cbe094bb3d9d0feab1eee0a64",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New Lord of Mysteries wiki: the Train Trade goods catalogue with base prices, buy and sell stations and item icons, a station planner, and the Utopian Theater memory-fragment cards.",
+            "zh-CN": "全新诡秘之主资料库：铁路大亨货物图鉴（含基础价格、买入与卖出站点、物品图标）、站点规划工具，以及乌托邦剧场记忆碎片卡牌。",
+            "zh-TW": "全新詭祕之主資料庫：鐵路大亨貨物圖鑑（含基礎價格、買入與賣出站點、物品圖示）、站點規劃工具，以及烏托邦劇場記憶碎片卡牌。"
+          }
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }
