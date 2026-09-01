@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.3.1",
+      "date": "2026-09-02",
+      "commit": "d794e9d1cbdc2c99b10a581de7a0696e2b8c1130",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Rating calculator: the summary total is now labelled as the sum of the items you entered rather than as the game's own Beyonder Rating, which is a separate value; and the level fields can be retyped without the old value reappearing.",
+            "zh-CN": "非凡评分计算器：合计一栏改为标明「各项合计」而非游戏自身的非凡评分（两者并非同一数值）；等级输入框现在可以正常重新输入，不会再跳回原值。",
+            "zh-TW": "非凡評分計算器：合計一欄改為標明「各項合計」而非遊戲自身的非凡評分（兩者並非同一數值）；等級輸入框現在可以正常重新輸入，不會再跳回原值。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.3.0",
       "date": "2026-09-02",
       "commit": "0b28175209e27f291e24268a1a79109ee0d35f7d",
