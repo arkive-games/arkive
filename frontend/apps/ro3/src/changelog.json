@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.4",
+      "date": "2026-09-02",
+      "commit": "1b427c02438cc48af95130bd54843aa8ea407848",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Updated the equipment catalogue counter to reflect deduplicated visible entries.",
+            "zh-CN": "装备图鉴顶部统计改为显示去重后的实际条目数。",
+            "zh-TW": "裝備圖鑑頂部統計改為顯示去重後的實際條目數。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.3",
       "date": "2026-09-02",
       "commit": "d7307d05d1255f418e8a56ddbae397df51f1d30c",
