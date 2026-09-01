@@ -106,6 +106,17 @@ WANTED_TABLES = (
     "ItemConfig",
     "AttributeConfig",
     "SpecialEffectConfig",
+    # soul / remnant echo system
+    "EmblemConfig",
+    "EmblemMarkConfig",
+    "EmblemLvConfig",
+    "EmblemSubAttriGroupConfig",
+    "EmblemSpecialGroupConfig",
+    "JobResonanceConfig",
+    "JobResonanceActiveConfig",
+    "JobResonanceRestraintConfig",
+    "HeroicSpiritLayerConfig",
+    "HeroicSpiritLevelConfig",
 )
 
 #: Tables measured to ship every row body empty. Listed so the export states the gap even
@@ -125,7 +136,7 @@ EXPECTED_KEYS_ONLY = (
 
 #: Icon families in the resource repo that a row may join to, ``icons/equipment`` included
 #: (this module is what puts it there).
-ICON_DIRS = ("equipment", "talents", "skills", "jobs", "monsters", "dungeons", "other")
+ICON_DIRS = ("equipment", "souls", "talents", "skills", "jobs", "monsters", "dungeons", "other")
 
 #: ``EquipGridConfig`` names its slot only through its sprites (``icon_equip_weapon_01``),
 #: so the slug is cut out of the sprite name rather than invented here.
@@ -539,11 +550,163 @@ def equipment_rows(
 
 
 # --------------------------------------------------------------------------------------
+# soul / remnant echo system
+
+
+def _soul_attributes(value) -> list[dict]:
+    """Normalize an emblem attribute list without changing the client's values."""
+    out = []
+    if not isinstance(value, list):
+        return out
+    for pair in value:
+        if not isinstance(pair, list) or not pair or not isinstance(pair[0], int):
+            continue
+        entry = {"attributeId": pair[0]}
+        if len(pair) > 1:
+            entry["min"] = pair[1]
+        if len(pair) > 2:
+            entry["max"] = pair[2]
+        out.append(entry)
+    return out
+
+
+def soul_rows(
+    emblems: dict,
+    items: dict,
+    marks: dict,
+    levels: dict,
+    sub_attrs: dict,
+    effects: dict,
+    resonance: dict,
+    resonance_active: dict,
+    resonance_restraint: dict,
+    heroic_layers: dict,
+    heroic_levels: dict,
+    attributes: dict,
+    icons: dict,
+    text: Text,
+) -> tuple[dict, dict]:
+    """Build the data consumed by the remnant echo and soul resonance editor."""
+    soul_items = {key: row for key, row in items.items() if key in emblems}
+    mark_by_id: dict[int, list[dict]] = {}
+    mark_effect_ids: set[int] = set()
+    attr_ids: set[int] = set()
+    for key in ordered(marks):
+        row = marks[key]
+        mark = clean(row)
+        mark["markId"] = row.get("_iEmblemMarkID", 0)
+        mark["threshold"] = row.get("_iMarkNum", 0)
+        mark["stage"] = row.get("_iMarkStage", 0)
+        mark["seasonPower"] = row.get("_iSeasonPower", 0)
+        icon = icon_path(icons, row.get("_kEmblemMarkPic"))
+        if icon:
+            mark["icon"] = icon
+        ids = flat_ids(row.get("_kSpecialAttribute"))
+        mark["specialEffectIds"] = ids
+        mark_effect_ids.update(ids)
+        mark_by_id.setdefault(row.get("_iEmblemMarkID", 0), []).append(mark)
+
+    sub_by_group: dict[int, list[dict]] = {}
+    for key in ordered(sub_attrs):
+        row = sub_attrs[key]
+        group = row.get("_iGroup")
+        if not isinstance(group, int):
+            continue
+        item = clean(row)
+        attr = row.get("_iSubAttriID")
+        if isinstance(attr, int):
+            attr_ids.add(attr)
+            item["attributeId"] = attr
+        sub_by_group.setdefault(group, []).append(item)
+
+    souls = []
+    for key in ordered(emblems):
+        row = emblems[key]
+        item = soul_items.get(key, {})
+        entry = {"iID": row.get("_iID", int(key) if key.isdigit() else key)}
+        name = text.render(item.get("_iName"))
+        if name:
+            entry["name"] = name
+        for source, target in (("_iQuality", "quality"), ("_iType", "type"),
+                               ("_iSubType", "subType"), ("_iLevelNeed", "levelNeed")):
+            if item.get(source) not in (None, "", 0, {}, []):
+                entry[target] = item[source]
+        icon = icon_path(icons, item.get("_kIcon"))
+        if icon:
+            entry["icon"] = icon
+        entry["seasonPower"] = row.get("_iSeasonPower", 0)
+        entry["subAttributeGroup"] = row.get("_iSubAttributeGroup", 0)
+        primary = _soul_attributes(row.get("_kPrimaryAttribute"))
+        primary_up = _soul_attributes(row.get("_kPrimaryAttributeLvUp"))
+        for attr in primary + primary_up:
+            attr_id = attr.get("attributeId")
+            if isinstance(attr_id, int):
+                attr_ids.add(attr_id)
+        entry["primaryAttributes"] = primary
+        entry["primaryAttributeLevelUp"] = primary_up
+        initial = []
+        for pair in row.get("_kInitialMark", []) if isinstance(row.get("_kInitialMark"), list) else []:
+            if isinstance(pair, list) and len(pair) >= 2:
+                initial.append({"threshold": pair[0], "markId": pair[1]})
+        entry["initialMarks"] = initial
+        mark_ids = {mark["markId"] for mark in initial if mark["markId"]}
+        entry["marks"] = [mark for mark_id in sorted(mark_ids)
+                           for mark in mark_by_id.get(mark_id, [])]
+        entry["subAttributes"] = sub_by_group.get(row.get("_iSubAttributeGroup"), [])
+        souls.append(entry)
+
+    resonance_rows = []
+    for key in ordered(resonance):
+        row = resonance[key]
+        item = {"iID": row.get("_iId", int(key) if key.isdigit() else key)}
+        item["resonanceId"] = row.get("_iJobResonanceId", 0)
+        name = text.render(row.get("_iName"))
+        if name:
+            item["name"] = name
+        icon = icon_path(icons, row.get("_kJobResonancePic"))
+        if icon:
+            item["icon"] = icon
+        item["power"] = row.get("_iPower", 0)
+        item["attributes"] = _soul_attributes(row.get("_kAttribute"))
+        for attr in item["attributes"]:
+            if isinstance(attr.get("attributeId"), int):
+                attr_ids.add(attr["attributeId"])
+        resonance_rows.append(item)
+
+    return {
+        "souls": souls,
+        "markEffects": effect_rows(effects, mark_effect_ids, text)[0],
+        "subAttributeGroups": [
+            {"group": group, "entries": entries} for group, entries in sorted(sub_by_group.items())
+        ],
+        "levels": [clean(levels[key]) for key in ordered(levels)],
+        "resonance": resonance_rows,
+        "resonanceActivation": [clean(resonance_active[key]) for key in ordered(resonance_active)],
+        "resonanceRestraint": [clean(resonance_restraint[key]) for key in ordered(resonance_restraint)],
+        "heroicSpiritLayers": [clean(heroic_layers[key]) for key in ordered(heroic_layers)],
+        "heroicSpiritLevels": [clean(heroic_levels[key]) for key in ordered(heroic_levels)],
+        "attributes": attribute_lookup(attributes, attr_ids, text),
+    }, {
+        "souls": len(souls),
+        "withName": sum(1 for row in souls if row.get("name")),
+        "withIcon": sum(1 for row in souls if row.get("icon")),
+        "marks": len(marks),
+        "markEffects": len(mark_effect_ids),
+        "resonance": len(resonance_rows),
+        "resonanceActivation": len(resonance_active),
+        "resonanceRestraint": len(resonance_restraint),
+        "heroicSpiritLayers": len(heroic_layers),
+        "heroicSpiritLevels": len(heroic_levels),
+        "attributeIds": sorted(attr_ids),
+    }
+
+
+# --------------------------------------------------------------------------------------
 # art
 
 
-def art_categories(equipment_icons: set[str], talent_icons: set[str]):
-    """Two :class:`.art.Category` values matching exactly the sprites these rows name.
+def art_categories(equipment_icons: set[str], talent_icons: set[str], soul_icons: set[str] | None = None):
+    """Art categories matching exactly the sprites these rows name.
 
     An enumerated alternation rather than a family prefix: ``^item_`` would drag in every
     one of the client's 1,000-plus item sprites, and only the equipment rows' icons belong
@@ -560,11 +723,20 @@ def art_categories(equipment_icons: set[str], talent_icons: set[str]):
         categories.append(
             art.Category("icons/talents", pattern, "talent sprites no earlier art pass exported")
         )
+    if soul_icons:
+        pattern = "^(?:%s)$" % "|".join(re.escape(n) for n in sorted(soul_icons))
+        categories.append(
+            # ItemSoulIcon assets are standalone Texture2D objects (the Sprite is only
+            # a thin wrapper), so decode them directly and avoid an atlas dependency.
+            art.Category("icons/souls", pattern, "soul / remnant echo item sprites", "Texture2D")
+        )
     return tuple(categories)
 
 
-def export_art(equipment_icons: set[str], talent_icons: set[str], res_out: Path) -> dict:
-    categories = art_categories(equipment_icons, talent_icons)
+def export_art(
+    equipment_icons: set[str], talent_icons: set[str], soul_icons: set[str], res_out: Path
+) -> dict:
+    categories = art_categories(equipment_icons, talent_icons, soul_icons)
     if not categories:
         return {}
     stage = stage_dir()
@@ -666,12 +838,18 @@ def main() -> None:
         *(row.get("_kIcon") for row in tables["PatronTalentConfig"].values()),
         *(row.get("icon") for row in tables["SeasonTalent"].values()),
     )
+    soul_ids = set(tables["EmblemConfig"])
+    soul_icons = sprite_names(
+        *(tables["ItemConfig"][key].get("_kIcon")
+          for key in soul_ids if key in tables["ItemConfig"]),
+    )
     art_report = {}
     if not args.skip_art:
         present = read_icons(res_out)
         art_report = export_art(
             {n for n in equipment_icons if n.lower() not in present},
             {n for n in talent_icons if n.lower() not in present},
+            {n for n in soul_icons if n.lower() not in present},
             res_out,
         )
     icons = read_icons(res_out)
@@ -958,6 +1136,51 @@ def main() -> None:
         "art": art_report,
     })
 
+    # --- remnant echoes / soul resonance ---------------------------------------------
+    souls, soul_counts = soul_rows(
+        tables["EmblemConfig"],
+        tables["ItemConfig"],
+        tables["EmblemMarkConfig"],
+        tables["EmblemLvConfig"],
+        tables["EmblemSubAttriGroupConfig"],
+        tables["SpecialEffectConfig"],
+        tables["JobResonanceConfig"],
+        tables["JobResonanceActiveConfig"],
+        tables["JobResonanceRestraintConfig"],
+        tables["HeroicSpiritLayerConfig"],
+        tables["HeroicSpiritLevelConfig"],
+        tables["AttributeConfig"],
+        icons,
+        text,
+    )
+    souls["specialGroups"] = plain_rows(tables["EmblemSpecialGroupConfig"])
+    write_json(out / "souls.json", {
+        "source": (
+            "EmblemConfig, EmblemMarkConfig, EmblemSubAttriGroupConfig and JobResonance* "
+            "tables in the .bytes data containers"
+        ),
+        "itemSource": "ItemConfig.lua, joined on the EmblemConfig id",
+        "iconSource": "icons/souls WebP in resource-ro3, joined on ItemConfig.kIcon",
+        "note": (
+            "The client ships 27 named remnant echoes. Primary attributes, level-up values, "
+            "mark thresholds, sub-attribute pools and the job resonance matrix are emitted "
+            "as authored. Dynamic per-player rolls are not present in the client config and "
+            "must remain author-editable in the BD tool."
+        ),
+        "counts": soul_counts,
+        "variants": {
+            name: variants[name]
+            for name in (
+                "EmblemConfig", "EmblemMarkConfig", "EmblemLvConfig",
+                "EmblemSubAttriGroupConfig", "EmblemSpecialGroupConfig",
+                "JobResonanceConfig", "JobResonanceActiveConfig",
+                "JobResonanceRestraintConfig", "HeroicSpiritLayerConfig",
+                "HeroicSpiritLevelConfig",
+            )
+        },
+        **souls,
+    })
+
     if surprises:
         print(f"NOTE: these tables are no longer keys-only: {', '.join(surprises)}")
     print(
@@ -980,6 +1203,10 @@ def main() -> None:
         f"{len(equip_effect_ids)} referenced, {equip_effect_counts['rows']} in "
         f"SpecialEffectConfig, {len(in_special_attr)} only in the keys-only EquipSpecialAttr"
     )
+    print(
+        f"souls        : {soul_counts['souls']} named echoes, {soul_counts['marks']} marks, "
+        f"{soul_counts['markEffects']} mark effects, {soul_counts['resonance']} resonances"
+    )
     for family, report in art_report.items():
         print(
             f"art          : {family} {report['written']} written of {report['selected']} "
@@ -992,7 +1219,8 @@ def main() -> None:
     for name, path in (("talents", "talents.json"),
                        ("talents-legacy", "talents-legacy.json"),
                        ("equipment", "equipment.json"),
-                       ("equipment-attrs", "equipment-attrs.json")):
+                       ("equipment-attrs", "equipment-attrs.json"),
+                       ("souls", "souls.json")):
         size = (out / path).stat().st_size
         flag = "  OVER BUDGET" if size > SHARD_BUDGET else ""
         print(f"{name:<13}: {size / 1000:.0f} kB{flag}")
