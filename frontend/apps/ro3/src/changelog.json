@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.1",
+      "date": "2026-09-02",
+      "commit": "1c0a3e2f197dd99a560f4bb994e12976a74fc457",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Grouped equipment entries that share the same visual across qualities while preserving quality variants.",
+            "zh-CN": "合并不同品质下共用同一装备图标的重复条目，并保留品质信息。",
+            "zh-TW": "合併不同品質下共用同一裝備圖示的重複條目，並保留品質資訊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.0",
       "date": "2026-09-02",
       "commit": "f15adade62dc7f351815fca9064fe695c4e8ffb9",
