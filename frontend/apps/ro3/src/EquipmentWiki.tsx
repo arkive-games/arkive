@@ -70,7 +70,7 @@ export function EquipmentWiki() {
     <div className="ro3-shell ro3-database equipment-wiki" role="tabpanel">
       <header className="database-header">
         <div><span className="database-eyebrow"><Shield aria-hidden="true" />装备资料库</span><h2>装备图鉴</h2><p>查阅装备基础属性与可用词条，为职业配置挑选合适的装备。</p></div>
-        <div className="database-stat"><strong>{data?.equipment.counts.withItem ?? '—'}</strong><span>件装备</span></div>
+        <div className="database-stat"><strong>{data ? groups.length : '—'}</strong><span>个图鉴条目</span></div>
       </header>
       <div className="database-toolbar">
         <label className="wiki-search"><Search aria-hidden="true" /><span className="sr-only">搜索装备</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索装备名称或编号" />{query ? <button type="button" aria-label="清空搜索" onClick={() => setQuery('')}><X aria-hidden="true" /></button> : null}</label>
