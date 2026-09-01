@@ -14,19 +14,32 @@ import {
   type SpeciesResult,
 } from '@/features/score/data'
 
-/** Band colours, keyed by the client's own thresholds (49 / 75 / 99 / 100). */
-const BAND_CLASS: Record<number, string> = {
-  49: 'text-rose-700 dark:text-rose-300',
-  75: 'text-amber-700 dark:text-amber-300',
-  99: 'text-sky-700 dark:text-sky-300',
-  100: 'text-emerald-700 dark:text-emerald-300',
-}
+/**
+ * Band colours, worst to best.
+ *
+ * Indexed by the band's *position* in the sorted list rather than keyed by its
+ * threshold. Keying on the threshold looks tidier but couples the palette to
+ * the client's current numbers: re-tune 99 to 98 and the lookup misses, the bar
+ * renders with no background class at all, and an invisible fill over the muted
+ * track reads as a styling glitch rather than a stale palette. A position that
+ * runs off the end falls back to the last colour, which is wrong but visible.
+ */
+const BAND_CLASS = [
+  'text-rose-700 dark:text-rose-300',
+  'text-amber-700 dark:text-amber-300',
+  'text-sky-700 dark:text-sky-300',
+  'text-emerald-700 dark:text-emerald-300',
+]
 
-const BAND_BAR_CLASS: Record<number, string> = {
-  49: 'bg-rose-500/70',
-  75: 'bg-amber-500/70',
-  99: 'bg-sky-500/70',
-  100: 'bg-emerald-500/70',
+const BAND_BAR_CLASS = [
+  'bg-rose-500/70',
+  'bg-amber-500/70',
+  'bg-sky-500/70',
+  'bg-emerald-500/70',
+]
+
+function bandStyle(palette: string[], index: number): string {
+  return palette[Math.min(Math.max(index, 0), palette.length - 1)]
 }
 
 export default function ScorePage() {
@@ -144,6 +157,7 @@ export default function ScorePage() {
                     key={item.species.id}
                     item={item}
                     rating={rating}
+                    bandIndex={rating.bands.findIndex((band) => band.id === item.band?.id)}
                     onScore={(value) => setScores((prev) => ({ ...prev, [item.species.id]: value }))}
                   />
                 ))}
@@ -193,9 +207,12 @@ function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> 
   const percent = Math.round(result.percent * 100)
   return (
     <div className="flex flex-wrap items-end gap-x-6 gap-y-2" data-testid="score-summary">
+      {/* Deliberately not labelled 非凡评分: the game's rating is a separate
+          server value, and nothing in the package says it equals this sum. */}
       <div>
         <div className="text-xs font-semibold text-muted-foreground">{t('score.total')}</div>
         <div className="text-3xl font-bold tabular-nums text-foreground">{result.score.toLocaleString()}</div>
+        <div className="text-xs text-muted-foreground">{t('score.totalHint')}</div>
       </div>
       <div>
         <div className="text-xs font-semibold text-muted-foreground">{t('score.expectedTotal')}</div>
@@ -218,10 +235,12 @@ function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> 
 function ItemRow({
   item,
   rating,
+  bandIndex,
   onScore,
 }: {
   item: SpeciesResult
   rating: Rating
+  bandIndex: number
   onScore: (value: number) => void
 }) {
   const { t } = useTranslation()
@@ -229,7 +248,6 @@ function ItemRow({
   // as `width: NaN%`, which the browser drops, leaving a bar stuck full-width
   // with no other symptom.
   const percent = Number.isFinite(item.percent) ? Math.round(clamp(item.percent, 0, 1) * 100) : 0
-  const bandKey = item.band?.percentage ?? 49
   const materials = materialsFor(rating, item.species)
 
   return (
@@ -270,7 +288,7 @@ function ItemRow({
           aria-valuemax={100}
           aria-label={item.species.name}
         >
-          <div className={`h-full rounded-full transition-all ${BAND_BAR_CLASS[bandKey]}`} style={{ width: `${percent}%` }} />
+          <div className={`h-full rounded-full transition-all ${bandStyle(BAND_BAR_CLASS, bandIndex)}`} style={{ width: `${percent}%` }} />
         </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-3 text-xs tabular-nums text-muted-foreground">
           <span>{t('score.expectedValue', { value: item.expected.toLocaleString() })}</span>
@@ -286,8 +304,8 @@ function ItemRow({
       </div>
 
       <div className="flex items-baseline gap-2 md:justify-end">
-        <span className={`text-lg font-bold tabular-nums ${BAND_CLASS[bandKey]}`}>{percent}%</span>
-        <span className={`text-xs font-semibold ${BAND_CLASS[bandKey]}`}>{item.band?.label}</span>
+        <span className={`text-lg font-bold tabular-nums ${bandStyle(BAND_CLASS, bandIndex)}`}>{percent}%</span>
+        <span className={`text-xs font-semibold ${bandStyle(BAND_CLASS, bandIndex)}`}>{item.band?.label}</span>
       </div>
     </article>
   )
@@ -312,6 +330,15 @@ function LevelField({
   disabled?: boolean
   testId: string
 }) {
+  // The field holds what was typed; the clamp lands on blur.
+  //
+  // Clamping on every keystroke makes a two-digit level unretypable: clearing
+  // "70" snaps the box to the minimum, and the next digits append to it — type
+  // "65" and you get "165", clamped straight back to 70, so the box shows the
+  // value you were trying to replace. `draft` is null whenever the field is not
+  // being edited, so external changes still flow in.
+  const [draft, setDraft] = useState<string | null>(null)
+
   return (
     <label className={`block ${disabled ? 'opacity-60' : ''}`}>
       <span className="block text-xs font-semibold text-muted-foreground">{label}</span>
@@ -320,9 +347,20 @@ function LevelField({
         inputMode="numeric"
         min={min}
         max={max}
-        value={value}
+        value={draft ?? value}
         disabled={disabled}
-        onChange={(event) => onChange(clamp(Math.trunc(Number(event.target.value)), min, max))}
+        onChange={(event) => {
+          const raw = event.target.value
+          setDraft(raw)
+          // An in-range value applies as you type; anything else waits for blur
+          // rather than yanking the caret to a clamped number.
+          const parsed = Math.trunc(Number(raw))
+          if (raw !== '' && Number.isFinite(parsed) && parsed >= min && parsed <= max) onChange(parsed)
+        }}
+        onBlur={() => {
+          if (draft !== null) onChange(clamp(Math.trunc(Number(draft)), min, max))
+          setDraft(null)
+        }}
         className="mt-0.5 h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
         data-testid={testId}
       />

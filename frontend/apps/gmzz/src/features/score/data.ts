@@ -212,8 +212,13 @@ export function evaluate(
     groups.push({
       genus,
       items,
-      // Totals are plain sums — those are raw points, and the game's own rating
-      // is a sum of them. Only the percentage needs the careful treatment.
+      // Plain sums of what was entered.
+      //
+      // NOT asserted to be the game's own 非凡评分. `ZhanLi` (the rating) and
+      // `CESpeciesScore` (item id -> score) are two separate server-pushed
+      // properties, and nothing in the package says the first is the sum of the
+      // second. The UI therefore labels this a total of the items entered, not
+      // the rating itself.
       score: sum(items.map((i) => i.score)),
       expected: sum(items.map((i) => i.expected)),
       max: sum(items.map((i) => i.max)),

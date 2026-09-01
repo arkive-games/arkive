@@ -320,7 +320,8 @@ const en = {
     "divinityLevel": "Divinity level",
     "divinityHint": "0–30",
     "divinityInactive": "Only applies at role level {{level}}",
-    "total": "Total rating",
+    "total": "Items total",
+    "totalHint": "Sum of what you entered",
     "expectedTotal": "Expected",
     "maxTotal": "Max",
     "overall": "Overall",
@@ -336,7 +337,7 @@ const en = {
     "headroomHint": "Items furthest from their expected benchmark, with the materials that raise them.",
     "loadError": "Rating data could not be loaded.",
     "dataNote": "Benchmarks and bands parsed from the local game package",
-    "aggregateNote": "The client only defines a per-item percentage; group and overall figures average those, so one maxed item cannot cover a neglected one."
+    "aggregateNote": "The client only defines a per-item percentage, so group and overall figures average those \u2014 one maxed item cannot cover a neglected one. The totals are simply the items you entered added up; the game\u2019s own rating is a separate server value and is not stated to be their sum."
   },
   catalogPagination: {
     "label": "Catalog pages",
@@ -636,7 +637,8 @@ const zhCN: Strings = {
     "divinityLevel": "神性等级",
     "divinityHint": "0–30",
     "divinityInactive": "扮演等级达到 {{level}} 级后才生效",
-    "total": "非凡评分",
+    "total": "各项合计",
+    "totalHint": "你填入的 14 项之和",
     "expectedTotal": "期望值",
     "maxTotal": "上限",
     "overall": "总完成度",
@@ -652,7 +654,7 @@ const zhCN: Strings = {
     "headroomHint": "距期望值差距最大的项目，并列出对应的提升材料。",
     "loadError": "评分数据加载失败。",
     "dataNote": "期望值与评价档位解析自本地游戏客户端",
-    "aggregateNote": "客户端只定义了单项百分比；分组与总体完成度由各单项取平均，因此某一项拉满不会替另一项补分。"
+    "aggregateNote": "客户端只定义了单项百分比，分组与总体完成度因此由各单项取平均——某一项拉满不会替另一项补分。合计一栏只是你填入各项的加总；游戏自己的非凡评分是另一个服务器数值，并没有说明它等于各项之和。"
   },
   catalogPagination: {
     "label": "目录分页",
@@ -951,7 +953,8 @@ const zhTW: Strings = {
     "divinityLevel": "神性等級",
     "divinityHint": "0–30",
     "divinityInactive": "扮演等級達到 {{level}} 級後才生效",
-    "total": "非凡評分",
+    "total": "各項合計",
+    "totalHint": "你填入的 14 項之和",
     "expectedTotal": "期望值",
     "maxTotal": "上限",
     "overall": "總完成度",
@@ -967,7 +970,7 @@ const zhTW: Strings = {
     "headroomHint": "距期望值差距最大的項目，並列出對應的提升材料。",
     "loadError": "評分資料載入失敗。",
     "dataNote": "期望值與評價檔位解析自本機遊戲客戶端",
-    "aggregateNote": "客戶端只定義了單項百分比；分組與總體完成度由各單項取平均，因此某一項拉滿不會替另一項補分。"
+    "aggregateNote": "客戶端只定義了單項百分比，分組與總體完成度因此由各單項取平均——某一項拉滿不會替另一項補分。合計一欄只是你填入各項的加總；遊戲自己的非凡評分是另一個伺服器數值，並沒有說明它等於各項之和。"
   },
   catalogPagination: {
     "label": "目錄分頁",
