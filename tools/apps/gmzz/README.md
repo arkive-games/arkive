@@ -127,10 +127,10 @@ the structure of a run — `TrainDifficultyData` (the five routes, whose
 (each route's exact station multiset, so the mix is determined rather than
 guessed), `TrainStationTypeData` (what each station buys and sells, per route
 tier), `TrainStrategyCardData` (107 cards with structured `Effects` and
-`TriggerConditions`) and `TrainUpgradeData` (the cargo cap ladder, 80→140).
+`TriggerConditions`) and `TrainUpgradeData` (the cargo cap ladder, 80→200).
 Matching on `TrainTrade` alone looks complete and silently drops every table
 that says how the mode is played — which is how the first pass here missed all
-six.
+five.
 
 Two `Train*` tables are deliberately **not** emitted. `TrainDummyMedicineData`
 belongs to the *training dummy*, not the railway. `TrainStrategyCardPoolData`

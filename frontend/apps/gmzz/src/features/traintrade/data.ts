@@ -1,4 +1,11 @@
 import { dataUrl, iconUrl } from '@/lib/urls'
+import {
+  parseTrainTradeRouteProfiles,
+  type RawDifficulty,
+  type RawMapGeneration,
+  type RawStationType,
+  type TrainTradeRouteProfile,
+} from './routeProfiles'
 
 export type TrainTradeGoods = {
   id: number
@@ -43,6 +50,7 @@ export type TrainTradePrices = Record<TrainTradeStation, TrainTradePriceRange>
 type RawPrice = { BuyPriceRange: [number, number]; SellPriceRange: [number, number] }
 type RawPriceTable = Record<string, Record<string, RawPrice>>
 
+
 /** Strip the client's own rich-text markup (`<LightHighlight>…</>`, `<HyperLink …>`). */
 const stripMarkup = (value: string | undefined) =>
   (value ?? '')
@@ -56,6 +64,15 @@ async function loadJson<T>(name: string, what: string): Promise<T> {
   const response = await fetch(file(name))
   if (!response.ok) throw new Error(`Unable to load ${what} (${response.status})`)
   return (await response.json()) as T
+}
+
+export async function loadTrainTradeRouteProfiles(): Promise<TrainTradeRouteProfile[]> {
+  const [difficulties, maps, stations] = await Promise.all([
+    loadJson<RawDifficulty[]>('difficulties.json', 'Train Trade difficulties'),
+    loadJson<RawMapGeneration[]>('map_generation.json', 'Train Trade map generation'),
+    loadJson<RawStationType[]>('station_types.json', 'Train Trade station types'),
+  ])
+  return parseTrainTradeRouteProfiles(difficulties, maps, stations)
 }
 
 /**
