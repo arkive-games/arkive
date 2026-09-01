@@ -1,4 +1,7 @@
-import { dataUrl } from '@/lib/urls'
+// Relative, not the `@/` alias the other features use: the root
+// `vitest.config.ts` defines no aliases (it cannot — each app has its own `@`
+// root), so an aliased import here makes this module's transforms untestable.
+import { dataUrl } from '../../lib/urls'
 
 /**
  * One stat family a grace is built from, and how many *extraordinary* affixes
@@ -100,17 +103,46 @@ export function combosOf(grace: Grace): GraceCondition[] {
   return grace.conditions.filter((condition) => condition.count > 0)
 }
 
-/** Stable label for one split, e.g. `攻击 x2 + 技能增强 x1`. */
+/**
+ * Stable identity for one split, e.g. `攻击 x2 + 技能增强 x1`.
+ *
+ * Sorted, so two splits that ask for the same thing in a different order count
+ * as one alternative rather than rendering as two identical `或` rows.
+ */
 export function comboKey(conditions: GraceCondition[]): string {
-  return conditions.map((condition) => `${condition.stat}x${condition.count}`).join('+')
+  return conditions
+    .map((condition) => `${condition.stat}x${condition.count}`)
+    .sort()
+    .join('+')
+}
+
+/**
+ * Merge identity: everything except the affix split.
+ *
+ * Every field the merged entry then exposes is in here, so a row can only fuse
+ * into an existing entry when it agrees on all of them. Taking, say, `score`
+ * from whichever row happened to come first would silently drop the other's —
+ * and the 18 rows sharing the `残躯壁垒` placeholder name are exactly the shape
+ * that would hide it. `JSON.stringify` rather than a delimiter join, so a
+ * separator appearing inside a name cannot forge a collision.
+ */
+function mergeKey(grace: Grace): string {
+  return JSON.stringify([
+    grace.slot,
+    grace.name,
+    grace.extraordinaryCount,
+    grace.brief1,
+    grace.brief2,
+    grace.score,
+    grace.tags,
+    grace.unlock,
+  ])
 }
 
 export function mergeGraces(graces: Grace[]): MergedGrace[] {
   const merged = new Map<string, MergedGrace>()
   for (const grace of graces) {
-    // Effect text is part of the key, not just the name: same-name rows with
-    // different effects are different graces.
-    const key = `${grace.slot}|${grace.name}|${grace.extraordinaryCount}|${grace.brief1}`
+    const key = mergeKey(grace)
     const combo = combosOf(grace)
     const existing = merged.get(key)
     if (existing) {

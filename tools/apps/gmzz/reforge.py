@@ -96,13 +96,23 @@ def conditions(value, names: dict[int, str]) -> list[dict]:
     )
     out = []
     for count, ids in items:
-        stats = {names[int(i)] for i in ids if int(i) in names}
+        group_ids = [int(i) for i in ids]
+        # Every id must resolve. Skipping the ones that don't and naming the
+        # condition after the rest looks like valid output while shipping an
+        # affix group nothing has a name for.
+        unknown = [i for i in group_ids if i not in names]
+        if unknown:
+            raise RuntimeError(
+                f"condition {group_ids} names affix group(s) {unknown} that are in neither "
+                f"{' nor '.join(GROUP_TABLES)}"
+            )
+        stats = {names[i] for i in group_ids}
         if len(stats) != 1:
             raise RuntimeError(
-                f"condition {ids} spans {sorted(stats)} affix stats, expected exactly one — "
+                f"condition {group_ids} spans {sorted(stats)} affix stats, expected exactly one — "
                 f"has the client started mixing stat families in one group?"
             )
-        out.append({"count": count, "groupIds": [int(i) for i in ids], "stat": stats.pop()})
+        out.append({"count": count, "groupIds": group_ids, "stat": stats.pop()})
     return out
 
 
@@ -133,14 +143,34 @@ def unlock(show_condition) -> dict | None:
     raise RuntimeError(f"unrecognised ShowCondition {raw!r} — add a branch for it rather than dropping it")
 
 
+#: ``Icon`` is a UE object path, ``/Game/<dir>/<Name>.<Name>``. Matched rather
+#: than split on the last dot: a bare file path would otherwise yield its
+#: *extension* as the asset name, and every icon would collapse to "png".
+_OBJECT_PATH = re.compile(r"^/Game/.+/(?P<stem>[^/.]+)\.(?P<name>[^./]+)$")
+
+
 def _icon_name(icon: str) -> str:
     """The asset name out of a ``/Game/<dir>/<Name>.<Name>`` object path."""
-    return icon.rsplit(".", 1)[-1] if icon else ""
+    if not icon:
+        return ""
+    match = _OBJECT_PATH.match(icon)
+    if not match or match.group("stem") != match.group("name"):
+        raise RuntimeError(f"Icon {icon!r} is not a /Game/<dir>/<Name>.<Name> object path")
+    return match.group("name")
 
 
 def _props(value) -> list[list]:
-    """``Prop1``/``Prop2`` as ``[[statKey, amount]]``; the client uses ``{}`` for none."""
-    return [list(pair) for pair in value] if isinstance(value, list) else []
+    """``Prop1``/``Prop2`` as ``[[statKey, amount]]``; the client uses ``{}`` for none.
+
+    A *non-empty* mapping is rejected rather than read as "no props": that is
+    how the client would look if it moved to ``{statKey: amount}``, and silently
+    emitting an empty stat list for every grace is the kind of break that ships.
+    """
+    if isinstance(value, list):
+        return [list(pair) for pair in value]
+    if value:
+        raise RuntimeError(f"Prop column is a non-empty {type(value).__name__}, expected a list: {value!r}")
+    return []
 
 
 def build(excel: Path, data_out: Path) -> tuple[int, int]:

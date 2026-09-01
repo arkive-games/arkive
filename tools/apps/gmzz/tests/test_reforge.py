@@ -88,6 +88,53 @@ def test_a_condition_mixing_stat_families_is_an_error():
         reforge.conditions({"2": [3991721, 3991726]}, NAMES)
 
 
+def test_an_unresolvable_group_id_is_an_error_even_when_its_partner_resolves():
+    # Naming the condition after the ids that did resolve would look like valid
+    # output while `groupIds` carried a group nothing has a name for.
+    with pytest.raises(RuntimeError, match="affix group"):
+        reforge.conditions({"2": [3991721, 9999999]}, NAMES)
+
+
+@pytest.mark.parametrize(
+    "icon",
+    ["/Game/Arts/UI_2/x/Convergence_1_1_5.Convergence_1_1_5"],
+)
+def test_icon_name_reads_the_object_path(icon):
+    assert reforge._icon_name(icon) == "Convergence_1_1_5"
+
+
+def test_icon_name_is_empty_for_an_empty_column():
+    assert reforge._icon_name("") == ""
+
+
+@pytest.mark.parametrize(
+    "icon",
+    [
+        # A bare file path: splitting on the last dot would yield "png", so
+        # every icon would collapse to its extension instead of failing.
+        "UI/Icons/Convergence_1_1_5.png",
+        "/Game/Arts/UI_2/x/Convergence_1_1_5.SomethingElse",
+        "Convergence_1_1_5",
+    ],
+)
+def test_icon_name_rejects_what_is_not_an_object_path(icon):
+    with pytest.raises(RuntimeError, match="object path"):
+        reforge._icon_name(icon)
+
+
+def test_props_reads_a_list_and_normalises_the_empty_client_table():
+    assert reforge._props([["Atk_N", 540]]) == [["Atk_N", 540]]
+    assert reforge._props({}) == []
+    assert reforge._props(None) == []
+
+
+def test_props_rejects_a_non_empty_mapping_rather_than_reading_it_as_none():
+    # This is how the column would look if the client moved to
+    # `{statKey: amount}`; returning [] would blank every grace's stats.
+    with pytest.raises(RuntimeError, match="non-empty dict"):
+        reforge._props({"Atk_N": 540})
+
+
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [

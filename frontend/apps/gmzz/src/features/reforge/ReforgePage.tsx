@@ -304,7 +304,13 @@ function GraceCard({ grace }: { grace: MergedGrace }) {
               <span className="text-xs text-muted-foreground">{t('reforge.comboOr')}</span>
             ) : null}
             {combo.map((condition, index) => (
-              <span key={condition.stat} className="flex items-center gap-1">
+              // Keyed on the whole requirement, not the stat name: the client
+              // is free to put two conditions on one stat family, and a
+              // duplicate key there reconciles into the wrong element.
+              <span
+                key={`${condition.stat}|${condition.count}|${condition.groupIds.join(',')}`}
+                className="flex items-center gap-1"
+              >
                 {index > 0 ? <span className="text-xs text-muted-foreground">+</span> : null}
                 <span className="inline-flex items-center gap-1 rounded border border-border bg-background/70 px-1.5 py-0.5 text-xs font-medium text-foreground">
                   {condition.stat}
