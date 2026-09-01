@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.2",
+      "date": "2026-09-02",
+      "commit": "693134506a03c01a340853210ca2e204975e5e0d",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed client placeholder equipment entries from the player-facing catalogue.",
+            "zh-CN": "移除玩家图鉴中的客户端占位装备条目。",
+            "zh-TW": "移除玩家圖鑑中的客戶端佔位裝備條目。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.1",
       "date": "2026-09-02",
       "commit": "1c0a3e2f197dd99a560f4bb994e12976a74fc457",
