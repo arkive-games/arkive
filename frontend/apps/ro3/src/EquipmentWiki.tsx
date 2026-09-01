@@ -31,16 +31,7 @@ function groupEquipment(records: EquipmentRecord[]): EquipmentGroup[] {
   }
   const result: EquipmentGroup[] = []
   for (const [key, group] of groups) {
-    const qualityCounts = new Map<number, number>()
-    for (const record of group) {
-      const quality = record.item?.iQuality ?? 0
-      qualityCounts.set(quality, (qualityCounts.get(quality) ?? 0) + 1)
-    }
-    if (Math.max(...qualityCounts.values()) <= 1) {
-      result.push({ key, records: [...group].sort((a, b) => (a.item?.iQuality ?? 0) - (b.item?.iQuality ?? 0)) })
-    } else {
-      for (const record of group) result.push({ key: `${key}|${record.iID}`, records: [record] })
-    }
+    result.push({ key, records: [...group].sort((a, b) => (a.item?.iQuality ?? 0) - (b.item?.iQuality ?? 0) || a.iID - b.iID) })
   }
   return result
 }
@@ -100,10 +91,11 @@ export function EquipmentWiki() {
 function EquipmentTile({ records, active, onSelect }: { records: EquipmentRecord[]; active: boolean; onSelect: (id: number) => void }) {
   const record = records[records.length - 1]
   const quality = record.item?.iQuality
+  const qualities = [...new Set(records.map((variant) => variant.item?.iQuality).filter((value): value is number => value !== undefined))]
   return <button type="button" className={`equipment-tile ${qualityClass(quality)}${active ? ' is-active' : ''}`} onClick={() => onSelect(record.iID)}>
     <span className="equipment-tile-art">{record.icon ? <img src={resourceUrl(record.icon)} alt="" loading="lazy" /> : <Shield aria-hidden="true" />}</span>
     <span className="equipment-tile-name">{text(record.name, `装备 ${record.iID}`)}</span>
-    <span className="equipment-tile-meta">{SLOT_LABELS[record.slot ?? ''] ?? record.slot ?? '未知部位'} · {records.length > 1 ? <span className="equipment-quality-dots" aria-label={`包含 ${records.length} 种品质`}>{records.map((variant) => <i className={qualityClass(variant.item?.iQuality)} key={variant.iID} />)}</span> : QUALITY_LABELS[quality ?? 1] ?? `品质 ${quality}`}</span>
+    <span className="equipment-tile-meta">{SLOT_LABELS[record.slot ?? ''] ?? record.slot ?? '未知部位'} · {qualities.length > 1 ? <span className="equipment-quality-dots" aria-label={`包含 ${qualities.length} 种品质`}>{qualities.map((value) => <i className={qualityClass(value)} key={value} />)}</span> : QUALITY_LABELS[quality ?? 1] ?? `品质 ${quality}`}</span>
   </button>
 }
 
