@@ -321,7 +321,7 @@ const en = {
     "divinityHint": "0–30",
     "divinityInactive": "Only applies at role level {{level}}",
     "total": "Items total",
-    "totalHint": "Sum of what you entered",
+    "totalHint": "Sum of the 14 items you entered",
     "expectedTotal": "Expected",
     "maxTotal": "Max",
     "overall": "Overall",

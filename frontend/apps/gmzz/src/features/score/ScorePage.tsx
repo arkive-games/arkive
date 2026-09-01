@@ -157,7 +157,6 @@ export default function ScorePage() {
                     key={item.species.id}
                     item={item}
                     rating={rating}
-                    bandIndex={rating.bands.findIndex((band) => band.id === item.band?.id)}
                     onScore={(value) => setScores((prev) => ({ ...prev, [item.species.id]: value }))}
                   />
                 ))}
@@ -206,28 +205,33 @@ function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> 
   const { t } = useTranslation()
   const percent = Math.round(result.percent * 100)
   return (
-    <div className="flex flex-wrap items-end gap-x-6 gap-y-2" data-testid="score-summary">
-      {/* Deliberately not labelled 非凡评分: the game's rating is a separate
-          server value, and nothing in the package says it equals this sum. */}
-      <div>
-        <div className="text-xs font-semibold text-muted-foreground">{t('score.total')}</div>
-        <div className="text-3xl font-bold tabular-nums text-foreground">{result.score.toLocaleString()}</div>
-        <div className="text-xs text-muted-foreground">{t('score.totalHint')}</div>
-      </div>
-      <div>
-        <div className="text-xs font-semibold text-muted-foreground">{t('score.expectedTotal')}</div>
-        <div className="text-lg font-semibold tabular-nums text-muted-foreground">
-          {result.expected.toLocaleString()}
+    <div data-testid="score-summary">
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
+        {/* Deliberately not labelled 非凡评分 (the in-game panel's name): that
+            rating is a separate server value, and nothing in the package says
+            it equals this sum. The hint sits below the row rather than inside
+            this cell — a third line here would bottom-align the other tiles
+            against it instead of against the total. */}
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground">{t('score.total')}</div>
+          <div className="text-3xl font-bold tabular-nums text-foreground">{result.score.toLocaleString()}</div>
+        </div>
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground">{t('score.expectedTotal')}</div>
+          <div className="text-lg font-semibold tabular-nums text-muted-foreground">
+            {result.expected.toLocaleString()}
+          </div>
+        </div>
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground">{t('score.maxTotal')}</div>
+          <div className="text-lg font-semibold tabular-nums text-muted-foreground">{result.max.toLocaleString()}</div>
+        </div>
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground">{t('score.overall')}</div>
+          <div className="text-lg font-semibold tabular-nums text-foreground">{percent}%</div>
         </div>
       </div>
-      <div>
-        <div className="text-xs font-semibold text-muted-foreground">{t('score.maxTotal')}</div>
-        <div className="text-lg font-semibold tabular-nums text-muted-foreground">{result.max.toLocaleString()}</div>
-      </div>
-      <div>
-        <div className="text-xs font-semibold text-muted-foreground">{t('score.overall')}</div>
-        <div className="text-lg font-semibold tabular-nums text-foreground">{percent}%</div>
-      </div>
+      <p className="mt-1 text-xs text-muted-foreground">{t('score.totalHint')}</p>
     </div>
   )
 }
@@ -235,15 +239,16 @@ function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> 
 function ItemRow({
   item,
   rating,
-  bandIndex,
   onScore,
 }: {
   item: SpeciesResult
   rating: Rating
-  bandIndex: number
   onScore: (value: number) => void
 }) {
   const { t } = useTranslation()
+  // Resolved here rather than passed in: the only valid producer is this one
+  // expression, and it belongs next to the bandStyle calls that consume it.
+  const bandIndex = rating.bands.findIndex((band) => band.id === item.band?.id)
   // Guarded before it reaches a CSS width: a non-finite percentage would render
   // as `width: NaN%`, which the browser drops, leaving a bar stuck full-width
   // with no other symptom.
