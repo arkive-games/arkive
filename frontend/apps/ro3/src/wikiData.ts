@@ -148,6 +148,166 @@ export interface WikiData {
   cards: CardCatalogDocument
 }
 
+export interface EquipmentItemRecord {
+  iID: number
+  iEquipPart?: number
+  iQuality?: number
+  iLevelNeed?: number
+  iTrade?: number
+  iStackLimit?: number
+  kIcon?: string
+}
+
+export interface EquipmentRecord {
+  iID: number
+  iRank?: number
+  iEntries?: number
+  kBasicAttribute?: number[][]
+  kFixedEntries?: number[][]
+  kSpecial?: number[][]
+  kFixedSpecialAttribute?: number[]
+  slot?: string
+  name?: { 'zh-CN'?: string }
+  desc?: { 'zh-CN'?: string }
+  icon?: string
+  item?: EquipmentItemRecord
+}
+
+export interface EquipmentAttributeRecord {
+  iID: number
+  kVariable?: string
+  iAttributeType?: number
+  name?: { 'zh-CN'?: string }
+}
+
+export interface EquipmentEntryRecord {
+  iID: number
+  iGroup?: number
+  iAttriID?: number
+  iMin?: number
+  iMax?: number
+  iWeight?: number
+}
+
+export interface EquipmentSpecialGroupRecord {
+  iID: number
+  iGroupID?: number
+  iSpecialID?: number
+  iPower?: number
+  name?: { 'zh-CN'?: string }
+  desc?: { 'zh-CN'?: string }
+}
+
+export interface EquipmentSpecialEffectRecord {
+  iID: number
+  iGroupID?: number
+  iPower?: number
+  name?: { 'zh-CN'?: string }
+  desc?: { 'zh-CN'?: string }
+  kDescData?: string[]
+}
+
+export interface EquipmentDocument {
+  counts: { equipment: number; withItem: number; withName: number; withIcon: number }
+  attributes: EquipmentAttributeRecord[]
+  equipment: EquipmentRecord[]
+}
+
+export interface EquipmentAttrsDocument {
+  counts: Record<string, number>
+  attributes: EquipmentAttributeRecord[]
+  entryGroups: EquipmentEntryRecord[]
+  specialGroups: EquipmentSpecialGroupRecord[]
+  specialEffects: EquipmentSpecialEffectRecord[]
+}
+
+export interface SoulAttributeRecord {
+  iID?: number
+  iAttributeID?: number
+  iSubAttriID?: number
+  attributeId?: number
+  iMin?: number
+  iMax?: number
+  min?: number
+  max?: number
+  iGroup?: number
+  iMarkID?: number
+  name?: { 'zh-CN'?: string }
+}
+
+export interface SoulRecord {
+  iID: number
+  quality?: number
+  type?: number
+  subType?: number
+  icon?: string
+  name?: { 'zh-CN'?: string }
+  desc?: { 'zh-CN'?: string }
+  seasonPower?: number
+  subAttributeGroup?: number
+  primaryAttributes?: SoulAttributeRecord[]
+  primaryAttributeLevelUp?: SoulAttributeRecord[]
+  initialMarks?: Array<{ threshold?: number; markId?: number; specialEffectIds?: number[] }>
+  marks?: Array<{ threshold?: number; markId?: number; effectId?: number; stage?: number; icon?: string; specialEffectIds?: number[] }>
+  subAttributes?: SoulAttributeRecord[]
+}
+
+export interface SoulMarkEffectRecord {
+  iID: number
+  iMarkID?: number
+  iLevel?: number
+  desc?: { 'zh-CN'?: string }
+  name?: { 'zh-CN'?: string }
+}
+
+export interface SoulResonanceRecord {
+  iID: number
+  resonanceId?: number
+  power?: number
+  icon?: string
+  name?: { 'zh-CN'?: string }
+  attributes?: SoulAttributeRecord[]
+}
+
+export interface SoulResonanceActivationRecord {
+  iID?: number
+  iId?: number
+  iJob?: number
+  iJobProfess?: number
+  iJobResonanceId?: number
+  iJobResonanceSkills?: number[]
+  iResonanceID?: number
+  iJobID?: number
+  iJobLv?: number
+  iNeedNum?: number
+  name?: { 'zh-CN'?: string }
+  desc?: { 'zh-CN'?: string }
+}
+
+export interface SoulResonanceRestraintRecord {
+  iID: number
+  iSourceID?: number
+  iTargetID?: number
+  iValue?: number
+  name?: { 'zh-CN'?: string }
+  desc?: { 'zh-CN'?: string }
+}
+
+export interface SoulWikiDocument {
+  counts: Record<string, number>
+  souls: SoulRecord[]
+  markEffects: SoulMarkEffectRecord[]
+  subAttributeGroups: Array<{ iID: number; attributes?: SoulAttributeRecord[] }>
+  levels: SoulAttributeRecord[]
+  resonance: SoulResonanceRecord[]
+  resonanceActivation: SoulResonanceActivationRecord[]
+  resonanceRestraint: SoulResonanceRestraintRecord[]
+  heroicSpiritLayers: SoulAttributeRecord[]
+  heroicSpiritLevels: SoulAttributeRecord[]
+  attributes: EquipmentAttributeRecord[]
+  specialGroups: EquipmentSpecialGroupRecord[]
+}
+
 async function fetchJson<T>(path: string): Promise<T> {
   const response = await fetch(dataUrl(path))
   if (!response.ok) throw new Error(`RO3 data request failed: ${path} (${response.status})`)
@@ -185,6 +345,30 @@ export async function loadTalentWikiData(): Promise<{
     fetchJson<TalentCatalogDocument>('talents.json'),
   ])
   return { version, talents }
+}
+
+export async function loadEquipmentWikiData(): Promise<{
+  version: DataVersion
+  equipment: EquipmentDocument
+  attrs: EquipmentAttrsDocument
+}> {
+  const [version, equipment, attrs] = await Promise.all([
+    loadDataVersion(),
+    fetchJson<EquipmentDocument>('equipment.json'),
+    fetchJson<EquipmentAttrsDocument>('equipment-attrs.json'),
+  ])
+  return { version, equipment, attrs }
+}
+
+export async function loadSoulWikiData(): Promise<{
+  version: DataVersion
+  souls: SoulWikiDocument
+}> {
+  const [version, souls] = await Promise.all([
+    loadDataVersion(),
+    fetchJson<SoulWikiDocument>('souls.json'),
+  ])
+  return { version, souls }
 }
 
 export async function loadSkillLevels(

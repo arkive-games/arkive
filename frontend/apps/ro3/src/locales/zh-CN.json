@@ -133,7 +133,9 @@
       "talents": "天赋系统",
       "cards": "卡片图鉴",
       "pets": "宠物图鉴",
-      "monsters": "魔物图鉴"
+      "monsters": "魔物图鉴",
+      "equipment": "装备图鉴",
+      "souls": "灵魂残响"
     },
     "professions": {
       "lineLabel": "职业系",
