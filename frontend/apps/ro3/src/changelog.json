@@ -1,16 +1,16 @@
 {
   "entries": [
     {
-      "version": "0.8.1",
-      "date": "2026-09-07",
-      "commit": "abd43752b187f662d5e35ec6e25310d4351c04f0",
+      "version": "0.9.0",
+      "date": "2026-09-02",
+      "commit": "f15adade62dc7f351815fca9064fe695c4e8ffb9",
       "changes": [
         {
-          "kind": "fix",
+          "kind": "feature",
           "text": {
-            "en-US": "The skill encyclopedia now has one clean address you can share and reload, instead of two links for the same page.",
-            "zh-CN": "职业技能图鉴现在只有一个简洁地址，可分享、可刷新，不再出现同一页面两个链接的情况。",
-            "zh-TW": "職業技能圖鑑現在只有一個簡潔網址，可分享、可重新整理，不再出現同一頁面兩個連結的情況。"
+            "en-US": "Added equipment and soul-resonance encyclopaedia pages with searchable client data.",
+            "zh-CN": "新增装备图鉴与灵魂残响百科，支持搜索筛选并查看客户端数据。",
+            "zh-TW": "新增裝備圖鑑與靈魂殘響百科，支援搜尋篩選並查看客戶端資料。"
           }
         }
       ]
