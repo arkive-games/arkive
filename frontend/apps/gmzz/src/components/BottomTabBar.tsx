@@ -2,6 +2,7 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
   BookOpen,
+  Gauge,
   Hammer,
   History,
   Home,
@@ -22,6 +23,7 @@ function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/traintrade')) return '/traintrade'
   if (pathname.startsWith('/utopia')) return '/utopia'
   if (pathname.startsWith('/reforge')) return '/reforge'
+  if (pathname.startsWith('/score')) return '/score'
   if (pathname.startsWith('/changelog')) return '/changelog'
   return '/'
 }
@@ -50,14 +52,21 @@ export function BottomTabBar() {
           {tab.icon}<span className="max-w-full truncate">{tab.label}</span>
         </Link>
       )}
+      // The strip is at its documented ceiling of four tabs (see
+      // ShellBottomNav's own contract), so anything further goes in here.
       more={{
         label: t('more'),
         icon: <Menu className="size-5" strokeWidth={1.8} />,
-        active: active === '/changelog',
+        active: active === '/changelog' || active === '/score',
         title: t('more'),
       }}
       grid={{
         items: [{
+          key: '/score',
+          label: t('nav.score'),
+          icon: <Gauge className="size-5" strokeWidth={1.8} />,
+          active: active === '/score',
+        }, {
           key: '/changelog',
           label: t('nav.changelog'),
           icon: <History className="size-5" strokeWidth={1.8} />,

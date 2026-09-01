@@ -103,6 +103,59 @@ pak's `C7/Content/` and the export lands as `.png`.
 pathway is worse than one that stays silent, so the split is left out and the
 page groups by tag. If the mapping turns up, it is a small addition here.
 
+## Beyonder rating (非凡评分)
+
+```bash
+uv run python -m gmzz.score
+```
+
+Writes `data-gmzz/score/rating.json`: 4 groups, 14 items, their benchmark
+curves, the rating bands and the improvement materials.
+
+非凡评分 is the game's one number for how developed a character is. Its panel
+splits into 4 groups (`CEGenusData`: 途径 / 装备 / 封印物 / 非凡人物) over 14 items
+(`CESpeciesData`). "CE" is the client's own abbreviation — combat effectiveness —
+which is why nothing in the export answers to `Score` or `Rating`, and the
+fastest way in is the panel's own label strings.
+
+**The per-item score is not in the client, and this pipeline invents none.**
+`Data/NetDefs/AvatarActorCEComponent.xml` settles it:
+
+```xml
+<ZhanLi Type="int" Flags="OWN_CLIENT" .../>          <!-- 非凡评分 CEScore -->
+<CESpeciesScore Type="DictIntInt" Flags="OWN_INITIAL_ONLY" .../>
+<OnMsgSyncCESpeciesScore> <Arg>int</Arg> <Arg>int</Arg> </OnMsgSyncCESpeciesScore>
+```
+
+The client receives every number and computes none, so how gear becomes points
+is server-side and unrecoverable here. What the client *does* own is the whole
+grading side, and that is what ships: the benchmark curves, the completion
+formula (`Min(1, Min(1, s/expected) * 0.9 + Min(1, s/max) * 0.1)`), the bands
+(推荐提升 / 稳步增长 / 趋于完善 / 登峰造极) and the materials each item consumes.
+
+Three traps, all of which cost time:
+
+- **The static `ExpectedScore` / `MaxScore` columns match no level.** Fitting all
+  28 formulas across the whole 70×31 grid, the best point (L70 D21) reproduces 4
+  of 28. They are emitted as the client's own fields, but the *curves* are what
+  grades a player — a column pinned to nothing would misgrade everyone.
+- **The curves take two parameters**, `$1` = 扮演等级 (to 70) and `$2` = 神性等级
+  (to 30) — the pair the client itself calls 扮演等级与神性等级. Divinity is inert
+  below the level cap because its branches sit behind `elseif $1 < 70`, verified
+  over all 28 curves, so the emitted form is `byLevel[1..69]` plus
+  `byDivinity[0..30]` rather than a 2170-point grid. The build asserts that
+  separability rather than trusting it.
+- **Do not probe outside the domain.** Each ladder ends at `elseif $2 == 30`, so
+  a divinity of 31 matches no branch and falls through to the `local Score`
+  default at the top of the body — which for 秘偶属性 is a different number than
+  its own value at 30. An early version asserted the curve was flat past 30 and
+  failed the build on that. Six curves are also not monotonic; that is the
+  client's data, not an error, so it is not asserted either.
+
+The formulas are run on the LuaJIT that `tables.py` already uses rather than
+re-implemented. The branch order is `$1 < 40 … $1 < 70` and only then `$2 < n`,
+and a transcription slip in that order would be invisible in the output.
+
 ## Equipment reforge graces (装备重塑 / 恩赐)
 
 ```bash

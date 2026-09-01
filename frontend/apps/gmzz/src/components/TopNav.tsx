@@ -6,13 +6,14 @@ import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } f
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
 
-export type NavKey = '/' | '/traintrade' | '/utopia' | '/reforge' | '/changelog'
+export type NavKey = '/' | '/traintrade' | '/utopia' | '/reforge' | '/score' | '/changelog'
 
 const ITEMS: { key: NavKey; labelKey: string }[] = [
   { key: '/', labelKey: 'nav.home' },
   { key: '/traintrade', labelKey: 'nav.traintrade' },
   { key: '/utopia', labelKey: 'nav.utopia' },
   { key: '/reforge', labelKey: 'nav.reforge' },
+  { key: '/score', labelKey: 'nav.score' },
 ]
 
 export function TopNav({ active }: { active: NavKey }) {

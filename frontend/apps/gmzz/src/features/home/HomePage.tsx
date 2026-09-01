@@ -8,6 +8,7 @@ const SECTIONS = [
   { to: '/traintrade', titleKey: 'trainTrade.title', bodyKey: 'trainTrade.homeDescription' },
   { to: '/utopia', titleKey: 'utopianTheater.title', bodyKey: 'utopianTheater.homeDescription' },
   { to: '/reforge', titleKey: 'reforge.title', bodyKey: 'reforge.homeDescription' },
+  { to: '/score', titleKey: 'score.title', bodyKey: 'score.homeDescription' },
 ] as const
 
 export default function HomePage() {
