@@ -97,6 +97,26 @@ describe('completion', () => {
   it('is 0 at no score', () => {
     expect(completion(0, 100, 200)).toBe(0)
   })
+
+  it.each([
+    ['max missing', 0, 100, 0],
+    ['expected missing', 0, 0, 100],
+    ['both missing', 0, 0, 0],
+  ])('scores an empty item at 0 when a benchmark is %s', (_case, score, expected, max) => {
+    // Counting a missing benchmark's term as 1 would put an untouched item at
+    // 10% (or 90%), which reads as progress that does not exist.
+    expect(completion(score, expected, max)).toBe(0)
+  })
+
+  it('gives a missing side no weight rather than free credit', () => {
+    // Only the surviving benchmark grades it: 50/100, not 0.5*0.9 + 0.1.
+    expect(completion(50, 100, 0)).toBe(0.5)
+    expect(completion(50, 0, 100)).toBe(0.5)
+  })
+
+  it('is 0 for a non-finite score rather than propagating NaN into a bar width', () => {
+    expect(completion(Number.NaN, 100, 200)).toBe(0)
+  })
 })
 
 describe('bandFor', () => {

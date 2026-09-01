@@ -104,10 +104,19 @@ export function clamp(value: number, low: number, high: number): number {
  * at the end.
  */
 export function completion(score: number, expected: number, max: number): number {
-  if (expected <= 0 && max <= 0) return 0
-  const toExpected = expected > 0 ? Math.min(1, score / expected) : 1
-  const toMax = max > 0 ? Math.min(1, score / max) : 1
-  return Math.min(1, toExpected * 0.9 + toMax * 0.1)
+  if (!Number.isFinite(score) || score <= 0) return 0
+  const hasExpected = expected > 0
+  const hasMax = max > 0
+  // A non-positive benchmark is not a bar you have cleared, it is a bar that is
+  // missing. Letting its term count as 1 would score an *empty* item at 10% (or
+  // 90%, if it were the expected side that went missing), which is worse than
+  // saying nothing. So a missing side drops out and the other carries the whole
+  // weight. The client's own formula would divide by zero here; it never does,
+  // because no shipped curve contains a zero.
+  if (!hasExpected && !hasMax) return 0
+  if (!hasExpected) return Math.min(1, score / max)
+  if (!hasMax) return Math.min(1, score / expected)
+  return Math.min(1, Math.min(1, score / expected) * 0.9 + Math.min(1, score / max) * 0.1)
 }
 
 /**

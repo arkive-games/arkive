@@ -61,6 +61,24 @@ def test_curve_rejects_a_formula_where_divinity_matters_below_the_level_cap(runt
         score.curve(score.compile_formula(runtime, LEAKY))
 
 
+def test_curve_catches_a_divinity_branch_between_the_old_sample_points(runtime):
+    # Sampling 0/7/15/30 would have missed this: it agrees at every one of those
+    # and differs only at divinity 1, so separability has to be checked over the
+    # whole range rather than a few points.
+    sneaky = (
+        "local Score = 50\n"
+        "if $1 < 70 and $2 == 1 then Score = 100 end\n"
+        "return Score"
+    )
+    with pytest.raises(RuntimeError, match="no longer separable"):
+        score.curve(score.compile_formula(runtime, sneaky))
+
+
+def test_curve_refuses_a_fractional_benchmark_rather_than_truncating(runtime):
+    with pytest.raises(RuntimeError, match="whole number"):
+        score.curve(score.compile_formula(runtime, "return 12.9"))
+
+
 def test_curve_does_not_probe_outside_the_domain(runtime):
     # Divinity 31 matches no branch and falls through to the body's default
     # (900 here, unlike the 800 at 30). That is out-of-domain, not a curve still

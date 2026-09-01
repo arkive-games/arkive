@@ -225,7 +225,10 @@ function ItemRow({
   onScore: (value: number) => void
 }) {
   const { t } = useTranslation()
-  const percent = Math.round(item.percent * 100)
+  // Guarded before it reaches a CSS width: a non-finite percentage would render
+  // as `width: NaN%`, which the browser drops, leaving a bar stuck full-width
+  // with no other symptom.
+  const percent = Number.isFinite(item.percent) ? Math.round(clamp(item.percent, 0, 1) * 100) : 0
   const bandKey = item.band?.percentage ?? 49
   const materials = materialsFor(rating, item.species)
 

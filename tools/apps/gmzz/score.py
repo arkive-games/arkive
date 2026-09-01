@@ -120,7 +120,10 @@ def curve(fn) -> dict:
     """
     by_level = []
     for level in range(1, MAX_ROLE_LEVEL):
-        seen = {int(fn(level, d)) for d in (0, 7, 15, MAX_DIVINITY)}
+        # Every divinity level, not a sample of them. Sampling cannot *prove*
+        # separability — a formula could match at the sampled points and differ
+        # between them — and the whole grid is only ~2k evaluations per curve.
+        seen = {_whole(fn(level, d)) for d in range(0, MAX_DIVINITY + 1)}
         if len(seen) != 1:
             raise RuntimeError(
                 f"divinity level changes the benchmark at role level {level} ({sorted(seen)}) — "
@@ -130,8 +133,21 @@ def curve(fn) -> dict:
 
     return {
         "byLevel": by_level,
-        "byDivinity": [int(fn(MAX_ROLE_LEVEL, d)) for d in range(0, MAX_DIVINITY + 1)],
+        "byDivinity": [_whole(fn(MAX_ROLE_LEVEL, d)) for d in range(0, MAX_DIVINITY + 1)],
     }
+
+
+def _whole(value) -> int:
+    """A formula result as an int, refusing to truncate a fractional one.
+
+    Every shipped curve returns integer literals. Rounding a future fractional
+    benchmark down would quietly shift what the page grades against, so it stops
+    instead.
+    """
+    number = float(value)
+    if not number.is_integer():
+        raise RuntimeError(f"benchmark formula returned {number}, expected a whole number of points")
+    return int(number)
 
 
 def _rows(payload):
