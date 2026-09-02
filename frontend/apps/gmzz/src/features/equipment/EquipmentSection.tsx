@@ -230,21 +230,22 @@ function EnhanceSliders({
           onChange={onBadge}
         />
       </div>
-      <div className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
-        <div className="flex justify-end gap-1.5">
-          <span>{t('equip.enhanceStage')}</span>
+      {/* The two readings are what the player quotes, so they lead; the score they come to is the footnote. */}
+      <div className="shrink-0 text-center tabular-nums">
+        <div className="flex items-baseline justify-center gap-1.5 text-sm">
+          <span className="text-muted-foreground">{t('equip.enhanceStage')}</span>
           <span className="font-semibold text-foreground" data-testid={`${testIdPrefix}-stage-value`}>
             {stageText(stage)}
           </span>
         </div>
-        <div className="flex justify-end gap-1.5">
-          <span>{t('equip.refinePercent')}</span>
+        <div className="flex items-baseline justify-center gap-1.5 text-sm">
+          <span className="text-muted-foreground">{t('equip.refinePercent')}</span>
           <span className="font-semibold text-foreground" data-testid={`${testIdPrefix}-refine-value`}>
             {percentText(badge)}
           </span>
         </div>
         {score ? (
-          <div className="mt-1 text-sm font-semibold text-foreground" data-testid={`${testIdPrefix}-enhance-score`}>
+          <div className="mt-1 text-xs text-muted-foreground" data-testid={`${testIdPrefix}-enhance-score`}>
             {t('equip.enhanceDerived', score)}
           </div>
         ) : null}
