@@ -3,43 +3,30 @@ import { IconSearch } from '@tabler/icons-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
+import { qualityPlateUrl } from '@/lib/urls'
+
 /** One selectable thing: an icon tile, a name, and a line of detail. */
 export type PickerOption = {
   id: number
   name: string
   /** Rendered under the name — gear level for an item, group/risk for a relic. */
   detail: string
-  /** Tints the tile border by rarity. */
+  /** Picks the rarity plate behind the icon; null draws a neutral tile. */
   quality: number | null
-  /** Icon URL. Falls back to a tinted tile when absent. */
+  /** Icon URL. Falls back to the bare plate when absent. */
   iconUrl?: string
   /** Extra searchable text that is not displayed. */
   keywords?: string
 }
 
-/** Quality tints, worst to best. Indexed by `quality` with a clamp. */
-const QUALITY_TILE = [
-  'from-zinc-500/40 to-zinc-800/60 border-zinc-500/50',
-  'from-zinc-500/40 to-zinc-800/60 border-zinc-500/50',
-  'from-emerald-500/40 to-emerald-900/60 border-emerald-500/50',
-  'from-sky-500/40 to-sky-900/60 border-sky-500/50',
-  'from-violet-500/40 to-violet-900/60 border-violet-500/50',
-  'from-amber-500/40 to-amber-900/60 border-amber-500/50',
-  'from-rose-500/40 to-rose-900/60 border-rose-500/50',
-  'from-fuchsia-500/40 to-fuchsia-900/60 border-fuchsia-500/50',
-]
-
-export function qualityTile(quality: number | null): string {
-  const index = Math.min(Math.max(quality ?? 0, 0), QUALITY_TILE.length - 1)
-  return QUALITY_TILE[index]
-}
-
 /**
  * A square icon tile.
  *
- * The rarity gradient stays behind the art: it is the border and backdrop the
- * game uses to signal quality, and it also covers the moment before the image
- * loads. Without a `src` the tile is all there is.
+ * The game's own rarity plate sits behind the art — the dark textured square
+ * with a coloured bar along its foot that every item in the client is drawn
+ * over — so the colour reads the same here as in the bag. It also covers the
+ * moment before the icon loads. Without a `src` the plate is all there is;
+ * without a `quality` (an empty slot) the tile is a neutral card.
  */
 export function IconTile({
   quality,
@@ -56,7 +43,9 @@ export function IconTile({
 }) {
   return (
     <div
-      className={`${className} shrink-0 overflow-hidden rounded border bg-gradient-to-br ${qualityTile(quality)} flex items-center justify-center text-xs font-semibold text-foreground/70`}
+      className={`${className} shrink-0 overflow-hidden rounded border border-border bg-muted bg-cover bg-center flex items-center justify-center text-xs font-semibold text-foreground/70`}
+      style={quality == null ? undefined : { backgroundImage: `url("${qualityPlateUrl(quality)}")` }}
+      data-quality={quality ?? undefined}
     >
       {src ? (
         <img src={src} alt={alt} loading="lazy" className="size-full object-contain" />

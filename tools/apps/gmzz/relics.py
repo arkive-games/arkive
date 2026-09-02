@@ -76,6 +76,7 @@ from .version import stamp_version
 OUT_FILE = "relics/relics.json"
 
 SEALED_TABLE = "SealedInfoData"
+ITEM_TABLE = "ItemNewData"
 PROMOTE_TABLE = "SealedPromoteData"
 RISK_TABLE = "SealedRisk"
 RESONANCE_TABLE = "SealedInfoAttrData"
@@ -107,9 +108,14 @@ def _plain(text) -> str:
 
 def artifacts(excel: Path, strings: dict) -> list[dict]:
     """The 18 封印物, with their group, starting grade and risk band."""
+    # An artifact has no quality of its own; the client shows it through the
+    # `ItemNewData` row `DisplayItemID` names, and that row's `quality` picks
+    # the rarity plate behind the icon (4, purple, for every one shipped).
+    items = load_table(excel, ITEM_TABLE)
     out = []
     for row in _rows(resolve_text(load_table(excel, SEALED_TABLE), strings)):
         group = row.get("GroupId")
+        shown = items.get(str(row.get("DisplayItemID"))) or {}
         out.append({
             "id": row["ID"],
             "name": row["Name"],
@@ -118,6 +124,7 @@ def artifacts(excel: Path, strings: dict) -> list[dict]:
             # `Tag` is the usage bucket: 1 副本, 2 竞技, 3 通用.
             "tag": row.get("Tag"),
             "initialGrade": row.get("InitialGrade"),
+            "quality": shown.get("quality"),
             "icon": row.get("Icon"),
             "description": _plain(row.get("ItemDes")),
             "seasons": list(row.get("SeasonIdList") or []),

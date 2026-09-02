@@ -1,8 +1,10 @@
-"""Emit the equipment and 封印物 icons into ``resource-gmzz``.
+"""Emit the equipment and 封印物 icons, and the rarity plates behind them, into
+``resource-gmzz``.
 
 Run from ``tools/`` (after ``gmzz.equipment`` and ``gmzz.relics``)::
 
     uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Item/Large
+    uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/ConfigIcon/ItemQuality
     uv run python -m gmzz.equipicons
 
 The ids come from the **already-emitted** JSON rather than from the game tables
@@ -23,6 +25,14 @@ would only invent a distinction the source does not make. The id spaces do not
 collide — verified against the goods set, 0 shared ids — but note the collision
 risk is real rather than structural: relic artifacts and materials sit in the
 same ``2xxxxxx`` band as the train-trade goods, and only their values differ.
+
+**The rarity plates are the game's, not ours.** The client draws every item icon
+over ``ConfigIcon/ItemQuality/ItemQuality01..07`` — a dark textured square with a
+coloured bar along its foot, white through green, blue, purple, gold and orange
+to red — and ``ItemNewData.quality`` is the ``0N`` in that name (the 橙 rows are
+quality 6, and 06 is the orange plate). They ship under ``ui/`` with the
+client's own names so the page can index them by quality rather than by a
+colour table we would otherwise have to keep in step by hand.
 """
 
 from __future__ import annotations
@@ -38,6 +48,16 @@ from .icons import ICON_SOURCE, OUT_SUBDIR, WEBP_QUALITY
 
 EQUIPMENT_FILE = "equipment/equipment.json"
 RELICS_FILE = "relics/relics.json"
+
+#: The rarity plates, ``ItemQuality01.png`` .. ``ItemQuality07.png``.
+PLATE_SOURCE = "C7/Content/Arts/UI_2/Resource/ConfigIcon/ItemQuality"
+PLATE_OUT_SUBDIR = "ui"
+PLATE_QUALITIES = range(1, 8)
+#: The 136x136 asset is a 120x120 plate inside a soft drop shadow. The page's
+#: tile draws its own border and clips to it, so only the plate is shipped —
+#: shadow included, the coloured bar would sit a few pixels above the tile's
+#: edge with a translucent gap beneath it.
+PLATE_BOX = (9, 9, 129, 129)
 
 #: Which module to run when one of the inputs is absent.
 _PRODUCER = {EQUIPMENT_FILE: "gmzz.equipment", RELICS_FILE: "gmzz.relics"}
@@ -84,41 +104,67 @@ def _is_current(webp: Path, png: Path) -> bool:
     return webp.is_file() and webp.stat().st_mtime >= png.stat().st_mtime
 
 
-def build(raw: Path, data_out: Path, res_out: Path) -> tuple[int, int, int]:
-    """Convert every equipment/relic icon. Returns (distinct, written, current)."""
-    wanted = icon_ids(data_out)
+def _sources(raw: Path, subdir: str, names: list[str], what: str) -> dict[str, Path]:
+    """``{name: png}`` for every wanted asset, or raise naming the export to run.
 
-    # Validated up front, exactly as in `gmzz.icons`: data-gmzz and resource-gmzz
-    # are committed separately, so a run that converted half the set before
-    # failing would ship a dataset naming images the image repo lacks. Coverage
-    # is 100% today, so a miss means the export regressed rather than that an
-    # icon is legitimately unavailable — an error, not a skip.
-    source = Path(raw) / ICON_SOURCE
-    export_hint = f"run: uex export --profile gmzz --only {ICON_SOURCE}"
+    Validated up front, exactly as in `gmzz.icons`: data-gmzz and resource-gmzz
+    are committed separately, so a run that converted half the set before
+    failing would ship a dataset naming images the image repo lacks. Coverage
+    is 100% today, so a miss means the export regressed rather than that an
+    asset is legitimately unavailable — an error, not a skip.
+    """
+    source = Path(raw) / subdir
+    export_hint = f"run: uex export --profile gmzz --only {subdir}"
     if not source.is_dir():
         raise FileNotFoundError(f"{source} not found — {export_hint}")
-    pngs = {icon: source / f"{icon}.png" for icon in wanted}
-    missing = [icon for icon, png in pngs.items() if not png.is_file()]
+    pngs = {name: source / f"{name}.png" for name in names}
+    missing = [name for name, png in pngs.items() if not png.is_file()]
     if missing:
         raise FileNotFoundError(
-            f"{len(missing)} icon(s) absent from the export, e.g. "
+            f"{len(missing)} {what}(s) absent from the export, e.g. "
             f"{missing[:5]} — a partial export? {export_hint}"
         )
+    return pngs
 
-    target = Path(res_out) / OUT_SUBDIR
+
+def _convert(pngs: dict[str, Path], target: Path, box: tuple[int, int, int, int] | None = None) -> int:
+    """Write one WebP per source into ``target``; returns how many were (re)written."""
     target.mkdir(parents=True, exist_ok=True)
     written = 0
-    for icon in wanted:
-        webp = target / f"{icon}.webp"
-        if _is_current(webp, pngs[icon]):
+    for name, png in pngs.items():
+        webp = target / f"{name}.webp"
+        if _is_current(webp, png):
             continue
-        with Image.open(pngs[icon]) as img:
-            img.save(webp, "WEBP", quality=WEBP_QUALITY, method=6)
+        with Image.open(png) as img:
+            (img.crop(box) if box else img).save(webp, "WEBP", quality=WEBP_QUALITY, method=6)
         written += 1
+    return written
 
-    current = len(wanted) - written
-    print(f"equipicons: {len(wanted)} icons, {written} written, {current} already current -> {target}")
-    return len(wanted), written, current
+
+def build(raw: Path, data_out: Path, res_out: Path) -> tuple[int, int, int]:
+    """Convert every equipment/relic icon and the rarity plates.
+
+    Returns (distinct, written, current) over both sets together.
+    """
+    wanted = icon_ids(data_out)
+    plates = [f"ItemQuality{quality:02d}" for quality in PLATE_QUALITIES]
+
+    # Both sources are checked before either is written, for the same reason
+    # each is checked before its own conversion.
+    icon_pngs = _sources(raw, ICON_SOURCE, wanted, "icon")
+    plate_pngs = _sources(raw, PLATE_SOURCE, plates, "plate")
+
+    target = Path(res_out) / OUT_SUBDIR
+    written = _convert(icon_pngs, target)
+    written += _convert(plate_pngs, Path(res_out) / PLATE_OUT_SUBDIR, PLATE_BOX)
+
+    total = len(wanted) + len(plates)
+    current = total - written
+    print(
+        f"equipicons: {len(wanted)} icons + {len(plates)} plates, "
+        f"{written} written, {current} already current -> {target.parent}"
+    )
+    return total, written, current
 
 
 def main(argv: list[str] | None = None) -> None:

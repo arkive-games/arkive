@@ -38,3 +38,16 @@ export function dataUrl(path: string): string {
 export function iconUrl(icon: string): string {
   return `${RES_BASE}/icons/${icon}.webp`
 }
+
+/** The rarity plates the game draws under item icons run `ItemQuality01`..`07`. */
+export const QUALITY_PLATE_MAX = 7
+
+/**
+ * URL of the game's own rarity plate for a quality, clamped onto the seven the
+ * client ships. `ItemNewData.quality` is the number in the asset's name, so
+ * this is a lookup rather than a colour table of ours.
+ */
+export function qualityPlateUrl(quality: number): string {
+  const clamped = Math.min(Math.max(Math.round(quality), 1), QUALITY_PLATE_MAX)
+  return `${RES_BASE}/ui/ItemQuality${String(clamped).padStart(2, '0')}.webp`
+}

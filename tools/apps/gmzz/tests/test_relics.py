@@ -12,11 +12,11 @@ from gmzz import relics
 ARTIFACTS = {
     "2085029": {
         "ID": 2085029, "Name": "公证书", "GroupId": 1, "Tag": 1, "InitialGrade": 3,
-        "Icon": "2000557", "ItemDes": "一纸<Mark>公证</>。", "SeasonIdList": [103],
+        "Icon": "2000557", "DisplayItemID": 2000641, "ItemDes": "一纸<Mark>公证</>。", "SeasonIdList": [103],
     },
     "2085004": {
         "ID": 2085004, "Name": "正义钱包", "GroupId": 2, "Tag": 3, "InitialGrade": 3,
-        "Icon": "2000584", "ItemDes": "", "SeasonIdList": [103],
+        "Icon": "2000584", "DisplayItemID": 2000584, "ItemDes": "", "SeasonIdList": [103],
     },
 }
 
@@ -70,13 +70,16 @@ MAT_WORDS = {
 }
 CONSTS = {"XMatMinWordNum": 1, "XMatMaxWordNum": 6, "SealWorstGrade": 3, "SealBestGrade": 1,
           "MainAttributeTipsEntryNumber": [6, 6, 5, 4], "Unwanted": "x"}
+# The 公证书 displays through a different item than its icon names; only the
+# displayed one carries the quality.
+ITEMS = {"2000641": {"ID": 2000641, "quality": 4, "icon": "2000557"}, "2000584": {"ID": 2000584, "quality": 4}}
 RISKS = [{"RiskID": 1, "RiskLevel": "有一定危险", "RiskDescription": "小心使用。"}]
 
 
 @pytest.fixture
 def stub(monkeypatch):
     tables = {
-        relics.SEALED_TABLE: ARTIFACTS, relics.PROMOTE_TABLE: PROMOTE,
+        relics.SEALED_TABLE: ARTIFACTS, relics.ITEM_TABLE: ITEMS, relics.PROMOTE_TABLE: PROMOTE,
         relics.RISK_TABLE: RISKS, relics.RESONANCE_TABLE: RESONANCE,
         relics.KNOWLEDGE_TABLE: KNOWLEDGE, relics.WORTH_TABLE: WORTHS,
         relics.MAT_TABLE: MATS, relics.MAT_TC_TABLE: MAT_TC,
@@ -94,6 +97,8 @@ def test_artifacts_carry_their_group_name(stub):
     assert rows[2085029]["groupName"] == "攻击"
     assert rows[2085004]["groupName"] == "防御"
     assert rows[2085029]["description"] == "一纸公证。", "client markup stripped"
+    # The rarity plate comes from the item the client displays, via DisplayItemID.
+    assert rows[2085029]["quality"] == 4 and rows[2085004]["quality"] == 4
 
 
 def test_promotion_reads_the_nested_shape_and_orders_worst_first(stub):

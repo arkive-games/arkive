@@ -11,6 +11,8 @@ export type Artifact = {
   /** Usage bucket: 1 副本, 2 竞技, 3 通用. */
   tag: number | null
   initialGrade: number | null
+  /** Of the item the client displays the artifact through — picks the rarity plate. */
+  quality: number | null
   icon: string | null
   description: string
   seasons: number[]

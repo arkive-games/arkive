@@ -3,6 +3,7 @@ import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
+import { iconUrl } from '@/lib/urls'
 import {
   artifactsInGroup, currentSeason, displayedValue, effectiveAffixCap, evaluateRelicSlot,
   gradeOptions, gradeRung, k2For, knowledgeLadder, markForStat, materialsForGroup, maxAffixes,
@@ -31,11 +32,7 @@ const SECTION_CLASS = 'border-t border-border/70 p-2.5'
 const PROSE_CLASS = 'mt-0.5 whitespace-pre-line text-xs leading-5 text-muted-foreground'
 const ENDS_CLASS = 'flex justify-between text-xs tabular-nums text-muted-foreground'
 
-/**
- * `Artifact.tag` is a usage bucket: 1 副本, 2 竞技, 3 通用. No artifact icon art
- * ships with the dataset, so the bucket is also what tints the placeholder tile.
- */
-const TAG_QUALITY: Record<number, number> = { 1: 3, 2: 4, 3: 5 }
+/** `Artifact.tag` is a usage bucket: 1 副本, 2 竞技, 3 通用. */
 const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagArena', 3: 'relic.tagGeneral' }
 
 function affixFrom(rung: PoolAffix): ChosenRelicAffix {
@@ -75,7 +72,6 @@ function ArtifactCell({ relics, groupId, artifact, onSelect }: {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const groupName = relics.groupNames[String(groupId)] ?? ''
-  const tint = (tag: number | null) => TAG_QUALITY[tag ?? 0] ?? null
   const detailOf = (entry: Artifact) =>
     t('relic.artifactDetail', {
       group: entry.groupName ?? groupName,
@@ -83,14 +79,20 @@ function ArtifactCell({ relics, groupId, artifact, onSelect }: {
     })
   const options: PickerOption[] = artifactsInGroup(relics, groupId).map((entry) => ({
     id: entry.id, name: entry.name, detail: detailOf(entry),
-    quality: tint(entry.tag), keywords: entry.description,
+    quality: entry.quality, iconUrl: entry.icon ? iconUrl(entry.icon) : undefined,
+    keywords: entry.description,
   }))
 
   return (
     <>
       <button type="button" aria-haspopup="dialog" onClick={() => setOpen(true)} className={CELL_CLASS}
         data-testid={`relic-artifact-open-${groupId}`}>
-        <IconTile quality={artifact === null ? null : tint(artifact.tag)} label={artifact?.name.slice(0, 1)} />
+        <IconTile
+          quality={artifact?.quality ?? null}
+          src={artifact?.icon ? iconUrl(artifact.icon) : undefined}
+          alt={artifact?.name ?? ''}
+          label={artifact?.name.slice(0, 1)}
+        />
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold text-foreground">
             {artifact === null ? t('relic.artifactEmpty') : artifact.name}

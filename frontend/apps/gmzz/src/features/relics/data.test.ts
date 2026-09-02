@@ -20,9 +20,9 @@ import {
  */
 const RELICS: Relics = {
   artifacts: [
-    { id: 2085029, name: '公证书', groupId: 1, groupName: '攻击', tag: 1, initialGrade: 3, icon: '2000557', description: '', seasons: [103] },
-    { id: 2085001, name: '丧钟', groupId: 1, groupName: '攻击', tag: 2, initialGrade: 3, icon: '2000543', description: '', seasons: [103] },
-    { id: 2085004, name: '正义钱包', groupId: 2, groupName: '防御', tag: 3, initialGrade: 3, icon: '2000584', description: '', seasons: [103] },
+    { id: 2085029, name: '公证书', groupId: 1, groupName: '攻击', tag: 1, initialGrade: 3, quality: 4, icon: '2000557', description: '', seasons: [103] },
+    { id: 2085001, name: '丧钟', groupId: 1, groupName: '攻击', tag: 2, initialGrade: 3, quality: 4, icon: '2000543', description: '', seasons: [103] },
+    { id: 2085004, name: '正义钱包', groupId: 2, groupName: '防御', tag: 3, initialGrade: 3, quality: 4, icon: '2000584', description: '', seasons: [103] },
   ],
   promotion: {
     ladder: [
