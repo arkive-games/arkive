@@ -253,9 +253,9 @@ export function graceFor(graces: Grace[], slot: number, affixes: ChosenAffix[]):
 export type PieceState = {
   slot: number
   itemId: number | null
-  /** 0..maxStage. */
+  /** 0..maxStage — the stage being refined; stages below it are complete. */
   enhanceStage: number
-  /** 0..100, the current stage's refinement. Tracked separately from the stage. */
+  /** 0..100, how far `enhanceStage` itself has come. Meaningless at +0, where nothing is being refined. */
   refinePercent: number
   affixes: ChosenAffix[]
 }
@@ -266,9 +266,9 @@ export type PieceResult = {
   brand: Brand | null
   /** The item's own 装备基础, 0 for an empty slot. */
   baseScore: number
-  /** stage x markPerStage. Proven against the game. */
+  /** The complete stages' mark plus the refined share of the current one. Proven against the game at "+3 37%" = 240. */
   enhanceScore: number
-  /** Per-stat totals the enhancement grants at this stage. */
+  /** Per-stat totals the enhancement grants, the current stage counted by its refinement. */
   enhanceStats: [string, number][]
   /** Sum of every chosen affix's Mark, contaminated ones subtracting. */
   affixMark: number
@@ -302,66 +302,88 @@ export function maxStageFor(equipment: Equipment, slot: number, season?: number)
   return bodyFor(equipment, slot, season)?.stages.length ?? equipment.enhancement.maxStage
 }
 
-export function enhanceOf(body: EnhanceBody | null, stage: number): {
-  score: number
-  stats: [string, number][]
-} {
-  if (!body) return { score: 0, stats: [] }
-  const reached = body.stages.filter((s) => s.stage <= stage)
-  const score = reached.reduce((total, s) => total + s.mark, 0)
-  const totals = new Map<string, number>()
-  for (const rung of reached) {
-    for (const [key, amount] of rung.stats) totals.set(key, (totals.get(key) ?? 0) + amount)
-  }
-  return { score, stats: [...totals] }
+/** How far along the ladder a piece is, in stages: the complete ones plus the refined share of the current one. */
+function stagesDone(totalStages: number, stage: number, refinePercent: number): number {
+  const current = Math.min(stage, totalStages)
+  if (current <= 0) return 0
+  return current - 1 + Math.min(100, Math.max(0, refinePercent)) / 100
 }
 
 /**
- * Overall enhancement progress.
+ * Enhancement score and stats at a stage with its refinement.
  *
- * The game shows "+3" over "37%" for a piece whose stages 1-3 read 100% and
- * whose 4-8 are locked: 3 of 8 stages is 37.5%. So the badge percentage is
- * progress across the whole ladder, with the in-progress stage counting its own
- * refinement — not the refinement figure on its own.
+ * "+3" is a piece whose stages 1 and 2 are complete and whose stage 3 is the one
+ * being refined, so stage 3's mark accrues with the refinement: fully refined it
+ * is worth exactly three stages (240, verified in game), freshly reached it is
+ * worth little more than "+2". At +0 nothing is being refined and nothing scores.
+ */
+export function enhanceOf(
+  body: EnhanceBody | null,
+  stage: number,
+  refinePercent = 100,
+): { score: number; stats: [string, number][] } {
+  if (!body) return { score: 0, stats: [] }
+  const done = stagesDone(body.stages.length, stage, refinePercent)
+  let score = 0
+  const totals = new Map<string, number>()
+  for (const rung of body.stages) {
+    // A complete stage counts whole, the current one by its refinement, the rest not at all.
+    const share = Math.min(1, Math.max(0, done - (rung.stage - 1)))
+    if (share <= 0) continue
+    score += rung.mark * share
+    for (const [key, amount] of rung.stats) totals.set(key, (totals.get(key) ?? 0) + amount * share)
+  }
+  return { score: Math.round(score), stats: [...totals] }
+}
+
+/**
+ * Overall enhancement progress, the percentage the game prints under the badge.
+ *
+ * It is progress across the whole ladder: the stages complete plus the current
+ * stage's own refinement, over the ladder's length. So "+3" of 8 runs from 25%
+ * (stage 3 just reached) up to 37.5% (stage 3 fully refined), which the game
+ * floors to the "37%" it shows beside a fully refined +3.
  */
 export function progressOf(body: EnhanceBody | null, stage: number, refinePercent: number): number {
   const total = body?.stages.length ?? 0
   if (total === 0) return 0
-  const done = Math.min(stage, total)
-  const partial = done < total ? Math.min(100, Math.max(0, refinePercent)) / 100 : 0
-  return ((done + partial) / total) * 100
+  return (stagesDone(total, stage, refinePercent) / total) * 100
 }
 
 /**
  * The badge percentages a stage can show, as the game prints them (floored).
  *
- * At +3 of 8 the badge runs 37%..49%: 37.5% with the fourth stage untouched,
- * and anything up to 50% before that stage completes and the badge reads +4.
- * So each stage owns a window of the whole-ladder percentage, and a slider for
- * the refinement is bounded by the stage rather than running 0..100 on its own.
- * A complete ladder is pinned at 100.
+ * Each stage owns a window of the whole-ladder percentage: +3 of 8 runs
+ * 25%..37%, and 37% is the most a +3 can read — one more point of refinement
+ * and the badge says +4. So a slider for the refinement is bounded by the stage
+ * rather than running 0..100 on its own. At +0 there is no refinement to show.
  */
 export function progressBounds(totalStages: number, stage: number): { min: number; max: number } {
-  if (totalStages <= 0) return { min: 0, max: 0 }
-  const done = Math.min(stage, totalStages)
-  if (done >= totalStages) return { min: 100, max: 100 }
-  const min = Math.floor((done / totalStages) * 100)
-  const max = Math.ceil(((done + 1) / totalStages) * 100) - 1
-  return { min, max: Math.max(min, max) }
+  const current = Math.min(stage, totalStages)
+  if (totalStages <= 0 || current <= 0) return { min: 0, max: 0 }
+  return {
+    min: Math.floor(((current - 1) / totalStages) * 100),
+    max: Math.floor((current / totalStages) * 100),
+  }
 }
 
 /**
  * The in-stage refinement that puts the badge at `progress`% — the inverse of
- * `progressOf`, clamped to 0..100 so a badge value outside the stage's window
- * lands on the nearest end rather than moving the stage.
+ * `progressOf` after the game's flooring.
+ *
+ * A floored badge covers a range of refinements, and the highest one is taken:
+ * the window's top value is what a fully refined stage reads, so it has to map
+ * back to 100 for "+3 37%" to score its three whole stages. The result is
+ * clamped into 1..100, so a badge outside the stage's window lands on the
+ * nearest end rather than moving the stage; +0 has no refinement and gives 0.
  */
 export function refineFromProgress(totalStages: number, stage: number, progress: number): number {
-  if (totalStages <= 0) return 0
-  const done = Math.min(stage, totalStages)
-  if (done >= totalStages) return 0
+  const current = Math.min(stage, totalStages)
+  if (totalStages <= 0 || current <= 0) return 0
   const span = 100 / totalStages
-  const refine = ((progress - done * span) / span) * 100
-  return Math.min(100, Math.max(0, Math.round(refine)))
+  // The smallest refinement that would already floor to the next badge, less one.
+  const next = Math.ceil(((progress + 1) / span - (current - 1)) * 100 - 1e-9)
+  return Math.min(100, Math.max(1, next - 1))
 }
 
 export function evaluatePiece(
@@ -373,7 +395,11 @@ export function evaluatePiece(
   const item = equipment.items.find((i) => i.id === state.itemId) ?? null
   const brand = item?.brandId != null ? equipment.brands.find((b) => b.id === item.brandId) ?? null : null
   const body = bodyFor(equipment, state.slot, season)
-  const { score: enhanceScore, stats: enhanceStats } = enhanceOf(body, state.enhanceStage)
+  const { score: enhanceScore, stats: enhanceStats } = enhanceOf(
+    body,
+    state.enhanceStage,
+    state.refinePercent,
+  )
 
   let affixMark = 0
   for (const affix of state.affixes) {

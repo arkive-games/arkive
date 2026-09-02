@@ -1,7 +1,18 @@
+import { useId } from 'react'
+
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const RANGE_CLASS = `h-6 w-full cursor-pointer accent-[color:var(--arkive-nav-accent)] disabled:cursor-default disabled:opacity-50 ${FOCUS}`
 const ENDS_CLASS = 'flex justify-between text-xs tabular-nums text-muted-foreground'
+const TICKS_CLASS = 'relative h-4 text-xs tabular-nums text-muted-foreground'
 const HEADING_CLASS = 'flex items-baseline justify-between gap-2 text-xs'
+
+/**
+ * Width of the browser's default range thumb. The track the thumb's centre
+ * travels is the input's width less this, so per-step labels are laid out along
+ * that inner span rather than the full width, or the end ones drift off the
+ * marks they name.
+ */
+const THUMB_PX = 16
 
 /**
  * An integer slider with its two ends labelled.
@@ -9,9 +20,12 @@ const HEADING_CLASS = 'flex items-baseline justify-between gap-2 text-xs'
  * Used wherever a value has a small, ordered range the player thinks of as a
  * ladder — relic grade, knowledge level, enhancement stage — rather than as a
  * number to type. `heading` adds a label/value line above the track for the
- * places that do not draw their own; without it the field is track and ends
- * only. A range with one value (`min === max`) is shown disabled: there is
- * nothing to drag to.
+ * places that do not draw their own; without it the field is track and labels
+ * only. `tickLabel` marks every step of the range and labels it, for a ladder
+ * short enough that each rung deserves a name (the eight enhancement stages);
+ * the two end labels are then not drawn. `labels` puts the label row above the
+ * track instead of below, so two stacked sliders can share the middle. A range
+ * with one value (`min === max`) is shown disabled: there is nothing to drag to.
  */
 export default function RangeField({
   label,
@@ -21,6 +35,8 @@ export default function RangeField({
   valueText,
   minLabel,
   maxLabel,
+  tickLabel,
+  labels = 'below',
   testId,
   heading = false,
   onChange,
@@ -32,10 +48,35 @@ export default function RangeField({
   valueText: string
   minLabel: string
   maxLabel: string
+  /** Labels every step in place of the two end labels. */
+  tickLabel?: (value: number) => string
+  labels?: 'above' | 'below'
   testId: string
   heading?: boolean
   onChange: (value: number) => void
 }) {
+  const listId = useId()
+  const steps = tickLabel && max > min ? Array.from({ length: max - min + 1 }, (_, i) => min + i) : null
+
+  const labelRow = steps ? (
+    <div className={TICKS_CLASS} aria-hidden>
+      {steps.map((step) => (
+        <span
+          key={step}
+          className="absolute -translate-x-1/2 whitespace-nowrap"
+          style={{ left: `calc(${THUMB_PX / 2}px + ${(step - min) / (max - min)} * (100% - ${THUMB_PX}px))` }}
+        >
+          {tickLabel?.(step)}
+        </span>
+      ))}
+    </div>
+  ) : (
+    <div className={ENDS_CLASS}>
+      <span>{minLabel}</span>
+      <span>{maxLabel}</span>
+    </div>
+  )
+
   return (
     <div className="min-w-0">
       {heading ? (
@@ -46,6 +87,7 @@ export default function RangeField({
           </span>
         </div>
       ) : null}
+      {labels === 'above' ? labelRow : null}
       <input
         type="range"
         min={min}
@@ -53,16 +95,21 @@ export default function RangeField({
         step={1}
         value={Math.min(max, Math.max(min, value))}
         disabled={min >= max}
+        list={steps ? listId : undefined}
         className={RANGE_CLASS}
         aria-label={label}
         aria-valuetext={valueText}
         data-testid={testId}
         onChange={(event) => onChange(Number(event.target.value))}
       />
-      <div className={ENDS_CLASS}>
-        <span>{minLabel}</span>
-        <span>{maxLabel}</span>
-      </div>
+      {steps ? (
+        <datalist id={listId}>
+          {steps.map((step) => (
+            <option key={step} value={step} />
+          ))}
+        </datalist>
+      ) : null}
+      {labels === 'below' ? labelRow : null}
     </div>
   )
 }

@@ -74,12 +74,13 @@ const PIP_OFF = 'text-muted-foreground/40'
 const AFFIX_ROW_CLASS =
   'grid min-w-0 grid-cols-[minmax(4rem,0.9fr)_minmax(4.5rem,1.2fr)_minmax(4rem,0.8fr)_auto_auto] items-center gap-1'
 /**
- * The rows layout's columns: item, enhancement, brand, affixes. Shared by the
+ * The rows layout's columns: item, enhancement, affixes, brand. Shared by the
  * header and every row so the two cannot drift apart. Four columns only fit
  * from `lg` up — at tablet width the affix column was left too narrow for its
- * own button — so below that a row stacks its cells with their own labels.
+ * own button — so below that a row stacks its cells with their own labels. The
+ * enhancement column is wide because its stage track labels all nine steps.
  */
-const ROW_GRID = 'lg:grid-cols-[minmax(13rem,18rem)_minmax(9rem,12rem)_minmax(0,8.5rem)_minmax(0,1.5fr)] lg:gap-3'
+const ROW_GRID = 'lg:grid-cols-[minmax(12rem,16rem)_minmax(18rem,24rem)_minmax(0,1.5fr)_minmax(0,9rem)] lg:gap-3'
 
 function readInt(raw: string, min: number, max: number): number {
   const whole = Math.trunc(Number(raw))
@@ -167,17 +168,24 @@ function Picker({
 }
 
 /**
- * Stage and badge-percentage sliders, the pair the game's own panel shows.
+ * Stage and badge-percentage sliders, the pair the game's own panel shows,
+ * stacked with their readings beside them.
  *
- * The second slider runs over the stage's window of the whole-ladder
- * percentage (37..49 at +3 of 8), which is the figure printed under the badge;
- * the in-stage refinement it stores is derived from that.
+ * The stage track has every step marked and labelled "+N" above it; the
+ * badge-percentage track below runs over the stage's window of the whole-ladder
+ * percentage (25..37 at +3 of 8), which is what is printed under the badge, and
+ * has its two ends labelled underneath. So the two tracks sit together in the
+ * middle with their scales outermost. The in-stage refinement that is stored is
+ * derived from the badge value. At +0 the window is empty and the second slider
+ * is disabled, since there is no stage being refined. The readings — and, for a
+ * piece, the score the two come to — sit to the right.
  */
 function EnhanceSliders({
   stage,
   badge,
   maxStage,
   testIdPrefix,
+  score,
   onStage,
   onBadge,
 }: {
@@ -185,6 +193,8 @@ function EnhanceSliders({
   badge: number
   maxStage: number
   testIdPrefix: string
+  /** Omitted for the batch sliders, which drive every piece and have no score of their own. */
+  score?: { score: number; stages: number }
   onStage: (stage: number) => void
   onBadge: (badge: number) => void
 }) {
@@ -193,32 +203,53 @@ function EnhanceSliders({
   const stageText = (value: number) => t('equip.stageOption', { stage: value })
   const percentText = (value: number) => t('equip.percentValue', { value })
   return (
-    <>
-      <RangeField
-        heading
-        label={t('equip.enhanceStage')}
-        min={0}
-        max={maxStage}
-        value={stage}
-        valueText={stageText(stage)}
-        minLabel={stageText(0)}
-        maxLabel={stageText(maxStage)}
-        testId={`${testIdPrefix}-stage`}
-        onChange={onStage}
-      />
-      <RangeField
-        heading
-        label={t('equip.refinePercent')}
-        min={bounds.min}
-        max={bounds.max}
-        value={badge}
-        valueText={percentText(badge)}
-        minLabel={percentText(bounds.min)}
-        maxLabel={percentText(bounds.max)}
-        testId={`${testIdPrefix}-refine`}
-        onChange={onBadge}
-      />
-    </>
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="min-w-0 flex-1">
+        <RangeField
+          label={t('equip.enhanceStage')}
+          min={0}
+          max={maxStage}
+          value={stage}
+          valueText={stageText(stage)}
+          minLabel={stageText(0)}
+          maxLabel={stageText(maxStage)}
+          tickLabel={stageText}
+          labels="above"
+          testId={`${testIdPrefix}-stage`}
+          onChange={onStage}
+        />
+        <RangeField
+          label={t('equip.refinePercent')}
+          min={bounds.min}
+          max={bounds.max}
+          value={badge}
+          valueText={percentText(badge)}
+          minLabel={percentText(bounds.min)}
+          maxLabel={percentText(bounds.max)}
+          testId={`${testIdPrefix}-refine`}
+          onChange={onBadge}
+        />
+      </div>
+      <div className="shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+        <div className="flex justify-end gap-1.5">
+          <span>{t('equip.enhanceStage')}</span>
+          <span className="font-semibold text-foreground" data-testid={`${testIdPrefix}-stage-value`}>
+            {stageText(stage)}
+          </span>
+        </div>
+        <div className="flex justify-end gap-1.5">
+          <span>{t('equip.refinePercent')}</span>
+          <span className="font-semibold text-foreground" data-testid={`${testIdPrefix}-refine-value`}>
+            {percentText(badge)}
+          </span>
+        </div>
+        {score ? (
+          <div className="mt-1 text-sm font-semibold text-foreground" data-testid={`${testIdPrefix}-enhance-score`}>
+            {t('equip.enhanceDerived', score)}
+          </div>
+        ) : null}
+      </div>
+    </div>
   )
 }
 
@@ -281,28 +312,28 @@ type PieceProps = {
 }
 type PieceControlProps = Pick<PieceProps, 'equipment' | 'result' | 'onPatch'>
 
+/** The refinement a freshly chosen stage starts at: complete, or none at +0. */
+function refineForStage(stage: number): number {
+  return stage > 0 ? 100 : 0
+}
+
 function EnhanceControls({ equipment, result, onPatch }: PieceControlProps) {
-  const { t } = useTranslation()
   const { slot, enhanceStage } = result.state
   const maxStage = maxStageFor(equipment, slot)
   const ladderStages = bodyFor(equipment, slot)?.stages.length ?? maxStage
 
   return (
-    <div className="min-w-0 space-y-1">
-      <EnhanceSliders
-        stage={enhanceStage}
-        badge={badgeOf(result.progressPercent, maxStage, enhanceStage)}
-        maxStage={maxStage}
-        testIdPrefix={`equip-${slot}`}
-        // The in-stage refinement is kept across a stage change, so "+3 at
-        // half" becomes "+4 at half" rather than snapping back to the floor.
-        onStage={(stage) => onPatch({ enhanceStage: stage })}
-        onBadge={(badge) => onPatch({ refinePercent: refineFromProgress(maxStage, enhanceStage, badge) })}
-      />
-      <div className="text-xs tabular-nums text-muted-foreground">
-        {t('equip.enhanceDerived', { score: result.enhanceScore, stages: ladderStages })}
-      </div>
-    </div>
+    <EnhanceSliders
+      stage={enhanceStage}
+      badge={badgeOf(result.progressPercent, maxStage, enhanceStage)}
+      maxStage={maxStage}
+      testIdPrefix={`equip-${slot}`}
+      score={{ score: result.enhanceScore, stages: ladderStages }}
+      // A stage is picked at its top — "+3" reads 37%, the figure a player
+      // quotes — and the refinement slider then walks it down if need be.
+      onStage={(stage) => onPatch({ enhanceStage: stage, refinePercent: refineForStage(stage) })}
+      onBadge={(badge) => onPatch({ refinePercent: refineFromProgress(maxStage, enhanceStage, badge) })}
+    />
   )
 }
 
@@ -409,8 +440,8 @@ function RowHeader() {
     >
       <span>{t('equip.item')}</span>
       <span>{t('equip.enhance')}</span>
-      <span>{t('equip.brand')}</span>
       <span>{t('equip.affixes')}</span>
+      <span>{t('equip.brand')}</span>
     </div>
   )
 }
@@ -438,11 +469,11 @@ function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: 
         />
       </button>
       <Cell label={t('equip.enhance')} hidden><EnhanceControls {...controls} /></Cell>
+      <Cell label={t('equip.affixes')} hidden><AffixEditor {...controls} /></Cell>
       {/* Stacked, an empty brand cell would be a bare label; in the grid it must stay to hold its column. */}
       <Cell label={t('equip.brand')} hidden className={result.brand ? '' : 'hidden lg:block'}>
         <BrandNote result={result} />
       </Cell>
-      <Cell label={t('equip.affixes')} hidden><AffixEditor {...controls} /></Cell>
     </article>
   )
 }
@@ -609,18 +640,17 @@ export default function EquipmentSection({
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)_minmax(0,1fr)]">
         <Cell label={t('equip.batchEnhance')}>
-          <div className="space-y-1">
-            <EnhanceSliders
-              stage={batch.stage}
-              badge={batch.badge}
-              maxStage={globalMaxStage}
-              testIdPrefix="equip-batch"
-              onStage={(stage) => applyBatch(stage, progressBounds(globalMaxStage, stage).min)}
-              onBadge={(badge) => applyBatch(batch.stage, badge)}
-            />
-          </div>
+          <EnhanceSliders
+            stage={batch.stage}
+            badge={batch.badge}
+            maxStage={globalMaxStage}
+            testIdPrefix="equip-batch"
+            // Picked at its top, like a single piece's stage.
+            onStage={(stage) => applyBatch(stage, progressBounds(globalMaxStage, stage).max)}
+            onBadge={(badge) => applyBatch(batch.stage, badge)}
+          />
         </Cell>
 
         <Cell label={t('equip.suit')}>
