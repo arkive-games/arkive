@@ -128,6 +128,16 @@ const EQUIPMENT_SLOTS = [
   { key: "accessory-1", label: "饰品 1", part: 6 },
   { key: "accessory-2", label: "饰品 2", part: 7 },
 ];
+function equipmentSlotsForLine(lineId: string) {
+  if (lineId === "archer") {
+    return EQUIPMENT_SLOTS.filter(
+      (slot) => slot.key !== "offhand" && slot.key !== "shield",
+    ).map((slot) =>
+      slot.key === "weapon" ? { ...slot, label: "主手武器" } : slot,
+    );
+  }
+  return EQUIPMENT_SLOTS;
+}
 const EMPTY_BUILD: BuildDraft = {
   id: "local-default",
   title: "未命名流派",
@@ -197,10 +207,16 @@ function normalizeBuild(
           cardIds: [],
         }))
       : [];
-  const equipment = EQUIPMENT_SLOTS.map(({ key }, index) => {
-    const value = oldEquipment[index] as
-      | Partial<EquipmentBuildConfig>
-      | undefined;
+  const equipmentByKey = new Map<string, Partial<EquipmentBuildConfig>>();
+  oldEquipment.forEach((value, index) => {
+    const key =
+      typeof value?.slotKey === "string"
+        ? value.slotKey
+        : EQUIPMENT_SLOTS[index]?.key;
+    if (key) equipmentByKey.set(key, value);
+  });
+  const equipment = EQUIPMENT_SLOTS.map(({ key }) => {
+    const value = equipmentByKey.get(key);
     return {
       slotKey: key,
       equipmentId: Number(value?.equipmentId ?? 0),
@@ -558,6 +574,7 @@ function BuildViewer({
       item,
     ]),
   );
+  const equipmentSlots = equipmentSlotsForLine(build.professionLineId);
   const petChips = (ids: number[]) => (
     <div className="build-chip-grid">
       {ids.map((id) => {
@@ -650,9 +667,12 @@ function BuildViewer({
         </BuildSection>
         <BuildSection icon={Shield} title="固定装备部位">
           <div className="build-config-grid">
-            {build.equipment.map((config, index) => {
+            {equipmentSlots.map((slot) => {
+              const config =
+                build.equipment.find((item) => item.slotKey === slot.key) ??
+                EMPTY_BUILD.equipment.find((item) => item.slotKey === slot.key) ??
+                EMPTY_BUILD.equipment[0];
               const item = equipmentMap.get(config.equipmentId);
-              const slot = EQUIPMENT_SLOTS[index];
               return (
                 <article className="build-config-card" key={config.slotKey}>
                   <div className="build-config-head">
@@ -794,6 +814,7 @@ function BuildEditor({
   onSave: () => void;
   onUnavailable: () => void;
 }) {
+  const equipmentSlots = equipmentSlotsForLine(line.id);
   const talents = data.talents.talents.seasonTalents.nodes
     .filter((node) => node.iType !== 0)
     .slice(0, 120);
@@ -971,20 +992,29 @@ function BuildEditor({
         hint="每个部位独立选择装备、品质、词条与卡片"
       >
         <div className="build-config-editor-list">
-          {EQUIPMENT_SLOTS.map((slot, index) => (
-            <EquipmentSlotEditor
-              key={slot.key}
-              slot={slot}
-              index={index}
-              config={draft.equipment[index] ?? EMPTY_BUILD.equipment[index]}
-              records={equipmentRecords.filter((item) =>
-                allowedForLine(item, line),
-              )}
-              attrs={data.equipment.attrs}
-              cards={cardsForPart(slot.part)}
-              update={updateEquipment}
-            />
-          ))}
+          {equipmentSlots.map((slot) => {
+            const index = draft.equipment.findIndex(
+              (item) => item.slotKey === slot.key,
+            );
+            const config =
+              (index >= 0 ? draft.equipment[index] : undefined) ??
+              EMPTY_BUILD.equipment.find((item) => item.slotKey === slot.key) ??
+              EMPTY_BUILD.equipment[0];
+            return (
+              <EquipmentSlotEditor
+                key={slot.key}
+                slot={slot}
+                index={index >= 0 ? index : 0}
+                config={config}
+                records={equipmentRecords.filter((item) =>
+                  allowedForLine(item, line),
+                )}
+                attrs={data.equipment.attrs}
+                cards={cardsForPart(slot.part)}
+                update={updateEquipment}
+              />
+            );
+          })}
         </div>
       </EditorSection>
       <EditorSection icon={PawPrint} title="出战宠物" hint="最多选择 4 个">
