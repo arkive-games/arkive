@@ -42,6 +42,7 @@ import { ProfessionWiki } from './ProfessionWiki'
 import { TalentWiki } from './TalentWiki'
 import { EquipmentWiki } from './EquipmentWiki'
 import { SoulWiki } from './SoulWiki'
+import { BuildPlanner } from './BuildPlanner'
 import { resourceUrl } from './lib/urls'
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
@@ -113,7 +114,7 @@ const GUIDES: GuideEntry[] = []
 
 type DestinationKey = keyof typeof DESTINATIONS
 type IconComponent = ComponentType<{ 'aria-hidden'?: boolean | 'true' }>
-type Page = 'overview' | 'wiki' | 'changelog'
+type Page = 'overview' | 'wiki' | 'builds' | 'changelog'
 type WikiView = 'skills' | 'talents' | 'cards' | 'pets' | 'monsters' | 'equipment' | 'souls'
 
 // Bare `/` opens the encyclopedias rather than the guide hub: the hub has no
@@ -122,7 +123,8 @@ type WikiView = 'skills' | 'talents' | 'cards' | 'pets' | 'monsters' | 'equipmen
 // its own, or reload and deep links would silently bounce back to the wiki.
 function getInitialPage(): Page {
   if (window.location.pathname.replace(/\/$/, '').endsWith('/changelog')) return 'changelog'
-  return new URLSearchParams(window.location.search).get('view') === 'overview' ? 'overview' : 'wiki'
+  const view = new URLSearchParams(window.location.search).get('view')
+  return view === 'overview' ? 'overview' : view === 'builds' ? 'builds' : 'wiki'
 }
 
 function getInitialWikiView(): WikiView {
@@ -141,7 +143,7 @@ function App() {
   const [sort, setSort] = useState<GuideSort>('latest')
   const [noticeId, setNoticeId] = useState(0)
 
-  const navItems: ShellNavItem[] = useMemo(() => content.navigation.map((item) => {
+  const navItems: ShellNavItem[] = useMemo(() => [{ key: 'builds', label: content.builds.title, active: page === 'builds' }, ...content.navigation.map((item) => {
     if (item.key !== 'wiki') {
       return { key: item.key, label: item.label, active: item.key === page }
     }
@@ -187,7 +189,7 @@ function App() {
         },
       ],
     }
-  }), [page, wikiView])
+  })], [page, wikiView])
 
   useEffect(() => {
     document.title = page === 'wiki'
@@ -247,6 +249,9 @@ function App() {
     } else if (nextPage === 'wiki') {
       url.searchParams.set('view', 'wiki')
       url.searchParams.set('wiki', nextWikiView)
+    } else if (nextPage === 'builds') {
+      url.searchParams.set('view', 'builds')
+      url.searchParams.delete('wiki')
     } else if (nextPage === 'overview') {
       url.searchParams.set('view', 'overview')
       url.searchParams.delete('wiki')
@@ -282,6 +287,10 @@ function App() {
   const handleNavigation = (key: string) => {
     if (key === 'overview') {
       navigateToPage('overview')
+      return
+    }
+    if (key === 'builds') {
+      navigateToPage('builds')
       return
     }
     if (key === 'classes' || key === 'dungeons') {
@@ -391,6 +400,8 @@ function App() {
 
       {page === 'wiki' ? (
         <WikiPage view={wikiView} onViewChange={openWiki} />
+      ) : page === 'builds' ? (
+        <main className="ro3-builds-page"><BuildPlanner onUnavailable={showUnavailable} /></main>
       ) : page === 'changelog' ? (
         <ChangelogPage onBack={() => navigateToPage('wiki')} />
       ) : (

@@ -53,6 +53,9 @@
     "wiki": "百科",
     "map": "互动地图"
   },
+  "builds": {
+    "title": "流派手册"
+  },
   "filters": {
     "eyebrow": "筛选攻略",
     "title": "看看大家怎么玩",
