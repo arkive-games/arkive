@@ -62,7 +62,12 @@ function DialogContent({
   showTideLine = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  size?: "default" | "sm"
+  /**
+   * Width above `sm`. The size classes are variant-scoped, so a plain `max-w-*`
+   * in `className` cannot override them — pick a size instead. `lg` is for
+   * content laid out in columns, such as an icon-grid picker.
+   */
+  size?: "default" | "sm" | "lg"
   showCloseButton?: boolean
   showTideLine?: boolean
   overlayClassName?: string
@@ -74,7 +79,7 @@ function DialogContent({
         data-slot="dialog-content"
         data-size={size}
         className={cn(
-          "fixed top-[50%] left-[50%] z-[var(--arkive-layer-sheet)] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-5 duration-[var(--arkive-motion-standard)] data-[size=default]:sm:max-w-lg data-[size=sm]:sm:max-w-md data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          "fixed top-[50%] left-[50%] z-[var(--arkive-layer-sheet)] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-5 duration-[var(--arkive-motion-standard)] data-[size=default]:sm:max-w-lg data-[size=sm]:sm:max-w-md data-[size=lg]:sm:max-w-4xl data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           MODAL_SURFACE_CLASS,
           className
         )}
