@@ -160,9 +160,26 @@ export async function loadEquipment(): Promise<{ equipment: Equipment; graces: G
 
 /* ------------------------------------------------------------------ affixes */
 
-/** The affix families a slot can roll at a tier, in the data's own order. */
-export function familiesFor(equipment: Equipment, slot: number, tier: AffixTier): string[] {
-  return Object.keys(equipment.affixes.bySlot[String(slot)]?.[tier] ?? {})
+/** The tiers a player can roll. `special` exists in the data but is not one. */
+const ROLLED_TIERS: AffixTier[] = ['normal', 'extraordinary', 'contaminated']
+
+/**
+ * The affix families a slot can roll at all, in the data's own order — the
+ * normal families first, then any that exist only at another tier.
+ *
+ * Not split by tier, because the tier is not something the player picks: it is
+ * read off the value (see `classifyAffix`), so the picker offers every stat the
+ * slot knows and the value decides the rest.
+ */
+export function familiesFor(equipment: Equipment, slot: number): string[] {
+  const tiers = equipment.affixes.bySlot[String(slot)] ?? {}
+  const families: string[] = []
+  for (const tier of ROLLED_TIERS) {
+    for (const family of Object.keys(tiers[tier] ?? {})) {
+      if (!families.includes(family)) families.push(family)
+    }
+  }
+  return families
 }
 
 export function ladderFor(
@@ -200,25 +217,77 @@ export function markForValue(ladder: Rung[], value: number): number {
   return rate === 0 ? 0 : Math.round(value * rate)
 }
 
-/* ------------------------------------------------------------------- grace */
-
-/** One chosen affix on a piece. */
+/** One chosen affix on a piece: the stat and the amount the card reads. The tier follows from the amount. */
 export type ChosenAffix = {
-  tier: AffixTier
   family: string
-  /** The stat amount, editable — see `markForValue`. */
+  /** The stat amount, editable — see `markForValue`. Negative for a contaminated affix. */
   value: number
 }
 
+/** A chosen affix with the tier and Mark its value works out to. */
+export type ScoredAffix = ChosenAffix & { tier: AffixTier; mark: number }
+
+/** The highest Mark a ladder carries; 0 for an empty one. */
+function topMark(ladder: Rung[]): number {
+  return ladder.reduce((best, [mark]) => Math.max(best, mark), 0)
+}
+
 /**
- * The grace a set of chosen affixes triggers, or null.
+ * The tier and Mark a chosen affix's value works out to.
+ *
+ * The game never asks the player which tier an affix is — the card shows a
+ * gold, grey or red pip — and neither does the page: a negative value is a
+ * contaminated affix, and a positive one is extraordinary once it is worth more
+ * Mark than the normal ladder tops out at (400 for every family), normal
+ * otherwise. The boundary is the normal top rather than the extraordinary
+ * bottom (550) because the game's own extraordinary rolls reach below the
+ * shipped rungs: a 4-extraordinary weapon read 攻击 +159 and 技能增强 +33, worth
+ * ~416 and ~412, both gold. A family with no extraordinary ladder in this slot
+ * (穿刺 on a weapon) is normal at any positive value.
+ */
+export function classifyAffix(equipment: Equipment, slot: number, affix: ChosenAffix): ScoredAffix {
+  const { family, value } = affix
+  if (value < 0) {
+    const ladder = ladderFor(equipment, slot, 'contaminated', family)
+    // A family with no contaminated ladder is still worth its normal rate, negated.
+    const fallback = ladderFor(equipment, slot, 'normal', family)
+    const mark = ladder.length > 0 ? markForValue(ladder, value) : markForValue(fallback, value)
+    return { ...affix, tier: 'contaminated', mark }
+  }
+  const normal = ladderFor(equipment, slot, 'normal', family)
+  const extraordinary = ladderFor(equipment, slot, 'extraordinary', family)
+  const asNormal = markForValue(normal.length > 0 ? normal : extraordinary, value)
+  if (extraordinary.length > 0 && (normal.length === 0 || asNormal > topMark(normal))) {
+    return { ...affix, tier: 'extraordinary', mark: markForValue(extraordinary, value) }
+  }
+  return { ...affix, tier: 'normal', mark: asNormal }
+}
+
+/**
+ * The flat bonus a piece's reforge score carries for its extraordinary affixes.
+ *
+ * The i-th extraordinary affix adds 200·i on top of its Mark, so the bonus is
+ * 200 × (1 + 2 + … + n) = 100·n·(n+1). Fitted to nine weapons read off the
+ * game's own 重塑 tab (the affix Marks explain everything but a remainder that
+ * is 600 at two, 1200 at three and 2000 at four extraordinary affixes), so a
+ * single extraordinary affix is extrapolated to 200 rather than observed. The
+ * grace's own `Score` column does not appear in the total at all.
+ */
+export function extraordinaryBonus(count: number): number {
+  return 100 * count * (count + 1)
+}
+
+/* ------------------------------------------------------------------- grace */
+
+/**
+ * The grace a set of affixes triggers, or null.
  *
  * Matches on the *extraordinary* affixes only, since that is what a grace's
  * conditions count, and requires every condition to be satisfied exactly: a
  * grace asking for 攻击x2 + 技能增强x1 must not fire on 攻击x3, because the
  * client ships that as a separate row with its own name.
  */
-export function graceFor(graces: Grace[], slot: number, affixes: ChosenAffix[]): Grace | null {
+export function graceFor(graces: Grace[], slot: number, affixes: Pick<ScoredAffix, 'tier' | 'family'>[]): Grace | null {
   const counts = new Map<string, number>()
   for (const affix of affixes) {
     if (affix.tier !== 'extraordinary') continue
@@ -270,14 +339,79 @@ export type PieceResult = {
   enhanceScore: number
   /** Per-stat totals the enhancement grants, the current stage counted by its refinement. */
   enhanceStats: [string, number][]
-  /** Sum of every chosen affix's Mark, contaminated ones subtracting. */
+  /**
+   * The item's base stats with the enhancement added on, in the item's order —
+   * what the card's stat block reads before reforge and brand. Empty for an
+   * empty slot, even when the enhancement sliders are up.
+   */
+  stats: [string, number][]
+  /** The chosen affixes, each with the tier and Mark its value works out to. */
+  affixes: ScoredAffix[]
+  /** Sum of every affix's Mark, contaminated ones subtracting. */
   affixMark: number
+  extraordinaryCount: number
+  /** See `extraordinaryBonus`. */
+  extraordinaryBonus: number
+  /** The 重塑 tab's figure: affixMark + extraordinaryBonus. */
+  reforgeScore: number
+  /** The grace the extraordinary affixes trigger — shown for its effect; it adds nothing of its own. */
   grace: Grace | null
-  graceScore: number
-  /** baseScore + enhanceScore + affixMark + graceScore. */
+  /** baseScore + enhanceScore + reforgeScore. */
   total: number
   /** Overall enhancement progress, the figure the game shows under the badge. */
   progressPercent: number
+}
+
+/**
+ * The item's base stats with the enhancement's gains folded in, in the item's
+ * order, then any stat the enhancement grants that the item lacks.
+ */
+export function statsWithEnhancement(item: EquipItem | null, enhanceStats: [string, number][]): [string, number][] {
+  if (!item) return []
+  const totals = new Map<string, number>(item.baseStats)
+  for (const [key, amount] of enhanceStats) totals.set(key, (totals.get(key) ?? 0) + amount)
+  return [...totals]
+}
+
+/**
+ * Stat keys that are two halves of one displayed stat. A weapon's 攻击 is a
+ * `min~max` range carried as two keys, and both take the affix family's label.
+ */
+const STAT_KEY_ALIAS: Record<string, string> = { AtkMin_N: 'Atk_N', AtkMax_N: 'Atk_N' }
+
+/**
+ * The display label for a stat key, from the affix table's family → key map
+ * read backwards — the only place the dataset pairs a key with its name. A key
+ * it does not know shows as itself rather than not at all.
+ */
+export function statLabel(equipment: Equipment, key: string): string {
+  const wanted = STAT_KEY_ALIAS[key] ?? key
+  for (const [family, statKey] of Object.entries(equipment.affixes.statKeyByFamily)) {
+    if (statKey === wanted) return family
+  }
+  return key
+}
+
+/** One line of a stat block: a label and either a single value or a `min~max` pair. */
+export type StatLine = { key: string; label: string; min: number; max: number }
+
+/**
+ * Stats folded into display lines, `AtkMin_N`/`AtkMax_N` becoming one 攻击 range.
+ * Order follows the first appearance of each line's key.
+ */
+export function statLines(equipment: Equipment, stats: [string, number][]): StatLine[] {
+  const lines: StatLine[] = []
+  for (const [key, value] of stats) {
+    const lineKey = STAT_KEY_ALIAS[key] ?? key
+    const existing = lines.find((line) => line.key === lineKey)
+    if (!existing) {
+      lines.push({ key: lineKey, label: statLabel(equipment, key), min: value, max: value })
+    } else {
+      existing.min = Math.min(existing.min, value)
+      existing.max = Math.max(existing.max, value)
+    }
+  }
+  return lines
 }
 
 export function bodyFor(equipment: Equipment, slot: number, season?: number): EnhanceBody | null {
@@ -401,14 +535,11 @@ export function evaluatePiece(
     state.refinePercent,
   )
 
-  let affixMark = 0
-  for (const affix of state.affixes) {
-    const ladder = ladderFor(equipment, state.slot, affix.tier, affix.family)
-    affixMark += markForValue(ladder, affix.value)
-  }
-
-  const grace = graceFor(graces, state.slot, state.affixes)
-  const graceScore = grace?.score ?? 0
+  const affixes = state.affixes.map((affix) => classifyAffix(equipment, state.slot, affix))
+  const affixMark = affixes.reduce((sum, affix) => sum + affix.mark, 0)
+  const extraordinaryCount = affixes.filter((affix) => affix.tier === 'extraordinary').length
+  const bonus = extraordinaryBonus(extraordinaryCount)
+  const reforgeScore = affixMark + bonus
   const baseScore = item?.baseScore ?? 0
 
   return {
@@ -418,10 +549,14 @@ export function evaluatePiece(
     baseScore,
     enhanceScore,
     enhanceStats,
+    stats: statsWithEnhancement(item, enhanceStats),
+    affixes,
     affixMark,
-    grace,
-    graceScore,
-    total: baseScore + enhanceScore + affixMark + graceScore,
+    extraordinaryCount,
+    extraordinaryBonus: bonus,
+    reforgeScore,
+    grace: graceFor(graces, state.slot, affixes),
+    total: baseScore + enhanceScore + reforgeScore,
     progressPercent: progressOf(body, state.enhanceStage, state.refinePercent),
   }
 }

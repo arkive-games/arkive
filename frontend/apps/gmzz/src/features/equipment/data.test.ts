@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest'
 import {
   activeSuits,
   bodyFor,
+  classifyAffix,
   itemsForSlot,
   playableProfessions,
   enhanceOf,
   evaluatePiece,
+  extraordinaryBonus,
   familiesFor,
   graceFor,
   ladderFor,
@@ -17,6 +19,8 @@ import {
   progressOf,
   refineFromProgress,
   scoredSlots,
+  statLines,
+  statsWithEnhancement,
   suitOf,
   suitTierFor,
   type Equipment,
@@ -90,7 +94,7 @@ const EQUIPMENT: Equipment = {
     ],
   },
   affixes: {
-    statKeyByFamily: { 攻击: 'Atk_N', 技能增强: 'SkillPlus_N' },
+    statKeyByFamily: { 攻击: 'Atk_N', 技能增强: 'SkillPlus_N', 最大生命: 'MaxHp_N', 穿刺: 'Pierce_N' },
     set: 4,
     bySlot: {
       '1': {
@@ -98,7 +102,7 @@ const EQUIPMENT: Equipment = {
           攻击: [[1000, 382], [950, 363], [550, 210]],
           技能增强: [[1000, 80], [550, 44]],
         },
-        normal: { 攻击: [[400, 153], [125, 48]] },
+        normal: { 攻击: [[400, 153], [125, 48]], 穿刺: [[400, 98], [125, 31]] },
         contaminated: { 攻击: [[-400, -153], [-200, -76]] },
       },
     },
@@ -304,10 +308,92 @@ describe('markRate / markForValue', () => {
 })
 
 describe('familiesFor', () => {
-  it('lists only the families a slot rolls at that tier', () => {
-    expect(familiesFor(EQUIPMENT, 1, 'extraordinary')).toEqual(['攻击', '技能增强'])
-    expect(familiesFor(EQUIPMENT, 1, 'normal')).toEqual(['攻击'])
-    expect(familiesFor(EQUIPMENT, 99, 'normal')).toEqual([])
+  it('lists every family the slot rolls at any tier, normal ones first', () => {
+    expect(familiesFor(EQUIPMENT, 1)).toEqual(['攻击', '穿刺', '技能增强'])
+    expect(familiesFor(EQUIPMENT, 99)).toEqual([])
+  })
+})
+
+describe('classifyAffix', () => {
+  const classify = (family: string, value: number) => classifyAffix(EQUIPMENT, 1, { family, value })
+
+  it('reads a value above the normal ladder\'s top Mark as extraordinary', () => {
+    const affix = classify('攻击', 308)
+    expect(affix.tier).toBe('extraordinary')
+    expect(affix.mark).toBeGreaterThan(780)
+    expect(affix.mark).toBeLessThan(830)
+  })
+
+  it('reads a value the normal ladder covers as normal', () => {
+    // The fixture's two-rung ladder averages to a hair under the top rung's own
+    // rate, so the top value reads a Mark or so under 400 — still normal.
+    const top = classify('攻击', 153)
+    expect(top.tier).toBe('normal')
+    expect(top.mark).toBeGreaterThan(395)
+    expect(top.mark).toBeLessThanOrEqual(400)
+    expect(classify('攻击', 48).tier).toBe('normal')
+  })
+
+  it('draws the line at the normal top, not the extraordinary bottom', () => {
+    // The game showed 攻击 +159 as a gold pip on a 4-extraordinary weapon: worth
+    // ~416, above the normal 400 yet below the lowest shipped extraordinary rung.
+    const affix = classify('攻击', 159)
+    expect(affix.tier).toBe('extraordinary')
+    expect(affix.mark).toBeGreaterThan(400)
+    expect(affix.mark).toBeLessThan(550)
+  })
+
+  it('is normal at any positive value for a family with no extraordinary ladder', () => {
+    const pierce = classify('穿刺', 50)
+    expect(pierce.tier).toBe('normal')
+    expect(pierce.mark).toBeGreaterThan(195)
+    expect(pierce.mark).toBeLessThan(210)
+    expect(classify('穿刺', 500).tier).toBe('normal')
+  })
+
+  it('is extraordinary at any positive value for a family with no normal ladder', () => {
+    expect(classify('技能增强', 33).tier).toBe('extraordinary')
+  })
+
+  it('reads a negative value as contaminated with a negative Mark', () => {
+    const affix = classify('攻击', -153)
+    expect(affix.tier).toBe('contaminated')
+    expect(affix.mark).toBeLessThan(-390)
+  })
+
+  it('is a normal zero for nothing typed', () => {
+    expect(classify('攻击', 0)).toMatchObject({ tier: 'normal', mark: 0 })
+  })
+})
+
+describe('extraordinaryBonus', () => {
+  it('is 200 × (1 + … + n), the remainder the game\'s 重塑 tab carries over the affix Marks', () => {
+    expect(extraordinaryBonus(0)).toBe(0)
+    expect(extraordinaryBonus(1)).toBe(200)
+    expect(extraordinaryBonus(2)).toBe(600)
+    expect(extraordinaryBonus(3)).toBe(1200)
+    expect(extraordinaryBonus(4)).toBe(2000)
+  })
+})
+
+describe('statsWithEnhancement / statLines', () => {
+  const item = EQUIPMENT.items[0]
+
+  it('adds the enhancement\'s gains onto the item\'s base stats', () => {
+    const stats = statsWithEnhancement(item, enhanceOf(bodyFor(EQUIPMENT, 1, 101), 3, 100).stats)
+    expect(stats).toEqual([['AtkMin_N', 387], ['AtkMax_N', 667], ['MaxHp_N', 2218]])
+  })
+
+  it('is empty for an empty slot however far the sliders are up', () => {
+    expect(statsWithEnhancement(null, [['AtkMin_N', 60]])).toEqual([])
+  })
+
+  it('folds the attack range into one 攻击 line and labels the rest by family', () => {
+    expect(statLines(EQUIPMENT, [['AtkMin_N', 387], ['AtkMax_N', 667], ['MaxHp_N', 2218], ['Mystery_N', 5]])).toEqual([
+      { key: 'Atk_N', label: '攻击', min: 387, max: 667 },
+      { key: 'MaxHp_N', label: '最大生命', min: 2218, max: 2218 },
+      { key: 'Mystery_N', label: 'Mystery_N', min: 5, max: 5 },
+    ])
   })
 })
 
@@ -391,16 +477,16 @@ describe('scoredSlots', () => {
 })
 
 describe('evaluatePiece', () => {
-  it('adds the item\'s base, enhancement, affix Mark and grace', () => {
+  it('adds the item\'s base, enhancement and reforge score', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
       slot: 1,
       itemId: 3020623,
       enhanceStage: 3,
       refinePercent: 100,
       affixes: [
-        { tier: 'extraordinary', family: '攻击', value: 382 },
-        { tier: 'extraordinary', family: '攻击', value: 382 },
-        { tier: 'extraordinary', family: '技能增强', value: 80 },
+        { family: '攻击', value: 382 },
+        { family: '攻击', value: 382 },
+        { family: '技能增强', value: 80 },
       ],
     }, 101)
 
@@ -408,9 +494,34 @@ describe('evaluatePiece', () => {
     expect(result.brand?.name).toBe('好孩子')
     expect(result.baseScore).toBe(2430)
     expect(result.enhanceScore).toBe(240)
+    expect(result.affixes.map((affix) => affix.tier)).toEqual(['extraordinary', 'extraordinary', 'extraordinary'])
+    expect(result.extraordinaryCount).toBe(3)
+    expect(result.extraordinaryBonus).toBe(1200)
+    expect(result.reforgeScore).toBe(result.affixMark + 1200)
     expect(result.grace?.id).toBe(108)
-    expect(result.graceScore).toBe(2000)
-    expect(result.total).toBe(2430 + 240 + result.affixMark + 2000)
+    expect(result.total).toBe(2430 + 240 + result.reforgeScore)
+    expect(result.stats).toEqual([['AtkMin_N', 387], ['AtkMax_N', 667], ['MaxHp_N', 2218]])
+  })
+
+  it('reproduces the game\'s 重塑 tab: 攻击 +308 +233 +332 read 3485', () => {
+    const result = evaluatePiece(EQUIPMENT, GRACES, {
+      slot: 1, itemId: 3020623, enhanceStage: 3, refinePercent: 100,
+      affixes: [{ family: '攻击', value: 308 }, { family: '攻击', value: 233 }, { family: '攻击', value: 332 }],
+    }, 101)
+    // Within the rounding the card's whole-number values allow.
+    expect(Math.abs(result.reforgeScore - 3485)).toBeLessThanOrEqual(3)
+    expect(result.grace?.id).toBe(109)
+    // The three tabs the game shows sum to 6155.
+    expect(Math.abs(result.total - 6155)).toBeLessThanOrEqual(3)
+  })
+
+  it('reproduces a two-extraordinary weapon: 攻击 +283 +283 with 穿刺 +50 read 2282', () => {
+    const result = evaluatePiece(EQUIPMENT, GRACES, {
+      slot: 1, itemId: null, enhanceStage: 0, refinePercent: 0,
+      affixes: [{ family: '攻击', value: 283 }, { family: '攻击', value: 283 }, { family: '穿刺', value: 50 }],
+    }, 101)
+    expect(result.extraordinaryCount).toBe(2)
+    expect(Math.abs(result.reforgeScore - 2282)).toBeLessThanOrEqual(5)
   })
 
   it('scores an empty slot with no base', () => {
@@ -436,9 +547,11 @@ describe('evaluatePiece', () => {
     }, 101)
     const dirty = evaluatePiece(EQUIPMENT, GRACES, {
       slot: 1, itemId: null, enhanceStage: 0, refinePercent: 0,
-      affixes: [{ tier: 'contaminated', family: '攻击', value: -153 }],
+      affixes: [{ family: '攻击', value: -153 }],
     }, 101)
+    expect(dirty.affixes[0].tier).toBe('contaminated')
     expect(dirty.affixMark).toBeLessThan(clean.affixMark)
+    expect(dirty.reforgeScore).toBeLessThan(0)
   })
 
   it('leaves brand null for an item wearing none', () => {

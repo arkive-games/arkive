@@ -1,7 +1,9 @@
-import { useEffect, useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
+import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import { Input } from '@gamemap/ui'
+import { useMemory } from '@gamemap/state-memory'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
@@ -13,13 +15,12 @@ import {
   evaluatePiece,
   familiesFor,
   itemsForSlot,
-  ladderFor,
-  markForValue,
   maxStageFor,
   newPiece,
   progressBounds,
   refineFromProgress,
   scoredSlots,
+  statLines,
   suitOf,
   suitThreshold,
   suitTierFor,
@@ -30,18 +31,19 @@ import {
   type Grace,
   type PieceResult,
   type PieceState,
+  type ScoredAffix,
   type Suit,
 } from '@/features/equipment/data'
 
 type LayoutMode = 'rows' | 'cards'
 
-/** The tiers a player can roll. `special` exists in the data but is not one. */
-const TIER_LABEL_KEY = {
-  extraordinary: 'equip.tierExtraordinary',
-  normal: 'equip.tierNormal',
-  contaminated: 'equip.tierContaminated',
-} satisfies Partial<Record<AffixTier, string>>
-const TIER_OPTIONS = Object.keys(TIER_LABEL_KEY) as (keyof typeof TIER_LABEL_KEY)[]
+/** The pip the game draws beside an affix: gold for extraordinary, grey for normal, red for contaminated. */
+const TIER_PIP: Record<AffixTier, { className: string; labelKey: string }> = {
+  extraordinary: { className: 'bg-amber-400', labelKey: 'equip.tierExtraordinary' },
+  normal: { className: 'bg-zinc-400', labelKey: 'equip.tierNormal' },
+  contaminated: { className: 'bg-red-500', labelKey: 'equip.tierContaminated' },
+  special: { className: 'bg-sky-400', labelKey: 'equip.tierSpecial' },
+}
 
 /**
  * `Suit.tag` is the game's own bucket for a suit's items — 冒险套装 is worn
@@ -60,9 +62,11 @@ const GRACE_PIPS = 4
 const SCORE_CAP = 999999
 
 const INPUT_CLASS =
-  'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
+  'h-7 border-border bg-background px-1.5 text-xs tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const SELECT_CLASS =
   'h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
+const COMPACT_SELECT_CLASS =
+  'h-7 w-full min-w-0 rounded-md border border-border bg-background px-1 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const LABEL_CLASS = 'mb-0.5 block text-xs font-semibold text-muted-foreground'
 const BUTTON_CLASS =
   'inline-flex items-center justify-center rounded-md border border-border text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] disabled:opacity-50'
@@ -71,28 +75,111 @@ const BADGE_CLASS =
   'inline-block shrink-0 rounded border border-border px-1 align-middle text-xs font-medium leading-4 text-muted-foreground'
 const PIP_ON = 'text-[color:var(--arkive-nav-accent)]'
 const PIP_OFF = 'text-muted-foreground/40'
+/** One affix: pip, stat, value, Mark, remove — two of these share a row. */
 const AFFIX_ROW_CLASS =
-  'grid min-w-0 grid-cols-[minmax(4rem,0.9fr)_minmax(4.5rem,1.2fr)_minmax(4rem,0.8fr)_auto_auto] items-center gap-1'
+  'grid min-w-0 grid-cols-[auto_minmax(3.5rem,1fr)_minmax(3rem,4rem)_auto_auto] items-center gap-1'
 /**
- * The rows layout's columns: item, enhancement, affixes, brand. Shared by the
- * header and every row so the two cannot drift apart. Four columns only fit
- * from `lg` up — at tablet width the affix column was left too narrow for its
- * own button — so below that a row stacks its cells with their own labels. The
- * enhancement column is wide because its stage track labels all nine steps.
+ * The rows layout's columns: item, stats, enhancement, affixes, brand. Shared
+ * by the header and every row so the two cannot drift apart. Five columns only
+ * fit from `xl` up — at 1100px the affix column was squeezed to a word a line —
+ * so below that a row stacks its cells with their own labels. The enhancement
+ * column is wide because its stage track labels all nine steps.
  */
-const ROW_GRID = 'lg:grid-cols-[minmax(12rem,16rem)_minmax(18rem,24rem)_minmax(0,1.5fr)_minmax(0,9rem)] lg:gap-3'
+const ROW_GRID =
+  'xl:grid-cols-[minmax(10rem,13rem)_minmax(7rem,9rem)_minmax(16rem,21rem)_minmax(0,2fr)_minmax(0,8rem)] xl:gap-3'
 
-function readInt(raw: string, min: number, max: number): number {
+/* ------------------------------------------------------------- persistence */
+
+type BatchState = { stage: number; badge: number }
+
+/** The loadout as stored: what was picked, before it is checked against the dataset. */
+type EquipmentDraft = { pieces: PieceState[]; batch: BatchState; suitChoice: number | null }
+
+function isChosenAffix(value: unknown): value is ChosenAffix {
+  return isRecord(value) && typeof value.family === 'string' && isFiniteNumber(value.value)
+}
+
+function isPieceState(value: unknown): value is PieceState {
+  return (
+    isRecord(value) &&
+    isFiniteNumber(value.slot) &&
+    isNullableNumber(value.itemId) &&
+    isFiniteNumber(value.enhanceStage) &&
+    isFiniteNumber(value.refinePercent) &&
+    Array.isArray(value.affixes) &&
+    value.affixes.every(isChosenAffix)
+  )
+}
+
+function isEquipmentDraft(value: unknown): value is EquipmentDraft {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.pieces) &&
+    value.pieces.every(isPieceState) &&
+    isRecord(value.batch) &&
+    isFiniteNumber(value.batch.stage) &&
+    isFiniteNumber(value.batch.badge) &&
+    isNullableNumber(value.suitChoice)
+  )
+}
+
+/**
+ * The loadout survives a reload. A calculator's inputs are a draft in the
+ * state-memory sense — costly to retype, not a record of progress — so it takes
+ * that class's thirty-day life. Only the fields listed in `isEquipmentDraft`
+ * are ever read back.
+ */
+const equipmentDraft = gmzzMemory.draft('score/equipment', {
+  default: (): EquipmentDraft => ({ pieces: [], batch: { stage: 0, badge: 0 }, suitChoice: null }),
+  validate: isEquipmentDraft,
+})
+
+const equipmentLayout = gmzzMemory.preference('score/equipment-layout', {
+  default: 'rows' as LayoutMode,
+  validate: (value: unknown): value is LayoutMode => value === 'rows' || value === 'cards',
+})
+
+/**
+ * A stored piece checked against the dataset it is about to be scored with.
+ *
+ * The draft outlives the data: an item can leave the dataset, a ladder can
+ * shorten, and a weapon from another pathway cannot be worn by this one. Each
+ * is corrected here rather than trusted, so a stale draft degrades to an empty
+ * slot instead of a piece that scores nothing for no visible reason. The stored
+ * draft itself is left alone — switch the pathway back and the weapon returns.
+ */
+function sanitizePiece(equipment: Equipment, piece: PieceState, professionId: number | null): PieceState {
+  const maxStage = maxStageFor(equipment, piece.slot)
+  const wearable = piece.itemId !== null && itemsForSlot(equipment, piece.slot, professionId).some((item) => item.id === piece.itemId)
+  const enhanceStage = Math.min(Math.max(Math.trunc(piece.enhanceStage), 0), maxStage)
+  const families = familiesFor(equipment, piece.slot)
+  return {
+    slot: piece.slot,
+    itemId: wearable ? piece.itemId : null,
+    enhanceStage,
+    refinePercent: enhanceStage === 0 ? 0 : Math.min(Math.max(Math.trunc(piece.refinePercent), 0), 100),
+    affixes: piece.affixes
+      .filter((affix) => families.includes(affix.family))
+      .slice(0, MAX_AFFIXES)
+      .map((affix) => ({ family: affix.family, value: readInt(affix.value, -SCORE_CAP, SCORE_CAP) })),
+  }
+}
+
+/* ------------------------------------------------------------------ helpers */
+
+function readInt(raw: string | number, min: number, max: number): number {
   const whole = Math.trunc(Number(raw))
-  if (!Number.isFinite(whole)) return min
+  if (!Number.isFinite(whole)) return 0
   return Math.min(Math.max(whole, min), max)
 }
 
-/** A fresh affix; the family is kept when the new tier still offers it. */
-function affixFor(equipment: Equipment, slot: number, tier: AffixTier, family?: string): ChosenAffix {
-  const families = familiesFor(equipment, slot, tier)
+/** A fresh affix of the slot's first family, at the top of its ladder or 0 if it has none. */
+function affixFor(equipment: Equipment, slot: number, family?: string): ChosenAffix {
+  const families = familiesFor(equipment, slot)
   const chosen = family !== undefined && families.includes(family) ? family : families[0] ?? ''
-  return { tier, family: chosen, value: ladderFor(equipment, slot, tier, chosen)[0]?.[1] ?? 0 }
+  const ladder = equipment.affixes.bySlot[String(slot)]
+  const top = ladder?.extraordinary?.[chosen]?.[0]?.[1] ?? ladder?.normal?.[chosen]?.[0]?.[1] ?? 0
+  return { family: chosen, value: top }
 }
 
 /** The PVE/PVP marker for an item's suit; empty for an unaffiliated item. */
@@ -116,7 +203,7 @@ function Cell({
 }) {
   return (
     <div className={`min-w-0 ${className}`}>
-      <span className={`${LABEL_CLASS} ${hidden ? 'lg:sr-only' : ''}`}>{label}</span>
+      <span className={`${LABEL_CLASS} ${hidden ? 'xl:sr-only' : ''}`}>{label}</span>
       {children}
     </div>
   )
@@ -126,20 +213,21 @@ type FieldProps = { label: string; testId: string }
 
 function NumberField({
   value,
+  min,
   max,
   label,
   testId,
   onValue,
-}: FieldProps & { value: number; max: number; onValue: (value: number) => void }) {
+}: FieldProps & { value: number; min: number; max: number; onValue: (value: number) => void }) {
   return (
     <Input
       type="number"
       inputMode="numeric"
-      min={0}
+      min={min}
       max={max}
       value={value}
       placeholder="0"
-      onChange={(event) => onValue(readInt(event.target.value, 0, max))}
+      onChange={(event) => onValue(readInt(event.target.value, min, max))}
       className={INPUT_CLASS}
       aria-label={label}
       data-testid={testId}
@@ -151,14 +239,15 @@ function Picker({
   value,
   label,
   testId,
+  className = SELECT_CLASS,
   onValue,
   children,
-}: FieldProps & { value: string | number; onValue: (raw: string) => void; children: ReactNode }) {
+}: FieldProps & { value: string | number; className?: string; onValue: (raw: string) => void; children: ReactNode }) {
   return (
     <select
       value={value}
       onChange={(event) => onValue(event.target.value)}
-      className={SELECT_CLASS}
+      className={className}
       aria-label={label}
       data-testid={testId}
     >
@@ -271,10 +360,14 @@ function IconPlaceholder({ item }: { item: EquipItem | null }) {
   )
 }
 
-/** Name, `+stage`, PVE/PVP marker, subtitle and the score split — shared by both layouts. */
+/**
+ * Name, `+stage`, PVE/PVP marker, subtitle and the score — shared by both
+ * layouts. The score is the total with its three parts under it, in the order
+ * the game's own tabs use, so 重塑 is read on its own rather than folded into
+ * "everything but the base".
+ */
 function PieceHeader({ result, kind, subtitle }: { result: PieceResult; kind: string; subtitle: string }) {
   const { t } = useTranslation()
-  const rest = result.enhanceScore + result.affixMark + result.graceScore
   return (
     <div className="min-w-0">
       <div className="truncate text-sm font-bold text-foreground">
@@ -286,10 +379,41 @@ function PieceHeader({ result, kind, subtitle }: { result: PieceResult; kind: st
         <span className="truncate">{subtitle}</span>
         {kind ? <span className={BADGE_CLASS}>{kind}</span> : null}
       </div>
-      <div className="text-xs tabular-nums text-muted-foreground">
-        {t('equip.scoreSplit', { base: result.baseScore, rest })}
+      <div className="text-xs tabular-nums text-muted-foreground" data-testid={`equip-score-${result.state.slot}`}>
+        <span className="font-semibold text-foreground">{t('equip.pieceScore', { score: result.total.toLocaleString() })}</span>
+        <span className="ml-1.5">
+          {t('equip.scoreParts', {
+            base: result.baseScore.toLocaleString(),
+            enhance: result.enhanceScore.toLocaleString(),
+            reforge: result.reforgeScore.toLocaleString(),
+          })}
+        </span>
       </div>
     </div>
+  )
+}
+
+/**
+ * The stat block the card reads: base stats with the enhancement added, before
+ * reforge and brand. A weapon's 攻击 is its `min~max` range.
+ */
+function StatBlock({ equipment, result }: { equipment: Equipment; result: PieceResult }) {
+  const { t } = useTranslation()
+  const lines = statLines(equipment, result.stats)
+  if (lines.length === 0) {
+    return <p className="text-xs text-muted-foreground">{t('equip.noStats')}</p>
+  }
+  return (
+    <dl className="min-w-0 space-y-0.5 text-xs tabular-nums" data-testid={`equip-stats-${result.state.slot}`}>
+      {lines.map((line) => (
+        <div key={line.key} className="flex items-baseline justify-between gap-2">
+          <dt className="truncate text-muted-foreground">{line.label}</dt>
+          <dd className="shrink-0 font-semibold text-foreground">
+            {line.min === line.max ? line.min.toLocaleString() : `${line.min.toLocaleString()}~${line.max.toLocaleString()}`}
+          </dd>
+        </div>
+      ))}
+    </dl>
   )
 }
 
@@ -338,94 +462,157 @@ function EnhanceControls({ equipment, result, onPatch }: PieceControlProps) {
   )
 }
 
-function GraceNote({ result }: { result: PieceResult }) {
+/**
+ * The reforge score on its own line: the affix Marks, the extraordinary bonus
+ * they carry, and the grace they trigger — named for its effect, since it adds
+ * nothing of its own to the score.
+ */
+function ReforgeSummary({ result }: { result: PieceResult }) {
   const { t } = useTranslation()
   const grace = result.grace
-  if (!grace) {
-    const extraordinary = result.state.affixes.filter((affix) => affix.tier === 'extraordinary').length
-    return extraordinary >= 2 ? <p className="text-xs text-muted-foreground">{t('equip.noGrace')}</p> : null
-  }
   return (
-    <div className="min-w-0">
-      <div className="flex flex-wrap items-baseline gap-x-2">
-        <span className="text-sm font-bold text-foreground">{grace.name}</span>
-        <span className="text-xs" aria-hidden>
-          {Array.from({ length: GRACE_PIPS }, (_, pip) => (
-            <span key={pip} className={pip < grace.extraordinaryCount ? PIP_ON : PIP_OFF}>◆</span>
-          ))}
+    <div className="min-w-0 text-xs" data-testid={`equip-reforge-${result.state.slot}`}>
+      <div className="flex flex-wrap items-baseline gap-x-2 tabular-nums">
+        <span className="font-semibold text-foreground">
+          {t('equip.reforgeScore', { score: result.reforgeScore.toLocaleString() })}
         </span>
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {t('equip.graceScore', { score: result.graceScore })}
+        <span className="text-muted-foreground">
+          {t('equip.reforgeParts', {
+            mark: result.affixMark.toLocaleString(),
+            bonus: result.extraordinaryBonus.toLocaleString(),
+            count: result.extraordinaryCount,
+          })}
         </span>
       </div>
-      <p className="whitespace-pre-line text-xs leading-5 text-muted-foreground">{grace.brief1}</p>
+      {grace ? (
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <span className="text-sm font-bold text-foreground">{grace.name}</span>
+            <span aria-hidden>
+              {Array.from({ length: GRACE_PIPS }, (_, pip) => (
+                <span key={pip} className={pip < grace.extraordinaryCount ? PIP_ON : PIP_OFF}>◆</span>
+              ))}
+            </span>
+          </div>
+          <p className="whitespace-pre-line leading-5 text-muted-foreground">{grace.brief1}</p>
+        </div>
+      ) : result.extraordinaryCount >= 2 ? (
+        <p className="text-muted-foreground">{t('equip.noGrace')}</p>
+      ) : null}
     </div>
   )
 }
 
-function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
+/** The gold / grey / red pip beside an affix, named for screen readers. */
+function TierPip({ tier }: { tier: AffixTier }) {
   const { t } = useTranslation()
-  const { slot, affixes } = result.state
-  const write = (next: ChosenAffix[]) => onPatch({ affixes: next })
-  const replace = (index: number, next: ChosenAffix) =>
-    write(affixes.map((affix, position) => (position === index ? next : affix)))
-
+  const pip = TIER_PIP[tier]
   return (
-    <div className="min-w-0 space-y-1.5">
-      <GraceNote result={result} />
-      {affixes.map((affix, index) => (
-        <div key={index} className={AFFIX_ROW_CLASS}>
-          <Picker
-            value={affix.tier}
-            label={t('equip.affixTier')}
-            testId={`equip-affix-tier-${slot}-${index}`}
-            onValue={(raw) => replace(index, affixFor(equipment, slot, raw as AffixTier, affix.family))}
-          >
-            {TIER_OPTIONS.map((tier) => (
-              <option key={tier} value={tier}>{t(TIER_LABEL_KEY[tier])}</option>
-            ))}
-          </Picker>
-          <Picker
-            value={affix.family}
-            label={t('equip.affixFamily')}
-            testId={`equip-affix-family-${slot}-${index}`}
-            onValue={(raw) => replace(index, affixFor(equipment, slot, affix.tier, raw))}
-          >
-            {familiesFor(equipment, slot, affix.tier).map((family) => (
-              <option key={family} value={family}>{family}</option>
-            ))}
-          </Picker>
-          <NumberField
-            value={affix.value}
-            max={SCORE_CAP}
-            label={t('equip.affixValue')}
-            testId={`equip-affix-value-${slot}-${index}`}
-            onValue={(value) => replace(index, { ...affix, value })}
-          />
-          <span className="px-1 text-xs tabular-nums text-muted-foreground">
-            {t('equip.affixMark', { mark: markForValue(ladderFor(equipment, slot, affix.tier, affix.family), affix.value) })}
-          </span>
-          <button
-            type="button"
-            onClick={() => write(affixes.filter((_, position) => position !== index))}
-            className={`${BUTTON_CLASS} size-7`}
-            aria-label={t('equip.removeAffix')}
-            data-testid={`equip-affix-remove-${slot}-${index}`}
-          >
-            ×
-          </button>
-        </div>
-      ))}
+    <span
+      className={`inline-block size-2.5 shrink-0 rounded-full ${pip.className}`}
+      role="img"
+      aria-label={t(pip.labelKey)}
+      title={t(pip.labelKey)}
+      data-tier={tier}
+    />
+  )
+}
+
+function AffixField({
+  equipment,
+  slot,
+  index,
+  affix,
+  onChange,
+  onRemove,
+}: {
+  equipment: Equipment
+  slot: number
+  index: number
+  affix: ScoredAffix
+  onChange: (next: ChosenAffix) => void
+  onRemove: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <div className={AFFIX_ROW_CLASS} data-testid={`equip-affix-${slot}-${index}`}>
+      <TierPip tier={affix.tier} />
+      <Picker
+        value={affix.family}
+        label={t('equip.affixFamily')}
+        testId={`equip-affix-family-${slot}-${index}`}
+        className={COMPACT_SELECT_CLASS}
+        onValue={(raw) => onChange({ family: raw, value: affix.value })}
+      >
+        {familiesFor(equipment, slot).map((family) => (
+          <option key={family} value={family}>{family}</option>
+        ))}
+      </Picker>
+      <NumberField
+        value={affix.value}
+        min={-SCORE_CAP}
+        max={SCORE_CAP}
+        label={t('equip.affixValue')}
+        testId={`equip-affix-value-${slot}-${index}`}
+        onValue={(value) => onChange({ family: affix.family, value })}
+      />
+      <span className="text-xs tabular-nums text-muted-foreground" data-testid={`equip-affix-mark-${slot}-${index}`}>
+        {t('equip.affixMark', { mark: affix.mark })}
+      </span>
       <button
         type="button"
-        disabled={affixes.length >= MAX_AFFIXES}
-        onClick={() => write([...affixes, affixFor(equipment, slot, 'extraordinary')])}
-        className={`${BUTTON_CLASS} min-h-8 px-2.5 py-1`}
-        data-testid={`equip-affix-add-${slot}`}
+        onClick={onRemove}
+        className={`${BUTTON_CLASS} size-7`}
+        aria-label={t('equip.removeAffix')}
+        data-testid={`equip-affix-remove-${slot}-${index}`}
       >
-        {/* `used` rather than `count`, which i18next reads as a plural selector. */}
-        {t('equip.addAffix', { used: affixes.length, max: MAX_AFFIXES })}
+        ×
       </button>
+    </div>
+  )
+}
+
+/**
+ * The affixes, two to a row. The tier is not asked for: a negative value is a
+ * contaminated affix and a value past the normal ladder is an extraordinary
+ * one, and the pip shows which the number came to.
+ */
+function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
+  const { t } = useTranslation()
+  const { slot } = result.state
+  const affixes = result.affixes
+  const write = (next: ChosenAffix[]) => onPatch({ affixes: next })
+  const plain = (list: ScoredAffix[]): ChosenAffix[] => list.map(({ family, value }) => ({ family, value }))
+
+  return (
+    <div className="min-w-0 space-y-1.5 @container">
+      {/* Two to a row once the cell itself is wide enough for two — a container
+          query, since the same editor sits in a card a quarter of the page wide
+          and in a rows-layout column that is wider than that at any viewport. */}
+      <div className="grid grid-cols-1 gap-x-3 gap-y-1 @[30rem]:grid-cols-2">
+        {affixes.map((affix, index) => (
+          <AffixField
+            key={index}
+            equipment={equipment}
+            slot={slot}
+            index={index}
+            affix={affix}
+            onChange={(next) => write(plain(affixes).map((entry, at) => (at === index ? next : entry)))}
+            onRemove={() => write(plain(affixes).filter((_, at) => at !== index))}
+          />
+        ))}
+        <button
+          type="button"
+          disabled={affixes.length >= MAX_AFFIXES}
+          onClick={() => write([...plain(affixes), affixFor(equipment, slot)])}
+          className={`${BUTTON_CLASS} h-7 justify-self-start px-2`}
+          data-testid={`equip-affix-add-${slot}`}
+        >
+          {/* `used` rather than `count`, which i18next reads as a plural selector. */}
+          {t('equip.addAffix', { used: affixes.length, max: MAX_AFFIXES })}
+        </button>
+      </div>
+      <ReforgeSummary result={result} />
     </div>
   )
 }
@@ -435,11 +622,12 @@ function RowHeader() {
   const { t } = useTranslation()
   return (
     <div
-      className={`hidden px-2.5 text-xs font-semibold text-muted-foreground lg:grid ${ROW_GRID}`}
+      className={`hidden px-2.5 text-xs font-semibold text-muted-foreground xl:grid ${ROW_GRID}`}
       aria-hidden
       data-testid="equip-rows-header"
     >
       <span>{t('equip.item')}</span>
+      <span>{t('equip.stats')}</span>
       <span>{t('equip.enhance')}</span>
       <span>{t('equip.affixes')}</span>
       <span>{t('equip.brand')}</span>
@@ -452,7 +640,7 @@ function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: 
   const controls: PieceControlProps = { equipment, result, onPatch }
   return (
     <article
-      className={`grid gap-2 rounded-md border border-border bg-card p-2.5 lg:items-start ${ROW_GRID}`}
+      className={`grid gap-2 rounded-md border border-border bg-card p-2.5 xl:items-start ${ROW_GRID}`}
       data-testid={`equip-row-${result.state.slot}`}
     >
       <button
@@ -469,10 +657,11 @@ function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: 
           subtitle={t('equip.slotAndLevel', { slot: slotName, level: result.item?.gearLevel ?? '—' })}
         />
       </button>
+      <Cell label={t('equip.stats')} hidden><StatBlock equipment={equipment} result={result} /></Cell>
       <Cell label={t('equip.enhance')} hidden><EnhanceControls {...controls} /></Cell>
       <Cell label={t('equip.affixes')} hidden><AffixEditor {...controls} /></Cell>
       {/* Stacked, an empty brand cell would be a bare label; in the grid it must stay to hold its column. */}
-      <Cell label={t('equip.brand')} hidden className={result.brand ? '' : 'hidden lg:block'}>
+      <Cell label={t('equip.brand')} hidden className={result.brand ? '' : 'hidden xl:block'}>
         <BrandNote result={result} />
       </Cell>
     </article>
@@ -503,7 +692,8 @@ function PieceCard({ equipment, slotName, kind, result, onPatch, onOpenPicker }:
         />
         <IconPlaceholder item={result.item} />
       </button>
-      <Cell label={t('equip.enhance')} className="p-2.5"><EnhanceControls {...controls} /></Cell>
+      <Cell label={t('equip.stats')} className="p-2.5"><StatBlock equipment={equipment} result={result} /></Cell>
+      <Cell label={t('equip.enhance')} className={SECTION_CLASS}><EnhanceControls {...controls} /></Cell>
       <Cell label={t('equip.affixes')} className={SECTION_CLASS}><AffixEditor {...controls} /></Cell>
       {result.brand ? (
         <Cell label={t('equip.brand')} className={SECTION_CLASS}><BrandNote result={result} /></Cell>
@@ -530,30 +720,27 @@ export default function EquipmentSection({
 }) {
   const { t } = useTranslation()
   const slots = useMemo(() => scoredSlots(equipment, graces), [equipment, graces])
-  const [layout, setLayout] = useState<LayoutMode>('rows')
-  const [pieces, setPieces] = useState<PieceState[]>(() => slots.map((slot) => newPiece(slot.id)))
-  // The batch sliders' own position. They push to every piece and never read
-  // one back, so they need a value of their own to sit at.
-  const [batch, setBatch] = useState({ stage: 0, badge: 0 })
-  // The player's pick when two suits are live at once; otherwise unused, since
-  // the suit follows from what is worn.
-  const [suitChoice, setSuitChoice] = useState<number | null>(null)
+  const [layout, setLayout] = useMemory(equipmentLayout)
+  const [draft, setDraft] = useMemory(equipmentDraft)
   // Which slot's picker is open. One modal for all eight pieces: they never open
   // together, and a modal per piece would mount eight dialogs' worth of portals.
   const [pickerSlot, setPickerSlot] = useState<number | null>(null)
 
-  // A weapon from the previous pathway cannot be worn by the new one, so it is
-  // dropped rather than left on screen as an unequippable piece.
-  useEffect(() => {
-    setPieces((prev) =>
-      prev.map((piece) => {
-        if (piece.itemId === null) return piece
-        const wearable = itemsForSlot(equipment, piece.slot, professionId)
-          .some((item) => item.id === piece.itemId)
-        return wearable ? piece : { ...piece, itemId: null }
-      }),
-    )
-  }, [equipment, professionId])
+  // What is scored: the stored draft, one piece per scored slot, checked
+  // against the dataset and the pathway. A slot the draft does not know starts
+  // empty; a weapon the pathway cannot wear is shown empty but kept stored.
+  const pieces = useMemo(
+    () =>
+      slots.map((slot) =>
+        sanitizePiece(equipment, draft.pieces.find((piece) => piece.slot === slot.id) ?? newPiece(slot.id), professionId),
+      ),
+    [draft.pieces, equipment, professionId, slots],
+  )
+  const { batch, suitChoice } = draft
+  const writePieces = useCallback(
+    (next: PieceState[]) => setDraft((prev) => ({ ...prev, pieces: next })),
+    [setDraft],
+  )
 
   const results = useMemo(() => pieces.map((p) => evaluatePiece(equipment, graces, p)), [equipment, graces, pieces])
   const averagePercent = useMemo(() => averageProgress(results), [results])
@@ -589,29 +776,30 @@ export default function EquipmentSection({
           base: sum.base + r.baseScore,
           enhance: sum.enhance + r.enhanceScore,
           affix: sum.affix + r.affixMark,
-          grace: sum.grace + r.graceScore,
+          bonus: sum.bonus + r.extraordinaryBonus,
+          reforge: sum.reforge + r.reforgeScore,
           total: sum.total + r.total,
         }),
-        { base: 0, enhance: 0, affix: 0, grace: 0, total: 0 },
+        { base: 0, enhance: 0, affix: 0, bonus: 0, reforge: 0, total: 0 },
       ),
     [results],
   )
 
-  const patchPiece = useCallback((index: number, patch: Partial<PieceState>) => {
-    setPieces((prev) => prev.map((piece, at) => (at === index ? { ...piece, ...patch } : piece)))
-  }, [])
+  const patchPiece = (index: number, patch: Partial<PieceState>) =>
+    writePieces(pieces.map((piece, at) => (at === index ? { ...piece, ...patch } : piece)))
   const globalMaxStage = equipment.enhancement.maxStage
   // Every piece is converted against its own ladder, so a slot with a shorter
   // one is capped at its end rather than set past it.
   const applyBatch = (stage: number, badge: number) => {
-    setBatch({ stage, badge })
-    setPieces((prev) =>
-      prev.map((piece) => {
+    setDraft((prev) => ({
+      ...prev,
+      batch: { stage, badge },
+      pieces: pieces.map((piece) => {
         const maxStage = maxStageFor(equipment, piece.slot)
         const enhanceStage = Math.min(stage, maxStage)
         return { ...piece, enhanceStage, refinePercent: refineFromProgress(maxStage, enhanceStage, badge) }
       }),
-    )
+    }))
   }
 
   return (
@@ -660,7 +848,7 @@ export default function EquipmentSection({
               value={chosenSuit?.suit.id ?? ''}
               label={t('equip.suitChoose')}
               testId="equip-suit-choice"
-              onValue={(raw) => setSuitChoice(Number(raw))}
+              onValue={(raw) => setDraft((prev) => ({ ...prev, suitChoice: Number(raw) }))}
             >
               {active.map((entry) => (
                 <option key={entry.suit.id} value={entry.suit.id}>
@@ -701,8 +889,11 @@ export default function EquipmentSection({
             <div className="flex flex-wrap gap-x-3 text-xs tabular-nums text-muted-foreground">
               <span>{t('equip.subtotalBase', { value: totals.base.toLocaleString() })}</span>
               <span>{t('equip.subtotalEnhance', { value: totals.enhance.toLocaleString() })}</span>
+              <span>{t('equip.subtotalReforge', { value: totals.reforge.toLocaleString() })}</span>
+            </div>
+            <div className="flex flex-wrap gap-x-3 text-xs tabular-nums text-muted-foreground">
               <span>{t('equip.subtotalAffix', { value: totals.affix.toLocaleString() })}</span>
-              <span>{t('equip.subtotalGrace', { value: totals.grace.toLocaleString() })}</span>
+              <span>{t('equip.subtotalBonus', { value: totals.bonus.toLocaleString() })}</span>
             </div>
           </div>
         </Cell>

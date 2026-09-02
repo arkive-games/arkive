@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { IconDatabase, IconInfoCircle } from '@tabler/icons-react'
+import { useMemory } from '@gamemap/state-memory'
 import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
@@ -17,6 +18,38 @@ import {
   type Rating,
   type SpeciesResult,
 } from '@/features/score/data'
+import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
+
+/** The character as typed into the page: levels, pathway, and the per-item scores. */
+type CharacterDraft = {
+  roleLevel: number
+  divinityLevel: number
+  /** `null` until a pathway is picked; the page then seeds the first playable one. */
+  professionId: number | null
+  /** Species id → the score the player typed. Keys are strings once stored, as JSON has no other kind. */
+  scores: Record<string, number>
+}
+
+function isCharacterDraft(value: unknown): value is CharacterDraft {
+  return (
+    isRecord(value) &&
+    isFiniteNumber(value.roleLevel) &&
+    isFiniteNumber(value.divinityLevel) &&
+    isNullableNumber(value.professionId) &&
+    isRecord(value.scores) &&
+    Object.values(value.scores).every(isFiniteNumber)
+  )
+}
+
+/**
+ * The inputs survive a reload. They are a draft in the state-memory sense — a
+ * calculator's configuration, costly to retype — so they take that class's
+ * thirty-day life rather than living for ever.
+ */
+const characterDraft = gmzzMemory.draft('score/character', {
+  default: (): CharacterDraft => ({ roleLevel: 70, divinityLevel: 0, professionId: null, scores: {} }),
+  validate: isCharacterDraft,
+})
 
 /**
  * Band colours, worst to best.
@@ -61,17 +94,28 @@ export default function ScorePage() {
   const [rating, setRating] = useState<Rating | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [roleLevel, setRoleLevel] = useState(70)
-  const [divinityLevel, setDivinityLevel] = useState(0)
-  const [scores, setScores] = useState<Record<number, number>>({})
+  const [draft, setDraft] = useMemory(characterDraft)
   const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
   const [relics, setRelics] = useState<Relics | null>(null)
+  const setRoleLevel = (roleLevel: number) => setDraft((prev) => ({ ...prev, roleLevel }))
+  const setDivinityLevel = (divinityLevel: number) => setDraft((prev) => ({ ...prev, divinityLevel }))
+  const setProfessionId = (professionId: number | null) => setDraft((prev) => ({ ...prev, professionId }))
+  const setScore = (speciesId: number, value: number) =>
+    setDraft((prev) => ({ ...prev, scores: { ...prev.scores, [speciesId]: value } }))
   /**
    * The character's pathway. Global, not per-section: it gates which weapons
    * exist for this character, and 途径技能 and the 非凡人物 group will read it
-   * too. Seeded from the dataset because the page has no default of its own.
+   * too. Read against the dataset rather than trusted: a stored pathway the
+   * data no longer offers falls back to the first playable one, as does an
+   * unset one, because the page has no default of its own.
    */
-  const [professionId, setProfessionId] = useState<number | null>(null)
+  const professionId = useMemo(() => {
+    if (!equipment) return draft.professionId
+    const playable = playableProfessions(equipment.equipment)
+    return playable.some((profession) => profession.id === draft.professionId)
+      ? draft.professionId
+      : playable[0]?.id ?? null
+  }, [draft.professionId, equipment])
 
   useEffect(() => {
     let live = true
@@ -80,9 +124,7 @@ export default function ScorePage() {
     // still works.
     void loadEquipment()
       .then((data) => {
-        if (!live) return
-        setEquipment(data)
-        setProfessionId((current) => current ?? playableProfessions(data.equipment)[0]?.id ?? null)
+        if (live) setEquipment(data)
       })
       .catch((cause) => console.error(cause))
     void loadRelics()
@@ -110,6 +152,11 @@ export default function ScorePage() {
     document.title = `${t('score.title')} - ${t('siteTitle')}`
   }, [t])
 
+  // Stored levels are clamped to the dataset's range, so a draft written under
+  // a higher cap cannot push a benchmark past the curve it is read from.
+  const roleLevel = rating ? clamp(draft.roleLevel, 1, rating.maxRoleLevel) : draft.roleLevel
+  const divinityLevel = rating ? clamp(draft.divinityLevel, 0, rating.maxDivinityLevel) : draft.divinityLevel
+  const scores = draft.scores
   const result = useMemo(
     () => (rating ? evaluate(rating, roleLevel, divinityLevel, scores) : null),
     [rating, roleLevel, divinityLevel, scores],
@@ -218,7 +265,7 @@ export default function ScorePage() {
                     key={item.species.id}
                     item={item}
                     rating={rating}
-                    onScore={(value) => setScores((prev) => ({ ...prev, [item.species.id]: value }))}
+                    onScore={(value) => setScore(item.species.id, value)}
                   />
                 ))}
               </div>

@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
+import { useMemory } from '@gamemap/state-memory'
 import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
+import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import { iconUrl } from '@/lib/urls'
 import {
   artifactsInGroup, currentSeason, displayedValue, effectiveAffixCap, evaluateRelicSlot,
@@ -11,6 +13,46 @@ import {
   newRelicSlot, poolFor, poolRungs, poolStats,
   type Artifact, type ChosenRelicAffix, type Material, type PoolAffix, type Relics, type RelicSlotState,
 } from '@/features/relics/data'
+
+/** The three slots as stored. `knowledgeLevel` is null until the player moves it, so the dataset's first level applies. */
+type RelicDraft = { knowledgeLevel: number | null; slots: RelicSlotState[] }
+
+function isRelicAffix(value: unknown): value is ChosenRelicAffix {
+  return (
+    isRecord(value) &&
+    typeof value.stat === 'string' &&
+    isFiniteNumber(value.value) &&
+    isFiniteNumber(value.mark) &&
+    (value.affixId === undefined || isFiniteNumber(value.affixId))
+  )
+}
+
+function isRelicSlotState(value: unknown): value is RelicSlotState {
+  return (
+    isRecord(value) &&
+    isFiniteNumber(value.groupId) &&
+    isNullableNumber(value.artifactId) &&
+    isFiniteNumber(value.grade) &&
+    isNullableNumber(value.materialId) &&
+    Array.isArray(value.affixes) &&
+    value.affixes.every(isRelicAffix)
+  )
+}
+
+function isRelicDraft(value: unknown): value is RelicDraft {
+  return (
+    isRecord(value) &&
+    isNullableNumber(value.knowledgeLevel) &&
+    Array.isArray(value.slots) &&
+    value.slots.every(isRelicSlotState)
+  )
+}
+
+/** The relic inputs survive a reload; a calculator's configuration is a draft, so it takes that class's thirty-day life. */
+const relicDraft = gmzzMemory.draft('score/relics', {
+  default: (): RelicDraft => ({ knowledgeLevel: null, slots: [] }),
+  validate: isRelicDraft,
+})
 
 /**
  * The panel's three slots. 1 攻击 and 2 防御 are fixed — an artifact's `groupId`
@@ -348,18 +390,42 @@ function Line({ label, value, strong = false }: { label: string; value: number; 
 export default function RelicSection({ relics }: { relics: Relics }) {
   const { t } = useTranslation()
   const season = useMemo(() => currentSeason(relics), [relics])
-  const [knowledgeLevel, setKnowledgeLevel] = useState(
-    () => knowledgeLadder(relics, season).find((rung) => rung.level != null)?.level ?? 0,
+  const [draft, setDraft] = useMemory(relicDraft)
+  const knowledgeLevel = useMemo(() => {
+    const ladder = knowledgeLadder(relics, season)
+    const known = ladder.some((rung) => rung.level === draft.knowledgeLevel)
+    return known ? (draft.knowledgeLevel as number) : ladder.find((rung) => rung.level != null)?.level ?? 0
+  }, [draft.knowledgeLevel, relics, season])
+  const setKnowledgeLevel = (level: number) => setDraft((prev) => ({ ...prev, knowledgeLevel: level }))
+  // One slot per group: the stored one when there is one, checked against the
+  // dataset — a grade or material it no longer knows falls back to the start —
+  // otherwise a fresh slot. Pre-picked so a card shows real effects on first
+  // paint. The scorer ignores `artifactId`, so this changes no number.
+  const slots = useMemo<RelicSlotState[]>(
+    () =>
+      GROUP_IDS.map((groupId) => {
+        const fresh: RelicSlotState = {
+          ...newRelicSlot(groupId, relics.promotion.worstGrade),
+          artifactId: artifactsInGroup(relics, groupId)[0]?.id ?? null,
+          materialId: materialsForGroup(relics, groupId)[0]?.id ?? null,
+        }
+        const stored = draft.slots.find((slot) => slot.groupId === groupId)
+        if (!stored) return fresh
+        const materials = materialsForGroup(relics, groupId)
+        const material = materials.find((entry) => entry.id === stored.materialId)
+        return {
+          groupId,
+          artifactId: artifactsInGroup(relics, groupId).some((a) => a.id === stored.artifactId) ? stored.artifactId : fresh.artifactId,
+          grade: gradeRung(relics, stored.grade) ? stored.grade : fresh.grade,
+          materialId: material ? stored.materialId : fresh.materialId,
+          // Affixes belong to the material's pool, so they go with it.
+          affixes: material ? stored.affixes.slice(0, maxAffixes(relics)) : [],
+        }
+      }),
+    [draft.slots, relics],
   )
-  const [slots, setSlots] = useState<RelicSlotState[]>(() =>
-    GROUP_IDS.map((groupId) => ({
-      ...newRelicSlot(groupId, relics.promotion.worstGrade),
-      // Pre-picked so a card shows real effects on first paint. The scorer
-      // ignores `artifactId`, so this changes no number.
-      artifactId: artifactsInGroup(relics, groupId)[0]?.id ?? null,
-      materialId: materialsForGroup(relics, groupId)[0]?.id ?? null,
-    })),
-  )
+  const setSlots = (update: (prev: RelicSlotState[]) => RelicSlotState[]) =>
+    setDraft((prev) => ({ ...prev, slots: update(slots) }))
 
   const k2 = k2For(relics, knowledgeLevel, season)
   const results = useMemo(
