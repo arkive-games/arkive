@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.12.3",
+      "date": "2026-09-03",
+      "commit": "b02c92676346dc4220f12c6a678d9c0861751f22",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Reorganized equipment editing into compact slot cards with a game-styled modal for gear, quality, entries, and socketed cards.",
+            "zh-CN": "重组装备编辑界面：仅显示紧凑的部位卡片，点击后在游戏风格弹窗中配置装备、品质、词条和卡片。",
+            "zh-TW": "重組裝備編輯介面：僅顯示緊湊的部位卡片，點擊後在遊戲風格彈窗中配置裝備、品質、詞條和卡片。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.12.2",
       "date": "2026-09-03",
       "commit": "016966d751a3a9d9af2096af21e17ad804cbfe5a",
