@@ -46,11 +46,32 @@ TYPES = {
 ITEMS = {
     "3020623": {
         "ID": 3020623, "itemName": "无形之编排", "subType": 302, "quality": 6, "icon": "3020623",
-        "TC": 62, "lvReq": 60, "Mark": 2430, "SuitID": 101, "SetId": 4,
-        "itemDes": "悄无声息的引导。",
+        "TC": 62, "lvReq": 60, "Mark": 2430, "SuitID": 101, "SetId": 4, "UniqueID": 0,
+        "itemDes": "悄无声息的引导。", "ShowCondition": [101, 7],
         "AtkMin_N": 327, "AtkMax_N": 607, "MaxHp_N": 1960, "AllProHurtPlus_N": 0,
     },
+    "3001059": {
+        "ID": 3001059, "itemName": "温暖的皮靴", "subType": 328, "quality": 6, "icon": "3001059",
+        "TC": 62, "Mark": 2685, "UniqueID": 10035, "itemDes": "x", "ShowCondition": [101, 10000],
+        "MaxHp_N": 2000, "Pierce_N": 0,
+    },
+    "3000108": {
+        "ID": 3000108, "itemName": "鞋靴橙75", "subType": 328, "quality": 6, "icon": "3000108",
+        "TC": 69, "Mark": 0, "UniqueID": 0, "Order": 999, "ShowCondition": {},
+    },
+    "3001074": {
+        "ID": 3001074, "itemName": "pvp烙印68", "subType": 328, "quality": 6, "icon": "3001074",
+        "TC": 68, "Mark": 2977, "UniqueID": 30013, "ShowCondition": [101, 10000],
+    },
     "9999": {"ID": 9999, "itemName": "不是装备", "subType": 7777, "quality": 1, "icon": "x"},
+}
+
+BRANDS = {
+    "10035": {"ID": 10035, "SuitName1": "好孩子", "SuitBrief1": "怪物专攻提高<Mark>150</>。", "SuitStory": ""},
+    "10032": {"ID": 10032, "SuitName1": "好孩子", "SuitBrief1": "怪物专攻提高<Mark>150</>。", "SuitStory": "", "productItemId": 3001059},
+    "10036": {"ID": 10036, "SuitName1": "好孩子2", "SuitBrief1": "second state", "SuitStory": ""},
+    "30013": {"ID": 30013, "SuitName1": "隐秘烙印", "SuitBrief1": "该效果已被隐秘，暂时无法查看。", "SuitStory": ""},
+    "40001": {"ID": 40001, "SuitName1": "未命名", "SuitBrief1": "描述文本3", "SuitStory": ""},
 }
 
 PROFESSIONS = {
@@ -83,16 +104,41 @@ def test_types_keeps_keys_and_labels_unzipped(stub):
 def test_items_reads_base_stats_off_the_item_and_drops_zeroes(stub):
     stub({equipment.TYPE_TABLE: TYPES, equipment.ITEM_TABLE: ITEMS})
     types_by_id = {t["id"]: t for t in equipment.types(None, {})}
-    rows = equipment.items(None, {}, types_by_id)
+    rows = {r["id"]: r for r in equipment.items(None, {}, types_by_id, set())}
 
-    assert [r["id"] for r in rows] == [3020623], "a non-equipment subType is skipped"
-    item = rows[0]
+    assert 9999 not in rows, "a non-equipment subType is skipped"
+    item = rows[3020623]
     assert item["slot"] == 1, "joined via subType -> EquipmentTypeData"
     assert item["gearLevel"] == 62, "TC is the 装等, not lvReq"
     assert item["levelRequirement"] == 60
     assert item["baseScore"] == 2430, "Mark on the row is the 装备基础 score"
+    assert item["brandId"] is None, "UniqueID 0 is no brand"
     # AllProHurtPlus_N is 0 and the game hides it.
     assert dict(item["baseStats"]) == {"AtkMin_N": 327, "AtkMax_N": 607, "MaxHp_N": 1960}
+    assert rows[3001059]["brandId"] == 10035, "UniqueID is the 烙印 the item wears"
+
+
+def test_items_drops_unreleased_gear(stub):
+    stub({equipment.TYPE_TABLE: TYPES, equipment.ITEM_TABLE: ITEMS, equipment.BRAND_TABLE: BRANDS})
+    types_by_id = {t["id"]: t for t in equipment.types(None, {})}
+    hidden = equipment.unwritten_brands(None, {})
+    # Both the designer stand-in and the client's "hidden" notice; the live
+    # brands and the `2` variant are not in this set.
+    assert hidden == {30013, 40001}
+
+    ids = [r["id"] for r in equipment.items(None, {}, types_by_id, hidden)]
+    # 鞋靴橙75 has no ShowCondition (the client never lists it) and pvp烙印68
+    # wears a brand the client still hides; both would be pickable otherwise.
+    assert ids == [3001059, 3020623]
+
+
+def test_brands_links_by_product_and_drops_the_unwritten(stub):
+    stub({equipment.BRAND_TABLE: BRANDS})
+    rows = {b["id"]: b for b in equipment.brands(None, {})}
+    assert set(rows) == {10035, 10032}, "hidden, placeholder and second-state rows are dropped"
+    assert rows[10032]["productItemId"] == 3001059
+    assert rows[10035]["productItemId"] is None
+    assert rows[10035]["effect"] == "怪物专攻提高150。", "client markup stripped"
 
 
 def test_professions_inverts_class_limit_and_keeps_the_disabled_one(stub):
@@ -185,7 +231,7 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
         equipment.TYPE_TABLE: TYPES,
         equipment.PROFESSION_TABLE: PROFESSIONS,
         equipment.ITEM_TABLE: ITEMS,
-        equipment.BRAND_TABLE: {"1": {"ID": 1, "SuitName1": "好孩子", "SuitBrief1": "怪物专攻提高<Mark>150</>。", "SuitStory": "", "productItemId": 3020623}},
+        equipment.BRAND_TABLE: BRANDS,
         equipment.BODY_TABLE: BODIES,
         equipment.STAGE_TABLE: STAGES,
         equipment.STAGE_PROP_TABLE: STAGE_PROPS,
@@ -197,8 +243,8 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
     }
     stub(tables)
     counts = equipment.build(None, tmp_path)
-    assert counts["items"] == 1 and counts["professions"] == 2
+    assert counts["items"] == 2 and counts["professions"] == 2 and counts["brands"] == 2
 
     payload = json.loads((tmp_path / equipment.OUT_FILE).read_text(encoding="utf-8"))
     assert payload["brands"][0]["effect"] == "怪物专攻提高150。", "client markup stripped"
-    assert payload["items"][0]["baseScore"] == 2430
+    assert {i["id"]: i["baseScore"] for i in payload["items"]} == {3001059: 2685, 3020623: 2430}

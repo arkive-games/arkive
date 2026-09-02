@@ -56,16 +56,21 @@ export type EquipItem = {
   baseScore: number | null
   suitId: number | null
   setId: number | null
+  /** The 烙印 this item wears (`Brand.id`), or null. */
+  brandId: number | null
   flavour: string
 }
 
-/** 烙印 — a named special effect. `itemId` is null when the link is unknown. */
+/**
+ * 烙印 — a named special effect. Items point at it via `EquipItem.brandId`;
+ * `productItemId` is the item the wearer upgrades into, not the wearer.
+ */
 export type Brand = {
   id: number
   name: string
   effect: string
   story: string
-  itemId: number | null
+  productItemId: number | null
 }
 
 export type EnhanceStage = {
@@ -334,7 +339,7 @@ export function evaluatePiece(
   season?: number,
 ): PieceResult {
   const item = equipment.items.find((i) => i.id === state.itemId) ?? null
-  const brand = item ? equipment.brands.find((b) => b.itemId === item.id) ?? null : null
+  const brand = item?.brandId != null ? equipment.brands.find((b) => b.id === item.brandId) ?? null : null
   const body = bodyFor(equipment, state.slot, season)
   const { score: enhanceScore, stats: enhanceStats } = enhanceOf(body, state.enhanceStage)
 

@@ -41,17 +41,17 @@ const EQUIPMENT: Equipment = {
       id: 3020623, name: '无形之编排', typeId: 302, slot: 1, quality: 6, icon: '3020623',
       gearLevel: 62, levelRequirement: 60,
       baseStats: [['AtkMin_N', 327], ['AtkMax_N', 607], ['MaxHp_N', 1960]],
-      baseScore: 2430, suitId: 101, setId: 4, flavour: '',
+      baseScore: 2430, suitId: 101, setId: 4, brandId: 10035, flavour: '',
     },
     {
       id: 3020600, name: '旧武器', typeId: 302, slot: 1, quality: 4, icon: '3020600',
       gearLevel: 60, levelRequirement: 55, baseStats: [], baseScore: 1200,
-      suitId: null, setId: 4, flavour: '',
+      suitId: null, setId: 4, brandId: null, flavour: '',
     },
   ],
   brands: [
-    { id: 10035, name: '好孩子', effect: '怪物专攻提高150。', story: '', itemId: 3020623 },
-    { id: 10032, name: '无主', effect: '', story: '', itemId: null },
+    { id: 10035, name: '好孩子', effect: '怪物专攻提高150。', story: '', productItemId: null },
+    { id: 10032, name: '好孩子', effect: '怪物专攻提高150。', story: '', productItemId: 3020600 },
   ],
   enhancement: {
     bodies: [
@@ -321,11 +321,12 @@ describe('evaluatePiece', () => {
     expect(dirty.affixMark).toBeLessThan(clean.affixMark)
   })
 
-  it('leaves brand null for an item nothing links to', () => {
+  it('leaves brand null for an item wearing none', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
       slot: 1, itemId: 3020600, baseScore: 0, enhanceStage: 0, refinePercent: 0, affixes: [],
     }, 101)
     expect(result.item?.name).toBe('旧武器')
+    // A brand whose productItemId is this item is the upgrade link, not a wearer.
     expect(result.brand).toBeNull()
   })
 })

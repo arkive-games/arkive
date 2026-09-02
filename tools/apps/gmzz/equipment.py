@@ -41,8 +41,17 @@ Joins worth writing down, because none are guessable:
   and that slot's base-stat keys — so `subType` is the only bridge from an item
   to its slot.
 - **`EquipmentUniqueData` is the 烙印** (a named special effect: 好孩子,
-  与我同行, 罗塞尔护符), and `productItemId` points at the item that carries it.
-  The fields are named `Suit*` but have nothing to do with suits.
+  与我同行, 罗塞尔护符). An item's `UniqueID` is the brand it wears; the brand's
+  own `productItemId` is **not** the reverse link but the item the brand's
+  wearer upgrades into (烙印 10032 on the 35装等 温暖的皮靴 points at the 62装等
+  one). The fields are named `Suit*` but have nothing to do with suits.
+- **`ItemNewData` ships gear the game has not released.** Two shapes, both
+  dropped: rows with an empty `ShowCondition` (`Order 999`, names like 武器橙75
+  and 测试S4装备) are slot placeholders the client never lists; rows wearing a
+  烙印 whose effect reads 该效果已被隐秘 are next season's copies of live items
+  (TC 64–69 猩红之啸, `pvp烙印66`, 罗塞尔装备). Neither can be equipped, so
+  neither belongs in a picker. Day-gated rows (`ShowCondition [101, 29]`) are
+  scheduled season content and are kept.
 - **Enhancement is keyed by "body", not slot.** `EquipmentGrowBodyConfigData`
   maps a body id to its slot and season; `EquipmentGrowEnhancePropData` and
   `EquipmentGrowBodyEnhanceData` are keyed by that same body id. One slot has
@@ -84,6 +93,9 @@ GROUP_TABLES = ("EquipmentWordRandomGroupData", "EquipmentWordInitRandomGroupDat
 CURRENT_SET = 4
 #: Affix tier by the group id's last two digits.
 TIER_BY_TAIL = [(1, 12, "normal"), (21, 32, "extraordinary"), (41, 52, "contaminated"), (61, 63, "special")]
+#: Effect texts a 烙印 row carries before it is written: the designer's stand-in
+#: (描述文本N) and the client's "hidden for now" notice on unreleased gear.
+UNWRITTEN_EFFECTS = ("描述文本", "该效果已被隐秘")
 
 _TAG = re.compile(r"<[^>]+>")
 
@@ -178,7 +190,9 @@ def professions(excel: Path, strings: dict, type_rows: list[dict]) -> list[dict]
     return out
 
 
-def items(excel: Path, strings: dict, types_by_id: dict[int, dict]) -> list[dict]:
+def items(
+    excel: Path, strings: dict, types_by_id: dict[int, dict], unwritten_brands: set[int],
+) -> list[dict]:
     """Equipment items out of ``ItemNewData``, joined to their slot via subType.
 
     The base stat values are **stored on the item row itself**, under keys named
@@ -192,12 +206,25 @@ def items(excel: Path, strings: dict, types_by_id: dict[int, dict]) -> list[dict
     emitted as ``baseScore`` and the page treats it as a default rather than a
     fact, because the boots 温暖的皮靴 carry 2685 against a card reading 2804 —
     a 119 gap this pipeline cannot yet explain.
+
+    Two kinds of row are gear the game has not released and are dropped: an
+    empty ``ShowCondition`` marks the slot placeholders the client never lists
+    (武器橙75, 测试S4装备 — ``Order 999``), and a ``UniqueID`` in
+    ``unwritten_brands`` marks an item wearing a 烙印 the client still hides,
+    which is how next season's copies of live items ship (TC 64–69 猩红之啸,
+    ``pvp烙印66``, 罗塞尔装备). A day-gated ``ShowCondition`` is kept: that is
+    scheduled content, not a test row.
     """
     out = []
     for row in _rows(resolve_text(load_table(excel, ITEM_TABLE), strings)):
         sub = row.get("subType")
         subtype = types_by_id.get(sub)
         if subtype is None:
+            continue
+        if not row.get("ShowCondition"):
+            continue
+        brand_id = row.get("UniqueID") or None
+        if brand_id in unwritten_brands:
             continue
         # Zero-valued base props exist on every row and the game hides them.
         stats = [[key, row[key]] for key in subtype["baseStatKeys"] if row.get(key)]
@@ -215,33 +242,56 @@ def items(excel: Path, strings: dict, types_by_id: dict[int, dict]) -> list[dict
             "baseScore": row.get("Mark"),
             "suitId": row.get("SuitID") or None,
             "setId": row.get("SetId"),
+            # The 烙印 this item wears, an `EquipmentUniqueData` id.
+            "brandId": brand_id,
             "flavour": _plain(row.get("itemDes") or ""),
         })
     out.sort(key=lambda i: i["id"])
     return out
 
 
+def _unwritten(effect: str) -> bool:
+    return not effect or any(marker in effect for marker in UNWRITTEN_EFFECTS)
+
+
+def unwritten_brands(excel: Path, strings: dict) -> set[int]:
+    """Ids of 烙印 rows whose effect the client will not show.
+
+    Both the designer's ``描述文本N`` stand-in and the 该效果已被隐秘 notice mean
+    the brand — and so any item wearing it — is not live. Kept separate from
+    :func:`brands` because ``items`` needs the *dropped* set, and the other
+    reason a brand is dropped (a ``2`` second-state variant) says nothing about
+    the item.
+    """
+    return {
+        row["ID"]
+        for row in _rows(resolve_text(load_table(excel, BRAND_TABLE), strings))
+        if _unwritten(_plain(row.get("SuitBrief1") or ""))
+    }
+
+
 def brands(excel: Path, strings: dict) -> list[dict]:
-    """烙印 — a named special effect, linked to its item by ``productItemId``.
+    """烙印 — a named special effect. Items point at it via their ``brandId``.
 
     The columns are named ``Suit*`` and are not suits. Rows whose name ends in
-    ``2`` are the client's second-state variants and rows whose effect text is a
-    placeholder (``描述文本N``) are unwritten, so both are dropped rather than
-    shipped as real effects.
+    ``2`` are the client's second-state variants and rows whose effect is
+    unwritten (see :func:`unwritten_brands`) are not live, so both are dropped
+    rather than shipped as real effects.
     """
     out = []
     for row in _rows(resolve_text(load_table(excel, BRAND_TABLE), strings)):
         name = row.get("SuitName1") or ""
         effect = _plain(row.get("SuitBrief1") or "")
-        if not name or not effect or name.endswith("2") or "描述文本" in effect:
+        if not name or name.endswith("2") or _unwritten(effect):
             continue
         out.append({
             "id": row["ID"],
             "name": name,
             "effect": effect,
             "story": row.get("SuitStory") or "",
-            # Present only on craftable brands; absent means the link is unknown.
-            "itemId": row.get("productItemId"),
+            # The item this brand's wearer upgrades into (温暖的皮靴 35 -> 62装等),
+            # present on the handful of craftable brands. Not the wearer itself.
+            "productItemId": row.get("productItemId"),
         })
     out.sort(key=lambda b: b["id"])
     return out
@@ -391,7 +441,7 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
     type_rows = types(excel, strings)
     types_by_id = {t["id"]: t for t in type_rows}
     profession_rows = professions(excel, strings, type_rows)
-    item_rows = items(excel, strings, types_by_id)
+    item_rows = items(excel, strings, types_by_id, unwritten_brands(excel, strings))
     brand_rows = brands(excel, strings)
     enhance = enhancement(excel, strings)
     suit = suits(excel, strings)
