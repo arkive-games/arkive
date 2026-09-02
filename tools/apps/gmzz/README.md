@@ -84,6 +84,37 @@ client's own, and this one is a join we performed. The stage fails rather than
 skipping a goods row that won't resolve, since a missing icon is a hole in the
 wiki and a silent skip hides a broken join.
 
+## Equipment and relic icons
+
+```bash
+uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Item/Large
+uv run python -m gmzz.equipicons
+```
+
+Converts the 270 distinct icons used by `equipment.items`, `relics.artifacts` and
+`relics.materials.items` into `GMZZ_RES_OUT/icons/` — the same directory
+`gmzz.icons` fills, because these are the same `Item/Large` art under the
+client's own numeric names. It writes no JSON: both stages already emit an `icon`
+field per row, so there is nothing left to map. Which is also why it does **not**
+re-stamp `version.json` — the version is a digest of `GMZZ_DATA_OUT`, and this
+stage only reads from there.
+
+**Run it after `gmzz.equipment` and `gmzz.relics`.** It collects the ids from
+their emitted JSON rather than from the tables, since those two stages own the
+filters that decide which rows exist; re-deriving the set here would be a second
+copy of that logic, free to drift. It fails naming the module to run when either
+file is absent.
+
+**The `icon` field is not the row's id.** Item 3001059 (温暖的皮靴) carries
+`icon: "3280621"`, and icons are shared — 270 images for 517 rows. Deduplicate,
+and never assume the row id is the asset name.
+
+Coverage is 100% across all 517 rows, so a PNG missing from the export means the
+export regressed and is an error rather than a skip. As in `gmzz.icons`, the
+whole set is validated before anything is written: the two artifact repos are
+committed separately, so a half-converted run would ship visibly broken. Re-runs
+skip any WebP newer than its source PNG.
+
 ## Utopian Theater (乌托邦剧场)
 
 ```bash
