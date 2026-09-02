@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   BookOpen,
   Check,
+  ChevronRight,
   Edit3,
   Gem,
   PawPrint,
@@ -20,6 +21,7 @@ import {
   loadSoulWikiData,
   loadTalentWikiData,
   loadWikiData,
+  loadSkillLevels,
   type EquipmentAttrsDocument,
   type EquipmentRecord,
   type SoulRecord,
@@ -561,6 +563,28 @@ function BuildViewer({
   const skillMap = new Map(
     data.skills.skills.map((skill) => [skill.iSkillID, skill]),
   );
+  const [skillDetails, setSkillDetails] = useState<Map<number, string>>(
+    () => new Map(),
+  );
+  useEffect(() => {
+    let active = true;
+    const selected = build.skillIds.slice(0, 6)
+      .map((id) => data.skills.skills.find((skill) => skill.iSkillID === id))
+      .filter((skill): skill is SkillIndexEntry => Boolean(skill));
+    Promise.all(
+      selected.map(async (skill) => {
+        const rows = await loadSkillLevels(skill, data.skills.shards);
+        return [skill.iSkillID, rows[0]?.desc?.["zh-CN"] ?? ""] as const;
+      }),
+    )
+      .then((entries) => {
+        if (active) setSkillDetails(new Map(entries.filter((entry): entry is readonly [number, string] => Boolean(entry))));
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [build.skillIds, data.skills.shards, data.skills.skills]);
   const equipmentMap = new Map(
     data.equipment.equipment.equipment.map((item) => [item.iID, item]),
   );
@@ -575,17 +599,36 @@ function BuildViewer({
       item,
     ]),
   );
+  const talentMap = new Map(
+    data.talents.talents.seasonTalents.nodes.map((talent) => [talent.iId, talent]),
+  );
+  const petSkillMap = new Map(
+    data.pets.skills.skills.map((skill) => [skill.id, skill]),
+  );
+  const cardEffectMap = new Map(
+    data.cards.specialEffects.map((effect) => [effect.id, localizedText(effect.description)]),
+  );
   const equipmentSlots = equipmentSlotsForLine(build.professionLineId);
   const petChips = (ids: number[]) => (
     <div className="build-chip-grid">
       {ids.map((id) => {
         const pet = petMap.get(id);
+        const star = data.pets.stars.stars.find((item) => item.petId === id);
+        const petSkillLines = [
+          ...(star?.activeSkills ?? []),
+          ...(star?.passiveMain ? [star.passiveMain] : []),
+        ]
+          .map((skillId) => petSkillMap.get(skillId)?.description)
+          .map((description) => localizedText(description))
+          .filter(Boolean)
+          .slice(0, 3);
         return (
           <BuildChip
             key={id}
             icon={pet?.art.encyclopedia}
             label={localizedText(pet?.name) || `宠物 ${id}`}
             meta={`品质 ${pet?.quality ?? "-"}`}
+            details={[`品质 ${pet?.quality ?? "-"}`, ...petSkillLines]}
           />
         );
       })}
@@ -638,19 +681,37 @@ function BuildViewer({
             编辑方案
           </button>
         </div>
-        <BuildSection icon={Swords} title="技能选择">
+        <BuildSection
+          icon={Swords}
+          title="技能选择"
+          action={
+            <button
+              type="button"
+              className="build-section-action"
+              aria-label="进入技能编辑"
+              title="进入技能编辑"
+              onClick={onEdit}
+            >
+              <ChevronRight aria-hidden="true" />
+            </button>
+          }
+        >
           <div className="build-chip-grid">
-            {build.skillIds.map((id) => {
+            {build.skillIds.slice(0, 6).map((id) => {
               const skill = skillMap.get(id);
               return (
                 <BuildChip
                   key={id}
                   icon={skill?.icon}
                   label={displayName(skill?.name, `技能 ${id}`)}
-                  meta={`技能 ${id}`}
+                  meta={`最高等级 ${skill?.iMaxLevel ?? "-"}`}
+                  details={[skillDetails.get(id) || "暂无技能描述", `技能编号 ${id}`, `最高等级 ${skill?.iMaxLevel ?? "-"}`, "点击右上角箭头进入技能编辑"]}
                 />
               );
             })}
+            {build.skillIds.length > 6 ? (
+              <span className="build-chip-more">+{build.skillIds.length - 6} 个技能</span>
+            ) : null}
             {build.skillIds.length === 0 ? (
               <span className="build-section-empty">暂无技能配置</span>
             ) : null}
@@ -675,7 +736,7 @@ function BuildViewer({
                 EMPTY_BUILD.equipment[0];
               const item = equipmentMap.get(config.equipmentId);
               return (
-                <article className="build-config-card" key={config.slotKey}>
+                <article className="build-config-card build-hover-target" key={config.slotKey}>
                   <div className="build-config-head">
                     {item?.icon ? (
                       <img src={resourceUrl(item.icon)} alt="" />
@@ -684,12 +745,17 @@ function BuildViewer({
                     )}
                     <div>
                       <strong>{slot?.label ?? config.slotKey}</strong>
-                      <small>
-                        {displayName(item?.name, "未选择装备")} · 品质{" "}
-                        {config.quality || item?.item?.iQuality || "-"}
-                      </small>
+                      <small>{displayName(item?.name, "未选择装备")} · 品质 {config.quality || item?.item?.iQuality || "-"}</small>
                     </div>
                   </div>
+                  <BuildHoverCard
+                    title={displayName(item?.name, "未选择装备")}
+                    lines={[
+                      item?.desc?.["zh-CN"] || "暂无装备说明",
+                      ...config.normalEntryIds.map((id) => `词条：${entryLabel(data.equipment.attrs, id)}`),
+                      ...config.specialEffectIds.map((id) => `特殊：${displayName(data.equipment.attrs.specialEffects.find((effect) => effect.iID === id)?.name, `特殊效果 ${id}`)}`),
+                    ]}
+                  />
                   <div className="build-config-lines">
                     {config.normalEntryIds.length ? (
                       <span>
@@ -705,14 +771,27 @@ function BuildViewer({
                       </span>
                     ) : null}
                     <span>
-                      镶嵌卡片：
-                      {config.cardIds
-                        .map(
-                          (id) =>
-                            localizedText(cardMap.get(id)?.name) ||
-                            `卡片 ${id}`,
-                        )
-                        .join("、") || "未镶嵌"}
+                      镶嵌卡片：{config.cardIds.length ? "" : "未镶嵌"}
+                      <span className="build-card-chip-row">
+                        {config.cardIds.map((id) => {
+                          const card = cardMap.get(id);
+                          const cardLines = [
+                            localizedText(card?.description),
+                            ...(card?.tiers[0]?.specialEffects ?? [])
+                              .map((effectId) => cardEffectMap.get(effectId))
+                              .filter(Boolean),
+                          ].filter(Boolean) as string[];
+                          return (
+                            <BuildChip
+                              key={id}
+                              icon={card?.icon}
+                              label={localizedText(card?.name) || `卡片 ${id}`}
+                              meta={`品质 ${card?.quality ?? "-"}`}
+                              details={cardLines.length ? cardLines : ["暂无卡片效果"]}
+                            />
+                          );
+                        })}
+                      </span>
                     </span>
                   </div>
                 </article>
@@ -729,7 +808,13 @@ function BuildViewer({
         <BuildSection icon={Sparkles} title="天赋">
           <div className="build-chip-grid">
             {build.talentIds.map((id) => (
-              <BuildChip key={id} label={`天赋节点 ${id}`} meta="全职业共用" />
+              <BuildChip
+                key={id}
+                icon={talentMap.get(id)?.levels?.[0] ? undefined : undefined}
+                label={displayName(talentMap.get(id)?.name, `天赋节点 ${id}`)}
+                meta="全职业共用"
+                details={[`节点编号 ${id}`, "全职业共用"]}
+              />
             ))}
             {build.talentIds.length === 0 ? (
               <span className="build-section-empty">暂无天赋配置</span>
@@ -746,7 +831,7 @@ function BuildViewer({
                   ? resonanceMap.get(config.resonanceId)
                   : undefined;
                 return (
-                  <article className="build-config-card" key={config.slotIndex}>
+                  <article className="build-config-card build-hover-target" key={config.slotIndex}>
                     <div className="build-config-head">
                       {soul?.icon ? (
                         <img src={resourceUrl(soul.icon)} alt="" />
@@ -763,6 +848,13 @@ function BuildViewer({
                         </small>
                       </div>
                     </div>
+                    <BuildHoverCard
+                      title={displayName(soul?.name, `残响 ${config.soulId}`)}
+                      lines={[
+                        soul?.desc?.["zh-CN"] || "暂无残响说明",
+                        resonance ? `共振：${displayName(resonance.name, `共振 ${resonance.iID}`)}` : "未指定共振",
+                      ]}
+                    />
                     <div className="build-config-lines">
                       <span>
                         副属性：{config.subAttributeIds.join("、") || "未选择"}
@@ -1521,10 +1613,12 @@ function SoulConfigEditor({
 function BuildSection({
   icon: Icon,
   title,
+  action,
   children,
 }: {
   icon: typeof Swords;
   title: string;
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -1534,6 +1628,7 @@ function BuildSection({
           <Icon aria-hidden="true" />
           {title}
         </span>
+        {action}
       </header>
       {children}
     </section>
@@ -1567,13 +1662,15 @@ function BuildChip({
   icon,
   label,
   meta,
+  details,
 }: {
   icon?: string;
   label: string;
   meta: string;
+  details?: string[];
 }) {
   return (
-    <span className="build-chip">
+    <span className={`build-chip${details?.length ? " build-hover-target" : ""}`}>
       {icon ? (
         <img src={resourceUrl(icon)} alt="" />
       ) : (
@@ -1585,6 +1682,17 @@ function BuildChip({
         <strong>{label}</strong>
         <small>{meta}</small>
       </span>
+      {details?.length ? <BuildHoverCard title={label} lines={details} /> : null}
+    </span>
+  );
+}
+function BuildHoverCard({ title, lines }: { title: string; lines: string[] }) {
+  return (
+    <span className="build-hover-card" role="tooltip">
+      <strong>{title}</strong>
+      {lines.filter(Boolean).map((line, index) => (
+        <span key={`${line}-${index}`}>{line}</span>
+      ))}
     </span>
   );
 }
