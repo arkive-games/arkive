@@ -1081,6 +1081,8 @@
 .build-editor-section > header small { color: #9a8567; font-size: 0.66rem; }
 .editor-attribute-grid { display: grid; grid-template-columns: repeat(6, minmax(5rem, 1fr)); gap: 0.45rem; }
 .editor-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 0.4rem; max-height: 15rem; overflow-y: auto; padding: 0.1rem; }
+.editor-picker-search { display: block; margin-bottom: 0.45rem; }
+.editor-picker-search input { width: min(24rem, 100%); min-height: 2rem; padding: 0.35rem 0.5rem; border: 1px solid rgba(121, 100, 68, 0.3); color: #57462e; background: rgba(255, 251, 237, 0.8); font: inherit; font-size: 0.7rem; }
 .editor-picker-grid button { position: relative; display: grid; grid-template-columns: 2.3rem minmax(0, 1fr); align-items: center; gap: 0.4rem; min-height: 3rem; padding: 0.3rem; border: 1px solid rgba(121, 100, 68, 0.24); color: #6b5637; background: rgba(255, 250, 235, 0.6); text-align: left; cursor: pointer; }
 .editor-picker-grid button:hover, .editor-picker-grid button.is-selected { border-color: #bc8632; background: rgba(237, 216, 168, 0.6); }
 .editor-picker-grid button > svg { position: absolute; top: 0.25rem; right: 0.25rem; width: 0.8rem; height: 0.8rem; color: #a46c20; }
