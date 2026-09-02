@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.11.0",
+      "date": "2026-09-02",
+      "commit": "41835320d64483d4941169fd78576422be7d8bad",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added profession-aware build loadouts with route-filtered skills and equipment, editable gear entries, socketed cards, and soul resonance effects.",
+            "zh-CN": "新增按职业路线联动的 BD 配置：技能与装备自动过滤，支持装备品质、词条、部位卡槽、灵魂残响和职业共振效果。",
+            "zh-TW": "新增按職業路線聯動的 BD 配置：技能與裝備自動篩選，支援裝備品質、詞條、部位卡槽、靈魂殘響和職業共鳴效果。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.10.1",
       "date": "2026-09-02",
       "commit": "27d2acd250b3bd97936a60e6875163af05b5f028",
