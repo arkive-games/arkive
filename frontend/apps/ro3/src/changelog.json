@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.10.0",
+      "date": "2026-09-02",
+      "commit": "e9178291e64c2ab290eb792fada66067765f5739",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added a local build planner with viewer and editor workflows for skills, attributes, equipment, cards, pets, talents, and soul echoes.",
+            "zh-CN": "新增本地职业 BD 流派手册，支持查看和编辑技能、属性、装备、卡片、宠物、天赋与灵魂残响。",
+            "zh-TW": "新增本地職業 BD 流派手冊，支援查看與編輯技能、屬性、裝備、卡片、寵物、天賦與靈魂殘響。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.4",
       "date": "2026-09-02",
       "commit": "1b427c02438cc48af95130bd54843aa8ea407848",
