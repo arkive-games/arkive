@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.12.1",
+      "date": "2026-09-02",
+      "commit": "96b4b345e7a99ef6d6064efc9cd24cbe7c45e52d",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed weapon entry selection for novice variants by inheriting the real entry pool from their visual equipment family.",
+            "zh-CN": "修复新手武器无法选择词条的问题，改为继承同视觉装备族的真实词条池。",
+            "zh-TW": "修復新手武器無法選擇詞條的問題，改為繼承同視覺裝備族的真實詞條池。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.12.0",
       "date": "2026-09-02",
       "commit": "3e24063dbc82c9ecd3b16b3ef800f47ccac77b5b",
