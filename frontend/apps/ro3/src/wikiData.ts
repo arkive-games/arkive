@@ -55,6 +55,7 @@ export interface TalentNodeRecord {
   kAfterids?: number[]
   kPosition?: number[]
   levels?: number[]
+  name?: { 'zh-CN'?: string }
 }
 
 export interface TalentLevelRecord {
@@ -156,6 +157,7 @@ export interface EquipmentItemRecord {
   iTrade?: number
   iStackLimit?: number
   kIcon?: string
+  kJobNeed?: number[]
 }
 
 export interface EquipmentRecord {
@@ -187,13 +189,16 @@ export interface EquipmentEntryRecord {
   iMin?: number
   iMax?: number
   iWeight?: number
+  name?: { 'zh-CN'?: string }
 }
 
 export interface EquipmentSpecialGroupRecord {
   iID: number
+  iGroup?: number
   iGroupID?: number
   iSpecialID?: number
   iPower?: number
+  iWeight?: number
   name?: { 'zh-CN'?: string }
   desc?: { 'zh-CN'?: string }
 }
@@ -217,6 +222,8 @@ export interface EquipmentAttrsDocument {
   counts: Record<string, number>
   attributes: EquipmentAttributeRecord[]
   entryGroups: EquipmentEntryRecord[]
+  entryCounts?: Array<{ iID: number; iQuality?: number; iNum?: number; iWeight?: number }>
+  slots?: Array<{ iID: number; slot?: string; icon?: string; [key: string]: unknown }>
   specialGroups: EquipmentSpecialGroupRecord[]
   specialEffects: EquipmentSpecialEffectRecord[]
 }

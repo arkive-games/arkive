@@ -1094,6 +1094,40 @@
 .build-save-button { color: #fff6df; background: #9c6d27; }
 .build-editor-footer .build-publish-button { border: 1px solid rgba(121, 100, 68, 0.32); }
 
+/* Dense configuration surfaces for the player build workbench. */
+.build-editor-form { grid-template-columns: minmax(10rem, 1fr) minmax(8rem, .7fr) minmax(10rem, .9fr) minmax(14rem, 1.8fr); }
+.build-summary-field { grid-column: span 1; }
+.build-stage-strip { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .5rem; }
+.build-stage-strip span { padding: .25rem .45rem; color: #806541; background: rgba(232, 218, 187, .45); font-size: .66rem; }
+.build-config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .55rem; }
+.build-config-card { padding: .55rem; border: 1px solid rgba(121, 100, 68, .25); background: rgba(255, 250, 235, .55); }
+.build-config-head { display: flex; align-items: center; gap: .45rem; }
+.build-config-head img { width: 2.45rem; height: 2.45rem; object-fit: contain; border: 1px solid rgba(121, 100, 68, .25); background: #ddcfaf; }
+.build-config-head > svg { width: 1.25rem; height: 1.25rem; color: #9d8258; }
+.build-config-head div { display: grid; min-width: 0; gap: .12rem; }
+.build-config-head strong { overflow: hidden; color: #5b4930; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.build-config-head small, .build-config-lines span { color: #927b5d; font-size: .63rem; }
+.build-config-lines { display: grid; gap: .2rem; margin-top: .45rem; }
+.build-config-editor-list { display: grid; gap: .55rem; }
+.build-equip-editor, .build-soul-editor { padding: .65rem; border: 1px solid rgba(121, 100, 68, .24); background: rgba(255, 250, 235, .48); }
+.build-config-editor-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .45rem; color: #71532a; font-size: .74rem; }
+.build-config-editor-head button { display: inline-grid; width: 1.7rem; height: 1.7rem; place-items: center; border: 1px solid rgba(121, 100, 68, .24); color: #94734e; background: transparent; cursor: pointer; }
+.build-config-editor-head svg { width: .8rem; height: .8rem; }
+.build-editor-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(7rem, .7fr); gap: .45rem; }
+.build-editor-grid label { display: grid; gap: .25rem; color: #715b3d; font-size: .66rem; font-weight: 800; }
+.build-editor-grid select, .build-socket-row select { width: 100%; min-height: 2rem; padding: .32rem .42rem; border: 1px solid rgba(121, 100, 68, .3); color: #57462e; background: rgba(255, 251, 237, .84); font: inherit; font-size: .68rem; }
+.build-entry-group, .build-soul-options { display: grid; gap: .3rem; margin-top: .55rem; }
+.build-entry-group > span, .build-soul-options > span { color: #806541; font-size: .66rem; font-weight: 800; }
+.build-entry-group > div, .build-soul-options > div { display: flex; flex-wrap: wrap; gap: .28rem; }
+.build-entry-group button, .build-soul-options button { padding: .25rem .38rem; border: 1px solid rgba(121, 100, 68, .24); color: #725d42; background: rgba(255, 250, 235, .65); font: inherit; font-size: .63rem; cursor: pointer; }
+.build-entry-group button:hover, .build-entry-group button.is-selected, .build-soul-options button:hover, .build-soul-options button.is-selected { border-color: #bc8632; color: #5c431f; background: rgba(237, 216, 168, .72); }
+.build-entry-group small, .build-editor-muted { color: #9a876d; font-size: .64rem; }
+.build-socket-row { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
+.build-add-row { display: inline-flex; align-items: center; justify-content: center; gap: .3rem; min-height: 2.1rem; border: 1px dashed rgba(145, 105, 49, .45); color: #806541; background: rgba(255, 250, 235, .38); font: inherit; font-size: .68rem; cursor: pointer; }
+.build-add-row:hover { border-color: #9c6d27; color: #5f431f; background: rgba(237, 216, 168, .5); }
+.build-add-row:disabled { cursor: not-allowed; opacity: .55; }
+.editor-picker-count { display: block; margin-top: .35rem; color: #9a8567; font-size: .64rem; }
+
 @media (max-width: 48rem) {
   .ro3-builds-page { padding-top: 0.6rem; }
   .build-planner { width: calc(100% - 1rem); }
@@ -1108,7 +1142,7 @@
   .build-view-main, .build-editor { padding-inline: 0.8rem; }
   .build-view-title { display: grid; }
   .build-attribute-grid, .editor-attribute-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .build-editor-form { grid-template-columns: 1fr; }
+  .build-editor-form, .build-editor-grid { grid-template-columns: 1fr; }
   .build-editor-form textarea { min-height: 3.5rem; }
   .build-chip { min-width: 8rem; }
 }
