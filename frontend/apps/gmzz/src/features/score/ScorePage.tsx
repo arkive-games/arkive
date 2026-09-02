@@ -4,6 +4,10 @@ import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
+import EquipmentSection from '@/features/equipment/EquipmentSection'
+import { loadEquipment, type Equipment, type Grace } from '@/features/equipment/data'
+import RelicSection from '@/features/relics/RelicSection'
+import { loadRelics, type Relics } from '@/features/relics/data'
 import {
   clamp,
   evaluate,
@@ -42,6 +46,16 @@ function bandStyle(palette: string[], index: number): string {
   return palette[Math.min(Math.max(index, 0), palette.length - 1)]
 }
 
+/**
+ * Genus ids that have a purpose-built section instead of a score input.
+ *
+ * 2 装备 and 3 封印物 model their own state and derive their scores, so showing
+ * the generic four-input group for them alongside would offer two places to
+ * enter the same number and no way to tell which one counted. The remaining
+ * groups (1 途径, 4 非凡人物) keep the input rows until they get sections too.
+ */
+const SECTIONED_GENUS = new Set([2, 3])
+
 export default function ScorePage() {
   const { t } = useTranslation()
   const [rating, setRating] = useState<Rating | null>(null)
@@ -50,9 +64,24 @@ export default function ScorePage() {
   const [roleLevel, setRoleLevel] = useState(70)
   const [divinityLevel, setDivinityLevel] = useState(0)
   const [scores, setScores] = useState<Record<number, number>>({})
+  const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
+  const [relics, setRelics] = useState<Relics | null>(null)
 
   useEffect(() => {
     let live = true
+    // The two sections' data is loaded alongside the rating rather than gating
+    // it: a section that fails to load hides itself, and the rest of the page
+    // still works.
+    void loadEquipment()
+      .then((data) => {
+        if (live) setEquipment(data)
+      })
+      .catch((cause) => console.error(cause))
+    void loadRelics()
+      .then((data) => {
+        if (live) setRelics(data)
+      })
+      .catch((cause) => console.error(cause))
     loadRating()
       .then((data) => {
         if (live) setRating(data)
@@ -138,8 +167,14 @@ export default function ScorePage() {
           <Summary result={result} />
         </section>
 
+        {equipment ? (
+          <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} />
+        ) : null}
+
+        {relics ? <RelicSection relics={relics} /> : null}
+
         <div className="space-y-4" data-testid="score-groups">
-          {result.groups.map((group) => (
+          {result.groups.filter((group) => !SECTIONED_GENUS.has(group.genus.id)).map((group) => (
             <section key={group.genus.id} aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
               <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-1.5">
                 <span className="text-xl font-bold text-foreground">{group.genus.name}</span>
