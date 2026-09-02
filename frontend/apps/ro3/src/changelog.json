@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.12.2",
+      "date": "2026-09-03",
+      "commit": "016966d751a3a9d9af2096af21e17ad804cbfe5a",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned archer equipment slots with the game client by using a single main-hand weapon slot without off-hand or shield selection.",
+            "zh-CN": "按游戏客户端规则调整弓箭手装备槽：仅保留主手武器，不再显示副手和盾牌选择。",
+            "zh-TW": "按遊戲客戶端規則調整弓箭手裝備槽：僅保留主手武器，不再顯示副手和盾牌選擇。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.12.1",
       "date": "2026-09-02",
       "commit": "96b4b345e7a99ef6d6064efc9cd24cbe7c45e52d",
