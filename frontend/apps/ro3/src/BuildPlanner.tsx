@@ -751,7 +751,17 @@ function BuildViewer({
                   <BuildHoverCard
                     title={displayName(item?.name, "未选择装备")}
                     lines={[
+                      item
+                        ? `品质 ${config.quality || item.item?.iQuality || "-"} · 使用等级 ${item.item?.iLevelNeed ?? "-"}`
+                        : "尚未选择装备",
                       item?.desc?.["zh-CN"] || "暂无装备说明",
+                      ...(item?.kBasicAttribute ?? []).map(([attributeId, min, max]) => {
+                        const name = displayName(
+                          data.equipment.attrs.attributes.find((attribute) => attribute.iID === attributeId)?.name,
+                          `属性 ${attributeId}`,
+                        );
+                        return `${name} +${min}${max !== min ? `~${max}` : ""}`;
+                      }),
                       ...config.normalEntryIds.map((id) => `词条：${entryLabel(data.equipment.attrs, id)}`),
                       ...config.specialEffectIds.map((id) => `特殊：${displayName(data.equipment.attrs.specialEffects.find((effect) => effect.iID === id)?.name, `特殊效果 ${id}`)}`),
                     ]}
