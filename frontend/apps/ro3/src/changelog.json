@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.10.1",
+      "date": "2026-09-02",
+      "commit": "27d2acd250b3bd97936a60e6875163af05b5f028",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Added search to every build editor catalogue so authors can select from the complete client dataset.",
+            "zh-CN": "为 BD 编辑器的每个数据选择器增加搜索，可从完整客户端数据中选择。",
+            "zh-TW": "為 BD 編輯器的每個資料選擇器增加搜尋，可從完整客戶端資料中選擇。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.10.0",
       "date": "2026-09-02",
       "commit": "e9178291e64c2ab290eb792fada66067765f5739",
