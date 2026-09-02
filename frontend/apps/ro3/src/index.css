@@ -1138,6 +1138,26 @@
 .equipment-selected-preview { display: flex; align-items: center; gap: .35rem; min-height: 2rem; margin-top: 1.15rem; color: #806541; font-size: .64rem; }
 .equipment-selected-preview img { width: 2rem; height: 2rem; object-fit: contain; border: 1px solid rgba(121, 100, 68, .24); background: #ddcfaf; }
 .build-config-editor-head small { color: #9a8567; font-size: .64rem; font-weight: 500; }
+.build-equipment-slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: .55rem; }
+.build-equipment-slot-card { display: grid; width: 100%; grid-template-columns: 3rem minmax(0, 1fr) auto; align-items: center; gap: .55rem; min-height: 5.2rem; padding: .55rem; border: 1px solid rgba(121, 100, 68, .28); color: #5b4930; background: linear-gradient(135deg, rgba(255, 251, 237, .88), rgba(238, 222, 185, .62)); text-align: left; cursor: pointer; transition: border-color var(--arkive-motion-immediate) var(--arkive-motion-easing), background var(--arkive-motion-immediate) var(--arkive-motion-easing), transform var(--arkive-motion-immediate) var(--arkive-motion-easing); }
+.build-equipment-slot-card:hover, .build-equipment-slot-card:focus-visible { border-color: #bc8632; background: linear-gradient(135deg, rgba(255, 251, 237, .98), rgba(237, 216, 168, .82)); outline: 0; }
+.build-equipment-slot-card:active { transform: translateY(1px); }
+.build-equipment-slot-art { display: grid; width: 3rem; height: 3rem; place-items: center; overflow: hidden; border: 1px solid rgba(121, 100, 68, .28); background: #ddcfaf; }
+.build-equipment-slot-art img { width: 100%; height: 100%; object-fit: contain; }
+.build-equipment-slot-art svg { width: 1.25rem; height: 1.25rem; color: #9d8258; }
+.build-equipment-slot-copy { display: grid; min-width: 0; gap: .16rem; }
+.build-equipment-slot-copy strong { color: #705025; font-size: .72rem; font-weight: 850; }
+.build-equipment-slot-copy span { overflow: hidden; color: #5b4930; font-size: .7rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.build-equipment-slot-copy small { color: #927b5d; font-size: .63rem; }
+.build-equipment-slot-action { padding: .2rem .35rem; border: 1px solid rgba(121, 100, 68, .28); color: #806541; background: rgba(255, 250, 235, .72); font-size: .62rem; font-weight: 800; white-space: nowrap; }
+.build-equipment-modal-backdrop { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgba(37, 34, 27, .58); backdrop-filter: blur(.16rem); }
+.build-equipment-modal { width: min(58rem, 100%); max-height: min(90dvh, 48rem); overflow-y: auto; padding: .9rem; border: 1px solid rgba(201, 166, 99, .7); background: linear-gradient(145deg, #f8efd7, #eee1c2); box-shadow: 0 1.2rem 3rem rgba(48, 38, 24, .3); }
+.build-equipment-modal .build-config-editor-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: .55rem; padding-bottom: .65rem; border-bottom: 1px solid rgba(121, 100, 68, .24); }
+.build-equipment-modal .build-config-editor-head strong { color: #4f3d23; font-size: .88rem; }
+.build-equipment-modal-close { display: inline-grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid rgba(121, 100, 68, .3); color: #705025; background: rgba(255, 250, 235, .72); cursor: pointer; }
+.build-equipment-modal-close:hover, .build-equipment-modal-close:focus-visible { border-color: #bc8632; background: #ead09b; outline: 0; }
+.build-equipment-modal-close svg { width: 1rem; height: 1rem; }
+.build-equipment-modal .equipment-choice-grid { max-height: 16rem; }
 
 @media (max-width: 48rem) {
   .ro3-builds-page { padding-top: 0.6rem; }
@@ -1156,6 +1176,12 @@
   .build-editor-form, .build-editor-grid { grid-template-columns: 1fr; }
   .build-editor-form textarea { min-height: 3.5rem; }
   .build-chip { min-width: 8rem; }
+  .build-equipment-slot-grid { grid-template-columns: 1fr; }
+  .build-equipment-modal-backdrop { align-items: end; padding: .5rem; }
+  .build-equipment-modal { max-height: 92dvh; padding: .7rem; }
+  .build-equipment-modal .build-config-editor-head { grid-template-columns: minmax(0, 1fr) auto; }
+  .build-equipment-modal .build-config-editor-head small { grid-column: 1; grid-row: 2; }
+  .build-equipment-modal-close { grid-column: 2; grid-row: 1 / span 2; }
 }
 
 @media (max-width: 48rem) {

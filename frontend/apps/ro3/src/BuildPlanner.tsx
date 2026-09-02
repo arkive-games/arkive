@@ -10,6 +10,7 @@ import {
   Sparkles,
   Swords,
   Upload,
+  X,
   Zap,
 } from "lucide-react";
 import { resourceUrl } from "./lib/urls";
@@ -815,6 +816,9 @@ function BuildEditor({
   onUnavailable: () => void;
 }) {
   const equipmentSlots = equipmentSlotsForLine(line.id);
+  const [activeEquipmentSlot, setActiveEquipmentSlot] = useState<string | null>(
+    null,
+  );
   const talents = data.talents.talents.seasonTalents.nodes
     .filter((node) => node.iType !== 0)
     .slice(0, 120);
@@ -991,7 +995,7 @@ function BuildEditor({
         title="固定装备部位"
         hint="每个部位独立选择装备、品质、词条与卡片"
       >
-        <div className="build-config-editor-list">
+        <div className="build-equipment-slot-grid">
           {equipmentSlots.map((slot) => {
             const index = draft.equipment.findIndex(
               (item) => item.slotKey === slot.key,
@@ -1000,19 +1004,53 @@ function BuildEditor({
               (index >= 0 ? draft.equipment[index] : undefined) ??
               EMPTY_BUILD.equipment.find((item) => item.slotKey === slot.key) ??
               EMPTY_BUILD.equipment[0];
+            const current = equipmentRecords.find(
+              (item) => item.iID === config.equipmentId,
+            );
             return (
-              <EquipmentSlotEditor
-                key={slot.key}
-                slot={slot}
-                index={index >= 0 ? index : 0}
-                config={config}
-                records={equipmentRecords.filter((item) =>
-                  allowedForLine(item, line),
-                )}
-                attrs={data.equipment.attrs}
-                cards={cardsForPart(slot.part)}
-                update={updateEquipment}
-              />
+              <div key={slot.key}>
+                <button
+                  type="button"
+                  className="build-equipment-slot-card"
+                  onClick={() => setActiveEquipmentSlot(slot.key)}
+                >
+                  <span className="build-equipment-slot-art">
+                    {current?.icon ? (
+                      <img src={resourceUrl(current.icon)} alt="" />
+                    ) : (
+                      <Shield aria-hidden="true" />
+                    )}
+                  </span>
+                  <span className="build-equipment-slot-copy">
+                    <strong>{slot.label}</strong>
+                    <span>
+                      {current
+                        ? displayName(current.name, "已选择装备")
+                        : "点击选择装备"}
+                    </span>
+                    <small>
+                      {current
+                        ? `品质 ${config.quality || current.item?.iQuality || "-"}`
+                        : "未配置"}
+                    </small>
+                  </span>
+                  <span className="build-equipment-slot-action">配置</span>
+                </button>
+                {activeEquipmentSlot === slot.key ? (
+                  <EquipmentSlotEditor
+                    slot={slot}
+                    index={index >= 0 ? index : 0}
+                    config={config}
+                    records={equipmentRecords.filter((item) =>
+                      allowedForLine(item, line),
+                    )}
+                    attrs={data.equipment.attrs}
+                    cards={cardsForPart(slot.part)}
+                    update={updateEquipment}
+                    onClose={() => setActiveEquipmentSlot(null)}
+                  />
+                ) : null}
+              </div>
             );
           })}
         </div>
@@ -1122,6 +1160,7 @@ function EquipmentSlotEditor({
   attrs,
   cards,
   update,
+  onClose,
 }: {
   slot: { key: string; label: string; part: number };
   index: number;
@@ -1130,6 +1169,7 @@ function EquipmentSlotEditor({
   attrs: EquipmentAttrsDocument;
   cards: WikiCard[];
   update: (index: number, patch: Partial<EquipmentBuildConfig>) => void;
+  onClose: () => void;
 }) {
   const families = useMemo(
     () => uniqueFamilies(records, slot.part),
@@ -1158,12 +1198,31 @@ function EquipmentSlotEditor({
         .includes(query.trim().toLocaleLowerCase("zh-CN")),
   );
   return (
-    <article className="build-equip-editor">
+    <div
+      className="build-equipment-modal-backdrop"
+      role="presentation"
+      onMouseDown={onClose}
+    >
+      <article
+        className="build-equip-editor build-equipment-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`equipment-dialog-${slot.key}`}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
       <div className="build-config-editor-head">
-        <strong>{slot.label}</strong>
+        <strong id={`equipment-dialog-${slot.key}`}>{slot.label}配置</strong>
         <small>
           {current ? displayName(current.name, "已选择装备") : "请选择装备"}
         </small>
+        <button
+          type="button"
+          className="build-equipment-modal-close"
+          aria-label="关闭装备配置"
+          onClick={onClose}
+        >
+          <X aria-hidden="true" />
+        </button>
       </div>
       <label className="editor-picker-search">
         <span className="sr-only">搜索{slot.label}</span>
@@ -1331,7 +1390,8 @@ function EquipmentSlotEditor({
           </div>
         </>
       ) : null}
-    </article>
+      </article>
+    </div>
   );
 }
 
