@@ -49,9 +49,9 @@ export type EquipItem = {
   /** `[statKey, value]`, zero-valued props already dropped as the game drops them. */
   baseStats: [string, number][]
   /**
-   * The item's own 装备基础 score. Verified exact for 无形之编排 (2430), but the
-   * boots 温暖的皮靴 carry 2685 against a card reading 2804, so the page treats
-   * this as a default and leaves it editable.
+   * The item's own 装备基础 score — fixed per item, so the page shows rather
+   * than asks for it. Verified exact for 无形之编排 (2430); the boots 温暖的皮靴
+   * carry 2685 against a card reading 2804, a gap this table does not explain.
    */
   baseScore: number | null
   suitId: number | null
@@ -253,8 +253,6 @@ export function graceFor(graces: Grace[], slot: number, affixes: ChosenAffix[]):
 export type PieceState = {
   slot: number
   itemId: number | null
-  /** Editable: no base-stat table has been found, so this is input. */
-  baseScore: number
   /** 0..maxStage. */
   enhanceStage: number
   /** 0..100, the current stage's refinement. Tracked separately from the stage. */
@@ -266,6 +264,8 @@ export type PieceResult = {
   state: PieceState
   item: EquipItem | null
   brand: Brand | null
+  /** The item's own 装备基础, 0 for an empty slot. */
+  baseScore: number
   /** stage x markPerStage. Proven against the game. */
   enhanceScore: number
   /** Per-stat totals the enhancement grants at this stage. */
@@ -332,6 +332,38 @@ export function progressOf(body: EnhanceBody | null, stage: number, refinePercen
   return ((done + partial) / total) * 100
 }
 
+/**
+ * The badge percentages a stage can show, as the game prints them (floored).
+ *
+ * At +3 of 8 the badge runs 37%..49%: 37.5% with the fourth stage untouched,
+ * and anything up to 50% before that stage completes and the badge reads +4.
+ * So each stage owns a window of the whole-ladder percentage, and a slider for
+ * the refinement is bounded by the stage rather than running 0..100 on its own.
+ * A complete ladder is pinned at 100.
+ */
+export function progressBounds(totalStages: number, stage: number): { min: number; max: number } {
+  if (totalStages <= 0) return { min: 0, max: 0 }
+  const done = Math.min(stage, totalStages)
+  if (done >= totalStages) return { min: 100, max: 100 }
+  const min = Math.floor((done / totalStages) * 100)
+  const max = Math.ceil(((done + 1) / totalStages) * 100) - 1
+  return { min, max: Math.max(min, max) }
+}
+
+/**
+ * The in-stage refinement that puts the badge at `progress`% — the inverse of
+ * `progressOf`, clamped to 0..100 so a badge value outside the stage's window
+ * lands on the nearest end rather than moving the stage.
+ */
+export function refineFromProgress(totalStages: number, stage: number, progress: number): number {
+  if (totalStages <= 0) return 0
+  const done = Math.min(stage, totalStages)
+  if (done >= totalStages) return 0
+  const span = 100 / totalStages
+  const refine = ((progress - done * span) / span) * 100
+  return Math.min(100, Math.max(0, Math.round(refine)))
+}
+
 export function evaluatePiece(
   equipment: Equipment,
   graces: Grace[],
@@ -351,17 +383,19 @@ export function evaluatePiece(
 
   const grace = graceFor(graces, state.slot, state.affixes)
   const graceScore = grace?.score ?? 0
+  const baseScore = item?.baseScore ?? 0
 
   return {
     state,
     item,
     brand,
+    baseScore,
     enhanceScore,
     enhanceStats,
     affixMark,
     grace,
     graceScore,
-    total: state.baseScore + enhanceScore + affixMark + graceScore,
+    total: baseScore + enhanceScore + affixMark + graceScore,
     progressPercent: progressOf(body, state.enhanceStage, state.refinePercent),
   }
 }
@@ -393,6 +427,41 @@ export function suitTierFor(
 export function averageProgress(results: PieceResult[]): number {
   if (results.length === 0) return 0
   return results.reduce((total, r) => total + r.progressPercent, 0) / results.length
+}
+
+/** The suit an item belongs to, or null for the 212 unaffiliated pieces. */
+export function suitOf(equipment: Equipment, item: EquipItem | null): Suit | null {
+  if (item?.suitId == null) return null
+  return equipment.suits.suits.find((suit) => suit.id === item.suitId) ?? null
+}
+
+/** The fewest pieces of a suit that trigger any of its effects. */
+export function suitThreshold(suit: Suit): number {
+  return suit.pieceCounts.length > 0 ? Math.min(...suit.pieceCounts) : Number.POSITIVE_INFINITY
+}
+
+export type ActiveSuit = { suit: Suit; count: number }
+
+/**
+ * The suits the worn items activate, most pieces first.
+ *
+ * A suit is not something the player picks: it follows from what is worn, and
+ * fires once `pieceCounts[0]` of its pieces are on. With eight slots and a
+ * two-piece threshold, both suits can be live at once — which is the only case
+ * where there is a choice to offer.
+ */
+export function activeSuits(equipment: Equipment, items: (EquipItem | null)[]): ActiveSuit[] {
+  const counts = new Map<number, number>()
+  for (const item of items) {
+    if (item?.suitId == null) continue
+    counts.set(item.suitId, (counts.get(item.suitId) ?? 0) + 1)
+  }
+  return equipment.suits.suits
+    .flatMap((suit) => {
+      const count = counts.get(suit.id) ?? 0
+      return count >= suitThreshold(suit) ? [{ suit, count }] : []
+    })
+    .sort((a, b) => b.count - a.count || a.suit.id - b.suit.id)
 }
 
 /** The slots the rating panel actually scores, in its own order. */
@@ -437,5 +506,5 @@ export function itemsForSlot(
 }
 
 export function newPiece(slot: number): PieceState {
-  return { slot, itemId: null, baseScore: 0, enhanceStage: 0, refinePercent: 0, affixes: [] }
+  return { slot, itemId: null, enhanceStage: 0, refinePercent: 0, affixes: [] }
 }

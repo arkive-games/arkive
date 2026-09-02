@@ -11,6 +11,8 @@ export type PickerOption = {
   name: string
   /** Rendered under the name — gear level for an item, group/risk for a relic. */
   detail: string
+  /** A short marker beside the name, such as PVE/PVP. Omitted when there is none to give. */
+  badge?: string
   /** Picks the rarity plate behind the icon; null draws a neutral tile. */
   quality: number | null
   /** Icon URL. Falls back to the bare plate when absent. */
@@ -143,6 +145,11 @@ export default function PickerModal({
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold leading-5 text-foreground" title={option.name}>
                       {option.name}
+                      {option.badge ? (
+                        <span className="ml-1.5 inline-block rounded border border-border px-1 align-middle text-xs font-medium leading-4 text-muted-foreground">
+                          {option.badge}
+                        </span>
+                      ) : null}
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">{option.detail}</span>
                   </span>

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
+import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { iconUrl } from '@/lib/urls'
 import {
@@ -24,13 +25,11 @@ const SPEC_TYPES = [1, 2]
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none ${FOCUS}`
 const BUTTON_CLASS = `inline-flex items-center justify-center rounded-md border border-border text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
-const RANGE_CLASS = `h-6 w-full cursor-pointer accent-[color:var(--arkive-nav-accent)] ${FOCUS}`
 const CELL_CLASS = `flex w-full min-w-0 items-center gap-2 rounded-md border border-border bg-background p-2 text-left transition-colors hover:border-[color:var(--arkive-nav-accent)] ${FOCUS}`
 const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const LABEL_CLASS = 'mb-0.5 block text-xs font-semibold text-muted-foreground'
 const SECTION_CLASS = 'border-t border-border/70 p-2.5'
 const PROSE_CLASS = 'mt-0.5 whitespace-pre-line text-xs leading-5 text-muted-foreground'
-const ENDS_CLASS = 'flex justify-between text-xs tabular-nums text-muted-foreground'
 
 /** `Artifact.tag` is a usage bucket: 1 副本, 2 竞技, 3 通用. */
 const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagArena', 3: 'relic.tagGeneral' }
@@ -49,20 +48,6 @@ function ChoiceSelect({ value, options, label, testId, onChange }: {
       onChange={(event) => onChange(event.target.value)}>
       {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
     </select>
-  )
-}
-
-function RangeField({ label, min, max, value, valueText, minLabel, maxLabel, testId, onChange }: {
-  label: string; min: number; max: number; value: number; valueText: string
-  minLabel: string; maxLabel: string; testId: string; onChange: (value: number) => void
-}) {
-  return (
-    <div>
-      <input type="range" min={min} max={max} step={1} value={value} className={RANGE_CLASS}
-        aria-label={label} aria-valuetext={valueText} data-testid={testId}
-        onChange={(event) => onChange(Number(event.target.value))} />
-      <div className={ENDS_CLASS}><span>{minLabel}</span><span>{maxLabel}</span></div>
-    </div>
   )
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  activeSuits,
   bodyFor,
   itemsForSlot,
   playableProfessions,
@@ -12,8 +13,11 @@ import {
   markForValue,
   markRate,
   maxStageFor,
+  progressBounds,
   progressOf,
+  refineFromProgress,
   scoredSlots,
+  suitOf,
   suitTierFor,
   type Equipment,
   type Grace,
@@ -74,7 +78,10 @@ const EQUIPMENT: Equipment = {
     maxStage: 8,
   },
   suits: {
-    suits: [{ id: 101, name: '灵与知回响', fullName: '[冒险]灵与知回响', tag: '冒险套装', pieceCounts: [2, 3], effect2: '', effect3: '' }],
+    suits: [
+      { id: 101, name: '灵与知回响', fullName: '[冒险]灵与知回响', tag: '冒险套装', pieceCounts: [2, 3], effect2: '', effect3: '' },
+      { id: 102, name: '铁与血誓约', fullName: '[竞技]铁与血誓约', tag: '竞技套装', pieceCounts: [2, 3], effect2: '', effect3: '' },
+    ],
     tiers: [
       { type: 2, level: 1, mark: 1003, requiredAveragePercent: 50, stats: [], effect: '' },
       { type: 2, level: 2, mark: 1755, requiredAveragePercent: 75, stats: [], effect: '' },
@@ -191,6 +198,45 @@ describe('progressOf', () => {
   })
 })
 
+describe('progressBounds', () => {
+  it('gives each stage its window of the badge percentage, floored like the game', () => {
+    expect(progressBounds(8, 0)).toEqual({ min: 0, max: 12 })
+    // +3 shows 37% untouched and stays below the 50% that would read +4.
+    expect(progressBounds(8, 3)).toEqual({ min: 37, max: 49 })
+    expect(progressBounds(8, 7)).toEqual({ min: 87, max: 99 })
+  })
+
+  it('pins a complete ladder at 100', () => {
+    expect(progressBounds(8, 8)).toEqual({ min: 100, max: 100 })
+    expect(progressBounds(8, 12)).toEqual({ min: 100, max: 100 })
+  })
+
+  it('is empty without a ladder', () => {
+    expect(progressBounds(0, 3)).toEqual({ min: 0, max: 0 })
+  })
+})
+
+describe('refineFromProgress', () => {
+  it('inverts progressOf inside the stage window', () => {
+    const body = bodyFor(EQUIPMENT, 1, 101)
+    for (const badge of [37, 40, 43, 49]) {
+      const refine = refineFromProgress(8, 3, badge)
+      expect(Math.floor(progressOf(body, 3, refine))).toBe(badge)
+    }
+  })
+
+  it('lands on the stage boundary, not on the neighbouring stage', () => {
+    expect(refineFromProgress(8, 3, 37)).toBe(0)
+    expect(refineFromProgress(8, 3, 10)).toBe(0)
+    expect(refineFromProgress(8, 3, 90)).toBe(100)
+  })
+
+  it('is 0 once the ladder is complete or absent', () => {
+    expect(refineFromProgress(8, 8, 100)).toBe(0)
+    expect(refineFromProgress(0, 3, 50)).toBe(0)
+  })
+})
+
 describe('markRate / markForValue', () => {
   it('derives the exchange rate from the ladder', () => {
     // 1000/382, 950/363, 550/210 all land on ~2.62 — the 攻击 worth.
@@ -281,6 +327,30 @@ describe('suitTierFor', () => {
   })
 })
 
+describe('suitOf / activeSuits', () => {
+  const adventure = EQUIPMENT.items[0]
+  const plain = EQUIPMENT.items[1]
+  const arena = { ...adventure, id: 3020999, suitId: 102 }
+
+  it('names the suit an item belongs to, and nothing for an unaffiliated one', () => {
+    expect(suitOf(EQUIPMENT, adventure)?.tag).toBe('冒险套装')
+    expect(suitOf(EQUIPMENT, plain)).toBeNull()
+    expect(suitOf(EQUIPMENT, null)).toBeNull()
+  })
+
+  it('activates a suit once its lowest piece count is worn', () => {
+    expect(activeSuits(EQUIPMENT, [adventure, plain, null])).toEqual([])
+    expect(activeSuits(EQUIPMENT, [adventure, adventure, plain])).toEqual([
+      { suit: EQUIPMENT.suits.suits[0], count: 2 },
+    ])
+  })
+
+  it('lists both suits when both are worn enough, the fuller one first', () => {
+    const active = activeSuits(EQUIPMENT, [adventure, adventure, arena, arena, arena])
+    expect(active.map((entry) => [entry.suit.id, entry.count])).toEqual([[102, 3], [101, 2]])
+  })
+})
+
 describe('scoredSlots', () => {
   it('keeps only slots a grace exists for, in panel order', () => {
     expect(scoredSlots(EQUIPMENT, GRACES).map((s) => s.id)).toEqual([1])
@@ -288,11 +358,10 @@ describe('scoredSlots', () => {
 })
 
 describe('evaluatePiece', () => {
-  it('adds base, enhancement, affix Mark and grace', () => {
+  it('adds the item\'s base, enhancement, affix Mark and grace', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
       slot: 1,
       itemId: 3020623,
-      baseScore: 2430,
       enhanceStage: 3,
       refinePercent: 0,
       affixes: [
@@ -304,18 +373,27 @@ describe('evaluatePiece', () => {
 
     expect(result.item?.name).toBe('无形之编排')
     expect(result.brand?.name).toBe('好孩子')
+    expect(result.baseScore).toBe(2430)
     expect(result.enhanceScore).toBe(240)
     expect(result.grace?.id).toBe(108)
     expect(result.graceScore).toBe(2000)
     expect(result.total).toBe(2430 + 240 + result.affixMark + 2000)
   })
 
+  it('scores an empty slot with no base', () => {
+    const result = evaluatePiece(EQUIPMENT, GRACES, {
+      slot: 1, itemId: null, enhanceStage: 3, refinePercent: 0, affixes: [],
+    }, 101)
+    expect(result.baseScore).toBe(0)
+    expect(result.total).toBe(240)
+  })
+
   it('subtracts a contaminated affix rather than adding it', () => {
     const clean = evaluatePiece(EQUIPMENT, GRACES, {
-      slot: 1, itemId: null, baseScore: 0, enhanceStage: 0, refinePercent: 0, affixes: [],
+      slot: 1, itemId: null, enhanceStage: 0, refinePercent: 0, affixes: [],
     }, 101)
     const dirty = evaluatePiece(EQUIPMENT, GRACES, {
-      slot: 1, itemId: null, baseScore: 0, enhanceStage: 0, refinePercent: 0,
+      slot: 1, itemId: null, enhanceStage: 0, refinePercent: 0,
       affixes: [{ tier: 'contaminated', family: '攻击', value: -153 }],
     }, 101)
     expect(dirty.affixMark).toBeLessThan(clean.affixMark)
@@ -323,7 +401,7 @@ describe('evaluatePiece', () => {
 
   it('leaves brand null for an item wearing none', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
-      slot: 1, itemId: 3020600, baseScore: 0, enhanceStage: 0, refinePercent: 0, affixes: [],
+      slot: 1, itemId: 3020600, enhanceStage: 0, refinePercent: 0, affixes: [],
     }, 101)
     expect(result.item?.name).toBe('旧武器')
     // A brand whose productItemId is this item is the upgrade link, not a wearer.
