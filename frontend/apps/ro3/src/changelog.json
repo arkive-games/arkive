@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.13.0",
+      "date": "2026-09-03",
+      "commit": "89a5b57595c40871a47ae08081ad97bfa6d918e8",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added game-style build viewing details: six-skill preview with skill editing entry and hover cards for equipment, cards, pets, talents, and soul echoes.",
+            "zh-CN": "新增游戏风格的 BD 查看详情：技能默认展示 6 个并提供技能编辑入口，装备、卡片、宠物、天赋和灵魂残响支持悬停查看效果。",
+            "zh-TW": "新增遊戲風格的 BD 查看詳情：技能預設展示 6 個並提供技能編輯入口，裝備、卡片、寵物、天賦和靈魂殘響支援懸停查看效果。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.12.3",
       "date": "2026-09-03",
       "commit": "b02c92676346dc4220f12c6a678d9c0861751f22",
