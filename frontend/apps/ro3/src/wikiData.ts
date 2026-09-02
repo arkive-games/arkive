@@ -151,6 +151,7 @@ export interface WikiData {
 
 export interface EquipmentItemRecord {
   iID: number
+  iSubType?: number
   iEquipPart?: number
   iQuality?: number
   iLevelNeed?: number
