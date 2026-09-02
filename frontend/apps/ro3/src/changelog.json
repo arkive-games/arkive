@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.12.0",
+      "date": "2026-09-02",
+      "commit": "3e24063dbc82c9ecd3b16b3ef800f47ccac77b5b",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Reworked build editing around fixed equipment slots with visual gear selection, quality and entry configuration, plus separate combat and assist pet parties.",
+            "zh-CN": "重构职业 BD 编辑：按固定装备部位选择并预览真实装备图片，支持品质、词条和卡槽配置，并拆分出战与助战宠物队伍。",
+            "zh-TW": "重構職業 BD 編輯：按固定裝備部位選擇並預覽真實裝備圖片，支援品質、詞條和卡槽配置，並拆分出戰與助戰寵物隊伍。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.11.0",
       "date": "2026-09-02",
       "commit": "41835320d64483d4941169fd78576422be7d8bad",
