@@ -1,10 +1,9 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useCallback, useMemo, useState, type ReactNode } from 'react'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import {
-  playableProfessions,
   equipmentIconUrl,
   averageProgress,
   bodyFor,
@@ -394,7 +393,22 @@ function PieceCard({ equipment, slotName, result, onPatch, onOpenPicker }: Piece
   )
 }
 
-export default function EquipmentSection({ equipment, graces }: { equipment: Equipment; graces: Grace[] }) {
+export default function EquipmentSection({
+  equipment,
+  graces,
+  professionId,
+}: {
+  equipment: Equipment
+  graces: Grace[]
+  /**
+   * The character's pathway, owned by the page.
+   *
+   * It is a property of the character, not of the loadout — 途径技能 and the
+   * 非凡人物 group will read the same value — so it lives one level up rather
+   * than being chosen inside this section.
+   */
+  professionId: number | null
+}) {
   const { t } = useTranslation()
   const slots = useMemo(() => scoredSlots(equipment, graces), [equipment, graces])
   const [layout, setLayout] = useState<LayoutMode>('rows')
@@ -403,10 +417,20 @@ export default function EquipmentSection({ equipment, graces }: { equipment: Equ
   // Which slot's picker is open. One modal for all eight pieces: they never open
   // together, and a modal per piece would mount eight dialogs' worth of portals.
   const [pickerSlot, setPickerSlot] = useState<number | null>(null)
-  const professions = useMemo(() => playableProfessions(equipment), [equipment])
-  // Only weapons are class-locked, and one class's weapons are a sixth of the
-  // list, so this is what makes the weapon picker usable at all.
-  const [professionId, setProfessionId] = useState<number | null>(() => professions[0]?.id ?? null)
+
+  // A weapon from the previous pathway cannot be worn by the new one, so it is
+  // dropped rather than left on screen as an unequippable piece.
+  useEffect(() => {
+    setPieces((prev) =>
+      prev.map((piece) => {
+        if (piece.itemId === null) return piece
+        const wearable = itemsForSlot(equipment, piece.slot, professionId)
+          .some((item) => item.id === piece.itemId)
+        return wearable ? piece : { ...piece, itemId: null, baseScore: 0 }
+      }),
+    )
+  }, [equipment, professionId])
+
 
   const results = useMemo(() => pieces.map((p) => evaluatePiece(equipment, graces, p)), [equipment, graces, pieces])
   const averagePercent = useMemo(() => averageProgress(results), [results])
@@ -474,34 +498,7 @@ export default function EquipmentSection({ equipment, graces }: { equipment: Equ
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-[minmax(0,10rem)_repeat(2,minmax(0,8rem))_minmax(0,1fr)] lg:grid-cols-[minmax(0,11rem)_repeat(2,minmax(0,9rem))_minmax(0,1fr)_minmax(0,1fr)]">
-        <Cell label={t('equip.profession')}>
-          <select
-            value={professionId ?? ''}
-            onChange={(event) => {
-              const next = event.target.value === '' ? null : Number(event.target.value)
-              setProfessionId(next)
-              // A weapon from the old class cannot be worn by the new one, so it
-              // is cleared rather than left showing an unequippable piece.
-              setPieces((prev) =>
-                prev.map((piece) => {
-                  if (piece.itemId === null) return piece
-                  const still = itemsForSlot(equipment, piece.slot, next)
-                    .some((item) => item.id === piece.itemId)
-                  return still ? piece : { ...piece, itemId: null, baseScore: 0 }
-                }),
-              )
-            }}
-            className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
-            data-testid="equip-profession"
-          >
-            {professions.map((profession) => (
-              <option key={profession.id} value={profession.id}>
-                {profession.sequenceName} · {profession.name}
-              </option>
-            ))}
-          </select>
-        </Cell>
+      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-[repeat(2,minmax(0,8rem))_minmax(0,1fr)] lg:grid-cols-[repeat(2,minmax(0,9rem))_minmax(0,1fr)_minmax(0,1fr)]">
         <Cell label={t('equip.batchStage')}>
           <Picker
             label={t('equip.batchStage')}

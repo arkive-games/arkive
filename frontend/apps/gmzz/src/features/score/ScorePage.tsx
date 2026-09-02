@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
 import EquipmentSection from '@/features/equipment/EquipmentSection'
-import { loadEquipment, type Equipment, type Grace } from '@/features/equipment/data'
+import { loadEquipment, playableProfessions, type Equipment, type Grace } from '@/features/equipment/data'
 import RelicSection from '@/features/relics/RelicSection'
 import { loadRelics, type Relics } from '@/features/relics/data'
 import {
@@ -66,6 +66,12 @@ export default function ScorePage() {
   const [scores, setScores] = useState<Record<number, number>>({})
   const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
   const [relics, setRelics] = useState<Relics | null>(null)
+  /**
+   * The character's pathway. Global, not per-section: it gates which weapons
+   * exist for this character, and 途径技能 and the 非凡人物 group will read it
+   * too. Seeded from the dataset because the page has no default of its own.
+   */
+  const [professionId, setProfessionId] = useState<number | null>(null)
 
   useEffect(() => {
     let live = true
@@ -74,7 +80,9 @@ export default function ScorePage() {
     // still works.
     void loadEquipment()
       .then((data) => {
-        if (live) setEquipment(data)
+        if (!live) return
+        setEquipment(data)
+        setProfessionId((current) => current ?? playableProfessions(data.equipment)[0]?.id ?? null)
       })
       .catch((cause) => console.error(cause))
     void loadRelics()
@@ -143,7 +151,7 @@ export default function ScorePage() {
             items rather than beside them. */}
         <section
           aria-label={t('score.progression')}
-          className="grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,14rem))_minmax(0,1fr)]"
+          className="grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,10rem))_minmax(0,13rem)_minmax(0,1fr)]"
         >
           <LevelField
             label={t('score.roleLevel')}
@@ -164,11 +172,29 @@ export default function ScorePage() {
             disabled={!atCap}
             testId="score-divinity-level"
           />
+          {equipment ? (
+            <label className="block">
+              <span className="block text-xs font-semibold text-muted-foreground">{t('score.pathway')}</span>
+              <select
+                value={professionId ?? ''}
+                onChange={(event) => setProfessionId(event.target.value === '' ? null : Number(event.target.value))}
+                className="mt-0.5 h-9 w-full rounded-md border border-border bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
+                data-testid="score-pathway"
+              >
+                {playableProfessions(equipment.equipment).map((profession) => (
+                  <option key={profession.id} value={profession.id}>
+                    {profession.sequenceName} · {profession.name}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-0.5 block text-xs text-muted-foreground">{t('score.pathwayHint')}</span>
+            </label>
+          ) : null}
           <Summary result={result} />
         </section>
 
         {equipment ? (
-          <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} />
+          <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} />
         ) : null}
 
         {relics ? <RelicSection relics={relics} /> : null}
