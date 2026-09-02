@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.13.1",
+      "date": "2026-09-03",
+      "commit": "817d9cb6340321dc62b409f74bee070957ddc632",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Expanded equipment hover cards with client-sourced quality, level, basic attributes, description, and selected entry details.",
+            "zh-CN": "完善装备悬浮信息：加入客户端品质、等级、基础属性、说明和已选词条。",
+            "zh-TW": "完善裝備懸浮信息：加入客戶端品質、等級、基礎屬性、說明和已選詞條。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.13.0",
       "date": "2026-09-03",
       "commit": "89a5b57595c40871a47ae08081ad97bfa6d918e8",
