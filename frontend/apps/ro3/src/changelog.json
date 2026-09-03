@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.15",
+      "date": "2026-09-04",
+      "commit": "2aaf21afb6128b86b36f9393b0f126fab16691db",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Align pet rows and standardize square icon frames across the build manual.",
+            "zh-CN": "对齐宠物上下两行，并统一流派手册中技能、装备、天赋、宠物、卡片和灵魂残响的正方形图标框。",
+            "zh-TW": "對齊寵物上下兩行，並統一流派手冊中技能、裝備、天賦、寵物、卡片與靈魂殘響的正方形圖示框。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.14",
       "date": "2026-09-03",
       "commit": "3ac1578cf9389eaa7f489fa2a8d46cd5776fa812",
