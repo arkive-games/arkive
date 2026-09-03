@@ -205,8 +205,10 @@ def resonance(excel: Path, strings: dict) -> dict:
                 out[str(season)][str(group)].append({
                     "affixCount": row.get("Level"),
                     "mark": row.get("Mark"),
+                    # Sorted: a Lua hash's order differs between runs and would
+                    # churn the dataset digest for nothing.
                     "stats": [[k, v[0] if isinstance(v, list) else v]
-                              for k, v in (row.get("FightProp") or {}).items()],
+                              for k, v in sorted((row.get("FightProp") or {}).items())],
                 })
     for season in out.values():
         for ladder in season.values():

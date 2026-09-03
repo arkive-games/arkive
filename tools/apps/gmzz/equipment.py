@@ -102,19 +102,6 @@ GROUP_TABLES = ("EquipmentWordRandomGroupData", "EquipmentWordInitRandomGroupDat
 SUIT_SCORE_FORMULAS = {1: "EQUIP_SUIT_LEVEL_SCORE_1", 2: "EQUIP_SUIT_LEVEL_SCORE_2"}
 _LINEAR_FORMULA = re.compile(r"^\s*return\s+(?P<slope>\d+(?:\.\d+)?)\s*\*\s*\(\s*\$1\s*-\s*(?P<origin>\d+)\s*\)\s*$")
 
-#: Names the live client shows that the exported tables do not yet carry.
-#:
-#: The client hot-patches itself into ``Saved/kscache/<build>/`` in a container
-#: format of its own, which uex does not read, so an export is the last full
-#: install (2018737, 2026-08-19) while players see the patched build. Build
-#: 2097705 renamed the two 64装等 mythic brooches; until the base install catches
-#: up and the export is refreshed, the names are corrected here, keyed by item id
-#: so a re-export that already has them simply agrees.
-NAME_OVERRIDES = {
-    3210641: "镜像之自我",  # 淬炼·真相的视角, the 冒险 (PVE) brooch
-    3210642: "二律之背反",  # 淬炼·无火的余灰, the 竞技 (PVP) brooch
-}
-
 #: The gear tier the current season rolls. Sets 1-3 are legacy ladders.
 CURRENT_SET = 4
 #: Affix tier by the group id's last two digits.
@@ -256,7 +243,7 @@ def items(
         stats = [[key, row[key]] for key in subtype["baseStatKeys"] if row.get(key)]
         out.append({
             "id": row["ID"],
-            "name": NAME_OVERRIDES.get(row["ID"], row["itemName"]),
+            "name": row["itemName"],
             "typeId": sub,
             "slot": subtype["slot"],
             "quality": row["quality"],
@@ -398,7 +385,9 @@ def suits(excel: Path, strings: dict) -> dict:
             "requiredStage": r.get("RequireLevel") or None,
             "requiredPieces": r.get("RequirePromote") or None,
             "requiredAveragePercent": r.get("RequireAvgPercent"),
-            "stats": [[k, v] for k, v in (r.get("SuitProp") or {}).items()],
+            # Sorted: the client keeps these in a Lua hash, whose order differs
+            # between runs and would churn the dataset digest for nothing.
+            "stats": [[k, v] for k, v in sorted((r.get("SuitProp") or {}).items())],
             "effect": _plain(r.get("SuitAdditionDesc") or ""),
         })
     tiers.sort(key=lambda t: (t["type"] or 0, t["level"] or 0))

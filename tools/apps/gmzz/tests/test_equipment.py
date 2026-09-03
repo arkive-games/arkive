@@ -141,18 +141,6 @@ def test_items_reads_base_stats_off_the_item_and_drops_zeroes(stub):
     assert rows[3001059]["brandId"] == 10035, "UniqueID is the 烙印 the item wears"
 
 
-def test_items_takes_the_live_name_for_a_brooch_the_export_predates(stub):
-    renamed = {
-        **ITEMS,
-        "3210642": {**ITEMS["3020623"], "ID": 3210642, "itemName": "淬炼·无火的余灰", "SuitID": 102},
-    }
-    stub({equipment.TYPE_TABLE: TYPES, equipment.ITEM_TABLE: renamed})
-    types_by_id = {t["id"]: t for t in equipment.types(None, {})}
-    names = {i["id"]: i["name"] for i in equipment.items(None, {}, types_by_id, set())}
-    assert names[3210642] == "二律之背反"
-    assert names[3020623] == "无形之编排", "an item with no override keeps its table name"
-
-
 def test_items_drops_unreleased_gear(stub):
     stub({equipment.TYPE_TABLE: TYPES, equipment.ITEM_TABLE: ITEMS, equipment.BRAND_TABLE: BRANDS})
     types_by_id = {t["id"]: t for t in equipment.types(None, {})}
