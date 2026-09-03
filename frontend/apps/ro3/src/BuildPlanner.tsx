@@ -38,6 +38,12 @@ import {
 } from "./professionCatalog";
 import content from "./locales/zh-CN.json";
 import nativeSlotAdd from "./assets/native-ui/genre/genremanual_img_add_01.webp";
+import nativePetCombat from "./assets/native-ui/genre/genremanual_img_pet_01.webp";
+import nativePetAssist from "./assets/native-ui/genre/genremanual_img_pet_02.webp";
+import nativeSoul01 from "./assets/native-ui/genre/genremanual_item_soul_01.webp";
+import nativeSoul02 from "./assets/native-ui/genre/genremanual_item_soul_02.webp";
+import nativeSoul03 from "./assets/native-ui/genre/genremanual_item_soul_03.webp";
+import nativeSoul04 from "./assets/native-ui/genre/genremanual_item_soul_04.webp";
 
 type BuildMode = "view" | "edit";
 export interface EquipmentBuildConfig {
@@ -761,6 +767,14 @@ function BuildViewer({
                     return <GameBuildSlot key={id ?? `combat-empty-${index}`} kind="pet" icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
                   })}
                 </div>
+                <div className="game-pet-effect-summary">
+                  <img src={nativePetCombat} alt="" />
+                  <strong>出战效果</strong>
+                  <span>{build.petCombatIds.length ? petEffectLines(build.petCombatIds[0], "combat")[0] : "未配置"}</span>
+                  <img src={nativePetAssist} alt="" />
+                  <strong>助战效果</strong>
+                  <span>{build.petAssistIds.length ? petEffectLines(build.petAssistIds[0], "assist")[0] : "未配置"}</span>
+                </div>
                 <span>助战</span>
                 <div className="game-build-slots game-build-slots--pets">
                   {Array.from({ length: 5 }, (_, index) => {
@@ -774,8 +788,9 @@ function BuildViewer({
             </GameBuildPanel>
 
             <GameBuildPanel icon={Gem} title="灵魂残响">
-              <div className="game-build-slots game-build-slots--souls">
-                {Array.from({ length: 5 }, (_, index) => {
+              <div className="game-soul-row">
+                <div className="game-build-slots game-build-slots--souls">
+                  {Array.from({ length: 5 }, (_, index) => {
                   const config = build.souls[index];
                   const soul = config?.soulId ? soulMap.get(config.soulId) : undefined;
                   const resonance = config?.resonanceId ? resonanceMap.get(config.resonanceId) : undefined;
@@ -804,7 +819,17 @@ function BuildViewer({
                     ? [...primary.slice(0, 1), ...resonanceAttributes.slice(0, 1), resonanceLine, ...markLines.slice(0, 1)].filter(Boolean)
                     : undefined;
                   return <GameBuildSlot key={config?.slotIndex ?? `soul-empty-${index}`} kind="soul" icon={soul?.icon} label={soul ? displayName(soul.name, `残响 ${config.soulId}`) : "空残响槽"} badge={soul ? `品质 ${soul.quality ?? "-"}` : undefined} empty={!soul} effects={soulEffects} details={soul ? [...primary, ...resonanceAttributes, resonanceLine, ...markLines, soul.desc?.["zh-CN"] || "暂无残响说明"] : undefined} />;
-                })}
+                  })}
+                </div>
+                <div className="game-soul-resonance-summary">
+                  {[nativeSoul01, nativeSoul02, nativeSoul03, nativeSoul04].map((icon, index) => (
+                    <span key={icon}>
+                      <img src={icon} alt="" />
+                      <strong>{build.souls.filter((soul) => soul.resonanceId).length || 0}</strong>
+                      <small>{["黄","蓝","金","红"][index]}</small>
+                    </span>
+                  ))}
+                </div>
               </div>
             </GameBuildPanel>
           </div>
@@ -861,6 +886,9 @@ function BuildViewer({
                   return <GameBuildSlot key={id ?? `talent-empty-${index}`} kind="talent" icon={level?.icon} label={id ? displayName(talent?.name ?? level?.name, `天赋节点 ${id}`) : "空天赋槽"} badge={talent ? `上限 ${talent.iMaxLevel ?? "-"}` : undefined} empty={!talent} details={talent ? [`节点编号 ${id}`, ...attrLines] : undefined} diamond />;
                 })}
               </div>
+            </GameBuildPanel>
+            <GameBuildPanel icon={BookOpen} title="功能尚未开启">
+              <div className="game-build-unavailable">功能尚未开启</div>
             </GameBuildPanel>
           </div>
         </div>

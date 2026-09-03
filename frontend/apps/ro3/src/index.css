@@ -1340,10 +1340,86 @@
 .game-build-slot-effects { color: #80632f; }
 .game-build-slot.is-empty .game-build-slot-frame { border: 0; opacity: .74; }
 .game-card-fixed-group { gap: .5rem; }
+.game-build-manual {
+  grid-template-rows: auto auto auto auto;
+  align-items: stretch;
+}
+.game-build-column {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 4;
+}
+.game-build-panel {
+  height: 100%;
+  box-sizing: border-box;
+}
+.game-build-column--right .game-build-panel:last-child {
+  border-bottom: 0;
+}
+.game-pet-roster {
+  grid-template-columns: minmax(0, 1fr) 5.2rem;
+  align-items: center;
+  column-gap: .45rem;
+}
+.game-pet-roster > span {
+  grid-column: 1 / -1;
+}
+.game-pet-roster .game-build-slots {
+  grid-column: 1;
+}
+.game-pet-effect-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 5.2rem;
+  align-content: center;
+  justify-items: center;
+  gap: .12rem;
+  padding: .25rem;
+  border: 1px solid rgba(121, 100, 68, .26);
+  background: url('./assets/native-ui/genre/genremanual_bg_property_12.webp') center / 100% 100% no-repeat;
+  color: #72552b;
+}
+.game-pet-roster .game-pet-effect-summary { grid-column: 2; grid-row: 2 / span 3; min-height: 11.5rem; }
+.game-pet-effect-summary img:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+.game-pet-effect-summary img:nth-of-type(2) { grid-column: 2; grid-row: 1; }
+.game-pet-effect-summary strong:nth-of-type(1) { grid-column: 1; grid-row: 2; }
+.game-pet-effect-summary strong:nth-of-type(2) { grid-column: 2; grid-row: 2; }
+.game-pet-effect-summary span:nth-of-type(1) { grid-column: 1; grid-row: 3; }
+.game-pet-effect-summary span:nth-of-type(2) { grid-column: 2; grid-row: 3; }
+.game-pet-effect-summary img { width: 2rem; height: 2rem; object-fit: contain; }
+.game-pet-effect-summary strong { font-size: .61rem; }
+.game-pet-effect-summary span { color: #957a51; font-size: .56rem; }
+.game-pet-effect-summary span { max-width: 4.6rem; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.game-soul-row { display: grid; grid-template-columns: minmax(0, 1fr) 7rem; align-items: center; gap: .5rem; }
+.game-soul-resonance-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; padding: .35rem; border: 1px solid rgba(121, 100, 68, .22); background: url('./assets/native-ui/genre/genremanual_bg_property_12.webp') center / 100% 100% no-repeat; }
+.game-soul-resonance-summary span {
+  display: grid;
+  min-width: 2.3rem;
+  justify-items: center;
+  gap: .04rem;
+  color: #73542a;
+}
+.game-soul-resonance-summary img { width: 1.45rem; height: 1.45rem; object-fit: contain; }
+.game-soul-resonance-summary strong { font-size: .62rem; }
+.game-soul-resonance-summary small { color: #9a7b4b; font-size: .52rem; }
+.game-build-unavailable {
+  display: grid;
+  min-height: 5rem;
+  place-items: center;
+  color: #aa9878;
+  font-size: .72rem;
+  background: url('./assets/native-ui/genre/genremanual_bg_property_10.webp') center / 9rem 100% no-repeat;
+}
+.game-build-slot.is-card strong,
+.game-build-slot.is-card .game-build-slot-effects { display: none; }
 
 @media (max-width: 56rem) {
   .game-build-manual { grid-template-columns: 1fr; }
+  .game-build-column { display: block; grid-template-rows: none; grid-row: auto; }
   .game-build-column--left { border-right: 0; }
+  .game-soul-row { grid-template-columns: 1fr; }
+  .game-pet-roster { grid-template-columns: 1fr; }
+  .game-pet-roster .game-pet-effect-summary { grid-column: 1; grid-row: auto; min-height: 5rem; }
 }
 
 @media (max-width: 48rem) {
