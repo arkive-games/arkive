@@ -1213,7 +1213,17 @@
 .game-pet-roster > span { color: #876a3d; font-size: .64rem; font-weight: 900; }
 .game-pet-roster .game-build-slots { padding: 0; }
 .game-hover-card, .game-build-slot > .build-hover-card { left: 50%; bottom: calc(100% + .5rem); transform: translate(-50%, .25rem); }
-.game-build-slot:hover > .build-hover-card, .game-build-slot:focus-within > .build-hover-card { transform: translate(-50%, 0); }
+.game-build-slot:hover > .build-hover-card, .game-build-slot:focus-within > .build-hover-card { opacity: 1; transform: translate(-50%, 0); }
+.game-build-slots > .game-build-slot:first-child > .build-hover-card { left: 0; transform: translateY(.25rem); }
+.game-build-slots > .game-build-slot:first-child:hover > .build-hover-card, .game-build-slots > .game-build-slot:first-child:focus-within > .build-hover-card { transform: translateY(0); }
+.build-planner { overflow: visible; }
+.build-view-layout { display: block; min-height: 48rem; }
+.build-view-main { width: 100%; padding: 1rem 1.35rem 1.5rem; }
+.build-view-title-actions { display: flex; align-items: center; gap: .5rem; }
+.build-view-build-select select { min-height: 2.25rem; min-width: 9rem; padding: 0 .65rem; border: 1px solid rgba(121, 100, 68, .38); color: #57462e; background: rgba(248, 239, 215, .88); font: inherit; font-size: .72rem; font-weight: 800; }
+.game-build-manual, .game-build-column, .game-build-panel { overflow: visible; }
+.game-build-slot > .build-hover-card { z-index: 999; visibility: hidden; }
+.game-build-slot:hover > .build-hover-card, .game-build-slot:focus-within > .build-hover-card { visibility: visible; }
 
 @media (max-width: 56rem) {
   .game-build-manual { grid-template-columns: 1fr; }
@@ -1232,7 +1242,9 @@
   .build-library > button:not(.build-publish-button) { min-width: 7rem; }
   .build-library .build-publish-button { display: none; }
   .build-view-main, .build-editor { padding-inline: 0.8rem; }
+  .build-view-main { padding-top: .8rem; }
   .build-view-title { display: grid; }
+  .build-view-title-actions { justify-content: space-between; }
   .build-attribute-grid, .editor-attribute-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .build-editor-form, .build-editor-grid { grid-template-columns: 1fr; }
   .build-editor-form textarea { min-height: 3.5rem; }

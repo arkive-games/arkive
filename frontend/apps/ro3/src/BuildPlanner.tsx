@@ -524,7 +524,6 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
             setDraft(builds.find((build) => build.id === id) ?? EMPTY_BUILD);
           }}
           onEdit={() => setMode("edit")}
-          onUnavailable={onUnavailable}
         />
       ) : (
         <BuildEditor
@@ -551,14 +550,12 @@ function BuildViewer({
   data,
   onSelect,
   onEdit,
-  onUnavailable,
 }: {
   build: BuildDraft;
   builds: BuildDraft[];
   data: BuildData;
   onSelect: (id: string) => void;
   onEdit: () => void;
-  onUnavailable: () => void;
 }) {
   const skillMap = new Map(
     data.skills.skills.map((skill) => [skill.iSkillID, skill]),
@@ -638,34 +635,6 @@ function BuildViewer({
   };
   return (
     <div className="build-view-layout">
-      <aside className="build-library">
-        <div className="build-library-head">
-          <strong>我的流派</strong>
-          <span>{builds.length}</span>
-        </div>
-        {builds.map((item) => (
-          <button
-            type="button"
-            key={item.id}
-            className={item.id === build.id ? "is-active" : undefined}
-            onClick={() => onSelect(item.id)}
-          >
-            <span>{item.title}</span>
-            <small>
-              {ROUTE_LABELS[item.professionRouteId] ?? item.profession}
-            </small>
-          </button>
-        ))}
-        <button
-          type="button"
-          className="build-publish-button"
-          onClick={onUnavailable}
-          disabled
-        >
-          <Upload aria-hidden="true" />
-          发布流派<span>暂无功能</span>
-        </button>
-      </aside>
       <div className="build-view-main">
         <div className="build-view-title">
           <div>
@@ -675,10 +644,26 @@ function BuildViewer({
             <h3>{build.title}</h3>
             <p>{build.summary || "作者尚未添加流派说明。"}</p>
           </div>
-          <button type="button" onClick={onEdit}>
-            <Edit3 aria-hidden="true" />
-            编辑方案
-          </button>
+          <div className="build-view-title-actions">
+            <label className="build-view-build-select">
+              <span className="sr-only">切换流派</span>
+              <select
+                value={build.id}
+                aria-label="切换流派"
+                onChange={(event) => onSelect(event.target.value)}
+              >
+                {builds.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="button" onClick={onEdit}>
+              <Edit3 aria-hidden="true" />
+              编辑方案
+            </button>
+          </div>
         </div>
         <div className="game-build-manual">
           <div className="game-build-column game-build-column--left">
