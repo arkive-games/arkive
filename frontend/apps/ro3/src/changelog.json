@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.9",
+      "date": "2026-09-03",
+      "commit": "3008694918f11e4ed77b5e9054a5be0ebeee14d9",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Refined pet frames, talent node art, resonance note strips, and zero-gap equipment and card rows.",
+            "zh-CN": "优化宠物方框头像、天赋节点素材、残响音符条，并让装备和卡片无缝排列。",
+            "zh-TW": "優化寵物方框頭像、天賦節點素材、殘響音符條，並讓裝備和卡片無縫排列。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.8",
       "date": "2026-09-03",
       "commit": "84c71cd4aa615526e725f9aa4ea07239e8e774a9",
