@@ -126,6 +126,18 @@ def test_rejects_an_unmapped_opcode():
     assert "Some/Table.luac" in str(excinfo.value)
 
 
+def test_passes_a_stock_dump_through_unchanged():
+    # A hot-patched table: version byte 0x02, nothing encrypted, nothing remapped.
+    body = _proto_body([0x27, 0x0A])
+    dump = LUAJIT_MAGIC + b"\x02" + _uleb(0x08) + _uleb(9) + b"@Test.lua" + _uleb(len(body)) + body + b"\x00"
+    assert decrypt(dump) == dump
+
+
+def test_rejects_an_unknown_version_byte():
+    with pytest.raises(LuacError, match="version 0x3"):
+        decrypt(LUAJIT_MAGIC + b"\x03" + _uleb(0x08) + b"\x00")
+
+
 def test_rejects_a_non_luajit_blob():
     with pytest.raises(LuacError):
         decrypt(b"not a dump at all")

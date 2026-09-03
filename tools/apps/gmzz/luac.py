@@ -1,7 +1,10 @@
 """Read the client's obfuscated LuaJIT data tables.
 
 Every game table lives under ``C7/Content/ScriptOPCode/Data/Excel`` as a LuaJIT
-2.1 bytecode dump with two layers of obfuscation on top:
+2.1 bytecode dump. In the base install each carries two layers of obfuscation;
+the tables the client hot-patches in (see :mod:`gmzz.kscache`) are stock dumps
+with neither, told apart by the version byte, and pass through untouched. The
+obfuscated form:
 
 1. The dump *container* is standard except that the version byte is ``0x82``
    instead of ``0x02``. Header, chunk name and the per-proto uleb128 length
@@ -112,6 +115,9 @@ def _build_opcode_map() -> dict[int, int]:
 OPCODE_MAP = _build_opcode_map()
 
 LUAJIT_MAGIC = b"\x1bLJ"
+#: The dump version byte: stock LuaJIT 2.1 writes 2; the client's obfuscated dumps carry 0x82.
+STOCK_VERSION = 0x02
+CLIENT_VERSION = 0x82
 _BCDUMP_F_STRIP = 0x02
 
 
@@ -184,6 +190,12 @@ def decrypt(data: bytes, path: Path | str = "<bytes>") -> bytes:
     """
     if data[:3] != LUAJIT_MAGIC:
         raise LuacError(f"{path}: not a LuaJIT dump (magic {data[:3]!r})")
+    if data[3] == STOCK_VERSION:
+        # Patched tables come down plain: the obfuscated form is the base
+        # install's, and what the client hot-patches in is a stock dump.
+        return data
+    if data[3] != CLIENT_VERSION:
+        raise LuacError(f"{path}: LuaJIT dump version {data[3]:#x} is neither stock nor the client's")
     pos = 4
     flags, pos = _read_uleb128(data, pos)
     out = bytearray(LUAJIT_MAGIC + b"\x02" + _write_uleb128(flags))

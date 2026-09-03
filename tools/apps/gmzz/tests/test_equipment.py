@@ -245,39 +245,9 @@ def test_affixes_ladders_are_lists_ordered_richest_first(stub):
 
     # A list, not a mark-keyed object: write_json sorts keys, and stringified
     # numbers put "1000" before "550".
+    assert weapon["extraordinary"]["攻击"] == [[1000, 382], [550, 210]]
     assert weapon["normal"]["攻击"] == [[400, 153]], "Set 3 is a legacy tier and excluded"
-    assert weapon["extraordinary"]["攻击"][0] == [1000, 382]
-    assert [mark for mark, _ in weapon["extraordinary"]["攻击"]] == equipment.LIVE_EXTRAORDINARY_MARKS
     assert result["set"] == equipment.CURRENT_SET
-
-
-def test_extraordinary_ladder_is_the_live_one_not_the_shipped_one(stub):
-    stub({
-        equipment.GROUP_TABLES[0]: GROUPS, equipment.GROUP_TABLES[1]: {},
-        equipment.WORD_TABLE: WORDS,
-    })
-    weapon = equipment.affixes(None, {})["bySlot"]["1"]
-    # The shipped 550 -> 210 rung is gone; the values are the ones read off live
-    # gear: 攻击 382/357/332/308/283/258/233/208/183/159.
-    assert weapon["extraordinary"]["攻击"] == [
-        [1000, 382], [935, 357], [870, 332], [805, 308], [740, 283],
-        [675, 258], [610, 233], [545, 208], [480, 183], [415, 159],
-    ]
-
-
-def test_live_extraordinary_ladder_rounds_half_up_and_needs_the_top_rung():
-    # 技能增强 is the family whose values were read in game: 80/70/49/33 on
-    # Marks 1000/870/610/415.
-    ladder = equipment.live_extraordinary_ladder({1000: 80, 550: 44})
-    assert ladder[1000] == 80 and ladder[870] == 70 and ladder[610] == 49 and ladder[415] == 33
-    # 675 x 0.08 = 54 exactly, 545 x 0.08 = 43.6 -> 44.
-    assert ladder[675] == 54 and ladder[545] == 44
-    # Half rounds up the way the client's own rows do (750 x 0.382 = 286.5 -> 287),
-    # which a float floor would get wrong: 1000 x 0.5 / 1000 lands on exactly .5.
-    assert equipment.live_extraordinary_ladder({1000: 5})[805] == 4  # 4.025
-    assert equipment.live_extraordinary_ladder({1000: 500})[805] == 403  # 402.5
-    with pytest.raises(RuntimeError):
-        equipment.live_extraordinary_ladder({950: 363})
 
 
 def test_affixes_only_offers_a_slot_the_groups_flagged_for_it(stub):

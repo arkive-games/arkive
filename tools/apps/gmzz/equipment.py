@@ -32,17 +32,13 @@ game — 3485, 2282, 5285 and 4180 — once the extraordinary ladder below is us
 The boots' 基础 is still 119 short of their card; that gap is real and not
 papered over.
 
-**The extraordinary ladder is not the one the client ships.** The word table's
-非凡 rows run Mark 550..1000 in steps of 50, but every extraordinary value read
-off live gear — 攻击 159/183/233/283/308/332/357/382, 技能增强 33/49/70/80 —
-sits on Mark `1000 − 65k` (k = 0..9, so 415..1000), and only the 1000 rung is
-shared. Reforging is a server RPC and the client table is not what it rolls
-from, so `affixes` emits the live ladder for that tier: ten rungs at those
-Marks, each worth `round_half_up(Mark × top/1000)` where `top` is the family's
-value at Mark 1000 — the same rounding that produces the client's own rows
-(750 × 0.382 = 286.5 → 287). The 普通 and 污染 ladders are emitted as shipped;
-穿刺 +50 = Mark 202 reproduces in game. The 545 and 675 rungs (攻击 208 and
-258) have not been observed yet and are inferred from the pattern.
+**Export from the hot-patched client, not the install.** The install is the
+base build (2018737); every patch since sits in ``Saved/kscache`` and 273
+Excel tables differ, ``EquipmentWordRandomWordData`` among them — its 非凡
+ladder went from Mark 550..1000 by 50 to 415..1000 by 65, which is where every
+value read off live gear sits. ``gmzz.kscache`` assembles the patched view for
+uex; point the export at that (see the README) or the affix ladders emitted
+here are a build behind and the reforge page's totals miss by up to five.
 
 Joins worth writing down, because none are guessable:
 
@@ -76,9 +72,7 @@ from __future__ import annotations
 
 import argparse
 import collections
-import math
 import re
-from fractions import Fraction
 from pathlib import Path
 
 from .common import write_json
@@ -125,11 +119,6 @@ NAME_OVERRIDES = {
 CURRENT_SET = 4
 #: Affix tier by the group id's last two digits.
 TIER_BY_TAIL = [(1, 12, "normal"), (21, 32, "extraordinary"), (41, 52, "contaminated"), (61, 63, "special")]
-#: The Marks live gear actually rolls at the extraordinary tier, richest first —
-#: ``1000 - 65k``. Not the client table's 550..1000 by 50; see the module docstring.
-LIVE_EXTRAORDINARY_MARKS = [1000 - 65 * k for k in range(10)]
-#: The Mark whose value every rung is scaled from. Both ladders share it.
-TOP_MARK = 1000
 #: Effect texts a 烙印 row carries before it is written: the designer's stand-in
 #: (描述文本N) and the client's "hidden for now" notice on unreleased gear.
 UNWRITTEN_EFFECTS = ("描述文本", "该效果已被隐秘")
@@ -437,29 +426,12 @@ def suit_level_scores(excel: Path) -> dict:
     return out
 
 
-def live_extraordinary_ladder(shipped: dict[int, int]) -> dict[int, int]:
-    """The extraordinary ladder live gear rolls, scaled from the shipped one's top rung.
-
-    ``shipped`` is the client's ``{mark: value}`` for one family; only its value
-    at Mark 1000 is used, since that is the one rung the two ladders share. The
-    scale is kept as a fraction so that a rung landing on exactly .5 rounds up
-    the way the client's own rows do (750 × 0.382 = 286.5 → 287) rather than
-    however the float happens to fall.
-    """
-    top = shipped.get(TOP_MARK)
-    if top is None:
-        raise RuntimeError(f"extraordinary ladder has no Mark {TOP_MARK} rung to scale from: {sorted(shipped)}")
-    scale = Fraction(top, TOP_MARK)
-    return {mark: math.floor(mark * scale + Fraction(1, 2)) for mark in LIVE_EXTRAORDINARY_MARKS}
-
-
 def affixes(excel: Path, strings: dict) -> dict:
     """The reforge affix pool, per slot, per tier, as a Mark ladder.
 
     A slot's pool is the groups whose ``Type<slot>_<subtype>`` flag is set. Only
     the current gear tier is emitted; every value is the stat a word grants at
-    that Mark. The extraordinary tier is replaced by the ladder live gear
-    actually rolls — see ``live_extraordinary_ladder``.
+    that Mark.
     """
     groups = {}
     for table in GROUP_TABLES:
@@ -495,12 +467,6 @@ def affixes(excel: Path, strings: dict) -> dict:
             for slot, gids in per_slot.items():
                 if gid in gids:
                     pool[slot][tier_of(gid)][family][word["Mark"]] = amount[0]
-
-    for tiers in pool.values():
-        if "extraordinary" in tiers:
-            tiers["extraordinary"] = {
-                family: live_extraordinary_ladder(ladder) for family, ladder in tiers["extraordinary"].items()
-            }
 
     # Each ladder is a LIST of [mark, value], richest first — not a mark-keyed
     # object. `write_json` sorts keys, and sorted stringified numbers put "1000"

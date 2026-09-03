@@ -51,6 +51,51 @@ this game. Point it at `Content/Paks` instead and you get 148k files with almost
 no cooked art rather than 591k — with **no error reported**, which is exactly how
 this was originally misdiagnosed as a client that streams its art from a CDN.
 
+## Exporting the hot-patched build, not the install
+
+```bash
+uv run python -m gmzz.kscache          # writes GMZZ_PATCHED/C7/Content
+uex export --profile gmzz --only C7/Content/ScriptOPCode/Data/Excel
+```
+
+with uex's `gmzz` profile pointed at `GMZZ_PATCHED/C7` rather than the install.
+
+The install is a *base* build and the client never rewrites it: every patch
+since is downloaded into `Saved/kscache/` and overlaid at run time. An export of
+`Game/C7` is therefore the last full download — 2018737 of 2026-08-19 — while
+players are on 2097705, and **273 Excel tables differ** between the two.
+`EquipmentWordRandomWordData` is one: its 非凡 ladder is Mark 550..1000 by 50 in
+the install and 415..1000 by 65 live, which is why the reforge page's totals
+were off by up to five until the live table was read. The patched tables are
+also stock LuaJIT dumps — version byte `0x02`, no XOR, no opcode remap — so
+`luac.py` tells them apart by that byte and passes them through.
+
+`kscache.py` assembles a second client root uex can mount as-is:
+
+- the base containers and `Manifest_UFSFiles_Win64.txt` are **hard-linked**, so
+  `GMZZ_PATCHED` must be on the install's volume and nothing is copied;
+- every changed `.pak` entry that has been downloaded goes into
+  `Paks/pakchunk0-Windows_1_P.pak`, a plain version-11 pak whose `_P` suffix
+  makes CUE4Parse prefer it over the base — this is where the tables live;
+- for the IoStore containers a `package.manifest` is synthesized: each kscache
+  pack file is hard-linked in as an extra partition of the container it patches
+  (`pakchunk9999-Windows_s19.ucas`, …) and the changed chunks are re-pointed at
+  it. Single-chunk bucket files are copied into one aggregate partition per
+  container instead, because block offsets carry the partition index in a
+  40-bit field and one container has 250 of them.
+
+What the run cannot recover, and reports: chunks the client has not downloaded
+yet (it fetches on demand; ~3,000 of 616k, in optional and cosmetic containers)
+are dropped rather than misread, one Excel table among them; the 53 pak entries
+*added* since the base build have no name, because the pak's own index is the
+only source of names and the chunk id is not a path hash we could find; and the
+`.upak` containers are left as installed. The format itself — the `KMF`
+manifest's 48-byte chunk records, `local.cache`, the pack and bucket files, the
+client's pak footer variant — is written up at the top of `kscache.py`.
+
+Needs `GMZZ_PATCHED` and `GMZZ_AES_KEY` (the pak index key, the same one in
+uex's profile) in `tools/.env`.
+
 ## Train trade (铁路大亨)
 
 ```bash

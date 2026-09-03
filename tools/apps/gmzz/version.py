@@ -51,7 +51,10 @@ def stamp_version(data_out: Path) -> str:
         digest.update(path.read_bytes())
     version = digest.hexdigest()[:12]
     payload: dict[str, str] = {"version": version}
-    game = optional_dir("GMZZ_GAME")
+    # The build the export actually came from: the hot-patched view when one is
+    # assembled (gmzz.kscache writes its live build there), else the install.
+    patched = optional_dir("GMZZ_PATCHED")
+    game = patched / "C7" if patched and (patched / "C7" / "Content" / "package.txt").exists() else optional_dir("GMZZ_GAME")
     game_version = read_game_version(game) if game else None
     if game_version:
         payload["gameVersion"] = game_version
