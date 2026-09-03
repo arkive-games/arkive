@@ -92,14 +92,28 @@ export type EnhanceBody = {
   stages: EnhanceStage[]
 }
 
+/**
+ * One rung of the two whole-loadout ladders in `EquipmentGrowBodySuitData`.
+ * Type 1 is the enhancement set — every piece at `requiredStage` or above
+ * (`requiredPieces` of them) — and type 2 the refinement set, gated on the
+ * average enhancement percentage.
+ */
 export type SuitTier = {
   type: number | null
   level: number | null
   mark: number | null
+  /** Type 1: the stage every piece must have reached. */
+  requiredStage: number | null
+  /** Type 1: how many pieces must have reached it — the whole loadout. */
+  requiredPieces: number | null
+  /** Type 2: the average enhancement percentage the loadout must reach. */
   requiredAveragePercent: number | null
   stats: [string, number][]
   effect: string
 }
+
+/** `perLevel × (gearLevel − origin)`: what a suit's piece-count effect scores at a gear level. */
+export type SuitLevelScore = { perLevel: number; origin: number }
 
 export type Suit = {
   id: number
@@ -120,7 +134,12 @@ export type Equipment = {
   items: EquipItem[]
   brands: Brand[]
   enhancement: { bodies: EnhanceBody[]; markPerStage: number[]; maxStage: number }
-  suits: { suits: Suit[]; tiers: SuitTier[] }
+  suits: {
+    suits: Suit[]
+    tiers: SuitTier[]
+    /** By effect level ("1" = two pieces, "2" = three), from the client's own formulas. */
+    levelScores?: Record<string, SuitLevelScore>
+  }
   affixes: {
     statKeyByFamily: Record<string, string>
     set: number
@@ -699,6 +718,49 @@ export function suitThreshold(suit: Suit): number {
 }
 
 export type ActiveSuit = { suit: Suit; count: number }
+
+/**
+ * The enhancement set the whole loadout has reached — "全身+3" and up — or
+ * null. Type-1 tiers ask for every piece (`requiredPieces` of them) to stand at
+ * `requiredStage` or above; the richest tier met is the one that scores, since
+ * the ladder's Marks (560, 1122, 1683, 2105) are levels of one bonus rather
+ * than a stack.
+ */
+export function wholeBodyTier(equipment: Equipment, stages: number[]): SuitTier | null {
+  const lowest = stages.length > 0 ? Math.min(...stages) : -1
+  return (
+    equipment.suits.tiers
+      .filter((tier) => tier.type === 1 && tier.requiredStage != null)
+      .filter((tier) => stages.length >= (tier.requiredPieces ?? stages.length) && lowest >= (tier.requiredStage ?? 0))
+      .sort((a, b) => (b.mark ?? 0) - (a.mark ?? 0))[0] ?? null
+  )
+}
+
+/** One of a suit's piece-count effects as worn: how many pieces it asks for, the gear level it runs at, and its score. */
+export type SuitEffectScore = { pieces: number; gearLevel: number; score: number }
+
+/**
+ * What a suit scores from the pieces of it that are worn.
+ *
+ * Each piece-count effect (two pieces, three pieces) runs at the gear level
+ * of the lowest piece among the highest N worn — with two 64s, a 62 and the
+ * rest 60, the two-piece effect is a 64 one and the three-piece a 62 — and is
+ * worth `perLevel × (gearLevel − origin)` from the client's formulas. An
+ * effect the loadout does not reach scores nothing.
+ */
+export function suitScoreFor(equipment: Equipment, suit: Suit, items: (EquipItem | null)[]): { total: number; effects: SuitEffectScore[] } {
+  const levels = items
+    .flatMap((item) => (item?.suitId === suit.id && item.gearLevel != null ? [item.gearLevel] : []))
+    .sort((a, b) => b - a)
+  const effects: SuitEffectScore[] = []
+  suit.pieceCounts.forEach((pieces, index) => {
+    const formula = equipment.suits.levelScores?.[String(index + 1)]
+    if (!formula || levels.length < pieces) return
+    const gearLevel = levels[pieces - 1]
+    effects.push({ pieces, gearLevel, score: Math.max(0, Math.round(formula.perLevel * (gearLevel - formula.origin))) })
+  })
+  return { total: effects.reduce((sum, effect) => sum + effect.score, 0), effects }
+}
 
 /**
  * The suits the worn items activate, most pieces first.

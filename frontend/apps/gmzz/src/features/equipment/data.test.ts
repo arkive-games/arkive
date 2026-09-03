@@ -26,7 +26,9 @@ import {
   toNearestFive,
   statLines,
   suitOf,
+  suitScoreFor,
   suitTierFor,
+  wholeBodyTier,
   type Equipment,
   type Grace,
 } from './data'
@@ -99,11 +101,14 @@ const EQUIPMENT: Equipment = {
       { id: 102, name: '铁与血誓约', fullName: '[竞技]铁与血誓约', tag: '竞技套装', pieceCounts: [2, 3], effect2: '', effect3: '' },
     ],
     tiers: [
-      { type: 2, level: 1, mark: 1003, requiredAveragePercent: 50, stats: [], effect: '' },
-      { type: 2, level: 2, mark: 1755, requiredAveragePercent: 75, stats: [], effect: '' },
-      { type: 2, level: 4, mark: 3259, requiredAveragePercent: 100, stats: [], effect: '' },
-      { type: 1, level: 1, mark: 560, requiredAveragePercent: null, stats: [], effect: '' },
+      { type: 2, level: 1, mark: 1003, requiredStage: null, requiredPieces: null, requiredAveragePercent: 50, stats: [], effect: '' },
+      { type: 2, level: 2, mark: 1755, requiredStage: null, requiredPieces: null, requiredAveragePercent: 75, stats: [], effect: '' },
+      { type: 2, level: 4, mark: 3259, requiredStage: null, requiredPieces: null, requiredAveragePercent: 100, stats: [], effect: '' },
+      { type: 1, level: 1, mark: 560, requiredStage: 3, requiredPieces: 8, requiredAveragePercent: null, stats: [], effect: '' },
+      { type: 1, level: 2, mark: 1122, requiredStage: 5, requiredPieces: 8, requiredAveragePercent: null, stats: [], effect: '' },
+      { type: 1, level: 4, mark: 2105, requiredStage: 8, requiredPieces: 8, requiredAveragePercent: null, stats: [], effect: '' },
     ],
+    levelScores: { '1': { perLevel: 201, origin: 49 }, '2': { perLevel: 323, origin: 49 } },
   },
   affixes: {
     statKeyByFamily: { 攻击: 'Atk_N', 技能增强: 'SkillPlus_N', 最大生命: 'MaxHp_N', 穿刺: 'Pierce_N' },
@@ -516,8 +521,9 @@ describe('suitTierFor', () => {
     expect(suitTierFor(EQUIPMENT, 2, 10)).toBeNull()
   })
 
-  it('treats a tier with no requirement as always met', () => {
-    expect(suitTierFor(EQUIPMENT, 1, 0)?.level).toBe(1)
+  it('treats a tier with no percentage requirement as always met, so the richest such tier wins', () => {
+    // The type-1 tiers gate on stages, not on the average percentage; to this lookup they carry no requirement.
+    expect(suitTierFor(EQUIPMENT, 1, 0)?.level).toBe(4)
   })
 })
 
@@ -542,6 +548,53 @@ describe('suitOf / activeSuits', () => {
   it('lists both suits when both are worn enough, the fuller one first', () => {
     const active = activeSuits(EQUIPMENT, [adventure, adventure, arena, arena, arena])
     expect(active.map((entry) => [entry.suit.id, entry.count])).toEqual([[102, 3], [101, 2]])
+  })
+})
+
+describe('wholeBodyTier', () => {
+  const eight = (stage: number) => Array.from({ length: 8 }, () => stage)
+
+  it('is the richest tier every piece has reached', () => {
+    expect(wholeBodyTier(EQUIPMENT, eight(3))?.mark).toBe(560)
+    expect(wholeBodyTier(EQUIPMENT, eight(6))?.mark).toBe(1122)
+    expect(wholeBodyTier(EQUIPMENT, eight(8))?.mark).toBe(2105)
+  })
+
+  it('is held back by the lowest piece', () => {
+    expect(wholeBodyTier(EQUIPMENT, [...eight(8).slice(1), 4])?.mark).toBe(560)
+    expect(wholeBodyTier(EQUIPMENT, [...eight(8).slice(1), 2])).toBeNull()
+  })
+
+  it('needs the whole loadout, not a subset of it', () => {
+    expect(wholeBodyTier(EQUIPMENT, [8, 8, 8])).toBeNull()
+    expect(wholeBodyTier(EQUIPMENT, [])).toBeNull()
+  })
+})
+
+describe('suitScoreFor', () => {
+  const suit = EQUIPMENT.suits.suits[0]
+  const at = (gearLevel: number): typeof EQUIPMENT.items[0] => ({ ...EQUIPMENT.items[0], gearLevel })
+
+  it('runs each piece-count effect at the level of the lowest piece among the highest N', () => {
+    // Two 64s, a 62 and the rest 60: a 64 two-piece and a 62 three-piece.
+    const { total, effects } = suitScoreFor(EQUIPMENT, suit, [at(64), at(62), at(60), at(64), at(60), null])
+    expect(effects).toEqual([
+      { pieces: 2, gearLevel: 64, score: 201 * 15 },
+      { pieces: 3, gearLevel: 62, score: 323 * 13 },
+    ])
+    expect(total).toBe(201 * 15 + 323 * 13)
+  })
+
+  it('scores only the effects the piece count reaches, and ignores other suits', () => {
+    const arena = { ...at(64), suitId: 102 }
+    const { effects } = suitScoreFor(EQUIPMENT, suit, [at(64), at(62), arena, arena])
+    expect(effects).toEqual([{ pieces: 2, gearLevel: 62, score: 323 * 0 + 201 * 13 }])
+    expect(suitScoreFor(EQUIPMENT, suit, [at(64)]).total).toBe(0)
+  })
+
+  it('scores nothing without the formulas', () => {
+    const bare: Equipment = { ...EQUIPMENT, suits: { ...EQUIPMENT.suits, levelScores: undefined } }
+    expect(suitScoreFor(bare, suit, [at(64), at(64), at(64)]).total).toBe(0)
   })
 })
 

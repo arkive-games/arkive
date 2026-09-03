@@ -80,6 +80,29 @@ PROFESSIONS = {
 }
 
 
+FORMULAS = {
+    "1600176": {"ID": 1600176, "Name": "EQUIP_SUIT_LEVEL_SCORE_1", "Formula": "return 201*($1 -49)"},
+    "1600177": {"ID": 1600177, "Name": "EQUIP_SUIT_LEVEL_SCORE_2", "Formula": "return 323*($1 -49)"},
+    "1600175": {"ID": 1600175, "Name": "EQUIP_SUIT_LEVEL1_FIXED", "Formula": "return 20*($1 -49)"},
+}
+
+
+def test_suit_level_scores_reads_the_two_linear_formulas(stub):
+    stub({equipment.FORMULA_TABLE: FORMULAS})
+    assert equipment.suit_level_scores(None) == {
+        "1": {"perLevel": 201.0, "origin": 49},
+        "2": {"perLevel": 323.0, "origin": 49},
+    }
+
+
+def test_suit_level_scores_rejects_a_formula_of_another_shape(stub):
+    bent = dict(FORMULAS)
+    bent["1600177"] = {**FORMULAS["1600177"], "Formula": "if $1 > 60 then return 9 end return 0"}
+    stub({equipment.FORMULA_TABLE: bent})
+    with pytest.raises(RuntimeError, match="EQUIP_SUIT_LEVEL_SCORE_2"):
+        equipment.suit_level_scores(None)
+
+
 @pytest.fixture
 def stub(monkeypatch):
     def stubbed(tables):
@@ -235,8 +258,12 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
         equipment.BODY_TABLE: BODIES,
         equipment.STAGE_TABLE: STAGES,
         equipment.STAGE_PROP_TABLE: STAGE_PROPS,
-        equipment.SUIT_TIER_TABLE: {"1": {"ID": 1, "Type": 2, "Level": 1, "Mark": 1003, "RequireAvgPercent": 50, "SuitProp": {"Atk_N": 10}, "SuitAdditionDesc": "x"}},
+        equipment.SUIT_TIER_TABLE: {
+            "1": {"ID": 1, "Type": 2, "Level": 1, "Mark": 1003, "RequireAvgPercent": 50, "SuitProp": {"Atk_N": 10}, "SuitAdditionDesc": "x"},
+            "2": {"ID": 2, "Type": 1, "Level": 1, "Mark": 560, "Require": 1, "RequireLevel": 3, "RequirePromote": 8, "SuitProp": {"Atk_N": 80}},
+        },
         equipment.SUIT_TABLE: {"101": {"ID": 101, "SuitName": "灵与知回响", "SuitNameAll": "[冒险]灵与知回响", "SuitTag": "冒险套装", "BeSuitNum": [2, 3], "SuitDesc1": "a", "SuitDesc2": "b"}},
+        equipment.FORMULA_TABLE: FORMULAS,
         equipment.GROUP_TABLES[0]: GROUPS,
         equipment.GROUP_TABLES[1]: {},
         equipment.WORD_TABLE: WORDS,
@@ -247,4 +274,10 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
 
     payload = json.loads((tmp_path / equipment.OUT_FILE).read_text(encoding="utf-8"))
     assert payload["brands"][0]["effect"] == "怪物专攻提高150。", "client markup stripped"
+    whole_body = next(t for t in payload["suits"]["tiers"] if t["type"] == 1)
+    assert (whole_body["requiredStage"], whole_body["requiredPieces"]) == (3, 8)
+    assert payload["suits"]["levelScores"] == {
+        "1": {"perLevel": 201.0, "origin": 49},
+        "2": {"perLevel": 323.0, "origin": 49},
+    }
     assert {i["id"]: i["baseScore"] for i in payload["items"]} == {3001059: 2685, 3020623: 2430}

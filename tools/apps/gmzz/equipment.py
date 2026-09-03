@@ -85,9 +85,16 @@ STAGE_TABLE = "EquipmentGrowBodyEnhanceData"
 STAGE_PROP_TABLE = "EquipmentGrowEnhancePropData"
 SUIT_TIER_TABLE = "EquipmentGrowBodySuitData"
 SUIT_TABLE = "EquipmentSuitData"
+FORMULA_TABLE = "FormulaData"
 PROFESSION_TABLE = "TransferPathProfessionData"
 WORD_TABLE = "EquipmentWordRandomWordData"
 GROUP_TABLES = ("EquipmentWordRandomGroupData", "EquipmentWordInitRandomGroupData")
+
+#: The score a suit's piece-count effect is worth, by the effect's level (1 = two
+#: pieces, 2 = three) — ``FormulaData`` rows of the shape ``return 201*($1 -49)``,
+#: where ``$1`` is the gear level the effect runs at.
+SUIT_SCORE_FORMULAS = {1: "EQUIP_SUIT_LEVEL_SCORE_1", 2: "EQUIP_SUIT_LEVEL_SCORE_2"}
+_LINEAR_FORMULA = re.compile(r"^\s*return\s+(?P<slope>\d+(?:\.\d+)?)\s*\*\s*\(\s*\$1\s*-\s*(?P<origin>\d+)\s*\)\s*$")
 
 #: The gear tier the current season rolls. Sets 1-3 are legacy ladders.
 CURRENT_SET = 4
@@ -366,13 +373,38 @@ def suits(excel: Path, strings: dict) -> dict:
             "type": r.get("Type"),
             "level": r.get("Level"),
             "mark": r.get("Mark"),
-            # Type 2 gates on the average enhancement percentage across pieces.
+            # Type 1 gates on every piece (RequirePromote of them) being at
+            # RequireLevel or above — the "whole body +3" bonus; type 2 on the
+            # average enhancement percentage across pieces.
+            "requiredStage": r.get("RequireLevel") or None,
+            "requiredPieces": r.get("RequirePromote") or None,
             "requiredAveragePercent": r.get("RequireAvgPercent"),
             "stats": [[k, v] for k, v in (r.get("SuitProp") or {}).items()],
             "effect": _plain(r.get("SuitAdditionDesc") or ""),
         })
     tiers.sort(key=lambda t: (t["type"] or 0, t["level"] or 0))
-    return {"suits": named, "tiers": tiers}
+    return {"suits": named, "tiers": tiers, "levelScores": suit_level_scores(excel)}
+
+
+def suit_level_scores(excel: Path) -> dict:
+    """The score a suit effect earns at a gear level, per effect level.
+
+    Read off ``FormulaData`` rather than typed in: the rows are one line each,
+    ``return 201*($1 -49)``, and the two numbers are what the page needs. A
+    formula of any other shape raises, so a redesign shows up as a failed build
+    rather than a page quietly scoring suits by a stale line.
+    """
+    by_name = {r["Name"]: r["Formula"] for r in _rows(load_table(excel, FORMULA_TABLE))}
+    out = {}
+    for level, name in SUIT_SCORE_FORMULAS.items():
+        body = by_name.get(name)
+        if body is None:
+            raise RuntimeError(f"{FORMULA_TABLE} has no row named {name}")
+        match = _LINEAR_FORMULA.match(body.replace("\n", " "))
+        if not match:
+            raise RuntimeError(f"{name} is not of the shape 'return A*($1 -B)': {body!r}")
+        out[str(level)] = {"perLevel": float(match.group("slope")), "origin": int(match.group("origin"))}
+    return out
 
 
 def affixes(excel: Path, strings: dict) -> dict:

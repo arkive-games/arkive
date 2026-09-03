@@ -26,8 +26,10 @@ import {
   scoredSlots,
   statLines,
   suitOf,
+  suitScoreFor,
   suitThreshold,
   suitTierFor,
+  wholeBodyTier,
   type AffixTier,
   type ChosenAffix,
   type EquipItem,
@@ -812,8 +814,23 @@ export default function EquipmentSection({
 
   const results = useMemo(() => pieces.map((p) => evaluatePiece(equipment, graces, p)), [equipment, graces, pieces])
   const averagePercent = useMemo(() => averageProgress(results), [results])
-  const active = useMemo(() => activeSuits(equipment, results.map((r) => r.item)), [equipment, results])
-  const chosenSuit = active.find((entry) => entry.suit.id === suitChoice) ?? active[0] ?? null
+  const items = useMemo(() => results.map((r) => r.item), [results])
+  const active = useMemo(() => activeSuits(equipment, items), [equipment, items])
+  // Each live suit scored from its own pieces; only one suit can be active in
+  // game, so the player's pick counts, and the best-scoring one stands in
+  // until they pick.
+  const suitScores = useMemo(
+    () => active.map((entry) => ({ ...entry, ...suitScoreFor(equipment, entry.suit, items) })),
+    [active, equipment, items],
+  )
+  const bestSuit = suitScores.reduce<(typeof suitScores)[number] | null>(
+    (best, entry) => (best === null || entry.total > best.total ? entry : best),
+    null,
+  )
+  const chosenSuit = suitScores.find((entry) => entry.suit.id === suitChoice) ?? bestSuit
+  // The whole-loadout enhancement set — 全身+3 and up — is part of the
+  // enhancement score, not of any one piece.
+  const bodyTier = useMemo(() => wholeBodyTier(equipment, pieces.map((piece) => piece.enhanceStage)), [equipment, pieces])
   // Type 2 is the tier family gated on average enhancement, which is the one a
   // whole-loadout view can answer. It only means anything under a live suit.
   const suitTier = useMemo(
@@ -837,21 +854,22 @@ export default function EquipmentSection({
     }))
   }, [equipment, pickerSlot, professionId, t])
 
-  const totals = useMemo(
-    () =>
-      results.reduce(
-        (sum, r) => ({
-          base: sum.base + r.baseScore,
-          enhance: sum.enhance + r.enhanceScore,
-          affix: sum.affix + r.affixMark,
-          bonus: sum.bonus + r.extraordinaryBonus,
-          reforge: sum.reforge + r.reforgeScore,
-          total: sum.total + r.total,
-        }),
-        { base: 0, enhance: 0, affix: 0, bonus: 0, reforge: 0, total: 0 },
-      ),
-    [results],
-  )
+  // The game's four parts: 基础, 强化 (the pieces' plus the whole-body set),
+  // 词条 (the reforge, affixes and bonus together) and 套装.
+  const totals = useMemo(() => {
+    const pieceSums = results.reduce(
+      (sum, r) => ({
+        base: sum.base + r.baseScore,
+        pieces: sum.pieces + r.enhanceScore,
+        reforge: sum.reforge + r.reforgeScore,
+      }),
+      { base: 0, pieces: 0, reforge: 0 },
+    )
+    const body = bodyTier?.mark ?? 0
+    const suit = chosenSuit?.total ?? 0
+    const enhance = pieceSums.pieces + body
+    return { ...pieceSums, body, enhance, suit, total: pieceSums.base + enhance + pieceSums.reforge + suit }
+  }, [bodyTier, chosenSuit, results])
 
   const patchPiece = (index: number, patch: Partial<PieceState>) =>
     writePieces(pieces.map((piece, at) => (at === index ? { ...piece, ...patch } : piece)))
@@ -918,7 +936,7 @@ export default function EquipmentSection({
               testId="equip-suit-choice"
               onValue={(raw) => setDraft((prev) => ({ ...prev, suitChoice: Number(raw) }))}
             >
-              {active.map((entry) => (
+              {suitScores.map((entry) => (
                 <option key={entry.suit.id} value={entry.suit.id}>
                   {t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}
                 </option>
@@ -931,6 +949,16 @@ export default function EquipmentSection({
                 : t('equip.suitNone', { need: Number.isFinite(suitNeed) ? suitNeed : '—' })}
             </div>
           )}
+          {chosenSuit ? (
+            <div className={`mt-1 ${TYPE.valueMuted}`} data-testid="equip-suit-score">
+              <span className={TYPE.value}>{t('equip.suitScore', { score: chosenSuit.total.toLocaleString() })}</span>
+              {chosenSuit.effects.map((effect) => (
+                <span key={effect.pieces} className="ml-2">
+                  {t('equip.suitEffectScore', { pieces: effect.pieces, level: effect.gearLevel, score: effect.score.toLocaleString() })}
+                </span>
+              ))}
+            </div>
+          ) : null}
           {chosenSuit ? (
             <div className={`mt-1 ${TYPE.body}`} data-testid="equip-suit-tier">
               {suitTier ? (
@@ -958,10 +986,14 @@ export default function EquipmentSection({
               <span>{t('equip.subtotalBase', { value: totals.base.toLocaleString() })}</span>
               <span>{t('equip.subtotalEnhance', { value: totals.enhance.toLocaleString() })}</span>
               <span>{t('equip.subtotalReforge', { value: totals.reforge.toLocaleString() })}</span>
+              <span>{t('equip.subtotalSuit', { value: totals.suit.toLocaleString() })}</span>
             </div>
-            <div className={`flex flex-wrap gap-x-3 ${TYPE.valueMuted}`}>
-              <span>{t('equip.subtotalAffix', { value: Math.round(totals.affix).toLocaleString() })}</span>
-              <span>{t('equip.subtotalBonus', { value: totals.bonus.toLocaleString() })}</span>
+            <div className={`flex flex-wrap gap-x-3 ${TYPE.valueMuted}`} data-testid="equip-body-tier">
+              <span>
+                {bodyTier
+                  ? t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: totals.body.toLocaleString() })
+                  : t('equip.bodyTierNone')}
+              </span>
             </div>
           </div>
         </Cell>
