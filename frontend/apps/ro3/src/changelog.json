@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.2",
+      "date": "2026-09-03",
+      "commit": "fcc72cbb97958428a90e6f74b41534307306a56f",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned the build manual with the in-client layout, equipment row, socket groups, and visible pet and soul effects.",
+            "zh-CN": "对齐流派手册布局，修正横向装备栏与真实卡槽分组，并显示宠物和残响效果。",
+            "zh-TW": "對齊流派手冊佈局，修正橫向裝備欄與真實卡槽分組，並顯示寵物和殘響效果。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.1",
       "date": "2026-09-03",
       "commit": "4b54dd4018ed2d9799d15f0d7556b6fe863d7576",
