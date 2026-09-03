@@ -339,12 +339,6 @@ export type PieceResult = {
   enhanceScore: number
   /** Per-stat totals the enhancement grants, the current stage counted by its refinement. */
   enhanceStats: [string, number][]
-  /**
-   * The item's base stats with the enhancement added on, in the item's order —
-   * what the card's stat block reads before reforge and brand. Empty for an
-   * empty slot, even when the enhancement sliders are up.
-   */
-  stats: [string, number][]
   /** The chosen affixes, each with the tier and Mark its value works out to. */
   affixes: ScoredAffix[]
   /** Sum of every affix's Mark, contaminated ones subtracting. */
@@ -360,17 +354,6 @@ export type PieceResult = {
   total: number
   /** Overall enhancement progress, the figure the game shows under the badge. */
   progressPercent: number
-}
-
-/**
- * The item's base stats with the enhancement's gains folded in, in the item's
- * order, then any stat the enhancement grants that the item lacks.
- */
-export function statsWithEnhancement(item: EquipItem | null, enhanceStats: [string, number][]): [string, number][] {
-  if (!item) return []
-  const totals = new Map<string, number>(item.baseStats)
-  for (const [key, amount] of enhanceStats) totals.set(key, (totals.get(key) ?? 0) + amount)
-  return [...totals]
 }
 
 /**
@@ -392,26 +375,46 @@ export function statLabel(equipment: Equipment, key: string): string {
   return key
 }
 
-/** One line of a stat block: a label and either a single value or a `min~max` pair. */
-export type StatLine = { key: string; label: string; min: number; max: number }
+/** A single value or a `min~max` pair, as one stat line shows it. */
+export type StatRange = { min: number; max: number }
 
 /**
- * Stats folded into display lines, `AtkMin_N`/`AtkMax_N` becoming one 攻击 range.
- * Order follows the first appearance of each line's key.
+ * One line of a stat block: the item's own value and what the enhancement adds
+ * to it, kept apart so the card can read `411~763 (+60)` the way the game
+ * shows a base with its bonus, rather than one summed figure.
  */
-export function statLines(equipment: Equipment, stats: [string, number][]): StatLine[] {
-  const lines: StatLine[] = []
-  for (const [key, value] of stats) {
-    const lineKey = STAT_KEY_ALIAS[key] ?? key
-    const existing = lines.find((line) => line.key === lineKey)
-    if (!existing) {
-      lines.push({ key: lineKey, label: statLabel(equipment, key), min: value, max: value })
-    } else {
-      existing.min = Math.min(existing.min, value)
-      existing.max = Math.max(existing.max, value)
+export type StatLine = { key: string; label: string; base: StatRange; gain: StatRange }
+
+/**
+ * Base stats and enhancement gains folded into display lines, `AtkMin_N` /
+ * `AtkMax_N` becoming one 攻击 range. Order follows the item's stats, then any
+ * stat the enhancement grants that the item lacks; nothing at all for an empty
+ * slot, however far the sliders are up.
+ */
+export function statLines(
+  equipment: Equipment,
+  baseStats: [string, number][] | null,
+  enhanceStats: [string, number][],
+): StatLine[] {
+  if (!baseStats) return []
+  // Values per line, per part: the alias pair contributes two to a range, every other key one.
+  const values = new Map<string, { label: string; base: number[]; gain: number[] }>()
+  const fold = (stats: [string, number][], part: 'base' | 'gain') => {
+    for (const [key, value] of stats) {
+      const lineKey = STAT_KEY_ALIAS[key] ?? key
+      let line = values.get(lineKey)
+      if (!line) {
+        line = { label: statLabel(equipment, key), base: [], gain: [] }
+        values.set(lineKey, line)
+      }
+      line[part].push(value)
     }
   }
-  return lines
+  fold(baseStats, 'base')
+  fold(enhanceStats, 'gain')
+  const range = (list: number[]): StatRange =>
+    list.length === 0 ? { min: 0, max: 0 } : { min: Math.min(...list), max: Math.max(...list) }
+  return [...values].map(([key, line]) => ({ key, label: line.label, base: range(line.base), gain: range(line.gain) }))
 }
 
 export function bodyFor(equipment: Equipment, slot: number, season?: number): EnhanceBody | null {
@@ -549,7 +552,6 @@ export function evaluatePiece(
     baseScore,
     enhanceScore,
     enhanceStats,
-    stats: statsWithEnhancement(item, enhanceStats),
     affixes,
     affixMark,
     extraordinaryCount,

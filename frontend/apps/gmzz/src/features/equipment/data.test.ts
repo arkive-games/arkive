@@ -20,7 +20,6 @@ import {
   refineFromProgress,
   scoredSlots,
   statLines,
-  statsWithEnhancement,
   suitOf,
   suitTierFor,
   type Equipment,
@@ -376,23 +375,25 @@ describe('extraordinaryBonus', () => {
   })
 })
 
-describe('statsWithEnhancement / statLines', () => {
+describe('statLines', () => {
   const item = EQUIPMENT.items[0]
 
-  it('adds the enhancement\'s gains onto the item\'s base stats', () => {
-    const stats = statsWithEnhancement(item, enhanceOf(bodyFor(EQUIPMENT, 1, 101), 3, 100).stats)
-    expect(stats).toEqual([['AtkMin_N', 387], ['AtkMax_N', 667], ['MaxHp_N', 2218]])
+  it('keeps the item\'s value and the enhancement\'s gain apart, the attack pair folded into one 攻击 range', () => {
+    const lines = statLines(EQUIPMENT, item.baseStats, enhanceOf(bodyFor(EQUIPMENT, 1, 101), 3, 100).stats)
+    expect(lines).toEqual([
+      { key: 'Atk_N', label: '攻击', base: { min: 327, max: 607 }, gain: { min: 60, max: 60 } },
+      { key: 'MaxHp_N', label: '最大生命', base: { min: 1960, max: 1960 }, gain: { min: 258, max: 258 } },
+    ])
   })
 
   it('is empty for an empty slot however far the sliders are up', () => {
-    expect(statsWithEnhancement(null, [['AtkMin_N', 60]])).toEqual([])
+    expect(statLines(EQUIPMENT, null, [['AtkMin_N', 60]])).toEqual([])
   })
 
-  it('folds the attack range into one 攻击 line and labels the rest by family', () => {
-    expect(statLines(EQUIPMENT, [['AtkMin_N', 387], ['AtkMax_N', 667], ['MaxHp_N', 2218], ['Mystery_N', 5]])).toEqual([
-      { key: 'Atk_N', label: '攻击', min: 387, max: 667 },
-      { key: 'MaxHp_N', label: '最大生命', min: 2218, max: 2218 },
-      { key: 'Mystery_N', label: 'Mystery_N', min: 5, max: 5 },
+  it('shows a stat the enhancement grants but the item lacks, and labels an unknown key by itself', () => {
+    expect(statLines(EQUIPMENT, [['Mystery_N', 5]], [['MaxHp_N', 86]])).toEqual([
+      { key: 'Mystery_N', label: 'Mystery_N', base: { min: 5, max: 5 }, gain: { min: 0, max: 0 } },
+      { key: 'MaxHp_N', label: '最大生命', base: { min: 0, max: 0 }, gain: { min: 86, max: 86 } },
     ])
   })
 })
@@ -500,7 +501,6 @@ describe('evaluatePiece', () => {
     expect(result.reforgeScore).toBe(result.affixMark + 1200)
     expect(result.grace?.id).toBe(108)
     expect(result.total).toBe(2430 + 240 + result.reforgeScore)
-    expect(result.stats).toEqual([['AtkMin_N', 387], ['AtkMax_N', 667], ['MaxHp_N', 2218]])
   })
 
   it('reproduces the game\'s 重塑 tab: 攻击 +308 +233 +332 read 3485', () => {

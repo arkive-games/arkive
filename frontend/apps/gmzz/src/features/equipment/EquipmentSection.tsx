@@ -11,7 +11,6 @@ import {
   activeSuits,
   equipmentIconUrl,
   averageProgress,
-  bodyFor,
   evaluatePiece,
   familiesFor,
   itemsForSlot,
@@ -32,6 +31,7 @@ import {
   type PieceResult,
   type PieceState,
   type ScoredAffix,
+  type StatRange,
   type Suit,
 } from '@/features/equipment/data'
 
@@ -86,7 +86,7 @@ const AFFIX_ROW_CLASS =
  * column is wide because its stage track labels all nine steps.
  */
 const ROW_GRID =
-  'xl:grid-cols-[minmax(10rem,13rem)_minmax(7rem,9rem)_minmax(16rem,21rem)_minmax(0,2fr)_minmax(0,8rem)] xl:gap-3'
+  'xl:grid-cols-[minmax(10rem,12rem)_minmax(10rem,11.5rem)_minmax(16rem,21rem)_minmax(0,2fr)_minmax(0,8rem)] xl:gap-3'
 
 /* ------------------------------------------------------------- persistence */
 
@@ -283,7 +283,7 @@ function EnhanceSliders({
   maxStage: number
   testIdPrefix: string
   /** Omitted for the batch sliders, which drive every piece and have no score of their own. */
-  score?: { score: number; stages: number }
+  score?: number
   onStage: (stage: number) => void
   onBadge: (badge: number) => void
 }) {
@@ -333,9 +333,9 @@ function EnhanceSliders({
             {percentText(badge)}
           </span>
         </div>
-        {score ? (
+        {score !== undefined ? (
           <div className="mt-1 text-xs text-muted-foreground" data-testid={`${testIdPrefix}-enhance-score`}>
-            {t('equip.enhanceDerived', score)}
+            {t('equip.enhanceDerived', { score })}
           </div>
         ) : null}
       </div>
@@ -380,8 +380,10 @@ function PieceHeader({ result, kind, subtitle }: { result: PieceResult; kind: st
         {kind ? <span className={BADGE_CLASS}>{kind}</span> : null}
       </div>
       <div className="text-xs tabular-nums text-muted-foreground" data-testid={`equip-score-${result.state.slot}`}>
-        <span className="font-semibold text-foreground">{t('equip.pieceScore', { score: result.total.toLocaleString() })}</span>
-        <span className="ml-1.5">
+        <span className="block font-semibold text-foreground">{t('equip.pieceScore', { score: result.total.toLocaleString() })}</span>
+        {/* Its own line: in the rows layout the column is narrow enough that
+            the three parts inline broke the last one onto a line by itself. */}
+        <span className="block">
           {t('equip.scoreParts', {
             base: result.baseScore.toLocaleString(),
             enhance: result.enhanceScore.toLocaleString(),
@@ -393,23 +395,35 @@ function PieceHeader({ result, kind, subtitle }: { result: PieceResult; kind: st
   )
 }
 
+/** `327~607` for a range, `1,960` for a single value. */
+function rangeText({ min, max }: StatRange): string {
+  return min === max ? min.toLocaleString() : `${min.toLocaleString()}~${max.toLocaleString()}`
+}
+
 /**
- * The stat block the card reads: base stats with the enhancement added, before
- * reforge and brand. A weapon's 攻击 is its `min~max` range.
+ * The stat block the card reads: the item's base stats, each with what the
+ * enhancement adds in brackets after it — `327~607 (+60)` — before reforge
+ * and brand. A weapon's 攻击 is its `min~max` range.
  */
 function StatBlock({ equipment, result }: { equipment: Equipment; result: PieceResult }) {
   const { t } = useTranslation()
-  const lines = statLines(equipment, result.stats)
+  const lines = statLines(equipment, result.item?.baseStats ?? null, result.enhanceStats)
   if (lines.length === 0) {
     return <p className="text-xs text-muted-foreground">{t('equip.noStats')}</p>
   }
   return (
-    <dl className="min-w-0 space-y-0.5 text-xs tabular-nums" data-testid={`equip-stats-${result.state.slot}`}>
+    // One grid for the whole block, so the values and the bracketed gains each
+    // line up in their own column rather than the gain pushing its value left.
+    <dl
+      className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] gap-x-1 gap-y-0.5 text-xs tabular-nums"
+      data-testid={`equip-stats-${result.state.slot}`}
+    >
       {lines.map((line) => (
-        <div key={line.key} className="flex items-baseline justify-between gap-2">
+        <div key={line.key} className="col-span-3 grid grid-cols-subgrid items-baseline">
           <dt className="truncate text-muted-foreground">{line.label}</dt>
-          <dd className="shrink-0 font-semibold text-foreground">
-            {line.min === line.max ? line.min.toLocaleString() : `${line.min.toLocaleString()}~${line.max.toLocaleString()}`}
+          <dd className="text-right font-semibold text-foreground">{rangeText(line.base)}</dd>
+          <dd className="text-emerald-700 dark:text-emerald-300">
+            {line.gain.max > 0 ? t('equip.statGain', { gain: `+${rangeText(line.gain)}` }) : null}
           </dd>
         </div>
       ))}
@@ -445,7 +459,6 @@ function refineForStage(stage: number): number {
 function EnhanceControls({ equipment, result, onPatch }: PieceControlProps) {
   const { slot, enhanceStage } = result.state
   const maxStage = maxStageFor(equipment, slot)
-  const ladderStages = bodyFor(equipment, slot)?.stages.length ?? maxStage
 
   return (
     <EnhanceSliders
@@ -453,7 +466,7 @@ function EnhanceControls({ equipment, result, onPatch }: PieceControlProps) {
       badge={badgeOf(result.progressPercent, maxStage, enhanceStage)}
       maxStage={maxStage}
       testIdPrefix={`equip-${slot}`}
-      score={{ score: result.enhanceScore, stages: ladderStages }}
+      score={result.enhanceScore}
       // A stage is picked at its top — "+3" reads 37%, the figure a player
       // quotes — and the refinement slider then walks it down if need be.
       onStage={(stage) => onPatch({ enhanceStage: stage, refinePercent: refineForStage(stage) })}
