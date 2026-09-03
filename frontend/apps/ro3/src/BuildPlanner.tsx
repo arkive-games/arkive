@@ -325,6 +325,53 @@ function uniqueFamilies(records: EquipmentRecord[], part: number) {
     ),
   }));
 }
+
+function seedClientBuild(data: BuildData): BuildDraft {
+  const line = PROFESSION_LINES[0];
+  const route = line.routes[0];
+  const stages = buildProfessionStages(
+    route,
+    data.profession.jobSkills.jobSkills,
+    new Map(data.profession.skills.skills.map((skill) => [skill.iSkillID, skill])),
+  );
+  const skillIds = stages.flatMap((stage) => stage.skills.map((choice) => choice.skillId)).slice(0, 6);
+  const equipment = equipmentSlotsForLine(line.id).map((slot) => {
+    const family = uniqueFamilies(data.equipment.equipment.equipment, slot.part)[0];
+    const variant = family?.variants[0];
+    return {
+      slotKey: slot.key,
+      equipmentId: variant?.iID ?? 0,
+      quality: variant?.item?.iQuality ?? 0,
+      normalEntryIds: [],
+      specialEffectIds: [],
+      cardIds: [],
+    };
+  });
+  const cards = data.cards.cards.filter((card) => card.icon).slice(0, 17);
+  let cardCursor = 0;
+  const sockets = equipment.map((item) => {
+    const record = data.equipment.equipment.equipment.find((candidate) => candidate.iID === item.equipmentId);
+    const count = socketCount(data.equipment.attrs, record);
+    const selected = cards.slice(cardCursor, cardCursor + count).map((card) => card.id);
+    cardCursor += selected.length;
+    return selected;
+  });
+  equipment.forEach((item, index) => { item.cardIds = sockets[index] ?? []; });
+  const pets = data.pets.catalog.pets.filter((pet) => pet.show).slice(0, 9).map((pet) => pet.id);
+  return normalizeBuild({
+    ...EMPTY_BUILD,
+    title: "剑士·骑士方案",
+    profession: LINE_LABELS[line.id],
+    professionLineId: line.id,
+    professionRouteId: route.id,
+    skillIds,
+    equipment,
+    petCombatIds: pets.slice(0, 4),
+    petAssistIds: pets.slice(4, 9),
+    talentIds: data.talents.talents.seasonTalents.nodes.slice(0, 5).map((talent) => talent.iId),
+    souls: data.souls.souls.souls.slice(0, 5).map((soul, index) => ({ slotIndex: index, soulId: soul.iID, subAttributeIds: [], markEffectIds: [] })),
+  });
+}
 function socketCount(
   attrs: EquipmentAttrsDocument,
   item: EquipmentRecord | undefined,
@@ -383,8 +430,19 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
       loadTalentWikiData(),
     ])
       .then(([wiki, profession, equipment, souls, pets, talents]) => {
-        if (active)
-          setData({ ...wiki, profession, equipment, souls, pets, talents });
+        if (active) {
+          const nextData = { ...wiki, profession, equipment, souls, pets, talents };
+          setData(nextData);
+          const current = readBuilds();
+          const isUntouched = current.length === 1 && current[0].id === EMPTY_BUILD.id && !current[0].skillIds.length && !current[0].petCombatIds.length && !current[0].souls.length;
+          if (isUntouched) {
+            const seeded = seedClientBuild(nextData);
+            setBuilds([seeded]);
+            setDraft(seeded);
+            setSelectedId(seeded.id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([seeded]));
+          }
+        }
       })
       .catch(() => {
         if (active) setDataError(true);
@@ -764,7 +822,7 @@ function BuildViewer({
                     const id = build.petCombatIds[index];
                     const pet = id ? petMap.get(id) : undefined;
                     const effects = id ? petEffectLines(id, "combat") : undefined;
-                    return <GameBuildSlot key={id ?? `combat-empty-${index}`} kind="pet" icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
+                    return <GameBuildSlot key={id ?? `combat-empty-${index}`} kind="pet" icon={pet?.art.fightField ?? pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
                   })}
                 </div>
                 <div className="game-pet-effect-summary">
@@ -781,7 +839,7 @@ function BuildViewer({
                     const id = build.petAssistIds[index];
                     const pet = id ? petMap.get(id) : undefined;
                     const effects = id ? petEffectLines(id, "assist") : undefined;
-                    return <GameBuildSlot key={id ?? `assist-empty-${index}`} kind="pet" icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空助战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
+                    return <GameBuildSlot key={id ?? `assist-empty-${index}`} kind="pet" icon={pet?.art.fightField ?? pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空助战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
                   })}
                 </div>
               </div>

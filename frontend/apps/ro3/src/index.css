@@ -1276,7 +1276,8 @@
   opacity: .7;
 }
 .game-build-panel > header > span { position: relative; z-index: 1; color: #5d4525; }
-.game-build-panel > header > span svg { color: #92702e; }
+.game-build-panel > header > span::before { content: ""; display: inline-block; width: 1.75rem; height: 1.75rem; margin-right: .12rem; background: url('./assets/native-ui/genre/genremanual_btn_title_go.webp') center / contain no-repeat; }
+.game-build-panel > header > span svg { display: none; }
 .game-build-panel > *:not(header) { padding: .7rem .8rem; }
 .game-build-slot-frame {
   box-sizing: border-box;
@@ -1315,6 +1316,8 @@
   padding: .38rem;
   background-image: url('./assets/native-ui/genre/genremanual_img_title_04.webp');
 }
+.game-build-slot.is-pet .game-build-slot-frame { width: 5.4rem; height: 5.4rem; padding: .2rem; background-image: url('./assets/native-ui/genre/genremanual_img_title_04.webp'); background-size: 100% 100%; }
+.game-build-slot.is-pet .game-build-slot-frame img { object-fit: cover; }
 .game-build-slot.is-card .game-build-slot-frame {
   width: 3.45rem;
   height: 3.7rem;
