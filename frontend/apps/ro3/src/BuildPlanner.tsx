@@ -838,12 +838,6 @@ function BuildViewer({
                     return <GameBuildSlot key={id ?? `combat-empty-${index}`} kind="pet" icon={pet?.art.head} overlayIcon={pet ? PET_CAMP_ICONS[pet.camp] : undefined} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
                   })}
                 </div>
-                <div className="game-pet-effect-summary" aria-label="出战效果">
-                  {build.petCombatIds.slice(0, 4).map((id, index) => {
-                    const pet = petMap.get(id);
-                    return <span key={`${id}-${index}`}><img src={pet ? resourceUrl(PET_CAMP_ICONS[pet.camp] ?? "") : nativePetCombat} alt="" /></span>;
-                  })}
-                </div>
                 <span className="game-pet-mode-label"><img src={nativePetAssist} alt="" />助战</span>
                 <div className="game-build-slots game-build-slots--pets">
                   {Array.from({ length: 5 }, (_, index) => {
