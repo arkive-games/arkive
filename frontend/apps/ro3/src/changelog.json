@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.1",
+      "date": "2026-09-03",
+      "commit": "4b54dd4018ed2d9799d15f0d7556b6fe863d7576",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed the viewer sidebar, added an always-visible build switcher, and fixed first-column hover panels so item details remain fully visible.",
+            "zh-CN": "移除查看页左侧栏，增加始终可见的流派切换，并修复首列悬停详情面板被裁剪的问题。",
+            "zh-TW": "移除查看頁左側欄，增加始終可見的流派切換，並修復首列懸停詳情面板被裁剪的問題。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.0",
       "date": "2026-09-03",
       "commit": "6c9d3a557aa565f7690f15ea4bd5c1ba96420a9d",
