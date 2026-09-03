@@ -19,6 +19,7 @@ import {
   progressOf,
   refineFromProgress,
   scoredSlots,
+  shownMark,
   statLines,
   suitOf,
   suitTierFor,
@@ -362,6 +363,16 @@ describe('classifyAffix', () => {
 
   it('is a normal zero for nothing typed', () => {
     expect(classify('攻击', 0)).toMatchObject({ tier: 'normal', mark: 0 })
+  })
+})
+
+describe('shownMark', () => {
+  it('rounds to the nearest five, as the card prints it', () => {
+    expect(shownMark(809)).toBe(810)
+    expect(shownMark(806)).toBe(805)
+    expect(shownMark(612)).toBe(610)
+    expect(shownMark(-244)).toBe(-245)
+    expect(shownMark(0)).toBe(0)
   })
 })
 

@@ -19,6 +19,7 @@ import {
   progressBounds,
   refineFromProgress,
   scoredSlots,
+  shownMark,
   statLines,
   suitOf,
   suitThreshold,
@@ -75,9 +76,9 @@ const BADGE_CLASS =
   'inline-block shrink-0 rounded border border-border px-1 align-middle text-xs font-medium leading-4 text-muted-foreground'
 const PIP_ON = 'text-[color:var(--arkive-nav-accent)]'
 const PIP_OFF = 'text-muted-foreground/40'
-/** One affix: pip, stat, value, Mark, remove — two of these share a row. */
+/** One affix: pip, stat, value, Mark as shown and as scored, remove. */
 const AFFIX_ROW_CLASS =
-  'grid min-w-0 grid-cols-[auto_minmax(3.5rem,1fr)_minmax(3rem,4rem)_auto_auto] items-center gap-1'
+  'grid min-w-0 grid-cols-[auto_minmax(3.5rem,1fr)_minmax(3.5rem,4rem)_auto_auto] items-center gap-1'
 /**
  * The rows layout's columns: item, stats, enhancement, affixes, brand. Shared
  * by the header and every row so the two cannot drift apart. Five columns only
@@ -86,7 +87,7 @@ const AFFIX_ROW_CLASS =
  * column is wide because its stage track labels all nine steps.
  */
 const ROW_GRID =
-  'xl:grid-cols-[minmax(10rem,12rem)_minmax(10rem,11.5rem)_minmax(16rem,21rem)_minmax(0,2fr)_minmax(0,8rem)] xl:gap-3'
+  'xl:grid-cols-[minmax(10rem,12rem)_minmax(10rem,11rem)_minmax(16rem,19rem)_minmax(0,2.4fr)_minmax(0,7rem)] xl:gap-5'
 
 /* ------------------------------------------------------------- persistence */
 
@@ -381,14 +382,12 @@ function PieceHeader({ result, kind, subtitle }: { result: PieceResult; kind: st
       </div>
       <div className="text-xs tabular-nums text-muted-foreground" data-testid={`equip-score-${result.state.slot}`}>
         <span className="block font-semibold text-foreground">{t('equip.pieceScore', { score: result.total.toLocaleString() })}</span>
-        {/* Its own line: in the rows layout the column is narrow enough that
-            the three parts inline broke the last one onto a line by itself. */}
-        <span className="block">
-          {t('equip.scoreParts', {
-            base: result.baseScore.toLocaleString(),
-            enhance: result.enhanceScore.toLocaleString(),
-            reforge: result.reforgeScore.toLocaleString(),
-          })}
+        {/* Three spans rather than one string, so a narrow column wraps between
+            the parts instead of splitting a figure from its name. */}
+        <span className="flex flex-wrap gap-x-1.5">
+          <span>{t('equip.subtotalBase', { value: result.baseScore.toLocaleString() })}</span>
+          <span>{t('equip.subtotalEnhance', { value: result.enhanceScore.toLocaleString() })}</span>
+          <span>{t('equip.subtotalReforge', { value: result.reforgeScore.toLocaleString() })}</span>
         </span>
       </div>
     </div>
@@ -569,8 +568,10 @@ function AffixField({
         testId={`equip-affix-value-${slot}-${index}`}
         onValue={(value) => onChange({ family: affix.family, value })}
       />
-      <span className="text-xs tabular-nums text-muted-foreground" data-testid={`equip-affix-mark-${slot}-${index}`}>
-        {t('equip.affixMark', { mark: affix.mark })}
+      {/* The figure the card prints (to the nearest five) leads, since that is
+          what the player checks against; the exact Mark that is summed follows. */}
+      <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground" data-testid={`equip-affix-mark-${slot}-${index}`}>
+        {t('equip.affixMark', { shown: shownMark(affix.mark), mark: affix.mark })}
       </span>
       <button
         type="button"
@@ -586,9 +587,11 @@ function AffixField({
 }
 
 /**
- * The affixes, two to a row. The tier is not asked for: a negative value is a
- * contaminated affix and a value past the normal ladder is an extraordinary
- * one, and the pip shows which the number came to.
+ * The affixes, one to a row on the left, with what the reforge comes to — its
+ * score and the grace it triggers — beside them on the right. The tier is not
+ * asked for: a negative value is a contaminated affix and a value past the
+ * normal ladder is an extraordinary one, and the pip shows which the number
+ * came to.
  */
 function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
   const { t } = useTranslation()
@@ -598,34 +601,36 @@ function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
   const plain = (list: ScoredAffix[]): ChosenAffix[] => list.map(({ family, value }) => ({ family, value }))
 
   return (
-    <div className="min-w-0 space-y-1.5 @container">
-      {/* Two to a row once the cell itself is wide enough for two — a container
-          query, since the same editor sits in a card a quarter of the page wide
-          and in a rows-layout column that is wider than that at any viewport. */}
-      <div className="grid grid-cols-1 gap-x-3 gap-y-1 @[30rem]:grid-cols-2">
-        {affixes.map((affix, index) => (
-          <AffixField
-            key={index}
-            equipment={equipment}
-            slot={slot}
-            index={index}
-            affix={affix}
-            onChange={(next) => write(plain(affixes).map((entry, at) => (at === index ? next : entry)))}
-            onRemove={() => write(plain(affixes).filter((_, at) => at !== index))}
-          />
-        ))}
-        <button
-          type="button"
-          disabled={affixes.length >= MAX_AFFIXES}
-          onClick={() => write([...plain(affixes), affixFor(equipment, slot)])}
-          className={`${BUTTON_CLASS} h-7 justify-self-start px-2`}
-          data-testid={`equip-affix-add-${slot}`}
-        >
-          {/* `used` rather than `count`, which i18next reads as a plural selector. */}
-          {t('equip.addAffix', { used: affixes.length, max: MAX_AFFIXES })}
-        </button>
+    // Side by side once the cell itself is wide enough — a container query,
+    // since the same editor sits in a card a quarter of the page wide and in a
+    // rows-layout column that is wider than that at any viewport.
+    <div className="min-w-0 @container">
+      <div className="flex min-w-0 flex-col gap-3 @min-[27rem]:flex-row @min-[27rem]:items-center">
+        <div className="grid shrink-0 grid-cols-1 gap-y-1 @min-[27rem]:w-[20rem]">
+          {affixes.map((affix, index) => (
+            <AffixField
+              key={index}
+              equipment={equipment}
+              slot={slot}
+              index={index}
+              affix={affix}
+              onChange={(next) => write(plain(affixes).map((entry, at) => (at === index ? next : entry)))}
+              onRemove={() => write(plain(affixes).filter((_, at) => at !== index))}
+            />
+          ))}
+          <button
+            type="button"
+            disabled={affixes.length >= MAX_AFFIXES}
+            onClick={() => write([...plain(affixes), affixFor(equipment, slot)])}
+            className={`${BUTTON_CLASS} h-7 justify-self-start px-2`}
+            data-testid={`equip-affix-add-${slot}`}
+          >
+            {/* `used` rather than `count`, which i18next reads as a plural selector. */}
+            {t('equip.addAffix', { used: affixes.length, max: MAX_AFFIXES })}
+          </button>
+        </div>
+        <ReforgeSummary result={result} />
       </div>
-      <ReforgeSummary result={result} />
     </div>
   )
 }
@@ -653,7 +658,7 @@ function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: 
   const controls: PieceControlProps = { equipment, result, onPatch }
   return (
     <article
-      className={`grid gap-2 rounded-md border border-border bg-card p-2.5 xl:items-start ${ROW_GRID}`}
+      className={`grid gap-2 rounded-md border border-border bg-card p-2.5 xl:items-center ${ROW_GRID}`}
       data-testid={`equip-row-${result.state.slot}`}
     >
       <button

@@ -227,6 +227,16 @@ export type ChosenAffix = {
 /** A chosen affix with the tier and Mark its value works out to. */
 export type ScoredAffix = ChosenAffix & { tier: AffixTier; mark: number }
 
+/**
+ * The Mark as the game prints it beside an affix: to the nearest five. Every
+ * affix score the card shows ends in 0 or 5 (809 reads 810), while the totals
+ * behave as if the exact figures were summed, so the rounding is display only
+ * and the exact Mark is what is scored.
+ */
+export function shownMark(mark: number): number {
+  return Math.round(mark / 5) * 5
+}
+
 /** The highest Mark a ladder carries; 0 for an empty one. */
 function topMark(ladder: Rung[]): number {
   return ladder.reduce((best, [mark]) => Math.max(best, mark), 0)
