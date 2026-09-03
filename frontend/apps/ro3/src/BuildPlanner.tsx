@@ -609,34 +609,33 @@ function BuildViewer({
     data.cards.specialEffects.map((effect) => [effect.id, localizedText(effect.description)]),
   );
   const equipmentSlots = equipmentSlotsForLine(build.professionLineId);
-  const petChips = (ids: number[]) => (
-    <div className="build-chip-grid">
-      {ids.map((id) => {
-        const pet = petMap.get(id);
-        const star = data.pets.stars.stars.find((item) => item.petId === id);
-        const petSkillLines = [
-          ...(star?.activeSkills ?? []),
-          ...(star?.passiveMain ? [star.passiveMain] : []),
-        ]
-          .map((skillId) => petSkillMap.get(skillId)?.description)
-          .map((description) => localizedText(description))
-          .filter(Boolean)
-          .slice(0, 3);
-        return (
-          <BuildChip
-            key={id}
-            icon={pet?.art.encyclopedia}
-            label={localizedText(pet?.name) || `宠物 ${id}`}
-            meta={`品质 ${pet?.quality ?? "-"}`}
-            details={[`品质 ${pet?.quality ?? "-"}`, ...petSkillLines]}
-          />
-        );
-      })}
-      {ids.length === 0 ? (
-        <span className="build-section-empty">暂无配置</span>
-      ) : null}
-    </div>
+  const equippedCards = build.equipment.flatMap((config) =>
+    config.cardIds.map((cardId) => ({ cardId, slotKey: config.slotKey })),
   );
+  const petDetails = (id: number) => {
+    const pet = petMap.get(id);
+    const stars = data.pets.stars.stars
+      .filter((item) => item.petId === id)
+      .sort((a, b) => b.star - a.star || b.stage - a.stage);
+    const star = stars[0];
+    const skillIds = [
+      ...(star?.activeSkills ?? []),
+      ...(star?.passiveMain ? [star.passiveMain] : []),
+      ...(star?.protectSkill ? [star.protectSkill] : []),
+    ];
+    return [
+      `品质 ${pet?.quality ?? "-"} · 最高星级 ${star?.star ?? "-"}`,
+      ...skillIds
+        .map((skillId) => petSkillMap.get(skillId))
+        .filter((skill) => Boolean(skill))
+        .slice(0, 3)
+        .flatMap((skill) => [
+          localizedText(skill?.name),
+          localizedText(skill?.description),
+        ])
+        .filter(Boolean),
+    ];
+  };
   return (
     <div className="build-view-layout">
       <aside className="build-library">
@@ -681,212 +680,130 @@ function BuildViewer({
             编辑方案
           </button>
         </div>
-        <BuildSection
-          icon={Swords}
-          title="技能选择"
-          action={
-            <button
-              type="button"
-              className="build-section-action"
-              aria-label="进入技能编辑"
-              title="进入技能编辑"
-              onClick={onEdit}
+        <div className="game-build-manual">
+          <div className="game-build-column game-build-column--left">
+            <GameBuildPanel
+              icon={Swords}
+              title="技能"
+              action={<button type="button" aria-label="进入技能编辑" title="进入技能编辑" onClick={onEdit}><ChevronRight aria-hidden="true" /></button>}
             >
-              <ChevronRight aria-hidden="true" />
-            </button>
-          }
-        >
-          <div className="build-chip-grid">
-            {build.skillIds.slice(0, 6).map((id) => {
-              const skill = skillMap.get(id);
-              return (
-                <BuildChip
-                  key={id}
-                  icon={skill?.icon}
-                  label={displayName(skill?.name, `技能 ${id}`)}
-                  meta={`最高等级 ${skill?.iMaxLevel ?? "-"}`}
-                  details={[skillDetails.get(id) || "暂无技能描述", `技能编号 ${id}`, `最高等级 ${skill?.iMaxLevel ?? "-"}`, "点击右上角箭头进入技能编辑"]}
-                />
-              );
-            })}
-            {build.skillIds.length > 6 ? (
-              <span className="build-chip-more">+{build.skillIds.length - 6} 个技能</span>
-            ) : null}
-            {build.skillIds.length === 0 ? (
-              <span className="build-section-empty">暂无技能配置</span>
-            ) : null}
-          </div>
-        </BuildSection>
-        <BuildSection icon={Zap} title="属性加点">
-          <div className="build-attribute-grid">
-            {Object.entries(build.attributes).map(([key, value]) => (
-              <div key={key}>
-                <span>{key}</span>
-                <strong>{value}</strong>
-              </div>
-            ))}
-          </div>
-        </BuildSection>
-        <BuildSection icon={Shield} title="固定装备部位">
-          <div className="build-config-grid">
-            {equipmentSlots.map((slot) => {
-              const config =
-                build.equipment.find((item) => item.slotKey === slot.key) ??
-                EMPTY_BUILD.equipment.find((item) => item.slotKey === slot.key) ??
-                EMPTY_BUILD.equipment[0];
-              const item = equipmentMap.get(config.equipmentId);
-              return (
-                <article className="build-config-card build-hover-target" key={config.slotKey}>
-                  <div className="build-config-head">
-                    {item?.icon ? (
-                      <img src={resourceUrl(item.icon)} alt="" />
-                    ) : (
-                      <Shield aria-hidden="true" />
-                    )}
-                    <div>
-                      <strong>{slot?.label ?? config.slotKey}</strong>
-                      <small>{displayName(item?.name, "未选择装备")} · 品质 {config.quality || item?.item?.iQuality || "-"}</small>
-                    </div>
-                  </div>
-                  <BuildHoverCard
-                    title={displayName(item?.name, "未选择装备")}
-                    lines={[
-                      item
-                        ? `品质 ${config.quality || item.item?.iQuality || "-"} · 使用等级 ${item.item?.iLevelNeed ?? "-"}`
-                        : "尚未选择装备",
-                      item?.desc?.["zh-CN"] || "暂无装备说明",
-                      ...(item?.kBasicAttribute ?? []).map(([attributeId, min, max]) => {
-                        const name = displayName(
-                          data.equipment.attrs.attributes.find((attribute) => attribute.iID === attributeId)?.name,
-                          `属性 ${attributeId}`,
-                        );
-                        return `${name} +${min}${max !== min ? `~${max}` : ""}`;
-                      }),
-                      ...config.normalEntryIds.map((id) => `词条：${entryLabel(data.equipment.attrs, id)}`),
-                      ...config.specialEffectIds.map((id) => `特殊：${displayName(data.equipment.attrs.specialEffects.find((effect) => effect.iID === id)?.name, `特殊效果 ${id}`)}`),
-                    ]}
-                  />
-                  <div className="build-config-lines">
-                    {config.normalEntryIds.length ? (
-                      <span>
-                        普通词条：
-                        {config.normalEntryIds
-                          .map((id) => entryLabel(data.equipment.attrs, id))
-                          .join("、")}
-                      </span>
-                    ) : null}
-                    {config.specialEffectIds.length ? (
-                      <span>
-                        特殊词条：{config.specialEffectIds.join("、")}
-                      </span>
-                    ) : null}
-                    <span>
-                      镶嵌卡片：{config.cardIds.length ? "" : "未镶嵌"}
-                      <span className="build-card-chip-row">
-                        {config.cardIds.map((id) => {
-                          const card = cardMap.get(id);
-                          const cardLines = [
-                            localizedText(card?.description),
-                            ...(card?.tiers[0]?.specialEffects ?? [])
-                              .map((effectId) => cardEffectMap.get(effectId))
-                              .filter(Boolean),
-                          ].filter(Boolean) as string[];
-                          return (
-                            <BuildChip
-                              key={id}
-                              icon={card?.icon}
-                              label={localizedText(card?.name) || `卡片 ${id}`}
-                              meta={`品质 ${card?.quality ?? "-"}`}
-                              details={cardLines.length ? cardLines : ["暂无卡片效果"]}
-                            />
-                          );
-                        })}
-                      </span>
-                    </span>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </BuildSection>
-        <BuildSection icon={PawPrint} title="出战宠物（4）">
-          {petChips(build.petCombatIds)}
-        </BuildSection>
-        <BuildSection icon={PawPrint} title="助战宠物（5）">
-          {petChips(build.petAssistIds)}
-        </BuildSection>
-        <BuildSection icon={Sparkles} title="天赋">
-          <div className="build-chip-grid">
-            {build.talentIds.map((id) => (
-              <BuildChip
-                key={id}
-                icon={talentMap.get(id)?.levels?.[0] ? undefined : undefined}
-                label={displayName(talentMap.get(id)?.name, `天赋节点 ${id}`)}
-                meta="全职业共用"
-                details={[`节点编号 ${id}`, "全职业共用"]}
-              />
-            ))}
-            {build.talentIds.length === 0 ? (
-              <span className="build-section-empty">暂无天赋配置</span>
-            ) : null}
-          </div>
-        </BuildSection>
-        <BuildSection icon={Gem} title="灵魂残响与共振">
-          <div className="build-config-grid">
-            {build.souls
-              .filter((config) => config.soulId)
-              .map((config) => {
-                const soul = soulMap.get(config.soulId);
-                const resonance = config.resonanceId
-                  ? resonanceMap.get(config.resonanceId)
-                  : undefined;
-                return (
-                  <article className="build-config-card build-hover-target" key={config.slotIndex}>
-                    <div className="build-config-head">
-                      {soul?.icon ? (
-                        <img src={resourceUrl(soul.icon)} alt="" />
-                      ) : (
-                        <Gem aria-hidden="true" />
-                      )}
-                      <div>
-                        <strong>
-                          {displayName(soul?.name, `残响 ${config.soulId}`)}
-                        </strong>
-                        <small>
-                          残响槽 {config.slotIndex + 1} · 品质{" "}
-                          {soul?.quality ?? "-"}
-                        </small>
-                      </div>
-                    </div>
-                    <BuildHoverCard
-                      title={displayName(soul?.name, `残响 ${config.soulId}`)}
-                      lines={[
-                        soul?.desc?.["zh-CN"] || "暂无残响说明",
-                        resonance ? `共振：${displayName(resonance.name, `共振 ${resonance.iID}`)}` : "未指定共振",
-                      ]}
+              <div className="game-build-slots game-build-slots--skills">
+                {Array.from({ length: 6 }, (_, index) => {
+                  const id = build.skillIds[index];
+                  const skill = id ? skillMap.get(id) : undefined;
+                  return (
+                    <GameBuildSlot
+                      key={id ?? `skill-empty-${index}`}
+                      icon={skill?.icon}
+                      label={id ? displayName(skill?.name, `技能 ${id}`) : "空技能槽"}
+                      badge={id ? `最高 ${skill?.iMaxLevel ?? "-"}` : undefined}
+                      empty={!id}
+                      details={id ? [skillDetails.get(id) || "暂无技能描述", `技能编号 ${id}`, `最高等级 ${skill?.iMaxLevel ?? "-"}`] : undefined}
                     />
-                    <div className="build-config-lines">
-                      <span>
-                        副属性：{config.subAttributeIds.join("、") || "未选择"}
-                      </span>
-                      <span>
-                        印记效果：{config.markEffectIds.join("、") || "未选择"}
-                      </span>
-                      {resonance ? (
-                        <span>
-                          共振：
-                          {displayName(resonance.name, `共振 ${resonance.iID}`)}
-                        </span>
-                      ) : null}
-                    </div>
-                  </article>
-                );
-              })}
-            {build.souls.filter((config) => config.soulId).length === 0 ? (
-              <span className="build-section-empty">暂无残响配置</span>
-            ) : null}
+                  );
+                })}
+              </div>
+            </GameBuildPanel>
+
+            <GameBuildPanel icon={Shield} title="装备">
+              <div className="game-build-slots game-build-slots--equipment">
+                {equipmentSlots.map((slot) => {
+                  const config = build.equipment.find((item) => item.slotKey === slot.key) ?? EMPTY_BUILD.equipment.find((item) => item.slotKey === slot.key) ?? EMPTY_BUILD.equipment[0];
+                  const item = equipmentMap.get(config.equipmentId);
+                  const lines = item
+                    ? [
+                        `品质 ${config.quality || item.item?.iQuality || "-"} · 使用等级 ${item.item?.iLevelNeed ?? "-"}`,
+                        ...(item.kBasicAttribute ?? []).map(([attributeId, min, max]) => {
+                          const name = displayName(data.equipment.attrs.attributes.find((attribute) => attribute.iID === attributeId)?.name, `属性 ${attributeId}`);
+                          return `${name} +${min}${max !== min ? `~${max}` : ""}`;
+                        }),
+                        ...config.normalEntryIds.map((id) => `词条 · ${entryLabel(data.equipment.attrs, id)}`),
+                        ...config.specialEffectIds.map((id) => `特技 · ${displayName(data.equipment.attrs.specialEffects.find((effect) => effect.iID === id)?.name, `特殊效果 ${id}`)}`),
+                        item.desc?.["zh-CN"] || "暂无装备说明",
+                      ]
+                    : undefined;
+                  return <GameBuildSlot key={slot.key} icon={item?.icon} label={item ? displayName(item.name, slot.label) : slot.label} badge={item ? `T${config.quality || item.item?.iQuality || "-"}` : undefined} empty={!item} details={lines} />;
+                })}
+              </div>
+            </GameBuildPanel>
+
+            <GameBuildPanel icon={PawPrint} title="宠物">
+              <div className="game-pet-roster">
+                <span>出战</span>
+                <div className="game-build-slots game-build-slots--pets">
+                  {Array.from({ length: 4 }, (_, index) => {
+                    const id = build.petCombatIds[index];
+                    const pet = id ? petMap.get(id) : undefined;
+                    return <GameBuildSlot key={id ?? `combat-empty-${index}`} icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? petDetails(id) : undefined} portrait />;
+                  })}
+                </div>
+                <span>助战</span>
+                <div className="game-build-slots game-build-slots--pets">
+                  {Array.from({ length: 5 }, (_, index) => {
+                    const id = build.petAssistIds[index];
+                    const pet = id ? petMap.get(id) : undefined;
+                    return <GameBuildSlot key={id ?? `assist-empty-${index}`} icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空助战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? petDetails(id) : undefined} portrait />;
+                  })}
+                </div>
+              </div>
+            </GameBuildPanel>
+
+            <GameBuildPanel icon={Gem} title="灵魂残响">
+              <div className="game-build-slots game-build-slots--souls">
+                {Array.from({ length: 5 }, (_, index) => {
+                  const config = build.souls[index];
+                  const soul = config?.soulId ? soulMap.get(config.soulId) : undefined;
+                  const resonance = config?.resonanceId ? resonanceMap.get(config.resonanceId) : undefined;
+                  const primary = soul?.primaryAttributes?.map((attribute) => {
+                    const name = displayName(data.souls.souls.attributes.find((item) => item.iID === attribute.attributeId)?.name, `属性 ${attribute.attributeId}`);
+                    return `${name} +${attribute.min}${attribute.max !== attribute.min ? `~${attribute.max}` : ""}`;
+                  }) ?? [];
+                  return <GameBuildSlot key={config?.slotIndex ?? `soul-empty-${index}`} icon={soul?.icon} label={soul ? displayName(soul.name, `残响 ${config.soulId}`) : "空残响槽"} badge={soul ? `品质 ${soul.quality ?? "-"}` : undefined} empty={!soul} details={soul ? [...primary, resonance ? `共振 · ${displayName(resonance.name, `共振 ${resonance.iID}`)}` : "未指定共振", soul.desc?.["zh-CN"] || "暂无残响说明"] : undefined} />;
+                })}
+              </div>
+            </GameBuildPanel>
           </div>
-        </BuildSection>
+
+          <div className="game-build-column game-build-column--right">
+            <GameBuildPanel icon={Zap} title="属性加点">
+              <div className="game-build-attributes">
+                {Object.entries(build.attributes).map(([key, value]) => <div key={key}><span>{key}</span><strong>{value}</strong></div>)}
+              </div>
+            </GameBuildPanel>
+
+            <GameBuildPanel icon={BookOpen} title="卡片">
+              <div className="game-build-slots game-build-slots--cards">
+                {Array.from({ length: Math.max(12, equippedCards.length) }, (_, index) => {
+                  const selected = equippedCards[index];
+                  const card = selected ? cardMap.get(selected.cardId) : undefined;
+                  const tier = card?.tiers[0];
+                  const attributes = tier?.attributes.map(([attributeId, value]) => {
+                    const name = localizedText(data.cards.attributes.find((attribute) => attribute.id === attributeId)?.name) || `属性 ${attributeId}`;
+                    return `${name} +${value}`;
+                  }) ?? [];
+                  const effects = (tier?.specialEffects ?? []).map((id) => cardEffectMap.get(id)).filter(Boolean) as string[];
+                  const part = selected ? EQUIPMENT_SLOTS.find((slot) => slot.key === selected.slotKey)?.label : undefined;
+                  return <GameBuildSlot key={`${selected?.cardId ?? "empty"}-${index}`} icon={card?.icon} label={card ? localizedText(card.name) || `卡片 ${card.id}` : "空卡槽"} badge={part} empty={!card} details={card ? [`品质 ${card.quality} · ${part ?? "未知部位"}`, ...attributes, ...effects, localizedText(card.description) || "暂无卡片说明"] : undefined} card />;
+                })}
+              </div>
+            </GameBuildPanel>
+
+            <GameBuildPanel icon={Sparkles} title="天赋">
+              <div className="game-build-slots game-build-slots--talents">
+                {Array.from({ length: Math.max(5, build.talentIds.length) }, (_, index) => {
+                  const id = build.talentIds[index];
+                  const talent = id ? talentMap.get(id) : undefined;
+                  const level = talent?.levels?.[0] ? data.talents.talents.seasonTalents.levels.find((item) => item.iId === talent.levels?.[0]) : undefined;
+                  const attrLines = level?.kAttrs?.map(([attributeId, value]) => {
+                    const name = displayName(data.talents.talents.attributes.find((attribute) => attribute.iID === attributeId)?.name, `属性 ${attributeId}`);
+                    return `${name} +${value}`;
+                  }) ?? [];
+                  return <GameBuildSlot key={id ?? `talent-empty-${index}`} icon={level?.icon} label={id ? displayName(talent?.name ?? level?.name, `天赋节点 ${id}`) : "空天赋槽"} badge={talent ? `上限 ${talent.iMaxLevel ?? "-"}` : undefined} empty={!talent} details={talent ? [`节点编号 ${id}`, ...attrLines] : undefined} diamond />;
+                })}
+              </div>
+            </GameBuildPanel>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1620,30 +1537,6 @@ function SoulConfigEditor({
   );
 }
 
-function BuildSection({
-  icon: Icon,
-  title,
-  action,
-  children,
-}: {
-  icon: typeof Swords;
-  title: string;
-  action?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section className="build-section">
-      <header>
-        <span>
-          <Icon aria-hidden="true" />
-          {title}
-        </span>
-        {action}
-      </header>
-      {children}
-    </section>
-  );
-}
 function EditorSection({
   icon: Icon,
   title,
@@ -1668,32 +1561,55 @@ function EditorSection({
     </section>
   );
 }
-function BuildChip({
+function GameBuildPanel({
+  icon: Icon,
+  title,
+  action,
+  children,
+}: {
+  icon: typeof Swords;
+  title: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="game-build-panel">
+      <header>
+        <span><Icon aria-hidden="true" />{title}</span>
+        {action}
+      </header>
+      {children}
+    </section>
+  );
+}
+function GameBuildSlot({
   icon,
   label,
-  meta,
+  badge,
   details,
+  empty = false,
+  portrait = false,
+  card = false,
+  diamond = false,
 }: {
   icon?: string;
   label: string;
-  meta: string;
+  badge?: string;
   details?: string[];
+  empty?: boolean;
+  portrait?: boolean;
+  card?: boolean;
+  diamond?: boolean;
 }) {
   return (
-    <span className={`build-chip${details?.length ? " build-hover-target" : ""}`}>
-      {icon ? (
-        <img src={resourceUrl(icon)} alt="" />
-      ) : (
-        <span className="build-chip-placeholder">
-          <Sparkles aria-hidden="true" />
-        </span>
-      )}
-      <span>
-        <strong>{label}</strong>
-        <small>{meta}</small>
-      </span>
+    <div className={`game-build-slot${empty ? " is-empty" : ""}${portrait ? " is-portrait" : ""}${card ? " is-card" : ""}${diamond ? " is-diamond" : ""}`} tabIndex={details?.length ? 0 : undefined}>
+      <div className="game-build-slot-frame">
+        {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" /> : <span className="game-build-slot-empty-mark">＋</span>}
+        {badge ? <small>{badge}</small> : null}
+      </div>
+      <strong>{label}</strong>
       {details?.length ? <BuildHoverCard title={label} lines={details} /> : null}
-    </span>
+    </div>
   );
 }
 function BuildHoverCard({ title, lines }: { title: string; lines: string[] }) {

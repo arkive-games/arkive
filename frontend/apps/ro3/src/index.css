@@ -1172,6 +1172,54 @@
 .build-equipment-modal-close svg { width: 1rem; height: 1rem; }
 .build-equipment-modal .equipment-choice-grid { max-height: 16rem; }
 
+/* The viewer mirrors the compact in-client build manual: framed paper panels,
+   square slots, and dense two-column information hierarchy. */
+.game-build-manual { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; border: 1px solid rgba(121, 100, 68, .35); background: rgba(245, 237, 215, .72) url('./assets/native-ui/card_bg_007.png') 0 0 / 10rem auto repeat; }
+.game-build-column { min-width: 0; }
+.game-build-column--left { border-right: 1px solid rgba(121, 100, 68, .32); }
+.game-build-panel { min-width: 0; border-bottom: 1px solid rgba(121, 100, 68, .28); background: rgba(250, 245, 228, .54) url('./assets/native-ui/skill_bg_frame.png') center / 100% 100% no-repeat; }
+.game-build-panel:last-child { border-bottom: 0; }
+.game-build-panel > header { display: flex; min-height: 2.35rem; align-items: center; justify-content: space-between; gap: .5rem; padding: .35rem .65rem; border-bottom: 1px solid rgba(121, 100, 68, .24); background: url('./assets/native-ui/skill_bg_title_02.png') center / 100% 100% no-repeat; color: #59462c; }
+.game-build-panel > header > span { display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; font-weight: 900; }
+.game-build-panel > header svg { width: 1rem; height: 1rem; color: #7d5b2a; }
+.game-build-panel > header button { display: inline-grid; width: 1.7rem; height: 1.7rem; place-items: center; border: 1px solid rgba(121, 100, 68, .35); border-radius: 50%; color: #6a512a; background: rgba(255, 248, 221, .65); cursor: pointer; }
+.game-build-panel > header button:hover, .game-build-panel > header button:focus-visible { border-color: #b77d27; background: #e8ce91; outline: 0; }
+.game-build-panel > header button svg { width: .95rem; height: .95rem; }
+.game-build-panel > *:not(header) { padding: .65rem; }
+.game-build-slots { display: grid; gap: .5rem; }
+.game-build-slots--skills { grid-template-columns: repeat(6, minmax(3.2rem, 1fr)); }
+.game-build-slots--equipment { grid-template-columns: repeat(4, minmax(4.5rem, 1fr)); }
+.game-build-slots--pets { grid-template-columns: repeat(5, minmax(3.5rem, 1fr)); }
+.game-build-slots--souls { grid-template-columns: repeat(5, minmax(3.5rem, 1fr)); }
+.game-build-slots--cards { grid-template-columns: repeat(6, minmax(3.3rem, 1fr)); }
+.game-build-slots--talents { grid-template-columns: repeat(5, minmax(3.7rem, 1fr)); }
+.game-build-slot { position: relative; display: grid; min-width: 0; justify-items: center; gap: .22rem; color: #5f4a2d; cursor: help; }
+.game-build-slot:focus-visible { outline: 2px solid #b77d27; outline-offset: .15rem; }
+.game-build-slot-frame { position: relative; display: grid; width: 3.45rem; height: 3.45rem; place-items: center; overflow: hidden; border: 2px solid rgba(162, 118, 46, .7); background: #e6d7b5 url('./assets/native-ui/skill_bg_title_03.png') center / 100% 100% no-repeat; box-shadow: inset 0 0 0 1px rgba(255, 249, 226, .65); }
+.game-build-slot-frame img { width: 100%; height: 100%; object-fit: contain; }
+.game-build-slot-frame small { position: absolute; right: .1rem; bottom: .05rem; padding: .02rem .14rem; color: #fff8e4; background: rgba(71, 52, 29, .8); font-size: .56rem; font-weight: 900; line-height: 1.2; }
+.game-build-slot-empty-mark { color: rgba(129, 106, 72, .42); font-size: 1.5rem; font-weight: 300; }
+.game-build-slot.is-empty .game-build-slot-frame { border-style: dashed; opacity: .7; }
+.game-build-slot strong { width: 100%; overflow: hidden; color: #655034; font-size: .62rem; font-weight: 800; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.game-build-slot.is-portrait .game-build-slot-frame { border-radius: 50%; }
+.game-build-slot.is-card .game-build-slot-frame { width: 3.2rem; height: 4rem; border-width: 1px; }
+.game-build-slot.is-diamond .game-build-slot-frame { transform: rotate(45deg); border-color: rgba(126, 94, 40, .84); }
+.game-build-slot.is-diamond .game-build-slot-frame img, .game-build-slot.is-diamond .game-build-slot-frame small { transform: rotate(-45deg); }
+.game-build-attributes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
+.game-build-attributes > div { display: flex; align-items: center; justify-content: space-between; min-height: 2rem; padding: .3rem .45rem; background: rgba(224, 212, 183, .55); }
+.game-build-attributes span { color: #705c42; font-size: .66rem; font-weight: 800; }
+.game-build-attributes strong { color: #755020; font-size: .85rem; }
+.game-pet-roster { display: grid; gap: .35rem; }
+.game-pet-roster > span { color: #876a3d; font-size: .64rem; font-weight: 900; }
+.game-pet-roster .game-build-slots { padding: 0; }
+.game-hover-card, .game-build-slot > .build-hover-card { left: 50%; bottom: calc(100% + .5rem); transform: translate(-50%, .25rem); }
+.game-build-slot:hover > .build-hover-card, .game-build-slot:focus-within > .build-hover-card { transform: translate(-50%, 0); }
+
+@media (max-width: 56rem) {
+  .game-build-manual { grid-template-columns: 1fr; }
+  .game-build-column--left { border-right: 0; }
+}
+
 @media (max-width: 48rem) {
   .ro3-builds-page { padding-top: 0.6rem; }
   .build-planner { width: calc(100% - 1rem); }
@@ -1195,6 +1243,9 @@
   .build-equipment-modal .build-config-editor-head { grid-template-columns: minmax(0, 1fr) auto; }
   .build-equipment-modal .build-config-editor-head small { grid-column: 1; grid-row: 2; }
   .build-equipment-modal-close { grid-column: 2; grid-row: 1 / span 2; }
+  .game-build-slots--skills { grid-template-columns: repeat(3, minmax(3.2rem, 1fr)); }
+  .game-build-slots--cards { grid-template-columns: repeat(4, minmax(3.3rem, 1fr)); }
+  .game-build-slots--equipment { grid-template-columns: repeat(3, minmax(4.2rem, 1fr)); }
 }
 
 @media (max-width: 48rem) {
