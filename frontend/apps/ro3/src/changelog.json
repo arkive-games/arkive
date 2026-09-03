@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.14",
+      "date": "2026-09-03",
+      "commit": "3ac1578cf9389eaa7f489fa2a8d46cd5776fa812",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Use the game talent icons in build editor selections.",
+            "zh-CN": "在流派编辑器中使用游戏包体的天赋图标。",
+            "zh-TW": "在流派編輯器中使用遊戲包體的天賦圖示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.13",
       "date": "2026-09-03",
       "commit": "3049af3ac143a99cbd96faf12b8ba2f491ca6ff9",
