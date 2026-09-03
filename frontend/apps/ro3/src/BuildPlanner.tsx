@@ -37,6 +37,7 @@ import {
   type ProfessionRoute,
 } from "./professionCatalog";
 import content from "./locales/zh-CN.json";
+import nativeSlotAdd from "./assets/native-ui/genre/genremanual_img_add_01.webp";
 
 type BuildMode = "view" | "edit";
 export interface EquipmentBuildConfig {
@@ -715,6 +716,7 @@ function BuildViewer({
                   return (
                     <GameBuildSlot
                       key={id ?? `skill-empty-${index}`}
+                      kind="skill"
                       icon={skill?.icon}
                       label={id ? displayName(skill?.name, `技能 ${id}`) : "空技能槽"}
                       badge={id ? `最高 ${skill?.iMaxLevel ?? "-"}` : undefined}
@@ -743,7 +745,7 @@ function BuildViewer({
                         item.desc?.["zh-CN"] || "暂无装备说明",
                       ]
                     : undefined;
-                  return <GameBuildSlot key={slot.key} icon={item?.icon} label={item ? displayName(item.name, slot.label) : slot.label} badge={item ? `T${config.quality || item.item?.iQuality || "-"}` : undefined} empty={!item} details={lines} />;
+                  return <GameBuildSlot key={slot.key} kind="equipment" icon={item?.icon} label={item ? displayName(item.name, slot.label) : slot.label} badge={item ? `T${config.quality || item.item?.iQuality || "-"}` : undefined} empty={!item} details={lines} />;
                 })}
               </div>
             </GameBuildPanel>
@@ -756,7 +758,7 @@ function BuildViewer({
                     const id = build.petCombatIds[index];
                     const pet = id ? petMap.get(id) : undefined;
                     const effects = id ? petEffectLines(id, "combat") : undefined;
-                    return <GameBuildSlot key={id ?? `combat-empty-${index}`} icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
+                    return <GameBuildSlot key={id ?? `combat-empty-${index}`} kind="pet" icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
                   })}
                 </div>
                 <span>助战</span>
@@ -765,7 +767,7 @@ function BuildViewer({
                     const id = build.petAssistIds[index];
                     const pet = id ? petMap.get(id) : undefined;
                     const effects = id ? petEffectLines(id, "assist") : undefined;
-                    return <GameBuildSlot key={id ?? `assist-empty-${index}`} icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空助战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
+                    return <GameBuildSlot key={id ?? `assist-empty-${index}`} kind="pet" icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空助战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
                   })}
                 </div>
               </div>
@@ -801,7 +803,7 @@ function BuildViewer({
                   const soulEffects = soul
                     ? [...primary.slice(0, 1), ...resonanceAttributes.slice(0, 1), resonanceLine, ...markLines.slice(0, 1)].filter(Boolean)
                     : undefined;
-                  return <GameBuildSlot key={config?.slotIndex ?? `soul-empty-${index}`} icon={soul?.icon} label={soul ? displayName(soul.name, `残响 ${config.soulId}`) : "空残响槽"} badge={soul ? `品质 ${soul.quality ?? "-"}` : undefined} empty={!soul} effects={soulEffects} details={soul ? [...primary, ...resonanceAttributes, resonanceLine, ...markLines, soul.desc?.["zh-CN"] || "暂无残响说明"] : undefined} />;
+                  return <GameBuildSlot key={config?.slotIndex ?? `soul-empty-${index}`} kind="soul" icon={soul?.icon} label={soul ? displayName(soul.name, `残响 ${config.soulId}`) : "空残响槽"} badge={soul ? `品质 ${soul.quality ?? "-"}` : undefined} empty={!soul} effects={soulEffects} details={soul ? [...primary, ...resonanceAttributes, resonanceLine, ...markLines, soul.desc?.["zh-CN"] || "暂无残响说明"] : undefined} />;
                 })}
               </div>
             </GameBuildPanel>
@@ -835,7 +837,7 @@ function BuildViewer({
                               }) ?? [];
                               const effects = (tier?.specialEffects ?? []).map((id) => cardEffectMap.get(id)).filter(Boolean) as string[];
                               const part = selected ? EQUIPMENT_SLOTS.find((slot) => slot.key === selected.slotKey)?.label : undefined;
-                              return <GameBuildSlot key={`${groupStart + index}-${selected?.cardId ?? "empty"}`} icon={card?.icon} label={card ? localizedText(card.name) || `卡片 ${card.id}` : "空卡槽"} badge={part} empty={!card} details={card ? [`品质 ${card.quality} · ${part ?? "未知部位"}`, ...attributes, ...effects, localizedText(card.description) || "暂无卡片说明"] : undefined} card />;
+                              return <GameBuildSlot key={`${groupStart + index}-${selected?.cardId ?? "empty"}`} kind="card" icon={card?.icon} label={card ? localizedText(card.name) || `卡片 ${card.id}` : "空卡槽"} badge={part} empty={!card} details={card ? [`品质 ${card.quality} · ${part ?? "未知部位"}`, ...attributes, ...effects, localizedText(card.description) || "暂无卡片说明"] : undefined} card />;
                             })}
                           </div>
                         );
@@ -856,7 +858,7 @@ function BuildViewer({
                     const name = displayName(data.talents.talents.attributes.find((attribute) => attribute.iID === attributeId)?.name, `属性 ${attributeId}`);
                     return `${name} +${value}`;
                   }) ?? [];
-                  return <GameBuildSlot key={id ?? `talent-empty-${index}`} icon={level?.icon} label={id ? displayName(talent?.name ?? level?.name, `天赋节点 ${id}`) : "空天赋槽"} badge={talent ? `上限 ${talent.iMaxLevel ?? "-"}` : undefined} empty={!talent} details={talent ? [`节点编号 ${id}`, ...attrLines] : undefined} diamond />;
+                  return <GameBuildSlot key={id ?? `talent-empty-${index}`} kind="talent" icon={level?.icon} label={id ? displayName(talent?.name ?? level?.name, `天赋节点 ${id}`) : "空天赋槽"} badge={talent ? `上限 ${talent.iMaxLevel ?? "-"}` : undefined} empty={!talent} details={talent ? [`节点编号 ${id}`, ...attrLines] : undefined} diamond />;
                 })}
               </div>
             </GameBuildPanel>
@@ -1643,6 +1645,7 @@ function GameBuildPanel({
 function GameBuildSlot({
   icon,
   label,
+  kind,
   badge,
   details,
   effects,
@@ -1653,6 +1656,7 @@ function GameBuildSlot({
 }: {
   icon?: string;
   label: string;
+  kind?: "skill" | "equipment" | "pet" | "card" | "talent" | "soul";
   badge?: string;
   details?: string[];
   effects?: string[];
@@ -1662,9 +1666,9 @@ function GameBuildSlot({
   diamond?: boolean;
 }) {
   return (
-    <div className={`game-build-slot${empty ? " is-empty" : ""}${portrait ? " is-portrait" : ""}${card ? " is-card" : ""}${diamond ? " is-diamond" : ""}`} tabIndex={details?.length ? 0 : undefined}>
+    <div className={`game-build-slot${empty ? " is-empty" : ""}${portrait ? " is-portrait" : ""}${card ? " is-card" : ""}${diamond ? " is-diamond" : ""}${kind ? ` is-${kind}` : ""}`} tabIndex={details?.length ? 0 : undefined}>
       <div className="game-build-slot-frame">
-        {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" /> : <span className="game-build-slot-empty-mark">＋</span>}
+        {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" /> : <img className="game-build-slot-empty-art" src={nativeSlotAdd} alt="" />}
         {badge ? <small>{badge}</small> : null}
       </div>
       <strong>{label}</strong>

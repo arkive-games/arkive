@@ -1232,6 +1232,115 @@
 .game-build-slot > .build-hover-card { z-index: 999; visibility: hidden; }
 .game-build-slot:hover > .build-hover-card, .game-build-slot:focus-within > .build-hover-card { visibility: visible; }
 
+/* Native GenreManual surfaces extracted from the client.  These assets carry
+   the game's paper grain, inset corners, and gold trim; layout remains fluid
+   while each slot uses the same art treatment as the in-client manual. */
+.game-build-manual {
+  border: 0;
+  background-color: #eee5d1;
+  background-image: url('./assets/native-ui/genre/genremanual_bg_05.webp');
+  background-repeat: repeat;
+  background-size: 6.25rem 14.25rem;
+}
+.game-build-column--left { border-right-color: rgba(121, 100, 68, .2); }
+.game-build-panel {
+  border-bottom-color: rgba(121, 100, 68, .2);
+  background-color: rgba(250, 246, 231, .44);
+  background-image: none;
+}
+.game-build-panel > header {
+  position: relative;
+  min-height: 2.1rem;
+  padding-inline: .8rem;
+  border-bottom: 0;
+  background-color: rgba(248, 238, 210, .78);
+  background-image: url('./assets/native-ui/genre/genremanual_bg_name_01.webp');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 2rem;
+}
+.game-build-panel > header::after {
+  content: "";
+  position: absolute;
+  right: .6rem;
+  bottom: -.35rem;
+  width: 3.2rem;
+  height: 2rem;
+  pointer-events: none;
+  background: url('./assets/native-ui/genre/genremanual_img_title_line.webp') center / 100% 100% no-repeat;
+  opacity: .7;
+}
+.game-build-panel > header > span { position: relative; z-index: 1; color: #5d4525; }
+.game-build-panel > header > span svg { color: #92702e; }
+.game-build-panel > *:not(header) { padding: .7rem .8rem; }
+.game-build-slot-frame {
+  box-sizing: border-box;
+  width: 4.35rem;
+  height: 4.35rem;
+  padding: .42rem;
+  border: 0;
+  background-color: transparent;
+  background-image: url('./assets/native-ui/genre/genremanual_img_title_02.webp');
+  background-position: center;
+  background-size: 100% 100%;
+  box-shadow: none;
+}
+.game-build-slot-frame img:not(.game-build-slot-empty-art) { width: 100%; height: 100%; object-fit: contain; }
+.game-build-slot-empty-art { width: 1.55rem !important; height: 1.55rem !important; opacity: .6; }
+.game-build-slot-frame small {
+  right: .26rem;
+  bottom: .2rem;
+  padding: .05rem .18rem;
+  border: 1px solid rgba(148, 111, 45, .38);
+  color: #76531f;
+  background: rgba(250, 238, 201, .9);
+  font-size: .54rem;
+}
+.game-build-slot.is-equipment .game-build-slot-frame {
+  width: 4.5rem;
+  height: 4.5rem;
+  padding: .28rem;
+  background-image: url('./assets/native-ui/genre/genremanual_img_equip_bar_01.webp');
+}
+.game-build-slot.is-skill .game-build-slot-frame { background-image: url('./assets/native-ui/genre/genremanual_img_title_02.webp'); }
+.game-build-slot.is-pet .game-build-slot-frame,
+.game-build-slot.is-soul .game-build-slot-frame {
+  width: 4.15rem;
+  height: 4.05rem;
+  padding: .38rem;
+  background-image: url('./assets/native-ui/genre/genremanual_img_title_04.webp');
+}
+.game-build-slot.is-card .game-build-slot-frame {
+  width: 3.45rem;
+  height: 3.7rem;
+  padding: .43rem;
+  border: 0;
+  background-image: url('./assets/native-ui/genre/genremanual_bg_property_10.webp');
+  background-size: 100% 100%;
+}
+.game-build-slot.is-card:not(.is-empty) .game-build-slot-frame { background-image: url('./assets/native-ui/genre/genremanual_bg_select_01.webp'); }
+.game-build-slot.is-talent .game-build-slot-frame {
+  width: 4.2rem;
+  height: 4.2rem;
+  padding: .65rem;
+  background-image: url('./assets/native-ui/genre/genremanual_img_talent_01.webp');
+}
+.game-build-slot.is-portrait .game-build-slot-frame { border-radius: 0; }
+.game-build-slot.is-diamond .game-build-slot-frame,
+.game-build-slot.is-diamond .game-build-slot-frame img,
+.game-build-slot.is-diamond .game-build-slot-frame small { transform: none; }
+.game-build-slot strong { color: #5d4525; font-size: .64rem; }
+.game-build-slot.is-card strong {
+  box-sizing: border-box;
+  width: 100%;
+  padding: .12rem .22rem;
+  color: #5d4525;
+  background: url('./assets/native-ui/genre/genremanual_bg_name_01.webp') center / 100% 100% no-repeat;
+}
+.game-build-slot-effects { color: #80632f; }
+.game-build-slot.is-empty .game-build-slot-frame { border: 0; opacity: .74; }
+.game-card-fixed-group { gap: .5rem; }
+
 @media (max-width: 56rem) {
   .game-build-manual { grid-template-columns: 1fr; }
   .game-build-column--left { border-right: 0; }
