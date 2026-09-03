@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.10",
+      "date": "2026-09-03",
+      "commit": "0df8db8c9d422bd92277329a46b5a2c4eb29d1f3",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Named profession advancement stages as first, second, advanced second, and third class changes.",
+            "zh-CN": "将职业阶段明确标注为一转、二转、进阶二转和三转。",
+            "zh-TW": "將職業階段明確標註為一轉、二轉、進階二轉和三轉。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.9",
       "date": "2026-09-03",
       "commit": "3008694918f11e4ed77b5e9054a5be0ebeee14d9",
