@@ -287,6 +287,20 @@ export function extraordinaryBonus(count: number): number {
   return 100 * count * (count + 1)
 }
 
+/**
+ * How many affixes a piece in this slot can carry: five on a weapon, four
+ * anywhere else. The client's constants put the fifth word behind the mythic
+ * weapon (`RANDOM_WORD_LIMIT_WHEN_NOTWARE_MYTHWEAPON` is 4, and only
+ * `RANDOM_WORD_POSITION_5` reaches five), so the weapon is the only slot that
+ * gets it. The weapon slot is read off the pathways rather than assumed to be
+ * slot 1: it is whichever slot the class-locked weapon subtypes belong to.
+ */
+export function maxAffixesFor(equipment: Equipment, slot: number): number {
+  const weaponTypes = new Set(equipment.professions.flatMap((profession) => profession.weaponTypeIds))
+  const isWeaponSlot = equipment.types.some((type) => type.slot === slot && weaponTypes.has(type.id))
+  return isWeaponSlot ? 5 : 4
+}
+
 /* ------------------------------------------------------------------- grace */
 
 /**

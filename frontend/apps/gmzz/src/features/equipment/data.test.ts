@@ -14,6 +14,7 @@ import {
   ladderFor,
   markForValue,
   markRate,
+  maxAffixesFor,
   maxStageFor,
   progressBounds,
   progressOf,
@@ -372,6 +373,15 @@ describe('toNearestFive', () => {
     expect(toNearestFive(3483)).toBe(3485)
     expect(toNearestFive(-244)).toBe(-245)
     expect(toNearestFive(0)).toBe(0)
+  })
+})
+
+describe('maxAffixesFor', () => {
+  it('allows five affixes on the weapon slot and four elsewhere', () => {
+    // Slot 1 is where the pathways' weapon subtype (302) lives.
+    expect(maxAffixesFor(EQUIPMENT, 1)).toBe(5)
+    expect(maxAffixesFor(EQUIPMENT, 12)).toBe(4)
+    expect(maxAffixesFor(EQUIPMENT, 99)).toBe(4)
   })
 })
 

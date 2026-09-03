@@ -14,6 +14,7 @@ import {
   evaluatePiece,
   familiesFor,
   itemsForSlot,
+  maxAffixesFor,
   maxStageFor,
   newPiece,
   progressBounds,
@@ -55,7 +56,6 @@ const SUIT_KIND_KEY: Record<string, string> = {
   竞技套装: 'equip.kindArena',
 }
 
-const MAX_AFFIXES = 5
 /** Every grace tops out at four extraordinary affixes, so the pip row is fixed. */
 const GRACE_PIPS = 4
 /** A sanity ceiling for the hand-typed affix values; the game has no real one. */
@@ -75,9 +75,9 @@ const BADGE_CLASS =
   'inline-block shrink-0 rounded border border-border px-1 align-middle text-xs font-medium leading-4 text-muted-foreground'
 const PIP_ON = 'text-[color:var(--arkive-nav-accent)]'
 const PIP_OFF = 'text-muted-foreground/40'
-/** One affix: pip, stat, value, Mark, remove. */
+/** One affix: pip, then stat, value and Mark in three equal columns so the rows read as a table, then remove. */
 const AFFIX_ROW_CLASS =
-  'grid min-w-0 grid-cols-[auto_minmax(3.5rem,1fr)_minmax(3.5rem,4rem)_auto_auto] items-center gap-1'
+  'grid min-w-0 grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1'
 /**
  * The rows layout's columns: item, stats, enhancement, affixes, brand. Shared
  * by the header and every row so the two cannot drift apart. Five columns only
@@ -160,7 +160,7 @@ function sanitizePiece(equipment: Equipment, piece: PieceState, professionId: nu
     refinePercent: enhanceStage === 0 ? 0 : Math.min(Math.max(Math.trunc(piece.refinePercent), 0), 100),
     affixes: piece.affixes
       .filter((affix) => families.includes(affix.family))
-      .slice(0, MAX_AFFIXES)
+      .slice(0, maxAffixesFor(equipment, piece.slot))
       .map((affix) => ({ family: affix.family, value: readInt(affix.value, -SCORE_CAP, SCORE_CAP) })),
   }
 }
@@ -211,6 +211,13 @@ function Cell({
 
 type FieldProps = { label: string; testId: string }
 
+/**
+ * An integer field that may be left blank. Blank means 0, but the box is not
+ * snapped to "0" while it is being edited: clearing it to retype would
+ * otherwise leave a "0" the next digits append to. `draft` holds the raw text
+ * while the field has focus and is dropped on blur, so an outside change still
+ * shows through.
+ */
 function NumberField({
   value,
   min,
@@ -219,15 +226,21 @@ function NumberField({
   testId,
   onValue,
 }: FieldProps & { value: number; min: number; max: number; onValue: (value: number) => void }) {
+  const [draft, setDraft] = useState<string | null>(null)
   return (
     <Input
       type="number"
       inputMode="numeric"
       min={min}
       max={max}
-      value={value}
+      value={draft ?? (value === 0 ? '' : value)}
       placeholder="0"
-      onChange={(event) => onValue(readInt(event.target.value, min, max))}
+      onChange={(event) => {
+        const raw = event.target.value
+        setDraft(raw)
+        onValue(raw.trim() === '' ? 0 : readInt(raw, min, max))
+      }}
+      onBlur={() => setDraft(null)}
       className={INPUT_CLASS}
       aria-label={label}
       data-testid={testId}
@@ -356,38 +369,38 @@ function IconPlaceholder({ item }: { item: EquipItem | null }) {
       src={item ? equipmentIconUrl(item.icon) : undefined}
       alt={item?.name ?? ''}
       label="?"
+      className="size-14"
     />
   )
 }
 
 /**
- * Name, `+stage`, PVE/PVP marker, subtitle and the score — shared by both
- * layouts. The score is the total with its three parts under it, in the order
- * the game's own tabs use, so 重塑 is read on its own rather than folded into
- * "everything but the base".
+ * The piece's card face, one fact a line: name with `+stage`, the PVE/PVP
+ * marker, subtype and gear level, then the total and its three parts in the
+ * order the game's own tabs use — so 重塑 is read on its own rather than folded
+ * into "everything but the base". Shared by both layouts.
  */
 function PieceHeader({ result, kind, subtitle }: { result: PieceResult; kind: string; subtitle: string }) {
   const { t } = useTranslation()
+  const parts: [string, number][] = [
+    ['equip.subtotalBase', result.baseScore],
+    ['equip.subtotalEnhance', result.enhanceScore],
+    ['equip.subtotalReforge', result.reforgeScore],
+  ]
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 text-xs leading-5">
       <div className="truncate text-sm font-bold text-foreground">
         {result.item ? result.item.name : t('equip.emptySlot')}
         <span className="ml-1 tabular-nums text-muted-foreground">+{result.state.enhanceStage}</span>
       </div>
-      {/* The marker sits on the short line: a long name already truncates, and it must not take the marker with it. */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <span className="truncate">{subtitle}</span>
-        {kind ? <span className={BADGE_CLASS}>{kind}</span> : null}
-      </div>
-      <div className="text-xs tabular-nums text-muted-foreground" data-testid={`equip-score-${result.state.slot}`}>
-        <span className="block font-semibold text-foreground">{t('equip.pieceScore', { score: result.total.toLocaleString() })}</span>
-        {/* Three spans rather than one string, so a narrow column wraps between
-            the parts instead of splitting a figure from its name. */}
-        <span className="flex flex-wrap gap-x-1.5">
-          <span>{t('equip.subtotalBase', { value: result.baseScore.toLocaleString() })}</span>
-          <span>{t('equip.subtotalEnhance', { value: result.enhanceScore.toLocaleString() })}</span>
-          <span>{t('equip.subtotalReforge', { value: result.reforgeScore.toLocaleString() })}</span>
-        </span>
+      {/* The marker keeps its line even when there is none, so the lines below sit at the same height on every piece. */}
+      <div className="h-5">{kind ? <span className={BADGE_CLASS}>{kind}</span> : null}</div>
+      <div className="truncate text-muted-foreground">{subtitle}</div>
+      <div className="tabular-nums" data-testid={`equip-score-${result.state.slot}`}>
+        <div className="font-semibold text-foreground">{t('equip.pieceScore', { score: result.total.toLocaleString() })}</div>
+        {parts.map(([key, value]) => (
+          <div key={key} className="text-muted-foreground">{t(key, { value: value.toLocaleString() })}</div>
+        ))}
       </div>
     </div>
   )
@@ -594,6 +607,7 @@ function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
   const { t } = useTranslation()
   const { slot } = result.state
   const affixes = result.affixes
+  const maxAffixes = maxAffixesFor(equipment, slot)
   const write = (next: ChosenAffix[]) => onPatch({ affixes: next })
   const plain = (list: ScoredAffix[]): ChosenAffix[] => list.map(({ family, value }) => ({ family, value }))
 
@@ -617,13 +631,13 @@ function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
           ))}
           <button
             type="button"
-            disabled={affixes.length >= MAX_AFFIXES}
+            disabled={affixes.length >= maxAffixes}
             onClick={() => write([...plain(affixes), affixFor(equipment, slot)])}
             className={`${BUTTON_CLASS} h-7 justify-self-start px-2`}
             data-testid={`equip-affix-add-${slot}`}
           >
             {/* `used` rather than `count`, which i18next reads as a plural selector. */}
-            {t('equip.addAffix', { used: affixes.length, max: MAX_AFFIXES })}
+            {t('equip.addAffix', { used: affixes.length, max: maxAffixes })}
           </button>
         </div>
         <ReforgeSummary result={result} />
@@ -653,6 +667,7 @@ function RowHeader() {
 function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: PieceProps) {
   const { t } = useTranslation()
   const controls: PieceControlProps = { equipment, result, onPatch }
+  const typeName = equipment.types.find((type) => type.id === result.item?.typeId)?.name ?? slotName
   return (
     <article
       className={`grid gap-2 rounded-md border border-border bg-card p-2.5 xl:items-center ${ROW_GRID}`}
@@ -669,7 +684,7 @@ function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: 
         <PieceHeader
           result={result}
           kind={kind}
-          subtitle={t('equip.slotAndLevel', { slot: slotName, level: result.item?.gearLevel ?? '—' })}
+          subtitle={t('equip.typeAndLevel', { type: typeName, level: result.item?.gearLevel ?? '—' })}
         />
       </button>
       <Cell label={t('equip.stats')} hidden><StatBlock equipment={equipment} result={result} /></Cell>
