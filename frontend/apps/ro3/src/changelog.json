@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.0",
+      "date": "2026-09-03",
+      "commit": "6c9d3a557aa565f7690f15ea4bd5c1ba96420a9d",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rebuilt the build viewer as a compact, game-style two-column manual with six skill slots, equipment and card grids, pet parties, talents, soul echoes, and client-data hover details.",
+            "zh-CN": "重构 BD 查看页为紧凑的游戏风格双栏流派手册：技能六格、装备与卡片网格、宠物队伍、天赋、灵魂残响及客户端数据悬浮详情。",
+            "zh-TW": "重構 BD 查看頁為緊湊的遊戲風格雙欄流派手冊：技能六格、裝備與卡片網格、寵物隊伍、天賦、靈魂殘響及客戶端資料懸浮詳情。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.13.1",
       "date": "2026-09-03",
       "commit": "817d9cb6340321dc62b409f74bee070957ddc632",
