@@ -6944,7 +6944,14 @@ select {
 }
 .game-pet-roster > .game-pet-effect-summary img { width: 2.1rem; height: 2.1rem; object-fit: contain; }
 .game-soul-row { grid-template-columns: minmax(0, 1fr) 7.2rem; gap: .55rem; }
-.game-build-slot.is-soul .game-soul-notes { width: 100%; box-sizing: border-box; }
+.game-build-slot.is-soul .game-soul-notes { width: 4.15rem; box-sizing: border-box; }
+
+/* Pair the equipment and talent surfaces, then the pet and card surfaces,
+   while the parent subgrid keeps each pair on a shared row height. */
+.game-build-column--right > .game-build-panel:nth-child(1) { order: 1; }
+.game-build-column--right > .game-build-panel:nth-child(3) { order: 2; }
+.game-build-column--right > .game-build-panel:nth-child(2) { order: 3; }
+.game-build-column--right > .game-build-panel:nth-child(4) { order: 4; }
 
 @media (min-width: 36rem) and (max-width: 56rem) {
   .game-build-slots--skills { grid-template-columns: repeat(6, minmax(3.2rem, 1fr)); }
