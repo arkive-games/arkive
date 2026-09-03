@@ -135,7 +135,7 @@ export function ProfessionWiki() {
                 setSelectedSkillId(null)
               }}>
                 <img src={stageIcon(candidate.stageId)} alt="" />
-                <span>{content.wiki.professions.rank.replace('{rank}', String(index + 1))}</span>
+                <span>{advancementLabel(index)}</span>
                 <strong>{stageLabel(candidate.stageId)}</strong>
                 <small>{content.wiki.professions.newSkills.replace('{count}', String(candidate.newSkillCount))}</small>
               </button>
@@ -248,4 +248,8 @@ function routeLabel(routeId: string): string {
 
 function stageLabel(stageId: string): string {
   return (content.wiki.professions.stages as Record<string, string>)[stageId] ?? stageId
+}
+
+function advancementLabel(index: number): string {
+  return content.wiki.professions.advancementLabels[index] ?? content.wiki.professions.rank.replace('{rank}', String(index + 1))
 }

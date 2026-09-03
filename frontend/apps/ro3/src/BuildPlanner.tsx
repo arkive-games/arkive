@@ -189,6 +189,9 @@ function displayName(
 ) {
   return value?.["zh-CN"] || fallback;
 }
+function advancementLabel(index: number): string {
+  return content.wiki.professions.advancementLabels[index] ?? content.wiki.professions.rank.replace('{rank}', String(index + 1));
+}
 function lineForBuild(build: BuildDraft) {
   return (
     PROFESSION_LINES.find((line) => line.id === build.professionLineId) ??
@@ -348,7 +351,7 @@ function seedClientBuild(data: BuildData): BuildDraft {
     new Map(data.profession.skills.skills.map((skill) => [skill.iSkillID, skill])),
   );
   const skillIds = stages.flatMap((stage) => stage.skills.map((choice) => choice.skillId)).slice(0, 6);
-  const equipment = equipmentSlotsForLine(line.id).map((slot) => {
+    const equipment: EquipmentBuildConfig[] = equipmentSlotsForLine(line.id).map((slot) => {
     const family = uniqueFamilies(data.equipment.equipment.equipment, slot.part)[0];
     const variant = family?.variants.at(-1);
     return {
@@ -1136,7 +1139,7 @@ function BuildEditor({
         <div className="build-stage-strip">
           {routeStages.map((stage) => (
             <span key={`${stage.professionId}-${stage.rank}`}>
-              第 {stage.rank - 1} 阶 · 新增 {stage.newSkillCount}
+              {advancementLabel(stage.rank - 2)} · 新增 {stage.newSkillCount}
             </span>
           ))}
         </div>
