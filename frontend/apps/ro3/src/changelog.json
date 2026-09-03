@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.16",
+      "date": "2026-09-04",
+      "commit": "f5ec0b0a3496cf8f50984d84ab9bc85b24d8a11b",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Enlarge the four-note soul resonance strip for clearer in-game readability.",
+            "zh-CN": "放大灵魂残响底部四格音符条，提升与游戏内一致的辨识度。",
+            "zh-TW": "放大靈魂殘響底部四格音符條，提升與遊戲內一致的辨識度。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.15",
       "date": "2026-09-04",
       "commit": "2aaf21afb6128b86b36f9393b0f126fab16691db",
