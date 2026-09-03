@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.8",
+      "date": "2026-09-03",
+      "commit": "84c71cd4aa615526e725f9aa4ea07239e8e774a9",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned build manual skill levels, quality frames, attribute icons, pet portraits, and soul resonance layout with the client UI.",
+            "zh-CN": "校准流派手册中的技能等级、品质框、属性图标、宠物头像和灵魂残响布局，使其更贴近客户端界面。",
+            "zh-TW": "校準流派手冊中的技能等級、品質框、屬性圖示、寵物頭像和靈魂殘響佈局，使其更貼近客戶端介面。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.7",
       "date": "2026-09-03",
       "commit": "50973530cfe28ed1ba6dde20026f2df5b0ddee1a",
