@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.12",
+      "date": "2026-09-03",
+      "commit": "83ff26177bfdae5879e6f22daa5be042a29af518",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Paired equipment with talents and pets with cards while matching soul note strips to their frames.",
+            "zh-CN": "将装备与天赋、宠物与卡片分别对齐，并让灵魂残响音符条与卡框等宽。",
+            "zh-TW": "將裝備與天賦、寵物與卡片分別對齊，並讓靈魂殘響音符條與卡框等寬。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.11",
       "date": "2026-09-03",
       "commit": "f55edef771855902f36aeaca587c4ea4c91f7298",
