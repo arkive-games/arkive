@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.4.0",
+      "date": "2026-09-03",
+      "commit": "9e18421d8d6162c1501074f403bc9f5ee52e8b3b",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rating calculator: a full equipment scorer. Pick each of the eight pieces, set its enhancement stage and refinement, and enter its reforge affixes (the tier is read off the value, with the game's gold, grey and red pips) to get the base, enhancement and reforge scores the game shows, plus the whole-loadout enhancement sets and the suit's two- and three-piece effects. Everything you enter is kept across reloads. The relic, pathway and character sections are marked coming soon while their numbers are checked.",
+            "zh-CN": "非凡评分计算器：完整的装备评分。选择八件装备，设置强化等级与精炼度，填入重塑词条（品阶按数值自动判定，显示游戏同款金/灰/红菱形），即可得到与游戏一致的基础、强化、重塑评分，以及全身强化套装与套装 2 件/3 件效果的加分。所有填写内容刷新后保留。封印物、途径、非凡人物暂标为「敬请期待」，待数值核对后开放。",
+            "zh-TW": "非凡評分計算器：完整的裝備評分。選擇八件裝備，設定強化等級與精煉度，填入重塑詞條（品階依數值自動判定，顯示遊戲同款金/灰/紅菱形），即可得到與遊戲一致的基礎、強化、重塑評分，以及全身強化套裝與套裝 2 件/3 件效果的加分。所有填寫內容重新整理後保留。封印物、途徑、非凡人物暫標為「敬請期待」，待數值核對後開放。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.3.1",
       "date": "2026-09-02",
       "commit": "d794e9d1cbdc2c99b10a581de7a0696e2b8c1130",
