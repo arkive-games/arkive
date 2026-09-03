@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.13",
+      "date": "2026-09-03",
+      "commit": "3049af3ac143a99cbd96faf12b8ba2f491ca6ff9",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Expanded the build card grid with larger native-style cards, clearer group spacing, and frame-aligned soul notes.",
+            "zh-CN": "放大流派手册卡片并恢复原生分组间距，同时让灵魂残响音符条与卡框对齐。",
+            "zh-TW": "放大流派手冊卡片並恢復原生分組間距，同時讓靈魂殘響音符條與卡框對齊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.12",
       "date": "2026-09-03",
       "commit": "83ff26177bfdae5879e6f22daa5be042a29af518",
