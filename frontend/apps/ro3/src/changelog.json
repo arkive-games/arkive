@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.6",
+      "date": "2026-09-03",
+      "commit": "9e2095c5c996e173f269bf1e36c0c7064fe3c493",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Extended the build manual with the client background texture and side-by-side pet and soul resonance summaries.",
+            "zh-CN": "补充客户端流派手册背景纹理，并将宠物效果与灵魂共鸣摘要调整为游戏内并排布局。",
+            "zh-TW": "補充客戶端流派手冊背景紋理，並將寵物效果與靈魂共鳴摘要調整為遊戲內並排佈局。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.5",
       "date": "2026-09-03",
       "commit": "fb3158951ce847f1a6407676a4fcdea29c9fe84b",
