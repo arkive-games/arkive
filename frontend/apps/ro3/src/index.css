@@ -1191,11 +1191,13 @@
 .game-build-slots--equipment { grid-template-columns: repeat(7, minmax(3.4rem, 1fr)); }
 .game-build-slots--pets { grid-template-columns: repeat(5, minmax(3.5rem, 1fr)); }
 .game-build-slots--souls { grid-template-columns: repeat(5, minmax(3.5rem, 1fr)); }
-.game-card-loadout { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.2rem, 1fr)); gap: .5rem; }
-.game-card-socket-group { display: grid; align-content: start; gap: .3rem; min-width: 0; padding: .35rem; border: 1px solid rgba(121, 100, 68, .18); background: rgba(234, 224, 199, .36); }
-.game-card-socket-group > span { color: #80623a; font-size: .6rem; font-weight: 900; text-align: center; }
+.game-card-fixed-grid { display: grid; gap: .6rem; overflow-x: auto; padding: .1rem 0 .25rem; }
+.game-card-fixed-row { display: flex; align-items: start; gap: .8rem; min-width: max-content; }
+.game-card-fixed-group { display: grid; grid-template-columns: repeat(4, 3.2rem); gap: .45rem; }
+.game-card-fixed-group.game-build-slots--cards { grid-template-columns: repeat(4, 3.2rem); }
+.game-card-fixed-group:has(.game-build-slot:nth-child(2):last-child) { grid-template-columns: repeat(2, 3.2rem); }
+.game-card-fixed-group:has(.game-build-slot:only-child) { grid-template-columns: 3.2rem; }
 .game-build-slots--cards { grid-template-columns: repeat(2, minmax(3.3rem, 1fr)); }
-.game-build-empty-copy { margin: 0; color: #917c60; font-size: .65rem; line-height: 1.6; text-align: center; }
 .game-build-slots--talents { grid-template-columns: repeat(5, minmax(3.7rem, 1fr)); }
 .game-build-slot { position: relative; display: grid; min-width: 0; justify-items: center; gap: .22rem; color: #5f4a2d; cursor: help; }
 .game-build-slot:focus-visible { outline: 2px solid #b77d27; outline-offset: .15rem; }

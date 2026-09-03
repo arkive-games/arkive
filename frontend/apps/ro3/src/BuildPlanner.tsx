@@ -612,15 +612,10 @@ function BuildViewer({
     data.cards.specialEffects.map((effect) => [effect.id, localizedText(effect.description)]),
   );
   const equipmentSlots = equipmentSlotsForLine(build.professionLineId);
-  const equippedCardGroups = equipmentSlots.map((slot) => {
-    const config = build.equipment.find((item) => item.slotKey === slot.key);
-    const item = config ? equipmentMap.get(config.equipmentId) : undefined;
-    return {
-      slot,
-      config,
-      count: Math.max(socketCount(data.equipment.attrs, item), config?.cardIds.length ?? 0),
-    };
-  }).filter((group) => group.count > 0);
+  const equippedCards = build.equipment.flatMap((config) =>
+    config.cardIds.map((cardId) => ({ cardId, slotKey: config.slotKey })),
+  );
+  const cardSlotRows = [[4, 2, 2], [2, 2, 2, 1, 1], [1]];
   const petDetails = (id: number) => {
     const pet = petMap.get(id);
     const stars = data.pets.stars.stars
@@ -820,28 +815,35 @@ function BuildViewer({
             </GameBuildPanel>
 
             <GameBuildPanel icon={BookOpen} title="卡片">
-              {equippedCardGroups.length ? (
-                <div className="game-card-loadout">
-                  {equippedCardGroups.map(({ slot, config, count }) => (
-                    <section className="game-card-socket-group" key={slot.key}>
-                      <span>{slot.label}</span>
-                      <div className="game-build-slots game-build-slots--cards">
-                        {Array.from({ length: count }, (_, index) => {
-                          const cardId = config?.cardIds[index];
-                          const card = cardId ? cardMap.get(cardId) : undefined;
-                          const tier = card?.tiers[0];
-                          const attributes = tier?.attributes.map(([attributeId, value]) => {
-                            const name = localizedText(data.cards.attributes.find((attribute) => attribute.id === attributeId)?.name) || `属性 ${attributeId}`;
-                            return `${name} +${value}`;
-                          }) ?? [];
-                          const effects = (tier?.specialEffects ?? []).map((id) => cardEffectMap.get(id)).filter(Boolean) as string[];
-                          return <GameBuildSlot key={`${slot.key}-${cardId ?? "empty"}-${index}`} icon={card?.icon} label={card ? localizedText(card.name) || `卡片 ${card.id}` : "空卡槽"} badge={slot.label} empty={!card} details={card ? [`品质 ${card.quality} · ${slot.label}`, ...attributes, ...effects, localizedText(card.description) || "暂无卡片说明"] : undefined} card />;
-                        })}
-                      </div>
-                    </section>
-                  ))}
-                </div>
-              ) : <p className="game-build-empty-copy">选择装备后，将按各部位的真实开孔数显示卡槽。</p>}
+              <div className="game-card-fixed-grid">
+                {cardSlotRows.map((groups, rowIndex) => {
+                  let offset = cardSlotRows.slice(0, rowIndex).flat().reduce((sum, value) => sum + value, 0);
+                  return (
+                    <div className="game-card-fixed-row" key={`card-row-${rowIndex}`}>
+                      {groups.map((groupSize, groupIndex) => {
+                        const groupStart = offset;
+                        offset += groupSize;
+                        return (
+                          <div className="game-card-fixed-group game-build-slots game-build-slots--cards" key={`card-group-${rowIndex}-${groupIndex}`}>
+                            {Array.from({ length: groupSize }, (_, index) => {
+                              const selected = equippedCards[groupStart + index];
+                              const card = selected ? cardMap.get(selected.cardId) : undefined;
+                              const tier = card?.tiers[0];
+                              const attributes = tier?.attributes.map(([attributeId, value]) => {
+                                const name = localizedText(data.cards.attributes.find((attribute) => attribute.id === attributeId)?.name) || `属性 ${attributeId}`;
+                                return `${name} +${value}`;
+                              }) ?? [];
+                              const effects = (tier?.specialEffects ?? []).map((id) => cardEffectMap.get(id)).filter(Boolean) as string[];
+                              const part = selected ? EQUIPMENT_SLOTS.find((slot) => slot.key === selected.slotKey)?.label : undefined;
+                              return <GameBuildSlot key={`${groupStart + index}-${selected?.cardId ?? "empty"}`} icon={card?.icon} label={card ? localizedText(card.name) || `卡片 ${card.id}` : "空卡槽"} badge={part} empty={!card} details={card ? [`品质 ${card.quality} · ${part ?? "未知部位"}`, ...attributes, ...effects, localizedText(card.description) || "暂无卡片说明"] : undefined} card />;
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
             </GameBuildPanel>
 
             <GameBuildPanel icon={Sparkles} title="天赋">
