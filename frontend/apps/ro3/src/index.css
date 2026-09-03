@@ -1237,11 +1237,16 @@
    while each slot uses the same art treatment as the in-client manual. */
 .game-build-manual {
   border: 0;
-  background-color: #eee5d1;
-  background-image: url('./assets/native-ui/genre/genremanual_bg_05.webp');
-  background-repeat: repeat;
-  background-size: 6.25rem 14.25rem;
+  background-color: transparent;
+  background-image: none;
 }
+.ro3-builds-page {
+  background-color: #eee8d8;
+  background-image: url('./assets/native-ui/genre/genremanual_bg_00.webp');
+  background-position: center top;
+  background-size: cover;
+}
+.build-planner { background: transparent; border-color: rgba(121, 100, 68, .28); box-shadow: none; }
 .game-build-column--left { border-right-color: rgba(121, 100, 68, .2); }
 .game-build-panel {
   border-bottom-color: rgba(121, 100, 68, .2);
