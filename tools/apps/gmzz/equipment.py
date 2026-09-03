@@ -25,14 +25,24 @@ is checkable against the game:
   the exact 基础 figure on its card.
 
 That agreement is why `Mark` is emitted as the score input it appears to be.
-What is *not* claimed: that the item's total 评分 equals the sum of these. The
-game decomposes that weapon as 基础 2430 + 强化 240 + 重塑 3485, and while the
-first two reproduce exactly, the 重塑 3485 does **not** fall out of the affix
-Marks plus the grace's own `Score` — three 非凡 攻击 affixes cannot sum below
-1650 and the grace is 2000, which overshoots. So the reforge contribution is
-shown as its parts (affix Mark total, grace score) and left editable rather than
-asserted, and the boots' 基础 is 119 short of their card. Both gaps are real and
-neither is papered over.
+The 重塑 tab is the sum of the affixes' integer Marks plus a flat
+`100·n·(n+1)` for `n` extraordinary affixes (two or more); the grace's own
+`Score` column is not in it. Reproduced exactly on four weapons read off the
+game — 3485, 2282, 5285 and 4180 — once the extraordinary ladder below is used.
+The boots' 基础 is still 119 short of their card; that gap is real and not
+papered over.
+
+**The extraordinary ladder is not the one the client ships.** The word table's
+非凡 rows run Mark 550..1000 in steps of 50, but every extraordinary value read
+off live gear — 攻击 159/183/233/283/308/332/357/382, 技能增强 33/49/70/80 —
+sits on Mark `1000 − 65k` (k = 0..9, so 415..1000), and only the 1000 rung is
+shared. Reforging is a server RPC and the client table is not what it rolls
+from, so `affixes` emits the live ladder for that tier: ten rungs at those
+Marks, each worth `round_half_up(Mark × top/1000)` where `top` is the family's
+value at Mark 1000 — the same rounding that produces the client's own rows
+(750 × 0.382 = 286.5 → 287). The 普通 and 污染 ladders are emitted as shipped;
+穿刺 +50 = Mark 202 reproduces in game. The 545 and 675 rungs (攻击 208 and
+258) have not been observed yet and are inferred from the pattern.
 
 Joins worth writing down, because none are guessable:
 
@@ -58,15 +68,17 @@ Joins worth writing down, because none are guessable:
   several bodies, one per season, so the season has to be carried through or the
   page silently mixes ladders from different seasons.
 - **Affix tier is the group id's tail**: 01–12 普通, 21–32 非凡, 41–52 污染,
-  61–63 the 途径/怪物专攻 specials. The 400→550 Mark gap is the 普通/非凡 border.
-  `Set 4` is the current gear tier; Sets 1–3 are legacy and cap at Mark 114.
+  61–63 the 途径/怪物专攻 specials. `Set 4` is the current gear tier; Sets 1–3
+  are legacy and cap at Mark 114.
 """
 
 from __future__ import annotations
 
 import argparse
 import collections
+import math
 import re
+from fractions import Fraction
 from pathlib import Path
 
 from .common import write_json
@@ -100,6 +112,11 @@ _LINEAR_FORMULA = re.compile(r"^\s*return\s+(?P<slope>\d+(?:\.\d+)?)\s*\*\s*\(\s
 CURRENT_SET = 4
 #: Affix tier by the group id's last two digits.
 TIER_BY_TAIL = [(1, 12, "normal"), (21, 32, "extraordinary"), (41, 52, "contaminated"), (61, 63, "special")]
+#: The Marks live gear actually rolls at the extraordinary tier, richest first —
+#: ``1000 - 65k``. Not the client table's 550..1000 by 50; see the module docstring.
+LIVE_EXTRAORDINARY_MARKS = [1000 - 65 * k for k in range(10)]
+#: The Mark whose value every rung is scaled from. Both ladders share it.
+TOP_MARK = 1000
 #: Effect texts a 烙印 row carries before it is written: the designer's stand-in
 #: (描述文本N) and the client's "hidden for now" notice on unreleased gear.
 UNWRITTEN_EFFECTS = ("描述文本", "该效果已被隐秘")
@@ -407,12 +424,29 @@ def suit_level_scores(excel: Path) -> dict:
     return out
 
 
+def live_extraordinary_ladder(shipped: dict[int, int]) -> dict[int, int]:
+    """The extraordinary ladder live gear rolls, scaled from the shipped one's top rung.
+
+    ``shipped`` is the client's ``{mark: value}`` for one family; only its value
+    at Mark 1000 is used, since that is the one rung the two ladders share. The
+    scale is kept as a fraction so that a rung landing on exactly .5 rounds up
+    the way the client's own rows do (750 × 0.382 = 286.5 → 287) rather than
+    however the float happens to fall.
+    """
+    top = shipped.get(TOP_MARK)
+    if top is None:
+        raise RuntimeError(f"extraordinary ladder has no Mark {TOP_MARK} rung to scale from: {sorted(shipped)}")
+    scale = Fraction(top, TOP_MARK)
+    return {mark: math.floor(mark * scale + Fraction(1, 2)) for mark in LIVE_EXTRAORDINARY_MARKS}
+
+
 def affixes(excel: Path, strings: dict) -> dict:
     """The reforge affix pool, per slot, per tier, as a Mark ladder.
 
     A slot's pool is the groups whose ``Type<slot>_<subtype>`` flag is set. Only
     the current gear tier is emitted; every value is the stat a word grants at
-    that Mark.
+    that Mark. The extraordinary tier is replaced by the ladder live gear
+    actually rolls — see ``live_extraordinary_ladder``.
     """
     groups = {}
     for table in GROUP_TABLES:
@@ -448,6 +482,12 @@ def affixes(excel: Path, strings: dict) -> dict:
             for slot, gids in per_slot.items():
                 if gid in gids:
                     pool[slot][tier_of(gid)][family][word["Mark"]] = amount[0]
+
+    for tiers in pool.values():
+        if "extraordinary" in tiers:
+            tiers["extraordinary"] = {
+                family: live_extraordinary_ladder(ladder) for family, ladder in tiers["extraordinary"].items()
+            }
 
     # Each ladder is a LIST of [mark, value], richest first — not a mark-keyed
     # object. `write_json` sorts keys, and sorted stringified numbers put "1000"

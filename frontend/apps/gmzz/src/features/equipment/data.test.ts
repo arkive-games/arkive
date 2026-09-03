@@ -12,8 +12,7 @@ import {
   familiesFor,
   graceFor,
   ladderFor,
-  markForValue,
-  markRate,
+  nearestRung,
   maxAffixesFor,
   affixBounds,
   clampAffixValue,
@@ -23,7 +22,6 @@ import {
   progressOf,
   refineFromProgress,
   scoredSlots,
-  toNearestFive,
   statLines,
   suitOf,
   suitScoreFor,
@@ -115,11 +113,12 @@ const EQUIPMENT: Equipment = {
     set: 4,
     bySlot: {
       '1': {
+        // The live extraordinary ladder (1000 - 65k), not the client table's.
         extraordinary: {
-          攻击: [[1000, 382], [950, 363], [550, 210]],
-          技能增强: [[1000, 80], [550, 44]],
+          攻击: [[1000, 382], [935, 357], [870, 332], [805, 308], [740, 283], [675, 258], [610, 233], [545, 208], [480, 183], [415, 159]],
+          技能增强: [[1000, 80], [935, 75], [870, 70], [805, 64], [740, 59], [675, 54], [610, 49], [545, 44], [480, 38], [415, 33]],
         },
-        normal: { 攻击: [[400, 153], [125, 48]], 穿刺: [[400, 98], [125, 31]] },
+        normal: { 攻击: [[400, 153], [125, 48]], 穿刺: [[400, 98], [202, 50], [125, 31]] },
         contaminated: { 攻击: [[-400, -153], [-200, -76]] },
       },
     },
@@ -291,39 +290,24 @@ describe('refineFromProgress', () => {
   })
 })
 
-describe('markRate / markForValue', () => {
-  it('derives the exchange rate from the ladder', () => {
-    // 1000/382, 950/363, 550/210 all land on ~2.62 — the 攻击 worth.
-    expect(markRate(ladderFor(EQUIPMENT, 1, 'extraordinary', '攻击'))).toBeCloseTo(2.62, 2)
-    expect(markRate(ladderFor(EQUIPMENT, 1, 'extraordinary', '技能增强'))).toBeCloseTo(12.5, 1)
+describe('nearestRung', () => {
+  const ladder = ladderFor(EQUIPMENT, 1, 'extraordinary', '攻击')
+
+  it('finds the rung a value sits on', () => {
+    expect(nearestRung(ladder, 308)).toEqual([805, 308])
+    expect(nearestRung(ladder, 382)).toEqual([1000, 382])
+    expect(nearestRung(ladder, 159)).toEqual([415, 159])
   })
 
-  it('scales a value the ladder does not carry exactly', () => {
-    // A 62装等 weapon reads 攻击 +308 where the nearest rung is 306, so the rate
-    // has to absorb it rather than snapping to a rung. Asserted as the rate
-    // applied, not a literal: the fixture's short ladder averages to a slightly
-    // different rate than the shipped 50-rung one, and hardcoding either number
-    // would make this test about the fixture instead of the behaviour.
-    const ladder = ladderFor(EQUIPMENT, 1, 'extraordinary', '攻击')
-    expect(markForValue(ladder, 308)).toBeCloseTo(308 * markRate(ladder), 10)
-    // Unrounded: the rounding belongs to the displayed figure and the piece's
-    // total, so an affix's fraction is not lost before the sum is taken.
-    expect(Number.isInteger(markForValue(ladder, 308))).toBe(false)
-    // On the ladder it lands between the 800 and 850 rungs, as it should.
-    expect(markForValue(ladder, 308)).toBeGreaterThan(780)
-    expect(markForValue(ladder, 308)).toBeLessThan(830)
+  it('takes the nearest rung for a value off the ladder, the richer one on a tie', () => {
+    expect(nearestRung(ladder, 310)).toEqual([805, 308])
+    expect(nearestRung(ladder, 500)).toEqual([1000, 382])
+    // 320 is 12 from both 308 and 332.
+    expect(nearestRung(ladder, 320)).toEqual([870, 332])
   })
 
-  it('is exact on a value that is on the ladder', () => {
-    const ladder = ladderFor(EQUIPMENT, 1, 'extraordinary', '攻击')
-    // 382 is the top rung, worth 1000.
-    expect(markForValue(ladder, 382)).toBeGreaterThan(995)
-    expect(markForValue(ladder, 382)).toBeLessThan(1005)
-  })
-
-  it('is 0 for an empty ladder rather than dividing by zero', () => {
-    expect(markRate([])).toBe(0)
-    expect(markForValue([], 100)).toBe(0)
+  it('is null for an empty ladder', () => {
+    expect(nearestRung([], 100)).toBeNull()
   })
 })
 
@@ -337,61 +321,49 @@ describe('familiesFor', () => {
 describe('classifyAffix', () => {
   const classify = (family: string, value: number) => classifyAffix(EQUIPMENT, 1, { family, value })
 
-  it('reads a value above the normal ladder\'s top Mark as extraordinary', () => {
-    const affix = classify('攻击', 308)
-    expect(affix.tier).toBe('extraordinary')
-    expect(affix.mark).toBeGreaterThan(780)
-    expect(affix.mark).toBeLessThan(830)
+  it('takes the rung\'s own integer Mark, not a rate applied to the value', () => {
+    expect(classify('攻击', 308)).toMatchObject({ tier: 'extraordinary', mark: 805 })
+    expect(classify('攻击', 357)).toMatchObject({ tier: 'extraordinary', mark: 935 })
+    expect(classify('技能增强', 70)).toMatchObject({ tier: 'extraordinary', mark: 870 })
   })
 
-  it('reads a value the normal ladder covers as normal', () => {
-    // The fixture's two-rung ladder averages to a hair under the top rung's own
-    // rate, so the top value reads a Mark or so under 400 — still normal.
-    const top = classify('攻击', 153)
-    expect(top.tier).toBe('normal')
-    expect(top.mark).toBeGreaterThan(395)
-    expect(top.mark).toBeLessThanOrEqual(400)
-    expect(classify('攻击', 48).tier).toBe('normal')
+  it('reads a value on the normal ladder as normal', () => {
+    expect(classify('攻击', 153)).toMatchObject({ tier: 'normal', mark: 400 })
+    expect(classify('攻击', 48)).toMatchObject({ tier: 'normal', mark: 125 })
+    expect(classify('穿刺', 50)).toMatchObject({ tier: 'normal', mark: 202 })
   })
 
-  it('draws the line at the normal top, not the extraordinary bottom', () => {
-    // The game showed 攻击 +159 as a gold pip on a 4-extraordinary weapon: worth
-    // ~416, above the normal 400 yet below the lowest shipped extraordinary rung.
-    const affix = classify('攻击', 159)
-    expect(affix.tier).toBe('extraordinary')
-    expect(affix.mark).toBeGreaterThan(400)
-    expect(affix.mark).toBeLessThan(550)
+  it('reads the lowest extraordinary rung as gold, as the game does', () => {
+    // A 4-extraordinary weapon read 攻击 +159 and 技能增强 +33 with gold pips.
+    expect(classify('攻击', 159)).toMatchObject({ tier: 'extraordinary', mark: 415 })
+    expect(classify('技能增强', 33)).toMatchObject({ tier: 'extraordinary', mark: 415 })
+  })
+
+  it('gives the tier whose rung is nearer, the richer on a tie', () => {
+    // 156 is 3 from normal 153 and 3 from extraordinary 159.
+    expect(classify('攻击', 156)).toMatchObject({ tier: 'extraordinary', mark: 415 })
+    expect(classify('攻击', 155)).toMatchObject({ tier: 'normal', mark: 400 })
   })
 
   it('is normal at any positive value for a family with no extraordinary ladder', () => {
-    const pierce = classify('穿刺', 50)
-    expect(pierce.tier).toBe('normal')
-    expect(pierce.mark).toBeGreaterThan(195)
-    expect(pierce.mark).toBeLessThan(210)
-    expect(classify('穿刺', 500).tier).toBe('normal')
+    expect(classify('穿刺', 500)).toMatchObject({ tier: 'normal', mark: 400 })
   })
 
   it('is extraordinary at any positive value for a family with no normal ladder', () => {
-    expect(classify('技能增强', 33).tier).toBe('extraordinary')
+    expect(classify('技能增强', 10)).toMatchObject({ tier: 'extraordinary', mark: 415 })
   })
 
-  it('reads a negative value as contaminated with a negative Mark', () => {
-    const affix = classify('攻击', -153)
-    expect(affix.tier).toBe('contaminated')
-    expect(affix.mark).toBeLessThan(-390)
+  it('reads a negative value as contaminated with the contaminated rung\'s Mark', () => {
+    expect(classify('攻击', -153)).toMatchObject({ tier: 'contaminated', mark: -400 })
+    expect(classify('攻击', -80)).toMatchObject({ tier: 'contaminated', mark: -200 })
+  })
+
+  it('negates the normal rung for a family with no contaminated ladder', () => {
+    expect(classify('穿刺', -50)).toMatchObject({ tier: 'contaminated', mark: -202 })
   })
 
   it('is a normal zero for nothing typed', () => {
     expect(classify('攻击', 0)).toMatchObject({ tier: 'normal', mark: 0 })
-  })
-})
-
-describe('toNearestFive', () => {
-  it('rounds to the nearest five, as the 重塑 tab prints its total', () => {
-    expect(toNearestFive(3616)).toBe(3615)
-    expect(toNearestFive(3483)).toBe(3485)
-    expect(toNearestFive(-244)).toBe(-245)
-    expect(toNearestFive(0)).toBe(0)
   })
 })
 
@@ -625,31 +597,49 @@ describe('evaluatePiece', () => {
     expect(result.affixes.map((affix) => affix.tier)).toEqual(['extraordinary', 'extraordinary', 'extraordinary'])
     expect(result.extraordinaryCount).toBe(3)
     expect(result.extraordinaryBonus).toBe(1200)
-    expect(result.reforgeScore).toBe(toNearestFive(result.affixMark + 1200))
-    expect(result.reforgeScore % 5).toBe(0)
+    expect(result.affixMark).toBe(3000)
+    expect(result.reforgeScore).toBe(4200)
     expect(result.grace?.id).toBe(108)
-    expect(result.total).toBe(2430 + 240 + result.reforgeScore)
+    expect(result.total).toBe(2430 + 240 + 4200)
   })
 
-  it('reproduces the game\'s 重塑 tab: 攻击 +308 +233 +332 read 3485', () => {
+  // Four weapons read off the game's own 重塑 tab. Each reproduces exactly:
+  // the rungs' integer Marks plus the extraordinary bonus, nothing rounded.
+  const reforge = (affixes: [string, number][]) =>
+    evaluatePiece(EQUIPMENT, GRACES, {
+      slot: 1, itemId: null, enhanceStage: 0, refinePercent: 0,
+      affixes: affixes.map(([family, value]) => ({ family, value })),
+    }, 101)
+
+  it('reproduces 攻击 +308 +233 +332 reading 3485, and the card\'s three tabs summing to 6155', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
       slot: 1, itemId: 3020623, enhanceStage: 3, refinePercent: 100,
       affixes: [{ family: '攻击', value: 308 }, { family: '攻击', value: 233 }, { family: '攻击', value: 332 }],
     }, 101)
-    // Within the rounding the card's whole-number values allow.
-    expect(Math.abs(result.reforgeScore - 3485)).toBeLessThanOrEqual(3)
+    expect(result.affixMark).toBe(805 + 610 + 870)
+    expect(result.reforgeScore).toBe(3485)
     expect(result.grace?.id).toBe(109)
-    // The three tabs the game shows sum to 6155.
-    expect(Math.abs(result.total - 6155)).toBeLessThanOrEqual(3)
+    expect(result.total).toBe(6155)
   })
 
-  it('reproduces a two-extraordinary weapon: 攻击 +283 +283 with 穿刺 +50 read 2282', () => {
-    const result = evaluatePiece(EQUIPMENT, GRACES, {
-      slot: 1, itemId: null, enhanceStage: 0, refinePercent: 0,
-      affixes: [{ family: '攻击', value: 283 }, { family: '攻击', value: 283 }, { family: '穿刺', value: 50 }],
-    }, 101)
+  it('reproduces 攻击 +283 +283 with 穿刺 +50 reading 2282 — not a multiple of five', () => {
+    const result = reforge([['攻击', 283], ['攻击', 283], ['穿刺', 50]])
     expect(result.extraordinaryCount).toBe(2)
-    expect(Math.abs(result.reforgeScore - 2282)).toBeLessThanOrEqual(5)
+    expect(result.reforgeScore).toBe(740 + 740 + 202 + 600)
+    expect(result.reforgeScore).toBe(2282)
+  })
+
+  it('reproduces 攻击 +357 +283 +283 with 技能增强 +70 reading 5285', () => {
+    const result = reforge([['攻击', 357], ['攻击', 283], ['攻击', 283], ['技能增强', 70]])
+    expect(result.extraordinaryBonus).toBe(2000)
+    expect(result.reforgeScore).toBe(935 + 740 + 740 + 870 + 2000)
+    expect(result.reforgeScore).toBe(5285)
+  })
+
+  it('reproduces 攻击 +183 +183 +233 with 技能增强 +49 reading 4180', () => {
+    const result = reforge([['攻击', 183], ['攻击', 183], ['攻击', 233], ['技能增强', 49]])
+    expect(result.reforgeScore).toBe(480 + 480 + 610 + 610 + 2000)
+    expect(result.reforgeScore).toBe(4180)
   })
 
   it('scores an empty slot with no base', () => {
@@ -725,7 +715,12 @@ describe('itemsForSlot', () => {
     expect(itemsForSlot(EQUIPMENT, 1, null)).toHaveLength(3)
   })
 
-  it('sorts by quality, best first', () => {
-    expect(itemsForSlot(EQUIPMENT, 1, 1200002).map((i) => i.quality)).toEqual([6, 4])
+  it('sorts by gear level, highest first, then quality', () => {
+    expect(itemsForSlot(EQUIPMENT, 1, 1200002).map((i) => i.gearLevel)).toEqual([62, 60])
+    const twoAtOnce: Equipment = {
+      ...EQUIPMENT,
+      items: [{ ...EQUIPMENT.items[0], id: 1, quality: 4 }, { ...EQUIPMENT.items[0], id: 2, quality: 6 }],
+    }
+    expect(itemsForSlot(twoAtOnce, 1, 1200002).map((i) => i.id)).toEqual([2, 1])
   })
 })

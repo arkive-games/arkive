@@ -511,22 +511,13 @@ function EnhanceControls({ equipment, result, onPatch }: PieceControlProps) {
 function ReforgeSummary({ result }: { result: PieceResult }) {
   const { t } = useTranslation()
   const grace = result.grace
-  // The exact sum, shown in brackets when the game's rounding to five moved it.
-  // The Marks are carried unrounded, so this is the only place they are rounded
-  // to the whole number the card can show.
-  const exact = Math.round(result.affixMark + result.extraordinaryBonus)
   return (
     <div className="min-w-0 space-y-2" data-testid={`equip-reforge-${result.state.slot}`}>
       <div>
-        <div className={TYPE.value}>
-          {t('equip.reforgeScore', { score: result.reforgeScore.toLocaleString() })}
-          {exact !== result.reforgeScore ? (
-            <span className={`ml-1 ${TYPE.valueMuted}`}>{t('equip.exactValue', { value: exact.toLocaleString() })}</span>
-          ) : null}
-        </div>
+        <div className={TYPE.value}>{t('equip.reforgeScore', { score: result.reforgeScore.toLocaleString() })}</div>
         <div className={TYPE.valueMuted}>
           {t('equip.reforgeParts', {
-            mark: Math.round(result.affixMark).toLocaleString(),
+            mark: result.affixMark.toLocaleString(),
             bonus: result.extraordinaryBonus.toLocaleString(),
           })}
         </div>
@@ -618,7 +609,7 @@ function AffixField({
         />
       </span>
       <span className={`whitespace-nowrap text-right ${TYPE.valueMuted}`} data-testid={`equip-affix-mark-${slot}-${index}`}>
-        {t('equip.affixMark', { mark: Math.round(affix.mark) })}
+        {t('equip.affixMark', { mark: affix.mark })}
       </span>
       <button
         type="button"
@@ -831,12 +822,10 @@ export default function EquipmentSection({
   // The whole-loadout enhancement set — 全身+3 and up — is part of the
   // enhancement score, not of any one piece.
   const bodyTier = useMemo(() => wholeBodyTier(equipment, pieces.map((piece) => piece.enhanceStage)), [equipment, pieces])
-  // Type 2 is the tier family gated on average enhancement, which is the one a
-  // whole-loadout view can answer. It only means anything under a live suit.
-  const suitTier = useMemo(
-    () => (chosenSuit ? suitTierFor(equipment, 2, averagePercent) : null),
-    [equipment, averagePercent, chosenSuit],
-  )
+  // The refinement set — type 2, gated on the average enhancement percentage
+  // across the loadout — is the other whole-body bonus, and like the first it
+  // counts towards the enhancement part.
+  const refineTier = useMemo(() => suitTierFor(equipment, 2, averagePercent), [equipment, averagePercent])
   const suitNeed = Math.min(...equipment.suits.suits.map(suitThreshold))
   const slotNames = useMemo(() => new Map(equipment.slots.map((slot) => [slot.id, slot.name])), [equipment])
   const kindOf = (item: EquipItem | null) => suitKind(t, suitOf(equipment, item))
@@ -854,7 +843,7 @@ export default function EquipmentSection({
     }))
   }, [equipment, pickerSlot, professionId, t])
 
-  // The game's four parts: 基础, 强化 (the pieces' plus the whole-body set),
+  // The game's four parts: 基础, 强化 (the pieces' plus both whole-body sets),
   // 词条 (the reforge, affixes and bonus together) and 套装.
   const totals = useMemo(() => {
     const pieceSums = results.reduce(
@@ -865,11 +854,10 @@ export default function EquipmentSection({
       }),
       { base: 0, pieces: 0, reforge: 0 },
     )
-    const body = bodyTier?.mark ?? 0
     const suit = chosenSuit?.total ?? 0
-    const enhance = pieceSums.pieces + body
-    return { ...pieceSums, body, enhance, suit, total: pieceSums.base + enhance + pieceSums.reforge + suit }
-  }, [bodyTier, chosenSuit, results])
+    const enhance = pieceSums.pieces + (bodyTier?.mark ?? 0) + (refineTier?.mark ?? 0)
+    return { ...pieceSums, enhance, suit, total: pieceSums.base + enhance + pieceSums.reforge + suit }
+  }, [bodyTier, chosenSuit, refineTier, results])
 
   const patchPiece = (index: number, patch: Partial<PieceState>) =>
     writePieces(pieces.map((piece, at) => (at === index ? { ...piece, ...patch } : piece)))
@@ -915,7 +903,7 @@ export default function EquipmentSection({
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-2 xl:grid-cols-[minmax(0,22rem)_minmax(0,17rem)_minmax(0,1fr)_minmax(0,15rem)]">
         <Cell label={t('equip.batchEnhance')}>
           <EnhanceSliders
             stage={batch.stage}
@@ -928,55 +916,69 @@ export default function EquipmentSection({
           />
         </Cell>
 
+        <Cell label={t('equip.bodyBonus')}>
+          <div className="space-y-1" data-testid="equip-body-tier">
+            <div className={TYPE.value}>
+              {bodyTier
+                ? t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: (bodyTier.mark ?? 0).toLocaleString() })
+                : t('equip.bodyTierNone')}
+            </div>
+            <div>
+              <div className={TYPE.value}>
+                {refineTier
+                  ? t('equip.suitTier', { level: refineTier.level ?? 0, mark: (refineTier.mark ?? 0).toLocaleString(), percent: averagePercent.toFixed(1) })
+                  : t('equip.suitNoTier', { percent: averagePercent.toFixed(1) })}
+              </div>
+              {refineTier ? <p className={`whitespace-pre-line ${TYPE.body}`}>{refineTier.effect}</p> : null}
+            </div>
+          </div>
+        </Cell>
+
         <Cell label={t('equip.suit')}>
-          {active.length >= 2 ? (
-            <Picker
-              value={chosenSuit?.suit.id ?? ''}
-              label={t('equip.suitChoose')}
-              testId="equip-suit-choice"
-              onValue={(raw) => setDraft((prev) => ({ ...prev, suitChoice: Number(raw) }))}
-            >
-              {suitScores.map((entry) => (
-                <option key={entry.suit.id} value={entry.suit.id}>
-                  {t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}
-                </option>
-              ))}
-            </Picker>
+          {suitScores.length === 0 ? (
+            <div className={TYPE.body} data-testid="equip-suit-active">
+              {t('equip.suitNone', { need: Number.isFinite(suitNeed) ? suitNeed : '—' })}
+            </div>
           ) : (
-            <div className={TYPE.name} data-testid="equip-suit-active">
-              {chosenSuit
-                ? t('equip.suitActive', { name: chosenSuit.suit.fullName || chosenSuit.suit.name, pieces: chosenSuit.count })
-                : t('equip.suitNone', { need: Number.isFinite(suitNeed) ? suitNeed : '—' })}
+            // One box per live suit, side by side when both are. Only one can be
+            // in effect, so the boxes are a choice: the chosen one is highlighted
+            // and scores; with a single live suit there is nothing to choose and
+            // it is taken as is.
+            <div className={`grid gap-2 ${suitScores.length > 1 ? 'sm:grid-cols-2' : ''}`} role="group" aria-label={t('equip.suitChoose')}>
+              {suitScores.map((entry) => {
+                const chosen = entry.suit.id === chosenSuit?.suit.id
+                return (
+                  <button
+                    key={entry.suit.id}
+                    type="button"
+                    aria-pressed={chosen}
+                    disabled={suitScores.length === 1}
+                    onClick={() => setDraft((prev) => ({ ...prev, suitChoice: entry.suit.id }))}
+                    className={`min-w-0 rounded-md border p-2 text-left transition-colors disabled:cursor-default ${FOCUS} ${
+                      chosen
+                        ? 'border-[color:var(--arkive-nav-accent)] bg-[color:var(--arkive-filter-active)]'
+                        : 'border-border hover:border-[color:var(--arkive-nav-accent)]/60'
+                    }`}
+                    data-testid={`equip-suit-${entry.suit.id}`}
+                    data-chosen={chosen}
+                  >
+                    <div className={`truncate ${TYPE.name}`}>
+                      {t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}
+                    </div>
+                    <div className={TYPE.value}>{t('equip.suitScore', { score: entry.total.toLocaleString() })}</div>
+                    {entry.effects.map((effect) => (
+                      <div key={effect.pieces} className={TYPE.valueMuted}>
+                        {t('equip.suitEffectScore', { pieces: effect.pieces, level: effect.gearLevel, score: effect.score.toLocaleString() })}
+                      </div>
+                    ))}
+                    {/* `effect2`/`effect3` are not shown: the client substitutes
+                        `{AllRaceHurtPlus_N}` at runtime from formula refs this pipeline
+                        cannot evaluate, so they would render as raw placeholders. */}
+                  </button>
+                )
+              })}
             </div>
           )}
-          {chosenSuit ? (
-            <div className={`mt-1 ${TYPE.valueMuted}`} data-testid="equip-suit-score">
-              <span className={TYPE.value}>{t('equip.suitScore', { score: chosenSuit.total.toLocaleString() })}</span>
-              {chosenSuit.effects.map((effect) => (
-                <span key={effect.pieces} className="ml-2">
-                  {t('equip.suitEffectScore', { pieces: effect.pieces, level: effect.gearLevel, score: effect.score.toLocaleString() })}
-                </span>
-              ))}
-            </div>
-          ) : null}
-          {chosenSuit ? (
-            <div className={`mt-1 ${TYPE.body}`} data-testid="equip-suit-tier">
-              {suitTier ? (
-                <>
-                  <span className={TYPE.value}>
-                    {t('equip.suitTier', { level: suitTier.level ?? 0, mark: suitTier.mark ?? 0, percent: averagePercent.toFixed(1) })}
-                  </span>
-                  <p className="whitespace-pre-line">{suitTier.effect}</p>
-                </>
-              ) : (
-                t('equip.suitNoTier', { percent: averagePercent.toFixed(1) })
-              )}
-              {/* `effect2`/`effect3` are not shown: the client substitutes
-                  `{AllRaceHurtPlus_N}` at runtime from formula refs this pipeline
-                  cannot evaluate, so they would render as raw placeholders. The
-                  tier's own effect text above is already resolved. */}
-            </div>
-          ) : null}
         </Cell>
 
         <Cell label={t('equip.totalScore')}>
@@ -987,13 +989,6 @@ export default function EquipmentSection({
               <span>{t('equip.subtotalEnhance', { value: totals.enhance.toLocaleString() })}</span>
               <span>{t('equip.subtotalReforge', { value: totals.reforge.toLocaleString() })}</span>
               <span>{t('equip.subtotalSuit', { value: totals.suit.toLocaleString() })}</span>
-            </div>
-            <div className={`flex flex-wrap gap-x-3 ${TYPE.valueMuted}`} data-testid="equip-body-tier">
-              <span>
-                {bodyTier
-                  ? t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: totals.body.toLocaleString() })
-                  : t('equip.bodyTierNone')}
-              </span>
             </div>
           </div>
         </Cell>

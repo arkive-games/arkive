@@ -210,91 +210,71 @@ export function ladderFor(
   return equipment.affixes.bySlot[String(slot)]?.[tier]?.[family] ?? []
 }
 
-/**
- * Mark per one point of a stat, derived from the ladder rather than hardcoded.
- *
- * The exchange rate is the whole reason Mark is comparable across stats — 1000
- * Mark buys 攻击 382 or 技能增强 80 — so it has to come from the shipped ladder,
- * not from a table of constants that could drift from it.
- */
-export function markRate(ladder: Rung[]): number {
-  const usable = ladder.filter(([, value]) => value !== 0)
-  if (usable.length === 0) return 0
-  return usable.reduce((total, [mark, value]) => total + mark / value, 0) / usable.length
-}
-
-/**
- * The Mark a stat value is worth on this ladder.
- *
- * Derived from the rate rather than looked up, because the value shown in game
- * does not always sit exactly on the shipped ladder — a 62装等 item reads
- * 攻击 +308 where the ladder's nearest rung is 306. Scaling the rate absorbs
- * that instead of forcing the user onto a rung the game did not give them.
- *
- * Not rounded. The game rounds once, on the piece's 重塑 total, so rounding
- * each affix first and then summing drifts from its figure by up to half a
- * point per affix; the fraction is kept and the display rounds where it shows
- * a single affix.
- */
-export function markForValue(ladder: Rung[], value: number): number {
-  const rate = markRate(ladder)
-  return rate === 0 ? 0 : value * rate
-}
-
 /** One chosen affix on a piece: the stat and the amount the card reads. The tier follows from the amount. */
 export type ChosenAffix = {
   family: string
-  /** The stat amount, editable — see `markForValue`. Negative for a contaminated affix. */
+  /** The stat amount, editable — see `classifyAffix`. Negative for a contaminated affix. */
   value: number
 }
 
-/** A chosen affix with the tier and Mark its value works out to. `mark` is unrounded — see `markForValue`. */
+/** A chosen affix with the tier and Mark its value works out to. */
 export type ScoredAffix = ChosenAffix & { tier: AffixTier; mark: number }
 
 /**
- * A score as the game prints it: to the nearest five. The 重塑 tab's figure
- * always ends in 0 or 5 while the affix Marks it sums do not, so the rounding
- * sits on the total. Individual affixes show no score in game, so theirs stay
- * exact.
+ * The rung of a ladder nearest to a stat value, or null for an empty ladder.
+ *
+ * An exact tie goes to the richer rung: the game only ever shows a rung's own
+ * value, so a value exactly between two is a typo, and the richer reading is
+ * the one the player was reaching for.
  */
-export function toNearestFive(score: number): number {
-  return Math.round(score / 5) * 5
-}
-
-/** The highest Mark a ladder carries; 0 for an empty one. */
-function topMark(ladder: Rung[]): number {
-  return ladder.reduce((best, [mark]) => Math.max(best, mark), 0)
+export function nearestRung(ladder: Rung[], value: number): Rung | null {
+  let best: Rung | null = null
+  for (const rung of ladder) {
+    if (
+      best === null ||
+      Math.abs(rung[1] - value) < Math.abs(best[1] - value) ||
+      (Math.abs(rung[1] - value) === Math.abs(best[1] - value) && rung[0] > best[0])
+    ) {
+      best = rung
+    }
+  }
+  return best
 }
 
 /**
  * The tier and Mark a chosen affix's value works out to.
  *
+ * Every affix in game is one rung of one ladder, and its Mark is that rung's
+ * integer Mark — not a rate applied to the value. Four weapons read off the
+ * game's 重塑 tab (3485, 2282, 5285, 4180) reproduce exactly this way, where a
+ * continuous rate drifted by up to five points. So the value is matched to the
+ * nearest rung across the ladders its sign allows and takes that rung's Mark.
+ *
  * The game never asks the player which tier an affix is — the card shows a
  * gold, grey or red pip — and neither does the page: a negative value is a
- * contaminated affix, and a positive one is extraordinary once it is worth more
- * Mark than the normal ladder tops out at (400 for every family), normal
- * otherwise. The boundary is the normal top rather than the extraordinary
- * bottom (550) because the game's own extraordinary rolls reach below the
- * shipped rungs: a 4-extraordinary weapon read 攻击 +159 and 技能增强 +33, worth
- * ~416 and ~412, both gold. A family with no extraordinary ladder in this slot
- * (穿刺 on a weapon) is normal at any positive value.
+ * contaminated affix, and a positive one belongs to whichever of the normal and
+ * extraordinary ladders holds the nearest rung. The two do not overlap (攻击
+ * normal tops out at 153, extraordinary starts at 159), so the nearest rung is
+ * also the tier. A family with no contaminated ladder in a slot still reads a
+ * negative value against its normal rungs, Mark negated.
  */
 export function classifyAffix(equipment: Equipment, slot: number, affix: ChosenAffix): ScoredAffix {
   const { family, value } = affix
   if (value < 0) {
     const ladder = ladderFor(equipment, slot, 'contaminated', family)
-    // A family with no contaminated ladder is still worth its normal rate, negated.
-    const fallback = ladderFor(equipment, slot, 'normal', family)
-    const mark = ladder.length > 0 ? markForValue(ladder, value) : markForValue(fallback, value)
-    return { ...affix, tier: 'contaminated', mark }
+    if (ladder.length > 0) {
+      return { ...affix, tier: 'contaminated', mark: nearestRung(ladder, value)?.[0] ?? 0 }
+    }
+    const fallback = nearestRung(ladderFor(equipment, slot, 'normal', family), -value)
+    return { ...affix, tier: 'contaminated', mark: fallback ? -fallback[0] : 0 }
   }
-  const normal = ladderFor(equipment, slot, 'normal', family)
-  const extraordinary = ladderFor(equipment, slot, 'extraordinary', family)
-  const asNormal = markForValue(normal.length > 0 ? normal : extraordinary, value)
-  if (extraordinary.length > 0 && (normal.length === 0 || asNormal > topMark(normal))) {
-    return { ...affix, tier: 'extraordinary', mark: markForValue(extraordinary, value) }
+  if (value === 0) return { ...affix, tier: 'normal', mark: 0 }
+  const normal = nearestRung(ladderFor(equipment, slot, 'normal', family), value)
+  const extraordinary = nearestRung(ladderFor(equipment, slot, 'extraordinary', family), value)
+  if (extraordinary && (!normal || Math.abs(extraordinary[1] - value) <= Math.abs(normal[1] - value))) {
+    return { ...affix, tier: 'extraordinary', mark: extraordinary[0] }
   }
-  return { ...affix, tier: 'normal', mark: asNormal }
+  return { ...affix, tier: 'normal', mark: normal?.[0] ?? 0 }
 }
 
 /**
@@ -327,7 +307,7 @@ function spanOf(ladders: Rung[][]): { min: number; max: number } | null {
 
 /**
  * What a family can be worth in a slot, read off its ladders. The two positive
- * tiers form one span (normal 48..153 and extraordinary 210..382 for 攻击
+ * tiers form one span (normal 48..153 and extraordinary 159..382 for 攻击
  * become 48..382), because the game's own rolls land between the two ladders'
  * ends; the contaminated ladder is its own, negative span.
  */
@@ -455,12 +435,12 @@ export type PieceResult = {
   enhanceStats: [string, number][]
   /** The chosen affixes, each with the tier and Mark its value works out to. */
   affixes: ScoredAffix[]
-  /** Sum of every affix's Mark, contaminated ones subtracting. Unrounded, like the Marks it sums. */
+  /** Sum of every affix's rung Mark, contaminated ones subtracting. */
   affixMark: number
   extraordinaryCount: number
   /** See `extraordinaryBonus`. */
   extraordinaryBonus: number
-  /** The 重塑 tab's figure: affixMark + extraordinaryBonus, to the nearest five as the game prints it. */
+  /** The 重塑 tab's figure: affixMark + extraordinaryBonus, exactly — every term is an integer. */
   reforgeScore: number
   /** The grace the extraordinary affixes trigger — shown for its effect; it adds nothing of its own. */
   grace: Grace | null
@@ -656,7 +636,7 @@ export function evaluatePiece(
   const affixMark = affixes.reduce((sum, affix) => sum + affix.mark, 0)
   const extraordinaryCount = affixes.filter((affix) => affix.tier === 'extraordinary').length
   const bonus = extraordinaryBonus(extraordinaryCount)
-  const reforgeScore = toNearestFive(affixMark + bonus)
+  const reforgeScore = affixMark + bonus
   const baseScore = item?.baseScore ?? 0
 
   return {
@@ -822,7 +802,9 @@ export function itemsForSlot(
       if (limit.length === 0 || professionId == null) return true
       return limit.includes(professionId)
     })
-    .sort((a, b) => b.quality - a.quality || a.name.localeCompare(b.name))
+    // Highest gear level first — the piece a player is looking for is almost
+    // always their newest — then quality, then name.
+    .sort((a, b) => (b.gearLevel ?? 0) - (a.gearLevel ?? 0) || b.quality - a.quality || a.name.localeCompare(b.name))
 }
 
 export function newPiece(slot: number): PieceState {
