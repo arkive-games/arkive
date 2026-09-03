@@ -1188,10 +1188,14 @@
 .game-build-panel > *:not(header) { padding: .65rem; }
 .game-build-slots { display: grid; gap: .5rem; }
 .game-build-slots--skills { grid-template-columns: repeat(6, minmax(3.2rem, 1fr)); }
-.game-build-slots--equipment { grid-template-columns: repeat(4, minmax(4.5rem, 1fr)); }
+.game-build-slots--equipment { grid-template-columns: repeat(7, minmax(3.4rem, 1fr)); }
 .game-build-slots--pets { grid-template-columns: repeat(5, minmax(3.5rem, 1fr)); }
 .game-build-slots--souls { grid-template-columns: repeat(5, minmax(3.5rem, 1fr)); }
-.game-build-slots--cards { grid-template-columns: repeat(6, minmax(3.3rem, 1fr)); }
+.game-card-loadout { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.2rem, 1fr)); gap: .5rem; }
+.game-card-socket-group { display: grid; align-content: start; gap: .3rem; min-width: 0; padding: .35rem; border: 1px solid rgba(121, 100, 68, .18); background: rgba(234, 224, 199, .36); }
+.game-card-socket-group > span { color: #80623a; font-size: .6rem; font-weight: 900; text-align: center; }
+.game-build-slots--cards { grid-template-columns: repeat(2, minmax(3.3rem, 1fr)); }
+.game-build-empty-copy { margin: 0; color: #917c60; font-size: .65rem; line-height: 1.6; text-align: center; }
 .game-build-slots--talents { grid-template-columns: repeat(5, minmax(3.7rem, 1fr)); }
 .game-build-slot { position: relative; display: grid; min-width: 0; justify-items: center; gap: .22rem; color: #5f4a2d; cursor: help; }
 .game-build-slot:focus-visible { outline: 2px solid #b77d27; outline-offset: .15rem; }
@@ -1201,6 +1205,7 @@
 .game-build-slot-empty-mark { color: rgba(129, 106, 72, .42); font-size: 1.5rem; font-weight: 300; }
 .game-build-slot.is-empty .game-build-slot-frame { border-style: dashed; opacity: .7; }
 .game-build-slot strong { width: 100%; overflow: hidden; color: #655034; font-size: .62rem; font-weight: 800; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.game-build-slot-effects { display: block; width: 100%; overflow: hidden; color: #876b43; font-size: .56rem; line-height: 1.3; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .game-build-slot.is-portrait .game-build-slot-frame { border-radius: 50%; }
 .game-build-slot.is-card .game-build-slot-frame { width: 3.2rem; height: 4rem; border-width: 1px; }
 .game-build-slot.is-diamond .game-build-slot-frame { transform: rotate(45deg); border-color: rgba(126, 94, 40, .84); }
@@ -1256,8 +1261,8 @@
   .build-equipment-modal .build-config-editor-head small { grid-column: 1; grid-row: 2; }
   .build-equipment-modal-close { grid-column: 2; grid-row: 1 / span 2; }
   .game-build-slots--skills { grid-template-columns: repeat(3, minmax(3.2rem, 1fr)); }
-  .game-build-slots--cards { grid-template-columns: repeat(4, minmax(3.3rem, 1fr)); }
-  .game-build-slots--equipment { grid-template-columns: repeat(3, minmax(4.2rem, 1fr)); }
+  .game-build-slots--cards { grid-template-columns: repeat(2, minmax(3.3rem, 1fr)); }
+  .game-build-slots--equipment { grid-template-columns: repeat(4, minmax(3.4rem, 1fr)); }
 }
 
 @media (max-width: 48rem) {

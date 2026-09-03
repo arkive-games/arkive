@@ -28,7 +28,7 @@ import {
   type SoulResonanceRecord,
   type SkillIndexEntry,
 } from "./wikiData";
-import { loadPetWikiData } from "./creatureData";
+import { loadPetWikiData, type PetSkillRecord } from "./creatureData";
 import { localizedText, type WikiCard } from "./cardCatalog";
 import {
   PROFESSION_LINES,
@@ -599,16 +599,28 @@ function BuildViewer({
   const talentMap = new Map(
     data.talents.talents.seasonTalents.nodes.map((talent) => [talent.iId, talent]),
   );
-  const petSkillMap = new Map(
+  const petSkillMap = new Map<number, PetSkillRecord>(
     data.pets.skills.skills.map((skill) => [skill.id, skill]),
+  );
+  const petAttributeMap = new Map(
+    data.pets.catalog.attributes.map((attribute) => [attribute.id, attribute]),
+  );
+  const soulMarkMap = new Map(
+    data.souls.souls.markEffects.map((effect) => [effect.iID, effect]),
   );
   const cardEffectMap = new Map(
     data.cards.specialEffects.map((effect) => [effect.id, localizedText(effect.description)]),
   );
   const equipmentSlots = equipmentSlotsForLine(build.professionLineId);
-  const equippedCards = build.equipment.flatMap((config) =>
-    config.cardIds.map((cardId) => ({ cardId, slotKey: config.slotKey })),
-  );
+  const equippedCardGroups = equipmentSlots.map((slot) => {
+    const config = build.equipment.find((item) => item.slotKey === slot.key);
+    const item = config ? equipmentMap.get(config.equipmentId) : undefined;
+    return {
+      slot,
+      config,
+      count: Math.max(socketCount(data.equipment.attrs, item), config?.cardIds.length ?? 0),
+    };
+  }).filter((group) => group.count > 0);
   const petDetails = (id: number) => {
     const pet = petMap.get(id);
     const stars = data.pets.stars.stars
@@ -632,6 +644,35 @@ function BuildViewer({
         ])
         .filter(Boolean),
     ];
+  };
+  const petEffectLines = (id: number, mode: "combat" | "assist") => {
+    const pet = petMap.get(id);
+    const star = data.pets.stars.stars
+      .filter((item) => item.petId === id)
+      .sort((a, b) => b.star - a.star || b.stage - a.stage)[0];
+    if (!pet || !star) return [mode === "combat" ? "暂无出战效果" : "暂无助战效果"];
+    if (mode === "combat") {
+      const attributes = (star.fightAttributes ?? []).map(([attributeId, value]) => {
+        const name = localizedText(petAttributeMap.get(attributeId)?.name) || `属性 ${attributeId}`;
+        return `${name} +${value}`;
+      });
+      const skills = [
+        ...(star.activeSkills ?? []),
+        ...(star.passiveMain ? [star.passiveMain] : []),
+        ...(star.protectSkill ? [star.protectSkill] : []),
+      ]
+        .map((skillId) => petSkillMap.get(skillId))
+        .filter((skill): skill is NonNullable<typeof skill> => Boolean(skill))
+        .flatMap((skill) => [localizedText(skill.description), localizedText(skill.name)])
+        .filter(Boolean);
+      return [...attributes, ...skills].slice(0, 2);
+    }
+    const skills = (star.assistSkill ?? [])
+      .map((skillId) => petSkillMap.get(skillId))
+      .filter((skill): skill is NonNullable<typeof skill> => Boolean(skill))
+      .flatMap((skill) => [localizedText(skill.description), localizedText(skill.name)])
+      .filter(Boolean);
+    return skills.slice(0, 2).length ? skills.slice(0, 2) : ["暂无助战效果"];
   };
   return (
     <div className="build-view-layout">
@@ -719,7 +760,8 @@ function BuildViewer({
                   {Array.from({ length: 4 }, (_, index) => {
                     const id = build.petCombatIds[index];
                     const pet = id ? petMap.get(id) : undefined;
-                    return <GameBuildSlot key={id ?? `combat-empty-${index}`} icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? petDetails(id) : undefined} portrait />;
+                    const effects = id ? petEffectLines(id, "combat") : undefined;
+                    return <GameBuildSlot key={id ?? `combat-empty-${index}`} icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空出战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
                   })}
                 </div>
                 <span>助战</span>
@@ -727,7 +769,8 @@ function BuildViewer({
                   {Array.from({ length: 5 }, (_, index) => {
                     const id = build.petAssistIds[index];
                     const pet = id ? petMap.get(id) : undefined;
-                    return <GameBuildSlot key={id ?? `assist-empty-${index}`} icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空助战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? petDetails(id) : undefined} portrait />;
+                    const effects = id ? petEffectLines(id, "assist") : undefined;
+                    return <GameBuildSlot key={id ?? `assist-empty-${index}`} icon={pet?.art.fightList} label={id ? localizedText(pet?.name) || `宠物 ${id}` : "空助战位"} badge={pet ? `品质 ${pet.quality}` : undefined} empty={!pet} details={id ? [...petDetails(id), ...(effects ?? [])] : undefined} effects={effects} portrait />;
                   })}
                 </div>
               </div>
@@ -743,7 +786,27 @@ function BuildViewer({
                     const name = displayName(data.souls.souls.attributes.find((item) => item.iID === attribute.attributeId)?.name, `属性 ${attribute.attributeId}`);
                     return `${name} +${attribute.min}${attribute.max !== attribute.min ? `~${attribute.max}` : ""}`;
                   }) ?? [];
-                  return <GameBuildSlot key={config?.slotIndex ?? `soul-empty-${index}`} icon={soul?.icon} label={soul ? displayName(soul.name, `残响 ${config.soulId}`) : "空残响槽"} badge={soul ? `品质 ${soul.quality ?? "-"}` : undefined} empty={!soul} details={soul ? [...primary, resonance ? `共振 · ${displayName(resonance.name, `共振 ${resonance.iID}`)}` : "未指定共振", soul.desc?.["zh-CN"] || "暂无残响说明"] : undefined} />;
+                  const markIds = config?.markEffectIds?.length
+                    ? config.markEffectIds
+                    : (soul?.marks ?? []).flatMap((mark) => mark.specialEffectIds ?? []);
+                  const markLines = markIds
+                    .map((id) => {
+                      const effect = soulMarkMap.get(id);
+                      return effect ? displayName(effect.desc ?? effect.name, `印记 ${id}`) : `印记 ${id}`;
+                    })
+                    .filter(Boolean);
+                  const resonanceLine = resonance ? `共振 · ${displayName(resonance.name, `共振 ${resonance.iID}`)}` : "未指定共振";
+                  const resonanceAttributes = resonance?.attributes?.map((attribute) => {
+                    const id = attribute.attributeId ?? attribute.iAttributeID ?? attribute.iSubAttriID ?? 0;
+                    const name = displayName(data.souls.souls.attributes.find((item) => item.iID === id)?.name, `属性 ${id}`);
+                    const min = attribute.min ?? attribute.iMin;
+                    const max = attribute.max ?? attribute.iMax;
+                    return `${name} +${min ?? "-"}${max !== undefined && max !== min ? `~${max}` : ""}`;
+                  }) ?? [];
+                  const soulEffects = soul
+                    ? [...primary.slice(0, 1), ...resonanceAttributes.slice(0, 1), resonanceLine, ...markLines.slice(0, 1)].filter(Boolean)
+                    : undefined;
+                  return <GameBuildSlot key={config?.slotIndex ?? `soul-empty-${index}`} icon={soul?.icon} label={soul ? displayName(soul.name, `残响 ${config.soulId}`) : "空残响槽"} badge={soul ? `品质 ${soul.quality ?? "-"}` : undefined} empty={!soul} effects={soulEffects} details={soul ? [...primary, ...resonanceAttributes, resonanceLine, ...markLines, soul.desc?.["zh-CN"] || "暂无残响说明"] : undefined} />;
                 })}
               </div>
             </GameBuildPanel>
@@ -757,20 +820,28 @@ function BuildViewer({
             </GameBuildPanel>
 
             <GameBuildPanel icon={BookOpen} title="卡片">
-              <div className="game-build-slots game-build-slots--cards">
-                {Array.from({ length: Math.max(12, equippedCards.length) }, (_, index) => {
-                  const selected = equippedCards[index];
-                  const card = selected ? cardMap.get(selected.cardId) : undefined;
-                  const tier = card?.tiers[0];
-                  const attributes = tier?.attributes.map(([attributeId, value]) => {
-                    const name = localizedText(data.cards.attributes.find((attribute) => attribute.id === attributeId)?.name) || `属性 ${attributeId}`;
-                    return `${name} +${value}`;
-                  }) ?? [];
-                  const effects = (tier?.specialEffects ?? []).map((id) => cardEffectMap.get(id)).filter(Boolean) as string[];
-                  const part = selected ? EQUIPMENT_SLOTS.find((slot) => slot.key === selected.slotKey)?.label : undefined;
-                  return <GameBuildSlot key={`${selected?.cardId ?? "empty"}-${index}`} icon={card?.icon} label={card ? localizedText(card.name) || `卡片 ${card.id}` : "空卡槽"} badge={part} empty={!card} details={card ? [`品质 ${card.quality} · ${part ?? "未知部位"}`, ...attributes, ...effects, localizedText(card.description) || "暂无卡片说明"] : undefined} card />;
-                })}
-              </div>
+              {equippedCardGroups.length ? (
+                <div className="game-card-loadout">
+                  {equippedCardGroups.map(({ slot, config, count }) => (
+                    <section className="game-card-socket-group" key={slot.key}>
+                      <span>{slot.label}</span>
+                      <div className="game-build-slots game-build-slots--cards">
+                        {Array.from({ length: count }, (_, index) => {
+                          const cardId = config?.cardIds[index];
+                          const card = cardId ? cardMap.get(cardId) : undefined;
+                          const tier = card?.tiers[0];
+                          const attributes = tier?.attributes.map(([attributeId, value]) => {
+                            const name = localizedText(data.cards.attributes.find((attribute) => attribute.id === attributeId)?.name) || `属性 ${attributeId}`;
+                            return `${name} +${value}`;
+                          }) ?? [];
+                          const effects = (tier?.specialEffects ?? []).map((id) => cardEffectMap.get(id)).filter(Boolean) as string[];
+                          return <GameBuildSlot key={`${slot.key}-${cardId ?? "empty"}-${index}`} icon={card?.icon} label={card ? localizedText(card.name) || `卡片 ${card.id}` : "空卡槽"} badge={slot.label} empty={!card} details={card ? [`品质 ${card.quality} · ${slot.label}`, ...attributes, ...effects, localizedText(card.description) || "暂无卡片说明"] : undefined} card />;
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              ) : <p className="game-build-empty-copy">选择装备后，将按各部位的真实开孔数显示卡槽。</p>}
             </GameBuildPanel>
 
             <GameBuildPanel icon={Sparkles} title="天赋">
@@ -1572,6 +1643,7 @@ function GameBuildSlot({
   label,
   badge,
   details,
+  effects,
   empty = false,
   portrait = false,
   card = false,
@@ -1581,6 +1653,7 @@ function GameBuildSlot({
   label: string;
   badge?: string;
   details?: string[];
+  effects?: string[];
   empty?: boolean;
   portrait?: boolean;
   card?: boolean;
@@ -1593,6 +1666,7 @@ function GameBuildSlot({
         {badge ? <small>{badge}</small> : null}
       </div>
       <strong>{label}</strong>
+      {effects?.length ? <span className="game-build-slot-effects" title={effects.join(" · ")}>{effects.slice(0, 2).join(" · ")}</span> : null}
       {details?.length ? <BuildHoverCard title={label} lines={details} /> : null}
     </div>
   );
