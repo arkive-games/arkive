@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.11",
+      "date": "2026-09-03",
+      "commit": "f55edef771855902f36aeaca587c4ea4c91f7298",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned the build manual sections, pet combat summary, slot spacing, and native title treatments with the client layout.",
+            "zh-CN": "按客户端布局校准流派手册分区、宠物出战效果、槽位间距和原生标题样式。",
+            "zh-TW": "依照客戶端佈局校準流派手冊分區、寵物出戰效果、槽位間距和原生標題樣式。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.10",
       "date": "2026-09-03",
       "commit": "0df8db8c9d422bd92277329a46b5a2c4eb29d1f3",
