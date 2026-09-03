@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.7",
+      "date": "2026-09-03",
+      "commit": "50973530cfe28ed1ba6dde20026f2df5b0ddee1a",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Seeded the manual with client equipment, cards, pets, talents, souls, and varied pet artwork for an authentic in-game first view.",
+            "zh-CN": "首次进入流派手册时使用客户端装备、卡片、宠物、天赋、残响数据，并展示不同宠物原画。",
+            "zh-TW": "首次進入流派手冊時使用客戶端裝備、卡片、寵物、天賦、殘響資料，並展示不同寵物原畫。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.6",
       "date": "2026-09-03",
       "commit": "9e2095c5c996e173f269bf1e36c0c7064fe3c493",
