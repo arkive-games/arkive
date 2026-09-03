@@ -7033,3 +7033,117 @@ select {
   .game-card-fixed-group:has(.game-build-slot:only-child) { grid-template-columns: 3.9rem; }
   .game-build-slot.is-card .game-build-slot-frame { width: 3.9rem; height: 3.9rem; }
 }
+
+/* Keep every build-manual icon inside the same square outer frame. Individual
+   systems retain their native art and quality colors inside that geometry. */
+.game-build-manual { --game-build-slot-size: 4.2rem; }
+.game-build-slot .game-build-slot-frame,
+.game-build-slot.is-equipment .game-build-slot-frame,
+.game-build-slot.is-pet .game-build-slot-frame,
+.game-build-slot.is-card .game-build-slot-frame,
+.game-build-slot.is-talent .game-build-slot-frame,
+.game-build-slot.is-soul .game-build-slot-frame {
+  box-sizing: border-box;
+  width: var(--game-build-slot-size);
+  height: var(--game-build-slot-size);
+  padding: .35rem;
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgba(142, 119, 81, .78);
+  border-radius: 0;
+  clip-path: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 249, 226, .68),
+    0 .08rem .16rem rgba(86, 65, 34, .14);
+}
+.game-build-slot.is-pet .game-build-slot-frame img:not(.game-build-slot-overlay) {
+  width: 100%;
+  height: 100%;
+  border-width: 1px;
+}
+.game-build-slot.is-talent .game-build-slot-frame {
+  background-color: #45311c;
+}
+.game-build-slot.is-soul .game-soul-notes {
+  box-sizing: border-box;
+  width: var(--game-build-slot-size);
+}
+
+/* Four combat pets plus the effect summary occupy the same five tracks as the
+   five assist pets, so both rows share identical left and right edges. */
+.game-pet-roster {
+  grid-template-columns: 3.2rem repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto);
+  column-gap: .35rem;
+  row-gap: .55rem;
+}
+.game-pet-roster > .game-pet-mode-label:first-of-type {
+  grid-column: 1;
+  grid-row: 1;
+}
+.game-pet-roster > .game-pet-mode-label:last-of-type {
+  grid-column: 1;
+  grid-row: 2;
+}
+.game-pet-roster > .game-build-slots--combat {
+  grid-column: 2 / 6;
+  grid-row: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .35rem;
+}
+.game-pet-roster > .game-build-slots--assist {
+  grid-column: 2 / 7;
+  grid-row: 2;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .35rem;
+}
+.game-pet-roster > .game-pet-effect-summary {
+  grid-column: 6;
+  grid-row: 1;
+  width: var(--game-build-slot-size);
+  min-height: 0;
+  aspect-ratio: 1;
+  justify-self: center;
+  grid-template-columns: repeat(2, 1.5rem);
+  grid-template-rows: repeat(2, 1.5rem);
+  gap: .12rem;
+  padding: .35rem;
+  border: 2px solid rgba(142, 119, 81, .78);
+  background-color: rgba(244, 235, 208, .64);
+  box-shadow: inset 0 0 0 1px rgba(255, 249, 226, .68);
+}
+.game-pet-roster > .game-pet-effect-summary span,
+.game-pet-roster > .game-pet-effect-summary img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.game-card-fixed-group.game-build-slots--cards {
+  grid-template-columns: repeat(4, var(--game-build-slot-size));
+}
+.game-card-fixed-group:has(.game-build-slot:nth-child(2):last-child) {
+  grid-template-columns: repeat(2, var(--game-build-slot-size));
+}
+.game-card-fixed-group:has(.game-build-slot:only-child) {
+  grid-template-columns: var(--game-build-slot-size);
+}
+
+@media (max-width: 36rem) {
+  .game-build-manual { --game-build-slot-size: 3.9rem; }
+  .game-pet-roster {
+    grid-template-columns: 3rem repeat(5, minmax(3.9rem, 1fr));
+    overflow-x: auto;
+  }
+  .game-pet-roster > .game-pet-effect-summary {
+    grid-column: 6;
+    grid-row: 1;
+  }
+  .game-pet-roster > .game-build-slots--combat {
+    grid-column: 2 / 6;
+    grid-row: 1;
+  }
+  .game-pet-roster > .game-build-slots--assist {
+    grid-column: 2 / 7;
+    grid-row: 2;
+  }
+}
