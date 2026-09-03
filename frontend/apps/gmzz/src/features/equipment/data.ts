@@ -228,13 +228,13 @@ export type ChosenAffix = {
 export type ScoredAffix = ChosenAffix & { tier: AffixTier; mark: number }
 
 /**
- * The Mark as the game prints it beside an affix: to the nearest five. Every
- * affix score the card shows ends in 0 or 5 (809 reads 810), while the totals
- * behave as if the exact figures were summed, so the rounding is display only
- * and the exact Mark is what is scored.
+ * A score as the game prints it: to the nearest five. The 重塑 tab's figure
+ * always ends in 0 or 5 while the affix Marks it sums do not, so the rounding
+ * sits on the total. Individual affixes show no score in game, so theirs stay
+ * exact.
  */
-export function shownMark(mark: number): number {
-  return Math.round(mark / 5) * 5
+export function toNearestFive(score: number): number {
+  return Math.round(score / 5) * 5
 }
 
 /** The highest Mark a ladder carries; 0 for an empty one. */
@@ -356,7 +356,7 @@ export type PieceResult = {
   extraordinaryCount: number
   /** See `extraordinaryBonus`. */
   extraordinaryBonus: number
-  /** The 重塑 tab's figure: affixMark + extraordinaryBonus. */
+  /** The 重塑 tab's figure: affixMark + extraordinaryBonus, to the nearest five as the game prints it. */
   reforgeScore: number
   /** The grace the extraordinary affixes trigger — shown for its effect; it adds nothing of its own. */
   grace: Grace | null
@@ -552,7 +552,7 @@ export function evaluatePiece(
   const affixMark = affixes.reduce((sum, affix) => sum + affix.mark, 0)
   const extraordinaryCount = affixes.filter((affix) => affix.tier === 'extraordinary').length
   const bonus = extraordinaryBonus(extraordinaryCount)
-  const reforgeScore = affixMark + bonus
+  const reforgeScore = toNearestFive(affixMark + bonus)
   const baseScore = item?.baseScore ?? 0
 
   return {

@@ -19,7 +19,7 @@ import {
   progressOf,
   refineFromProgress,
   scoredSlots,
-  shownMark,
+  toNearestFive,
   statLines,
   suitOf,
   suitTierFor,
@@ -366,13 +366,12 @@ describe('classifyAffix', () => {
   })
 })
 
-describe('shownMark', () => {
-  it('rounds to the nearest five, as the card prints it', () => {
-    expect(shownMark(809)).toBe(810)
-    expect(shownMark(806)).toBe(805)
-    expect(shownMark(612)).toBe(610)
-    expect(shownMark(-244)).toBe(-245)
-    expect(shownMark(0)).toBe(0)
+describe('toNearestFive', () => {
+  it('rounds to the nearest five, as the 重塑 tab prints its total', () => {
+    expect(toNearestFive(3616)).toBe(3615)
+    expect(toNearestFive(3483)).toBe(3485)
+    expect(toNearestFive(-244)).toBe(-245)
+    expect(toNearestFive(0)).toBe(0)
   })
 })
 
@@ -509,7 +508,8 @@ describe('evaluatePiece', () => {
     expect(result.affixes.map((affix) => affix.tier)).toEqual(['extraordinary', 'extraordinary', 'extraordinary'])
     expect(result.extraordinaryCount).toBe(3)
     expect(result.extraordinaryBonus).toBe(1200)
-    expect(result.reforgeScore).toBe(result.affixMark + 1200)
+    expect(result.reforgeScore).toBe(toNearestFive(result.affixMark + 1200))
+    expect(result.reforgeScore % 5).toBe(0)
     expect(result.grace?.id).toBe(108)
     expect(result.total).toBe(2430 + 240 + result.reforgeScore)
   })

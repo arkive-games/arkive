@@ -19,7 +19,6 @@ import {
   progressBounds,
   refineFromProgress,
   scoredSlots,
-  shownMark,
   statLines,
   suitOf,
   suitThreshold,
@@ -76,7 +75,7 @@ const BADGE_CLASS =
   'inline-block shrink-0 rounded border border-border px-1 align-middle text-xs font-medium leading-4 text-muted-foreground'
 const PIP_ON = 'text-[color:var(--arkive-nav-accent)]'
 const PIP_OFF = 'text-muted-foreground/40'
-/** One affix: pip, stat, value, Mark as shown and as scored, remove. */
+/** One affix: pip, stat, value, Mark, remove. */
 const AFFIX_ROW_CLASS =
   'grid min-w-0 grid-cols-[auto_minmax(3.5rem,1fr)_minmax(3.5rem,4rem)_auto_auto] items-center gap-1'
 /**
@@ -568,10 +567,8 @@ function AffixField({
         testId={`equip-affix-value-${slot}-${index}`}
         onValue={(value) => onChange({ family: affix.family, value })}
       />
-      {/* The figure the card prints (to the nearest five) leads, since that is
-          what the player checks against; the exact Mark that is summed follows. */}
       <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground" data-testid={`equip-affix-mark-${slot}-${index}`}>
-        {t('equip.affixMark', { shown: shownMark(affix.mark), mark: affix.mark })}
+        {t('equip.affixMark', { mark: affix.mark })}
       </span>
       <button
         type="button"
