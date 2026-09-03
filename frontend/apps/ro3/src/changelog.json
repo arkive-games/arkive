@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.4",
+      "date": "2026-09-03",
+      "commit": "6c3bbe52810d3d18f743c8eea1888bcf5a433429",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Applied extracted Ragnarok 3 GenreManual UI assets to build viewer slots and information panels.",
+            "zh-CN": "将解包的仙境传说 3 流派手册原生 UI 应用于 BD 查看页槽位与信息面板。",
+            "zh-TW": "將解包的仙境傳說 3 流派手冊原生 UI 應用於 BD 查看頁槽位與資訊面板。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.3",
       "date": "2026-09-03",
       "commit": "6c25ea8f8fc383e803c6b5360b1907722d7b6040",
