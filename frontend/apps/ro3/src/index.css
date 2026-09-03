@@ -6977,3 +6977,59 @@ select {
   .game-pet-roster > .game-build-slots--combat { grid-column: 2; grid-row: 2; }
   .game-pet-roster > .game-build-slots--assist { grid-column: 2; grid-row: 3; }
 }
+
+/* Card slots follow the client groups: generous card art with clear gutters
+   between groups, while each group itself remains a fixed slot matrix. */
+.game-card-fixed-grid {
+  gap: .82rem;
+  padding: .35rem .2rem .55rem;
+}
+.game-card-fixed-row { gap: .8rem; }
+.game-card-fixed-group.game-build-slots--cards {
+  grid-template-columns: repeat(4, 4.2rem);
+  column-gap: .3rem;
+}
+.game-card-fixed-group:has(.game-build-slot:nth-child(2):last-child) {
+  grid-template-columns: repeat(2, 4.2rem);
+}
+.game-card-fixed-group:has(.game-build-slot:only-child) {
+  grid-template-columns: 4.2rem;
+}
+.game-build-slot.is-card .game-build-slot-frame {
+  width: 4.2rem;
+  height: 4.2rem;
+  padding: .3rem;
+}
+.game-build-slot.is-card .game-build-slot-frame small {
+  right: .16rem;
+  bottom: .16rem;
+  left: auto;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  display: grid;
+  place-items: center;
+  padding: 0 .12rem;
+  border: 1px solid rgba(106, 78, 35, .55);
+  border-radius: 50%;
+  color: #fff7df;
+  background: rgba(63, 51, 34, .82);
+  font-size: .48rem;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .55);
+}
+
+@media (max-width: 36rem) {
+  .game-card-fixed-row { gap: .65rem; }
+  .game-card-fixed-group.game-build-slots--cards,
+  .game-card-fixed-group:has(.game-build-slot:nth-child(2):last-child) {
+    column-gap: .22rem;
+  }
+  .game-card-fixed-group.game-build-slots--cards,
+  .game-card-fixed-group:has(.game-build-slot:nth-child(2):last-child),
+  .game-card-fixed-group:has(.game-build-slot:only-child) {
+    grid-template-columns: repeat(4, 3.9rem);
+  }
+  .game-card-fixed-group:has(.game-build-slot:nth-child(2):last-child) { grid-template-columns: repeat(2, 3.9rem); }
+  .game-card-fixed-group:has(.game-build-slot:only-child) { grid-template-columns: 3.9rem; }
+  .game-build-slot.is-card .game-build-slot-frame { width: 3.9rem; height: 3.9rem; }
+}
