@@ -15,6 +15,9 @@ import {
   markForValue,
   markRate,
   maxAffixesFor,
+  affixBounds,
+  clampAffixValue,
+  counterpartFor,
   maxStageFor,
   progressBounds,
   progressOf,
@@ -39,10 +42,12 @@ const EQUIPMENT: Equipment = {
     { id: 3, name: '项链', order: 10, seasons: [201] },
   ],
   professions: [
+    { id: 1200001, name: '太阳途径', sequenceName: '歌颂者', description: '', disabled: false, weaponTypeIds: [301] },
     { id: 1200002, name: '空想家途径', sequenceName: '观众', description: '', disabled: false, weaponTypeIds: [302] },
     { id: 1200008, name: '错误途径', sequenceName: '偷盗者', description: '', disabled: true, weaponTypeIds: [] },
   ],
   types: [
+    { id: 301, name: '长戟', slot: 1, baseStatKeys: ['AtkMin_N', 'AtkMax_N', 'MaxHp_N'], baseStatLabels: ['攻击', '最大生命'], classLimit: [1200001] },
     { id: 302, name: '龙瞳', slot: 1, baseStatKeys: ['AtkMin_N', 'AtkMax_N', 'MaxHp_N'], baseStatLabels: ['攻击', '最大生命'], classLimit: [1200002] },
   ],
   items: [
@@ -51,6 +56,12 @@ const EQUIPMENT: Equipment = {
       gearLevel: 62, levelRequirement: 60,
       baseStats: [['AtkMin_N', 327], ['AtkMax_N', 607], ['MaxHp_N', 1960]],
       baseScore: 2430, suitId: 101, setId: 4, brandId: 10035, flavour: '',
+    },
+    {
+      // The same weapon for the 太阳 pathway: same suit, gear level and quality, other subtype.
+      id: 3010623, name: '无声之戟', typeId: 301, slot: 1, quality: 6, icon: '3010623',
+      gearLevel: 62, levelRequirement: 60, baseStats: [], baseScore: 2430,
+      suitId: 101, setId: 4, brandId: null, flavour: '',
     },
     {
       id: 3020600, name: '旧武器', typeId: 302, slot: 1, quality: 4, icon: '3020600',
@@ -376,6 +387,46 @@ describe('toNearestFive', () => {
   })
 })
 
+describe('affixBounds / clampAffixValue', () => {
+  it('reads the positive span across both ladders and the contaminated span on its own', () => {
+    expect(affixBounds(EQUIPMENT, 1, '攻击')).toEqual({ negative: { min: -153, max: -76 }, positive: { min: 48, max: 382 } })
+    expect(affixBounds(EQUIPMENT, 1, '穿刺')).toEqual({ negative: null, positive: { min: 31, max: 98 } })
+    expect(affixBounds(EQUIPMENT, 1, '未知')).toEqual({ negative: null, positive: null })
+  })
+
+  it('pulls a value into the span of its sign', () => {
+    expect(clampAffixValue(EQUIPMENT, 1, '攻击', 500)).toBe(382)
+    expect(clampAffixValue(EQUIPMENT, 1, '攻击', 20)).toBe(48)
+    expect(clampAffixValue(EQUIPMENT, 1, '攻击', 308)).toBe(308)
+    expect(clampAffixValue(EQUIPMENT, 1, '攻击', -300)).toBe(-153)
+    expect(clampAffixValue(EQUIPMENT, 1, '攻击', -10)).toBe(-76)
+  })
+
+  it('leaves 0 alone and flips a sign the family cannot roll', () => {
+    expect(clampAffixValue(EQUIPMENT, 1, '攻击', 0)).toBe(0)
+    expect(clampAffixValue(EQUIPMENT, 1, '穿刺', -50)).toBe(31)
+    expect(clampAffixValue(EQUIPMENT, 1, '未知', 77)).toBe(77)
+  })
+})
+
+describe('counterpartFor', () => {
+  const eye = EQUIPMENT.items[0]
+
+  it('is the item itself when the pathway can wear it', () => {
+    expect(counterpartFor(EQUIPMENT, eye, 1200002)?.id).toBe(3020623)
+    expect(counterpartFor(EQUIPMENT, eye, null)?.id).toBe(3020623)
+  })
+
+  it("swaps a weapon for the other pathway's counterpart", () => {
+    expect(counterpartFor(EQUIPMENT, eye, 1200001)?.id).toBe(3010623)
+  })
+
+  it('is null when the other pathway has no counterpart', () => {
+    // 旧武器 has no 太阳 twin in the fixture.
+    expect(counterpartFor(EQUIPMENT, EQUIPMENT.items[2], 1200001)).toBeNull()
+  })
+})
+
 describe('maxAffixesFor', () => {
   it('allows five affixes on the weapon slot and four elsewhere', () => {
     // Slot 1 is where the pathways' weapon subtype (302) lives.
@@ -386,9 +437,9 @@ describe('maxAffixesFor', () => {
 })
 
 describe('extraordinaryBonus', () => {
-  it('is 200 × (1 + … + n), the remainder the game\'s 重塑 tab carries over the affix Marks', () => {
+  it('is 100·n·(n+1) from two extraordinary affixes up, the remainder the game\'s 重塑 tab carries over the affix Marks', () => {
     expect(extraordinaryBonus(0)).toBe(0)
-    expect(extraordinaryBonus(1)).toBe(200)
+    expect(extraordinaryBonus(1)).toBe(0)
     expect(extraordinaryBonus(2)).toBe(600)
     expect(extraordinaryBonus(3)).toBe(1200)
     expect(extraordinaryBonus(4)).toBe(2000)
@@ -469,7 +520,7 @@ describe('suitTierFor', () => {
 
 describe('suitOf / activeSuits', () => {
   const adventure = EQUIPMENT.items[0]
-  const plain = EQUIPMENT.items[1]
+  const plain = EQUIPMENT.items[2]
   const arena = { ...adventure, id: 3020999, suitId: 102 }
 
   it('names the suit an item belongs to, and nothing for an unaffiliated one', () => {
@@ -589,14 +640,15 @@ describe('playableProfessions', () => {
   it('drops the disabled pathway and any with no weapon', () => {
     // 错误途径 ships disabled, and a pathway with no weapon subtype cannot be
     // the basis of a weapon filter.
-    expect(playableProfessions(EQUIPMENT).map((p) => p.id)).toEqual([1200002])
+    expect(playableProfessions(EQUIPMENT).map((p) => p.id)).toEqual([1200001, 1200002])
   })
 })
 
 describe('itemsForSlot', () => {
   it('narrows a class-locked slot to that pathway', () => {
     expect(itemsForSlot(EQUIPMENT, 1, 1200002)).toHaveLength(2)
-    expect(itemsForSlot(EQUIPMENT, 1, 1200001)).toHaveLength(0)
+    expect(itemsForSlot(EQUIPMENT, 1, 1200001)).toHaveLength(1)
+    expect(itemsForSlot(EQUIPMENT, 1, 1200009)).toHaveLength(0)
   })
 
   it('ignores the pathway for a slot with no class restriction', () => {
@@ -609,12 +661,12 @@ describe('itemsForSlot', () => {
         ...EQUIPMENT.items[0], id: 9001, name: '甲', typeId: 400, slot: 12,
       }],
     }
-    expect(itemsForSlot(armour, 12, 1200001)).toHaveLength(1)
+    expect(itemsForSlot(armour, 12, 1200009)).toHaveLength(1)
     expect(itemsForSlot(armour, 12, null)).toHaveLength(1)
   })
 
   it('returns everything when no pathway is chosen', () => {
-    expect(itemsForSlot(EQUIPMENT, 1, null)).toHaveLength(2)
+    expect(itemsForSlot(EQUIPMENT, 1, null)).toHaveLength(3)
   })
 
   it('sorts by quality, best first', () => {

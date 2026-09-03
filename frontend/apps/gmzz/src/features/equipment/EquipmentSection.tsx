@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
+import { TYPE } from '@/lib/typography'
 import { Input } from '@gamemap/ui'
 import { useMemory } from '@gamemap/state-memory'
 import type { TFunction } from 'i18next'
@@ -10,7 +11,10 @@ import { useTranslation } from 'react-i18next'
 import {
   activeSuits,
   equipmentIconUrl,
+  affixBounds,
   averageProgress,
+  clampAffixValue,
+  counterpartFor,
   evaluatePiece,
   familiesFor,
   itemsForSlot,
@@ -38,12 +42,16 @@ import {
 
 type LayoutMode = 'rows' | 'cards'
 
-/** The pip the game draws beside an affix: gold for extraordinary, grey for normal, red for contaminated. */
+/**
+ * The pip the game draws beside an affix: gold for extraordinary, grey for
+ * normal, red for contaminated — the same ◆ the grace's pips use, so the two
+ * read as one system.
+ */
 const TIER_PIP: Record<AffixTier, { className: string; labelKey: string }> = {
-  extraordinary: { className: 'bg-amber-400', labelKey: 'equip.tierExtraordinary' },
-  normal: { className: 'bg-zinc-400', labelKey: 'equip.tierNormal' },
-  contaminated: { className: 'bg-red-500', labelKey: 'equip.tierContaminated' },
-  special: { className: 'bg-sky-400', labelKey: 'equip.tierSpecial' },
+  extraordinary: { className: 'text-amber-400', labelKey: 'equip.tierExtraordinary' },
+  normal: { className: 'text-zinc-400', labelKey: 'equip.tierNormal' },
+  contaminated: { className: 'text-red-500', labelKey: 'equip.tierContaminated' },
+  special: { className: 'text-sky-400', labelKey: 'equip.tierSpecial' },
 }
 
 /**
@@ -56,28 +64,24 @@ const SUIT_KIND_KEY: Record<string, string> = {
   竞技套装: 'equip.kindArena',
 }
 
-/** Every grace tops out at four extraordinary affixes, so the pip row is fixed. */
-const GRACE_PIPS = 4
 /** A sanity ceiling for the hand-typed affix values; the game has no real one. */
 const SCORE_CAP = 999999
 
-const INPUT_CLASS =
-  'h-7 border-border bg-background px-1.5 text-xs tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const SELECT_CLASS =
-  'h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const COMPACT_SELECT_CLASS =
-  'h-7 w-full min-w-0 rounded-md border border-border bg-background px-1 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const LABEL_CLASS = 'mb-0.5 block text-xs font-semibold text-muted-foreground'
-const BUTTON_CLASS =
-  'inline-flex items-center justify-center rounded-md border border-border text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] disabled:opacity-50'
+const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
+const INPUT_CLASS = `h-7 border-border bg-background px-1.5 ${TYPE.control} tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]`
+const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none ${FOCUS}`
+const COMPACT_SELECT_CLASS = `h-7 w-full min-w-0 rounded-md border border-border bg-background px-1 ${TYPE.control} text-foreground outline-none ${FOCUS}`
+const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
+const BUTTON_CLASS = `inline-flex items-center justify-center rounded-md border border-border ${TYPE.control} font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
 const SECTION_CLASS = 'border-t border-border/70 p-2.5'
-const BADGE_CLASS =
-  'inline-block shrink-0 rounded border border-border px-1 align-middle text-xs font-medium leading-4 text-muted-foreground'
-const PIP_ON = 'text-[color:var(--arkive-nav-accent)]'
-const PIP_OFF = 'text-muted-foreground/40'
-/** One affix: pip, then stat, value and Mark in three equal columns so the rows read as a table, then remove. */
-const AFFIX_ROW_CLASS =
-  'grid min-w-0 grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1'
+const BADGE_CLASS = `inline-block shrink-0 rounded border border-border px-1 align-middle ${TYPE.control} font-medium leading-4 text-muted-foreground`
+/** A grace's pips: one gold ◆ per extraordinary affix it counts, and no grey ones filling up to four. */
+const PIP_CLASS = 'text-[color:var(--arkive-nav-accent)]'
+/**
+ * One affix: pip, stat, value, Mark, remove. The value and Mark columns are
+ * fixed so they line up down the list and the stat takes what is left.
+ */
+const AFFIX_ROW_CLASS = 'grid min-w-0 grid-cols-[auto_minmax(0,1fr)_3.75rem_4rem_auto] items-center gap-1'
 /**
  * The rows layout's columns: item, stats, enhancement, affixes, brand. Shared
  * by the header and every row so the two cannot drift apart. Five columns only
@@ -86,7 +90,7 @@ const AFFIX_ROW_CLASS =
  * column is wide because its stage track labels all nine steps.
  */
 const ROW_GRID =
-  'xl:grid-cols-[minmax(10rem,12rem)_minmax(10rem,11rem)_minmax(16rem,19rem)_minmax(0,2.4fr)_minmax(0,7rem)] xl:gap-5'
+  'xl:grid-cols-[minmax(10rem,12rem)_minmax(10rem,11rem)_minmax(16rem,19rem)_minmax(0,2fr)_minmax(9rem,12rem)] xl:gap-5'
 
 /* ------------------------------------------------------------- persistence */
 
@@ -143,25 +147,28 @@ const equipmentLayout = gmzzMemory.preference('score/equipment-layout', {
  * A stored piece checked against the dataset it is about to be scored with.
  *
  * The draft outlives the data: an item can leave the dataset, a ladder can
- * shorten, and a weapon from another pathway cannot be worn by this one. Each
- * is corrected here rather than trusted, so a stale draft degrades to an empty
- * slot instead of a piece that scores nothing for no visible reason. The stored
- * draft itself is left alone — switch the pathway back and the weapon returns.
+ * shorten, and a weapon belongs to one pathway. Each is corrected here rather
+ * than trusted, so a stale draft degrades to an empty slot instead of a piece
+ * that scores nothing for no visible reason. A weapon of another pathway is
+ * swapped for this pathway's counterpart — every weapon has one per pathway —
+ * and only dropped when there is none. The stored draft itself is left alone,
+ * so switching the pathway back brings the original weapon back.
  */
 function sanitizePiece(equipment: Equipment, piece: PieceState, professionId: number | null): PieceState {
   const maxStage = maxStageFor(equipment, piece.slot)
-  const wearable = piece.itemId !== null && itemsForSlot(equipment, piece.slot, professionId).some((item) => item.id === piece.itemId)
+  const stored = equipment.items.find((item) => item.id === piece.itemId && item.slot === piece.slot) ?? null
+  const worn = stored ? counterpartFor(equipment, stored, professionId) : null
   const enhanceStage = Math.min(Math.max(Math.trunc(piece.enhanceStage), 0), maxStage)
   const families = familiesFor(equipment, piece.slot)
   return {
     slot: piece.slot,
-    itemId: wearable ? piece.itemId : null,
+    itemId: worn?.id ?? null,
     enhanceStage,
     refinePercent: enhanceStage === 0 ? 0 : Math.min(Math.max(Math.trunc(piece.refinePercent), 0), 100),
     affixes: piece.affixes
       .filter((affix) => families.includes(affix.family))
       .slice(0, maxAffixesFor(equipment, piece.slot))
-      .map((affix) => ({ family: affix.family, value: readInt(affix.value, -SCORE_CAP, SCORE_CAP) })),
+      .map((affix) => ({ family: affix.family, value: clampAffixValue(equipment, piece.slot, affix.family, readInt(affix.value, -SCORE_CAP, SCORE_CAP)) })),
   }
 }
 
@@ -216,16 +223,27 @@ type FieldProps = { label: string; testId: string }
  * snapped to "0" while it is being edited: clearing it to retype would
  * otherwise leave a "0" the next digits append to. `draft` holds the raw text
  * while the field has focus and is dropped on blur, so an outside change still
- * shows through.
+ * shows through. `commit` runs on blur with the value as typed, for a bound
+ * that must not bite mid-keystroke — clamping "3" up to 48 on the way to
+ * "308" would make the number untypable.
  */
 function NumberField({
   value,
   min,
   max,
+  placeholder = '0',
   label,
   testId,
   onValue,
-}: FieldProps & { value: number; min: number; max: number; onValue: (value: number) => void }) {
+  commit,
+}: FieldProps & {
+  value: number
+  min: number
+  max: number
+  placeholder?: string
+  onValue: (value: number) => void
+  commit?: (value: number) => number
+}) {
   const [draft, setDraft] = useState<string | null>(null)
   return (
     <Input
@@ -234,13 +252,19 @@ function NumberField({
       min={min}
       max={max}
       value={draft ?? (value === 0 ? '' : value)}
-      placeholder="0"
+      placeholder={placeholder}
       onChange={(event) => {
         const raw = event.target.value
         setDraft(raw)
         onValue(raw.trim() === '' ? 0 : readInt(raw, min, max))
       }}
-      onBlur={() => setDraft(null)}
+      onBlur={() => {
+        setDraft(null)
+        if (commit) {
+          const settled = commit(value)
+          if (settled !== value) onValue(settled)
+        }
+      }}
       className={INPUT_CLASS}
       aria-label={label}
       data-testid={testId}
@@ -271,16 +295,17 @@ function Picker({
 
 /**
  * Stage and badge-percentage sliders, the pair the game's own panel shows,
- * stacked with their readings beside them.
+ * stacked, with the score they come to above them.
  *
- * The stage track has every step marked and labelled "+N" above it; the
- * badge-percentage track below runs over the stage's window of the whole-ladder
- * percentage (25..37 at +3 of 8), which is what is printed under the badge, and
- * has its two ends labelled underneath. So the two tracks sit together in the
- * middle with their scales outermost. The in-stage refinement that is stored is
- * derived from the badge value. At +0 the window is empty and the second slider
- * is disabled, since there is no stage being refined. The readings — and, for a
- * piece, the score the two come to — sit to the right.
+ * The stage track has every step marked and labelled "+N" above it, the
+ * current one picked out; the badge-percentage track below runs over the
+ * stage's window of the whole-ladder percentage (25..37 at +3 of 8), which is
+ * what is printed under the badge, with its two ends and the current value
+ * labelled underneath. So the two tracks sit together in the middle with their
+ * scales outermost, and the scales are also the readings — there is no
+ * separate reading to keep in step with them. The in-stage refinement that is
+ * stored is derived from the badge value. At +0 the window is empty and the
+ * second slider is disabled, since there is no stage being refined.
  */
 function EnhanceSliders({
   stage,
@@ -305,53 +330,37 @@ function EnhanceSliders({
   const stageText = (value: number) => t('equip.stageOption', { stage: value })
   const percentText = (value: number) => t('equip.percentValue', { value })
   return (
-    <div className="flex min-w-0 items-center gap-3">
-      <div className="min-w-0 flex-1">
-        <RangeField
-          label={t('equip.enhanceStage')}
-          min={0}
-          max={maxStage}
-          value={stage}
-          valueText={stageText(stage)}
-          minLabel={stageText(0)}
-          maxLabel={stageText(maxStage)}
-          tickLabel={stageText}
-          labels="above"
-          testId={`${testIdPrefix}-stage`}
-          onChange={onStage}
-        />
-        <RangeField
-          label={t('equip.refinePercent')}
-          min={bounds.min}
-          max={bounds.max}
-          value={badge}
-          valueText={percentText(badge)}
-          minLabel={percentText(bounds.min)}
-          maxLabel={percentText(bounds.max)}
-          testId={`${testIdPrefix}-refine`}
-          onChange={onBadge}
-        />
-      </div>
-      {/* The two readings are what the player quotes, so they lead; the score they come to is the footnote. */}
-      <div className="shrink-0 text-center tabular-nums">
-        <div className="flex items-baseline justify-center gap-1.5 text-sm">
-          <span className="text-muted-foreground">{t('equip.enhanceStage')}</span>
-          <span className="font-semibold text-foreground" data-testid={`${testIdPrefix}-stage-value`}>
-            {stageText(stage)}
-          </span>
+    <div className="min-w-0">
+      {score !== undefined ? (
+        <div className={`mb-1.5 ${TYPE.value}`} data-testid={`${testIdPrefix}-enhance-score`}>
+          {t('equip.enhanceDerived', { score: score.toLocaleString() })}
         </div>
-        <div className="flex items-baseline justify-center gap-1.5 text-sm">
-          <span className="text-muted-foreground">{t('equip.refinePercent')}</span>
-          <span className="font-semibold text-foreground" data-testid={`${testIdPrefix}-refine-value`}>
-            {percentText(badge)}
-          </span>
-        </div>
-        {score !== undefined ? (
-          <div className="mt-1 text-xs text-muted-foreground" data-testid={`${testIdPrefix}-enhance-score`}>
-            {t('equip.enhanceDerived', { score })}
-          </div>
-        ) : null}
-      </div>
+      ) : null}
+      <RangeField
+        label={t('equip.enhanceStage')}
+        min={0}
+        max={maxStage}
+        value={stage}
+        valueText={stageText(stage)}
+        minLabel={stageText(0)}
+        maxLabel={stageText(maxStage)}
+        tickLabel={stageText}
+        labels="above"
+        testId={`${testIdPrefix}-stage`}
+        onChange={onStage}
+      />
+      <RangeField
+        label={t('equip.refinePercent')}
+        min={bounds.min}
+        max={bounds.max}
+        value={badge}
+        valueText={percentText(badge)}
+        minLabel={percentText(bounds.min)}
+        maxLabel={percentText(bounds.max)}
+        showValue
+        testId={`${testIdPrefix}-refine`}
+        onChange={onBadge}
+      />
     </div>
   )
 }
@@ -374,34 +383,31 @@ function IconPlaceholder({ item }: { item: EquipItem | null }) {
   )
 }
 
+/** The piece's total, heading its column level with the base, enhancement and reforge scores that head the others. */
+function PieceScore({ result }: { result: PieceResult }) {
+  const { t } = useTranslation()
+  return (
+    <div className={`mb-1.5 ${TYPE.value}`} data-testid={`equip-score-${result.state.slot}`}>
+      {t('equip.pieceScore', { score: result.total.toLocaleString() })}
+    </div>
+  )
+}
+
 /**
  * The piece's card face, one fact a line: name with `+stage`, the PVE/PVP
- * marker, subtype and gear level, then the total and its three parts in the
- * order the game's own tabs use — so 重塑 is read on its own rather than folded
- * into "everything but the base". Shared by both layouts.
+ * marker, subtype and gear level. Shared by both layouts.
  */
 function PieceHeader({ result, kind, subtitle }: { result: PieceResult; kind: string; subtitle: string }) {
   const { t } = useTranslation()
-  const parts: [string, number][] = [
-    ['equip.subtotalBase', result.baseScore],
-    ['equip.subtotalEnhance', result.enhanceScore],
-    ['equip.subtotalReforge', result.reforgeScore],
-  ]
   return (
-    <div className="min-w-0 text-xs leading-5">
-      <div className="truncate text-sm font-bold text-foreground">
+    <div className={`min-w-0 ${TYPE.body}`}>
+      <div className={`truncate ${TYPE.name}`}>
         {result.item ? result.item.name : t('equip.emptySlot')}
         <span className="ml-1 tabular-nums text-muted-foreground">+{result.state.enhanceStage}</span>
       </div>
       {/* The marker keeps its line even when there is none, so the lines below sit at the same height on every piece. */}
       <div className="h-5">{kind ? <span className={BADGE_CLASS}>{kind}</span> : null}</div>
-      <div className="truncate text-muted-foreground">{subtitle}</div>
-      <div className="tabular-nums" data-testid={`equip-score-${result.state.slot}`}>
-        <div className="font-semibold text-foreground">{t('equip.pieceScore', { score: result.total.toLocaleString() })}</div>
-        {parts.map(([key, value]) => (
-          <div key={key} className="text-muted-foreground">{t(key, { value: value.toLocaleString() })}</div>
-        ))}
-      </div>
+      <div className="truncate">{subtitle}</div>
     </div>
   )
 }
@@ -412,42 +418,49 @@ function rangeText({ min, max }: StatRange): string {
 }
 
 /**
- * The stat block the card reads: the item's base stats, each with what the
- * enhancement adds in brackets after it — `327~607 (+60)` — before reforge
- * and brand. A weapon's 攻击 is its `min~max` range.
+ * The base score, then the stat block the card reads: the item's base stats,
+ * each with what the enhancement adds in brackets after it — `327~607 (+60)`
+ * — before reforge and brand. A weapon's 攻击 is its `min~max` range.
  */
 function StatBlock({ equipment, result }: { equipment: Equipment; result: PieceResult }) {
   const { t } = useTranslation()
   const lines = statLines(equipment, result.item?.baseStats ?? null, result.enhanceStats)
-  if (lines.length === 0) {
-    return <p className="text-xs text-muted-foreground">{t('equip.noStats')}</p>
-  }
   return (
-    // One grid for the whole block, so the values and the bracketed gains each
-    // line up in their own column rather than the gain pushing its value left.
-    <dl
-      className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] gap-x-1 gap-y-0.5 text-xs tabular-nums"
-      data-testid={`equip-stats-${result.state.slot}`}
-    >
-      {lines.map((line) => (
-        <div key={line.key} className="col-span-3 grid grid-cols-subgrid items-baseline">
-          <dt className="truncate text-muted-foreground">{line.label}</dt>
-          <dd className="text-right font-semibold text-foreground">{rangeText(line.base)}</dd>
-          <dd className="text-emerald-700 dark:text-emerald-300">
-            {line.gain.max > 0 ? t('equip.statGain', { gain: `+${rangeText(line.gain)}` }) : null}
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <div className="min-w-0">
+      <div className={`mb-1.5 ${TYPE.value}`} data-testid={`equip-base-score-${result.state.slot}`}>
+        {t('equip.baseDerived', { score: result.baseScore.toLocaleString() })}
+      </div>
+      {lines.length === 0 ? (
+        <p className={TYPE.body}>{t('equip.noStats')}</p>
+      ) : (
+        // One grid for the whole block, so the values and the bracketed gains each
+        // line up in their own column rather than the gain pushing its value left.
+        <dl
+          className={`grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] gap-x-1 gap-y-0.5 ${TYPE.valueMuted}`}
+          data-testid={`equip-stats-${result.state.slot}`}
+        >
+          {lines.map((line) => (
+            <div key={line.key} className="col-span-3 grid grid-cols-subgrid items-baseline">
+              <dt className="truncate">{line.label}</dt>
+              <dd className={`text-right ${TYPE.value}`}>{rangeText(line.base)}</dd>
+              <dd className="text-emerald-700 dark:text-emerald-300">
+                {line.gain.max > 0 ? t('equip.statGain', { gain: `+${rangeText(line.gain)}` }) : null}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
   )
 }
 
 function BrandNote({ result }: { result: PieceResult }) {
-  if (!result.brand) return null
+  const { t } = useTranslation()
+  if (!result.brand) return <p className={TYPE.body}>{t('equip.noBrand')}</p>
   return (
     <div className="min-w-0">
-      <div className="text-sm font-semibold text-[color:var(--arkive-nav-accent)]">{result.brand.name}</div>
-      <p className="whitespace-pre-line text-xs leading-5 text-muted-foreground">{result.brand.effect}</p>
+      <div className={`${TYPE.name} text-[color:var(--arkive-nav-accent)]`}>{result.brand.name}</div>
+      <p className={`whitespace-pre-line ${TYPE.body}`}>{result.brand.effect}</p>
     </div>
   )
 }
@@ -487,42 +500,48 @@ function EnhanceControls({ equipment, result, onPatch }: PieceControlProps) {
 }
 
 /**
- * The reforge score on its own line: the affix Marks, the extraordinary bonus
- * they carry, and the grace they trigger — named for its effect, since it adds
- * nothing of its own to the score.
+ * The reforge score above, the grace below: the affix Marks and the
+ * extraordinary bonus they carry on top, and under a gap the grace they
+ * trigger — named for its effect, since it adds nothing of its own to the
+ * score. The lower half stays empty when nothing fires, so the score sits at
+ * the same height on every row.
  */
 function ReforgeSummary({ result }: { result: PieceResult }) {
   const { t } = useTranslation()
   const grace = result.grace
+  // The exact sum, shown in brackets when the game's rounding to five moved it.
+  const exact = result.affixMark + result.extraordinaryBonus
   return (
-    <div className="min-w-0 text-xs" data-testid={`equip-reforge-${result.state.slot}`}>
-      <div className="flex flex-wrap items-baseline gap-x-2 tabular-nums">
-        <span className="font-semibold text-foreground">
+    <div className="min-w-0 space-y-2" data-testid={`equip-reforge-${result.state.slot}`}>
+      <div>
+        <div className={TYPE.value}>
           {t('equip.reforgeScore', { score: result.reforgeScore.toLocaleString() })}
-        </span>
-        <span className="text-muted-foreground">
+          {exact !== result.reforgeScore ? (
+            <span className={`ml-1 ${TYPE.valueMuted}`}>{t('equip.exactValue', { value: exact.toLocaleString() })}</span>
+          ) : null}
+        </div>
+        <div className={TYPE.valueMuted}>
           {t('equip.reforgeParts', {
             mark: result.affixMark.toLocaleString(),
             bonus: result.extraordinaryBonus.toLocaleString(),
-            count: result.extraordinaryCount,
           })}
-        </span>
-      </div>
-      {grace ? (
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <span className="text-sm font-bold text-foreground">{grace.name}</span>
-            <span aria-hidden>
-              {Array.from({ length: GRACE_PIPS }, (_, pip) => (
-                <span key={pip} className={pip < grace.extraordinaryCount ? PIP_ON : PIP_OFF}>◆</span>
-              ))}
-            </span>
-          </div>
-          <p className="whitespace-pre-line leading-5 text-muted-foreground">{grace.brief1}</p>
         </div>
-      ) : result.extraordinaryCount >= 2 ? (
-        <p className="text-muted-foreground">{t('equip.noGrace')}</p>
-      ) : null}
+      </div>
+      <div className="min-w-0">
+        {grace ? (
+          <>
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <span className={TYPE.name}>{grace.name}</span>
+              <span className={`${TYPE.control} ${PIP_CLASS}`} aria-hidden>
+                {'◆'.repeat(grace.extraordinaryCount)}
+              </span>
+            </div>
+            <p className={`whitespace-pre-line ${TYPE.body}`}>{grace.brief1}</p>
+          </>
+        ) : result.extraordinaryCount >= 2 ? (
+          <p className={TYPE.body}>{t('equip.noGrace')}</p>
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -533,12 +552,14 @@ function TierPip({ tier }: { tier: AffixTier }) {
   const pip = TIER_PIP[tier]
   return (
     <span
-      className={`inline-block size-2.5 shrink-0 rounded-full ${pip.className}`}
+      className={`shrink-0 ${TYPE.control} leading-none ${pip.className}`}
       role="img"
       aria-label={t(pip.labelKey)}
       title={t(pip.labelKey)}
       data-tier={tier}
-    />
+    >
+      ◆
+    </span>
   )
 }
 
@@ -558,6 +579,13 @@ function AffixField({
   onRemove: () => void
 }) {
   const { t } = useTranslation()
+  const bounds = affixBounds(equipment, slot, affix.family)
+  // The span the field will settle into, as its placeholder and its title: the
+  // player sees what the stat can roll before typing, and after, if the number
+  // moved on blur, why.
+  const spanText = [bounds.negative, bounds.positive]
+    .flatMap((span) => (span ? [`${span.min}~${span.max}`] : []))
+    .join(' / ')
   return (
     <div className={AFFIX_ROW_CLASS} data-testid={`equip-affix-${slot}-${index}`}>
       <TierPip tier={affix.tier} />
@@ -566,21 +594,26 @@ function AffixField({
         label={t('equip.affixFamily')}
         testId={`equip-affix-family-${slot}-${index}`}
         className={COMPACT_SELECT_CLASS}
-        onValue={(raw) => onChange({ family: raw, value: affix.value })}
+        // The value follows into the new family's bounds, so a 攻击 308 does not linger as an impossible 技能增强 308.
+        onValue={(raw) => onChange({ family: raw, value: clampAffixValue(equipment, slot, raw, affix.value) })}
       >
         {familiesFor(equipment, slot).map((family) => (
           <option key={family} value={family}>{family}</option>
         ))}
       </Picker>
-      <NumberField
-        value={affix.value}
-        min={-SCORE_CAP}
-        max={SCORE_CAP}
-        label={t('equip.affixValue')}
-        testId={`equip-affix-value-${slot}-${index}`}
-        onValue={(value) => onChange({ family: affix.family, value })}
-      />
-      <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground" data-testid={`equip-affix-mark-${slot}-${index}`}>
+      <span title={spanText} className="min-w-0">
+        <NumberField
+          value={affix.value}
+          min={bounds.negative?.min ?? bounds.positive?.min ?? -SCORE_CAP}
+          max={bounds.positive?.max ?? bounds.negative?.max ?? SCORE_CAP}
+          placeholder={bounds.positive ? `${bounds.positive.min}~${bounds.positive.max}` : '0'}
+          label={t('equip.affixValue')}
+          testId={`equip-affix-value-${slot}-${index}`}
+          onValue={(value) => onChange({ family: affix.family, value })}
+          commit={(value) => clampAffixValue(equipment, slot, affix.family, value)}
+        />
+      </span>
+      <span className={`whitespace-nowrap text-right ${TYPE.valueMuted}`} data-testid={`equip-affix-mark-${slot}-${index}`}>
         {t('equip.affixMark', { mark: affix.mark })}
       </span>
       <button
@@ -616,8 +649,8 @@ function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
     // since the same editor sits in a card a quarter of the page wide and in a
     // rows-layout column that is wider than that at any viewport.
     <div className="min-w-0 @container">
-      <div className="flex min-w-0 flex-col gap-3 @min-[27rem]:flex-row @min-[27rem]:items-center">
-        <div className="grid shrink-0 grid-cols-1 gap-y-1 @min-[27rem]:w-[20rem]">
+      <div className="flex min-w-0 flex-col gap-3 @min-[27rem]:flex-row @min-[27rem]:items-start">
+        <div className="grid shrink-0 grid-cols-1 gap-y-1 @min-[27rem]:w-[17rem]">
           {affixes.map((affix, index) => (
             <AffixField
               key={index}
@@ -651,7 +684,7 @@ function RowHeader() {
   const { t } = useTranslation()
   return (
     <div
-      className={`hidden px-2.5 text-xs font-semibold text-muted-foreground xl:grid ${ROW_GRID}`}
+      className={`hidden px-2.5 ${TYPE.label} xl:grid ${ROW_GRID}`}
       aria-hidden
       data-testid="equip-rows-header"
     >
@@ -670,28 +703,30 @@ function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: 
   const typeName = equipment.types.find((type) => type.id === result.item?.typeId)?.name ?? slotName
   return (
     <article
-      className={`grid gap-2 rounded-md border border-border bg-card p-2.5 xl:items-center ${ROW_GRID}`}
+      className={`grid gap-2 rounded-md border border-border bg-card p-2.5 xl:items-start ${ROW_GRID}`}
       data-testid={`equip-row-${result.state.slot}`}
     >
-      <button
-        type="button"
-        onClick={onOpenPicker}
-        title={t('equip.itemLabel')}
-        className="flex min-w-0 items-start gap-2 rounded-md border border-border bg-background/60 p-2 text-left transition-colors hover:border-[color:var(--arkive-nav-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
-        data-testid={`equip-open-picker-${result.state.slot}`}
-      >
-        <IconPlaceholder item={result.item} />
-        <PieceHeader
-          result={result}
-          kind={kind}
-          subtitle={t('equip.typeAndLevel', { type: typeName, level: result.item?.gearLevel ?? '—' })}
-        />
-      </button>
+      <div className="min-w-0">
+        <PieceScore result={result} />
+        <button
+          type="button"
+          onClick={onOpenPicker}
+          title={t('equip.itemLabel')}
+          className={`flex w-full min-w-0 items-center gap-2 rounded-md border border-border bg-background/60 p-2 text-left transition-colors hover:border-[color:var(--arkive-nav-accent)] ${FOCUS}`}
+          data-testid={`equip-open-picker-${result.state.slot}`}
+        >
+          <IconPlaceholder item={result.item} />
+          <PieceHeader
+            result={result}
+            kind={kind}
+            subtitle={t('equip.typeAndLevel', { type: typeName, level: result.item?.gearLevel ?? '—' })}
+          />
+        </button>
+      </div>
       <Cell label={t('equip.stats')} hidden><StatBlock equipment={equipment} result={result} /></Cell>
       <Cell label={t('equip.enhance')} hidden><EnhanceControls {...controls} /></Cell>
       <Cell label={t('equip.affixes')} hidden><AffixEditor {...controls} /></Cell>
-      {/* Stacked, an empty brand cell would be a bare label; in the grid it must stay to hold its column. */}
-      <Cell label={t('equip.brand')} hidden className={result.brand ? '' : 'hidden xl:block'}>
+      <Cell label={t('equip.brand')} hidden>
         <BrandNote result={result} />
       </Cell>
     </article>
@@ -708,11 +743,14 @@ function PieceCard({ equipment, slotName, kind, result, onPatch, onOpenPicker }:
       className="flex min-w-0 flex-col rounded-md border border-border bg-card"
       data-testid={`equip-card-${result.state.slot}`}
     >
+      <div className="px-2.5 pt-2.5">
+        <PieceScore result={result} />
+      </div>
       <button
         type="button"
         onClick={onOpenPicker}
         title={t('equip.itemLabel')}
-        className="flex min-w-0 items-start justify-between gap-2 border-b border-border p-2.5 text-left transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)]"
+        className="flex min-w-0 items-center justify-between gap-2 border-b border-border p-2.5 pt-0 text-left transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)]"
         data-testid={`equip-open-picker-${result.state.slot}`}
       >
         <PieceHeader
@@ -725,9 +763,7 @@ function PieceCard({ equipment, slotName, kind, result, onPatch, onOpenPicker }:
       <Cell label={t('equip.stats')} className="p-2.5"><StatBlock equipment={equipment} result={result} /></Cell>
       <Cell label={t('equip.enhance')} className={SECTION_CLASS}><EnhanceControls {...controls} /></Cell>
       <Cell label={t('equip.affixes')} className={SECTION_CLASS}><AffixEditor {...controls} /></Cell>
-      {result.brand ? (
-        <Cell label={t('equip.brand')} className={SECTION_CLASS}><BrandNote result={result} /></Cell>
-      ) : null}
+      <Cell label={t('equip.brand')} className={SECTION_CLASS}><BrandNote result={result} /></Cell>
     </article>
   )
 }
@@ -836,8 +872,8 @@ export default function EquipmentSection({
     <section className="space-y-3" data-testid="equip-section" aria-label={t('equip.title')}>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
         <div className="min-w-0">
-          <h2 className="text-xl font-bold text-foreground">{t('equip.title')}</h2>
-          <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted-foreground">{t('equip.hint')}</p>
+          <h2 className={TYPE.sectionTitle}>{t('equip.title')}</h2>
+          <p className={`mt-0.5 max-w-3xl ${TYPE.body}`}>{t('equip.hint')}</p>
         </div>
         <div className="inline-flex shrink-0 overflow-hidden rounded-md border border-border" role="group" aria-label={t('equip.layout')}>
           {(['rows', 'cards'] as const).map((mode) => (
@@ -846,7 +882,7 @@ export default function EquipmentSection({
               type="button"
               aria-pressed={layout === mode}
               onClick={() => setLayout(mode)}
-              className={`inline-flex min-h-9 items-center gap-1.5 px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)] ${mode === 'cards' ? 'border-l border-border' : ''} ${
+              className={`inline-flex min-h-9 items-center gap-1.5 px-3 ${TYPE.control} font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)] ${mode === 'cards' ? 'border-l border-border' : ''} ${
                 layout === mode
                   ? 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -887,17 +923,17 @@ export default function EquipmentSection({
               ))}
             </Picker>
           ) : (
-            <div className="text-sm font-semibold text-foreground" data-testid="equip-suit-active">
+            <div className={TYPE.name} data-testid="equip-suit-active">
               {chosenSuit
                 ? t('equip.suitActive', { name: chosenSuit.suit.fullName || chosenSuit.suit.name, pieces: chosenSuit.count })
                 : t('equip.suitNone', { need: Number.isFinite(suitNeed) ? suitNeed : '—' })}
             </div>
           )}
           {chosenSuit ? (
-            <div className="mt-1 text-xs leading-5 text-muted-foreground" data-testid="equip-suit-tier">
+            <div className={`mt-1 ${TYPE.body}`} data-testid="equip-suit-tier">
               {suitTier ? (
                 <>
-                  <span className="tabular-nums text-foreground">
+                  <span className={TYPE.value}>
                     {t('equip.suitTier', { level: suitTier.level ?? 0, mark: suitTier.mark ?? 0, percent: averagePercent.toFixed(1) })}
                   </span>
                   <p className="whitespace-pre-line">{suitTier.effect}</p>
@@ -915,13 +951,13 @@ export default function EquipmentSection({
 
         <Cell label={t('equip.totalScore')}>
           <div data-testid="equip-totals">
-            <div className="text-2xl font-bold tabular-nums text-foreground">{totals.total.toLocaleString()}</div>
-            <div className="flex flex-wrap gap-x-3 text-xs tabular-nums text-muted-foreground">
+            <div className={TYPE.total}>{totals.total.toLocaleString()}</div>
+            <div className={`flex flex-wrap gap-x-3 ${TYPE.valueMuted}`}>
               <span>{t('equip.subtotalBase', { value: totals.base.toLocaleString() })}</span>
               <span>{t('equip.subtotalEnhance', { value: totals.enhance.toLocaleString() })}</span>
               <span>{t('equip.subtotalReforge', { value: totals.reforge.toLocaleString() })}</span>
             </div>
-            <div className="flex flex-wrap gap-x-3 text-xs tabular-nums text-muted-foreground">
+            <div className={`flex flex-wrap gap-x-3 ${TYPE.valueMuted}`}>
               <span>{t('equip.subtotalAffix', { value: totals.affix.toLocaleString() })}</span>
               <span>{t('equip.subtotalBonus', { value: totals.bonus.toLocaleString() })}</span>
             </div>

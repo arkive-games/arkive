@@ -19,6 +19,7 @@ import {
   type SpeciesResult,
 } from '@/features/score/data'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
+import { TYPE } from '@/lib/typography'
 
 /** The character as typed into the page: levels, pathway, and the per-item scores. */
 type CharacterDraft = {
@@ -189,7 +190,7 @@ export default function ScorePage() {
     <ContentPage active="/score" title={t('score.title')} wide>
       <div data-testid="score-page" className="space-y-4">
         <header className="border-b border-border pb-4">
-          <h1 className="text-3xl font-bold text-foreground">{t('score.title')}</h1>
+          <h1 className={TYPE.pageTitle}>{t('score.title')}</h1>
           <p className="mt-1 max-w-4xl text-sm leading-6 text-muted-foreground">{t('score.description')}</p>
           <p className="mt-1 max-w-4xl text-xs leading-5 text-muted-foreground">{t('score.sourceNote')}</p>
         </header>
@@ -221,7 +222,7 @@ export default function ScorePage() {
           />
           {equipment ? (
             <label className="block">
-              <span className="block text-xs font-semibold text-muted-foreground">{t('score.pathway')}</span>
+              <span className={`block ${TYPE.label}`}>{t('score.pathway')}</span>
               <select
                 value={professionId ?? ''}
                 onChange={(event) => setProfessionId(event.target.value === '' ? null : Number(event.target.value))}
@@ -250,7 +251,7 @@ export default function ScorePage() {
           {result.groups.filter((group) => !SECTIONED_GENUS.has(group.genus.id)).map((group) => (
             <section key={group.genus.id} aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
               <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-1.5">
-                <span className="text-xl font-bold text-foreground">{group.genus.name}</span>
+                <span className={TYPE.sectionTitle}>{group.genus.name}</span>
                 <span className="text-xs font-normal tabular-nums text-muted-foreground">
                   {t('score.groupTotal', {
                     score: group.score.toLocaleString(),
@@ -321,21 +322,21 @@ function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> 
             this cell — a third line here would bottom-align the other tiles
             against it instead of against the total. */}
         <div>
-          <div className="text-xs font-semibold text-muted-foreground">{t('score.total')}</div>
+          <div className={TYPE.label}>{t('score.total')}</div>
           <div className="text-3xl font-bold tabular-nums text-foreground">{result.score.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-xs font-semibold text-muted-foreground">{t('score.expectedTotal')}</div>
+          <div className={TYPE.label}>{t('score.expectedTotal')}</div>
           <div className="text-lg font-semibold tabular-nums text-muted-foreground">
             {result.expected.toLocaleString()}
           </div>
         </div>
         <div>
-          <div className="text-xs font-semibold text-muted-foreground">{t('score.maxTotal')}</div>
+          <div className={TYPE.label}>{t('score.maxTotal')}</div>
           <div className="text-lg font-semibold tabular-nums text-muted-foreground">{result.max.toLocaleString()}</div>
         </div>
         <div>
-          <div className="text-xs font-semibold text-muted-foreground">{t('score.overall')}</div>
+          <div className={TYPE.label}>{t('score.overall')}</div>
           <div className="text-lg font-semibold tabular-nums text-foreground">{percent}%</div>
         </div>
       </div>
@@ -369,7 +370,7 @@ function ItemRow({
       data-testid={`score-item-${item.species.id}`}
     >
       <div className="min-w-0">
-        <div className="text-sm font-bold text-foreground">{item.species.name}</div>
+        <div className={TYPE.name}>{item.species.name}</div>
         {materials.length > 0 ? (
           <div className="mt-0.5 truncate text-xs text-muted-foreground" title={materials.map((m) => `${m.name}: ${m.description}`).join('\n')}>
             {materials.map((m) => m.name).join(' · ')}
@@ -454,7 +455,7 @@ function LevelField({
 
   return (
     <label className={`block ${disabled ? 'opacity-60' : ''}`}>
-      <span className="block text-xs font-semibold text-muted-foreground">{label}</span>
+      <span className={`block ${TYPE.label}`}>{label}</span>
       <Input
         type="number"
         inputMode="numeric"

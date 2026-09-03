@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
+import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
 import {
   artifactsInGroup, currentSeason, displayedValue, effectiveAffixCap, evaluateRelicSlot,
@@ -69,9 +70,9 @@ const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-back
 const BUTTON_CLASS = `inline-flex items-center justify-center rounded-md border border-border text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
 const CELL_CLASS = `flex w-full min-w-0 items-center gap-2 rounded-md border border-border bg-background p-2 text-left transition-colors hover:border-[color:var(--arkive-nav-accent)] ${FOCUS}`
 const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const LABEL_CLASS = 'mb-0.5 block text-xs font-semibold text-muted-foreground'
+const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
 const SECTION_CLASS = 'border-t border-border/70 p-2.5'
-const PROSE_CLASS = 'mt-0.5 whitespace-pre-line text-xs leading-5 text-muted-foreground'
+const PROSE_CLASS = `mt-0.5 whitespace-pre-line ${TYPE.body}`
 
 /** `Artifact.tag` is a usage bucket: 1 副本, 2 竞技, 3 通用. */
 const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagArena', 3: 'relic.tagGeneral' }
@@ -185,7 +186,7 @@ function GradeSlider({ relics, grade, groupId, onChange }: {
     <div>
       <span className={LABEL_CLASS}>{t('relic.grade')}</span>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold tabular-nums text-foreground" data-testid={`relic-grade-value-${groupId}`}>
+        <span className={`${TYPE.name} tabular-nums`} data-testid={`relic-grade-value-${groupId}`}>
           {valueText}
         </span>
         {grade === best ? (
@@ -231,7 +232,7 @@ function KnowledgeBar({ relics, level, k2, season, onChange }: {
             maxLabel={t('relic.knowledgeOption', { level: max, k2: last?.k2 ?? 0 })}
             testId="relic-knowledge-range" />
         </div>
-        <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground" data-testid="relic-k2">
+        <span className={`shrink-0 ${TYPE.name} tabular-nums`} data-testid="relic-k2">
           {t('relic.k2Resolved', { k2 })}
         </span>
       </div>
@@ -284,7 +285,7 @@ function RelicCard({ relics, slot, result, k2, season, onChange }: {
         </div>
         <div className="shrink-0 text-right">
           <div className="text-xs font-semibold text-muted-foreground">{t('relic.slotTotal')}</div>
-          <div className="text-2xl font-bold tabular-nums text-foreground" data-testid={`relic-total-${groupId}`}>
+          <div className={TYPE.total} data-testid={`relic-total-${groupId}`}>
             {result.total.toLocaleString()}
           </div>
         </div>
@@ -449,7 +450,7 @@ export default function RelicSection({ relics }: { relics: Relics }) {
   return (
     <section className="space-y-3" data-testid="relic-section" aria-label={t('relic.title')}>
       <div className="border-b border-border pb-3">
-        <h2 className="text-xl font-bold text-foreground">{t('relic.title')}</h2>
+        <h2 className={TYPE.sectionTitle}>{t('relic.title')}</h2>
         <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted-foreground">{t('relic.hint')}</p>
       </div>
 
@@ -464,7 +465,7 @@ export default function RelicSection({ relics }: { relics: Relics }) {
 
       <div className="rounded-md border border-border bg-card p-3" data-testid="relic-totals">
         <div className="text-xs font-semibold text-muted-foreground">{t('relic.grandTotal')}</div>
-        <div className="text-3xl font-bold tabular-nums text-foreground">{totals.total.toLocaleString()}</div>
+        <div className={`${TYPE.total} text-3xl`}>{totals.total.toLocaleString()}</div>
         <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs tabular-nums text-muted-foreground">
           <span>{t('relic.subtotalAssembly', { value: totals.assembly.toLocaleString() })}</span>
           <span>{t('relic.subtotalResonance', { value: totals.resonance.toLocaleString() })}</span>

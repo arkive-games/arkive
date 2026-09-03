@@ -276,15 +276,81 @@ export function classifyAffix(equipment: Equipment, slot: number, affix: ChosenA
 /**
  * The flat bonus a piece's reforge score carries for its extraordinary affixes.
  *
- * The i-th extraordinary affix adds 200·i on top of its Mark, so the bonus is
- * 200 × (1 + 2 + … + n) = 100·n·(n+1). Fitted to nine weapons read off the
- * game's own 重塑 tab (the affix Marks explain everything but a remainder that
- * is 600 at two, 1200 at three and 2000 at four extraordinary affixes), so a
- * single extraordinary affix is extrapolated to 200 rather than observed. The
- * grace's own `Score` column does not appear in the total at all.
+ * Fitted to nine weapons read off the game's own 重塑 tab: the affix Marks
+ * explain everything but a remainder of 600 at two, 1200 at three and 2000 at
+ * four extraordinary affixes — the i-th extraordinary affix adding 200·i, so
+ * 100·n·(n+1) — while a single one carries nothing, which is also where the
+ * graces start (none is defined below two). The grace's own `Score` column
+ * does not appear in the total at all.
  */
 export function extraordinaryBonus(count: number): number {
-  return 100 * count * (count + 1)
+  return count >= 2 ? 100 * count * (count + 1) : 0
+}
+
+/** The lowest and highest value a stat can roll at a sign, from the rungs the data ships. */
+export type AffixBounds = {
+  /** The range of a contaminated roll, or null where the family has none in this slot. */
+  negative: { min: number; max: number } | null
+  /** The range of a normal or extraordinary roll — one span, as the two ladders abut. */
+  positive: { min: number; max: number } | null
+}
+
+function spanOf(ladders: Rung[][]): { min: number; max: number } | null {
+  const values = ladders.flat().map(([, value]) => value)
+  if (values.length === 0) return null
+  return { min: Math.min(...values), max: Math.max(...values) }
+}
+
+/**
+ * What a family can be worth in a slot, read off its ladders. The two positive
+ * tiers form one span (normal 48..153 and extraordinary 210..382 for 攻击
+ * become 48..382), because the game's own rolls land between the two ladders'
+ * ends; the contaminated ladder is its own, negative span.
+ */
+export function affixBounds(equipment: Equipment, slot: number, family: string): AffixBounds {
+  return {
+    negative: spanOf([ladderFor(equipment, slot, 'contaminated', family)]),
+    positive: spanOf([ladderFor(equipment, slot, 'normal', family), ladderFor(equipment, slot, 'extraordinary', family)]),
+  }
+}
+
+/**
+ * A typed value pulled inside the family's bounds — a positive value into the
+ * positive span, a negative one into the contaminated span. A sign the family
+ * cannot roll flips to the nearest end of the span it can; 0 stays 0, so an
+ * emptied field is left alone.
+ */
+export function clampAffixValue(equipment: Equipment, slot: number, family: string, value: number): number {
+  if (value === 0) return 0
+  const { negative, positive } = affixBounds(equipment, slot, family)
+  const span = value < 0 ? negative ?? positive : positive ?? negative
+  if (!span) return value
+  return Math.min(span.max, Math.max(span.min, value))
+}
+
+/**
+ * The same weapon for another pathway, or null.
+ *
+ * Each weapon exists once per pathway: 无形之编排 (3020623, the 空想家 eye) has
+ * a 太阳 halberd, a 愚者 cane and so on at 3010623, 3030623, …, sharing the
+ * suit, gear level and quality and differing only in subtype. So a change of
+ * pathway swaps the weapon for its counterpart rather than dropping it. The
+ * counterpart is found by those shared attributes rather than by the id's
+ * shape, which is a convention the dataset happens to follow rather than a
+ * contract.
+ */
+export function counterpartFor(equipment: Equipment, item: EquipItem, professionId: number | null): EquipItem | null {
+  const wanted = itemsForSlot(equipment, item.slot, professionId)
+  if (wanted.some((candidate) => candidate.id === item.id)) return item
+  return (
+    wanted.find(
+      (candidate) =>
+        candidate.suitId === item.suitId &&
+        candidate.gearLevel === item.gearLevel &&
+        candidate.quality === item.quality &&
+        candidate.setId === item.setId,
+    ) ?? null
+  )
 }
 
 /**
