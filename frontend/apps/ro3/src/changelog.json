@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.3",
+      "date": "2026-09-03",
+      "commit": "6c25ea8f8fc383e803c6b5360b1907722d7b6040",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Matched the fixed three-row card socket arrangement from the in-client build manual.",
+            "zh-CN": "按游戏内流派手册恢复固定三行卡片槽位布局。",
+            "zh-TW": "依照遊戲內流派手冊恢復固定三行卡片槽位佈局。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.2",
       "date": "2026-09-03",
       "commit": "fcc72cbb97958428a90e6f74b41534307306a56f",
