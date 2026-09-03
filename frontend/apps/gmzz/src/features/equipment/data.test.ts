@@ -300,7 +300,10 @@ describe('markRate / markForValue', () => {
     // different rate than the shipped 50-rung one, and hardcoding either number
     // would make this test about the fixture instead of the behaviour.
     const ladder = ladderFor(EQUIPMENT, 1, 'extraordinary', '攻击')
-    expect(markForValue(ladder, 308)).toBe(Math.round(308 * markRate(ladder)))
+    expect(markForValue(ladder, 308)).toBeCloseTo(308 * markRate(ladder), 10)
+    // Unrounded: the rounding belongs to the displayed figure and the piece's
+    // total, so an affix's fraction is not lost before the sum is taken.
+    expect(Number.isInteger(markForValue(ladder, 308))).toBe(false)
     // On the ladder it lands between the 800 and 850 rungs, as it should.
     expect(markForValue(ladder, 308)).toBeGreaterThan(780)
     expect(markForValue(ladder, 308)).toBeLessThan(830)

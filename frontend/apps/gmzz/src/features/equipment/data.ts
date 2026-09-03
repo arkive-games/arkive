@@ -211,10 +211,15 @@ export function markRate(ladder: Rung[]): number {
  * does not always sit exactly on the shipped ladder — a 62装等 item reads
  * 攻击 +308 where the ladder's nearest rung is 306. Scaling the rate absorbs
  * that instead of forcing the user onto a rung the game did not give them.
+ *
+ * Not rounded. The game rounds once, on the piece's 重塑 total, so rounding
+ * each affix first and then summing drifts from its figure by up to half a
+ * point per affix; the fraction is kept and the display rounds where it shows
+ * a single affix.
  */
 export function markForValue(ladder: Rung[], value: number): number {
   const rate = markRate(ladder)
-  return rate === 0 ? 0 : Math.round(value * rate)
+  return rate === 0 ? 0 : value * rate
 }
 
 /** One chosen affix on a piece: the stat and the amount the card reads. The tier follows from the amount. */
@@ -224,7 +229,7 @@ export type ChosenAffix = {
   value: number
 }
 
-/** A chosen affix with the tier and Mark its value works out to. */
+/** A chosen affix with the tier and Mark its value works out to. `mark` is unrounded — see `markForValue`. */
 export type ScoredAffix = ChosenAffix & { tier: AffixTier; mark: number }
 
 /**
@@ -431,7 +436,7 @@ export type PieceResult = {
   enhanceStats: [string, number][]
   /** The chosen affixes, each with the tier and Mark its value works out to. */
   affixes: ScoredAffix[]
-  /** Sum of every affix's Mark, contaminated ones subtracting. */
+  /** Sum of every affix's Mark, contaminated ones subtracting. Unrounded, like the Marks it sums. */
   affixMark: number
   extraordinaryCount: number
   /** See `extraordinaryBonus`. */

@@ -510,7 +510,9 @@ function ReforgeSummary({ result }: { result: PieceResult }) {
   const { t } = useTranslation()
   const grace = result.grace
   // The exact sum, shown in brackets when the game's rounding to five moved it.
-  const exact = result.affixMark + result.extraordinaryBonus
+  // The Marks are carried unrounded, so this is the only place they are rounded
+  // to the whole number the card can show.
+  const exact = Math.round(result.affixMark + result.extraordinaryBonus)
   return (
     <div className="min-w-0 space-y-2" data-testid={`equip-reforge-${result.state.slot}`}>
       <div>
@@ -522,7 +524,7 @@ function ReforgeSummary({ result }: { result: PieceResult }) {
         </div>
         <div className={TYPE.valueMuted}>
           {t('equip.reforgeParts', {
-            mark: result.affixMark.toLocaleString(),
+            mark: Math.round(result.affixMark).toLocaleString(),
             bonus: result.extraordinaryBonus.toLocaleString(),
           })}
         </div>
@@ -614,7 +616,7 @@ function AffixField({
         />
       </span>
       <span className={`whitespace-nowrap text-right ${TYPE.valueMuted}`} data-testid={`equip-affix-mark-${slot}-${index}`}>
-        {t('equip.affixMark', { mark: affix.mark })}
+        {t('equip.affixMark', { mark: Math.round(affix.mark) })}
       </span>
       <button
         type="button"
@@ -958,7 +960,7 @@ export default function EquipmentSection({
               <span>{t('equip.subtotalReforge', { value: totals.reforge.toLocaleString() })}</span>
             </div>
             <div className={`flex flex-wrap gap-x-3 ${TYPE.valueMuted}`}>
-              <span>{t('equip.subtotalAffix', { value: totals.affix.toLocaleString() })}</span>
+              <span>{t('equip.subtotalAffix', { value: Math.round(totals.affix).toLocaleString() })}</span>
               <span>{t('equip.subtotalBonus', { value: totals.bonus.toLocaleString() })}</span>
             </div>
           </div>
