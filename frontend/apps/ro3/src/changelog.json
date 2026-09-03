@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.5",
+      "date": "2026-09-03",
+      "commit": "fb3158951ce847f1a6407676a4fcdea29c9fe84b",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Matched build manual panel heights and native pet, card, talent, and soul resonance arrangements to the client layout.",
+            "zh-CN": "按客户端布局对齐流派手册面板高度，并还原宠物、卡片、天赋与灵魂共鸣区域。",
+            "zh-TW": "依照客戶端佈局對齊流派手冊面板高度，並還原寵物、卡片、天賦與靈魂共鳴區域。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.4",
       "date": "2026-09-03",
       "commit": "6c3bbe52810d3d18f743c8eea1888bcf5a433429",
