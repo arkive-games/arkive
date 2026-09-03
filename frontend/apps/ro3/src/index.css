@@ -1215,9 +1215,14 @@
 .game-build-attributes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
 .game-build-attributes > div { display: flex; align-items: center; justify-content: space-between; min-height: 2rem; padding: .3rem .45rem; background: rgba(224, 212, 183, .55); }
 .game-build-attributes span { color: #705c42; font-size: .66rem; font-weight: 800; }
+.game-build-attributes span { display: inline-flex; align-items: center; gap: .22rem; }
+.game-build-attributes span img { width: 1rem; height: 1rem; object-fit: contain; }
+.game-build-attributes span img { filter: brightness(0) saturate(100%); opacity: .7; }
 .game-build-attributes strong { color: #755020; font-size: .85rem; }
 .game-pet-roster { display: grid; gap: .35rem; }
 .game-pet-roster > span { color: #876a3d; font-size: .64rem; font-weight: 900; }
+.game-pet-mode-label { display: inline-flex; align-items: center; gap: .25rem; }
+.game-pet-mode-label img { width: 1.85rem; height: 1.85rem; object-fit: contain; }
 .game-pet-roster .game-build-slots { padding: 0; }
 .game-hover-card, .game-build-slot > .build-hover-card { left: 50%; bottom: calc(100% + .5rem); transform: translate(-50%, .25rem); }
 .game-build-slot:hover > .build-hover-card, .game-build-slot:focus-within > .build-hover-card { opacity: 1; transform: translate(-50%, 0); }
@@ -1264,19 +1269,9 @@
   background-position: center;
   background-size: 100% 2rem;
 }
-.game-build-panel > header::after {
-  content: "";
-  position: absolute;
-  right: .6rem;
-  bottom: -.35rem;
-  width: 3.2rem;
-  height: 2rem;
-  pointer-events: none;
-  background: url('./assets/native-ui/genre/genremanual_img_title_line.webp') center / 100% 100% no-repeat;
-  opacity: .7;
-}
+.game-build-panel > header::after { display: none; }
 .game-build-panel > header > span { position: relative; z-index: 1; color: #5d4525; }
-.game-build-panel > header > span::before { content: ""; display: inline-block; width: 1.75rem; height: 1.75rem; margin-right: .12rem; background: url('./assets/native-ui/genre/genremanual_btn_title_go.webp') center / contain no-repeat; }
+.game-build-panel > header > span::before { display: none; }
 .game-build-panel > header > span svg { display: none; }
 .game-build-panel > *:not(header) { padding: .7rem .8rem; }
 .game-build-slot-frame {
@@ -1294,20 +1289,29 @@
 .game-build-slot-frame img:not(.game-build-slot-empty-art) { width: 100%; height: 100%; object-fit: contain; }
 .game-build-slot-empty-art { width: 1.55rem !important; height: 1.55rem !important; opacity: .6; }
 .game-build-slot-frame small {
-  right: .26rem;
-  bottom: .2rem;
+  right: .18rem;
+  bottom: .18rem;
   padding: .05rem .18rem;
   border: 1px solid rgba(148, 111, 45, .38);
   color: #76531f;
   background: rgba(250, 238, 201, .9);
   font-size: .54rem;
 }
+.game-build-slot.is-skill .game-build-slot-frame small { right: 50%; bottom: .08rem; transform: translateX(50%); min-width: 2.05rem; padding: 0 .16rem; border: 1px solid rgba(255, 247, 216, .95); color: #fff; background: rgba(47, 43, 35, .82); font-size: .68rem; line-height: 1.2; text-align: center; text-shadow: 0 1px 1px #000; }
 .game-build-slot.is-equipment .game-build-slot-frame {
   width: 4.5rem;
   height: 4.5rem;
   padding: .28rem;
   background-image: url('./assets/native-ui/genre/genremanual_img_equip_bar_01.webp');
 }
+.game-build-slot.is-equipment .game-build-slot-frame { border: 2px solid #8d7d62; background-color: #e5ddc8; }
+.game-build-slot.is-equipment .game-build-slot-frame small { top: .18rem; right: auto; bottom: auto; left: .2rem; padding: 0 .12rem; border: 0; color: #774b99; background: rgba(255, 243, 207, .9); font-size: .72rem; line-height: 1.15; text-shadow: 0 1px 0 #fff; }
+.game-build-slot.is-equipment.is-quality-1 .game-build-slot-frame { border-color: #8f8f8f; background-color: #dcdcdc; }
+.game-build-slot.is-equipment.is-quality-2 .game-build-slot-frame { border-color: #74a96c; background-color: #d7ebd0; }
+.game-build-slot.is-equipment.is-quality-3 .game-build-slot-frame { border-color: #5f91c8; background-color: #d5e6f7; }
+.game-build-slot.is-equipment.is-quality-4 .game-build-slot-frame { border-color: #9473c5; background-color: #e8daf5; }
+.game-build-slot.is-equipment.is-quality-5 .game-build-slot-frame { border-color: #db9a45; background-color: #f7e1b8; }
+.game-build-slot.is-equipment.is-quality-6 .game-build-slot-frame { border-color: #d16d5d; background-color: #f4d1cb; }
 .game-build-slot.is-skill .game-build-slot-frame { background-image: url('./assets/native-ui/genre/genremanual_img_title_02.webp'); }
 .game-build-slot.is-pet .game-build-slot-frame,
 .game-build-slot.is-soul .game-build-slot-frame {
@@ -1316,17 +1320,25 @@
   padding: .38rem;
   background-image: url('./assets/native-ui/genre/genremanual_img_title_04.webp');
 }
-.game-build-slot.is-pet .game-build-slot-frame { width: 5.4rem; height: 5.4rem; padding: .2rem; background-image: url('./assets/native-ui/genre/genremanual_img_title_04.webp'); background-size: 100% 100%; }
-.game-build-slot.is-pet .game-build-slot-frame img { object-fit: cover; }
+.game-build-slot.is-pet .game-build-slot-frame { width: 5.05rem; height: 5.05rem; padding: .16rem; border: 2px solid #817158; border-radius: 50%; background-color: #e3d9c2; background-image: none; box-shadow: inset 0 0 0 2px rgba(255, 248, 224, .9), 0 0 0 1px rgba(126, 101, 61, .48); }
+.game-build-slot.is-pet .game-build-slot-frame img:not(.game-build-slot-overlay) { border-radius: 50%; object-fit: cover; }
+.game-build-slot-frame .game-build-slot-overlay { position: absolute; top: .02rem; left: .02rem; z-index: 2; width: 1.28rem !important; height: 1.28rem !important; padding: .06rem; border: 1px solid rgba(255, 244, 210, .9); border-radius: .18rem; background: rgba(49, 40, 27, .58); object-fit: contain !important; }
 .game-build-slot.is-card .game-build-slot-frame {
-  width: 3.45rem;
+  width: 3.7rem;
   height: 3.7rem;
   padding: .43rem;
   border: 0;
   background-image: url('./assets/native-ui/genre/genremanual_bg_property_10.webp');
   background-size: 100% 100%;
 }
-.game-build-slot.is-card:not(.is-empty) .game-build-slot-frame { background-image: url('./assets/native-ui/genre/genremanual_bg_select_01.webp'); }
+.game-build-slot.is-card .game-build-slot-frame { border: 2px solid #8a806d; background-color: #dcd7ca; background-blend-mode: multiply; }
+.game-build-slot.is-card.is-quality-1 .game-build-slot-frame { border-color: #909090; background-color: #dcdcdc; }
+.game-build-slot.is-card.is-quality-2 .game-build-slot-frame { border-color: #74a96c; background-color: #d7ebd0; }
+.game-build-slot.is-card.is-quality-3 .game-build-slot-frame { border-color: #5f91c8; background-color: #d5e6f7; }
+.game-build-slot.is-card.is-quality-4 .game-build-slot-frame { border-color: #9473c5; background-color: #e8daf5; }
+.game-build-slot.is-card.is-quality-5 .game-build-slot-frame { border-color: #db9a45; background-color: #f7e1b8; }
+.game-build-slot.is-card.is-quality-6 .game-build-slot-frame { border-color: #d16d5d; background-color: #f4d1cb; }
+.game-build-slot.is-card .game-build-slot-frame small { right: auto; bottom: .12rem; left: .12rem; }
 .game-build-slot.is-talent .game-build-slot-frame {
   width: 4.2rem;
   height: 4.2rem;
@@ -1334,6 +1346,7 @@
   background-image: url('./assets/native-ui/genre/genremanual_img_talent_01.webp');
 }
 .game-build-slot.is-portrait .game-build-slot-frame { border-radius: 0; }
+.game-build-slot.is-pet.is-portrait .game-build-slot-frame { border-radius: 50%; }
 .game-build-slot.is-diamond .game-build-slot-frame,
 .game-build-slot.is-diamond .game-build-slot-frame img,
 .game-build-slot.is-diamond .game-build-slot-frame small { transform: none; }
@@ -1398,8 +1411,13 @@
 .game-pet-effect-summary strong { font-size: .61rem; }
 .game-pet-effect-summary span { color: #957a51; font-size: .56rem; }
 .game-pet-effect-summary span { max-width: 4.6rem; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.game-pet-effect-summary { grid-template-columns: repeat(2, 2rem); grid-template-rows: repeat(2, 2rem); min-height: 11.5rem; gap: .35rem; align-content: center; }
+.game-pet-effect-summary span { display: grid; width: 2rem; height: 2rem; place-items: center; max-width: none; }
+.game-pet-effect-summary span img { width: 2rem; height: 2rem; border-radius: .25rem; object-fit: contain; }
+.game-pet-effect-summary strong { display: none; }
+.game-build-slot.is-pet .game-build-slot-effects { display: none; }
 .game-soul-row { display: grid; grid-template-columns: minmax(0, 1fr) 7rem; align-items: center; gap: .5rem; }
-.game-soul-resonance-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; padding: .35rem; border: 1px solid rgba(121, 100, 68, .22); background: url('./assets/native-ui/genre/genremanual_bg_property_12.webp') center / 100% 100% no-repeat; }
+.game-soul-resonance-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .1rem; padding: .35rem .25rem; border: 1px solid rgba(121, 100, 68, .22); background: url('./assets/native-ui/genre/genremanual_bg_property_12.webp') center / 100% 100% no-repeat; }
 .game-soul-resonance-summary span {
   display: grid;
   min-width: 2.3rem;
@@ -1420,14 +1438,27 @@
 }
 .game-build-slot.is-card strong,
 .game-build-slot.is-card .game-build-slot-effects { display: none; }
+.game-build-slot.is-soul > strong,
+.game-build-slot.is-soul > .game-build-slot-effects { display: none; }
+.game-soul-notes { display: flex; justify-content: center; gap: .08rem; margin-top: -.35rem; }
+.game-soul-notes img { width: .7rem; height: .7rem; object-fit: contain; }
+.game-build-slot.is-soul .game-build-slot-frame { background-color: #d99438; background-image: url('./assets/native-ui/genre/genremanual_bg_property_10.webp'); background-blend-mode: multiply; }
+.game-build-slot.is-soul .game-build-slot-frame small { top: .1rem; right: auto; bottom: auto; left: .12rem; padding: 0 .14rem; border: 0; color: #fff; background: rgba(38, 34, 29, .88); font-size: .7rem; line-height: 1.2; }
+.game-soul-notes { gap: .04rem; margin-top: -.25rem; }
+.game-soul-notes img { width: .78rem; height: .78rem; }
 
 @media (max-width: 56rem) {
   .game-build-manual { grid-template-columns: 1fr; }
   .game-build-column { display: block; grid-template-rows: none; grid-row: auto; }
+  .game-build-panel { height: auto; }
   .game-build-column--left { border-right: 0; }
   .game-soul-row { grid-template-columns: 1fr; }
   .game-pet-roster { grid-template-columns: 1fr; }
   .game-pet-roster .game-pet-effect-summary { grid-column: 1; grid-row: auto; min-height: 5rem; }
+}
+
+@media (max-width: 56rem) {
+  .game-pet-roster .game-pet-effect-summary { min-height: 5rem; grid-template-columns: repeat(4, 2rem); grid-template-rows: 2rem; }
 }
 
 @media (max-width: 48rem) {
