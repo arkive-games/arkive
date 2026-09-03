@@ -6864,3 +6864,109 @@ select {
   object-position: center bottom;
   filter: drop-shadow(0 0.35rem 0.3rem rgba(58, 46, 29, 0.28));
 }
+
+/* Final client-manual alignment pass: keep the native surfaces, then tune the
+   grid so the dense desktop composition follows the in-game proportions. */
+.game-build-panel > header {
+  min-height: 2.55rem;
+  background-size: 100% 100%;
+}
+.game-build-panel > header > span {
+  gap: .48rem;
+  font-size: .82rem;
+}
+.game-build-panel > header > span::after {
+  content: '»';
+  display: inline-grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  border: 1px solid rgba(121, 100, 68, .48);
+  border-radius: 50%;
+  color: #6a512a;
+  background: rgba(255, 248, 221, .62);
+  font-family: Georgia, serif;
+  font-size: 1.08rem;
+  line-height: 1;
+}
+.game-build-slots--skills { gap: .35rem; }
+.game-build-slots--equipment { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.game-build-slot.is-equipment .game-build-slot-frame { width: 100%; max-width: 4.5rem; }
+.game-build-slot.is-equipment strong { font-size: .7rem; }
+.game-card-fixed-group,
+.game-card-fixed-group.game-build-slots--cards { gap: 0; }
+.game-pet-roster {
+  grid-template-columns: 3.2rem minmax(0, 1fr) 6.4rem;
+  grid-template-rows: auto auto;
+  column-gap: .45rem;
+  row-gap: .5rem;
+  align-items: center;
+}
+.game-pet-roster > .game-pet-mode-label {
+  grid-column: 1;
+  justify-self: center;
+  flex-direction: column;
+  gap: .12rem;
+  text-align: center;
+}
+.game-pet-roster > .game-pet-mode-label img { width: 2.2rem; height: 2.2rem; }
+.game-pet-roster > .game-build-slots--combat {
+  grid-column: 2;
+  grid-row: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.game-pet-roster > .game-build-slots--assist {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.game-pet-roster > .game-pet-effect-summary {
+  grid-column: 3;
+  grid-row: 1;
+  display: grid;
+  width: 100%;
+  min-height: 7.8rem;
+  box-sizing: border-box;
+  grid-template-columns: repeat(2, 2.1rem);
+  grid-template-rows: repeat(2, 2.1rem);
+  place-content: center;
+  justify-content: center;
+  gap: .32rem;
+  padding: .35rem;
+  border: 0;
+  background: radial-gradient(circle at center, rgba(157, 181, 81, .34), rgba(157, 181, 81, 0) 68%);
+}
+.game-pet-roster > .game-pet-effect-summary span {
+  display: grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  place-items: center;
+}
+.game-pet-roster > .game-pet-effect-summary img { width: 2.1rem; height: 2.1rem; object-fit: contain; }
+.game-soul-row { grid-template-columns: minmax(0, 1fr) 7.2rem; gap: .55rem; }
+.game-build-slot.is-soul .game-soul-notes { width: 100%; box-sizing: border-box; }
+
+@media (min-width: 36rem) and (max-width: 56rem) {
+  .game-build-slots--skills { grid-template-columns: repeat(6, minmax(3.2rem, 1fr)); }
+  .game-build-slots--equipment { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+}
+
+@media (max-width: 56rem) {
+  .game-pet-roster {
+    grid-template-columns: 3rem minmax(0, 1fr) 5.6rem;
+  }
+  .game-pet-roster > .game-pet-effect-summary {
+    min-height: 6.8rem;
+    grid-template-columns: repeat(2, 1.8rem);
+    grid-template-rows: repeat(2, 1.8rem);
+  }
+  .game-pet-roster > .game-pet-effect-summary span,
+  .game-pet-roster > .game-pet-effect-summary img { width: 1.8rem; height: 1.8rem; }
+}
+
+@media (max-width: 36rem) {
+  .game-pet-roster { grid-template-columns: 3rem minmax(0, 1fr); }
+  .game-pet-roster > .game-pet-effect-summary { grid-column: 2; grid-row: 1; }
+  .game-pet-roster > .game-build-slots--combat { grid-column: 2; grid-row: 2; }
+  .game-pet-roster > .game-build-slots--assist { grid-column: 2; grid-row: 3; }
+}
