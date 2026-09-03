@@ -1001,6 +1001,9 @@ function BuildEditor({
   const talents = data.talents.talents.seasonTalents.nodes
     .filter((node) => node.iType !== 0)
     .slice(0, 120);
+  const talentLevelById = new Map(
+    data.talents.talents.seasonTalents.levels.map((level) => [level.iId, level]),
+  );
   const prefix =
     (
       {
@@ -1269,10 +1272,22 @@ function BuildEditor({
       >
         <PickerGrid
           selected={draft.talentIds}
-          items={talents.map((talent) => ({
-            id: talent.iId,
-            name: displayName(talent.name, `天赋节点 ${talent.iId}`),
-          }))}
+          items={talents.map((talent) => {
+            const icon = talent.levels
+              ?.map((levelId) => talentLevelById.get(levelId)?.icon)
+              .find((value): value is string => Boolean(value));
+            const level = talent.levels?.[0]
+              ? talentLevelById.get(talent.levels[0])
+              : undefined;
+            return {
+              id: talent.iId,
+              name: displayName(
+                talent.name ?? level?.name,
+                `天赋节点 ${talent.iId}`,
+              ),
+              icon,
+            };
+          })}
           limit={12}
           onToggle={(id) =>
             updateDraft({
