@@ -7065,8 +7065,24 @@ select {
   background-color: #45311c;
 }
 .game-build-slot.is-soul .game-soul-notes {
+  display: grid;
   box-sizing: border-box;
   width: var(--game-build-slot-size);
+  height: 1.15rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: 1px;
+  margin-top: 0;
+  padding: 1px;
+  overflow: hidden;
+  border: 1px solid #5a554a;
+  background: #302f2c;
+  box-shadow: 0 .08rem .12rem rgba(55, 43, 27, .2);
+}
+.game-build-slot.is-soul .game-soul-notes img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Four combat pets plus the effect summary occupy the same five tracks as the
