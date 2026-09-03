@@ -90,6 +90,16 @@ function bandStyle(palette: string[], index: number): string {
  */
 const SECTIONED_GENUS = new Set([2, 3])
 
+/**
+ * What is published. The equipment system ships first; the relic section, the
+ * generic score inputs for 途径 and 非凡人物, the divinity level and the overall
+ * summary stay in the code but off the page until their numbers are checked
+ * against the game the way the equipment's were. Flip these to bring them back.
+ */
+const LIVE = { relics: false, otherGenus: false, divinity: false, summary: false }
+/** The genus the equipment section answers for. */
+const EQUIPMENT_GENUS = 2
+
 export default function ScorePage() {
   const { t } = useTranslation()
   const [rating, setRating] = useState<Rating | null>(null)
@@ -199,7 +209,11 @@ export default function ScorePage() {
             items rather than beside them. */}
         <section
           aria-label={t('score.progression')}
-          className="grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,10rem))_minmax(0,13rem)_minmax(0,1fr)]"
+          className={`grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-2 ${
+            LIVE.summary
+              ? 'lg:grid-cols-[repeat(2,minmax(0,10rem))_minmax(0,13rem)_minmax(0,1fr)]'
+              : 'lg:grid-cols-[minmax(0,10rem)_minmax(0,16rem)]'
+          }`}
         >
           <LevelField
             label={t('score.roleLevel')}
@@ -210,16 +224,18 @@ export default function ScorePage() {
             onChange={setRoleLevel}
             testId="score-role-level"
           />
-          <LevelField
-            label={t('score.divinityLevel')}
-            hint={atCap ? t('score.divinityHint') : t('score.divinityInactive', { level: rating.maxRoleLevel })}
-            value={divinityLevel}
-            min={0}
-            max={rating.maxDivinityLevel}
-            onChange={setDivinityLevel}
-            disabled={!atCap}
-            testId="score-divinity-level"
-          />
+          {LIVE.divinity ? (
+            <LevelField
+              label={t('score.divinityLevel')}
+              hint={atCap ? t('score.divinityHint') : t('score.divinityInactive', { level: rating.maxRoleLevel })}
+              value={divinityLevel}
+              min={0}
+              max={rating.maxDivinityLevel}
+              onChange={setDivinityLevel}
+              disabled={!atCap}
+              testId="score-divinity-level"
+            />
+          ) : null}
           {equipment ? (
             <label className="block">
               <span className={`block ${TYPE.label}`}>{t('score.pathway')}</span>
@@ -238,17 +254,33 @@ export default function ScorePage() {
               <span className="mt-0.5 block text-xs text-muted-foreground">{t('score.pathwayHint')}</span>
             </label>
           ) : null}
-          <Summary result={result} />
+          {LIVE.summary ? <Summary result={result} /> : null}
         </section>
 
         {equipment ? (
           <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} />
         ) : null}
 
-        {relics ? <RelicSection relics={relics} /> : null}
+        {LIVE.relics && relics ? <RelicSection relics={relics} /> : null}
+
+        {/* The parts not yet published, each under its own name so the page's
+            shape is already the final one. */}
+        <div className="space-y-4" data-testid="score-coming-soon">
+          {result.groups
+            .filter((group) => group.genus.id !== EQUIPMENT_GENUS && !(LIVE.relics && group.genus.id === 3))
+            .filter((group) => !(LIVE.otherGenus && !SECTIONED_GENUS.has(group.genus.id)))
+            .map((group) => (
+              <section key={group.genus.id} aria-label={group.genus.name} data-testid={`score-soon-${group.genus.id}`}>
+                <h2 className={`border-b border-border pb-1.5 ${TYPE.sectionTitle}`}>{group.genus.name}</h2>
+                <p className={`mt-2 rounded-md border border-dashed border-border p-4 text-center ${TYPE.body}`}>
+                  {t('score.comingSoon')}
+                </p>
+              </section>
+            ))}
+        </div>
 
         <div className="space-y-4" data-testid="score-groups">
-          {result.groups.filter((group) => !SECTIONED_GENUS.has(group.genus.id)).map((group) => (
+          {result.groups.filter((group) => LIVE.otherGenus && !SECTIONED_GENUS.has(group.genus.id)).map((group) => (
             <section key={group.genus.id} aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
               <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-1.5">
                 <span className={TYPE.sectionTitle}>{group.genus.name}</span>
@@ -274,7 +306,7 @@ export default function ScorePage() {
           ))}
         </div>
 
-        {gaps.length > 0 ? (
+        {LIVE.summary && gaps.length > 0 ? (
           <section aria-label={t('score.headroom')} className="rounded-md border border-border bg-card p-3">
             <h2 className="text-sm font-bold text-foreground">{t('score.headroom')}</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">{t('score.headroomHint')}</p>

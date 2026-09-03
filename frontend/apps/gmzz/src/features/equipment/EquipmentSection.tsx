@@ -73,12 +73,14 @@ const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:rin
 const INPUT_CLASS = `h-7 border-border bg-background px-1.5 ${TYPE.control} tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]`
 const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none ${FOCUS}`
 const COMPACT_SELECT_CLASS = `h-7 w-full min-w-0 rounded-md border border-border bg-background px-1 ${TYPE.control} text-foreground outline-none ${FOCUS}`
-const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
+const LABEL_CLASS = `mb-1.5 block ${TYPE.label}`
 const BUTTON_CLASS = `inline-flex items-center justify-center rounded-md border border-border ${TYPE.control} font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
 const SECTION_CLASS = 'border-t border-border/70 p-2.5'
 const BADGE_CLASS = `inline-block shrink-0 rounded border border-border px-1 align-middle ${TYPE.control} font-medium leading-4 text-muted-foreground`
 /** A grace's pips: one gold ◆ per extraordinary affix it counts, and no grey ones filling up to four. */
 const PIP_CLASS = 'text-[color:var(--arkive-nav-accent)]'
+/** What enhancement or reforge added, wherever a figure is split into base and gain. */
+const GAIN_CLASS = 'text-emerald-700 dark:text-emerald-300'
 /**
  * One affix: pip, stat, value, Mark, remove. The value and Mark columns are
  * fixed so they line up down the list and the stat takes what is left.
@@ -385,12 +387,22 @@ function IconPlaceholder({ item }: { item: EquipItem | null }) {
   )
 }
 
-/** The piece's total, heading its column level with the base, enhancement and reforge scores that head the others. */
+/**
+ * The piece's total, heading its column level with the base, enhancement and
+ * reforge scores that head the others, split into the item's own base and what
+ * was added to it (enhancement and reforge) — the addition in the same green
+ * as the enhancement gains in the stat block.
+ */
 function PieceScore({ result }: { result: PieceResult }) {
   const { t } = useTranslation()
+  const added = result.enhanceScore + result.reforgeScore
   return (
     <div className={`mb-1.5 ${TYPE.value}`} data-testid={`equip-score-${result.state.slot}`}>
       {t('equip.pieceScore', { score: result.total.toLocaleString() })}
+      <span className="ml-1 font-normal text-muted-foreground">
+        ({result.baseScore.toLocaleString()}
+        <span className={GAIN_CLASS}>{t('equip.pieceAdded', { added: added.toLocaleString() })}</span>)
+      </span>
     </div>
   )
 }
@@ -445,7 +457,7 @@ function StatBlock({ equipment, result }: { equipment: Equipment; result: PieceR
             <div key={line.key} className="col-span-3 grid grid-cols-subgrid items-baseline">
               <dt className="truncate">{line.label}</dt>
               <dd className={`text-right ${TYPE.value}`}>{rangeText(line.base)}</dd>
-              <dd className="text-emerald-700 dark:text-emerald-300">
+              <dd className={GAIN_CLASS}>
                 {line.gain.max > 0 ? t('equip.statGain', { gain: `+${rangeText(line.gain)}` }) : null}
               </dd>
             </div>
@@ -903,7 +915,7 @@ export default function EquipmentSection({
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-2 xl:grid-cols-[minmax(0,22rem)_minmax(0,17rem)_minmax(0,1fr)_minmax(0,15rem)]">
+      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-2 xl:grid-cols-[minmax(0,22rem)_minmax(0,14rem)_minmax(0,1fr)_minmax(0,16rem)]">
         <Cell label={t('equip.batchEnhance')}>
           <EnhanceSliders
             stage={batch.stage}
@@ -917,7 +929,7 @@ export default function EquipmentSection({
         </Cell>
 
         <Cell label={t('equip.bodyBonus')}>
-          <div className="space-y-1" data-testid="equip-body-tier">
+          <div className="space-y-3" data-testid="equip-body-tier">
             <div className={TYPE.value}>
               {bodyTier
                 ? t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: (bodyTier.mark ?? 0).toLocaleString() })
@@ -940,11 +952,12 @@ export default function EquipmentSection({
               {t('equip.suitNone', { need: Number.isFinite(suitNeed) ? suitNeed : '—' })}
             </div>
           ) : (
-            // One box per live suit, side by side when both are. Only one can be
-            // in effect, so the boxes are a choice: the chosen one is highlighted
-            // and scores; with a single live suit there is nothing to choose and
-            // it is taken as is.
-            <div className={`grid gap-2 ${suitScores.length > 1 ? 'sm:grid-cols-2' : ''}`} role="group" aria-label={t('equip.suitChoose')}>
+            // One box per live suit, side by side when both are, and a single one
+            // keeps the same box width rather than stretching. Only one can be in
+            // effect, so the boxes are a choice: the chosen one is highlighted and
+            // scores; with a single live suit there is nothing to choose and it is
+            // taken as is.
+            <div className="grid grid-cols-[repeat(2,minmax(0,14rem))] gap-2" role="group" aria-label={t('equip.suitChoose')}>
               {suitScores.map((entry) => {
                 const chosen = entry.suit.id === chosenSuit?.suit.id
                 return (
@@ -984,7 +997,8 @@ export default function EquipmentSection({
         <Cell label={t('equip.totalScore')}>
           <div data-testid="equip-totals">
             <div className={TYPE.total}>{totals.total.toLocaleString()}</div>
-            <div className={`flex flex-wrap gap-x-3 ${TYPE.valueMuted}`}>
+            {/* Two a row, so the four parts read as two pairs rather than a run of figures. */}
+            <div className={`mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 ${TYPE.valueMuted}`}>
               <span>{t('equip.subtotalBase', { value: totals.base.toLocaleString() })}</span>
               <span>{t('equip.subtotalEnhance', { value: totals.enhance.toLocaleString() })}</span>
               <span>{t('equip.subtotalReforge', { value: totals.reforge.toLocaleString() })}</span>

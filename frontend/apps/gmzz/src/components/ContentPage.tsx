@@ -34,7 +34,11 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
         loginLabel={t('login')}
         accountControl={<ArkiveAccountControl language={lng} variant="mobileHeader" />}
       />
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {/* `relative` so anything positioned inside — a screen-reader-only label is
+          `position: absolute` — is contained by this scroller. Without it such an
+          element sits in the document at its static position, and one far down a
+          long page gives the window a second scrollbar into blank space. */}
+      <div className="relative min-h-0 flex-1 overflow-y-auto">
         <div className="flex min-h-full flex-col">
           <div className={cn('arkive-content-page mx-auto w-full flex-1 pb-6', wide ? 'max-w-[var(--arkive-content-wide-data)]' : 'max-w-[var(--arkive-content-standard)]')}>
             {heading ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null}

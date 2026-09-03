@@ -297,6 +297,7 @@ const en = {
   },
   score: {
     "title": "Beyonder Rating Calculator",
+    "comingSoon": "Coming soon",
     "homeDescription": "Enter your level and the 14 sub-scores the in-game rating panel shows, and see how each one grades.",
     "description": "The in-game Beyonder Rating panel grades 14 items against a benchmark that moves with your level. Enter your progression and each item's score to see its completion, its band, and how far it is from the target.",
     "sourceNote": "The per-item score is computed on the server and sent to the client, so it cannot be derived from gear here — read the 14 numbers off the in-game panel. Everything this page derives from them is the client's own arithmetic.",
@@ -384,7 +385,8 @@ const en = {
     "tierNormal": "Normal",
     "tierContaminated": "Contaminated",
     "tierSpecial": "Special",
-    "reforgeScore": "Reforge {{score}}",
+    "reforgeScore": "Reforge score {{score}}",
+    "pieceAdded": " + {{added}}",
     "reforgeParts": "affixes {{mark}} + extraordinary bonus {{bonus}}",
     "noGrace": "No grace for this combination"
   },
@@ -719,6 +721,7 @@ const zhCN: Strings = {
   },
   score: {
     "title": "非凡评分计算器",
+    "comingSoon": "敬请期待",
     "homeDescription": "填入等级与游戏内非凡评分面板的 14 项分数，逐项对照养成进度。",
     "description": "游戏内的非凡评分面板会把养成拆成 14 项，并按你的等级给出对应的期望值与上限。填入你的等级和各项分数，即可看到每一项的完成度、评价档位，以及距离目标还差多少。",
     "sourceNote": "各项分数本身由服务器计算后下发给客户端，无法从装备反推——请直接抄游戏内面板上的 14 个数字。本页在此基础上的所有推导，都用客户端自己的公式。",
@@ -806,7 +809,8 @@ const zhCN: Strings = {
     "tierNormal": "普通",
     "tierContaminated": "污染",
     "tierSpecial": "特殊",
-    "reforgeScore": "重塑 {{score}}",
+    "reforgeScore": "重塑评分 {{score}}",
+    "pieceAdded": " + {{added}}",
     "reforgeParts": "词条 {{mark}} + 非凡加成 {{bonus}}",
     "noGrace": "该组合没有对应恩赐"
   },
@@ -1140,6 +1144,7 @@ const zhTW: Strings = {
   },
   score: {
     "title": "非凡評分計算器",
+    "comingSoon": "敬請期待",
     "homeDescription": "填入等級與遊戲內非凡評分面板的 14 項分數，逐項對照養成進度。",
     "description": "遊戲內的非凡評分面板會把養成拆成 14 項，並依你的等級給出對應的期望值與上限。填入你的等級和各項分數，即可看到每一項的完成度、評價檔位，以及距離目標還差多少。",
     "sourceNote": "各項分數本身由伺服器計算後下發給客戶端，無法從裝備反推——請直接抄遊戲內面板上的 14 個數字。本頁在此基礎上的所有推導，都用客戶端自己的公式。",
@@ -1227,7 +1232,8 @@ const zhTW: Strings = {
     "tierNormal": "普通",
     "tierContaminated": "污染",
     "tierSpecial": "特殊",
-    "reforgeScore": "重塑 {{score}}",
+    "reforgeScore": "重塑評分 {{score}}",
+    "pieceAdded": " + {{added}}",
     "reforgeParts": "詞條 {{mark}} + 非凡加成 {{bonus}}",
     "noGrace": "該組合沒有對應恩賜"
   },
