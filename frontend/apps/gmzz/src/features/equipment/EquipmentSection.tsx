@@ -24,6 +24,7 @@ import {
   progressBounds,
   refineFromProgress,
   scoredSlots,
+  statLabel,
   statLines,
   suitOf,
   suitScoreFor,
@@ -39,6 +40,7 @@ import {
   type PieceState,
   type ScoredAffix,
   type StatRange,
+  type SuitTier,
   type Suit,
 } from '@/features/equipment/data'
 
@@ -365,6 +367,18 @@ function EnhanceSliders({
         testId={`${testIdPrefix}-refine`}
         onChange={onBadge}
       />
+    </div>
+  )
+}
+
+/** One whole-loadout set as reached: its title line, then the stats it grants, labelled by family. */
+function BonusTier({ equipment, tier, title }: { equipment: Equipment; tier: SuitTier; title: string }) {
+  return (
+    <div>
+      <div className={TYPE.value}>{title}</div>
+      <div className={TYPE.valueMuted}>
+        {tier.stats.map(([key, amount]) => `${statLabel(equipment, key)} +${amount.toLocaleString()}`).join(' · ')}
+      </div>
     </div>
   )
 }
@@ -929,20 +943,24 @@ export default function EquipmentSection({
         </Cell>
 
         <Cell label={t('equip.bodyBonus')}>
+          {/* The two whole-loadout sets in one shape each: what was reached and
+              its score, then the stats it grants. A set not reached shows
+              nothing at all, so the column is blank until there is a bonus. */}
           <div className="space-y-3" data-testid="equip-body-tier">
-            <div className={TYPE.value}>
-              {bodyTier
-                ? t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: (bodyTier.mark ?? 0).toLocaleString() })
-                : t('equip.bodyTierNone')}
-            </div>
-            <div>
-              <div className={TYPE.value}>
-                {refineTier
-                  ? t('equip.suitTier', { level: refineTier.level ?? 0, mark: (refineTier.mark ?? 0).toLocaleString(), percent: averagePercent.toFixed(1) })
-                  : t('equip.suitNoTier', { percent: averagePercent.toFixed(1) })}
-              </div>
-              {refineTier ? <p className={`whitespace-pre-line ${TYPE.body}`}>{refineTier.effect}</p> : null}
-            </div>
+            {bodyTier ? (
+              <BonusTier
+                equipment={equipment}
+                tier={bodyTier}
+                title={t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: (bodyTier.mark ?? 0).toLocaleString() })}
+              />
+            ) : null}
+            {refineTier ? (
+              <BonusTier
+                equipment={equipment}
+                tier={refineTier}
+                title={t('equip.suitTier', { percent: averagePercent.toFixed(1), mark: (refineTier.mark ?? 0).toLocaleString() })}
+              />
+            ) : null}
           </div>
         </Cell>
 
